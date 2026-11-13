@@ -1,0 +1,1470 @@
+{
+  "schema": "genesis-static-public-source-excerpts/v1",
+  "part": "B",
+  "note": "Public source excerpts actually inspected. These are not private judge opinions, reserved oracles, ledgers, captures or runtime results. Numbered ranges are 1-based and inclusive.",
+  "sources": [
+    {
+      "id": "B-S01",
+      "path": "apps/cli/package.json",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "c9c071a3db4543abab9f02dfd25a494881a23377",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "full_content",
+      "read_note": "Fetched complete blob and inspected full displayed content.",
+      "decisive_ranges": [
+        [
+          1,
+          46
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/apps/cli/package.json",
+      "ownership": {
+        "owner": "S5",
+        "rule_type": "longest_directory_prefix",
+        "rule": "apps/cli/"
+      },
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 46,
+          "text": "{\n  \"$schema\": \"https://json.schemastore.org/package.json\",\n  \"name\": \"@orchestra/cli\",\n  \"version\": \"1.18.27\",\n  \"type\": \"module\",\n  \"license\": \"MIT\",\n  \"bin\": {\n    \"orchestra\": \"./bin/orchestra.cjs\"\n  },\n  \"files\": [\n    \"bin\"\n  ],\n  \"scripts\": {\n    \"build\": \"bun run script/build.ts\",\n    \"dev\": \"bun run src/index.ts\",\n    \"test\": \"bun run script/test.ts\",\n    \"typecheck\": \"tsgo --noEmit\"\n  },\n  \"dependencies\": {\n    \"@agentclientprotocol/sdk\": \"0.21.0\",\n    \"@effect/platform-node\": \"catalog:\",\n    \"@orchestra/app-dock\": \"workspace:*\",\n    \"@orchestra/client\": \"workspace:*\",\n    \"@orchestra/continuity\": \"workspace:*\",\n    \"@orchestra/core\": \"workspace:*\",\n    \"@orchestra/engine-claude-code\": \"workspace:*\",\n    \"@orchestra/maestro\": \"workspace:*\",\n    \"@orchestra/server\": \"workspace:*\",\n    \"@orchestra/tui\": \"workspace:*\",\n    \"@opentui/core\": \"catalog:\",\n    \"@opentui/solid\": \"catalog:\",\n    \"bonjour-service\": \"1.3.0\",\n    \"@parcel/watcher\": \"2.5.1\",\n    \"drizzle-orm\": \"catalog:\",\n    \"effect\": \"catalog:\",\n    \"solid-js\": \"catalog:\"\n  },\n  \"devDependencies\": {\n    \"@orchestra/omni-campaign\": \"workspace:*\",\n    \"@orchestra/script\": \"workspace:*\",\n    \"@tsconfig/bun\": \"catalog:\",\n    \"@types/bun\": \"catalog:\",\n    \"@typescript/native-preview\": \"catalog:\"\n  }\n}\n"
+        }
+      ]
+    },
+    {
+      "id": "B-S02",
+      "path": "apps/cli/src/commands/handlers/serve.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "f11a2c92019d75847eac7b87d0b762cf944e7c93",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "full_content",
+      "read_note": "Fetched complete blob and inspected full displayed content.",
+      "decisive_ranges": [
+        [
+          1,
+          24
+        ],
+        [
+          122,
+          135
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/apps/cli/src/commands/handlers/serve.ts",
+      "ownership": {
+        "owner": "S5",
+        "rule_type": "longest_directory_prefix",
+        "rule": "apps/cli/"
+      },
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 24,
+          "text": "import { NodeHttpServer } from \"@effect/platform-node\"\nimport { ClaudeCodeAccount } from \"@orchestra/core/claude-code-account\"\nimport { Credential } from \"@orchestra/core/credential\"\nimport { Database } from \"@orchestra/core/database/database\"\nimport { AppNodeBuilder } from \"@orchestra/core/effect/app-node-builder\"\nimport { LayerNode } from \"@orchestra/core/effect/layer-node\"\nimport { PermissionSaved } from \"@orchestra/core/permission/saved\"\nimport { SessionV2 } from \"@orchestra/core/session\"\nimport { Context, Layer, Option } from \"effect\"\nimport * as Effect from \"effect/Effect\"\nimport { HttpRouter, HttpServer } from \"effect/unstable/http\"\nimport { createServer } from \"node:http\"\nimport { writeSync } from \"node:fs\"\nimport path from \"node:path\"\nimport { WebUi } from \"@orchestra/server/web-ui\"\nimport { createRoutes } from \"@orchestra/server/routes\"\nimport { AppDockSocket } from \"@orchestra/app-dock/socket-transport\"\nimport { Commands } from \"../commands\"\nimport { ProductHost } from \"../../host\"\nimport { ChildProcessSpawner } from \"effect/unstable/process/ChildProcessSpawner\"\nimport { Runtime } from \"../../framework/runtime\"\nimport { Daemon } from \"../../services/daemon\"\nimport { addressInUse } from \"./serve-port\"\nimport { ServeShutdown } from \"./serve-shutdown\""
+        },
+        {
+          "start_line": 122,
+          "end_line": 135,
+          "text": "function bind(hostname: string, port: number, password: string, host: ReturnType<typeof hosts>, root: string | undefined, cors?: ReadonlyArray<string>) {\n  const server = createServer()\n  return Layer.build(\n    HttpRouter.serve(createRoutes({ password, host, webRoot: root, cors }), { disableListenLog: true, disableLogger: true }).pipe(\n      Layer.provideMerge(NodeHttpServer.layer(() => server, { port, host: hostname })),\n      Layer.provide(AppNodeBuilder.build(LayerNode.group([Credential.node, PermissionSaved.node, ClaudeCodeAccount.node]))),\n    ),\n  ).pipe(Effect.map((context) => ({ address: Context.get(context, HttpServer.HttpServer).address, server })))\n}\n\n// The Dock tools exist only when the desktop that owns this child handed it a Dock channel.\nfunction hosts() {\n  return ProductHost.contributions(AppDockSocket.fromEnv())\n}"
+        }
+      ]
+    },
+    {
+      "id": "B-S03",
+      "path": "packages/server/src/routes.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "75b0f9753e4c879767ef186f5003519e2b681025",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "partial_content",
+      "read_note": "Fetched complete blob; inspected selected imports, declarations and numbered excerpts only. No whole-file semantic coverage claimed.",
+      "decisive_ranges": [
+        [
+          81,
+          139
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/server/src/routes.ts",
+      "ownership": {
+        "owner": "S1",
+        "rule_type": "longest_directory_prefix",
+        "rule": "packages/server/"
+      },
+      "excerpts": [
+        {
+          "start_line": 81,
+          "end_line": 139,
+          "text": "export interface Options {\n  readonly password?: string\n  /** Product contributions the application composes (apps/cli `CliHost.contributions`); sdk-next passes none. */\n  readonly host?: ReadonlyArray<Host.Contribution>\n  /** Directory of the built web UI; when set, the server also serves it at `/`. */\n  readonly webRoot?: string\n  /** Extra origins the server answers cross-origin, besides the local and desktop ones. */\n  readonly cors?: ReadonlyArray<string>\n  /** Replaces the capability operator; tests and sdk-next embed their own. */\n  readonly operator?: CapabilityOperatorContract.Interface\n  /** Replaces the capability setup verifier; tests avoid vendor calls with it. */\n  readonly verifier?: CapabilityConnectionSetupContract.Verifier\n}\n\nexport function createRoutes(options: Options = {}) {\n  return makeRoutes(\n    options.password\n      ? ServerAuth.Config.configLayer({ username: \"orchestra\", password: Option.some(options.password) })\n      : ServerAuth.Config.layer,\n    options,\n  )\n}\n\nexport function createEmbeddedRoutes(options: Pick<Options, \"host\" | \"operator\" | \"verifier\"> = {}) {\n  return makeRoutes(ServerAuth.Config.configLayer({ username: \"orchestra\", password: Option.none() }), options)\n}\n\nfunction makeRoutes<AuthError, AuthServices>(\n  auth: Layer.Layer<ServerAuth.Config, AuthError, AuthServices>,\n  options: Omit<Options, \"password\">,\n) {\n  const merged = Host.merge(options.host ?? [])\n  // Contributed global nodes add services and may not fail, so the root keeps the application services' types.\n  const serviceLayer: Layer.Layer<\n    LayerNode.Output<typeof applicationServices>,\n    LayerNode.Error<typeof applicationServices>\n  > = AppNodeBuilder.build(\n    LayerNode.group([applicationServices, ...merged.nodes]),\n    [[SessionExecution.node, SessionExecutionLocal.node], ...merged.replacements],\n    merged.locationNodes,\n  )\n\n  const api = HttpApiBuilder.layer(Api, { openapiPath: \"/openapi.json\" }).pipe(\n    Layer.provide(handlers),\n    Layer.provide(merged.references),\n    Layer.provide(sessionLocationLayer),\n    Layer.provide(locationLayer),\n    Layer.provide(authorizationLayer),\n    Layer.provide(capabilityAuthorizationLayer),\n    Layer.provide(schemaErrorLayer),\n    Layer.provide(auth),\n    Layer.provide(options.operator ? Layer.succeed(ServerOperator.Service, options.operator) : ServerOperator.layer),\n    Layer.provide(ServerContentTicket.layer),\n    Layer.provide(options.verifier ? Layer.succeed(ServerCapabilityVerification.Service, options.verifier) : ServerCapabilityVerification.layer),\n    Layer.provide(serviceLayer),\n    // The desktop renderer (`oc://renderer`) calls a desktop-owned server cross-origin, as the earlier runtime did.\n    Layer.provide(corsLayer({ cors: options.cors })),\n  )\n  return Layer.merge(api, options.webRoot ? WebUi.layer(options.webRoot) : Layer.empty)"
+        }
+      ]
+    },
+    {
+      "id": "B-S04",
+      "path": "packages/core/src/host.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "a0fc5bc9a36e50315b0ddddf4de3566555711250",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "full_content",
+      "read_note": "Fetched complete blob and inspected full displayed content.",
+      "decisive_ranges": [
+        [
+          15,
+          59
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/host.ts",
+      "ownership": {
+        "owner": "S1",
+        "rule_type": "longest_directory_prefix",
+        "rule": "packages/core/"
+      },
+      "excerpts": [
+        {
+          "start_line": 15,
+          "end_line": 59,
+          "text": "/** Global services every composition root provides to a contribution's reference overrides. */\nexport type ReferenceServices =\n  | Database.Service\n  | EventV2.Service\n  | LocationServiceMap.Service\n  | ClaudeCodeAccount.Service\n\n/**\n * What a product module hands a composition root. A root applies all contributions once, to its single\n * application graph (AGENTS \"V2 Session Core\": one process-local SessionExecution, one Location map).\n */\nexport interface Contribution {\n  /** Stable module id (\"maestro\", \"app-dock\", ...). Duplicates are a composition error. */\n  readonly id: string\n  /** Node replacements for the root graph; AppNodeBuilder also applies them to every Location map it builds. */\n  readonly replacements?: LayerNode.Replacements\n  /** Extra global nodes owned by the module. They must not fail: the root's error type does not grow. */\n  readonly nodes?: ReadonlyArray<Node.GlobalNode<unknown>>\n  /** Extra Location-scoped nodes appended to `locationServices` in every Location map the root builds. */\n  readonly locationNodes?: ReadonlyArray<Node.LocationNode<unknown, LocationError>>\n  /** Context.Reference overrides (core/host/* references), provided to the API layer. */\n  readonly references?: Layer.Layer<never, never, ReferenceServices>\n}\n\n// One coordinator per process: these stay owned by the composition root.\nconst reserved = [SessionExecution.node, SessionV2.node, LocationServiceMap.node, ScheduledTask.node, ScheduledTask.daemonNode]\n\n/** Flatten contributions in order; synchronous because it only validates data. */\nexport function merge(contributions: ReadonlyArray<Contribution>) {\n  const duplicate = repeated(contributions.map((item) => item.id))\n  if (duplicate) throw new Error(`Host contribution id is not unique: ${duplicate}`)\n  const replacements = contributions.flatMap((item) => item.replacements ?? [])\n  const nodes = contributions.flatMap((item) => item.nodes ?? [])\n  const locationNodes = contributions.flatMap((item) => item.locationNodes ?? [])\n  const claimed = [...replacements.map(([source]) => source), ...nodes].find((node) => reserved.some((owned) => owned.name === node.name))\n  if (claimed) throw new Error(`Host contribution may not own ${claimed.name}`)\n  const node = repeated(nodes.map((item) => item.name))\n  if (node) throw new Error(`Host contribution node is not unique: ${node}`)\n  // A contributed Location node may not shadow a built-in one either; changing a built-in is a replacement.\n  const builtIn = new Set(locationServices.dependencies.map((item) => item.name))\n  const location = repeated(locationNodes.map((item) => item.name)) ?? locationNodes.find((item) => builtIn.has(item.name))?.name\n  if (location) throw new Error(`Host contribution Location node is not unique: ${location}`)\n  const [first, ...rest] = contributions.flatMap((item) => (item.references ? [item.references] : []))\n  const references: Layer.Layer<never, never, ReferenceServices> = !first ? Layer.empty : rest.length === 0 ? first : Layer.mergeAll(first, ...rest)\n  return { replacements, nodes, locationNodes, references }"
+        }
+      ]
+    },
+    {
+      "id": "B-S05",
+      "path": "apps/cli/src/host.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "cc89adc3a11e2bd3e7d779642382ed86dfceab31",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "full_content",
+      "read_note": "Fetched complete blob and inspected full displayed content.",
+      "decisive_ranges": [
+        [
+          1,
+          29
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/apps/cli/src/host.ts",
+      "ownership": {
+        "owner": "S5",
+        "rule_type": "longest_directory_prefix",
+        "rule": "apps/cli/"
+      },
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 29,
+          "text": "export * as ProductHost from \"./host\"\n\nimport type { Host } from \"@orchestra/core/host\"\nimport { AppDockTools } from \"@orchestra/app-dock/application-tools\"\nimport { ContinuityV2 } from \"@orchestra/continuity/v2\"\nimport { ClaudeCodeHost } from \"@orchestra/engine-claude-code/v2/host\"\nimport { MaestroSeatsV2 } from \"@orchestra/maestro/v2/seats\"\n\n/**\n * Everything the product's V2 server composes, in the order it is applied. `Host.merge` flattens replacements in this\n * order and the last replacement of a node wins, so a later entry may refine an earlier one but none may depend on a\n * node an earlier one replaced differently. Today no two entries replace the same node, except inside Maestro, whose own\n * list orders its ToolSafety replacements (Arsenal first, write-roots last).\n *\n * 1. `maestro`: seats, Maestro and Atlas tools, the Arsenal's native safety, Task governance and write-roots safety.\n * 2. `continuity`: replaces `SessionCompaction` and adds `context_recall` / `context_compact`. It sits after Maestro\n *    because the seats' skills and prompts are the context it masks and summarizes, and it touches none of Maestro's nodes.\n * 3. `engine-claude-code`: replaces `ExecutionHost`, for agents whose `engine` names it.\n * 4. `app-dock`: only when the desktop that owns this child handed it a Dock channel.\n */\nexport function contributions(dock?: Parameters<typeof AppDockTools.contribution>[0]): ReadonlyArray<Host.Contribution> {\n  return [\n    MaestroSeatsV2.contribution,\n    ContinuityV2.contribution,\n    ClaudeCodeHost.contribution,\n    ...(dock ? [AppDockTools.contribution(dock)] : []),\n  ]\n}\n"
+        }
+      ]
+    },
+    {
+      "id": "B-S06",
+      "path": "modules/maestro/coordination/src/v2/seats.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "f27ddca3b35551b16482f7032197af7cba25e3e6",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "full_content",
+      "read_note": "Fetched complete blob and inspected full displayed content.",
+      "decisive_ranges": [
+        [
+          3,
+          28
+        ],
+        [
+          32,
+          50
+        ],
+        [
+          235,
+          258
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/maestro/coordination/src/v2/seats.ts",
+      "ownership": {
+        "owner": "S3",
+        "rule_type": "longest_directory_prefix",
+        "rule": "modules/maestro/"
+      },
+      "excerpts": [
+        {
+          "start_line": 3,
+          "end_line": 28,
+          "text": "import path from \"path\"\nimport { Effect, Layer, Option } from \"effect\"\nimport { AgentV2 } from \"@orchestra/core/agent\"\nimport { BoardTools } from \"@orchestra/core/board/tools\"\nimport { makeLocationNode } from \"@orchestra/core/effect/app-node\"\nimport type { Host } from \"@orchestra/core/host\"\nimport type { PermissionV2 } from \"@orchestra/core/permission\"\nimport { PluginV2 } from \"@orchestra/core/plugin\"\nimport { ResearchSeatTools } from \"@orchestra/core/research/seat-tools\"\nimport { SkillV2 } from \"@orchestra/core/skill\"\nimport { ArsenalNative } from \"../arsenal-native\"\nimport { MaestroGovernanceV2 } from \"./governance\"\nimport { Seats } from \"../seats\"\nimport { SeatSkillContent } from \"../seat-skill-content\"\nimport { MaestroAtlasHeaderV2 } from \"./atlas-header-source\"\nimport { MaestroBoardDriftV2 } from \"./board-drift-source\"\nimport { MaestroAtlasRestoreV2 } from \"./atlas-restore\"\nimport { MaestroResearchInquiryV2 } from \"./research-inquiry-source\"\nimport { MaestroSeats } from \"./seats-service\"\nimport { MaestroSkillSourcesV2 } from \"./skill-sources\"\nimport { MaestroTeamV2 } from \"./team-source\"\nimport { MaestroGuideIndexV2 } from \"./guide-index-source\"\nimport { MaestroToolsV2 } from \"./tools\"\nimport { MaestroAtlasToolV2 } from \"./tools/atlas\"\nimport { MaestroResearchTools } from \"./tools/research\"\nimport { MaestroWorkflowHostV2 } from \"./workflow/host\""
+        },
+        {
+          "start_line": 32,
+          "end_line": 50,
+          "text": "/**\n * Projects every native seat of the roster into the Location's V2 agents as a subagent (a direct seat as a primary\n * agent) with its charter and task-tool description, and its native profile as the last rules, so configuration cannot\n * widen it (findLast wins). Maestro itself\n * is core's default agent; configuration (`agent.<id>`) installed before this plugin keeps its prompt and description,\n * and the seat's engine, model and display label stay the owner's settings. Every agent then gets the `visibility`\n * denials, every seat its own skill tree as skills, and Maestro its playbooks.\n *\n * The roster loads lazily: it materializes the seats' skill trees and the playbooks, which only an Orchestra build\n * packages. Where they are missing (the standalone CLI binary today) the seats and playbooks are skipped with a warning\n * and the Location still opens; the denials apply regardless.\n */\nconst layer = Layer.effectDiscard(\n  Effect.gen(function* () {\n    const plugins = yield* PluginV2.Service\n    const agents = yield* AgentV2.Service\n    const skills = yield* SkillV2.Service\n    const seats = yield* MaestroSeats.Service\n    const loaded = yield* Effect.tryPromise(() =>"
+        },
+        {
+          "start_line": 235,
+          "end_line": 258,
+          "text": "export const node = makeLocationNode({\n  name: \"maestro/seats\",\n  layer,\n  deps: [PluginV2.node, AgentV2.node, SkillV2.node, MaestroSeats.node],\n})\n\n/** Maestro on V2: native seats as agents, Maestro's native and Atlas tools, the Atlas header and resume, Maestro's board drift and guide index, the research seat's inquiry snapshot, the Arsenal's native safety owner and Maestro's Task governance in every Location, plus the workflow completion host and Maestro's board tools. */\nexport const contribution: Host.Contribution = {\n  id: \"maestro\",\n  replacements: [...ArsenalNative.nativeRegistryReplacements, ...MaestroGovernanceV2.replacements],\n  nodes: [MaestroWorkflowHostV2.node, BoardTools.node],\n  locationNodes: [\n    MaestroSeats.node,\n    node,\n    MaestroToolsV2.node,\n    MaestroAtlasToolV2.node,\n    MaestroAtlasHeaderV2.node,\n    MaestroBoardDriftV2.node,\n    MaestroTeamV2.node,\n    MaestroGuideIndexV2.node,\n    MaestroAtlasRestoreV2.node,\n    MaestroResearchInquiryV2.node,\n  ],\n}"
+        }
+      ]
+    },
+    {
+      "id": "B-S07",
+      "path": "modules/maestro/coordination/src/seats/index.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "a4f0ecf5b5144f91837571286f91fc552be0c826",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "full_content",
+      "read_note": "Fetched complete blob and inspected full displayed content.",
+      "decisive_ranges": [
+        [
+          1,
+          32
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/maestro/coordination/src/seats/index.ts",
+      "ownership": {
+        "owner": "S3",
+        "rule_type": "longest_directory_prefix",
+        "rule": "modules/maestro/"
+      },
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 32,
+          "text": "export * as Seats from \".\"\n\nimport backend from \"./backend\"\nimport archie from \"./archie\"\nimport patty from \"./patty\"\nimport lucy from \"./lucy\"\nimport billy from \"./billy\"\nimport jimmy from \"./jimmy\"\nimport rosie from \"./rosie\"\nimport frankie from \"./frankie\"\nimport live from \"./live\"\nimport type { Seat } from \"./seat\"\n// seat-imports:end\n\nexport type { Seat } from \"./seat\"\nexport { skillSource, sharedSource } from \"./seat\"\n\n// One import and one entry per seat, keyed by its id, in roster order; `script/seat.ts add` writes both.\nexport const all: Readonly<Record<string, Seat>> = Object.freeze({\n  [backend.id]: backend,\n  [archie.id]: archie,\n  [patty.id]: patty,\n  [lucy.id]: lucy,\n  [billy.id]: billy,\n  [jimmy.id]: jimmy,\n  [rosie.id]: rosie,\n  [frankie.id]: frankie,\n  [live.id]: live,\n  // seat-entries:end\n})\n\nfor (const role of [\"research\", \"planner\", \"approves\"] as const) {"
+        }
+      ]
+    },
+    {
+      "id": "B-S08",
+      "path": "modules/maestro/coordination/src/v2/workflow/host.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "111dac220a84bdeffe94956244b728b29eb98ea4",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "partial_content",
+      "read_note": "Fetched complete blob; inspected selected imports, declarations and numbered excerpts only. No whole-file semantic coverage claimed.",
+      "decisive_ranges": [
+        [
+          14,
+          29
+        ],
+        [
+          79,
+          119
+        ],
+        [
+          403,
+          417
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/maestro/coordination/src/v2/workflow/host.ts",
+      "ownership": {
+        "owner": "S3",
+        "rule_type": "longest_directory_prefix",
+        "rule": "modules/maestro/"
+      },
+      "excerpts": [
+        {
+          "start_line": 14,
+          "end_line": 29,
+          "text": "import { Relay } from \"@orchestra/core/relay\"\nimport { RelayWorkflowBinding } from \"@orchestra/core/relay-workflow-binding\"\nimport { RelayWorkflowSession } from \"@orchestra/core/relay-workflow-session\"\nimport { SessionStore, SessionV2 } from \"@orchestra/core/session\"\nimport { SessionExecution } from \"@orchestra/core/session/execution\"\nimport { SkillV2 } from \"@orchestra/core/skill\"\nimport { MaestroEvent } from \"@orchestra/schema/maestro-event\"\nimport type { RelayArm } from \"@orchestra/schema/relay-arm\"\nimport { SessionID } from \"@orchestra/schema/session-id\"\nimport { SessionMessage } from \"@orchestra/core/session/message\"\nimport { WorkflowGateV2 } from \"../governance/workflow\"\nimport { MaestroSeats } from \"../seats-service\"\nimport { WorkflowArmV2 } from \"./arm\"\nimport { WorkflowRecordsV2 } from \"./records\"\nimport { WorkflowRelayV2 } from \"./relay\"\nimport { WorkflowSettlementV2 } from \"./settlement\""
+        },
+        {
+          "start_line": 79,
+          "end_line": 119,
+          "text": "    // The placement a binding names, opened in its authority Session's Location: the Relay that holds its arm, the\n    // publication port that revalidates its plan and the two global acceptance checks bound to that Session.\n    const within = <A, E>(\n      bound: Bound,\n      use: (placement: {\n        readonly relay: Relay.Interface\n        readonly revalidate: Effect.Effect<Effect.Success<ReturnType<typeof RelayWorkflowBinding.revalidate>>, RelayWorkflowBinding.Held>\n        readonly checks: ReadonlyMap<string, Effect.Effect<WorkflowSettlementV2.Outcome, unknown>>\n        readonly host: Pick<WorkflowSettlementV2.Binding, \"projectID\" | \"sessionID\" | \"directory\">\n      }) => Effect.Effect<A, E>,\n    ) =>\n      Effect.gen(function* () {\n        const authority = yield* store.get(SessionV2.ID.make(bound.binding.authoritySessionID))\n        if (!authority) return yield* new RelayWorkflowBinding.Held({ reason: \"WORKFLOW_HOST_LINEAGE_MISMATCH\" })\n        const arm = (yield* WorkflowArmV2.arms(database, authority.id)).find((entry) => entry.token === bound.token)\n        if (!arm || arm.projectID !== authority.projectID || arm.directory !== authority.location.directory)\n          return yield* new RelayWorkflowBinding.Held({ reason: \"WORKFLOW_ARM_PLACEMENT_MISMATCH\" })\n        return yield* Effect.gen(function* () {\n          const relay = yield* Relay.Service\n          const permission = yield* PermissionV2.Service\n          const config = yield* Config.Service\n          const skills = yield* SkillV2.Service\n          // A contributed Location node: present in every Maestro Location, though the map's type names only core services.\n          const seats = Option.getOrElse(yield* Effect.serviceOption(MaestroSeats.Service), () => MaestroSeats.make([]))\n          const port = yield* WorkflowRelayV2.publication(relay, authority, {\n            store,\n            seats,\n            atlas: { config, git, fs, skills },\n          })\n          const directory = authority.location.directory\n          const binding = {\n            sessionID: authority.id,\n            projectID: authority.projectID,\n            planID: bound.binding.planRevisionID,\n            taskID: bound.executionSessionID,\n            directory,\n          }\n          return yield* use({\n            relay,\n            revalidate: RelayWorkflowBinding.revalidate(port, bound.binding.definition).pipe(\n              Effect.mapError((error) =>"
+        },
+        {
+          "start_line": 403,
+          "end_line": 417,
+          "text": "export const node = makeGlobalNode({\n  service: Service,\n  layer,\n  deps: [\n    Database.node,\n    SessionStore.node,\n    LocationServiceMap.node,\n    EventV2.node,\n    RelayWorkflowSession.node,\n    GitCli.node,\n    FSUtil.node,\n    AppProcess.node,\n  ],\n})\n"
+        }
+      ]
+    },
+    {
+      "id": "B-S09",
+      "path": "modules/maestro/coordination/src/v2/workflow/relay.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "66c147f58f29334e1cfe541f240c14619a87d05c",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "full_content",
+      "read_note": "Fetched complete blob and inspected full displayed content.",
+      "decisive_ranges": [
+        [
+          3,
+          14
+        ],
+        [
+          33,
+          78
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/maestro/coordination/src/v2/workflow/relay.ts",
+      "ownership": {
+        "owner": "S3",
+        "rule_type": "longest_directory_prefix",
+        "rule": "modules/maestro/"
+      },
+      "excerpts": [
+        {
+          "start_line": 3,
+          "end_line": 14,
+          "text": "import { Buffer } from \"node:buffer\"\nimport path from \"node:path\"\nimport { Effect } from \"effect\"\nimport { AuthoringGraph } from \"@orchestra/relay/authoring/graph\"\nimport { AuthoringStore } from \"@orchestra/relay/authoring/store\"\nimport { Location } from \"@orchestra/core/location\"\nimport { LocationServiceMap } from \"@orchestra/core/location-services\"\nimport { Relay } from \"@orchestra/core/relay\"\nimport { RelayWorkflowBinding } from \"@orchestra/core/relay-workflow-binding\"\nimport { AbsolutePath } from \"@orchestra/core/schema\"\nimport type { ProjectID } from \"@orchestra/schema/project-id\"\nimport { WorkflowKnowledgeV2 } from \"./knowledge\""
+        },
+        {
+          "start_line": 33,
+          "end_line": 78,
+          "text": "\n/**\n * The published authoring documents a workflow plan binds to, read through the placement's Relay store, with the\n * placement's skill catalog for the skills they name, the Atlas anchors they cite and the global acceptance checks.\n * The caller supplies the placement's Relay: a Location tool its own, the global workflow host the one `relay` opens.\n * A Relay whose data root names another project holds before any document is read.\n */\nexport const publication = Effect.fn(\"WorkflowRelayV2.publication\")(function* (\n  service: Relay.Interface,\n  placement: { readonly projectID: ProjectID },\n  services: WorkflowKnowledgeV2.Services,\n) {\n  if (path.basename(service.paths.root) !== placement.projectID)\n    return yield* new RelayWorkflowBinding.Held({ reason: \"WORKFLOW_PUBLICATION_PROJECT_MISMATCH\" })\n  return {\n    projectID: placement.projectID,\n    acceptance: ACCEPTANCE_CONTROLS,\n    knowledge: (reference, authorSessionID) =>\n      WorkflowKnowledgeV2.resolve(services, { projectID: placement.projectID, authorSessionID, reference }).pipe(\n        Effect.mapError((error) => new RelayWorkflowBinding.Held({ reason: `WORKFLOW_KNOWLEDGE_${error.reason}` })),\n      ),\n    skills: (name) =>\n      services.atlas.skills.list().pipe(\n        Effect.flatMap((list) => {\n          const skill = list.find((entry) => entry.name === name)\n          if (!skill || !skill.content.trim() || skill.content.includes(\"\\0\") || Buffer.byteLength(skill.content) > 2 * 1024 * 1024)\n            return Effect.fail(new AuthoringGraph.Refusal({ status: 404, code: \"skill-unavailable\", message: \"Skill unavailable\" }))\n          return Effect.succeed({\n            id: skill.name,\n            content: skill.content,\n            sha256: RelayWorkflowBinding.digest(Buffer.from(skill.content)),\n          })\n        }),\n      ),\n    use: <A, E>(read: (store: Pick<AuthoringStore.Interface, \"get\" | \"version\" | \"documents\">) => Effect.Effect<A, E>) =>\n      Effect.scoped(\n        Effect.gen(function* () {\n          const store = yield* AuthoringStore.open(service.paths.root, placement.projectID)\n          return yield* read({ get: store.get, version: store.version, documents: store.documents })\n        }),\n      ).pipe(\n        // The store opens synchronously and dies on a bad database; that is an acquisition hold, not a crash.\n        Effect.catchDefect(() => Effect.fail(new RelayWorkflowBinding.Held({ reason: \"WORKFLOW_PUBLICATION_ACQUISITION\" }))),\n      ),\n  } satisfies RelayWorkflowBinding.PublicationPort\n})"
+        }
+      ]
+    },
+    {
+      "id": "B-S10",
+      "path": "modules/relay/src/authoring/store.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "b11d17cd55ffa69a307130a31ab44d01ac7e477d",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "partial_content",
+      "read_note": "Fetched complete blob; inspected selected imports, declarations and numbered excerpts only. No whole-file semantic coverage claimed.",
+      "decisive_ranges": [
+        [
+          42,
+          78
+        ],
+        [
+          148,
+          177
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/src/authoring/store.ts",
+      "ownership": {
+        "owner": "S3",
+        "rule_type": "longest_directory_prefix",
+        "rule": "modules/relay/"
+      },
+      "excerpts": [
+        {
+          "start_line": 42,
+          "end_line": 78,
+          "text": "export interface Interface {\n  readonly documents: () => Effect.Effect<ReadonlyArray<RelayAuthoring.Document>>\n  readonly get: (id: string) => Effect.Effect<RelayAuthoring.Document, AuthoringGraph.Refusal>\n  readonly save: (input: SaveInput) => Effect.Effect<RelayAuthoring.Document, AuthoringGraph.Refusal>\n  // Saves only when the ID is new.\n  readonly seed: (id: string, body: Partial<RelayAuthoring.Document>) => Effect.Effect<void, AuthoringGraph.Refusal>\n  readonly remove: (id: string) => Effect.Effect<void, AuthoringGraph.Refusal>\n  readonly versions: (id: string) => Effect.Effect<ReadonlyArray<RelayAuthoring.Version>>\n  readonly version: (id: string, versionID: string) => Effect.Effect<RelayAuthoring.Version, AuthoringGraph.Refusal>\n  // `principal`, when given, is recorded as `publishedBy` or `unpublishedBy` (PARITY-EXCEPTIONS W14-1).\n  readonly publish: (\n    id: string,\n    versionID: string,\n    expectedChecksum?: string,\n    principal?: string,\n  ) => Effect.Effect<RelayAuthoring.Document, AuthoringGraph.Refusal>\n  readonly unpublish: (\n    id: string,\n    expectedChecksum?: string,\n    principal?: string,\n  ) => Effect.Effect<RelayAuthoring.Document, AuthoringGraph.Refusal>\n  readonly scopes: () => Effect.Effect<ReadonlyArray<RelayAuthoring.Scope>>\n  readonly saveScope: (\n    body: { readonly name: string; readonly description?: string },\n    id?: string,\n  ) => Effect.Effect<RelayAuthoring.Scope, AuthoringGraph.Refusal>\n  readonly removeScope: (id: string) => Effect.Effect<void, AuthoringGraph.Refusal>\n}\n\nexport class Service extends Context.Service<Service, Interface>()(\"@orchestra/relay/AuthoringStore\") {}\n\n// Opens `<dataDir>/authoring.sqlite3` scoped to one workspace (WAL, foreign keys on); closing the scope closes it.\nexport const open = (dataDir: string, workspaceID: string): Effect.Effect<Interface, never, Scope.Scope> =>\n  Effect.gen(function* () {\n    // Acquire and release stay synchronous: an async step in a release is dropped when the fiber is interrupted.\n    const db = yield* Effect.acquireRelease(\n      Effect.sync(() => {"
+        },
+        {
+          "start_line": 148,
+          "end_line": 177,
+          "text": "    }\n\n    return {\n      documents: () => Effect.sync(documents),\n      get: (id) => AuthoringGraph.refusing(Effect.sync(() => row<RelayAuthoring.Document>(\"documents\", id))),\n      save: (input) => write((now) => save(input, now)),\n      seed: (id, body) =>\n        write((now) => {\n          if (db.get(\"SELECT 1 FROM documents WHERE workspace=? AND id=?\", workspaceID, id)) return\n          save({ body, createID: id }, now)\n        }),\n      remove: (id) =>\n        write(() => {\n          row(\"documents\", id)\n          drop(\"documents\", id)\n        }),\n      versions: (id) =>\n        Effect.sync(() =>\n          rows<RelayAuthoring.Version>(\n            \"SELECT body FROM versions WHERE workspace=? AND document_id=? ORDER BY rowid DESC\",\n            id,\n          ),\n        ),\n      version: (id, versionID) =>\n        AuthoringGraph.refusing(\n          Effect.sync(() => {\n            const version = row<RelayAuthoring.Version>(\"versions\", versionID)\n            if (version.workflowId !== id) return AuthoringGraph.refuse(\"Version not found\", 404, \"not-found\")\n            return version\n          }),"
+        }
+      ]
+    },
+    {
+      "id": "B-S11",
+      "path": "packages/core/src/relay.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "25fb509203f933a2e8b0f311c3fc8f9476d53e16",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "partial_content",
+      "read_note": "Fetched complete blob; inspected selected imports, declarations and numbered excerpts only. No whole-file semantic coverage claimed.",
+      "decisive_ranges": [
+        [
+          9,
+          21
+        ],
+        [
+          120,
+          174
+        ],
+        [
+          493,
+          542
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/relay.ts",
+      "ownership": {
+        "owner": "S1",
+        "rule_type": "longest_directory_prefix",
+        "rule": "packages/core/"
+      },
+      "excerpts": [
+        {
+          "start_line": 9,
+          "end_line": 21,
+          "text": "import { RelayArm } from \"@orchestra/schema/relay-arm\"\nimport { ArmCreate } from \"@orchestra/relay/arm/create\"\nimport { ArmEvaluate } from \"@orchestra/relay/arm/evaluate\"\nimport { ArmLoad } from \"@orchestra/relay/arm/load\"\nimport { ArmState } from \"@orchestra/relay/arm/state\"\nimport { RelayAudit } from \"@orchestra/relay/audit\"\nimport { GateCheck } from \"@orchestra/relay/gate/check\"\nimport { GateControl } from \"@orchestra/relay/gate/control\"\nimport { GateShell } from \"@orchestra/relay/gate/shell\"\nimport { RelayJson } from \"@orchestra/relay/json\"\nimport { JudgeConfig } from \"@orchestra/relay/judge/config\"\nimport { LedgerChain } from \"@orchestra/relay/ledger/chain\"\nimport { LedgerRead } from \"@orchestra/relay/ledger/read\""
+        },
+        {
+          "start_line": 120,
+          "end_line": 174,
+          "text": "export interface Interface {\n  readonly paths: Paths\n  readonly judge: JudgeConfig.Config\n  // One hook check through the gate core, recorded in the install's ledger. Verifies run one at a time.\n  readonly verify: (input: VerifyInput) => Effect.Effect<Verified>\n  // The dry \"Check now\": grades a WP and records nothing.\n  readonly check: (\n    input: Omit<GateCheck.Input, \"stateDir\">,\n  ) => Effect.Effect<RelayArm.CheckOutcome, GateCheck.Busy | GateControl.PlanError>\n  // Whether the user approved this project's own commands (the gate on `trial`).\n  readonly trusted: Effect.Effect<boolean>\n  // \"Test now\": runs one check command in the project as a check would, and returns its output. It grades nothing,\n  // records nothing and cannot pass a step; only a trusted project may run one.\n  readonly trial: (input: {\n    readonly command: string\n    readonly params?: Readonly<Record<string, string>>\n  }) => Effect.Effect<Trial, Untrusted | GateShell.Unavailable>\n  readonly create: (\n    input: ArmCreate.Input,\n  ) => Effect.Effect<\"created\" | \"unchanged\", ArmCreate.Conflict | ArmState.StateError | Unavailable>\n  // Moves a workflow arm that graded nothing from one execution Session to another (ArmCreate.rebind).\n  readonly rebind: (\n    input: ArmCreate.Input & { readonly agentID: string; readonly from: string },\n  ) => Effect.Effect<\"rebound\" | \"unchanged\", ArmCreate.Conflict | ArmState.StateError | ArmState.Busy | Unavailable>\n  // The execution Session holding an arm (ArmCreate.holder).\n  readonly holder: (token: RelayArm.Token) => Effect.Effect<Option.Option<string>, ArmState.StateError | Unavailable>\n  readonly evaluate: (input: RelayArm.EvaluateInput) => Effect.Effect<RelayArm.Evaluation, Unavailable>\n  readonly currentStep: (token: RelayArm.Token, binding: RelayArm.WorkflowBinding) =>\n    Effect.Effect<RelayWorkflowCurrentStep.View, RelayWorkflowBinding.Held | Unavailable>\n  readonly transition: (input: RelayWorkflowTransition.Input) =>\n    Effect.Effect<RelayArm.Evaluation, RelayWorkflowBinding.Held | Unavailable>\n  readonly release: (\n    token: RelayArm.Token,\n    reason: string,\n  ) => Effect.Effect<void, ArmState.StateError | ArmState.Busy | Unavailable>\n  // Whether the arm is parked awaiting its owner, read without the run lock and without running a check.\n  readonly parked: (\n    token: RelayArm.Token,\n  ) => Effect.Effect<Option.Option<ArmEvaluate.Parked>, ArmState.StateError | Unavailable>\n  // `relay verify` of the arm with this project's key: chain integrity, controls and the oracle recheck.\n  readonly audit: (\n    token: RelayArm.Token,\n  ) => Effect.Effect<RelayAudit.VerifyReport, ArmState.StateError | LedgerRead.Missing | Unavailable>\n  // Clears a stale `.run.lock` with a `gate-recovered` note (R6); true when one was cleared.\n  readonly recover: (\n    token: RelayArm.Token,\n  ) => Effect.Effect<boolean, ArmState.StateError | LedgerChain.AppendError | RelayJson.EncodeError | Unavailable>\n  // Appends one note to an install's ledger, stamping `ts` first.\n  readonly record: (\n    installID: string,\n    body: Readonly<Record<string, unknown>>,\n  ) => Effect.Effect<LedgerChain.Appended, LedgerChain.AppendError | RelayJson.EncodeError | Unavailable>\n}\n\nexport class Service extends Context.Service<Service, Interface>()(\"@orchestra/Relay\") {}"
+        },
+        {
+          "start_line": 493,
+          "end_line": 542,
+          "text": "        // Bound progressive arms may only cross the guarded native settlement boundary; an API/CLI evaluate cannot\n        // spend their retry budget or advance them. Missing/invalid arm data remains the existing engine's defect.\n        const bound = yield* ArmLoad.arm(path.join(paths.arms, input.token)).pipe(Effect.option)\n        if (Option.isSome(bound) && bound.value.meta.workflow)\n          return { outcome: \"refused\" as const, failing: [], ledgerSeq: -1,\n            reason: \"WORKFLOW_NATIVE_SETTLEMENT_REQUIRED\" }\n        yield* recover(input.token).pipe(Effect.ignore)\n        return yield* armed(ArmEvaluate.evaluate(input))\n      }),\n      currentStep: Effect.fn(\"Relay.currentStep\")(function* (token: RelayArm.Token, binding: RelayArm.WorkflowBinding) {\n        return yield* armed(RelayWorkflowCurrentStep.read(token, binding).pipe(\n          Effect.mapError((error) => error instanceof RelayWorkflowBinding.Held ? error\n            : new RelayWorkflowBinding.Held({ reason: \"WORKFLOW_STATE_ACQUISITION\" })),\n        ))\n      }),\n      transition: Effect.fn(\"Relay.transition\")(function* (input: RelayWorkflowTransition.Input) {\n        return yield* armed(Effect.gen(function* () {\n          const evaluator = RelayWorkflowEvaluator.native\n          return yield* RelayWorkflowTransition.transition(input).pipe(\n            Effect.provideService(RelayWorkflowTransition.NativeEvaluator, evaluator),\n          )\n        })).pipe(Effect.mapError((error) => error instanceof RelayWorkflowBinding.Held ? error\n          : new RelayWorkflowBinding.Held({ reason: \"WORKFLOW_SETTLEMENT_ACQUISITION\" })))\n      }),\n      release: Effect.fn(\"Relay.release\")(function* (token: RelayArm.Token, reason: string) {\n        yield* recover(token).pipe(Effect.ignore)\n        return yield* armed(ArmEvaluate.release(token, reason))\n      }),\n      parked: Effect.fn(\"Relay.parked\")(function* (token: RelayArm.Token) {\n        return yield* armed(ArmEvaluate.parked(token))\n      }),\n      audit: Effect.fn(\"Relay.audit\")(function* (token: RelayArm.Token) {\n        const key = yield* ledgerKey\n        const arm = yield* ArmState.dir(token).pipe(Effect.provideService(ArmState.Store, store(key)))\n        return yield* RelayAudit.verify(arm, { key })\n      }),\n      recover,\n      record,\n    })\n  }),\n)\n\nexport const node = makeLocationNode({\n  service: Service,\n  layer,\n  deps: [Global.node, Location.node, Config.node, AppProcess.node, FSUtil.node],\n})\n\n// The completion HOLD code of an arm evaluation and the parked text after it, as the evaluator defines them (§9).\nexport const hold = ArmEvaluate.hold"
+        }
+      ]
+    },
+    {
+      "id": "B-S12",
+      "path": "modules/maestro/coordination/src/v2/tools/atlas.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "1989941d868187b7fc264559f0c90d11c9b1c4d3",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "partial_content",
+      "read_note": "Fetched complete blob; inspected selected imports, declarations and numbered excerpts only. No whole-file semantic coverage claimed.",
+      "decisive_ranges": [
+        [
+          22,
+          40
+        ],
+        [
+          62,
+          63
+        ],
+        [
+          86,
+          121
+        ],
+        [
+          266,
+          304
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/maestro/coordination/src/v2/tools/atlas.ts",
+      "ownership": {
+        "owner": "S3",
+        "rule_type": "longest_directory_prefix",
+        "rule": "modules/maestro/"
+      },
+      "excerpts": [
+        {
+          "start_line": 22,
+          "end_line": 40,
+          "text": "export const name = \"atlas_context\"\n\nconst closed = { parseOptions: { onExcessProperty: \"error\" } } as const\nconst Catalog = Schema.Struct({ action: Schema.Literal(\"catalog\") }).annotate(closed)\nconst Unit = Schema.Struct({\n  action: Schema.Literal(\"unit\"),\n  unit: Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(256)),\n}).annotate(closed)\n// Native upstream seat only: anchors exact verified units to proposed work (see `anchor`).\nconst Anchor = Schema.Struct({\n  action: Schema.Literal(\"anchor\"),\n  target: AtlasKnowledge.Target,\n  units: Schema.Array(AtlasKnowledge.UnitID).check(\n    Schema.isMinLength(1),\n    Schema.isMaxLength(AtlasKnowledge.MAX_UNITS),\n    Schema.isUnique(),\n  ),\n}).annotate(closed)\nexport const Input = Schema.Union([Catalog, Unit, Anchor])"
+        },
+        {
+          "start_line": 62,
+          "end_line": 63,
+          "text": "export const description =\n  'Read verified Atlas Knowledge/Own context: {\"action\":\"catalog\"} returns bounded unit/territory metadata, not bodies; {\"action\":\"unit\",\"unit\":\"exact ID\"} loads complete, fresh, current verified bytes. The upstream seat may anchor exact selected units to proposed work: {\"action\":\"anchor\",\"target\":{\"kind\":\"assignment|work-package\",\"id\":\"work ID\"},\"units\":[\"exact ID\"]}. Return reference binds verified bodies to this actual call; no approval or Knowledge promotion. No nearest-name selection or owner/root arguments. Holds block only claims dependent on missing context.'"
+        },
+        {
+          "start_line": 86,
+          "end_line": 121,
+          "text": "          execute: (input, context) =>\n            Effect.gen(function* () {\n              if (!context.agent || !context.toolCallID || !context.assistantMessageID)\n                return unavailable(\"missing-native-call-identity\")\n              const agent = yield* agents.get(context.agent)\n              const member = MaestroAtlasSourceV2.reader(context.agent, seats)\n              if (!member || agent?.id !== context.agent) return unavailable(\"native-atlas-owner-required\")\n              if (input.action === \"anchor\" && member !== \"archie\") return unavailable(\"native-archie-required\")\n              yield* permission\n                .assert({\n                  action: name,\n                  resources: [member],\n                  save: [member],\n                  sessionID: context.sessionID,\n                  agent: context.agent,\n                  source: { type: \"tool\", messageID: context.assistantMessageID, callID: context.toolCallID },\n                })\n                .pipe(Effect.mapError((error) => new Tool.Failure({ message: \"Atlas context was not permitted\", error })))\n              const session = yield* sessions.get(context.sessionID)\n              if (!session) return unavailable(\"session-placement-unavailable\")\n              const placement = { projectID: session.projectID, directory: session.location.directory }\n              const result =\n                input.action === \"anchor\"\n                  ? yield* Effect.result(\n                      anchor(services, placement, {\n                        projectID: session.projectID,\n                        authorSessionID: context.sessionID,\n                        assistantMessageID: context.assistantMessageID,\n                        callID: context.toolCallID,\n                        target: input.target,\n                        units: input.units,\n                      }),\n                    )\n                  : input.action === \"catalog\"\n                    ? yield* Effect.result(MaestroAtlasSourceV2.catalog(services, placement))\n                    : yield* Effect.result(MaestroAtlasSourceV2.unit(services, placement, input.unit))"
+        },
+        {
+          "start_line": 266,
+          "end_line": 304,
+          "text": "export const acquire = Effect.fn(\"MaestroAtlasToolV2.acquire\")(function* (\n  services: MaestroAtlasSourceV2.Services,\n  placement: MaestroAtlasSourceV2.Placement,\n  ids: readonly string[],\n) {\n  const before = yield* MaestroAtlasSourceV2.read(services, placement)\n  const units = yield* Effect.forEach(\n    ids,\n    Effect.fnUntraced(function* (id) {\n      const unit = yield* MaestroAtlasSourceV2.unit(services, placement, id)\n      if (\n        unit.projectID !== placement.projectID ||\n        unit.unit !== id ||\n        unit.sourceIdentity !== before.identityHash ||\n        unit.sourceRevision !== before.context.sourceRevision ||\n        unit.receipt.sourceRevision !== unit.sourceRevision ||\n        unit.coverage.state !== \"complete\" ||\n        unit.coverage.freshness !== \"FRESH\" ||\n        unit.coverage.truncated !== false\n      )\n        return yield* held(\"unit-acquisition-mismatch\", [id])\n      return {\n        unit: unit.unit,\n        name: unit.name,\n        sourceIdentity: unit.sourceIdentity,\n        sourceRevision: unit.receipt.sourceRevision,\n        contentHash: unit.contentHash,\n        receiptHash: unit.receiptHash,\n        bodyHash: digest(unit.content),\n        content: unit.content,\n      } satisfies AtlasKnowledge.Unit\n    }),\n  )\n  if (units.reduce((bytes, unit) => bytes + Buffer.byteLength(unit.content, \"utf8\"), 0) > AtlasKnowledge.MAX_BYTES)\n    return yield* held(\"knowledge-body-budget-exceeded\", ids)\n  const after = yield* MaestroAtlasSourceV2.read(services, placement)\n  if (after.identityHash !== before.identityHash || after.directory !== before.directory)\n    return yield* held(\"source-changed-during-anchor\", [before.identityHash, after.identityHash])\n  return units"
+        }
+      ]
+    },
+    {
+      "id": "B-S13",
+      "path": "modules/maestro/coordination/src/v2/atlas-source.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "5388417c92f33c2cfd0d06d58d04446c35631d42",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "partial_content",
+      "read_note": "Fetched complete blob; inspected selected imports, declarations and numbered excerpts only. No whole-file semantic coverage claimed.",
+      "decisive_ranges": [
+        [
+          6,
+          19
+        ],
+        [
+          24,
+          32
+        ],
+        [
+          57,
+          119
+        ],
+        [
+          139,
+          170
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/maestro/coordination/src/v2/atlas-source.ts",
+      "ownership": {
+        "owner": "S3",
+        "rule_type": "longest_directory_prefix",
+        "rule": "modules/maestro/"
+      },
+      "excerpts": [
+        {
+          "start_line": 6,
+          "end_line": 19,
+          "text": "import { inspectOwnSnapshot, OWN_CAP, verifyHostContext } from \"@orchestra/atlas-boundary\"\nimport type { VerifiedHostContext, VerifiedOwnUnit } from \"@orchestra/atlas-boundary\"\nimport { Config } from \"@orchestra/core/config\"\nimport { ConfigMarkdown } from \"@orchestra/core/config/markdown\"\nimport { FSUtil } from \"@orchestra/core/fs-util\"\nimport { GitCli } from \"@orchestra/core/git-cli\"\nimport { SkillV2 } from \"@orchestra/core/skill\"\nimport { AgentV2 } from \"@orchestra/core/agent\"\nimport { Effect, Option, Schema } from \"effect\"\nimport { Seats } from \"../seats\"\nimport type { MaestroSeats } from \"./seats-service\"\n\n// The verified Atlas Own reader, over V2 services. Config comes from the Location's documents (`maestro.atlas`), Git from the process git command line, and\n// files through the Location's filesystem. Every failure is an explicit hold, never an absence claim."
+        },
+        {
+          "start_line": 24,
+          "end_line": 32,
+          "text": "export function owner(id: string, seats: MaestroSeats.Interface): Owner | undefined {\n  if (!seats.has(id) || Seats.all[id]?.atlasMemory !== true) return undefined\n  return id === \"backend\" || id === \"jimmy\" || id === \"archie\" || id === \"live\" ? id : undefined\n}\n\n/** Atlas context reads (catalog, unit) also reach Maestro; anchor and the memory tools stay with the seats. */\nexport function reader(id: string, seats: MaestroSeats.Interface): Owner | \"maestro\" | undefined {\n  if (id === AgentV2.defaultID) return \"maestro\"\n  return owner(id, seats)"
+        },
+        {
+          "start_line": 57,
+          "end_line": 119,
+          "text": "/** Bounded unit and territory metadata of the verified Own catalog; bodies are never loaded. */\nexport const catalog = Effect.fn(\"MaestroAtlasV2.catalog\")(function* (services: Services, placement: Placement) {\n  const source = yield* read(services, placement)\n  const units = boundedRows(\n    source.context.units.map((unit) => ({\n      unit: unit.unit,\n      skillName: unit.skillName,\n      graphCoverage: unit.receipt.graphCoverage,\n      tokenEstimate: unit.tokenEstimate,\n      complete: complete(unit),\n    })),\n  )\n  const territories = boundedRows(\n    source.context.territories.map((territory) => ({\n      name: territory.name,\n      owner: territory.owner,\n      tier: territory.tier,\n      globs: territory.globs,\n    })),\n  )\n  return {\n    projectID: placement.projectID,\n    sourceIdentity: source.identityHash,\n    sourceRevision: source.context.sourceRevision,\n    catalogVersion: source.context.catalogVersion,\n    units,\n    territories,\n    coverage: {\n      state:\n        units.length === source.context.units.length && territories.length === source.context.territories.length\n          ? (\"complete\" as const)\n          : (\"partial\" as const),\n      scope: \"verified-own-catalog\" as const,\n      units: { returned: units.length, total: source.context.units.length },\n      territories: { returned: territories.length, total: source.context.territories.length },\n      bodiesLoaded: false,\n    },\n  }\n})\n\n/** The complete, fresh, verified bytes of one exact unit. */\nexport const unit = Effect.fn(\"MaestroAtlasV2.unit\")(function* (services: Services, placement: Placement, id: string) {\n  const source = yield* read(services, placement)\n  const loaded = yield* loadSkill(services, placement, source, id)\n  const selected = source.context.units.find((candidate) => candidate.unit === loaded.unit)\n  if (!selected) return yield* held(\"unit-missing-or-ambiguous\", [id])\n  return {\n    projectID: placement.projectID,\n    sourceIdentity: source.identityHash,\n    sourceRevision: source.context.sourceRevision,\n    ...loaded,\n    receipt: selected.receipt,\n    coverage: {\n      state: \"complete\" as const,\n      scope: \"verified-own-unit\" as const,\n      graphCoverage: selected.receipt.graphCoverage,\n      freshness: \"FRESH\" as const,\n      currentBlobsChecked: true,\n      truncated: false,\n      // COMPLETE is Atlas's declared graph coverage, not universal semantic-language support.\n      note: \"Verified Atlas Own coverage; no additional semantic-language coverage is claimed.\",\n    },\n  }"
+        },
+        {
+          "start_line": 139,
+          "end_line": 170,
+          "text": "    const catalogContent = yield* readStatic(services.fs, directory, \"TERRITORY-CATALOG.json\")\n    const snapshotContent = yield* readStatic(services.fs, directory, \"OWN-SNAPSHOT.json\")\n    const catalog = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(catalogContent)\n    if (Option.isNone(catalog)) return yield* held(\"catalog-json-invalid\", [directory])\n    const inspection = inspectOwnSnapshot(snapshotContent)\n    if (inspection.status === \"HOLD\")\n      return yield* held(inspection.reason, [path.join(directory, \"OWN-SNAPSHOT.json\"), ...inspection.evidence])\n    const head = yield* services.git.run([\"rev-parse\", \"--verify\", \"HEAD^{commit}\"], { cwd: repository })\n    if (head.exitCode !== 0 || head.truncated || !gitHash.test(head.text().trim()))\n      return yield* held(\"repository-head-invalid\", [repository])\n    const ancestor = yield* services.git.run(\n      [\"merge-base\", \"--is-ancestor\", inspection.sourceRevision, head.text().trim()],\n      { cwd: repository },\n    )\n    if (ancestor.exitCode !== 0 || ancestor.truncated)\n      return yield* held(\"source-revision-not-ancestor\", [inspection.sourceRevision, head.text().trim()])\n    const files = yield* Effect.forEach(inspection.artifactPaths, (file) =>\n      readStatic(services.fs, directory, file).pipe(Effect.map((content) => ({ path: file, content }))),\n    )\n    // Metadata and source roots are explicit, separate bindings; neither comes from model scope.\n    const currentBlobs = Object.fromEntries(\n      yield* Effect.forEach(inspection.sourcePaths, (file) => readBlob(services, sourceDirectory, file)),\n    )\n    const verified = verifyHostContext({\n      projectId: placement.projectID,\n      catalog: catalog.value,\n      snapshotContent,\n      files,\n      currentBlobs,\n    })\n    if (verified.status === \"HOLD\") return yield* held(verified.reason, verified.evidence)\n    if (!verified.context.units.length) return yield* held(\"context-empty\", [directory])"
+        }
+      ]
+    },
+    {
+      "id": "B-S14",
+      "path": "modules/atlas/packages/retrieval/src/host-context.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "6c60032a6049e5de89592d9b6aa483207c909598",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "full_content",
+      "read_note": "Fetched complete blob and inspected full displayed content.",
+      "decisive_ranges": [
+        [
+          21,
+          31
+        ],
+        [
+          82,
+          137
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/retrieval/src/host-context.ts",
+      "ownership": {
+        "owner": "S4",
+        "rule_type": "longest_directory_prefix",
+        "rule": "modules/atlas/"
+      },
+      "excerpts": [
+        {
+          "start_line": 21,
+          "end_line": 31,
+          "text": "export interface VerifiedOwnUnit {\n  readonly unit: string\n  readonly skillName: string\n  readonly path: string\n  readonly content: string\n  readonly receipt: StaticOwnReceipt\n  readonly tokenEstimate: number\n  readonly pointers: readonly ManifestPointer[]\n  readonly pullReachable: readonly string[]\n  readonly advisoryDropped: number\n  readonly truncated: boolean"
+        },
+        {
+          "start_line": 82,
+          "end_line": 137,
+          "text": "export function inspectOwnSnapshot(content: string) {\n  const snapshot = parseOwnSnapshot(content)\n  if (!snapshot) return { status: \"HOLD\" as const, reason: \"snapshot-invalid\", evidence: [] as readonly string[] }\n  return {\n    status: \"READY\" as const,\n    snapshot: snapshot.snapshot,\n    sourceRevision: snapshot.sourceRevision,\n    sourcePaths: [...new Set(snapshot.units.flatMap((entry) => Object.keys(entry.sourceBlobs)))].sort(),\n    artifactPaths: [OWN_COVERAGE_PATH, ...snapshot.units.map((entry) => staticOwnArtifactPath(entry.unit.id))],\n  }\n}\n\n/** Verify committed static Own bytes against the canonical oracle and current source anchors. */\nexport function verifyHostContext(input: HostContextInput): HostContextResult {\n  try {\n    const catalog = territoryCatalog(input.projectId, input.catalog)\n    const snapshot = parseOwnSnapshot(input.snapshotContent)\n    if (!snapshot) return { status: \"HOLD\", reason: \"snapshot-invalid\", evidence: [] }\n    const verification = verifyStaticOwnSnapshot(snapshot, input.files, (file) => input.currentBlobs[file])\n    if (verification.status === \"HOLD\") {\n      return { status: \"HOLD\", reason: \"artifacts-invalid\", evidence: verification.issues }\n    }\n    const units = snapshot.units.map((entry): VerifiedOwnUnit => {\n      const path = staticOwnArtifactPath(entry.unit.id)\n      const file = input.files.find((candidate) => candidate.path === path)\n      const receipt = file ? parseStaticOwnReceipt(file.content) : undefined\n      if (!file || !receipt) throw new Error(`missing artifact receipt: ${entry.unit.id}`)\n      if (receipt.graphCoverage !== \"COMPLETE\") throw new Error(`under-approximate coverage: ${entry.unit.id}`)\n      if (\n        !Number.isSafeInteger(entry.pack.tokenEstimate) ||\n        entry.pack.tokenEstimate < 0 ||\n        entry.pack.tokenEstimate > OWN_CAP\n      ) {\n        throw new Error(`ownership cap exceeded: ${entry.unit.id}`)\n      }\n      if (!Number.isSafeInteger(entry.pack.advisoryDropped) || entry.pack.advisoryDropped < 0) {\n        throw new Error(`malformed advisory-drop receipt: ${entry.unit.id}`)\n      }\n      if (entry.pack.manifest.pointers.some((pointer) => !validPointer(pointer))) {\n        throw new Error(`malformed ownership pointer: ${entry.unit.id}`)\n      }\n      if (receipt.drillUnits.some((unit) => !snapshot.units.some((candidate) => candidate.unit.id === unit))) {\n        throw new Error(`unavailable drill unit: ${entry.unit.id}`)\n      }\n      return {\n        unit: entry.unit.id,\n        skillName: staticOwnSkillName(entry.unit.id),\n        path,\n        content: file.content,\n        receipt,\n        tokenEstimate: entry.pack.tokenEstimate,\n        pointers: entry.pack.manifest.pointers,\n        pullReachable: entry.pack.pullReachable.map(String),\n        advisoryDropped: entry.pack.advisoryDropped,\n        truncated: entry.pack.manifest.truncated,\n      }"
+        }
+      ]
+    },
+    {
+      "id": "B-S15",
+      "path": "modules/atlas/boundary/package.json",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "055b46b9d32d765c3c2dc54468137d031bb3de90",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "full_content",
+      "read_note": "Fetched complete blob and inspected full displayed content.",
+      "decisive_ranges": [
+        [
+          1,
+          30
+        ],
+        [
+          44,
+          51
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/boundary/package.json",
+      "ownership": {
+        "owner": "S4",
+        "rule_type": "longest_directory_prefix",
+        "rule": "modules/atlas/"
+      },
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 30,
+          "text": "{\n  \"name\": \"@orchestra/atlas-boundary\",\n  \"version\": \"0.0.0\",\n  \"type\": \"module\",\n  \"private\": true,\n  \"exports\": {\n    \".\": {\n      \"types\": \"./src/generated/boundary.d.ts\",\n      \"default\": \"./src/generated/boundary.js\"\n    },\n    \"./materialize\": {\n      \"types\": \"./src/generated/materialize.d.ts\",\n      \"default\": \"./src/generated/materialize.js\"\n    },\n    \"./native-header\": {\n      \"types\": \"./src/generated/native-header.d.ts\",\n      \"default\": \"./src/generated/native-header.js\"\n    },\n    \"./native-memory\": {\n      \"types\": \"./src/generated/native-memory.d.ts\",\n      \"default\": \"./src/generated/native-memory.js\"\n    },\n    \"./surface\": {\n      \"types\": \"./src/generated/surface.d.ts\",\n      \"default\": \"./src/generated/surface.js\"\n    },\n    \"./mine\": {\n      \"types\": \"./src/generated/mine.d.ts\",\n      \"default\": \"./src/generated/mine.js\"\n    },"
+        },
+        {
+          "start_line": 44,
+          "end_line": 51,
+          "text": "  \"scripts\": {\n    \"generate\": \"bun script/build.ts\",\n    \"check:generated\": \"bun script/build.ts --check\",\n    \"typecheck\": \"tsgo --noEmit\",\n    \"test\": \"bun test --timeout 30000\"\n  },\n  \"dependencies\": {\n    \"web-tree-sitter\": \"0.23.2\""
+        }
+      ]
+    },
+    {
+      "id": "B-S16",
+      "path": "modules/atlas/boundary/script/build.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "df0a875e47e98e8803e00818d178166d0b1cb8dd",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "full_content",
+      "read_note": "Fetched complete blob and inspected full displayed content.",
+      "decisive_ranges": [
+        [
+          5,
+          18
+        ],
+        [
+          29,
+          40
+        ],
+        [
+          71,
+          85
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/boundary/script/build.ts",
+      "ownership": {
+        "owner": "S4",
+        "rule_type": "longest_directory_prefix",
+        "rule": "modules/atlas/"
+      },
+      "excerpts": [
+        {
+          "start_line": 5,
+          "end_line": 18,
+          "text": "const output = path.resolve(import.meta.dir, \"../src/generated\")\nconst check = Bun.argv.includes(\"--check\")\nawait Promise.all(\n  (\n    [\n      [\"boundary\", \"retrieval/src/host-context.ts\"],\n      [\"materialize\", \"retrieval/src/own-snapshot.ts\"],\n      // F3 A3: the bound Memory header read alone, for hosts that must not reach recall, fold or write.\n      [\"native-header\", \"adapter-io/src/native-header.ts\"],\n      // F3 A1/A3: the bound Memory composition (recall, exact fold, write, reconcile) for the backend seat's tools.\n      [\"native-memory\", \"adapter-io/src/native-bound.ts\"],\n      // The Atlas screen's read and write API over the composition root (specs/atlas-ui/build D1/D2).\n      [\"surface\", \"adapter-io/src/surface/index.ts\"],\n      // The screen's Genesis mining (specs/atlas-ui/build D39): the CLI's governed pass, driven by the host's models."
+        },
+        {
+          "start_line": 29,
+          "end_line": 40,
+          "text": "    const entry = path.join(root, \"modules/atlas/packages\", file)\n    const result = await Bun.build({\n      entrypoints: [entry],\n      target: \"node\",\n      format: \"esm\",\n      // Bun's cross-module identifier minifier is nondeterministic: repeated builds of the same graph\n      // occasionally permute short names, so check:generated flakes. Keep whitespace and syntax minification only.\n      minify: { whitespace: true, syntax: true, identifiers: false },\n      // The surface's AST module imports the parser at load and only uses it after `initAst()`, which the surface never\n      // calls. Kept external, it resolves at run time to this package's pinned dependency, and the emscripten loader's\n      // own paths never enter the committed bytes.\n      external: [\"web-tree-sitter\"],"
+        },
+        {
+          "start_line": 71,
+          "end_line": 85,
+          "text": "      throw new Error(\"Atlas boundary declaration build was empty\")\n    const generated = [\n      { path: path.join(output, `${name}.js`), content: await result.outputs[0].text() },\n      { path: path.join(output, `${name}.d.ts`), content: declarations[0] },\n    ]\n    await Promise.all(\n      generated.map(async (file) => {\n        if (!check) return Bun.write(file.path, file.content)\n        if (!(await Bun.file(file.path).exists())) throw new Error(`Missing generated Atlas boundary: ${file.path}`)\n        if ((await Bun.file(file.path).text()) !== file.content)\n          throw new Error(`Stale generated Atlas boundary: ${file.path}`)\n      }),\n    )\n  }),\n)"
+        }
+      ]
+    },
+    {
+      "id": "B-S17",
+      "path": "packages/client/src/contract.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "1dccaeb657cc106b7a8cba93f5f5c34a8faf8680",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "full_content",
+      "read_note": "Fetched complete blob and inspected full displayed content.",
+      "decisive_ranges": [
+        [
+          1,
+          18
+        ],
+        [
+          45,
+          55
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/client/src/contract.ts",
+      "ownership": {
+        "owner": "S1",
+        "rule_type": "longest_directory_prefix",
+        "rule": "packages/client/"
+      },
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 18,
+          "text": "import { makeDefaultApi } from \"@orchestra/protocol/api\"\nimport { InvalidRequestError, SessionNotFoundError } from \"@orchestra/protocol/errors\"\nimport { HttpApiMiddleware } from \"effect/unstable/httpapi\"\n\nclass LocationMiddleware extends HttpApiMiddleware.Service<LocationMiddleware>()(\n  \"@orchestra/client/LocationMiddleware\",\n  { error: InvalidRequestError },\n) {}\n\nclass SessionLocationMiddleware extends HttpApiMiddleware.Service<SessionLocationMiddleware>()(\n  \"@orchestra/client/SessionLocationMiddleware\",\n  { error: [InvalidRequestError, SessionNotFoundError] },\n) {}\n\nexport const ClientApi = makeDefaultApi({\n  locationMiddleware: LocationMiddleware,\n  sessionLocationMiddleware: SessionLocationMiddleware,\n})"
+        },
+        {
+          "start_line": 45,
+          "end_line": 55,
+          "text": "  \"server.lean\": \"lean\",\n  \"server.ragStudio\": \"ragStudio\",\n  \"server.atlas\": \"atlas\",\n  \"server.config\": \"config\",\n  \"server.trust\": \"server.trust\",\n  \"server.relay.document\": \"relayDocuments\",\n  \"server.relay.publish\": \"relayPublish\",\n  \"server.relay.hook\": \"relayHooks\",\n  \"server.relay.run\": \"relayRuns\",\n  \"server.pullRequest\": \"pullRequests\",\n  \"server.guardrail\": \"guardrail\","
+        }
+      ]
+    },
+    {
+      "id": "B-S18",
+      "path": "packages/client/script/build.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "99ae2184b9c13f6175d7ba8e3025068bee07ee4f",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "full_content",
+      "read_note": "Fetched complete blob and inspected full displayed content.",
+      "decisive_ranges": [
+        [
+          1,
+          7
+        ],
+        [
+          22,
+          47
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/client/script/build.ts",
+      "ownership": {
+        "owner": "S1",
+        "rule_type": "longest_directory_prefix",
+        "rule": "packages/client/"
+      },
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 7,
+          "text": "import { NodeFileSystem } from \"@effect/platform-node\"\nimport { compile, emitEffectImported, emitPromise, write } from \"@orchestra/httpapi-codegen\"\nimport { ClientApi, endpointNames, groupNames, omitEndpoints } from \"../src/contract\"\nimport { Effect } from \"effect\"\nimport { fileURLToPath } from \"url\"\n\nconst contract = compile(ClientApi, { groupNames, endpointNames, omitEndpoints })"
+        },
+        {
+          "start_line": 22,
+          "end_line": 47,
+          "text": "await Effect.runPromise(\n  Effect.all(\n    [\n      write(\n        emitPromise(contract, {\n          splitGroups,\n          outputTypes: {\n            \"sessions.events\": {\n              name: \"SessionEventEncoded\",\n              import: 'import type { SessionEventEncoded } from \"../wire\"',\n            },\n            \"events.subscribe\": {\n              name: \"OrchestraEventEncoded\",\n              import: 'import type { OrchestraEventEncoded } from \"@orchestra/protocol/groups/event\"',\n            },\n          },\n        }),\n        fileURLToPath(new URL(\"../src/generated\", import.meta.url)),\n      ),\n      write(\n        emitEffectImported(contract, { module: \"../contract\", api: \"ClientApi\" }, { splitGroups }),\n        fileURLToPath(new URL(\"../src/generated-effect\", import.meta.url)),\n      ),\n    ],\n    { concurrency: 2, discard: true },\n  ).pipe(Effect.provide(NodeFileSystem.layer)),"
+        }
+      ]
+    },
+    {
+      "id": "B-S19",
+      "path": "packages/protocol/src/api.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "40b5b5bd266b8a9bd3893f74d5429bf535dc01d7",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "full_content",
+      "read_note": "Fetched complete blob and inspected full displayed content.",
+      "decisive_ranges": [
+        [
+          31,
+          39
+        ],
+        [
+          95,
+          110
+        ],
+        [
+          148,
+          158
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/protocol/src/api.ts",
+      "ownership": {
+        "owner": "S1",
+        "rule_type": "longest_directory_prefix",
+        "rule": "packages/protocol/"
+      },
+      "excerpts": [
+        {
+          "start_line": 31,
+          "end_line": 39,
+          "text": "import { LeanGroup } from \"./groups/lean\"\nimport { RagStudioGroup } from \"./groups/rag-studio\"\nimport { AtlasGroup } from \"./groups/atlas\"\nimport { ConfigGroup } from \"./groups/config\"\nimport { TrustGroup } from \"./groups/trust\"\nimport { BoardGroup } from \"./groups/board\"\nimport { RelayDocumentGroup, RelayPublishGroup } from \"./groups/relay-document\"\nimport { RelayHookGroup } from \"./groups/relay-hook\"\nimport { RelayRunGroup } from \"./groups/relay-run\""
+        },
+        {
+          "start_line": 95,
+          "end_line": 110,
+          "text": "    .add(ProjectCopyGroup.middleware(locationMiddleware))\n    .add(ProjectGroup)\n    .add(LeanGroup.middleware(locationMiddleware))\n    .add(RagStudioGroup.middleware(locationMiddleware))\n    .add(AtlasGroup.middleware(locationMiddleware))\n    .add(ConfigGroup)\n    .add(TrustGroup)\n    .add(BoardGroup)\n    .add(RelayDocumentGroup.middleware(locationMiddleware))\n    .add(RelayPublishGroup.middleware(locationMiddleware))\n    .add(RelayHookGroup.middleware(locationMiddleware))\n    .add(PullRequestGroup.middleware(locationMiddleware))\n    .add(ScheduleGroup.middleware(locationMiddleware))\n    .add(ActionsBindingGroup.middleware(locationMiddleware))\n    .add(ActionsOperationGroup.middleware(locationMiddleware))\n    .add(ActionsWorkflowGroup.middleware(locationMiddleware))"
+        },
+        {
+          "start_line": 148,
+          "end_line": 158,
+          "text": "\nexport const makeDefaultApi = <\n  LocationId extends HttpApiMiddleware.AnyId,\n  LocationService,\n  SessionLocationId extends HttpApiMiddleware.AnyId,\n  SessionLocationService,\n>(options: {\n  readonly locationMiddleware: Context.Key<LocationId, LocationService>\n  readonly sessionLocationMiddleware: Context.Key<SessionLocationId, SessionLocationService>\n}) => makeApiFromGroup(EventGroup, options.locationMiddleware, options.sessionLocationMiddleware)\n"
+        }
+      ]
+    },
+    {
+      "id": "B-S20",
+      "path": "packages/protocol/src/groups/atlas.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "1ad5dee72e17105d118eef8974cc283b68ea64ce",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "full_content",
+      "read_note": "Fetched complete blob and inspected full displayed content.",
+      "decisive_ranges": [
+        [
+          36,
+          84
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/protocol/src/groups/atlas.ts",
+      "ownership": {
+        "owner": "S1",
+        "rule_type": "longest_directory_prefix",
+        "rule": "packages/protocol/"
+      },
+      "excerpts": [
+        {
+          "start_line": 36,
+          "end_line": 84,
+          "text": "import { HttpApiEndpoint, HttpApiGroup, OpenApi } from \"effect/unstable/httpapi\"\nimport { ServiceUnavailableError } from \"../errors\"\nimport { LocationQuery, locationQueryOpenApi } from \"./location\"\n\n// The Atlas screen over the requested Location's Atlas store: the legacy `/atlas/*` instance routes with the same wire\n// shapes (an absent value is `null`, never omitted). A repository with no `.atlas/` answers `{ state: \"empty\" }`.\nexport const AtlasGroup = HttpApiGroup.make(\"server.atlas\")\n  .add(\n    HttpApiEndpoint.get(\"atlas.snapshot\", \"/api/atlas/snapshot\", {\n      query: LocationQuery,\n      success: Location.response(AtlasSnapshotResult),\n      error: ServiceUnavailableError,\n    })\n      .annotateMerge(locationQueryOpenApi)\n      .annotateMerge(\n        OpenApi.annotations({\n          identifier: \"v2.atlas.snapshot\",\n          summary: \"Get the Atlas snapshot\",\n          description:\n            \"Facts, candidates, drift, store files, dependents, the tree, committed Own, Memory and territories.\",\n        }),\n      ),\n  )\n  .add(\n    HttpApiEndpoint.get(\"atlas.reasoning\", \"/api/atlas/reasoning/:id\", {\n      params: { id: Schema.String },\n      query: LocationQuery,\n      success: Location.response(AtlasReasoningResult),\n      error: ServiceUnavailableError,\n    })\n      .annotateMerge(locationQueryOpenApi)\n      .annotateMerge(\n        OpenApi.annotations({\n          identifier: \"v2.atlas.reasoning\",\n          summary: \"Get a staged fact's reasoning\",\n          description: \"The model reasoning a staged row's answerRef names, by the fact's 12-character why.\",\n        }),\n      ),\n  )\n  .add(\n    HttpApiEndpoint.get(\"atlas.own\", \"/api/atlas/own\", {\n      query: Schema.Struct({ ...LocationQuery.fields, scope: Schema.String }),\n      success: Location.response(AtlasOwnResult),\n      error: ServiceUnavailableError,\n    })\n      .annotateMerge(locationQueryOpenApi)\n      .annotateMerge(\n        OpenApi.annotations({\n          identifier: \"v2.atlas.own\","
+        }
+      ]
+    },
+    {
+      "id": "B-S21",
+      "path": "packages/client/src/generated/client.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "93cab27e0b902d6e8fbd21d6aaec320a2b9fe09c",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "partial_content",
+      "read_note": "Fetched complete blob; inspected selected imports, declarations and numbered excerpts only. No whole-file semantic coverage claimed.",
+      "decisive_ranges": [
+        [
+          535,
+          599
+        ],
+        [
+          2417,
+          2465
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/client/src/generated/client.ts",
+      "ownership": {
+        "owner": "S1",
+        "rule_type": "longest_directory_prefix",
+        "rule": "packages/client/"
+      },
+      "excerpts": [
+        {
+          "start_line": 535,
+          "end_line": 599,
+          "text": "export interface ClientOptions {\n  readonly baseUrl: string\n  readonly fetch?: typeof globalThis.fetch\n  readonly headers?: HeadersInit\n}\n\nexport interface RequestOptions {\n  readonly signal?: AbortSignal\n  readonly headers?: HeadersInit\n}\n\nexport function make(options: ClientOptions) {\n  const fetch = options.fetch ?? globalThis.fetch\n\n  const prepare = (descriptor: RequestDescriptor, requestOptions?: RequestOptions) => {\n    const url = new URL(descriptor.path, options.baseUrl)\n    for (const [key, value] of Object.entries(descriptor.query ?? {})) appendQuery(url.searchParams, key, value)\n    const headers = new Headers(options.headers)\n    for (const [key, value] of Object.entries(descriptor.headers ?? {})) {\n      if (value !== undefined && value !== null) headers.set(key, String(value))\n    }\n    for (const [key, value] of new Headers(requestOptions?.headers)) headers.set(key, value)\n    if (descriptor.body !== undefined && !headers.has(\"content-type\")) headers.set(\"content-type\", \"application/json\")\n    return {\n      url,\n      init: {\n        method: descriptor.method,\n        signal: requestOptions?.signal,\n        headers,\n        body: descriptor.body === undefined ? undefined : JSON.stringify(descriptor.body),\n      } satisfies RequestInit,\n    }\n  }\n\n  const execute = async (descriptor: RequestDescriptor, requestOptions?: RequestOptions) => {\n    try {\n      const prepared = prepare(descriptor, requestOptions)\n      return await fetch(prepared.url, prepared.init)\n    } catch (cause) {\n      throw new ClientError(\"Transport\", { cause })\n    }\n  }\n\n  const responseError = async (response: Response, descriptor: RequestDescriptor): Promise<never> => {\n    if (descriptor.declaredStatuses.includes(response.status)) throw await json(response)\n    try {\n      await response.body?.cancel()\n    } catch {}\n    throw new ClientError(\"UnexpectedStatus\", { cause: { status: response.status } })\n  }\n\n  const request = async <A>(descriptor: RequestDescriptor, requestOptions?: RequestOptions): Promise<A> => {\n    const response = await execute(descriptor, requestOptions)\n    if (response.status !== descriptor.successStatus) return responseError(response, descriptor)\n    if (descriptor.empty) {\n      try {\n        await response.body?.cancel()\n      } catch {}\n      return undefined as A\n    }\n    if (descriptor.binary) {\n      return new Uint8Array(await response.arrayBuffer()) as A\n    }\n    return (await json(response)) as A\n  }"
+        },
+        {
+          "start_line": 2417,
+          "end_line": 2465,
+          "text": "    atlas: {\n      snapshot: (input?: AtlasSnapshotInput, requestOptions?: RequestOptions) =>\n        request<AtlasSnapshotOutput>(\n          {\n            method: \"GET\",\n            path: `/api/atlas/snapshot`,\n            query: { location: input?.[\"location\"] },\n            successStatus: 200,\n            declaredStatuses: [503, 400, 401],\n            empty: false,\n          },\n          requestOptions,\n        ),\n      reasoning: (input: AtlasReasoningInput, requestOptions?: RequestOptions) =>\n        request<AtlasReasoningOutput>(\n          {\n            method: \"GET\",\n            path: `/api/atlas/reasoning/${encodeURIComponent(input.id)}`,\n            query: { location: input[\"location\"] },\n            successStatus: 200,\n            declaredStatuses: [503, 400, 401],\n            empty: false,\n          },\n          requestOptions,\n        ),\n      own: (input: AtlasOwnInput, requestOptions?: RequestOptions) =>\n        request<AtlasOwnOutput>(\n          {\n            method: \"GET\",\n            path: `/api/atlas/own`,\n            query: { location: input[\"location\"], scope: input[\"scope\"] },\n            successStatus: 200,\n            declaredStatuses: [503, 400, 401],\n            empty: false,\n          },\n          requestOptions,\n        ),\n      health: (input?: AtlasHealthInput, requestOptions?: RequestOptions) =>\n        request<AtlasHealthOutput>(\n          {\n            method: \"GET\",\n            path: `/api/atlas/health`,\n            query: { location: input?.[\"location\"] },\n            successStatus: 200,\n            declaredStatuses: [503, 400, 401],\n            empty: false,\n          },\n          requestOptions,\n        ),"
+        }
+      ]
+    },
+    {
+      "id": "B-S22",
+      "path": "packages/server/src/handlers/atlas.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "692afb828dc5c896339adfebbb5e33ef39876347",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "full_content",
+      "read_note": "Fetched complete blob and inspected full displayed content.",
+      "decisive_ranges": [
+        [
+          1,
+          34
+        ],
+        [
+          72,
+          79
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/server/src/handlers/atlas.ts",
+      "ownership": {
+        "owner": "S1",
+        "rule_type": "longest_directory_prefix",
+        "rule": "packages/server/"
+      },
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 34,
+          "text": "import { Atlas } from \"@orchestra/core/atlas\"\nimport { SessionRunnerModel } from \"@orchestra/core/session/runner\"\nimport { Catalog } from \"@orchestra/core/catalog\"\nimport { Integration } from \"@orchestra/core/integration\"\nimport { Location } from \"@orchestra/core/location\"\nimport { Npm } from \"@orchestra/core/npm\"\nimport { AppProcess } from \"@orchestra/core/process\"\nimport { LLM, LLMClient, LLMEvent, SystemPart } from \"@orchestra/llm\"\nimport { ServiceUnavailableError } from \"@orchestra/protocol/errors\"\nimport { SessionID } from \"@orchestra/schema/session-id\"\nimport { Effect, Stream } from \"effect\"\nimport { HttpApiBuilder } from \"effect/unstable/httpapi\"\nimport { Api } from \"../api\"\nimport { response } from \"../location\"\n\n// The Atlas screen over the requested Location's store, through the same surface the legacy instance routes open\n// (@orchestra/core/atlas). The store root is the Location's project worktree, or its directory when the project has no\n// worktree. Delegation and mining resolve the chosen model from the Location's catalog, outside any Session.\nexport const AtlasHandler = HttpApiBuilder.group(Api, \"server.atlas\", (handlers) =>\n  Effect.gen(function* () {\n    const dependencies = { npm: yield* Npm.Service, processes: yield* AppProcess.Service }\n    const client = yield* LLMClient.Service\n    const unavailable = (error: Atlas.Unavailable) =>\n      new ServiceUnavailableError({ service: \"atlas\", message: error.message })\n    const at = <A, R>(call: (atlas: Atlas.Interface) => Effect.Effect<A, Atlas.Unavailable, R>) =>\n      response(\n        Effect.gen(function* () {\n          const location = yield* Location.Service\n          return yield* call(\n            Atlas.open(\n              dependencies,\n              Atlas.storeRoot(location.project.directory, location.directory),\n              location.project.id,\n            ),"
+        },
+        {
+          "start_line": 72,
+          "end_line": 79,
+          "text": "    return handlers\n      .handle(\"atlas.snapshot\", () => at((atlas) => atlas.snapshot()))\n      .handle(\"atlas.reasoning\", (ctx) => at((atlas) => atlas.reasoning(ctx.params.id)))\n      .handle(\"atlas.own\", (ctx) => at((atlas) => atlas.own(ctx.query.scope)))\n      .handle(\"atlas.health\", () => at((atlas) => atlas.health()))\n      .handle(\"atlas.promote\", (ctx) => at((atlas) => atlas.promote(ctx.payload)))\n      .handle(\"atlas.draft\", (ctx) => at((atlas) => atlas.draft(ctx.payload)))\n      .handle(\"atlas.emit\", (ctx) => at((atlas) => atlas.emit(ctx.payload)))"
+        }
+      ]
+    },
+    {
+      "id": "B-S23",
+      "path": "packages/core/src/atlas.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "f6718654785fb155e1bb1b2acb7e9985478b983b",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "full_content",
+      "read_note": "Fetched complete blob and inspected full displayed content.",
+      "decisive_ranges": [
+        [
+          3,
+          8
+        ],
+        [
+          104,
+          131
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/atlas.ts",
+      "ownership": {
+        "owner": "S1",
+        "rule_type": "longest_directory_prefix",
+        "rule": "packages/core/"
+      },
+      "excerpts": [
+        {
+          "start_line": 3,
+          "end_line": 8,
+          "text": "import { existsSync } from \"node:fs\"\nimport { join } from \"node:path\"\nimport { mineSites, mineWith } from \"@orchestra/atlas-boundary/mine\"\nimport type { MineResult, MineSites } from \"@orchestra/atlas-boundary/mine\"\nimport { openSurface } from \"@orchestra/atlas-boundary/surface\"\nimport type {"
+        },
+        {
+          "start_line": 104,
+          "end_line": 131,
+          "text": "export const storeRoot = (worktree: string, directory: string) => (Project.isRoot(worktree) ? directory : worktree)\n\n/**\n * The surface over the store at `root`. `projectID` is the Orchestra project id the first territory catalog records\n * (issues/c-engine.md item 2): the client never sends it, and an existing catalog of another project refuses the write.\n */\nexport const open = (dependencies: Dependencies, root: string, projectID: string): Interface => {\n  const runAt = <A>(name: string, call: () => A) =>\n    Effect.try({ try: call, catch: (cause) => new Unavailable({ message: firstLine(cause) }) }).pipe(\n      Effect.withSpan(`AtlasSurface.${name}`),\n    )\n  const run = <A>(name: string, call: (surface: ReturnType<typeof openSurface>) => A) =>\n    runAt(name, () => call(openSurface(root)))\n  const stored = () => existsSync(join(root, \".atlas\"))\n  const health = () => run(\"health\", (surface) => surface.health())\n  return {\n    snapshot: () => run(\"snapshot\", (surface) => surface.snapshot()),\n    reasoning: (id) => run(\"reasoning\", (surface) => surface.reasoning(id)),\n    own: (scope) => run(\"own\", (surface) => surface.own(scope)),\n    health,\n    promote: (input) => run(\"promote\", (surface) => surface.promote(input)),\n    draft: (input) => run(\"draft\", (surface) => surface.draft(input)),\n    emit: (input) => run(\"emit\", (surface) => surface.emit(input)),\n    link: (input) => run(\"link\", (surface) => surface.link(input)),\n    verify: (input) => run(\"verify\", (surface) => surface.verify(input)),\n    review: () => run(\"review\", (surface) => surface.review()),\n    hold: (input) => run(\"hold\", (surface) => surface.hold(input)),\n    release: (input) => run(\"release\", (surface) => surface.release(input)),"
+        }
+      ]
+    },
+    {
+      "id": "B-S24",
+      "path": "modules/atlas/packages/adapter-io/src/surface/index.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "cf531a1cba71737a453ef43a4d8b0af9c5914189",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "partial_content",
+      "read_note": "Fetched complete blob; inspected selected imports, declarations and numbered excerpts only. No whole-file semantic coverage claimed.",
+      "decisive_ranges": [
+        [
+          138,
+          159
+        ],
+        [
+          184,
+          188
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/src/surface/index.ts",
+      "ownership": {
+        "owner": "S4",
+        "rule_type": "longest_directory_prefix",
+        "rule": "modules/atlas/"
+      },
+      "excerpts": [
+        {
+          "start_line": 138,
+          "end_line": 159,
+          "text": "export function openSurface(repoPath: string): AtlasSurface {\n  const absent = () => !existsSync(join(repoPath, \".atlas\"))\n  return {\n    snapshot: () => (absent() ? EMPTY : snapshot(repoPath)),\n    install: () => install(repoPath),\n    reasoning: (id) => (absent() ? EMPTY : readReasoning(readStoreFiles(repoPath), id)),\n    own: (scope) => (absent() ? EMPTY : own(repoPath, scope)),\n    health: () => (absent() ? EMPTY : health(repoPath)),\n    promote: (input) => (absent() ? EMPTY : promote(repoPath, input)),\n    draft: (input) => (absent() ? EMPTY : draft(repoPath, input)),\n    emit: (input) => (absent() ? EMPTY : emit(repoPath, input)),\n    link: (input) => (absent() ? EMPTY : link(repoPath, input)),\n    verify: (input) => (absent() ? EMPTY : verify(repoPath, input)),\n    review: () => (absent() ? EMPTY : review(repoPath)),\n      hold: (input) => (absent() ? EMPTY : hold(repoPath, input)),\n      release: (input) => (absent() ? EMPTY : release(repoPath, input)),\n      propose: (input) => (absent() ? EMPTY : propose(repoPath, input)),\n      decide: (input) => (absent() ? EMPTY : decide(repoPath, input)),\n      answer: (input) => (absent() ? EMPTY : answer(repoPath, input)),\n      memoryDecide: (input) => (absent() ? EMPTY : memoryDecide(repoPath, input)),\n      territory: (input) => (absent() ? EMPTY : territory(repoPath, input)),\n  }"
+        },
+        {
+          "start_line": 184,
+          "end_line": 188,
+          "text": "function own(repoPath: string, scope: string): AtlasOwnResult {\n  const runtime = composeRuntime(repoPath)\n  const out = runtime.own(scope)\n  return { state: \"ok\", scope, tool: out.tool, pack: out.pack, readRefusal: runtime.readRefusal ?? null }\n}"
+        }
+      ]
+    },
+    {
+      "id": "B-S25",
+      "path": "modules/atlas/boundary/src/generated/surface.d.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "7614ff6a04ff82b76ed68836a843d7232fa8cd43",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "partial_content",
+      "read_note": "Fetched complete blob; inspected selected imports, declarations and numbered excerpts only. No whole-file semantic coverage claimed.",
+      "decisive_ranges": [
+        [
+          532,
+          556
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/boundary/src/generated/surface.d.ts",
+      "ownership": {
+        "owner": "S4",
+        "rule_type": "longest_directory_prefix",
+        "rule": "modules/atlas/"
+      },
+      "excerpts": [
+        {
+          "start_line": 532,
+          "end_line": 556,
+          "text": "}\nexport interface AtlasSurface {\n\treadonly snapshot: () => AtlasSnapshotResult;\n\t/** D37: the one method that runs when `.atlas/` is absent. */\n\treadonly install: () => AtlasInstallResult;\n\treadonly reasoning: (id: string) => AtlasReasoningResult;\n\treadonly own: (scope: string) => AtlasOwnResult;\n\treadonly health: () => AtlasHealthResult;\n\treadonly promote: (input: AtlasPromoteInput) => AtlasPromoteResult;\n\treadonly draft: (input: AtlasDraftInput) => AtlasDraftResult;\n\treadonly emit: (input: AtlasEmitInput) => AtlasEmitResult;\n\treadonly link: (input: AtlasLinkInput) => AtlasLinkResult;\n\treadonly verify: (input: AtlasVerifyInput) => AtlasVerifyResult;\n\treadonly review: () => AtlasReviewResult;\n\treadonly hold: (input: AtlasHoldInput) => AtlasReviewWriteResult;\n\treadonly release: (input: AtlasReleaseInput) => AtlasReviewWriteResult;\n\treadonly propose: (input: AtlasProposeInput) => AtlasReviewWriteResult;\n\treadonly decide: (input: AtlasDecideInput) => AtlasReviewWriteResult;\n\treadonly answer: (input: AtlasAnswerInput) => AtlasReviewWriteResult;\n\treadonly memoryDecide: (input: AtlasMemoryDecideInput) => AtlasReviewWriteResult;\n\treadonly territory: (input: AtlasTerritoryInput) => AtlasReviewWriteResult;\n}\n/** The Atlas screen's API over the store at `<repoPath>/.atlas`. Opening it reads nothing. */\nexport declare function openSurface(repoPath: string): AtlasSurface;\n"
+        }
+      ]
+    },
+    {
+      "id": "B-S26",
+      "path": "packages/app-shell/src/utils/server.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "542e992958dca3993e633babd881c5a7e8407c66",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "full_content",
+      "read_note": "Fetched complete blob and inspected full displayed content.",
+      "decisive_ranges": [
+        [
+          1,
+          11
+        ],
+        [
+          27,
+          56
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/app-shell/src/utils/server.ts",
+      "ownership": {
+        "owner": "S2",
+        "rule_type": "longest_directory_prefix",
+        "rule": "packages/app-shell/"
+      },
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 11,
+          "text": "import { Orchestra } from \"@orchestra/client\"\nimport type { ServerConnection } from \"@/context/server\"\nimport type {\n  RequestOptions,\n  ServerApi,\n  SessionCommandInput,\n  SessionCompactInput,\n  SessionPromptInput,\n  SessionStageInput,\n} from \"@/server-api\"\nimport { decode64 } from \"@/utils/base64\""
+        },
+        {
+          "start_line": 27,
+          "end_line": 56,
+          "text": "\nexport function createApiForServer(input: {\n  server: ServerConnection.HttpBase\n  fetch?: typeof globalThis.fetch\n}): ServerApi {\n  // The contract keeps the app's own view of the client's outputs, so the two sides are not assignable to\n  // each other. `server-api-parity.ts` holds them to the same groups, methods and inputs instead.\n  return buildServerApi(input) as unknown as ServerApi\n}\n\n/** The adapter: the current API client in the groups and shapes the contract declares. */\nfunction buildServerApi(input: {\n  server: ServerConnection.HttpBase\n  fetch?: typeof globalThis.fetch\n}) {\n  const orchestra = Orchestra.make({\n    baseUrl: input.server.url,\n    fetch: input.fetch,\n    headers: input.server.password\n      ? {\n          Authorization: `Basic ${authTokenFromCredentials({\n            username: input.server.username,\n            password: input.server.password,\n          })}`,\n        }\n      : undefined,\n  })\n  const select = async (sessionID: string, value: object, requestOptions?: RequestOptions) => {\n    if (\"agent\" in value && typeof value.agent === \"string\" && value.agent)\n      await orchestra.sessions.switchAgent({ sessionID, agent: value.agent }, requestOptions)"
+        }
+      ]
+    },
+    {
+      "id": "B-S27",
+      "path": "packages/client/src/index.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "b65f3f982384824273b9641df98671bc4392bc15",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "full_content",
+      "read_note": "Fetched complete blob and inspected full displayed content.",
+      "decisive_ranges": [
+        [
+          1,
+          4
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/client/src/index.ts",
+      "ownership": {
+        "owner": "S1",
+        "rule_type": "longest_directory_prefix",
+        "rule": "packages/client/"
+      },
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 4,
+          "text": "export * from \"./generated/index\"\nexport type { EventsSubscribeOutput as OrchestraEvent } from \"./generated/types\"\nexport { ActionsTransferError, makeActionsTransfer } from \"./actions-transfer\"\n"
+        }
+      ]
+    },
+    {
+      "id": "B-S28",
+      "path": "packages/client/src/generated/index.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "8f420039bd548a21207ad6727a74efd8dad3db40",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "full_content",
+      "read_note": "Fetched complete blob and inspected full displayed content.",
+      "decisive_ranges": [
+        [
+          1,
+          4
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/client/src/generated/index.ts",
+      "ownership": {
+        "owner": "S1",
+        "rule_type": "longest_directory_prefix",
+        "rule": "packages/client/"
+      },
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 4,
+          "text": "export { ClientError, type ClientErrorReason } from \"./client-error\"\nexport * as Orchestra from \"./client\"\nexport * from \"./types\"\n"
+        }
+      ]
+    },
+    {
+      "id": "B-S29",
+      "path": "packages/app-shell/package.json",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "eb09ebc7c07ed519482aeafdd5e592bf8223a269",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "full_content",
+      "read_note": "Fetched complete blob and inspected full displayed content.",
+      "decisive_ranges": [
+        [
+          57,
+          68
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/app-shell/package.json",
+      "ownership": {
+        "owner": "S2",
+        "rule_type": "longest_directory_prefix",
+        "rule": "packages/app-shell/"
+      },
+      "excerpts": [
+        {
+          "start_line": 57,
+          "end_line": 68,
+          "text": "  \"dependencies\": {\n    \"@corvu/drawer\": \"catalog:\",\n    \"@dnd-kit/abstract\": \"0.5.0\",\n    \"@dnd-kit/dom\": \"0.5.0\",\n    \"@dnd-kit/helpers\": \"0.5.0\",\n    \"@dnd-kit/solid\": \"0.5.0\",\n    \"@kobalte/core\": \"catalog:\",\n    \"@orchestra/client\": \"workspace:*\",\n    \"@orchestra/core\": \"workspace:*\",\n    \"@orchestra/schema\": \"workspace:*\",\n    \"@orchestra/session-ui\": \"workspace:*\",\n    \"@orchestra/ui\": \"workspace:*\","
+        }
+      ]
+    },
+    {
+      "id": "B-S30",
+      "path": "modules/maestro/coordination/src/v2/workflow/knowledge.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "f8f7852950b60029a4807324798954962f72ada5",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "full_content",
+      "read_note": "Fetched complete blob and inspected full displayed content.",
+      "decisive_ranges": [
+        [
+          6,
+          14
+        ],
+        [
+          29,
+          41
+        ],
+        [
+          64,
+          100
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/maestro/coordination/src/v2/workflow/knowledge.ts",
+      "ownership": {
+        "owner": "S3",
+        "rule_type": "longest_directory_prefix",
+        "rule": "modules/maestro/"
+      },
+      "excerpts": [
+        {
+          "start_line": 6,
+          "end_line": 14,
+          "text": "import { SessionStore, SessionV2 } from \"@orchestra/core/session\"\nimport { AtlasKnowledge } from \"@orchestra/schema/atlas-knowledge\"\nimport { MaestroAtlasSourceV2 } from \"../atlas-source\"\nimport type { MaestroSeats } from \"../seats-service\"\nimport { MaestroAtlasToolV2 } from \"../tools/atlas\"\n\n// `AtlasKnowledge.resolve`: a workflow publication\n// cites an anchor reference, and the host accepts it only when the native upstream seat produced it through one completed\n// `atlas_context` call in the author Session and the same units still load unchanged from the Atlas source. V2 keeps one"
+        },
+        {
+          "start_line": 29,
+          "end_line": 41,
+          "text": "  input: { readonly projectID: string; readonly authorSessionID: string; readonly reference: unknown },\n) {\n  if (!Schema.is(AtlasKnowledge.Reference)(input.reference)) return yield* held(\"anchor-reference-invalid\", [])\n  if (MaestroAtlasSourceV2.owner(\"archie\", services.seats) !== \"archie\")\n    return yield* held(\"native-archie-required\", [input.authorSessionID])\n  const sessionID = SessionV2.ID.make(input.authorSessionID)\n  const session = yield* services.store.get(sessionID)\n  if (!session) return yield* held(\"author-session-unavailable\", [input.authorSessionID])\n  if (session.projectID !== input.projectID || session.agent !== \"archie\")\n    return yield* held(\"author-session-binding-mismatch\", [input.authorSessionID, input.projectID])\n  // The full history, so an anchor older than a compaction still resolves.\n  const entries = yield* services.store\n    .entries(sessionID)"
+        },
+        {
+          "start_line": 64,
+          "end_line": 100,
+          "text": "  const anchor = Option.getOrUndefined(Schema.decodeUnknownOption(AtlasKnowledge.Anchor)(call.anchor))\n  const invocation = Option.getOrUndefined(Schema.decodeUnknownOption(MaestroAtlasToolV2.Input)(call.part.state.input))\n  if (\n    call.message.error ||\n    call.message.finish === \"error\" ||\n    call.message.agent !== \"archie\" ||\n    call.part.name !== MaestroAtlasToolV2.name ||\n    call.part.provider?.executed === true ||\n    call.part.state.status !== \"completed\" ||\n    !anchor ||\n    invocation?.action !== \"anchor\" ||\n    anchor.projectID !== input.projectID ||\n    anchor.authorSessionID !== sessionID ||\n    anchor.assistantMessageID !== call.message.id ||\n    anchor.callID !== call.part.id ||\n    !isDeepStrictEqual(anchor.target, invocation.target) ||\n    !isDeepStrictEqual(\n      anchor.units.map((unit) => unit.unit),\n      invocation.units,\n    )\n  )\n    return yield* held(\"anchor-invocation-mismatch\", [input.reference])\n  if (anchor.units.reduce((bytes, unit) => bytes + Buffer.byteLength(unit.content, \"utf8\"), 0) > AtlasKnowledge.MAX_BYTES)\n    return yield* held(\"knowledge-body-budget-exceeded\", [input.reference])\n  if (\n    MaestroAtlasToolV2.digest(AtlasKnowledge.canonical(anchor)) !== anchor.reference ||\n    anchor.units.some((unit) => MaestroAtlasToolV2.digest(unit.content) !== unit.bodyHash)\n  )\n    return yield* held(\"anchor-digest-mismatch\", [input.reference])\n  const units = yield* MaestroAtlasToolV2.acquire(\n    services.atlas,\n    { projectID: session.projectID, directory: session.location.directory },\n    invocation.units,\n  )\n  if (!isDeepStrictEqual(units, anchor.units)) return yield* held(\"anchor-source-drift\", [input.reference])\n  return anchor\n})"
+        }
+      ]
+    },
+    {
+      "id": "B-S31",
+      "path": "packages/core/package.json",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "8ee8ebb666051c9b5ee0fcd4a54bceb3a2cb3c43",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "partial_content",
+      "read_note": "Fetched complete blob; inspected selected imports, declarations and numbered excerpts only. No whole-file semantic coverage claimed.",
+      "decisive_ranges": [
+        [
+          530,
+          538
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/package.json",
+      "ownership": {
+        "owner": "S1",
+        "rule_type": "longest_directory_prefix",
+        "rule": "packages/core/"
+      },
+      "excerpts": [
+        {
+          "start_line": 530,
+          "end_line": 538,
+          "text": "    \"@orchestra/atlas-boundary\": \"workspace:*\",\n    \"@orchestra/effect-drizzle-sqlite\": \"workspace:*\",\n    \"@orchestra/effect-sqlite-node\": \"workspace:*\",\n    \"@orchestra/llm\": \"workspace:*\",\n    \"@orchestra/maestro-arsenal\": \"workspace:*\",\n    \"@orchestra/plugin\": \"workspace:*\",\n    \"@orchestra/relay\": \"workspace:*\",\n    \"@orchestra/schema\": \"workspace:*\",\n    \"@parcel/watcher\": \"2.5.1\","
+        }
+      ]
+    },
+    {
+      "id": "B-S32",
+      "path": "modules/maestro/coordination/package.json",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "97397b0bc609fcf842f654ecbad2f4dd66d8d8d4",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "full_content",
+      "read_note": "Fetched complete blob and inspected full displayed content.",
+      "decisive_ranges": [
+        [
+          1,
+          8
+        ],
+        [
+          31,
+          54
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/maestro/coordination/package.json",
+      "ownership": {
+        "owner": "S3",
+        "rule_type": "longest_directory_prefix",
+        "rule": "modules/maestro/"
+      },
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 8,
+          "text": "{\n  \"$schema\": \"https://json.schemastore.org/package.json\",\n  \"name\": \"@orchestra/maestro\",\n  \"version\": \"0.0.0\",\n  \"private\": true,\n  \"type\": \"module\",\n  \"license\": \"MIT\",\n  \"exports\": {"
+        },
+        {
+          "start_line": 31,
+          "end_line": 54,
+          "text": "  },\n  \"scripts\": {\n    \"test\": \"bun test --timeout 30000\",\n    \"typecheck\": \"tsgo --noEmit\"\n  },\n  \"dependencies\": {\n    \"@orchestra/atlas-boundary\": \"workspace:*\",\n    \"@orchestra/core\": \"workspace:*\",\n    \"@orchestra/llm\": \"workspace:*\",\n    \"@orchestra/maestro-arsenal\": \"workspace:*\",\n    \"@orchestra/relay\": \"workspace:*\",\n    \"@orchestra/schema\": \"workspace:*\",\n    \"drizzle-orm\": \"catalog:\",\n    \"effect\": \"catalog:\",\n    \"fast-xml-parser\": \"5.7.3\",\n    \"gray-matter\": \"4.0.3\"\n  },\n  \"devDependencies\": {\n    \"@tsconfig/bun\": \"catalog:\",\n    \"@types/bun\": \"catalog:\",\n    \"@typescript/native-preview\": \"catalog:\"\n  }\n}\n"
+        }
+      ]
+    },
+    {
+      "id": "B-S33",
+      "path": "packages/client/package.json",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "4cd0244e98ff18b5e65d3c2808196705095b6691",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "full_content",
+      "read_note": "Fetched complete blob and inspected full displayed content.",
+      "decisive_ranges": [
+        [
+          1,
+          39
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/client/package.json",
+      "ownership": {
+        "owner": "S1",
+        "rule_type": "longest_directory_prefix",
+        "rule": "packages/client/"
+      },
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 39,
+          "text": "{\n  \"$schema\": \"https://json.schemastore.org/package.json\",\n  \"name\": \"@orchestra/client\",\n  \"private\": true,\n  \"type\": \"module\",\n  \"license\": \"MIT\",\n  \"exports\": {\n    \".\": \"./src/index.ts\",\n    \"./effect\": \"./src/effect.ts\",\n    \"./contract\": \"./src/contract.ts\"\n  },\n  \"scripts\": {\n    \"generate\": \"bun run script/build.ts\",\n    \"check:generated\": \"bun run generate && git diff --exit-code -- src/generated src/generated-effect\",\n    \"test\": \"bun test --timeout 5000\",\n    \"typecheck\": \"tsgo --noEmit\"\n  },\n  \"dependencies\": {\n    \"@orchestra/schema\": \"workspace:*\",\n    \"@orchestra/protocol\": \"workspace:*\"\n  },\n  \"peerDependencies\": {\n    \"effect\": \"4.0.0-beta.83\"\n  },\n  \"peerDependenciesMeta\": {\n    \"effect\": {\n      \"optional\": true\n    }\n  },\n  \"devDependencies\": {\n    \"@effect/platform-node\": \"catalog:\",\n    \"@orchestra/httpapi-codegen\": \"workspace:*\",\n    \"@tsconfig/bun\": \"catalog:\",\n    \"@types/bun\": \"catalog:\",\n    \"@typescript/native-preview\": \"catalog:\",\n    \"effect\": \"catalog:\"\n  }\n}\n"
+        }
+      ]
+    },
+    {
+      "id": "B-S34",
+      "path": "packages/server/package.json",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "1e2d83907eaac06d0da1571ac7ceab9f528102b7",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "full_content",
+      "read_note": "Fetched complete blob and inspected full displayed content.",
+      "decisive_ranges": [
+        [
+          1,
+          32
+        ],
+        [
+          39,
+          56
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/server/package.json",
+      "ownership": {
+        "owner": "S1",
+        "rule_type": "longest_directory_prefix",
+        "rule": "packages/server/"
+      },
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 32,
+          "text": "{\n  \"$schema\": \"https://json.schemastore.org/package.json\",\n  \"name\": \"@orchestra/server\",\n  \"version\": \"1.18.27\",\n  \"private\": true,\n  \"type\": \"module\",\n  \"license\": \"MIT\",\n  \"exports\": {\n    \"./api\": \"./src/api.ts\",\n    \"./auth\": \"./src/auth.ts\",\n    \"./capability-content-ticket\": \"./src/capability-content-ticket.ts\",\n    \"./capability-verification\": \"./src/capability-verification.ts\",\n    \"./cors\": \"./src/cors.ts\",\n    \"./handlers\": \"./src/handlers.ts\",\n    \"./handlers/agent\": \"./src/handlers/agent.ts\",\n    \"./handlers/model\": \"./src/handlers/model.ts\",\n    \"./handlers/session\": \"./src/handlers/session.ts\",\n    \"./location\": \"./src/location.ts\",\n    \"./middleware/authorization\": \"./src/middleware/authorization.ts\",\n    \"./middleware/capability-authorization\": \"./src/middleware/capability-authorization.ts\",\n    \"./middleware/schema-error\": \"./src/middleware/schema-error.ts\",\n    \"./middleware/session-location\": \"./src/middleware/session-location.ts\",\n    \"./operator\": \"./src/operator.ts\",\n    \"./principal\": \"./src/principal.ts\",\n    \"./routes\": \"./src/routes.ts\",\n    \"./web-ui\": \"./src/web-ui.ts\",\n    \"./test/capability-connections-fixture\": \"./test/capability-connections-fixture.ts\",\n    \"./test/capability-setup-http-fixture\": \"./test/capability-setup-http-fixture.ts\",\n    \"./handlers/capability-connections\": \"./src/handlers/capability-connections.ts\"\n  },\n  \"scripts\": {\n    \"test\": \"bun test --timeout 30000 --only-failures\","
+        },
+        {
+          "start_line": 39,
+          "end_line": 56,
+          "text": "    \"@orchestra/protocol\": \"workspace:*\",\n    \"@orchestra/rag-studio\": \"workspace:*\",\n    \"@orchestra/relay\": \"workspace:*\",\n    \"@orchestra/schema\": \"workspace:*\",\n    \"drizzle-orm\": \"catalog:\",\n    \"effect\": \"catalog:\"\n  },\n  \"devDependencies\": {\n    \"@effect/platform-node\": \"catalog:\",\n    \"@orchestra/client\": \"workspace:*\",\n    \"@orchestra/httpapi-codegen\": \"workspace:*\",\n    \"@orchestra/plugin\": \"workspace:*\",\n    \"@tsconfig/bun\": \"catalog:\",\n    \"@types/bun\": \"catalog:\",\n    \"@typescript/native-preview\": \"catalog:\"\n  }\n}\n"
+        }
+      ]
+    },
+    {
+      "id": "B-S35",
+      "path": "modules/relay/package.json",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "c7145670d8f79d2db91eb8545af5361bc04549f1",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "full_content",
+      "read_note": "Fetched complete blob and inspected full displayed content.",
+      "decisive_ranges": [
+        [
+          1,
+          28
+        ],
+        [
+          40,
+          50
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/package.json",
+      "ownership": {
+        "owner": "S3",
+        "rule_type": "longest_directory_prefix",
+        "rule": "modules/relay/"
+      },
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 28,
+          "text": "{\n  \"$schema\": \"https://json.schemastore.org/package.json\",\n  \"name\": \"@orchestra/relay\",\n  \"version\": \"0.0.0\",\n  \"private\": true,\n  \"type\": \"module\",\n  \"license\": \"MIT\",\n  \"exports\": {\n    \".\": \"./src/index.ts\",\n    \"./arm/create\": \"./src/arm/create.ts\",\n    \"./arm/evaluate\": \"./src/arm/evaluate.ts\",\n    \"./arm/load\": \"./src/arm/load.ts\",\n    \"./arm/state\": \"./src/arm/state.ts\",\n    \"./audit\": \"./src/audit.ts\",\n    \"./authoring/graph\": \"./src/authoring/graph.ts\",\n    \"./authoring/hook\": \"./src/authoring/hook.ts\",\n    \"./authoring/lint\": \"./src/authoring/lint.ts\",\n    \"./authoring/store\": \"./src/authoring/store.ts\",\n    \"./gate/check\": \"./src/gate/check.ts\",\n    \"./gate/control\": \"./src/gate/control.ts\",\n    \"./gate/shell\": \"./src/gate/shell.ts\",\n    \"./hook/evaluate\": \"./src/hook/evaluate.ts\",\n    \"./json\": \"./src/json.ts\",\n    \"./judge/config\": \"./src/judge/config.ts\",\n    \"./ledger/chain\": \"./src/ledger/chain.ts\",\n    \"./ledger/read\": \"./src/ledger/read.ts\",\n    \"./ledger/verify\": \"./src/ledger/verify.ts\"\n  },"
+        },
+        {
+          "start_line": 40,
+          "end_line": 50,
+          "text": "  \"dependencies\": {\n    \"@orchestra/schema\": \"workspace:*\",\n    \"effect\": \"catalog:\"\n  },\n  \"devDependencies\": {\n    \"@tsconfig/bun\": \"catalog:\",\n    \"@types/bun\": \"catalog:\",\n    \"@typescript/native-preview\": \"catalog:\"\n  }\n}\n"
+        }
+      ]
+    },
+    {
+      "id": "B-S36",
+      "path": "AGENTS.md",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "full_content",
+      "read_note": "Fetched complete blob and inspected full displayed content.",
+      "decisive_ranges": [
+        [
+          1,
+          3
+        ],
+        [
+          14,
+          18
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/AGENTS.md",
+      "ownership": {
+        "owner": "S5",
+        "rule_type": "fallback",
+        "rule": "fallback_shard"
+      },
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 3,
+          "text": "- After changing the public Protocol or Server `HttpApi`, run `bun run generate` from `packages/client`. Do not edit `src/generated` or `src/generated-effect` directly.\n- Keep runtime dependencies directed from Schema to Core and Protocol, then from Core and Protocol to Server. Client runtime code may depend on Schema and Protocol but never Core or Server; `sdk-next` composes Client, Core, and Server.\n- The default branch in this repo is `dev`."
+        },
+        {
+          "start_line": 14,
+          "end_line": 18,
+          "text": "- Maestro's name is fixed. The app and other Sessions find and address the conductor by it, so config cannot rename it.\n- Every other native seat is addressed by its stable id (for example `backend`); its display name is a user setting (`agent.<id>.name`). Code, tests, docs, commits and PR text refer to a seat by role or id, never by a default display name.\n- The backend specialist's default display name lives only in `BACKEND_DEFAULT_LABEL` (`modules/maestro/coordination/src/roster.ts`). `modules/maestro/coordination/test/specialist-name-guard.test.ts` fails on any other occurrence in the repository.\n\n## Commits and PR Titles"
+        }
+      ]
+    },
+    {
+      "id": "B-P01",
+      "path": ".orchestra/skills/execute-genesis/references/parallel-partition.json",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "blob_sha": "cdd2fba881059af6152371b417d8a791d8090a9f",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "full_content",
+      "read_note": "Fetched complete blob and inspected full displayed content.",
+      "decisive_ranges": [
+        [
+          1,
+          18
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/parallel-partition.json",
+      "ownership": "PROTOCOL",
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 18,
+          "text": "{\n  \"schema_version\": 1,\n  \"repository\": \"gustavomhss/hugr-orchestra\",\n  \"baseline_commit\": \"1cde2ff7a71bcf7aecb5d030917b577165135d38\",\n  \"baseline_tree\": \"a522a53e5f046f1758151b0f558531bbded04592\",\n  \"baseline_entry_count\": 14442,\n  \"baseline_paths_sha256\": \"2516d9fbc2edc223c10a30359aabc54687eb0871c0f77c35a7e5952fede57b83\",\n  \"baseline_tree_records_sha256\": \"ac3538da3b3440fe7c7c931aa69ca3be423b39ec56a5b0775b95a1f5b2e7ddab\",\n  \"digest_encoding\": \"UTF-8; records sorted by UTF-8 path bytes; LF after every record. paths: path + LF. tree_records: mode + TAB + object_type + TAB + object_oid + TAB + path + LF.\",\n  \"resolver\": {\n    \"priority\": [\n      \"exact_file\",\n      \"longest_directory_prefix\",\n      \"fallback\"\n    ],\n    \"directory_boundary\": \"Each directory prefix ends in slash; raw substring, fuzzy and basename matches are forbidden.\",\n    \"fallback_shard\": \"S5\",\n    \"scope\": \"Every tracked baseline entry is owned, including generated files, fixtures, binary assets, vendor code, docs, tests, configs and hidden paths. Ownership does not imply equal extraction depth. New source commits require re-enumeration and new digests before closure.\""
+        }
+      ]
+    },
+    {
+      "id": "B-P02",
+      "path": ".orchestra/skills/execute-genesis/references/integration.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "blob_sha": "e9bd813f08eaad30e829c27e0f73ff0e3aef602d",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "full_content",
+      "read_note": "Fetched complete blob and inspected full displayed content.",
+      "decisive_ranges": [
+        [
+          14,
+          32
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/integration.md",
+      "ownership": "PROTOCOL",
+      "excerpts": [
+        {
+          "start_line": 14,
+          "end_line": 32,
+          "text": "por SHA e verificar payload/hashes, origem, execução, domínio, critérios e decisões.\nRegistrar commits selecionados; um avanço de HEAD não troca automaticamente inputs.\nUm checkpoint pode ajudar preparação, mas não vira entrega completa do domínio.\n\nConferir a união de 14.442 entradas e as necessidades/fluxos, classificações e\nexclusões. Reconciliar alterações reais do candidato e provas afetadas. Verificar\ndependências de build e navegação separadamente. Cobertura estrutural não prova\nsuficiência semântica. Não herdar PASS do piloto como aceite da união.\n\n## Integrar e executar\n\nMontar candidato isolado com os patches e artefatos exatos. Resolver conflitos por\nproprietário, sem sobrescrever snapshots inteiros ou fazer merge cego de latest.\nUsar o release real de S4; verificar que input/binding/reader atendem aos cinco\ndomínios. Aplicar regras de store isolado, governança e testes em [runtime.md](runtime.md).\n\nReutilizar provas locais compatíveis, executar controles faltantes ou invalidados\npelo delta e os casos transversais. Cobrir consumo Atlas-only, navegação progressiva,\nimpacto entre domínios, cache/rebuild, coerência, falhas, retomada, rollback, histórico,"
+        }
+      ]
+    },
+    {
+      "id": "B-P03",
+      "path": ".orchestra/skills/execute-genesis/references/principles.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "full_content",
+      "read_note": "Fetched complete blob and inspected full displayed content.",
+      "decisive_ranges": [
+        [
+          1,
+          73
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/principles.md",
+      "ownership": "PROTOCOL",
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 73,
+          "text": "# Princípios e critérios que orientam a execução\n\nUsar estes princípios para decidir e verificar. Não criar um documento, agente,\naprovação ou gate adicional para cada item. Cada tarefa herda este contrato e cita\nsomente os IDs pertinentes; especializar o que muda no seu domínio.\n\nA fonte normativa é `modules/atlas/docs/design/genesis-ownership-plan.md` no baseline\n`1cde2ff7a71bcf7aecb5d030917b577165135d38`. As famílias abaixo preservam seus 50 IDs;\no texto original decide detalhes. A autorização atual amplia escopo e topologia,\nsem substituir provas por declarações. [Registro](criteria.json).\n\n## Axiomas — como escolher o caminho\n\n- **GO-A1:** entregar entendimento transferível de código e produto: propósito, comportamento, contratos, decisões, impacto e manutenção.\n- **GO-A2:** construir cumulativamente; conhecimento intermediário persiste e precisa ser útil.\n- **GO-A3:** começar a consulta pelo necessário e aprofundar pelo índice; skills prescrevem ações e quando buscar evidência.\n- **GO-A4:** manter conhecimento e fonte juntos; reutilizar o que continua válido e reconstruir os afetados.\n- **GO-A5:** separar atualidade, validade semântica e autoridade; Git e gates sustentam essas relações.\n- **GO-A6:** mecanizar o determinístico; usar modelos para interpretação, com trabalho delimitado e resultados preservados.\n- **GO-A7:** estender o Atlas existente com o mínimo necessário; nenhuma plataforma paralela de conhecimento ou orquestração.\n\n## Quality standards — o que caracteriza uma entrega boa\n\n- **QS-1 Fidelidade:** afirmações rastreáveis; intenção, observação, interpretação e lacuna identificadas.\n- **QS-2 Utilidade:** um consumidor consegue agir; instruções claras, contexto suficiente, pouca repetição.\n- **QS-3 Simplicidade:** cada mecanismo novo resolve uma necessidade concreta que o existente não atende.\n- **QS-4 Engenharia:** respeitar arquitetura, geração, validação de entradas e persistência do repositório.\n- **QS-5 Evidência:** verificar implementação e uso reais; os juízes avaliam uma barra fixa, não aperfeiçoamento infinito.\n- **QS-6 Economia:** fontes delimitadas, reúso, revisão de deltas e uso reportado honestamente.\n\n## Completeness criteria — o que precisa estar coberto\n\n- **CC-1:** população, necessidades, fontes, lacunas e artefatos exigidos da fatia completamente reconciliados.\n- **CC-2:** todos os níveis L1–L4 necessários produzidos, persistidos, úteis e alcançáveis pelo caminho real.\n- **CC-3:** propósito, comportamento, contratos, decisões, impacto e manutenção apoiados por conteúdo, não só títulos.\n- **CC-4:** construção, invalidação, reúso e atualização pertinentes funcionam de ponta a ponta.\n- **CC-5:** publicação coerente, leitura, recuperação e compatibilidade têm provas no escopo devido.\n- **CC-6:** execução nova e suas limitações econômicas estão reconciliadas; incertezas antigas continuam preservadas.\n- **CC-7:** documentação, skills, gerados, compatibilidade e obrigações históricas têm disposição explícita.\n\n## Success criteria — como reconhecer que funcionou\n\n- **SC-1:** consumidor independente resolve todos os casos obrigatórios de ownership, sem erro crítico e sem redescobrir a fonte.\n- **SC-2:** consumo raso e profundo respeita limites definidos para a tarefa; não exige carregar o grafo inteiro.\n- **SC-3:** mudanças atingem o conjunto esperado, preservam independentes e não repetem interpretação sem necessidade.\n- **SC-4:** construção, avaliação, atualização e leitura têm uso separado; desconhecido não vira zero ou economia inventada.\n- **SC-5:** leituras coerentes e recusas dos estados inválidos exigidos são observadas nas portas reais.\n\n## Invariants — o que permanece verdadeiro durante o trabalho\n\n- **GO-I1:** históricos, pedidos e respostas originais são preservados; correções têm identidade e vínculo novos.\n- **GO-I2:** conflito de intenção e implementação permanece visível; hash atual não prova interpretação correta.\n- **GO-I3:** leitura atual usa versões exatas aceitas e compatíveis; rollback não torna conhecimento stale atual.\n- **GO-I4:** input/receita inalterados e válidos reutilizam resultado; link de navegação não é dependência de build.\n- **GO-I5:** adição, remoção, código, intenção e receita entram no impacto; falha de observação não é worklist vazia.\n- **GO-I6:** despachos, juízes, correções, consumidores e tentativas incertas continuam contabilizados; sem fallback oculto.\n- **GO-I7:** portas governadas, fronteiras e segredos permanecem protegidos; texto importado é dado, nunca autoridade executável.\n- **GO-I8:** estrutura, hashes, seções e testes completos não bastam para alegar suficiência semântica.\n\n## Definition of Done — quando a entrega pode terminar\n\n- **DOD-1:** CC/SC têm evidência e decisão; critérios julgados têm os dois pareceres pertinentes.\n- **DOD-2:** invariants e QS aplicáveis foram conferidos; controles negativos necessários rejeitaram defeitos reais.\n- **DOD-3:** consumidor e cadeia operacional exigidos foram exercitados, com versões fixadas.\n- **DOD-4:** gates atribuídos à fatia têm resultados reais no candidato correto; a integração final tem seus próprios gates.\n- **DOD-5:** uso novo, reservas e pendências estão reconciliados sem apagar o histórico ou afirmar custo desconhecido como zero.\n- **DOD-6:** orientação operacional, evidências, migração pertinente e revisão independente estão entregues e preservadas.\n- **DOD-7:** entrega local, aceite global, aceite humano, landing e ativação são distintos. ROOT cuida da integração e do aceite da união.\n\nO [contrato de conclusão](completion.md) aplica esse DoD à fatia. A parte exclusivamente\nglobal não impede a entrega local, mas também não absorve trabalho local inacabado.\nUma sugestão opcional do juiz não amplia a missão. Uma lacuna obrigatória permanece aberta.\n"
+        }
+      ]
+    },
+    {
+      "id": "B-S37",
+      "path": "packages/server/src/handlers.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "2a58a97a11c0cac94a63f9e7bf0dbe4c6acdcd33",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP fetch_file response sha",
+      "read_scope": "full_content",
+      "read_note": "Fetched complete blob and inspected full displayed content.",
+      "decisive_ranges": [
+        [
+          27,
+          30
+        ],
+        [
+          79,
+          85
+        ]
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/server/src/handlers.ts",
+      "ownership": {
+        "owner": "S1",
+        "rule_type": "longest_directory_prefix",
+        "rule": "packages/server/"
+      },
+      "excerpts": [
+        {
+          "start_line": 27,
+          "end_line": 30,
+          "text": "import { LeanHandler } from \"./handlers/lean\"\nimport { RagStudioHandler } from \"./handlers/rag-studio\"\nimport { AtlasHandler } from \"./handlers/atlas\"\nimport { ConfigHandler } from \"./handlers/config\""
+        },
+        {
+          "start_line": 79,
+          "end_line": 85,
+          "text": "  ProjectCopyHandler,\n  ProjectHandler,\n  LeanHandler,\n  RagStudioHandler,\n  AtlasHandler,\n  ConfigHandler,\n  TrustHandler,"
+        }
+      ]
+    }
+  ]
+}

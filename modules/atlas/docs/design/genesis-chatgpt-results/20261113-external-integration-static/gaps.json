@@ -1,0 +1,490 @@
+{
+  "schema": "genesis-external-integration-static-gaps/v1",
+  "audit_id": "20261113-external-integration-static",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "interpretation": "These are static findings, scope limitations and future integration requirements; UNKNOWN is not an assertion that another session has not performed work.",
+  "gaps": [
+    {
+      "id": "A-GAP-01",
+      "status": "SCOPE_LIMITATION",
+      "severity": "informational",
+      "subject": "Semantic and runtime completeness",
+      "description": "The 14442-leaf reconciliation is structural. This inventory has not read the contents of 14442 blobs and cannot certify extraction completeness, correctness, L1–L4 usefulness or runtime behavior.",
+      "required_next_step": "Coordination selects exact domain handoffs and performs its separate semantic and runtime gates.",
+      "blocking_static_inventory": false,
+      "front": "A"
+    },
+    {
+      "id": "A-GAP-02",
+      "status": "RECOVERED",
+      "severity": "informational",
+      "subject": "Large root recursive tree request",
+      "description": "The first recursive root request failed with Transport closed; no Git truncation result was available. The complete hierarchy was recovered using 47 successful non-truncated tree responses.",
+      "required_next_step": "None for this candidate; repeat decomposition if recovering.",
+      "blocking_static_inventory": false,
+      "front": "A"
+    },
+    {
+      "id": "A-GAP-03",
+      "status": "OPEN_FOR_COORDINATION",
+      "severity": "material_integration_requirement",
+      "subject": "Baseline observer does not directly cover the full tracked-path population",
+      "description": "Static inspection of ownership-input.ts plus tree metadata identifies 86 distinct tracked paths subject to baseline file-observation refusals: 80 blob sizes >256000, 5 paths containing an .atlas segment (3 root paths plus 2 fixtures), and 1 symlink. These groups do not overlap. This is a baseline source/metadata fit finding, not a runtime result or a finding about the unknown current S4 candidate.",
+      "evidence": {
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "observer_path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+        "observer_blob_sha": "c6afd6a35071a2487a1168cea5ed1ad26379c376",
+        "metadata_index": "tree-inventory.tsv",
+        "detail": "inventory.json#/baseline_input_fit"
+      },
+      "qualification": "Oversize comparison uses Git blob sizes and assumes identical materialized bytes; actual worktree filters/line endings and membership propagation were not measured.",
+      "required_next_step": "Verify exact S4 release representation/input/binding/reader coverage or explicit safe disposition for these paths while retaining all 14442 entries.",
+      "blocking_static_inventory": false,
+      "blocks_future_integration_claim_until_resolved": true,
+      "front": "A"
+    },
+    {
+      "id": "B-G01",
+      "status": "OPEN",
+      "severity": "material_for_integration",
+      "topic": "Generated executable boundary parity",
+      "finding": "Core and Maestro import packaged generated Atlas exports. The recipe and public declarations were inspected; executable surface.js/boundary.js equivalence to their source was not established.",
+      "verified_cause": "No generation/check/native execution authorized; generated executable contents not inspected.",
+      "available_result": "UNKNOWN",
+      "owners": [
+        "S4",
+        "S1",
+        "S3",
+        "ROOT"
+      ],
+      "next_control": "Bind exact generated blobs plus recipe in candidate and perform required generation/consumer gates under coordination.",
+      "control_status": "NOT_RUN",
+      "evidence": [
+        {
+          "source_id": "B-S15",
+          "path": "modules/atlas/boundary/package.json",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "055b46b9d32d765c3c2dc54468137d031bb3de90"
+        },
+        {
+          "source_id": "B-S16",
+          "path": "modules/atlas/boundary/script/build.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "df0a875e47e98e8803e00818d178166d0b1cb8dd"
+        },
+        {
+          "source_id": "B-S23",
+          "path": "packages/core/src/atlas.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "f6718654785fb155e1bb1b2acb7e9985478b983b"
+        },
+        {
+          "source_id": "B-S25",
+          "path": "modules/atlas/boundary/src/generated/surface.d.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "7614ff6a04ff82b76ed68836a843d7232fa8cd43"
+        }
+      ],
+      "front": "B"
+    },
+    {
+      "id": "B-G02",
+      "status": "OPEN",
+      "severity": "material_for_integration",
+      "topic": "Runtime and real consumer behavior",
+      "finding": "Static wiring does not establish actual successful composition, HTTP delivery, Host refusals, coherent reads, rollback or use of accepted Genesis knowledge.",
+      "verified_cause": "User explicitly forbids runtime/tests/CI/native tools/consumers in this audit.",
+      "available_result": "NOT_RUN",
+      "owners": [
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "ROOT"
+      ],
+      "next_control": "Select exact handoffs/runtime release and execute missing or invalidated controls under the primary coordination.",
+      "control_status": "NOT_RUN",
+      "evidence": [
+        {
+          "source_id": "B-P02",
+          "path": ".orchestra/skills/execute-genesis/references/integration.md",
+          "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "blob_sha": "e9bd813f08eaad30e829c27e0f73ff0e3aef602d"
+        },
+        {
+          "source_id": "B-S03",
+          "path": "packages/server/src/routes.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "75b0f9753e4c879767ef186f5003519e2b681025"
+        },
+        {
+          "source_id": "B-S04",
+          "path": "packages/core/src/host.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "a0fc5bc9a36e50315b0ddddf4de3566555711250"
+        },
+        {
+          "source_id": "B-S12",
+          "path": "modules/maestro/coordination/src/v2/tools/atlas.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "1989941d868187b7fc264559f0c90d11c9b1c4d3"
+        },
+        {
+          "source_id": "B-S22",
+          "path": "packages/server/src/handlers/atlas.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "692afb828dc5c896339adfebbb5e33ef39876347"
+        }
+      ],
+      "front": "B"
+    },
+    {
+      "id": "B-G03",
+      "status": "OPEN",
+      "severity": "scope_limit",
+      "topic": "Complete transitive impact set",
+      "finding": "The graph covers selected critical boundaries and minimum requested chains; it is not the exhaustive import/call graph of every baseline blob. Impact targets are a lower-bound hypothesis for review, not a calculated worklist.",
+      "verified_cause": "Only listed content sources were read; complete tree metadata is separately inventoried by front A.",
+      "available_result": "UNKNOWN",
+      "owners": [
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5",
+        "ROOT"
+      ],
+      "next_control": "Use the actual candidate delta and artifact build dependencies to determine affected/preserved knowledge; treat observation failure distinctly from an empty set.",
+      "control_status": "NOT_RUN",
+      "evidence": [
+        {
+          "source_id": "B-P01",
+          "path": ".orchestra/skills/execute-genesis/references/parallel-partition.json",
+          "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "blob_sha": "cdd2fba881059af6152371b417d8a791d8090a9f"
+        },
+        {
+          "source_id": "B-P02",
+          "path": ".orchestra/skills/execute-genesis/references/integration.md",
+          "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "blob_sha": "e9bd813f08eaad30e829c27e0f73ff0e3aef602d"
+        },
+        {
+          "source_id": "B-P03",
+          "path": ".orchestra/skills/execute-genesis/references/principles.md",
+          "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765"
+        }
+      ],
+      "front": "B"
+    },
+    {
+      "id": "B-G04",
+      "status": "OPEN",
+      "severity": "conditional_static_limit",
+      "topic": "Seat resources in the chosen product build",
+      "finding": "seats.ts explicitly catches lazy roster/skill-root loading and warns if unavailable; its comment identifies standalone CLI resource absence. The selected shipped build's availability was not inspected.",
+      "verified_cause": "Conditional load and fallback exist in the source; no build/consumer executed.",
+      "available_result": "UNKNOWN",
+      "owners": [
+        "S3",
+        "S5",
+        "ROOT"
+      ],
+      "next_control": "Verify roster/skills/playbooks are packaged and discoverable in the exact integrated build, preserving the native identity and visibility rules.",
+      "control_status": "NOT_RUN",
+      "evidence": [
+        {
+          "source_id": "B-S05",
+          "path": "apps/cli/src/host.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "cc89adc3a11e2bd3e7d779642382ed86dfceab31"
+        },
+        {
+          "source_id": "B-S06",
+          "path": "modules/maestro/coordination/src/v2/seats.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "f27ddca3b35551b16482f7032197af7cba25e3e6"
+        },
+        {
+          "source_id": "B-S36",
+          "path": "AGENTS.md",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f"
+        }
+      ],
+      "front": "B"
+    },
+    {
+      "id": "B-G05",
+      "status": "OPEN",
+      "severity": "scope_limit",
+      "topic": "Actual Genesis navigation and knowledge dependency graph",
+      "finding": "catalog/unit/anchor and reference-resolution interfaces were inspected. No actual accepted S1–S5 knowledge units, private oracles or other-session outputs were read. There are no asserted unit-to-unit navigation/build edges.",
+      "verified_cause": "Audit is public/static and may not obtain/reconstruct private coordination material or other-session results.",
+      "available_result": "UNKNOWN",
+      "owners": [
+        "S4",
+        "S1",
+        "S2",
+        "S3",
+        "S5",
+        "ROOT"
+      ],
+      "next_control": "Coordination must bind accepted unit IDs and inspect their navigation links separately from build_dependencies, then use an independent Atlas-only consumer.",
+      "control_status": "NOT_RUN",
+      "evidence": [
+        {
+          "source_id": "B-S12",
+          "path": "modules/maestro/coordination/src/v2/tools/atlas.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "1989941d868187b7fc264559f0c90d11c9b1c4d3"
+        },
+        {
+          "source_id": "B-S13",
+          "path": "modules/maestro/coordination/src/v2/atlas-source.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "5388417c92f33c2cfd0d06d58d04446c35631d42"
+        },
+        {
+          "source_id": "B-S14",
+          "path": "modules/atlas/packages/retrieval/src/host-context.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "6c60032a6049e5de89592d9b6aa483207c909598"
+        },
+        {
+          "source_id": "B-S30",
+          "path": "modules/maestro/coordination/src/v2/workflow/knowledge.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "f8f7852950b60029a4807324798954962f72ada5"
+        },
+        {
+          "source_id": "B-P02",
+          "path": ".orchestra/skills/execute-genesis/references/integration.md",
+          "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "blob_sha": "e9bd813f08eaad30e829c27e0f73ff0e3aef602d"
+        }
+      ],
+      "front": "B"
+    },
+    {
+      "id": "B-G06",
+      "status": "OPEN",
+      "severity": "material_for_integration",
+      "topic": "Client generation and app adapter parity",
+      "finding": "ClientApi generation path and selected HTTP endpoint strings align statically. app-shell adapter casts to ServerApi; the complete generated/client/API/UI parity was not established.",
+      "verified_cause": "Generation, typechecks and contract consumers are not run. Only selected generated client sections were inspected.",
+      "available_result": "UNKNOWN",
+      "owners": [
+        "S1",
+        "S2",
+        "ROOT"
+      ],
+      "next_control": "For affected contracts, verify generated bytes and exercise API/adapter parity on the exact candidate; reuse prior proof only if source, recipe, outputs and scope are compatible.",
+      "control_status": "NOT_RUN",
+      "evidence": [
+        {
+          "source_id": "B-S17",
+          "path": "packages/client/src/contract.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "1dccaeb657cc106b7a8cba93f5f5c34a8faf8680"
+        },
+        {
+          "source_id": "B-S18",
+          "path": "packages/client/script/build.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "99ae2184b9c13f6175d7ba8e3025068bee07ee4f"
+        },
+        {
+          "source_id": "B-S21",
+          "path": "packages/client/src/generated/client.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "93cab27e0b902d6e8fbd21d6aaec320a2b9fe09c"
+        },
+        {
+          "source_id": "B-S26",
+          "path": "packages/app-shell/src/utils/server.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "542e992958dca3993e633babd881c5a7e8407c66"
+        },
+        {
+          "source_id": "B-S36",
+          "path": "AGENTS.md",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f"
+        }
+      ],
+      "front": "B"
+    },
+    {
+      "id": "GAP-C-001",
+      "category": "OUT_OF_SCOPE_EVIDENCE",
+      "state": "OPEN_FOR_COORDINATION",
+      "finding": "Candidato de integração, handoffs selecionados e capacidades atuais do runtime S4 não foram inspecionados por esta auditoria; sua disponibilidade e satisfação são UNKNOWN.",
+      "evidence_refs": [
+        "C-INTEGRATION",
+        "C-RUNTIME"
+      ],
+      "affected_criteria": [
+        "GO-A1",
+        "GO-A2",
+        "GO-A3",
+        "GO-A4",
+        "GO-A5",
+        "GO-A6",
+        "GO-A7",
+        "GO-I1",
+        "GO-I2",
+        "GO-I3",
+        "GO-I4",
+        "GO-I5",
+        "GO-I6",
+        "GO-I7",
+        "GO-I8",
+        "AC-01",
+        "AC-02",
+        "AC-03",
+        "AC-04",
+        "AC-05",
+        "AC-06",
+        "AC-07",
+        "AC-08",
+        "AC-09",
+        "AC-10",
+        "CC-1",
+        "CC-2",
+        "CC-3",
+        "CC-4",
+        "CC-5",
+        "CC-6",
+        "CC-7",
+        "SC-1",
+        "SC-2",
+        "SC-3",
+        "SC-4",
+        "SC-5",
+        "QS-1",
+        "QS-2",
+        "QS-3",
+        "QS-4",
+        "QS-5",
+        "QS-6",
+        "DOD-1",
+        "DOD-2",
+        "DOD-3",
+        "DOD-4",
+        "DOD-5",
+        "DOD-6",
+        "DOD-7"
+      ],
+      "resolution": "Coordenação fixa os commits e fornece evidência autorizada segundo INT-00..12; não inferir ausência nem execução de outra sessão.",
+      "audit_blocker": false,
+      "front": "C"
+    },
+    {
+      "id": "GAP-C-002",
+      "category": "FIT_BOUNDARY",
+      "state": "OPEN_FOR_COORDINATION",
+      "finding": "O protocolo descreve restrições do observador de inputs (.atlas, symlinks, arquivos acima de 256.000 bytes e membership indisponível) que precisam ser conciliadas com a população completa, sem excluir fontes. A solução/capacidade de um candidato posterior é UNKNOWN.",
+      "evidence_refs": [
+        "C-TRANSPORT",
+        "C-RUNTIME"
+      ],
+      "affected_criteria": [
+        "AC-01",
+        "AC-04",
+        "AC-06",
+        "AC-09",
+        "CC-1",
+        "CC-2"
+      ],
+      "resolution": "INT-02 exige decisão de fit e evidência no candidato real; preservar absent versus unavailable e a cobertura completa.",
+      "audit_blocker": false,
+      "epistemic_status": "PROTOCOL_OBSERVATION; no later runtime implementation inferred",
+      "front": "C"
+    },
+    {
+      "id": "GAP-C-003",
+      "category": "ECONOMY_GUARANTEE",
+      "state": "OPEN_FOR_COORDINATION",
+      "finding": "Não foi demonstrada nesta auditoria a garantia financeira/admissão do adapter nem uso consolidado; limite lógico não basta. Dados não observados permanecem UNKNOWN.",
+      "evidence_refs": [
+        "C-NORM",
+        "C-RUNTIME",
+        "C-INTEGRATION"
+      ],
+      "affected_criteria": [
+        "GO-I6",
+        "AC-08",
+        "CC-6",
+        "SC-4",
+        "DOD-5"
+      ],
+      "resolution": "INT-00/09 reconciliam as garantias e uso por canais autorizados, sem publicar ledgers ou converter bytes/chamadas em valores fictícios.",
+      "audit_blocker": false,
+      "front": "C"
+    },
+    {
+      "id": "GAP-C-004",
+      "category": "SEMANTIC_AND_RUNTIME_EVIDENCE",
+      "state": "OPEN_FOR_COORDINATION",
+      "finding": "Casos Atlas-only, navegação real, cache/rebuild, falha/retomada/rollback, recusas e preservação não foram executados. Leitura de protocolo não satisfaz essas exigências.",
+      "evidence_refs": [
+        "C-NORM",
+        "C-RUNTIME",
+        "C-JUDGING"
+      ],
+      "affected_criteria": [
+        "AC-02",
+        "AC-03",
+        "AC-04",
+        "AC-05",
+        "AC-06",
+        "AC-07",
+        "AC-09",
+        "AC-10",
+        "SC-1",
+        "SC-2",
+        "SC-3",
+        "SC-5",
+        "DOD-3"
+      ],
+      "resolution": "Reutilizar somente provas compatíveis e executar controles faltantes/invalidados no escopo autorizado da coordenação.",
+      "audit_blocker": false,
+      "front": "C"
+    },
+    {
+      "id": "GAP-C-005",
+      "category": "GATES_AND_ACCEPTANCE",
+      "state": "OPEN_FOR_COORDINATION",
+      "finding": "Resultados de testes/CI, proteção de branch, julgamento global, aceite humano, landing e ativação são UNKNOWN e não foram realizados por esta auditoria.",
+      "evidence_refs": [
+        "C-AGENTS",
+        "C-COMPLETION",
+        "C-INTEGRATION"
+      ],
+      "affected_criteria": [
+        "AC-09",
+        "DOD-1",
+        "DOD-2",
+        "DOD-4",
+        "DOD-6",
+        "DOD-7"
+      ],
+      "resolution": "INT-10..12 exigem evidência e atos próprios, distinguindo resultado estático, revisão, aceite humano, landing e ativação.",
+      "audit_blocker": false,
+      "front": "C"
+    }
+  ],
+  "static_review": {
+    "status": "PENDING",
+    "material_findings": []
+  },
+  "integration": {
+    "status": "NOT_PERFORMED",
+    "owner": "Primary coordination",
+    "runtime_evidence": "NOT_RUN",
+    "acceptance": "NOT_CLAIMED"
+  }
+}

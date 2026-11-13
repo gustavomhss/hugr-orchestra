@@ -1,0 +1,278 @@
+{
+  "schema": "genesis-external-static-source-manifest-fragment/v1",
+  "producer": "C",
+  "scope": "Only sources actually fetched through GitHub MCP and read as full UTF-8 text by this producer.",
+  "sources": [
+    {
+      "id": "C-REG",
+      "role": "protocol",
+      "path": ".orchestra/skills/execute-genesis/references/criteria.json",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "6171f3d23d3e0263e578c04338067ecb8012016d",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 236
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/criteria.json",
+      "purpose": "Definição do registro, sequência dos IDs e pins normativos."
+    },
+    {
+      "id": "C-CAMPAIGN",
+      "role": "protocol",
+      "path": ".orchestra/skills/execute-genesis/references/campaign.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "41a2aded10fbe639d4a0df1c4354da651543c47d",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 71
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/campaign.md",
+      "purpose": "Responsabilidades S1–S5, runtime comum S4 e integração ROOT."
+    },
+    {
+      "id": "C-INTEGRATION",
+      "role": "protocol",
+      "path": ".orchestra/skills/execute-genesis/references/integration.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "e9bd813f08eaad30e829c27e0f73ff0e3aef602d",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 55
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/integration.md",
+      "purpose": "Seleção exata, união, reuso compatível e dupla independente da integração."
+    },
+    {
+      "id": "C-RUNTIME",
+      "role": "protocol",
+      "path": ".orchestra/skills/execute-genesis/references/runtime.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "0e0f1607003ff49946ed7a155c268b31239930e6",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 151
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/runtime.md",
+      "purpose": "Provas separadas de produção, binding, consumo, runtime, CI e limites."
+    },
+    {
+      "id": "C-TRANSPORT",
+      "role": "protocol",
+      "path": ".orchestra/skills/execute-genesis/references/transport.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 150
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/transport.md",
+      "purpose": "Bytes, identities, dependências, navegação e limites de adaptação."
+    },
+    {
+      "id": "C-PRINCIPLES",
+      "role": "protocol",
+      "path": ".orchestra/skills/execute-genesis/references/principles.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 73
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/principles.md",
+      "purpose": "Orientação preservando os 50 IDs e significado normativo."
+    },
+    {
+      "id": "C-HANDOFFS",
+      "role": "protocol",
+      "path": ".orchestra/skills/execute-genesis/references/handoffs.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "e6dda45da04f507bab745b67b5b053fcf19be32b",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 110
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/handoffs.md",
+      "purpose": "Selagem sem autorreferência, origem e evidência de entrega."
+    },
+    {
+      "id": "C-COMPLETION",
+      "role": "protocol",
+      "path": ".orchestra/skills/execute-genesis/references/completion.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "a843c2c312eefc80ecbad3890764d9d65ce45c43",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 70
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/completion.md",
+      "purpose": "Critérios para fechamento local e pendências globais."
+    },
+    {
+      "id": "C-JUDGING",
+      "role": "protocol",
+      "path": ".orchestra/skills/execute-genesis/references/judging.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 98
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/judging.md",
+      "purpose": "Independência, barra fixa, pacote exato, correção e limites de pareceres."
+    },
+    {
+      "id": "C-NORM",
+      "role": "normative_baseline",
+      "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 257
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-plan.md",
+      "purpose": "Texto literal dos 50 critérios, conforme blob exigido pelo registro."
+    },
+    {
+      "id": "C-AGENTS",
+      "role": "repository_instructions",
+      "path": "AGENTS.md",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 224
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/AGENTS.md",
+      "purpose": "Direção de dependências, geração, gates e limites de execução."
+    },
+    {
+      "id": "C-P1",
+      "role": "prompt",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/01-core.md",
+      "revision": "d2d985c28947c7f984a36b07ad34ede3d4d2d6b4",
+      "git_blob_sha": "f28b83019447209bcfa8a9171e5dc0241555fe47",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 142
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d2d985c28947c7f984a36b07ad34ede3d4d2d6b4/modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/01-core.md",
+      "purpose": "Missão e fronteiras S1."
+    },
+    {
+      "id": "C-P2",
+      "role": "prompt",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/02-interfaces.md",
+      "revision": "d2d985c28947c7f984a36b07ad34ede3d4d2d6b4",
+      "git_blob_sha": "7321a9d83d966675ba5e62e999994d85f5dbb9e0",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 142
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d2d985c28947c7f984a36b07ad34ede3d4d2d6b4/modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/02-interfaces.md",
+      "purpose": "Missão e fronteiras S2."
+    },
+    {
+      "id": "C-P3",
+      "role": "prompt",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/03-agentes.md",
+      "revision": "d2d985c28947c7f984a36b07ad34ede3d4d2d6b4",
+      "git_blob_sha": "b04842104c2052fd45ef0913f5e4bd0f3bb5c451",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 142
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d2d985c28947c7f984a36b07ad34ede3d4d2d6b4/modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/03-agentes.md",
+      "purpose": "Missão e fronteiras S3."
+    },
+    {
+      "id": "C-P4",
+      "role": "prompt",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/04-atlas.md",
+      "revision": "d2d985c28947c7f984a36b07ad34ede3d4d2d6b4",
+      "git_blob_sha": "0a9ba7423545f2c99504ed783bd65dcdf8465f26",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 142
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d2d985c28947c7f984a36b07ad34ede3d4d2d6b4/modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/04-atlas.md",
+      "purpose": "Missão e runtime comum S4."
+    },
+    {
+      "id": "C-P5",
+      "role": "prompt",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/05-plataforma.md",
+      "revision": "d2d985c28947c7f984a36b07ad34ede3d4d2d6b4",
+      "git_blob_sha": "3f2510b89f86bd2ccf608d0d87c754f3c0df2d6d",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 142
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d2d985c28947c7f984a36b07ad34ede3d4d2d6b4/modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/05-plataforma.md",
+      "purpose": "Missão e fronteiras S5."
+    },
+    {
+      "id": "C-FREEZE",
+      "role": "audit_freeze",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/verification-criteria.json",
+      "revision": "3d9a515f264a7938c764d37532bc42ad6005fc47",
+      "git_blob_sha": "ac96d6dbb23025989be110029dcb63fad9b25b1b",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 265
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/3d9a515f264a7938c764d37532bc42ad6005fc47/modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/verification-criteria.json",
+      "purpose": "Critérios estáticos congelados antes desta autoria."
+    }
+  ],
+  "decisive_public_excerpts": [
+    {
+      "source_id": "C-CAMPAIGN",
+      "start_line": 34,
+      "end_line": 44,
+      "text": "| Obrigações | Cada domínio | S4 | ROOT |\n| --- | --- | --- | --- |\n| AC-01 / CC-1 | Cobertura e suficiência de sua população | Igual, para Atlas | União e fluxos entre domínios |\n| AC-02/03 / SC-1/2 | Casos e consumo Atlas-only do próprio domínio | Reader e binding comuns | Casos e navegação da união |\n| AC-04 | Produção real, fonte/autoridade e casos próprios | Importer e recusas comuns reais | Compatibilidade dos cinco pacotes |\n| AC-05/06 / SC-3 | Dependências, afetados e mudança específica | Cache/rebuild e controles comuns | Propagação entre domínios |\n| AC-07 / CC-5 / SC-5 | Evidência pertinente ao uso local | Motor: coerência, recuperação e rollback | União, concorrência e escopos independentes |\n| AC-08 / CC-6 / SC-4 | Uso novo e limites reais registrados | Garantias efetivas do adapter | Reconciliação agregada e limites históricos |\n| AC-09 | Integração/gates do componente alterado | Portas Atlas e controles negativos | Gates integrados e proteção observada |\n| AC-10 / CC-7 | Preservar fontes/objetos e gerados do domínio | Migração/publicação compatível | Preservação e migração da união |\n| GO-A/GO-I/QS/DOD | Aplicáveis à própria missão | Aplicáveis à própria missão | Disposições globais e entrega governada |"
+    },
+    {
+      "source_id": "C-RUNTIME",
+      "start_line": 103,
+      "end_line": 110,
+      "text": "| Evidência observada | Afirmação permitida | O que ainda exige prova |\n| --- | --- | --- |\n| Resposta nativa e corpo preservados | Produção efetiva daquela unidade. | Qualidade, importação, consumo. |\n| Dois juízos locais vinculados | Aceite semântico do pacote exato. | Binding/runtime e gates pertinentes. |\n| Adapter executado com pacote real | Operação de importação observada. | Publicação autorizada e leitura. |\n| `ownership.index/read` reais | Índice/leitura da seleção observada. | Casos do consumidor e cobertura. |\n| Casos de reuse/rebuild/recovery | Controles executados naquele candidato. | Outros controles/versões. |\n| Testes remotos identificados | Resultado daqueles gates de CI. | Aceite semântico ou proteção da branch. |"
+    },
+    {
+      "source_id": "C-TRANSPORT",
+      "start_line": 136,
+      "end_line": 145,
+      "text": "O observador atual aceita `file:<path>` e `members:<directory>`. Sua versão é calculada\npor `id(...)` do kernel sobre bytes ou membership; não é SHA-256 nem blob Git. S4 deve\nobservar a cópia real e conferir seu vínculo com a fonte capturada, sem inventar observações.\n\nO caminho atual recusa `.git`, `.atlas`, caminhos absolutos, `.`/`..`, symlinks e leitura de\narquivo acima de 256.000 bytes. Membership exige consulta Git completa, sem erro/truncamento,\ne considera também arquivos não ignorados. `absent` difere de `unavailable`: uma falha de\nleitura ou um formato recusado não demonstra remoção. Preservar a lacuna e tratar a fronteira\nnecessária com o mecanismo mínimo justificado; não remover a fonte do escopo para passar.\nFonte: [ownership-input.ts](https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/src/ownership-input.ts), blob `c6afd6a35071a2487a1168cea5ed1ad26379c376`."
+    },
+    {
+      "source_id": "C-INTEGRATION",
+      "start_line": 35,
+      "end_line": 38,
+      "text": "Reconciliar ledgers novos e segmentos históricos v1/v2, sem exigir que as cinco\nconversas novas recuperem handles antigos. Manter tentativas/uso desconhecidos como\ntais. Limite lógico não prova admissão financeira; AC-08 permanece aberto onde sua\ngarantia não foi demonstrada. Não chamar esse limite de conformidade implementada."
+    },
+    {
+      "source_id": "C-COMPLETION",
+      "start_line": 25,
+      "end_line": 29,
+      "text": "Uma matriz de aceitação basta: critério/obrigação, estado local, evidência/juízos e\ncomplemento exclusivamente global. Preservar os 50 IDs do [registro](criteria.json),\nagrupando referências quando útil. Não criar 50 documentos ou repetir leis em cada WP.\nPASS local não fecha a união. N/A exige razão real de escopo e revisão; não significa\nque a ferramenta faltou ou que houve pouco tempo. Obrigações globais nomeiam ROOT."
+    }
+  ],
+  "hash_note": "Git blob SHAs are values supplied by GitHub MCP. Content SHA-256 was not calculated by this producer and remains UNKNOWN. No Git SHA is relabeled as a content/runtime hash."
+}

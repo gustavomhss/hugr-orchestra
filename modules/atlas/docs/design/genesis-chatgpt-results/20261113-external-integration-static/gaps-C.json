@@ -1,0 +1,166 @@
+{
+  "schema": "genesis-external-static-gaps-fragment/v1",
+  "producer": "C",
+  "audit_scope": "STATIC_ONLY",
+  "gaps": [
+    {
+      "id": "GAP-C-001",
+      "category": "OUT_OF_SCOPE_EVIDENCE",
+      "state": "OPEN_FOR_COORDINATION",
+      "finding": "Candidato de integração, handoffs selecionados e capacidades atuais do runtime S4 não foram inspecionados por esta auditoria; sua disponibilidade e satisfação são UNKNOWN.",
+      "evidence_refs": [
+        "C-INTEGRATION",
+        "C-RUNTIME"
+      ],
+      "affected_criteria": [
+        "GO-A1",
+        "GO-A2",
+        "GO-A3",
+        "GO-A4",
+        "GO-A5",
+        "GO-A6",
+        "GO-A7",
+        "GO-I1",
+        "GO-I2",
+        "GO-I3",
+        "GO-I4",
+        "GO-I5",
+        "GO-I6",
+        "GO-I7",
+        "GO-I8",
+        "AC-01",
+        "AC-02",
+        "AC-03",
+        "AC-04",
+        "AC-05",
+        "AC-06",
+        "AC-07",
+        "AC-08",
+        "AC-09",
+        "AC-10",
+        "CC-1",
+        "CC-2",
+        "CC-3",
+        "CC-4",
+        "CC-5",
+        "CC-6",
+        "CC-7",
+        "SC-1",
+        "SC-2",
+        "SC-3",
+        "SC-4",
+        "SC-5",
+        "QS-1",
+        "QS-2",
+        "QS-3",
+        "QS-4",
+        "QS-5",
+        "QS-6",
+        "DOD-1",
+        "DOD-2",
+        "DOD-3",
+        "DOD-4",
+        "DOD-5",
+        "DOD-6",
+        "DOD-7"
+      ],
+      "resolution": "Coordenação fixa os commits e fornece evidência autorizada segundo INT-00..12; não inferir ausência nem execução de outra sessão.",
+      "audit_blocker": false
+    },
+    {
+      "id": "GAP-C-002",
+      "category": "FIT_BOUNDARY",
+      "state": "OPEN_FOR_COORDINATION",
+      "finding": "O protocolo descreve restrições do observador de inputs (.atlas, symlinks, arquivos acima de 256.000 bytes e membership indisponível) que precisam ser conciliadas com a população completa, sem excluir fontes. A solução/capacidade de um candidato posterior é UNKNOWN.",
+      "evidence_refs": [
+        "C-TRANSPORT",
+        "C-RUNTIME"
+      ],
+      "affected_criteria": [
+        "AC-01",
+        "AC-04",
+        "AC-06",
+        "AC-09",
+        "CC-1",
+        "CC-2"
+      ],
+      "resolution": "INT-02 exige decisão de fit e evidência no candidato real; preservar absent versus unavailable e a cobertura completa.",
+      "audit_blocker": false,
+      "epistemic_status": "PROTOCOL_OBSERVATION; no later runtime implementation inferred"
+    },
+    {
+      "id": "GAP-C-003",
+      "category": "ECONOMY_GUARANTEE",
+      "state": "OPEN_FOR_COORDINATION",
+      "finding": "Não foi demonstrada nesta auditoria a garantia financeira/admissão do adapter nem uso consolidado; limite lógico não basta. Dados não observados permanecem UNKNOWN.",
+      "evidence_refs": [
+        "C-NORM",
+        "C-RUNTIME",
+        "C-INTEGRATION"
+      ],
+      "affected_criteria": [
+        "GO-I6",
+        "AC-08",
+        "CC-6",
+        "SC-4",
+        "DOD-5"
+      ],
+      "resolution": "INT-00/09 reconciliam as garantias e uso por canais autorizados, sem publicar ledgers ou converter bytes/chamadas em valores fictícios.",
+      "audit_blocker": false
+    },
+    {
+      "id": "GAP-C-004",
+      "category": "SEMANTIC_AND_RUNTIME_EVIDENCE",
+      "state": "OPEN_FOR_COORDINATION",
+      "finding": "Casos Atlas-only, navegação real, cache/rebuild, falha/retomada/rollback, recusas e preservação não foram executados. Leitura de protocolo não satisfaz essas exigências.",
+      "evidence_refs": [
+        "C-NORM",
+        "C-RUNTIME",
+        "C-JUDGING"
+      ],
+      "affected_criteria": [
+        "AC-02",
+        "AC-03",
+        "AC-04",
+        "AC-05",
+        "AC-06",
+        "AC-07",
+        "AC-09",
+        "AC-10",
+        "SC-1",
+        "SC-2",
+        "SC-3",
+        "SC-5",
+        "DOD-3"
+      ],
+      "resolution": "Reutilizar somente provas compatíveis e executar controles faltantes/invalidados no escopo autorizado da coordenação.",
+      "audit_blocker": false
+    },
+    {
+      "id": "GAP-C-005",
+      "category": "GATES_AND_ACCEPTANCE",
+      "state": "OPEN_FOR_COORDINATION",
+      "finding": "Resultados de testes/CI, proteção de branch, julgamento global, aceite humano, landing e ativação são UNKNOWN e não foram realizados por esta auditoria.",
+      "evidence_refs": [
+        "C-AGENTS",
+        "C-COMPLETION",
+        "C-INTEGRATION"
+      ],
+      "affected_criteria": [
+        "AC-09",
+        "DOD-1",
+        "DOD-2",
+        "DOD-4",
+        "DOD-6",
+        "DOD-7"
+      ],
+      "resolution": "INT-10..12 exigem evidência e atos próprios, distinguindo resultado estático, revisão, aceite humano, landing e ativação.",
+      "audit_blocker": false
+    }
+  ],
+  "notes": [
+    "Essas pendências são requisitos da integração real e não impedem concluir a autoria estática de C.",
+    "Nenhuma lacuna foi fechada com NOT_APPLICABLE por falta de evidência.",
+    "A dupla independente da integração da coordenação permanece responsável por seu aceite; revisão estática desta auditoria não a substitui."
+  ]
+}

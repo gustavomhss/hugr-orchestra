@@ -1,0 +1,2641 @@
+{
+  "schema": "genesis-external-integration-static-sources/v1",
+  "repository": "gustavomhss/hugr-orchestra",
+  "audit_id": "20261113-external-integration-static",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "prompts_revision": "d2d985c28947c7f984a36b07ad34ede3d4d2d6b4",
+  "content_source_bindings": 70,
+  "unique_blob_oids": 70,
+  "content_bindings_by_revision": {
+    "1cde2ff7a71bcf7aecb5d030917b577165135d38": 46,
+    "3d9a515f264a7938c764d37532bc42ad6005fc47": 1,
+    "d2d985c28947c7f984a36b07ad34ede3d4d2d6b4": 5,
+    "ee2521a5b966bd505cc95bd1c733e09e12f33531": 18
+  },
+  "content_sources": [
+    {
+      "path": "AGENTS.md",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": "full"
+        },
+        {
+          "actor": "/root/inventory",
+          "read_scope": "full_content"
+        },
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [
+              [
+                1,
+                3
+              ],
+              [
+                14,
+                18
+              ]
+            ],
+            "note": "Fetched complete blob and inspected full displayed content."
+          }
+        },
+        {
+          "actor": "/root/criteria",
+          "read_scope": {
+            "kind": "full_content",
+            "line_count": 224
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                1,
+                3
+              ],
+              [
+                14,
+                18
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S36",
+        "C-AGENTS"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/AGENTS.md",
+      "id": "SRC-001"
+    },
+    {
+      "path": "apps/cli/package.json",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "c9c071a3db4543abab9f02dfd25a494881a23377",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [
+              [
+                1,
+                46
+              ]
+            ],
+            "note": "Fetched complete blob and inspected full displayed content."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                1,
+                46
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S01"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/apps/cli/package.json",
+      "id": "SRC-002"
+    },
+    {
+      "path": "apps/cli/src/commands/handlers/serve.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "f11a2c92019d75847eac7b87d0b762cf944e7c93",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [
+              [
+                1,
+                24
+              ],
+              [
+                122,
+                135
+              ]
+            ],
+            "note": "Fetched complete blob and inspected full displayed content."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                1,
+                24
+              ],
+              [
+                122,
+                135
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S02"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/apps/cli/src/commands/handlers/serve.ts",
+      "id": "SRC-003"
+    },
+    {
+      "path": "apps/cli/src/host.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "cc89adc3a11e2bd3e7d779642382ed86dfceab31",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [
+              [
+                1,
+                29
+              ]
+            ],
+            "note": "Fetched complete blob and inspected full displayed content."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                1,
+                29
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S05"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/apps/cli/src/host.ts",
+      "id": "SRC-004"
+    },
+    {
+      "path": "modules/atlas/boundary/package.json",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "055b46b9d32d765c3c2dc54468137d031bb3de90",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [
+              [
+                1,
+                30
+              ],
+              [
+                44,
+                51
+              ]
+            ],
+            "note": "Fetched complete blob and inspected full displayed content."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                1,
+                30
+              ],
+              [
+                44,
+                51
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S15"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/boundary/package.json",
+      "id": "SRC-005"
+    },
+    {
+      "path": "modules/atlas/boundary/script/build.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "df0a875e47e98e8803e00818d178166d0b1cb8dd",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [
+              [
+                5,
+                18
+              ],
+              [
+                29,
+                40
+              ],
+              [
+                71,
+                85
+              ]
+            ],
+            "note": "Fetched complete blob and inspected full displayed content."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                5,
+                18
+              ],
+              [
+                29,
+                40
+              ],
+              [
+                71,
+                85
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S16"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/boundary/script/build.ts",
+      "id": "SRC-006"
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/surface.d.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "7614ff6a04ff82b76ed68836a843d7232fa8cd43",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "partial_content",
+            "ranges": [
+              [
+                532,
+                556
+              ]
+            ],
+            "note": "Fetched complete blob; inspected selected imports, declarations and numbered excerpts only. No whole-file semantic coverage claimed."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                532,
+                556
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S25"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/boundary/src/generated/surface.d.ts",
+      "id": "SRC-007"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": "full"
+        },
+        {
+          "actor": "/root/criteria",
+          "read_scope": {
+            "kind": "full_content",
+            "line_count": 257
+          }
+        }
+      ],
+      "aliases": [
+        "C-NORM"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-plan.md",
+      "id": "SRC-008"
+    },
+    {
+      "path": "modules/atlas/package.json",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "49cf8584beca5e4c4a4a79e7f5e5468c506817d4",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [],
+            "note": "Context source read; not required for every edge."
+          }
+        }
+      ],
+      "aliases": [
+        "B-X02"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/package.json",
+      "id": "SRC-009"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "c6afd6a35071a2487a1168cea5ed1ad26379c376",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": "full"
+        },
+        {
+          "actor": "/root/inventory",
+          "read_scope": "full_content"
+        }
+      ],
+      "aliases": [],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "id": "SRC-010"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/surface/index.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "cf531a1cba71737a453ef43a4d8b0af9c5914189",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "partial_content",
+            "ranges": [
+              [
+                138,
+                159
+              ],
+              [
+                184,
+                188
+              ]
+            ],
+            "note": "Fetched complete blob; inspected selected imports, declarations and numbered excerpts only. No whole-file semantic coverage claimed."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                138,
+                159
+              ],
+              [
+                184,
+                188
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S24"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/src/surface/index.ts",
+      "id": "SRC-011"
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/types.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "05cb2ae05d296764ce2e786d07b28b36d7428cb7",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": "full"
+        }
+      ],
+      "aliases": [],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/knowledge/src/ownership/types.ts",
+      "id": "SRC-012"
+    },
+    {
+      "path": "modules/atlas/packages/retrieval/src/host-context.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "6c60032a6049e5de89592d9b6aa483207c909598",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [
+              [
+                21,
+                31
+              ],
+              [
+                82,
+                137
+              ]
+            ],
+            "note": "Fetched complete blob and inspected full displayed content."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                21,
+                31
+              ],
+              [
+                82,
+                137
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S14"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/retrieval/src/host-context.ts",
+      "id": "SRC-013"
+    },
+    {
+      "path": "modules/maestro/coordination/package.json",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "97397b0bc609fcf842f654ecbad2f4dd66d8d8d4",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [
+              [
+                1,
+                8
+              ],
+              [
+                31,
+                54
+              ]
+            ],
+            "note": "Fetched complete blob and inspected full displayed content."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                1,
+                8
+              ],
+              [
+                31,
+                54
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S32"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/maestro/coordination/package.json",
+      "id": "SRC-014"
+    },
+    {
+      "path": "modules/maestro/coordination/src/seats/index.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a4f0ecf5b5144f91837571286f91fc552be0c826",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [
+              [
+                1,
+                32
+              ]
+            ],
+            "note": "Fetched complete blob and inspected full displayed content."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                1,
+                32
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S07"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/maestro/coordination/src/seats/index.ts",
+      "id": "SRC-015"
+    },
+    {
+      "path": "modules/maestro/coordination/src/v2/atlas-source.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "5388417c92f33c2cfd0d06d58d04446c35631d42",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "partial_content",
+            "ranges": [
+              [
+                6,
+                19
+              ],
+              [
+                24,
+                32
+              ],
+              [
+                57,
+                119
+              ],
+              [
+                139,
+                170
+              ]
+            ],
+            "note": "Fetched complete blob; inspected selected imports, declarations and numbered excerpts only. No whole-file semantic coverage claimed."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                6,
+                19
+              ],
+              [
+                24,
+                32
+              ],
+              [
+                57,
+                119
+              ],
+              [
+                139,
+                170
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S13"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/maestro/coordination/src/v2/atlas-source.ts",
+      "id": "SRC-016"
+    },
+    {
+      "path": "modules/maestro/coordination/src/v2/seats.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "f27ddca3b35551b16482f7032197af7cba25e3e6",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [
+              [
+                3,
+                28
+              ],
+              [
+                32,
+                50
+              ],
+              [
+                235,
+                258
+              ]
+            ],
+            "note": "Fetched complete blob and inspected full displayed content."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                3,
+                28
+              ],
+              [
+                32,
+                50
+              ],
+              [
+                235,
+                258
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S06"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/maestro/coordination/src/v2/seats.ts",
+      "id": "SRC-017"
+    },
+    {
+      "path": "modules/maestro/coordination/src/v2/tools/atlas.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "1989941d868187b7fc264559f0c90d11c9b1c4d3",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "partial_content",
+            "ranges": [
+              [
+                22,
+                40
+              ],
+              [
+                62,
+                63
+              ],
+              [
+                86,
+                121
+              ],
+              [
+                266,
+                304
+              ]
+            ],
+            "note": "Fetched complete blob; inspected selected imports, declarations and numbered excerpts only. No whole-file semantic coverage claimed."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                22,
+                40
+              ],
+              [
+                62,
+                63
+              ],
+              [
+                86,
+                121
+              ],
+              [
+                266,
+                304
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S12"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/maestro/coordination/src/v2/tools/atlas.ts",
+      "id": "SRC-018"
+    },
+    {
+      "path": "modules/maestro/coordination/src/v2/workflow/host.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "111dac220a84bdeffe94956244b728b29eb98ea4",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "partial_content",
+            "ranges": [
+              [
+                14,
+                29
+              ],
+              [
+                79,
+                119
+              ],
+              [
+                403,
+                417
+              ]
+            ],
+            "note": "Fetched complete blob; inspected selected imports, declarations and numbered excerpts only. No whole-file semantic coverage claimed."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                14,
+                29
+              ],
+              [
+                79,
+                119
+              ],
+              [
+                403,
+                417
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S08"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/maestro/coordination/src/v2/workflow/host.ts",
+      "id": "SRC-019"
+    },
+    {
+      "path": "modules/maestro/coordination/src/v2/workflow/knowledge.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "f8f7852950b60029a4807324798954962f72ada5",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [
+              [
+                6,
+                14
+              ],
+              [
+                29,
+                41
+              ],
+              [
+                64,
+                100
+              ]
+            ],
+            "note": "Fetched complete blob and inspected full displayed content."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                6,
+                14
+              ],
+              [
+                29,
+                41
+              ],
+              [
+                64,
+                100
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S30"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/maestro/coordination/src/v2/workflow/knowledge.ts",
+      "id": "SRC-020"
+    },
+    {
+      "path": "modules/maestro/coordination/src/v2/workflow/relay.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "66c147f58f29334e1cfe541f240c14619a87d05c",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [
+              [
+                3,
+                14
+              ],
+              [
+                33,
+                78
+              ]
+            ],
+            "note": "Fetched complete blob and inspected full displayed content."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                3,
+                14
+              ],
+              [
+                33,
+                78
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S09"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/maestro/coordination/src/v2/workflow/relay.ts",
+      "id": "SRC-021"
+    },
+    {
+      "path": "modules/relay/package.json",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "c7145670d8f79d2db91eb8545af5361bc04549f1",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [
+              [
+                1,
+                28
+              ],
+              [
+                40,
+                50
+              ]
+            ],
+            "note": "Fetched complete blob and inspected full displayed content."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                1,
+                28
+              ],
+              [
+                40,
+                50
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S35"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/package.json",
+      "id": "SRC-022"
+    },
+    {
+      "path": "modules/relay/src/authoring/store.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "b11d17cd55ffa69a307130a31ab44d01ac7e477d",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "partial_content",
+            "ranges": [
+              [
+                42,
+                78
+              ],
+              [
+                148,
+                177
+              ]
+            ],
+            "note": "Fetched complete blob; inspected selected imports, declarations and numbered excerpts only. No whole-file semantic coverage claimed."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                42,
+                78
+              ],
+              [
+                148,
+                177
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S10"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/relay/src/authoring/store.ts",
+      "id": "SRC-023"
+    },
+    {
+      "path": "packages/app-shell/package.json",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "eb09ebc7c07ed519482aeafdd5e592bf8223a269",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [
+              [
+                57,
+                68
+              ]
+            ],
+            "note": "Fetched complete blob and inspected full displayed content."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                57,
+                68
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S29"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/app-shell/package.json",
+      "id": "SRC-024"
+    },
+    {
+      "path": "packages/app-shell/src/context/sdk.tsx",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "2f757be8e9c5ef85838e7c2e991ad7f6e1de5645",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [],
+            "note": "Context source read; not required for every edge."
+          }
+        }
+      ],
+      "aliases": [
+        "B-X05"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/app-shell/src/context/sdk.tsx",
+      "id": "SRC-025"
+    },
+    {
+      "path": "packages/app-shell/src/context/server-sdk.tsx",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "8163d68ab02ddbc65e968be3f20f8742bb1e1397",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "partial_content",
+            "ranges": [],
+            "note": "Search-selected lines only; not used for a graph assertion."
+          }
+        }
+      ],
+      "aliases": [
+        "B-X06"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/app-shell/src/context/server-sdk.tsx",
+      "id": "SRC-026"
+    },
+    {
+      "path": "packages/app-shell/src/utils/server.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "542e992958dca3993e633babd881c5a7e8407c66",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [
+              [
+                1,
+                11
+              ],
+              [
+                27,
+                56
+              ]
+            ],
+            "note": "Fetched complete blob and inspected full displayed content."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                1,
+                11
+              ],
+              [
+                27,
+                56
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S26"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/app-shell/src/utils/server.ts",
+      "id": "SRC-027"
+    },
+    {
+      "path": "packages/client/package.json",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "4cd0244e98ff18b5e65d3c2808196705095b6691",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [
+              [
+                1,
+                39
+              ]
+            ],
+            "note": "Fetched complete blob and inspected full displayed content."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                1,
+                39
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S33"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/client/package.json",
+      "id": "SRC-028"
+    },
+    {
+      "path": "packages/client/script/build.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "99ae2184b9c13f6175d7ba8e3025068bee07ee4f",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [
+              [
+                1,
+                7
+              ],
+              [
+                22,
+                47
+              ]
+            ],
+            "note": "Fetched complete blob and inspected full displayed content."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                1,
+                7
+              ],
+              [
+                22,
+                47
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S18"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/client/script/build.ts",
+      "id": "SRC-029"
+    },
+    {
+      "path": "packages/client/src/contract.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "1dccaeb657cc106b7a8cba93f5f5c34a8faf8680",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [
+              [
+                1,
+                18
+              ],
+              [
+                45,
+                55
+              ]
+            ],
+            "note": "Fetched complete blob and inspected full displayed content."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                1,
+                18
+              ],
+              [
+                45,
+                55
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S17"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/client/src/contract.ts",
+      "id": "SRC-030"
+    },
+    {
+      "path": "packages/client/src/generated/client.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "93cab27e0b902d6e8fbd21d6aaec320a2b9fe09c",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "partial_content",
+            "ranges": [
+              [
+                535,
+                599
+              ],
+              [
+                2417,
+                2465
+              ]
+            ],
+            "note": "Fetched complete blob; inspected selected imports, declarations and numbered excerpts only. No whole-file semantic coverage claimed."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                535,
+                599
+              ],
+              [
+                2417,
+                2465
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S21"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/client/src/generated/client.ts",
+      "id": "SRC-031"
+    },
+    {
+      "path": "packages/client/src/generated/index.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "8f420039bd548a21207ad6727a74efd8dad3db40",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [
+              [
+                1,
+                4
+              ]
+            ],
+            "note": "Fetched complete blob and inspected full displayed content."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                1,
+                4
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S28"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/client/src/generated/index.ts",
+      "id": "SRC-032"
+    },
+    {
+      "path": "packages/client/src/generated/request.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "3f4791f495716ce7446ba634a32648b594092be4",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [],
+            "note": "Complete 12-line RequestDescriptor declaration inspected; contextual source only."
+          }
+        }
+      ],
+      "aliases": [
+        "B-X04"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/client/src/generated/request.ts",
+      "id": "SRC-033"
+    },
+    {
+      "path": "packages/client/src/index.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "b65f3f982384824273b9641df98671bc4392bc15",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [
+              [
+                1,
+                4
+              ]
+            ],
+            "note": "Fetched complete blob and inspected full displayed content."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                1,
+                4
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S27"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/client/src/index.ts",
+      "id": "SRC-034"
+    },
+    {
+      "path": "packages/core/package.json",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "8ee8ebb666051c9b5ee0fcd4a54bceb3a2cb3c43",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "partial_content",
+            "ranges": [
+              [
+                530,
+                538
+              ]
+            ],
+            "note": "Fetched complete blob; inspected selected imports, declarations and numbered excerpts only. No whole-file semantic coverage claimed."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                530,
+                538
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S31"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/package.json",
+      "id": "SRC-035"
+    },
+    {
+      "path": "packages/core/src/atlas.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "f6718654785fb155e1bb1b2acb7e9985478b983b",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [
+              [
+                3,
+                8
+              ],
+              [
+                104,
+                131
+              ]
+            ],
+            "note": "Fetched complete blob and inspected full displayed content."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                3,
+                8
+              ],
+              [
+                104,
+                131
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S23"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/atlas.ts",
+      "id": "SRC-036"
+    },
+    {
+      "path": "packages/core/src/host.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a0fc5bc9a36e50315b0ddddf4de3566555711250",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [
+              [
+                15,
+                59
+              ]
+            ],
+            "note": "Fetched complete blob and inspected full displayed content."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                15,
+                59
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S04"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/host.ts",
+      "id": "SRC-037"
+    },
+    {
+      "path": "packages/core/src/relay.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "25fb509203f933a2e8b0f311c3fc8f9476d53e16",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "partial_content",
+            "ranges": [
+              [
+                9,
+                21
+              ],
+              [
+                120,
+                174
+              ],
+              [
+                493,
+                542
+              ]
+            ],
+            "note": "Fetched complete blob; inspected selected imports, declarations and numbered excerpts only. No whole-file semantic coverage claimed."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                9,
+                21
+              ],
+              [
+                120,
+                174
+              ],
+              [
+                493,
+                542
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S11"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/relay.ts",
+      "id": "SRC-038"
+    },
+    {
+      "path": "packages/protocol/package.json",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "517e462e6c645c726c26b9027d03ee55d6bc2dfc",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [],
+            "note": "Context source read; not required for every edge."
+          }
+        }
+      ],
+      "aliases": [
+        "B-X01"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/protocol/package.json",
+      "id": "SRC-039"
+    },
+    {
+      "path": "packages/protocol/src/api.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "40b5b5bd266b8a9bd3893f74d5429bf535dc01d7",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [
+              [
+                31,
+                39
+              ],
+              [
+                95,
+                110
+              ],
+              [
+                148,
+                158
+              ]
+            ],
+            "note": "Fetched complete blob and inspected full displayed content."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                31,
+                39
+              ],
+              [
+                95,
+                110
+              ],
+              [
+                148,
+                158
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S19"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/protocol/src/api.ts",
+      "id": "SRC-040"
+    },
+    {
+      "path": "packages/protocol/src/groups/atlas.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "1ad5dee72e17105d118eef8974cc283b68ea64ce",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [
+              [
+                36,
+                84
+              ]
+            ],
+            "note": "Fetched complete blob and inspected full displayed content."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                36,
+                84
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S20"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/protocol/src/groups/atlas.ts",
+      "id": "SRC-041"
+    },
+    {
+      "path": "packages/server/package.json",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "1e2d83907eaac06d0da1571ac7ceab9f528102b7",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [
+              [
+                1,
+                32
+              ],
+              [
+                39,
+                56
+              ]
+            ],
+            "note": "Fetched complete blob and inspected full displayed content."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                1,
+                32
+              ],
+              [
+                39,
+                56
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S34"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/server/package.json",
+      "id": "SRC-042"
+    },
+    {
+      "path": "packages/server/src/api.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "e1ab621208cf063ff1ce846ded0205e9b8dae93e",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [],
+            "note": "Context source read; not required for every edge."
+          }
+        }
+      ],
+      "aliases": [
+        "B-X03"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/server/src/api.ts",
+      "id": "SRC-043"
+    },
+    {
+      "path": "packages/server/src/handlers.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "2a58a97a11c0cac94a63f9e7bf0dbe4c6acdcd33",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [
+              [
+                27,
+                30
+              ],
+              [
+                79,
+                85
+              ]
+            ],
+            "note": "Fetched complete blob and inspected full displayed content."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                27,
+                30
+              ],
+              [
+                79,
+                85
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S37"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/server/src/handlers.ts",
+      "id": "SRC-044"
+    },
+    {
+      "path": "packages/server/src/handlers/atlas.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "692afb828dc5c896339adfebbb5e33ef39876347",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [
+              [
+                1,
+                34
+              ],
+              [
+                72,
+                79
+              ]
+            ],
+            "note": "Fetched complete blob and inspected full displayed content."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                1,
+                34
+              ],
+              [
+                72,
+                79
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S22"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/server/src/handlers/atlas.ts",
+      "id": "SRC-045"
+    },
+    {
+      "path": "packages/server/src/routes.ts",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "75b0f9753e4c879767ef186f5003519e2b681025",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "partial_content",
+            "ranges": [
+              [
+                81,
+                139
+              ]
+            ],
+            "note": "Fetched complete blob; inspected selected imports, declarations and numbered excerpts only. No whole-file semantic coverage claimed."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                81,
+                139
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-S03"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/server/src/routes.ts",
+      "id": "SRC-046"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/verification-criteria.json",
+      "revision": "3d9a515f264a7938c764d37532bc42ad6005fc47",
+      "git_blob_sha": "ac96d6dbb23025989be110029dcb63fad9b25b1b",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "/root/inventory",
+          "read_scope": "full_content"
+        },
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": []
+          }
+        },
+        {
+          "actor": "/root/criteria",
+          "read_scope": {
+            "kind": "full_content",
+            "line_count": 265
+          }
+        }
+      ],
+      "aliases": [
+        "B-A01",
+        "C-FREEZE"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/3d9a515f264a7938c764d37532bc42ad6005fc47/modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/verification-criteria.json",
+      "id": "SRC-047"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/01-core.md",
+      "revision": "d2d985c28947c7f984a36b07ad34ede3d4d2d6b4",
+      "git_blob_sha": "f28b83019447209bcfa8a9171e5dc0241555fe47",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": "full; identical lines deduplicated against already read prompt lines"
+        },
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": []
+          }
+        },
+        {
+          "actor": "/root/criteria",
+          "read_scope": {
+            "kind": "full_content",
+            "line_count": 142
+          }
+        }
+      ],
+      "aliases": [
+        "B-P05",
+        "C-P1"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d2d985c28947c7f984a36b07ad34ede3d4d2d6b4/modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/01-core.md",
+      "id": "SRC-048"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/02-interfaces.md",
+      "revision": "d2d985c28947c7f984a36b07ad34ede3d4d2d6b4",
+      "git_blob_sha": "7321a9d83d966675ba5e62e999994d85f5dbb9e0",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": "full; identical lines deduplicated against already read prompt lines"
+        },
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": []
+          }
+        },
+        {
+          "actor": "/root/criteria",
+          "read_scope": {
+            "kind": "full_content",
+            "line_count": 142
+          }
+        }
+      ],
+      "aliases": [
+        "B-P06",
+        "C-P2"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d2d985c28947c7f984a36b07ad34ede3d4d2d6b4/modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/02-interfaces.md",
+      "id": "SRC-049"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/03-agentes.md",
+      "revision": "d2d985c28947c7f984a36b07ad34ede3d4d2d6b4",
+      "git_blob_sha": "b04842104c2052fd45ef0913f5e4bd0f3bb5c451",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": "full; identical lines deduplicated against already read prompt lines"
+        },
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": []
+          }
+        },
+        {
+          "actor": "/root/criteria",
+          "read_scope": {
+            "kind": "full_content",
+            "line_count": 142
+          }
+        }
+      ],
+      "aliases": [
+        "B-P07",
+        "C-P3"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d2d985c28947c7f984a36b07ad34ede3d4d2d6b4/modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/03-agentes.md",
+      "id": "SRC-050"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/04-atlas.md",
+      "revision": "d2d985c28947c7f984a36b07ad34ede3d4d2d6b4",
+      "git_blob_sha": "0a9ba7423545f2c99504ed783bd65dcdf8465f26",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": "full; identical lines deduplicated against already read prompt lines"
+        },
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": []
+          }
+        },
+        {
+          "actor": "/root/criteria",
+          "read_scope": {
+            "kind": "full_content",
+            "line_count": 142
+          }
+        }
+      ],
+      "aliases": [
+        "B-P08",
+        "C-P4"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d2d985c28947c7f984a36b07ad34ede3d4d2d6b4/modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/04-atlas.md",
+      "id": "SRC-051"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/05-plataforma.md",
+      "revision": "d2d985c28947c7f984a36b07ad34ede3d4d2d6b4",
+      "git_blob_sha": "3f2510b89f86bd2ccf608d0d87c754f3c0df2d6d",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": "full; identical lines deduplicated against already read prompt lines"
+        },
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": []
+          }
+        },
+        {
+          "actor": "/root/criteria",
+          "read_scope": {
+            "kind": "full_content",
+            "line_count": 142
+          }
+        }
+      ],
+      "aliases": [
+        "B-P09",
+        "C-P5"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d2d985c28947c7f984a36b07ad34ede3d4d2d6b4/modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/05-plataforma.md",
+      "id": "SRC-052"
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/campaign.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "41a2aded10fbe639d4a0df1c4354da651543c47d",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": "full"
+        },
+        {
+          "actor": "/root/criteria",
+          "read_scope": {
+            "kind": "full_content",
+            "line_count": 71
+          }
+        }
+      ],
+      "aliases": [
+        "C-CAMPAIGN"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/campaign.md",
+      "id": "SRC-053"
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/completion.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "a843c2c312eefc80ecbad3890764d9d65ce45c43",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": "full"
+        },
+        {
+          "actor": "/root/criteria",
+          "read_scope": {
+            "kind": "full_content",
+            "line_count": 70
+          }
+        }
+      ],
+      "aliases": [
+        "C-COMPLETION"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/completion.md",
+      "id": "SRC-054"
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/criteria.json",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "6171f3d23d3e0263e578c04338067ecb8012016d",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": "full"
+        },
+        {
+          "actor": "/root/criteria",
+          "read_scope": {
+            "kind": "full_content",
+            "line_count": 236
+          }
+        }
+      ],
+      "aliases": [
+        "C-REG"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/criteria.json",
+      "id": "SRC-055"
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/fatia-1.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "78482ad7c72ec275fadb26ebece1c30bc1e5ccb9",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": "full"
+        }
+      ],
+      "aliases": [],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/fatia-1.md",
+      "id": "SRC-056"
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/fatia-2.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "75eb60566ac43b84f9fc90de3506cb1c8c6fe51d",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": "full"
+        }
+      ],
+      "aliases": [],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/fatia-2.md",
+      "id": "SRC-057"
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/fatia-3.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "c9ed9ba1de32d4a60af8177103cf66745d51e2ab",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": "full"
+        }
+      ],
+      "aliases": [],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/fatia-3.md",
+      "id": "SRC-058"
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/fatia-4.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "ec4698de9d693688a280d729d29b10cea02ef4ee",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": "full"
+        }
+      ],
+      "aliases": [],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/fatia-4.md",
+      "id": "SRC-059"
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/fatia-5.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "9151d0c026ad59bf53f220007774a08fc2a98a4b",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": "full"
+        }
+      ],
+      "aliases": [],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/fatia-5.md",
+      "id": "SRC-060"
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/fresh-start.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "ca485b25e43293a309c5489279dce80ce1441ed0",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": "full"
+        }
+      ],
+      "aliases": [],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/fresh-start.md",
+      "id": "SRC-061"
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/handoffs.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "e6dda45da04f507bab745b67b5b053fcf19be32b",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": "full"
+        },
+        {
+          "actor": "/root/criteria",
+          "read_scope": {
+            "kind": "full_content",
+            "line_count": 110
+          }
+        }
+      ],
+      "aliases": [
+        "C-HANDOFFS"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/handoffs.md",
+      "id": "SRC-062"
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/integration.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "e9bd813f08eaad30e829c27e0f73ff0e3aef602d",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": "full"
+        },
+        {
+          "actor": "/root/inventory",
+          "read_scope": "full_content"
+        },
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [
+              [
+                14,
+                32
+              ]
+            ],
+            "note": "Fetched complete blob and inspected full displayed content."
+          }
+        },
+        {
+          "actor": "/root/criteria",
+          "read_scope": {
+            "kind": "full_content",
+            "line_count": 55
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                14,
+                32
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-P02",
+        "C-INTEGRATION"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/integration.md",
+      "id": "SRC-063"
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/judging.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": "full"
+        },
+        {
+          "actor": "/root/criteria",
+          "read_scope": {
+            "kind": "full_content",
+            "line_count": 98
+          }
+        }
+      ],
+      "aliases": [
+        "C-JUDGING"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/judging.md",
+      "id": "SRC-064"
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/orchestration.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": "full"
+        }
+      ],
+      "aliases": [],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/orchestration.md",
+      "id": "SRC-065"
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/parallel-partition.json",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "cdd2fba881059af6152371b417d8a791d8090a9f",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": "full"
+        },
+        {
+          "actor": "/root/inventory",
+          "read_scope": "full_content"
+        },
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [
+              [
+                1,
+                18
+              ]
+            ],
+            "note": "Fetched complete blob and inspected full displayed content."
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                1,
+                18
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-P01"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/parallel-partition.json",
+      "id": "SRC-066"
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/principles.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": "full"
+        },
+        {
+          "actor": "/root/inventory",
+          "read_scope": "full_content"
+        },
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": [
+              [
+                1,
+                73
+              ]
+            ],
+            "note": "Fetched complete blob and inspected full displayed content."
+          }
+        },
+        {
+          "actor": "/root/criteria",
+          "read_scope": {
+            "kind": "full_content",
+            "line_count": 73
+          }
+        },
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": {
+            "kind": "independent_exact_excerpt_byte_comparison",
+            "ranges": [
+              [
+                1,
+                73
+              ]
+            ]
+          }
+        }
+      ],
+      "aliases": [
+        "B-P03",
+        "C-PRINCIPLES"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/principles.md",
+      "id": "SRC-067"
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/runtime.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "0e0f1607003ff49946ed7a155c268b31239930e6",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": "full"
+        },
+        {
+          "actor": "/root/criteria",
+          "read_scope": {
+            "kind": "full_content",
+            "line_count": 151
+          }
+        }
+      ],
+      "aliases": [
+        "C-RUNTIME"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/runtime.md",
+      "id": "SRC-068"
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/transport.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": "full"
+        },
+        {
+          "actor": "/root/criteria",
+          "read_scope": {
+            "kind": "full_content",
+            "line_count": 150
+          }
+        }
+      ],
+      "aliases": [
+        "C-TRANSPORT"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/transport.md",
+      "id": "SRC-069"
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/SKILL.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+      "object_type": "blob",
+      "hash_provenance": "GitHub MCP source object SHA",
+      "readers": [
+        {
+          "actor": "external-audit-orchestrator",
+          "read_scope": "full"
+        },
+        {
+          "actor": "/root/contracts",
+          "read_scope": {
+            "kind": "full_content",
+            "ranges": []
+          }
+        }
+      ],
+      "aliases": [
+        "B-P04"
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/SKILL.md",
+      "id": "SRC-070"
+    }
+  ],
+  "tree_enumeration": {
+    "baseline_root_tree": "a522a53e5f046f1758151b0f558531bbded04592",
+    "successful_tree_responses": 47,
+    "responses_index": "sources-A.json#/tree_responses",
+    "inventory": "tree-inventory.tsv",
+    "descendant_records": 16710,
+    "tracked_blob_paths": 14442,
+    "read_scope": "Git tree metadata only; not full content reads",
+    "recomputed_tree_objects_by_path": 2269,
+    "recomputed_root_matches": true
+  },
+  "independent_source_excerpt_comparison": {
+    "index": "evidence-excerpts-B.json",
+    "sources": 40,
+    "ranges": 75,
+    "range_mismatches": 0,
+    "baseline_object_mismatches": 0
+  },
+  "limits": [
+    "Content source count is distinct revision/path bindings, not 14442 semantic reads.",
+    "No other-session result, current runtime release, private oracle, private ledger or protected coordination state was read.",
+    "SHA-256 of source body is not asserted when not calculated; Git object SHAs are observed source identities.",
+    "No product execution or campaign criterion acceptance is established."
+  ]
+}

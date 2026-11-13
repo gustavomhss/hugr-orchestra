@@ -1,0 +1,3027 @@
+{
+  "schema": "genesis-external-static-criteria-map/v1",
+  "audit_id": "20261113-external-integration-static",
+  "scope": "PUBLIC_STATIC_REQUIREMENTS_MAPPING_ONLY",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "prompts_revision": "d2d985c28947c7f984a36b07ad34ede3d4d2d6b4",
+  "frozen_verification": {
+    "commit": "3d9a515f264a7938c764d37532bc42ad6005fc47",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/verification-criteria.json",
+    "git_blob_sha": "ac96d6dbb23025989be110029dcb63fad9b25b1b"
+  },
+  "authority_notes": [
+    "Os 50 IDs e normative_row abaixo preservam literalmente as linhas indicadas pelo registro no baseline; explicações, owner specialization e gate_refs são planejamento derivado separado.",
+    "ROOT significa a coordenação principal da campanha; esta auditoria externa não assume a integração final.",
+    "Esta matriz não emite local_status/global_status de aceitação do transporte Genesis. Mapeamento estático de requisito não é evidência de execução ou satisfação.",
+    "Não foram consultados resultados privados, oracles, pareceres integrais, ledgers, releases correntes ou o estado de outras sessões.",
+    "UNKNOWN significa evidência de aceitação não observada nesta auditoria, não prova de ausência do trabalho de outra sessão.",
+    "Os controles de integração são planejados e NOT_RUN; permanecem responsabilidade da coordenação, sem bloquear o fechamento meramente estático desta auditoria."
+  ],
+  "static_observations": {
+    "registry_declared_count": 50,
+    "registry_observed_count": 50,
+    "unique_ids": 50,
+    "normative_blob_matches_registry": true,
+    "all_source_lines_match_ids": true,
+    "scope_of_observation": "Leitura MCP dos dois blobs e comparação literal de IDs/linhas; não é teste do produto."
+  },
+  "reuse_compatibility": {
+    "id": "REUSE-1",
+    "rule": "A prova só é candidata a reuso quando a coordenação comprovar compatibilidade de source revision, candidate revision, contrato/recipe, inputs, authority, scope/dependency closure e casos/limites. Delta que afeta qualquer relação exige revalidação correspondente. Reuso não cria uma nova execução e não converte revisão semântica em binding review.",
+    "available_evidence": "UNKNOWN",
+    "basis": [
+      "C-CAMPAIGN",
+      "C-INTEGRATION",
+      "C-RUNTIME",
+      "C-TRANSPORT"
+    ]
+  },
+  "source_catalog": [
+    {
+      "id": "C-REG",
+      "role": "protocol",
+      "path": ".orchestra/skills/execute-genesis/references/criteria.json",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "6171f3d23d3e0263e578c04338067ecb8012016d",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 236
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/criteria.json",
+      "purpose": "Definição do registro, sequência dos IDs e pins normativos."
+    },
+    {
+      "id": "C-CAMPAIGN",
+      "role": "protocol",
+      "path": ".orchestra/skills/execute-genesis/references/campaign.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "41a2aded10fbe639d4a0df1c4354da651543c47d",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 71
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/campaign.md",
+      "purpose": "Responsabilidades S1–S5, runtime comum S4 e integração ROOT."
+    },
+    {
+      "id": "C-INTEGRATION",
+      "role": "protocol",
+      "path": ".orchestra/skills/execute-genesis/references/integration.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "e9bd813f08eaad30e829c27e0f73ff0e3aef602d",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 55
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/integration.md",
+      "purpose": "Seleção exata, união, reuso compatível e dupla independente da integração."
+    },
+    {
+      "id": "C-RUNTIME",
+      "role": "protocol",
+      "path": ".orchestra/skills/execute-genesis/references/runtime.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "0e0f1607003ff49946ed7a155c268b31239930e6",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 151
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/runtime.md",
+      "purpose": "Provas separadas de produção, binding, consumo, runtime, CI e limites."
+    },
+    {
+      "id": "C-TRANSPORT",
+      "role": "protocol",
+      "path": ".orchestra/skills/execute-genesis/references/transport.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 150
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/transport.md",
+      "purpose": "Bytes, identities, dependências, navegação e limites de adaptação."
+    },
+    {
+      "id": "C-PRINCIPLES",
+      "role": "protocol",
+      "path": ".orchestra/skills/execute-genesis/references/principles.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 73
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/principles.md",
+      "purpose": "Orientação preservando os 50 IDs e significado normativo."
+    },
+    {
+      "id": "C-HANDOFFS",
+      "role": "protocol",
+      "path": ".orchestra/skills/execute-genesis/references/handoffs.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "e6dda45da04f507bab745b67b5b053fcf19be32b",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 110
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/handoffs.md",
+      "purpose": "Selagem sem autorreferência, origem e evidência de entrega."
+    },
+    {
+      "id": "C-COMPLETION",
+      "role": "protocol",
+      "path": ".orchestra/skills/execute-genesis/references/completion.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "a843c2c312eefc80ecbad3890764d9d65ce45c43",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 70
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/completion.md",
+      "purpose": "Critérios para fechamento local e pendências globais."
+    },
+    {
+      "id": "C-JUDGING",
+      "role": "protocol",
+      "path": ".orchestra/skills/execute-genesis/references/judging.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 98
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/judging.md",
+      "purpose": "Independência, barra fixa, pacote exato, correção e limites de pareceres."
+    },
+    {
+      "id": "C-NORM",
+      "role": "normative_baseline",
+      "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 257
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-plan.md",
+      "purpose": "Texto literal dos 50 critérios, conforme blob exigido pelo registro."
+    },
+    {
+      "id": "C-AGENTS",
+      "role": "repository_instructions",
+      "path": "AGENTS.md",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 224
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/AGENTS.md",
+      "purpose": "Direção de dependências, geração, gates e limites de execução."
+    },
+    {
+      "id": "C-P1",
+      "role": "prompt",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/01-core.md",
+      "revision": "d2d985c28947c7f984a36b07ad34ede3d4d2d6b4",
+      "git_blob_sha": "f28b83019447209bcfa8a9171e5dc0241555fe47",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 142
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d2d985c28947c7f984a36b07ad34ede3d4d2d6b4/modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/01-core.md",
+      "purpose": "Missão e fronteiras S1."
+    },
+    {
+      "id": "C-P2",
+      "role": "prompt",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/02-interfaces.md",
+      "revision": "d2d985c28947c7f984a36b07ad34ede3d4d2d6b4",
+      "git_blob_sha": "7321a9d83d966675ba5e62e999994d85f5dbb9e0",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 142
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d2d985c28947c7f984a36b07ad34ede3d4d2d6b4/modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/02-interfaces.md",
+      "purpose": "Missão e fronteiras S2."
+    },
+    {
+      "id": "C-P3",
+      "role": "prompt",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/03-agentes.md",
+      "revision": "d2d985c28947c7f984a36b07ad34ede3d4d2d6b4",
+      "git_blob_sha": "b04842104c2052fd45ef0913f5e4bd0f3bb5c451",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 142
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d2d985c28947c7f984a36b07ad34ede3d4d2d6b4/modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/03-agentes.md",
+      "purpose": "Missão e fronteiras S3."
+    },
+    {
+      "id": "C-P4",
+      "role": "prompt",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/04-atlas.md",
+      "revision": "d2d985c28947c7f984a36b07ad34ede3d4d2d6b4",
+      "git_blob_sha": "0a9ba7423545f2c99504ed783bd65dcdf8465f26",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 142
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d2d985c28947c7f984a36b07ad34ede3d4d2d6b4/modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/04-atlas.md",
+      "purpose": "Missão e runtime comum S4."
+    },
+    {
+      "id": "C-P5",
+      "role": "prompt",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/05-plataforma.md",
+      "revision": "d2d985c28947c7f984a36b07ad34ede3d4d2d6b4",
+      "git_blob_sha": "3f2510b89f86bd2ccf608d0d87c754f3c0df2d6d",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 142
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d2d985c28947c7f984a36b07ad34ede3d4d2d6b4/modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/05-plataforma.md",
+      "purpose": "Missão e fronteiras S5."
+    },
+    {
+      "id": "C-FREEZE",
+      "role": "audit_freeze",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/verification-criteria.json",
+      "revision": "3d9a515f264a7938c764d37532bc42ad6005fc47",
+      "git_blob_sha": "ac96d6dbb23025989be110029dcb63fad9b25b1b",
+      "sha256": "UNKNOWN",
+      "read_scope": {
+        "kind": "full_content",
+        "line_count": 265
+      },
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/3d9a515f264a7938c764d37532bc42ad6005fc47/modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/verification-criteria.json",
+      "purpose": "Critérios estáticos congelados antes desta autoria."
+    }
+  ],
+  "criteria": [
+    {
+      "id": "GO-A1",
+      "source_line": 52,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 52
+      },
+      "normative_row": "| GO-A1 | The product is transferable ownership: purpose, behavior, constraints, decisions, impact and safe maintenance; claim count is not delivery. |",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 aplica o critério à sua missão e mantém evidência do próprio escopo.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 aplica o critério à própria missão e ao runtime comum quando pertinente; a especialização operacional precisa ser fixada no WP.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT dá disposição global e entrega governada; a coordenação mantém seu par próprio de integração.",
+        "assignment_basis": "CAMPAIGN_HIGH_LEVEL_OWNER_RULE_WITH_DERIVED_SPECIALIZATION",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [
+        "AC-01",
+        "AC-02",
+        "AC-03"
+      ],
+      "decisive_evidence_required": "Julgamento independente e casos de manutenção que sustentem propósito, comportamento, limites, decisões, impacto e ação segura; uma contagem isolada não decide.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Explicações aceitas e casos locais podem apoiar a união se continuarem válidos; o fluxo transversal ainda exige prova.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-01",
+        "INT-03",
+        "INT-11"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-PRINCIPLES",
+        "C-JUDGING"
+      ]
+    },
+    {
+      "id": "GO-A2",
+      "source_line": 53,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 53
+      },
+      "normative_row": "| GO-A2 | Construction is cumulative; intermediate knowledge is persistent and independently useful, not disposable model scratch. |",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 preserva produção real, fontes, autoridade e casos próprios.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 fornece importer e recusas comuns reais.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT verifica compatibilidade dos cinco pacotes.",
+        "assignment_basis": "CAMPAIGN_HIGH_LEVEL_OWNER_RULE_WITH_DERIVED_SPECIALIZATION",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [
+        "AC-03",
+        "AC-04"
+      ],
+      "decisive_evidence_required": "Artefatos intermediários persistidos com predecessores aceitos e caso de uso direto; comprovar que a construção posterior reutiliza essa base.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Corpos intermediários e revisões exatas podem ser reaproveitados sem nova autoria; persistência e acesso no candidato exigem binding.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-02",
+        "INT-03"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-TRANSPORT",
+        "C-RUNTIME"
+      ]
+    },
+    {
+      "id": "GO-A3",
+      "source_line": 54,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 54
+      },
+      "normative_row": "| GO-A3 | Consumption starts small: skills prescribe work and when/how to consult a scoped index; depth is pulled recursively as needed. Skills are not link inventories. |",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 prova os casos próprios e consumo Atlas-only do seu domínio.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 responde pelo reader e binding comuns; a prova comum não substitui casos locais.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT prova casos e navegação da união.",
+        "assignment_basis": "CAMPAIGN_HIGH_LEVEL_OWNER_RULE_WITH_DERIVED_SPECIALIZATION",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [
+        "AC-03",
+        "SC-2"
+      ],
+      "decisive_evidence_required": "Leituras reais do índice/skill demonstram entrada pequena, consulta por necessidade e aprofundamento limitado; os limites precisam preceder a avaliação.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Reader comum e casos rasos/profundos compatíveis podem ser reutilizados; hyperlinks sozinhos não valem como consumo.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-03"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-RUNTIME",
+        "C-JUDGING"
+      ]
+    },
+    {
+      "id": "GO-A4",
+      "source_line": 55,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 55
+      },
+      "normative_row": "| GO-A4 | Code/product changes enter their affected knowledge surfaces; unchanged validated knowledge is reused. Initial construction and maintenance use the same dependency/validation semantics. |",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 declara dependências, afetados e mudança específica.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 responde por cache/rebuild e controles comuns.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT verifica propagação entre domínios.",
+        "assignment_basis": "CAMPAIGN_HIGH_LEVEL_OWNER_RULE_WITH_DERIVED_SPECIALIZATION",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [
+        "AC-05",
+        "AC-06"
+      ],
+      "decisive_evidence_required": "Mudanças de código, produto, receita e intenção produzem o conjunto esperado e preservam resultados não afetados sob o mesmo contrato de validação.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Provas comuns de cache/invalidação de S4 e resultados independentes ainda válidos; cada delta de domínio conserva seu caso.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-04",
+        "INT-05"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-TRANSPORT"
+      ]
+    },
+    {
+      "id": "GO-A5",
+      "source_line": 56,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 56
+      },
+      "normative_row": "| GO-A5 | Knowledge and source evolve together through Git, governed publication and CI consistency controls. Freshness, semantic validity and authority are different properties. |",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 responde pela integração e gates dos componentes que alterou.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 responde pelas portas Atlas e controles negativos comuns.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT responde pelos gates integrados e proteção observada.",
+        "assignment_basis": "CAMPAIGN_HIGH_LEVEL_OWNER_RULE_WITH_DERIVED_SPECIALIZATION",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [
+        "AC-07",
+        "AC-09"
+      ],
+      "decisive_evidence_required": "Fonte, conhecimento e contratos têm versões exatas; governança, freshness e validade semântica são verificadas separadamente nas portas reais.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Bindings e gates anteriores somente quando o delta não muda fonte, contrato, autoridade, validade ou fechamento de dependências.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-02",
+        "INT-07",
+        "INT-10"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-HANDOFFS",
+        "C-RUNTIME",
+        "C-AGENTS"
+      ]
+    },
+    {
+      "id": "GO-A6",
+      "source_line": 57,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 57
+      },
+      "normative_row": "| GO-A6 | Mechanize what tools can determine; pay models for interpretation/composition that tools cannot supply. Bound execution before starting it and preserve useful completed work. |",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 registra uso novo, limites reais e desconhecidos; não declara histórico zero.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 responde pelas garantias efetivas do adapter.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT reconcilia agregado e limites históricos por meios autorizados.",
+        "assignment_basis": "CAMPAIGN_HIGH_LEVEL_OWNER_RULE_WITH_DERIVED_SPECIALIZATION",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [
+        "AC-08"
+      ],
+      "decisive_evidence_required": "Derivações determinísticas e interpretação têm responsabilidades distintas; trabalho é limitado antes do despacho e completions úteis ficam preservadas.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Inventário mecânico, pacotes de contexto e completions verificadas; não repetir avaliação só para medir economia histórica.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-00",
+        "INT-09",
+        "INT-11"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-PRINCIPLES",
+        "C-RUNTIME"
+      ]
+    },
+    {
+      "id": "GO-A7",
+      "source_line": 58,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 58
+      },
+      "normative_row": "| GO-A7 | Extend the existing Atlas with the minimum justified mechanisms; no parallel store, governance system or general-purpose orchestration framework by default. |",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 aplica o critério à sua missão e mantém evidência do próprio escopo.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 aplica o critério à própria missão e ao runtime comum quando pertinente; a especialização operacional precisa ser fixada no WP.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT dá disposição global e entrega governada; a coordenação mantém seu par próprio de integração.",
+        "assignment_basis": "CAMPAIGN_HIGH_LEVEL_OWNER_RULE_WITH_DERIVED_SPECIALIZATION",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [
+        "AC-04"
+      ],
+      "decisive_evidence_required": "Decisão de fit demonstra necessidade concreta de qualquer mecanismo novo e insuficiência da porta existente; verificar inexistência de store/governança paralelos no candidato.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Tipos, CAS, leitores e governança existentes são candidatos de reuso, mas o fit e as capacidades precisam de evidência.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-02",
+        "INT-11"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-TRANSPORT",
+        "C-RUNTIME"
+      ]
+    },
+    {
+      "id": "GO-I1",
+      "source_line": 120,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 120
+      },
+      "normative_row": "| GO-I1 | Original campaign receipts, responses, claims and source identities remain immutable; retries have new linked identities. | AC-10 |",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 preserva fontes/objetos e superfícies geradas de seu domínio.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 responde por migração e publicação compatíveis.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT verifica preservação e migração da união.",
+        "assignment_basis": "CAMPAIGN_HIGH_LEVEL_OWNER_RULE_WITH_DERIVED_SPECIALIZATION",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [
+        "AC-10"
+      ],
+      "decisive_evidence_required": "Comparação exata dos objetos protegidos e vínculos novos para retries/correções; nenhum recibo histórico é reescrito.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Inventário protegido e identidades imutáveis podem ser reutilizados; esta auditoria não acessa nem reconstrói esses objetos privados.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-00",
+        "INT-08"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-HANDOFFS",
+        "C-INTEGRATION"
+      ]
+    },
+    {
+      "id": "GO-I2",
+      "source_line": 121,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 121
+      },
+      "normative_row": "| GO-I2 | Observed behavior, authorized intent, interpretation and gaps remain distinguishable; a structural freshness check cannot promote semantic certainty. | AC-02, AC-04 |",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 preserva produção real, fontes, autoridade e casos próprios.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 fornece importer e recusas comuns reais.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT verifica compatibilidade dos cinco pacotes.",
+        "assignment_basis": "CAMPAIGN_HIGH_LEVEL_OWNER_RULE_WITH_DERIVED_SPECIALIZATION",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [
+        "AC-02",
+        "AC-04"
+      ],
+      "decisive_evidence_required": "Corpos e revisões distinguem observado, intenção autorizada, interpretação e gaps; controles de conflito não promovem freshness a verdade semântica.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Fontes, autoridade e revisões compatíveis podem sustentar várias linhas; conflitos materiais permanecem abertos.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-02",
+        "INT-03",
+        "INT-11"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-PRINCIPLES",
+        "C-TRANSPORT"
+      ]
+    },
+    {
+      "id": "GO-I3",
+      "source_line": 122,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 122
+      },
+      "normative_row": "| GO-I3 | Current reads bind exact artifact versions to an accepted scope/dependency manifest valid for current inputs/contracts; prior acceptance or rollback cannot make stale knowledge current. Historical reads are labelled. | AC-06, AC-07, AC-09 |",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 fornece evidência pertinente ao uso local.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 responde pelo motor de coerência, recuperação e rollback.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT verifica união, concorrência e escopos independentes.",
+        "assignment_basis": "CAMPAIGN_HIGH_LEVEL_OWNER_RULE_WITH_DERIVED_SPECIALIZATION",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [
+        "AC-06",
+        "AC-07",
+        "AC-09"
+      ],
+      "decisive_evidence_required": "Leitores vinculam manifesto aceito e fechamento exigido às versões atuais; drift, rollback incompatível e histórico são tratados sem servir stale como atual.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Provas comuns de coerência e binding exato; qualquer mudança de source, manifest, policy ou contrato exige revalidação afetada.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-05",
+        "INT-06",
+        "INT-07"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-RUNTIME",
+        "C-INTEGRATION"
+      ]
+    },
+    {
+      "id": "GO-I4",
+      "source_line": 123,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 123
+      },
+      "normative_row": "| GO-I4 | Unchanged valid inputs/recipe reuse output without another interpretation call; independent artifacts are not rebuilt merely because navigation links exist. | AC-05 |",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 declara dependências, afetados e mudança específica.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 responde por cache/rebuild e controles comuns.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT verifica propagação entre domínios.",
+        "assignment_basis": "CAMPAIGN_HIGH_LEVEL_OWNER_RULE_WITH_DERIVED_SPECIALIZATION",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [
+        "AC-05"
+      ],
+      "decisive_evidence_required": "Inputs/recipe válidos e iguais dão cache hit sem nova interpretação; navegação isolada não reconstrói independentes.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Recibos de reuse com identidades e contadores observados no candidato compatível; texto igual sozinho não autoriza reuso.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-04"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-TRANSPORT",
+        "C-RUNTIME"
+      ]
+    },
+    {
+      "id": "GO-I5",
+      "source_line": 124,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 124
+      },
+      "normative_row": "| GO-I5 | Source additions, changes, removals and relevant non-code changes enter impact analysis; unavailable impact is HOLD, not an empty successful worklist. | AC-06 |",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 declara dependências, afetados e mudança específica.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 responde por cache/rebuild e controles comuns.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT verifica propagação entre domínios.",
+        "assignment_basis": "CAMPAIGN_HIGH_LEVEL_OWNER_RULE_WITH_DERIVED_SPECIALIZATION",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [
+        "AC-06"
+      ],
+      "decisive_evidence_required": "Adição, remoção, mudança de código, intenção e receita entram no conjunto esperado; observação indisponível gera HOLD.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Mapas de dependência e resultados de mutação compatíveis; manter controles específicos das novas fronteiras.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-05",
+        "INT-07"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-TRANSPORT",
+        "C-RUNTIME"
+      ]
+    },
+    {
+      "id": "GO-I6",
+      "source_line": 125,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 125
+      },
+      "normative_row": "| GO-I6 | Every issued model request consumes the shared run budget, including validation/retry and unresolved in-flight work; no silent fallback provider/model. | AC-08 |",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 registra uso novo, limites reais e desconhecidos; não declara histórico zero.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 responde pelas garantias efetivas do adapter.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT reconcilia agregado e limites históricos por meios autorizados.",
+        "assignment_basis": "CAMPAIGN_HIGH_LEVEL_OWNER_RULE_WITH_DERIVED_SPECIALIZATION",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [
+        "AC-08"
+      ],
+      "decisive_evidence_required": "Toda requisição emitida, inclusive avaliação/retry/in-flight, consta do controle econômico autorizado; fallback exige autorização explícita.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Contabilidade observável pode ser reconciliada sem reexecutar chamadas; tentativas e custos ausentes permanecem UNKNOWN.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-00",
+        "INT-09"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-RUNTIME",
+        "C-INTEGRATION"
+      ]
+    },
+    {
+      "id": "GO-I7",
+      "source_line": 126,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 126
+      },
+      "normative_row": "| GO-I7 | Governed doors, secret handling, project boundaries and Knowledge/Memory separation remain intact. Imported source/docs/tool text is data, not execution authority. | AC-04, AC-09, AC-10 |",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 responde pela integração e gates dos componentes que alterou.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 responde pelas portas Atlas e controles negativos comuns.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT responde pelos gates integrados e proteção observada.",
+        "assignment_basis": "CAMPAIGN_HIGH_LEVEL_OWNER_RULE_WITH_DERIVED_SPECIALIZATION",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [
+        "AC-04",
+        "AC-09",
+        "AC-10"
+      ],
+      "decisive_evidence_required": "Portas governadas rejeitam dados maliciosos, acesso fora de projeto e autoridade indevida; Knowledge/Memory e segredos mantêm separação.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Controles comuns compatíveis de S4 e de cada entrada alterada; publicar apenas referência pública permitida à prova.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-02",
+        "INT-07",
+        "INT-08"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-RUNTIME",
+        "C-TRANSPORT",
+        "C-AGENTS"
+      ]
+    },
+    {
+      "id": "GO-I8",
+      "source_line": 127,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 127
+      },
+      "normative_row": "| GO-I8 | A scope, generation or artifact is not declared semantically complete just because its graph, source hashes, required sections or tests are complete. | AC-01, AC-02, AC-03 |",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 reconcilia sua população, necessidades e suficiência; contagem não demonstra conhecimento.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 cumpre a mesma obrigação para Atlas e fornece contratos comuns necessários ao binding.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT reconcilia união e fluxos entre domínios.",
+        "assignment_basis": "CAMPAIGN_HIGH_LEVEL_OWNER_RULE_WITH_DERIVED_SPECIALIZATION",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [
+        "AC-01",
+        "AC-02",
+        "AC-03"
+      ],
+      "decisive_evidence_required": "Julgamento e consumidores decidem suficiência além de hashes, graph shape, seções e testes completos.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Evidência mecânica pode apoiar revisão, mas não substitui os casos semânticos ou a dupla da união.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-01",
+        "INT-03",
+        "INT-11"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-COMPLETION",
+        "C-INTEGRATION"
+      ]
+    },
+    {
+      "id": "AC-01",
+      "source_line": 138,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 138
+      },
+      "normative_row": "| AC-01 | **Coverage, judged + mechanical:** freeze the finite slice inventory: needs → required artifacts → sources → cases below. Every required need has accepted support; intentional unknowns are named in advance. Unknown critical required knowledge fails acceptance. Mechanical mapping completeness does not judge semantic sufficiency. |",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 reconcilia sua população, necessidades e suficiência; contagem não demonstra conhecimento.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 cumpre a mesma obrigação para Atlas e fornece contratos comuns necessários ao binding.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT reconcilia união e fluxos entre domínios.",
+        "assignment_basis": "EXPLICIT_CAMPAIGN_AC01_CC1",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [],
+      "decisive_evidence_required": "Inventário finito needs→artefacts→sources→cases congelado; cada necessidade obrigatória tem suporte aceito, com unknowns intencionais prévios e nenhum unknown crítico aceito.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Inventário e julgamentos locais compatíveis apoiam a união; não inferir cobertura semântica de 14.442 entradas mapeadas.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-01",
+        "INT-11"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-INTEGRATION",
+        "C-JUDGING"
+      ]
+    },
+    {
+      "id": "AC-02",
+      "source_line": 139,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 139
+      },
+      "normative_row": "| AC-02 | **Ownership, judged:** an Atlas-only consumer correctly handles a permitted change, contract violation, cross-component impact, operational failure and deliberately out-of-scope question. Freeze expected reasoning/consequences, critical mistakes and evidence before production. All required answers must match; the unknown case must abstain. The author alone cannot certify this row. |",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 prova os casos próprios e consumo Atlas-only do seu domínio.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 responde pelo reader e binding comuns; a prova comum não substitui casos locais.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT prova casos e navegação da união.",
+        "assignment_basis": "EXPLICIT_CAMPAIGN_AC02_AC03_SC1_SC2",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [],
+      "decisive_evidence_required": "Consumidor Atlas-only independente resolve mudança permitida, violação, impacto, falha e pergunta fora de escopo; todos os casos fixados e abstenção esperada são avaliados por dupla sem autoria.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Casos locais, contratos e provas de reader podem ser reutilizados se compatíveis; casos transversais/held-out ainda precisam da coordenação.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-03",
+        "INT-11"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-JUDGING",
+        "C-RUNTIME"
+      ]
+    },
+    {
+      "id": "AC-03",
+      "source_line": 140,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 140
+      },
+      "normative_row": "| AC-03 | **Consumption, mixed:** skill states working protocol and index usage; actual index reads reach purpose, behavior, constraints, decisions, impact, verification and evidence within fixed task-specific read/context bounds. A routine task stops shallow; a deeper task reaches supporting knowledge. Each intermediate artifact has a direct-use case. Validate real readers, not only Markdown links. |",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 prova os casos próprios e consumo Atlas-only do seu domínio.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 responde pelo reader e binding comuns; a prova comum não substitui casos locais.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT prova casos e navegação da união.",
+        "assignment_basis": "EXPLICIT_CAMPAIGN_AC02_AC03_SC1_SC2",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [],
+      "decisive_evidence_required": "Consultas reais index/read alcançam propósito, comportamento, constraints, decisões, impacto, verificação e fontes; caso raso para cedo, caso profundo aprofunda, intermediários são úteis e limites prévios são cumpridos.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Reader e binding comuns de S4 compatíveis; traços de consulta válidos para o mesmo caso/limite sem contá-los como novas execuções.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-03"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-RUNTIME",
+        "C-JUDGING"
+      ]
+    },
+    {
+      "id": "AC-04",
+      "source_line": 141,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 141
+      },
+      "normative_row": "| AC-04 | **Construction, mixed:** real paths ingest existing knowledge and construct missing understanding; labelled stale/conflicting/missing/malicious-source fixtures are handled without inventing intent, hiding conflict, granting authority or publishing unsupported required content. A canned final document cannot satisfy the producer test. |",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 preserva produção real, fontes, autoridade e casos próprios.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 fornece importer e recusas comuns reais.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT verifica compatibilidade dos cinco pacotes.",
+        "assignment_basis": "EXPLICIT_CAMPAIGN_AC04",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [],
+      "decisive_evidence_required": "Produção real ingressa conhecimento existente e constrói o ausente; fixtures stale/conflitante/ausente/maliciosa são rotuladas e não ganham autoridade nem publicação indevida.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Importer e recusas comuns de S4, corpos de produção reais e revisões exatas; nenhum documento pronto substitui a prova de produção.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-02",
+        "INT-07",
+        "INT-11"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-TRANSPORT",
+        "C-RUNTIME"
+      ]
+    },
+    {
+      "id": "AC-05",
+      "source_line": 142,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 142
+      },
+      "normative_row": "| AC-05 | **Reuse, mechanical:** identical inputs/recipe produce a cache hit with zero proposer calls; an independent edit preserves unrelated result identities and call counts. Equal prose with changed authority/validity/gaps MUST propagate; a receipt-only change refreshes bindings without new downstream interpretation. An unchanged validated consumer-visible result stops downstream rebuild. Build dependency edits invalidate dependents, unlike navigation-only links. |",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 declara dependências, afetados e mudança específica.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 responde por cache/rebuild e controles comuns.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT verifica propagação entre domínios.",
+        "assignment_basis": "EXPLICIT_CAMPAIGN_AC05_AC06_SC3",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [],
+      "decisive_evidence_required": "Cache exato tem zero proposer calls; edição independente preserva IDs/contadores; alteração de authority/validity/gaps propaga apesar de prosa igual; receipt-only refresca binding sem interpretação; resultado canônico igual interrompe propagação; navegação não é build.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Controles S4 de cache/rebuild compatíveis e resultados inalterados; o delta transversal precisa confronto próprio de fechamento e identidade.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-04"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-TRANSPORT",
+        "C-RUNTIME"
+      ]
+    },
+    {
+      "id": "AC-06",
+      "source_line": 143,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 143
+      },
+      "normative_row": "| AC-06 | **Incremental correctness, mixed:** behavior edit, added/removed source, intent-doc change and recipe change produce the independently expected affected set. Rebuilds restore required knowledge; mutation controls omit an edge/input and must fail. Detecting staleness alone is insufficient. |",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 declara dependências, afetados e mudança específica.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 responde por cache/rebuild e controles comuns.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT verifica propagação entre domínios.",
+        "assignment_basis": "EXPLICIT_CAMPAIGN_AC05_AC06_SC3",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [],
+      "decisive_evidence_required": "Conjunto esperado independente para behavior edit, source add/remove, intent-doc e recipe change; rebuild restaura conhecimento; mutação omitindo edge/input é rejeitada.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Controles comuns e sets esperados compatíveis; novas fronteiras exigem expected set próprio, não mera detecção de stale.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-05"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-TRANSPORT",
+        "C-INTEGRATION"
+      ]
+    },
+    {
+      "id": "AC-07",
+      "source_line": 144,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 144
+      },
+      "normative_row": "| AC-07 | **Publication/recovery, mechanical:** inject failure between generation and activation, interrupt/resume, and concurrent reads. A separate reader observes only a complete accepted manifest valid for current inputs/contracts or HOLD. A failed rebuild after source drift cannot fall back to stale knowledge as current. Resume reuses durable completions; rollback rejects incompatible source bindings; historical reads are labelled. |",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 fornece evidência pertinente ao uso local.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 responde pelo motor de coerência, recuperação e rollback.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT verifica união, concorrência e escopos independentes.",
+        "assignment_basis": "EXPLICIT_CAMPAIGN_AC07_CC5_SC5",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [],
+      "decisive_evidence_required": "Falha geração→ativação, interrupção/resume e concorrência mostram reader separado vendo manifesto completo aceito compatível ou HOLD; drift não serve stale; resume reutiliza duráveis; rollback incompatível falha e histórico é rotulado.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Motor de recovery de S4 e provas da mesma versão/isolamento; união, concorrência e escopos independentes exigem complementaridade explícita.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-06"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-RUNTIME",
+        "C-INTEGRATION"
+      ]
+    },
+    {
+      "id": "AC-08",
+      "source_line": 145,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 145
+      },
+      "normative_row": "| AC-08 | **Economy, mechanical + approval:** one run ledger/reservation governs production, evaluation, retries and concurrent calls. Synthetic checks precede real calls. If real adapter conformance requires a paid call, it needs a bounded explicit authorization first, charged to the same global envelope. Only a conforming route may run the real slice. Report limits, usage and unsettled calls; no bytes-to-token or call-count-to-dollar fiction. |",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 registra uso novo, limites reais e desconhecidos; não declara histórico zero.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 responde pelas garantias efetivas do adapter.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT reconcilia agregado e limites históricos por meios autorizados.",
+        "assignment_basis": "EXPLICIT_CAMPAIGN_AC08_CC6_SC4",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [],
+      "decisive_evidence_required": "Um envelope autorizado e controle de reservas cobrem produção, avaliação, retry e concorrência; conformance sintética precede rota real, chamadas pagas requerem autorização limitada; uso/limites/in-flight são reconciliados sem conversões fictícias.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Reutilizar somente medições/recibos autorizados existentes e garantias compatíveis; limite lógico não prova teto financeiro.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-00",
+        "INT-09"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-RUNTIME",
+        "C-INTEGRATION"
+      ]
+    },
+    {
+      "id": "AC-09",
+      "source_line": 146,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 146
+      },
+      "normative_row": "| AC-09 | **Git/CI/host, mechanical:** changed declared input, new input under registered scope, missing artifact, broken index reference, incompatible dependency version and invalid generation are rejected at intended gates/readers. A local invalid unit holds its required closure while an independent valid scope remains readable; shared manifest corruption holds its dependent reads. Known-good/bad controls use actual entry points. Report workflow scope and branch-protection enforcement separately. |",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 responde pela integração e gates dos componentes que alterou.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 responde pelas portas Atlas e controles negativos comuns.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT responde pelos gates integrados e proteção observada.",
+        "assignment_basis": "EXPLICIT_CAMPAIGN_AC09",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [],
+      "decisive_evidence_required": "Gates/readers reais recusam input alterado/novo, artifact ausente, índice quebrado, dependency version incompatível e geração inválida; invalidade local bloqueia closure mas mantém independente; corrupção compartilhada bloqueia dependentes; workflow e proteção são reportados separadamente.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Controles negativos comuns de S4 e gates locais compatíveis; repetir apenas faltantes/invalidados e cobrir a união.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-07",
+        "INT-10"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-RUNTIME",
+        "C-AGENTS",
+        "C-INTEGRATION"
+      ]
+    },
+    {
+      "id": "AC-10",
+      "source_line": 147,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 147
+      },
+      "normative_row": "| AC-10 | **Preservation/migration, mechanical + review:** baseline inventory of protected campaign objects remains exact; old producers cannot publish into the new accepted scope accidentally. Stage new outputs without consumer authority, activate explicitly, preserve old accepted state for rollback and keep unrelated scopes usable. Generated boundaries change only through their generators. |",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 preserva fontes/objetos e superfícies geradas de seu domínio.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 responde por migração e publicação compatíveis.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT verifica preservação e migração da união.",
+        "assignment_basis": "EXPLICIT_CAMPAIGN_AC10_CC7",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [],
+      "decisive_evidence_required": "Inventário protegido permanece exato; produtores antigos não publicam no novo scope; staging sem autoridade, ativação explícita, rollback preservado e independentes usáveis; gerados só por geradores.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Inventários protegidos e provas de migração compatíveis verificadas pela coordenação em canal autorizado; não publicar seus conteúdos nesta auditoria.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-08"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-HANDOFFS",
+        "C-RUNTIME"
+      ]
+    },
+    {
+      "id": "CC-1",
+      "source_line": 159,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 159
+      },
+      "normative_row": "| CC-1 | Scope, sources, gaps, existing/missing knowledge and the finite required-artifact inventory are frozen. | AC-01, AC-04 |",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 reconcilia sua população, necessidades e suficiência; contagem não demonstra conhecimento.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 cumpre a mesma obrigação para Atlas e fornece contratos comuns necessários ao binding.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT reconcilia união e fluxos entre domínios.",
+        "assignment_basis": "EXPLICIT_CAMPAIGN_AC01_CC1",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [
+        "AC-01",
+        "AC-04"
+      ],
+      "decisive_evidence_required": "Escopo, fontes, lacunas, conhecimento existente/ausente e inventário finito de artefatos obrigatórios têm identidade congelada.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Inventário mecânico e plano local compatíveis; a integração ainda reconcilia necessidades e fontes da união.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-01",
+        "INT-02"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-COMPLETION"
+      ]
+    },
+    {
+      "id": "CC-2",
+      "source_line": 160,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 160
+      },
+      "normative_row": "| CC-2 | The slice is constructed cumulatively and every required level is persisted, directly usable and reachable through the real index/skill path. | AC-03, AC-04 |",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 preserva produção real, fontes, autoridade e casos próprios.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 fornece importer e recusas comuns reais.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT verifica compatibilidade dos cinco pacotes.",
+        "assignment_basis": "CAMPAIGN_HIGH_LEVEL_OWNER_RULE_WITH_DERIVED_SPECIALIZATION",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [
+        "AC-03",
+        "AC-04"
+      ],
+      "decisive_evidence_required": "Construção cumulativa persiste cada nível necessário e comprova utilidade e alcance pelo índice/skill reais.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Artefatos intermediários aceitos, reader/binding comuns e casos de uso direto compatíveis.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-02",
+        "INT-03"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-TRANSPORT",
+        "C-RUNTIME"
+      ]
+    },
+    {
+      "id": "CC-3",
+      "source_line": 161,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 161
+      },
+      "normative_row": "| CC-3 | Product purpose, behavior, contracts, decisions, impact and safe maintenance are supported, not merely titled. | AC-02 |",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 prova os casos próprios e consumo Atlas-only do seu domínio.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 responde pelo reader e binding comuns; a prova comum não substitui casos locais.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT prova casos e navegação da união.",
+        "assignment_basis": "CAMPAIGN_HIGH_LEVEL_OWNER_RULE_WITH_DERIVED_SPECIALIZATION",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [
+        "AC-02"
+      ],
+      "decisive_evidence_required": "Conteúdo e casos de ownership demonstram propósito, comportamento, contratos, decisões, impacto e manutenção; títulos não bastam.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Revisões locais e casos de consumidor ainda válidos; não reutilizar como aceite da união sem julgamento próprio.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-03",
+        "INT-11"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-PRINCIPLES",
+        "C-JUDGING"
+      ]
+    },
+    {
+      "id": "CC-4",
+      "source_line": 162,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 162
+      },
+      "normative_row": "| CC-4 | Initial build, invalidation, rebuild, reuse and relevant additions/removals/non-code inputs work end to end. | AC-05, AC-06 |",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 declara dependências, afetados e mudança específica.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 responde por cache/rebuild e controles comuns.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT verifica propagação entre domínios.",
+        "assignment_basis": "CAMPAIGN_HIGH_LEVEL_OWNER_RULE_WITH_DERIVED_SPECIALIZATION",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [
+        "AC-05",
+        "AC-06"
+      ],
+      "decisive_evidence_required": "Fluxo completo construção→invalidação→rebuild→reuse trata add/remove e inputs não código, preservando independentes.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Resultados comuns de S4 para mecanismo e casos locais compatíveis; diferenças interdomínio continuam de ROOT.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-02",
+        "INT-04",
+        "INT-05"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-RUNTIME"
+      ]
+    },
+    {
+      "id": "CC-5",
+      "source_line": 163,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 163
+      },
+      "normative_row": "| CC-5 | Coherent publication, reader verification, failure recovery and rollback work without weakening governance. | AC-07, AC-09, AC-10 |",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 fornece evidência pertinente ao uso local.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 responde pelo motor de coerência, recuperação e rollback.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT verifica união, concorrência e escopos independentes.",
+        "assignment_basis": "EXPLICIT_CAMPAIGN_AC07_CC5_SC5",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [
+        "AC-07",
+        "AC-09",
+        "AC-10"
+      ],
+      "decisive_evidence_required": "Publicação coerente, reader verification, falha/recuperação/rollback e preservação cumprem governança sem enfraquecê-la.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Provas comuns de recovery e recusas compatíveis; união exige concorrência e escopos independentes observados.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-06",
+        "INT-07",
+        "INT-08"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-RUNTIME"
+      ]
+    },
+    {
+      "id": "CC-6",
+      "source_line": 164,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 164
+      },
+      "normative_row": "| CC-6 | Execution economics are enforced/reported to the stated adapter guarantee and the approved run reconciles. | AC-08 |",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 registra uso novo, limites reais e desconhecidos; não declara histórico zero.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 responde pelas garantias efetivas do adapter.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT reconcilia agregado e limites históricos por meios autorizados.",
+        "assignment_basis": "EXPLICIT_CAMPAIGN_AC08_CC6_SC4",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [
+        "AC-08"
+      ],
+      "decisive_evidence_required": "Garantia econômica alegada corresponde à capacidade demonstrada do adapter e ao run autorizado reconciliado.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Contabilidade e conformance existentes compatíveis; informação ausente fica UNKNOWN e não fecha o critério.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-00",
+        "INT-09"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-INTEGRATION"
+      ]
+    },
+    {
+      "id": "CC-7",
+      "source_line": 165,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 165
+      },
+      "normative_row": "| CC-7 | Compatibility, generated surfaces, applicable docs/skills/guides and old-campaign obligations have explicit dispositions; expansion is not silently claimed complete. | AC-09, AC-10 |",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 preserva fontes/objetos e superfícies geradas de seu domínio.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 responde por migração e publicação compatíveis.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT verifica preservação e migração da união.",
+        "assignment_basis": "EXPLICIT_CAMPAIGN_AC10_CC7",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [
+        "AC-09",
+        "AC-10"
+      ],
+      "decisive_evidence_required": "Compatibilidade, gerados, docs/skills/guides e obrigações históricas têm disposição explícita; expansão não é marcada concluída por presunção.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Disposições locais e inventários preservados compatíveis; coordenação verifica histórico por canais autorizados.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-07",
+        "INT-08",
+        "INT-11"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-COMPLETION",
+        "C-AGENTS"
+      ]
+    },
+    {
+      "id": "SC-1",
+      "source_line": 169,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 169
+      },
+      "normative_row": "- **SC-1 — ownership:** AC-02 passes all frozen required cases without a critical mistake or source discovery by the consumer.",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 prova os casos próprios e consumo Atlas-only do seu domínio.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 responde pelo reader e binding comuns; a prova comum não substitui casos locais.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT prova casos e navegação da união.",
+        "assignment_basis": "EXPLICIT_CAMPAIGN_AC02_AC03_SC1_SC2",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [
+        "AC-02"
+      ],
+      "decisive_evidence_required": "Todos os casos obrigatórios congelados de AC-02 passam sem erro crítico e sem o consumidor redescobrir fontes.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Casos e reader comuns sob mesmas tarefas/oracles/limites; não extrapolar resultado para tarefas futuras arbitrárias.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-03",
+        "INT-11"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-JUDGING",
+        "C-RUNTIME"
+      ]
+    },
+    {
+      "id": "SC-2",
+      "source_line": 170,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 170
+      },
+      "normative_row": "- **SC-2 — progressive use:** AC-03 meets the read/context limits frozen before evaluation; routine use does not require loading the full graph.",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 prova os casos próprios e consumo Atlas-only do seu domínio.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 responde pelo reader e binding comuns; a prova comum não substitui casos locais.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT prova casos e navegação da união.",
+        "assignment_basis": "EXPLICIT_CAMPAIGN_AC02_AC03_SC1_SC2",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [
+        "AC-03"
+      ],
+      "decisive_evidence_required": "AC-03 cumpre limites de leitura/contexto fixados antes da avaliação e rotina não carrega o grafo completo.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Traços reais compatíveis do mesmo caso/limite e index/read do candidato exato.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-03"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-JUDGING",
+        "C-RUNTIME"
+      ]
+    },
+    {
+      "id": "SC-3",
+      "source_line": 171,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 171
+      },
+      "normative_row": "- **SC-3 — incrementality:** AC-05/06 preserve independent knowledge and reconcile the expected affected set; unchanged work incurs no new interpretation calls.",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 declara dependências, afetados e mudança específica.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 responde por cache/rebuild e controles comuns.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT verifica propagação entre domínios.",
+        "assignment_basis": "EXPLICIT_CAMPAIGN_AC05_AC06_SC3",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [
+        "AC-05",
+        "AC-06"
+      ],
+      "decisive_evidence_required": "AC-05/06 reconciliam affected set esperado, preservam independentes e não gastam interpretação em trabalho inalterado.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Controles comuns de reuse/rebuild e casos locais compatíveis; evitar duplicação sem eliminar o delta transversal.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-04",
+        "INT-05"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-RUNTIME"
+      ]
+    },
+    {
+      "id": "SC-4",
+      "source_line": 172,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 172
+      },
+      "normative_row": "- **SC-4 — economics:** separately report initial construction, validation, incremental update and daily reads; stay within the approved envelope and never call missing usage zero. No savings percentage without a comparable measured baseline, and no rerun of old mining merely to obtain one.",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 registra uso novo, limites reais e desconhecidos; não declara histórico zero.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 responde pelas garantias efetivas do adapter.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT reconcilia agregado e limites históricos por meios autorizados.",
+        "assignment_basis": "EXPLICIT_CAMPAIGN_AC08_CC6_SC4",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [
+        "AC-08"
+      ],
+      "decisive_evidence_required": "Uso de construção, validação, incremental update e daily reads é separado; envelope respeitado, desconhecidos preservados e nenhuma economia percentual sem baseline comparável medido.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Medições autorizadas existentes; não repetir mineração histórica para inventar baseline de economia.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-09"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-INTEGRATION"
+      ]
+    },
+    {
+      "id": "SC-5",
+      "source_line": 173,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 173
+      },
+      "normative_row": "- **SC-5 — consistency:** AC-07/09 demonstrate coherent accepted reads and refusal of the specified invalid states, without asserting CI proves semantic truth.",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 fornece evidência pertinente ao uso local.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 responde pelo motor de coerência, recuperação e rollback.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT verifica união, concorrência e escopos independentes.",
+        "assignment_basis": "EXPLICIT_CAMPAIGN_AC07_CC5_SC5",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [
+        "AC-07",
+        "AC-09"
+      ],
+      "decisive_evidence_required": "AC-07/09 comprovam leituras coerentes e recusa dos estados inválidos especificados; CI não é prova semântica.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Provas comuns de coerência/negativos compatíveis e complementos da união.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-06",
+        "INT-07",
+        "INT-10"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-RUNTIME"
+      ]
+    },
+    {
+      "id": "QS-1",
+      "source_line": 180,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 180
+      },
+      "normative_row": "- **QS-1 Fidelity:** preserve evidence and disagreements; use correct epistemic labels; no unsupported product rationale.",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 aplica o critério à sua missão e mantém evidência do próprio escopo.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 aplica o critério à própria missão e ao runtime comum quando pertinente; a especialização operacional precisa ser fixada no WP.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT dá disposição global e entrega governada; a coordenação mantém seu par próprio de integração.",
+        "assignment_basis": "CAMPAIGN_HIGH_LEVEL_OWNER_RULE_WITH_DERIVED_SPECIALIZATION",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [],
+      "decisive_evidence_required": "Revisão de fidelidade mantém desacordos, rótulos epistêmicos e rastreabilidade; rationale não apoiado permanece hipótese.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Fontes e revisões exatas podem apoiar múltiplos IDs, sem apagar divergências ou gaps.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-02",
+        "INT-11"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-PRINCIPLES",
+        "C-JUDGING"
+      ]
+    },
+    {
+      "id": "QS-2",
+      "source_line": 181,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 181
+      },
+      "normative_row": "- **QS-2 Operational utility:** concise skills prescribe actions; index entries state what a deeper artifact answers; explanations/procedures are readable, scoped and non-redundant.",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 aplica o critério à sua missão e mantém evidência do próprio escopo.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 aplica o critério à própria missão e ao runtime comum quando pertinente; a especialização operacional precisa ser fixada no WP.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT dá disposição global e entrega governada; a coordenação mantém seu par próprio de integração.",
+        "assignment_basis": "CAMPAIGN_HIGH_LEVEL_OWNER_RULE_WITH_DERIVED_SPECIALIZATION",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [],
+      "decisive_evidence_required": "Revisão operacional e consumidor mostram skills acionáveis, index entries úteis e conteúdo legível, delimitado e sem redundância vazia.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Procedimentos, entradas de índice e casos já validados compatíveis com o escopo/candidato.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-03",
+        "INT-11"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-PRINCIPLES",
+        "C-RUNTIME"
+      ]
+    },
+    {
+      "id": "QS-3",
+      "source_line": 182,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 182
+      },
+      "normative_row": "- **QS-3 Simplicity:** every new mechanism names an acceptance need existing code cannot satisfy; no speculative framework, per-layer agent, vector store, bespoke database or mandatory deepening loop.",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 aplica o critério à sua missão e mantém evidência do próprio escopo.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 aplica o critério à própria missão e ao runtime comum quando pertinente; a especialização operacional precisa ser fixada no WP.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT dá disposição global e entrega governada; a coordenação mantém seu par próprio de integração.",
+        "assignment_basis": "CAMPAIGN_HIGH_LEVEL_OWNER_RULE_WITH_DERIVED_SPECIALIZATION",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [],
+      "decisive_evidence_required": "Cada mecanismo novo demonstra necessidade não atendida por código existente; revisão rejeita framework, store ou deepening loop especulativo.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Decisões de fit e portas existentes compatíveis, avaliadas contra a necessidade atual.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-02",
+        "INT-11"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-PRINCIPLES",
+        "C-TRANSPORT"
+      ]
+    },
+    {
+      "id": "QS-4",
+      "source_line": 183,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 183
+      },
+      "normative_row": "- **QS-4 Engineering:** repository style/dependency boundaries, generated-code discipline, safe persistence, input validation and secret handling; no global test hacks or duplicated implementation in tests.",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 responde pela integração e gates dos componentes que alterou.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 responde pelas portas Atlas e controles negativos comuns.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT responde pelos gates integrados e proteção observada.",
+        "assignment_basis": "CAMPAIGN_HIGH_LEVEL_OWNER_RULE_WITH_DERIVED_SPECIALIZATION",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [],
+      "decisive_evidence_required": "Revisão de estilo/dependências/geração/persistência/inputs/segredos e controles reais do delta; sem hacks globais ou testes duplicando implementação.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Gates e revisões compatíveis para partes inalteradas; mudanças de API pública exigem disposição de geração conforme AGENTS.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-07",
+        "INT-08",
+        "INT-10",
+        "INT-11"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-AGENTS",
+        "C-PRINCIPLES"
+      ]
+    },
+    {
+      "id": "QS-5",
+      "source_line": 184,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 184
+      },
+      "normative_row": "- **QS-5 Evidence:** actual implementation/reader controls, anti-vacuity mutations where relevant, bounded semantic review and explicit scope of proof; review a fixed bar, not endless optional improvements.",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 aplica o critério à sua missão e mantém evidência do próprio escopo.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 aplica o critério à própria missão e ao runtime comum quando pertinente; a especialização operacional precisa ser fixada no WP.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT dá disposição global e entrega governada; a coordenação mantém seu par próprio de integração.",
+        "assignment_basis": "CAMPAIGN_HIGH_LEVEL_OWNER_RULE_WITH_DERIVED_SPECIALIZATION",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [],
+      "decisive_evidence_required": "Leitores e implementação reais, mutações antivacuidade pertinentes e revisão semântica limitada à barra congelada têm evidência de escopo.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Recibos exatos e revisões compatíveis; nenhuma sugestão opcional acrescenta critério obrigatório retroativo.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-03",
+        "INT-05",
+        "INT-07",
+        "INT-11"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-JUDGING",
+        "C-RUNTIME"
+      ]
+    },
+    {
+      "id": "QS-6",
+      "source_line": 185,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 185
+      },
+      "normative_row": "- **QS-6 Economy:** scoped evidence packs, shared validated context, deterministic derivation first, reusable completions and honest accounting; no automatic retry/refinement campaign.",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 registra uso novo, limites reais e desconhecidos; não declara histórico zero.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 responde pelas garantias efetivas do adapter.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT reconcilia agregado e limites históricos por meios autorizados.",
+        "assignment_basis": "CAMPAIGN_HIGH_LEVEL_OWNER_RULE_WITH_DERIVED_SPECIALIZATION",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [],
+      "decisive_evidence_required": "Pacotes delimitados, contexto compartilhado válido, derivação mecânica, completions reutilizadas e contabilidade honesta; não iniciar retry/refinement automático.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Evidence packs e completions ainda válidos; cada reuso explicita identidade e o que a prova não cobre.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-00",
+        "INT-09",
+        "INT-11"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-PRINCIPLES",
+        "C-RUNTIME"
+      ]
+    },
+    {
+      "id": "DOD-1",
+      "source_line": 223,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 223
+      },
+      "normative_row": "- **DOD-1:** CC-1..7 and SC-1..5 have explicit evidence/verdicts; judged rows have named acceptance, not inferred approval from tests.",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 aplica o critério à sua missão e mantém evidência do próprio escopo.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 aplica o critério à própria missão e ao runtime comum quando pertinente; a especialização operacional precisa ser fixada no WP.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT dá disposição global e entrega governada; a coordenação mantém seu par próprio de integração.",
+        "assignment_basis": "CAMPAIGN_HIGH_LEVEL_OWNER_RULE_WITH_DERIVED_SPECIALIZATION",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [
+        "CC-1",
+        "CC-2",
+        "CC-3",
+        "CC-4",
+        "CC-5",
+        "CC-6",
+        "CC-7",
+        "SC-1",
+        "SC-2",
+        "SC-3",
+        "SC-4",
+        "SC-5"
+      ],
+      "decisive_evidence_required": "Todos CC-1..7 e SC-1..5 têm evidência e veredicto; itens julgados têm aceite nomeado e não inferido de testes.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Matriz e provas locais compatíveis alimentam avaliação global; os pareceres locais não se tornam o par da integração.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-11"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-COMPLETION",
+        "C-INTEGRATION"
+      ]
+    },
+    {
+      "id": "DOD-2",
+      "source_line": 224,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 224
+      },
+      "normative_row": "- **DOD-2:** all applicable invariants and QS-1..6 are reviewed; known-bad controls demonstrate relevant gates can reject defects.",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 aplica o critério à sua missão e mantém evidência do próprio escopo.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 aplica o critério à própria missão e ao runtime comum quando pertinente; a especialização operacional precisa ser fixada no WP.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT dá disposição global e entrega governada; a coordenação mantém seu par próprio de integração.",
+        "assignment_basis": "CAMPAIGN_HIGH_LEVEL_OWNER_RULE_WITH_DERIVED_SPECIALIZATION",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [],
+      "decisive_evidence_required": "Invariants e QS aplicáveis são revisados; known-bad controls demonstram rejeição real nos gates pertinentes.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Provas negativas e revisões do mesmo candidato/contrato, com deltas afetados reavaliados.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-07",
+        "INT-10",
+        "INT-11"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-COMPLETION",
+        "C-JUDGING"
+      ]
+    },
+    {
+      "id": "DOD-3",
+      "source_line": 225,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 225
+      },
+      "normative_row": "- **DOD-3:** real consumers use accepted artifacts through the index/skill path; end-to-end update/publication/recovery, not only isolated modules, is verified.",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 aplica o critério à sua missão e mantém evidência do próprio escopo.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 aplica o critério à própria missão e ao runtime comum quando pertinente; a especialização operacional precisa ser fixada no WP.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT dá disposição global e entrega governada; a coordenação mantém seu par próprio de integração.",
+        "assignment_basis": "CAMPAIGN_HIGH_LEVEL_OWNER_RULE_WITH_DERIVED_SPECIALIZATION",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [],
+      "decisive_evidence_required": "Consumidor real usa artefatos aceitos por index/skill e cadeia update/publication/recovery é provada ponta a ponta.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Provas comuns compatíveis e casos locais; módulos isolados não substituem a cadeia da união.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-03",
+        "INT-05",
+        "INT-06"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-COMPLETION",
+        "C-RUNTIME"
+      ]
+    },
+    {
+      "id": "DOD-4",
+      "source_line": 226,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 226
+      },
+      "normative_row": "- **DOD-4:** scoped remote tests, package-local typechecks, generated checks where applicable and `bun run check:guards --base origin/dev` are reconciled; one final epic covers the integrated bundle. Never report unrun gates as green.",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 responde pela integração e gates dos componentes que alterou.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 responde pelas portas Atlas e controles negativos comuns.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT responde pelos gates integrados e proteção observada.",
+        "assignment_basis": "CAMPAIGN_HIGH_LEVEL_OWNER_RULE_WITH_DERIVED_SPECIALIZATION",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [],
+      "decisive_evidence_required": "Gates remotos escopados, typechecks locais por pacote, gerados pertinentes, guardas e epic final reconciliados com candidato exato; unrun não vira green.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Resultados de gates compatíveis podem ser reutilizados após análise de delta; ROOT executa faltantes/invalidados e epic exigido.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-10"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-AGENTS",
+        "C-COMPLETION",
+        "C-INTEGRATION"
+      ]
+    },
+    {
+      "id": "DOD-5",
+      "source_line": 227,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 227
+      },
+      "normative_row": "- **DOD-5:** real authorized usage/cost and unresolved requests reconcile; no unapproved calls, silent fallback or budget reset between stages.",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 registra uso novo, limites reais e desconhecidos; não declara histórico zero.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 responde pelas garantias efetivas do adapter.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT reconcilia agregado e limites históricos por meios autorizados.",
+        "assignment_basis": "CAMPAIGN_HIGH_LEVEL_OWNER_RULE_WITH_DERIVED_SPECIALIZATION",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [],
+      "decisive_evidence_required": "Uso/custo autorizado e requests não resolvidos reconciliados através das etapas, incluindo avaliação e correção; sem fallback oculto ou reset.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Medições e reservas reais já registradas; desconhecidos permanecem explícitos, sem publicar ledger privado.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-00",
+        "INT-09",
+        "INT-11"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-RUNTIME",
+        "C-INTEGRATION"
+      ]
+    },
+    {
+      "id": "DOD-6",
+      "source_line": 228,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 228
+      },
+      "normative_row": "- **DOD-6:** docs/skills/operator guidance, migration/rollback and historical obligation dispositions are accurate; independent review is complete before landing and only verified owned resources are cleaned.",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 aplica o critério à sua missão e mantém evidência do próprio escopo.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 aplica o critério à própria missão e ao runtime comum quando pertinente; a especialização operacional precisa ser fixada no WP.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT dá disposição global e entrega governada; a coordenação mantém seu par próprio de integração.",
+        "assignment_basis": "CAMPAIGN_HIGH_LEVEL_OWNER_RULE_WITH_DERIVED_SPECIALIZATION",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [],
+      "decisive_evidence_required": "Guias, evidências, migração/rollback e disposições históricas estão corretos; revisão independente precede landing e qualquer limpeza limita-se a recursos próprios verificados.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Docs/revisões e controles compatíveis; esta auditoria não autoriza limpeza, landing ou acesso histórico privado.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-08",
+        "INT-11",
+        "INT-12"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-HANDOFFS",
+        "C-COMPLETION",
+        "C-INTEGRATION"
+      ]
+    },
+    {
+      "id": "DOD-7",
+      "source_line": 229,
+      "normative_source": {
+        "source_id": "C-NORM",
+        "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+        "line": 229
+      },
+      "normative_row": "- **DOD-7:** owner acceptance and governed integration are recorded. Code complete, tested, semantically accepted and landed are distinct states. No silent waiver; a failed criterion remains open or an explicit owner amendment changes this contract.",
+      "mapping_kind": "STATIC_INTERPRETATION_AND_FUTURE_EVIDENCE_PLAN",
+      "owner_assignment": {
+        "local_owners": [
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5"
+        ],
+        "local_responsibility": "Cada S1–S5 aplica o critério à sua missão e mantém evidência do próprio escopo.",
+        "common_runtime_owner": "S4",
+        "common_responsibility": "S4 aplica o critério à própria missão e ao runtime comum quando pertinente; a especialização operacional precisa ser fixada no WP.",
+        "global_owner": "ROOT",
+        "global_responsibility": "ROOT dá disposição global e entrega governada; a coordenação mantém seu par próprio de integração.",
+        "assignment_basis": "CAMPAIGN_HIGH_LEVEL_OWNER_RULE_WITH_DERIVED_SPECIALIZATION",
+        "specialization_is_normative_text": false,
+        "source_refs": [
+          "C-CAMPAIGN",
+          "C-NORM"
+        ]
+      },
+      "related_criteria": [],
+      "decisive_evidence_required": "Aceite do dono e integração governada são registrados separadamente de code complete, testes, aceitação semântica, landing e ativação; falhas continuam abertas sem waiver implícito.",
+      "observed_requirement_satisfaction_evidence": "UNKNOWN",
+      "reusable_evidence_candidates": "Provas anteriores podem compor o pacote, mas o aceite humano e atos governados não são herdados nem presumidos.",
+      "reusable_evidence_available": "UNKNOWN",
+      "reuse_compatibility_ref": "REUSE-1",
+      "pending_gate_refs": [
+        "INT-11",
+        "INT-12"
+      ],
+      "gate_execution_status": "NOT_RUN",
+      "campaign_acceptance_verdict": "UNKNOWN",
+      "global_complement": "DEFERRED_TO_COORDINATION_INTEGRATION",
+      "references": [
+        "C-REG",
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-COMPLETION",
+        "C-INTEGRATION"
+      ]
+    }
+  ]
+}

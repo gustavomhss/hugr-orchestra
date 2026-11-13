@@ -1,0 +1,2499 @@
+{
+  "schema": "genesis-external-static-contracts/v1",
+  "audit_id": "20261113-external-integration-static",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "prompts_revision": "d2d985c28947c7f984a36b07ad34ede3d4d2d6b4",
+  "freeze_commit": "3d9a515f264a7938c764d37532bc42ad6005fc47",
+  "author": "external-contracts-producer",
+  "status": "STATIC_CANDIDATE",
+  "scope": "Selected critical S1–S5 boundaries; not an exhaustive repository import/call graph and not a campaign execution report.",
+  "definitions": {
+    "build": "Consumer -> source/module/generation input required by declared imports or generation recipe; compile, type and package edges are not execution evidence. These are product-module/generation dependencies, not a claim about Genesis artifact build_dependencies.",
+    "call": "Caller/dispatch contract -> callee contract as written in source. No runtime request was sent.",
+    "navigation": "Discovery/reference -> information reachable through an explicit read/resolution interface. Never automatically a build dependency. Unit-to-unit links in actual campaign knowledge were not inspected and are not invented here.",
+    "impact": "Changed producer/contract -> potentially affected consumer; bounded static inference based on traced edges."
+  },
+  "ownership_rule": {
+    "source": "B-P01",
+    "algorithm": "exact_files[path] > longest matching directory_prefix ending in / > fallback S5",
+    "computed_for_all_nodes": true
+  },
+  "counts": {
+    "nodes": 20,
+    "source_observed_edges": 17,
+    "impact_inferences": 7,
+    "content_sources": 53
+  },
+  "nodes": [
+    {
+      "id": "cli_serve",
+      "label": "CLI serve",
+      "source_id": "B-S02",
+      "path": "apps/cli/src/commands/handlers/serve.ts",
+      "blob_sha": "f11a2c92019d75847eac7b87d0b762cf944e7c93",
+      "owner": "S5",
+      "rule_type": "longest_directory_prefix",
+      "rule": "apps/cli/"
+    },
+    {
+      "id": "cli_host",
+      "label": "Composição ProductHost",
+      "source_id": "B-S05",
+      "path": "apps/cli/src/host.ts",
+      "blob_sha": "cc89adc3a11e2bd3e7d779642382ed86dfceab31",
+      "owner": "S5",
+      "rule_type": "longest_directory_prefix",
+      "rule": "apps/cli/"
+    },
+    {
+      "id": "api_routes",
+      "label": "HTTP createRoutes",
+      "source_id": "B-S03",
+      "path": "packages/server/src/routes.ts",
+      "blob_sha": "75b0f9753e4c879767ef186f5003519e2b681025",
+      "owner": "S1",
+      "rule_type": "longest_directory_prefix",
+      "rule": "packages/server/"
+    },
+    {
+      "id": "core_host",
+      "label": "Core Host.merge",
+      "source_id": "B-S04",
+      "path": "packages/core/src/host.ts",
+      "blob_sha": "a0fc5bc9a36e50315b0ddddf4de3566555711250",
+      "owner": "S1",
+      "rule_type": "longest_directory_prefix",
+      "rule": "packages/core/"
+    },
+    {
+      "id": "maestro_seats",
+      "label": "MaestroSeatsV2",
+      "source_id": "B-S06",
+      "path": "modules/maestro/coordination/src/v2/seats.ts",
+      "blob_sha": "f27ddca3b35551b16482f7032197af7cba25e3e6",
+      "owner": "S3",
+      "rule_type": "longest_directory_prefix",
+      "rule": "modules/maestro/"
+    },
+    {
+      "id": "workflow_host",
+      "label": "Maestro workflow host",
+      "source_id": "B-S08",
+      "path": "modules/maestro/coordination/src/v2/workflow/host.ts",
+      "blob_sha": "111dac220a84bdeffe94956244b728b29eb98ea4",
+      "owner": "S3",
+      "rule_type": "longest_directory_prefix",
+      "rule": "modules/maestro/"
+    },
+    {
+      "id": "relay_publication",
+      "label": "Porta de publicação Relay",
+      "source_id": "B-S09",
+      "path": "modules/maestro/coordination/src/v2/workflow/relay.ts",
+      "blob_sha": "66c147f58f29334e1cfe541f240c14619a87d05c",
+      "owner": "S3",
+      "rule_type": "longest_directory_prefix",
+      "rule": "modules/maestro/"
+    },
+    {
+      "id": "core_relay",
+      "label": "Core Relay.Service",
+      "source_id": "B-S11",
+      "path": "packages/core/src/relay.ts",
+      "blob_sha": "25fb509203f933a2e8b0f311c3fc8f9476d53e16",
+      "owner": "S1",
+      "rule_type": "longest_directory_prefix",
+      "rule": "packages/core/"
+    },
+    {
+      "id": "relay_store",
+      "label": "Relay AuthoringStore",
+      "source_id": "B-S10",
+      "path": "modules/relay/src/authoring/store.ts",
+      "blob_sha": "b11d17cd55ffa69a307130a31ab44d01ac7e477d",
+      "owner": "S3",
+      "rule_type": "longest_directory_prefix",
+      "rule": "modules/relay/"
+    },
+    {
+      "id": "atlas_tool",
+      "label": "atlas_context",
+      "source_id": "B-S12",
+      "path": "modules/maestro/coordination/src/v2/tools/atlas.ts",
+      "blob_sha": "1989941d868187b7fc264559f0c90d11c9b1c4d3",
+      "owner": "S3",
+      "rule_type": "longest_directory_prefix",
+      "rule": "modules/maestro/"
+    },
+    {
+      "id": "atlas_reader",
+      "label": "Leitor Own do Maestro",
+      "source_id": "B-S13",
+      "path": "modules/maestro/coordination/src/v2/atlas-source.ts",
+      "blob_sha": "5388417c92f33c2cfd0d06d58d04446c35631d42",
+      "owner": "S3",
+      "rule_type": "longest_directory_prefix",
+      "rule": "modules/maestro/"
+    },
+    {
+      "id": "atlas_host_context",
+      "label": "Verificação Atlas HostContext",
+      "source_id": "B-S14",
+      "path": "modules/atlas/packages/retrieval/src/host-context.ts",
+      "blob_sha": "6c60032a6049e5de89592d9b6aa483207c909598",
+      "owner": "S4",
+      "rule_type": "longest_directory_prefix",
+      "rule": "modules/atlas/"
+    },
+    {
+      "id": "atlas_boundary",
+      "label": "Exports Atlas boundary",
+      "source_id": "B-S15",
+      "path": "modules/atlas/boundary/package.json",
+      "blob_sha": "055b46b9d32d765c3c2dc54468137d031bb3de90",
+      "owner": "S4",
+      "rule_type": "longest_directory_prefix",
+      "rule": "modules/atlas/"
+    },
+    {
+      "id": "client_contract",
+      "label": "ClientApi/generator",
+      "source_id": "B-S17",
+      "path": "packages/client/src/contract.ts",
+      "blob_sha": "1dccaeb657cc106b7a8cba93f5f5c34a8faf8680",
+      "owner": "S1",
+      "rule_type": "longest_directory_prefix",
+      "rule": "packages/client/"
+    },
+    {
+      "id": "protocol_api",
+      "label": "Protocol API/AtlasGroup",
+      "source_id": "B-S19",
+      "path": "packages/protocol/src/api.ts",
+      "blob_sha": "40b5b5bd266b8a9bd3893f74d5429bf535dc01d7",
+      "owner": "S1",
+      "rule_type": "longest_directory_prefix",
+      "rule": "packages/protocol/"
+    },
+    {
+      "id": "client",
+      "label": "Cliente gerado",
+      "source_id": "B-S21",
+      "path": "packages/client/src/generated/client.ts",
+      "blob_sha": "93cab27e0b902d6e8fbd21d6aaec320a2b9fe09c",
+      "owner": "S1",
+      "rule_type": "longest_directory_prefix",
+      "rule": "packages/client/"
+    },
+    {
+      "id": "core_atlas",
+      "label": "Core Atlas.open",
+      "source_id": "B-S23",
+      "path": "packages/core/src/atlas.ts",
+      "blob_sha": "f6718654785fb155e1bb1b2acb7e9985478b983b",
+      "owner": "S1",
+      "rule_type": "longest_directory_prefix",
+      "rule": "packages/core/"
+    },
+    {
+      "id": "atlas_surface",
+      "label": "Fonte Atlas surface",
+      "source_id": "B-S24",
+      "path": "modules/atlas/packages/adapter-io/src/surface/index.ts",
+      "blob_sha": "cf531a1cba71737a453ef43a4d8b0af9c5914189",
+      "owner": "S4",
+      "rule_type": "longest_directory_prefix",
+      "rule": "modules/atlas/"
+    },
+    {
+      "id": "ui_adapter",
+      "label": "Adaptador app-shell",
+      "source_id": "B-S26",
+      "path": "packages/app-shell/src/utils/server.ts",
+      "blob_sha": "542e992958dca3993e633babd881c5a7e8407c66",
+      "owner": "S2",
+      "rule_type": "longest_directory_prefix",
+      "rule": "packages/app-shell/"
+    },
+    {
+      "id": "workflow_knowledge",
+      "label": "Resolver da referência Knowledge",
+      "source_id": "B-S30",
+      "path": "modules/maestro/coordination/src/v2/workflow/knowledge.ts",
+      "blob_sha": "f8f7852950b60029a4807324798954962f72ada5",
+      "owner": "S3",
+      "rule_type": "longest_directory_prefix",
+      "rule": "modules/maestro/"
+    }
+  ],
+  "edges": [
+    {
+      "id": "B-E01",
+      "kind": "build",
+      "from": "cli_serve",
+      "to": "api_routes",
+      "direction": "cli_serve -> api_routes",
+      "owners": [
+        "S5",
+        "S1"
+      ],
+      "cross_shard": true,
+      "epistemic_status": "OBSERVED_STATIC_SOURCE",
+      "mechanism": "serve.ts importa createRoutes e o fornece a HttpRouter.serve; routes.ts declara createRoutes e monta HttpApiBuilder.layer.",
+      "boundary": "S5 CLI → S1 Server.",
+      "limit": "Import/chamada escrita em fonte; nenhum servidor foi iniciado.",
+      "impact": {
+        "status": "STATIC_INFERENCE",
+        "description": "Mudanças em Options/createRoutes podem afetar o comando serve e a inicialização HTTP."
+      },
+      "remaining_control": {
+        "status": "NOT_RUN",
+        "description": "Rever delta de assinatura e executar composição/arranque no candidato exato somente pela coordenação."
+      },
+      "evidence": [
+        {
+          "source_id": "B-S01",
+          "path": "apps/cli/package.json",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "c9c071a3db4543abab9f02dfd25a494881a23377",
+          "ranges": [
+            [
+              1,
+              46
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S02",
+          "path": "apps/cli/src/commands/handlers/serve.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "f11a2c92019d75847eac7b87d0b762cf944e7c93",
+          "ranges": [
+            [
+              1,
+              24
+            ],
+            [
+              122,
+              135
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S03",
+          "path": "packages/server/src/routes.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "75b0f9753e4c879767ef186f5003519e2b681025",
+          "ranges": [
+            [
+              81,
+              139
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S34",
+          "path": "packages/server/package.json",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "1e2d83907eaac06d0da1571ac7ceab9f528102b7",
+          "ranges": [
+            [
+              1,
+              32
+            ],
+            [
+              39,
+              56
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B-E02",
+      "kind": "build",
+      "from": "cli_serve",
+      "to": "cli_host",
+      "direction": "cli_serve -> cli_host",
+      "owners": [
+        "S5",
+        "S5"
+      ],
+      "cross_shard": false,
+      "epistemic_status": "OBSERVED_STATIC_SOURCE",
+      "mechanism": "hosts() retorna ProductHost.contributions(AppDockSocket.fromEnv()); o resultado é passado como host à criação das rotas.",
+      "boundary": "S5 command → composição S5.",
+      "limit": "Dock é condicional ao canal recebido; nenhum canal foi aberto.",
+      "impact": {
+        "status": "STATIC_INFERENCE",
+        "description": "Mudança na lista/ordem de contribuições altera a composição entregue por serve."
+      },
+      "remaining_control": {
+        "status": "NOT_RUN",
+        "description": "Conferir lista e ordem de contribuições e cenário com/sem canal Dock."
+      },
+      "evidence": [
+        {
+          "source_id": "B-S02",
+          "path": "apps/cli/src/commands/handlers/serve.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "f11a2c92019d75847eac7b87d0b762cf944e7c93",
+          "ranges": [
+            [
+              1,
+              24
+            ],
+            [
+              122,
+              135
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S05",
+          "path": "apps/cli/src/host.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "cc89adc3a11e2bd3e7d779642382ed86dfceab31",
+          "ranges": [
+            [
+              1,
+              29
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B-E03",
+      "kind": "build",
+      "from": "cli_host",
+      "to": "maestro_seats",
+      "direction": "cli_host -> maestro_seats",
+      "owners": [
+        "S5",
+        "S3"
+      ],
+      "cross_shard": true,
+      "epistemic_status": "OBSERVED_STATIC_SOURCE",
+      "mechanism": "ProductHost importa @orchestra/maestro/v2/seats e inclui MaestroSeatsV2.contribution; manifesto mapeia esse export para v2/seats.ts.",
+      "boundary": "S5 → S3; injeção explícita de contribuição do produto.",
+      "limit": "O comentário de seats.ts registra que roster/playbooks podem não carregar no CLI standalone; composição declarada não comprova disponibilidade.",
+      "impact": {
+        "status": "STATIC_INFERENCE",
+        "description": "Mudanças em contribuição, roster e skills podem afetar agentes/ferramentas expostos pelo host."
+      },
+      "remaining_control": {
+        "status": "NOT_RUN",
+        "description": "Conferir recursos embarcados e efeitos da indisponibilidade do roster no build escolhido."
+      },
+      "evidence": [
+        {
+          "source_id": "B-S05",
+          "path": "apps/cli/src/host.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "cc89adc3a11e2bd3e7d779642382ed86dfceab31",
+          "ranges": [
+            [
+              1,
+              29
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S06",
+          "path": "modules/maestro/coordination/src/v2/seats.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "f27ddca3b35551b16482f7032197af7cba25e3e6",
+          "ranges": [
+            [
+              3,
+              28
+            ],
+            [
+              32,
+              50
+            ],
+            [
+              235,
+              258
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S32",
+          "path": "modules/maestro/coordination/package.json",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "97397b0bc609fcf842f654ecbad2f4dd66d8d8d4",
+          "ranges": [
+            [
+              1,
+              8
+            ],
+            [
+              31,
+              54
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B-E04",
+      "kind": "build",
+      "from": "api_routes",
+      "to": "core_host",
+      "direction": "api_routes -> core_host",
+      "owners": [
+        "S1",
+        "S1"
+      ],
+      "cross_shard": false,
+      "epistemic_status": "OBSERVED_STATIC_SOURCE",
+      "mechanism": "makeRoutes chama Host.merge(options.host ?? []) e aplica nodes, replacements, locationNodes e references ao grafo de serviços.",
+      "boundary": "S1 Server → S1 Core; integra entradas de contribuições S3/S4/S5.",
+      "limit": "Host.merge contém validações síncronas para IDs/nós duplicados e nós reservados; estas recusas não foram executadas.",
+      "impact": {
+        "status": "STATIC_INFERENCE",
+        "description": "Contrato Host.Contribution é ponto de impacto para todos os módulos selecionados que o entregam."
+      },
+      "remaining_control": {
+        "status": "NOT_RUN",
+        "description": "Exercitar colisões de IDs/nós e preservação do SessionExecution global no candidato integrado."
+      },
+      "evidence": [
+        {
+          "source_id": "B-S03",
+          "path": "packages/server/src/routes.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "75b0f9753e4c879767ef186f5003519e2b681025",
+          "ranges": [
+            [
+              81,
+              139
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S04",
+          "path": "packages/core/src/host.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "a0fc5bc9a36e50315b0ddddf4de3566555711250",
+          "ranges": [
+            [
+              15,
+              59
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B-E05",
+      "kind": "build",
+      "from": "maestro_seats",
+      "to": "workflow_host",
+      "direction": "maestro_seats -> workflow_host",
+      "owners": [
+        "S3",
+        "S3"
+      ],
+      "cross_shard": false,
+      "epistemic_status": "OBSERVED_STATIC_SOURCE",
+      "mechanism": "seats.ts projeta o catálogo Seats nos agentes e adiciona MaestroWorkflowHostV2.node em contribution.nodes.",
+      "boundary": "Dentro de S3; a contribuição depois atravessa o Host S1.",
+      "limit": "Não afirma que todos os seats estejam habilitados ou que um workflow tenha rodado.",
+      "impact": {
+        "status": "STATIC_INFERENCE",
+        "description": "Mudanças no node ou catálogo podem afetar disponibilidade e governança das tarefas do Maestro."
+      },
+      "remaining_control": {
+        "status": "NOT_RUN",
+        "description": "Conferir catálogo/nós e exercer ao menos um caso autorizado de seat pelo host real."
+      },
+      "evidence": [
+        {
+          "source_id": "B-S06",
+          "path": "modules/maestro/coordination/src/v2/seats.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "f27ddca3b35551b16482f7032197af7cba25e3e6",
+          "ranges": [
+            [
+              3,
+              28
+            ],
+            [
+              32,
+              50
+            ],
+            [
+              235,
+              258
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S07",
+          "path": "modules/maestro/coordination/src/seats/index.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "a4f0ecf5b5144f91837571286f91fc552be0c826",
+          "ranges": [
+            [
+              1,
+              32
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S08",
+          "path": "modules/maestro/coordination/src/v2/workflow/host.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "111dac220a84bdeffe94956244b728b29eb98ea4",
+          "ranges": [
+            [
+              14,
+              29
+            ],
+            [
+              79,
+              119
+            ],
+            [
+              403,
+              417
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B-E06",
+      "kind": "build",
+      "from": "workflow_host",
+      "to": "relay_publication",
+      "direction": "workflow_host -> relay_publication",
+      "owners": [
+        "S3",
+        "S3"
+      ],
+      "cross_shard": false,
+      "epistemic_status": "OBSERVED_STATIC_SOURCE",
+      "mechanism": "WorkflowHost.within obtém a authority Session e Relay.Service, então chama WorkflowRelayV2.publication(relay, authority, {store,seats,atlas}).",
+      "boundary": "S3 workflow host → porta S3 com serviços S1.",
+      "limit": "O código verifica linhagem/placement antes da chamada; eficácia em runtime permanece UNKNOWN.",
+      "impact": {
+        "status": "STATIC_INFERENCE",
+        "description": "Mudança em placement/publication pode invalidar a vinculação de plano de um seat ao Relay correto."
+      },
+      "remaining_control": {
+        "status": "NOT_RUN",
+        "description": "Exercitar sessão ausente, placement incompatível e porta de publicação no candidato fixo."
+      },
+      "evidence": [
+        {
+          "source_id": "B-S08",
+          "path": "modules/maestro/coordination/src/v2/workflow/host.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "111dac220a84bdeffe94956244b728b29eb98ea4",
+          "ranges": [
+            [
+              14,
+              29
+            ],
+            [
+              79,
+              119
+            ],
+            [
+              403,
+              417
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S09",
+          "path": "modules/maestro/coordination/src/v2/workflow/relay.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "66c147f58f29334e1cfe541f240c14619a87d05c",
+          "ranges": [
+            [
+              3,
+              14
+            ],
+            [
+              33,
+              78
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B-E07",
+      "kind": "build",
+      "from": "relay_publication",
+      "to": "core_relay",
+      "direction": "relay_publication -> core_relay",
+      "owners": [
+        "S3",
+        "S1"
+      ],
+      "cross_shard": true,
+      "epistemic_status": "OBSERVED_STATIC_SOURCE",
+      "mechanism": "A porta depende de Relay.Interface e adquire Relay.Service por LocationServiceMap; core/relay.ts define paths/currentStep/transition e o serviço Location-scoped.",
+      "boundary": "S3 → S1; serviço core Relay pertence a S1 pelo path, não pelo nome.",
+      "limit": "CurrentStep/transition são declarados; nenhuma transição ou avaliação foi executada.",
+      "impact": {
+        "status": "STATIC_INFERENCE",
+        "description": "Mudanças em paths/Interface/placement podem afetar a publicação e a retomada do host de workflows."
+      },
+      "remaining_control": {
+        "status": "NOT_RUN",
+        "description": "Validar identidade de projeto/Location e compatibilidade do serviço usado pelos workflows."
+      },
+      "evidence": [
+        {
+          "source_id": "B-S09",
+          "path": "modules/maestro/coordination/src/v2/workflow/relay.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "66c147f58f29334e1cfe541f240c14619a87d05c",
+          "ranges": [
+            [
+              3,
+              14
+            ],
+            [
+              33,
+              78
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S11",
+          "path": "packages/core/src/relay.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "25fb509203f933a2e8b0f311c3fc8f9476d53e16",
+          "ranges": [
+            [
+              9,
+              21
+            ],
+            [
+              120,
+              174
+            ],
+            [
+              493,
+              542
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B-E08",
+      "kind": "build",
+      "from": "relay_publication",
+      "to": "relay_store",
+      "direction": "relay_publication -> relay_store",
+      "owners": [
+        "S3",
+        "S3"
+      ],
+      "cross_shard": false,
+      "epistemic_status": "OBSERVED_STATIC_SOURCE",
+      "mechanism": "publication.use abre AuthoringStore.open(service.paths.root, placement.projectID) e expõe somente get/version/documents à leitura.",
+      "boundary": "Dentro de S3; boundary entre porta do host e store de authoring.",
+      "limit": "A checagem basename(root) versus projectID está na fonte; isolamento real e integridade do banco não foram exercitados.",
+      "impact": {
+        "status": "STATIC_INFERENCE",
+        "description": "Mudanças em get/version/documents ou escopo de abertura afetam resolução das publicações ligadas aos workflows."
+      },
+      "remaining_control": {
+        "status": "NOT_RUN",
+        "description": "Exercitar aquisição falha, projeto incompatível e resolução de versão exata."
+      },
+      "evidence": [
+        {
+          "source_id": "B-S09",
+          "path": "modules/maestro/coordination/src/v2/workflow/relay.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "66c147f58f29334e1cfe541f240c14619a87d05c",
+          "ranges": [
+            [
+              3,
+              14
+            ],
+            [
+              33,
+              78
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S10",
+          "path": "modules/relay/src/authoring/store.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "b11d17cd55ffa69a307130a31ab44d01ac7e477d",
+          "ranges": [
+            [
+              42,
+              78
+            ],
+            [
+              148,
+              177
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S35",
+          "path": "modules/relay/package.json",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "c7145670d8f79d2db91eb8545af5361bc04549f1",
+          "ranges": [
+            [
+              1,
+              28
+            ],
+            [
+              40,
+              50
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B-E09",
+      "kind": "build",
+      "from": "client_contract",
+      "to": "protocol_api",
+      "direction": "client_contract -> protocol_api",
+      "owners": [
+        "S1",
+        "S1"
+      ],
+      "cross_shard": false,
+      "epistemic_status": "OBSERVED_STATIC_SOURCE",
+      "mechanism": "ClientApi usa makeDefaultApi; build.ts compila ClientApi e grava generated/generated-effect. A API agrega AtlasGroup.",
+      "boundary": "S1 Client/codegen → S1 Protocol; dependência de geração.",
+      "limit": "Receita lida; generate/check:generated não foram executados. Dependência de geração não é dependência runtime em Server/Core.",
+      "impact": {
+        "status": "STATIC_INFERENCE",
+        "description": "Alterar endpoint/grupo/shape pode exigir regeneração do cliente e revalidação do contrato."
+      },
+      "remaining_control": {
+        "status": "NOT_RUN",
+        "description": "Conferir geração do cliente no commit integrado e igualdade das saídas antes de reaproveitar provas."
+      },
+      "evidence": [
+        {
+          "source_id": "B-S17",
+          "path": "packages/client/src/contract.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "1dccaeb657cc106b7a8cba93f5f5c34a8faf8680",
+          "ranges": [
+            [
+              1,
+              18
+            ],
+            [
+              45,
+              55
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S18",
+          "path": "packages/client/script/build.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "99ae2184b9c13f6175d7ba8e3025068bee07ee4f",
+          "ranges": [
+            [
+              1,
+              7
+            ],
+            [
+              22,
+              47
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S19",
+          "path": "packages/protocol/src/api.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "40b5b5bd266b8a9bd3893f74d5429bf535dc01d7",
+          "ranges": [
+            [
+              31,
+              39
+            ],
+            [
+              95,
+              110
+            ],
+            [
+              148,
+              158
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S33",
+          "path": "packages/client/package.json",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "4cd0244e98ff18b5e65d3c2808196705095b6691",
+          "ranges": [
+            [
+              1,
+              39
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B-E10",
+      "kind": "build",
+      "from": "ui_adapter",
+      "to": "client",
+      "direction": "ui_adapter -> client",
+      "owners": [
+        "S2",
+        "S1"
+      ],
+      "cross_shard": true,
+      "epistemic_status": "OBSERVED_STATIC_SOURCE",
+      "mechanism": "app-shell/utils/server.ts importa Orchestra de @orchestra/client e chama Orchestra.make; index.ts e generated/index.ts reexportam o módulo client.",
+      "boundary": "S2 app-shell → S1 Client.",
+      "limit": "O adaptador local faz cast para ServerApi; comentário aponta verificação de paridade, não executada nesta auditoria.",
+      "impact": {
+        "status": "STATIC_INFERENCE",
+        "description": "Mudanças em métodos/inputs do cliente podem afetar o adaptador e fluxos da UI."
+      },
+      "remaining_control": {
+        "status": "NOT_RUN",
+        "description": "Validar paridade do adaptador e consumo do contrato alterado; não concluir pela presença do cast."
+      },
+      "evidence": [
+        {
+          "source_id": "B-S26",
+          "path": "packages/app-shell/src/utils/server.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "542e992958dca3993e633babd881c5a7e8407c66",
+          "ranges": [
+            [
+              1,
+              11
+            ],
+            [
+              27,
+              56
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S27",
+          "path": "packages/client/src/index.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "b65f3f982384824273b9641df98671bc4392bc15",
+          "ranges": [
+            [
+              1,
+              4
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S28",
+          "path": "packages/client/src/generated/index.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "8f420039bd548a21207ad6727a74efd8dad3db40",
+          "ranges": [
+            [
+              1,
+              4
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S21",
+          "path": "packages/client/src/generated/client.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "93cab27e0b902d6e8fbd21d6aaec320a2b9fe09c",
+          "ranges": [
+            [
+              535,
+              599
+            ],
+            [
+              2417,
+              2465
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S29",
+          "path": "packages/app-shell/package.json",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "eb09ebc7c07ed519482aeafdd5e592bf8223a269",
+          "ranges": [
+            [
+              57,
+              68
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B-E11",
+      "kind": "call",
+      "from": "client",
+      "to": "protocol_api",
+      "direction": "client -> protocol_api",
+      "owners": [
+        "S1",
+        "S1"
+      ],
+      "cross_shard": false,
+      "epistemic_status": "OBSERVED_STATIC_SOURCE",
+      "mechanism": "Cliente atlas.snapshot/own envia GET /api/atlas/snapshot e /api/atlas/own; AtlasGroup declara exatamente essas rotas, LocationQuery e respostas.",
+      "boundary": "S1 Client → contrato HTTP S1; fronteira de transporte.",
+      "limit": "É chamada HTTP declarada, não importação de Client para Core/Server. Nenhuma requisição foi enviada.",
+      "impact": {
+        "status": "STATIC_INFERENCE",
+        "description": "Alterar método/path/query/shape/erros pode romper client/API mesmo com compilação isolada."
+      },
+      "remaining_control": {
+        "status": "NOT_RUN",
+        "description": "Consumir as rotas reais no candidato, incluindo erro de Location/auth e ausência do store."
+      },
+      "evidence": [
+        {
+          "source_id": "B-S21",
+          "path": "packages/client/src/generated/client.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "93cab27e0b902d6e8fbd21d6aaec320a2b9fe09c",
+          "ranges": [
+            [
+              535,
+              599
+            ],
+            [
+              2417,
+              2465
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S20",
+          "path": "packages/protocol/src/groups/atlas.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "1ad5dee72e17105d118eef8974cc283b68ea64ce",
+          "ranges": [
+            [
+              36,
+              84
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S19",
+          "path": "packages/protocol/src/api.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "40b5b5bd266b8a9bd3893f74d5429bf535dc01d7",
+          "ranges": [
+            [
+              31,
+              39
+            ],
+            [
+              95,
+              110
+            ],
+            [
+              148,
+              158
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B-E12",
+      "kind": "call",
+      "from": "protocol_api",
+      "to": "core_atlas",
+      "direction": "protocol_api -> core_atlas",
+      "owners": [
+        "S1",
+        "S1"
+      ],
+      "cross_shard": false,
+      "epistemic_status": "OBSERVED_STATIC_SOURCE",
+      "mechanism": "AtlasGroup usa server.atlas; handlers.ts inclui AtlasHandler e routes.ts fornece handlers. AtlasHandler registra atlas.own/snapshot e chama Atlas.open com storeRoot e project.id da Location.",
+      "boundary": "S1 Protocol/Server → adaptador Core S1.",
+      "limit": "Ligação estática por grupo/handlers; não demonstra middleware autorizado ou coerência observada.",
+      "impact": {
+        "status": "STATIC_INFERENCE",
+        "description": "Mudanças de resolução de Location/storeRoot podem alterar a origem de knowledge entregue ao cliente."
+      },
+      "remaining_control": {
+        "status": "NOT_RUN",
+        "description": "Consumidor HTTP deve conferir project/store binding e recusa de erro sem confundir {state:empty} com dados válidos."
+      },
+      "evidence": [
+        {
+          "source_id": "B-S19",
+          "path": "packages/protocol/src/api.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "40b5b5bd266b8a9bd3893f74d5429bf535dc01d7",
+          "ranges": [
+            [
+              31,
+              39
+            ],
+            [
+              95,
+              110
+            ],
+            [
+              148,
+              158
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S20",
+          "path": "packages/protocol/src/groups/atlas.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "1ad5dee72e17105d118eef8974cc283b68ea64ce",
+          "ranges": [
+            [
+              36,
+              84
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S37",
+          "path": "packages/server/src/handlers.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "2a58a97a11c0cac94a63f9e7bf0dbe4c6acdcd33",
+          "ranges": [
+            [
+              27,
+              30
+            ],
+            [
+              79,
+              85
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S03",
+          "path": "packages/server/src/routes.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "75b0f9753e4c879767ef186f5003519e2b681025",
+          "ranges": [
+            [
+              81,
+              139
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S22",
+          "path": "packages/server/src/handlers/atlas.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "692afb828dc5c896339adfebbb5e33ef39876347",
+          "ranges": [
+            [
+              1,
+              34
+            ],
+            [
+              72,
+              79
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S23",
+          "path": "packages/core/src/atlas.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "f6718654785fb155e1bb1b2acb7e9985478b983b",
+          "ranges": [
+            [
+              3,
+              8
+            ],
+            [
+              104,
+              131
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B-E13",
+      "kind": "build",
+      "from": "core_atlas",
+      "to": "atlas_boundary",
+      "direction": "core_atlas -> atlas_boundary",
+      "owners": [
+        "S1",
+        "S4"
+      ],
+      "cross_shard": true,
+      "epistemic_status": "OBSERVED_STATIC_SOURCE",
+      "mechanism": "Core importa openSurface de @orchestra/atlas-boundary/surface; o manifesto exporta generated/surface.js e surface.d.ts, cuja declaração inclui openSurface/own/snapshot.",
+      "boundary": "S1 → S4; boundary empacotada.",
+      "limit": "A declaração gerada foi lida; o corpo JS gerado não foi inspecionado nem comparado à receita. Não se afirma equivalência executável.",
+      "impact": {
+        "status": "STATIC_INFERENCE",
+        "description": "Mudanças de export, declaração ou implementação gerada podem afetar API/knowledge no Core."
+      },
+      "remaining_control": {
+        "status": "NOT_RUN",
+        "description": "Rever os bytes gerados e executar check:generated/consumo somente no candidato autorizado pela coordenação."
+      },
+      "evidence": [
+        {
+          "source_id": "B-S23",
+          "path": "packages/core/src/atlas.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "f6718654785fb155e1bb1b2acb7e9985478b983b",
+          "ranges": [
+            [
+              3,
+              8
+            ],
+            [
+              104,
+              131
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S15",
+          "path": "modules/atlas/boundary/package.json",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "055b46b9d32d765c3c2dc54468137d031bb3de90",
+          "ranges": [
+            [
+              1,
+              30
+            ],
+            [
+              44,
+              51
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S25",
+          "path": "modules/atlas/boundary/src/generated/surface.d.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "7614ff6a04ff82b76ed68836a843d7232fa8cd43",
+          "ranges": [
+            [
+              532,
+              556
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S31",
+          "path": "packages/core/package.json",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "8ee8ebb666051c9b5ee0fcd4a54bceb3a2cb3c43",
+          "ranges": [
+            [
+              530,
+              538
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B-E14",
+      "kind": "build",
+      "from": "atlas_boundary",
+      "to": "atlas_surface",
+      "direction": "atlas_boundary -> atlas_surface",
+      "owners": [
+        "S4",
+        "S4"
+      ],
+      "cross_shard": false,
+      "epistemic_status": "OBSERVED_STATIC_SOURCE",
+      "mechanism": "A receita mapeia surface para adapter-io/src/surface/index.ts; essa fonte declara openSurface e own(scope) sobre composeRuntime.",
+      "boundary": "Dentro de S4; export gerado → fonte da receita declarada.",
+      "limit": "Manifesto, receita que escreve src/generated e fonte estão lidos; paridade com generated/surface.js é UNKNOWN.",
+      "impact": {
+        "status": "STATIC_INFERENCE",
+        "description": "Mudanças nesta fonte/receita podem requerer rebuild do boundary consumido por S1 e nova prova de integração."
+      },
+      "remaining_control": {
+        "status": "NOT_RUN",
+        "description": "Gerar/verificar bundle e invalidar provas do boundary caso os bytes/receita mudem."
+      },
+      "evidence": [
+        {
+          "source_id": "B-S16",
+          "path": "modules/atlas/boundary/script/build.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "df0a875e47e98e8803e00818d178166d0b1cb8dd",
+          "ranges": [
+            [
+              5,
+              18
+            ],
+            [
+              29,
+              40
+            ],
+            [
+              71,
+              85
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S24",
+          "path": "modules/atlas/packages/adapter-io/src/surface/index.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "cf531a1cba71737a453ef43a4d8b0af9c5914189",
+          "ranges": [
+            [
+              138,
+              159
+            ],
+            [
+              184,
+              188
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S15",
+          "path": "modules/atlas/boundary/package.json",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "055b46b9d32d765c3c2dc54468137d031bb3de90",
+          "ranges": [
+            [
+              1,
+              30
+            ],
+            [
+              44,
+              51
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B-E15",
+      "kind": "build",
+      "from": "atlas_reader",
+      "to": "atlas_host_context",
+      "direction": "atlas_reader -> atlas_host_context",
+      "owners": [
+        "S3",
+        "S4"
+      ],
+      "cross_shard": true,
+      "epistemic_status": "OBSERVED_STATIC_SOURCE",
+      "mechanism": "MaestroAtlasSourceV2 importa inspectOwnSnapshot/verifyHostContext do boundary. Receita boundary aponta para retrieval/src/host-context.ts, que declara essas funções.",
+      "boundary": "S3 → S4 pela API pública empacotada.",
+      "limit": "Fonte/receita/export observados; paridade do bundle boundary.js não foi executada. Chamadas internas a Git/FS foram somente lidas.",
+      "impact": {
+        "status": "STATIC_INFERENCE",
+        "description": "Mudanças na verificação do snapshot/contexto podem afetar as unidades aceitas pelos seats e Maestro."
+      },
+      "remaining_control": {
+        "status": "NOT_RUN",
+        "description": "Verificar geração do boundary e exercer recusas no host real sem importar snapshots desta auditoria."
+      },
+      "evidence": [
+        {
+          "source_id": "B-S13",
+          "path": "modules/maestro/coordination/src/v2/atlas-source.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "5388417c92f33c2cfd0d06d58d04446c35631d42",
+          "ranges": [
+            [
+              6,
+              19
+            ],
+            [
+              24,
+              32
+            ],
+            [
+              57,
+              119
+            ],
+            [
+              139,
+              170
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S14",
+          "path": "modules/atlas/packages/retrieval/src/host-context.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "6c60032a6049e5de89592d9b6aa483207c909598",
+          "ranges": [
+            [
+              21,
+              31
+            ],
+            [
+              82,
+              137
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S15",
+          "path": "modules/atlas/boundary/package.json",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "055b46b9d32d765c3c2dc54468137d031bb3de90",
+          "ranges": [
+            [
+              1,
+              30
+            ],
+            [
+              44,
+              51
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S16",
+          "path": "modules/atlas/boundary/script/build.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "df0a875e47e98e8803e00818d178166d0b1cb8dd",
+          "ranges": [
+            [
+              5,
+              18
+            ],
+            [
+              29,
+              40
+            ],
+            [
+              71,
+              85
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B-E16",
+      "kind": "navigation",
+      "from": "atlas_tool",
+      "to": "atlas_reader",
+      "direction": "atlas_tool -> atlas_reader",
+      "owners": [
+        "S3",
+        "S3"
+      ],
+      "cross_shard": false,
+      "epistemic_status": "OBSERVED_STATIC_SOURCE",
+      "mechanism": "atlas_context distingue action=catalog, unit e anchor; catálogo expõe metadados de IDs, action=unit entrega a unidade exata por MaestroAtlasSourceV2.unit.",
+      "boundary": "S3 leitor do seat/Maestro → catálogo/unidade verificada; leitura é mediada por boundary S4.",
+      "limit": "Navegação progressiva por ID, não aresta de build entre unidades. Os IDs e corpos de unidades concretas não foram consultados.",
+      "impact": {
+        "status": "STATIC_INFERENCE",
+        "description": "Uma alteração de IDs/catalog pode invalidar referências de navegação; não basta para inferir rebuild de corpos independentes."
+      },
+      "remaining_control": {
+        "status": "NOT_RUN",
+        "description": "Consumidor Atlas-only deve passar catálogo→unidade rasa/profunda com budgets e erro explícito para ID ausente."
+      },
+      "evidence": [
+        {
+          "source_id": "B-S12",
+          "path": "modules/maestro/coordination/src/v2/tools/atlas.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "1989941d868187b7fc264559f0c90d11c9b1c4d3",
+          "ranges": [
+            [
+              22,
+              40
+            ],
+            [
+              62,
+              63
+            ],
+            [
+              86,
+              121
+            ],
+            [
+              266,
+              304
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S13",
+          "path": "modules/maestro/coordination/src/v2/atlas-source.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "5388417c92f33c2cfd0d06d58d04446c35631d42",
+          "ranges": [
+            [
+              6,
+              19
+            ],
+            [
+              24,
+              32
+            ],
+            [
+              57,
+              119
+            ],
+            [
+              139,
+              170
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B-E18",
+      "kind": "navigation",
+      "from": "relay_publication",
+      "to": "workflow_knowledge",
+      "direction": "relay_publication -> workflow_knowledge",
+      "owners": [
+        "S3",
+        "S3"
+      ],
+      "cross_shard": false,
+      "epistemic_status": "OBSERVED_STATIC_SOURCE",
+      "mechanism": "publication.knowledge encaminha reference+authorSessionID a WorkflowKnowledgeV2.resolve; o resolver busca um anchor de atlas_context na sessão autora e readquire as mesmas unidades.",
+      "boundary": "S3 publicação de workflow → referência de Knowledge ligada ao consumo S4; história de sessão S1 é entrada.",
+      "limit": "Referência é navegação com validação de identidade/digest; não é autoridade executável nem aceite. Nenhum histórico foi obtido.",
+      "impact": {
+        "status": "STATIC_INFERENCE",
+        "description": "Drift das unidades, mudança de sessão/projeto ou digest pode invalidar a referência usada pelo workflow."
+      },
+      "remaining_control": {
+        "status": "NOT_RUN",
+        "description": "Exercitar anchor ausente/duplicado, source drift e binding incompatível através da porta real."
+      },
+      "evidence": [
+        {
+          "source_id": "B-S09",
+          "path": "modules/maestro/coordination/src/v2/workflow/relay.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "66c147f58f29334e1cfe541f240c14619a87d05c",
+          "ranges": [
+            [
+              3,
+              14
+            ],
+            [
+              33,
+              78
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S30",
+          "path": "modules/maestro/coordination/src/v2/workflow/knowledge.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "f8f7852950b60029a4807324798954962f72ada5",
+          "ranges": [
+            [
+              6,
+              14
+            ],
+            [
+              29,
+              41
+            ],
+            [
+              64,
+              100
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S12",
+          "path": "modules/maestro/coordination/src/v2/tools/atlas.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "1989941d868187b7fc264559f0c90d11c9b1c4d3",
+          "ranges": [
+            [
+              22,
+              40
+            ],
+            [
+              62,
+              63
+            ],
+            [
+              86,
+              121
+            ],
+            [
+              266,
+              304
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "impact_edges": [
+    {
+      "id": "B-I01",
+      "kind": "impact",
+      "from": "protocol_api",
+      "to": "client",
+      "direction": "changed protocol_api -> potentially affected client",
+      "owners": [
+        "S1",
+        "S1"
+      ],
+      "epistemic_status": "BOUNDED_STATIC_INFERENCE",
+      "mechanism": "Mudança de endpoint/shape no Protocol pode requerer regeneração e invalidate os contratos do client.",
+      "boundary": "S1 dono do contrato; S2 consumidor do client; ROOT revê a cadeia integrada.",
+      "basis_edges": [
+        "B-E09",
+        "B-E11"
+      ],
+      "limit": "Conjunto mínimo plausível observado, não fechamento transitivo exaustivo e não worklist executada. Mudanças de código, intenção, receita, adição/remoção exigem reavaliação no candidato.",
+      "remaining_control": {
+        "status": "NOT_RUN",
+        "description": "Aplicar delta real e verificar afetados/preservados/reuso pela coordenação."
+      },
+      "evidence": [
+        {
+          "source_id": "B-S17",
+          "path": "packages/client/src/contract.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "1dccaeb657cc106b7a8cba93f5f5c34a8faf8680",
+          "ranges": [
+            [
+              1,
+              18
+            ],
+            [
+              45,
+              55
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S18",
+          "path": "packages/client/script/build.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "99ae2184b9c13f6175d7ba8e3025068bee07ee4f",
+          "ranges": [
+            [
+              1,
+              7
+            ],
+            [
+              22,
+              47
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S19",
+          "path": "packages/protocol/src/api.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "40b5b5bd266b8a9bd3893f74d5429bf535dc01d7",
+          "ranges": [
+            [
+              31,
+              39
+            ],
+            [
+              95,
+              110
+            ],
+            [
+              148,
+              158
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S33",
+          "path": "packages/client/package.json",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "4cd0244e98ff18b5e65d3c2808196705095b6691",
+          "ranges": [
+            [
+              1,
+              39
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S21",
+          "path": "packages/client/src/generated/client.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "93cab27e0b902d6e8fbd21d6aaec320a2b9fe09c",
+          "ranges": [
+            [
+              535,
+              599
+            ],
+            [
+              2417,
+              2465
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S20",
+          "path": "packages/protocol/src/groups/atlas.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "1ad5dee72e17105d118eef8974cc283b68ea64ce",
+          "ranges": [
+            [
+              36,
+              84
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B-I02",
+      "kind": "impact",
+      "from": "client",
+      "to": "ui_adapter",
+      "direction": "changed client -> potentially affected ui_adapter",
+      "owners": [
+        "S1",
+        "S2"
+      ],
+      "epistemic_status": "BOUNDED_STATIC_INFERENCE",
+      "mechanism": "Métodos/inputs/erros diferentes podem afetar o adaptador app-shell.",
+      "boundary": "S1 atualiza API/gerados; S2 confere adaptação; paridade real pendente.",
+      "basis_edges": [
+        "B-E10"
+      ],
+      "limit": "Conjunto mínimo plausível observado, não fechamento transitivo exaustivo e não worklist executada. Mudanças de código, intenção, receita, adição/remoção exigem reavaliação no candidato.",
+      "remaining_control": {
+        "status": "NOT_RUN",
+        "description": "Aplicar delta real e verificar afetados/preservados/reuso pela coordenação."
+      },
+      "evidence": [
+        {
+          "source_id": "B-S26",
+          "path": "packages/app-shell/src/utils/server.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "542e992958dca3993e633babd881c5a7e8407c66",
+          "ranges": [
+            [
+              1,
+              11
+            ],
+            [
+              27,
+              56
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S27",
+          "path": "packages/client/src/index.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "b65f3f982384824273b9641df98671bc4392bc15",
+          "ranges": [
+            [
+              1,
+              4
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S28",
+          "path": "packages/client/src/generated/index.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "8f420039bd548a21207ad6727a74efd8dad3db40",
+          "ranges": [
+            [
+              1,
+              4
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S21",
+          "path": "packages/client/src/generated/client.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "93cab27e0b902d6e8fbd21d6aaec320a2b9fe09c",
+          "ranges": [
+            [
+              535,
+              599
+            ],
+            [
+              2417,
+              2465
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S29",
+          "path": "packages/app-shell/package.json",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "eb09ebc7c07ed519482aeafdd5e592bf8223a269",
+          "ranges": [
+            [
+              57,
+              68
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B-I03",
+      "kind": "impact",
+      "from": "core_host",
+      "to": "cli_host",
+      "direction": "changed core_host -> potentially affected cli_host",
+      "owners": [
+        "S1",
+        "S5"
+      ],
+      "epistemic_status": "BOUNDED_STATIC_INFERENCE",
+      "mechanism": "Mudança em Host.Contribution/merge pode alterar aceitação das contribuições compostas pelo CLI.",
+      "boundary": "S1 contrato; S3 contribuição Maestro; S5 composição; ROOT integra.",
+      "basis_edges": [
+        "B-E03",
+        "B-E04"
+      ],
+      "limit": "Conjunto mínimo plausível observado, não fechamento transitivo exaustivo e não worklist executada. Mudanças de código, intenção, receita, adição/remoção exigem reavaliação no candidato.",
+      "remaining_control": {
+        "status": "NOT_RUN",
+        "description": "Aplicar delta real e verificar afetados/preservados/reuso pela coordenação."
+      },
+      "evidence": [
+        {
+          "source_id": "B-S05",
+          "path": "apps/cli/src/host.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "cc89adc3a11e2bd3e7d779642382ed86dfceab31",
+          "ranges": [
+            [
+              1,
+              29
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S06",
+          "path": "modules/maestro/coordination/src/v2/seats.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "f27ddca3b35551b16482f7032197af7cba25e3e6",
+          "ranges": [
+            [
+              3,
+              28
+            ],
+            [
+              32,
+              50
+            ],
+            [
+              235,
+              258
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S32",
+          "path": "modules/maestro/coordination/package.json",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "97397b0bc609fcf842f654ecbad2f4dd66d8d8d4",
+          "ranges": [
+            [
+              1,
+              8
+            ],
+            [
+              31,
+              54
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S03",
+          "path": "packages/server/src/routes.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "75b0f9753e4c879767ef186f5003519e2b681025",
+          "ranges": [
+            [
+              81,
+              139
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S04",
+          "path": "packages/core/src/host.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "a0fc5bc9a36e50315b0ddddf4de3566555711250",
+          "ranges": [
+            [
+              15,
+              59
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B-I04",
+      "kind": "impact",
+      "from": "relay_store",
+      "to": "workflow_host",
+      "direction": "changed relay_store -> potentially affected workflow_host",
+      "owners": [
+        "S3",
+        "S3"
+      ],
+      "epistemic_status": "BOUNDED_STATIC_INFERENCE",
+      "mechanism": "Mudança de versão/documento/escopo do store pode afetar resolução de publicação no host.",
+      "boundary": "S3 port/store; S1 serviços de sessão e Location.",
+      "basis_edges": [
+        "B-E06",
+        "B-E08"
+      ],
+      "limit": "Conjunto mínimo plausível observado, não fechamento transitivo exaustivo e não worklist executada. Mudanças de código, intenção, receita, adição/remoção exigem reavaliação no candidato.",
+      "remaining_control": {
+        "status": "NOT_RUN",
+        "description": "Aplicar delta real e verificar afetados/preservados/reuso pela coordenação."
+      },
+      "evidence": [
+        {
+          "source_id": "B-S08",
+          "path": "modules/maestro/coordination/src/v2/workflow/host.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "111dac220a84bdeffe94956244b728b29eb98ea4",
+          "ranges": [
+            [
+              14,
+              29
+            ],
+            [
+              79,
+              119
+            ],
+            [
+              403,
+              417
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S09",
+          "path": "modules/maestro/coordination/src/v2/workflow/relay.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "66c147f58f29334e1cfe541f240c14619a87d05c",
+          "ranges": [
+            [
+              3,
+              14
+            ],
+            [
+              33,
+              78
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S10",
+          "path": "modules/relay/src/authoring/store.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "b11d17cd55ffa69a307130a31ab44d01ac7e477d",
+          "ranges": [
+            [
+              42,
+              78
+            ],
+            [
+              148,
+              177
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S35",
+          "path": "modules/relay/package.json",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "c7145670d8f79d2db91eb8545af5361bc04549f1",
+          "ranges": [
+            [
+              1,
+              28
+            ],
+            [
+              40,
+              50
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B-I05",
+      "kind": "impact",
+      "from": "atlas_surface",
+      "to": "core_atlas",
+      "direction": "changed atlas_surface -> potentially affected core_atlas",
+      "owners": [
+        "S4",
+        "S1"
+      ],
+      "epistemic_status": "BOUNDED_STATIC_INFERENCE",
+      "mechanism": "Mudança na superfície Atlas ou receita pode propagar ao boundary, Core e respostas HTTP.",
+      "boundary": "S4 fonte/geração; S1 adaptador/API; ROOT valida propagação.",
+      "basis_edges": [
+        "B-E13",
+        "B-E14",
+        "B-E12"
+      ],
+      "limit": "Conjunto mínimo plausível observado, não fechamento transitivo exaustivo e não worklist executada. Mudanças de código, intenção, receita, adição/remoção exigem reavaliação no candidato.",
+      "remaining_control": {
+        "status": "NOT_RUN",
+        "description": "Aplicar delta real e verificar afetados/preservados/reuso pela coordenação."
+      },
+      "evidence": [
+        {
+          "source_id": "B-S23",
+          "path": "packages/core/src/atlas.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "f6718654785fb155e1bb1b2acb7e9985478b983b",
+          "ranges": [
+            [
+              3,
+              8
+            ],
+            [
+              104,
+              131
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S15",
+          "path": "modules/atlas/boundary/package.json",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "055b46b9d32d765c3c2dc54468137d031bb3de90",
+          "ranges": [
+            [
+              1,
+              30
+            ],
+            [
+              44,
+              51
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S25",
+          "path": "modules/atlas/boundary/src/generated/surface.d.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "7614ff6a04ff82b76ed68836a843d7232fa8cd43",
+          "ranges": [
+            [
+              532,
+              556
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S31",
+          "path": "packages/core/package.json",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "8ee8ebb666051c9b5ee0fcd4a54bceb3a2cb3c43",
+          "ranges": [
+            [
+              530,
+              538
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S16",
+          "path": "modules/atlas/boundary/script/build.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "df0a875e47e98e8803e00818d178166d0b1cb8dd",
+          "ranges": [
+            [
+              5,
+              18
+            ],
+            [
+              29,
+              40
+            ],
+            [
+              71,
+              85
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S24",
+          "path": "modules/atlas/packages/adapter-io/src/surface/index.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "cf531a1cba71737a453ef43a4d8b0af9c5914189",
+          "ranges": [
+            [
+              138,
+              159
+            ],
+            [
+              184,
+              188
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S19",
+          "path": "packages/protocol/src/api.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "40b5b5bd266b8a9bd3893f74d5429bf535dc01d7",
+          "ranges": [
+            [
+              31,
+              39
+            ],
+            [
+              95,
+              110
+            ],
+            [
+              148,
+              158
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S20",
+          "path": "packages/protocol/src/groups/atlas.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "1ad5dee72e17105d118eef8974cc283b68ea64ce",
+          "ranges": [
+            [
+              36,
+              84
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S37",
+          "path": "packages/server/src/handlers.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "2a58a97a11c0cac94a63f9e7bf0dbe4c6acdcd33",
+          "ranges": [
+            [
+              27,
+              30
+            ],
+            [
+              79,
+              85
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S03",
+          "path": "packages/server/src/routes.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "75b0f9753e4c879767ef186f5003519e2b681025",
+          "ranges": [
+            [
+              81,
+              139
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S22",
+          "path": "packages/server/src/handlers/atlas.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "692afb828dc5c896339adfebbb5e33ef39876347",
+          "ranges": [
+            [
+              1,
+              34
+            ],
+            [
+              72,
+              79
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B-I06",
+      "kind": "impact",
+      "from": "atlas_host_context",
+      "to": "workflow_knowledge",
+      "direction": "changed atlas_host_context -> potentially affected workflow_knowledge",
+      "owners": [
+        "S4",
+        "S3"
+      ],
+      "epistemic_status": "BOUNDED_STATIC_INFERENCE",
+      "mechanism": "Mudança da validação/contexto ou das unidades aceitas pode invalidar anchors de workflows.",
+      "boundary": "S4 boundary; S3 leitura/anchors/workflow; S1 história de sessão.",
+      "basis_edges": [
+        "B-E15",
+        "B-E16",
+        "B-E18"
+      ],
+      "limit": "Conjunto mínimo plausível observado, não fechamento transitivo exaustivo e não worklist executada. Mudanças de código, intenção, receita, adição/remoção exigem reavaliação no candidato.",
+      "remaining_control": {
+        "status": "NOT_RUN",
+        "description": "Aplicar delta real e verificar afetados/preservados/reuso pela coordenação."
+      },
+      "evidence": [
+        {
+          "source_id": "B-S13",
+          "path": "modules/maestro/coordination/src/v2/atlas-source.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "5388417c92f33c2cfd0d06d58d04446c35631d42",
+          "ranges": [
+            [
+              6,
+              19
+            ],
+            [
+              24,
+              32
+            ],
+            [
+              57,
+              119
+            ],
+            [
+              139,
+              170
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S14",
+          "path": "modules/atlas/packages/retrieval/src/host-context.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "6c60032a6049e5de89592d9b6aa483207c909598",
+          "ranges": [
+            [
+              21,
+              31
+            ],
+            [
+              82,
+              137
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S15",
+          "path": "modules/atlas/boundary/package.json",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "055b46b9d32d765c3c2dc54468137d031bb3de90",
+          "ranges": [
+            [
+              1,
+              30
+            ],
+            [
+              44,
+              51
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S16",
+          "path": "modules/atlas/boundary/script/build.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "df0a875e47e98e8803e00818d178166d0b1cb8dd",
+          "ranges": [
+            [
+              5,
+              18
+            ],
+            [
+              29,
+              40
+            ],
+            [
+              71,
+              85
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S12",
+          "path": "modules/maestro/coordination/src/v2/tools/atlas.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "1989941d868187b7fc264559f0c90d11c9b1c4d3",
+          "ranges": [
+            [
+              22,
+              40
+            ],
+            [
+              62,
+              63
+            ],
+            [
+              86,
+              121
+            ],
+            [
+              266,
+              304
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S09",
+          "path": "modules/maestro/coordination/src/v2/workflow/relay.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "66c147f58f29334e1cfe541f240c14619a87d05c",
+          "ranges": [
+            [
+              3,
+              14
+            ],
+            [
+              33,
+              78
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S30",
+          "path": "modules/maestro/coordination/src/v2/workflow/knowledge.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "f8f7852950b60029a4807324798954962f72ada5",
+          "ranges": [
+            [
+              6,
+              14
+            ],
+            [
+              29,
+              41
+            ],
+            [
+              64,
+              100
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "B-I07",
+      "kind": "impact",
+      "from": "maestro_seats",
+      "to": "cli_serve",
+      "direction": "changed maestro_seats -> potentially affected cli_serve",
+      "owners": [
+        "S3",
+        "S5"
+      ],
+      "epistemic_status": "BOUNDED_STATIC_INFERENCE",
+      "mechanism": "Mudança de roster/contribuição/recursos pode alterar agentes disponíveis no produto servido pelo CLI.",
+      "boundary": "S3 conteúdo e contribuição; S5 embalagem/composição; ROOT valida disponibilidade.",
+      "basis_edges": [
+        "B-E03",
+        "B-E05",
+        "B-E02"
+      ],
+      "limit": "Conjunto mínimo plausível observado, não fechamento transitivo exaustivo e não worklist executada. Mudanças de código, intenção, receita, adição/remoção exigem reavaliação no candidato.",
+      "remaining_control": {
+        "status": "NOT_RUN",
+        "description": "Aplicar delta real e verificar afetados/preservados/reuso pela coordenação."
+      },
+      "evidence": [
+        {
+          "source_id": "B-S05",
+          "path": "apps/cli/src/host.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "cc89adc3a11e2bd3e7d779642382ed86dfceab31",
+          "ranges": [
+            [
+              1,
+              29
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S06",
+          "path": "modules/maestro/coordination/src/v2/seats.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "f27ddca3b35551b16482f7032197af7cba25e3e6",
+          "ranges": [
+            [
+              3,
+              28
+            ],
+            [
+              32,
+              50
+            ],
+            [
+              235,
+              258
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S32",
+          "path": "modules/maestro/coordination/package.json",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "97397b0bc609fcf842f654ecbad2f4dd66d8d8d4",
+          "ranges": [
+            [
+              1,
+              8
+            ],
+            [
+              31,
+              54
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S07",
+          "path": "modules/maestro/coordination/src/seats/index.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "a4f0ecf5b5144f91837571286f91fc552be0c826",
+          "ranges": [
+            [
+              1,
+              32
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S08",
+          "path": "modules/maestro/coordination/src/v2/workflow/host.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "111dac220a84bdeffe94956244b728b29eb98ea4",
+          "ranges": [
+            [
+              14,
+              29
+            ],
+            [
+              79,
+              119
+            ],
+            [
+              403,
+              417
+            ]
+          ]
+        },
+        {
+          "source_id": "B-S02",
+          "path": "apps/cli/src/commands/handlers/serve.ts",
+          "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "blob_sha": "f11a2c92019d75847eac7b87d0b762cf944e7c93",
+          "ranges": [
+            [
+              1,
+              24
+            ],
+            [
+              122,
+              135
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "minimum_chains": [
+    {
+      "requirement": "CLI→core/API",
+      "status": "STATIC_CHAIN_TRACED",
+      "edge_ids": [
+        "B-E01",
+        "B-E02",
+        "B-E03",
+        "B-E04"
+      ],
+      "runtime_result": "NOT_RUN"
+    },
+    {
+      "requirement": "seat→Maestro/Relay",
+      "status": "STATIC_CHAIN_TRACED",
+      "edge_ids": [
+        "B-E05",
+        "B-E06",
+        "B-E07",
+        "B-E08"
+      ],
+      "runtime_result": "NOT_RUN",
+      "note": "Seats and Maestro are S3; the Core Relay adapter is S1 despite its name."
+    },
+    {
+      "requirement": "client→API/knowledge",
+      "status": "STATIC_CONTRACT_AND_GENERATION_RECIPE_TRACED",
+      "edge_ids": [
+        "B-E09",
+        "B-E11",
+        "B-E12",
+        "B-E13",
+        "B-E14"
+      ],
+      "runtime_result": "NOT_RUN",
+      "unresolved": "Generated executable boundary parity and actual current knowledge consumption remain UNKNOWN."
+    }
+  ],
+  "hypotheses": [],
+  "limitations": [
+    "No other-session outputs or private coordination state were read.",
+    "No source contents under native/omni were extracted, and no Platform 200 artifacts were produced.",
+    "Selected graph does not establish complete semantic ownership for the 14,442 baseline leaves.",
+    "Generated executable parity, actual Atlas units, runtime behavior and transitive impact closure remain unverified."
+  ],
+  "gap_ids": [
+    "B-G01",
+    "B-G02",
+    "B-G03",
+    "B-G04",
+    "B-G05",
+    "B-G06"
+  ],
+  "acceptance": "No global PASS, integration completion or human acceptance asserted."
+}

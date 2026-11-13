@@ -1,0 +1,739 @@
+{
+  "schema": "genesis-external-static-integration-control-plan/v1",
+  "audit_id": "20261113-external-integration-static",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "execution_status": "NOT_RUN",
+  "purpose": "Plano mínimo de grupos de controles da coordenação, não execução nem novos requisitos normativos.",
+  "owner_interpretation": "ROOT significa a coordenação principal da campanha; esta auditoria externa não assume a integração final.",
+  "constraints": [
+    "Nenhum teste, CI, ferramenta nativa do produto, consumidor, integração final, merge, deploy ou ativação executado por esta auditoria.",
+    "Nenhum comando/recibo/run/hash de execução é inventado; candidato, release e entrypoints futuros são UNKNOWN.",
+    "Não repetir o mecanismo comum S4 cinco vezes; cada domínio mantém seus casos, e ROOT cobre a união e os deltas.",
+    "O plano não concede acesso a material privado; conferência restrita ocorre somente por atores autorizados da coordenação."
+  ],
+  "reuse_compatibility": {
+    "id": "REUSE-1",
+    "rule": "A prova só é candidata a reuso quando a coordenação comprovar compatibilidade de source revision, candidate revision, contrato/recipe, inputs, authority, scope/dependency closure e casos/limites. Delta que afeta qualquer relação exige revalidação correspondente. Reuso não cria uma nova execução e não converte revisão semântica em binding review.",
+    "available_evidence": "UNKNOWN",
+    "basis": [
+      "C-CAMPAIGN",
+      "C-INTEGRATION",
+      "C-RUNTIME",
+      "C-TRANSPORT"
+    ]
+  },
+  "source_catalog": [
+    {
+      "id": "C-REG",
+      "path": ".orchestra/skills/execute-genesis/references/criteria.json",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "6171f3d23d3e0263e578c04338067ecb8012016d",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/criteria.json"
+    },
+    {
+      "id": "C-CAMPAIGN",
+      "path": ".orchestra/skills/execute-genesis/references/campaign.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "41a2aded10fbe639d4a0df1c4354da651543c47d",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/campaign.md"
+    },
+    {
+      "id": "C-INTEGRATION",
+      "path": ".orchestra/skills/execute-genesis/references/integration.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "e9bd813f08eaad30e829c27e0f73ff0e3aef602d",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/integration.md"
+    },
+    {
+      "id": "C-RUNTIME",
+      "path": ".orchestra/skills/execute-genesis/references/runtime.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "0e0f1607003ff49946ed7a155c268b31239930e6",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/runtime.md"
+    },
+    {
+      "id": "C-TRANSPORT",
+      "path": ".orchestra/skills/execute-genesis/references/transport.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/transport.md"
+    },
+    {
+      "id": "C-PRINCIPLES",
+      "path": ".orchestra/skills/execute-genesis/references/principles.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/principles.md"
+    },
+    {
+      "id": "C-HANDOFFS",
+      "path": ".orchestra/skills/execute-genesis/references/handoffs.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "e6dda45da04f507bab745b67b5b053fcf19be32b",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/handoffs.md"
+    },
+    {
+      "id": "C-COMPLETION",
+      "path": ".orchestra/skills/execute-genesis/references/completion.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "a843c2c312eefc80ecbad3890764d9d65ce45c43",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/completion.md"
+    },
+    {
+      "id": "C-JUDGING",
+      "path": ".orchestra/skills/execute-genesis/references/judging.md",
+      "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/judging.md"
+    },
+    {
+      "id": "C-NORM",
+      "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-plan.md"
+    },
+    {
+      "id": "C-AGENTS",
+      "path": "AGENTS.md",
+      "revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/AGENTS.md"
+    },
+    {
+      "id": "C-P1",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/01-core.md",
+      "revision": "d2d985c28947c7f984a36b07ad34ede3d4d2d6b4",
+      "git_blob_sha": "f28b83019447209bcfa8a9171e5dc0241555fe47",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d2d985c28947c7f984a36b07ad34ede3d4d2d6b4/modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/01-core.md"
+    },
+    {
+      "id": "C-P2",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/02-interfaces.md",
+      "revision": "d2d985c28947c7f984a36b07ad34ede3d4d2d6b4",
+      "git_blob_sha": "7321a9d83d966675ba5e62e999994d85f5dbb9e0",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d2d985c28947c7f984a36b07ad34ede3d4d2d6b4/modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/02-interfaces.md"
+    },
+    {
+      "id": "C-P3",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/03-agentes.md",
+      "revision": "d2d985c28947c7f984a36b07ad34ede3d4d2d6b4",
+      "git_blob_sha": "b04842104c2052fd45ef0913f5e4bd0f3bb5c451",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d2d985c28947c7f984a36b07ad34ede3d4d2d6b4/modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/03-agentes.md"
+    },
+    {
+      "id": "C-P4",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/04-atlas.md",
+      "revision": "d2d985c28947c7f984a36b07ad34ede3d4d2d6b4",
+      "git_blob_sha": "0a9ba7423545f2c99504ed783bd65dcdf8465f26",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d2d985c28947c7f984a36b07ad34ede3d4d2d6b4/modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/04-atlas.md"
+    },
+    {
+      "id": "C-P5",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/05-plataforma.md",
+      "revision": "d2d985c28947c7f984a36b07ad34ede3d4d2d6b4",
+      "git_blob_sha": "3f2510b89f86bd2ccf608d0d87c754f3c0df2d6d",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d2d985c28947c7f984a36b07ad34ede3d4d2d6b4/modules/atlas/docs/design/genesis-chatgpt-sessions/prompts/05-plataforma.md"
+    },
+    {
+      "id": "C-FREEZE",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/verification-criteria.json",
+      "revision": "3d9a515f264a7938c764d37532bc42ad6005fc47",
+      "git_blob_sha": "ac96d6dbb23025989be110029dcb63fad9b25b1b",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/3d9a515f264a7938c764d37532bc42ad6005fc47/modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/verification-criteria.json"
+    }
+  ],
+  "controls": [
+    {
+      "id": "INT-00",
+      "name": "Fixar inputs, autoridade e condições de admissão",
+      "owner": "ROOT",
+      "supporting_owners": [
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5"
+      ],
+      "depends_on": [],
+      "required_evidence": [
+        "Selecionar handoffs selados S1–S5 por commits exatos; conferir fonte, protocolo, escopo, pacote, hashes e versões de decisões sem substituir inputs por um HEAD móvel.",
+        "Fixar candidato e delta de código, contratos, fronteiras, tarefas, limites de leitura e critérios independentes antes da avaliação pertinente; material reservado permanece em canal autorizado da coordenação.",
+        "Capturar inventário protegido antes de qualquer operação de migração/publicação; não reconstruir objetos privados nesta auditoria.",
+        "Antes de chamadas reais, provar capacidade da rota, limites/admissão econômica e autorização aplicável; chamadas pagas externas só com autorização limitada explícita."
+      ],
+      "reuse": "Handoffs, completions e provas já existentes só após compatibilidade verificada; desconhecidos não são reduzidos a zero.",
+      "criteria_ids": [
+        "GO-A6",
+        "GO-I1",
+        "GO-I6",
+        "AC-08",
+        "DOD-5"
+      ],
+      "source_refs": [
+        "C-INTEGRATION",
+        "C-HANDOFFS",
+        "C-RUNTIME",
+        "C-NORM"
+      ],
+      "parallelism": "Preparação documental por domínio pode ocorrer em paralelo; a seleção de inputs da união tem um único responsável.",
+      "execution_status": "NOT_RUN",
+      "observed_execution_evidence": "UNKNOWN",
+      "selected_candidate_revision": "UNKNOWN",
+      "exact_entrypoints_and_commands": "UNKNOWN — devem vir do candidato/release real selecionado pela coordenação",
+      "compatibility_rule": "REUSE-1"
+    },
+    {
+      "id": "INT-01",
+      "name": "Reconciliar população, necessidades e cobertura semântica",
+      "owner": "ROOT",
+      "supporting_owners": [
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5"
+      ],
+      "depends_on": [
+        "INT-00"
+      ],
+      "required_evidence": [
+        "Reconciliar árvore, tipos de objeto, exclusões declaradas, ownership disjunto e união de toda a população fixada, confrontando a auditoria estática com os inputs selecionados.",
+        "Reconciliar needs→artefacts→sources→cases e classificações/depth; classificar unknowns e recusar unknown crítico obrigatório.",
+        "Conservar exatamente os 50 IDs e a semântica normativa; não herdar aprovação do piloto, de contagem mecânica ou da soma de pareceres locais."
+      ],
+      "reuse": "Inventário verificável desta auditoria e cobertura local podem ser reutilizados como evidência estrutural; suficiência precisa julgamento.",
+      "criteria_ids": [
+        "GO-A1",
+        "GO-I8",
+        "AC-01",
+        "CC-1"
+      ],
+      "source_refs": [
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-INTEGRATION"
+      ],
+      "parallelism": "Conferências locais disjuntas paralelizam; a reconciliação da união aguarda seus resultados.",
+      "execution_status": "NOT_RUN",
+      "observed_execution_evidence": "UNKNOWN",
+      "selected_candidate_revision": "UNKNOWN",
+      "exact_entrypoints_and_commands": "UNKNOWN — devem vir do candidato/release real selecionado pela coordenação",
+      "compatibility_rule": "REUSE-1"
+    },
+    {
+      "id": "INT-02",
+      "name": "Construção real, fit do transporte e binding comum",
+      "owner": "S4",
+      "supporting_owners": [
+        "S1",
+        "S2",
+        "S3",
+        "S5",
+        "ROOT"
+      ],
+      "depends_on": [
+        "INT-00",
+        "INT-01"
+      ],
+      "required_evidence": [
+        "Fixar release/candidato real de S4 e verificar capacidades separadas de importação, index/read, rebuild e recovery; disponibilidade atual do release é UNKNOWN nesta auditoria.",
+        "Usar produção efetiva, preservar bytes e autoridade e provar a transformação para tipos existentes, CAS, inputs reais e porta governada; hash Git/SHA-256 de transporte não é OwnershipInput.version.",
+        "Conferir enum/layers/paths, corpos/bytes, inputs, artefatos required, roots, build_dependencies e navigation; rejeitar ciclos de build sem confundir ciclos de navegação.",
+        "Conciliar cobertura das fontes com a fronteira do observador descrita no protocolo: .atlas, symlinks, arquivo acima de 256.000 bytes, caminhos recusados e membership completo; absent é diferente de unavailable. Não excluir essas entradas para obter aceitação; decisão de fit/mecanismo mínimo e provas do candidato são exigidas.",
+        "Executar casos rotulados existentes/ausentes/stale/conflitantes/maliciosos e demonstrar que não inventam intenção/autoridade nem publicam conteúdo requerido sem suporte.",
+        "ROOT verifica a compatibilidade do mesmo contrato de transporte e binding para os cinco pacotes; reviewers de conteúdo não concedem automaticamente aprovação de binding."
+      ],
+      "reuse": "Um conjunto comum de provas S4 pode cobrir os cinco domínios quando versões, inputs, authority, scope e contrato forem compatíveis; casos locais continuam próprios.",
+      "criteria_ids": [
+        "GO-A2",
+        "GO-A5",
+        "GO-A7",
+        "GO-I2",
+        "GO-I7",
+        "AC-04",
+        "CC-2",
+        "QS-1",
+        "QS-3"
+      ],
+      "source_refs": [
+        "C-NORM",
+        "C-TRANSPORT",
+        "C-RUNTIME",
+        "C-CAMPAIGN",
+        "C-INTEGRATION"
+      ],
+      "parallelism": "Verificação de pacotes disjuntos pode ser paralela em estado isolado; shared write surfaces e transformação aceita são coordenados.",
+      "execution_status": "NOT_RUN",
+      "observed_execution_evidence": "UNKNOWN",
+      "selected_candidate_revision": "UNKNOWN",
+      "exact_entrypoints_and_commands": "UNKNOWN — devem vir do candidato/release real selecionado pela coordenação",
+      "compatibility_rule": "REUSE-1"
+    },
+    {
+      "id": "INT-03",
+      "name": "Consumidores Atlas-only e navegação progressiva",
+      "owner": "ROOT",
+      "supporting_owners": [
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5"
+      ],
+      "depends_on": [
+        "INT-02"
+      ],
+      "required_evidence": [
+        "Consumidores novos e independentes usam leitores reais index/read, sem receber fonte, resposta ou material reservado; isolamento e sua evidência observável precisam ser explicitados.",
+        "Julgar casos congelados de mudança permitida, violação de contrato, impacto transversal, falha operacional e abstenção fora de escopo.",
+        "Observar leitura rasa que termina cedo, leitura profunda que alcança evidência, utilidade direta de intermediários e limites de leitura/contexto previamente fixados.",
+        "Guardar versões e traços em destino autorizado; a auditoria pública não publica capturas, oracles ou pareceres integrais."
+      ],
+      "reuse": "Reader/binding comum e casos locais compatíveis são candidatos a reuso; casos da união continuam atribuídos a ROOT e não podem ser substituídos por links.",
+      "criteria_ids": [
+        "GO-A1",
+        "GO-A3",
+        "AC-02",
+        "AC-03",
+        "CC-3",
+        "SC-1",
+        "SC-2",
+        "QS-2",
+        "QS-5",
+        "DOD-3"
+      ],
+      "source_refs": [
+        "C-NORM",
+        "C-RUNTIME",
+        "C-JUDGING",
+        "C-CAMPAIGN"
+      ],
+      "parallelism": "Casos disjuntos podem paralelizar com estado isolado e limites compartilhados respeitados.",
+      "execution_status": "NOT_RUN",
+      "observed_execution_evidence": "UNKNOWN",
+      "selected_candidate_revision": "UNKNOWN",
+      "exact_entrypoints_and_commands": "UNKNOWN — devem vir do candidato/release real selecionado pela coordenação",
+      "compatibility_rule": "REUSE-1"
+    },
+    {
+      "id": "INT-04",
+      "name": "Reuse e identidade do resultado versus recibo",
+      "owner": "S4",
+      "supporting_owners": [
+        "S1",
+        "S2",
+        "S3",
+        "S5",
+        "ROOT"
+      ],
+      "depends_on": [
+        "INT-02"
+      ],
+      "required_evidence": [
+        "Inputs e recipe iguais dão cache hit e zero proposer calls observado.",
+        "Edição independente preserva identidades de resultados e contadores de partes não afetadas.",
+        "Prosa igual com authority/validity/gaps diferentes propaga; receipt-only refresca binding sem interpretação downstream.",
+        "Resultado canônico válido e inalterado interrompe rebuild; edição build invalida dependentes e navegação isolada não o faz."
+      ],
+      "reuse": "Executar o mecanismo comum uma vez no candidato compatível; revisar apenas casos de fronteira e deltas não cobertos.",
+      "criteria_ids": [
+        "GO-A4",
+        "GO-I4",
+        "AC-05",
+        "CC-4",
+        "SC-3"
+      ],
+      "source_refs": [
+        "C-NORM",
+        "C-TRANSPORT",
+        "C-CAMPAIGN"
+      ],
+      "parallelism": "Pode correr em paralelo a INT-03/07/08 em stores isolados; não compartilhar projeção mutável.",
+      "execution_status": "NOT_RUN",
+      "observed_execution_evidence": "UNKNOWN",
+      "selected_candidate_revision": "UNKNOWN",
+      "exact_entrypoints_and_commands": "UNKNOWN — devem vir do candidato/release real selecionado pela coordenação",
+      "compatibility_rule": "REUSE-1"
+    },
+    {
+      "id": "INT-05",
+      "name": "Affected set e reconstrução entre domínios",
+      "owner": "ROOT",
+      "supporting_owners": [
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5"
+      ],
+      "depends_on": [
+        "INT-02",
+        "INT-04"
+      ],
+      "required_evidence": [
+        "Fixar expected affected set independente para behavior edit, added source, removed source, intent-doc change e recipe change.",
+        "Propagar por build dependencies e restaurar conhecimento requerido após rebuild; fonte indisponível é HOLD, não uma worklist vazia.",
+        "Aplicar mutações delimitadas omitindo edge/input e comprovar rejeição; revisão inclui fronteiras reais confirmadas no grafo.",
+        "Usar o grafo estático como ponto de partida de impacto; ele não é prova de invalidação executada nem um grafo exaustivo de runtime."
+      ],
+      "reuse": "Provas comuns de S4 e casos locais compatíveis; a união deve provar propagação transversal afetada pelo delta.",
+      "criteria_ids": [
+        "GO-A4",
+        "GO-I3",
+        "GO-I5",
+        "AC-06",
+        "CC-4",
+        "SC-3",
+        "QS-5",
+        "DOD-3"
+      ],
+      "source_refs": [
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-INTEGRATION",
+        "C-TRANSPORT"
+      ],
+      "parallelism": "Expected sets por fronteira podem ser preparados paralelamente; shared publication fica serializada.",
+      "execution_status": "NOT_RUN",
+      "observed_execution_evidence": "UNKNOWN",
+      "selected_candidate_revision": "UNKNOWN",
+      "exact_entrypoints_and_commands": "UNKNOWN — devem vir do candidato/release real selecionado pela coordenação",
+      "compatibility_rule": "REUSE-1"
+    },
+    {
+      "id": "INT-06",
+      "name": "Coerência, falha, retomada e rollback",
+      "owner": "ROOT",
+      "supporting_owners": [
+        "S4",
+        "S1",
+        "S2",
+        "S3",
+        "S5"
+      ],
+      "depends_on": [
+        "INT-02",
+        "INT-05"
+      ],
+      "required_evidence": [
+        "Injetar falha entre geração e ativação, interrupção/resume e leituras concorrentes em estado isolado.",
+        "Reader separado observa manifesto inteiro aceito e compatível com inputs/contracts atuais ou HOLD; nunca mistura atualização parcial.",
+        "Rebuild falho após source drift não serve versão stale como atual; resume reutiliza completions duráveis.",
+        "Rollback rejeita binding incompatível; leituras históricas são rotuladas; demonstrar scopes independentes e closure compartilhada."
+      ],
+      "reuse": "Controles comuns de S4 podem ser reaproveitados quando candidato/escopo/contrato forem idênticos; ROOT completa união e concorrência interdomínio.",
+      "criteria_ids": [
+        "GO-I3",
+        "AC-07",
+        "CC-5",
+        "SC-5",
+        "DOD-3"
+      ],
+      "source_refs": [
+        "C-NORM",
+        "C-RUNTIME",
+        "C-CAMPAIGN",
+        "C-INTEGRATION"
+      ],
+      "parallelism": "Cenários independentes usam estado separado; concorrência é somente a controlada pelo caso.",
+      "execution_status": "NOT_RUN",
+      "observed_execution_evidence": "UNKNOWN",
+      "selected_candidate_revision": "UNKNOWN",
+      "exact_entrypoints_and_commands": "UNKNOWN — devem vir do candidato/release real selecionado pela coordenação",
+      "compatibility_rule": "REUSE-1"
+    },
+    {
+      "id": "INT-07",
+      "name": "Recusas nas portas reais e isolamento de escopo",
+      "owner": "S4",
+      "supporting_owners": [
+        "S1",
+        "S2",
+        "S3",
+        "S5",
+        "ROOT"
+      ],
+      "depends_on": [
+        "INT-02"
+      ],
+      "required_evidence": [
+        "Known-good/bad controls entram pelos gates/readers reais para input alterado, input novo em scope registrado, artefato ausente, referência quebrada, dependency version incompatível e geração inválida.",
+        "Unidade inválida bloqueia sua closure exigida, preservando leitura de scope independente; corrupção de manifesto compartilhado bloqueia leituras dependentes.",
+        "Conferir autoridade, trust, segredos, Knowledge/Memory e fronteiras de projeto; texto importado permanece dado.",
+        "Distinguir implementação do gate, resultado de execução, escopo de workflow e proteção efetiva de branch."
+      ],
+      "reuse": "Recusas comuns de S4 e controles locais compatíveis; ROOT verifica as entradas usadas pela união e deltas de host.",
+      "criteria_ids": [
+        "GO-A5",
+        "GO-I5",
+        "GO-I7",
+        "AC-04",
+        "AC-09",
+        "CC-5",
+        "CC-7",
+        "SC-5",
+        "QS-4",
+        "QS-5",
+        "DOD-2"
+      ],
+      "source_refs": [
+        "C-NORM",
+        "C-RUNTIME",
+        "C-CAMPAIGN",
+        "C-AGENTS"
+      ],
+      "parallelism": "Controles disjuntos podem paralelizar em estado isolado, preservando autoridade e política reais.",
+      "execution_status": "NOT_RUN",
+      "observed_execution_evidence": "UNKNOWN",
+      "selected_candidate_revision": "UNKNOWN",
+      "exact_entrypoints_and_commands": "UNKNOWN — devem vir do candidato/release real selecionado pela coordenação",
+      "compatibility_rule": "REUSE-1"
+    },
+    {
+      "id": "INT-08",
+      "name": "Preservação, migração e geradores",
+      "owner": "ROOT",
+      "supporting_owners": [
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5"
+      ],
+      "depends_on": [
+        "INT-00",
+        "INT-02"
+      ],
+      "required_evidence": [
+        "Confrontar inventário protegido anterior/posterior por identidade exata em canal autorizado; não expor seus dados na auditoria pública.",
+        "Demonstrar que producers antigos não publicam acidentalmente no scope novo; staging não recebe autoridade servida.",
+        "Preservar aceito anterior para rollback, ativação explícita e usabilidade dos scopes independentes.",
+        "Confirmar mudanças de gerados pelos geradores e dispor compatibilidade, docs/skills/guides e histórico de forma explícita."
+      ],
+      "reuse": "Inventários e provas locais compatíveis são preservados; nenhuma reexecução histórica somente para completar estatística.",
+      "criteria_ids": [
+        "GO-I1",
+        "GO-I7",
+        "AC-10",
+        "CC-5",
+        "CC-7",
+        "QS-4",
+        "DOD-6"
+      ],
+      "source_refs": [
+        "C-NORM",
+        "C-CAMPAIGN",
+        "C-HANDOFFS",
+        "C-AGENTS"
+      ],
+      "parallelism": "Inventários locais paralelizam; migração/publicação compartilha coordenação e não toca produção implicitamente.",
+      "execution_status": "NOT_RUN",
+      "observed_execution_evidence": "UNKNOWN",
+      "selected_candidate_revision": "UNKNOWN",
+      "exact_entrypoints_and_commands": "UNKNOWN — devem vir do candidato/release real selecionado pela coordenação",
+      "compatibility_rule": "REUSE-1"
+    },
+    {
+      "id": "INT-09",
+      "name": "Reconciliação econômica contínua e fechamento",
+      "owner": "ROOT",
+      "supporting_owners": [
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5"
+      ],
+      "depends_on": [
+        "INT-00"
+      ],
+      "required_evidence": [
+        "Manter desde a admissão uma reserva/envelope compartilhados para produção, avaliação, correção, retries e chamadas concorrentes.",
+        "Separar construção inicial, validação, atualização incremental e leituras; tokens/tentativas/custo não expostos são UNKNOWN, nunca zero.",
+        "Provar a garantia econômica real do adapter; limite lógico ou ledger de tarefas não demonstra teto financeiro.",
+        "Reconciliar segmentos autorizados locais/históricos sem publicar ledgers; após a avaliação final, incorporar suas próprias chamadas e manter reservas não resolvidas abertas, sem reexecutar produção."
+      ],
+      "reuse": "Somente uso observado e garantias compatíveis existentes; não estimar tokens por bytes, dólares por chamadas ou economia percentual sem baseline medido.",
+      "criteria_ids": [
+        "GO-A6",
+        "GO-I6",
+        "AC-08",
+        "CC-6",
+        "SC-4",
+        "QS-6",
+        "DOD-5"
+      ],
+      "source_refs": [
+        "C-NORM",
+        "C-RUNTIME",
+        "C-CAMPAIGN",
+        "C-INTEGRATION"
+      ],
+      "parallelism": "Controle é compartilhado e contínuo; checkpoints não resetam orçamento. Finalização depende de toda atividade emitida, inclusive INT-11.",
+      "accounting_dependency_note": "A dependência INT-00 inicia o controle; snapshots de evidência alimentam INT-11 e o fechamento contábil posterior registra as próprias chamadas de revisão. Isso não libera critério econômico desconhecido nem repete avaliação.",
+      "execution_status": "NOT_RUN",
+      "observed_execution_evidence": "UNKNOWN",
+      "selected_candidate_revision": "UNKNOWN",
+      "exact_entrypoints_and_commands": "UNKNOWN — devem vir do candidato/release real selecionado pela coordenação",
+      "compatibility_rule": "REUSE-1"
+    },
+    {
+      "id": "INT-10",
+      "name": "Gates técnicos e proteção da união",
+      "owner": "ROOT",
+      "supporting_owners": [
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5"
+      ],
+      "depends_on": [
+        "INT-00",
+        "INT-02",
+        "INT-05",
+        "INT-06",
+        "INT-07",
+        "INT-08"
+      ],
+      "required_evidence": [
+        "Selecionar gates escopados para os componentes alterados, typechecks por pacote, checks de gerados pertinentes e guardas; registrar comandos/candidato/runs/resultados reais.",
+        "Conforme AGENTS, testes de produto são remotos por rotas autorizadas; guards e typechecks são distintos de CI. Esta auditoria não executa nenhum deles.",
+        "Reconciliar gates locais reutilizáveis e executar apenas faltantes/invalidados; um epic final cobre o conjunto integrado conforme regra do repositório.",
+        "Reportar escopo do workflow e proteção efetiva da branch separadamente; ler um workflow não prova enforcement nem execução."
+      ],
+      "reuse": "Reaproveitar gates locais cujo candidato, escopo, inputs e contratos continuem válidos após o delta; não executar toda suíte comum cinco vezes.",
+      "criteria_ids": [
+        "GO-A5",
+        "AC-09",
+        "SC-5",
+        "QS-4",
+        "DOD-2",
+        "DOD-4"
+      ],
+      "source_refs": [
+        "C-NORM",
+        "C-AGENTS",
+        "C-RUNTIME",
+        "C-INTEGRATION"
+      ],
+      "parallelism": "Gates independentes e escopados podem paralelizar; o epic final usa um candidato fechado.",
+      "execution_status": "NOT_RUN",
+      "observed_execution_evidence": "UNKNOWN",
+      "selected_candidate_revision": "UNKNOWN",
+      "exact_entrypoints_and_commands": "UNKNOWN — devem vir do candidato/release real selecionado pela coordenação",
+      "compatibility_rule": "REUSE-1"
+    },
+    {
+      "id": "INT-11",
+      "name": "Dupla independente e disposição dos 50 critérios",
+      "owner": "ROOT",
+      "supporting_owners": [
+        "integration/J1",
+        "integration/J2",
+        "S1",
+        "S2",
+        "S3",
+        "S4",
+        "S5"
+      ],
+      "depends_on": [
+        "INT-01",
+        "INT-02",
+        "INT-03",
+        "INT-04",
+        "INT-05",
+        "INT-06",
+        "INT-07",
+        "INT-08",
+        "INT-09",
+        "INT-10"
+      ],
+      "required_evidence": [
+        "Criar a dupla própria da integração em contextos novos e sem autoria; ambos recebem o mesmo pacote exato e cobrem todos os critérios pertinentes, sem ferramentas e sem links desacompanhados de corpos.",
+        "Preservar decisões em destino autorizado; corrigir achados obrigatórios e reapresentar delta aos mesmos IDs. Nenhum terceiro voto remove veto.",
+        "Consolidar evidência/veredictos dos 50 IDs, distinção local/global, docs/operator guidance, limites e uso atual; desconhecido crítico impede fechamento.",
+        "A revisão estática pública desta auditoria é somente insumo; não se torna o par final, nem binding review ou aceite da união.",
+        "Congelar o pacote de revisão após correções e emitir apenas projeção pública permitida; pareceres integrais privados não entram nesta entrega."
+      ],
+      "reuse": "Provas locais compatíveis alimentam o pacote; os pares locais e seus votos não substituem a nova dupla da união.",
+      "criteria_ids": [
+        "GO-A1",
+        "GO-I2",
+        "GO-I8",
+        "AC-01",
+        "AC-02",
+        "AC-04",
+        "QS-1",
+        "QS-2",
+        "QS-3",
+        "QS-5",
+        "QS-6",
+        "DOD-1",
+        "DOD-2",
+        "DOD-5",
+        "DOD-6",
+        "DOD-7"
+      ],
+      "source_refs": [
+        "C-NORM",
+        "C-JUDGING",
+        "C-COMPLETION",
+        "C-INTEGRATION"
+      ],
+      "parallelism": "Os dois juízes podem avaliar em paralelo; cada um cobre a mesma barra completa e correções voltam aos mesmos IDs.",
+      "execution_status": "NOT_RUN",
+      "observed_execution_evidence": "UNKNOWN",
+      "selected_candidate_revision": "UNKNOWN",
+      "exact_entrypoints_and_commands": "UNKNOWN — devem vir do candidato/release real selecionado pela coordenação",
+      "compatibility_rule": "REUSE-1"
+    },
+    {
+      "id": "INT-12",
+      "name": "Handoff, aceite humano e atos governados separados",
+      "owner": "ROOT",
+      "supporting_owners": [
+        "owner"
+      ],
+      "depends_on": [
+        "INT-11"
+      ],
+      "required_evidence": [
+        "Selar payload imutável antes do handoff, sem SHA autorreferente; reler branch e artefatos/hashes.",
+        "Registrar separadamente prontidão de revisão, aceite humano, landing e ativação; nenhuma etapa é inferida de documentação, teste ou parecer isolado.",
+        "Manter falhas e obrigações abertas; só emenda explícita do dono altera contrato. Merge/deploy/ativação exigem os atos autorizados correspondentes.",
+        "Conservar instruções de recuperação e não limpar recursos sem ownership verificado."
+      ],
+      "reuse": "Identidades, payloads e decisões anteriores são preservados; aceite do dono e integração governada não são reusados por inferência.",
+      "criteria_ids": [
+        "DOD-6",
+        "DOD-7"
+      ],
+      "source_refs": [
+        "C-NORM",
+        "C-HANDOFFS",
+        "C-COMPLETION",
+        "C-INTEGRATION"
+      ],
+      "parallelism": "Selagem/publicação e atos de aceitação têm sequenciamento explícito e um responsável.",
+      "execution_status": "NOT_RUN",
+      "observed_execution_evidence": "UNKNOWN",
+      "selected_candidate_revision": "UNKNOWN",
+      "exact_entrypoints_and_commands": "UNKNOWN — devem vir do candidato/release real selecionado pela coordenação",
+      "compatibility_rule": "REUSE-1"
+    }
+  ],
+  "static_plan_observations": {
+    "control_count": 13,
+    "all_execution_states_not_run": true,
+    "entrypoints_not_observed": "UNKNOWN"
+  },
+  "remaining_decisions": [
+    "SHAs dos handoffs selecionados, candidato de integração e release/capacidades S4.",
+    "Casos privados de avaliação, limites reais de leitura/contexto e mecanismo observável de isolamento.",
+    "Política/autoridade de publicação, proteção de branch e gates efetivamente aplicáveis ao delta.",
+    "Garantia financeira demonstrável, reservas e limites autorizados; valores não expostos permanecem UNKNOWN."
+  ]
+}

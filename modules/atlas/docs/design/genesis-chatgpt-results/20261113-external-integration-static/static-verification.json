@@ -17,10 +17,10 @@
     "blob": 14442
   },
   "mode_counts": {
-    "040000": 2268,
     "100644": 14370,
     "100755": 71,
-    "120000": 1
+    "120000": 1,
+    "040000": 2268
   },
   "duplicate_paths": 0,
   "resolver_mismatches": [],
@@ -66,5 +66,38 @@
   "limitations": [
     "Git tree reconstruction validates metadata completeness and object identities, not the content or semantics of enumerated blobs.",
     "No current S4 candidate or runtime execution inspected."
-  ]
+  ],
+  "source_bindings": {
+    "partition": {
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/parallel-partition.json",
+      "git_blob_sha": "cdd2fba881059af6152371b417d8a791d8090a9f"
+    },
+    "observer": {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "git_blob_sha": "c6afd6a35071a2487a1168cea5ed1ad26379c376"
+    }
+  },
+  "criteria_matrix": {
+    "criterion_count": 50,
+    "unique_ids": 50,
+    "sequence_equal": true,
+    "literal_normative_row_mismatches": [],
+    "controls": 13,
+    "all_controls_not_run": true,
+    "bad_gate_references": [],
+    "bad_dependencies": [],
+    "dependency_cycles": [],
+    "requirement_acceptance_evidence_all_unknown": true,
+    "method": "Deterministic JSON and literal source comparison; no product test or runtime executed."
+  },
+  "contract_source_excerpts": {
+    "sources": 40,
+    "ranges": 75,
+    "exact_byte_comparisons": 75,
+    "range_mismatches": 0,
+    "baseline_tree_object_mismatches": 0,
+    "method": "Root independently fetched all 40 cited source blobs by MCP and compared all 75 supplied ranges exactly."
+  }
 }
