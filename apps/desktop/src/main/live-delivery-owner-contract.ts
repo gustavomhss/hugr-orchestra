@@ -9,7 +9,8 @@ export type LiveDeliveryOwner = {
   setConnection(connection: LiveDeliveryConnection): Promise<void>
   invalidate(): Promise<void>
   onComplete(listener: (completion: LiveDeliveryCompletion) => void): () => void
-  shutdown(): Promise<void>
+  /** Fence admission immediately, then join optional window flushing before local capture shutdown. */
+  shutdown(beforeStop?: () => Promise<void>): Promise<void>
 }
 
 export type LiveDeliveryOwnerOptions = {
