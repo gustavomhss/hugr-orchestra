@@ -36,6 +36,100 @@ jobs:
             packages/adapter-io/test/evaluation-boundaries.test.ts \
             packages/adapter-io/test/evaluation-rebuild.test.ts \
             --reporter=default --reporter=json --outputFile=attachment-results.json 2>&1 | tee attachment-tests.log
+      - name: Capture public compiled workspace only
+        run: |
+          python3 - <<'PYEXPORT'
+          import hashlib, json, os, pathlib, stat
+          root = pathlib.Path.cwd().resolve(strict=True)
+          out = root / "attachment-public-compiled"
+          out.mkdir(exist_ok=False)
+          files = []
+          sources = []
+          def checked(path, kind, allowed):
+              rel = path.relative_to(root)
+              if not rel.parts or any(part.startswith(".") or part == "node_modules" for part in rel.parts):
+                  raise RuntimeError("excluded-export-path")
+              cursor = root
+              for index, part in enumerate(rel.parts):
+                  cursor = cursor / part
+                  st = cursor.lstat()
+                  last = index == len(rel.parts) - 1
+                  if stat.S_ISLNK(st.st_mode):
+                      raise RuntimeError("export-symlink")
+                  if not last or kind == "directory":
+                      if not stat.S_ISDIR(st.st_mode):
+                          raise RuntimeError("export-ancestor-not-directory")
+                  elif not stat.S_ISREG(st.st_mode) or st.st_nlink != 1:
+                      raise RuntimeError("export-file-not-unique-regular")
+              resolved = path.resolve(strict=True)
+              allowed_resolved = allowed.resolve(strict=True)
+              if not resolved.is_relative_to(root) or not allowed_resolved.is_relative_to(root) or not resolved.is_relative_to(allowed_resolved):
+                  raise RuntimeError("export-containment")
+              return path.lstat()
+          def collect(directory, compiled):
+              checked(directory, "directory", compiled)
+              for path in sorted(directory.iterdir()):
+                  st = path.lstat()
+                  if stat.S_ISDIR(st.st_mode):
+                      collect(path, compiled)
+                  else:
+                      checked(path, "file", compiled)
+                      sources.append((path, compiled))
+          # Exact checked-in workspace set; test-only packages have no runtime entrypoint.
+          entrypoints = {name: "./dist/src/index.js" for name in ["adapter-io", "cli", "genesis", "grounding", "index", "kernel", "knowledge", "mcp-server", "memory", "persist", "retrieval", "tools"]}
+          entrypoints.update({"contracts": "./dist/index.js", "e2e": None, "e2e-blackbox": None})
+          checked(root / "packages", "directory", root / "packages")
+          actual_names = {path.name for path in (root / "packages").iterdir()}
+          if actual_names != set(entrypoints) | {".gitkeep"}:
+              raise RuntimeError("workspace-set-drift")
+          # Known tracked empty metadata is not exported or followed.
+          marker = root / "packages" / ".gitkeep"
+          marker_stat = marker.lstat()
+          if not stat.S_ISREG(marker_stat.st_mode) or marker_stat.st_nlink != 1 or marker_stat.st_size != 0 or marker.resolve(strict=True) != marker:
+              raise RuntimeError("workspace-metadata-drift")
+          for name, entrypoint in sorted(entrypoints.items()):
+              package = root / "packages" / name
+              checked(package, "directory", root / "packages")
+              manifest_path = package / "package.json"
+              checked(manifest_path, "file", manifest_path)
+              metadata = json.loads(manifest_path.read_bytes())
+              checked(manifest_path, "file", manifest_path)
+              if metadata.get("name") != "@atlas/" + name or metadata.get("main") != entrypoint:
+                  raise RuntimeError("workspace-entrypoint-drift")
+              sources.append((manifest_path, manifest_path))
+              if entrypoint is not None:
+                  entry = package / entrypoint
+                  compiled = entry.parent
+                  checked(compiled, "directory", compiled)
+                  checked(entry, "file", compiled)
+                  collect(compiled, compiled)
+          for name in ["package.json", "package-lock.json"]:
+              path = root / name
+              checked(path, "file", path)
+              sources.append((path, path))
+          for source, allowed in sources:
+              before = checked(source, "file", allowed)
+              rel = source.relative_to(root)
+              data = source.read_bytes()
+              after = checked(source, "file", allowed)
+              if (before.st_dev, before.st_ino, before.st_size, before.st_mtime_ns) != (after.st_dev, after.st_ino, after.st_size, after.st_mtime_ns) or len(data) != after.st_size:
+                  raise RuntimeError("export-source-changed")
+              target = out / rel
+              target.parent.mkdir(parents=True, exist_ok=True)
+              target.write_bytes(data)
+              files.append({"path": rel.as_posix(), "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()})
+          mandatory = ["packages/adapter-io/dist/src/" + name for name in ["evaluation-admission-read.js", "evaluation-admission-read.d.ts", "genesis-evaluation.js", "genesis-evaluation.d.ts", "ownership-attachment.js", "ownership-attachment.d.ts"]]
+          if not set(mandatory).issubset({x["path"] for x in files}):
+              raise RuntimeError("required-compiled-output-missing")
+          manifest = {"schema": "public-compiled-capture/v1", "commit": os.environ["GITHUB_SHA"], "run_id": os.environ["GITHUB_RUN_ID"], "run_attempt": os.environ["GITHUB_RUN_ATTEMPT"], "files": sorted(files, key=lambda x: x["path"]), "excludes": ["node_modules", "private-campaign-data", "runtime-roots", "environment-values"]}
+          (out / "manifest.json").write_text(json.dumps(manifest, sort_keys=True, indent=2) + "\n")
+          PYEXPORT
+      - uses: actions/upload-artifact@v4
+        with:
+          name: evaluation-attachment-public-compiled
+          path: modules/atlas/attachment-public-compiled/
+          include-hidden-files: true
+          if-no-files-found: error
       - name: Pin public sources
         if: always()
         run: |
