@@ -1,0 +1,208 @@
+{
+  "schema": "omni-public-interim-review/v1",
+  "kind": "summary_not_original_transcript",
+  "packet": "C07",
+  "layer": "L1",
+  "artifact": {
+    "author_path": "authors/core/records-07.json",
+    "public_path": "history/core/v1/records-07.json",
+    "sha256": "7e1431eb75856196e74ea764eacab2618d63223e543c065b7f18f89d7f41d661",
+    "bytes": 44189
+  },
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "records": 13,
+  "population": 393,
+  "status": "V1_FIX_FIRST; V2_PENDING_SAME_PAIR_REVIEW",
+  "decisions": {
+    "J1": {
+      "judge_identity": "/root/omni_review_courier/omni_j1",
+      "per_record": [
+        {
+          "index": 0,
+          "path": "native/omni/crates/hugr-omni/src/process/run.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 1,
+          "path": "native/omni/crates/hugr-omni/src/process/tests/agent_loop.rs",
+          "verdict": "FIX-FIRST"
+        },
+        {
+          "index": 2,
+          "path": "native/omni/crates/hugr-omni/src/process/tests/big.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 3,
+          "path": "native/omni/crates/hugr-omni/src/process/tests/deadline.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 4,
+          "path": "native/omni/crates/hugr-omni/src/process/tests/exit.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 5,
+          "path": "native/omni/crates/hugr-omni/src/process/tests/host.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 6,
+          "path": "native/omni/crates/hugr-omni/src/process/tests/host/lost.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 7,
+          "path": "native/omni/crates/hugr-omni/src/process/tests/memory.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 8,
+          "path": "native/omni/crates/hugr-omni/src/process/tests/mod.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 9,
+          "path": "native/omni/crates/hugr-omni/src/process/tests/scope.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 10,
+          "path": "native/omni/crates/hugr-omni/src/process/tests/tree.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 11,
+          "path": "native/omni/crates/hugr-omni/src/pty/mod.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 12,
+          "path": "native/omni/crates/hugr-omni/src/pty/tests.rs",
+          "verdict": "PASS"
+        }
+      ],
+      "private_opinion_sha256": "74bed66bdd64bac4bc74ed4363daf73220049312b0a599be7d51e6e5fc66904b",
+      "private_addenda_sha256": [
+        "77df972ff41fb18a8ee950741742c257bef01291e67527957bfe624f2a1c0bc7",
+        "03a5c5a9999f6bc976522e1937ab5bc6969f25cb12a48f2b7b6d1862ead3476a"
+      ]
+    },
+    "J2": {
+      "judge_identity": "/root/omni_review_courier/omni_j2",
+      "per_record": [
+        {
+          "index": 0,
+          "path": "native/omni/crates/hugr-omni/src/process/run.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 1,
+          "path": "native/omni/crates/hugr-omni/src/process/tests/agent_loop.rs",
+          "verdict": "FIX-FIRST"
+        },
+        {
+          "index": 2,
+          "path": "native/omni/crates/hugr-omni/src/process/tests/big.rs",
+          "verdict": "FIX-FIRST"
+        },
+        {
+          "index": 3,
+          "path": "native/omni/crates/hugr-omni/src/process/tests/deadline.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 4,
+          "path": "native/omni/crates/hugr-omni/src/process/tests/exit.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 5,
+          "path": "native/omni/crates/hugr-omni/src/process/tests/host.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 6,
+          "path": "native/omni/crates/hugr-omni/src/process/tests/host/lost.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 7,
+          "path": "native/omni/crates/hugr-omni/src/process/tests/memory.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 8,
+          "path": "native/omni/crates/hugr-omni/src/process/tests/mod.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 9,
+          "path": "native/omni/crates/hugr-omni/src/process/tests/scope.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 10,
+          "path": "native/omni/crates/hugr-omni/src/process/tests/tree.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 11,
+          "path": "native/omni/crates/hugr-omni/src/pty/mod.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 12,
+          "path": "native/omni/crates/hugr-omni/src/pty/tests.rs",
+          "verdict": "REQUEST_EVIDENCE"
+        }
+      ],
+      "private_opinion_sha256": "bcf0a3f49ddce49a8fe3c1da57eebeb40f700b26effcf81e9476fa65f0e99020",
+      "private_addenda_sha256": [
+        "fdd281aea6c9787a44c6795ae03d0b710de3de4d07373a36f7b90527e960b79d"
+      ]
+    }
+  },
+  "mandatory_findings": [
+    {
+      "id": "C07-F1",
+      "judges": [
+        "J1",
+        "J2"
+      ],
+      "index": 1,
+      "field": "/1/behavior/1",
+      "finding": "Aggregate logged-PID count does not establish individual coverage of each expected root."
+    },
+    {
+      "id": "C07-F2",
+      "judges": [
+        "J2"
+      ],
+      "index": 2,
+      "fields": [
+        "/2/behavior/0",
+        "/2/behavior/1"
+      ],
+      "finding": "Attribute socket-capacity comparison to source-comment rationale; describe exit success, prefix and trim_end length checks without claiming complete returned value or framing validation.",
+      "J1_classification": "optional in v1; included in mandatory union because J2 requires correction"
+    }
+  ],
+  "missing_evidence": [
+    {
+      "index": 12,
+      "field": "/12/evidence/0/quote",
+      "classification": "transport_reconciliation_not_author_defect",
+      "request": "Canonical authored JSON for the PTY fixture argument escape; comparison and write-line concerns already clarified. Complete unchanged record12 replay supplied with the separate v2 request; decision pending."
+    }
+  ],
+  "transport_note": "Root reported a quote-escaping error and a wrapper-only insertion. J2 reported further quote-encoding discrepancies, which are preserved separately from authored-record findings. The captured source and candidate quotations match; canonical replay is part of the v2 review request. Preserved operator copies are not authenticated host-message exports.",
+  "current_accepted_population": 51,
+  "limitations": [
+    "Documentary L1 review only; no current execution or runtime binding.",
+    "All thirteen complete objects were supplied; selected source excerpts do not imply every source line was transmitted.",
+    "No C07 body acceptance or complete-layer release is recorded here.",
+    "Original opinions, message packets and reserved material remain private."
+  ]
+}

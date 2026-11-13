@@ -1,0 +1,174 @@
+{
+  "schema": "omni-public-interim-review/v1",
+  "kind": "summary_not_original_transcript",
+  "packet": "C08",
+  "layer": "L1",
+  "artifact": {
+    "author_path": "authors/core/records-08.json",
+    "public_path": "history/core/v1/records-08.json",
+    "sha256": "8674ea3f7227ce47cbefef5aaa26144cdf9fa09c47fd2281684e8b26460223d9",
+    "bytes": 44316
+  },
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "records": 11,
+  "population": 393,
+  "status": "V1_FIX_FIRST; AUTHOR_CORRECTION_PENDING_SAME_PAIR_REVIEW",
+  "decisions": {
+    "J1": {
+      "judge_identity": "/root/omni_review_courier/omni_j1",
+      "per_record": [
+        {
+          "index": 0,
+          "path": "native/omni/crates/hugr-omni/src/spawn/env.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 1,
+          "path": "native/omni/crates/hugr-omni/src/spawn/mod.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 2,
+          "path": "native/omni/crates/hugr-omni/src/spawn/path.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 3,
+          "path": "native/omni/crates/hugr-omni/src/spawn/resolve.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 4,
+          "path": "native/omni/crates/hugr-omni/src/spawn/sys.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 5,
+          "path": "native/omni/crates/hugr-omni/src/spawn/tests.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 6,
+          "path": "native/omni/crates/hugr-omni/src/spawn/tests/resolve.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 7,
+          "path": "native/omni/crates/hugr-omni/src/spawn/tests/verbatim.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 8,
+          "path": "native/omni/crates/hugr-omni/src/spawn/validate.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 9,
+          "path": "native/omni/crates/hugr-omni/src/types.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 10,
+          "path": "native/omni/crates/hugr-omni/tests/contract.rs",
+          "verdict": "PASS"
+        }
+      ],
+      "private_opinion_sha256": "9bf5b761d5e6c3249a7e3982d9e5a12c09f4e43ac0a6c824e632378cae873ace",
+      "private_opinion_bytes": 6724
+    },
+    "J2": {
+      "judge_identity": "/root/omni_review_courier/omni_j2",
+      "per_record": [
+        {
+          "index": 0,
+          "path": "native/omni/crates/hugr-omni/src/spawn/env.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 1,
+          "path": "native/omni/crates/hugr-omni/src/spawn/mod.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 2,
+          "path": "native/omni/crates/hugr-omni/src/spawn/path.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 3,
+          "path": "native/omni/crates/hugr-omni/src/spawn/resolve.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 4,
+          "path": "native/omni/crates/hugr-omni/src/spawn/sys.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 5,
+          "path": "native/omni/crates/hugr-omni/src/spawn/tests.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 6,
+          "path": "native/omni/crates/hugr-omni/src/spawn/tests/resolve.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 7,
+          "path": "native/omni/crates/hugr-omni/src/spawn/tests/verbatim.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 8,
+          "path": "native/omni/crates/hugr-omni/src/spawn/validate.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 9,
+          "path": "native/omni/crates/hugr-omni/src/types.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 10,
+          "path": "native/omni/crates/hugr-omni/tests/contract.rs",
+          "verdict": "FIX-FIRST"
+        }
+      ],
+      "private_opinion_sha256": "94025582ab2f70397576146ece9b4adbe843eb238969124bf1dc592c8a34d12d",
+      "private_opinion_bytes": 5184
+    }
+  },
+  "mandatory_findings": [
+    {
+      "id": "C08-F1",
+      "judges": [
+        "J2"
+      ],
+      "index": 10,
+      "field": "/10/behavior/2",
+      "finding": "The unconditional statement that only suite errors fail the test omits successful setup, fixture warm-up and separate scenario-accounting requirements. Distinguish pending scenario-result classification from all test failure gates.",
+      "J1_classification": "optional in v1; mandatory union follows J2 requirement",
+      "source_path": "native/omni/crates/hugr-omni/tests/contract.rs",
+      "source_lines": [
+        [
+          12,
+          48
+        ],
+        [
+          51,
+          63
+        ]
+      ]
+    }
+  ],
+  "missing_evidence": [],
+  "transport_note": "Both operators preserved literal argument copies. Frozen request comparison and complete candidate reconstruction match canonical body bytes for both judges. No observed discrepancy was reported. These are operator copies, not authenticated host-message exports.",
+  "current_accepted_population": 64,
+  "limitations": [
+    "Documentary L1 review only; no current execution or runtime binding.",
+    "All eleven complete objects were supplied; selected source excerpts do not imply every source line was transmitted.",
+    "No C08 body acceptance or complete-layer release is recorded here.",
+    "Original opinions, message packets and reserved material remain private."
+  ]
+}

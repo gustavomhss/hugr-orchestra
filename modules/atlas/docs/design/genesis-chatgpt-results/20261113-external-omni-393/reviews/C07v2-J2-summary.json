@@ -1,0 +1,141 @@
+{
+  "schema": "omni-public-review-summary/v1",
+  "kind": "summary_not_original_transcript",
+  "packet": "C07v2",
+  "layer": "L1",
+  "judge_identity": "/root/omni_review_courier/omni_j2",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "artifact": {
+    "author_path": "authors/core/records-07.v2.json",
+    "public_path": "bodies/core/records-07.v2.json",
+    "sha256": "1ea62bd5a74a8e5230ac3c1d0ac7478c03f8bb22bdf0d7f11dbc5e3be2e94c25",
+    "bytes": 44585
+  },
+  "verdict": "PASS",
+  "covered_records": 13,
+  "population": 393,
+  "records": [
+    {
+      "index": 0,
+      "path": "native/omni/crates/hugr-omni/src/process/run.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 1,
+      "path": "native/omni/crates/hugr-omni/src/process/tests/agent_loop.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 2,
+      "path": "native/omni/crates/hugr-omni/src/process/tests/big.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 3,
+      "path": "native/omni/crates/hugr-omni/src/process/tests/deadline.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 4,
+      "path": "native/omni/crates/hugr-omni/src/process/tests/exit.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 5,
+      "path": "native/omni/crates/hugr-omni/src/process/tests/host.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 6,
+      "path": "native/omni/crates/hugr-omni/src/process/tests/host/lost.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 7,
+      "path": "native/omni/crates/hugr-omni/src/process/tests/memory.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 8,
+      "path": "native/omni/crates/hugr-omni/src/process/tests/mod.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 9,
+      "path": "native/omni/crates/hugr-omni/src/process/tests/scope.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 10,
+      "path": "native/omni/crates/hugr-omni/src/process/tests/tree.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 11,
+      "path": "native/omni/crates/hugr-omni/src/pty/mod.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 12,
+      "path": "native/omni/crates/hugr-omni/src/pty/tests.rs",
+      "verdict": "PASS"
+    }
+  ],
+  "criteria": {
+    "C1": {
+      "label": "Every covered path has an actual read-based, file-specific useful disposition",
+      "verdict": "PASS"
+    },
+    "C2": {
+      "label": "Assertions distinguish implementation, documentation/declaration, inference and gaps",
+      "verdict": "PASS"
+    },
+    "C3": {
+      "label": "Source identities, paths and exact quote evidence support claims",
+      "verdict": "PASS"
+    },
+    "C4": {
+      "label": "Contracts, failures, relations and maintenance implications are useful at L1",
+      "verdict": "PASS"
+    },
+    "C5": {
+      "label": "Test source, old reviews and docs are never current execution",
+      "verdict": "PASS"
+    },
+    "C6": {
+      "label": "Ownership/exclusions and authorized external scope preserved",
+      "verdict": "PASS"
+    },
+    "C7": {
+      "label": "No secrets/private evaluation/session material in candidate",
+      "verdict": "PASS"
+    }
+  },
+  "mandatory_findings_remaining": [],
+  "missing_evidence": [],
+  "private_opinion_sha256": "bfafc90aca73881cbdbc6c4bc76b188dd3cb7979ed4f673deac4a0a46202f3dc",
+  "private_opinion_digest_scope": "SHA256 of the privately retained UTF-8 opinion text with final LF; not a host-message envelope or authenticated transport receipt",
+  "transport_note": "Both reviewers evaluated the complete replacement objects1/2 and bound the unchanged objects to their prior full-body review. A complete canonical replay of unchanged object12 and literal source/JSON encodings resolved all reported quote-escaping issues. Earlier wrapper and coordinate errors remain preserved transport history, separate from author findings. The current-body reconstruction from operator-preserved copies and that replay matches the exact body. Such copies and root-reported reconstructions are not authenticated host-message exports.",
+  "limitations": [
+    "Documentary semantic review only; judge used no tools or execution.",
+    "Acceptance covers thirteen L1 records only and does not release complete L1 or later layers.",
+    "Judges received complete candidate records and selected decisive source evidence; no claim of full-source judge reading.",
+    "No runtime-import binding, current platform test, release or global integration acceptance is established.",
+    "Original private exchanges and reserved evaluation material are withheld; no public reproducibility of those withheld materials is claimed."
+  ],
+  "resolved_findings": [
+    {
+      "id": "C07-F1",
+      "field": "/1/behavior/1",
+      "resolution": "The PID-log claim now describes an aggregate lower bound and checks of recorded PIDs, without individual expected-root coverage."
+    },
+    {
+      "id": "C07-F2",
+      "fields": [
+        "/2/behavior/0",
+        "/2/behavior/1"
+      ],
+      "resolution": "Socket-capacity figures are attributed to source rationale; reported output checks are successful exit, prefix and trim_end length, with their coverage limits."
+    }
+  ]
+}
