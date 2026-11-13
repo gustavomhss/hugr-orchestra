@@ -1,5 +1,8 @@
 name: s4-l4-dispatch-synthetic
 on:
+  push:
+    branches:
+      - genesis-s4-l4-dispatch-v3-ci
   workflow_dispatch:
 permissions:
   contents: read
