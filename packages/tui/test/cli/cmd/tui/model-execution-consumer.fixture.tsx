@@ -134,9 +134,11 @@ export async function mount(options: { draft?: boolean; initial?: ModelExecution
     return <Show when={sdk.connectionEpoch() > 0}>{props.children}</Show>
   }
   let context!: { sdk: ReturnType<typeof useSDK>; sync: ReturnType<typeof useSync>; local: ReturnType<typeof useLocal>; route: ReturnType<typeof useRoute>; dialog: ReturnType<typeof useDialog> }
+  const localOwners = new Set<ReturnType<typeof useLocal>>()
   let prompt: PromptRef | undefined
   function Probe() {
     context = { sdk: useSDK(), sync: useSync(), local: useLocal(), route: useRoute(), dialog: useDialog() }
+    localOwners.add(context.local)
     onMount(() => {
       // Match app.tsx: apply CLI variant through the real setter, including before preference I/O completes.
       if (options.args?.variant !== undefined) context.local.model.variant.set(options.args.variant)
@@ -212,7 +214,10 @@ export async function mount(options: { draft?: boolean; initial?: ModelExecution
       async dispose() {
         if (lifecycle.disposed) return
         lifecycle.disposed = true
-        app.renderer.destroy()
+        const destroyed = await Promise.allSettled([Promise.resolve().then(() => app.renderer.destroy())])
+        const cleanup = await Promise.allSettled([...localOwners].map((local) => local.flush()))
+        const failures = [...destroyed, ...cleanup].flatMap((result) => result.status === "rejected" ? [result.reason] : [])
+        if (failures.length > 0) throw new AggregateError(failures, "Failed to destroy fixture or flush Local owners")
         await rm(root, { recursive: true, force: true })
       },
       async reload() {
@@ -223,7 +228,16 @@ export async function mount(options: { draft?: boolean; initial?: ModelExecution
         await wait(() => context.sdk === greetingSDK && prompt !== undefined, "consumer remounted after initial greeting")
       },
     }
-  } catch (error) { app.renderer.destroy(); await rm(root, { recursive: true, force: true }); throw error }
+  } catch (error) {
+    const destroyed = await Promise.allSettled([Promise.resolve().then(() => app.renderer.destroy())])
+    const cleanup = await Promise.allSettled([...localOwners].map((local) => local.flush()))
+    const failures = [...destroyed, ...cleanup].flatMap((result) => result.status === "rejected" ? [result.reason] : [])
+    if (failures.length > 0) throw new AggregateError([error, ...failures], "Mount and Local cleanup failed")
+    const removed = await Promise.allSettled([rm(root, { recursive: true, force: true })])
+    const failed = removed.find((result) => result.status === "rejected")
+    if (failed?.status === "rejected") throw new AggregateError([error, failed.reason], "Mount and fixture removal failed")
+    throw error
+  }
 }
 
 

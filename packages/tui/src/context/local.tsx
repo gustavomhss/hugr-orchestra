@@ -81,6 +81,37 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
     const event = useEvent()
     const permission = usePermission()
 
+    const persistence = {
+      bootstrap: [] as Promise<void>[],
+      pending: new Set<Promise<void>>(),
+      failure: undefined as { error: unknown } | undefined,
+    }
+
+    function observeBootstrap(bootstrap: Promise<void>) {
+      persistence.bootstrap.push(bootstrap)
+      void bootstrap.catch((error: unknown) => {
+        persistence.failure ??= { error }
+        console.error("Failed to initialize Local state", { error })
+      })
+    }
+
+    function observeWrite(write: Promise<void>) {
+      const observed = write.then(() => undefined, (error: unknown) => {
+        persistence.failure ??= { error }
+        console.error("Failed to write Local state", { error })
+      }).finally(() => { persistence.pending.delete(observed) })
+      persistence.pending.add(observed)
+    }
+
+    async function flush() {
+      // Bootstrap finalizers can admit a pending preference write after owner disposal.
+      const bootstrap = await Promise.allSettled(persistence.bootstrap)
+      while (persistence.pending.size > 0) await Promise.allSettled(persistence.pending)
+      if (persistence.failure) throw persistence.failure.error
+      const failed = bootstrap.find((result) => result.status === "rejected")
+      if (failed?.status === "rejected") throw failed.reason
+    }
+
     function isModelValid(model: { providerID: string; modelID: string }) {
       const provider = sync.data.provider.find((item) => item.id === model.providerID)
       return !!provider?.models[model.modelID]
@@ -186,15 +217,15 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
           return
         }
         state.pending = false
-        void writeJsonAtomic(filePath, {
+        observeWrite(writeJsonAtomic(filePath, {
           recent: modelStore.recent,
           favorite: modelStore.favorite,
           variant: modelStore.variant,
           variantIntent: modelStore.variantIntent,
-        })
+        }))
       }
 
-      readJson<unknown>(filePath)
+      observeBootstrap(readJson<unknown>(filePath)
         .then((x) => {
           if (!x || typeof x !== "object") return
           const value = x as Record<string, unknown>
@@ -210,7 +241,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
         .finally(() => {
           setModelStore("ready", true)
           if (state.pending) save()
-        })
+        }))
 
       const fallbackModel = createMemo(() => {
         if (args.model) {
@@ -521,12 +552,12 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
           return
         }
         state.pending = false
-        void writeJsonAtomic(filePath, {
+        observeWrite(writeJsonAtomic(filePath, {
           pinned: sessionStore.pinned,
-        })
+        }))
       }
 
-      readJson<unknown>(filePath)
+      observeBootstrap(readJson<unknown>(filePath)
         .then((x) => {
           if (!x || typeof x !== "object") return
           const pinned = (x as Record<string, unknown>).pinned
@@ -540,7 +571,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
         .finally(() => {
           setSessionStore("ready", true)
           if (state.pending) save()
-        })
+        }))
 
       const slots = createMemo(() => {
         const existing = new Set(sync.data.session.filter((x) => x.parentID === undefined).map((x) => x.id))
@@ -624,6 +655,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
     })
 
     const result = {
+      flush,
       model,
       agent,
       mcp,
