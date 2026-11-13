@@ -188,6 +188,7 @@ function open(ctx: Context, plan: CodeIndexBuild.Plan, shards: ReadonlyArray<Cod
     }))
     const choices = yield* Effect.forEach(shards, (planned) => Effect.gen(function* () {
       if (yield* CodeIndexStore.exists(plan.dir, planned.key)) return { planned, key: planned.key } satisfies Ready
+      if (ctx.readOnly) return yield* new Research.Error({ code: "index_unavailable", message: "Index has not been built for this commit" })
       const previous = records.flatMap((record) => record.shards
         .filter((shard) => shard.id === planned.shard.id && shard.key !== planned.key)
         .map((shard) => ({ commit: record.commit, key: shard.key })))

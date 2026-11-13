@@ -7,6 +7,7 @@ import { ChildProcess } from "effect/unstable/process"
 import { parse } from "jsonc-parser"
 import { Research } from "@orchestra/schema/research"
 import { AppProcess } from "../../process"
+import { ReviewGit } from "../../review-toolkit/git"
 import type { Language } from "../index"
 
 // J2.1 shard discovery, J2.2 shard keys and J2.14 git under a sanitized environment. Every path is repo-relative
@@ -67,8 +68,39 @@ export const live = (root: string) =>
     } satisfies Git
   })
 
-/** Private-wave scaffold: source implementation follows the frozen readonly code contract. */
-export const captured = (root: string, commit: string): Effect.Effect<Git, Research.Error, AppProcess.Service> => live(root)
+const COMMIT_ID = /^[0-9a-f]{40}$|^[0-9a-f]{64}$/
+const CAPTURED_COMMANDS = new Set(["rev-parse", "ls-tree", "cat-file", "status"])
+const CAPTURED_OUTPUT_CAP = 16 * 1024 * 1024
+
+/** Immutable committed-tree view: real git at `commit`, never the live worktree or a replacement object. */
+export const captured = (root: string, commit: string): Effect.Effect<Git, Research.Error, AppProcess.Service> =>
+  Effect.gen(function* () {
+    if (!COMMIT_ID.test(commit))
+      return yield* new Research.Error({ code: "source_unavailable", message: "commit must be a full lowercase hex id" })
+    const proc = yield* AppProcess.Service
+    const env = { ...environment(), ...ReviewGit.environment }
+    const run = (args: ReadonlyArray<string>, stdin?: string) =>
+      proc.run(ChildProcess.make("git", [...args], { cwd: root, env, extendEnv: false }), {
+        stdin, timeout: "60 seconds", maxOutputBytes: CAPTURED_OUTPUT_CAP, maxErrorBytes: CAPTURED_OUTPUT_CAP,
+      }).pipe(
+        Effect.mapError(() => new Research.Error({ code: "source_unavailable", message: `git ${args[0]} could not run` })),
+        Effect.flatMap((result) => result.exitCode !== 0 || result.stdoutTruncated
+          ? Effect.fail(new Research.Error({ code: "source_unavailable", message: `git ${args[0]} failed: ${result.stderr.toString("utf8").trim().slice(0, 500)}` }))
+          : Effect.succeed(result.stdout)),
+      )
+    const resolved = yield* run(["rev-parse", "--verify", `${commit}^{commit}`])
+    if (resolved.toString("utf8").trim() !== commit)
+      return yield* new Research.Error({ code: "source_unavailable", message: "commit did not resolve to the given id" })
+    return {
+      run: (args, stdin) => {
+        const command = args[0]
+        if (!CAPTURED_COMMANDS.has(command ?? ""))
+          return Effect.fail(new Research.Error({ code: "source_unavailable", message: `git ${command ?? ""} is not allowed` }))
+        if (command === "status") return Effect.succeed(Buffer.alloc(0))
+        return run(args.map((arg) => arg === "HEAD^{commit}" ? `${commit}^{commit}` : arg), stdin)
+      },
+    } satisfies Git
+  })
 
 /** As modules/maestro/arsenal/src/engine/process.ts: the caller environment minus anything that redirects git. */
 export function environment(source: NodeJS.ProcessEnv = process.env): Record<string, string> {

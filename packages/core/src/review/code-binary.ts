@@ -1,6 +1,6 @@
 export * as ReviewCodeBinary from "./code-binary"
 
-import { Context, Effect, Layer } from "effect"
+import { Context, Layer } from "effect"
 import { CrossSpawnSpawner } from "../cross-spawn-spawner"
 import { makeGlobalNode } from "../effect/app-node"
 import { httpClient } from "../effect/app-node-platform"
@@ -11,7 +11,7 @@ import { EffectFlock } from "../util/effect-flock"
 export class Service extends Context.Service<Service, RipgrepBinary.Interface>()("@orchestra/ReviewCodeBinary") {}
 
 export function make(options: Partial<RipgrepBinary.Options> = {}): ReturnType<typeof RipgrepBinary.make> {
-  return Effect.succeed({ filepath: Effect.fail(new RipgrepBinary.Unavailable({ message: "review-code scaffold", retry: false })) })
+  return RipgrepBinary.make({ ...options, download: false })
 }
 
 export const node = makeGlobalNode({
