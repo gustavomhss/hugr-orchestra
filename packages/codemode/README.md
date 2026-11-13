@@ -4,11 +4,11 @@ Confined code execution over explicit, schema-described tools. A model writes a 
 
 ## Who uses it
 
-No package in the workspace imports it today (a grep for `@orchestra/codemode` outside this folder finds nothing). It is a self-contained library.
+Core supplies an optional isolated native regular-expression executor through `@orchestra/core/codemode-native-regex`. Hosts select it explicitly; adding the dependency does not automatically enable it for a production caller.
 
 ## Entry points
 
-`src/index.ts` exports `CodeMode`, `Tool`, `OpenAPI`, `ToolError` and `toolError`.
+`src/index.ts` exports `CodeMode`, `Tool`, `OpenAPI`, `NativeRegex`, `ToolError` and `toolError`.
 
 ```ts
 import { CodeMode, Tool } from "@orchestra/codemode"
