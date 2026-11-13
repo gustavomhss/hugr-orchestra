@@ -1,0 +1,17 @@
+name: support-maintenance-overlay-verifier
+on:
+  push:
+    branches: [genesis-support-07-overlay-verifier]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  offline-verifier:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 20
+      - run: node --test modules/atlas/test/verify-maintenance-overlay.test.mjs
