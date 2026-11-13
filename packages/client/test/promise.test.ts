@@ -251,11 +251,28 @@ test("events.subscribe exposes the Promise event stream wire projection", async 
   expect(events[1]?.type === "session.next.model.switched" && events[1].data.timestamp).toBe(1_717_171_717_000)
 })
 
-test("events.subscribe yields a complete frame before refusing an oversized remainder", async () => {
-  const frame = `data: ${JSON.stringify({ id: "evt_ok", type: "server.connected", data: {} })}\n\n`
+test("events.subscribe delivers large valid frames across chunks and at EOF", async () => {
+  const first = { id: "evt_ok", type: "server.connected", data: {} }
+  const large = ["evt_large", "evt_eof"].map((id) => ({
+    id,
+    type: "session.next.synthetic",
+    data: {
+      timestamp: 1_717_171_717_000,
+      sessionID: "ses_test",
+      messageID: `msg_${id}`,
+      text: "é🌍".repeat(400_000),
+    },
+  }))
+  const final = new TextEncoder().encode(`data: ${JSON.stringify(large[1])}`)
+  const chunks = [
+    new TextEncoder().encode(`data: ${JSON.stringify(first)}\r\n\r\ndata: ${JSON.stringify(large[0])}\r\n\r\n`),
+    final.subarray(0, final.length - 7),
+    final.subarray(final.length - 7),
+  ]
   const stream = new ReadableStream({
-    start(controller) {
-      controller.enqueue(new TextEncoder().encode(frame + "x".repeat(1_048_577)))
+    pull(controller) {
+      const chunk = chunks.shift()
+      if (chunk) return controller.enqueue(chunk)
       controller.close()
     },
   })
@@ -264,19 +281,66 @@ test("events.subscribe yields a complete frame before refusing an oversized rema
     fetch: async () => new Response(stream, { headers: { "content-type": "text/event-stream" } }),
   })
   const iterator = client.events.subscribe()[Symbol.asyncIterator]()
-  expect(await iterator.next()).toMatchObject({
-    done: false,
-    value: { id: "evt_ok", type: "server.connected", data: {} },
-  })
-  expect(
-    await iterator.next().then(
-      () => {
-        throw new Error("Expected the oversized remainder to fail")
-      },
-      (error: unknown) => error,
-    ),
-  ).toMatchObject({ name: "ClientError", reason: "MalformedResponse" })
+  expect(await iterator.next()).toEqual({ done: false, value: first })
+  expect(await iterator.next()).toEqual({ done: false, value: large[0] })
+  expect(await iterator.next()).toEqual({ done: false, value: large[1] })
+  expect(await iterator.next()).toEqual({ done: true, value: undefined })
+  expect(stream.locked).toBe(false)
 })
+
+test("events.subscribe ignores a non-data remainder at real EOF", async () => {
+  const first = { id: "evt_ok", type: "server.connected", data: {} }
+  const stream = new ReadableStream({
+    start(controller) {
+      controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(first)}\n\n` + "x".repeat(1_048_577)))
+      controller.close()
+    },
+  })
+  const client = Orchestra.make({
+    baseUrl: "http://localhost:3000",
+    fetch: async () => new Response(stream, { headers: { "content-type": "text/event-stream" } }),
+  })
+  const events = []
+  for await (const event of client.events.subscribe()) events.push(event)
+  expect(events).toEqual([first])
+  expect(stream.locked).toBe(false)
+})
+
+for (const malformed of [false, true]) {
+  test(`events.subscribe cancels its reader and releases its lock on ${malformed ? "malformed JSON" : "consumer return"}`, async () => {
+    const cancellations: unknown[] = []
+    const first = { id: "evt_ok", type: "server.connected", data: {} }
+    // Leave the source open so cancellation must reach the actual underlying stream.
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode(`data: ${malformed ? "{not-json}" : JSON.stringify(first)}\n\n`))
+      },
+      cancel(reason) {
+        cancellations.push(reason)
+      },
+    })
+    const client = Orchestra.make({
+      baseUrl: "http://localhost:3000",
+      fetch: async () => new Response(stream, { headers: { "content-type": "text/event-stream" } }),
+    })
+    const iterator = client.events.subscribe()[Symbol.asyncIterator]()
+    if (malformed) {
+      expect(await iterator.next().catch((error: unknown) => error)).toMatchObject({
+        name: "ClientError", reason: "MalformedResponse",
+      })
+    }
+    if (!malformed) {
+      expect(await iterator.next()).toEqual({ done: false, value: first })
+      expect(iterator.return).toBeDefined()
+      await iterator.return?.()
+    }
+    expect(cancellations).toHaveLength(1)
+    expect(stream.locked).toBe(false)
+    const reader = stream.getReader()
+    expect(await reader.read()).toEqual({ done: true, value: undefined })
+    reader.releaseLock()
+  })
+}
 
 test("events.subscribe terminates on malformed Promise SSE data", async () => {
   const client = Orchestra.make({
