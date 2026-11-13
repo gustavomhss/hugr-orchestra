@@ -1,8 +1,8 @@
 {
   "version": 1,
   "status": "integration-in-progress; not merge approval or final epic qualification",
-  "source": "22003d5649859bdc32b5b8a51e722f5e523ca9ae",
-  "sourceBoundary": "Root checkpoint before browser TDZ/lifecycle/selection repairs; hosted snapshots below are distinct, not represented as this entire source tree.",
+  "source": "6378febbb4",
+  "sourceBoundary": "Root checkpoint includes schema recovery, lifecycle, reconnect and TDZ repairs; selection repair remains pending. Hosted snapshots below are distinct, not represented as this entire source tree.",
   "ledger": {"retainedClosed": 63, "total": 65, "stillOpen": ["E10", "M13"], "rule": "Retain original disposition until final complete hosted qualification; no ledger closure in this checkpoint."},
   "firstEpic": {"run": "43427741510", "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43427741510", "source": "0a38c2078c6f6fa65b9fdfa54bb6ad6d7ab87964", "status": "completed", "conclusion": "failure", "jobs": {"total": 56, "success": 30, "failure": 22, "cancelled": 4}, "scope": {"packages": "", "cold": true, "windows_e2e": false}, "desktopLimit": "Windows job cancelled after actual Bun758P0F147skip and Node203P0F; setup258s + task644.825s exceeds inclusive900s. Linux library test step timed out without complete Desktop totals. Neither cancellation establishes a leaked process.", "terminalJobAPI": {"path": "/tmp/closing-checkpoint-epic-jobs.json", "sha256": "94525e51e982133087b4d16abd295be3ce11d04d387439ec1082d192324f8848"}},
   "browser": {"run": "43445796579", "snapshot": "6fe0b5cea20af474896450f3866f2887fecfc795", "conclusion": "failure", "linux": {"pass": 612, "fail": 32}, "windows": {"pass": 641, "fail": 3}, "repairPlan": "docs/audits/remediation-browser-fixture-plan.md", "limits": "Old selection oracle conflicts with explicit-intent guide; TDZ, submit lifecycle and reconnect fixture repairs require fresh hosted proof. No production fallback authorized.", "receipt": {"path": "/tmp/root-browser-directory-hosted.log", "sha256": "70bbce10da66491909a60fed8ea4dbb39acd088dbf9aee8b055e0f6bbb541d14"}},
