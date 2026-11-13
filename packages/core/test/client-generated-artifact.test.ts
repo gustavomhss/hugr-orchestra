@@ -53,6 +53,7 @@ test.skipIf(!isClientGeneratedRequest(request))("official Client generation qual
     expect(process.env.RUNNER_OS).toBe("Linux")
     expect(process.env.CI).toBe("true")
     expect(proof.snapshot).toMatch(/^[a-f0-9]{40}$/)
+    if (typeof proof.snapshot !== "string") return yield* Effect.die(new Error("Missing hosted snapshot identity"))
     expect(proof.runID).toMatch(/^[1-9][0-9]*$/)
     expect(proof.runAttempt).toMatch(/^[1-9][0-9]*$/)
     const proc = yield* AppProcess.Service
