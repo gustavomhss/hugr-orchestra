@@ -255,7 +255,7 @@ test("events.subscribe yields a complete frame before refusing an oversized rema
   const frame = `data: ${JSON.stringify({ id: "evt_ok", type: "server.connected", data: {} })}\n\n`
   const stream = new ReadableStream({
     start(controller) {
-      controller.enqueue(new TextEncoder().encode(frame + "x".repeat(1_048_577)))
+      controller.enqueue(new TextEncoder().encode(frame + "x".repeat(134_217_729)))
       controller.close()
     },
   })
