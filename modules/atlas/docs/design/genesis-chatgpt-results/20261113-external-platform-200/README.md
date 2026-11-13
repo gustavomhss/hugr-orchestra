@@ -7,6 +7,7 @@ Conhecimento documental estático para 200 caminhos exatos do Orchestra no basel
 - [Manifesto completo: paths, blobs, hashes e lotes](manifest.json)
 - [Critérios congelados antes da autoria](criteria.md)
 - [Trabalho, achados e limites](work.md)
+- [Resumo vigente das revisões documentais](review-summary.json)
 - Cobertura: [A — 54](coverage-a.json), [B — 69](coverage-b.json), [C — 77](coverage-c.json).
 
 ## Corpos de conhecimento

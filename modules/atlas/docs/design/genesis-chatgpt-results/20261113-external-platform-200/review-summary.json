@@ -8,9 +8,9 @@
   "counts": {
     "inventoried": 200,
     "produced": 200,
-    "reviewed_by_both": 11,
-    "documentary_pair_accepted": 11,
-    "pending": 189
+    "reviewed_by_both": 43,
+    "documentary_pair_accepted": 43,
+    "pending": 157
   },
   "accepted_units": [
     {
@@ -33,31 +33,110 @@
         "P042"
       ],
       "judges": {
-        "J1": "DOCUMENTARY_LOCAL_PASS_AFTER_SUPPLEMENT",
-        "J2": "DOCUMENTARY_LOCAL_PASS_CONFIRMED_AFTER_SUPPLEMENT"
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
       },
-      "body_changed_for_review": false,
       "resolved_findings": [
-        "Reading method/coverage supplied explicitly, distinct from byte identity.",
-        "Applicable inherited criteria supplied in full; no extension to runtime/global acceptance."
+        "Explicit full-reading method and complete inherited criteria supplied."
+      ],
+      "optional_open": []
+    },
+    {
+      "id": "A-02",
+      "body": {
+        "path": "bodies/a-02.md",
+        "sha256": "49417c5c197630418170ec3bf46d3e39aac2d6104ba1b9f5a756c7038cab179b"
+      },
+      "source_ids": [
+        "P022",
+        "P026",
+        "P029",
+        "P030",
+        "P031",
+        "P032",
+        "P033",
+        "P034",
+        "P035",
+        "P038",
+        "P040",
+        "P041"
+      ],
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "resolved_findings": [
+        "Editorial identifier corrected to models.dev; exact delta approved by the same pair."
+      ],
+      "optional_open": []
+    },
+    {
+      "id": "B-01",
+      "body": {
+        "path": "bodies/b-01.md",
+        "sha256": "e580ffbd580d99defb45d8ca063f48f19e5ec840bd80500a2b1e05bd2641cc97"
+      },
+      "source_ids": [
+        "P072",
+        "P130",
+        "P131",
+        "P132",
+        "P135",
+        "P136",
+        "P137",
+        "P152"
+      ],
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "resolved_findings": [
+        "Full package-key/resolution query and explicit integrity-syntax results supplied; documentary processing only."
+      ],
+      "optional_open": [
+        "Additional wording could emphasize that emulator rejection concerns implemented qemu/gcompat indicators, without universal detection."
       ]
+    },
+    {
+      "id": "C-01",
+      "body": {
+        "path": "bodies/c-01.md",
+        "sha256": "41b285b84fbbf72693cbeb0784f70352636ec6f55bf952be4d5693edae9f3048"
+      },
+      "source_ids": [
+        "P001",
+        "P002",
+        "P003",
+        "P004",
+        "P005",
+        "P006",
+        "P007",
+        "P008",
+        "P009",
+        "P010",
+        "P055",
+        "P056"
+      ],
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "resolved_findings": [],
+      "optional_open": []
     }
   ],
   "open_semantic_findings_in_accepted_units": [],
   "pending_units": [
-    "A-02",
     "A-03",
     "A-04",
     "A-05",
     "A-06",
-    "B-01",
     "B-02",
     "B-03",
     "B-04",
     "B-05",
     "B-06",
     "B-07",
-    "C-01",
     "C-02",
     "C-03",
     "C-04",
@@ -71,5 +150,11 @@
     "Other source bodies are authored, not accepted by extrapolation.",
     "No product/tests/CI/runtime/consumers/maintenance exercised.",
     "No global PASS. Private original judgments are not published here."
-  ]
+  ],
+  "private_custody": {
+    "opaque_ref": "libfile_fde3_f-37490b821af88191b1992581701f56df_3a07899f8a4481918837fffaac5a42fc",
+    "version": 0,
+    "sha256": "f7a3a109b1cb8d74f9e4585a1febbc8b3aeaf52fbb79ebfb4da418d302f9d2e3",
+    "scope": "Original records and literal packets through the four listed accepted units; no public private judgments."
+  }
 }
