@@ -12,7 +12,9 @@
   "scripts": {
     "linux": "bun scripts/linux-workspace.ts",
     "typecheck": "tsgo -b",
-    "test": "bun test && node --experimental-strip-types --test \"src/**/*.node.test.ts\"",
+    "test": "bun run test:bun && bun run test:node",
+    "test:bun": "bun test",
+    "test:node": "node --experimental-strip-types --test \"src/**/*.node.test.ts\"",
     "test:app-dock:e2e": "bun run src/main/app-dock-security.test.ts",
     "test:app-dock:tools": "bun run src/main/app-dock-tools.test.ts",
     "test:app-dock:rpc": "bun run src/main/app-dock-rpc.test.ts",

@@ -192,6 +192,14 @@
       "dependsOn": ["transit"],
       "outputs": []
     },
+    "@orchestra/desktop#test:bun": {
+      "dependsOn": ["transit"],
+      "outputs": []
+    },
+    "@orchestra/desktop#test:node": {
+      "dependsOn": ["transit"],
+      "outputs": []
+    },
     "@orchestra/desktop#test": {
       "dependsOn": ["transit"],
       "outputs": []

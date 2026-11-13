@@ -412,6 +412,27 @@ jobs:
             echo "shard $PART tests lane packages: ${lane[*]}"
             filters=("${lane[@]/#/--filter=}")
           fi
+          # Desktop's full package command composes Bun and Node. Separate jobs keep setup plus execution
+          # inside the existing clock; each Bun file belongs to one bin and each bin owns a real omni control.
+          if [ -n "$DESKTOP" ]; then
+            if [ "$DESKTOP" = "node" ]; then
+              GITHUB_ACTIONS=false bun turbo run test:node --filter=@orchestra/desktop --log-order=stream
+              exit 0
+            fi
+            mapfile -t files < <(bun packages/script/src/test-plan.ts shard apps/desktop "$(tr '[:upper:]' '[:lower:]' <<< "$RUNNER_OS")" "${DESKTOP_SHARD%/*}" "${DESKTOP_SHARD#*/}")
+            [ -n "${files[0]:-}" ] || { echo "::error::shard $PART selects no Desktop test file"; exit 1; }
+            echo "shard $PART runs ${#files[@]} Desktop files"
+            printf '%s\n' "${files[@]}" >&2
+            report=()
+            if [ "$COLD" = "true" ]; then
+              mkdir -p "$RUNNER_TEMP/junit"
+              report=(--reporter=junit "--reporter-outfile=$RUNNER_TEMP/junit/$(tr '[:upper:]' '[:lower:]' <<< "$RUNNER_OS")-$PART.xml")
+            fi
+            # ./ makes each argument an exact path rather than a Bun substring filter. Keep bunfig preloads,
+            # suite-wide omni proof and the package's default per-test timeout unchanged.
+            GITHUB_ACTIONS=false bun turbo run test:bun --filter=@orchestra/desktop --log-order=stream -- "${files[@]/#/./}" "${report[@]}"
+            exit 0
+          fi
           # Core is sharded on both systems: shard i/n takes the i-th bin of the time-balanced split (packages/script/src/test-plan.ts).
           # The plan job and this step read the same inputs, so the n shards cover every test file once.
           if [ -n "$SHARD" ]; then
@@ -494,6 +515,8 @@ jobs:
           FILTERS: ${{ matrix.filters }}
           PART: ${{ matrix.part }}
           SHARD: ${{ matrix.shard }}
+          DESKTOP: ${{ matrix.desktop }}
+          DESKTOP_SHARD: ${{ matrix.desktopShard }}
           COLD: ${{ inputs.cold }}
           PACKAGES: ${{ inputs.packages }}
           ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
@@ -509,7 +532,7 @@ jobs:
 
       # A cold run keeps the JUnit reports; `bun packages/script/src/test-plan.ts refresh <dir>` folds them into packages/script/src/test-timings.json.
       - name: Upload JUnit timings
-        if: always() && inputs.cold && matrix.shard
+        if: always() && inputs.cold && (matrix.shard || matrix.desktopShard)
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: junit-${{ runner.os }}-${{ matrix.part }}

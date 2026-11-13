@@ -31,6 +31,8 @@ export type Timings = {
   files: Record<string, Record<string, number>>
   // Declared scheduling floors, separate from cold-run measurements. Same keys as `files`.
   reserves?: Record<string, Record<string, number>>
+  // Scheduling evidence, including estimates that must not be mistaken for platform measurements.
+  provenance?: Record<string, unknown>
   // Seconds per sharded package in total, keyed `<package directory>`.
   totals: Record<string, Record<Platform, number>>
 }
@@ -41,6 +43,7 @@ export function shardCount(seconds: number, target: number, margin: number) {
 
 // Size from the larger of the measured total and current file weights, scaled by platform overhead.
 export function packageShards(timings: Timings, directory: string, platform: Platform) {
+  if (directory === "apps/desktop") return desktopAnchors.length
   const total = timings.totals[directory]?.[platform]
   if (total === undefined) return 1
   const weights = weigh(directory, timings.files[`${directory}:${platform}`] ?? {}, total, UNTIMED_FLOOR, timings.reserves?.[`${directory}:${platform}`])
@@ -67,6 +70,7 @@ const UNTIMED_FLOOR = 1
 
 /** The bins `shard` prints. The floor lives here, so a test of this function is a test of the split CI runs. */
 export function plannedBins(timings: Timings, directory: string, platform: Platform) {
+  if (directory === "apps/desktop") return desktopBins(timings, platform)
   return balance(
     weigh(
       directory,
@@ -86,7 +90,7 @@ export function weigh(
   floorOrReserves: number | Record<string, number> = 0,
   reserves: Record<string, number> = {},
 ) {
-  const files = testFiles(path.join(root, directory)).map((file) => ({ file, bytes: statSync(path.join(root, directory, file)).size }))
+  const files = (directory === "apps/desktop" ? desktopFiles().bun : testFiles(path.join(root, directory))).map((file) => ({ file, bytes: statSync(path.join(root, directory, file)).size }))
   const known = files.filter((entry) => measured[entry.file] !== undefined)
   const unknown = files.filter((entry) => measured[entry.file] === undefined)
   const knownSeconds = known.reduce((sum, entry) => sum + (measured[entry.file] ?? 0), 0)
@@ -107,10 +111,64 @@ export function weigh(
 // Per-file seconds from a Bun JUnit report: only the top-level suites, which are named after the test file. Describe
 // blocks are nested suites with other names and are skipped.
 export function suiteTimes(xml: string) {
-  return [...xml.matchAll(/<testsuite\s[^>]*?name="([^"]+\.test\.ts)"[^>]*?time="([\d.]+)"/g)].map((match) => {
+  return [...xml.matchAll(/<testsuite\s[^>]*?name="([^"]+(?:\.test|_test|\.spec|_spec)\.[jt]sx?)"[^>]*?time="([\d.]+)"/g)].map((match) => {
     const name = (match[1] ?? "").replaceAll("\\", "/")
-    return [name.match(/(?:^|\/)(test\/.+)$/)?.[1] ?? name, Number(match[2])] as [string, number]
+    return [name.match(/(?:^|\/)((?:test|src|scripts)\/.+)$/)?.[1] ?? name, Number(match[2])] as [string, number]
   })
+}
+
+// The plan job has Node but no dependencies. Accept the current literal exclusions, never guess at new glob syntax.
+export function desktopIgnores(config: string) {
+  if (Buffer.byteLength(config) > 32_768) throw new Error("Desktop bunfig exceeds the bounded exclusion parser")
+  const section = config.split(/^\[test\]\s*$/m)[1]?.split(/^\[/m)[0]
+  const source = section?.replace(/#[^\n]*/g, "") ?? ""
+  const matches = [...source.matchAll(/(?:^|\n)\s*pathIgnorePatterns\s*=\s*\[([^\]]*)\][ \t]*(?=\r?\n|$)/g)]
+  if (matches.length !== 1 || [...source.matchAll(/\bpathIgnorePatterns\b/g)].length !== 1) throw new Error("Expected one literal Desktop pathIgnorePatterns array")
+  const body = matches[0]![1]!
+  const paths = [...body.matchAll(/"([^"\\]*)"/g)].map((match) => match[1]!)
+  if (!/^\s*"[^"\\]*"(?:\s*,\s*"[^"\\]*")*\s*,?\s*$/.test(body) || paths.length === 0 || new Set(paths).size !== paths.length)
+    throw new Error("Unsupported Desktop exclusion syntax")
+  if (paths.some((file) => file !== "src/**/*.node.test.ts" && !/^(?:[a-zA-Z0-9_-]+\/)*[a-zA-Z0-9_.-]+\.test\.[jt]sx?$/.test(file)))
+    throw new Error("Unsupported Desktop exclusion pattern")
+  if (!paths.includes("src/**/*.node.test.ts")) throw new Error("Desktop Node exclusion is missing")
+  return paths
+}
+
+export function desktopFiles() {
+  const directory = path.join(root, "apps/desktop")
+  const ignores = desktopIgnores(readFileSync(path.join(directory, "bunfig.toml"), "utf8"))
+  const files = desktopTree(directory).filter((file) => /(?:\.test|_test|\.spec|_spec)\.[jt]sx?$/.test(file)).toSorted()
+  const node = files.filter((file) => file.startsWith("src/") && file.endsWith(".node.test.ts"))
+  const excluded = files.filter((file) => ignores.includes(file))
+  const bun = files.filter((file) => !node.includes(file) && !excluded.includes(file))
+  if (!bun.length || !node.length) throw new Error("Desktop discovery selected an empty runner")
+  return { bun, node, excluded }
+}
+
+function desktopTree(directory: string, prefix = ""): string[] {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    if (entry.name === "node_modules" || entry.name === ".git") return []
+    const file = `${prefix}${entry.name}`
+    if (entry.isDirectory()) return desktopTree(path.join(directory, entry.name), `${file}/`)
+    return entry.isFile() ? [file] : []
+  })
+}
+
+export const desktopAnchors = ["src/main/omni-process.test.ts", "src/main/owned-serve.test.ts", "src/main/owned-serve-omni.test.ts"]
+
+export function desktopBins(timings: Timings, platform: Platform) {
+  const weights = weigh("apps/desktop", timings.files[`apps/desktop:${platform}`] ?? {}, timings.totals["apps/desktop"]?.[platform] ?? 0, UNTIMED_FLOOR)
+  const bins = desktopAnchors.map((name) => {
+    const anchor = weights.find((entry) => entry.name === name)
+    if (!anchor) throw new Error(`Missing Desktop real process control: ${name}`)
+    return { seconds: anchor.weight, names: [name] }
+  })
+  for (const entry of weights.filter((entry) => !desktopAnchors.includes(entry.name)).toSorted((a, b) => b.weight - a.weight || a.name.localeCompare(b.name))) {
+    const bin = bins.reduce((best, candidate) => candidate.seconds < best.seconds ? candidate : best)
+    bin.seconds += entry.weight
+    bin.names.push(entry.name)
+  }
+  return bins
 }
 
 function testFiles(directory: string) {
@@ -158,6 +216,9 @@ function shard(timings: Timings, args: string[]) {
 }
 
 function plan(timings: Timings) {
+  // Validate the current Desktop discovery and all three real controls before emitting matrix entries.
+  desktopBins(timings, "linux")
+  desktopBins(timings, "windows")
   const linuxCore = packageShards(timings, "packages/core", "linux")
   const windowsCore = packageShards(timings, "packages/core", "windows")
   const unit = [
@@ -199,7 +260,7 @@ export function coreShards(name: Platform, host: string, count: number) {
 // Windows atlas lane beside the process query proof, for the same reason.
 export function packageLanes(name: Platform, host: string) {
   const linux = name === "linux"
-  const claimed = ["core", "cli", "app", "server", "sdk-next", "client", "tui", "session-ui", "atlas-boundary", "relay", ...(linux ? [] : ["desktop", "script"])].map((entry) => `@orchestra/${entry}`)
+  const claimed = ["core", "cli", "app", "server", "sdk-next", "client", "tui", "session-ui", "atlas-boundary", "relay", "desktop", ...(linux ? [] : ["script"])].map((entry) => `@orchestra/${entry}`)
   // httpapi-codegen is a build-time generator whose tests pin POSIX paths, so it runs on Linux only.
   const excluded = name === "windows" ? [...claimed, "@orchestra/httpapi-codegen"] : claimed
   const filters = (packages: string[]) => packages.map((entry) => `--filter=@orchestra/${entry}`).join(" ")
@@ -221,9 +282,10 @@ export function packageLanes(name: Platform, host: string) {
       rollback: !linux,
     }),
     lane("relay", "relay", "--filter=@orchestra/relay"),
-    // Windows desktop and script together exceed the libs lane's serial test budget.
+    ...[1, 2, 3].map((index) => lane(`desktop-bun-${index}`, `desktop Bun ${index}/3`, filters(["desktop"]), { desktop: "bun", desktopShard: `${index}/3`, electron: linux })),
+    lane("desktop-node", "desktop Node", filters(["desktop"]), { desktop: "node", electron: linux }),
+    // Windows script remains separate from the libs lane.
     ...(linux ? [] : [
-      lane("desktop", "desktop", filters(["desktop"]), { budget: 15 }),
       lane("script", "script", filters(["script"]), { budget: 15 }),
     ]),
     lane("libs", "other packages", excluded.map((entry) => `--filter=!${entry}`).join(" "), {
@@ -268,16 +330,17 @@ function refresh(timings: Timings, directory: string | undefined) {
     process.exit(2)
   }
   const reports = (readdirSync(directory, { recursive: true }) as string[]).filter((file) =>
-    /(^|[\\/])(linux|windows)-core-\d+(-watcher)?\.xml$/.test(file),
+    /(^|[\\/])(linux|windows)-(?:core-\d+(?:-watcher)?|(?:packages|windows)-desktop-bun-\d+)\.xml$/.test(file),
   )
   if (reports.length === 0) {
-    console.error(`no core JUnit report under ${directory}`)
+    console.error(`no Core or Desktop JUnit report under ${directory}`)
     process.exit(1)
   }
   const measured = new Map<string, Record<string, number>>()
   for (const report of reports) {
     const platform = path.basename(report).startsWith("linux") ? "linux" : "windows"
-    const key = `packages/core:${platform}`
+    const packageDirectory = path.basename(report).includes("desktop-bun-") ? "apps/desktop" : "packages/core"
+    const key = `${packageDirectory}:${platform}`
     const files = measured.get(key) ?? {}
     for (const [file, seconds] of suiteTimes(readFileSync(path.join(directory, report), "utf8"))) files[file] = Number(seconds.toFixed(2))
     measured.set(key, files)
@@ -285,9 +348,10 @@ function refresh(timings: Timings, directory: string | undefined) {
   for (const [key, files] of measured) {
     const platform = key.endsWith("linux") ? "linux" : "windows"
     timings.files[key] = Object.fromEntries(Object.entries(files).toSorted(([a], [b]) => a.localeCompare(b)))
-    const core = timings.totals["packages/core"] ?? { linux: 0, windows: 0 }
-    core[platform] = Math.round(Object.values(files).reduce((sum, seconds) => sum + seconds, 0))
-    timings.totals["packages/core"] = core
+    const packageDirectory = key.slice(0, key.lastIndexOf(":"))
+    const total = timings.totals[packageDirectory] ?? { linux: 0, windows: 0 }
+    total[platform] = Math.round(Object.values(files).reduce((sum, seconds) => sum + seconds, 0))
+    timings.totals[packageDirectory] = total
   }
   writeFileSync(timingsFile, JSON.stringify(timings, null, 2) + "\n")
   console.error(`refreshed ${[...measured.keys()].join(", ")} from ${reports.length} reports`)
