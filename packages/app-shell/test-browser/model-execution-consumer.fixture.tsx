@@ -2,7 +2,7 @@ import { expect, mock } from "bun:test"
 import { mkdtemp, mkdir, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
-import { createRoot, createSignal, mergeProps } from "solid-js"
+import { createRoot, mergeProps } from "solid-js"
 import { createComponent, Dynamic, render } from "solid-js/web"
 import { createStore } from "solid-js/store"
 import { createModelCatalog } from "@/hooks/provider-catalog"
@@ -176,11 +176,10 @@ export function selection(calls: ReturnType<typeof transport>, sessionID?: strin
     [Provider.Info.empty(Provider.ID.make(ref.providerID))], [model, { ...model, id: Model.ID.make("blocked"), name: "Blocked model" }],
     { providerID: Provider.ID.make(ref.providerID), id: Model.ID.make(ref.id) },
   )
-  const [view, setView] = createStore({ catalog: normalized(), sessionID })
-  const [ready, setReady] = createSignal(true)
+  const [view, setView] = createStore({ catalog: normalized(), sessionID, ready: true })
   const [saved, setSaved] = createStore<import("../src/context/local").Saved>({ session: {} })
   const catalog = createModelCatalog(() => view.catalog.connected.flatMap((id) => view.catalog.all.get(id) ?? []), () => [])
-  const models = { ...catalog, ready: Object.assign(ready, { promise: Promise.resolve(true) }),
+  const models = { ...catalog, ready: Object.assign(() => view.ready, { promise: Promise.resolve(true) }),
     find: (key: { providerID: string; modelID: string }) => catalog.list().find((item) => item.id === key.modelID && item.provider.id === key.providerID),
     recent: { list: () => [], push() {} }, setVisibility() {}, variant: { get: () => undefined, set() {} } }
   const server = actual?.server ?? bind(calls)
@@ -196,9 +195,9 @@ export function selection(calls: ReturnType<typeof transport>, sessionID?: strin
       sync: () => sync,
       serverSDK: () => server,
       providers,
-      models, saved, setSaved, savedReady: ready,
+      models, saved, setSaved, savedReady: () => view.ready,
     } as Parameters<typeof localModule.createLocal>[0])
-    return { local, dispose, setView, setReady, saved, setSaved, models, sdk, server, sync, setMetadata, providers, calls,
+    return { local, dispose, setView, setReady: (value: boolean) => setView("ready", value), saved, setSaved, models, sdk, server, sync, setMetadata, providers, calls,
       removeModel() {
         const provider = view.catalog.all.get(ref.providerID)
         if (!provider) throw new Error("Missing catalog provider control")

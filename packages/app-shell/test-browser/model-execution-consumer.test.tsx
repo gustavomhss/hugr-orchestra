@@ -1,10 +1,10 @@
 import { registerSubmitHarnessLifecycle } from "@/components/prompt-input/submit-harness"
 import { beforeAll, expect, test } from "bun:test"
 import { Schema } from "effect"
-import { createRoot, createSignal } from "solid-js"
+import { createRoot } from "solid-js"
 import type { UserMessage } from "@/v2-wire"
 import { followSessionModel } from "@/pages/session/session-model-helpers"
-import { unwrap } from "solid-js/store"
+import { createStore, reconcile, unwrap } from "solid-js/store"
 import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 import { ModelExecution } from "@orchestra/schema/model-execution"
 import { createFollowupSender, followupInput, commands, state, toasts, optimistic, optimisticRemovals, promptInputs, sentCommands, sentShell, sdkFor, serverFor, setReactiveOwner } from "@/components/prompt-input/submit-harness"
@@ -626,10 +626,11 @@ function firstSendOwner(options: { variant?: string; value?: string;
     ? { ...agent, model: { providerID: ref.providerID, modelID: ref.id }, variant: options.variant } : agent))
   state.localOverride = source.local
   const follower = createRoot((dispose) => {
-    const [last, setLast] = createSignal<UserMessage>()
-    const [remote, setRemote] = createSignal<{ providerID: string; id: string }>()
-    followSessionModel(source.local, { lastUserMessage: last, model: remote, sessionID: () => "session-1" })
-    return { dispose, last, setLast, setRemote }
+    const [history, setHistory] = createStore<{ last?: UserMessage; remote?: { providerID: string; id: string } }>({})
+    const last = () => history.last
+    followSessionModel(source.local, { lastUserMessage: last, model: () => history.remote, sessionID: () => "session-1" })
+    return { dispose, last, setLast: (value: UserMessage) => setHistory("last", reconcile(value)),
+      setRemote: (value: { providerID: string; id: string }) => setHistory("remote", reconcile(value)) }
   })
   const editor = composer(options.value ?? "first Send", options.input?.(source))
   return { calls, source, follower, editor,
