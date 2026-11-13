@@ -135,7 +135,13 @@ def terminate_tree(root_pid, root_start, proc, timeout=TREE_TIMEOUT):
     kill_sent = set()
     empty_samples = 0
     while time.monotonic() < deadline:
-        snapshot = proc_snapshot()
+        try:
+            snapshot = proc_snapshot()
+        except RuntimeError as exc:
+            if 'PROC_ENTRY_RACE_UNKNOWN' in str(exc):
+                time.sleep(POLL_INTERVAL)
+                continue
+            raise
         current = descendants(snapshot, root_pid, root_start)
         if proc.poll() is None:
             # The direct child is part of the tree even if a census raced.
