@@ -32,7 +32,7 @@ import { PromptRefProvider } from "../../../../src/context/prompt"
 import { EditorContextProvider } from "../../../../src/context/editor"
 import { LocationProvider } from "../../../../src/context/location"
 import { TuiConfigProvider } from "../../../../src/config"
-import { OrchestraKeymapProvider, registerOrchestraKeymap } from "../../../../src/keymap"
+import { getOrchestraModeStack, OrchestraKeymapProvider, registerOrchestraKeymap } from "../../../../src/keymap"
 import { createPluginRuntime, PluginRuntimeProvider } from "../../../../src/plugin/runtime"
 import { Prompt, type PromptRef } from "../../../../src/component/prompt"
 import { DialogModel } from "../../../../src/component/dialog-model"
@@ -143,11 +143,13 @@ export async function mount(options: { draft?: boolean; initial?: ModelExecution
     })
     return <Prompt sessionID={owner.sessionID} ref={(value) => { prompt = value }} />
   }
+  const observation = { count: 0, mode: (): string | undefined => undefined }
   function Harness() {
     const renderer = useRenderer()
     const keymap = createDefaultOpenTuiKeymap(renderer)
     const config = createTuiResolvedConfig()
     onCleanup(registerOrchestraKeymap(keymap, renderer, config))
+    observation.mode = () => getOrchestraModeStack(keymap).current()
     return <TestTuiContexts directory={root} paths={{ home: root, state, worktree: root }}>
       <ExitProvider exit={() => {}}><ClipboardProvider value={{ read: async () => undefined, write: async () => {} }}>
         <OrchestraKeymapProvider keymap={keymap}><ArgsProvider {...options.args}><KVProvider><ToastProvider>
@@ -183,6 +185,27 @@ export async function mount(options: { draft?: boolean; initial?: ModelExecution
       showModels() { context.dialog.replace(() => <DialogModel />) },
       showVariants() { context.dialog.replace(() => <DialogVariant />) },
       preferenceFile: path.join(state, "model.json"),
+      observe(label: string, detail: {
+        counters?: Record<string, number>;
+        dialog?: { filter: string; filtered: readonly { value: string; title: string; disabled?: boolean }[] };
+      } = {}) {
+        try {
+          if (observation.count >= 12) return
+          observation.count++
+          const focused = app.renderer.currentFocusedRenderable
+          console.error("E6 TUI input observation", JSON.stringify({
+            sequence: observation.count, label,
+            focus: focused ? { id: focused.id, type: focused.constructor.name, isFocused: focused.focused } : null,
+            prompt: { focused: prompt?.focused, storedModeHint: prompt?.current.mode, inputLength: prompt?.current.input.length },
+            keymapMode: observation.mode(), dialogStackLength: context.dialog.stack.length,
+            counters: detail.counters,
+            dialog: detail.dialog && { filter: detail.dialog.filter.slice(0, 120),
+              filtered: detail.dialog.filtered.slice(0, 20).map((option) => ({ value: option.value,
+                title: option.title.slice(0, 120), disabled: option.disabled })) },
+            frame: app.captureCharFrame().split("\n").slice(0, 40).map((line) => line.slice(0, 120)).join("\n"),
+          }))
+        } catch { return }
+      },
       async dispose() {
         if (lifecycle.disposed) return
         lifecycle.disposed = true

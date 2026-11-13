@@ -87,13 +87,20 @@ test("E6 TUI pinned named default stays literal after catalog removal and reload
 
 test("E6 TUI actual variant dialog distinguishes model default from the literal default variant", async () => {
   const fixture = await mount({ catalogModel: namedDefault, args: { model: `${ref.providerID}/${ref.id}`, variant: "default" }, reply: readyReply(namedDefault) })
+  const observe = (label: string) => fixture.observe(label)
   try {
     await wait(() => fixture.context.local.model.ready && fixture.context.local.model.current()?.modelID === ref.id, "CLI literal variant and READY chosen model")
     expect(fixture.context.local.model.intent().variant).toBe("default")
     fixture.showVariants()
     await wait(() => { void fixture.app.renderOnce(); return fixture.app.captureCharFrame().includes("Model default") }, "actual DialogVariant with distinct model-default and named rows")
+    observe("before pressKey(\"up\")")
     await fixture.app.mockInput.pressKey("up")
+    await fixture.app.renderOnce()
+    observe("after render pressKey(\"up\")")
+    observe("before pressEnter()")
     await fixture.app.mockInput.pressEnter()
+    await fixture.app.renderOnce()
+    observe("after render pressEnter()")
     await wait(() => fixture.context.local.model.intent().variant === null, "model-default row delegates undefined to real setter")
     fixture.prompt.set({ input: "explicit model default", parts: [], mode: "normal" })
     fixture.prompt.submit()
@@ -101,8 +108,14 @@ test("E6 TUI actual variant dialog distinguishes model default from the literal 
     expect(fixture.calls.filter((call) => call.path.endsWith("/model") && call.method === "POST").at(-1)?.body).toEqual({ model: ref })
     fixture.showVariants()
     await wait(() => { void fixture.app.renderOnce(); return fixture.app.captureCharFrame().includes("Model default") }, "second actual DialogVariant")
+    observe("before pressKey(\"down\")")
     await fixture.app.mockInput.pressKey("down")
+    await fixture.app.renderOnce()
+    observe("after render pressKey(\"down\")")
+    observe("before pressEnter()")
     await fixture.app.mockInput.pressEnter()
+    await fixture.app.renderOnce()
+    observe("after render pressEnter()")
     await wait(() => fixture.context.local.model.intent().variant === "default", "named row delegates exact literal default")
     fixture.prompt.set({ input: "literal named default", parts: [], mode: "normal" })
     fixture.prompt.submit()
@@ -111,7 +124,8 @@ test("E6 TUI actual variant dialog distinguishes model default from the literal 
       .toEqual({ model: { ...ref, variant: "default" } })
     const stored = await preferences(fixture.preferenceFile, (value) => value.variantIntent?.[key] === "default")
     expect(stored.variantIntent?.[key]).toBe("default")
-  } finally { await fixture.dispose() }
+  } catch (error) { observe("first failure"); throw error }
+  finally { await fixture.dispose() }
 })
 
 test("E6 TUI explicit missing CLI ref and literal default survive catalog loading until a manual choice wins", async () => {

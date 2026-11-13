@@ -193,12 +193,16 @@ test.each(["Session ABA", "raw model", "variant", "reconnect", "disposal", "dire
 
 test("CONTROL E6 TUI shell is not blocked solely by unavailable model eligibility", async () => {
   const fixture = await ready()
+  const observe = (label: string) => fixture.observe(label)
   try {
     fixture.control.reply = () => json({ location: { directory: fixture.owner.directory }, data: decision("unavailable") })
     const queriesBeforeShell = fixture.queries().length
     fixture.prompt.set({ input: "", parts: [], mode: "normal" })
     fixture.prompt.focus()
+    observe("before pressKey(\"!\")")
     await fixture.app.mockInput.pressKey("!")
+    await fixture.app.renderOnce()
+    observe("after render pressKey(\"!\")")
     await wait(() => { void fixture.app.renderOnce(); return fixture.app.captureCharFrame().includes("Shell") }, "actual shell-mode key binding")
     fixture.prompt.set({ input: "pwd", parts: [], mode: "shell" })
     fixture.prompt.submit()
@@ -206,7 +210,8 @@ test("CONTROL E6 TUI shell is not blocked solely by unavailable model eligibilit
     expect(fixture.queries()).toHaveLength(queriesBeforeShell)
     expect(fixture.admissions()).toEqual([])
     expect(fixture.calls.filter((call) => call.method === "POST" && call.path !== "/api/model/execution").map((call) => call.path.split("/").at(-1))).toEqual(["shell"])
-  } finally { await fixture.dispose() }
+  } catch (error) { observe("first failure"); throw error }
+  finally { await fixture.dispose() }
 })
 
 
@@ -267,6 +272,7 @@ test("E6 TUI rendered selector keeps NEW A after A to B to A and a late old A re
   const newest = { ...decision(), models: both.models.filter((entry) => entry.model.id === ref.id) }
   const fixture = await ready({ initial: both })
   const selecting = spyOn(fixture.context.local.model, "set")
+  const observe = (label: string) => fixture.observe(label, { counters: { setter: selecting.mock.calls.length } })
   try {
     fixture.control.reply = () => json({ location: { directory: fixture.owner.directory }, data: both })
     const manualBefore = fixture.queries().length
@@ -317,17 +323,29 @@ test("E6 TUI rendered selector keeps NEW A after A to B to A and a late old A re
     expect(fixture.app.captureCharFrame()).not.toContain("Blocked model")
     expect(fixture.context.local.model.current()).toEqual({ providerID: ref.providerID, modelID: ref.id })
     const selectionsBeforeMissingB = selecting.mock.calls.length
+    observe("before pressKey(\"b\")")
     await fixture.app.mockInput.pressKey("b")
     await fixture.app.renderOnce()
+    observe("after render pressKey(\"b\")")
+    observe("before pressEnter()")
     await fixture.app.mockInput.pressEnter()
+    await fixture.app.renderOnce()
+    observe("after render pressEnter()")
     await Bun.sleep(0)
     expect(selecting.mock.calls).toHaveLength(selectionsBeforeMissingB)
     expect(fixture.context.sync.data.provider[0]?.models.blocked, "catalog B remains; only the canonical context list changed").toBeDefined()
+    observe("before pressKey(\"backspace\")")
     await fixture.app.mockInput.pressKey("backspace")
+    await fixture.app.renderOnce()
+    observe("after render pressKey(\"backspace\")")
     await wait(() => { void fixture.app.renderOnce(); return fixture.app.captureCharFrame().includes("Consumer model") }, "original dialog restores A after clearing the missing-B search")
     const selectedBefore = selecting.mock.calls.length
+    observe("before pressEnter()")
     await fixture.app.mockInput.pressEnter()
+    await fixture.app.renderOnce()
+    observe("after render pressEnter()")
     await wait(() => selecting.mock.calls.length === selectedBefore + 1, "NEW A ready row invokes the real set method after OLD A settled")
     expect(selecting.mock.calls.at(-1)?.[0]).toEqual({ providerID: ref.providerID, modelID: ref.id })
-  } finally { release.resolve(); selecting.mockRestore(); await fixture.dispose() }
+  } catch (error) { observe("first failure"); throw error }
+  finally { release.resolve(); selecting.mockRestore(); await fixture.dispose() }
 })
