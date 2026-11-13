@@ -1,0 +1,97 @@
+{
+  "schema": "genesis-external-integration-static-handoff/v1",
+  "audit_id": "20261113-external-integration-static",
+  "campaign": "20261111-v1",
+  "protocol_epoch": "parallel-v3-fresh",
+  "results_epoch": "20261113-external-integration-static",
+  "session": "external-integration-static",
+  "repository": "gustavomhss/hugr-orchestra",
+  "branch": "genesis-external-integration-static",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_tree": "a522a53e5f046f1758151b0f558531bbded04592",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "prompts_revision": "d2d985c28947c7f984a36b07ad34ede3d4d2d6b4",
+  "observed_branch_head": "e358e0c9547fd244d67b7b3b06e0621bdceaf16f",
+  "candidate_revision": "UNKNOWN",
+  "candidate_note": "No final integration candidate was selected or executed. source_revision identifies the code and tree investigated statically.",
+  "artifact_revision": "669ee0ed0f1a1f7e14c360540c00b62cd2b72967",
+  "package": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/artifact-index.json",
+    "byte_length": 9344,
+    "sha256": "a664d6916e148b4869cc0b7b20d28ee33ed90d143dc1c5169cedb08faa95effa",
+    "git_blob_sha": "9091ad0c0bba8ff2910608a71b409cb1626f138c"
+  },
+  "completion_state": "STATIC_AUDIT_REVIEWED_CANDIDATE",
+  "authority": "User-authorized public static audit only; input for the primary coordination integration pair.",
+  "seal_note": "This separate seal references the already existing payload commit. Its own containing commit SHA is intentionally absent.",
+  "delivery_verification_at_authoring": "Pending actual branch update, MCP readback and V-10 review. A subsequent delivery-verification.json may record those observations and reference this seal without rewriting it.",
+  "source_manifest": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/source-manifest.json",
+  "public_review_summary": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/review-summary.json",
+  "gaps": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/gaps.json",
+  "verification_freeze": {
+    "commit": "3d9a515f264a7938c764d37532bc42ad6005fc47",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/verification-criteria.json",
+    "git_blob_sha": "ac96d6dbb23025989be110029dcb63fad9b25b1b",
+    "sha256": "41867346b9903119c6e3fad37d0048b41967b32c9191f80723fff4213b4320b9"
+  },
+  "verified_static_scope": {
+    "git_descendant_records": 16710,
+    "tracked_blob_paths": 14442,
+    "directory_entries": 2268,
+    "gitlinks": 0,
+    "partition_counts": {
+      "S1": 2236,
+      "S2": 4506,
+      "S3": 4553,
+      "S4": 2220,
+      "S5": 927
+    },
+    "partition_digests_equal": 12,
+    "reconstructed_tree_objects_by_path": 2269,
+    "content_source_bindings": 70,
+    "contract_nodes": 20,
+    "observed_contract_relations": 17,
+    "bounded_inferred_impacts": 7,
+    "criterion_ids_preserved": 50,
+    "integration_controls": 13,
+    "control_execution_status": "NOT_RUN"
+  },
+  "static_content_obligations_open": [],
+  "integration_obligations": "See all open coordination requirements and scope limits in gaps.json; none is silently waived.",
+  "global_integration": {
+    "owner": "Primary coordination and its own independent integration pair",
+    "status": "NOT_PERFORMED_BY_THIS_AUDIT",
+    "requirement_satisfaction": "UNKNOWN for all 50 IDs",
+    "owner_acceptance": "NOT_CLAIMED",
+    "landing": "NOT_PERFORMED",
+    "activation": "NOT_PERFORMED"
+  },
+  "reserved_slices": {
+    "omni_393": "NOT_PRODUCED_OR_CHANGED",
+    "platform_200": "NOT_PRODUCED_OR_CHANGED",
+    "other_session_results": "NOT_READ"
+  },
+  "execution_boundaries": {
+    "product_tests": "NOT_RUN",
+    "ci_dispatch": "NOT_RUN",
+    "atlas_or_native_product_tools": "NOT_RUN",
+    "consumers": "NOT_RUN",
+    "final_integration": "NOT_PERFORMED",
+    "merge": "NOT_PERFORMED",
+    "deployment": "NOT_PERFORMED",
+    "private_coordination_state": "NOT_ACCESSED"
+  },
+  "unknown_measurements": {
+    "host_tokens": "UNKNOWN",
+    "financial_cost": "UNKNOWN",
+    "historical_usage": "UNKNOWN"
+  },
+  "recovery": [
+    "Read this handoff at the published sealing commit and pin artifact_revision. A newer branch HEAD does not replace selected inputs.",
+    "Fetch artifact-index.json at artifact_revision and verify the package SHA-256. Resolve every indexed path at that exact payload commit and verify byte_length, SHA-256 and Git blob SHA.",
+    "If GitHub MCP fetch_file returns metadata without the large TSV body, fetch its Git blob by SHA; metadata alone is not a body readback.",
+    "For changes, preserve existing commits, create a descendant payload and a separate new handoff. Read the branch first, use expected_sha and force:false; reread and reconcile any lease failure.",
+    "The primary coordination selects real S1–S5 handoffs and the S4 runtime release, resolves applicable gaps and executes only its authorized integration gates. This static pair is not the final integration pair."
+  ],
+  "supersedes": null
+}
