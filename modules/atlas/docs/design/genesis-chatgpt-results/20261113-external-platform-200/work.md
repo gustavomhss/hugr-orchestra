@@ -75,3 +75,8 @@ As dez unidades A-01–A-04, B-01–B-02 e C-01–C-04 somam 110 fontes distinta
 B-03 tem 12 fontes examinadas pelos dois, com correções documentais localizadas em preparação/revisão: separação de casos da fixture de inventário e alinhamento do nome exportMissing. O resultado é 122 fontes examinadas por ambos, 110 aceitas, 78 aguardando primeiro par e 90 ainda não aceitas. Os demais corpos continuam produzidos; não são aceitos por extrapolação.
 
 Custódia privada confirmada dos registros deste checkpoint: `libfile_fde3_f-720a2dca401081919a454ae2fb4bd084_3a07899f8a4481918837fffaac5a42fc`, versão 0, SHA-256 `400a8d51ae61a0cec3bd119257a0712b3b3c3787dff0c417c4b062741bbc6b70`. Os próximos transportes são limitados à capacidade de leitura do par: texto literal completo e evidência decisiva permanecem requisitos. Não houve promoção de L3–L4 nem execução de produto.
+
+
+## Checkpoint do delta B-03
+
+O corpo B-03 foi corrigido em cinco linhas e o mapa B em dois campos: os casos de readers esparsos e revisão inválida foram separados, a ordem de validação foi atribuída à implementação e o identificador foi alinhado a `exportMissing`. O corpo corrente tem SHA-256 `da129131222a1f111877c1c9eedc8ce130c9373d4f5251b4075f8d35281005d4`. O primeiro juiz aceitou o delta e o segundo está em avaliação; este checkpoint ainda mantém 110 fontes aceitas pela dupla. A versão anterior e seus pareceres permanecem preservados.

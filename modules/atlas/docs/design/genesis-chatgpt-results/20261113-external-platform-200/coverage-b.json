@@ -345,7 +345,7 @@
       {
         "start_line": 7,
         "end_line": 37,
-        "anchor": "L7–37, árvore fixa e nomes"
+        "anchor": "L7–37, revisão fixa e registros selecionados"
       },
       {
         "start_line": 39,
@@ -2123,7 +2123,7 @@
     ],
     "disposition": "produced-static-awaiting-review",
     "limitations": [
-      "Modelo local de resolução; parser.errors não consumido; missingExport/pins não falham isoladamente e não há rollback de I/O.",
+      "Modelo local de resolução; parser.errors não consumido; exportMissing/pins não falham isoladamente e não há rollback de I/O.",
       "Análise documental estática; nenhum código, teste, ferramenta, CI ou workflow do produto foi executado."
     ]
   },
