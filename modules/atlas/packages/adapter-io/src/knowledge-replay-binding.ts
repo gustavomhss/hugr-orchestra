@@ -17,7 +17,7 @@ export function describeReplayFact(value: unknown, hash: string): ReplayFact | u
     !Array.isArray(value.claims) || (value.freshness !== "FRESH" && value.freshness !== "DRIFTED") ||
     value.check !== undefined || (value.provenance !== undefined && !provenance(value.provenance)) ||
     (value.witness !== undefined && !record(value.witness))) return undefined
-  const fact = value as GroundedFact
+  const fact = value as unknown as GroundedFact
   const shared = { contentHash: hash, scope: value.scope, tier: "T2" as const }
   const witness = value.witness
 
@@ -27,7 +27,7 @@ export function describeReplayFact(value: unknown, hash: string): ReplayFact | u
     if (witness !== undefined && (!record(witness) || !isKnownSlot(witness.slot) ||
       witness.slot !== fact.predicateSlot || !text(witness.target) || !text(witness.scope) ||
       (witness.atLeast !== undefined && typeof witness.atLeast !== "number"))) return undefined
-    const candidate = { ...fact, slot: fact.predicateSlot } as Candidate
+    const candidate = { ...fact, slot: fact.predicateSlot } as unknown as Candidate
     const family = familyOf(fact)
     if (family !== "advisory") return undefined
     // This is the documented identity refusal; unrelated internal faults must remain visible.
@@ -49,7 +49,7 @@ export function describeReplayFact(value: unknown, hash: string): ReplayFact | u
       !isKnownRelationKind(fact.relationKind) || !["RELATED", "SUPERSEDED"].includes(fact.authoring)) return undefined
     if (witness !== undefined && (!record(witness) || witness.relationKind !== fact.relationKind ||
       !text(witness.target) || !text(witness.sourceScope))) return undefined
-    const identity = resolveWriteIdentity(fact, fact as Candidate)
+    const identity = resolveWriteIdentity(fact, fact as unknown as Candidate)
     const claim = claimNormOf(fact, "relation")
     return { fact, scope: shared.scope, anchor: identity.primaryAnchor, claim,
       row: { ...shared, nodeKey: identity.targetKey, family: "relation", claims: [claim], primaryAnchor: identity.primaryAnchor,
