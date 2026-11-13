@@ -1,32 +1,17 @@
+export { SessionRouteErrorBoundary } from "./session/session-route-frame"
+import { SessionProviders, TargetServerScopedProviders, SessionRouteErrorBoundary, SessionRouteFrame, SessionPanelFrame } from "./session/session-route-frame"
 import type { FilePart } from "@/v2-types"
 import type { UserMessage } from "@/v2-wire"
-
 import type { Project } from "@/v2-types"
 import { getFilename } from "@orchestra/core/util/path"
 import { useDialog } from "@orchestra/ui/context/dialog"
 import { useMutation } from "@tanstack/solid-query"
-import {
-  batch,
-  ErrorBoundary,
-  onCleanup,
-  Suspense,
-  Show,
-  Match,
-  Switch,
-  createMemo,
-  createEffect,
-  createComputed,
-  createSignal,
-  on,
-  onMount,
-  type ParentProps,
-  untrack,
-} from "solid-js"
+import { batch, ErrorBoundary, onCleanup, Suspense, Show, Match, Switch, createMemo, createEffect, createComputed, createSignal, on, onMount, untrack } from "solid-js"
 import { makeEventListener } from "@solid-primitives/event-listener"
 import { createMediaQuery } from "@solid-primitives/media"
 import { createResizeObserver } from "@solid-primitives/resize-observer"
 import { useLocal } from "@/context/local"
-import { FileProvider, selectionFromLines, useFile, type FileSelection, type SelectedLineRange } from "@/context/file"
+import { selectionFromLines, useFile, type FileSelection, type SelectedLineRange } from "@/context/file"
 import { createStore, unwrap } from "solid-js/store"
 import type { SessionReviewLineComment } from "@orchestra/session-ui/session-review"
 import { ResizeHandle } from "@orchestra/ui/resize-handle"
@@ -42,23 +27,20 @@ import { base64Encode, checksum } from "@orchestra/core/util/encode"
 import { useLocation, useNavigate, useParams, useSearchParams } from "@solidjs/router"
 import { NewSessionView, SessionHeader } from "@/components/session"
 import { SessionErrorFallback, SessionLoading } from "@/pages/session/session-fallback"
-import { CommentsProvider, useComments } from "@/context/comments"
+import { useComments } from "@/context/comments"
 import { useCommand } from "@/context/command"
 import { DirectoryDataProvider } from "@/pages/directory-layout"
 import { useServerSync } from "@/context/server-sync"
 import { useLanguage } from "@/context/language"
 import { useLayout } from "@/context/layout"
-import { ModelsProvider } from "@/context/models"
-import { useNotification } from "@/context/notification"
-import { isPromptEqual, PromptProvider, usePrompt } from "@/context/prompt"
+import { isPromptEqual, usePrompt } from "@/context/prompt"
 import { usePlatform } from "@/context/platform"
 import { SDKProvider, useSDK } from "@/context/sdk"
 import { useServerSDK } from "@/context/server-sdk"
-import { ServerConnection } from "@/context/server"
 import { useSettings } from "@/context/settings"
 import { useSync } from "@/context/sync"
 import { useTabs } from "@/context/tabs"
-import { TerminalProvider, useTerminal } from "@/context/terminal"
+import { useTerminal } from "@/context/terminal"
 import { PromptInputV2Composer, usePromptInputV2Controller } from "@/components/prompt-input-v2"
 import { useSettingsCommand } from "@/components/settings-dialog"
 import { setCursorPosition } from "@/components/prompt-input/editor-dom"
@@ -66,13 +48,7 @@ import { promptLength } from "@/components/prompt-input/history"
 import { type FollowupDraft, sendFollowupDraft } from "@/components/prompt-input/submit"
 import { createSubmissionOwner } from "@/components/prompt-input/submission-policy"
 import { type QueuedPrompt, createQueuedPromptStore, queuedPromptPayload, queuedPromptSources } from "@/components/prompt-input/queued-prompt"
-import {
-  createEvidenceComposerActions,
-  createPromptInputController,
-  createSessionComposerController,
-  createSessionComposerRegionController,
-  SessionComposerRegion,
-} from "@/pages/session/composer"
+import { createEvidenceComposerActions, createPromptInputController, createSessionComposerController, createSessionComposerRegionController, SessionComposerRegion } from "@/pages/session/composer"
 import { createOpenReviewFile, createSessionTabs, createSizing, shouldShowFileTree } from "@/pages/session/helpers"
 import { MessageTimeline } from "@/pages/session/timeline/message-timeline"
 import { createExecutionEvidenceRenderer } from "@/pages/session/orchestra-evidence"
@@ -101,7 +77,6 @@ import { modelExecutionReasonKey } from "@/i18n/frontend-recovery"
 import { legacySessionHref, requireServerKey, sessionHref } from "@/utils/session-route"
 import { createSessionOwnership } from "./session/session-ownership"
 import { createSessionLineage } from "./session/session-lineage"
-import { SessionLineageBoundary } from "./session/session-lineage-boundary"
 import { createSessionVcsReview } from "./session/session-vcs-review"
 import { SessionCapabilitiesProvider } from "./session/capabilities"
 import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
@@ -173,25 +148,6 @@ function TargetSessionSettingsCommand() {
   return null
 }
 
-export function SessionRouteErrorBoundary(
-  props: ParentProps<{ sessionID?: string; serverKey?: ServerConnection.Key; padded?: boolean }>,
-) {
-  return (
-    <SessionLineageBoundary
-      identity={() => JSON.stringify([props.serverKey, props.sessionID])}
-      fallback={(error, reset) => (
-        <SessionRouteFrame padded={props.padded}>
-          <SessionPanelFrame raised={!!props.sessionID}>
-            <SessionErrorFallback error={error} sessionID={props.sessionID} serverKey={props.serverKey} onRetry={reset} />
-          </SessionPanelFrame>
-        </SessionRouteFrame>
-      )}
-    >
-      {props.children}
-    </SessionLineageBoundary>
-  )
-}
-
 function ResolvedTargetSessionRoute() {
   const params = useParams<{ serverKey: string; id: string }>()
   const tabs = useTabs()
@@ -238,67 +194,6 @@ function TargetSessionPage() {
     <Show when={`${serverSDK().scope}\0${sdk().directory}`} keyed>
       <SessionPage />
     </Show>
-  )
-}
-
-function TargetServerScopedProviders(
-  props: ParentProps<{ directory?: () => string | undefined; sessionID?: () => string | undefined }>,
-) {
-  return (
-    <>
-      <MarkSessionNotificationsViewed sessionID={props.sessionID} />
-      <ModelsProvider directory={props.directory}>{props.children}</ModelsProvider>
-    </>
-  )
-}
-
-function MarkSessionNotificationsViewed(props: { sessionID?: () => string | undefined }) {
-  const notification = useNotification()
-  createEffect(() => {
-    const sessionID = props.sessionID?.()
-    if (!notification.ready() || !sessionID) return
-    if (notification.session.unseenCount(sessionID) === 0) return
-    notification.session.markViewed(sessionID)
-  })
-  return null
-}
-
-function SessionProviders(props: ParentProps) {
-  return (
-    <TerminalProvider>
-      <FileProvider>
-        <PromptProvider>
-          <CommentsProvider>{props.children}</CommentsProvider>
-        </PromptProvider>
-      </FileProvider>
-    </TerminalProvider>
-  )
-}
-
-function SessionRouteFrame(props: ParentProps<{ padded?: boolean }>) {
-  return (
-    <div
-      data-session-layout="surface"
-      class="relative size-full overflow-hidden flex flex-col"
-      classList={{ "p-2": props.padded }}
-    >
-      {props.children}
-    </div>
-  )
-}
-
-function SessionPanelFrame(props: ParentProps<{ raised?: boolean }>) {
-  return (
-    <div
-      data-session-layout="body"
-      data-raised={props.raised ? "" : undefined}
-      classList={{
-        "flex-1 min-h-0 flex flex-col bg-v2-background-bg-base rounded-[10px] overflow-hidden": true,
-        "shadow-[var(--v2-elevation-raised)]": !!props.raised,
-      }}
-    >
-      {props.children}
-    </div>
   )
 }
 

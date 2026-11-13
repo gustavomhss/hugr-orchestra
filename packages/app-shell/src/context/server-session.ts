@@ -1,23 +1,16 @@
+import { needsOlderTurnRoot, wireMessageSource, mergeOptimisticPage, merge, reconcileFetched, type OptimisticItem, type MessagePage } from "./server-session-pages"
 import { Binary } from "@orchestra/core/util/binary"
 import { retry } from "@orchestra/core/util/retry"
 import type { SessionMessageInfo } from "@/session-types"
-
 import type { ServerCurrentEvent } from "./server-sdk"
 import type { PermissionRequest, PermissionV2Request, QuestionRequest } from "@/v2-types"
 import type { Message, Part, SessionStatus, Todo } from "@/v2-wire"
-
 import type { ServerApi } from "@/utils/server"
 import { batch, getOwner, onCleanup } from "solid-js"
 import { createStore, produce, reconcile } from "solid-js/store"
 import { message as cleanMessage } from "@/utils/diffs"
 import { rootSession } from "@/utils/session-route"
-import {
-  decodeSessionLifecycleEvent,
-  decodeSessionManagementEvent,
-  normalizeSessionInfo,
-  renameSession,
-  type AppSession,
-} from "@/utils/session"
+import { decodeSessionLifecycleEvent, decodeSessionManagementEvent, normalizeSessionInfo, renameSession, type AppSession,  } from "@/utils/session"
 import { compareMessages, messageKey, normalizeSessionMessages, sameValue } from "@/utils/session-message"
 import { dropSessionCaches, pickSessionCacheEvictions, SESSION_CACHE_LIMIT } from "./global-sync/session-cache"
 import { normalizePermissionRequest } from "./global-sync/utils"
@@ -37,58 +30,6 @@ const historyMessagePageSize = 200
 const sessionInfoLimit = 2_048
 const emptyIDs: ReadonlySet<string> = new Set()
 
-function needsOlderTurnRoot(source: readonly SessionMessageInfo[]) {
-  const boundary = source.find(
-    (message) =>
-      message.type === "user" ||
-      message.type === "shell" ||
-      message.type === "assistant" || message.type === "compaction" ||
-      (message.type === "synthetic" && message.description?.trim()),
-  )
-  return boundary?.type === "assistant"
-}
-
-type OptimisticItem = {
-  message: Message
-  parts: Part[]
-  confirmedParts?: Part[]
-  confirmedMessage?: boolean
-}
-
-type MessagePage = {
-  session: Message[]
-  part: { id: string; part: Part[] }[]
-  source?: SessionMessageInfo[]
-  sourceMode?: "latest" | "older"
-  projectSource?: boolean
-  cursor?: string
-  complete: boolean
-}
-
-function wireMessageSource(items: { info: Message; parts: Part[] }[]): SessionMessageInfo[] {
-  return items
-    .slice()
-    .sort((a, b) => compareMessages(a.info, b.info))
-    .map((item) => {
-      if (item.info.role === "user") {
-        return {
-          id: item.info.id,
-          type: "user" as const,
-          text: item.parts.flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n"),
-          time: item.info.time,
-        }
-      }
-      return {
-        id: item.info.id,
-        type: "assistant" as const,
-        agent: item.info.agent ?? item.info.mode,
-        model: { id: item.info.modelID, providerID: item.info.providerID, variant: item.info.variant },
-        content: [],
-        time: item.info.time,
-      }
-    })
-}
-
 // The markers describe the current HTTP attempt.
 type MessageLoadState = {
   touchedMessages: Set<string>
@@ -107,34 +48,6 @@ type MessageLoadBaseline = Pick<
   "touchedMessages" | "retainedMessages" | "touchedParts" | "clearedMessageParts"
 >
 
-function mergeOptimisticPage(page: MessagePage, items: OptimisticItem[]) {
-  if (items.length === 0) return { ...page, observed: [] as { messageID: string; parts: Part[] }[] }
-  const session = [...page.session]
-  const part = new Map(page.part.map((item) => [item.id, item.part]))
-  const observed: { messageID: string; parts: Part[] }[] = []
-  for (const item of items) {
-    const result = Binary.search(session, messageKey(item.message), messageKey)
-    const found = result.found
-    if (!found) session.splice(result.index, 0, item.message)
-    const current = part.get(item.message.id)
-    const confirmed = found ? item.parts.filter((part) => current?.some((value) => value.id === part.id)) : []
-    if (found) observed.push({ messageID: item.message.id, parts: confirmed })
-    part.set(
-      item.message.id,
-      merge(
-        found ? (current ?? []) : merge(item.confirmedParts ?? [], current ?? []),
-        item.parts.filter((part) => !confirmed.includes(part)),
-      ),
-    )
-  }
-  return {
-    ...page,
-    session,
-    part: [...part.entries()].sort((a, b) => cmp(a[0], b[0])).map(([id, parts]) => ({ id, part: parts })),
-    observed,
-  }
-}
-
 function runInflight(map: Map<string, Promise<void>>, key: string, task: () => Promise<void>) {
   const pending = map.get(key)
   if (pending) return pending
@@ -143,48 +56,6 @@ function runInflight(map: Map<string, Promise<void>>, key: string, task: () => P
   })
   map.set(key, promise)
   return promise
-}
-
-// Keeps the order of `a`, replacing items in place and appending new ones: part order is content order, not ID order.
-function merge<T extends { id: string }>(a: readonly T[], b: readonly T[]) {
-  const items = new Map(a.map((item) => [item.id, item] as const))
-  for (const item of b) items.set(item.id, item)
-  return [...items.values()]
-}
-
-function reconcileFetched<T extends { id: string }>(
-  fetched: T[],
-  current: readonly T[],
-  options: {
-    touched?: ReadonlySet<string>
-    retained?: ReadonlySet<string>
-    removed?: ReadonlySet<string>
-    preserveUnfetched?: boolean | ((item: T) => boolean)
-    compare?: (a: T, b: T) => number
-  } = {},
-) {
-  const result = new Map(fetched.map((item) => [item.id, item]))
-  const live = new Map(current.map((item) => [item.id, item]))
-  if (options.preserveUnfetched) {
-    for (const item of current) {
-      if (!result.has(item.id) && (options.preserveUnfetched === true || options.preserveUnfetched(item)))
-        result.set(item.id, item)
-    }
-  }
-  for (const id of options.retained ?? emptyIDs) {
-    if (result.has(id)) continue
-    const item = live.get(id)
-    if (item) result.set(id, item)
-  }
-  // Events observed while the request is pending are the freshest client state for those identities.
-  for (const id of options.touched ?? emptyIDs) {
-    const item = live.get(id)
-    if (item) result.set(id, item)
-    if (!item) result.delete(id)
-  }
-  for (const id of options.removed ?? emptyIDs) result.delete(id)
-  const items = [...result.values()]
-  return options.compare ? items.sort(options.compare) : items
 }
 
 type TodoRead = (sessionID: string) => Promise<readonly { content: string; status: string; priority: string }[]>
