@@ -100,7 +100,7 @@ for (const entry of cases) {
     const provider = yield* CodeModeNativeRegex.make
     const before = Omni.snapshot().spawns
     const reply = NativeRegex.decodeReply(entry.request, yield* provider.run(entry.request, 5000))
-    expect(reply).toEqual({ version: 1, ok: true, operation: entry.request.operation, regex: entry.state, result: entry.result })
+    expect<unknown>(reply).toEqual({ version: 1, ok: true, operation: entry.request.operation, regex: entry.state, result: entry.result })
     expect(Omni.snapshot().spawns).toBeGreaterThan(before)
   }))
 }
