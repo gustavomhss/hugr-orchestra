@@ -189,11 +189,12 @@ describe("test shard planner", () => {
   test("Windows CLI, Server and clients have disjoint owners without changing package wrappers", () => {
     const lanes = packageLanes("windows", "fixture-host") as { part: string; filters?: string; turbo?: boolean; budget?: number }[]
     expect(lanes).toHaveLength(17)
-    expect(lanes.filter((lane) => ["windows-cli", "windows-server", "windows-clients"].includes(lane.part))).toEqual([
+    const expected = [
       { name: "windows", host: "fixture-host", part: "windows-cli", label: "cli", turbo: true, filters: "--filter=@orchestra/cli" },
       { name: "windows", host: "fixture-host", part: "windows-server", label: "server", turbo: true, filters: "--filter=@orchestra/server" },
       { name: "windows", host: "fixture-host", part: "windows-clients", label: "clients, SDK, TUI", turbo: true, filters: "--filter=@orchestra/client --filter=@orchestra/sdk-next --filter=@orchestra/tui --filter=@orchestra/session-ui" },
-    ])
+    ]
+    expect(lanes.filter((lane) => ["windows-cli", "windows-server", "windows-clients"].includes(lane.part))).toEqual(expected)
     const cli = JSON.parse(readFileSync(new URL("../../../apps/cli/package.json", import.meta.url), "utf8"))
     expect(cli.scripts.test).toBe("bun run script/test.ts")
     const workflow = readFileSync(new URL("../../../.github/workflows/test.yml", import.meta.url), "utf8")
@@ -224,9 +225,10 @@ describe("test shard planner", () => {
     const shards = lanes.filter((lane) => lane.boundaryShard)
     expect(shards.map((lane) => lane.boundaryShard)).toEqual(["1/2", "2/2"])
     expect(shards.every((lane) => lane.filters === "--filter=@orchestra/atlas-boundary" && lane.turbo && !lane.hosted && !lane.rollback && lane.budget === undefined)).toBe(true)
-    expect(lanes.filter((lane) => lane.hosted || lane.rollback)).toEqual([
+    const expected = [
       { name: "windows", host: "fixture-host", part: "windows-process", label: "process query, rollback", hosted: true, rollback: true },
-    ])
+    ]
+    expect(lanes.filter((lane) => lane.hosted || lane.rollback)).toEqual(expected)
     const workflow = readFileSync(new URL("../../../.github/workflows/test.yml", import.meta.url), "utf8")
     expect(workflow).toContain('bun turbo test --filter=@orchestra/atlas-boundary --log-order=stream -- "${files[@]/#/./}" "${report[@]}"')
     const boundary = workflow.split('if [ -n "$BOUNDARY_SHARD" ]; then')[1]?.split("# Core is sharded")[0] ?? ""
@@ -244,8 +246,8 @@ describe("test shard planner", () => {
   })
 
   test("Linux package matrix remains exactly the pre-split contract", () => {
-    const common = { name: "linux", host: "fixture-host" }
-    expect(packageLanes("linux", common.host)).toEqual([
+    const common: { name: "linux"; host: string } = { name: "linux", host: "fixture-host" }
+    const expected = [
       { ...common, part: "packages-app", label: "app", turbo: true, filters: "--filter=@orchestra/app", electron: true },
       { ...common, part: "packages-cli", label: "cli, server, clients", turbo: true, filters: "--filter=@orchestra/cli --filter=@orchestra/server --filter=@orchestra/sdk-next --filter=@orchestra/client --filter=@orchestra/tui --filter=@orchestra/session-ui", electron: true },
       { ...common, part: "packages-atlas", label: "atlas boundary", turbo: true, filters: "--filter=@orchestra/atlas-boundary", electron: true, hosted: false, rollback: false },
@@ -257,7 +259,8 @@ describe("test shard planner", () => {
       { ...common, part: "httpapi-1", label: "httpapi 1/2", httpapi: true, httpapiShard: "1/2" },
       { ...common, part: "httpapi-2", label: "httpapi 2/2", httpapi: true, httpapiShard: "2/2" },
       { ...common, part: "sandbox", label: "sandbox proofs", hosted: true },
-    ])
+    ]
+    expect(packageLanes("linux", common.host)).toEqual(expected)
   })
 
   test("a platform's overhead scales its total before the shard count", () => {
