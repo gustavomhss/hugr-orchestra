@@ -1,7 +1,9 @@
 name: evaluation-maintenance-caller-synthetic
 on:
   push:
-    branches: [genesis-evaluation-maintenance-caller-ci]
+    branches:
+      - genesis-evaluation-maintenance-caller-ci
+      - genesis-support-06-caller-toolchain
   workflow_dispatch:
 permissions:
   contents: read
@@ -13,17 +15,17 @@ jobs:
       run:
         working-directory: modules/atlas
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
-      - name: Verify exact source overlay base
-        shell: bash
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Set up Node.js 22
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: modules/atlas/package-lock.json
+      - name: Record toolchain versions
         run: |
-          set -euo pipefail
-          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-          sha256sum --check <<'PINS'
-          1286f756209fa5e5abb6af0ec4794d6a57c979c3ba3dd97aa0d10ee22dd33a3b  packages/adapter-io/src/evaluation-maintenance-host.ts
-          1e511bd090ab303f0ee9cb8c69c1d6289a5a5c5cabbe5cd96c56833ad6a52a9e  packages/adapter-io/src/evaluation-rebuild.ts
-          4f38223d0d513b38fdd489aa7fea5a3cc818b1cc37a180973167f732f2494a18  packages/adapter-io/src/ownership-rebuild.ts
-          PINS
+          node --version
+          npm --version
       - run: npm ci
       - run: npm run build
       - name: Caller boundary and synthetic real-host integration
@@ -42,17 +44,17 @@ jobs:
           files=(packages/adapter-io/dist/src/evaluation-maintenance-host.js packages/adapter-io/dist/src/evaluation-maintenance-host.d.ts packages/adapter-io/dist/src/evaluation-maintenance-caller.js packages/adapter-io/dist/src/evaluation-maintenance-caller.d.ts)
           for file in "${files[@]}"; do
             if [[ ! -f "$file" || ! -s "$file" || -L "$file" ]]; then
-              printf 'Missing, empty or symlink output: %s\n' "$file" >&2
+              printf 'Missing, empty or symlink output: %s\\n' "$file" >&2
               exit 1
             fi
           done
           {
-            printf 'schema=maintenance-caller-overlay/v1\nkind=overlay-not-standalone\n'
-            printf 'base_commit=%s\nrepository=%s\n' "$GITHUB_SHA" "$GITHUB_REPOSITORY"
-            printf 'requires=complete-built-modules-atlas-tree-at-base_commit\n'
-            printf 'source_family=host-v3-plus-evaluation-implementation-v6\n'
-            printf 'host_source_commit=3aa3bd492f852cbf3711b7b6fb4647316560d0ec\n'
-            printf '\n[sha256-relative-to-modules-atlas]\n'
+            printf 'schema=maintenance-caller-overlay/v1\\nkind=overlay-not-standalone\\n'
+            printf 'base_commit=%s\\nrepository=%s\\n' "$GITHUB_SHA" "$GITHUB_REPOSITORY"
+            printf 'requires=complete-built-modules-atlas-tree-at-base_commit\\n'
+            printf 'source_family=host-v3-plus-evaluation-implementation-v6\\n'
+            printf 'host_source_commit=3aa3bd492f852cbf3711b7b6fb4647316560d0ec\\n'
+            printf '\\n[sha256-relative-to-modules-atlas]\\n'
             sha256sum "${files[@]}" packages/adapter-io/src/evaluation-maintenance-host.ts packages/adapter-io/src/evaluation-maintenance-caller.ts packages/adapter-io/src/evaluation-rebuild.ts packages/adapter-io/src/ownership-rebuild.ts package.json package-lock.json
           } > maintenance-caller-overlay-manifest.txt
       - name: Export external host and caller overlay, not standalone package
