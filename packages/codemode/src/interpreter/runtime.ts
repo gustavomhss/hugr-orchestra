@@ -1,4 +1,8 @@
 import { parse } from "acorn"
+import { parseWithoutNativeRegExp } from "../native-regexp-parser.js"
+import { makeDriver, type Driver } from "../native-regex-driver.js"
+import type { Reply, Request } from "../native-regex.js"
+import { fromWireCapture, fromWireMatch, replacementArgs } from "../native-regex-values.js"
 import { Cause, Effect, Exit, Fiber, Semaphore } from "effect"
 import { DiagnosticCategory, ModuleKind, ScriptTarget, flattenDiagnosticMessageText, transpileModule } from "typescript"
 import {
@@ -112,7 +116,7 @@ import {
   SandboxURLSearchParams,
 } from "../values.js"
 
-const parseProgram = (code: string): ProgramNode => {
+const parseProgram = (code: string, finite = false): ProgramNode => {
   const transpiled = transpileModule(`async function __codemode__() {\n${code}\n}`, {
     reportDiagnostics: true,
     compilerOptions: {
@@ -133,7 +137,7 @@ const parseProgram = (code: string): ProgramNode => {
   const bodyStart = transpiled.outputText.indexOf("{") + 1
   const bodyEnd = transpiled.outputText.lastIndexOf("}")
   const executableCode = transpiled.outputText.slice(bodyStart, bodyEnd)
-  const parsed = parse(executableCode, {
+  const parsed = (finite ? parseWithoutNativeRegExp : parse)(executableCode, {
     ecmaVersion: "latest",
     sourceType: "script",
     allowReturnOutsideFunction: true,
@@ -391,7 +395,7 @@ const invokeStringMethod = (value: string, name: string, args: Array<unknown>, n
         break
       }
       if (args[0] instanceof SandboxRegExp) {
-        result = value.split((args[0] as SandboxRegExp).regex, optNum(1))
+        result = value.split((args[0] as SandboxRegExp).native(), optNum(1))
         break
       }
       const requestedLimit = optNum(1)
@@ -419,7 +423,7 @@ const invokeStringMethod = (value: string, name: string, args: Array<unknown>, n
     case "replace":
     case "replaceAll": {
       if (args[0] instanceof SandboxRegExp) {
-        const pattern = (args[0] as SandboxRegExp).regex
+        const pattern = (args[0] as SandboxRegExp).native()
         const replacement = str(1)
         if (name === "replaceAll" && !pattern.global) {
           throw new InterpreterRuntimeError(
@@ -599,6 +603,20 @@ const collectPatternNames = (pattern: AstNode, out: Array<string> = []): Array<s
   return out
 }
 
+function nativeResult(reply: Extract<Reply, { ok: true }>, label: string, node: AstNode): unknown {
+  const result = reply.result
+  switch (result.kind) {
+    case "boolean":
+    case "number":
+    case "string":
+    case "strings": return boundedData(result.value, label)
+    case "match": return result.value === null ? null : fromWireMatch(result.value)
+    case "matches": return result.value.map(fromWireMatch)
+    case "split": return boundedData(result.value.map(fromWireCapture), label)
+    default: throw new InterpreterRuntimeError("Native regular expression operation returned an incompatible result.", node)
+  }
+}
+
 class Interpreter<R> {
   private scopes: Array<Map<string, Binding>>
   private readonly invokeTool: (path: ReadonlyArray<string>, args: Array<unknown>) => Effect.Effect<unknown, unknown, R>
@@ -606,6 +624,7 @@ class Interpreter<R> {
   // ToolRuntime.make like invokeTool: the interpreter never holds the tree itself.
   private readonly toolKeys: (path: ReadonlyArray<string>) => ReadonlyArray<string>
   private readonly logs: Array<string>
+  private readonly native: Driver | undefined
   private lastValue: unknown
   // Caps how many eagerly forked tool calls run at once (the parallel-call concurrency cap).
   private readonly callPermits: Semaphore.Semaphore
@@ -618,12 +637,14 @@ class Interpreter<R> {
     invokeTool: (path: ReadonlyArray<string>, args: Array<unknown>) => Effect.Effect<unknown, unknown, R>,
     toolKeys: (path: ReadonlyArray<string>) => ReadonlyArray<string>,
     logs: Array<string> = [],
+    native?: Driver,
   ) {
     const globalScope = new Map<string, Binding>()
     this.scopes = [globalScope]
     this.invokeTool = invokeTool
     this.toolKeys = toolKeys
     this.logs = logs
+    this.native = native
     this.lastValue = undefined
     this.callPermits = Semaphore.makeUnsafe(TOOL_CALL_CONCURRENCY)
     globalScope.set("tools", { mutable: false, value: new ToolReference([]) })
@@ -1410,9 +1431,7 @@ class Interpreter<R> {
         // sandbox regex from those (the host `value` instance is never exposed).
         const regex = node.regex
         if (isRecord(regex) && typeof regex.pattern === "string") {
-          return Effect.sync(() =>
-            this.constructRegExp([regex.pattern, typeof regex.flags === "string" ? regex.flags : ""], node),
-          )
+          return this.constructRegExp([regex.pattern, typeof regex.flags === "string" ? regex.flags : ""], node)
         }
         return Effect.sync(() => boundedData(node.value, "Literal"))
       }
@@ -1492,7 +1511,7 @@ class Interpreter<R> {
           case "Date":
             return self.constructDate(args)
           case "RegExp":
-            return self.constructRegExp(args, node)
+            return yield* self.constructRegExp(args, node)
           case "Map":
             return self.constructMap(args[0], node)
           case "Set":
@@ -1521,32 +1540,78 @@ class Interpreter<R> {
     return new SandboxDate(new Date(...(parts as [number, number])).getTime())
   }
 
-  private constructRegExp(args: Array<unknown>, node: AstNode): SandboxRegExp {
-    const first = args[0]
-    const pattern =
-      first instanceof SandboxRegExp ? first.regex.source : first === undefined ? "" : coerceToString(first)
-    const flagsArg = args[1]
-    if (flagsArg !== undefined && typeof flagsArg !== "string") {
-      throw new InterpreterRuntimeError(
-        `RegExp flags must be a string of flag characters (e.g. "g", "gi"), not ${flagsArg === null ? "null" : typeof flagsArg}.`,
-        node,
-      )
-    }
-    const flags = flagsArg ?? (first instanceof SandboxRegExp ? first.regex.flags : "")
-    try {
-      return new SandboxRegExp(pattern, flags)
-    } catch (error) {
-      // Say which part was rejected and how to fix it, instead of passing the engine
-      // message through bare. A flags failure names the flags; a pattern failure gets the
-      // escaping hint (the usual cause is an unescaped metacharacter in a built-up string).
-      const reason = regexFailureReason(error)
-      throw new InterpreterRuntimeError(
-        /flag/i.test(reason)
-          ? `new RegExp(...) received invalid flags ${JSON.stringify(flags)} (${reason}). Valid flags are d, g, i, m, s, u, v, and y.`
-          : `new RegExp(...) received ${JSON.stringify(pattern)}, which is not a valid regular expression pattern (${reason}). ${escapeRegexHint}`,
-        node,
-      ).as("SyntaxError")
-    }
+  private constructRegExp(args: Array<unknown>, node: AstNode, method?: string): Effect.Effect<SandboxRegExp, unknown> {
+    return Effect.suspend(() => {
+      const first = args[0]
+      const pattern = first instanceof SandboxRegExp ? first.source : first === undefined ? "" : coerceToString(first)
+      const flagsArg = args[1]
+      if (flagsArg !== undefined && typeof flagsArg !== "string") {
+        throw new InterpreterRuntimeError(
+          `RegExp flags must be a string of flag characters (e.g. "g", "gi"), not ${flagsArg === null ? "null" : typeof flagsArg}.`,
+          node,
+        )
+      }
+      const flags = flagsArg ?? (first instanceof SandboxRegExp ? first.flags : "")
+      const invalid = (error: unknown) => {
+        const reason = regexFailureReason(error)
+        return new InterpreterRuntimeError(
+          method !== undefined
+            ? `String.${method} received the string ${JSON.stringify(pattern)}, which is not a valid regular expression pattern (${reason}). ${escapeRegexHint}`
+            : /flag/i.test(reason)
+              ? `new RegExp(...) received invalid flags ${JSON.stringify(flags)} (${reason}). Valid flags are d, g, i, m, s, u, v, and y.`
+              : `new RegExp(...) received ${JSON.stringify(pattern)}, which is not a valid regular expression pattern (${reason}). ${escapeRegexHint}`,
+          node,
+        ).as("SyntaxError")
+      }
+      if (!this.native) return Effect.try({ try: () => new SandboxRegExp(pattern, flags), catch: invalid })
+      return this.native.run(() => ({ version: 1, operation: "construct", pattern, flags }), node).pipe(Effect.map((reply) => {
+        if (!reply.ok) throw invalid(reply.message)
+        return SandboxRegExp.fromState(reply.regex)
+      }))
+    })
+  }
+
+  private runNative(factory: () => Request, node: AstNode, pattern: SandboxRegExp): Effect.Effect<Extract<Reply, { ok: true }>, unknown> {
+    if (!this.native) return Effect.fail(new InterpreterRuntimeError("Native regular expression executor is unavailable for timed execution.", node))
+    return this.native.run(factory, node, (reply) => {
+      if (reply.regex !== undefined) pattern.updateState(reply.regex)
+    }).pipe(Effect.map((reply) => {
+      if (!reply.ok) throw new InterpreterRuntimeError(reply.message, node).as(reply.name)
+      return reply
+    }))
+  }
+
+  private invokeFiniteString(value: string, name: string, args: Array<unknown>, node: AstNode): Effect.Effect<unknown, unknown> {
+    const self = this
+    return Effect.gen(function* () {
+      const input = args[0]
+      if (!(input instanceof SandboxRegExp) && typeof input !== "string") {
+        throw new InterpreterRuntimeError(
+          `String.${name} expects a regular expression (a /pattern/flags literal or new RegExp(...)) or a string pattern, not ${input === null ? "null" : typeof input}.`, node,
+        )
+      }
+      const pattern = input instanceof SandboxRegExp ? input : yield* self.constructRegExp([input, name === "matchAll" ? "g" : ""], node, name)
+      if ((name === "matchAll" || name === "replaceAll") && !pattern.flags.includes("g")) {
+        throw new InterpreterRuntimeError(name === "matchAll"
+          ? `String.matchAll requires a regular expression with the global (g) flag: write /${pattern.source}/${pattern.flags}g, or use String.match for a single match.`
+          : `String.replaceAll requires a regular expression with the global (g) flag: write /${pattern.source}/${pattern.flags}g, or use String.replace to replace only the first match.`, node)
+      }
+      const reply = yield* self.runNative((): Request => {
+        const regex = pattern.state()
+        if (name === "split") {
+          if (args[1] !== undefined && typeof args[1] !== "number")
+            throw new InterpreterRuntimeError("String.split expects argument 2 to be a number.", node)
+          return { version: 1, operation: "split", regex, subject: value, ...(args[1] === undefined ? {} : { limit: args[1] >>> 0 }) }
+        }
+        if (name === "replace" || name === "replaceAll") {
+          if (typeof args[1] !== "string") throw new InterpreterRuntimeError(`String.${name} expects argument 2 to be a string.`, node)
+          return { version: 1, operation: name, regex, subject: value, replacement: args[1] }
+        }
+        if (name === "match" || name === "matchAll" || name === "search") return { version: 1, operation: name, regex, subject: value }
+        throw new InterpreterRuntimeError(`String.${name} is not a native regular expression operation.`, node)
+      }, node, pattern)
+      return nativeResult(reply, `String.${name} result`, node)
+    })
   }
 
   private constructMap(init: unknown, node: AstNode): SandboxMap {
@@ -2266,6 +2331,9 @@ class Interpreter<R> {
       ) {
         return this.invokeStringReplacer(ref.receiver, ref.name, args, node)
       }
+      if (this.native && (["match", "matchAll", "search"].includes(ref.name) ||
+        (args[0] instanceof SandboxRegExp && ["split", "replace", "replaceAll"].includes(ref.name))))
+        return this.invokeFiniteString(ref.receiver, ref.name, args, node)
       return Effect.succeed(invokeStringMethod(ref.receiver, ref.name, args, node))
     }
     if (typeof ref.receiver === "number") {
@@ -2278,7 +2346,13 @@ class Interpreter<R> {
       return Effect.succeed(invokeDateMethod(ref.receiver, ref.name, node))
     }
     if (ref.receiver instanceof SandboxRegExp) {
-      return Effect.succeed(invokeRegExpMethod(ref.receiver, ref.name, args, node))
+      const pattern = ref.receiver
+      if (this.native && (ref.name === "test" || ref.name === "exec")) {
+        const operation = ref.name
+        return this.runNative(() => ({ version: 1, operation, regex: pattern.state(), subject: coerceToString(args[0]) }), node, pattern)
+          .pipe(Effect.map((reply) => nativeResult(reply, `RegExp.${operation} result`, node)))
+      }
+      return Effect.succeed(invokeRegExpMethod(pattern, ref.name, args, node))
     }
     if (ref.receiver instanceof SandboxMap) {
       return this.invokeMapMethod(ref.receiver, ref.name, args, node)
@@ -2323,24 +2397,30 @@ class Interpreter<R> {
     }
 
     const pattern = args[0]
-    if (pattern instanceof SandboxRegExp) {
-      if (name === "replaceAll" && !pattern.regex.global) {
-        throw new InterpreterRuntimeError(
-          `String.replaceAll requires a regular expression with the global (g) flag: write /${pattern.regex.source}/${pattern.regex.flags}g, or use String.replace to replace only the first match.`,
-          node,
-        )
-      }
-      if (name === "replace") value.replace(pattern.regex, collect)
-      else value.replaceAll(pattern.regex, collect)
-    } else {
-      if (typeof pattern !== "string") {
-        throw new InterpreterRuntimeError(`String.${name} expects argument 1 to be a string.`, node)
-      }
-      if (name === "replace") value.replace(pattern, collect)
-      else value.replaceAll(pattern, collect)
+    if (pattern instanceof SandboxRegExp && name === "replaceAll" && !pattern.flags.includes("g")) {
+      throw new InterpreterRuntimeError(
+        `String.replaceAll requires a regular expression with the global (g) flag: write /${pattern.source}/${pattern.flags}g, or use String.replace to replace only the first match.`, node,
+      )
     }
+    const collected = this.native && pattern instanceof SandboxRegExp
+      ? this.runNative(() => ({ version: 1, operation: name === "replace" ? "collectReplace" : "collectReplaceAll", regex: pattern.state(), subject: value }), node, pattern)
+        .pipe(Effect.map((reply) => {
+          if (reply.result.kind !== "replacements") throw new InterpreterRuntimeError(`String.${name} produced an invalid replacement match.`, node)
+          for (const match of reply.result.value) matches.push({ match: match.match, offset: match.offset, args: replacementArgs(match, value) })
+        }))
+      : Effect.sync(() => {
+        if (pattern instanceof SandboxRegExp) {
+          if (name === "replace") value.replace(pattern.native(), collect)
+          else value.replaceAll(pattern.native(), collect)
+          return
+        }
+        if (typeof pattern !== "string") throw new InterpreterRuntimeError(`String.${name} expects argument 1 to be a string.`, node)
+        if (name === "replace") value.replace(pattern, collect)
+        else value.replaceAll(pattern, collect)
+      })
 
     return Effect.gen(function* () {
+      yield* collected
       const output: Array<string> = []
       let end = 0
       for (const match of matches) {
@@ -3033,7 +3113,7 @@ class Interpreter<R> {
       }
       if (objectValue instanceof SandboxRegExp) {
         if (typeof key === "string" && regexpProperties.has(key)) {
-          return new ComputedValue((objectValue.regex as unknown as Record<string, unknown>)[key])
+          return new ComputedValue(objectValue.read(key))
         }
         if (typeof key === "string" && regexpMethods.has(key)) return new IntrinsicReference(objectValue, key)
         return new ComputedValue(undefined)
@@ -3347,6 +3427,7 @@ export const executeWithLimits = <const Tools extends Record<string, unknown>>(
     const guard = Effect.suspend(() =>
       deadline !== undefined && performance.now() >= deadline ? Effect.never : Effect.void,
     )
+    const native = deadline === undefined ? undefined : makeDriver(deadline, guard)
     const hooks = {
       ...(options.onToolCallStart === undefined ? {} : { onToolCallStart: options.onToolCallStart }),
       ...(options.onToolCallEnd === undefined ? {} : { onToolCallEnd: options.onToolCallEnd }),
@@ -3356,7 +3437,7 @@ export const executeWithLimits = <const Tools extends Record<string, unknown>>(
       limits.maxToolCalls,
       searchIndex,
       hooks,
-      guard,
+      native === undefined ? guard : native.idle.pipe(Effect.andThen(guard)),
     )
     const logs: Array<string> = []
     const logged = () => (logs.length > 0 ? { logs: [...logs] } : {})
@@ -3369,8 +3450,8 @@ export const executeWithLimits = <const Tools extends Record<string, unknown>>(
           toolCalls: [...tools.calls],
         } satisfies Result
       }
-      const program = parseProgram(options.code)
-      const interpreter = new Interpreter<Services<Tools>>(tools.invoke, tools.keys, logs)
+      const program = parseProgram(options.code, native !== undefined)
+      const interpreter = new Interpreter<Services<Tools>>(tools.invoke, tools.keys, logs, native)
       const value = yield* interpreter.run(program)
       const result = copyOut(copyIn(value, "Execution result"), true) as DataValue
       const success = {
