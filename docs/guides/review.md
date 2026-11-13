@@ -11,6 +11,15 @@ code run in a throwaway copy of the tree, which is deleted when the review ends.
 The committed PR workflow described below is for the PR-capable campaign build, pending lead acceptance with the
 campaign bundle. This guide does not mean your installed app has already been updated.
 
+## Prepare local review checks
+
+Ask Maestro explicitly: “Prepare `shfmt`, `cargo-machete`, or both for review.” Maestro asks for one-time permission
+before downloads, licence notices or version probes. If permission is declined, preparation does not proceed.
+
+Analysis with these checks is supported only on Linux x64. After a host restart, ask Maestro to prepare them again.
+Preparation does not enable every check for every project or review. Review cards report actual check statuses and
+reasons, including checks that could not run; a partial preparation is not reported as fully ready.
+
 ## The card
 
 Every review ends with one `review-result` card:
