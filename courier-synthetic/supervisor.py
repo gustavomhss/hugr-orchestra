@@ -60,6 +60,15 @@ def enable_subreaper():
         raise OSError(error, os.strerror(error))
 
 
+def proc_row(pid):
+    raw = (Path('/proc') / str(pid) / 'stat').read_text()
+    close = raw.rfind(')')
+    if close < 0:
+        raise ValueError('malformed proc stat')
+    fields = raw[close + 2:].split()
+    return (int(fields[1]), int(fields[2]), int(fields[3]), int(fields[19]), fields[0])
+
+
 def proc_snapshot():
     """Return pid -> (ppid, pgrp, session, starttime, state); errors are UNKNOWN."""
     found = {}
@@ -71,16 +80,7 @@ def proc_snapshot():
         if not entry.name.isdecimal():
             continue
         try:
-            raw = (entry / 'stat').read_text()
-            close = raw.rfind(')')
-            if close < 0:
-                raise ValueError('malformed proc stat')
-            fields = raw[close + 2:].split()
-            # fields start at stat field 3 (state)
-            state = fields[0]
-            ppid, pgrp, session = map(int, fields[1:4])
-            starttime = int(fields[19])  # stat field 22
-            found[int(entry.name)] = (ppid, pgrp, session, starttime, state)
+            found[int(entry.name)] = proc_row(int(entry.name))
         except FileNotFoundError:
             # A racing exit is not evidence of absence; force a fresh census.
             raise RuntimeError('PROC_ENTRY_RACE_UNKNOWN')
@@ -207,7 +207,7 @@ def main():
     root_start = None
     try:
         enable_subreaper()
-        own = proc_snapshot().get(os.getpid())
+        own = proc_row(os.getpid())
         if own is None:
             raise RuntimeError('SUPERVISOR_IDENTITY_UNKNOWN')
         root_start = own[3]
