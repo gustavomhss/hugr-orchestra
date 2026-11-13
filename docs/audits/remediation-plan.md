@@ -4,7 +4,7 @@ Autorização do owner: delegar simples em quatro partes; planejar complexos ant
 
 ## Estado atual da execução
 
-A única entrega externa continua sendo a [PR draft1463](https://github.com/gustavomhss/hugr-orchestra/pull/1463), para `dev`. O ledger registra **58/65 encerrados** (57 correções novas e um controle de correção existente); **7 permanecem abertos**: E6, E10, L4, L5, L9, M13 e T2. Consulte [remediation-status.json](remediation-status.json) para a disposição por ID e [remediation-complex-contracts.md](remediation-complex-contracts.md) para decisões, recusas e limites de prova. Esta é uma execução em andamento, sem aprovação de merge ou suíte épica verde.
+A única entrega externa continua sendo a [PR draft1463](https://github.com/gustavomhss/hugr-orchestra/pull/1463), para `dev`. O ledger registra **59/65 encerrados** (58 correções novas e um controle de correção existente); **6 permanecem abertos**: E6, E10, L4, L5, L9 e M13. Consulte [remediation-status.json](remediation-status.json) para a disposição por ID e [remediation-complex-contracts.md](remediation-complex-contracts.md) para decisões, recusas e limites de prova. Esta é uma execução em andamento, sem aprovação de merge ou suíte épica verde.
 
 As quatro frentes atuais são consumo de modelos App/TUI, isolamento CodeMode, autoridade de schedules e entrega durável desktop. Evidência de setup não é RED de produto; source/typecheck/revisão estática não é runtime GREEN. O CodeMode341 teve seu gate rejeitado por travamento ordinário e somente o nosso run amplo foi cancelado, documentadamente; a reprodução original permanece separada. Contratos de store/outbox, causas e publicação de Memory foram planejados antes de qualquer implementação dependente. A canonical continua preservada.
 

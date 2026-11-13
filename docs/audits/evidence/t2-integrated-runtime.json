@@ -1,0 +1,100 @@
+{
+  "finding": "T2",
+  "status": "fixed_verified",
+  "policy": "No arbitrary default Promise SSE ceiling; cancellation/reader cleanup preserved. No bounded-memory claim.",
+  "generatedRecovery": "client-generated-union-recovery.json",
+  "qualification": "client-generated-union-provenance.json",
+  "runtime": {
+    "server-linux": {
+      "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43379794072",
+      "job": 131734633742,
+      "passed": 4,
+      "failed": 0,
+      "assertions": 70,
+      "rawLogSHA256": "e7adc04e88189807472cc199a54bb6faeedff7de1b8d714dbae5e53b4c9134e7",
+      "omniSpawns": 72
+    },
+    "server-windows": {
+      "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43379794072",
+      "job": 131734634001,
+      "passed": 4,
+      "failed": 0,
+      "assertions": 70,
+      "rawLogSHA256": "44a6266f094760383b4c60b9896d56cb2db6ded8eb9a9c842a36ca059f8cae2e",
+      "omniSpawns": 60
+    },
+    "client-linux": {
+      "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43379793584",
+      "job": 131734632642,
+      "passed": 33,
+      "failed": 0,
+      "assertions": 106,
+      "rawLogSHA256": "58ce09e9dff03d4c5c6965200814ae0ffc4bbdf7f3b08c44651da9db6cade1d9"
+    },
+    "client-windows": {
+      "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43379793584",
+      "job": 131734632216,
+      "passed": 33,
+      "failed": 0,
+      "assertions": 106,
+      "rawLogSHA256": "ed34b55f357e39e13604abbd021d1356af936acc432e76a273805f0f84f20542"
+    },
+    "baseline-control": {
+      "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43174322667",
+      "job": 131034778579,
+      "passed": 3,
+      "failed": 0,
+      "assertions": 53,
+      "rawLogSHA256": "70603a108851a168acd0e31a367d9e5c0207edfae24a397c968c4c171111a05d",
+      "omniSpawns": 54
+    },
+    "baseline-red": {
+      "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43175111696",
+      "job": 131037352586,
+      "passed": 0,
+      "failed": 1,
+      "assertions": 12,
+      "rawLogSHA256": "31a4ab2fcfd0dfa73e27a6803172ed860c788a37075136cd1a1ea2c0bfea721a"
+    }
+  },
+  "envelopeSnapshot": {
+    "sha": "e87abd4982db6979b170ca5a5aac4a5ab9213be6",
+    "parent": "6a0d01d332fa0ef2583391a6ddfa6b7efbebc3d1",
+    "changedPaths": [
+      ".ci-run.json",
+      ".github/workflows/test-ci.yml",
+      "docs/audits/evidence/client-generated-union-provenance.json",
+      "docs/audits/evidence/client-generated-union-recovery.json",
+      "docs/audits/evidence/e6-final-functional-union.json",
+      "docs/audits/evidence/l5-independent-writers-union.json",
+      "docs/audits/remediation-client-generation-plan.md",
+      "docs/audits/remediation-replay-binding-contract-draft.md",
+      "packages/client/src/generated/client.ts"
+    ],
+    "generatedBlob": "2590d1554b935090d12c3cb23974c99f8a81b8f1"
+  },
+  "clientSnapshot": {
+    "sha": "97b5d121ac1fe9e6c858147fd637e5a8e11c6481",
+    "parent": "6a0d01d332fa0ef2583391a6ddfa6b7efbebc3d1",
+    "changedPaths": [
+      ".ci-run.json",
+      ".github/workflows/test-ci.yml",
+      "docs/audits/evidence/client-generated-union-provenance.json",
+      "docs/audits/evidence/client-generated-union-recovery.json",
+      "docs/audits/evidence/e6-final-functional-union.json",
+      "docs/audits/evidence/l5-independent-writers-union.json",
+      "docs/audits/remediation-client-generation-plan.md",
+      "docs/audits/remediation-replay-binding-contract-draft.md",
+      "packages/client/src/generated/client.ts"
+    ],
+    "generatedBlob": "2590d1554b935090d12c3cb23974c99f8a81b8f1"
+  },
+  "checks": {
+    "ClientPackageTypecheck": 0,
+    "CoreAcceptanceTypecheck": 0,
+    "guards": "78 rules, 528 paths, 0 gates, 4 known warnings, 0 errors",
+    "boundaries": 0,
+    "spawnImports": 0
+  },
+  "scope": "Real TCP/Core/SQL admission with resume:false; 64-byte and819200-byte inline synthetic fixtures intact through both clients. No image decoding/model execution claim. Client gate additionally preserves10MiB and128Mi-unit valid frames, malformed-data cancellation, Promise/Effect codecs. Baseline RED occurs after12 real admission/SQL witnesses; control has1filtered case. No causal performance claim."
+}
