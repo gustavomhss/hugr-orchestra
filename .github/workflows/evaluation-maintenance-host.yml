@@ -1,0 +1,27 @@
+name: evaluation-maintenance-host-synthetic
+on:
+  push:
+    branches: [genesis-evaluation-maintenance-host-ci]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: modules/atlas
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - run: npm ci
+      - run: npm run build
+      - name: Focused synthetic maintenance controls
+        run: |
+          set -o pipefail
+          npx vitest run packages/adapter-io/test/evaluation-rebuild.test.ts packages/adapter-io/test/evaluation-maintenance-host.test.ts 2>&1 | tee maintenance-host.log
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: maintenance-host-${{ github.sha }}
+          path: modules/atlas/maintenance-host.log
