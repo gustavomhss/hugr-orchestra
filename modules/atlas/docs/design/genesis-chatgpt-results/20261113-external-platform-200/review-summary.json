@@ -8,11 +8,11 @@
   "counts": {
     "inventoried": 200,
     "produced": 200,
-    "reviewed_by_both": 184,
-    "documentary_pair_accepted": 184,
+    "reviewed_by_both": 194,
+    "documentary_pair_accepted": 194,
     "reviewed_with_material_findings": 0,
-    "awaiting_initial_pair_review": 16,
-    "pending_acceptance": 16
+    "awaiting_initial_pair_review": 6,
+    "pending_acceptance": 6
   },
   "accepted_units": [
     {
@@ -528,12 +528,62 @@
       },
       "resolved_findings": [],
       "optional_open": []
+    },
+    {
+      "id": "C-06",
+      "body": {
+        "path": "bodies/c-06.md",
+        "sha256": "aab4cb35b78d3c48673aed5ccfb7a0f55df8cc6512ecf2762efb53463f96e88a",
+        "byte_length": 20149
+      },
+      "source_ids": [
+        "P076",
+        "P090"
+      ],
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "resolved_findings": [
+        "App Dock corrigido para um módulo lógico distribuído por três pacotes.",
+        "Recusa do codemod node: com exit 2 para mock.module de builtin sem prefixo explicitada.",
+        "Mesmos juízes aceitaram o corpo D1; ocorrência de aspas na transcrição de evidência foi substituída e preservada."
+      ],
+      "optional_open": [
+        "A invariância formal do gerador abrange specifiers retidos e enumerados pela política full após filtros; R6b sobre imports é obrigação distinta.",
+        "25 grupos canônicos não equivale à identidade de todos os caminhos /api/*; projectCopy é exceção de caminho documentada."
+      ]
+    },
+    {
+      "id": "C-07",
+      "body": {
+        "path": "bodies/c-07.md",
+        "sha256": "35ccb181c5167dd2d093f43ed7a5cdeee221a17981d24e88ad59cb980cd50bf4",
+        "byte_length": 28454
+      },
+      "source_ids": [
+        "P077",
+        "P078",
+        "P079",
+        "P080",
+        "P081",
+        "P082",
+        "P083",
+        "P091"
+      ],
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "resolved_findings": [
+        "O complemento integral de P083 L561 confirmou o alias MCP Dock já presente na fonte; a redação agora o liga explicitamente ao App Dock/app-dock e preserva autoridades distintas.",
+        "A anotação de remoção de server-protocol foi localizada corretamente no trecho de detecção."
+      ],
+      "optional_open": []
     }
   ],
   "open_semantic_findings_in_accepted_units": [],
   "pending_units": [
-    "C-06",
-    "C-07",
     "C-08"
   ],
   "limits": [
@@ -543,10 +593,10 @@
     "No global PASS. Private original judgments are not published here."
   ],
   "private_custody": {
-    "opaque_ref": "libfile_fde3_f-85c3faf588908191ade2fc93b8e0d583_3a07899f8a4481918837fffaac5a42fc",
+    "opaque_ref": "libfile_fde3_f-63fe6843880c8191b4e4e66c3777fad2_3a07899f8a4481918837fffaac5a42fc",
     "version": 0,
-    "sha256": "3ca1fb301cc0a4f267fb83ebdaf33e16a1807203f8d4d796e240e5b70055c4cc",
-    "scope": "Visible originals and source/artifact records through 18 accepted L2 units (184 unique sources); pending activity explicitly distinguished. No runtime or global acceptance."
+    "sha256": "f7649444fd58fa1ebe4af105302e2c3b285d98fec17ca69da208f780f16e2fd9",
+    "scope": "Visible originals and source/artifact records through 20 accepted L2 units (194 unique sources); pending activity explicitly distinguished. No runtime or global acceptance."
   },
   "reviewed_pending_units": [],
   "counting_note": "Aceites contabilizam somente versões atuais listadas e fontes primárias únicas; apoios e repetições de revisão não acrescentam fontes."
