@@ -251,27 +251,36 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       if (ownership.disposed() || (!params.id && input.newSessionWorkspaceReady?.() === false)) return Promise.resolve(false)
       const target = prompt.capture()
       if (params.id) {
+        const text = target.current().map((part) => "content" in part ? part.content : "").join("")
+        const command = text.startsWith("/") && sync().data.command.some((command) => command.name === text.split(" ")[0].slice(1))
+        const selection = input.model ?? local.model
+        if (selection === local.model && selection.ready?.() === true && input.mode() === "normal" &&
+          !input.shouldQueue?.() && !command && (text.trim().length || input.imageAttachments().length || input.commentCount())) {
+          const model = selection.execution.input().model
+          const agent = local.agent.key?.() ?? local.agent.current()?.id
+          // Commit the Send's choice before ownership: its first optimistic row must not restore a new intent mid-send.
+          if (model && agent) local.session.restore({ sessionID: params.id, agent,
+            model: { providerID: model.providerID, modelID: model.id, variant: model.variant } })
+        }
         const captured = capture(target)
         const owners = admissionSource().source.existing
         const actions = owners.get(existingOwner) ?? new Map<string, ExistingAdmission>()
         owners.set(existingOwner, actions)
         actions.forEach((action, key) => { if (!action.current()) actions.delete(key) })
         const agent = captured.agentID
-        const text = captured.submission.prompt.map((part) => "content" in part ? part.content : "").join("")
         const intentKey = captured.mode === "normal" && !captured.shouldQueue && agent &&
           (text.trim().length || captured.images.length || captured.commentCount) ? JSON.stringify({
           currentPrompt: captured.submission.prompt, context: captured.submission.context, images: captured.images,
           mode: captured.mode, agent, model: captured.intent.model, variant: captured.intent.variant,
           delivery: captured.delivery, policyVersion: captured.policyVersion,
         }) : undefined
-        // Lookup precedes catalog classification: an ambiguous unknown-slash prompt keeps its original kind.
+        // A retained request keeps its original kind even if the command catalog changed after its lost ACK.
         const previous = intentKey ? actions.get(intentKey) : undefined
         if (previous?.task) return previous.task
         const model = previous?.request.selection?.model ?? (captured.currentModel && {
           modelID: captured.currentModel.id, providerID: captured.currentModel.provider.id,
         })
-        const kind = previous?.request.kind ?? (text.startsWith("/") &&
-          sync().data.command.some((command) => command.name === text.split(" ")[0].slice(1)) ? "command" : "prompt")
+        const kind = previous?.request.kind ?? (command ? "command" : "prompt")
         const key = previous?.request.key ?? JSON.stringify({
           currentPrompt: captured.submission.prompt, context: captured.submission.context, images: captured.images,
           mode: captured.mode, agent, model, variant: captured.variant, delivery: captured.delivery, policyVersion: captured.policyVersion,
