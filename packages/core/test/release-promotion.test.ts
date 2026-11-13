@@ -374,6 +374,7 @@ for (const conflict of ["missing", "different", "extra"] as const) {
     const first = await fixture.promote()
     expect(first.exitCode, first.stderr.toString()).toBe(0)
     const state = await fixture.read()
+    expect(state.log.filter((entry) => entry.operation === "release.backoff:3")).toEqual([])
     const original = structuredClone(state.releases["v0.3.6"].assets)
     if (conflict === "missing") delete state.releases["v0.3.6"].assets["SHA256SUMS"]
     if (conflict === "different") {
@@ -399,10 +400,24 @@ for (const conflict of ["missing", "different", "extra"] as const) {
     const before = structuredClone(state.releases["v0.3.6"])
     const count = state.log.length
     await fixture.save(state)
-    expect((await fixture.promote()).exitCode).not.toBe(0)
+    const refused = await fixture.promote()
+    expect(refused.exitCode).not.toBe(0)
+    expect(refused.step).toBe("Publish versioned releases only after asset digest verification")
+    expect(refused.stderr.toString()).toContain("RELEASE_ASSET_DIGEST_MISMATCH")
     const after = await fixture.read()
     expect(after.releases["v0.3.6"]).toEqual(before)
     expect(after.log.slice(count).filter((entry) => entry.operation.startsWith("asset.upload:v0.3.6/"))).toEqual([])
+    const reads = after.log.slice(count).filter((entry) =>
+      entry.operation === "release.read:v0.3.6" && entry.args[0] === "api")
+    expect(reads.map((entry) => entry.args)).toEqual(Array.from({ length: 10 }, () =>
+      ["api", `https://api.github.com/repos/${state.repository}/releases/${before.id}`]))
+    const backoffs = after.log.slice(count).filter((entry) => entry.operation === "release.backoff:3")
+    expect(backoffs.map((entry) => ({ args: entry.args, mutation: entry.mutation }))).toEqual(
+      Array.from({ length: 9 }, () => ({ args: ["3"], mutation: false })),
+    )
+    expect(after.log.slice(count).filter((entry) => reads.includes(entry) || backoffs.includes(entry))
+      .map((entry) => entry.operation)).toEqual(Array.from({ length: 10 }, (_, index) =>
+        index < 9 ? ["release.read:v0.3.6", "release.backoff:3"] : ["release.read:v0.3.6"]).flat())
   })
 }
 

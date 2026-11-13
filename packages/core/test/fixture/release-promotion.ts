@@ -167,7 +167,7 @@ export async function releaseFixture(directory: string, version = "0.3.6") {
   const bin = join(directory, "bin")
   await mkdir(bin)
   const quote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`
-  for (const tool of ["gh", "npm"]) {
+  for (const tool of ["gh", "npm", "sleep"]) {
     const file = join(bin, tool)
     await writeFile(
       file,

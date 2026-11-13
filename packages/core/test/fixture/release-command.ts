@@ -160,7 +160,11 @@ const fields = () =>
     ),
   )
 
-if (tool === "npm") {
+if (tool === "sleep") {
+  if (args.length !== 1 || args[0] !== "3") throw new Error(`FIXTURE_SLEEP_UNSUPPORTED:${JSON.stringify(args)}`)
+  // This private static transport fixture records retry backoff without wall-clock network waiting.
+  await operation("release.backoff:3", false, () => undefined)
+} else if (tool === "npm") {
   if (args[0] === "view" && args[1] && ["dist.integrity", "version"].includes(args[2])) {
     const key = args[1]
     await operation(`npm.view:${key}`, false, () => {
