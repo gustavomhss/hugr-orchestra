@@ -110,9 +110,11 @@ def descendants(snapshot, root_pid, root_start):
 
 
 def signal_identity(pid, starttime, sig):
-    snapshot = proc_snapshot()
-    row = snapshot.get(pid)
-    if row is None or row[3] != starttime:
+    try:
+        row = proc_row(pid)
+    except (OSError, ValueError, IndexError) as exc:
+        raise RuntimeError('PID_IDENTITY_UNKNOWN') from exc
+    if row[3] != starttime:
         raise RuntimeError('PID_IDENTITY_UNKNOWN')
     os.kill(pid, sig)
 
