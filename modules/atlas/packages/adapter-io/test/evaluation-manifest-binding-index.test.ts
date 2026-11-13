@@ -69,7 +69,7 @@ describe("evaluation manifest candidate entry index", () => {
 
   it("refuses a missing candidate entry", () => {
     const f = fixture()
-    const candidate = { ...f.candidate, entries: [] }
+    const candidate = { ...f.candidate, entries: [{ ...f.candidate.entries[0]!, key: "other" }] }
     const candidateId = f.store.put(candidate)
     const manifest = f.store.get(f.manifestId) as EvaluationOwnershipManifest
     const rebound = f.store.put({ ...manifest, evaluationCandidate: candidateId })
