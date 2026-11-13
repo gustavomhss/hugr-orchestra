@@ -1,0 +1,30 @@
+name: maintenance-descriptor-loader-synthetic
+on:
+  push:
+    branches: [genesis-maintenance-descriptor-loader-ci]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic-loader:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Verify checkout and run only synthetic loader tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          {
+            printf 'commit=%s\n' "$GITHUB_SHA"
+            node --version
+            sha256sum modules/atlas/scripts/maintenance-descriptor-loader.mjs modules/atlas/scripts/maintenance-descriptor-loader.test.mjs
+            node --test modules/atlas/scripts/maintenance-descriptor-loader.test.mjs
+          } 2>&1 | tee maintenance-descriptor-loader-test.log
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: maintenance-descriptor-loader-synthetic-${{ github.sha }}
+          path: maintenance-descriptor-loader-test.log
+          if-no-files-found: error
