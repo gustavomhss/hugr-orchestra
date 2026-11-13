@@ -237,22 +237,25 @@ export function finalizeEvaluationUpdate(request: {
   readonly readReference: (reference: NativeReference) => Uint8Array
 }): OwnershipRefusal | { readonly kind: "private-evaluation-candidate"; readonly prepared: PreparedEvaluation; readonly manifest: Hash; readonly context: OwnershipEvaluationContext } {
   const { store, target } = request, prepared = target.prepared
-  // Detach the graph from caller-owned aliases before invoking any external callback.
-  // The snapshot is the only candidate used to build and return the finalized graph.
-  const candidate = deepFreeze(structuredClone(prepared.candidate))
-  const finalizedPrepared: PreparedEvaluation = { ...prepared, candidate }
-  const context: OwnershipEvaluationContext = { evaluation: candidate.evaluation, evaluationCandidate: prepared.candidate_id, generation: target.targetGeneration }
   // No target manifest exists yet. Label intended context without inventing a manifest identity.
   const refuse = (message: string): OwnershipRefusal & { phase: "evaluation"; evaluationCandidate: Hash; generation: Hash } => ({
     kind: "hold", reason: "ownership-review", evidence: [message], phase: "evaluation", evaluationCandidate: prepared.candidate_id, generation: target.targetGeneration })
   try {
+  // Snapshot construction is inside the guarded boundary: hostile proxies or uncloneable
+  // values must become HOLD, not escape the finalize API as uncaught exceptions.
+  const candidate = deepFreeze(structuredClone(prepared.candidate))
+  const finalizedPrepared: PreparedEvaluation = { ...prepared, candidate }
+  const context: OwnershipEvaluationContext = { evaluation: candidate.evaluation, evaluationCandidate: prepared.candidate_id, generation: target.targetGeneration }
+  // Decisions and references are callback inputs too. Validate an immutable detached copy,
+  // never the caller-owned binding object.
+  const bindingSnapshot = deepFreeze(structuredClone(request.binding))
   if (prepared.candidate_id !== id(candidate) || id(store.get(prepared.candidate_id)) !== prepared.candidate_id ||
     JSON.stringify(candidate.runtime_identity) !== JSON.stringify(evaluationRuntimeIdentity())) return refuse("evaluation-target-integrity")
   const plan = store.get(candidate.evaluation.evaluationPlan)
   if (!isRecord(plan) || id(plan) !== candidate.evaluation.evaluationPlan || plan.schema !== "genesis-evaluation-rebuild-plan/v1" || plan.target_generation !== target.targetGeneration)
     return refuse("evaluation-target-plan")
   if (candidate.observations.some((input) => request.current(input.key) !== input.version)) return refuse("evaluation-target-input-drift")
-  const binding = validateEvaluationBinding(request.binding, finalizedPrepared)
+  const binding = validateEvaluationBinding(bindingSnapshot, finalizedPrepared)
   const evidence = binding.decisions.map((decision) => [decision.request_ref, decision.response_ref].map((reference) => {
     const bytes = request.readReference(reference)
     if (nativeSha256(bytes) !== reference.sha256) throw new Error("evaluation-rebuild-reference-drift")

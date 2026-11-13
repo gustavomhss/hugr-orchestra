@@ -178,3 +178,43 @@ describe("finalize candidate alias isolation", () => {
     expect(original.entries[0]!.artifact.title).toBe("caller-side-mutation")
   })
 })
+
+describe("finalize decision snapshot and failure boundary", () => {
+  it("keeps validated decisions stable when a reference callback mutates caller binding aliases", () => {
+    const f = changed(), evidence = decisions(f.target)
+    const originalReviewer = evidence.binding.decisions[0]!.reviewer
+    const originalDecision = evidence.binding.decisions[0]!.decision_id
+    const result = finalizeEvaluationUpdate({ store: f.store, target: f.target, ...evidence,
+      readReference: (reference) => {
+        Reflect.set(evidence.binding.decisions[0]!, "reviewer", "attacker-reviewer")
+        Reflect.set(evidence.binding.decisions[0]!, "decision_id", "sha256:attacker")
+        Reflect.set(evidence.binding.decisions[0]!.entries[0]!, "result", "attacker-result")
+        // The exact reference object passed to the callback is frozen as part of the snapshot.
+        expect(Reflect.set(reference, "sha256", "0".repeat(64))).toBe(false)
+        return reference.sha256 === nativeSha256(new TextEncoder().encode("synthetic new exact rebuild request"))
+          ? new TextEncoder().encode("synthetic new exact rebuild request")
+          : new TextEncoder().encode("synthetic response a")
+      },
+      current: (key) => f.current.get(key) })
+    expect(result.kind).toBe("private-evaluation-candidate")
+    if (result.kind !== "private-evaluation-candidate") return
+    const manifest = f.store.get(result.manifest) as EvaluationOwnershipManifest
+    const storedArtifact = f.store.get(manifest.entries[0]!.artifact) as EvaluationOwnershipArtifact
+    const receipt = f.store.get(storedArtifact.receipt) as EvaluationOwnershipReceipt
+    const reviewers = receipt.reviews.map(hash => (f.store.get(hash) as EvaluationOwnershipReview).reviewer)
+    expect(reviewers).toContain(originalReviewer)
+    expect(reviewers).not.toContain("attacker-reviewer")
+    expect(evidence.binding.decisions[0]!.decision_id).toBe("sha256:attacker")
+    expect(originalDecision).not.toBe("sha256:attacker")
+  })
+
+  it("converts a snapshot/clone failure into HOLD instead of throwing outside finalize", () => {
+    const f = changed(), evidence = decisions(f.target)
+    const hostile = new Proxy(f.target.prepared.candidate, { getPrototypeOf() { throw new Error("synthetic-snapshot-trap") } })
+    const target = { ...f.target, prepared: { ...f.target.prepared, candidate: hostile } } as unknown as PreparedEvaluationUpdate
+    expect(() => finalizeEvaluationUpdate({ store: f.store, target, ...evidence,
+      current: (key) => f.current.get(key) })).not.toThrow()
+    expect(finalizeEvaluationUpdate({ store: f.store, target, ...evidence,
+      current: (key) => f.current.get(key) })).toMatchObject({ kind: "hold", evidence: ["synthetic-snapshot-trap"] })
+  })
+})
