@@ -1,6 +1,5 @@
 import {
   BoxRenderable,
-  RGBA,
   TextareaRenderable,
   MouseEvent,
   PasteEvent,
@@ -12,7 +11,6 @@ import type { CommandContext } from "@opentui/keymap"
 import { createComputed, createEffect, createMemo, onMount, createSignal, onCleanup, on, Show, Switch, Match } from "solid-js"
 import { registerOrchestraSpinner } from "../register-spinner"
 import path from "path"
-import { fileURLToPath } from "url"
 import { modelExecutionReason, useLocal } from "../../context/local"
 import { tint, useTheme } from "../../context/theme"
 import { EmptyBorder, SplitBorder } from "../../ui/border"
@@ -25,7 +23,7 @@ import { useRoute } from "../../context/route"
 import { useProject } from "../../context/project"
 import { useSync } from "../../context/sync"
 import { useEvent } from "../../context/event"
-import { editorSelectionKey, useEditorContext, type EditorSelection } from "../../context/editor"
+import { editorSelectionKey, useEditorContext } from "../../context/editor"
 import { normalizePromptContent, openEditor } from "../../editor"
 import { useExit } from "../../context/exit"
 import { promptOffsetWidth } from "../../prompt/display"
@@ -36,7 +34,7 @@ import { expandPastedTextPlaceholders, expandTrackedPastedText } from "../../pro
 import { usePromptStash } from "../../prompt/stash"
 import { DialogStash } from "../dialog-stash"
 import { type AutocompleteRef, Autocomplete } from "./autocomplete"
-import { useRenderer, useTerminalDimensions, type JSX } from "@opentui/solid"
+import { useRenderer, useTerminalDimensions } from "@opentui/solid"
 import type { SessionMessageAssistant } from "../../types"
 import type { TuiPromptFilePart } from "@orchestra/plugin/tui"
 import { Locale } from "../../util/locale"
@@ -58,86 +56,12 @@ import { usePromptMove } from "./move"
 import { readLocalAttachment } from "./local-attachment"
 import { useLocation } from "../../context/location"
 import { agentKey, findAgent } from "../../util/agent"
+import { PromptSupport } from "./support"
+import type { PromptProps, PromptRef } from "./support"
 
 registerOrchestraSpinner()
 
-export type PromptProps = {
-  sessionID?: string
-  visible?: boolean
-  disabled?: boolean
-  onSubmit?: () => void
-  ref?: (ref: PromptRef | undefined) => void
-  hint?: JSX.Element
-  right?: JSX.Element
-  showPlaceholder?: boolean
-  placeholders?: {
-    normal?: string[]
-    shell?: string[]
-  }
-}
-
-function pastedFilepath(value: string, platform: string) {
-  const raw = value.replace(/^['"]+|['"]+$/g, "")
-  if (raw.startsWith("file://")) {
-    try {
-      return fileURLToPath(raw)
-    } catch {}
-  }
-  if (platform === "win32") return raw
-  return raw.replace(/\\(.)/g, "$1")
-}
-
-export type PromptRef = {
-  focused: boolean
-  current: PromptInfo
-  set(prompt: PromptInfo): void
-  reset(): void
-  blur(): void
-  focus(): void
-  submit(): void
-}
-
-const money = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-})
-
-const DRAFT_RETENTION_MIN_CHARS = 20
-
-function randomIndex(count: number) {
-  if (count <= 0) return 0
-  return Math.floor(Math.random() * count)
-}
-
-function fadeColor(color: RGBA, alpha: number) {
-  return RGBA.fromValues(color.r, color.g, color.b, color.a * alpha)
-}
-
-function hasEditorRangeSelection(selection: EditorSelection["ranges"][number]) {
-  return (
-    selection.selection.start.line !== selection.selection.end.line ||
-    selection.selection.start.character !== selection.selection.end.character
-  )
-}
-
-function getEditorRangeLabel(selection: EditorSelection["ranges"][number]) {
-  if (!hasEditorRangeSelection(selection)) return
-  if (selection.selection.start.line === selection.selection.end.line) return `#${selection.selection.start.line}`
-  return `#${selection.selection.start.line}-${selection.selection.end.line}`
-}
-
-function formatEditorContext(selection: EditorSelection) {
-  const selected = selection.ranges.filter(hasEditorRangeSelection)
-  if (selected.length === 0)
-    return `<system-reminder>Note: The user opened the file "${selection.filePath}". This may or may not be relevant to the current task.</system-reminder>\n`
-
-  const ranges = selected.map((range, index) => {
-    const prefix = selected.length > 1 ? `Selection ${index + 1}: ` : ""
-    return `Note: The user selected ${prefix}${getEditorRangeLabel(range)} from "${selection.filePath}". \`\`\`${range.text}\`\`\`\n\n`
-  })
-
-  return `<system-reminder>${ranges.join("\n")} This may or may not be relevant to the current task.</system-reminder>\n`
-}
+export type { PromptProps, PromptRef } from "./support"
 
 let stashed: { prompt: PromptInfo; cursor: number } | undefined
 
@@ -186,9 +110,9 @@ export function Prompt(props: PromptProps) {
   const editorSelectionLabel = createMemo(() => {
     const ranges = editorContext()?.ranges
     if (!ranges) return
-    const first = ranges.find(hasEditorRangeSelection) ?? ranges[0]
+    const first = ranges.find(PromptSupport.hasEditorRangeSelection) ?? ranges[0]
     if (!first) return
-    return [getEditorRangeLabel(first), ranges.length > 1 ? `+${ranges.length - 1}` : undefined]
+    return [PromptSupport.getEditorRangeLabel(first), ranges.length > 1 ? `+${ranges.length - 1}` : undefined]
       .filter(Boolean)
       .join(" ")
   })
@@ -281,7 +205,7 @@ export function Prompt(props: PromptProps) {
     const cost = session?.cost ?? 0
     return {
       context: pct ? `${Locale.number(tokens)} (${pct})` : Locale.number(tokens),
-      cost: cost > 0 ? money.format(cost) : undefined,
+      cost: cost > 0 ? PromptSupport.money.format(cost) : undefined,
     }
   })
 
@@ -292,7 +216,7 @@ export function Prompt(props: PromptProps) {
     interrupt: number
     placeholder: number
   }>({
-    placeholder: randomIndex(list().length),
+    placeholder: PromptSupport.randomIndex(list().length),
     prompt: {
       input: "",
       parts: [],
@@ -306,7 +230,7 @@ export function Prompt(props: PromptProps) {
     on(
       () => props.sessionID,
       () => {
-        setStore("placeholder", randomIndex(list().length))
+        setStore("placeholder", PromptSupport.randomIndex(list().length))
       },
       { defer: true },
     ),
@@ -822,7 +746,7 @@ export function Prompt(props: PromptProps) {
           desc: "Shell mode",
           group: "Prompt",
           cmd: () => {
-            setStore("placeholder", randomIndex(shell().length))
+            setStore("placeholder", PromptSupport.randomIndex(shell().length))
             setStore("mode", "shell")
           },
         },
@@ -1055,7 +979,7 @@ export function Prompt(props: PromptProps) {
 
     const editorSelection = editorContext()
     const editorText =
-      editorSelection && editor.labelState() === "pending" ? formatEditorContext(editorSelection) : undefined
+      editorSelection && editor.labelState() === "pending" ? PromptSupport.formatEditorContext(editorSelection) : undefined
 
     const demoCommand = args.mini && args.demo ? Demo.parse(inputText) : undefined
     if (demoCommand) {
@@ -1189,7 +1113,7 @@ export function Prompt(props: PromptProps) {
   async function pasteInputText(text: string) {
     const normalizedText = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n")
     const pastedContent = normalizedText.trim()
-    const filepath = pastedFilepath(pastedContent, terminalEnvironment.platform)
+    const filepath = PromptSupport.pastedFilepath(pastedContent, terminalEnvironment.platform)
     const isUrl = /^(https?):\/\//.test(filepath)
     if (!isUrl) {
       const attachment = await readLocalAttachment(filepath)
@@ -1276,7 +1200,7 @@ export function Prompt(props: PromptProps) {
   }
 
   function clearPrompt() {
-    if (store.prompt.input.trim().length >= DRAFT_RETENTION_MIN_CHARS || store.prompt.parts.length > 0) {
+    if (store.prompt.input.trim().length >= PromptSupport.DRAFT_RETENTION_MIN_CHARS || store.prompt.parts.length > 0) {
       history.append({
         ...store.prompt,
         mode: store.mode,
@@ -1450,26 +1374,26 @@ export function Prompt(props: PromptProps) {
                 <Show when={local.agent.current()} fallback={<box height={1} />}>
                   {(agent) => (
                     <>
-                      <text fg={fadeColor(highlight(), agentMetaAlpha())}>
+                      <text fg={PromptSupport.fadeColor(highlight(), agentMetaAlpha())}>
                         {store.mode === "shell" ? "Shell" : Locale.titlecase(agent().name)}
                       </text>
                       <Show when={store.mode === "normal" && local.permission.mode === "auto"}>
-                        <text fg={fadeColor(theme.textMuted, agentMetaAlpha())}>auto</text>
+                        <text fg={PromptSupport.fadeColor(theme.textMuted, agentMetaAlpha())}>auto</text>
                       </Show>
                       <Show when={store.mode === "normal"}>
                         <box flexDirection="row" gap={1}>
-                          <text fg={fadeColor(theme.textMuted, modelMetaAlpha())}>·</text>
+                          <text fg={PromptSupport.fadeColor(theme.textMuted, modelMetaAlpha())}>·</text>
                           <text
                             flexShrink={0}
-                            fg={fadeColor(leader() ? theme.textMuted : theme.text, modelMetaAlpha())}
+                            fg={PromptSupport.fadeColor(leader() ? theme.textMuted : theme.text, modelMetaAlpha())}
                           >
                             {local.model.parsed().model}
                           </text>
-                          <text fg={fadeColor(theme.textMuted, modelMetaAlpha())}>{currentProviderLabel()}</text>
+                          <text fg={PromptSupport.fadeColor(theme.textMuted, modelMetaAlpha())}>{currentProviderLabel()}</text>
                           <Show when={showVariant()}>
-                            <text fg={fadeColor(theme.textMuted, variantMetaAlpha())}>·</text>
+                            <text fg={PromptSupport.fadeColor(theme.textMuted, variantMetaAlpha())}>·</text>
                             <text>
-                              <span style={{ fg: fadeColor(theme.warning, variantMetaAlpha()), bold: true }}>
+                              <span style={{ fg: PromptSupport.fadeColor(theme.warning, variantMetaAlpha()), bold: true }}>
                                 {local.model.variant.current()}
                               </span>
                             </text>
