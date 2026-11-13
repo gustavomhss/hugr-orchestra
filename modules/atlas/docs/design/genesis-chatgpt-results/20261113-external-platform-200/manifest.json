@@ -1,0 +1,1818 @@
+{
+  "schema": "genesis-platform-200-manifest/v1",
+  "repository": "gustavomhss/hugr-orchestra",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_tree": "a522a53e5f046f1758151b0f558531bbded04592",
+  "count": 200,
+  "validation": {
+    "unique_paths": 200,
+    "all_git_blobs": true,
+    "missing": [],
+    "duplicates": [],
+    "non_blobs": [],
+    "tree_truncated": false
+  },
+  "entries": [
+    {
+      "id": "P001",
+      "path": ".claude/skills/orchestra-design-system/SKILL.md",
+      "git_blob_sha": "ee1c5f77b226bf9af98322a112975267a758e201",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 3411,
+      "batch": "C"
+    },
+    {
+      "id": "P002",
+      "path": ".claude/skills/orchestra-visual-qa/SKILL.md",
+      "git_blob_sha": "ccbed690b5a7177d6b548b13c709e6d3a4c9e6c5",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 8015,
+      "batch": "C"
+    },
+    {
+      "id": "P003",
+      "path": ".claude/skills/orchestra-visual-qa/scripts/aa.ts",
+      "git_blob_sha": "3580e97e8cd6ad528482b7ccfa053f2f221f0cd5",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 749,
+      "batch": "C"
+    },
+    {
+      "id": "P004",
+      "path": ".claude/skills/orchestra-visual-qa/scripts/bands.js",
+      "git_blob_sha": "ca8b60241eccde95d375c0fd7f09c00bc78bda74",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 1258,
+      "batch": "C"
+    },
+    {
+      "id": "P005",
+      "path": ".claude/skills/orchestra-visual-qa/scripts/cdp.ts",
+      "git_blob_sha": "fecb87bff555d4f460cba6c946e4dd721cb15c87",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 1404,
+      "batch": "C"
+    },
+    {
+      "id": "P006",
+      "path": ".claude/skills/orchestra-visual-qa/scripts/fix-aa.ts",
+      "git_blob_sha": "4fea7a4093f3594f1aaf0349771a857ae36d58db",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 1365,
+      "batch": "C"
+    },
+    {
+      "id": "P007",
+      "path": ".claude/skills/orchestra-visual-qa/scripts/inject.ts",
+      "git_blob_sha": "4703c5690d7b065ec7286866ee0560e73ac017b7",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 466,
+      "batch": "C"
+    },
+    {
+      "id": "P008",
+      "path": ".claude/skills/orchestra-visual-qa/scripts/lits.py",
+      "git_blob_sha": "f6f3a0ca102f59b22fc069eed7ce084ee0327b9c",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 557,
+      "batch": "C"
+    },
+    {
+      "id": "P009",
+      "path": ".claude/skills/orchestra-visual-qa/scripts/motion.py",
+      "git_blob_sha": "da0d669965aef4b6a5c04dd7a609f805bb536b65",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 1373,
+      "batch": "C"
+    },
+    {
+      "id": "P010",
+      "path": ".claude/skills/orchestra-visual-qa/scripts/sheet.py",
+      "git_blob_sha": "8f94370e554d70236c4bdd40ffe947f746c480d2",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 262,
+      "batch": "C"
+    },
+    {
+      "id": "P011",
+      "path": ".dockerignore",
+      "git_blob_sha": "487e9eb94ae2a3df6f55310fe6225f5e63f66bb2",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 117,
+      "batch": "C"
+    },
+    {
+      "id": "P012",
+      "path": ".editorconfig",
+      "git_blob_sha": "aada95f26a8221428758ea0b22f886f3e5a8da8b",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 136,
+      "batch": "C"
+    },
+    {
+      "id": "P013",
+      "path": ".gitattributes",
+      "git_blob_sha": "ab990df12bf47e70e5033bdeecb0db030b391902",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 3680,
+      "batch": "C"
+    },
+    {
+      "id": "P014",
+      "path": ".github/TEAM_MEMBERS",
+      "git_blob_sha": "5268ff59ddc8b11a0c61f9041ebbec959298c7d4",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 211,
+      "batch": "A"
+    },
+    {
+      "id": "P015",
+      "path": ".github/actions/apple-signing/action.yml",
+      "git_blob_sha": "7578e1f849972d689229c1563d4a5402494e24a6",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 2948,
+      "batch": "A"
+    },
+    {
+      "id": "P016",
+      "path": ".github/actions/omni-binaries/action.yml",
+      "git_blob_sha": "26e6b752b0383fbd4b55afa5b026240a447562bf",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 3348,
+      "batch": "A"
+    },
+    {
+      "id": "P017",
+      "path": ".github/actions/previous-pass/action.yml",
+      "git_blob_sha": "38adb400c7e72cffd31470bb778a0ca1db3b884d",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 1987,
+      "batch": "A"
+    },
+    {
+      "id": "P018",
+      "path": ".github/actions/ripgrep/action.yml",
+      "git_blob_sha": "7c63713ca98e75672489d16f9dc5e68f00311f23",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 5600,
+      "batch": "A"
+    },
+    {
+      "id": "P019",
+      "path": ".github/actions/setup-bun/action.yml",
+      "git_blob_sha": "e2cda5b54676d4d1c35785aaef7aa69d66944597",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 6665,
+      "batch": "A"
+    },
+    {
+      "id": "P020",
+      "path": ".github/dependabot.yml",
+      "git_blob_sha": "27e4fba42bf1864ece8b13de0156cfcbbfd94697",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 508,
+      "batch": "A"
+    },
+    {
+      "id": "P021",
+      "path": ".github/pull_request_template.md",
+      "git_blob_sha": "393bf90518e9c82e8ffccededc3b823b7a90500f",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 846,
+      "batch": "A"
+    },
+    {
+      "id": "P022",
+      "path": ".github/workflows/artifact-native.yml",
+      "git_blob_sha": "d18645ea4a9888998d188ea7012542b1bd310818",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 5490,
+      "batch": "A"
+    },
+    {
+      "id": "P023",
+      "path": ".github/workflows/cache-warm.yml",
+      "git_blob_sha": "83f0e5ce8770244765fe08bf6131ed2f7075adcb",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 3836,
+      "batch": "A"
+    },
+    {
+      "id": "P024",
+      "path": ".github/workflows/codeql.yml",
+      "git_blob_sha": "d8c1a08d61ccaea0c46416cea1e2acf6018c7fa3",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 823,
+      "batch": "A"
+    },
+    {
+      "id": "P025",
+      "path": ".github/workflows/distribution-bundle.yml",
+      "git_blob_sha": "9ff7ba447f6da199891615d43756498bd9e99eb6",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 15079,
+      "batch": "A"
+    },
+    {
+      "id": "P026",
+      "path": ".github/workflows/native.yml",
+      "git_blob_sha": "32f6a5a5e1707b670ed599f5d6ef383685ea4bf6",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 9409,
+      "batch": "A"
+    },
+    {
+      "id": "P027",
+      "path": ".github/workflows/nix-distribution.yml",
+      "git_blob_sha": "f46f9c6db20067a495eff609e2c544ceb5efe401",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 11138,
+      "batch": "A"
+    },
+    {
+      "id": "P028",
+      "path": ".github/workflows/nix-eval.yml",
+      "git_blob_sha": "a2bbeb479158cde6911ec966a4dd0151edd771ae",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 3233,
+      "batch": "A"
+    },
+    {
+      "id": "P029",
+      "path": ".github/workflows/omni-artifacts-proof.yml",
+      "git_blob_sha": "2d6a1d943df3537fc76597338b16e812ac7ba89f",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 384,
+      "batch": "A"
+    },
+    {
+      "id": "P030",
+      "path": ".github/workflows/omni-artifacts.yml",
+      "git_blob_sha": "474b13ec132053b9dd0b5d089af315d77d5ee530",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 6019,
+      "batch": "A"
+    },
+    {
+      "id": "P031",
+      "path": ".github/workflows/omni-cli-smoke.yml",
+      "git_blob_sha": "b7b15805daca8acf8fb3aac68b258e1fe46484e4",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 8188,
+      "batch": "A"
+    },
+    {
+      "id": "P032",
+      "path": ".github/workflows/omni-delivery-campaign.yml",
+      "git_blob_sha": "2135e4899c1795a6d42bfd571b5b66f3a6705e36",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 3557,
+      "batch": "A"
+    },
+    {
+      "id": "P033",
+      "path": ".github/workflows/omni-desktop-smoke.yml",
+      "git_blob_sha": "15e8dc5aab45b33d0d6f7ae505b5551cd4a78e5f",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 8715,
+      "batch": "A"
+    },
+    {
+      "id": "P034",
+      "path": ".github/workflows/omni-mirror.yml",
+      "git_blob_sha": "b224f2ff544394bf914495b7efcfd27a7869af3e",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 3202,
+      "batch": "A"
+    },
+    {
+      "id": "P035",
+      "path": ".github/workflows/omni.yml",
+      "git_blob_sha": "f3bc81db7c1c6230f3b79a0f8acd444aea5633b0",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 2735,
+      "batch": "A"
+    },
+    {
+      "id": "P036",
+      "path": ".github/workflows/release-cli.yml",
+      "git_blob_sha": "84d12627da5287bea983a759ef4c9553213f2265",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 19743,
+      "batch": "A"
+    },
+    {
+      "id": "P037",
+      "path": ".github/workflows/release-desktop.yml",
+      "git_blob_sha": "538cefa7dc28af5f16cb5e82f813863988c65d77",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 25337,
+      "batch": "A"
+    },
+    {
+      "id": "P038",
+      "path": ".github/workflows/runtime-products.yml",
+      "git_blob_sha": "564d04d8ace6251cf4525568f04ea7fcd69fafdd",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 11947,
+      "batch": "A"
+    },
+    {
+      "id": "P039",
+      "path": ".github/workflows/test.yml",
+      "git_blob_sha": "93862b55ca3408729bb07c0d7cac51946217e444",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 27871,
+      "batch": "A"
+    },
+    {
+      "id": "P040",
+      "path": ".github/workflows/toolkit-arm.yml",
+      "git_blob_sha": "4d77478cdf64a738d302ff53fc77d3223dcad1b5",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 8778,
+      "batch": "A"
+    },
+    {
+      "id": "P041",
+      "path": ".github/workflows/tree-sitter-artifacts.yml",
+      "git_blob_sha": "6dfab4d4d65d1a74e962614c1d4cee8f9a936b76",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 3106,
+      "batch": "A"
+    },
+    {
+      "id": "P042",
+      "path": ".github/workflows/typecheck.yml",
+      "git_blob_sha": "a5e4bd4142940291b9e0e5853b4f3ad4536d5411",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 1918,
+      "batch": "A"
+    },
+    {
+      "id": "P043",
+      "path": ".gitignore",
+      "git_blob_sha": "f87b0cd6e00813278e36474cf332bae735394518",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 1037,
+      "batch": "C"
+    },
+    {
+      "id": "P044",
+      "path": ".gitleaksignore",
+      "git_blob_sha": "cc01a286fb70faa6d30cf42b60de097e3ffe4c1d",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 506,
+      "batch": "C"
+    },
+    {
+      "id": "P045",
+      "path": ".orchestra/.gitignore",
+      "git_blob_sha": "c072cfe070993e55dccceb038cae99aabe8cbf3b",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 82,
+      "batch": "C"
+    },
+    {
+      "id": "P046",
+      "path": ".orchestra/ci.json",
+      "git_blob_sha": "f5b3ede980cec671af3401ee8d9e41380f0c6253",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 635,
+      "batch": "C"
+    },
+    {
+      "id": "P047",
+      "path": ".orchestra/command/ai-deps.md",
+      "git_blob_sha": "5a50c22749c387a3d2d43e4d7134b15cdbe3cc98",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 1029,
+      "batch": "C"
+    },
+    {
+      "id": "P048",
+      "path": ".orchestra/command/commit.md",
+      "git_blob_sha": "5fb08dfbe6f34a7c43db5c6d241f018644a967be",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 547,
+      "batch": "C"
+    },
+    {
+      "id": "P049",
+      "path": ".orchestra/command/learn.md",
+      "git_blob_sha": "fe4965a5887e0e1c175f0b3d5961f343353eb9e4",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 1628,
+      "batch": "C"
+    },
+    {
+      "id": "P050",
+      "path": ".orchestra/command/rmslop.md",
+      "git_blob_sha": "02c9fc0844a7010572352e6f29efa97a965c6ee0",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 576,
+      "batch": "C"
+    },
+    {
+      "id": "P051",
+      "path": ".orchestra/command/spellcheck.md",
+      "git_blob_sha": "0abf23c4fd090d5350a65b2ffe406b3e5e4b3a80",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 204,
+      "batch": "C"
+    },
+    {
+      "id": "P052",
+      "path": ".orchestra/command/translate.md",
+      "git_blob_sha": "64df08d6c1049ae6eb255a9935f333ef5a8ce71b",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 773,
+      "batch": "C"
+    },
+    {
+      "id": "P053",
+      "path": ".orchestra/env.d.ts",
+      "git_blob_sha": "f2b13a934c43620d93061017edf65f12122dc0a0",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 76,
+      "batch": "C"
+    },
+    {
+      "id": "P054",
+      "path": ".orchestra/orchestra.jsonc",
+      "git_blob_sha": "9421004e51e5b007a7d291fa24ed94c14e1f156d",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 469,
+      "batch": "C"
+    },
+    {
+      "id": "P055",
+      "path": ".orchestra/plugins/smoke-theme.json",
+      "git_blob_sha": "dfe73305d2d8cfaaec14691c5fc0471d0a3a67ec",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 4278,
+      "batch": "C"
+    },
+    {
+      "id": "P056",
+      "path": ".orchestra/plugins/tui-smoke.tsx",
+      "git_blob_sha": "d45fc50b3db8dc8e67218c269eb6c44f16c6a429",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 31255,
+      "batch": "C"
+    },
+    {
+      "id": "P057",
+      "path": ".orchestra/skills/vcs-maintenance/SKILL.md",
+      "git_blob_sha": "1031f1840484ee904c286b426050aee67bb57350",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 2267,
+      "batch": "C"
+    },
+    {
+      "id": "P058",
+      "path": ".orchestra/skills/windows-test-portability/SKILL.md",
+      "git_blob_sha": "0f7955bb52127ebcf6b84e66bde9cec7b861150b",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 3339,
+      "batch": "C"
+    },
+    {
+      "id": "P059",
+      "path": ".oxlintrc.json",
+      "git_blob_sha": "4dce1ec7a1dcd8f9837d9f0b047bda69769ce414",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 2077,
+      "batch": "C"
+    },
+    {
+      "id": "P060",
+      "path": ".prettierignore",
+      "git_blob_sha": "dc65965b09963d0c3409d1accf4408d1139f84a5",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 679,
+      "batch": "C"
+    },
+    {
+      "id": "P061",
+      "path": ".sh",
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 0,
+      "batch": "C"
+    },
+    {
+      "id": "P062",
+      "path": ".vscode/launch.example.json",
+      "git_blob_sha": "744ce92aabfdafa29799f26f0a247b754cad1ad8",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 184,
+      "batch": "C"
+    },
+    {
+      "id": "P063",
+      "path": ".vscode/settings.example.json",
+      "git_blob_sha": "05bbf7fe11c12f09097dd23a4cafbf70ff56c183",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 53,
+      "batch": "C"
+    },
+    {
+      "id": "P064",
+      "path": ".zed/settings.json",
+      "git_blob_sha": "a3a5e1e2b219b4e8389b1d0f43ba3d3aba55c6e3",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 169,
+      "batch": "C"
+    },
+    {
+      "id": "P065",
+      "path": "CHANGELOG.md",
+      "git_blob_sha": "1a7d0ab88e4cc04bd3830fc3ad41cfa00657319c",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 7536,
+      "batch": "C"
+    },
+    {
+      "id": "P066",
+      "path": "CONTEXT.md",
+      "git_blob_sha": "06d6824458dcaf9e207dcabe4dcdff126617dd48",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 32758,
+      "batch": "C"
+    },
+    {
+      "id": "P067",
+      "path": "CONTRIBUTING.md",
+      "git_blob_sha": "a2e75315cf33e7618a05717a161fa63fc402dd86",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 11324,
+      "batch": "C"
+    },
+    {
+      "id": "P068",
+      "path": "LICENSE",
+      "git_blob_sha": "8503aa75d211d2106ccf9ff44bbdf3248744b860",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 1111,
+      "batch": "C"
+    },
+    {
+      "id": "P069",
+      "path": "NOTICE",
+      "git_blob_sha": "c6241d2c1d7bd91496600b620eef8ac11999d0de",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 267,
+      "batch": "C"
+    },
+    {
+      "id": "P070",
+      "path": "README.md",
+      "git_blob_sha": "16e36fecddd898e1eeac5f33371088a9c4ec07df",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 8555,
+      "batch": "C"
+    },
+    {
+      "id": "P071",
+      "path": "SECURITY.md",
+      "git_blob_sha": "a8ce7932938b93a3a6685cfc3fa8b5cdc5123baa",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 3900,
+      "batch": "C"
+    },
+    {
+      "id": "P072",
+      "path": "bun.lock",
+      "git_blob_sha": "6139ce6e65ec428fc3ef92f0787be0d8b32db6e3",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 489909,
+      "batch": "B"
+    },
+    {
+      "id": "P073",
+      "path": "bunfig.toml",
+      "git_blob_sha": "c506ff57c4bf3fa3a6bd3501b8ce2fc29122accb",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 1024,
+      "batch": "C"
+    },
+    {
+      "id": "P074",
+      "path": "docs/architecture/module-scaffold-exit.md",
+      "git_blob_sha": "a7cd9f546cc796f3180b79a7820c0cfae8971447",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 1954,
+      "batch": "C"
+    },
+    {
+      "id": "P075",
+      "path": "docs/architecture/monolith-map.md",
+      "git_blob_sha": "d06cafc23fac3c113661e8cc80b1d9fead7c01aa",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 33949,
+      "batch": "C"
+    },
+    {
+      "id": "P076",
+      "path": "docs/architecture/phase-plans/70-80-source.md",
+      "git_blob_sha": "97e5ee07b55a84a15cd5f9f5ece80920e2e55b45",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 94781,
+      "batch": "C"
+    },
+    {
+      "id": "P077",
+      "path": "docs/architecture/phase-plans/70-90-briefs/FAC-CORE-CLI.md",
+      "git_blob_sha": "5e51e5b687c154824e9efb003a59c7550f8bc1f4",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 4317,
+      "batch": "C"
+    },
+    {
+      "id": "P078",
+      "path": "docs/architecture/phase-plans/70-90-briefs/RB-BLOCKS.md",
+      "git_blob_sha": "4e36e30ccf77cef73a60c6615027e328698e98b4",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 5190,
+      "batch": "C"
+    },
+    {
+      "id": "P079",
+      "path": "docs/architecture/phase-plans/70-90-briefs/RD-TOOLKIT.md",
+      "git_blob_sha": "31fcaf47a871384ed32e3b9e901323763f543f06",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 4805,
+      "batch": "C"
+    },
+    {
+      "id": "P080",
+      "path": "docs/architecture/phase-plans/70-90-briefs/README.md",
+      "git_blob_sha": "8ee22e913a19e7dacdfd248af54ebbfe9102b22d",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 1650,
+      "batch": "C"
+    },
+    {
+      "id": "P081",
+      "path": "docs/architecture/phase-plans/70-90-briefs/REN-TEETH.md",
+      "git_blob_sha": "a61d03697509ab1d5d8694e975f518d16329f869",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 4924,
+      "batch": "C"
+    },
+    {
+      "id": "P082",
+      "path": "docs/architecture/phase-plans/70-90-briefs/RN-SCRIPT.md",
+      "git_blob_sha": "d51e434709c494e96dcc0a687066df27e5b85ccd",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 4995,
+      "batch": "C"
+    },
+    {
+      "id": "P083",
+      "path": "docs/architecture/phase-plans/70-90.md",
+      "git_blob_sha": "f340d61b1edf002cb49d9123ee0421252267b4aa",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 78527,
+      "batch": "C"
+    },
+    {
+      "id": "P084",
+      "path": "docs/architecture/phase-plans/70c/edges.py",
+      "git_blob_sha": "3b9b7a038de4bef72dfbd11f164cf4dcf42853e4",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 2760,
+      "batch": "C"
+    },
+    {
+      "id": "P085",
+      "path": "docs/architecture/phase-plans/70c/plan-b1c.md",
+      "git_blob_sha": "ed482c638a957540f2bc2e44a2e428ad07fe5386",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 45774,
+      "batch": "C"
+    },
+    {
+      "id": "P086",
+      "path": "docs/architecture/phase-plans/70c/plan.md",
+      "git_blob_sha": "a8a9dd1516885987c8fa8103d29b4718278fadae",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 61558,
+      "batch": "C"
+    },
+    {
+      "id": "P087",
+      "path": "docs/architecture/phase-plans/70c/r11-map.md",
+      "git_blob_sha": "c8dea65d31e434b22b999d4184a2dabbfee10401",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 7932,
+      "batch": "C"
+    },
+    {
+      "id": "P088",
+      "path": "docs/architecture/phase-plans/70c/v2-route-inventory.md",
+      "git_blob_sha": "de1bfc6182005d3b6c8c50815600c2ed68a70913",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 6058,
+      "batch": "C"
+    },
+    {
+      "id": "P089",
+      "path": "docs/architecture/phase-plans/70c/w1-rules.md",
+      "git_blob_sha": "a3e1fcb2ef79f3b5baba53da14ebf02fea2ef29e",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 2523,
+      "batch": "C"
+    },
+    {
+      "id": "P090",
+      "path": "docs/architecture/phase-plans/80-90-source.md",
+      "git_blob_sha": "97681fcc8053bba2307e85cf244050baeb2ed889",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 67328,
+      "batch": "C"
+    },
+    {
+      "id": "P091",
+      "path": "docs/architecture/phase-plans/convergence.md",
+      "git_blob_sha": "5408a9104f34474e2fa173f41089de4667471e3f",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 40725,
+      "batch": "C"
+    },
+    {
+      "id": "P092",
+      "path": "docs/architecture/restructure-plan.md",
+      "git_blob_sha": "04f2cf81056797514188017a6b4335c9a3468419",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 116246,
+      "batch": "C"
+    },
+    {
+      "id": "P093",
+      "path": "docs/archives/README.md",
+      "git_blob_sha": "1fb495eab264450ee3c0d4935277ae66405a2a0b",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 3608,
+      "batch": "C"
+    },
+    {
+      "id": "P094",
+      "path": "docs/archives/actions-parity.json",
+      "git_blob_sha": "e522f83097c81563b58d8c5b8ec16e9ab153ed1a",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 983,
+      "batch": "C"
+    },
+    {
+      "id": "P095",
+      "path": "docs/archives/backend-evidence.json",
+      "git_blob_sha": "83621ff3da2133986203e24053ad02ab8b549621",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 1004,
+      "batch": "C"
+    },
+    {
+      "id": "P096",
+      "path": "docs/archives/visual-evidence.json",
+      "git_blob_sha": "86228a7e720da21a38d5a0fc3f1d16e9e49c14b1",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 1137,
+      "batch": "C"
+    },
+    {
+      "id": "P097",
+      "path": "docs/archives/visual-handoff.json",
+      "git_blob_sha": "900f7254ab3498114d80b913ad5865eaf08d17be",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 1578,
+      "batch": "C"
+    },
+    {
+      "id": "P098",
+      "path": "docs/guides/README.md",
+      "git_blob_sha": "783edb92da8d64af84ea991f4d132a0bfb90f2f1",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 2448,
+      "batch": "C"
+    },
+    {
+      "id": "P099",
+      "path": "docs/guides/architecture.md",
+      "git_blob_sha": "f9791f2055663c866ed4d2c70b6ff568ab72a947",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 7371,
+      "batch": "C"
+    },
+    {
+      "id": "P100",
+      "path": "docs/guides/environment.md",
+      "git_blob_sha": "3c9dd8068f73c9a21b35728f603f35da68f81157",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 3239,
+      "batch": "C"
+    },
+    {
+      "id": "P101",
+      "path": "docs/guides/getting-started.md",
+      "git_blob_sha": "008f60ac8a07a532f809589e9943b796faf31156",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 3711,
+      "batch": "C"
+    },
+    {
+      "id": "P102",
+      "path": "docs/guides/omni.md",
+      "git_blob_sha": "bfaf9807bf5d42a4f6c6096ab19342e2b6d8fd9d",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 4217,
+      "batch": "C"
+    },
+    {
+      "id": "P103",
+      "path": "docs/guides/workspaces.md",
+      "git_blob_sha": "05cfa98531ea2a0b954191c1e761db7273fb438e",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 2820,
+      "batch": "C"
+    },
+    {
+      "id": "P104",
+      "path": "docs/specs/distribution/CONTRACT.md",
+      "git_blob_sha": "df848cf1fb73e28f8f1ecf4a6f62c6e750f65b18",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 7348,
+      "batch": "A"
+    },
+    {
+      "id": "P105",
+      "path": "docs/specs/distribution/EVIDENCE.md",
+      "git_blob_sha": "32f4e0dd7a2dc61e4c46e6c3895c555416ebc406",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 26264,
+      "batch": "A"
+    },
+    {
+      "id": "P106",
+      "path": "docs/specs/distribution/STACK.md",
+      "git_blob_sha": "3f926209343ab1671db9483036937c4c656cadd2",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 6271,
+      "batch": "A"
+    },
+    {
+      "id": "P107",
+      "path": "godfile-waivers.json",
+      "git_blob_sha": "2a7a3269086a5d6e3d3d4b29f96c88d67afaaf5f",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 20042,
+      "batch": "C"
+    },
+    {
+      "id": "P108",
+      "path": "nix/W5-readiness.md",
+      "git_blob_sha": "a71142ffbbb2a7e84d776629dfbb935e0c2b2adc",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 15471,
+      "batch": "A"
+    },
+    {
+      "id": "P109",
+      "path": "nix/check-distribution.sh",
+      "git_blob_sha": "6256c3936ff1fe82957148185fa7fc3126b7b18c",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 9490,
+      "batch": "A"
+    },
+    {
+      "id": "P110",
+      "path": "nix/desktop.nix",
+      "git_blob_sha": "371416b8276a4c62fdbb46ef0dac252fc0f73a24",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 8614,
+      "batch": "A"
+    },
+    {
+      "id": "P111",
+      "path": "nix/hashes.json",
+      "git_blob_sha": "607d5185634b1cc095ba3aff98ed53df8c2c348b",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 330,
+      "batch": "A"
+    },
+    {
+      "id": "P112",
+      "path": "nix/orchestra.nix",
+      "git_blob_sha": "bbf2776ab8e0a4c163b4ed9b6baf41fb6482b0a0",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 10338,
+      "batch": "A"
+    },
+    {
+      "id": "P113",
+      "path": "nix/scripts/archive-distribution-evidence.py",
+      "git_blob_sha": "af3fbe890d19985a903cbe9089ca487657b74be6",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 3793,
+      "batch": "A"
+    },
+    {
+      "id": "P114",
+      "path": "nix/scripts/canonicalize-node-modules.ts",
+      "git_blob_sha": "7997a3cd2325751c3e581089af094e3e1478a35e",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 2738,
+      "batch": "A"
+    },
+    {
+      "id": "P115",
+      "path": "nix/scripts/complete-distribution.py",
+      "git_blob_sha": "4c548a7a46241e97251d6f57a712b8c21f78c8f4",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 19359,
+      "batch": "A"
+    },
+    {
+      "id": "P116",
+      "path": "nix/scripts/control-ledger.ts",
+      "git_blob_sha": "57270aa933470c3fd7786cce40af1cd8b1e41e69",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 1115,
+      "batch": "A"
+    },
+    {
+      "id": "P117",
+      "path": "nix/scripts/dependency_measurement.py",
+      "git_blob_sha": "e5b59122e48b47d3876dde0386224a7259eb0fbb",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 16826,
+      "batch": "A"
+    },
+    {
+      "id": "P118",
+      "path": "nix/scripts/normalize-bun-binaries.ts",
+      "git_blob_sha": "978ab325b7bb70c951a9b7559634e9435527916a",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 3370,
+      "batch": "A"
+    },
+    {
+      "id": "P119",
+      "path": "nix/scripts/prepare-bun-template.py",
+      "git_blob_sha": "c290a3adde45f03995a60503133d4cc0f6b7dcba",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 3229,
+      "batch": "A"
+    },
+    {
+      "id": "P120",
+      "path": "nix/scripts/probe-dependency-measurement.py",
+      "git_blob_sha": "dd17fbbc260357f6e0abf453d459e8421ad83401",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 17302,
+      "batch": "A"
+    },
+    {
+      "id": "P121",
+      "path": "nix/scripts/probe-distribution-completion.py",
+      "git_blob_sha": "16170dcd4ea3ed3e4d99fddae590e986a41d122d",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 13446,
+      "batch": "A"
+    },
+    {
+      "id": "P122",
+      "path": "nix/scripts/probe-distribution.ts",
+      "git_blob_sha": "5c55ab30734758b9d6b789fcf6a61d35688ca31a",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 13631,
+      "batch": "A"
+    },
+    {
+      "id": "P123",
+      "path": "nix/scripts/prune-desktop-addons.py",
+      "git_blob_sha": "82d3b28f712600d54b2d5a918af146d27d26ad90",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 3655,
+      "batch": "A"
+    },
+    {
+      "id": "P124",
+      "path": "nix/scripts/prune-foreign-prebuilds.py",
+      "git_blob_sha": "b64cff65fbbf94ffae29ec6bb17404615dd0c73d",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 2259,
+      "batch": "A"
+    },
+    {
+      "id": "P125",
+      "path": "nix/scripts/repair-host-prebuilds.py",
+      "git_blob_sha": "81744cd065c612ce3ded7ff86a10adcb697ff443",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 6717,
+      "batch": "A"
+    },
+    {
+      "id": "P126",
+      "path": "nix/scripts/verify-distribution.ts",
+      "git_blob_sha": "dea1c13145a27881c776bc4723668d3e57733723",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 20376,
+      "batch": "A"
+    },
+    {
+      "id": "P127",
+      "path": "nix/scripts/workspace-config.ts",
+      "git_blob_sha": "e6f3f3755d8a0b475706b3821eee4344d5f67c2e",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 3994,
+      "batch": "A"
+    },
+    {
+      "id": "P128",
+      "path": "nix/scripts/workspace-paths.json",
+      "git_blob_sha": "a24806009ed52ae6d5dca551f2d231d743f8a494",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 189,
+      "batch": "A"
+    },
+    {
+      "id": "P129",
+      "path": "nix/test_toolchain_metadata.py",
+      "git_blob_sha": "6efb6aace8a8a237c4955b2db815998819ccef56",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 4680,
+      "batch": "A"
+    },
+    {
+      "id": "P130",
+      "path": "packages/script/bunfig.toml",
+      "git_blob_sha": "6a7a84a36a8a7ca8625c92217cf090743d8a42d2",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 48,
+      "batch": "B"
+    },
+    {
+      "id": "P131",
+      "path": "packages/script/src/index.test.ts",
+      "git_blob_sha": "073516071d51cdf81fb9507ba447c281a026c7a5",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 7051,
+      "batch": "B"
+    },
+    {
+      "id": "P132",
+      "path": "packages/script/src/index.ts",
+      "git_blob_sha": "a60535a8dd8937035d9c40ab93926da44943f621",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 2953,
+      "batch": "B"
+    },
+    {
+      "id": "P133",
+      "path": "packages/script/src/omni.ts",
+      "git_blob_sha": "559a7cec19bfa9c2dac18eaf3280ca9e3db93eee",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 7549,
+      "batch": "B"
+    },
+    {
+      "id": "P134",
+      "path": "packages/script/src/spawn-imports.ts",
+      "git_blob_sha": "42d087c33f314523c0a4fb3e4731d39f60e2f907",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 1803,
+      "batch": "B"
+    },
+    {
+      "id": "P135",
+      "path": "packages/script/src/tree-sitter-prebuilds-cli.ts",
+      "git_blob_sha": "8c93953b717da950fa125a24bcbb81e0b06088d3",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 1069,
+      "batch": "B"
+    },
+    {
+      "id": "P136",
+      "path": "packages/script/src/tree-sitter-prebuilds.test.ts",
+      "git_blob_sha": "6ac7dea31e97817b9ecb0cf81141b69c46e30dac",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 24657,
+      "batch": "B"
+    },
+    {
+      "id": "P137",
+      "path": "packages/script/src/tree-sitter-prebuilds.ts",
+      "git_blob_sha": "94e9e8f5d393ed27b5e177dc5fc6ba8277954322",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 21162,
+      "batch": "B"
+    },
+    {
+      "id": "P138",
+      "path": "packages/script/test/archive-inventory.test.ts",
+      "git_blob_sha": "e6ddba89bc298813229fb470eba9e268746f2cd9",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 4356,
+      "batch": "B"
+    },
+    {
+      "id": "P139",
+      "path": "packages/script/test/atlas-baseline.test.ts",
+      "git_blob_sha": "558d0ec0a5bf71a187b23e81063f84af274e3edf",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 3388,
+      "batch": "B"
+    },
+    {
+      "id": "P140",
+      "path": "packages/script/test/build-preflight.test.ts",
+      "git_blob_sha": "dcf998f4ff3b76683a0ec7d1c4fde2c8be15822b",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 3693,
+      "batch": "B"
+    },
+    {
+      "id": "P141",
+      "path": "packages/script/test/check-spawn-imports.test.ts",
+      "git_blob_sha": "6c00aa1007b381496457bab49abcb8beaa5890a9",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 1377,
+      "batch": "B"
+    },
+    {
+      "id": "P142",
+      "path": "packages/script/test/control-ledger.test.ts",
+      "git_blob_sha": "7991831063b132e6cc1b33f05d4eaa571ae8ca0c",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 1831,
+      "batch": "B"
+    },
+    {
+      "id": "P143",
+      "path": "packages/script/test/dependency-inputs.test.ts",
+      "git_blob_sha": "0bd9d1cbfe56b7d3d3893d5bfcd0a03716ce06e1",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 6628,
+      "batch": "B"
+    },
+    {
+      "id": "P144",
+      "path": "packages/script/test/module-boundaries.test.ts",
+      "git_blob_sha": "5c0c4cdedb969d461386938d0313fab79c2f4163",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 30714,
+      "batch": "B"
+    },
+    {
+      "id": "P145",
+      "path": "packages/script/test/move-relink.test.ts",
+      "git_blob_sha": "fd7b79525dfdef51ceaac9cb4faf8b8c2fc67fea",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 11904,
+      "batch": "B"
+    },
+    {
+      "id": "P146",
+      "path": "packages/script/test/omni-artifact-exec-bit.test.ts",
+      "git_blob_sha": "d8a57659b275ef44afd382b3dff4ca361e757fb9",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 5814,
+      "batch": "B"
+    },
+    {
+      "id": "P147",
+      "path": "packages/script/test/omni-history-checkout.test.ts",
+      "git_blob_sha": "0cda1e5f10333c7df296a97ad512c32655d04d67",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 2649,
+      "batch": "B"
+    },
+    {
+      "id": "P148",
+      "path": "packages/script/test/omni-mirror.test.ts",
+      "git_blob_sha": "54b0cab0204755fa09eed52af679cdf8e6fc44e6",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 8584,
+      "batch": "B"
+    },
+    {
+      "id": "P149",
+      "path": "packages/script/test/recovery-bundle.test.ts",
+      "git_blob_sha": "b96aafd8e126fe6504b62c57fc1e448ca7619a8a",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 17977,
+      "batch": "B"
+    },
+    {
+      "id": "P150",
+      "path": "packages/script/test/resource-paths.test.ts",
+      "git_blob_sha": "414e49fddad99a401f4d703957dfb364b780368f",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 2557,
+      "batch": "B"
+    },
+    {
+      "id": "P151",
+      "path": "packages/script/test/workspace-config.test.ts",
+      "git_blob_sha": "2e0fae78e3404aba59fce93d6f6f2597713fd767",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 4543,
+      "batch": "B"
+    },
+    {
+      "id": "P152",
+      "path": "packages/script/tsconfig.json",
+      "git_blob_sha": "6aca2bc06666998ebbc6102fe9ba755948f2195a",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 626,
+      "batch": "B"
+    },
+    {
+      "id": "P153",
+      "path": "patches/@ai-sdk%2Famazon-bedrock@4.0.166.patch",
+      "git_blob_sha": "388b306daaba1473556e9f538a63f20904fdaf10",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 7458,
+      "batch": "B"
+    },
+    {
+      "id": "P154",
+      "path": "patches/@ai-sdk%2Fanthropic@3.0.111.patch",
+      "git_blob_sha": "82003f9c2088ee1add1c71cdfda788fe61bc68f7",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 28016,
+      "batch": "B"
+    },
+    {
+      "id": "P155",
+      "path": "patches/@ai-sdk%2Fgoogle@3.0.73.patch",
+      "git_blob_sha": "400b4e277691ce40ebe9a8465c5a0353dd1e721b",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 2763,
+      "batch": "B"
+    },
+    {
+      "id": "P156",
+      "path": "patches/@ai-sdk%2Fgroq@3.0.31.patch",
+      "git_blob_sha": "f26a4bedfa202c8bac0f3ada23684997ffa9eba0",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 3302,
+      "batch": "B"
+    },
+    {
+      "id": "P157",
+      "path": "patches/@ai-sdk%2Fmistral@3.0.51.patch",
+      "git_blob_sha": "f76ed1c126e2077fcccd0357cb5308bae698b0e7",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 27768,
+      "batch": "B"
+    },
+    {
+      "id": "P158",
+      "path": "patches/@ai-sdk%2Fopenai-compatible@2.0.41.patch",
+      "git_blob_sha": "9f03ec95732a5a73235b2c5e7af29ba1ae09f5be",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 1768,
+      "batch": "B"
+    },
+    {
+      "id": "P159",
+      "path": "patches/@ai-sdk%2Fxai@3.0.102.patch",
+      "git_blob_sha": "1ea20de9cd996abcf18f4709de17e7a97c01e603",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 13285,
+      "batch": "B"
+    },
+    {
+      "id": "P160",
+      "path": "patches/@dnd-kit%2Fdom@0.5.0.patch",
+      "git_blob_sha": "7c56793f9ad53954f83fb4632dfbe8552f85ad94",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 724,
+      "batch": "B"
+    },
+    {
+      "id": "P161",
+      "path": "patches/@modelcontextprotocol%2Fsdk@1.32.0.patch",
+      "git_blob_sha": "cced46f315c677fbdd27987e3e649437ea2f764e",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 32450,
+      "batch": "B"
+    },
+    {
+      "id": "P162",
+      "path": "patches/@npmcli%2Fagent@4.0.2.patch",
+      "git_blob_sha": "a3506a90e3df9ef4ce4e86427bf0f9f1b5ec1517",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 418,
+      "batch": "B"
+    },
+    {
+      "id": "P163",
+      "path": "patches/@opentui%2Fcore@0.4.5.patch",
+      "git_blob_sha": "daac4054af59347e6e13cca96cb0663ac248a229",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 8250,
+      "batch": "B"
+    },
+    {
+      "id": "P164",
+      "path": "patches/@pierre%2Ftrees@1.0.0-beta.4.patch",
+      "git_blob_sha": "b9db9cbf790f17166349526cc9a9578dc3a9b0d0",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 5108,
+      "batch": "B"
+    },
+    {
+      "id": "P165",
+      "path": "patches/@silvia-odwyer%2Fphoton-node@0.3.4.patch",
+      "git_blob_sha": "32f4787f84c26fa4a0d0a06b58299c2d0f0e7fcd",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 12220,
+      "batch": "B"
+    },
+    {
+      "id": "P166",
+      "path": "patches/@standard-community%2Fstandard-openapi@0.2.9.patch",
+      "git_blob_sha": "2ac5af09ab74839ca8d7e06377d7c67d526c2fa7",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 696,
+      "batch": "B"
+    },
+    {
+      "id": "P167",
+      "path": "patches/@tanstack%2Fvirtual-core@3.17.3.patch",
+      "git_blob_sha": "2450d4234b484a741f198e063881a5fcd1b86416",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 4717,
+      "batch": "B"
+    },
+    {
+      "id": "P168",
+      "path": "patches/effect@4.0.0-beta.83.patch",
+      "git_blob_sha": "6e4042f9f7952c794973e22c35fc9be34f99d349",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 6535,
+      "batch": "B"
+    },
+    {
+      "id": "P169",
+      "path": "patches/gcp-metadata@8.1.2.patch",
+      "git_blob_sha": "8b7667e29aba027e8776128b198d954b643c38cd",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 625,
+      "batch": "B"
+    },
+    {
+      "id": "P170",
+      "path": "patches/pacote@21.5.0.patch",
+      "git_blob_sha": "a681e1c2a938452a5de0baffc9809d641fbf0e55",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 896,
+      "batch": "B"
+    },
+    {
+      "id": "P171",
+      "path": "patches/solid-js@1.9.10.patch",
+      "git_blob_sha": "0571d5c8c670e195971139b39356115d26620671",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 7438,
+      "batch": "B"
+    },
+    {
+      "id": "P172",
+      "path": "patches/tree-sitter@0.25.0.patch",
+      "git_blob_sha": "3e658b0cd239be44c16d9fe475112e3e5b8609de",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 910,
+      "batch": "B"
+    },
+    {
+      "id": "P173",
+      "path": "perf/test-suite.md",
+      "git_blob_sha": "d48d5d0a3291a809c5094fa5c462c0269aa11162",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 20313,
+      "batch": "C"
+    },
+    {
+      "id": "P174",
+      "path": "script/archive-inventory.ts",
+      "git_blob_sha": "fbebe3ab34381245627a0889f49db7ebffc3c285",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 4370,
+      "batch": "B"
+    },
+    {
+      "id": "P175",
+      "path": "script/archive-scopes.json",
+      "git_blob_sha": "87f4bb358fea2695c816e72464bdab316b869622",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 433,
+      "batch": "B"
+    },
+    {
+      "id": "P176",
+      "path": "script/artifact-native-workspace.mjs",
+      "git_blob_sha": "94b2bffe7960109a99c6dc9a17bf60c892c6ec23",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 1706,
+      "batch": "B"
+    },
+    {
+      "id": "P177",
+      "path": "script/boundary-ledger.json",
+      "git_blob_sha": "f23792773a529eea729526f4eff5ef6fb3e6bac7",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 22495,
+      "batch": "B"
+    },
+    {
+      "id": "P178",
+      "path": "script/check-module-boundaries.ts",
+      "git_blob_sha": "6137ac1694389e890b0dacf5702bb5f49757742d",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 35707,
+      "batch": "B"
+    },
+    {
+      "id": "P179",
+      "path": "script/check-ripgrep-pins.ts",
+      "git_blob_sha": "f3e79b0973476829802dbbde176b5f0674edf8b6",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 2970,
+      "batch": "B"
+    },
+    {
+      "id": "P180",
+      "path": "script/check-spawn-imports.ts",
+      "git_blob_sha": "2dbd447ee433f34bf4d0d02e6299bbb44357df86",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 3571,
+      "batch": "B"
+    },
+    {
+      "id": "P181",
+      "path": "script/compat-facade.ts",
+      "git_blob_sha": "823040195602f31aa68ae2622abec30cad4a4cac",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 3716,
+      "batch": "B"
+    },
+    {
+      "id": "P182",
+      "path": "script/distribution-deno.ts",
+      "git_blob_sha": "e12ea0129b1526838c1f151c749fdd9988fe7d51",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 7160,
+      "batch": "B"
+    },
+    {
+      "id": "P183",
+      "path": "script/explicit-exports.ts",
+      "git_blob_sha": "374fb06293689c7f762b485ae9abc36194110783",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 7214,
+      "batch": "B"
+    },
+    {
+      "id": "P184",
+      "path": "script/format.ts",
+      "git_blob_sha": "996de9ad04a41b06ae0d12cd311d733ec9541665",
+      "mode": "100755",
+      "object_type": "blob",
+      "byte_length": 98,
+      "batch": "B"
+    },
+    {
+      "id": "P185",
+      "path": "script/generate.ts",
+      "git_blob_sha": "60308900ce20c10784bd6c34ad75d2e10f693058",
+      "mode": "100755",
+      "object_type": "blob",
+      "byte_length": 123,
+      "batch": "B"
+    },
+    {
+      "id": "P186",
+      "path": "script/godfile.ts",
+      "git_blob_sha": "ca6fdf432b991b0eba10b4acd4657a0c511b0497",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 7661,
+      "batch": "B"
+    },
+    {
+      "id": "P187",
+      "path": "script/module-architecture.json",
+      "git_blob_sha": "c189ab9762c33d19c72f2a9ffa683c0985d09448",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 23032,
+      "batch": "B"
+    },
+    {
+      "id": "P188",
+      "path": "script/module-architecture.ts",
+      "git_blob_sha": "358b19f280d47cb70f7eb70263aa43b30e9c04a0",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 17877,
+      "batch": "B"
+    },
+    {
+      "id": "P189",
+      "path": "script/module-readme.ts",
+      "git_blob_sha": "3751e06303e8044ae6bdaa35005173f00d135857",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 2182,
+      "batch": "B"
+    },
+    {
+      "id": "P190",
+      "path": "script/monolith-inventory.ts",
+      "git_blob_sha": "1a508ed56a1a9c1a038a815efd3f168a51a641b8",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 17068,
+      "batch": "B"
+    },
+    {
+      "id": "P191",
+      "path": "script/move-relink.ts",
+      "git_blob_sha": "776013fe1ed193c6a03f495be63ed280769d23fe",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 15843,
+      "batch": "B"
+    },
+    {
+      "id": "P192",
+      "path": "script/omni-mirror.sh",
+      "git_blob_sha": "2057c6977efad5625a0360875004d30eacf2719a",
+      "mode": "100755",
+      "object_type": "blob",
+      "byte_length": 6219,
+      "batch": "B"
+    },
+    {
+      "id": "P193",
+      "path": "script/recovery-bundle.ts",
+      "git_blob_sha": "62be21abf9f2742f00eec7851e516a7afae1bd37",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 16553,
+      "batch": "B"
+    },
+    {
+      "id": "P194",
+      "path": "script/recovery-publication.ts",
+      "git_blob_sha": "39db6701b8cb134fa13e6995c9581e5c03f18a5a",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 3111,
+      "batch": "B"
+    },
+    {
+      "id": "P195",
+      "path": "script/rename-ledger.ts",
+      "git_blob_sha": "e3b4e74249e0321edf6e1e0729344dba9f2b49e1",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 24256,
+      "batch": "B"
+    },
+    {
+      "id": "P196",
+      "path": "script/sign-windows.ps1",
+      "git_blob_sha": "ebcf2795f625f3b7175c025d9c26d0dce53c31e9",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 2753,
+      "batch": "B"
+    },
+    {
+      "id": "P197",
+      "path": "script/spawn-allowlist.json",
+      "git_blob_sha": "532e0a09e7ca43777ec6f9792f9429bb73148348",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 4984,
+      "batch": "B"
+    },
+    {
+      "id": "P198",
+      "path": "script/upgrade-opentui.ts",
+      "git_blob_sha": "f8e49b648ecdb5f12ff69094f5ac0c36fb8d7dbc",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 5751,
+      "batch": "B"
+    },
+    {
+      "id": "P199",
+      "path": "tsconfig.json",
+      "git_blob_sha": "65fa6c7f31c11e2a1ff643ea263f97815c6bac5d",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 126,
+      "batch": "C"
+    },
+    {
+      "id": "P200",
+      "path": "turbo.json",
+      "git_blob_sha": "c375d67bc4b2738991a62994d3a81e01cdc7c639",
+      "mode": "100644",
+      "object_type": "blob",
+      "byte_length": 7461,
+      "batch": "C"
+    }
+  ]
+}
+
