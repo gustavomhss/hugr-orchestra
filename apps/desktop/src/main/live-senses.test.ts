@@ -11,16 +11,20 @@ test.each(["permission", "meeting"])("cancels senses held at %s without starting
   const entered = Promise.withResolvers<void>()
   const release = Promise.withResolvers<void>()
   const seen = { started: 0, stopped: 0 }
+  const requests: { path: string; length: string | null }[] = []
   const logDirectory = await mkdtemp(join(tmpdir(), "live-senses-"))
   const server = Bun.serve({
     port: 0,
     async fetch(request) {
+      requests.push({ path: new URL(request.url).pathname, length: request.headers.get("content-length") })
       await request.json()
       if (new URL(request.url).pathname === "/api/meeting/start") {
         seen.started++
         entered.resolve()
         await release.promise
-        return Response.json({ data: { id: "meeting_pending", timeStarted: 1 } })
+        // This fixture isolates late-acquisition cleanup, not connection reuse. Bun 1.3.14 returns 400 on
+        // the reused connection after this held response; live-meeting-client.test.ts retains the reuse control.
+        return Response.json({ data: { id: "meeting_pending", timeStarted: 1 } }, { headers: { connection: "close" } })
       }
       if (new URL(request.url).pathname === "/api/meeting/stop") seen.stopped++
       return new Response(null, { status: 204 })
@@ -52,6 +56,9 @@ test.each(["permission", "meeting"])("cancels senses held at %s without starting
     release.resolve()
     await expect(starting).rejects.toMatchObject({ name: "AbortError" })
     expect(seen).toEqual(stage === "permission" ? { started: 0, stopped: 0 } : { started: 1, stopped: 1 })
+    expect(requests.map((request) => request.path)).toEqual(
+      stage === "permission" ? [] : ["/api/meeting/start", "/api/meeting/stop"],
+    )
   } finally {
     release.resolve()
     await starting.catch(() => undefined)
