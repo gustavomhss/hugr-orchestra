@@ -1,7 +1,7 @@
 export * as ReviewPRRequestV2 from "./review-pr"
 
 import { createHash } from "node:crypto"
-import { Cause, Effect, Option, Schema } from "effect"
+import { Cause, Effect, Option, Schema, Scope } from "effect"
 import { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
 import { ReviewPrecisionCatalog } from "@orchestra/core/review/precision-catalog"
@@ -103,11 +103,15 @@ export const run = Effect.fn("ReviewPRRequestV2.run")(function* (params: Input, 
     const rules = yield* ReviewFanoutV2.baseRules(git, worktree, prepared.baseSHA, prepared.changedPaths)
     const lenses: string[] = []
     const ledger = ReviewProbe.ledger()
+    const parentScope = yield* Scope.Scope
     const copies = yield* Effect.cached(Effect.all({
       head: ReviewScratch.create({ worktree, revision: prepared.headSHA }),
       base: ReviewScratch.create({ worktree, revision: prepared.baseSHA }),
-    }, { concurrency: 1 }).pipe(Effect.provideService(AppProcess.Service, input.processes)))
-    const binding = input.binding({ worktree, diff: prepared.diff, cache, lenses, ledger, copies })
+    }, { concurrency: 1 }).pipe(
+      Effect.provideService(AppProcess.Service, input.processes),
+      Effect.provideService(Scope.Scope, parentScope),
+    ))
+    const binding = input.binding({ worktree, diff: prepared.diff, cache, lenses, ledger, copies, headCommit: prepared.headSHA })
     let first = true
     const port: ReviewFanoutV2.Port = {
       create: (child) => sessions.create({ id: sessionID(child.key), parentID: child.role === "lead" ? parent.id : lead,
