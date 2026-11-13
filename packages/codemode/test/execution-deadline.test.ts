@@ -210,6 +210,21 @@ test("BEHAVIOR deadline: late synchronous host success cannot become a successfu
   expectTimeout(result)
 })
 
+test("BEHAVIOR deadline: uncaught late synchronous host refusal cannot escape the deadline", async () => {
+  const witness = { startedAt: 0, finishedAt: 0 }
+  const state = { entries: 0 }
+  const result = await run(CodeMode.execute({
+    code: "return await tools.host({})",
+    tools: { host: host(Effect.sync(() => { state.entries++; blockHostFor(blockMs, witness) }).pipe(
+      Effect.andThen(Effect.fail(toolError("Expected late refusal"))),
+    )) },
+    limits: { timeoutMs },
+  }))
+  expectBlocked(witness, blockMs)
+  expect(state.entries).toBe(1)
+  expectTimeout(result)
+})
+
 test("BEHAVIOR deadline: an expired user callback cannot request another host body", async () => {
   const witness = { startedAt: 0, finishedAt: 0 }
   const entries: string[] = []
