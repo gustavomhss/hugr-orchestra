@@ -1,0 +1,24 @@
+name: Support supervisor descendants (synthetic only)
+on:
+  workflow_dispatch:
+  push:
+    branches: [genesis-support-09-courier-descendants]
+    paths:
+      - 'courier-synthetic/supervisor.py'
+      - 'courier-synthetic/test_supervisor_descendants.py'
+      - '.github/workflows/support-supervisor-descendants.yml'
+permissions:
+  contents: read
+jobs:
+  linux-synthetic:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: genesis-support-09-courier-descendants
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Descendant lifecycle fixtures only
+        run: python -I -S -B courier-synthetic/test_supervisor_descendants.py
