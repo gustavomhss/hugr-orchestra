@@ -8,11 +8,11 @@
   "counts": {
     "inventoried": 200,
     "produced": 200,
-    "reviewed_by_both": 194,
-    "documentary_pair_accepted": 194,
+    "reviewed_by_both": 200,
+    "documentary_pair_accepted": 200,
     "reviewed_with_material_findings": 0,
-    "awaiting_initial_pair_review": 6,
-    "pending_acceptance": 6
+    "awaiting_initial_pair_review": 0,
+    "pending_acceptance": 0
   },
   "accepted_units": [
     {
@@ -580,23 +580,48 @@
         "A anotação de remoção de server-protocol foi localizada corretamente no trecho de detecção."
       ],
       "optional_open": []
+    },
+    {
+      "id": "C-08",
+      "body": {
+        "path": "bodies/c-08.md",
+        "sha256": "32bfe540290c320d5761b1535c5cb8f02adcdce57467f7bdff64f26d4e96747c",
+        "byte_length": 29025
+      },
+      "source_ids": [
+        "P084",
+        "P085",
+        "P086",
+        "P087",
+        "P088",
+        "P089"
+      ],
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "resolved_findings": [
+        "re.S descrito corretamente como DOTALL; unicidade pretendida de IDs separada da limitação truthy no exemplo.",
+        "Mesmo J2 confirmou disponibilidade integral após retomada, examinou seções e emitiu decisão integrada real; tentativas sem resposta não receberam resultado presumido."
+      ],
+      "optional_open": [
+        "A fonte filtra mensagens de usuário ainda ausentes de state.delivered; o corpo resume como mensagens ainda não entregues. Precisão não bloqueante."
+      ]
     }
   ],
   "open_semantic_findings_in_accepted_units": [],
-  "pending_units": [
-    "C-08"
-  ],
+  "pending_units": [],
   "limits": [
     "Acceptance is documentary and local to the exact listed body.",
-    "Other source bodies are authored, not accepted by extrapolation.",
     "No product/tests/CI/runtime/consumers/maintenance exercised.",
-    "No global PASS. Private original judgments are not published here."
+    "No global PASS. Private original judgments are not published here.",
+    "All21 source bodies and L1 are paired; integrated L3/L4 and final metadata transformation remain separate pending work."
   ],
   "private_custody": {
-    "opaque_ref": "libfile_fde3_f-63fe6843880c8191b4e4e66c3777fad2_3a07899f8a4481918837fffaac5a42fc",
+    "opaque_ref": "libfile_fde3_f-c8dabdfdcfa08191936e7dee79cc646d_3a07899f8a4481918837fffaac5a42fc",
     "version": 0,
-    "sha256": "f7649444fd58fa1ebe4af105302e2c3b285d98fec17ca69da208f780f16e2fd9",
-    "scope": "Visible originals and source/artifact records through 20 accepted L2 units (194 unique sources); pending activity explicitly distinguished. No runtime or global acceptance."
+    "sha256": "f3a8fe31d3cd62769d3804f5436de25403cad12999b30e5794987669afc4b445",
+    "scope": "Visible originals and source/artifact records through 21 accepted L2 units (200 unique sources); pending activity explicitly distinguished. No runtime or global acceptance."
   },
   "reviewed_pending_units": [],
   "counting_note": "Aceites contabilizam somente versões atuais listadas e fontes primárias únicas; apoios e repetições de revisão não acrescentam fontes."

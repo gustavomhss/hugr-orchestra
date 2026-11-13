@@ -1,6 +1,6 @@
 # Genesis — candidato externo Platform 200
 
-Conhecimento documental estático para 200 caminhos exatos do Orchestra no baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Autoria L1–L2 concluída; 194 fontes aceitas documentalmente pela dupla e revisão das seis de C-08 em andamento. Não é PASS global, publicação Atlas ou prova de runtime.
+Conhecimento documental estático para 200 caminhos exatos do Orchestra no baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Os 21 corpos L2 e o manifesto L1 foram aceitos pela mesma dupla, cobrindo as 200 fontes. A síntese integrada L3–L4 e a revisão final dos metadados seguem em preparação. Não é PASS global, publicação Atlas ou prova de runtime.
 
 ## Identidade e cobertura
 
