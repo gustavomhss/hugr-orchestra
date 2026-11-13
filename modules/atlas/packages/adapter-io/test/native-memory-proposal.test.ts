@@ -42,6 +42,27 @@ const T1 = "2026-10-18T10:00:00.000Z"
 const T2 = "2026-10-18T11:00:00.000Z"
 const RULE = { rule: "run go vet before the handler tests", scope: "packages/api" }
 
+it("publishes decision and Memory together without a second raw review append", () => {
+  const configured = binding()
+  const proposal = proposeProjectRule(configured, RULE, T1)
+  if (!proposal.ok) throw new Error(proposal.reason)
+  const path = reviewLogPath(root)
+  const original = readFileSync(path, "utf8")
+  chmodSync(path, 0o400)
+  // Actual write refusal is the fault control; reading the original proposal must still work.
+  expect(() => appendFileSync(path, "must not append\n")).toThrow()
+  const result = decideProjectRule(configured, { proposalId: proposal.proposalId, verdict: "indexed", by: "owner" }, T2)
+  expect(result.ok).toBe(true)
+  expect(readFileSync(path, "utf8")).toBe(original)
+  const reopened = foldReview(readReview(root).records)
+  expect(reopened.openMemoryProposals).toHaveLength(0)
+  expect(reopened.memoryDecisions).toMatchObject([{ proposalId: proposal.proposalId, verdict: "indexed" }])
+  expect(createDurableMemory(root).read().store).toHaveLength(1)
+  const competing = decideProjectRule(configured, { proposalId: proposal.proposalId, verdict: "discarded", by: "owner" }, T2)
+  expect(competing).toMatchObject({ ok: false, refusal: "proposal-not-open" })
+  expect(createDurableMemory(root).read().store).toHaveLength(1)
+})
+
 describe("proposeProjectRule", () => {
   it("proposes once and writes nothing to the memory store", () => {
     const v = proposeProjectRule(binding(), RULE, T1)
