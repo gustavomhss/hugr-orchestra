@@ -24,7 +24,7 @@ export function evaluationManifestRefusal(store: StoreApi, manifestHash: Hash, a
     const entriesByKey = new Map<string, ReturnType<typeof nativeRecord>>()
     for (const raw of candidate.entries) {
       const expected = nativeRecord(raw, "candidate entry")
-      if (!entriesByKey.has(String(expected.key))) entriesByKey.set(String(expected.key), expected)
+      if (typeof expected.key === "string" && !entriesByKey.has(expected.key)) entriesByKey.set(expected.key, expected)
     }
     for (const entry of manifest.entries) {
       const expected = entriesByKey.get(entry.key)
