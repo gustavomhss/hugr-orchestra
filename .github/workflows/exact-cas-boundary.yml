@@ -1,0 +1,23 @@
+name: exact-cas-boundary-synthetic
+on:
+  push:
+    branches: [genesis-cas-boundary-ci]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Exact CAS boundary synthetic tests only
+        shell: bash
+        run: |
+          set -o pipefail
+          python3 -I -S -B cas-boundary-ci/test_cas_boundary.py 2>&1 | tee cas-boundary.log
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: exact-cas-boundary-${{ github.sha }}
+          path: cas-boundary.log
