@@ -116,7 +116,8 @@ describe("test shard planner", () => {
     const desktop = workflow.split('if [ -n "$DESKTOP" ]; then')[1]?.split("# Core is sharded")[0] ?? ""
     expect(desktop).not.toContain("ORCHESTRA_OMNI_CONTROL=declared")
     expect(desktop).not.toContain("--timeout")
-    const turbo = JSON.parse(readFileSync(new URL("../../../turbo.json", import.meta.url), "utf8").replace(/\/\/[^\n]*/g, ""))
+    const turbo = JSON.parse(readFileSync(new URL("../../../turbo.json", import.meta.url), "utf8").replace(/^\s*\/\/[^\n]*/gm, ""))
+    expect(turbo.$schema).toBe("https://v2-8-13.turborepo.dev/schema.json")
     expect(turbo.tasks["@orchestra/desktop#test:bun"]).toEqual(turbo.tasks["@orchestra/desktop#test"])
     expect(turbo.tasks["@orchestra/desktop#test:node"]).toEqual(turbo.tasks["@orchestra/desktop#test"])
   })
