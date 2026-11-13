@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "previousDev": "22d326d58f6cbb9fdc46b55620194c5d434a7444",
+  "incomingDev": "5804b4f794ba31f49890b79565cff62b65e37725",
+  "priorRoot": "db64254072",
+  "scope": "Integrate the seven incoming dev commits before the next full cold qualification; no ledger closure.",
+  "conflicts": [
+    "modules/atlas/packages/adapter-io/src/review-log.ts",
+    "modules/atlas/boundary/src/generated/native-memory.js",
+    "modules/atlas/boundary/src/generated/surface.js"
+  ],
+  "resolution": {
+    "method": "Restore the exact prior Root blobs for these three paths, retaining every other incoming change.",
+    "reason": "Both branches independently extracted review-records.ts with identical bytes. Root additionally composes validated joint Memory receipts. Reverting readReview to the incoming raw reader would lose the campaign fix.",
+    "sharedReviewRecordsBlob": "cc68c53c23a75c8aea6ca5a26453d2701fa1b199",
+    "generatedFilesManuallyEdited": false,
+    "localGenerationBuildOrTests": false,
+    "independentReadOnlyReview": "APPROVE by io_recovery; Root verified the staged Atlas tree and bun.lock have no delta against priorRoot."
+  },
+  "atlasProducerIdentity": {
+    "evidence": "atlas-final-refresh.json",
+    "qualifiedRun": "43449908836",
+    "sourceCount": 354,
+    "allRecordedInputsUnchanged": true,
+    "bothLocksUnchanged": true,
+    "all18GeneratedOutputsUnchanged": true,
+    "limit": "Preserves the existing qualified producer vector; this is source identity evidence, not a new runtime qualification."
+  },
+  "incomingChangesRetained": "Lucy engagement source/policy/evidence, review-toolkit repository analysis, their tests and specs.",
+  "qualification": "New full cold aggregate pending. Previous aggregate and scoped source vectors retain their recorded status."
+}
