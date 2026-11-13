@@ -64,6 +64,7 @@ jobs:
           import path from 'node:path'
           import { omniControlScope, validateRequest } from './script/test-ci-request.ts'
           import { locateTestPackage } from './script/test-ci-location.ts'
+          import { isAtlasGeneratedRequest } from './packages/core/test/fixture/atlas-generated-request.ts'
           const request = validateRequest(JSON.parse(readFileSync('.ci-run.json', 'utf8')),
             (file) => (statSync(file, { throwIfNoEntry: false })?.isFile() ?? false) &&
               realpathSync(file).startsWith(realpathSync('.') + path.sep),
@@ -73,7 +74,7 @@ jobs:
           writeFileSync('test-ci-evidence/request.json', JSON.stringify({ request,
             platform: process.platform, arch: process.arch, sha: process.env.GITHUB_SHA }))
           appendFileSync(process.env.GITHUB_OUTPUT,
-            `package=${request.package}\ndirectory=${request.directory}\nrunner=${request.runner}\nomni_control=${omniControlScope(request)}\n`)
+            `package=${request.package}\ndirectory=${request.directory}\nrunner=${request.runner}\nomni_control=${omniControlScope(request)}\natlas_generated=${isAtlasGeneratedRequest(request)}\n`)
           NODE
 
       - name: Fetch source history for Script fixtures
@@ -284,6 +285,15 @@ jobs:
               node --experimental-strip-types --test "${args[@]}"
               ;;
           esac
+
+      - name: Upload Atlas boundary qualification evidence
+        if: always() && runner.os == 'Linux' && steps.request.outputs.atlas_generated == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: atlas-generated-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.sha }}
+          path: test-ci-evidence/atlas-generated/
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Upload Lean dashboard previews (extension)
         if: always() && hashFiles(format('{0}/e2e/test-results/lean-visual/*.png', steps.request.outputs.directory)) != ''
