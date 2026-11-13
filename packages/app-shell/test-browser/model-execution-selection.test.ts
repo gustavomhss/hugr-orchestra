@@ -1,18 +1,59 @@
-import { expect, test } from "bun:test"
+import { beforeAll, expect, test } from "bun:test"
 import { createRoot } from "solid-js"
 import { createStore } from "solid-js/store"
+import { Schema } from "effect"
+import { Location } from "@orchestra/schema/location"
+import { Model } from "@orchestra/schema/model"
+import { ModelExecution } from "@orchestra/schema/model-execution"
+import { Provider } from "@orchestra/schema/provider"
+import type { makeModelExecutionQuery } from "@orchestra/client"
 import { createModelCatalog } from "../src/hooks/provider-catalog"
 import { mixedEngineAgents, mixedEngineCatalog } from "../src/testing/model-execution-fixture"
 
-const host = { providerID: "anthropic", modelID: "claude-host" }
+const host = { providerID: "anthropic", modelID: "claude-host", variant: "high" }
 const api = { providerID: "openai", modelID: "gpt-api" }
 const [state, setState] = createStore({
   data: { agent: mixedEngineAgents("orchestra"), config: {} },
   catalog: mixedEngineCatalog(),
+  epoch: 0,
   chosen: host as { providerID: string; modelID: string; variant?: string | null } | undefined,
 })
 const ready = Object.assign(() => true, { promise: undefined })
 const writes: unknown[] = []
+const persistedWrites: unknown[] = []
+type Execute = Parameters<typeof makeModelExecutionQuery>[0]["execute"]
+const calls: { request: Parameters<Execute>[0]; signal: AbortSignal;
+  reply: ReturnType<typeof Promise.withResolvers<Awaited<ReturnType<Execute>>>> }[] = []
+const sdk = {
+  directory: "/mixed-engine-project",
+  modelExecutionEpoch: () => state.epoch,
+  orchestra: { models: { execution: ((request, options) => {
+    const reply = Promise.withResolvers<Awaited<ReturnType<Execute>>>()
+    calls.push({ request: structuredClone(request), signal: options.signal, reply })
+    return reply.promise
+  }) satisfies Execute } },
+}
+const server = { scope: "local" }
+const entries = ([
+  ["anthropic", "claude-host"], ["anthropic#api-key", "claude-api"], ["openai", "gpt-api"],
+  ["opencode", "zen-free"], ["custom", "api-model"], ["custom", "host-only-model"],
+] as const).map(([providerID, id]) => Model.Info.empty(Provider.ID.make(providerID), Model.ID.make(id)))
+const responseSchema = Location.response(ModelExecution.Response)
+const ref = Model.Ref.make({ providerID: Provider.ID.make(host.providerID), id: Model.ID.make(host.modelID),
+  variant: Model.VariantID.make(host.variant) })
+
+// Explicit public transport outcomes qualify consumer ownership, not the backend eligibility algorithm.
+function response(decision: ModelExecution.Decision, engine: string, missing = false) {
+  return Schema.decodeUnknownSync(responseSchema)({
+    location: { directory: sdk.directory, project: { id: "project", directory: sdk.directory } },
+    data: {
+      models: entries.filter((model) => !missing || model.id !== host.modelID).map((model) => ({
+        model, engine, ...(model.id === host.modelID ? decision : { status: "ready" }),
+      })),
+      selection: { ref, engine, ...decision },
+    },
+  })
+}
 const catalog = createModelCatalog(
   () => state.catalog.connected.flatMap((id) => state.catalog.all.get(id) ?? []),
   () => [],
@@ -24,16 +65,16 @@ const models = {
     catalog.list().find((model) => model.provider.id === key.providerID && model.id === key.modelID),
   recent: { list: () => [host, api], push() {} },
   setVisibility() {},
-  variant: { get: () => undefined, set() {} },
+  variant: { get: () => host.variant, set() {} },
 }
 const fixtures = {
   context: {
     createSimpleContext: (input: { init: () => unknown }) => ({ provider: input.init, use: () => undefined }),
   },
   models: { useModels: () => models },
-  sdk: { useSDK: () => () => ({ directory: "/mixed-engine-project" }) },
+  sdk: { useSDK: () => () => sdk },
   sync: { useSync: () => () => state },
-  server: { useServerSDK: () => () => ({ scope: "local" }) },
+  server: { useServerSDK: () => () => server },
   router: { useParams: () => ({}), useSearchParams: () => [{}] },
   providers: {
     useProviders: () => ({
@@ -45,10 +86,14 @@ const fixtures = {
   },
   persist: {
     Persist: { serverWorkspace: () => ({ key: "selection" }) },
-    persisted: (_target: unknown, store: readonly unknown[]) => [store[0], store[1], null, ready],
+    persisted: (_target: unknown, store: ReturnType<typeof createStore>) => [store[0], (...args: unknown[]) => {
+      persistedWrites.push(args)
+      return Reflect.apply(store[1], undefined, args)
+    }, null, ready],
   },
   prompt: {
     usePrompt: () => ({
+      ready,
       model: {
         current: () => state.chosen,
         set: (item: typeof state.chosen) => {
@@ -92,54 +137,110 @@ Bun.plugin({
     }))
   },
 })
-const { LocalProvider }: typeof import("../src/context/local") = await import(
-  `${Bun.resolveSync("../src/context/local.tsx", import.meta.dir)}?execution-test`
-)
-const { createPromptModelSelection }: typeof import("../src/pages/session/composer/prompt-model-selection") =
-  await import(
-    `${Bun.resolveSync("../src/pages/session/composer/prompt-model-selection.ts", import.meta.dir)}?execution-test`
-  )
+let LocalProvider: typeof import("../src/context/local").LocalProvider
+let createPromptModelSelection: typeof import("../src/pages/session/composer/prompt-model-selection").createPromptModelSelection
+beforeAll(async () => {
+  const local = await import(`${Bun.resolveSync("../src/context/local.tsx", import.meta.dir)}?execution-test`)
+  const composer = await import(`${Bun.resolveSync("../src/pages/session/composer/prompt-model-selection.ts", import.meta.dir)}?execution-test`)
+  LocalProvider = local.LocalProvider
+  createPromptModelSelection = composer.createPromptModelSelection
+})
 
-test("LocalProvider and composer filter all candidates by Maestro engine, not a secondary CC seat", () => {
-  setState({ data: { agent: mixedEngineAgents("orchestra"), config: {} }, catalog: mixedEngineCatalog(), chosen: host })
+async function wait(condition: () => boolean, label: string) {
+  const deadline = performance.now() + 1500
+  while (!condition()) {
+    if (performance.now() >= deadline) throw new Error(`Selection fixture did not settle: ${label}`)
+    await Bun.sleep(1)
+  }
+}
+
+test("Local and composer retain explicit intent and consume Maestro eligibility without fallback writes", async () => {
+  setState({ data: { agent: mixedEngineAgents("orchestra"), config: {} }, catalog: mixedEngineCatalog(), chosen: host, epoch: 0 })
   writes.length = 0
-  createRoot((dispose) => {
+  persistedWrites.length = 0
+  calls.length = 0
+  const owner = createRoot((dispose) => {
     const local = LocalProvider({}) as unknown as ReturnType<typeof import("../src/context/local").useLocal>
     const composer = createPromptModelSelection({ agent: local.agent.current })
-    try {
-      expect(local.agent.current()?.engine).toBe("orchestra")
-      expect(state.data.agent.find((agent) => agent.id === "secondary")?.engine).toBe("claude-code")
-      for (const selection of [local.model, composer]) {
-        expect(selection.list().map((model) => model.id)).toEqual(["claude-api", "gpt-api", "zen-free", "api-model"])
-        expect(selection.current()?.id).toBe("gpt-api")
-        expect(selection.recent().map((model) => model?.id)).toEqual(["gpt-api"])
-        selection.set(host)
-        expect(selection.current()?.id).toBe("gpt-api")
-      }
-      expect(writes).toEqual([])
-      setState("data", "agent", mixedEngineAgents("claude-code"))
-      for (const selection of [local.model, composer]) {
-        expect(selection.list().map((model) => model.id)).toEqual([
-          "claude-host",
-          "claude-api",
-          "gpt-api",
-          "zen-free",
-          "api-model",
-        ])
-        expect(selection.current()?.id).toBe("claude-host")
-      }
-      setState("data", "agent", mixedEngineAgents("orchestra"))
-      // Real API-connected Anthropic has no host-only marker. CC login is irrelevant to this control.
-      const original = mixedEngineCatalog()
-      const provider = original.all.get("anthropic")!
-      setState("catalog", {
-        ...original,
-        all: new Map(original.all).set("anthropic", { ...provider, options: { apiKeySource: "api-connection" } }),
-      })
-      expect(local.model.list().some((model) => model.id === "claude-host")).toBe(true)
-      expect(composer.current()?.id).toBe("claude-host")
-    } finally {
-      dispose()
-    }
+    local.model.set({ providerID: host.providerID, modelID: host.modelID })
+    local.model.variant.set(host.variant)
+    return { dispose, selections: [local.model, composer], local, composer }
   })
+  const expectedRequest = {
+    location: { directory: sdk.directory }, context: { type: "draft", agentID: "maestro" }, model: ref,
+  }
+  const answer = async (value: ReturnType<typeof response>, from: number, label: string) => {
+    await wait(() => calls.slice(from).filter((call) => !call.signal.aborted).length === 2, `${label} requests`)
+    const current = calls.slice(from).filter((call) => !call.signal.aborted)
+    for (const call of current) {
+      expect(call.request).toEqual(expectedRequest)
+      call.reply.resolve(value)
+    }
+    await wait(() => owner.selections.every((selection) => selection.execution.read().status === "ready"), label)
+  }
+  const retained = () => {
+    for (const selection of owner.selections) {
+      expect(selection.intent()).toEqual({ model: { providerID: host.providerID, modelID: host.modelID }, variant: host.variant })
+      expect(selection.current()?.id).toBe(host.modelID)
+    }
+    expect(state.chosen).toEqual(host)
+    expect(writes).toEqual([])
+    expect(persistedWrites).toEqual([])
+  }
+  try {
+    // Loading checks explicit composer intent only; no automatic Local default is assumed.
+    expect(owner.composer.current()?.id).toBe(host.modelID)
+    expect(owner.composer.execution.ready()).toBe(false)
+    expect(owner.composer.execution.read().status).toBe("loading")
+    expect(writes).toEqual([])
+    expect(persistedWrites).toEqual([])
+    await answer(response({ status: "unsupported", reason: "unsupported-api" }, "orchestra"), 0, "unsupported host")
+    retained()
+    for (const selection of owner.selections) {
+      expect(selection.list().map((model) => model.id)).toEqual(entries.map((model) => model.id))
+      expect(selection.execution.ready()).toBe(false)
+      expect(selection.execution.reason(host)).toBe("unsupported-api")
+    }
+
+    const secondary = calls.length
+    expect(state.data.agent.find((agent) => agent.id === "secondary")?.engine).toBe("claude-code")
+    setState("data", "agent", mixedEngineAgents("orchestra").map((agent) =>
+      agent.id === "secondary" ? { ...agent, engine: "orchestra" } : agent))
+    await answer(response({ status: "unsupported", reason: "unsupported-api" }, "orchestra"), secondary, "secondary-only refresh")
+    retained()
+    for (const selection of owner.selections) {
+      expect(selection.execution.ready()).toBe(false)
+      expect(selection.execution.reason(host)).toBe("unsupported-api")
+    }
+
+    const primary = calls.length
+    setState("data", "agent", state.data.agent.map((agent) =>
+      agent.id === "maestro" ? { ...agent, engine: "claude-code" } : agent))
+    expect(owner.local.agent.current()?.engine).toBe("claude-code")
+    await answer(response({ status: "ready" }, "claude-code"), primary, "Maestro ready")
+    retained()
+    for (const selection of owner.selections) expect(selection.execution.ready()).toBe(true)
+
+    const removed = calls.length
+    const original = mixedEngineCatalog()
+    const provider = original.all.get(host.providerID)
+    if (!provider) throw new Error("Missing controlled host provider")
+    setState("catalog", { ...original, all: new Map(original.all).set(host.providerID, {
+      ...provider, models: Object.fromEntries(Object.entries(provider.models).filter(([id]) => id !== host.modelID)),
+    }) })
+    setState("epoch", 1)
+    await answer(response({ status: "unavailable", reason: "model-missing" }, "claude-code", true), removed, "missing host")
+    retained()
+    for (const selection of owner.selections) {
+      expect(selection.execution.ready()).toBe(false)
+      expect(selection.execution.reason(host)).toBe("model-missing")
+      expect(selection.list().some((model) => model.id === host.modelID)).toBe(true)
+    }
+  } finally {
+    owner.dispose()
+    // Settle every controlled transport, including superseded generations, after the real owners abort it.
+    for (const call of calls) call.reply.resolve(response({ status: "unavailable", reason: "model-missing" }, "claude-code", true))
+    await Promise.all(calls.map((call) => call.reply.promise))
+    expect(calls.every((call) => call.signal.aborted)).toBe(true)
+  }
 })
