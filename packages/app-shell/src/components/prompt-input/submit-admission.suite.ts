@@ -18,13 +18,28 @@ import {
   promptInputs,
   worktreeCreateInputs,
   sentShell,
+  sentPrompts,
   sessionCreateInputs,
+  toasts,
   state,
   storedSessions,
   submitInput,
   syncedDirectories,
   policyFixture, serverFor, sdkFor, setReactiveOwner, interrupts, statusWrites,
 } from "./submit-harness"
+
+test.each(["removed", "unavailable"])("rejects %s workspace before Session creation and retains the prompt", async (failure) => {
+  state.workspaceDirectories = []
+  state.workspaceLookupFailure = failure === "unavailable"
+  const submit = createPromptSubmit({ ...submitInput(), info: () => undefined, newSessionWorktree: () => state.selected })
+  await submit.handleSubmit(new Event("submit", { cancelable: true }))
+  expect(state.workspaceLookups).toEqual([{ projectID: "project" }])
+  expect(sessionCreateInputs).toEqual([])
+  expect(createdSessions).toEqual([])
+  expect(sentPrompts).toEqual([])
+  expect(state.promptValue).toEqual([{ type: "text", content: "ls", start: 0, end: 2 }])
+  expect(toasts).toContainEqual(expect.objectContaining({ title: "prompt.toast.sessionCreateFailed.title" }))
+})
 
 const deferred = () => Promise.withResolvers<void>()
 

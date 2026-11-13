@@ -91,6 +91,8 @@ export interface Turn {
       readonly summary: string
       readonly trigger: string
       readonly nativeSessionID: string
+      /** Identity chosen by an engine that already owns this archived context. */
+      readonly messageID?: SessionMessage.ID
     }) => Effect.Effect<void>
   }
   /**

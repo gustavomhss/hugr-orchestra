@@ -39,6 +39,7 @@ export type HomeProjectsViewProps = {
   projectsForServer: (server: ServerConnection.Any) => LocalProject[]
   collapsed: (server: ServerConnection.Any) => boolean
   canDefaultServer: Accessor<boolean>
+  defaultKnown: Accessor<boolean>
   defaultServerKey: Accessor<ServerConnection.Key | null | undefined>
   canRevealProject: (server: ServerConnection.Any) => boolean
   unseenCount: (server: ServerConnection.Any, project: LocalProject) => number
@@ -169,6 +170,7 @@ function HomeServerRow(props: {
   projectsForServer: HomeProjectsViewProps["projectsForServer"]
   contextMenuOpen: HomeProjectsContextMenuProps["contextMenuOpen"]
   canDefaultServer: HomeProjectsViewProps["canDefaultServer"]
+  defaultKnown: HomeProjectsViewProps["defaultKnown"]
   defaultServerKey: HomeProjectsViewProps["defaultServerKey"]
   onFocusServer: HomeProjectsViewProps["onFocusServer"]
   onToggleCollapsed: HomeProjectsViewProps["onToggleCollapsed"]
@@ -256,7 +258,7 @@ function HomeServerRow(props: {
           server={props.server}
           labels={serverMenuLabels(props.language)}
           canDefault={props.canDefaultServer()}
-          isDefault={props.defaultServerKey() === ServerConnection.key(props.server)}
+          isDefault={props.defaultKnown() && props.defaultServerKey() === ServerConnection.key(props.server)}
           onEdit={props.onEditServer}
           onSetDefault={() => props.onSetDefaultServer(props.server)}
           onRemoveDefault={() => props.onSetDefaultServer(undefined)}

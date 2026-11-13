@@ -20,7 +20,32 @@ export type PassName = typeof PassName.Type
 export const Fill = Schema.Literals(["complete", "failed"]).annotate({ identifier: "RagStudioFill" })
 export type Fill = typeof Fill.Type
 
-export const PipelineField = Schema.Literals(["parser", "boundary", "tokenizer", "k"]).annotate({
+export const NumericType = Schema.Literals(["float32", "int8", "binary"]).annotate({
+  identifier: "RagStudioNumericType",
+})
+export type NumericType = typeof NumericType.Type
+
+export const Metric = Schema.Literals(["cosine", "dot", "distance"]).annotate({
+  identifier: "RagStudioMetric",
+})
+export type Metric = typeof Metric.Type
+
+export const Sense = Schema.Literals(["off", "missing", "fused"]).annotate({
+  identifier: "RagStudioSense",
+})
+export type Sense = typeof Sense.Type
+
+export const PipelineField = Schema.Literals([
+  "parser",
+  "boundary",
+  "tokenizer",
+  "k",
+  "embedding_model",
+  "query_model",
+  "dimension",
+  "numeric_type",
+  "metric",
+]).annotate({
   identifier: "RagStudioPipelineField",
 })
 export type PipelineField = typeof PipelineField.Type
@@ -50,7 +75,12 @@ export const Pipeline = Schema.Struct({
   boundary: Schema.String,
   tokenizer: Schema.String,
   lexical: Schema.Literal(true),
-  embedding: Schema.Literal(false),
+  embedding: Schema.Boolean,
+  embeddingModel: Schema.String,
+  queryModel: Schema.String,
+  dimension: Schema.Int,
+  numericType: NumericType,
+  metric: Metric,
   k: Schema.Int,
 }).annotate({ identifier: "RagStudioPipeline" })
 
@@ -89,9 +119,13 @@ export const QuestionResult = Schema.Struct({
   promptText: Schema.String,
   promptChunkIds: Schema.Array(Schema.String),
   retrievalOptional: Schema.Boolean,
+  sense: Sense,
 }).annotate({ identifier: "RagStudioQuestionResult" })
 
-export const AdmitResult = Schema.Union([Source, Schema.Struct({ refused: Schema.Literals(["atlas", "permission"]) })]).annotate({
+export const AdmitResult = Schema.Union([
+  Source,
+  Schema.Struct({ refused: Schema.Literals(["atlas", "permission"]) }),
+]).annotate({
   identifier: "RagStudioAdmitResult",
 })
 export type AdmitResult = typeof AdmitResult.Type
@@ -144,6 +178,7 @@ export const CompareResult = Schema.Union([
     questions: Schema.Array(
       Schema.Struct({
         id: Schema.String,
+        text: Schema.String,
         startChanged: Schema.Boolean,
         endChanged: Schema.Boolean,
         textChanged: Schema.Boolean,
@@ -159,7 +194,10 @@ export const PassInput = Schema.Struct({ pass: PassName, sourceId: Schema.String
 export type PassInput = typeof PassInput.Type
 
 export const PassResult = Schema.Union([
-  Schema.Struct({ pass: Schema.Literal("redo_numbers"), result: Schema.Literal("not_applicable") }),
+  Schema.Struct({
+    pass: Schema.Literal("redo_numbers"),
+    result: Schema.Literals(["not_applicable", "no_key"]),
+  }),
   Schema.Struct({ pass: PassName, fill: Fill }),
 ]).annotate({ identifier: "RagStudioPassResult" })
 export type PassResult = typeof PassResult.Type

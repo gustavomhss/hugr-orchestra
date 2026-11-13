@@ -38,3 +38,9 @@ Retry memory ends when the composer closes or leaves its Session or server, even
 Staging, clearing or committing a revert is refused while the Session has active work. API clients receive HTTP 409. Wait for the turn or operation to finish, or explicitly interrupt the Session, then retry.
 
 Cancelling the request that waits for a revert does not cancel the revert itself. Refresh the Session to check its result before retrying. An explicit Session interruption stops the active operation.
+
+## Undo and replacement messages
+
+After staging undo, a new replacement message commits the selected history cut and its admission atomically. A conflicting message ID rejects the replacement without truncating history. Exact retries do not cut history again. Pending work cannot resume hidden history while undo remains staged.
+
+Creating a child and deleting its parent are serialized through the durable change. A child cannot survive deletion by racing its creation.

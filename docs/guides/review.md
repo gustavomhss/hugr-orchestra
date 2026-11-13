@@ -126,7 +126,7 @@ The tier is how deep the review goes.
 | --- | --- |
 | **Quick** | One pass over the diff with its intent; findings are backed by a quote. Reports only P0 and P1. |
 | **Standard** (default) | Separate reading passes for routed concerns and candidates checked by a second Session that did not find them. New or changed tests need fail-before/pass-after evidence when the required lane is available. |
-| **Deep** | Can be requested, but is not built yet. It runs as Standard. |
+| **Deep** | Two independent hunt samples, graph-backed caller context when available, and class-specific advanced proofs under larger bounded budgets. |
 
 When nobody sets a tier, Orchestra chooses one from the change: Quick for documentation only, test-only additions or
 a small change with none of the risks below; Deep for a trust boundary, authentication or secrets, concurrency or
@@ -138,9 +138,7 @@ Quick and Standard cap the number of reading passes. A routed lens over the cap 
 not silently examined; even the privacy lens can be capped at Quick. Routing `personal-data` does not grant a full
 audit. Check the card's coverage and deviations for what actually ran.
 
-When a review asks for Deep, the card shows `tier.requested: "deep"` in the routing record, runs Standard, records the
-method as `standard`, and lists every unbuilt Deep lane under "not examined" with the reason `not-built`. Read that as
-"this change deserved more than this release can do", not as a pass. Deep itself is not built.
+Deep runs its own tier and records its actual method. Two independently ordered hunt samples provide agreement only for ranking; agreement cannot confirm a finding. Caller context widens changed-line filtering only when an existing index supplies complete, fresh, revision-bound evidence. Missing or ambiguous index data stays explicitly unavailable. Individual missing adapters remain `not-run`, and findings still require independent proof. A catalog that genuinely lacks Deep adapters records the requested tier and falls back to Standard.
 
 A trusted review at Standard or Deep also typechecks a TypeScript change with the project's own `tsc`, confined in a
 scratch copy. It does not install a compiler. A missing one is unavailable. Approval waits until that check is listed
@@ -150,7 +148,7 @@ instead, and that citation does not block approval. Quick does not run it.
 The same trusted review asks the project's own language server, if the repository already has one, for diagnostics on
 the changed TypeScript and JavaScript files. It opens them in the scratch copy and does not write them, and it does
 not install a server. A missing one is recorded and does not block approval. An error it publishes is on the card; it
-does not by itself refuse approval. Deep is still not built.
+does not by itself refuse approval.
 
 A trusted review at Standard or Deep also runs `go vet` on each changed Go package, in the scratch copy. The host fixes that command. It does not install Go, and it does not add a vet flag. A missing Go is unavailable, and approval waits until that check is listed in `review.acceptedUnavailable` or Go is present. Quick does not run it.
 
@@ -159,6 +157,10 @@ If `golangci-lint` is already installed, the same review runs `golangci-lint run
 If `shellcheck` or `hadolint` is already installed, Standard or Deep runs it on the changed shell scripts or Dockerfiles. The host passes those files and no flag. It does not install either tool. A missing one is recorded as `not run: <tool> absent` and does not block approval. Quick does not run them.
 
 When a lockfile changes, Standard or Deep runs pinned osv-scanner 2.7.1 as `scan source -r` with `--offline` in the scratch copy. It does not download that database, and it does not run `fix`. The host refreshes it outside the review with `orchestra toolkit osv`, which runs `osv-scanner --offline-vulnerabilities --download-offline-databases` against a host directory, not the review copy. A missing database is recorded as `not run: osv advisory database absent` and does not block approval. When the database is present, the card states its age. Quick does not run the scan. On a machine that is not the qualified Linux x64 runtime the card records that and does not block approval. A missing pin on Linux still does.
+
+For a changed `Cargo.lock`, Standard and Deep also run cargo-audit 0.23.0 on the qualified Linux x64 runtime. Prepare the installed pin with `orchestra toolkit prefetch cargo-audit`, then fetch a RustSec advisory database with `orchestra toolkit rustsec`. These are explicit host operations; a review does not install the tool or fetch a database. Each refresh publishes a new database generation, preserving the one an existing review is reading.
+
+The scan reads captured head and base lockfiles from a private directory and ignores project and user Cargo audit configuration. It does not build the project or generate a lockfile. The card states the database revision, its commit time, and the time the host refreshed it, including when the data is stale. Missing data is recorded as `not run: RustSec advisory database absent`; an unavailable pin or unsupported runtime is also reported rather than passed. Registry yank status is not examined. Advisory reports are probation candidates tied to the actual package block; confirming a defect still requires checking the advisory against the dependency and its affected use. A broken head or base scan withholds candidates. Quick does not run this check.
 
 Standard and Deep source reviews also route pinned jscpd 5.4.3 for exact duplicate code. Before reviewing, the host provisions it with `orchestra toolkit prefetch jscpd`; the review itself only uses an installed binary. It scans the head and base scratch copies with separate reports and an empty host working directory, so project configuration cannot enable extra passes. Either side of a new clone can intersect the changed lines. A clone is a probation candidate in `change.duplication`, never proof of a security or correctness defect; confirming it requires a written constraint or harmful divergence. Quick does not run it. The change lens still obeys the tier cap: if higher-priority routed lenses fill that cap, duplication items remain outside the model review and coverage reports the unexamined lens. Native execution is qualified on Linux x64 only. An unavailable base scan withholds candidates rather than treating all head clones as new.
 
@@ -254,6 +256,26 @@ A long "not examined" list on an `APPROVE` is a reason to look closer, not a def
 for an analyzer is not proof that its adapter exists or that it ran. The review method requires unavailable checks
 and their reasons to be reported, but the current PR card validator does not independently verify that the list is
 complete. Inspect checks and coverage; the review never installs or downloads a missing tool.
+
+## Advanced proofs
+
+A built Deep review offers additional proofs for particular classes and languages. The verifier chooses an offered option and a structured target; the host fixes the executable and arguments. Each attempt runs in confined scratch space and retains its output. A missing target, tool, sandbox, or resource budget is `not-run` with a reason.
+
+- JavaScript and TypeScript invariants can use a seeded integer property. The host tries fixed boundary values followed by a reproducible generated sequence and shrinks a failing value toward zero with a bounded budget. A pass covers that law and those generated cases.
+- JavaScript and TypeScript atomicity candidates can use an explicit interleaving schedule. The same scenario and gates run twice on both base and head. The proof requires repeatable failure on base and success on head. This is separate from the Go race detector.
+- Rust weak-oracle candidates can use an already installed cargo-mutants 27.1.0 on Linux x64. The host selects changed-line mutants, checks the baseline and runs offline with the existing lockfile. A surviving viable mutant fails the proof. An empty selection, all-unviable mutants, timeout or incomplete report cannot pass. The review never downloads this tool.
+
+These adapters do not qualify other languages or native platforms. Formal and fuzz probes remain unavailable.
+
+## Release candidate evidence
+
+At the governed code stage, request profile `release` and supply `release.artifact`, a relative path in the opened project. Optional paths are `signature`, `provenance`, `updater`, `sbom` and `notes`. Signing policy is `signer: { publicKey, sha256 }`: a PEM public-key path and its lowercase SHA-256 SPKI DER fingerprint. Paths cannot traverse directories, dependencies or symlinks. The host reads candidate bytes once before selecting the review identity; changing any supplied bytes or policy produces a new identity. A release rereview requires a fresh release request with the proofs.
+
+Capture requires atomic `O_NOFOLLOW` support. A host without it (including the current Windows runtime) refuses supplied files with `nofollow-unavailable`; the review records acquisition errors without reading their bytes.
+
+The card always lists five checks and their retained evidence. Signing verifies a raw Ed25519 signature over candidate bytes under the caller's fingerprint policy. Provenance verifies a DSSE in-toto/SLSA v1 statement bound to the candidate hash. Updater checks the supplied electron-builder entry's literal filename and SHA-512 digest. SBOM checks only cryptographic co-signature of an attached Syft document and candidate hashes in that statement; it does not establish completeness or that Syft's source describes the candidate. Notes establish that nonempty text was supplied.
+
+Absent evidence is `not-run`; a failed supplied proof or acquisition error blocks approval. The owner may explicitly accept unavailable proofs through the existing project setting. None of these checks certifies publisher identity, notarization, platform signing or a SLSA level. Behavioural evaluation remains not examined, reason `owner-permission`. Quick and Standard retain their existing lenses; Deep adds the release lens.
 
 ## Lanes you accept as unavailable
 

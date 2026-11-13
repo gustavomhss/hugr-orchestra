@@ -1,5 +1,6 @@
 export * as ReviewCandidatesV2 from "./review-candidates"
 
+import { ReviewProbe } from "@orchestra/core/review-toolkit/probe"
 import { ReviewCatalog } from "@orchestra/core/review/catalog"
 import type { ReviewOutcomes } from "@orchestra/core/review/outcomes"
 import { ReviewRouting } from "@orchestra/core/review/routing"
@@ -169,6 +170,7 @@ export function options(catalog: ReviewCatalog.Catalog, tier: Tier, record: Revi
   const language = record.languages.map((item) => item.id).find((id) => entry.options[id])
   return (entry.options[language ?? "*"] ?? entry.options["*"] ?? [])
     .filter((option) => {
+      if (ReviewProbe.ADVANCED.some((id) => id === option.option) && (tier.id !== "deep" || !tier.built || tier.runs !== "deep")) return false
       const rung = catalog.options.find((item) => item.id === option.option)?.rung
       return rung !== undefined && tier.rungs[rung].includes(candidate.severity)
     })

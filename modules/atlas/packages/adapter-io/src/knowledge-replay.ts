@@ -19,7 +19,7 @@ import type { Hash } from "@atlas/contracts"
 import type { CasObject } from "@atlas/kernel"
 import type { CurrentNode, GroundedFact, StoreProjection } from "@atlas/knowledge"
 import { blobPath } from "./layout.js"
-import { readKnowledge } from "./knowledge-log.js"
+import { knowledgeRegresses, readKnowledge } from "./knowledge-log.js"
 import type { KnowledgeEntry } from "./knowledge-log.js"
 import { actorInScope } from "./policy.js"
 import type { AtlasPolicy } from "./policy.js"
@@ -46,7 +46,11 @@ export function replayKnowledge(
 ): KnowledgeReplay {
   const read = readKnowledge(repoPath)
   const projection = rehydrateProjection(disk)
-  const pending = [...read.rows.values()].filter((e) => !sameRow(projection.current.get(e.row.nodeKey), e.row))
+  const pending = [...read.rows.values()].filter((entry) => {
+    const held = projection.current.get(entry.row.nodeKey)
+    if (sameRow(held, entry.row)) return false
+    return held === undefined || !knowledgeRegresses(held, entry.row, read.lines)
+  })
   const resolved = pending.flatMap((entry) => {
     const fact = restoreBlob(repoPath, disk, entry)
     // Capture the validated read, so absence cannot fall through into either proven or staging candidates.
@@ -56,6 +60,7 @@ export function replayKnowledge(
     (item) =>
       item.fact.seal === "proven" &&
       actorInScope(policy, item.entry.seat, item.entry.row.scope) &&
+      boundToFact(item.entry.row, item.fact) &&
       reproven(item.entry.row, item.fact),
   )
   const candidates = resolved.filter((item) => !proven.includes(item))
@@ -127,6 +132,14 @@ function sameRow(held: CurrentNode | undefined, logged: CurrentNode): boolean {
   const { derivedAt: _held, ...heldRest } = held
   const { derivedAt: _logged, ...loggedRest } = logged
   return JSON.stringify(heldRest) === JSON.stringify(loggedRest)
+}
+
+// Imported row restriction; canonical-family compatibility remains under audit.
+function boundToFact(row: CurrentNode, fact: GroundedFact) {
+  if (!Array.isArray(row.claims)) return false
+  if (typeof fact.id !== "string" || row.nodeKey !== fact.id) return false
+  const sentence = "claimNorm" in fact && typeof fact.claimNorm === "string" ? fact.claimNorm : undefined
+  return row.claims.every((claim) => claim === sentence)
 }
 
 const withRows = (p: StoreProjection, entries: readonly KnowledgeEntry[]): StoreProjection => ({

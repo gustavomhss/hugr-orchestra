@@ -78,9 +78,10 @@ it.live("mutation rendezvous reports an actual pre-writer not-run result immedia
       const writes: string[] = []
       yield* Effect.scoped(Effect.gen(function* () {
         // This public probe refuses the offered, unbuilt option before any runner or writer; no jail is needed.
-        const first = yield* ReviewProbe.run({ candidate: "c1", option: "probe:mutants", target: {} }, {
+        // formal stays unbuilt. mutants is built and would take the writer path.
+        const first = yield* ReviewProbe.run({ candidate: "c1", option: "probe:formal", target: {} }, {
           reviewID: "review_probe_early", head, base,
-          offered: { c1: ["probe:mutants"] },
+          offered: { c1: ["probe:formal"] },
           cap: 3, hunks: [], ledger: ReviewProbe.ledger(), timeoutSeconds: 60,
         }).pipe(
           Effect.provideService(Writer, async (file, content) => {

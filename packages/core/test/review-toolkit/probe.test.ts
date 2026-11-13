@@ -209,13 +209,14 @@ live("a go file is go test -race, or go itself is absent", () =>
   }), 180_000,
 )
 
-it.live("Deep and other unbuilt options answer not-run: not-built", () =>
+it.live("unsupported formal and fuzz options answer not-run: not-built", () =>
   Effect.gen(function* () {
     expectSpawn(import.meta.path)
     const fixture = yield* repo
     yield* Effect.scoped(Effect.gen(function* () {
       const head = yield* ReviewScratch.create({ worktree: fixture.root, tree: true })
-      const options = ["probe:mutants", "probe:interleave", "probe:property", "probe:fuzz"]
+      // mutants, interleave and property are built; only these two still refuse before an attempt.
+      const options = ["probe:formal", "probe:fuzz"]
       const shared = context(head, { offered: { c1: options } })
       const results = yield* Effect.forEach(options, (option) => ReviewProbe.run(probe(option, { test: { file: "src/a.test.ts" } }), shared))
       results.forEach((result) => expect(result.result).toMatchObject({ status: "not-run", reason: "not-built", excerpt: "not-built" }))

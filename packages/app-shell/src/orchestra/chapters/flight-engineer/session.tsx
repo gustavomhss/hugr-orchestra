@@ -5,15 +5,17 @@ import { MxBadge } from "../kit"
 import { clock } from "./model"
 import { Glyph, Keys, Meter, Note } from "./parts"
 import type { useFlight } from "./run"
+import { runClaim } from "./run-state"
 
 type Flight = ReturnType<typeof useFlight>
 
 // The chapter's first screen: ready to start, or a running meeting. The transcript, suggestions and answers live in
 // the overlay; the bridge sends this window only the run state and the audio levels.
 export function Session(props: { flight: Flight; openSettings: () => void }) {
+  const shown = () => runClaim(props.flight.store.runKnown, props.flight.store.run.running)
   return (
     <Show
-      when={props.flight.store.run.running && props.flight.store.run}
+      when={shown() === "running" && props.flight.store.run.running ? props.flight.store.run : undefined}
       fallback={<Idle flight={props.flight} openSettings={props.openSettings} />}
     >
       {(run) => <Running flight={props.flight} run={run() as RunningState} />}
@@ -33,25 +35,34 @@ function Idle(props: { flight: Flight; openSettings: () => void }) {
   return (
     <>
       <div class="fe-split">
-        <section class="mx-card fe-hero" aria-labelledby="fe-idle-title">
-          <MxBadge>{t("orchestra.flightEngineer.idle.badge")}</MxBadge>
-          <h2 id="fe-idle-title">{t("orchestra.flightEngineer.idle.title")}</h2>
-          <p>{t("orchestra.flightEngineer.idle.body")}</p>
-          <div class="fe-start">
-            <button type="button" class="mx-btn primary" disabled={props.flight.store.starting} onClick={() => props.flight.requestStart()}>
-              {t("orchestra.flightEngineer.start")}
-            </button>
-            <span class="fe-or">
-              {t("orchestra.flightEngineer.orPress")} <Keys accelerator={hotkeyOf(props.flight)} />
-            </span>
-          </div>
-          <Show when={props.flight.store.protection !== undefined}>
-            <p class="fe-protect">
-              <Glyph name="shield" />
-              {props.flight.store.protection ? t("orchestra.flightEngineer.protection.on") : t("orchestra.flightEngineer.protection.off")}
-            </p>
-          </Show>
-        </section>
+        <Show
+          when={runClaim(props.flight.store.runKnown, props.flight.store.run.running) === "idle"}
+          fallback={
+            <Show when={props.flight.store.runFailed}>
+              <Note tone="bad">{t("common.requestFailed")}</Note>
+            </Show>
+          }
+        >
+          <section class="mx-card fe-hero" aria-labelledby="fe-idle-title">
+            <MxBadge>{t("orchestra.flightEngineer.idle.badge")}</MxBadge>
+            <h2 id="fe-idle-title">{t("orchestra.flightEngineer.idle.title")}</h2>
+            <p>{t("orchestra.flightEngineer.idle.body")}</p>
+            <div class="fe-start">
+              <button type="button" class="mx-btn primary" disabled={props.flight.store.starting} onClick={() => props.flight.requestStart()}>
+                {t("orchestra.flightEngineer.start")}
+              </button>
+              <span class="fe-or">
+                {t("orchestra.flightEngineer.orPress")} <Keys accelerator={hotkeyOf(props.flight)} />
+              </span>
+            </div>
+            <Show when={props.flight.store.protection !== undefined}>
+              <p class="fe-protect">
+                <Glyph name="shield" />
+                {props.flight.store.protection ? t("orchestra.flightEngineer.protection.on") : t("orchestra.flightEngineer.protection.off")}
+              </p>
+            </Show>
+          </section>
+        </Show>
         <section class="mx-card" aria-labelledby="fe-ready-title">
           <h3 id="fe-ready-title" class="fe-card-title">
             {t("orchestra.flightEngineer.readiness")}
@@ -241,6 +252,9 @@ function Running(props: { flight: Flight; run: RunningState }) {
             }}
           />
         </Show>
+        <Show when={props.flight.store.renameFailed}>
+          <Note tone="bad">{t("orchestra.flightEngineer.settings.failed")}</Note>
+        </Show>
         <p class="fe-meta">
           {t("orchestra.flightEngineer.startedAt", {
             time: new Intl.DateTimeFormat(language.intl(), { hour: "numeric", minute: "2-digit" }).format(props.run.startedAt),
@@ -255,13 +269,16 @@ function Running(props: { flight: Flight; run: RunningState }) {
           </Show>
         </div>
         <div class="fe-start">
-          <button type="button" class="mx-btn danger" onClick={() => void props.flight.stop()}>
+          <button type="button" class="mx-btn danger" disabled={props.flight.store.stopBusy} onClick={() => void props.flight.stop()}>
             {t("orchestra.flightEngineer.stop")}
           </button>
           <span class="fe-or">
             {t("orchestra.flightEngineer.orPress")} <Keys accelerator={hotkeyOf(props.flight)} />
           </span>
         </div>
+        <Show when={props.flight.store.stopFailed}>
+          <Note tone="bad">{t("common.requestFailed")}</Note>
+        </Show>
       </section>
       <section class="mx-card fe-overlay-note" aria-labelledby="fe-overlay-title">
         <h3 id="fe-overlay-title" class="fe-card-title">{t("orchestra.flightEngineer.overlay.title")}</h3>

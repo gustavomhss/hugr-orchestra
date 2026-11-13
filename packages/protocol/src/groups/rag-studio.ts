@@ -8,7 +8,7 @@ import { LocationQuery, locationQueryOpenApi } from "./location"
 const sourceParams = Schema.Struct({ sourceId: Schema.String })
 const revisionParams = Schema.Struct({ revisionId: Schema.String })
 const questionParams = Schema.Struct({ questionId: Schema.String })
-// Rag Studio over the requested Location. Embedding stays off. Project source is refused as Atlas.
+// Rag Studio over the requested Location. Embedding stays off until a model is named. Project source is refused as Atlas.
 export const RagStudioGroup = HttpApiGroup.make("server.ragStudio")
   .add(
     HttpApiEndpoint.get("ragStudio.sources", "/api/rag-studio/sources", {

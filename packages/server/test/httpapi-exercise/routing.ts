@@ -42,6 +42,7 @@ export function coverageResult(scenario: Scenario): Result {
 export function parseOptions(args: string[]): Options {
   const mode = option(args, "--mode") ?? "effect"
   if (mode !== "effect" && mode !== "coverage" && mode !== "auth") throw new Error(`invalid --mode ${mode}`)
+  if (mode !== "effect" && args.includes("--shard")) throw new Error("--shard is effect only")
   return {
     mode,
     include: option(args, "--include"),
@@ -52,6 +53,7 @@ export function parseOptions(args: string[]): Options {
     scenarioTimeout: parseScenarioTimeout(option(args, "--scenario-timeout") ?? "30 seconds"),
     progress: args.includes("--progress"),
     trace: args.includes("--trace"),
+    shard: parseShard(args),
   }
 }
 
@@ -72,7 +74,26 @@ export function selectedScenarios(options: Options, scenarios: Scenario[]) {
     : included.length - 1
   if (start === -1) throw new Error(`--start-at matched no scenario: ${options.startAt}`)
   if (end === -1) throw new Error(`--stop-at matched no scenario: ${options.stopAt}`)
-  return included.slice(start, end + 1)
+  const selected = included.slice(start, end + 1)
+  const shard = options.shard
+  if (!shard) return selected
+  const sharded = selected.filter((_, index) => index % shard.count === shard.index - 1)
+  if (sharded.length === 0) throw new Error(`--shard ${shard.index}/${shard.count} selected no scenario`)
+  return sharded
+}
+
+function parseShard(args: string[]) {
+  if (!args.includes("--shard")) return undefined
+  const value = option(args, "--shard")
+  if (value === undefined) throw new Error("missing --shard value")
+  const match = /^([1-9]\d*)\/([1-9]\d*)$/.exec(value)
+  if (!match) throw new Error(`invalid --shard ${value}`)
+  const index = Number(match[1])
+  const count = Number(match[2])
+  if (!Number.isSafeInteger(index) || !Number.isSafeInteger(count) || index > count) {
+    throw new Error(`invalid --shard ${value}`)
+  }
+  return { index, count }
 }
 
 function matchesName(value: string, scenario: Scenario) {

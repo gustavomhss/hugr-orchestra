@@ -1,6 +1,9 @@
+import fs from "node:fs"
+import os from "node:os"
+import path from "node:path"
 import { expect, test } from "bun:test"
 import { admit, listSources } from "../src/admit"
-import { digest, memoryStore, withStore } from "../src/context"
+import { digest, memoryStore, placed, withStore } from "../src/context"
 
 const locationId = "loc"
 const inside = "/location/loc/notes.txt"
@@ -19,6 +22,52 @@ test("A76 — With no admit call, the location inventory contains zero sources, 
     expect(store.sources()).toEqual([])
     expect(store.chunks()).toEqual([])
     expect(store.atlasWrites).toBe(0)
+  })
+})
+
+test("a redundant slash in the location root still admits a file inside that location", async () => {
+  const file = "/location/loc/studio/work/corpus/note.txt"
+  const store = memoryStore({
+    projectRoot: "/source",
+    locationRoot: "/location/loc//studio/work",
+    files: { [file]: "The harbor light is blue." },
+  })
+  await withStore(store, async () => {
+    const admitted = await admit({ locationId: "/location/loc//studio/work", path: file })
+    expect("id" in admitted).toBe(true)
+    if (!("id" in admitted)) return
+    expect(admitted.path).toBe(file)
+    expect(admitted.status).toBe("not_yet_read")
+  })
+})
+
+test("the same file through a symlink is one source", async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "rag-place-"))
+  const real = path.join(root, "real")
+  const link = path.join(root, "link")
+  fs.mkdirSync(real)
+  fs.symlinkSync(real, link)
+  const file = path.join(real, "note.txt")
+  fs.writeFileSync(file, "The harbor light is blue.")
+  const viaLink = path.join(link, "note.txt")
+  const stored = placed(file)
+  const soon = path.join(link, "soon.txt")
+  const store = memoryStore({
+    projectRoot: path.join(root, "project"),
+    locationRoot: link,
+    files: { [stored]: "The harbor light is blue.", [placed(soon)]: "soon" },
+  })
+  await withStore(store, async () => {
+    const first = await admit({ locationId: link, path: viaLink })
+    const second = await admit({ locationId: link, path: file })
+    const created = await admit({ locationId: link, path: soon })
+    expect("id" in first && "id" in second && "id" in created).toBe(true)
+    if (!("id" in first) || !("id" in second) || !("id" in created)) return
+    expect(first.id).toBe(second.id)
+    expect(first.path).toBe(stored)
+    expect(store.sources()).toHaveLength(2)
+    const gone = path.join(link, "gone", "note.txt")
+    expect(placed(gone)).toBe(path.join(fs.realpathSync(link), "gone", "note.txt").split(path.sep).join("/"))
   })
 })
 

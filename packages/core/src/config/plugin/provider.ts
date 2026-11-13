@@ -1,25 +1,26 @@
 export * as ConfigProviderPlugin from "./provider"
 
 import { define } from "../../plugin/internal"
-import { Effect } from "effect"
+import { Effect, Option } from "effect"
 import { mergeGenerationOptions, mergeProviderOptions } from "@orchestra/llm"
 import { Config } from "../../config"
 import { Global } from "../../global"
 import { Location } from "../../location"
 import { ConfigTrust } from "../trust"
 import { ModelV2 } from "../../model"
-import { ProviderV2 } from "../../provider"
 
 export const Plugin = define({
   id: "config-provider",
   effect: Effect.fn(function* (ctx) {
     const config = yield* Config.Service
     const global = yield* Global.Service
-    const location = yield* Location.Service
+    const location = Option.getOrUndefined(yield* Effect.serviceOption(Location.Service))
     yield* ctx.integration.transform(
       Effect.fn(function* (integrations) {
         const entries = yield* config.entries()
-        const runnable = new Set(ConfigTrust.runnable(entries, global.config, location.directory))
+        const runnable = new Set(location
+          ? ConfigTrust.runnable(entries, global.config, location.directory)
+          : entries.filter((entry) => ConfigTrust.isUser(global.config, entry)))
         const files = entries.filter((entry): entry is Config.Document => entry.type === "document")
         const configuredIntegrations = new Set(
           files
@@ -51,7 +52,9 @@ export const Plugin = define({
     yield* ctx.catalog.transform(
       Effect.fn(function* (catalog) {
         const entries = yield* config.entries()
-        const runnable = new Set(ConfigTrust.runnable(entries, global.config, location.directory))
+        const runnable = new Set(location
+          ? ConfigTrust.runnable(entries, global.config, location.directory)
+          : entries.filter((entry) => ConfigTrust.isUser(global.config, entry)))
         const files = entries.filter((entry): entry is Config.Document => entry.type === "document")
         const configuredDefault = Config.latest(
           entries.filter((entry) => runnable.has(entry)),

@@ -15,6 +15,7 @@ export function HomeProjects(props: { projects: HomeProjectsController }) {
       projectsForServer={props.projects.server.projects}
       collapsed={props.projects.server.collapsed}
       canDefaultServer={props.projects.server.canDefault}
+      defaultKnown={props.projects.server.defaultKnown}
       defaultServerKey={props.projects.server.defaultKey}
       canRevealProject={props.projects.project.canReveal}
       unseenCount={props.projects.project.unseenCount}

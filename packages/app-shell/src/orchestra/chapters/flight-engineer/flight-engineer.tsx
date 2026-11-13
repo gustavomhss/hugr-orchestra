@@ -10,6 +10,7 @@ import { MeetingDetail } from "./detail"
 import { MeetingList } from "./meetings"
 import { Note } from "./parts"
 import { useFlight } from "./run"
+import { runClaim } from "./run-state"
 import { Session } from "./session"
 import { FlightSettings } from "./settings"
 import { serverMeetings } from "./source"
@@ -45,7 +46,7 @@ export default function FlightEngineer(props: ChapterPageProps) {
             {(item) => (
               <button type="button" aria-current={current() === item ? "page" : undefined} onClick={() => go(item ? `/${item}` : "")}>
                 {t(`orchestra.flightEngineer.nav.${item || "meeting"}` as "orchestra.flightEngineer.nav.meeting")}
-                <Show when={item === "" && flight.store.run.running}>
+                <Show when={item === "" && runClaim(flight.store.runKnown, flight.store.run.running) === "running"}>
                   <i class="fe-dot" aria-hidden="true" />
                 </Show>
               </button>

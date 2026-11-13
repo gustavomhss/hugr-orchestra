@@ -398,7 +398,7 @@ const layer = Layer.effect(
           Effect.gen(function* () {
             yield* events.publish(SessionEvent.Synthetic, {
               sessionID: session.id,
-              messageID: SessionMessage.ID.create(),
+              messageID: input.messageID ?? SessionMessage.ID.create(),
               timestamp: yield* DateTime.now,
               text: `Engine compaction summary (${input.trigger}):\nNative owner: ${input.nativeSessionID}\n\n${input.summary}`,
             })

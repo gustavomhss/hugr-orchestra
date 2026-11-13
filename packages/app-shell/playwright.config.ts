@@ -10,6 +10,7 @@ const reuse = !process.env.CI
 const workers = Number(process.env.PLAYWRIGHT_WORKERS ?? (process.env.CI ? 1 : 0)) || undefined
 export default defineConfig({
   testDir: "./e2e",
+  grepInvert: process.env.ORCHESTRA_CHANNEL === "prod" ? /@development-channel/ : /@production-channel/,
   testIgnore: process.env.ORCHESTRA_PERFORMANCE === "1" ? "performance/**/*.test.ts" : "performance/**",
   outputDir: "./e2e/test-results",
   timeout: 60_000,

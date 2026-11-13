@@ -17,11 +17,12 @@ describe("duplication review routing", () => {
     expect(ReviewCatalog.current.lenses.find((lens) => lens.id === "change")?.classes).toContain("change.duplication")
   })
 
-  test("Quick excludes duplication and a Deep request preserves the current fallback", () => {
+  test("Quick excludes duplication and production Deep routes the scanner", () => {
     const quick = ReviewRoute.route({ stage: "code", tier: "quick", settings }, base, head, ReviewCatalog.current)
     expect(quick.packs.some((pack) => pack.id === "jscpd")).toBe(false)
     const deep = ReviewRoute.route({ stage: "code", tier: "deep", settings }, base, head, ReviewCatalog.current)
-    expect(deep.tier).toMatchObject({ id: "standard", requested: "deep" })
+    expect(deep.tier).toMatchObject({ id: "deep" })
+    expect(deep.tier.requested).toBeUndefined()
     expect(deep.packs).toContainEqual({ id: "jscpd", source: "catalog", lane: "no-build", status: "routed" })
   })
 

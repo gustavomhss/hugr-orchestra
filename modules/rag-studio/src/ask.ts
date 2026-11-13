@@ -1,5 +1,6 @@
 import type { QuestionResult } from "./types"
 import { requireStore } from "./context"
+import { fuse } from "./embed"
 import { diagnose } from "./lights"
 import { block } from "./prompt"
 import { shape } from "./report"
@@ -19,7 +20,15 @@ export async function ask(revisionId: string, text: string): Promise<QuestionRes
   if (stale) throw new Error("rejected")
   const boundary = revision.boundary ?? "document"
   const k = revision.k ?? store.pipeline(revision.locationId).k
-  const matches = (await searchWords(revisionId, text)).filter((chunk) => store.chunkCut(chunk.id) === boundary)
+  const words = (await searchWords(revisionId, text)).filter((chunk) => store.chunkCut(chunk.id) === boundary)
+  const fused = await fuse({
+    locationId: revision.locationId,
+    boundary,
+    sentence: text,
+    words,
+    pipeline: store.pipeline(revision.locationId),
+  })
+  const matches = fused.matches.filter((chunk) => chunk.text.includes(text))
   const owners = store
     .sources()
     .filter((row) => row.locationId === revision.locationId && row.text.includes(text))
@@ -37,5 +46,6 @@ export async function ask(revisionId: string, text: string): Promise<QuestionRes
     promptText: cut.promptText,
     promptChunkIds: cut.promptChunkIds,
     retrievalOptional: cut.retrievalOptional,
+    sense: fused.sense,
   })
 }

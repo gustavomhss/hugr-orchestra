@@ -1,7 +1,6 @@
 export * as EventOrder from "./order"
 
-import { Context, Deferred, Effect, Exit } from "effect"
-import type * as Scope from "effect/Scope"
+import { Context, Deferred, Effect, Exit, type Scope } from "effect"
 
 /**
  * Notification turn for one committed durable event. Tickets of an aggregate are taken inside the commit
@@ -108,6 +107,21 @@ export function make(scope: Scope.Scope) {
       }),
     )
 
+  /** Register delivery now; the returned effect waits unless this is a same-aggregate reentrant publication. */
+  const schedule = (ticket: Ticket | undefined, notifying: Effect.Effect<void>) =>
+    Effect.uninterruptible(Effect.gen(function* () {
+      const deferred = ticket !== undefined && ((yield* Delivering).has(ticket.aggregateID) || (yield* DeferNotifications))
+      const done = yield* Deferred.make<void>()
+      yield* deliver(ticket, notifying, Effect.interruptible).pipe(
+        Effect.provideService(Delivering, new Set<string>()),
+        Effect.provideService(DeferNotifications, false),
+        Effect.onExit((exit) => Deferred.done(done, exit)),
+        Effect.ignore,
+        Effect.forkIn(scope, { startImmediately: true }),
+      )
+      return deferred ? Effect.void : Deferred.await(done)
+    }))
+
   // Pipe a commit transaction through this when its body takes a ticket as the last step: a commit that then fails
   // would otherwise leave the ticket blocking its successors forever.
   const guard =
@@ -115,5 +129,5 @@ export function make(scope: Scope.Scope) {
     <A, E, R>(transaction: Effect.Effect<A, E, R>) =>
       transaction.pipe(Effect.onExit((exit) => (Exit.isFailure(exit) ? release(box.ticket) : Effect.void)))
 
-  return { take, release, deliver, commit, guard }
+  return { take, release, deliver, commit, guard, schedule }
 }

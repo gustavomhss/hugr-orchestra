@@ -72,7 +72,7 @@ qualified("Linux x64 runs the pinned type-aware rule and does not write the sour
     const text = yield* Effect.promise(() => Bun.file(artifact(made.store, check?.uri)).text())
     expect(text).toContain("typescript(no-floating-promises)")
     expect(yield* Effect.promise(() => Bun.file(path.join(made.root, "src", "a.ts")).text())).toBe(before)
-    expect(ReviewCatalog.current.route.tiers.find((tier) => tier.id === "deep")?.built).toBe(false)
+    expect(ReviewCatalog.current.route.tiers.find((tier) => tier.id === "deep")?.built).toBe(true)
   }),
   110_000,
 )

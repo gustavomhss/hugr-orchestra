@@ -9,6 +9,8 @@ import { useLanguage } from "@/context/language"
 import { ServerConnection } from "@/context/server"
 import { useGlobal } from "@/context/global"
 import { cleanPickerInput, createDirectorySearch, displayPickerPath } from "./directory-picker-domain"
+import { showToast } from "@/utils/toast"
+import { StalePickerSearch } from "./picker-search"
 
 
 interface DialogSelectDirectoryProps {
@@ -62,10 +64,16 @@ export function DialogSelectDirectory(props: DialogSelectDirectoryProps) {
   const home = createMemo(() => sync.data.path.home || "")
   const start = createMemo(() => sync.data.path.home || sync.data.path.directory || "")
 
+  const [searchFailed, setSearchFailed] = createSignal(false)
   const directories = createDirectorySearch({
     sdk,
     home,
     base: start,
+    report: (error) => {
+      console.error(error)
+      setSearchFailed(true)
+      showToast({ variant: "error", title: language.t("common.requestFailed") })
+    },
   })
 
   const recentProjects = createMemo(() => {
@@ -99,13 +107,22 @@ export function DialogSelectDirectory(props: DialogSelectDirectoryProps) {
       })
   })
 
+  let held: ReturnType<typeof uniqueRows> = []
   const items = async (value: string) => {
-    const results = await directories(value)
-    const directoryRows = results.map((absolute) => toRow(absolute, home(), "folders"))
-    // Cap the idle list only. Once a query narrows the results, every project stays searchable.
+    setSearchFailed(false)
     const recent = recentProjects()
     const visible = value ? recent : recent.slice(0, RECENT_PROJECT_LIMIT)
-    return uniqueRows([...visible, ...directoryRows])
+    try {
+      const results = await directories(value)
+      const directoryRows = results.map((absolute) => toRow(absolute, home(), "folders"))
+      held = uniqueRows([...visible, ...directoryRows])
+      return held
+    } catch (error) {
+      if (error instanceof StalePickerSearch) return held.length ? held : uniqueRows(visible)
+      console.error(error)
+      setSearchFailed(true)
+      return held.length ? held : uniqueRows(visible)
+    }
   }
 
   function resolve(absolute: string) {
@@ -118,7 +135,9 @@ export function DialogSelectDirectory(props: DialogSelectDirectoryProps) {
       <List
         class="px-3"
         search={{ placeholder: language.t("dialog.directory.search.placeholder"), autofocus: true }}
-        emptyMessage={language.t("dialog.directory.empty")}
+        emptyMessage={
+          searchFailed() ? language.t("common.requestFailed") : language.t("dialog.directory.empty")
+        }
         loadingMessage={language.t("common.loading")}
         items={items}
         key={(x) => x.absolute}

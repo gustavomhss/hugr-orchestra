@@ -17,6 +17,7 @@ import { createSessionTabs } from "@/pages/session/helpers"
 import { useSessionLayout } from "@/pages/session/session-layout"
 import { normalizeSessionInfo } from "@/utils/session"
 import { sessionTitle } from "@/utils/session-title"
+import { settleSessionSearch } from "./session-search"
 
 export type CommandPaletteEntry = {
   id: string
@@ -255,9 +256,9 @@ export function createServerSessionEntries(props: {
     const openedByID = new Map(opened.flatMap((project) => (project.id ? [[project.id, project] as const] : [])))
     const stored = props.stored().map((project) => ({ ...project, expanded: false }))
     const storedByID = new Map(stored.map((project) => [project.id, project] as const))
-    return props
-      .load(search, current.signal)
-      .then((result) =>
+    let entries: CommandPaletteEntry[] = []
+    const ok = await settleSessionSearch({
+      read: props.load(search, current.signal).then((result) =>
         result.data
           .map(normalizeSessionInfo)
           .filter((session) => !session.time.archived)
@@ -277,7 +278,17 @@ export function createServerSessionEntries(props: {
               updated: session.time.updated,
             }
           }),
-      )
-      .catch(() => [] as CommandPaletteEntry[])
+      ),
+      current: () => !current.signal.aborted,
+      apply: (value) => {
+        entries = value
+      },
+      report: (error) => {
+        console.error(error)
+      },
+    })
+    if (current.signal.aborted) return []
+    if (!ok) throw new Error("session search failed")
+    return entries
   }
 }

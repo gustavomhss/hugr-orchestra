@@ -268,19 +268,25 @@ const layer = Layer.effect(
       client: Client,
       defs: ListToolsResult["tools"],
       timeout: number,
+      publish: (registered: { scope: Scope.Closeable; names: string[]; ids: string[] }) => Effect.Effect<boolean>,
     ) {
-      const scope = yield* Scope.make()
-      const accepted = (yield* Effect.forEach(defs, (def) =>
-        tools
-          .registerMcp(authority, def.name, (id) => mcpTool(name, id, client, def, timeout))
-          .pipe(
-            Effect.map((id) => ({ id, name: def.name })),
-            Effect.orElseSucceed(() => undefined),
-          ),
-      ).pipe(Scope.provide(scope))).filter((entry) => entry !== undefined)
-      const refused = defs.length - accepted.length
-      if (refused) yield* Effect.logWarning("MCP tool registration refused", { server: name.slice(0, 128), refused })
-      return { scope, names: accepted.map((entry) => entry.name), ids: accepted.map((entry) => entry.id) }
+      return yield* Effect.uninterruptibleMask((restore) => Effect.gen(function* () {
+        const scope = yield* Scope.make()
+        return yield* Effect.gen(function* () {
+          const accepted = (yield* restore(Effect.forEach(defs, (def) =>
+            tools.registerMcp(authority, def.name, (id) => mcpTool(name, id, client, def, timeout)).pipe(
+              Effect.map((id) => ({ id, name: def.name })),
+              Effect.orElseSucceed(() => undefined),
+            ),
+          ).pipe(Scope.provide(scope)))).filter((entry) => entry !== undefined)
+          const refused = defs.length - accepted.length
+          if (refused) yield* Effect.logWarning("MCP tool registration refused", { server: name.slice(0, 128), refused })
+          // Transfer the completed registration while interruption remains masked.
+          const published = yield* publish({ scope, names: accepted.map((entry) => entry.name), ids: accepted.map((entry) => entry.id) })
+          if (!published) yield* Scope.close(scope, Exit.void)
+          return published
+        }).pipe(Effect.onExit((exit) => Exit.isFailure(exit) ? Scope.close(scope, exit) : Effect.void))
+      }))
     })
 
     const mcpTool = (
@@ -366,43 +372,48 @@ const layer = Layer.effect(
       }
       const defs = listed?.success ?? []
       // Connected is reported only once the server's tools are in the registry.
-      const registered = yield* register(name, authority, client, defs, request)
-      if (current.generation !== generation) {
-        yield* Scope.close(registered.scope, Exit.void)
-        return yield* Effect.promise(() => client.close().catch(() => undefined))
-      }
-      current.client = client
-      current.tools = registered.scope
-      current.toolNames = registered.names
-      current.toolIds = registered.ids
-      current.status = opened.status
-      client.onclose = () => {
-        if (current.client !== client) return
-        const scope = current.tools
-        current.client = undefined
-        current.tools = undefined
-        current.toolNames = undefined
-        current.toolIds = undefined
-        current.status = failed(McpStdio.failure(opened.transport, new Error("Connection closed")))
-        if (scope) Effect.runFork(Scope.close(scope, Exit.void))
-      }
-      if (!client.getServerCapabilities()?.tools) return
-      client.setNotificationHandler(ToolListChangedNotificationSchema, () =>
-        runPromise(
-          Effect.gen(function* () {
+      yield* register(name, authority, client, defs, request, (registered) => Effect.gen(function* () {
+        if (current.generation !== generation) return false
+        const previous = current.tools
+        current.client = client
+        current.tools = registered.scope
+        current.toolNames = registered.names
+        current.toolIds = registered.ids
+        current.status = opened.status
+        client.onclose = () => {
+          if (current.client !== client) return
+          current.client = undefined
+          current.toolNames = undefined
+          current.toolIds = undefined
+          current.status = failed(McpStdio.failure(opened.transport, new Error("Connection closed")))
+          const owned = current.tools
+          current.tools = undefined
+          if (owned) Effect.runFork(Scope.close(owned, Exit.void))
+        }
+        client.setNotificationHandler(ToolListChangedNotificationSchema, () =>
+          runPromise(Effect.gen(function* () {
             if (current.client !== client) return
             const defs = yield* McpCatalog.defs(client, request)
             if (!defs || current.client !== client) return
-            const updated = yield* register(name, authority, client, defs, request)
-            if (current.client !== client) return yield* Scope.close(updated.scope, Exit.void)
-            const previous = current.tools
-            current.tools = updated.scope
-            current.toolNames = updated.names
-            current.toolIds = updated.ids
-            if (previous) yield* Scope.close(previous, Exit.void)
-          }),
-        ),
-      )
+            yield* register(name, authority, client, defs, request, (updated) => Effect.gen(function* () {
+              if (current.client !== client || current.generation !== generation) return false
+              const previous = current.tools
+              current.tools = updated.scope
+              current.toolNames = updated.names
+              current.toolIds = updated.ids
+              if (previous) yield* Scope.close(previous, Exit.void)
+              return true
+            }))
+          })),
+        )
+        if (previous) yield* Scope.close(previous, Exit.void)
+        return true
+      })).pipe(Effect.onExit((exit) => Effect.gen(function* () {
+        if (current.client === client) return
+        if (Exit.isFailure(exit) && current.generation === generation)
+          current.status = failed("Tool registration did not complete")
+        yield* Effect.promise(() => client.close().catch(() => undefined))
+      })))
     })
 
     const open = Effect.fnUntraced(function* (

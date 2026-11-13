@@ -3,134 +3,196 @@ import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import { useSDK } from "@/context/sdk"
 import type { ChapterPageProps } from "@/orchestra/chapter-route"
-
-type Status = "not_yet_read" | "read" | "failed"
-
-function statusKey(status: Status) {
-  if (status === "read") return "orchestra.ragStudio.status.read" as const
-  if (status === "failed") return "orchestra.ragStudio.status.failed" as const
-  return "orchestra.ragStudio.status.not_yet_read" as const
-}
+import { MxBadge } from "../kit"
+import { roster, setRoster, statusKey, statusTone } from "./roster"
+import { pathDir, pathName, SourceText } from "./source-text"
 
 export function Files(props: ChapterPageProps) {
   const language = useLanguage()
   const sdk = useSDK()
   const [state, setState] = createStore({
-    sources: [] as Array<{ id: string; path: string; status: Status }>,
+    path: "",
+    busy: false,
+    refusal: "" as "" | "atlas" | "permission",
+    openError: false,
+    openPath: "",
     text: "",
     cuts: [] as Array<{ start: number; end: number }>,
-    path: "",
-    error: "" as "" | "load" | "atlas" | "permission",
   })
   const location = () => ({ directory: props.directory })
 
-  const load = () =>
+  const openSource = (sourceId: string) =>
     sdk()
-      .orchestra.ragStudio.sources({ location: location() })
-      .then((result) =>
+      .orchestra.ragStudio.source({ location: location(), sourceId })
+      .then((result) => {
+        setRoster("openId", result.data.source.id)
         setState({
+          openError: false,
+          openPath: result.data.source.path,
+          text: result.data.text,
+          cuts: result.data.chunks.map((chunk) => ({ start: chunk.start, end: chunk.end })),
+        })
+      })
+      .catch(() => setState({ openError: true }))
+
+  const load = (quiet: boolean) => {
+    if (!quiet) setRoster("status", "loading")
+    return sdk()
+      .orchestra.ragStudio.sources({ location: location() })
+      .then((result) => {
+        setRoster({
+          status: "ready",
           sources: result.data.map((row) => ({ id: row.id, path: row.path, status: row.status })),
-          error: "",
-        }),
-      )
-      .catch(() => setState({ error: "load" }))
+        })
+        if (quiet && roster.openId) void openSource(roster.openId)
+      })
+      .catch(() => setRoster({ status: "error", sources: [] }))
+  }
 
   createEffect(() => {
     props.directory
-    void load()
+    setState({ path: "", refusal: "", openError: false, openPath: "", text: "", cuts: [] })
+    setRoster("openId", "")
+    void load(false)
   })
 
-  const paint = (text: string, cuts: Array<{ start: number; end: number }>) => {
-    if (cuts.length === 0) return [text]
-    const pieces: string[] = []
-    let cursor = 0
-    for (const cut of cuts) {
-      pieces.push(text.slice(cursor, cut.start))
-      pieces.push(text.slice(cut.start, cut.end))
-      cursor = cut.end
-    }
-    pieces.push(text.slice(cursor))
-    return pieces
-  }
+  createEffect(() => {
+    if (roster.revision === 0) return
+    void load(true)
+  })
 
   return (
     <section>
-      <h2>{language.t("orchestra.ragStudio.files")}</h2>
+      <h3 class="mx-section">{language.t("orchestra.ragStudio.files")}</h3>
       <form
+        class="rag-form"
         onSubmit={(event) => {
           event.preventDefault()
-          const path = state.path
+          const path = state.path.trim()
+          if (!path || state.busy) return
+          setState({ busy: true, refusal: "", openError: false })
           void sdk()
             .orchestra.ragStudio.admit({ location: location(), path })
             .then(async (result) => {
               if ("refused" in result.data) {
-                setState({ error: result.data.refused })
+                setState({ busy: false, refusal: result.data.refused })
                 return
               }
               await sdk().orchestra.ragStudio.parse({ location: location(), sourceId: result.data.id })
-              setState({ path: "", error: "" })
-              await load()
+              setState({ path: "", busy: false, refusal: "" })
+              await openSource(result.data.id)
+              await load(true)
             })
-            .catch(() => setState({ error: "load" }))
+            .catch(() => {
+              setState({ busy: false, openError: true })
+              return load(true)
+            })
         }}
       >
-        <label>
-          {language.t("orchestra.ragStudio.path")}
-          <input value={state.path} onInput={(event) => setState({ path: event.currentTarget.value })} />
+        <label class="mx-field">
+          <span>{language.t("orchestra.ragStudio.path")}</span>
+          <input
+            value={state.path}
+            spellcheck={false}
+            autocomplete="off"
+            onInput={(event) => setState({ path: event.currentTarget.value })}
+          />
         </label>
-        <button type="submit">{language.t("orchestra.ragStudio.admit")}</button>
+        <button class="mx-btn" type="submit" disabled={state.busy || !state.path.trim()}>
+          {language.t("orchestra.ragStudio.admit")}
+        </button>
       </form>
-      <Show when={state.error === "atlas"}>
-        <p>{language.t("orchestra.ragStudio.refused.atlas")}</p>
+      <Show when={state.refusal === "atlas"}>
+        <p class="mx-error" role="alert">
+          {language.t("orchestra.ragStudio.refused.atlas")}
+        </p>
       </Show>
-      <Show when={state.error === "permission"}>
-        <p>{language.t("orchestra.ragStudio.refused.permission")}</p>
+      <Show when={state.refusal === "permission"}>
+        <p class="mx-error" role="alert">
+          {language.t("orchestra.ragStudio.refused.permission")}
+        </p>
       </Show>
-      <Show when={state.sources.length === 0} fallback={
-        <ul>
-          <For each={state.sources}>
+      <Show when={state.openError}>
+        <p class="mx-error" role="alert">
+          {language.t("orchestra.ragStudio.actionError")}
+        </p>
+      </Show>
+      <Show when={roster.status === "loading"}>
+        <div class="mx-empty" role="status">
+          {language.t("orchestra.ragStudio.loading")}
+        </div>
+      </Show>
+      <Show when={roster.status === "error"}>
+        <div class="mx-empty" role="alert">
+          {language.t("orchestra.ragStudio.error")}
+        </div>
+      </Show>
+      <Show when={roster.status === "ready" && roster.sources.length === 0}>
+        <div class="mx-empty">
+          <strong>{language.t("orchestra.ragStudio.empty")}</strong>
+        </div>
+      </Show>
+      <Show when={roster.status === "ready" && roster.sources.length > 0}>
+        <div class="mx-table">
+          <For each={roster.sources}>
             {(source) => (
-              <li>
+              <div class="mx-row" data-selected={roster.openId === source.id ? "true" : undefined}>
+                <div class="mx-grow">
+                  <strong>
+                    <bdi>{pathName(source.path)}</bdi>
+                  </strong>
+                  <Show when={pathDir(source.path)}>
+                    {(dir) => (
+                      <small dir="ltr">
+                        <bdi>{dir()}</bdi>
+                      </small>
+                    )}
+                  </Show>
+                </div>
+                <MxBadge tone={statusTone(source.status)}>{language.t(statusKey(source.status))}</MxBadge>
                 <button
+                  class="mx-btn"
                   type="button"
-                  onClick={() =>
-                    void sdk()
-                      .orchestra.ragStudio.source({ location: location(), sourceId: source.id })
-                      .then((result) =>
-                        setState({
-                          text: result.data.text,
-                          cuts: result.data.chunks.map((chunk) => ({ start: chunk.start, end: chunk.end })),
-                        }),
-                      )
-                  }
+                  aria-pressed={roster.openId === source.id}
+                  onClick={() => void openSource(source.id)}
                 >
-                  {source.path}
+                  {language.t("orchestra.ragStudio.showCut")}
                 </button>
-                {" · "}
-                {language.t(statusKey(source.status))}
                 <button
+                  class="mx-btn danger"
                   type="button"
-                  onClick={() =>
+                  onClick={() => {
                     void sdk()
                       .orchestra.ragStudio.remove({ location: location(), sourceId: source.id })
-                      .then(() => load())
-                  }
+                      .then(() => {
+                        if (roster.openId === source.id) {
+                          setRoster("openId", "")
+                          setState({ openPath: "", text: "", cuts: [] })
+                        }
+                        return load(true)
+                      })
+                      .catch(() => setState({ openError: true }))
+                  }}
                 >
-                  {language.t("orchestra.ragStudio.removePieces")}
+                  {language.t("orchestra.ragStudio.remove")}
                 </button>
-              </li>
+              </div>
             )}
           </For>
-        </ul>
-      }>
-        <p>{language.t("orchestra.ragStudio.empty")}</p>
+        </div>
       </Show>
-      <Show when={state.text}>
-        <p>
-          <For each={paint(state.text, state.cuts)}>
-            {(piece, index) => <Show when={index() % 2 === 1} fallback={piece}><mark>{piece}</mark></Show>}
-          </For>
-        </p>
+      <Show when={state.openPath}>
+        <div class="rag-follow">
+          <Show when={state.cuts.length > 0}>
+            <p class="mx-note">{language.t("orchestra.ragStudio.cuts")}</p>
+          </Show>
+          <p class="mx-note rag-path" dir="ltr">
+            <bdi>{state.openPath}</bdi>
+          </p>
+          <Show when={state.text} fallback={<div class="mx-empty" role="status">{language.t("orchestra.ragStudio.notRecorded")}</div>}>
+            <SourceText text={state.text} cuts={state.cuts} />
+          </Show>
+        </div>
       </Show>
     </section>
   )

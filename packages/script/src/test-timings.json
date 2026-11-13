@@ -5,7 +5,7 @@
     "e2e": 270
   },
   "overhead": {
-    "linux": 1,
+    "linux": 2,
     "windows": 1.6
   },
   "margin": 1.15,
@@ -998,6 +998,11 @@
     "packages/core": {
       "linux": 1078,
       "windows": 1644
+    }
+  },
+  "reserves": {
+    "packages/core:linux": {
+      "test/review-toolkit/rustsec-native-refresh.test.ts": 300
     }
   }
 }

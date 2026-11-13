@@ -1,23 +1,31 @@
 export * as ReviewProbe from "./probe"
 
 import path from "path"
-import { mkdir, mkdtemp, rm } from "fs/promises"
+import { mkdir, rm } from "fs/promises"
 import { Duration, Effect, Option, Schema, Semaphore } from "effect"
+import { Reference } from "effect/Context"
 import { PositiveInt, optional } from "@orchestra/schema/schema"
-import { ToolSafetySandbox } from "../tool-safety-sandbox"
-import { ResearchProcess } from "../research-toolkit/process"
 import { denied } from "../research-toolkit/probe/assets"
-import { ProbeRun } from "../research-toolkit/probe/run"
-import { ProbeRunners } from "../research-toolkit/probe/runners"
 import { Probe } from "../research-toolkit/probe/types"
 import { ReviewScratch } from "./scratch-copy"
+import { ReviewProbeRuntime } from "./probe-runtime"
+import { ReviewProbeTargets } from "./probe-targets"
+import { ReviewProbeProperty } from "./probe-property"
+import { ReviewProbeInterleave } from "./probe-interleave"
+import { ReviewProbeMutants } from "./probe-mutants"
 import { withSnapshotMutation, writeSnapshot } from "./snapshot-mutation"
 
 // K6 probe half (E1): one catalog option, mapped by the host to a closed research runner, run confined in the review's
 // scratch copy through ResearchProcess (omni). The model picks an option and a target; it never names a binary or flag.
 
 /** The probe options this build runs; any other option id answers `not-run: not-built` (K6, phase 1). */
-export const BUILT = ["probe:regress", "probe:test", "probe:typecheck", "probe:script", "probe:race"] as const
+export const ADVANCED = ["probe:mutants", "probe:interleave", "probe:property"] as const
+export const BUILT = ["probe:regress", "probe:test", "probe:typecheck", "probe:script", "probe:race", ...ADVANCED] as const
+
+/** Host observation of actual semaphore operations, used by the cancellation-order fixture. */
+export const ObservePermit = Reference<(event: "waiting" | "acquired" | "released") => void>("@orchestra/ReviewProbe/ObservePermit", {
+  defaultValue: () => () => {},
+})
 
 const EXCERPT_BYTES = 4096
 const file = Schema.NonEmptyString.check(Schema.isMaxLength(8192))
@@ -27,6 +35,9 @@ export const Input = Schema.Struct({
   /** A catalog option id offered in the brief. */
   option: Schema.NonEmptyString.check(Schema.isMaxLength(128)),
   target: Schema.Struct({
+    property: optional(ReviewProbeTargets.Property),
+    interleave: optional(ReviewProbeTargets.Interleave),
+    mutants: optional(ReviewProbeTargets.Mutants),
     hunk: optional(Schema.Struct({ path: file, startLine: PositiveInt, endLine: PositiveInt })),
     test: optional(Schema.Struct({ file, name: optional(Schema.NonEmptyString.check(Schema.isMaxLength(1024))) })),
     script: optional(Schema.Struct({
@@ -79,15 +90,7 @@ export type Context = {
   readonly queueSeconds?: number
 }
 
-type Step = {
-  readonly label: "head" | "reverted" | "base"
-  readonly status: Status
-  readonly reason?: string
-  readonly exitCode?: number
-  readonly argv: ReadonlyArray<string>
-  readonly stdout: string
-  readonly stderr: string
-}
+type Step = ReviewProbeRuntime.Step
 
 /**
  * Runs one probe. `result` is the K6 output; `artifact` is the raw output the caller retains under `result.uri`;
@@ -107,7 +110,9 @@ export const run = Effect.fn("ReviewProbe.run")(function* (input: Input, context
     context.ledger.attempts.set(input.candidate, (context.ledger.attempts.get(input.candidate) ?? 1) - 1)
     return settle(input, context, { uri, started, steps: [], status: "not-run", reason: "busy" })
   }
-  const steps = yield* execute(input, context)
+  const executed = yield* execute(input, context)
+  if ("status" in executed) return settle(input, context, { uri, started, ...executed })
+  const steps = executed
   const stopped = steps.find((step) => step.status === "not-run")
   if (stopped) return settle(input, context, { uri, started, steps, status: "not-run", reason: stopped.reason })
   // Regress holds when the test passes on head and fails wherever the change is taken away.
@@ -126,26 +131,32 @@ function refuse(input: Input, context: Context, key: string) {
 
 const execute = Effect.fnUntraced(function* (input: Input, context: Context) {
   const target = input.target
+  if (input.option === "probe:property")
+    return target.property ? yield* ReviewProbeProperty.run(target.property, context) : { status: "not-run", reason: "target-missing: property", steps: [] } satisfies ReviewProbeRuntime.Result
+  if (input.option === "probe:interleave")
+    return target.interleave ? yield* ReviewProbeInterleave.run(target.interleave, context) : { status: "not-run", reason: "target-missing: interleave", steps: [] } satisfies ReviewProbeRuntime.Result
+  if (input.option === "probe:mutants")
+    return target.mutants ? yield* ReviewProbeMutants.run(target.mutants, context) : { status: "not-run", reason: "target-missing: mutants", steps: [] } satisfies ReviewProbeRuntime.Result
   if (input.option === "probe:typecheck")
-    return [yield* step("head", context.head, { kind: "typecheck", project: target.hunk?.path ?? target.test?.file ?? "." }, context)]
+    return [yield* ReviewProbeRuntime.step("head", context.head, { kind: "typecheck", project: target.hunk?.path ?? target.test?.file ?? "." }, context)]
   if (input.option === "probe:script") {
-    if (!target.script) return [notRun("target-missing: script")]
+    if (!target.script) return [ReviewProbeRuntime.notRun("target-missing: script")]
     const language = target.script.language
-    if (language !== "ts" && language !== "js" && language !== "py") return [notRun(`script-language-unsupported: ${language}`)]
-    return [yield* step("head", context.head, { kind: "script", language, source: target.script.text }, context)]
+    if (language !== "ts" && language !== "js" && language !== "py") return [ReviewProbeRuntime.notRun(`script-language-unsupported: ${language}`)]
+    return [yield* ReviewProbeRuntime.step("head", context.head, { kind: "script", language, source: target.script.text }, context)]
   }
-  if (!target.test) return [notRun("target-missing: test")]
+  if (!target.test) return [ReviewProbeRuntime.notRun("target-missing: test")]
   const test = { kind: "test" as const, file: target.test.file, name: target.test.name }
-  if (input.option === "probe:test") return [yield* step("head", context.head, test, context)]
+  if (input.option === "probe:test") return [yield* ReviewProbeRuntime.step("head", context.head, test, context)]
   // Go is the only catalogued race detector. Other languages are not run, and nothing is installed.
   if (input.option === "probe:race") {
-    if (!target.test.file.endsWith(".go")) return [notRun("race-detector-absent")]
-    return [yield* step("head", context.head, test, context, true)]
+    if (!target.test.file.endsWith(".go")) return [ReviewProbeRuntime.notRun("race-detector-absent")]
+    return [yield* ReviewProbeRuntime.step("head", context.head, test, context, true)]
   }
   const hunk = target.hunk ? pick(context.hunks, target.hunk) : undefined
-  if (target.hunk && !hunk) return [notRun(`hunk-unknown: ${target.hunk.path}:${target.hunk.startLine}-${target.hunk.endLine}`)]
-  if (!hunk && !context.base) return [notRun("target-missing: regress needs a hunk or a base copy")]
-  const head = yield* step("head", context.head, test, context)
+  if (target.hunk && !hunk) return [ReviewProbeRuntime.notRun(`hunk-unknown: ${target.hunk.path}:${target.hunk.startLine}-${target.hunk.endLine}`)]
+  if (!hunk && !context.base) return [ReviewProbeRuntime.notRun("target-missing: regress needs a hunk or a base copy")]
+  const head = yield* ReviewProbeRuntime.step("head", context.head, test, context)
   if (head.status === "not-run") return [head]
   const reverted = hunk ? yield* revertedStep(hunk, test, context) : undefined
   const base = context.base ? yield* baseStep(context.base, test, context) : undefined
@@ -157,17 +168,17 @@ const revertedStep = Effect.fnUntraced(function* (hunk: ReviewScratch.Hunk, test
   return yield* withSnapshotMutation(
     ReviewScratch.revert(context.head, hunk),
     ReviewScratch.revert(context.head, { path: hunk.path, line: hunk.line, current: hunk.original, original: hunk.current }).pipe(Effect.orDie),
-    step("reverted", context.head, test, context),
-  ).pipe(Effect.catchTag("Probe.Error", () => Effect.succeed(notRun(`hunk-not-in-copy: ${hunk.path}:${hunk.line}`, "reverted"))))
+    ReviewProbeRuntime.step("reverted", context.head, test, context),
+  ).pipe(Effect.catchTag("Probe.Error", () => Effect.succeed(ReviewProbeRuntime.notRun(`hunk-not-in-copy: ${hunk.path}:${hunk.line}`, "reverted"))))
 })
 
 /** The head's test file run against the base copy, then the base copy's own file (or none) put back. */
 const baseStep = Effect.fnUntraced(function* (base: ReviewScratch.Snapshot, test: Extract<Probe.ProbeInput["runner"], { kind: "test" }>, context: Context) {
   const files = yield* Effect.all([ReviewScratch.resolve(context.head, test.file), ReviewScratch.resolve(base, test.file)]).pipe(
     Effect.catchTag("Probe.Error", () => Effect.succeed(undefined)))
-  if (!files) return notRun(`path-outside-copy: ${test.file}`, "base")
+  if (!files) return ReviewProbeRuntime.notRun(`path-outside-copy: ${test.file}`, "base")
   const source = Bun.file(files[0])
-  if (!(yield* Effect.promise(() => source.exists()))) return notRun(`test-file-missing: ${test.file}`, "base")
+  if (!(yield* Effect.promise(() => source.exists()))) return ReviewProbeRuntime.notRun(`test-file-missing: ${test.file}`, "base")
   const previous = yield* Effect.promise(() => Bun.file(files[1]).bytes().catch(() => undefined))
   return yield* withSnapshotMutation(Effect.gen(function* () {
     yield* Effect.promise(() => mkdir(path.dirname(files[1]), { recursive: true }))
@@ -178,48 +189,8 @@ const baseStep = Effect.fnUntraced(function* (base: ReviewScratch.Snapshot, test
       return
     }
     yield* writeSnapshot(files[1], previous)
-  }), step("base", base, test, context))
+  }), ReviewProbeRuntime.step("base", base, test, context))
 })
-
-/** One closed runner in a copy, confined: no network, writes only to the confine's own scratch. */
-const step = Effect.fnUntraced(function* (label: Step["label"], copy: ReviewScratch.Snapshot, runner: Probe.ProbeInput["runner"], context: Context, race = false) {
-  // A fresh directory per run for the runner's script and version checks; the copy itself stays as taken.
-  const scratch = yield* Effect.promise(() => mkdtemp(path.join(copy.scratch, "probe-")))
-  const env = ResearchProcess.environment()
-  return yield* Effect.gen(function* () {
-    const plan = yield* ProbeRunners.plan({ runner, snapshot: copy, scratch, heapMiB: Probe.Limits.heapMiB, env, race })
-    const launch = yield* ToolSafetySandbox.confine({ command: plan.argv[0], args: plan.argv.slice(1), cwd: plan.cwd, env: { ...env, ...plan.env }, write: [] })
-      .pipe(Effect.mapError((error) => denied(`sandbox-unavailable: ${error.reason}`)))
-    const outcome = yield* ResearchProcess.run({
-      command: launch.command, args: launch.args, cwd: plan.cwd,
-      env: Object.fromEntries(Object.entries(launch.env).filter((entry): entry is [string, string] => entry[1] !== undefined)),
-      timeoutMs: context.timeoutSeconds * 1000, maxBytes: Probe.Limits.outputBytes, maxRssBytes: Probe.Limits.rssBytes,
-    })
-    const stdout = outcome.stdout.data.toString("utf8")
-    const stderr = outcome.stderr.data.toString("utf8")
-    const argv = plan.argv.map((arg) => arg.split(copy.scratch).join("<scratch>"))
-    const settled = verdict(outcome, `${stdout}\n${stderr}`)
-    return { label, ...settled, exitCode: outcome.exitCode ?? undefined, argv, stdout, stderr } satisfies Step
-  }).pipe(
-    // A missing toolchain or runner, a path outside the copy, or no jail: the probe could not run.
-    Effect.catchTag("Probe.Error", (error) => Effect.succeed(notRun(error.reason, label))),
-    Effect.ensuring(Effect.promise(() => rm(scratch, { recursive: true, force: true }))),
-  )
-})
-
-function verdict(outcome: ResearchProcess.Outcome, text: string): { status: Status; reason?: string } {
-  if (outcome.timedOut) return { status: "not-run", reason: "timeout" }
-  if (outcome.memoryExceeded) return { status: "not-run", reason: "memory-exceeded" }
-  if (outcome.overflow) return { status: "not-run", reason: "output-cap" }
-  if (outcome.failure !== undefined) return { status: "not-run", reason: `process-failed: ${outcome.failure}` }
-  // R2: a repository that refuses local tests leaves fail-before/pass-after unavailable, never a failure.
-  if (text.includes(ProbeRun.GUARD)) return { status: "not-run", reason: `repo-guard: ${ProbeRun.GUARD}` }
-  return { status: outcome.exitCode === 0 ? "pass" : "fail" }
-}
-
-function notRun(reason: string, label: Step["label"] = "head"): Step {
-  return { label, status: "not-run", reason, argv: [], stdout: "", stderr: "" }
-}
 
 /** The diff hunk on the target's path whose current lines overlap the target's range. */
 function pick(hunks: ReadonlyArray<ReviewScratch.Hunk>, target: { path: string; startLine: number; endLine: number }) {
@@ -230,6 +201,7 @@ function pick(hunks: ReadonlyArray<ReviewScratch.Hunk>, target: { path: string; 
 
 function settle(input: Input, context: Context, outcome: { uri: string; started: number; steps: ReadonlyArray<Step>; status: Status; reason?: string }) {
   const steps = outcome.steps
+  const primary = input.option === "probe:mutants" ? steps.find((step) => step.label === "mutants") ?? steps[0] : steps[0]
   const share = Math.floor(EXCERPT_BYTES / Math.max(steps.length, 1))
   const excerpt = steps.map((step) => {
     const header = `[${step.label}] ${step.reason ?? `${step.status} (exit ${step.exitCode ?? "none"})`}`
@@ -238,7 +210,7 @@ function settle(input: Input, context: Context, outcome: { uri: string; started:
   const result = {
     status: outcome.status,
     reason: outcome.reason,
-    exitCode: steps[0]?.exitCode,
+    exitCode: primary?.exitCode,
     durationMs: Date.now() - outcome.started,
     excerpt: excerpt || (outcome.reason ?? ""),
     uri: outcome.uri,
@@ -253,7 +225,7 @@ function settle(input: Input, context: Context, outcome: { uri: string; started:
       "stdout:", step.stdout, "stderr:", step.stderr]),
   ].join("\n")
   const evidence = outcome.status === "not-run" ? undefined : {
-    kind: "probe", option: input.option, command: steps[0]?.argv.join(" ") ?? input.option,
+    kind: "probe", option: input.option, command: primary?.argv.join(" ") ?? input.option,
     result: [outcome.status, ...steps.map((step) => `${step.label} ${step.status}`)].join("; "), uri: outcome.uri,
   } satisfies Evidence
   return { result, artifact: { uri: outcome.uri, text }, evidence }
@@ -271,8 +243,14 @@ function tail(text: string, bytes: number) {
 const HOST = Semaphore.makeUnsafe(1)
 
 const permit = Effect.fnUntraced(function* (seconds: number) {
-  const got = yield* HOST.take(1).pipe(Effect.timeoutOption(Duration.seconds(seconds)))
+  const observe = yield* ObservePermit
+  observe("waiting")
+  const got = yield* Effect.acquireRelease(
+    HOST.take(1).pipe(Effect.timeoutOption(Duration.seconds(seconds))),
+    (got) => Option.isSome(got) ? HOST.release(1).pipe(Effect.tap(() => Effect.sync(() => observe("released")))) : Effect.void,
+    { interruptible: true },
+  )
   if (Option.isNone(got)) return false
-  yield* Effect.addFinalizer(() => HOST.release(1))
+  observe("acquired")
   return true
 })

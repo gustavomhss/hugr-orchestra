@@ -1,7 +1,7 @@
 export * as SessionRunner from "./index"
 
 import type { LLMError, ToolFailure } from "@orchestra/llm"
-import { Context, Effect } from "effect"
+import { Context, Effect, Schema } from "effect"
 import { SessionSchema } from "../schema"
 import type { ContextSnapshotDecodeError, MessageDecodeError } from "../error"
 import { SessionRunnerModel } from "./model"
@@ -10,7 +10,11 @@ import type { ToolOutputStore } from "../../tool-output-store"
 import type { SessionSubagentModels } from "../subagent-models"
 import type { ModelExecution } from "../../model-execution"
 
+/** A staged undo must be committed by replacement admission or cleared before an explicit continuation. */
+export class BusyError extends Schema.TaggedErrorClass<BusyError>()("Session.BusyError", { sessionID: SessionSchema.ID }) {}
+
 export type RunError =
+  | BusyError
   | LLMError
   | SessionRunnerModel.Error
   | ModelExecution.ExecutionUnavailableError

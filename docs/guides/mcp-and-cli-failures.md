@@ -22,11 +22,15 @@ MCP identities use a private random key stored as a sealed `mcp-tool-identity.ke
 
 If the identity file is lost, a fresh key produces new tool identifiers and existing exact approvals no longer match. Back up and restore it with the matching credential keychain entry or credential key file. On systems using the credential-file fallback, that existing fallback remains the protection boundary. Windows inherits the data directory's existing ACL; POSIX mode bits are not a new Windows ACL guarantee.
 
+## Overlapping MCP tool names
+
+Different MCP server/tool pairs use separate opaque identifiers even when their display labels or sanitized names coincide. Execution and approvals use the captured authority and effective identifier; a legacy alias cannot choose another server's tool. Configuration changes that change authority require a newly authorized identity rather than transferring an old approval.
+
 ## OAuth callback port
 
 The browser sign-in for a remote server returns to `http://127.0.0.1:19876/mcp/oauth/callback`. If another program holds the port, starting the sign-in fails at once with `OAuth callback port <port> is already in use`. Close the program, or set `oauth.callback_port` (or `oauth.redirect_uri`) in the server's MCP config.
 
-The ChatGPT browser sign-in uses port 1455 and fails with a clear message when it is taken. Closing the connect dialog, or going back from it, cancels the sign-in and releases the port.
+The ChatGPT browser sign-in uses port 1455 and fails with a clear message when it is taken. An unrelated or malformed callback does not consume the pending login. Listener cleanup remains bounded even if another local request is incomplete. Closing the connect dialog, or going back from it, cancels the sign-in and releases the port.
 
 ## CLI
 
@@ -36,3 +40,7 @@ The ChatGPT browser sign-in uses port 1455 and fails with a clear message when i
 - `orchestra run --continue` with no earlier session in the directory prints `No earlier session to continue in <dir>; started a new session.` to stderr, then runs the prompt in a new session. Pass `--session <id>` to require an existing one.
 - A headless `orchestra run` that needs a permission cannot ask anyone. It prints `auto-rejecting. Pass --auto to allow it.` to stderr, rejects the request, and exits non-zero even when the agent finishes. Pass `--auto` to allow it. With `--format json` the warning is not printed; only the exit code reports it.
 - `orchestra mcp add`, `mcp auth`, `mcp logout` and `agent create` print a one-line error and exit non-zero instead of a stack dump.
+
+## Removing an archive installation
+
+`orchestra uninstall` recognizes the versioned prefix created by the archive installer and removes only its owned launcher, current link and selected payload. Other installed versions remain. Dry-run and data/config retention flags still apply. A standalone executable or an unproven npm layout is refused with instructions rather than targeting another installation.

@@ -9,6 +9,8 @@ import { ResearchProcess } from "../research-toolkit/process"
 import { ProbeRun } from "../research-toolkit/probe/run"
 import { Probe } from "../research-toolkit/probe/types"
 import { ToolSafetySandbox } from "../tool-safety-sandbox"
+import type { ReviewReleaseEvidence } from "./release-evidence"
+import type { ReviewImpactCache } from "./impact-cache"
 import { ReviewItem } from "./item"
 import { ReviewNoise } from "./noise"
 import { ReviewSarif } from "./sarif"
@@ -28,7 +30,7 @@ import { ReviewZizmorAnalyze } from "./zizmor-analyze"
 import { ReviewBuildLane } from "./build-lane"
 import { ReviewGolangci } from "./golangci"
 import { ReviewInvoke } from "./invoke"
-import { ReviewOsv } from "./osv"
+import { ReviewAdvisory } from "./advisory"
 import { ReviewSyft } from "./syft"
 import { ReviewJscpdAnalyze } from "./jscpd-analyze"
 import { ReviewGoPinned } from "./go-pinned"
@@ -40,8 +42,8 @@ export const TYPECHECK_CI = ReviewBuildLane.TYPECHECK_CI
 export const LSP_ABSENT = ReviewLspDiagnostics.ABSENT
 export const NATIVE_UNQUALIFIED = ReviewTypeAware.UNQUALIFIED
 export const GOLANGCI_ABSENT = ReviewGolangci.ABSENT
-export const OSV_DATABASE_ABSENT = ReviewOsv.DATABASE_ABSENT
-export const OSV_DATABASE_AGE = ReviewOsv.DATABASE_AGE
+export const OSV_DATABASE_ABSENT = ReviewAdvisory.DATABASE_ABSENT
+export const OSV_DATABASE_AGE = ReviewAdvisory.DATABASE_AGE
 
 // K6 analyze half (design §7.2, §8.6, plan WP 1.4): the host runs the routed packs before any model turn, each confined
 // in a scratch copy (head, and base for the new-only step), keeps every raw output as a citable artifact, normalizes it
@@ -75,6 +77,9 @@ export type RunInput = {
   /** The head revision; omitted, the working tree as it is now. */
   readonly head?: string
   readonly tier: string
+  readonly profile?: string
+  /** Immutable host capture, admitted before the review identity is selected. */
+  readonly release?: ReviewReleaseEvidence.Captured
   readonly catalog?: ReviewCatalog.Catalog
   /** The host directory that keeps this review's artifacts. */
   readonly store: string
@@ -117,6 +122,15 @@ export const ReadDiagnostics = Context.Reference<typeof ReviewLspDiagnostics.rea
   { defaultValue: () => ReviewLspDiagnostics.read },
 )
 
+/** Host-only Deep graph observation; lazy loading keeps ordinary reviews on their existing startup path. */
+export const ReadImpact = Context.Reference<typeof ReviewImpactCache.read>(
+  "@orchestra/ReviewAnalyze/ReadImpact",
+  { defaultValue: () => (context) => Effect.gen(function* () {
+    const { ReviewImpactCache } = yield* Effect.promise(() => import("./impact-cache"))
+    return yield* ReviewImpactCache.read(context)
+  }) },
+)
+
 // Base results by pack, version, template and the base commit's tree: a rereview, or a second review over the same base,
 // reads them instead of scanning again.
 const baseCache = new Map<string, { results: ReadonlyArray<ReviewSarif.Raw>; uri: string }>()
@@ -142,6 +156,25 @@ export const run = Effect.fn("ReviewAnalyze.run")(function* (input: RunInput, pi
       : { worktree: input.worktree, revision: input.head })),
     base: yield* Effect.cached(copy({ worktree: input.worktree, revision: input.base })),
   }
+  const requested = catalog.route.tiers.find((entry) => entry.id === input.tier)
+  const readImpact = yield* ReadImpact
+  const impact = requested?.id === "deep" && requested.built && requested.runs === "deep"
+    ? yield* readImpact(context)
+    : undefined
+  // Candidate bytes were captured before the host selected the review identity, never from a mutable path here.
+  const releaseChecks: Check[] = []
+  if (input.profile === "release") {
+    const { ReviewReleaseChecks } = yield* Effect.promise(() => import("./release-checks"))
+    const { ReviewReleaseEvidence } = yield* Effect.promise(() => import("./release-evidence"))
+    const captured = input.release ?? (yield* ReviewReleaseEvidence.capture(input.worktree))
+    const release = yield* ReviewReleaseChecks.run(captured)
+    const uri = yield* context.write("raw/release.json", JSON.stringify(release.raw))
+    releaseChecks.push(...release.checks.map((check) => ({
+      ...check,
+      uri,
+      reason: `${check.reason ?? check.status}; release-evidence:${captured.identity}; raw:${uri}`,
+    })))
+  }
   // No-build packs first: a repository gate may rewrite files in the head copy.
   const ordered = input.packs
     .map((packID) => ({ packID, pack: catalog.packs.find((entry) => entry.id === packID) }))
@@ -152,15 +185,17 @@ export const run = Effect.fn("ReviewAnalyze.run")(function* (input: RunInput, pi
     head: outcomes.flatMap((outcome) => outcome.head).filter(inScope),
     base: outcomes.flatMap((outcome) => outcome.base).filter(inScope),
     changed: input.changed,
+    ...(impact === undefined ? {} : { blastRadius: impact.ranges }),
     ...(input.addedSuppressions === undefined ? {} : { addedSuppressions: input.addedSuppressions }),
     tier: input.tier,
     catalog,
   })
   const retained = yield* context.write("retained.json", JSON.stringify(result.retained))
   const debt = yield* context.write("debt.json", JSON.stringify(result.debt))
-  const diagnostics = yield* languageServer(selected, context)
+  const readDiagnostics = yield* ReadDiagnostics
+  const diagnostics = yield* ReviewLspDiagnostics.analyze(selected, context, readDiagnostics)
   return {
-    checks: [...outcomes.flatMap((outcome) => outcome.checks), ...diagnostics],
+    checks: [...releaseChecks, ...outcomes.flatMap((outcome) => outcome.checks), ...diagnostics, ...(impact === undefined ? [] : [impact.check])],
     items: result.items,
     retained: { uri: retained, total: result.retained.total, unread: result.retained.unread },
     debt: { uri: debt, total: result.debt.length },
@@ -248,7 +283,7 @@ const runPack = Effect.fnUntraced(function* (packID: string, pack: Pack | undefi
   if (pack.template === "staticcheck" || pack.template === "gosec-sarif") return yield* ReviewGoPinned.run(pack, context, confined)
   if (pack.template === "golangci-lint") return yield* ReviewGolangci.run(pack, context, confined)
   if (pack.template === "invoke") return yield* ReviewInvoke.run(pack, context, confined)
-  if (pack.template === "osv-offline") return yield* ReviewOsv.run(pack, context, confined)
+  if (pack.template === "osv-offline" || pack.template === "cargo-audit-lock-json") return yield* ReviewAdvisory.run(pack, context, confined, rules(context.catalog))
   if (pack.template === "syft-dir-json") return yield* ReviewSyft.run(pack, context, confined)
   if (pack.template === "jscpd-dir-sarif") return yield* ReviewJscpdAnalyze.run(pack, context, confined, rules(context.catalog))
   if (pack.lane === "build") return yield* ReviewBuildLane.run(pack, context, confined)
@@ -292,6 +327,8 @@ function pinnedScanner(id: string): Scanner | undefined {
 
 /** A pinned scanner over the head copy and, for the new-only step, the base copy. */
 const scanned = Effect.fnUntraced(function* (pack: Pack, scanner: Scanner, context: RunContext) {
+  const output = pack.output
+  if (output.format === "check") return only(check(pack, "not-run", "check-output-requires-dispatcher"))
   const template = scanner.templates[pack.template]
   if (!template) return only(check(pack, "not-run", `template unknown: ${pack.template}`))
   const ruleSelection = nativeDrops(context.catalog, pack.id, knownNative(pack.id))
@@ -303,7 +340,7 @@ const scanned = Effect.fnUntraced(function* (pack: Pack, scanner: Scanner, conte
     if ("failed" in copied) return { status: "not-run" as const, reason: copied.failed }
     const snapshot = copied.snapshot
     // Outside the scanned copy. A report-file scanner may write only that file; a stdout scanner writes nothing.
-    const report = path.join(snapshot.scratch, "reports", `${pack.id}.${pack.output.format}`)
+    const report = path.join(snapshot.scratch, "reports", `${pack.id}.${output.format}`)
     yield* Effect.promise(() => mkdir(path.dirname(report), { recursive: true }))
     if (scanner.prepare) yield* scanner.prepare(path.dirname(report), ruleSelection.dropped)
     if (scanner.sink !== "stdout") yield* Effect.promise(() => writeFile(report, ""))
@@ -317,15 +354,15 @@ const scanned = Effect.fnUntraced(function* (pack: Pack, scanner: Scanner, conte
     const text = scanner.sink === "stdout"
       ? ran.outcome.stdout.data.toString("utf8")
       : yield* Effect.promise(() => Bun.file(report).text().catch(() => ""))
-    const uri = yield* context.write(`raw/${pack.id}-${side}.${pack.output.format}`, text)
+    const uri = yield* context.write(`raw/${pack.id}-${side}.${output.format}`, text)
     const unsettled = settle(ran.outcome)
     if (unsettled) return { ...unsettled, uri }
     if (!completed.includes(ran.outcome.exitCode ?? -1))
       return { status: "acquisition-error" as const, reason: `exit ${ran.outcome.exitCode}: ${firstLine(ran.outcome.stderr.data)}`, uri }
     const options = { pack: pack.id, root: snapshot.root }
-    const parsed = pack.output.format === "sarif"
+    const parsed = output.format === "sarif"
       ? ReviewSarif.parseSarif(text, options)
-      : ReviewSarif.parseJson(pack.output.parser, text, options)
+      : ReviewSarif.parseJson(output.parser, text, options)
     if (parsed.status === "acquisition-error") return { status: "acquisition-error" as const, reason: parsed.reason, uri }
     return { status: "ok" as const, results: parsed.results, uri }
   })
@@ -738,40 +775,6 @@ const confined = Effect.fnUntraced(function* (input: {
 })
 
 export type Confine = typeof confined
-
-const SOURCE = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".mts", ".cts"])
-
-/** Read-only diagnostics for a trusted build-lane review. No server in the copy is absence, not a fetch. */
-const languageServer = Effect.fnUntraced(function* (input: RunInput, context: RunContext) {
-  if (input.lane !== "build" || !input.trusted) return []
-  const files = Object.keys(input.changed).filter(sourceFile).sort()
-  if (files.length === 0) return []
-  const head = yield* context.head
-  if ("failed" in head) return []
-  const read = yield* ReadDiagnostics
-  const report = yield* read({ root: head.snapshot.root, files })
-  const uri = report.workspaceExecuted ? yield* context.write("raw/lsp.log", formatDiagnostics(report)) : undefined
-  return [{
-    id: "lsp",
-    pack: "lsp",
-    version: "project",
-    lane: "build" as const,
-    status: report.status,
-    ...(report.reason === undefined ? {} : { reason: report.reason }),
-    workspaceExecuted: report.workspaceExecuted,
-    ...(uri === undefined ? {} : { uri }),
-  }]
-})
-
-function sourceFile(file: string) {
-  if (!SOURCE.has(path.posix.extname(file)) || file.includes("\0") || path.isAbsolute(file)) return false
-  return file.split(/[/\\]/).every((part) => part !== "" && part !== "." && part !== "..")
-}
-
-function formatDiagnostics(report: { diagnostics: readonly { path: string; severity: number; line: number; character: number; message: string }[]; opened: number; skipped: number }) {
-  const lines = report.diagnostics.map((item) => `${item.path}:${item.line}:${item.character} ${item.message}`)
-  return [`opened ${report.opened}`, `skipped ${report.skipped}`, ...lines].join("\n")
-}
 
 const copy = (input: Parameters<typeof ReviewScratch.create>[0]) =>
   ReviewScratch.create(input).pipe(

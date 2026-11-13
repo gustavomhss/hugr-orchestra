@@ -1,10 +1,10 @@
 # Rag Studio — work packages
 
-`plan-check` ok. `conflict-map` conflict-free. Contract `fb61d451`. Not dispatched.
+`plan-check` ok. `conflict-map` conflict-free. Contract `17a340bf`. Not dispatched.
 
 Each package writes one file and turns its ids green. It imports `seam.ts`. It does not redeclare a signature. It does not edit `api.ts`, `chapter-route.tsx`, `navigation.ts`, `module-architecture.json`, or `packages/core/src/rag-studio/sql.ts`. Those are the lead's.
 
-A package is done when its ids pass and the contract hash is still `7c2ae7a5`. J-ids are the owner's, not a green test.
+A package is done when its ids pass and the contract hash is still `17a340bf`. J-ids are the owner's, not a green test.
 
 ## Engine
 

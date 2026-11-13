@@ -2,8 +2,10 @@ import { createEffect, createSignal, For, onCleanup, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import type { LiveHotkey, LiveHotkeyAction, LiveSettings, LiveSource } from "@/context/platform"
 import { useLanguage } from "@/context/language"
+import { showToast } from "@/utils/toast"
 import { MxBadge, MxToggle } from "../kit"
 import { settleHotkeyWrite } from "./hotkey"
+import { savedKeyShown, settleSettingsRead } from "./settings-read"
 import { accelerator } from "./model"
 import { Keys, mac, Note } from "./parts"
 import { settleProtectionWrite } from "./protection"
@@ -33,14 +35,35 @@ export function FlightSettings(props: { flight: Flight }) {
     // The destructive action waiting for a second click, and whether one is running.
     confirm: undefined as "key" | "hotkeys" | undefined,
     busy: false,
+    settingsFailed: false,
+    keyFailed: false,
   })
   const [secret, setSecret] = createSignal("")
+  let settingsRead = 0
+  let keyRead = 0
+  const reportRead = (kind: "settingsFailed" | "keyFailed") => (error: unknown) => {
+    console.error(error)
+    if (!store.settingsFailed && !store.keyFailed) showToast({ variant: "error", title: t("common.requestFailed") })
+    setStore(kind, true)
+  }
 
   createEffect(() => {
     const current = seat()
     if (!current) return
-    void current.getSettings().then((value) => setStore("settings", value))
-    void current.hasTranscriptionKey().then((value) => setStore("saved", value))
+    const settingsStarted = ++settingsRead
+    const keyStarted = ++keyRead
+    void settleSettingsRead({
+      read: current.getSettings(),
+      current: () => settingsStarted === settingsRead && seat() === current,
+      apply: (value) => setStore({ settings: value, settingsFailed: false }),
+      report: reportRead("settingsFailed"),
+    })
+    void settleSettingsRead({
+      read: current.hasTranscriptionKey(),
+      current: () => keyStarted === keyRead && seat() === current,
+      apply: (value) => setStore({ saved: value, keyFailed: false }),
+      report: reportRead("keyFailed"),
+    })
   })
 
   const patch = (change: Partial<LiveSettings>) =>
@@ -165,7 +188,15 @@ export function FlightSettings(props: { flight: Flight }) {
       <Show when={store.problem}>
         <Note tone="bad">{store.problem}</Note>
       </Show>
-      <Show when={props.flight.store.readinessFailed || props.flight.store.protectionFailed || props.flight.store.hotkeysFailed}>
+      <Show
+        when={
+          props.flight.store.readinessFailed ||
+          props.flight.store.protectionFailed ||
+          props.flight.store.hotkeysFailed ||
+          store.settingsFailed ||
+          store.keyFailed
+        }
+      >
         <Note tone="bad">{t("common.requestFailed")}</Note>
       </Show>
 
@@ -181,35 +212,37 @@ export function FlightSettings(props: { flight: Flight }) {
             <Show
               when={store.replacing || store.saved === false}
               fallback={
-                <>
-                  <MxBadge tone="good">{t("orchestra.flightEngineer.saved")}</MxBadge>
-                  <button type="button" class="mx-btn" onClick={() => setStore("replacing", true)}>
-                    {t("orchestra.flightEngineer.settings.replace")}
-                  </button>
-                  <Show
-                    when={store.confirm === "key"}
-                    fallback={
-                      <button type="button" class="mx-btn danger" onClick={() => setStore("confirm", "key")}>
+                <Show when={savedKeyShown(store.saved)}>
+                  <>
+                    <MxBadge tone="good">{t("orchestra.flightEngineer.saved")}</MxBadge>
+                    <button type="button" class="mx-btn" onClick={() => setStore("replacing", true)}>
+                      {t("orchestra.flightEngineer.settings.replace")}
+                    </button>
+                    <Show
+                      when={store.confirm === "key"}
+                      fallback={
+                        <button type="button" class="mx-btn danger" onClick={() => setStore("confirm", "key")}>
+                          {t("orchestra.flightEngineer.settings.remove")}
+                        </button>
+                      }
+                    >
+                      <span role="group" aria-label={t("orchestra.flightEngineer.settings.removeConfirm")}>
+                        {t("orchestra.flightEngineer.settings.removeConfirm")}
+                      </span>
+                      <button type="button" class="mx-btn danger" disabled={store.busy} onClick={() => void removeKey()}>
                         {t("orchestra.flightEngineer.settings.remove")}
                       </button>
-                    }
-                  >
-                    <span role="group" aria-label={t("orchestra.flightEngineer.settings.removeConfirm")}>
-                      {t("orchestra.flightEngineer.settings.removeConfirm")}
-                    </span>
-                    <button type="button" class="mx-btn danger" disabled={store.busy} onClick={() => void removeKey()}>
-                      {t("orchestra.flightEngineer.settings.remove")}
-                    </button>
-                    <button
-                      type="button"
-                      class="mx-btn"
-                      disabled={store.busy}
-                      onClick={() => setStore("confirm", undefined)}
-                    >
-                      {t("orchestra.flightEngineer.cancel")}
-                    </button>
-                  </Show>
-                </>
+                      <button
+                        type="button"
+                        class="mx-btn"
+                        disabled={store.busy}
+                        onClick={() => setStore("confirm", undefined)}
+                      >
+                        {t("orchestra.flightEngineer.cancel")}
+                      </button>
+                    </Show>
+                  </>
+                </Show>
               }
             >
               <form

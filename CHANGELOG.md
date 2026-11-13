@@ -4,6 +4,44 @@ All notable changes to HuGR Orchestra are recorded here. The format follows [Kee
 
 ## [Unreleased]
 
+- Replaying knowledge no longer replaces a later commit with an earlier one that was logged afterwards. The later commit stays.
+- Replaying knowledge no longer treats a logged row as proven when its key or claims are not in the fact. That row is held for review.
+- Searching for a file or folder no longer treats a failed search as no matches. That failure is shown.
+- Opening Servers no longer treats a failed default read as no default. That failure is shown.
+- Searching sessions in the command palette no longer treats a failed search as no results. That failure is shown.
+- Opening Plugins no longer treats a failed behavior read as all behaviors off, or sends that set to the server. That failure is shown.
+- Replacing a server no longer hides a failed read of the default. That failure is shown. The default is not moved unless the read says this entry was it.
+- Exporting a diff no longer treats a failed patch load as a file with no patch text. That failure is shown.
+- Asking in Rag Studio no longer treats a failed source read as not recorded. That failure is shown.
+- Opening a folder in another app no longer treats a failed install check as not installed. That failure is shown.
+- Opening Rag Studio no longer treats a failed pipeline read as embedding off, or as the default pipeline. That failure is shown.
+- Opening Flight Engineer no longer treats a failed run-state read as a stopped meeting. Stopping a meeting no longer hides a failed write. That failure is shown.
+- Opening Settings no longer turns a failed live-seat read into a stopped meeting, a missing key, and protection on. Changing content protection no longer hides a failed write. The switch goes back, and that failure is shown.
+
+## 0.3.7 (2026-11-12)
+
+Command line and desktop release candidate, unsigned like 0.3.6. Publication reuses the exact artifacts validated for this cut; the release receipt records their source, runtime checks and SHA256 digests.
+
+- Sandbox parent rollback compares exact 64-bit filesystem identities and preserves directories when identity is unavailable.
+- Project provider overrides and agent execution, permissions and selection settings now require project trust, including discovered agent Markdown and trust revocation.
+- Undo replacement admission commits atomically with its history cut. Conflicting prompt IDs preserve history, staged undo blocks hidden-history execution, and busy revert requests return HTTP 409.
+- Child creation and parent deletion serialize through commit without holding lifecycle guards across observer callbacks.
+- Concurrent credential access shares one home-scoped key lock across profiles, retains ownership through native calls and recovers automatically after process death.
+- Claude mode preserves updated context and supported media, retains compaction archive identity, delivers every tracked background completion, and settles handed input even when cleanup fails.
+- Background Task retries reconcile through durable admission without retaining completed watchers or starting another child provider turn.
+- Owned desktop servers regain their retry budget after stable operation; bounded diagnostics retain newer-database refusals independently on each output stream.
+- Desktop updates keep services running until native preparation confirms quit; installation errors do not trigger partial teardown and forced recovery.
+- Slow terminal WebSocket clients have bounded output retention and disconnect cleanly while preserving replay order and the running PTY.
+- Ambiguous MCP tool owners fail explicitly with existing permission keys preserved; cancelled connection setup releases its claims.
+- Active workspace placement works when the picker is hidden and is revalidated at submission. Copied Sessions resolve their repository through canonical Location ownership.
+- Archive uninstall verifies ownership of its selected payload and links, preserves other versions, and refuses npm targets that do not match the executable's owner.
+- Unsolicited OAuth callbacks preserve the pending login; incomplete local requests cannot prevent listener cleanup.
+- Cold Session content renders before the first heavy review panel, including an empty undo projection; warm tab switches retain the mounted panel.
+
+- Changing pinch zoom no longer hides a failed write. The switch goes back, and that failure is shown. Reading it when Settings opens no longer treats a failed read as off.
+- The Flight Engineer home card no longer hides a failed meeting list. A meeting already shown stays, and that failure is shown. "No meetings yet" is only a list that came back empty.
+- Renaming a running Flight Engineer meeting no longer hides a failed write. The title stays as it was, and that failure is shown.
+- Opening Flight Engineer settings no longer hides a failed read. The speech-to-text key is not shown as saved until a read says it is, and that failure is shown. The other settings stay as they were.
 - Changing a Flight Engineer hotkey, or resetting them, no longer hides a failed write. The keys stay as they were, and that failure is shown. Reloading them after the change, or when Flight Engineer opens, no longer hides a failed read.
 
 ## 0.3.6 (2026-11-11)

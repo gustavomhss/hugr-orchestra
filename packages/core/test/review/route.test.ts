@@ -5,7 +5,12 @@ import { ReviewCatalog } from "../../src/review/catalog"
 import { ReviewRoute } from "../../src/review/route"
 import { ReviewRouting } from "../../src/review/routing"
 
-const catalog = ReviewCatalog.current
+// Preserve the R3 regression matrix for catalogs whose Deep adapters are genuinely unavailable.
+const catalog: ReviewCatalog.Catalog = {
+  ...ReviewCatalog.current,
+  route: { ...ReviewCatalog.current.route, tiers: ReviewCatalog.current.route.tiers.map((tier) =>
+    tier.id === "deep" ? { ...tier, built: false, runs: "standard" } : tier) },
+}
 const fixture = (name: string) => path.join(import.meta.dir, "route-fixture", name)
 const owner: { base: ReviewRoute.Tree; head: ReviewRoute.Head } = await Bun.file(fixture("owner-example.json")).json()
 const docs: { base: ReviewRoute.Tree; head: ReviewRoute.Head } = await Bun.file(fixture("docs-only.json")).json()

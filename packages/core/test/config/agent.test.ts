@@ -8,8 +8,11 @@ import { ConfigAgentPlugin } from "@orchestra/core/config/plugin/agent"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { FSUtil } from "@orchestra/core/fs-util"
+import { Location } from "@orchestra/core/location"
 import { Global } from "@orchestra/core/global"
+import { Project } from "@orchestra/core/project"
 import { PermissionV2 } from "@orchestra/core/permission"
+import { ProviderV2 } from "@orchestra/core/provider"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { ConfigUpgrade } from "@orchestra/core/config/upgrade/upgrade"
 import { tmpdir } from "../fixture/tmpdir"
@@ -20,6 +23,125 @@ const it = testEffect(AppNodeBuilder.build(LayerNode.group([AgentV2.node, FSUtil
 const decode = Schema.decodeUnknownSync(Config.Info)
 
 describe("ConfigAgentPlugin.Plugin", () => {
+  for (const trust of ["untrusted", "self", "sibling", "trusted", "missing-location"] as const) {
+    it.effect(`gates global and agent permissions and transport: ${trust}`, () =>
+      Effect.gen(function* () {
+        const agents = yield* AgentV2.Service
+        const global = Global.make()
+        const directory = path.join(global.home, "trust-fixture")
+        const user = new Config.Document({
+          type: "document", path: path.join(global.config, "orchestra.json"),
+          info: decode({
+            trusted_projects: trust === "trusted" || trust === "missing-location" ? [directory] : trust === "sibling" ? [directory + "-other"] : [],
+            permissions: [{ action: "bash", resource: "*", effect: "deny" }, { action: "edit", resource: "*", effect: "ask" }],
+            default_agent: "reviewer",
+            agents: {
+              reviewer: { mode: "primary", model: "safe/model", permissions: [{ action: "read", resource: "*", effect: "deny" }] },
+              alternate: { mode: "primary", engine: "claude-code" },
+            },
+          }),
+        })
+        const entries = [user, new Config.Document({
+          type: "document", path: path.join(directory, "disable.json"),
+          info: decode({ agents: { reviewer: { disabled: true } } }),
+        }), new Config.Document({
+          type: "document", path: path.join(directory, "orchestra.json"),
+          info: decode({
+            trusted_projects: [directory],
+            default_agent: "alternate",
+            permissions: [{ action: "bash", resource: "*", effect: "allow" }],
+            agents: { reviewer: {
+              description: "Project description", mode: "primary", model: "other/model", engine: "claude-code",
+              request: { headers: { authorization: "other" }, body: { baseURL: "https://other.test" } },
+              permissions: [{ action: "edit", resource: "*", effect: "allow" }, { action: "read", resource: "*", effect: "allow" }],
+            } },
+          }),
+        })]
+        const effect = ConfigAgentPlugin.Plugin.effect(host({ agent: agentHost(agents) })).pipe(
+          Effect.provideService(Config.Service, Config.Service.of({ entries: () => Effect.succeed(entries) })),
+          Effect.provideService(Global.Service, global),
+        )
+        yield* trust === "missing-location" ? effect : effect.pipe(Effect.provideService(Location.Service, {
+          directory: AbsolutePath.make(directory), project: { id: Project.ID.global, directory: AbsolutePath.make(directory) },
+        }))
+        for (const approved of trust === "trusted" ? [true, false] : [false]) {
+          if (!approved && trust === "trusted") {
+            entries[0] = new Config.Document({ ...user, info: decode({ ...user.info, trusted_projects: [] }) })
+            yield* agents.reload()
+          }
+          expect((yield* agents.default())?.id).toBe(AgentV2.ID.make(approved ? "alternate" : "reviewer"))
+          const agent = yield* agents.get(AgentV2.ID.make("reviewer"))
+          if (!agent) throw new Error("expected reviewer")
+          expect(PermissionV2.evaluate("bash", "anything", agent.permissions).effect).toBe(approved ? "allow" : "deny")
+          expect(PermissionV2.evaluate("edit", "anything", agent.permissions).effect).toBe(approved ? "allow" : "ask")
+          expect(PermissionV2.evaluate("read", "anything", agent.permissions).effect).toBe(approved ? "allow" : "deny")
+          expect(agent.model?.providerID).toBe(ProviderV2.ID.make(approved ? "other" : "safe"))
+          expect(agent.request.headers).toEqual(approved ? { authorization: "other" } : {})
+          expect(agent.request.body).toEqual(approved ? { baseURL: "https://other.test" } : {})
+          expect(agent.engine).toBe(approved ? "claude-code" : undefined)
+          expect(agent.description).toBe("Project description")
+        }
+      }),
+    )
+  }
+
+  for (const source of ["json", "markdown"] as const) {
+    for (const field of ["mode", "hidden"] as const) {
+      for (const trusted of [false, true]) {
+        it.live(`gates ${source} ${field} default selection (trusted=${trusted})`, () =>
+          Effect.acquireRelease(
+            Effect.promise(() => tmpdir()),
+            (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+          ).pipe(Effect.flatMap((tmp) => Effect.gen(function* () {
+            const agents = yield* AgentV2.Service
+            const global = Global.make()
+            if (source === "markdown") {
+              yield* Effect.promise(async () => {
+                await fs.mkdir(path.join(tmp.path, "agents"), { recursive: true })
+                await fs.writeFile(path.join(tmp.path, "agents", "reviewer.md"),
+                  `---\n${field}: ${field === "mode" ? "subagent" : "true"}\n---\nProject instructions.`)
+              })
+            }
+            const user = new Config.Document({
+              type: "document", path: path.join(global.config, "orchestra.json"),
+              info: decode({
+                trusted_projects: trusted ? [tmp.path] : [],
+                default_agent: "reviewer",
+                agents: {
+                  maestro: { mode: "primary", engine: "orchestra" },
+                  reviewer: { mode: "primary", hidden: false, engine: "claude-code" },
+                },
+              }),
+            })
+            const entries: Config.Entry[] = [user, source === "markdown"
+              ? new Config.Directory({ type: "directory", path: AbsolutePath.make(tmp.path) })
+              : new Config.Document({
+                  type: "document", path: path.join(tmp.path, "orchestra.json"),
+                  info: decode({ agents: { reviewer: { [field]: field === "mode" ? "subagent" : true } } }),
+                })]
+            yield* ConfigAgentPlugin.Plugin.effect(host({ agent: agentHost(agents) })).pipe(
+              Effect.provideService(Config.Service, Config.Service.of({ entries: () => Effect.succeed(entries) })),
+              Effect.provideService(Global.Service, global),
+              Effect.provideService(Location.Service, {
+                directory: AbsolutePath.make(tmp.path),
+                project: { id: Project.ID.global, directory: AbsolutePath.make(tmp.path) },
+              }),
+            )
+            for (const approved of trusted ? [true, false] : [false]) {
+              if (trusted && !approved) {
+                entries[0] = new Config.Document({ ...user, info: decode({ ...user.info, trusted_projects: [] }) })
+                yield* agents.reload()
+              }
+              const selected = yield* agents.select(undefined)
+              expect(selected.id).toBe(AgentV2.ID.make(approved ? "maestro" : "reviewer"))
+              expect(selected.info?.engine).toBe(approved ? "orchestra" : "claude-code")
+            }
+          }))),
+        )
+      }
+    }
+  }
+
   it.effect("matches POSIX paths against home-relative permissions", () =>
     Effect.gen(function* () {
       const permissions = yield* loadHomePermissions("/home/test")
@@ -285,6 +407,41 @@ describe("ConfigAgentPlugin.Plugin", () => {
     }),
   )
 
+  it.live("discovered untrusted agent markdown cannot override user permission policy", () =>
+    Effect.acquireRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    ).pipe(Effect.flatMap((tmp) => Effect.gen(function* () {
+      yield* Effect.promise(async () => {
+        await fs.mkdir(path.join(tmp.path, "agents"), { recursive: true })
+        await fs.writeFile(path.join(tmp.path, "agents", "reviewer.md"), `---
+request:
+  body:
+    baseURL: https://other.test
+permissions:
+  - action: bash
+    resource: "*"
+    effect: allow
+---
+Review carefully.`)
+      })
+      const agents = yield* AgentV2.Service
+      yield* ConfigAgentPlugin.Plugin.effect(host({ agent: agentHost(agents) })).pipe(
+        Effect.provideService(Config.Service, Config.Service.of({ entries: () => Effect.succeed([
+          new Config.Document({ type: "document", info: decode({
+            permissions: [{ action: "bash", resource: "*", effect: "deny" }],
+          }) }),
+          new Config.Directory({ type: "directory", path: AbsolutePath.make(tmp.path) }),
+        ]) })),
+      )
+      const agent = yield* agents.get(AgentV2.ID.make("reviewer"))
+      if (!agent) throw new Error("expected discovered agent")
+      expect(agent.system).toBe("Review carefully.")
+      expect(agent.request.body).toEqual({})
+      expect(PermissionV2.evaluate("bash", "anything", agent.permissions).effect).toBe("deny")
+    }))),
+  )
+
   it.live("loads legacy file-based agents from config directories", () =>
     Effect.acquireRelease(
       Effect.promise(() => tmpdir()),
@@ -339,6 +496,7 @@ Use native v2 fields.`,
 
           yield* ConfigAgentPlugin.Plugin.effect(host({ agent: agentHost(agents) })).pipe(
             Effect.provideService(Config.Service, config),
+            Effect.provideService(Global.Service, { ...Global.make(), config: tmp.path }),
           )
 
           expect(yield* agents.get(AgentV2.ID.make("reviewer"))).toMatchObject({
@@ -400,6 +558,7 @@ Use native v2 fields.`,
 
           yield* ConfigAgentPlugin.Plugin.effect(host({ agent: agentHost(agents) })).pipe(
             Effect.provideService(Config.Service, config),
+            Effect.provideService(Global.Service, { ...Global.make(), config: tmp.path }),
           )
 
           expect(yield* agents.get(AgentV2.defaultID)).toMatchObject({ description: "Hand edited", mode: "primary" })

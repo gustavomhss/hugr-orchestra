@@ -826,3 +826,110 @@ test.skipIf(!on)("iterator return failure after drain grace reports error and pr
   expect(events).toEqual(["exit:7", "error", "close:7"])
   expect(errors[0].message).toContain("late-iterator-return-failed")
 })
+test.skipIf(!on)("owned serve: diagnostics bound long split lines, redact secrets and remember newer database", async () => {
+  expectSpawn(import.meta.path)
+  const dir = await mkdtemp(join(tmpdir(), "owned-serve-bounded-"))
+  await writeFile(join(dir, "serve.ts"), `
+const password = process.env.ORCHESTRA_SERVER_PASSWORD
+process.stderr.write("newer Orchestra ")
+setTimeout(() => {
+  process.stderr.write("version" + "é".repeat(2_000_000) + password.slice(0, 18))
+  setTimeout(() => {
+    process.stderr.write(password.slice(18) + "x".repeat(2_000_000) + "\\n")
+    console.error(Array.from({length: 30}, (_, i) => "tail " + i).join("\\n"))
+    setTimeout(() => process.exit(1), 300)
+  }, 20)
+}, 20)
+`)
+  const messages: string[] = []
+  const sizes: number[] = []
+  let leaked = ""
+  const owned = await startOwnedServe({
+    logger: { log: (message) => messages.push(message), error: (message) => messages.push(message) },
+    command: [process.execPath, join(dir, "serve.ts")],
+    env: { PATH: process.env.PATH ?? "" }, cwd: dir,
+    write: (_stream, line) => { sizes.push(Buffer.byteLength(line)); if (line.includes("[redacted]")) leaked = line },
+  })
+  try {
+    const failure = await owned.health.wait.catch((error: Error) => error)
+    await until(() => messages.includes(newerRefusal))
+    expect(Math.max(...sizes)).toBeLessThanOrEqual(16_384)
+    expect(leaked).toContain("[redacted]")
+    expect(leaked).not.toContain(owned.password)
+    expect(String(failure)).not.toContain(owned.password)
+    expect(Buffer.byteLength(String(failure))).toBeLessThan(250_000)
+    expect(String(failure).split("Last server output:\n")[1]?.split("\n").length).toBeLessThanOrEqual(15)
+    expect(messages).not.toContain("owned serve restarting")
+  } finally { await owned.listener.stop() }
+}, 30_000)
+// Append to apps/desktop/src/main/omni-process.test.ts in a separate CI-only repro checkout.
+// Uses that file's existing fakeServe, expectSpawn, DesktopOmni, startOwnedServe and until.
+test.skipIf(!on)("owned serve: a server stable for 65 seconds restarts after a crash", async () => {
+  expectSpawn(import.meta.path)
+  const dir = await realpath(await mkdtemp(join(tmpdir(), "owned-serve-stable-")))
+  const marker = `stable-${randomUUID()}`
+  await writeFile(join(dir, "serve.ts"), `${fakeServe}\nsetTimeout(() => console.log(${JSON.stringify(marker)}), 65_000)\n`)
+  const events: string[] = []
+  const spawns: Array<number | undefined> = []
+  const stable = Promise.withResolvers<void>()
+  const stableDeadline = setTimeout(() => stable.reject(new Error("server did not emit its 65-second marker")), 80_000)
+  const owned = await startOwnedServe({
+    logger: { log: (message) => events.push(message), error: (message) => events.push(message) },
+    command: [process.execPath, join(dir, "serve.ts")],
+    env: { PATH: process.env.PATH ?? "" },
+    cwd: dir,
+    write: (_stream, message) => { if (message === marker) stable.resolve() },
+    onSpawn: (pid) => spawns.push(pid),
+  })
+  try {
+    await owned.health.wait
+    // Synchronize on a real child marker; do not change clocks or source constants.
+    await stable.promise
+    const auth = { authorization: `Basic ${Buffer.from(`orchestra:${owned.password}`).toString("base64")}` }
+    await fetch(`${owned.url}/crash`, { headers: auth }).catch(() => undefined)
+    await until(() => events.includes("owned serve restarting") || events.includes("owned serve crash loop; not restarting"))
+    expect(events).toContain("owned serve restarting")
+    expect(events).not.toContain("owned serve crash loop; not restarting")
+    await until(() => spawns.length >= 2)
+    await until(() => fetch(`${owned.url}/api/health`, { headers: auth }).then((response) => response.ok, () => false))
+  } finally {
+    clearTimeout(stableDeadline)
+    await owned.listener.stop()
+  }
+}, 100_000)
+
+test.skipIf(!on)("owned serve: immediate crashes exhaust the budget; explicit stop cancels retry", async () => {
+  expectSpawn(import.meta.path)
+  const crashing = await ownedScript(`process.exit(2)`)
+  try {
+    const deadline = Date.now() + 85_000
+    while (!crashing.messages.includes("owned serve crash loop; not restarting")) {
+      if (Date.now() > deadline) throw new Error("crash budget did not stop the loop")
+      await new Promise((resolve) => setTimeout(resolve, 100))
+    }
+    expect(crashing.spawns).toHaveLength(7)
+  } finally { await crashing.owned.listener.stop() }
+  const stopped = await ownedScript(`process.exit(2)`)
+  try {
+    await until(() => stopped.messages.includes("owned serve restarting"))
+    await stopped.owned.listener.stop()
+    await new Promise((resolve) => setTimeout(resolve, 1_500))
+    expect(stopped.spawns).toHaveLength(1)
+  } finally { await stopped.owned.listener.stop() }
+}, 100_000)
+
+test.skipIf(!on)("owned serve: split database refusal survives an interleaved output stream", async () => {
+  expectSpawn(import.meta.path)
+  const started = await ownedScript(`
+process.stderr.write("x".repeat(4081) + "newer Orchestra version" + "y".repeat(80))
+setTimeout(() => console.log("interleaved stdout"), 50)
+setTimeout(() => process.stderr.write("\\n"), 150)
+setTimeout(() => process.exit(1), 250)
+`)
+  try {
+    await until(() => started.messages.includes(newerRefusal) || started.messages.includes("owned serve restarting"))
+    expect(started.messages).toContain(newerRefusal)
+    expect(started.messages).not.toContain("owned serve restarting")
+    expect(started.spawns).toHaveLength(1)
+  } finally { await started.owned.listener.stop() }
+}, 30_000)

@@ -2918,9 +2918,16 @@
           "snapshot": "1408937d24f62ccd12bcd80526763abc53784f4a",
           "source": "c2d0284730243d9094d2905a4999e78467f36190",
           "result": "Both OS108pass/0fail/0skip, cleanup/wrapper0. Root independently checked jobs/raw and all18 snapshot blobs; integrated17 own commits throughc9861968b9 match exactly. Three actual Core SQL bridges remain green43328345986 with identical four production/two actor blobs. Desktop type0 on unchanged production source; tsconfig excludes test harness. Real native HTTP fixture was repaired using write-completion callbacks and observed peer close while preserving original cap/time/strict error criteria; production unchanged after0c63. No Main/Senses/IPC/UI or Electron wiring."
+        },
+        {
+          "kind": "actual_electron_sqlite_capability_green_integrated",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43355280790",
+          "snapshot": "4d23c8297d83ed5ba6a64bb5e1c5da55beb07a67",
+          "commit": "3799aa8bfdcffe75f88188bdaf242ad8f27cac63",
+          "result": "Linux and Windows each1pass/37assertions/2Omni spawns. Actual Electron42.11.16 main embeds Node24.19.0 and SQLite3.53.3. Real Store reopen, pending batch, exact UTF8 digest and integrity_check passed; owned process/profile cleanup completed. Root independently checked jobs, raw records, both snapshot source blobs, LF/CRLF transformations and identical hosted bundles. This is isolated Electron capability, not production Main/Senses/IPC/UI wiring."
         }
       ],
-      "remaining": "Private Store and Manager verified and integrated. Actual Electron SQLite capability planned before production wiring. Original three legacy client failures, target/capture/STT/IPC/UI/quit and M11 lifetime integration remain open."
+      "remaining": "Private Store, Manager and actual Electron SQLite capability verified and integrated. Original legacy client failures, target/capture/STT/IPC/UI/quit and M11 lifetime integration remain open."
     },
     {
       "id": "M14",
@@ -3816,5 +3823,11 @@
       "omni": "not applicable",
       "scope": "Scoped hosted Linux existing request/parser/matrix/report tests."
     }
+  },
+  "dev_sync_pending": {
+    "parent": "3799aa8bfdcffe75f88188bdaf242ad8f27cac63",
+    "dev": "04026786c46d8e6b3e7a66e75e03d545459d632d",
+    "state": "13 conflicts resolved; Core typecheck passed; further affected-package and hosted seam qualification pending",
+    "generated": "One whole previously qualified Atlas surface retained temporarily; official hosted generation required for source union."
   }
 }

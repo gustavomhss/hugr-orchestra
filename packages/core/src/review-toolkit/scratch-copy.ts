@@ -49,6 +49,12 @@ export const create = Effect.fn("ReviewScratch.create")(function* (
   return { ...snapshot, scratch, digest: yield* digest(snapshot) } satisfies Snapshot
 })
 
+/** Whether this snapshot identifies exactly the clean tree supplied by the host. */
+export function pristine(snapshot: Snapshot, tree: string) {
+  return snapshot.dirtyDigest === undefined && /^[0-9a-f]{40}(?:[0-9a-f]{24})?$/.test(tree) &&
+    snapshot.digest === treeHasher(tree).digest("hex")
+}
+
 /** The physical path of `file` inside the copy; refused when it, or a link on its way, leads outside the copy or into a dependency shadow. */
 export const resolve = Effect.fn("ReviewScratch.resolve")(function* (snapshot: Snapshot, file: string) {
   const target = path.resolve(snapshot.root, file)
@@ -83,8 +89,7 @@ const digest = Effect.fnUntraced(function* (snapshot: ProbeSnapshot.Snapshot) {
     ].filter(Boolean))].sort()
     : []
   return yield* Effect.promise(async () => {
-    const hasher = new Bun.CryptoHasher("sha256")
-    hasher.update(`tree\0${tree}\0`)
+    const hasher = treeHasher(tree)
     for (const file of changed) {
       hasher.update(`${file}\0`)
       const copy = Bun.file(path.join(snapshot.root, file))
@@ -94,6 +99,10 @@ const digest = Effect.fnUntraced(function* (snapshot: ProbeSnapshot.Snapshot) {
     return hasher.digest("hex")
   })
 })
+
+function treeHasher(tree: string) {
+  return new Bun.CryptoHasher("sha256").update(`tree\0${tree}\0`)
+}
 
 const git = (cwd: string, args: ReadonlyArray<string>) =>
   ResearchProcess.git(cwd, args).pipe(

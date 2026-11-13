@@ -113,3 +113,12 @@ describe("request package locations", () => {
       () => ({ package: "core", directory: "modules/core" }))).toThrow("requires package app")
   })
 })
+
+test("hosted browser checks can exercise the actual release channel", () => {
+  const request = { package: "app", runner: "playwright", config: production, args: ["e2e/a.spec.ts"], env: { ORCHESTRA_CHANNEL: "prod" } }
+  expect(validateRequest(request, () => true, resolve).env).toEqual({ ORCHESTRA_CHANNEL: "prod" })
+  for (const value of ["dev", "production", "1", "strict", "prod\n", "prod\r", "prod\nSECRET=bad"]) {
+    expect(() => validateRequest({ ...request, env: { ORCHESTRA_CHANNEL: value } }, () => true, resolve)).toThrow()
+  }
+  expect(() => validateRequest({ ...request, env: { ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "0" } }, () => true, resolve)).toThrow()
+})

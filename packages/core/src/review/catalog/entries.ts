@@ -3,7 +3,8 @@ import type { ReviewCatalog } from "./index"
 import { actionlint } from "./actionlint"
 import { oxlint } from "./oxlint"
 import { languagesRest } from "./languages-rest"
-import { releaseProfile } from "./phase5"
+import { releaseChecks } from "./release-checks"
+import { phase5Options, releaseProfile } from "./phase5"
 import { phase3 } from "./phase3"
 import { phase4 } from "./phase4"
 import { engagementProfiles } from "./phase6"
@@ -12,6 +13,7 @@ import { golangci } from "./golangci"
 import { osv } from "./osv"
 import { syft } from "./syft"
 import { jscpd } from "./jscpd"
+import { cargoAudit } from "./cargo-audit"
 import { hadolint, shellcheck } from "./invoke"
 import { gosec } from "./gosec"
 import { govet } from "./govet"
@@ -34,12 +36,20 @@ const regress = { option: "probe:regress", proves: "the test stays green with th
 const race = { option: "probe:race", proves: "a race-instrumented run of the test that drives the concurrent path" }
 
 const ran = (id: string, proves: string) => ({ id, node: "lucy-review-prove-regress", options: { "*": [quote(proves), test, script] } })
-const raced = (id: string, proves: string) => ({
+const raced = (id: string, proves: string): ReviewCatalog.Catalog["classes"][number] => ({
   id,
-  node: "lucy-review-prove-race",
-  options: { "*": [quote(proves), test, script], go: [quote(proves), test, race] },
+  node: id === "concurrency.atomicity" ? "lucy-review-prove-interleave" : "lucy-review-prove-race",
+  options: id === "concurrency.atomicity"
+    ? { "*": [quote(proves), test, script], go: [quote(proves), test, race], "js-ts": [quote(proves), test, { option: "probe:interleave", proves: "the same gated schedule fails on base and passes on head" }] }
+    : { "*": [quote(proves), test, script], go: [quote(proves), test, race] },
 })
-const quoted = (id: string, proves: string) => ({ id, node: "lucy-review-prove-quote", options: { "*": [quote(proves), test, script] } })
+const quoted = (id: string, proves: string): ReviewCatalog.Catalog["classes"][number] => ({
+  id,
+  node: id === "logic.invariant" ? "lucy-review-prove-property" : "lucy-review-prove-quote",
+  options: id === "logic.invariant"
+    ? { "*": [quote(proves), test, script], "js-ts": [quote(proves), { option: "probe:property", proves: "the stated law fails on a retained shrunk input" }, test] }
+    : { "*": [quote(proves), test, script] },
+})
 const plain = (id: string, proves: string) => ({ id, node: "lucy-review-prove-quote", options: { "*": [quote(proves)] } })
 
 const DOCS = ["**/*.md", "**/*.mdx", "**/*.rst", "**/*.adoc", "docs/**", "**/docs/**"]
@@ -108,6 +118,7 @@ export const current = {
     syft.pack,
     typeAware.pack,
     jscpd.pack,
+    cargoAudit.pack,
   ],
   rules: [
     {
@@ -128,6 +139,7 @@ export const current = {
     ...typeAware.rules,
     ...zizmor.rules,
     ...jscpd.rules,
+    ...cargoAudit.rules,
   ],
   overlays: [
     {
@@ -154,6 +166,7 @@ export const current = {
     actionlint.overlay,
   ],
   lenses: [
+    releaseChecks.lens,
     {
       id: "correctness-logic",
       node: "lucy-lens-correctness-logic",
@@ -219,8 +232,11 @@ export const current = {
     },
     {
       id: "tests.weak-oracle",
-      node: "lucy-review-prove-regress",
-      options: { "*": [quote("the assertion that cannot fail for the hunk it claims to cover"), regress] },
+      node: "lucy-review-prove-mutants",
+      options: {
+        "*": [quote("the assertion that cannot fail for the hunk it claims to cover"), regress],
+        rust: [quote("the assertion that cannot fail for the hunk it claims to cover"), regress, { option: "probe:mutants", proves: "a viable changed-line mutant survives the tests" }],
+      },
     },
     {
       id: "security.boundary",
@@ -255,6 +271,8 @@ export const current = {
     { id: "probe:typecheck", rung: "probe", cost: "medium" },
     { id: "probe:script", rung: "probe", cost: "medium" },
     { id: "probe:race", rung: "probe", cost: "high" },
+    ...phase5Options,
+    ...releaseChecks.options,
   ],
   languages: [
     {
@@ -376,10 +394,10 @@ export const current = {
         probeAttempts: 2,
       },
       {
-        // Requestable; until phase 5 builds it, the route records the request and runs Standard (R3).
+        // Qualified Deep adapters, independent samples and release checks run under their own budget.
         id: "deep",
-        built: false,
-        runs: "standard",
+        built: true,
+        runs: "deep",
         report: ["P0", "P1", "P2", "P3"],
         budget: {
           lenses: { min: 3, max: 8 },

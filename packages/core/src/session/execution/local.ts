@@ -22,6 +22,12 @@ const layer = Layer.effect(
         // A coalesced wake can outlive its Session; an explicit resume reports the vanished placement to its caller.
         if (!session && !force) return
         if (!session) return yield* new SessionExecution.MissingSessionError({ sessionID })
+        // Undo remains reversible while staged. A wake admitted during its filesystem window must not promote the
+        // pending input or read the hidden history; explicit continuation reports the same busy contract.
+        if (session.revert) {
+          if (force) return yield* new SessionRunner.BusyError({ sessionID })
+          return
+        }
         return yield* SessionRunner.Service.use((runner) => runner.run({ sessionID, force })).pipe(
           Effect.provide(locations.get(session.location)),
           Effect.mapError((error) => error as SessionRunner.RunError),

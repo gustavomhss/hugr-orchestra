@@ -17,6 +17,7 @@ export function shape(input: {
   promptText: string
   promptChunkIds: string[]
   retrievalOptional: boolean
+  sense: QuestionResult["sense"]
 }): QuestionResult {
   if (input.hits === undefined || input.dropped === undefined) throw new Error("rejected")
   return {
@@ -30,5 +31,6 @@ export function shape(input: {
     promptText: input.promptText,
     promptChunkIds: input.promptChunkIds,
     retrievalOptional: input.retrievalOptional,
+    sense: input.sense,
   }
 }

@@ -25,6 +25,8 @@ const BACKOFF = [1_000, 2_000, 4_000, 8_000, 16_000, 30_000]
 const STABLE_AFTER = 60_000
 // How many of the server's last output lines a startup failure quotes.
 const FAILURE_TAIL = 15
+// UTF-16 units: even four-byte code points fit within a 16 KiB emitted segment.
+const OUTPUT_SEGMENT = 4096
 
 export async function startOwnedServe(options: {
   logger: Logger
@@ -71,15 +73,18 @@ export async function startOwnedServe(options: {
     state.closed = new Promise<void>((resolve) => child.once("close", () => resolve()))
     // An omni child learns its pid asynchronously, so the witness waits for the spawn event.
     child.once("spawn", () => options.onSpawn?.(child.pid))
-    // This child's lines only. `recent` is the shared 15-line health tail and must not decide a restart.
-    const output: string[] = []
+    // Keep a bounded witness, independent of the diagnostic tail, even across output segments.
+    const refusal = { seen: false, stdout: "", stderr: "" }
+    const phrase = "newer Orchestra version"
     const record = (stream: "stdout" | "stderr", line: string) => {
       const text = line.replaceAll(password, "[redacted]")
-      output.push(text)
+      const witness = refusal[stream] + line
+      refusal.seen ||= witness.includes(phrase)
+      refusal[stream] = witness.slice(-(phrase.length - 1))
       write(stream, text)
     }
-    forward(child.stdout, (line) => record("stdout", line))
-    forward(child.stderr, (line) => record("stderr", line))
+    forward(child.stdout, (line) => record("stdout", line), password)
+    forward(child.stderr, (line) => record("stderr", line), password)
     // A failed spawn emits error and never exit. Without this, health waits out the two-minute timeout
     // and the renderer never sees why the process did not start.
     const failed = new Promise<never>((_, reject) => {
@@ -101,7 +106,7 @@ export async function startOwnedServe(options: {
       }),
     )
     // `close` is emitted before stdout/stderr emit "end", and forward flushes a partial line only on end.
-    // Decide once both have ended, against this child's full output.
+    // Decide once both have ended, against this child's bounded refusal witness.
     const drained = { stdout: false, stderr: false, closed: false, decided: false }
     const decide = () => {
       if (drained.decided || !drained.closed || !drained.stdout || !drained.stderr) return
@@ -109,7 +114,7 @@ export async function startOwnedServe(options: {
       if (state.stopping) return
       // A database this build does not know will fail the same way on every start. Restarting only
       // hides that behind a health timeout.
-      if (output.some((line) => line.includes("newer Orchestra version"))) {
+      if (refusal.seen) {
         options.logger.error("owned serve will not restart: the database is newer than this build", { url })
         return
       }
@@ -204,16 +209,32 @@ async function poll(check: () => Promise<boolean>, signal: AbortSignal) {
   signal.throwIfAborted()
 }
 
-function forward(stream: Readable, write: (line: string) => void) {
+function forward(stream: Readable, write: (line: string) => void, password: string) {
   const buffer = { text: "" }
   stream.setEncoding("utf8")
   stream.on("data", (chunk: string) => {
-    const lines = (buffer.text + chunk).split(/\r?\n/)
-    buffer.text = lines.pop() ?? ""
-    lines.filter((line) => line.trim()).forEach(write)
+    buffer.text += chunk
+    for (;;) {
+      const newline = buffer.text.indexOf("\n")
+      // Hold a secret-length suffix until the next chunk, so redaction cannot straddle an emitted segment.
+      if (newline < 0 && buffer.text.length < OUTPUT_SEGMENT + password.length) return
+      let end = newline >= 0 && newline <= OUTPUT_SEGMENT ? newline : OUTPUT_SEGMENT
+      const secret = buffer.text.lastIndexOf(password, end)
+      if (secret >= 0 && secret < end && secret + password.length > end) end = secret
+      const line = buffer.text.slice(0, end).replace(/\r$/, "")
+      buffer.text = buffer.text.slice(end + (end === newline ? 1 : 0))
+      if (line.trim()) write(line)
+    }
   })
   stream.on("end", () => {
-    if (buffer.text.trim()) write(buffer.text)
+    while (buffer.text.length) {
+      let end = Math.min(OUTPUT_SEGMENT, buffer.text.length)
+      const secret = buffer.text.lastIndexOf(password, end)
+      if (secret >= 0 && secret < end && secret + password.length > end) end = secret
+      const line = buffer.text.slice(0, end)
+      buffer.text = buffer.text.slice(end)
+      if (line.trim()) write(line)
+    }
   })
 }
 

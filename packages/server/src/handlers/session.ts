@@ -57,6 +57,7 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
 
     const admit = (input: Parameters<SessionV2.Interface["prompt"]>[0]) =>
       session.prompt(input).pipe(
+        Effect.catchTag("Session.BusyError", operationErrors["Session.BusyError"]),
         Effect.catchTag("Session.NotFoundError", (error) =>
           Effect.fail(
             new SessionNotFoundError({
