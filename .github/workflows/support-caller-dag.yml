@@ -1,0 +1,39 @@
+name: support-caller-dag
+on:
+  push:
+    branches: [genesis-support-04-caller-dag]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic-caller-dag:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: modules/atlas
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Verify isolated branch ancestry
+        shell: bash
+        run: |
+          set -euo pipefail
+          git merge-base --is-ancestor 920794008c16169c486bbd1ca8ef8e962d83f29c HEAD
+          test "$(git branch --show-current)" = "genesis-support-04-caller-dag"
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: modules/atlas/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - name: Real caller, host and core synthetic DAG integration
+        shell: bash
+        run: |
+          set -o pipefail
+          npx vitest run packages/adapter-io/test/evaluation-maintenance-caller-dag.integration.test.ts 2>&1 | tee caller-dag.log
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: caller-dag-log-${{ github.sha }}
+          path: modules/atlas/caller-dag.log
