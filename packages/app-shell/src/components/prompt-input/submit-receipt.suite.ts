@@ -165,6 +165,81 @@ test.each([undefined, null, "default"] as const)("a removed raw model edited dur
   } finally { gate.resolve(); await sending }
 })
 
+test("a confirmed draft receipt survives post-ACK policy refusal and retries only its handoff with a removed raw choice", async () => {
+  const key = draftSessionKey(ServerScope.local, "/repo/main")
+  const entered = Promise.withResolvers<void>()
+  const gate = Promise.withResolvers<void>()
+  const retryEntered = Promise.withResolvers<void>()
+  const retryRelease = Promise.withResolvers<void>()
+  const failure = new Error("post-ACK policy write refused")
+  const atPromotion: { policy?: unknown; version?: number } = {}
+  state.sendHook = async () => { entered.resolve(); await gate.promise }
+  state.promoteProbe = () => {
+    atPromotion.policy = structuredClone(canonicalPolicies.get("session-1"))
+    atPromotion.version = policyFixture.server.sessionManagement.subagentModelsWriteVersion("session-1")
+  }
+  const real = createPromptState({ prompt: "one confirmed admission" })
+  const submit = createPromptSubmit({ ...submitInput(), prompt: real, pendingKey: () => key,
+    info: () => state.params.id ? { id: state.params.id } : undefined })
+  const sending = submit.handleSubmit(new Event("submit"))
+  const tasks: Promise<unknown>[] = [sending]
+  try {
+    await entered.promise
+    expect(promptInputs).toHaveLength(1)
+    const original = structuredClone(promptInputs[0])
+    const beforeQueries = modelExecutionInputs.length
+    const beforeVersion = policyFixture.server.sessionManagement.subagentModelsWriteVersion("session-1")
+    state.modelID = "removed-model"
+    state.variant = null
+    state.currentModelMissing = true
+    togglePending(key, "provider", "model", true)
+    const pending = pendingSnapshot(key)
+    state.policyWrite = async () => { throw failure }
+    gate.resolve()
+    await sending
+    expect(savedPolicies.at(-1)).toEqual({ sessionID: "session-1", policy: pending.policy })
+    expect(policyFixture.server.sessionManagement.subagentModelsWriteVersion("session-1")).toBeGreaterThan(beforeVersion)
+    expect(canonicalPolicies.get("session-1")).toBeUndefined()
+    expect(pendingSnapshot(key)).toEqual(pending)
+    expect(promoted).toEqual([])
+    expect(state.params.id).toBeUndefined()
+    expect(promptInputs).toEqual([original])
+    expect(createdSessions).toEqual(["/repo/main"])
+    expect(modelExecutionInputs).toHaveLength(beforeQueries)
+    expect(state.modelID).toBe("removed-model")
+    expect(state.variant).toBeNull()
+
+    state.policyWrite = async () => {}
+    state.policyWait = async () => { retryEntered.resolve(); await retryRelease.promise }
+    const retry = submit.handleSubmit(new Event("submit"))
+    tasks.push(retry)
+    await retryEntered.promise
+    expect(promoted).toEqual([])
+    expect(promptInputs).toEqual([original])
+    expect(createdSessions).toHaveLength(1)
+    expect(modelExecutionInputs).toHaveLength(beforeQueries)
+    retryRelease.resolve()
+    await retry
+    expect(atPromotion.policy).toEqual(pending.policy)
+    expect(atPromotion.version).toBe(policyFixture.server.sessionManagement.subagentModelsWriteVersion("session-1"))
+    expect(savedPolicies.at(-1)).toEqual({ sessionID: "session-1", policy: pending.policy })
+    expect(pendingSnapshot(key).revision).toBe(0)
+    expect(promptInputs).toEqual([original])
+    expect(createdSessions).toEqual(["/repo/main"])
+    expect(modelExecutionInputs).toHaveLength(beforeQueries)
+    expect(promoted).toEqual([{ directory: "/repo/main", sessionID: "session-1" }])
+    expect(promotedSelections).toEqual([{ agent: "backend", model: { providerID: "provider", modelID: "removed-model" }, variant: null }])
+    expect(state.params.id).toBe("session-1")
+    expect(real.current()[0]).toMatchObject({ content: "" })
+    expect(state.modelID).toBe("removed-model")
+    expect(state.variant).toBeNull()
+    await submit.handleSubmit(new Event("submit"))
+    expect(promptInputs).toEqual([original])
+    expect(createdSessions).toHaveLength(1)
+    expect(promoted).toHaveLength(1)
+  } finally { gate.resolve(); retryRelease.resolve(); await Promise.allSettled(tasks) }
+})
+
 // Server Solid snapshots createMemo. Positive control proves the context accessor sees this edit.
 test.skipIf(isServer)("context edit during a draft send still promotes and keeps the new context unsent", async () => {
   expect(isServer).toBe(false)

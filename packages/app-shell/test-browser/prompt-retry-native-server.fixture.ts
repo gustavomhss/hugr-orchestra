@@ -35,7 +35,7 @@ import { authorizationLayer } from "@orchestra/server/middleware/authorization"
 import { schemaErrorLayer } from "@orchestra/server/middleware/schema-error"
 import { SessionLocationMiddleware, sessionLocationLayer } from "@orchestra/server/middleware/session-location"
 import { eq } from "drizzle-orm"
-import { Context, Effect, Layer, Option } from "effect"
+import { Context, Effect, Layer, Option, Schema } from "effect"
 import { HttpRouter, HttpServer } from "effect/unstable/http"
 import { HttpApi, HttpApiBuilder } from "effect/unstable/httpapi"
 
@@ -44,7 +44,18 @@ const filename = process.argv[3]
 const ready = process.argv[4]
 if (!directory || !filename || !ready) throw new Error("Missing private prompt fixture paths")
 const stop = Promise.withResolvers<void>()
-process.once("SIGTERM", stop.resolve)
+const promptAck: { hold?: {
+  claimed: boolean; expired: boolean;
+  entered: ReturnType<typeof Promise.withResolvers<{ status: number; sessionID: string; messageID: string }>>;
+  release: ReturnType<typeof Promise.withResolvers<void>>;
+  timer?: ReturnType<typeof setTimeout>;
+} } = {}
+const releasePromptAck = () => {
+  if (!promptAck.hold) return
+  clearTimeout(promptAck.hold.timer)
+  promptAck.hold.release.resolve()
+}
+process.once("SIGTERM", () => { releasePromptAck(); stop.resolve() })
 
 // This seeds real Location state; ModelExecution.node remains the production node in locationServices.
 const catalogSeed = makeLocationNode({
@@ -62,6 +73,10 @@ const catalogSeed = makeLocationNode({
       })
       draft.model.update(ProviderV2.ID.make("provider"), ModelV2.ID.make("model"), (model) => {
         model.enabled = true
+      })
+      draft.model.update(ProviderV2.ID.make("provider"), ModelV2.ID.make("model-next"), (model) => {
+        model.enabled = true
+        model.variants = [{ id: ModelV2.VariantID.make("default") }]
       })
     })
   })),
@@ -95,20 +110,71 @@ await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
     )
   const web = HttpRouter.toWebHandler(routes, { disableLogger: true })
   yield* Effect.addFinalizer(() => Effect.promise(() => web.dispose()))
-  const inspect = () => Effect.runPromise(Effect.gen(function* () {
-    const inputs = yield* database.db.select().from(SessionInputTable).where(eq(SessionInputTable.session_id, session.id)).all()
-    const events = yield* database.db.select().from(EventTable).where(eq(EventTable.aggregate_id, session.id)).all()
-    const messages = yield* database.db.select().from(SessionMessageTable).where(eq(SessionMessageTable.session_id, session.id)).all()
-    return { session: yield* sessions.get(session.id), inputs,
+  const inspect = (sessionID = session.id) => Effect.runPromise(Effect.gen(function* () {
+    const inputs = yield* database.db.select().from(SessionInputTable).where(eq(SessionInputTable.session_id, sessionID)).all()
+    const events = yield* database.db.select().from(EventTable).where(eq(EventTable.aggregate_id, sessionID)).all()
+    const messages = yield* database.db.select().from(SessionMessageTable).where(eq(SessionMessageTable.session_id, sessionID)).all()
+    return { session: yield* sessions.get(sessionID), inputs,
       admissions: events.filter((event) => event.type === EventV2.versionedType(SessionEvent.PromptAdmitted.type, 1)), messages }
   }))
   const server = Bun.serve({ hostname: "127.0.0.1", port: 0, async fetch(request) {
-    const pathname = new URL(request.url).pathname
-    if (pathname === "/__fixture/inspect") return Response.json(await inspect())
-    if (pathname === "/__fixture/stop") { stop.resolve(); return Response.json({ ok: true }) }
-    return web.handler(request)
+    const url = new URL(request.url)
+    const pathname = url.pathname
+    if (pathname === "/__fixture/inspect") {
+      const selected = url.searchParams.get("sessionID")
+      const sessionID = selected === null ? Option.some(session.id) : Schema.decodeUnknownOption(SessionV2.ID)(selected)
+      if (Option.isNone(sessionID)) return new Response("Invalid fixture Session ID", { status: 400 })
+      return Response.json(await inspect(sessionID.value))
+    }
+    if (pathname === "/__fixture/prompt-ack/arm" && request.method === "POST") {
+      if (promptAck.hold) return new Response("Fixture hold already armed", { status: 409 })
+      const hold = { claimed: false, expired: false,
+        entered: Promise.withResolvers<{ status: number; sessionID: string; messageID: string }>(),
+        release: Promise.withResolvers<void>(), timer: undefined as ReturnType<typeof setTimeout> | undefined }
+      // The route waiter observes this rejection; teardown before that waiter must not leak a rejection.
+      void hold.entered.promise.catch(() => {})
+      promptAck.hold = hold
+      hold.timer = setTimeout(() => {
+        hold.expired = true
+        hold.entered.reject(new Error("Native fixture prompt ACK hold expired"))
+        hold.release.resolve()
+      }, 10_000)
+      return Response.json({ ok: true })
+    }
+    if (pathname === "/__fixture/prompt-ack/entered") {
+      if (!promptAck.hold) return new Response("Fixture hold not armed", { status: 409 })
+      return Response.json(await promptAck.hold.entered.promise)
+    }
+    if (pathname === "/__fixture/prompt-ack/release" && request.method === "POST") {
+      releasePromptAck()
+      return Response.json({ ok: true })
+    }
+    if (pathname === "/__fixture/stop") { releasePromptAck(); stop.resolve(); return Response.json({ ok: true }) }
+    const hold = promptAck.hold
+    const target = /^\/api\/session\/([^/]+)\/prompt$/.exec(pathname)
+    const sessionID = target ? Schema.decodeUnknownOption(SessionV2.ID)(target[1]) : Option.none()
+    const claimed = request.method === "POST" && hold && !hold.claimed && Option.isSome(sessionID)
+    if (claimed) hold.claimed = true
+    const response = await web.handler(request)
+    if (!claimed || !hold || Option.isNone(sessionID)) return response
+    if (response.status !== 200) {
+      hold.entered.reject(new Error(`Actual native prompt returned HTTP ${response.status} before held ACK`))
+      releasePromptAck()
+      return response
+    }
+    const rows = await inspect(sessionID.value)
+    if (rows.inputs.length !== 1 || rows.admissions.length !== 1) {
+      hold.entered.reject(new Error("Native fixture hold requires one actual SQL admission and event"))
+      releasePromptAck()
+      return response
+    }
+    hold.entered.resolve({ status: response.status, sessionID: sessionID.value, messageID: rows.inputs[0]!.id })
+    // The generated-client fetch is still pending: Bun.serve has not returned the actual handler Response.
+    await hold.release.promise
+    if (hold.expired) throw new Error("Native fixture prompt ACK hold expired")
+    return response
   } })
-  yield* Effect.addFinalizer(() => Effect.sync(() => server.stop(true)))
+  yield* Effect.addFinalizer(() => Effect.sync(() => { releasePromptAck(); server.stop(true) }))
   yield* Effect.promise(() => Bun.write(ready, JSON.stringify({ url: server.url.origin, directory, sessionID: session.id })))
   yield* Effect.promise(() => stop.promise)
 })))
