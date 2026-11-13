@@ -118,7 +118,7 @@
     "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43479893813",
     "source": "c9ffb56cb19050f65946b54ff9c5f799d0e6becb",
     "integratedDev": "5804b4f794ba31f49890b79565cff62b65e37725",
-    "status": "in_progress",
+    "status": "completed",
     "inputs": {
       "packages": "",
       "cold": true,
@@ -127,6 +127,74 @@
     "observedJobs": 70,
     "codeFrozen": true,
     "postDispatchDelta": "Root subsequently added test-fixture and wiring repairs for observed failures. This run qualifies only its immutable c9ffb56c source; later test source needs requalification.",
-    "ledgerUnchanged": "63/65, E10 and M13 remain open until aggregate qualification."
+    "ledgerUnchanged": "63/65, E10 and M13 remain open until aggregate qualification.",
+    "conclusion": "failure",
+    "job_conclusions": {
+      "success": 63,
+      "failure": 7,
+      "cancelled": 0
+    },
+    "non_success_jobs": [
+      {
+        "name": "e2e (linux 4/8)",
+        "id": 132073531030,
+        "conclusion": "failure"
+      },
+      {
+        "name": "unit (windows core 3/12)",
+        "id": 132074159169,
+        "conclusion": "failure"
+      },
+      {
+        "name": "unit (linux core 12/15)",
+        "id": 132074159190,
+        "conclusion": "failure"
+      },
+      {
+        "name": "unit (linux core 4/15)",
+        "id": 132074159427,
+        "conclusion": "failure"
+      },
+      {
+        "name": "unit (windows core 4/12)",
+        "id": 132074159435,
+        "conclusion": "failure"
+      },
+      {
+        "name": "unit (linux app)",
+        "id": 132074162214,
+        "conclusion": "failure"
+      },
+      {
+        "name": "unit (windows app unit)",
+        "id": 132074166934,
+        "conclusion": "failure"
+      }
+    ],
+    "subsequentFocusedGates": {
+      "wiringAndBrowserCLI": {
+        "run": 43484346251,
+        "both": "31P/94 assertions/5 own Omni spawns/0 delegated"
+      },
+      "appWiring": {
+        "run": 43485311529,
+        "both": "1P/9 assertions"
+      },
+      "thinkingStableTransport": {
+        "run": 43486973940,
+        "linux": "1P, retries0"
+      },
+      "writerAndLedger": {
+        "run": 43488702717,
+        "source": "2bb0f515b635aa3c37813021f83568f8f1fc6fae",
+        "both": "14P/125 assertions/122 own Omni spawns/0 delegated",
+        "linuxWriterMs": 198.76,
+        "windowsWriterMs": 1849.93,
+        "linux100kLedgerMs": 4464.26,
+        "windows100kLedgerMs": 8454.33,
+        "testBudgetMs": 30000,
+        "limit": "Actual full selected cohort now passes with bounded startup diagnostics; this does not establish the cause of the original silent READY timeout or qualify the complete Core suite."
+      }
+    }
   }
 }

@@ -47,3 +47,22 @@ thinking-menu E2E. Local Core/App/E2E checks use package typecheck scripts only.
 generation remain hosted. The scoped requests wait for runner room; no queue bypass is authorized.
 Complete static guards and source checks, then qualify the final integration. Preserve every failed
 snapshot and actual source vector. One draft PR1463 remains the only external delivery.
+
+## Follow-up evidence before the next aggregate
+
+The label-only thinking correction still failed43485312141: the trace shows the correct menu followed
+by SSE EOF about9ms later, recurring every250ms. The fixture now owns one actual continuously open
+transport; all idle/hover/focus/selection oracles are preserved. Gate43486973940 passed1 case, retries0.
+
+The early-exit diagnostic alone still timed out READY in43484348604 Linux, while the genuine missing-file
+negative passed. The fixture then gained a bounded2048-byte live inspection tail, fixed actor phase
+messages, and a read-only control-directory snapshot on defect. This diagnostic delta does not change
+the five source writes, ACK or deadlines. A filtered probe passed43486151874; the same complete selected
+MoveSession/operations cohort then passed43488702717 on both OS:14P/125 assertions,122 own Omni spawns
+and zero delegated per OS. Writer198.76ms Linux/1849.93ms Windows;100000-row ledger4464.26/8454.33ms,
+all under the original30000ms test budget. Do not attribute the original READY failure to a specific
+mechanism without evidence; only the current executable fixture/cohort has been qualified.
+
+Core/App/E2E typechecks passed before the final diagnostic delta; the next Core attempt was killed by
+the operating system with SIGKILL, without a type diagnostic. A single bounded-memory repeat remains
+in progress. Final completion requires successful type and static checks as well as the new aggregate.

@@ -4002,7 +4002,7 @@
     "state": "Merge complete through dev 5804b4f794; Atlas producer vector unchanged; final cold qualification pending.",
     "dev": "5804b4f794ba31f49890b79565cff62b65e37725",
     "generation": "Official Client/Atlas/configuration artifacts verified for their recorded source scopes; no manual generated-source edits.",
-    "full_epic": "43427741510 and43453802489 completed with failure. Third cold43479893813 is in progress on c9ffb56cb19050f65946b54ff9c5f799d0e6becb (70 observed jobs). No full-suite green or closure of E10/M13."
+    "full_epic": "43427741510,43453802489 and43479893813 completed with failure; third63 success/7 failure/0 cancelled. Focused wiring, transport, writer/ledger gates now pass. Final aggregate still pending; E10/M13 remain open."
   },
   "integration_history": [
     {
