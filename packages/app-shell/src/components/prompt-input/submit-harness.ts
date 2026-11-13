@@ -76,6 +76,8 @@ export const optimisticSeeded: boolean[] = []
 export const storedSessions: Record<string, Array<{ id: string; title?: string }>> = {}
 export const promoted: Array<{ directory: string; sessionID: string }> = []
 export const promotedAgents: Array<string | undefined> = []
+export const promotedSelections: Array<{ agent?: string; model?: { providerID: string; modelID: string }; variant?: string | null }> = []
+export const modelExecutionInputs: unknown[] = []
 export const sentShell: Array<{ sessionID: string; id?: string; command: string }> = []
 export const syncedDirectories: string[] = []
 export const promotedDrafts: Array<{ draftID: string; server: string; sessionId: string }> = []
@@ -113,7 +115,7 @@ export const state = {
   params: {} as { id?: string },
   search: {} as { draftId?: string },
   selected: "/repo/worktree-a",
-  variant: undefined as string | undefined,
+  variant: undefined as string | null | undefined,
   permissionServer: "server-a",
   createSessionGate: undefined as Promise<void> | undefined,
   rulesFailure: false,
@@ -135,6 +137,7 @@ export const state = {
   sendHook: async (_input: unknown) => {},
   statusObserved: (_args: unknown[]) => {},
   modelID: "model",
+  currentModelMissing: false,
   agentID: "backend",
   agentConfig: undefined as { model?: { providerID: string; modelID: string }; variant?: string } | undefined,
 }
@@ -236,6 +239,7 @@ export const clientFor = (directory: string) => {
   }
   // Explicit contract response for the fake admission hooks above; never a production eligibility fallback.
   registerSessionModelExecution(api.session, async (input) => {
+    modelExecutionInputs.push(structuredClone(input))
     if (!input.model) throw new Error("Fake admission fixture requires an exact model candidate")
     const directory = input.location?.directory ?? "/repo/main"
     return {
@@ -335,15 +339,16 @@ beforeAll(async () => {
         execution: { context: () => "controlled-submit-fixture-metadata",
           input: () => ({ model: { providerID: "provider", id: state.modelID, variant: state.variant ?? undefined } }) },
         intent: () => ({ model: { providerID: "provider", modelID: state.modelID }, variant: state.variant }),
-        current: () => ({ id: state.modelID, provider: { id: "provider" } }),
-        variant: { current: () => state.variant },
+        current: () => state.currentModelMissing ? undefined : ({ id: state.modelID, provider: { id: "provider" } }),
+        variant: { current: () => state.variant ?? undefined },
       },
       agent: {
         // A seat renamed from its default label: payloads must carry the stable id, never the label.
         current: () => ({ id: state.agentID, name: "Pikachu", ...state.agentConfig }),
       },
       session: {
-        promote(directory: string, sessionID: string, selection: { agent?: string }) {
+        promote(directory: string, sessionID: string, selection: (typeof promotedSelections)[number]) {
+          promotedSelections.push(structuredClone(selection))
           promoted.push({ directory, sessionID })
           state.promoteProbe?.()
           state.promoteStarted.resolve()
@@ -521,6 +526,8 @@ function resetSubmitHarness() {
   optimisticSeeded.length = 0
   promoted.length = 0
   promotedAgents.length = 0
+  promotedSelections.length = 0
+  modelExecutionInputs.length = 0
   promotedDrafts.length = 0
   sentPrompts.length = 0
   promptInputs.length = 0
@@ -562,6 +569,7 @@ function resetSubmitHarness() {
   state.sendHook = async () => {}
   state.statusObserved = () => {}
   state.modelID = "model"
+  state.currentModelMissing = false
   state.agentID = "backend"
   state.agentConfig = undefined
   policyWrites.length = 0
