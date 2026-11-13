@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Synthetic tests for reader error redaction; no private reader/recovery is invoked."""
+"""Synthetic tests for reader error redaction and safe failure evidence."""
 import importlib.util
 import subprocess
 import sys
@@ -7,6 +7,8 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
+import hashlib
+import json
 
 ROOT = Path(__file__).resolve().parents[1]
 LIFECYCLE = ROOT / "script" / "evaluation-reader-lifecycle.py"
@@ -47,31 +49,59 @@ class ReaderErrorRedaction(unittest.TestCase):
                 diagnostic = broker.safe_error_diagnostic(error)
                 self.assertEqual(diagnostic, expected)
                 self.assertNotIn(sentinel, diagnostic)
-                self.assertNotIn(sentinel, repr({"status": "UNKNOWN", "diagnostic": diagnostic}))
 
-    def test_failed_child_output_is_scrubbed_without_removing_unknown(self):
-        sentinel = "SYNTHETIC_SECRET_STDOUT_STDERR_08"
+    def test_failure_after_persisted_capture_keeps_forensic_digests(self):
+        sentinel = "SYNTHETIC_PRIVATE_PAYLOAD_08"
+        stdout = json.dumps({"body": sentinel, "evaluation": {"phase": "evaluation"}}).encode()
+        stderr = ("diagnostic " + sentinel).encode()
+        response = stdout
         with tempfile.TemporaryDirectory() as temp:
             run = Path(temp)
-            (run / "stdout.json").write_text(sentinel)
-            (run / "stderr.txt").write_text(sentinel)
-            broker.scrub_capture(run)
-            self.assertEqual((run / "stdout.json").read_bytes(), b"")
-            self.assertEqual((run / "stderr.txt").read_bytes(), b"")
-            stop = {"status": "UNKNOWN", "diagnostic": "reader-failure-UNKNOWN",
-                    "recovery": "EXPLICIT_REVIEW_REQUIRED"}
-            self.assertEqual(stop["status"], "UNKNOWN")
-            self.assertNotIn(sentinel, repr(stop))
+            (run / "stdout.json").write_bytes(stdout)
+            (run / "stderr.txt").write_bytes(stderr)
+            (run / "response.json").write_bytes(response)
+            (run / "process-start.json").write_text('{"identity":"synthetic"}')
+            error = RuntimeError(sentinel)
+            evidence = broker.preserve_failure_evidence(run, None, None, error,
+                {"lifecycle_state": "POSSIBLY_STARTED_TERMINATION_UNKNOWN", "state": "UNKNOWN"})
+            stored = json.loads((run / "failure-evidence.json").read_text())
+            self.assertEqual(evidence, stored)
+            self.assertEqual(stored["status"], "UNKNOWN")
+            self.assertEqual(stored["outputs"]["stdout_persisted"],
+                {"present": True, "bytes": len(stdout), "sha256": hashlib.sha256(stdout).hexdigest()})
+            self.assertEqual(stored["outputs"]["stderr_persisted"]["sha256"], hashlib.sha256(stderr).hexdigest())
+            self.assertEqual(stored["outputs"]["response_persisted"]["sha256"], hashlib.sha256(response).hexdigest())
+            self.assertTrue(stored["lifecycle_records"]["process-start.json"])
+            self.assertFalse(stored["payload_retained"])
+            for name in ("stdout.json", "stderr.txt", "response.json"):
+                self.assertEqual((run / name).read_bytes(), b"")
+            self.assertNotIn(sentinel, (run / "failure-evidence.json").read_text())
+            self.assertEqual(stored["process_outcome"]["state"], "UNKNOWN")
+
+    def test_anonymous_output_streams_are_hashed_without_payload_retention(self):
+        secret = b"SYNTHETIC_ANONYMOUS_STDERR_08"
+        with tempfile.TemporaryDirectory() as temp:
+            run = Path(temp)
+            out = tempfile.TemporaryFile()
+            err = tempfile.TemporaryFile()
+            try:
+                out.write(b"partial stdout " + secret);err.write(secret)
+                out.flush();err.flush()
+                evidence = broker.preserve_failure_evidence(run, out, err,
+                    KeyboardInterrupt("private signal detail"), {"state": "UNKNOWN"})
+                self.assertEqual(evidence["outputs"]["stdout_anonymous"]["sha256"],
+                    hashlib.sha256(b"partial stdout " + secret).hexdigest())
+                self.assertEqual(evidence["outputs"]["stderr_anonymous"]["sha256"],
+                    hashlib.sha256(secret).hexdigest())
+                self.assertNotIn(secret.decode(), (run / "failure-evidence.json").read_text())
+            finally:
+                out.close();err.close()
 
     def test_cli_failure_has_no_traceback_or_exception_payload(self):
-        sentinel = "SYNTHETIC_SECRET_TRACEBACK_08"
-        completed = subprocess.run(
-            [sys.executable, str(BROKER)],
-            text=True, capture_output=True, timeout=5,
-        )
+        completed = subprocess.run([sys.executable, str(BROKER)],
+            text=True, capture_output=True, timeout=5)
         self.assertEqual(completed.returncode, 1)
         self.assertNotIn("Traceback", completed.stderr)
-        self.assertNotIn(sentinel, completed.stdout + completed.stderr)
         self.assertIn('"status":"UNKNOWN"', completed.stderr)
         self.assertIn('"diagnostic":"reader-failure-UNKNOWN"', completed.stderr)
 
