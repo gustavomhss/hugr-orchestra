@@ -544,7 +544,13 @@ test("live events after an empty failed hydration remain available to the retry"
     emit(global("session.next.step.started", { assistantMessageID: assistantID, agent: "maestro", model }))
     emit(global("session.next.text.started", { assistantMessageID: assistantID, textID: "txt_1" }))
     emit(global("session.next.text.delta", { assistantMessageID: assistantID, textID: "txt_1", delta: "after failure" }))
-    await wait(() => content(sync)?.[0]?.type === "text")
+    // The SDK may batch the delta after text.started; prove it landed before retrying the empty history.
+    await wait(() => {
+      const part = content(sync)?.[0]
+      return part?.type === "text" && part.text === "after failure"
+    })
+    expect(content(sync)?.[0]).toMatchObject({ type: "text", text: "after failure" })
+    expect(state.reads).toBe(1)
     await sync.session.sync(sessionID)
     expect(content(sync)?.[0]).toMatchObject({ type: "text", text: "after failure" })
     expect(state.reads).toBe(2)
