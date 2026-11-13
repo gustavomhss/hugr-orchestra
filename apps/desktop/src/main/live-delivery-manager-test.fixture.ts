@@ -65,6 +65,7 @@ export async function peer(t: TestContext) {
       throw new Error("Unsupported fixture operation")
     } catch (error) {
       state.failures.push(error)
+      if (response.headersSent) { response.destroy(); return }
       if (!response.destroyed) { response.writeHead(500); response.end("FIXTURE_FAILURE") }
     }
   })
