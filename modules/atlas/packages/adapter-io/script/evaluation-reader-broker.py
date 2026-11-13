@@ -15,14 +15,43 @@ COUNTS=['index_calls','read_calls','body_bytes_total']
 sha=lambda b:hashlib.sha256(b).hexdigest()
 now=lambda:datetime.datetime.now(datetime.timezone.utc).isoformat()
 def fail(s):raise RuntimeError(s)
-def scrub_capture(run):
- # Failed attempts retain the UNKNOWN/STOP evidence, never child-controlled output.
- if run is None:return
- for name in ('stdout.json','stderr.txt'):
+def _stream_evidence(stream):
+ if stream is None:return {'present':False,'bytes':0,'sha256':None}
+ stream.flush();position=stream.tell();stream.seek(0);digest=hashlib.sha256();size=0
+ while True:
+  chunk=stream.read(65536)
+  if not chunk:break
+  digest.update(chunk);size+=len(chunk)
+ stream.seek(position)
+ return {'present':True,'bytes':size,'sha256':digest.hexdigest()}
+
+def _file_evidence(path):
+ if not path.exists():return {'present':False,'bytes':0,'sha256':None}
+ data=path.read_bytes()
+ return {'present':True,'bytes':len(data),'sha256':sha(data)}
+
+def preserve_failure_evidence(run,out_stream,err_stream,error,process_outcome):
+ if run is None:return None
+ outputs={
+  'stdout_anonymous':_stream_evidence(out_stream),
+  'stderr_anonymous':_stream_evidence(err_stream),
+  'stdout_persisted':_file_evidence(run/'stdout.json'),
+  'stderr_persisted':_file_evidence(run/'stderr.txt'),
+  'response_persisted':_file_evidence(run/'response.json'),
+ }
+ lifecycle={name:(run/name).is_file() for name in ('process-start.json','process-release.json','process-exit.json','process-spawn-stop.json','process-spawn-uncertain.json')}
+ evidence={'schema':'reader-failure-evidence/v1','status':'UNKNOWN',
+  'diagnostic':safe_error_diagnostic(error),'outputs':outputs,'lifecycle_records':lifecycle,
+  'process_outcome':process_outcome,'payload_retained':False,
+  'payload_policy':'raw child output omitted; byte counts and SHA-256 retained'}
+ write(run/'failure-evidence.json',evidence)
+ # Keep the forensic digest/length record; remove only raw child-controlled payloads.
+ for name in ('stdout.json','stderr.txt','response.json'):
   path=run/name
   try:
    with path.open('wb') as stream:stream.flush();os.fsync(stream.fileno())
   except FileNotFoundError:pass
+ return evidence
 
 def safe_error_diagnostic(error):return _lifecycle.safe_failure_diagnostic(error)
 def filebytes(p):
@@ -183,7 +212,7 @@ def main():
  configure()
  case_id=sys.argv[2];req=json.loads(sys.argv[3]);a,c,cfg,authhash=authorization(case_id);validate_request(req,c)
  _lifecycle.durable_directory(LOGS);lock=LOGS/'active.lock';_lifecycle.durable_directory(lock,exclusive=True) # sticky if any uncertainty
- safe_release=False;run=None;proc=None;anchor=None
+ safe_release=False;run=None;proc=None;anchor=None;out_stream=None;err_stream=None
  signal.signal(signal.SIGTERM,interrupted);signal.signal(signal.SIGHUP,interrupted);signal.signal(signal.SIGINT,interrupted)
  try:
   # Authorization MUST be reread after acquiring the global lock.
@@ -205,13 +234,13 @@ def main():
   policycheck(c,cfg)
   # Child-controlled bytes stay in anonymous temporary storage until exit is proven.
   # stderr is discarded; on UNKNOWN there is no named output file for a live child to keep writing.
-  with tempfile.TemporaryFile() as out,open(os.devnull,'wb') as err:
-   proc,anchor=_lifecycle.gated_spawn(argv,cwd,env,out,err,run,SETTINGS['timeout_seconds'])
-   # On timeout/interruption the BaseException path retains sticky lock and UNKNOWN.
-   _lifecycle.wait_unreaped(proc,SETTINGS['timeout_seconds'])
-   out.flush();os.fsync(out.fileno())
-   code,absence=_lifecycle.finish_group(proc,anchor)
-   out.seek(0);raw=out.read()
+  out_stream=tempfile.TemporaryFile();err_stream=tempfile.TemporaryFile()
+  proc,anchor=_lifecycle.gated_spawn(argv,cwd,env,out_stream,err_stream,run,SETTINGS['timeout_seconds'])
+  # Keep anonymous streams open through cleanup so failure evidence can be hashed after stop.
+  _lifecycle.wait_unreaped(proc,SETTINGS['timeout_seconds'])
+  out_stream.flush();err_stream.flush();os.fsync(out_stream.fileno());os.fsync(err_stream.fileno())
+  code,absence=_lifecycle.finish_group(proc,anchor)
+  out_stream.seek(0);raw=out_stream.read()
   write(run/'process-exit.json',absence)
   result=json.loads(raw) if code==0 else None
   current=ledger(c,cfg,a['ledger_name']);after=snapshot();write(run/'after.json',after)
@@ -244,14 +273,19 @@ def main():
   if proc is not None:
    try:outcome=_lifecycle.stop_group(proc,anchor)
    except BaseException as cleanup:outcome={'lifecycle_state':'POSSIBLY_STARTED_TERMINATION_UNKNOWN','state':'UNKNOWN','diagnostic':safe_error_diagnostic(cleanup),'identity':anchor}
+  # Preserve safe forensic digests before removing any raw child-controlled payload.
+  evidence=None
+  try:evidence=preserve_failure_evidence(run,out_stream,err_stream,error,outcome)
+  except BaseException:pass
   # No retry, refund, ledger mutation or lock release on any failure.
-  scrub_capture(run)
-  try:write(lock/'STOP.json',{'case':case_id,'attempt':str(run) if run else None,'status':'UNKNOWN','diagnostic':safe_error_diagnostic(error),'process':outcome,'recovery':'EXPLICIT_REVIEW_REQUIRED; no release, retry, ledger reset or automatic rollback'})
+  try:write(lock/'STOP.json',{'case':case_id,'attempt':str(run) if run else None,'status':'UNKNOWN','diagnostic':safe_error_diagnostic(error),'process':outcome,'failure_evidence':str(run/'failure-evidence.json') if evidence else None,'recovery':'EXPLICIT_REVIEW_REQUIRED; no release, retry, ledger reset or automatic rollback'})
   except BaseException:pass
   raise
  finally:
   # Only a normal confirmed exit AND completed capture can release the shared lock.
   if safe_release and proc is not None and proc.poll() is not None:lock.rmdir()
+  for stream in (out_stream,err_stream):
+   if stream is not None:stream.close()
 def entrypoint():
  try:main()
  except BaseException as error:
