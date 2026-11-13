@@ -9,6 +9,7 @@ import { useMutation } from "@tanstack/solid-query"
 import { showToast } from "@/utils/toast"
 import { useNavigate } from "@solidjs/router"
 import { batch, createEffect, createMemo, createResource, onCleanup, Show } from "solid-js"
+import { settleDefaultOpen } from "./default-open"
 import { createStore } from "solid-js/store"
 import { DialogRemoveServer } from "@/components/server/dialog-remove-server"
 import { ServerHealthIndicator, ServerRow } from "@/components/server/server-row"
@@ -50,19 +51,24 @@ function useDefaultServer(
   platform: ReturnType<typeof usePlatform>,
   language: Pick<ReturnType<typeof useLanguage>, "t">,
 ) {
-  const [defaultKey, defaultUrlActions] = createResource(
-    async () => {
-      try {
-        const key = await platform.getDefaultServer?.()
-        if (!key) return null
-        return key
-      } catch (err) {
-        showRequestError(language, err)
-        return null
-      }
-    },
-    { initialValue: null },
-  )
+  const [defaultKey, defaultUrlActions] = createResource(async () => {
+    const read = platform.getDefaultServer?.()
+    if (!read) return null
+    let value: ServerConnection.Key | null | undefined
+    const ok = await settleDefaultOpen({
+      read,
+      current: () => true,
+      apply: (next) => {
+        value = next
+      },
+      report: (error) => {
+        console.error(error)
+        showRequestError(language, error)
+      },
+    })
+    if (!ok) throw new Error("default read failed")
+    return value ?? null
+  })
 
   const canDefault = createMemo(() => !!platform.getDefaultServer && !!platform.setDefaultServer)
   const setDefault = async (key: ServerConnection.Key | null) => {
@@ -74,7 +80,16 @@ function useDefaultServer(
     }
   }
 
-  return { defaultKey: () => defaultKey.latest, canDefault, setDefault }
+  return {
+    defaultKey: () => {
+      if (defaultKey.state !== "ready" && defaultKey.state !== "refreshing") return undefined
+      return defaultKey()
+    },
+    defaultKnown: () => defaultKey.state === "ready" || defaultKey.state === "refreshing",
+    defaultFailed: () => defaultKey.state === "errored",
+    canDefault,
+    setDefault,
+  }
 }
 
 function useServerPreview(checkServerHealth: ReturnType<typeof useCheckServerHealth>) {
@@ -225,7 +240,7 @@ export function createServerManagementController(
   const platform = input.platform
   const language = input.language
   const checkServerHealth = input.checkServerHealth
-  const { defaultKey, canDefault, setDefault } = useDefaultServer(platform, language)
+  const { defaultKey, defaultKnown, defaultFailed, canDefault, setDefault } = useDefaultServer(platform, language)
   const { previewStatus } = useServerPreview(checkServerHealth)
   const lifetime = { generation: 0, disposed: false }
   onCleanup(() => {
@@ -570,6 +585,8 @@ export function createServerManagementController(
 
   return {
     defaultKey,
+    defaultKnown,
+    defaultFailed,
     canDefault,
     sortedItems,
     status: () => global.servers.health,
@@ -628,7 +645,7 @@ export function ServerConnectionList(props: { controller: ReturnType<typeof useS
                 status={props.controller.status()[key]}
                 class="flex items-center gap-3 min-w-0 flex-1"
                 badge={
-                  <Show when={props.controller.defaultKey() === ServerConnection.key(i)}>
+                  <Show when={props.controller.defaultKnown() && props.controller.defaultKey() === ServerConnection.key(i)}>
                     <span class="text-text-base bg-surface-base text-14-regular px-1.5 rounded-xs">
                       {language.t("dialog.server.status.default")}
                     </span>
@@ -657,12 +674,24 @@ export function ServerConnectionList(props: { controller: ReturnType<typeof useS
                         >
                           <DropdownMenu.ItemLabel>{language.t("dialog.server.menu.edit")}</DropdownMenu.ItemLabel>
                         </DropdownMenu.Item>
-                        <Show when={props.controller.canDefault() && props.controller.defaultKey() !== key}>
+                        <Show
+                          when={
+                            props.controller.defaultKnown() &&
+                            props.controller.canDefault() &&
+                            props.controller.defaultKey() !== key
+                          }
+                        >
                           <DropdownMenu.Item onSelect={() => props.controller.setDefault(key)}>
                             <DropdownMenu.ItemLabel>{language.t("dialog.server.menu.default")}</DropdownMenu.ItemLabel>
                           </DropdownMenu.Item>
                         </Show>
-                        <Show when={props.controller.canDefault() && props.controller.defaultKey() === key}>
+                        <Show
+                          when={
+                            props.controller.defaultKnown() &&
+                            props.controller.canDefault() &&
+                            props.controller.defaultKey() === key
+                          }
+                        >
                           <DropdownMenu.Item onSelect={() => props.controller.setDefault(null)}>
                             <DropdownMenu.ItemLabel>
                               {language.t("dialog.server.menu.defaultRemove")}
