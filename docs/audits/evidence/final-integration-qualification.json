@@ -92,5 +92,30 @@
     "Guard warnings are advice, not bypassed gates; no approval label or ignore added.",
     "Boundary checker reports91 pre-existing ledgered violations, zero new and zero stale.",
     "Controlled capture and STT ports do not prove physical hardware capture or native permission dialogs."
-  ]
+  ],
+  "ci_runner_repair": {
+    "commit": "cfe68154d2",
+    "failed_provisioning_run": 43416897905,
+    "job": 131856956729,
+    "annotation": "The configuration macos-14-arm64-us-default is not supported",
+    "change": "Only macos-14 to macos-15 in omni-cli-smoke matrix; all test steps and assertions unchanged",
+    "independent_source_review": {
+      "reviewer": "ui_recovery",
+      "verdict": "APPROVE"
+    },
+    "hosted_requalification": "pending"
+  },
+  "architecture_export_followup": {
+    "commit": "6f977bbe1b",
+    "focused_run": 43416806305,
+    "status": "pending",
+    "runtime_changed": false,
+    "oracles_changed": false
+  },
+  "m13_final_pure_ipc": {
+    "run": 43416804061,
+    "status": "success",
+    "cases_per_os": 16,
+    "note": "Current IPC pure-leaf dependency graph; independent detailed receipt pending integration."
+  }
 }
