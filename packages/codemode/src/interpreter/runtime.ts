@@ -3343,6 +3343,10 @@ export const executeWithLimits = <const Tools extends Record<string, unknown>>(
   searchIndex: ToolRuntime.DiscoveryPlan["searchIndex"],
 ): Effect.Effect<Result, never, Services<Tools>> =>
   Effect.suspend((): Effect.Effect<Result, never, Services<Tools>> => {
+    const deadline = limits.timeoutMs === undefined ? undefined : performance.now() + limits.timeoutMs
+    const guard = Effect.suspend(() =>
+      deadline !== undefined && performance.now() >= deadline ? Effect.never : Effect.void,
+    )
     const hooks = {
       ...(options.onToolCallStart === undefined ? {} : { onToolCallStart: options.onToolCallStart }),
       ...(options.onToolCallEnd === undefined ? {} : { onToolCallEnd: options.onToolCallEnd }),
@@ -3352,35 +3356,43 @@ export const executeWithLimits = <const Tools extends Record<string, unknown>>(
       limits.maxToolCalls,
       searchIndex,
       hooks,
+      guard,
     )
     const logs: Array<string> = []
     const logged = () => (logs.length > 0 ? { logs: [...logs] } : {})
 
-    if (options.code.trim().length === 0) {
-      return Effect.succeed({
-        ok: false,
-        error: { kind: "ParseError", message: "Code cannot be empty." },
-        toolCalls: [...tools.calls],
-      })
-    }
-
     const operation = Effect.gen(function* () {
+      if (options.code.trim().length === 0) {
+        return {
+          ok: false,
+          error: { kind: "ParseError", message: "Code cannot be empty." },
+          toolCalls: [...tools.calls],
+        } satisfies Result
+      }
       const program = parseProgram(options.code)
       const interpreter = new Interpreter<Services<Tools>>(tools.invoke, tools.keys, logs)
       const value = yield* interpreter.run(program)
       const result = copyOut(copyIn(value, "Execution result"), true) as DataValue
-      return {
+      const success = {
         ok: true,
         value: result,
         ...logged(),
         toolCalls: [...tools.calls],
       } satisfies Result
+      return limits.maxOutputBytes === undefined ? success : boundOutput(success, limits.maxOutputBytes)
     }).pipe((program) => {
       const timeoutMs = limits.timeoutMs
-      if (timeoutMs === undefined) return program
-      return program.pipe(
+      if (deadline === undefined) return program
+      return Effect.gen(function* () {
+        // Start the race's timer before parsing or a synchronous first host activity can run.
+        yield* Effect.yieldNow
+        const outcome = yield* Effect.exit(program)
+        if (Exit.isFailure(outcome) && Cause.hasInterruptsOnly(outcome.cause)) return yield* outcome
+        yield* guard
+        return yield* outcome
+      }).pipe(
         Effect.timeoutOrElse({
-          duration: timeoutMs,
+          duration: Math.max(0, deadline - performance.now()),
           orElse: () =>
             Effect.succeed({
               ok: false,
@@ -3403,7 +3415,9 @@ export const executeWithLimits = <const Tools extends Record<string, unknown>>(
               toolCalls: [...tools.calls],
             } satisfies Result),
       ),
-      Effect.map((result) => (limits.maxOutputBytes === undefined ? result : boundOutput(result, limits.maxOutputBytes))),
+      Effect.map((result) =>
+        result.ok || limits.maxOutputBytes === undefined ? result : boundOutput(result, limits.maxOutputBytes),
+      ),
     )
   })
 
