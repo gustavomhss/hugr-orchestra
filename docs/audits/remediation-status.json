@@ -2068,10 +2068,36 @@
       "id": "L9",
       "severity": "P2",
       "owner": "lead",
-      "status": "planned_unverified",
-      "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "751067c627",
+        "8cc1a85090",
+        "a3ea655858"
+      ],
+      "evidence": [
+        {
+          "kind": "actual_paired_writer_red_green_both_os",
+          "runs": [
+            "43388260391",
+            "43388297401"
+          ],
+          "result": "Same exact tests/fixture. PerOS baseline3P3F28assertions versus final6P0F42; real5writes ACK after childexit0 inside awaited durable projector precedes oldcleanup. Full Core runtime993blobvectors differ only move-session.ts; 992others unchanged. Earlier notification/ACK-watch attempts remain historical and are not claimed deterministic RED."
+        },
+        {
+          "kind": "actual_http_and_official_sdk_generation",
+          "runs": [
+            "43382931356",
+            "43382932112"
+          ],
+          "result": "HTTP3P0F16assertions eachOS. Official Client generate twice, installed Promise/Effect and codegen passed;258inputs and exact57entry ZIP/56outputs verified, produced bytes already installed. No manual generated edit."
+        },
+        {
+          "kind": "types_static_cold_review",
+          "result": "Core/Protocol/Server/TUI package types0, repeated currentCoremetadata types0. Independent coldsource+projector fixture reviews APPROVE. Rootguards78rules554paths0gate7advice0errors; boundaries0new0stale; spawn0. Full epic remains final scope."
+        }
+      ],
+      "remaining": "Closed by deliberate source retention for moveChanges=true: copy captured changes and move Session, preserve source files/index and late external writes. Protocol, TUI carry wording and user guide agree. No atomic multi-file capture, destination conflict elimination or apply+publication transaction claim; false/omitted transfer unchanged."
     },
     {
       "id": "L10",
