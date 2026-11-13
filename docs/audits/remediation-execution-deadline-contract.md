@@ -36,3 +36,9 @@ The public tool-tree type accepts described tools, so do not widen it or cast ra
 ## Later native-operation condition
 
 The isolated native-operation stage must capture its complete outcome, join the owned helper Scope, release its own busy latch, then execute this guard **before** turning any native success or native error into a catchable interpreter value. A post-reply guard must never wait for its own latch. The guard at host entry will also wait for the per-execution native latch, then reevaluate the absolute deadline. Only the child scope is new; host tool Scopes remain unchanged. The lead must freeze the exact wire, typed leaf port and acceptance before authorizing that later stage.
+
+## Qualified preparatory implementation
+
+The source stage is integrated through `ed27b27f94`. [The complete current CodeMode package gate](https://github.com/gustavomhss/hugr-orchestra/actions/runs/43345280622) passes379 cases/1210 assertions on each of Linux and Windows across all10 current files. This comprises269 original runtime cases,89 private-parser cases and21 new deadline cases; the earlier rejected whole-Worker prototype's280 included11 prototype-only cases absent here. No current package case was excluded. Original100ms, eager parallelism, Scope, pure caller interruption and outcome barriers pass. Package typecheck and Root guard/boundary/spawn checks pass. Root independently verified logs, actual snapshot blobs and whole-package tree identity.
+
+This qualifies the absolute deadline guard stage. It does not close E10: isolated native operations, their typed provider, metadata representation and the original CPU acceptance still require implementation and proof.

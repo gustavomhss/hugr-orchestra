@@ -428,6 +428,19 @@
           "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43340984879",
           "snapshot": "b1875cb9e4f9bbfcabb4f76dcf023931ff7faf7b",
           "result": "Corrected3 BOTH2pass1realRED17assertions: wait for actual canonical response preserves exactonequery/disabledrow; actualKobalte keyboard Enter preserves disabled/directcallback/high/default corrections. RemainingrealRED: reselecting checked Modeldefault suppresses callback, rawundefined never becomesexplicitnull. Root+Elon approve2lineSharedUI per-itemonSelect fix, not yet applied. Five additional controlled ACK/raw-intent/policy-refusal cases plus actual SERVER-heldSQL-committed true-draft HTTP case authored/coldapproved; App type0 atb14 (browserfixtures excluded). Runtime acceptance pending; no production ACK or AFTERbenchmark claim."
+        },
+        {
+          "kind": "app_consumers_final_green_before_tui_completion",
+          "source": "6bbc92c20f2dd4f3668812ad7749f6e29c0a8165",
+          "runs": [
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43353090848",
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43353092858"
+          ],
+          "snapshots": [
+            "6f5fb04ea840c576db92d44086e8f761eed892eb",
+            "71c08b7d9ccb80a0d8aaf9645a3c4015ebb50606"
+          ],
+          "result": "Both OS A114pass/0fail849assertions/5Omni; B outer11pass34assertions plus browser3pass15assertions, both isolated real children exit0. Existing wrapper hides successful child stdout:90/110 are static registrations, not independently emitted runtime counts. Actual draft HTTP200+SQL durable admission, later model/policy edits, original POST preserved, current policy ACK and raw handoff/no second POST pass. Root independently downloaded alljobs/raw and compared52 owned path blobs across both snapshots (104 exact comparisons). App and SharedUI package types0. Six original TUI key/frame witnesses and Windows real atomic-file EPERM remain unresolved; context14 separately green. No AFTER benchmark or aggregate UI integration claimed."
         }
       ],
       "remaining": "Core/host/API and literal variant identity are integrated and verified in scoped hosted gates. Consumer correction freeze/cold review, Client/SessionUI/App/TUI types, full consumer/E1/owner regressions and production AFTER benchmark remain required. Whole E6 stays open. Historical stored default strings are preserved literally; ambiguous old aliases are not rewritten."
@@ -3775,5 +3788,20 @@
     },
     "conflicts": "G2 Core DB export only; E6 Core model/host then wire/UI; H6 MCP/Registry/Config readDocument; releases workflow/tools. Shared docs owned by root. Client generation serialized, no writer currently active.",
     "checks": "globally serial typechecks GOMAXPROCS=2; hosted tests only; full epic suite once final scope"
+  },
+  "ci_runner_repair": {
+    "commit": "a6022d9922",
+    "old_arm_run": "43353582325",
+    "failure": "Runner rejected unsupported macos-14-arm64-us-default before any test/build/architecture witness; cleanup success. Not product RED.",
+    "source": "https://github.com/actions/runner-images/blob/main/README.md",
+    "change": "Update only ARM/all selectors macos-14 to macos-15 in workflow and shared request map; two existing exact-host test literals updated; Intel and architecture gate unchanged.",
+    "parser_control": {
+      "run": "43354069467",
+      "pass_count": 39,
+      "fail_count": 0,
+      "assertions": 211,
+      "omni": "not applicable",
+      "scope": "Scoped hosted Linux existing request/parser/matrix/report tests."
+    }
   }
 }
