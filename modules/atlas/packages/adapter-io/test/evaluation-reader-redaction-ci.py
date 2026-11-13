@@ -142,6 +142,14 @@ class ReaderErrorRedaction(unittest.TestCase):
                 self.assertEqual(evidence["outputs"]["stderr_anonymous"]["sha256"],
                     hashlib.sha256(secret).hexdigest())
                 self.assertNotIn(secret.decode(), (run / "failure-evidence.json").read_text())
+                retained = run / "private-failure-evidence"
+                self.assertEqual((retained / "stdout-anonymous.bin").read_bytes(), b"partial stdout " + secret)
+                self.assertEqual((retained / "stderr-anonymous.bin").read_bytes(), secret)
+                self.assertEqual((retained / "stdout-anonymous.bin").stat().st_mode & 0o777, 0o600)
+                metadata = evidence["payload_retention"]["streams"]
+                self.assertEqual(metadata["stdout-anonymous"]["sha256"],
+                    hashlib.sha256(b"partial stdout " + secret).hexdigest())
+                self.assertFalse(metadata["stdout-anonymous"]["complete"])
             finally:
                 out.close();err.close()
 
