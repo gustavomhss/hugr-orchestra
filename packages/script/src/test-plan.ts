@@ -44,6 +44,7 @@ export function shardCount(seconds: number, target: number, margin: number) {
 // Size from the larger of the measured total and current file weights, scaled by platform overhead.
 export function packageShards(timings: Timings, directory: string, platform: Platform) {
   if (directory === "apps/desktop") return desktopAnchors.length
+  if (directory === "modules/atlas/boundary") return platform === "windows" ? 2 : 1
   const total = timings.totals[directory]?.[platform]
   if (total === undefined) return 1
   const weights = weigh(directory, timings.files[`${directory}:${platform}`] ?? {}, total, UNTIMED_FLOOR, timings.reserves?.[`${directory}:${platform}`])
@@ -219,6 +220,8 @@ function plan(timings: Timings) {
   // Validate the current Desktop discovery and all three real controls before emitting matrix entries.
   desktopBins(timings, "linux")
   desktopBins(timings, "windows")
+  if (plannedBins(timings, "modules/atlas/boundary", "windows").some((bin) => bin.names.length === 0))
+    throw new Error("Windows Boundary selected an empty shard")
   const linuxCore = packageShards(timings, "packages/core", "linux")
   const windowsCore = packageShards(timings, "packages/core", "windows")
   const unit = [
@@ -250,14 +253,11 @@ export function coreShards(name: Platform, host: string, count: number) {
   }))
 }
 
-// The package lanes. Core is sharded by time above; these stay fixed and are sized from the round 2 epic run (seconds of test
-// time, Linux / Windows): app 283 / 301, cli 223 / 177, server 37 / 65, the four small clients 38 / 39, and `atlas-boundary`,
-// whose one generator test takes about 210 / 294 s and so gets a lane of its own. `@orchestra/relay` has its own turbo
-// lane on both platforms: its package tests took over 6 minutes inside the libs complement. The libs lane is the
-// complement of every claimed package, so a package added later lands in it instead of in no lane. Repo-wide gates and
-// the Relay pytest suite are not package tests: they share the Linux gates lane and share it with no bulk package (the
-// lane that carried them with the other packages ran past the 10-minute limit). The legacy rollback proof rides in the
-// Windows atlas lane beside the process query proof, for the same reason.
+// Core is sharded by measured time above. Linux keeps its original package/proof lanes. Windows CLI, Server and
+// clients have separate clocks after cold 43453802489 exhausted the combined job before CLI started. Boundary's
+// dominant producer file gets one of two bins; process-query and rollback have an independent lane. Package scopes
+// stay disjoint except those explicit file partitions. The libs complement still owns future packages. Relay and
+// repo gates keep their existing lanes; neither shares a bulk package's clock.
 export function packageLanes(name: Platform, host: string) {
   const linux = name === "linux"
   const claimed = ["core", "cli", "app", "server", "sdk-next", "client", "tui", "session-ui", "atlas-boundary", "relay", "desktop", ...(linux ? [] : ["script"])].map((entry) => `@orchestra/${entry}`)
@@ -275,12 +275,19 @@ export function packageLanes(name: Platform, host: string) {
   })
   return [
     lane("app", "app", filters(["app"]), { electron: linux }),
-    lane("cli", "cli, server, clients", filters(["cli", "server", "sdk-next", "client", "tui", "session-ui"]), { electron: linux }),
-    lane("atlas", linux ? "atlas boundary" : "atlas boundary, process query, rollback", filters(["atlas-boundary"]), {
-      electron: linux,
-      hosted: !linux,
-      rollback: !linux,
-    }),
+    ...(linux
+      ? [lane("cli", "cli, server, clients", filters(["cli", "server", "sdk-next", "client", "tui", "session-ui"]), { electron: linux })]
+      : [
+          lane("cli", "cli", filters(["cli"])),
+          lane("server", "server", filters(["server"])),
+          lane("clients", "clients, SDK, TUI", filters(["client", "sdk-next", "tui", "session-ui"])),
+        ]),
+    ...(linux
+      ? [lane("atlas", "atlas boundary", filters(["atlas-boundary"]), { electron: linux, hosted: false, rollback: false })]
+      : [
+          ...[1, 2].map((index) => lane(`atlas-${index}`, `atlas boundary ${index}/2`, filters(["atlas-boundary"]), { boundaryShard: `${index}/2` })),
+          { name, host, part: "windows-process", label: "process query, rollback", hosted: true, rollback: true },
+        ]),
     lane("relay", "relay", "--filter=@orchestra/relay"),
     ...[1, 2, 3].map((index) => lane(`desktop-bun-${index}`, `desktop Bun ${index}/3`, filters(["desktop"]), { desktop: "bun", desktopShard: `${index}/3`, electron: linux })),
     lane("desktop-node", "desktop Node", filters(["desktop"]), { desktop: "node", electron: linux }),
@@ -330,16 +337,17 @@ function refresh(timings: Timings, directory: string | undefined) {
     process.exit(2)
   }
   const reports = (readdirSync(directory, { recursive: true }) as string[]).filter((file) =>
-    /(^|[\\/])(linux|windows)-(?:core-\d+(?:-watcher)?|(?:packages|windows)-desktop-bun-\d+)\.xml$/.test(file),
+    /(^|[\\/])(linux|windows)-(?:core-\d+(?:-watcher)?|(?:packages|windows)-desktop-bun-\d+|windows-atlas-\d+)\.xml$/.test(file),
   )
   if (reports.length === 0) {
-    console.error(`no Core or Desktop JUnit report under ${directory}`)
+    console.error(`no Core, Desktop or Boundary JUnit report under ${directory}`)
     process.exit(1)
   }
   const measured = new Map<string, Record<string, number>>()
   for (const report of reports) {
     const platform = path.basename(report).startsWith("linux") ? "linux" : "windows"
-    const packageDirectory = path.basename(report).includes("desktop-bun-") ? "apps/desktop" : "packages/core"
+    const packageDirectory = path.basename(report).includes("desktop-bun-") ? "apps/desktop"
+      : path.basename(report).includes("windows-atlas-") ? "modules/atlas/boundary" : "packages/core"
     const key = `${packageDirectory}:${platform}`
     const files = measured.get(key) ?? {}
     for (const [file, seconds] of suiteTimes(readFileSync(path.join(directory, report), "utf8"))) files[file] = Number(seconds.toFixed(2))

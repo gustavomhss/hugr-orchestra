@@ -1216,6 +1216,24 @@
       "src/renderer/zoom-failure.test.ts": 0.0074,
       "test/live-plist.test.ts": 0.0017,
       "test/native/workspace-proof.test.ts": 0.1395
+    },
+    "modules/atlas/boundary:linux": {
+      "test/build.test.ts": 221.07099,
+      "test/cas-repair.test.ts": 0.08089,
+      "test/catalog.test.ts": 0.00431,
+      "test/memory-decision-atomicity.test.ts": 0.03328,
+      "test/memory-decision-receipts.test.ts": 0.39842,
+      "test/scanner-clock.test.ts": 11.2341,
+      "test/surface.test.ts": 0.01056
+    },
+    "modules/atlas/boundary:windows": {
+      "test/build.test.ts": 229.4554,
+      "test/cas-repair.test.ts": 1.07471,
+      "test/catalog.test.ts": 0.00531,
+      "test/memory-decision-atomicity.test.ts": 2.25033,
+      "test/memory-decision-receipts.test.ts": 43.69891,
+      "test/scanner-clock.test.ts": 11.31099,
+      "test/surface.test.ts": 0.06584
     }
   },
   "totals": {
@@ -1226,6 +1244,10 @@
     "apps/desktop": {
       "linux": 589.9823,
       "windows": 589.9823
+    },
+    "modules/atlas/boundary": {
+      "linux": 232.83255,
+      "windows": 287.86149
     }
   },
   "reserves": {
@@ -1249,6 +1271,42 @@
         "cases": 11,
         "seconds": 137.33
       }
+    },
+    "modules/atlas/boundary": {
+      "run": "43446942835",
+      "snapshot": "149bbefea1bd7f5acdea6956c55beb95671d3328",
+      "method": "Sum real printed passing-case durations by file on each platform. Not file wall time: excludes module/load/cleanup overhead. Existing one-second per-file scheduling floor remains. Windows split fixed at two bins; Linux package lane unchanged.",
+      "platforms": {
+        "linux": {
+          "job": "131958754181",
+          "rawSHA256": "08182a61f4562e1a915fb31006acb53f45a44ba9c71a570b938f675071e047a4",
+          "observedCases": {
+            "test/build.test.ts": 1,
+            "test/cas-repair.test.ts": 7,
+            "test/catalog.test.ts": 3,
+            "test/memory-decision-atomicity.test.ts": 3,
+            "test/memory-decision-receipts.test.ts": 57,
+            "test/scanner-clock.test.ts": 1,
+            "test/surface.test.ts": 2
+          },
+          "caseTotal": 74
+        },
+        "windows": {
+          "job": "131958754727",
+          "rawSHA256": "1c7aabafe54b97143549cf25008220694daf4b67ca749df5ad0d3e90a285556f",
+          "observedCases": {
+            "test/build.test.ts": 1,
+            "test/cas-repair.test.ts": 7,
+            "test/catalog.test.ts": 3,
+            "test/memory-decision-atomicity.test.ts": 3,
+            "test/memory-decision-receipts.test.ts": 57,
+            "test/scanner-clock.test.ts": 1,
+            "test/surface.test.ts": 2
+          },
+          "caseTotal": 74
+        }
+      },
+      "coldLimit": "43453802489 Windows Boundary emitted no terminal totals before inclusive job cancellation; do not treat its340s active step as measured per-file times or successful74-case execution."
     }
   }
 }

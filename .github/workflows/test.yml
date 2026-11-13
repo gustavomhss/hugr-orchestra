@@ -433,6 +433,21 @@ jobs:
             GITHUB_ACTIONS=false bun turbo run test:bun --filter=@orchestra/desktop --log-order=stream -- "${files[@]/#/./}" "${report[@]}"
             exit 0
           fi
+          # Boundary's existing test task keeps its default 30-second per-test limit. The heavy producer
+          # file owns one Windows bin; the remaining files own the other. Proof steps have their own lane.
+          if [ -n "$BOUNDARY_SHARD" ]; then
+            mapfile -t files < <(bun packages/script/src/test-plan.ts shard modules/atlas/boundary "$(tr '[:upper:]' '[:lower:]' <<< "$RUNNER_OS")" "${BOUNDARY_SHARD%/*}" "${BOUNDARY_SHARD#*/}")
+            [ -n "${files[0]:-}" ] || { echo "::error::shard $PART selects no Boundary test file"; exit 1; }
+            echo "shard $PART runs ${#files[@]} Boundary files"
+            printf '%s\n' "${files[@]}" >&2
+            report=()
+            if [ "$COLD" = "true" ]; then
+              mkdir -p "$RUNNER_TEMP/junit"
+              report=(--reporter=junit "--reporter-outfile=$RUNNER_TEMP/junit/$(tr '[:upper:]' '[:lower:]' <<< "$RUNNER_OS")-$PART.xml")
+            fi
+            GITHUB_ACTIONS=false bun turbo test --filter=@orchestra/atlas-boundary --log-order=stream -- "${files[@]/#/./}" "${report[@]}"
+            exit 0
+          fi
           # Core is sharded on both systems: shard i/n takes the i-th bin of the time-balanced split (packages/script/src/test-plan.ts).
           # The plan job and this step read the same inputs, so the n shards cover every test file once.
           if [ -n "$SHARD" ]; then
@@ -517,6 +532,7 @@ jobs:
           SHARD: ${{ matrix.shard }}
           DESKTOP: ${{ matrix.desktop }}
           DESKTOP_SHARD: ${{ matrix.desktopShard }}
+          BOUNDARY_SHARD: ${{ matrix.boundaryShard }}
           COLD: ${{ inputs.cold }}
           PACKAGES: ${{ inputs.packages }}
           ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
@@ -532,7 +548,7 @@ jobs:
 
       # A cold run keeps the JUnit reports; `bun packages/script/src/test-plan.ts refresh <dir>` folds them into packages/script/src/test-timings.json.
       - name: Upload JUnit timings
-        if: always() && inputs.cold && (matrix.shard || matrix.desktopShard)
+        if: always() && inputs.cold && (matrix.shard || matrix.desktopShard || matrix.boundaryShard)
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: junit-${{ runner.os }}-${{ matrix.part }}
