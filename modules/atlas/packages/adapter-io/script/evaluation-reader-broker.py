@@ -15,6 +15,16 @@ COUNTS=['index_calls','read_calls','body_bytes_total']
 sha=lambda b:hashlib.sha256(b).hexdigest()
 now=lambda:datetime.datetime.now(datetime.timezone.utc).isoformat()
 def fail(s):raise RuntimeError(s)
+def scrub_capture(run):
+ # Failed attempts retain the UNKNOWN/STOP evidence, never child-controlled output.
+ if run is None:return
+ for name in ('stdout.json','stderr.txt'):
+  path=run/name
+  try:
+   with path.open('wb') as stream:stream.flush();os.fsync(stream.fileno())
+  except FileNotFoundError:pass
+
+def safe_error_diagnostic(error):return _lifecycle.safe_failure_diagnostic(error)
 def filebytes(p):
  if p.is_symlink() or not p.is_file() or p.stat().st_nlink!=1:fail('unsafe-file:'+str(p))
  return p.read_bytes()
@@ -228,12 +238,22 @@ def main():
   outcome={'lifecycle_state':'GATE_OR_RELEASE_STATE_SEE_DURABLE_RECORDS','state':'no-handle-returned','registration':str(run/'process-start.json') if run else None}
   if proc is not None:
    try:outcome=_lifecycle.stop_group(proc,anchor)
-   except BaseException as cleanup:outcome={'lifecycle_state':'POSSIBLY_STARTED_TERMINATION_UNKNOWN','state':'UNCERTAIN','error':str(cleanup),'identity':anchor}
+   except BaseException as cleanup:outcome={'lifecycle_state':'POSSIBLY_STARTED_TERMINATION_UNKNOWN','state':'UNKNOWN','diagnostic':safe_error_diagnostic(cleanup),'identity':anchor}
   # No retry, refund, ledger mutation or lock release on any failure.
-  try:write(lock/'STOP.json',{'case':case_id,'attempt':str(run) if run else None,'error':str(error),'process':outcome,'recovery':'EXPLICIT_REVIEW_REQUIRED; no release, retry, ledger reset or automatic rollback'})
+  scrub_capture(run)
+  try:write(lock/'STOP.json',{'case':case_id,'attempt':str(run) if run else None,'status':'UNKNOWN','diagnostic':safe_error_diagnostic(error),'process':outcome,'recovery':'EXPLICIT_REVIEW_REQUIRED; no release, retry, ledger reset or automatic rollback'})
   except BaseException:pass
   raise
  finally:
   # Only a normal confirmed exit AND completed capture can release the shared lock.
   if safe_release and proc is not None and proc.poll() is not None:lock.rmdir()
-if __name__=='__main__':main()
+def entrypoint():
+ try:main()
+ except BaseException as error:
+  # Suppress Python traceback/exception repr, which can disclose argv and envelopes.
+  for sig in (signal.SIGTERM,signal.SIGINT,signal.SIGHUP):
+   try:signal.signal(sig,signal.SIG_IGN)
+   except (ValueError,OSError):pass
+  sys.stderr.write(json.dumps({'status':'UNKNOWN','diagnostic':safe_error_diagnostic(error)},separators=(',',':'))+'\\n')
+  raise SystemExit(1)
+if __name__=='__main__':entrypoint()
