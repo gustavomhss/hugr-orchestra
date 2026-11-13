@@ -667,7 +667,8 @@
         "816e98492e",
         "a4a68c5f1d",
         "5e74c47dc6",
-        "ed27b27f94"
+        "ed27b27f94",
+        "753406a957"
       ],
       "evidence": [
         {
@@ -796,9 +797,21 @@
           "snapshot": "c146351148a61aee7bdbe45e3aae71fcd908e3a8",
           "source": "8355a3b591832155a1a66761dc5df4eb1129c558",
           "result": "Both OS379pass/0fail1210assertions across all10 current package files:269 original runtime cases,89 private parser and21 deadline acceptance. Earlier rejected Worker prototype280 included11 prototype cases absent from this tree; no current case excluded. All original100ms, eager parallelism, Scope and pure caller interruption controls pass. Root independently verified jobs/raw, snapshot blobs and whole CodeMode tree equal integrateded27. CodeMode type0, Root guards/boundaries/spawn0. Preparatory absolute deadline guards only; native regex still requires isolated operation wiring."
+        },
+        {
+          "kind": "hardened_macos_arm_intel_capability_integrated_green",
+          "runs": [
+            "43354169059",
+            "43353582278"
+          ],
+          "snapshots": [
+            "81fadc842f9e6314b5ec6e88a3252ccc1bfa2d68",
+            "fd87bae09e51a27ceb542ddb0a4a488473c3a606"
+          ],
+          "result": "Both actual macOS architectures5pass/0fail177assertions/Omni5, wrappers/cleanup0; child Bun1.3.14. Source and compiled CPU helper kill/fullScope/independent PID absence about1.518\u20131.534s, pidPolls0, no CPU_DONE/watchdog/canaries. Root independently downloaded alljobs/raw and checked2 exact blobs per snapshot plus all11 structured records perOS. Intel architecture is bound by the executed unique compileTarget branch and manifest, not nominal runner label; direct request.json echo is not retained in normal Core jobs. Earlier ARM macos14 unsupported runner failure preserved, never product RED. Evidence/e10-macos-capability.json records provenance."
         }
       ],
-      "remaining": "Private parser, hardened Linux/Windows source+compiled helper capability and absolute execution deadline stage verified and integrated. Worker prototype rejected, absent. macOS capability, typed native codec/factory/interpreter representation and original CPU acceptance remain open. No general parent CPU preemption or whole E10 closure."
+      "remaining": "Private parser, hardened Linux/Windows source+compiled helper capability and absolute execution deadline stage verified and integrated. Worker prototype rejected, absent. Typed native codec/factory/interpreter representation and original CPU acceptance remain open. No general parent CPU preemption or whole E10 closure."
     },
     {
       "id": "E11",
