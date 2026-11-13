@@ -4,7 +4,7 @@ import { evaluationRuntimeIdentity } from "./evaluation-runtime-identity.js"
 import { posix } from "node:path"
 import { asNodeKey, id } from "@atlas/kernel"
 import type { Hash } from "@atlas/contracts"
-import { OWNERSHIP_ADMISSION_CRITERIA, readOwnership, isEvaluationOwnershipManifest } from "@atlas/knowledge"
+import { OWNERSHIP_ADMISSION_CRITERIA, isEvaluationOwnershipManifest } from "@atlas/knowledge"
 import type { GroundedFact, EvaluationOwnershipContract, EvaluationOwnershipManifest, EvaluationOwnershipReview, EvaluationOwnershipReceipt } from "@atlas/knowledge"
 import { prepareNativePackage } from "./genesis-native.js"
 import type { NativeCandidate, PreparedNativePackage } from "./genesis-native.js"
@@ -15,6 +15,7 @@ import { loadEvaluationAccess, evaluationPolicyUrl } from "./ownership-evaluatio
 import { evaluationOwnershipClaim } from "./ownership-access.js"
 import { validateEvaluationBinding, evaluationBindingUrl } from "./genesis-evaluation-binding.js"
 import { ownershipInput } from "./ownership-input.js"
+import { readEvaluationAdmission } from "./evaluation-admission-read.js"
 
 export type EvaluationCandidate = Omit<NativeCandidate, "kind" | "version" | "contract" | "criteria" | "entries"> & {
   kind: "genesis-evaluation-candidate"; version: 2; phase: "evaluation"; plan_path: string; runtime_identity: Record<string, string>
@@ -167,10 +168,8 @@ async function finishEvaluationAdmission(repoPath: string, fresh: PreparedEvalua
   const manifest: EvaluationOwnershipManifest = { kind: "ownership-manifest", version: 2, scope: fresh.candidate.scope, entries, roots: fresh.candidate.roots,
     evaluation: fresh.candidate.evaluation, evaluationCandidate: fresh.candidate_id, generation: access.context.generation }
   const ownership = nativePut(store, manifest)
-  for (const entry of entries) {
-    const result = readOwnership(store, ownership, { scope: manifest.scope, key: entry.key, maxBytes: Number.MAX_SAFE_INTEGER }, (key) => ownershipInput(root, key), access.context)
-    if (result.kind === "hold") return { kind: "hold" as const, phase: "evaluation", refusal: result }
-  }
+  const result = readEvaluationAdmission(store, ownership, manifest.scope, entries.map((entry) => entry.key), (key) => ownershipInput(root, key), access.context)
+  if (result.kind === "hold") return { kind: "hold" as const, phase: "evaluation", refusal: result }
   const { composeRuntime } = await import("./compose.js")
   const { deriveGroundingAxes } = await import("./grounding-computer.js")
   const { walkFileTree } = await import("./fs.js")
