@@ -235,9 +235,12 @@ describe("prompt dispatch and cancellation", () => {
   test("Stop cancels both actual worktree waiters before readiness can send either prompt", async () => {
     state.params = { id: "session-1" }
     Worktree.pending(ServerScope.local, "/repo/main")
-    const submit = createPromptSubmit(submitInput())
+    const real = createPromptState({ prompt: "first worktree send" })
+    const submit = createPromptSubmit({ ...submitInput(), prompt: real })
     const first = submit.handleSubmit({ preventDefault: () => undefined } as Event)
+    real.set([{ type: "text", content: "second worktree send", start: 0, end: 20 }])
     const second = submit.handleSubmit({ preventDefault: () => undefined } as Event)
+    expect(second).not.toBe(first)
     await state.waitersReady.promise
     await submit.abort()
     Worktree.ready(ServerScope.local, "/repo/main")
