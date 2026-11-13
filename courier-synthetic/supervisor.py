@@ -215,10 +215,10 @@ def main():
             proc = subprocess.Popen([PYTHON, '-I', '-S', '-B', str(P / 'courier.py'),
                  str(grant), grantsha, offset], env=ENV, cwd=P,
                  stdout=out, stderr=err, start_new_session=True)
-            snap = proc_snapshot()
-            row = snap.get(proc.pid)
-            if row is None:
-                raise RuntimeError('CHILD_IDENTITY_UNKNOWN')
+            try:
+                row = proc_row(proc.pid)
+            except (OSError, ValueError, IndexError) as exc:
+                raise RuntimeError('CHILD_IDENTITY_UNKNOWN') from exc
             child_start = row[3]
             emit(run / 'child-start.json', {'pid': proc.pid, 'starttime': child_start,
                  'session': row[2], 'scope': 'subreaper ancestry census'})
