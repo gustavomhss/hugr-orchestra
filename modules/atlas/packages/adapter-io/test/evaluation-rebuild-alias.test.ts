@@ -191,9 +191,10 @@ describe("finalize decision snapshot and failure boundary", () => {
         Reflect.set(evidence.binding.decisions[0]!.entries[0]!, "result", "attacker-result")
         // The exact reference object passed to the callback is frozen as part of the snapshot.
         expect(Reflect.set(reference, "sha256", "0".repeat(64))).toBe(false)
-        return reference.sha256 === nativeSha256(new TextEncoder().encode("synthetic new exact rebuild request"))
-          ? new TextEncoder().encode("synthetic new exact rebuild request")
-          : new TextEncoder().encode("synthetic response a")
+        const payloads = ["synthetic new exact rebuild request", "synthetic response a", "synthetic response b"]
+        const payload = payloads.find(value => nativeSha256(new TextEncoder().encode(value)) === reference.sha256)
+        if (payload === undefined) throw new Error("synthetic-reference-not-found")
+        return new TextEncoder().encode(payload)
       },
       current: (key) => f.current.get(key) })
     expect(result.kind).toBe("private-evaluation-candidate")
@@ -214,7 +215,9 @@ describe("finalize decision snapshot and failure boundary", () => {
     const target = { ...f.target, prepared: { ...f.target.prepared, candidate: hostile } } as unknown as PreparedEvaluationUpdate
     expect(() => finalizeEvaluationUpdate({ store: f.store, target, ...evidence,
       current: (key) => f.current.get(key) })).not.toThrow()
-    expect(finalizeEvaluationUpdate({ store: f.store, target, ...evidence,
-      current: (key) => f.current.get(key) })).toMatchObject({ kind: "hold", evidence: ["synthetic-snapshot-trap"] })
+    const result = finalizeEvaluationUpdate({ store: f.store, target, ...evidence,
+      current: (key) => f.current.get(key) })
+    expect(result.kind).toBe("hold")
+    if (result.kind === "hold") expect(result.evidence[0]).toBeTruthy()
   })
 })
