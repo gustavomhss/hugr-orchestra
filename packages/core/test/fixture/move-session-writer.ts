@@ -23,7 +23,7 @@ export const start = Effect.fn("MoveSessionWriter.start")(function* (source: str
     { stdin: "ignore", stdout: "pipe", stderr: "pipe" }), { timeout: "30 seconds" }).pipe(Effect.forkScoped)
   const ready = Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Struct({
     pid: Schema.Number, descriptorOpen: Schema.Literal(true),
-  })))(yield* Effect.promise(() => waitForFile(path.join(control, "READY"))))
+  })))(yield* waitForFile(path.join(control, "READY")))
   return {
     ready,
     release: Effect.gen(function* () {
@@ -33,7 +33,7 @@ export const start = Effect.fn("MoveSessionWriter.start")(function* (source: str
       })
       const ack = Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Struct({
         pid: Schema.Number, writes: Schema.Literal(5), descriptorClosed: Schema.Literal(true),
-      })))(yield* Effect.promise(() => waitForFile(path.join(control, "ACK"))))
+      })))(yield* waitForFile(path.join(control, "ACK")))
       const result = yield* Fiber.join(child).pipe(Effect.flatMap(AppProcess.requireSuccess))
       return { ack, exitCode: result.exitCode }
     }),
@@ -42,29 +42,45 @@ export const start = Effect.fn("MoveSessionWriter.start")(function* (source: str
 
 // Watch before checking the file, so an already-published acknowledgement cannot fall between those steps.
 function waitForFile(file: string) {
-  return new Promise<string>((resolve, reject) => {
-    const state = { done: false }
+  return Effect.callback<string>((resume) => {
+    const state = { done: false, cleanup: undefined as Promise<void> | undefined }
+    const controller = new AbortController()
+    const pending = new Set<Promise<void>>()
+    const closed = Promise.withResolvers<void>()
+    const cleanup = () => state.cleanup ??= (async () => {
+      clearTimeout(timer)
+      watcher.close()
+      controller.abort()
+      await closed.promise
+      await Promise.allSettled(pending)
+    })()
     const finish = (error?: unknown, value?: string) => {
       if (state.done) return
       state.done = true
-      clearTimeout(timer)
-      watcher.close()
-      if (error !== undefined) {
-        reject(error)
-        return
-      }
-      resolve(value ?? "")
+      void cleanup().then(
+        () => resume(error === undefined ? Effect.succeed(value ?? "") : Effect.die(error)),
+        (cause: unknown) => resume(Effect.die(cause)),
+      )
     }
     const check = () => {
-      void fs.readFile(file, "utf8").then((value) => finish(undefined, value), (error: unknown) => {
-        if (typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT") return
-        finish(error)
-      })
+      if (state.done) return
+      const read = fs.readFile(file, { encoding: "utf8", signal: controller.signal })
+        .then((value) => finish(undefined, value), (error: unknown) => {
+          if (typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT") return
+          finish(error)
+        }).finally(() => { pending.delete(read) })
+      pending.add(read)
     }
     const watcher = watch(path.dirname(file), check)
+    watcher.once("close", () => closed.resolve())
     const timer = setTimeout(() => finish(new Error(`Writer acknowledgement timed out: ${path.basename(file)}`)), 20_000)
     watcher.on("error", finish)
     check()
+    // Effect joins this cancellation finalizer before the enclosing fixture can remove its directory.
+    return Effect.promise(() => {
+      state.done = true
+      return cleanup()
+    })
   })
 }
 
