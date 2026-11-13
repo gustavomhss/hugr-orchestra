@@ -1,0 +1,123 @@
+{
+  "schema": "omni-public-review-summary/v1",
+  "kind": "summary_not_original_transcript",
+  "packet": "C08v2",
+  "layer": "L1",
+  "judge_identity": "/root/omni_review_courier/omni_j1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "artifact": {
+    "author_path": "authors/core/records-08.v2.json",
+    "public_path": "bodies/core/records-08.v2.json",
+    "sha256": "71a5233928ea5aa4eadd749a55b40510e83c881629eb004edcee24034b0b940c",
+    "bytes": 44509
+  },
+  "verdict": "PASS",
+  "covered_records": 11,
+  "population": 393,
+  "records": [
+    {
+      "index": 0,
+      "path": "native/omni/crates/hugr-omni/src/spawn/env.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 1,
+      "path": "native/omni/crates/hugr-omni/src/spawn/mod.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 2,
+      "path": "native/omni/crates/hugr-omni/src/spawn/path.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 3,
+      "path": "native/omni/crates/hugr-omni/src/spawn/resolve.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 4,
+      "path": "native/omni/crates/hugr-omni/src/spawn/sys.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 5,
+      "path": "native/omni/crates/hugr-omni/src/spawn/tests.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 6,
+      "path": "native/omni/crates/hugr-omni/src/spawn/tests/resolve.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 7,
+      "path": "native/omni/crates/hugr-omni/src/spawn/tests/verbatim.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 8,
+      "path": "native/omni/crates/hugr-omni/src/spawn/validate.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 9,
+      "path": "native/omni/crates/hugr-omni/src/types.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 10,
+      "path": "native/omni/crates/hugr-omni/tests/contract.rs",
+      "verdict": "PASS"
+    }
+  ],
+  "criteria": {
+    "C1": {
+      "label": "Every covered path has an actual read-based, file-specific useful disposition",
+      "verdict": "PASS"
+    },
+    "C2": {
+      "label": "Assertions distinguish implementation, documentation/declaration, inference and gaps",
+      "verdict": "PASS"
+    },
+    "C3": {
+      "label": "Source identities, paths and exact quote evidence support claims",
+      "verdict": "PASS"
+    },
+    "C4": {
+      "label": "Contracts, failures, relations and maintenance implications are useful at L1",
+      "verdict": "PASS"
+    },
+    "C5": {
+      "label": "Test source, old reviews and docs are never current execution",
+      "verdict": "PASS"
+    },
+    "C6": {
+      "label": "Ownership/exclusions and authorized external scope preserved",
+      "verdict": "PASS"
+    },
+    "C7": {
+      "label": "No secrets/private evaluation/session material in candidate",
+      "verdict": "PASS"
+    }
+  },
+  "mandatory_findings_remaining": [],
+  "missing_evidence": [],
+  "private_opinion_sha256": "d992d8828f674076afd8d2db94b92fe210378be85e06e7ee8cc5c00f522355ba",
+  "private_opinion_digest_scope": "SHA256 of the complete privately retained UTF-8 opinion text with final LF, including any introductory context confirmation; not a host-message envelope or authenticated transport receipt",
+  "transport_note": "Both reviewers received the complete predecessor candidate and source evidence, then the full replacement object at index10 with exact retention of unchanged indices0–9. Reconstruction from operator-preserved replacement messages and the previously supplied object text matches the target body exactly. No transport discrepancy was observed for this delta. Operator copies do not authenticate host-message envelopes.",
+  "limitations": [
+    "Documentary semantic review only; judge used no tools or execution.",
+    "Acceptance covers eleven L1 records only and does not release complete L1 or later layers.",
+    "Judges received complete candidate records and selected decisive source evidence; no claim of full-source judge reading.",
+    "No runtime-import binding, current platform test, release or global integration acceptance is established.",
+    "Original private exchanges and reserved evaluation material are withheld; no public reproducibility of those withheld materials is claimed."
+  ],
+  "resolved_findings": [
+    {
+      "id": "C08-F1",
+      "field": "/10/behavior/2",
+      "resolution": "Pending product failures are distinguished from setup, required binaries, fixture warm-up, ledger/runtime initialization, complete scenario accounting and the empty-error-list assertion. Mandatory in J2 original opinion; optional wording concern in J1 original opinion."
+    }
+  ]
+}

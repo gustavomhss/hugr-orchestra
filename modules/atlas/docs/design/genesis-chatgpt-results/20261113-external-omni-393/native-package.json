@@ -4893,14 +4893,30 @@
         "scope": "native/omni",
         "basis": "User-reserved residual393-source external slice; source-only documentary claims at exact baseline; no runtime/publication authority."
       },
-      "validity": "blocked",
+      "validity": "supported",
       "gaps": [
-        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
+        "Documentary source interpretation only; current runtime/platform behavior is not established by these records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
       ],
       "input_keys": [
+        "file:native/omni/crates/hugr-omni/src/api/command.rs",
+        "file:native/omni/crates/hugr-omni/src/error/messages/mod.rs",
+        "file:native/omni/crates/hugr-omni/src/error/messages/w03.rs",
+        "file:native/omni/crates/hugr-omni/src/error/messages/w04.rs",
+        "file:native/omni/crates/hugr-omni/src/error/messages/w07.rs",
+        "file:native/omni/crates/hugr-omni/src/error/messages/w09.rs",
+        "file:native/omni/crates/hugr-omni/src/error/messages/w10.rs",
+        "file:native/omni/crates/hugr-omni/src/error/messages/wp8b.rs",
+        "file:native/omni/crates/hugr-omni/src/error/messages/wp_h.rs",
+        "file:native/omni/crates/hugr-omni/src/error/mod.rs",
+        "file:native/omni/crates/hugr-omni/src/io/collect.rs",
+        "file:native/omni/crates/hugr-omni/src/io/out.rs",
+        "file:native/omni/crates/hugr-omni/src/process/child.rs",
+        "file:native/omni/crates/hugr-omni/src/process/deadline.rs",
+        "file:native/omni/crates/hugr-omni/src/process/exit.rs",
+        "file:native/omni/crates/hugr-omni/src/process/run.rs",
         "file:native/omni/crates/hugr-omni/src/spawn/env.rs",
         "file:native/omni/crates/hugr-omni/src/spawn/mod.rs",
         "file:native/omni/crates/hugr-omni/src/spawn/path.rs",
@@ -4912,9 +4928,107 @@
         "file:native/omni/crates/hugr-omni/src/spawn/validate.rs",
         "file:native/omni/crates/hugr-omni/src/types.rs",
         "file:native/omni/crates/hugr-omni/tests/contract.rs",
+        "file:native/omni/crates/hugr-omni/tests/runner/ledger.rs",
+        "file:native/omni/crates/hugr-omni/tests/runner/suite.rs",
         "file:modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/recipes/author-contract.md"
       ],
       "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/api/command.rs",
+          "git_blob_sha": "ca33173b6f5b60c213cff9b02ac10bf31eaa9022",
+          "sha256": "9b130c6166ef54e2cad64a9ea058c76db05a3264bb4daae5f150755130c09220"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/error/messages/mod.rs",
+          "git_blob_sha": "78f26c0b6f0bc7a25be915f78cfdf5a7b49a57dd",
+          "sha256": "3c993b99c2de48bea5bdcfa0fb9d8b7d887813655438c9b2075a5b699895a6e6"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/error/messages/w03.rs",
+          "git_blob_sha": "f31a047d399761f76c77181e5396c8fb75bd4aff",
+          "sha256": "4e95f4283e33820df227a8056cf35696c08d007fbcd418748b07f3c735e0da03"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/error/messages/w04.rs",
+          "git_blob_sha": "814ea4e6d0600b2006567aa99e505ef7ad34b1fc",
+          "sha256": "354028ad6d11b50af5d2f156f683179ebc01014cd7844d13f36f4486aa7d3f2e"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/error/messages/w07.rs",
+          "git_blob_sha": "99685766fe3b3bfbff9f08756abeb7e2721d77be",
+          "sha256": "3ba856e6fe2051e559e6030d8f2efd035f3ffbeef2891a78b120c6fe23dd5ed4"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/error/messages/w09.rs",
+          "git_blob_sha": "9caf072ef6082d2e9adc1bac4af56087efae06d2",
+          "sha256": "f7f2015d56884630a8b76c85b242560a16c3433579ec5d3bafb456da5c24e441"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/error/messages/w10.rs",
+          "git_blob_sha": "3e63011d4f3705a399c3665345700d95e4709e7c",
+          "sha256": "a59508b744640650b1d82599e5dc331ebc9560b156e4a1b5f3d3d5f610a145fb"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/error/messages/wp8b.rs",
+          "git_blob_sha": "7fe8b3eb201173cf741ac68872317bfcb13c182f",
+          "sha256": "4ef83a4eb7e3c97112ca2174cabd3d576bd70dbc27f134124b430444224fcf8b"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/error/messages/wp_h.rs",
+          "git_blob_sha": "72b82197c6d358d4721da1b530aa6818b69c4149",
+          "sha256": "916436c869cd2071663752b9ba743c91895315b3721ee87b8aa3440735e10c34"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/error/mod.rs",
+          "git_blob_sha": "7e5d1569ad39bcfc4fb28781320f72f6579c4961",
+          "sha256": "51ad6bb3efdd5ab6b8a70c975aefbff9bdab36f296af4147504ed324ff1145f9"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/io/collect.rs",
+          "git_blob_sha": "fec2fa0c0254049ea3b7dab3a25ca05be919c82e",
+          "sha256": "484f95f4f494eda698683acb4c85e25a9494543d553f83a7a6926e716090dee7"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/io/out.rs",
+          "git_blob_sha": "d00bf67b4b42952cf69715dca6d03894f369c394",
+          "sha256": "a6fd825ea474e5803265b5cdf649b9484640ea5203921687542e44808c0363fe"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/process/child.rs",
+          "git_blob_sha": "431ba07ac85778f408c37a55d567db40890a0cee",
+          "sha256": "d13216ad75127aafb89bbb1f88704a61d30f40c1d8561cc49c6ab6055f9bb4ac"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/process/deadline.rs",
+          "git_blob_sha": "106cb5bdebcd7323bbe6f50cad03b66566bac7c9",
+          "sha256": "c3cfcde9a00472067ec5582740c4e6d4c49f1a087d2bb95dd3cd28b6435cc437"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/process/exit.rs",
+          "git_blob_sha": "0fb6eee5990a5a5bcebcc2d6424efecaa2b5ea7c",
+          "sha256": "9a6f27e74b7a621397905a69a56f586f6518cc45ca08cec682f4c0e41942a2e2"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/process/run.rs",
+          "git_blob_sha": "c2725d150e579a0c902746a2835196cbbbe3ef59",
+          "sha256": "7e6ea694a726ae0c56af9a76ec38b2e8008770c32ba4caf1f6cd6fd370f4b53a"
+        },
         {
           "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
           "path": "native/omni/crates/hugr-omni/src/spawn/env.rs",
@@ -4980,6 +5094,18 @@
           "path": "native/omni/crates/hugr-omni/tests/contract.rs",
           "git_blob_sha": "4adad1487fb13b55fcc1b46105001f6e42900c9b",
           "sha256": "c63f929f98326c229372c83c8f5fbc08746f55fc57e2ca0319fa926c08ec53c4"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/tests/runner/ledger.rs",
+          "git_blob_sha": "4dd7eb82054795c6833ea7a04c47e240f6050788",
+          "sha256": "edc73e7fb833b10d48bedcf11206741b7c5af45fbd30f05881711295c8d34b7f"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/tests/runner/suite.rs",
+          "git_blob_sha": "decc807cac6e2f0554130b636d2f36a514a61e96",
+          "sha256": "34f5dc73b80294c02802f4829d356bf59334df4b55bef447090bb9d5f1c23b50"
         }
       ],
       "recipe_ref": {
@@ -4998,7 +5124,16 @@
         "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/core/records-08.v2.json",
         "sha256": "71a5233928ea5aa4eadd749a55b40510e83c881629eb004edcee24034b0b940c"
       },
-      "semantic_review_refs": [],
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/reviews/C08v2-J2-summary.json",
+          "sha256": "771d1bb2036e0834e113297ff30dfb2b6e22e3956881fc11a15cbf5b93cc8a18"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/reviews/C08v2-J1-summary.json",
+          "sha256": "e9615f92cb38bf9c0885e51580f1f7a13bb7f582e51ea2e922a7eef0d6de0e20"
+        }
+      ],
       "runtime_receipt_refs": []
     },
     {
@@ -5008,10 +5143,10 @@
       "layer": 1,
       "need": "evidence",
       "body": {
-        "path": "bodies/core/records-09.v2.json",
+        "path": "bodies/core/records-09.v3.json",
         "encoding": "utf-8",
-        "byte_length": 41900,
-        "sha256": "8e5718778a6e24f54a79f2c456f858946d36cc796e15268ca1b6859f21b89adf"
+        "byte_length": 42813,
+        "sha256": "53e546b5c1a628577bbaa136a4c2349f084668afd371318138cc4f0f0bd7fdc6"
       },
       "authority": {
         "scope": "native/omni",
@@ -5034,6 +5169,8 @@
         "file:native/omni/crates/hugr-omni/tests/runner/pattern.rs",
         "file:native/omni/crates/hugr-omni/tests/runner/read.rs",
         "file:native/omni/crates/hugr-omni/tests/runner/scenario.rs",
+        "file:native/omni/crates/hugr-omni/tests/runner/schema.rs",
+        "file:native/omni/crates/hugr-omni/tests/runner/suite.rs",
         "file:modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/recipes/author-contract.md"
       ],
       "source_refs": [
@@ -5090,6 +5227,18 @@
           "path": "native/omni/crates/hugr-omni/tests/runner/scenario.rs",
           "git_blob_sha": "9e62d9c879cb78082cf96253805d0e9b082ad145",
           "sha256": "5091a9aa986c7d46f301e3fea0e0566f9e06d330e7db2a91b77feb22a9510847"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/tests/runner/schema.rs",
+          "git_blob_sha": "c7d04d4eee962ad694a43b93379b2a7bff14a223",
+          "sha256": "ffe402bd83ae36c8aea613a6c18e06c1aaa972f89a14b805fd1b56524738dca3"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/tests/runner/suite.rs",
+          "git_blob_sha": "decc807cac6e2f0554130b636d2f36a514a61e96",
+          "sha256": "34f5dc73b80294c02802f4829d356bf59334df4b55bef447090bb9d5f1c23b50"
         }
       ],
       "recipe_ref": {
@@ -5105,8 +5254,8 @@
         "sha256": "574f2d8677876dd176b83350a4129da44655f494bebcf1c344d4b823519048fe"
       },
       "producer_response_ref": {
-        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/core/records-09.v2.json",
-        "sha256": "8e5718778a6e24f54a79f2c456f858946d36cc796e15268ca1b6859f21b89adf"
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/core/records-09.v3.json",
+        "sha256": "53e546b5c1a628577bbaa136a4c2349f084668afd371318138cc4f0f0bd7fdc6"
       },
       "semantic_review_refs": [],
       "runtime_receipt_refs": []

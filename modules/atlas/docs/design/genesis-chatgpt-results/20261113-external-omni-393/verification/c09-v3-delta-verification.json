@@ -1,0 +1,152 @@
+{
+  "schema": "omni-author-delta-verification/v1",
+  "recorded_at": "2026-11-13T18:20:58.536323+00:00",
+  "delta": "authors/core/delta-09-v3.json",
+  "delta_sha256": "c3a262d63f7e4aba01af6f88490d7dd15d34019261813372ce580ca49ca4e43e",
+  "old_body_sha256": "8e5718778a6e24f54a79f2c456f858946d36cc796e15268ca1b6859f21b89adf",
+  "new_body_sha256": "53e546b5c1a628577bbaa136a4c2349f084668afd371318138cc4f0f0bd7fdc6",
+  "record_count": 9,
+  "unchanged_record_indices": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "field_changes": [
+    {
+      "pointer": "/0/behavior/1",
+      "before": "Converts finite nonnegative millisecond numbers to fractional Duration values; PTY objects default to 80 by 24 and require dimensions representable as u16.",
+      "after": "Duration conversion uses Duration::from_millis when as_u64 succeeds; otherwise only finite, nonnegative as_f64 values proceed to Duration::from_secs_f64(ms / 1000.0), without an upper representable-range guard. PTY objects default to 80 by 24 and require dimensions representable as u16."
+    },
+    {
+      "pointer": "/0/failures_or_limits",
+      "before": [
+        "This adapter does not expose maxRssBytes or pipe backpressure at this source revision. hex_bytes consumes pairs and accepts a final single hex digit; schema.rs reuses the same parser rather than requiring even length."
+      ],
+      "after": [
+        "This adapter does not expose maxRssBytes or pipe backpressure at this source revision. hex_bytes consumes pairs and accepts a final single hex digit; schema.rs reuses the same parser rather than requiring even length.",
+        "A sufficiently large finite nonnegative value on the floating-point duration branch can exceed Duration's representable range and reach the panicking Duration::from_secs_f64 conversion instead of returning this adapter's Err. schema.rs accepts numeric timeoutMs/graceMs options without that upper bound; this is a source/API boundary, not an observed panic."
+      ]
+    },
+    {
+      "pointer": "/1/behavior/1",
+      "before": "Only Fail::Product is eligible for pending treatment; malformed or missing expected fields are harness failures.",
+      "after": "Only Fail::Product is eligible for pending under the suite's other conditions. An absent ordinary field in the returned field map becomes Fail::Harness through string conversion, whereas an expected partial result absent from Error::result() explicitly yields Fail::Product. Malformed expectation shapes are checked during Scenario::load through Names::step and schema::step/schema::expect (including pieces/entries validation), with load errors classified as Harness; the comparator alone is not the complete shape validator."
+    }
+  ],
+  "source_evidence_occurrences": 16,
+  "distinct_sources": [
+    "native/omni/crates/hugr-omni/tests/runner/command.rs",
+    "native/omni/crates/hugr-omni/tests/runner/expect.rs",
+    "native/omni/crates/hugr-omni/tests/runner/mod.rs",
+    "native/omni/crates/hugr-omni/tests/runner/names.rs",
+    "native/omni/crates/hugr-omni/tests/runner/scenario.rs",
+    "native/omni/crates/hugr-omni/tests/runner/schema.rs",
+    "native/omni/crates/hugr-omni/tests/runner/suite.rs"
+  ],
+  "excerpts": [
+    {
+      "path": "native/omni/crates/hugr-omni/tests/runner/command.rs",
+      "start_line": 84,
+      "end_line": 115,
+      "quote_sha256": "2bc306832a1c5b74203e61f15c15fb7094955b59d4c4061155b1683eae889652"
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/tests/runner/schema.rs",
+      "start_line": 142,
+      "end_line": 173,
+      "quote_sha256": "369d4592f1222de8abe4e26c9560e015f840dfe9d22e4c25a598d00f0569ebb9"
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/tests/runner/command.rs",
+      "start_line": 41,
+      "end_line": 46,
+      "quote_sha256": "7ac8f17ed42d4c6b40d6e8bf379f73894189c52bb01937461bc53ae3b7bda8a5"
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/tests/runner/command.rs",
+      "start_line": 84,
+      "end_line": 93,
+      "quote_sha256": "31e9de8b8ddad07d7e7e186436750c19e28cbee510dbbb0ae1294a2d05e09700"
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/tests/runner/schema.rs",
+      "start_line": 142,
+      "end_line": 173,
+      "quote_sha256": "369d4592f1222de8abe4e26c9560e015f840dfe9d22e4c25a598d00f0569ebb9"
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/tests/runner/expect.rs",
+      "start_line": 19,
+      "end_line": 38,
+      "quote_sha256": "f6b3bad3774da81e180118894328ca9f0c737c389901fdb6f417885ccf6b635a"
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/tests/runner/expect.rs",
+      "start_line": 85,
+      "end_line": 138,
+      "quote_sha256": "a994ee516c451dfff3fdcc89190eec8ccac8e7c35649159ac54505dd5dca5669"
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/tests/runner/expect.rs",
+      "start_line": 140,
+      "end_line": 169,
+      "quote_sha256": "98606458008a369fe36887373c68cfec9e3030869f2f7e57bf42023f3661f0e3"
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/tests/runner/expect.rs",
+      "start_line": 229,
+      "end_line": 276,
+      "quote_sha256": "66312fde2ac1bc22b09c3d4862b38e11180f0dae554a53e2be1200fa226966e8"
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/tests/runner/schema.rs",
+      "start_line": 25,
+      "end_line": 56,
+      "quote_sha256": "65398ae792d9032e56c586bc2f4f6304799538602e05d52935e612b14bd72398"
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/tests/runner/schema.rs",
+      "start_line": 58,
+      "end_line": 95,
+      "quote_sha256": "f977ccf8b020ee560d9beb6f50cc2cbe7efbf8dc57e0c4a2a89a42e805c8c4d6"
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/tests/runner/schema.rs",
+      "start_line": 97,
+      "end_line": 140,
+      "quote_sha256": "b29d9350c04fd58e59160b329a2d023e420a3a9d733b437e6c9403351b8c7383"
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/tests/runner/names.rs",
+      "start_line": 51,
+      "end_line": 92,
+      "quote_sha256": "dea3dce5050f8dccfd95f7358937f28d1ad2a92796d6b1da18a724fc8fff4007"
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/tests/runner/scenario.rs",
+      "start_line": 33,
+      "end_line": 69,
+      "quote_sha256": "301b8341726759a0bf8c6bd4c87d51f665201c242d0e99659f5eea1933b48775"
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/tests/runner/suite.rs",
+      "start_line": 48,
+      "end_line": 78,
+      "quote_sha256": "d15b18c97e512b5f8747aaafb929a244eaf8cc5cb9e8128e94c52e13571832cb"
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/tests/runner/mod.rs",
+      "start_line": 50,
+      "end_line": 105,
+      "quote_sha256": "9433e8f960c8db7007a26b3e04cb248cc620bda0848091804af06b3230074896"
+    }
+  ],
+  "result": "PASS",
+  "limits": [
+    "Documentary identity, exact field-diff and source-quote checks only; no semantic decision or runtime result is inferred."
+  ]
+}

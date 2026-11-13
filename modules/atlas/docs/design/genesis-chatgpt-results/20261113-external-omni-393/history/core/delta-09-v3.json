@@ -1,0 +1,565 @@
+{
+  "source": "records-09.v2.json",
+  "source_sha256": "8e5718778a6e24f54a79f2c456f858946d36cc796e15268ca1b6859f21b89adf",
+  "source_bytes": 41900,
+  "replacement": "records-09.v3.json",
+  "replacement_sha256": "53e546b5c1a628577bbaa136a4c2349f084668afd371318138cc4f0f0bd7fdc6",
+  "replacement_bytes": 42813,
+  "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "public_request": {
+    "path": "control/C09-author-corrections-v3.md",
+    "sha256": "7ea98a78e78822b7efa37735d15b02b79e8f511952a946fe1b899b010bd90f88",
+    "bytes": 4033
+  },
+  "author_role": "CORE original producer correction; no acceptance review performed.",
+  "changes": [
+    {
+      "finding": "C09 duration conversion branches and guard scope",
+      "record_index": 0,
+      "path": "native/omni/crates/hugr-omni/tests/runner/command.rs",
+      "json_pointer": "/0/behavior/1",
+      "field": "behavior[1]",
+      "operation": "replace",
+      "before": "Converts finite nonnegative millisecond numbers to fractional Duration values; PTY objects default to 80 by 24 and require dimensions representable as u16.",
+      "after": "Duration conversion uses Duration::from_millis when as_u64 succeeds; otherwise only finite, nonnegative as_f64 values proceed to Duration::from_secs_f64(ms / 1000.0), without an upper representable-range guard. PTY objects default to 80 by 24 and require dimensions representable as u16.",
+      "reason": "as_u64 succeeds into Duration::from_millis. The other branch reads as_f64 and checks only finiteness and nonnegativity before calling Duration::from_secs_f64(ms / 1000.0). It has no explicit upper representable-range check. The existing PTY defaults/u16 statement is preserved.",
+      "supporting_evidence": [
+        {
+          "path": "native/omni/crates/hugr-omni/tests/runner/command.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/tests/runner/command.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "d821afbfaec029a662f65b44f2ec310ccdff3720",
+          "source_sha256": "96309819c54f8726cf278e98189b52eab73a8afc7394a6528cf3920753df0a62",
+          "source_bytes": 4816,
+          "line_count": 138,
+          "line_coordinates": "1-based inclusive, LF-delimited",
+          "start_line": 84,
+          "end_line": 115,
+          "quote": "/// A duration in milliseconds: a non-negative finite number (a fraction stays exact to the nanosecond).\npub fn duration(key: &str, v: &Value) -> Result<Duration, String> {\n    if let Some(ms) = v.as_u64() {\n        return Ok(Duration::from_millis(ms));\n    }\n    match v.as_f64() {\n        Some(ms) if ms.is_finite() && ms >= 0.0 => Ok(Duration::from_secs_f64(ms / 1000.0)),\n        _ => Err(inexpressible(key, v)),\n    }\n}\n\nfn pty_size(v: &Value) -> Result<PtySize, String> {\n    let mut size = PtySize::default();\n    match v {\n        Value::Bool(true) => {}\n        Value::Object(o) => {\n            for (key, n) in o {\n                let n = n\n                    .as_u64()\n                    .and_then(|n| u16::try_from(n).ok())\n                    .ok_or_else(|| inexpressible(key, n))?;\n                match key.as_str() {\n                    \"cols\" => size.cols = n,\n                    \"rows\" => size.rows = n,\n                    _ => return Err(format!(\"unknown pty key {key}\")),\n                }\n            }\n        }\n        _ => return Err(format!(\"option pty: unexpected value {v}\")),\n    }\n    Ok(size)\n}"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/tests/runner/schema.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/tests/runner/schema.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "c7d04d4eee962ad694a43b93379b2a7bff14a223",
+          "source_sha256": "ffe402bd83ae36c8aea613a6c18e06c1aaa972f89a14b805fd1b56524738dca3",
+          "source_bytes": 9358,
+          "line_count": 255,
+          "line_coordinates": "1-based inclusive, LF-delimited",
+          "start_line": 142,
+          "end_line": 173,
+          "quote": "fn options(v: &Value) -> Check {\n    for (k, o) in object(v)? {\n        match k.as_str() {\n            \"cwd\" | \"windowsVerbatimArgs\" => text(o),\n            \"env\" => match object(o)?.values().all(|x| x.is_string() || x.is_null()) {\n                true => Ok(()),\n                false => Err(\"env values are text or null\".into()),\n            },\n            \"inheritEnv\" | \"text\" | \"mergeStderr\" => boolean(o),\n            \"timeoutMs\" | \"graceMs\" | \"maxOutputBytes\" => match o {\n                Value::Number(_) => Ok(()),\n                Value::Object(t) if t.len() == 1 => one_of(\n                    t.get(\"$number\").unwrap_or(&Value::Null),\n                    &[\"NaN\", \"Infinity\", \"-Infinity\"],\n                ),\n                _ => Err(\"want a number or {\\\"$number\\\": ...}\".into()),\n            },\n            \"input\" => data(o),\n            \"stdin\" => one_of(o, &[\"pipe\", \"closed\"]),\n            \"pty\" if o == &Value::Bool(true) => Ok(()),\n            \"pty\" => object(o)?\n                .iter()\n                .try_for_each(|(d, n)| match (d.as_str(), n.is_number()) {\n                    (\"cols\" | \"rows\", true) => Ok(()),\n                    _ => Err(format!(\"bad pty {d}: {n}\")),\n                }),\n            _ => Err(\"unknown option\".into()),\n        }\n        .map_err(|e| format!(\"{k}: {e}\"))?;\n    }\n    Ok(())\n}"
+        }
+      ]
+    },
+    {
+      "finding": "C09 appended floating-point Duration range limit",
+      "record_index": 0,
+      "path": "native/omni/crates/hugr-omni/tests/runner/command.rs",
+      "json_pointer": "/0/failures_or_limits/1",
+      "field": "failures_or_limits[1]",
+      "operation": "add",
+      "before_present": false,
+      "before": null,
+      "after": "A sufficiently large finite nonnegative value on the floating-point duration branch can exceed Duration's representable range and reach the panicking Duration::from_secs_f64 conversion instead of returning this adapter's Err. schema.rs accepts numeric timeoutMs/graceMs options without that upper bound; this is a source/API boundary, not an observed panic.",
+      "preserved_existing_entries": [
+        "This adapter does not expose maxRssBytes or pipe backpressure at this source revision. hex_bytes consumes pairs and accepts a final single hex digit; schema.rs reuses the same parser rather than requiring even length."
+      ],
+      "reason": "The finite/nonnegative guard does not establish the representable Duration upper bound, and schema options accepts Value::Number without imposing that bound. A sufficiently large finite floating-point millisecond value can therefore reach the standard-library panicking conversion rather than the adapter Err branch. This is the source/API boundary specified in the public correction request, not a runtime panic observation.",
+      "api_boundary": {
+        "api": "std::time::Duration::from_secs_f64",
+        "property_used": "An input exceeding the representable Duration range can panic.",
+        "runtime_reproduction": "NOT_RUN"
+      },
+      "supporting_evidence": [
+        {
+          "path": "native/omni/crates/hugr-omni/tests/runner/command.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/tests/runner/command.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "d821afbfaec029a662f65b44f2ec310ccdff3720",
+          "source_sha256": "96309819c54f8726cf278e98189b52eab73a8afc7394a6528cf3920753df0a62",
+          "source_bytes": 4816,
+          "line_count": 138,
+          "line_coordinates": "1-based inclusive, LF-delimited",
+          "start_line": 41,
+          "end_line": 46,
+          "quote": "            \"timeoutMs\" => {\n                cmd.timeout(duration(key, v)?);\n            }\n            \"graceMs\" => {\n                cmd.grace(duration(key, v)?);\n            }"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/tests/runner/command.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/tests/runner/command.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "d821afbfaec029a662f65b44f2ec310ccdff3720",
+          "source_sha256": "96309819c54f8726cf278e98189b52eab73a8afc7394a6528cf3920753df0a62",
+          "source_bytes": 4816,
+          "line_count": 138,
+          "line_coordinates": "1-based inclusive, LF-delimited",
+          "start_line": 84,
+          "end_line": 93,
+          "quote": "/// A duration in milliseconds: a non-negative finite number (a fraction stays exact to the nanosecond).\npub fn duration(key: &str, v: &Value) -> Result<Duration, String> {\n    if let Some(ms) = v.as_u64() {\n        return Ok(Duration::from_millis(ms));\n    }\n    match v.as_f64() {\n        Some(ms) if ms.is_finite() && ms >= 0.0 => Ok(Duration::from_secs_f64(ms / 1000.0)),\n        _ => Err(inexpressible(key, v)),\n    }\n}"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/tests/runner/schema.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/tests/runner/schema.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "c7d04d4eee962ad694a43b93379b2a7bff14a223",
+          "source_sha256": "ffe402bd83ae36c8aea613a6c18e06c1aaa972f89a14b805fd1b56524738dca3",
+          "source_bytes": 9358,
+          "line_count": 255,
+          "line_coordinates": "1-based inclusive, LF-delimited",
+          "start_line": 142,
+          "end_line": 173,
+          "quote": "fn options(v: &Value) -> Check {\n    for (k, o) in object(v)? {\n        match k.as_str() {\n            \"cwd\" | \"windowsVerbatimArgs\" => text(o),\n            \"env\" => match object(o)?.values().all(|x| x.is_string() || x.is_null()) {\n                true => Ok(()),\n                false => Err(\"env values are text or null\".into()),\n            },\n            \"inheritEnv\" | \"text\" | \"mergeStderr\" => boolean(o),\n            \"timeoutMs\" | \"graceMs\" | \"maxOutputBytes\" => match o {\n                Value::Number(_) => Ok(()),\n                Value::Object(t) if t.len() == 1 => one_of(\n                    t.get(\"$number\").unwrap_or(&Value::Null),\n                    &[\"NaN\", \"Infinity\", \"-Infinity\"],\n                ),\n                _ => Err(\"want a number or {\\\"$number\\\": ...}\".into()),\n            },\n            \"input\" => data(o),\n            \"stdin\" => one_of(o, &[\"pipe\", \"closed\"]),\n            \"pty\" if o == &Value::Bool(true) => Ok(()),\n            \"pty\" => object(o)?\n                .iter()\n                .try_for_each(|(d, n)| match (d.as_str(), n.is_number()) {\n                    (\"cols\" | \"rows\", true) => Ok(()),\n                    _ => Err(format!(\"bad pty {d}: {n}\")),\n                }),\n            _ => Err(\"unknown option\".into()),\n        }\n        .map_err(|e| format!(\"{k}: {e}\"))?;\n    }\n    Ok(())\n}"
+        }
+      ]
+    },
+    {
+      "finding": "C09 ordinary missing field, missing partial result and scenario-shape validation",
+      "record_index": 1,
+      "path": "native/omni/crates/hugr-omni/tests/runner/expect.rs",
+      "json_pointer": "/1/behavior/1",
+      "field": "behavior[1]",
+      "operation": "replace",
+      "before": "Only Fail::Product is eligible for pending treatment; malformed or missing expected fields are harness failures.",
+      "after": "Only Fail::Product is eligible for pending under the suite's other conditions. An absent ordinary field in the returned field map becomes Fail::Harness through string conversion, whereas an expected partial result absent from Error::result() explicitly yields Fail::Product. Malformed expectation shapes are checked during Scenario::load through Names::step and schema::step/schema::expect (including pieces/entries validation), with load errors classified as Harness; the comparator alone is not the complete shape validator.",
+      "reason": "A missing ordinary field creates a String error that converts to Harness; the partial-result branch explicitly constructs Product when Error::result() is None. Suite classification admits Product as pending only for a listed item, subject to remaining suite checks. Separately, Scenario::load invokes Names::step and schema::step/schema::expect before applicability/execution; schema checks pieces and entries shapes, and suite maps load failures to Harness. Runtime Ctx::step later invokes expect::check. The outcome comparator is not claimed to reject every malformed shape itself.",
+      "supporting_evidence": [
+        {
+          "path": "native/omni/crates/hugr-omni/tests/runner/expect.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/tests/runner/expect.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "7107cd30a509c7b2a7654fe314bfc1b00347ff53",
+          "source_sha256": "54b06b10f5cbcc97d838cbb37e651dae3e599a7c7bf5c76046f5aea7686efbe7",
+          "source_bytes": 10106,
+          "line_count": 276,
+          "line_coordinates": "1-based inclusive, LF-delimited",
+          "start_line": 19,
+          "end_line": 38,
+          "quote": "/// Why a step failed. Only `Product` (the library's outcome differs from the expectation) may count as pending; a\n/// `Harness` failure (malformed scenario, unknown variable, runner or OS-oracle error) always fails the suite. Every\n/// error not built as `Product` is `Harness`, so an unclassified failure fails closed.\n#[derive(Debug)]\npub enum Fail {\n    Product(String),\n    Harness(String),\n}\n\nimpl From<String> for Fail {\n    fn from(msg: String) -> Fail {\n        Fail::Harness(msg)\n    }\n}\n\nimpl From<&str> for Fail {\n    fn from(msg: &str) -> Fail {\n        Fail::Harness(msg.to_string())\n    }\n}"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/tests/runner/expect.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/tests/runner/expect.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "7107cd30a509c7b2a7654fe314bfc1b00347ff53",
+          "source_sha256": "54b06b10f5cbcc97d838cbb37e651dae3e599a7c7bf5c76046f5aea7686efbe7",
+          "source_bytes": 10106,
+          "line_count": 276,
+          "line_coordinates": "1-based inclusive, LF-delimited",
+          "start_line": 85,
+          "end_line": 138,
+          "quote": "/// Checks `expect` against the outcome; `elapsedMs` is the step's own duration.\npub fn check(expect: &Value, got: &Outcome, elapsed: Duration) -> Result<(), Fail> {\n    let want = expect.as_object().ok_or(\"`expect` must be an object\")?;\n    let product = |msg: String| Err(Fail::Product(msg));\n    if let (Err(e), false) = (got, want.contains_key(\"error\")) {\n        return product(format!(\"unexpected error {e}\"));\n    }\n    for (key, w) in want {\n        match (key.as_str(), got) {\n            (\"elapsedMs\", _) => {\n                let ms = elapsed.as_secs_f64() * 1000.0;\n                if !number(w, Some(ms))? {\n                    return product(format!(\"elapsedMs: expected {w}, got {ms:.0}\"));\n                }\n            }\n            (\"error\", Ok(_)) => return product(format!(\"expected error {w}, got success\")),\n            (\"error\", Err(e)) => {\n                let code = w.as_str().ok_or(\"`error` must be a code\")?;\n                if e.code().as_str() != code {\n                    return product(format!(\"expected error {code}, got {e}\"));\n                }\n            }\n            (\"message\", Err(e)) => {\n                let text = e.to_string();\n                for part in w.as_array().map_or(vec![w], |a| a.iter().collect()) {\n                    let part = part.as_str().ok_or(\"message parts must be strings\")?;\n                    if !text.contains(part) {\n                        return product(format!(\"message {text:?} lacks {part:?}\"));\n                    }\n                }\n            }\n            (\"result\", Err(e)) => match e.result() {\n                Some(result) => fields(w, &run_fields(result)).map_err(|f| f.at(\"result\"))?,\n                None => return product(format!(\"error {e} carries no result\")),\n            },\n            (_, Err(e)) => return product(format!(\"{key} expected, got error {e}\")),\n            (_, Ok(f)) => {\n                let g = f\n                    .get(key.as_str())\n                    .ok_or_else(|| format!(\"{key}: not produced by this step\"))?;\n                field(w, g).map_err(|f| f.at(key))?;\n            }\n        }\n    }\n    Ok(())\n}\n\nfn fields(want: &Value, got: &Fields) -> Result<(), Fail> {\n    for (key, w) in want.as_object().ok_or(\"want an object\")? {\n        let g = got.get(key.as_str()).ok_or_else(|| format!(\"{key}: no such field\"))?;\n        field(w, g).map_err(|f| f.at(key))?;\n    }\n    Ok(())\n}"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/tests/runner/expect.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/tests/runner/expect.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "7107cd30a509c7b2a7654fe314bfc1b00347ff53",
+          "source_sha256": "54b06b10f5cbcc97d838cbb37e651dae3e599a7c7bf5c76046f5aea7686efbe7",
+          "source_bytes": 10106,
+          "line_count": 276,
+          "line_coordinates": "1-based inclusive, LF-delimited",
+          "start_line": 140,
+          "end_line": 169,
+          "quote": "fn field(w: &Value, got: &Got) -> Result<(), Fail> {\n    let (ok, shown) = match got {\n        Got::Num(n) => (number(w, *n)?, n.map_or(\"null\".into(), |n| n.to_string())),\n        Got::Str(s) => (string(w, s.as_deref().map(|s| (s.as_bytes(), true)))?, format!(\"{s:?}\")),\n        Got::Bool(b) => (w.as_bool().ok_or(\"want true or false\")? == *b, b.to_string()),\n        Got::Data(Data::Text(t)) => (string(w, Some((t.as_bytes(), true)))?, shown(t.as_bytes())),\n        Got::Data(Data::Bytes(b)) => (string(w, Some((b, false)))?, shown(b)),\n        Got::Entries(list) => (entries(w, list)?, format!(\"{list:?}\")),\n        Got::Pieces(got) => {\n            let want: Vec<(u64, bool)> = w\n                .as_array()\n                .ok_or(\"pieces: want a list\")?\n                .iter()\n                .map(|p| {\n                    (\n                        p[\"bytes\"].as_u64().unwrap_or(u64::MAX),\n                        p[\"continues\"].as_bool().unwrap_or(false),\n                    )\n                })\n                .collect();\n            (want == *got, format!(\"{got:?} (bytes, continues)\"))\n        }\n        Got::Obj(f) => return fields(w, f),\n    };\n    if ok {\n        Ok(())\n    } else {\n        Err(Fail::Product(format!(\"expected {w}, got {shown}\")))\n    }\n}"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/tests/runner/expect.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/tests/runner/expect.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "7107cd30a509c7b2a7654fe314bfc1b00347ff53",
+          "source_sha256": "54b06b10f5cbcc97d838cbb37e651dae3e599a7c7bf5c76046f5aea7686efbe7",
+          "source_bytes": 10106,
+          "line_count": 276,
+          "line_coordinates": "1-based inclusive, LF-delimited",
+          "start_line": 229,
+          "end_line": 276,
+          "quote": "/// Pids accepted by `pid`/`parentPid`: a number, a numeric string, or a list of them (a capture).\nfn ids(v: &Value) -> Vec<f64> {\n    match v {\n        Value::Array(a) => a.iter().flat_map(ids).collect(),\n        Value::String(s) => s.parse().into_iter().collect(),\n        v => v.as_f64().into_iter().collect(),\n    }\n}\n\n/// `entries`: an unordered list matched one to one.\nfn entries(w: &Value, got: &[ProcessInfo]) -> Result<bool, String> {\n    let want = w.as_array().ok_or(\"entries must be a list\")?;\n    let mut ok = vec![vec![false; got.len()]; want.len()];\n    for (i, e) in want.iter().enumerate() {\n        for (j, p) in got.iter().enumerate() {\n            ok[i][j] = entry(e, p)?;\n        }\n    }\n    Ok(want.len() == got.len() && assign(&ok, 0, &mut vec![false; got.len()]))\n}\n\nfn assign(ok: &[Vec<bool>], i: usize, used: &mut [bool]) -> bool {\n    let Some(row) = ok.get(i) else { return true };\n    for j in 0..row.len() {\n        if row[j] && !used[j] {\n            used[j] = true;\n            if assign(ok, i + 1, used) {\n                return true;\n            }\n            used[j] = false;\n        }\n    }\n    false\n}\n\nfn entry(e: &Value, p: &ProcessInfo) -> Result<bool, String> {\n    let mut ok = true;\n    for (key, w) in e.as_object().ok_or(\"an entry must be an object\")? {\n        ok &= match key.as_str() {\n            \"pid\" => ids(w).contains(&f64::from(p.pid)),\n            \"parentPid\" if w.is_null() => p.parent_pid.is_none(),\n            \"parentPid\" => p.parent_pid.is_some_and(|pp| ids(w).contains(&f64::from(pp))),\n            \"name\" => string(w, p.name.as_deref().map(|n| (n.as_bytes(), true)))?,\n            _ => return Err(format!(\"unknown entry key {key}\")),\n        };\n    }\n    Ok(ok)\n}"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/tests/runner/schema.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/tests/runner/schema.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "c7d04d4eee962ad694a43b93379b2a7bff14a223",
+          "source_sha256": "ffe402bd83ae36c8aea613a6c18e06c1aaa972f89a14b805fd1b56524738dca3",
+          "source_bytes": 9358,
+          "line_count": 255,
+          "line_coordinates": "1-based inclusive, LF-delimited",
+          "start_line": 25,
+          "end_line": 56,
+          "quote": "/// Checks step `s`, whose action is `name` with value `target`.\npub fn step(name: &str, target: &Value, s: &Map<String, Value>) -> Check {\n    match name {\n        \"run\" | \"spawn\" => match target.as_array() {\n            Some(argv) if !argv.is_empty() && argv.iter().all(Value::is_string) => Ok(()),\n            _ => Err(format!(\"`{name}` takes [command, ...args] as strings\")),\n        },\n        \"os\" => one_of(target, &[\"alive\", \"dead\"]),\n        _ => text(target),\n    }?;\n    for (key, v) in s.iter().filter(|(k, _)| *k != name) {\n        match key.as_str() {\n            \"timeoutMs\" | \"withinMs\" | \"graceMs\" | \"cols\" | \"rows\" => count(v),\n            \"as\" => text(v),\n            \"capture\" if name == \"processes\" => text(v),\n            \"capture\" => object(v)?.values().try_for_each(regex),\n            \"await\" | \"close\" | \"detach\" | \"lines\" => boolean(v),\n            \"data\" => data(v),\n            \"until\" => until(v),\n            \"pids\" => match v {\n                Value::Array(a) if !a.is_empty() && a.iter().all(|p| p.is_string() || p.is_u64()) => Ok(()),\n                Value::String(_) => Ok(()),\n                _ => Err(\"want a capture or a non-empty list of pids\".into()),\n            },\n            \"options\" => options(v),\n            \"expect\" => expect(name, s, v),\n            _ => Err(\"unknown key\".into()),\n        }\n        .map_err(|e| format!(\"{key}: {e}\"))?;\n    }\n    Ok(())\n}"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/tests/runner/schema.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/tests/runner/schema.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "c7d04d4eee962ad694a43b93379b2a7bff14a223",
+          "source_sha256": "ffe402bd83ae36c8aea613a6c18e06c1aaa972f89a14b805fd1b56524738dca3",
+          "source_bytes": 9358,
+          "line_count": 255,
+          "line_coordinates": "1-based inclusive, LF-delimited",
+          "start_line": 58,
+          "end_line": 95,
+          "quote": "fn expect(name: &str, s: &Map<String, Value>, v: &Value) -> Check {\n    let want = object(v)?;\n    let lines = s.get(\"lines\") == Some(&Value::Bool(true));\n    for (key, w) in want {\n        let allowed = match (name, key.as_str()) {\n            (_, \"error\" | \"elapsedMs\") => true,\n            (_, \"message\" | \"result\") => want.contains_key(\"error\"),\n            (\"run\" | \"wait\", k) => EXIT.contains(&k) || k == \"stdout\" || k == \"stderr\",\n            (\"stop\", k) => EXIT.contains(&k),\n            (\"read\", \"pieces\") => lines,\n            (\"read\", k) => STREAMS.contains(&k) || [\"chunks\", \"lostBefore\", \"continues\", \"droppedBytes\"].contains(&k),\n            (\"processes\", \"entries\") => true,\n            _ => false,\n        };\n        if !allowed {\n            return Err(format!(\"`{name}` cannot expect `{key}` (here)\"));\n        }\n        match key.as_str() {\n            \"error\" => one_of(w, &CODES),\n            \"message\" => match w {\n                Value::String(_) => Ok(()),\n                Value::Array(a) if !a.is_empty() && a.iter().all(Value::is_string) => Ok(()),\n                _ => Err(\"want text or a list of texts\".into()),\n            },\n            \"result\" => object(w)?.iter().try_for_each(|(k, m)| result_field(k, m)),\n            \"droppedBytes\" => object(w)?.iter().try_for_each(|(k, m)| match k.as_str() {\n                \"stdout\" | \"stderr\" => number(m),\n                _ => Err(format!(\"unknown stream {k}\")),\n            }),\n            \"pieces\" => object(w)?.iter().try_for_each(|(k, list)| pieces(k, list)),\n            \"entries\" => w.as_array().ok_or(\"want a list\")?.iter().try_for_each(entry),\n            k if STREAMS.contains(&k) => string(w),\n            k => result_field(k, w),\n        }\n        .map_err(|e| format!(\"{key}: {e}\"))?;\n    }\n    Ok(())\n}"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/tests/runner/schema.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/tests/runner/schema.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "c7d04d4eee962ad694a43b93379b2a7bff14a223",
+          "source_sha256": "ffe402bd83ae36c8aea613a6c18e06c1aaa972f89a14b805fd1b56524738dca3",
+          "source_bytes": 9358,
+          "line_count": 255,
+          "line_coordinates": "1-based inclusive, LF-delimited",
+          "start_line": 97,
+          "end_line": 140,
+          "quote": "/// A field of an `Exit` or `RunResult` (or a numeric field of `read`).\nfn result_field(key: &str, w: &Value) -> Check {\n    match key {\n        \"exitCode\" | \"chunks\" | \"lostBefore\" | \"continues\" | \"elapsedMs\" => number(w),\n        \"signal\" => string(w),\n        \"reason\" => one_of(w, &REASONS),\n        \"success\" => boolean(w),\n        \"stdout\" | \"stderr\" => string(w),\n        _ => Err(format!(\"unknown field {key}\")),\n    }\n}\n\nfn pieces(stream: &str, list: &Value) -> Check {\n    if !STREAMS.contains(&stream) {\n        return Err(format!(\"unknown stream {stream}\"));\n    }\n    for piece in list.as_array().ok_or(\"want a list of pieces\")? {\n        let p = object(piece)?;\n        if p.len() != 2\n            || !p.get(\"bytes\").is_some_and(Value::is_u64)\n            || !p.get(\"continues\").is_some_and(Value::is_boolean)\n        {\n            return Err(format!(\"a piece is {{\\\"bytes\\\": n, \\\"continues\\\": bool}}, not {piece}\"));\n        }\n    }\n    Ok(())\n}\n\nfn entry(e: &Value) -> Check {\n    for (k, w) in object(e)? {\n        let ids = |w: &Value| match w {\n            Value::String(_) => true,\n            Value::Array(a) => a.iter().all(|x| x.is_string() || x.is_u64()),\n            w => w.is_u64(),\n        };\n        match k.as_str() {\n            \"pid\" if ids(w) => {}\n            \"parentPid\" if w.is_null() || ids(w) => {}\n            \"name\" => string(w)?,\n            _ => return Err(format!(\"bad entry key {k}: {w}\")),\n        }\n    }\n    Ok(())\n}"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/tests/runner/names.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/tests/runner/names.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "0600409c934c4dbe8bff70613608359c8055c0b4",
+          "source_sha256": "de88a24a9f5cc8df8a7a23b09f6795ef788d9d65c2b014040f8b23278c72251e",
+          "source_bytes": 5665,
+          "line_count": 139,
+          "line_coordinates": "1-based inclusive, LF-delimited",
+          "start_line": 51,
+          "end_line": 92,
+          "quote": "    /// Checks step `s` (action `name`, value `target`) against the earlier steps, then records what it defines.\n    pub fn step(&mut self, name: &str, target: &Value, s: &Map<String, Value>) -> Check {\n        schema::step(name, target, s)?;\n        let has = |k: &str| s.contains_key(k);\n        let flag = |k: &str| s.get(k).and_then(Value::as_bool);\n        let kind = target.as_str().and_then(|h| self.handles.get(h).copied());\n        let child = matches!(kind, Some(Kind::Pipe | Kind::Pty));\n        let required: Result<(), &str> = match name {\n            \"run\" if has(\"as\") != (flag(\"await\") == Some(false)) => {\n                Err(\"`as` goes with `await: false`, and only with it\")\n            }\n            \"write\" if !child => Err(\"needs an earlier spawned child\"),\n            // SPEC: `write` without `data` only closes stdin.\n            \"write\" if !has(\"data\") && flag(\"close\") == Some(false) => Err(\"without `data` it closes stdin\"),\n            \"write\" if flag(\"close\").unwrap_or(!has(\"data\")) && kind == Some(Kind::Pty) => {\n                Err(\"closes stdin, which a terminal does not have\")\n            }\n            \"read\" | \"stop\" | \"processes\" if !child => Err(\"needs an earlier spawned child\"),\n            \"read\" if !has(\"until\") => Err(\"needs `until`\"),\n            \"wait\" if kind.is_none() => Err(\"needs an earlier spawned child or `run` with `await: false`\"),\n            \"resize\" if kind != Some(Kind::Pty) => Err(\"needs an earlier spawned terminal child (`pty`)\"),\n            \"resize\" if !has(\"cols\") || !has(\"rows\") => Err(\"needs `cols` and `rows`\"),\n            \"resize\"\n                if [\"cols\", \"rows\"]\n                    .iter()\n                    .any(|k| s[*k].as_u64().is_some_and(|n| n > u64::from(u16::MAX))) =>\n            {\n                Err(\"`cols` and `rows` must fit 16 bits\")\n            }\n            \"os\" if !has(\"pids\") => Err(\"needs `pids`\"),\n            _ => Ok(()),\n        };\n        required.map_err(|e| format!(\"`{name}` {e}\"))?;\n        for (key, v) in s.iter().filter(|(k, _)| *k != \"expect\") {\n            self.vars_in(v).map_err(|e| format!(\"{key}: {e}\"))?;\n        }\n        self.define(name, s);\n        match s.get(\"expect\") {\n            Some(want) => self.vars_in(want).map_err(|e| format!(\"expect: {e}\")),\n            None => Ok(()),\n        }\n    }"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/tests/runner/scenario.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/tests/runner/scenario.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "9e62d9c879cb78082cf96253805d0e9b082ad145",
+          "source_sha256": "5091a9aa986c7d46f301e3fea0e0566f9e06d330e7db2a91b77feb22a9510847",
+          "source_bytes": 4392,
+          "line_count": 107,
+          "line_coordinates": "1-based inclusive, LF-delimited",
+          "start_line": 33,
+          "end_line": 69,
+          "quote": "    /// Parses and validates a scenario; `stem` is its file name without `.json`, which must equal the id.\n    pub fn load(text: &str, stem: &str) -> Result<Scenario, String> {\n        let json: Map<String, Value> = serde_json::from_str(text).map_err(|e| format!(\"bad JSON: {e}\"))?;\n        if let Some(key) = json\n            .keys()\n            .find(|k| ![\"id\", \"os\", \"langs\", \"files\", \"steps\"].contains(&k.as_str()))\n        {\n            return Err(format!(\"unknown key {key}\"));\n        }\n        let id = json.get(\"id\").and_then(Value::as_str).ok_or(\"missing id\")?;\n        if id != stem || !pattern(r\"^C-[A-Z]+-\\d\\d\\.[a-z0-9-]+$\")?.is_match(id) {\n            return Err(format!(\"id {id:?} must be `<item>.<name>` and equal the file name\"));\n        }\n        for (key, allowed) in [(\"os\", &OSES), (\"langs\", &LANGS)] {\n            if let Some(v) = json.get(key) {\n                let list = v.as_array().ok_or_else(|| format!(\"{key} must be a list\"))?;\n                if list.is_empty() || !list.iter().all(|x| x.as_str().is_some_and(|x| allowed.contains(&x))) {\n                    return Err(format!(\"{key} must list some of {allowed:?}\"));\n                }\n            }\n        }\n        let mut names = Names::new();\n        names.files(json.get(\"files\"))?;\n        let steps = json\n            .get(\"steps\")\n            .and_then(Value::as_array)\n            .filter(|s| !s.is_empty())\n            .ok_or(\"missing steps\")?;\n        for (i, step) in steps.iter().enumerate() {\n            let (name, target) = action(step).map_err(|e| format!(\"step {i}: {e}\"))?;\n            let obj = step.as_object().ok_or_else(|| format!(\"step {i}: not an object\"))?;\n            names\n                .step(name, target, obj)\n                .map_err(|e| format!(\"step {i} ({name}): {e}\"))?;\n        }\n        Ok(Scenario { json })\n    }"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/tests/runner/suite.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/tests/runner/suite.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "decc807cac6e2f0554130b636d2f36a514a61e96",
+          "source_sha256": "34f5dc73b80294c02802f4829d356bf59334df4b55bef447090bb9d5f1c23b50",
+          "source_bytes": 2983,
+          "line_count": 84,
+          "line_coordinates": "1-based inclusive, LF-delimited",
+          "start_line": 48,
+          "end_line": 78,
+          "quote": "        let loaded = std::fs::read_to_string(path)\n            .map_err(|e| e.to_string())\n            .and_then(|text| Scenario::load(&text, &stem));\n        let started = Instant::now();\n        let result = match loaded {\n            Ok(s) if !s.applies() => {\n                sum.other += 1;\n                continue;\n            }\n            Ok(s) => {\n                tokio::task::LocalSet::new()\n                    .run_until(super::run(&s, fixture, sum.ran + 1))\n                    .await\n            }\n            Err(e) => Err(Fail::Harness(format!(\"bad scenario: {e}\"))),\n        };\n        sum.ran += 1;\n        *items.entry(item.clone()).or_insert(true) &= result.is_ok();\n        match result {\n            Ok(()) => {\n                sum.passed += 1;\n                println!(\"ok      {stem} ({} ms)\", started.elapsed().as_millis());\n            }\n            Err(Fail::Product(e)) if ledger.pending(&item) => {\n                sum.pending += 1;\n                println!(\"pending {stem}: {e}\");\n            }\n            Err(Fail::Product(e) | Fail::Harness(e)) => errors.push(format!(\"{stem}: {e}\")),\n        }\n    }\n    errors.extend(ledger.check(&known, &items));"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/tests/runner/mod.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/tests/runner/mod.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "84a5dd002898539bacc1d7b1cf9101ec339edf28",
+          "source_sha256": "87bc545e3ab1ae13d297ff740bedbf5905d8091a6c2d54af8ea3ca066cc4667a",
+          "source_bytes": 11565,
+          "line_count": 286,
+          "line_coordinates": "1-based inclusive, LF-delimited",
+          "start_line": 50,
+          "end_line": 105,
+          "quote": "/// Runs `s` in a fresh `${TMP}`; `Err` names the failing step, its action, and expected vs got.\npub async fn run(s: &Scenario, fixture: &Path, seq: usize) -> Result<(), Fail> {\n    let tmp = os::tmp(seq);\n    let mut ctx = Ctx {\n        vars: HashMap::from([\n            (\"FIXTURE\".into(), vec![fixture.display().to_string()]),\n            (\"TMP\".into(), vec![tmp.display().to_string()]),\n            (\"EXE\".into(), vec![std::env::consts::EXE_SUFFIX.into()]),\n        ]),\n        kids: HashMap::new(),\n        runs: HashMap::new(),\n        readers: HashMap::new(),\n        token: CancellationToken::new(),\n    };\n    let result = ctx.steps(s, &tmp).await;\n    // Clean up whatever is left: cancel pending runs, drop (force-kill) every child.\n    ctx.token.cancel();\n    ctx.runs.values().for_each(JoinHandle::abort);\n    drop(ctx);\n    let _ = std::fs::remove_dir_all(&tmp);\n    result\n}\n\nimpl Ctx {\n    async fn steps(&mut self, s: &Scenario, tmp: &Path) -> Result<(), Fail> {\n        for (name, content) in s.files() {\n            let path = tmp.join(self.text(name)?);\n            let content = self.text(content.as_str().ok_or(\"file contents must be text\")?)?;\n            std::fs::create_dir_all(path.parent().unwrap_or(tmp)).map_err(|e| e.to_string())?;\n            std::fs::write(&path, content).map_err(|e| format!(\"files: {e}\"))?;\n        }\n        for (i, step) in s.steps().enumerate() {\n            let (name, _) = action(step)?;\n            self.step(step).await.map_err(|f| f.at(&format!(\"step {i} ({name})\")))?;\n        }\n        Ok(())\n    }\n\n    async fn step(&mut self, step: &Value) -> Result<(), Fail> {\n        let (name, target) = action(step)?;\n        let s = step.as_object().ok_or(\"a step must be an object\")?;\n        let limit = s.get(\"timeoutMs\").and_then(Value::as_u64).unwrap_or(10_000);\n        let started = Instant::now();\n        let outcome = match tokio::time::timeout(Duration::from_millis(limit), self.act(name, target, s)).await {\n            Ok(outcome) => outcome?,\n            // Every action but `os` waits on the library; an `os` timeout is the oracle hanging.\n            Err(_) if name == \"os\" => return Err(Fail::Harness(format!(\"the OS oracle timed out after {limit} ms\"))),\n            Err(_) => return Err(Fail::Product(format!(\"timed out after {limit} ms\"))),\n        };\n        match s.get(\"expect\") {\n            Some(want) => expect::check(&self.resolve(want)?, &outcome, started.elapsed()),\n            None => outcome\n                .map(drop)\n                .map_err(|e| Fail::Product(format!(\"unexpected error {e}\"))),\n        }\n    }"
+        }
+      ]
+    }
+  ],
+  "retained_record_decisions": [
+    {
+      "record_index": 0,
+      "path": "native/omni/crates/hugr-omni/tests/runner/command.rs",
+      "git_blob_sha": "d821afbfaec029a662f65b44f2ec310ccdff3720",
+      "source_sha256": "96309819c54f8726cf278e98189b52eab73a8afc7394a6528cf3920753df0a62",
+      "source_bytes": 4816,
+      "line_count": 138,
+      "kind": "test",
+      "retained_disposition": "analyzed",
+      "source_identity_unchanged": true,
+      "record_object_unchanged": false,
+      "changed_fields": [
+        "behavior[1]",
+        "failures_or_limits[1] (append)"
+      ],
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "record_index": 1,
+      "path": "native/omni/crates/hugr-omni/tests/runner/expect.rs",
+      "git_blob_sha": "7107cd30a509c7b2a7654fe314bfc1b00347ff53",
+      "source_sha256": "54b06b10f5cbcc97d838cbb37e651dae3e599a7c7bf5c76046f5aea7686efbe7",
+      "source_bytes": 10106,
+      "line_count": 276,
+      "kind": "test",
+      "retained_disposition": "analyzed",
+      "source_identity_unchanged": true,
+      "record_object_unchanged": false,
+      "changed_fields": [
+        "behavior[1]"
+      ],
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "record_index": 2,
+      "path": "native/omni/crates/hugr-omni/tests/runner/ledger.rs",
+      "git_blob_sha": "4dd7eb82054795c6833ea7a04c47e240f6050788",
+      "source_sha256": "edc73e7fb833b10d48bedcf11206741b7c5af45fbd30f05881711295c8d34b7f",
+      "source_bytes": 3000,
+      "line_count": 78,
+      "kind": "test",
+      "retained_disposition": "analyzed",
+      "source_identity_unchanged": true,
+      "record_object_unchanged": true,
+      "changed_fields": [],
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "record_index": 3,
+      "path": "native/omni/crates/hugr-omni/tests/runner/mod.rs",
+      "git_blob_sha": "84a5dd002898539bacc1d7b1cf9101ec339edf28",
+      "source_sha256": "87bc545e3ab1ae13d297ff740bedbf5905d8091a6c2d54af8ea3ca066cc4667a",
+      "source_bytes": 11565,
+      "line_count": 286,
+      "kind": "test",
+      "retained_disposition": "analyzed",
+      "source_identity_unchanged": true,
+      "record_object_unchanged": true,
+      "changed_fields": [],
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "record_index": 4,
+      "path": "native/omni/crates/hugr-omni/tests/runner/names.rs",
+      "git_blob_sha": "0600409c934c4dbe8bff70613608359c8055c0b4",
+      "source_sha256": "de88a24a9f5cc8df8a7a23b09f6795ef788d9d65c2b014040f8b23278c72251e",
+      "source_bytes": 5665,
+      "line_count": 139,
+      "kind": "test",
+      "retained_disposition": "analyzed",
+      "source_identity_unchanged": true,
+      "record_object_unchanged": true,
+      "changed_fields": [],
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "record_index": 5,
+      "path": "native/omni/crates/hugr-omni/tests/runner/os.rs",
+      "git_blob_sha": "854630011360fbc4c8664e6620bb36364d8871f4",
+      "source_sha256": "1da904a68655383046af8423eb02f39b80132e97240cf31d9c86551a0e6cc7f0",
+      "source_bytes": 5936,
+      "line_count": 144,
+      "kind": "test",
+      "retained_disposition": "analyzed",
+      "source_identity_unchanged": true,
+      "record_object_unchanged": true,
+      "changed_fields": [],
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "record_index": 6,
+      "path": "native/omni/crates/hugr-omni/tests/runner/pattern.rs",
+      "git_blob_sha": "9f84a53d81d500cf8427d24200922fae5046d680",
+      "source_sha256": "905ed1e59f5adc15f28804ce94bf91b9be5bf22a19746f8222872b3af9711d2a",
+      "source_bytes": 7292,
+      "line_count": 160,
+      "kind": "test",
+      "retained_disposition": "analyzed",
+      "source_identity_unchanged": true,
+      "record_object_unchanged": true,
+      "changed_fields": [],
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "record_index": 7,
+      "path": "native/omni/crates/hugr-omni/tests/runner/read.rs",
+      "git_blob_sha": "d952863dc844de14d5c0bdecd9666c2101d9fc1d",
+      "source_sha256": "d35c1c6c3df02b4f842ec04ded53875145f8f0ceeca251ad6da1f6b615e487c0",
+      "source_bytes": 7426,
+      "line_count": 211,
+      "kind": "test",
+      "retained_disposition": "analyzed",
+      "source_identity_unchanged": true,
+      "record_object_unchanged": true,
+      "changed_fields": [],
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "record_index": 8,
+      "path": "native/omni/crates/hugr-omni/tests/runner/scenario.rs",
+      "git_blob_sha": "9e62d9c879cb78082cf96253805d0e9b082ad145",
+      "source_sha256": "5091a9aa986c7d46f301e3fea0e0566f9e06d330e7db2a91b77feb22a9510847",
+      "source_bytes": 4392,
+      "line_count": 107,
+      "kind": "test",
+      "retained_disposition": "analyzed",
+      "source_identity_unchanged": true,
+      "record_object_unchanged": true,
+      "changed_fields": [],
+      "runtime_status": "NOT_RUN"
+    }
+  ],
+  "unchanged_record_indices": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "additional_baseline_inputs_by_record": [
+    {
+      "record_index": 0,
+      "record_path": "native/omni/crates/hugr-omni/tests/runner/command.rs",
+      "additional_inputs": [
+        {
+          "path": "native/omni/crates/hugr-omni/tests/runner/schema.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/tests/runner/schema.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "c7d04d4eee962ad694a43b93379b2a7bff14a223",
+          "source_sha256": "ffe402bd83ae36c8aea613a6c18e06c1aaa972f89a14b805fd1b56524738dca3",
+          "source_bytes": 9358,
+          "line_count": 255,
+          "used_for": "Numeric command-option acceptance at lines 142–173 has no Duration representable-range upper bound; this is supporting input for both corrected conversion behavior and appended limit."
+        }
+      ]
+    },
+    {
+      "record_index": 1,
+      "record_path": "native/omni/crates/hugr-omni/tests/runner/expect.rs",
+      "additional_inputs": [
+        {
+          "path": "native/omni/crates/hugr-omni/tests/runner/schema.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/tests/runner/schema.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "c7d04d4eee962ad694a43b93379b2a7bff14a223",
+          "source_sha256": "ffe402bd83ae36c8aea613a6c18e06c1aaa972f89a14b805fd1b56524738dca3",
+          "source_bytes": 9358,
+          "line_count": 255,
+          "used_for": "step 25–56 invokes expect; expect 58–95, result_field 97–107, pieces 109–123 and entry 125–140 establish preflight expectation-shape validation."
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/tests/runner/names.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/tests/runner/names.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "0600409c934c4dbe8bff70613608359c8055c0b4",
+          "source_sha256": "de88a24a9f5cc8df8a7a23b09f6795ef788d9d65c2b014040f8b23278c72251e",
+          "source_bytes": 5665,
+          "line_count": 139,
+          "used_for": "Names::step 51–92 invokes schema::step before action/name/reference checks."
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/tests/runner/scenario.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/tests/runner/scenario.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "9e62d9c879cb78082cf96253805d0e9b082ad145",
+          "source_sha256": "5091a9aa986c7d46f301e3fea0e0566f9e06d330e7db2a91b77feb22a9510847",
+          "source_bytes": 4392,
+          "line_count": 107,
+          "used_for": "Scenario::load 33–69 validates each step through Names::step before producing a Scenario."
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/tests/runner/suite.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/tests/runner/suite.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "decc807cac6e2f0554130b636d2f36a514a61e96",
+          "source_sha256": "34f5dc73b80294c02802f4829d356bf59334df4b55bef447090bb9d5f1c23b50",
+          "source_bytes": 2983,
+          "line_count": 84,
+          "used_for": "48–78 loads/validates before applicability/execution, converts load errors to Harness, and makes only a ledger-listed Product failure pending before final ledger checks."
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/tests/runner/mod.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/tests/runner/mod.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "84a5dd002898539bacc1d7b1cf9101ec339edf28",
+          "source_sha256": "87bc545e3ab1ae13d297ff740bedbf5905d8091a6c2d54af8ea3ca066cc4667a",
+          "source_bytes": 11565,
+          "line_count": 286,
+          "used_for": "run/Ctx::steps/Ctx::step 50–105 execute a loaded Scenario and invoke expect::check on the resolved expectation and outcome; this binds the separate runtime comparison stage."
+        }
+      ]
+    }
+  ],
+  "preserved_v2_correction": {
+    "file": "records-09.v2.json",
+    "sha256": "8e5718778a6e24f54a79f2c456f858946d36cc796e15268ca1b6859f21b89adf",
+    "bytes": 41900,
+    "record_index": 0,
+    "field": "failures_or_limits[0]",
+    "text_unchanged": "This adapter does not expose maxRssBytes or pipe backpressure at this source revision. hex_bytes consumes pairs and accepts a final single hex digit; schema.rs reuses the same parser rather than requiring even length.",
+    "evidence_unchanged": true,
+    "reason": "The correction about hex_bytes accepting a final single hex digit is retained verbatim; no hex behavior or evidence was changed."
+  },
+  "cross_reference_check": {
+    "active_record_files_checked": [
+      "records-01.v2.json",
+      "records-02.v3.json",
+      "records-03.v2.json",
+      "records-04.v2.json",
+      "records-05.json",
+      "records-06.v2.json",
+      "records-07.v2.json",
+      "records-08.v2.json",
+      "records-09.v2.json",
+      "records-10.json",
+      "records-11.v2.json",
+      "records-12.json",
+      "records-13.json",
+      "records-14.json",
+      "records-15.json",
+      "records-16.json",
+      "records-17.json",
+      "records-18.json"
+    ],
+    "method": "Inspected matching duration/finite-number, missing-field/partial-result and Harness/Product statements in active CORE semantic fields and the L2 synopsis.",
+    "related_claims_retained": [
+      {
+        "file": "l2-notes.md",
+        "line": 70,
+        "reason": "Describes scenario structure/name validation, Harness/Product separation and Product-only pending eligibility. It does not classify every absent partial result as Harness or claim the outcome comparator alone validates every shape."
+      },
+      {
+        "file": "l2-notes.md",
+        "line": 38,
+        "reason": "Describes production grace rounding and wire truncation, not the separate conformance adapter floating-point Duration range boundary."
+      },
+      {
+        "file": "l2-notes.md",
+        "line": 77,
+        "reason": "The final-single-hex-digit statement remains accurate and is preserved in the active v3 record."
+      },
+      {
+        "file": "records-10.json",
+        "record_index": 0,
+        "reason": "Describes accepted option syntax and malformed schema fixtures; it does not assert that numeric option values already have a Duration upper-range guard."
+      }
+    ],
+    "dependent_changes": [],
+    "l2_drafts_modified": [],
+    "l2_notes_sha256_preserved": "71b3dd5e454625a8cbe79141b1b8d91bce82ebf4a460f337b2555fbf2aaba6c8",
+    "l2_status": "Candidate synopsis remains unaccepted; no formal L2/L3/L4 authoring or acceptance review performed."
+  },
+  "originals_preserved": [
+    {
+      "file": "records-09.json",
+      "sha256": "2618b97190eeb9cd9381642301aba4e22197806c0b19b8497311009ed7d0fcdf",
+      "bytes": 41437
+    },
+    {
+      "file": "records-09.v2.json",
+      "sha256": "8e5718778a6e24f54a79f2c456f858946d36cc796e15268ca1b6859f21b89adf",
+      "bytes": 41900
+    }
+  ],
+  "strict_change_scope": "Only /0/behavior/1 and /1/behavior/1 are replaced, and /0/failures_or_limits/1 is appended. All nine paths, source identities, evidence quotations, dispositions and every unrelated field are unchanged; record objects 2–8 are identical to v2.",
+  "delivery_before_sha256": "10778468d0c6230b9c90a672a562a12934d85f66e2d1ed3f0419b9b8d7aaee06",
+  "delivery_after_sha256": "79f614467338cc45dc4f35f4aa23f8d74a72f2debd809ef15835de5ec4aea748",
+  "runtime_status": "NOT_RUN",
+  "acceptance": "Pending independent review; the original author does not self-approve."
+}
