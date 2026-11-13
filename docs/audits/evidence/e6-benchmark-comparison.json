@@ -1,0 +1,258 @@
+{
+  "verdict": "APPROVE_FUNCTIONAL_AND_COLLECTION_SCOPE",
+  "scope": "Actual six selected benchmark executions and complete paired evidence collection; no causal performance claim and no finding closure.",
+  "datasets": {
+    "before": {
+      "run": 43265220168,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43265220168",
+      "jobs": [
+        {
+          "databaseId": 131346854867,
+          "name": "test (ubuntu-24.04)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "databaseId": 131350237360,
+          "name": "cleanup",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "artifact": 13966232311,
+      "artifact_name": "playwright-ubuntu-24.04-1",
+      "zip_bytes": 256544,
+      "zip_sha256": "3fd604c54d58de1d0eb99f51370affdeb610addd4b1fbead394309f7fa7b9658",
+      "snapshot": "ba9e0fb61ce5c82b129f2cdb000d37a5c4c78e80",
+      "parents": [
+        "348ad68a8fa7e29f185b20ecb3a2042886a5741f"
+      ],
+      "snapshot_changed_from_parent": [
+        ".ci-run.json"
+      ],
+      "records": {
+        "BENCHMARK_PAGE": 90,
+        "BENCHMARK": 6
+      },
+      "record_total": 96,
+      "records_canonical_sha256": "9ebca5bf2510f6e512c93d4ae94f580ed5728bb21bb4a0e98e0064cbaee93840",
+      "inner_report_sha256": "4d902d9b55ba7709f487b404af6c7f202e68a6ee44ce45820b4fbd86b36fc4c8",
+      "case_file_sha256": "7ca92426871d3316a063831ce99a01621726ee412f371126033876144b6123c4",
+      "playwright_runtime_sha256": "a6602ba7f422a9d0f73d54bdefed9842d758e5e5a6d69a05320b37c6b6214e1f",
+      "test_statuses": [
+        "passed",
+        "passed",
+        "passed",
+        "passed",
+        "passed",
+        "passed"
+      ],
+      "selected_test_titles": {
+        "benchmarks cold and hot session tab switching": 3,
+        "benchmarks v2 session tab switching with and without the review pane": 3
+      },
+      "effective": {
+        "platform": "linux",
+        "arch": "x64",
+        "renderer": "current",
+        "workers": 1,
+        "repeatEach": 3,
+        "retries": 0,
+        "config": "e2e/performance/playwright.config.ts",
+        "selected_spec": "e2e/performance/timeline/session-tab-switch-benchmark.spec.ts",
+        "request": {
+          "package": "app",
+          "directory": "packages/app-shell",
+          "packageSelector": "packages/app",
+          "runner": "playwright",
+          "args": [
+            "e2e/performance/timeline/session-tab-switch-benchmark.spec.ts"
+          ],
+          "env": {},
+          "config": "e2e/performance/playwright.config.ts",
+          "benchmarkRenderer": "current"
+        }
+      },
+      "stats": {
+        "startTime": "2026-11-12T17:04:23.486Z",
+        "duration": 221098.179,
+        "expected": 6,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "grepInvert_serialized": null
+    },
+    "after": {
+      "run": 43380610880,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43380610880",
+      "jobs": [
+        {
+          "databaseId": 131737248899,
+          "name": "test (ubuntu-24.04)",
+          "status": "completed",
+          "conclusion": "success"
+        },
+        {
+          "databaseId": 131739559947,
+          "name": "cleanup",
+          "status": "completed",
+          "conclusion": "success"
+        }
+      ],
+      "artifact": 14015784010,
+      "artifact_name": "playwright-ubuntu-24.04-1",
+      "zip_bytes": 256723,
+      "zip_sha256": "5bb3d4e6c41bea955d2f75878f896a28872b3184637b352c0ab510b746517d85",
+      "snapshot": "d1b468b0f93b750602ceb4e5e0ccf0886c5d5332",
+      "parents": [
+        "6a0d01d332fa0ef2583391a6ddfa6b7efbebc3d1"
+      ],
+      "snapshot_changed_from_parent": [
+        ".ci-run.json",
+        ".github/workflows/test-ci.yml",
+        "docs/audits/evidence/client-generated-union-provenance.json",
+        "docs/audits/evidence/client-generated-union-recovery.json",
+        "docs/audits/evidence/e6-final-functional-union.json",
+        "docs/audits/evidence/l5-independent-writers-union.json",
+        "docs/audits/remediation-client-generation-plan.md",
+        "docs/audits/remediation-native-executor-plan.md",
+        "docs/audits/remediation-replay-binding-contract-draft.md",
+        "docs/audits/remediation-source-retention-plan.md",
+        "packages/client/src/generated/client.ts",
+        "packages/core/test/fixture/knowledge-replay-binding.ts",
+        "packages/core/test/knowledge-replay-binding.test.ts"
+      ],
+      "records": {
+        "BENCHMARK_PAGE": 90,
+        "BENCHMARK": 6
+      },
+      "record_total": 96,
+      "records_canonical_sha256": "b10ddefc2caebf2ab3a44365a3d0a932a72667c28c7017e1cc75dbdd9b754ea7",
+      "inner_report_sha256": "a34e1c6d5245bc57ab2d7f29133bb894c290f9a65e5c4340a9e74606519dbead",
+      "case_file_sha256": "f572808e33a463d6b2b703d8da414f1594e583e4882ea0a611a8a72aa573e0bc",
+      "playwright_runtime_sha256": "fa660e25455740ebab042b51ea3ca2258468cd2d325590bb919c4ff1014b3739",
+      "test_statuses": [
+        "passed",
+        "passed",
+        "passed",
+        "passed",
+        "passed",
+        "passed"
+      ],
+      "selected_test_titles": {
+        "benchmarks cold and hot session tab switching": 3,
+        "benchmarks v2 session tab switching with and without the review pane": 3
+      },
+      "effective": {
+        "platform": "linux",
+        "arch": "x64",
+        "renderer": "current",
+        "workers": 1,
+        "repeatEach": 3,
+        "retries": 0,
+        "config": "e2e/performance/playwright.config.ts",
+        "selected_spec": "e2e/performance/timeline/session-tab-switch-benchmark.spec.ts",
+        "request": {
+          "package": "app",
+          "directory": "packages/app-shell",
+          "packageSelector": "packages/app",
+          "runner": "playwright",
+          "args": [
+            "e2e/performance/timeline/session-tab-switch-benchmark.spec.ts"
+          ],
+          "env": {},
+          "config": "e2e/performance/playwright.config.ts",
+          "benchmarkRenderer": "current"
+        }
+      },
+      "stats": {
+        "startTime": "2026-11-13T06:44:51.912Z",
+        "duration": 253954.497,
+        "expected": 6,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "grepInvert_serialized": {}
+    }
+  },
+  "discrepancies": [],
+  "source_continuity": {
+    "input_root": "a356555691e7129468adc99478a2ffd4f90452f9",
+    "before_source": "348ad68a8fa7e29f185b20ecb3a2042886a5741f",
+    "critical_path_count": 108,
+    "all_after_snapshot_match_root": true,
+    "critical_blob_manifest_sha256": "a955f856a2b16a958b0e64f390c501a5e63be9e44c7edfe9a522db5d22cb0150",
+    "performance_tree_changed_before_to_root": [
+      "packages/app-shell/e2e/performance/timeline/home-tab-navigation-benchmark.spec.ts"
+    ],
+    "unselected_change_only": true,
+    "scope": "Selected performance harness and E6 owned code/tests match the actual AFTER snapshot; source changes elsewhere and incoming dev prevent causal attribution.",
+    "critical_blob_manifest_file_sha256": "2a3ce9281653c0c34161d8e583134f8030a4135d9ff3d45ae74df6f785c705d3",
+    "selected_critical_blobs": [
+      {
+        "path": "packages/app-shell/e2e/performance/benchmark.ts",
+        "root_blob": "1165988db612185a83f39487bd1af550e9813b03",
+        "after_snapshot_blob": "1165988db612185a83f39487bd1af550e9813b03",
+        "match": true
+      },
+      {
+        "path": "packages/app-shell/e2e/performance/playwright.config.ts",
+        "root_blob": "bffb4db9d097bc39e9c8191d24b8c4e29b543ffc",
+        "after_snapshot_blob": "bffb4db9d097bc39e9c8191d24b8c4e29b543ffc",
+        "match": true
+      },
+      {
+        "path": "packages/app-shell/e2e/performance/timeline/session-tab-switch-benchmark.spec.ts",
+        "root_blob": "3a3c6bad49c1e0dbeb942587846580f41c873b84",
+        "after_snapshot_blob": "3a3c6bad49c1e0dbeb942587846580f41c873b84",
+        "match": true
+      },
+      {
+        "path": "packages/app-shell/e2e/performance/timeline/session-tab-switch-probe.ts",
+        "root_blob": "955da80367d7bf3307864f758c8b1e0de94588f4",
+        "after_snapshot_blob": "955da80367d7bf3307864f758c8b1e0de94588f4",
+        "match": true
+      },
+      {
+        "path": "packages/app-shell/e2e/performance/timeline/session-timeline-stress.fixture.ts",
+        "root_blob": "94d603ae36f4bc5bea35c00023545987cbe83fba",
+        "after_snapshot_blob": "94d603ae36f4bc5bea35c00023545987cbe83fba",
+        "match": true
+      },
+      {
+        "path": "packages/app-shell/e2e/performance/timeline/timeline-test-helpers.ts",
+        "root_blob": "7de0c322d7617179ddc910a30b33c40e2dc576d3",
+        "after_snapshot_blob": "7de0c322d7617179ddc910a30b33c40e2dc576d3",
+        "match": true
+      },
+      {
+        "path": "packages/app-shell/playwright.config.ts",
+        "root_blob": "d935c68f5b996c0e53195ec832b969c217fcf858",
+        "after_snapshot_blob": "d935c68f5b996c0e53195ec832b969c217fcf858",
+        "match": true
+      },
+      {
+        "path": "packages/app-shell/src/pages/session.tsx",
+        "root_blob": "40e77224150d4163cf9536aee25503650b8500bc",
+        "after_snapshot_blob": "40e77224150d4163cf9536aee25503650b8500bc",
+        "match": true
+      }
+    ]
+  },
+  "effective_comparison": {
+    "same_selected_execution_configuration": true,
+    "same_six_test_title_multiplicity": true,
+    "metadata_revision_differences": "Expected run/commit/time/revision differences",
+    "grepInvert_difference": "BEFORE null, AFTER {} reflects serialized default channel regex in base config. Selected spec is untagged; both datasets execute identical six cases with no skips. Do not call whole config byte-identical.",
+    "duration_ms": {
+      "before": 221098.179,
+      "after": 253954.497
+    },
+    "performance_claim": "None. These are unpaired source revisions across incoming dev and hosted execution variation; duration is descriptive only."
+  },
+  "comparison_input_sha256": "41bb308b5c8660d12d93e1d46532c5d4f1eb58cb038786e307cba812bbfdcbed",
+  "after_job_raw_sha256": "4b0271d1f090570e3132201348912e50a7a119591fc8d2a7384407e464107515",
+  "rootAssessment": "E6 functional and requested collection gates satisfied. Closed at this integrated source; full epic remains final PR obligation. No causal performance gain or regression threshold asserted."
+}

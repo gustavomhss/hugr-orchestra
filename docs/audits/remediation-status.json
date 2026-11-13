@@ -277,7 +277,7 @@
       "id": "E6",
       "severity": "P2",
       "owner": "clients",
-      "status": "core_host_api_verified_ui_planned",
+      "status": "fixed_verified",
       "runtime_reproduced": true,
       "commits": [
         "8253290d1d",
@@ -297,7 +297,9 @@
         "e288a0387a",
         "a2870ff7e8",
         "e14cf72118",
-        "2ba68435ec"
+        "2ba68435ec",
+        "f914f19c8042f8f1f6544d6254a4fb91702d7bec",
+        "1ea3a466a7ddaa5b5d1d5c9be1e9bf07f8826990"
       ],
       "evidence": [
         {
@@ -448,9 +450,26 @@
           "source": "f914f19c8042f8f1f6544d6254a4fb91702d7bec",
           "snapshot": "8020cedd286a87abe4ce92bfcbe5a827d65ecf70",
           "result": "Both OS76pass/0fail/8files, all six original variant cases and four actual atomic I/O cases executed. Root independently checked both jobs/raw and snapshot diff only .ci-run.json. TUI type0. Previous43364979791 actual76 failed Linux74/2/1error and Windows73/3 because real preference writes raced fixture removal; owner-local bootstrap/write flush and joined teardown fixed lifetime without changing oracles. One GitHub422 before dispatch preserved, followed by exactly one authorized official retry. Final dev integration/App aggregate/AFTER benchmark pending; E6 remains open."
+        },
+        {
+          "kind": "final_integrated_functional_union_both_os",
+          "runs": [
+            "43368851805",
+            "43368851179",
+            "43369898441"
+          ],
+          "result": "PerOS: A114P849assertions, B11unitP34assertions+3browserP15assertions and2isolatedwrappers exit0; TUI76P including6variants+4realatomiccases. Exact snapshots/54ownedpaths and rawjobs independently checked. evidence/e6-final-functional-union.json."
+        },
+        {
+          "kind": "requested_production_before_after_collection",
+          "runs": [
+            "43265220168",
+            "43380610880"
+          ],
+          "result": "Both6passed,90PAGE+6BENCHMARK each, Linux/current/1worker/repeat3/retries0. Both ZIP digests and embedded HTML/runtime records match. AFTER108critical blobs exact. Effective selectedconfig equivalent; metadata and serializedgrepInvert differ, no causal performance claim. evidence/e6-benchmark-comparison.json."
         }
       ],
-      "remaining": "Core/host/API and literal variant identity are integrated and verified in scoped hosted gates. Consumer correction freeze/cold review, Client/SessionUI/App/TUI types, full consumer/E1/owner regressions and production AFTER benchmark remain required. Whole E6 stays open. Historical stored default strings are preserved literally; ambiguous old aliases are not rewritten."
+      "remaining": "Closed for explicit model/variant identity and current App/TUI consumers under preserved preference storage compatibility. Legacy stored default intent cannot be recovered; first-known-model metadata performs documented one-time inference. No causal benchmark improvement or durable preference transaction guarantee; full epic remains final PR gate."
     },
     {
       "id": "E7",
