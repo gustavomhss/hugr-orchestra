@@ -1,0 +1,312 @@
+{
+  "version": 1,
+  "verdict": "APPROVE",
+  "scope": "Official configuration schema collection only; no local generation or recovery performed by reviewer. Declared tracked-source scope is not a complete import graph.",
+  "run": {
+    "id": 43445799130,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43445799130",
+    "conclusion": "success",
+    "jobID": 131954767729,
+    "os": "Linux",
+    "testCases": 26,
+    "omniSpawns": 6,
+    "assertions": 69,
+    "rawJobLogSHA256": "a4f5c0f690ade0a01fcc7c7d9924a2b77221305c1fe41166d4337e2b7da012a4"
+  },
+  "artifact": {
+    "id": 14047658645,
+    "name": "config-generated-43445799130-1-ae6aaaf387afa852df2f46224a6fc6ea0d82280b",
+    "zipSHA256": "a548151fbb141eb78a556e66f5f9ab47e86a3203297478f525a642d52446574d",
+    "provenanceSHA256": "badcb3f6a5ab0a49af16728334d6666a6943433b2699afad598a2ca4bb385512",
+    "inventory": [
+      "provenance.json",
+      "schema/config.json",
+      "schema/theme.json",
+      "schema/tui.json"
+    ]
+  },
+  "snapshot": {
+    "sha": "ae6aaaf387afa852df2f46224a6fc6ea0d82280b",
+    "parent": "c54a5180d68899b2b5a94d67d5cc6dc0651f1681",
+    "changesFromParent": [
+      ".ci-run.json"
+    ]
+  },
+  "inputSourceCommit": "c54a5180d68899b2b5a94d67d5cc6dc0651f1681",
+  "reviewedCurrentRootCommit": "c54a5180d68899b2b5a94d67d5cc6dc0651f1681",
+  "request": {
+    "package": "core",
+    "directory": "packages/core",
+    "packageSelector": "packages/core",
+    "runner": "bun",
+    "args": [
+      "./test/config-generated-artifact.test.ts",
+      "--timeout",
+      "900000"
+    ],
+    "env": {}
+  },
+  "runtime": {
+    "bunRuntime": "1.3.14",
+    "bunNodeCompatibility": "24.3.0",
+    "bunCLI": "1.3.14"
+  },
+  "platform": "linux",
+  "arch": "x64",
+  "sourceScope": [
+    "packages/core",
+    "packages/schema",
+    "packages/llm",
+    "packages/tui",
+    "script",
+    "apps/cli/script",
+    "packages/ui/src/theme/desktop-theme.schema.json",
+    "package.json",
+    "bun.lock",
+    "bunfig.toml",
+    "tsconfig.json"
+  ],
+  "sourceScopeBasis": "Declared tracked-source prefixes cover Core, Schema, LLM, TUI, shared scripts, CLI scripts, the directly mirrored UI theme schema and root package/runtime configuration. Installed external dependencies are bound by bun.lock; this is not a complete repository or dynamically discovered import graph manifest.",
+  "sourceVector": {
+    "count": 2642,
+    "canonicalSHA256": "ea9ef8bb5d5c700f557954e55a87b7f849818d134118992f054bdfa88c621254",
+    "beforeEqualsAfter": true,
+    "inputCommitMismatches": [],
+    "currentRootMismatches": [],
+    "criticalFiles": [
+      {
+        "path": "apps/cli/script/schema-files.ts",
+        "sha256": "d3e2cab1821f5321fe8840b367f9b0d77a2b9ab73308f0837dfd7de9250f4a06",
+        "bytes": 3428
+      },
+      {
+        "path": "bun.lock",
+        "sha256": "2f17db8fac3fd523bc679d6b8eb95cb044e67b702d2a7249d5223c06f801824c",
+        "bytes": 497782
+      },
+      {
+        "path": "packages/core/src/config.ts",
+        "sha256": "633c2d6fb9e540ff60dbbaa742ab9db981e6d4538c22af4108b3adfe8be6330e",
+        "bytes": 20966
+      },
+      {
+        "path": "packages/tui/package.json",
+        "sha256": "d48cb7e9b8b40f7910e4abb62175ac425767b76f891fbd44b067fee0b0594f74",
+        "bytes": 2766
+      },
+      {
+        "path": "packages/tui/src/config/index.tsx",
+        "sha256": "b314ec2657361cd4e328d67c164d97f4bbcc70239cb2f33eef9e84671f23b38d",
+        "bytes": 2797
+      },
+      {
+        "path": "packages/tui/src/config/keybind.ts",
+        "sha256": "e1be565a9e0b04374ae1d3c23194b014b62ed9360382587df41b81777654237f",
+        "bytes": 23678
+      },
+      {
+        "path": "packages/tui/src/config/schema.ts",
+        "sha256": "03add6f0a3a8c75ddc1adbf8aab106e4d16b60b5685cebbc2bb890a828019afb",
+        "bytes": 3703
+      }
+    ]
+  },
+  "commands": [
+    {
+      "stage": "snapshot",
+      "program": "git",
+      "args": [
+        "rev-parse",
+        "HEAD"
+      ],
+      "cwd": ".",
+      "budgetMs": 15000,
+      "env": {},
+      "started": "2026-11-13T14:47:25.685Z",
+      "exitCode": 0,
+      "status": "completed",
+      "finished": "2026-11-13T14:47:25.708Z",
+      "stdoutTruncated": false,
+      "stderrTruncated": false,
+      "outputTruncated": false,
+      "stdoutBytes": 41,
+      "stderrBytes": 0,
+      "stdoutSHA256": "01796fcf421e435df6853aea16f950bc7aebd85b58834b6dbb7e6bc2b73b5b1b",
+      "stderrSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "stage": "bun-runtime",
+      "program": "/home/runner/.bun/bin/bun",
+      "args": [
+        "--version"
+      ],
+      "cwd": ".",
+      "budgetMs": 15000,
+      "env": {},
+      "started": "2026-11-13T14:47:25.709Z",
+      "exitCode": 0,
+      "status": "completed",
+      "finished": "2026-11-13T14:47:25.714Z",
+      "stdoutTruncated": false,
+      "stderrTruncated": false,
+      "outputTruncated": false,
+      "stdoutBytes": 7,
+      "stderrBytes": 0,
+      "stdoutSHA256": "56b0485099b6c5427d3b68c042fd05b632d5e52e924c5064473389812227164c",
+      "stderrSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "stage": "real-index-path",
+      "program": "git",
+      "args": [
+        "rev-parse",
+        "--git-path",
+        "index"
+      ],
+      "cwd": ".",
+      "budgetMs": 15000,
+      "env": {},
+      "started": "2026-11-13T14:47:25.715Z",
+      "exitCode": 0,
+      "status": "completed",
+      "finished": "2026-11-13T14:47:25.724Z",
+      "stdoutTruncated": false,
+      "stderrTruncated": false,
+      "outputTruncated": false,
+      "stdoutBytes": 11,
+      "stderrBytes": 0,
+      "stdoutSHA256": "742e1586a644af64934a892663d03c75415bfb01edafdfdd924a8627573bfb9c",
+      "stderrSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "stage": "source-manifest",
+      "program": "git",
+      "args": [
+        "ls-files",
+        "-z",
+        "--",
+        "packages/core",
+        "packages/schema",
+        "packages/llm",
+        "packages/tui",
+        "script",
+        "apps/cli/script",
+        "packages/ui/src/theme/desktop-theme.schema.json",
+        "package.json",
+        "bun.lock",
+        "bunfig.toml",
+        "tsconfig.json",
+        "schema/config.json",
+        "schema/theme.json",
+        "schema/tui.json"
+      ],
+      "cwd": ".",
+      "budgetMs": 15000,
+      "env": {},
+      "started": "2026-11-13T14:47:25.727Z",
+      "exitCode": 0,
+      "status": "completed",
+      "finished": "2026-11-13T14:47:25.740Z",
+      "stdoutTruncated": false,
+      "stderrTruncated": false,
+      "outputTruncated": false,
+      "stdoutBytes": 123269,
+      "stderrBytes": 0,
+      "stdoutSHA256": "7b86abab29188b85804eeec8b72b823eca4e9525ee3d6db7bf8393cc9152ff09",
+      "stderrSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "stage": "generate-first",
+      "program": "/home/runner/.bun/bin/bun",
+      "args": [
+        "run",
+        "apps/cli/script/schema-files.ts"
+      ],
+      "cwd": ".",
+      "budgetMs": 240000,
+      "env": {},
+      "started": "2026-11-13T14:47:25.871Z",
+      "exitCode": 0,
+      "status": "completed",
+      "finished": "2026-11-13T14:47:26.517Z",
+      "stdoutTruncated": false,
+      "stderrTruncated": false,
+      "outputTruncated": false,
+      "stdoutBytes": 197,
+      "stderrBytes": 0,
+      "stdoutSHA256": "42c9bc391fb341c572147efc941f4092275224211a2354b27509a7453509d2e2",
+      "stderrSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "stage": "generate-second",
+      "program": "/home/runner/.bun/bin/bun",
+      "args": [
+        "run",
+        "apps/cli/script/schema-files.ts"
+      ],
+      "cwd": ".",
+      "budgetMs": 240000,
+      "env": {},
+      "started": "2026-11-13T14:47:26.522Z",
+      "exitCode": 0,
+      "status": "completed",
+      "finished": "2026-11-13T14:47:27.149Z",
+      "stdoutTruncated": false,
+      "stderrTruncated": false,
+      "outputTruncated": false,
+      "stdoutBytes": 197,
+      "stderrBytes": 0,
+      "stdoutSHA256": "42c9bc391fb341c572147efc941f4092275224211a2354b27509a7453509d2e2",
+      "stderrSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "schema/config.json",
+      "changed": true,
+      "before": {
+        "sha256": "8fda412b89aa5630cfd7b2e2116a0789ab7b793423edfbf8dcec3927c6016747",
+        "bytes": 30801
+      },
+      "qualified": {
+        "sha256": "7e2f7739b5cf42b714c4a31a525d579091e97e0ca631d98f8d26cabb4d1edff5",
+        "bytes": 34873
+      }
+    },
+    {
+      "path": "schema/theme.json",
+      "changed": false,
+      "before": {
+        "sha256": "7b49ca85c29a628d28f43e84ea69404152a3030dee2080566f6f1ef2f0e14b6d",
+        "bytes": 6042
+      },
+      "qualified": {
+        "sha256": "7b49ca85c29a628d28f43e84ea69404152a3030dee2080566f6f1ef2f0e14b6d",
+        "bytes": 6042
+      }
+    },
+    {
+      "path": "schema/tui.json",
+      "changed": false,
+      "before": {
+        "sha256": "16c4dd2d51f4b32b397cb9effa31cfc9c48dd7aa546f28b149f106e64d01d0e2",
+        "bytes": 1131057
+      },
+      "qualified": {
+        "sha256": "16c4dd2d51f4b32b397cb9effa31cfc9c48dd7aa546f28b149f106e64d01d0e2",
+        "bytes": 1131057
+      }
+    }
+  ],
+  "equalities": {
+    "firstSecondInstalledArtifact": true,
+    "actualArtifactBytesVerified": true,
+    "beforeMatchesInputCommit": true,
+    "realIndexStable": true,
+    "cleanupJoinedBeforeQualification": true
+  },
+  "realIndexSHA256": "9d20138aec1a7d32747d25ea752dfde840152f10cd8b250b093461f8638e01d9",
+  "elapsedMsBeforeQualification": 1648.255517,
+  "testBudgetMs": 900000,
+  "qualified": true
+}
