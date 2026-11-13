@@ -892,7 +892,7 @@ export function createServerSession(
     const status = executionStatus(event)
     const reduction = v2.reduce(data.session_message[sessionID] ?? [], event)
     const loaded = data.session_message[sessionID] !== undefined
-    if (reduction && keepTranscript(dropped, sessionID, status, protectedSessions().has(sessionID), loaded)) {
+    if (reduction && keepTranscript(dropped, sessionID, status, dropped.has(sessionID) && !loaded && status !== "busy" && protectedSessions().has(sessionID), loaded)) {
       dropped.delete(sessionID)
       projectV2(reduction)
       if (reduction.missing) hydrateV2Message(sessionID, reduction.missing)

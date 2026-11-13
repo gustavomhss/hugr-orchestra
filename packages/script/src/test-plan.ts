@@ -177,7 +177,7 @@ function plan(timings: Timings) {
     console.log(`::warning title=test plan::${jobs} jobs exceed the ${timings.budget.limit}-job account cap; max-parallel queues the surplus`)
 }
 
-function coreShards(name: Platform, host: string, count: number) {
+export function coreShards(name: Platform, host: string, count: number) {
   return Array.from({ length: count }, (_, index) => ({
     name,
     host,
@@ -186,8 +186,6 @@ function coreShards(name: Platform, host: string, count: number) {
     shard: `${index + 1}/${count}`,
     turbo: true,
     filters: "--filter=@orchestra/core",
-    // The dependency-shadow cap proof is allowed 10 minutes. An 8-minute step killed the Windows shard that held it.
-    ...(name === "windows" ? { budget: 15 } : {}),
   }))
 }
 

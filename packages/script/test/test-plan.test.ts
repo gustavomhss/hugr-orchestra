@@ -1,12 +1,22 @@
 import { describe, expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
-import { balance, packageLanes, packageShards, plannedBins, shardCount, suiteTimes, weigh, type Timings } from "../src/test-plan.ts"
+import { balance, coreShards, packageLanes, packageShards, plannedBins, shardCount, suiteTimes, weigh, type Timings } from "../src/test-plan.ts"
 
 const registry: { modules: { kind: string; scope: string; name: string }[] } = JSON.parse(
   readFileSync(new URL("../../../script/module-registry.json", import.meta.url), "utf8"),
 )
 
 describe("test shard planner", () => {
+  test("every core matrix entry uses the default eight-minute step", () => {
+    for (const platform of ["linux", "windows"] as const) {
+      const lanes = coreShards(platform, "fixture-host", 2)
+      expect(lanes).toHaveLength(2)
+      for (const lane of lanes) {
+        expect("budget" in lane).toBe(false)
+      }
+    }
+  })
+
   test("package filters cover each registered package once and keep future packages in libs", () => {
     const packages = [...registry.modules.filter((entry) => entry.kind === "bun" && entry.scope === ".").map((entry) => entry.name), "@orchestra/future-package"]
     for (const [platform, host] of [["linux", "ubuntu-24.04"], ["windows", "windows-latest"]] as const) {
