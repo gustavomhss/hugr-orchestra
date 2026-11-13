@@ -439,6 +439,9 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
       return json(route, message)
     }
 
+    const currentTodoMatch = path.match(/^\/api\/session\/([^/]+)\/todo$/)
+    if (currentTodoMatch) return json(route, { location: location(config), data: config.todos?.(currentTodoMatch[1]!) ?? [] })
+
     const todoMatch = path.match(/^\/session\/([^/]+)\/todo$/)
     if (todoMatch) return json(route, config.todos?.(todoMatch[1]!) ?? [])
     if (/^\/session\/[^/]+\/(children|diff)$/.test(path)) return json(route, [])
