@@ -40,8 +40,10 @@ def preserve_failure_evidence(run,out_stream,err_stream,error,process_outcome):
   'response_persisted':_file_evidence(run/'response.json'),
  }
  lifecycle={name:(run/name).is_file() for name in ('process-start.json','process-release.json','process-exit.json','process-spawn-stop.json','process-spawn-uncertain.json')}
+ complete=(process_outcome.get('lifecycle_state')=='TERMINATION_PROVEN' and process_outcome.get('group_absent') is True and process_outcome.get('kernel_probe')=='killpg-zero-ESRCH')
  evidence={'schema':'reader-failure-evidence/v1','status':'UNKNOWN',
   'diagnostic':safe_error_diagnostic(error),'outputs':outputs,'lifecycle_records':lifecycle,
+  'capture_completeness':'COMPLETE_AFTER_TERMINATION_PROOF' if complete else 'INCOMPLETE_UNKNOWN',
   'process_outcome':process_outcome,'payload_retained':False,
   'payload_policy':'raw child output omitted; byte counts and SHA-256 retained'}
  write(run/'failure-evidence.json',evidence)
@@ -54,6 +56,21 @@ def preserve_failure_evidence(run,out_stream,err_stream,error,process_outcome):
  return evidence
 
 def safe_error_diagnostic(error):return _lifecycle.safe_failure_diagnostic(error)
+
+def failure_process_outcome(proc,anchor,run):
+ if proc is None:return {'lifecycle_state':'GATE_OR_RELEASE_STATE_SEE_DURABLE_RECORDS','state':'UNKNOWN'}
+ exit_record=run/'process-exit.json' if run is not None else None
+ if exit_record is not None and exit_record.is_file():
+  try:proof=read(exit_record)
+  except BaseException:return {'lifecycle_state':'PROCESS_EXIT_RECORD_INVALID','state':'UNKNOWN','identity':anchor}
+  if (proof.get('anchor')==anchor and proof.get('group_absent') is True and
+      proof.get('kernel_probe')=='killpg-zero-ESRCH' and proof.get('members')==[]):
+   return proof
+  return {'lifecycle_state':'PROCESS_EXIT_RECORD_UNPROVEN','state':'UNKNOWN','identity':anchor}
+ try:return _lifecycle.stop_group(proc,anchor)
+ except BaseException as cleanup:
+  return {'lifecycle_state':'POSSIBLY_STARTED_TERMINATION_UNKNOWN','state':'UNKNOWN',
+          'diagnostic':safe_error_diagnostic(cleanup),'identity':anchor}
 def filebytes(p):
  if p.is_symlink() or not p.is_file() or p.stat().st_nlink!=1:fail('unsafe-file:'+str(p))
  return p.read_bytes()
@@ -269,10 +286,9 @@ def main():
   safe_release=False
   # Repeated catchable signals cannot interrupt conservative cleanup.
   for sig in (signal.SIGTERM,signal.SIGINT,signal.SIGHUP):signal.signal(sig,signal.SIG_IGN)
-  outcome={'lifecycle_state':'GATE_OR_RELEASE_STATE_SEE_DURABLE_RECORDS','state':'no-handle-returned','registration':str(run/'process-start.json') if run else None}
-  if proc is not None:
-   try:outcome=_lifecycle.stop_group(proc,anchor)
-   except BaseException as cleanup:outcome={'lifecycle_state':'POSSIBLY_STARTED_TERMINATION_UNKNOWN','state':'UNKNOWN','diagnostic':safe_error_diagnostic(cleanup),'identity':anchor}
+  outcome=failure_process_outcome(proc,anchor,run)
+  if run is not None and not (run/'process-start.json').is_file():
+   outcome={**outcome,'registration':'NOT_DURABLY_REGISTERED'}
   # Preserve safe forensic digests before removing any raw child-controlled payload.
   evidence=None
   try:evidence=preserve_failure_evidence(run,out_stream,err_stream,error,outcome)
