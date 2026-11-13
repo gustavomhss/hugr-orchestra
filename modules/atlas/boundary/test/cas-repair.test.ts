@@ -40,15 +40,16 @@ test("CONTROL L6: actual bundled exports support fresh writes and valid canonica
 test("CONTROL L6: real knowledge logs replay under existing seal, scope and reproof decisions", () => {
   const current = fixture()
   const fresh = current.fresh()
-  AtlasCas.seed(current.api, fresh.repo, "proven", { claim: "holds", seal: "proven" })
-  AtlasCas.seed(current.api, fresh.repo, "advisory", { claim: "candidate" })
-  AtlasCas.seed(current.api, fresh.repo, "outside-scope", { claim: "other", seal: "proven" }, "other")
-  AtlasCas.seed(current.api, fresh.repo, "broken", { claim: "fails reproof", seal: "proven" })
-  const reproven = (row: AtlasCas.Row) => row.nodeKey !== "broken"
+  const proven = AtlasCas.seed(current.api, fresh.repo, "proven", { claim: "holds", seal: "proven" }).row
+  const advisory = AtlasCas.seed(current.api, fresh.repo, "advisory", { claim: "candidate" }).row
+  const outside = AtlasCas.seed(current.api, fresh.repo, "outside-scope", { claim: "other", seal: "proven" }, "other").row
+  const broken = AtlasCas.seed(current.api, fresh.repo, "broken", { claim: "fails reproof", seal: "proven" }).row
+  // Controlled unit boundary: canonical production oracle coverage lives in the separate actual-producer suite.
+  const reproven = (row: AtlasCas.Row) => row.nodeKey !== broken.nodeKey
   const result = current.api.replayKnowledge(fresh.repo, fresh.disk, AtlasCas.policy, reproven)
   expect(result).toEqual({ applied: 1, staged: 3, missing: 0, rejected: 0 })
-  expect([...current.api.rehydrateProjection(fresh.disk).current.keys()]).toEqual(["proven"])
-  expect([...AtlasCas.staged(fresh.disk).current.keys()].sort()).toEqual(["advisory", "broken", "outside-scope"])
+  expect([...current.api.rehydrateProjection(fresh.disk).current.keys()]).toEqual([proven.nodeKey])
+  expect([...AtlasCas.staged(fresh.disk).current.keys()].sort()).toEqual([advisory.nodeKey, broken.nodeKey, outside.nodeKey].sort())
   expect(current.api.replayKnowledge(fresh.repo, fresh.disk, AtlasCas.policy, reproven)).toEqual({
     applied: 0,
     staged: 0,
@@ -123,8 +124,9 @@ test("L6: an escaping shard symlink refuses before touching an external sentinel
 test("L6: replay with a real valid log/blob and corrupt local CAS repairs it or safely counts it missing", () => {
   const current = fixture()
   const fresh = current.fresh()
-  const fact = { claim: "replay stored content", seal: "proven" }
-  const row = AtlasCas.seed(current.api, fresh.repo, "replay", fact)
+  const seed = AtlasCas.seed(current.api, fresh.repo, "replay", { claim: "replay stored content", seal: "proven" })
+  const fact = seed.fact
+  const row = seed.row
   expect(JSON.parse(readFileSync(current.api.blobPath(fresh.repo, row.contentHash), "utf8"))).toEqual(fact)
   expect(fresh.disk.put(fact)).toBe(row.contentHash)
   writeFileSync(AtlasCas.valuePath(fresh.cas, row.contentHash), '{"claim":')
@@ -148,8 +150,11 @@ test("L6: actual absence observed during restore or selection never enters prove
   for (const phase of ["after-real-put", "before-selection-read"]) {
     for (const seal of ["proven", "advisory"]) {
       const fresh = current.fresh()
-      const fact = { claim: `lost ${phase}/${seal}`, ...(seal === "proven" ? { seal } : {}) }
-      const row = AtlasCas.seed(current.api, fresh.repo, "lost", fact)
+      const seed = AtlasCas.seed(current.api, fresh.repo, "lost", {
+        claim: `lost ${phase}/${seal}`, ...(seal === "proven" ? { seal: "proven" as const } : {}),
+      })
+      const fact = seed.fact
+      const row = seed.row
       const file = AtlasCas.valuePath(fresh.cas, row.contentHash)
       if (phase === "before-selection-read") expect(fresh.disk.put(fact)).toBe(row.contentHash)
       const removed: string[] = []

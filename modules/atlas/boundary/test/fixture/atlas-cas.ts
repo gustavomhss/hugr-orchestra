@@ -14,6 +14,10 @@ export type Row = {
   readonly contentHash: string
   readonly claims: readonly string[]
   readonly scope?: string
+  readonly primaryAnchor?: string
+  readonly slot?: "invariant"
+  readonly tier?: "T2"
+  readonly seal?: "proven"
 }
 export type Projection = { readonly current: ReadonlyMap<string, Row>; readonly cas: ReadonlySet<string> }
 type Decision<T> = { readonly out: T; readonly next?: Projection; readonly put?: readonly Fact[] }
@@ -50,6 +54,11 @@ type Api = {
   readonly id: (fact: Fact) => string
   readonly emptyStore: () => Projection
   readonly blobPath: (repoPath: string, hash: string) => string
+  readonly nodeKey: (candidate: Fact) => string
+  readonly primaryAnchorId: (candidate: Fact) => string
+  readonly familyOf: (fact: Fact) => "advisory" | undefined
+  readonly claimNormOf: (fact: Fact, family: "advisory") => string
+  readonly resolveWriteIdentity: (fact: Fact, candidate: Fact) => { readonly primaryAnchor: string; readonly targetKey: string }
 }
 
 const boundary = path.resolve(import.meta.dir, "../..")
@@ -64,6 +73,11 @@ const exports = [
   "id",
   "emptyStore",
   "blobPath",
+  "nodeKey",
+  "primaryAnchorId",
+  "familyOf",
+  "claimNormOf",
+  "resolveWriteIdentity",
 ] as const
 
 export async function make() {
@@ -94,7 +108,8 @@ async function bundle(root: string): Promise<Api> {
       `export { replayKnowledge } from ${JSON.stringify(path.join(packages, "adapter-io/src/knowledge-replay.ts"))}`,
       `export { blobPath } from ${JSON.stringify(path.join(packages, "adapter-io/src/layout.ts"))}`,
       `export { id } from ${JSON.stringify(path.join(packages, "kernel/src/index.ts"))}`,
-      `export { emptyStore } from ${JSON.stringify(path.join(packages, "knowledge/src/index.ts"))}`,
+      `export { emptyStore, nodeKey, primaryAnchorId } from ${JSON.stringify(path.join(packages, "knowledge/src/index.ts"))}`,
+      `export { familyOf, claimNormOf, resolveWriteIdentity } from ${JSON.stringify(path.join(packages, "adapter-io/src/governed-emit-identity.ts"))}`,
     ].join("\n"),
   )
   const built = await Bun.build({
@@ -140,26 +155,41 @@ export function inventory(root: string) {
     .sort()
 }
 
-export function seed(api: Api, repo: string, key: string, fact: Fact, scope = "core") {
+export function seed(api: Api, repo: string, key: string, input: { readonly claim: string; readonly seal?: "proven" }, scope = "core") {
+  // These are replay/CAS unit fixtures with controlled reproof, not production-oracle or seal-minter positives.
+  const candidate = { claimText: input.claim, claimNorm: input.claim, slot: "invariant" as const, tier: "T2" as const,
+    provenance: { source: "cas-repair fixture", trusted: false },
+    grounding: { entries: [{ anchor: { kind: "symbol", qualifiedPath: `src/${key}.ts::fixture`,
+      subtreeHash: api.id({ fixture: "cas-repair anchor", key }) }, path: `src/${key}.ts` }] } }
+  const fact = { kind: "advisory" as const, id: api.nodeKey(candidate), tier: candidate.tier, claimNorm: input.claim,
+    grounding: candidate.grounding, freshness: "FRESH" as const, claims: [], authoring: "ADVISORY" as const,
+    scope, predicateSlot: candidate.slot, ...(input.seal === undefined ? {} : { seal: input.seal }) }
+  const family = api.familyOf(fact)
+  if (family !== "advisory") throw new Error("CAS replay seed must resolve as an advisory")
+  const identity = api.resolveWriteIdentity(fact, candidate)
+  expect(identity.targetKey).toBe(fact.id)
+  expect(identity.primaryAnchor).toBe(api.primaryAnchorId(candidate))
+  const row: Row = { nodeKey: identity.targetKey, family, contentHash: api.id(fact),
+    claims: [api.claimNormOf(fact, family)], scope, primaryAnchor: identity.primaryAnchor, slot: fact.predicateSlot,
+    tier: fact.tier, ...(fact.seal === undefined ? {} : { seal: fact.seal }) }
   const writer = api.withKnowledgeLog(api.createDiskStore(path.join(repo, "writer", "cas")), {
     repoPath: repo,
     seat: "backend",
     source: {},
   })
-  const row: Row = { nodeKey: key, family: "advisory", contentHash: api.id(fact), claims: [], scope }
   const committed = writer.commitProjection((projection) => ({
     out: row,
     next: {
       ...projection,
-      current: new Map([...projection.current, [key, row]]),
+      current: new Map([...projection.current, [row.nodeKey, row]]),
       cas: new Set([...projection.cas, row.contentHash]),
     },
     put: [fact],
   }))
   expect(committed.settled, "CAS fixture knowledge seed must really commit").toBe(true)
   expect(writer.get(row.contentHash)).toEqual(fact)
-  expect(api.readKnowledge(repo).rows.get(key)?.row).toEqual(row)
-  return row
+  expect(api.readKnowledge(repo).rows.get(row.nodeKey)?.row).toEqual(row)
+  return { row, fact }
 }
 
 export function staged(disk: Disk) {
