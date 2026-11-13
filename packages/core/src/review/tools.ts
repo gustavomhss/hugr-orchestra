@@ -91,7 +91,15 @@ export const bind = (sessionID: string, binding: Binding) =>
 export function readCode(
   sessionID: string,
 ): Effect.Effect<{ readonly source: CodeSource; readonly retain?: Binding["retain"] }, Tool.Failure, Scope.Scope> {
-  return Effect.fail(new Tool.Failure({ message: `review-code-binding-missing: ${sessionID}` }))
+  return Effect.gen(function* () {
+    const binding = bindings.get(sessionID)
+    if (!binding?.codeSource) return yield* new Tool.Failure({ message: `review-code-binding-missing: ${sessionID}` })
+    const source = yield* binding.codeSource.pipe(
+      Effect.mapError(() => new Tool.Failure({ message: "review-code-source-unavailable" })),
+    )
+    if (bindings.get(sessionID) !== binding) return yield* new Tool.Failure({ message: `review-code-binding-missing: ${sessionID}` })
+    return { source, ...(binding.retain ? { retain: binding.retain } : {}) }
+  })
 }
 
 export function tools(services: Services) {

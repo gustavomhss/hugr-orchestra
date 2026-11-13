@@ -50,6 +50,7 @@ export const reviewBinding = (held: {
     unknown,
     Scope.Scope
   >
+  readonly headCommit?: string
 }) => (bound: ReviewFanoutV2.BindInput) =>
   Effect.gen(function* () {
     if (bound.lenses) {
@@ -58,8 +59,17 @@ export const reviewBinding = (held: {
     const pageable = bound.lens !== undefined || (bound.lenses?.length ?? 0) > 0
     const needsProbe = bound.role === "verifier" && Object.values(bound.offered ?? {}).flat().some((id) => ReviewProbe.BUILT.some((built) => built === id))
     const made = needsProbe ? yield* held.copies.pipe(Effect.catch(() => Effect.succeed(undefined))) : undefined
+    const codeSource = held.copies.pipe(
+      Effect.mapError(() => new Tool.Failure({ message: "review-code-source-unavailable" })),
+      Effect.map((made) => ({
+        directory: made.head.root,
+        worktree: held.worktree,
+        ...(made.head.kind === "commit" && held.headCommit ? { commit: held.headCommit } : {}),
+      })),
+    )
     return {
       repository: held.worktree,
+      codeSource,
       retain: (artifact: { readonly uri: string; readonly text: string }) => Effect.promise(async () => {
         await Bun.write(rawArtifactPath(held.cache, artifact.uri), JSON.stringify(artifact))
       }),
