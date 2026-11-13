@@ -30,18 +30,18 @@ const valid = [
 for (const entry of valid) {
   test(`native regex protocol accepts ${entry.operation}`, () => {
     const reply = { version: 1, ok: true, regex, ...entry }
-    expect(NativeRegex.decodeReply(request(entry.operation), reply)).toEqual(reply)
+    expect<unknown>(NativeRegex.decodeReply(request(entry.operation), reply)).toEqual(reply)
   })
 }
 
 test("native regex protocol preserves null, global strings and catchable native errors", () => {
   for (const result of [{ kind: "match", value: null }, { kind: "strings", value: null }, { kind: "strings", value: [""] }]) {
     const reply = { version: 1, ok: true, operation: "match", regex, result }
-    expect(NativeRegex.decodeReply(request("match"), reply)).toEqual(reply)
+    expect<unknown>(NativeRegex.decodeReply(request("match"), reply)).toEqual(reply)
   }
   for (const state of [{}, { regex }]) {
     const reply = { version: 1, ok: false, operation: "construct", name: "SyntaxError", message: "invalid pattern", ...state }
-    expect(NativeRegex.decodeReply(request("construct"), reply)).toEqual(reply)
+    expect<unknown>(NativeRegex.decodeReply(request("construct"), reply)).toEqual(reply)
   }
 })
 
@@ -99,7 +99,7 @@ test("native regex protocol preserves undefined and empty text tags plus absent 
       version: 1, ok: true, operation: "exec", regex, result: { kind: "match", value },
     })
     if (!decoded.ok || decoded.operation !== "exec" || decoded.result.value === null) throw new Error("Expected exec match")
-    expect(decoded.result.value).toEqual(value)
+    expect<unknown>(decoded.result.value).toEqual(value)
     expect(Object.hasOwn(decoded.result.value, "groups")).toBe(Object.hasOwn(value, "groups"))
     expect(decoded.result.value.captures).toEqual([{ kind: "undefined" }, { kind: "text", value: "" }])
     expect(decoded.result.value.index).toBe(2)
