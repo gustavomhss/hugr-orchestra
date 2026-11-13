@@ -73,15 +73,34 @@ jobs:
                   else:
                       checked(path, "file", compiled)
                       sources.append((path, compiled))
+          # Exact checked-in workspace set; test-only packages have no runtime entrypoint.
+          entrypoints = {name: "./dist/src/index.js" for name in ["adapter-io", "cli", "genesis", "grounding", "index", "kernel", "knowledge", "mcp-server", "memory", "persist", "retrieval", "tools"]}
+          entrypoints.update({"contracts": "./dist/index.js", "e2e": None, "e2e-blackbox": None})
           checked(root / "packages", "directory", root / "packages")
-          for package in sorted((root / "packages").iterdir()):
+          actual_names = {path.name for path in (root / "packages").iterdir()}
+          if actual_names != set(entrypoints) | {".gitkeep"}:
+              raise RuntimeError("workspace-set-drift")
+          # Known tracked empty metadata is not exported or followed.
+          marker = root / "packages" / ".gitkeep"
+          marker_stat = marker.lstat()
+          if not stat.S_ISREG(marker_stat.st_mode) or marker_stat.st_nlink != 1 or marker_stat.st_size != 0 or marker.resolve(strict=True) != marker:
+              raise RuntimeError("workspace-metadata-drift")
+          for name, entrypoint in sorted(entrypoints.items()):
+              package = root / "packages" / name
               checked(package, "directory", root / "packages")
-              compiled = package / "dist" / "src"
-              checked(compiled, "directory", compiled)
               manifest_path = package / "package.json"
               checked(manifest_path, "file", manifest_path)
+              metadata = json.loads(manifest_path.read_bytes())
+              checked(manifest_path, "file", manifest_path)
+              if metadata.get("name") != "@atlas/" + name or metadata.get("main") != entrypoint:
+                  raise RuntimeError("workspace-entrypoint-drift")
               sources.append((manifest_path, manifest_path))
-              collect(compiled, compiled)
+              if entrypoint is not None:
+                  entry = package / entrypoint
+                  compiled = entry.parent
+                  checked(compiled, "directory", compiled)
+                  checked(entry, "file", compiled)
+                  collect(compiled, compiled)
           for name in ["package.json", "package-lock.json"]:
               path = root / name
               checked(path, "file", path)
