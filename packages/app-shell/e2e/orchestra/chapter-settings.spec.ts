@@ -1,5 +1,9 @@
 import { expect, test, type Page, type Route } from "@playwright/test"
 import { mockOrchestraServer } from "../utils/mock-server"
+import type { ModelsExecutionOutput } from "@orchestra/client"
+import { Location } from "@orchestra/schema/location"
+import { ModelExecution } from "@orchestra/schema/model-execution"
+import { Schema } from "effect"
 
 const server = "http://127.0.0.1:4096"
 const directory = "/repo/settings"
@@ -479,6 +483,11 @@ test("v2: Disconnect removes stored credentials, confirms removing several, expl
 })
 
 async function setup(page: Page, state: ReturnType<typeof fixture>) {
+  const models = [
+    model("openai", "gpt-5", "GPT-5", 400_000),
+    model("openrouter", "claude-sonnet-4", "Claude Sonnet 4", 200_000),
+    model("openrouter", "gpt-5", "GPT-5 via OpenRouter", 400_000),
+  ]
   await page.addInitScript(
     ({ server, directory }) => {
       localStorage.setItem("language.v1", JSON.stringify({ locale: "en" }))
@@ -494,6 +503,23 @@ async function setup(page: Page, state: ReturnType<typeof fixture>) {
   // The provider catalog is served below in the V2 shape, with the integrations the list needs.
   await mockOrchestraServer(page, {
     provider: { all: [], connected: [], default: {} },
+    modelExecution(input) {
+      const selected = input.model
+      // Controlled UI outcomes use the same advertised catalog, not a local copy of server eligibility policy.
+      const response: ModelsExecutionOutput = {
+        location: { directory, project: { id: "settings", directory } },
+        data: {
+          models: models.map((model) => ({ model, status: "ready", engine: "orchestra" })),
+          ...(selected === undefined ? {} : {
+            selection: models.some((model) => model.id === selected.id && model.providerID === selected.providerID)
+              ? { status: "ready", engine: "orchestra", ref: { ...selected } }
+              : { status: "unavailable", reason: "model-missing", engine: "orchestra", ref: { ...selected } },
+          }),
+        },
+      }
+      Schema.decodeUnknownSync(Schema.fromJsonString(Location.response(ModelExecution.Response)))(JSON.stringify(response))
+      return response
+    },
     directory,
     project: {
       id: "settings",
@@ -573,11 +599,7 @@ async function setup(page: Page, state: ReturnType<typeof fixture>) {
     if (url.pathname === "/api/model")
       return json(route, {
         location,
-        data: [
-          model("openai", "gpt-5", "GPT-5", 400_000),
-          model("openrouter", "claude-sonnet-4", "Claude Sonnet 4", 200_000),
-          model("openrouter", "gpt-5", "GPT-5 via OpenRouter", 400_000),
-        ],
+        data: models,
       })
     // The server's catalog default follows the configured model, so a saved default comes back on refetch.
     if (url.pathname === "/api/model/default") {
@@ -601,7 +623,7 @@ function integration(id: string, name: string, connections: unknown[]) {
   return { id, name, methods: [{ type: "key" }], connections }
 }
 
-function model(providerID: string, id: string, name: string, context: number) {
+function model(providerID: string, id: string, name: string, context: number): ModelsExecutionOutput["data"]["models"][number]["model"] {
   return {
     id,
     providerID,
