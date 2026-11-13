@@ -64,6 +64,9 @@ for (const kind of ["spawn", "plain", "silent", "delegation", "failure"] as cons
       expect(run.result.exitCode, run.output).toBe(0)
       expect(run.output).toContain(`omni positive control [${run.external}]: pass (suite: 2 isolated files); 1 omni spawn(s), 0 delegated.`)
       expect(run.output).toContain("BROWSER_ACTUAL_CHILD")
+      if (typeof run.junit !== "string") throw new Error("Actual browser JUnit artifact unavailable")
+      expect(run.junit.trim().length).toBeGreaterThan(0)
+      expect(run.junit).toContain("<testsuite")
       return
     }
     expect(run.result.exitCode).not.toBe(0)
@@ -141,10 +144,15 @@ import { expectSpawn } from ${local("./fixture/omni-expect.ts")};
         const result = yield* processes.run(ChildProcess.make(process.execPath, [
           "--no-env-file", `--config=${config}`, fileURLToPath(new URL("../../../script/test-browser.ts", import.meta.url)),
           ...files, "--timeout", "5000",
+          ...(kind === "spawn" ? ["--reporter=junit", "--reporter-outfile", path.join(root, "junit.xml")] : []),
         ], { cwd: root, shell: false, extendEnv: false, env, stdout: "pipe", stderr: "pipe" }), {
           maxOutputBytes: 2 * 1024 * 1024, maxErrorBytes: 2 * 1024 * 1024,
         })
-        return { result, output: result.stdout.toString() + result.stderr.toString(), external }
+        const junit = yield* Effect.tryPromise({
+          try: () => kind === "spawn" ? Bun.file(path.join(root, "junit.xml")).text() : Promise.resolve(undefined),
+          catch: (cause) => cause,
+        })
+        return { result, output: result.stdout.toString() + result.stderr.toString(), external, junit }
       }),
       (root) => Effect.tryPromise({ try: () => rm(root, { recursive: true, force: true }), catch: (cause) => cause }).pipe(Effect.orDie),
     )
