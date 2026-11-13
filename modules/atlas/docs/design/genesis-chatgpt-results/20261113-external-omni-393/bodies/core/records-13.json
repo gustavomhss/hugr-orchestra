@@ -1,0 +1,342 @@
+[
+  {
+    "path": "native/omni/crates/omni-supervisor/src/windows/diag.rs",
+    "git_blob_sha": "0c52c46067a1461b5f5fe0b7904e4d8eaa3f0c02",
+    "source_sha256": "baa54d27b547a8e3c440ac593bc4f818042f22f82b66eae77127d1ae3bf34874",
+    "source_bytes": 2369,
+    "line_count": 76,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Keep supervisor diagnostics off the deadline-owning thread with a bounded lossy queue.",
+    "behavior": [
+      "Retains at most 32 queued lines, drops the newest line on overflow and accumulates a dropped-line count.",
+      "A helper drains a line with its accumulated drop count, writes a prefixed diagnostic and optional drop notice, and ignores write/flush errors.",
+      "Mutex and condition-variable poisoning recover the contained state rather than panicking."
+    ],
+    "contracts": [
+      "The control path only enqueues; it never writes host stderr."
+    ],
+    "dependencies": [
+      "channel::helper supplies the drain thread; tree.rs reports incomplete member proofs through Diag."
+    ],
+    "failures_or_limits": [
+      "A blocked sink can hold the helper forever and diagnostics can be lost; queue capacity bounds line count rather than String byte size. report still takes a short mutex, so its never-blocks comment means no blocking sink I/O, not lock-free execution."
+    ],
+    "evidence": [
+      {
+        "start_line": 11,
+        "end_line": 18,
+        "quote": "/// Lines waiting for the drain thread.\npub(super) const CAPACITY: usize = 32;\n\n#[derive(Default)]\nstruct Queue {\n    lines: VecDeque<String>,\n    dropped: u64,\n}"
+      },
+      {
+        "start_line": 31,
+        "end_line": 57,
+        "quote": "    /// Queues one line; never blocks.\n    pub(super) fn report(&self, line: String) {\n        let mut q = self.lock();\n        if q.lines.len() >= CAPACITY {\n            q.dropped += 1;\n            return;\n        }\n        q.lines.push_back(line);\n        self.cv.notify_one();\n    }\n\n    /// Drains the queue into `sink` on a helper thread; write errors are ignored.\n    pub(super) fn start(self: &Arc<Self>, mut sink: impl Write + Send + 'static) -> io::Result<()> {\n        let diag = self.clone();\n        channel::helper(\"diagnostics\", move || {\n            loop {\n                let (line, dropped) = diag.next();\n                let _ = writeln!(sink, \"hugr-omni-supervisor: {line}\");\n                if dropped > 0 {\n                    let _ = writeln!(\n                        sink,\n                        \"hugr-omni-supervisor: {dropped} more diagnostic line(s) were dropped\"\n                    );\n                }\n                let _ = sink.flush();\n            }\n        })"
+      },
+      {
+        "start_line": 60,
+        "end_line": 68,
+        "quote": "    /// The next line, and the drops counted since the last one.\n    fn next(&self) -> (String, u64) {\n        let mut q = self.lock();\n        loop {\n            if let Some(line) = q.lines.pop_front() {\n                return (line, std::mem::take(&mut q.dropped));\n            }\n            q = self.cv.wait(q).unwrap_or_else(PoisonError::into_inner);\n        }"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/src/windows/inventory.rs",
+    "git_blob_sha": "3702faa0f1dba094b2bafb8dccb12579a066f782",
+    "source_sha256": "d08836c1dadb2dde1aea0ec6a0118b439dd7af840fb37dc2d1fa5244a5e8f742",
+    "source_bytes": 4428,
+    "line_count": 104,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Return live Windows Job inventory while distinguishing unknown observations from departed members.",
+    "behavior": [
+      "Obtains Job candidate PIDs, excludes an exited root, opens each candidate and verifies Job membership before reading metadata.",
+      "Holds verified process handles through a ToolHelp snapshot, rechecks liveness, and obtains creation times for entries that remain.",
+      "Includes parentPid only when the parent is also listed and no younger than the child; empty executable names become None."
+    ],
+    "contracts": [
+      "Query/snapshot failures propagate as incomplete inventory rather than an empty success."
+    ],
+    "dependencies": [
+      "job.rs supplies member_pids/probe/exited; tree.rs returns results through List/Processes or Ack::Error."
+    ],
+    "failures_or_limits": [
+      "The snapshot is not an atomic process-tree view; members absent from it or exited by the later check are omitted. HashMap iteration gives no stable order, and names are lossy UTF-16 conversions."
+    ],
+    "evidence": [
+      {
+        "start_line": 19,
+        "end_line": 54,
+        "quote": "/// The Job's live members, minus `exclude` (the root once it exited).\npub(super) fn list(job: &OwnedHandle, exclude: Option<u32>) -> io::Result<Vec<ProcEntry>> {\n    let candidates: Vec<u32> = job::member_pids(job)?\n        .into_iter()\n        .filter(|&p| Some(p) != exclude)\n        .collect();\n    of(job, &candidates)\n}\n\n/// The live members among `candidates`. `ppid` is set only when the parent is listed and was created no\n/// later than the child (a parent pid reused by a younger member is not the parent).\npub(super) fn of(job: &OwnedHandle, candidates: &[u32]) -> io::Result<Vec<ProcEntry>> {\n    let mut held = HashMap::new();\n    for &pid in candidates {\n        if let Probe::Member(h) = job::probe(job, pid)?\n            && !job::exited(&h)\n        {\n            held.insert(pid, h);\n        }\n    }\n    let snap = snapshot(&held)?;\n    // Liveness is confirmed after the snapshot; a member absent from it exited meanwhile.\n    let mut live = HashMap::new();\n    for (pid, h) in &held {\n        if let Some((ppid, name)) = snap.get(pid).filter(|_| !job::exited(h)) {\n            live.insert(*pid, (*ppid, name.clone(), created(h)?));\n        }\n    }\n    Ok(live\n        .iter()\n        .map(|(&pid, (ppid, name, born))| ProcEntry {\n            pid,\n            ppid: live.get(ppid).filter(|parent| parent.2 <= *born).map(|_| *ppid),\n            name: (!name.is_empty()).then(|| name.clone()),\n        })\n        .collect())"
+      },
+      {
+        "start_line": 57,
+        "end_line": 68,
+        "quote": "fn created(process: &OwnedHandle) -> io::Result<u64> {\n    let (mut c, mut e, mut k, mut u) = (\n        FILETIME::default(),\n        FILETIME::default(),\n        FILETIME::default(),\n        FILETIME::default(),\n    );\n    // SAFETY: a process handle with query access and four valid out pointers.\n    if unsafe { GetProcessTimes(process.as_raw_handle(), &mut c, &mut e, &mut k, &mut u) } == 0 {\n        return Err(io::Error::last_os_error());\n    }\n    Ok(u64::from(c.dwHighDateTime) << 32 | u64::from(c.dwLowDateTime))"
+      },
+      {
+        "start_line": 84,
+        "end_line": 103,
+        "quote": "    // SAFETY: `entry` has `dwSize` set, as both calls require.\n    let mut ok = unsafe { Process32FirstW(snap.as_raw_handle(), &mut entry) };\n    while ok != 0 {\n        if held.contains_key(&entry.th32ProcessID) {\n            let len = entry\n                .szExeFile\n                .iter()\n                .position(|&c| c == 0)\n                .unwrap_or(entry.szExeFile.len());\n            let name = String::from_utf16_lossy(entry.szExeFile.get(..len).unwrap_or_default());\n            found.insert(entry.th32ProcessID, (entry.th32ParentProcessID, name));\n        }\n        // SAFETY: as above.\n        ok = unsafe { Process32NextW(snap.as_raw_handle(), &mut entry) };\n    }\n    let err = io::Error::last_os_error();\n    if err.raw_os_error() != Some(ERROR_NO_MORE_FILES as i32) {\n        return Err(err);\n    }\n    Ok(found)"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/src/windows/job.rs",
+    "git_blob_sha": "bace96746cff8d83b507b5ae10dfd97328b31ff5",
+    "source_sha256": "8b2bceb35bed81ee335dff9a418527552d91c939f916cb491c8fc99aa5b56369",
+    "source_bytes": 7509,
+    "line_count": 165,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Own the Windows Job kill boundary and conservative PID membership probes.",
+    "behavior": [
+      "Creates an anonymous noninheritable Job with only KILL_ON_JOB_CLOSE, never a breakaway flag.",
+      "Queries active/total counts as Option, lists member PIDs with four bounded growth retries, and reports listing failure as unknown.",
+      "Probes a PID through an owned query/synchronize handle and distinguishes Gone, Outside and Member; only ERROR_INVALID_PARAMETER means no process.",
+      "Forced termination uses exit code one; a failed call is left for repeated tree settlement passes."
+    ],
+    "contracts": [
+      "Unknown active counts are not zero in the normal Tree proof; a retained Member handle pins the observed process identity."
+    ],
+    "dependencies": [
+      "tree.rs repeats termination and owns the Job; members.rs/inventory.rs consume conservative probes."
+    ],
+    "failures_or_limits": [
+      "terminate ignores its immediate API result and requires the caller to observe completion. Active count zero alone precedes the stronger per-member proof. container/mod.rs has a separate bounded polling policy that does accept unknown as a break condition."
+    ],
+    "evidence": [
+      {
+        "start_line": 21,
+        "end_line": 43,
+        "quote": "/// A new anonymous, non-inheritable Job whose last handle closing kills every member.\npub(super) fn create() -> io::Result<OwnedHandle> {\n    // SAFETY: null attributes (not inheritable) and no name; the result is checked for null.\n    let job = unsafe { CreateJobObjectW(std::ptr::null(), std::ptr::null()) };\n    // SAFETY: `job` is null or a fresh handle owned by nobody else.\n    let job =\n        OwnedHandle::try_from(unsafe { HandleOrNull::from_raw_handle(job) }).map_err(|_| io::Error::last_os_error())?;\n    let mut limits = JOBOBJECT_EXTENDED_LIMIT_INFORMATION::default();\n    // Only KILL_ON_JOB_CLOSE: never JOB_OBJECT_LIMIT_BREAKAWAY_OK or SILENT_BREAKAWAY_OK.\n    limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;\n    // SAFETY: `limits` is the structure this information class expects, with its exact size.\n    let ok = unsafe {\n        SetInformationJobObject(\n            job.as_raw_handle(),\n            JobObjectExtendedLimitInformation,\n            (&raw const limits).cast(),\n            size_of::<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>() as u32,\n        )\n    };\n    if ok == 0 {\n        return Err(io::Error::last_os_error());\n    }\n    Ok(job)"
+      },
+      {
+        "start_line": 46,
+        "end_line": 71,
+        "quote": "/// Live members, or `None` when the Job cannot be queried (unknown is never taken for empty).\npub(super) fn active(job: &OwnedHandle) -> Option<u32> {\n    counts(job).map(|(active, _)| active)\n}\n\n/// (live members, every process ever associated with the Job, child Jobs included), or `None`.\npub(super) fn counts(job: &OwnedHandle) -> Option<(u32, u32)> {\n    let mut info = JOBOBJECT_BASIC_ACCOUNTING_INFORMATION::default();\n    // SAFETY: `info` is the structure this information class expects, with its exact size.\n    let ok = unsafe {\n        QueryInformationJobObject(\n            job.as_raw_handle(),\n            JobObjectBasicAccountingInformation,\n            (&raw mut info).cast(),\n            size_of::<JOBOBJECT_BASIC_ACCOUNTING_INFORMATION>() as u32,\n            std::ptr::null_mut(),\n        )\n    };\n    (ok != 0).then_some((info.ActiveProcesses, info.TotalProcesses))\n}\n\n/// Forced stop: every member, at once.\npub(super) fn terminate(job: &OwnedHandle) {\n    // SAFETY: a valid Job handle. A failure leaves the members alive; `Tree::settle` repeats the pass until\n    // the Job is empty.\n    unsafe { TerminateJobObject(job.as_raw_handle(), KILLED) };"
+      },
+      {
+        "start_line": 74,
+        "end_line": 109,
+        "quote": "/// The pids the Job lists now. An error means \"unknown\", never \"none\".\npub(super) fn member_pids(job: &OwnedHandle) -> io::Result<Vec<u32>> {\n    let header = size_of::<JOBOBJECT_BASIC_PROCESS_ID_LIST>() - size_of::<usize>();\n    let mut room = 64usize;\n    // The Job can grow between the size query and the next call: a few retries, then an error.\n    for _ in 0..4 {\n        // usize-aligned buffer: the header, then `room` process ids.\n        let mut buf = vec![0usize; header.div_ceil(size_of::<usize>()) + room];\n        let bytes = u32::try_from(buf.len() * size_of::<usize>()).map_err(io::Error::other)?;\n        // SAFETY: `buf` is writable for `bytes` bytes and aligned for the structure.\n        let ok = unsafe {\n            QueryInformationJobObject(\n                job.as_raw_handle(),\n                JobObjectBasicProcessIdList,\n                buf.as_mut_ptr().cast(),\n                bytes,\n                std::ptr::null_mut(),\n            )\n        };\n        let err = io::Error::last_os_error();\n        // SAFETY: the buffer starts with the structure's header (written by the call, or still zeroed).\n        let list = unsafe { &*buf.as_ptr().cast::<JOBOBJECT_BASIC_PROCESS_ID_LIST>() };\n        let (assigned, listed) = (\n            list.NumberOfAssignedProcesses as usize,\n            list.NumberOfProcessIdsInList as usize,\n        );\n        if ok != 0 && listed == assigned {\n            let ids = buf.get(header.div_ceil(size_of::<usize>())..).unwrap_or_default();\n            return Ok(ids.iter().take(listed).map(|&p| p as u32).collect());\n        }\n        if ok == 0 && err.raw_os_error() != Some(ERROR_MORE_DATA as i32) {\n            return Err(err);\n        }\n        room = assigned.max(room) + 16;\n    }\n    Err(io::Error::other(\"the Job kept growing while it was listed\"))"
+      },
+      {
+        "start_line": 112,
+        "end_line": 140,
+        "quote": "/// What a pid names now, as seen from `job`.\npub(super) enum Probe {\n    /// No process has this pid: whatever had it is gone.\n    Gone,\n    /// The pid names a process outside the Job: it was reused, so the member that had it is gone.\n    Outside,\n    /// A process of the Job, held open (its pid cannot be reused while the handle lives).\n    Member(OwnedHandle),\n}\n\n/// Opens `pid` and checks it against `job`. Any other failure is an error: unknown, never gone.\npub(super) fn probe(job: &OwnedHandle, pid: u32) -> io::Result<Probe> {\n    let Some(h) = open(pid)? else { return Ok(Probe::Gone) };\n    let mut inside = 0;\n    // SAFETY: valid process and Job handles and a valid out pointer.\n    if unsafe { IsProcessInJob(h.as_raw_handle(), job.as_raw_handle(), &mut inside) } == 0 {\n        return Err(io::Error::last_os_error());\n    }\n    Ok(if inside != 0 { Probe::Member(h) } else { Probe::Outside })\n}\n\n/// Whatever had `pid` is certainly gone: no process has it, or the one that has it now has exited (a live\n/// process keeps its pid, so an exited holder means the original is gone either way).\npub(super) fn certainly_gone(pid: u32) -> bool {\n    match open(pid) {\n        Ok(None) => true,\n        Ok(Some(h)) => exited(&h),\n        Err(_) => false,\n    }"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/src/windows/members.rs",
+    "git_blob_sha": "da62deb134121546a6e263c6c86e0b882270997b",
+    "source_sha256": "a23f06ca30fb30bed6d17932ecc232317b3e50b29de0469f7245846bb9c050c3",
+    "source_bytes": 11064,
+    "line_count": 263,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Track Windows Job births and prove departure after an empty Job flushes its completion notifications.",
+    "behavior": [
+      "Associates the completion port before processes exist and records NEW_PROCESS PIDs plus an unswept notification total; periodic sweeps prune certainly-gone identities.",
+      "Once empty, posts a marker, waits until seen, reconciles notification total against Job TotalProcesses and unions any remaining listed PIDs.",
+      "Each candidate must be gone, outside the Job, or signalled; a live member is Pending and query/accounting/notification gaps are Unknown.",
+      "The completion worker wakes the owner on empty and flush events; a port failure leaves proofs unresolved."
+    ],
+    "contracts": [
+      "Members::prove must be called only after the Job is confirmed empty."
+    ],
+    "dependencies": [
+      "job.rs supplies counts/probes; queues.rs carries Settle; tree.rs owns the final proof deadline and result policy."
+    ],
+    "failures_or_limits": [
+      "The stronger proof is not an unconditional Stopped prerequisite: tree.rs permits Pending/Unknown after one second of confirmed emptiness, with a diagnostic. Embedded hooks suppress a birth or blind a probe for tests, not production recovery."
+    ],
+    "evidence": [
+      {
+        "start_line": 152,
+        "end_line": 195,
+        "quote": "    /// Call only once the Job is empty. First flushes the port (everything queued before the marker was\n    /// posted while members existed), then reconciles the notifications received with the Job's own count of\n    /// processes (a lost notification makes the proof Unknown), then probes every pid recorded, and every pid\n    /// the Job still lists.\n    pub(super) fn prove(&self, id: u64, job: &OwnedHandle) -> Proof {\n        {\n            let mut records = self.lock();\n            let Some(rec) = records.get_mut(&id) else {\n                return Proof::Unknown(\"the tree has no member record\".into());\n            };\n            match rec.flush {\n                Flush::Seen => {}\n                Flush::Posted => return Proof::Pending(\"the completion port is not flushed yet\".into()),\n                Flush::NotPosted => {\n                    // SAFETY: a valid port; the packet carries plain integers, no OVERLAPPED is dereferenced.\n                    let posted = unsafe {\n                        PostQueuedCompletionStatus(\n                            self.port.as_raw_handle(),\n                            0,\n                            MARKER,\n                            id as usize as *const OVERLAPPED,\n                        )\n                    };\n                    if posted == 0 {\n                        return Proof::Unknown(format!(\"flush marker: {}\", io::Error::last_os_error()));\n                    }\n                    rec.flush = Flush::Posted;\n                    return Proof::Pending(\"the completion port is not flushed yet\".into());\n                }\n            }\n        }\n        let Some((_, total)) = job::counts(job) else {\n            return Proof::Unknown(\"the Job's accounting cannot be read\".into());\n        };\n        let notified = self.lock().get(&id).map_or(0, |r| r.notified);\n        if notified != u64::from(total) {\n            return Proof::Unknown(format!(\n                \"lost job notification: {notified} of the Job's {total} processes were reported\"\n            ));\n        }\n        let listed = match job::member_pids(job) {\n            Ok(listed) => listed,\n            Err(e) => return Proof::Unknown(format!(\"the Job's members cannot be listed: {e}\")),\n        };"
+      },
+      {
+        "start_line": 204,
+        "end_line": 220,
+        "quote": "        let mut gone = Vec::new();\n        for pid in pids {\n            #[cfg(test)]\n            if *self.blind.lock().unwrap_or_else(PoisonError::into_inner) == Some(pid) {\n                return Proof::Unknown(format!(\"pid {pid} cannot be inspected (test)\"));\n            }\n            match job::probe(job, pid) {\n                Ok(Probe::Gone | Probe::Outside) => gone.push(pid),\n                Ok(Probe::Member(h)) if job::exited(&h) => gone.push(pid),\n                Ok(Probe::Member(_)) => return Proof::Pending(format!(\"pid {pid} is still exiting\")),\n                Err(e) => return Proof::Unknown(format!(\"pid {pid} cannot be inspected: {e}\")),\n            }\n        }\n        if let Some(rec) = self.lock().get_mut(&id) {\n            rec.pids.retain(|p| !gone.contains(p));\n        }\n        Proof::Gone"
+      },
+      {
+        "start_line": 223,
+        "end_line": 261,
+        "quote": "    /// The port's reader. Notifications for a tree that is not recorded (never, or no longer) are ignored.\n    fn serve(&self, inbox: &Inbox) {\n        loop {\n            let (mut msg, mut key, mut value) = (0u32, 0usize, std::ptr::null_mut::<OVERLAPPED>());\n            // SAFETY: a valid port and valid out pointers; job and marker packets carry plain integers.\n            let ok = unsafe {\n                GetQueuedCompletionStatus(self.port.as_raw_handle(), &mut msg, &mut key, &mut value, INFINITE)\n            };\n            if ok == 0 {\n                return; // the port is gone: proofs stay pending, and `Tree::settle`'s bound answers the Stops\n            }\n            let (id, pid) = if key == MARKER {\n                (value as usize as u64, 0)\n            } else {\n                (key as u64, value as usize as u32)\n            };\n            let mut records = self.lock();\n            let Some(rec) = records.get_mut(&id) else { continue };\n            match (key == MARKER, msg) {\n                (true, _) => rec.flush = Flush::Seen,\n                (false, MSG_NEW_PROCESS) => {\n                    #[cfg(test)]\n                    if self.suppress.swap(false, std::sync::atomic::Ordering::SeqCst) {\n                        continue;\n                    }\n                    rec.notified += 1;\n                    rec.pids.insert(pid);\n                    if rec.pids.len() > rec.sweep_at.max(SWEEP_FROM) {\n                        rec.pids.retain(|&p| !job::certainly_gone(p));\n                        rec.sweep_at = 2 * rec.pids.len();\n                    }\n                    continue;\n                }\n                (false, MSG_ACTIVE_PROCESS_ZERO) => {}\n                _ => continue,\n            }\n            drop(records);\n            inbox.event(Event::Settle { id });\n        }"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/src/windows/mod.rs",
+    "git_blob_sha": "97c76451ed7c852756c27a941c71b30ab813bbda",
+    "source_sha256": "2e51e8b7afa98241c37c0206152a749d29efe110eea4d8df4cd1196044320222",
+    "source_bytes": 13118,
+    "line_count": 345,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Run the Windows supervisor owner loop with request admission, deadline enforcement and host-loss cleanup.",
+    "behavior": [
+      "Enforces tree deadlines before waiting and again before handling one queued item; events take precedence through Inbox, and polling runs every 10 ms while stopping or 100 ms for lingering roots.",
+      "Admits requests only below the owed-reply budget, preserves released tombstones until gone, rejects requests to unknown/released IDs and refuses spawns at the tree limit.",
+      "Registers Job membership before process creation, arms an exit watcher before publishing Spawned, and rolls failed setup back by dropping the owned Job.",
+      "Host loss closes queues, starts each live tree stop with its own grace, and exits success when all are gone or failure at the longest remaining deadline plus five seconds."
+    ],
+    "contracts": [
+      "Go is a Windows no-op for known trees; Stop replies await Tree settlement, not root exit alone."
+    ],
+    "dependencies": [
+      "boot/channel/queues provide transport; spawn/tree/members own process state; diag avoids owner-thread stderr I/O."
+    ],
+    "failures_or_limits": [
+      "A too-large process list yields Ack::Error; other unencodable replies or queue overflow trigger host loss. Normal protocol deadlines do not make synchronous OS spawn/inventory calls interruptible."
+    ],
+    "evidence": [
+      {
+        "start_line": 111,
+        "end_line": 135,
+        "quote": "    /// One turn of the loop: due deadlines, then one event or request. `Some` = exit with that code.\n    fn step(&mut self) -> Option<ExitCode> {\n        let now = Instant::now();\n        self.enforce(now);\n        if let Some(bound) = self.host_gone {\n            if self.trees.values().all(|t| t.gone) {\n                return Some(ExitCode::SUCCESS);\n            }\n            if now >= bound {\n                return Some(ExitCode::FAILURE);\n            }\n        }\n        let admit = self.host_gone.is_none() && self.out.len() + self.stop_waiters < MAX_REPLIES;\n        let item = self.inbox.next(admit, self.wake(now, admit));\n        // The wait can be long: deadlines due by now go first, and the item is handled at the time it arrived.\n        let now = Instant::now();\n        self.enforce(now);\n        match item {\n            Some(Item::Request(m)) => self.request(m, now),\n            Some(Item::Event(Event::Exited { id, code })) => self.exited(id, code, now),\n            Some(Item::Event(Event::Settle { id })) => self.settle(id, now),\n            Some(Item::Event(Event::HostGone)) => self.host_died(now),\n            None => {}\n        }\n        None"
+      },
+      {
+        "start_line": 138,
+        "end_line": 155,
+        "quote": "    /// Queues `msg`; an overflow (impossible by the accounting in `queues`) ends the channel, never blocks.\n    fn send(&self, msg: &Msg) {\n        match self.out.send(msg) {\n            Ok(()) => {}\n            Err(Refused::Unencodable) => {\n                if let Msg::Processes { req, id, .. } = *msg {\n                    // A list too large for one frame is an incomplete inventory.\n                    self.send(&Msg::Ack {\n                        req,\n                        id,\n                        result: Ack::Error,\n                    });\n                } else {\n                    self.inbox.event(Event::HostGone);\n                }\n            }\n            Err(Refused::Full) => self.inbox.event(Event::HostGone),\n        }"
+      },
+      {
+        "start_line": 267,
+        "end_line": 315,
+        "quote": "    /// A tree the host still holds (an unknown or released id is `Ack unknown` for every request).\n    fn live(&mut self, id: u64) -> Option<&mut Tree> {\n        self.trees.get_mut(&id).filter(|t| !t.released)\n    }\n\n    fn spawn(&mut self, s: Spawn) -> Msg {\n        let req = s.req;\n        let failed = |code, errno, msg| Msg::SpawnFailed { req, code, errno, msg };\n        if self.trees.len() >= self.max_trees {\n            spawn::discard(&s, self.channel as RawHandle);\n            let msg = format!(\n                \"the supervisor holds its limit of {} trees (alive, or not released yet)\",\n                self.max_trees\n            );\n            return failed(FailCode::Io, 0, msg);\n        }\n        let id = self.next_id;\n        self.next_id += 1;\n        let members = &self.members;\n        let root = match spawn::spawn(&s, self.channel as RawHandle, |job| members.watch(id, job)) {\n            Ok(root) => root,\n            Err(f) => {\n                members.forget(id);\n                return failed(f.code, f.errno, f.msg);\n            }\n        };\n        let (pty, ends) = root.pty.map_or((None, None), |(p, e)| (Some(p), Some(e)));\n        let exit_handle = root.process.try_clone();\n        let tree = Tree::new(id, root.pid, root.process, root.job, pty, s.grace_ms);\n        // Rollback on failure: dropping `tree` closes its Job, which ends the root.\n        let watched = exit_handle.and_then(|h| {\n            watch(h, &self.inbox, move |h| Event::Exited {\n                id,\n                code: tree::exit_code(h),\n            })\n        });\n        if let Err(e) = watched {\n            members.forget(id);\n            return failed(FailCode::Io, 0, format!(\"exit watch: {e}\"));\n        }\n        let pid = tree.pid;\n        self.trees.insert(id, tree);\n        // The host pulls these out with DUPLICATE_CLOSE_SOURCE; they are never touched here again.\n        let pty_ends = ends.map_or([0; 2], |e| {\n            use std::os::windows::io::IntoRawHandle;\n            [e.output.into_raw_handle() as u64, e.input.into_raw_handle() as u64]\n        });\n        Msg::Spawned { req, id, pid, pty_ends }\n    }"
+      },
+      {
+        "start_line": 329,
+        "end_line": 344,
+        "quote": "    /// Every tree gets a `Stop` with its own grace, counted from now; the supervisor exits once all are\n    /// gone, or at the latest deadline plus slack (exiting closes the remaining Jobs, which ends their members).\n    fn host_died(&mut self, now: Instant) {\n        if self.host_gone.is_some() {\n            return;\n        }\n        self.inbox.close();\n        self.out.close();\n        let mut last = now;\n        for t in self.trees.values_mut().filter(|t| !t.gone) {\n            t.stop(None, t.grace_ms, now);\n            last = last.max(t.deadline().unwrap_or(now));\n        }\n        self.host_gone = Some(last + HOST_DEATH_SLACK);\n        self.next_poll = now;\n    }"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/src/windows/queues.rs",
+    "git_blob_sha": "42d0b7606a5e4018ab809eed68861d288116c260",
+    "source_sha256": "c06e7c51d4a9b6dbe1eb945d60da664afa36bf3bfa7546f8e1b4c528928b2677",
+    "source_bytes": 7433,
+    "line_count": 230,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Bound Windows owner requests and owed replies while reserving capacity for lifecycle events.",
+    "behavior": [
+      "Allows 64 queued requests and blocks only the reader at that limit; HostGone is deduplicated and lifecycle events are taken ahead of requests.",
+      "Admission elsewhere counts 1024 outstanding replies/Stop waiters; capacity additionally reserves one Exited per 4096 trees plus Ready.",
+      "Outbox counts frames already taken by the writer until written, batches queued bytes for the writer, and refuses overflow without blocking the owner.",
+      "Closing Inbox drops pending requests and wakes the reader; closing Outbox discards queued frames and wakes its drain."
+    ],
+    "contracts": [
+      "Events rely on one root-exit and bounded settle notifications per tree for their construction bound."
+    ],
+    "dependencies": [
+      "mod.rs enforces reply/tree admission; channel.rs performs blocking reads/writes and reports progress."
+    ],
+    "failures_or_limits": [
+      "Bounds count requests/frames rather than bytes, with individual message size bounded by the protocol. No writer-progress timeout is implemented here; owner deadlines continue because the writer is independent."
+    ],
+    "evidence": [
+      {
+        "start_line": 18,
+        "end_line": 25,
+        "quote": "/// Decoded requests waiting for the owner thread.\nconst MAX_REQUESTS: usize = 64;\n/// Replies owed (frames not yet written + `Stop` waiters) at or above which no request is admitted.\npub(super) const MAX_REPLIES: usize = 1024;\n/// Tree records (alive, or gone but not released); a `Spawn` beyond it is refused (`docs/protocol.md`).\npub(super) const MAX_TREES: usize = 4096;\n/// Request replies, one `Exited` per tree, and `Ready`.\nconst CAPACITY: usize = MAX_REPLIES + MAX_TREES + 1;"
+      },
+      {
+        "start_line": 68,
+        "end_line": 91,
+        "quote": "    pub(super) fn event(&self, event: Event) {\n        let mut q = self.lock();\n        if matches!(event, Event::HostGone) {\n            if q.host_gone {\n                return;\n            }\n            q.host_gone = true;\n        }\n        q.events.push_back(event);\n        self.owner.notify_one();\n    }\n\n    /// Blocks while the inbox is full; `false` once the host is gone.\n    pub(super) fn request(&self, msg: Msg) -> bool {\n        let mut q = self.lock();\n        while q.requests.len() >= MAX_REQUESTS && !q.closed {\n            q = self.reader.wait(q).unwrap_or_else(PoisonError::into_inner);\n        }\n        if q.closed {\n            return false;\n        }\n        q.requests.push_back(msg);\n        self.owner.notify_one();\n        true"
+      },
+      {
+        "start_line": 100,
+        "end_line": 131,
+        "quote": "    /// The next event, else (if `admit`) the next request, waiting until `until`. `None` on timeout, or when\n    /// the writer made progress (the caller recomputes `admit`).\n    pub(super) fn next(&self, admit: bool, until: Option<Instant>) -> Option<Item> {\n        let mut q = self.lock();\n        loop {\n            if let Some(e) = q.events.pop_front() {\n                return Some(Item::Event(e));\n            }\n            if admit && let Some(m) = q.requests.pop_front() {\n                self.reader.notify_one();\n                return Some(Item::Request(m));\n            }\n            if q.progress {\n                q.progress = false;\n                return None;\n            }\n            q.waiting = true;\n            q = match until {\n                None => self.owner.wait(q).unwrap_or_else(PoisonError::into_inner),\n                Some(t) => {\n                    let Some(left) = t.checked_duration_since(Instant::now()).filter(|d| !d.is_zero()) else {\n                        q.waiting = false;\n                        return None;\n                    };\n                    self.owner\n                        .wait_timeout(q, left)\n                        .unwrap_or_else(PoisonError::into_inner)\n                        .0\n                }\n            };\n            q.waiting = false;\n        }"
+      },
+      {
+        "start_line": 182,
+        "end_line": 229,
+        "quote": "    /// Queues `msg`, never blocking. After `close` frames are dropped.\n    pub(super) fn send(&self, msg: &Msg) -> Result<(), Refused> {\n        let mut frame = Vec::new();\n        omni_proto::encode(msg, &mut frame).map_err(|_| Refused::Unencodable)?;\n        let mut q = self.lock();\n        if q.closed {\n            return Ok(());\n        }\n        if q.frames.len() + q.in_flight >= CAPACITY {\n            return Err(Refused::Full);\n        }\n        q.frames.push_back(frame);\n        self.cv.notify_one();\n        Ok(())\n    }\n\n    /// Frames not yet written, including the batch being written.\n    pub(super) fn len(&self) -> usize {\n        let q = self.lock();\n        q.frames.len() + q.in_flight\n    }\n\n    pub(super) fn close(&self) {\n        let mut q = self.lock();\n        q.closed = true;\n        q.frames.clear();\n        self.cv.notify_all();\n    }\n\n    /// Every queued frame as one write (still counted until `written`); `None` once closed.\n    pub(super) fn take(&self) -> Option<Vec<u8>> {\n        let mut q = self.lock();\n        loop {\n            if q.closed {\n                return None;\n            }\n            if !q.frames.is_empty() {\n                q.in_flight = q.frames.len();\n                return Some(q.frames.drain(..).flatten().collect());\n            }\n            q = self.cv.wait(q).unwrap_or_else(PoisonError::into_inner);\n        }\n    }\n\n    /// The batch from `take` was written.\n    pub(super) fn written(&self) {\n        self.lock().in_flight = 0;\n    }"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/src/windows/spawn.rs",
+    "git_blob_sha": "b2c097e9c51e4b4ffd70ffd0721fc8bed8bc5561",
+    "source_sha256": "ac7f586d6d930371128ab570e7abdb65137b5f3f4b040b42ff627963fbf62ed2",
+    "source_bytes": 11700,
+    "line_count": 291,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Validate Windows spawn wire data, consume transferred stdio and create a contained pipe or terminal root.",
+    "behavior": [
+      "Takes ownership of each distinct transferred pipe once, refuses repeated/missing/extra slots and never adopts the channel or non-pipe values; closed stdin becomes a readable NUL handle.",
+      "Requires valid NUL-free WTF-8 and an absolute program, checks cwd metadata, resolves batch scripts through the system-directory cmd.exe and refuses batch or extra argv with verbatim mode.",
+      "Builds a double-NUL environment block with ASCII-case sorting, creates/watches a Job before the root, and optionally creates ConPTY before CreateProcessW.",
+      "Maps common Windows errors to NotFound, NotExecutable or BadCwd and returns owned handles so failed setup closes containment."
+    ],
+    "contracts": [
+      "The launch path never resolves cmd.exe through PATH or ComSpec; HANDLE_LIST/PSEUDOCONSOLE plus JOB_LIST are delegated to create.rs."
+    ],
+    "dependencies": [
+      "cmdline.rs quoting/WTF-8; pty_windows.rs console lifetime; job.rs containment; host spawn/env.rs prepares environment."
+    ],
+    "failures_or_limits": [
+      "Environment sorting here folds only ASCII, whereas the host environment name helper folds BMP letters; equivalence for non-ASCII names is not established. Transferred-handle ownership assumes a cooperating authenticated host, not arbitrary valid pipe-handle numbers."
+    ],
+    "evidence": [
+      {
+        "start_line": 69,
+        "end_line": 109,
+        "quote": "/// Starts `s`. `channel` is the host pipe, which a transferred handle may never be. `watch` sees the Job\n/// before any process exists in it.\npub(super) fn spawn(\n    s: &Spawn,\n    channel: RawHandle,\n    watch: impl FnOnce(&OwnedHandle) -> io::Result<()>,\n) -> Result<Root, Failure> {\n    let stdio = take_stdio(s, channel)?;\n    let program = text(&s.program, \"program\")?;\n    let argv = s\n        .argv\n        .iter()\n        .map(|a| text(a, \"argument\"))\n        .collect::<Result<Vec<_>, _>>()?;\n    let Some((argv0, args)) = argv.split_first() else {\n        return Err(invalid(\"argv is empty\"));\n    };\n    let program_path = PathBuf::from(OsString::from_wide(&program));\n    if !program_path.is_absolute() {\n        return Err(invalid(format!(\n            \"program {} is not an absolute path\",\n            program_path.display()\n        )));\n    }\n    let cwd = text(&s.cwd, \"cwd\")?;\n    let cwd_path = PathBuf::from(OsString::from_wide(&cwd));\n    match std::fs::metadata(&cwd_path) {\n        Ok(m) if m.is_dir() => {}\n        Ok(_) => {\n            return Err(os_failure(\n                &cwd_path.display().to_string(),\n                &io::Error::from_raw_os_error(ERROR_DIRECTORY as i32),\n            ));\n        }\n        Err(e) => {\n            return Err(Failure {\n                code: FailCode::BadCwd,\n                ..os_failure(&cwd_path.display().to_string(), &e)\n            });\n        }\n    }"
+      },
+      {
+        "start_line": 110,
+        "end_line": 165,
+        "quote": "    let verbatim = match &s.verbatim {\n        Some(tail) => Some(text(tail, \"the verbatim command line\")?),\n        None => None,\n    };\n    let batch = is_batch(&program_path).map_err(|e| os_failure(\"program path\", &e))?;\n    // A verbatim line (amendment WP8b) goes to the named program as it is: never with arguments to quote, and never\n    // to a batch file, which would need a `cmd.exe` the caller did not name.\n    if verbatim.is_some() && batch {\n        return Err(invalid(\n            \"a verbatim command line cannot start a batch file; name cmd.exe as the program\",\n        ));\n    }\n    if verbatim.is_some() && !args.is_empty() {\n        return Err(invalid(\"a verbatim command line takes argv[0] alone\"));\n    }\n    // A batch file never reaches CreateProcessW by name (it would start cmd.exe with our unescaped line):\n    // it runs as `cmd.exe /c` with std's batch quoting, or is refused.\n    let (app, line) = if batch {\n        if !program_path.is_file() {\n            let e = io::Error::from_raw_os_error(ERROR_FILE_NOT_FOUND as i32);\n            return Err(os_failure(&program_path.display().to_string(), &e));\n        }\n        // cmd.exe cannot open a verbatim path: std's plain spelling, or a refusal.\n        (\n            cmd_exe().map_err(|e| os_failure(\"system directory\", &e))?,\n            cmdline::user_path(&program).and_then(|script| cmdline::bat(&script, args)),\n        )\n    } else {\n        let line = match &verbatim {\n            Some(tail) => cmdline::verbatim(argv0, tail),\n            None => cmdline::exe(argv0, args),\n        };\n        (program, line)\n    };\n    let mut line = line.map_err(invalid)?;\n    line.push(0);\n    let env = env_block(&s.env)?;\n    let job = job::create().map_err(|e| os_failure(\"job\", &e))?;\n    watch(&job).map_err(|e| os_failure(\"job completion port\", &e))?;\n    // A terminal root: the ConPTY path is laid out step by step in `pty_windows`; `create` below is its step 5.\n    let pty = match s.pty {\n        Some((cols, rows)) => Some(pty_windows::create(cols, rows).map_err(|e| match e.kind() {\n            io::ErrorKind::InvalidInput => invalid(e.to_string()),\n            _ => os_failure(\"terminal\", &e),\n        })?),\n        None => None,\n    };\n    let pc = pty.as_ref().map(|(p, _)| p.handle());\n    match create(&app, &mut line, &env, &cwd, &job, stdio.as_ref(), pc) {\n        Ok((pid, process)) => Ok(Root { pid, process, job, pty }),\n        Err(e) => {\n            if let Some((p, _)) = pty {\n                p.close(Instant::now());\n            }\n            Err(os_failure(\"CreateProcessW\", &e))\n        }"
+      },
+      {
+        "start_line": 181,
+        "end_line": 212,
+        "quote": "/// Takes ownership of each distinct transferred pipe exactly once (the host gave it to this process for this\n/// spawn), then checks the slots. A repeated value, or a missing or extra handle, is refused, and every handle\n/// taken is closed on that path. A value that is not a pipe, or is the channel, is not ours to close.\nfn take_stdio(s: &Spawn, channel: RawHandle) -> Result<Option<Stdio>, Failure> {\n    let mut i = 0;\n    let [stdin, stdout, stderr] = s.handles.map(|v| {\n        let first = !s.handles.iter().take(i).any(|&o| o == v);\n        i += 1;\n        let h = v as usize as RawHandle;\n        // SAFETY: GetFileType only reads the handle's type; an invalid value gives FILE_TYPE_UNKNOWN.\n        let pipe = v != 0 && first && h != channel && unsafe { GetFileType(h as HANDLE) } == FILE_TYPE_PIPE;\n        // SAFETY: a pipe handle the host duplicated into this process for this spawn; owned from here on.\n        pipe.then(|| unsafe { OwnedHandle::from_raw_handle(h) })\n    });\n    let given = s.handles.map(|v| v != 0);\n    let unusable =\n        given.iter().filter(|&&g| g).count() != [&stdin, &stdout, &stderr].iter().filter(|h| h.is_some()).count();\n    let wanted = match s.pty {\n        Some(_) => [false; 3],\n        None => [s.stdin == Slot::Pipe, true, s.stderr == Slot::Pipe],\n    };\n    if unusable || given != wanted {\n        return Err(invalid(format!(\"handles {:?} do not match the stdio slots\", s.handles)));\n    }\n    let (Some(stdout), None) = (stdout, s.pty) else {\n        return Ok(None);\n    };\n    let stdin = match stdin {\n        Some(pipe) => pipe,\n        None => open_nul().map_err(|e| os_failure(\"NUL\", &e))?,\n    };\n    Ok(Some(Stdio { stdin, stdout, stderr }))"
+      },
+      {
+        "start_line": 263,
+        "end_line": 290,
+        "quote": "/// `KEY=VALUE\\0...\\0`, sorted by name ignoring ASCII case (the order Windows documents for the block).\nfn env_block(env: &[(Vec<u8>, Vec<u8>)]) -> Result<Vec<u16>, Failure> {\n    let mut vars = Vec::with_capacity(env.len());\n    for (k, v) in env {\n        let key = text(k, \"environment name\")?;\n        // A leading `=` is legal (the hidden per-drive `=C:` variables); one anywhere else is not.\n        if key.is_empty() || key.iter().skip(1).any(|&c| c == u16::from(b'=')) {\n            return Err(invalid(format!(\n                \"environment name {:?} is empty or contains `=`\",\n                String::from_utf16_lossy(&key)\n            )));\n        }\n        vars.push((key, text(v, \"environment value\")?));\n    }\n    let upper = |c: &u16| if (97..=122).contains(c) { c - 32 } else { *c };\n    vars.sort_by(|a, b| a.0.iter().map(upper).cmp(b.0.iter().map(upper)));\n    let mut block = Vec::new();\n    for (k, v) in vars {\n        block.extend(k);\n        block.push(u16::from(b'='));\n        block.extend(v);\n        block.push(0);\n    }\n    if block.is_empty() {\n        block.push(0);\n    }\n    block.push(0);\n    Ok(block)"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  }
+]

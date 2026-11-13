@@ -1,0 +1,12 @@
+{
+  "source": "records-11.json",
+  "replacement": "records-11.v2.json",
+  "changes": [
+    {
+      "path": "native/omni/crates/omni-supervisor/src/windows/channel.rs",
+      "field": "failures_or_limits",
+      "reason": "Full queues.rs inspection confirms bounded admission and independent deadline enforcement, not a writer-stall timeout; replaces the imprecise v1 phrase queue stall enforcement."
+    }
+  ],
+  "original_preserved": true
+}

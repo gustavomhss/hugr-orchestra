@@ -1,0 +1,660 @@
+[
+  {
+    "path": "native/omni/campaign/test/omni-broker-sharing.test.ts",
+    "git_blob_sha": "ff30fd176180ed8a5ed2dc640acf11bcf837b631",
+    "source_sha256": "99c18abfcb2082c1a04e10609006e7ad9a658b22520a1bbfd5bce37c6e341c06",
+    "source_bytes": 11493,
+    "line_count": 176,
+    "disposition": "analyzed",
+    "contracts": [
+      "Windows-only; main fault matrix timeout 180 seconds, malformed test 30 seconds.",
+      "Transient broker read retry is one second; malformed reply must arrive within three seconds, with pid0/closed=true/status=null; teardown kills after two seconds and confirms close within five."
+    ],
+    "dependencies": [
+      "WindowsInventory.brokerScript/publishRequest are instrumented at exact source boundaries; real PowerShell handles provide Windows sharing semantics."
+    ],
+    "failures_or_limits": [
+      "Linux execution cannot prove this boundary; mutation tests are source assertions, not recorded outcomes."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "test",
+    "purpose": "Exercises the real Windows inventory broker against file-sharing and partial-publication failures.",
+    "behavior": [
+      "For lock and partial JSON faults, tests normal, unprotected-read and no-retry brokers; normal recovery must execute exactly once and serve a second request.",
+      "Releases faults only after observing the broker failure; a late release may repeat at most three times, and cannot pass without one actual recovery.",
+      "Permanent malformed JSON must return bounded failure, never execute a repaired consumed request and allow the next independent request."
+    ],
+    "evidence": [
+      {
+        "start_line": 18,
+        "end_line": 26,
+        "quote": "  for (const mutation of [\"none\", \"unprotected\", \"no-retry\"] as const) {\n    for (const fault of [\"lock\", \"partial\"] as const) {\n      const late: number[] = []\n      for (;;) {\n        const outcome = await control(mutation, fault)\n        if (outcome.late !== undefined) {\n          late.push(outcome.late)\n          if (late.length < ATTEMPTS) continue\n          throw new Error(`${fault}: no recovery in ${ATTEMPTS} attempts; each release came after the broker's last read attempt began (${late.join(\", \")} ms after its first fault)`)"
+      },
+      {
+        "start_line": 100,
+        "end_line": 106,
+        "quote": "    }\n    expect(JSON.parse(readFileSync(reply, \"utf8\"))).toMatchObject({ status: 0, closed: true, timedOut: false })\n    expect(readFileSync(executed, \"utf8\")).toBe(\"once\\n\")\n    writeFileSync(file + \".ack\", \"ack\")\n    await until(5000, \"request ack consumed\", () => !existsSync(file) && !existsSync(reply) && !existsSync(file + \".ack\") ? true : undefined)\n    publish(dir, \"second\", \"SECOND_SNAPSHOT\")\n    await until(10_000, \"next exact request reply\", () => existsSync(path.join(dir, \"reply-second.json\")) ? true : undefined)"
+      },
+      {
+        "start_line": 119,
+        "end_line": 120,
+        "quote": "if (win) test(\"permanent malformed request stays bounded red; repaired consumed request never runs; next request succeeds\", async () => {\n  const dir = mkdtempSync(path.join(os.tmpdir(), \"omni-malformed-control-\"))"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/test/omni-campaign-inventory.test.ts",
+    "git_blob_sha": "7517069120a789c43af5e7f78193db36d7c9de81",
+    "source_sha256": "4517b438b91391caab12e73cff570e1c72b9fc2df38f496272f38044e43d335e",
+    "source_bytes": 29037,
+    "line_count": 399,
+    "disposition": "analyzed",
+    "contracts": [
+      "Common real-process tests allow60seconds; two-owner and close-deadline cases120seconds; birth/DST controls30seconds.",
+      "Execution watchdog15seconds must finish<17seconds, fast refusal<=2seconds; close deadline2seconds rejects injected2.5second observations."
+    ],
+    "dependencies": [
+      "lib.ts/process-rows/WindowsInventory are copied and narrowly mutated; delivery-fixtures and V8 closeWithinDeadline provide real boundaries."
+    ],
+    "failures_or_limits": [
+      "Synthetic CIM rows prove parser logic independently of Windows runtime; platform-specific OS controls still require their matching runner."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "test",
+    "purpose": "Tests ownership and inventory oracles with synthetic rows, real processes and targeted source mutations.",
+    "behavior": [
+      "Checks unknown argv retention, pid+birth reuse rejection, strict UTC/DST ordering, exact marker arguments and retained identity after argv loss; macOS adds Bun/Node UTC fixture controls.",
+      "Real processes prove stale identity cannot kill, numeric pinned identity can, watchdog capture precedes timeout and query failure cannot publish a premature success.",
+      "Two-owner mutations demonstrate that hidden argv in B must not let cleanup A kill B; unknown-row and stale-PID mutations must invalidate their controls.",
+      "Delayed recorder-close confirmation must retain its handle; delayed OS disappearance/reachability must fail the complete-close deadline while the late-check mutation passes incorrectly."
+    ],
+    "evidence": [
+      {
+        "start_line": 136,
+        "end_line": 141,
+        "quote": "    expect(kill9({ pid: server.pid, startTime: `${server.identity.startTime}-stale` })).toBe(false)\n    expect(table().some((row) => matches(row, server.identity))).toBe(true)\n    expect(kill9(server.pid)).toBe(true)\n    await until(10_000, \"real host exit\", () => server.proc.exitCode !== null || server.proc.signalCode !== null ? true : undefined)\n    expect(table().some((row) => matches(row, server.identity) && !row.state.startsWith(\"Z\"))).toBe(false)\n  } finally {"
+      },
+      {
+        "start_line": 278,
+        "end_line": 282,
+        "quote": "      const independentlyLive = table().some((row) => matches(row, proof.bid) && hasNonce(row.args, proof.bNonce))\n      expect(proof.gatePass).toBe(!mutation)\n      expect(independentlyLive).toBe(!mutation)\n      console.log(\"OWNER_MUTATION_PROOF \" + JSON.stringify({ mutation, ...proof, independentlyLive }))\n    } finally {"
+      },
+      {
+        "start_line": 365,
+        "end_line": 368,
+        "quote": "          (result) => ({ gatePass: true, result, error: \"\" }), (error: unknown) => ({ gatePass: false, result: undefined, error: String(error) }))\n        expect(observed.gatePass).toBe(mutation)\n        console.log(\"CLOSE_DEADLINE_MUTATION_PROOF \" + JSON.stringify({ stage, mutation, ...observed }))\n        await until(15_000, \"delayed final observer completion\", async () => Promise.race([checked.promise.then(() => true), Bun.sleep(100).then(() => undefined)]))"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/test/omni-campaign-recorder.test.ts",
+    "git_blob_sha": "2364993be52277136ff8d17feafa93db91886cfb",
+    "source_sha256": "06b0f5cc5594fab4c0ad8b4b08ab8987ed55d4213f910a2b61505acafbb6b4d1",
+    "source_bytes": 3828,
+    "line_count": 50,
+    "disposition": "analyzed",
+    "contracts": [
+      "Healthy readiness budget2seconds, fault budgets500ms; suite90seconds, Windows stalled helper30seconds.",
+      "Close-after-ready accepts recorder-closed or EPIPE as observable race outcomes."
+    ],
+    "dependencies": [
+      "WindowsInventory.makeRecorder/run/stop manage helper lifecycle; lib.table checks independent process presence."
+    ],
+    "failures_or_limits": [
+      "Only the stalled executable test is Windows-gated; generic recorder lifecycle uses real Bun child processes on available OS."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "test",
+    "purpose": "Verifies recorder startup/shutdown failures remain visible and close owned helper processes.",
+    "behavior": [
+      "Healthy recorder must appear in OS inventory, stop, clear pid and disappear.",
+      "Injects no-ready, malformed-ready, early-close, close-after-ready and stuck-shutdown helpers; each must return the named error, closed state and zero pending requests with no nonce process left.",
+      "Windows stalled executable uses a500ms helper deadline and must report its owned pid, fail in<3seconds and confirm disappearance."
+    ],
+    "evidence": [
+      {
+        "start_line": 15,
+        "end_line": 22,
+        "quote": "  const faults = [\n    { name: \"no-ready\", script: \"setInterval(()=>{},1000)\", error: \"readiness deadline expired\", shutdown: false },\n    { name: \"malformed-ready\", script: 'console.log(JSON.stringify({ready:\"yes\"}));setInterval(()=>{},1000)', error: \"malformed identity recorder ready\", shutdown: false },\n    { name: \"early-close\", script: \"process.exit(0)\", error: \"identity recorder closed\", shutdown: false },\n    { name: \"early-close-after-ready\", script: 'console.log(JSON.stringify({ready:true}));process.exit(0)', error: \"identity recorder closed\", shutdown: false, capture: true },\n    { name: \"stuck-shutdown\", script: 'console.log(JSON.stringify({ready:true}));process.stdin.resume();setInterval(()=>{},1000)', error: \"shutdown deadline expired\", shutdown: true },\n  ]\n  for (const fault of faults) {"
+      },
+      {
+        "start_line": 27,
+        "end_line": 31,
+        "quote": "      expect((fault.capture ? [fault.error, \"EPIPE: broken pipe, write\"] : [fault.error]).some((error) => result.error.includes(error))).toBe(true)\n      expect(recorder.snapshot()).toMatchObject({ pid: undefined, closed: true, pending: 0 })\n      expect(table().some((row) => hasNonce(row.args, nonce))).toBe(false)\n      console.log(\"RECORDER_FAULT_PROOF \" + JSON.stringify({ name: fault.name, red: !!result.error, closed: recorder.snapshot().closed }))\n    } finally { await recorder.stop(true) }"
+      },
+      {
+        "start_line": 44,
+        "end_line": 48,
+        "quote": "  expect(result.error).toContain(\"Windows helper deadline expired\")\n  expect(Number.isSafeInteger(result.pid) && result.pid > 0).toBe(true)\n  expect(performance.now() - started).toBeLessThan(3000)\n  expect(table().some((row) => row.pid === result.pid && hasNonce(row.args, nonce))).toBe(false)\n  await WindowsInventory.stop()"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/test/omni-delivery-campaign.hosted.ts",
+    "git_blob_sha": "2af9e8a9141c8d9c68b85c4dd4f4fd22ec49dedb",
+    "source_sha256": "90e1349993bdc9f6179cd9ecd3dbac76717e73ddd2026892850526c2888559fe",
+    "source_bytes": 2660,
+    "line_count": 51,
+    "disposition": "analyzed",
+    "contracts": [
+      "Explicit .hosted.ts selection; overall480seconds, optional CLI build180seconds, V9 child120seconds."
+    ],
+    "dependencies": [
+      "v8-windows.ts and v9-broken-artifacts.ts supply real scenarios; core expectSpawn asserts actual native use."
+    ],
+    "failures_or_limits": [
+      "Existing dist is checked for presence here; exact-source binary provenance is not verified by this wrapper itself.",
+      "Separate V9 process prevents its compiled fallback mutation contaminating the parent runtime."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "test",
+    "purpose": "Runs explicit hosted Windows delivery V8 and broken-artifact V9 acceptance assertions.",
+    "behavior": [
+      "Requires win32, Omni flag1 and existing addon/supervisor; first performs real AppProcess git --version with a10second timeout.",
+      "Builds CLI if dist is absent, then requires V8 pass and runs V9 --quiet --mutation --diagnose in a separate process.",
+      "V9 must exit0 and publish a CAMPAIGN_VERDICT whose pass is true."
+    ],
+    "evidence": [
+      {
+        "start_line": 13,
+        "end_line": 17,
+        "quote": "  expect(process.platform).toBe(\"win32\")\n  expect(process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER).toBe(\"1\")\n  expect(existsSync(process.env.HUGR_OMNI_ADDON ?? \"\")).toBe(true)\n  expect(existsSync(process.env.HUGR_OMNI_SUPERVISOR ?? \"\")).toBe(true)\n  const { Effect, ChildProcess } = await effectModules()"
+      },
+      {
+        "start_line": 41,
+        "end_line": 43,
+        "quote": "  const v9 = Bun.spawn([process.execPath, path.join(ROOT, \"native/omni/campaign/v9-broken-artifacts.ts\"), \"--quiet\", \"--mutation\", \"--diagnose\"], {\n    cwd: ROOT, stdout: \"pipe\", stderr: \"pipe\", timeout: 120_000,\n  })"
+      },
+      {
+        "start_line": 46,
+        "end_line": 51,
+        "quote": "  expect(v8.pass).toBe(true)\n  expect(code).toBe(0)\n  const line = stdout.split(\"\\n\").find((line) => line.startsWith(\"CAMPAIGN_VERDICT \"))\n  expect(line).toBeDefined()\n  expect(JSON.parse(line!.slice(\"CAMPAIGN_VERDICT \".length)).pass).toBe(true)\n}, 480_000)"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/test/omni-fixture-identity.hosted.ts",
+    "git_blob_sha": "0086b39ec87eabdd4f1aa81a71400f75608d2ddc",
+    "source_sha256": "f0145cdf336853241e6138610e2e31adec1ac9d2460ae4ce2046f7a379fd839f",
+    "source_bytes": 7608,
+    "line_count": 126,
+    "disposition": "analyzed",
+    "contracts": [
+      "Healthy readiness45seconds/test120seconds; fault readiness20seconds/test45seconds.",
+      "Child stop uses1000ms grace, then owned nonce disappearance must be observed within8seconds."
+    ],
+    "dependencies": [
+      "core process-tree fixture, native Omni binding and protocol-fixtures isolated env are exercised under nondefault TZ/locale."
+    ],
+    "failures_or_limits": [
+      "Raw records are preserved before cleanup so absent/undefined identity failures cannot be concealed.",
+      "Wait/pump cleanup lacks a separate local timeout beyond the outer test."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "test",
+    "purpose": "Requires process-tree fixtures to publish exact OS birth identities before readiness.",
+    "behavior": [
+      "CI setup performs real AppProcess git and verifies Omni spawn counter growth; Bun and Node depth-one trees must each publish two nonempty birth identities matching inventory and alive().",
+      "A missing-birth mutation queries an absent valid pid and must fail before READY with zero records.",
+      "On non-Linux hosts, a PATH lookup failure must likewise reject birth query before readiness; Linux uses /proc directly."
+    ],
+    "evidence": [
+      {
+        "start_line": 45,
+        "end_line": 49,
+        "quote": "      expect(recorded).toHaveLength(2)\n      expect(recorded.every((record) => typeof record.startTime === \"string\" && record.startTime.length > 0)).toBe(true)\n      expect(recorded.every((record) => rows.some((row) => matches(row, record)))).toBe(true)\n      expect(await alive(launched.sample.nonce)).toBe(2)\n    } finally { await close(launched) }"
+      },
+      {
+        "start_line": 60,
+        "end_line": 64,
+        "quote": "    expect(launched.state.stdout).not.toContain(launched.sample.ready)\n    expect(launched.state.stderr).toContain(\"fixture birth identity missing creation time\")\n    expect(records(launched.sample.nonce)).toHaveLength(0)\n    expect(launched.state.exit?.success).toBe(false)\n  } finally { await close(launched) }"
+      },
+      {
+        "start_line": 67,
+        "end_line": 68,
+        "quote": "if (process.platform !== \"linux\") test(\"failed real ps/CIM executable lookup fails before READY\", async () => {\n  const launched = await launch(\"bun\", 0, \"query-failure\")"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/test/omni-functional-matrix.hosted.ts",
+    "git_blob_sha": "4e3c27c28326eb965638e56f0ab64a9d19c049e2",
+    "source_sha256": "b65e022529b3d761b2a034522da9abddc680578a56e8a52f8bedc62669f0bfd7",
+    "source_bytes": 3384,
+    "line_count": 53,
+    "disposition": "analyzed",
+    "contracts": [
+      "Overall test deadline900seconds; parent git operation10seconds.",
+      "Mutated observations are retained instead of silently retried."
+    ],
+    "dependencies": [
+      "matrix-build.ts supplies checked artifacts; v3-supervisor/v4-lsp/v5-mcp/v6-terminal own cell assertions."
+    ],
+    "failures_or_limits": [
+      "Wrapper assertions describe intended matrix results; this documentary pass provides no runtime evidence."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "test",
+    "purpose": "Coordinates the exact-source hosted V3–V6 functional matrix and oracle sensitivity controls.",
+    "behavior": [
+      "Requires CI and strict Omni mode, proves parent AppProcess git uses native spawning, then invokes matrix preparation.",
+      "Runs wrong-owner, missing-MCP-marker and missing-PTY-replay mutations before restored V3/V4/V5/V6 cells, without retries.",
+      "Requires named mutation failures,22LSP handshakes and every restored cell pass."
+    ],
+    "evidence": [
+      {
+        "start_line": 33,
+        "end_line": 37,
+        "quote": "  const owner = await v3.run({ mutation: \"wrong-owner\" }).catch(failure)\n  const marker = await v5.run({ mutation: \"missing-marker\" }).catch(failure)\n  const replay = await v6.run({ mutation: \"missing-replay\" }).catch(failure)\n  console.log(\"MATRIX_MUTATIONS_RED \" + JSON.stringify({ os: process.platform, owner, marker, replay }))\n  // Restored actual cells execute after mutations. No retries; retain every failed observation."
+      },
+      {
+        "start_line": 45,
+        "end_line": 53,
+        "quote": "  expect(owner.pass).toBe(false)\n  expect(\"error\" in owner && owner.error).toContain(\"wrong-owner positive control rejected\")\n  expect(marker.pass).toBe(false)\n  expect(\"error\" in marker && marker.error).toContain(\"last stderr line in Orchestra debug log\")\n  expect(replay.pass).toBe(false)\n  expect(\"errors\" in replay && replay.errors.some((error) => error.includes(\"reconnection replay differs\"))).toBe(true)\n  expect(\"handshakes\" in results.v4 && results.v4.handshakes).toHaveLength(22)\n  Object.values(results).forEach((result) => expect(result.pass).toBe(true))\n}, 900_000)"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/test/omni-macos-overhead.hosted.ts",
+    "git_blob_sha": "fba0221733081c36ea9ea3e12a11b026a1f55213",
+    "source_sha256": "4fda693d7e43b0ef71c887700454643e17f62da5ddbfbbaed66aa03127194228",
+    "source_bytes": 2712,
+    "line_count": 49,
+    "disposition": "analyzed",
+    "contracts": [
+      "Headroom wait600seconds, main test900seconds; malformed children10seconds each/test60seconds."
+    ],
+    "dependencies": [
+      "v7-overhead.ts measures real AppProcess calls and implements pacing validation."
+    ],
+    "failures_or_limits": [
+      "Pacing/headroom improve the measurement conditions but do not substitute for run-time samples; no benchmark was executed."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "test",
+    "purpose": "Checks macOS overhead acceptance and sensitivity without relaxing quiet-host limits.",
+    "behavior": [
+      "Requires darwin/Omni flag1 and real git native control; waits for load<=25% of available CPUs before each run.",
+      "Runs1000paced pairs with20ms inter-pair idle, expects actual KPI pass, then slow-omni mutation failure with1000completed samples per arm.",
+      "Malformed/duplicate --idle-ms flags must exit nonzero with the named parsing error and no successful verdict."
+    ],
+    "evidence": [
+      {
+        "start_line": 19,
+        "end_line": 23,
+        "quote": "  const headroom = () => until(600_000, \"macOS V7 quiet startup headroom\", () =>\n    os.loadavg()[0] <= os.availableParallelism() * 0.25 ? true : undefined)\n  await headroom()\n  const measured = await run({ quiet: true, interPairIdleMs: 20 })\n  console.log(\"MACOS_V7 \" + JSON.stringify(measured))"
+      },
+      {
+        "start_line": 34,
+        "end_line": 37,
+        "quote": "  expect(slow.counts.legacy.completed).toBe(1000)\n  expect(slow.counts.omni.completed).toBe(1000)\n  expect(slow.pass).toBe(false)\n}, 900_000)"
+      },
+      {
+        "start_line": 40,
+        "end_line": 49,
+        "quote": "  for (const args of [[\"--idle-ms\"], [\"--idle-ms=\"], [\"--idle-ms= \"], [\"--idle-ms=5\\n\"], [\"--idle-ms=NaN\"], [\"--idle-ms=1\", \"--idle-ms=2\"]]) {\n    const proc = Bun.spawn([process.execPath, path.join(ROOT, \"native/omni/campaign/v7-overhead.ts\"), ...args], {\n      cwd: ROOT, stdout: \"pipe\", stderr: \"pipe\", timeout: 10_000,\n    })\n    const [stdout, stderr, code] = await Promise.all([new Response(proc.stdout).text(), new Response(proc.stderr).text(), proc.exited])\n    expect(code).not.toBe(0)\n    expect(stderr).toContain(\"V7 requires one --idle-ms=<integer> value\")\n    expect(stdout).not.toContain('\"pass\":true')\n  }\n}, 60_000)"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/test/omni-natural-exit.hosted.ts",
+    "git_blob_sha": "0af1e7faf822b271e7fcc4809bb4801b4908203f",
+    "source_sha256": "73396caaa12746a9e1be66d2ffe2ddfffee1d1c60d28f1217c1e6951324829ba",
+    "source_bytes": 2154,
+    "line_count": 43,
+    "disposition": "analyzed",
+    "contracts": [
+      "Two explicitly selected hosted tests each allow300seconds; v10-natural-exit retains its unchanged10second observation bound."
+    ],
+    "dependencies": [
+      "v10-natural-exit.ts and natural-host.ts implement disposal and independent parent observation; expectSpawn requires actual native use."
+    ],
+    "failures_or_limits": [
+      "This proves the Bun core-process host boundary when executed, not compiled CLI or Electron lifetime."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "test",
+    "purpose": "Asserts natural Bun exit after core process disposal and rejects a retained timer.",
+    "behavior": [
+      "Strict-mode parent runs real AppProcess Node output and disposes its runtime before the natural-host scenario.",
+      "Normal run must return pass=true/error empty.",
+      "Timer mutation must fail after actual disposed/retained markers while host remains unclosed, unsignalled and present in inventory; restoring only mutation input must pass."
+    ],
+    "evidence": [
+      {
+        "start_line": 26,
+        "end_line": 27,
+        "quote": "  expect({ pass: result.pass, error: result.error }).toEqual({ pass: true, error: \"\" })\n}, 300_000)"
+      },
+      {
+        "start_line": 36,
+        "end_line": 43,
+        "quote": "  expect(result.observation.disposed).toBe(true)\n  expect(result.observation.closed).toBe(false)\n  expect(result.observation.exitCode).toBeNull()\n  expect(result.observation.signalCode).toBeNull()\n  expect(result.observation.left.some((row) => row.pid === result.hostPID)).toBe(true)\n  // Restore only the mutation input; the same source and deadlines must return green.\n  expect((await run()).pass).toBe(true)\n}, 300_000)"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/test/omni-overhead.hosted.ts",
+    "git_blob_sha": "00cc5a7eb2219150d297cd1879154608fc7c0b12",
+    "source_sha256": "d6b861cbc9732e1dba7c44579a7e76bcce7b27fe8f4106d1dcd88722d1f25022",
+    "source_bytes": 4432,
+    "line_count": 81,
+    "disposition": "analyzed",
+    "contracts": [
+      "Attribution and strace tests900seconds each; baseline mutation test1800seconds and CI==='true'.",
+      "Mutation must publish exactly one v7-overhead verdict and exit1."
+    ],
+    "dependencies": [
+      "v7-attribution.ts/overhead.ts supply measurements; Rust supervisor unix/procs.rs is copied for a disposable mutation build."
+    ],
+    "failures_or_limits": [
+      "Cargo build and mutation child have no individual timeout here; outer Bun test supplies the bound.",
+      "No build or benchmark was run in this documentary task."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "test",
+    "purpose": "Checks Linux overhead attribution, syscall observations and sensitivity to the exact pre-fix inventory implementation.",
+    "behavior": [
+      "Rejects non-Linux or disabled Omni environments; requires1000samples each for real Effect, bare binding and staged exit/EOF/stop arms.",
+      "Runs unprivileged strace attribution and the unchanged quiet1000-pair KPI.",
+      "Copies native source, removes the specific inventory optimization, verifies pre-fix blob ad9169b6fe48afc06aee30cb2e1072d2daf5771c, builds only its supervisor and requires mutated KPI failure with exact1000spawn/delegation counters."
+    ],
+    "evidence": [
+      {
+        "start_line": 50,
+        "end_line": 55,
+        "quote": "    const baseline = current.slice(0, first) + current.slice(last)\n    const hash = Bun.spawn([\"git\", \"hash-object\", \"--stdin\"], { cwd: ROOT, stdin: Buffer.from(baseline), stdout: \"pipe\" })\n    expect((await new Response(hash.stdout).text()).trim()).toBe(\"ad9169b6fe48afc06aee30cb2e1072d2daf5771c\")\n    expect(await hash.exited).toBe(0)\n    await Bun.write(file, baseline)\n    const build = Bun.spawn([\"cargo\", \"build\", \"--release\", \"-p\", \"omni-supervisor\"], { cwd: scratch, stdout: \"inherit\", stderr: \"inherit\" })"
+      },
+      {
+        "start_line": 74,
+        "end_line": 79,
+        "quote": "    expect(verdict.counts).toEqual({ legacy: { completed: 1000, spawns: 0, delegations: 0 },\n      omni: { completed: 1000, spawns: 1000, delegations: 0 } })\n    expect(verdict.pass).toBe(false)\n    expect(exit).toBe(1)\n  } finally {\n    rmSync(scratch, { recursive: true, force: true })"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/test/omni-windows-lifecycle.hosted.ts",
+    "git_blob_sha": "610200919d737d0ff59637a4bef205346dc7d1df",
+    "source_sha256": "0e57a453f253b848c9647ef9624a2837f179fd2555d64a87e01b9cc2e11c9d36",
+    "source_bytes": 7411,
+    "line_count": 116,
+    "disposition": "analyzed",
+    "contracts": [
+      "Overall900second test; all restored result cells must pass."
+    ],
+    "dependencies": [
+      "v1-background.ts, v2-kill.ts and windows-lifecycle.ts supply real frontend/console/process observations."
+    ],
+    "failures_or_limits": [
+      "A zero final process count alone cannot certify graceful shutdown; its forced-termination mutation explicitly tests that distinction."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "test",
+    "purpose": "Exercises compiled Windows adoption, crash and graceful-quit boundaries with targeted oracle mutations.",
+    "behavior": [
+      "Requires Windows/Omni flag1, verifies parent native spawn and builds CLI from supplied native artifacts within240seconds.",
+      "Runs V1 plus V2 serve/TUI crash and V10 serve/TUI quit; V1 must send two acknowledged Esc events to the displayed session, emit one interrupt request and remove only foreground work.",
+      "Omit-adoption, skip-inner-owner, forced-kill-graceful and disable-Esc mutations must fail their named conditions.",
+      "Recorder-stop-error mutations retain measurementPass=true yet publish exactly one failed verdict after confirmed recorder closure and complete cleanup."
+    ],
+    "evidence": [
+      {
+        "start_line": 60,
+        "end_line": 66,
+        "quote": "  for (const mutation of [\"omit-adoption\", \"skip-inner-owner\", \"forced-kill-graceful\", \"disable-esc\"]) {\n    process.env.OMNI_CAMPAIGN_MUTATION = mutation\n    try {\n      const result = mutation === \"omit-adoption\" || mutation === \"disable-esc\" ? await run() : await v2.run(\"serve\", mutation === \"forced-kill-graceful\" ? \"quit\" : \"kill\")\n      mutants.push({ mutation, result })\n      expect(result.pass).toBe(false)\n      if (mutation === \"omit-adoption\") {"
+      },
+      {
+        "start_line": 78,
+        "end_line": 82,
+        "quote": "      if (mutation === \"forced-kill-graceful\") {\n        expect(\"input\" in result && result.input).toBe(\"TerminateProcess\")\n        expect(\"shutdown\" in result && result.shutdown?.pass).toBe(false)\n        expect(\"observed\" in result && result.observed?.last.counts.every((count) => count === 0)).toBe(true)\n      }"
+      },
+      {
+        "start_line": 107,
+        "end_line": 110,
+        "quote": "      expect(published).toHaveLength(1)\n      expect(published[0]!.pass).toBe(false)\n      expect(published[0]!.teardownError).toContain(\"CIM recorder injected stop error after confirmed OS/stdio close\")\n    } finally {"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/test/recorder-turbo.hosted.ts",
+    "git_blob_sha": "876e12718629cce607cc6b96accd73ab782a9300",
+    "source_sha256": "a1842ee30642a3181ce878f5bd764a1331b66b7c1a44890cc933327dd1528107",
+    "source_bytes": 1583,
+    "line_count": 30,
+    "disposition": "analyzed",
+    "contracts": [
+      "Each child timeout120seconds with8MiB stdout and stderr caps; overall test300seconds."
+    ],
+    "dependencies": [
+      "core LayerNode/AppProcess and testEffect execute the Turbo command through the product process abstraction."
+    ],
+    "failures_or_limits": [
+      "Comment describes hosted Windows diagnosis, but this file contains no explicit Windows/CI assertion.",
+      "Force bypasses Turbo cache; it does not establish observed results in this analysis."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "test",
+    "purpose": "Diagnoses recorder behavior under matched Turbo strict and loose environments.",
+    "behavior": [
+      "Uses real AppProcess to run forced uncached core tests twice, removing inherited experimental-spawner/control-run variables.",
+      "Selects real execute-capture and fresh AppProcess/spawner tests; logs stdout/stderr per environment and requires exit codes[0,0]."
+    ],
+    "evidence": [
+      {
+        "start_line": 17,
+        "end_line": 27,
+        "quote": "    for (const mode of [\"strict\", \"loose\"] as const) {\n      const env = { ...process.env }\n      delete env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER\n      delete env.ORCHESTRA_OMNI_CONTROL_RUN\n      const result = yield* app.run(ChildProcess.make(process.execPath, [\n        \"run\", \"turbo\", \"test\", \"--filter=@orchestra/core\", \"--force\", `--env-mode=${mode}`,\n        \"--\", \"-t\", \"real execute captures|fresh AppProcess and spawner\",\n      ], { cwd: ROOT, env }), { timeout: \"120 seconds\", maxOutputBytes: 8 * 1024 * 1024, maxErrorBytes: 8 * 1024 * 1024 })\n      console.log(\"RECORDER_TURBO_PROBE \" + JSON.stringify({ mode, code: result.exitCode, stdout: result.stdout.toString(), stderr: result.stderr.toString() }))\n      results.push(result.exitCode)\n    }"
+      },
+      {
+        "start_line": 28,
+        "end_line": 29,
+        "quote": "    expect(results).toEqual([0, 0])\n  }), 300_000,"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/tsconfig.json",
+    "git_blob_sha": "4df8a0627cfff71b1b4d340d4fd7f318edadeada",
+    "source_sha256": "b33f915b317253ab1e0f3c69960b2900258052496f7f5678071cd019461b868a",
+    "source_bytes": 69,
+    "line_count": 4,
+    "disposition": "analyzed",
+    "contracts": [
+      "The direct include pattern does not select nested campaign/test files."
+    ],
+    "dependencies": [
+      "delivery-tsconfig.json retains core type paths and Bun declarations."
+    ],
+    "failures_or_limits": [
+      "Compiler inclusion is not test execution or hosted proof selection."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "config",
+    "purpose": "Extends delivery typechecking to every top-level campaign TypeScript module.",
+    "behavior": [
+      "Inherits delivery-tsconfig.json and replaces include with ./*.ts."
+    ],
+    "evidence": [
+      {
+        "start_line": 2,
+        "end_line": 4,
+        "quote": "  \"extends\": \"./delivery-tsconfig.json\",\n  \"include\": [\"./*.ts\"]\n}"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/v1-background.ts",
+    "git_blob_sha": "e8ffd44c32c08863fd313e14c6364e70be0a07d2",
+    "source_sha256": "fd21516b6bf493350514dc5233d330d36a369d178efa2f9c1b6bb6a66816c6c7",
+    "source_bytes": 15102,
+    "line_count": 192,
+    "disposition": "analyzed",
+    "contracts": [
+      "Positive controls allow90seconds; tool completion30seconds; adoption/output/cancel checks20seconds; first Esc acknowledgment4seconds."
+    ],
+    "dependencies": [
+      "windows-lifecycle.ts supplies actual console input, observed frontend requests and finishCampaign; lib.ts pins identities."
+    ],
+    "failures_or_limits": [
+      "omit-adoption, omit-post-tool-marker and disable-esc inject real missing behavior; source checks are not execution results."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "test",
+    "purpose": "Proves real agent background adoption, continued output, session removal and Windows frontend cancellation isolation.",
+    "behavior": [
+      "Two-stage fake LLM starts a depth-two background tree with a600second shell timeout; all-member supervision must be observed before releasing the shell, whose recorded duration must be<=20seconds.",
+      "After tool/turn completion, requires exact original tree identities in the job registry and a newly generated marker traversing the adoption output pump.",
+      "Windows attaches the real same-session TUI, starts foreground work, sends two Esc events and requires one successful interrupt plus durable cancellation and zero foreground members; original background identities and fresh output must survive.",
+      "Session removal must empty the adopted tree within20seconds; final success additionally requires clean protocol and teardown."
+    ],
+    "evidence": [
+      {
+        "start_line": 85,
+        "end_line": 91,
+        "quote": "    const marker = `post-tool-${randomUUID()}`\n    const markerSent = Date.now()\n    if (markerSent < completed.time!.end!) throw new Error(\"marker generated before tool completion\")\n    if (adopted.output.includes(marker)) throw new Error(\"unique post-tool marker already present before injection\")\n    // Named fault injection lets the real post-adoption output oracle be tested in both directions.\n    if (process.env.OMNI_CAMPAIGN_MUTATION !== \"omit-post-tool-marker\") writeFileSync(channel, marker)\n    const listed = await until(20_000, \"new post-tool output traversing adoption pump into registry\", async () => {"
+      },
+      {
+        "start_line": 131,
+        "end_line": 134,
+        "quote": "        const cancellation = tool?.state?.status === \"error\" ? \"processor-interrupted\"\n          : tool?.state?.status === \"completed\" && tool.state.metadata?.exit === null ? \"shell-aborted\" : undefined\n        return esc.abortRequests.length === 1 && esc.abortRequests[0]!.status === 200 && cancellation !== undefined && found.members.length === 0 && found.wrappers.length === 0 ? { cancellation, tool: tool!.state!, foregroundRemaining: 0, cancelMs: Date.now() - injected } : undefined\n      })"
+      },
+      {
+        "start_line": 155,
+        "end_line": 155,
+        "quote": "      llm: llm.seen, offered: llm.offered, protocolErrors: llm.errors, pass: before.pass && toolMs <= 20_000 && afterTurn === tree.size && (!win || afterEsc?.pass === true) && afterRemove === 0 && stopMs < 20_000 && llm.errors.length === 0, steps,"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/v10-exit.ts",
+    "git_blob_sha": "08622c3f4da00d412a08a71f93043992efea57a1",
+    "source_sha256": "f42100a9eae978bab661a1062bd8c63fd802b31dce40bcb70ec3d50c54e6a8ab",
+    "source_bytes": 6991,
+    "line_count": 80,
+    "disposition": "analyzed",
+    "contracts": [
+      "Windows returns explicit failure because SIGTERM is not the required console-graceful path; readiness control90seconds.",
+      "Declares event-loop retention unproven because serve explicitly calls process.exit."
+    ],
+    "dependencies": [
+      "core CLI shutdown emits CLI_SHUTDOWN; lib.ts owns inventory and cleanup; v10-natural-exit is the separate natural-exit proof."
+    ],
+    "failures_or_limits": [
+      "This script calls verdict before its finally cleanup, unlike finishCampaign-based cells; cleanup failure can follow an already emitted successful verdict."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "test",
+    "purpose": "Checks Unix compiled serve shutdown/disposal and complete owned-tree cleanup after SIGTERM.",
+    "behavior": [
+      "Activates fake LSP, stdio MCP and a depth-one tree through a real write turn, requiring all exact members under the pinned host's supervisors.",
+      "Signals the verified host, then requires host exit plus zero retained members/supervisors and nonce inventories within one20second budget.",
+      "shutdownEvidence requires exactly DEBUG started/disposed events for the host, SIGTERM, exit143 and no terminating signal."
+    ],
+    "evidence": [
+      {
+        "start_line": 62,
+        "end_line": 62,
+        "quote": "    return verdict(\"v10-exit\", { target: \"serve\", kpi: \"runtime.dispose completes, exits exactly 143, cleans LSP/MCP within 20 s\", eventLoopRetention: \"unproven: this serve command explicitly process.exit()s\", home: scratch.home, nonce: tree.nonce, pinnedHost, live, supervisors, status, shutdown, exitCode: host.proc.exitCode, signalCode: host.proc.signalCode, exitMs, totalMs, after, leftovers, llm: llm.seen, pass: shutdown.pass && totalMs < 20_000 && leftovers.length === 0, steps })"
+      },
+      {
+        "start_line": 77,
+        "end_line": 77,
+        "quote": "  return { events, pass: exitCode === 143 && signalCode === null && events.length === 2 && events.every((event) => event.signal === \"SIGTERM\") && events[0]!.status === \"started\" && events[1]!.status === \"disposed\" }"
+      },
+      {
+        "start_line": 66,
+        "end_line": 68,
+        "quote": "    llm.stop()\n    await cleanup(scratch.home, [tree.nonce])\n  }"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/v10-natural-exit.ts",
+    "git_blob_sha": "3873007aa47c77eda08db43627058e9454d6a5a3",
+    "source_sha256": "cd2204a1d4fb47ef44b11fb913da6bf07d607a70bebaa306f7b0cc508a1bd54f",
+    "source_bytes": 6690,
+    "line_count": 95,
+    "disposition": "analyzed",
+    "contracts": [
+      "Readiness120seconds, activation HTTP60seconds and supervision30seconds precede the10second shutdown measurement.",
+      "Inventory queries are capped at2seconds and only start with a full2second remaining budget."
+    ],
+    "dependencies": [
+      "natural-host.ts owns the real disposal sequence; lib.ts retains pid/start identity and cleans owned trees."
+    ],
+    "failures_or_limits": [
+      "Explicitly covers Bun core-process composition, not compiled CLI/Electron.",
+      "The HTTP dispose promise is awaited after the successful inventory observation and has its own60second timeout."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "test",
+    "purpose": "Observes unforced Bun host exit after real AppProcess/native disposal while retaining completed native objects.",
+    "behavior": [
+      "Launches natural-host.ts with release addon/supervisor and strict Omni; verifies exact AppProcess output and supervised native pipe/tree controls.",
+      "Starts disposal, then within10seconds requires disposed marker, code0, no signal, closed stdio and no retained host/member/supervisor or nonce process.",
+      "Requires retained native output evidence; timer mutation holds the host after identical disposal and must fail. Parent kills only failed hosts before cleanup and publication."
+    ],
+    "evidence": [
+      {
+        "start_line": 11,
+        "end_line": 11,
+        "quote": "const BOUND_MS = 10_000"
+      },
+      {
+        "start_line": 79,
+        "end_line": 79,
+        "quote": "      return state.closed && proc.exitCode === 0 && proc.signalCode === null && existsSync(disposed) && left.length === 0 && fixtures.every((fixture) => fixture.members.length + fixture.wrappers.length === 0) ? true : undefined"
+      },
+      {
+        "start_line": 89,
+        "end_line": 93,
+        "quote": "    if (!pass && proc.exitCode === null && proc.signalCode === null) proc.kill(\"SIGKILL\")\n    await cleanup(scratch.home, [tree.nonce, native])\n  }\n  return verdict(\"v10-natural-exit\", { runtime: \"bun\", mutation: input.mutation ?? \"none\", boundMs: BOUND_MS, pass, error: failure, hostPID: proc.pid, observation, output: state.output.slice(-4000) })\n}"
+      }
+    ]
+  }
+]

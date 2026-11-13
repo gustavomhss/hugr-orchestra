@@ -1,0 +1,389 @@
+[
+  {
+    "path": "native/omni/crates/omni-supervisor/tests/windows_channel.rs",
+    "git_blob_sha": "18048dc1a28dea74a00332b40e8bc110861c0f8b",
+    "source_sha256": "8ad76dd4598e59867d703e932756ec96398dbb515c871783fd2720e927901cbb",
+    "source_bytes": 2841,
+    "line_count": 72,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Check Windows channel backpressure and recovery across a spawn/exit burst.",
+    "behavior": [
+      "Prepares 1024 short hostname roots with merged stderr and a minimal environment, accumulating Spawn frames before reading any replies.",
+      "Writes on a separate thread and requires a one-second stalled write callback within sixty seconds, showing reply pressure propagated to host writes.",
+      "After reading resumes, requires every Spawned and Exited, joins the writer, and verifies subsequent Stop, Release and new Spawn work."
+    ],
+    "contracts": [
+      "The burst represents roughly twice the 1024 reply budget because each root also yields Exited; host pipe buffers are deliberately 4 KiB."
+    ],
+    "dependencies": [
+      "windows_host.rs Writer and Prepared requests; native hostname.exe; windows/queues.rs admission policy."
+    ],
+    "failures_or_limits": [
+      "The full 4096-tree cap is tested separately with a lowered unit-test cap, not by this burst. Dropped output readers may make children fail writes; this case verifies channel delivery, not output success. It was not run."
+    ],
+    "evidence": [
+      {
+        "start_line": 18,
+        "end_line": 27,
+        "quote": "/// Twice the supervisor's reply budget (`queues::MAX_REPLIES`, 1024) in frames: Spawned + Exited per tree.\nconst BURST: usize = 1024;\n\n/// `hostname.exe`: a program that starts and ends at once.\nfn quick() -> Spec {\n    let root: OsString = std::env::var_os(\"SystemRoot\").unwrap();\n    let mut spec = Spec::program(&PathBuf::from(&root).join(r\"System32\\hostname.exe\"), &[]);\n    spec.stderr = Slot::Merge;\n    spec.env = vec![(\"SystemRoot\".into(), root)];\n    spec"
+      },
+      {
+        "start_line": 30,
+        "end_line": 71,
+        "quote": "#[test]\nfn a_burst_to_a_host_that_does_not_read_is_delivered_and_service_resumes() {\n    let mut host = Host::start();\n    let (mut frames, mut reqs) = (Vec::new(), Vec::new());\n    for _ in 0..BURST {\n        // The host's read end goes with `p`: a child may fail its write, which changes nothing here.\n        let p = host.prepare(quick());\n        reqs.push(p.req);\n        frames.extend(host::frame(&p.msg));\n    }\n    // The host writes every Spawn and reads nothing: Spawned and Exited frames pile up in the supervisor until\n    // it stops admitting requests, and the host's write stalls.\n    let writer = host.writer();\n    let (stalled_tx, stalled) = mpsc::channel();\n    let w = std::thread::spawn(move || {\n        writer.write(&frames, Duration::from_secs(1), move || {\n            let _ = stalled_tx.send(());\n        })\n    });\n    // ~2048 reply frames against 4 KiB of host-side buffering and a budget of 1024: the supervisor must stop\n    // admitting, and so stop reading, before the host has written everything.\n    assert!(\n        stalled.recv_timeout(Duration::from_secs(60)).is_ok(),\n        \"the host was never held back\"\n    );\n    // The host reads again: every request gets its reply, every tree its Exited.\n    let mut ids = Vec::new();\n    for &req in &reqs {\n        match host.reply(req) {\n            Msg::Spawned { id, .. } => ids.push(id),\n            other => panic!(\"{other:?}\"),\n        }\n    }\n    for &id in &ids {\n        host.exited(id);\n    }\n    w.join().unwrap();\n    // Service resumed: new requests complete.\n    host.stop(ids[0], 0);\n    let released = host.call(|req| Msg::Release { req, id: ids[0] });\n    assert!(matches!(released, Msg::Ack { result: Ack::Ok, .. }), \"{released:?}\");\n    assert!(host.spawn(quick()).is_ok());"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/tests/windows_child.rs",
+    "git_blob_sha": "a6b579ca0452abfc6e9d07121142451eeae63ca9",
+    "source_sha256": "9c7ed980347b53c08a442cd5b0b84c7b556ef5f1c84f692219f048d35b5848c0",
+    "source_bytes": 9317,
+    "line_count": 224,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Implement Windows test-child roles for argument recovery, stdio, Job containment and racing descendants.",
+    "behavior": [
+      "Reruns an ignored exact test and emits raw command line, decoded argv, cwd/env, stdin handle type/byte count, output markers or chosen unsigned exit code.",
+      "Queries its innermost Job limits and attempts a CREATE_BREAKAWAY_FROM_JOB child to report whether escape was refused.",
+      "Builds optional resistant descendant chains, an early-exiting root, or a nested Job; a breeding role starts children only after CTRL_BREAK and logs each PID plus creation time at spawn."
+    ],
+    "contracts": [
+      "Logged creation identity covers children created but not scheduled before forced termination; markers signal readiness to the parent oracle."
+    ],
+    "dependencies": [
+      "windows_host.rs selects child test; windows_tree.rs consumes chain/breed/nest roles; Windows console and Job APIs."
+    ],
+    "failures_or_limits": [
+      "Hanging Windows roles have no self-expiry watchdog in this file and rely on Job/process cleanup by tests. Reported historical runner counts in comments are not evidence from this analysis."
+    ],
+    "evidence": [
+      {
+        "start_line": 52,
+        "end_line": 107,
+        "quote": "/// Runs one mode and exits:\n/// - `argv <args>`: prints its raw command line, its arguments, cwd and `HUGR_W06`;\n/// - `stdin`: reads stdin to EOF, prints the handle's file type and the byte count;\n/// - `both`: `OUT` on stdout, `ERR` on stderr;\n/// - `job`: prints its own Job's member count and limits, and whether a breakaway child was refused;\n/// - `exit <code>`;\n/// - `chain <level> <depth> <resist> <root-exits>`: a chain of descendants; each prints `PID <level> <pid>`,\n///   the root prints `READY` (or exits, if asked); `resist` ignores CTRL_BREAK/C/CLOSE; all hang;\n/// - `breed <log>`: prints `READY`; on CTRL_BREAK starts hanging descendants until it is killed, appending\n///   `<pid> <creation time>` to `log` (one write) for each one as soon as it exists;\n/// - `nest`: puts itself in a Job of its own (nested in the supervisor's), then runs `chain 0 2 0 0`.\npub fn run(args: &[OsString]) -> ! {\n    let words: Vec<&str> = args.iter().map(|a| a.to_str().unwrap_or(\"\")).collect();\n    match words.as_slice() {\n        [\"argv\", ..] => {\n            // SAFETY: GetCommandLineW returns this process's NUL-terminated command line.\n            let raw = unsafe {\n                let p = GetCommandLineW();\n                OsString::from_wide(std::slice::from_raw_parts(\n                    p,\n                    (0..).take_while(|&i| *p.add(i) != 0).count(),\n                ))\n            };\n            out(&format!(\"CMDLINE {raw:?}\"));\n            out(&format!(\"ARGS {:?}\", &args[1..]));\n            out(&format!(\"CWD {:?}\", std::env::current_dir().unwrap()));\n            out(&format!(\"ENV {:?}\", std::env::var_os(\"HUGR_W06\")));\n        }\n        [\"stdin\"] => {\n            // SAFETY: plain queries on this process's stdin.\n            let kind = unsafe { GetFileType(GetStdHandle(STD_INPUT_HANDLE)) };\n            let mut buf = Vec::new();\n            std::io::stdin().read_to_end(&mut buf).unwrap();\n            out(&format!(\"STDIN kind={kind} bytes={}\", buf.len()));\n        }\n        [\"both\"] => {\n            out(\"OUT\");\n            eprintln!(\"ERR\");\n        }\n        [\"job\"] => job(),\n        [\"exit\", code] => std::process::exit(code.parse::<u32>().unwrap() as i32),\n        [\"chain\", level, depth, resist, root_exits] => chain(level.parse().unwrap(), depth, resist, root_exits),\n        [\"breed\", log] => breed(log),\n        [\"nest\"] => {\n            // A Job of its own inside the supervisor's, as cargo makes one: its descendants are in both.\n            // SAFETY: an anonymous Job and the current-process pseudo handle; the Job handle is kept open.\n            unsafe {\n                let job = CreateJobObjectW(std::ptr::null(), std::ptr::null());\n                assert!(!job.is_null());\n                assert_ne!(AssignProcessToJobObject(job, GetCurrentProcess()), 0);\n            }\n            chain(0, \"2\", \"0\", \"0\")\n        }\n        other => panic!(\"unknown child mode {other:?}\"),\n    }\n    std::process::exit(0)"
+      },
+      {
+        "start_line": 110,
+        "end_line": 152,
+        "quote": "fn job() {\n    let mut acct = JOBOBJECT_BASIC_ACCOUNTING_INFORMATION::default();\n    let mut lim = JOBOBJECT_EXTENDED_LIMIT_INFORMATION::default();\n    let null = std::ptr::null_mut();\n    // SAFETY: a null Job is the caller's innermost Job; each structure matches its class and size.\n    unsafe {\n        let n = size_of_val(&acct) as u32;\n        assert_ne!(\n            QueryInformationJobObject(\n                null,\n                JobObjectBasicAccountingInformation,\n                (&raw mut acct).cast(),\n                n,\n                null.cast()\n            ),\n            0\n        );\n        let n = size_of_val(&lim) as u32;\n        assert_ne!(\n            QueryInformationJobObject(\n                null,\n                JobObjectExtendedLimitInformation,\n                (&raw mut lim).cast(),\n                n,\n                null.cast()\n            ),\n            0\n        );\n    }\n    let flags = lim.BasicLimitInformation.LimitFlags;\n    let escape = match child_cmd(&[\"exit\", \"0\"])\n        .creation_flags(CREATE_BREAKAWAY_FROM_JOB)\n        .status()\n    {\n        Ok(_) => \"escaped\".to_string(),\n        Err(e) => format!(\"refused:{}\", e.raw_os_error().unwrap_or(0)),\n    };\n    out(&format!(\n        \"JOB active={} kill={} breakaway={} escape={escape}\",\n        acct.ActiveProcesses,\n        flags & JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE != 0,\n        flags & (JOB_OBJECT_LIMIT_BREAKAWAY_OK | JOB_OBJECT_LIMIT_SILENT_BREAKAWAY_OK) != 0\n    ));"
+      },
+      {
+        "start_line": 164,
+        "end_line": 198,
+        "quote": "/// The barrier: nothing is started before the graceful stop's CTRL_BREAK arrives; from then on descendants\n/// (hanging `chain`s) are started one after another until the Job is terminated. Each one is logged here as\n/// soon as it exists, never by itself: on a slow machine the descendants of this unthrottled loop may never\n/// get to run before the deadline (W06b: 875 created, 46 started, on GitLab's 2-vCPU runner), and the oracle\n/// must cover the ones the Job's termination caught still starting.\nfn breed(log: &str) -> ! {\n    // SAFETY: a handler that lives as long as the process.\n    unsafe { SetConsoleCtrlHandler(Some(start_breeding), 1) };\n    let log = log.to_string();\n    std::thread::spawn(move || {\n        drop(BREAK.wait_while(BREAK_SEEN.lock().unwrap(), |seen| !*seen).unwrap());\n        let mut file = std::fs::OpenOptions::new()\n            .append(true)\n            .create(true)\n            .open(&log)\n            .unwrap();\n        while let Ok(mut c) = child_cmd(&[\"chain\", \"0\", \"0\", \"0\", \"0\"]).stdout(Stdio::null()).spawn() {\n            let line = format!(\"{} {}\\n\", c.id(), created(c.as_raw_handle()));\n            file.write_all(line.as_bytes()).unwrap();\n            std::thread::spawn(move || c.wait());\n        }\n    });\n    out(\"READY\");\n    loop {\n        std::thread::park();\n    }\n}\n\n/// A process's creation time (FILETIME as one number).\nfn created(process: RawHandle) -> u64 {\n    let mut times = [FILETIME::default(); 4];\n    let [c, e, k, u] = &mut times;\n    // SAFETY: a process handle with query access and four valid out pointers.\n    assert_ne!(unsafe { GetProcessTimes(process, c, e, k, u) }, 0);\n    u64::from(c.dwHighDateTime) << 32 | u64::from(c.dwLowDateTime)"
+      },
+      {
+        "start_line": 201,
+        "end_line": 223,
+        "quote": "fn chain(level: u32, depth: &str, resist: &str, root_exits: &str) -> ! {\n    if resist == \"1\" {\n        // SAFETY: a handler that lives as long as the process.\n        unsafe { SetConsoleCtrlHandler(Some(ignore_ctrl), 1) };\n    }\n    let mut next = (level < depth.parse().unwrap()).then(|| {\n        child_cmd(&[\"chain\", &(level + 1).to_string(), depth, resist, \"0\"])\n            .spawn()\n            .unwrap()\n    });\n    if level > 0 {\n        out(&format!(\"PID {level} {}\", std::process::id()));\n    } else if root_exits == \"1\" {\n        std::process::exit(0);\n    } else {\n        out(\"READY\");\n    }\n    if let Some(c) = next.as_mut() {\n        let _ = c.wait(); // never returns while the chain hangs\n    }\n    loop {\n        std::thread::park();\n    }"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/tests/windows_host.rs",
+    "git_blob_sha": "fe8569b4ebfbf9efc61fee0b97a28da6b328efec",
+    "source_sha256": "81776d964516c23d41e666df186f0177aeabe920e7a6df1db214ee15d881a90a",
+    "source_bytes": 14035,
+    "line_count": 375,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Provide a Windows named-pipe protocol host and disposable sub-host controls for supervisor integration tests.",
+    "behavior": [
+      "Creates a first-instance local-only overlapped pipe, starts the supervisor on a windowless console, verifies connecting PID and exact Ready, and decodes into a bounded 64-frame receive channel.",
+      "Uses request IDs with unmatched-frame storage, ten-second frame/write bounds, DuplicateHandle close-source transfers, and Stop/List/Exit/handle-count helpers.",
+      "Sub-host modes expose a resistant tree for host death or channel flooding; a console mode checks graceful tree stop followed by a host-console event control."
+    ],
+    "contracts": [
+      "A stalled host reader must backpressure the real supervisor; test Host Drop kills its supervisor so owned Jobs close."
+    ],
+    "dependencies": [
+      "windows_os.rs supplies overlapped I/O and OS Proc oracles; windows_host/spawn.rs builds requests; windows_child.rs implements roles."
+    ],
+    "failures_or_limits": [
+      "The early-message vector can grow and Drop only requests supervisor kill, without waiting here. Flood intentionally parks indefinitely after a stalled write until the parent kills the sub-host. These are test-specific lifetime choices."
+    ],
+    "evidence": [
+      {
+        "start_line": 63,
+        "end_line": 116,
+        "quote": "    /// Pipe first (first instance, local clients only), then the supervisor on its own windowless console,\n    /// then the client-pid check and `Ready`.\n    pub fn start() -> Host {\n        static N: AtomicU32 = AtomicU32::new(0);\n        let name = format!(\n            r\"\\\\.\\pipe\\hugr-omni-test-{}-{}\",\n            std::process::id(),\n            N.fetch_add(1, Ordering::Relaxed)\n        );\n        let wide: Vec<u16> = name.encode_utf16().chain([0]).collect();\n        let open = PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED | FILE_FLAG_FIRST_PIPE_INSTANCE;\n        let mode = PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT | PIPE_REJECT_REMOTE_CLIENTS;\n        // SAFETY: a NUL-terminated name and null security attributes (not inheritable).\n        let h = unsafe { CreateNamedPipeW(wide.as_ptr(), open, mode, 1, BUF, BUF, 0, std::ptr::null()) };\n        let pipe = Arc::new(owned(h, \"CreateNamedPipeW\"));\n        let sup = Command::new(env!(\"CARGO_BIN_EXE_hugr-omni-supervisor\"))\n            .args([\"--host-pid\", &std::process::id().to_string(), \"--pipe\", &name])\n            .creation_flags(CREATE_NO_WINDOW)\n            .stdin(Stdio::null())\n            .stdout(Stdio::null())\n            .spawn()\n            .unwrap();\n        let raw = pipe.as_raw_handle();\n        // SAFETY: `overlapped` keeps the OVERLAPPED alive until the operation completes.\n        overlapped(&pipe, |ov| unsafe { ConnectNamedPipe(raw, ov) }, Some(T)).unwrap();\n        let mut client = 0;\n        // SAFETY: a connected pipe and a valid out pointer.\n        check(unsafe { GetNamedPipeClientProcessId(raw, &mut client) }, \"client pid\");\n        assert_eq!(client, sup.id(), \"the pipe's client is not the supervisor we started\");\n        let (tx, frames) = mpsc::sync_channel(64); // a host that stops reading stalls the supervisor's writes\n        let p = pipe.clone();\n        std::thread::spawn(move || {\n            let (mut buf, mut chunk) = (Vec::new(), vec![0u8; BUF as usize]);\n            loop {\n                match omni_proto::decode(&buf) {\n                    Ok(Some((m, n))) => {\n                        buf.drain(..n);\n                        if tx.send(m).is_err() {\n                            return;\n                        }\n                    }\n                    Ok(None) => {\n                        let at = chunk.as_mut_ptr();\n                        // SAFETY: as above; `chunk` outlives the read.\n                        let read = |ov| unsafe { ReadFile(p.as_raw_handle(), at, BUF, std::ptr::null_mut(), ov) };\n                        match overlapped(&p, read, None) {\n                            Ok(n) if n > 0 => buf.extend_from_slice(&chunk[..n]),\n                            _ => return,\n                        }\n                    }\n                    Err(e) => panic!(\"the supervisor sent a malformed frame: {e}\"),\n                }\n            }\n        });"
+      },
+      {
+        "start_line": 164,
+        "end_line": 208,
+        "quote": "    /// The first frame matching `want` (earlier ones are kept for later), within `T`.\n    pub fn recv(&mut self, what: &str, want: impl Fn(&Msg) -> bool) -> Msg {\n        if let Some(i) = self.early.iter().position(&want) {\n            return self.early.remove(i);\n        }\n        let end = Instant::now() + T;\n        loop {\n            match self.frames.recv_timeout(end.saturating_duration_since(Instant::now())) {\n                Ok(m) if want(&m) => return m,\n                Ok(m) => self.early.push(m),\n                Err(e) => panic!(\"waiting for {what}: {e:?}; received meanwhile: {:?}\", self.early),\n            }\n        }\n    }\n\n    /// The reply to request `req`.\n    pub fn reply(&mut self, req: u64) -> Msg {\n        self.recv(\"a reply\", |m| reply_to(m) == Some(req))\n    }\n\n    /// One request, its reply.\n    pub fn call(&mut self, make: impl FnOnce(u64) -> Msg) -> Msg {\n        let req = self.req();\n        self.send(&make(req));\n        self.reply(req)\n    }\n\n    /// Hands a host-side handle to the supervisor (non-inheritable, `DUPLICATE_CLOSE_SOURCE`).\n    pub fn give(&self, h: OwnedHandle) -> u64 {\n        let (sup, mut target) = (self.sup.as_raw_handle(), std::ptr::null_mut());\n        let opts = DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE;\n        // SAFETY: valid process handles; the source handle is closed by the call.\n        let ok = unsafe {\n            DuplicateHandle(\n                GetCurrentProcess(),\n                h.into_raw_handle(),\n                sup,\n                &mut target,\n                0,\n                FALSE,\n                opts,\n            )\n        };\n        check(ok, \"give\");\n        target as u64"
+      },
+      {
+        "start_line": 264,
+        "end_line": 284,
+        "quote": "    /// Writes `Go` requests without reading any reply until one write stays pending for 2 s, i.e. the\n    /// supervisor stopped reading; prints `STALLED` and never returns (the pending write stays alive).\n    pub fn flood(&self, id: u64) -> ! {\n        let mut req = 1 << 40;\n        loop {\n            req += 1;\n            write_watching(&self.pipe, &frame(&Msg::Go { req, id }), Duration::from_secs(2), || {\n                out(\"STALLED\");\n                loop {\n                    std::thread::park();\n                }\n            });\n        }\n    }\n}\n\nimpl Drop for Host {\n    /// Whatever a test leaves behind dies with the supervisor's Jobs.\n    fn drop(&mut self) {\n        let _ = self.sup.kill();\n    }"
+      },
+      {
+        "start_line": 325,
+        "end_line": 374,
+        "quote": "/// A host in its own process (so the test can kill it or give it its own console) with a resistant chain\n/// (grace 500 ms), except in `console`. Prints `SUP <pid>` and `TREE <root> <pid 1> <pid 2>`, then:\n/// `kill`: starts a `std::process` control child, prints `CONTROL <pid>` and waits to be killed;\n/// `flood`: floods the channel (`Host::flood`);\n/// `console`: counts console events, stops the tree gracefully, sends one CTRL_BREAK to its own console\n/// as the control, prints `EVENTS <count> EXIT <root exit code> MS <stop time>`.\nfn sub_host(kind: &str) -> ! {\n    if kind == \"console\" {\n        // SAFETY: a handler that lives as long as the process.\n        unsafe { SetConsoleCtrlHandler(Some(count_ctrl), TRUE) };\n    }\n    let mut host = Host::start();\n    let mut spec = Spec::child(&[\"chain\", \"0\", \"2\", if kind == \"console\" { \"0\" } else { \"1\" }, \"0\"]);\n    spec.grace_ms = 500;\n    let tree = host.spawn(spec).unwrap();\n    let pids: Vec<String> = tree\n        .stdout\n        .take(\"PID \", 2)\n        .iter()\n        .map(|l| l.rsplit(' ').next().unwrap().into())\n        .collect();\n    tree.stdout.line(\"READY\");\n    out(&format!(\"SUP {}\", host.sup.id()));\n    out(&format!(\"TREE {} {}\", tree.pid, pids.join(\" \")));\n    match kind {\n        \"kill\" => {\n            let mut control = child_cmd(&[\"chain\", \"0\", \"0\", \"0\", \"0\"])\n                .stdout(Stdio::null())\n                .spawn()\n                .unwrap();\n            out(&format!(\"CONTROL {}\", control.id()));\n            let _ = control.wait(); // the test kills this host first\n        }\n        \"flood\" => host.flood(tree.id),\n        _ => {\n            let ms = host.stop(tree.id, 5000).as_millis();\n            let code = host.exited(tree.id);\n            // SAFETY: plain call; group 0 = every process on this sub-host's own console.\n            check(\n                unsafe { GenerateConsoleCtrlEvent(CTRL_BREAK_EVENT, 0) },\n                \"GenerateConsoleCtrlEvent\",\n            );\n            let n = *EVENT_SEEN\n                .wait_timeout_while(EVENTS.lock().unwrap(), T, |n| *n == 0)\n                .unwrap()\n                .0;\n            out(&format!(\"EVENTS {n} EXIT {code} MS {ms}\"));\n        }\n    }\n    std::process::exit(0)"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/tests/windows_host/spawn.rs",
+    "git_blob_sha": "5e07525893021707293a5ea282f7b6341905bf7d",
+    "source_sha256": "ceecd2ef11c2cf929925f29ed72bfa6a752d194ed14ecaa9e619779321c3ca67",
+    "source_bytes": 4838,
+    "line_count": 155,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Build Windows pipe Spawn requests with transferred handles and expose the resulting test tree.",
+    "behavior": [
+      "Spec defaults to current environment/cwd, null stdin, separate stderr and 1000 ms grace; child mode prefixes the exact ignored test arguments.",
+      "prepare creates pipe ends, immediately transfers child-side handles into the supervisor and encodes OS strings into protocol bytes with no PTY.",
+      "spawn sends the prepared message, requires zero returned PTY handles, opens the root through the independent OS oracle and exposes stdout/stderr/stdin."
+    ],
+    "contracts": [
+      "Prepared already owns remote handles before its message is sent; Host::give uses DUPLICATE_CLOSE_SOURCE."
+    ],
+    "dependencies": [
+      "windows_host.rs communication and transfer; windows_os.rs Proc/Lines; omni_proto Spawn/Slot."
+    ],
+    "failures_or_limits": [
+      "Dropping an unsent Prepared closes local ends but this type has no remote-handle rollback; those handles depend on later supervisor cleanup. This is fixture construction, not public host spawn behavior, and was not executed."
+    ],
+    "evidence": [
+      {
+        "start_line": 35,
+        "end_line": 57,
+        "quote": "impl Spec {\n    /// `program args...` with this process's environment and cwd, stdin null, stderr piped.\n    pub fn program(program: &Path, args: &[&str]) -> Spec {\n        Spec {\n            program: program.into(),\n            argv: std::iter::once(program.as_os_str())\n                .chain(args.iter().map(OsStr::new))\n                .map(Into::into)\n                .collect(),\n            env: std::env::vars_os().collect(),\n            cwd: std::env::current_dir().unwrap(),\n            stdin: Slot::Null,\n            stderr: Slot::Pipe,\n            grace_ms: 1000,\n            verbatim: None,\n        }\n    }\n\n    /// The child program (`windows_child.rs`) in mode `args`.\n    pub fn child(args: &[&str]) -> Spec {\n        let all: Vec<&str> = CHILD.iter().chain(args).copied().collect();\n        Spec::program(&std::env::current_exe().unwrap(), &all)\n    }"
+      },
+      {
+        "start_line": 76,
+        "end_line": 127,
+        "quote": "/// A `Spawn` ready to send (its stdio handles already given to the supervisor) and the host's ends.\npub struct Prepared {\n    /// Its request id.\n    pub req: u64,\n    /// The message.\n    pub msg: Msg,\n    stdout: OwnedHandle,\n    stderr: Option<Lines>,\n    stdin: Option<File>,\n}\n\nimpl Host {\n    /// The `Spawn` for `spec`, with fresh pipes for its stdio slots.\n    pub fn prepare(&mut self, spec: Spec) -> Prepared {\n        let (out_r, out_w) = pipe();\n        let (stdin, in_h) = match spec.stdin {\n            Slot::Pipe => {\n                let (r, w) = pipe();\n                (Some(File::from(w)), self.give(r))\n            }\n            _ => (None, 0),\n        };\n        let (stderr, err_h) = match spec.stderr {\n            Slot::Pipe => {\n                let (r, w) = pipe();\n                (Some(Lines::new(File::from(r))), self.give(w))\n            }\n            _ => (None, 0),\n        };\n        let handles = [in_h, self.give(out_w), err_h];\n        let bytes = |s: &OsStr| s.as_encoded_bytes().to_vec();\n        let req = self.req();\n        let msg = Msg::Spawn(Spawn {\n            req,\n            program: bytes(spec.program.as_os_str()),\n            argv: spec.argv.iter().map(|a| bytes(a)).collect(),\n            env: spec.env.iter().map(|(k, v)| (bytes(k), bytes(v))).collect(),\n            cwd: bytes(spec.cwd.as_os_str()),\n            pty: None,\n            stdin: spec.stdin,\n            stderr: spec.stderr,\n            grace_ms: spec.grace_ms,\n            handles,\n            verbatim: spec.verbatim.as_deref().map(bytes),\n        });\n        Prepared {\n            req,\n            msg,\n            stdout: out_r,\n            stderr,\n            stdin,\n        }"
+      },
+      {
+        "start_line": 130,
+        "end_line": 153,
+        "quote": "    /// Spawns `spec` with fresh pipes for its stdio slots.\n    pub fn spawn(&mut self, spec: Spec) -> Result<Tree, (FailCode, String)> {\n        let p = self.prepare(spec);\n        self.send(&p.msg);\n        match self.reply(p.req) {\n            Msg::Spawned {\n                id,\n                pid,\n                pty_ends: [0, 0],\n                ..\n            } => {\n                let (root, stdout) = (Proc::open(pid), Lines::new(File::from(p.stdout)));\n                Ok(Tree {\n                    id,\n                    pid,\n                    root,\n                    stdout,\n                    stderr: p.stderr,\n                    stdin: p.stdin,\n                })\n            }\n            Msg::SpawnFailed { code, msg, .. } => Err((code, msg)),\n            other => panic!(\"unexpected reply to Spawn: {other:?}\"),\n        }"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/tests/windows_os.rs",
+    "git_blob_sha": "bd916ab724f76301930811cba4a33a018253e944",
+    "source_sha256": "4bbcfc8216adc2e9a02af16d965fd69bd44793ab2152178d5de458d9baf79990",
+    "source_bytes": 10892,
+    "line_count": 296,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Provide Windows OS identity/liveness oracles, bounded observations and overlapped test transport primitives.",
+    "behavior": [
+      "Checks logged PID plus creation time to distinguish a departed process from PID reuse; Proc holds a process handle for live/exit-code/termination and same-object handle checks.",
+      "Runs overlapped operations with a separate event, cancels on an optional timeout and waits for completion before releasing buffers.",
+      "A write-watching helper reports a stall then waits for eventual completion; line helpers preserve unmatched markers and bound requested observations by ten seconds."
+    ],
+    "contracts": [
+      "Death assertions use native handles or creation identity rather than supervisor List alone."
+    ],
+    "dependencies": [
+      "Windows OpenProcess/GetProcessTimes/WaitForSingleObject/CompareObjectHandles; windows_host.rs and tree/PTY suites."
+    ],
+    "failures_or_limits": [
+      "The heading saying every wait is bounded is broader than implementation: limit None and post-stall GetOverlappedResult waits are indefinite, and the callback may never return. Lines is unbounded and stops silently on read error; Proc::alive treats wait statuses other than WAIT_TIMEOUT as nonalive."
+    ],
+    "evidence": [
+      {
+        "start_line": 61,
+        "end_line": 95,
+        "quote": "/// Runs one overlapped operation on `pipe` and waits for it (within `limit`, cancelling on timeout).\npub fn overlapped(\n    pipe: &OwnedHandle,\n    op: impl FnOnce(*mut OVERLAPPED) -> i32,\n    limit: Option<Duration>,\n) -> std::io::Result<usize> {\n    let ev = event();\n    let mut ov = OVERLAPPED {\n        hEvent: ev.as_raw_handle(),\n        ..Default::default()\n    };\n    if op(&mut ov) == 0 {\n        let e = std::io::Error::last_os_error();\n        match e.raw_os_error().map(|c| c as u32) {\n            Some(ERROR_IO_PENDING | ERROR_MORE_DATA) => {}\n            Some(ERROR_PIPE_CONNECTED) => return Ok(0),\n            _ => return Err(e),\n        }\n    }\n    let ms = limit.map_or(INFINITE, |d| d.as_millis() as u32);\n    // SAFETY: a valid event and pipe; on timeout the operation is cancelled, then awaited below.\n    unsafe {\n        if WaitForSingleObject(ev.as_raw_handle(), ms) == WAIT_TIMEOUT {\n            CancelIoEx(pipe.as_raw_handle(), &ov);\n        }\n    }\n    let mut n = 0;\n    // SAFETY: `ov` belongs to the operation above; waiting completes it before `ov` goes away.\n    if unsafe { GetOverlappedResult(pipe.as_raw_handle(), &ov, &mut n, TRUE) } == 0 {\n        let e = std::io::Error::last_os_error();\n        if e.raw_os_error() != Some(ERROR_MORE_DATA as i32) {\n            return Err(e);\n        }\n    }\n    Ok(n as usize)"
+      },
+      {
+        "start_line": 98,
+        "end_line": 130,
+        "quote": "/// Writes `bytes` to `pipe`; if the write is still pending after `stall` (the reader stopped reading), calls\n/// `on_stall` once, then waits for the write to complete.\npub fn write_watching(pipe: &OwnedHandle, bytes: &[u8], stall: Duration, on_stall: impl FnOnce()) {\n    let ev = event();\n    let mut ov = OVERLAPPED {\n        hEvent: ev.as_raw_handle(),\n        ..Default::default()\n    };\n    // SAFETY: `bytes` and `ov` outlive the write: it is awaited below (or `on_stall` never returns).\n    let ok = unsafe {\n        WriteFile(\n            pipe.as_raw_handle(),\n            bytes.as_ptr(),\n            bytes.len() as u32,\n            std::ptr::null_mut(),\n            &mut ov,\n        )\n    };\n    if ok == 0 {\n        let e = std::io::Error::last_os_error();\n        assert_eq!(e.raw_os_error(), Some(ERROR_IO_PENDING as i32), \"write: {e}\");\n        // SAFETY: a valid event.\n        if unsafe { WaitForSingleObject(ev.as_raw_handle(), stall.as_millis() as u32) } == WAIT_TIMEOUT {\n            on_stall();\n        }\n    }\n    let mut n = 0;\n    // SAFETY: `ov` belongs to the write above.\n    check(\n        unsafe { GetOverlappedResult(pipe.as_raw_handle(), &ov, &mut n, TRUE) },\n        \"write\",\n    );\n    assert_eq!(n as usize, bytes.len());"
+      },
+      {
+        "start_line": 149,
+        "end_line": 165,
+        "quote": "/// The OS-only oracle: the process that had `pid` and was created at `born` is gone (no process has the pid,\n/// another process has it now, or it has exited).\npub fn gone(pid: u32, born: u64) -> bool {\n    // SAFETY: a plain open by pid.\n    let h = unsafe { OpenProcess(PROCESS_SYNCHRONIZE | PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid) };\n    if h.is_null() {\n        let e = std::io::Error::last_os_error();\n        assert_eq!(\n            e.raw_os_error(),\n            Some(ERROR_INVALID_PARAMETER as i32),\n            \"OpenProcess({pid}): {e}\"\n        );\n        return true;\n    }\n    let h = owned(h, \"OpenProcess\");\n    // SAFETY: a valid process handle.\n    created(&h) != born || unsafe { WaitForSingleObject(h.as_raw_handle(), 0) } == WAIT_OBJECT_0"
+      },
+      {
+        "start_line": 174,
+        "end_line": 191,
+        "quote": "impl Lines {\n    /// Starts reading `r`.\n    pub fn new(r: impl Read + Send + 'static) -> Lines {\n        let (tx, rx) = mpsc::channel();\n        std::thread::spawn(move || {\n            for line in BufReader::new(r).split(b'\\n').map_while(Result::ok) {\n                if tx\n                    .send(String::from_utf8_lossy(&line).trim_end_matches('\\r').to_string())\n                    .is_err()\n                {\n                    return;\n                }\n            }\n        });\n        Lines {\n            rx,\n            kept: Default::default(),\n        }"
+      },
+      {
+        "start_line": 255,
+        "end_line": 294,
+        "quote": "    /// Not exited.\n    pub fn alive(&self) -> bool {\n        // SAFETY: a valid process handle.\n        unsafe { WaitForSingleObject(self.0.as_raw_handle(), 0) == WAIT_TIMEOUT }\n    }\n\n    /// Exits within `d`.\n    pub fn dead_within(&self, d: Duration) -> bool {\n        // SAFETY: a valid process handle.\n        unsafe { WaitForSingleObject(self.0.as_raw_handle(), d.as_millis() as u32) == WAIT_OBJECT_0 }\n    }\n\n    /// Its exit code.\n    pub fn exit_code(&self) -> u32 {\n        let mut code = 0;\n        // SAFETY: a process handle with query access.\n        check(\n            unsafe { GetExitCodeProcess(self.0.as_raw_handle(), &mut code) },\n            \"GetExitCodeProcess\",\n        );\n        code\n    }\n\n    /// Whether it holds, at value `value`, a handle to the same object as `ours`.\n    pub fn holds(&self, value: usize, ours: &OwnedHandle) -> bool {\n        let (from, mut dup) = (self.0.as_raw_handle(), std::ptr::null_mut());\n        // SAFETY: valid process handles (`from` has PROCESS_DUP_HANDLE); a failed duplicate leaves `dup` null.\n        let ok = unsafe {\n            DuplicateHandle(\n                from,\n                value as HANDLE,\n                GetCurrentProcess(),\n                &mut dup,\n                0,\n                FALSE,\n                DUPLICATE_SAME_ACCESS,\n            )\n        };\n        // SAFETY: two valid handles.\n        ok != 0 && unsafe { CompareObjectHandles(owned(dup, \"dup\").as_raw_handle(), ours.as_raw_handle()) } != 0"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/tests/windows_pty.rs",
+    "git_blob_sha": "072467d17ae026e6ae565df8d98cf87e52717eab",
+    "source_sha256": "110f5157fb66204dcad6e122ef0d17ee5b84ceddc6530d901e541ce09ce407b6",
+    "source_bytes": 9831,
+    "line_count": 237,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Specify the ConPTY integration path, interrupt/resize behavior, stop timing and build-dependent handle retention.",
+    "behavior": [
+      "Checks a prompt response, typed Ctrl-C exit, reported initial/resized dimensions, Closed resize after stop, and Invalid sizes zero or above 32767.",
+      "Uses a resistant writing descendant to require Stop and stream EOF within 1500 ms for a 1000 ms grace, both after root exit and while the root is live; the writer must be dead.",
+      "Repeats natural exit/EOF for 200 sessions, requiring all forty numbered markers plus END and measuring settled supervisor handles with a live-terminal control.",
+      "Checks no terminal event reaches the host console, then requires one direct console event control."
+    ],
+    "contracts": [
+      "Reads PTY ends from Spawned, keeping output draining while terminal close may wait."
+    ],
+    "dependencies": [
+      "windows_pty_term.rs role and Screen helpers; windows_host.rs; RtlGetVersion supplies build selection."
+    ],
+    "failures_or_limits": [
+      "The handle assertion permits one extra handle per session below build 26100 plus ten slack, and ten slack on newer builds; it is not zero-leak evidence for older builds. Timing, build behavior and run outputs remain unexecuted."
+    ],
+    "evidence": [
+      {
+        "start_line": 75,
+        "end_line": 118,
+        "quote": "#[test]\nfn conpty_a_prompt_is_answered_and_the_stream_ends_when_the_root_exits() {\n    let mut host = Host::start();\n    let mut t = Term::spawn(&mut host, &[\"prompt\"], (80, 24));\n    t.screen.wait(\"NAME?\");\n    t.type_in(b\"omni\\r\");\n    t.screen.wait(\"GOT=omni;\");\n    assert_eq!(host.exited(t.id), 0);\n    t.screen.end();\n}\n\n#[test]\nfn conpty_ctrl_c_typed_on_the_terminal_interrupts_its_program() {\n    let mut host = Host::start();\n    let mut t = Term::spawn(&mut host, &[\"hang\"], (80, 24));\n    t.screen.wait(\"READY;\");\n    t.type_in(b\"\\x03\");\n    assert_eq!(host.exited(t.id), CTRL_EXIT, \"the program did not end by Ctrl+C\");\n    t.screen.end();\n}\n\n#[test]\nfn conpty_the_child_sees_its_size_and_each_resize_and_a_resize_after_exit_is_closed() {\n    let mut host = Host::start();\n    let t = Term::spawn(&mut host, &[\"sizes\"], (90, 30));\n    t.screen.wait(\"SIZE=90x30;\");\n    for (cols, rows) in [(120, 40), (100, 25)] {\n        assert_eq!(resize(&mut host, t.id, cols, rows), Ack::Ok);\n        t.screen.wait(&format!(\"SIZE={cols}x{rows};\"));\n    }\n    host.stop(t.id, 0);\n    assert_eq!(resize(&mut host, t.id, 80, 24), Ack::Closed);\n    t.screen.end();\n}\n\n#[test]\nfn conpty_a_size_conhost_cannot_take_is_refused_as_invalid() {\n    let mut host = Host::start();\n    for size in [(0, 24), (80, 0), (32768, 24)] {\n        match term::spawn_reply(&mut host, &[\"hang\"], size) {\n            Msg::SpawnFailed { code, msg, .. } => assert_eq!(code, FailCode::Invalid, \"{size:?}: {msg}\"),\n            other => panic!(\"{size:?}: {other:?}\"),\n        }\n    }"
+      },
+      {
+        "start_line": 121,
+        "end_line": 168,
+        "quote": "/// The card's success criterion. The writer is a descendant that ignores Ctrl+C and blocks in its CTRL_CLOSE\n/// handler (the OS ends such a process about 5 s after the hang-up), writing all the while. `Stop` with a grace of\n/// 1000 ms must end the tree at its deadline, whether the hang-up came at root exit or as the stop's graceful\n/// step, and whether or not `ClosePseudoConsole` has returned (before 24H2 it waits for the writer).\n#[test]\nfn conpty_a_stubborn_writer_ends_within_a_grace_of_1000_ms() {\n    let mut host = Host::start();\n    for root_exits in [true, false] {\n        let t = Term::spawn(&mut host, &[\"stubborn\", if root_exits { \"1\" } else { \"0\" }], (80, 24));\n        let writer = Proc::open(t.screen.value(\"WRITER\").parse().unwrap());\n        if root_exits {\n            // The supervisor hangs up when the root exits, before it sends `Exited`.\n            assert_eq!(host.exited(t.id), 0);\n        } else {\n            // Both are Job members: the root was born in the Job, the writer inherited it.\n            let mut listed: Vec<u32> = host.list(t.id).iter().map(|e| e.pid).collect();\n            listed.sort_unstable();\n            let mut both = [t.root.pid(), writer.pid()];\n            both.sort_unstable();\n            assert_eq!(listed, both);\n        }\n        assert!(writer.alive(), \"the writer is not stubborn\");\n        let t0 = Instant::now();\n        let took = host.stop(t.id, 1000);\n        let (end, _) = t.screen.end();\n        let ended = end.saturating_duration_since(t0);\n        // Recorded, not asserted: the order in which conhost hangs up the processes on a terminal is not\n        // documented, so a live root may end by the hang-up (CTRL_EXIT) or by the forced stop (1).\n        let root = if root_exits { 0 } else { host.exited(t.id) };\n        eprintln!(\n            \"STUBBORN root_exits={root_exits}: Stopped after {} ms, stream ended after {} ms, root exit {root:#x}\",\n            took.as_millis(),\n            ended.as_millis()\n        );\n        assert!(\n            took >= Duration::from_millis(950),\n            \"the writer did not hold out until the deadline: {took:?}\"\n        );\n        assert!(\n            took <= Duration::from_millis(1500),\n            \"the deadline did not hold: {took:?}\"\n        );\n        assert!(\n            ended <= Duration::from_millis(1500),\n            \"the stream ended {ended:?} after Stop\"\n        );\n        assert!(!writer.alive(), \"the writer survived Stopped\");\n        release(&mut host, t.id);"
+      },
+      {
+        "start_line": 172,
+        "end_line": 219,
+        "quote": "/// The close path (root exit → hang-up → the stream ends by itself, no `Stop` yet) 200 times in a row with nothing\n/// lost, and the supervisor's handle count over those sessions. Below build 26100 conhost leaks handles per\n/// pseudoconsole (ADR-0003 Q2); the number printed here is the one GUARANTEES declares.\n#[test]\nfn conpty_the_close_path_200_times_loses_nothing_and_handles_stay_bounded() {\n    const RUNS: u32 = 200;\n    const LINES: u32 = 40;\n    let build = windows_build();\n    let mut host = Host::start();\n    // The counter's control: it sees what a live terminal holds in the supervisor.\n    let t = Term::spawn(&mut host, &[\"hang\"], (80, 24));\n    t.screen.wait(\"READY;\");\n    let live = host.handle_count();\n    host.stop(t.id, 0);\n    t.screen.end();\n    release(&mut host, t.id);\n    let before = settled_handles(&mut host);\n    assert!(\n        live > before,\n        \"the handle count missed a live terminal: {live} then {before}\"\n    );\n    let mut slowest = Duration::ZERO;\n    for run in 1..=RUNS {\n        let t0 = Instant::now();\n        let t = Term::spawn(&mut host, &[\"burst\", &LINES.to_string()], (80, 24));\n        let (end, text) = t.screen.end();\n        slowest = slowest.max(end.saturating_duration_since(t0));\n        let lost: Vec<u32> = (1..=LINES).filter(|i| !text.contains(&format!(\"LINE={i};\"))).collect();\n        assert!(\n            lost.is_empty() && text.contains(\"END;\"),\n            \"run {run}: lines {lost:?} lost, or no END: {text:?}\"\n        );\n        assert_eq!(host.exited(t.id), 0, \"run {run}\");\n        host.stop(t.id, 1000);\n        release(&mut host, t.id);\n    }\n    let after = settled_handles(&mut host);\n    let per_session = (f64::from(after) - f64::from(before)) / f64::from(RUNS);\n    eprintln!(\n        \"CONPTY-HANDLES build={build} sessions={RUNS} before={before} after={after} per_session={per_session:.2} \\\n         live_terminal={live} slowest_spawn_to_end_ms={}\",\n        slowest.as_millis()\n    );\n    let leak = if build < 26100 { RUNS } else { 0 };\n    assert!(\n        after <= before + leak + 10,\n        \"build {build}: supervisor handles grew from {before} to {after} over {RUNS} sessions\"\n    );"
+      },
+      {
+        "start_line": 222,
+        "end_line": 236,
+        "quote": "/// A host with its own console (as W06's console test) runs terminal sessions: Ctrl+C typed into one, a stubborn\n/// writer hung up and forced in another. No console event may reach it; then the control, a Ctrl+C on its own\n/// console, must reach its handler: the handler table and its cleared ignore-Ctrl+C flag are unchanged.\n#[test]\nfn conpty_sessions_never_reach_the_hosts_console() {\n    let mut sub = Command::new(std::env::current_exe().unwrap())\n        .args(PTY_CHILD)\n        .arg(\"console-host\")\n        .creation_flags(CREATE_NO_WINDOW)\n        .stdout(Stdio::piped())\n        .spawn()\n        .unwrap();\n    let lines = Lines::new(sub.stdout.take().unwrap());\n    assert_eq!(lines.line(\"EVENTS \"), \"EVENTS during=0 control=1\");\n    assert!(sub.wait().unwrap().success());"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/tests/windows_pty_term.rs",
+    "git_blob_sha": "9cdd9eeff2bffc5bf9152f364659e16acdcc5f44",
+    "source_sha256": "817c3b52d810ba67ce8374e5b0248f6e13cf8b9b8fb086aa5bd43cbacd75e835",
+    "source_bytes": 10182,
+    "line_count": 276,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Implement the Windows terminal test host, output-handle transfer and controlled console programs.",
+    "behavior": [
+      "Sends terminal Spawn with zero stdio handles, pulls output first with DUPLICATE_CLOSE_SOURCE and starts Screen draining before obtaining the input end.",
+      "Runs prompt, burst, hang and size-polling roles, plus a stubborn writer whose armed marker precedes root exit or wait.",
+      "The writer ignores Ctrl-C/Break and blocks in close handling while producing ticks, enabling tests of independent force deadlines.",
+      "A separate console host clears its Ctrl-C ignore flag, counts events during two terminal sessions and raises a direct control event afterwards."
+    ],
+    "contracts": [
+      "Term owns OS root identity, readable Screen and writable input; expected terminal control exit is 0xC000013A."
+    ],
+    "dependencies": [
+      "windows_host.rs transport; screen.rs marker observation; Windows console APIs and child test entry."
+    ],
+    "failures_or_limits": [
+      "Input write and internal armed-line/child waits are blocking fixture operations; resistant roles rely on parent Job termination. Source comments about OS close timing are contextual claims, not reproduced observations here."
+    ],
+    "evidence": [
+      {
+        "start_line": 52,
+        "end_line": 100,
+        "quote": "impl Term {\n    /// Spawns `pty_child <args>` on a terminal of `size`, which must succeed.\n    pub fn spawn(host: &mut Host, args: &[&str], size: (u16, u16)) -> Term {\n        match spawn_reply(host, args, size) {\n            Msg::Spawned {\n                id,\n                pid,\n                pty_ends: [output, input],\n                ..\n            } => {\n                // The output first: until someone reads it conhost blocks, and before 24H2 so does its close.\n                let screen = Screen::new(File::from(pull(host, output)));\n                Term {\n                    id,\n                    root: Proc::open(pid),\n                    screen,\n                    input: File::from(pull(host, input)),\n                }\n            }\n            other => panic!(\"unexpected reply to a terminal Spawn: {other:?}\"),\n        }\n    }\n\n    /// Types `bytes` on the terminal.\n    pub fn type_in(&mut self, bytes: &[u8]) {\n        self.input.write_all(bytes).unwrap();\n    }\n}\n\n/// Sends the `Spawn` of `pty_child <args>` on a terminal of `size` (no stdio handles) and returns the reply.\npub fn spawn_reply(host: &mut Host, args: &[&str], size: (u16, u16)) -> Msg {\n    let all: Vec<&str> = PTY_CHILD.iter().chain(args).copied().collect();\n    let spec = Spec::program(&std::env::current_exe().unwrap(), &all);\n    let bytes = |s: &OsStr| s.as_encoded_bytes().to_vec();\n    let req = host.req();\n    host.send(&Msg::Spawn(Spawn {\n        req,\n        program: bytes(spec.program.as_os_str()),\n        argv: spec.argv.iter().map(|a| bytes(a)).collect(),\n        env: spec.env.iter().map(|(k, v)| (bytes(k), bytes(v))).collect(),\n        cwd: bytes(spec.cwd.as_os_str()),\n        pty: Some(size),\n        stdin: Slot::Null,\n        stderr: Slot::Pipe,\n        grace_ms: spec.grace_ms,\n        handles: [0; 3],\n        verbatim: spec.verbatim.as_deref().map(bytes),\n    }));\n    host.reply(req)"
+      },
+      {
+        "start_line": 103,
+        "end_line": 120,
+        "quote": "/// Takes a handle out of the supervisor with `DUPLICATE_CLOSE_SOURCE`, as the host does with `pty_ends`.\nfn pull(host: &Host, value: u64) -> OwnedHandle {\n    assert_ne!(value, 0, \"a terminal end is missing\");\n    let mut h = std::ptr::null_mut();\n    // SAFETY: the supervisor's process handle (full access) and a valid out pointer; the call closes the source.\n    let ok = unsafe {\n        DuplicateHandle(\n            host.sup.as_raw_handle(),\n            value as HANDLE,\n            GetCurrentProcess(),\n            &mut h,\n            0,\n            FALSE,\n            DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE,\n        )\n    };\n    check(ok, \"pull a terminal end\");\n    owned(h, \"pull a terminal end\")"
+      },
+      {
+        "start_line": 162,
+        "end_line": 205,
+        "quote": "        [\"stubborn\", root_exits] => {\n            let mut writer = Command::new(std::env::current_exe().unwrap())\n                .args(PTY_CHILD)\n                .arg(\"writer\")\n                .stderr(Stdio::piped())\n                .spawn()\n                .unwrap();\n            let mut armed = String::new();\n            BufReader::new(writer.stderr.take().unwrap())\n                .read_line(&mut armed)\n                .unwrap();\n            assert_eq!(armed.trim(), \"ARMED\");\n            say(&format!(\"WRITER={};\", writer.id()));\n            if *root_exits == \"1\" {\n                std::process::exit(0);\n            }\n            let _ = writer.wait(); // never returns: the writer does not end by itself\n        }\n        [\"writer\"] => {\n            // SAFETY: a handler that lives as long as the process.\n            unsafe { SetConsoleCtrlHandler(Some(resist), TRUE) };\n            let _ = std::io::stderr().write_all(b\"ARMED\\n\");\n            let mut tick = 0u64;\n            loop {\n                say(&format!(\"TICK={tick};\"));\n                tick += 1;\n                std::thread::sleep(Duration::from_millis(10));\n            }\n        }\n        [\"console-host\"] => console_host(),\n        other => panic!(\"unknown terminal mode {other:?}\"),\n    }\n    std::process::exit(0)\n}\n\nunsafe extern \"system\" fn resist(event: u32) -> i32 {\n    if event >= CTRL_CLOSE_EVENT {\n        // Returning would let the OS end the process now; blocking holds out until it gives up waiting (~5 s).\n        loop {\n            std::thread::park();\n        }\n    }\n    TRUE\n}"
+      },
+      {
+        "start_line": 240,
+        "end_line": 275,
+        "quote": "/// A host on its own console that handles Ctrl+C itself (ignore flag cleared, a handler counting every event)\n/// runs two terminal sessions, then raises a Ctrl+C on its own console. Prints\n/// `EVENTS during=<events during the sessions> control=<events from the control>`.\nfn console_host() -> ! {\n    // SAFETY: changes only this process's handler list; `count` lives as long as the process.\n    unsafe {\n        SetConsoleCtrlHandler(None, FALSE);\n        SetConsoleCtrlHandler(Some(count), TRUE);\n    }\n    let mut host = Host::start();\n    let mut t = Term::spawn(&mut host, &[\"hang\"], (80, 24));\n    t.screen.wait(\"READY;\");\n    t.type_in(b\"\\x03\");\n    assert_eq!(host.exited(t.id), CTRL_EXIT);\n    t.screen.end();\n    let s = Term::spawn(&mut host, &[\"stubborn\", \"0\"], (80, 24));\n    s.screen.value(\"WRITER\");\n    host.stop(s.id, 1000);\n    s.screen.end();\n    let during = EVENTS.load(Ordering::SeqCst);\n    // SAFETY: plain call; group 0 = every process on this host's own console, i.e. this one.\n    check(\n        unsafe { GenerateConsoleCtrlEvent(CTRL_C_EVENT, 0) },\n        \"GenerateConsoleCtrlEvent\",\n    );\n    let guard = EVENT.0.lock().unwrap();\n    drop(\n        EVENT\n            .1\n            .wait_timeout_while(guard, T, |_| EVENTS.load(Ordering::SeqCst) == during),\n    );\n    say(&format!(\n        \"EVENTS during={during} control={}\",\n        EVENTS.load(Ordering::SeqCst) - during\n    ));\n    std::process::exit(0)"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/tests/windows_pty_term/screen.rs",
+    "git_blob_sha": "902e72be0f76a737c4c89105c44a931cbd326dd5",
+    "source_sha256": "c98dfb264f6f612dfe2c40ef1788d3e528e3c033240fb82b8d09536cb2db4afa",
+    "source_bytes": 4995,
+    "line_count": 142,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Capture ConPTY output and find ordered visible-text markers for the integration oracle.",
+    "behavior": [
+      "A reader thread appends raw bytes, records EOF/error time, and wakes condition-variable waiters.",
+      "Marker and value searches start after the previous match and wait up to the shared bound; end requires EOF and no read error.",
+      "The visible filter decodes lossily, strips CR and escapes, maps cursor-right to at most 512 spaces and cursor-position to a newline."
+    ],
+    "contracts": [
+      "visible is a marker-oriented projection rather than a terminal screen emulator."
+    ],
+    "dependencies": [
+      "windows_pty_term.rs owns Screen; windows_pty.rs uses markers, complete text and end timestamps."
+    ],
+    "failures_or_limits": [
+      "Raw output grows without a cap and each search rebuilds visible text. The filter omits cursor overwrite/state semantics and loosely ends OSC on ESC plus any following character, so it cannot validate arbitrary terminal rendering or exact byte preservation."
+    ],
+    "evidence": [
+      {
+        "start_line": 25,
+        "end_line": 50,
+        "quote": "impl Screen {\n    pub(super) fn new(mut r: File) -> Screen {\n        let shown = Arc::new((Mutex::new(Shown::default()), Condvar::new()));\n        let s = shown.clone();\n        std::thread::spawn(move || {\n            let mut buf = vec![0u8; 64 * 1024];\n            loop {\n                let read = r.read(&mut buf);\n                let mut g = s.0.lock().unwrap();\n                match read {\n                    Ok(n) if n > 0 => g.raw.extend_from_slice(&buf[..n]),\n                    // std reads a broken pipe as 0: conhost closed its end.\n                    other => {\n                        g.error = other.err().map(|e| e.to_string());\n                        g.end = Some(Instant::now());\n                    }\n                }\n                s.1.notify_all();\n                if g.end.is_some() {\n                    return;\n                }\n            }\n        });\n        Screen {\n            shown,\n            from: Default::default(),"
+      },
+      {
+        "start_line": 54,
+        "end_line": 100,
+        "quote": "    /// Waits (within `T`) until `find` matches the visible text after the last match: `Some((end, value))`.\n    fn until<R>(&self, what: &str, find: impl Fn(&str) -> Option<(usize, R)>) -> R {\n        let from = self.from.get();\n        let g = self.shown.0.lock().unwrap();\n        let (g, _) = self\n            .shown\n            .1\n            .wait_timeout_while(g, T, |s| s.end.is_none() && find(&visible(&s.raw)[from..]).is_none())\n            .unwrap();\n        let text = visible(&g.raw);\n        match find(&text[from..]) {\n            Some((end, value)) => {\n                self.from.set(from + end);\n                value\n            }\n            None => panic!(\n                \"waiting for {what}: ended={:?}; the terminal showed {text:?}\",\n                g.end.is_some()\n            ),\n        }\n    }\n\n    /// The next `token`.\n    pub fn wait(&self, token: &str) {\n        self.until(token, |t| t.find(token).map(|i| (i + token.len(), ())));\n    }\n\n    /// The value of the next `<key>=<value>;`.\n    pub fn value(&self, key: &str) -> String {\n        let key = format!(\"{key}=\");\n        self.until(&key, |t| {\n            let start = t.find(&key)? + key.len();\n            let len = t[start..].find(';')?;\n            Some((start + len + 1, t[start..start + len].to_string()))\n        })\n    }\n\n    /// Waits (within `T`) for the end of the stream: when it ended, and everything it showed.\n    pub fn end(&self) -> (Instant, String) {\n        let g = self.shown.0.lock().unwrap();\n        let (g, _) = self.shown.1.wait_timeout_while(g, T, |s| s.end.is_none()).unwrap();\n        let text = visible(&g.raw);\n        let end = g\n            .end\n            .unwrap_or_else(|| panic!(\"the stream did not end; the terminal showed {text:?}\"));\n        assert!(g.error.is_none(), \"reading the terminal failed: {:?}\", g.error);\n        (end, text)"
+      },
+      {
+        "start_line": 104,
+        "end_line": 141,
+        "quote": "/// The text of a ConPTY stream, for finding markers only: escape sequences dropped, `\\r` dropped, a cursor move\n/// right (CUF) as that many spaces and a cursor position (CUP) as a line break, since ConPTY renders blank cells\n/// and line starts that way.\npub fn visible(raw: &[u8]) -> String {\n    let s = String::from_utf8_lossy(raw);\n    let (mut out, mut it) = (String::new(), s.chars());\n    while let Some(c) = it.next() {\n        match c {\n            '\\x1b' => match it.next() {\n                Some('[') => {\n                    let mut params = String::new();\n                    for d in it.by_ref() {\n                        match d {\n                            'C' => out.extend(std::iter::repeat_n(' ', params.parse().unwrap_or(1).min(512))),\n                            'H' | 'f' => out.push('\\n'),\n                            '@'..='~' => {}\n                            _ => {\n                                params.push(d);\n                                continue;\n                            }\n                        }\n                        break;\n                    }\n                }\n                Some(']') => {\n                    while let Some(d) = it.next() {\n                        if d == '\\x07' || (d == '\\x1b' && it.next().is_some()) {\n                            break;\n                        }\n                    }\n                }\n                _ => {}\n            },\n            '\\r' => {}\n            c => out.push(c),\n        }\n    }\n    out"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  }
+]

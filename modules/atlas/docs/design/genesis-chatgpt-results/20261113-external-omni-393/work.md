@@ -29,3 +29,9 @@ The supplied external-slice scope overrides the original S5 branch/path/populati
 ## Authorship checkpoint
 
 130 of 393 records have been authored and mechanically checked against full captured source bytes. This checkpoint preserves those original bodies, still pending independent semantic judgment. Source metadata and excerpts passed documentary validation; no product/runtime claim follows.
+
+## Complete source-record checkpoint
+
+All 393 assigned sources now have authored read-based records; all 393 passed documentary source/blob/byte/quote/coverage checks. Six deliberate artifact-corruption controls were rejected by that verifier. These are documentation controls, not Omni product tests. The three author waves ended; the fresh independent pair is `/root/omni_review_courier/omni_j1` and `/root/omni_review_courier/omni_j2`, coordinated by a nonauthor courier. Formal L1 judgment is active. L2 notes are preserved as drafts and will be revalidated against accepted L1 before release; L3/L4 remain pending. No layer has self-approval.
+
+Bun 1.3.14 and the pinned S4 runtime candidate were materialized in isolated scratch; 415 runtime source/config files were hash-verified and compiled through the package typecheck command. This did not execute Omni tests, full repository CI or any Atlas consumption operation. Detailed scope is in verification/runtime-preparation.json.

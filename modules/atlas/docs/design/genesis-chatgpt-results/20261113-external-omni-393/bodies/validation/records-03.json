@@ -1,0 +1,559 @@
+[
+  {
+    "path": "native/omni/campaign/v2-kill.ts",
+    "git_blob_sha": "dc5ae7ad47900bbaaa88d00445f3e57331750799",
+    "source_sha256": "f177286b755f3a78dee5e16a5b002bcd4a411b117a2378f15ab5407ca3eee928",
+    "source_bytes": 14248,
+    "line_count": 253,
+    "disposition": "analyzed",
+    "contracts": [
+      "Control readiness is 90 seconds, reduced to 15 seconds for wrong-owner mutation; TUI close 20 seconds, health probe 5 seconds.",
+      "Hold baseline requires two debug members, readiness 60 seconds/control 30 seconds, then the same 8-second kill window."
+    ],
+    "dependencies": [
+      "lib.ts and windows-lifecycle.ts supply deadline snapshots, exact ownership, actual console input and graceful evidence."
+    ],
+    "failures_or_limits": [
+      "The separate hold branch emits verdict before finally cleanup; serve/TUI branches defer publication.",
+      "Windows console paths reject non-Windows execution."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "test",
+    "purpose": "Measures owned-tree disappearance after real host death and Windows attached-TUI/graceful-quit boundaries.",
+    "behavior": [
+      "Serve scenario activates bash, MCP grandchild tree, LSP and two terminals, requiring every exact fixture member under the pinned host's supervisors before destruction.",
+      "Host kill must yield zero nonce members and retained host/supervisor identities within 8 seconds; Windows serve Ctrl+C uses a 20-second graceful-disposal bound.",
+      "Attached Windows TUI dies first; server health and all protected trees must survive before the server is killed.",
+      "skip-inner-owner and forced-kill-graceful mutations test false ownership and false graceful-shutdown claims; finishCampaign publishes after teardown."
+    ],
+    "evidence": [
+      {
+        "start_line": 42,
+        "end_line": 42,
+        "quote": "const KPI_MS = 8_000"
+      },
+      {
+        "start_line": 199,
+        "end_line": 201,
+        "quote": "    const observed = recorder.inventory ? await windowsSnapshots(recorder.inventory, killed, quitHost ? 20_000 : KPI_MS, all, retained) : await deadlineSnapshots(killed, KPI_MS, all, retained)\n    const shutdown = quitHost ? gracefulEvidence(\"serve\", terminalHost.host!, input) : undefined\n    const leftovers = mentioning(home).map((row) => `${row.pid} ${row.args?.slice(0, 160) ?? \"<argv unavailable>\"}`)"
+      },
+      {
+        "start_line": 218,
+        "end_line": 218,
+        "quote": "      pass: (shutdown === undefined || shutdown.pass) && (frontendEvidence === undefined || frontendEvidence.pass) && observed.zeroAtMs !== undefined && observed.last.counts.every((count) => count === 0) && observed.last.retained.length === 0 && leftovers.length === 0,"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/v3-supervisor.ts",
+    "git_blob_sha": "e5c571e22d66291f4caeead9739fda6edcbf4d61",
+    "source_sha256": "3155716899a95b4d21a5a46a4851188c5ade42b31d6bc0efc4e8db83b2ddddf1",
+    "source_bytes": 11990,
+    "line_count": 156,
+    "disposition": "analyzed",
+    "contracts": [
+      "sampleDeadline requires prior positive controls, 2-second query budgets, a reserved probe at bound−2250ms, and rejection of late query/projection results."
+    ],
+    "dependencies": [
+      "lib.ts validates exact ownership; API/protocol supervision distinguishes declared Unix limitation from Windows Job behavior."
+    ],
+    "failures_or_limits": [
+      "Unix surviving old trees are an expected protection gap, not successful cleanup.",
+      "Sampling timestamps identify when observations occurred; waiting to window end does not fabricate an exact endpoint observation."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "test",
+    "purpose": "Tests the declared OS-specific supervisor-death tier and protected next-spawn recovery.",
+    "behavior": [
+      "After supervised depth-two bash/PTY controls, kills pinned supervisors and samples fresh inventories within 8 seconds while retaining the live server.",
+      "Windows expects Jobs to close and all fixture counts reach zero; Unix expects all original three-member trees remain unprotected through the reserved final positive observation.",
+      "Next PTY admission must recover within 30 seconds under a new supervisor identity; subsequent host death must clear the new tree within 8 seconds.",
+      "Wrong-owner, late-query, empty-table and unknown-argv mutations must fail named gates; teardown failures downgrade the measurement."
+    ],
+    "evidence": [
+      {
+        "start_line": 62,
+        "end_line": 65,
+        "quote": "      ? { expected: \"Jobs close\", matches: observed.zeroAtMs !== undefined && observed.last.counts.every((count) => count === 0) }\n      : { expected: \"Unix trees remain unprotected\", observedAtMs: observed.last.atMs,\n          matches: observed.last.terminal && observed.samples.every((sample) => sample.fixtureIds.every((ids, index) => ids.length === 3 && ids.every((id) => (index === 0 ? before.bash : before.pty).fixtureIds.some((original) => matches(id, original))))) }\n    step(`supervisor kill tier ${JSON.stringify(tier)}; last deadline snapshot ${JSON.stringify(observed.last)}`)"
+      },
+      {
+        "start_line": 110,
+        "end_line": 115,
+        "quote": "  const queryBudgetMs = 2000\n  const terminalAtMs = boundMs - queryBudgetMs - 250\n  if (positive.length !== nonces.length || !positive.length || positive.some((entry) => !entry.pass || !entry.fixtureIds.length))\n    throw new Error(\"V3 observation requires prior positive alive controls\")\n  if (terminalAtMs < 0) throw new Error(\"V3 observation window cannot fit a full bounded query\")\n  const origin = performance.now() - (Date.now() - started)"
+      },
+      {
+        "start_line": 126,
+        "end_line": 132,
+        "quote": "    if (elapsed() >= boundMs || elapsed() - queryAtMs > queryBudgetMs)\n      throw new Error(\"V3 late inventory observation rejected\")\n    if (!rows.length) throw new Error(\"V3 inventory observation empty\")\n    const scope = inventoryScope(rows, [...retained, ...watched, ...positive.flatMap((entry) => [...entry.fixtureIds, ...entry.wrappers])])\n    if (scope.some((row) => row.args === null)) throw new Error(\"V3 inventory observation has unknown argv in owned scope\")\n    const found = nonces.map((nonce) => members(nonce, rows))\n    const atMs = elapsed()"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/v4-lsp.ts",
+    "git_blob_sha": "0c077d10f35ebab735ca7e3108cc634df12375cb",
+    "source_sha256": "7f4a6c641007b79d437328ecaf53e5385ae1f73a0d7d7829767b7b6a28336810",
+    "source_bytes": 17952,
+    "line_count": 249,
+    "disposition": "analyzed",
+    "contracts": [
+      "Live handshake waits 45 seconds, dead-cache status 10 seconds; host restart waits 20 seconds for exit and 8 seconds for tree zero.",
+      "Prompt/wait API requests allow 120 seconds; individual restart duration is recorded, without a separate numeric KPI threshold here."
+    ],
+    "dependencies": [
+      "protocol-fixtures checks binary provenance; pinned real npm tools supply LSP behavior; core LSP owns demand-driven restart."
+    ],
+    "failures_or_limits": [
+      "Source labels this local scenario complete but explicitly keeps wp10Complete=false; TLS abbreviation here denotes TypeScript language server, not encrypted transport."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "test",
+    "purpose": "Exercises real TypeScript language-server crash recovery through compiled Orchestra LSP ownership.",
+    "behavior": [
+      "Requires typescript-language-server 4.3.4 and TypeScript 5.8.2, runs native Node wrapper plus syntax/semantic tsservers and an auxiliary nonce tree.",
+      "Twenty wrapper crashes must produce cached error status without eager respawn, then a write demand creates a fresh client and initialize/initialized/didOpen handshake.",
+      "Each replacement must remove every old identity, preserve one process-owned supervisor and keep process count stable; final disposal/readmission yields 22 distinct birth identities and generations.",
+      "Final nonce sweep and teardown errors force failure; legacy transport mutation must fail supervision."
+    ],
+    "evidence": [
+      {
+        "start_line": 174,
+        "end_line": 178,
+        "quote": "    for (let cycle = 0; cycle < 20; cycle++) {\n      console.error(`[v4-lsp] automatic cycle ${cycle + 1}/20`)\n      const before = await live()\n      const control = supervised(tree.nonce)\n      if (!control) throw new Error(\"LSP supervisor positive control failed (legacy transport)\")"
+      },
+      {
+        "start_line": 196,
+        "end_line": 200,
+        "quote": "      const owned = owner[0]\n      if (!automaticRestart || oldLeft !== 0 || owner.length !== 1 || !owned || !matches(owned, initialOwner))\n        throw new Error(\"same-instance restart did not stop old tree, create fresh client, or preserve single supervisor\")\n      cycles.push({ cycle: cycle + 1, live: before.current.length, tsservers: after.tsservers.length, recorded: after.recorded,\n        supervised: control, restartMs: Date.now() - crashed, oldLeft, after: after.current.length,"
+      },
+      {
+        "start_line": 210,
+        "end_line": 214,
+        "quote": "    pass = automaticRestart === true && cycles.length === 20 && new Set(counts).size === 1 &&\n      cycles.every((cycle) => cycle.oldLeft === 0 && cycle.after === cycle.live) && handshakes.length === 22 &&\n      new Set(handshakes.map((entry) => `${entry.pid}:${entry.startTime}`)).size === 22 &&\n      new Set(handshakes.map((entry) => entry.generation)).size === 22\n    if (!pass) error = \"LSP cycle count/leftovers/process-count KPI failed\""
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/v5-mcp.ts",
+    "git_blob_sha": "be49621ec7f9e8092314d40f48de03659ba921a1",
+    "source_sha256": "f44848071b1cfa1d9204dc5d994801952f8b90fba879e0e472faed8b9a17f333",
+    "source_bytes": 5200,
+    "line_count": 81,
+    "disposition": "analyzed",
+    "contracts": [
+      "MCP config timeout 10 seconds; PUT requests 25 seconds; marker wait 10 seconds.",
+      "Final oracle-query or teardown failure forces pass=false."
+    ],
+    "dependencies": [
+      "protocol-fixtures.mcpFixture supplies actual write receipts and JSON-RPC peer; real server debug logs and MCP APIs provide observed assertions."
+    ],
+    "failures_or_limits": [
+      "Final beforeCleanup array is recorded but its nonzero length is not itself folded into pass; an earlier explicit disconnect-zero assertion remains the cleanup criterion.",
+      "No invocation or MCP connection was executed during source analysis."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "test",
+    "purpose": "Checks real MCP connection and failure diagnostics after saturating stderr before initialize.",
+    "behavior": [
+      "Starts compiled serve and a stdio peer that writes exactly 1 MiB stderr before handshake; requires connected status, probe tool, live supervised process and final marker exactly once as the last debug line.",
+      "A second peer exits17 after stderr and must report failed connection diagnostics containing its final marker.",
+      "Disconnect must remove the healthy peer within 8 seconds; missing-marker and legacy mutations exercise marker/supervision failures."
+    ],
+    "evidence": [
+      {
+        "start_line": 48,
+        "end_line": 52,
+        "quote": "    if (written.bytes !== 1024 * 1024 || written.marker !== `LAST-STDERR-${nonce}` ||\n      written.markerBytes !== Buffer.byteLength(written.marker + \"\\n\") || metrics.uniqueMarkerLines !== 1 ||\n      !lines.at(-1)?.endsWith(`line=${written.marker}`) || !metrics.supervised || Number(metrics.processTablePositive) < 1)\n      throw new Error(\"MCP payload/supervision positive control failed\")\n    await call(\"PUT\", \"/api/mcp/failure\", {"
+      },
+      {
+        "start_line": 57,
+        "end_line": 60,
+        "quote": "    if (failed.failure?.status !== \"failed\" || !failed.failure.error?.includes(`LAST-STDERR-${failureNonce}`))\n      throw new Error(`last stderr line absent from failed-connect diagnostics: ${JSON.stringify(failed.failure)}`)\n    await call(\"POST\", \"/api/mcp/campaign/disconnect\", {})\n    await until(8_000, \"MCP process gone after disconnect\", async () => (await sweep(nonce)).length === 0 ? true : undefined)"
+      },
+      {
+        "start_line": 67,
+        "end_line": 70,
+        "quote": "    try { metrics.beforeCleanup = await finalSweep(nonce) }\n    catch (cause) { pass = false; error = `${error ?? \"\"} oracle: ${String(cause)}` }\n    finally { await finish(scratch).catch((cause) => { pass = false; error = `${error ?? \"\"} teardown: ${String(cause)}` }) }\n  }"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/v6-terminal.ts",
+    "git_blob_sha": "46360c9953a3f7207dde2b668617a6cbf877e03d",
+    "source_sha256": "1a82703b0b1ff3037392790a6d3d3fce7de9153b7c4f1c445de150f00ac29cd3",
+    "source_bytes": 26850,
+    "line_count": 389,
+    "disposition": "analyzed",
+    "contracts": [
+      "Most readiness/output operations20seconds; Vim initial screen30seconds; flood/raw completion120seconds; health10seconds; final nonce zero8seconds.",
+      "Windows accepts named unsupported rawAccounting because ConPTY has no POSIX raw-slave contract."
+    ],
+    "dependencies": [
+      "pty-byte-probe supplies byteFixture/stats/exactRaw; real PTY API and ticketed WebSocket transport supply replay."
+    ],
+    "failures_or_limits": [
+      "Receiver-paced raw equality does not certify lossless unpaced flood; gap-count mutation is effective only on the POSIX raw lane.",
+      "wp10Complete=false and TUI quit remains owned by lifecycle."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "test",
+    "purpose": "Tests real terminal editing/resizing, exact replay and bounded-output responsiveness with separately scoped raw-byte accounting.",
+    "behavior": [
+      "Runs real Vim edit and size30×100→40×120; missing editor fails capability. Producer and editor must be supervised.",
+      "Reconnect compares complete missed UTF-16 text and end cursor against independent whole replay, using é/astral Unicode and missing/truncated-replay mutations.",
+      "Unpaced cooked 50 MiB flood must complete while health requests stay bounded and terminal responds afterward; cooked byte identity is explicitly unclaimed.",
+      "POSIX raw lane verifies actual slave mode after Node initialization, then transfers 800 acknowledged64KiB blocks and requires exact mirrored bytes with no gaps; gap-count mutation corrupts this receiving boundary."
+    ],
+    "evidence": [
+      {
+        "start_line": 203,
+        "end_line": 207,
+        "quote": "      if (whole.state.replay.slice(0, cursor) !== baseline || expected.length === 0 || expected !== reconnect.state.replay ||\n        reconnect.state.meta !== expectedEnd || expectedEnd !== cursor + expected.length || expectedEnd !== whole.state.replay.length ||\n        observer.state.text !== expected || !containsMissed(expected) || !containsMissed(reconnect.state.replay))\n        throw new Error(\"reconnection replay differs from independent whole missed text/end cursor\")\n      writeFileSync(path.join(scratch.home, \"replay.ws.txt\"), whole.state.replay)"
+      },
+      {
+        "start_line": 331,
+        "end_line": 334,
+        "quote": "      metrics.rawFlowControl = { ...flow, blockBytes: 64 * 1024, blocks: 800,\n        tier: \"receiver-acknowledged raw byte identity; unpaced burst losslessness not claimed\" }\n      if (flow.acknowledgments !== 800) throw new Error(\"raw transfer did not acknowledge every payload block\")\n      if (actualMode.phase !== \"after-Node-stdio-initialization-before-payload\" || actualMode.after.OPOST ||"
+      },
+      {
+        "start_line": 374,
+        "end_line": 378,
+        "quote": "  const pass = errors.length === 0 && Object.entries(checks).every(([cell, status]) => status === \"passed\" ||\n    win && cell === \"rawAccounting\" && status === \"unsupported-ConPTY-no-POSIX-slave-termios\")\n  const result = verdict(\"v6-terminal\", { ...evidence(scratch), pass, status: pass ? \"passed-local-terminal-slice\" : \"failed-local\",\n    wp10Complete: false, tuiQuit: { status: \"not-run\", owner: \"lifecycle\", pass: null },\n    mutation: options.mutation ?? null, checks, metrics, errors,"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/v7-attribution.ts",
+    "git_blob_sha": "ef381a06ec7106345c8323ef8ed0d8d0543eeeb8",
+    "source_sha256": "66668a5810a63c45c5750d6092f93f02f3753425ff261e8f4eb555bf20b12d04",
+    "source_bytes": 7418,
+    "line_count": 142,
+    "disposition": "analyzed",
+    "contracts": [
+      "Sample HTTP timeout20seconds and git timeout10seconds; trace must observe actual hugr-omni-supervisor exec."
+    ],
+    "dependencies": [
+      "delivery-fixtures hosts real AppProcess; OmniSpawner/native binding expose lower-level boundaries; strace is Linux diagnostic tooling."
+    ],
+    "failures_or_limits": [
+      "Diagnostic timing does not replace real AppProcess overhead acceptance.",
+      "Bare/staged counters intentionally differ from AppProcess instrumentation; trace adds observation overhead."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "test",
+    "purpose": "Attributes V7 cost across real Effect caller, bare binding and native spawn/exit/EOF/stop stages.",
+    "behavior": [
+      "Waits up to600seconds for 30 continuous seconds at load1<=half available CPUs, then refuses a busy measurement.",
+      "Uses25 alternating warmup pairs and1000 samples for each app/bare/staged arm, or one staged sample under unprivileged strace.",
+      "Validates real git SHA output, app-only spawn counter increment and zero delegations; records medians and native syscall boundaries."
+    ],
+    "evidence": [
+      {
+        "start_line": 12,
+        "end_line": 15,
+        "quote": "  await until(600_000, \"V7 quiet host (unchanged load1 <= 0.5 * CPUs)\", () => {\n    if (os.loadavg()[0] > os.availableParallelism() * 0.5) quiet.since = Date.now()\n    return Date.now() - quiet.since >= 30_000 ? true : undefined\n  })"
+      },
+      {
+        "start_line": 42,
+        "end_line": 50,
+        "quote": "    const arms = trace ? [\"staged\"] : [\"app\", \"bare\", \"staged\"]\n    for (let pair = 0; pair < (trace ? 0 : 25); pair++)\n      for (const arm of pair % 2 ? arms.toReversed() : arms) await sample(arm)\n    for (let pair = 0; pair < (trace ? 1 : 1000); pair++) {\n      if (os.loadavg()[0] > os.availableParallelism() * 0.5) throw new Error(`Busy attribution host: ${load()}`)\n      for (const arm of pair % 2 ? arms.toReversed() : arms)\n        rows.push({ pair, arm, sample: await sample(arm), load: load() })\n    }\n    const p50 = (values: number[]) => {"
+      },
+      {
+        "start_line": 112,
+        "end_line": 124,
+        "quote": "              if (item.stream !== \"stdout\" || item.lostBefore || typeof item.data === \"string\") throw new Error(\"Unexpected staged output\")\n              chunks.push(item.data)\n            }\n            stages.eof = performance.now() - started\n          })()\n          try {\n            const exit = await child.wait()\n            stages.exit = performance.now() - started\n            await output\n            const stopping = performance.now()\n            await child.stop()\n            stages.stop = performance.now() - stopping\n            return { ...exit, stdout: Buffer.concat(chunks), stderr: Buffer.alloc(0) }"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/v7-overhead.ts",
+    "git_blob_sha": "eb9817a2edc798267af5fd319b8ac984f69ce385",
+    "source_sha256": "b481918ac3afa4e241fda35e7464308e46e93d27703a01e4a30b5dcf2a256227",
+    "source_bytes": 9542,
+    "line_count": 158,
+    "disposition": "analyzed",
+    "contracts": [
+      "Timing requires --quiet; Unix quiet means load1<=half CPUs, Windows bypasses this load check; sample HTTP20seconds/git10seconds.",
+      "--busy-unrun-ok can exit0 for unrun-busy while its verdict remains unsuccessful."
+    ],
+    "dependencies": [
+      "delivery-fixtures defers successful publication until cleanup; separate process flags select real legacy/Omni behavior."
+    ],
+    "failures_or_limits": [
+      "Exit status alone is not timing acceptance; inspect timingKpiRun, pass and status.",
+      "A rejected busy attempt is not retained in final successful sample rows, though attempts counts it."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "test",
+    "purpose": "Measures the unchanged real-AppProcess median overhead KPI with separate legacy and Omni hosts.",
+    "behavior": [
+      "Times only AppProcess.run including Effect execution; validates real unchanged git HEAD, distinct host pids, backend mode and exact native/delegation counters.",
+      "Uses25 warmup and1000 sequential AB/BA pairs; busy runs discard all samples and retry at most3 whole attempts after up to180seconds settling.",
+      "Accepts p50(omni)<=max(p50(legacy)*1.10,p50(legacy)+2ms); slow-omni adds actual5ms latency within the timed boundary.",
+      "Control mode produces3 pairs per arm but pass=false/acceptance-unrun; optional pacing0–100ms is outside samples."
+    ],
+    "evidence": [
+      {
+        "start_line": 55,
+        "end_line": 59,
+        "quote": "    const warmup = options.controlOnly ? 1 : 25\n    const count = options.controlOnly ? 3 : 1000\n    // Each attempt is a whole measurement (warmup and every pair): samples from a busy stretch are never kept.\n    for (;;) {\n      attempts++"
+      },
+      {
+        "start_line": 95,
+        "end_line": 100,
+        "quote": "    const base = p50(\"legacy\")\n    const omni = p50(\"omni\")\n    const limit = Math.max(base * 1.10, base + 2)\n    return record(\"v7-overhead\", { pass: omni <= limit, timingKpiRun: true, attempts, warmup, interPairIdleMs: idle, mutation: options.mutation, counts,\n      p50Ms: { legacy: base, omni, limit }, evidence: evidence(\"v7-samples\", rows) })\n  } catch (error) {"
+      },
+      {
+        "start_line": 154,
+        "end_line": 157,
+        "quote": "    const unrun = \"status\" in result && result.status === \"unrun-busy\"\n    if (unrun) console.log(`::warning title=V7 unrun::${\"error\" in result ? result.error : \"machine busy\"}`)\n    process.exit(result.pass || \"ready\" in result && result.ready || unrun && process.argv.includes(\"--busy-unrun-ok\") ? 0 : 1)\n  }"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/v8-windows.ts",
+    "git_blob_sha": "06ff99f4b239f6561f07f2c746c60c36b24463fc",
+    "source_sha256": "3b98dddf6d7fc9de3e2502ba19981ce1ee2f7a824325fbdcce8680ab9d171fa6",
+    "source_bytes": 15140,
+    "line_count": 245,
+    "disposition": "analyzed",
+    "contracts": [
+      "Host execution180seconds; command calls20seconds; ConPTY readiness20seconds; PowerShell tree readiness25seconds.",
+      "Non-Windows returns pass=false/status unrun; exact expected cell names prevent omitted coverage from passing."
+    ],
+    "dependencies": [
+      "real AppProcess, PtyOmni.adapt and native binding are exercised; closeWithinDeadline is also tested with delayed observer mutations."
+    ],
+    "failures_or_limits": [
+      "Invalid arguments may be explicitly refused rather than delivered, as allowed by this test contract.",
+      "Deadline race rejects late results but does not cancel every underlying promise; final cleanup remains necessary."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "test",
+    "purpose": "Checks Windows command delivery, literal-or-refused metacharacters and complete ConPTY shutdown.",
+    "behavior": [
+      "Requires real Windows; host inventory covers cmd.exe, .cmd tool, offline real npm/npx, seven metacharacter payloads, PowerShell shell and ConPTY close, plus real server shell interruption.",
+      "Metacharacters must arrive exactly or yield typed Omni INVALID_ARGUMENT, with one native spawn, zero delegations and no injection sentinel.",
+      "ConPTY must stop, emit native EOF/onExit, empty independent OS inventory and native reachable processes within one6second absolute deadline.",
+      "PowerShell user-shell route must record User aborted the command, return204 and leave zero tree members."
+    ],
+    "evidence": [
+      {
+        "start_line": 132,
+        "end_line": 134,
+        "quote": "      cells.push({ name: `npx-metachar/${name}`, payload, ...observed, spawns, delegations, injected: existsSync(sentinel),\n        pass: !existsSync(sentinel) && spawns === 1 && delegations === 0 && (exact || observed.refusal?.code === \"INVALID_ARGUMENT\") })\n    }"
+      },
+      {
+        "start_line": 177,
+        "end_line": 184,
+        "quote": "    const closed = await closeWithinDeadline(started, 6000, { stop: () => proc.stop(), eof: eof.promise, exited: exited.promise,\n      remaining: (budget) => { const found = members(tree.nonce, table(budget)); return found.members.length + found.wrappers.length },\n      processes: () => proc.child.processes() })\n    const after = Omni.snapshot()\n    cells.push({ name: \"ConPTY-close\", ...closed, supervised: control, output: { ...output },\n      boundary: \"native EOF observation through PtyOmni.adapt\", spawns: after.spawns - before.spawns, nativePid: native.pid,\n      pass: control && closed.ms <= 6000 && output.ended && output.exited && output.stopped && !output.error &&\n        output.eofMs <= 6000 && output.exitMs <= 6000 && output.stopMs <= 6000 && closed.left === 0 && closed.reachable.length === 0 && after.delegations === before.delegations })"
+      },
+      {
+        "start_line": 209,
+        "end_line": 220,
+        "quote": "  const within = () => { if (performance.now() >= deadline) throw new Error(`ConPTY complete close exceeded ${boundMs} ms`); return deadline - performance.now() }\n  try {\n    const result = await Promise.race([Promise.all([input.stop(), input.eof, input.exited]).then(async () => {\n      const left = await input.remaining(Math.max(1, within()))\n      within()\n      const reachable = await input.processes()\n      within()\n      return { left, reachable }\n    }), new Promise<never>((_, reject) => {\n      timer.id = setTimeout(() => reject(new Error(`ConPTY stop + EOF + onExit watchdog expired after ${boundMs} ms`)), Math.max(0, deadline - performance.now()))\n    })])\n    within()"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/v9-broken-artifacts.ts",
+    "git_blob_sha": "a408ec1837b7f9b078d6fcfae2d174f02caa483f",
+    "source_sha256": "a6b300bbfd592c280913eb56197447789e946f745f773a8ee9ea3b36a0601fb1",
+    "source_bytes": 11260,
+    "line_count": 151,
+    "disposition": "analyzed",
+    "contracts": [
+      "Requires --quiet and Unix half-CPU load; intact/Windows warmup30seconds, broken acceptance2seconds, lazy controls5seconds."
+    ],
+    "dependencies": [
+      "CLI omni-entry preflight and core Omni loader are exercised through shipped/copy-compiled executables; delivery-fixtures owns observation and post-cleanup publication."
+    ],
+    "failures_or_limits": [
+      "Windows measurement excludes first-launch scanning by design; result is warm-launch rejection latency.",
+      "Optional mutation compilation is not bounded locally by this file."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "test",
+    "purpose": "Checks copied shipped CLI artifacts reject broken native delivery without implicit fallback.",
+    "behavior": [
+      "Plants valid checkout/resources fallback bait, then tests intact, missing addon, corrupt addon and missing supervisor copies with scrubbed resolution variables.",
+      "Broken cells require normal exit1, no stdout/signal/error/timeout, diagnostic prefix/remediation and completion<=2seconds; intact cell requires shipped paths, nonce-tree success and native counters.",
+      "Flag0 --version stays lazy; unset/default and strict modes preflight. Optional compiled fallback mutant must successfully select bait, be rejected by the guard oracle, and restored shipped binary must still reject.",
+      "Windows warms copied executables on legacy --version before timed checks; diagnostic reruns cannot rescue failed measured cells."
+    ],
+    "evidence": [
+      {
+        "start_line": 16,
+        "end_line": 19,
+        "quote": "  return !result.timedOut && !result.error && result.signal === null && result.code === 1 && result.ms <= 2000 &&\n    result.stdout === \"\" && result.stderr.startsWith(\"hugr-omni CLI preflight failed: \") && (configured || load) &&\n    result.stderr.includes(\"Reinstall this CLI with its addon and supervisor\")\n}"
+      },
+      {
+        "start_line": 53,
+        "end_line": 55,
+        "quote": "    for (const cell of [\"intact\", \"addon-missing\", \"addon-corrupt\", \"supervisor-missing\"]) {\n      if (!quiet()) throw new Error(`V9 machine became busy before ${cell}: ${load()}`)\n      const dir = path.join(scratch.home, cell, \"bin\")"
+      },
+      {
+        "start_line": 132,
+        "end_line": 135,
+        "quote": "      return { kind: \"compiled-preflight-implicit-fallback\", ...observed, selected, gatePass: rejected,\n        detected: success && !rejected, restored, missingArtifactPreserved: !existsSync(target.addon) }\n    })() : undefined\n    const log = evidence(\"v9-cells\", { source, home: scratch.home, checkoutFallbackBait: bait, cells, controls, mutation })"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/wait.ts",
+    "git_blob_sha": "4ec37d42809cd7df9315f926daf06bfa022aeeb4",
+    "source_sha256": "739a5391b5fb6b536b3e978bc6db9f1615bfceb11dcedd940d9e1380f36fe192",
+    "source_bytes": 1007,
+    "line_count": 19,
+    "disposition": "analyzed",
+    "contracts": [
+      "Expired/nonpositive budget throws a named timeout before another probe; late resolution is rejected."
+    ],
+    "dependencies": [
+      "Campaign readiness/cleanup helpers use until and sleep."
+    ],
+    "failures_or_limits": [
+      "Promise.race does not cancel a timed-out probe; its side effects may continue.",
+      "Synchronous blocking probes can delay timer delivery, though post-probe time check rejects their late result."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "implementation",
+    "purpose": "Polls an asynchronous campaign probe against one absolute deadline.",
+    "behavior": [
+      "Races each probe with the remaining wall-clock budget, clears its timer and rechecks the deadline after resolution.",
+      "Returns any value other than undefined, including false; retries undefined after up to200ms sleep."
+    ],
+    "evidence": [
+      {
+        "start_line": 11,
+        "end_line": 19,
+        "quote": "    const value = await Promise.race([\n      Promise.resolve().then(probe),\n      new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error(`timed out after ${timeoutMs} ms waiting for ${what}`)), left) }),\n    ]).finally(() => clearTimeout(timer))\n    if (Date.now() >= deadline) throw new Error(`timed out after ${timeoutMs} ms waiting for ${what}`)\n    if (value !== undefined) return value\n    await sleep(Math.min(200, deadline - Date.now()))\n  }\n}"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/windows-inventory.ts",
+    "git_blob_sha": "9f377fec777e53f9c0de635cfab76d5c747e7844",
+    "source_sha256": "915e8dfae9d56457ea9334bea818232039009e0bba62ba386dd5aaa6531b2fbe",
+    "source_bytes": 22275,
+    "line_count": 311,
+    "disposition": "analyzed",
+    "contracts": [
+      "Default helper/recorder deadline10seconds; query output cap64MiB per stream, checked after capture; startup uses synchronous5ms polling.",
+      "Malformed consumed request cannot run again until broker acknowledgment cleanup."
+    ],
+    "dependencies": [
+      "lib.ts consumes WindowsInventory; broker-sharing/recorder tests mutate these exact boundaries."
+    ],
+    "failures_or_limits": [
+      "64MiB check occurs after ReadToEndAsync, so it is not a streaming memory bound.",
+      "makeRecorder keys pending captures by pid; concurrent requests for the same pid overwrite the earlier map entry."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "implementation",
+    "purpose": "Provides Windows inventory watchdogs, exact birth capture and retained-handle cleanup for campaign observations.",
+    "behavior": [
+      "PowerShell7 broker atomically accepts closed JSON requests, retries sharing/partial JSON faults for1second, owns query process handles and confirms OS/pipe closure.",
+      "Caller uses monotonic deadline including executable startup, allows2seconds only for failed teardown and rejects late replies; unconfirmed leases survive until recovery.",
+      "CIM preserves unknown argv unless OS confirms absence; decoder rejects malformed birth/session fields and missing querying host.",
+      "Identity recorder validates readiness and requested pid replies, bounds capture/shutdown and clears handles only after confirmed close; kill revalidates pinned creation time."
+    ],
+    "evidence": [
+      {
+        "start_line": 39,
+        "end_line": 53,
+        "quote": "      $readUntil=[DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()+1000;\n      while ($true) {\n        $stream=$null; $reader=$null;\n        try {\n          $stream=[IO.File]::Open($file,[IO.FileMode]::Open,[IO.FileAccess]::Read,([IO.FileShare]::ReadWrite -bor [IO.FileShare]::Delete));\n          $reader=[IO.StreamReader]::new($stream,$utf8); $text=$reader.ReadToEnd();\n          $request=ConvertFrom-Json -ErrorAction Stop $text;\n          if ($request.command -isnot [string] -or !$request.command -or $request.args -isnot [array] -or @($request.args | Where-Object {$_ -isnot [string]}).Count -ne 0 -or $request.deadline -isnot [ValueType] -or [double]::IsNaN([double]$request.deadline) -or [double]::IsInfinity([double]$request.deadline)) {throw 'Malformed Windows helper request'}\n          break;\n        } catch {\n          $cause=$_.Exception; while ($cause.InnerException) {$cause=$cause.InnerException};\n          if ([DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() -ge $readUntil -or (($cause.HResult -band 65535) -notin @(32,33) -and $_.FullyQualifiedErrorId -notlike '*ConvertFromJson*' -and $cause.Message -ne 'Malformed Windows helper request')) {throw}\n          [Threading.Thread]::Sleep(5);\n        } finally {if ($reader) {$reader.Dispose()} elseif ($stream) {$stream.Dispose()}}\n      }"
+      },
+      {
+        "start_line": 166,
+        "end_line": 172,
+        "quote": "  rmSync(path.join(broker.dir!, `owned-${key}`), { force: true })\n  // Only the watchdog removes request/reply files, after its enumeration has consumed them.\n  writeFileSync(file + \".ack\", \"ack\\n\")\n  if (reply.timedOut || performance.now() >= deadline) throw Object.assign(new Error(`Windows helper deadline expired after ${timeoutMs} ms`), { helperPID: reply.pid })\n  if (reply.error) throw new Error(`Windows helper failed: ${reply.error}`)\n  if (!Number.isSafeInteger(reply.pid) || reply.pid <= 0 || !Number.isInteger(reply.status) || typeof reply.stdout !== \"string\" || typeof reply.stderr !== \"string\") throw new Error(\"malformed Windows helper result\")\n  return { ...reply, instrument: broker.identity! }"
+      },
+      {
+        "start_line": 291,
+        "end_line": 298,
+        "quote": "    await prepare()\n    const request = Promise.withResolvers<Identity | undefined>()\n    pending.set(pid, request)\n    const timer = setTimeout(() => request.reject(new Error(`identity capture deadline expired for PID ${pid}`)), timeoutMs)\n    state.proc!.stdin!.write(JSON.stringify({ pid }) + \"\\n\")\n    try { return await request.promise }\n    catch (error) { await stop(true); throw error }\n    finally { clearTimeout(timer) }"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/windows-lifecycle.ts",
+    "git_blob_sha": "6d4c53d9577423d10764643b2017d051eee7661c",
+    "source_sha256": "04d8da626266b9c588d88a90fd4909a47c1ed3153112adeaaed06be6e3b9cd27",
+    "source_bytes": 20022,
+    "line_count": 309,
+    "disposition": "analyzed",
+    "contracts": [
+      "Console readiness120seconds/TUI render30seconds; recorder warmup30seconds/query10seconds; graceful/forced recorder close2seconds each.",
+      "Graceful TUI requires Ctrl+C, exit0, no signal and alternate-screen exit; serve requires two started/disposed DEBUG events and128+SIGINT/SIGBREAK code."
+    ],
+    "dependencies": [
+      "PtyOmni product adapter supplies terminal; WindowsInventory supplies CIM decoder; V1/V2 consume finishCampaign and observers."
+    ],
+    "failures_or_limits": [
+      "isolatedEnvironment temporarily replaces global process.env only around synchronous spawn, restoring before yield; asynchronous use would violate its assumption.",
+      "Lifecycle recorder uses persistent powershell, distinct from the PowerShell7 per-query broker in windows-inventory.ts."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "fixture",
+    "purpose": "Supplies real Windows console lifecycle, frontend-request observation and teardown-qualified campaign publication.",
+    "behavior": [
+      "Requires Windows CI for compiled CLI ConPTY hosts; uses160columns for attached session sidebar, validates host birth identity and health before input.",
+      "Two-stage local LLM selects foreground stage only from latest user prompt; frontend-only proxy records actual UI interrupt traffic and closes sockets/controllers on teardown.",
+      "finishCampaign emits exactly one verdict after teardown and downgrades measurement success on recorder/frontend/shared-cleanup errors.",
+      "Warm persistent PowerShell CIM recorder returns fresh tagged snapshots; windowsSnapshots rejects observations outside bound and tracks exact retained identities."
+    ],
+    "evidence": [
+      {
+        "start_line": 156,
+        "end_line": 160,
+        "quote": "export async function finishCampaign<T extends Record<string, unknown> & { pass: boolean }>(scenario: string, execute: () => Promise<T>, teardown: () => Promise<void>): Promise<T | { pass: false; error: string } | ((T | { pass: false; error: string }) & { pass: false; measurementPass: boolean; teardownError: string })> {\n  const result = await execute().catch((error) => ({ pass: false as const, error: String(error) }))\n  const error = await teardown().then(() => undefined, (error) => String(error))\n  return verdict(scenario, error === undefined ? result : { ...result, measurementPass: result.pass, pass: false as const, teardownError: error })\n}"
+      },
+      {
+        "start_line": 176,
+        "end_line": 181,
+        "quote": "  const pass = input === \"Ctrl+C\" && host.state.exit !== undefined && host.state.exit.exitCode === expectedExitCode &&\n    host.state.exit.signal === undefined && Number.isFinite(expectedExitCode) && events.length === 2 &&\n    events.every((event) => event.event === \"cli.shutdown\" && event.level === \"DEBUG\" && [\"SIGINT\", \"SIGBREAK\"].includes(event.signal) && Number.isFinite(event.elapsedMs)) &&\n    events[0]!.status === \"started\" && events[1]!.status === \"disposed\"\n  return { input, exit: host.state.exit, expectedExitCode, events, pass,\n    ...(!pass ? { blocker: \"Windows Ctrl+C did not prove runtime disposal; owner required: apps/cli/src/commands/handlers/serve.ts (SIGINT/SIGBREAK shutdown handler)\" } : {}) }"
+      },
+      {
+        "start_line": 297,
+        "end_line": 302,
+        "quote": "export function isolatedEnvironment<T>(env: Record<string, string>, spawn: () => T) {\n  const inherited = process.env\n  process.env = env\n  try { return spawn() }\n  finally { process.env = inherited }\n}"
+      }
+    ]
+  }
+]

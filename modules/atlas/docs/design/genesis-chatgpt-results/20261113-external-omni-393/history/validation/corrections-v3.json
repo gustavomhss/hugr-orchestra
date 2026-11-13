@@ -1,0 +1,48 @@
+{
+  "schema": "omni-author-correction/v1",
+  "author_role": "validation",
+  "revision": "v3",
+  "reason": "Root corrected validator to Git-style LF line numbering. Earlier trailing-blank excerpt alarms were validator false positives; their existing exact range normalization remains harmless and unchanged. The v2 conversion of regex-table line_count from 407 to 409 followed the former validator and is reversed here. Unicode U+2028/U+2029 are data within lines, so two later excerpt ranges are remapped to LF numbering. No semantic text or baseline bytes changed.",
+  "files": [
+    {
+      "file": "records-04.json",
+      "preserved_path": "omni-genesis/authors/validation/history/v2/records-04.json",
+      "original_sha256": "02a99ca9776fd8a2efaa8eeefe947bc05d10d03b0b6f793f15eff5e26bb934e4",
+      "corrected_sha256": "a71950a6496e31d030a24e153572533a247fe0934b09dd02e7b14971e2bc2aa1",
+      "changes": [
+        {
+          "field": "line_count",
+          "old": 409,
+          "new": 407
+        },
+        {
+          "excerpt": 1,
+          "old_start": 209,
+          "old_end": 219,
+          "new_start": 207,
+          "new_end": 217
+        },
+        {
+          "excerpt": 2,
+          "old_start": 358,
+          "old_end": 367,
+          "new_start": 356,
+          "new_end": 365
+        }
+      ]
+    },
+    {
+      "file": "capture.json",
+      "preserved_path": "omni-genesis/authors/validation/history/v2/capture.json",
+      "original_sha256": "3bd4f20f7916f30ec3e97ed63cae8e14efbcad62a0e821f3d3d163a0f4937096",
+      "corrected_sha256": "228c2237e1a56561517f64cf444b61b1bc75d56705e317cdc8fcd84a1b55f818",
+      "changes": [
+        {
+          "field": "line_count",
+          "old": 409,
+          "new": 407
+        }
+      ]
+    }
+  ]
+}

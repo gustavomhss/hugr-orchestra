@@ -1,0 +1,26 @@
+{
+  "schema": "omni-author-correction/v1",
+  "author_role": "validation",
+  "revision": "v4",
+  "reason": "Semantic source-link correction after reading full V6 source: it imports the byte helpers, not cookedCertificate. No other record text or baseline bytes changed.",
+  "files": [
+    {
+      "file": "records-01.json",
+      "original_path": "omni-genesis/authors/validation/history/v1/records-01.json",
+      "original_sha256": "91ace68858cc144e61097e3e75a51f7572f136bcdd0563adcd61828820dd8eb6",
+      "corrected_sha256": "3cc2e576f468ca16d441457f248aff4f56c46f59e34ef54a9595f9b85c526bb8",
+      "changes": [
+        {
+          "path": "native/omni/campaign/pty-byte-probe.ts",
+          "field": "dependencies",
+          "old": [
+            "protocol-fixtures supplies real server/API/provenance; V6 uses cookedCertificate."
+          ],
+          "new": [
+            "protocol-fixtures supplies real server/API/provenance; V6 imports byteFixture, byteStats and exactRaw for its separate paced raw lane. cookedCertificate is exported here but is not consumed by V6 at this source revision."
+          ]
+        }
+      ]
+    }
+  ]
+}

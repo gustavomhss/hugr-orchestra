@@ -1,0 +1,749 @@
+[
+  {
+    "path": "native/omni/bindings/node/npm/README.md",
+    "git_blob_sha": "5a2f4714516a2364e183dd24b00565cd7cb90482",
+    "source_sha256": "e3be61e5780a2775da9f7415139a59e2a436591b135f4d4e2609a77c99f05798",
+    "source_bytes": 9305,
+    "line_count": 139,
+    "disposition": "analyzed",
+    "kind": "doc",
+    "purpose": "Explain how nine same-version npm packages are built, packed and clean-install verified.",
+    "behavior": [
+      "Documents eight Windows/macOS/Linux CPU/libc platforms and a script-free main package with static optionalDependencies.",
+      "Linux GNU addons target glibc 2.17 with static musl supervisors; musl addons link libc dynamically while supervisors remain static.",
+      "Describes format/CPU/static-link and tar-content checks, clean caches, loader diagnostics and runtime-specific quickstart execution.",
+      "Requires publishing platform packages before the main package because Deno reads every optional dependency packument."
+    ],
+    "contracts": [
+      "Nothing in these packaging tools publishes; POSIX packaging preserves supervisor execute bits.",
+      "Deno has no supported musl row; Node and Bun are the musl verification targets."
+    ],
+    "dependencies": [
+      "native/omni/scripts/build-artifacts.mjs",
+      "native/omni/bindings/node/npm/pack.mjs and verify.mjs.",
+      "Native build toolchains, Zig, Docker, tar and package managers."
+    ],
+    "failures_or_limits": [
+      "This is build guidance and historical measurement narrative, not current run evidence; actual build-artifacts.mjs now requires the native target OS and CPU."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 3,
+        "end_line": 22,
+        "quote": "Nine packages, one version. `hugr-omni` (index.js, index.d.ts, no native file, no scripts) lists eight\n`optionalDependencies`; each `hugr-omni-<id>` holds `hugr-omni.node` and, next to it, `hugr-omni-supervisor`\n(the static musl build on Linux), and says `os`/`cpu`/`libc` so a package manager installs only its own. Installing\nnever compiles or downloads. Nothing here publishes.\n\n| id | built with | `.node` from | supervisor from |\n|---|---|---|---|\n| `win32-x64-msvc` | Windows | `x86_64-pc-windows-msvc` | same |\n| `win32-arm64-msvc` | Windows on Arm | `aarch64-pc-windows-msvc` | same |\n| `darwin-arm64` | macOS | `aarch64-apple-darwin` | same |\n| `darwin-x64` | macOS | `x86_64-apple-darwin` | same |\n| `linux-x64-gnu` | zig, glibc 2.17 | `x86_64-unknown-linux-gnu` | `x86_64-unknown-linux-musl` |\n| `linux-arm64-gnu` | zig, glibc 2.17 | `aarch64-unknown-linux-gnu` | `aarch64-unknown-linux-musl` |\n| `linux-x64-musl` | Alpine (`rust:1-alpine`), `-crt-static` | `x86_64-unknown-linux-musl` | same, static |\n| `linux-arm64-musl` | Alpine (`rust:1-alpine`), `-crt-static` | `aarch64-unknown-linux-musl` | same, static |\n\nThe loader (`index.js`) picks the package by `process.platform`, `process.arch` and, on Linux, the C library: the text\nof `/usr/bin/ldd`, else `process.report`'s `header.glibcVersionRuntime` (absent on musl). A musl addon links musl's\n`libc.musl-<arch>.so.1` dynamically, so a musl Node or Bun can load it; `pack.mjs` checks its `DT_NEEDED`, and that a\nglibc addon needs `libc.so.6` and no musl. Deno has no musl build, so musl is proven with npm and Bun only."
+      },
+      {
+        "start_line": 79,
+        "end_line": 91,
+        "quote": "`pack.mjs` reads `target/<triple>/release` (`CARGO_TARGET_DIR` moves it), checks that every binary is the right\nformat and CPU for its package and that the Linux supervisor is static, packs, and checks each tarball (exact file\nlist, supervisor executable, no scripts). Run it on a POSIX host when it packs Linux or macOS packages: a Windows\nhost cannot keep the execute bit. It also asserts that `package.json` lists the eight packages at its own version\n(keep them static; bump all nine together).\n\n`verify.mjs` serves the tarballs from a localhost registry, installs `hugr-omni` into an empty project with npm,\n`bun install` or `deno install` (empty cache, no `HUGR_OMNI_*` variable), checks that only this platform's package was\ninstalled, with the supervisor next to the addon and no script anywhere, and runs\n`bindings/node/examples/quickstart.ts` as written (Node: through `tsc`, which also types it against the installed\n`index.d.ts`; Deno with `--allow-ffi --allow-env --allow-read`). Install and quickstart must each finish in 30 s.\nWith `node` it also checks the loader's messages for an unsupported platform and for a missing platform package.\n`HUGR_BUN` / `HUGR_DENO` name the launcher (`npx -y bun@1`, `npx -y deno@2`) when the tool is not on the PATH."
+      },
+      {
+        "start_line": 136,
+        "end_line": 139,
+        "quote": "## Release (W21)\n\nPublish the eight platform packages first and `hugr-omni` last: Deno reads the packument of every optional dependency\nand fails on one that does not exist yet."
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/npm/pack.mjs",
+    "git_blob_sha": "a186429e88017fbd881a702669fa73083620024a",
+    "source_sha256": "e7106238838cad87b862adc8a081b70a9bfe7909a38b23c33b573eee86a6c333",
+    "source_bytes": 11593,
+    "line_count": 197,
+    "disposition": "analyzed",
+    "kind": "build",
+    "purpose": "Stage and pack npm distributions from already-built native binaries with byte-level platform checks.",
+    "behavior": [
+      "Defines eight platform tuples; inspects 64-bit little-endian ELF, Mach-O and PE32+ headers for format/CPU, and ELF interpreter/needed libraries for staticness.",
+      "Requires a static Linux supervisor and the requested addon libc; runtime identity must match runtime/OS/CPU with nonempty version/path.",
+      "Validates exact same-version optionalDependencies and absent main scripts, deletes the requested output directory, stages packages/licenses and uses npm pack.",
+      "Asserts exact tar members, no package scripts and POSIX supervisor execute bits; subsets may be packed but main package still lists all eight platforms."
+    ],
+    "contracts": [
+      "No compilation or publication occurs; CARGO_TARGET_DIR selects source release artifacts.",
+      "The executable-bit check is skipped on a Windows host."
+    ],
+    "dependencies": [
+      "native/omni/bindings/node/package.json",
+      "native/omni/LICENSE-MIT and LICENSE-APACHE.",
+      "npm and tar."
+    ],
+    "failures_or_limits": [
+      "Header checks establish format/architecture/link declarations, not successful loading; the command destructively recreates its output directory when executed."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 87,
+        "end_line": 115,
+        "quote": "/** Checks the actual shipped bytes, shared by build, pack and clean-install proofs. */\nexport function validateBinaries(id, addon, supervisor) {\n  const p = PLATFORMS[id];\n  assert(p, `unknown platform ${id}`);\n  for (const file of [addon, supervisor]) assert(existsSync(file), `${file} is missing: build it first (npm/README.md)`);\n  const want = { format: FORMAT[p.os], cpu: p.cpu };\n  const lib = inspect(addon);\n  assert.deepEqual({ format: lib.format, cpu: lib.cpu }, want, `${addon} is not a ${id} addon`);\n  const sup = inspect(supervisor);\n  assert.deepEqual({ format: sup.format, cpu: sup.cpu }, want, `${supervisor} is not a ${id} supervisor`);\n  if (p.os === \"linux\") {\n    assert(sup.static, `${supervisor} is dynamically linked: the Linux supervisor is the static musl build`);\n    const musl = lib.needed.filter((n) => /^libc\\.musl-|^ld-musl-|^libc\\.so$/.test(n));\n    const glibc = lib.needed.filter((n) => n === \"libc.so.6\");\n    assert.equal(\n      p.libc === \"musl\" ? musl.length > 0 && glibc.length === 0 : glibc.length > 0 && musl.length === 0,\n      true,\n      `${addon} is not a ${p.libc} addon: it needs ${JSON.stringify(lib.needed)}${p.libc === \"musl\" ? \" (build it with RUSTFLAGS=\\\"-C target-feature=-crt-static\\\")\" : \"\"}`,\n    );\n  }\n  return { addon: lib, supervisor: sup };\n}\n\nexport function validateRuntimeIdentity(identity, runtime, id) {\n  assert(PLATFORMS[id], `unknown platform ${id}`);\n  assert.equal(identity.runtime, runtime, `launcher did not execute ${runtime}`);\n  assert.equal(identity.os, PLATFORMS[id].os, `${runtime}: wrong runtime OS for ${id}`);\n  assert.equal(identity.cpu, PLATFORMS[id].cpu, `${runtime}: wrong runtime CPU for ${id}`);\n  assert(identity.version && identity.execPath, `${runtime}: empty runtime identity`);"
+      },
+      {
+        "start_line": 128,
+        "end_line": 158,
+        "quote": "// The main package: static optionalDependencies, exactly the eight platform packages at its own version, no scripts.\nconst main = JSON.parse(readFileSync(join(nodeDir, \"package.json\"), \"utf8\"));\nassert.equal(main.scripts, undefined, \"the main package has no scripts (no lifecycle script, ever)\");\nassert.deepEqual(\n  main.optionalDependencies,\n  Object.fromEntries(Object.keys(PLATFORMS).map((id) => [`hugr-omni-${id}`, main.version])),\n  `package.json: optionalDependencies must be the ${Object.keys(PLATFORMS).length} platform packages, each at version ${main.version}`,\n);\n\nrmSync(out, { recursive: true, force: true });\nmkdirSync(join(out, \"tarballs\"), { recursive: true });\n\n/** Stages `files` (name in the package -> source) with `json` as its package.json, packs it, and checks the tarball. */\nfunction pack(json, files, supervisor) {\n  const dir = join(out, \"stage\", json.name);\n  mkdirSync(dir, { recursive: true });\n  for (const [name, from] of Object.entries(files)) copyFileSync(from, join(dir, name));\n  if (supervisor) chmodSync(join(dir, supervisor), 0o755);\n  writeFileSync(join(dir, \"package.json\"), `${JSON.stringify(json, null, 2)}\\n`);\n  npm([\"pack\", \"--silent\", \"--pack-destination\", \"../../tarballs\"], dir);\n\n  // The tarball as it is: exactly these files, the supervisor executable, no scripts. (`tar` runs next to it: GNU tar\n  // reads `C:\\...` as a remote host.)\n  const tgz = `${json.name}-${json.version}.tgz`;\n  const tar = (...args) => execFileSync(\"tar\", args, { cwd: join(out, \"tarballs\"), encoding: \"utf8\" });\n  const listing = tar(\"-tvzf\", tgz).trim().split(\"\\n\").map((l) => l.split(/\\s+/));\n  assert.deepEqual(listing.map((l) => l.at(-1)).sort(), [\"package.json\", ...Object.keys(files)].map((n) => `package/${n}`).sort(), `${tgz}: unexpected contents`);\n  if (supervisor && process.platform !== \"win32\") {\n    assert(listing.find((l) => l.at(-1) === `package/${supervisor}`)[0].startsWith(\"-rwx\"), `${supervisor} lost its execute bit in ${tgz}`);\n  }\n  assert.equal(JSON.parse(tar(\"-xzOf\", tgz, \"package/package.json\")).scripts, undefined, `${tgz} has scripts`);"
+      },
+      {
+        "start_line": 162,
+        "end_line": 196,
+        "quote": "for (const id of ids) {\n  const p = PLATFORMS[id];\n  const exe = `hugr-omni-supervisor${p.os === \"win32\" ? \".exe\" : \"\"}`;\n  const addon = join(target, p.addon, \"release\", p.lib);\n  const supervisor = join(target, p.supervisor, \"release\", exe);\n  console.log(`binary proof ${id}: ${JSON.stringify(validateBinaries(id, addon, supervisor))}`);\n\n  pack(\n    {\n      name: `hugr-omni-${id}`,\n      version: main.version,\n      description: `The native addon and the supervisor of hugr-omni for ${id}. Install hugr-omni, not this package.`,\n      license: main.license,\n      repository: main.repository,\n      homepage: main.homepage,\n      bugs: main.bugs,\n      os: [p.os],\n      cpu: [p.cpu],\n      ...(p.libc && { libc: [p.libc] }),\n      main: \"hugr-omni.node\",\n      files: [\"hugr-omni.node\", exe, ...Object.keys(licenses)],\n      engines: main.engines,\n    },\n    { \"hugr-omni.node\": addon, [exe]: supervisor, ...licenses },\n    exe,\n  );\n}\n\n// The main package is bindings/node/package.json plus the licenses (npm itself adds a README, once W18 writes one).\nconst readme = join(nodeDir, \"README.md\");\npack({ ...main, files: [...main.files, ...Object.keys(licenses)] }, {\n  ...Object.fromEntries(main.files.map((f) => [f, join(nodeDir, f)])),\n  ...licenses,\n  ...(existsSync(readme) && { \"README.md\": readme }),\n});"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/npm/verify.mjs",
+    "git_blob_sha": "ea9f40fce52aa33c3a5a4c7d96946e2f8aae056e",
+    "source_sha256": "93d6921ca3ae1b4155fea4ec5b3179cb7328cd0a4bb28138ec6115f6febe9abf",
+    "source_bytes": 16595,
+    "line_count": 249,
+    "disposition": "analyzed",
+    "kind": "build",
+    "purpose": "Prove clean package-manager installation and quickstart execution against packed tarballs.",
+    "behavior": [
+      "Starts a read-only localhost registry, builds an empty project/git repo, clears addon/supervisor/target overrides and uses clean manager caches.",
+      "Selects native OS/CPU/libc, refuses Deno on musl, verifies actual runtime identity/binary CPU, and specifically checks musl Bun linkage.",
+      "Validates installed binary pair and Windows eager/delay imports with KERNEL32 positive control and no vcruntime/msvcp; requires script-free package manifests and compilation-free install logs.",
+      "Runs the original quickstart (TypeScript-lowered for Node), checks successful output/inventory, creates binary/tarball hash proof JSON and probes loader errors on Node."
+    ],
+    "contracts": [
+      "Install and quickstart have 30-second bounds; launcher resolution has a separate 120-second bound.",
+      "Bun/Deno may install a same-CPU alternate-libc stub; that exception is deliberate, and the loader must choose the correct addon."
+    ],
+    "dependencies": [
+      "pack.mjs validators, quickstart.ts, npm/Bun/Deno, tar, Git and TypeScript."
+    ],
+    "failures_or_limits": [
+      "Only three named checkout-related environment variables are removed despite the broad header wording; no proof was executed."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 62,
+        "end_line": 75,
+        "quote": "// A package that only its `libc` keeps off this machine (the other libc's package, same os and cpu) gets a stub tarball\n// (its package.json, no addon): Bun and Deno do not read `libc` (measured: bun 1.x, deno 2.x) and install it, as they\n// will install the published one. npm must skip it; under Bun and Deno the loader must still pick this machine's package\n// (the stub has no addon, and the decoy below would fail the quickstart).\nconst libcOnly = absent.filter((other) => PLATFORMS[other].os === process.platform && PLATFORMS[other].cpu === process.arch);\nfor (const other of libcOnly) {\n  const { os, cpu, libc: lib } = PLATFORMS[other];\n  const dir = join(tmp, \"stubs\", other);\n  mkdirSync(join(dir, \"package\"), { recursive: true });\n  const json = { name: `hugr-omni-${other}`, version, os: [os], cpu: [cpu], libc: [lib], main: \"hugr-omni.node\" };\n  writeFileSync(join(dir, \"package\", \"package.json\"), JSON.stringify(json));\n  execFileSync(\"tar\", [\"-czf\", \"stub.tgz\", \"package\"], { cwd: dir });\n  entries.push({ file: join(dir, \"stub.tgz\"), json });\n}"
+      },
+      {
+        "start_line": 116,
+        "end_line": 123,
+        "quote": "// Nothing that points at a checkout; a clean cache for the package manager under test.\nconst env = { ...process.env };\nfor (const v of [\"HUGR_OMNI_ADDON\", \"HUGR_OMNI_SUPERVISOR\", \"CARGO_TARGET_DIR\"]) delete env[v];\nconst sh = promisify(exec);\nasync function timed(command, extraEnv) {\n  const start = performance.now();\n  const { stdout, stderr } = await sh(command, { cwd: project, env: { ...env, ...extraEnv }, timeout: 30_000, killSignal: \"SIGKILL\" });\n  return { out: stdout + stderr, seconds: (performance.now() - start) / 1000 };"
+      },
+      {
+        "start_line": 182,
+        "end_line": 206,
+        "quote": "  // Installed: the main package and only this platform's, no lifecycle script, nothing compiled, supervisor next to the addon.\n  const main = createRequire(join(project, \"package.json\")).resolve(\"hugr-omni\");\n  const addon = createRequire(main).resolve(`hugr-omni-${id}`);\n  for (const other of Object.keys(PLATFORMS).filter((o) => o !== id)) {\n    if (runtime !== \"node\" && libcOnly.includes(other)) continue; // declared: Bun and Deno do not read `libc`\n    assert.throws(() => createRequire(main).resolve(`hugr-omni-${other}/package.json`), `hugr-omni-${other} must not be installed on ${id}`);\n  }\n  const supervisor = join(dirname(addon), process.platform === \"win32\" ? \"hugr-omni-supervisor.exe\" : \"hugr-omni-supervisor\");\n  assert(existsSync(supervisor), \"the supervisor is not next to the addon\");\n  const binaries = validateBinaries(id, addon, supervisor);\n  const crtImports = {};\n  if (process.platform === \"win32\") {\n    // H5 (x64 and arm64): built with a static C runtime, so no Visual C++ Redistributable is needed. KERNEL32 is the\n    // positive control: an import table read as empty would otherwise pass.\n    for (const file of [addon, supervisor]) {\n      const dlls = peImports(readFileSync(file));\n      assert(dlls.some((d) => /^kernel32\\.dll$/i.test(d)), `${file}: its import table reads ${JSON.stringify(dlls)}, without KERNEL32.dll`);\n      const crt = dlls.filter((d) => /^(vcruntime|msvcp)/i.test(d));\n      assert.deepEqual(crt, [], `${file} needs the Visual C++ runtime (${crt.join(\", \")}): build it with +crt-static (.cargo/config.toml)`);\n      crtImports[file === addon ? \"addon\" : \"supervisor\"] = dlls;\n    }\n  }\n  for (const dir of [dirname(main), dirname(addon)]) assert.equal(JSON.parse(readFileSync(join(dir, \"package.json\"), \"utf8\")).scripts, undefined, `${dir} has scripts`);\n  assert.match(installed.out, /hugr-omni/, \"the install log is empty: the check below would pass on nothing\");\n  assert.doesNotMatch(installed.out, /node-gyp|gyp ERR|cargo (build|install)|rustc|maturin/i, \"the install compiled something\");"
+      },
+      {
+        "start_line": 218,
+        "end_line": 244,
+        "quote": "  // The platform package comes before a Cargo build: a decoy build where the loader would look (<project>/target) must not matter.\n  mkdirSync(join(project, \"target\", \"debug\"), { recursive: true });\n  writeFileSync(join(project, \"target\", \"debug\", { darwin: \"libhugr_omni_node.dylib\", win32: \"hugr_omni_node.dll\" }[process.platform] ?? \"libhugr_omni_node.so\"), \"not a library\");\n  const hello = await timed(run);\n  assert.match(hello.out, /^true /, \"run() of the quickstart did not succeed\");\n  assert.match(hello.out, /parentPid/, \"processes() of the quickstart listed nothing\");\n  console.log(`K9 ok  ${runtime}  ${id}  install ${installed.seconds.toFixed(1)} s  quickstart ${hello.seconds.toFixed(1)} s`);\n  const proofs = resolve(tarballs, \"..\", \"proofs\");\n  mkdirSync(proofs, { recursive: true });\n  writeFileSync(join(proofs, `${id}-${runtime}.json`), JSON.stringify({\n    id, identity, runtimeBinary, binaries, crtImports,\n    sha256: Object.fromEntries([[\"hugr_omni.node\", addon], [process.platform === \"win32\" ? \"hugr-omni-supervisor.exe\" : \"hugr-omni-supervisor\", supervisor]].map(([name, file]) => [name, createHash(\"sha256\").update(readFileSync(file)).digest(\"hex\")])),\n    tarballs: entries.filter((e) => names.includes(e.json.name)).map((e) => ({ name: e.json.name, sha256: createHash(\"sha256\").update(readFileSync(e.file)).digest(\"hex\") })),\n    installSeconds: installed.seconds, quickstartSeconds: hello.seconds, quickstart: hello.out,\n  }, null, 2));\n\n  if (runtime === \"node\") {\n    // The loader's messages, from the package alone (no platform package, no checkout): unsupported, and not installed.\n    const alone = join(tmp, \"alone\");\n    cpSync(dirname(main), join(alone, \"node_modules\", \"hugr-omni\"), { recursive: true });\n    // The addon loads at the first use (WP-H), so the probe uses it: spawn() throws the loader's message.\n    writeFileSync(join(alone, \"probe.cjs\"), `if (process.argv[2]) Object.defineProperty(process, \"platform\", { value: process.argv[2] });\\ntry { require(\"hugr-omni\").spawn(\"x\"); console.log(\"LOADED\"); } catch (e) { console.log(e.message); }\\n`);\n    const probe = (...args) => execFileSync(process.execPath, [\"probe.cjs\", ...args], { cwd: alone, env, encoding: \"utf8\" });\n    const unsupported = probe(\"freebsd\");\n    for (const supported of Object.keys(PLATFORMS)) assert(unsupported.includes(supported), `the unsupported-platform message does not list ${supported}: ${unsupported}`);\n    assert(unsupported.includes(`freebsd-${process.arch}`), `the unsupported-platform message does not name the platform: ${unsupported}`);\n    assert.match(probe(), new RegExp(`hugr-omni-${id} .* is not installed`), \"the missing-package message does not name the package\");"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/scripts/artifacts.node-smoke.mjs",
+    "git_blob_sha": "d4d70894b77157d67172eed6a837e129892a3242",
+    "source_sha256": "28ceca6fbef54ef1bf1301a05d55ca90bd90f21d466b8947da40a85bbf6c9270",
+    "source_bytes": 6121,
+    "line_count": 110,
+    "disposition": "analyzed",
+    "kind": "test",
+    "purpose": "Exercise artifact and runtime-identity checks with malformed fixtures and optional mutations of real outputs.",
+    "behavior": [
+      "Checks platform tuples against exact optionalDependencies.",
+      "Synthesizes empty/unknown/truncated/wrong-CPU binaries, requires missing artifacts and empty Cargo target directories to fail, and rejects wrong runtime/OS/CPU identities.",
+      "Subprocess checks ensure existing-musl-guest flags reject invalid values and non-musl targets before any Cargo command.",
+      "Only with HUGR_PROOF_REAL=true mutates actual shipped addon/supervisor CPU headers and an empty artifact after first accepting originals."
+    ],
+    "contracts": [
+      "Real-byte probes require HUGR_PROOF_ID and optional artifact-root override.",
+      "Synthetic Mach-O headers test validation branches, not runnable programs."
+    ],
+    "dependencies": [
+      "native/omni/bindings/node/npm/pack.mjs",
+      "native/omni/scripts/build-artifacts.mjs"
+    ],
+    "failures_or_limits": [
+      "Real mutation coverage is conditional; neither fixture controls nor real probes ran here."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 23,
+        "end_line": 44,
+        "quote": "test(\"empty, truncated, unknown and wrong-CPU artifact inputs fail closed\", () => {\n  const tmp = mkdtempSync(join(tmpdir(), \"omni-artifact-control-\"));\n  try {\n    const addon = join(tmp, \"addon.node\");\n    const sup = join(tmp, \"supervisor\");\n    writeFileSync(addon, Buffer.alloc(0));\n    assert.throws(() => inspect(addon), /empty or truncated binary/);\n    writeFileSync(addon, Buffer.alloc(64));\n    assert.throws(() => inspect(addon), /unknown binary format/);\n    assert.throws(() => validateBinaries(\"darwin-arm64\", addon, sup), /supervisor is missing/);\n    const macho = Buffer.alloc(64);\n    macho.writeUInt32LE(0xfeedfacf, 0);\n    macho.writeUInt32LE(0x0100000c, 4);\n    writeFileSync(addon, macho);\n    writeFileSync(sup, macho);\n    assert.equal(validateBinaries(\"darwin-arm64\", addon, sup).addon.cpu, \"arm64\");\n    macho.writeUInt32LE(0x01000007, 4);\n    writeFileSync(addon, macho);\n    assert.throws(() => validateBinaries(\"darwin-arm64\", addon, sup), /not a darwin-arm64 addon/);\n    writeFileSync(addon, readFileSync(sup));\n    writeFileSync(sup, macho);\n    assert.throws(() => validateBinaries(\"darwin-arm64\", addon, sup), /not a darwin-arm64 supervisor/);"
+      },
+      {
+        "start_line": 63,
+        "end_line": 83,
+        "quote": "test(\"runtime identity rejects emulated CPU, wrong OS and wrong launcher\", () => {\n  const identity = { runtime: \"bun\", os: \"win32\", cpu: \"arm64\", version: \"1.4.2\", execPath: \"bun.exe\" };\n  validateRuntimeIdentity(identity, \"bun\", \"win32-arm64-msvc\");\n  assert.throws(() => validateRuntimeIdentity({ ...identity, cpu: \"x64\" }, \"bun\", \"win32-arm64-msvc\"), /wrong runtime CPU/);\n  assert.throws(() => validateRuntimeIdentity({ ...identity, os: \"linux\" }, \"bun\", \"win32-arm64-msvc\"), /wrong runtime OS/);\n  assert.throws(() => validateRuntimeIdentity({ ...identity, runtime: \"node\" }, \"bun\", \"win32-arm64-msvc\"), /launcher did not execute bun/);\n  assert.throws(() => validateRuntimeIdentity({ ...identity, version: \"\" }, \"bun\", \"win32-arm64-msvc\"), /empty runtime identity/);\n});\n\ntest(\"existing-musl-guest build refuses unknown flag and non-musl target before Cargo\", () => {\n  const id = process.platform === \"linux\" ? `linux-${process.arch}-gnu` :\n    process.platform === \"darwin\" ? `darwin-${process.arch}` : `win32-${process.arch}-msvc`;\n  for (const [flag, diagnostic] of [[\"yes\", \"must be 1 or unset\"], [\"1\", \"existing guest mode requires a musl target\"]]) {\n    const result = spawnSync(process.execPath, [join(root, \"scripts/build-artifacts.mjs\"), id], {\n      cwd: root, encoding: \"utf8\", env: { ...process.env, HUGR_BUILD_EXISTING_MUSL_GUEST: flag },\n    });\n    assert.notEqual(result.status, 0);\n    assert(result.stderr.includes(diagnostic), result.stderr);\n    assert(!result.stdout.includes(\"$ cargo\"));\n  }\n});"
+      },
+      {
+        "start_line": 85,
+        "end_line": 106,
+        "quote": "if (process.env.HUGR_PROOF_REAL === \"true\") test(\"real shipped binaries pass; empty and wrong architecture mutations go red\", () => {\n  const id = process.env.HUGR_PROOF_ID;\n  assert(PLATFORMS[id], \"HUGR_PROOF_ID must name the built target\");\n  const artifacts = process.env.HUGR_PROOF_ARTIFACTS ?? join(root, \"dist/omni\");\n  const addon = join(artifacts, id, \"hugr_omni.node\");\n  const supervisor = join(artifacts, id, `hugr-omni-supervisor${PLATFORMS[id].os === \"win32\" ? \".exe\" : \"\"}`);\n  const tmp = mkdtempSync(join(tmpdir(), \"omni-real-mutation-\"));\n  try {\n    validateBinaries(id, addon, supervisor);\n    const broken = join(tmp, \"mutant\");\n    writeFileSync(broken, Buffer.alloc(0));\n    assert.throws(() => validateBinaries(id, broken, supervisor), /empty or truncated binary/);\n    for (const file of [addon, supervisor]) {\n      const bytes = readFileSync(file);\n      const format = inspect(file).format;\n      if (format === \"elf\") bytes.writeUInt16LE(PLATFORMS[id].cpu === \"x64\" ? 183 : 62, 18);\n      if (format === \"macho\") bytes.writeUInt32LE(PLATFORMS[id].cpu === \"x64\" ? 0x0100000c : 0x01000007, 4);\n      if (format === \"pe\") bytes.writeUInt16LE(PLATFORMS[id].cpu === \"x64\" ? 0xaa64 : 0x8664, bytes.readUInt32LE(0x3c) + 4);\n      writeFileSync(broken, bytes);\n      assert.throws(() => validateBinaries(id, file === addon ? broken : addon, file === supervisor ? broken : supervisor), new RegExp(`not a ${id} ${file === addon ? \"addon\" : \"supervisor\"}`));\n    }\n    console.log(`mutation proof ${id}: empty artifact, addon CPU and supervisor CPU rejected; original bytes accepted`);"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/scripts/brief.py",
+    "git_blob_sha": "44ea40dcdf7e571a48668e577efc8f2b6e07023e",
+    "source_sha256": "63d5e010c81a683c8fdf6fc3e3d91b43bde1cd1801417ee25c5f80f09e73a0b3",
+    "source_bytes": 3575,
+    "line_count": 63,
+    "disposition": "analyzed",
+    "kind": "build",
+    "purpose": "Generate a work-package dispatch brief from the current plan card and acceptance rows.",
+    "behavior": [
+      "Requires WP and baseline plus optional notes file; extracts a matching fourth-level PLAN heading and fails if absent.",
+      "Selects acceptance-table lines naming that WP and prints them with the card and notes.",
+      "Printed guidance fixes baseline ancestry, local work-package commits, reading order, ownership/seam constraints, gates and an exact RETURN format."
+    ],
+    "contracts": [
+      "The script prints instructions only; it does not checkout, build, test or push.",
+      "Source text must keep the expected PLAN heading and acceptance row shapes."
+    ],
+    "dependencies": [
+      "native/omni/PLAN.md",
+      "native/omni/docs/acceptance.md"
+    ],
+    "failures_or_limits": [
+      "Printed workflow is historical project guidance and does not override this analysis session's authorization; no brief command was executed."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 16,
+        "end_line": 28,
+        "quote": "def main() -> None:\n    if len(sys.argv) not in (3, 4):\n        sys.exit(__doc__)\n    wp, base = sys.argv[1], sys.argv[2]\n    notes = pathlib.Path(sys.argv[3]).read_text() if len(sys.argv) == 4 else \"\"\n    plan = (ROOT / \"PLAN.md\").read_text()\n    m = re.search(rf\"^#### {re.escape(wp)} · .*?(?=^#### |^### |\\Z)\", plan, re.S | re.M)\n    if not m:\n        sys.exit(f\"brief: card {wp} not found in PLAN.md\")\n    card = m.group(0).strip()\n    acc = (ROOT / \"docs/acceptance.md\").read_text()\n    items = [l for l in acc.splitlines() if l.startswith(\"| \") and re.search(rf\"\\| {re.escape(wp)}( |/|$)\", l + \" \")]\n    title = card.splitlines()[0].split(\" · \", 1)[1]"
+      },
+      {
+        "start_line": 29,
+        "end_line": 40,
+        "quote": "    print(f\"\"\"WP {wp} — {title}\nSTEP 0  In your worktree run `git fetch -q origin && git switch -c wp/{wp} {base}` FIRST (worktrees may start elsewhere),\n        then `git merge-base --is-ancestor {base} HEAD` (abort if it fails). Echo BASELINE_VERIFIED {base}.\nCOMMIT  locally on wp/{wp}, early and often. Do not push and do not run Docker: the lead pushes, runs the Linux\n        cold gate and starts the Windows CI. Never switch the active gh account or change any global git/gh config.\nREAD    AGENTS.md (binding) · your card below · docs/api-contract.md · docs/adr/0005-supervisor.md · docs/protocol.md ·\n        conformance/SPEC.md · conformance/FIXTURE.md · GUARANTEES.md · the seam files you call or implement.\nCARD    (the axioms an independent Codex review judges you against, field by field):\n{card}\n\nITEMS   (docs/acceptance.md rows you own):\n\"\"\" + (\"\\n\".join(items) if items else \"(none beyond the card's Completude)\") + f\"\"\""
+      },
+      {
+        "start_line": 49,
+        "end_line": 59,
+        "quote": "GATES   python3 scripts/file-size-guard.py · cargo fmt --all -- --check · cargo clippy --workspace --all-targets -- -D warnings ·\n        cargo clippy --workspace --all-targets --target x86_64-pc-windows-msvc -- -D warnings ·\n        cargo build --workspace --bins && cargo test --workspace --no-fail-fast (macOS)\nSTOP    at \"branch wp/{wp} committed locally, green on macOS, waiting for the lead\".\nRETURN  (exactly this):\n  WP {wp} · branch wp/{wp} · head <sha> · worktree <path> · BASELINE_VERIFIED <sha>\n  ITEMS    <id> green [macos|linux|win-compile|win-runtime] ... (or what is red and why)\n  GATES    <cmd> → <last line>\n  PROBES   <the mutations you ran and which test went red>\n  ARQUIVOS <list>\n  ERREI NO BRIEF? <1–3 lines: anything in the brief, card or seams that was wrong or missing>\"\"\")"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/scripts/build-artifacts.mjs",
+    "git_blob_sha": "1943388caead80bf75791e806f1dd44c98a9e27a",
+    "source_sha256": "074d159af8d1a3382f47fe47c061590a8b147b15020881e975ed15123533366a",
+    "source_bytes": 13474,
+    "line_count": 207,
+    "disposition": "analyzed",
+    "kind": "build",
+    "purpose": "Build one native target's addon/supervisor and emit architecture, ABI and source-bound artifact evidence.",
+    "behavior": [
+      "Requires requested OS and CPU to match the running Node process; GNU Linux uses a glibc-2.17 Zig addon plus musl supervisor, Alpine builds static supervisor/dynamic addon, and macOS/Windows build natively.",
+      "Checks highest GLIBC symbol exactly 2.17, musl DT_NEEDED, Windows CRT imports and final binary pair, then copies files and writes source/tree/binary SHA256 proof.",
+      "Existing-musl-guest mode is only flag 1 and a musl target; it verifies native machine/ELF CPU, actual executable musl dependency, mapped executable libc inode/device, no glibc/gcompat/qemu maps and musl Rust host.",
+      "Optional HUGR_PROOF_HEAD requires exact Git head; guest mode uses --locked Cargo and requires default target directory."
+    ],
+    "contracts": [
+      "Cargo runs from Omni so toolchain/config apply; POSIX supervisor mode is 0755.",
+      "Guest creation, namespaces, cache and teardown remain the caller's responsibility."
+    ],
+    "dependencies": [
+      "pack.mjs validators, rustup/Cargo, Zig, Docker or verified musl guest, objdump/readelf."
+    ],
+    "failures_or_limits": [
+      "Git HEAD/tree hashes do not independently prove a clean worktree; no artifacts were built."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 42,
+        "end_line": 56,
+        "quote": "const args = process.argv.slice(2);\nconst outAt = args.indexOf(\"--out\");\nconst out = resolve(root, outAt >= 0 ? (args.splice(outAt, 2)[1] ?? \"\") : \"dist/omni\");\nassert(outAt < 0 || out !== root, \"--out needs a directory\");\nconst [id, ...extra] = args;\nassert(id && extra.length === 0, `usage: node scripts/build-artifacts.mjs <id> [--out <dir>] (id: one of ${Object.keys(PLATFORMS).join(\", \")})`);\nconst p = BUILDS[id];\nassert(p, `unknown platform ${id} (one of ${Object.keys(PLATFORMS).join(\", \")})`);\nassert.equal(process.platform, PLATFORMS[id].os, `${id} requires its native OS`);\nassert.equal(process.arch, PLATFORMS[id].cpu, `${id} requires its native CPU`);\nassert(process.env.HUGR_BUILD_EXISTING_MUSL_GUEST === undefined || process.env.HUGR_BUILD_EXISTING_MUSL_GUEST === \"1\",\n  \"HUGR_BUILD_EXISTING_MUSL_GUEST must be 1 or unset\");\nassert(!process.env.HUGR_BUILD_EXISTING_MUSL_GUEST || p.build === \"alpine\", \"existing guest mode requires a musl target\");\n// This entry never creates a container. Caller owns its pinned guest, namespaces,\n// writable checkout, toolchain caches and teardown. Flag alone proves no ABI."
+      },
+      {
+        "start_line": 65,
+        "end_line": 74,
+        "quote": "const prefix = read(\"git\", [\"rev-parse\", \"--show-prefix\"]).trim().replace(/\\/$/, \"\");\nconst source = {\n  headSHA: read(\"git\", [\"rev-parse\", \"HEAD\"]).trim(),\n  treeHash: read(\"git\", [\"rev-parse\", \"HEAD^{tree}\"]).trim(),\n  omniTreeHash: read(\"git\", [\"rev-parse\", prefix ? `HEAD:${prefix}` : \"HEAD^{tree}\"]).trim(),\n};\nif (process.env.HUGR_PROOF_HEAD) assert.equal(source.headSHA, process.env.HUGR_PROOF_HEAD, \"checkout is not the current PR head\");\nconsole.log(`source proof ${JSON.stringify(source)}`);\nconst checks = {};\nconst existingGuest = process.env.HUGR_BUILD_EXISTING_MUSL_GUEST === \"1\" ? verifyExistingMuslGuest(id) : undefined;"
+      },
+      {
+        "start_line": 88,
+        "end_line": 118,
+        "quote": "if (p.build === \"zig\") {\n  // glibc Linux: the addon at the glibc 2.17 floor (zig), the supervisor static (musl).\n  run(\"cargo\", [\"zigbuild\", \"--release\", \"-p\", \"hugr-omni-node\", \"--target\", `${p.addon}.2.17`]);\n  run(\"cargo\", [\"build\", \"--release\", \"-p\", \"omni-supervisor\", \"--target\", p.supervisor]);\n  // The highest GLIBC_ version the addon's dynamic symbols need. The positive control is that one is named at all.\n  const versions = read(\"objdump\", [\"-T\", addon]).match(/GLIBC_[0-9.]*/g) ?? [];\n  const floor = versions.map((v) => [v, v.slice(6).split(\".\").map(Number)]).sort(([, a], [, b]) => {\n    for (let i = 0; i < Math.max(a.length, b.length); i++) if ((a[i] ?? 0) !== (b[i] ?? 0)) return (a[i] ?? 0) - (b[i] ?? 0);\n    return 0;\n  }).at(-1)?.[0];\n  assert.equal(floor, \"GLIBC_2.17\", `the addon needs ${floor ?? \"no GLIBC_ version (objdump read nothing)\"}, not the 2.17 floor`);\n  checks.glibcFloor = floor;\n  console.log(`glibc floor proof ${id}: ${floor}`);\n} else if (p.build === \"alpine\") {\n  // musl Linux, natively on Alpine (as napi-rs builds it): the supervisor static (the target's default), the addon a\n  // cdylib that links musl dynamically (-crt-static, set here and not in .cargo/config.toml: it must not reach the\n  // supervisor), so a musl Node or Bun can dlopen it. The container's CPU is the host's. The image writes ./target.\n  assert(target === join(root, \"target\"), \"the alpine build writes ./target: unset CARGO_TARGET_DIR\");\n  if (existingGuest) {\n    checks.existingMuslGuest = existingGuest;\n    run(\"cargo\", [\"build\", \"--locked\", \"--release\", \"-p\", \"omni-supervisor\", \"--target\", p.supervisor]);\n    run(\"cargo\", [\"build\", \"--locked\", \"--release\", \"-p\", \"hugr-omni-node\", \"--target\", p.addon],\n      { RUSTFLAGS: \"-C target-feature=-crt-static\" });\n  } else run(\"docker\", [\"run\", \"--rm\", \"-v\", `${root}:/w`, \"-w\", \"/w\", \"rust:1-alpine\", \"sh\", \"-euc\", `\n    apk add --no-cache gcc musl-dev >/dev/null\n    rustup toolchain install\n    cargo build --release -p omni-supervisor --target ${p.supervisor}\n    RUSTFLAGS=\"-C target-feature=-crt-static\" cargo build --release -p hugr-omni-node --target ${p.addon}`]);\n  const dynamic = read(\"readelf\", [\"-d\", addon]);\n  console.log(dynamic);\n  assert.match(dynamic, /NEEDED.*\\[(libc\\.musl-[^\\]]*|libc\\.so)\\]/, \"the addon does not link musl dynamically\");"
+      },
+      {
+        "start_line": 151,
+        "end_line": 175,
+        "quote": "function verifyExistingMuslGuest(id) {\n  assert.equal(process.platform, \"linux\", \"EXISTING_MUSL_GUEST_LINUX_REQUIRED\");\n  const cpu = PLATFORMS[id].cpu === \"x64\" ? \"x86_64\" : \"aarch64\";\n  assert.equal(machine(), cpu, \"EXISTING_MUSL_GUEST_NATIVE_CPU_MISMATCH\");\n  const runtime = inspect(\"/proc/self/exe\");\n  assert.equal(runtime.format, \"elf\", \"EXISTING_MUSL_GUEST_ELF_REQUIRED\");\n  assert.equal(runtime.cpu, PLATFORMS[id].cpu, \"EXISTING_MUSL_GUEST_ELF_CPU_MISMATCH\");\n  assert(runtime.needed.some((n) => n === `libc.musl-${cpu}.so.1` || n === \"libc.so\") &&\n    !runtime.needed.includes(\"libc.so.6\"), \"EXISTING_MUSL_GUEST_NODE_ABI_MISMATCH\");\n  const maps = readFileSync(\"/proc/self/maps\", \"utf8\").trim().split(\"\\n\").map((line) => {\n    const fields = /^\\S+\\s+([rwxps-]{4})\\s+\\S+\\s+([0-9a-f]+):([0-9a-f]+)\\s+(\\d+)(?:\\s+(.*))?$/.exec(line);\n    assert(fields, \"EXISTING_MUSL_GUEST_MAPS_INVALID\");\n    return { permissions: fields[1], major: parseInt(fields[2], 16), minor: parseInt(fields[3], 16), inode: BigInt(fields[4]), path: fields[5] };\n  });\n  assert(maps.length > 0, \"EXISTING_MUSL_GUEST_MAPS_EMPTY\");\n  assert(!maps.some((m) => m.path && /(?:libc\\.so\\.6|libgcompat|qemu)/.test(m.path)), \"EXISTING_MUSL_GUEST_COMPAT_OR_EMULATION_REFUSED\");\n  const library = realpathSync(`/lib/ld-musl-${cpu}.so.1`);\n  const stat = statSync(library, { bigint: true });\n  const major = Number((stat.dev >> 8n & 0xfffn) | (stat.dev >> 32n & 0xfffff000n));\n  const minor = Number((stat.dev & 0xffn) | (stat.dev >> 12n & 0xffffff00n));\n  assert(maps.some((m) => m.path === library && m.permissions.includes(\"x\") && m.inode === stat.ino && m.major === major && m.minor === minor),\n    \"EXISTING_MUSL_GUEST_LIBC_NOT_LOADED\");\n  const rustHost = read(\"rustc\", [\"-vV\"]).split(\"\\n\").find((line) => line.startsWith(\"host: \"));\n  assert.equal(rustHost, `host: ${cpu}-unknown-linux-musl`, \"EXISTING_MUSL_GUEST_RUST_HOST_MISMATCH\");\n  return { cpu, library, inode: String(stat.ino), device: `${major}:${minor}`, runtime, rustHost };"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/scripts/ci.mjs",
+    "git_blob_sha": "8cdad20d7be0bdafb9a91fe3d1aeb7384ad4f92d",
+    "source_sha256": "935505d36abcb62c8a9bcb8e48d918eeae320b662929175ffa24075f2a1ab675",
+    "source_bytes": 9779,
+    "line_count": 146,
+    "disposition": "analyzed",
+    "kind": "build",
+    "purpose": "Select and execute the fast or release CI step list for each operating system.",
+    "behavior": [
+      "Release activates via --release, RELEASE=1 or CI_COMMIT_TAG beginning v; TEST_FILTER is split on spaces and passed to cargo test.",
+      "Linux alone runs static guards, surface/skill/guarantee checks, TypeScript checks and README checker tests; all OSes build, lint, run Rust, Node contract/idioms/hardening and Bun contract/hardening.",
+      "Release adds Linux musl supervisor checks, Node24/Bun/Deno suites, executable docs/skills, release K4 and clean npm-package proofs.",
+      "Executes selected steps sequentially, reports timings and stops on first nonzero result."
+    ],
+    "contracts": [
+      "Only npx uses a shell on Windows.",
+      "Release packaging hard-codes Linux x64 GNU and Windows x64; macOS derives CPU from rustc host, whereas build-artifacts.mjs supports the complete matrix."
+    ],
+    "dependencies": [
+      "All named scripts and package runtimes; caller must run in Omni directory.",
+      "native/omni/.github/workflows/ci.yml supplies release/filter environment."
+    ],
+    "failures_or_limits": [
+      "Header references old push-to-main/bundle triggers; current workflow trigger definitions are separate. No gate executed."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 16,
+        "end_line": 19,
+        "quote": "const os = { linux: \"linux\", darwin: \"darwin\", win32: \"windows\" }[process.platform];\nconst release = process.argv.includes(\"--release\") || process.env.RELEASE === \"1\" || /^v/.test(process.env.CI_COMMIT_TAG ?? \"\");\nconst target = process.env.CARGO_TARGET_DIR ?? \"target\";\nconst filter = (process.env.TEST_FILTER ?? \"\").split(\" \").filter(Boolean);"
+      },
+      {
+        "start_line": 36,
+        "end_line": 66,
+        "quote": "const steps = [\n  // Static checks: the same on every OS, so only Linux runs them.\n  { name: \"file-size guard\", on: lint, cmd: [\"python3\", \"scripts/file-size-guard.py\"] },\n  { name: \"file-size guard (own tests)\", on: lint, cmd: [\"python3\", \"scripts/test_file_size_guard.py\"] },\n  { name: \"plan sections\", on: lint, cmd: [\"python3\", \"scripts/plan-sections-check.py\"] },\n  { name: \"rustfmt\", on: lint, cmd: [\"cargo\", \"fmt\", \"--all\", \"--\", \"--check\"] },\n  { name: \"surface checks (own tests)\", on: lint, cmd: [\"node\", \"--test\", \"scripts/surface-check/surface.test.mjs\", \"scripts/guarantees-check/check.test.mjs\", \"scripts/skill-check/check.test.mjs\"] },\n  { name: \"surface parity\", on: lint, cmd: [\"node\", \"scripts/surface-check/parity.mjs\"] },\n  { name: \"binding surface\", on: lint, cmd: [\"node\", \"scripts/surface-check/binding.mjs\"] },\n  { name: \"guarantees ledger\", on: lint, cmd: [\"node\", \"scripts/guarantees-check/check.mjs\"] },\n  { name: \"docs blocks (static)\", on: lint, cmd: [\"node\", \"scripts/readme-check/check.mjs\", \"--static\"] },\n  { name: \"skills\", on: lint, cmd: [\"node\", \"scripts/skill-check/check.mjs\"] },\n  { name: \"skill blocks (static)\", on: lint, cmd: () => [\"node\", \"scripts/readme-check/check.mjs\", \"--static\", ...skillDocs()] },\n  { name: \"tsc\", on: lint, cmd: tsc(\"bindings/node/tsconfig.json\") },\n  { name: \"tsc (tests)\", on: lint, cmd: tsc(\"bindings/node/test/tsconfig.json\") },\n  { name: \"clippy\", cmd: [\"cargo\", \"clippy\", \"--workspace\", \"--all-targets\", \"--\", \"-D\", \"warnings\"] },\n\n  // The suite on this OS.\n  { name: \"build\", cmd: [\"cargo\", \"build\", \"--workspace\", \"--bins\"] },\n  { name: \"build addon\", cmd: [\"cargo\", \"build\", \"-p\", \"hugr-omni-node\"] },\n  // The teeth of the docs-block checker. Its run cases need the workspace binaries and the addon built above, and network\n  // once for TypeScript; the lint lane already fetches TypeScript, so Linux only.\n  { name: \"readme-check teeth\", on: lint, cmd: [\"node\", \"--test\", \"scripts/readme-check/check.test.mjs\"] },\n  { name: \"cargo test\", cmd: [\"cargo\", \"test\", \"--workspace\", \"--no-fail-fast\", \"--\", ...filter] },\n  { name: \"TS runner teeth\", cmd: [\"node\", \"bindings/node/test/teeth.mjs\"] },\n  { name: \"TS contract (node 22)\", cmd: [\"node\", \"bindings/node/test/contract.mjs\"] },\n  { name: \"TS idioms (node 22)\", cmd: [\"node\", \"bindings/node/test/idioms.mjs\"] },\n  { name: \"TS hardening (node 22)\", cmd: [\"node\", \"bindings/node/test/hardening.mjs\"] },\n  // Bun runs Orchestra (the TUI's server runs in a Bun Worker): its contract and the WP-H hardening are fast-gate steps.\n  { name: \"TS contract (bun)\", cmd: npx(\"bun@1\", \"bindings/node/test/contract.mjs\") },\n  { name: \"TS hardening (bun)\", cmd: npx(\"bun@1\", \"bindings/node/test/hardening.mjs\") },"
+      },
+      {
+        "start_line": 68,
+        "end_line": 84,
+        "quote": "  // Release only.\n  { name: \"musl supervisor\", on: [\"linux\"], release: true, cmd: [\"cargo\", \"build\", \"--release\", \"-p\", \"omni-supervisor\", \"--target\", \"x86_64-unknown-linux-musl\"] },\n  { name: \"musl supervisor is static\", on: [\"linux\"], release: true, run: () => {\n    const elf = spawnSync(\"readelf\", [\"-l\", join(target, \"x86_64-unknown-linux-musl/release/hugr-omni-supervisor\")], { encoding: \"utf8\" });\n    return elf.status === 0 && !elf.stdout.includes(\"INTERP\") ? null : \"the supervisor is dynamically linked (or readelf failed)\";\n  } },\n  { name: \"supervisor suite (musl)\", on: [\"linux\"], release: true, cmd: [\"cargo\", \"test\", \"-p\", \"omni-supervisor\", \"--no-fail-fast\"],\n    env: () => ({ HUGR_OMNI_SUPERVISOR: join(process.cwd(), target, \"x86_64-unknown-linux-musl/release/hugr-omni-supervisor\") }) },\n  ...[\"contract\", \"idioms\"].flatMap((t) => [\n    { name: `TS ${t} (node 24)`, release: true, cmd: npx(\"node@24\", `bindings/node/test/${t}.mjs`) },\n    ...(t === \"contract\" ? [] : [{ name: `TS ${t} (bun)`, release: true, cmd: npx(\"bun@1\", `bindings/node/test/${t}.mjs`) }]),\n    { name: `TS ${t} (deno)`, release: true, cmd: npx(\"deno@2\", \"run\", \"-A\", `bindings/node/test/${t}.mjs`) },\n  ]),\n  { name: \"docs blocks (run)\", release: true, cmd: [\"node\", \"scripts/readme-check/check.mjs\"] },\n  { name: \"skill blocks (run)\", release: true, cmd: () => [\"node\", \"scripts/readme-check/check.mjs\", ...skillDocs()] },\n  { name: \"K4 (release build)\", release: true, cmd: [\"cargo\", \"build\", \"--release\", \"--workspace\", \"--bins\"] },\n  { name: \"K4\", release: true, cmd: [\"cargo\", \"test\", \"--release\", \"-p\", \"hugr-omni\", \"--no-fail-fast\", \"--\", \"k4\"] },"
+      },
+      {
+        "start_line": 101,
+        "end_line": 112,
+        "quote": "    { name: \"K9 build\", on: [\"linux\"], release: true, cmd: [\"cargo\", \"zigbuild\", \"--release\", \"-p\", \"hugr-omni-node\", \"--target\", `${linux}.2.17`] },\n    { name: \"K9 glibc floor\", on: [\"linux\"], release: true, run: () => {\n      const dump = spawnSync(\"objdump\", [\"-T\", join(target, linux, \"release/libhugr_omni_node.so\")], { encoding: \"utf8\" }).stdout ?? \"\";\n      const top = [...dump.matchAll(/GLIBC_([0-9.]+)/g)].map((m) => m[1]).sort((a, b) => a.localeCompare(b, undefined, { numeric: true })).pop();\n      return top === \"2.17\" ? null : `the addon needs GLIBC_${top}, above the 2.17 floor`;\n    } },\n    { name: \"K9 pack\", on: [\"linux\"], release: true, cmd: [\"node\", \"bindings/node/npm/pack.mjs\", \"dist\", \"linux-x64-gnu\"] },\n    // macOS and Windows: this machine's triple.\n    { name: \"K9 build\", on: [\"darwin\", \"windows\"], release: true, cmd: () => [\"cargo\", \"build\", \"--release\", \"-p\", \"hugr-omni-node\", \"-p\", \"omni-supervisor\", \"--target\", host()] },\n    { name: \"K9 pack\", on: [\"darwin\", \"windows\"], release: true,\n      cmd: () => [\"node\", \"bindings/node/npm/pack.mjs\", \"dist\", { darwin: host().startsWith(\"aarch64\") ? \"darwin-arm64\" : \"darwin-x64\", windows: \"win32-x64-msvc\" }[os]] },\n    ...[\"node\", \"bun\", \"deno\"].map(verify),"
+      },
+      {
+        "start_line": 116,
+        "end_line": 135,
+        "quote": "const plan = steps.filter((s) => (!s.on || s.on.includes(os)) && (!s.release || release));\nconsole.log(`ci: ${plan.length} steps on ${os}${release ? \" (release)\" : \"\"}`);\nconst times = [];\nfor (const s of plan) {\n  console.log(`\\n=== ${s.name}`);\n  const t0 = Date.now();\n  let failure = null;\n  if (s.run) failure = s.run();\n  else {\n    const cmd = typeof s.cmd === \"function\" ? s.cmd() : s.cmd;\n    // npx is a .cmd script on Windows, which Node starts only through a shell; its arguments here have no spaces.\n    const shell = os === \"windows\" && cmd[0] === \"npx\";\n    const r = spawnSync(cmd[0], cmd.slice(1), { stdio: \"inherit\", shell, env: { ...process.env, ...s.env?.() } });\n    if (r.status !== 0) failure = `exit ${r.status ?? r.signal ?? r.error?.message}`;\n  }\n  times.push([s.name, (Date.now() - t0) / 1000]);\n  if (failure) {\n    report();\n    console.error(`\\nci: FAILED at \"${s.name}\": ${failure}`);\n    process.exit(1);"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/scripts/file-size-guard.py",
+    "git_blob_sha": "5c1b41d44a73e0f3bf095efc2cb5d8850e9f604d",
+    "source_sha256": "85f3138572ce570539ddf41df4ed5b1919c70387a04f70b0b5cbfc42d0a5b36b",
+    "source_bytes": 4834,
+    "line_count": 120,
+    "disposition": "analyzed",
+    "kind": "build",
+    "purpose": "Enforce a per-file 400-line limit for all classified tracked Omni code.",
+    "behavior": [
+      "Runs git ls-files -z within the Omni root, so embedding in Orchestra limits scope to that subtree.",
+      "Closed extension/name sets classify code and noncode; extensionless shebang files count as code and unknown kinds fail.",
+      "Counts raw LF-based physical lines, including a nonterminated last line; all sweet/ok/max thresholds equal 400.",
+      "Rejects empty tracked/code populations or failed listing, skips tracked paths deleted from the worktree and reports largest file/counts."
+    ],
+    "contracts": [
+      "Exit 1 means oversized code; exit 2 means broken listing/classification; no exception list exists.",
+      "Only tracked files are inspected, so untracked code is outside this guard until staged."
+    ],
+    "dependencies": [
+      "Git index and filesystem bytes.",
+      "native/omni/scripts/test_file_size_guard.py"
+    ],
+    "failures_or_limits": [
+      "The source's WARN wording is vestigial because all thresholds are equal; the guard was not run."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 24,
+        "end_line": 35,
+        "quote": "# One limit: the ok and warn bands of the old 400/600/650 guard are gone, so they hold nothing.\nSWEET, OK, MAX = 400, 400, 400\n\nCODE_EXT = {\n    \".rs\", \".ts\", \".tsx\", \".mts\", \".cts\", \".js\", \".jsx\", \".mjs\", \".cjs\",\n    \".py\", \".pyi\", \".sh\", \".bash\", \".ps1\",\n}\nNOT_CODE_EXT = {\n    \".md\", \".txt\", \".json\", \".jsonc\", \".yaml\", \".yml\", \".toml\", \".lock\",\n    \".cfg\", \".ini\", \".dockerfile\", \".svg\", \".png\", \".jpg\", \".jpeg\", \".gif\", \".ico\",\n}\nNOT_CODE_NAMES = {\".gitignore\", \".gitattributes\", \".editorconfig\", \".npmignore\", \"LICENSE\"}"
+      },
+      {
+        "start_line": 56,
+        "end_line": 77,
+        "quote": "def count_lines(data: bytes) -> int:\n    if not data:\n        return 0\n    return data.count(b\"\\n\") + (0 if data.endswith(b\"\\n\") else 1)\n\n\ndef main() -> int:\n    # The omni root, not the git top level: inside Orchestra, omni is native/omni and the rest is not ours.\n    root = Path(__file__).resolve().parent.parent\n    try:\n        # Run in the root, `git ls-files` lists only that subtree, with paths relative to it.\n        listing = subprocess.run(\n            [\"git\", \"ls-files\", \"-z\"], cwd=root, check=True, capture_output=True).stdout\n    except (OSError, subprocess.CalledProcessError) as err:\n        print(f\"file-size-guard: BROKEN — could not list tracked files via git ({err}).\")\n        return 2\n\n    paths = [Path(p) for p in listing.decode(\"utf-8\").split(\"\\0\") if p]\n    if not paths:\n        print(\"file-size-guard: BROKEN — `git ls-files` returned no files. Either nothing is \"\n              \"tracked or the listing broke; a guard that checks zero files must not pass.\")\n        return 2"
+      },
+      {
+        "start_line": 79,
+        "end_line": 100,
+        "quote": "    unknown, sizes, skipped = [], [], 0\n    for path in paths:\n        if not (root / path).is_file():\n            continue  # deleted in the working tree but still in the index\n        kind = classify(path, root)\n        if kind == \"unknown\":\n            unknown.append(str(path))\n        elif kind == \"skip\":\n            skipped += 1\n        else:\n            sizes.append((count_lines((root / path).read_bytes()), str(path)))\n\n    if unknown:\n        print(\"file-size-guard: BROKEN — unclassified files (add the extension to CODE_EXT or \"\n              \"NOT_CODE_EXT in scripts/file-size-guard.py):\")\n        for p in unknown:\n            print(f\"  {p}\")\n        return 2\n    if not sizes:\n        print(\"file-size-guard: BROKEN — zero code files found. Either the repo has no code or \"\n              \"the classification broke; refusing to pass vacuously.\")\n        return 2"
+      },
+      {
+        "start_line": 102,
+        "end_line": 116,
+        "quote": "    sizes.sort(reverse=True)\n    fail = [s for s in sizes if s[0] > MAX]\n    warn = [s for s in sizes if OK < s[0] <= MAX]\n    ok = [s for s in sizes if SWEET < s[0] <= OK]\n    sweet = [s for s in sizes if s[0] <= SWEET]\n\n    for n, p in fail:\n        print(f\"FAIL {n:>5}  {p}  (limit {MAX}: split it into modules)\")\n    for n, p in warn:\n        print(f\"WARN {n:>5}  {p}  (tolerated up to {MAX}; plan the split)\")\n    largest_n, largest_p = sizes[0]\n    print(f\"file-size-guard: {len(sizes)} code files checked, {skipped} non-code skipped · \"\n          f\"sweet {len(sweet)} · ok {len(ok)} · warn {len(warn)} · fail {len(fail)} · \"\n          f\"largest {largest_p} ({largest_n})\")\n    return 1 if fail else 0"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/scripts/guarantees-check/check.mjs",
+    "git_blob_sha": "1e3572cfa3e2df1ccaaecd12f0f63efdb4a5ec70",
+    "source_sha256": "9248e4b0e3d3cb8d7e6e119165f002b323ee4cf006bfe49d48511f07aeb024b6",
+    "source_bytes": 11574,
+    "line_count": 197,
+    "disposition": "analyzed",
+    "kind": "build",
+    "purpose": "Check guarantee-table completeness and evidence-link presence without asserting semantic proof.",
+    "behavior": [
+      "Finds exact containment/promise headings and headers, reads every rendered table row, rejects missing/empty inputs and stray rows after table termination.",
+      "Accepts planned, not-applicable dash, declared text or green with URL/run number; expands C-item ranges and rejects ambiguous shorthand.",
+      "Resolves scenario/test-source item mentions, KPI rows, work-package headings and shaped workflow run references; requires every scenario item to appear in promises.",
+      "CLI accepts only optional --root and distinguishes violations (1) from unreadable input (2)."
+    ],
+    "contracts": [
+      "This is an honest-drift link checker; it does not fetch CI runs or judge whether linked tests substantiate a promise.",
+      "Tests evidence is based on item-ID mentions in selected source trees."
+    ],
+    "dependencies": [
+      "GUARANTEES.md, docs/acceptance.md, PLAN.md, conformance/scenarios and binding/core test sources."
+    ],
+    "failures_or_limits": [
+      "A correctly shaped green link is accepted without execution/result verification; no check ran."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 11,
+        "end_line": 22,
+        "quote": "//   Promises table (Item | Linux | macOS | Windows | Evidence), per row:\n//   - each OS cell is `planned`, `–` (not applicable), `declared: <what is declared>`, or `green` with a link to the CI\n//     run (a URL or `run <number>`): a `green` nobody can follow is a promise without evidence (INV-09);\n//   - the Evidence cell is a list (`+` or `,`) of links, each of a kind this check can resolve:\n//       `scenario`/`scenarios`  every C- item of the row has a file conformance/scenarios/<ID>.*.json\n//       `idiom tests`/`runner`  every C- item of the row is named in a test source (TESTS below)\n//       `K<n>`                  the KPI exists in docs/acceptance.md\n//       `W<nn>`                 the work package has a heading in PLAN.md\n//       `<file>.yml run <n>`    a CI run, accepted by its shape: this check does not fetch it\n//     a word it cannot resolve is a failure naming it. The check looks that a link exists, not that it is good.\n//   And the other way round: every scenario file's item is listed by some row.\n//   Containment tiers table: every row has text for each OS (it has no status or evidence column to check)."
+      },
+      {
+        "start_line": 105,
+        "end_line": 106,
+        "quote": "const statusOk = (cell) =>\n  cell === \"planned\" || cell === \"–\" || /^declared: \\S/.test(cell) || (/^green\\b/.test(cell) && /https?:\\/\\/\\S+|\\brun \\d+/.test(cell));"
+      },
+      {
+        "start_line": 148,
+        "end_line": 174,
+        "quote": "    const ids = itemsOf(cells[0]);\n    if (/C-[A-Z]+-\\d\\d(?:\\s*[/,&]\\s*|-)\\d\\d\\b/.test(cells[0])) out.push(`${label}: an item list in shorthand (\\`C-X-01/02\\`, \\`C-X-01-02\\`) is not read; write \\`C-X-01..02\\` or each item in full`);\n    ids.forEach((id) => listed.add(id));\n    [\"Linux\", \"macOS\", \"Windows\"].forEach((os, i) => {\n      if (!statusOk(cells[i + 1])) out.push(`${label}: ${os} status \"${cells[i + 1].slice(0, 40)}\" is none of planned, –, declared: <what>, green (with a run link)`);\n    });\n    const kinds = new Set();\n    const tokens = cells[4].replace(/\\s*\\([^)]*\\)/g, \"\").split(/\\s*[+,]\\s*/).map((t) => t.trim()).filter(Boolean);\n    if (tokens.length === 0) out.push(`${label}: no evidence`);\n    for (const t of tokens) {\n      if (/^scenarios?$/.test(t)) kinds.add(\"scenario\");\n      else if (/^(idiom tests|runner)$/.test(t)) kinds.add(\"tests\");\n      else if (/^K\\d+$/.test(t)) {\n        if (!kpis.has(t)) out.push(`${label}: evidence ${t} is not a KPI of docs/acceptance.md`);\n      } else if (/^W\\d+[a-z]?$/.test(t)) {\n        if (!packages.has(t)) out.push(`${label}: evidence ${t} is not a work package of PLAN.md`);\n      } else if (!/^\\S+\\.yml run \\d+$/.test(t)) out.push(`${label}: evidence \"${t}\" is not a link this check can resolve (scenario, idiom tests, runner, K<n>, W<nn>, <file>.yml run <n>)`);\n    }\n    if (kinds.size > 0 && ids.length === 0) out.push(`${label}: names ${[...kinds].join(\"/\")} evidence but lists no C- item`);\n    for (const id of ids) {\n      const ok = (kinds.has(\"scenario\") && proven.has(id)) || (kinds.has(\"tests\") && named.has(id));\n      if (kinds.size > 0 && !ok) out.push(`${label}: ${id} has no ${[...kinds].map((k) => (k === \"scenario\" ? `scenario file conformance/scenarios/${id}.*.json` : \"test source naming it\")).join(\" and no \")}`);\n    }\n  }\n  for (const [id, files] of proven) {\n    if (!listed.has(id)) out.push(`conformance/scenarios/${files[0]}: proves ${id}, which no row of ${file} lists`);\n  }"
+      },
+      {
+        "start_line": 179,
+        "end_line": 195,
+        "quote": "if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {\n  try {\n    const args = process.argv.slice(2);\n    if (args.length !== 0 && !(args.length === 2 && args[0] === \"--root\" && args[1] !== \"\" && !args[1].startsWith(\"--\"))) {\n      throw new Unreadable(`unknown or incomplete arguments: ${args.join(\" \")} (the only one is --root <dir>)`);\n    }\n    const root = args.length === 2 ? resolve(args[1]) : resolve(dirname(fileURLToPath(import.meta.url)), \"../..\");\n    const { violations, summary } = check(root);\n    if (violations.length > 0) {\n      for (const v of violations) console.error(`guarantees-check: FAIL ${v}`);\n      console.error(`guarantees-check: ${violations.length} violation(s)`);\n      process.exit(1);\n    }\n    console.log(`guarantees-check: OK, ${summary}`);\n  } catch (e) {\n    console.error(`guarantees-check: CANNOT READ ${e instanceof Unreadable ? e.message : (e?.stack ?? e)}`);\n    process.exit(2);"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/scripts/guarantees-check/check.test.mjs",
+    "git_blob_sha": "6583887a485a8607c1d8e218e8f908509271e375",
+    "source_sha256": "261f8fda49c304811079a7adc0ff119952ee0ef017e58759fd8e96783dc4a282",
+    "source_bytes": 8503,
+    "line_count": 169,
+    "disposition": "analyzed",
+    "kind": "test",
+    "purpose": "Assert that the guarantee ledger checker accepts a valid miniature repository and rejects planted drift.",
+    "behavior": [
+      "Creates a temporary clean table/scenario/test/KPI/WP tree, runs the real checker subprocess and checks exact exit code plus diagnostic fragments.",
+      "Mutations cover missing evidence, range members, statuses, green-without-run, unknown KPI/WP, absent named tests and unlisted scenario items.",
+      "Rejects missing/empty inputs with exit 2, malformed/stray/rendered-without-leading-pipe rows, shorthand IDs, non-JSON scenarios and invalid CLI arguments."
+    ],
+    "contracts": [
+      "Clean-tree positive control prevents a checker that fails everything from passing the suite.",
+      "Temporary files are removed through node:test after cleanup."
+    ],
+    "dependencies": [
+      "native/omni/scripts/guarantees-check/check.mjs"
+    ],
+    "failures_or_limits": [
+      "Fixture JSON contents are intentionally empty because this checker validates link presence, not scenario semantics; tests were not run."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 40,
+        "end_line": 49,
+        "quote": "const CLEAN = {\n  \"GUARANTEES.md\": GUARANTEES,\n  \"docs/acceptance.md\": \"## KPIs\\n\\n| ID | Target |\\n|---|---|\\n| K1 orphans | 0 |\\n| K5 output | 0 |\\n\",\n  \"PLAN.md\": \"#### W12w · ConPTY\\n- x\\n\",\n  \"conformance/scenarios/C-RUN-01.result.json\": \"{}\",\n  \"conformance/scenarios/C-IO-01.live.json\": \"{}\",\n  \"conformance/scenarios/C-IO-02.paused.json\": \"{}\",\n  \"crates/hugr-omni/src/process/tests/host.rs\": \"// C-HOST-01 lives here\\n\",\n  \"crates/hugr-omni/tests/contract.rs\": \"//! contract\\n\",\n  \"bindings/node/test/idioms.mjs\": \"// C-TS-01\\n\","
+      },
+      {
+        "start_line": 79,
+        "end_line": 112,
+        "quote": "test(\"the clean tree passes, and a table outside the Promises section is not looked at\", () => {\n  expects(run(), 0, \"OK\");\n});\n\ntest(\"a scenario link with no scenario file fails and names the item\", () => {\n  expects(run(row(\"C-RUN-01 run is complete\", \"C-RUN-02 run is complete\")), 1, \"C-RUN-02 has no scenario file conformance/scenarios/C-RUN-02.*.json\");\n});\n\ntest(\"a range names every item in it\", () => {\n  expects(run(row(\"C-IO-01..02\", \"C-IO-01..03\")), 1, \"C-IO-03 has no scenario file\");\n});\n\ntest(\"a missing or unknown per-OS status fails and names the row and the OS\", () => {\n  expects(run(row(\"| planned | planned | planned | scenario |\", \"| planned | planned |  | scenario |\")), 1, \"C-RUN-01\", \"Windows status\");\n  expects(run(row(\"| planned | planned | planned | scenario |\", \"| maybe | planned | planned | scenario |\")), 1, \"Linux status \\\"maybe\\\"\");\n});\n\ntest(\"green needs a link to the run\", () => {\n  expects(run(row(\"green (https://ci.example/run/1)\", \"green\")), 1, \"Windows status \\\"green\\\"\");\n  expects(run(row(\"green (https://ci.example/run/1)\", \"green, run 9\")), 0);\n});\n\ntest(\"an evidence word the check cannot resolve fails and names it\", () => {\n  expects(run(row(\"| scenario |\", \"| trust me |\")), 1, 'evidence \"trust me\"');\n  expects(run(row(\"| scenario |\", \"|  |\")), 1, \"no evidence\");\n});\n\ntest(\"a KPI or work package that does not exist fails and names it\", () => {\n  expects(run(row(\"scenarios + K5\", \"scenarios + K99\")), 1, \"K99 is not a KPI\");\n  expects(run(row(\"W12w,\", \"W99,\")), 1, \"W99 is not a work package\");\n});\n\ntest(\"an idiom-test link needs a test source that names the item\", () => {\n  expects(run({ \"crates/hugr-omni/src/process/tests/host.rs\": \"// nothing\\n\" }), 1, \"C-HOST-01 has no test source naming it\");"
+      },
+      {
+        "start_line": 128,
+        "end_line": 169,
+        "quote": "test(\"an input that cannot be read exits 2 and names it\", () => {\n  expects(run({ \"GUARANTEES.md\": null }), 2, \"GUARANTEES.md\");\n  expects(run({ \"GUARANTEES.md\": (t) => t.replace(\"## Promises\", \"## Promised\") }), 2, '\"## Promises\" section is missing');\n  expects(run(row(\"| Item | Linux | macOS | Windows | Evidence |\", \"| Item | Linux | macOS | Windows |\")), 2, \"header under\");\n  expects(run({ \"GUARANTEES.md\": (t) => t.slice(0, t.indexOf(\"| C-RUN-01\")) }), 2, \"EMPTY\");\n  expects(run({ \"docs/acceptance.md\": \"no kpis\\n\" }), 2, \"KPI\");\n  expects(run({ \"PLAN.md\": \"nothing\\n\" }), 2, \"PLAN.md\");\n  expects(run({ \"conformance/scenarios/C-RUN-01.result.json\": null, \"conformance/scenarios/C-IO-01.live.json\": null, \"conformance/scenarios/C-IO-02.paused.json\": null }), 2, \"conformance/scenarios\");\n  expects(run({ \"bindings/node/test/idioms.mjs\": null, \"crates/hugr-omni/tests/contract.rs\": null }), 2, \"crates/hugr-omni/tests\");\n});\n\ntest(\"a row after a blank line is not silently dropped, in either table\", () => {\n  expects(run({ \"GUARANTEES.md\": (t) => `${t}\\nSome prose.\\n\\n| C-RUN-02 stray | planned | planned | planned | scenario |\\n` }), 1, \"GUARANTEES.md:\", \"after the table ended\");\n  expects(run(row(\"| Kill unit | the session | the session | the Job |\\n\", \"| Kill unit | the session | the session | the Job |\\n\\n| Extra | a | b | c |\\n\")), 1, \"after the table ended\");\n});\n\ntest(\"a row GFM renders is checked like any other, with no leading pipe or with a space before it\", () => {\n  const append = (line) => ({ \"GUARANTEES.md\": (t) => `${t}${line}\\n` });\n  expects(run(append(\"C-PROC-02 nothing escapes | green | green | green | trust me\")), 1, 'Linux status \"green\"', 'evidence \"trust me\"');\n  expects(run(append(\"  | C-PROC-02 nothing escapes | green | green | green | trust me |\")), 1, 'evidence \"trust me\"');\n  expects(run(append(\"Some prose right under the table.\")), 1, \"has 1 cells, the header has 5\");\n  expects(run(append(\"C-IO-01 fine without pipes | planned | planned | planned | scenario\")), 0);\n});\n\ntest(\"an item list in shorthand is refused: the items it hides would go unchecked\", () => {\n  expects(run(row(\"C-IO-01..02 output\", \"C-IO-01/02 output\")), 1, \"shorthand\");\n  expects(run(row(\"C-IO-01..02 output\", \"C-IO-01-02 output\")), 1, \"shorthand\");\n  expects(run(row(\"C-IO-01..02 output\", \"C-IO-01, 02 output\")), 1, \"shorthand\");\n});\n\ntest(\"a scenario file that is not .json is refused, not ignored\", () => {\n  expects(run({ \"conformance/scenarios/C-RUN-02.extra.yaml\": \"id: x\\n\" }), 1, \"C-RUN-02.extra.yaml\", \"not a .json scenario\");\n});\n\ntest(\"an argument the check does not know, or --root without a directory, exits 2\", () => {\n  const root = tree();\n  for (const args of [[\"--rot\", root], [\"--root\"], [\"--root\", root, \"--extra\"], [root]]) {\n    const r = spawnSync(process.execPath, [script, ...args], { encoding: \"utf8\" });\n    assert.equal(r.status, 2, `${args.join(\" \")}: ${r.stdout}${r.stderr}`);\n    assert.ok(r.stderr.includes(\"unknown or incomplete arguments\"), r.stderr);\n  }\n});"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/scripts/plan-sections-check.py",
+    "git_blob_sha": "43d5eb8d7c2b2387f91232990f1c0bad20e269bf",
+    "source_sha256": "a0a091e2de7e14a356466f0de9341060932d839c2f5b5b6b7e4aa9844de7a1ab",
+    "source_bytes": 1072,
+    "line_count": 32,
+    "disposition": "analyzed",
+    "kind": "build",
+    "purpose": "Check that every fourth-level PLAN card carries the required review dimensions and owner label.",
+    "behavior": [
+      "Reads a named file or PLAN.md, splits on fourth-level headings and refuses zero cards.",
+      "Within each card before the next third-level heading requires bold Completude, Sucesso, Invariantes, Qualidade and DoD labels plus Agente or Quem.",
+      "Prints count and diagnostics, exiting one on missing labels."
+    ],
+    "contracts": [
+      "Checks section markers, not completeness of their prose.",
+      "The trailing comment mentions sandbox-table links, but no corresponding row-link validation is implemented."
+    ],
+    "dependencies": [
+      "native/omni/PLAN.md formatting."
+    ],
+    "failures_or_limits": [
+      "Any fourth-level heading is treated as a card; marker substring presence is sufficient."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 9,
+        "end_line": 25,
+        "quote": "REQUIRED = [\"Completude\", \"Sucesso\", \"Invariantes\", \"Qualidade\", \"DoD\"]\nWHO = re.compile(r\"\\*\\*(Agente|Quem):\\*\\*\")\n\ntext = open(sys.argv[1] if len(sys.argv) > 1 else \"PLAN.md\", encoding=\"utf-8\").read()\ncards = re.split(r\"^#### \", text, flags=re.M)[1:]\nif not cards:\n    sys.exit(\"plan-sections-check: found 0 WP cards — refusing to pass vacuously\")\n\nfailures = []\nfor card in cards:\n    title = card.splitlines()[0].strip()\n    body = card.split(\"\\n### \")[0]\n    missing = [s for s in REQUIRED if f\"**{s}\" not in body]\n    if not WHO.search(body):\n        missing.append(\"Agente/Quem\")\n    if missing:\n        failures.append(f\"{title}: missing {', '.join(missing)}\")"
+      },
+      {
+        "start_line": 27,
+        "end_line": 32,
+        "quote": "# The sandbox table rows are WPs too: each row must point to its card section.\nprint(f\"checked {len(cards)} WP cards\")\nif failures:\n    print(\"\\n\".join(failures))\n    sys.exit(1)\nprint(\"PLAN-01 OK\")"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/scripts/readme-check/blocks.mjs",
+    "git_blob_sha": "06823d41ecbddf4b42783b1fc2994efe1c493a56",
+    "source_sha256": "851472ae6280c0a9d84b6f68d3003c749ddf5f4f91594ff20e455fbd3eeeeeb9",
+    "source_bytes": 9884,
+    "line_count": 157,
+    "disposition": "analyzed",
+    "kind": "build",
+    "purpose": "Extract every supported documentation fence and enforce static executable-example rules.",
+    "behavior": [
+      "Accounts for CommonMark backtick/tilde fences, tracks headings and nearest TOML dependency block, and flags hidden/nested/unclosed fences, indented code and HTML pre.",
+      "Allows only ts/rust/sh/toml/text, only quickstart attributes and at most ten lines per quickstart; root README needs exactly one TS and one Rust quickstart.",
+      "Requires TypeScript before Rust and canonical hugr-omni Git dependency TOML before Rust examples.",
+      "Simple sh lines permit restricted argv characters without shell syntax; only literal install lines under Install in the two READMEs qualify for prerelease nonexecution."
+    ],
+    "contracts": [
+      "isRun selects TS/Rust and nonexempt sh; text/TOML are not executed.",
+      "Scope targets contributor drift, not hostile Markdown evasion."
+    ],
+    "dependencies": [
+      "native/omni/scripts/readme-check/check.mjs and run.mjs.",
+      "Root Cargo repository URL."
+    ],
+    "failures_or_limits": [
+      "Prerelease install exception is explicit and must be removed at release; no examples were executed."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 27,
+        "end_line": 55,
+        "quote": "export const RUNNABLE = new Set([\"ts\", \"rust\"]);\nconst LANGS = new Set([\"ts\", \"rust\", \"sh\", \"toml\", \"text\"]);\nexport const QUICKSTART_LINES = 10;\n/** The only `sh` lines allowed not to run (README.md, under `## Install`) until the release publishes the package. */\nexport const PRE_RELEASE_INSTALL = [\"npm install hugr-omni\", \"bun add hugr-omni\", \"deno add npm:hugr-omni\"];\n\n/** The commands of a `sh` block: each non-blank line without its `# comment`, as `{ line, argv }`; `argv` is null when\n *  the line is not a simple command (it holds a character a shell would interpret). */\nexport function commands(code) {\n  return code\n    .split(\"\\n\")\n    .map((raw) => raw.replace(/(^|\\s)#.*$/, \"\").trim())\n    .filter((line) => line !== \"\")\n    .map((line) => {\n      const argv = line.split(/\\s+/);\n      const simple = /^[A-Za-z0-9_./:@+-]+$/.test(argv[0]) && argv.every((a) => /^[A-Za-z0-9_./:@+=,-]+$/.test(a));\n      return { line, argv: simple ? argv : null };\n    });\n}\n\n/** Is `b` the pre-release install block: README.md or bindings/node/README.md, under `## Install`, with no line but the literal install lines? */\nexport function isPreReleaseInstall(b) {\n  const readme = b.file === \"README.md\" || b.file === \"bindings/node/README.md\";\n  const lines = b.lang === \"sh\" ? commands(b.code) : [];\n  return readme && b.heading === \"Install\" && lines.length > 0 && lines.every((c) => PRE_RELEASE_INSTALL.includes(c.line));\n}\n\n/** The blocks run.mjs runs: `ts`, `rust`, and every `sh` block that is not the pre-release install. */\nexport const isRun = (b) => RUNNABLE.has(b.lang) || (b.lang === \"sh\" && !isPreReleaseInstall(b));"
+      },
+      {
+        "start_line": 98,
+        "end_line": 115,
+        "quote": "  if (open !== null) violations.push(`${file}:${open.line}: the code block is never closed (a fence runs to the end of the document)`);\n  let toml = null;\n  for (const b of blocks) {\n    if (b.lang === \"toml\") toml = b.code;\n    if (b.lang === \"rust\") b.deps = toml;\n  }\n  return { blocks, violations };\n}\n\n/** What is wrong with the `[dependencies]` a `toml` block gives a `rust` block (nothing when it is fine); `repository` is the canonical git URL. */\nfunction dependencyProblems(toml, repository) {\n  const lines = toml.split(\"\\n\").map((l) => l.trim()).filter((l) => l !== \"\" && !l.startsWith(\"#\"));\n  const out = [];\n  if (lines[0] !== \"[dependencies]\") out.push(\"must start with `[dependencies]`\");\n  if (lines.some((l, i) => i > 0 && l.startsWith(\"[\"))) out.push(\"must hold only the `[dependencies]` table\");\n  const dep = /^hugr-omni\\s*=\\s*\\{[^}\\n]*\\bgit\\s*=\\s*\"([^\"\\n]+)\"[^}\\n]*\\}$/m.exec(toml.replace(/^[ \\t]+/gm, \"\"));\n  if (!dep) out.push('must give hugr-omni as one inline table with a git URL: `hugr-omni = { git = \"https://...\" }`');\n  else if (dep[1] !== repository) out.push(`names the git URL ${dep[1]}, not the repository of Cargo.toml (${repository})`);"
+      },
+      {
+        "start_line": 124,
+        "end_line": 154,
+        "quote": "export function validate(blocks, files, readme, repository) {\n  const out = [];\n  for (const b of blocks) {\n    const where = `${b.file}:${b.line}`;\n    if (!LANGS.has(b.lang)) out.push(`${where}: the code block says \"${b.lang}\", not one of ${[...LANGS].join(\", \")}`);\n    for (const a of b.attrs) {\n      if (a !== \"quickstart\") out.push(`${where}: unknown attribute \"${a}\" after the language`);\n      else if (!RUNNABLE.has(b.lang)) out.push(`${where}: only a ts or rust block can be a quickstart`);\n    }\n    if (b.code.trim() === \"\") out.push(`${where}: the code block is empty`);\n    const lines = b.code.split(\"\\n\").length;\n    if (b.attrs.includes(\"quickstart\") && lines > QUICKSTART_LINES) out.push(`${where}: the ${b.lang} quickstart has ${lines} lines; the limit is ${QUICKSTART_LINES}`);\n    if (b.lang === \"rust\") {\n      if (b.deps === null || b.deps === undefined) out.push(`${where}: a rust block needs a toml block before it that gives its [dependencies]`);\n      else for (const problem of dependencyProblems(b.deps, repository)) out.push(`${where}: the toml block before it ${problem}`);\n    }\n    if (b.lang === \"sh\" && !isPreReleaseInstall(b)) {\n      for (const c of commands(b.code)) {\n        if (c.argv === null) out.push(`${where}: \\`${c.line}\\` is not a simple command; a sh block runs one \\`program arg arg\\` per line, with no shell`);\n      }\n    }\n  }\n  for (const file of files) {\n    const first = blocks.find((b) => b.file === file && RUNNABLE.has(b.lang));\n    if (first && first.lang !== \"ts\") out.push(`${file}:${first.line}: the first runnable block is ${first.lang}; the docs lead with TypeScript`);\n    if (file === readme) {\n      for (const lang of [\"ts\", \"rust\"]) {\n        const n = blocks.filter((b) => b.file === file && b.lang === lang && b.attrs.includes(\"quickstart\")).length;\n        if (n !== 1) out.push(`${file}: has ${n} \\`${lang} quickstart\\` blocks; it needs exactly one`);\n      }\n    }"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/scripts/readme-check/check.mjs",
+    "git_blob_sha": "aa839479c29ab604f4ccda6278c345e6300bfbaa",
+    "source_sha256": "242ce05c11f5692f3f12159fa80ad3a84b5a4a8794c971f6d0e34fc0488985f8",
+    "source_bytes": 7649,
+    "line_count": 135,
+    "disposition": "analyzed",
+    "kind": "build",
+    "purpose": "Coordinate static and executable checks over public README and recipe code blocks.",
+    "behavior": [
+      "Defaults to root README, binding README and recursive docs/guide .md; rejects alternative documentation formats, missing/empty guide and zero blocks.",
+      "Strictly parses root/repo/timeout/static flags, validates fences against the workspace repository URL and runs blocks only if static violations are absent.",
+      "Reports runnable counts, text/TOML exclusions and each exact prerelease install line left unexecuted.",
+      "Exit 1 means rule/example failure; exit 2 means bad arguments or unavailable input/tool."
+    ],
+    "contracts": [
+      "--root selects documentation; --repo selects implementation/build dependencies; default per-block timeout is 120 seconds.",
+      "Maintainer READMEs outside default public scope are intentionally excluded."
+    ],
+    "dependencies": [
+      "blocks.mjs and run.mjs.",
+      "native/omni/Cargo.toml",
+      "Native binaries, Node/npm/TypeScript, Rust and Git for runtime mode."
+    ],
+    "failures_or_limits": [
+      "Static success is explicitly reported as no blocks run; this analysis invoked neither mode."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 34,
+        "end_line": 49,
+        "quote": "/** The command line, strictly: an unknown flag, or a flag without its value, is refused instead of ignored. */\nfunction parseArgs(argv) {\n  const opts = { root: here, repo: here, timeoutMs: 120_000, static: false, files: [] };\n  const valued = { \"--root\": \"root\", \"--repo\": \"repo\", \"--timeout-ms\": \"timeoutMs\" };\n  for (let i = 0; i < argv.length; i++) {\n    const a = argv[i];\n    if (a in valued) {\n      const v = argv[++i];\n      if (v === undefined || v.startsWith(\"--\")) throw new Unrunnable(`${a} needs a value`);\n      opts[valued[a]] = a === \"--timeout-ms\" ? Number(v) : resolve(v);\n    } else if (a === \"--static\") opts.static = true;\n    else if (a.startsWith(\"--\")) throw new Unrunnable(`unknown argument ${a} (known: ${[...Object.keys(valued), \"--static\"].join(\", \")})`);\n    else opts.files.push(a);\n  }\n  if (!Number.isFinite(opts.timeoutMs) || opts.timeoutMs <= 0) throw new Unrunnable(\"--timeout-ms must be a positive number\");\n  return opts;"
+      },
+      {
+        "start_line": 86,
+        "end_line": 120,
+        "quote": "function main() {\n  const { root, repo, timeoutMs, files, static: staticOnly } = parseArgs(process.argv.slice(2));\n  const violations = [];\n  let docs = files;\n  if (docs.length === 0) {\n    const guide = guideFiles(root, \"docs/guide\", violations);\n    if (guide.length === 0) throw new Unrunnable(\"docs/guide: no .md file found (the guide came back EMPTY)\");\n    docs = [\"README.md\", \"bindings/node/README.md\", ...guide];\n  }\n  const blocks = [];\n  for (const doc of docs) {\n    let text;\n    try {\n      text = readFileSync(isAbsolute(doc) ? doc : join(root, doc), \"utf8\");\n    } catch (e) {\n      throw new Unrunnable(`${doc}: cannot be read (${e.code ?? e.message})`);\n    }\n    const found = extract(text, doc);\n    blocks.push(...found.blocks);\n    violations.push(...found.violations);\n  }\n  if (blocks.length === 0) throw new Unrunnable(`${docs.join(\", \")}: no code block found (the extraction came back EMPTY)`);\n  violations.push(...validate(blocks, docs, \"README.md\", repositoryUrl(repo)));\n  const toRun = blocks.filter(isRun);\n  const skipped = blocks.filter(isPreReleaseInstall).flatMap((b) => commands(b.code).map((c) => c.line));\n  const executed = violations.length === 0 && !staticOnly;\n  if (executed) {\n    violations.push(...runBlocks(toRun, { repo, timeoutMs, cache: process.env.HUGR_README_CHECK_CACHE ?? join(tmpdir(), \"hugr-omni-readme-check-ts5\") }));\n  }\n  const count = (lang) => toRun.filter((b) => b.lang === lang).length;\n  const ran = executed ? `ts ${count(\"ts\")}, rust ${count(\"rust\")}, sh ${count(\"sh\")}` : \"none (static rules only)\";\n  const text = blocks.filter((b) => b.lang === \"text\").length;\n  const toml = blocks.filter((b) => b.lang === \"toml\").length;\n  const note = `${blocks.length} blocks in ${docs.length} files; ran: ${ran}; not run: text ${text}, toml ${toml} (the rust blocks' dependencies), pre-release install lines ${skipped.length}`;\n  return { violations, note, skipped };"
+      },
+      {
+        "start_line": 123,
+        "end_line": 134,
+        "quote": "try {\n  const { violations, note, skipped } = main();\n  const show = violations.length > 0 ? console.error : console.log;\n  if (violations.length > 0) {\n    for (const v of violations) console.error(`readme-check: FAIL ${v}`);\n    console.error(`readme-check: ${violations.length} failure(s); ${note}`);\n  } else console.log(`readme-check: OK, ${note}`);\n  for (const line of skipped) show(`readme-check: not run (pre-release install): ${line}`);\n  if (violations.length > 0) process.exit(1);\n} catch (e) {\n  console.error(`readme-check: CANNOT RUN ${e instanceof Unrunnable ? e.message : (e?.stack ?? e)}`);\n  process.exit(2);"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/scripts/readme-check/fixture/dev.js",
+    "git_blob_sha": "0b27c8d7c466f181e654178c2b826c84b816f48f",
+    "source_sha256": "ec980f6af924528beb16d12b1b898a14bd984aaa8b8467b59816543339aa21f3",
+    "source_bytes": 519,
+    "line_count": 10,
+    "disposition": "analyzed",
+    "kind": "fixture",
+    "purpose": "Stand in for a development server in executable documentation examples.",
+    "behavior": [
+      "Writes its PID to dev.pid and prints startup plus ready-in-12-ms lines.",
+      "Stays alive through an interval but self-exits after 120 seconds as a leak backstop."
+    ],
+    "contracts": [
+      "The docs runner reads dev.pid to assert the example stopped its server."
+    ],
+    "dependencies": [
+      "native/omni/scripts/readme-check/run.mjs",
+      "native/omni/scripts/readme-check/fixture/package.json"
+    ],
+    "failures_or_limits": [
+      "The displayed 12 ms is a fixed fixture string, not measured startup latency."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 10,
+        "quote": "// A stand-in dev server for the docs' blocks: prints a startup line and `ready`, then stays alive like a real one.\n// It records its pid in dev.pid so the docs runner can prove that a block stopped it; it ends itself after two minutes\n// so a hung run never leaves it behind for good.\nconst { writeFileSync } = require(\"node:fs\");\n\nwriteFileSync(\"dev.pid\", `${process.pid}\\n`);\nconsole.log(\"starting dev server\");\nconsole.log(\"ready in 12 ms\");\nsetTimeout(() => process.exit(0), 120_000);\nsetInterval(() => {}, 1000);"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/scripts/readme-check/fixture/package.json",
+    "git_blob_sha": "f01a0f86e6de3abdad804844eabaac2ee97ce06c",
+    "source_sha256": "6b591c88931a51a6aa0ca0d178e46f2d9f288279fc5887f1b53e90bbd4c45137",
+    "source_bytes": 120,
+    "line_count": 8,
+    "disposition": "analyzed",
+    "kind": "fixture",
+    "purpose": "Give documentation examples reproducible npm development-server and test commands.",
+    "behavior": [
+      "Declares a private fixture-app package.",
+      "Maps dev to node dev.js and test to node test.js."
+    ],
+    "contracts": [
+      "No dependency installation or public package identity is required by this manifest."
+    ],
+    "dependencies": [
+      "native/omni/scripts/readme-check/fixture/dev.js",
+      "native/omni/scripts/readme-check/fixture/test.js"
+    ],
+    "failures_or_limits": [
+      "This fixture validates example flow rather than a real application build."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 8,
+        "quote": "{\n  \"name\": \"fixture-app\",\n  \"private\": true,\n  \"scripts\": {\n    \"dev\": \"node dev.js\",\n    \"test\": \"node test.js\"\n  }\n}"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/scripts/readme-check/fixture/test.js",
+    "git_blob_sha": "20ca01dbc7e6b73a9970f7fc1adb21bf98b2b51d",
+    "source_sha256": "8061493c632750526365cb1e6b608086e92d49fd6b982b725b759931219474cb",
+    "source_bytes": 91,
+    "line_count": 2,
+    "disposition": "analyzed",
+    "kind": "fixture",
+    "purpose": "Provide immediate successful test output for executable documentation recipes.",
+    "behavior": [
+      "Prints the fixed line 3 passed and otherwise completes normally."
+    ],
+    "contracts": [
+      "The line is fixture output, not a real count of repository tests."
+    ],
+    "dependencies": [
+      "native/omni/scripts/readme-check/fixture/package.json invokes it as npm test."
+    ],
+    "failures_or_limits": [
+      "No assertions exist in this stand-in script; no execution occurred here."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 2,
+        "quote": "// A stand-in test suite for the docs' blocks: it passes at once.\nconsole.log(\"3 passed\");"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  }
+]

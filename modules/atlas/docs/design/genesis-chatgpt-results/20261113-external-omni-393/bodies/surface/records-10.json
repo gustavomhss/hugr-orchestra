@@ -1,0 +1,112 @@
+[
+  {
+    "path": "native/omni/docs/research/landscape.md",
+    "git_blob_sha": "cfcf1b71e16a377198104d4995e4a058b5b63cec",
+    "source_sha256": "3bad4ab1409bb0d158cde674ea17c366c5ff1aa074612b589e83b133256b1b13",
+    "source_bytes": 65998,
+    "line_count": 633,
+    "disposition": "analyzed",
+    "kind": "doc",
+    "purpose": "Historical landscape survey used to inform the October 2026 build-versus-adopt decision, not an executed comparison of current packages.",
+    "behavior": [
+      "Scores 22 behaviors with Y=1 and partial=0.5, ranking 32 candidates; its 81.8% processkit/processkit-py headline is a documentation-derived upper bound.",
+      "Treats fewer-than-three-OS support strictly, accepts documented setsid escape limits, and caps batch-argument support at partial.",
+      "The lead’s later spot-check found 12 supported and eight partially supported cells among 20 sampled cells; three Y ratings were overstated."
+    ],
+    "contracts": [
+      "Method explicitly states no candidate was installed or executed; reading a CI workflow does not establish a successful run.",
+      "Combined-library scores take best cells without charging integration costs."
+    ],
+    "dependencies": [
+      "docs/research/processkit-fit.md supplies the subsequent measured 1/24 fit cited by the addendum.",
+      "docs/decisions/G0.md uses the later fit/evaluation evidence to decide whether to adopt processkit."
+    ],
+    "failures_or_limits": [
+      "Uneven README versus implementation inspection and mutable upstream main/HEAD links limit reproducibility.",
+      "The report itself downgrades the headline to an upper bound; historical ranking is not a current ecosystem recommendation."
+    ],
+    "gaps": [
+      "No installation, runtime validation, or independent rerun is available from this document."
+    ],
+    "inference": [],
+    "evidence": [
+      {
+        "start_line": 3,
+        "end_line": 5,
+        "quote": "**Access date:** 2026-10-01 (all repository, registry and documentation facts below were read on this date; no candidate was installed or executed). **Work package:** R1, research only, no code, no architecture proposals.\n\n## Verdict"
+      },
+      {
+        "start_line": 48,
+        "end_line": 59,
+        "quote": "**Cell codes.** Every Y/P cell links to the primary source it rests on (README, official docs, or source file on GitHub).\n\n- **Y** - documented or implemented (source read) for ordinary use on all three OS. Deliberate escapes that the library documents (a descendant that calls `setsid` or joins its own Job) are not held against it.\n- **P** - partial: the behaviour exists but with a named gap, or on all three OS only through caller-side assembly. Each P is explained in the candidate notes (section 6).\n- **N** - not provided, or explicitly refused by the project. **?** - cannot be decided from the primary sources I read (honest unknown, scored 0).\n- **†** after a code (e.g. `Y†`) - the behaviour works on fewer than three OS (Unix-only pexpect, Windows-only pywinpty, POSIX-only process-wrap PTY, zerobox without Windows). **Scored 0 in the strict column**, counted by its base letter in the 'any-OS' column.\n\n**Coverage** = (#Y + 0.5 x #P) / 22, counted only for cells that work on all three OS (strict column). The relaxed 'any-OS' column additionally counts † cells so near-misses are visible. Opt-in features count when documented (execa `killDescendants`). Two ecosystem-wide conventions apply to every candidate: (1) Windows `.cmd/.bat` arguments cannot round-trip exactly through cmd.exe, so B02 is capped at P for any library; (2) macOS has no kernel whole-tree primitive, so process-group tracking is accepted as Y for B11/B13-B15 when the escape (`setsid`) is documented.\n\n**'Tested'.** No candidate code was run. The 'CI on 3 OS' column reports what each repository's own workflow files show (matrix read from the workflow YAML where available); a doc claim is not treated as a test result.\n\n**Combinations** (section 4) take the best strict cell per behaviour across the members. They are an upper bound: they ignore integration friction (for example execa cannot spawn into node-pty, srt wraps a shell command string, and tree-kill logic is not applied to a PTY child). Per-OS libraries (pexpect/ptyprocess on Unix + pywinpty on Windows) are credited at P only, because the caller must switch APIs per OS."
+      },
+      {
+        "start_line": 627,
+        "end_line": 633,
+        "quote": "## Lead verification (2026-10-01)\n\nCodex fact-checked 20 Y/P cells across 11 candidates against their cited sources: **12 supported, 8 partial, 0 unsupported**.\nThree **Y** cells are overstated by their own sources — processkit B11 (kill after the root exited is not explicit),\nprocesskit-py B07 (no evidence that unread output is continuously drained with counted drops) and portable-pty B01\n(PATHEXT search exists, `.cmd` execution semantics do not). The 81.8% headline is therefore an upper bound; the measured\nfit (`processkit-fit.md`: 1 of 24 contract items as-is) is what the G0 used."
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/PLAN.md",
+    "git_blob_sha": "f8a105e63117dfb8a5ad1c911210b3993c34e1ca",
+    "source_sha256": "cd01cdec5108fa10da0b1a5e3e816da5670d0a525c8c2fd4efc250978b0e07c5",
+    "source_bytes": 85875,
+    "line_count": 873,
+    "disposition": "analyzed",
+    "kind": "doc",
+    "purpose": "Historical master plan, work-package ownership map and evolving decision log for Omni’s process-supervisor implementation.",
+    "behavior": [
+      "Defines downward module seams, measurable K1–K11 acceptance goals, read-only independent review, and work cards with separate invariants and completion evidence.",
+      "Records G0’s decision to build a core with TypeScript first, rejecting the early host-owned lifecycle designs in favor of ADR-0005’s external supervisor.",
+      "Its status table and dated appendix preserve prior runs, failures, CI migrations and explicit amendments rather than proving the frozen baseline’s runtime behavior."
+    ],
+    "contracts": [
+      "API-contract is the designated semantic authority; bindings are conversion layers and product tests remain outside implementers’ write sets.",
+      "Historical release cards require publication approval; these recorded procedures grant no present publication authority."
+    ],
+    "dependencies": [
+      "docs/api-contract.md and docs/adr/0005-supervisor.md define the authoritative API and adopted architecture.",
+      "scripts/file-size-guard.py, scripts/review-prompt.py and current workflows must be read to establish present gates."
+    ],
+    "failures_or_limits": [
+      "Older cards retain three-language release goals, five platform packages and 650-line limits despite later scope and tooling changes.",
+      "Review prompt text still uses >600/>650 thresholds; the current guard’s 400-line ceiling supersedes that historical guidance."
+    ],
+    "gaps": [
+      "Historical CI outcomes and mutable status rows are not revalidated in this read-only analysis."
+    ],
+    "inference": [],
+    "evidence": [
+      {
+        "start_line": 94,
+        "end_line": 111,
+        "quote": "| `hugr-omni` · `api/` | superfície pública (`docs/api-contract.md`) | `process`, `io`, `spawn`, `pty`, `error` | W00 (congelado) |\n| `hugr-omni` · `process/` | estado do `Child`: `stop`, `wait`, `processes`, precedência de `reason`, timeout e cancelamento, `run` | `pty`, `client`, `io`, `spawn`, `error`, `types` | W07, W09 |\n| `hugr-omni` · `pty/` | lado host do PTY: leitura, `Go`, `resize` | `client`, `io`, `error`, `types` | W12 |\n| `hugr-omni` · `client/` | ciclo de vida do supervisor (início lazy, geração, reinício, checagem de pid criador), canal não bloqueante | `omni-proto`, `spawn` (tipo `Spec`), `error` | W04 |\n| `hugr-omni` · `io/` | bombas de saída com buffer limitado, decodificação, `lines`, stdin, coleta do `run` | `error`, `types` | W10 |\n| `hugr-omni` · `spawn/` | do pedido ao `Spawn`: `resolve` (PATH final + PATHEXT), `env`, `validate` | `error`, `types` | W03 |\n| `hugr-omni` · `error/` | `OmniError` e códigos (`mod.rs`, congelado) + textos (`messages`) | `types` | W00, W03 |\n| `hugr-omni` · `types` | tipos de valor públicos (`Exit`, `RunOutput`, `Chunk`, `ProcessInfo`, ...), sem dependências | — | W00 (congelado) |\n| `omni-proto` | frames e mensagens host↔supervisor (`docs/protocol.md`) | — | W00 (tipos), W04 (codec) |\n| `omni-supervisor` · `unix/` | loop de eventos, `posix_spawn`, sessões, inventário, pidfd/kqueue, colheita e pin, `Stop`, morte do host | `omni-proto` | W05 |\n| `omni-supervisor` · `windows/` | `CreateProcessW` + `JOB_LIST`, quoting do std, Jobs, CTRL_BREAK do próprio console, morte do host | `omni-proto` | W06 |\n| `omni-supervisor` · `pty_unix/`, `pty_windows/` | PTY no supervisor (fork + `TIOCSCTTY` + `Go`; ConPTY + worker de fechamento com prazo) | `unix/` ou `windows/` | W12, W12w |\n| `omni-fixture` | programa de teste | — | W01 |\n\nRegras:\n- As dependências só apontam para baixo na tabela. O supervisor nunca depende de `hugr-omni`; os dois só compartilham `omni-proto`.\n- `lib.rs` só reexporta `api` e `error`; o resto é `pub(crate)`.\n- Os bindings são crates separadas e só enxergam a API pública (o compilador garante). Dentro de cada binding a divisão é por responsabilidade: `child`, `run`, `error`, `convert`."
+      },
+      {
+        "start_line": 664,
+        "end_line": 666,
+        "quote": "| WG0 | **assinado: B** | `docs/decisions/G0.md` | TS no v0.1; Python e Rust no v0.2 |\n| S5 | concluído · revisado | `spike/supervisor` · ADR-0005 **aceito** | 9/10 testes com asserção nos 4 alvos; T9 resolvido por `posix_spawn` + novo K4 |\n| W00 | **concluído · na `main`** (PR #2, CI verde nos 3 OS + musl) | `main` `ee40167` | workspace de 4 crates compilando (macOS, Windows clippy, Linux); seams congelados: API, protocolo v1, spawn/client, supervisor; `processes()` entrou no contrato |"
+      },
+      {
+        "start_line": 765,
+        "end_line": 769,
+        "quote": "  qualidade   — card quality bar + QS; flag over-engineering, tests without value, any code file > 600 lines\n                (P2: needs a split plan; > 650 is P0) and any import that points up the module layering\n  dod         — every DoD bullet of the card is satisfied or demonstrably satisfiable\nThen list findings. SEVERITY: P0 wrong behavior/security/data loss/invariant broken/contract test edited;\nP1 vacuous scenario, flaky, UX or message regression, wrong docs; P2 clarity/over-engineering; P3 nit."
+      },
+      {
+        "start_line": 851,
+        "end_line": 856,
+        "quote": "- 2026-10-01 · R1 encontrou o `processkit` (Rust 3.3.4 + processkit-py 1.5.0, MIT), com 81,8% de cobertura nos 3 OS em 2 linguagens, o que dispara o nosso critério de parada. Owner: **pivotar** para hugr-omni = pacote TypeScript (Node/Bun/Deno) sobre o processkit, mais a camada de sandbox depois. **Condição do Owner:** não confiar no README; o pivô só se confirma com a avaliação prática (E1, KPIs nos 3 OS) e a auditoria independente do código (Codex). Até lá, S1/S2 ficam pausados. Sinais medidos no fonte v3.3.4: `src` com ~86 mil linhas em 58 arquivos (28 acima de 650 linhas), 308 ocorrências de `unsafe`, CI em 5 SOs, criado em 2026-05-31, 55 versões, um autor principal.\n- 2026-10-01 · **G0 assinado: opção B.** A evidência medida (fit: 1 de 24 itens como está; perda silenciosa de saída; travamento sob Node/Bun no Linux sem pidfd; churn alto) mostrou que construir em cima do processkit nos faria reescrever I/O, timers, motivos, saída do host e o wait, mantendo uma dependência de 86 mil linhas. O processkit fica como **referência** (MIT): reaproveitamos técnicas (filho suspenso → Job → resume; cgroup v2 quando delegado), sem dependência de código. Linguagens: TS no v0.1; Python e Rust no v0.2. S1/S2 retomam assim que o billing do Actions for destravado (precisam de Windows).\n- 2026-10-02 · Lead: **ADR-0005 aceito** depois do S5 (asserções verdes nos 4 alvos) e da revisão do Codex (*accept_with_changes*). Refinamentos incorporados: `posix_spawn` + SETSID para filhos com pipe e fork só para a raiz do PTY; supervisor Linux em musl estático; a sessão é a unidade de kill; o pin dura até a sessão esvaziar (nunca acaba no `Release`); `Stop`/`Stopped` com prazo único e todos os waiters respondidos; `Go` só com o leitor rodando. Os requisitos R1–R10 entraram nos cards W04/W05/W06/W12/W12w. Núcleo refatiado: W04 (canal/cliente), W05 (supervisor Unix), W06 (supervisor Windows), W12 (PTY Unix + host), W12w (ConPTY no supervisor).\n- 2026-10-02 · Stakeholder autorizou: **K4 = ≤ 1,25× o stdlib ou ≤ +0,3 ms, o que for mais folgado.** O S5 mediu uma ida e volta fixa de ~0,17 ms do supervisor; com spawn de ~0,7 ms no Linux, a razão fica em 1,22–1,36×. macOS (1,10–1,14×) e Windows (1,11–1,16×) passam. A otimização da ida e volta continua no W04.\n- 2026-10-02 · Lead: as revisões do Codex rejeitaram os ADRs 0001–0003 como base de produto, pela mesma causa raiz: trabalho de ciclo de vida dentro do host. Ficam proibidos fork no host, mudança de estado de console ou de sinais do host, e zumbis \"pinados\" que um host com reaper agressivo destrói. **Decisão (ADR-0005):** um supervisor (binário próprio, iniciado por exec, uma vez por host) cria e colhe todos os filhos; o I/O continua no host via fds/handles passados. A validação é o spike S5. Os testes de spike e de produto precisam **afirmar** o resultado (print não é aceite).\n- 2026-10-02 · Stakeholder: \"quem aprova é você\" → o lead aprova as decisões técnicas (D12). Contrato da API revisado pelo Codex em 3 rodadas (rework → rework → freeze_after_fixes); as decisões estão em `docs/api-contract.md`: `stop()` no lugar de `kill()`, stdin fechado por padrão, saída sempre drenada com perda avisada em ordem, `run()` completo ou `OUTPUT_LIMIT`, `RunResult` descreve a execução inteira, `lines()` e `mergeStderr`, `.cmd` via `cmd.exe` com escaping seguro. Congelado (D5)."
+      },
+      {
+        "start_line": 869,
+        "end_line": 873,
+        "quote": "- 2026-10-01 · Owner: monolito modular + god-file guard. Limites por arquivo de código (não por PR): ideal 400, ok 600, máximo 650; documentos fora. Implementado em `scripts/file-size-guard.py`, com testes de dentes em `scripts/test_file_size_guard.py` (9 casos) e mutation probe no repo real (um arquivo de 651 linhas → FAIL; removido → verde).\n- 2026-10-04 · Owner: sem AppVeyor; o CI é self-hosted e enxuto. Um script, `scripts/ci.mjs`, é o gate em todo OS (o runner e o lead rodam o mesmo). Push em `main`/`bundle/*` roda o gate rápido: checks estáticos, clippy, a suíte Rust com o contrato, contrato e idioms do TS no Node 22 (~7 min frio no Mac do lead; menos com cache quente). Tag `v*` ou `RELEASE=1` soma o resto: supervisor musl, Node 24/Bun/Deno, os blocos das docs rodando de verdade, K4 em release, os pacotes npm (K9). Runners: Linux em Docker na máquina do lead (privilegiado, imagem `scripts/ci.Dockerfile`), Windows quando houver uma máquina; só refs protegidas (`main`, `bundle/*`, `v*`); os runners compartilhados do GitLab ficam desligados. `appveyor.yml` saiu.\n- 2026-10-04 · Owner: sem runner Windows por enquanto. O Linux checa que o código Windows compila (clippy com o alvo `x86_64-pc-windows-msvc`); o comportamento no Windows foi provado no CI do GitLab (Server 2022) até o W06b, e o que entrou depois (W13, W14, Q1, W18) fica sem prova no Windows até haver uma máquina. O pacote `darwin-arm64` sai compilado de forma cruzada no Mac Intel do lead e é publicado sem teste num Mac ARM (o código Unix é o mesmo do x64 testado; o risco fica no empacotamento).\n- 2026-10-04 · Lead: o CI não roda mais no push. O runner Linux divide a máquina do Owner (Intel, 16 GB) e o build frio derrubou o Docker Desktop; agora o lead dispara um pipeline por bundle (à mão ou pela API) e uma tag `v*` dispara um. O container do job fica em 2 CPUs e 4 GB, com `CARGO_BUILD_JOBS=2`.\n- 2026-10-06 · Owner: de volta ao GitHub, conta `gustavomhss` (repo público `gustavomhss/hugr-omni`, remote `github`). CI no GitHub Actions: Ubuntu 24.04, macOS 14 (arm64) e Windows Server 2022, todos com `node scripts/ci.mjs`; isso cobre o Windows e o darwin-arm64 que estavam sem prova. Cache: `Swatinem/rust-cache` por SO e lockfile, salvo só pela `main`. Poda: checks estáticos só no Linux; sem clippy cruzado para Windows; o pesado só no release. O GitLab vira só leitura; `.gitlab-ci.yml` e a imagem do runner saíram."
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  }
+]

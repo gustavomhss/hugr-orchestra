@@ -1,0 +1,760 @@
+[
+  {
+    "path": "native/omni/scripts/readme-check/check.test.mjs",
+    "git_blob_sha": "485c4e665725661d5e3004a51b321e4c95d1f732",
+    "source_sha256": "a5a03e20354b783e8930b86b8fa810f28dff22dfca3569dafbade69ed9da164a",
+    "source_bytes": 22745,
+    "line_count": 358,
+    "disposition": "analyzed",
+    "kind": "test",
+    "purpose": "Assert static example extraction and real documentation execution fail on planted defects.",
+    "behavior": [
+      "Static temporary docs test language/attribute limits, TS-first ordering, canonical dependency URL, ten-line quickstarts, exact prerelease install exemptions and unsupported/malformed fence forms.",
+      "Runtime controls require valid TS/disposal blocks to pass and type errors, throws, hangs, leftover servers, Rust panic/build errors and missing shell programs to fail with source locations.",
+      "Rust setup tests require the README's own supervisor-building shell step and Tokio feature declaration, ignoring ambient supervisor shortcuts.",
+      "PID oracle tests reject unknown/malformed PID records, distinguish reaped/live processes and test zombies off Windows."
+    ],
+    "contracts": [
+      "Runtime cases require built repository binaries, toolchains and network-backed TypeScript cache.",
+      "The Windows zombie case is explicitly skipped because Windows has no zombies."
+    ],
+    "dependencies": [
+      "readme-check/check.mjs, blocks.mjs and run.mjs.",
+      "Fixture project and OS process APIs."
+    ],
+    "failures_or_limits": [
+      "No test ran; executable controls are definitions, not proof results."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 226,
+        "end_line": 266,
+        "quote": "test(\"run: blocks that pass do pass (hugr-omni resolves, `await using` compiles and disposes)\", () => {\n  const got = real(\n    [\n      fence(\"ts\", 'import { run } from \"hugr-omni\";', 'const r = await run(\"node\", [\"-e\", \"console.log(6 * 7)\"]);', \"if (!r.success || String(r.stdout).trim() !== '42') throw new Error('bad');\"),\n      fence(\"ts\", \"let disposed = false;\", \"{ await using x = { async [Symbol.asyncDispose]() { disposed = true; } }; }\", \"if (!disposed) throw new Error('not disposed');\"),\n    ].join(\"\\n\"),\n  );\n  expects(got, 0, \"OK\", \"ran: ts 2\");\n});\n\ntest(\"run: a block may use `process` and `node:*`, as in a reader's project (the Node types are installed)\", () => {\n  const got = real(fence(\"ts\", 'import { tmpdir } from \"node:os\";', \"const path: string | undefined = process.env.PATH;\", \"console.log(typeof path, tmpdir());\"));\n  expects(got, 0, \"OK\", \"ran: ts 1\");\n});\n\ntest(\"run: a block that throws fails and names file:line\", () => {\n  expects(real(`# d\\n\\n${fence(\"ts\", \"console.log(1);\", \"throw new Error('boom');\")}`), 1, \"doc.md:3\", \"exited 1\", \"boom\");\n});\n\ntest(\"run: a type error fails and names the line of the code\", () => {\n  expects(real(`# d\\n\\n${fence(\"ts\", \"const n: number = 1;\", 'const s: string = n;')}`), 1, \"TypeScript refused\", \"doc.md:5\");\n});\n\ntest(\"run: a block that hangs fails by its deadline\", () => {\n  expects(real(fence(\"ts\", \"setInterval(() => {}, 1000);\"), 3_000), 1, \"did not finish in 3000 ms\");\n});\n\ntest(\"run: a block that leaves its dev server running fails and the leftover is ended\", () => {\n  const leaves = fence(\n    \"ts\",\n    'const { spawn } = await import(\"node:child_process\" as string);',\n    'const { existsSync, readFileSync } = await import(\"node:fs\" as string);',\n    'spawn(process.execPath, [\"dev.js\"], { stdio: \"ignore\", detached: true }).unref();',\n    'while (!existsSync(\"dev.pid\") || !readFileSync(\"dev.pid\", \"utf8\").trim()) await new Promise((r) => setTimeout(r, 20));',\n  ).replace(\"process.execPath\", '(globalThis as any).process.execPath');\n  expects(real(leaves), 1, \"left running: dev.pid\");\n});\n\ntest(\"run: a Rust block that panics, and one that does not build, fail\", () => {\n  expects(real(`${fence(\"ts\", \"console.log(1);\")}\\n${DEPS}\\n${fence(\"rust\", \"fn main() { panic!(\\\"boom\\\"); }\")}`), 1, \"doc.md:\", \"rust block exited 101\");\n  expects(real(`${fence(\"ts\", \"console.log(1);\")}\\n${DEPS}\\n${fence(\"rust\", \"fn main() { let x: u8 = \\\"s\\\"; }\")}`), 1, \"the rust block does not build\");"
+      },
+      {
+        "start_line": 278,
+        "end_line": 308,
+        "quote": "test(\"run: every sh block runs: a failing command fails, a passing one passes, a missing program exits 2\", () => {\n  expects(real(fence(\"sh\", \"node --no-such-flag\")), 1, \"the sh block's `node --no-such-flag` exited\");\n  expects(real(fence(\"sh\", \"node --version\", \"node --version\")), 0, \"ran: ts 0, rust 0, sh 1\");\n  expects(real(fence(\"sh\", \"no-such-program-hugr --x\")), 2, \"no-such-program-hugr: cannot be started\");\n});\n\nconst exe = process.platform === \"win32\" ? \".exe\" : \"\";\nconst HELLO = fence(\n  \"rust\",\n  \"use hugr_omni::Command;\",\n  \"#[tokio::main]\",\n  \"async fn main() -> Result<(), hugr_omni::Error> {\",\n  '    let out = Command::new(\"node\").args([\"--version\"]).run().await?;',\n  \"    assert!(out.exit.success());\",\n  \"    Ok(())\",\n  \"}\",\n);\n\ntest(\"run: the Rust example runs on the README's steps alone: with its supervisor build it passes, without it fails, whatever the environment says\", () => {\n  // The debug supervisor of this checkout is in the environment and in target/debug, and must not be used.\n  const debug = join(process.env.CARGO_TARGET_DIR ?? join(repo, \"target\"), \"debug\", `hugr-omni-supervisor${exe}`);\n  const env = { ...process.env, HUGR_OMNI_SUPERVISOR: debug };\n  const ts = fence(\"ts\", \"console.log(1);\");\n  expects(real(`${ts}\\n${DEPS}\\n${fence(\"sh\", \"cargo build --release -p omni-supervisor\")}\\n${HELLO}`, 60_000, env), 0, \"ran: ts 1, rust 1, sh 1\");\n  expects(real(`${ts}\\n${DEPS}\\n${HELLO}`, 60_000, env), 1, \"the rust block exited\", \"no sh block of the docs built target/release/hugr-omni-supervisor\");\n});\n\ntest(\"run: the Rust example is built with the README's own tokio features, so one the README forgot fails the build\", () => {\n  const ts = fence(\"ts\", \"console.log(1);\");\n  const noMacros = fence(\"toml\", \"[dependencies]\", `hugr-omni = { git = \"${GIT}\" }`, 'tokio = { version = \"1\", features = [\"rt-multi-thread\"] }');\n  expects(real(`${ts}\\n${noMacros}\\n${HELLO}`), 1, \"the rust block does not build\");"
+      },
+      {
+        "start_line": 311,
+        "end_line": 358,
+        "quote": "test(\"run: a pid file that is not a pid cannot be proven gone, and fails\", () => {\n  const writes = fence(\"ts\", 'const { writeFileSync } = await import(\"node:fs\" as string);', 'writeFileSync(\"dev.pid\", \"banana\");');\n  expects(real(writes), 1, \"cannot be proven that it left nothing running\", \"dev.pid (not a pid)\");\n});\n\ntest(\"survivors: a pid the inspection cannot answer for, or that is not a pid, is not proven gone\", () => {\n  const dir = tree({ \"a.pid\": \"4242\\n\", \"b.pid\": \"banana\\n\", \"c.pid\": \"0\\n\" });\n  const got = survivors(dir, () => {\n    throw new Error(\"boom\");\n  });\n  assert.deepEqual(got.running, []);\n  assert.equal(got.unknown.length, 3, JSON.stringify(got));\n  assert.ok(got.unknown.some((u) => u.includes(\"pid 4242: cannot be inspected: boom\")), JSON.stringify(got));\n  assert.ok(got.unknown.some((u) => u.includes(\"b.pid (not a pid)\")) && got.unknown.some((u) => u.includes(\"c.pid (not a pid)\")), JSON.stringify(got));\n});\n\ntest(\"isAlive: a reaped pid is gone and this process is alive\", () => {\n  const reaped = spawnSync(process.execPath, [\"-e\", \"0\"]).pid;\n  assert.equal(isAlive(reaped), false);\n  assert.equal(isAlive(process.pid), true);\n});\n\n/** The `stat` of `pid` as `ps` prints it (empty when there is no such process). */\nconst stat = (pid) => spawnSync(\"ps\", [\"-o\", \"stat=\", \"-p\", String(pid)], { encoding: \"utf8\" }).stdout.trim();\n\ntest(\"survivors: a zombie is not a leak, a live process is\", { skip: process.platform === \"win32\" && \"Windows has no zombies\" }, async () => {\n  // `sh` forks `sleep 0`, then becomes `sleep 30`, which never reaps it: an exited, unreaped child.\n  const parent = spawn(\"sh\", [\"-c\", \"sleep 0 & echo $!; exec sleep 30\"], { stdio: [\"ignore\", \"pipe\", \"ignore\"] });\n  try {\n    const zombie = Number(await new Promise((resolve) => parent.stdout.once(\"data\", (d) => resolve(String(d).trim()))));\n    const deadline = Date.now() + 10_000;\n    while (!stat(zombie).startsWith(\"Z\")) {\n      assert.ok(Date.now() < deadline, `pid ${zombie} never became a zombie (stat \"${stat(zombie)}\")`);\n      await new Promise((r) => setTimeout(r, 20));\n    }\n    assert.doesNotThrow(() => process.kill(zombie, 0), \"kill(pid, 0) succeeds on a zombie: the false leak this guards against\");\n    assert.equal(isAlive(zombie), false);\n    const dir = tree({ \"zombie.pid\": `${zombie}\\n` });\n    assert.deepEqual(survivors(dir), { running: [], unknown: [] });\n    writeFileSync(join(dir, \"live.pid\"), `${parent.pid}\\n`);\n    const got = survivors(dir);\n    assert.deepEqual(got.unknown, []);\n    assert.equal(got.running.length, 1, JSON.stringify(got));\n    assert.ok(got.running[0].includes(`pid ${parent.pid}`), JSON.stringify(got));\n  } finally {\n    parent.kill(\"SIGKILL\");\n  }\n});"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/scripts/readme-check/run.mjs",
+    "git_blob_sha": "5cc35198873071a853e2fe38926c8ccef1cdcaa2",
+    "source_sha256": "bef817d6d6e86098aae210ff222a04537c5c82f89cfba957c654b5bb77d454a2",
+    "source_bytes": 14368,
+    "line_count": 262,
+    "disposition": "analyzed",
+    "kind": "build",
+    "purpose": "Execute docs in disposable projects while checking setup fidelity and visible process leftovers.",
+    "behavior": [
+      "Runs simple shell blocks first in repository cwd with a scratch Cargo target, then TS and Rust blocks in copied fixture projects.",
+      "TypeScript uses cached TypeScript5/Node22 types, a shim to local index.js and strict declaration mapping; Rust copies Cargo.lock, substitutes only the hugr-omni Git URL and builds with the repository toolchain.",
+      "Rust execution removes HUGR_OMNI_SUPERVISOR and places only the supervisor built by documentation shell steps beside its executable.",
+      "Checks .pid files after execution, treats inspection errors as unknown, kills observed survivors, and rejects nonzero/timeout/unknown/leak outcomes."
+    ],
+    "contracts": [
+      "Shell steps have at least ten minutes and Rust builds thirty minutes; example execution uses the requested per-block deadline.",
+      "Missing tools are Unrunnable; final temporary-directory cleanup failures are ignored."
+    ],
+    "dependencies": [
+      "readme-check fixture, Cargo/rustup, npm/TypeScript and native binaries."
+    ],
+    "failures_or_limits": [
+      "Leak inspection covers recorded .pid files rather than arbitrary descendants. Windows successful tasklist output with no matching CSV PID is treated as gone, less strict than the conformance oracle."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 55,
+        "end_line": 78,
+        "quote": "export function isAlive(pid) {\n  if (process.platform === \"win32\") {\n    const r = spawnSync(\"tasklist\", [\"/FI\", `PID eq ${pid}`, \"/FO\", \"CSV\", \"/NH\"], { encoding: \"utf8\" });\n    if (r.error || r.status !== 0) throw new Error(`tasklist failed (${r.error?.code ?? r.status}): ${r.stderr.trim()}`);\n    return r.stdout.split(\"\\n\").some((row) => row.split(\",\")[1]?.replaceAll('\"', \"\").trim() === String(pid));\n  }\n  if (process.platform === \"linux\") {\n    let stat;\n    try {\n      stat = readFileSync(`/proc/${pid}/stat`, \"utf8\");\n    } catch (e) {\n      if (e.code === \"ENOENT\" || e.code === \"ESRCH\") return false;\n      throw new Error(`/proc/${pid}/stat cannot be read (${e.code ?? e.message})`);\n    }\n    const state = stat.slice(stat.lastIndexOf(\")\") + 2).split(\" \")[0];\n    if (!/^[A-Za-z]$/.test(state)) throw new Error(`/proc/${pid}/stat has no state: ${stat.slice(0, 60)}`);\n    return state !== \"Z\" && state !== \"X\";\n  }\n  const r = spawnSync(\"ps\", [\"-o\", \"stat=\", \"-p\", String(pid)], { encoding: \"utf8\" });\n  if (r.error) throw new Error(`ps cannot be started (${r.error.code ?? r.error.message})`);\n  const state = r.stdout.trim();\n  if (r.status === 1 && state === \"\" && r.stderr.trim() === \"\") return false; // ps: no such process\n  if (r.status !== 0 || state === \"\") throw new Error(`ps failed (${r.status}): ${r.stderr.trim() || \"no state\"}`);\n  return !state.startsWith(\"Z\");"
+      },
+      {
+        "start_line": 85,
+        "end_line": 120,
+        "quote": "export function survivors(dir, alive = isAlive) {\n  const running = [];\n  const unknown = [];\n  for (const name of readdirSync(dir).filter((n) => n.endsWith(\".pid\"))) {\n    const pid = Number(readFileSync(join(dir, name), \"utf8\").trim());\n    if (!Number.isInteger(pid) || pid <= 1) {\n      unknown.push(`${name} (not a pid)`); // never signal 0 or 1: that reaches a whole group\n      continue;\n    }\n    let live;\n    try {\n      live = alive(pid);\n    } catch (e) {\n      unknown.push(`${name} (pid ${pid}: cannot be inspected: ${e.message})`);\n      continue;\n    }\n    if (!live) continue;\n    running.push(`${name} (pid ${pid})`);\n    try {\n      process.kill(pid);\n    } catch {\n      // gone in between\n    }\n  }\n  return { running, unknown };\n}\n\n/** Runs `cmd` in `cwd` for one `ts` or `rust` block; returns a violation text or null. `hint` is appended to a failure. */\nfunction execute(block, cmd, args, cwd, env, ms, hint = \"\") {\n  const where = `${block.file}:${block.line}`;\n  const r = sh(cmd, args, { cwd, env, timeout: ms, killSignal: \"SIGKILL\" });\n  const { running, unknown } = survivors(cwd);\n  if (r.error?.code === \"ETIMEDOUT\") return `${where}: the ${block.lang} block did not finish in ${ms} ms (a hang is a failure)${hint}`;\n  if (r.status !== 0) return `${where}: the ${block.lang} block exited ${r.status ?? r.signal}\\n${tail(`${r.stdout}\\n${r.stderr}`)}${hint}`;\n  if (unknown.length > 0) return `${where}: the block ended, but it cannot be proven that it left nothing running: ${unknown.join(\", \")}`;\n  if (running.length > 0) return `${where}: the block ended but left running: ${running.join(\", \")} (its tree was not stopped)`;"
+      },
+      {
+        "start_line": 203,
+        "end_line": 240,
+        "quote": "function runRust(blocks, work, env, ms, repo) {\n  const out = [];\n  const target = process.env.CARGO_TARGET_DIR ?? join(repo, \"target\");\n  const supervisor = join(work, \"target\", \"release\", `hugr-omni-supervisor${EXE}`); // built by the README's `sh` block\n  const runEnv = { ...env };\n  delete runEnv.HUGR_OMNI_SUPERVISOR;\n  blocks.forEach((b, i) => {\n    const project = join(work, `r${i}`);\n    cpSync(fixture, project, { recursive: true });\n    const crate = join(work, `crate${i}`);\n    mkdirSync(join(crate, \"src\"), { recursive: true });\n    writeFileSync(join(crate, \"src\", \"main.rs\"), `${b.code}\\n`);\n    // The dependencies are the README's own `toml` block; the only change is hugr-omni's git URL, swapped for this checkout.\n    const deps = b.deps.replace(/(^[ \\t]*hugr-omni\\s*=\\s*\\{[^}\\n]*?)\\bgit\\s*=\\s*\"[^\"\\n]+\"/m, `$1path = \"${fwd(join(repo, \"crates\", \"hugr-omni\"))}\"`);\n    if (deps === b.deps) throw new Unrunnable(`${b.file}:${b.line}: the toml block before the rust block has no hugr-omni git dependency to point at this checkout`);\n    writeFileSync(\n      join(crate, \"Cargo.toml\"),\n      `[package]\\nname = \"readme-block-${i}\"\\nversion = \"0.0.0\"\\nedition = \"2024\"\\npublish = false\\n\\n${deps.trim()}\\n\\n[workspace]\\n`,\n    );\n    cpSync(join(repo, \"Cargo.lock\"), join(crate, \"Cargo.lock\"));\n    // cwd = the repository, so rustup picks its rust-toolchain.toml; the crate is found by --manifest-path.\n    const built = sh(\"cargo\", [\"build\", \"--quiet\", \"--manifest-path\", join(crate, \"Cargo.toml\")], {\n      cwd: repo, env: { ...runEnv, CARGO_TARGET_DIR: target }, timeout: 1_800_000,\n    });\n    if (built.status !== 0) {\n      out.push(`${b.file}:${b.line}: the rust block does not build\\n${tail(`${built.stdout}\\n${built.stderr}`)}`);\n      return;\n    }\n    // Next to its own copy of the executable, as the README says, and nowhere else: not the debug supervisor in target/.\n    const bin = join(work, `bin${i}`);\n    mkdirSync(bin);\n    const exe = join(bin, `readme-block-${i}${EXE}`);\n    copyFileSync(join(target, \"debug\", `readme-block-${i}${EXE}`), exe);\n    const placed = existsSync(supervisor);\n    if (placed) copyFileSync(supervisor, join(bin, `hugr-omni-supervisor${EXE}`));\n    const hint = placed ? \"\" : \"\\n(no sh block of the docs built target/release/hugr-omni-supervisor, which the Rust example needs: cargo build --release -p omni-supervisor)\";\n    const failure = execute(b, exe, [], project, runEnv, ms, hint);\n    if (failure) out.push(failure);"
+      },
+      {
+        "start_line": 245,
+        "end_line": 260,
+        "quote": "/** Runs every block it is given (`sh`, `ts`, `rust`); returns the violations. Throws `Unrunnable` when a tool or build is missing. */\nexport function runBlocks(blocks, { repo, timeoutMs, cache }) {\n  const work = mkdtempSync(join(tmpdir(), \"readme-check-\"));\n  try {\n    const pick = (lang) => blocks.filter((b) => b.lang === lang);\n    const out = [];\n    if (pick(\"sh\").length) out.push(...runSh(pick(\"sh\"), work, process.env, timeoutMs, repo));\n    if (pick(\"ts\").length) out.push(...runTs(pick(\"ts\"), work, process.env, timeoutMs, repo, cache));\n    if (pick(\"rust\").length) out.push(...runRust(pick(\"rust\"), work, process.env, timeoutMs, repo));\n    return out;\n  } finally {\n    try {\n      rmSync(work, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });\n    } catch {\n      // a temp directory some process still holds (Windows) is not worth failing the run for\n    }"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/scripts/review-prompt.py",
+    "git_blob_sha": "5668ef2c4e1aac476551c554d8db84605b98040d",
+    "source_sha256": "adeca0fe83d7818089207ba93c5bd278f3be6a39e65ea351243483f8339a43d8",
+    "source_bytes": 2708,
+    "line_count": 54,
+    "disposition": "analyzed",
+    "kind": "build",
+    "purpose": "Print a work-package review prompt containing the current card and global plan standards.",
+    "behavior": [
+      "Requires WP, baseline and head plus optional notes; missing card or PLAN 4.3–4.4 sections exits loudly.",
+      "Printed prompt limits review to baseline...head diff, requests evidence for five scorecard dimensions and defines P0–P3 finding severities.",
+      "The printed quality rule still describes over-600-line P2 and over-650-line P0 thresholds."
+    ],
+    "contracts": [
+      "It only prints guidance and does not conduct a review or execute gates.",
+      "Current file-size-guard.py and Omni AGENTS instead enforce 400 lines, so these prompt thresholds are stale."
+    ],
+    "dependencies": [
+      "native/omni/PLAN.md headings/card shape.",
+      "native/omni/.github/review/schema.json expresses the output structure."
+    ],
+    "failures_or_limits": [
+      "Printed permission to run tests is historical guidance and does not authorize execution in this session."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 23,
+        "end_line": 39,
+        "quote": "def main() -> None:\n    if len(sys.argv) not in (4, 5):\n        sys.exit(__doc__)\n    wp, base, head = sys.argv[1:4]\n    notes = pathlib.Path(sys.argv[4]).read_text() if len(sys.argv) == 5 else \"\"\n    plan = (ROOT / \"PLAN.md\").read_text()\n    card = section(plan, rf\"^#### {re.escape(wp)} · .*?(?=^#### |^### |\\Z)\", f\"card {wp}\")\n    glob = section(plan, r\"^### 4\\.3 .*?(?=^### 4\\.5 )\", \"sections 4.3-4.4\")\n    print(f\"\"\"ROLE: independent, adversarial reviewer for hugr-omni. You did not write this change; assume it is wrong\nuntil the diff and its evidence prove otherwise.\nSCOPE: `git diff {base}...{head}` in this worktree (work package {wp}). Read-only commands only. You may run cargo\ncheck/clippy/test if your sandbox allows (if it cannot lock target/, say so and do not count it as a failure; the lead\nreproduces gates cold). Context: AGENTS.md, docs/api-contract.md, docs/adr/0005-supervisor.md, docs/protocol.md.\nTHE CARD (the axioms this work is judged against, verbatim):\n{card}\nGLOBAL INVARIANTS / QUALITY (PLAN.md 4.3 and 4.4, verbatim):\n{glob}"
+      },
+      {
+        "start_line": 41,
+        "end_line": 50,
+        "quote": "FOR EACH CARD FIELD return pass|fail with concrete evidence (file:line or command output):\n  completude  — every owned item is implemented and its scenario/test genuinely exercises it\n  sucesso     — the user-visible outcome the card promises is actually delivered\n  invariantes — every card invariant and global INV holds, including on error paths\n  qualidade   — card quality bar + QS; flag over-engineering, tests without value, any code file > 600 lines\n                (P2: needs a split plan; > 650 is P0) and any import that points up the module layering\n  dod         — every DoD bullet of the card is satisfied or demonstrably satisfiable\nThen list findings. SEVERITY: P0 wrong behavior/security/data loss/invariant broken/contract test edited;\nP1 vacuous test, flaky, UX or message regression, wrong docs, contract deviation; P2 clarity/over-engineering; P3 nit.\nNever invent filler: empty findings are fine.\"\"\")"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/scripts/skill-check/check.mjs",
+    "git_blob_sha": "4102a3963994e3d2b418792f269c79ae3f3a16b3",
+    "source_sha256": "68be121e7c14b9ae3bb936e143fb44212c3f9c3663439c01999f52459cc41ab6",
+    "source_bytes": 13205,
+    "line_count": 254,
+    "disposition": "analyzed",
+    "kind": "build",
+    "purpose": "Keep packaged skills loadable and cross-referenced to the public API and local documentation.",
+    "behavior": [
+      "Requires skill-folder identity, approved scalar frontmatter keys, a Use when description at most 1024 characters, body at most 500 lines and both When headings.",
+      "Checks one-level .md references, links/anchors confined to the package, and requires every reference be linked by its SKILL.md.",
+      "Checks selected camelCase/uppercase inline identifiers against declaration members/error codes or a reasoned foreign ledger; stale, duplicate or own-surface ledger entries fail.",
+      "Checks plugin JSON/name/skill paths and rejects empty skill/surface/ledger inputs."
+    ],
+    "contracts": [
+      "Fenced code and plain/dotted identifiers are outside this semantic name check; executable fenced examples belong to readme-check.",
+      "Exit 1 is violations, exit 2 unreadable inputs/arguments."
+    ],
+    "dependencies": [
+      "surface-check/dts.mjs, markdown.mjs, foreign.txt, index.d.ts and plugin.json."
+    ],
+    "failures_or_limits": [
+      "External links are not fetched, and supported Markdown/identifier forms are deliberately bounded."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 7,
+        "end_line": 27,
+        "quote": "// Per skill folder (every entry of skills/ must be one):\n//   - SKILL.md opens with frontmatter (markdown.mjs reads it): `name` equals the folder and matches [a-z0-9-]{1,64};\n//     `description` is at most 1024 characters, holds \"Use when\" (it is the trigger text) and no `<` or `>`; no key\n//     outside KEYS; the body is at most 500 lines and has the headings \"## When to use\" and \"## When not to use\";\n//   - the folder holds SKILL.md and, optionally, references/: .md files only, no subfolder (references stay one\n//     level deep), each one linked from SKILL.md.\n// Per file (SKILL.md and its references):\n//   - every relative link resolves to a file or folder inside this package (the mirror holds nothing else), and every\n//     `#anchor` to a heading of the .md file it names (or of the file itself);\n//   - every inline code span that is, or starts with (followed by `:`, `(` or `=`), an identifier of one of two shapes\n//     is checked against bindings/node/index.d.ts (read with surface-check/dts.mjs):\n//       option shape  lowerCamelCase with at least one hump (`timeoutMs`, `droppedBytes`): a name of the surface;\n//       code shape    upper case with two letters or more, `_` allowed (`NOT_FOUND`, `IO`): an `OmniError` code;\n//     anything else (a dotted path, a lower-case word, a sentence, fenced code) is not looked at. A shaped identifier\n//     that is not omni's (`PATH`, `killSignal`) must be listed in FOREIGN, one per line with a `# why`; an entry that\n//     omni does have, that no skill uses, or that is listed twice is a violation (the ledger cannot rot).\n// Plus .claude-plugin/plugin.json: valid JSON with a kebab-case `name`; any `skills` path it adds exists.\n//\n//   node scripts/skill-check/check.mjs [--root <package root>]\n// Exit: 0 holds · 1 violations (each names file:line) · 2 an input cannot be read (no skill at all, no index.d.ts,\n// no OmniError codes, no ledger), or an argument is unknown."
+      },
+      {
+        "start_line": 94,
+        "end_line": 137,
+        "quote": "/** Checks the links, anchors and identifiers of one file (`path` relative to `root`); `used` collects foreign ids met. */\nfunction checkFile(root, path, lines, first, known, foreign, used) {\n  const out = [];\n  const found = scan(lines, first);\n  if (found.unclosed) out.push(`${path}: a code fence is never closed (the rest of the file would be read as code)`);\n  const linked = [];\n  for (const { line, value } of found.links) {\n    if (/^[a-z][a-z0-9+.-]*:/i.test(value)) continue; // http:, https:, mailto:\n    const where = `${path}:${line}`;\n    const [target, anchor] = value.split(\"#\", 2);\n    const file = target === \"\" ? join(root, path) : resolve(join(root, dirname(path)), decodeURI(target));\n    const rel = relative(root, file);\n    if (rel.startsWith(\"..\") || isAbsolute(rel)) {\n      out.push(`${where}: the link \\`${value}\\` leaves this package (the mirror would not have it)`);\n      continue;\n    }\n    const k = kind(file);\n    if (k === null) {\n      out.push(`${where}: the link \\`${value}\\` names ${rel}, which does not exist`);\n      continue;\n    }\n    linked.push(rel.split(\"\\\\\").join(\"/\"));\n    if (anchor === undefined) continue;\n    if (k !== \"file\" || !file.endsWith(\".md\")) {\n      out.push(`${where}: the link \\`${value}\\` has an anchor, but ${rel} is not a Markdown file`);\n      continue;\n    }\n    const anchors = target === \"\" ? found.anchors : scan(readFileSync(file, \"utf8\").replace(/\\r\\n/g, \"\\n\").split(\"\\n\")).anchors;\n    if (!anchors.has(anchor)) out.push(`${where}: ${rel} has no heading with the anchor #${anchor}`);\n  }\n  let checked = 0;\n  for (const { line, value } of found.spans) {\n    const id = /^([A-Za-z_$][\\w$]*)(?:$|[:(=])/.exec(value)?.[1];\n    if (!id) continue;\n    const option = OPTION.test(id);\n    const code = CODE.test(id);\n    if (!option && !code) continue;\n    checked++;\n    if (foreign.has(id)) {\n      used.add(id);\n      continue;\n    }\n    if (option && !known.names.has(id)) out.push(`${path}:${line}: \\`${id}\\` is not a name of ${DTS} (a renamed or invented option?); if it is another library's, list it in ${FOREIGN}`);\n    if (code && !known.codes.has(id)) out.push(`${path}:${line}: \\`${id}\\` is not an \\`OmniError\\` code of ${DTS}; if it is another name (an env var, a signal), list it in ${FOREIGN}`);"
+      },
+      {
+        "start_line": 167,
+        "end_line": 192,
+        "quote": "  const path = `${dir}/SKILL.md`;\n  const fm = frontmatter(read(root, path));\n  out.push(...fm.problems.map((p) => `${path}${p.replace(/^line (\\d+): /, \":$1: \").replace(/^(?!:)/, \": \")}`));\n  if (fm.fields) {\n    for (const [key, { line }] of fm.fields) if (!KEYS.has(key)) out.push(`${path}:${line}: unknown frontmatter key \\`${key}\\` (known: ${[...KEYS].join(\", \")})`);\n    const n = fm.fields.get(\"name\");\n    if (!n) out.push(`${path}: the frontmatter has no \\`name\\``);\n    else {\n      if (!/^[a-z0-9-]{1,64}$/.test(n.value)) out.push(`${path}:${n.line}: name \"${n.value}\" must match [a-z0-9-]{1,64}`);\n      if (n.value !== name) out.push(`${path}:${n.line}: name \"${n.value}\" is not the folder's name \"${name}\"`);\n    }\n    const d = fm.fields.get(\"description\");\n    if (!d || d.value.trim() === \"\") out.push(`${path}: the frontmatter has no \\`description\\` (the text that triggers the skill)`);\n    else {\n      if (d.value.length > MAX_DESCRIPTION) out.push(`${path}:${d.line}: the description has ${d.value.length} characters; the limit is ${MAX_DESCRIPTION}`);\n      if (!d.value.includes(\"Use when\")) out.push(`${path}:${d.line}: the description must say \"Use when ...\" (it is the trigger text)`);\n      if (/[<>]/.test(d.value)) out.push(`${path}:${d.line}: the description must not contain < or >`);\n    }\n  }\n  if (fm.body.length > MAX_BODY) out.push(`${path}: the body has ${fm.body.length} lines; the limit is ${MAX_BODY} (move detail to references/)`);\n  for (const h of HEADINGS) if (!fm.body.some((l) => l.trimEnd() === h)) out.push(`${path}: has no \"${h}\" heading`);\n\n  const skill = take(checkFile(root, path, fm.body, fm.bodyLine, known, foreign, used));\n  for (const ref of refs) {\n    take(checkFile(root, ref, read(root, ref).replace(/\\r\\n/g, \"\\n\").split(\"\\n\"), 1, known, foreign, used));\n    if (!skill.linked.includes(ref)) out.push(`${ref}: no link from ${path} reaches it (a reference is read only through SKILL.md)`);"
+      },
+      {
+        "start_line": 215,
+        "end_line": 237,
+        "quote": "/** Runs every rule; returns `{ violations, summary }`. Throws `Unreadable` when an input cannot be read. */\nexport function check(root) {\n  const known = surface(root);\n  const { ids: foreign, out } = ledger(root, known);\n  const used = new Set();\n  const skills = entries(root, \"skills\");\n  const totals = { files: 0, links: 0, checked: 0 };\n  let n = 0;\n  for (const e of skills) {\n    if (!e.isDirectory()) {\n      out.push(`skills/${e.name}: skills/ holds skill folders only`);\n      continue;\n    }\n    n++;\n    const r = checkSkill(root, e.name, known, foreign, used);\n    out.push(...r.out);\n    for (const k of Object.keys(totals)) totals[k] += r[k];\n  }\n  if (n === 0) throw new Unreadable(\"skills/: no skill folder found (the skills came back EMPTY)\");\n  for (const [id, line] of foreign) if (!used.has(id)) out.push(`${FOREIGN}:${line}: \\`${id}\\` is used by no skill; remove it`);\n  out.push(...checkPlugin(root));\n  const summary = `${n} skills, ${totals.files} files, ${totals.links} links, ${totals.checked} identifiers checked (${foreign.size} declared foreign)`;\n  return { violations: out, summary };"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/scripts/skill-check/check.test.mjs",
+    "git_blob_sha": "9c3359d208e577bd324af08fb52e686aa1cd2a22",
+    "source_sha256": "d8d5b587e673269011fbc390511a420c60d03a9399f3142989d9a0b10311c358",
+    "source_bytes": 10764,
+    "line_count": 178,
+    "disposition": "analyzed",
+    "kind": "test",
+    "purpose": "Assert skill validation catches structural, linkage and API-name drift using temporary packages.",
+    "behavior": [
+      "Positive clean fixture includes repeat anchors, relative/external links, inline code and fenced decoys.",
+      "Mutations cover missing/invalid/duplicate frontmatter, mismatched names, description constraints, body length/headings and unknown keys.",
+      "Rejects broken/outside/anchor links, invented option/error identifiers, rotten foreign entries, unlinked/deep references and malformed plugin manifests.",
+      "Missing skills/declarations/error unions/ledger and unknown CLI flags must exit 2 with named diagnostics."
+    ],
+    "contracts": [
+      "The fake package deliberately includes text the checker should ignore, guarding against indiscriminate matching.",
+      "Tests invoke the real check.mjs in a subprocess and remove fixture trees afterward."
+    ],
+    "dependencies": [
+      "native/omni/scripts/skill-check/check.mjs"
+    ],
+    "failures_or_limits": [
+      "No loader or product runtime is exercised by these schema/link controls; they were not run."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 83,
+        "end_line": 105,
+        "quote": "test(\"the clean tree passes; fenced code, inline-code links, external links and plain words are not looked at\", () => {\n  expects(run(), 0, \"OK\", \"2 skills\", \"1 declared foreign\");\n});\n\ntest(\"frontmatter: missing, unclosed, or a value YAML would read differently\", () => {\n  expects(run({ \"skills/demo/SKILL.md\": (t) => t.replace(/^---\\n[\\s\\S]*?\\n---\\n/, \"\") }), 1, \"skills/demo/SKILL.md\", \"no frontmatter\");\n  expects(run({ \"skills/demo/SKILL.md\": (t) => t.replace(\"\\n---\\n\\n# Demo\", \"\\n\\n# Demo\") }), 1, \"never closed\");\n  expects(run({ \"skills/other/SKILL.md\": (t) => t.replace(`description: ${DESCRIPTION}`, \"description: Use when: always\") }), 1, \"skills/other/SKILL.md:3\", \"quote it\");\n  expects(run({ \"skills/other/SKILL.md\": (t) => t.replace(`description: ${DESCRIPTION}`, \"description: |\\n  Use when x\") }), 1, \"YAML syntax\", \"not a one-line\");\n  expects(run(demo(\"name: demo\\n\", \"name: demo\\nname: demo\\n\")), 1, \"`name` is given twice\");\n});\n\ntest(\"name: equal to the folder, and [a-z0-9-]{1,64}\", () => {\n  expects(run(demo(\"name: demo\", \"name: dem0\")), 1, 'name \"dem0\" is not the folder\\'s name \"demo\"');\n  expects(run({ \"skills/Bad_Name/SKILL.md\": skill(`name: Bad_Name\\ndescription: ${DESCRIPTION}`, \"\") }), 1, 'name \"Bad_Name\" must match');\n  expects(run(demo(\"name: demo\\n\", \"\")), 1, \"has no `name`\");\n});\n\ntest(\"description: present, at most 1024 characters, says Use when, no angle brackets\", () => {\n  expects(run(demo(`description: \"${DESCRIPTION}\"`, \"\")), 1, \"has no `description`\");\n  expects(run(demo(DESCRIPTION, `${\"x\".repeat(1020)} Use when x`)), 1, \"the limit is 1024\");\n  expects(run(demo(\"Use when\", \"Used when\")), 1, 'must say \"Use when');\n  expects(run(demo(\"Runs things.\", \"Runs <things>.\")), 1, \"must not contain < or >\");"
+      },
+      {
+        "start_line": 117,
+        "end_line": 160,
+        "quote": "test(\"a link to a missing file, a missing anchor, or outside the package fails and names it\", () => {\n  expects(run(demo(\"docs/guide.md#2-reading\", \"docs/guides.md#2-reading\")), 1, \"skills/demo/SKILL.md:19\", \"docs/guides.md, which does not exist\");\n  expects(run(demo(\"docs/guide.md#2-reading\", \"docs/guide.md#3-reading\")), 1, \"has no heading with the anchor #3-reading\");\n  expects(run(demo(\"(#map-1)\", \"(#map-2)\")), 1, \"skills/demo/SKILL.md has no heading with the anchor #map-2\");\n  expects(run(demo(\"(../../docs)\", \"(../../docs#x)\")), 1, \"is not a Markdown file\");\n  expects(run(demo(\"(../../docs)\", \"(../../../elsewhere.md)\")), 1, \"leaves this package\");\n  expects(run({ \"skills/demo/references/more.md\": (t) => t.replace(\"#when-to-use\", \"#when-to-run\") }), 1, \"skills/demo/references/more.md:3\", \"#when-to-run\");\n});\n\ntest(\"a fence never closed is reported (the rest of the file would be code)\", () => {\n  expects(run({ \"skills/other/SKILL.md\": (t) => `${t}\\n\\`\\`\\`ts\\nconst x = 1;\\n` }), 1, \"never closed\");\n});\n\ntest(\"an option-shaped or code-shaped identifier omni does not have fails, unless declared foreign\", () => {\n  expects(run(demo(\"`timeoutMs`\", \"`timeoutMS`\")), 1, \"`timeoutMS` is not a name of bindings/node/index.d.ts\");\n  expects(run(demo(\"`inheritEnv: false`\", \"`inheritEnvs: false`\")), 1, \"`inheritEnvs` is not a name\");\n  expects(run(demo(\"`NOT_FOUND`\", \"`NOT_FUND`\")), 1, \"`NOT_FUND` is not an `OmniError` code\");\n  expects(run(demo(\"`killSignal`\", \"`killSignals`\")), 1, \"`killSignals` is not a name\", \"`killSignal` is used by no skill\");\n  expects(run({ \"skills/demo/references/more.md\": (t) => `${t}\\nSee \\`graceMS\\`.\\n` }), 1, \"skills/demo/references/more.md:5\", \"`graceMS`\");\n});\n\ntest(\"the foreign ledger cannot rot: omni's own name, unused, duplicate, unshaped, or without a reason\", () => {\n  const ledger = (text) => ({ \"scripts/skill-check/foreign.txt\": (t) => `${t}${text}\\n` });\n  expects(run(ledger(\"timeoutMs   # mine\")), 1, \"`timeoutMs` is omni's own\");\n  expects(run(ledger(\"unusedThing   # nobody\")), 1, \"`unusedThing` is used by no skill\");\n  expects(run(ledger(\"killSignal   # again\")), 1, \"listed twice\");\n  expects(run(ledger(\"plain   # word\")), 1, '\"plain\" has neither the option nor the code shape');\n  expects(run({ \"scripts/skill-check/foreign.txt\": \"killSignal\\n\" }), 1, \"says no reason\");\n});\n\ntest(\"the skill folder: SKILL.md and references/ of .md files only, each reference linked\", () => {\n  expects(run({ \"skills/demo/notes.txt\": \"x\" }), 1, \"skills/demo/notes.txt: a skill folder holds SKILL.md and references/ only\");\n  expects(run({ \"skills/demo/references/deep/x.md\": \"# x\\n\" }), 1, \"skills/demo/references/deep\", \"one level deep\");\n  expects(run({ \"skills/demo/references/orphan.md\": \"# Orphan\\n\" }), 1, \"skills/demo/references/orphan.md: no link from skills/demo/SKILL.md\");\n  expects(run({ \"skills/empty/references/x.md\": \"# x\\n\" }), 1, \"skills/empty: has no SKILL.md\");\n  expects(run({ \"skills/README.md\": \"# x\\n\" }), 1, \"skills/README.md: skills/ holds skill folders only\");\n});\n\ntest(\"the plugin manifest: present, valid JSON, kebab-case name, existing skills paths\", () => {\n  expects(run({ \".claude-plugin/plugin.json\": null }), 1, \".claude-plugin/plugin.json: cannot be read\");\n  expects(run({ \".claude-plugin/plugin.json\": \"{ name: x\" }), 1, \"not valid JSON\");\n  expects(run({ \".claude-plugin/plugin.json\": JSON.stringify({ name: \"Demo Plugin\" }) }), 1, \"`name` must be a kebab-case string\");\n  expects(run({ \".claude-plugin/plugin.json\": JSON.stringify({ name: \"demo\", skills: [\"./nowhere\"] }) }), 1, 'the skills path \"./nowhere\"');\n  expects(run({ \".claude-plugin/plugin.json\": JSON.stringify({ name: \"demo\", skills: \"./skills\" }) }), 0, \"OK\");"
+      },
+      {
+        "start_line": 163,
+        "end_line": 177,
+        "quote": "test(\"an input that cannot be read exits 2 and names it\", () => {\n  expects(run({ \"skills/demo/SKILL.md\": null, \"skills/demo/references/more.md\": null, \"skills/other/SKILL.md\": null, \"skills/\": \"\" }), 2, \"EMPTY\");\n  expects(run({ \"skills/demo/SKILL.md\": null, \"skills/demo/references/more.md\": null, \"skills/other/SKILL.md\": null }), 2, \"skills: cannot be listed\");\n  expects(run({ \"bindings/node/index.d.ts\": null }), 2, \"bindings/node/index.d.ts\");\n  expects(run({ \"bindings/node/index.d.ts\": (t) => t.replace(/export class OmniError[\\s\\S]*$/, \"\") }), 2, \"OmniError\");\n  expects(run({ \"scripts/skill-check/foreign.txt\": null }), 2, \"foreign.txt\");\n});\n\ntest(\"an argument the check does not know, or --root without a directory, exits 2\", () => {\n  const root = tree();\n  for (const args of [[\"--rot\", root], [\"--root\"], [\"--root\", root, \"--extra\"], [root]]) {\n    const got = run({}, [...args]);\n    assert.equal(got.code, 2, `${args.join(\" \")}: ${got.text}`);\n    assert.ok(got.text.includes(\"unknown or incomplete arguments\"), got.text);\n  }"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/scripts/skill-check/foreign.txt",
+    "git_blob_sha": "32b39c797414add5e90a45986319d35b4cddd28d",
+    "source_sha256": "f05fd542bfa4d35ee0d8bcd6b887c15db4d963ccc612ad36581f4c4f83da0ac1",
+    "source_bytes": 2139,
+    "line_count": 41,
+    "disposition": "analyzed",
+    "kind": "config",
+    "purpose": "Explain foreign identifiers that skill prose may mention without treating them as Omni API names.",
+    "behavior": [
+      "Lists external process-library options and events, scenario keys/fixture markers, environment/constants and OS API names.",
+      "Each entry has a reason identifying its owning boundary; examples include windowsVerbatimArguments, forceKillAfterDelay, ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER and MSG_CMSG_CLOEXEC."
+    ],
+    "contracts": [
+      "skill-check rejects entries that are Omni's own, unused, duplicated or missing a reason.",
+      "These names are comparison/context vocabulary, not additions to the Omni surface."
+    ],
+    "dependencies": [
+      "native/omni/scripts/skill-check/check.mjs",
+      "native/omni/skills prose and bindings/node/index.d.ts."
+    ],
+    "failures_or_limits": [
+      "Mentioning a secret variable name such as OMNI_MIRROR_DEPLOY_KEY provides no credential value or authority."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 16,
+        "quote": "# Identifiers the skills name in `code` that are not hugr-omni's TypeScript surface (bindings/node/index.d.ts) but\n# have its option shape (lowerCamelCase) or its error-code shape (UPPER_CASE). check.mjs refuses an entry omni has,\n# an entry no skill uses, a duplicate, and an entry without a `# why`.\n\n# Node child_process, cross-spawn, execa, node-pty / bun-pty (omni-migrate, omni-lifecycle)\ncrossSpawn                 # cross-spawn's default export\nexecFile                   # node:child_process\nspawnSync                  # node:child_process\nkillSignal                 # node:child_process option\nmaxBuffer                  # node:child_process option\nwindowsVerbatimArguments   # node:child_process option\nforceKillAfterDelay        # execa option\nonData                     # node-pty / bun-pty event\nonExit                     # node-pty / bun-pty event\nsetTimeout                 # JS timer, in an anti-pattern\noptionalDependencies       # package.json field"
+      },
+      {
+        "start_line": 25,
+        "end_line": 41,
+        "quote": "# Environment variables and constants\nPATH                       # environment variable\nPS1                        # bash prompt variable\nTEST_FILTER                # scripts/ci.mjs input\nRELEASE                    # scripts/ci.mjs input\nORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER  # Orchestra's switch (integration plan D-L1)\nOMNI_MIRROR_DEPLOY_KEY     # Orchestra CI secret (WP6)\nPRE_RELEASE_INSTALL        # scripts/readme-check/blocks.mjs constant\nVERSION                    # omni-proto protocol version constant\nVCRUNTIME                  # the MSVC runtime DLL family\n\n# OS APIs (omni-os-traps)\nCREATE_NEW_PROCESS_GROUP   # Win32 process creation flag\nPROC_THREAD_ATTRIBUTE_HANDLE_LIST  # Win32 attribute\nPOSIX_SPAWN_CLOEXEC_DEFAULT  # macOS posix_spawn flag\nMSG_CMSG_CLOEXEC           # Linux recvmsg flag\nTIOCPTYGNAME               # macOS ioctl"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/scripts/skill-check/markdown.mjs",
+    "git_blob_sha": "be0a01454c6063387c22606f12ed4f8b509ce615",
+    "source_sha256": "9b81683e38fdee0d455f26433b14946b634e6e3b97ff9a0602cd4fb84c04d705",
+    "source_bytes": 4914,
+    "line_count": 104,
+    "disposition": "analyzed",
+    "kind": "build",
+    "purpose": "Parse the deliberately small Markdown/frontmatter subset used by skill validation.",
+    "behavior": [
+      "Requires first/closing --- lines and one-line key:value scalars, flags duplicate keys and unsupported YAML blocks/maps/list-like syntax.",
+      "Scans outside backtick/tilde fences for ATX headings, inline/reference links and single-line code spans.",
+      "Generates normalized Unicode-aware anchors with duplicate suffixes and reports an unclosed fence.",
+      "Double-quoted escapes are simplified by dropping the backslash; single quotes use doubled-quote decoding."
+    ],
+    "contracts": [
+      "Cross-line code spans and general YAML are not supported; fenced code is delegated to another checker.",
+      "Returned source line numbers include a configurable body offset."
+    ],
+    "dependencies": [
+      "native/omni/scripts/skill-check/check.mjs"
+    ],
+    "failures_or_limits": [
+      "This is a tailored reader, not a complete CommonMark/YAML implementation; its anchor/comment claims should be read within that scope."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 16,
+        "end_line": 37,
+        "quote": "/** Splits `text` into `{ fields, body, bodyLine, problems }`; `bodyLine` is the 1-based line where the body starts. */\nexport function frontmatter(text) {\n  const lines = text.replace(/\\r\\n/g, \"\\n\").split(\"\\n\");\n  const problems = [];\n  if (lines[0] !== \"---\") return { fields: null, body: lines, bodyLine: 1, problems: [\"line 1: no frontmatter (the file must start with a `---` line)\"] };\n  const end = lines.indexOf(\"---\", 1);\n  if (end < 0) return { fields: null, body: lines, bodyLine: 1, problems: [\"the frontmatter is never closed (no second `---` line)\"] };\n  const fields = new Map();\n  for (let i = 1; i < end; i++) {\n    const raw = lines[i];\n    if (raw.trim() === \"\") continue;\n    const m = /^([a-z][a-z0-9-]*):(?: (.*))?$/.exec(raw);\n    if (!m) {\n      problems.push(`line ${i + 1}: \"${raw.slice(0, 60)}\" is not a one-line \\`key: value\\` (no YAML block, list, map or indented line is read)`);\n      continue;\n    }\n    const [, key, given = \"\"] = m;\n    const value = scalar(given.trim(), i + 1, problems);\n    if (fields.has(key)) problems.push(`line ${i + 1}: \\`${key}\\` is given twice`);\n    else fields.set(key, { value, line: i + 1 });\n  }\n  return { fields, body: lines.slice(end + 1), bodyLine: end + 2, problems };"
+      },
+      {
+        "start_line": 40,
+        "end_line": 62,
+        "quote": "/** A one-line YAML scalar: quoted (`\"...\"` with `\\\"` and `\\\\`, or `'...'` with `''`) or plain. */\nfunction scalar(v, line, problems) {\n  if (v.startsWith('\"')) {\n    const m = /^\"((?:[^\"\\\\]|\\\\.)*)\"$/.exec(v);\n    if (m) return m[1].replace(/\\\\(.)/g, \"$1\");\n  } else if (v.startsWith(\"'\")) {\n    const m = /^'((?:[^']|'')*)'$/.exec(v);\n    if (m) return m[1].replaceAll(\"''\", \"'\");\n  } else if (/^[|>[{&*!%@`]/.test(v)) {\n    problems.push(`line ${line}: a value starting with \"${v[0]}\" is YAML syntax this check does not read; write one quoted line`);\n    return v;\n  } else if (/: |\\s#/.test(v) || v.endsWith(\":\")) {\n    problems.push(`line ${line}: a plain value with \": \" or \" #\" is not what it seems in YAML; quote it`);\n    return v;\n  } else return v;\n  problems.push(`line ${line}: an unterminated or malformed quoted value`);\n  return v;\n}\n\n/** GitHub's anchor for the heading text `raw` (before de-duplication). */\nexport function slug(raw) {\n  const text = raw.replace(/!?\\[([^\\]]*)\\]\\([^)]*\\)/g, \"$1\");\n  return text.toLowerCase().replace(/[^\\p{L}\\p{M}\\p{N}\\p{Pc} -]/gu, \"\").replace(/ /g, \"-\");"
+      },
+      {
+        "start_line": 69,
+        "end_line": 103,
+        "quote": "export function scan(lines, first = 1) {\n  const anchors = new Set();\n  const seen = new Map();\n  const links = [];\n  const spans = [];\n  let fence = null;\n  lines.forEach((raw, i) => {\n    const line = first + i;\n    const f = FENCE.exec(raw);\n    if (fence) {\n      if (f && f[1][0] === fence[0] && f[1].length >= fence.length && raw.trim() === f[1]) fence = null;\n      return;\n    }\n    if (f) {\n      fence = f[1];\n      return;\n    }\n    const plain = raw.replace(/(`+)(?!`)(.+?)(?<!`)\\1(?!`)/g, (_, _ticks, code) => {\n      spans.push({ line, value: code.trim() });\n      return \" \";\n    });\n    const h = /^ {0,3}#{1,6}[ \\t]+(.*?)(?:[ \\t]+#+)?[ \\t]*$/.exec(raw);\n    if (h) {\n      const base = slug(h[1]);\n      const n = seen.get(base) ?? 0;\n      seen.set(base, n + 1);\n      anchors.add(n === 0 ? base : `${base}-${n}`);\n    }\n    for (const m of plain.matchAll(/!?\\[[^\\]]*\\]\\(\\s*(<[^>]*>|[^)\\s]+)(?:\\s+\"[^\"]*\")?\\s*\\)/g)) {\n      links.push({ line, value: m[1].replace(/^<|>$/g, \"\") });\n    }\n    const def = /^ {0,3}\\[[^\\]]+\\]:\\s*(\\S+)/.exec(plain);\n    if (def) links.push({ line, value: def[1].replace(/^<|>$/g, \"\") });\n  });\n  return { anchors, links, spans, unclosed: fence !== null };"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/scripts/surface-check/binding.mjs",
+    "git_blob_sha": "768cf6b6387838222e591812d5be0b3394ffd5bc",
+    "source_sha256": "a35a1ed20be3057603c1b49a84d4f95dcd9c0f7c101cb825a044b819772a71b2",
+    "source_bytes": 13134,
+    "line_count": 238,
+    "disposition": "analyzed",
+    "kind": "build",
+    "purpose": "Guard the binding boundary against local process control and unauthorized runtime dependencies.",
+    "behavior": [
+      "Raw-scans index.js and Rust sources for listed process/timer/engine spellings, refuses local/computed JS imports and non-Rust binding source files.",
+      "Expands supported Rust use trees and rejects std paths reaching process, root/glob std imports, extern/FFI/assembly exports and run_script.",
+      "Uses offline cargo metadata --no-deps to resolve actual package names and allows only core/napi/napi-derive normal dependencies plus napi-build for build dependencies; dev dependencies are excluded.",
+      "Returns violations separately from unreadable inputs and strict argument errors."
+    ],
+    "contracts": [
+      "Scope is honest contributor drift; raw comments can cause false failures.",
+      "Rust housekeeping timers are reviewed manually; computed aliases, macros and comments embedded within paths are acknowledged blind spots."
+    ],
+    "dependencies": [
+      "native/omni/bindings/node sources/build.rs/Cargo.toml.",
+      "Cargo metadata and surface-check/dts.mjs helpers."
+    ],
+    "failures_or_limits": [
+      "A clean scan does not prove semantic purity or inspect dependency implementations; no scan executed."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 33,
+        "end_line": 38,
+        "quote": "// What it does not do: see a spelling it does not list in JavaScript (a computed property name, an alias of `require`,\n// `process.binding` through a variable), or Rust written by a macro or with a comment inside a path (`std::/* */process`).\n// Timeouts are scanned for in JavaScript only (`setTimeout`, `AbortSignal.timeout`, `timers/promises`, ...): in Rust the\n// binding has timers of its own for its housekeeping (exec.rs), and no spelling tells those from a process timeout, so\n// that is for review. index.js is under ~200 lines by W13's card; review reads it once. A source it cannot read exits 2,\n// never 0."
+      },
+      {
+        "start_line": 49,
+        "end_line": 59,
+        "quote": "const NODE = \"bindings/node\";\nconst JS_DENIED = [\n  \"child_process\", \"process.kill\", \".kill(\", \"setTimeout\", \"setInterval\", \"AbortSignal.timeout\",\n  \"Bun.spawn\", \"Bun.$\", \"Deno.Command\", \"Deno.run\", \"Deno.kill\", \"process.binding\", \"internalBinding\",\n  \"cluster\", \"timers/promises\", \"scheduler.wait\", \"getBuiltinModule\",\n];\n/** A `require(` or `import(` whose argument is not a string literal: it could load anything, and is not read. */\nconst JS_COMPUTED = /\\b(?:require|import)\\s*\\(\\s*(?![\"'])/;\nconst JS_LOCAL = /(?:require\\(\\s*|\\bfrom\\s+|\\bimport\\(\\s*)[\"'`]\\.{1,2}\\//;\nconst RUST_DENIED = [\"tokio::process\", \"libc\", \"nix::\", \"windows_sys\", \".kill(\", \"run_script\"];\nconst ALLOWED_DEPS = { normal: [\"hugr-omni\", \"napi\", \"napi-derive\"], build: [\"napi-build\"] };"
+      },
+      {
+        "start_line": 162,
+        "end_line": 180,
+        "quote": "/** The dependencies of the binding crate, as cargo reads them: `{ name, kind }`, `name` the real package (not a rename). */\nfunction dependencies(root) {\n  const manifest = join(root, NODE, \"Cargo.toml\");\n  read(root, `${NODE}/Cargo.toml`);\n  const r = spawnSync(\"cargo\", [\"metadata\", \"--no-deps\", \"--offline\", \"--format-version\", \"1\", \"--manifest-path\", manifest], {\n    encoding: \"utf8\", cwd: root, maxBuffer: 256 * 1024 * 1024,\n  });\n  if (r.error) throw new Unreadable(`${NODE}/Cargo.toml: cargo cannot be started to read it (${r.error.code ?? r.error.message})`);\n  if (r.status !== 0) throw new Unreadable(`${NODE}/Cargo.toml: cargo cannot read it:\\n${r.stderr.trim().split(\"\\n\").slice(-6).join(\"\\n\")}`);\n  let meta;\n  try {\n    meta = JSON.parse(r.stdout);\n  } catch {\n    throw new Unreadable(`${NODE}/Cargo.toml: cargo metadata did not answer JSON`);\n  }\n  const real = realpathSync(manifest);\n  const pkg = (meta.packages ?? []).find((p) => realpathSync(p.manifest_path) === real);\n  if (!pkg) throw new Unreadable(`${NODE}/Cargo.toml: cargo metadata does not list the binding package`);\n  return pkg.dependencies.filter((d) => d.kind !== \"dev\").map((d) => ({ name: d.name, kind: d.kind ?? \"normal\" }));"
+      },
+      {
+        "start_line": 201,
+        "end_line": 220,
+        "quote": "  const js = read(root, `${NODE}/index.js`);\n  scanRaw(`${NODE}/index.js`, js, JS_DENIED);\n  js.split(\"\\n\").forEach((line, i) => {\n    if (JS_LOCAL.test(line)) out.push(`${NODE}/index.js:${i + 1}: loads another local file, which this check does not read`);\n    if (JS_COMPUTED.test(line)) out.push(`${NODE}/index.js:${i + 1}: a require() or import() whose argument is not a string literal loads a file this check cannot name`);\n  });\n  const { rust, other } = listing(root, `${NODE}/src`);\n  if (rust.length === 0) throw new Unreadable(`${NODE}/src: no .rs file found (the scan came back EMPTY)`);\n  for (const f of rust) scanRust(f, read(root, f));\n  for (const f of other) out.push(`${f}: a file in the binding's sources that is not .rs; this check does not read it`);\n  try {\n    scanRust(`${NODE}/build.rs`, read(root, `${NODE}/build.rs`));\n  } catch (e) {\n    if (!(e instanceof Unreadable) || !/ENOENT/.test(e.message)) throw e; // a binding without a build script is fine\n  }\n  const deps = dependencies(root);\n  if (deps.length === 0) throw new Unreadable(`${NODE}/Cargo.toml: no dependency found (the manifest came back EMPTY)`);\n  for (const { name, kind } of deps) {\n    if (!ALLOWED_DEPS[kind]?.includes(name)) out.push(`${NODE}/Cargo.toml: ${kind} dependency \\`${name}\\` is not one of ${(ALLOWED_DEPS[kind] ?? []).join(\", \") || \"(none)\"}`);\n  }"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/scripts/surface-check/dts.mjs",
+    "git_blob_sha": "df3e65de70cb2517428f361a60676a4c13200ba9",
+    "source_sha256": "5601de42c0bd0da603e155d0d2ff900288eecc91207f275ca29a6917eaf05c10",
+    "source_bytes": 6066,
+    "line_count": 167,
+    "disposition": "analyzed",
+    "kind": "build",
+    "purpose": "Read a bounded TypeScript declaration grammar into stable public capability paths.",
+    "behavior": [
+      "Tokenizes comments, strings, identifiers, numbers and punctuation with source lines; rejects unclosed comments/strings and template literal types.",
+      "Collects exported function/type/interface/class names, members and nested object-literal members, deduplicating overload paths.",
+      "Requires supported top-level exports and supported member syntax, matches braces and rejects an empty public surface.",
+      "Also provides strict optional --root parsing shared by surface checks."
+    ],
+    "contracts": [
+      "Positional parameter names and string-literal union values are intentionally not capability items.",
+      "Unsupported index/call/construct signatures are Unreadable rather than silently omitted."
+    ],
+    "dependencies": [
+      "native/omni/bindings/node/index.d.ts",
+      "surface-check/parity.mjs and skill-check/check.mjs."
+    ],
+    "failures_or_limits": [
+      "This parser does not type-check declarations or compare enum/reason values."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 4,
+        "end_line": 10,
+        "quote": "// The surface is every exported function, interface, class and type alias, each member of an interface or class,\n// and each member of a `{ ... }` type literal anywhere inside them, named by its path: `run`, `Child`, `Child.stop`,\n// `Child.stop.graceMs`, `PtyOption.cols`. Parameter names are not items (they are positional); string-literal union\n// values are not items either (they are values, not capabilities).\n//\n// Anything outside that grammar (a declaration that is not exported, an index signature, a template literal type)\n// is `Unreadable`, never skipped: a surface that a reader silently half-understood is the failure this guards against."
+      },
+      {
+        "start_line": 17,
+        "end_line": 22,
+        "quote": "/** The repository root of a check script (shared by parity.mjs and binding.mjs): `--root <dir>` or `fallback`; any other argument is `Unreadable`, never ignored. */\nexport function rootArg(argv, fallback) {\n  const args = argv.slice(2);\n  if (args.length === 0) return fallback;\n  if (args.length === 2 && args[0] === \"--root\" && args[1] !== \"\" && !args[1].startsWith(\"--\")) return resolve(args[1]);\n  throw new Unreadable(`unknown or incomplete arguments: ${args.join(\" \")} (the only one is --root <dir>)`);"
+      },
+      {
+        "start_line": 118,
+        "end_line": 165,
+        "quote": "  /** The members of a `{ ... }` whose `{` was just consumed; consumes the closing `}`. */\n  function members(path) {\n    while (!at(\"}\")) {\n      if (at(\";\") || at(\",\")) {\n        p++;\n        continue;\n      }\n      if (toks[p]?.k === \"id\" && toks[p].v === \"readonly\") p++;\n      const t = toks[p];\n      if (t?.k !== \"id\" && t?.k !== \"str\") fail(\"unsupported member (an index, call or construct signature?)\");\n      p++;\n      if (at(\"?\")) p++;\n      if (!at(\":\") && !at(\"(\")) fail(`unsupported member syntax after '${t.v}'`);\n      const full = [...path, t.v];\n      items.add(full.join(\".\"));\n      body(full, true);\n    }\n    p++;\n  }\n\n  while (p < toks.length) {\n    if (toks[p].k !== \"id\" || toks[p].v !== \"export\") fail(\"every top-level declaration must start with `export`\");\n    p++;\n    const kind = word();\n    if (kind === \"function\") {\n      const name = word();\n      items.add(name);\n      body([name], false);\n    } else if (kind === \"interface\" || kind === \"class\") {\n      const name = word();\n      items.add(name);\n      while (!at(\"{\")) {\n        if (p >= toks.length) fail(`${kind} ${name} has no body`);\n        p++;\n      }\n      p++;\n      members([name]);\n    } else if (kind === \"type\") {\n      const name = word();\n      items.add(name);\n      if (!at(\"=\")) fail(`type ${name} has no \\`=\\``);\n      p++;\n      body([name], false);\n    } else {\n      fail(`unsupported declaration \\`export ${kind}\\``);\n    }\n  }\n  if (items.size === 0) throw new Unreadable(`${file}: no exported declaration found (the surface came back EMPTY)`);"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/scripts/surface-check/parity.mjs",
+    "git_blob_sha": "04b93e9ad2df6f1d86383cc01b3ecbb7a7329e1c",
+    "source_sha256": "05b594e73fbcbd22cc8feba2faa06d7400f68681c6ebe007e140ceb28ffea0e8",
+    "source_bytes": 9609,
+    "line_count": 193,
+    "disposition": "analyzed",
+    "kind": "build",
+    "purpose": "Cross-check glossary, TypeScript/Rust capabilities and their explicit parity mapping.",
+    "behavior": [
+      "Parses contract section 2 and a two-section mapping, enforcing at most fifteen concepts and a truthful declared count.",
+      "Requires one row per glossary concept, both language sides present and cited TS names mapped to that concept.",
+      "Every observed public item must appear exactly once, every mapped item must exist, and excluded words are checked in glossary and item names.",
+      "Reports external re-exports and explicitly says Python is deferred to v0.2."
+    ],
+    "contracts": [
+      "Checks capabilities rather than type-value unions or Rust enum variants.",
+      "Exit 1 means mismatch; unreadable grammar/input exits 2."
+    ],
+    "dependencies": [
+      "docs/api-contract.md, bindings/node/index.d.ts, parity.txt and rust.mjs.",
+      "Rust crate public re-export boundary."
+    ],
+    "failures_or_limits": [
+      "Concept grouping can intentionally pair language-specific helpers rather than identical signatures; full value-level parity is unproved."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 10,
+        "end_line": 15,
+        "quote": "// v0.1 covers TypeScript and Rust. Python (C-PAR-01 is v0.2) is not read here: its column joins the map with the\n// package. Declared limit: the capabilities are compared, not the values inside a type: a Rust enum variant or a TypeScript\n// string-literal value (an error code, a `reason`) that exists in one language only is not caught (v0.2). A check that cannot read its input exits 2 and says which file and why, never 0.\n//\n//   node scripts/surface-check/parity.mjs [--root <repository root>]\n// Exit: 0 parity holds · 1 violations (each names the item) · 2 an input cannot be read."
+      },
+      {
+        "start_line": 108,
+        "end_line": 127,
+        "quote": "/** One language's side: every public item placed once, every placed item real, no excluded word. */\nfunction sideViolations(lang, surface, placed, excluded, out) {\n  const owner = new Map();\n  for (const [concept, items] of placed) {\n    for (const item of items) {\n      if (owner.has(item)) out.push(`${lang} item \\`${item}\\` is placed in two concepts (${owner.get(item)} and ${concept})`);\n      owner.set(item, concept);\n    }\n  }\n  const real = new Set(surface);\n  for (const item of surface) {\n    if (!owner.has(item)) out.push(`${lang} public item \\`${item}\\` is in no concept of scripts/surface-check/parity.txt (a capability added to one language: INV-02)`);\n  }\n  for (const [item, concept] of owner) {\n    if (!real.has(item)) out.push(`parity.txt places \\`${item}\\` under \"${concept}\" but the ${lang} surface has no such item`);\n  }\n  for (const item of surface) {\n    const hit = words(last(item)).find((w) => excluded.has(w));\n    if (hit) out.push(`${lang} public item \\`${item}\\` carries the excluded word \"${hit}\" (${excluded.get(hit)})`);\n  }"
+      },
+      {
+        "start_line": 141,
+        "end_line": 175,
+        "quote": "  if (concepts.length > MAX_CONCEPTS) out.push(`the glossary has ${concepts.length} concepts; the limit is ${MAX_CONCEPTS}`);\n  if (declared !== undefined && declared !== concepts.length) {\n    out.push(`the glossary heading says ${declared} concepts but lists ${concepts.length}`);\n  }\n  for (const { name } of concepts) {\n    const hit = words(name).find((w) => excluded.has(w));\n    if (hit) out.push(`glossary concept \"${name}\" carries the excluded word \"${hit}\" (${excluded.get(hit)})`);\n  }\n\n  const byConcept = new Map();\n  for (const row of rows) {\n    if (byConcept.has(row.concept)) out.push(`parity.txt has two rows for \"${row.concept}\"`);\n    byConcept.set(row.concept, row);\n    if (!concepts.some((c) => c.name === row.concept)) out.push(`parity.txt row \"${row.concept}\" is not a glossary concept`);\n  }\n  for (const { name, names, parenthetical } of concepts) {\n    if (parenthetical && names.length === 0) out.push(`glossary concept \"${name}\" has a parenthetical that cites no \\`backticked\\` name, so nothing is cross-checked against it`);\n    const row = byConcept.get(name);\n    if (!row) {\n      out.push(`glossary concept \"${name}\" has no row in parity.txt`);\n      continue;\n    }\n    if (row.ts.length === 0) out.push(`concept \"${name}\" has no TypeScript item`);\n    if (row.rust.length === 0) out.push(`concept \"${name}\" has no Rust item`);\n    for (const cited of names) {\n      if (!row.ts.some((item) => last(item) === cited)) out.push(`the glossary cites \\`${cited}\\` under \"${name}\" but no TypeScript item of that concept is named so`);\n    }\n  }\n  sideViolations(\"TypeScript\", ts, new Map(rows.map((r) => [r.concept, r.ts])), excluded, out);\n  sideViolations(\"Rust\", rust.items, new Map(rows.map((r) => [r.concept, r.rust])), excluded, out);\n\n  const summary =\n    `glossary ${concepts.length} concepts (limit ${MAX_CONCEPTS}) · TypeScript ${ts.length} items, Rust ${rust.items.length} items` +\n    ` (${rust.foreign.length} re-exported from another crate: ${rust.foreign.join(\", \") || \"none\"}) · excluded words: ${[...excluded.keys()].join(\", \")}` +\n    \" · Python: v0.2, not read\";"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/scripts/surface-check/parity.txt",
+    "git_blob_sha": "5efe733d9ab54244c0cd5db9793c1d0ee9f24ad8",
+    "source_sha256": "2f4981a5f86c0bd87815599b1aa13dba394a737f53740a49178674a397886f23",
+    "source_bytes": 4868,
+    "line_count": 51,
+    "disposition": "analyzed",
+    "kind": "config",
+    "purpose": "Assign every declared TS/Rust public capability to one shared glossary concept.",
+    "behavior": [
+      "Defines excluded words shell, kill, sandbox and label with decision references.",
+      "Maps fifteen concepts, including configure under spawn, maxRssBytes under timeout, backpressure under output and method/result/error fields across languages.",
+      "Indented continuation rows expand output's many fields; ownership is exact once per item according to parity.mjs."
+    ],
+    "contracts": [
+      "Enum variants and literal values are deliberately excluded and Python is deferred.",
+      "Comments label WP-H/WP8b additions proposed even though current mapping already contains them; these comments are historical status text."
+    ],
+    "dependencies": [
+      "native/omni/scripts/surface-check/parity.mjs",
+      "native/omni/docs/api-contract.md",
+      "TS declarations and Rust public API."
+    ],
+    "failures_or_limits": [
+      "The map is an asserted correspondence checked structurally, not an execution-equivalence proof."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 14,
+        "end_line": 16,
+        "quote": "# Declared limit: the rows place capabilities (functions, options, fields, types). The values inside a type, Rust enum\n# variants and TypeScript string-literal unions (error codes, `reason`, `stream`, `stdin`), are not compared across\n# languages: full C-PAR-01 is v0.2."
+      },
+      {
+        "start_line": 21,
+        "end_line": 25,
+        "quote": "[excluded]\nshell | INV-03 (PLAN §4.3): no shell, ever\nkill | PLAN §3: `stop()` ends the tree, there is no `kill()`\nsandbox | PLAN phases 2-3: arrives with SANDBOX_UNAVAILABLE, not in v0.1 (docs/api-contract.md §11)\nlabel | PLAN Apêndice E, `processes()` decision: no agent or session label"
+      },
+      {
+        "start_line": 28,
+        "end_line": 51,
+        "quote": "# WP-H (proposed, lead approves at merge): `configure` sits under spawn. It says where the native addon and the supervisor\n# that every spawn starts are. The addon has no Rust meaning (Rust links the core); a Rust host names its supervisor with\n# HUGR_OMNI_SUPERVISOR or by placing it next to its executable, which is not an item of the API.\n# WP8b (proposed, lead approves at merge): `windowsVerbatimArgs` sits under spawn. It says how the program is started (its\n# Windows command line), like `configure` says where the supervisor that starts it is.\nrun | run, CommonOptions, RunOptions | Command, Command::new, Command::arg, Command::args, Command::run\nspawn | spawn, SpawnOptions, PipeChild, configure, ConfigureOptions, ConfigureOptions.addon, ConfigureOptions.supervisor, CommonOptions.windowsVerbatimArgs | Command::spawn, Command::spawn_pty, PipeChild, Command::windows_verbatim_args\ncwd | CommonOptions.cwd | Command::cwd\nenvironment | CommonOptions.env, CommonOptions.inheritEnv | Command::env, Command::env_remove, Command::inherit_env\nterminal | RunOptions.pty, SpawnOptions.pty, spawn.pty, PtyOption, PtyOption.cols, PtyOption.rows, PtyChild, PtyChild.resize | Command::pty, PtySize, PtySize.cols, PtySize.rows, PtyChild, PtyChild::resize\ntimeout | CommonOptions.timeoutMs, CommonOptions.maxRssBytes | Command::timeout, Command::max_rss_bytes\ngrace | CommonOptions.graceMs, Child.stop.graceMs | Command::grace\ncancellation | CommonOptions.signal | Command::cancel_on, CancellationToken\nstdin | RunOptions.input, SpawnOptions.stdin, Child.write, PipeChild.closeStdin | Command::input, Command::stdin, Stdin, Child::write, PipeChild::close_stdin\noutput limit | RunOptions.maxOutputBytes | Command::max_output_bytes\ntext vs bytes | CommonOptions.text, run.text, spawn.text | Command::text, Data\noutput | CommonOptions.mergeStderr, SpawnOptions.backpressure, Child.output, Child.lines, Child.droppedBytes, Child.droppedBytes.stdout, Child.droppedBytes.stderr,\n  Chunk, Chunk.stream, Chunk.data, Chunk.lostBefore, Line, Line.stream, Line.text, Line.lostBefore, Line.continues |\n  Command::merge_stderr, Command::backpressure, Child::output, Child::lines, Child::dropped_bytes, DroppedBytes, DroppedBytes.stdout, DroppedBytes.stderr,\n  Output, Output::next, Lines, Lines::next, Chunk, Chunk.stream, Chunk.data, Chunk.lost_before, Line, Line.stream, Line.text,\n  Line.lost_before, Line.continues, Stream\nChild | Child, Child.pid, Child.wait, Child.stop, Child.processes, ProcessInfo, ProcessInfo.pid, ProcessInfo.parentPid, ProcessInfo.name | Child, Child::pid, Child::wait, Child::stop, Child::processes, ProcessInfo, ProcessInfo.pid, ProcessInfo.parent_pid, ProcessInfo.name\nExit / RunResult | Exit, Exit.exitCode, Exit.signal, Exit.reason, Exit.success, RunResult, RunResult.stdout, RunResult.stderr | Exit, Exit.code, Exit.signal, Exit.reason, Exit::success, Reason, RunOutput, RunOutput.exit, RunOutput.stdout, RunOutput.stderr\nOmniError | OmniError, OmniError.code, OmniError.result | Error, Error::code, Error::result, ErrorCode, ErrorCode::as_str"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/scripts/surface-check/rust.mjs",
+    "git_blob_sha": "d3bfd1e75831fe0816b9aecbd81817242aa0cae2",
+    "source_sha256": "b345e1b54230b458f55ce92877a076e293f1abe847015ad8e64542d00fadd603",
+    "source_bytes": 12679,
+    "line_count": 231,
+    "disposition": "analyzed",
+    "kind": "build",
+    "purpose": "Extract Rust public capabilities from the core's prescribed re-export and rustfmt layout.",
+    "behavior": [
+      "Reads lib.rs/api/mod.rs re-exports, resolves unique exported structs/enums, public fields and inherent methods including qualified/generic impl headers.",
+      "Skips modules only when declared under cfg(test); foreign re-exports remain named boundary items.",
+      "Rejects unsupported public syntax, aliases hiding impls, extra globs, macros, include/path indirection and non-Rust source files.",
+      "Returns sorted item paths plus foreign names; missing/ambiguous definitions or an empty surface are Unreadable."
+    ],
+    "contracts": [
+      "Uses column-zero blocks and four-space members expected from rustfmt; it is a line reader, not the Rust compiler.",
+      "Does not expand cfg/macros or compare trait implementations and enum variants."
+    ],
+    "dependencies": [
+      "crates/hugr-omni/src public re-export graph.",
+      "surface-check/dts.mjs Unreadable and parity.mjs consumer."
+    ],
+    "failures_or_limits": [
+      "Layout and bounded grammar limit guarantees; comments/raw-text patterns can affect scanning."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 7,
+        "end_line": 31,
+        "quote": "// This is a line reader, not a Rust parser, and it says so: it relies on the layout `cargo fmt --check` enforces in CI\n// (items at column 0, members at 4 spaces, a block closed by `}` at column 0). It does not expand macros, follow\n// `cfg`, or see trait impls (`impl Trait for T` is not an inherent impl; enum variants are values, not capabilities).\n//\n// What it understands, it reads. What it does not understand, it refuses: every public syntax outside the list below\n// is `Unreadable`, never skipped, so a new public form can only turn this check red until the reader learns it.\n//   - column 0 of lib.rs and api/mod.rs: `pub use` (a path, `{a, b}`, no `as`), `#[doc(hidden)] pub mod`, and the one\n//     glob `pub use api::*;` in lib.rs; any other `pub ...` line, any other glob, any public module is refused;\n//   - an exported name must be defined exactly once as a `pub struct` or `pub enum` of this crate (or come from another\n//     crate); a tuple struct with a public field, a struct body that cannot be found, is refused;\n//   - an inherent impl of an exported type, at column 0, written `impl T`, `impl<..> T<..>` or through a path\n//     (`impl crate::api::T`: the last segment names the type): each `    pub fn` (with `const`/`async`/`unsafe`) is a\n//     method; any other `    pub ...` line (`pub extern \"C\" fn`, `pub const`, `pub type`) is refused; an impl of an\n//     exported type nested inside a fn or mod, an impl header of another shape that mentions one, and a module-level\n//     alias of one (`type X = T;`, which an `impl X` would hide) are refused;\n//   - `#[macro_export]` and any `macro_rules!` in the crate are refused (a macro can write public API this reader\n//     cannot expand), and so are `include!`/`include_str!`/`include_bytes!` and `#[path = ...]`, which pull in code\n//     this reader would not see; a file under src that is not `.rs` is refused for the same reason (a module could\n//     include it). Test modules are skipped only when their `mod x;` carries `#[cfg(test)]`; any other module file,\n//     whatever its name, is part of the library and is read.\n//\n// Declared limit (C-PAR-01 is v0.2 for the rest): what the reader compares is the capabilities, items named `Type`,\n// `Type.field` and `Type::method`. Enum variants here and string-literal union values in index.d.ts (error codes,\n// `reason`, `stream`) are values: they are not compared across languages, so a code that exists in one language only\n// is not caught."
+      },
+      {
+        "start_line": 153,
+        "end_line": 170,
+        "quote": "export function rustSurface(root) {\n  const exported = [\n    ...reexports(read(join(root, SRC, \"lib.rs\")), `${SRC}/lib.rs`),\n    ...reexports(read(join(root, SRC, \"api/mod.rs\")), `${SRC}/api/mod.rs`),\n  ];\n  const listed = sources(root, SRC);\n  const everything = listed.rs.map((f) => ({ f, lines: read(join(root, f)).split(\"\\n\") }));\n  const isTest = testModules(everything);\n  const strange = listed.other.find((f) => !isTest(f));\n  if (strange) throw new Unreadable(`${strange}: a file under src that is not .rs; a module could include it and this reader would not see it`);\n  const files = everything.filter(({ f }) => !isTest(f));\n  for (const { f, lines } of files) {\n    const pulled = lines.findIndex((l) => /\\binclude(?:_str|_bytes)?!\\s*[(\\[{]/.test(l) || /#\\s*\\[\\s*(?:cfg_attr\\s*\\([^\\]]*?)?\\bpath\\s*=/.test(l));\n    if (pulled >= 0) throw new Unreadable(`${f}:${pulled + 1}: \\`${lines[pulled].trim().slice(0, 60)}\\` pulls in code this reader does not see (include! and #[path] are refused)`);\n    const at = lines.findIndex((l) => l.includes(\"#[macro_export]\"));\n    if (at >= 0) throw new Unreadable(`${f}:${at + 1}: an exported macro is public API this reader cannot name`);\n    const rules = lines.findIndex((l) => /^\\s*macro_rules!/.test(l));\n    if (rules >= 0) throw new Unreadable(`${f}:${rules + 1}: a macro_rules! can write impls this reader cannot expand`);"
+      },
+      {
+        "start_line": 180,
+        "end_line": 206,
+        "quote": "  for (const name of names) {\n    const def = new RegExp(`^pub (struct|enum|union|trait|type|fn|const|static) ${name}\\\\b`);\n    const found = files.flatMap(({ f, lines }) => lines.flatMap((l, i) => (def.test(l) ? [{ f, lines, i, kind: def.exec(l)[1] }] : [])));\n    if (found.length !== 1) {\n      const where = found.map(({ f, i }) => `${f}:${i + 1}`).join(\", \");\n      throw new Unreadable(`${SRC}: \\`${name}\\` is exported but ${found.length === 0 ? \"defined nowhere\" : `defined ${found.length} times (${where})`}`);\n    }\n    const { f, lines, i, kind } = found[0];\n    if (kind !== \"struct\" && kind !== \"enum\") throw new Unreadable(`${f}:${i + 1}: \\`${name}\\` is a ${kind}; this reader maps structs and enums`);\n    if (kind === \"struct\") {\n      if (lines[i].endsWith(\"{\")) {\n        for (const [j, l] of body(lines, i, f)) {\n          const field = /^ {4}pub (\\w+):/.exec(l);\n          if (field) items.add(`${name}.${field[1]}`);\n          else if (publicMember(l)) throw new Unreadable(`${f}:${j + 1}: \\`${l.trim()}\\` is public syntax this reader does not understand in struct ${name}`);\n        }\n      } else if (lines[i].includes(\"(\")) {\n        if (/\\bpub\\b/.test(lines[i].slice(lines[i].indexOf(\"(\")))) throw new Unreadable(`${f}:${i + 1}: tuple struct ${name} has a public field; not supported`);\n      } else if (!lines[i].endsWith(\";\")) {\n        throw new Unreadable(`${f}:${i + 1}: cannot find the body of struct ${name}`);\n      }\n    }\n  }\n  const alias = new RegExp(`^(?:pub(?:\\\\([^)]*\\\\))?\\\\s+)?type\\\\s+\\\\w+(?:<[^>]*>)?\\\\s*=\\\\s*(?:\\\\w+::)*(${[...names].join(\"|\")})(?:<[^>]*>)?\\\\s*;`);\n  for (const { f, lines } of files) {\n    const at = lines.findIndex((l) => names.size > 0 && alias.test(l));\n    if (at >= 0) throw new Unreadable(`${f}:${at + 1}: \\`${lines[at].trim()}\\` aliases an exported type; an \\`impl\\` of the alias would hide its methods from this reader`);"
+      },
+      {
+        "start_line": 208,
+        "end_line": 230,
+        "quote": "  for (const { f, lines } of files) {\n    lines.forEach((l, i) => {\n      if (!/^\\s*impl[\\s<]/.test(l)) return;\n      let end = i;\n      while (end < lines.length && !lines[end].endsWith(\"{\")) end++;\n      const header = lines.slice(i, end + 1).join(\" \");\n      if (/\\sfor\\s/.test(header)) return; // a trait impl\n      const target = implTarget(header);\n      if (target === null) {\n        if ([...names].some((n) => new RegExp(`\\\\b${n}\\\\b`).test(header))) throw new Unreadable(`${f}:${i + 1}: cannot read the impl header \\`${header.trim().slice(0, 60)}\\``);\n        return;\n      }\n      if (!names.has(target)) return; // an impl of some other type that merely mentions an exported one\n      if (/^\\s/.test(l)) throw new Unreadable(`${f}:${i + 1}: an impl of ${target} nested inside a fn or mod is not read; move it to column 0`);\n      for (const [j, member] of body(lines, end, f)) {\n        const fn = /^ {4}pub (?:(?:const|async|unsafe) )*fn (\\w+)/.exec(member);\n        if (fn) items.add(`${target}::${fn[1]}`);\n        else if (publicMember(member)) throw new Unreadable(`${f}:${j + 1}: \\`${member.trim()}\\` is public syntax this reader does not understand in impl ${target}`);\n      }\n    });\n  }\n  if (names.size === 0) throw new Unreadable(`${SRC}: no \\`pub use\\` re-export found (the surface came back EMPTY)`);\n  return { items: [...items].sort(), foreign };"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/scripts/surface-check/surface.test.mjs",
+    "git_blob_sha": "9b3d33436f1c0bc73824d79550769378af6f6032",
+    "source_sha256": "028c0d670e87065c36c9d35be94ab079655f5f1d3d8dfd1df77da32056a33c8d",
+    "source_bytes": 24283,
+    "line_count": 384,
+    "disposition": "analyzed",
+    "kind": "test",
+    "purpose": "Probe parity and binding-boundary checks against a clean miniature source tree and planted violations.",
+    "behavior": [
+      "Parity mutants add/remove/duplicate capability mappings, exceed glossary size, introduce excluded names and unsupported TS/Rust syntax.",
+      "Tests qualified/nested/generic/aliased impls, macro/include/path indirection and cfg(test)-only source exclusion.",
+      "Binding mutants exercise raw JS process/timer APIs, computed/local imports, std process paths/use trees, FFI/assembly and JS execution through Node-API.",
+      "Cargo manifest mutations cover inline/dotted/target/renamed/build dependencies; dev dependencies and allowed API dependencies remain accepted."
+    ],
+    "contracts": [
+      "Checks expected exit code and named diagnostics from actual checker subprocesses; clean positive controls prevent universal rejection.",
+      "Malformed/missing inputs and unknown CLI arguments must exit 2."
+    ],
+    "dependencies": [
+      "surface-check/parity.mjs, binding.mjs, dts.mjs and rust.mjs.",
+      "Cargo metadata for manifest parsing."
+    ],
+    "failures_or_limits": [
+      "These controls test known detector cases, not adversarial completeness; none were executed."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 112,
+        "end_line": 174,
+        "quote": "test(\"parity: the clean tree passes (a check that fires on everything is not a check)\", () => {\n  expects(parity(), 0, \"parity OK\");\n});\n\ntest(\"parity: a comment is not a declaration, and a pub(crate) fn is not public API\", () => {\n  expects(parity({ \"bindings/node/index.d.ts\": (t) => t.replace(\"}\\n\", \"}\\n/* detach?: boolean; */\\n// readonly extra: number;\\n\") }), 0);\n});\n\ntest(\"parity: an option added to the TypeScript surface only fails and names it\", () => {\n  expects(parity({ \"bindings/node/index.d.ts\": (t) => t.replace(\"cwd?: string\", \"cwd?: string; detach?: boolean\") }), 1, \"TypeScript public item `Options.detach`\");\n});\n\ntest(\"parity: a method added to the Rust API only fails and names it\", () => {\n  expects(parity({ \"crates/hugr-omni/src/api/command.rs\": (t) => t.replace(\"    pub(crate) fn\", \"    /// d\\n    pub fn detach(&self) {}\\n\\n    pub(crate) fn\") }), 1, \"Rust public item `Command::detach`\");\n});\n\ntest(\"parity: a field added to an exported Rust struct fails and names it\", () => {\n  expects(parity({ \"crates/hugr-omni/src/types.rs\": (t) => t.replace(\"    pub pid: u32,\", \"    pub pid: u32,\\n    pub extra: u32,\") }), 1, \"`Child.extra`\");\n});\n\ntest(\"parity: a map entry for an item that does not exist fails and names it\", () => {\n  expects(parity({ \"scripts/surface-check/parity.txt\": (t) => t.replace(\"Options.cwd\", \"Options.cwd, Options.gone\") }), 1, \"places `Options.gone`\");\n});\n\ntest(\"parity: a concept with nothing in Rust fails and names the concept\", () => {\n  expects(parity({ \"scripts/surface-check/parity.txt\": (t) => t.replace(\"| Command::cwd\", \"|\") }), 1, 'concept \"cwd\" has no Rust item');\n});\n\ntest(\"parity: a glossary concept without a row fails and names it\", () => {\n  expects(parity({ \"docs/api-contract.md\": GLOSSARY([\"run\", \"cwd (`cwd`)\", \"Child (`pid`, `stop`)\", \"timeout\"]) }), 1, 'glossary concept \"timeout\" has no row');\n});\n\ntest(\"parity: a row for something that is not a glossary concept fails and names it\", () => {\n  expects(parity({ \"scripts/surface-check/parity.txt\": (t) => `${t}timeout | | \\n` }), 1, 'row \"timeout\" is not a glossary concept');\n});\n\ntest(\"parity: a glossary of 16 concepts fails\", () => {\n  const sixteen = Array.from({ length: 16 }, (_, i) => `concept${i}`);\n  expects(parity({ \"docs/api-contract.md\": GLOSSARY(sixteen) }), 1, \"has 16 concepts; the limit is 15\");\n});\n\ntest(\"parity: a heading that miscounts the glossary fails\", () => {\n  expects(parity({ \"docs/api-contract.md\": GLOSSARY([\"run\", \"cwd (`cwd`)\", \"Child (`pid`, `stop`)\"], \"4 concepts\") }), 1, \"says 4 concepts but lists 3\");\n});\n\ntest(\"parity: a name the glossary cites but no item carries fails and names it\", () => {\n  expects(parity({ \"docs/api-contract.md\": GLOSSARY([\"run\", \"cwd (`cwd`)\", \"Child (`pid`, `stop`, `resize`)\"]) }), 1, \"cites `resize` under \\\"Child\\\"\");\n});\n\ntest(\"parity: an excluded capability in either language fails and names the word\", () => {\n  expects(parity({ \"bindings/node/index.d.ts\": (t) => t.replace(\"cwd?: string\", \"cwd?: string; shell?: boolean\") }), 1, 'excluded word \"shell\"');\n  expects(parity({ \"crates/hugr-omni/src/api/command.rs\": (t) => t.replace(\"    pub(crate) fn\", \"    pub fn use_shell(&self) {}\\n\\n    pub(crate) fn\") }), 1, 'excluded word \"shell\"');\n});\n\ntest(\"parity: an item placed in two concepts fails and names it\", () => {\n  expects(parity({ \"scripts/surface-check/parity.txt\": (t) => t.replace(\"Options.cwd |\", \"Options.cwd, run |\") }), 1, \"`run` is placed in two concepts\");\n});\n\ntest(\"parity: an input that cannot be read exits 2 and names the file or the construct\", () => {\n  expects(parity({ \"bindings/node/index.d.ts\": null }), 2, \"bindings/node/index.d.ts\");\n  expects(parity({ \"bindings/node/index.d.ts\": \"// nothing here\\n\" }), 2, \"EMPTY\");\n  expects(parity({ \"bindings/node/index.d.ts\": (t) => `${t}export const x: number;\\n` }), 2, \"export const\");\n  expects(parity({ \"bindings/node/index.d.ts\": (t) => t.replace(\"export function\", \"function\") }), 2, \"must start with `export`\");"
+      },
+      {
+        "start_line": 202,
+        "end_line": 244,
+        "quote": "test(\"parity: a method added through a qualified impl is seen; one the reader cannot place is refused\", () => {\n  const append = (text) => ({ \"crates/hugr-omni/src/api/command.rs\": (t) => `${t}\\n${text}\\n` });\n  expects(parity(append(\"impl crate::api::Command {\\n    pub fn shell(&self) {}\\n}\")), 1, \"`Command::shell`\");\n  expects(parity(append(\"impl api::Command {\\n    pub fn shell(&self) {}\\n}\")), 1, \"`Command::shell`\");\n  expects(parity(append(\"impl<T> crate::api::Command<T> {\\n    pub fn extra(&self) {}\\n}\")), 1, \"`Command::extra`\");\n  expects(parity(append(\"fn helper() {\\n    impl Command {\\n        pub fn shell(&self) {}\\n    }\\n}\")), 2, \"nested inside a fn or mod\");\n  expects(parity(append(\"mod inner {\\n    impl super::Command {\\n        pub fn shell(&self) {}\\n    }\\n}\")), 2, \"nested inside a fn or mod\");\n  expects(parity(append(\"impl<T> <Command as Other>::Out {\\n    pub fn shell(&self) {}\\n}\")), 2, \"cannot read the impl header\");\n  expects(parity(append(\"type Cmd = Command;\\n\\nimpl Cmd {\\n    pub fn shell(&self) {}\\n}\")), 2, \"aliases an exported type\");\n  expects(parity(append(\"type Cmd = crate::api::Command;\")), 2, \"aliases an exported type\");\n  expects(parity(append(\"macro_rules! add {\\n    () => {};\\n}\")), 2, \"macro_rules!\");\n  expects(parity(append(\"impl Drop for Command {\\n    fn drop(&mut self) {}\\n}\\n\\nimpl<T> From<T> for Command {\\n    fn from(_t: T) -> Command {\\n        Command::new()\\n    }\\n}\")), 0);\n});\n\ntest(\"parity: code pulled in by include!, #[path] or a non-.rs file is refused, since the reader would not see it\", () => {\n  const append = (text) => ({ \"crates/hugr-omni/src/api/command.rs\": (t) => `${t}\\n${text}\\n` });\n  const ext = \"impl Command {\\n    pub fn shell(self) -> Self {\\n        self\\n    }\\n}\\n\";\n  expects(parity({ ...append('include!(\"command_ext.in\");'), \"crates/hugr-omni/src/api/command_ext.in\": ext }), 2, \"command_ext.in\", \"not .rs\");\n  expects(parity(append('include!(\"command_ext.rs\");')), 2, \"pulls in code this reader does not see\");\n  expects(parity(append('const S: &str = include_str!(\"data.txt\");')), 2, \"include! and #[path] are refused\");\n  expects(parity(append('include_bytes!(\"data.bin\");')), 2, \"pulls in code\");\n  expects(parity(append('#[path = \"elsewhere.rs\"]\\nmod elsewhere;')), 2, \"#[path]\");\n  expects(parity(append('#[cfg_attr(unix, path = \"unix.rs\")]\\nmod platform;')), 2, \"#[path]\");\n  expects(parity({ \"crates/hugr-omni/src/api/notes.md\": \"# a note\\n\" }), 2, \"notes.md\", \"not .rs\");\n  expects(parity(append('fn helper() {\\n    let _path = \"x\";\\n}')), 0);\n});\n\ntest(\"parity: a module named tests is skipped only under #[cfg(test)]; otherwise it is library code and is read\", () => {\n  const ext = \"impl Command {\\n    /// Shell.\\n    pub fn shell(&mut self) -> &mut Self {\\n        self\\n    }\\n}\\n\";\n  const declared = (attr) => ({ \"crates/hugr-omni/src/api/mod.rs\": (t) => `${t}${attr}mod tests;\\n`, \"crates/hugr-omni/src/api/tests.rs\": ext });\n  expects(parity(declared(\"\")), 1, \"`Command::shell`\");\n  expects(parity(declared(\"#[allow(dead_code)]\\n\")), 1, \"`Command::shell`\");\n  expects(parity({ \"crates/hugr-omni/src/api/mod.rs\": (t) => `${t}mod tests;\\n`, \"crates/hugr-omni/src/api/tests/mod.rs\": \"mod more;\\n\", \"crates/hugr-omni/src/api/tests/more.rs\": ext }), 1, \"`Command::shell`\");\n  expects(parity(declared(\"#[cfg(test)]\\n\")), 0);\n  expects(parity(declared(\"#[cfg(test)]\\n#[allow(dead_code)]\\n\")), 0);\n  expects(parity({ \"crates/hugr-omni/src/api/mod.rs\": (t) => `${t}#[cfg(test)]\\nmod tests;\\n`, \"crates/hugr-omni/src/api/tests/mod.rs\": \"mod more;\\n\", \"crates/hugr-omni/src/api/tests/more.rs\": ext, \"crates/hugr-omni/src/api/tests/data.txt\": \"x\" }), 0);\n});\n\ntest(\"parity: an impl header wrapped onto a where clause is still read, and an impl of another type that mentions an exported one is not mistaken for it\", () => {\n  const wrapped = (t) =>\n    t.replace(\"impl Child {\\n    /// Stops.\\n    pub fn stop(&self) {}\\n}\", \"impl Child\\nwhere\\n    Self: Sized,\\n{\\n    /// Stops.\\n    pub fn stop(&self) {}\\n\\n    /// More.\\n    pub fn extra(&self) {}\\n}\");\n  expects(parity({ \"crates/hugr-omni/src/types.rs\": wrapped }), 1, \"`Child::extra`\");\n  expects(parity({ \"crates/hugr-omni/src/types.rs\": (t) => `${t}\\nstruct Other;\\n\\nimpl Other {\\n    pub fn holds(&self, _c: Child) {}\\n}\\n` }), 0);"
+      },
+      {
+        "start_line": 261,
+        "end_line": 287,
+        "quote": "test(\"binding: every spelling of a std path reaching process fails, written out or through any use tree\", () => {\n  const rs = (text) => ({ \"bindings/node/src/lib.rs\": (t) => `${t}${text}\\n` });\n  const spellings = [\n    \"use std::{process::Command};\",\n    \"use std::{process::{self, Command}};\",\n    \"use std::{self, process};\",\n    \"use std::{\\n    io,\\n    process::Command,\\n};\",\n    \"use std::os::unix::process::CommandExt;\",\n    \"use std::os::unix::{process::CommandExt};\",\n    \"pub use std::process;\",\n    \"pub(crate) use ::std::{process};\",\n    \"use std::*;\",\n    \"use std::os::unix::*;\",\n    \"use std as s;\",\n    \"use std::{self as s};\",\n    \"extern crate std as s;\",\n    'fn go() {\\n    let _ = std::process::Command::new(\"x\");\\n}',\n    'fn go() {\\n    let _ = ::std::process::Command::new(\"x\");\\n}',\n    'fn go() {\\n    let _ = std ::\\n        process::Command::new(\"x\");\\n}',\n    'fn go() {\\n    let _ = std::os::unix::process::CommandExt::exec;\\n}',\n  ];\n  for (const text of spellings) expects(binding(rs(text)), 1, \"bindings/node/src/lib.rs:\", \"process control belongs to the Rust core\");\n  expects(binding(rs(\"use std::{process::Command\")), 2, \"never closed by `;`\");\n  expects(binding(rs(\"use std::{process::Command;\")), 2, \"cannot read the use declaration\");\n  expects(binding(rs(\"use std::{process::Command, ?};\")), 2, \"cannot read the use declaration\");\n  expects(binding(rs(\"use std::{sync::Arc, time::Duration, collections::HashMap};\\nuse std::io::Write;\\nuse hugr_omni::Command as Core;\")), 0);\n  expects(binding({ \"bindings/node/build.rs\": 'fn main() { std::process::exit(0); }\\n' }), 1, \"bindings/node/build.rs:1\");"
+      },
+      {
+        "start_line": 359,
+        "end_line": 383,
+        "quote": "test(\"binding: a dependency outside the core and Node-API fails and names it, in every table form cargo accepts\", () => {\n  const append = (text) => ({ \"bindings/node/Cargo.toml\": (t) => `${t}${text}` });\n  const inline = (line) => ({ \"bindings/node/Cargo.toml\": (t) => t.replace('napi = \"3\"', `napi = \"3\"\\n${line}`) });\n  expects(binding(inline('libc = \"0.2\"')), 1, \"normal dependency `libc`\");\n  expects(binding(inline(\"nix.version = \\\"0.29\\\"\")), 1, \"`nix`\");\n  expects(binding(append('\\n[dependencies.libc]\\nversion = \"0.2\"\\n')), 1, \"normal dependency `libc`\");\n  expects(binding(append(\"\\n[target.'cfg(unix)'.dependencies]\\nnix = \\\"0.29\\\"\\n\")), 1, \"`nix`\");\n  expects(binding(append(\"\\n[target.'cfg(unix)'.dependencies.libc]\\nversion = \\\"0.2\\\"\\n\")), 1, \"`libc`\");\n  expects(binding(inline('harmless = { package = \"libc\", version = \"0.2\" }')), 1, \"`libc`\");\n  expects(binding(append('\\n[dependencies.harmless]\\npackage = \"windows-sys\"\\nversion = \"0.61\"\\n')), 1, \"`windows-sys`\");\n  expects(binding({ \"bindings/node/Cargo.toml\": (t) => t.replace('napi-build = \"2\"', 'napi-build = \"2\"\\nlibc = \"0.2\"') }), 1, \"build dependency `libc`\");\n});\n\ntest(\"binding: dev-dependencies are not looked at, and a core or Node-API dependency in any table form is fine\", () => {\n  expects(binding({ \"bindings/node/Cargo.toml\": (t) => t.replace('tokio = \"1\"', 'libc = \"0.2\"') }), 0);\n  expects(binding({ \"bindings/node/Cargo.toml\": (t) => `${t}\\n[target.'cfg(windows)'.dependencies.napi-derive]\\nversion = \"3\"\\n` }), 0);\n});\n\ntest(\"binding: a source that cannot be read exits 2\", () => {\n  expects(binding({ \"bindings/node/index.js\": null }), 2, \"index.js\");\n  expects(binding({ \"bindings/node/src/lib.rs\": null }), 2, \"bindings/node/src\");\n  expects(binding({ \"bindings/node/src/lib.rs\": null, \"bindings/node/src/note.txt\": \"no Rust here\" }), 2, \"EMPTY\");\n  expects(binding({ \"bindings/node/Cargo.toml\": null }), 2, \"Cargo.toml\");\n  expects(binding({ \"bindings/node/Cargo.toml\": (t) => `${t}\\n[dependencies\\n` }), 2, \"cargo cannot read it\");\n  expects(binding({ \"bindings/node/Cargo.toml\": '[package]\\nname = \"x\"\\nversion = \"0.0.0\"\\nedition = \"2024\"\\n' }), 2, \"EMPTY\");"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/scripts/test_file_size_guard.py",
+    "git_blob_sha": "c123bf35bcafe56d9fad9fd910049f40332bbce8",
+    "source_sha256": "aebd4974f7ade0864ed8ca2b1d50fadcfce098e26c715015d3560fa1e41b12ef",
+    "source_bytes": 3479,
+    "line_count": 79,
+    "disposition": "analyzed",
+    "kind": "test",
+    "purpose": "Probe file-size classification, exact line counting and embedded-repository scope.",
+    "behavior": [
+      "Creates temporary Git repositories, stages fixture files and copies the real guard untracked into its intended root.",
+      "Asserts 400 lines pass and 401 fail with or without trailing LF; documents skip, shebang scripts count and unknown/empty populations fail.",
+      "Nested native/omni cases ensure oversized or unknown outer files are excluded while oversized inner files fail and an empty subtree remains broken."
+    ],
+    "contracts": [
+      "Expected exit code and output text must both match; prints aggregate case count and exits one on any failure."
+    ],
+    "dependencies": [
+      "native/omni/scripts/file-size-guard.py",
+      "Git and Python subprocesses."
+    ],
+    "failures_or_limits": [
+      "The helper does not remove its mkdtemp repositories after each case; no cases were executed here."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 15,
+        "end_line": 34,
+        "quote": "def repo(files: dict, omni: str = \"\"):\n    \"\"\"A git repo holding `files`, with the guard copied (untracked) to `<omni>/scripts/`, as it sits in omni.\"\"\"\n    root = Path(tempfile.mkdtemp(prefix=\"fsg-\"))\n    subprocess.run([\"git\", \"init\", \"-q\"], cwd=root, check=True)\n    for name, content in files.items():\n        path = root / name\n        path.parent.mkdir(parents=True, exist_ok=True)\n        path.write_bytes(content if isinstance(content, bytes) else content.encode())\n    if files:\n        subprocess.run([\"git\", \"add\", \"-A\"], cwd=root, check=True)\n    guard = root / omni / \"scripts\" / GUARD.name\n    guard.parent.mkdir(parents=True, exist_ok=True)\n    shutil.copy(GUARD, guard)\n    return root, guard\n\n\ndef run(root: Path, guard: Path):\n    # Run from the repo's top level: the guard must scan its own root whatever the caller's directory is.\n    out = subprocess.run([sys.executable, str(guard)], cwd=root, capture_output=True, text=True)\n    return out.returncode, out.stdout"
+      },
+      {
+        "start_line": 44,
+        "end_line": 75,
+        "quote": "CASES = [\n    # (name, files, expected exit code, text that must appear in the output[, omni root inside the repo])\n    (\"400 lines passes\", {\"src/a.rs\": lines(400)}, 0, \"sweet 1\"),\n    (\"401 lines fails and names the file\", {\"src/big.rs\": lines(401)}, 1, \"FAIL   401  src/big.rs\"),\n    (\"no trailing newline still counts the last line\",\n     {\"src/a.py\": lines(401, end_newline=False)}, 1, \"FAIL   401  src/a.py\"),\n    (\"documents are not checked\",\n     {\"PLAN.md\": lines(5000), \"data.json\": lines(5000), \"src/a.ts\": lines(10)}, 0, \"fail 0\"),\n    (\"extensionless shebang script is code\",\n     {\"scripts/tool\": \"#!/bin/sh\\n\" + lines(700), \"src/a.rs\": lines(1)}, 1, \"scripts/tool\"),\n    (\"unclassified extension is broken, named\", {\"src/a.rs\": lines(1), \"x.weird\": \"1\\n\"}, 2, \"x.weird\"),\n    (\"empty repo is broken, not a pass\", {}, 2, \"returned no files\"),\n    (\"only documents is broken, not a pass\", {\"README.md\": \"hi\\n\"}, 2, \"zero code files\"),\n    # Inside a host repo (Orchestra's native/omni) the guard scans its own subtree and nothing else.\n    (\"nested: a big file outside the omni root is not ours\",\n     {\"src/huge.ts\": lines(5000), \"x.weird\": \"1\\n\", f\"{NESTED}/src/a.rs\": lines(10)}, 0, \"1 code files checked\", NESTED),\n    (\"nested: a big file inside the omni root fails, named from the root\",\n     {\"src/a.ts\": lines(1), f\"{NESTED}/src/big.rs\": lines(401)}, 1, \"FAIL   401  src/big.rs\", NESTED),\n    (\"nested: an empty omni root is broken, not a pass\",\n     {\"src/a.ts\": lines(1)}, 2, \"returned no files\", NESTED),\n]\n\n\ndef main() -> int:\n    failures = 0\n    for name, files, want_code, want_text, *omni in CASES:\n        code, out = run(*repo(files, *omni))\n        ok = code == want_code and want_text in out\n        failures += not ok\n        print(f\"{'ok  ' if ok else 'FAIL'} {name}\" + (\"\" if ok else f\"\\n     exit={code} out={out!r}\"))\n    print(f\"{len(CASES) - failures}/{len(CASES)} teeth cases passed\")\n    return 1 if failures else 0"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/LICENSE-APACHE",
+    "git_blob_sha": "57bc88a15a0ee8266c259b2667e64608d3f7e292",
+    "source_sha256": "c95bae1d1ce0235ecccd3560b772ec1efb97f348a79f0fbe0a634f0c2ccefe2c",
+    "source_bytes": 11358,
+    "line_count": 202,
+    "disposition": "analyzed",
+    "kind": "license",
+    "purpose": "Carry the Apache License 2.0 legal text used as one project licensing option.",
+    "behavior": [
+      "Contains the January 2004 Apache 2.0 terms, including copyright and patent grants, redistribution conditions and contribution treatment.",
+      "Includes trademark restrictions, warranty/liability disclaimers and the standard unfilled application appendix."
+    ],
+    "contracts": [
+      "Packaging copies this file alongside LICENSE-MIT into main/platform packages."
+    ],
+    "dependencies": [
+      "native/omni/bindings/node/npm/pack.mjs includes both license files.",
+      "Workspace/package license metadata identifies the alternative-license expression."
+    ],
+    "failures_or_limits": [
+      "This is classification of supplied legal text, not legal advice or an audit of third-party license compliance."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 5,
+        "quote": "                                 Apache License\n                           Version 2.0, January 2004\n                        http://www.apache.org/licenses/\n\n   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION"
+      },
+      {
+        "start_line": 89,
+        "end_line": 98,
+        "quote": "   4. Redistribution. You may reproduce and distribute copies of the\n      Work or Derivative Works thereof in any medium, with or without\n      modifications, and in Source or Object form, provided that You\n      meet the following conditions:\n\n      (a) You must give any other recipients of the Work or\n          Derivative Works a copy of this License; and\n\n      (b) You must cause any modified files to carry prominent notices\n          stating that You changed the files; and"
+      },
+      {
+        "start_line": 178,
+        "end_line": 195,
+        "quote": "   APPENDIX: How to apply the Apache License to your work.\n\n      To apply the Apache License to your work, attach the following\n      boilerplate notice, with the fields enclosed by brackets \"[]\"\n      replaced with your own identifying information. (Don't include\n      the brackets!)  The text should be enclosed in the appropriate\n      comment syntax for the file format. We also recommend that a\n      file or class name and description of purpose be included on the\n      same \"printed page\" as the copyright notice for easier\n      identification within third-party archives.\n\n   Copyright [yyyy] [name of copyright owner]\n\n   Licensed under the Apache License, Version 2.0 (the \"License\");\n   you may not use this file except in compliance with the License.\n   You may obtain a copy of the License at\n\n       http://www.apache.org/licenses/LICENSE-2.0"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/LICENSE-MIT",
+    "git_blob_sha": "732f302f865abcb11bd44768f0b7339a47903e14",
+    "source_sha256": "b929c9d704b174f957c690c9651eba9a5e789d9cd6fee0492a5e3876ed657d81",
+    "source_bytes": 1080,
+    "line_count": 22,
+    "disposition": "analyzed",
+    "kind": "license",
+    "purpose": "Carry the MIT legal text and project copyright notice as the other licensing option.",
+    "behavior": [
+      "Names copyright 2026 hugr-omni contributors.",
+      "Grants broad permission subject to preserving copyright/permission notices, followed by the AS IS warranty/liability disclaimer."
+    ],
+    "contracts": [
+      "The text requires notice inclusion in copies or substantial portions; pack.mjs includes it with Apache text."
+    ],
+    "dependencies": [
+      "native/omni/bindings/node/npm/pack.mjs",
+      "Project MIT OR Apache-2.0 metadata."
+    ],
+    "failures_or_limits": [
+      "This record classifies the source text and does not determine legal applicability to a particular downstream use."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 13,
+        "quote": "MIT License\n\nCopyright (c) 2026 hugr-omni contributors\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software."
+      },
+      {
+        "start_line": 15,
+        "end_line": 21,
+        "quote": "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  }
+]

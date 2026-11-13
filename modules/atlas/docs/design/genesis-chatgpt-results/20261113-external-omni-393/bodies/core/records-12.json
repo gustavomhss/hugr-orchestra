@@ -1,0 +1,241 @@
+[
+  {
+    "path": "native/omni/crates/omni-supervisor/src/windows/container/broker.rs",
+    "git_blob_sha": "f87b8d7a51b844e355c61177c9cc43c7caeb7e5c",
+    "source_sha256": "d2dd38b4d67203a3f46a782bd5efe87e6050e42e98836d55fa762bf3187450c4",
+    "source_bytes": 5778,
+    "line_count": 159,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Broker explicitly granted local TCP ports through per-route Windows AF_UNIX sockets.",
+    "behavior": [
+      "Binds every listener before returning and connects accepted streams only to its configured 127.0.0.1 port with a ten-second connect timeout; client bytes never choose the destination.",
+      "Uses noninheritable overlapped sockets and caps active connections at 64 per route.",
+      "Copies both directions with shared sockets, passes EOF as a half-close, and shuts both sides on transfer error."
+    ],
+    "contracts": [
+      "The launcher lifetime owns broker workers; socket-folder grants are applied by container/mod.rs before start."
+    ],
+    "dependencies": [
+      "Windows WinSock AF_UNIX support and std TcpStream I/O; launcher stderr receives broker errors."
+    ],
+    "failures_or_limits": [
+      "No idle/transfer deadline is imposed. If broker-pair thread creation fails, the ignored spawn result leaves the active counter incremented; repeated failures can exhaust admission. Raw listener sockets also rely on launcher exit for some error-path cleanup."
+    ],
+    "evidence": [
+      {
+        "start_line": 18,
+        "end_line": 20,
+        "quote": "/// Simultaneous connections per route; more are closed at accept.\nconst MAX_ACTIVE: usize = 64;\nconst CONNECT_TIMEOUT: Duration = Duration::from_secs(10);"
+      },
+      {
+        "start_line": 29,
+        "end_line": 46,
+        "quote": "/// Binds every route before returning, so the confined child never races a missing listener.\npub(super) fn start(routes: &[Route]) -> io::Result<()> {\n    let mut data = WSADATA::default();\n    // SAFETY: version 2.2 and an out structure.\n    let error = unsafe { WSAStartup(0x0202, &mut data) };\n    if error != 0 {\n        return Err(io::Error::from_raw_os_error(error));\n    }\n    let listeners = routes\n        .iter()\n        .map(|route| Ok((listener(route)?, route.port)))\n        .collect::<io::Result<Vec<_>>>()?;\n    for (socket, port) in listeners {\n        std::thread::Builder::new()\n            .name(\"broker\".into())\n            .spawn(move || serve(socket, port))?;\n    }\n    Ok(())"
+      },
+      {
+        "start_line": 95,
+        "end_line": 116,
+        "quote": "fn serve(listener: SOCKET, port: u16) {\n    let active = Arc::new(AtomicUsize::new(0));\n    loop {\n        // SAFETY: a listening socket; the peer address is not wanted.\n        let client = unsafe { accept(listener, std::ptr::null_mut(), std::ptr::null_mut()) };\n        if client == INVALID_SOCKET {\n            report(port, &io::Error::last_os_error());\n            return;\n        }\n        // SAFETY: a fresh connected stream socket owned by nobody else; TcpStream only sends, receives and shuts down.\n        let client = unsafe { TcpStream::from_raw_socket(client as u64) };\n        if active.fetch_add(1, Ordering::SeqCst) >= MAX_ACTIVE {\n            active.fetch_sub(1, Ordering::SeqCst);\n            continue;\n        }\n        let active = active.clone();\n        let _ = std::thread::Builder::new().name(\"broker-pair\".into()).spawn(move || {\n            if let Err(e) = pair(client, port) {\n                report(port, &e);\n            }\n            active.fetch_sub(1, Ordering::SeqCst);\n        });"
+      },
+      {
+        "start_line": 120,
+        "end_line": 150,
+        "quote": "/// Pipes both ways until both directions end; each end's EOF is passed on as a half-close. The sockets are shared,\n/// never duplicated: `WSADuplicateSocketW` is not promised for AF_UNIX.\nfn pair(client: TcpStream, port: u16) -> io::Result<()> {\n    let upstream = Arc::new(TcpStream::connect_timeout(\n        &([127, 0, 0, 1], port).into(),\n        CONNECT_TIMEOUT,\n    )?);\n    let client = Arc::new(client);\n    let (from, to) = (client.clone(), upstream.clone());\n    let forward = std::thread::Builder::new()\n        .name(\"broker-up\".into())\n        .spawn(move || copy(&from, &to))?;\n    copy(&upstream, &client);\n    let _ = forward.join();\n    Ok(())\n}\n\nfn copy(mut from: &TcpStream, mut to: &TcpStream) {\n    let mut buffer = [0u8; 16 * 1024];\n    loop {\n        match from.read(&mut buffer) {\n            Ok(0) => break,\n            Ok(n) if to.write_all(&buffer[..n]).is_ok() => {}\n            _ => {\n                let _ = from.shutdown(Shutdown::Both);\n                let _ = to.shutdown(Shutdown::Both);\n                return;\n            }\n        }\n    }\n    let _ = to.shutdown(Shutdown::Write);"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/src/windows/container/guard.rs",
+    "git_blob_sha": "c39c2902c492eca3a27dab941ee716636ac1f872",
+    "source_sha256": "fa973927e27c64ab35d0dc7eb306bd3ea35fde66c515829334bd4c8416ef1293",
+    "source_bytes": 11952,
+    "line_count": 297,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Coordinate temporary read-only guards and missing-name placeholders with a journal and shared holder locks.",
+    "behavior": [
+      "Serializes journal changes with a directory lock, reconciles stale states, and deduplicates aliases within one protect call by file identity.",
+      "Existing paths get captured DACLs and read-only profile rights; missing names become protected empty directories, with per-holder locked marker files.",
+      "Release drops markers and parent pins; reconciliation restores a state only when no observed holder remains locked, and removes only empty placeholders."
+    ],
+    "contracts": [
+      "Joining commands protect their own SID too; ancestor pins are intended to prevent renaming the guarded path out of its write root."
+    ],
+    "dependencies": [
+      "acl.rs supplies capture/protect/restore/identity/pin; container/mod.rs brackets launch and invokes recovery."
+    ],
+    "failures_or_limits": [
+      "Protection happens before the state write, leaving a crash interval without a journal record. Ancestor pin errors are ignored. Reconciliation ignores restore/read failures and then removes state; marker-open or non-lock-violation errors count as no live holder. Atomic rename is not a durability flush."
+    ],
+    "evidence": [
+      {
+        "start_line": 37,
+        "end_line": 92,
+        "quote": "pub(super) fn protect(journal: &Path, paths: &[PathBuf], roots: &[PathBuf], sid: &Sid) -> io::Result<Held> {\n    fs::create_dir_all(journal)?;\n    let _lock = DirLock::acquire(journal)?;\n    reconcile(journal)?;\n    // SAFETY: GetCurrentProcessId reads only this process's id and cannot fail.\n    let pid = unsafe { GetCurrentProcessId() };\n    let mut markers = Vec::new();\n    let mut pins = Vec::new();\n    let mut pinned: HashSet<PathBuf> = HashSet::new();\n    let mut seen: HashSet<Identity> = HashSet::new();\n    for (index, path) in paths.iter().enumerate() {\n        // Dedupe guards that resolve to the same object, so restoration is order-independent and never leaves a file\n        // read-only. A missing name has no identity yet and cannot collide with another name.\n        if path.exists() {\n            match acl::identity(path) {\n                Ok(id) if !seen.insert(id) => continue,\n                _ => {}\n            }\n        }\n        let hash = hash(path);\n        let state = journal.join(format!(\"g-{hash}.state\"));\n        if !state.exists() {\n            let content = if path.exists() {\n                let sddl = acl::capture(path)?;\n                acl::protect(path, sid)?;\n                format!(\"E\\n{}\\n{}\", path.display(), sddl)\n            } else {\n                fs::create_dir(path)?;\n                acl::protect(path, sid)?;\n                format!(\"P\\n{}\\n\", path.display())\n            };\n            write_atomic(&state, &content)?;\n        } else {\n            // A joining command still strips its own profile to read-only on an already-protected path.\n            acl::protect(path, sid)?;\n        }\n        // Pin every directory from the path up to its write root so the container cannot move a parent aside.\n        for ancestor in ancestors_to_root(path, roots) {\n            if !pinned.insert(ancestor.clone()) {\n                continue;\n            }\n            if let Ok(handle) = acl::pin(&ancestor) {\n                pins.push(handle);\n            }\n        }\n        let marker = journal.join(format!(\"o-{hash}-{pid}-{index}.own\"));\n        let file = OpenOptions::new()\n            .create(true)\n            .truncate(true)\n            .read(true)\n            .write(true)\n            .open(&marker)?;\n        lock(&file, false)?;\n        markers.push((file, marker));\n    }\n    Ok(Held { markers, pins })"
+      },
+      {
+        "start_line": 117,
+        "end_line": 136,
+        "quote": "/// Releases this command's holds, then restores every path no other live holder still protects.\npub(super) fn release(held: Held, journal: &Path) -> io::Result<()> {\n    let _lock = DirLock::acquire(journal)?;\n    for (file, marker) in held.markers {\n        let _ = unlock(&file);\n        drop(file);\n        let _ = fs::remove_file(&marker);\n    }\n    // Release the parent pins before restoring, so a placeholder's directory can be removed.\n    drop(held.pins);\n    reconcile(journal)\n}\n\n/// Replays any leftover state: restores or drops every guarded path with no live holder. Idempotent.\npub(super) fn recover(journal: &Path) -> io::Result<()> {\n    if !journal.exists() {\n        return Ok(());\n    }\n    let _lock = DirLock::acquire(journal)?;\n    reconcile(journal)"
+      },
+      {
+        "start_line": 168,
+        "end_line": 200,
+        "quote": "        if let Ok(mut file) = File::open(&state) {\n            let mut text = String::new();\n            if file.read_to_string(&mut text).is_ok() {\n                let mut parts = text.splitn(3, '\\n');\n                let kind = parts.next().unwrap_or(\"\");\n                let path = parts.next().unwrap_or(\"\");\n                let sddl = parts.next().unwrap_or(\"\");\n                if !path.is_empty() {\n                    let target = PathBuf::from(path);\n                    match kind {\n                        \"E\" => {\n                            let _ = acl::restore(&target, sddl);\n                        }\n                        // Only ever remove the empty placeholder this guard created. If something is inside it, it is\n                        // host content: leave it and report, never delete it.\n                        \"P\" => {\n                            if let Err(error) = fs::remove_dir(&target) {\n                                let _ = writeln!(\n                                    io::stderr().lock(),\n                                    \"hugr-omni-supervisor: appcontainer: leaving placeholder {}: {error}\",\n                                    target.display(),\n                                );\n                            }\n                        }\n                        _ => {}\n                    }\n                }\n            }\n        }\n        let _ = fs::remove_file(&state);\n        for owner in dead {\n            let _ = fs::remove_file(owner);\n        }"
+      },
+      {
+        "start_line": 205,
+        "end_line": 233,
+        "quote": "/// Whether a live process still holds the marker's lock. A dead holder's lock is already released by the OS, so this\n/// acquires it and reports the marker free.\nfn held_by_other(marker: &Path) -> bool {\n    let Ok(file) = OpenOptions::new().read(true).write(true).open(marker) else {\n        return false;\n    };\n    match lock(&file, true) {\n        Ok(()) => {\n            let _ = unlock(&file);\n            false\n        }\n        Err(error) => error.raw_os_error() == Some(ERROR_LOCK_VIOLATION as i32),\n    }\n}\n\nfn read_names(dir: &Path) -> Vec<(String, PathBuf)> {\n    let Ok(entries) = fs::read_dir(dir) else {\n        return Vec::new();\n    };\n    entries\n        .flatten()\n        .map(|entry| (entry.file_name().to_string_lossy().into_owned(), entry.path()))\n        .collect()\n}\n\nfn write_atomic(path: &Path, content: &str) -> io::Result<()> {\n    let temp = path.with_extension(\"tmp\");\n    File::create(&temp)?.write_all(content.as_bytes())?;\n    fs::rename(&temp, path)"
+      }
+    ],
+    "inference": [
+      "The source comment claims crash safety, but these error/order paths do not establish recovery for every interrupted or failed restore."
+    ],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/src/windows/container/mod.rs",
+    "git_blob_sha": "4a856174674e2be2ed9ce10aeb7880d4c99d924d",
+    "source_sha256": "3ecc1e9bf40c60108127e67667f46f0fb624dbf3430bd400be92845e4fe96b35",
+    "source_bytes": 14134,
+    "line_count": 331,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Run the standalone Windows AppContainer launcher and manage grant, broker and guard lifecycle.",
+    "behavior": [
+      "Parses bounded profile names, absolute grant/route/guard/journal paths, isolated toolchain-grant mode, revoke and recovery modes, or app plus verbatim line launch.",
+      "Derives the shared toolchain capability, applies profile grants including broker socket folders, starts routes, protects guards and launches with SECURITY_CAPABILITIES plus a new kill-on-close Job.",
+      "Inherits only selected standard handles, waits for the confined root, terminates its Job and polls emptiness up to 200 times at 25 ms before releasing guards and cleaning route names.",
+      "Toolchain grants are best effort; launcher errors print one diagnostic and exit 125."
+    ],
+    "contracts": [
+      "The managed launcher is itself the host child; confined descendants belong to the nested Job and root exit code is returned."
+    ],
+    "dependencies": [
+      "acl.rs supplies grants/SIDs; broker.rs fixed endpoints; guard.rs recovery; job.rs and create::Attributes build confinement attributes."
+    ],
+    "failures_or_limits": [
+      "App and line are not included in the absolute-path check. Guard release errors are ignored; an unknown active count or the bounded poll expiry permits restoration to continue without confirmed Job emptiness. OS isolation was not executed here."
+    ],
+    "evidence": [
+      {
+        "start_line": 127,
+        "end_line": 156,
+        "quote": "    if request\n        .grants\n        .iter()\n        .map(|g| &g.0)\n        .chain(&request.toolchain)\n        .chain(request.routes.iter().map(|r| &r.socket))\n        .chain(request.guards.iter())\n        .chain(request.journal.iter())\n        .any(|p| !p.is_absolute())\n    {\n        return Err(\"every path must be absolute\".into());\n    }\n    if !request.toolchain.is_empty() {\n        let alone = request.grants.is_empty()\n            && request.routes.is_empty()\n            && request.guards.is_empty()\n            && request.journal.is_none()\n            && request.app.is_none()\n            && request.line.is_none();\n        if request.revoke || request.recover || !alone {\n            return Err(\"--toolchain takes no command and no other grant\".into());\n        }\n        return Ok(request);\n    }\n    if (!request.guards.is_empty() || request.recover) && request.journal.is_none() {\n        return Err(\"--guard and --recover need --journal\".into());\n    }\n    if !request.revoke && !request.recover && (request.app.is_none() || request.line.is_none()) {\n        return Err(\"missing --app or --line\".into());\n    }"
+      },
+      {
+        "start_line": 160,
+        "end_line": 214,
+        "quote": "fn run(request: &Request) -> Result<i32, String> {\n    let toolchain = acl::capability(TOOLCHAIN).map_err(|e| format!(\"capability {TOOLCHAIN}: {e}\"))?;\n    if !request.toolchain.is_empty() {\n        for path in &request.toolchain {\n            let _ = acl::apply(path, &toolchain, Grant::Read);\n        }\n        return Ok(0);\n    }\n    // Recovery needs no profile: it only restores ACLs captured by an earlier run and removes stale placeholders.\n    if request.recover {\n        let journal = request.journal.as_deref().unwrap_or_else(|| Path::new(\"\"));\n        guard::recover(journal).map_err(|e| format!(\"recover {}: {e}\", journal.display()))?;\n        return Ok(0);\n    }\n    let sid = acl::profile(&request.name).map_err(|e| format!(\"profile {}: {e}\", request.name))?;\n    let folders = request\n        .routes\n        .iter()\n        .filter_map(|r| r.socket.parent().map(|p| (p.to_path_buf(), Grant::Write)));\n    let grants: Vec<_> = request.grants.iter().cloned().chain(folders).collect();\n    if request.revoke {\n        for (path, _) in &grants {\n            acl::revoke(path, &sid).map_err(|e| format!(\"revoke {}: {e}\", path.display()))?;\n        }\n        acl::delete(&request.name).map_err(|e| format!(\"delete profile {}: {e}\", request.name))?;\n        return Ok(0);\n    }\n    for (path, grant) in &grants {\n        acl::apply(path, &sid, *grant).map_err(|e| format!(\"grant {grant:?} {}: {e}\", path.display()))?;\n    }\n    broker::start(&request.routes).map_err(|e| format!(\"broker: {e}\"))?;\n    // Protection brackets only the launch, and its holds are released whether the command succeeds or fails. A crash\n    // between here and release leaves a journal that the next launch (reconciled in `protect`) or `--recover` replays.\n    let journal = request.journal.clone();\n    let write_roots: Vec<PathBuf> = grants\n        .iter()\n        .filter(|(_, grant)| matches!(grant, Grant::Write))\n        .map(|(path, _)| path.clone())\n        .collect();\n    let held = match &journal {\n        Some(dir) => Some(guard::protect(dir, &request.guards, &write_roots, &sid).map_err(|e| format!(\"guard: {e}\"))?),\n        None => None,\n    };\n    let (app, line) = (\n        request.app.as_deref().unwrap_or_default(),\n        request.line.as_deref().unwrap_or_default(),\n    );\n    let code = launch(app, line, &sid, &toolchain).map_err(|e| format!(\"start {app}: {e}\"));\n    if let (Some(held), Some(dir)) = (held, &journal) {\n        let _ = guard::release(held, dir);\n    }\n    for route in &request.routes {\n        let _ = std::fs::remove_file(&route.socket);\n    }\n    code"
+      },
+      {
+        "start_line": 217,
+        "end_line": 230,
+        "quote": "/// Starts `app` confined to the profile, in a new kill-on-close Job, and waits for it.\nfn launch(app: &str, line: &str, sid: &acl::Sid, toolchain: &acl::Sid) -> io::Result<i32> {\n    let job = super::job::create()?;\n    let jobs: [HANDLE; 1] = [job.as_raw_handle()];\n    let mut held = [SID_AND_ATTRIBUTES {\n        Sid: toolchain.raw(),\n        Attributes: ENABLED,\n    }];\n    let mut capabilities = SECURITY_CAPABILITIES {\n        AppContainerSid: sid.raw(),\n        Capabilities: held.as_mut_ptr(),\n        CapabilityCount: 1,\n        ..SECURITY_CAPABILITIES::default()\n    };"
+      },
+      {
+        "start_line": 303,
+        "end_line": 320,
+        "quote": "    let mut code = 0u32;\n    // SAFETY: a live process handle.\n    let waited = unsafe { WaitForSingleObject(process.as_raw_handle(), INFINITE) };\n    // SAFETY: a live process handle and an out value.\n    if waited != 0 || unsafe { GetExitCodeProcess(process.as_raw_handle(), &mut code) } == 0 {\n        return Err(io::Error::last_os_error());\n    }\n    // Kill any confined descendant the root left behind and wait until the Job is empty before the caller restores\n    // ACLs — a process still alive could otherwise write a guarded path during the restore window.\n    super::job::terminate(&job);\n    for _ in 0..200 {\n        if matches!(super::job::active(&job), None | Some(0)) {\n            break;\n        }\n        std::thread::sleep(std::time::Duration::from_millis(25));\n    }\n    drop(job);\n    Ok(code as i32)"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/src/windows/container/tests.rs",
+    "git_blob_sha": "cf803b2a3f44102925c77f48417c2774eded1fb5",
+    "source_sha256": "ea5a3b4968a4a95d54bf1fd17cc9d38a6b41345482e0ad99d51521cd697f5959",
+    "source_bytes": 2027,
+    "line_count": 59,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Check AppContainer launch argument grammar for grants, routes, profile names and exclusive toolchain mode.",
+    "behavior": [
+      "Builds a read/write grant request with route 5432 and an app command line, asserting parsed profile, grant count, route count/port and verbatim line.",
+      "Rejects relative grant/toolchain paths, mixed toolchain/command or revoke modes, zero or malformed ports, invalid or overlong names, missing commands and unknown flags.",
+      "Accepts a standalone toolchain request and a read-grant revoke request."
+    ],
+    "contracts": [
+      "Parser tests require no confined process creation; they constrain CLI shape only."
+    ],
+    "dependencies": [
+      "container/mod.rs parse function and Request fields."
+    ],
+    "failures_or_limits": [
+      "The cases do not cover guard/recover journaling, DACL effects, broker networking, or token isolation. Their assertions were not executed."
+    ],
+    "evidence": [
+      {
+        "start_line": 9,
+        "end_line": 30,
+        "quote": "#[test]\nfn parses_grants_routes_and_the_command() {\n    let request = parse(args(&[\n        \"orchestra-abc\",\n        \"--read\",\n        r\"C:\\w\",\n        \"--write\",\n        r\"C:\\w\\out\",\n        \"--route\",\n        r\"5432=C:\\t\\0.sock\",\n        \"--app\",\n        r\"C:\\pwsh.exe\",\n        \"--line\",\n        \"pwsh -Command x\",\n    ]))\n    .unwrap();\n    assert_eq!(request.name, \"orchestra-abc\");\n    assert_eq!(request.grants.len(), 2);\n    assert_eq!(request.routes.len(), 1);\n    assert_eq!(request.routes[0].port, 5432);\n    assert_eq!(request.line.as_deref(), Some(\"pwsh -Command x\"));\n    assert!(!request.revoke);"
+      },
+      {
+        "start_line": 33,
+        "end_line": 58,
+        "quote": "#[test]\nfn refuses_relative_paths_bad_names_ports_and_missing_commands() {\n    for bad in [\n        &[\"orchestra\", \"--read\", r\"w\", \"--app\", \"a\", \"--line\", \"l\"][..],\n        &[\"orchestra\", \"--toolchain\", r\"go\"],\n        &[\"orchestra\", \"--toolchain\", r\"C:\\go\", \"--app\", \"a\", \"--line\", \"l\"],\n        &[\"orchestra\", \"--toolchain\", r\"C:\\go\", \"--read\", r\"C:\\w\"],\n        &[\"orchestra\", \"--toolchain\", r\"C:\\go\", \"--revoke\"],\n        &[\"orchestra\", \"--route\", r\"0=C:\\t\\0.sock\", \"--app\", \"a\", \"--line\", \"l\"],\n        &[\"orchestra\", \"--route\", r\"5432\", \"--app\", \"a\", \"--line\", \"l\"],\n        &[\"bad name\", \"--app\", \"a\", \"--line\", \"l\"],\n        &[&\"x\".repeat(65), \"--app\", \"a\", \"--line\", \"l\"],\n        &[\"orchestra\", \"--read\", r\"C:\\w\"],\n        &[\"orchestra\", \"--unknown\", \"v\", \"--app\", \"a\", \"--line\", \"l\"],\n    ] {\n        assert!(parse(args(bad)).is_err(), \"{bad:?}\");\n    }\n    assert_eq!(\n        parse(args(&[\"orchestra\", \"--toolchain\", r\"C:\\go\"])).unwrap().toolchain,\n        [std::path::PathBuf::from(r\"C:\\go\")]\n    );\n    assert!(\n        parse(args(&[\"orchestra\", \"--read\", r\"C:\\w\", \"--revoke\"]))\n            .unwrap()\n            .revoke\n    );"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/src/windows/create.rs",
+    "git_blob_sha": "afeb3c5f7b389205b31f8fdb3d024165fd25477e",
+    "source_sha256": "8cb01e8d3631eb68dacb44231aa3af6a89cadce0add2527f1d9b3c04faf42f48",
+    "source_bytes": 6170,
+    "line_count": 161,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Create Windows roots atomically in their Job with a narrow inherited-handle or pseudoconsole attribute list.",
+    "behavior": [
+      "Builds JOB_LIST plus HANDLE_LIST for pipe roots or PSEUDOCONSOLE for terminals; pipe standard handles become inheritable and duplicates are removed from the list.",
+      "Always sets STARTF_USESTDHANDLES, leaving explicit null handles for terminals; pipe roots use CREATE_NEW_PROCESS_GROUP while terminal roots keep the console group for Ctrl-C.",
+      "Passes explicit executable, mutable command line, Unicode environment and cwd to CreateProcessW and owns returned process/thread handles.",
+      "An aligned Attributes buffer queries required size, retains caller pointers until deletion, and propagates initialize/update errors."
+    ],
+    "contracts": [
+      "Attribute values must remain valid and unmoved until the list drops; Job assignment occurs in process creation rather than after a runnable child exists."
+    ],
+    "dependencies": [
+      "spawn.rs supplies validated strings and Stdio; job.rs supplies the Job; pty_windows supplies HPCON."
+    ],
+    "failures_or_limits": [
+      "NUL/double-NUL encoding invariants are caller responsibilities. Handle inheritance flags are set here and not reset here; lifetime cleanup relies on owned Stdio supplied by spawn."
+    ],
+    "evidence": [
+      {
+        "start_line": 27,
+        "end_line": 74,
+        "quote": "    let cwd: Vec<u16> = cwd.iter().copied().chain([0]).collect();\n    let app: Vec<u16> = app.iter().copied().chain([0]).collect();\n    // The attribute list points at these two: declared first, so they outlive it.\n    let jobs: [HANDLE; 1] = [job.as_raw_handle()];\n    let mut inherit: Vec<HANDLE> = Vec::new();\n    let mut si = STARTUPINFOEXW::default();\n    si.StartupInfo.cb = size_of::<STARTUPINFOEXW>() as u32;\n    si.StartupInfo.dwFlags = STARTF_USESTDHANDLES; // a terminal root gets explicit null handles\n    if let Some(io) = stdio {\n        let err = io.stderr.as_ref().unwrap_or(&io.stdout);\n        for h in [&io.stdin, &io.stdout, err] {\n            // Inheritable only for this call; HANDLE_LIST keeps them from any other child.\n            // SAFETY: a handle we own.\n            if unsafe { SetHandleInformation(h.as_raw_handle(), HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT) } == 0 {\n                return Err(io::Error::last_os_error());\n            }\n            if !inherit.contains(&h.as_raw_handle()) {\n                inherit.push(h.as_raw_handle());\n            }\n        }\n        si.StartupInfo.hStdInput = io.stdin.as_raw_handle();\n        si.StartupInfo.hStdOutput = io.stdout.as_raw_handle();\n        si.StartupInfo.hStdError = err.as_raw_handle();\n    }\n    let mut attrs = Attributes::new(2)?;\n    // SAFETY: `jobs`, `inherit` and the pseudoconsole outlive `attrs`, and none of them moves before it is dropped.\n    unsafe {\n        attrs.set(\n            PROC_THREAD_ATTRIBUTE_JOB_LIST as usize,\n            jobs.as_ptr().cast(),\n            size_of_val(&jobs),\n        )?;\n        match pc {\n            Some(pc) => attrs.set(\n                PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE as usize,\n                pc as *const _,\n                size_of::<isize>(),\n            )?,\n            None => attrs.set(\n                PROC_THREAD_ATTRIBUTE_HANDLE_LIST as usize,\n                inherit.as_ptr().cast(),\n                size_of_val(inherit.as_slice()),\n            )?,\n        }\n    }\n    si.lpAttributeList = attrs.list();\n    // CTRL_BREAK targets the root's group; a terminal root stays in the console's group (ADR-0003).\n    let group = if pc.is_none() { CREATE_NEW_PROCESS_GROUP } else { 0 };"
+      },
+      {
+        "start_line": 76,
+        "end_line": 103,
+        "quote": "    // SAFETY: NUL-terminated strings, a double-NUL environment block, a writable command line, and an\n    // initialized STARTUPINFOEXW whose attribute list is alive. Handles are inherited only for a pipe root,\n    // and then only the HANDLE_LIST.\n    let ok = unsafe {\n        CreateProcessW(\n            app.as_ptr(),\n            line.as_mut_ptr(),\n            std::ptr::null(),\n            std::ptr::null(),\n            i32::from(pc.is_none()),\n            EXTENDED_STARTUPINFO_PRESENT | CREATE_UNICODE_ENVIRONMENT | group,\n            env.as_ptr().cast(),\n            cwd.as_ptr(),\n            &si.StartupInfo,\n            &mut pi,\n        )\n    };\n    if ok == 0 {\n        return Err(io::Error::last_os_error());\n    }\n    // SAFETY: both handles are fresh from CreateProcessW and owned by nobody else.\n    let (process, _thread) = unsafe {\n        (\n            OwnedHandle::from_raw_handle(pi.hProcess),\n            OwnedHandle::from_raw_handle(pi.hThread),\n        )\n    };\n    Ok((pi.dwProcessId, process))"
+      },
+      {
+        "start_line": 111,
+        "end_line": 129,
+        "quote": "impl Attributes {\n    pub(super) fn new(count: u32) -> io::Result<Attributes> {\n        let mut size = 0;\n        // SAFETY: a size query with a null list (it fails with ERROR_INSUFFICIENT_BUFFER and sets `size`).\n        unsafe { InitializeProcThreadAttributeList(std::ptr::null_mut(), count, 0, &mut size) };\n        let mut buf = vec![0usize; size.div_ceil(size_of::<usize>())];\n        // SAFETY: `buf` is at least `size` bytes, pointer-aligned.\n        if unsafe { InitializeProcThreadAttributeList(buf.as_mut_ptr().cast(), count, 0, &mut size) } == 0 {\n            return Err(io::Error::last_os_error());\n        }\n        Ok(Attributes { buf })\n    }\n\n    pub(super) fn list(&mut self) -> LPPROC_THREAD_ATTRIBUTE_LIST {\n        self.buf.as_mut_ptr().cast()\n    }\n\n    /// # Safety\n    /// `value` must stay valid, unmoved, until the list is dropped."
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  }
+]

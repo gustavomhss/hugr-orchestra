@@ -1,0 +1,376 @@
+[
+  {
+    "path": "native/omni/crates/omni-supervisor/src/pty_unix/tests.rs",
+    "git_blob_sha": "cd8fb223ac290823b3a216366f8b979cbfb386f4",
+    "source_sha256": "383e677ab712e89fb91b1691cf518cd46015b0a0064214b8d5b6ebadad7783cf",
+    "source_bytes": 8874,
+    "line_count": 216,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Specify the Unix PTY system seam with bounded child and terminal observations.",
+    "behavior": [
+      "Checks master/slave close-on-exec flags, terminal identity, requested size and bidirectional bytes including CRLF echo translation.",
+      "Checks resize from 80 by 24 to 120 by 40 and the 1 by 32767 boundary.",
+      "Forks async-signal-safe-only child closures: a new session with make_controlling must receive SIGINT from typed Ctrl-C, while the unwired control reads past it; a non-session-leader must get EPERM."
+    ],
+    "contracts": [
+      "Wait helpers impose a ten-second bound and drain PTY output while observing child exit, including the documented macOS exit dependency."
+    ],
+    "dependencies": [
+      "pty_unix open/resize/make_controlling seam; libc terminal ioctls, fork and waitpid."
+    ],
+    "failures_or_limits": [
+      "The helper kills a timed-out child before failing; assertions were inspected, not executed, so these platform conditions remain unverified here."
+    ],
+    "evidence": [
+      {
+        "start_line": 105,
+        "end_line": 134,
+        "quote": "#[test]\nfn open_makes_a_close_on_exec_terminal_of_the_requested_size() {\n    let pair = open(100, 30).unwrap();\n    for fd in [&pair.master, &pair.slave] {\n        // SAFETY: F_GETFD only reads the descriptor's flags.\n        let flags = unsafe { libc::fcntl(fd.as_raw_fd(), libc::F_GETFD) };\n        assert!(\n            flags != -1 && flags & libc::FD_CLOEXEC != 0,\n            \"{fd:?} is not close-on-exec\"\n        );\n    }\n    // SAFETY: isatty only inspects the descriptor.\n    assert_eq!(unsafe { libc::isatty(pair.slave.as_raw_fd()) }, 1);\n    assert_eq!(size(pair.slave.as_fd()), (100, 30));\n    // Typed on the master, a line on the slave; the master then reads the terminal's echo of it and what the slave\n    // wrote, as a terminal shows them (`\\n` becomes `\\r\\n`).\n    write_all(pair.master.as_fd(), b\"ping\\n\");\n    read_exactly(pair.slave.as_fd(), b\"ping\\n\");\n    write_all(pair.slave.as_fd(), b\"pong\\n\");\n    read_exactly(pair.master.as_fd(), b\"ping\\r\\npong\\r\\n\");\n}\n\n#[test]\nfn resize_sets_the_size_the_terminal_reports() {\n    let pair = open(80, 24).unwrap();\n    resize(pair.master.as_fd(), 120, 40).unwrap();\n    assert_eq!(size(pair.slave.as_fd()), (120, 40));\n    resize(pair.master.as_fd(), 1, 32767).unwrap();\n    assert_eq!(size(pair.slave.as_fd()), (1, 32767));\n}"
+      },
+      {
+        "start_line": 172,
+        "end_line": 196,
+        "quote": "#[test]\nfn ctrl_c_on_the_terminal_interrupts_the_session_that_took_it() {\n    let pair = open(80, 24).unwrap();\n    let pid = session_child(&pair.slave, true);\n    read_exactly(pair.master.as_fd(), b\"READY\\r\\n\");\n    write_all(pair.master.as_fd(), b\"\\x03x\\n\");\n    let st = status(pid, pair.master.as_fd());\n    assert!(\n        libc::WIFSIGNALED(st) && libc::WTERMSIG(st) == libc::SIGINT,\n        \"not interrupted by SIGINT: wait status {st:#x} (exit code {})\",\n        libc::WEXITSTATUS(st)\n    );\n}\n\n#[test]\nfn control_without_make_controlling_ctrl_c_interrupts_nothing() {\n    let pair = open(80, 24).unwrap();\n    let pid = session_child(&pair.slave, false);\n    read_exactly(pair.master.as_fd(), b\"READY\\r\\n\");\n    write_all(pair.master.as_fd(), b\"\\x03x\\n\");\n    let st = status(pid, pair.master.as_fd());\n    assert!(\n        libc::WIFEXITED(st) && libc::WEXITSTATUS(st) == 0,\n        \"the control read past the \\\\x03 and exited 0; wait status {st:#x}\"\n    );"
+      },
+      {
+        "start_line": 199,
+        "end_line": 215,
+        "quote": "#[test]\nfn make_controlling_outside_a_new_session_returns_the_errno() {\n    let pair = open(80, 24).unwrap();\n    let slave = pair.slave.as_raw_fd();\n    // SAFETY: the closure makes async-signal-safe calls only (`make_controlling` reads errno without allocating).\n    let pid = unsafe {\n        fork(move || match make_controlling(slave) {\n            Err(libc::EPERM) => 0,\n            Err(_) => 1,\n            Ok(()) => 2,\n        })\n    };\n    let st = status(pid, pair.master.as_fd());\n    assert!(\n        libc::WIFEXITED(st) && libc::WEXITSTATUS(st) == 0,\n        \"want Err(EPERM) from a process that is not a session leader; wait status {st:#x}\"\n    );"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/src/pty_windows/mod.rs",
+    "git_blob_sha": "58433fe7eb2dd5c6cd952c5c660d969b1bb34ef2",
+    "source_sha256": "409691e5c0f4b9ee9ce0be80334aadd6db82a502947c06915bca2c675889c76e",
+    "source_bytes": 7422,
+    "line_count": 144,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Own Windows ConPTY creation, resize and asynchronous close without blocking the supervisor owner.",
+    "behavior": [
+      "Starts a dedicated closer before allocating the console, creates noninheritable pipes, calls CreatePseudoConsole with flags zero, and immediately closes PTY-side copies.",
+      "Sends the HPCON to the closer; dropping ConPty disconnects its channel so ClosePseudoConsole runs only on that thread.",
+      "Accepts dimensions 1 through 32767 and unwraps Win32 HRESULT codes into I/O errors."
+    ],
+    "contracts": [
+      "The host receives input/output handles; CreateProcessW attributes and null standard handles belong to windows/spawn and create."
+    ],
+    "dependencies": [
+      "windows/tree.rs must enforce stop deadlines independently; Windows Console APIs implement the OS boundary."
+    ],
+    "failures_or_limits": [
+      "close(deadline) deliberately ignores its argument after transfer to Drop: it does not itself enforce a deadline. A failed send to the closer is ignored and would leave the pseudoconsole open; the code relies on the receiver remaining alive."
+    ],
+    "evidence": [
+      {
+        "start_line": 62,
+        "end_line": 90,
+        "quote": "pub(crate) fn create(cols: u16, rows: u16) -> io::Result<(ConPty, ConPtyEnds)> {\n    let size = coord(cols, rows)?;\n    // Step 1: from here on, every early return drops `hang_up`, and the closer exits without a close.\n    let (hang_up, hung_up) = mpsc::channel::<HPCON>();\n    std::thread::Builder::new()\n        .name(\"conpty-close\".into())\n        .stack_size(STACK)\n        .spawn(move || {\n            // The pseudoconsole, if `create` made one; then wait until the `ConPty` is gone (its sender with it).\n            if let Ok(hpc) = hung_up.recv() {\n                let _ = hung_up.recv();\n                // SAFETY: the pseudoconsole `create` made, closed only here, once; nothing uses it any more.\n                unsafe { ClosePseudoConsole(hpc) };\n            }\n        })?;\n    // Step 2.\n    let (pty_input, input) = pipe()?;\n    let (output, pty_output) = pipe()?;\n    let mut hpc: HPCON = 0;\n    // SAFETY: two valid pipe ends and a valid out pointer; flags 0 (step 3).\n    let hr = unsafe { CreatePseudoConsole(size, pty_input.as_raw_handle(), pty_output.as_raw_handle(), 0, &mut hpc) };\n    // Step 4, on every path.\n    drop((pty_input, pty_output));\n    check(hr)?;\n    // Cannot fail: the closer keeps its receiver until it has received this. Were it gone, the pseudoconsole\n    // would stay open (never a close here, on the caller's thread).\n    let _ = hang_up.send(hpc);\n    let pty = ConPty { hpc, _hang_up: hang_up };\n    Ok((pty, ConPtyEnds { output, input }))"
+      },
+      {
+        "start_line": 99,
+        "end_line": 111,
+        "quote": "    /// `ResizePseudoConsole`.\n    pub(crate) fn resize(&self, cols: u16, rows: u16) -> io::Result<()> {\n        let size = coord(cols, rows)?;\n        // SAFETY: a live pseudoconsole: it is closed only after `self` is gone.\n        check(unsafe { ResizePseudoConsole(self.hpc, size) })\n    }\n\n    /// Closes on a worker thread; the caller enforces `deadline` independently (the close can block).\n    pub(crate) fn close(self, deadline: Instant) {\n        // Dropping `self` wakes the closer (step 7). Nothing here waits, so the deadline stays the caller's (step 8).\n        let _ = deadline;\n        drop(self);\n    }"
+      },
+      {
+        "start_line": 125,
+        "end_line": 143,
+        "quote": "/// A size conhost takes: 1..=32767 cells each way.\nfn coord(cols: u16, rows: u16) -> io::Result<COORD> {\n    match (i16::try_from(cols), i16::try_from(rows)) {\n        (Ok(x @ 1..), Ok(y @ 1..)) => Ok(COORD { X: x, Y: y }),\n        _ => Err(io::Error::new(\n            io::ErrorKind::InvalidInput,\n            format!(\"terminal size {cols}x{rows} is outside 1..=32767 cells each way\"),\n        )),\n    }\n}\n\n/// An `HRESULT` as a result; a wrapped Win32 error (`HRESULT_FROM_WIN32`) comes back as that error's code.\nfn check(hr: i32) -> io::Result<()> {\n    if hr >= 0 {\n        return Ok(());\n    }\n    let hr = hr as u32;\n    let code = if hr >> 16 == 0x8007 { hr & 0xFFFF } else { hr };\n    Err(io::Error::from_raw_os_error(code as i32))"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/src/windows/boot.rs",
+    "git_blob_sha": "fc2b9f4f7c7e7c5f29fb62ab96fb50a3428078d1",
+    "source_sha256": "6e3e1f672704477dc08f938d27077d169b071736a3f4b7acbe2f04f809c73a80",
+    "source_bytes": 3276,
+    "line_count": 74,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Bootstrap the Windows supervisor with host identity and lifetime watches before Ready.",
+    "behavior": [
+      "Clears inherited ignore-Ctrl-C state, installs a supervisor-local console handler, opens a noninheritable host process handle and arms its wait thread.",
+      "Starts member tracking and diagnostics, connects to the named pipe and verifies its server PID, then starts channel workers and queues versioned Ready.",
+      "A generic watch helper waits on an owned process handle and posts the requested owner-loop event."
+    ],
+    "contracts": [
+      "The host watch is armed before the channel or Ready; children inherit the cleared Ctrl-C ignore flag while the supervisor ignores console events."
+    ],
+    "dependencies": [
+      "channel.rs verifies host PID and starts transport; members.rs tracks Jobs; queues.rs carries HostGone and root events."
+    ],
+    "failures_or_limits": [
+      "Console handler call statuses and WaitForSingleObject return values are not checked; watch completion posts its event regardless of wait status. Process-handle ownership avoids watching solely by a later PID lookup."
+    ],
+    "evidence": [
+      {
+        "start_line": 20,
+        "end_line": 44,
+        "quote": "pub(super) fn start(args: &Args) -> io::Result<Supervisor> {\n    own_console();\n    let name = args.pipe.as_deref().ok_or_else(|| io::Error::other(\"missing --pipe\"))?;\n    // SAFETY: a plain open by pid, not inheritable; checked for null.\n    let host = unsafe { OpenProcess(PROCESS_SYNCHRONIZE, FALSE, args.host_pid) };\n    // SAFETY: `host` is null or a fresh handle owned by nobody else.\n    let host = OwnedHandle::try_from(unsafe { HandleOrNull::from_raw_handle(host) })\n        .map_err(|_| io::Error::last_os_error())?;\n    let inbox = Arc::new(Inbox::default());\n    let out = Arc::new(Outbox::default());\n    // Armed before the channel exists, so it is armed before Ready.\n    watch(host, &inbox, |_| Event::HostGone)?;\n    let members = Members::start(&inbox)?;\n    let diag = Arc::new(Diag::default());\n    diag.start(io::stderr())?;\n    // The pipe's server must be the host: the handle above then names the live host, not a reused pid.\n    let pipe = channel::connect(name, args.host_pid)?;\n    channel::start(&pipe, &inbox, &out)?;\n    let sup = Supervisor::new(inbox, out, members, diag, pipe.as_raw_handle() as usize);\n    sup.send(&Msg::Ready {\n        version: VERSION,\n        pid: std::process::id(),\n        info: INFO_PIDFD_HOST, // the host is watched through its process handle\n    });\n    Ok(sup)"
+      },
+      {
+        "start_line": 47,
+        "end_line": 59,
+        "quote": "/// The supervisor runs on its own console (the host starts it with `CREATE_NO_WINDOW`), so its\n/// CTRL_BREAKs never reach the host and nothing here changes the host's console state. Children inherit\n/// the ignore-Ctrl+C flag from their creator, so it is cleared here (a terminal child must be\n/// interruptible); the supervisor itself ignores every console event.\nfn own_console() {\n    unsafe extern \"system\" fn ignore(_event: u32) -> i32 {\n        TRUE\n    }\n    // SAFETY: changes only this process's handler list; `ignore` lives as long as the process.\n    unsafe {\n        SetConsoleCtrlHandler(None, FALSE);\n        SetConsoleCtrlHandler(Some(ignore), TRUE);\n    }"
+      },
+      {
+        "start_line": 62,
+        "end_line": 73,
+        "quote": "/// Waits for `handle` on a helper thread, then queues `event(&handle)`.\npub(super) fn watch(\n    handle: OwnedHandle,\n    inbox: &Arc<Inbox>,\n    event: impl FnOnce(&OwnedHandle) -> Event + Send + 'static,\n) -> io::Result<()> {\n    let inbox = inbox.clone();\n    channel::helper(\"watch\", move || {\n        // SAFETY: a valid process handle owned by this thread.\n        unsafe { WaitForSingleObject(handle.as_raw_handle(), INFINITE) };\n        inbox.event(event(&handle));\n    })"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/src/windows/channel.rs",
+    "git_blob_sha": "174e5838b68f87222527adb04782d5f499df26c5",
+    "source_sha256": "189e298e11a79d865fccc1e3c8269ed27352c75084f0e8bc597db6b851955ce5",
+    "source_bytes": 7624,
+    "line_count": 199,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Transport Windows host requests and replies on independently blocking overlapped pipe workers.",
+    "behavior": [
+      "Opens the host named pipe without inheritance, with identification-only SQOS, and refuses a server PID different from --host-pid.",
+      "Decodes only Spawn, Go, Stop, Resize, List and Release; malformed input, wrong message direction or read failure posts HostGone.",
+      "One reader feeds the bounded Inbox and one writer drains Outbox frames; write failure closes output and posts HostGone, while completed writes signal owner progress.",
+      "Each side owns a manual-reset event and completes overlapped operations before dropping their buffers; ERROR_MORE_DATA remains readable partial data."
+    ],
+    "contracts": [
+      "No synchronous pipe wait runs on the owner loop; queue bounds are supplied by queues.rs."
+    ],
+    "dependencies": [
+      "omni_proto decode/encode framing; Windows named-pipe PID and overlapped APIs; boot.rs owns startup."
+    ],
+    "failures_or_limits": [
+      "Helper threads use 64 KiB stacks and can remain inside OS I/O until the channel/peer ends. queues.rs bounds admission and preserves independent owner-loop deadlines; it does not impose a writer-progress timeout."
+    ],
+    "evidence": [
+      {
+        "start_line": 25,
+        "end_line": 54,
+        "quote": "/// Opens the host's pipe and checks that its server is the host (`--host-pid`).\npub(super) fn connect(name: &str, host_pid: u32) -> io::Result<Arc<OwnedHandle>> {\n    let wide: Vec<u16> = name.encode_utf16().chain([0]).collect();\n    // SAFETY: a NUL-terminated name; null security attributes (not inheritable). SQOS identification only:\n    // whoever serves the pipe cannot impersonate the supervisor.\n    let h = unsafe {\n        CreateFileW(\n            wide.as_ptr(),\n            GENERIC_READ | GENERIC_WRITE,\n            0,\n            std::ptr::null(),\n            OPEN_EXISTING,\n            FILE_FLAG_OVERLAPPED | SECURITY_SQOS_PRESENT | SECURITY_IDENTIFICATION,\n            std::ptr::null_mut(),\n        )\n    };\n    // SAFETY: `h` is INVALID_HANDLE_VALUE or a fresh handle owned by nobody else.\n    let pipe = OwnedHandle::try_from(unsafe { HandleOrInvalid::from_raw_handle(h) })\n        .map_err(|_| io::Error::last_os_error())?;\n    let mut server = 0;\n    // SAFETY: a valid pipe handle and a valid out pointer.\n    if unsafe { GetNamedPipeServerProcessId(pipe.as_raw_handle(), &mut server) } == 0 {\n        return Err(io::Error::last_os_error());\n    }\n    if server != host_pid {\n        return Err(io::Error::other(format!(\n            \"the pipe is served by pid {server}, not the host {host_pid}\"\n        )));\n    }\n    Ok(Arc::new(pipe))"
+      },
+      {
+        "start_line": 74,
+        "end_line": 105,
+        "quote": "fn read_requests(io: &Overlapped, inbox: &Inbox) {\n    let (mut buf, mut start, mut chunk) = (Vec::new(), 0, vec![0u8; 64 * 1024]);\n    loop {\n        match omni_proto::decode(buf.get(start..).unwrap_or_default()) {\n            Ok(Some((msg, used))) => {\n                start += used;\n                let request = matches!(\n                    msg,\n                    Msg::Spawn(_)\n                        | Msg::Go { .. }\n                        | Msg::Stop { .. }\n                        | Msg::Resize { .. }\n                        | Msg::List { .. }\n                        | Msg::Release { .. }\n                );\n                // A supervisor-bound kind from the host is malformed: the host is gone.\n                if !request || !inbox.request(msg) {\n                    break;\n                }\n            }\n            Ok(None) => {\n                buf.drain(..start);\n                start = 0;\n                match io.read(&mut chunk) {\n                    Ok(n) => buf.extend_from_slice(chunk.get(..n).unwrap_or_default()),\n                    Err(_) => break,\n                }\n            }\n            Err(_) => break,\n        }\n    }\n    inbox.event(Event::HostGone);"
+      },
+      {
+        "start_line": 108,
+        "end_line": 123,
+        "quote": "fn write_replies(io: &Overlapped, out: &Outbox, inbox: &Inbox) {\n    while let Some(frames) = out.take() {\n        let mut rest = frames.as_slice();\n        while !rest.is_empty() {\n            match io.write(rest) {\n                Ok(n) if n > 0 => rest = rest.get(n..).unwrap_or_default(),\n                _ => {\n                    out.close();\n                    inbox.event(Event::HostGone);\n                    return;\n                }\n            }\n        }\n        out.written();\n        inbox.progress();\n    }"
+      },
+      {
+        "start_line": 180,
+        "end_line": 197,
+        "quote": "    /// Waits for the operation `ov` started; a message-mode partial read (`ERROR_MORE_DATA`) is data.\n    fn finish(&self, ok: i32, ov: &OVERLAPPED) -> io::Result<usize> {\n        let more = |e: &io::Error| e.raw_os_error() == Some(ERROR_MORE_DATA as i32);\n        if ok == 0 {\n            let e = io::Error::last_os_error();\n            if e.raw_os_error() != Some(ERROR_IO_PENDING as i32) && !more(&e) {\n                return Err(e); // nothing was queued\n            }\n        }\n        let mut n = 0;\n        // SAFETY: `ov` belongs to an operation queued on this pipe; waiting completes it before `ov` is dropped.\n        if unsafe { GetOverlappedResult(self.pipe.as_raw_handle(), ov, &mut n, TRUE) } == 0 {\n            let e = io::Error::last_os_error();\n            if !more(&e) {\n                return Err(e);\n            }\n        }\n        Ok(n as usize)"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/src/windows/cmdline.rs",
+    "git_blob_sha": "8d0f5371284ccf46e5befa32828381efde0caae7",
+    "source_sha256": "ac85ea6b31eaf833784937a6283c4a94a7c93802d4dc3dcf608106185cdbd375",
+    "source_bytes": 13330,
+    "line_count": 335,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Build Windows executable, verbatim and batch command lines and decode protocol WTF-8.",
+    "behavior": [
+      "Executable quoting preserves empty/spaced arguments and backslashes before quotes; argv[0] containing a quote is refused, while verbatim mode appends the tail unchanged.",
+      "Batch mode uses cmd.exe /e:ON /v:OFF /d /c, quotes metacharacters, defuses percent expansion, and rejects CR/LF arguments or percent-bearing script paths.",
+      "Removes a verbatim batch-path prefix only for equivalent drive/UNC spelling within its length check; WTF-8 decoding preserves lone surrogates but refuses NUL, overlong sequences and out-of-range code points.",
+      "Embedded tests specify std-derived quoting, raw-tail, batch-path and encoding cases."
+    ],
+    "contracts": [
+      "The source attributes its quoting algorithm to a pinned Rust std commit and names deliberate refusal differences."
+    ],
+    "dependencies": [
+      "windows/spawn.rs selects launch mode; std path absolute conversion verifies normalization equivalence."
+    ],
+    "failures_or_limits": [
+      "General cmd shell syntax is intentionally exposed only through verbatim tails. The original prefixed path length is used for the conservative 260-unit check; port provenance and runtime argument recovery were not independently executed here."
+    ],
+    "evidence": [
+      {
+        "start_line": 23,
+        "end_line": 46,
+        "quote": "/// `\"argv0\" args...`, recoverable by the MSVC rules (`CommandLineToArgvW`, Rust's `args_os`).\npub(super) fn exe(argv0: &[u16], args: &[Vec<u16>]) -> Result<Vec<u16>, &'static str> {\n    if argv0.contains(&QUOTE) {\n        return Err(\"argv[0] contains a double quote\");\n    }\n    let mut cmd = vec![QUOTE];\n    cmd.extend_from_slice(argv0);\n    cmd.push(QUOTE);\n    for arg in args {\n        cmd.push(SPACE);\n        append_arg(&mut cmd, arg);\n    }\n    Ok(cmd)\n}\n\n/// `\"argv0\" tail` (amendment WP8b): the same quoted `argv[0]` as `exe`, then the caller's tail exactly as given (std's\n/// `CommandExt::raw_arg`). An empty tail adds nothing, not even the space.\npub(super) fn verbatim(argv0: &[u16], tail: &[u16]) -> Result<Vec<u16>, &'static str> {\n    let mut cmd = exe(argv0, &[])?;\n    if !tail.is_empty() {\n        cmd.push(SPACE);\n        cmd.extend_from_slice(tail);\n    }\n    Ok(cmd)"
+      },
+      {
+        "start_line": 75,
+        "end_line": 96,
+        "quote": "/// `cmd.exe /e:ON /v:OFF /d /c \"\"script\" args...\"` (std `make_bat_command_line`). Arguments that cannot be\n/// passed literally to a batch file (`\\r`, `\\n`) are refused, as std does.\npub(super) fn bat(script: &[u16], args: &[Vec<u16>]) -> Result<Vec<u16>, &'static str> {\n    if script.contains(&QUOTE) || script.last() == Some(&BACKSLASH) {\n        return Err(\"a batch file path may not contain `\\\"` or end with `\\\\`\");\n    }\n    if script.contains(&PERCENT) {\n        return Err(\"a batch file whose path contains `%` cannot be run safely\");\n    }\n    let mut cmd: Vec<u16> = \"cmd.exe /e:ON /v:OFF /d /c \\\"\".encode_utf16().collect();\n    cmd.push(QUOTE);\n    cmd.extend_from_slice(script);\n    cmd.push(QUOTE);\n    for arg in args {\n        cmd.push(SPACE);\n        if arg.iter().any(|&c| c == CR || c == LF) {\n            return Err(\"a batch file argument cannot contain a line break\");\n        }\n        append_bat_arg(&mut cmd, arg);\n    }\n    cmd.push(QUOTE);\n    Ok(cmd)"
+      },
+      {
+        "start_line": 138,
+        "end_line": 167,
+        "quote": "/// std's `to_user_path` / `from_wide_to_user_path` (same commit, `library/std/src/sys/args/windows.rs`):\n/// cmd.exe cannot open a verbatim path, so `\\\\?\\C:\\…` becomes `C:\\…` and `\\\\?\\UNC\\srv\\…` becomes `\\\\srv\\…`, but\n/// only when the plain spelling names the same file (`GetFullPathNameW` gives it back unchanged) and is short\n/// enough (under 260 units, with the NUL). Where std would keep the verbatim spelling (which cmd.exe cannot\n/// run), this refuses. A path without the `\\\\?\\` prefix is returned as it is.\npub(super) fn user_path(path: &[u16]) -> Result<Vec<u16>, &'static str> {\n    const REFUSED: &str = \"a verbatim (\\\\\\\\?\\\\) batch file path has no plain spelling of the same file that \\\n                           cmd.exe can run (too long, not a drive or UNC path, or it would be normalized)\";\n    const QUERY: u16 = b'?' as u16;\n    const COLON: u16 = b':' as u16;\n    const U: u16 = b'U' as u16;\n    const N: u16 = b'N' as u16;\n    const C: u16 = b'C' as u16;\n    let [BACKSLASH, BACKSLASH, QUERY, BACKSLASH, rest @ ..] = path else {\n        return Ok(path.to_vec());\n    };\n    let plain: Vec<u16> = match rest {\n        [U, N, C, BACKSLASH, tail @ ..] => [BACKSLASH, BACKSLASH].iter().chain(tail).copied().collect(),\n        [_, COLON, BACKSLASH, ..] => rest.to_vec(),\n        _ => return Err(REFUSED),\n    };\n    if path.len() + 1 > 260 {\n        return Err(REFUSED);\n    }\n    let full = std::path::absolute(Path::new(&OsString::from_wide(&plain))).map_err(|_| REFUSED)?;\n    if full.as_os_str().encode_wide().eq(plain.iter().copied()) {\n        Ok(plain)\n    } else {\n        Err(REFUSED)\n    }"
+      },
+      {
+        "start_line": 170,
+        "end_line": 213,
+        "quote": "/// A protocol OS string (WTF-8, `docs/protocol.md`) as UTF-16. `None` when it is malformed or holds a NUL.\npub(super) fn wide(bytes: &[u8]) -> Option<Vec<u16>> {\n    fn cont(bytes: &[u8], i: usize) -> Option<u32> {\n        bytes\n            .get(i)\n            .filter(|&&b| b & 0xC0 == 0x80)\n            .map(|&b| u32::from(b & 0x3F))\n    }\n    let mut out = Vec::with_capacity(bytes.len());\n    let mut i = 0;\n    while let Some(&b0) = bytes.get(i) {\n        let b = u32::from(b0);\n        let (cp, len) = match b0 {\n            0 => return None,\n            0x01..=0x7F => (b, 1),\n            0xC2..=0xDF => ((b & 0x1F) << 6 | cont(bytes, i + 1)?, 2),\n            // Generalized UTF-8: surrogate code points (ED A0..BF) are WTF-8.\n            0xE0..=0xEF => ((b & 0x0F) << 12 | cont(bytes, i + 1)? << 6 | cont(bytes, i + 2)?, 3),\n            0xF0..=0xF4 => {\n                let cp = (b & 0x07) << 18 | cont(bytes, i + 1)? << 12 | cont(bytes, i + 2)? << 6 | cont(bytes, i + 3)?;\n                (cp, 4)\n            }\n            _ => return None,\n        };\n        // Overlong forms and code points above U+10FFFF are malformed.\n        let shortest = match len {\n            1 => 0,\n            2 => 0x80,\n            3 => 0x800,\n            _ => 0x1_0000,\n        };\n        if cp < shortest || cp > 0x10_FFFF {\n            return None;\n        }\n        match u16::try_from(cp) {\n            Ok(unit) => out.push(unit),\n            Err(_) => {\n                let c = cp - 0x1_0000;\n                out.extend([0xD800 | (c >> 10) as u16, 0xDC00 | (c & 0x3FF) as u16]);\n            }\n        }\n        i += len;\n    }\n    Some(out)"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/src/windows/container/acl.rs",
+    "git_blob_sha": "64d8a0f563b87e20416359567b28a39a591fbd70",
+    "source_sha256": "1f88f94df74a9f4fba0db7292810b77f6d58c224622ec4784150a4b8662d0d48",
+    "source_bytes": 16113,
+    "line_count": 386,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Create AppContainer profiles and manage file grants, guarded DACL snapshots and restoration.",
+    "behavior": [
+      "Read grants allow read/execute; write grants add write/delete but omit FILE_DELETE_CHILD. Existing explicit grants are reused, and revoke removes explicit entries for the SID.",
+      "Guard operations open the reparse point itself by handle; pin handles omit delete sharing, and volume/file-index identity deduplicates aliases.",
+      "Protect detaches DACL inheritance, revokes the profile rights and grants read/execute; capture stores DACL SDDL and restore reinstates its protected/unprotected state.",
+      "Profile creation reuses an existing profile SID; owned descriptors and converted ACL allocations are freed after use."
+    ],
+    "contracts": [
+      "There are no deny grants; excluded paths must be kept outside granted trees or protected by guard handling."
+    ],
+    "dependencies": [
+      "acl/dacl.rs handles named grant propagation; acl/sid.rs owns profile/capability SIDs; guard.rs coordinates snapshot lifetime."
+    ],
+    "failures_or_limits": [
+      "The introductory deny-ACE behavior is a reported prior Windows observation, not verified here. Snapshot restoration is not a merge with unrelated concurrent ACL edits."
+    ],
+    "evidence": [
+      {
+        "start_line": 45,
+        "end_line": 59,
+        "quote": "/// What one grant gives the profile on one path.\n#[derive(Clone, Copy, Debug, PartialEq, Eq)]\npub(super) enum Grant {\n    /// Read and execute, inherited by the subtree.\n    Read,\n    /// Read, write, execute and delete, inherited. Never `FILE_DELETE_CHILD`.\n    Write,\n}\n\nimpl Grant {\n    fn mask(self) -> u32 {\n        match self {\n            Grant::Read => FILE_GENERIC_READ | FILE_GENERIC_EXECUTE,\n            Grant::Write => FILE_GENERIC_READ | FILE_GENERIC_WRITE | FILE_GENERIC_EXECUTE | DELETE,\n        }"
+      },
+      {
+        "start_line": 94,
+        "end_line": 115,
+        "quote": "/// Adds the grant unless `path` already carries it as an explicit ACE.\npub(super) fn apply(path: &Path, sid: &Sid, grant: Grant) -> io::Result<()> {\n    // A directory's grant covers its subtree; a file takes no inheritance flags.\n    let flags = if std::fs::metadata(path)?.is_dir() {\n        OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE\n    } else {\n        0\n    };\n    let current = Dacl::read(path)?;\n    if current.has(sid, grant.mask(), flags)? {\n        return Ok(());\n    }\n    current.write(path, sid, GRANT_ACCESS, grant.mask(), flags)\n}\n\n/// Removes every explicit ACE for the SID from `path` (and, with them, their inherited copies below it).\npub(super) fn revoke(path: &Path, sid: &Sid) -> io::Result<()> {\n    let current = Dacl::read(path)?;\n    if !current.mentions(sid)? {\n        return Ok(());\n    }\n    current.write(path, sid, REVOKE_ACCESS, 0, 0)"
+      },
+      {
+        "start_line": 184,
+        "end_line": 210,
+        "quote": "/// Makes the profile read-only on the link at `path`: a deny ACE below an inherited allow does not hold, so instead\n/// the DACL is detached from inheritance (its effective ACEs copied in place, so every other trustee keeps what it\n/// had), every explicit ACE for `sid` is removed, and one read-and-execute ACE is granted. Idempotent and run for\n/// every joining profile, so a second container with a write grant that was copied in by the first command's detach is\n/// also stripped to read-only. A directory grants it inheritable, and the parent write grant never carries\n/// `FILE_DELETE_CHILD`, so the container can neither write into, delete nor rename the path.\npub(super) fn protect(path: &Path, sid: &Sid) -> io::Result<()> {\n    let handle = open(path, true)?;\n    let flags = if file_info(&handle)?.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY != 0 {\n        OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE\n    } else {\n        0\n    };\n    // Copy the inherited ACEs in place and disable further inheritance, so the parents' write grants stop flowing in.\n    let detached = HandleDacl::read(&handle)?;\n    detached.set(\n        &handle,\n        DACL_SECURITY_INFORMATION | PROTECTED_DACL_SECURITY_INFORMATION,\n        detached.acl,\n    )?;\n    // Drop every right any profile had here (the copies of the parents' write grants among them), then read-only.\n    let current = HandleDacl::read(&handle)?;\n    let entries = [\n        explicit(sid, REVOKE_ACCESS, 0, 0),\n        explicit(sid, GRANT_ACCESS, Grant::Read.mask(), flags),\n    ];\n    current.edit(&handle, &entries)"
+      },
+      {
+        "start_line": 237,
+        "end_line": 283,
+        "quote": "/// Restores a DACL captured by [`capture`] on the link at `path`, including whether it was protected from inheritance.\n/// Setting an unprotected DACL drops the inherited ACEs the string carries and lets the parents' ACEs flow back in.\npub(super) fn restore(path: &Path, sddl: &str) -> io::Result<()> {\n    let handle = open(path, true)?;\n    let text: Vec<u16> = sddl.encode_utf16().chain([0]).collect();\n    let mut sd: PSECURITY_DESCRIPTOR = std::ptr::null_mut();\n    // SAFETY: a NUL-terminated SDDL string and an out pointer for the descriptor (freed below).\n    if unsafe {\n        ConvertStringSecurityDescriptorToSecurityDescriptorW(\n            text.as_ptr(),\n            SDDL_REVISION_1,\n            &mut sd,\n            std::ptr::null_mut(),\n        )\n    } == 0\n    {\n        return Err(io::Error::last_os_error());\n    }\n    let restore = (|| {\n        let (mut control, mut revision): (u16, u32) = (0, 0);\n        // SAFETY: a valid descriptor and out values.\n        if unsafe { GetSecurityDescriptorControl(sd, &mut control, &mut revision) } == 0 {\n            return Err(io::Error::last_os_error());\n        }\n        let (mut present, mut dacl, mut defaulted): (i32, *mut ACL, i32) = (0, std::ptr::null_mut(), 0);\n        // SAFETY: a valid descriptor and out values; `dacl` points into `sd`.\n        if unsafe { GetSecurityDescriptorDacl(sd, &mut present, &mut dacl, &mut defaulted) } == 0 {\n            return Err(io::Error::last_os_error());\n        }\n        let info = DACL_SECURITY_INFORMATION\n            | if control & SE_DACL_PROTECTED != 0 {\n                PROTECTED_DACL_SECURITY_INFORMATION\n            } else {\n                UNPROTECTED_DACL_SECURITY_INFORMATION\n            };\n        // SAFETY: a live handle and a DACL that lives in `sd`.\n        win32(unsafe {\n            SetSecurityInfo(\n                handle.as_raw_handle() as HANDLE,\n                SE_FILE_OBJECT,\n                info,\n                std::ptr::null_mut(),\n                std::ptr::null_mut(),\n                dacl,\n                std::ptr::null(),\n            )\n        })"
+      }
+    ],
+    "inference": [
+      "External DACL changes during a guard lifetime could be overwritten when the captured snapshot is restored."
+    ],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/src/windows/container/acl/dacl.rs",
+    "git_blob_sha": "eaeda82ef246f6fa8f1b97d877de3b9c807b9447",
+    "source_sha256": "3b099af3399dafbd88ce0fb5be609f55219c5f149f16290ef1d2bbafda0dcf1a",
+    "source_bytes": 5470,
+    "line_count": 140,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Read and update named-path DACLs for idempotent AppContainer grants.",
+    "behavior": [
+      "Reads a security descriptor by path and owns its lifetime; a null DACL produces no matching explicit entries.",
+      "Enumerates only ordinary allowed/denied ACEs that are not inherited, matches SID equality, and recognizes an existing allow when its mask and inheritance flags cover the requested subset.",
+      "Merges an explicit access entry and writes through SetNamedSecurityInfoW so inherited ACEs propagate to an existing subtree."
+    ],
+    "contracts": [
+      "Grant presence is an explicit-ACE check, distinct from calculating effective Windows access."
+    ],
+    "dependencies": [
+      "acl.rs calls has/mentions/write for apply and revoke; Windows ACL APIs allocate descriptors and replacement ACLs."
+    ],
+    "failures_or_limits": [
+      "Object-specific ACE forms and inherited entries are intentionally excluded from matching. Named-path grant writes do not use the reparse-point handle protection used for guards."
+    ],
+    "evidence": [
+      {
+        "start_line": 45,
+        "end_line": 85,
+        "quote": "    /// The explicit ACEs naming `sid`, as (denies, mask, flags).\n    pub(super) fn entries(&self, sid: &Sid) -> io::Result<Vec<(bool, u32, u32)>> {\n        if self.acl.is_null() {\n            return Ok(Vec::new());\n        }\n        let mut size = ACL_SIZE_INFORMATION::default();\n        // SAFETY: a valid ACL and the structure this information class expects, with its exact size.\n        let ok = unsafe {\n            GetAclInformation(\n                self.acl,\n                (&raw mut size).cast(),\n                size_of::<ACL_SIZE_INFORMATION>() as u32,\n                AclSizeInformation,\n            )\n        };\n        if ok == 0 {\n            return Err(io::Error::last_os_error());\n        }\n        let mut found = Vec::new();\n        for index in 0..size.AceCount {\n            let mut ace = std::ptr::null_mut();\n            // SAFETY: an index below AceCount of a valid ACL.\n            if unsafe { GetAce(self.acl, index, &mut ace) } == 0 {\n                return Err(io::Error::last_os_error());\n            }\n            // SAFETY: every ACE starts with an ACE_HEADER.\n            let header = unsafe { *ace.cast::<ACE_HEADER>() };\n            if !matches!(header.AceType, ACCESS_ALLOWED | ACCESS_DENIED)\n                || u32::from(header.AceFlags) & INHERITED_ACE != 0\n            {\n                continue;\n            }\n            // Allowed and denied ACEs share this layout: header, mask, then the SID in place.\n            let ace = ace.cast::<ACCESS_ALLOWED_ACE>();\n            // SAFETY: an allowed/denied ACE, whose SID starts at SidStart.\n            let (mask, named) = unsafe { ((*ace).Mask, EqualSid((&raw mut (*ace).SidStart).cast(), sid.raw()) != 0) };\n            if named {\n                found.push((header.AceType == ACCESS_DENIED, mask, u32::from(header.AceFlags)));\n            }\n        }\n        Ok(found)"
+      },
+      {
+        "start_line": 88,
+        "end_line": 97,
+        "quote": "    pub(super) fn has(&self, sid: &Sid, mask: u32, flags: u32) -> io::Result<bool> {\n        Ok(self\n            .entries(sid)?\n            .iter()\n            .any(|&(denies, m, f)| !denies && m & mask == mask && f & flags == flags))\n    }\n\n    pub(super) fn mentions(&self, sid: &Sid) -> io::Result<bool> {\n        Ok(!self.entries(sid)?.is_empty())\n    }"
+      },
+      {
+        "start_line": 112,
+        "end_line": 131,
+        "quote": "        let mut next: *mut ACL = std::ptr::null_mut();\n        // SAFETY: one initialized entry naming a live SID; the old ACL may be null; `next` is freed below.\n        win32(unsafe { SetEntriesInAclW(1, &entry, self.acl, &mut next) })?;\n        let name = wide_path(path);\n        // Not SetFileSecurityW: SetNamedSecurityInfoW also updates the inherited ACEs of the existing subtree.\n        // SAFETY: a NUL-terminated path and the ACL built above.\n        let error = unsafe {\n            SetNamedSecurityInfoW(\n                name.as_ptr(),\n                SE_FILE_OBJECT,\n                DACL_SECURITY_INFORMATION,\n                std::ptr::null_mut(),\n                std::ptr::null_mut(),\n                next,\n                std::ptr::null(),\n            )\n        };\n        // SAFETY: allocated by SetEntriesInAclW.\n        unsafe { LocalFree(next.cast()) };\n        win32(error)"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/src/windows/container/acl/sid.rs",
+    "git_blob_sha": "5a52b8538c552177cbea4a6f3fecc64aa6cc2cc2",
+    "source_sha256": "8189d5016152abca39e5b95a44333a4e4711868371f4b8a46ca56e370d40f909",
+    "source_bytes": 2350,
+    "line_count": 61,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Own profile and custom-capability SIDs with the corresponding Windows allocation cleanup.",
+    "behavior": [
+      "Distinguishes profile SIDs freed with FreeSid from capability SIDs freed with LocalFree.",
+      "Derives a named capability, frees all group SIDs and every extra capability SID, retains only the first, and errors if none is returned."
+    ],
+    "contracts": [
+      "The raw SID remains valid only for the owning Sid lifetime; callers embed that pointer in security-capability and ACL structures."
+    ],
+    "dependencies": [
+      "acl.rs creates profile SIDs; container/mod.rs requests the shared toolchain capability; DeriveCapabilitySidsFromName supplies allocations."
+    ],
+    "failures_or_limits": [
+      "The comment describes the shared toolchain capability as adding no network service; actual access depends on Windows token checks and the grants maintained elsewhere. This module alone does not establish confinement."
+    ],
+    "evidence": [
+      {
+        "start_line": 11,
+        "end_line": 30,
+        "quote": "/// A profile's SID (freed with FreeSid) or a capability's (LocalFree), freed on drop.\npub(in super::super) struct Sid(pub(super) PSID, pub(super) bool);\n\nimpl Sid {\n    pub(in super::super) fn raw(&self) -> PSID {\n        self.0\n    }\n}\n\nimpl Drop for Sid {\n    fn drop(&mut self) {\n        // SAFETY: a SID from CreateAppContainerProfile or DeriveAppContainerSidFromAppContainerName (FreeSid), or one\n        // DeriveCapabilitySidsFromName allocated (LocalFree).\n        unsafe {\n            if self.1 {\n                LocalFree(self.0);\n            } else {\n                FreeSid(self.0);\n            }\n        }"
+      },
+      {
+        "start_line": 34,
+        "end_line": 60,
+        "quote": "/// The SID of the named custom capability. Every Orchestra container holds it, so a toolchain grant made to it once\n/// serves every profile and no other principal: an AppContainer passes the access check on an ACE for a capability its\n/// token holds. A capability that names no network service adds no network.\npub(in super::super) fn capability(name: &str) -> io::Result<Sid> {\n    let name = wide(name);\n    let (mut groups, mut group_count, mut sids, mut count) = (std::ptr::null_mut(), 0u32, std::ptr::null_mut(), 0u32);\n    // SAFETY: a NUL-terminated name and out pointers for two LocalAlloc'd arrays of LocalAlloc'd SIDs.\n    if unsafe { DeriveCapabilitySidsFromName(name.as_ptr(), &mut groups, &mut group_count, &mut sids, &mut count) } == 0\n    {\n        return Err(io::Error::last_os_error());\n    }\n    // SAFETY: the arrays and their SIDs came from the call above; only the first capability SID is kept.\n    unsafe {\n        for index in 0..group_count as usize {\n            LocalFree(*groups.add(index));\n        }\n        LocalFree(groups.cast());\n        for index in 1..count as usize {\n            LocalFree(*sids.add(index));\n        }\n        let first = if count > 0 { *sids } else { std::ptr::null_mut() };\n        LocalFree(sids.cast());\n        if first.is_null() {\n            return Err(io::Error::other(\"no capability SID\"));\n        }\n        Ok(Sid(first, true))\n    }"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  }
+]

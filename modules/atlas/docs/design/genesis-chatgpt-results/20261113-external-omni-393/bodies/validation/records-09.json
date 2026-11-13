@@ -1,0 +1,704 @@
+[
+  {
+    "path": "native/omni/qa/src/fetch.rs",
+    "git_blob_sha": "aa7fbad03c29eb82f4ee56b08339517dda325dec",
+    "source_sha256": "596e0cd7d2e6d956191e3b5a81b8b2d21939d4b1e70248cd2060a038d2bfa5ea",
+    "source_bytes": 6519,
+    "line_count": 162,
+    "disposition": "analyzed",
+    "contracts": [
+      "Network activity is confined by design to preparation; measured tasks receive offline environments from setup."
+    ],
+    "dependencies": [
+      "pins/semver-workspace.lock and vite manifests form preparation stamps; setup.rs exposes cache paths."
+    ],
+    "failures_or_limits": [
+      "Checkout freshness checks HEAD only, not dirty/untracked state; stamps assert prior preparation, not package integrity revalidation. External commands here are not bounded by the measured-run deadline."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "implementation",
+    "purpose": "Prepares pinned real-world workloads and dependency caches before measured QA.",
+    "behavior": [
+      "Pins semver commit 3e64fdbfce78bfbd2eb97bdbdc50ce4d62c9831b and commander bd4ae263f6966183f3c9e8b105fb5ae3c568c047 with shallow detached checkouts.",
+      "Creates a semver cache workspace with the supplied lock, fetches/builds offline-ready Rust artifacts, installs commander/Vite with npm ci --ignore-scripts and caches picocolors@1.1.1.",
+      "Per-step stamps skip work when commit/lock/package content matches; cache defaults to qa/.cache/<os>-<arch> or HUGR_QA_CACHE."
+    ],
+    "evidence": [
+      {
+        "start_line": 16,
+        "end_line": 29,
+        "quote": "const SEMVER: Pin = Pin {\n    name: \"semver\",\n    url: \"https://github.com/dtolnay/semver\",\n    commit: \"3e64fdbfce78bfbd2eb97bdbdc50ce4d62c9831b\",\n};\n\n/// commander 14.0.1 (tag `v14.0.1`), with its own `package-lock.json`.\nconst COMMANDER: Pin = Pin {\n    name: \"commander\",\n    url: \"https://github.com/tj/commander.js\",\n    commit: \"bd4ae263f6966183f3c9e8b105fb5ae3c568c047\",\n};\n\n/// The cache: `HUGR_QA_CACHE`, else `qa/.cache/<os>-<arch>` (per OS: the npm packages hold native binaries)."
+      },
+      {
+        "start_line": 95,
+        "end_line": 99,
+        "quote": "    stamped(&vite.join(\"node_modules/.qa-pin\"), &pin, || {\n        npm(cache, &vite, &[\"ci\", \"--no-audit\", \"--no-fund\", \"--ignore-scripts\"])?;\n        npm(cache, &vite, &[\"cache\", \"add\", INSTALLED])\n    })\n}"
+      },
+      {
+        "start_line": 108,
+        "end_line": 112,
+        "quote": "    if git(&[\"rev-parse\", \"HEAD\"]).is_ok_and(|head| head.trim() == pin.commit) {\n        return Ok(());\n    }\n    eprintln!(\"omni-qa: fetching {} at {}\", pin.url, pin.commit);\n    let _ = std::fs::remove_dir_all(&dir);"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/src/invoke.rs",
+    "git_blob_sha": "508d417ba86aeea0c02594bb6a9a4860ba600d68",
+    "source_sha256": "35057541013833bd244b7b93a4c5537eb136a50bc76505a230ded8e5c3d03579",
+    "source_bytes": 8465,
+    "line_count": 208,
+    "disposition": "analyzed",
+    "contracts": [
+      "Requests expire after 60 seconds, shorter than runners' 90-second waits.",
+      "Embedded test defines a 3-second blocked runner with two descendants and asserts Hung, exact leftover IDs and OS cleanup."
+    ],
+    "dependencies": [
+      "oracle::Watch performs identity classification/cleanup; record.rs deserializes; report::Invocation holds outcomes."
+    ],
+    "failures_or_limits": [
+      "Malformed/non-record stdout is only logged; Record uses permissive defaults. Product and embedded test were not executed."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "implementation",
+    "purpose": "Runs one isolated QA host, serves oracle requests and preserves bounded result records.",
+    "behavior": [
+      "Spawns with per-runner HUGR_QA_BOUND_MS, pipes JSON requests/results and logs stderr; reader routes check/usage/arm to Watch.",
+      "Kills a runner exceeding its bound, allows a 5-second stdout drain and performs a 20-second final leftover observation; Windows also samples every two seconds.",
+      "Requires successful exit plus end marker for Ok; exit 3 is reported Error, deadline is Hung, and other exits are Crash."
+    ],
+    "evidence": [
+      {
+        "start_line": 19,
+        "end_line": 26,
+        "quote": "const DRAIN: Duration = Duration::from_secs(5);\n/// The final observation of what a runner left: one snapshot and the kills.\npub const FINAL: Duration = Duration::from_secs(20);\n/// Windows: how often the runner's tree is observed while it runs, besides the batches' own sampling.\nconst SAMPLE: Duration = Duration::from_secs(2);\n/// How long a runner's ask stays valid: less than the runner's own wait (90 s, `rust/ask.rs`, `node/runner.mjs`), so\n/// an answer it no longer waits for never acts.\nconst ASKED: Duration = Duration::from_secs(60);"
+      },
+      {
+        "start_line": 105,
+        "end_line": 118,
+        "quote": "    let ended = match status {\n        None => Ended::Hung(format!(\"the runner did not finish within {bound:?}\")),\n        Some(s) if s.success() && ended_well => Ended::Ok,\n        // Exit 3: the runner stopped itself with an error it reported (its log says which).\n        Some(s) if s.code() == Some(3) => {\n            Ended::Error(format!(\"the runner reported an error (exit 3): {}\", log.display()))\n        }\n        Some(s) => Ended::Crash(format!(\"{s}, {}\", log.display())),\n    };\n    Ok(Invocation {\n        lang: lang.into(),\n        workload: workload.into(),\n        arm: arm.into(),\n        records,"
+      },
+      {
+        "start_line": 189,
+        "end_line": 191,
+        "quote": "        assert!(matches!(inv.ended, Ended::Hung(_)));\n        let logged: Vec<u32> = std::fs::read_to_string(&pids)\n            .unwrap()"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/src/main.rs",
+    "git_blob_sha": "a4e51f0d0524a0d043e0f43d756ba32b4d671f38",
+    "source_sha256": "83546464d59ef5c3ccdaf164ce548e0da39f6d3c3850f6ed877053dad4f650e2",
+    "source_bytes": 1150,
+    "line_count": 36,
+    "disposition": "analyzed",
+    "contracts": [
+      "Returns each selected mode's ExitCode."
+    ],
+    "dependencies": [
+      "plan coordinates build/control/runners/report; rust provides the workload host; declared modules compose the harness."
+    ],
+    "failures_or_limits": [
+      "Non-Linux Unix targets inherit linux naming; this thin entry does not verify workload outcomes."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "implementation",
+    "purpose": "Routes the Rust QA executable between orchestration and worker modes.",
+    "behavior": [
+      "A first argument runner dispatches remaining arguments to rust::main; all other invocations reach plan::main.",
+      "os_name maps macOS and Windows explicitly and treats every other target as linux."
+    ],
+    "evidence": [
+      {
+        "start_line": 23,
+        "end_line": 27,
+        "quote": "    match args.first().map(String::as_str) {\n        Some(\"runner\") => rust::main(args.get(1..).unwrap_or_default()),\n        _ => plan::main(&args),\n    }\n}"
+      },
+      {
+        "start_line": 31,
+        "end_line": 36,
+        "quote": "    match std::env::consts::OS {\n        \"macos\" => \"macos\",\n        \"windows\" => \"windows\",\n        _ => \"linux\",\n    }\n}"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/src/oracle/mod.rs",
+    "git_blob_sha": "aa8b1b7c5d524300a3062ad9b53f19859aedb046",
+    "source_sha256": "a5bc9693d9f367b96ba7251ffabd1257362f5f12cd06d73e5a48113403e98353",
+    "source_bytes": 10889,
+    "line_count": 259,
+    "disposition": "analyzed",
+    "contracts": [
+      "TOOL_BOUND is 30 seconds; token emits two independently seeded 64-bit hash outputs as 32 hex digits.",
+      "Gone/reused/unknown identities are not killed; ambiguous live evidence is reported left running."
+    ],
+    "dependencies": [
+      "unix.rs/windows.rs query OS; rules.rs produces Victim evidence; watch.rs schedules requests."
+    ],
+    "failures_or_limits": [
+      "Unix still has a recheck-to-signal race. A failed fresh snapshot logs and returns empty Reaped, so cleanup failure is not separately surfaced through that return type."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "implementation",
+    "purpose": "Defines oracle identities, OS snapshots, cleanup confirmation and resource usage.",
+    "behavior": [
+      "Root identity binds pid to a before/after spawn window with 200000 FILETIME units of slack; Proc stores OS-specific creation identity and optional marker.",
+      "reap obtains a fresh snapshot, confirms unique nonzero identities, exact markers and intact live parent chains, then signals only confirmed victims.",
+      "Windows kills through a checked process handle; Unix invokes kill -KILL after the snapshot; host_usage reads host and detected supervisor fds/RSS."
+    ],
+    "evidence": [
+      {
+        "start_line": 81,
+        "end_line": 88,
+        "quote": "pub const STAMP: u64 = 200_000;\n\nimpl Root {\n    /// Whether `p` is this root: same pid, created within the spawn window.\n    pub fn is(&self, pid: u32, created: u64) -> bool {\n        self.pid == pid && (self.from.saturating_sub(STAMP)..=self.to).contains(&created)\n    }\n}"
+      },
+      {
+        "start_line": 206,
+        "end_line": 220,
+        "quote": "        let linked = same(&v.proc).is_some()\n            && v.via.as_ref().is_some_and(|via| {\n                std::iter::once(&v.proc)\n                    .chain(via)\n                    .zip(via)\n                    .all(|(child, parent)| same(parent).is_some() && same(child) == Some(parent.pid))\n            });\n        if linked {\n            sure.push(v.proc.pid);\n        } else {\n            left.push(v.proc.pid);\n        }\n    }\n    (sure, left)\n}"
+      },
+      {
+        "start_line": 153,
+        "end_line": 160,
+        "quote": "        Err(e) => {\n            eprintln!(\n                \"omni-qa: could not confirm the leftovers {:?} before a kill: {e}\",\n                pids()\n            );\n            return Reaped::default();\n        }\n    };"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/src/oracle/rules.rs",
+    "git_blob_sha": "fb24f8fd27e11677b77ba71e40e31c3d24533871",
+    "source_sha256": "f777b88e7166782449632b05e1de85f25de8f9e6bae64ab07f163fb1f67cf7da",
+    "source_bytes": 13888,
+    "line_count": 341,
+    "disposition": "analyzed",
+    "contracts": [
+      "Host, asking process and supervisor are excluded; incomplete processes are counted separately and never candidates for killing."
+    ],
+    "dependencies": [
+      "oracle/mod.rs supplies identity types and revalidation; watch.rs records snapshots and requests classification."
+    ],
+    "failures_or_limits": [
+      "Unix group membership can justify counting without a killable live parent chain; Windows unobserved links deliberately remain incomplete."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "implementation",
+    "purpose": "Classifies process ownership from marker evidence and observed identity links.",
+    "behavior": [
+      "Unix proves exact task markers, non-host groups containing marked processes and older-parent descendants; unresolved root groups become incomplete unless the live leader belongs to another task.",
+      "Windows History pins the original runner identity, records parent links and last-seen times, and distinguishes task roots from unnamed supervisor roots attributed on final batch checks.",
+      "Victim construction is stricter than counting: killing requires a live chain to strong marker/root evidence or a pinned anchor; final leftovers follow run marker prefixes or observed runner ancestry."
+    ],
+    "evidence": [
+      {
+        "start_line": 42,
+        "end_line": 54,
+        "quote": "pub fn unix(snap: &[Proc], probe: &Probe, who: Who) -> Found {\n    let sup = supervisor(snap, who.host).map(|p| p.pid);\n    let own: BTreeSet<u32> = snap\n        .iter()\n        .filter(|p| p.pid == who.host || p.pid == who.me)\n        .map(|p| p.pgid)\n        .chain([0, 1])\n        .collect();\n    let marked = |p: &Proc| p.tag.as_deref() == Some(probe.tag.as_str());\n    let groups: BTreeSet<u32> = snap\n        .iter()\n        .filter(|p| marked(p))\n        .map(|p| p.pgid)"
+      },
+      {
+        "start_line": 98,
+        "end_line": 118,
+        "quote": "pub fn victims(\n    snap: &[Proc],\n    pids: &[u32],\n    strong: &dyn Fn(&Proc) -> bool,\n    anchor: &dyn Fn(&Proc) -> bool,\n) -> Vec<Victim> {\n    let parent = |p: &Proc| snap.iter().find(|q| q.pid == p.ppid && q.created <= p.created);\n    let via = |p: &Proc| {\n        let (mut cur, mut via) = (p, Vec::new());\n        while via.len() <= snap.len() {\n            if strong(cur) {\n                return Some(via);\n            }\n            let up = parent(cur)?;\n            via.push(up.clone());\n            if anchor(up) {\n                return Some(via);\n            }\n            if !pids.contains(&up.pid) && !strong(up) {\n                return None;\n            }"
+      },
+      {
+        "start_line": 185,
+        "end_line": 194,
+        "quote": "        if self.host.is_none() {\n            self.host = snap.iter().find(|p| p.pid == host).map(Id::of);\n        }\n        // Anchors only through the pinned identity, seen alive in this very snapshot.\n        if let Some(pinned) = self.host.filter(|h| snap.iter().any(|p| Id::of(p) == *h)) {\n            self.anchors.insert(pinned);\n            let sup = supervisor(snap, host).filter(|s| s.created >= pinned.created);\n            self.anchors.extend(sup.map(Id::of));\n        }\n        let alive: HashMap<u32, &Proc> = snap.iter().map(|p| (p.pid, p)).collect();"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/src/oracle/tests.rs",
+    "git_blob_sha": "46565200d3b9c0fdf3a8d23149911d29e12b679e",
+    "source_sha256": "7810fe083288440fe5531a942175a72417be41b6342f6351e06c243aed7a7052",
+    "source_bytes": 13995,
+    "line_count": 334,
+    "disposition": "analyzed",
+    "contracts": [
+      "Both OS classification algorithms run on synthetic tables on any host; expected Found vectors explicitly separate proven/incomplete/batch."
+    ],
+    "dependencies": [
+      "oracle/rules.rs is the actual implementation; kill and parse submodules cover additional boundaries."
+    ],
+    "failures_or_limits": [
+      "Table tests are not OS runtime evidence and were not executed."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "test",
+    "purpose": "Specifies adversarial ownership classification on synthetic Unix and Windows process tables.",
+    "behavior": [
+      "Checks exact markers/groups/children versus incomplete exited-root groups, exclusion of strangers and root pid reuse by another task.",
+      "Windows tables distinguish observed parent links, children born while a parent was known alive, unobserved later links, batch-only unknown run roots and immediate short-lived leftovers.",
+      "Tests pin the original runner against pid reuse, preserve pre-oracle-thread births using STAMP, isolate marker prefixes and refuse parents younger than children."
+    ],
+    "evidence": [
+      {
+        "start_line": 75,
+        "end_line": 75,
+        "quote": "    assert_eq!(got, found(&[20, 21, 31, 60], &[30, 32, 70, 71], &[]));"
+      },
+      {
+        "start_line": 177,
+        "end_line": 180,
+        "quote": "        rules::windows(&after, &hist, &task, None, WHO),\n        found(&[11, 12, 14], &[13], &[])\n    );\n    // Last check of the batch: omni's root and its child are the batch's, not the other task's root 19."
+      },
+      {
+        "start_line": 325,
+        "end_line": 334,
+        "quote": "fn a_parent_newer_than_its_child_never_adopts_it() {\n    let snap = vec![proc(11, 20, 11, 100, None), proc(20, 1, 20, 300, Some(\"q-1-\"))];\n    let mut set = std::collections::BTreeSet::from([20]);\n    super::rules::children_for_test(&snap, &mut set);\n    assert_eq!(\n        set.into_iter().collect::<Vec<_>>(),\n        vec![20],\n        \"the older stranger 11 was adopted\"\n    );\n}"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/src/oracle/tests/kill.rs",
+    "git_blob_sha": "545d2bf7d8c5f59c1c1024d925a12a97a6b4fae8",
+    "source_sha256": "915b4aa82761c4ba610fe2773c323a235d7421c892f14b188961d5c3b4cb7bf9",
+    "source_bytes": 5658,
+    "line_count": 132,
+    "disposition": "analyzed",
+    "contracts": [
+      "Counting may be broad while confirmed kill vectors remain narrow; explicit strong identity is represented by an empty evidence chain."
+    ],
+    "dependencies": [
+      "oracle::confirmed, rules::victims, Watch and windows::kill_script are exercised."
+    ],
+    "failures_or_limits": [
+      "Source assertions were not run; the expiry case covers an already-expired request, not every later deadline overrun."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "test",
+    "purpose": "Specifies deadline and evidence safety for orphan cleanup.",
+    "behavior": [
+      "A zero-duration final request must return expired without killing a marked process; the test permits a 60-second answer wait.",
+      "Synthetic confirmations reject reused/gone/unknown-start identities, stale parent links and same-second macOS replacement without the original marker.",
+      "Checks Windows script structure caches the process handle and compares creation time before kill; descendants of a gone root remain left running."
+    ],
+    "evidence": [
+      {
+        "start_line": 34,
+        "end_line": 43,
+        "quote": "    watch.ask(final_ask, Duration::ZERO, Some(answer));\n    let result = rx.recv_timeout(Duration::from_secs(60)).unwrap();\n    let alive = marked.try_wait().unwrap().is_none();\n    let _ = marked.kill();\n    let _ = marked.wait();\n    assert!(matches!(&result, Err(e) if e.contains(\"expired\")), \"{result:?}\");\n    assert!(alive, \"the expired final observation killed a process\");\n}\n\n/// The kill re-checks every identity: a pid now held by a newer process, a gone pid and an unknown start are spared."
+      },
+      {
+        "start_line": 98,
+        "end_line": 98,
+        "quote": "    assert_eq!(confirmed(&victims, &now), (vec![30, 31, 40], vec![11]));"
+      },
+      {
+        "start_line": 68,
+        "end_line": 70,
+        "quote": "        script.contains(\"$null = $p.Handle\") && script.contains(\"-lt 10) { $p.Kill()\"),\n        \"{script}\"\n    );"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/src/oracle/tests/parse.rs",
+    "git_blob_sha": "a4cf1fe88b2f666ad43ca2eeeeb38bc590e453c7",
+    "source_sha256": "b6421f35b81cc6d0f509c90816915b4b96be936352b17434549d673ad3683074",
+    "source_bytes": 3377,
+    "line_count": 72,
+    "disposition": "analyzed",
+    "contracts": [
+      "Synthetic data covers Linux/macOS/Windows parsers without querying those systems."
+    ],
+    "dependencies": [
+      "oracle/unix.rs/windows.rs parsers and oracle::token provide tested functions."
+    ],
+    "failures_or_limits": [
+      "These finite examples and token inequality assertions are not runtime or cryptographic assurance; tests were not executed."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "test",
+    "purpose": "Defines OS inventory parser and marker-source boundary cases.",
+    "behavior": [
+      "Linux stat accepts nested parentheses in comm, extracts start ticks and omits zombies; malformed/truncated input errors and only exact NUL-separated marker keys count.",
+      "macOS fixtures require a separately read matching argv prefix before environment parsing; markers in argv, other names/values or unmatched command lines are rejected.",
+      "Windows parses pid/parent/FILETIME plus spaced names; malformed numeric fields fail; token checks require differing 32-hex strings."
+    ],
+    "evidence": [
+      {
+        "start_line": 44,
+        "end_line": 53,
+        "quote": "    let not_ours = [\n        \"  93   1  93 S    Mon Jan 12 10:00:00 2026 fx HUGR_QA_TASK=q-1- A=1\", // only in argv\n        \"  94   1  94 S    Mon Jan 12 10:00:00 2026 fx OTHER_HUGR_QA_TASK=q-1-\", // another variable\n        \"  95   1  95 S    Mon Jan 12 10:00:00 2026 fx X=HUGR_QA_TASK=q-1-\",   // inside another value\n        \"  96   1  96 S    Mon Jan 12 10:00:00 2026 fx HUGR_QA_TASK=q-1-\",     // no command line to split on\n        \"  95   1  95 S    Mon Jan 12 10:00:00 2026 fxHUGR_QA_TASK=q-1-\",      // does not follow its command line\n    ];\n    for line in not_ours {\n        assert_eq!(ps(line).tag, None, \"{line}\");\n    }"
+      },
+      {
+        "start_line": 71,
+        "end_line": 71,
+        "quote": "    assert!(parse_line(\"4321 x 1 a\").is_err());"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/src/oracle/unix.rs",
+    "git_blob_sha": "b2a0b92a4a902563ee42d35b82c27efe87842d5b",
+    "source_sha256": "5fcee943c1618bc36d8f241ef54290e9f20abc73a7d673da8ef5e2a6bcee1553",
+    "source_bytes": 8309,
+    "line_count": 197,
+    "disposition": "analyzed",
+    "contracts": [
+      "Incomplete stat/parser/tool observations error rather than becoming an empty process list; PermissionDenied environ becomes an unmarked process."
+    ],
+    "dependencies": [
+      "oracle/mod.rs dispatches snapshots/usage and supplies the bounded tool wrapper."
+    ],
+    "failures_or_limits": [
+      "Snapshots are non-atomic; macOS whitespace environment parsing and second-resolution identity have documented caveats. Permission denial can hide ownership markers."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "implementation",
+    "purpose": "Reads Unix process identity, task markers and resource counts from OS interfaces.",
+    "behavior": [
+      "Linux scans /proc stat and environ, excludes Z/X/x processes, ignores vanished entries and reads markers only from exact NUL-delimited environment names.",
+      "macOS combines ps -E process data with a second argv-only ps call, parsing creation time to local-second precision and matching environment after the exact command prefix.",
+      "Linux counts fd entries/VmRSS; macOS counts numeric lsof descriptor rows and reads ps RSS."
+    ],
+    "evidence": [
+      {
+        "start_line": 32,
+        "end_line": 36,
+        "quote": "            // Another user's process: not one a task of this user started.\n            Err(e) if e.kind() == ErrorKind::PermissionDenied => None,\n            Err(e) => return Err(format!(\"/proc/{pid}/environ: {e}\")),\n        };\n        procs.push(proc);"
+      },
+      {
+        "start_line": 137,
+        "end_line": 151,
+        "quote": "    let env = argv\n        .get(&pid)\n        .and_then(|command| rest.strip_prefix(command))\n        .filter(|env| env.is_empty() || env.starts_with(char::is_whitespace));\n    Ok(Some(Proc {\n        pid,\n        ppid: ppid.parse().map_err(|_| bad())?,\n        pgid: pgid.parse().map_err(|_| bad())?,\n        created: started(&lstart).ok_or_else(bad)?,\n        name: base_name(program),\n        tag: env.and_then(marker_in_words),\n    }))\n}\n\n/// `ps -o lstart` (`Sun Oct  4 02:31:00 2026`, local time) as `20261004023100`."
+      },
+      {
+        "start_line": 72,
+        "end_line": 77,
+        "quote": "pub fn marker_in_environ(env: &[u8]) -> Option<String> {\n    let prefix = format!(\"{MARKER}=\");\n    env.split(|&b| b == 0)\n        .find_map(|var| var.strip_prefix(prefix.as_bytes()))\n        .map(|value| String::from_utf8_lossy(value).into_owned())\n}"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/src/oracle/watch.rs",
+    "git_blob_sha": "faa8c83db018a292706b56b9d26efcdc702f748e",
+    "source_sha256": "086de22b1a8b97514734e7b60fbd8ddeef700ddfde7a61df8fff723654db2be8",
+    "source_bytes": 8763,
+    "line_count": 207,
+    "disposition": "analyzed",
+    "contracts": [
+      "ask_now bounds the receiver wait; missing oracle responses become errors; request callbacks carry JSON values or error text."
+    ],
+    "dependencies": [
+      "rules.rs classifies; mod.rs snapshot/reap/host_usage perform OS observations; invoke.rs carries requests/replies."
+    ],
+    "failures_or_limits": [
+      "Expiration is checked after the first snapshot, before reap; reap performs another snapshot without receiving the original deadline, leaving a documentary gap for deadlines expiring during revalidation/kill.",
+      "The channel and retained history are unbounded within one runner."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "implementation",
+    "purpose": "Serves each runner's oracle requests on a dedicated thread with shared fresh snapshots.",
+    "behavior": [
+      "Watch queues asks with expiration instants, coalesces pending requests, takes snapshots after requests and answers expired snapshots without classifying or killing.",
+      "Windows armed batches trigger 250-ms sampling and retain identity history; named roots reset at batch start/last check.",
+      "Check/Final build strict Victim evidence, reap confirmed leftovers and retain deduplicated left-running pids; Usage queries host/supervisor resources."
+    ],
+    "evidence": [
+      {
+        "start_line": 132,
+        "end_line": 141,
+        "quote": "            if Instant::now() > until {\n                if let Some(answer) = answer {\n                    answer(Err(\n                        \"expired: the snapshot finished after the ask's deadline; nothing was done\".into(),\n                    ));\n                }\n                continue;\n            }\n            let result = match (ask, &snap) {\n                (Ask::Check { .. } | Ask::Final { .. }, Err(e)) => Err(format!(\"K1 not observed: {e}\")),"
+      },
+      {
+        "start_line": 168,
+        "end_line": 171,
+        "quote": "                    victims.extend(rules::victims(snap, &found.batch, &|_| false, &|p| hist.is_anchor(p)));\n                    kill(&victims, left);\n                    serde_json::to_value(found).map_err(|e| e.to_string())\n                }"
+      },
+      {
+        "start_line": 17,
+        "end_line": 17,
+        "quote": "const SAMPLE: Duration = Duration::from_millis(250);"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/src/oracle/windows.rs",
+    "git_blob_sha": "13c363f3702f67fbdced371c524fc42349e324a2",
+    "source_sha256": "23cd63d727d7c21c3e4792d22b4f968b601c1c6bae90c75c486dfe5929f0a52e",
+    "source_bytes": 3462,
+    "line_count": 84,
+    "disposition": "analyzed",
+    "contracts": [
+      "PowerShell runs NoLogo/NoProfile/NonInteractive through the shared 30-second tool bound."
+    ],
+    "dependencies": [
+      "oracle/mod.rs supplies Proc/Usage/tool and invokes kill_confirmed; rules.rs provides candidate identities."
+    ],
+    "failures_or_limits": [
+      "Exceptions collapse into GONE output and only KILLED rows return as successes; Windows runtime behavior was not exercised."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "implementation",
+    "purpose": "Reads Windows CIM process identity and performs same-handle conditional cleanup.",
+    "behavior": [
+      "CIM emits pid, parent pid, creation FILETIME and name; empty/malformed inventory errors, with no environment marker or process-group field.",
+      "kill_script opens/caches a System.Diagnostics.Process handle and kills only when StartTime differs by fewer than 10 FILETIME units, emitting KILLED/REUSED/GONE lines.",
+      "Usage reads handle count and working set, converting bytes to KiB."
+    ],
+    "evidence": [
+      {
+        "start_line": 63,
+        "end_line": 67,
+        "quote": "         $p = [System.Diagnostics.Process]::GetProcessById([int]$v[$i]); $null = $p.Handle; \\\n         if ([Math]::Abs($p.StartTime.ToFileTimeUtc() - [long]$v[$i + 1]) -lt 10) {{ $p.Kill(); \\\"KILLED $($v[$i])\\\" }} \\\n         else {{ \\\"REUSED $($v[$i])\\\" }} }} catch {{ \\\"GONE $($v[$i])\\\" }} }}\",\n        pairs.join(\",\")\n    )"
+      },
+      {
+        "start_line": 25,
+        "end_line": 28,
+        "quote": "    if procs.is_empty() {\n        return Err(\"Win32_Process listed no process\".into());\n    }\n    Ok(procs)"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/src/plan.rs",
+    "git_blob_sha": "02756932047a9dbaf71dc8864cb820a7f9494115",
+    "source_sha256": "1c522caac74a5ae16106f765c26a5619828d5d3d36530ee2bcfdd83ec8947dd0",
+    "source_bytes": 9025,
+    "line_count": 230,
+    "disposition": "analyzed",
+    "contracts": [
+      "Preparation is outside measured budget; exit 0=judged success, 1=failed targets, 2=setup/control infrastructure error."
+    ],
+    "dependencies": [
+      "fetch.rs, control.rs, invoke.rs, setup.rs and report compose execution."
+    ],
+    "failures_or_limits": [
+      "Node --version success is checked but minimum 22 is not parsed; build/fetch commands have no measured-run cap. No orchestration was executed."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "implementation",
+    "purpose": "Orchestrates build, pinned workload preparation, controls, bounded runner matrix and report.",
+    "behavior": [
+      "Supports quick/full, rust/ts subsets, orphan injection and explicit no-k4; creates 11 workload/arm invocations per selected language.",
+      "Measured budgets are quick 6 minutes or Windows 18, full 30; workload caps vary 45–600 seconds and triple on Windows, with 10-second report and 25-second post-run reserves.",
+      "Builds workspace binaries and optional Node addon, requires Node launch/addon presence, runs controls before workloads and emits NotRun records when budget is exhausted."
+    ],
+    "evidence": [
+      {
+        "start_line": 18,
+        "end_line": 30,
+        "quote": "const INVOCATIONS: [(&str, &str); 11] = [\n    (\"QA-A\", \"omni\"),\n    (\"QA-A\", \"std\"),\n    (\"QA-B\", \"omni\"),\n    (\"QA-B\", \"std\"),\n    (\"QA-C\", \"omni\"),\n    (\"QA-D\", \"omni\"),\n    (\"QA-D\", \"std\"),\n    (\"QA-E\", \"omni\"),\n    (\"QA-E\", \"std\"),\n    (\"K4\", \"omni\"),\n    (\"K6\", \"omni\"),\n];"
+      },
+      {
+        "start_line": 59,
+        "end_line": 60,
+        "quote": "const RESERVE: Duration = Duration::from_secs(10);\nconst AFTER: Duration = Duration::from_secs(25);"
+      },
+      {
+        "start_line": 135,
+        "end_line": 140,
+        "quote": "                if left.is_zero() {\n                    let why = format!(\"not run: the {} budget of {:?} ran out\", mode.name(), budget(mode));\n                    invocations.push(Invocation::not_run(lang, workload, arm, why));\n                    continue;\n                }\n                eprintln!(\"qa/run: {lang} {workload} {arm}\");"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/src/record.rs",
+    "git_blob_sha": "a635be3073b7d7036575c2d802b25f26a02cd0c8",
+    "source_sha256": "37fc186e8de69a08c5dc42a54797eedeab67f085ba4ea055c9321706a2f4ba56",
+    "source_bytes": 2556,
+    "line_count": 67,
+    "disposition": "analyzed",
+    "contracts": [
+      "Kind is documented as task/k4/k6/end but represented as a string."
+    ],
+    "dependencies": [
+      "invoke.rs deserializes records; Rust/Node runners produce them; report/kpis.rs interprets metrics."
+    ],
+    "failures_or_limits": [
+      "Defaulted fields and unconstrained kind strings permit structurally sparse records; emit logs serialization failure rather than returning it."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "implementation",
+    "purpose": "Defines the shared JSON-line record schema used by Rust and Node QA hosts.",
+    "behavior": [
+      "Record carries task identity, timing, hangs, proven/incomplete/unobserved K1 counts, stop/grace, lost bytes, failure/skip text and K4/K6 measurement fields.",
+      "Serde defaults omitted fields; optional fields are omitted when serializing; end produces a kind=end marker and emit prints one JSON line."
+    ],
+    "evidence": [
+      {
+        "start_line": 8,
+        "end_line": 15,
+        "quote": "#[derive(Debug, Clone, Default, Serialize, Deserialize)]\n#[serde(default)]\npub struct Record {\n    pub kind: String,\n    pub workload: String,\n    pub name: String,\n    /// `omni` or `std`.\n    pub arm: String,"
+      },
+      {
+        "start_line": 53,
+        "end_line": 60,
+        "quote": "    pub fn end() -> Record {\n        Record {\n            kind: \"end\".into(),\n            ..Record::default()\n        }\n    }\n\n    /// Prints it as one line on stdout (the runner protocol)."
+      },
+      {
+        "start_line": 61,
+        "end_line": 67,
+        "quote": "    pub fn emit(&self) {\n        match serde_json::to_string(self) {\n            Ok(line) => println!(\"{line}\"),\n            Err(e) => eprintln!(\"omni-qa: unprintable record {self:?}: {e}\"),\n        }\n    }\n}"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/src/report/kpis.rs",
+    "git_blob_sha": "cee53a21eb6d9eb1204227457add3bfa55023d2e",
+    "source_sha256": "10d96f7cbc099256f2a83c7cbc945f318c3bdceddff5a8910a93e600b4e71434",
+    "source_bytes": 8563,
+    "line_count": 216,
+    "disposition": "analyzed",
+    "contracts": [
+      "K4 permits <=max(1.25*std,std+300us); K3 <=500ms without survivors; K6 requires both supervisor readings, descriptor deltas<=0 and RSS<=10240KiB."
+    ],
+    "dependencies": [
+      "record.rs, report::Run/Invocation supply measurements; report/mod.rs renders decisions."
+    ],
+    "failures_or_limits": [
+      "Metrics are aggregated source logic, not measurements. Missing required K3/K4/K6 returns None and fails; skipped own measurements do not erase K1."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "implementation",
+    "purpose": "Aggregates runner records into per-language KPIs and the overall verdict.",
+    "behavior": [
+      "Counts K1 failures/unobserved/incomplete even for skipped or non-task records, adds final leftovers and maps runner Hung/Crash to K2/K7.",
+      "Computes K3 nearest-rank p95 over grace, K4 both spawn and round-trip thresholds, and K6 host/supervisor descriptor deltas plus host RSS growth.",
+      "Overall success requires passed controls, nonempty language set, all required KPI verdicts and no omni failed checks; no-k4 explicitly exempts K4 and Windows K8 repeats K1–K7."
+    ],
+    "evidence": [
+      {
+        "start_line": 177,
+        "end_line": 197,
+        "quote": "    let k4 = |o: Option<f64>, s: Option<f64>| o.zip(s).map(|(o, s)| o <= (1.25 * s).max(s + 300.0));\n    [\n        Some(omni.k1_orphans == 0 && omni.k1_incomplete == 0 && omni.k1_unobserved == 0),\n        Some(omni.k2_hung == 0),\n        omni.k3_p95_over_grace_ms\n            .map(|p| p <= 500 && omni.k3_trees_survived == 0),\n        k4(omni.k4_pid_p50_us, std.k4_pid_p50_us)\n            .zip(k4(omni.k4_round_trip_p50_us, std.k4_round_trip_p50_us))\n            .map(|(a, b)| a && b),\n        Some(omni.k5_lost_bytes == 0),\n        // The supervisor's figures are part of the soak: missing on either side, K6 is not measured.\n        omni.k6_host_fds_delta\n            .zip(omni.k6_rss_growth_kb)\n            .zip(omni.k6_supervisor_fds_delta)\n            .map(|((fds, rss), sup)| fds <= 0 && sup <= 0 && rss <= 10 * 1024),\n        Some(omni.k7_crashes == 0),\n    ]\n}\n\n/// Per language: its omni and std figures and omni's verdicts.\npub type PerLang = (String, Kpis, Kpis, [Option<bool>; 7]);"
+      },
+      {
+        "start_line": 213,
+        "end_line": 216,
+        "quote": "    let checks = per.iter().all(|p| p.1.failed.is_empty());\n    let pass = run.control.is_ok() && !per.is_empty() && (0..7).all(k_ok) && checks && k8 != Some(false);\n    (per, k8, pass)\n}"
+      },
+      {
+        "start_line": 105,
+        "end_line": 109,
+        "quote": "            // A skip only drops the workload's own measurement (K2, K3, K5, K4, K6).\n            if let Some(skip) = &r.skip {\n                k.skipped.push(format!(\"{}/{}: {skip}\", r.workload, r.name));\n                continue;\n            }"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/src/report/mod.rs",
+    "git_blob_sha": "d966ff33b25101e32cde8380c7a93c102d1c5399",
+    "source_sha256": "1e76abad93789d98ae53c97f3e8550284b38b95148b02c56cc33d2deb1565750",
+    "source_bytes": 12107,
+    "line_count": 304,
+    "disposition": "analyzed",
+    "contracts": [
+      "K1 cells expose incomplete/unobserved/left-running evidence; Markdown lists failed checks and skips."
+    ],
+    "dependencies": [
+      "report/kpis.rs computes verdicts; bounded.rs runs metadata tools; plan.rs chooses output paths/deadline."
+    ],
+    "failures_or_limits": [
+      "JSON invocation objects omit the Ended variant and per-invocation left_running vector, though aggregate failures/KPI data and Markdown retain related information.",
+      "Writing output files is not atomic and rendering logic was not executed."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "implementation",
+    "purpose": "Renders machine-readable and Markdown QA reports with bounded metadata collection.",
+    "behavior": [
+      "Writes report.json with OS/arch/mode/commit/versions/load, controls, KPIs and invocation records, then report.md with targets, verdicts and runner summaries.",
+      "Marks missing measurements as failure, records no-k4/injection explicitly and separates std baseline failures from judged omni failures.",
+      "Metadata commands use up to 3 seconds of remaining budget; exhausted/unavailable metadata is labeled rather than delaying indefinitely."
+    ],
+    "evidence": [
+      {
+        "start_line": 136,
+        "end_line": 140,
+        "quote": "        \"invocations\": run.invocations.iter().map(|i| serde_json::json!({\n            \"lang\": i.lang, \"workload\": i.workload, \"arm\": i.arm, \"seconds\": i.seconds, \"records\": i.records,\n            \"leftovers\": match &i.leftovers { Ok(l) => serde_json::json!(l), Err(e) => serde_json::json!({\"error\": e}) },\n        })).collect::<Vec<_>>(),\n    });"
+      },
+      {
+        "start_line": 102,
+        "end_line": 108,
+        "quote": "fn mark(v: Option<bool>) -> &'static str {\n    match v {\n        Some(true) => \"PASS\",\n        Some(false) => \"FAIL\",\n        None => \"FAIL (not measured)\",\n    }\n}"
+      },
+      {
+        "start_line": 294,
+        "end_line": 297,
+        "quote": "    if within.is_zero() {\n        return format!(\"({program}: no time left)\");\n    }\n    crate::bounded::run(std::process::Command::new(program).args(args).current_dir(dir), within)"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/src/report/tests.rs",
+    "git_blob_sha": "297ca6ab40e648dc4deebed7e8135f49a8f8eb5e",
+    "source_sha256": "4156b4e3ff46db906de7f56d8831992843d75c07889718074cb8c1dd8815605f",
+    "source_bytes": 4332,
+    "line_count": 145,
+    "disposition": "analyzed",
+    "contracts": [
+      "Uses fabricated records with no OS workload execution; assertions target judge rather than duplicate KPI formulas."
+    ],
+    "dependencies": [
+      "report/kpis.rs computes the actual verdict; record.rs and oracle usage types supply fixtures."
+    ],
+    "failures_or_limits": [
+      "Test definitions were read but not run; synthetic clean pass is not an observed QA outcome."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "test",
+    "purpose": "Specifies report fail-closed behavior for missing or invalid measurement evidence.",
+    "behavior": [
+      "A synthetic clean run includes a 510-ms stop with 500-ms grace, equal omni/std K4 and unchanged host/supervisor usage and must pass.",
+      "Removing either supervisor usage sample leaves K6 unmeasured and fails; unobserved K1 in a soak fails K1 even when K6 itself remains measured.",
+      "Final leftovers and failed final observations fail the run; skipped tasks still contribute K1 orphans/unobserved failures."
+    ],
+    "evidence": [
+      {
+        "start_line": 73,
+        "end_line": 91,
+        "quote": "fn k6_without_the_supervisor_before_or_after_is_not_measured() {\n    for side in [\"before\", \"after\"] {\n        let mut soak = soak();\n        let figures = if side == \"before\" {\n            &mut soak.before\n        } else {\n            &mut soak.after\n        };\n        if let Some(usage) = figures.as_mut() {\n            usage.supervisor = None;\n        }\n        let (per, _, pass) = judge(&clean(soak), \"macos\");\n        assert_eq!(per[0].3[5], None, \"K6 with no supervisor figure {side} the soak\");\n        assert!(!pass, \"{side}\");\n    }\n}\n\n#[test]\nfn a_clean_run_passes() {"
+      },
+      {
+        "start_line": 123,
+        "end_line": 140,
+        "quote": "fn a_skipped_task_still_counts_for_k1_and_its_failures() {\n    let skipped = |r: Record| Record {\n        skip: Some(\"not installed here\".into()),\n        ..r\n    };\n    let unobserved = skipped(Record {\n        unobserved: true,\n        fail: Some(\"K1 not observed: ps did not finish\".into()),\n        ..record(\"task\", \"omni\")\n    });\n    let orphaned = skipped(Record {\n        orphans: 2,\n        ..record(\"task\", \"omni\")\n    });\n    for (what, r) in [(\"unobserved\", unobserved), (\"orphans\", orphaned)] {\n        let mut run = clean(soak());\n        run.invocations[0].records.push(r);\n        let (per, _, pass) = judge(&run, \"macos\");"
+      }
+    ]
+  }
+]

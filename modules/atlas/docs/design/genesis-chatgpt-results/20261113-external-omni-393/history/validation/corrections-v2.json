@@ -1,0 +1,199 @@
+{
+  "schema": "omni-author-correction/v1",
+  "author_role": "validation",
+  "revision": "v2",
+  "reason": "Documentary excerpt normalization and line-count correction; no semantic text or source bytes changed.",
+  "files": [
+    {
+      "file": "records-04.json",
+      "original_path": "authors/validation/history/v1/records-04.json",
+      "original_sha256": "e4757b76da09ac5dd9543b170520b54e50d03d135aafc00d7c9d5fb1f661b36f",
+      "corrected_sha256": "02a99ca9776fd8a2efaa8eeefe947bc05d10d03b0b6f793f15eff5e26bb934e4",
+      "changes": [
+        {
+          "path": "native/omni/conformance/regex-table.json",
+          "field": "line_count",
+          "old": 407,
+          "new": 409
+        },
+        {
+          "path": "native/omni/crates/omni-fixture/src/out.rs",
+          "excerpt": 0,
+          "reason": "Trim trailing blank lines from cited range so exact quote survives validator newline normalization.",
+          "old_start": 53,
+          "old_end": 62,
+          "new_start": 53,
+          "new_end": 61
+        },
+        {
+          "path": "native/omni/crates/omni-fixture/src/parse.rs",
+          "excerpt": 1,
+          "reason": "Trim trailing blank lines from cited range so exact quote survives validator newline normalization.",
+          "old_start": 166,
+          "old_end": 173,
+          "new_start": 166,
+          "new_end": 172
+        }
+      ]
+    },
+    {
+      "file": "records-08.json",
+      "original_path": "authors/validation/history/v1/records-08.json",
+      "original_sha256": "b8014df9059223aed9fcd9726d215a7115c103c62456099d0e2eff04e00c9624",
+      "corrected_sha256": "f61814e58448e18a355ddb2e503edcb53e82aaaff538feaafc9e97daabccbea3",
+      "changes": [
+        {
+          "path": "native/omni/qa/Cargo.lock",
+          "excerpt": 0,
+          "reason": "Trim trailing blank lines from cited range so exact quote survives validator newline normalization.",
+          "old_start": 68,
+          "old_end": 76,
+          "new_start": 68,
+          "new_end": 75
+        },
+        {
+          "path": "native/omni/qa/Cargo.lock",
+          "excerpt": 1,
+          "reason": "Trim trailing blank lines from cited range so exact quote survives validator newline normalization.",
+          "old_start": 166,
+          "old_end": 179,
+          "new_start": 166,
+          "new_end": 178
+        },
+        {
+          "path": "native/omni/qa/pins/semver-workspace.lock",
+          "excerpt": 0,
+          "reason": "Trim trailing blank lines from cited range so exact quote survives validator newline normalization.",
+          "old_start": 20,
+          "old_end": 25,
+          "new_start": 20,
+          "new_end": 24
+        },
+        {
+          "path": "native/omni/qa/src/control.rs",
+          "excerpt": 0,
+          "reason": "Trim trailing blank lines from cited range so exact quote survives validator newline normalization.",
+          "old_start": 25,
+          "old_end": 30,
+          "new_start": 25,
+          "new_end": 29
+        }
+      ]
+    },
+    {
+      "file": "records-09.json",
+      "original_path": "authors/validation/history/v1/records-09.json",
+      "original_sha256": "c6a6cf6617a36504b959b0d0696040370429d0385ac44ecb3eb534e83cd1fe13",
+      "corrected_sha256": "b891101f01773921cfb3938cde4cb8b6e3e356f3f56a8403eea22fcf6e89fc13",
+      "changes": [
+        {
+          "path": "native/omni/qa/src/invoke.rs",
+          "excerpt": 0,
+          "reason": "Trim trailing blank lines from cited range so exact quote survives validator newline normalization.",
+          "old_start": 19,
+          "old_end": 27,
+          "new_start": 19,
+          "new_end": 26
+        },
+        {
+          "path": "native/omni/qa/src/main.rs",
+          "excerpt": 0,
+          "reason": "Trim trailing blank lines from cited range so exact quote survives validator newline normalization.",
+          "old_start": 23,
+          "old_end": 28,
+          "new_start": 23,
+          "new_end": 27
+        },
+        {
+          "path": "native/omni/qa/src/oracle/mod.rs",
+          "excerpt": 0,
+          "reason": "Trim trailing blank lines from cited range so exact quote survives validator newline normalization.",
+          "old_start": 81,
+          "old_end": 89,
+          "new_start": 81,
+          "new_end": 88
+        },
+        {
+          "path": "native/omni/qa/src/oracle/unix.rs",
+          "excerpt": 2,
+          "reason": "Trim trailing blank lines from cited range so exact quote survives validator newline normalization.",
+          "old_start": 72,
+          "old_end": 78,
+          "new_start": 72,
+          "new_end": 77
+        },
+        {
+          "path": "native/omni/qa/src/plan.rs",
+          "excerpt": 0,
+          "reason": "Trim trailing blank lines from cited range so exact quote survives validator newline normalization.",
+          "old_start": 18,
+          "old_end": 31,
+          "new_start": 18,
+          "new_end": 30
+        },
+        {
+          "path": "native/omni/qa/src/plan.rs",
+          "excerpt": 1,
+          "reason": "Trim trailing blank lines from cited range so exact quote survives validator newline normalization.",
+          "old_start": 59,
+          "old_end": 61,
+          "new_start": 59,
+          "new_end": 60
+        }
+      ]
+    },
+    {
+      "file": "records-10.json",
+      "original_path": "authors/validation/history/v1/records-10.json",
+      "original_sha256": "ebb15c4a20b36a15073ebfb0fa9bd9078b528c2ae0a74aaeda73e0e39a341913",
+      "corrected_sha256": "563777faf0a34c7b9e22d64c394fbea705c694813565231a6e6977a47ff12a79",
+      "changes": [
+        {
+          "path": "native/omni/qa/src/rust/arm.rs",
+          "excerpt": 0,
+          "reason": "Trim trailing blank lines from cited range so exact quote survives validator newline normalization.",
+          "old_start": 60,
+          "old_end": 77,
+          "new_start": 60,
+          "new_end": 76
+        },
+        {
+          "path": "native/omni/qa/src/rust/ask.rs",
+          "excerpt": 1,
+          "reason": "Trim trailing blank lines from cited range so exact quote survives validator newline normalization.",
+          "old_start": 60,
+          "old_end": 65,
+          "new_start": 60,
+          "new_end": 64
+        },
+        {
+          "path": "native/omni/qa/src/rust/term.rs",
+          "excerpt": 0,
+          "reason": "Trim trailing blank lines from cited range so exact quote survives validator newline normalization.",
+          "old_start": 32,
+          "old_end": 34,
+          "new_start": 32,
+          "new_end": 33
+        },
+        {
+          "path": "native/omni/qa/src/setup.rs",
+          "excerpt": 1,
+          "reason": "Trim trailing blank lines from cited range so exact quote survives validator newline normalization.",
+          "old_start": 39,
+          "old_end": 45,
+          "new_start": 39,
+          "new_end": 44
+        }
+      ]
+    },
+    {
+      "file": "capture.json",
+      "original_sha256": "228c2237e1a56561517f64cf444b61b1bc75d56705e317cdc8fcd84a1b55f818",
+      "corrected_sha256": "3bd4f20f7916f30ec3e97ed63cae8e14efbcad62a0e821f3d3d163a0f4937096",
+      "changes": [
+        "native/omni/conformance/regex-table.json"
+      ],
+      "reason": "Count Unicode line separators consistently with public validator."
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "source": "records-09.json",
+  "replacement": "records-09.v2.json",
+  "changes": [
+    {
+      "path": "native/omni/crates/hugr-omni/tests/runner/command.rs",
+      "field": "failures_or_limits",
+      "reason": "Inspection of schema.rs showed it reuses hex_bytes; the v1 assertion about an even-length precheck was unsupported. Exact loop evidence now states acceptance of a final single hex digit."
+    }
+  ],
+  "original_preserved": true
+}

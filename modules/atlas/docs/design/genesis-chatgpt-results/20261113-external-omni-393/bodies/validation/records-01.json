@@ -1,0 +1,652 @@
+[
+  {
+    "path": "native/omni/campaign/.gitignore",
+    "git_blob_sha": "333c1e910a3e2bef1b9d0d4587392627d8388974",
+    "source_sha256": "96731671afe640d782dff36b82a3ad8d1ce0ebe4a7b174f6506f251395941e2f",
+    "source_bytes": 6,
+    "line_count": 1,
+    "disposition": "analyzed",
+    "contracts": [
+      "Ignored output still needs explicit preservation when assembling acceptance evidence."
+    ],
+    "dependencies": [
+      "campaign/README.md describes logs as raw local evidence."
+    ],
+    "failures_or_limits": [
+      "An ignore rule neither executes a campaign nor records its result."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "config",
+    "purpose": "Keeps campaign process observations and generated evidence out of source control.",
+    "behavior": [
+      "Ignores the campaign-local logs/ directory."
+    ],
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 1,
+        "quote": "logs/"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/README.md",
+    "git_blob_sha": "873e6bf1494004f72d72511c14efcab77856a6ce",
+    "source_sha256": "0a1a041a63bfa6d3cebaed9ffeaf12c01d0e8069c3d3e86d4dee0fbe3fc486e8",
+    "source_bytes": 4864,
+    "line_count": 66,
+    "disposition": "analyzed",
+    "contracts": [
+      "Campaign output is not a completed WP10 acceptance certificate; owner signature and default-on acceptance remain separate.",
+      "Package-wide test:ci intentionally fails; explicitly select hosted proof files."
+    ],
+    "dependencies": [
+      "docs/orchestra-integration.md supplies the WP10 acceptance boundary; v1–v10 scripts emit observations."
+    ],
+    "failures_or_limits": [
+      "Source instructions and listed proofs are declarations, not observed executions."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "doc",
+    "purpose": "Defines the V1–V10 delivery campaign and limits what its scripts can certify.",
+    "behavior": [
+      "Requires an owner-authorized local gate, isolated HOME/XDG and rebuilt native/CLI artifacts from one revision.",
+      "Maps background adoption, crash/supervisor recovery, real LSP/MCP/PTY callers, overhead, Windows lifecycle, broken delivery artifacts and natural exit to distinct campaign evidence.",
+      "Requires quiet-host overhead p50(omni) <= max(p50(legacy)*1.10,p50(legacy)+2 ms); documents raw-byte comparisons and separate hosted wrappers."
+    ],
+    "evidence": [
+      {
+        "start_line": 3,
+        "end_line": 7,
+        "quote": "These scripts exercise real Orchestra callers and compiled binaries. They are evidence producers for WP10 in\n[`orchestra-integration.md`](../docs/orchestra-integration.md), not a completed acceptance certificate.\n\nEvery local run requires `ORCHESTRA_LOCAL_TESTS=1`, the owner-authorized exception for this campaign. Hosts use\ntemporary HOME/XDG directories and empty credentials. Do not point a scenario at a running user server. Process"
+      },
+      {
+        "start_line": 37,
+        "end_line": 38,
+        "quote": "Timing acceptance requires a quiet host; a refused or interrupted measurement is not green. V7's limit is\n`p50(omni) <= max(p50(legacy) * 1.10, p50(legacy) + 2 ms)`. Do not loosen it to accommodate local load."
+      },
+      {
+        "start_line": 46,
+        "end_line": 47,
+        "quote": "revisions, mutation controls, raw ConPTY limits and the owner-authorized signing deferral. No individual workflow\ncertifies all of WP10; owner signature and default-on boundary acceptance remain separate gates."
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/bunfig.toml",
+    "git_blob_sha": "be6ad1a7e8b95bf8aa515e70c11652dd252fbb8a",
+    "source_sha256": "fbcf5dc67170aa0c2423c1f8c85e9a70454701aad4a95ccbebc71ab60d4af29c",
+    "source_bytes": 133,
+    "line_count": 2,
+    "disposition": "analyzed",
+    "contracts": [
+      "Campaign tests inherit the shared local-test and control policies."
+    ],
+    "dependencies": [
+      "../../../script/test-guard.ts guards test execution; test-omni-control.ts and core preload establish campaign test context."
+    ],
+    "failures_or_limits": [
+      "Contains no execution result or standalone test selection."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "config",
+    "purpose": "Applies repository test authorization and Omni control preloads to campaign tests.",
+    "behavior": [
+      "Preloads test-guard.ts, test-omni-control.ts and core's test/preload.ts for Bun test."
+    ],
+    "evidence": [
+      {
+        "start_line": 2,
+        "end_line": 2,
+        "quote": "preload = [\"../../../script/test-guard.ts\", \"../../../script/test-omni-control.ts\", \"../../../packages/core/test/preload.ts\"]"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/delivery-fixtures.ts",
+    "git_blob_sha": "5aa6350e41434ea2021b1168d9751e37b4eb7489",
+    "source_sha256": "b0e375df81a1680bcb942a52fa40870f64072876263a255532a0037ceb49d1e2",
+    "source_bytes": 6891,
+    "line_count": 142,
+    "disposition": "analyzed",
+    "contracts": [
+      "Authorization requires CI or ORCHESTRA_LOCAL_TESTS=1; deliveryEnv strips credential/runtime injection variables and relocates user/cache paths."
+    ],
+    "dependencies": [
+      "lib.ts supplies identity capture, ownership, cleanup callbacks and verdicts; core fixture omni-effect preserves shared runtime identities."
+    ],
+    "failures_or_limits": [
+      "Captured output is buffered in memory; timeout cleanup can add a 10-second close wait beyond measured execution.",
+      "A returned provisional success can later be published as failed if cleanup fails."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "fixture",
+    "purpose": "Provides bounded delivery-process execution, sanitized environments and cleanup-dependent verdict publishing.",
+    "behavior": [
+      "Defers successful record publication until cleanup; cleanup errors convert a queued success to failure.",
+      "Captures process birth identity before measuring, buffers stdout/stderr and first-output latency, and resolves on close/error or a deadline watchdog that kills the retained process and destroys pipes.",
+      "Optionally inventories and reaps exact nonce-owned descendants; loads the real AppProcess runtime through shared Effect identities."
+    ],
+    "evidence": [
+      {
+        "start_line": 7,
+        "end_line": 11,
+        "quote": "export function record<T extends Record<string, unknown> & { pass: boolean }>(name: string, result: T) {\n  if (!result.pass) return { ...verdict(name, result), ...result }\n  afterCleanup((error) => verdict(name, error === undefined ? result : { ...result, pass: false, cleanupError: String(error) }))\n  return result\n}"
+      },
+      {
+        "start_line": 41,
+        "end_line": 46,
+        "quote": "export async function execute(bin: string, args: string[], env: Record<string, string>, cwd: string, deadlineMs: number, nonces: string[] = []) {\n  await prepareCapture()\n  const started = performance.now()\n  const proc = spawn(bin, args, { env, cwd, stdio: [\"ignore\", \"pipe\", \"pipe\"], windowsHide: true })\n  proc.stdout.setEncoding(\"utf8\")\n  proc.stderr.setEncoding(\"utf8\")"
+      },
+      {
+        "start_line": 68,
+        "end_line": 77,
+        "quote": "      })\n      proc.once(\"close\", (code, signal) => resolve({ code, signal, ms: performance.now() - started }))\n      timer.id = setTimeout(() => {\n        state.timedOut = true\n        proc.kill(\"SIGKILL\")\n        proc.stdout.destroy()\n        proc.stderr.destroy()\n        resolve({ code: proc.exitCode, signal: proc.signalCode, ms: performance.now() - started })\n      }, deadlineMs)\n    })"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/delivery-tsconfig.json",
+    "git_blob_sha": "a1a1977d95523257286d469b05a25288d86c70ab",
+    "source_sha256": "acf294ab5c661d7b90634061fc88601385cbe7bc0fb97128a44f0bc2529ca4c0",
+    "source_bytes": 485,
+    "line_count": 12,
+    "disposition": "analyzed",
+    "contracts": [
+      "The include list limits this config's direct campaign scope to four files."
+    ],
+    "dependencies": [
+      "packages/core/tsconfig.json and its installed Effect/type declarations define type compatibility."
+    ],
+    "failures_or_limits": [
+      "Type paths do not themselves verify runtime module identity or execute campaign scenarios."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "config",
+    "purpose": "Typechecks the selected delivery campaign files against core's Effect declarations.",
+    "behavior": [
+      "Extends core tsconfig, enables Bun types and points typeRoots into core's installed @types.",
+      "Aliases effect and effect/unstable/process to core declarations; includes delivery-fixtures, V7 overhead, V8 Windows and V9 broken artifacts."
+    ],
+    "evidence": [
+      {
+        "start_line": 6,
+        "end_line": 10,
+        "quote": "    \"paths\": {\n      \"effect\": [\"../../../packages/core/node_modules/effect/dist/index.d.ts\"],\n      \"effect/unstable/process\": [\"../../../packages/core/node_modules/effect/dist/unstable/process/index.d.ts\"]\n    }\n  },"
+      },
+      {
+        "start_line": 11,
+        "end_line": 11,
+        "quote": "  \"include\": [\"delivery-fixtures.ts\", \"v7-overhead.ts\", \"v8-windows.ts\", \"v9-broken-artifacts.ts\"]"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/fake-llm.ts",
+    "git_blob_sha": "ab90b2dfdcae67dc5285005925729c7b7f091053",
+    "source_sha256": "4b858d8beba40e4d10243eb50c676cc8e27459ca90ec190d7142797599a87acc",
+    "source_bytes": 3230,
+    "line_count": 90,
+    "disposition": "analyzed",
+    "contracts": [
+      "Tool requests use supplied names and JSON arguments, giving campaigns control over actual caller behavior without a remote model."
+    ],
+    "dependencies": [
+      "isolated-user configuration installs provider() output; background/kill scenarios consume fakeLLM()."
+    ],
+    "failures_or_limits": [
+      "No method/path/authentication checks and no body-size bound; this is a trusted local protocol fixture.",
+      "Synthetic responses establish no model-quality claim."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "fixture",
+    "purpose": "Supplies a deterministic local OpenAI-compatible SSE peer for real agent tool execution.",
+    "behavior": [
+      "Advertises a synthetic zero-cost test model and listens on ephemeral loopback HTTP.",
+      "Records offered tool names and emits the requested parallel tool calls once, only when all desired tools are offered; subsequent replies finish with done.",
+      "Streams role, tool-call/content, finish reason and [DONE] events."
+    ],
+    "evidence": [
+      {
+        "start_line": 56,
+        "end_line": 59,
+        "quote": "      const withTools = !issued && calls.length > 0 && available.length === calls.length\n      seen.push(withTools ? \"tools\" : \"text\")\n      if (withTools) issued = true\n      response.writeHead(200, { \"content-type\": \"text/event-stream\", \"cache-control\": \"no-cache\" })"
+      },
+      {
+        "start_line": 83,
+        "end_line": 86,
+        "quote": "      send({}, withTools ? \"tool_calls\" : \"stop\")\n      response.end(\"data: [DONE]\\n\\n\")\n    })\n  })"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/isolated-user.ts",
+    "git_blob_sha": "4f964993accebbd223e5db797510131b18210df8",
+    "source_sha256": "bdb43a50041054debf05e8994eb59180d85ae9e12282b9581b6acdbd6df150e6",
+    "source_bytes": 2857,
+    "line_count": 60,
+    "disposition": "analyzed",
+    "contracts": [
+      "Omni spawner defaults to enabled unless explicitly inherited otherwise."
+    ],
+    "dependencies": [
+      "server-client.ts exports the shared campaign password; callers own cleanup of the returned paths and child handles."
+    ],
+    "failures_or_limits": [
+      "Environment/path isolation is not an OS user or sandbox boundary.",
+      "Synchronous git init has no explicit timeout in this helper."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "fixture",
+    "purpose": "Builds an isolated campaign HOME/project and scrubbed child environment.",
+    "behavior": [
+      "Creates a canonical temporary home and TypeScript project, removes provider/credential/runtime variables, and relocates HOME, AppData, XDG and global Git configuration.",
+      "Disables model fetch and auto-update/compaction, supplies empty auth and the campaign password, then initializes the project Git repository.",
+      "Optional provider config adds a test-model maestro agent with allow permissions before merging supplied agents."
+    ],
+    "evidence": [
+      {
+        "start_line": 21,
+        "end_line": 23,
+        "quote": "    if (value !== undefined && !/^(HUGR_|ORCHESTRA_|ORCHESTRA_|ANTHROPIC_|OPENAI_|AWS_|AZURE_|GOOGLE_|GEMINI_|GITHUB_|GH_|BUN_OPTIONS|NODE_OPTIONS|SSH_AUTH_SOCK)/i.test(key) && !/(TOKEN|SECRET|PASSWORD|API_KEY|CREDENTIAL)/i.test(key)) env[key] = value\n  Object.assign(env, {\n    ORCHESTRA_TEST_HOME: home,"
+      },
+      {
+        "start_line": 42,
+        "end_line": 47,
+        "quote": "    ORCHESTRA_AUTH_CONTENT: \"{}\",\n    ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER ?? \"1\",\n  })\n  if (Object.keys(config).length) writeConfig(project, config)\n  const git = spawnSync(\"git\", [\"init\", \"-q\"], { cwd: project, env })\n  if (git.status !== 0) throw new Error(`git init failed: ${git.error ?? git.stderr}`)"
+      },
+      {
+        "start_line": 52,
+        "end_line": 60,
+        "quote": "export function writeConfig(project: string, config: Record<string, unknown>) {\n  writeFileSync(\n    path.join(project, \"orchestra.json\"),\n    JSON.stringify(config.provider ? {\n      ...config,\n      agent: { maestro: { model: \"test/test-model\", permission: { \"*\": \"allow\" } }, ...(config.agent as Record<string, unknown>) },\n    } : config),\n  )\n}"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/lib.ts",
+    "git_blob_sha": "3ee675802be3ca7e3cf0d986357e5e34e0b22863",
+    "source_sha256": "5b00c597516f5147e473936b8ba8db38b5ebd75395659319042b3e3dc5905803",
+    "source_bytes": 23288,
+    "line_count": 377,
+    "disposition": "analyzed",
+    "contracts": [
+      "Numeric kill requests require a retained identity; Unix rechecks it before SIGKILL.",
+      "deadlineSnapshots requires at least one valid observation within the supplied bound."
+    ],
+    "dependencies": [
+      "process-rows.ts handles birth clocks; WindowsInventory handles Windows identity; core process-tree fixtures provide nonce records."
+    ],
+    "failures_or_limits": [
+      "Unix identity recheck and signal are separate operations, leaving a residual race.",
+      "Raw logs and generated verdict fields are observations only when actually executed."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "fixture",
+    "purpose": "Centralizes exact process ownership, all-member Omni supervision controls and deadline-qualified campaign observations.",
+    "behavior": [
+      "Pins pid plus start time and retains owned handles/fixture identities across reparenting; discovery limits nonce membership to the owner's scope and rejects unknown argv there.",
+      "Positive control requires the exact fixture count, live pinned hosts, marker argv and supervisor ancestry for every protected member.",
+      "Bounds inventory queries to 10 seconds and samples cleanup before the declared deadline; failed or late inventory cannot establish zero.",
+      "Queues successful verdicts until owned cleanup completes; Windows delegates exact-handle inventory/kill to its recorder."
+    ],
+    "evidence": [
+      {
+        "start_line": 224,
+        "end_line": 226,
+        "quote": "  const unknown = live.filter((row) => row.args === null && ![...named, ...roots].some((id) => matches(row, id)))\n  if (unknown.length) throw new Error(`campaign nonce discovery has unknown argv in owner scope: ${JSON.stringify(unknown)}`)\n  const found = live.filter((row) => records.some((record) => matches(row, record)))"
+      },
+      {
+        "start_line": 256,
+        "end_line": 256,
+        "quote": "  return { fixtureIds: found.members.map((row) => identity(row.pid, rows)), wrappers: found.wrappers.map((row) => identity(row.pid, rows)), protectedMembers, pass: hosts.length > 0 && hosts.every((host) => rows.some((row) => matches(row, host) && row.args !== null)) && counted === size && protectedMembers.length > 0 && protectedMembers.every((member) => member.argvPresent && member.supervisors.length > 0) }"
+      },
+      {
+        "start_line": 350,
+        "end_line": 364,
+        "quote": "export async function deadlineSnapshots(started: number, boundMs: number, nonces: string[], retained: Identity[]) {\n  const deadline = started + boundMs\n  const samples: { atMs: number; counts: number[]; fixtureIds: Identity[][]; wrappers: Identity[][]; retained: Identity[] }[] = []\n  while (Date.now() < deadline - 250) {\n    const rows = table(Math.min(2000, deadline - Date.now()))\n    const found = nonces.map((nonce) => members(nonce, rows))\n    const atMs = Date.now() - started\n    if (atMs >= boundMs) throw new Error(`process observation missed ${boundMs} ms deadline (${atMs} ms)`)\n    samples.push({ atMs, counts: found.map((tree) => tree.members.length + tree.wrappers.length), fixtureIds: found.map((tree) => tree.members.map((row) => identity(row.pid, rows))), wrappers: found.map((tree) => tree.wrappers.map((row) => identity(row.pid, rows))), retained: retained.filter((pinned) => rows.some((row) => matches(row, pinned) && !row.state.startsWith(\"Z\"))) })\n    await sleep(Math.min(250, Math.max(0, deadline - Date.now())))\n  }\n  if (samples.length === 0) throw new Error(\"deadline observation produced no valid snapshots\")\n  await sleep(Math.max(0, deadline - Date.now()))\n  return { samples, zeroAtMs: samples.find((sample) => sample.counts.every((count) => count === 0) && sample.retained.length === 0)?.atMs, last: samples[samples.length - 1]! }\n}"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/matrix-build.ts",
+    "git_blob_sha": "2b32ed70018039f8eca8a02ddbcbdd93a69b4473",
+    "source_sha256": "07e1e0b11dbad8844db6989072713e457dda74bec1292d7152de24e02a2417f8",
+    "source_bytes": 5982,
+    "line_count": 76,
+    "disposition": "analyzed",
+    "contracts": [
+      "Default command deadline is 240 seconds; build commands disable experimental Omni spawning.",
+      "Records source/native manifests, binary hashes, platform, timestamps and CI run in cli-provenance.json."
+    ],
+    "dependencies": [
+      "omni-binaries action provides release artifacts; CLI build consumes OMNI_ARTIFACTS; protocol-fixtures rechecks provenance."
+    ],
+    "failures_or_limits": [
+      "The native cache/source claim depends on the external build action; missing Windows editor remains an explicit capability failure.",
+      "A HEAD match alone does not prove a clean checkout, though recorded hashes identify enumerated working bytes."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "build",
+    "purpose": "Prepares hosted matrix artifacts with source and binary provenance plus pinned real LSP tooling.",
+    "behavior": [
+      "Requires CI/GITHUB_SHA and matching checkout HEAD, hashes tracked native/product inputs and requires release addon/supervisor paths under the checkout.",
+      "Copies exact native binaries, builds one CLI with --single --skip-install and rejects bundled native hashes that differ from the release inputs.",
+      "Installs typescript-language-server@4.3.4 and typescript@5.8.2 with scripts disabled; resolves real Node and optional Windows Vim."
+    ],
+    "evidence": [
+      {
+        "start_line": 18,
+        "end_line": 21,
+        "quote": "  if (!process.env.CI || !process.env.GITHUB_SHA) throw new Error(\"functional matrix requires hosted CI; owner Mac execution forbidden\")\n  const sourceSHA = await command([\"git\", \"rev-parse\", \"HEAD\"])\n  if (sourceSHA !== process.env.GITHUB_SHA) throw new Error(\"checkout/GITHUB_SHA mismatch\")\n  const tracked = (await command([\"git\", \"ls-files\", \"-z\"])).split(\"\\0\").filter(Boolean)"
+      },
+      {
+        "start_line": 46,
+        "end_line": 50,
+        "quote": "  if (digest(path.join(path.dirname(bin), \"hugr_omni.node\")) !== digest(addon) ||\n    digest(path.join(path.dirname(bin), win ? \"hugr-omni-supervisor.exe\" : \"hugr-omni-supervisor\")) !== digest(supervisor))\n    throw new Error(\"compiled CLI native artifacts differ from exact-source release inputs\")\n  const provenance = { sourceSHA, at: buildAt, completedAt: new Date().toISOString(), cliSha256: digest(bin), sourceHashes,\n    nativeSourceHashes, nativeSourceDigest, nativeProvenance: \"omni-binaries exact-source cache key; release build on miss\","
+      },
+      {
+        "start_line": 59,
+        "end_line": 60,
+        "quote": "  await command([...npm, \"install\", \"--prefix\", tools, \"--ignore-scripts\", \"--no-audit\", \"--no-fund\", \"typescript-language-server@4.3.4\", \"typescript@5.8.2\"])\n  process.env.OMNI_CAMPAIGN_LSP_TOOLS = path.join(tools, \"node_modules\")"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/natural-host.ts",
+    "git_blob_sha": "8604a3d311406f407edf72b60bcc1fdb70bf5632",
+    "source_sha256": "6f031d0fc1c7a5f0bf83dc1cc488510f5bff7f7c46f36f9fcdc049d55b2b0315",
+    "source_bytes": 4697,
+    "line_count": 81,
+    "disposition": "analyzed",
+    "contracts": [
+      "Normal host has no forced exit, watchdog or unref; the parent owns failure cleanup.",
+      "Only POST /write and /dispose are accepted on ephemeral loopback control."
+    ],
+    "dependencies": [
+      "core AppProcess/LayerNode/Omni implement the tested disposal boundary; v10-natural-exit.ts owns observations."
+    ],
+    "failures_or_limits": [
+      "Activation and disposal waits have no local deadlines; parent must bound them.",
+      "Retaining completed native objects prevents GC being mistaken for disposal."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "fixture",
+    "purpose": "Hosts real AppProcess and native Omni objects for natural-event-loop-exit proof.",
+    "behavior": [
+      "POST /write runs a real AppProcess child, a native pipe reader and a process tree, retaining native handles, pumps and captured chunks.",
+      "POST /dispose stops retained native children with 100 ms grace, awaits pumps and runtime disposal, writes a disposed marker and closes HTTP/idle connections.",
+      "NATURAL_MUTATION=timer adds a referenced interval after the same disposal as a negative control."
+    ],
+    "evidence": [
+      {
+        "start_line": 14,
+        "end_line": 17,
+        "quote": "const retained: { pipe?: Stoppable; pump?: Promise<void>; chunks?: Uint8Array[]; app?: { stdout: string; stderr: string } }[] = []\nconst processes = ManagedRuntime.make(LayerNode.compile(AppProcess.node))\nconst node = process.env.NATURAL_NODE!\nconst requests: string[] = []"
+      },
+      {
+        "start_line": 45,
+        "end_line": 51,
+        "quote": "async function dispose() {\n  console.log(\"NATURAL_EVENT \" + JSON.stringify({ event: \"dispose-started\", pid: process.pid }))\n  for (const value of retained) if (value.pipe) await value.pipe.stop({ graceMs: 100 })\n  for (const value of retained) await value.pump\n  await processes.dispose()\n  console.log(\"NATURAL_RETAINED \" + JSON.stringify(retained.map((value) => value.pipe ? { pid: value.pipe.pid, chunks: value.chunks!.map((chunk) => Buffer.from(chunk).toString()) } : value.app)))\n}"
+      },
+      {
+        "start_line": 68,
+        "end_line": 70,
+        "quote": "    if (process.env.NATURAL_MUTATION === \"timer\") setInterval(() => {}, 1000)\n    control.close()\n    control.closeIdleConnections()"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/package.json",
+    "git_blob_sha": "b3da731a621865b196d854a42eaf8c4cce37b45d",
+    "source_sha256": "dd2c1e768ff42007605c46d6855cdb6ae901c214e521fb92882dd041c9b59fd4",
+    "source_bytes": 358,
+    "line_count": 17,
+    "disposition": "analyzed",
+    "contracts": [
+      "Private=true prevents normal package publication; declared control mode is not a campaign acceptance verdict."
+    ],
+    "dependencies": [
+      "@orchestra/core workspace and shared catalog provide runtime/type versions."
+    ],
+    "failures_or_limits": [
+      "Hosted .hosted.ts selection and native artifact preparation are external to this script."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "config",
+    "purpose": "Declares the private ESM campaign workspace and its control-mode Bun test command.",
+    "behavior": [
+      "Defines @orchestra/omni-campaign version 0.0.0 with workspace core and catalog Effect dependencies.",
+      "Runs tests with ORCHESTRA_OMNI_CONTROL=declared and Bun's 30,000 ms test timeout; includes catalog @types/bun."
+    ],
+    "evidence": [
+      {
+        "start_line": 8,
+        "end_line": 8,
+        "quote": "    \"test\": \"ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 30000\""
+      },
+      {
+        "start_line": 10,
+        "end_line": 16,
+        "quote": "  \"dependencies\": {\n    \"@orchestra/core\": \"workspace:*\",\n    \"effect\": \"catalog:\"\n  },\n  \"devDependencies\": {\n    \"@types/bun\": \"catalog:\"\n  }"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/process-rows.ts",
+    "git_blob_sha": "ac72c969289afd042a023b48a5c06fef0f99d6ce",
+    "source_sha256": "4c8e8262f3e617ef1135e227d19470b78445c0da4884fb538450431deaef3f1a",
+    "source_bytes": 3737,
+    "line_count": 57,
+    "disposition": "analyzed",
+    "contracts": [
+      "Numeric birth clocks and UTC calendar clocks remain distinct for ancestry comparisons in lib.ts."
+    ],
+    "dependencies": [
+      "Linux /proc supplements ps; lib.ts uses identities for scope, positive controls and safe cleanup."
+    ],
+    "failures_or_limits": [
+      "Linux can observe a different process between ps and the first stat, but cross-checks identity around argv.",
+      "Malformed rows, missing host, invalid dates or unavailable non-ENOENT reads fail the query."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "implementation",
+    "purpose": "Decodes Unix process inventory into pinned birth identities and exact nonce predicates.",
+    "behavior": [
+      "Parses every nonempty ps row and requires the querying host; Linux reads stat/cmdline/stat and rejects changed birth ticks, dropping only ENOENT exits.",
+      "macOS identities retain UTC lstart text; birth() strictly validates date components and weekday before comparison.",
+      "matches requires pid and startTime; hasNonce escapes regex metacharacters and requires whitespace/quote argument boundaries."
+    ],
+    "evidence": [
+      {
+        "start_line": 22,
+        "end_line": 28,
+        "quote": "          const checked = readFileSync(`/proc/${pid}/stat`, \"utf8\")\n          const fields = stat.slice(stat.lastIndexOf(\")\") + 2).split(\" \")\n          const now = checked.slice(checked.lastIndexOf(\")\") + 2).split(\" \")\n          if (fields[19] !== now[19]) throw new Error(`PID ${pid} changed identity during /proc query`)\n          return { fields: now, args: args || null }\n        }\n        catch (error) {"
+      },
+      {
+        "start_line": 46,
+        "end_line": 48,
+        "quote": "export function hasNonce(args: string | null, nonce: string) {\n  return args !== null && new RegExp(`(?:^|[\\\\s\"'])${nonce.replace(/[.*+?^${}()|[\\]\\\\]/g, \"\\\\$&\")}(?=$|[\\\\s\"'])`).test(args)\n}"
+      },
+      {
+        "start_line": 52,
+        "end_line": 55,
+        "quote": "  const match = typeof row.startTime === \"string\" && row.startTime.match(/^UTC:(Sun|Mon|Tue|Wed|Thu|Fri|Sat)\\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\s+(\\d{1,2}) (\\d{2}):(\\d{2}):(\\d{2}) (\\d{4})$/)\n  const date = new Date(match ? Date.parse(row.startTime.slice(4) + \" GMT\") : NaN)\n  if (!match || !Number.isFinite(date.getTime()) || date.getUTCFullYear() !== Number(match[7]) || date.getUTCMonth() !== [\"Jan\", \"Feb\", \"Mar\", \"Apr\", \"May\", \"Jun\", \"Jul\", \"Aug\", \"Sep\", \"Oct\", \"Nov\", \"Dec\"].indexOf(match[2]!) || date.getUTCDate() !== Number(match[3]) || date.getUTCHours() !== Number(match[4]) || date.getUTCMinutes() !== Number(match[5]) || date.getUTCSeconds() !== Number(match[6]) || date.getUTCDay() !== [\"Sun\", \"Mon\", \"Tue\", \"Wed\", \"Thu\", \"Fri\", \"Sat\"].indexOf(match[1]!))\n    throw new Error(`campaign birth time unavailable/unparseable for PID ${row.pid}: ${row.startTime}`)"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/protocol-fixtures.ts",
+    "git_blob_sha": "c79ef3a2e389c13bdc1a58c7f5454e4fc361760a",
+    "source_sha256": "5275455d8a966582ba09929477a6350ff1d16bb7dbf09ab03d26e20aff17d87a",
+    "source_bytes": 11029,
+    "line_count": 192,
+    "disposition": "analyzed",
+    "contracts": [
+      "API calls use campaign Basic auth and project-directory scope with default 120-second abort deadline.",
+      "finalSweep can inject final-oracle failure so failed inventory cannot appear green."
+    ],
+    "dependencies": [
+      "lib.ts owns identities/cleanup; matrix-build.ts writes provenance; V4/V5/V6 use these helpers."
+    ],
+    "failures_or_limits": [
+      "Source hash recheck covers named critical inputs, not every manifest entry; evidence's executed-local label is emitted by runtime code, not a result of this analysis."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "fixture",
+    "purpose": "Provides provenance-checked real CLI fixtures, bounded API calls and a saturating stdio MCP peer.",
+    "behavior": [
+      "Requires explicit local-test flag, scrubs child environment to an allowlist and resolves real Node/canonical HOME with a 10-second query.",
+      "Checks CLI/native hashes plus LSP/core lock inputs against recorded provenance before serving; startup waits up to 120 seconds.",
+      "Finalization kills owned hosts, verifies exit within 10 seconds, cleans nonce trees and copies evidence even on failure.",
+      "MCP fixture synchronously writes exactly 1 MiB stderr plus optional final marker before initialize; optional exit 17 and omitted-marker mutations exercise failure detection."
+    ],
+    "evidence": [
+      {
+        "start_line": 50,
+        "end_line": 55,
+        "quote": "  if (!/^[a-f0-9]{40}$/.test(built.sourceSHA) || digest(bin) !== built.cliSha256 ||\n    digest(path.join(path.dirname(bin), \"hugr_omni.node\")) !== built.addonSha256 ||\n    digest(path.join(path.dirname(bin), process.platform === \"win32\" ? \"hugr-omni-supervisor.exe\" : \"hugr-omni-supervisor\")) !== built.supervisorSha256 ||\n    [\"packages/core/src/lsp/client.ts\", \"packages/core/src/lsp/lsp.ts\", \"bun.lock\"].some((file) => digest(path.join(ROOT, file)) !== built.sourceHashes?.[file]))\n    throw new Error(\"CLI provenance mismatch: rebuild this worktree after product changes\")\n  return {"
+      },
+      {
+        "start_line": 124,
+        "end_line": 127,
+        "quote": "export function finalSweep(nonce: string) {\n  if (process.env.OMNI_CAMPAIGN_FINAL_ORACLE_FAILURE === \"1\") throw new Error(\"injected final oracle query failure\")\n  return sweep(nonce)\n}"
+      },
+      {
+        "start_line": 176,
+        "end_line": 181,
+        "quote": "for (let i = 0; i < 1024; i++) bytes += write(block);\nconst marker = 'LAST-STDERR-' + nonce;\nconst markerBytes = ${omitMarker ? \"0\" : \"write(Buffer.from(marker + '\\\\n'))\"};\nfs.writeFileSync(${JSON.stringify(path.join(scratch.home, `${nonce}.written.json`))}, JSON.stringify({bytes, markerBytes, marker, pid: process.pid}));\n${fail ? \"process.exit(17);\" : \"\"}\nreadline.createInterface({input: process.stdin}).on('line', line => {"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/pty-byte-probe.ts",
+    "git_blob_sha": "abbf4924ba290f3881d570157e2e90e295c68953",
+    "source_sha256": "388a1f2ac5c181af3c4632f6bb662cabebb8408bbddcd4d59cbfa5d5dd8f4669",
+    "source_bytes": 18659,
+    "line_count": 325,
+    "disposition": "analyzed",
+    "contracts": [
+      "Readiness/post-flood waits are 20 seconds; producer completion is 120 seconds; Windows returns an explicit failed/not-run capability result.",
+      "exactRaw requires source length greater than 50 MiB, no reported gap and byte equality."
+    ],
+    "dependencies": [
+      "protocol-fixtures supplies real server/API/provenance; V6 imports byteFixture, byteStats and exactRaw for its separate paced raw lane. cookedCertificate is exported here but is not consumed by V6 at this source revision."
+    ],
+    "failures_or_limits": [
+      "Native wait/pump after quit have no separate timeout here; outer hosted wrapper must bound the run.",
+      "Full byte arrays are retained in memory and disk; no execution was performed."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "test",
+    "purpose": "Compares native, OS-reference and real WebSocket PTY bytes with independently mirrored successful writes.",
+    "behavior": [
+      "POSIX-only producer writes 50 MiB plus protocol markers; Python snapshots and sets actual slave termios, with raw mode requiring OPOST/ECHO/ICANON off.",
+      "Runs cooked/raw lanes through Omni, Python stdlib PTY and Orchestra WebSocket, capturing hashes, chunk sizes, lostBefore and CR expansion boundaries.",
+      "Requires exact raw source/output equality, matching cooked bytes and corruption/truncation/reported-gap negative controls; certificate reloads captures and termios instead of trusting prose."
+    ],
+    "evidence": [
+      {
+        "start_line": 23,
+        "end_line": 23,
+        "quote": "  return source.length > 50 * 1024 * 1024 && lost.length === 0 && received.equals(source)"
+      },
+      {
+        "start_line": 85,
+        "end_line": 87,
+        "quote": "after = snapshot()\nif ${JSON.stringify(mode)} == 'raw' and (after['OPOST'] or after['ECHO'] or after['ICANON']): raise RuntimeError('raw termios verification failed')\njson.dump({'before': before, 'after': after, 'pid': os.getpid(), 'mode': ${JSON.stringify(mode)}}, open(${JSON.stringify(files.termios)}, 'w'))"
+      },
+      {
+        "start_line": 316,
+        "end_line": 319,
+        "quote": "    pass = raw.rawExact && osRaw.rawExact && wsRaw.rawExact && raw.lostBefore.length === 0 && osRaw.lostBefore.length === 0 &&\n      cooked.bytes.equals(osCooked.bytes) && cooked.bytes.equals(wsCooked.bytes) && Object.values(controls).every(Boolean)\n    if (!pass) errors.push(\"deterministic raw PTY capture differs from actual producer stdout or reported a gap\")\n  } catch (cause) { errors.push(String(cause)) }"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/campaign/server-client.ts",
+    "git_blob_sha": "d5c87f622c54d0a024a6123da16b0459c71abe26",
+    "source_sha256": "84d9bf3460575f2d9419c23b979c755d56e10b79d8aac9681af70de9aa9fb743",
+    "source_bytes": 4648,
+    "line_count": 73,
+    "disposition": "analyzed",
+    "contracts": [
+      "History pagination stops on no-more, missing or non-increasing last sequence; event order is preserved."
+    ],
+    "dependencies": [
+      "Real /api/session and process endpoints define returned shapes; fake-llm supplies the configured test model."
+    ],
+    "failures_or_limits": [
+      "Response JSON is asserted to expected types without runtime schema validation; individual requests are bounded, entire pagination is not."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "fixture",
+    "purpose": "Calls the real server's project-scoped APIs and folds durable tool events for campaign assertions.",
+    "behavior": [
+      "All JSON calls carry location[directory], campaign Basic auth and a 120-second abort deadline; non-OK responses throw with bounded body context.",
+      "Creates synthetic-model sessions, prompts and waits for idle, rejecting durable error/failed event types.",
+      "Paginates history with increasing sequence cursors and folds tool-called/success/failed events into running/completed/error calls; exposes active sessions and adopted background processes."
+    ],
+    "evidence": [
+      {
+        "start_line": 13,
+        "end_line": 17,
+        "quote": "      signal: AbortSignal.timeout(120_000),\n      headers: {\n        \"content-type\": \"application/json\",\n        authorization: `Basic ${Buffer.from(`orchestra:${password}`).toString(\"base64\")}`,\n      },"
+      },
+      {
+        "start_line": 37,
+        "end_line": 40,
+        "quote": "      const history = (await api.get(`/api/session/${sessionID}/history`)) as { data: { type: string }[] }\n      const failed = history.data.find((event) => /(^|\\.)(error|failed)(\\.|$)/.test(event.type))\n      if (failed) throw new Error(`session ${sessionID} recorded ${failed.type}: ${JSON.stringify(failed)}`)\n      return history.data"
+      },
+      {
+        "start_line": 47,
+        "end_line": 51,
+        "quote": "        found.push(...page.data)\n        const last = page.data.at(-1)?.durable?.seq\n        if (!page.hasMore || last === undefined || last <= after) return found\n        after = last\n      }"
+      }
+    ]
+  }
+]

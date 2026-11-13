@@ -1,0 +1,205 @@
+[
+  {
+    "path": "native/omni/crates/omni-supervisor/tests/unix_spawn.rs",
+    "git_blob_sha": "922fe6b1990aacd865c8835cc50e0bd7a1c68ab8",
+    "source_sha256": "0bc8b449477402d18b0361e43af9db3c85986d4718a95ea860ddca3f3559d6e1",
+    "source_bytes": 9194,
+    "line_count": 238,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Specify Unix spawn isolation, error typing and lossless protocol backpressure.",
+    "behavior": [
+      "Compares Ready capability bits with an independent pidfd probe; hostile inherited fds/signals must be cleared, with a direct std::process control showing the hostile state is real.",
+      "Checks no-close_range fallback, pipe/null stdin, merged/separate output, normal exit codes and signal exits.",
+      "Requires typed failures for missing/nonexecutable program, bad cwd, relative program, NUL and Windows verbatim input while restoring the exact supervisor fd set, including repeated SCM_RIGHTS copies.",
+      "Sends 100,000 requests without reading to require writer backpressure and ordered recovery; a missing descriptor must close the channel and clean the tree, and 300 deferred exits must be delivered."
+    ],
+    "contracts": [
+      "Pipe roots must report pid=pgid=sid with only descriptors 0,1,2 and an empty inherited signal mask."
+    ],
+    "dependencies": [
+      "common Host/Cmd/OS roles and omni_proto framing; Linux seccomp facility controls."
+    ],
+    "failures_or_limits": [
+      "Flood and exit-burst bounds assert finite test conditions rather than proving arbitrary-load throughput. None of these tests was run."
+    ],
+    "evidence": [
+      {
+        "start_line": 48,
+        "end_line": 74,
+        "quote": "#[test]\nfn a_pipe_root_leads_its_session_with_only_stdio_and_default_signals() {\n    // The host leaked fd 99, ignores SIGINT/SIGHUP/SIGTERM/SIGUSR1 and SIGCHLD, and blocks SIGUSR2.\n    let mut h = Host::start_with(os::hostile);\n    assert!(\n        !os::fds_of(h.sup.id()).contains(&99),\n        \"the supervisor kept the host's leaked descriptor\"\n    );\n    let t = h.spawn(&Cmd::role(\"info\"));\n    let (fds, ignored, blocked, ids) = parse_info(&t.out.rest());\n    assert_eq!(fds, [0, 1, 2]);\n    assert_eq!(\n        ignored,\n        [libc::SIGPIPE],\n        \"only the one a Rust program ignores by itself\"\n    );\n    assert_eq!(blocked, Vec::<i32>::new());\n    assert_eq!(ids, [t.pid; 3], \"pid = pgid = sid: a session leader\");\n    // SIGCHLD was SIG_IGN when the supervisor started: exits are still observed (not auto-reaped).\n    assert_eq!(h.exited(t.id), Exit::Code(0));\n\n    // Control: the same probe started through std::process by a parent in the same hostile state sees all of it.\n    let mut c = Cmd::role(\"info\").std();\n    os::hostile(&mut c);\n    let out = String::from_utf8(c.output().unwrap().stdout).unwrap();\n    let (fds, ignored, blocked, _) = parse_info(&out.lines().map(str::to_owned).collect::<Vec<_>>());\n    assert!(fds.contains(&99) && ignored.contains(&libc::SIGTERM) && blocked.contains(&libc::SIGUSR2));"
+      },
+      {
+        "start_line": 127,
+        "end_line": 172,
+        "quote": "fn spawn_failures_are_typed_and_leave_nothing_behind() {\n    let mut h = Host::start();\n    let before = os::fds_of(h.sup.id());\n    let dir = std::env::temp_dir().join(format!(\"omni-sup-spawn-{}\", std::process::id()));\n    std::fs::create_dir_all(&dir).unwrap();\n    let plain = dir.join(\"not-executable\");\n    std::fs::write(&plain, b\"#!/bin/sh\\n\").unwrap();\n\n    let mut bad_cwd = Cmd::new(\"/bin/cat\", &[]);\n    bad_cwd.cwd = dir.join(\"missing\");\n    let mut nul = Cmd::new(\"/bin/cat\", &[]);\n    nul.argv.push(\"a\\0b\".into());\n    let mut verbatim = Cmd::new(\"/bin/cat\", &[]);\n    verbatim.verbatim = Some(b\"x\".to_vec()); // amendment WP8b: a Windows command line\n    let cases = [\n        (Cmd::new(\"/nonexistent/omni-sup\", &[]), FailCode::NotFound),\n        (Cmd::new(plain.to_str().unwrap(), &[]), FailCode::NotExecutable),\n        (bad_cwd, FailCode::BadCwd),\n        (Cmd::new(\"cat\", &[]), FailCode::Invalid), // not absolute: the host resolves programs\n        (nul, FailCode::Invalid),\n        (verbatim, FailCode::Invalid),\n    ];\n    for (cmd, code) in cases {\n        let cmd = cmd.stdin();\n        let Err((got, errno, msg)) = h.try_spawn(&cmd) else {\n            panic!(\"{cmd:?} started\")\n        };\n        assert_eq!(got, code, \"{cmd:?}: {msg}\");\n        assert_eq!(errno != 0, code != FailCode::Invalid, \"{cmd:?}: errno {errno}\");\n    }\n    std::fs::remove_dir_all(&dir).unwrap();\n    // One descriptor number sent three times (the kernel installs three copies), on a rejected spawn.\n    let (_r, w) = std::io::pipe().unwrap();\n    let cmd = Cmd::new(\"cat\", &[]).stdin().separate_stderr(); // not absolute: rejected\n    let req = h.req();\n    let raw = std::os::fd::AsRawFd::as_raw_fd(&w);\n    h.send(&Msg::Spawn(cmd.spawn_msg(req)), &[raw, raw, raw]);\n    assert!(matches!(\n        h.reply(req),\n        Msg::SpawnFailed {\n            code: FailCode::Invalid,\n            ..\n        }\n    ));\n    // Every received pipe end was closed again: the supervisor's descriptor table is as before.\n    assert_eq!(os::fds_of(h.sup.id()), before);"
+      },
+      {
+        "start_line": 175,
+        "end_line": 207,
+        "quote": "#[test]\nfn a_flood_from_a_host_that_stops_reading_is_backpressured_and_lossless() {\n    const N: u64 = 100_000;\n    let mut h = Host::start();\n    let mut frames = Vec::new();\n    for req in 1..=N {\n        encode(&Msg::List { req, id: 999 }, &mut frames).unwrap();\n    }\n    let mut w = h.sock.try_clone().unwrap();\n    let (done_tx, done) = mpsc::channel();\n    let writer = std::thread::spawn(move || {\n        w.write_all(&frames).unwrap();\n        done_tx.send(()).unwrap();\n    });\n    // The host reads nothing: with its reply queue full the supervisor stops reading, so the writer blocks.\n    assert!(\n        done.recv_timeout(Duration::from_secs(1)).is_err(),\n        \"the supervisor buffered the whole flood\"\n    );\n    for req in 1..=N {\n        match h.recv() {\n            Some(Msg::Ack {\n                req: r,\n                id: 999,\n                result: Ack::Unknown,\n            }) if r == req => {}\n            other => panic!(\"reply {req}: {other:?}\"),\n        }\n    }\n    done.recv_timeout(T).unwrap();\n    // Admission resumed: a new request after the stall completes.\n    assert_eq!(h.ack(|req| Msg::Release { req, id: 999 }), Ack::Unknown);\n    writer.join().unwrap();"
+      },
+      {
+        "start_line": 210,
+        "end_line": 237,
+        "quote": "#[test]\nfn a_protocol_violation_ends_the_connection_and_every_tree() {\n    let mut h = Host::start();\n    let t = h.spawn(&Cmd::role(\"tree hang resist\").grace(200));\n    let leaf = common::host::field(&t.out.take(\"UP \", 1), 1)[0];\n    // A Spawn that announces a stdout pipe but carries no descriptor.\n    let req = h.req();\n    h.send(&Msg::Spawn(Cmd::role(\"leaf plain\").spawn_msg(req)), &[]);\n    assert!(h.recv().is_none(), \"the connection must end\");\n    let st = wait_child(&mut h.sup, T).expect(\"the supervisor did not exit\");\n    assert_eq!(st.code(), Some(1));\n    assert!(!os::alive(t.pid) && !os::alive(leaf));\n}\n\n#[test]\nfn a_burst_of_exits_while_the_host_does_not_read_is_delivered() {\n    const N: usize = 300;\n    let mut h = Host::start();\n    let mut trees: Vec<_> = (0..N).map(|_| h.spawn(&Cmd::new(\"/bin/cat\", &[]).stdin())).collect();\n    for t in &mut trees {\n        drop(t.stdin.take()); // every cat sees end of input and exits\n    }\n    // Nobody reads the channel until every root is gone (asked of the OS).\n    assert!(os::wait_until(T, || trees.iter().all(|t| !os::alive(t.pid))));\n    for t in &trees {\n        assert_eq!(h.exited(t.id), Exit::Code(0));\n    }\n    assert_eq!(h.list(trees[0].id).unwrap(), [], \"the loop still serves requests\");"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/tests/unix_stop/inventory.rs",
+    "git_blob_sha": "73c4a73e52e3e07a7be072a6994c548fa2d2b526",
+    "source_sha256": "765a3522b070fa6b3d9ca2f4e0970b781ac33f4085464b2f1825defc09072ad5",
+    "source_bytes": 4547,
+    "line_count": 116,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Specify Unix Stop behavior when inventory fails, recovers or lacks pidfd support.",
+    "behavior": [
+      "Sets Linux descriptor limit three: List must return Ack::Error and Stop must not be confirmed while an out-of-group resistant leaf remains live.",
+      "Restores the limit and requires the pending Stop to finish, leaf death and the original descriptor table with no leak.",
+      "Denies pidfd syscalls and requires zero capability bits while session-rechecked fallback still stops other groups.",
+      "Checks a recovered graceful scan sends TERM before a long force deadline and a one-free-fd case uses the emergency reserve during pidfd identity recheck."
+    ],
+    "contracts": [
+      "Incomplete inventory is not an empty inventory; graceful delivery must resume after a transient scan failure."
+    ],
+    "dependencies": [
+      "common/os.rs prlimit/seccomp; host.rs protocol observations; role report/resist/group fixtures."
+    ],
+    "failures_or_limits": [
+      "Linux-specific controls require descriptor-limit and seccomp facilities. The observed assertions are documentary only and do not validate the PID-check-to-kill race of the no-pidfd fallback."
+    ],
+    "evidence": [
+      {
+        "start_line": 16,
+        "end_line": 52,
+        "quote": "fn an_incomplete_inventory_is_an_error_and_never_confirms_a_stop() {\n    let mut h = Host::start();\n    let t = h.spawn(&Cmd::role(\"tree hang resist+group\"));\n    let leaf = field(&t.out.take(\"UP \", 1), 1)[0];\n    let sup = h.sup.id();\n    let before = os::fds_of(sup);\n\n    let soft = os::set_nofile(sup as i32, 3); // only stdio numbers: the inventory cannot be read at all\n    assert_eq!(\n        h.list(t.id),\n        Err(Ack::Error),\n        \"an incomplete inventory is not an empty list\"\n    );\n    let req = h.req();\n    h.send(\n        &Msg::Stop {\n            req,\n            id: t.id,\n            grace_ms: 0,\n        },\n        &[],\n    );\n    while let Ok(Some(msg)) = h.recv_within(ms(500)) {\n        assert!(\n            matches!(msg, Msg::Exited { .. }),\n            \"no Stopped from an incomplete scan: {msg:?}\"\n        );\n    }\n    assert!(\n        alive(leaf),\n        \"the member in another group cannot be found without the inventory\"\n    );\n\n    os::set_nofile(sup as i32, soft);\n    assert!(matches!(h.reply(req), Msg::Stopped { .. }));\n    assert!(!alive(leaf));\n    assert_eq!(os::fds_of(sup), before, \"exhaustion leaked no descriptor\");"
+      },
+      {
+        "start_line": 59,
+        "end_line": 65,
+        "quote": "fn without_pidfd_members_in_other_groups_are_still_stopped() {\n    let mut h = Host::start_with(os::without_pidfd);\n    assert_eq!(h.info, 0, \"neither host watch nor member signalling may claim pidfd\");\n    let t = h.spawn(&Cmd::role(\"tree hang resist+group resist\"));\n    let leaves = field(&t.out.take(\"UP \", 2), 1);\n    assert!(h.stop(t.id, 200) >= ms(200));\n    assert!(leaves.iter().all(|&l| !alive(l)));"
+      },
+      {
+        "start_line": 73,
+        "end_line": 95,
+        "quote": "fn the_graceful_step_waits_for_a_complete_inventory() {\n    let mut h = Host::start();\n    let t = h.spawn(&Cmd::role(\"tree hang report+group\"));\n    t.out.take(\"UP \", 1);\n    let sup = h.sup.id() as i32;\n    let soft = os::set_nofile(sup, 3);\n    let req = h.req();\n    h.send(\n        &Msg::Stop {\n            req,\n            id: t.id,\n            grace_ms: 60_000,\n        },\n        &[],\n    );\n    // The root's group needs no inventory: its SIGTERM proves sweeps ran while the inventory was missing.\n    assert_eq!(h.exited(t.id), Exit::Signal(libc::SIGTERM));\n    os::set_nofile(sup, soft);\n    t.out.take(\"TERM\", 1); // the member in another group got its graceful signal after the recovery\n    assert!(\n        matches!(h.reply(req), Msg::Stopped { .. }),\n        \"confirmed long before the 60 s deadline\"\n    );"
+      },
+      {
+        "start_line": 103,
+        "end_line": 115,
+        "quote": "fn a_stop_with_one_free_descriptor_still_reaches_members_in_other_groups() {\n    let mut h = Host::start();\n    assert_ne!(\n        h.info & omni_proto::INFO_PIDFD_MEMBERS,\n        0,\n        \"this case is about pidfd signalling\"\n    );\n    let t = h.spawn(&Cmd::role(\"tree hang resist+group\"));\n    let leaf = field(&t.out.take(\"UP \", 1), 1)[0];\n    let sup = h.sup.id();\n    os::set_nofile(sup as i32, os::fds_of(sup).len() as u64 + 1);\n    assert!(h.stop(t.id, 200) >= ms(200));\n    assert!(!alive(leaf));"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/tests/unix_stop/main.rs",
+    "git_blob_sha": "fee7bee935412896883ebc719d214ea2da59b00b",
+    "source_sha256": "1e0978cc12885e8ebb242d772c99ffce809b3d66cdf107efe7fe9ecd61ca2fc6",
+    "source_bytes": 7889,
+    "line_count": 241,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Specify whole-session Unix Stop, root pinning, inventory and Release semantics.",
+    "behavior": [
+      "Requires resistant leaves across process groups to share one force deadline while an unrelated sentinel survives; a polite control ends before its long grace.",
+      "After root exit, requires a zombie pin while descendants live, preserved exit status, orphan-only inventory, then reaping and immediate idempotent Stop when empty.",
+      "Checks idle-time grace and concurrent Stops using the earliest deadline, with exact PID/parent/name inventory matching the stop boundary.",
+      "Release hides the ID but retains the root pin and host-loss cleanup duty; a group-only kill control misses out-of-group leaves."
+    ],
+    "contracts": [
+      "Unknown/released requests return Ack::Unknown; Go on a pipe root is OK and Resize without a terminal returns Ack::Error."
+    ],
+    "dependencies": [
+      "common Host and independent OS liveness; inventory.rs and member_states.rs add failure-state cases."
+    ],
+    "failures_or_limits": [
+      "These assertions target session-scoped cooperative containment; they do not assert that an adversarial setsid escape remains in the session. Timing windows and results were not executed."
+    ],
+    "evidence": [
+      {
+        "start_line": 33,
+        "end_line": 62,
+        "quote": "fn stop_gives_the_whole_session_one_deadline_and_spares_everyone_else() {\n    let mut outsider = sentinel(); // unrelated, resists SIGTERM, own group\n    let mut h = Host::start();\n    // Root (polite) + resistant leaf in another group + resistant leaf in the root's group + polite leaf.\n    let t = h.spawn(&Cmd::role(\"tree hang resist+group resist plain\"));\n    let leaves = field(&t.out.take(\"UP \", 3), 1);\n    let took = h.stop(t.id, 400);\n    assert!(\n        took >= ms(400) && took < ms(1400),\n        \"the resistant leaves need the forced step at 400 ms: {took:?}\"\n    );\n    assert_eq!(\n        h.exits.get(&t.id),\n        Some(&Exit::Signal(libc::SIGTERM)),\n        \"Exited comes before Stopped\"\n    );\n    for p in leaves.iter().chain([&t.pid]) {\n        assert!(!alive(*p), \"{p} survived a confirmed Stop\");\n    }\n    assert!(\n        alive(outsider.id() as i32),\n        \"Stop touched a process outside the session\"\n    );\n\n    // Control: a polite tree needs no forced step.\n    let t = h.spawn(&Cmd::role(\"tree hang plain+group plain\"));\n    t.out.take(\"UP \", 2);\n    assert!(h.stop(t.id, 5000) < ms(1000));\n    outsider.kill().unwrap();\n    outsider.wait().unwrap();"
+      },
+      {
+        "start_line": 66,
+        "end_line": 87,
+        "quote": "fn stop_after_the_root_exited_ends_the_orphans_and_keeps_the_exit() {\n    let mut h = Host::start();\n    let t = h.spawn(&Cmd::role(\"tree exit resist+group\"));\n    let leaf = field(&t.out.take(\"UP \", 1), 1)[0];\n    assert_eq!(h.exited(t.id), Exit::Code(0));\n    assert_eq!(os::sid(leaf), t.pid);\n    assert!(\n        os::zombie(t.pid),\n        \"the root must stay unreaped while its session has a live member\"\n    );\n    let list = h.list(t.id).unwrap();\n    assert_eq!(\n        list.iter().map(|p| (p.pid, p.ppid)).collect::<Vec<_>>(),\n        [(leaf as u32, None)]\n    );\n\n    assert!(h.stop(t.id, 200) >= ms(200));\n    assert!(!alive(leaf));\n    assert!(!os::exists(t.pid), \"the root is reaped once the session is empty\");\n    assert_eq!(h.list(t.id).unwrap(), []);\n    assert!(h.stop(t.id, 5000) < ms(100), \"a gone tree is Stopped at once\");\n    assert_eq!(h.exits[&t.id], Exit::Code(0), \"the recorded exit never changes\");"
+      },
+      {
+        "start_line": 104,
+        "end_line": 130,
+        "quote": "fn overlapping_stops_share_the_earliest_deadline() {\n    let mut h = Host::start();\n    let t = h.spawn(&Cmd::role(\"tree hang resist\"));\n    t.out.take(\"UP \", 1);\n    let (slow, fast) = (h.req(), h.req());\n    let t0 = Instant::now();\n    h.send(\n        &Msg::Stop {\n            req: slow,\n            id: t.id,\n            grace_ms: 20_000,\n        },\n        &[],\n    );\n    h.send(\n        &Msg::Stop {\n            req: fast,\n            id: t.id,\n            grace_ms: 300,\n        },\n        &[],\n    );\n    for req in [fast, slow] {\n        assert!(matches!(h.reply(req), Msg::Stopped { id, .. } if id == t.id));\n    }\n    let took = t0.elapsed();\n    assert!(took >= ms(300) && took < ms(2000), \"{took:?}\");"
+      },
+      {
+        "start_line": 164,
+        "end_line": 191,
+        "quote": "fn release_keeps_the_pin_while_resistant_descendants_live_in_other_groups() {\n    let mut h = Host::start();\n    let t = h.spawn(&Cmd::role(\"tree exit resist+group resist+group\").grace(300));\n    let leaves = field(&t.out.take(\"UP \", 2), 1);\n    assert_eq!(h.exited(t.id), Exit::Code(0));\n    assert_eq!(h.ack(|req| Msg::Release { req, id: t.id }), Ack::Ok);\n    for &l in &leaves {\n        assert_eq!(\n            (os::sid(l), os::pgid(l) == t.pid),\n            (t.pid, false),\n            \"a session member in another group\"\n        );\n    }\n    assert!(os::zombie(t.pid), \"Release must not end the pin while descendants live\");\n\n    // Group-only control: what a group-only implementation would send reaches neither leaf.\n    os::killpg(t.pid, libc::SIGKILL);\n    assert!(\n        !wait_until(ms(300), || leaves.iter().any(|&l| !alive(l))),\n        \"the group signal reached a leaf\"\n    );\n    assert!(os::zombie(t.pid), \"still pinned\");\n\n    // The released id answers nothing, but cleanup duty stays: host death stops the whole session.\n    assert_eq!(h.list(t.id), Err(Ack::Unknown));\n    let status = h.close();\n    assert_eq!(status.code(), Some(0), \"clean exit = every tree confirmed gone\");\n    assert!(leaves.iter().all(|&l| !alive(l)));"
+      },
+      {
+        "start_line": 195,
+        "end_line": 240,
+        "quote": "fn unknown_released_and_misdirected_requests_are_answered() {\n    let mut h = Host::start();\n    let id = 4242;\n    assert_eq!(h.ack(|req| Msg::Stop { req, id, grace_ms: 0 }), Ack::Unknown);\n    assert_eq!(h.list(id), Err(Ack::Unknown));\n    assert_eq!(h.ack(|req| Msg::Go { req, id }), Ack::Unknown);\n    assert_eq!(\n        h.ack(|req| Msg::Resize {\n            req,\n            id,\n            cols: 80,\n            rows: 24\n        }),\n        Ack::Unknown\n    );\n    assert_eq!(h.ack(|req| Msg::Release { req, id }), Ack::Unknown);\n\n    let t = h.spawn(&Cmd::role(\"leaf plain\"));\n    t.out.take(\"UP \", 1);\n    assert_eq!(\n        h.ack(|req| Msg::Go { req, id: t.id }),\n        Ack::Ok,\n        \"a pipe root needs no Go\"\n    );\n    assert_eq!(\n        h.ack(|req| Msg::Resize {\n            req,\n            id: t.id,\n            cols: 80,\n            rows: 24\n        }),\n        Ack::Error,\n        \"no terminal\"\n    );\n    assert_eq!(h.ack(|req| Msg::Release { req, id: t.id }), Ack::Ok);\n    assert_eq!(h.ack(|req| Msg::Release { req, id: t.id }), Ack::Unknown);\n    assert_eq!(\n        h.ack(|req| Msg::Stop {\n            req,\n            id: t.id,\n            grace_ms: 0\n        }),\n        Ack::Unknown\n    );\n    assert_eq!(h.close().code(), Some(0));\n    assert!(!alive(t.pid), \"a released tree is still stopped at host death\");"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/tests/unix_stop/member_states.rs",
+    "git_blob_sha": "98aeab0badfdac6c0dcb7126c848decdc1039055",
+    "source_sha256": "0ca63f51eb442a62c5250c81a5f50fb45908b52ce6c1ac933b4efdd85d20c474",
+    "source_bytes": 3390,
+    "line_count": 80,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Distinguish stopped, exiting and zombie-leader Unix processes from truly departed tree members.",
+    "behavior": [
+      "Stops a root with SIGSTOP, forces a supervisor reaping pass using another root exit, and requires no false Exited plus continued List membership; resume and stdin EOF must yield exactly one real exit.",
+      "Repeatedly stops a resistant heavy leaf and requires the independent OS oracle to report it no longer alive when Stopped arrives.",
+      "On Linux, creates a zombie leader with a live resistant thread, verifies that precondition, requires List membership and the full 300 ms force grace before all threads die."
+    ],
+    "contracts": [
+      "Stopped means a live workload is gone, not merely an unretrievable session query or zombie leader field."
+    ],
+    "dependencies": [
+      "common role heavy/zleader fixtures; OS liveness inspects Linux tasks or macOS kernel state; Unix Stop implementation under test."
+    ],
+    "failures_or_limits": [
+      "The macOS waitid behavior is stated as prior source context; the current review supplies no reproduction. These three cases cover selected difficult states, not all process-table races."
+    ],
+    "evidence": [
+      {
+        "start_line": 12,
+        "end_line": 35,
+        "quote": "/// macOS `waitid(WEXITED | WNOWAIT)` also reports a child that is merely stopped (found by W04): a stopped,\n/// then continued root is never reported as exited, never unpinned; it gets exactly one `Exited` when it\n/// really exits.\n#[test]\nfn a_stopped_root_is_not_an_exited_root() {\n    let mut h = Host::start();\n    let mut t = h.spawn(&Cmd::role(\"tree stdin\").stdin());\n    t.out.take(\"ROOT \", 1);\n    os::kill(t.pid, libc::SIGSTOP);\n    assert!(wait_until(Duration::from_secs(5), || os::stopped(t.pid)));\n    // Another root's exit makes the supervisor ask waitid about every root, the stopped one included.\n    let other = h.spawn(&Cmd::role(\"exit 0\"));\n    assert_eq!(h.exited(other.id), Exit::Code(0));\n    let list = h.list(t.id).unwrap(); // a round trip: anything sent before it has been read\n    assert!(!h.exits.contains_key(&t.id), \"a stop is not an exit\");\n    assert!(\n        list.iter().any(|p| p.pid == t.pid as u32),\n        \"a stopped root is a live member\"\n    );\n    os::kill(t.pid, libc::SIGCONT);\n    drop(t.stdin.take()); // end of input: the root exits 0\n    assert_eq!(h.exited(t.id), Exit::Code(0));\n    assert!(h.stop(t.id, 1000) < ms(1000)); // another round trip: a second Exited would fail the host\n}"
+      },
+      {
+        "start_line": 37,
+        "end_line": 51,
+        "quote": "/// `Stopped` means gone: a member that takes long to tear down after SIGKILL (macOS: `getsid` and\n/// `proc_pidinfo` already fail for it, but it is not a zombie yet) must be a zombie or gone, per the OS, when\n/// `Stopped` arrives (lead r4: an exiting process is never \"gone\").\n#[test]\nfn stopped_waits_for_a_member_that_is_still_being_torn_down() {\n    let mut h = Host::start();\n    for _ in 0..3 {\n        let t = h.spawn(&Cmd::role(\"tree hang resist+group+heavy\"));\n        let leaf = field(&t.out.take(\"UP \", 1), 1)[0];\n        h.stop(t.id, 100);\n        assert!(\n            !alive(leaf),\n            \"Stopped arrived while member {leaf} was still being torn down\"\n        );\n    }"
+      },
+      {
+        "start_line": 54,
+        "end_line": 79,
+        "quote": "/// Linux: a thread-group leader that ended while another thread runs shows as a zombie in /proc, yet the\n/// process lives: `List` reaches it, and `Stopped` comes only after its last thread ended (its threads ignore\n/// SIGTERM, so only the SIGKILL at the deadline ends them).\n#[cfg(target_os = \"linux\")]\n#[test]\nfn a_zombie_leader_with_a_running_thread_is_a_live_member() {\n    let mut h = Host::start();\n    let t = h.spawn(&Cmd::role(\"tree hang resist+group+zleader\"));\n    let leaf = field(&t.out.take(\"ZLEADER \", 1), 1)[0];\n    let stat = std::fs::read_to_string(format!(\"/proc/{leaf}/stat\")).unwrap();\n    assert!(\n        stat.rsplit_once(')').unwrap().1.trim_start().starts_with('Z'),\n        \"precondition: a zombie leader\"\n    );\n    assert!(alive(leaf), \"precondition: a thread still runs\");\n    let list = h.list(t.id).unwrap();\n    assert!(\n        list.iter().any(|p| p.pid == leaf as u32),\n        \"List must reach it: {list:?}\"\n    );\n    let took = h.stop(t.id, 300);\n    assert!(\n        took >= ms(300),\n        \"Stopped before the SIGKILL at the deadline ended the thread: {took:?}\"\n    );\n    assert!(!alive(leaf));"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  }
+]

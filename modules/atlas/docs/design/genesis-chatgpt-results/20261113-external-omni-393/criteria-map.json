@@ -1,0 +1,14 @@
+{
+  "schema": "omni-public-criteria-map/v1",
+  "status": "Labels map the pre-author public criteria; no new acceptance bar.",
+  "criteria": {
+    "C1": "Every covered path has an actual read-based, file-specific useful disposition.",
+    "C2": "Assertions distinguish implementation, documentation/declaration, inference and gaps.",
+    "C3": "Source identities, paths and exact quote evidence support claims.",
+    "C4": "Contracts, failures, relations and maintenance implications are useful at the layer under review. The first wave evaluates L1.",
+    "C5": "Test source, old reviews and docs are never current execution.",
+    "C6": "Ownership, exclusions and authorized external scope are preserved.",
+    "C7": "No secrets, private evaluation or session material in the candidate."
+  },
+  "corrections": "Both same judges must re-evaluate exact changed bytes."
+}

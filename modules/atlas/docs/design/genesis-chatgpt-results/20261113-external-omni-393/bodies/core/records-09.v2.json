@@ -1,0 +1,428 @@
+[
+  {
+    "path": "native/omni/crates/hugr-omni/tests/runner/command.rs",
+    "git_blob_sha": "d821afbfaec029a662f65b44f2ec310ccdff3720",
+    "source_sha256": "96309819c54f8726cf278e98189b52eab73a8afc7394a6528cf3920753df0a62",
+    "source_bytes": 4816,
+    "line_count": 138,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Translate conformance command JSON into the public Rust Command API.",
+    "behavior": [
+      "Requires a nonempty string argv array and maps nullable env entries to removals, alongside cwd, inheritance, timeout, grace, text, merge, verbatim, input, output cap, stdin and PTY options.",
+      "Converts finite nonnegative millisecond numbers to fractional Duration values; PTY objects default to 80 by 24 and require dimensions representable as u16.",
+      "Accepts text or whitespace-stripped hex input; rejects unknown command options as harness errors."
+    ],
+    "contracts": [
+      "The scenario vocabulary is shared with TypeScript, but representability failures require language-restricted scenarios."
+    ],
+    "dependencies": [
+      "api/command.rs supplies the builder setters; runner/schema.rs must validate syntactic shapes before translation."
+    ],
+    "failures_or_limits": [
+      "This adapter does not expose maxRssBytes or pipe backpressure at this source revision. hex_bytes consumes pairs and accepts a final single hex digit; schema.rs reuses the same parser rather than requiring even length."
+    ],
+    "evidence": [
+      {
+        "start_line": 9,
+        "end_line": 16,
+        "quote": "pub fn build(argv: &Value, options: Option<&Value>, token: &CancellationToken) -> Result<(Command, bool), String> {\n    let argv: Vec<&str> = argv\n        .as_array()\n        .and_then(|a| a.iter().map(Value::as_str).collect())\n        .ok_or(\"`run`/`spawn` takes [command, ...args] as strings\")?;\n    let (program, args) = argv.split_first().ok_or(\"`run`/`spawn` needs a command\")?;\n    let mut cmd = Command::new(program);\n    cmd.args(args).cancel_on(token.clone());"
+      },
+      {
+        "start_line": 59,
+        "end_line": 74,
+        "quote": "            \"maxOutputBytes\" => {\n                let n = v.as_u64().ok_or_else(|| inexpressible(key, v))?;\n                cmd.max_output_bytes(usize::try_from(n).map_err(|_| inexpressible(key, v))?);\n            }\n            \"stdin\" => {\n                cmd.stdin(match v.as_str() {\n                    Some(\"pipe\") => Stdin::Pipe,\n                    Some(\"closed\") => Stdin::Closed,\n                    _ => return Err(bad()),\n                });\n            }\n            \"pty\" => {\n                pty = true;\n                cmd.pty(pty_size(v)?);\n            }\n            _ => return Err(format!(\"unknown option {key}\")),"
+      },
+      {
+        "start_line": 84,
+        "end_line": 92,
+        "quote": "/// A duration in milliseconds: a non-negative finite number (a fraction stays exact to the nanosecond).\npub fn duration(key: &str, v: &Value) -> Result<Duration, String> {\n    if let Some(ms) = v.as_u64() {\n        return Ok(Duration::from_millis(ms));\n    }\n    match v.as_f64() {\n        Some(ms) if ms.is_finite() && ms >= 0.0 => Ok(Duration::from_secs_f64(ms / 1000.0)),\n        _ => Err(inexpressible(key, v)),\n    }"
+      },
+      {
+        "start_line": 130,
+        "end_line": 138,
+        "quote": "    let digits: Vec<char> = hex.chars().filter(|c| !c.is_whitespace()).collect();\n    digits\n        .chunks(2)\n        .map(|p| {\n            let pair: String = p.iter().collect();\n            u8::from_str_radix(&pair, 16).map_err(|_| format!(\"bad hex {hex:?}\"))\n        })\n        .collect()\n}"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/tests/runner/expect.rs",
+    "git_blob_sha": "7107cd30a509c7b2a7654fe314bfc1b00347ff53",
+    "source_sha256": "54b06b10f5cbcc97d838cbb37e651dae3e599a7c7bf5c76046f5aea7686efbe7",
+    "source_bytes": 10106,
+    "line_count": 276,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Compare conformance outcomes while separating product mismatches from invalid harness expectations.",
+    "behavior": [
+      "Models exit/run fields, output data, pieces and process entries with typed values; errors can be checked by code, message fragments and partial result.",
+      "Only Fail::Product is eligible for pending treatment; malformed or missing expected fields are harness failures.",
+      "Numeric matchers support bounds and null, text matchers support literals, containment, regex, length and hex; process inventories require an unordered one-to-one assignment rather than a greedy match."
+    ],
+    "contracts": [
+      "Text length counts characters while binary output length counts bytes; listed expectation fields are mandatory observations."
+    ],
+    "dependencies": [
+      "types.rs and Error supply outcomes; runner/pattern.rs defines the regex subset."
+    ],
+    "failures_or_limits": [
+      "Recursive inventory matching may explore multiple assignments for overlapping predicates; this is test-source logic, not evidence of executed conformance."
+    ],
+    "evidence": [
+      {
+        "start_line": 19,
+        "end_line": 37,
+        "quote": "/// Why a step failed. Only `Product` (the library's outcome differs from the expectation) may count as pending; a\n/// `Harness` failure (malformed scenario, unknown variable, runner or OS-oracle error) always fails the suite. Every\n/// error not built as `Product` is `Harness`, so an unclassified failure fails closed.\n#[derive(Debug)]\npub enum Fail {\n    Product(String),\n    Harness(String),\n}\n\nimpl From<String> for Fail {\n    fn from(msg: String) -> Fail {\n        Fail::Harness(msg)\n    }\n}\n\nimpl From<&str> for Fail {\n    fn from(msg: &str) -> Fail {\n        Fail::Harness(msg.to_string())\n    }"
+      },
+      {
+        "start_line": 205,
+        "end_line": 225,
+        "quote": "/// Exact text, `{contains}`, `{regex}`, `{length}` (characters of text, bytes of binary) or `{hex}` (raw\n/// bytes; UTF-8 for text); `null` matches only null. `got` is (bytes, is_text).\nfn string(w: &Value, got: Option<(&[u8], bool)>) -> Result<bool, String> {\n    let Some((bytes, is_text)) = got else {\n        return Ok(w.is_null());\n    };\n    let text = String::from_utf8_lossy(bytes);\n    Ok(match w {\n        Value::Null => false,\n        Value::String(s) => s.as_bytes() == bytes,\n        Value::Object(o) if o.len() == 1 => match o.iter().next().ok_or(\"empty matcher\")? {\n            (op, Value::String(s)) if op == \"contains\" => text.contains(s.as_str()),\n            (op, Value::String(r)) if op == \"regex\" => pattern(r)?.is_match(&text),\n            (op, n) if op == \"length\" => {\n                let n = n.as_u64().ok_or(\"length wants a number\")?;\n                n == if is_text { text.chars().count() } else { bytes.len() } as u64\n            }\n            (op, Value::String(h)) if op == \"hex\" => hex_bytes(h)? == bytes,\n            _ => return Err(format!(\"unknown string matcher {w}\")),\n        },\n        _ => return Err(format!(\"bad string matcher {w}\")),"
+      },
+      {
+        "start_line": 238,
+        "end_line": 261,
+        "quote": "/// `entries`: an unordered list matched one to one.\nfn entries(w: &Value, got: &[ProcessInfo]) -> Result<bool, String> {\n    let want = w.as_array().ok_or(\"entries must be a list\")?;\n    let mut ok = vec![vec![false; got.len()]; want.len()];\n    for (i, e) in want.iter().enumerate() {\n        for (j, p) in got.iter().enumerate() {\n            ok[i][j] = entry(e, p)?;\n        }\n    }\n    Ok(want.len() == got.len() && assign(&ok, 0, &mut vec![false; got.len()]))\n}\n\nfn assign(ok: &[Vec<bool>], i: usize, used: &mut [bool]) -> bool {\n    let Some(row) = ok.get(i) else { return true };\n    for j in 0..row.len() {\n        if row[j] && !used[j] {\n            used[j] = true;\n            if assign(ok, i + 1, used) {\n                return true;\n            }\n            used[j] = false;\n        }\n    }\n    false"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/tests/runner/ledger.rs",
+    "git_blob_sha": "4dd7eb82054795c6833ea7a04c47e240f6050788",
+    "source_sha256": "edc73e7fb833b10d48bedcf11206741b7c5af45fbd30f05881711295c8d34b7f",
+    "source_bytes": 3000,
+    "line_count": 78,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Parse the pending conformance ledger and reject unknown or stale waivers.",
+    "behavior": [
+      "Trims lines, ignores blank and full-line comments, and requires exactly an item identifier and a work-package token.",
+      "Rejects duplicate entries and malformed identifier/work-package syntax.",
+      "Checks pending identifiers against known contract items and flags a waiver as stale once all applicable scenarios for that item passed."
+    ],
+    "contracts": [
+      "Pending is item-level: the item identifier precedes the first dot in a scenario ID."
+    ],
+    "dependencies": [
+      "runner/suite.rs provides known items and aggregated applicable scenario results."
+    ],
+    "failures_or_limits": [
+      "Although the introductory syntax description mentions comments, the parser only ignores lines beginning with #; inline trailing comment tokens fail. A pending record is not a runtime guarantee."
+    ],
+    "evidence": [
+      {
+        "start_line": 14,
+        "end_line": 29,
+        "quote": "    pub fn parse(text: &str) -> (Ledger, Vec<String>) {\n        let (mut items, mut errors) = (BTreeMap::new(), Vec::new());\n        for (n, line) in text.lines().enumerate().map(|(n, l)| (n + 1, l.trim())) {\n            if line.is_empty() || line.starts_with('#') {\n                continue;\n            }\n            match line.split_whitespace().collect::<Vec<_>>()[..] {\n                [id, wp] if is_item(id) && is_wp(wp) => {\n                    if items.insert(id.to_string(), wp.to_string()).is_some() {\n                        errors.push(format!(\"pending.txt:{n}: {id} is listed twice\"));\n                    }\n                }\n                _ => errors.push(format!(\"pending.txt:{n}: want `<ID> <WP>`, got {line:?}\")),\n            }\n        }\n        (Ledger { items }, errors)"
+      },
+      {
+        "start_line": 36,
+        "end_line": 47,
+        "quote": "    /// After the run. `known`: the items that have a scenario file; `passed`: for each item run here, whether\n    /// every one of its scenarios passed.\n    pub fn check(&self, known: &BTreeSet<String>, passed: &BTreeMap<String, bool>) -> Vec<String> {\n        let mut errors = Vec::new();\n        for (id, wp) in &self.items {\n            if !known.contains(id) {\n                errors.push(format!(\n                    \"{id} ({wp}) is in conformance/pending.txt but no scenario proves it\"\n                ));\n            } else if passed.get(id) == Some(&true) {\n                errors.push(format!(\"{id} ({wp}) passes: remove it from conformance/pending.txt\"));\n            }"
+      },
+      {
+        "start_line": 53,
+        "end_line": 56,
+        "quote": "/// The item of a scenario id: `C-KILL-01.tree` → `C-KILL-01`.\npub fn item(scenario: &str) -> &str {\n    scenario.split('.').next().unwrap_or(scenario)\n}"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/tests/runner/mod.rs",
+    "git_blob_sha": "84a5dd002898539bacc1d7b1cf9101ec339edf28",
+    "source_sha256": "87bc545e3ab1ae13d297ff740bedbf5905d8091a6c2d54af8ea3ca066cc4667a",
+    "source_bytes": 11565,
+    "line_count": 286,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Execute the conformance scenario DSL with named children, runs, readers and captures.",
+    "behavior": [
+      "Creates fresh scenario variables and temporary files, runs actions sequentially, then cancels the shared token, aborts run tasks, drops children and attempts directory removal.",
+      "Applies a default ten-second per-step deadline; OS-oracle timeouts are harness failures while other action timeouts are product failures.",
+      "Supports synchronous or named asynchronous run, pipe/PTY spawn, write/read/wait/stop/resize/process inventory, shared abort, and independently observed OS liveness.",
+      "Variable substitution returns an array for an exact multivalue reference and uses the first value when embedded in text."
+    ],
+    "contracts": [
+      "Named asynchronous runs use spawn_local; PTY stdin cannot be closed through the pipe write action."
+    ],
+    "dependencies": [
+      "runner/command.rs builds public Commands; read.rs retains readers; os.rs checks PIDs independently; expect.rs compares outcomes."
+    ],
+    "failures_or_limits": [
+      "Fixture paths are joined to the scenario temporary directory; this is a trusted test DSL rather than a path containment boundary. Cleanup aborts tasks without claiming an observed tree-gone result."
+    ],
+    "evidence": [
+      {
+        "start_line": 64,
+        "end_line": 69,
+        "quote": "    let result = ctx.steps(s, &tmp).await;\n    // Clean up whatever is left: cancel pending runs, drop (force-kill) every child.\n    ctx.token.cancel();\n    ctx.runs.values().for_each(JoinHandle::abort);\n    drop(ctx);\n    let _ = std::fs::remove_dir_all(&tmp);"
+      },
+      {
+        "start_line": 88,
+        "end_line": 103,
+        "quote": "    async fn step(&mut self, step: &Value) -> Result<(), Fail> {\n        let (name, target) = action(step)?;\n        let s = step.as_object().ok_or(\"a step must be an object\")?;\n        let limit = s.get(\"timeoutMs\").and_then(Value::as_u64).unwrap_or(10_000);\n        let started = Instant::now();\n        let outcome = match tokio::time::timeout(Duration::from_millis(limit), self.act(name, target, s)).await {\n            Ok(outcome) => outcome?,\n            // Every action but `os` waits on the library; an `os` timeout is the oracle hanging.\n            Err(_) if name == \"os\" => return Err(Fail::Harness(format!(\"the OS oracle timed out after {limit} ms\"))),\n            Err(_) => return Err(Fail::Product(format!(\"timed out after {limit} ms\"))),\n        };\n        match s.get(\"expect\") {\n            Some(want) => expect::check(&self.resolve(want)?, &outcome, started.elapsed()),\n            None => outcome\n                .map(drop)\n                .map_err(|e| Fail::Product(format!(\"unexpected error {e}\"))),"
+      },
+      {
+        "start_line": 115,
+        "end_line": 136,
+        "quote": "                if action == \"run\" {\n                    if s.get(\"await\") != Some(&Value::Bool(false)) {\n                        return Ok(cmd.run().await.map(|r| run_fields(&r)));\n                    }\n                    let name = name.ok_or(\"`await: false` needs `as`\")?;\n                    self.runs\n                        .insert(name, tokio::task::spawn_local(async move { cmd.run().await }));\n                    return none();\n                }\n                let kid = if pty {\n                    cmd.spawn_pty().map(Kid::Pty)\n                } else {\n                    cmd.spawn().map(Kid::Pipe)\n                };\n                let kid = match kid {\n                    Ok(kid) => kid,\n                    Err(e) => return Ok(Err(e)),\n                };\n                if let Some(name) = name {\n                    self.vars\n                        .insert(format!(\"{name}.pid\"), vec![kid.child().pid().to_string()]);\n                    self.kids.insert(name, kid);"
+      },
+      {
+        "start_line": 212,
+        "end_line": 228,
+        "quote": "    /// `os`: every pid alive / dead per the OS, now or within `withinMs`.\n    async fn os(&self, want: &Value, s: &Map<String, Value>) -> Result<Outcome, Fail> {\n        let alive = match want.as_str() {\n            Some(\"alive\") => true,\n            Some(\"dead\") => false,\n            _ => return Err(\"`os` is \\\"alive\\\" or \\\"dead\\\"\".into()),\n        };\n        let pids = self.resolve(s.get(\"pids\").ok_or(\"`os` needs pids\")?)?;\n        let pids: Vec<u32> = flat(&pids)\n            .iter()\n            .map(|p| p.parse().map_err(|_| format!(\"bad pid {p:?}\")))\n            .collect::<Result<_, _>>()?;\n        if pids.is_empty() {\n            return Err(\"no pids to check\".into());\n        }\n        let within = Duration::from_millis(s.get(\"withinMs\").and_then(Value::as_u64).unwrap_or(0));\n        os::expect(pids, alive, within).await.map(|()| Ok(Fields::new()))"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/tests/runner/names.rs",
+    "git_blob_sha": "0600409c934c4dbe8bff70613608359c8055c0b4",
+    "source_sha256": "de88a24a9f5cc8df8a7a23b09f6795ef788d9d65c2b014040f8b23278c72251e",
+    "source_bytes": 5665,
+    "line_count": 139,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Preflight scenario names, variable references and handle-kind constraints before execution.",
+    "behavior": [
+      "Seeds FIXTURE, TMP and EXE, validates file contents and every action schema, and requires references to existing child or run names.",
+      "Requires as for await:false runs, validates PTY resize dimensions, forbids terminal stdin close, and checks OS PID references.",
+      "Validates non-expectation variable uses before defining new captures; the current step expectation can refer to captures introduced by that step."
+    ],
+    "contracts": [
+      "Spawn handle kind is inferred from options.pty and recorded with a derived name.pid variable."
+    ],
+    "dependencies": [
+      "runner/schema.rs checks field values; runner/scenario.rs invokes preflight while loading."
+    ],
+    "failures_or_limits": [
+      "Reusing a name overwrites its table entry rather than being rejected. Static declaration of a child does not establish that the runtime spawn succeeded."
+    ],
+    "evidence": [
+      {
+        "start_line": 58,
+        "end_line": 90,
+        "quote": "        let required: Result<(), &str> = match name {\n            \"run\" if has(\"as\") != (flag(\"await\") == Some(false)) => {\n                Err(\"`as` goes with `await: false`, and only with it\")\n            }\n            \"write\" if !child => Err(\"needs an earlier spawned child\"),\n            // SPEC: `write` without `data` only closes stdin.\n            \"write\" if !has(\"data\") && flag(\"close\") == Some(false) => Err(\"without `data` it closes stdin\"),\n            \"write\" if flag(\"close\").unwrap_or(!has(\"data\")) && kind == Some(Kind::Pty) => {\n                Err(\"closes stdin, which a terminal does not have\")\n            }\n            \"read\" | \"stop\" | \"processes\" if !child => Err(\"needs an earlier spawned child\"),\n            \"read\" if !has(\"until\") => Err(\"needs `until`\"),\n            \"wait\" if kind.is_none() => Err(\"needs an earlier spawned child or `run` with `await: false`\"),\n            \"resize\" if kind != Some(Kind::Pty) => Err(\"needs an earlier spawned terminal child (`pty`)\"),\n            \"resize\" if !has(\"cols\") || !has(\"rows\") => Err(\"needs `cols` and `rows`\"),\n            \"resize\"\n                if [\"cols\", \"rows\"]\n                    .iter()\n                    .any(|k| s[*k].as_u64().is_some_and(|n| n > u64::from(u16::MAX))) =>\n            {\n                Err(\"`cols` and `rows` must fit 16 bits\")\n            }\n            \"os\" if !has(\"pids\") => Err(\"needs `pids`\"),\n            _ => Ok(()),\n        };\n        required.map_err(|e| format!(\"`{name}` {e}\"))?;\n        for (key, v) in s.iter().filter(|(k, _)| *k != \"expect\") {\n            self.vars_in(v).map_err(|e| format!(\"{key}: {e}\"))?;\n        }\n        self.define(name, s);\n        match s.get(\"expect\") {\n            Some(want) => self.vars_in(want).map_err(|e| format!(\"expect: {e}\")),\n            None => Ok(()),"
+      },
+      {
+        "start_line": 94,
+        "end_line": 117,
+        "quote": "    fn define(&mut self, name: &str, s: &Map<String, Value>) {\n        if let Some(handle) = s.get(\"as\").and_then(Value::as_str) {\n            let pty = s\n                .get(\"options\")\n                .and_then(|o| o.get(\"pty\"))\n                .is_some_and(|p| p != &Value::Bool(false));\n            let kind = match (name, pty) {\n                (\"run\", _) => Kind::Run,\n                (_, true) => Kind::Pty,\n                _ => Kind::Pipe,\n            };\n            self.handles.insert(handle.to_string(), kind);\n            if kind != Kind::Run {\n                self.vars.insert(format!(\"{handle}.pid\"));\n            }\n        }\n        match s.get(\"capture\") {\n            Some(Value::String(name)) => {\n                self.vars.insert(name.clone());\n            }\n            Some(Value::Object(caps)) => self.vars.extend(caps.keys().cloned()),\n            _ => {}\n        }\n    }"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/tests/runner/os.rs",
+    "git_blob_sha": "854630011360fbc4c8664e6620bb36364d8871f4",
+    "source_sha256": "1da904a68655383046af8423eb02f39b80132e97240cf31d9c86551a0e6cc7f0",
+    "source_bytes": 5936,
+    "line_count": 144,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Provide independent operating-system PID liveness observations for contract scenarios.",
+    "behavior": [
+      "Classifies Linux proc states and macOS ps output, treating zombies as dead; on Windows it checks tasklist CSV and its no-task informational response.",
+      "Uses three outcomes, Alive, Dead and Unknown; an unreadable or ambiguous observation is a harness failure, never evidence of death.",
+      "Polls spawn_blocking observations every twenty milliseconds until the requested state or deadline, then distinguishes product mismatch from oracle failure."
+    ],
+    "contracts": [
+      "The oracle must be independent of Omni process inventory."
+    ],
+    "dependencies": [
+      "Platform /proc, ps and tasklist boundaries; runner/mod.rs resolves PID inputs and consumes the result."
+    ],
+    "failures_or_limits": [
+      "Observations identify PID numbers without a captured creation identity, so PID reuse can appear as a still-live process. The source also creates canonical per-scenario temp directories but does not itself run scenarios."
+    ],
+    "evidence": [
+      {
+        "start_line": 12,
+        "end_line": 19,
+        "quote": "/// What the OS says about a pid. Only a confirmed absence or a zombie/dead state is `Dead`; anything the oracle\n/// cannot establish is `Unknown`, which fails the suite (never counted as dead or alive).\n#[derive(Debug, PartialEq)]\npub enum Life {\n    Alive,\n    Dead,\n    Unknown(String),\n}"
+      },
+      {
+        "start_line": 99,
+        "end_line": 127,
+        "quote": "/// The `os` step: every pid is alive (or dead) per the OS, now or within `within`. A mismatch is the product's; an\n/// oracle that cannot tell is the harness's.\npub async fn expect(pids: Vec<u32>, alive: bool, within: Duration) -> Result<(), Fail> {\n    let deadline = Instant::now() + within;\n    let wanted = if alive { Life::Alive } else { Life::Dead };\n    loop {\n        let probe = pids.clone();\n        let lives: Vec<(u32, Life)> =\n            tokio::task::spawn_blocking(move || probe.into_iter().map(|p| (p, life(p))).collect())\n                .await\n                .map_err(|e| e.to_string())?;\n        if let Some((pid, Life::Unknown(why))) = lives.iter().find(|(_, l)| matches!(l, Life::Unknown(_))) {\n            return Err(Fail::Harness(format!(\n                \"the OS cannot tell whether {pid} is alive: {why}\"\n            )));\n        }\n        let wrong: Vec<u32> = lives\n            .into_iter()\n            .filter(|(_, l)| *l != wanted)\n            .map(|(p, _)| p)\n            .collect();\n        if wrong.is_empty() {\n            return Ok(());\n        }\n        if Instant::now() >= deadline {\n            let state = if alive { \"alive\" } else { \"dead\" };\n            return Err(Fail::Product(format!(\n                \"expected {state} per the OS, but not: {wrong:?}\"\n            )));"
+      },
+      {
+        "start_line": 133,
+        "end_line": 144,
+        "quote": "/// A fresh, canonical directory for one scenario (macOS: `/private/var/...`; Windows: no `\\\\?\\` prefix), so\n/// a child's `cwd` prints exactly `${TMP}`.\npub fn tmp(seq: usize) -> PathBuf {\n    let dir = std::env::temp_dir().join(format!(\"omni-contract-{}-{seq}\", std::process::id()));\n    let _ = std::fs::remove_dir_all(&dir);\n    std::fs::create_dir_all(&dir).expect(\"create ${TMP}\");\n    let canon = std::fs::canonicalize(&dir).expect(\"canonicalize ${TMP}\");\n    match canon.to_str().and_then(|s| s.strip_prefix(r\"\\\\?\\\")) {\n        Some(plain) => PathBuf::from(plain),\n        None => canon,\n    }\n}"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/tests/runner/pattern.rs",
+    "git_blob_sha": "9f84a53d81d500cf8427d24200922fae5046d680",
+    "source_sha256": "905ed1e59f5adc15f28804ce94bf91b9be5bf22a19746f8222872b3af9711d2a",
+    "source_bytes": 7292,
+    "line_count": 160,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Restrict and normalize conformance regexes to the intended JavaScript-u/Rust common subset.",
+    "behavior": [
+      "Rewrites digit and word shorthands to ASCII classes and dot to exclude LF, CR, U+2028 and U+2029.",
+      "Supports selected escapes, groups, alternatives and quantifiers, while rejecting lookaround, inline flags, backreferences, Unicode property/space escapes, surrogate escapes and ambiguous class constructs.",
+      "Tracks whether quantifiers have an atom, permits a single lazy modifier, and finishes with Rust Regex parsing."
+    ],
+    "contracts": [
+      "Cross-language equivalence is claimed only for patterns accepted by this restricted grammar."
+    ],
+    "dependencies": [
+      "regex crate compiles the normalized expression; conformance/regex-table.json supplies shared differential fixtures."
+    ],
+    "failures_or_limits": [
+      "The implementation is a validator and rewriter, not support for general JavaScript regular expressions. No differential fixtures were executed in this analysis."
+    ],
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 18,
+        "quote": "//! Scenario regexes: only a subset that JavaScript (with the `u` flag: matching by code point) and Rust's `regex`\n//! read the same way (SPEC). Each pattern is checked against a whitelist and rewritten so Rust means what JavaScript\n//! means: `\\d` `\\D` `\\w` `\\W` become explicit ASCII classes and `.` excludes JavaScript's line terminators\n//! (`\\n \\r U+2028 U+2029`). `conformance/regex-table.json` is the differential table every runner checks.\n\nuse regex::Regex;\n\n/// Compiles a scenario regex, or says which construct is outside the subset.\npub fn pattern(re: &str) -> Result<Regex, String> {\n    let rust = translate(re).map_err(|e| format!(\"regex {re:?} uses {e}, outside the JS/Rust subset (SPEC)\"))?;\n    Regex::new(&rust).map_err(|e| format!(\"regex {re:?}: {e}\"))\n}\n\n/// The subset: literals; `^ $ | * + ? *? +? ??`; `{n}` `{n,}` `{n,m}`; `( )` and `(?: )`; classes without nesting,\n/// set operators or ranges next to a class escape; escapes `\\d \\D \\w \\W` (`\\d \\w` inside a class), `\\n \\r \\t \\f\n/// \\v`, `\\xHH`, `\\uHHHH` (not a surrogate), and escaped syntax characters (`\\-` only inside a class, as under the\n/// `u` flag). Everything else (look-around, backreferences, named groups, flags, `\\s`, `\\b`, `\\p`, Rust-only\n/// syntax) is refused."
+      },
+      {
+        "start_line": 30,
+        "end_line": 61,
+        "quote": "            '\\\\' => {\n                let e = chars.next().ok_or(\"a trailing backslash\")?;\n                match (e, class) {\n                    ('d', false) => out.push_str(\"[0-9]\"),\n                    ('D', false) => out.push_str(\"[^0-9]\"),\n                    ('w', false) => out.push_str(\"[0-9A-Za-z_]\"),\n                    ('W', false) => out.push_str(\"[^0-9A-Za-z_]\"),\n                    ('d' | 'w', true) if was_dash => return Err(\"a range ending in a class escape\".into()),\n                    ('d', true) => {\n                        out.push_str(\"0-9\");\n                        after_escape = true;\n                    }\n                    ('w', true) => {\n                        out.push_str(\"0-9A-Za-z_\");\n                        after_escape = true;\n                    }\n                    ('n' | 'r' | 't' | 'f' | 'v', _) => out.extend(['\\\\', e]),\n                    ('x' | 'u', _) => {\n                        let n = if e == 'x' { 2 } else { 4 };\n                        let hex: String = (0..n).filter_map(|_| chars.next_if(char::is_ascii_hexdigit)).collect();\n                        if hex.len() != n {\n                            return Err(format!(\"\\\\{e} without {n} hex digits\"));\n                        }\n                        if u32::from_str_radix(&hex, 16).is_ok_and(|v| (0xD800..=0xDFFF).contains(&v)) {\n                            return Err(\"a surrogate escape (JS pairs them, Rust refuses them)\".into());\n                        }\n                        out.push_str(&format!(\"\\\\x{{{hex}}}\"));\n                    }\n                    ('-', true) => out.push_str(\"\\\\-\"),\n                    (p, _) if \"\\\\^$.|?*+()[]{}\".contains(p) => out.extend(['\\\\', p]),\n                    ('/', _) => out.push('/'),\n                    _ => return Err(format!(\"the escape \\\\{e}\")),"
+      },
+      {
+        "start_line": 92,
+        "end_line": 99,
+        "quote": "            '.' => {\n                prev = Prev::Atom;\n                out.push_str(r\"[^\\n\\r\\x{2028}\\x{2029}]\");\n            }\n            '(' if chars.next_if_eq(&'?').is_some() => {\n                if chars.next_if_eq(&':').is_none() {\n                    return Err(\"look-around, a named group or an inline flag\".into());\n                }"
+      },
+      {
+        "start_line": 151,
+        "end_line": 158,
+        "quote": "impl Prev {\n    /// After a quantifier; `lazy`: it is a `?`, which after a quantifier makes it lazy.\n    fn quantified(self, lazy: bool) -> Result<Prev, String> {\n        match self {\n            Prev::Atom => Ok(Prev::Quantifier),\n            Prev::Quantifier if lazy => Ok(Prev::Lazy),\n            _ => Err(\"a quantifier with nothing to repeat (after an assertion, `(`, `|` or another quantifier)\".into()),\n        }"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/tests/runner/read.rs",
+    "git_blob_sha": "d952863dc844de14d5c0bdecd9666c2101d9fc1d",
+    "source_sha256": "d35c1c6c3df02b4f842ec04ded53875145f8f0ceeca251ad6da1f6b615e487c0",
+    "source_bytes": 7426,
+    "line_count": 211,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Read conformance child output across steps while preserving line fragments, capture state and loss metrics.",
+    "behavior": [
+      "Keeps a stream reader plus pending stdout/stderr/PTY fragments; chunk mode splits complete lines for captures and line mode reassembles continued pieces.",
+      "Captures the first regex group or whole match and can stop after a required number of matching complete lines; it consumes the entire current item even after reaching that count.",
+      "Flushes partial text at gaps and EOF, fails an unsatisfied match count, returns per-step output and pieces plus dropped-byte observations, and optionally detaches the reader."
+    ],
+    "contracts": [
+      "A reused reader keeps its mode; switching modes attempts a fresh public stream claim, subject to single-consumer rules."
+    ],
+    "dependencies": [
+      "io stream APIs provide chunks/lines and loss counters; runner/pattern.rs compiles captures; runner/mod.rs stores variables."
+    ],
+    "failures_or_limits": [
+      "Capture totals and pending fragments persist across steps whereas returned output is per-read. Explicit detach drops the source, so the product consumer cannot later be reclaimed."
+    ],
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 8,
+        "quote": "//! `read`: claims the single consumer (first time, or again after `detach` or in the other mode: the library\n//! decides whether that is allowed), reads until `until`, and reports what this step read.\n//!\n//! `until.match` and `capture` see complete lines, kept across steps: in chunks mode the runner splits on `\\n`\n//! (dropping a trailing `\\r`); in lines mode a line is the library's text as is, with `continues` pieces joined.\n//! A gap (`lostBefore`) ends the partial line, and the end of the output ends the last one. A step consumes\n//! whole items, so lines that arrive in the same chunk as its `until` match are read by that step. In lines\n//! mode the step's `stdout`/`stderr`/`pty` is each line's text followed by `\\n` unless it continues."
+      },
+      {
+        "start_line": 84,
+        "end_line": 93,
+        "quote": "    if reader.src.is_none() || reader.lines != lines {\n        let claimed = if lines {\n            child.lines().map(Src::Lines)\n        } else {\n            child.output().map(Src::Chunks)\n        };\n        match claimed {\n            Ok(src) => (reader.src, reader.lines) = (Some(src), lines),\n            Err(e) => return Ok(Err(e)),\n        }"
+      },
+      {
+        "start_line": 116,
+        "end_line": 126,
+        "quote": "        let Some(item) = item else {\n            for pending in &mut reader.pending {\n                if !pending.is_empty() {\n                    pass.line(std::mem::take(pending));\n                }\n            }\n            if let (Some((_, n)), false) = (&pass.until, pass.done()) {\n                return Err(Fail::Product(format!(\n                    \"output ended after {} of {n} matching lines\",\n                    pass.matched\n                )));"
+      },
+      {
+        "start_line": 139,
+        "end_line": 173,
+        "quote": "        chunks += 1;\n        lost += gap.unwrap_or(0);\n        let pending = &mut reader.pending[k];\n        if gap.unwrap_or(0) > 0 && !pending.is_empty() {\n            pass.line(std::mem::take(pending));\n        }\n        let bytes = match piece {\n            Data::Text(t) => t.into_bytes(),\n            Data::Bytes(b) => {\n                text = false;\n                b\n            }\n        };\n        data[k].extend_from_slice(&bytes);\n        if let Some(c) = cont {\n            pieces[k].push((bytes.len() as u64, c));\n        }\n        pending.extend_from_slice(&bytes);\n        match cont {\n            Some(true) => continues += 1,\n            Some(false) => {\n                data[k].push(b'\\n');\n                pass.line(std::mem::take(pending));\n            }\n            // Only a piece with a newline completes lines (no rescan of a long partial line).\n            None if bytes.contains(&b'\\n') => {\n                for piece in std::mem::take(pending).split_inclusive(|&b| b == b'\\n') {\n                    match piece.strip_suffix(b\"\\n\") {\n                        Some(line) => pass.line(line.strip_suffix(b\"\\r\").unwrap_or(line).to_vec()),\n                        None => *pending = piece.to_vec(),\n                    }\n                }\n            }\n            None => {}\n        }"
+      },
+      {
+        "start_line": 175,
+        "end_line": 193,
+        "quote": "    if s.get(\"detach\") == Some(&Value::Bool(true)) {\n        reader.src = None;\n    }\n    let dropped = child.dropped_bytes();\n    let [out, err, pty] = data.map(|b| {\n        Got::Data(if text {\n            Data::Text(String::from_utf8_lossy(&b).into_owned())\n        } else {\n            Data::Bytes(b)\n        })\n    });\n    let num = |n: u64| Got::Num(Some(n as f64));\n    Ok(Ok(Fields::from([\n        (\"stdout\", out),\n        (\"stderr\", err),\n        (\"pty\", pty),\n        (\"chunks\", num(chunks)),\n        (\"lostBefore\", num(lost)),\n        (\"continues\", num(continues)),"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/tests/runner/scenario.rs",
+    "git_blob_sha": "9e62d9c879cb78082cf96253805d0e9b082ad145",
+    "source_sha256": "5091a9aa986c7d46f301e3fea0e0566f9e06d330e7db2a91b77feb22a9510847",
+    "source_bytes": 4392,
+    "line_count": 107,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Load scenario files with strict identifiers, action keys and platform/language filters.",
+    "behavior": [
+      "Requires a filename-matching C-category-number.suffix ID, rejects unknown top-level fields, and validates optional nonempty OS/language lists against allowed names.",
+      "Requires a nonempty steps array and preflights all variable/handle names before applicability selection.",
+      "Recognizes exactly ten action names and their permitted additional fields, with timeoutMs available to every action."
+    ],
+    "contracts": [
+      "Exactly one action must appear per step; absent platform or language filters apply universally."
+    ],
+    "dependencies": [
+      "runner/names.rs validates references and shapes; suite.rs selects current-platform Rust scenarios after loading."
+    ],
+    "failures_or_limits": [
+      "Platform filtering does not bypass structural validation during load. This file declares selection rules but provides no execution result."
+    ],
+    "evidence": [
+      {
+        "start_line": 33,
+        "end_line": 68,
+        "quote": "    /// Parses and validates a scenario; `stem` is its file name without `.json`, which must equal the id.\n    pub fn load(text: &str, stem: &str) -> Result<Scenario, String> {\n        let json: Map<String, Value> = serde_json::from_str(text).map_err(|e| format!(\"bad JSON: {e}\"))?;\n        if let Some(key) = json\n            .keys()\n            .find(|k| ![\"id\", \"os\", \"langs\", \"files\", \"steps\"].contains(&k.as_str()))\n        {\n            return Err(format!(\"unknown key {key}\"));\n        }\n        let id = json.get(\"id\").and_then(Value::as_str).ok_or(\"missing id\")?;\n        if id != stem || !pattern(r\"^C-[A-Z]+-\\d\\d\\.[a-z0-9-]+$\")?.is_match(id) {\n            return Err(format!(\"id {id:?} must be `<item>.<name>` and equal the file name\"));\n        }\n        for (key, allowed) in [(\"os\", &OSES), (\"langs\", &LANGS)] {\n            if let Some(v) = json.get(key) {\n                let list = v.as_array().ok_or_else(|| format!(\"{key} must be a list\"))?;\n                if list.is_empty() || !list.iter().all(|x| x.as_str().is_some_and(|x| allowed.contains(&x))) {\n                    return Err(format!(\"{key} must list some of {allowed:?}\"));\n                }\n            }\n        }\n        let mut names = Names::new();\n        names.files(json.get(\"files\"))?;\n        let steps = json\n            .get(\"steps\")\n            .and_then(Value::as_array)\n            .filter(|s| !s.is_empty())\n            .ok_or(\"missing steps\")?;\n        for (i, step) in steps.iter().enumerate() {\n            let (name, target) = action(step).map_err(|e| format!(\"step {i}: {e}\"))?;\n            let obj = step.as_object().ok_or_else(|| format!(\"step {i}: not an object\"))?;\n            names\n                .step(name, target, obj)\n                .map_err(|e| format!(\"step {i} ({name}): {e}\"))?;\n        }\n        Ok(Scenario { json })"
+      },
+      {
+        "start_line": 71,
+        "end_line": 80,
+        "quote": "    /// Whether this scenario is meant for this OS and for Rust.\n    pub fn applies(&self) -> bool {\n        let has = |key: &str, me: &str| {\n            self.json\n                .get(key)\n                .and_then(Value::as_array)\n                .is_none_or(|l| l.iter().any(|x| x.as_str() == Some(me)))\n        };\n        has(\"os\", os::OS) && has(\"langs\", \"rust\")\n    }"
+      },
+      {
+        "start_line": 92,
+        "end_line": 106,
+        "quote": "/// The step's action name and value; any other key must be one this action accepts.\npub fn action(step: &Value) -> Result<(&str, &Value), String> {\n    let obj = step.as_object().ok_or(\"a step must be an object\")?;\n    let mut found = obj.iter().filter(|(k, _)| ACTIONS.iter().any(|(a, _)| a == k));\n    let (Some((name, value)), None) = (found.next(), found.next()) else {\n        return Err(\"a step needs exactly one action\".into());\n    };\n    let (_, extra) = ACTIONS.iter().find(|(a, _)| a == name).ok_or(\"unknown action\")?;\n    if let Some(key) = obj\n        .keys()\n        .find(|k| *k != name && *k != \"timeoutMs\" && !extra.contains(&k.as_str()))\n    {\n        return Err(format!(\"`{name}` does not take `{key}`\"));\n    }\n    Ok((name, value))"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  }
+]

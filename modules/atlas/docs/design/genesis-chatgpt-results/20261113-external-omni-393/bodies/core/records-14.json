@@ -1,0 +1,190 @@
+[
+  {
+    "path": "native/omni/crates/omni-supervisor/src/windows/tests/job_lifetime.rs",
+    "git_blob_sha": "db2b1228c71572654843430f157163cffdb680f0",
+    "source_sha256": "8ec4ae952b0de3c36847d9e3ae99cd441bfb6ab293062d397f406061d05ac60a",
+    "source_bytes": 7549,
+    "line_count": 195,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Check native Job and root-process handle lifetimes through production owner-loop transitions, with a mutation control.",
+    "behavior": [
+      "Relaunches the exact test in separate processes for forced stop, natural exit, live descendants, unknown member proof and a mutation that retains the original Job handle.",
+      "Uses GetHandleInformation on the original numeric handles, without cloning, to require Job closure before Stopped/Release while the exited root handle remains valid and signalled.",
+      "Asserts a live descendant keeps its Job open, repeated Stop remains idempotent, List becomes empty after gone, and Release finally closes the root PID pin.",
+      "The mutation subprocess must fail specifically at the Job-closure oracle."
+    ],
+    "contracts": [
+      "Process isolation prevents parallel tests from reusing a closed numeric handle and invalidating the negative oracle."
+    ],
+    "dependencies": [
+      "Tree::raw_handles/retain_job_on_gone test hooks; tests/mod.rs Looped; native Windows handle/process queries."
+    ],
+    "failures_or_limits": [
+      "The unknown-proof case deliberately accepts the one-second fallback with a diagnostic. This is a test specification plus mutation design, not an executed result."
+    ],
+    "evidence": [
+      {
+        "start_line": 20,
+        "end_line": 48,
+        "quote": "#[test]\nfn native_job_closes_before_stopped_and_release() {\n    if let Ok(case) = std::env::var(CASE) {\n        exercise(&case);\n        return;\n    }\n    for case in [\"stop\", \"natural\", \"descendant\", \"unknown\", \"mutation\"] {\n        let output = Command::new(std::env::current_exe().unwrap())\n            .args([\"--exact\", FILTER, \"--nocapture\", \"--test-threads=1\"])\n            .env(CASE, case)\n            .output()\n            .unwrap();\n        let stdout = String::from_utf8_lossy(&output.stdout);\n        let stderr = String::from_utf8_lossy(&output.stderr);\n        if case == \"mutation\" {\n            assert!(\n                !output.status.success(),\n                \"omitting the production close escaped the OS oracle\"\n            );\n            assert!(\n                stderr.contains(\"owned Job must close before Stopped and client Release\"),\n                \"mutation failed for the wrong reason:\\n{stdout}\\n{stderr}\"\n            );\n            println!(\"native Job mutation control: original owned handle stayed valid; OS oracle rejected it\");\n            continue;\n        }\n        assert!(output.status.success(), \"{case}:\\n{stdout}\\n{stderr}\");\n        println!(\"native Job lifetime control: {case} passed\");\n    }"
+      },
+      {
+        "start_line": 83,
+        "end_line": 107,
+        "quote": "    if let Some(child) = &mut descendant {\n        drop(l.ends.pop().unwrap());\n        l.exited(id);\n        l.sup.enforce(Instant::now());\n        assert!(\n            !l.sup.trees[&id].gone,\n            \"root exit must not close a live descendant's Job\"\n        );\n        assert!(\n            handle_information(job).is_ok(),\n            \"Job must remain valid while descendants live\"\n        );\n        assert!(\n            child.try_wait().unwrap().is_none(),\n            \"closing the Job killed a live descendant\"\n        );\n        assert_eq!(\n            l.sup.trees[&id]\n                .list()\n                .unwrap()\n                .iter()\n                .map(|p| p.pid)\n                .collect::<Vec<_>>(),\n            [child.id()]\n        );"
+      },
+      {
+        "start_line": 125,
+        "end_line": 176,
+        "quote": "    let first = l.stop(id, 0);\n    let second = l.stop(id, 0);\n    l.stopped(first);\n    assert_closed(job, \"owned Job must close before Stopped and client Release\");\n    if let Some(child) = &mut descendant {\n        assert!(\n            child.try_wait().unwrap().is_some(),\n            \"Stopped preceded the real descendant's exit\"\n        );\n    }\n    l.stopped(second);\n    let tree = &l.sup.trees[&id];\n    assert!(\n        tree.gone && !tree.released,\n        \"completed tree must remain until client Release\"\n    );\n    assert_eq!(tree.raw_handles(), (None, process));\n    assert!(\n        handle_information(process).is_ok(),\n        \"exited root's original PROCESS handle must stay pinned\"\n    );\n    // SAFETY: query the original root handle, proven valid above; no additional handle pins the pid.\n    assert_eq!(unsafe { GetProcessId(process) }, pid);\n    // SAFETY: poll the same valid process handle; the real OS, not Tree::exit, confirms root exit.\n    assert_eq!(unsafe { WaitForSingleObject(process, 0) }, WAIT_OBJECT_0);\n\n    let listed = l.request(|req| Msg::List { req, id });\n    assert_eq!(\n        l.until(|m| matches!(m, Msg::Processes { req, .. } if *req == listed)).1,\n        Msg::Processes {\n            req: listed,\n            id,\n            list: Vec::new()\n        }\n    );\n    let again = l.stop(id, 0);\n    l.stopped(again); // idempotent after the owned Job has closed\n    assert_closed(job, \"idempotent Stop must not recreate the Job\");\n    assert!(handle_information(process).is_ok());\n\n    let released = l.request(|req| Msg::Release { req, id });\n    assert_eq!(\n        l.until(|m| matches!(m, Msg::Ack { req, .. } if *req == released)).1,\n        Msg::Ack {\n            req: released,\n            id,\n            result: Ack::Ok\n        }\n    );\n    l.sup.enforce(Instant::now()); // production retain path drops the released, gone record\n    assert!(!l.sup.trees.contains_key(&id));\n    assert_closed(process, \"Release must close the original root PROCESS pin\");"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/src/windows/tests/members.rs",
+    "git_blob_sha": "295e9e10893ffcace6bbfc729e017e5fa75fb23e",
+    "source_sha256": "1e0cc3b6c1c7eecfe2fa9373dfec213291f13b443976efdcb16d088d4b4b185c",
+    "source_bytes": 2623,
+    "line_count": 73,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Specify member inventory filtering and completion-port departure proof outside the owner loop.",
+    "behavior": [
+      "Assigns one paused process to a Job and leaves an outsider alive; inventory must retain only the live member, omit an exited PID, then become empty after member termination.",
+      "Requires NEW_PROCESS notification to record a member without polling, injects an outsider PID as a reuse stand-in and observes the flush-marker Pending phase.",
+      "Checks a live member blocks proof, then termination and wait allow Gone while the outsider stays alive."
+    ],
+    "contracts": [
+      "An outsider PID is a deterministic model of reuse; no actual numeric PID recycling is forced."
+    ],
+    "dependencies": [
+      "inventory::of and Members::prove; job::create/terminate; Looped test utilities create cmd.exe pause children."
+    ],
+    "failures_or_limits": [
+      "The test deliberately calls prove while the Job is live to exercise Pending, unlike the production empty-Job precondition. It does not validate the owner fallback deadline or full pipe protocol and was not run."
+    ],
+    "evidence": [
+      {
+        "start_line": 15,
+        "end_line": 38,
+        "quote": "#[test]\nfn list_keeps_live_members_and_leaves_out_pids_outside_the_job_or_gone() {\n    let job = job::create().unwrap();\n    let (mut member, mut outsider) = (pause(), pause());\n    assign(&job, &member);\n    let gone = {\n        let mut c = Command::new(cmd_exe()).args([\"/d\", \"/c\", \"exit\"]).spawn().unwrap();\n        c.wait().unwrap();\n        c.id()\n    };\n    let list = inventory::of(&job, &[member.id(), outsider.id(), gone]).unwrap();\n    assert_eq!(\n        list,\n        [ProcEntry {\n            pid: member.id(),\n            ppid: None,\n            name: Some(\"cmd.exe\".into())\n        }]\n    );\n    job::terminate(&job);\n    member.wait().unwrap();\n    assert_eq!(inventory::of(&job, &[member.id()]).unwrap(), []);\n    outsider.kill().unwrap();\n    outsider.wait().unwrap();"
+      },
+      {
+        "start_line": 41,
+        "end_line": 72,
+        "quote": "#[test]\nfn members_are_recorded_as_they_start_and_proven_gone_only_once_exited() {\n    let inbox = Arc::new(Inbox::default());\n    let members = Members::start(&inbox).unwrap();\n    let job = job::create().unwrap();\n    members.watch(7, &job).unwrap();\n    let (mut member, mut outsider) = (pause(), pause());\n    assign(&job, &member);\n    // From the completion port, with no poll.\n    assert!(until(|| members.recorded(7).contains(&member.id())));\n    // A recorded pid that names a live process outside the Job (a reused pid) never blocks the proof.\n    members.insert(7, outsider.id());\n    assert!(\n        matches!(members.prove(7, &job), Proof::Pending(_)),\n        \"the flush marker goes out first\"\n    );\n    match inbox.next(false, Some(Instant::now() + Duration::from_secs(10))) {\n        Some(Item::Event(Event::Settle { id: 7 })) => {}\n        other => panic!(\"{other:?}\"),\n    }\n    let live = members.prove(7, &job);\n    assert_eq!(\n        live,\n        Proof::Pending(format!(\"pid {} is still exiting\", member.id())),\n        \"a live member blocks it\"\n    );\n    job::terminate(&job);\n    member.wait().unwrap();\n    assert_eq!(members.prove(7, &job), Proof::Gone);\n    assert!(outsider.try_wait().unwrap().is_none(), \"the outsider is untouched\");\n    outsider.kill().unwrap();\n    outsider.wait().unwrap();"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/src/windows/tests/mod.rs",
+    "git_blob_sha": "defc022cfcc336060747f61ebbe1cd0b745f7e9a",
+    "source_sha256": "0cfa1d9ba7102ca70e1e952a8d3730595eb7516d4ce8d2418d287e6b6bfc6504",
+    "source_bytes": 13403,
+    "line_count": 371,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Exercise owner-loop edge states that end-to-end Windows tests cannot reliably force.",
+    "behavior": [
+      "Drives Supervisor directly with encoded reply capture and actual contained cmd.exe children, retaining host pipe ends until a case releases them.",
+      "Fills 1024 reply slots with an empty Inbox, then requires writer progress to wake request admission.",
+      "Blinds a member probe or suppresses a NEW_PROCESS notification and requires Stopped between 900 ms and two seconds plus the corresponding diagnostic.",
+      "Fills or breaks stderr while checking another tree stop remains timely, and lowers the tree cap to require an I/O failure plus EOF on the refused transferred stdout."
+    ],
+    "contracts": [
+      "The fixture owner loop uses production step/enforce paths and native children, but bypasses the named-pipe transport."
+    ],
+    "dependencies": [
+      "Supervisor, Members test hooks, Inbox/Outbox, Diag and job_lifetime/members subtests."
+    ],
+    "failures_or_limits": [
+      "Timing windows are assertions for a future Windows run; no performance or passing status is established here. Thread/liveness setup is bounded by ten-second helpers."
+    ],
+    "evidence": [
+      {
+        "start_line": 216,
+        "end_line": 251,
+        "quote": "#[test]\nfn a_full_reply_budget_with_an_empty_inbox_recovers_when_the_writer_drains() {\n    let Looped {\n        mut sup, inbox, out, ..\n    } = Looped::new();\n    // Nobody writes: MAX_REPLIES answered requests fill the reply budget, and the inbox is empty.\n    for req in 0..MAX_REPLIES as u64 {\n        assert!(inbox.request(Msg::Go { req, id: 7 }));\n        assert!(sup.step().is_none());\n    }\n    assert_eq!(out.len(), MAX_REPLIES);\n    std::thread::spawn(move || {\n        loop {\n            let _ = sup.step();\n        }\n    });\n    assert!(until(|| inbox.owner_waiting()), \"the owner never blocked\");\n    // A request arrives while nothing can be admitted; then the writer drains everything.\n    assert!(inbox.request(Msg::Go { req: 9999, id: 7 }));\n    assert!(out.take().is_some());\n    out.written();\n    inbox.progress();\n    assert!(\n        until(|| out.len() == 1),\n        \"the owner never admitted the request after the writer drained\"\n    );\n    let frame = out.take().unwrap();\n    let reply = omni_proto::decode(&frame).unwrap().unwrap().0;\n    assert_eq!(\n        reply,\n        Msg::Ack {\n            req: 9999,\n            id: 7,\n            result: Ack::Unknown\n        }\n    );"
+      },
+      {
+        "start_line": 254,
+        "end_line": 293,
+        "quote": "/// `Stopped` for a tree whose Job emptied at `emptied` came out at `at`: through the 1 s fallback.\nfn through_the_fallback(emptied: Instant, at: Instant) {\n    let took = at - emptied;\n    assert!(\n        took >= Duration::from_millis(900),\n        \"Stopped came before the bound: {took:?}\"\n    );\n    assert!(took < Duration::from_secs(2), \"Stopped came late: {took:?}\");\n}\n\n#[test]\nfn a_member_that_cannot_be_inspected_holds_stopped_back_one_second_at_most() {\n    let mut l = Looped::new();\n    let (id, pid) = l.spawn(&[\"exit\", \"0\"], false);\n    // Only this test steps the loop, so nothing settles before the root's probe is made to fail.\n    l.members.blind(pid);\n    let emptied = l.exited(id); // the root was the only member: its exit empties the Job\n    let req = l.stop(id, 0);\n    through_the_fallback(emptied, l.stopped(req));\n    assert!(\n        l.diag.queued().iter().any(|d| d.contains(\"cannot be inspected\")),\n        \"{:?}\",\n        l.diag.queued()\n    );\n}\n\n#[test]\nfn a_lost_job_notification_sends_stopped_through_the_fallback_and_says_so() {\n    let mut l = Looped::new();\n    l.members.suppress_next(); // the root's NEW_PROCESS; the flush marker still works\n    let (id, _) = l.spawn(&[\"exit\", \"0\"], false);\n    let emptied = l.exited(id);\n    let req = l.stop(id, 0);\n    through_the_fallback(emptied, l.stopped(req));\n    assert!(\n        l.diag.queued().iter().any(|d| d.contains(\"lost job notification\")),\n        \"{:?}\",\n        l.diag.queued()\n    );\n}"
+      },
+      {
+        "start_line": 295,
+        "end_line": 327,
+        "quote": "#[test]\nfn a_stderr_that_blocks_or_fails_holds_back_neither_stopped_nor_another_trees_deadline() {\n    let (full, _reader) = full_pipe();\n    let broken = File::from(pipe().1); // its read end is closed at once\n    for (case, sink) in [(\"full\", full), (\"broken\", broken)] {\n        let mut l = Looped::new();\n        l.diag.start(sink).unwrap();\n        // Lines ahead of the fallback's: the drain thread is stuck on them (full) or failing (broken).\n        for i in 0..100 {\n            l.diag.report(format!(\"filler {i}\"));\n        }\n        let (a, a_pid) = l.spawn(&[\"exit\", \"0\"], false);\n        l.members.blind(a_pid);\n        let (b, _) = l.spawn(&[\"pause\"], true); // alive until stopped\n        let emptied = l.exited(a);\n        let (stop_b, asked) = (l.stop(b, 300), Instant::now());\n        let stop_a = l.stop(a, 0);\n        let b_at = l.stopped(stop_b);\n        assert!(\n            b_at - asked < Duration::from_secs(1),\n            \"{case}: a deadline was held back: {:?}\",\n            b_at - asked\n        );\n        through_the_fallback(emptied, l.stopped(stop_a));\n        if case == \"full\" {\n            // The drain is stuck on its first line: the queue stays at its bound, the rest were dropped.\n            assert_eq!(\n                l.diag.queued().len(),\n                diag::CAPACITY,\n                \"the drain thread was not blocked\"\n            );\n        }\n    }"
+      },
+      {
+        "start_line": 330,
+        "end_line": 369,
+        "quote": "#[test]\nfn a_spawn_over_the_tree_cap_is_refused_and_its_handles_are_closed() {\n    let mut l = Looped::new();\n    l.sup.max_trees = 1;\n    l.spawn(&[\"exit\", \"0\"], false);\n    let (r, w) = pipe();\n    let me = cmd_exe().into_os_string().into_encoded_bytes();\n    let req = l.request(|req| {\n        Msg::Spawn(Spawn {\n            req,\n            program: me.clone(),\n            argv: vec![me],\n            env: Vec::new(),\n            cwd: b\"C:\\\\\".to_vec(),\n            pty: None,\n            stdin: Slot::Null,\n            stderr: Slot::Merge,\n            grace_ms: 0,\n            handles: [0, w.into_raw_handle() as u64, 0],\n            verbatim: None,\n        })\n    });\n    match l\n        .until(|m| matches!(m, Msg::SpawnFailed { req: r, .. } | Msg::Spawned { req: r, .. } if *r == req))\n        .1\n    {\n        Msg::SpawnFailed {\n            code: FailCode::Io,\n            msg,\n            ..\n        } => assert!(msg.contains(\"limit of 1 trees\"), \"{msg}\"),\n        other => panic!(\"the cap did not hold: {other:?}\"),\n    }\n    // The refused Spawn's stdout was closed: its read end reaches EOF at once.\n    let (tx, rx) = std::sync::mpsc::channel();\n    let mut refused = File::from(r);\n    std::thread::spawn(move || tx.send(refused.read_to_end(&mut Vec::new()).map(|n| n == 0)));\n    assert!(\n        rx.recv_timeout(Duration::from_secs(10)).unwrap().unwrap(),\n        \"the refused handle was kept\""
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/src/windows/tree.rs",
+    "git_blob_sha": "8ed49805ebf5248ae97df419a7889e622ba6121a",
+    "source_sha256": "dc0e46bd0a4efbf1f273b2a11743a71bc921da79eed66cd9d2da6f0627161f4c",
+    "source_bytes": 8786,
+    "line_count": 238,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Manage one Windows tree from root/Job ownership through shared stopping, settlement and Release.",
+    "behavior": [
+      "Pins the root PID with its process handle; concurrent Stops accumulate waiters and keep the earliest deadline, with grace zero forcing immediately.",
+      "Graceful pipe stop sends CTRL_BREAK to the pinned root group; terminal stop or root exit closes ConPTY asynchronously. At deadline and each unsettled forced poll, Job termination is attempted.",
+      "Gone requires root exit and a confirmed zero active count, then either full member proof or one second of unresolved proof with a diagnostic; it closes the owned Job before returning Stop waiters.",
+      "Gone List is empty; PTY resize requires a live terminal; the process pin survives until the released tree record is dropped."
+    ],
+    "contracts": [
+      "Root exit is distinct from tree-gone; unknown Job count does not complete normal settlement."
+    ],
+    "dependencies": [
+      "job.rs kill/count; members.rs proof; inventory.rs List; pty_windows.rs nonblocking close; mod.rs sends replies and drops released records."
+    ],
+    "failures_or_limits": [
+      "Stopped can follow an unproven Pending/Unknown member result after the bound, so it is not always a per-process signalled-handle proof. exit_code ignores GetExitCodeProcess failure and then returns its initialized zero value."
+    ],
+    "evidence": [
+      {
+        "start_line": 75,
+        "end_line": 112,
+        "quote": "    /// Starts a stop or joins the one in progress; the earliest deadline wins. `grace_ms` 0 forces at once.\n    /// `now` is when the request was received.\n    pub(super) fn stop(&mut self, waiter: Option<u64>, grace_ms: u32, now: Instant) {\n        if self.gone {\n            return;\n        }\n        let deadline = now + Duration::from_millis(grace_ms.into());\n        match &mut self.stop {\n            Some(s) => {\n                s.waiters.extend(waiter);\n                s.deadline = s.deadline.min(deadline);\n            }\n            None => {\n                self.stop = Some(Stopping {\n                    waiters: waiter.into_iter().collect(),\n                    deadline,\n                    forced: false,\n                });\n                if grace_ms > 0 {\n                    self.graceful(deadline);\n                }\n            }\n        }\n        self.enforce(now);\n    }\n\n    /// Forces the tree once its deadline has passed (`settle` repeats the pass until the Job is empty).\n    pub(super) fn enforce(&mut self, now: Instant) {\n        if self.gone {\n            return;\n        }\n        if let Some(s) = self.stop.as_mut().filter(|s| !s.forced && now >= s.deadline) {\n            s.forced = true;\n            if let Some(job) = &self.job {\n                job::terminate(job);\n            }\n            self.close_pty(now);\n        }"
+      },
+      {
+        "start_line": 126,
+        "end_line": 158,
+        "quote": "    /// Gone = the root exited, the Job has no live member (an unknown count is not zero), and every process\n    /// that ever joined it is proven gone (`Members::prove`), or `PROOF_BOUND` has passed since the Job was\n    /// first seen empty (then one diagnostic line says why). Closes the owned Job before returning the\n    /// `Stop` waiters to answer, once; the root's pid pin stays until the record is released and dropped.\n    /// While a forced stop's Job still has members, each call repeats the forced pass.\n    pub(super) fn settle(&mut self, members: &Members, diag: &Diag, now: Instant) -> Option<Vec<u64>> {\n        if self.gone {\n            return None;\n        }\n        // A missing handle on a live tree cannot establish an empty Job or complete its proof.\n        let job = self.job.as_ref()?;\n        let active = job::active(job);\n        if active != Some(0) && self.stop.as_ref().is_some_and(|s| s.forced) {\n            // Forced means until the Job is empty, as SIGKILL until the session is empty on Unix: what a pass\n            // left alive (it failed, or a process was still joining the Job while it ran) meets the next one.\n            job::terminate(job);\n        }\n        if self.exit.is_none() || active != Some(0) {\n            return None;\n        }\n        let since = *self.empty_since.get_or_insert(now);\n        match members.prove(self.id, job) {\n            Proof::Gone => {}\n            Proof::Pending(why) | Proof::Unknown(why) if now >= since + PROOF_BOUND => diag.report(format!(\n                \"tree {} reported gone {} ms after its Job emptied, unproven: {why}\",\n                self.id,\n                now.duration_since(since).as_millis()\n            )),\n            _ => return None,\n        }\n        self.close_job();\n        self.gone = true;\n        Some(self.stop.take().map(|s| s.waiters).unwrap_or_default())"
+      },
+      {
+        "start_line": 178,
+        "end_line": 204,
+        "quote": "    pub(super) fn resize(&self, cols: u16, rows: u16) -> Ack {\n        match &self.pty {\n            Some(pty) if self.exit.is_none() => match pty.resize(cols, rows) {\n                Ok(()) => Ack::Ok,\n                Err(_) => Ack::Error,\n            },\n            _ => Ack::Closed,\n        }\n    }\n\n    /// Pipe root: CTRL_BREAK to its console process group (it was created with `CREATE_NEW_PROCESS_GROUP`\n    /// on the supervisor's own console, so the host never sees it). Terminal root: hang up the terminal.\n    /// Best effort; the deadline forces the rest.\n    fn graceful(&mut self, deadline: Instant) {\n        if self.pty.is_some() {\n            self.close_pty(deadline);\n        } else {\n            // SAFETY: a plain call; the group id is the pinned root pid.\n            unsafe { GenerateConsoleCtrlEvent(CTRL_BREAK_EVENT, self.pid) };\n        }\n    }\n\n    fn close_pty(&mut self, deadline: Instant) {\n        if let Some(pty) = self.pty.take() {\n            pty.close(deadline);\n        }\n    }"
+      },
+      {
+        "start_line": 232,
+        "end_line": 237,
+        "quote": "/// The exit code of a process that has exited.\npub(super) fn exit_code(process: &OwnedHandle) -> u32 {\n    let mut code = 0;\n    // SAFETY: a process handle with query access; on failure `code` stays 0.\n    unsafe { windows_sys::Win32::System::Threading::GetExitCodeProcess(process.as_raw_handle(), &mut code) };\n    code"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  }
+]

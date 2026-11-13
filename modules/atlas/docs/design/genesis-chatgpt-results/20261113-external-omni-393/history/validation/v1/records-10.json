@@ -1,0 +1,689 @@
+[
+  {
+    "path": "native/omni/qa/src/rust/agent.rs",
+    "git_blob_sha": "33ca4afbfec21fca79a83888a56fc148a98c692e",
+    "source_sha256": "57b66c20b46feaf6ddd500fda49901ef4da17a8364dc8e367ac19e32358a82ca",
+    "source_bytes": 4062,
+    "line_count": 110,
+    "disposition": "analyzed",
+    "contracts": [
+      "Task bounds are plan timeout plus 10 seconds; cwd refers to the pinned cache or isolated temporary project."
+    ],
+    "dependencies": [
+      "workloads/agent.json supplies commands; arm.rs runs them; Runner performs K1/K2."
+    ],
+    "failures_or_limits": [
+      "The fixture is trusted: empty commands or zero cancellation divisors can reach modulo-by-zero before intended error handling; cancellation timing is deterministic, not random."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "implementation",
+    "purpose": "Runs the Rust QA-E command loop with deterministic cancellation and isolated temporary npm projects.",
+    "behavior": [
+      "Loads shared agent.json, cycles commands for the configured quick/full total and chunks by concurrency with a minimum of one.",
+      "Every cancelEvery-th command gets a cancellation delay from wrapping i*2654435761 modulo 2^32 and cancelWithinMs; uncancelled commands must succeed, cancelled omni commands may succeed or abort.",
+      "@tmp commands get a fresh package.json and directories are removed after their batch."
+    ],
+    "evidence": [
+      {
+        "start_line": 60,
+        "end_line": 64,
+        "quote": "            let cancelled = i % plan.cancel_every == plan.cancel_every - 1;\n            if cancelled {\n                spec.cancel_after = Some(Duration::from_millis(spread(i) % plan.cancel_within_ms));\n            }\n            let arm = runner.arm;"
+      },
+      {
+        "start_line": 100,
+        "end_line": 102,
+        "quote": "pub fn spread(i: u64) -> u64 {\n    i.wrapping_mul(2_654_435_761) % (1 << 32)\n}"
+      },
+      {
+        "start_line": 39,
+        "end_line": 47,
+        "quote": "    for chunk in indexes.chunks(plan.concurrency.max(1)) {\n        let mut tasks = Vec::new();\n        let mut scratch = Vec::new();\n        for &i in chunk {\n            let Some(cmd) = usize::try_from(i)\n                .ok()\n                .and_then(|i| plan.commands.get(i % plan.commands.len()))\n            else {\n                return Err(\"agent.json lists no commands\".into());"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/src/rust/arm.rs",
+    "git_blob_sha": "95fbee1aa1ca2ceed508a2ea4e03478187e0d905",
+    "source_sha256": "f803f1462b50f0e5add8d9d173145776be409250931fedb77d3deefbaa73df67",
+    "source_bytes": 9850,
+    "line_count": 349,
+    "disposition": "analyzed",
+    "contracts": [
+      "Omni pipe/PTY child variants dereference the same Child surface; stdout/stderr are combined only for textual QA checks."
+    ],
+    "dependencies": [
+      "stdlib.rs implements comparison behavior; seen.rs filters terminal escapes; hugr_omni is the library under observation."
+    ],
+    "failures_or_limits": [
+      "The local How mapping covers exit/signal/killed/timeout/aborted plus output limit; memory-exceeded workloads are not represented.",
+      "Scheduled cancellation tasks are not explicitly cancelled when an earlier run completes."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "implementation",
+    "purpose": "Provides the Rust QA process abstraction over omni and std arms.",
+    "behavior": [
+      "Spec carries program/args/cwd/env, timeout, two-second default grace, input, cancel timing, stdin and output limits.",
+      "omni_run requests bytes, schedules CancellationToken, preserves ABORTED/OUTPUT_LIMIT partial results and maps process reasons into QA How.",
+      "spawn captures pid/window and output; PTY uses 100x30 and missing program becomes None; Proc supports bounded marker reads, rest, wait, writes and timed stop."
+    ],
+    "evidence": [
+      {
+        "start_line": 60,
+        "end_line": 77,
+        "quote": "impl Default for Spec {\n    fn default() -> Spec {\n        Spec {\n            program: String::new(),\n            args: Vec::new(),\n            cwd: None,\n            env: Vec::new(),\n            timeout: None,\n            grace: Duration::from_secs(2),\n            input: None,\n            cancel_after: None,\n            stdin_pipe: false,\n            max_output: None,\n            pty: false,\n        }\n    }\n}\n"
+      },
+      {
+        "start_line": 188,
+        "end_line": 191,
+        "quote": "            (ErrorCode::Aborted, Some(r)) => (How::Aborted, r.clone()),\n            (ErrorCode::OutputLimit, Some(r)) => (How::Limit, r.clone()),\n            _ => return Err(e.to_string()),\n        },"
+      },
+      {
+        "start_line": 323,
+        "end_line": 332,
+        "quote": "    pub async fn stop(&mut self, grace: Duration) -> Result<Duration, String> {\n        let t0 = Instant::now();\n        match self {\n            Proc::Omni(p) => p.child.stop(Some(grace)).await.map(drop).map_err(|e| e.to_string())?,\n            Proc::Std(p) => p.stop().await?,\n        }\n        Ok(t0.elapsed())\n    }\n\n    /// The root's exit code (`None`: ended by a signal), within `within`."
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/src/rust/arm/seen.rs",
+    "git_blob_sha": "b9f87116c586b8ca4149c1b8a265964c53393b11",
+    "source_sha256": "88724f1be352ae205118548047798a0a9b70893e05f9aa429d18ad0ffe08c0fc",
+    "source_bytes": 1906,
+    "line_count": 65,
+    "disposition": "analyzed",
+    "contracts": [
+      "Input is decoded Rust str; cursor offsets follow valid string boundaries."
+    ],
+    "dependencies": [
+      "arm.rs and stdlib.rs use Seen for shell and streaming assertions."
+    ],
+    "failures_or_limits": [
+      "This is an escape stripper, not a terminal emulator; it retains all accumulated text and has no storage cap, and OSC escape termination accepts any following character."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "implementation",
+    "purpose": "Maintains incremental terminal-stripped output and marker-consumption position.",
+    "behavior": [
+      "A five-state parser removes ESC/CSI/OSC sequences across chunks, ending CSI on @ through ~ and OSC on BEL or ESC plus the next character.",
+      "take advances only past a found marker, rest consumes the remainder and tail returns a bounded Unicode-character suffix for diagnostics."
+    ],
+    "evidence": [
+      {
+        "start_line": 25,
+        "end_line": 44,
+        "quote": "            self.escape = match (&self.escape, c) {\n                (Escape::None, '\\u{1b}') => Escape::Esc,\n                (Escape::None, c) => {\n                    self.text.push(c);\n                    Escape::None\n                }\n                (Escape::Esc, '[') => Escape::Csi,\n                (Escape::Esc, ']') => Escape::Osc,\n                (Escape::Esc, _) => Escape::None,\n                (Escape::Csi, '\\u{40}'..='\\u{7e}') => Escape::None,\n                (Escape::Csi, _) => Escape::Csi,\n                (Escape::Osc, '\\u{7}') => Escape::None,\n                (Escape::Osc, '\\u{1b}') => Escape::OscEsc,\n                (Escape::Osc, _) => Escape::Osc,\n                (Escape::OscEsc, _) => Escape::None,\n            };\n        }\n    }\n\n    pub(super) fn take(&mut self, needle: &str) -> bool {"
+      },
+      {
+        "start_line": 44,
+        "end_line": 54,
+        "quote": "    pub(super) fn take(&mut self, needle: &str) -> bool {\n        match self.text[self.at..].find(needle) {\n            Some(i) => {\n                self.at += i + needle.len();\n                true\n            }\n            None => false,\n        }\n    }\n\n    pub(super) fn rest(&mut self) -> String {"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/src/rust/ask.rs",
+    "git_blob_sha": "2a4f9d8a890923fb1f22aad14cad25cbc4623b54",
+    "source_sha256": "615a0f4311e5070e0944db0fd0ffe2bc7b2546d5910c8c4ea4729d2ffeb84932",
+    "source_bytes": 3096,
+    "line_count": 81,
+    "disposition": "analyzed",
+    "contracts": [
+      "Requests and task records share stdout; oracle responses arrive on stdin."
+    ],
+    "dependencies": [
+      "invoke.rs serves the protocol; runner/mod.rs and perf.rs request ownership/resource observations."
+    ],
+    "failures_or_limits": [
+      "Timed-out requests are not removed from the waiting map until a reply eventually arrives; repeated missing replies can retain entries for runner lifetime."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "implementation",
+    "purpose": "Implements Rust runner requests to the orchestrator's independent oracle.",
+    "behavior": [
+      "A stdin reader parses JSON replies by id and resolves oneshot senders; malformed/no-id lines are ignored.",
+      "Requests allocate atomic ids, print JSON to stdout and wait at most 90 seconds; check/usage decode Found/HostUsage while arm emits a notification."
+    ],
+    "evidence": [
+      {
+        "start_line": 16,
+        "end_line": 18,
+        "quote": "const ANSWER: Duration = Duration::from_secs(90);\n\ntype Waiting = Arc<Mutex<HashMap<u64, oneshot::Sender<Result<Value, String>>>>>;"
+      },
+      {
+        "start_line": 60,
+        "end_line": 65,
+        "quote": "        match tokio::time::timeout(ANSWER, rx).await {\n            Ok(Ok(result)) => result,\n            _ => Err(format!(\"the oracle did not answer within {ANSWER:?}\")),\n        }\n    }\n"
+      },
+      {
+        "start_line": 40,
+        "end_line": 43,
+        "quote": "                if let Some(tx) = answers.lock().ok().and_then(|mut w| w.remove(&id)) {\n                    let _ = tx.send(result);\n                }\n            }"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/src/rust/misbehave.rs",
+    "git_blob_sha": "d6374c9f86fc84f3f443a9f37a160aa90623953e",
+    "source_sha256": "e48b620964cd6e86485628c0885ceddbf67a92069bfbce0ce19adfa11e9a1421",
+    "source_bytes": 8787,
+    "line_count": 223,
+    "disposition": "analyzed",
+    "contracts": [
+      "Omni daemon/editor must end with root Exit; flood requires exact alphabet bytes via lost and line output exact numbered text.",
+      "Git setup disables global/system config and supplies a local qa identity."
+    ],
+    "dependencies": [
+      "Runner supplies K1/K2; arm.rs supplies process operations; omni-fixture supplies hostile actors."
+    ],
+    "failures_or_limits": [
+      "Generic outer bound is 13.5 seconds while flood/line internals allow 60 seconds; sync Git initialization is outside a separate tool deadline."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "implementation",
+    "purpose": "Defines Rust QA-D adversarial workloads and output assertions.",
+    "behavior": [
+      "Runs daemon-with-held-output, three-process resistant tree, 32-MiB output with 64-MiB limit, 100000 streamed lines, isolated Git editor and answered stdin prompt.",
+      "Uses 3-second timeout, 500-ms grace and 10-second slack for the generic task bound; tree markers synchronize before stop.",
+      "A hold=2000 tree stopped beside sleep=4000 exposes leftovers to immediate per-task K1 checks; keep preserves stopped Child until observation."
+    ],
+    "evidence": [
+      {
+        "start_line": 11,
+        "end_line": 19,
+        "quote": "const TIMEOUT: Duration = Duration::from_secs(3);\nconst GRACE: Duration = Duration::from_millis(500);\n/// K2 bound beyond the task's own limits.\nconst SLACK: Duration = Duration::from_secs(10);\n/// 32 MiB, over the 16 MiB default `maxOutputBytes`.\nconst FLOOD: usize = 32 << 20;\nconst LINES: usize = 100_000;\n\npub async fn all(runner: &mut Runner) -> Result<(), String> {"
+      },
+      {
+        "start_line": 32,
+        "end_line": 42,
+        "quote": "            let bound = TIMEOUT + GRACE + SLACK;\n            runner\n                .task(\n                    \"QA-D\",\n                    Task {\n                        name: name.into(),\n                        ctx,\n                        bound,\n                        body,\n                    },\n                )"
+      },
+      {
+        "start_line": 59,
+        "end_line": 67,
+        "quote": "            let mut proc = arm::spawn(arm, ctx.fixture(&[\"hold=2000\", \"ready\", \"hang\"]), &ctx)?;\n            proc.expect(\"READY\", Duration::from_secs(10)).await?;\n            let took = proc.stop(GRACE).await?;\n            Ok(Outcome {\n                stop: Some((took, GRACE)),\n                keep: Some(proc),\n                ..Outcome::default()\n            })\n        }"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/src/rust/mod.rs",
+    "git_blob_sha": "091fda98ab96677024957e8b5e1d0724f0089b03",
+    "source_sha256": "f12640a3acbcb259033d49a402d9306e74c228a49ea4017290a379023d8afe76",
+    "source_bytes": 11777,
+    "line_count": 344,
+    "disposition": "analyzed",
+    "contracts": [
+      "own_bound reserves 10 seconds and floors at 5; lost counts substitutions plus absolute length difference, with embedded six-case assertions."
+    ],
+    "dependencies": [
+      "ask.rs provides oracle protocol; setup.rs supplies inputs; workload modules implement actions; record.rs emits data."
+    ],
+    "failures_or_limits": [
+      "Timed-out bodies can continue while oracle observation runs; body.abort occurs afterward. Embedded tests and runtime were not executed."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "implementation",
+    "purpose": "Runs Rust workload hosts with task identity, bounded execution and post-return K1 checks.",
+    "behavior": [
+      "Builds a four-worker tokio runtime, dispatches QA-A–E/K4/K6 and emits end only on success; reported runner errors exit 3 and runtime shutdown waits at most two seconds.",
+      "Ctx tags tasks and captures root spawn windows; Windows omni batches serialize; other tasks run concurrently with individual bounds.",
+      "checked observes K1 before aborting a timed-out task body; successful Outcome.keep children survive until the batch's observations finish, preventing Drop cleanup from hiding failed stop."
+    ],
+    "evidence": [
+      {
+        "start_line": 265,
+        "end_line": 273,
+        "quote": "        Ok(Err(join)) => (Err(format!(\"the task panicked: {join}\")), false),\n        Err(_) => (Err(format!(\"no return within {:?}\", t.bound)), true),\n    };\n    let took = t0.elapsed();\n    let last = left.fetch_sub(1, Ordering::SeqCst) == 1;\n    let found = oracle.check(&t.ctx.probe(), last, batch_since).await;\n    body.abort();\n    (t.name, result, hung, took, found)\n}"
+      },
+      {
+        "start_line": 240,
+        "end_line": 242,
+        "quote": "                    // Only now, with every task of the batch checked, may a kept child go (its drop kills its tree).\n                    drop(outcome.keep);\n                }"
+      },
+      {
+        "start_line": 332,
+        "end_line": 344,
+        "quote": "    fn lost_counts_missing_altered_and_extra_bytes() {\n        for (want, got, n) in [\n            (\"abc\", \"abc\", 0),\n            (\"abc\", \"ab\", 1),\n            (\"abc\", \"\", 3),\n            (\"abc\", \"aXc\", 1),\n            (\"x\", \"xCORRUPTION\", 10),\n            (\"abc\", \"XbcD\", 2),\n        ] {\n            assert_eq!(lost(want.as_bytes(), got.as_bytes()), n, \"want {want:?}, got {got:?}\");\n        }\n    }\n}"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/src/rust/perf.rs",
+    "git_blob_sha": "20fe0a5da1e8088f7c478fc8aaf0b2754342738f",
+    "source_sha256": "071b5d7c477a9090f1084bbddbb97e303682fa7927046ccb6d8c62df42ec0737",
+    "source_bytes": 7563,
+    "line_count": 212,
+    "disposition": "analyzed",
+    "contracts": [
+      "Soak is omni-only and validates expected x output or descendant marker before stop; overhead timeout emits a K2 hung record."
+    ],
+    "dependencies": [
+      "setup.rs supplies sample counts; arm.rs executes actors; ask::Oracle supplies OS usage and cleanup checks."
+    ],
+    "failures_or_limits": [
+      "A timed-out K4 measurement thread is not joined or explicitly cancelled; outer host lifecycle bounds it. Missing supervisor usage is rejected later by KPI verdict logic."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "implementation",
+    "purpose": "Defines Rust K4 alternating latency sampling and K6 bounded soak.",
+    "behavior": [
+      "K4 measures fixture exit=0 on a dedicated thread outside runtime workers, alternates arm order, excludes warmup and records median pid/exit microseconds.",
+      "K6 uses 50 warmups then 1000 tasks alternating plain run, tree spawn/stop and PTY run; individual task limit is 10 seconds and total reserves 20 seconds for K1.",
+      "Resource settling permits three seconds with 100-ms polls; K1 attaches orphan/incomplete/unobserved data to the final record."
+    ],
+    "evidence": [
+      {
+        "start_line": 21,
+        "end_line": 32,
+        "quote": "    std::thread::spawn(move || {\n        let _ = tx.send(measure(&handle, &fixture, n));\n    });\n    let bound = own_bound();\n    let [omni, std] = match tokio::time::timeout(bound, rx).await {\n        Ok(measured) => measured.map_err(|e| e.to_string())??,\n        Err(_) => {\n            hung(\"K4\", \"spawn-exit\", bound).emit();\n            return Ok(());\n        }\n    };\n    for (arm, (mut pid, mut rt)) in [(Arm::Omni, omni), (Arm::Std, std)] {"
+      },
+      {
+        "start_line": 145,
+        "end_line": 145,
+        "quote": "const ONE: Duration = Duration::from_secs(10);"
+      },
+      {
+        "start_line": 160,
+        "end_line": 172,
+        "quote": "    for i in 0..SOAK_WARM {\n        one(i).await?;\n    }\n    let before = oracle.usage().await.map_err(Soak::Failed)?;\n    let t0 = Instant::now();\n    for i in 0..SOAK {\n        one(i).await?;\n    }\n    let took = t0.elapsed();\n    // Pumps and replies of the last tasks may still be closing: give the counts up to 3 s to come back.\n    let settle = Instant::now() + Duration::from_secs(3);\n    let after = loop {\n        let now = oracle.usage().await.map_err(Soak::Failed)?;"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/src/rust/stdlib.rs",
+    "git_blob_sha": "07031d465e2d041781a0ea35106578a97406c9e7",
+    "source_sha256": "ca0785dd3543e420ace41530c6d8cead0b896802147a20ad6d32511db8cabd1d",
+    "source_bytes": 6623,
+    "line_count": 189,
+    "disposition": "analyzed",
+    "contracts": [
+      "No graceful tree shutdown or PTY support is claimed by this baseline; root identities are reported to Ctx."
+    ],
+    "dependencies": [
+      "arm.rs delegates std operations; seen.rs handles marker text; Runner bounds and oracle cleans external leftovers."
+    ],
+    "failures_or_limits": [
+      "Reader errors become truncated/empty data and output storage is unbounded; this comparison intentionally lacks omni guarantees."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "implementation",
+    "purpose": "Implements the intentionally root-only Rust std comparison arm.",
+    "behavior": [
+      "Builds std::process commands with captured pipes, optional input, environment/cwd and a separate Unix process group; Windows npm resolves as npm.cmd.",
+      "run polls every 2 ms, force-kills only the root on timeout/cancel and then waits for both reader threads, exposing descendant-held-pipe hangs.",
+      "Spawned StdProc forwards output through an unbounded channel, strips escapes for markers, writes synchronously and implements stop as root kill plus ten-second wait."
+    ],
+    "evidence": [
+      {
+        "start_line": 17,
+        "end_line": 17,
+        "quote": "const POLL: Duration = Duration::from_millis(2);"
+      },
+      {
+        "start_line": 60,
+        "end_line": 71,
+        "quote": "        if late(spec.timeout) || late(spec.cancel_after) {\n            how = if late(spec.timeout) { How::Timeout } else { How::Aborted };\n            let _ = child.kill();\n            break child.wait().map_err(|e| e.to_string())?;\n        }\n        tokio::time::sleep(POLL).await;\n    };\n    // Like `output()`: the result is complete once both pipes closed, which a surviving descendant can delay.\n    let (out, err) = tokio::task::spawn_blocking(move || (out.join(), err.join()))\n        .await\n        .map_err(|e| e.to_string())?;\n    let signal = exit_signal(&status);"
+      },
+      {
+        "start_line": 172,
+        "end_line": 177,
+        "quote": "    pub async fn stop(&mut self) -> Result<(), String> {\n        let _ = self.child.kill();\n        self.wait(Duration::from_secs(10)).await.map(drop)\n    }\n\n    pub async fn wait(&mut self, within: Duration) -> Result<Option<i64>, String> {"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/src/rust/suites.rs",
+    "git_blob_sha": "001709098254dfffb0c393ae7360ce072e6d0153",
+    "source_sha256": "3fd633bfb67894ffa970aa286e856e0b4bfdf89bdb6d25494b8f2dfcbe5c46db",
+    "source_bytes": 6102,
+    "line_count": 155,
+    "disposition": "analyzed",
+    "contracts": [
+      "Vite task bound is 72 seconds; stopped child remains kept until K1 inspection."
+    ],
+    "dependencies": [
+      "Pinned cache from fetch/setup, arm process surface and Runner record/oracle checks."
+    ],
+    "failures_or_limits": [
+      "TCP connect/write are not individually timed by get; enclosing task/runner limits remain the broader bounds."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "implementation",
+    "purpose": "Defines Rust real-suite and dev-server QA workloads.",
+    "behavior": [
+      "QA-A runs semver cargo test --offline --locked and commander npm test to 180-second completion or 500/3000-ms cuts; whole runs require success markers, and quick omits full std suites.",
+      "Cut runs are judged by K1/K2 because they may finish before cutoff; task bound adds ten seconds.",
+      "QA-B uses distinct loopback port ranges, waits up to 60 seconds for Vite ready, GETs /@vite/client with 20-second read timeout and requires HTTP/1.1 200 before two-second-grace stop."
+    ],
+    "evidence": [
+      {
+        "start_line": 51,
+        "end_line": 59,
+        "quote": "                        // A cut run is judged by K1/K2 only (on a fast machine it can end before its cut).\n                        if whole && (!ran.ok() || !text.contains(passed)) {\n                            eprintln!(\"{task} failed; its whole output:\\n{text}\");\n                            return Err(format!(\n                                \"the suite failed: {:?} {:?}: {}\",\n                                ran.how,\n                                ran.code,\n                                tail(&text)\n                            ));"
+      },
+      {
+        "start_line": 109,
+        "end_line": 117,
+        "quote": "                if !got.starts_with(\"HTTP/1.1 200\") {\n                    return Err(format!(\"the dev server answered {:?}\", tail(&got)));\n                }\n                let took = server.stop(grace).await?;\n                Ok(Outcome {\n                    stop: Some((took, grace)),\n                    keep: Some(server),\n                    ..Outcome::default()\n                })"
+      },
+      {
+        "start_line": 139,
+        "end_line": 145,
+        "quote": "    conn.set_read_timeout(Some(Duration::from_secs(20)))\n        .map_err(|e| e.to_string())?;\n    write!(\n        conn,\n        \"GET {path} HTTP/1.1\\r\\nHost: 127.0.0.1:{port}\\r\\nConnection: close\\r\\n\\r\\n\"\n    )\n    .map_err(|e| e.to_string())?;"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/src/rust/term.rs",
+    "git_blob_sha": "119db62c487af11071bc7db49df7000bf589c9ca",
+    "source_sha256": "47e4b45ee075fa9605ca4ee6e326f06953d1648598642fec81a1ecbb8338c134",
+    "source_bytes": 3281,
+    "line_count": 93,
+    "disposition": "analyzed",
+    "contracts": [
+      "Each interaction step allows 20 seconds; whole shell task bound is eight steps or 160 seconds; PTY dimensions come from arm's 100x30."
+    ],
+    "dependencies": [
+      "workloads/shells.json supplies exact commands/env/markers; arm.rs spawns PTY; Runner records/checks."
+    ],
+    "failures_or_limits": [
+      "Availability skips are observable and still pass through K1 accounting; these definitions were not run on any OS."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "implementation",
+    "purpose": "Drives platform-selected shells/REPLs through omni PTYs.",
+    "behavior": [
+      "Loads shells.json, filters by exact OS and rejects a std arm because the comparison library has no PTY.",
+      "Waits prompt, runs computed output, starts a long command, waits its marker, sends Ctrl-C, requires the prompt again, then exits and requires code zero.",
+      "Missing executable yields an explicit skip; final stop uses one-second grace and keep retains the Child through K1."
+    ],
+    "evidence": [
+      {
+        "start_line": 32,
+        "end_line": 34,
+        "quote": "const STEP: Duration = Duration::from_secs(20);\nconst GRACE: Duration = Duration::from_secs(1);\n"
+      },
+      {
+        "start_line": 70,
+        "end_line": 89,
+        "quote": "                let fixture = ctx.setup.fixture.to_string_lossy();\n                sh.write(&shell.long.replace(\"${FIXTURE}\", &fixture)).await?;\n                sh.expect(&shell.longing, STEP).await?;\n                sh.write(\"\\u{3}\").await?;\n                sh.expect(&shell.prompt, STEP)\n                    .await\n                    .map_err(|e| format!(\"Ctrl-C: {e}\"))?;\n                sh.write(&shell.exit).await?;\n                let code = sh.wait(STEP).await?;\n                sh.stop(GRACE).await?;\n                match code {\n                    Some(0) => Ok(Outcome {\n                        keep: Some(sh),\n                        ..Outcome::default()\n                    }),\n                    code => Err(format!(\"{} exited {code:?}\", shell.name)),\n                }\n            }\n        });\n        let bound = STEP * 8;"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/src/setup.rs",
+    "git_blob_sha": "35f7611a709d868abf4dad88a1dfc2e1c8c4b6c1",
+    "source_sha256": "63d7b7f7ecb96515ce910d2c87dcb3b8a7d4dfdaa821290bc8af1474236e17d8",
+    "source_bytes": 5777,
+    "line_count": 170,
+    "disposition": "analyzed",
+    "contracts": [
+      "Required environment values error when absent; mode values other than full map to quick; test_fixture requires prebuilt fixture in the shared target."
+    ],
+    "dependencies": [
+      "plan.rs creates Setup; Rust/Node runners consume its environment; fetch.rs prepares referenced caches."
+    ],
+    "failures_or_limits": [
+      "Constants are workload declarations, not completed sample counts; caller input is trusted after parsing."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "config",
+    "purpose": "Defines shared QA workload sizing and environment serialization.",
+    "behavior": [
+      "Quick/full use reps 1/3, Vite rounds 2/10 and K4 samples 200/1000; agent commands are 600 only for non-Windows full, otherwise 200.",
+      "K6 is 1000 after 50 warmups and K4 has 30 warmups; Setup exports root/fixture/cache/mode/run/injection plus JSON task env/sizes for Node.",
+      "Task env pins Cargo/npm caches offline, disables npm audit/fund/update notices and sets CI=true plus HUGR_QA_TASK."
+    ],
+    "evidence": [
+      {
+        "start_line": 56,
+        "end_line": 58,
+        "quote": "pub const SOAK: u32 = 1000;\npub const SOAK_WARM: u32 = 50;\npub const K4_WARM: u32 = 30;"
+      },
+      {
+        "start_line": 39,
+        "end_line": 45,
+        "quote": "    pub fn commands(self) -> u32 {\n        match self {\n            Mode::Full if !cfg!(windows) => 600,\n            _ => 200,\n        }\n    }\n"
+      },
+      {
+        "start_line": 141,
+        "end_line": 148,
+        "quote": "            (\"CARGO_NET_OFFLINE\", \"true\".into()),\n            (\"npm_config_cache\", at(\"npm-cache\")),\n            (\"npm_config_offline\", \"true\".into()),\n            (\"npm_config_update_notifier\", \"false\".into()),\n            (\"npm_config_fund\", \"false\".into()),\n            (\"npm_config_audit\", \"false\".into()),\n            (\"CI\", \"true\".into()),\n        ]"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/vite/README.md",
+    "git_blob_sha": "67b1253c0e3951727f660c6040321a2517694bcd",
+    "source_sha256": "c3ae040322f6bb11ade768532073ae7645c8f56549f0d923e91e78b6a5bb31c3",
+    "source_bytes": 989,
+    "line_count": 20,
+    "disposition": "analyzed",
+    "contracts": [
+      "Manifest and lock must be updated together; preparation installs them per OS then workloads run offline."
+    ],
+    "dependencies": [
+      "fetch.rs copies/installs inputs; rust/suites.rs and node/workloads.mjs drive Vite."
+    ],
+    "failures_or_limits": [
+      "The statement that no workflow runs QA is a repository-document claim, not an independently verified CI inventory here."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "doc",
+    "purpose": "Explains the minimal pinned Vite fixture and its consumers.",
+    "behavior": [
+      "Describes only package.json/package-lock.json inputs and no application source.",
+      "QA-B starts dev server, waits readiness and fetches /@vite/client; QA-E runs npm ls against the cached fixture."
+    ],
+    "evidence": [
+      {
+        "start_line": 14,
+        "end_line": 14,
+        "quote": "Both files are inputs, not code. Update the lock together with `package.json`; the harness then runs offline."
+      },
+      {
+        "start_line": 18,
+        "end_line": 18,
+        "quote": "Someone running `qa/run`. No workflow under `.github/workflows` runs the QA harness today."
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/vite/package-lock.json",
+    "git_blob_sha": "a94b3cb4e4e9af34391b4a9052ca29f1e720a8c3",
+    "source_sha256": "e6cdcb0991dcd4b0cdfe3b745271a304ec130d791378faa186d2ac7c9bb0904b",
+    "source_bytes": 34825,
+    "line_count": 1122,
+    "disposition": "analyzed",
+    "contracts": [
+      "Registry namespace is registry.npmjs.org; Vite engine accepts Node18/20/22+, whereas optional lzma declares ^22.20 || ^24.12 || >=25.",
+      "fetch.rs runs npm ci --ignore-scripts, so lifecycle declarations such as esbuild/fsevents install scripts are not executed by that preparation command."
+    ],
+    "dependencies": [
+      "vite/package.json fixes the top-level pin; fetch.rs uses exact package+lock content as stamp."
+    ],
+    "failures_or_limits": [
+      "Every lock entry was read; no dependency implementation, installation compatibility or supply-chain safety was audited."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "lockfile",
+    "purpose": "Pins the npm dependency graph for the Vite workload.",
+    "behavior": [
+      "Lockfile v3 pins qa-vite 0.0.0/Vite 6.4.5, esbuild 0.25.12, Rollup 4.64.0, PostCSS 8.5.28, tinyglobby 0.2.17 and their resolved registry integrity metadata.",
+      "Includes CPU/OS-optional esbuild/Rollup native packages, fsevents 2.3.3 and optional lzma Linux x64 1.5.1; Vite peers are optional."
+    ],
+    "evidence": [
+      {
+        "start_line": 4,
+        "end_line": 12,
+        "quote": "  \"lockfileVersion\": 3,\n  \"requires\": true,\n  \"packages\": {\n    \"\": {\n      \"name\": \"qa-vite\",\n      \"version\": \"0.0.0\",\n      \"devDependencies\": {\n        \"vite\": \"6.4.5\"\n      }"
+      },
+      {
+        "start_line": 1046,
+        "end_line": 1070,
+        "quote": "    \"node_modules/vite\": {\n      \"version\": \"6.4.5\",\n      \"resolved\": \"https://registry.npmjs.org/vite/-/vite-6.4.5.tgz\",\n      \"integrity\": \"sha512-4enwjFfi4IwtEh0w+jPzpLVOFQiPHmmzPxcHXQOyEur47o6u0jE573DmGpjA+7irXoMLYRZD5ZaFUEneS3abPg==\",\n      \"dev\": true,\n      \"license\": \"MIT\",\n      \"dependencies\": {\n        \"esbuild\": \"^0.25.0\",\n        \"fdir\": \"^6.4.4\",\n        \"picomatch\": \"^4.0.2\",\n        \"postcss\": \"^8.5.3\",\n        \"rollup\": \"^4.34.9\",\n        \"tinyglobby\": \"^0.2.13\"\n      },\n      \"bin\": {\n        \"vite\": \"bin/vite.js\"\n      },\n      \"engines\": {\n        \"node\": \"^18.0.0 || ^20.0.0 || >=22.0.0\"\n      },\n      \"funding\": {\n        \"url\": \"https://github.com/vitejs/vite?sponsor=1\"\n      },\n      \"optionalDependencies\": {\n        \"fsevents\": \"~2.3.3\""
+      },
+      {
+        "start_line": 456,
+        "end_line": 473,
+        "quote": "    \"node_modules/@napi-rs/lzma-linux-x64-gnu\": {\n      \"version\": \"1.5.1\",\n      \"resolved\": \"https://registry.npmjs.org/@napi-rs/lzma-linux-x64-gnu/-/lzma-linux-x64-gnu-1.5.1.tgz\",\n      \"integrity\": \"sha512-oTXEIha4SsuXdTA4Iyskj0kpdx2yVXdhd75c2v3xGrHFfVMsbhTPZU/nMPL4sWKo4pBHm3aucLaqGlF696dTyQ==\",\n      \"cpu\": [\n        \"x64\"\n      ],\n      \"dev\": true,\n      \"license\": \"MIT\",\n      \"optional\": true,\n      \"os\": [\n        \"linux\"\n      ],\n      \"engines\": {\n        \"node\": \"^22.20 || ^24.12 || >=25\"\n      }\n    },\n    \"node_modules/@rollup/rollup-android-arm-eabi\": {"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/vite/package.json",
+    "git_blob_sha": "fd04a77c81c6dbbf7f9e9fb1894ea73a8eb91d63",
+    "source_sha256": "edd7d78cb2feec3e1ac8bc47854cdd1ef6aea94af02b36c3fc98756dc14b95b7",
+    "source_bytes": 171,
+    "line_count": 12,
+    "disposition": "analyzed",
+    "contracts": [
+      "No application source, build script or production dependency is declared."
+    ],
+    "dependencies": [
+      "package-lock.json pins transitive packages; QA-B launches npm run dev."
+    ],
+    "failures_or_limits": [
+      "Manifest data does not prove server startup or installation."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "build",
+    "purpose": "Defines the private ESM Vite QA project.",
+    "behavior": [
+      "qa-vite version 0.0.0 is private and type=module.",
+      "The sole script dev invokes vite; the sole dev dependency is exactly Vite 6.4.5."
+    ],
+    "evidence": [
+      {
+        "start_line": 6,
+        "end_line": 12,
+        "quote": "  \"scripts\": {\n    \"dev\": \"vite\"\n  },\n  \"devDependencies\": {\n    \"vite\": \"6.4.5\"\n  }\n}"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/workloads/agent.json",
+    "git_blob_sha": "d750f1c7b67783ebf7310532ae5efc4ce7ff319d",
+    "source_sha256": "eec885f9f752c2c809d895cc3af845d0a0e6a0050a72a38895b4ce45ad25bb27",
+    "source_bytes": 1761,
+    "line_count": 20,
+    "disposition": "analyzed",
+    "contracts": [
+      "Uncancelled commands must succeed; cancelled omni commands may complete normally or abort; runners add 10000-ms slack and Windows omni serializes tasks."
+    ],
+    "dependencies": [
+      "rust/agent.rs and node/workloads.mjs interpret this plan; fetch/setup supply offline package caches."
+    ],
+    "failures_or_limits": [
+      "No OS filter is present; available tools and prepared cache are prerequisites, and source is not execution evidence."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "fixture",
+    "purpose": "Defines the exact QA-E command cycle and cancellation schedule shared by both runners.",
+    "behavior": [
+      "Cycles eleven commands across cached semver/commander/Vite and fresh @tmp npm projects: Git queries, offline Cargo build/test, Node syntax check/one-million-byte output, npm ls and picocolors@1.1.1 install.",
+      "Concurrency=10, timeout=60000 ms; every fourth command cancels at deterministic (i*2654435761 mod 2^32) mod 500 ms."
+    ],
+    "evidence": [
+      {
+        "start_line": 3,
+        "end_line": 6,
+        "quote": "  \"concurrency\": 10,\n  \"timeoutMs\": 60000,\n  \"cancelEvery\": 4,\n  \"cancelWithinMs\": 500,"
+      },
+      {
+        "start_line": 17,
+        "end_line": 18,
+        "quote": "    { \"name\": \"npm-install\", \"cwd\": \"@tmp\", \"program\": \"npm\", \"args\": [\"install\", \"--no-save\", \"--no-package-lock\", \"picocolors@1.1.1\"] },\n    { \"name\": \"node-print\", \"cwd\": \"@tmp\", \"program\": \"node\", \"args\": [\"-e\", \"process.stdout.write('x'.repeat(1000000))\"] }"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/workloads/shells.json",
+    "git_blob_sha": "2f588057b1d33a0a11f105ee48ff1ffe93cfd3ee",
+    "source_sha256": "c16fd18e38092cdb13d9184b71af1cb28d038f7cb9adaede38785dab93ed6861",
+    "source_bytes": 3001,
+    "line_count": 83,
+    "disposition": "analyzed",
+    "contracts": [
+      "Rust/Node drivers require prompt->computed result->prompt->long marker->Ctrl-C->prompt->exit0 with 20000-ms steps and 160000-ms task bound; unavailable executables are explicit skips."
+    ],
+    "dependencies": [
+      "rust/term.rs and node/workloads.mjs consume exact strings; omni-fixture supplies shell foreground marker."
+    ],
+    "failures_or_limits": [
+      "Prompt substring matching verifies the declared interaction, not full terminal rendering; installed shell versions remain external prerequisites."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "fixture",
+    "purpose": "Defines six interactive shell/REPL scripts with anti-echo output markers.",
+    "behavior": [
+      "Bash/zsh apply to Linux/macOS; powershell.exe to Windows; pwsh and Node REPL to all three; Python3 REPL to Linux/macOS.",
+      "Each row supplies startup args/env/prompt, a computed 42QA/QA42 response, a long-command marker, Ctrl-C recovery and a zero-exit command.",
+      "Bash/zsh long actors use escaped fixture bytes to emit 55LONG only after foreground execution; PowerShell/Python sleep 30 seconds and Node loops indefinitely."
+    ],
+    "evidence": [
+      {
+        "start_line": 2,
+        "end_line": 2,
+        "quote": "  \"about\": \"QA-C: interactive programs in a terminal (omni only: neither std::process nor child_process has one). For each: wait for `prompt`, type `say` and see `said`, type `long` (a command that runs 30 s or more) and see `longing`, which it prints once it runs, press Ctrl-C and see the prompt again, type `exit` and see the program exit 0. `said` and `longing` are computed by the program, so the terminal's echo of the typed line never matches them. `${FIXTURE}` is omni-fixture: a shell's long command is a program that prints its marker itself, so Ctrl-C never lands before the shell made it the foreground job. A program the OS does not have is reported as skipped.\","
+      },
+      {
+        "start_line": 5,
+        "end_line": 15,
+        "quote": "      \"name\": \"bash\",\n      \"os\": [\"linux\", \"macos\"],\n      \"program\": \"bash\",\n      \"args\": [\"--norc\", \"--noprofile\", \"-i\"],\n      \"env\": { \"PS1\": \"QA> \" },\n      \"prompt\": \"QA> \",\n      \"say\": \"echo $((40+2))QA\\r\",\n      \"said\": \"42QA\",\n      \"long\": \"\\\"${FIXTURE}\\\" 'out=\\\\x35\\\\x35LONG\\\\n' hang\\r\",\n      \"longing\": \"55LONG\",\n      \"exit\": \"exit 0\\r\""
+      },
+      {
+        "start_line": 57,
+        "end_line": 67,
+        "quote": "      \"name\": \"node-repl\",\n      \"os\": [\"linux\", \"macos\", \"windows\"],\n      \"program\": \"node\",\n      \"args\": [\"-i\"],\n      \"env\": { \"NODE_REPL_HISTORY\": \"\" },\n      \"prompt\": \"> \",\n      \"say\": \"'Q' + 'A' + (40 + 2)\\r\",\n      \"said\": \"QA42\",\n      \"long\": \"console.log('LO' + 'NG'); for (;;) {}\\r\",\n      \"longing\": \"LONG\",\n      \"exit\": \".exit\\r\""
+      }
+    ]
+  }
+]

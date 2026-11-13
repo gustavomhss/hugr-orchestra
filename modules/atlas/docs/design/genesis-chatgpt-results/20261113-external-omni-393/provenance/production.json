@@ -1,0 +1,44 @@
+{
+  "schema": "genesis-external-production-summary/v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "production_state": "COMPLETE_PENDING_INDEPENDENT_REVIEW",
+  "actors": [
+    {
+      "role": "core",
+      "host_task_identity": "/root/omni_core_author",
+      "source_count": 134,
+      "source_bytes": 932528,
+      "statement": "Author reported complete full-blob reading; records and excerpts mechanically bound to captured Git blobs. This is not self semantic approval."
+    },
+    {
+      "role": "validation",
+      "host_task_identity": "/root/omni_validation_author",
+      "source_count": 147,
+      "source_bytes": 753673,
+      "statement": "Author reported complete full-blob reading; records and excerpts mechanically bound to captured Git blobs. This is not self semantic approval."
+    },
+    {
+      "role": "surface",
+      "host_task_identity": "/root/omni_surface_author",
+      "source_count": 112,
+      "source_bytes": 1139526,
+      "statement": "Author reported complete full-blob reading; records and excerpts mechanically bound to captured Git blobs. This is not self semantic approval."
+    }
+  ],
+  "judge_tasks": [
+    "/root/omni_review_courier/omni_j1",
+    "/root/omni_review_courier/omni_j2"
+  ],
+  "review_coordinator": "/root/omni_review_courier",
+  "private_evidence": "Reserved oracle, original dispatch/session captures and private ledgers are not published. Their existence and public digest commitment do not make withheld material publicly reproducible.",
+  "model_diversity": "NOT_ESTABLISHED; separate contexts only",
+  "token_usage": "UNKNOWN",
+  "physical_provider_attempts": "UNKNOWN",
+  "billed_cost": "UNKNOWN",
+  "layers": {
+    "L1": "393 source records produced; independent review in progress",
+    "L2": "Authored drafts only; revalidation/release awaits accepted L1",
+    "L3": "NOT_PRODUCED",
+    "L4": "NOT_PRODUCED"
+  }
+}

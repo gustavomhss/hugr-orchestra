@@ -1,0 +1,189 @@
+[
+  {
+    "path": "native/omni/docs/research/processkit-eval.md",
+    "git_blob_sha": "bb931c13589a4e3dc04b4e985a92fbaca19f67c1",
+    "source_sha256": "e6a211d67bb0db4d2773f2b131e916268d914773e4cb412c0bf8d2948c1c5798",
+    "source_bytes": 25769,
+    "line_count": 398,
+    "disposition": "analyzed",
+    "kind": "doc",
+    "purpose": "Archives the E1 hands-on evaluation of processkit 3.3.4 and its conditional adoption recommendation.",
+    "behavior": [
+      "Reports macOS-native workloads, incomplete Linux process-group runs and only small cgroup smoke trials; Windows and this harness's upstream-suite part were not run.",
+      "Uses independent OS/tag survivor checks with planted orphan controls, operation timeouts, interleaved stdlib comparisons and numbered output.",
+      "Finds descendant-held stdout hangs, a fixed five-second drain outside requested timeout, abrupt-host-death survivors and unbounded slow-reader buffering."
+    ],
+    "contracts": [
+      "Reported KPI results are tied to the named harness/baseline and explicitly distinguish complete, partial and unmeasured cells.",
+      "Adoption recommendation requires missing Windows/upstream evidence and wrapper fixes; draft upstream bug reports were not posted."
+    ],
+    "dependencies": [
+      "spikes/pk-eval historical harness/evidence",
+      "processkit 3.3.4",
+      "G0 decision",
+      "processkit-fit.md separate study"
+    ],
+    "failures_or_limits": [
+      "Host overload, disk exhaustion and harness ENOSPC limited the sample; no KPI came from hosted CI.",
+      "Fit study's separate 244-test claim does not contradict this evaluation's own Part 1 being unrun."
+    ],
+    "gaps": [
+      "Raw cgroup smoke results were transcript-only; no historical measurements were repeated here."
+    ],
+    "inference": [],
+    "evidence": [
+      {
+        "start_line": 15,
+        "end_line": 27,
+        "quote": "| | Status |\n|---|---|\n| **GitHub Actions (the planned evidence source)** | **Blocked.** No job in either run started. Each one was rejected with *\"The job was not started because your account is locked due to a billing issue.\"* The same lock hit the sibling `spike/packaging` run. Runs: [36941339911](https://github.com/HuGR-Labs/hugr-omni/actions/runs/36941339911) and [36943227404](https://github.com/HuGR-Labs/hugr-omni/actions/runs/36943227404). The workflow `.github/workflows/spike-pk-eval.yml` is committed. Once billing is restored, any push to the branch re-runs Part 1 and Part 2 on ubuntu/macos/windows-latest. |\n| **macOS** | Run **natively** and complete. macOS 15.3.2, x86_64 (i7-9750H), backend `Mechanism::ProcessGroup`. Evidence: `spikes/pk-eval/evidence/part2-macos-run{1,2,3}*.txt`. |\n| **Linux** | Run in **Docker Desktop's Linux VM**, not on an `ubuntu-latest` runner. Kernel 6.10.14-linuxkit, cgroup v2, image `rust:1` (Debian), `--init` (tini as subreaper). **Unprivileged container → `ProcessGroup` backend:** W0–W3 done at full iteration counts; the run died partway through W3 when the Docker VM went down (host disk full, §9), so W4–W10 were never reached. **`--privileged --cgroupns=private` → `CgroupV2` backend:** smoke level only (n=3 per case, W0/W1/W2/W8; results in the agent transcript, not saved as a file). |\n| **Windows** | **Not measured.** There is no local Windows host and CI was locked. Every Windows-specific claim below (Job Object, ConPTY, CTRL_BREAK, `.cmd` quoting) is **untested**. |\n| **Part 1 (upstream suite)** | **Not run.** See §2. |\n\nTwo caveats limit the latency numbers (K3, K4). They do not affect the survivor, hang\nor loss counts:\n* The host was a shared laptop under heavy load: load average above 300 from other\n  agents' builds during the runs.\n* Its disk ran full twice (§9)."
+      },
+      {
+        "start_line": 38,
+        "end_line": 46,
+        "quote": "| **K1** survivors after a task (0) | **0** in ≈2,500 teardowns (W1, W3–W7) | **0** in 1,300 teardowns (W1, W3 ×4) | 0 (smoke, 9 trees) | not measured |\n| **K1-host**: owner dies abruptly (0) | **868 of 868** tree processes survive (217/217 trees, 100%) | not measured | 100% with own/group; 3 of 4 per tree with `kill_on_parent_death` (smoke) | not measured (docs claim WholeTree) |\n| K1-host: owner catches the signal and drops (0) | 0 of 160 | – | 0 (smoke) | – |\n| W2 escapees (see §4) | 200/200 escape | 200/200 escape | 0/6 (contained) | not measured |\n| **K2** hangs (0) | **5** (W5.stream: 5 of 5) | 0 (W1–W3 only) | – | – |\n| **K3** p95 minus grace (≤ +500 ms) | **+3,068 ms** (W5.with_timeout). Every other kill/drop/timeout/cancel/graceful case: ≤ +18 ms | ≤ +35 ms (W1–W3) | – | – |\n| **K4** p50 ratio vs `std::process` (≤ 1.25) | **1.002** | not reached | – | – |\n| **K5** bytes/lines lost (0) | **0 / 0** | 0 (W3) | – | – |\n| **K7** host crashes (0) | **0** caused by processkit (13 harness case aborts came from the harness's own `mkdir` hitting ENOSPC; reran) | 0 (run cut short by the Docker VM dying) | – | – |"
+      },
+      {
+        "start_line": 76,
+        "end_line": 98,
+        "quote": "* **Survivors are counted by the OS, never by processkit.** Every helper carries\n  `--tag=<unique>` in argv and passes it on to its descendants. A survivor is a live,\n  non-zombie process found by both of these checks:\n  1. a native liveness probe: Linux `/proc/<pid>/stat`, macOS `sysctl(KERN_PROC_PID)`\n     `p_stat`, Windows `GetExitCodeProcess`;\n  2. a full process-table scan (`sysinfo`) for the tag.\n* **Instrument calibration (W0).** Each run starts a 4-level tree with plain\n  `std::process`, kills only the root, and requires the scan to find exactly 4 and then\n  3 processes, with the root reported dead. It passed in every run (`instrument_ok=true`).\n  * It caught a real instrument bug during development: macOS `proc_pidinfo` reported\n    zombies as alive. Fixed by switching to `sysctl`.\n  * W2 on the ProcessGroup backend is a second positive control: the scan does find\n    escapees.\n* **Hang guard.** Every awaited processkit call runs under `tokio::time::timeout`\n  (30 s unless stated). If the guard expires on an operation that should have\n  finished, that is one K2 hang.\n* **K3** is the p95 of \"stop requested → API returned **and** every tree pid gone (OS\n  view)\", minus the configured grace. For `timeout` cases the clock starts at the\n  deadline.\n* **K4** compares `Command::output_bytes` with `std::process::Command::output`. Runs\n  are interleaved round-robin: 50 warm-up and 500 measured.\n* **K5** compares what arrived with what the child provably wrote: numbered 100-byte\n  lines plus an `END <n>` trailer."
+      },
+      {
+        "start_line": 194,
+        "end_line": 204,
+        "quote": "| variant | returns after (p50 / p95) | BYE captured | grandchild left |\n|---|---|---|---|\n| `output_string()` | **5.0 / 5.07 s** | 20/20 | 0 |\n| `start().wait()` | 5.0 / 5.03 s | n/a | 0 |\n| `stdout_lines()` until the end | **never: 5/5 hangs** (30 s guard; the stream would wait for the grandchild) | yes | 0 after drop |\n| `timeout(2s).output_string()` | **5.0 / 5.07 s**, `timed_out=false` | 20/20 | 0 |\n| `timeout(2s)` + `stdout_lines()` | 2.0 / 2.02 s | 20/20 | 0 |\n\nThe 5 s is a hard-coded constant (`running/mod.rs: PUMP_TEARDOWN = 5s`) and is not\nconfigurable. `Command::timeout` does not bound it. `stdout_lines()` does not apply it\nat all."
+      },
+      {
+        "start_line": 331,
+        "end_line": 356,
+        "quote": "1. **The core promise holds where we could measure it.** Teardown during a task\n   (kill / drop / timeout / cancel / group, including root-already-exited) left 0\n   orphans in about 3,800 OS-counted teardowns on macOS and Linux. p95 was ≤ 35 ms,\n   graceful stops landed within +25 ms of the grace, nothing was lost, and spawn\n   overhead was 1.00× `std`. Building this ourselves would cost months.\n2. **Required fixes, all in our wrapper (no fork):**\n   * Never expose an unbounded `stdout_lines()`: always set `timeout` or\n     `inactivity_timeout` (W5 hang).\n   * Account for the fixed 5 s pipe-drain stall in our latency budget, or report it\n     upstream (W5).\n   * Always set an `OutputBufferPolicy` byte cap (W4 memory).\n   * Always await `RunningProcess` handles before `group.stop()` (zombie footgun).\n3. **Host-death orphans need our own architecture, whichever library we use.** On\n   macOS and Linux nothing kills a tree when a Node host is SIGKILLed, gets an\n   unhandled signal, or calls `process.exit()`. The napi package needs signal and exit\n   hooks that drop handles, plus an out-of-process watchdog/reaper for SIGKILL. On\n   Linux that could use cgroup and `PR_SET_CHILD_SUBREAPER`.\n4. **setsid escape on macOS and Linux without cgroups is an OS limit, not a defect.**\n   Surface `mechanism()` and document it. On Linux, prefer the cgroup backend where\n   delegation exists: it contained 6/6 escapees.\n5. **The verdict is conditional on the Windows run and Part 1, neither of which\n   exists.** Windows is where processkit has the most code: Job Object, ConPTY, and (code\n   reading) a process-global `SetStdHandle` swap during headless ConPTY spawns, which is risky\n   inside a multi-threaded Node host. Re-run the committed CI on windows-latest before\n   committing. If ConPTY hangs or loses output, or W10 shows injection, downgrade to\n   \"do not build on it\" for Windows."
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/docs/research/processkit-fit.md",
+    "git_blob_sha": "0da0d9dcd11e9eb6e6b099cebb542e47adda2389",
+    "source_sha256": "231cdb3b768ffa19baa46da5923887f913afc51b13f15f6469e8efdaf4d551ec",
+    "source_bytes": 40429,
+    "line_count": 406,
+    "disposition": "analyzed",
+    "kind": "doc",
+    "purpose": "Maps processkit 3.3.4 to the proposed Omni contract and estimates the adapter/upstream work before the later own-core decision.",
+    "behavior": [
+      "Labels each claim measured/documented/source/unknown and classifies 24 contract items as one as-is, eighteen adapter, three upstream and two unattainable on some OS.",
+      "Proposes an actor/registry/raw-tee adapter owning output, cause latches, timers, GC and host cleanup; estimates approximately 2000 Rust plus 600 TypeScript lines.",
+      "Records slow-sink silent loss, fixed post-exit drain, PTY job-control escape, consuming control handles and release-churn risks, with unsent upstream proposals."
+    ],
+    "contracts": [
+      "Measured probes are darwin-x64 at v3.3.4; Windows and real host-runtime hazards remain source/unknown claims.",
+      "G0 later selects the owned core; proposed signal hooks/processkit dependency are not baseline architecture."
+    ],
+    "dependencies": [
+      "docs/acceptance.md",
+      "PLAN.md §3",
+      "processkit v3.3.4 source/docs",
+      "G0.md",
+      "ADR-0004 Q8"
+    ],
+    "failures_or_limits": [
+      "Probe code lived in a scratchpad outside this repository; reported 244-test integration run is a distinct historical exercise.",
+      "Early output/kill/truncated terminology differs from the later frozen API."
+    ],
+    "gaps": [
+      "Historical cost estimate and recommendations were not implemented or revalidated by this analysis."
+    ],
+    "inference": [],
+    "evidence": [
+      {
+        "start_line": 5,
+        "end_line": 10,
+        "quote": "> Date: 2026-10-01 · Subject: `processkit` **3.3.4** (tag `v3.3.4` = `ba1a6fe`, crates.io, MIT) ·\n> Upstream `main` is 92 commits / +6.8k lines past that tag and has not been released.\n>\n> **Evidence tags.** **[M]** = measured by us on darwin-x64 (macOS 15.3.2, rustc 1.98.0) against the\n> `v3.3.4` tag. **[D]** = upstream docs. **[S]** = upstream source read at `v3.3.4`. **[?]** = unknown or\n> needs a spike. Links point to the `v3.3.4` tag unless they say `main`."
+      },
+      {
+        "start_line": 18,
+        "end_line": 31,
+        "quote": "**Yes, we can build on it, with an adapter.** processkit gives us the hard OS layer we would\notherwise write ourselves: Job Objects, cgroup v2, process groups, ConPTY/openpty, a race-free\nsuspended spawn, the TERM→grace→KILL ladder and PATHEXT resolution. Its upstream integration suite\npasses in full on our darwin-x64 target (**244/244, including 11 PTY tests, [M]**), even though\nupstream CI never runs that target.\n\nIts I/O and handle model is built for Rust ownership, not for our contract. The adapter therefore\ntakes over output capture, reasons, timers, host exit and GC safety.\n\n**Adapter size: ~2,000 LOC Rust (range 1.6k–2.6k) + ~600 LOC TS.** Add ~250 LOC Rust plus one\nextra shipped binary per target if we want a SIGKILL watchdog sidecar on Unix (optional, §C). If\nupstream declines proposals F1 and F4, add ~500 LOC Rust: we would own the pipes ourselves via\n`to_tokio_command` + `ProcessGroup::spawn`. That path loses the Windows CTRL_BREAK soft tier, and\nPTY would still have to go through processkit."
+      },
+      {
+        "start_line": 45,
+        "end_line": 66,
+        "quote": "2. **Output after the root exits is governed by a fixed 5 s `PUMP_TEARDOWN`, not by our `graceMs`.**\n   - `wait()` and `output_string()` take 5.0 s when a grandchild holds the pipe [M].\n   - Worse, the same bound aborts a pump whose *attached consumer is merely slow*. Result: 24,576 of\n     60,000 bytes delivered and `drain()` still returns `Ok(Exited(0))`. That is **silent output\n     loss** [M].\n   - Capture is line-oriented: a line longer than the byte cap is dropped whole [D]. So we must own\n     byte capture through raw tees.\n\n   Affects K5, C-IO-02, C-IO-04 and C-RUN-01.\n3. **The handle model fights a binding.**\n   - The finishers consume the handle: `wait(self)`, `finish(self)`, `shutdown(self, _)`.\n   - `resize_pty` needs `&mut self`, so it cannot run while a wait is pending.\n   - A cancellation error carries no outcome or output [M].\n   - Precedence is \"cancel wins\", not our \"first event wins\" [D].\n   - Drop is an immediate hard kill [D].\n   - The Windows ConPTY path builds its own `CreateProcessW` command line and skips std's\n     batch-file (BatBadBut) escaping [S].\n   - Unix PTY echo is forced off [S][M].\n\n   So the adapter has to run one actor per child, keep a shared `Arc<ProcessGroup>` for kill, use a\n   liveness-probe workaround for resize, and own timers and reasons. Affects C-SPAWN-02, C-PTY-01,\n   C-PTY-02, C-TMO-02 and C-EXIT-01."
+      },
+      {
+        "start_line": 74,
+        "end_line": 77,
+        "quote": "## A. Fit table (24 items: C-SPAWN-01..C-PTY-04 and C-TS-01, minus C-RS-*)\n\nStatus counts: **Y 1 · A 18 · U 3 · X 2** (one primary status per row; other sub-cases are named in\nthe row)."
+      },
+      {
+        "start_line": 217,
+        "end_line": 239,
+        "quote": "- **Handle shape.** `wait`, `finish`, `drain`, `shutdown` and `output_*` take `self`. `resize_pty`\n  and `start_kill` take `&mut self` [S `public-api.txt#L1583-L1607`]. So the adapter must use\n  **path P**:\n  - one actor task per child that owns `RunningProcess`, with raw tees as the I/O;\n  - a per-child `Arc<ProcessGroup>`, so `stop()` can be called from another task while the actor\n    awaits `drain()`;\n  - for PTY resize, either the `wait_for` liveness loop or F4.\n\n  A shared group + PTY works [M]. Note that on a shared-group handle, upstream's own timeout and\n  cancel reach only the direct child [D], so we run our own timers.\n- **tokio runtime ownership.**\n  - processkit needs a current tokio runtime for `start()` and its internal tasks (pumps, stdin\n    writer, watchdogs). It needs the `process`, `time`, `io-util`, `rt`, `sync`, `fs` and `net`\n    features [S `Cargo.toml`]. napi-rs's `tokio_rt` multi-thread runtime with `enable_all` fits.\n  - The precedent: processkit-py owns exactly one runtime via `pyo3-async-runtimes` and adds a\n    fork guard.\n  - At env teardown we must run `killAll()` *before* the runtime shuts down.\n- **Drop semantics: OK [M].** Dropping a `RunningProcess` on a thread with no runtime does not panic\n  and kills the tree. The no-runtime path is explicitly handled [S `SRC/src/running/mod.rs#L3396`].\n  Drop is always a *hard* kill, which is why the registry owns the handles (GC safety).\n- **Cancellation.** `CancellationToken` (`tokio-util`) is re-exported. We barely use it: only the\n  \"already aborted\" fast path. Abort, kill and timeout go through `group.stop` so we keep control of\n  precedence and outcome."
+      },
+      {
+        "start_line": 369,
+        "end_line": 406,
+        "quote": "All runs: darwin-x64 (macOS 15.3.2), rustc 1.98.0, processkit at tag `v3.3.4`, features `pty`,\n`process-control`. Throwaway probe code lived in the session scratchpad; none is in this repo.\n\n- **Upstream suite.** `cargo test --features pty,process-control --test integration --\n  --include-ignored` → **244 passed, 0 failed, 0 ignored** (11 `pty::` tests, 2 `parent_death::`).\n- **E1.** Compile-time `Send + 'static` asserts on the futures listed in §D → OK.\n- **E2.** Drop of a `RunningProcess` on a thread with no runtime → no panic; child dead.\n- **E3.** `sh -c 'sleep 30 & echo $!; …'` → `output_string` 5.012 s, `wait` 5.008 s; grandchild dead\n  after drop.\n- **E4.** Program resolution:\n  - `env_remove(PATH)` + `ls` → **ran (Exited 0)**, while `resolve_program` → NotFound.\n  - `env(\"PATH\",\"\")` → NotFound \"`ls` not found on PATH\".\n  - File without exec bit → PermissionDenied.\n  - Bad cwd → Spawn \"working directory does not exist\".\n- **E5 / E5b / E5c.** Kill and cancel:\n  - Shared-group `stop(2s)`: cooperative child 20.6 ms → Signalled 15; TERM-ignorer 2.000 s →\n    Signalled 9.\n  - `shutdown(1s)` on a TERM-ignorer 1.002 s.\n  - `cancel_on` + `cancel_grace` → `Err(Cancelled)` with no outcome or output.\n- **E7.** Exit 0/1/42/255 → `Exited(n)`.\n- **E8.** A setsid escapee (fork, setsid, exec sleep; drop after 500 ms) is **alive** after an\n  own-group drop.\n- **E9.** Raw tee chunks `[(7.5 ms,[97,255]), (1.01 s,[98])]`.\n- **E12 / E12b.** PTY `sleep 30` + `\\x03` → `Signalled(2)` in 0.4 ms; write after exit → `EIO`;\n  `resize_pty` after exit → `Unsupported`.\n- **host-death.** Host starts `sh -c 'sleep 300 & …; exec sleep 300'` then:\n  - return or panic → both dead;\n  - exit, sigint, sigterm, abort, sigkill, sigkill+pdeath → **both alive**.\n- **rootgone.** Root exits; a TERM-ignoring great-grandchild is killed by `stop(2s)` in 2.10 s; a\n  second `stop` takes 14 µs.\n- **slow-sink.** 60,000 B, child exits at once, sink takes 1 KiB per 200 ms → `drain()` =\n  `Ok(Exited(0))` after 5.03 s with **24,576 / 60,000 B delivered**.\n- **ptyjobs.** `bash -i` / `zsh -i` under PTY in a shared group, `sleep 301 &` → bg job alive after\n  `stop(500ms)` (escalated) and after drop.\n- **hostpty.** Host with PTY child `sh -c 'sleep 302 & …; exec sleep 303'` is SIGKILLed → both\n  alive.\n- **sigchld.** Install a non-chaining SIGCHLD handler after tokio's: next `output_string` **hangs**\n  (5 s timeout). Installed before tokio, or not at all: completes in 0.21 s."
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/docs/research/pain.md",
+    "git_blob_sha": "8d88b0880eb8f96ff5bd02b10aec7093a1469939",
+    "source_sha256": "ed858e0f3d9fb5ac315ea37eb5165723b2aff42a4cd853f5594a3567ca8585a1",
+    "source_bytes": 45907,
+    "line_count": 414,
+    "disposition": "analyzed",
+    "kind": "doc",
+    "purpose": "Preserves the October 2026 issue-tracker survey supporting cross-ecosystem process-management pain.",
+    "behavior": [
+      "Counts 1592 deduplicated issues across ten repositories, assigning one of seven primary categories; reports 873 Windows mentions under an explicit regex.",
+      "Provides repo/category/state tables, query results, issue-number ledger, duplicate-cluster sensitivity and a deterministic representative-issue selection rule.",
+      "Documents a staged keyword screen and excerpt-based single-reader classification, plus a small lead recount/spot-check."
+    ],
+    "contracts": [
+      "Counts represent issue reports, not prevalence, severity, distinct defects or users; the document calls them directional upper bounds.",
+      "Excluded Claude Code results do not enter totals; Windows share and ecosystem labels are snapshot-specific."
+    ],
+    "dependencies": [
+      "Named GitHub repository/issue snapshots at 2026-10-01",
+      "Appendix A query matrix",
+      "Appendix B counted issue ledger",
+      "G0.md"
+    ],
+    "failures_or_limits": [
+      "109/650 queries hit the 100-result cap; 1533 Tier-3 issues and later comments were unread in the original survey.",
+      "Codex contributes 49% of counts, Python is thin, and lead spot-check found two loose classifications among five."
+    ],
+    "gaps": [
+      "No issue searches, counts or live statuses were re-executed during this baseline reading."
+    ],
+    "inference": [],
+    "evidence": [
+      {
+        "start_line": 3,
+        "end_line": 13,
+        "quote": "Access date: **2026-10-01** (GitHub data fetched live between about 18:50 and 20:20 local time, UTC-3; issue states, comment counts and search rankings are as of that day).\n\nScope: read-only `gh search issues` (65 queries x 10 repositories = 650 runs; an 11th repository was queried and then excluded, see section 1), then classification of the issue text into 7 categories (C1-C7) by reading. No comment, reaction or contact was made on any issue.\n\n## 0. Headline numbers (data only)\n\n- Issues counted (one primary category each, deduplicated by repo+issue number): **1592** across **10** repositories.\n- Per ecosystem: **TypeScript 659**, **Python 104**, **Rust 829**.\n- Per category: C1 253, C2 97, C3 200, C4 323, C5 192, C6 156, C7 371.\n- Counted issues whose title/body mention Windows (regex, see section 4): **873 of 1592 = 54.8%**.\n- Open/closed among counted: 855 open / 737 closed."
+      },
+      {
+        "start_line": 202,
+        "end_line": 209,
+        "quote": "1. **Search.** For each of 65 queries and each repo: `gh search issues --repo <repo> <terms> --limit 100 --json number,title,state,url,createdAt,body,labels,commentsCount,repository`. gh searches title and body by default (checked on one term, `zombie` on gemini-cli: the default result set equals `--match title,body` and differs from `--match comments`; so comments are not searched). Multiple unquoted words are ANDed; a quoted phrase is a phrase search. Only issues are searched (not PRs). Relevance order, 100 results max per query.\n2. **Dedup.** Results merged by (repo, issue number); the same issue from several queries counts once.\n3. **Stage-1 screen (deterministic).** Keep an issue if (a) its title+body (template lines such as `Sandbox Environment: ...`, `Generate a shell command` config boilerplate and unchecked checkboxes stripped) contains an execution-context word (process, subprocess, spawn, shell, bash, powershell, cmd.exe, terminal, pty, stdin, stdout, sigint/sigterm/sigkill, sandbox, seatbelt, landlock, bwrap, isatty, run_shell/execute_command, etc.) and (b) it contains all (prefix-stemmed) words of at least one query that returned it. Tier 1: a process-specific term (orphan, zombie, pty, conpty, ENOENT/EINVAL/EAGAIN, PATHEXT, taskkill, SIGKILL/SIGTERM/SIGINT, child_process, subprocess, spawn, .cmd/.bat, cmd.exe, powershell, git bash, seatbelt, landlock, bwrap, sandbox-exec, chcp, mojibake, ctrl+c, stdin/stdout/stderr, shell tool/command, pid ...) in the title. Tier 2: such a term only in the body. Tier 3: neither (only weak words such as stuck/timeout/hang/kill/encoding/output). Tier 3 was not read (audit in section 6).\n4. **Reading.** Tier 1 and Tier 2 issues were read as one line each (title, first ~100 to 150 characters of the body, and a ~115-character window around the first strong term); a few dozen ambiguous ones were re-read with up to 450 to 700 characters of body. This reads the issue's first message (the body); later comments were not read. When unsure the issue was marked U and not counted.\n5. **Classification.** One primary category per issue, chosen by the root symptom described. Counted only if the issue describes a concrete defect or gap in how the tool spawns, controls, terminates, observes the output of, or isolates an external command/process or terminal session. Rules used: C1 includes leaked/unreaped children, leaked PTYs/handles, MCP/LSP child processes not stopped, desktop helper processes surviving app exit; C2 includes cancel/Ctrl+C/stop/SIGTERM that does not stop or only stops the parent, process-tree kill problems (taskkill /T storms, stale PID reuse), commands that keep running after abort; C3 includes PTY/node-pty/ConPTY failures, isatty/non-TTY stdin failures, interactive programs (sudo, pagers, REPLs) that cannot be driven, terminal modes left raw/mouse-tracking after exit, resize crashes; **not** pure TUI rendering/flicker, IME, clipboard or paste issues (those are X or O); C4 includes spawn ENOENT/EINVAL/EPERM, .cmd/.bat shims and PATHEXT, quoting/escaping, cmd.exe vs PowerShell vs Git Bash selection or syntax errors, WSL/UNC path handling in spawned shells, visible console windows from spawned children, and non-Windows shell-dialect/PATH/arg-length (E2BIG/ENAMETOOLONG) spawn failures; C5 includes mojibake/code-page problems in command output, missing/empty/truncated/duplicated output, 'Shell Integration Unavailable'-type output capture failure, hang waiting for completion/EOF, unbounded output; C6 includes hangs and missing/unbounded timeouts of executed commands and commands blocked on stdin or interactive prompts; C7 includes failures, gaps, or requests for sandboxing of executed commands (seatbelt/sandbox-exec, landlock, bubblewrap, Windows restricted-token/elevated sandbox, AppContainer, sandbox proxies). OpenHands' Docker-runtime provisioning problems were treated as X (not process semantics), except where the issue was about command execution inside it.\n6. **Excluded as not about executing commands (X) or other (O).** X: model loops, auth/quota, UI rendering, file-edit tools, install/update problems, IDE/extension crashes, security/prompt-injection reports without a process or sandbox defect, etc. O (150 issues, not counted): feature requests or design notes about command execution that fit none of C1-C7 (for example background-task managers, tool-call plumbing, hook payloads, TUI terminal-state or cwd issues). U (234, not counted): relevant but not classifiable from the body.\n7. **Windows flag.** See section 4.\n8. **Repro.** Each counted issue is listed by number in Appendix B, so any count in section 2 can be rechecked against the query results of Appendix A. Because GitHub search is live and relevance-ranked, a rerun later will differ in ranking, states and comment counts."
+      },
+      {
+        "start_line": 213,
+        "end_line": 221,
+        "quote": "- **Cap and ranking.** Every query returns at most the 100 best-matching issues; 109 of 650 queries were capped (codex 41/65, orchestra 27/65, gemini-cli 20/65). Large trackers are therefore undercounted more than small ones, and counts across repos are not comparable as rates.\n- **Not rates.** Counts are numbers of issues, not users affected, severity or frequency; trackers differ in size, age, template and triage culture (openai/codex alone is 49% of all counted issues; its tracker covers the desktop app as well as the CLI; 321 of its 786 counted issues are C7 sandbox failures of that product's own sandbox).\n- **Single reader.** Classification was done by one reader, from the first message of the issue, with no second rater; U/O handling reduces false positives but the boundaries between categories (notably C3 vs C5 for 'cannot read terminal output', C4 vs C7 for Windows sandbox launch errors, C1 vs C2 for leaked process trees) are judgment calls. Repeated reports of one defect are counted separately (section 7).\n- **Unread tail.** Stage 1 dropped 4148 hits and Tier 3 (1533) was not read; the audit (section 6) estimates 6 to 9% additional counted-type issues in Tier 3. Comments after the first message were never read.\n- **Query set history.** A first collector run used phrase quoting for multi-word terms and an invalid query (`\"shell: true\"` is parsed as a qualifier); that run was discarded and all 65 queries were rerun with the final form (`shell=true`, ANDed words, brief-style quoted phrases). Only the final results are used. The queries in Appendix A are verbatim.\n- **Extras.** claude-code was queried but excluded (section 1); the ProcessKit repos have too few issues to count. Ecosystem labels follow the implementation language of each repository.\n- **Python is the thinnest sample** (104 counted over 4 repos; OpenHands and SWE-agent execute commands in Docker containers by default), and 24 of the 104 come from the two extras.\n- **Category definitions are mine** (the brief gives short labels); in particular C7 counts sandbox failures and requests, not only cross-platform sandbox abstractions, and C4 includes some non-Windows spawn/shell-dialect problems (97% of C4 issues still mention Windows).\n- **Snapshot.** Issues are read as of 2026-10-01; later edits or issue deletions are not reflected. Issue dates run up to 2026-09/10, so numbers for recent products (codex desktop, orchestra v2) include very recent reports."
+      },
+      {
+        "start_line": 410,
+        "end_line": 414,
+        "quote": "## Lead verification (2026-10-01)\n\n- **Raw hits reproduced 9/9** (`orphan`, `\"spawn ENOENT\"`, `conpty` × cline, orchestra, codex): 49/100*/100*, 0/12/7, 5/34/68, identical to Appendix A.\n- **Classification spot-check, 5 sampled counted issues:** 3 clearly in category (gemini-cli #15873 orphaned process; codex #11278 orphaned app-server; orchestra #6703 is a Windows-shell request, plausible for C4), 2 loose (gemini-cli #22612 is children dying under Bun, not a failed stop; aider #1244 is a Windows console error in the agent's own UI, not a PTY of an executed command).\n- **Reading for the G0:** pain exists in all three ecosystems and the Windows share is high, but the counts are an **upper bound** that tracks tracker size (openai/codex is 49% of the total) — use them as direction, not as a measure."
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  }
+]

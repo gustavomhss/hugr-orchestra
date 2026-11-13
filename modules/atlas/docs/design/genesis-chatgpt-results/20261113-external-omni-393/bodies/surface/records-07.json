@@ -1,0 +1,610 @@
+[
+  {
+    "path": "native/omni/HANDOFF.md",
+    "git_blob_sha": "99832d7179bbc66139680336b53383288f71d9ab",
+    "source_sha256": "b23e494e09cdafe7234fcf43cc2dc4047ec9a68fabb5b089e7503f30230717c0",
+    "source_bytes": 17278,
+    "line_count": 227,
+    "disposition": "analyzed",
+    "kind": "doc",
+    "purpose": "Preserves dated handoff states, explicit supersession and remaining owner decisions across Omni's standalone and Orchestra integration history.",
+    "behavior": [
+      "Newest 2026-10-11 section supersedes older resumptions and reports WP9a landed, Omni default, deterministic mirror replay and the 400-line split campaign.",
+      "Separates product revisions from later harness/CI repairs, preserved failed timing attempts and cache hits from new runtime evidence.",
+      "Records CLI artifact placement/preflight, unsigned local-use approval and remaining release/npm/notarization/legacy-removal work."
+    ],
+    "contracts": [
+      "PLAN is identified as the project status/decision authority; this file is a resume aid.",
+      "Historical owner statements constrain their recorded work scope and do not authorize new actions in this analysis."
+    ],
+    "dependencies": [
+      "PLAN.md",
+      "docs/ux/WP9a-default-on.md",
+      "docs/ux/WP10-orchestra-integration.md",
+      "Orchestra mirror/build workflows"
+    ],
+    "failures_or_limits": [
+      "Older main/bundle states, five-package counts and repository locations are deliberately retained history, not current implementation assertions.",
+      "Reported CI runs and local logs were not reopened or executed here."
+    ],
+    "gaps": [
+      "Release/npm/notarization and WP9b remain separately deferred in the document."
+    ],
+    "inference": [],
+    "evidence": [
+      {
+        "start_line": 3,
+        "end_line": 21,
+        "quote": "## Pós-landing — 2026-10-11\n\nEsta seção substitui o estado de retomada abaixo. WP9a está na `dev` (PR #73, merge `7368278b`); Omni é o default.\n\n- Espelho: `script/omni-mirror.sh` + `.github/workflows/omni-mirror.yml` reproduzem cada commit first-parent da\n  `dev` que toca `packages/omni` como um commit determinístico no `hugr-omni` (trailer `Orchestra-Commit:`), sobre\n  a v0.1 `415038b`, só fast-forward. `git subtree` foi abandonado (recursão do dash, mais de 1 h). A main do\n  espelho é read-only (ruleset `mirror-main-read-only`, deploy key `OMNI_MIRROR_DEPLOY_KEY`).\n- Limite de 400 linhas por arquivo de código (regra do owner): `scripts/file-size-guard.py` falha acima de 400.\n  Campanha de split no PR #277 (`f926b11a74`).\n- `native.yml` provisiona os binários do Omni no job workspace (PR #280).\n- Paridade das CLIs (PR #282, `8926c90b93`): `packages/cli` e `packages/orchestra` usam\n  `packages/script/src/omni.ts`. `OMNI_ARTIFACTS=<dir>/<id>/{hugr_omni.node,hugr-omni-supervisor[.exe]}` é\n  obrigatório exceto com `--single`; o par vai ao lado do binário; preflight em `packages/cli/src/omni-entry.ts`. O\n  loader também procura em `<binário>/../omni` (CLI do desktop em `Resources/cli`). O Nix (`fork/nix-omni`) passa\n  um symlink por id.\n- V7 no macOS Intel hospedado é ruidoso: falhou uma vez por 0,25 ms no #282 e passou na repetição.\n- Pendências do owner: release do Orchestra (pré-requisito do WP9b), npm, notarização, campanha separada para os\n  god files do Orchestra anteriores ao Omni."
+      },
+      {
+        "start_line": 29,
+        "end_line": 44,
+        "quote": "- Epic final `38071818809`, typecheck `38071010416`, Electron real `38071013779`, CLI `38071010746` e native\n  `38071010790` verdes em `c97e1a7283`. Cache hits não são execução nova; todos artifacts/lanes continuam obrigatórios.\n- Delivery `38071010760` passou na tentativa 3: V9 Windows perdeu o limite de 2 s na primeira; macOS recusou carga\n  nas tentativas 1/2, sem KPI completo. Retentativas mantêm fonte, assertions, deadlines e KPI.\n- União do BackgroundJob revisada: extensão não começa após falha. Fixture agora segura cleanup de tentativa\n  iniciada durante reutilização do ID; isso não prova o guard de token de settlement antigo. Mutação da ordem\n  rejeitada em `38069015137`, restauração `38069253793`; adoção real e controles portáveis em `38067064470`/`38067064731`.\n- Checkpoints/evento público novos da `dev` reconciliados. Gerador SDK particiona seis aliases, preservando tipos\n  públicos e teto existente: 16575 LOC, máximo 16592. Revisão fria e compiler probe: vermelho `38071401680`, verde\n  `38071613961`. Client e SDK regenerados pelos comandos oficiais; nenhuma edição manual de generated.\n- Builder publica `.complete` só após saída executável válida. Shell adota após exit zero/finalização; job mantém\n  broker/scratch até parada. Broker Node via AppProcess, sem exceção nova no spawn ledger. Revisões/probes medidos.\n- Quit desktop usa ID causal autenticado/atômico, não ordem entre relógios de processos. ID estrangeiro rejeitado\n  nos três SOs (`38057262233`); logger/capture seguem caminho real do onboarding, tracing padrão desligado.\n- Relatório final: `docs/ux/WP9a-default-on.md`. Restam landing/post-merge do PR; WP9b espera release limpa.\n  npm/Developer ID/notarização seguem os adiamentos explícitos. Não relabelar PTY 500 anterior como corrigido."
+      },
+      {
+        "start_line": 68,
+        "end_line": 91,
+        "quote": "- Provas anteriores, produto `50df6ac76a`: CLI compilada (`37886935451`) e Electron real (`37886938068`) nos três SOs.\n  Electron prova crash de main/utility e app.quit natural; packaging é unsigned --dir, sem prova de notarização.\n- Saída natural Bun/Node + controles de seats: `37886081319`, 26 testes por SO. Windows V1/V2/V10 restaurado:\n  `37887074886`, incluindo dois Esc reais e Ctrl+C. Remover SIGINT/SIGBREAK deixou `37866045782` vermelho.\n- V3–V6 verdes nos três SOs (`37866046448`); oito alvos nativos provados (`37799127882`). Raw POSIX é\n  receiver-ACK; raw ConPTY permanece unsupported, com cooked/render testado. Não confundir isso com burst raw lossless.\n- V7 macOS Intel/x64 fechado (`37832187161`): legado 9,89377 ms; Omni 11,30649 ms; limite 11,89377 ms. Slowdown\n  real de 5 ms foi rejeitado. Recusas/execuções ARM incompletas permanecem unrun; KPI inalterado.\n- Owner autorizou adiar Developer ID/notarização para uso local sem Apple Developer: **\"go on\"**. Waiver com alcance\n  e remediação no relatório WP10. Não autoriza distribuição notarizada nem publicação npm.\n- Owner aceitou o relatório para o escopo local em 2026-10-09: **\"eai, pode seguir\"**, respondendo à pergunta de\n  assinatura. WP9a autorizado; npm/distribuição pública continuam fora desse aceite.\n- WP9a provisiona artifacts nativos em cada shard, preserva/hash inputs Rust e helpers de campanha, valida arquivos\n  também em cache hits e mantém lane Windows `=0`. Turbo strict preserva/hash `PSModuleAnalysisCachePath`: remover\n  entrada deixou recorder vermelho; alteração/restauração de helper agora muda/recupera hash Core.\n- Produto `f036dca9a4`: CLI (`38005242768`) e Electron unsigned (`38004541043`) nos três SOs; delivery\n  (`38005245577`, tentativa 2), V9 três SOs/V8 Server 2022/V7 Linux e Intel. Recusa por carga na tentativa 1 preservada.\n  Full typecheck `38004544234`. Reparos posteriores só CI/harness; não são novos binários medidos.\n- Boundary Mac do owner executado: V2 CLI `d4a32678c6`, V7 Bun `feeb526787`; hashes e KPIs em\n  `docs/ux/WP9a-default-on.md`. Não atribuir essas medições a binário novo `f036dca9a4`.\n- Epic completa verde em `fc41e41a68` (`38014329741`): producers/consumers, unit Linux/Windows, e2e Linux,\n  Atlas, godfile, HttpApi, Relay e Windows `=0`. Core Windows executou sem cache: 1524 pass/29 skips existentes.\n  Relatório WP9a revisado; candidato integrado por fast-forward no `omni-native` e PR #73 (draft).\n  WP9b continua depois de uma release limpa. Artefatos dos oito alvos não habilitam sozinhos as rows CLI desativadas."
+      },
+      {
+        "start_line": 168,
+        "end_line": 178,
+        "quote": "- De volta ao GitHub (`gustavomhss/hugr-omni`). `main` = `bundle/B4` (8f01860): v0.1 completo, CI verde em Ubuntu\n  24.04, macOS 14 arm64 e Windows 2022 (~3 min por SO).\n- O primeiro CI no macOS 14 achou um bug real: EMSGSIZE do XNU num `sendmsg` com descritores matava o canal sob\n  carga (host e supervisor). Corrigido nos dois lados (8f01860^^).\n- Q2 assinado. Demo nativa no Mac do Owner: `~/Documents/HuGR/omni-demo` (pacote npm local instalado,\n  `demo.mjs`, `arvore.mjs`, `host-morre.mjs`, guia `omni-guia.html`).\n- Validação do Owner feita (demo nativa no Mac: árvore, `kill -9` no host, timeout, PTY, sem shell). Versão 0.1.0.\n  `release.yml` (à mão) gerou e provou os 5 pacotes, cada um no seu SO e CPU (run 37509139962); tarballs em\n  `~/Documents/HuGR/hugr-omni-release/` (use o `hugr-omni-0.1.0.tgz` de um job POSIX). Publicar no npm: adiado pelo\n  Owner (2026-10-06, \"deixa sem npm por hora\"); quando voltar: `npm login`, os 5 de plataforma, depois `hugr-omni`, e\n  tirar `PRE_RELEASE_INSTALL` e o aviso de pre-release do README. K4 do Rust no macOS ainda aberto."
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/docs/acceptance.md",
+    "git_blob_sha": "7bbbca24f87d379a7487fa1c3043d620e291aaad",
+    "source_sha256": "bfdb3b6427263b3b56a0523b0751d67926ea40744e03e3f5b8d5377d41955091",
+    "source_bytes": 12906,
+    "line_count": 111,
+    "disposition": "analyzed",
+    "kind": "doc",
+    "purpose": "Maps deterministic contract promises, release KPIs and human management gates to their owning work packages.",
+    "behavior": [
+      "Enumerates startup/env/output/tree/lifetime/PTY/language/package promises and routes non-DSL proofs to idiom tests, IO units or QA.",
+      "Defines an inverted pending ledger: expected failures are pending, unexpected successes fail, and release requires it empty.",
+      "Sets numeric K1–K11 targets and labels Python/sandbox capabilities as future phases."
+    ],
+    "contracts": [
+      "Implementers may not alter contract tests; API contract is frozen.",
+      "K4 compares p50 overhead against 1.25× or +0.3 ms, whichever is looser; K9 requires clean installs."
+    ],
+    "dependencies": [
+      "docs/api-contract.md",
+      "PLAN.md §4.2",
+      "conformance/pending.txt",
+      "QA harness",
+      "GUARANTEES.md"
+    ],
+    "failures_or_limits": [
+      "Five-target scope, unconditional no-backpressure wording and five reason values predate current eight-target packaging and memory/backpressure additions.",
+      "ARC-FS line 103 still says 650 lines; current guard and AGENTS require 400."
+    ],
+    "gaps": [
+      "Acceptance inventory contains stale thresholds/capability summaries; it does not establish current green status."
+    ],
+    "inference": [],
+    "evidence": [
+      {
+        "start_line": 3,
+        "end_line": 8,
+        "quote": "Two layers. The **contract** (C-*) is a small set of deterministic promises, written once as shared\nscenarios and run through every language. The **KPIs** (K*) are measured by using the library for real\n(see PLAN §4.2) and decide the release. Management items (G0/UX/REL/...) are judged by people.\n\n\"3 OS\" = Windows, macOS, Linux. \"5 targets\" = win-x64, darwin-arm64, darwin-x64, linux-x64, linux-arm64.\nOwner = the work package that turns the item green. Contract tests are read-only for implementers. The API they exercise is frozen in `docs/api-contract.md`."
+      },
+      {
+        "start_line": 21,
+        "end_line": 30,
+        "quote": "| C-IO-02 | The child never blocks on output: up to 16 MiB/stream buffered for an attached consumer, 1 MiB with none, the rest dropped and counted in `droppedBytes`; loss is reported in order (`lostBefore`, incl. a final item before EOF) with decoding/line assembly restarting at gaps; single consumer (second claim → `INVALID_ARGUMENT`), break detaches; `wait()`/`stop()` complete with a paused consumer and 50 MB unread | W10 |\n| C-IO-03 | `write` resolves when the pipe accepted the bytes, in call order; `closeStdin` flushes then closes, idempotent; spawn stdin is closed by default (`write` → `INVALID_ARGUMENT`); writing after close/exit → `CLOSED`, host never crashes; pending writes settle on exit/stop/timeout/cancel | W10 |\n| C-IO-04 | Nothing written before exit is lost; if the root exits while a descendant holds the pipe, `wait()` resolves at root exit, `output` stays open until the descendant closes or `stop()`, and `run()` returns within `graceMs` with what it read and stops the rest — never hangs | W10 |\n| C-RUN-01 | `run()` returns exitCode/stdout/stderr/success/reason (`success` ⇔ reason `exit` and code 0); a resolved result is always complete — above `maxOutputBytes` (default 16 MiB/stream) the tree is stopped and it rejects `OUTPUT_LIMIT` with the first bytes in `error.result`; `input` is fed then closed, without it stdin is closed; a timeout after the root exited still yields `reason: \"timeout\"`; non-zero exit never throws | W10 |\n| C-KILL-01 | `stop()` ends child, grandchildren and great-grandchildren — also after `wait()` resolved and only descendants remain (root `Exit` unchanged); once the tree is gone it is a no-op | W07 |\n| C-KILL-02 | `stop()` asks gracefully first with one deadline for the whole tree; a cooperative child finishes cleanup; one that ignores it is forced after `graceMs` (per-OS tier in GUARANTEES) | W07 |\n| C-KILL-03 | A descendant that deliberately escapes (setsid / job breakaway) behaves exactly as GUARANTEES declares per OS | W07 |\n| C-EXIT-01 | Exit codes 0/1/42/255 and Windows codes > 255 (e.g. `0xC000013A`) are reported as the same non-negative integer in all languages; `reason` is `exit`/`signal`/`killed`/`timeout`/`aborted` with the documented precedence | W07 |\n| C-PROC-01 | `processes()` lists exactly the live processes `stop()` would end: a 3-level fixture tree appears with correct `parentPid` links and names (root's `parentPid` null), descendants stay listed after the root exits, a Unix descendant that escaped via `setsid` is alive and not listed; after `stop()` it returns `[]` and every listed pid is dead per the OS; no argument text appears | W07 |\n| C-SCOPE-01 | Leaving scope kills the tree: TS `await using`, Python `with`/`async with`, Rust drop. Proven by the per-language idiom tests (C-RS-01, C-TS-01, C-PY-01): the scenario DSL has no scope | W07 |"
+      },
+      {
+        "start_line": 58,
+        "end_line": 60,
+        "quote": "**Pending ledger.** `conformance/pending.txt` lists, one per line, the items whose owning WP has not landed yet (`<ID> <WP>`).\nThe runners report a pending item that fails as `pending`, and FAIL a pending item that passes (remove it from the\nledger). Only the lead edits the ledger, and it must be empty for a release."
+      },
+      {
+        "start_line": 76,
+        "end_line": 85,
+        "quote": "| K1 orphan processes after a task | 0 |\n| K2 hangs | 0 |\n| K3 stop latency p95 | ≤ graceMs + 500 ms |\n| K4 spawn overhead p50 (time to PID, and trivial round-trip) | ≤ 1.25× stdlib or ≤ +0.3 ms absolute, whichever is looser |\n| K5 output bytes lost/garbled within documented limits | 0 |\n| K6 1000-task soak: fds/handles back to baseline; RSS growth | ≤ 10 MB |\n| K7 host crashes | 0 |\n| K8 Windows parity on K1–K7 | same targets |\n| K9 clean installs | 100% |\n| K10 cold user (README only) | 15/15 tasks; median first success ≤ 5 min |"
+      },
+      {
+        "start_line": 103,
+        "end_line": 103,
+        "quote": "| ARC-FS | God-file guard: no tracked code file over 650 lines (`scripts/file-size-guard.py`, teeth in `scripts/test_file_size_guard.py`); wired into CI by W00 and run on every bundle | W00 |"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/docs/adr/0001-process-model.md",
+    "git_blob_sha": "54b9231e2488de5f0ab5c45acd12f01f03e63f94",
+    "source_sha256": "bdb581a2aedaceb48fef153a0a9b7f5e88f1562ac5fb72ebdecac4764725e51a",
+    "source_bytes": 29400,
+    "line_count": 335,
+    "disposition": "analyzed",
+    "kind": "doc",
+    "purpose": "Archives the S1 process-model spike, measured alternatives and an explicitly superseded product proposal.",
+    "behavior": [
+      "Reports controlled Windows race demonstrations, nested Job behavior, best-effort CTRL_BREAK and suspended/JOB_LIST approaches.",
+      "Examines Unix session creation, terminal job control, escapes, zombie pinning and pidfd/kqueue versus host SIGCHLD/reaper interference.",
+      "Compares in-job timing against stdlib and proposes host-side process-group/watchdog seams that the lead later rejected as the product baseline."
+    ],
+    "contracts": [
+      "Header explicitly gives ADR-0005 precedence wherever designs disagree.",
+      "Evidence distinguishes tested runners from untested musl/older OS floors and identifies same-job timing comparisons as necessary."
+    ],
+    "dependencies": [
+      "spikes/process historical experiment",
+      "docs/research/adr-reviews-s1-s2.md",
+      "ADR-0002",
+      "ADR-0005"
+    ],
+    "failures_or_limits": [
+      "Do not infer current host spawning, AttachConsole use, group-only kill or host zombie ownership from this proposal.",
+      "Quoted RESULT lines are archival measurements, not new test execution."
+    ],
+    "gaps": [
+      "Historical minimum macOS floor, inherited-handle race and Bun/Deno coverage were open in this spike."
+    ],
+    "inference": [],
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 6,
+        "quote": "# ADR-0001 · Process model: containment, tree kill, PID safety, exit observation\n\n> **Lead status (2026-10-02):** reviewed by Codex (`docs/research/adr-reviews-s1-s2.md`, verdict *reject as a product baseline*). The accepted parts and the replacement design are in **ADR-0005 (supervisor)**; where this ADR and ADR-0005 disagree, ADR-0005 wins.\n\n\n**Status:** proposed (WP S1 spike; decisions backed by CI evidence; awaiting the lead)"
+      },
+      {
+        "start_line": 51,
+        "end_line": 56,
+        "quote": "| Approach | Result (run 1, windows) |\n|---|---|\n| naive: std spawn, then `AssignProcessToJobObject` | `approach=naive-assign-after-spawn ok=100/100 grandchild_in_job=100/100` — passes only because child start-up is slower than the assign. Simulated host preemption between spawn and assign (run 3, windows): `approach=naive+preempt(2ms) ok=99/100 grandchild_in_job=99/100` · `approach=naive+preempt(10ms) ok=0/100 grandchild_in_job=0/100` · `approach=naive+preempt(50ms) ok=0/100 grandchild_in_job=0/100` — **racy** |\n| **(a) std `Command` + `CREATE_SUSPENDED` → assign → resume** | `approach=a-suspended+NtResumeProcess ok=100/100 grandchild_in_job=100/100 errors=0` · `approach=a-suspended+toolhelp-resume ok=100/100 grandchild_in_job=100/100 errors=0` |\n| **(b) `CreateProcessW` + `STARTUPINFOEX` + `PROC_THREAD_ATTRIBUTE_JOB_LIST`** | `approach=b-CreateProcessW+JOB_LIST ok=100/100 grandchild_in_job=100/100 errors=0` |\n| (c) std `spawn_with_attributes`/`raw_attribute` | **not usable on stable**: `RESULT Q1 os=windows c-std-raw_attribute-on-stable rustc=\"rustc 1.99.0 (b940084d7 2026-09-28)\" compile_error=E0554`; on nightly it works: `RESULT Q1 os=windows ctx=top approach=c-std-spawn_with_attributes(nightly) ok=100/100 grandchild_in_job=100/100 errors=0` (run 3) |"
+      },
+      {
+        "start_line": 211,
+        "end_line": 217,
+        "quote": "Hostile hosts decide it. With `SIGCHLD = SIG_IGN` in the host (auto-reap), a blocking `waitid` on macOS\ndoes not return when *its* child exits but when **all** children have exited; pidfd/kqueue fire on time:\n> `RESULT Q7 os=macos host-SIGCHLD=SIG_IGN blocking-waitid(short 100ms child, sibling 1500ms) returned_after_ms=1546 ret=-1 errno=10 (ECHILD=10) | kqueue-NOTE_EXIT fired=Ok(true) after_ms=184`\n> `RESULT Q7 os=linux host-SIGCHLD=SIG_IGN blocking-waitid(short 100ms child, sibling 1500ms) returned_after_ms=100 ret=-1 errno=10 (ECHILD=10) | pidfd+poll fired=Ok(true) after_ms=101`\nWith a foreign `waitpid(-1)` reaper in the host (Python `os.wait()` / old asyncio watchers) both observe the\nexit, but the status can be stolen:\n> `RESULT Q7 os=linux host-foreign-waitpid(-1)-reaper blocking-waitid observed_exit=50/50 got_status=49/50 | pidfd+poll observed_exit=50/50 | reaper_stole=101`"
+      },
+      {
+        "start_line": 244,
+        "end_line": 271,
+        "quote": "1. **Windows spawn = approach (a):** `std::process::Command` with\n   `CREATE_SUSPENDED | CREATE_NEW_PROCESS_GROUP` (plus `CREATE_NO_WINDOW` when the host has no console) →\n   `AssignProcessToJobObject` to a fresh per-child job created with `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`\n   (no breakaway flags) → `NtResumeProcess` (resolved with `GetProcAddress` at runtime; Toolhelp-snapshot\n   resume as fallback). If assignment fails, `TerminateProcess` the still-suspended child (it never ran) and\n   return a typed error. This keeps std's program resolution, quoting (including the BatBadBut fix), env block\n   and pipes — nothing to port — at no measured cost. Switch to `spawn_with_attributes` +\n   `PROC_THREAD_ATTRIBUTE_JOB_LIST` when it is stable (no suspension needed).\n2. **Windows stop:** graceful = `GenerateConsoleCtrlEvent(CTRL_BREAK_EVENT, root_pid)`; when the host has no\n   console, `AttachConsole(root_pid)` → send → `FreeConsole` under a process-wide lock; forced =\n   `TerminateJobObject` after `graceMs`. Exit code `0xC000013A` is reported as 3221225786.\n3. **Unix spawn:** our own `posix_spawn(p)` with `POSIX_SPAWN_SETSID` (plus SETSIGDEF/SETSIGMASK, and\n   `POSIX_SPAWN_CLOEXEC_DEFAULT` on macOS). Never `fork`, never `pre_exec`. PTY children get the same\n   session (and `TIOCSCTTY`). Owning `posix_spawn` means the core owns PATH resolution against the\n   child's final PATH (PLAN §3 already requires that), argv/envp building and the stdio file actions.\n4. **Unix stop:** graceful = `killpg(pgid, SIGTERM)`; forced = `killpg(pgid, SIGKILL)` after `graceMs`.\n   No subreaper, no `/proc` scans; descendants that leave the group are declared out of reach (Linux cgroup v2\n   delegation is a possible future tier, not v1).\n5. **PID safety:** the root is never reaped while the `Child` handle may still signal its group: exit is\n   observed with WNOWAIT semantics and the zombie is reaped only after the final `killpg` (and after the\n   watchdog untrack, ADR-0002). Windows: hold the process handle and the job handle.\n6. **INV-16 exit observation:** Linux: a pidfd per child (`pidfd_spawnp` when glibc ≥ 2.39, else\n   `pidfd_open` immediately after `posix_spawn`) watched by one dedicated reactor thread (epoll); status read\n   with `waitid(P_PIDFD, WEXITED|WNOWAIT)`. Fallback for kernels < 5.3: one blocking\n   `waitid(P_PID, WEXITED|WNOWAIT)` thread per child (64 KiB stack). macOS: one dedicated kqueue thread\n   (`EVFILT_PROC`/`NOTE_EXIT`); if registration fails because the child is already a zombie, a\n   `waitid(WNOHANG|WNOWAIT)` probe. Windows: wait on the process handle (`RegisterWaitForSingleObject` or a\n   waiter thread). Never a SIGCHLD handler, never tokio's process reaper."
+      },
+      {
+        "start_line": 321,
+        "end_line": 335,
+        "quote": "## Open risks\n\n- `NtResumeProcess` is undocumented (stable for 20+ years, used by Sysinternals); vetoing it means approach (b) and\n  the std quoting port now, or +6 ms Toolhelp resume.\n- A child that itself uses `CREATE_BREAKAWAY_FROM_JOB` fails with ERROR_ACCESS_DENIED inside our job.\n- Windows handle inheritance: std serialises its own spawns (`CREATE_PROCESS_LOCK`), but another runtime in\n  the same process (libuv in Node) spawning concurrently can inherit our pipe ends during its CreateProcess,\n  delaying EOF; the \"root exited → return after graceMs\" rule bounds the damage. Not measured.\n- The `AttachConsole` fallback is process-global state: it needs a lock and must never run in a host that has a console.\n- Zombie roots live as long as the user holds a `Child`; leaked handles leak one zombie each.\n- One pidfd per live child on Linux (RLIMIT_NOFILE); kqueue on macOS uses one fd total.\n- musl, glibc < 2.26 and older macOS releases were not tested for `POSIX_SPAWN_SETSID`; the minimum macOS\n  version is unverified (only Darwin 25.6 arm64 on CI and Darwin 24.3 x86_64 locally). Bun/Deno not exercised.\n- Escapes via `setsid` on Unix remain; cgroup v2 delegation (systemd user sessions) is the only real fix on Linux.\n- macOS runner timing noise (Q8) makes a single-number K4 on macOS unreliable."
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/docs/adr/0002-host-exit.md",
+    "git_blob_sha": "2bbdbba67e230c4c63b521060d49e13f47fad274",
+    "source_sha256": "410cdbb9c43919f6b1a5fa2d60933bde59a12bfeb22197d6f56a4037e2d20ac6",
+    "source_bytes": 19459,
+    "line_count": 233,
+    "disposition": "analyzed",
+    "kind": "doc",
+    "purpose": "Archives S1 host-death and signal experiments that motivated out-of-process cleanup without host signal hooks.",
+    "behavior": [
+      "Reports Windows Job close cleanup and rejects Linux PDEATHSIG for descendants, spawning-thread lifetime and fork cost.",
+      "Demonstrates pipe-EOF watchdog failure under inherited writers and pidfd/kqueue death detection, plus fragile native signal chaining in Node/Python.",
+      "Proposes a fork-without-exec Unix watchdog and host-held Windows Jobs, then explicitly defers to the replacing supervisor ADR."
+    ],
+    "contracts": [
+      "Lead header rejects this proposal as product baseline; ADR-0005 governs conflicts.",
+      "No signal/exit-hook cleanup is the retained architectural principle; per-spike watchdog grace was host-wide and capped."
+    ],
+    "dependencies": [
+      "ADR-0001",
+      "ADR-0005",
+      "spikes/process historical experiment",
+      "docs/research/adr-reviews-s1-s2.md"
+    ],
+    "failures_or_limits": [
+      "Host fork, fixed tracking array and Windows forced-only host cleanup belong to the rejected proposal, not an observed current implementation.",
+      "Bun/Deno, watchdog-death recovery and old-kernel caveats were unresolved in this document."
+    ],
+    "gaps": [
+      "Archival experiment claims were not rerun or generalized to the pinned baseline."
+    ],
+    "inference": [],
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 6,
+        "quote": "# ADR-0002 · Host-exit cleanup and host signals\n\n> **Lead status (2026-10-02):** reviewed by Codex (`docs/research/adr-reviews-s1-s2.md`, verdict *reject as a product baseline*). The accepted parts and the replacement design are in **ADR-0005 (supervisor)**; where this ADR and ADR-0005 disagree, ADR-0005 wins.\n\n\n**Status:** proposed (WP S1 spike; decisions backed by CI evidence; awaiting the lead)"
+      },
+      {
+        "start_line": 59,
+        "end_line": 88,
+        "quote": "**Linux — `PR_SET_PDEATHSIG` is rejected (measured, three defects):**\n1. It covers only the direct child. Grandchild survives every mode:\n   > `RESULT Q5 os=linux mech=pdeathsig host_death=sigkill host=signal:9 root=dead@0ms grandchild=ALIVE` (ubuntu-latest; identical for return/exit/panic/abort/sigint/sigterm)\n2. It fires when the *thread* that forked exits, not the process — the host is still alive:\n   > `RESULT Q5 os=linux pdeathsig spawner=std-thread-that-exited child_alive_after_500ms=false (host still alive)`\n   > `RESULT Q5 os=linux pdeathsig spawner=tokio-spawn_blocking(keep_alive=200ms) alive@100ms=true alive@1500ms=false (runtime+host alive)`\n   (control: `spawner=main-thread child_alive_after_500ms=true`). Any spawn from a tokio blocking-pool\n   thread, a libuv worker or a Python thread would randomly kill healthy children.\n3. It needs `pre_exec` (prctl in the child), which forces std's fork+exec path instead of `posix_spawn`\n   (ADR-0001 Q8: 26.6 ms vs 0.53 ms p50 on aarch64 with a 1 GiB host).\n\n**Linux and macOS — a per-host watchdog process (adopted).** On the first spawn the core `fork()`s\n(no `exec`) a tiny watchdog that runs only async-signal-safe syscalls: `setsid()` (so terminal SIGINT/SIGHUP\naimed at the host's job does not kill it), closes every inherited fd except its pipe (so it never pins the\nhost's sockets/pipes open), then waits. The host writes `+pgid` / `-pgid` (4-byte atomic pipe writes) as\ntrees are created and reaped. On host death the watchdog sends SIGTERM to every tracked group, sleeps the\ngrace, then SIGKILL, then `_exit`.\n\nTwo death detectors were measured:\n- `watchdog-pipe`: EOF on the pipe. Works for all 7 modes, **but fails when the host has a forked (no-exec)\n  child that inherited the write end** (Python `os.fork()`, `multiprocessing` fork start method):\n  > `RESULT Q5 os=linux mech=watchdog-pipe host_death=sigkill host=signal:9 root=ALIVE grandchild=ALIVE forked_worker_holds_pipe=1`\n- `watchdog-proc`: the pipe for data + **pidfd of the host (Linux) / kqueue `EVFILT_PROC` `NOTE_EXIT` on the\n  host (macOS)** for death. 7/7 modes and the forked-worker case, on all three Unix jobs:\n  > `RESULT Q5 os=linux mech=watchdog-proc host_death=sigkill host=signal:9 root=dead@2ms grandchild=dead@0ms` (ubuntu-latest, ubuntu-24.04-arm)\n  > `RESULT Q5 os=linux mech=watchdog-proc host_death=abort host=signal:6 root=dead@0ms grandchild=dead@0ms`\n  > `RESULT Q5 os=macos mech=watchdog-proc host_death=sigkill host=signal:9 root=dead@2ms grandchild=dead@0ms` (macos-latest)\n  > `RESULT Q5 os=macos mech=watchdog-proc host_death=sigkill host=signal:9 root=dead@2ms grandchild=dead@0ms forked_worker_holds_pipe=1`\n  (`dead@Nms` is measured after the host was reaped; the fixture dies on SIGTERM, so the 200 ms grace is\n  not exercised here.)"
+      },
+      {
+        "start_line": 133,
+        "end_line": 151,
+        "quote": "**Native chaining is fragile in three independent ways (all measured):**\n1. *Node/libuv replaces it.* If JS adds `process.on('SIGINT')` after the addon loaded, libuv installs its own\n   handler and ours never runs; if the last JS listener is removed, libuv resets to `SIG_DFL` (ours is gone):\n   > `RESULT Q6 os=linux host=node scen=js-after-native sig=INT ... host_after_2500ms=exit:0 native_chain_fired=false ... js_py_marks=[\"JS-HANDLER\"] child=ALIVE`\n   > `RESULT Q6 os=linux host=node scen=js-before-native-removed sig=INT ... host_after_2500ms=signal:2 native_chain_fired=false ... child=ALIVE`\n2. *On macOS, chaining breaks Node itself.* The very same Node handler (`node::SignalExit`, which re-raises)\n   is reported with `flags=0x84000000` (`SA_RESETHAND|SA_RESTORER`) on Linux but `flags=0x0` on macOS: Darwin's\n   `sigaction()` does not hand back `SA_RESETHAND` in the old action. Restoring it therefore loses the one-shot\n   flag, `SignalExit`'s re-raise lands on itself, and Ctrl-C/SIGTERM no longer terminate Node (the host keeps\n   running, spinning):\n   > macOS: `RESULT Q6 os=macos host=node scen=native sig=INT armed=true host_after_2500ms=running native_chain_fired=true fired_count=1 prev_action_at_install=sig=2,handler=0x10446df64,sym=_ZN4node10SignalExitEiP9__siginfoPv,flags=0x0 js_py_marks=[] child=dead@0ms`\n   > Linux:  `RESULT Q6 os=linux host=node scen=native sig=INT armed=true host_after_2500ms=signal:2 native_chain_fired=true fired_count=1 prev_action_at_install=sig=2,handler=0xf5c230,sym=_ZN4node10SignalExitEiP9siginfo_tPv,flags=0x84000000 js_py_marks=[] child=dead@0ms`\n   (A first version that *called* the previous handler instead of restoring it spun forever on macOS too;\n   see the comment in `src/sigchain.rs`.)\n3. *Python semantics are violated.* Python turns SIGINT into `KeyboardInterrupt`; an app (REPL, CLI with a\n   cancel prompt) may catch it and continue. The native handler has already killed the children:\n   > `RESULT Q6 os=linux host=python3 scen=native-catch sig=INT ... host_after_2500ms=running native_chain_fired=true ... js_py_marks=[\"CAUGHT\"] child=dead@0ms`\n   (control without the shim: `scen=today-catch ... host_after_2500ms=running ... child=ALIVE`). And a later\n   `signal.signal()` silently replaces the shim: `scen=py-after-native ... native_chain_fired=false ... child=ALIVE`."
+      },
+      {
+        "start_line": 166,
+        "end_line": 182,
+        "quote": "1. **Windows:** every child tree lives in its own job object created with\n   `JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`; the job handle is non-inheritable and held only by the core for the\n   life of the `Child` (and implicitly until host death). Host death on Windows = T1, forced.\n2. **Linux and macOS:** the core starts **one watchdog per host process**, lazily on the first spawn, by\n   `fork()` without `exec`. The watchdog: `setsid()`; dup `/dev/null` onto 0/1/2; closes every other fd\n   except its pipe read end and its death handle; detects host death with **pidfd + poll (Linux ≥ 5.3)**\n   or **kqueue `EVFILT_PROC`/`NOTE_EXIT` (macOS)**, plus `getppid() != host` as the registration-race check\n   and pipe EOF as a secondary signal; keeps the tracked pgids in a fixed array; on death: SIGTERM each\n   group → sleep grace → SIGKILL each group → `_exit(0)`. Only async-signal-safe calls after `fork`.\n   On Linux < 5.3 the death detector degrades to pipe EOF (and the forked-worker caveat applies).\n3. **The bindings install no signal handlers and no exit hooks for cleanup.** Node: no `process.on('SIGINT'|'SIGTERM'|'exit')`\n   from the binding; Python: no `signal.signal`, no `atexit` from the binding; the Rust API registers\n   nothing either. Graceful cleanup is the job of scopes (`await using` / `with` / `Drop`), which in Python\n   also run when `KeyboardInterrupt` unwinds; abrupt host death is the job of the job object / watchdog.\n   This keeps the host's own Ctrl-C behaviour bit-for-bit unchanged (INV-07 spirit, INV-10).\n4. **Grace at host death:** the watchdog uses one host-wide grace: the largest `graceMs` among live tracked\n   trees, capped at 5 s (Unix only; Windows is forced by the kernel)."
+      },
+      {
+        "start_line": 223,
+        "end_line": 233,
+        "quote": "- **Watchdog can be killed** (`kill -9 -1`, an OOM kill that picks it, a sandbox that forbids fork). Then\n  host-death cleanup silently degrades to \"none\" on Unix. Mitigation idea (not measured): the host can detect a\n  dead watchdog via its pid/pidfd and restart it on the next spawn.\n- **Fork from a large multithreaded host:** the watchdog is a COW copy of Node/Python; it touches almost no\n  memory, but the `fork()` itself costs page-table copies once per host (ADR-0001 Q8 measured fork+exec at\n  26.6 ms p50 for a 1 GiB host on aarch64). One-time cost, but visible on the first spawn.\n- **Sandboxes/seccomp** that block `fork` or `pidfd_open`; Linux < 5.3 loses the forked-worker protection.\n- **Grace at host death** is host-wide (max of live trees, capped) — per-tree grace is not preserved.\n- **Bun and Deno** were not exercised (Node 22 and CPython 3.12 only). The decision (no handlers in the binding)\n  avoids depending on their signal handling, but the watchdog has not been forked from inside Bun/Deno yet.\n- **Windows host death is never graceful** (no CTRL_BREAK is sent at host death; the kernel terminates)."
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/docs/adr/0003-pty.md",
+    "git_blob_sha": "2cf6ab91d3d77518017fa46dad64ff37f120870b",
+    "source_sha256": "6fc6303b954d6f4bcfde34c6bd888536e7fc1dfb2256db68030de76ee07b9456",
+    "source_bytes": 30844,
+    "line_count": 315,
+    "disposition": "analyzed",
+    "kind": "doc",
+    "purpose": "Archives S2 PTY experiments, portable-pty rejection and the OS behaviors retained by the later supervisor design.",
+    "behavior": [
+      "Reports missing Unix exec errors, Windows DSR dependence and race/control limitations in portable-pty; atomic CLOEXEC allocation avoids a demonstrated fd inheritance window.",
+      "Documents ConPTY pipe-end ownership, reader/closer separation, exit-driven EOF and independent forced cleanup needs; no silence heuristic is accepted.",
+      "Shows inherited Ctrl-C ignore state, job-control groups requiring session sweeps, VT rendering/normalization and differing Windows close/handle behavior."
+    ],
+    "contracts": [
+      "ADR-0005 supersedes host-mutating and fork-based proposal details.",
+      "PTY comparison concerns normalized terminal text; ConPTY is a renderer and raw byte equality is not promised by these spike results."
+    ],
+    "dependencies": [
+      "spikes/pty historical probe",
+      "ADR-0005",
+      "docs/research/adr-reviews-s1-s2.md",
+      "Windows ConPTY and Unix PTY APIs"
+    ],
+    "failures_or_limits": [
+      "Measured Windows builds are 20348 and 26100; documented 17763 minimum is not a tested floor.",
+      "Pre-26100 handle growth, host Ctrl-C mutation and escaped-reader closure were open risks; current supervisor code must be read separately."
+    ],
+    "gaps": [
+      "No historical RESULT or CI status was independently executed or confirmed here."
+    ],
+    "inference": [],
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 6,
+        "quote": "# ADR 0003: Pseudo-terminals (`pty`) on Windows, macOS and Linux\n\n> **Lead status (2026-10-02):** reviewed by Codex (`docs/research/adr-reviews-s1-s2.md`, verdict *reject as a product baseline*). The accepted parts and the replacement design are in **ADR-0005 (supervisor)**; where this ADR and ADR-0005 disagree, ADR-0005 wins.\n\n\n**Status:** proposed (spike S2, 2026-10-02). Awaiting the lead."
+      },
+      {
+        "start_line": 58,
+        "end_line": 69,
+        "quote": "| child pid / handle | yes: `Child::process_id()`; `as_raw_handle()` on Windows |\n| child in our Job without a race | **no.** `ProcThreadAttributeList::with_capacity(1)` + `set_pty` only, so there is no JOB_LIST and no `CREATE_SUSPENDED`. Only a post-hoc `AssignProcessToJobObject` is possible. `master` is unchanged (`with_capacity(1)`, line 125). |\n| ClosePseudoConsole ordering | **no explicit control.** It runs only in `Drop for PsuedoCon` when the last `Arc<Inner>` (master + slave + writer) drops. |\n| headless use (no terminal behind it) | **no.** `CreatePseudoConsole` flags are hard-coded to `INHERIT_CURSOR \\| RESIZE_QUIRK \\| WIN32_INPUT_MODE`. ConPTY sends `ESC[6n` and holds back the child's output until someone answers. |\n| spawn errors | **no (Unix).** `close_random_fds()` in `pre_exec` closes std's exec-error pipe. |\n\nCI evidence:\n- `RESULT Q1 lib=portable-pty-0.9.0 os=windows ... got_hello=false dsr_request=true got_hello_after_dsr_reply=true ... eof_with_master_alive=false drop_master_ms=0 eof_after_drop=true raw=\"\\e[6n\\e[?9001h...\"` on W26100 R1/R2 and W20348 R1/R2. The child's `hello` arrives only after we answer the DSR as a terminal would, and EOF arrives only after the master is dropped.\n- `RESULT Q1 execfail os=linux portable_pty_spawn=Ok portable_pty_child_status=\"exited:Terminated by Aborted after_ms=110\" own_spawn=Err(No such file or directory (os error 2))` (ubuntu R2).\n- `RESULT Q1 execfail os=macos portable_pty_spawn=Ok portable_pty_child_status=\"still-running-after-10s\" own_spawn=Err(No such file or directory (os error 2))` (macos R1/R2).\n- With portable-pty, a missing interpreter becomes a \"successful\" spawn followed by an abort. That would break our `NOT_FOUND`/`NOT_EXECUTABLE` error codes.\n- On Unix, portable-pty's `kill()` sends SIGHUP and then SIGKILL to **one pid**, not to the tree (`lib.rs` 341–370)."
+      },
+      {
+        "start_line": 95,
+        "end_line": 108,
+        "quote": "**Deterministic sequence.** It uses no silence timer. The only clock is the contract's `graceMs` deadline, which starts at a process-exit event. A short code sketch follows each OS list.\n\nWindows (ConPTY):\n1. Create two pipes with `CreatePipe`, then call `CreatePseudoConsole(size, in_r, out_w, flags=0, &hpc)`. **Close `in_r` and `out_w` immediately** (conhost keeps its own duplicates). Never pass `PSEUDOCONSOLE_INHERIT_CURSOR` (see Q1 `dsr_request=true`).\n2. Call `CreateProcessW` with:\n   - `bInheritHandles=FALSE`\n   - `EXTENDED_STARTUPINFO_PRESENT`\n   - **one** attribute list `{PSEUDOCONSOLE, JOB_LIST}` (see Q5)\n   - `STARTF_USESTDHANDLES` with NULL or INVALID std handles (see Q6 stdh)\n   - never `CREATE_NEW_PROCESS_GROUP` (see Q3)\n3. A dedicated reader thread drains `out_r` from spawn until `ReadFile` returns 0 or `ERROR_BROKEN_PIPE`. **`ClosePseudoConsole` is never called on the reader thread.** (MS docs: before 24H2, `ClosePseudoConsole` \"will wait indefinitely\" if nobody drains.)\n4. When the process handle is signalled (child exit), call `ClosePseudoConsole` from a non-reader thread. This hangs up the console: every remaining client gets `CTRL_CLOSE_EVENT`, and conhost flushes its final frame.\n5. Read to EOF. Done.\n6. If EOF has not arrived `graceMs` after the exit, a descendant is ignoring the hang-up. Call `TerminateJobObject`, and EOF follows."
+      },
+      {
+        "start_line": 148,
+        "end_line": 157,
+        "quote": "**Minimum Windows build:**\n- **Documented minimum:** Windows 10 1809 / Server 2019 (build 17763), the CreatePseudoConsole/ClosePseudoConsole requirements.\n- **Verified:**\n  - build **20348.5622** (windows-2022, image 20260927.320.1)\n  - build **26100.33438** (windows-latest = windows-2025-vs2026, image 20260925.250.1)\n- The same sequence works on both. The difference is that `ClosePseudoConsole` takes about 2 ms on 20348 and returns at once on 26100. This matches the MS note \"Starting Windows 11 24H2 (build 26100) ClosePseudoConsole will return immediately\".\n- **K6 regression on 20348.** Each pseudoconsole leaks one process handle there, even with zero children:\n  - `RESULT Q2 conpty-handles os=windows iters=200 handles_start=83 after_create_close_only=288 after_full_sessions=488 delta_per_create_close=1.02 delta_per_session=1.00` (W20348 R2)\n  - versus `... delta_per_create_close=0.02 delta_per_session=0.00` (W26100 R2)\n- Builds 17763, 19045 and 22631 were not tested."
+      },
+      {
+        "start_line": 210,
+        "end_line": 213,
+        "quote": "**However, `killpg` is not enough for a PTY:**\n- An interactive job-control shell moves each job into its own pgrp.\n- `RESULT Q5 unix-jobctl os=linux ... session_members(pid,pgid)=[(3940, 3940), (3943, 3943), (3944, 3944)] survivors_after_killpg=[3943] bg_alive_after_killpg=true eof_after_killpg=false survivors_after_session_sweep=[] eof_after_sweep=true` (ubuntu R2; on macOS the background job also survives `killpg`, but EOF still arrives because the tty is revoked: `eof_after_killpg=true`).\n- A background job survives `killpg(child)` and keeps the stream open on Linux. A session sweep (SIGKILL every pid whose `getsid == child pid`) kills it."
+      },
+      {
+        "start_line": 292,
+        "end_line": 315,
+        "quote": "- **GUARANTEES: output.** \"In PTY mode, `output` is the terminal's byte stream. On Unix that is the child's bytes after ONLCR plus the echo of written input (e.g. `^C`). On Windows it is ConPTY's re-rendered VT stream (DECSET 9001/1004/25, ED, CUP, OSC title). Text is equal across OS only after the documented VT normalization. Byte equality is not promised.\" Contract tests for `pty` compare normalized text.\n- **GUARANTEES: end of stream / K5.** \"The PTY stream ends after the child exits. If no descendant holds the terminal, it ends at once. Otherwise descendants are hung up (Windows `CTRL_CLOSE`, Unix SIGHUP at session-leader exit) and those still alive at `graceMs` are killed. Every byte the child wrote before exiting is delivered.\" Do **not** promise descendant output after the root exits: macOS revokes the tty immediately, Linux keeps it, and Windows gives about 5 s.\n- **GUARANTEES: kill / INV-04.** \"`kill()` on a PTY child: Windows uses the same Job as non-PTY children. Unix uses the child's process group plus every process in its session.\" The brief's \"same process-group model\" holds only on Windows. The PTY graceful step is a **hang-up** (`ClosePseudoConsole` / SIGHUP to the session), not CTRL_BREAK/SIGTERM, before the force step at `graceMs`.\n- **GUARANTEES: interrupt and resize.**\n  - \"`write(\"\\x03\")` interrupts the foreground program on Linux, macOS and Windows (Windows: hugr-omni clears the inherited ignore-CTRL+C flag for PTY children).\"\n  - \"`resize` is observed by the child. Latency is not guaranteed (measured ≤ 24 ms on CI).\"\n- **Platform floor:** Windows 10 1809 / Server 2019 is the documented floor, and the GUARANTEES must list tested builds (20348, 26100). Builds before 26100 leak one handle per PTY session (K6). The lead must choose: declare the leak and scope K6 on Windows to 26100+, or ship `conpty.dll`.\n- **W12w should stay its own WP.**\n  - Its failure modes are Windows-only and only show up in Windows CI: EOF/close ordering, DSR, std handles, the Ctrl-C flag, VT noise, the 20348 handle leak, and close blocking before 24H2.\n  - Its write-set (`pty/windows.rs`) is disjoint from W12's (`pty/unix.rs` plus integration).\n  - It depends on W06 (Job) and on the frozen seam above.\n  - Its acceptance checklist is the Windows rules in Decision 1–2 plus the Q2/Q3/Q5/Q6 experiments as contract items.\n\n## Open risks\n\n- **20348 handle leak (1 per pseudoconsole).** The leaked handle type was not identified, and 17763, 19045 and 22631 were not tested. K6/K8 on Windows Server 2022 and on Windows 10/11 before 24H2 are at risk.\n- **Ctrl-C flag clearing is process-global** (`SetConsoleCtrlHandler(NULL, FALSE)` in the host). It changes the host's own Ctrl+C behaviour if the host has a console. Restoring the flag after spawn needs the undocumented `RTL_USER_PROCESS_PARAMETERS.ConsoleFlags` read. W12w must decide between toggle-under-spawn-lock and leaving it cleared, and must test it.\n- **Escaped Unix descendants.** A process that calls `setsid()` and keeps the slave open escapes both pgrp and session sweep, so EOF never comes. The reader must be poll-based with a wake fd, so the master can be dropped at `graceMs`. Untested. Overlaps S1 (cgroup/subreaper).\n- **Host-inherited non-CLOEXEC fds reach PTY children** (macOS CI 131, 140, 143, 146; Linux 142, 145). S1 must define child fd hygiene: in `pre_exec`, mark fds ≥ 3 CLOEXEC (`close_range(3, ~0, CLOSE_RANGE_CLOEXEC)` on Linux ≥ 5.11, an `fcntl` loop otherwise). Do not close them.\n- **ConPTY is a renderer, not a pipe.** 2000-line bursts at 80×24 lost nothing on either build. Not tested: lines wider than `cols` (wrap), full-screen apps, resize during output (reflow), and children that write raw non-UTF-8 bytes under a non-65001 code page.\n- **Windows stubborn descendants:** without our kill, Windows terminates them about 5 s after `CTRL_CLOSE`. A `graceMs` above 5 s therefore makes no difference.\n- **24H2 emits `?9001h`** (it asks the terminal for win32-input-mode). Plain VT input (`0x03`, text) works today. A future ConPTY could change input handling.\n- **conhost/OpenConsole is the host's child and is not in the Job.** What happens to it when the host crashes was not tested.\n- **Linux `stubborn-kill`:** in R1 `gc_dead_at_eof_check` was 49/50. EOF was 50/50 and the descendant was gone within 2 s in R2 (50/50). This is probably a reaping lag on the runner and was not investigated."
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/docs/decisions/G0.md",
+    "git_blob_sha": "f130353122aa6d6271e30ac04bdb6e67922b0ef0",
+    "source_sha256": "55a80893f8ce09fe2d30e3443d78a830b46396e1969e6579c5b2172b5a62b077",
+    "source_bytes": 4513,
+    "line_count": 42,
+    "disposition": "analyzed",
+    "kind": "doc",
+    "purpose": "Records the signed Phase 0 decision to own a lean Rust core with TypeScript first rather than depend on processkit.",
+    "behavior": [
+      "Contrasts documentation-level 81.8% landscape coverage with one-of-24 as-is contract fit and measured output/hang/lifetime shortcomings.",
+      "Evaluates three kill criteria, keeping uncompleted maintainer conversations as a release gate while choosing option B for build.",
+      "Separates TypeScript v0.1 from later Python/Rust packages and requires Windows evidence plus API approval before Phase 1 freeze."
+    ],
+    "contracts": [
+      "Owner signature records option B and language sequencing on 2026-10-01.",
+      "The decision is based on linked research/spikes, with Windows explicitly not measured at that decision date."
+    ],
+    "dependencies": [
+      "landscape.md",
+      "pain.md",
+      "processkit-audit.md",
+      "processkit-fit.md",
+      "processkit-eval.md",
+      "ADR-0004"
+    ],
+    "failures_or_limits": [
+      "Figures summarize historical candidate research, not current competitor or baseline measurements.",
+      "Draft title remains despite signed status; later supervisor design refines the selected techniques."
+    ],
+    "gaps": [
+      "G0-05 maintainer conversations were still open in the signed decision."
+    ],
+    "inference": [],
+    "evidence": [
+      {
+        "start_line": 3,
+        "end_line": 15,
+        "quote": "> Status: **SIGNED — option B** (Owner, 2026-10-01). Prepared by the lead from the Phase 0 evidence below.\n> Windows was not measured by anyone: GitHub Actions for HuGR-Labs is locked by a billing issue.\n\n## Evidence\n\n| Source | What it says |\n|---|---|\n| R1 `docs/research/landscape.md` | On documentation, `processkit` (Rust) + `processkit-py` reach 81.8% of 22 behaviors on 3 OS. TypeScript tops out at 61.4% even combining libraries. Nobody combines the lifecycle with an OS sandbox. |\n| R2 `docs/research/pain.md` | 1,592 issues across 10 agent repos in TS, Python and Rust (an upper bound; openai/codex is 49%). ~55% mention Windows. Lead reproduced 9/9 raw counts. |\n| Codex audit `docs/research/processkit-audit.md` | Verdict *build on it with fixes*. Windows startup containment sound. P0: no-orphans not universal (silent pgroup fallback on Linux; macOS); host-death cleanup limited. P1: PTY fd leak (Unix), NUL env injection and unsafe `.bat` on the ConPTY path, silence-based ConPTY EOF, incomplete capture reported as complete, unbounded capture. |\n| P0 fit `docs/research/processkit-fit.md` | Of 24 contract items: **1 as-is**, 18 adapter, 3 upstream, 2 not achievable on some OS. Adapter ~2.0k Rust + 0.6k TS; we would still own I/O, timers, exit reasons and host exit. Measured silent output loss (24,576 of 60,000 bytes, `drain()` returned success). Churn: 14 incompatible version lines and 3 yanks in 12 weeks; v4 redesign planned. |\n| E1 `docs/research/processkit-eval.md` | macOS + partial Linux, during tasks: 0 orphans in ~2,500 teardowns, stop p95 ≤ +18 ms, 1.00× `std::process`, 0 bytes lost, 0 crashes. Failures: stream never ends when a descendant holds stdout (5/5); fixed 5 s stall ignores `.timeout(2s)` and reports `timed_out=false`; host death leaves 100% of trees on macOS; slow reader buffers everything (+300 MB for 200 MB). Windows and the upstream suite NOT RUN. |\n| S3 `docs/adr/0004-packaging.md` | napi-rs + maturin packaging works without compiling (darwin-x64, linux-x64; arm64 partial; Windows and darwin-arm64 NOT RUN). **Q8: processkit's wait hangs deterministically under Node 22/24 and Bun on Linux when pidfd is unavailable** (kernel < 5.3 or seccomp); 0 hangs on macOS and with pidfd. A per-child blocking `waitpid` had 0 hangs everywhere. |"
+      },
+      {
+        "start_line": 21,
+        "end_line": 29,
+        "quote": "| An alternative covers ≥ 80% | By documentation yes (processkit 81.8%); **measured against our contract no** — 1 of 24 items as-is, with silent output loss and a hang under Node/Bun on Linux without pidfd | does not stop us |\n| Nobody would switch | Maintainer conversations not done yet (G0-05, Owner) | open — gates the release, not the build |\n| Pain in ≥ 2 ecosystems | Yes, in all three (directional) | go |\n\n## Options\n\n- **A — Build the TS package on processkit.** Fastest start, but we would replace its I/O, timers, exit reasons, host-exit handling and (under Node/Bun) its wait mechanism, keep an 86k-line, fast-churning dependency, and need upstream fixes for the ConPTY path.\n- **B — Own lean core, TypeScript first (lead's recommendation).** Rust core written to our contract and module rules, reusing the techniques processkit proved (suspended child → Job → resume on Windows; cgroup v2 when delegated; process group otherwise; per-child blocking `waitpid` or pidfd for exits). Python and Rust packages follow on the same core when the Owner decides. Everything we promise is ours to fix.\n- **C — Stop.** Point TS users at execa + node-pty and contribute to processkit."
+      },
+      {
+        "start_line": 35,
+        "end_line": 42,
+        "quote": "Before any Phase 1 dispatch:\n1. **Owner:** unlock GitHub Actions billing for HuGR-Labs (or move the repo). Nothing on Windows can be proven otherwise.\n2. **Lead:** resume S1/S2 on Windows CI (they answer exactly the Windows questions B needs), then freeze the contract (W00) after your API approval (D5).\n\n## Signature\n\n- [x] Owner decision: **B — own lean core, TypeScript first** — 2026-10-01\n- [x] Owner decision on languages: **TypeScript in v0.1; Python and Rust packages in v0.2**, on the same core and the same contract suite — 2026-10-01"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/docs/guide/recipes.md",
+    "git_blob_sha": "7a34e6d46f69cdffcf0c721b135803ca7b8a1c21",
+    "source_sha256": "b4550162df4d1c7f649b33e5b7f66e3add230110d235afa95bbe05354c16ea59",
+    "source_bytes": 19071,
+    "line_count": 391,
+    "disposition": "analyzed",
+    "kind": "doc",
+    "purpose": "Provides TypeScript-first copyable recipes for common agent process/terminal work and a compact Rust API mapping.",
+    "behavior": [
+      "Shows readiness loops with whole-session deadlines, result-based timeout/nonzero handling and explicit abort rejection with collected output.",
+      "Explains merged/clean environments, PATH resolution, stdin closure, per-stream output versus OS merge, and type-directed string/byte results.",
+      "Uses one persistent iterator for multi-step Unix bash conversations, explicit prompt markers, echo removal and row/column-aware resize."
+    ],
+    "contracts": [
+      "Leaving an output loop detaches permanently; stop/disposal owns the tree, while wait reports root exit.",
+      "PTY output is terminal data; prompts require chunks and PTYs lack closeStdin."
+    ],
+    "dependencies": [
+      "scripts/readme-check",
+      "GUARANTEES.md",
+      "scripts/surface-check/parity.txt",
+      "bindings/node/index.d.ts"
+    ],
+    "failures_or_limits": [
+      "The claim that every block runs in CI is documentary intent; no examples ran here.",
+      "Reason table omits current memory_exceeded; the guide does not cover maxRssBytes or optional backpressure.",
+      "Interactive examples lack their own timeout in some blocks; external docs harness bounds do not travel with pasted code."
+    ],
+    "gaps": [
+      "Newer memory/backpressure options need current contract consultation."
+    ],
+    "inference": [],
+    "evidence": [
+      {
+        "start_line": 8,
+        "end_line": 17,
+        "quote": "Every block here is run by CI (`scripts/readme-check`) on each OS, inside a small project with an `npm run dev` that\nprints `ready` and an `npm test` that passes (the one Unix-only block, the shell, says so). To adapt one, change the\ncommand. They are written as ES modules; from CommonJS, `require(\"hugr-omni\")` gives the same `run`, `spawn` and\n`OmniError`.\n\nIn a fresh Node project (`npm init -y` makes it CommonJS), run `npm pkg set type=module` (or name your files `.mts`)\nbefore using top-level `await`, and add `npm i -D @types/node` when you type-check with TypeScript.\n\nWhich function: `run` when the program ends by itself and you want its whole output; `spawn` when it keeps running, or\nyou want to read as it goes, write to it, or stop it."
+      },
+      {
+        "start_line": 53,
+        "end_line": 58,
+        "quote": "- `lines()` and `output` are two views of one consumer. Claim it once; a second `for await` is `INVALID_ARGUMENT`.\n- A server that stays alive without ever printing `ready` ends the loop only when the budget stops it, so say how long\n  you can wait.\n- `processes()` answers \"why is the port busy?\" with pids and parent links, never command-line arguments. It lists the\n  root too, in no particular order, and it is `[]` once the tree is gone: take the pids before `stop()` if you want to\n  check them with `ps` afterwards."
+      },
+      {
+        "start_line": 89,
+        "end_line": 92,
+        "quote": "- A non-zero exit never throws. Timeouts do not throw either; both are results you read.\n- `graceMs` is how long the tree gets to wind down (a cooperative program finishes its cleanup) before it is forced.\n- Output above `maxOutputBytes` (16 MiB per stream by default) stops the tree and rejects with `OUTPUT_LIMIT`; the\n  first bytes are in `error.result`. For more, use `spawn()` and read it as it comes."
+      },
+      {
+        "start_line": 246,
+        "end_line": 250,
+        "quote": "- Without `stdin: \"pipe\"`, `write()` rejects with `INVALID_ARGUMENT`, and the message names the option.\n- Writing after `closeStdin()`, or after the program closed its end of the pipe or exited, rejects with `CLOSED`.\n- Output that arrives before you start reading waits for you (up to 1 MiB per stream), so writing first and reading\n  afterwards loses nothing.\n- A terminal has no `closeStdin()`; send the program's own end of input (section 3)."
+      },
+      {
+        "start_line": 302,
+        "end_line": 316,
+        "quote": "| `reason` | What happened | `exitCode`, `signal` |\n|---|---|---|\n| `exit` | the program ended by itself | its code, `null` |\n| `signal` | Unix only: a signal that was not ours ended it (a crash, someone else's `kill`) | `null`, the signal's name |\n| `timeout` | `timeoutMs` passed and the tree was stopped | what the program ended with |\n| `aborted` | the `signal` fired and the tree was stopped | what the program ended with |\n| `killed` | `stop()`, or the end of an `await using` scope | what the program ended with |\n\n- After `timeout`, `aborted` or `killed` the program's own status is still reported. On Unix a program that dies of our\n  SIGTERM has `exitCode: null` and `signal: \"SIGTERM\"`; one that handles SIGTERM and exits 0 has `exitCode: 0` and\n  still `success: false`. On Windows `signal` is always `null`.\n- `stdout` and `stderr` are strings. With `text: false` they are `Uint8Array`, byte for byte, and TypeScript knows it:\n  `r.stdout.trim()` compiles by default, and is an error with `text: false` (the same goes for `chunk.data`).\n- A failure to start is not a result: `spawn()` throws `OmniError` at once (`NOT_FOUND`, `INVALID_CWD`, ...), and\n  `run()` rejects with it."
+      },
+      {
+        "start_line": 322,
+        "end_line": 343,
+        "quote": "- **Know when it is ready.** Choose the prompt yourself (`PS1`) and wait for it, so that a banner, a slow startup or\n  your own startup files cannot fool you.\n- **Tell the echo from the output.** The terminal echoes what you type. A reply is the echo of your command, then\n  its output, then the next prompt: cut the first line and the last.\n- **Run several steps with one iterator.** Leaving a `for await` loop detaches the output for good, and a second claim\n  throws `INVALID_ARGUMENT`. Take the iterator once, and call `next()` as often as you need.\n\nThe block below is for Unix (`bash`, `stty`) and ends at once on Windows: `cmd.exe` and `powershell.exe` have a prompt\nand an echo of their own, so print a transcript of your shell before you pick its markers. It starts bash with\n`--noediting` because, with line editing on, bash redraws the prompt when the terminal is resized, and the redraw looks\nlike the next prompt.\n\n```ts\nimport { spawn } from \"hugr-omni\";\n\nif (process.platform === \"win32\") process.exit(0); // bash and stty are Unix tools\n\n// --norc and --noprofile keep your own startup files out, so PS1 is the prompt we chose.\nawait using term = spawn(\"bash\", [\"--noediting\", \"--norc\", \"--noprofile\"], {\n  pty: { cols: 100, rows: 30 },\n  env: { PS1: \"omni> \" },\n});"
+      },
+      {
+        "start_line": 381,
+        "end_line": 391,
+        "quote": "- Pick the marker so that the command cannot print it by accident, and add a `timeoutMs` to `spawn` when a reply\n  could never come (a command that waits for input).\n\n## Rust\n\nThe options have the same meaning and, in Rust style, the same names: `Command::new(..).args(..)`, `.timeout(..)`,\n`.grace(..)`, `.cancel_on(token)`, `.pty(PtySize { cols, rows })`, `.cwd(..)`, `.env(..)`, `.env_remove(..)`, `.inherit_env(..)`,\n`.input(..)`, `.stdin(..)`, `.merge_stderr(..)`, `.text(..)`, then `.run().await`\nor `.spawn()` / `.spawn_pty()` for a child you stream from, write to and `stop(None).await`. Dropping a child kills its tree at\nonce without waiting; call `stop(None)` for a graceful end. The table that places every TypeScript and Rust name under its\nconcept is [scripts/surface-check/parity.txt](../../scripts/surface-check/parity.txt); Python joins it in v0.2."
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/docs/ux/Q2-cold-users-v0.1.md",
+    "git_blob_sha": "aa78aecf5fc389f2c804a326f5647b00184fa00d",
+    "source_sha256": "b9050b62c6ae8519a27cf409484942341ee98a7a7d8028c382de2102d43260db",
+    "source_bytes": 4253,
+    "line_count": 57,
+    "disposition": "analyzed",
+    "kind": "doc",
+    "purpose": "Records the v0.1 cold-user exercise and follow-up documentation/typing friction.",
+    "behavior": [
+      "Reports three fresh agents on macOS x64/Node, packed pre-release tarballs, fifteen tasks and self-timed first-success results.",
+      "Classifies friction as annoyances and maps them to typed text output, environment/stdin/result recipes, module setup and shell guidance.",
+      "Reports a second strict-TypeScript cohort, identifying an old installed declaration tarball as a setup issue rather than a new-package typing regression."
+    ],
+    "contracts": [
+      "The report's scope is agent users with README/recipes/install note, not a broad human or cross-platform usability study.",
+      "Owner signature is dated 2026-10-06."
+    ],
+    "dependencies": [
+      "README.md",
+      "docs/guide/recipes.md",
+      "W18b changes",
+      "lead's external review records"
+    ],
+    "failures_or_limits": [
+      "15/15 and approximately 0.1-minute median are reported observations, not rerun here.",
+      "Full scripts/reports are kept outside this captured file, and the rerun used an old tarball before lead recheck."
+    ],
+    "gaps": [
+      "External raw reports are not part of this source capture."
+    ],
+    "inference": [],
+    "evidence": [
+      {
+        "start_line": 3,
+        "end_line": 5,
+        "quote": "Three fresh agents (Claude Sonnet), each with only the README, the recipes guide and an install note (the package is\nnot on npm yet, so it was installed from the packed tarballs), on macOS x64, Node 22 (Node 24 through npx where a task\nneeded `await using`). They never saw code, plan or conversation. Each did 5 of 15 typical agent tasks and timed itself."
+      },
+      {
+        "start_line": 27,
+        "end_line": 29,
+        "quote": "**15/15 succeeded, every one on its first run; median time to first success ≈ 0.1 min (target ≤ 5 min). No blocker.**\nVerified by the users with `ps`: no process left after stop, cancel or scope exit; Ctrl-C reached `sleep` through bash\nin about 1 ms; the abort landed about 7 ms after 500 ms."
+      },
+      {
+        "start_line": 35,
+        "end_line": 42,
+        "quote": "| `stdout` is typed `string \\| Uint8Array` whatever `text` says, so `r.stdout.trim()` fails `tsc` | type the result by `text` (W18b) |\n| `env`, `inheritEnv`, `cwd`, `stdin: \"pipe\"`/`closeStdin()`, `mergeStderr` are only in `index.d.ts` | one short recipe each (W18b) |\n| a clean environment (`inheritEnv: false`) drops PATH, so `run(\"node\")` is NOT_FOUND; the error says so, the docs do not | a note in the env recipe (W18b) |\n| what `exitCode`/`signal`/`reason` are after a timeout or a `stop()` (`reason: \"killed\"`, `success: false`) | a short \"reading the result\" section (W18b) |\n| the examples assume ESM and `await using`; a fresh Node 22 project is CommonJS | a CommonJS + `try`/`finally` line in the README (W18b) |\n| no recipe drives a real shell (prompt detection, telling the echo from the output, several steps) | a shell recipe (W18b) |\n| `resize()` effect and `stty` row/column order; macOS `/tmp` is `/private/tmp` | one line each (W18b) |\n| the README's relative links pointed to files the test workspace did not have | test setup, not the product: the npm README uses absolute links |"
+      },
+      {
+        "start_line": 44,
+        "end_line": 57,
+        "quote": "## Rerun after W18b (three new agents, strict TypeScript)\n\nThree more fresh agents did the same 15 tasks, this time in TypeScript type-checked with `tsc --strict`\n(`nodenext`) and run with `tsx` (and bun for `await using`): **15/15 succeeded, each in about a minute or less, no\nblocker.** Their install note (the lead's test setup) pointed at the previous main tarball, so their `stdout` typing\nfriction came from the old `index.d.ts`; the lead re-checked the new package with strict `tsc`: `r.stdout.trim()`\ncompiles and `text: false` gives `Uint8Array`. Real frictions left, all fixed in the docs (747c8c0 and the shell\nrecipe): a fresh `npm init -y` project is CommonJS, so top-level `await` needs `npm pkg set type=module` or `.mts`;\nTypeScript needs `@types/node` for `process`; a Ctrl-C to a silent command in a shell should wait until\n`processes()` lists it.\n\nThe full user reports and their scripts are kept with the lead's review records.\n\nSigned by the owner on 2026-10-06 (\"assino o relatório\", in the session chat)."
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/docs/ux/WP10-orchestra-integration.md",
+    "git_blob_sha": "1271db6aff93ca8256c8ffd2596b63944de5465c",
+    "source_sha256": "d83e33cf33250516acdffb17dbd11206b8d1a9478b74f1e24d38a8551304ec1c",
+    "source_bytes": 13813,
+    "line_count": 130,
+    "disposition": "analyzed",
+    "kind": "doc",
+    "purpose": "Records revision-scoped Orchestra integration verification, measured limits and local-use distribution approval.",
+    "behavior": [
+      "Tracks installer/LSP/CLI/PTY repairs, independent mutations and hosted evidence with explicit product/source pins.",
+      "Separates acknowledged raw POSIX byte accounting from cooked responsiveness and unsupported ConPTY raw identity.",
+      "Documents eight native artifact targets without equating them to enabled CLI targets, public npm release or notarized distribution."
+    ],
+    "contracts": [
+      "Earlier campaign results cannot be attributed to later revisions; cleanup after failed measurement cannot turn it green.",
+      "Authorized signing/notarization deferral covers local unsigned/ad-hoc artifacts only; no KPI waiver or public-distribution approval."
+    ],
+    "dependencies": [
+      "docs/ux/WP9a-default-on.md",
+      "docs/orchestra-integration.md",
+      "linked Orchestra Actions runs and campaign evidence"
+    ],
+    "failures_or_limits": [
+      "Evidence links and reported pass counts are historical claims read from this document, not fetched run logs or new execution.",
+      "Unix setsid/supervisor-death/no-pidfd limitations persist; ConPTY raw is explicitly unsupported."
+    ],
+    "gaps": [
+      "Full runner-local source manifest is not archived by test-ci; signing/npm/WP9b remain separately gated."
+    ],
+    "inference": [],
+    "evidence": [
+      {
+        "start_line": 64,
+        "end_line": 82,
+        "quote": "These runs close the previously listed hosted gaps. Evidence belongs to the source SHA recorded by each run;\nan earlier campaign result is not a measurement of a later revision.\n\n| Evidence | Result and scope |\n|---|---|\n| [37832187161](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37832187161) | macOS **Intel/x64** V7: 25 warmup pairs, 1000 samples per arm, AB/BA, 20 ms idle outside the clock. Legacy p50 9.89377 ms; Omni 11.30649 ms; unchanged limit 11.89377 ms. Measured 5 ms in-clock slowdown was rejected: Omni 17.66623 ms, limit 12.06073 ms. Busy/partial ARM runs remain unrun. |\n| [37799127882](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37799127882) | Eight native artifact targets: Linux GNU/musl x64/arm64, macOS x64/arm64, Windows MSVC x64/arm64. Clean-install/runtime proofs execute the addon and supervisor under Node/Bun/Deno; Deno on musl is explicitly N/A. This does not enable every target in the Orchestra CLI build table or publish npm packages. |\n| [37866046448](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37866046448) | V3–V6 on Linux/macOS/Windows: supervisor-death tiers and fresh recovery; twenty same-instance LSP crashes with real tsservers; one MiB MCP stderr plus final diagnostic marker; real vim/resize, Unicode reconnect replay, cooked 50 MiB responsiveness and supported raw byte accounting. |\n| [37809901606](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37809901606) | Earlier Bun and built-Node natural-exit proof on three OSes; timer and orphan stdout-holder controls included. Controlled production-source fixture, not Electron. |\n| [37882215212](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37882215212) | Actual packaged Electron on three OSes: main crash, utilityProcess crash with main alive, and unsignalled code-zero app.quit. Real Keychain isolation repairs the macOS fixture. Unsigned --dir packaging only. |\n| [37866045782](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37866045782) | Deliberately red lead mutation: removing Windows SIGINT/SIGBREAK listeners broke serve Ctrl+C shutdown. Restored product is exercised by the current Windows lifecycle run below. |\n| [37886081319](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37886081319) | Reconciled working-tree snapshot `99d05a535a2a1d5a7b06640cb024d9f79a9abb38`: 26 tests per OS, no skips. Natural-exit fixture now shares seatSkillsFiles and ORCHESTRA_COMPILED=true with production; generated-map hashes are retained. Timer stays red after disposal; orphan stdout holder cannot bypass descendant/broker cleanup. Seat packaging failure controls also execute. |\n| [37887074886](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37887074886) | Snapshot on reconciled product: Windows V1 adoption/output and two real frontend Esc in the same Session; V2 compiled serve/TUI crash; V10 TUI quit and real serve Ctrl+C. Omitted adoption, missing inner supervisor ownership, forced kill presented as graceful, disabled Esc and recorder-stop faults are rejected. |\n| [37886935451](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37886935451) | Product `50df6ac76a`: compiled CLI crash smoke and in-bundle debug omni passed on Linux/macOS/Windows, using shipped neighboring native files. |\n| [37886938068](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37886938068) | Product `50df6ac76a`: actual packaged Electron matrix passed on Linux/macOS/Windows. Live bash/LSP protocol fixture/MCP plus grandchild/two terminals; main and utility crashes leave zero owned trees within 8 s; app.quit exits unsignalled with code zero within 20 s. Legacy-unowned, forced-kill-as-graceful and empty-fixture controls are rejected before restored green cells. |\n\nV6 raw POSIX identity uses receiver-acknowledged 64 KiB blocks; it does not claim lossless unpaced raw bursts.\nConPTY raw byte identity is `supported:false`, `pass:null`; its cooked/render tier executes. Acknowledged raw\naccounting and cooked unpaced responsiveness are separate observations."
+      },
+      {
+        "start_line": 84,
+        "end_line": 96,
+        "quote": "Unix setsid escapes, the Unix supervisor-death hole and no-pidfd limitations retain their declared guarantees.\nWindows inventories retain PID plus creation time and owner chains. A missing identity or incomplete query is a\nfailure. Cleanup after a failed measurement cannot turn that measurement green.\n\nEarlier run source pins: V7 `097a9faebfcf90a0c0f118bbe708539dea9572d2`; eight targets\n`edc12db0a31ecb15f6af73b2e4e99a4fed4fbd0c`; V3–V6 `e4934e51a78935ab1bcc0306b216c0c9018da615`;\nnatural exit `cc72d7a1868049cee332a924bc6dd5cc5accc247`; Electron\n`eb9d5a6f715db0e052d1122345be2f0bc2f02f8f`. Restored Windows lifecycle snapshot:\n`256c63d3b74c9b5bd6e61e942dcf47477c1a0db7` (only the request file differs from product `50df6ac76a`).\n\nThe natural builder hashes the generated seat map in its full runner-local source manifest. The verdict logs retain\nthe manifest digest and selected source hashes; `test-ci` does not archive that full manifest as an artifact.\nDesktop workflows separately upload their source/artifact pins and mutation evidence."
+      },
+      {
+        "start_line": 102,
+        "end_line": 114,
+        "quote": "## Authorized distribution deferral\n\nWAIVER (human-authorized) — Apple Developer ID signing and macOS notarization proof are deferred.\n\n- authorized-by: owner, 2026-10-09, **\"go on\"**, in response to continuing technical closeout for local use without\n  an Apple Developer membership.\n- reason: no paid Apple Developer membership or valid Developer ID identity is available.\n- scope: local unsigned/ad-hoc development artifacts only. This is not approval of signed/notarized distribution,\n  a public release or npm publication.\n- remediation: obtain Developer ID and notarization credentials, then execute the original signing/notarization\n  path before that distribution; tracking: WP4/WP5 signing requirements in `docs/orchestra-integration.md`.\n\nNo KPI waiver was granted. Busy timing refusals are preserved. npm publication remains owner-deferred."
+      },
+      {
+        "start_line": 118,
+        "end_line": 130,
+        "quote": "- Owner accepted this technical report for the documented local scope on 2026-10-09: **\"eai, pode seguir\"**, in\n  response to the explicit report-signature question. This authorizes WP9a work, not npm/public distribution.\n- Owner-Mac V2/V7 boundary probes executed on their pinned default-on revisions; actual SHAs, raw sample hashes\n  and unchanged KPI limits are in the WP9a report. They are not new `f036dca9a4` binary measurements.\n- Supported candidate builds now select Omni when unset; explicit `=0` retains rollback. CI provisions native\n  artifacts to every unit shard, hashes Rust and campaign inputs, and retains a real Windows legacy cell.\n- Product `f036dca9a4` compiled CLI and actual unsigned Electron matrices passed on three OSes. Later CI/harness\n  repairs change neither product source nor native build inputs. The WP9a report records the separate epic gate,\n  failed attempts and exact source scope; this historical WP10 table does not relabel earlier proofs as current.\n- Eight-target artifact proof alone does not enable currently disabled musl/Windows arm64 CLI build rows.\n- WP9b stays after one clean release; npm publication requires separate owner authorization.\n\nOwner signature: **accepted, 2026-10-09 — \"eai, pode seguir\"**. Scope: local use; no public distribution approval."
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/docs/ux/WP9a-default-on.md",
+    "git_blob_sha": "a20d3e122d7fa087bf6f29854788079f94d7e82c",
+    "source_sha256": "2325ffa6ed4f5d47c16ef3a359362055e6ec2d80b83f2670153749fae6f3aeec",
+    "source_bytes": 24445,
+    "line_count": 197,
+    "disposition": "analyzed",
+    "kind": "doc",
+    "purpose": "Records default-on rollout semantics, native artifact/cache contracts and final revision-specific integration evidence.",
+    "behavior": [
+      "Documents unset selecting Omni on supported builds, empty/0 selecting legacy, 1/strict retention and invalid-value warning fallback.",
+      "Requires same-run native artifacts on unit shards, nonempty files, executable supervisors and explicit Rust/environment/campaign cache inputs even for cache hits.",
+      "Preserves final candidate evidence, failed/retried attempts and proof limits for registry isolation, generator partitioning, authenticated quit IDs and raw owner-Mac measurements."
+    ],
+    "contracts": [
+      "Cached lanes are not fresh execution; earlier binary measurements retain their actual source pins.",
+      "Local-use authorization does not include npm/notarization; legacy removal waits for a clean release."
+    ],
+    "dependencies": [
+      "WP10-orchestra-integration.md",
+      "Orchestra PR #73",
+      "native producers/consumers",
+      "linked campaign/CI evidence"
+    ],
+    "failures_or_limits": [
+      "This is an evidence report rather than current source inspection of Orchestra adapters.",
+      "Historical macOS PTY activation failures remain unexplained; registry cleanup proof does not exercise the stale-settlement token guard."
+    ],
+    "gaps": [
+      "Latest report still lists landing/post-merge/mirror checks; newer HANDOFF section reports landing complete."
+    ],
+    "inference": [],
+    "evidence": [
+      {
+        "start_line": 12,
+        "end_line": 31,
+        "quote": "- Supported builds select Omni when `ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER` is unset. `=0` keeps the legacy backend for\n  rollback; empty is also off. `=1` and `=strict` retain their existing meanings; invalid values fall back to legacy\n  with a warning. Targets still compiled with `OMNI_ENABLED=false` retain legacy behavior.\n- Background shell processes adopted at successful tool completion remain visible in the Session process panel.\n  Esc cancels the foreground turn; Session removal/server shutdown stops adopted processes.\n- Windows GUI launches started by Session shell commands close with that Session under the supervised tree policy.\n- The `!` shell template has a 120-second deadline.\n- Local source development needs the matching Omni addon and supervisor (`bun run omni:build`), or an explicit `=0`\n  rollback. This change does not publish binaries or remove legacy dependencies.\n\n## CI contract\n\n- Same-run Linux/Windows native producers feed every unit shard and the Windows rollback cell. Downloaded files\n  must exist and be nonempty; Unix supervisor execute permission is restored and checked. Missing artifacts cannot\n  fall back to an unrelated cache/build in the consumer.\n- Turbo transit hashes include the Rust workspace, manifests/lockfile, pinned toolchain, `.cargo` and binding\n  inputs. Mode, positive-control preload and native action affect cache keys; native paths pass into strict Turbo\n  environments. Cached shards still validate their downloaded native artifacts.\n- `test-ci` provisions native files for Bun/Node requests even when the flag is unset. Python requests do not need\n  them. The standalone build-time godfile test explicitly selects `=0`; ordinary runtime suites stay default-native."
+      },
+      {
+        "start_line": 64,
+        "end_line": 76,
+        "quote": "Local dry-run cache probe changed one real supervisor source comment: native transit hash and Core consumer hash\nboth changed; byte-exact restoration recovered both original hashes. A no-op was stable; explicit `=0` changed the\nCore test hash. These are cache-input proofs, not test-suite passes. Cold CI/runtime reviewers requested corrections\nand approved the repaired source; actual workflow execution remains a separate gate. The three-file\n`f036dca9a4..326a697ad7` diff changes only CI environment hashing, a manual probe and recorder failure diagnostics;\n`fc41e41a68` additionally hashes campaign TypeScript consumed by Core tests. CLI/Electron evidence above belongs\nto the unchanged product at `f036dca9a4`, not fresh CI-repair binaries.\n\nA recorder-source comment probe exposed an additional blind cache input: before the extension, both Core and native\ntransit hashes stayed unchanged. With the explicit campaign input, Core changed from `f931030248c41725` to\n`dfcae1ccc4cde971`; byte-exact restoration recovered `f931030248c41725`. Native transit remained\n`a7bc40b96369db56`, as expected for a test-only input. `PSModuleAnalysisCachePath` values `cache-probe-a` and\n`cache-probe-b` produced different Core hashes (`61ef8bce08aa2795`, `ba37197b0e1a82e9`). Dry-run cache probes only."
+      },
+      {
+        "start_line": 159,
+        "end_line": 181,
+        "quote": "Linux/Windows package scheduling is serialized to prevent cold bootstrap/generation contention; every package and\noriginal per-test deadline remains. Historical macOS `/pty` 500 activation errors did not reproduce in fresh\noriginal-environment matrices; their cause remains unknown, not a claimed product fix. No diagnostic-only desktop\nintervention substitutes for the required restored cells. The `06699d3fd8` evidence above predates the additional\nruntime reconciliation below; it is not relabeled as a measurement of a later build.\n\n## Latest shared-runtime reconciliation — 2026-10-10\n\nCandidate `c97e1a7283610c582e3e482a101e9f453ea1bab5` includes the `dev` terminal-notification change, project\ncheckpoints and durable work-result event through `d6a58a0296`. Cold reviewers approved the shared-job/Omni lease\nunion and checkpoint/event integration boundaries. The latter review covered merge boundaries, not an independent\nreview of the entire already-landed upstream feature.\n\nThe old registry fixture waited for a finalizer inside a queued command that now correctly never begins after its\npredecessor fails. Its replacement retains failure and restart assertions, checks queued non-entry, and holds an\nactual begun-command cancellation finalizer across ID reuse. This proves cleanup isolation, not execution of the\nstale-settlement token guard. Restoring early successor release made the non-entry assertion fail; restoration passed.\n\nThe public event initially grew the generated SDK main types to 16634 nonblank LOC, above the existing 16592 cap.\nExtending the existing generator partition to six event aliases reduced it to 16575, without changing a waiver or\ndeclaration bytes. Public reexports and type-only dependency cycles remain. Client and legacy SDK were regenerated\nwith their official commands; generated files were not hand-edited. The compiler probe rejects an omitted partition\nexport; its reach is partition placement, not absence of the still-public alias from the main module."
+      },
+      {
+        "start_line": 190,
+        "end_line": 197,
+        "quote": "| [38071818809](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38071818809) | Final `c97e1a7283` epic passed all lanes: native producers/consumers, Linux/Windows unit suites, e2e, Atlas, generated-client/HttpApi/Relay and Windows rollback. Cache-replayed lanes are not fresh executions. |\n| [38071010416](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38071010416) | Final `c97e1a7283` full package typecheck passed. |\n| [38071013779](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38071013779) | Final `c97e1a7283` actual unsigned Electron matrix passed on three OSes, with required restored crash/quit cells, controls and original logging environment. |\n| [38071010746](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38071010746), [38071010790](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38071010790) | Final `c97e1a7283` compiled CLI and native gates passed on three OSes. |\n| [38071010760](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38071010760) | Final `c97e1a7283` delivery passed, attempt 3. Attempt 1 Windows V9 exceeded 2 s; same-source retry passed. macOS attempts 1/2 refused busy hosts; incomplete V7 timing remains unrun. No deadline or KPI changed. |\n\nRemaining landing steps: documentation-only PR-head checks, history-preserving merge of #73, then post-merge CI and\nmirror fast-forward verification. npm, Developer ID/notarization and WP9b retain their separate deferred scope."
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  }
+]

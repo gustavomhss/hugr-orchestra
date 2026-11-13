@@ -1,0 +1,37 @@
+{
+  "schema": "omni-documentary-negative-cases/v1",
+  "frozen_at": "2026-11-13T15:09:58.051863+00:00",
+  "scope": "Artifact verifier controls, not product tests or runtime acceptance. Complements pre-author criteria without retroactively changing them.",
+  "cases": [
+    {
+      "id": "DOC-NEG-01",
+      "mutation": "remove a source record",
+      "expected": "MISSING_SOURCES"
+    },
+    {
+      "id": "DOC-NEG-02",
+      "mutation": "duplicate source record",
+      "expected": "DUPLICATE"
+    },
+    {
+      "id": "DOC-NEG-03",
+      "mutation": "substitute Git blob SHA",
+      "expected": "BLOB_MISMATCH"
+    },
+    {
+      "id": "DOC-NEG-04",
+      "mutation": "replace source quote with absent text",
+      "expected": "QUOTE_MISMATCH"
+    },
+    {
+      "id": "DOC-NEG-05",
+      "mutation": "use one excluded path as new source",
+      "expected": "OUT_OF_SCOPE"
+    },
+    {
+      "id": "DOC-NEG-06",
+      "mutation": "claim source test runtime status PASS",
+      "expected": "UNSUPPORTED_RUNTIME_STATUS"
+    }
+  ]
+}

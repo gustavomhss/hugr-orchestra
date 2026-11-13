@@ -1,0 +1,394 @@
+[
+  {
+    "path": "native/omni/crates/omni-supervisor/tests/common/cmd.rs",
+    "git_blob_sha": "a582f48ac84bc21f15faaddc4e78a841f5b6d4be",
+    "source_sha256": "72927c57e5455980c70eaf488862f03148c34f26fae471923d83140416af5a93",
+    "source_bytes": 2919,
+    "line_count": 95,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Describe Unix supervisor test commands in both wire-protocol and direct-process forms.",
+    "behavior": [
+      "Defaults to inherited environment/current directory, closed stdin, merged stderr and 300 ms grace; fluent helpers change those fields.",
+      "Builds a child-role command by rerunning the exact test binary role with a selected environment value.",
+      "Encodes Unix OS strings as raw bytes in Spawn, with no PTY, zero Windows handles and optional verbatim data for refusal testing."
+    ],
+    "contracts": [
+      "The direct std::process control clears/reapplies environment and cwd but always uses null stdin and piped stdout."
+    ],
+    "dependencies": [
+      "common/host.rs sends Spawn; common/role.rs interprets role selection; omni_proto defines slots."
+    ],
+    "failures_or_limits": [
+      "The direct control does not mirror every Cmd stdio/grace/verbatim field, so it is a targeted baseline rather than a complete behavioral substitute. No child was executed here."
+    ],
+    "evidence": [
+      {
+        "start_line": 26,
+        "end_line": 50,
+        "quote": "    pub fn new(program: &str, args: &[&str]) -> Cmd {\n        let mut argv = vec![OsString::from(program)];\n        argv.extend(args.iter().map(OsString::from));\n        Cmd {\n            program: PathBuf::from(program),\n            argv,\n            env: std::env::vars_os().collect(),\n            cwd: std::env::current_dir().unwrap(),\n            stdin: false,\n            merge: true,\n            grace_ms: 300,\n            verbatim: None,\n        }\n    }\n\n    /// This test binary in a child role (`role.rs`).\n    pub fn role(spec: &str) -> Cmd {\n        let exe = std::env::current_exe().unwrap();\n        let mut c = Cmd::new(\n            exe.to_str().unwrap(),\n            &[\"--exact\", \"role\", \"--nocapture\", \"--test-threads=1\", \"-q\"],\n        );\n        c.env.retain(|(k, _)| k != super::role::VAR);\n        c.env.push((super::role::VAR.into(), spec.into()));\n        c"
+      },
+      {
+        "start_line": 68,
+        "end_line": 93,
+        "quote": "    /// The same command through `std::process` (the in-host control), stdout piped.\n    pub fn std(&self) -> Command {\n        let mut c = Command::new(&self.program);\n        c.args(&self.argv[1..])\n            .env_clear()\n            .envs(self.env.iter().cloned())\n            .current_dir(&self.cwd);\n        c.stdin(Stdio::null()).stdout(Stdio::piped());\n        c\n    }\n\n    pub fn spawn_msg(&self, req: u64) -> Spawn {\n        let b = |s: &std::ffi::OsStr| s.as_bytes().to_vec();\n        Spawn {\n            req,\n            program: b(self.program.as_os_str()),\n            argv: self.argv.iter().map(|a| b(a)).collect(),\n            env: self.env.iter().map(|(k, v)| (b(k), b(v))).collect(),\n            cwd: b(self.cwd.as_os_str()),\n            pty: None,\n            stdin: if self.stdin { Slot::Pipe } else { Slot::Null },\n            stderr: if self.merge { Slot::Merge } else { Slot::Pipe },\n            grace_ms: self.grace_ms,\n            handles: [0; 3],\n            verbatim: self.verbatim.clone(),\n        }"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/tests/common/host.rs",
+    "git_blob_sha": "ac1f453b07959ad18f0d5fb97a356579d7090533",
+    "source_sha256": "0457aa11b1c16fbfbd97636f64c57783b169d5f9dc91e42863b08d097d9933e1",
+    "source_bytes": 12460,
+    "line_count": 358,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Provide a minimal Unix protocol host for supervisor integration tests.",
+    "behavior": [
+      "Starts the supervisor on fd zero via a socketpair in its own process group, verifies version/PID in Ready and retains capability info.",
+      "Sends pipe descriptors on the first frame bytes via SCM_RIGHTS, reads complete replies under ten-second observation bounds, stashes unrelated replies and rejects duplicate Exited messages.",
+      "Constructs pipe roots, exposes Stop/List/Exit helpers, and closes the channel to simulate host loss; Drop waits then forcibly kills a stuck supervisor."
+    ],
+    "contracts": [
+      "HUGR_OMNI_SUPERVISOR may select an alternate built binary; default uses the package binary."
+    ],
+    "dependencies": [
+      "common/cmd.rs builds wire data; omni_proto handles framing; UnixStream/sendmsg and std process APIs supply transport."
+    ],
+    "failures_or_limits": [
+      "Lines uses an unbounded test channel and treats a line-reader error as end of input. Per-observation timeouts do not bound write_all or an endless sequence of nonmatching lines; this is test infrastructure, not the production bounded host client."
+    ],
+    "evidence": [
+      {
+        "start_line": 18,
+        "end_line": 50,
+        "quote": "/// Bound for every single observation; reaching it fails the test.\npub const T: Duration = Duration::from_secs(10);\n\n/// The supervisor under test: `HUGR_OMNI_SUPERVISOR` (e.g. the static musl build), else this package's binary.\npub fn sup_path() -> PathBuf {\n    std::env::var_os(\"HUGR_OMNI_SUPERVISOR\")\n        .map(PathBuf::from)\n        .unwrap_or_else(|| PathBuf::from(env!(\"CARGO_BIN_EXE_hugr-omni-supervisor\")))\n}\n\n/// Lines of a pipe, read by a thread.\npub struct Lines(mpsc::Receiver<String>);\n\nimpl Lines {\n    pub fn new(r: impl Read + Send + 'static) -> Lines {\n        let (tx, rx) = mpsc::channel();\n        std::thread::spawn(move || {\n            for line in BufReader::new(r).lines() {\n                let Ok(line) = line else { break };\n                if tx.send(line).is_err() {\n                    break;\n                }\n            }\n        });\n        Lines(rx)\n    }\n\n    /// The next line; `None` at end of file. Fails the test after `T`.\n    pub fn next(&self) -> Option<String> {\n        match self.0.recv_timeout(T) {\n            Ok(l) => Some(l),\n            Err(mpsc::RecvTimeoutError::Disconnected) => None,\n            Err(mpsc::RecvTimeoutError::Timeout) => panic!(\"no output line within {T:?}\"),"
+      },
+      {
+        "start_line": 107,
+        "end_line": 129,
+        "quote": "    pub fn start_with(setup: impl FnOnce(&mut Command)) -> Host {\n        let (ours, theirs) = UnixStream::pair().unwrap();\n        let mut cmd = Command::new(sup_path());\n        cmd.arg(\"--host-pid\").arg(std::process::id().to_string());\n        cmd.stdin(Stdio::from(OwnedFd::from(theirs))).process_group(0);\n        setup(&mut cmd);\n        let sup = cmd.spawn().unwrap();\n        let mut h = Host {\n            sup,\n            sock: ours,\n            rbuf: Vec::new(),\n            info: 0,\n            next: 1,\n            exits: HashMap::new(),\n            stash: VecDeque::new(),\n        };\n        match h.recv() {\n            Some(Msg::Ready { version, pid, info }) => {\n                assert_eq!((version, pid), (omni_proto::VERSION, h.sup.id()));\n                h.info = info;\n            }\n            other => panic!(\"expected Ready, got {other:?}\"),\n        }"
+      },
+      {
+        "start_line": 184,
+        "end_line": 195,
+        "quote": "    /// The reply to `req`. `Exited` on the way is recorded; other replies wait in a stash.\n    pub fn reply(&mut self, req: u64) -> Msg {\n        if let Some(i) = self.stash.iter().position(|m| req_of(m) == Some(req)) {\n            return self.stash.remove(i).unwrap();\n        }\n        loop {\n            match self.recv().expect(\"the supervisor closed the channel\") {\n                Msg::Exited { id, exit } => assert!(self.exits.insert(id, exit).is_none(), \"second Exited for {id}\"),\n                m if req_of(&m) == Some(req) => return m,\n                m => self.stash.push_back(m),\n            }\n        }"
+      },
+      {
+        "start_line": 211,
+        "end_line": 244,
+        "quote": "    pub fn try_spawn(&mut self, cmd: &Cmd) -> Result<Tree, (FailCode, i32, String)> {\n        let (out_r, out_w) = std::io::pipe().unwrap();\n        let (in_r, in_w) = if cmd.stdin {\n            Some(std::io::pipe().unwrap())\n        } else {\n            None\n        }\n        .unzip();\n        let (err_r, err_w) = if cmd.merge {\n            None\n        } else {\n            Some(std::io::pipe().unwrap())\n        }\n        .unzip();\n        let mut fds: Vec<RawFd> = in_r.iter().map(AsRawFd::as_raw_fd).collect();\n        fds.push(out_w.as_raw_fd());\n        fds.extend(err_w.iter().map(AsRawFd::as_raw_fd));\n        let req = self.req();\n        self.send(&Msg::Spawn(cmd.spawn_msg(req)), &fds);\n        drop((in_r, out_w, err_w)); // the supervisor and the child hold their own copies\n        match self.reply(req) {\n            Msg::Spawned { id, pid, pty_ends, .. } => {\n                assert_eq!(pty_ends, [0, 0]);\n                Ok(Tree {\n                    id,\n                    pid: pid as i32,\n                    out: Lines::new(out_r),\n                    err: err_r.map(Lines::new),\n                    stdin: in_w,\n                })\n            }\n            Msg::SpawnFailed { code, errno, msg, .. } => Err((code, errno, msg)),\n            other => panic!(\"expected Spawned, got {other:?}\"),\n        }"
+      },
+      {
+        "start_line": 282,
+        "end_line": 311,
+        "quote": "    /// Closes the channel (host death for the supervisor) and returns the supervisor's exit status.\n    pub fn close(mut self) -> ExitStatus {\n        // Shut down, not just drop: `self` still owns the socket until the end of this function.\n        self.sock.shutdown(std::net::Shutdown::Both).unwrap();\n        wait_child(&mut self.sup, T).expect(\"the supervisor did not exit after host death\")\n    }\n}\n\nimpl Drop for Host {\n    fn drop(&mut self) {\n        let _ = self.sock.shutdown(std::net::Shutdown::Both);\n        if wait_child(&mut self.sup, T).is_none() {\n            let _ = self.sup.kill();\n            let _ = self.sup.wait();\n        }\n    }\n}\n\n/// Bounded `wait` on a child of this process.\npub fn wait_child(c: &mut Child, within: Duration) -> Option<ExitStatus> {\n    let end = Instant::now() + within;\n    loop {\n        if let Some(st) = c.try_wait().unwrap() {\n            return Some(st);\n        }\n        if Instant::now() >= end {\n            return None;\n        }\n        std::thread::sleep(Duration::from_millis(5));\n    }"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/tests/common/host_role.rs",
+    "git_blob_sha": "60099eba1f0054357e735351e6954f7c949b4e5f",
+    "source_sha256": "1d5dd7e06a72c151ee051d4c14e894fb2eaab5badcf267095c747fd600966201",
+    "source_bytes": 3875,
+    "line_count": 98,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Implement disposable Unix host roles for deliberate host-death races.",
+    "behavior": [
+      "Creates a managed tree with two SIGTERM-resistant leaves, one in another process group, then prints root/leaf/supervisor IDs and Ready info.",
+      "Exercises normal exit, abort with core dumps disabled, externally delivered signals, and idle-period SIGKILL after a longer grace.",
+      "For midspawn, waits for a child marker before dying without reading Spawned; for partial mode, sends half a frame plus its descriptor.",
+      "Held-channel modes duplicate the socket without close-on-exec into an unrelated child; Linux can also deny pidfd syscalls."
+    ],
+    "contracts": [
+      "Markers synchronize test preconditions, so each death mode has a concrete observed setup."
+    ],
+    "dependencies": [
+      "common/host.rs protocol host; role.rs marker/child roles; os::without_pidfd supplies seccomp fallback simulation."
+    ],
+    "failures_or_limits": [
+      "The unrelated holder intentionally outlives this host and must be killed by the parent test. These modes describe test-induced process death, not results from this review."
+    ],
+    "evidence": [
+      {
+        "start_line": 14,
+        "end_line": 30,
+        "quote": "pub fn run(mode: &str) {\n    let mut host = match mode {\n        #[cfg(target_os = \"linux\")]\n        \"held-nopidfd\" => Host::start_with(super::os::without_pidfd),\n        _ => Host::start(),\n    };\n    let grace = if mode == \"idle\" { 1000 } else { 300 };\n    let tree = host.spawn(&Cmd::role(\"tree hang resist+group resist\").grace(grace));\n    let leaves = field(&tree.out.take(\"UP \", 2), 1);\n    say(&format!(\n        \"TREE {} {} {} {}\",\n        tree.pid,\n        leaves[0],\n        leaves[1],\n        host.sup.id()\n    ));\n    say(&format!(\"INFO {}\", host.info));"
+      },
+      {
+        "start_line": 50,
+        "end_line": 85,
+        "quote": "        \"midspawn\" => {\n            // A complete Spawn; once its child runs, die before reading `Spawned`.\n            let (out_r, out_w) = std::io::pipe().unwrap();\n            let req = host.req();\n            host.send(\n                &Msg::Spawn(Cmd::role(\"leaf plain\").spawn_msg(req)),\n                &[out_w.as_raw_fd()],\n            );\n            drop(out_w);\n            let up = Lines::new(out_r).take(\"UP \", 1);\n            say(&format!(\"INFLIGHT {}\", field(&up, 1)[0]));\n            die()\n        }\n        \"partial\" => {\n            // Half a Spawn frame, its descriptor riding on the first byte; then die.\n            let (_out_r, out_w) = std::io::pipe().unwrap();\n            let mut bytes = Vec::new();\n            encode(&Msg::Spawn(Cmd::role(\"leaf plain\").spawn_msg(host.req())), &mut bytes).unwrap();\n            let half = &bytes[..bytes.len() / 2];\n            assert_eq!(send_with_fds(&host.sock, half, &[out_w.as_raw_fd()]), half.len());\n            say(\"PARTIAL\");\n            die()\n        }\n        \"held\" | \"held-nopidfd\" => {\n            // A copy of the channel without close-on-exec, kept open by an unrelated child: no EOF at death.\n            // SAFETY: dup of our own socket; the copy is closed below, after the holder inherited it.\n            let copy = unsafe { libc::dup(host.sock.as_raw_fd()) };\n            assert!(copy >= 0);\n            // Never waited for on purpose: it outlives this host, and the test kills it.\n            #[allow(clippy::zombie_processes)]\n            let holder = command(\"leaf plain\").stdout(Stdio::null()).spawn().unwrap();\n            // SAFETY: closing the copy we just made.\n            unsafe { libc::close(copy) };\n            say(&format!(\"HOLDER {}\", holder.id()));\n            say(\"WAIT\");\n            hang()"
+      },
+      {
+        "start_line": 91,
+        "end_line": 97,
+        "quote": "/// How long the `idle` host leaves its supervisor without any event.\npub const IDLE: std::time::Duration = std::time::Duration::from_millis(1500);\n\nfn die() -> ! {\n    // SAFETY: plain integer argument; SIGKILL cannot be caught.\n    unsafe { libc::raise(libc::SIGKILL) };\n    hang()"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/tests/common/mod.rs",
+    "git_blob_sha": "dc3fb5559aa28cd0407b22514f5dc2c326e17136",
+    "source_sha256": "381bbaf5bd0ec5c5cbf27c9f201d51aa80798ca0d0afa83ab0406aeae762be14",
+    "source_bytes": 299,
+    "line_count": 9,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Declare the shared Unix supervisor integration-test helper modules.",
+    "behavior": [
+      "Exports command description, minimal host, disposable host roles, OS oracle and child roles.",
+      "Allows dead_code because separate integration binaries consume different subsets."
+    ],
+    "contracts": [
+      "This module contains wiring only and introduces no independent test assertions."
+    ],
+    "dependencies": [
+      "common/cmd.rs, host.rs, host_role.rs, os.rs and role.rs provide the actual helpers."
+    ],
+    "failures_or_limits": [],
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 9,
+        "quote": "//! Shared helpers of the Unix supervisor suite (SUP-U): a test host, the OS oracle and the child roles.\n// Each test binary uses a different part of these helpers; the rest would warn as dead code there.\n#![allow(dead_code)]\n\npub mod cmd;\npub mod host;\npub mod host_role;\npub mod os;\npub mod role;"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/tests/common/os.rs",
+    "git_blob_sha": "efea0beb267e336b302ef53d357708d49f5b8ace",
+    "source_sha256": "422bae2aca5a19a7864b21b70ba24a3ba3c646ea6ecef64f83d8048b5feb06a4",
+    "source_bytes": 11372,
+    "line_count": 299,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Observe Unix process/descriptor state independently and construct hostile inherited-state controls.",
+    "behavior": [
+      "Linux liveness examines all tasks when a thread-group leader is a zombie; missing process/thread files mean gone while unreadable state panics.",
+      "macOS queries kernel process state including teardown, and platform helpers observe stopped state, sessions/groups and descriptor lists.",
+      "Creates full pipes, adjusts Linux descriptor limits, and installs pre-exec hostile fd/signal state or seccomp ENOSYS filters for pidfd and close_range.",
+      "Bounded polling uses OS conditions instead of fixed synchronization sleeps."
+    ],
+    "contracts": [
+      "The supervisor does not provide the oracle results; observation failure must not silently become death in alive."
+    ],
+    "dependencies": [
+      "libc /proc/sysctl/proc_pidinfo/prlimit/seccomp interfaces; Unix integration suites use these controls."
+    ],
+    "failures_or_limits": [
+      "macOS alive relies on hard-coded LP64 kinfo_proc size/offsets, and fd listing has a fixed 4096-entry buffer. exists/stopped and signal helpers have narrower error treatment than alive; tests require the relevant platform facilities."
+    ],
+    "evidence": [
+      {
+        "start_line": 19,
+        "end_line": 64,
+        "quote": "/// The process exists (alive or a zombie). Permission errors count as existing.\npub fn exists(pid: i32) -> bool {\n    // SAFETY: signal 0 only checks for existence.\n    unsafe { libc::kill(pid, 0) == 0 || *errno() == libc::EPERM }\n}\n\n/// The process exists and is not a zombie. A zombie thread-group leader whose other threads still run is\n/// alive: every task of `/proc/<pid>/task` is asked. An observation that cannot be made fails the test.\n#[cfg(target_os = \"linux\")]\npub fn alive(pid: i32) -> bool {\n    match state(&format!(\"/proc/{pid}/stat\")) {\n        None | Some(b'X') => false,\n        Some(b'Z') => {\n            let tasks = match std::fs::read_dir(format!(\"/proc/{pid}/task\")) {\n                Ok(dir) => dir,\n                Err(e) if e.kind() == std::io::ErrorKind::NotFound => return false,\n                Err(e) => panic!(\"cannot list the threads of {pid}: {e}\"),\n            };\n            tasks\n                .map(|t| {\n                    t.unwrap_or_else(|e| panic!(\"cannot list the threads of {pid}: {e}\"))\n                        .file_name()\n                })\n                .filter_map(|tid| state(&format!(\"/proc/{pid}/task/{}/stat\", tid.to_string_lossy())))\n                .any(|s| !matches!(s, b'Z' | b'X'))\n        }\n        Some(_) => true,\n    }\n}\n\n/// The state letter of a `stat` file; `None` when the process or thread is gone.\n#[cfg(target_os = \"linux\")]\nfn state(path: &str) -> Option<u8> {\n    match std::fs::read_to_string(path) {\n        Ok(s) => Some(\n            *s.rsplit_once(')')\n                .unwrap_or_else(|| panic!(\"unparsable {path}\"))\n                .1\n                .trim_start()\n                .as_bytes()\n                .first()\n                .unwrap(),\n        ),\n        Err(e) if e.kind() == std::io::ErrorKind::NotFound || e.raw_os_error() == Some(libc::ESRCH) => None,\n        Err(e) => panic!(\"cannot read {path}: {e}\"),\n    }"
+      },
+      {
+        "start_line": 67,
+        "end_line": 89,
+        "quote": "/// The process exists and is not a zombie. A process being torn down (after SIGKILL, before it is a\n/// zombie) counts as alive: `getsid` and `proc_pidinfo` already fail for it, so only the kernel's process\n/// table (`sysctl(KERN_PROC_PID)`) can tell (Codex/lead r4: an exiting process is not gone).\n#[cfg(target_os = \"macos\")]\npub fn alive(pid: i32) -> bool {\n    // kinfo_proc (<sys/sysctl.h>, 648 bytes on LP64): kp_proc.p_stat at 36, kp_proc.p_pid at 40.\n    let mut mib = [libc::CTL_KERN, libc::KERN_PROC, libc::KERN_PROC_PID, pid];\n    let mut buf = [0u8; 648];\n    let mut len: libc::size_t = buf.len();\n    // SAFETY: `buf` has `len` writable bytes.\n    let r = unsafe {\n        libc::sysctl(\n            mib.as_mut_ptr(),\n            4,\n            buf.as_mut_ptr().cast(),\n            &raw mut len,\n            std::ptr::null_mut(),\n            0,\n        )\n    };\n    assert_eq!(r, 0, \"sysctl(KERN_PROC_PID, {pid}) failed\");\n    len == buf.len() && i32::from_ne_bytes(buf[40..44].try_into().unwrap()) == pid && u32::from(buf[36]) != libc::SZOMB\n}"
+      },
+      {
+        "start_line": 126,
+        "end_line": 149,
+        "quote": "/// Open descriptor numbers of another process of ours.\n#[cfg(target_os = \"linux\")]\npub fn fds_of(pid: u32) -> Vec<i32> {\n    let mut v: Vec<i32> = std::fs::read_dir(format!(\"/proc/{pid}/fd\"))\n        .unwrap()\n        .filter_map(|e| e.ok()?.file_name().to_str()?.parse().ok())\n        .collect();\n    v.sort_unstable();\n    v\n}\n\n/// Open descriptor numbers of another process of ours.\n#[cfg(target_os = \"macos\")]\npub fn fds_of(pid: u32) -> Vec<i32> {\n    // SAFETY: plain old data, written by proc_pidinfo up to the given size.\n    let mut buf: Vec<libc::proc_fdinfo> = vec![unsafe { std::mem::zeroed() }; 4096];\n    let bytes = (buf.len() * std::mem::size_of::<libc::proc_fdinfo>()) as libc::c_int;\n    // SAFETY: `buf` has `bytes` writable bytes.\n    let n = unsafe { libc::proc_pidinfo(pid as i32, libc::PROC_PIDLISTFDS, 0, buf.as_mut_ptr().cast(), bytes) };\n    assert!(n > 0, \"proc_pidinfo(PROC_PIDLISTFDS) of {pid} failed\");\n    let count = n as usize / std::mem::size_of::<libc::proc_fdinfo>();\n    let mut v: Vec<i32> = buf.iter().take(count).map(|f| f.proc_fd).collect();\n    v.sort_unstable();\n    v"
+      },
+      {
+        "start_line": 218,
+        "end_line": 252,
+        "quote": "/// A hostile parent for the next exec (runs between fork and exec): leaks fd 99 without close-on-exec,\n/// ignores SIGINT/SIGHUP/SIGTERM/SIGUSR1 and SIGCHLD (auto-reap!), and blocks SIGUSR2.\npub fn hostile(cmd: &mut std::process::Command) {\n    use std::os::unix::process::CommandExt;\n    let hook = || {\n        // SAFETY: async-signal-safe calls on locals, in the child before exec.\n        unsafe {\n            if libc::dup2(2, 99) != 99 {\n                return Err(std::io::Error::last_os_error());\n            }\n            for sig in [libc::SIGINT, libc::SIGHUP, libc::SIGTERM, libc::SIGUSR1, libc::SIGCHLD] {\n                libc::signal(sig, libc::SIG_IGN);\n            }\n            let mut set: libc::sigset_t = std::mem::zeroed();\n            libc::sigemptyset(&raw mut set);\n            libc::sigaddset(&raw mut set, libc::SIGUSR2);\n            libc::sigprocmask(libc::SIG_BLOCK, &raw const set, std::ptr::null_mut());\n        }\n        Ok(())\n    };\n    // SAFETY: the hook only makes async-signal-safe calls.\n    unsafe { cmd.pre_exec(hook) };\n}\n\n/// Simulates a kernel without pidfd for the next exec: `pidfd_open` and `pidfd_send_signal` fail with\n/// ENOSYS, exactly as on Linux < 5.3. The product binary has no switch for it.\n#[cfg(target_os = \"linux\")]\npub fn without_pidfd(cmd: &mut std::process::Command) {\n    deny(cmd, &[libc::SYS_pidfd_open, libc::SYS_pidfd_send_signal]);\n}\n\n/// Simulates Linux < 5.9 for the next exec: `close_range` fails with ENOSYS.\n#[cfg(target_os = \"linux\")]\npub fn without_close_range(cmd: &mut std::process::Command) {\n    deny(cmd, &[libc::SYS_close_range]);"
+      },
+      {
+        "start_line": 255,
+        "end_line": 298,
+        "quote": "/// A seccomp filter for the next exec that makes the given syscalls fail with ENOSYS.\n#[cfg(target_os = \"linux\")]\nfn deny(cmd: &mut std::process::Command, syscalls: &[libc::c_long]) {\n    use std::os::unix::process::CommandExt;\n    let stmt = |code: u32, k: u32| libc::sock_filter {\n        code: code as u16,\n        jt: 0,\n        jf: 0,\n        k,\n    };\n    let n = syscalls.len();\n    let mut filter = vec![stmt(libc::BPF_LD | libc::BPF_W | libc::BPF_ABS, 0)]; // the syscall number\n    for (i, &nr) in syscalls.iter().enumerate() {\n        let to_deny = (n - i) as u8; // skip the remaining checks and the ALLOW\n        filter.push(libc::sock_filter {\n            code: (libc::BPF_JMP | libc::BPF_JEQ | libc::BPF_K) as u16,\n            jt: to_deny,\n            jf: 0,\n            k: nr as u32,\n        });\n    }\n    filter.push(stmt(libc::BPF_RET | libc::BPF_K, libc::SECCOMP_RET_ALLOW));\n    filter.push(stmt(\n        libc::BPF_RET | libc::BPF_K,\n        libc::SECCOMP_RET_ERRNO | libc::ENOSYS as u32,\n    ));\n    // Built before the fork: the hook below only reads it.\n    let hook = move || {\n        let prog = libc::sock_fprog {\n            len: filter.len() as u16,\n            filter: filter.as_ptr().cast_mut(),\n        };\n        // SAFETY: prctl with plain arguments and a pointer to a live filter program; no allocation.\n        unsafe {\n            if libc::prctl(libc::PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0) != 0\n                || libc::prctl(libc::PR_SET_SECCOMP, libc::SECCOMP_MODE_FILTER, &raw const prog) != 0\n            {\n                return Err(std::io::Error::last_os_error());\n            }\n        }\n        Ok(())\n    };\n    // SAFETY: the hook only makes async-signal-safe calls.\n    unsafe { cmd.pre_exec(hook) };"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/tests/common/role.rs",
+    "git_blob_sha": "106e4b91f6215044ba28b7a634cb719142882cee",
+    "source_sha256": "7af4928b99e45d65d285790a4ebe91330b484a6ad47233dd6fbf2effbcbb1b68",
+    "source_bytes": 9913,
+    "line_count": 262,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Supply marker-driven Unix child roles for process trees, signals, teardown and PID reuse tests.",
+    "behavior": [
+      "Reruns the test binary by role and arms a 60-second lifetime exit, extended to 600 seconds when the role specification contains long.",
+      "Leaves can resist TERM/HUP, create another group, report TERM, allocate 256 MiB with 64 threads, or on Linux leave a zombie leader with a live worker.",
+      "Tree roots launch leaves then hang, exit, or wait for stdin EOF; additional roles report inherited state, raise signals and fork/reap through a PID window.",
+      "Snapshot is taken before the lifetime thread starts and reports fds, ignored/blocked signals and PID/PGID/SID."
+    ],
+    "contracts": [
+      "Signal handlers use write/_exit or the raw thread-exit syscall; markers establish readiness for parent tests."
+    ],
+    "dependencies": [
+      "host_role.rs supplies host-death modes; cmd.rs selects roles; OS libc and std process/thread APIs implement fixtures."
+    ],
+    "failures_or_limits": [
+      "Snapshot scans descriptors below 1024 and signals below 32, not the complete platform ranges. PID cycling and heavy teardown are intentional test fixtures; none ran locally."
+    ],
+    "evidence": [
+      {
+        "start_line": 25,
+        "end_line": 57,
+        "quote": "/// The variable that selects a role.\npub const VAR: &str = \"OMNI_SUP_ROLE\";\nconst LIFETIME: Duration = Duration::from_secs(60);\nconst LONG_LIFETIME: Duration = Duration::from_secs(600);\n\n/// Runs the role named by `OMNI_SUP_ROLE` and exits; returns at once in a normal test run.\npub fn main() {\n    let Ok(spec) = std::env::var(VAR) else { return };\n    let snapshot = Snapshot::take(); // before anything opens a descriptor\n    let lifetime = if spec.contains(\"long\") { LONG_LIFETIME } else { LIFETIME };\n    std::thread::spawn(move || {\n        std::thread::sleep(lifetime);\n        std::process::exit(70);\n    });\n    let words: Vec<&str> = spec.split(' ').collect();\n    match words.as_slice() {\n        [\"info\"] => snapshot.print(),\n        [\"out\"] => {\n            say(\"OUT\");\n            std::io::stderr().write_all(b\"ERR\\n\").unwrap();\n        }\n        [\"exit\", code] => std::process::exit(code.parse().unwrap()),\n        [\"raise\", sig] => {\n            // SAFETY: plain integer argument; the signal has its default disposition.\n            unsafe { libc::raise(sig.parse().unwrap()) };\n        }\n        [\"leaf\", flags] => leaf(flags),\n        [\"tree\", then, leaves @ ..] => tree(then, leaves),\n        [\"host\", mode] => super::host_role::run(mode),\n        [\"cycle\", lo, hi] => cycle(lo.parse().unwrap(), hi.parse().unwrap()),\n        _ => std::process::exit(99),\n    }\n    std::process::exit(0);"
+      },
+      {
+        "start_line": 87,
+        "end_line": 108,
+        "quote": "fn leaf(flags: &str) {\n    for flag in flags.split('+') {\n        match flag {\n            \"resist\" => ignore_term(),\n            // SAFETY: the handler only makes async-signal-safe calls.\n            \"report\" => unsafe {\n                libc::signal(\n                    libc::SIGTERM,\n                    on_term as extern \"C\" fn(libc::c_int) as libc::sighandler_t,\n                );\n            },\n            // SAFETY: plain integer arguments.\n            \"group\" => assert_eq!(unsafe { libc::setpgid(0, 0) }, 0),\n            \"plain\" | \"long\" => {}\n            \"heavy\" => heavy(),\n            #[cfg(target_os = \"linux\")]\n            \"zleader\" => zleader(),\n            other => panic!(\"unknown leaf flag {other}\"),\n        }\n    }\n    say(&format!(\"UP {}\", ids()));\n    hang()"
+      },
+      {
+        "start_line": 111,
+        "end_line": 150,
+        "quote": "/// Ends the main thread only (the raw `exit` syscall, as `pthread_exit` does, from a SIGUSR1 handler sent to\n/// it with `tgkill`) while a thread keeps the process running; never returns.\n#[cfg(target_os = \"linux\")]\nfn zleader() -> ! {\n    extern \"C\" fn end_this_thread(_: libc::c_int) {\n        // SAFETY: the raw exit syscall ends only the calling thread; async-signal-safe.\n        unsafe { libc::syscall(libc::SYS_exit, 0) };\n    }\n    std::thread::spawn(|| {\n        let me = std::process::id();\n        let zombie = || {\n            let s = std::fs::read_to_string(format!(\"/proc/{me}/stat\")).unwrap();\n            s.rsplit_once(')')\n                .is_some_and(|(_, rest)| rest.trim_start().starts_with('Z'))\n        };\n        while !zombie() {\n            std::thread::sleep(Duration::from_millis(1));\n        }\n        say(&format!(\"ZLEADER {}\", ids()));\n        hang()\n    });\n    // SAFETY: installs a handler that only calls an async-signal-safe syscall, then signals the main thread.\n    unsafe {\n        libc::signal(\n            libc::SIGUSR1,\n            end_this_thread as extern \"C\" fn(libc::c_int) as libc::sighandler_t,\n        );\n        let pid = libc::getpid();\n        libc::syscall(libc::SYS_tgkill, pid, pid, libc::SIGUSR1);\n    }\n    hang()\n}\n\n/// Makes the process slow to tear down: memory to unmap and threads to end after SIGKILL.\nfn heavy() {\n    let heap: Vec<Vec<u8>> = (0..64).map(|_| vec![1u8; 4 << 20]).collect();\n    std::mem::forget(heap);\n    for _ in 0..64 {\n        std::thread::spawn(|| std::thread::sleep(Duration::from_secs(3600)));\n    }"
+      },
+      {
+        "start_line": 169,
+        "end_line": 198,
+        "quote": "fn tree(then: &str, leaves: &[&str]) {\n    for flags in leaves {\n        // Never waited for on purpose: the leaves outlive this root (they are the tree under test).\n        #[allow(clippy::zombie_processes)]\n        command(&format!(\"leaf {flags}\")).spawn().unwrap();\n    }\n    say(&format!(\"ROOT {}\", ids()));\n    match then {\n        \"hang\" => hang(),\n        \"exit\" => {}\n        \"stdin\" => _ = std::io::copy(&mut std::io::stdin(), &mut std::io::sink()),\n        other => panic!(\"unknown tree end {other}\"),\n    }\n}\n\nfn cycle(lo: i32, hi: i32) {\n    loop {\n        // SAFETY: the child only calls _exit.\n        let pid = unsafe { libc::fork() };\n        if pid == 0 {\n            // SAFETY: async-signal-safe exit of the forked child.\n            unsafe { libc::_exit(0) };\n        }\n        let mut st = 0;\n        // SAFETY: reaping our own child.\n        unsafe { libc::waitpid(pid, &raw mut st, 0) };\n        if (lo..hi).contains(&pid) {\n            return;\n        }\n    }"
+      },
+      {
+        "start_line": 208,
+        "end_line": 226,
+        "quote": "impl Snapshot {\n    fn take() -> Snapshot {\n        // SAFETY: queries only: F_GETFD, sigaction with no new action, sigprocmask with no new set.\n        unsafe {\n            let fds = (0..1024).filter(|&fd| libc::fcntl(fd, libc::F_GETFD) != -1).collect();\n            let mut ignored = Vec::new();\n            let mut blocked = Vec::new();\n            let mut cur: libc::sigset_t = std::mem::zeroed();\n            libc::sigprocmask(libc::SIG_BLOCK, std::ptr::null(), &raw mut cur);\n            for sig in 1..32 {\n                let mut old: libc::sigaction = std::mem::zeroed();\n                if libc::sigaction(sig, std::ptr::null(), &raw mut old) == 0 && old.sa_sigaction == libc::SIG_IGN {\n                    ignored.push(sig);\n                }\n                if libc::sigismember(&raw const cur, sig) == 1 {\n                    blocked.push(sig);\n                }\n            }\n            Snapshot { fds, ignored, blocked }"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/tests/unix_host.rs",
+    "git_blob_sha": "0ca3078074e3f2ed508a55d4bdc1d1477db4a168",
+    "source_sha256": "8cab6fdac4c0b6d712cb0a67b6ae621cdb6e80df118905b66acc3027f7ada447",
+    "source_bytes": 12202,
+    "line_count": 301,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Specify Unix cleanup across host death, channel races, resource exhaustion and blocked diagnostics.",
+    "behavior": [
+      "Checks exact host exit/signal cause for exit, abort, group SIGINT, TERM/KILL, full or partial in-flight Spawn and an inherited channel holder; all known tree PIDs and supervisor must become nonlive.",
+      "Requires held-channel host watches, Linux no-pidfd fallback capability reporting, and grace measured from death after an idle interval.",
+      "Queues two Spawns while the supervisor is stopped, closes the channel, resumes it and requires clean prompt cleanup of the late-created child.",
+      "Linux descriptor-limit cases distinguish emergency-reserve success from no-inventory failure; full/broken stderr must not prevent stop or the documented failure exit bound."
+    ],
+    "contracts": [
+      "The OS oracle, not Stopped alone, observes cleanup; inability to inventory can produce exit one and require manual leaf cleanup."
+    ],
+    "dependencies": [
+      "common/host_role.rs and role.rs construct controlled trees; common/os.rs supplies liveness, limits and full pipes."
+    ],
+    "failures_or_limits": [
+      "Timing/assertion outcomes were not executed. The suite explicitly acknowledges an unreachable out-of-group leaf when descriptor limit three makes inventory unavailable."
+    ],
+    "evidence": [
+      {
+        "start_line": 40,
+        "end_line": 87,
+        "quote": "/// Runs `host <mode>`, kills it `by`, checks it died as `want`, then that zero tree processes survive and\n/// the supervisor exited; returns the host's `Ready.info` and the time from its death to zero survivors.\nfn host_dies(mode: &str, by: By, want: Death) -> (u32, Duration) {\n    let mut c = command(&format!(\"host {mode}\"));\n    c.process_group(0).stdout(Stdio::piped());\n    let mut host = c.spawn().unwrap();\n    let out = Lines::new(host.stdout.take().unwrap());\n    let line = out.take(\"TREE \", 1).remove(0);\n    let nums: Vec<i32> = line.split(' ').skip(1).map(|s| s.parse().unwrap()).collect();\n    let (mut tree, sup) = (nums[..3].to_vec(), nums[3]);\n    let info = field(&out.take(\"INFO \", 1), 1)[0] as u32;\n    let mut holder = None;\n    match mode {\n        \"midspawn\" => tree.extend(field(&out.take(\"INFLIGHT \", 1), 1)),\n        \"partial\" => _ = out.take(\"PARTIAL\", 1),\n        \"held\" | \"held-nopidfd\" => {\n            holder = Some(field(&out.take(\"HOLDER \", 1), 1)[0]);\n            out.take(\"WAIT\", 1);\n        }\n        \"signal\" => _ = out.take(\"WAIT\", 1),\n        _ => {}\n    }\n    let host_pid = host.id() as i32;\n    match by {\n        By::Itself => {}\n        By::Test(sig) => kill(host_pid, sig),\n        By::TestToGroup(sig) => killpg(host_pid, sig),\n    }\n    let status = wait_child(&mut host, T).expect(\"the host did not die\");\n    match want {\n        Death::Code(code) => assert_eq!(status.code(), Some(code), \"{mode}: {status:?}\"),\n        Death::Signal(sig) => assert_eq!(signal_of(status), Some(sig), \"{mode}: {status:?}\"),\n    }\n    let dead = Instant::now();\n    let clean = wait_until(Duration::from_secs(3), || {\n        tree.iter().all(|&p| !alive(p)) && !alive(sup)\n    });\n    let survivors: Vec<i32> = tree.iter().copied().filter(|&p| alive(p)).collect();\n    if let Some(h) = holder {\n        kill(h, libc::SIGKILL);\n    }\n    assert!(\n        clean,\n        \"{mode}: survivors {survivors:?}, supervisor alive: {} ({:?} after death)\",\n        alive(sup),\n        dead.elapsed()\n    );\n    (info, dead.elapsed())"
+      },
+      {
+        "start_line": 127,
+        "end_line": 146,
+        "quote": "#[test]\nfn host_dies_while_a_forked_copy_keeps_the_channel_open() {\n    // No EOF reaches the supervisor: only the event-based watch (pidfd / kqueue) sees the death.\n    let (info, _) = host_dies(\"held\", By::Test(libc::SIGKILL), Death::Signal(libc::SIGKILL));\n    assert_eq!(info & omni_proto::INFO_PIDFD_HOST, omni_proto::INFO_PIDFD_HOST);\n}\n\n/// The same without pidfd (Linux, seccomp): the documented fallback polls `getppid()`.\n#[cfg(target_os = \"linux\")]\n#[test]\nfn host_dies_while_the_channel_is_held_and_pidfd_is_missing() {\n    let (info, _) = host_dies(\"held-nopidfd\", By::Test(libc::SIGKILL), Death::Signal(libc::SIGKILL));\n    assert_eq!(info, 0);\n}\n\n#[test]\nfn host_dies_after_an_idle_period_and_the_trees_still_get_their_grace() {\n    // The grace (1000 ms) starts at the death, not at the supervisor's last wakeup before the idle period.\n    let (_, to_zero) = host_dies(\"idle\", By::Itself, Death::Signal(libc::SIGKILL));\n    assert!(to_zero >= Duration::from_millis(900), \"forced too early: {to_zero:?}\");"
+      },
+      {
+        "start_line": 154,
+        "end_line": 191,
+        "quote": "fn a_child_started_as_the_channel_closes_is_stopped_and_reaped() {\n    let mut h = Host::start();\n    let sup = h.sup.id() as i32;\n    kill(sup, libc::SIGSTOP); // both Spawns and the close are all there when it runs again\n    let (out_r, out_w) = std::io::pipe().unwrap();\n    let (first, second) = (h.req(), h.req());\n    // Only the role variable in the environment: both frames must fit the socket buffer of a stopped reader.\n    let small = |c: Cmd| {\n        let mut c = c;\n        c.env.retain(|(k, _)| k == common::role::VAR);\n        c\n    };\n    let mut frames = Vec::new();\n    let early = small(Cmd::role(\"leaf plain\")).spawn_msg(first);\n    omni_proto::encode(&omni_proto::Msg::Spawn(early), &mut frames).unwrap();\n    let late = small(Cmd::role(\"leaf plain\").grace(5000)).spawn_msg(second);\n    omni_proto::encode(&omni_proto::Msg::Spawn(late), &mut frames).unwrap();\n    assert!(frames.len() < 4096, \"{} bytes\", frames.len());\n    // One sendmsg (both stdout ends on its first byte): macOS ends a read at a record that carries\n    // descriptors, so two sends could be handled in two turns.\n    let fd = out_w.as_raw_fd();\n    let sent = send_with_fds(&h.sock, &frames, &[fd, fd]);\n    assert_eq!(sent, frames.len());\n    drop(out_w);\n    drop(std::mem::replace(\n        &mut h.sock,\n        std::os::unix::net::UnixStream::pair().unwrap().0,\n    )); // fully closed\n    let t0 = Instant::now();\n    kill(sup, libc::SIGCONT);\n    let status = wait_child(&mut h.sup, T).expect(\"the supervisor did not exit\");\n    let took = t0.elapsed();\n    assert_eq!(status.code(), Some(0), \"a tree was not confirmed gone ({took:?})\");\n    assert!(\n        took < Duration::from_millis(1500),\n        \"the late child was not stopped at the death: {took:?}\"\n    );\n    Lines::new(out_r).rest(); // end of file: no process holding the children's stdout survives"
+      },
+      {
+        "start_line": 208,
+        "end_line": 228,
+        "quote": "/// With not even the reserve usable (limit 3), members outside the root's group cannot be found: the\n/// supervisor never claims a clean exit; at its bound it says so on stderr and exits 1 (documented risk).\n#[cfg(target_os = \"linux\")]\n#[test]\nfn host_death_without_any_inventory_ends_loudly() {\n    let mut h = Host::start_with(|c| {\n        c.stderr(Stdio::piped());\n    });\n    let t = h.spawn(&Cmd::role(\"tree hang resist+group\").grace(300));\n    let leaf = field(&t.out.take(\"UP \", 1), 1)[0];\n    let mut err = h.sup.stderr.take().unwrap();\n    common::os::set_nofile(h.sup.id() as i32, 3);\n    let status = h.close();\n    let mut text = String::new();\n    std::io::Read::read_to_string(&mut err, &mut text).unwrap();\n    kill(leaf, libc::SIGKILL); // the member the supervisor could not find\n    assert_eq!(status.code(), Some(1), \"{text}\");\n    assert!(\n        text.contains(\"not confirmed gone\") && text.contains(\"inventory is incomplete\"),\n        \"{text}\"\n    );"
+      },
+      {
+        "start_line": 280,
+        "end_line": 300,
+        "quote": "/// The exit bound's report goes to a full stderr (Linux, `prlimit` 3 makes a tree unconfirmable): the\n/// supervisor still exits, at its bound plus at most the drain bound.\n#[cfg(target_os = \"linux\")]\n#[test]\nfn a_full_stderr_never_delays_the_exit_bound() {\n    let (_unread, w) = common::os::full_pipe();\n    let mut h = Host::start_with(move |c| {\n        c.stderr(Stdio::from(std::os::fd::OwnedFd::from(w)));\n    });\n    let t = h.spawn(&Cmd::role(\"tree hang resist+group\").grace(300));\n    let leaf = field(&t.out.take(\"UP \", 1), 1)[0];\n    common::os::set_nofile(h.sup.id() as i32, 3);\n    let t0 = Instant::now();\n    let status = h.close();\n    kill(leaf, libc::SIGKILL); // the member the supervisor could not find\n    assert_eq!(status.code(), Some(1));\n    assert!(\n        t0.elapsed() < Duration::from_secs(7),\n        \"0.3 s grace + 5 s of sweeps + 0.5 s drain: {:?}\",\n        t0.elapsed()\n    );"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/tests/unix_pid_reuse.rs",
+    "git_blob_sha": "0d142c4cdc731365394a31029c03d5ec0cd7cee9",
+    "source_sha256": "44bca8fa963e2684142c48395e8b5f41e95553cdcba34559e71f306c9302438d",
+    "source_bytes": 7776,
+    "line_count": 206,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Require actual Unix PID recycling to test stale-tree safety, with a destructive naive-signal control.",
+    "behavior": [
+      "Completes tree A, keeps an exited root B pinned by a live descendant, then forces new unrelated group leaders around both PID numbers.",
+      "Requires A numeric PID to be reused and B to be skipped; old A Stop/List/Release must not affect newcomers, while B Stop kills its descendant.",
+      "A control killpg on the stale A number must kill the newcomer, demonstrating the oracle would detect numeric-PID misuse.",
+      "Linux writes ns_last_pid or reruns in a private user/PID namespace; macOS cycles forks with a 300-second steering bound."
+    ],
+    "contracts": [
+      "Coverage does not skip if PID steering is unavailable; it fails with required environment capabilities."
+    ],
+    "dependencies": [
+      "common Host and OS oracle; role cycle/long-lived leaves; unshare on Linux and fork/reap on macOS."
+    ],
+    "failures_or_limits": [
+      "This environment-sensitive, potentially long-running test was read only. RAII newcomer wrappers kill/reap test-owned controls even when an assertion fails."
+    ],
+    "evidence": [
+      {
+        "start_line": 28,
+        "end_line": 75,
+        "quote": "#[test]\nfn a_gone_tree_never_touches_its_recycled_number_and_a_pinned_one_is_skipped() {\n    #[cfg(target_os = \"linux\")]\n    if !linux::can_steer() {\n        return linux::in_private_pid_namespace(\n            \"a_gone_tree_never_touches_its_recycled_number_and_a_pinned_one_is_skipped\",\n        );\n    }\n    let mut h = Host::start();\n    // A: completely gone (root exited, no descendant, reaped).\n    let a = h.spawn(&Cmd::role(\"exit 0\"));\n    assert_eq!(h.exited(a.id), Exit::Code(0));\n    h.stop(a.id, 0);\n    // B: root exited, a member lives: the zombie root pins the number.\n    let b = h.spawn(&Cmd::role(\"tree exit resist+group+long\")); // must outlive the cycle\n    let b_leaf = field(&b.out.take(\"UP \", 1), 1)[0];\n    assert_eq!(h.exited(b.id), Exit::Code(0));\n\n    let (on_a, after_b) = steer_both(a.pid, b.pid);\n    assert_eq!(\n        on_a.pid(),\n        a.pid,\n        \"precondition: the gone tree's number now leads another group\"\n    );\n    assert_eq!(os::pgid(a.pid), a.pid);\n    assert_ne!(after_b.pid(), b.pid, \"a pinned number must be skipped by the allocator\");\n\n    let t0 = Instant::now();\n    h.stop(a.id, 5000);\n    assert!(\n        t0.elapsed() < Duration::from_millis(100),\n        \"a gone tree is Stopped at once\"\n    );\n    assert_eq!(h.list(a.id).unwrap(), [], \"the recycled number is not the old tree\");\n    assert_eq!(h.ack(|req| Msg::Release { req, id: a.id }), Ack::Ok);\n    h.stop(b.id, 200);\n    assert!(!alive(b_leaf));\n    assert!(\n        alive(on_a.pid()) && alive(after_b.pid()),\n        \"Stop reached an unrelated process\"\n    );\n\n    // Control: what a supervisor that forgot the tree was gone would do does kill the newcomer.\n    os::killpg(a.pid, libc::SIGKILL);\n    assert!(\n        wait_until(Duration::from_secs(5), || !alive(on_a.pid())),\n        \"the control must hit\"\n    );"
+      },
+      {
+        "start_line": 104,
+        "end_line": 126,
+        "quote": "/// Spawns one newcomer right after `a - 1` (it must get `a`) and one right after `b - 1` (it must not get\n/// `b`), retrying a few times when another process took the number first.\nfn steer_both(a: i32, b: i32) -> (Owned, Owned) {\n    let mut on_a = None;\n    for _ in 0..5 {\n        let c = steer(a);\n        if c.pid() == a {\n            on_a = Some(c);\n            break;\n        } // else dropped: killed and reaped\n    }\n    let on_a = on_a.unwrap_or_else(|| panic!(\"could not hand pid {a} to a newcomer\"));\n    (on_a, steer(b))\n}\n\n#[cfg(target_os = \"linux\")]\nconst NS_LAST_PID: &str = \"/proc/sys/kernel/ns_last_pid\";\n\n/// Linux: the next pid of this namespace is `target` (or the first free one after it).\n#[cfg(target_os = \"linux\")]\nfn steer(target: i32) -> Owned {\n    std::fs::write(NS_LAST_PID, (target - 1).to_string()).unwrap();\n    newcomer()"
+      },
+      {
+        "start_line": 129,
+        "end_line": 156,
+        "quote": "/// macOS: pids are handed out in order (wrapping at 99999), skipping numbers in use. Cycle the allocator to\n/// just below `target`: parallel helpers race to a window below it, then single forks reach `target - 1`.\n#[cfg(target_os = \"macos\")]\nfn steer(target: i32) -> Owned {\n    let end = Instant::now() + Duration::from_secs(300);\n    let window = ((target - 1500).max(100), (target - 200).max(100));\n    loop {\n        assert!(\n            Instant::now() < end,\n            \"could not cycle the pid allocator to {target} within 300 s\"\n        );\n        let last = probe();\n        if last < target && (last + 1..target).all(os::exists) {\n            return newcomer();\n        }\n        if last >= target || last < window.0 {\n            let n = std::thread::available_parallelism().map_or(4, |n| n.get()).min(8);\n            let mut helpers: Vec<Owned> = (0..n)\n                .map(|_| Owned(command(&format!(\"cycle {} {}\", window.0, window.1)).spawn().unwrap()))\n                .collect();\n            assert!(wait_until(end - Instant::now(), || helpers.iter_mut().any(|h| h\n                .0\n                .try_wait()\n                .unwrap()\n                .is_some())));\n            drop(helpers); // killed and reaped\n        }\n    }"
+      },
+      {
+        "start_line": 178,
+        "end_line": 204,
+        "quote": "    /// Writing needs CAP_SYS_ADMIN over this pid namespace: probe by writing the current value back.\n    pub fn can_steer() -> bool {\n        std::fs::read_to_string(NS_LAST_PID)\n            .and_then(|v| std::fs::write(NS_LAST_PID, v.trim()))\n            .is_ok()\n    }\n\n    /// Re-runs `test` as root of a new user + pid namespace, where `ns_last_pid` is writable.\n    pub fn in_private_pid_namespace(test: &str) {\n        assert!(\n            std::env::var_os(\"OMNI_SUP_PIDNS\").is_none(),\n            \"inside the private pid namespace and ns_last_pid is still not writable\"\n        );\n        let exe = std::env::current_exe().unwrap();\n        let status = std::process::Command::new(\"unshare\")\n            .args([\"--user\", \"--map-root-user\", \"--pid\", \"--fork\", \"--mount-proc\"])\n            .arg(exe)\n            .args([\"--exact\", test, \"--nocapture\", \"--test-threads=1\"])\n            .env(\"OMNI_SUP_PIDNS\", \"1\")\n            .status();\n        let ok = status.as_ref().is_ok_and(std::process::ExitStatus::success);\n        assert!(\n            ok,\n            \"PID-reuse coverage is required on Linux and could not run ({status:?}): it needs a writable \\\n             /proc/sys/kernel/ns_last_pid (root in a privileged container) or unprivileged user namespaces \\\n             (`unshare -Urpf --mount-proc true` must work)\"\n        );"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  }
+]

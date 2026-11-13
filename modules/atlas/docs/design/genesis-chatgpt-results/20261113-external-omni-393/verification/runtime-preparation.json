@@ -1,0 +1,45 @@
+{
+  "schema": "omni-runtime-preparation/v1",
+  "recorded_at": "2026-11-13T15:11:09.827858+00:00",
+  "runtime_candidate": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "runtime_release_commit": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "runtime_release_blob": "7513fcca63664ca02094e9ed9b8fab090c20295d",
+  "local_git_checkout": false,
+  "observed_head": null,
+  "captured_runtime_files": 415,
+  "bun_version": "1.3.14",
+  "bun_distribution": "@oven/bun-linux-x64@1.3.14",
+  "npm_ci": {
+    "exit_code": 0,
+    "packages_reported_added": 167,
+    "scripts": "ignored"
+  },
+  "installed_scip_packaging_shim": {
+    "command": [
+      "node",
+      "scripts/fix-scip-types.mjs"
+    ],
+    "exit_code": 0,
+    "limit": "The pinned repository postinstall shim patches installed dependency metadata only."
+  },
+  "compile": {
+    "command": [
+      "bun",
+      "run",
+      "typecheck",
+      "--force"
+    ],
+    "cwd": "modules/atlas",
+    "exit_code": 0,
+    "scope": "415 source/config/runtime files materialized and hash-verified; test files were not materialized or executed. This is not complete repository or Omni CI."
+  },
+  "operations": {
+    "prepare": "NOT_RUN",
+    "binding": "NOT_RUN",
+    "publish_isolated": "NOT_RUN",
+    "ownership.index": "NOT_RUN",
+    "ownership.read": "NOT_RUN",
+    "independent_consumer": "NOT_RUN"
+  },
+  "product_tests": "NOT_RUN"
+}

@@ -1,0 +1,56 @@
+{
+  "schema": "omni-documentary-negative-results/v1",
+  "valid_candidate_records": 393,
+  "controls": [
+    {
+      "case": "DOC-NEG-01",
+      "expected_refusal": "MISSING_SOURCES",
+      "observed_error_codes": [
+        "MISSING_SOURCES"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "DOC-NEG-02",
+      "expected_refusal": "DUPLICATE",
+      "observed_error_codes": [
+        "DUPLICATE"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "DOC-NEG-03",
+      "expected_refusal": "BLOB_MISMATCH",
+      "observed_error_codes": [
+        "BLOB_MISMATCH"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "DOC-NEG-04",
+      "expected_refusal": "QUOTE_MISMATCH",
+      "observed_error_codes": [
+        "QUOTE_MISMATCH"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "DOC-NEG-05",
+      "expected_refusal": "OUT_OF_SCOPE",
+      "observed_error_codes": [
+        "MISSING_SOURCES",
+        "OUT_OF_SCOPE"
+      ],
+      "rejected": true
+    },
+    {
+      "case": "DOC-NEG-06",
+      "expected_refusal": "UNSUPPORTED_RUNTIME_STATUS",
+      "observed_error_codes": [
+        "UNSUPPORTED_RUNTIME_STATUS"
+      ],
+      "rejected": true
+    }
+  ],
+  "scope": "Documentation verifier only. These were generated artifact mutations in temporary copies. No Omni source, runtime, workflow or product test was executed or changed."
+}

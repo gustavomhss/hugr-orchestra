@@ -1,0 +1,646 @@
+[
+  {
+    "path": "native/omni/qa/.gitignore",
+    "git_blob_sha": "8c6edc00385ae755911a1ba9d44e628f8aa49f74",
+    "source_sha256": "8cebcbf4ab7b81e3c5d8619f33e8d76b226afb7fc5195d6e09f64bf47f01e46f",
+    "source_bytes": 24,
+    "line_count": 3,
+    "disposition": "analyzed",
+    "contracts": [
+      "Leading slashes scope the rules to this directory."
+    ],
+    "dependencies": [
+      "qa/run and src/setup.rs produce reports/caches; Cargo may produce qa/target."
+    ],
+    "failures_or_limits": [
+      "Ignoring generated artifacts does not validate or retain any measurement."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "config",
+    "purpose": "Keeps QA generated output, caches and local target builds outside version control.",
+    "behavior": [
+      "Ignores /out/, /.cache/ and /target/ relative to the QA directory."
+    ],
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 3,
+        "quote": "/out/\n/.cache/\n/target/"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/Cargo.lock",
+    "git_blob_sha": "43e1e75563e1a7c2375a70d0718129aaa3703b05",
+    "source_sha256": "6875afd927941c3885c147437a42d68e91528b5c61dd05a54d455f751bdad5b0",
+    "source_bytes": 5803,
+    "line_count": 235,
+    "disposition": "analyzed",
+    "contracts": [
+      "Registry namespace is crates.io-index; local path crates have no registry source/checksum."
+    ],
+    "dependencies": [
+      "qa/Cargo.toml declares the root dependencies; Cargo resolves this independent workspace."
+    ],
+    "failures_or_limits": [
+      "Dependency metadata was read fully; transitive implementation/security and successful lock resolution were not audited or executed."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "lockfile",
+    "purpose": "Pins the separate Rust QA workspace dependency graph.",
+    "behavior": [
+      "Cargo lock format 4 includes local omni-qa 0.0.0, hugr-omni/omni-proto 0.1.0 and registry packages with checksums.",
+      "Pins tokio 1.53.2, tokio-util 0.7.19, libc 0.2.190, serde 1.0.229, serde_json 1.0.151 and windows-sys 0.61.2."
+    ],
+    "evidence": [
+      {
+        "start_line": 68,
+        "end_line": 75,
+        "quote": "name = \"omni-qa\"\nversion = \"0.0.0\"\ndependencies = [\n \"hugr-omni\",\n \"serde\",\n \"serde_json\",\n \"tokio\",\n]"
+      },
+      {
+        "start_line": 166,
+        "end_line": 178,
+        "quote": "name = \"tokio\"\nversion = \"1.53.2\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"e95f91fcc7a621e8b030f6aa23c71fe9838ae2fb4d8118b75602a328f5144044\"\ndependencies = [\n \"bytes\",\n \"libc\",\n \"mio\",\n \"pin-project-lite\",\n \"socket2\",\n \"tokio-macros\",\n \"windows-sys\",\n]"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/Cargo.toml",
+    "git_blob_sha": "f40d068ee91a366145cc0e342354ea057144fcf1",
+    "source_sha256": "9aaab7e4d7048e1fecd48b0b46bd9a9c206dfb9a8df7f7979c540602bda51772",
+    "source_bytes": 821,
+    "line_count": 27,
+    "disposition": "analyzed",
+    "contracts": [
+      "Separate [workspace] means root workspace gates/lints do not automatically apply."
+    ],
+    "dependencies": [
+      "qa/run explicitly builds this manifest into the root target; Cargo.lock pins dependencies."
+    ],
+    "failures_or_limits": [
+      "Manifest limits are declarations; no build/lint was run."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "build",
+    "purpose": "Defines the standalone omni-qa Rust workspace to isolate harness dependencies.",
+    "behavior": [
+      "Declares unpublished 0.0.0, edition 2024, Rust 1.98 and MIT OR Apache-2.0.",
+      "Depends on local hugr-omni plus tokio runtime/time/sync/macros, serde derive and serde_json; no tokio process feature.",
+      "Denies missing docs, unwrap/expect/panic and forbids unsafe in this workspace."
+    ],
+    "evidence": [
+      {
+        "start_line": 11,
+        "end_line": 19,
+        "quote": "[workspace]\n\n[dependencies]\nhugr-omni = { path = \"../crates/hugr-omni\" }\ntokio = { version = \"1\", default-features = false, features = [\"rt-multi-thread\", \"time\", \"sync\", \"macros\"] }\nserde = { version = \"1\", features = [\"derive\"] }\nserde_json = \"1\"\n\n# The root workspace's lints, which a separate workspace cannot inherit."
+      },
+      {
+        "start_line": 20,
+        "end_line": 27,
+        "quote": "[lints.rust]\nmissing_docs = \"deny\"\nunsafe_code = \"forbid\"\n\n[lints.clippy]\nunwrap_used = \"deny\"\nexpect_used = \"deny\"\npanic = \"deny\""
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/README.md",
+    "git_blob_sha": "95ff3153f8f814158c75f272bb72a807160eeb27",
+    "source_sha256": "c173831409fb1fc8df8eb283ef4a5c73f533f698c9555eb5d6e2dfc23b3dac2e",
+    "source_bytes": 17728,
+    "line_count": 223,
+    "disposition": "analyzed",
+    "contracts": [
+      "Quick measured budget is 6 minutes, 18 on Windows; full is 30 minutes; build/fetch are outside that budget.",
+      "K4 target is <=1.25x std or <=+0.3 ms; K6 requires nonincreasing descriptor counts and <=10 MB RSS growth."
+    ],
+    "dependencies": [
+      "src/plan.rs, oracle/, report/ implement orchestration/identity/KPIs; workloads and lockfiles pin external programs."
+    ],
+    "failures_or_limits": [
+      "Docs record intended semantics, not measured results; Python is future. The Docker example names rust:1.96 despite Cargo.toml requiring Rust 1.98.",
+      "Unix identity recheck-to-signal race and macOS ps parsing caveats are expressly declared."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "doc",
+    "purpose": "Explains the QA workload matrix, KPI gates and independent process-identity oracle.",
+    "behavior": [
+      "Defines omni/std comparisons for real suites, Vite, terminals, misbehavior, agent loops, spawn overhead and soak; quick/full differ in repetitions and budget.",
+      "K1 distinguishes proven orphans, incomplete identity and unobserved snapshots; count is permissive while killing requires a fresh strong evidence chain.",
+      "Controls include real leftovers plus sentinel/stranger/argv-decoy negatives; exit 0 requires all omni targets and oracle control, exit 1 indicates failed measurement and exit 2 inability to run."
+    ],
+    "evidence": [
+      {
+        "start_line": 108,
+        "end_line": 116,
+        "quote": "**Killing.** Counting is generous, killing strict. A snapshot is not atomic, so a parent line can be stale (read, then\nexited, its pid reused by a stranger whose child is read later): a link proves enough to count, not to kill. A\nproven process is killed only on strong evidence, confirmed by a fresh snapshot right before the kill: it carries the\ntask's marker (Unix), it is the task's root identity (Windows), or every parent link that proved it is still live up\nto such a process (or, for a batch or a runner's leftovers on Windows, up to the runner or its supervisor): each\nparent alive with the identity it was observed with, each child's parent pid still that parent's. A dead identity\nnever comes back, so a parent alive at both moments was the parent all along. The evidence itself is compared again\ntoo: every process of the chain must show the marker it was observed with (or none), listed once. macOS start times\nare to the second, so a replacement born in the same second shares a pid and start; without the marker it is never"
+      },
+      {
+        "start_line": 63,
+        "end_line": 69,
+        "quote": "**Limits.** The measured part of a run (controls, runners, report; not the builds and the one-time fetch) has a\nbudget: 6 minutes for `--quick` (the card's 5 plus a margin; 18 on Windows, where omni's `run()` tasks are checked\none at a time and quick runs in CI), 30 for `--full` (on Windows with 200 agent commands instead of 600). Each runner\ngets its own limit within what is left (`src/plan.rs`); past it, it is ended and counted as hung (K2) with the records\nit printed, and a runner the budget cannot fit is reported as not run. Inside the runners, K4 and K6 end themselves\nbefore their limit with a K2 record; every oracle answer, every OS tool and the report's metadata (commit, versions,\nload) have deadlines within the budget, and the orchestrator stops reading a runner's stdout 5 s after it ended. A"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/node/arm.mjs",
+    "git_blob_sha": "8fc5cb2347d7439b407094b82b443036600d7010",
+    "source_sha256": "42a4226deb030640e2cdc0b480485548d8e8b894e4a88c0c9bf5c4caf9a98f4e",
+    "source_bytes": 9618,
+    "line_count": 293,
+    "disposition": "analyzed",
+    "contracts": [
+      "Proc exposes expect/write/rest/stop/wait; NOT_FOUND PTY programs return null for explicit unavailable-shell reporting."
+    ],
+    "dependencies": [
+      "runner.mjs supplies task context; bindings/node/index.js supplies omni; workloads/perf consume both arms."
+    ],
+    "failures_or_limits": [
+      "Std comparison intentionally lacks tree containment; raw chunks converted to strings independently can split UTF-8 in Seen, unlike the product decoder."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "implementation",
+    "purpose": "Implements Node QA's common process surface over omni and child_process.",
+    "behavior": [
+      "omniRun collects raw bytes and normalizes ABORTED/OUTPUT_LIMIT partial results; spawn records pid plus creation window and PTY uses 100x30.",
+      "Std comparison leaves stdin open by default, detaches Unix roots for oracle discovery and stops only the root with SIGTERM then SIGKILL; Windows npm uses a shell.",
+      "Seen strips CSI/OSC escapes across chunks and consumes markers incrementally; timed-out omni reads retain their pending iterator promise."
+    ],
+    "evidence": [
+      {
+        "start_line": 203,
+        "end_line": 212,
+        "quote": "    this.#pending ??= this.#items.next(); // a timed-out read stays pending for the next call: no chunk is lost\n    const limit = timeout(Math.max(until - Date.now(), 0));\n    try {\n      const item = await Promise.race([this.#pending, limit.promise]);\n      this.#pending = undefined;\n      if (item.done) return false;\n      this.seen.push(typeof item.value.data === \"string\" ? item.value.data : Buffer.from(item.value.data).toString());\n      return true;\n    } finally {\n      limit.clear();"
+      },
+      {
+        "start_line": 95,
+        "end_line": 102,
+        "quote": "    cwd: spec.cwd,\n    env: { ...process.env, ...spec.env },\n    detached: !windows,\n    shell: npm, // Node runs a .cmd only through a shell\n    stdio: [stdin, \"pipe\", \"pipe\"],\n    windowsHide: true,\n  });\n}"
+      },
+      {
+        "start_line": 77,
+        "end_line": 80,
+        "quote": "    if (e.code === \"ABORTED\" && e.result) return ran(\"aborted\", e.result);\n    if (e.code === \"OUTPUT_LIMIT\" && e.result) return ran(\"limit\", e.result);\n    throw e;\n  } finally {"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/node/perf.mjs",
+    "git_blob_sha": "d81bbf7d0db7471cfbe6e4edf462c7439a7b5e9f",
+    "source_sha256": "0c17dc00b0ad316ed68caa7e562c639da5fe6017483ad1067885df8f2b673ada",
+    "source_bytes": 5052,
+    "line_count": 116,
+    "disposition": "analyzed",
+    "contracts": [
+      "K6 is omni-only; ownBoundMs derives from the orchestration budget."
+    ],
+    "dependencies": [
+      "arm.mjs starts processes; runner.mjs supplies limits/protocol; oracle usage supplies OS resource counts."
+    ],
+    "failures_or_limits": [
+      "Missing supervisor readings can pass the local settle predicate, but report KPI code must reject them as unmeasured; these are definitions, not measured overhead/soak results."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "implementation",
+    "purpose": "Measures Node spawn overhead and bounded omni soak.",
+    "behavior": [
+      "K4 alternates omni/std order, removes configured warmups, records median spawn-to-pid and spawn-to-exit microseconds and emits a hung record on deadline.",
+      "K6 cycles normal run, spawned/stopped tree and PTY run, with a 10000-ms per-task bound and 20000-ms reserve for K1.",
+      "Samples resource usage before/after measured work and allows up to 3 seconds for descriptor settling, then attaches oracle orphan/incomplete results."
+    ],
+    "evidence": [
+      {
+        "start_line": 58,
+        "end_line": 68,
+        "quote": "const ONE_MS = 10_000;\n\nexport async function soak(runner) {\n  if (runner.arm !== \"omni\") throw new Error(\"K6 measures the library: omni only\");\n  const ctx = runner.ctx();\n  // Room is kept for the K1 check after the soak.\n  const boundMs = ownBoundMs() - 20_000;\n  const until = Date.now() + boundMs;\n  let record;\n  const each = async (i) => {\n    const done = await before(one(i, ctx).then(() => true), Math.min(Date.now() + ONE_MS, until));"
+      },
+      {
+        "start_line": 83,
+        "end_line": 91,
+        "quote": "    const back = (now) =>\n      now.host.fds <= before0.host.fds && (!now.supervisor || !before0.supervisor || now.supervisor.fds <= before0.supervisor.fds);\n    after = await oracle.usage();\n    while (!back(after) && Date.now() < settle) {\n      await new Promise((resolve) => setTimeout(resolve, 100));\n      after = await oracle.usage();\n    }\n    record = { kind: \"k6\", workload: \"K6\", name: \"soak\", arm: \"omni\", ms, orphans: 0, incomplete: 0, lost: 0, samples: setup.sizes.soak, before: before0, after };\n  }"
+      },
+      {
+        "start_line": 45,
+        "end_line": 55,
+        "quote": "        samples[arm][0].push((tPid - t0) * 1000);\n        samples[arm][1].push((tExit - t0) * 1000);\n      }\n    }\n  }\n  const p50 = (v) => v.sort((a, b) => a - b)[Math.floor(v.length / 2)];\n  for (const arm of [\"omni\", \"std\"]) {\n    const [pid, rt] = samples[arm];\n    emit({ kind: \"k4\", workload: \"K4\", name: \"spawn-exit\", arm, pid_p50_us: p50(pid), rt_p50_us: p50(rt), samples: n });\n  }\n}"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/node/qa.mjs",
+    "git_blob_sha": "534ce3a7bdd8ce5e6307d3decb521aa0b0bea92c",
+    "source_sha256": "28867687b8e0299bc6f99afffbf8ebaa8c262af8cf3d1c53a205dbe256e092ca",
+    "source_bytes": 1408,
+    "line_count": 25,
+    "disposition": "analyzed",
+    "contracts": [
+      "Abandoned hung task promises must not keep the runner alive after its report."
+    ],
+    "dependencies": [
+      "plan.rs invokes this entry; runner.mjs emits JSON; workloads.mjs/perf.mjs execute selected measurements."
+    ],
+    "failures_or_limits": [
+      "This entry relies on outer oracle cleanup for tasks abandoned at their bound."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "implementation",
+    "purpose": "Dispatches the Node QA runner and emits its terminal protocol marker.",
+    "behavior": [
+      "Accepts only QA-A/B/C/D/E, K4 or K6 and omni/std; invalid invocation exits 3.",
+      "Dynamically imports runner/workloads/perf, awaits the selected function, emits kind=end and flushes stdout before exit 0.",
+      "Caught runner errors print stack/detail and exit 3, separating reported failure from other host-crash exits."
+    ],
+    "evidence": [
+      {
+        "start_line": 5,
+        "end_line": 15,
+        "quote": "const names = [\"QA-A\", \"QA-B\", \"QA-C\", \"QA-D\", \"QA-E\", \"K4\", \"K6\"];\nconst [workload, arm] = process.argv.slice(2);\n// Exit 3: an error this runner reports itself (a package that does not load included). Anything else that ends it\n// early is a host crash (K7).\nif (!names.includes(workload) || ![\"omni\", \"std\"].includes(arm)) {\n  process.stderr.write(`usage: node qa/node/qa.mjs <${names.join(\"|\")}> <omni|std>\\n`);\n  process.exit(3);\n}\ntry {\n  const { emit, Runner } = await import(\"./runner.mjs\");\n  const { agentLoop, devServer, misbehave, shells, tests } = await import(\"./workloads.mjs\");"
+      },
+      {
+        "start_line": 18,
+        "end_line": 25,
+        "quote": "  await table[workload](new Runner(arm));\n  emit({ kind: \"end\" });\n  // Tasks that hung were abandoned, not awaited: they must not keep this runner up.\n  process.stdout.write(\"\", () => process.exit(0));\n} catch (e) {\n  process.stderr.write(`qa runner ${workload}: ${e?.stack ?? e}\\n`);\n  process.exit(3);\n}"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/node/runner.mjs",
+    "git_blob_sha": "9d8fb8bb1f0d9f23d270ac631ee02f83b9995b1e",
+    "source_sha256": "9efd689bceb0a7f04b3e549fe339d8c1cceac40c73403130d61b4aa78a1d9e6b",
+    "source_bytes": 8023,
+    "line_count": 211,
+    "disposition": "analyzed",
+    "contracts": [
+      "Task environments carry HUGR_QA_TASK; ownBoundMs reserves 10000 ms and floors at 5000.",
+      "Injected first-task orphan uses a detached fixture; lost counts positional mismatches plus length difference."
+    ],
+    "dependencies": [
+      "invoke.rs owns the oracle endpoint; workloads/perf supply tasks; record.rs describes output consumers."
+    ],
+    "failures_or_limits": [
+      "Timed-out task bodies are abandoned, not cancelled by Promise.race; outer oracle/runner teardown must clean them.",
+      "Malformed oracle JSON is ignored until a valid reply or deadline."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "implementation",
+    "purpose": "Tracks Node QA task identity, per-task bounds and requests to the independent oracle.",
+    "behavior": [
+      "Builds run/arm/task markers and records root pid with FILETIME-compatible before/after spawn windows.",
+      "Batches race each task against its bound, ask K1 immediately upon completion and preserve stopped child references through observation; Windows omni batches serialize because run roots lack individual pid exposure.",
+      "Oracle answers match request ids with a 90000-ms timeout; records include hung/fail/unobserved, orphan/incomplete, stop timing and lost bytes."
+    ],
+    "evidence": [
+      {
+        "start_line": 120,
+        "end_line": 124,
+        "quote": "    if (setup.os === \"windows\" && this.arm === \"omni\" && tasks.length > 1) {\n      for (const task of tasks) await this.batch(workload, [task]);\n      return;\n    }\n    if (setup.inject && this.arm === \"omni\" && !this.injected && tasks.length > 0) {"
+      },
+      {
+        "start_line": 140,
+        "end_line": 152,
+        "quote": "        const result = await Promise.race([ran, bound]);\n        clearTimeout(timer);\n        const ms = performance.now() - t0;\n        const last = --left === 0;\n        const found = await oracle.check(t.ctx.probe(), last, batchSince).then(\n          (found) => ({ found }),\n          (e) => ({ unobserved: e.message }),\n        );\n        return { ...result, ...found, ms };\n      }),\n    );\n    oracle.arm(false);\n    tasks.forEach((t, i) => {"
+      },
+      {
+        "start_line": 206,
+        "end_line": 211,
+        "quote": "export function lost(want, got) {\n  let altered = 0;\n  const n = Math.min(want.length, got.length);\n  for (let i = 0; i < n; i++) if (want[i] !== got[i]) altered++;\n  return altered + Math.abs(want.length - got.length);\n}"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/node/runner.test.mjs",
+    "git_blob_sha": "2abc232dd0a5a24a91451a89605094d69736965a",
+    "source_sha256": "1faed3816a0a3ef3fe4279ba06cb48ea48cddf80de0b19fbfe816564b03e5d54",
+    "source_bytes": 573,
+    "line_count": 18,
+    "disposition": "analyzed",
+    "contracts": [
+      "Uses node:test and strict equality on Buffer inputs."
+    ],
+    "dependencies": [
+      "runner.mjs exports the actual lost implementation; Rust runner has the same table."
+    ],
+    "failures_or_limits": [
+      "These are source assertions only; no Node test was executed."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "test",
+    "purpose": "Specifies Node K5 byte-loss accounting examples.",
+    "behavior": [
+      "Asserts zero for identical abc, one/two/three for missing or altered bytes and ten for an appended CORRUPTION suffix.",
+      "Combines replacement plus extra byte in abc versus XbcD and expects two."
+    ],
+    "evidence": [
+      {
+        "start_line": 7,
+        "end_line": 18,
+        "quote": "test(\"lost counts missing, altered and extra bytes\", () => {\n  for (const [want, got, n] of [\n    [\"abc\", \"abc\", 0],\n    [\"abc\", \"ab\", 1],\n    [\"abc\", \"\", 3],\n    [\"abc\", \"aXc\", 1],\n    [\"x\", \"xCORRUPTION\", 10],\n    [\"abc\", \"XbcD\", 2],\n  ]) {\n    assert.equal(lost(Buffer.from(want), Buffer.from(got)), n, `want ${want}, got ${got}`);\n  }\n});"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/node/workloads.mjs",
+    "git_blob_sha": "c995955568638dbf43c79239531889b205483f24",
+    "source_sha256": "dd7377972d128a75c7416fdd722fc74f44e475c3ca4c0f63ec193fc27041b49b",
+    "source_bytes": 10654,
+    "line_count": 231,
+    "disposition": "analyzed",
+    "contracts": [
+      "Generic slack is 10000 ms; agent tasks use configured timeout/concurrency/cancelEvery.",
+      "Scratch Git repositories disable system/user config and use a local qa identity."
+    ],
+    "dependencies": [
+      "arm.mjs supplies process behavior; runner.mjs bounds/records; workloads/{shells,agent}.json define reusable inputs."
+    ],
+    "failures_or_limits": [
+      "QA-D task bound is 13500 ms even where an inner flood/read limit is 60000 ms; the outer bound can dominate.",
+      "Cut suite paths do not assert timeout reason directly; K1/K2 and task completion provide surrounding measurements."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "implementation",
+    "purpose": "Defines Node QA-A through QA-E workload setup and checks.",
+    "behavior": [
+      "QA-A completes semver/commander suites with 180000-ms limits or cuts them at 500/3000 ms; quick omits full std suites. QA-B awaits Vite ready, fetches /@vite/client status 200 and stops with 2000-ms grace.",
+      "QA-C drives platform shell JSON through PTY prompts, commands, Ctrl-C and exit using 20000-ms steps; unavailable programs are explicit skips.",
+      "QA-D covers held pipes, resistant trees, 32 MiB, 100000 lines, isolated Git editor/prompt and a two-second leftover beside a four-second task; QA-E uses deterministic cancellation on the shared command plan."
+    ],
+    "evidence": [
+      {
+        "start_line": 96,
+        "end_line": 100,
+        "quote": "  const TIMEOUT = 3000;\n  const GRACE = 500;\n  const FLOOD = 32 << 20;\n  const LINES = 100_000;\n  const arm = runner.arm;"
+      },
+      {
+        "start_line": 158,
+        "end_line": 168,
+        "quote": "        name: \"short-leftover\",\n        ctx: short,\n        boundMs,\n        body: async () => {\n          const proc = spawn(arm, short.fixture([\"hold=2000\", \"ready\", \"hang\"]), short);\n          await proc.expect(\"READY\", 10_000);\n          return { stopMs: await proc.stop(GRACE), graceMs: GRACE, keep: proc };\n        },\n      },\n      {\n        name: \"beside-a-long-task\","
+      },
+      {
+        "start_line": 215,
+        "end_line": 224,
+        "quote": "      const cancelled = i % plan.cancelEvery === plan.cancelEvery - 1;\n      const spec = ctx.spec(cmd.program, cmd.args, { cwd, timeoutMs: plan.timeoutMs });\n      if (cancelled) spec.cancelAfterMs = spread(i) % plan.cancelWithinMs;\n      const body = async () => {\n        const r = await run(runner.arm, spec, ctx);\n        if (!cancelled && !ok(r)) throw new Error(`${r.how} ${r.code}: ${tail(text(r))}`);\n        if (cancelled && runner.arm === \"omni\" && !(ok(r) || r.how === \"aborted\")) {\n          throw new Error(`cancelled, it ended as ${r.how} ${r.code}`);\n        }\n        return {};"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/pins/semver-workspace.lock",
+    "git_blob_sha": "4da33a38e44a59c6dfd8b5c632f37b2411a664bf",
+    "source_sha256": "68ff54324f7d40ff84e1ea6898d8b38129df2558524326133914bbe22cec144e",
+    "source_bytes": 3016,
+    "line_count": 74,
+    "disposition": "analyzed",
+    "contracts": [
+      "Registry namespace is crates.io-index; package checksums bind downloaded dependency artifacts."
+    ],
+    "dependencies": [
+      "fetch.rs copies this file into cached semver/Cargo.lock before cargo fetch; suite runners request --offline --locked."
+    ],
+    "failures_or_limits": [
+      "The lock metadata does not audit dependency implementations or prove an offline run succeeds."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "lockfile",
+    "purpose": "Pins the external semver workload's Cargo dependency graph for repeatable offline QA.",
+    "behavior": [
+      "Locks semver 1.0.26 with serde 1.0.229 and proc-macro2/quote/syn/unicode-ident transitive versions.",
+      "Uses legacy Cargo lock syntax with qualified registry dependency strings and a metadata checksum table."
+    ],
+    "evidence": [
+      {
+        "start_line": 20,
+        "end_line": 24,
+        "quote": "name = \"semver\"\nversion = \"1.0.26\"\ndependencies = [\n \"serde 1.0.229 (registry+https://github.com/rust-lang/crates.io-index)\",\n]"
+      },
+      {
+        "start_line": 67,
+        "end_line": 74,
+        "quote": "[metadata]\n\"checksum proc-macro2 1.0.107 (registry+https://github.com/rust-lang/crates.io-index)\" = \"985e7ec9bb745e6ce6535b544d84d6cd6f7ad8bd711c398938ae983b91a766d9\"\n\"checksum quote 1.0.47 (registry+https://github.com/rust-lang/crates.io-index)\" = \"1fbf4db142a473a8d80c26bbf18454ed458bf8d26c8219c331daecfdbd079001\"\n\"checksum serde 1.0.229 (registry+https://github.com/rust-lang/crates.io-index)\" = \"4148590afebada386688f18773da617792bf2ef03ffc1e4cbd2b1d45b023e0ba\"\n\"checksum serde_core 1.0.229 (registry+https://github.com/rust-lang/crates.io-index)\" = \"67dca2c9c51e58a4791a4b1ed58308b39c64224d349a935ab5039aa360942a48\"\n\"checksum serde_derive 1.0.229 (registry+https://github.com/rust-lang/crates.io-index)\" = \"e7a5d71263a5a7d47b41f6b3f06ba276f10cc18b0931f1799f710578e2309348\"\n\"checksum syn 3.0.6 (registry+https://github.com/rust-lang/crates.io-index)\" = \"8593e8e72159ed2257d083c7a454a85cbf854f37a0966d8d483aff8c8a3ebcee\"\n\"checksum unicode-ident 1.0.26 (registry+https://github.com/rust-lang/crates.io-index)\" = \"d245f478577f809a851594d02313b640fb437e0bb33866753cff937863096954\""
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/run",
+    "git_blob_sha": "2f3ebf990217865fad06d66ebc90f5e7b83a80f6",
+    "source_sha256": "fcc319852eb136e2c40f1361e713ae8849feed6e7f712a03330ab93bf8c6d85b",
+    "source_bytes": 366,
+    "line_count": 6,
+    "disposition": "analyzed",
+    "contracts": [
+      "Exec preserves the Rust harness process exit status."
+    ],
+    "dependencies": [
+      "qa/Cargo.toml defines the independent binary; src/main.rs handles mode/runner dispatch."
+    ],
+    "failures_or_limits": [
+      "Launching builds and runs workloads; this script was read but never invoked."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "build",
+    "purpose": "Provides the POSIX QA launcher with release Cargo execution.",
+    "behavior": [
+      "Enables shell error/unset checks, changes from qa/ to the Omni root and execs cargo run.",
+      "Uses qa/Cargo.toml and CARGO_TARGET_DIR or target, forwarding every argument after --."
+    ],
+    "evidence": [
+      {
+        "start_line": 4,
+        "end_line": 6,
+        "quote": "set -eu\ncd \"$(dirname \"$0\")/..\"\nexec cargo run --release --quiet --manifest-path qa/Cargo.toml --target-dir \"${CARGO_TARGET_DIR:-target}\" -- \"$@\""
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/run.ps1",
+    "git_blob_sha": "e6c6eccbd2c99b1c3e102f3da9d998fa7805d066",
+    "source_sha256": "3fe80b17cd9dcbb473c7c33edeeff842f41b9d12f4fc5531a76257d98907250e",
+    "source_bytes": 570,
+    "line_count": 7,
+    "disposition": "analyzed",
+    "contracts": [
+      "Avoids ErrorActionPreference=Stop because harness progress is written to stderr."
+    ],
+    "dependencies": [
+      "Cargo.toml and src/main.rs provide the Rust harness."
+    ],
+    "failures_or_limits": [
+      "Windows execution and PowerShell behavior were not exercised."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "build",
+    "purpose": "Provides the PowerShell QA launcher and exit-code propagation.",
+    "behavior": [
+      "Moves to the Omni root and selects CARGO_TARGET_DIR or target.",
+      "Runs release/quiet Cargo with qa/Cargo.toml, forwards @args and exits with LASTEXITCODE."
+    ],
+    "evidence": [
+      {
+        "start_line": 4,
+        "end_line": 7,
+        "quote": "Set-Location (Split-Path -Parent $PSScriptRoot)\n$target = if ($env:CARGO_TARGET_DIR) { $env:CARGO_TARGET_DIR } else { \"target\" }\ncargo run --release --quiet --manifest-path qa/Cargo.toml --target-dir $target -- @args\nexit $LASTEXITCODE"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/src/bounded.rs",
+    "git_blob_sha": "bea20b58d9e1efaadba867ac0bd4ed9ec5ddcd23",
+    "source_sha256": "80b21d8d14c55159a7a17f45df50cc89831a4a36b4414b8587c26cb2775f2972",
+    "source_bytes": 2450,
+    "line_count": 69,
+    "disposition": "analyzed",
+    "contracts": [
+      "Output is decoded lossily as UTF-8; this helper is for harness tools rather than governed product process behavior."
+    ],
+    "dependencies": [
+      "oracle OS inventory, metadata and setup helpers call bounded::run/stdout."
+    ],
+    "failures_or_limits": [
+      "The deadline excludes spawn and up to two drain waits; kill followed by wait is not separately bounded. Reader buffers have no size cap.",
+      "A descendant retaining pipes can cause captured output to be reported empty."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "implementation",
+    "purpose": "Bounds helper command exit and drains its captured output on reader threads.",
+    "behavior": [
+      "Spawns with closed stdin and piped stdout/stderr, checks try_wait every 5 ms and kills/waits the root at the deadline.",
+      "After exit, each drain receiver gets at most one second; late or failed drains become empty strings; stdout helper rejects nonzero status with stderr."
+    ],
+    "evidence": [
+      {
+        "start_line": 30,
+        "end_line": 35,
+        "quote": "        if Instant::now() >= deadline {\n            let _ = child.kill();\n            let _ = child.wait();\n            return Err(format!(\"{name} did not finish within {within:?}\"));\n        }\n        std::thread::sleep(Duration::from_millis(5));"
+      },
+      {
+        "start_line": 37,
+        "end_line": 42,
+        "quote": "    // A descendant of the tool could keep its pipes open: what came within a second is what it said.\n    let take = |rx: mpsc::Receiver<Vec<u8>>| {\n        let bytes = rx.recv_timeout(Duration::from_secs(1)).unwrap_or_default();\n        String::from_utf8_lossy(&bytes).into_owned()\n    };\n    Ok(Ran {"
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/src/control.rs",
+    "git_blob_sha": "c5c9d4eb6f6867610570e90d31735984a85c85f1",
+    "source_sha256": "e0718f177e2c533c63ef59317c9188695342366251694e54e3c1b7d3fdba998e",
+    "source_bytes": 15734,
+    "line_count": 388,
+    "disposition": "analyzed",
+    "contracts": [
+      "Oracle requests allow 60 seconds; log readiness allows 30 seconds; identity-outlive polling is 250 ms."
+    ],
+    "dependencies": [
+      "oracle::Watch supplies the same classifier/cleanup as runners; omni-fixture pidlog/hold/watch provide identities."
+    ],
+    "failures_or_limits": [
+      "Lost/incorrect identities fail the run after allowing lifetimes to expire; controls are definitions, not an observed passed prerequisite."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "implementation",
+    "purpose": "Exercises K1 positive and negative controls before trusting measurement.",
+    "behavior": [
+      "Starts a marked tree, sentinel, argv/other-variable decoy and an unrelated descendant; identifies logged pids through creation time and held-parent chains before root termination.",
+      "Requires exactly the positive tree's two descendants, no incomplete rows and surviving negatives; after cleanup only Windows unconfirmable leftovers may remain counted.",
+      "Controls signal only held Child handles; unheld identities must expire naturally within 15 seconds plus one-second margin, or the run errors."
+    ],
+    "evidence": [
+      {
+        "start_line": 25,
+        "end_line": 29,
+        "quote": "const LIFE: Duration = Duration::from_secs(15);\n/// How much longer than a lifetime the controls wait for what they started to end on its own.\nconst MARGIN: Duration = Duration::from_secs(1);\n/// How often the controls look whether what they started has ended.\nconst POLL: Duration = Duration::from_millis(250);"
+      },
+      {
+        "start_line": 324,
+        "end_line": 330,
+        "quote": "    if counted != left || !found.incomplete.is_empty() {\n        return Err(format!(\n            \"the oracle counted {counted:?} (incomplete {:?}); the tree left {left:?}\",\n            found.incomplete\n        ));\n    }\n    let alive: Vec<u32> = oracle::snapshot()?.iter().map(|p| p.pid).collect();"
+      },
+      {
+        "start_line": 112,
+        "end_line": 118,
+        "quote": "    // Signalled: only what the controls hold, through its handle.\n    for child in std::iter::once(&mut sentinel).chain(&mut others) {\n        let _ = child.kill();\n        let _ = child.wait();\n    }\n    // Every parent the controls started has ended (the tree's root above), each after every spawn: no control\n    // process can be born after this instant, and each ends on its own within `life` of its birth."
+      }
+    ]
+  },
+  {
+    "path": "native/omni/qa/src/control/tests.rs",
+    "git_blob_sha": "e7da838169523bb584504c5a48f5e5c94874a097",
+    "source_sha256": "23c33aadf6098c80e81da70ba03f5f9c9e7a30768c997830c0401dbf3972dbc7",
+    "source_bytes": 6062,
+    "line_count": 142,
+    "disposition": "analyzed",
+    "contracts": [
+      "Tests use two-second control lifetimes; outsiders block on test-held stdin rather than timing out; named fixtures use hard links for OS inventory."
+    ],
+    "dependencies": [
+      "control.rs control_with/identify implement behavior; oracle snapshot provides OS identities."
+    ],
+    "failures_or_limits": [
+      "These adversarial tests are source only; no processes were started or tests executed."
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation",
+    "kind": "test",
+    "purpose": "Checks that failed or fooled control identity attribution never signals unrelated processes.",
+    "behavior": [
+      "Injected delayed identification fails on the stranger and asserts no named control leftovers.",
+      "A substituted logged pid belonging to an outsider must be rejected as not proven while the outsider stays alive.",
+      "Even a deliberately fooled identity result must leave the outsider alive and fail for outliving its lifetime."
+    ],
+    "evidence": [
+      {
+        "start_line": 87,
+        "end_line": 97,
+        "quote": "fn a_logged_pid_reused_by_a_stranger_is_never_taken_nor_killed() {\n    let (named, setup) = named(\"omni-qa-ctl2\");\n    let stranger: Mutex<Option<Child>> = Mutex::new(None);\n    let reused = |log: &Path, held: &Held| {\n        if log.to_string_lossy().contains(\"tree\") {\n            let other = outsider();\n            let mut pids = read_pids(log);\n            *pids.last_mut().unwrap() = other.id();\n            let text: String = pids.iter().map(|p| format!(\"{p}\\n\")).collect();\n            std::fs::write(log, text).unwrap();\n            *stranger.lock().unwrap() = Some(other);"
+      },
+      {
+        "start_line": 136,
+        "end_line": 142,
+        "quote": "    assert_eq!(ended, None, \"C was signalled\");\n    assert!(\n        matches!(&result, Err(e) if e.contains(&format!(\"[{c}]\")) && e.contains(\"still alive\")),\n        \"{result:?}\"\n    );\n    assert!(left.is_empty(), \"left behind: {left:?}\");\n}"
+      }
+    ]
+  }
+]

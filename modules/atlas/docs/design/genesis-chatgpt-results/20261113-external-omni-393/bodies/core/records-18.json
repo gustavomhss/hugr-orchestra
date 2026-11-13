@@ -1,0 +1,165 @@
+[
+  {
+    "path": "native/omni/crates/omni-supervisor/tests/windows_spawn/main.rs",
+    "git_blob_sha": "4719d200881984fc1295c2da089269859589e133",
+    "source_sha256": "e26843063788a53f514de28bab9a90c04317e54a02b40c677cd8b8b728f17210",
+    "source_bytes": 9577,
+    "line_count": 265,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Differentially specify Windows executable/batch/raw command-line semantics and refusal before execution.",
+    "behavior": [
+      "Uses a corpus of empty/space/tab/quote/backslash, shell metacharacter, percent and Unicode arguments; compares raw command line with std::process and exact recovered argv/cwd/env.",
+      "Checks .bat/.CMD and trailing-dot batch paths against std, with no INJECTED marker and literal argument recovery.",
+      "Runs convertible verbatim batch paths but refuses overlong ones; CR/LF arguments and percent-bearing script paths must not create a canary, while a valid positive control does.",
+      "Compares verbatim tails with std raw_arg and refuses batch, extra argv or NUL combinations."
+    ],
+    "contracts": [
+      "The supervisor must either preserve the stated literal semantics or refuse before any script executes."
+    ],
+    "dependencies": [
+      "windows_host.rs protocol fixture; windows_child argv/raw-line role; production cmdline.rs and spawn.rs; Rust std differential baseline."
+    ],
+    "failures_or_limits": [
+      "The finite corpus is a targeted quoting regression set, not exhaustive shell equivalence. The raw-line comparison uses the std version that would compile/run the test, while production attributes a pinned source port; no differential run occurred."
+    ],
+    "evidence": [
+      {
+        "start_line": 18,
+        "end_line": 61,
+        "quote": "/// Arguments that break naive quoting, cmd.exe, or both.\nconst ARGS: &[&str] = &[\n    \"\",\n    \" \",\n    \"a b\",\n    \"\\t\",\n    \"\\\"\",\n    \"\\\"\\\"\",\n    \"a\\\"b\",\n    \"\\\"a b\\\"\",\n    \"\\\\\",\n    \"a\\\\\",\n    \"a\\\\\\\\\",\n    \"\\\\\\\"\",\n    \"a\\\\\\\"b\",\n    \"a b\\\\\",\n    \"\\\\\\\\srv\\\\share\\\\\",\n    \"%PATH%\",\n    \"%\",\n    \"%%\",\n    \"%cd%\",\n    \"!PATH!\",\n    \"&echo INJECTED&\",\n    \"|echo INJECTED\",\n    \"a&b|c<d>e\",\n    \"^\",\n    \"x^&y\",\n    \"(\",\n    \")\",\n    \"@echo\",\n    \"--\",\n    \"/c\",\n    \";\",\n    \",\",\n    \"=\",\n    \"a=b\",\n    \"'\",\n    \"`\",\n    \"$x\",\n    \"*?\",\n    \"é\",\n    \"日本語\",\n    \"😀\",\n];"
+      },
+      {
+        "start_line": 98,
+        "end_line": 117,
+        "quote": "#[test]\nfn command_lines_are_identical_to_std_and_arguments_arrive_exactly() {\n    let dir = temp_dir(\"cwd é 日\");\n    let argv: Vec<&str> = [\"argv\"].iter().chain(ARGS).copied().collect();\n    let mut host = Host::start();\n    let mut spec = Spec::child(&argv);\n    spec.cwd = dir.clone();\n    spec.env.push((\"HUGR_W06\".into(), \"ü 日 %PATH%\".into()));\n    let (code, ours) = run(&mut host, spec);\n    let (_, theirs) = run_std(child_cmd(&argv).current_dir(&dir).env(\"HUGR_W06\", \"ü 日 %PATH%\"));\n    assert_eq!(code, 0, \"{ours:?}\");\n    assert_eq!(field(&ours, \"ARGS \"), args_line(ARGS));\n    assert_eq!(\n        field(&ours, \"CMDLINE \"),\n        field(&theirs, \"CMDLINE \"),\n        \"differential: std built another line\"\n    );\n    assert_eq!(field(&ours, \"CWD \"), field(&theirs, \"CWD \"));\n    assert!(field(&ours, \"CWD \").contains(\"cwd é 日\"));\n    assert_eq!(field(&ours, \"ENV \"), r#\"ENV Some(\"ü 日 %PATH%\")\"#);"
+      },
+      {
+        "start_line": 121,
+        "end_line": 149,
+        "quote": "fn batch_files_get_std_batch_quoting_and_metacharacters_stay_literal() {\n    let dir = temp_dir(\"bat\");\n    let exe = std::env::current_exe().unwrap();\n    let body = format!(\n        \"@\\\"{}\\\" host::child --exact --ignored --nocapture -- argv %*\\r\\n\",\n        exe.display()\n    );\n    let mut host = Host::start();\n    for name in [\"t.bat\", \"u.CMD\"] {\n        std::fs::write(dir.join(name), &body).unwrap();\n        let (code, ours) = run(&mut host, Spec::program(&dir.join(name), ARGS));\n        let (_, theirs) = run_std(Command::new(dir.join(name)).args(ARGS));\n        assert_eq!(code, 0, \"{name}: {ours:?}\");\n        assert_eq!(field(&ours, \"ARGS \"), args_line(ARGS), \"{name}\");\n        assert_eq!(\n            field(&ours, \"CMDLINE \"),\n            field(&theirs, \"CMDLINE \"),\n            \"{name}: differential\"\n        );\n        assert!(!injected(&ours), \"{name}: {ours:?}\");\n    }\n    // `v.bat.` opens `v.bat`: it must be treated as the batch file it is, never handed to CreateProcessW as a\n    // program (which would run cmd.exe on the unescaped line). Whatever cmd.exe makes of the name, the result\n    // is std's, and nothing is injected.\n    std::fs::write(dir.join(\"v.bat\"), &body).unwrap();\n    let dotted = dir.join(\"v.bat.\");\n    let ours = run(&mut host, Spec::program(&dotted, ARGS));\n    assert_eq!(ours, run_std(Command::new(&dotted).args(ARGS)), \"differential\");\n    assert!(!injected(&ours.1), \"{ours:?}\");"
+      },
+      {
+        "start_line": 176,
+        "end_line": 220,
+        "quote": "    // Too long for a plain spelling (std would keep it verbatim, and cmd.exe could not run it): refused before\n    // anything runs.\n    let long = dir.join(\"d\".repeat(240));\n    std::fs::create_dir_all(&long).unwrap();\n    let canary = dir.join(\"canary\");\n    std::fs::write(long.join(\"x.bat\"), format!(\"@echo ran> \\\"{}\\\"\\r\\n\", canary.display())).unwrap();\n    let verbatim = std::fs::canonicalize(long.join(\"x.bat\")).unwrap();\n    match host.spawn(Spec::program(&verbatim, &[\"a\"])) {\n        Err((FailCode::Invalid, msg)) => assert!(msg.contains(\"verbatim\"), \"{msg}\"),\n        other => panic!(\"{:?}\", other.map(|t| t.pid)),\n    }\n    assert!(!canary.exists(), \"a refused spawn ran the batch file\");\n}\n\n#[test]\nfn batch_arguments_that_cannot_pass_literally_are_refused_and_nothing_runs() {\n    let dir = temp_dir(\"refuse\");\n    let canary = dir.join(\"canary\");\n    let body = format!(\"@echo ran> \\\"{}\\\"\\r\\n\", canary.display());\n    std::fs::create_dir_all(dir.join(\"100%\")).unwrap();\n    for script in [dir.join(\"c.bat\"), dir.join(\"100%\").join(\"c.bat\")] {\n        std::fs::write(script, &body).unwrap();\n    }\n    let mut host = Host::start();\n    let cases: [(PathBuf, &str); 3] = [\n        (dir.join(\"c.bat\"), \"a\\nb\"),\n        (dir.join(\"c.bat\"), \"a\\rb\"),\n        (dir.join(\"100%\").join(\"c.bat\"), \"plain\"), // cmd.exe would expand `%` in the path\n    ];\n    for (script, arg) in cases {\n        match host.spawn(Spec::program(&script, &[arg])) {\n            Err((FailCode::Invalid, _)) => {}\n            other => panic!(\"{arg:?}: {:?}\", other.map(|t| t.pid)),\n        }\n    }\n    let e = Command::new(dir.join(\"c.bat\")).arg(\"a\\nb\").spawn().unwrap_err();\n    assert_eq!(\n        e.kind(),\n        std::io::ErrorKind::InvalidInput,\n        \"differential: std refuses it too\"\n    );\n    assert!(!canary.exists(), \"a refused spawn ran the batch file\");\n    // Control: the canary appears when the script does run.\n    assert_eq!(run(&mut host, Spec::program(&dir.join(\"c.bat\"), &[\"ok\"])).0, 0);\n    assert!(canary.exists());"
+      },
+      {
+        "start_line": 223,
+        "end_line": 264,
+        "quote": "/// Amendment WP8b: a verbatim tail is written after the quoted `argv[0]` exactly as std's `raw_arg` writes it\n/// (differential), parsed by the child's own rules; it never goes to a batch file or with arguments.\n#[test]\nfn a_verbatim_command_line_is_std_raw_arg_and_never_reaches_a_batch_file() {\n    const TAIL: &str = r#\"\"a b\" c\\\"d %PATH% x&y |z ^\"#;\n    let mut host = Host::start();\n    let mut spec = Spec::child(&[\"argv\"]);\n    let words: Vec<String> = spec.argv.drain(1..).map(|a| a.into_string().unwrap()).collect();\n    spec.verbatim = Some(format!(\"{} {TAIL}\", words.join(\" \")).into());\n    let (code, ours) = run(&mut host, spec);\n    let (_, theirs) = run_std(std::os::windows::process::CommandExt::raw_arg(\n        &mut child_cmd(&[\"argv\"]),\n        TAIL,\n    ));\n    assert_eq!(code, 0, \"{ours:?}\");\n    assert_eq!(\n        field(&ours, \"CMDLINE \"),\n        field(&theirs, \"CMDLINE \"),\n        \"differential: std raw_arg\"\n    );\n    assert_eq!(\n        field(&ours, \"ARGS \"),\n        args_line(&[\"a b\", \"c\\\"d\", \"%PATH%\", \"x&y\", \"|z\", \"^\"])\n    );\n\n    let dir = temp_dir(\"raw\");\n    std::fs::write(dir.join(\"x.cmd\"), \"@echo INJECTED\\r\\n\").unwrap();\n    let mut code = |spec: Spec| host.spawn(spec).err().map(|e| e.0);\n    let mut batch = Spec::program(&dir.join(\"x.cmd\"), &[]);\n    batch.verbatim = Some(\"&echo INJECTED\".into());\n    assert_eq!(\n        code(batch),\n        Some(FailCode::Invalid),\n        \"a batch file needs a cmd.exe the caller names\"\n    );\n    let mut with_args = Spec::child(&[\"exit\", \"0\"]);\n    with_args.verbatim = Some(\"x\".into());\n    assert_eq!(code(with_args), Some(FailCode::Invalid), \"argv[0] alone\");\n    let mut nul = Spec::child(&[]);\n    nul.argv.truncate(1);\n    nul.verbatim = Some(\"a\\0b\".into());\n    assert_eq!(code(nul), Some(FailCode::Invalid));"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/tests/windows_spawn/root.rs",
+    "git_blob_sha": "85145544ccef0626f322027dac6a06d5daea0c6a",
+    "source_sha256": "e2b03ed651a11545f088dc5022abdeb93c5e4787ca52b617e4d68ca622588728",
+    "source_bytes": 7105,
+    "line_count": 205,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Specify Windows root containment, narrow handle inheritance, error typing and handle lifetime stability.",
+    "behavior": [
+      "Requires the child to report a one-member kill-on-close Job with breakaway refused, then verifies NUL/pipe/merged/separate stdio behavior.",
+      "Creates an inheritable event and checks positive controls in the supervisor and a direct std child, while the contained root must not hold that object.",
+      "Checks missing/invalid program, bad cwd, NUL, relative path and absent/repeated transferred-handle errors; a repeated pipe must close once so its reader reaches EOF.",
+      "Checks full 32-bit exit values and thirty cycles of success/Stop/Release plus failed spawns, allowing at most three additional supervisor handles."
+    ],
+    "contracts": [
+      "Same-object native handle comparison supports the inheritance oracle; a numeric handle absence alone is insufficient."
+    ],
+    "dependencies": [
+      "windows_host.rs and windows_os.rs Proc/pipe helpers; windows_child job/stdin/exit roles."
+    ],
+    "failures_or_limits": [
+      "The inheritance control uses the test host std::process launch, not the production host no-inheritance startup path. Handle-count slack and a finite cycle count are regression thresholds; all assertions remain unexecuted."
+    ],
+    "evidence": [
+      {
+        "start_line": 17,
+        "end_line": 48,
+        "quote": "#[test]\nfn the_root_is_born_alone_in_its_own_job_which_refuses_breakaway() {\n    let mut host = Host::start();\n    let t = host.spawn(Spec::child(&[\"job\"])).unwrap();\n    assert_eq!(\n        t.stdout.line(\"JOB \"),\n        \"JOB active=1 kill=true breakaway=false escape=refused:5\"\n    );\n    assert_eq!(host.exited(t.id), 0);\n}\n\n#[test]\nfn stdio_slots_are_nul_pipe_and_merge() {\n    let mut host = Host::start();\n    // A null stdin is the NUL device (a character file), never a NULL handle.\n    let (_, lines) = run(&mut host, Spec::child(&[\"stdin\"]));\n    assert_eq!(field(&lines, \"STDIN \"), format!(\"STDIN kind={FILE_TYPE_CHAR} bytes=0\"));\n    let mut spec = Spec::child(&[\"stdin\"]);\n    spec.stdin = Slot::Pipe;\n    let mut t = host.spawn(spec).unwrap();\n    t.stdin.take().unwrap().write_all(b\"hello\").unwrap();\n    assert_eq!(t.stdout.line(\"STDIN \"), format!(\"STDIN kind={FILE_TYPE_PIPE} bytes=5\"));\n    let mut spec = Spec::child(&[\"both\"]);\n    spec.stderr = Slot::Merge;\n    let (_, lines) = run(&mut host, spec);\n    assert!(\n        lines.contains(&\"OUT\".into()) && lines.contains(&\"ERR\".into()),\n        \"{lines:?}\"\n    );\n    let t = host.spawn(Spec::child(&[\"both\"])).unwrap();\n    assert_eq!(t.stderr.as_ref().unwrap().line(\"ERR\"), \"ERR\");\n    assert!(!t.stdout.rest().contains(&\"ERR\".into()));"
+      },
+      {
+        "start_line": 51,
+        "end_line": 83,
+        "quote": "#[test]\nfn the_child_inherits_its_stdio_and_nothing_else() {\n    // An inheritable handle in the host. std::process hands it to the supervisor (control 1) and to its own\n    // children (control 2); HANDLE_LIST must keep it from the supervisor's child.\n    let sa = SECURITY_ATTRIBUTES {\n        nLength: size_of::<SECURITY_ATTRIBUTES>() as u32,\n        bInheritHandle: 1,\n        ..Default::default()\n    };\n    // SAFETY: an anonymous event with inheritable attributes.\n    let leak = unsafe { OwnedHandle::from_raw_handle(CreateEventW(&sa, 1, 0, std::ptr::null())) };\n    let value = leak.as_raw_handle() as usize;\n    let mut host = Host::start();\n    let t = host.spawn(Spec::child(&[\"chain\", \"0\", \"0\", \"0\", \"0\"])).unwrap();\n    t.stdout.line(\"READY\");\n    assert!(\n        host.sup_proc().holds(value, &leak),\n        \"control: the supervisor inherited the handle\"\n    );\n    let mut plain = child_cmd(&[\"chain\", \"0\", \"0\", \"0\", \"0\"])\n        .stdout(Stdio::null())\n        .spawn()\n        .unwrap();\n    assert!(\n        Proc::open(plain.id()).holds(value, &leak),\n        \"control: a std::process child inherits it\"\n    );\n    plain.kill().unwrap();\n    plain.wait().unwrap();\n    assert!(\n        !t.root.holds(value, &leak),\n        \"the supervisor's child inherited a handle outside its stdio\"\n    );"
+      },
+      {
+        "start_line": 87,
+        "end_line": 122,
+        "quote": "fn start_failures_are_typed_and_handles_are_validated() {\n    let dir = temp_dir(\"fail\");\n    std::fs::write(dir.join(\"text.txt\"), \"not a program\").unwrap();\n    let mut host = Host::start();\n    let mut code = |spec: Spec| host.spawn(spec).err().map(|e| e.0);\n    assert_eq!(\n        code(Spec::program(&dir.join(\"missing.exe\"), &[])),\n        Some(FailCode::NotFound)\n    );\n    assert_eq!(\n        code(Spec::program(&dir.join(\"text.txt\"), &[])),\n        Some(FailCode::NotExecutable)\n    );\n    let mut spec = Spec::child(&[\"exit\", \"0\"]);\n    spec.cwd = dir.join(\"missing\");\n    assert_eq!(code(spec), Some(FailCode::BadCwd));\n    let mut spec = Spec::child(&[\"exit\", \"0\"]);\n    spec.argv.push(\"a\\0b\".into());\n    assert_eq!(code(spec), Some(FailCode::Invalid));\n    assert_eq!(\n        code(Spec::program(Path::new(\"relative.exe\"), &[])),\n        Some(FailCode::Invalid)\n    );\n    // stdout is always a pipe: a Spawn without its handle is refused.\n    let reply = host.call(|req| raw_spawn(req, Slot::Merge, [0; 3]));\n    assert!(\n        matches!(\n            reply,\n            Msg::SpawnFailed {\n                code: FailCode::Invalid,\n                ..\n            }\n        ),\n        \"{reply:?}\"\n    );\n    repeated_pipe_is_refused_and_closed(&mut host);"
+      },
+      {
+        "start_line": 143,
+        "end_line": 172,
+        "quote": "/// One transferred pipe named in both the stdout and stderr slots: refused, and closed exactly once by the\n/// supervisor, so the host's read end sees EOF.\nfn repeated_pipe_is_refused_and_closed(host: &mut Host) {\n    let (r, w) = host::pipe();\n    let v = host.give(w);\n    let reply = host.call(|req| raw_spawn(req, Slot::Pipe, [0, v, v]));\n    assert!(\n        matches!(\n            reply,\n            Msg::SpawnFailed {\n                code: FailCode::Invalid,\n                ..\n            }\n        ),\n        \"{reply:?}\"\n    );\n    assert_eq!(\n        host::Lines::new(std::fs::File::from(r)).rest(),\n        Vec::<String>::new(),\n        \"EOF\"\n    );\n}\n\n#[test]\nfn exit_codes_arrive_as_full_32_bit_values() {\n    let mut host = Host::start();\n    for code in [0u32, 42, 3221225786] {\n        let t = host.spawn(Spec::child(&[\"exit\", &code.to_string()])).unwrap();\n        assert_eq!(host.exited(t.id), code);\n    }"
+      },
+      {
+        "start_line": 175,
+        "end_line": 204,
+        "quote": "#[test]\nfn handle_count_is_stable_across_spawns_stops_and_failures() {\n    let dir = temp_dir(\"handles\");\n    let mut host = Host::start();\n    let cycle = |host: &mut Host| {\n        let t = host.spawn(Spec::child(&[\"exit\", \"0\"])).unwrap();\n        assert_eq!(host.exited(t.id), 0);\n        host.stop(t.id, 0);\n        assert!(matches!(\n            host.call(|req| Msg::Release { req, id: t.id }),\n            Msg::Ack { result: Ack::Ok, .. }\n        ));\n        // Failures after the stdio handles were transferred: the supervisor must close them.\n        assert!(host.spawn(Spec::program(&dir.join(\"missing.exe\"), &[])).is_err());\n        let mut spec = Spec::child(&[\"exit\", \"0\"]);\n        spec.stdin = Slot::Pipe;\n        spec.cwd = dir.join(\"missing\");\n        assert!(host.spawn(spec).is_err());\n        repeated_pipe_is_refused_and_closed(host);\n    };\n    cycle(&mut host);\n    let before = host.handle_count();\n    for _ in 0..30 {\n        cycle(&mut host);\n    }\n    let after = host.handle_count();\n    assert!(\n        after <= before + 3,\n        \"supervisor handles grew from {before} to {after} over 30 cycles\"\n    );"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/omni-supervisor/tests/windows_tree.rs",
+    "git_blob_sha": "119f1c6e12d3e4fb3dc8b749b4e6167ca86a281f",
+    "source_sha256": "ad3ff443aa66a22e869c080b3920d716ff7b6ff34003fd6cd43d0900a453be62",
+    "source_bytes": 12532,
+    "line_count": 349,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Specify Windows whole-Job inventory, shared stopping, lifecycle failure cleanup and console isolation.",
+    "behavior": [
+      "Checks parent/name inventory, graceful CTRL_BREAK exit, resistant trees forced at the earliest overlapping deadline, and descendant cleanup after root exit.",
+      "Requires every request on unknown/released IDs to return Unknown while Release alone leaves the process alive and host loss still cleans it.",
+      "Exercises channel disconnect/malformed frames, killed or flooding host, and supervisor death; a direct std child remains a host-death control, and host console events remain isolated.",
+      "Checks idle-period grace, logs descendants born after the graceful-stop barrier with PID/creation identity, and requires nested Job stopping below the one-second fallback."
+    ],
+    "contracts": [
+      "Independent Proc handles and creation-time comparisons check death, not just protocol Stopped/List."
+    ],
+    "dependencies": [
+      "windows_host sub-hosts; windows_child chain/breed/nest roles; windows_os::gone identity oracle."
+    ],
+    "failures_or_limits": [
+      "The breeding test validates parseable logged descendants and at least three entries; it does not prove every unlogged process was observed. Ordinary cases assert full death, while separate unit tests intentionally cover the unresolved-member proof fallback. No suite execution is claimed."
+    ],
+    "evidence": [
+      {
+        "start_line": 59,
+        "end_line": 117,
+        "quote": "#[test]\nfn list_follows_the_job_and_a_graceful_stop_breaks_the_root_group() {\n    let mut host = Host::start();\n    let (t, [p1, p2]) = chain(&mut host, false, 5000);\n    let mut list = host.list(t.id);\n    list.sort_by_key(|e| e.pid);\n    let mut want = vec![\n        ProcEntry {\n            pid: t.pid,\n            ppid: None,\n            name: exe_name(),\n        },\n        ProcEntry {\n            pid: p1.pid(),\n            ppid: Some(t.pid),\n            name: exe_name(),\n        },\n        ProcEntry {\n            pid: p2.pid(),\n            ppid: Some(p1.pid()),\n            name: exe_name(),\n        },\n    ];\n    want.sort_by_key(|e| e.pid);\n    assert_eq!(list, want);\n    let took = host.stop(t.id, 5000);\n    timing(\"graceful, 3 processes, grace 5000\", took);\n    assert!(took < Duration::from_millis(2500), \"a graceful stop took {took:?}\");\n    assert_eq!(host.exited(t.id), CTRL_BREAK_EXIT, \"the root ended by CTRL_BREAK\");\n    assert_eq!(host.list(t.id), []);\n    all_dead(&t, &[p1, p2]);\n}\n\n#[test]\nfn a_resistant_tree_is_forced_at_the_earliest_of_overlapping_deadlines() {\n    let mut host = Host::start();\n    let (t, rest) = chain(&mut host, true, 1000);\n    let t0 = Instant::now();\n    let (a, b) = (host.req(), host.req());\n    host.send(&Msg::Stop {\n        req: a,\n        id: t.id,\n        grace_ms: 30_000,\n    });\n    host.send(&Msg::Stop {\n        req: b,\n        id: t.id,\n        grace_ms: 1000,\n    });\n    assert_eq!(host.reply(a), Msg::Stopped { req: a, id: t.id });\n    assert_eq!(host.reply(b), Msg::Stopped { req: b, id: t.id });\n    let took = t0.elapsed();\n    timing(\"forced, resistant, earliest deadline 1000\", took);\n    assert!(\n        took >= Duration::from_millis(950) && took < Duration::from_millis(3000),\n        \"{took:?}\"\n    );\n    assert_eq!(host.exited(t.id), 1, \"forced by TerminateJobObject\");\n    all_dead(&t, &rest);"
+      },
+      {
+        "start_line": 145,
+        "end_line": 204,
+        "quote": "fn unknown_and_released_ids_get_ack_unknown_for_every_request() {\n    let requests: [fn(u64, u64) -> Msg; 5] = [\n        |req, id| Msg::Go { req, id },\n        |req, id| Msg::Stop { req, id, grace_ms: 0 },\n        |req, id| Msg::Resize {\n            req,\n            id,\n            cols: 80,\n            rows: 24,\n        },\n        |req, id| Msg::List { req, id },\n        |req, id| Msg::Release { req, id },\n    ];\n    let mut host = Host::start();\n    let mut ack = |id: u64, make: fn(u64, u64) -> Msg| match host.call(|req| make(req, id)) {\n        Msg::Ack { result, .. } => result,\n        other => panic!(\"{other:?}\"),\n    };\n    for make in requests {\n        assert_eq!(ack(999, make), Ack::Unknown);\n    }\n    let t = host.spawn(Spec::child(&[\"chain\", \"0\", \"0\", \"0\", \"0\"])).unwrap();\n    t.stdout.line(\"READY\");\n    let mut ack = |make: fn(u64, u64) -> Msg| match host.call(|req| make(req, t.id)) {\n        Msg::Ack { result, .. } => result,\n        other => panic!(\"{other:?}\"),\n    };\n    assert_eq!(ack(requests[0]), Ack::Ok, \"Go is a no-op on Windows\");\n    assert_eq!(ack(requests[2]), Ack::Closed, \"a pipe tree has no terminal\");\n    assert_eq!(ack(requests[4]), Ack::Ok);\n    for make in requests {\n        assert_eq!(ack(make), Ack::Unknown);\n    }\n    assert!(t.root.alive(), \"Release ends nothing\");\n    host.disconnect();\n    assert!(\n        t.root.dead_within(T),\n        \"a released tree is still stopped when the host dies\"\n    );\n}\n\n#[test]\nfn host_death_by_channel_end_or_malformed_frame_stops_every_tree() {\n    for malformed in [false, true] {\n        let mut host = Host::start();\n        let (t1, rest1) = chain(&mut host, true, 500);\n        let (t2, rest2) = chain(&mut host, false, 500);\n        let sup = host.sup_proc();\n        if malformed {\n            host.write(&[1, 0, 0, 0, 0x7F]); // unknown kind\n        } else {\n            host.disconnect();\n        }\n        assert!(\n            sup.dead_within(T),\n            \"the supervisor outlived its host (malformed={malformed})\"\n        );\n        assert_eq!(sup.exit_code(), 0, \"clean shutdown: every tree gone\");\n        all_dead(&t1, &rest1);\n        all_dead(&t2, &rest2);"
+      },
+      {
+        "start_line": 226,
+        "end_line": 279,
+        "quote": "#[test]\nfn a_killed_host_takes_its_trees_but_not_its_own_children() {\n    let (mut sub, lines, sup, tree) = sub_host(\"kill\");\n    let control = Proc::open(last_number(&lines.line(\"CONTROL \")));\n    sub.kill().unwrap(); // TerminateProcess: the host dies without a word\n    assert!(sup.dead_within(T), \"the supervisor outlived its host\");\n    assert_eq!(sup.exit_code(), 0);\n    for p in &tree {\n        assert!(!p.alive(), \"pid {} survived its host\", p.pid());\n    }\n    assert!(\n        control.alive(),\n        \"control: a host's own std::process child survives the host\"\n    );\n    control.kill();\n}\n\n#[test]\nfn a_flooding_host_is_held_back_and_its_death_still_stops_the_trees() {\n    let (mut sub, lines, sup, tree) = sub_host(\"flood\");\n    // A host write pending for 2 s: the supervisor stopped reading because its queues are bounded.\n    lines.line(\"STALLED\");\n    sub.kill().unwrap();\n    assert!(sup.dead_within(T), \"a stalled channel kept the supervisor alive\");\n    assert_eq!(sup.exit_code(), 0);\n    for p in &tree {\n        assert!(!p.alive(), \"pid {} survived\", p.pid());\n    }\n}\n\n#[test]\nfn supervisor_death_ends_every_tree() {\n    let mut host = Host::start();\n    let (t, rest) = chain(&mut host, true, 30_000);\n    host.sup.kill().unwrap();\n    assert!(t.root.dead_within(T), \"a tree outlived its supervisor\");\n    for p in &rest {\n        assert!(p.dead_within(T), \"a tree outlived its supervisor\");\n    }\n}\n\n#[test]\nfn stops_never_reach_the_hosts_console() {\n    // The sub-host owns a console and counts the console events it receives. It stops a tree gracefully\n    // (CTRL_BREAK, which ends the root), then sends one CTRL_BREAK to its own console as the control:\n    // exactly that one must have been counted.\n    let (_sub, lines, _sup, tree) = sub_host(\"console\");\n    let line = lines.line(\"EVENTS \");\n    let words: Vec<&str> = line.split(' ').collect();\n    assert_eq!(words[..4], [\"EVENTS\", \"1\", \"EXIT\", \"3221225786\"], \"{line}\");\n    assert!(words[5].parse::<u64>().unwrap() < 2500, \"{line}\");\n    for p in &tree {\n        assert!(!p.alive());\n    }"
+      },
+      {
+        "start_line": 311,
+        "end_line": 348,
+        "quote": "#[test]\nfn stopped_arrives_only_once_every_member_is_gone_even_ones_born_between_polls() {\n    let log = std::env::temp_dir().join(format!(\"hugr-w06-{}-breed.log\", std::process::id()));\n    let _ = std::fs::remove_file(&log);\n    let mut host = Host::start();\n    let t = host.spawn(Spec::child(&[\"breed\", log.to_str().unwrap()])).unwrap();\n    t.stdout.line(\"READY\");\n    // The barrier: the root starts descendants only once the stop's CTRL_BREAK reaches it, and keeps\n    // starting them until the Job is terminated at the deadline, so the last ones live between two polls.\n    timing(\"breeding tree, grace 2000\", host.stop(t.id, 2000));\n    // The oracle, independent of the supervisor: the root logged each descendant's pid and creation time as\n    // soon as it existed; the OS must report every one of them gone at the moment Stopped arrived.\n    let logged = std::fs::read_to_string(&log).unwrap_or_default();\n    let entries: Vec<(u32, u64)> = logged\n        .lines()\n        .filter_map(|l| {\n            l.split_once(' ')\n                .and_then(|(p, b)| Some((p.parse().ok()?, b.parse().ok()?)))\n        })\n        .collect();\n    assert!(entries.len() >= 3, \"the barrier never opened: {logged:?}\");\n    for (pid, born) in entries {\n        assert!(host::os::gone(pid, born), \"pid {pid} was alive when Stopped arrived\");\n    }\n    assert!(!t.root.alive());\n}\n\n#[test]\nfn a_tree_whose_root_made_its_own_nested_job_is_stopped_without_the_fallback() {\n    let mut host = Host::start();\n    let t = host.spawn(Spec::child(&[\"nest\"])).unwrap();\n    let p2 = Proc::open(last_number(&t.stdout.line(\"PID 2 \")));\n    t.stdout.line(\"READY\");\n    let took = host.stop(t.id, 0);\n    timing(\"forced at once, nested Job\", took);\n    // The port's NEW_PROCESS count matches the Job's TotalProcesses with a child Job inside: no 1 s fallback.\n    assert!(took < Duration::from_millis(900), \"the fallback ran: {took:?}\");\n    assert!(!p2.alive());"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  }
+]

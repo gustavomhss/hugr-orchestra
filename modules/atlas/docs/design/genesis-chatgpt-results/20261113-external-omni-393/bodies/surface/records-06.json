@@ -1,0 +1,799 @@
+[
+  {
+    "path": "native/omni/skills/omni-conformance/SKILL.md",
+    "git_blob_sha": "e7cd2d4e4ddf7bf970430d7f126f16012c03ba47",
+    "source_sha256": "9b610a8e5751d8da89bfd3c38159fa637a93d3ca7bf82ec420758276445a06e6",
+    "source_bytes": 6149,
+    "line_count": 100,
+    "disposition": "analyzed",
+    "kind": "doc",
+    "purpose": "Maintainer procedure for shared contract scenarios, fixture verbs, pending items and runner diagnosis.",
+    "behavior": [
+      "Reserves scenario files, Rust contract tests and pending ledger edits to the lead; an implementer reports disputed expectations instead of weakening them.",
+      "Defines ten action keys, marker-driven synchronization, the restricted cross-language regex dialect and OS polling independent of the library.",
+      "Requires a scenario to fail before its fix and runner teeth to demonstrate rejection; pending successes fail until the ledger is updated."
+    ],
+    "contracts": [
+      "SPEC.md and FIXTURE.md define the executable formats; every scenario item must appear in GUARANTEES.",
+      "Scenarios must not skip an applicable OS/language; releases require an empty pending ledger."
+    ],
+    "dependencies": [
+      "conformance/SPEC.md",
+      "conformance/FIXTURE.md",
+      "docs/acceptance.md",
+      "scripts/ci.mjs"
+    ],
+    "failures_or_limits": [
+      "Procedural statements and command examples do not establish execution in this analysis.",
+      "Lines 88–89 describe Bun as release-only, while the current ci.mjs also runs Bun contract/hardening in its fast gate."
+    ],
+    "gaps": [
+      "Historical gate summary lags the current fast gate."
+    ],
+    "inference": [],
+    "evidence": [
+      {
+        "start_line": 27,
+        "end_line": 35,
+        "quote": "- **Scenarios (`conformance/scenarios/*.json`) and `crates/hugr-omni/tests` are read-only for implementers**\n  (INV-13). Only the lead writes or changes them. An implementer who believes a scenario is wrong stops and reports\n  it, with the evidence. Never edit the scenario to match the code.\n- **`conformance/pending.txt`** is the lead's. It lists items that cannot pass yet. A pending item that passes fails\n  the suite until its line is removed, and the file must be empty for a release.\n- **The fixture** (`crates/omni-fixture`) may gain a verb when a contract item needs one. Every verb is listed in\n  FIXTURE.md in the same change.\n- **GUARANTEES.md** must list every scenario's item. `node scripts/guarantees-check/check.mjs` fails on a scenario\n  file whose item no row names."
+      },
+      {
+        "start_line": 39,
+        "end_line": 58,
+        "quote": "1. **Name it by the item it proves:** `C-<AREA>-<NN>.<what>.json`. `id` starts with the item from\n   [docs/acceptance.md](../../docs/acceptance.md).\n2. **Use the steps of SPEC.md**, with exactly one action key per step: `run`, `spawn`, `write`, `read`, `wait`,\n   `stop`, `abort`, `resize`, `processes` and `os`. `options` use the TypeScript names (`timeoutMs`, `inheritEnv`,\n   `mergeStderr`, ...). Each runner maps them.\n3. **Synchronize on markers, never on time.** A `read` with `until: { match, count }` waits for fixture lines such as\n   `READY`, `PID <level> <pid>`, `GOT <line>` or `LOGGED <line>`. `os` steps ask the OS, never the library, with\n   `withinMs` to poll. There is no sleep step, by design.\n4. **Use only the shared regex subset.** It has no look-around, no backreferences, no named groups, no flags, and no\n   `\\s`, `\\b` or `\\p`. `\\d` and `\\w` are ASCII. Matching is by code point, on complete lines.\n   `conformance/regex-table.json` is the definition, and every runner checks itself against it first.\n5. **Expect only what the contract promises.** List the fields that matter. Unlisted fields are ignored. Use matchers\n   (`contains`, `regex`, `lt`/`gt`) where the contract gives a range, not an exact value. Timing expectations prove a\n   bound, not a latency.\n6. **Limit it to an OS or language only when the input cannot exist there.** Examples: `os` for a Unix signal,\n   `langs` for a NaN duration in Rust. A runner never skips a scenario meant for it, and `skipped` counts as a\n   failure.\n7. **Make it fail first.** Run it against the code before the fix, or with the fix reverted, and see it red for the\n   right reason.\n"
+      },
+      {
+        "start_line": 82,
+        "end_line": 89,
+        "quote": "- Each runner prints one line per scenario, then `contract: N passed, M pending, K failed`. Only K greater than 0\n  fails.\n- **Teeth** prove that the runner can fail: a loose matcher, a missing step or a harness error must each be caught.\n  Run them whenever a runner changes.\n- Both runners read the same files. A scenario green in Rust and red in TypeScript (or the reverse) is a binding or\n  runner bug, not a contract question.\n- `node scripts/ci.mjs` runs the Rust suite and the Node 22 contract in the fast gate. Node 24, Bun and Deno run\n  under `--release` (see the `omni-gates` skill)."
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/skills/omni-core-change/SKILL.md",
+    "git_blob_sha": "f6192cb120753fb92aed7c74d35f054c9c68163f",
+    "source_sha256": "563da8d750404860e683059adb611f91e679f460a3862c443ef72ba27c88e9de",
+    "source_bytes": 6944,
+    "line_count": 111,
+    "disposition": "analyzed",
+    "kind": "doc",
+    "purpose": "Prescribes how maintainers change the Rust core, binding and supervisor while preserving layers and frozen contracts.",
+    "behavior": [
+      "Places changes by downward-only layer imports and preserves frozen seam names/signatures unless the lead changes them.",
+      "Treats error text as append-only work-package constructors and requires coordinated contract, Rust API, TypeScript declarations, parity map and documentation changes.",
+      "Protocol changes require a version bump, protocol documentation, malformed-codec cases and simultaneous host/supervisor changes."
+    ],
+    "contracts": [
+      "No tokio process/SIGCHLD observation or host signal hooks; bounded spawn round trips are the stated blocking exception.",
+      "Code files, including tests, have a 400-line ceiling; dependencies/unsafe locations follow AGENTS allowlists."
+    ],
+    "dependencies": [
+      "AGENTS.md",
+      "PLAN.md §4.3",
+      "docs/api-contract.md",
+      "docs/protocol.md"
+    ],
+    "failures_or_limits": [
+      "These are maintainer instructions, not evidence that every baseline file satisfies them.",
+      "The skill's dependency list omits sysinfo, which the captured Cargo.lock includes; current manifests and AGENTS must resolve the policy context."
+    ],
+    "gaps": [
+      "Dependency allowlist restatement may predate the memory-limit addition."
+    ],
+    "inference": [],
+    "evidence": [
+      {
+        "start_line": 44,
+        "end_line": 59,
+        "quote": "- Every error text is a `pub(crate)` constructor in `crates/hugr-omni/src/error/messages/<wp>.rs` (one submodule per WP).\n- Add your own `impl Error` block **at the end of the file**, named for your work package. Never edit another work\n  package's texts.\n- A message says what failed, the value, and the fix ([contract §11](../../docs/api-contract.md#11-errors-and-other-languages-v02)).\n  The codes are fixed: `NOT_FOUND`, `NOT_EXECUTABLE`, `INVALID_CWD`, `INVALID_ARGUMENT`, `ABORTED`, `OUTPUT_LIMIT`,\n  `CLOSED` and `IO`. A new code is a contract change.\n\n## 4. Allowlists\n\n- **`unsafe`** is allowed only in `client`, `pty`, `spawn/sys.rs`, the supervisor, `omni-fixture/src/sys`, the\n  bindings, and the test runners' one environment write at startup. Every block has a `// SAFETY:` comment.\n- **Dependencies** (INV-12): only `libc`, `windows-sys`, `tokio` (without the `process` feature), `tokio-util`,\n  `serde`/`serde_json`/`regex` in tests and runners, and the napi crates in the binding. Anything else, **including a\n  new `windows-sys` feature**, means: stop and ask the lead.\n- **No `unwrap`, `expect` or `panic`** in library or supervisor code (clippy denies them). Nothing may panic across\n  FFI. Test crates may opt out with the one allowed `#![allow(...)]` line."
+      },
+      {
+        "start_line": 63,
+        "end_line": 84,
+        "quote": "A new option, field or behavior is a contract change, made by the lead. In order:\n\n1. The lead amends [docs/api-contract.md](../../docs/api-contract.md) and, where behavior changes, adds a scenario.\n2. `bindings/node/index.d.ts` and the Rust `api` change together. Parity (INV-02) means a capability exists in every\n   language or in none. Update `scripts/surface-check/parity.txt`.\n3. The surface checks prove it: `node scripts/surface-check/parity.mjs` and `node scripts/surface-check/binding.mjs`.\n4. The docs (README, recipes) and the skills that name the option follow. `node scripts/skill-check/check.mjs` fails\n   on a skill that names an option `index.d.ts` no longer has.\n\n## 6. Protocol changes\n\nThe host-supervisor protocol is frozen ([docs/protocol.md](../../docs/protocol.md)). Changing a message, a field or\na reply rule is a lead decision, and lands as one change:\n\n1. Bump `VERSION` in `crates/omni-proto/src/lib.rs`. The host refuses a supervisor of another version, and both\n   ship together.\n2. Update `docs/protocol.md`: the message table, the reply table, and the descriptor rules.\n3. Update the codec and its tests in `crates/omni-proto/src/codec/`: round trips, plus the malformed cases (unknown\n   kind, bad length, trailing bytes, a slot not allowed for its field).\n4. Change the client (`crates/hugr-omni/src/client`) and the supervisor (Unix and Windows) in the same change. A\n   supervisor and a host from different commits never talk.\n5. Keep the reply rule: every request gets exactly one reply carrying its `req`."
+      },
+      {
+        "start_line": 88,
+        "end_line": 100,
+        "quote": "- **INV-16.** Never observe child exit through tokio's process or SIGCHLD machinery. `tokio::process` is banned.\n  The supervisor owns every child, and the host never forks.\n- **The host** installs no signal handler and no exit hook, and changes no console state. Anything of that kind lives\n  in the supervisor.\n- **Never block the host:** not the Node main thread, not the tokio executor. The one exception is spawning, with\n  bounded round trips: one for a pipe child, two for a Unix PTY child.\n- **No shell, ever.** On Windows, `.cmd` and `.bat` run through `cmd.exe` with batch-safe quoting, or are refused.\n- The traps behind these rules are in the `omni-os-traps` skill.\n\n## 8. File size\n\nAt most 400 lines per code file, tests included (per file, never per change). Check with\n`python3 scripts/file-size-guard.py`. Documents are not counted."
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/skills/omni-gates/SKILL.md",
+    "git_blob_sha": "968426a62d9183077b3f5256129139e909ffce34",
+    "source_sha256": "2e62e56020d76c716fc6efbefefaef03bbb90fbf207f737ab6b86eb9df8eacab",
+    "source_bytes": 6627,
+    "line_count": 106,
+    "disposition": "analyzed",
+    "kind": "doc",
+    "purpose": "Documents gate order, fast/release distinctions and disciplined triage of OS-dependent failures.",
+    "behavior": [
+      "Runs cheap static gates before builds, requires workspace binaries before tests, and describes a local Windows cross-clippy check separately from native CI.",
+      "Separates fast checks from release additions: runtime variants, executable examples, musl supervisor, K4 timing and K9 package installs.",
+      "Treats timeouts as failed observations, synchronizes on fixture markers and checks PID/descriptor identity before diagnosing leaks."
+    ],
+    "contracts": [
+      "AGENTS.md wins if instructions disagree; no assertion relaxation, retry or OS skip without lead decision.",
+      "Reports must explicitly name unrun OS checks rather than call them green."
+    ],
+    "dependencies": [
+      "AGENTS.md",
+      "scripts/ci.mjs",
+      "references/ci-history.md",
+      "conformance/FIXTURE.md"
+    ],
+    "failures_or_limits": [
+      "Gate table retains push/main/bundle triggers and release-only Bun descriptions that differ from current mirror workflow/ci.mjs.",
+      "Docker example uses rust:1.96 while cross-target setup names toolchain 1.98.0; examples are not current execution evidence."
+    ],
+    "gaps": [
+      "Gate trigger/runtime table requires reading alongside actual baseline scripts."
+    ],
+    "inference": [],
+    "evidence": [
+      {
+        "start_line": 40,
+        "end_line": 58,
+        "quote": "- `cargo test` alone never builds another package's binaries (`omni-fixture`, `hugr-omni-supervisor`). Run\n  `cargo build --workspace --bins` first, or the contract runner fails loudly.\n- The Windows clippy target checks that the Windows code compiles on a Mac or Linux machine. CI runs only the\n  native clippy on each OS, so this local step is the only cross check before Windows CI. It needs\n  `rustup target add x86_64-pc-windows-msvc --toolchain 1.98.0` once.\n- At most two heavy Rust builds run at once on the lead's machine. Delete your worktree's `target/` when you stop.\n\n## Fast gate and release gate\n\n`node scripts/ci.mjs` is the one CI script. GitHub Actions runs it on Linux, macOS and Windows, and so does anyone by\nhand. Read its header for the authoritative step list.\n\n| | Fast (every push to main, bundle/**, PRs) | `--release` (a `v*` tag, `RELEASE=1`, or by hand) |\n|---|---|---|\n| Static checks (Linux only) | file size, plan sections, rustfmt, surface parity, binding surface, guarantees ledger, docs blocks (static), tsc | plus the surface and guarantees checks' own tests |\n| Rust | clippy, build, `cargo test --workspace` | plus the musl supervisor (static), the supervisor suite on musl, K4 on a release build |\n| TypeScript | runner teeth, contract and idioms on Node 22 | plus Node 24, Bun and Deno |\n| Docs | static rules | every docs block run for real |\n| Packages | none | K9: build, pack and clean-install the npm package of this OS with npm, Bun and Deno |"
+      },
+      {
+        "start_line": 81,
+        "end_line": 97,
+        "quote": "1. **A timeout is a failure.** It never counts as \"probably slow\". A test that timed out did not observe what it\n   claims. Find what it was waiting for.\n2. **Did the test synchronize on a marker?** Tests wait for fixture output (`READY`, `PID <level> <pid>`, `GOT`,\n   `LOGGED`), never for time. Any `sleep` used to wait for a state is the bug. Replace it with a marker\n   ([FIXTURE.md](../../conformance/FIXTURE.md)).\n3. **Suspect reuse before suspecting the product.**\n   - PID reuse: Windows hands a freed pid to the next process within moments, often to another test's\n     `omni-fixture`. An oracle that says \"pid X is alive\" must check that X is still *our* process (a nonce or a\n     log path in its command line), not just that the number exists.\n   - Descriptor reuse: other tests open files at the same time and get the same fd numbers. Compare identities\n     (device and inode), not numbers.\n4. **Is the bound honest under load?** A 2-vCPU CI runner can take seconds to start a process. A bound that\n   includes the root's start-up must allow for it (\"under two graces\", not \"under one grace plus 50 ms\"). A bound is\n   there to prove that a hang is bounded, not to measure latency.\n5. **Reproduce on the failing OS with `TEST_FILTER`**, several runs in a row, before and after the fix.\n6. **Never loosen an assertion, add a retry, or skip on an OS without a lead decision.** A skip counts as a failure\n   in the contract runners. When an OS limit is real, declare it in GUARANTEES with the measured number."
+      },
+      {
+        "start_line": 102,
+        "end_line": 106,
+        "quote": "## Before you hand over\n\n- Every gate in the order above is green locally. Linux is green in Docker with `--privileged`.\n- `git diff --name-only <baseline>...HEAD` shows only your write-set.\n- Your report names any test you could not run on an OS, and says why. Never write \"green\" for something not run."
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/skills/omni-gates/references/ci-history.md",
+    "git_blob_sha": "0a5d972b9e268c92ad7f9504e3775ddc80b26d64",
+    "source_sha256": "a6a34306994f97ca80a3ad8125bc13b27b1b28857356220e322ef42badf3eb17",
+    "source_bytes": 4464,
+    "line_count": 58,
+    "disposition": "analyzed",
+    "kind": "doc",
+    "purpose": "Preserves historical CI incident diagnoses and lessons for later gate triage.",
+    "behavior": [
+      "Records Windows saturated-runner stop failures, repeated forced termination until Job empty and the distinction between start-up-inclusive bounds and cleanup latency.",
+      "Explains macOS descriptor-message EMSGSIZE, one-byte SCM_RIGHTS transfer, and identity-aware PID/fd leak oracles.",
+      "Lists privileged Linux PID reuse, build resource limits, unresolved historical macOS K4 timing and ConPTY close-worker behavior."
+    ],
+    "contracts": [
+      "Incident entries tie symptoms to named commits/tests; timing figures are historical measurements.",
+      "PID and descriptor checks must prove identity, not merely a recycled number."
+    ],
+    "dependencies": [
+      "HANDOFF.md",
+      "PLAN.md",
+      "ADR-0003",
+      "supervisor and client tests referenced in the incident entries"
+    ],
+    "failures_or_limits": [
+      "Mirror commit and CI claims are documentary reports, not independently rerun observations.",
+      "Final path-filter note describes docs-only push behavior; current mirror ci.yml is tag/manual-triggered."
+    ],
+    "gaps": [
+      "Historical trigger guidance must not be treated as current workflow configuration."
+    ],
+    "inference": [],
+    "evidence": [
+      {
+        "start_line": 9,
+        "end_line": 20,
+        "quote": "- **Symptom.** On GitLab's Windows Server 2022 runner, `stopped_arrives_only_once_every_member_is_gone_even_ones_born_between_polls`\n  (`crates/omni-supervisor/tests/windows_tree.rs`) failed. CTRL_BREAK sometimes did not reach the root, and a stop\n  with a 2000 ms grace took 5230 ms. Separately, a W09 grace-window test measured 1.53 s against a 1 s grace.\n- **Cause.** On a 2-vCPU runner, the breeding test's descendants did not start and log themselves before the deadline,\n  so the oracle could not see them. A single forced pass could miss a process that was still joining the Job. The\n  measured window also included the root's start-up.\n- **Fix.** The breeder logs each descendant when `CreateProcess` returns. The forced pass repeats while the Job has\n  members (forced means \"until the Job is empty\", like SIGKILL until the session is empty on Unix). After host\n  death the supervisor waits 5 s, not 2, before it reports trees not proven gone. The grace bound became \"under two\n  graces\". GUARANTEES declares the OS teardown time after `TerminateJobObject`: 840 ms for 875 processes.\n- **Lesson.** CTRL_BREAK is best effort on Windows. The forced step is the guarantee. A bound that includes process\n  start-up must allow for a loaded machine."
+      },
+      {
+        "start_line": 24,
+        "end_line": 31,
+        "quote": "- **Symptom.** The first GitHub Actions run on `macos-14` (arm64) killed the host-supervisor channel under concurrent\n  spawns. The host took it for a dead supervisor.\n- **Cause.** XNU refuses a `sendmsg` with SCM_RIGHTS that does not fit the socket send buffer whole, and that buffer\n  shrinks while the peer has not read. Linux has no such failure.\n- **Fix.** Both ends (`crates/hugr-omni/src/client/unix.rs` and `crates/omni-supervisor/src/unix/chan.rs`) send the\n  descriptors with one byte, or wait for the peer. Guarded by `a_spawn_with_a_large_environment_starts`\n  (`crates/hugr-omni/src/process/tests/big.rs`), with a 64 KiB environment, far above the 8 KiB socket buffer.\n- **Lesson.** A test suite green on one Unix is not green on the other. Run macOS CI before you trust a channel change."
+      },
+      {
+        "start_line": 35,
+        "end_line": 43,
+        "quote": "- **Symptom.** On Windows, a pid \"stayed alive\" after `stop()` (QA-E, and a W09 test). On Unix, a descriptor-leak test\n  saw \"open\" descriptors after the batch was closed.\n- **Cause.** Not leaks. Windows reused the freed pid at once, often for another test's `omni-fixture`. Other tests\n  reopened the same descriptor numbers.\n- **Fix.** On Windows, a logged pid counts as alive only while its command line still names this test's log\n  (`assert_dead_logged` in `crates/hugr-omni/src/process/tests/mod.rs`). The descriptor test compares (device,\n  inode) identities, not numbers. The same commit kept the large-environment test's 64 KiB variable under Linux's\n  128 KiB limit for one environment string.\n- **Lesson.** Before you report a leak, prove that the pid or descriptor is still the one you created."
+      },
+      {
+        "start_line": 52,
+        "end_line": 58,
+        "quote": "- **K4 (time to pid) on macOS** measured about +0.7 ms over the standard library on a loaded developer machine. K4 is\n  judged on quiet CI release builds, with Linux as the reference. The macOS figure is still open (HANDOFF,\n  2026-10-06).\n- **Windows ConPTY close** can block for seconds on Server 2022. A test that waits for the close on the test thread\n  hangs. The supervisor closes on a worker under an independent deadline (ADR-0003, S3).\n- **Path filters.** `ci.yml` ignores pushes that change only `**.md`, `docs/**` or licenses. A docs-only change runs\n  no CI, so run the static docs checks by hand."
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/skills/omni-lifecycle/SKILL.md",
+    "git_blob_sha": "bb6fb77fe6162c9b9f1612ad32eecffc5d870238",
+    "source_sha256": "c949daba5af474eef2e82aeaaa3205a6a6ef3f537894f604adb44401e4fa7b27",
+    "source_bytes": 8420,
+    "line_count": 123,
+    "disposition": "analyzed",
+    "kind": "doc",
+    "purpose": "Teaches lifetime ownership, termination causes and per-OS tree containment to TypeScript callers.",
+    "behavior": [
+      "Distinguishes root-only wait from whole-tree stop/disposal, timeout results and abort rejection with partial run result.",
+      "Explains preserving an already-recorded root exit while stopping descendants and waiting for output plus bounded descendant cleanup in run.",
+      "Documents Unix session containment and setsid escape, Windows Jobs without breakaway, supervisor death asymmetry and forced termination after grace."
+    ],
+    "contracts": [
+      "Default grace is 2000 ms; process inventory may reject IO rather than return a knowingly incomplete scan.",
+      "Cause is committed when termination acts; exitCode 0 after a stop is still unsuccessful killed."
+    ],
+    "dependencies": [
+      "docs/api-contract.md §§5–8",
+      "GUARANTEES.md",
+      "docs/guide/recipes.md"
+    ],
+    "failures_or_limits": [
+      "Reason table lists only exit/signal/killed/timeout/aborted and omits current memory_exceeded.",
+      "Per-OS guarantees and historical 840 ms teardown figure are sourced assertions, not runtime observations here."
+    ],
+    "gaps": [
+      "Usage guidance predates maxRssBytes/memory_exceeded."
+    ],
+    "inference": [],
+    "evidence": [
+      {
+        "start_line": 29,
+        "end_line": 44,
+        "quote": "| Call or option | Ends | Resolves | Notes |\n|---|---|---|---|\n| `wait()` | nothing | when the **root** exits | descendants may still run; every call returns the same `Exit` |\n| `stop({ graceMs })` | the **whole tree** | once the tree is gone (per tier) | graceful first, forced after `graceMs` (default 2000); safe to repeat |\n| `await using` / `[Symbol.asyncDispose]` | the whole tree | when `stop()` resolves | the default way to own a child |\n| `timeoutMs` | the whole tree, at the deadline | `run()`: resolves `reason: \"timeout\"`; `spawn()`: `wait()` gives `\"timeout\"` | a whole-run budget, not an idle timer |\n| `signal` (an `AbortSignal`) | the whole tree, on abort | `run()`: rejects `ABORTED` with `error.result`; `spawn()`: `wait()` gives `\"aborted\"` | already aborted: nothing starts; `spawn()` throws and `run()` rejects `ABORTED` |\n| `processes()` | nothing | the live members `stop()` would end now | `[]` once gone; no command-line arguments; rejects `IO` if the scan is incomplete |\n\n- `stop()` after `wait()` resolved still ends surviving descendants, and keeps the root's recorded `Exit`.\n- The cause is committed when the library acts. A child that handles SIGTERM and exits 0 after `stop()` reports\n  `reason: \"killed\"`, `exitCode: 0`, `success: false`. If the root had already exited by itself, its `exit` or\n  `signal` stays ([contract §7](../../docs/api-contract.md#7-exit-and-termination-cause)).\n- `run()` resolves only after the root exits **and** the output ends. Descendants that keep the pipes open get\n  `graceMs` after the root's exit, then they are stopped ([contract §6](../../docs/api-contract.md#6-run)).\n- `run()`, `stop()` and disposal return only after the tree is stopped. `wait()` reports the root only."
+      },
+      {
+        "start_line": 75,
+        "end_line": 84,
+        "quote": "| `reason` | Means | `exitCode`, `signal` |\n|---|---|---|\n| `exit` | the root ended by itself | its code; `null` |\n| `signal` | Unix only: a signal that was not ours ended it (a crash, someone else's kill) | `null`; the name |\n| `killed` | `stop()` or scope exit | what the root ended with |\n| `timeout` | `timeoutMs` passed | what the root ended with |\n| `aborted` | the `AbortSignal` fired | what the root ended with |\n\nMore detail, with runnable code, is in [recipes §8](../../docs/guide/recipes.md#8-reading-the-result). On Windows,\n`signal` is always `null`, and exit codes are unsigned (3221225786 is a console Ctrl-C/Ctrl-Break exit)."
+      },
+      {
+        "start_line": 91,
+        "end_line": 104,
+        "quote": "- **Kill unit.** Unix: the root's session (every root is a session leader). Windows: the Job, with no breakaway.\n- **Graceful step.** Unix: SIGTERM (plus SIGHUP for a terminal) and SIGCONT to the session. Windows: CTRL_BREAK to\n  console processes, which is best effort. A `.bat` script keeps going after it.\n- **Forced step after `graceMs`.** SIGKILL until the session is empty, or `TerminateJobObject` until the Job is\n  empty. It is guaranteed on every OS.\n- **Declared escapes.** On Unix, a descendant that calls `setsid` (tmux, gpg-agent, some daemons) leaves the session\n  and survives `stop()`. On Windows nothing leaves the Job.\n- **Your process dies** (normal end, `process.exit()`, uncaught exception, SIGINT, SIGTERM, even SIGKILL). The\n  supervisor notices and stops every tree within its grace. You register nothing: hugr-omni installs no signal\n  handler and no exit hook ([recipes §4](../../docs/guide/recipes.md#4-cleanup-cancel-errors-and-the-end-of-your-own-process)).\n- **The supervisor dies.** Unix trees keep running, unprotected (declared). Windows trees die with their Jobs. The\n  next spawn starts a new supervisor ([ADR-0005](../../docs/adr/0005-supervisor.md)).\n- **PID reuse.** A tree that is gone is never signalled again. This is one more reason to stop through the library\n  and never by pid."
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/skills/omni-migrate/SKILL.md",
+    "git_blob_sha": "665a86a1c4e9210c5da7dda9fbe0e597044885c9",
+    "source_sha256": "9b68e50ce36fb6567ecff6e511db22e1e1c5ac9531875daf0775f775cf27ad8d",
+    "source_bytes": 10255,
+    "line_count": 127,
+    "disposition": "analyzed",
+    "kind": "doc",
+    "purpose": "Maps legacy child_process, execa and PTY APIs to Omni while exposing semantic migration hazards.",
+    "behavior": [
+      "Maps environment replacement to inheritEnv:false, open stdin to stdin:'pipe', startup events to synchronous spawn errors and child kill to awaited whole-tree stop.",
+      "Rejects implicit shell translation and daemon/unref semantics; explicit shell commands must be visible, with an included windowsVerbatimArgs example.",
+      "Explains one output consumer, root-exit versus pipe completion, PTY key/size differences and explicit error-code mapping."
+    ],
+    "contracts": [
+      "Nonzero exit resolves a result; output-limit failure stops the tree and carries collected bytes.",
+      "Migration checklist requires loss detection for byte-exact streams and identity-aware proof that cleanup removed the tree."
+    ],
+    "dependencies": [
+      "docs/api-contract.md",
+      "references/orchestra.md",
+      "omni-processes/references/windows.md"
+    ],
+    "failures_or_limits": [
+      "Lines 73–77 categorically say there is no backpressure, conflicting with current backpressure:true support.",
+      "Line 50 calls verbatim Windows arguments planned although lines 98–99 already document windowsVerbatimArgs."
+    ],
+    "gaps": [
+      "Migration defaults must be qualified as default-mode behavior; verbatim option status is internally inconsistent."
+    ],
+    "inference": [],
+    "evidence": [
+      {
+        "start_line": 28,
+        "end_line": 50,
+        "quote": "| `execFile(cmd, args, cb)`, `execa(cmd, args)`, `spawnSync` | `await run(cmd, args, options)` | there is no synchronous API; a non-zero exit resolves (`success: false`), never rejects |\n| `spawn(cmd, args, opts)`, `crossSpawn(cmd, args, opts)` | `spawn(cmd, args, options)` | Windows `.cmd` resolution (what cross-spawn is for) is built in |\n| `exec(commandString)`, `shell: true`, execa `shell` | no equivalent | see \"The shell\" below |\n| `cwd` | `cwd` | a missing directory throws `INVALID_CWD` synchronously |\n| `env: {...}` (replaces the environment) | `env` (merged over the inherited one) plus `inheritEnv: false` to replace | `env: { X: null }` removes a variable; `inheritEnv: false` drops PATH too (`NOT_FOUND`) |\n| `timeout` (signals the root only) | `timeoutMs` | stops the whole tree; `run()` resolves `reason: \"timeout\"` |\n| `killSignal`, execa `forceKillAfterDelay` | `graceMs` | the graceful step and the forced step are fixed per OS; the delay is yours |\n| `signal` (an `AbortSignal`) | `signal` | `run()` rejects `ABORTED` with `error.result`; `spawn()`'s `wait()` gives `reason: \"aborted\"` |\n| `maxBuffer` | `maxOutputBytes` (per stream, 16 MiB default) | over the limit: tree stopped, `OUTPUT_LIMIT`, first bytes in `error.result` |\n| `encoding` / execa `encoding: \"buffer\"` | `text` (default `true`; `false` gives `Uint8Array`) | invalid UTF-8 becomes U+FFFD in text mode |\n| `input` (execa, execFileSync) | `input` (`run()` only) | stdin is closed after it |\n| `stdio: [\"pipe\", ...]` default open stdin | `stdin: \"pipe\"` | hugr-omni's default is a closed stdin: the child reads end of input at once |\n| `stdio: \"inherit\"`, fd numbers, streams | no equivalent | hugr-omni always captures; see \"When not to use\" |\n| execa `all`, `2>&1` | `mergeStderr: true` | one chronological stream, labeled `stdout` |\n| `child.stdout.on(\"data\")`, `child.stderr.on(\"data\")` | one `for await (const c of child.output)` | one consumer for both streams; `c.stream` says which; a second loop throws `INVALID_ARGUMENT` |\n| `readline` over `child.stdout` | `child.lines()` | lines of more than 1 MiB come in pieces marked `continues` |\n| `child.stdin.write`, `child.stdin.end` | `await child.write(data)`, `await child.closeStdin()` | `write` resolves when the OS took the bytes |\n| `child.on(\"exit\", (code, sig))` | `await child.wait()` | `exitCode`, `signal` (a name, not a number) and `reason` |\n| `child.on(\"close\")` (after stdio ended) | `wait()` plus the end of the `output` loop | `run()` already waits for both |\n| `child.on(\"error\")` for ENOENT and EACCES | a synchronous `throw` from `spawn()` | `NOT_FOUND`, `NOT_EXECUTABLE`, `INVALID_CWD`, `INVALID_ARGUMENT` |\n| `child.kill()`, `child.kill(signal)`, tree-kill, `taskkill /T` | `await child.stop({ graceMs })` | the whole tree; no arbitrary signal |\n| `detached: true`, `child.unref()` | no equivalent | every tree is contained and owned |\n| `windowsVerbatimArguments` | no equivalent yet | planned as an explicit option (WP8b) |"
+      },
+      {
+        "start_line": 73,
+        "end_line": 87,
+        "quote": "1. **No backpressure, counted loss.** Legacy pipes stop a child that writes faster than you read. hugr-omni never\n   blocks the child. It buffers up to 16 MiB per stream for an attached consumer (1 MiB with none) and drops the\n   rest, which is reported as `lostBefore` and `droppedBytes`. A port that must not lose bytes (`git cat-file\n   --batch`, a protocol over stdout) has to read eagerly and fail on any `lostBefore`\n   ([contract §4](../../docs/api-contract.md#4-output)).\n2. **Exit is not \"output complete\".** `wait()` resolves at root exit. Output ends when every holder of the pipes\n   closed them, and that holder can be a descendant. Legacy `close` waited for both. Wait for both, or use `run()`.\n3. **Startup errors are synchronous.** `spawn()` throws. It never emits a later `error` event. Wrap the call, not a\n   listener.\n4. **The environment merges.** `env: { FOO: \"1\" }` keeps the rest of the inherited environment. To pass exactly a\n   set, use `inheritEnv: false` and build the object yourself: `{ ...process.env, ...extra }`.\n5. **stdin is closed by default.** A port of code that writes later needs `stdin: \"pipe\"`.\n6. **One consumer.** Legacy code often attaches several `data` listeners. Fan out from one loop instead.\n7. **Signals are names.** `exit.signal` is `\"SIGTERM\"`, not 15, and always `null` on Windows. If the legacy API\n   reported `128 + signo` or a number, convert it at the boundary."
+      },
+      {
+        "start_line": 93,
+        "end_line": 101,
+        "quote": "- **The call site does not need one** (the usual case: `exec(\"git status\")`). Split it into a program and an\n  argument array: `run(\"git\", [\"status\"])`. Never split a user-provided string on spaces.\n- **The caller truly needs shell syntax** (a user-typed pipeline, `&&`, globbing, a shell builtin). Name the shell\n  explicitly, so a reviewer sees it: `spawn(\"sh\", [\"-c\", script])` on Unix, with the script as one argument. On\n  Windows, `cmd.exe` parses its command line by its own rules, so name it and write that line yourself with\n  `windowsVerbatimArgs` (amendment WP8b): `run(\"cmd.exe\", [], { windowsVerbatimArgs: '/d /s /c \"' + line + '\"' })`.\n  The text goes after the quoted program unchanged; `args` must be empty, and other systems refuse the option.\n- **A `.cmd` or `.bat` file is not a reason for a shell.** hugr-omni runs it through cmd.exe with safe quoting, or\n  refuses it (see the `omni-processes` skill, references/windows.md)."
+      },
+      {
+        "start_line": 119,
+        "end_line": 127,
+        "quote": "- Each call site is classified: run, spawn, pty, or out of scope (it must outlive the host, or needs the real\n  terminal), with the reason written down.\n- No `shell: true` was translated silently. An explicit shell is named, and is reviewed as a decision.\n- `env` replacement semantics are kept where the legacy code replaced the environment.\n- `stdin: \"pipe\"` is passed where the legacy code wrote later.\n- Every byte-exact stream fails on `lostBefore`. Every display stream shows the gap.\n- Kill paths became `stop()`, awaited and bounded. tree-kill, `taskkill` and `pgrep` walks are deleted.\n- Error mapping is explicit: `NOT_FOUND` and `INVALID_CWD` to the legacy ENOENT, `NOT_EXECUTABLE` to EACCES, and so on.\n- A test proves that the tree is gone after the port. Check by a nonce in argv, never by a bare pid."
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/skills/omni-migrate/references/orchestra.md",
+    "git_blob_sha": "f817cbd370e9e783c4d9ab4c0ccda8d184abec26",
+    "source_sha256": "dd2a3915c8198dc0d58d31ac87760823a7328545e2ddcf18d9432ab4048bf3ff",
+    "source_bytes": 3444,
+    "line_count": 45,
+    "disposition": "analyzed",
+    "kind": "doc",
+    "purpose": "Indexes the documented Orchestra adapter migration and its integration decisions.",
+    "behavior": [
+      "Describes legacy/omni/delegation-free strict switch states and a single dynamic core loader with usage counters.",
+      "Maps Effect, PTY, legacy Process, MCP stdio, maestro and desktop adapters to named work packages.",
+      "Requires explicit JS environment snapshots, one eager output pump, gap errors for byte streams, visible PTY gaps and configure-based native paths."
+    ],
+    "contracts": [
+      "Integration plan wins over this index; deliberate host-surviving applications and real-terminal consumers remain out of scope.",
+      "Completion combines root exit with output drain or a 2 s grace; PTY dimensions clamp to 1..32767."
+    ],
+    "dependencies": [
+      "docs/orchestra-integration.md",
+      "Orchestra core loader and adapter paths named in the table"
+    ],
+    "failures_or_limits": [
+      "Paths and switch default reflect a migration-era design, not proof of current Orchestra implementation.",
+      "The reference still names packages/omni, while this capture resides under native/omni."
+    ],
+    "gaps": [
+      "Default-on evolution is documented elsewhere; do not infer current adapter switch semantics from this historical index alone."
+    ],
+    "inference": [],
+    "evidence": [
+      {
+        "start_line": 9,
+        "end_line": 14,
+        "quote": "- `ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER` has three states. Unset or `0` means legacy. `1` means omni, delegating\n  unsupported options to legacy. `strict` means no delegation: unsupported options fail with `BadArgument` (D-L1).\n- `packages/core/src/omni.ts` is the only module that imports `hugr-omni`, and only dynamically. It counts omni\n  spawns and delegations. A test run with the flag on and zero omni spawns fails (D-L2).\n- Every omni spawn passes `inheritEnv: false` with `env: {...process.env, ...opts.env}`, minus `HUGR_OMNI_*`. Under\n  Bun, `process.env` writes do not reach native code otherwise (D-L3, H4)."
+      },
+      {
+        "start_line": 20,
+        "end_line": 26,
+        "quote": "| Effect spawner, `packages/core/src/cross-spawn-spawner.ts` (`CrossSpawnSpawner.node`) | cross-spawn | `omni-spawner.ts` behind the flag | WP1 |\n| `Shell.invocation` in `packages/core/src/shell.ts` | `shell: true` | an explicit shell, a flag and the joined string | WP0 (signature), WP1 |\n| PTY, `packages/core/src/pty/pty.bun.ts` and `pty.node.ts` | bun-pty / node-pty | `pty/omni.ts` implementing `Proc` | WP2 |\n| Legacy `Process`, `packages/orchestra/src/util/process.ts` (16 importers) | `child_process` | omni, with an explicit mapping table written first | WP3 |\n| MCP stdio, `packages/orchestra/src/mcp/` (`StdioClientTransport`) | the SDK's transport plus a `pgrep` walk | `OmniStdioTransport` in `mcp/stdio.ts` | WP3 |\n| maestro-arsenal, `engine/process.ts` and `governance/process.ts` | `Bun.spawn` | omni `run` through the core loader | WP3 |\n| Desktop main process and its utility process | `child_process` | omni, each with its own configured paths | WP4 |"
+      },
+      {
+        "start_line": 30,
+        "end_line": 45,
+        "quote": "- **Output (D-L5).** One pump per child reads eagerly. Any `lostBefore` on a pipe stream fails that stream with a\n  PlatformError, so Effect callers never get gapped bytes. In a PTY, a gap becomes a visible marker line.\n- **Completion (D-L6).** `exitCode` resolves at root exit **plus** the end of the output, or a 2 s drain grace.\n  Kill and finalizers are bounded: `stop({ graceMs: forceKillAfter ?? 2000 })`.\n- **PTY (D-L7).** The consumer is claimed synchronously at spawn. The exit code is `exitCode ?? 128 + signo`. Sizes\n  are clamped to 1..32767 on create and on update.\n- **Shell (D-L4).** `shell: true | string` becomes `[shell, flag, joined]` through `Shell.invocation`. cmd.exe\n  delegated to legacy until WP8b; with it, cmd.exe can run through omni with `windowsVerbatimArgs`.\n- **Delivery (D-L8).** The addon and the supervisor are real files side by side. The path is given to the binding\n  by JS through `configure({ addon, supervisor })`, never through environment variables.\n\n## What stays outside omni\n\nDaemons and launched apps that must outlive the host, `utilityProcess.fork`, the TUI pager and `$EDITOR` (they need\nthe real terminal), clipboard helpers that daemonize, the synchronous `shell-env` probe, plugin-facing `Bun.$` and\n`Bun.spawn`, and the published SDK's server spawn. Each is listed with its reason in §3 of the plan."
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/skills/omni-os-traps/SKILL.md",
+    "git_blob_sha": "65034dceefaf015f2e14b2d7a49edaf15a334eca",
+    "source_sha256": "f5fea7c52331692c5b2c882aee01015a9c2a51121ff6f2450a2a71bb546d881f",
+    "source_bytes": 7143,
+    "line_count": 54,
+    "disposition": "analyzed",
+    "kind": "doc",
+    "purpose": "Connects known OS symptoms to causal mechanisms, retained fixes and regression tests.",
+    "behavior": [
+      "Catalogues macOS PTY Go acknowledgement, host reaper isolation, thread-safe PTY naming, ConPTY close deadlines and noninheritable Windows bootstrap handles.",
+      "Explains close-on-exec descriptor discipline, pinned root identities against PID reuse, one-byte descriptor transfer and best-effort Windows graceful stop.",
+      "Directs maintainers to the affected-OS regression, including a demonstrated failure when a new fix is reverted."
+    ],
+    "contracts": [
+      "New irreducible limits require measured GUARANTEES declarations by the lead.",
+      "The ptsname race explicitly has no dedicated reproducible regression test."
+    ],
+    "dependencies": [
+      "AGENTS.md",
+      "ADR-0001",
+      "ADR-0003",
+      "ADR-0005",
+      "named supervisor/client regression tests"
+    ],
+    "failures_or_limits": [
+      "The table is documentary navigation; named fixes/tests were not executed by SURFACE.",
+      "Cross-platform green results cannot substitute for the affected OS, and table references may move as modules split."
+    ],
+    "gaps": [
+      "Declared ptsname test gap remains a review obligation."
+    ],
+    "inference": [],
+    "evidence": [
+      {
+        "start_line": 29,
+        "end_line": 38,
+        "quote": "| macOS: a terminal program that prints and exits at once shows **no output** | the root exits and the PTY is torn down before the host reader runs; macOS discards the unread output | the PTY root is held before `exec` until the host confirms its reader runs (`Go`, R9). This is two round trips for a Unix PTY spawn (`crates/omni-supervisor/src/pty_unix`, `crates/hugr-omni/src/pty`) | `a_program_that_prints_and_exits_at_once_loses_nothing_300_times` (`crates/hugr-omni/src/pty/tests.rs`) |\n| a child's exit is **never observed**, or `wait()` hangs, in some hosts only | the host has `SIGCHLD = SIG_IGN` (auto-reap), or runs a `waitpid(-1)` reaper (tokio, Node, Bun), and steals in-host children | the supervisor owns every child, and the host never forks (ADR-0005); no `tokio::process` (INV-16) | `an_identity_never_signals_a_reaped_and_reused_number` (`crates/hugr-omni/src/client/tests/identity.rs`); the SIGCHLD-ignored start in `crates/omni-supervisor/tests/unix_spawn.rs` |\n| a PTY child gets **another terminal's** slave, rarely and under concurrency | `ptsname` returns a static buffer and is not thread-safe | `ptsname_r` on Linux, `TIOCPTYGNAME` on macOS; `/dev/ptmx` opened with `O_CLOEXEC` (`crates/omni-supervisor/src/pty_unix/mod.rs`) | no dedicated test; a race is not reproducible on demand. Keep the calls as they are, and review any change to them |\n| Windows: `stop()` of a terminal **takes about 5 s** or hangs | `ClosePseudoConsole` can block for seconds on Server 2022 (build 20348) | close on a worker thread, with an independent deadline that enforces `graceMs` (`crates/omni-supervisor/src/pty_windows`) | `conpty_a_stubborn_writer_ends_within_a_grace_of_1000_ms`, `conpty_the_close_path_200_times_loses_nothing_and_handles_stay_bounded` (`crates/omni-supervisor/tests/windows_pty.rs`) |\n| Windows: an **unrelated child of the host** holds our pipe, so output never ends | `PROC_THREAD_ATTRIBUTE_HANDLE_LIST` limits only *our* child. Any inheritable handle in the host leaks into every other `CreateProcess` | never create inheritable handles in the host: a private named-pipe rendezvous, `bInheritHandles = FALSE`, non-inheritable `DuplicateHandle` (R7) | `the_bootstrap_creates_no_inheritable_handle` (`crates/hugr-omni/src/client/tests/windows.rs`) |\n| macOS: a child **inherits stray descriptors** (a socket, the channel) | `posix_spawn` inherits every fd without CLOEXEC, and macOS has no `MSG_CMSG_CLOEXEC`, so a received fd is briefly inheritable | `POSIX_SPAWN_CLOEXEC_DEFAULT` plus explicit `dup2` actions for stdio; `fcntl(FD_CLOEXEC)` at once on received fds (a declared window, see GUARANTEES \"Host state\") | `a_pipe_root_leads_its_session_with_only_stdio_and_default_signals`, `without_close_range_leaked_descriptors_are_still_closed` (`crates/omni-supervisor/tests/unix_spawn.rs`) |\n| a `stop()` **signals a stranger**, or a test sees a dead pid \"alive\" | PID reuse is real on CI (S5 T6): the root's number is recycled after it is reaped | the root is kept unreaped (pinned) until its session is empty; a gone tree is never signalled again (ADR-0005 decision 4). Windows holds the root handle | `a_gone_tree_never_touches_its_recycled_number_and_a_pinned_one_is_skipped` (`crates/omni-supervisor/tests/unix_pid_reuse.rs`, Linux with `--privileged`) |\n| macOS: the channel **dies under concurrent spawns**; the host reports a dead supervisor | XNU refuses (EMSGSIZE) a `sendmsg` with SCM_RIGHTS that does not fit the send buffer whole, and the buffer shrinks while the peer has not read | send the descriptors with one byte, or wait for the peer, on both ends (`crates/hugr-omni/src/client/unix.rs`, `crates/omni-supervisor/src/unix/chan.rs`) | `a_spawn_with_a_large_environment_starts` (`crates/hugr-omni/src/process/tests/big.rs`) |\n| Windows: a **graceful stop does nothing**; the stop lasts the whole grace | CTRL_BREAK does not reach a process without a console, or one that ignores it; a `.bat` continues after \"Terminate batch job\" | graceful is best effort on Windows; the forced pass repeats until the Job is empty (W06b) | `stopped_arrives_only_once_every_member_is_gone_even_ones_born_between_polls` (`crates/omni-supervisor/tests/windows_tree.rs`) |\n| Windows terminal: **Ctrl-C (`\\x03`) is ignored** | the child inherits the per-process \"ignore Ctrl-C\" flag from the CI chain, or from `CREATE_NEW_PROCESS_GROUP` | clear the flag for the PTY child before `CreateProcessW`; never use a new process group for a PTY child ([ADR-0003 Q3](../../docs/adr/0003-pty.md#q3-x03-interrupts-the-foreground-program)) | `conpty_ctrl_c_typed_on_the_terminal_interrupts_its_program` (`crates/omni-supervisor/tests/windows_pty.rs`) |"
+      },
+      {
+        "start_line": 42,
+        "end_line": 49,
+        "quote": "1. Match the symptom. The OS column matters: several traps exist on only one OS, so green on your OS proves nothing\n   about the others.\n2. Before you change the fixed code, run its guarding test on the affected OS (`TEST_FILTER=<test name>`; see the\n   `omni-gates` skill).\n3. After the change, the guarding test must stay green there. A fix for a new trap adds a row to this table: the\n   symptom, the cause, the fix, and a test that fails without the fix. Prove the \"fails without\" part by reverting the\n   fix once.\n4. If a limit cannot be fixed, declare it in GUARANTEES with the measured number. A declaration needs the lead."
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/skills/omni-processes/SKILL.md",
+    "git_blob_sha": "039bc28d4dfe9952e43bea0d474abbd60a74826a",
+    "source_sha256": "6ef4113f3baa0993e0b0eb96899583b219f9777cab7644df880eb8002b2e2d2c",
+    "source_bytes": 9146,
+    "line_count": 133,
+    "disposition": "analyzed",
+    "kind": "doc",
+    "purpose": "Introduces everyday TypeScript process calls, output ownership, error/result semantics and environment/stdin defaults.",
+    "behavior": [
+      "Chooses run for collected completion and spawn for ongoing output/input; command arguments stay literal and resolution uses the child's environment.",
+      "Documents nonzero exits and timeouts as results, abort/output-limit/IO as post-start run rejections with partial results, and exactly one output iterator.",
+      "Explains merged env with null deletions, clean-env PATH loss, SystemRoot exception, closed-by-default stdin and async disposal across runtimes."
+    ],
+    "contracts": [
+      "spawn startup failures throw synchronously; run rejects them.",
+      "Detached output cannot be reclaimed; mergeStderr provides one chronological stream instead of ordering separate pipes."
+    ],
+    "dependencies": [
+      "docs/api-contract.md",
+      "docs/guide/recipes.md",
+      "references/windows.md",
+      "bindings/node/index.d.ts"
+    ],
+    "failures_or_limits": [
+      "Lines 84–94 state unconditionally that output never blocks and wait never needs reading; current opt-in backpressure invalidates that blanket wording.",
+      "Usage examples are source examples, not runtime observations."
+    ],
+    "gaps": [
+      "Teach default dropping separately from backpressure:true, where unread output can stall a writer."
+    ],
+    "inference": [],
+    "evidence": [
+      {
+        "start_line": 34,
+        "end_line": 39,
+        "quote": "- `command` is never parsed by a shell. Pass every argument as its own array element. Metacharacters such as `&`, `|`,\n  `$` and `;` reach the program literally ([contract §3](../../docs/api-contract.md#3-starting-a-process)).\n- `command` is looked up on the child's PATH, after `env` and `inheritEnv` are applied (plus PATHEXT on Windows).\n  A command written with a path separator resolves against `cwd`.\n- Startup failures are thrown synchronously by `spawn()`, and reject `run()`: `NOT_FOUND`, `NOT_EXECUTABLE`,\n  `INVALID_CWD` and `INVALID_ARGUMENT`. Each message names the value and the fix."
+      },
+      {
+        "start_line": 67,
+        "end_line": 94,
+        "quote": "- A finished `run()` resolves whatever the exit code. Check `success`, `reason`, `exitCode` and `signal`, and never\n  wrap a failing command in `try/catch` to detect it. `success` is `reason === \"exit\" && exitCode === 0`.\n- A timeout is a result too: `run()` resolves with `reason: \"timeout\"` and the output collected so far.\n- Once the program has started, `run()` rejects only with `ABORTED` (your `signal` fired), `OUTPUT_LIMIT` (a stream went over `maxOutputBytes`,\n  16 MiB by default) or `IO`. In each case `error.result` holds what was collected.\n- The meaning of every `reason` value, and where each comes from:\n  [recipes §8](../../docs/guide/recipes.md#8-reading-the-result) and\n  [contract §7](../../docs/api-contract.md#7-exit-and-termination-cause).\n\n## Output: one consumer, bounded buffers, counted loss\n\nRead [contract §4](../../docs/api-contract.md#4-output) once. In practice it means the following.\n\n- **One consumer.** `output` (chunks) and `lines()` are two views of a single consumer. The first `for await`\n  claims it. A second claim throws `INVALID_ARGUMENT`, and leaving the loop (`break`, `return` or `throw`)\n  detaches for good. For several reads, take the iterator once with `child.output[Symbol.asyncIterator]()` and call\n  `next()` as often as you need ([recipes §9](../../docs/guide/recipes.md#9-unix-drive-bash-in-a-terminal)).\n- **The child never blocks on output.** The library always drains the pipes. While a consumer is attached, up to\n  16 MiB per stream waits for it. With no consumer (never attached, or detached), up to 1 MiB per stream is kept for\n  a later first consumer. Anything beyond that is dropped, never blocked on.\n- **Loss is counted and reported in order.** `droppedBytes` holds the totals. The first chunk or line after a gap\n  carries `lostBefore`. Code that must not miss bytes checks `lostBefore` on every item. Code that only scans for a\n  marker can ignore it.\n- **Order across pipes is not guaranteed.** Each item says its `stream`. Use `mergeStderr: true` for one\n  chronological stream ([recipes §7](../../docs/guide/recipes.md#7-stderr-apart-and-merged)).\n- **Text or bytes.** By default, text is UTF-8, decoded across chunks, and invalid bytes become U+FFFD. With\n  `text: false` you get `Uint8Array`, losslessly, and TypeScript types the result by it.\n- **`wait()` never needs the output read.** An unread child still exits. Its output just goes to the buffers above."
+      },
+      {
+        "start_line": 98,
+        "end_line": 118,
+        "quote": "- `env` is merged over the inherited environment, and a `null` value removes a variable.\n- `inheritEnv: false` starts from nothing but `env`. On Windows, `SystemRoot` is still passed, unless `env` sets or\n  removes it. **That removes PATH too**, so a bare name such as `\"node\"` is `NOT_FOUND`. The message says the child's\n  environment has no PATH. Either pass the program's full path (`process.execPath` for Node itself) or put PATH back\n  in `env` ([recipes §5](../../docs/guide/recipes.md#5-environment-and-working-directory)).\n- `cwd` must exist (`INVALID_CWD` otherwise), and a relative `cwd` is relative to your own working directory.\n- stdin: `run()` takes `input`, which is written and then stdin is closed. `spawn()` children have stdin closed\n  unless you pass `stdin: \"pipe\"`. Then `write()` resolves when the OS has taken the bytes, and `closeStdin()` ends the\n  input. Writing without `stdin: \"pipe\"` is `INVALID_ARGUMENT`. Writing after the end of input is `CLOSED`\n  ([recipes §6](../../docs/guide/recipes.md#6-writing-to-stdin)).\n\n## Module formats and scope exit\n\n- ESM: `import { run, spawn, OmniError } from \"hugr-omni\"`.\n  CommonJS: `const { run, spawn, OmniError } = require(\"hugr-omni\")`.\n  Both give the same API ([the package page](../../bindings/node/README.md)).\n- Top-level `await` needs an ES module: `npm pkg set type=module`, or `.mts` files.\n- `await using child = spawn(...)` awaits `child.stop()` when the scope ends, even on a throw. It needs Node 24+,\n  Bun, Deno, or TypeScript 5.2+ compiling for Node 22. Elsewhere, write `try { ... } finally { await child.stop(); }`\n  ([recipes §4](../../docs/guide/recipes.md#4-cleanup-cancel-errors-and-the-end-of-your-own-process)).\n- hugr-omni installs no signal handler and no exit hook in your process. You have nothing to register for cleanup."
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/skills/omni-processes/references/windows.md",
+    "git_blob_sha": "9d99df79a95ef0743fcf11b3a5d4afca0ea343db",
+    "source_sha256": "652a317b2ba518a544957eb73b1c80d62b65c1576d3d636fced177c9035e0e0d",
+    "source_bytes": 4021,
+    "line_count": 63,
+    "disposition": "analyzed",
+    "kind": "doc",
+    "purpose": "Explains Windows-specific invocation, environment, exit-code and containment behavior for callers.",
+    "behavior": [
+      "Describes PATHEXT lookup, batch-safe cmd.exe dispatch and explicit refusal of unrepresentable batch arguments/paths.",
+      "Rejects drive-relative command/cwd forms, preserves SystemRoot for clean environments unless explicitly changed, and documents case-insensitive variable keys.",
+      "Uses unsigned Windows exit codes and null signal fields; graceful CTRL_BREAK is best effort, with Job-wide forced cleanup."
+    ],
+    "contracts": [
+      "Only exe/com/bat/cmd directly execute; other script types require their interpreter.",
+      "Batch line breaks and paths containing percent/quote or trailing backslash are refused rather than silently mangled."
+    ],
+    "dependencies": [
+      "docs/api-contract.md §§3,7",
+      "GUARANTEES.md",
+      "supervisor Windows cmdline implementation"
+    ],
+    "failures_or_limits": [
+      "Lines 28–31 still describe verbatim cmd.exe arguments as planned; current index.d.ts and migration skill expose windowsVerbatimArgs.",
+      "No Windows execution was performed during this analysis."
+    ],
+    "gaps": [
+      "Verbatim-argument status is stale relative to the baseline binding."
+    ],
+    "inference": [],
+    "evidence": [
+      {
+        "start_line": 10,
+        "end_line": 20,
+        "quote": "- `npm`, `npx`, `pnpm` and `yarn` are `.cmd` files on Windows. hugr-omni finds them by name through PATHEXT, so\n  `spawn(\"npm\", [\"run\", \"dev\"])` works unchanged on every OS. Never append `.cmd` yourself in portable code.\n- A resolved `.cmd` or `.bat` file runs through `cmd.exe`, with the same batch-safe escaping as Rust's standard\n  library. What cmd.exe cannot receive literally is refused with `INVALID_ARGUMENT` before anything runs, never\n  passed in mangled form: an argument with a line break, or a batch file whose path contains `%` or `\"` or ends with\n  `\\` (`crates/omni-supervisor/src/windows/cmdline.rs`). If you hit this, pass the data another way: stdin, a file,\n  or an environment variable.\n- Metacharacters (`&`, `|`, `^`, `%`, `<`, `>`) in your arguments are never interpreted. They are not \"escaped for\n  you so the shell runs them\"; they reach the program as text.\n- Only `.exe`, `.com`, `.bat` and `.cmd` files start directly. A `.ps1` or `.js` file is `NOT_EXECUTABLE`. Run its\n  interpreter instead: `spawn(\"powershell.exe\", [\"-File\", script])`, or `spawn(process.execPath, [script])`."
+      },
+      {
+        "start_line": 27,
+        "end_line": 31,
+        "quote": "- Unix: `spawn(\"sh\", [\"-c\", script])`.\n- Windows: `cmd.exe` parses its command line by its own rules, not the C runtime's. hugr-omni quotes arguments by\n  the C runtime rule, so a whole command string given to `cmd.exe /c` does not always arrive as written. An explicit\n  option for a verbatim cmd.exe command line is planned (integration plan WP8b). Until then, prefer running the real\n  program directly, and keep cmd.exe for the cases that need it, reviewed one by one."
+      },
+      {
+        "start_line": 37,
+        "end_line": 46,
+        "quote": "- A drive-relative path such as `C:tools\\x.exe` or `C:work` is relative to a per-drive current directory, which a\n  child cannot rely on. It is refused: `INVALID_ARGUMENT` for `command`, `INVALID_CWD` for `cwd`. Each message says\n  to write the full path, with `\\` after the drive letter.\n- A command with a path separator (`.\\tool.exe`, `bin/tool`) resolves against `cwd`, as on Unix.\n\n## Environment\n\n- Variable names are case-insensitive on Windows. Do not set both `Path` and `PATH` in `env`.\n- `inheritEnv: false` still passes `SystemRoot` from the host, unless `env` sets it or removes it with `null`. Many\n  programs cannot start without it. Nothing else is added, so PATH is gone and bare names are `NOT_FOUND`."
+      },
+      {
+        "start_line": 50,
+        "end_line": 63,
+        "quote": "- Exit codes are reported as non-negative integers: `0xC000013A` (STATUS_CONTROL_C_EXIT) is 3221225786, not a\n  negative number. Compare against the unsigned value.\n- `signal` is always `null` on Windows. A program ended by a console Ctrl-C or Ctrl-Break usually exits with\n  3221225786.\n- Graceful stop on Windows is best effort: CTRL_BREAK goes to the tree's console processes. Most runtimes exit at\n  once. A `.bat` script prints `Terminate batch job (Y/N)?`, reads end of input, and **continues** (ADR-0001 Q3). The\n  forced step after `graceMs` (`TerminateJobObject`) always ends the tree. Expect `reason: \"killed\"` with whatever\n  code the forced step left. The tiers are in [GUARANTEES.md](../../../GUARANTEES.md#containment-tiers-adr-0005).\n\n## Trees\n\nOn Windows, the kill unit is the Job. A descendant cannot leave it: breakaway is refused. So, unlike `setsid` on Unix,\nnothing escapes `stop()`. `processes()` lists the Job's live members, and `name` is the file name with `.exe`\n(`node.exe`)."
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/skills/omni-release/SKILL.md",
+    "git_blob_sha": "f7e39c191cf939b581ecea8aee75a784b512e7cd",
+    "source_sha256": "bb7d5a78c1e93f4538a89f1791bb21d274d1b97814be0b88f21dbec813e1b165",
+    "source_bytes": 5401,
+    "line_count": 85,
+    "disposition": "analyzed",
+    "kind": "doc",
+    "purpose": "Defines the documented release checklist, synchronized versioning and owner-controlled publication order.",
+    "behavior": [
+      "Requires empty pending ledger, evidence-backed guarantees, integration hardening prerequisite and an owner decision for unmet K4 timing.",
+      "Synchronizes Cargo workspace, npm package plus eight platform dependencies and plugin version; uses native-OS/CPU packaging/clean-install evidence.",
+      "Publishes platform packages before the main package, then removes the pre-release install exception; tags the Orchestra source rather than the mirror."
+    ],
+    "contracts": [
+      "Publication requires explicit owner authorization for the particular release.",
+      "Main tarball should come from a POSIX job to preserve executable mode."
+    ],
+    "dependencies": [
+      "HANDOFF.md",
+      "ADR-0004",
+      "bindings/node/npm/README.md",
+      "references/mirror.md",
+      "references/new-target.md"
+    ],
+    "failures_or_limits": [
+      "Release evidence/preconditions are documentary instructions, not verified current publication readiness.",
+      "Checklist line 81 says five optional dependencies despite eight listed earlier and in package.json."
+    ],
+    "gaps": [
+      "Final checklist retains an obsolete dependency count."
+    ],
+    "inference": [],
+    "evidence": [
+      {
+        "start_line": 28,
+        "end_line": 44,
+        "quote": "- `conformance/pending.txt` lists no item. Every contract item passes.\n- [GUARANTEES.md](../../GUARANTEES.md) states, per OS, only what has evidence (INV-09). Rows still \"planned\" are not\n  promised.\n- The integration plan's owner decision O8 holds: publish only after WP-H (the H2 to H5 fixes would otherwise ship)\n  ([plan §5](../../docs/orchestra-integration.md#5-owner-decisions)).\n- **K4** (time to pid against the standard library, at most 1.25 times, or at most 0.3 ms more) is judged on quiet\n  CI release builds, with Linux as the reference. The macOS Rust figure (about +0.7 ms on a loaded machine) is still\n  open. If the CI figure misses the target, that is a decision for the owner, not a waiver the agent grants.\n\n## 2. Bump the version, everywhere at once\n\nOne version for all artifacts. Change it in:\n\n- `Cargo.toml` (`[workspace.package] version`). The crates inherit it, and `Cargo.lock` follows on the next build.\n- `bindings/node/package.json`: `version` **and** the eight `optionalDependencies`. `pack.mjs` asserts that the\n  package lists the eight platform packages at its own version.\n- `.claude-plugin/plugin.json`: `version` pins the skills plugin to it."
+      },
+      {
+        "start_line": 50,
+        "end_line": 55,
+        "quote": "- `node scripts/ci.mjs --release` (or push a `v*` tag, which runs it on all three OSes). This adds the musl\n  supervisor, Node 24, Bun and Deno, every docs block run for real, K4 on a release build, and K9 for this OS.\n- The **release workflow** (`release.yml`, started by hand, or the Orchestra artifacts workflow once WP6 lands)\n  builds every platform package on its own OS and CPU, packs it with the main package, and proves a clean install\n  with npm, Bun and Deno. Its artifacts are the tarballs to publish. Take `hugr-omni-<version>.tgz` from a POSIX job:\n  Windows cannot keep the execute bit."
+      },
+      {
+        "start_line": 61,
+        "end_line": 76,
+        "quote": "**Stop here and ask the owner.** Publishing needs the owner's explicit yes in this conversation, and an npm account.\nShow what will be published: the package names, the version, and the tarball list from the release run. Wait. A yes\nfor one release is not a yes for the next.\n\nAfter the yes:\n\n1. Publish the **platform packages first**: `hugr-omni-linux-x64-gnu`, `hugr-omni-linux-arm64-gnu`,\n   `hugr-omni-linux-x64-musl`, `hugr-omni-linux-arm64-musl`, `hugr-omni-darwin-arm64`, `hugr-omni-darwin-x64`,\n   `hugr-omni-win32-x64-msvc` and `hugr-omni-win32-arm64-msvc` (plus any target added since).\n2. Publish **`hugr-omni` last.** Deno reads the packument of every optional dependency, and fails on one that does\n   not exist yet.\n3. The first publish ends the pre-release state. Remove the `PRE_RELEASE_INSTALL` exception from\n   `scripts/readme-check/blocks.mjs`, and the pre-release notice from the README. The install lines then run in\n   `--release` like any other block.\n4. Tag the release on the source of truth (Orchestra `packages/omni`), never on the mirror\n   ([references/mirror.md](references/mirror.md))."
+      },
+      {
+        "start_line": 80,
+        "end_line": 85,
+        "quote": "- `pending.txt` is empty, and GUARANTEES holds only proven rows.\n- The version is the same in the Cargo workspace, `package.json` (with the five optional dependencies) and\n  `plugin.json`.\n- `--release` is green on three OSes, and the release workflow is green for every platform.\n- The owner said yes to this release.\n- Platform packages were published before `hugr-omni`. `PRE_RELEASE_INSTALL` is gone after the first publish."
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/skills/omni-release/references/mirror.md",
+    "git_blob_sha": "a523ceb67aba1d1ae8d60994273f770c2fef593f",
+    "source_sha256": "c34551f0cd117e92289082789a58bc350be911257c63128a223a36445446f9b2",
+    "source_bytes": 4732,
+    "line_count": 71,
+    "disposition": "analyzed",
+    "kind": "doc",
+    "purpose": "Documents the historical Orchestra-to-standalone Omni mirror process and source-of-truth rules.",
+    "behavior": [
+      "Describes deterministic first-parent replay after 415038b, carrying original metadata and an Orchestra-Commit trailer.",
+      "Requires prior mirror-tree verification and fast-forward-only main updates with serialized jobs; deploy-key setup is described, not performed.",
+      "Maps Orchestra omni-v tags to immutable mirror v tags only after their source commit is mirrored, and prohibits direct mirror contributions."
+    ],
+    "contracts": [
+      "Package-local documentation links must remain valid in the split tree.",
+      "A divergent mirror or premature tag produces a failed job; forced restoration needs owner authorization."
+    ],
+    "dependencies": [
+      "docs/orchestra-integration.md",
+      "Orchestra script/omni-mirror.sh and omni-mirror.yml described by the document"
+    ],
+    "failures_or_limits": [
+      "External replay implementation, secrets, branch protection and tag state are not captured or checked here.",
+      "packages/omni paths and historical split commit are documentary context; capture location is native/omni."
+    ],
+    "gaps": [
+      "Claims about live mirror protection and credentials require separate authorized verification."
+    ],
+    "inference": [],
+    "evidence": [
+      {
+        "start_line": 9,
+        "end_line": 27,
+        "quote": "- Up to `415038b` the mirror's `main` is omni's own history: the commit the subtree import recorded\n  (`git-subtree-split`). After it, `script/omni-mirror.sh` replays Orchestra's `dev`: each first-parent commit of `dev`\n  that changes `packages/omni` becomes one mirror commit with that tree, the original author, committer, dates and\n  message, and an `Orchestra-Commit: <sha>` trailer. The commits are fully determined by their source, so a re-run\n  makes the same SHAs. (`git subtree split` was used first; on `dev`'s history it overflows dash's recursion limit and\n  runs past an hour, so the replay replaced it.)\n- Orchestra's `.github/workflows/omni-mirror.yml` runs on every push to `dev` that touches `packages/omni/**` (and by\n  hand), one run at a time (`concurrency: omni-mirror`, never cancelled half-way):\n  1. it fetches the mirror's `main` and checks that it is exactly what an earlier run pushed: the tree of the\n     Orchestra commit named in its newest trailer, or `415038b` itself. Anything else stops it red with \"the mirror\n     has a commit Orchestra does not; port it to packages/omni\";\n  2. it replays the new `dev` commits and pushes them to the mirror's `refs/heads/main`, **fast-forward only**. It never\n     forces. The gate is not run again: `omni.yml` runs it on the same push on three OSes.\n- It authenticates with an SSH deploy key with write access, in the Orchestra secret `OMNI_MIRROR_DEPLOY_KEY`, and pins\n  github.com's host key.\n- The mirror's `main` is protected (owner decision O4). The deploy key is the only bypass.\n- The mirror's own CI (`.github/workflows/ci.yml`) runs only on `v*` tags and by hand. Day-to-day CI runs in Orchestra\n  (`omni.yml`), and the platform binaries are built by Orchestra's `omni-artifacts.yml`, which calls\n  `scripts/build-artifacts.mjs` like the mirror's `release.yml`."
+      },
+      {
+        "start_line": 31,
+        "end_line": 35,
+        "quote": "A release is tagged in Orchestra, never on the mirror: tag the release commit on `dev` as `omni-v<version>`\n(`omni-v0.2.0`) and push the tag. The same workflow points the mirror's tag `v<version>` at the mirror commit made\nfrom the tagged commit, which starts the mirror's release-check CI. That commit must be on the mirror's `main` already.\nIf the tag arrived before the `dev` run that mirrors its commit had finished, the job is red: re-run it once that run is\ngreen. An existing mirror tag is never moved; a refused tag push turns the job red."
+      },
+      {
+        "start_line": 39,
+        "end_line": 47,
+        "quote": "- **Never commit, push, merge or open a pull request on the mirror.** Every change goes into Orchestra's\n  `packages/omni` and reaches the mirror through the replay. A commit made on the mirror makes the next push a\n  non-fast-forward. The mirror job turns red, and someone has to untangle it by hand.\n- Issues and pull requests that arrive on the mirror are ported into Orchestra by a maintainer, credited, and then\n  closed on the mirror with a link.\n- Links inside omni's docs and skills stay inside `packages/omni`. The mirror holds nothing else, and\n  `scripts/skill-check` refuses a skill link that leaves the package.\n- Release tags are made on the source of truth, as `omni-v*` in Orchestra (above). Never tag a commit that exists only\n  on the mirror."
+      },
+      {
+        "start_line": 53,
+        "end_line": 60,
+        "quote": "1. A non-fast-forward means someone wrote on the mirror. Find the stray commit (`git log mirror/main` against the\n   split) and port its content into Orchestra if it is wanted. Restoring the mirror is a force push, which needs the\n   owner's yes.\n2. A red `ci.mjs` in the split means `packages/omni` depends on something outside itself (a path, a script, a\n   workspace package). Fix the dependency in Orchestra. Never patch the mirror.\n3. \"the OMNI_MIRROR_DEPLOY_KEY secret is not set\", or a refused SSH login: the deploy key is missing or was rotated.\n   Recreate it (below).\n4. A tag job red because its split is not on the mirror's `main` yet: wait for the `dev` run, then re-run the tag job."
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/skills/omni-release/references/new-target.md",
+    "git_blob_sha": "b44472569b5e39a4c1ca463e8351304eead68167",
+    "source_sha256": "a95c53273447adcf846a554e6ac34e95df0fd354a9b740dc5b1aa48f306890d5",
+    "source_bytes": 2961,
+    "line_count": 43,
+    "disposition": "analyzed",
+    "kind": "doc",
+    "purpose": "Provides the documented checklist for extending the npm native-target matrix.",
+    "behavior": [
+      "Defines npm OS/CPU/ABI IDs separately from Rust addon and supervisor triples, with static musl supervisors on Linux and glibc 2.17 GNU addons.",
+      "Requires coordinated loader, packer, verifier, optional dependency and native-runner workflow changes.",
+      "Specifies dynamic musl cdylib versus static Windows CRT, evidence-backed guarantees and platform-first publication."
+    ],
+    "contracts": [
+      "A target must be proved by clean npm/Bun/Deno installs on its OS and CPU; cross compilation alone is insufficient.",
+      "Binary format/CPU/static-supervisor checks and at least one contract run or declared gap precede merge."
+    ],
+    "dependencies": [
+      "ADR-0004",
+      "bindings/node/npm/README.md",
+      "index.js",
+      "npm/pack.mjs",
+      "npm/verify.mjs",
+      "release.yml"
+    ],
+    "failures_or_limits": [
+      "The three-place list omits current scripts/artifact-targets.mjs used by build-artifacts; follow actual baseline dependencies when adding a target.",
+      "This procedure does not establish availability or green evidence for any target."
+    ],
+    "gaps": [
+      "Target expansion also needs artifact-targets.mjs; this older checklist is not exhaustive."
+    ],
+    "inference": [],
+    "evidence": [
+      {
+        "start_line": 12,
+        "end_line": 29,
+        "quote": "1. **Decide the id and the triples.** The id is `<os>-<cpu>[-<abi>]`, in npm's `process.platform` and\n   `process.arch` names (`linux-arm64-musl`, `win32-arm64-msvc`). The addon triple and the supervisor triple can\n   differ. On Linux the supervisor is always the static musl build (ADR-0005 decision 1), and a glibc addon is\n   built at the glibc 2.17 floor with zig.\n2. **Wire the id in the three places that list targets**, in one change:\n   - `bindings/node/index.js`, the runtime map from `process.platform` and `process.arch` (and libc on Linux) to\n     the package id;\n   - `bindings/node/npm/pack.mjs`, the target table (`os`, `cpu`, `libc`, the addon and supervisor triples, the\n     library file name);\n   - `bindings/node/npm/verify.mjs`, the ids it expects to find installed.\n3. **Add the optional dependency** to `bindings/node/package.json`, at the current version.\n4. **Add a matrix row to the release workflow** (`release.yml`, or the Orchestra artifacts workflow). It runs on a\n   runner of that OS and CPU: no cross-compiled package ships unproven. The row builds, packs, and runs `verify.mjs`\n   with node, bun and deno.\n5. **Static linking where it matters.** A musl addon is a `cdylib` built with `-crt-static`. A Windows build uses a\n   static CRT (`+crt-static`), and `verify.mjs` checks that no `VCRUNTIME` DLL is needed (integration plan, H5).\n6. **GUARANTEES.** Add the target to the per-OS columns, or state that it inherits an existing column, and why.\n   A target with no CI evidence promises nothing (INV-09)."
+      },
+      {
+        "start_line": 34,
+        "end_line": 43,
+        "quote": "- The release workflow is green for the new row: build, pack, and a clean install with npm, Bun and Deno, with the\n  quickstart running as written.\n- `pack.mjs` checks the binary format and CPU of both files, and that the Linux supervisor is static.\n- The contract suite has run on that platform at least once (a runner of that OS and CPU), or the gap is declared.\n\n## Publishing\n\nA new platform package is published before `hugr-omni` like the others, with the owner's yes (see the SKILL.md\npublish step). Deno fails on a missing optional dependency, so never publish a `hugr-omni` whose\n`optionalDependencies` names a target that is not on the registry yet."
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/skills/omni-terminals/SKILL.md",
+    "git_blob_sha": "799fc1107a2a9ca8d19dad91044f90a9c2c1e14d",
+    "source_sha256": "4a825995ff69bbe7815c8cb0f6a048aaedbc0d69c249e5002c235f9eab4a0515",
+    "source_bytes": 8547,
+    "line_count": 141,
+    "disposition": "analyzed",
+    "kind": "doc",
+    "purpose": "Teaches PTY interaction, one-iterator prompt matching and OS-specific terminal behavior.",
+    "behavior": [
+      "Documents 80x24 defaults, 1..32767 dimensions, merged pty output, run-with-PTY output limits and rejection of run input.",
+      "Explains Enter/Ctrl-C/Ctrl-D bytes, CRLF/echo/control-sequence noise and accumulating chunks because prompts lack newlines.",
+      "Provides a single-iterator two-question conversation with bounded lifetime and discusses resize order, ConPTY interrupt inheritance and asynchronous close."
+    ],
+    "contracts": [
+      "PtyChild has no closeStdin; resize after exit is CLOSED.",
+      "ANSI stripping is only a marker matcher, not a screen renderer; terminal loss counts against stdout."
+    ],
+    "dependencies": [
+      "docs/api-contract.md §10",
+      "docs/guide/recipes.md",
+      "ADR-0003",
+      "GUARANTEES.md"
+    ],
+    "failures_or_limits": [
+      "Timing numbers and pre-26100 handle limitation are historical documented measurements, not new observations.",
+      "Buffer description documents dropping without discussing current optional backpressure; callers must consult current contract."
+    ],
+    "gaps": [
+      "No PTY or ConPTY examples were executed in this reading."
+    ],
+    "inference": [],
+    "evidence": [
+      {
+        "start_line": 30,
+        "end_line": 41,
+        "quote": "- `spawn(cmd, args, { pty: true })` (80 x 24) or `{ pty: { cols, rows } }` returns a `PtyChild`. Sizes are integers\n  from 1 to 32767, otherwise `INVALID_ARGUMENT`.\n- `run(cmd, args, { pty })` collects everything into `stdout`, while `stderr` is empty. `maxOutputBytes` applies.\n  It takes no `input` (`INVALID_ARGUMENT`), because nobody types. A program that waits for input waits until\n  `timeoutMs`, so always give `run()` with `pty` a `timeoutMs`.\n- `write(text)` types into the terminal. `resize(cols, rows)` takes columns first and returns nothing. Called after\n  exit, it is `CLOSED`.\n- There is no `closeStdin()`: a terminal has no separate end of input. Send the program's own: on a Unix terminal,\n  `\"\\x04\"` (Ctrl-D) at the start of a line.\n- `mergeStderr` does not apply: the terminal already mixes everything.\n- Output beyond the buffers is dropped and counted like pipe output. Terminal output counts as `stdout` in\n  `droppedBytes`, and the first chunk after a gap carries `lostBefore`."
+      },
+      {
+        "start_line": 47,
+        "end_line": 76,
+        "quote": "| Enter | `\"\\r\"` | the terminal turns it into a newline for the program (ICRNL) |\n| Ctrl-C | `\"\\x03\"` | interrupts the foreground program (SIGINT on Unix, CTRL_C_EVENT through ConPTY) |\n| Ctrl-D | `\"\\x04\"` | end of input for a Unix program reading a line, at the start of a line |\n| Ctrl-Z | `\"\\x1a\"` | Unix: suspends the foreground job (job control) |\n\nTo Ctrl-C a command that prints nothing (a `sleep` in a shell), first wait until `processes()` lists it. Otherwise\nthe Ctrl-C may reach the shell before the command starts.\n\n## What the output looks like\n\n- **Line ends are `\\r\\n`.** The terminal translates every `\\n` (ONLCR). Split on `\\r\\n`, or remove `\\r`.\n- **Echo.** The terminal echoes what you type. A reply to a command is the echo, then the output, then the next\n  prompt. Unix also echoes Ctrl-C as `^C`; ConPTY does not.\n- **Escape sequences.** Programs that see a terminal add colors and cursor moves. ConPTY on Windows also adds its\n  own: cursor hide and show, clear screen, home, and a window title (OSC 0) holding the program's path. It may also\n  move the cursor instead of sending a line feed ([ADR-0003 Q6](../../docs/adr/0003-pty.md#q6-output-noise-raw-samples-and-the-matcher)).\n- **Prompts end without a newline.** Read `output` (chunks), not `lines()`, and match on the accumulated text.\n\n```ts\nimport { run } from \"hugr-omni\";\n\nconst r = await run(\"node\", [\"-e\", \"console.log(process.stdout.isTTY ? 'tty' : 'pipe'); console.log('done')\"], { pty: true, timeoutMs: 30_000 });\nconst visible = r.stdout\n  .replace(/\\x1b\\][^\\x07\\x1b]*(\\x07|\\x1b\\\\)/g, \"\") // OSC: the window title ConPTY sets\n  .replace(/\\x1b\\[[0-?]*[ -/]*[@-~]/g, \"\") // CSI: colors, cursor, clear screen\n  .replace(/\\r/g, \"\");\nconsole.log(visible.split(\"\\n\").filter((l) => l.trim() !== \"\")); // [ 'tty', 'done' ]\n```\n\nThis strip is enough for matching markers. It does not render a screen: it turns no cursor move into text."
+      },
+      {
+        "start_line": 80,
+        "end_line": 86,
+        "quote": "1. **Choose a marker you control.** For a shell, set the prompt yourself (bash: `PS1` in `env`, plus `--norc`,\n   `--noprofile` and `--noediting`), so a banner or the user's startup files cannot fool you.\n2. **Take the iterator once.** Leaving a `for await` loop detaches for good, and a second claim is\n   `INVALID_ARGUMENT`. Keep `const it = term.output[Symbol.asyncIterator]()` and an accumulated `seen` string. Write\n   an `until(marker)` that calls `it.next()` until `seen` holds the marker, and fails if the stream ends first.\n3. **Type, then wait for the next marker.** Cut the echo (the first line) and the prompt (the last) from the reply.\n4. **Bound every wait.** Give `spawn` a `timeoutMs` when a reply might never come."
+      },
+      {
+        "start_line": 117,
+        "end_line": 133,
+        "quote": "- The child sees the initial size before its first instruction. `resize(cols, rows)` reaches it at once: SIGWINCH on\n  Unix, `ResizePseudoConsole` on Windows. The measured round trip was about 1 ms on Linux, 6 to 12 ms on macOS, and\n  16 to 24 ms on Windows ([ADR-0003 Q4](../../docs/adr/0003-pty.md#q4-initial-size-and-resize)).\n- `stty size` prints rows first. `resize()` takes columns first. Both are the usual orders.\n- bash with line editing redraws its prompt on a resize, and the redraw looks like a new prompt. Start it with\n  `--noediting` when you resize during a conversation.\n\n## Windows (ConPTY) notes\n\n- Ctrl-C works: hugr-omni clears the inherited \"ignore Ctrl-C\" flag for terminal children and never puts them in a\n  new process group ([ADR-0003 Q3](../../docs/adr/0003-pty.md#q3-x03-interrupts-the-foreground-program)).\n- `cmd.exe` and `powershell.exe` have their own prompt and echo rules. Print a transcript once before you pick the\n  markers. The bash recipe is Unix only.\n- `stop()` closes the pseudo console for the graceful step. Closing can block for seconds on Server 2022, so the\n  supervisor does it on a worker under an independent deadline. `stop()` still honors `graceMs`.\n- On builds before 26100 (Server 2022 is 20348), one handle per terminal session stays in the supervisor. This is\n  declared in [GUARANTEES.md](../../GUARANTEES.md#promises)."
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/Cargo.lock",
+    "git_blob_sha": "cc4933b127bf21bb2fc38eb7d54b7b85f9eea057",
+    "source_sha256": "748fdfa76a1d59694ab52e06bc9c7c28a96175121932ada1b0f033387ca1dbda",
+    "source_bytes": 16829,
+    "line_count": 674,
+    "disposition": "analyzed",
+    "kind": "lockfile",
+    "purpose": "Pins the Cargo workspace dependency resolution and registry checksums in lock format version 4.",
+    "behavior": [
+      "Records the five local 0.1.0 packages and their graph, including the node binding's core/napi/build/derive dependencies and the supervisor's libc/protocol/windows-sys set.",
+      "Pins notable resolved versions: tokio 1.53.1, napi 3.14.0, sysinfo 0.39.6, libc 0.2.189 and windows-sys 0.61.2; both syn 2 and syn 3 coexist."
+    ],
+    "contracts": [
+      "Registry entries carry source URLs and checksums; local workspace packages do not.",
+      "Generated lock data records resolution, while manifests determine feature/target/development classification."
+    ],
+    "dependencies": [
+      "Workspace Cargo.toml and crate manifests",
+      "crates.io registry packages enumerated in this file"
+    ],
+    "failures_or_limits": [
+      "Lockfile inspection cannot prove successful downloads, build compatibility, security status or which optional features are active.",
+      "All 674 lines were read; no dependency build/update/audit was executed."
+    ],
+    "gaps": [],
+    "inference": [],
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 3,
+        "quote": "# This file is automatically @generated by Cargo.\n# It is not intended for manual editing.\nversion = 4"
+      },
+      {
+        "start_line": 135,
+        "end_line": 158,
+        "quote": "[[package]]\nname = \"hugr-omni\"\nversion = \"0.1.0\"\ndependencies = [\n \"libc\",\n \"omni-proto\",\n \"regex\",\n \"serde\",\n \"serde_json\",\n \"sysinfo\",\n \"tokio\",\n \"tokio-util\",\n \"windows-sys\",\n]\n\n[[package]]\nname = \"hugr-omni-node\"\nversion = \"0.1.0\"\ndependencies = [\n \"hugr-omni\",\n \"napi\",\n \"napi-build\",\n \"napi-derive\",\n]"
+      },
+      {
+        "start_line": 292,
+        "end_line": 310,
+        "quote": "name = \"omni-fixture\"\nversion = \"0.1.0\"\ndependencies = [\n \"libc\",\n \"windows-sys\",\n]\n\n[[package]]\nname = \"omni-proto\"\nversion = \"0.1.0\"\n\n[[package]]\nname = \"omni-supervisor\"\nversion = \"0.1.0\"\ndependencies = [\n \"libc\",\n \"omni-proto\",\n \"windows-sys\",\n]"
+      },
+      {
+        "start_line": 459,
+        "end_line": 485,
+        "quote": "name = \"sysinfo\"\nversion = \"0.39.6\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"d2071df9448915b71c4fe6d25deaf1c22f12bd234f01540b77312bb8e41361e6\"\ndependencies = [\n \"libc\",\n \"memchr\",\n \"ntapi\",\n \"objc2-core-foundation\",\n \"objc2-io-kit\",\n \"windows\",\n]\n\n[[package]]\nname = \"tokio\"\nversion = \"1.53.1\"\nsource = \"registry+https://github.com/rust-lang/crates.io-index\"\nchecksum = \"202caea871b69668250d242070849eb495be178ed697a3e98aebce5bc81a0bed\"\ndependencies = [\n \"bytes\",\n \"libc\",\n \"mio\",\n \"pin-project-lite\",\n \"socket2\",\n \"tokio-macros\",\n \"windows-sys\",\n]"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  }
+]
