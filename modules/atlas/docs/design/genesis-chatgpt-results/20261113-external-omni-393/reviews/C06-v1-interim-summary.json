@@ -1,0 +1,73 @@
+{
+  "schema": "omni-public-interim-review/v1",
+  "kind": "summary_not_original_transcript",
+  "packet": "C06",
+  "layer": "L1",
+  "artifact": {
+    "author_path": "authors/core/records-06.json",
+    "public_path": "bodies/core/records-06.json",
+    "sha256": "b691e8080963789de55dc0ca9bc04ce258aeb2aed4d556ce18cdb6664daf012e",
+    "bytes": 43320
+  },
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "records": 12,
+  "population": 393,
+  "status": "FIX_FIRST_AUTHOR_CORRECTION_PENDING",
+  "decisions": {
+    "J1": {
+      "judge_identity": "/root/omni_review_courier/omni_j1",
+      "per_record": [
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "FIX-FIRST",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS"
+      ],
+      "private_opinion_sha256": "5835a8f010a670fcb7be72193abc76b1d488dcf7ca8cfd0d238639a21859e577"
+    },
+    "J2": {
+      "judge_identity": "/root/omni_review_courier/omni_j2",
+      "per_record": [
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS"
+      ],
+      "private_opinion_sha256": "b5f8de86d0b4cf7958139a97bd9be1b82925b1ec5015ae43f5fa6267dafb1112",
+      "private_addendum_sha256": "79d871f39b3fc56fe1835c91faca61fbededad68430c9d236b9d8621e7b5d69e"
+    }
+  },
+  "mandatory_findings": [
+    {
+      "id": "C06-J1-F1",
+      "judge": "J1",
+      "index": 5,
+      "field": "/5/behavior/2",
+      "finding": "Narrow test coverage to settlement of submitted pending writes; polling order does not prove the worker entered an active OS write before abandonment."
+    }
+  ],
+  "missing_evidence": [],
+  "transport_note": "J1 source excerpt had one courier substitution (false instead of true at io/tests/lines.rs:129). Captured source and author body were unchanged; both received and bound the literal correction. J2 original was canonical. Preserved copies are not authenticated host-envelope exports.",
+  "accepted_population_unchanged": 39,
+  "limitations": [
+    "Documentary L1 review; no current test execution or runtime binding.",
+    "All twelve complete candidate objects supplied with selected source excerpts; not every source line transmitted.",
+    "Eleven dual PASS rows in a body requiring correction do not release or increase complete-body acceptance.",
+    "Original opinions, source-message packets and reserved material remain private."
+  ]
+}

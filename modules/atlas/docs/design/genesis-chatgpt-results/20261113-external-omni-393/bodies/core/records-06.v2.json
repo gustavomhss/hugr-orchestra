@@ -1,0 +1,523 @@
+[
+  {
+    "path": "native/omni/crates/hugr-omni/src/io/tests/collect.rs",
+    "git_blob_sha": "cb81fad6d703b4f7efab355f07350d28db32a459",
+    "source_sha256": "2f80fc8e6d06847627da06db05836e94a285ea0cf19bcd3566ec207a58100068",
+    "source_bytes": 6904,
+    "line_count": 169,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Pins collector prefix, event precedence and immediate-claim contracts.",
+    "behavior": [
+      "Collects 3 MiB raw output plus stderr without drops under a 4 MiB cap; overflow returns exactly the first 1000 bytes and identifies its stream.",
+      "Tests late bytes after end, a shorter within deadline, limit preserving the other stream in the same batch, and read failure preserving only earlier prefixes.",
+      "Pre-claim or pending loss must produce Io; an unpolled collection already owns the consumer and dropping it prevents reclaim."
+    ],
+    "contracts": [
+      "Collection must never make output containing a hole look complete."
+    ],
+    "dependencies": [
+      "io/collect.rs and queue state are exercised with OS pipes and deterministic bare queues."
+    ],
+    "failures_or_limits": [
+      "No child process runs in this suite; timing and assertions remain unexecuted here."
+    ],
+    "evidence": [
+      {
+        "start_line": 79,
+        "end_line": 94,
+        "quote": "/// A stream over the limit does not end the batch already taken: the other stream keeps what was queued\n/// with it, and what follows on the stream over the limit (its drops included) is no failure.\n#[test]\nfn the_limit_keeps_the_rest_of_the_batch() {\n    let rt = runtime();\n    let (pumps, shared) = bare(&rt);\n    let collect = pumps.collect(5, LIMIT);\n    shared.accept(0, b\"0123456789\");\n    shared.finish(0, None); // its end reports the 4 bytes dropped beyond `max + 1`\n    shared.accept(1, b\"abc\");\n    let got = bounded(&rt, collect).unwrap();\n    assert_eq!((got.over_limit, got.failed.is_none()), (Some(Stream::Stdout), true));\n    assert_eq!(\n        (got.stdout, got.stderr),\n        (Data::Text(\"01234\".into()), Data::Text(\"abc\".into()))\n    );"
+      },
+      {
+        "start_line": 128,
+        "end_line": 147,
+        "quote": "    let got = bounded(&rt, collect).unwrap();\n    let failed = got.failed.unwrap();\n    assert_eq!(failed.code(), ErrorCode::Io);\n    assert!(failed.to_string().contains(\"2 bytes of the child's stdout\"), \"{failed}\");\n    assert_eq!(got.stdout, Data::Text(\"a\".repeat(UNATTACHED)));\n    assert_eq!(pumps.dropped().stdout, 2);\n}\n\n/// The claim is made when `collect` is called, before its future is polled; dropping the future unpolled\n/// detaches the consumer.\n#[test]\nfn collect_claims_when_called() {\n    let rt = runtime();\n    let (pumps, _shared) = bare(&rt);\n    let collect = pumps.collect(MIB, LIMIT);\n    assert_eq!(pumps.output().unwrap_err().code(), ErrorCode::InvalidArgument);\n    drop(collect);\n    assert_eq!(pumps.lines().unwrap_err().code(), ErrorCode::InvalidArgument);\n    let again = bounded(&rt, pumps.collect(MIB, LIMIT));\n    assert_eq!(again.unwrap_err().code(), ErrorCode::InvalidArgument);"
+      },
+      {
+        "start_line": 153,
+        "end_line": 167,
+        "quote": "fn a_pending_drop_at_a_bounded_end_is_a_failure() {\n    let rt = runtime();\n    for (within, at_least) in [(Duration::from_millis(50), Duration::ZERO), (LIMIT, DRAIN)] {\n        let (pumps, shared) = bare(&rt);\n        shared.accept(0, &vec![b'a'; UNATTACHED]);\n        shared.accept(0, b\"zz\");\n        let collect = pumps.collect(4 * MIB, within);\n        let start = Instant::now();\n        pumps.end();\n        let got = bounded(&rt, collect).unwrap();\n        assert!(start.elapsed() >= at_least);\n        let failed = got.failed.unwrap();\n        assert_eq!(failed.code(), ErrorCode::Io);\n        assert!(failed.to_string().contains(\"2 bytes of the child's stdout\"), \"{failed}\");\n        assert_eq!((got.stdout, got.over_limit), (Data::Text(\"a\".repeat(UNATTACHED)), None));"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/io/tests/hold.rs",
+    "git_blob_sha": "e81ea27f47e3f79664a57556a7e4819c08459f6e",
+    "source_sha256": "f75fa08ae6daa5c02b405ef06bab0a01783448cd0b07c59d226c0a3e01789633",
+    "source_bytes": 3327,
+    "line_count": 92,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Distinguishes optional attached backpressure from normal output dropping.",
+    "behavior": [
+      "Writes 40 MiB into a held 16 MiB queue and requires the writer to remain pending, then verifies exact bytes and zero gaps after consumption.",
+      "end releases the held writer and resumes dropping; detach releases it and credits retained output to drops.",
+      "With no consumer claim, hold still uses the unattached budget and allows the writer to finish."
+    ],
+    "contracts": [
+      "Backpressure must not make stop/end depend on consumer progress."
+    ],
+    "dependencies": [
+      "io/queue::holds_back and condvar wake paths are exercised through actual pipes."
+    ],
+    "failures_or_limits": [
+      "A 200 ms receive timeout is the explicit pending-writer observation, not proof of timing on every system."
+    ],
+    "evidence": [
+      {
+        "start_line": 22,
+        "end_line": 42,
+        "quote": "    until(|| shared.queued(0) + 64 * 1024 > ATTACHED);\n    // Held: the reader waits for room, so the writer is stuck on a full pipe.\n    assert!(matches!(\n        writer.recv_timeout(Duration::from_millis(200)),\n        Err(RecvTimeoutError::Timeout)\n    ));\n    assert_eq!(pumps.dropped().stdout, 0);\n    let mut chunks = Vec::new();\n    let read = async {\n        let mut got = 0;\n        while got < data.len() {\n            let chunk = output.next().await.unwrap().unwrap();\n            got += bytes(std::slice::from_ref(&chunk)).len();\n            chunks.push(chunk);\n        }\n    };\n    bounded(&rt, read);\n    drop(done(writer));\n    assert_eq!(bytes(&chunks), data);\n    assert!(losses(&chunks).iter().all(|&l| l == 0), \"a gap under backpressure\");\n    assert_eq!(pumps.dropped().stdout, 0);"
+      },
+      {
+        "start_line": 55,
+        "end_line": 63,
+        "quote": "    let shared = &pumps.shared;\n    until(|| shared.queued(0) + 64 * 1024 > ATTACHED);\n    pumps.end();\n    drop(done(writer));\n    bounded(&rt, pumps.ended());\n    assert!(\n        pumps.dropped().stdout > 0,\n        \"past the budget, the rest is dropped once the output ended\"\n    );"
+      },
+      {
+        "start_line": 82,
+        "end_line": 91,
+        "quote": "/// Without a claim, backpressure changes nothing: the unattached budget applies and the writer never waits.\n#[test]\nfn with_no_consumer_the_usual_budget_applies() {\n    let rt = runtime();\n    let (pumps, out, err) = child(&rt, false);\n    drop(err);\n    pumps.hold();\n    drop(done(feed(out, pattern(20 * MIB))));\n    bounded(&rt, pumps.ended());\n    assert!(pumps.dropped().stdout > 0);"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/io/tests/lines.rs",
+    "git_blob_sha": "763914b1d83be5499927c5ff977a72e067982d79",
+    "source_sha256": "7347690757b66b6f1c4df4afe2fdda5b555f170f4d4bfb19e5325b6b1a637499",
+    "source_bytes": 5595,
+    "line_count": 152,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Checks line splitting, UTF-8-safe piece limits, gap boundaries and abandoned-byte accounting.",
+    "behavior": [
+      "Covers LF, CRLF split across reads, blank lines and unterminated final text.",
+      "A long multibyte line splits at 1048575 then 151426 bytes; an exactly 1 MiB line with split CRLF remains one piece.",
+      "Loss terminates partial text with replacement decoding and puts loss on the next or final empty line; dropping the view counts unpublished CRLF and partial bytes."
+    ],
+    "contracts": [
+      "continues marks pieces only, and no line spans a gap."
+    ],
+    "dependencies": [
+      "io/out::Lines is exercised with pipes and exact manually fed queue boundaries."
+    ],
+    "failures_or_limits": [
+      "Assertions describe expected output shapes; no test was executed."
+    ],
+    "evidence": [
+      {
+        "start_line": 66,
+        "end_line": 86,
+        "quote": "    assert_eq!(\n        got,\n        [(stdout, 1_048_575, true), (stdout, 151_426, false), (stdout, 3, false)]\n    );\n}\n\n/// A `\\r` that ends what has arrived may still be the line end: a line of exactly 1 MiB whose `\\r` and\n/// `\\n` arrive in separate reads is one piece. Fed item by item, so the read boundary is exact.\n#[test]\nfn a_1_mib_line_split_before_its_newline_is_one_piece() {\n    let shared = Arc::new(Shared::new(true, [Stream::Stdout, Stream::Stderr], [true, false]));\n    shared.claim(Claim::Attached).unwrap();\n    let mut lines = Lines::new(Arc::clone(&shared));\n    shared.accept(0, &vec![b'a'; MIB]);\n    shared.accept(0, b\"\\r\");\n    assert!(pending(lines.next()), \"a piece was cut before the line end arrived\");\n    shared.accept(0, b\"\\nEND\\n\");\n    shared.finish(0, None);\n    let got = bounded(&runtime(), drain(&mut lines));\n    let got: Vec<_> = shape(&got).into_iter().map(|l| (l.1, l.3)).collect();\n    assert_eq!(got, [(MIB, false), (3, false)]);"
+      },
+      {
+        "start_line": 117,
+        "end_line": 122,
+        "quote": "    assert_eq!(\n        pick(Stream::Stdout),\n        [(2, None), (UNATTACHED - 4 + 3, None), (4, Some(4)), (4, None)]\n    );\n    assert_eq!(pick(Stream::Stderr), [(UNATTACHED, None), (0, Some(2))]);\n    assert!(got.iter().all(|l| !l.continues));"
+      },
+      {
+        "start_line": 143,
+        "end_line": 151,
+        "quote": "fn dropping_lines_counts_what_they_held() {\n    let rt = runtime();\n    let (pumps, shared) = bare(&rt);\n    let mut lines = pumps.lines().unwrap();\n    shared.accept(0, b\"one\\ntwo\\r\\npar\");\n    assert_eq!(bounded(&rt, lines.next()).unwrap().unwrap().text, \"one\");\n    assert_eq!(pumps.dropped().stdout, 0);\n    drop(lines);\n    assert_eq!(pumps.dropped().stdout, 5 + 3);"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/io/tests/mod.rs",
+    "git_blob_sha": "7cbf4571004f797587711e2ac39abbab9eb276c4",
+    "source_sha256": "8763f89bf7417a85b496067ab260ed4cd770206aae90f84dc749a475c0bd06e2",
+    "source_bytes": 4872,
+    "line_count": 153,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Supplies bounded real-pipe and bare-queue infrastructure for I/O unit tests.",
+    "behavior": [
+      "child creates two real OS pipes and starts Pumps while feed writes from threads; bare permits exact accept/finish event ordering without reader threads.",
+      "Async and thread waits use 20 s failure bounds; after_first_poll and pending control future admission boundaries.",
+      "Compile-time send checks cover chunk/line next, collect, ended, stdin write and close futures."
+    ],
+    "contracts": [
+      "The suite intentionally starts no child process; pipe writers play its output side."
+    ],
+    "dependencies": [
+      "io::Pumps, Shared and Stdin are the tested implementation."
+    ],
+    "failures_or_limits": [
+      "until polls observed state with 1 ms sleeps; it is bounded but differs from the repository preference for marker-only synchronization."
+    ],
+    "evidence": [
+      {
+        "start_line": 36,
+        "end_line": 64,
+        "quote": "/// Runs `f` to completion on `rt`; more than `LIMIT` fails the test.\nfn bounded<F: Future>(rt: &Runtime, f: F) -> F::Output {\n    rt.block_on(async { tokio::time::timeout(LIMIT, f).await.expect(\"timed out\") })\n}\n\nfn pipe() -> (Pipe, PipeWriter) {\n    let (read, write) = std::io::pipe().unwrap();\n    (Pipe::from(read), write)\n}\n\n/// A pipe child: its pumps, and the writing ends of its stdout and stderr.\nfn child(rt: &Runtime, text: bool) -> (Pumps, PipeWriter, PipeWriter) {\n    let ((out, out_w), (err, err_w)) = (pipe(), pipe());\n    let source = Source::Pipes {\n        stdout: out,\n        stderr: Some(err),\n    };\n    (Pumps::start(rt.handle(), source, text).unwrap(), out_w, err_w)\n}\n\n/// Pumps without reader threads: the test plays the readers (`accept`, `finish`), so the queue holds exactly\n/// what it pushed.\nfn bare(rt: &Runtime) -> (Pumps, Arc<Shared>) {\n    let shared = Arc::new(Shared::new(true, [Stream::Stdout, Stream::Stderr], [true, true]));\n    let pumps = Pumps {\n        shared: Arc::clone(&shared),\n        rt: rt.handle().clone(),\n    };\n    (pumps, shared)"
+      },
+      {
+        "start_line": 92,
+        "end_line": 112,
+        "quote": "/// Polls until `cond` holds (a reader thread got that far); more than `LIMIT` fails the test.\nfn until(mut cond: impl FnMut() -> bool) {\n    let start = Instant::now();\n    while !cond() {\n        assert!(start.elapsed() < LIMIT, \"condition never held\");\n        thread::sleep(Duration::from_millis(1));\n    }\n}\n\n/// Polls `fut` once, runs `then` (e.g. starts a writer once a claim was made), then awaits `fut`.\nasync fn after_first_poll<F: Future>(fut: F, then: impl FnOnce()) -> F::Output {\n    let mut fut = pin!(fut);\n    let mut then = Some(then);\n    poll_fn(|cx| {\n        let polled = fut.as_mut().poll(cx);\n        if let Some(then) = then.take() {\n            then();\n        }\n        polled\n    })\n    .await"
+      },
+      {
+        "start_line": 138,
+        "end_line": 152,
+        "quote": "/// Every future of io can move to another thread (`tokio::spawn`, a binding's runtime).\n#[test]\nfn the_futures_are_send() {\n    fn send<T: Send>(_: &T) {}\n    let rt = runtime();\n    let ((pumps, _out, _err), (more, _o, _e)) = (child(&rt, true), child(&rt, true));\n    let (mut output, mut lines) = (pumps.output().unwrap(), more.lines().unwrap());\n    send(&output.next());\n    send(&lines.next());\n    send(&pumps.collect(1, LIMIT));\n    send(&pumps.ended());\n    let (_read, write) = std::io::pipe().unwrap();\n    let stdin = super::Stdin::start(rt.handle(), Pipe::from(write)).unwrap();\n    send(&stdin.write(b\"x\"));\n    send(&stdin.close());"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/io/tests/output.rs",
+    "git_blob_sha": "3072835bb56a71da16148bd9c40719aa662699d5",
+    "source_sha256": "38d00965ced7b7b675fe794560fce90d4c028f680d281cef7c2ad773cddb7f8b",
+    "source_bytes": 10860,
+    "line_count": 289,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Exercises output budgets, ordered gaps, decoder reset, consumer ownership and bounded drain.",
+    "behavior": [
+      "Unclaimed 50 MiB retains exactly 1 MiB and reports remaining loss on an empty final chunk; paused attached 20 MiB retains 16 MiB.",
+      "A paced 64 MiB stream is exact; split/invalid UTF-8 and byte mode are checked, including decoder reset at a gap.",
+      "Second or post-detach claims fail; EOF waits for all pipe holders, end permits late cleanup bytes but cuts at DRAIN, and view-held bytes count when dropped."
+    ],
+    "contracts": [
+      "Terminal output uses Stream::Pty and stdout accounting."
+    ],
+    "dependencies": [
+      "io/out.rs and queue/mod.rs are exercised via actual pipes and bare queues."
+    ],
+    "failures_or_limits": [
+      "Paced lossless output depends on explicit acknowledgments limiting inflight bytes; it does not claim unlimited buffering."
+    ],
+    "evidence": [
+      {
+        "start_line": 43,
+        "end_line": 56,
+        "quote": "    let dropped = (50 * MIB - UNATTACHED) as u64;\n    assert_eq!((pumps.dropped().stdout, pumps.dropped().stderr), (dropped, 0));\n\n    let chunks = bounded(&rt, drain(&mut pumps.output().unwrap()));\n    assert_eq!(bytes(&chunks), data[..UNATTACHED]);\n    let (last, kept) = chunks.split_last().unwrap();\n    assert!(\n        kept.iter()\n            .all(|c| c.lost_before.is_none() && c.stream == Stream::Stdout)\n    );\n    assert_eq!(\n        (last.data.clone(), last.lost_before),\n        (Data::Bytes(Vec::new()), Some(dropped))\n    );"
+      },
+      {
+        "start_line": 167,
+        "end_line": 171,
+        "quote": "        out.write_all(b\"\\xa9tail\\n\").unwrap();\n        drop((out, err));\n        let rest = drain(&mut output).await;\n        let got: Vec<_> = rest.iter().map(|c| (text(c), c.lost_before)).collect();\n        assert_eq!(got, [(\"\\u{FFFD}\", None), (\"\\u{FFFD}tail\\n\", Some(4))]);"
+      },
+      {
+        "start_line": 219,
+        "end_line": 228,
+        "quote": "    until(|| pumps.dropped().stdout == 1);\n    let start = Instant::now();\n    pumps.end();\n    bounded(&rt, pumps.ended());\n    let chunks = bounded(&rt, drain(&mut pumps.output().unwrap()));\n    assert!(start.elapsed() >= DRAIN - Duration::from_millis(50));\n    assert_eq!(bytes(&chunks), data[..UNATTACHED]);\n    assert_eq!(chunks.last().unwrap().lost_before, Some(1));\n    out.write_all(b\"more\").unwrap();\n    until(|| pumps.dropped().stdout == 5);"
+      },
+      {
+        "start_line": 271,
+        "end_line": 288,
+        "quote": "    let mut output = pumps.output().unwrap();\n    shared.accept(0, b\"ab\\xc3\");\n    assert_eq!(text(&bounded(&rt, next(&mut output))), \"ab\");\n    drop(output);\n    assert_eq!(pumps.dropped().stdout, 1);\n\n    let (pumps, shared) = bare(&rt);\n    let mut first = vec![b'a'; UNATTACHED - 1];\n    first.push(0xc3);\n    shared.accept(0, &first);\n    shared.accept(0, b\"zzz\");\n    let mut output = pumps.output().unwrap();\n    shared.accept(0, b\"xyz\");\n    assert_eq!(text(&bounded(&rt, next(&mut output))).len(), UNATTACHED - 1);\n    assert_eq!(text(&bounded(&rt, next(&mut output))), \"\\u{FFFD}\");\n    assert_eq!(pumps.dropped().stdout, 3);\n    drop(output);\n    assert_eq!(pumps.dropped().stdout, 3 + 3);"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/io/tests/stdin.rs",
+    "git_blob_sha": "a3a848c7879156919807f7e4fcb53ea50043178a",
+    "source_sha256": "817c823bc60c1b3ca62a029cb75bd7c11485b84a696d8c0fca237575dde1baed",
+    "source_bytes": 5086,
+    "line_count": 156,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Checks stdin call order, write backpressure, close, abandon and broken-pipe settlement.",
+    "behavior": [
+      "Two 2 MiB writes must remain ordered and noninterleaved before trailing c; repeated close succeeds and later writes are Closed.",
+      "An 8 MiB write cannot resolve until the reader has consumed at least 7 MiB.",
+      "The abandon test requires the two submitted pending writes and a later write to return Closed, without synchronizing that either submitted write has become active in the worker. Broken pipe gives Closed, and drop after a completed last write delivers EOF."
+    ],
+    "contracts": [
+      "in_order deliberately polls futures in queue order; write completion means OS acceptance, not application consumption."
+    ],
+    "dependencies": [
+      "io/stdin::Writer is exercised with real anonymous pipes."
+    ],
+    "failures_or_limits": [
+      "No actual child lifecycle or supervisor is involved; tests were not run."
+    ],
+    "evidence": [
+      {
+        "start_line": 79,
+        "end_line": 95,
+        "quote": "    let (a, b) = (vec![b'a'; 2 * MIB], vec![b'b'; 2 * MIB]);\n    bounded(&rt, async {\n        let (ra, rb) = in_order(stdin.write(&a), stdin.write(&b)).await;\n        ra.unwrap();\n        rb.unwrap();\n        stdin.write(b\"c\").await.unwrap();\n        let (r1, r2) = in_order(stdin.close(), stdin.close()).await;\n        r1.unwrap();\n        r2.unwrap();\n        stdin.close().await.unwrap();\n        assert!(closed(stdin.write(b\"late\").await).contains(\"closeStdin()\"));\n    });\n    let got = got.recv_timeout(LIMIT).unwrap();\n    assert!(\n        got == [a, b, b\"c\".to_vec()].concat(),\n        \"the writes were reordered or interleaved\"\n    );"
+      },
+      {
+        "start_line": 100,
+        "end_line": 109,
+        "quote": "fn write_waits_for_the_pipe() {\n    let rt = runtime();\n    let (stdin, read) = stdin(&rt);\n    let count = Arc::new(AtomicUsize::new(0));\n    let _got = child_reads(read, Arc::clone(&count));\n    bounded(&rt, stdin.write(&vec![b'w'; 8 * MIB])).unwrap();\n    assert!(\n        count.load(Ordering::SeqCst) >= 7 * MIB,\n        \"write resolved before the child read the bytes\"\n    );"
+      },
+      {
+        "start_line": 119,
+        "end_line": 143,
+        "quote": "    bounded(&rt, async {\n        let (r1, r2) = in_order(in_order(stdin.write(&big), stdin.write(&more)), async {\n            stdin.abandon();\n            stdin.abandon();\n        })\n        .await\n        .0;\n        assert!(closed(r1).contains(\"exited\"));\n        closed(r2);\n        closed(stdin.write(b\"z\").await);\n        stdin.close().await.unwrap();\n    });\n    drop(read);\n}\n\n/// A child that closed its stdin: the write is `Closed` (EPIPE), not a crash, and so is every later one.\n#[test]\nfn a_closed_pipe_is_closed() {\n    let rt = runtime();\n    let (stdin, read) = stdin(&rt);\n    drop(read);\n    bounded(&rt, async {\n        assert!(closed(stdin.write(b\"x\").await).contains(\"closed its end\"));\n        closed(stdin.write(b\"y\").await);\n        stdin.close().await.unwrap();"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/process/child.rs",
+    "git_blob_sha": "431ba07ac85778f408c37a55d567db40890a0cee",
+    "source_sha256": "d13216ad75127aafb89bbb1f88704a61d30f40c1d8561cc49c6ab6055f9bb4ac",
+    "source_bytes": 8900,
+    "line_count": 247,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Builds public child handles and binds tree lifetime to input/output ownership.",
+    "behavior": [
+      "Child exposes root wait separately from whole-tree stop and inventory; output/lines share a single claim and write requires piped or terminal stdin.",
+      "Pipe spawn validates before cancellation check, then creates client child, pumps and optional hold, arming timeout and memory watchers.",
+      "PTY spawn starts its output reader before Go, then arms watchers; dropping Child sends an immediate detached kill and ends/abandons I/O."
+    ],
+    "contracts": [
+      "Pty resize accepts 1..32767 cells; PipeChild close_stdin is idempotent.",
+      "Startup I/O failures initiate tree cleanup before returning an error."
+    ],
+    "dependencies": [
+      "client supplies Spawned/Tree; io supplies pumps/writer; process life/deadline/memory own policy."
+    ],
+    "failures_or_limits": [
+      "Drop and startup-failure kill are nonblocking requests, not synchronous confirmations of tree disappearance."
+    ],
+    "evidence": [
+      {
+        "start_line": 139,
+        "end_line": 145,
+        "quote": "impl Drop for Child {\n    fn drop(&mut self) {\n        // A forked copy touches no lock and commands nothing; its fields just drop.\n        if self.inner.life.at_home() {\n            self.inner.life.kill();\n            self.inner.close_ends();\n        }"
+      },
+      {
+        "start_line": 215,
+        "end_line": 246,
+        "quote": "/// Starts a pipe child (`InvalidArgument` if `req.mode` is a terminal).\npub(crate) fn spawn_pipe(req: &Request, opts: &Options) -> Result<PipeChild, Error> {\n    if let Mode::Pty(_) = req.mode {\n        return Err(Error::pty_needs_spawn_pty());\n    }\n    let spec = spawn::prepare(req)?;\n    deadline::refuse_if_cancelled(opts)?;\n    let rt = client::runtime()?;\n    let spawned = client::spawn(&spec)?;\n    let child = Child::start(rt.handle(), spawned, opts.text, spec.grace)?;\n    if opts.backpressure {\n        child.inner.pumps.hold(); // before anyone can claim the output\n    }\n    deadline::arm(rt.handle(), &child.inner, req.timeout, opts.cancel.clone());\n    memory::arm(rt.handle(), &child.inner, req.max_rss_bytes);\n    Ok(PipeChild { child })\n}\n\n/// Starts a terminal child.\npub(crate) fn spawn_pty(req: &Request, opts: &Options) -> Result<PtyChild, Error> {\n    let spec = spawn::prepare(req)?;\n    deadline::refuse_if_cancelled(opts)?;\n    let rt = client::runtime()?;\n    let spawned = client::spawn(&spec)?;\n    // `start` returns with the terminal's reader running (`io::Pumps::start`); only then may the held Unix root exec\n    // (ADR-0005 R9), or a program that prints and exits at once can lose its output on macOS. An exec failure comes\n    // back here; dropping `child` then ends the tree and lets the readers go.\n    let child = Child::start(rt.handle(), spawned, opts.text, spec.grace)?;\n    child.inner.life.go()?;\n    deadline::arm(rt.handle(), &child.inner, req.timeout, opts.cancel.clone());\n    memory::arm(rt.handle(), &child.inner, req.max_rss_bytes);\n    Ok(PtyChild { child })"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/process/deadline.rs",
+    "git_blob_sha": "106cb5bdebcd7323bbe6f50cad03b66566bac7c9",
+    "source_sha256": "c3cfcde9a00472067ec5582740c4e6d4c49f1a087d2bb95dd3cd28b6435cc437",
+    "source_bytes": 8792,
+    "line_count": 219,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Enforces timeout/cancellation across root lifetime and surviving descendants.",
+    "behavior": [
+      "Pre-cancelled commands fail after validation and before spawn; a library-runtime Alarm starts counting immediately at creation.",
+      "The first deadline/cancellation stops the tree with configured grace; cancellation wins when both futures are ready in the same poll.",
+      "After root and output finish, remaining pipe-free members enter a weak-reference linger state with one-second inventory checks; deadline races a pending List."
+    ],
+    "contracts": [
+      "Root exit already observed retains its own reason despite later descendant cleanup."
+    ],
+    "dependencies": [
+      "process/life.rs commits cause; client inventory identifies remaining members."
+    ],
+    "failures_or_limits": [
+      "Inventory error ends enforcement just like lost supervisor; a recoverable incomplete inventory can therefore cease the linger watch. The same limitation is explicitly acknowledged in source."
+    ],
+    "evidence": [
+      {
+        "start_line": 61,
+        "end_line": 101,
+        "quote": "async fn enforce(mut deadline: Deadline, inner: Arc<Inner>) {\n    let event = first(deadline.fired(), settled(&inner)).await;\n    let (inner, cause) = match event {\n        First::A(cause) => (inner, cause),\n        First::B(Settled::Over) => return,\n        First::B(Settled::Lingering) => {\n            let child = Arc::downgrade(&inner);\n            drop(inner);\n            match linger(&mut deadline, &child).await {\n                Some(fired) => fired,\n                None => return,\n            }\n        }\n    };\n    // A failure here (the supervisor is gone) also reaches every waiter of the child (`wait`, `stop`) on its own.\n    let _ = inner.stop_with(cause, inner.grace).await;\n}\n\n/// The lingering state: the child and the cause once the deadline fires, or `None` once the child was dropped,\n/// nothing is left of its tree, or its supervisor cannot tell. It holds the child only while it checks: a dropped\n/// child fails to upgrade, and a stopped tree lists nothing without a round trip. The deadline races each whole\n/// check, so it wins over a pending `List` (the check is dropped, and the stop is sent at once).\nasync fn linger(deadline: &mut Deadline, child: &Weak<Inner>) -> Option<(Arc<Inner>, Reason)> {\n    loop {\n        match first(deadline.fired(), still_lingering(child)).await {\n            First::A(cause) => return Some((child.upgrade()?, cause)),\n            First::B(true) => {}\n            First::B(false) => return None,\n        }\n    }\n}\n\n/// After `LINGER_CHECK`: whether the child still exists and its tree still has members.\nasync fn still_lingering(child: &Weak<Inner>) -> bool {\n    tokio::time::sleep(LINGER_CHECK).await;\n    let Some(inner) = child.upgrade() else {\n        return false;\n    };\n    // `Err`: a lost supervisor (for good) or a broken inventory, which the client does not tell apart; through that\n    // supervisor the deadline could stop nothing reliably either way.\n    inner.life.processes().await.is_ok_and(|left| !left.is_empty())"
+      },
+      {
+        "start_line": 112,
+        "end_line": 122,
+        "quote": "/// Resolves once the output is over and the root exited.\nasync fn settled(inner: &Inner) -> Settled {\n    inner.pumps.ended().await;\n    match inner.life.wait().await {\n        // The root's own end (or a library act after it): ask once whether anything is left to time (an `Err` ends\n        // it, as in `linger`).\n        Ok(exit) if matches!(exit.reason, Reason::Exit | Reason::Signal) => match inner.life.processes().await {\n            Ok(left) if !left.is_empty() => Settled::Lingering,\n            Ok(_) | Err(_) => Settled::Over,\n        },\n        _ => Settled::Over,"
+      },
+      {
+        "start_line": 141,
+        "end_line": 159,
+        "quote": "    /// `Aborted` or `Timeout`, whichever fired first (a cancellation wins a tie).\n    pub(super) async fn fired(&mut self) -> Reason {\n        let Deadline { alarm, cancel } = self;\n        let aborted = async {\n            match cancel {\n                Some(token) => token.cancelled().await,\n                None => pending().await,\n            }\n        };\n        let expired = async {\n            match alarm {\n                Some(alarm) => alarm.await,\n                None => pending().await,\n            }\n        };\n        match first(aborted, expired).await {\n            First::A(()) => Reason::Aborted,\n            First::B(()) => Reason::Timeout,\n        }"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/process/exit.rs",
+    "git_blob_sha": "0fb6eee5990a5a5bcebcc2d6424efecaa2b5ea7c",
+    "source_sha256": "9a6f27e74b7a621397905a69a56f586f6518cc45ca08cec682f4c0e41942a2e2",
+    "source_bytes": 3064,
+    "line_count": 70,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Converts native root status plus first library action into public Exit.",
+    "behavior": [
+      "Native code or signal is always preserved; Killed, Timeout, Aborted or MemoryExceeded may override only the reason.",
+      "Exit/Signal passed as a cause count as no library action.",
+      "Signal names cover shared termination signals and OS-specific Linux/BSD numbering, falling back to SIG<number>."
+    ],
+    "contracts": [
+      "A child handling termination and exiting zero still has the committed non-Exit reason."
+    ],
+    "dependencies": [
+      "process/life.rs determines the committed cause; client RootExit supplies native status."
+    ],
+    "failures_or_limits": [
+      "Mapping assumes Linux versus BSD-style numbering for non-Linux Unix platforms."
+    ],
+    "evidence": [
+      {
+        "start_line": 18,
+        "end_line": 27,
+        "quote": "pub(super) fn of(root: RootExit, cause: Option<Reason>) -> Exit {\n    let (code, signal, own) = match root {\n        RootExit::Code(code) => (Some(code), None, Reason::Exit),\n        RootExit::Signal(num) => (None, Some(signal_name(num, std::env::consts::OS)), Reason::Signal),\n    };\n    let reason = match cause {\n        Some(acted @ (Reason::Killed | Reason::Timeout | Reason::Aborted | Reason::MemoryExceeded)) => acted,\n        Some(Reason::Exit | Reason::Signal) | None => own,\n    };\n    Exit { code, signal, reason }"
+      },
+      {
+        "start_line": 53,
+        "end_line": 69,
+        "quote": "    let own = match (os, num) {\n        (\"linux\", 7) => Some(\"SIGBUS\"),\n        (\"linux\", 10) => Some(\"SIGUSR1\"),\n        (\"linux\", 12) => Some(\"SIGUSR2\"),\n        (\"linux\", 16) => Some(\"SIGSTKFLT\"),\n        (\"linux\", 29) => Some(\"SIGIO\"),\n        (\"linux\", 30) => Some(\"SIGPWR\"),\n        (\"linux\", 31) => Some(\"SIGSYS\"),\n        (\"linux\", _) => None,\n        (_, 7) => Some(\"SIGEMT\"),\n        (_, 10) => Some(\"SIGBUS\"),\n        (_, 12) => Some(\"SIGSYS\"),\n        (_, 30) => Some(\"SIGUSR1\"),\n        (_, 31) => Some(\"SIGUSR2\"),\n        _ => None,\n    };\n    shared.or(own).map_or_else(|| format!(\"SIG{num}\"), str::to_owned)"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/process/life.rs",
+    "git_blob_sha": "9c703390e6883d195a71ffbc857ee42f405de8c8",
+    "source_sha256": "d47825bd8be76381bfa93aec7b746174d0200289d992d999012412815877beac",
+    "source_bytes": 5617,
+    "line_count": 144,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Separates root result from tree stop and commits the first termination cause once.",
+    "behavior": [
+      "Before first stop/kill, nonblocking unconstrained polling checks whether root exit is already known; known exit commits Root, otherwise commits the supplied library cause.",
+      "stop delegates whole-tree completion to Tree then returns the root status; kill sends zero-grace stop without waiting.",
+      "Converts process entries and validates grace by rounding nanoseconds up to milliseconds within u32 range."
+    ],
+    "contracts": [
+      "Forked copies avoid locks and rely on client refusal; later causes never replace the first."
+    ],
+    "dependencies": [
+      "client::Tree owns protocol lifecycle; process/exit.rs constructs Exit."
+    ],
+    "failures_or_limits": [
+      "Cause is committed before sending termination; a later channel error is surfaced separately rather than undoing the cause."
+    ],
+    "evidence": [
+      {
+        "start_line": 65,
+        "end_line": 84,
+        "quote": "    /// Commits `cause` unless one is committed already, then ends the whole tree with one deadline: graceful now,\n    /// forced at `grace` (whole milliseconds, see `grace`). Resolves with the root's `Exit` once the supervisor\n    /// confirmed the tree gone, at once if it is gone already. After the root exited, only its descendants are left to\n    /// stop, and the root's `Exit` is unchanged. Overlapping calls share the earliest deadline (the supervisor's rule).\n    /// In a forked copy, the client's refusal comes back before any lock is taken.\n    pub(super) async fn stop(&self, cause: Reason, grace: Duration) -> Result<Exit, Error> {\n        if self.at_home() {\n            self.commit(cause);\n        }\n        self.tree.stop(grace).await?;\n        self.wait().await\n    }\n\n    /// Force-kills the tree without waiting for it (drop): never blocks. Does nothing in a forked copy.\n    pub(super) fn kill(&self) {\n        if self.at_home() {\n            self.commit(Reason::Killed);\n            self.tree.stop_detached(Duration::ZERO);\n        }\n    }"
+      },
+      {
+        "start_line": 110,
+        "end_line": 128,
+        "quote": "    /// Contract §7: the cause is committed when the library acts, before the termination is sent.\n    fn commit(&self, cause: Reason) {\n        let mut committed = lock(&self.cause);\n        if let Cause::Open = *committed {\n            *committed = if self.root_exited() {\n                Cause::Root\n            } else {\n                Cause::Acted(cause)\n            };\n        }\n    }\n\n    /// Whether the client has already observed the root's exit, without waiting: `Tree::exited` is ready on its\n    /// first poll once the exit is known. Polled outside tokio's cooperative budget, which could otherwise make a\n    /// known exit look pending.\n    fn root_exited(&self) -> bool {\n        let mut cx = Context::from_waker(Waker::noop());\n        let exited = pin!(tokio::task::unconstrained(self.tree.exited()));\n        matches!(exited.poll(&mut cx), Poll::Ready(Ok(_)))"
+      },
+      {
+        "start_line": 132,
+        "end_line": 139,
+        "quote": "/// A grace for `stop`: whole milliseconds, a fraction rounding up (contract §3); `InvalidArgument` above\n/// 4294967295 ms.\npub(super) fn grace(grace: Duration) -> Result<Duration, Error> {\n    let ms = grace.as_nanos().div_ceil(1_000_000);\n    match u64::try_from(ms) {\n        Ok(whole) if ms <= MAX_GRACE_MS => Ok(Duration::from_millis(whole)),\n        _ => Err(Error::duration_out_of_range(\"graceMs\", ms)),\n    }"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/process/memory.rs",
+    "git_blob_sha": "c7ef222f5a57cf93e250e077d35cd258527aa391",
+    "source_sha256": "7933963d860d697ccd3895899499257fa593eb20033be9867362fc8e8190d6d6",
+    "source_bytes": 3689,
+    "line_count": 86,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Samples resident memory across tree members and descendant ancestry to enforce max_rss_bytes.",
+    "behavior": [
+      "Every 250 ms obtains current tree members, then scans OS process memory on spawn_blocking, with Linux task duplication disabled.",
+      "Traverses descendants with a HashSet to avoid double counting multiple listed roots; missing sampled processes count zero.",
+      "RSS strictly above cap sends zero-grace MemoryExceeded and ends the watch; weak ownership releases on child drop."
+    ],
+    "contracts": [
+      "Sampling expands beyond session membership, while stopping retains the supervisor tree boundary."
+    ],
+    "dependencies": [
+      "sysinfo reports process parents and RSS; Life::processes supplies seed PIDs."
+    ],
+    "failures_or_limits": [
+      "No hard allocation limit: short peaks may be missed; inventory/sample failure ends the watch. Escaped descendants are killed only through cooperating jail lifetime."
+    ],
+    "evidence": [
+      {
+        "start_line": 30,
+        "end_line": 55,
+        "quote": "/// Holds the child only while it samples, so a dropped child (whose drop kills the tree) ends the watch. It ends\n/// too once the tree lists nothing (stopped, or ended on its own) or the supervisor cannot list it.\nasync fn watch(child: Weak<Inner>, cap: u64) {\n    loop {\n        tokio::time::sleep(PERIOD).await;\n        let Some(inner) = child.upgrade() else {\n            return;\n        };\n        let Ok(members) = inner.life.processes().await else {\n            return;\n        };\n        if members.is_empty() {\n            return;\n        }\n        let pids: Vec<Pid> = members.iter().map(|m| Pid::from_u32(m.pid)).collect();\n        // Reading the OS' tables is blocking work: off the runtime's workers.\n        let Ok(rss) = tokio::task::spawn_blocking(move || resident(&pids)).await else {\n            return;\n        };\n        if rss > cap {\n            // Forced at once (no grace): a tree growing past its cap gets no time to grow further. A failure here\n            // (the supervisor is gone) also reaches every waiter of the child on its own.\n            let _ = inner.stop_with(Reason::MemoryExceeded, Duration::ZERO).await;\n            return;\n        }\n    }"
+      },
+      {
+        "start_line": 58,
+        "end_line": 85,
+        "quote": "/// The resident bytes of `roots` and every descendant of theirs together; a process gone by now counts 0.\nfn resident(roots: &[Pid]) -> u64 {\n    let mut system = System::new();\n    // Tasks off: on Linux each thread would be listed with its process' whole RSS.\n    system.refresh_processes_specifics(\n        ProcessesToUpdate::All,\n        true,\n        ProcessRefreshKind::nothing().without_tasks().with_memory(),\n    );\n    let processes = system.processes();\n    let mut children: HashMap<Pid, Vec<Pid>> = HashMap::new();\n    for process in processes.values() {\n        if let Some(parent) = process.parent() {\n            children.entry(parent).or_default().push(process.pid());\n        }\n    }\n    let mut counted = HashSet::new();\n    let mut pending = roots.to_vec();\n    while let Some(pid) = pending.pop() {\n        if counted.insert(pid) {\n            pending.extend(children.get(&pid).into_iter().flatten().copied());\n        }\n    }\n    counted\n        .iter()\n        .filter_map(|pid| processes.get(pid))\n        .map(sysinfo::Process::memory)\n        .sum()"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/process/mod.rs",
+    "git_blob_sha": "cef9ad00238c99617b6a2ea2329e5fd0556af5c4",
+    "source_sha256": "2573e21fdf20f5e1087ddcc00a34abf534f5fe487cf3c84bbed6e20b0b28aa15",
+    "source_bytes": 1460,
+    "line_count": 47,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Defines process-layer exports and host-only launch defaults.",
+    "behavior": [
+      "Exports Child/PipeChild/PtyChild and routes internal spawn/run functions to their modules.",
+      "Options hold cancellation, text mode, run input, output cap and pipe backpressure separately from validated spawn Request.",
+      "Defaults select text, no cancellation/input, 16 MiB per-stream max output and no backpressure."
+    ],
+    "contracts": [
+      "Frozen seam covers handle methods, Options and launch entrypoints."
+    ],
+    "dependencies": [
+      "api/command.rs populates Options; spawn::Request contains options requiring pure validation."
+    ],
+    "failures_or_limits": [
+      "This module sets defaults but performs no spawn, memory sampling or timeout work."
+    ],
+    "evidence": [
+      {
+        "start_line": 22,
+        "end_line": 45,
+        "quote": "/// Default `max_output_bytes` per stream (contract §6).\npub(crate) const DEFAULT_MAX_OUTPUT: usize = 16 << 20;\n\n/// What `spawn::prepare` does not need (everything validated, incl. `timeout`, is in `spawn::Request`).\n#[derive(Debug, Clone)]\npub(crate) struct Options {\n    pub cancel: Option<CancellationToken>,\n    pub text: bool,\n    pub input: Option<Vec<u8>>,\n    pub max_output_bytes: usize,\n    /// `spawn()` with pipes only (WP-H): an attached consumer that falls behind holds the child back instead of\n    /// losing output.\n    pub backpressure: bool,\n}\n\nimpl Default for Options {\n    fn default() -> Self {\n        Options {\n            cancel: None,\n            text: true,\n            input: None,\n            max_output_bytes: DEFAULT_MAX_OUTPUT,\n            backpressure: false,\n        }"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  }
+]

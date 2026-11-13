@@ -1,0 +1,128 @@
+{
+  "schema": "omni-public-review-summary/v1",
+  "kind": "summary_not_original_transcript",
+  "packet": "C06v2",
+  "layer": "L1",
+  "judge_identity": "/root/omni_review_courier/omni_j1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "artifact": {
+    "author_path": "authors/core/records-06.v2.json",
+    "public_path": "bodies/core/records-06.v2.json",
+    "sha256": "875f5ca4644377acdfa957bd48562d58fbdcd1020b73966f423fb4fc67204752",
+    "bytes": 43456
+  },
+  "verdict": "PASS",
+  "covered_records": 12,
+  "population": 393,
+  "records": [
+    {
+      "index": 0,
+      "path": "native/omni/crates/hugr-omni/src/io/tests/collect.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 1,
+      "path": "native/omni/crates/hugr-omni/src/io/tests/hold.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 2,
+      "path": "native/omni/crates/hugr-omni/src/io/tests/lines.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 3,
+      "path": "native/omni/crates/hugr-omni/src/io/tests/mod.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 4,
+      "path": "native/omni/crates/hugr-omni/src/io/tests/output.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 5,
+      "path": "native/omni/crates/hugr-omni/src/io/tests/stdin.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 6,
+      "path": "native/omni/crates/hugr-omni/src/process/child.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 7,
+      "path": "native/omni/crates/hugr-omni/src/process/deadline.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 8,
+      "path": "native/omni/crates/hugr-omni/src/process/exit.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 9,
+      "path": "native/omni/crates/hugr-omni/src/process/life.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 10,
+      "path": "native/omni/crates/hugr-omni/src/process/memory.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 11,
+      "path": "native/omni/crates/hugr-omni/src/process/mod.rs",
+      "verdict": "PASS"
+    }
+  ],
+  "criteria": {
+    "C1": {
+      "label": "Every covered path has an actual read-based, file-specific useful disposition",
+      "verdict": "PASS"
+    },
+    "C2": {
+      "label": "Assertions distinguish implementation, documentation/declaration, inference and gaps",
+      "verdict": "PASS"
+    },
+    "C3": {
+      "label": "Source identities, paths and exact quote evidence support claims",
+      "verdict": "PASS"
+    },
+    "C4": {
+      "label": "Contracts, failures, relations and maintenance implications are useful at L1",
+      "verdict": "PASS"
+    },
+    "C5": {
+      "label": "Test source, old reviews and docs are never current execution",
+      "verdict": "PASS"
+    },
+    "C6": {
+      "label": "Ownership/exclusions and authorized external scope preserved",
+      "verdict": "PASS"
+    },
+    "C7": {
+      "label": "No secrets/private evaluation/session material in candidate",
+      "verdict": "PASS"
+    }
+  },
+  "mandatory_findings_remaining": [],
+  "missing_evidence": [],
+  "private_opinion_sha256": "2c40d25a5162e45cf6546397536901782ce8197b95ed964603b6775d2f88f089",
+  "private_opinion_digest_scope": "SHA256 of the privately retained complete UTF-8 opinion text with final LF; not a host-message envelope or authenticated transport receipt.",
+  "transport_note": "Both reviewers received all twelve complete original objects and the complete replacement object5. Eleven unchanged original objects plus that replacement reconstruct the current body exactly in the manually preserved message copies. Seven additional literal excerpts match captured source lines. The old C06-T1 false/true source-excerpt discrepancy was corrected and bound by both; it was not an author or baseline defect. No delta transport discrepancy was observed. Copies are not authenticated host-message exports.",
+  "limitations": [
+    "Documentary semantic review only; judge used no tools or execution.",
+    "Acceptance covers twelve L1 records only and does not release complete L1 or later layers.",
+    "Judges received complete candidate records and selected decisive source evidence; no claim of full-source judge reading.",
+    "No runtime-import binding, current platform test, release or global integration acceptance is established.",
+    "Original private exchanges and reserved evaluation material are withheld; no public reproducibility of those withheld materials is claimed."
+  ],
+  "resolved_findings": [
+    {
+      "id": "C06-J1-F1",
+      "field": "/5/behavior/2",
+      "resolution": "The test description now limits its claim to submitted pending writes and explicitly does not claim synchronized worker activation."
+    }
+  ]
+}

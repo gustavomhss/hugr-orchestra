@@ -1,0 +1,100 @@
+{
+  "schema": "omni-author-delta-verification/v1",
+  "recorded_at": "2026-11-13T17:45:17.263907+00:00",
+  "delta": "authors/core/delta-07-v2.json",
+  "delta_sha256": "e8d97272d5f45b3836ac93f4f6736690b2f51ee7e9f5ec00d900826f0758f40a",
+  "old_body_sha256": "7e1431eb75856196e74ea764eacab2618d63223e543c065b7f18f89d7f41d661",
+  "new_body_sha256": "1ea62bd5a74a8e5230ac3c1d0ac7478c03f8bb22bdf0d7f11dbc5e3be2e94c25",
+  "record_count": 13,
+  "unchanged_record_indices": [
+    0,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "field_changes": [
+    {
+      "pointer": "/1/behavior/1",
+      "before": "Each command must settle within 5 s; shared PID log must include every expected started root and all recorded fixture processes must be dead afterward.",
+      "after": "Each command must settle within 5 s; the shared log must satisfy pids.len() >= started, an aggregate lower bound on complete PID entries. That count does not identify every expected root individually; assert_dead_logged subsequently checks the PIDs actually recorded."
+    },
+    {
+      "pointer": "/2/behavior/0",
+      "before": "Sends a 64 KiB OMNI_BIG value, exceeding the socket-buffer scale while staying below Linux single-env-string limits.",
+      "after": "Sets OMNI_BIG to 64 KiB of x; the source comment compares that size with an 8 KiB socket buffer and Linux's 128 KiB limit for one environment string. This test does not measure/configure socket capacity or establish that EMSGSIZE or its fallback branch occurred."
+    },
+    {
+      "pointer": "/2/behavior/1",
+      "before": "Requires successful fixture execution and exact printed value framing/length under a 30 s timeout.",
+      "after": "Configures a 30 s command timeout and requires successful exit, text.starts_with(\"OMNI_BIG=\\\"xxx\"), and text.trim_end().len() == big.len() + 11; the assertions do not compare the complete returned value or validate full framing."
+    }
+  ],
+  "source_evidence_occurrences": 8,
+  "distinct_sources": [
+    "native/omni/crates/hugr-omni/src/process/tests/agent_loop.rs",
+    "native/omni/crates/hugr-omni/src/process/tests/big.rs",
+    "native/omni/crates/hugr-omni/src/process/tests/deadline.rs",
+    "native/omni/crates/hugr-omni/src/process/tests/mod.rs"
+  ],
+  "excerpts": [
+    {
+      "path": "native/omni/crates/hugr-omni/src/process/tests/agent_loop.rs",
+      "start_line": 15,
+      "end_line": 23,
+      "quote_sha256": "71090f7c1ecf492d713be7e9d4dc7ac43f9cfd63de4c42f44449bb9496b5ea82"
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/src/process/tests/agent_loop.rs",
+      "start_line": 48,
+      "end_line": 67,
+      "quote_sha256": "622cd870ec11bc732edfcdb53bebd171d7b337c2d3ac042df337a6581f5571e5"
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/src/process/tests/agent_loop.rs",
+      "start_line": 70,
+      "end_line": 74,
+      "quote_sha256": "e378f5b346d554f4ebb820a4df9c1c84e99003010c67d098a086c3b307f71965"
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/src/process/tests/agent_loop.rs",
+      "start_line": 125,
+      "end_line": 139,
+      "quote_sha256": "34bb145316a8c420662e4faebf2d68789ace2464f6f241858395bd5bf68876b1"
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/src/process/tests/deadline.rs",
+      "start_line": 28,
+      "end_line": 34,
+      "quote_sha256": "00529cc7b0750a0640afd4be1bcaee347a1db57cd28d68389c6a3a6875fa3ba9"
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/src/process/tests/mod.rs",
+      "start_line": 222,
+      "end_line": 249,
+      "quote_sha256": "4ae8aa8f9efefbe0fab6539bc3ff2da49afb13faee7340534d62ad7c837a52c1"
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/src/process/tests/big.rs",
+      "start_line": 1,
+      "end_line": 29,
+      "quote_sha256": "7fcb1f057df836af5203df963b715abf61cf1a279bff90500dcc3cc31bc2a734"
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/src/process/tests/big.rs",
+      "start_line": 13,
+      "end_line": 27,
+      "quote_sha256": "adac38146cec9bc9035a25e969259d3c866bb58d26d08ae17992f514904f2667"
+    }
+  ],
+  "result": "PASS",
+  "limits": [
+    "Documentary identity, exact field-diff and source-quote checks only; no semantic decision or runtime result is inferred."
+  ]
+}

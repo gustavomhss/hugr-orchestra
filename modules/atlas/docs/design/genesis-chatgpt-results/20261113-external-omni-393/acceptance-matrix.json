@@ -1,7 +1,7 @@
 {
   "schema": "omni-acceptance-matrix/v1",
   "state": "PROVISIONAL_NOT_FINAL_ACCEPTANCE",
-  "updated_at": "2026-11-13T17:13:43.420092+00:00",
+  "updated_at": "2026-11-13T17:45:32.649861+00:00",
   "normative_source": {
     "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
     "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
@@ -15,7 +15,7 @@
       "normative_source_line": 52,
       "normative_text": "| GO-A1 | The product is transferable ownership: purpose, behavior, constraints, decisions, impact and safe maintenance; claim count is not delivery. |",
       "local_status": "HOLD",
-      "observed": "393 source-specific L1 records exist; 39 current records accepted by both judges.",
+      "observed": "393 source-specific L1 records exist; 51 current records accepted by both judges.",
       "remaining_local": "Complete review, L2–L4 and independent maintenance consumption.",
       "evidence": [
         "manifest.json",
@@ -268,7 +268,7 @@
       "normative_source_line": 127,
       "normative_text": "| GO-I8 | A scope, generation or artifact is not declared semantically complete just because its graph, source hashes, required sections or tests are complete. | AC-01, AC-02, AC-03 |",
       "local_status": "HOLD",
-      "observed": "Mechanical completeness is separated from 39 of 393 current records accepted by both judges; no whole layer released.",
+      "observed": "Mechanical completeness is separated from 51 of 393 current records accepted by both judges; no whole layer released.",
       "remaining_local": "Final layer/package decisions from both persistent judges.",
       "evidence": [
         "work.md",
@@ -340,7 +340,7 @@
       "normative_source_line": 141,
       "normative_text": "| AC-04 | **Construction, mixed:** real paths ingest existing knowledge and construct missing understanding; labelled stale/conflicting/missing/malicious-source fixtures are handled without inventing intent, hiding conflict, granting authority or publishing unsupported required content. A canned final document cannot satisfy the producer test. |",
       "local_status": "HOLD",
-      "observed": "Three actual authors produced the 393 records; 39 current records passed both semantic judges. A separately approved six-record pilot was actually prepared, published and read through Atlas.",
+      "observed": "Three actual authors produced the 393 records; 51 current records passed both semantic judges. A separately approved six-record pilot was actually prepared, published and read through Atlas.",
       "remaining_local": "Remaining source/authority review and applicable native import/refusal evidence.",
       "evidence": [
         "provenance/production.json",
@@ -842,7 +842,7 @@
       "normative_text": "- **DOD-4:** scoped remote tests, package-local typechecks, generated checks where applicable and `bun run check:guards --base origin/dev` are reconciled; one final epic covers the integrated bundle. Never report unrun gates as green.",
       "local_status": "HOLD",
       "observed": "Pinned Atlas typecheck succeeded; compatible shared S4 CI controls are verified. A bounded guard API evaluation covered 132 owned additions with 78 rules, zero gates/errors and four documentary WARN. The exact full guard CLI was attempted and failed with no-repository before loading rules. Own-branch CI remains NOT_RUN.",
-      "remaining_local": "Complete the required guard gate from a genuine checkout with its real origin/dev history/base, and resolve any applicable own-change CI obligation through an authorized route. Current MCP exposes no workflow dispatch; PR/workflow/temporary-branch changes are not authorized by this task.",
+      "remaining_local": "Execute the complete required guard command with genuine origin/dev history/base, and resolve any applicable own-change CI obligation through an exposed authorized route. Current GitHub MCP has no workflow-dispatch operation. The user explicitly forbids PR creation, workflow changes and changes to other sessions' branches; no broader user prohibition on every possible temporary branch is inferred.",
       "evidence": [
         "verification/runtime-preparation.json",
         "verification/shared-runtime-controls.json",

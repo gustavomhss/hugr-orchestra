@@ -1,0 +1,198 @@
+{
+  "source": "records-06.json",
+  "source_sha256": "b691e8080963789de55dc0ca9bc04ce258aeb2aed4d556ce18cdb6664daf012e",
+  "source_bytes": 43320,
+  "replacement": "records-06.v2.json",
+  "replacement_sha256": "875f5ca4644377acdfa957bd48562d58fbdcd1020b73966f423fb4fc67204752",
+  "replacement_bytes": 43456,
+  "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "public_request": {
+    "path": "control/C06-author-corrections-v2.md",
+    "sha256": "37cda3816a2a450e73363e331f1d2e7b8c4413ad4ce3545c1eb7d2bfb6388b50",
+    "bytes": 2282
+  },
+  "author_role": "CORE original producer correction; no acceptance review performed.",
+  "changes": [
+    {
+      "finding": "C06 submitted pending writes versus deterministically active and queued worker states",
+      "record_index": 5,
+      "path": "native/omni/crates/hugr-omni/src/io/tests/stdin.rs",
+      "field": "behavior[2]",
+      "before": "Abandon settles active and queued writes, broken pipe gives Closed, and drop after a completed last write delivers EOF.",
+      "after": "The abandon test requires the two submitted pending writes and a later write to return Closed, without synchronizing that either submitted write has become active in the worker. Broken pipe gives Closed, and drop after a completed last write delivers EOF.",
+      "reason": "in_order polls its first future before its second; nesting it submits both writes before abandon. The test has no worker-progress acknowledgment or barrier before abandon, so both jobs may still be queued. It requires settlement of the two submitted pending writes and Closed for a later write, without establishing deterministic exercise of both current and queue paths. Broken-pipe and completed-last-write EOF descriptions remain unchanged.",
+      "supporting_evidence": [
+        {
+          "path": "native/omni/crates/hugr-omni/src/io/tests/stdin.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/io/tests/stdin.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "a3a848c7879156919807f7e4fcb53ea50043178a",
+          "source_sha256": "817c823bc60c1b3ca62a029cb75bd7c11485b84a696d8c0fca237575dde1baed",
+          "source_bytes": 5086,
+          "line_count": 156,
+          "start_line": 40,
+          "end_line": 70,
+          "quote": "/// Polls `a` then `b` each round, so what `a` queues comes first.\nasync fn in_order<A: Future, B: Future>(a: A, b: B) -> (A::Output, B::Output) {\n    let (mut a, mut b) = (pin!(a), pin!(b));\n    let (mut ra, mut rb) = (None, None);\n    poll_fn(|cx| {\n        if ra.is_none()\n            && let Poll::Ready(r) = a.as_mut().poll(cx)\n        {\n            ra = Some(r);\n        }\n        if rb.is_none()\n            && let Poll::Ready(r) = b.as_mut().poll(cx)\n        {\n            rb = Some(r);\n        }\n        match (ra.take(), rb.take()) {\n            (Some(x), Some(y)) => Poll::Ready((x, y)),\n            (x, y) => {\n                (ra, rb) = (x, y);\n                Poll::Pending\n            }\n        }\n    })\n    .await\n}\n\nfn closed(result: Result<(), Error>) -> String {\n    let err = result.unwrap_err();\n    assert_eq!(err.code(), ErrorCode::Closed, \"{err}\");\n    err.to_string()\n}"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/io/tests/stdin.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/io/tests/stdin.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "a3a848c7879156919807f7e4fcb53ea50043178a",
+          "source_sha256": "817c823bc60c1b3ca62a029cb75bd7c11485b84a696d8c0fca237575dde1baed",
+          "source_bytes": 5086,
+          "line_count": 156,
+          "start_line": 112,
+          "end_line": 132,
+          "quote": "/// The child exited (or its tree was stopped) while a write waits on a full pipe: every pending and later\n/// write settles with `Closed`, and `close` succeeds.\n#[test]\nfn abandon_settles_pending_writes() {\n    let rt = runtime();\n    let (stdin, read) = stdin(&rt);\n    let (big, more) = (vec![b'x'; 4 * MIB], vec![b'y'; 10]);\n    bounded(&rt, async {\n        let (r1, r2) = in_order(in_order(stdin.write(&big), stdin.write(&more)), async {\n            stdin.abandon();\n            stdin.abandon();\n        })\n        .await\n        .0;\n        assert!(closed(r1).contains(\"exited\"));\n        closed(r2);\n        closed(stdin.write(b\"z\").await);\n        stdin.close().await.unwrap();\n    });\n    drop(read);\n}"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/io/tests/stdin.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/io/tests/stdin.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "a3a848c7879156919807f7e4fcb53ea50043178a",
+          "source_sha256": "817c823bc60c1b3ca62a029cb75bd7c11485b84a696d8c0fca237575dde1baed",
+          "source_bytes": 5086,
+          "line_count": 156,
+          "start_line": 134,
+          "end_line": 156,
+          "quote": "/// A child that closed its stdin: the write is `Closed` (EPIPE), not a crash, and so is every later one.\n#[test]\nfn a_closed_pipe_is_closed() {\n    let rt = runtime();\n    let (stdin, read) = stdin(&rt);\n    drop(read);\n    bounded(&rt, async {\n        assert!(closed(stdin.write(b\"x\").await).contains(\"closed its end\"));\n        closed(stdin.write(b\"y\").await);\n        stdin.close().await.unwrap();\n    });\n}\n\n/// Dropping stdin closes the child's end once queued writes are done.\n#[test]\nfn dropping_stdin_closes_the_child_end() {\n    let rt = runtime();\n    let (stdin, read) = stdin(&rt);\n    let got = child_reads(read, Arc::default());\n    bounded(&rt, stdin.write(b\"last\")).unwrap();\n    drop(stdin);\n    assert_eq!(got.recv_timeout(LIMIT).unwrap(), b\"last\");\n}"
+        }
+      ],
+      "implementation_context_distinct_from_test_coverage": {
+        "statement": "Writer::abandon handles an optional current reply and drains queued jobs, but those implementation branches do not establish which worker states this unsynchronized source test reaches.",
+        "supporting_evidence": [
+          {
+            "path": "native/omni/crates/hugr-omni/src/io/stdin.rs",
+            "baseline_path": "baseline/native/omni/crates/hugr-omni/src/io/stdin.rs",
+            "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "git_blob_sha": "74359d986b6a739ed3f30a6478f22a94f14b9a42",
+            "source_sha256": "be121e58dc316408012c74d0d18ade8147859dd85f101770f21e9e2d8f2a7a31",
+            "source_bytes": 5636,
+            "line_count": 166,
+            "start_line": 75,
+            "end_line": 85,
+            "quote": "    pub(super) async fn write(&self, data: &[u8]) -> Result<(), Error> {\n        let (reply, done) = oneshot::channel();\n        {\n            let mut jobs = self.lock();\n            if let Some(why) = jobs.shut {\n                return Err(Error::stdin_closed(why));\n            }\n            jobs.queue.push_back(Job::Write(data.to_vec(), reply));\n        }\n        self.wake.notify_one();\n        done.await.unwrap_or_else(|_| Err(Error::stdin_closed(BY_EXIT)))"
+          },
+          {
+            "path": "native/omni/crates/hugr-omni/src/io/stdin.rs",
+            "baseline_path": "baseline/native/omni/crates/hugr-omni/src/io/stdin.rs",
+            "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "git_blob_sha": "74359d986b6a739ed3f30a6478f22a94f14b9a42",
+            "source_sha256": "be121e58dc316408012c74d0d18ade8147859dd85f101770f21e9e2d8f2a7a31",
+            "source_bytes": 5636,
+            "line_count": 166,
+            "start_line": 101,
+            "end_line": 110,
+            "quote": "    pub(super) fn abandon(&self) {\n        {\n            let mut jobs = self.lock();\n            jobs.gone = true;\n            if let Some(reply) = jobs.current.take() {\n                let _ = reply.send(Err(Error::stdin_closed(BY_EXIT)));\n            }\n            shut(&mut jobs, BY_EXIT);\n        }\n        self.wake.notify_all();"
+          },
+          {
+            "path": "native/omni/crates/hugr-omni/src/io/stdin.rs",
+            "baseline_path": "baseline/native/omni/crates/hugr-omni/src/io/stdin.rs",
+            "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "git_blob_sha": "74359d986b6a739ed3f30a6478f22a94f14b9a42",
+            "source_sha256": "be121e58dc316408012c74d0d18ade8147859dd85f101770f21e9e2d8f2a7a31",
+            "source_bytes": 5636,
+            "line_count": 166,
+            "start_line": 113,
+            "end_line": 151,
+            "quote": "    /// The thread: one job at a time, in order, until stdin is closed, broken or abandoned.\n    fn run(&self, mut sink: File) {\n        loop {\n            let (data, close) = {\n                let mut jobs = self.lock();\n                loop {\n                    if jobs.gone {\n                        return;\n                    }\n                    match jobs.queue.pop_front() {\n                        Some(Job::Write(data, reply)) => {\n                            jobs.current = Some(reply);\n                            break (data, None);\n                        }\n                        Some(Job::Close(reply)) => break (Vec::new(), Some(reply)),\n                        None => jobs = self.wake.wait(jobs).unwrap_or_else(PoisonError::into_inner),\n                    }\n                }\n            };\n            if let Some(reply) = close {\n                drop(sink);\n                shut(&mut self.lock(), BY_CLOSE);\n                let _ = reply.send(Ok(()));\n                return;\n            }\n            let wrote = sink.write_all(&data);\n            let mut jobs = self.lock();\n            let reply = jobs.current.take();\n            let (result, stop) = match wrote {\n                Ok(()) => (Ok(()), None),\n                Err(e) if e.kind() == ErrorKind::BrokenPipe => (Err(Error::stdin_closed(BY_CHILD)), Some(BY_CHILD)),\n                Err(e) => (Err(Error::write_failed(&e)), Some(BY_FAILURE)),\n            };\n            if let Some(reply) = reply {\n                let _ = reply.send(result);\n            }\n            if let Some(why) = stop {\n                shut(&mut jobs, why);\n                return;"
+          },
+          {
+            "path": "native/omni/crates/hugr-omni/src/io/stdin.rs",
+            "baseline_path": "baseline/native/omni/crates/hugr-omni/src/io/stdin.rs",
+            "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "git_blob_sha": "74359d986b6a739ed3f30a6478f22a94f14b9a42",
+            "source_sha256": "be121e58dc316408012c74d0d18ade8147859dd85f101770f21e9e2d8f2a7a31",
+            "source_bytes": 5636,
+            "line_count": 166,
+            "start_line": 157,
+            "end_line": 166,
+            "quote": "/// Nothing more is written: queued writes fail with `why`, queued closes succeed. The first reason stays.\nfn shut(jobs: &mut Jobs, why: &'static str) {\n    let why = *jobs.shut.get_or_insert(why);\n    for job in jobs.queue.drain(..) {\n        let _ = match job {\n            Job::Write(_, reply) => reply.send(Err(Error::stdin_closed(why))),\n            Job::Close(reply) => reply.send(Ok(())),\n        };\n    }\n}"
+          }
+        ]
+      }
+    }
+  ],
+  "additional_baseline_inputs_by_record": [
+    {
+      "record_index": 5,
+      "record_path": "native/omni/crates/hugr-omni/src/io/tests/stdin.rs",
+      "additional_inputs": [
+        {
+          "path": "native/omni/crates/hugr-omni/src/io/stdin.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/io/stdin.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "74359d986b6a739ed3f30a6478f22a94f14b9a42",
+          "source_sha256": "be121e58dc316408012c74d0d18ade8147859dd85f101770f21e9e2d8f2a7a31",
+          "source_bytes": 5636,
+          "line_count": 166,
+          "used_for": "Writer::write queues a job and awaits its reply (75–85); abandon handles current and queue (101–110, 157–166); the separate worker sets current and calls write_all (113–151). These support the implementation-versus-test-coverage distinction and the decision to leave implementation-only dependents unchanged."
+        }
+      ]
+    }
+  ],
+  "cross_reference_check": {
+    "active_record_files_checked": [
+      "records-01.v2.json",
+      "records-02.v3.json",
+      "records-03.v2.json",
+      "records-04.v2.json",
+      "records-05.json",
+      "records-06.json",
+      "records-07.json",
+      "records-08.json",
+      "records-09.v2.json",
+      "records-10.json",
+      "records-11.v2.json",
+      "records-12.json",
+      "records-13.json",
+      "records-14.json",
+      "records-15.json",
+      "records-16.json",
+      "records-17.json",
+      "records-18.json"
+    ],
+    "method": "Searched abandon and active/current/queued write wording in CORE outputs; inspected matching semantic fields in all active records and the relevant L2 paragraph.",
+    "related_claims_retained": [
+      {
+        "file": "records-05.json",
+        "record_index": 5,
+        "fields": [
+          "behavior[1]",
+          "failures_or_limits[0]"
+        ],
+        "reason": "These describe the implementation handling current and queued writes and its non-interruptible OS write; they do not claim the abandon source test synchronizes both states."
+      },
+      {
+        "file": "l2-notes.md",
+        "line": 44,
+        "reason": "The paragraph describes implementation behavior and cites io/stdin.rs; it does not claim deterministic active-plus-queued coverage from abandon_settles_pending_writes."
+      }
+    ],
+    "dependent_changes": [],
+    "l2_drafts_modified": [],
+    "l2_notes_sha256_preserved": "71b3dd5e454625a8cbe79141b1b8d91bce82ebf4a460f337b2555fbf2aaba6c8",
+    "l2_status": "Candidate synopsis remains unaccepted; no formal L2/L3/L4 authoring or acceptance review performed."
+  },
+  "courier_transmission_note": "The separately corrected lines.rs false/true transcription issue identified in the public request is not changed here.",
+  "original_preserved": true,
+  "unchanged_record_indices": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+  ],
+  "strict_change_scope": "Only record 5 behavior[2] changed. All twelve source paths, identities, existing evidence arrays and every other field are unchanged; decisive correction evidence is carried in this delta.",
+  "delivery_before_sha256": "f527ac9c991902ac0b39046f397c30a8aafd1586f4c01cc09632f176dcfcaa81",
+  "delivery_after_sha256": "1f5f0033454a5674264422d7314f5a12573c4a3c24c10e796f56933d9b73cd28",
+  "runtime_status": "NOT_RUN",
+  "acceptance": "Pending independent review; the original author does not self-approve."
+}

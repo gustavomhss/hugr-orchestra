@@ -1,0 +1,540 @@
+[
+  {
+    "path": "native/omni/crates/hugr-omni/src/process/run.rs",
+    "git_blob_sha": "c2725d150e579a0c902746a2835196cbbbe3ef59",
+    "source_sha256": "7e6ea694a726ae0c56af9a76ec38b2e8008770c32ba4caf1f6cd6fd370f4b53a",
+    "source_bytes": 16767,
+    "line_count": 393,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Drives run through root execution, descendant drain, tree stop and output settlement.",
+    "behavior": [
+      "Forces stdin closed unless input exists; feed ignores Closed when the child exits or stops reading early.",
+      "A root exit opens one grace window; stopping descendants gets only remaining grace, then output is awaited for a bounded drain even if the supervisor fails.",
+      "Absolute deadline starts before spawn; finishing at/after it returns Timeout despite late timer delivery. Aborted rejects with partial result; output/input break overrides Normal/Timeout, and failed stop returns Io with result only when root status is known."
+    ],
+    "contracts": [
+      "run never reports completion before its stop attempt and output settle; nonzero ordinary exit remains a successful Result."
+    ],
+    "dependencies": [
+      "process/deadline enforces actual timeout; io/collect supplies ordered loss/limit results."
+    ],
+    "failures_or_limits": [
+      "Source cannot establish completion under all OS failures; Unstopped explicitly preserves inability to confirm cleanup."
+    ],
+    "evidence": [
+      {
+        "start_line": 175,
+        "end_line": 197,
+        "quote": "    /// The result of a run whose tree is gone, decided now: the root's status with the run's reason and the complete\n    /// output, or the error with what was collected as its result. A run that finishes at or after its deadline `due`\n    /// timed out (§6), however late its timer's event came; a cause that came first stays.\n    fn settle(self, due: Option<Instant>, mut exit: Exit, output: Collected) -> Result<RunOutput, Error> {\n        let outcome = match self {\n            Outcome::Normal if due.is_some_and(|due| Instant::now() >= due) => Outcome::Timeout,\n            outcome => outcome,\n        };\n        match outcome {\n            Outcome::Timeout => exit.reason = Reason::Timeout,\n            Outcome::Aborted => exit.reason = Reason::Aborted,\n            Outcome::Normal | Outcome::Broken(_) => {}\n        }\n        let result = RunOutput {\n            exit,\n            stdout: output.stdout,\n            stderr: output.stderr,\n        };\n        match outcome {\n            Outcome::Normal | Outcome::Timeout => Ok(result),\n            Outcome::Aborted => Err(Error::run_cancelled().with_result(result)),\n            Outcome::Broken(error) => Err(error.with_result(result)),\n        }"
+      },
+      {
+        "start_line": 302,
+        "end_line": 330,
+        "quote": "    /// Starts the one stop of the tree, unless it is under way or done. `cause` counts only while the root runs. Its\n    /// grace: the whole of it while the root runs, what is left of the window once it exited (none when it is over).\n    fn stop(&mut self, cause: Reason) {\n        let grace = match &self.phase {\n            Phase::Running => self.grace,\n            Phase::Draining { since, .. } => self.grace.saturating_sub(since.elapsed()),\n            Phase::Stopping(_) | Phase::Stopped(_) | Phase::Unstopped(_) => return,\n        };\n        self.phase = Phase::Stopping(Box::pin(self.inner.stop_with(cause, grace)));\n    }\n\n    /// Once the stop is over and the output too: the run's result (`Outcome::settle`); or, if the stop failed, that\n    /// failure, with what was collected as its result whenever the root's `Exit` is known.\n    fn finish(&mut self) -> Result<Option<RunOutput>, Error> {\n        let Some(output) = self.output.take() else {\n            return Ok(None);\n        };\n        match std::mem::replace(&mut self.phase, Phase::Running) {\n            Phase::Stopped(exit) => {\n                let outcome = std::mem::replace(&mut self.outcome, Outcome::Normal);\n                outcome.settle(self.due, exit, output).map(Some)\n            }\n            Phase::Unstopped(error) => Err(match self.exit.take() {\n                Some(exit) => error.with_result(RunOutput {\n                    exit,\n                    stdout: output.stdout,\n                    stderr: output.stderr,\n                }),\n                None => error,"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/process/tests/agent_loop.rs",
+    "git_blob_sha": "16c973ae3d9e7582f4e925fc11077d54dd1afe5b",
+    "source_sha256": "e69c3f6b41e0aaac8c3f7c49000db10f6e52de2e02d0b19a82cb5fe35e42cc4e",
+    "source_bytes": 7745,
+    "line_count": 197,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Runs the QA-E mixed-command lifecycle stress workload through public APIs.",
+    "behavior": [
+      "Defines 200 commands in batches of 20 across 14 deterministic kinds: success, nonzero exit, lines, stdin, pipe holders, resisting trees, timeout/cancel, race, drop, pre-cancel and output limit.",
+      "Each command must settle within 5 s; the shared log must satisfy pids.len() >= started, an aggregate lower bound on complete PID entries. That count does not identify every expected root individually; assert_dead_logged subsequently checks the PIDs actually recorded.",
+      "Cancellation race allows only ordinary success or Aborted with result, while pre-cancel must have no result."
+    ],
+    "contracts": [
+      "K1/K2 in comments are intended test acceptance conditions, not observed measurements here."
+    ],
+    "dependencies": [
+      "omni-fixture logs actual process starts; process/tests helpers check OS liveness."
+    ],
+    "failures_or_limits": [
+      "Arbitrary timings use a fixed LCG spread, not random exhaustive scheduling."
+    ],
+    "evidence": [
+      {
+        "start_line": 15,
+        "end_line": 23,
+        "quote": "const COMMANDS: u64 = 200;\nconst AT_ONCE: usize = 20;\n/// The kinds of command below.\nconst KINDS: u64 = 14;\n/// The kind that is cancelled before it starts, so it logs nothing.\nconst NEVER_STARTS: u64 = 11;\nconst GRACE: Duration = Duration::from_millis(100);\n/// K2: no command takes longer (each is meant to take at most ~0.5 s).\nconst BOUND: Duration = Duration::from_secs(5);"
+      },
+      {
+        "start_line": 48,
+        "end_line": 65,
+        "quote": "    let pids = pids_in(&log);\n    let started = (0..COMMANDS).filter(|i| i % KINDS != NEVER_STARTS).count();\n    assert!(\n        pids.len() >= started,\n        \"only {} pids logged for {started} commands\",\n        pids.len()\n    );\n    assert_dead_logged(&pids, Duration::from_secs(2), &log);\n    let _ = std::fs::remove_file(&log);\n}\n\n/// K2: command `i` returns within `BOUND`.\nasync fn bounded(i: u64, fixture: PathBuf, log: PathBuf) {\n    let done = tokio::time::timeout(BOUND, command(i, &fixture, &log)).await;\n    assert!(\n        done.is_ok(),\n        \"K2: command {i} (kind {}) did not return within {BOUND:?}\",\n        i % KINDS"
+      },
+      {
+        "start_line": 142,
+        "end_line": 146,
+        "quote": "            // The cancellation races the end of a quick run: either outcome is right, nothing else is.\n            let (ran, ()) = tokio::join!(cmd.args([\"out=x\", \"exit=0\"]).run(), cancel_at(at / 20));\n            match ran {\n                Ok(out) => assert!(out.exit.success(), \"{i}: {out:?}\"),\n                Err(e) => assert!(e.code() == ErrorCode::Aborted && e.result().is_some(), \"{i}: {e}\"),"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/process/tests/big.rs",
+    "git_blob_sha": "39e8c7e87e4d1ca3ef5281e5a1202c83628d0726",
+    "source_sha256": "107aa0217b70fcdeccd282ddc223a12bf824acc0af08ce01461414ccd05e5eaa",
+    "source_bytes": 1074,
+    "line_count": 29,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Regresses large Spawn environment transport with attached pipe descriptors.",
+    "behavior": [
+      "Sets OMNI_BIG to 64 KiB of x; the source comment compares that size with an 8 KiB socket buffer and Linux's 128 KiB limit for one environment string. This test does not measure/configure socket capacity or establish that EMSGSIZE or its fallback branch occurred.",
+      "Configures a 30 s command timeout and requires successful exit, text.starts_with(\"OMNI_BIG=\\\"xxx\"), and text.trim_end().len() == big.len() + 11; the assertions do not compare the complete returned value or validate full framing."
+    ],
+    "contracts": [
+      "Targets macOS EMSGSIZE fallback without suppressing descriptor transfer."
+    ],
+    "dependencies": [
+      "client/unix::send handles first-byte SCM_RIGHTS retry; omni-fixture getenv emits the value."
+    ],
+    "failures_or_limits": [
+      "One value size is tested; this is not a maximum environment-size guarantee."
+    ],
+    "evidence": [
+      {
+        "start_line": 13,
+        "end_line": 27,
+        "quote": "    // 64 KiB: far above the 8 KiB socket buffer, under Linux's 128 KiB limit for one environment string.\n    let big = \"x\".repeat(64 * 1024);\n    block(async {\n        let mut cmd = Command::new(&fixture);\n        cmd.arg(\"getenv=OMNI_BIG\")\n            .env(\"OMNI_BIG\", &big)\n            .timeout(Duration::from_secs(30));\n        let out = cmd.run().await.expect(\"run\");\n        assert!(out.exit.success(), \"{:?}\", out.exit);\n        let text = out.stdout.to_string();\n        assert!(\n            text.starts_with(\"OMNI_BIG=\\\"xxx\") && text.trim_end().len() == big.len() + 11,\n            \"{}\",\n            &text[..text.len().min(80)]\n        );"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/process/tests/deadline.rs",
+    "git_blob_sha": "8dda1006bcc229c464237a4445baa326ec54d69d",
+    "source_sha256": "7865f706f5e01192498e651c3be2bff07874f46d66bfab4b5b652245d3323891",
+    "source_bytes": 12605,
+    "line_count": 306,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Exercises deadline behavior beyond root exit and Rust future lifetime guarantees.",
+    "behavior": [
+      "Cancellation after root exit must kill a pipe holder while preserving root code; Unix pipe-free lingering members still time out.",
+      "Inspects Arc strong/weak counts to require watcher release after natural end, stop, drop or disappearing descendants.",
+      "Single-thread caller runtime must make progress alongside run; resisting output holders receive one grace only; 200 zero-timeout runs must all report Timeout; dropping a pending run kills its tree."
+    ],
+    "contracts": [
+      "Liveness comes from OS checks and all waits have failure bounds; Send is checked for run futures."
+    ],
+    "dependencies": [
+      "process/deadline, run and child Drop are exercised with real fixture/supervisor binaries."
+    ],
+    "failures_or_limits": [
+      "Reference counts check current implementation lifecycle; tests have not executed in this session."
+    ],
+    "evidence": [
+      {
+        "start_line": 99,
+        "end_line": 106,
+        "quote": "    let member = logged(&log, 1)[0];\n    let exit = block(child.wait()).expect(\"wait\");\n    assert_eq!((exit.code, exit.reason), (Some(0), Reason::Exit), \"{exit:?}\");\n    let left = block(child.processes()).expect(\"processes\");\n    assert_eq!(left.iter().map(|p| p.pid).collect::<Vec<_>>(), [member], \"{left:?}\");\n\n    assert_dead(&[member], timeout + Duration::from_secs(2));\n    assert_eq!(block(child.wait()).expect(\"wait\"), exit);"
+      },
+      {
+        "start_line": 128,
+        "end_line": 140,
+        "quote": "        // Held by the child and by us, and weakly by the armed work: it lingers.\n        eventually(&format!(\"{end}: the armed work lingers\"), || {\n            Arc::strong_count(&inner) == 2 && Arc::weak_count(&inner) == 1\n        });\n        match end {\n            \"stop\" => drop(block(child.stop(None)).expect(\"stop\")),\n            \"drop\" => drop(child),\n            _ => {}\n        }\n        eventually(&format!(\"{end}: the armed work let go\"), || {\n            Arc::weak_count(&inner) == 0\n        });\n        assert_dead(&[member], Duration::from_secs(2));"
+      },
+      {
+        "start_line": 237,
+        "end_line": 240,
+        "quote": "    assert_eq!(out.stdout, Data::Text(\"ROOT\\n\".into()));\n    assert!(took >= grace, \"the window was cut short: {took:?}\");\n    assert!(took < grace * 2, \"stopped after a second grace: {took:?}\");\n    assert_dead(&logged(&log, 2), Duration::ZERO);"
+      },
+      {
+        "start_line": 269,
+        "end_line": 273,
+        "quote": "                let exit = ran.expect(\"run\").exit;\n                assert!(\n                    exit.reason == Reason::Timeout && !exit.success(),\n                    \"round {round} run {i}: {exit:?}\"\n                );"
+      },
+      {
+        "start_line": 279,
+        "end_line": 297,
+        "quote": "/// C-RS-01 (drop kills): dropping a `run()` future that has not finished (a `select!`, an aborted task) kills its\n/// whole tree at once, members that ignore the graceful request included.\n#[test]\nfn dropping_a_run_future_kills_its_tree() {\n    let log = log_path(\"w09-run-drop\");\n    let mut cmd = fixture();\n    cmd.args([&pidlog(&log), \"ignore-term\", \"tree=2:resist\", \"hang\"]);\n    let pids = block(async {\n        let mut run = pin!(cmd.run());\n        loop {\n            let polled = tokio::time::timeout(Duration::from_millis(10), run.as_mut()).await;\n            assert!(polled.is_err(), \"the run ended: {polled:?}\");\n            if pids_in(&log).len() == 3 {\n                break logged(&log, 3);\n            }\n        }\n    });\n    assert_dead(&pids, Duration::from_secs(1));\n    let _ = std::fs::remove_file(&log);"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/process/tests/exit.rs",
+    "git_blob_sha": "07ffdc1506af720570fb4464ad12e4043c0adbe2",
+    "source_sha256": "d3016570f20119ddd0d1c47f54f912d34c2b94076738f252342b4278d936a75b",
+    "source_bytes": 2972,
+    "line_count": 71,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Pins pure Exit conversion, OS signal naming and stop-grace rounding.",
+    "behavior": [
+      "Table covers normal/nonzero/full-u32 exit codes, signal status and Killed/Timeout/Aborted precedence, preserving native code/signal.",
+      "success is true only for ordinary Exit with code zero; signal-name cases distinguish Linux and BSD/macOS numbering plus numeric fallback.",
+      "Grace rounds any positive fractional millisecond upward and rejects values beyond u32 milliseconds."
+    ],
+    "contracts": [
+      "These are pure semantic assertions, independent of a running supervisor."
+    ],
+    "dependencies": [
+      "process/exit.rs and process/life::grace are the implementation under test."
+    ],
+    "failures_or_limits": [
+      "MemoryExceeded is supported by implementation but absent from this older precedence table."
+    ],
+    "evidence": [
+      {
+        "start_line": 13,
+        "end_line": 31,
+        "quote": "    let cases = [\n        // The root's exit was observed first: its own status.\n        (Code(0), None, Some(0), None, Reason::Exit),\n        (Code(42), None, Some(42), None, Reason::Exit),\n        (Code(3_221_225_786), None, Some(3_221_225_786), None, Reason::Exit),\n        (Signal(15), None, None, Some(\"SIGTERM\"), Reason::Signal),\n        // The library acted first: its cause, with the root's native status kept.\n        (Code(0), Some(Killed), Some(0), None, Killed),\n        (Signal(9), Some(Timeout), None, Some(\"SIGKILL\"), Timeout),\n        (Code(u32::MAX), Some(Aborted), Some(u32::MAX), None, Aborted),\n        // `Exit` and `Signal` are not library actions.\n        (Code(7), Some(Reason::Exit), Some(7), None, Reason::Exit),\n        (Signal(2), Some(Reason::Signal), None, Some(\"SIGINT\"), Reason::Signal),\n    ];\n    for (root, cause, code, signal, reason) in cases {\n        let exit = of(root, cause);\n        let got = (exit.code, exit.signal.as_deref(), exit.reason);\n        assert_eq!(got, (code, signal, reason), \"{root:?} with {cause:?}\");\n        assert_eq!(exit.success(), reason == Reason::Exit && code == Some(0), \"{exit:?}\");"
+      },
+      {
+        "start_line": 60,
+        "end_line": 69,
+        "quote": "fn grace_is_whole_milliseconds_rounded_up_and_bounded() {\n    let ms = Duration::from_millis;\n    assert_eq!(grace(Duration::ZERO).ok(), Some(ms(0)));\n    assert_eq!(grace(Duration::from_micros(1500)).ok(), Some(ms(2)));\n    assert_eq!(grace(Duration::from_nanos(1)).ok(), Some(ms(1)));\n    assert_eq!(grace(ms(u64::from(u32::MAX))).ok(), Some(ms(u64::from(u32::MAX))));\n    for over in [ms(u64::from(u32::MAX)) + Duration::from_nanos(1), Duration::MAX] {\n        let e = grace(over).expect_err(\"over the limit\");\n        assert_eq!(e.code(), ErrorCode::InvalidArgument, \"{e}\");\n        assert!(e.to_string().contains(\"graceMs\"), \"{e}\");"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/process/tests/host.rs",
+    "git_blob_sha": "a713a2c4bb3c845d9d060c27882375d225b3e84d",
+    "source_sha256": "6b43698fced7d98a2ef23634005c04f835a23d28d429506bd7e75128a4214d0a",
+    "source_bytes": 7688,
+    "line_count": 233,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Tests supervisor cleanup when the Rust host ends through several distinct paths.",
+    "behavior": [
+      "Role spawns and intentionally forgets a resisting three-process tree so host destructors cannot provide cleanup.",
+      "Parent verifies all PIDs alive, releases a stdin gate, then checks exact host exit status for return, process::exit, libtest panic, hard kill, Unix group SIGINT and SIGTERM.",
+      "All recorded tree members must die within 300 ms grace plus reaction allowance; Role Drop kills/reaps a failed helper."
+    ],
+    "contracts": [
+      "The host installs no custom signal handler in these roles."
+    ],
+    "dependencies": [
+      "Real supervisor and omni-fixture provide host-death behavior; process/tests OS observers check liveness."
+    ],
+    "failures_or_limits": [
+      "Panic is observed through a libtest subprocess exiting 101, not an arbitrary application panic runtime."
+    ],
+    "evidence": [
+      {
+        "start_line": 30,
+        "end_line": 53,
+        "quote": "/// The host of the tests below: spawns a resisting 3-process tree and leaks the child, then holds still until the\n/// test lets it go (a line on stdin, or its end), and only then ends as `ROLE` says. A no-op in a normal run.\n#[test]\nfn host_role() {\n    let (Ok(mode), Some(log)) = (std::env::var(ROLE), std::env::var_os(LOG)) else {\n        return;\n    };\n    use_supervisor();\n    let child = Command::new(binary(\"omni-fixture\"))\n        .args([pidlog(Path::new(&log)).as_str(), \"ignore-term\", \"tree=2:resist\", \"hang\"])\n        .grace(GRACE)\n        .spawn()\n        .expect(\"spawn\");\n    logged(Path::new(&log), 3);\n    std::mem::forget(child);\n    let _ = std::io::stdin().read_line(&mut String::new());\n    match mode.as_str() {\n        \"return\" => {}\n        \"exit\" => std::process::exit(EXIT_CODE),\n        \"panic\" => panic!(\"the host panics with a live child\"),\n        _ => loop {\n            std::thread::park();\n        },\n    }"
+      },
+      {
+        "start_line": 97,
+        "end_line": 122,
+        "quote": "    let status = exited(&mut host.0);\n    match end {\n        End::Itself(code) => assert_eq!(status.code(), Some(code), \"{mode}: {status:?}\"),\n        End::Killed => {\n            // std kills with SIGKILL on Unix and `TerminateProcess(_, 1)` on Windows.\n            #[cfg(unix)]\n            assert_eq!(\n                std::os::unix::process::ExitStatusExt::signal(&status),\n                Some(9),\n                \"{mode}: {status:?}\"\n            );\n            #[cfg(windows)]\n            assert_eq!(status.code(), Some(1), \"{mode}: {status:?}\");\n        }\n        #[cfg(unix)]\n        End::Signal { num, .. } => {\n            let signal = std::os::unix::process::ExitStatusExt::signal(&status);\n            assert_eq!(\n                signal,\n                Some(num),\n                \"{mode}: the host did not die of the signal: {status:?}\"\n            );\n        }\n    }\n    assert_dead(&tree, GRACE + Duration::from_secs(3));\n    let _ = std::fs::remove_file(&log);"
+      },
+      {
+        "start_line": 192,
+        "end_line": 200,
+        "quote": "#[test]\nfn the_host_panics() {\n    // libtest reports the uncaught panic of the test and exits 101.\n    host_ends(\"panic\", \"panic\", End::Itself(101));\n}\n\n#[test]\nfn the_host_is_killed_hard() {\n    host_ends(\"kill\", \"wait\", End::Killed);"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/process/tests/host/lost.rs",
+    "git_blob_sha": "afae67a77b2a8e9577844d024336cf81f90ffdf7",
+    "source_sha256": "924898444c99c2b8f7c7e735e50d0d6c12a8abf6be6d25d012aa467eccf7d904",
+    "source_bytes": 7058,
+    "line_count": 174,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Tests run partial-result preservation and watcher release after Unix supervisor loss.",
+    "behavior": [
+      "Isolated run lets an escaped output holder remain after root exit, confirms root report through a later probe, then kills its own supervisor.",
+      "run must return Io within the drain/window allowance with known root code/reason and ROOT output preserved.",
+      "A separate lingering role kills supervisor and requires its weak watcher reference to disappear without firing cancellation."
+    ],
+    "contracts": [
+      "Escaped holder and pipe-free member are explicitly killed by the test because Unix supervisor death can leave trees unprotected."
+    ],
+    "dependencies": [
+      "host.rs provides isolated role harness; process/run and deadline handle supervisor loss."
+    ],
+    "failures_or_limits": [
+      "This source exposes a Unix containment limit and cleans it up; it does not prove supervisor crash kills descendants."
+    ],
+    "evidence": [
+      {
+        "start_line": 43,
+        "end_line": 65,
+        "quote": "        // A round trip through the same supervisor after that report: its channel is ordered, so once the reply\n        // is in, the client has recorded the root's exit.\n        let probe = Command::new(&fixture).arg(\"exit=0\").spawn().expect(\"spawn the probe\");\n        probe.wait().await.expect(\"the probe's exit\");\n        send(\"KILL\", &own_supervisor().to_string());\n        pids[1]\n    };\n    let started = Instant::now();\n    let (ran, escapee) = super::super::block(async { tokio::join!(cmd.run(), kill) });\n    let took = started.elapsed();\n    // Out of the tree by design, it would live on for a minute: end it here.\n    send(\"KILL\", &escapee.to_string());\n    let e = ran.expect_err(\"a run whose supervisor died\");\n    assert_eq!(e.code(), ErrorCode::Io, \"{e}\");\n    let result = e.result().expect(\"the run's result: the root's exit was known\");\n    assert_eq!(\n        (result.exit.code, result.exit.reason),\n        (Some(0), Reason::Exit),\n        \"{result:?}\"\n    );\n    let stdout = result.stdout.to_string();\n    assert!(stdout.lines().any(|line| line == \"ROOT\"), \"{stdout:?}\");\n    assert!(took < WINDOW + Duration::from_secs(2), \"the run did not end: {took:?}\");"
+      },
+      {
+        "start_line": 89,
+        "end_line": 99,
+        "quote": "    // Held by the child and by us, and weakly by the armed work: it lingers.\n    eventually(\"the armed work lingers\", || {\n        Arc::strong_count(&inner) == 2 && Arc::weak_count(&inner) == 1\n    });\n    send(\"KILL\", &own_supervisor().to_string());\n    // A dead supervisor leaves Unix trees running, unprotected (GUARANTEES): end the member here.\n    send(\"KILL\", &member.to_string());\n    eventually(\"the armed work let go once the supervisor was lost\", || {\n        Arc::weak_count(&inner) == 0\n    });\n    assert!(!token.is_cancelled());"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/process/tests/memory.rs",
+    "git_blob_sha": "e89d7c7ad83a34819a794429108c231ad72ba93c",
+    "source_sha256": "f51f58d29e0b28236b0ba91bf717d10d8d2386757367937cc162b52270783e97",
+    "source_bytes": 2434,
+    "line_count": 61,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Checks memory cap semantics through real public run/spawn operations.",
+    "behavior": [
+      "A 256 MiB root against 64 MiB cap must return MemoryExceeded, not success.",
+      "A descendant-only 256 MiB allocation must give root MemoryExceeded and eventually empty inventory.",
+      "An 8 MiB workload under a 1 GiB cap must survive at least one second and exit normally."
+    ],
+    "contracts": [
+      "Root wait can precede completion of tree stop, so descendant case polls inventory afterward."
+    ],
+    "dependencies": [
+      "process/memory.rs uses sysinfo sampling; omni-fixture allocates controlled memory."
+    ],
+    "failures_or_limits": [
+      "Does not cover short spikes, failed inventories, escaped descendants or exact RSS thresholds. Tests remain NOT_RUN."
+    ],
+    "evidence": [
+      {
+        "start_line": 18,
+        "end_line": 42,
+        "quote": "/// The root itself holds 256 MiB against a cap of 64 MiB: `run()` ends long before its timeout, and says why.\n#[test]\nfn a_root_over_the_cap_is_killed_with_memory_exceeded() {\n    let mut cmd = fixture();\n    cmd.args([\"alloc=256\", \"hang\"]).max_rss_bytes(64 * MIB).timeout(LIMIT);\n    let out = block(cmd.run()).expect(\"run\");\n    assert_eq!(out.exit.reason, Reason::MemoryExceeded, \"{out:?}\");\n    assert!(!out.exit.success());\n}\n\n/// Only a descendant holds the memory (the root stays tiny): the cap is on the whole tree. Nothing of the tree is\n/// left.\n#[test]\nfn a_descendant_over_the_cap_kills_the_whole_tree() {\n    let mut cmd = fixture();\n    cmd.args([\"alloc-child=256\", \"hang\"]).max_rss_bytes(64 * MIB);\n    let child = cmd.spawn().expect(\"spawn\");\n    let exit = block(child.wait()).expect(\"wait\");\n    assert_eq!(exit.reason, Reason::MemoryExceeded, \"{exit:?}\");\n    // `wait()` resolves at the root's exit; the stop that confirms the rest of the tree gone may still be finishing.\n    let deadline = std::time::Instant::now() + LIMIT;\n    while !block(child.processes()).expect(\"processes\").is_empty() {\n        assert!(std::time::Instant::now() < deadline, \"the tree is still alive\");\n        std::thread::sleep(Duration::from_millis(20));\n    }"
+      },
+      {
+        "start_line": 48,
+        "end_line": 60,
+        "quote": "fn a_tree_under_the_cap_exits_normally() {\n    let mut cmd = fixture();\n    cmd.args([\"alloc=8\", \"sleep=1000\", \"exit=0\"])\n        .max_rss_bytes(1024 * MIB)\n        .timeout(LIMIT);\n    let started = std::time::Instant::now();\n    let out = block(cmd.run()).expect(\"run\");\n    assert!(\n        started.elapsed() >= Duration::from_millis(1000),\n        \"it did not live through the samples\"\n    );\n    assert_eq!(out.exit.reason, Reason::Exit, \"{out:?}\");\n    assert!(out.exit.success());"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/process/tests/mod.rs",
+    "git_blob_sha": "056fe46a611b9d67ebf7ff5093e05e5ae8838b71",
+    "source_sha256": "3856df2bcb4affe3fba3dab40648dbfd8b96a82d6eb1b4250ff86c8c06929192",
+    "source_bytes": 11105,
+    "line_count": 281,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Supplies real-supervisor fixture startup, bounded waits and OS liveness observers for process tests.",
+    "behavior": [
+      "Requires workspace-built binaries, stages supervisor atomically beside test executable when no override exists, and warms binaries to exclude initial macOS validation delay.",
+      "Started owns Life and unread marker-sized stdio, kills on drop and tracks PID logs; caller futures run on a separate bounded runtime.",
+      "Linux /proc and macOS ps reject observation failures; Windows tasklist identifies fixture names and optional command-line log matching mitigates fast PID reuse."
+    ],
+    "contracts": [
+      "Liveness must be checked externally rather than trusting library process inventory."
+    ],
+    "dependencies": [
+      "omni-fixture and hugr-omni-supervisor binaries are required before tests."
+    ],
+    "failures_or_limits": [
+      "Windows command_line failures return empty text, which may remove an otherwise live PID from the log-filtered set; source does not turn that failure into explicit unknown."
+    ],
+    "evidence": [
+      {
+        "start_line": 53,
+        "end_line": 84,
+        "quote": "/// Once per process: puts this target dir's supervisor next to the test binary, where the library looks for one\n/// (unless `HUGR_OMNI_SUPERVISOR` names one), and runs it and the fixture once. Setting the variable instead would\n/// need `unsafe`, which `process` does not allow.\n/// - The copy is made only when the build changed, under a private name, then renamed: no run ever executes a\n///   half-written file.\n/// - Warm-up, not synchronization: macOS validates a new executable on its first exec (15 s measured for a fresh\n///   copy of the supervisor), which must not eat into the client's bounds.\nfn use_supervisor() {\n    static PLACED: OnceLock<()> = OnceLock::new();\n    PLACED.get_or_init(|| {\n        let mut warm = vec![binary(\"omni-fixture\")];\n        if std::env::var_os(\"HUGR_OMNI_SUPERVISOR\").is_none() {\n            let built = binary(\"hugr-omni-supervisor\");\n            let file = built.file_name().expect(\"file name\").to_owned();\n            let placed = std::env::current_exe().expect(\"current_exe\").with_file_name(&file);\n            let same = std::fs::read(&placed).ok() == Some(std::fs::read(&built).expect(\"read the supervisor\"));\n            if !same {\n                let staged = placed.with_extension(format!(\"{}.part\", std::process::id()));\n                std::fs::copy(&built, &staged).unwrap_or_else(|e| panic!(\"copy to {}: {e}\", staged.display()));\n                if let Err(e) = std::fs::rename(&staged, &placed) {\n                    let _ = std::fs::remove_file(&staged);\n                    // Windows refuses to replace a binary that another run is executing; that copy is this build.\n                    assert!(placed.is_file(), \"rename to {}: {e}\", placed.display());\n                }\n            }\n            warm.push(placed);\n        }\n        for exe in warm {\n            // Without arguments the fixture exits 0 and the supervisor refuses to run (exit 2): both have run.\n            let ran = Command::new(&exe).stdin(std::process::Stdio::null()).output();\n            assert!(ran.is_ok(), \"{} does not run: {ran:?}\", exe.display());\n        }"
+      },
+      {
+        "start_line": 228,
+        "end_line": 248,
+        "quote": "fn assert_dead_of(pids: &[u32], within: Duration, log: Option<&Path>) {\n    let deadline = Instant::now() + within;\n    loop {\n        let mut living: Vec<u32> = pids.iter().copied().filter(|&p| alive(p)).collect();\n        if let Some(log) = log.filter(|_| !living.is_empty() && std::env::consts::OS == \"windows\") {\n            let name = log\n                .file_name()\n                .map(|n| n.to_string_lossy().into_owned())\n                .unwrap_or_default();\n            living.retain(|&p| command_line(p).contains(&name));\n        }\n        if living.is_empty() {\n            return;\n        }\n        assert!(\n            Instant::now() < deadline,\n            \"alive per the OS: {living:?} (of {pids:?}){}\",\n            describe(&living)\n        );\n        std::thread::sleep(Duration::from_millis(10));\n    }"
+      },
+      {
+        "start_line": 273,
+        "end_line": 280,
+        "quote": "/// Windows: the command line of `pid` now, empty when no process has it.\nfn command_line(pid: u32) -> String {\n    let query = format!(\"(Get-CimInstance Win32_Process -Filter 'ProcessId={pid}').CommandLine\");\n    Command::new(\"powershell\")\n        .args([\"-NoProfile\", \"-Command\", &query])\n        .output()\n        .map(|out| String::from_utf8_lossy(&out.stdout).into_owned())\n        .unwrap_or_default()"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/process/tests/scope.rs",
+    "git_blob_sha": "f0b3f41cd4d155911de2ba7b222f456366b7f1b8",
+    "source_sha256": "3b3fd20108d647c68cfd8885ed1d282b7196f49f465b0506cd3e7df315f5cdf2",
+    "source_bytes": 2359,
+    "line_count": 67,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Verifies Child Drop kills resisting trees even after caller-runtime teardown.",
+    "behavior": [
+      "Uses fixture PID markers to establish a root plus two resistant descendants.",
+      "Drops PipeChild on a separate thread within one second and requires all PIDs dead within another second.",
+      "Repeats after destroying the caller Tokio runtime, demonstrating intended independence of library background work."
+    ],
+    "contracts": [
+      "Timeout or panic of Drop fails through the completion channel."
+    ],
+    "dependencies": [
+      "Child Drop and dedicated client runtime are exercised with real supervisor and OS checks."
+    ],
+    "failures_or_limits": [
+      "This asserts a bounded observed outcome when run; no runtime evidence was produced here."
+    ],
+    "evidence": [
+      {
+        "start_line": 32,
+        "end_line": 49,
+        "quote": "/// Drops `child` on a thread of its own, which must finish within `bound`: a drop that blocks or panics fails.\nfn drop_within(child: PipeChild, bound: Duration) {\n    let (done, dropped) = mpsc::channel();\n    std::thread::spawn(move || {\n        drop(child);\n        let _ = done.send(());\n    });\n    dropped\n        .recv_timeout(bound)\n        .expect(\"dropping the child blocked or panicked\");\n}\n\n#[test]\nfn dropping_a_child_kills_its_whole_tree() {\n    let child = resisting();\n    let pids = block(tree_pids(&child));\n    drop_within(child, Duration::from_secs(1));\n    assert_dead(&pids, Duration::from_secs(1));"
+      },
+      {
+        "start_line": 53,
+        "end_line": 66,
+        "quote": "fn dropping_a_child_after_the_callers_runtime_shut_down_kills_its_whole_tree() {\n    let caller = tokio::runtime::Builder::new_multi_thread()\n        .worker_threads(1)\n        .enable_all()\n        .build()\n        .expect(\"caller runtime\");\n    let (child, pids) = caller.block_on(async {\n        let child = resisting();\n        let pids = tokio::time::timeout(LIMIT, tree_pids(&child)).await.expect(\"timed out\");\n        (child, pids)\n    });\n    drop(caller);\n    drop_within(child, Duration::from_secs(1));\n    assert_dead(&pids, Duration::from_secs(1));"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/process/tests/tree.rs",
+    "git_blob_sha": "b1f1c44f0f453012c59fceca7ced6c73dc96229c",
+    "source_sha256": "ecf63f783a1be1511a106ea8214b25651c12080c286ab512bb9a9f77c0a3b35a",
+    "source_bytes": 7471,
+    "line_count": 192,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Checks tree inventory, stop deadlines and Exit preservation against OS-observed fixture trees.",
+    "behavior": [
+      "Four-level cooperative tree must list names/parents, stop inside one fifth of grace, become empty and return identical Exit on repeated stop.",
+      "After root exits code 5, descendants stay live/listed without the root; later cleanup keeps the same root result.",
+      "Cooperative termination with code zero is Killed; resisting trees wait until grace then force; detached kill acts immediately; raw exit/signal statuses remain unchanged."
+    ],
+    "contracts": [
+      "Inventory parent links include only listed parents and success excludes library-caused code zero."
+    ],
+    "dependencies": [
+      "process::Life mediates real supervisor; helpers use external OS liveness."
+    ],
+    "failures_or_limits": [
+      "Timing allowances are test bounds rather than published latency measurements."
+    ],
+    "evidence": [
+      {
+        "start_line": 44,
+        "end_line": 67,
+        "quote": "    assert_eq!(listed(&t), chain(&pids));\n\n    let grace = Duration::from_secs(5);\n    let started = Instant::now();\n    let exit = block(t.life.stop(Reason::Killed, grace)).expect(\"stop\");\n    assert!(\n        started.elapsed() < grace / 5,\n        \"not ended by the graceful request: {:?}\",\n        started.elapsed()\n    );\n    assert_eq!(exit.reason, Reason::Killed, \"{exit:?}\");\n    if unix() {\n        assert_eq!((exit.code, exit.signal.as_deref()), (None, Some(\"SIGTERM\")), \"{exit:?}\");\n    }\n    assert_dead(&pids, Duration::ZERO);\n    assert_eq!(listed(&t), []);\n\n    let again = Instant::now();\n    assert_eq!(block(t.life.stop(Reason::Killed, grace)).expect(\"stop again\"), exit);\n    assert!(\n        again.elapsed() < grace / 5,\n        \"a second stop waited: {:?}\",\n        again.elapsed()\n    );"
+      },
+      {
+        "start_line": 78,
+        "end_line": 102,
+        "quote": "    let exit = block(t.life.wait()).expect(\"wait\");\n    assert_eq!(\n        (exit.code, exit.signal.as_deref(), exit.reason),\n        (Some(5), None, Reason::Exit)\n    );\n    let rest = &pids[1..];\n    assert!(\n        rest.iter().all(|&p| alive(p)),\n        \"the descendants died with the root: {rest:?}\"\n    );\n    assert_eq!(listed(&t), chain(rest));\n\n    let started = Instant::now();\n    assert_eq!(\n        block(t.life.stop(Reason::Killed, Duration::from_secs(5))).expect(\"stop\"),\n        exit\n    );\n    assert!(started.elapsed() < Duration::from_secs(1), \"{:?}\", started.elapsed());\n    assert_dead(&pids, Duration::ZERO);\n    assert_eq!(listed(&t), []);\n    assert_eq!(\n        block(t.life.stop(Reason::Killed, Duration::ZERO)).expect(\"stop again\"),\n        exit\n    );\n    assert_eq!(block(t.life.wait()).expect(\"wait again\"), exit);"
+      },
+      {
+        "start_line": 131,
+        "end_line": 144,
+        "quote": "    let grace = Duration::from_millis(1500);\n    let started = Instant::now();\n    let exit = block(t.life.stop(Reason::Killed, grace)).expect(\"stop\");\n    let took = started.elapsed();\n    assert!(\n        took >= grace - Duration::from_millis(100),\n        \"forced before the deadline: {took:?}\"\n    );\n    assert!(took < grace + Duration::from_secs(1), \"forced late: {took:?}\");\n    assert_eq!(exit.reason, Reason::Killed, \"{exit:?}\");\n    if unix() {\n        assert_eq!((exit.code, exit.signal.as_deref()), (None, Some(\"SIGKILL\")), \"{exit:?}\");\n    }\n    assert_dead(&pids, Duration::ZERO);"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/pty/mod.rs",
+    "git_blob_sha": "7e9c31c7fbe63d621900f62718a6106bfe5ad939",
+    "source_sha256": "43353043244cc4528ea2b1ec67a243d795559bf13709619f49871e60d3f786b4",
+    "source_bytes": 461,
+    "line_count": 7,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Documents that host PTY behavior is composed from existing client, process and I/O layers.",
+    "behavior": [
+      "Contains only the cfg(test) module declaration; runtime terminal wiring resides in process::spawn_pty.",
+      "Names io pumps/stdin and client Go/Resize as terminal responsibilities, with reader-before-Go ordering."
+    ],
+    "contracts": [
+      "No separate host PTY transport or process creator is introduced here."
+    ],
+    "dependencies": [
+      "process/child.rs orchestrates startup; io/queue/reader.rs and client::Tree implement the cited parts."
+    ],
+    "failures_or_limits": [
+      "Architecture comment is not an additional implementation or execution result."
+    ],
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 7,
+        "quote": "//! Host side of a terminal child (W12). It needs no code of its own: the terminal's output is read by the\n//! `io` pumps (`Source::Pty`, whose reader runs before `Pumps::start` returns), what is typed goes through\n//! `io::Stdin`, and the held Unix root's `Go` and `Resize` are `client::Tree` requests. `process::spawn_pty`\n//! wires them in the order ADR-0005 R9 needs: reader first, then `Go`. This module holds the host-side suite.\n\n#[cfg(test)]\nmod tests;"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/pty/tests.rs",
+    "git_blob_sha": "c98296d04da2f410d46d657b46e83e55668a6d62",
+    "source_sha256": "f793fc1e2eec5dbf96a2ef93aad363fc7654a8c5bcefa898c1a1b8e6c34860de",
+    "source_bytes": 5218,
+    "line_count": 118,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Regresses immediate-exit Unix terminal output and synchronous held-root exec failures.",
+    "behavior": [
+      "Repeats a print-and-exit PTY launch 300 times and compares exact RUN-i CRLF output with no missing runs.",
+      "An executable-mode file containing nonprogram text must fail spawn_pty itself with NotExecutable, matching pipe spawn.",
+      "Requires real built binaries and bounded caller futures; stages/warms the supervisor once."
+    ],
+    "contracts": [
+      "Unix-only because ConPTY renders extra control sequences; Windows has separate coverage."
+    ],
+    "dependencies": [
+      "process spawn_pty reader-before-Go ordering and Unix supervisor exec handshake are exercised."
+    ],
+    "failures_or_limits": [
+      "The 300-run claim is a test loop/acceptance threshold, not an observed success count in this analysis."
+    ],
+    "evidence": [
+      {
+        "start_line": 91,
+        "end_line": 117,
+        "quote": "#[test]\nfn a_program_that_prints_and_exits_at_once_loses_nothing_300_times() {\n    use_supervisor();\n    let mut lost = Vec::new();\n    for i in 0..300 {\n        let line = format!(\"RUN-{i}\");\n        let shown = shown(&[format!(\"out={line}\\\\n\")]);\n        if shown != format!(\"{line}\\r\\n\") {\n            lost.push((i, shown));\n        }\n    }\n    assert!(lost.is_empty(), \"{} of 300 runs lost output: {lost:?}\", lost.len());\n}\n\n#[test]\nfn an_exec_failure_of_the_held_root_comes_back_from_spawn_pty() {\n    use_supervisor();\n    // Executable by its mode, but not a program: `execve` fails with ENOEXEC after `Go`.\n    let path = std::env::temp_dir().join(format!(\"omni-w12-{}-not-a-program\", std::process::id()));\n    std::fs::write(&path, \"not a program\\n\").expect(\"write\");\n    std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755)).expect(\"chmod\");\n    let pty = Command::new(&path).spawn_pty().map(|c| c.pid());\n    let pipe = Command::new(&path).spawn().map(|c| c.pid());\n    let _ = std::fs::remove_file(&path);\n    let pty = pty.expect_err(\"spawn_pty of a file that is not a program\");\n    assert_eq!(pty.code(), ErrorCode::NotExecutable, \"{pty}\");\n    assert_eq!(pipe.map_err(|e| e.code()), Err(ErrorCode::NotExecutable));"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  }
+]

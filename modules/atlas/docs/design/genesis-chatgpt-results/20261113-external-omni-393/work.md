@@ -75,3 +75,17 @@ The exact required command `bun run check:guards --base origin/dev` was attempte
 ## Fifth reviewed core batch
 
 Both persistent judges accepted C05 without an author correction: six I/O implementation records, bringing the current accepted source-record count to 39 of 393 across five exact bodies. The full candidate and selected, literal baseline support were transmitted; no full-source reading by the judges is claimed. The two public summaries bind the actual private opinions and exact original body; the source map names 12 primary/support paths. C06 and the remaining batches continue. No complete L1 release or current Omni runtime outcome follows from this documentary acceptance.
+
+## Scope wording clarification and remote tree proof
+
+The earlier CI paragraph grouped a temporary CI branch with the user's explicit prohibitions. The user explicitly forbids PRs, workflow changes and changes to other sessions' branches; it did not state a universal prohibition on any temporary branch. This distinction does not expose the missing workflow-dispatch capability or establish a successful CI route. The actual failed guard setup and zero-run observation remain unchanged; no new branch, workflow or PR was created.
+
+A fresh GitHub MCP check of checkpoint `326324c20f3f1bf96338c39c7c44605e7c8e4a70` compared the mode, type and Git SHA of every sibling at all six ancestors of the allowed result prefix. All outside siblings matched the baseline, and the result namespace was absent at baseline. This gives a complete tree-based scope proof independent of the 300-file compare response limit. See verification/remote-scope/checkpoint08-prefix-scope-proof.json. It does not judge semantic completeness.
+
+## Sixth reviewed core batch and seventh correction
+
+Both persistent judges accepted C06v2: twelve current records, bringing accepted source-record coverage to 51 of 393 across six exact bodies. The author corrected one field to distinguish two submitted pending writes from deterministic exercise of both the active worker and queue paths. The source test does not synchronize that either submitted write has reached the worker. Original C06v1, the public correction request and exact delta remain under history/core; the intermediate finding and final summaries/source map are under reviews/. No current Omni test result is asserted.
+
+C07v2 is produced and mechanically verified but remains pending re-review. Its three changed fields describe the aggregate PID-log lower bound without promising individual root coverage, attribute the large-environment socket-capacity comparison to the source comment, and state the actual success/prefix/trim_end-length assertions without claiming full output comparison or observed fallback execution. All thirteen source identities and eleven unchanged record objects are preserved; eight delta excerpts from four source paths were verified. The original C07v1 and correction request/delta are retained.
+
+One courier call to the first persistent judge failed during C08 transport. Recovery used the same task identity; the judge subsequently confirmed that only INTRO/A/B/C/D had arrived and that no C08 verdict existed, while retaining its already-issued C06v2 decision. The queue resumes from the missing supplements. No replacement judge, retroactive delivery claim or inferred C08 acceptance was used. Root transmission errors in C07 remain operator history, separate from author findings.

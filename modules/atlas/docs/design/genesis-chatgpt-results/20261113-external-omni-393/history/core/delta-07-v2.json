@@ -1,0 +1,447 @@
+{
+  "source": "records-07.json",
+  "source_sha256": "7e1431eb75856196e74ea764eacab2618d63223e543c065b7f18f89d7f41d661",
+  "source_bytes": 44189,
+  "replacement": "records-07.v2.json",
+  "replacement_sha256": "1ea62bd5a74a8e5230ac3c1d0ac7478c03f8bb22bdf0d7f11dbc5e3be2e94c25",
+  "replacement_bytes": 44585,
+  "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "public_request": {
+    "path": "control/C07-author-corrections-v2.md",
+    "sha256": "f7704e18630d44de6f823140b0dca072ce9e3eb2514a2d3ef23252d5d2229c89",
+    "bytes": 3709
+  },
+  "author_role": "CORE original producer correction; no acceptance review performed.",
+  "changes": [
+    {
+      "finding": "C07 aggregate PID count does not establish per-root coverage",
+      "record_index": 1,
+      "path": "native/omni/crates/hugr-omni/src/process/tests/agent_loop.rs",
+      "json_pointer": "/1/behavior/1",
+      "field": "behavior[1]",
+      "before": "Each command must settle within 5 s; shared PID log must include every expected started root and all recorded fixture processes must be dead afterward.",
+      "after": "Each command must settle within 5 s; the shared log must satisfy pids.len() >= started, an aggregate lower bound on complete PID entries. That count does not identify every expected root individually; assert_dead_logged subsequently checks the PIDs actually recorded.",
+      "reason": "pids_in parses complete newline-terminated PID entries. The test compares their aggregate count to the number of non-pre-cancelled command kinds; it does not map entries to every expected root. Descendant entries can contribute to that aggregate. It subsequently calls assert_dead_logged on the recorded PID vector. The five-second per-command timeout remains unchanged.",
+      "supporting_evidence": [
+        {
+          "path": "native/omni/crates/hugr-omni/src/process/tests/agent_loop.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/process/tests/agent_loop.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "16c973ae3d9e7582f4e925fc11077d54dd1afe5b",
+          "source_sha256": "e69c3f6b41e0aaac8c3f7c49000db10f6e52de2e02d0b19a82cb5fe35e42cc4e",
+          "source_bytes": 7745,
+          "line_count": 197,
+          "line_coordinates": "1-based inclusive, LF-delimited",
+          "start_line": 15,
+          "end_line": 23,
+          "quote": "const COMMANDS: u64 = 200;\nconst AT_ONCE: usize = 20;\n/// The kinds of command below.\nconst KINDS: u64 = 14;\n/// The kind that is cancelled before it starts, so it logs nothing.\nconst NEVER_STARTS: u64 = 11;\nconst GRACE: Duration = Duration::from_millis(100);\n/// K2: no command takes longer (each is meant to take at most ~0.5 s).\nconst BOUND: Duration = Duration::from_secs(5);"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/process/tests/agent_loop.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/process/tests/agent_loop.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "16c973ae3d9e7582f4e925fc11077d54dd1afe5b",
+          "source_sha256": "e69c3f6b41e0aaac8c3f7c49000db10f6e52de2e02d0b19a82cb5fe35e42cc4e",
+          "source_bytes": 7745,
+          "line_count": 197,
+          "line_coordinates": "1-based inclusive, LF-delimited",
+          "start_line": 48,
+          "end_line": 67,
+          "quote": "    let pids = pids_in(&log);\n    let started = (0..COMMANDS).filter(|i| i % KINDS != NEVER_STARTS).count();\n    assert!(\n        pids.len() >= started,\n        \"only {} pids logged for {started} commands\",\n        pids.len()\n    );\n    assert_dead_logged(&pids, Duration::from_secs(2), &log);\n    let _ = std::fs::remove_file(&log);\n}\n\n/// K2: command `i` returns within `BOUND`.\nasync fn bounded(i: u64, fixture: PathBuf, log: PathBuf) {\n    let done = tokio::time::timeout(BOUND, command(i, &fixture, &log)).await;\n    assert!(\n        done.is_ok(),\n        \"K2: command {i} (kind {}) did not return within {BOUND:?}\",\n        i % KINDS\n    );\n}"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/process/tests/agent_loop.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/process/tests/agent_loop.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "16c973ae3d9e7582f4e925fc11077d54dd1afe5b",
+          "source_sha256": "e69c3f6b41e0aaac8c3f7c49000db10f6e52de2e02d0b19a82cb5fe35e42cc4e",
+          "source_bytes": 7745,
+          "line_count": 197,
+          "line_coordinates": "1-based inclusive, LF-delimited",
+          "start_line": 70,
+          "end_line": 74,
+          "quote": "async fn command(i: u64, fixture: &Path, log: &Path) {\n    let at = Duration::from_millis(spread(i) % 300);\n    let token = CancellationToken::new();\n    let mut cmd = Command::new(fixture);\n    cmd.arg(pidlog(log)).grace(GRACE).cancel_on(token.clone());"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/process/tests/agent_loop.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/process/tests/agent_loop.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "16c973ae3d9e7582f4e925fc11077d54dd1afe5b",
+          "source_sha256": "e69c3f6b41e0aaac8c3f7c49000db10f6e52de2e02d0b19a82cb5fe35e42cc4e",
+          "source_bytes": 7745,
+          "line_count": 197,
+          "line_coordinates": "1-based inclusive, LF-delimited",
+          "start_line": 125,
+          "end_line": 139,
+          "quote": "        5 => {\n            let timeout = at + Duration::from_millis(10);\n            let out = cmd\n                .args([\"ignore-term\", \"tree=2:resist\", \"hang\"])\n                .timeout(timeout)\n                .run()\n                .await;\n            let out = out.expect(\"run\");\n            assert_eq!(out.exit.reason, Reason::Timeout, \"{i}: {out:?}\");\n        }\n        6 => {\n            let (ran, ()) = tokio::join!(cmd.args([\"tree=1\", \"hang\"]).run(), cancel_at(at));\n            let e = ran.expect_err(\"a cancelled run that never ends\");\n            assert_eq!(e.code(), ErrorCode::Aborted, \"{i}: {e}\");\n            assert_eq!(e.result().map(|r| r.exit.reason), Some(Reason::Aborted), \"{i}\");"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/process/tests/deadline.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/process/tests/deadline.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "8dda1006bcc229c464237a4445baa326ec54d69d",
+          "source_sha256": "7865f706f5e01192498e651c3be2bff07874f46d66bfab4b5b652245d3323891",
+          "source_bytes": 12605,
+          "line_count": 306,
+          "line_coordinates": "1-based inclusive, LF-delimited",
+          "start_line": 28,
+          "end_line": 34,
+          "quote": "/// Every complete line of `log`, as a pid.\npub(super) fn pids_in(log: &Path) -> Vec<u32> {\n    let text = std::fs::read_to_string(log).unwrap_or_default();\n    text.split_inclusive('\\n')\n        .filter_map(|line| line.strip_suffix('\\n')?.trim().parse().ok())\n        .collect()\n}"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/process/tests/mod.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/process/tests/mod.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "056fe46a611b9d67ebf7ff5093e05e5ae8838b71",
+          "source_sha256": "3856df2bcb4affe3fba3dab40648dbfd8b96a82d6eb1b4250ff86c8c06929192",
+          "source_bytes": 11105,
+          "line_count": 281,
+          "line_coordinates": "1-based inclusive, LF-delimited",
+          "start_line": 222,
+          "end_line": 249,
+          "quote": "/// `assert_dead` for pids logged to `log` while other tests run fixtures too: on Windows, a pid only counts while\n/// its command line still names `log` (a freed pid goes at once to another test's `omni-fixture`).\nfn assert_dead_logged(pids: &[u32], within: Duration, log: &Path) {\n    assert_dead_of(pids, within, Some(log));\n}\n\nfn assert_dead_of(pids: &[u32], within: Duration, log: Option<&Path>) {\n    let deadline = Instant::now() + within;\n    loop {\n        let mut living: Vec<u32> = pids.iter().copied().filter(|&p| alive(p)).collect();\n        if let Some(log) = log.filter(|_| !living.is_empty() && std::env::consts::OS == \"windows\") {\n            let name = log\n                .file_name()\n                .map(|n| n.to_string_lossy().into_owned())\n                .unwrap_or_default();\n            living.retain(|&p| command_line(p).contains(&name));\n        }\n        if living.is_empty() {\n            return;\n        }\n        assert!(\n            Instant::now() < deadline,\n            \"alive per the OS: {living:?} (of {pids:?}){}\",\n            describe(&living)\n        );\n        std::thread::sleep(Duration::from_millis(10));\n    }\n}"
+        }
+      ]
+    },
+    {
+      "finding": "C07 large environment size versus comment rationale and unobserved fallback",
+      "record_index": 2,
+      "path": "native/omni/crates/hugr-omni/src/process/tests/big.rs",
+      "json_pointer": "/2/behavior/0",
+      "field": "behavior[0]",
+      "before": "Sends a 64 KiB OMNI_BIG value, exceeding the socket-buffer scale while staying below Linux single-env-string limits.",
+      "after": "Sets OMNI_BIG to 64 KiB of x; the source comment compares that size with an 8 KiB socket buffer and Linux's 128 KiB limit for one environment string. This test does not measure/configure socket capacity or establish that EMSGSIZE or its fallback branch occurred.",
+      "reason": "The fixture input is explicitly 64 * 1024 x characters. The 8 KiB socket-buffer and Linux 128 KiB comparisons occur in a source comment. The complete 29-line source has no socket-capacity measurement/configuration or assertion that EMSGSIZE or its fallback branch was reached.",
+      "supporting_evidence": [
+        {
+          "path": "native/omni/crates/hugr-omni/src/process/tests/big.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/process/tests/big.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "39e8c7e87e4d1ca3ef5281e5a1202c83628d0726",
+          "source_sha256": "107aa0217b70fcdeccd282ddc223a12bf824acc0af08ce01461414ccd05e5eaa",
+          "source_bytes": 1074,
+          "line_count": 29,
+          "line_coordinates": "1-based inclusive, LF-delimited",
+          "start_line": 1,
+          "end_line": 29,
+          "quote": "//! A spawn whose message is larger than the channel's socket buffer (a large environment) still starts, with its\n//! pipes: macOS refuses such a message whole when descriptors ride on it (EMSGSIZE).\n\nuse std::time::Duration;\n\nuse super::{binary, block, use_supervisor};\nuse crate::api::Command;\n\n#[test]\nfn a_spawn_with_a_large_environment_starts() {\n    use_supervisor();\n    let fixture = binary(\"omni-fixture\");\n    // 64 KiB: far above the 8 KiB socket buffer, under Linux's 128 KiB limit for one environment string.\n    let big = \"x\".repeat(64 * 1024);\n    block(async {\n        let mut cmd = Command::new(&fixture);\n        cmd.arg(\"getenv=OMNI_BIG\")\n            .env(\"OMNI_BIG\", &big)\n            .timeout(Duration::from_secs(30));\n        let out = cmd.run().await.expect(\"run\");\n        assert!(out.exit.success(), \"{:?}\", out.exit);\n        let text = out.stdout.to_string();\n        assert!(\n            text.starts_with(\"OMNI_BIG=\\\"xxx\") && text.trim_end().len() == big.len() + 11,\n            \"{}\",\n            &text[..text.len().min(80)]\n        );\n    });\n}"
+        }
+      ]
+    },
+    {
+      "finding": "C07 actual output assertions and configured timeout",
+      "record_index": 2,
+      "path": "native/omni/crates/hugr-omni/src/process/tests/big.rs",
+      "json_pointer": "/2/behavior/1",
+      "field": "behavior[1]",
+      "before": "Requires successful fixture execution and exact printed value framing/length under a 30 s timeout.",
+      "after": "Configures a 30 s command timeout and requires successful exit, text.starts_with(\"OMNI_BIG=\\\"xxx\"), and text.trim_end().len() == big.len() + 11; the assertions do not compare the complete returned value or validate full framing.",
+      "reason": "The command is configured with a 30-second timeout. After run returns, the source asserts successful exit, the shown prefix, and text.trim_end().len() == big.len() + 11. Those conditions do not compare the full value or establish complete framing. The method is trim_end, not trim; these remain unexecuted source assertions.",
+      "supporting_evidence": [
+        {
+          "path": "native/omni/crates/hugr-omni/src/process/tests/big.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/process/tests/big.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "39e8c7e87e4d1ca3ef5281e5a1202c83628d0726",
+          "source_sha256": "107aa0217b70fcdeccd282ddc223a12bf824acc0af08ce01461414ccd05e5eaa",
+          "source_bytes": 1074,
+          "line_count": 29,
+          "line_coordinates": "1-based inclusive, LF-delimited",
+          "start_line": 13,
+          "end_line": 27,
+          "quote": "    // 64 KiB: far above the 8 KiB socket buffer, under Linux's 128 KiB limit for one environment string.\n    let big = \"x\".repeat(64 * 1024);\n    block(async {\n        let mut cmd = Command::new(&fixture);\n        cmd.arg(\"getenv=OMNI_BIG\")\n            .env(\"OMNI_BIG\", &big)\n            .timeout(Duration::from_secs(30));\n        let out = cmd.run().await.expect(\"run\");\n        assert!(out.exit.success(), \"{:?}\", out.exit);\n        let text = out.stdout.to_string();\n        assert!(\n            text.starts_with(\"OMNI_BIG=\\\"xxx\") && text.trim_end().len() == big.len() + 11,\n            \"{}\",\n            &text[..text.len().min(80)]\n        );"
+        }
+      ]
+    }
+  ],
+  "retained_record_decisions": [
+    {
+      "record_index": 0,
+      "path": "native/omni/crates/hugr-omni/src/process/run.rs",
+      "git_blob_sha": "c2725d150e579a0c902746a2835196cbbbe3ef59",
+      "source_sha256": "7e6ea694a726ae0c56af9a76ec38b2e8008770c32ba4caf1f6cd6fd370f4b53a",
+      "source_bytes": 16767,
+      "line_count": 393,
+      "kind": "implementation",
+      "retained_disposition": "analyzed",
+      "source_identity_unchanged": true,
+      "record_unchanged": true,
+      "changed_fields": [],
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "record_index": 1,
+      "path": "native/omni/crates/hugr-omni/src/process/tests/agent_loop.rs",
+      "git_blob_sha": "16c973ae3d9e7582f4e925fc11077d54dd1afe5b",
+      "source_sha256": "e69c3f6b41e0aaac8c3f7c49000db10f6e52de2e02d0b19a82cb5fe35e42cc4e",
+      "source_bytes": 7745,
+      "line_count": 197,
+      "kind": "test",
+      "retained_disposition": "analyzed",
+      "source_identity_unchanged": true,
+      "record_unchanged": false,
+      "changed_fields": [
+        "behavior[1]"
+      ],
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "record_index": 2,
+      "path": "native/omni/crates/hugr-omni/src/process/tests/big.rs",
+      "git_blob_sha": "39e8c7e87e4d1ca3ef5281e5a1202c83628d0726",
+      "source_sha256": "107aa0217b70fcdeccd282ddc223a12bf824acc0af08ce01461414ccd05e5eaa",
+      "source_bytes": 1074,
+      "line_count": 29,
+      "kind": "test",
+      "retained_disposition": "analyzed",
+      "source_identity_unchanged": true,
+      "record_unchanged": false,
+      "changed_fields": [
+        "behavior[0]",
+        "behavior[1]"
+      ],
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "record_index": 3,
+      "path": "native/omni/crates/hugr-omni/src/process/tests/deadline.rs",
+      "git_blob_sha": "8dda1006bcc229c464237a4445baa326ec54d69d",
+      "source_sha256": "7865f706f5e01192498e651c3be2bff07874f46d66bfab4b5b652245d3323891",
+      "source_bytes": 12605,
+      "line_count": 306,
+      "kind": "test",
+      "retained_disposition": "analyzed",
+      "source_identity_unchanged": true,
+      "record_unchanged": true,
+      "changed_fields": [],
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "record_index": 4,
+      "path": "native/omni/crates/hugr-omni/src/process/tests/exit.rs",
+      "git_blob_sha": "07ffdc1506af720570fb4464ad12e4043c0adbe2",
+      "source_sha256": "d3016570f20119ddd0d1c47f54f912d34c2b94076738f252342b4278d936a75b",
+      "source_bytes": 2972,
+      "line_count": 71,
+      "kind": "test",
+      "retained_disposition": "analyzed",
+      "source_identity_unchanged": true,
+      "record_unchanged": true,
+      "changed_fields": [],
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "record_index": 5,
+      "path": "native/omni/crates/hugr-omni/src/process/tests/host.rs",
+      "git_blob_sha": "a713a2c4bb3c845d9d060c27882375d225b3e84d",
+      "source_sha256": "6b43698fced7d98a2ef23634005c04f835a23d28d429506bd7e75128a4214d0a",
+      "source_bytes": 7688,
+      "line_count": 233,
+      "kind": "test",
+      "retained_disposition": "analyzed",
+      "source_identity_unchanged": true,
+      "record_unchanged": true,
+      "changed_fields": [],
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "record_index": 6,
+      "path": "native/omni/crates/hugr-omni/src/process/tests/host/lost.rs",
+      "git_blob_sha": "afae67a77b2a8e9577844d024336cf81f90ffdf7",
+      "source_sha256": "924898444c99c2b8f7c7e735e50d0d6c12a8abf6be6d25d012aa467eccf7d904",
+      "source_bytes": 7058,
+      "line_count": 174,
+      "kind": "test",
+      "retained_disposition": "analyzed",
+      "source_identity_unchanged": true,
+      "record_unchanged": true,
+      "changed_fields": [],
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "record_index": 7,
+      "path": "native/omni/crates/hugr-omni/src/process/tests/memory.rs",
+      "git_blob_sha": "e89d7c7ad83a34819a794429108c231ad72ba93c",
+      "source_sha256": "f51f58d29e0b28236b0ba91bf717d10d8d2386757367937cc162b52270783e97",
+      "source_bytes": 2434,
+      "line_count": 61,
+      "kind": "test",
+      "retained_disposition": "analyzed",
+      "source_identity_unchanged": true,
+      "record_unchanged": true,
+      "changed_fields": [],
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "record_index": 8,
+      "path": "native/omni/crates/hugr-omni/src/process/tests/mod.rs",
+      "git_blob_sha": "056fe46a611b9d67ebf7ff5093e05e5ae8838b71",
+      "source_sha256": "3856df2bcb4affe3fba3dab40648dbfd8b96a82d6eb1b4250ff86c8c06929192",
+      "source_bytes": 11105,
+      "line_count": 281,
+      "kind": "test",
+      "retained_disposition": "analyzed",
+      "source_identity_unchanged": true,
+      "record_unchanged": true,
+      "changed_fields": [],
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "record_index": 9,
+      "path": "native/omni/crates/hugr-omni/src/process/tests/scope.rs",
+      "git_blob_sha": "f0b3f41cd4d155911de2ba7b222f456366b7f1b8",
+      "source_sha256": "3b3fd20108d647c68cfd8885ed1d282b7196f49f465b0506cd3e7df315f5cdf2",
+      "source_bytes": 2359,
+      "line_count": 67,
+      "kind": "test",
+      "retained_disposition": "analyzed",
+      "source_identity_unchanged": true,
+      "record_unchanged": true,
+      "changed_fields": [],
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "record_index": 10,
+      "path": "native/omni/crates/hugr-omni/src/process/tests/tree.rs",
+      "git_blob_sha": "b1f1c44f0f453012c59fceca7ced6c73dc96229c",
+      "source_sha256": "ecf63f783a1be1511a106ea8214b25651c12080c286ab512bb9a9f77c0a3b35a",
+      "source_bytes": 7471,
+      "line_count": 192,
+      "kind": "test",
+      "retained_disposition": "analyzed",
+      "source_identity_unchanged": true,
+      "record_unchanged": true,
+      "changed_fields": [],
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "record_index": 11,
+      "path": "native/omni/crates/hugr-omni/src/pty/mod.rs",
+      "git_blob_sha": "7e9c31c7fbe63d621900f62718a6106bfe5ad939",
+      "source_sha256": "43353043244cc4528ea2b1ec67a243d795559bf13709619f49871e60d3f786b4",
+      "source_bytes": 461,
+      "line_count": 7,
+      "kind": "implementation",
+      "retained_disposition": "analyzed",
+      "source_identity_unchanged": true,
+      "record_unchanged": true,
+      "changed_fields": [],
+      "runtime_status": "NOT_RUN"
+    },
+    {
+      "record_index": 12,
+      "path": "native/omni/crates/hugr-omni/src/pty/tests.rs",
+      "git_blob_sha": "c98296d04da2f410d46d657b46e83e55668a6d62",
+      "source_sha256": "f793fc1e2eec5dbf96a2ef93aad363fc7654a8c5bcefa898c1a1b8e6c34860de",
+      "source_bytes": 5218,
+      "line_count": 118,
+      "kind": "test",
+      "retained_disposition": "analyzed",
+      "source_identity_unchanged": true,
+      "record_unchanged": true,
+      "changed_fields": [],
+      "runtime_status": "NOT_RUN"
+    }
+  ],
+  "additional_baseline_inputs_by_record": [
+    {
+      "record_index": 1,
+      "record_path": "native/omni/crates/hugr-omni/src/process/tests/agent_loop.rs",
+      "additional_inputs": [
+        {
+          "path": "native/omni/crates/hugr-omni/src/process/tests/deadline.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/process/tests/deadline.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "8dda1006bcc229c464237a4445baa326ec54d69d",
+          "source_sha256": "7865f706f5e01192498e651c3be2bff07874f46d66bfab4b5b652245d3323891",
+          "source_bytes": 12605,
+          "line_count": 306,
+          "used_for": "pids_in at lines 28–34 parses complete newline-terminated entries as PIDs; it performs no command/root identity mapping."
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/process/tests/mod.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/process/tests/mod.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "056fe46a611b9d67ebf7ff5093e05e5ae8838b71",
+          "source_sha256": "3856df2bcb4affe3fba3dab40648dbfd8b96a82d6eb1b4250ff86c8c06929192",
+          "source_bytes": 11105,
+          "line_count": 281,
+          "used_for": "assert_dead_logged/assert_dead_of at lines 222–249 operate on the supplied recorded PID vector, with the existing Windows command-line filtering behavior."
+        }
+      ]
+    },
+    {
+      "record_index": 2,
+      "record_path": "native/omni/crates/hugr-omni/src/process/tests/big.rs",
+      "additional_inputs": [],
+      "scope_note": "The complete 29-line test establishes its configured input, comment rationale, timeout and literal assertions. No runtime measurement or fallback-path execution is inferred."
+    }
+  ],
+  "cross_reference_check": {
+    "active_record_files_checked": [
+      "records-01.v2.json",
+      "records-02.v3.json",
+      "records-03.v2.json",
+      "records-04.v2.json",
+      "records-05.json",
+      "records-06.v2.json",
+      "records-07.json",
+      "records-08.json",
+      "records-09.v2.json",
+      "records-10.json",
+      "records-11.v2.json",
+      "records-12.json",
+      "records-13.json",
+      "records-14.json",
+      "records-15.json",
+      "records-16.json",
+      "records-17.json",
+      "records-18.json"
+    ],
+    "method": "Searched relevant PID-log/root-coverage and large-environment/socket/EMSGSIZE/framing wording in active CORE semantic fields and l2-notes.md.",
+    "related_claims_retained": [
+      {
+        "file": "records-07.json",
+        "record_index": 2,
+        "field": "contracts[0]",
+        "reason": "Targets macOS EMSGSIZE fallback describes the intended regression target; corrected behavior explicitly distinguishes that aim from proof of branch execution."
+      },
+      {
+        "file": "records-04.v2.json",
+        "record_index": 3,
+        "field": "behavior[1]",
+        "reason": "Describes the Unix send implementation response to EMSGSIZE, not observed fallback coverage from this test."
+      }
+    ],
+    "dependent_changes": [],
+    "l2_drafts_modified": [],
+    "l2_notes_sha256_preserved": "71b3dd5e454625a8cbe79141b1b8d91bce82ebf4a460f337b2555fbf2aaba6c8",
+    "l2_reason_unchanged": "The synopsis contains no claim about individual root coverage in agent_loop, OMNI_BIG full-value/framing validation, socket-buffer measurement, or observed EMSGSIZE fallback from big.rs.",
+    "l2_status": "Candidate synopsis remains unaccepted; no formal L2/L3/L4 authoring or acceptance review performed."
+  },
+  "transport_note": "The supplied GRACE definition and previously corrected courier escapes/wrapper/line-coordinate issues do not require candidate changes; baseline bytes are the source of the excerpts.",
+  "original_preserved": true,
+  "c06_v2_preserved": {
+    "file": "records-06.v2.json",
+    "sha256": "875f5ca4644377acdfa957bd48562d58fbdcd1020b73966f423fb4fc67204752",
+    "bytes": 43456
+  },
+  "unchanged_record_indices": [
+    0,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+  ],
+  "strict_change_scope": "Only /1/behavior/1, /2/behavior/0 and /2/behavior/1 changed. All thirteen paths, source identities, quotations, dispositions and every other field are unchanged.",
+  "delivery_before_sha256": "1f5f0033454a5674264422d7314f5a12573c4a3c24c10e796f56933d9b73cd28",
+  "delivery_after_sha256": "524070245f6581fac7d15a51a33fd235d2ae13799b0b107438e6722656a2b1ac",
+  "runtime_status": "NOT_RUN",
+  "acceptance": "Pending independent review; the original author does not self-approve."
+}

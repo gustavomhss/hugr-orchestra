@@ -1,0 +1,135 @@
+{
+  "schema": "omni393-mcp-prefix-scope-proof/v1",
+  "baseline": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "candidate": "326324c20f3f1bf96338c39c7c44605e7c8e4a70",
+  "prefix": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/",
+  "method": "Inductive equality of every sibling mode/type/SHA at every allowed-prefix ancestor using untruncated Git trees through GitHub MCP.",
+  "levels": [
+    {
+      "ancestor": "/",
+      "allowed_child": "modules",
+      "baseline_tree": "a522a53e5f046f1758151b0f558531bbded04592",
+      "candidate_tree": "7284be96872f812a8a85e7f32ec444b845a221ff",
+      "equal_sibling_count": 42,
+      "baseline_child": {
+        "path": "modules",
+        "mode": "040000",
+        "type": "tree",
+        "sha": "c80d5587e0ab36bc67d7720424930fa945c1b6bb",
+        "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/trees/c80d5587e0ab36bc67d7720424930fa945c1b6bb"
+      },
+      "candidate_child": {
+        "path": "modules",
+        "mode": "040000",
+        "type": "tree",
+        "sha": "06630be3e32f8e9b720b454de7790e150e79da16",
+        "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/trees/06630be3e32f8e9b720b454de7790e150e79da16"
+      },
+      "other_changes": []
+    },
+    {
+      "ancestor": "modules",
+      "allowed_child": "atlas",
+      "baseline_tree": "c80d5587e0ab36bc67d7720424930fa945c1b6bb",
+      "candidate_tree": "06630be3e32f8e9b720b454de7790e150e79da16",
+      "equal_sibling_count": 9,
+      "baseline_child": {
+        "path": "atlas",
+        "mode": "040000",
+        "type": "tree",
+        "sha": "fe44d34f2398d853b8863d65febd3c7d8ef4ea7d",
+        "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/trees/fe44d34f2398d853b8863d65febd3c7d8ef4ea7d"
+      },
+      "candidate_child": {
+        "path": "atlas",
+        "mode": "040000",
+        "type": "tree",
+        "sha": "7d8e909d217d4fd62ff9694229bbbf263d36e2e7",
+        "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/trees/7d8e909d217d4fd62ff9694229bbbf263d36e2e7"
+      },
+      "other_changes": []
+    },
+    {
+      "ancestor": "modules/atlas",
+      "allowed_child": "docs",
+      "baseline_tree": "fe44d34f2398d853b8863d65febd3c7d8ef4ea7d",
+      "candidate_tree": "7d8e909d217d4fd62ff9694229bbbf263d36e2e7",
+      "equal_sibling_count": 21,
+      "baseline_child": {
+        "path": "docs",
+        "mode": "040000",
+        "type": "tree",
+        "sha": "fe80b68f1cc785931d2c674d7c619bb5e7a4f65b",
+        "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/trees/fe80b68f1cc785931d2c674d7c619bb5e7a4f65b"
+      },
+      "candidate_child": {
+        "path": "docs",
+        "mode": "040000",
+        "type": "tree",
+        "sha": "f0399f488e7f3dfc429bccd854cfafe9765b5708",
+        "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/trees/f0399f488e7f3dfc429bccd854cfafe9765b5708"
+      },
+      "other_changes": []
+    },
+    {
+      "ancestor": "modules/atlas/docs",
+      "allowed_child": "design",
+      "baseline_tree": "fe80b68f1cc785931d2c674d7c619bb5e7a4f65b",
+      "candidate_tree": "f0399f488e7f3dfc429bccd854cfafe9765b5708",
+      "equal_sibling_count": 24,
+      "baseline_child": {
+        "path": "design",
+        "mode": "040000",
+        "type": "tree",
+        "sha": "d2e53777e5533edd251f3a5a5394d2643972b51e",
+        "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/trees/d2e53777e5533edd251f3a5a5394d2643972b51e"
+      },
+      "candidate_child": {
+        "path": "design",
+        "mode": "040000",
+        "type": "tree",
+        "sha": "0d3fe0c40020437a586d037b95dd3c5bb6bd38e4",
+        "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/trees/0d3fe0c40020437a586d037b95dd3c5bb6bd38e4"
+      },
+      "other_changes": []
+    },
+    {
+      "ancestor": "modules/atlas/docs/design",
+      "allowed_child": "genesis-chatgpt-results",
+      "baseline_tree": "d2e53777e5533edd251f3a5a5394d2643972b51e",
+      "candidate_tree": "0d3fe0c40020437a586d037b95dd3c5bb6bd38e4",
+      "equal_sibling_count": 78,
+      "baseline_child": null,
+      "candidate_child": {
+        "path": "genesis-chatgpt-results",
+        "mode": "040000",
+        "type": "tree",
+        "sha": "a96f800edb9dc79c596ddd76bb1754d64f8f2a0d",
+        "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/trees/a96f800edb9dc79c596ddd76bb1754d64f8f2a0d"
+      },
+      "other_changes": []
+    },
+    {
+      "ancestor": "modules/atlas/docs/design/genesis-chatgpt-results",
+      "allowed_child": "20261113-external-omni-393",
+      "baseline_tree": null,
+      "candidate_tree": "a96f800edb9dc79c596ddd76bb1754d64f8f2a0d",
+      "equal_sibling_count": 0,
+      "baseline_child": null,
+      "candidate_child": {
+        "path": "20261113-external-omni-393",
+        "mode": "040000",
+        "type": "tree",
+        "sha": "82c016a87f0d8feb0813510e31454447231f97be",
+        "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/trees/82c016a87f0d8feb0813510e31454447231f97be"
+      },
+      "other_changes": []
+    }
+  ],
+  "namespace_absent_at_baseline": true,
+  "conclusion": "All tree changes from baseline are contained in the authorized prefix.",
+  "observed_at": "2026-11-13T17:35:22.375Z",
+  "limits": [
+    "This tree equality proof does not assess semantic correctness or approvals."
+  ]
+}
