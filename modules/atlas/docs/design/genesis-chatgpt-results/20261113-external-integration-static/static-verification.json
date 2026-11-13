@@ -1,0 +1,70 @@
+{
+  "schema": "genesis-external-static-metadata-verification/v1",
+  "method": "Independent Python standard-library arithmetic over supplied Git tree metadata; no product code, tests, native Atlas tools or CI executed.",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "root_expected": "a522a53e5f046f1758151b0f558531bbded04592",
+  "root_recomputed": "a522a53e5f046f1758151b0f558531bbded04592",
+  "tree_objects_by_path_verified": 2269,
+  "tree_object_mismatches": [],
+  "tsv": {
+    "path": "tree-inventory.tsv",
+    "byte_length": 2828263,
+    "sha256": "243af8f4c2ea35ac4ede30d7ed8dc42ab52adb710fe29163d12c6c5c8fa0a8a8",
+    "row_count": 16710
+  },
+  "type_counts": {
+    "tree": 2268,
+    "blob": 14442
+  },
+  "mode_counts": {
+    "040000": 2268,
+    "100644": 14370,
+    "100755": 71,
+    "120000": 1
+  },
+  "duplicate_paths": 0,
+  "resolver_mismatches": [],
+  "competing_rule_paths": [],
+  "global": {
+    "entry_count": 14442,
+    "path_sha256": "2516d9fbc2edc223c10a30359aabc54687eb0871c0f77c35a7e5952fede57b83",
+    "tree_records_sha256": "ac3538da3b3440fe7c7c931aa69ca3be423b39ec56a5b0775b95a1f5b2e7ddab"
+  },
+  "shards": {
+    "S1": {
+      "entry_count": 2236,
+      "path_sha256": "67d80c0e398b495140ef3b9fd4d0a8058036290919856635298b9007ed153889",
+      "tree_records_sha256": "30fd2c9a07e039f5277ffe761c87f162e946188404dcedc9bf34d73c6a927e58"
+    },
+    "S2": {
+      "entry_count": 4506,
+      "path_sha256": "8b70f96dcbb623bdd1cc2a48b61d51d255d9d9ce90836efc9a5cd05f1fc5a582",
+      "tree_records_sha256": "cb4f96b19e248e923485db63de87e56b45523428e1cb891a8746ec8189dffd88"
+    },
+    "S3": {
+      "entry_count": 4553,
+      "path_sha256": "6ca1aca1f8a1da4bf4061c67f06f983f0b676e6d90a7f2af945cb57a7f76c4f1",
+      "tree_records_sha256": "f9130f5eaa900907cefacb284974dabfeb22970e1e391f5eb0a567175e9f46c2"
+    },
+    "S4": {
+      "entry_count": 2220,
+      "path_sha256": "0b99735199c8a9a4db61bf506dafe92acb76909dd9f9c48d8f521fb920c6cd1d",
+      "tree_records_sha256": "919064e1e589092b32d0f19d7f01346fab04faa9f6dad0ed6a3070ef8d083129"
+    },
+    "S5": {
+      "entry_count": 927,
+      "path_sha256": "7d807d18a0bbbcccbaa1f01954b78036a2769c5fee95a1e8be5293435ec714f0",
+      "tree_records_sha256": "1117add0d62b1d427ae30df7bedf616a507f35a41c0534fb1444951f48c15c31"
+    }
+  },
+  "observer_baseline_metadata": {
+    "oversize_256000": 80,
+    "dot_atlas_segment": 5,
+    "symlinks": 1,
+    "union": 86
+  },
+  "limitations": [
+    "Git tree reconstruction validates metadata completeness and object identities, not the content or semantics of enumerated blobs.",
+    "No current S4 candidate or runtime execution inspected."
+  ]
+}

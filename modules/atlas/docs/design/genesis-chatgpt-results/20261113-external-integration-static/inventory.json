@@ -1,0 +1,1232 @@
+{
+  "schema": "genesis-external-integration-static-inventory/v1",
+  "audit_id": "20261113-external-integration-static",
+  "front": "A",
+  "status": "STRUCTURAL_RECONCILIATION_COMPLETE_STATIC_ONLY",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_tree": "a522a53e5f046f1758151b0f558531bbded04592",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "partition_blob_sha": "cdd2fba881059af6152371b417d8a791d8090a9f",
+  "verification_freeze": {
+    "commit": "3d9a515f264a7938c764d37532bc42ad6005fc47",
+    "blob_sha": "ac96d6dbb23025989be110029dcb63fad9b25b1b",
+    "criteria": [
+      "A-01",
+      "A-02",
+      "A-03",
+      "A-04",
+      "A-05",
+      "A-06",
+      "A-07",
+      "A-08",
+      "A-09",
+      "A-10"
+    ]
+  },
+  "definition": {
+    "expected_population": 14442,
+    "observed_population": 14442,
+    "population_selector": "Git descendants with object_type != tree; all observed selected entries are blobs, including the symlink blob.",
+    "excluded_from_population_but_enumerated": {
+      "tree_records": 2268,
+      "reason": "Directory tree entries are structural containers, not tracked leaf paths; including them would produce 16710 descendants."
+    },
+    "root_tree_record": "The root object is identified separately; it is not a descendant TSV row.",
+    "excluded_tracked_leaf_paths": [],
+    "metadata_is_not_content_read": true,
+    "all_source_types_included": "No extension, visibility, generated, fixture, asset, vendor, doc, test or config filter was applied. Their semantic classification/depth is not inferred from tree metadata."
+  },
+  "enumeration": {
+    "method": "One non-recursive root; seventeen recursive top-level trees; non-recursive modules and packages plus twenty-seven recursive child trees. Prefix child paths and include each non-recursive directory entry once.",
+    "successful_tree_responses": 47,
+    "all_successful_responses_truncated_false": true,
+    "root_returned_entry_count": 43,
+    "descendant_records": 16710,
+    "type_counts": {
+      "tree": 2268,
+      "blob": 14442,
+      "commit": 0
+    },
+    "mode_counts": {
+      "100644": 14370,
+      "100755": 71,
+      "120000": 1,
+      "160000": 0,
+      "040000": 2268
+    },
+    "gitlinks": [],
+    "symlinks": [
+      {
+        "path": "packages/app-shell/src/custom-elements.d.ts",
+        "blob_sha": "e4ea0d6cebdad58ea12fc08dd7a3f732cdb45f8f",
+        "owner": "S2",
+        "read_scope": "metadata_only; target content not fetched"
+      }
+    ],
+    "unique_paths": 16710,
+    "duplicate_paths": [],
+    "responses_index": "sources-A.json#/tree_responses",
+    "initial_failure": {
+      "request_url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/trees/a522a53e5f046f1758151b0f558531bbded04592?recursive=1",
+      "observed_error": "Transport closed",
+      "meaning": "No Git truncation status was returned. This response contributes no entries.",
+      "recovery": "Decomposition into 47 successful tree responses."
+    },
+    "distinct_object_oids": {
+      "blob": 12807,
+      "descendant_tree": 2202,
+      "tree_including_root": 2203,
+      "commit_gitlink": 0
+    },
+    "duplicate_blob_oid_references": 1635,
+    "duplicate_oid_explanation": "Repeated Git OIDs at different paths are allowed; they do not reduce tracked-path population or create duplicate path assignments."
+  },
+  "resolver": {
+    "priority": [
+      "exact_file",
+      "longest_directory_prefix",
+      "fallback"
+    ],
+    "directory_boundary": "Each directory prefix ends in slash; raw substring, fuzzy and basename matches are forbidden.",
+    "fallback_shard": "S5",
+    "exact_rule_count": 87,
+    "prefix_rule_count": 99,
+    "resolution_counts": {
+      "longest_directory_prefix": 14130,
+      "fallback": 225,
+      "exact_file": 87
+    },
+    "competing_rule_matches": [],
+    "unresolved_ownership": [],
+    "duplicate_assignments": 0,
+    "missing_exact_rules": [],
+    "empty_prefix_rules": [],
+    "fallback_paths": [
+      ".dockerignore",
+      ".editorconfig",
+      ".gitattributes",
+      ".github/TEAM_MEMBERS",
+      ".github/actions/apple-signing/action.yml",
+      ".github/actions/omni-binaries/action.yml",
+      ".github/actions/previous-pass/action.yml",
+      ".github/actions/ripgrep/action.yml",
+      ".github/actions/setup-bun/action.yml",
+      ".github/dependabot.yml",
+      ".github/pull_request_template.md",
+      ".github/workflows/artifact-native.yml",
+      ".github/workflows/cache-warm.yml",
+      ".github/workflows/codeql.yml",
+      ".github/workflows/distribution-bundle.yml",
+      ".github/workflows/guards.yml",
+      ".github/workflows/native.yml",
+      ".github/workflows/nix-distribution.yml",
+      ".github/workflows/nix-eval.yml",
+      ".github/workflows/nix-toolchain.yml",
+      ".github/workflows/omni-artifacts-proof.yml",
+      ".github/workflows/omni-artifacts.yml",
+      ".github/workflows/omni-cli-smoke.yml",
+      ".github/workflows/omni-delivery-campaign.yml",
+      ".github/workflows/omni-desktop-smoke.yml",
+      ".github/workflows/omni-mirror.yml",
+      ".github/workflows/omni.yml",
+      ".github/workflows/release-cli.yml",
+      ".github/workflows/release-desktop.yml",
+      ".github/workflows/runtime-products.yml",
+      ".github/workflows/test-ci.yml",
+      ".github/workflows/test.yml",
+      ".github/workflows/toolkit-arm.yml",
+      ".github/workflows/tree-sitter-artifacts.yml",
+      ".github/workflows/typecheck.yml",
+      ".gitignore",
+      ".gitleaksignore",
+      ".orchestra/.gitignore",
+      ".orchestra/ci.json",
+      ".orchestra/command/ai-deps.md",
+      ".orchestra/command/commit.md",
+      ".orchestra/command/learn.md",
+      ".orchestra/command/rmslop.md",
+      ".orchestra/command/spellcheck.md",
+      ".orchestra/command/translate.md",
+      ".orchestra/env.d.ts",
+      ".orchestra/orchestra.jsonc",
+      ".orchestra/plugins/smoke-theme.json",
+      ".orchestra/plugins/tui-smoke.tsx",
+      ".orchestra/skills/guardrail-customization/SKILL.md",
+      ".orchestra/skills/guardrail-maintenance/SKILL.md",
+      ".orchestra/skills/guardrail-ownership/SKILL.md",
+      ".orchestra/skills/guardrail-usage/SKILL.md",
+      ".orchestra/skills/vcs-maintenance/SKILL.md",
+      ".orchestra/skills/windows-test-portability/SKILL.md",
+      ".oxlintrc.json",
+      ".prettierignore",
+      ".sh",
+      "AGENTS.md",
+      "CHANGELOG.md",
+      "CONTEXT.md",
+      "CONTRIBUTING.md",
+      "LICENSE",
+      "NOTICE",
+      "README.md",
+      "SECURITY.md",
+      "bun.lock",
+      "bunfig.toml",
+      "docs/architecture/module-scaffold-exit.md",
+      "docs/architecture/monolith-map.md",
+      "docs/architecture/phase-plans/70-80-source.md",
+      "docs/architecture/phase-plans/70-90-briefs/FAC-CORE-CLI.md",
+      "docs/architecture/phase-plans/70-90-briefs/RB-BLOCKS.md",
+      "docs/architecture/phase-plans/70-90-briefs/RD-TOOLKIT.md",
+      "docs/architecture/phase-plans/70-90-briefs/README.md",
+      "docs/architecture/phase-plans/70-90-briefs/REN-TEETH.md",
+      "docs/architecture/phase-plans/70-90-briefs/RN-SCRIPT.md",
+      "docs/architecture/phase-plans/70-90.md",
+      "docs/architecture/phase-plans/70c/edges.py",
+      "docs/architecture/phase-plans/70c/plan-b1c.md",
+      "docs/architecture/phase-plans/70c/plan.md",
+      "docs/architecture/phase-plans/70c/r11-map.md",
+      "docs/architecture/phase-plans/70c/v2-route-inventory.md",
+      "docs/architecture/phase-plans/70c/w1-rules.md",
+      "docs/architecture/phase-plans/80-90-source.md",
+      "docs/architecture/phase-plans/convergence.md",
+      "docs/architecture/restructure-plan.md",
+      "docs/guides/README.md",
+      "docs/guides/architecture.md",
+      "docs/guides/environment.md",
+      "docs/guides/getting-started.md",
+      "docs/guides/omni.md",
+      "docs/guides/workspaces.md",
+      "flake.lock",
+      "flake.nix",
+      "godfile-waivers.json",
+      "package.json",
+      "script/README.md",
+      "script/archive-inventory.ts",
+      "script/archive-scopes.json",
+      "script/artifact-native-workspace.mjs",
+      "script/boundary-ledger.json",
+      "script/check-module-boundaries.ts",
+      "script/check-ripgrep-pins.ts",
+      "script/check-spawn-imports.ts",
+      "script/compat-facade.ts",
+      "script/distribution-deno.ts",
+      "script/explicit-exports.ts",
+      "script/format.ts",
+      "script/generate.ts",
+      "script/godfile.ts",
+      "script/guards/README.md",
+      "script/guards/baseline.ts",
+      "script/guards/catalog.ts",
+      "script/guards/config.toml",
+      "script/guards/diff.ts",
+      "script/guards/engine.ts",
+      "script/guards/guards.test.ts",
+      "script/guards/history.ts",
+      "script/guards/rule.template.toml",
+      "script/guards/rule.ts",
+      "script/guards/rules/agent-scratch.toml",
+      "script/guards/rules/arsenal-evaluator-file.toml",
+      "script/guards/rules/binary-added.toml",
+      "script/guards/rules/build-output.toml",
+      "script/guards/rules/cargo-lockfile-stale.toml",
+      "script/guards/rules/client-env-secret.toml",
+      "script/guards/rules/conflict-markers.toml",
+      "script/guards/rules/dep-git-source.toml",
+      "script/guards/rules/dep-lifecycle-script.toml",
+      "script/guards/rules/dep-new-added.toml",
+      "script/guards/rules/dep-registry-override.toml",
+      "script/guards/rules/destructive-shell.toml",
+      "script/guards/rules/env-file.toml",
+      "script/guards/rules/exec-bit.toml",
+      "script/guards/rules/gha-continue-on-error.toml",
+      "script/guards/rules/gha-curl-pipe-sh.toml",
+      "script/guards/rules/gha-deprecated-commands.toml",
+      "script/guards/rules/gha-env-write.toml",
+      "script/guards/rules/gha-insecure-commands.toml",
+      "script/guards/rules/gha-job-disabled.toml",
+      "script/guards/rules/gha-permissions-broad.toml",
+      "script/guards/rules/gha-pull-request-target.toml",
+      "script/guards/rules/gha-secrets-inherit.toml",
+      "script/guards/rules/gha-secrets-tojson.toml",
+      "script/guards/rules/gha-template-injection.toml",
+      "script/guards/rules/gha-unpinned-uses.toml",
+      "script/guards/rules/guardrail-ignore-added.toml",
+      "script/guards/rules/heredoc-residue.toml",
+      "script/guards/rules/hook-bypass.toml",
+      "script/guards/rules/js-console-log.toml",
+      "script/guards/rules/js-debugger.toml",
+      "script/guards/rules/js-empty-catch.toml",
+      "script/guards/rules/js-loose-assertion.toml",
+      "script/guards/rules/js-test-focused.toml",
+      "script/guards/rules/js-test-skipped.toml",
+      "script/guards/rules/large-file.toml",
+      "script/guards/rules/lint-disable.toml",
+      "script/guards/rules/llm-elision.toml",
+      "script/guards/rules/local-abs-path.toml",
+      "script/guards/rules/local-tests-escape.toml",
+      "script/guards/rules/lockfile-stale.toml",
+      "script/guards/rules/merge-artifacts.toml",
+      "script/guards/rules/merge-outside-conveyor.toml",
+      "script/guards/rules/migration-add-required-column.toml",
+      "script/guards/rules/migration-destructive.toml",
+      "script/guards/rules/migration-edited.toml",
+      "script/guards/rules/os-junk.toml",
+      "script/guards/rules/plugin-legacy-sdk.toml",
+      "script/guards/rules/private-key.toml",
+      "script/guards/rules/protected-paths.toml",
+      "script/guards/rules/py-assert-trivial.toml",
+      "script/guards/rules/py-bare-except.toml",
+      "script/guards/rules/py-breakpoint.toml",
+      "script/guards/rules/py-no-cover.toml",
+      "script/guards/rules/py-noqa-blanket.toml",
+      "script/guards/rules/py-test-skipped.toml",
+      "script/guards/rules/py-type-ignore.toml",
+      "script/guards/rules/removed-evaluator.toml",
+      "script/guards/rules/rs-dbg-macro.toml",
+      "script/guards/rules/rs-should-panic-bare.toml",
+      "script/guards/rules/rs-test-ignored.toml",
+      "script/guards/rules/rs-todo-macros.toml",
+      "script/guards/rules/schema-any-mutable.toml",
+      "script/guards/rules/secret-token.toml",
+      "script/guards/rules/submodule-added.toml",
+      "script/guards/rules/symlink-added.toml",
+      "script/guards/rules/test-assertions-removed.toml",
+      "script/guards/rules/test-declaration-removed.toml",
+      "script/guards/rules/test-file-deleted.toml",
+      "script/guards/rules/test-globalthis.toml",
+      "script/guards/rules/test-retry-added.toml",
+      "script/guards/rules/test-timeout-raised.toml",
+      "script/guards/rules/tls-verify-off.toml",
+      "script/guards/rules/ts-any-added.toml",
+      "script/guards/rules/ts-double-cast.toml",
+      "script/guards/rules/ts-ignore.toml",
+      "script/guards/rules/ts-strict-relaxed.toml",
+      "script/guards/rules/wip-marker.toml",
+      "script/guards/run.ts",
+      "script/hooks",
+      "script/module-architecture.json",
+      "script/module-architecture.ts",
+      "script/module-readme.ts",
+      "script/module-registry.json",
+      "script/monolith-inventory.ts",
+      "script/move-relink.ts",
+      "script/omni-mirror.sh",
+      "script/recovery-bundle.ts",
+      "script/recovery-publication.ts",
+      "script/rename-ledger.ts",
+      "script/sign-windows.ps1",
+      "script/spawn-allowlist.json",
+      "script/test-ci-location.ts",
+      "script/test-ci-package.ts",
+      "script/test-ci-paths.ts",
+      "script/test-ci-request.ts",
+      "script/test-ci-upload.ts",
+      "script/test-ci.ts",
+      "script/test-guard.ts",
+      "script/test-omni-control.ts",
+      "script/toolchain-registry.json",
+      "script/upgrade-opentui.ts",
+      "tsconfig.json",
+      "turbo.json"
+    ],
+    "fallback_explanation": "Fallback is an explicit total ownership rule assigning these 225 tracked paths to S5, not an exclusion."
+  },
+  "digest_method": {
+    "algorithm": "SHA-256",
+    "calculation": "Deterministic JavaScript over bytes returned as MCP Git-tree metadata; no product tool or test was executed.",
+    "encoding": "UTF-8; records sorted by UTF-8 path bytes; LF after every record. paths: path + LF. tree_records: mode + TAB + object_type + TAB + object_oid + TAB + path + LF.",
+    "sort": "Lexicographic unsigned UTF-8 path byte order. All observed paths are ASCII, so ordinal string order is identical.",
+    "paths_format": "path + LF",
+    "tree_records_format": "mode + TAB + object_type + TAB + object_oid + TAB + path + LF",
+    "terminal_lf": true
+  },
+  "global": {
+    "expected": {
+      "entry_count": 14442,
+      "path_sha256": "2516d9fbc2edc223c10a30359aabc54687eb0871c0f77c35a7e5952fede57b83",
+      "tree_records_sha256": "ac3538da3b3440fe7c7c931aa69ca3be423b39ec56a5b0775b95a1f5b2e7ddab"
+    },
+    "actual": {
+      "entry_count": 14442,
+      "path_sha256": "2516d9fbc2edc223c10a30359aabc54687eb0871c0f77c35a7e5952fede57b83",
+      "tree_records_sha256": "ac3538da3b3440fe7c7c931aa69ca3be423b39ec56a5b0775b95a1f5b2e7ddab"
+    },
+    "count_difference": 0,
+    "path_digest_equal": true,
+    "tree_records_digest_equal": true
+  },
+  "shards": {
+    "S1": {
+      "expected": {
+        "name": "Core, sessions, models and API contracts",
+        "entry_count": 2236,
+        "path_sha256": "67d80c0e398b495140ef3b9fd4d0a8058036290919856635298b9007ed153889",
+        "tree_records_sha256": "30fd2c9a07e039f5277ffe761c87f162e946188404dcedc9bf34d73c6a927e58",
+        "top_level_counts": {
+          ".orchestra": 6,
+          "docs": 55,
+          "packages": 2117,
+          "schema": 1,
+          "tooling": 57
+        },
+        "fallback_count": 0
+      },
+      "actual": {
+        "entry_count": 2236,
+        "path_sha256": "67d80c0e398b495140ef3b9fd4d0a8058036290919856635298b9007ed153889",
+        "tree_records_sha256": "30fd2c9a07e039f5277ffe761c87f162e946188404dcedc9bf34d73c6a927e58",
+        "top_level_counts": {
+          ".orchestra": 6,
+          "docs": 55,
+          "packages": 2117,
+          "schema": 1,
+          "tooling": 57
+        },
+        "fallback_count": 0
+      },
+      "difference": 0,
+      "comparisons": {
+        "entry_count": true,
+        "path_sha256": true,
+        "tree_records_sha256": true,
+        "top_level_counts": true,
+        "fallback_count": true
+      }
+    },
+    "S2": {
+      "expected": {
+        "name": "Desktop, web, application shell and UI systems",
+        "entry_count": 4506,
+        "path_sha256": "8b70f96dcbb623bdd1cc2a48b61d51d255d9d9ce90836efc9a5cd05f1fc5a582",
+        "tree_records_sha256": "cb4f96b19e248e923485db63de87e56b45523428e1cb891a8746ec8189dffd88",
+        "top_level_counts": {
+          ".github": 1,
+          ".orchestra": 28,
+          "apps": 555,
+          "assets": 7,
+          "docs": 90,
+          "packages": 3823,
+          "schema": 2
+        },
+        "fallback_count": 0
+      },
+      "actual": {
+        "entry_count": 4506,
+        "path_sha256": "8b70f96dcbb623bdd1cc2a48b61d51d255d9d9ce90836efc9a5cd05f1fc5a582",
+        "tree_records_sha256": "cb4f96b19e248e923485db63de87e56b45523428e1cb891a8746ec8189dffd88",
+        "top_level_counts": {
+          ".github": 1,
+          ".orchestra": 28,
+          "apps": 555,
+          "assets": 7,
+          "docs": 90,
+          "packages": 3823,
+          "schema": 2
+        },
+        "fallback_count": 0
+      },
+      "difference": 0,
+      "comparisons": {
+        "entry_count": true,
+        "path_sha256": true,
+        "tree_records_sha256": true,
+        "top_level_counts": true,
+        "fallback_count": true
+      }
+    },
+    "S3": {
+      "expected": {
+        "name": "Maestro, Relay, specialists and integrations",
+        "entry_count": 4553,
+        "path_sha256": "6ca1aca1f8a1da4bf4061c67f06f983f0b676e6d90a7f2af945cb57a7f76c4f1",
+        "tree_records_sha256": "f9130f5eaa900907cefacb284974dabfeb22970e1e391f5eb0a567175e9f46c2",
+        "top_level_counts": {
+          ".orchestra": 12,
+          "docs": 274,
+          "modules": 4244,
+          "packages": 21,
+          "specs": 2
+        },
+        "fallback_count": 0
+      },
+      "actual": {
+        "entry_count": 4553,
+        "path_sha256": "6ca1aca1f8a1da4bf4061c67f06f983f0b676e6d90a7f2af945cb57a7f76c4f1",
+        "tree_records_sha256": "f9130f5eaa900907cefacb284974dabfeb22970e1e391f5eb0a567175e9f46c2",
+        "top_level_counts": {
+          ".orchestra": 12,
+          "docs": 274,
+          "modules": 4244,
+          "packages": 21,
+          "specs": 2
+        },
+        "fallback_count": 0
+      },
+      "difference": 0,
+      "comparisons": {
+        "entry_count": true,
+        "path_sha256": true,
+        "tree_records_sha256": true,
+        "top_level_counts": true,
+        "fallback_count": true
+      }
+    },
+    "S4": {
+      "expected": {
+        "name": "Atlas, knowledge, continuity, RAG and Genesis",
+        "entry_count": 2220,
+        "path_sha256": "0b99735199c8a9a4db61bf506dafe92acb76909dd9f9c48d8f521fb920c6cd1d",
+        "tree_records_sha256": "919064e1e589092b32d0f19d7f01346fab04faa9f6dad0ed6a3070ef8d083129",
+        "top_level_counts": {
+          ".atlas": 3,
+          ".github": 4,
+          ".orchestra": 3,
+          "docs": 15,
+          "modules": 1940,
+          "script": 93,
+          "specs": 162
+        },
+        "fallback_count": 0
+      },
+      "actual": {
+        "entry_count": 2220,
+        "path_sha256": "0b99735199c8a9a4db61bf506dafe92acb76909dd9f9c48d8f521fb920c6cd1d",
+        "tree_records_sha256": "919064e1e589092b32d0f19d7f01346fab04faa9f6dad0ed6a3070ef8d083129",
+        "top_level_counts": {
+          ".atlas": 3,
+          ".github": 4,
+          ".orchestra": 3,
+          "docs": 15,
+          "modules": 1940,
+          "script": 93,
+          "specs": 162
+        },
+        "fallback_count": 0
+      },
+      "difference": 0,
+      "comparisons": {
+        "entry_count": true,
+        "path_sha256": true,
+        "tree_records_sha256": true,
+        "top_level_counts": true,
+        "fallback_count": true
+      }
+    },
+    "S5": {
+      "expected": {
+        "name": "CLI, Omni, distribution, infrastructure and cross-cutting contracts",
+        "entry_count": 927,
+        "path_sha256": "7d807d18a0bbbcccbaa1f01954b78036a2769c5fee95a1e8be5293435ec714f0",
+        "tree_records_sha256": "1117add0d62b1d427ae30df7bedf616a507f35a41c0534fb1444951f48c15c31",
+        "top_level_counts": {
+          ".claude": 10,
+          ".dockerignore": 1,
+          ".editorconfig": 1,
+          ".gitattributes": 1,
+          ".github": 32,
+          ".gitignore": 1,
+          ".gitleaksignore": 1,
+          ".orchestra": 18,
+          ".oxlintrc.json": 1,
+          ".prettierignore": 1,
+          ".sh": 1,
+          ".vscode": 2,
+          ".zed": 1,
+          "AGENTS.md": 1,
+          "CHANGELOG.md": 1,
+          "CONTEXT.md": 1,
+          "CONTRIBUTING.md": 1,
+          "LICENSE": 1,
+          "NOTICE": 1,
+          "README.md": 1,
+          "SECURITY.md": 1,
+          "apps": 162,
+          "bun.lock": 1,
+          "bunfig.toml": 1,
+          "docs": 38,
+          "flake.lock": 1,
+          "flake.nix": 1,
+          "godfile-waivers.json": 1,
+          "native": 426,
+          "nix": 31,
+          "package.json": 1,
+          "packages": 36,
+          "patches": 20,
+          "perf": 1,
+          "script": 126,
+          "tsconfig.json": 1,
+          "turbo.json": 1
+        },
+        "fallback_count": 225
+      },
+      "actual": {
+        "entry_count": 927,
+        "path_sha256": "7d807d18a0bbbcccbaa1f01954b78036a2769c5fee95a1e8be5293435ec714f0",
+        "tree_records_sha256": "1117add0d62b1d427ae30df7bedf616a507f35a41c0534fb1444951f48c15c31",
+        "top_level_counts": {
+          ".claude": 10,
+          ".dockerignore": 1,
+          ".editorconfig": 1,
+          ".gitattributes": 1,
+          ".github": 32,
+          ".gitignore": 1,
+          ".gitleaksignore": 1,
+          ".orchestra": 18,
+          ".oxlintrc.json": 1,
+          ".prettierignore": 1,
+          ".sh": 1,
+          ".vscode": 2,
+          ".zed": 1,
+          "AGENTS.md": 1,
+          "CHANGELOG.md": 1,
+          "CONTEXT.md": 1,
+          "CONTRIBUTING.md": 1,
+          "LICENSE": 1,
+          "NOTICE": 1,
+          "README.md": 1,
+          "SECURITY.md": 1,
+          "apps": 162,
+          "bun.lock": 1,
+          "bunfig.toml": 1,
+          "docs": 38,
+          "flake.lock": 1,
+          "flake.nix": 1,
+          "godfile-waivers.json": 1,
+          "native": 426,
+          "nix": 31,
+          "package.json": 1,
+          "packages": 36,
+          "patches": 20,
+          "perf": 1,
+          "script": 126,
+          "tsconfig.json": 1,
+          "turbo.json": 1
+        },
+        "fallback_count": 225
+      },
+      "difference": 0,
+      "comparisons": {
+        "entry_count": true,
+        "path_sha256": true,
+        "tree_records_sha256": true,
+        "top_level_counts": true,
+        "fallback_count": true
+      }
+    }
+  },
+  "artifact": {
+    "file": "tree-inventory.tsv",
+    "columns": [
+      "mode",
+      "object_type",
+      "object_oid",
+      "path",
+      "population",
+      "owner",
+      "resolution",
+      "matched_rule",
+      "size_bytes"
+    ],
+    "data_rows": 16710,
+    "encoding": "UTF-8, TAB separated, LF after header and every row",
+    "sha256": "243af8f4c2ea35ac4ede30d7ed8dc42ab52adb710fe29163d12c6c5c8fa0a8a8",
+    "sha256_provenance": "calculated over complete TSV including header",
+    "size_bytes": 2828263
+  },
+  "limits": {
+    "content_of_14442_blobs": "Not read as a corpus. AGENTS.md and ownership-input.ts were separately inspected in full; the other enumerated metadata is not content evidence.",
+    "semantic_coverage": "UNKNOWN; count and digest agreement do not show semantic sufficiency",
+    "reserved_slices": "Omni 393 and Platform 200 are represented only by baseline metadata when present; no extraction or result changes were performed.",
+    "runtime": "NOT_RUN",
+    "product_tools": "NOT_RUN",
+    "tests_and_ci": "NOT_RUN",
+    "consumer": "NOT_RUN",
+    "coordination_private_state": "NOT_REQUESTED",
+    "other_session_results": "NOT_READ",
+    "global_acceptance": "NOT_ASSERTED"
+  },
+  "recovery": {
+    "anchor_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "root_tree": "a522a53e5f046f1758151b0f558531bbded04592",
+    "read_index": "sources-A.json#/tree_responses",
+    "procedure": [
+      "Read baseline commit with GitHub MCP and require its tree to equal source_tree.",
+      "Fetch each recorded tree endpoint, require returned SHA equality and truncated=false; if a response is unavailable, decompose that tree by non-recursive children and do not silently omit it.",
+      "Reconstruct root entries, modules/packages direct entries, and each recursive subtree with repository-path prefixes exactly once; require unique paths.",
+      "Select non-tree leaves, apply the pinned partition resolver, and calculate paths and tree-record digests in the documented encoding.",
+      "Compare all global/shard counts, top-level counts, fallback counts and digests; preserve differences or UNKNOWN instead of adjusting data."
+    ],
+    "new_source_revision": "Requires new enumeration and new digests; never substitute current branch HEAD."
+  },
+  "baseline_input_fit": {
+    "claim_type": "bounded_static_inference",
+    "observer_source": {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "blob_sha": "c6afd6a35071a2487a1168cea5ed1ad26379c376",
+      "read_scope": "full_content",
+      "decisive_lines": {
+        "forbidden_atlas_segment": [
+          31,
+          33,
+          43
+        ],
+        "symlink_refusal": [
+          77,
+          92,
+          132,
+          152
+        ],
+        "byte_limit": [
+          172,
+          181
+        ]
+      }
+    },
+    "observed_rules": [
+      "isAllowedRel rejects any path segment equal to .atlas.",
+      "The file observation refuses symlinks.",
+      "The default byte-read path and final byte-length check refuse >256000 bytes."
+    ],
+    "metadata_intersection": {
+      "oversize_blob_count": 80,
+      "oversize_by_shard": {
+        "S2": 73,
+        "S5": 1,
+        "S4": 3,
+        "S1": 3
+      },
+      "top_level_atlas_path_count": 3,
+      "any_atlas_segment_path_count": 5,
+      "symlink_path_count": 1,
+      "union_path_count": 86,
+      "intersection_path_count": 0,
+      "oversize_paths": [
+        {
+          "path": "apps/desktop/icons/beta/icon.icns",
+          "blob_sha": "6d172b3820760e99a478ba9fd23b49ba2c519739",
+          "size_bytes": 461956,
+          "owner": "S2"
+        },
+        {
+          "path": "apps/desktop/icons/dev/icon.icns",
+          "blob_sha": "6d172b3820760e99a478ba9fd23b49ba2c519739",
+          "size_bytes": 461956,
+          "owner": "S2"
+        },
+        {
+          "path": "apps/desktop/icons/prod/icon.icns",
+          "blob_sha": "6d172b3820760e99a478ba9fd23b49ba2c519739",
+          "size_bytes": 461956,
+          "owner": "S2"
+        },
+        {
+          "path": "apps/desktop/src/renderer/splash/comet.mp4",
+          "blob_sha": "d45661fe5d5488fd937b6faf0be4d38e90a7a8e1",
+          "size_bytes": 1010559,
+          "owner": "S2"
+        },
+        {
+          "path": "bun.lock",
+          "blob_sha": "6139ce6e65ec428fc3ef92f0787be0d8b32db6e3",
+          "size_bytes": 489909,
+          "owner": "S5"
+        },
+        {
+          "path": "docs/images/readme/atlas-graph-dark.png",
+          "blob_sha": "da79e78f0beca8f16084ca9fbc1e77a183ee6357",
+          "size_bytes": 1192384,
+          "owner": "S2"
+        },
+        {
+          "path": "docs/images/readme/atlas-graph-light.png",
+          "blob_sha": "ab30cbfddee439c2a2ffeeb5b64287debfef778f",
+          "size_bytes": 1182194,
+          "owner": "S2"
+        },
+        {
+          "path": "docs/images/readme/atlas-ledger-dark.png",
+          "blob_sha": "c2bb139873dda96bb01f9984a5b18d5c16926294",
+          "size_bytes": 259938,
+          "owner": "S2"
+        },
+        {
+          "path": "docs/images/readme/atlas-ledger-light.png",
+          "blob_sha": "d0bc8e16b96c0148d46a2c9f6007d7e07b28a583",
+          "size_bytes": 281135,
+          "owner": "S2"
+        },
+        {
+          "path": "docs/images/readme/claude-mode-dark.png",
+          "blob_sha": "532528ab6c050556667717e67c98c1aeebda4d06",
+          "size_bytes": 261115,
+          "owner": "S2"
+        },
+        {
+          "path": "docs/images/readme/claude-mode-light.png",
+          "blob_sha": "d95cac4507bb3dbc9783f5290032d86aee44c140",
+          "size_bytes": 281178,
+          "owner": "S2"
+        },
+        {
+          "path": "docs/images/readme/context-savings.png",
+          "blob_sha": "f872165e506edfa488ef60e868638c975118be33",
+          "size_bytes": 359505,
+          "owner": "S2"
+        },
+        {
+          "path": "docs/images/readme/flow-dark.png",
+          "blob_sha": "6242bbea7c520106718eaaae26116a3c61d79296",
+          "size_bytes": 346584,
+          "owner": "S2"
+        },
+        {
+          "path": "docs/images/readme/flow-light.png",
+          "blob_sha": "1cc1d222b8852e18a80474fb82ce78a5c9081e65",
+          "size_bytes": 369005,
+          "owner": "S2"
+        },
+        {
+          "path": "docs/images/readme/home-dashboard.png",
+          "blob_sha": "77e652fd2800adc6b59a5f2c2e5fc0229d13c15e",
+          "size_bytes": 336437,
+          "owner": "S2"
+        },
+        {
+          "path": "docs/images/readme/lean-dark.png",
+          "blob_sha": "d4e638bb8e6a7ff2b016ef2f8af5b6235c3c8819",
+          "size_bytes": 258280,
+          "owner": "S2"
+        },
+        {
+          "path": "docs/images/readme/lean-light.png",
+          "blob_sha": "efeb287c2f90cb1026fdfea59ffdf04ca42653d8",
+          "size_bytes": 265662,
+          "owner": "S2"
+        },
+        {
+          "path": "docs/images/readme/omni-light.png",
+          "blob_sha": "361c24a3d07063604f02721bde587c8b7ea75338",
+          "size_bytes": 260525,
+          "owner": "S2"
+        },
+        {
+          "path": "docs/images/readme/pipeline-dark.png",
+          "blob_sha": "47bbbd99a118407375f41cc89b34ca5c02a2f06a",
+          "size_bytes": 270128,
+          "owner": "S2"
+        },
+        {
+          "path": "docs/images/readme/pipeline-light.png",
+          "blob_sha": "649921e7a5fc9ff5c5b31998ddd278b63abe0ddf",
+          "size_bytes": 289861,
+          "owner": "S2"
+        },
+        {
+          "path": "docs/images/readme/relay-dark.png",
+          "blob_sha": "edcc19324932d353a544ef98b5143d6bf202871e",
+          "size_bytes": 262459,
+          "owner": "S2"
+        },
+        {
+          "path": "docs/images/readme/relay-light.png",
+          "blob_sha": "66233caa1083cfcfa95fa845959791d0a564f71e",
+          "size_bytes": 280540,
+          "owner": "S2"
+        },
+        {
+          "path": "docs/images/readme/settings-providers-claude-mode.png",
+          "blob_sha": "3424a77f4fd5c2dfed19ebbc0e3b4262745c3aba",
+          "size_bytes": 365491,
+          "owner": "S2"
+        },
+        {
+          "path": "docs/images/readme/workflow-canvas-dark.png",
+          "blob_sha": "ebb1b10e79d367512a1ba5edcee8863b354f6850",
+          "size_bytes": 725105,
+          "owner": "S2"
+        },
+        {
+          "path": "docs/images/readme/workflow-canvas-light.png",
+          "blob_sha": "9915dea91fa63ec9bf15e2b9ce0c4d6167689dcc",
+          "size_bytes": 925594,
+          "owner": "S2"
+        },
+        {
+          "path": "docs/specs/projects-board/mocks/v5.jpg",
+          "blob_sha": "5ee9cf2a67f66ef375ab8a5960eccea902f890b9",
+          "size_bytes": 414243,
+          "owner": "S2"
+        },
+        {
+          "path": "docs/specs/projects-board/mocks/v6-epic.jpg",
+          "blob_sha": "b562b2ca6a3634e6904792f8f20be2ee06a5d866",
+          "size_bytes": 376121,
+          "owner": "S2"
+        },
+        {
+          "path": "docs/specs/projects-board/mocks/v6-inbox.jpg",
+          "blob_sha": "29221ce3bd0bdeb28fa71542f10a76e53c51fbca",
+          "size_bytes": 324962,
+          "owner": "S2"
+        },
+        {
+          "path": "docs/specs/projects-board/mocks/v6-issue.jpg",
+          "blob_sha": "2de282155caf6dacaf58af4ae5e9a70654d10249",
+          "size_bytes": 334652,
+          "owner": "S2"
+        },
+        {
+          "path": "docs/specs/projects-board/mocks/v7-money.jpg",
+          "blob_sha": "59dcd9224ae93e5a71942f7c723255850ea2f55c",
+          "size_bytes": 267793,
+          "owner": "S2"
+        },
+        {
+          "path": "docs/specs/projects-board/mocks/v7-proof.jpg",
+          "blob_sha": "303b580e1e6f982de95913b6bd66498146da4db0",
+          "size_bytes": 357684,
+          "owner": "S2"
+        },
+        {
+          "path": "docs/specs/projects-board/mocks/v7-watch.jpg",
+          "blob_sha": "50ac46e6cce9e72751bbfb3031be37ce576fcb41",
+          "size_bytes": 358073,
+          "owner": "S2"
+        },
+        {
+          "path": "modules/atlas/boundary/src/generated/mine.js",
+          "blob_sha": "e3d5fed3e80881e6389c4de426b0f16df76ed6f3",
+          "size_bytes": 397146,
+          "owner": "S4"
+        },
+        {
+          "path": "modules/atlas/boundary/src/generated/surface.js",
+          "blob_sha": "5d0e2cf23486ff6d12e1d828dee8aaf647ac33be",
+          "size_bytes": 557017,
+          "owner": "S4"
+        },
+        {
+          "path": "packages/app-shell/public/assets/Inter.ttf",
+          "blob_sha": "e31b51e3e9388ae61767c692885e5d77ff7b5346",
+          "size_bytes": 874708,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/assets/JetBrainsMonoNerdFontMono-Regular.woff2",
+          "blob_sha": "02a57c6f500a61edf5cc451f23e76bd92a034f2a",
+          "size_bytes": 1060580,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/abby-santurbane.jpg",
+          "blob_sha": "a26d284ce420d646fdca0b07b41e35b90619eead",
+          "size_bytes": 799641,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/aleksandra-khaprenko.jpg",
+          "blob_sha": "bcbd56f4b9c54d4b84a6370df94def7eaf6af50e",
+          "size_bytes": 785728,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/alessandro-russo.jpg",
+          "blob_sha": "f85945f06f4bbb9dac74c9fd494d5592d113efd8",
+          "size_bytes": 743017,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/andy-kennedy.jpg",
+          "blob_sha": "55264a9db8ebdf884bb25656be39d31c0412a710",
+          "size_bytes": 399040,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/artem-kniaz.jpg",
+          "blob_sha": "cb40a2ffed99c6e9fef2f1a48c6852de6770573a",
+          "size_bytes": 633410,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/ashkan-forouzani.jpg",
+          "blob_sha": "92fc6d66455a2d0dcea59c74be3c112f7a5758e5",
+          "size_bytes": 991115,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/daniele-levis-pelusi.jpg",
+          "blob_sha": "89bcd6bf2e08653dd0d0ee09a7cb9555e78262b8",
+          "size_bytes": 281633,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/daniil-silantev.jpg",
+          "blob_sha": "8dad438e974874ce9b6609201c89b6f5155bd1ec",
+          "size_bytes": 475107,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/decry-yae.jpg",
+          "blob_sha": "1b123ca7ca6e4e88f0813763afcc4e543ad98a00",
+          "size_bytes": 523842,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/digital-reach.jpg",
+          "blob_sha": "c6ae01d0ff6c93996baae16f2d164730b440c6ae",
+          "size_bytes": 371421,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/dunes-2.jpg",
+          "blob_sha": "44d13f6d7d1b1e4b59272558e359dc91f279c9cc",
+          "size_bytes": 609375,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/dunes.jpg",
+          "blob_sha": "069bc15d4633c44925b2b4ccafe3746fecc00c8e",
+          "size_bytes": 606304,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/f-cary-snyder.jpg",
+          "blob_sha": "39b615bd6a66bf3b3074a4e528965ae5a6fb5fe6",
+          "size_bytes": 531947,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/fernando-jorge.jpg",
+          "blob_sha": "7f62dbd40d4d4af6bc2ee131cc1a0a5413843601",
+          "size_bytes": 447920,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/gareth-david.jpg",
+          "blob_sha": "82900675f5ca33800f6c723af4981e68f109c640",
+          "size_bytes": 693244,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/jeremy-thomas.jpg",
+          "blob_sha": "b57874d9588edafb7e49b042d80956b3a5f6870a",
+          "size_bytes": 830229,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/jonatan-pie.jpg",
+          "blob_sha": "b70a30abfd20a5f522e6899dd710a60e27d00e46",
+          "size_bytes": 435611,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/jr-korpa.jpg",
+          "blob_sha": "2afbb3dace33aa672789c2b603fd1a13adc105e9",
+          "size_bytes": 489374,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/jude-infantini.jpg",
+          "blob_sha": "1778450ef3fbbbea747ca27a0299b58ab2f49108",
+          "size_bytes": 1267366,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/leo-visions.jpg",
+          "blob_sha": "24218ce6daac8383620c90b6a92235efb635de11",
+          "size_bytes": 495613,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/leo.jpg",
+          "blob_sha": "16995eb8b4d1fcee324fb52480c4a63b0be128fe",
+          "size_bytes": 455431,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/nasa-2.jpg",
+          "blob_sha": "590ab7abe2bcf2b62532df81bbc9b200020a41d5",
+          "size_bytes": 282032,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/nathan-dumlao.jpg",
+          "blob_sha": "ea1e2b0140c75be95fa5742a591f2ce2878850d4",
+          "size_bytes": 679717,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/osman-rana.jpg",
+          "blob_sha": "38bd344b573618f27a6ae1c064c36a32e18d6021",
+          "size_bytes": 961062,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/photo-1.jpg",
+          "blob_sha": "0382ca31a8a422db93705a1ee26717722acafdb2",
+          "size_bytes": 1009426,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/photo-2.jpg",
+          "blob_sha": "2c5a37e8d03aaed5f4f6c1208a1f81edf5443799",
+          "size_bytes": 648904,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/photo-3.jpg",
+          "blob_sha": "cef1123a7170155f2b087468e8c4178d3615bffc",
+          "size_bytes": 790208,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/photo-4.jpg",
+          "blob_sha": "a25d878a7f8f7facd6f2ddbf08f2550340524e88",
+          "size_bytes": 815780,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/ryan-hutton.jpg",
+          "blob_sha": "57adb0869bbf8ac36d8d0cd922f66fcc3a2814a6",
+          "size_bytes": 476355,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/scott-rodgerson.jpg",
+          "blob_sha": "e27d13fb97ae55b0845db36dec0a0aea2a7fcfce",
+          "size_bytes": 771360,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/sergey-pesterev.jpg",
+          "blob_sha": "fbe67357193b78acd41f32b5601ed645f10b5ce8",
+          "size_bytes": 474372,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/storm.jpg",
+          "blob_sha": "4acfb5bd1ab234fb31aee65d6e22d094b7b0c966",
+          "size_bytes": 551964,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/sumner-mahaffey.jpg",
+          "blob_sha": "8cdabe2c67f0f418f9201ad53e0571d4bf92e7c7",
+          "size_bytes": 392343,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/sydney-rae.jpg",
+          "blob_sha": "ae45b760d9727bf6d146094394119cd7f38e7245",
+          "size_bytes": 668734,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/app-shell/public/orchestra/wallpapers/trevor-mckinnon.jpg",
+          "blob_sha": "005d91ddafd24a7f26a4260fdc4e97b20dfd3548",
+          "size_bytes": 300862,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/client/src/generated/types.ts",
+          "blob_sha": "fca4633666a639d550065312a13e48c6ce221d12",
+          "size_bytes": 462732,
+          "owner": "S1"
+        },
+        {
+          "path": "packages/codemode/test/fixtures/opencode-v2-openapi.json",
+          "blob_sha": "934b22e389f4ae86039967dd8134d750780b025c",
+          "size_bytes": 637024,
+          "owner": "S1"
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/modelina.package-lock.json",
+          "blob_sha": "9fc9ef1bc7124fcead2d83cea20f2bff4340949c",
+          "size_bytes": 266885,
+          "owner": "S1"
+        },
+        {
+          "path": "packages/ui/src/assets/fonts/Inter.ttf",
+          "blob_sha": "e31b51e3e9388ae61767c692885e5d77ff7b5346",
+          "size_bytes": 874708,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/ui/src/assets/fonts/JetBrainsMonoNerdFontMono-Regular.woff2",
+          "blob_sha": "02a57c6f500a61edf5cc451f23e76bd92a034f2a",
+          "size_bytes": 1060580,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/ui/src/components/file-icons/sprite.svg",
+          "blob_sha": "619b2b58cace6ed6d84b0f37c20b1c6e7b8b0ce0",
+          "size_bytes": 943958,
+          "owner": "S2"
+        },
+        {
+          "path": "packages/ui/src/components/provider-icons/sprite.svg",
+          "blob_sha": "c8099d7ad1bac04b243a93af3a344e4ff9112f7e",
+          "size_bytes": 281569,
+          "owner": "S2"
+        },
+        {
+          "path": "schema/tui.json",
+          "blob_sha": "9250e2ec0c6e433ade0d5a172e8156087022f217",
+          "size_bytes": 1131057,
+          "owner": "S2"
+        },
+        {
+          "path": "specs/atlas-ui/mock/data-real.js",
+          "blob_sha": "80c2198b2eed5e25567cb99c7a102cab17265ab6",
+          "size_bytes": 2302009,
+          "owner": "S4"
+        }
+      ],
+      "atlas_segment_paths": [
+        {
+          "path": ".atlas/members/orch/memory/logbook.jsonl",
+          "blob_sha": "06c5367191e1152715e6712393e54e48439a932a",
+          "size_bytes": 1908,
+          "owner": "S4"
+        },
+        {
+          "path": ".atlas/project/board.jsonl",
+          "blob_sha": "f9a3f49ca801090e16c871b99383797679e2640b",
+          "size_bytes": 57364,
+          "owner": "S4"
+        },
+        {
+          "path": ".atlas/project/orientation.jsonl",
+          "blob_sha": "3396235bb7e04fad7a72fecfbd3b4cce5379695e",
+          "size_bytes": 2592,
+          "owner": "S4"
+        },
+        {
+          "path": "modules/atlas/harness/probes/__fixtures__/bench-driver-corpus/pkg-a/.atlas/index.scip",
+          "blob_sha": "fb0440a117f6f0fb456bae516d3c39ab3f2da20e",
+          "size_bytes": 1936,
+          "owner": "S4"
+        },
+        {
+          "path": "modules/atlas/harness/probes/__fixtures__/bench-driver-corpus/pkg-b/.atlas/index.scip",
+          "blob_sha": "44f83d3715b186998a077fff51f3ec88e8ca7641",
+          "size_bytes": 2011,
+          "owner": "S4"
+        }
+      ],
+      "symlink_paths": [
+        {
+          "path": "packages/app-shell/src/custom-elements.d.ts",
+          "blob_sha": "e4ea0d6cebdad58ea12fc08dd7a3f732cdb45f8f",
+          "size_bytes": 33,
+          "owner": "S2"
+        }
+      ]
+    },
+    "qualification": "The metadata intersects baseline source rules; no observer was executed. Oversize inference assumes worktree bytes faithfully materialize Git blob bytes, and actual checkout filters/line endings were not measured. Membership observation may also refuse a directory containing one of the restricted paths; that propagation was not executed or counted.",
+    "required_next_step": "Coordination must verify governed representation/input/binding/reader compatibility for these tracked paths against the selected S4 release without dropping them from the inventory.",
+    "current_s4_candidate_status": "UNKNOWN; no S4 branch or result was read",
+    "excluded_from_inventory": false,
+    "runtime_executed": false
+  }
+}

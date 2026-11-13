@@ -1,0 +1,44 @@
+{
+  "schema": "genesis-external-integration-static-gaps/v1",
+  "front": "A",
+  "gaps": [
+    {
+      "id": "A-GAP-01",
+      "status": "SCOPE_LIMITATION",
+      "severity": "informational",
+      "subject": "Semantic and runtime completeness",
+      "description": "The 14442-leaf reconciliation is structural. This inventory has not read the contents of 14442 blobs and cannot certify extraction completeness, correctness, L1–L4 usefulness or runtime behavior.",
+      "required_next_step": "Coordination selects exact domain handoffs and performs its separate semantic and runtime gates.",
+      "blocking_static_inventory": false
+    },
+    {
+      "id": "A-GAP-02",
+      "status": "RECOVERED",
+      "severity": "informational",
+      "subject": "Large root recursive tree request",
+      "description": "The first recursive root request failed with Transport closed; no Git truncation result was available. The complete hierarchy was recovered using 47 successful non-truncated tree responses.",
+      "required_next_step": "None for this candidate; repeat decomposition if recovering.",
+      "blocking_static_inventory": false
+    },
+    {
+      "id": "A-GAP-03",
+      "status": "OPEN_FOR_COORDINATION",
+      "severity": "material_integration_requirement",
+      "subject": "Baseline observer does not directly cover the full tracked-path population",
+      "description": "Static inspection of ownership-input.ts plus tree metadata identifies 86 distinct tracked paths subject to baseline file-observation refusals: 80 blob sizes >256000, 5 paths containing an .atlas segment (3 root paths plus 2 fixtures), and 1 symlink. These groups do not overlap. This is a baseline source/metadata fit finding, not a runtime result or a finding about the unknown current S4 candidate.",
+      "evidence": {
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "observer_path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+        "observer_blob_sha": "c6afd6a35071a2487a1168cea5ed1ad26379c376",
+        "metadata_index": "tree-inventory.tsv",
+        "detail": "inventory.json#/baseline_input_fit"
+      },
+      "qualification": "Oversize comparison uses Git blob sizes and assumes identical materialized bytes; actual worktree filters/line endings and membership propagation were not measured.",
+      "required_next_step": "Verify exact S4 release representation/input/binding/reader coverage or explicit safe disposition for these paths while retaining all 14442 entries.",
+      "blocking_static_inventory": false,
+      "blocks_future_integration_claim_until_resolved": true
+    }
+  ],
+  "count_or_digest_differences": [],
+  "unresolved_inventory_blockers": []
+}
