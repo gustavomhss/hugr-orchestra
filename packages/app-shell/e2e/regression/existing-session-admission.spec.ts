@@ -102,7 +102,7 @@ test("existing empty Session retains first Send identity across canonical projec
     await page.locator(submit).click()
     const sent = await first
     const failed = page.waitForEvent("requestfailed", { predicate: (request) => request === sent })
-    expect(prompts).toEqual([sent.postData()])
+    await expect.poll(() => prompts).toEqual([sent.postData()])
     expect(writes).toEqual([`POST /api/session/${sessionID}/agent`, `POST /api/session/${sessionID}/model`, `POST ${promptPath}`])
     await expect(page.locator(admitting)).toHaveAttribute("data-prompt-admitting", "true")
     await expect(page.locator(editor)).toHaveText(text)
@@ -150,6 +150,6 @@ test("existing empty Session retains first Send identity across canonical projec
       body: JSON.stringify({ writes, prompts, reads, delivery, messageID: payload.id, boundary: "Controlled HTTP and SSE; no backend durability claim" }) })
   } finally {
     gate.resolve()
-    await transport.close()
+    if (!page.isClosed()) await transport.close()
   }
 })
