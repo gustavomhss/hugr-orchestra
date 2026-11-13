@@ -6,8 +6,8 @@ import shfmtPin from "../../src/backend-toolkit/packs/shfmt"
 import cargoMachetePin from "../../src/backend-toolkit/packs/cargo-machete"
 
 const cards = [ReviewLocalCheckCards.shfmt.pack, ReviewLocalCheckCards.cargoMachete.pack]
-const ids = cards.map((pack) => pack.id)
-const route = (tier: string, changed: readonly string[], catalog = ReviewCatalog.current) => ReviewRoute.route(
+const ids: ReadonlyArray<string> = cards.map((pack) => pack.id)
+const route = (tier: string, changed: readonly string[], catalog: ReviewCatalog.Catalog = ReviewCatalog.current) => ReviewRoute.route(
   { stage: "code", tier, settings: { acceptedUnavailable: [] } },
   { files: ["src/lib.rs"] },
   { files: [...changed, "src/lib.rs"], changes: changed.map((path) => ({ path, added: [], removed: 0 })) },
