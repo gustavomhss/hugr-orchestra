@@ -217,8 +217,19 @@ describe("LocationServiceMap", () => {
             ),
           )
           const config = path.join(dir.path, ".user-config")
+          const global: Global.Interface = {
+            home: dir.path,
+            config,
+            data: path.join(dir.path, ".runtime", "data"),
+            cache: path.join(dir.path, ".runtime", "cache"),
+            state: path.join(dir.path, ".runtime", "state"),
+            tmp: path.join(dir.path, ".runtime", "tmp"),
+            bin: path.join(dir.path, ".runtime", "bin"),
+            log: path.join(dir.path, ".runtime", "log"),
+            repos: path.join(dir.path, ".runtime", "repos"),
+          }
           yield* Effect.promise(async () => {
-            await fs.mkdir(config)
+            await Promise.all(Object.values(global).map((directory) => fs.mkdir(directory, { recursive: true })))
             await fs.writeFile(path.join(config, "orchestra.json"), JSON.stringify({ trusted_projects: [dir.path] }))
           })
           // Approval belongs to this fixture's isolated user document, never the ambient user's config.
@@ -250,7 +261,8 @@ describe("LocationServiceMap", () => {
             Effect.provide(
               AppNodeBuilder.build(nodes, [
                 [SessionExecution.node, SessionExecutionLocal.node],
-                [Global.node, Global.layerWith({ config })],
+                [Global.node, Global.layerWith(global)],
+                [Database.node, Database.layerFromPath(":memory:")],
               ]),
             ),
             Effect.scoped,
