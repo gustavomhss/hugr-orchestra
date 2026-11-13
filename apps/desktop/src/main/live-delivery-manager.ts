@@ -137,6 +137,8 @@ export function createLiveDeliveryManager(options: LiveDeliveryOptions): LiveDel
     options.store.complete(value.id, { target: record.target, meetingID: record.meeting.id, sessionID: record.meeting.sessionID, timeStarted: record.meeting.timeStarted, timeEnded: identity.meeting.timeEnded })
     value.removed = true; value.next = false; value.paused = true; closeOwner(current)
     entries.delete(value.id); unconfirmed.delete(value.id); notify()
+    try { options.onComplete?.({ localID: value.id, sessionID: record.meeting.sessionID, meetingID: record.meeting.id }) }
+    catch { console.warn("Live delivery completion observer failed") }
   }
   async function drain(value: Entry, current: Owner) {
     let stage: "read" | "append" | "stop" = "read"
