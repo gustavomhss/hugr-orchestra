@@ -136,6 +136,10 @@
         "$TURBO_ROOT$/packages/core/test/fixture/tmpdir.ts"
       ]
     },
+    "@orchestra/engine-claude-code#test": {
+      "dependsOn": ["transit"],
+      "outputs": []
+    },
     "@orchestra/codemode#test": {
       "dependsOn": ["transit"],
       "outputs": []
