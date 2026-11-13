@@ -1,0 +1,289 @@
+{
+  "status": "INDEPENDENT_GITHUB_READ_ONLY_VERIFICATION",
+  "AFTER": "HOLD; no benchmark result or performance claim",
+  "packs": {
+    "A": {
+      "run": 43368851805,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43368851805",
+      "status": "completed",
+      "conclusion": "success",
+      "snapshot": "54bd146703165afd2e7449989e6bbfa728463a0d",
+      "parents": [
+        "1ea3a466a7ddaa5b5d1d5c9be1e9bf07f8826990"
+      ],
+      "expected_root": "1ea3a466a7ddaa5b5d1d5c9be1e9bf07f8826990",
+      "changed_files": [
+        ".ci-run.json"
+      ],
+      "os": {
+        "linux": {
+          "job": 131699628498,
+          "conclusion": "success",
+          "pass": 114,
+          "fail": 0,
+          "assertions": 849,
+          "tests": 114,
+          "files": 5,
+          "omni_control": "omni positive control [c0435df0374043a4936dd1b3788d07a2]: pass (declared: 5 test(s) in test-browser/model-execution-consumer.test.tsx, test-browser/prompt-retry.test.ts); 5 omni spawn(s), 0 delegated.",
+          "raw_log_sha256": "5f8cf25e45dd3cea27a0480f188d88d370d6fc3c7ffcfb1f29229b1ccb4ff117",
+          "job_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43368851805/job/131699628498",
+          "bounded_raw_evidence": [
+            "omni positive control [c0435df0374043a4936dd1b3788d07a2]: pass (declared: 5 test(s) in test-browser/model-execution-consumer.test.tsx, test-browser/prompt-retry.test.ts); 5 omni spawn(s), 0 delegated.",
+            "114 pass",
+            "0 fail",
+            "849 expect() calls",
+            "Ran 114 tests across 5 files. [16.45s]"
+          ]
+        },
+        "windows": {
+          "job": 131699628757,
+          "conclusion": "success",
+          "pass": 114,
+          "fail": 0,
+          "assertions": 849,
+          "tests": 114,
+          "files": 5,
+          "omni_control": "omni positive control [3cd1d20611bb325409ec8c677ef9f02f]: pass (declared: 5 test(s) in test-browser/model-execution-consumer.test.tsx, test-browser/prompt-retry.test.ts); 5 omni spawn(s), 0 delegated.",
+          "raw_log_sha256": "fc0ced510d5ff4c0b2d9e4054ae9bba8fc80ee442df2477e88fdf66084c5e850",
+          "job_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43368851805/job/131699628757",
+          "bounded_raw_evidence": [
+            "omni positive control [3cd1d20611bb325409ec8c677ef9f02f]: pass (declared: 5 test(s) in test-browser/model-execution-consumer.test.tsx, test-browser/prompt-retry.test.ts); 5 omni spawn(s), 0 delegated.",
+            "114 pass",
+            "0 fail",
+            "849 expect() calls",
+            "Ran 114 tests across 5 files. [25.55s]"
+          ]
+        }
+      }
+    },
+    "B": {
+      "run": 43368851179,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43368851179",
+      "status": "completed",
+      "conclusion": "success",
+      "snapshot": "fb8747db7e1c071fe6268672ace560cbb7aa0f59",
+      "parents": [
+        "1ea3a466a7ddaa5b5d1d5c9be1e9bf07f8826990"
+      ],
+      "expected_root": "1ea3a466a7ddaa5b5d1d5c9be1e9bf07f8826990",
+      "changed_files": [
+        ".ci-run.json"
+      ],
+      "os": {
+        "windows": {
+          "job": 131699625819,
+          "conclusion": "success",
+          "unit": {
+            "pass": 11,
+            "fail": 0,
+            "assertions": 34,
+            "tests": 11,
+            "files": 3
+          },
+          "browser": {
+            "pass": 3,
+            "fail": 0,
+            "assertions": 15,
+            "tests": 3,
+            "files": 3
+          },
+          "isolated_solid_child_wrapper_pass": true,
+          "isolated_browser_child_wrapper_pass": true,
+          "child_runtime_counts": "not emitted; no static counts claimed",
+          "raw_log_sha256": "cb02b4b5066168e90fb9e95c1a9be68423f5eded92ea800b728dd8eaaa6e1bb0",
+          "job_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43368851179/job/131699625819",
+          "bounded_raw_evidence": [
+            "(pass) prompt submit with isolated module mocks (solid) [1374.71ms]",
+            "(pass) prompt submit with isolated module mocks (browser) [1375.77ms]",
+            "11 pass",
+            "0 fail",
+            "34 expect() calls",
+            "Ran 11 tests across 3 files. [4.30s]",
+            "omni positive control [387018396bf9a1ec56ff40edc3618d11]: not applicable (focused: no declaring test ran); this run made no omni spawn and delegated none, so it proved nothing about omni.",
+            "3 pass",
+            "0 fail",
+            "15 expect() calls",
+            "Ran 3 tests across 3 files. [2.81s]"
+          ]
+        },
+        "linux": {
+          "job": 131699626055,
+          "conclusion": "success",
+          "unit": {
+            "pass": 11,
+            "fail": 0,
+            "assertions": 34,
+            "tests": 11,
+            "files": 3
+          },
+          "browser": {
+            "pass": 3,
+            "fail": 0,
+            "assertions": 15,
+            "tests": 3,
+            "files": 3
+          },
+          "isolated_solid_child_wrapper_pass": true,
+          "isolated_browser_child_wrapper_pass": true,
+          "child_runtime_counts": "not emitted; no static counts claimed",
+          "raw_log_sha256": "74bc9c5d005deb1ffc90e57ac4db1972ed2a00a9589e123cf36a0508e8f54c86",
+          "job_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43368851179/job/131699626055",
+          "bounded_raw_evidence": [
+            "(pass) prompt submit with isolated module mocks (solid) [517.02ms]",
+            "(pass) prompt submit with isolated module mocks (browser) [552.84ms]",
+            "11 pass",
+            "0 fail",
+            "34 expect() calls",
+            "Ran 11 tests across 3 files. [1453.00ms]",
+            "omni positive control [1e45dfbf2773effa2f3c8323c4eef9aa]: not applicable (focused: no declaring test ran); this run made no omni spawn and delegated none, so it proved nothing about omni.",
+            "3 pass",
+            "0 fail",
+            "15 expect() calls",
+            "Ran 3 tests across 3 files. [997.00ms]"
+          ]
+        }
+      }
+    },
+    "TUI": {
+      "run": 43369898441,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43369898441",
+      "status": "completed",
+      "conclusion": "success",
+      "snapshot": "a2ea26d91e0a6ac243bfa84f85d6983ad24b45d1",
+      "parents": [
+        "421381c83d4d033555a7da111d50be5b48cbfe8e"
+      ],
+      "expected_root": "421381c83d4d033555a7da111d50be5b48cbfe8e",
+      "changed_files": [
+        ".ci-run.json"
+      ],
+      "os": {
+        "windows": {
+          "job": 131702961971,
+          "conclusion": "success",
+          "pass": 76,
+          "fail": 0,
+          "assertions": 16726,
+          "tests": 76,
+          "files": 8,
+          "variant_original_pass": 6,
+          "atomic_pass": 4,
+          "raw_log_sha256": "0425a0f78205e8b09c77a43f2fa5847969be80928540861b5b865990ed18b706",
+          "job_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43369898441/job/131702961971",
+          "bounded_raw_evidence": [
+            "76 pass",
+            "0 fail",
+            "16726 expect() calls",
+            "Ran 76 tests across 8 files. [10.31s]"
+          ]
+        },
+        "linux": {
+          "job": 131702962215,
+          "conclusion": "success",
+          "pass": 76,
+          "fail": 0,
+          "assertions": 1165,
+          "tests": 76,
+          "files": 8,
+          "variant_original_pass": 6,
+          "atomic_pass": 4,
+          "raw_log_sha256": "d0cefa9ef4578f3fd76f2fad3a711644c31a4fa1ba837598517f8c485a360e94",
+          "job_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43369898441/job/131702962215",
+          "bounded_raw_evidence": [
+            "76 pass",
+            "0 fail",
+            "1165 expect() calls",
+            "Ran 76 tests across 8 files. [7.38s]"
+          ]
+        }
+      }
+    }
+  },
+  "existing_receipt_comparison": {
+    "A_snapshot_matches": true,
+    "B_snapshot_matches": true,
+    "TUI_snapshot_matches": true,
+    "actual_counts_match": true,
+    "official_exits_existing_receipts": {
+      "A": 0,
+      "B": 0,
+      "TUI": 0
+    }
+  },
+  "scope": "A/B qualify Root 1ea3a466a7; TUI qualifies Root 421381c83d after devsync transitive dependency changes. The 54 E6 owned paths remain unchanged at input Root 0af31ce9a6. This evidence does not qualify later changes.",
+  "input_root": "0af31ce9a64c9d072fedfab8c8f07f5e745bc11f",
+  "source_continuity": {
+    "scope": "All 54 E6 owned paths, including relevant frontend source and tests, are unchanged from both qualified parents at this input Root. This comparison does not assert that every transitive dependency is unchanged.",
+    "comparisons": [
+      {
+        "qualified_parent": "1ea3a466a7ddaa5b5d1d5c9be1e9bf07f8826990",
+        "input_root": "0af31ce9a64c9d072fedfab8c8f07f5e745bc11f",
+        "compared_owned_paths": 54,
+        "changed_owned_paths": []
+      },
+      {
+        "qualified_parent": "421381c83d4d033555a7da111d50be5b48cbfe8e",
+        "input_root": "0af31ce9a64c9d072fedfab8c8f07f5e745bc11f",
+        "compared_owned_paths": 54,
+        "changed_owned_paths": []
+      }
+    ],
+    "owned_paths": [
+      "docs/guides/models.md",
+      "packages/app-shell/src/components/dialog-select-model-list.tsx",
+      "packages/app-shell/src/components/dialog-select-model.tsx",
+      "packages/app-shell/src/components/prompt-input-v2.tsx",
+      "packages/app-shell/src/components/prompt-input/queued-prompt.ts",
+      "packages/app-shell/src/components/prompt-input/submission-policy.ts",
+      "packages/app-shell/src/components/prompt-input/submission-types.ts",
+      "packages/app-shell/src/components/prompt-input/submit-delivery.suite.ts",
+      "packages/app-shell/src/components/prompt-input/submit-dispatch.suite.ts",
+      "packages/app-shell/src/components/prompt-input/submit-harness.ts",
+      "packages/app-shell/src/components/prompt-input/submit-receipt.suite.ts",
+      "packages/app-shell/src/components/prompt-input/submit.suite.ts",
+      "packages/app-shell/src/components/prompt-input/submit.ts",
+      "packages/app-shell/src/context/local.test.ts",
+      "packages/app-shell/src/context/local.tsx",
+      "packages/app-shell/src/context/server-sdk.tsx",
+      "packages/app-shell/src/i18n/frontend-recovery.ts",
+      "packages/app-shell/src/pages/session.tsx",
+      "packages/app-shell/src/pages/session/composer/prompt-model-selection.ts",
+      "packages/app-shell/src/server-api.ts",
+      "packages/app-shell/src/utils/refcount.test.ts",
+      "packages/app-shell/src/utils/refcount.ts",
+      "packages/app-shell/src/utils/server-compat.ts",
+      "packages/app-shell/src/utils/server.ts",
+      "packages/app-shell/src/utils/session-management.ts",
+      "packages/app-shell/src/utils/session-model-execution.ts",
+      "packages/app-shell/test-browser/followup-idle.test.ts",
+      "packages/app-shell/test-browser/model-execution-consumer.fixture.tsx",
+      "packages/app-shell/test-browser/model-execution-consumer.test.tsx",
+      "packages/app-shell/test-browser/model-execution-context.test.ts",
+      "packages/app-shell/test-browser/model-variant-intent.test.ts",
+      "packages/app-shell/test-browser/prompt-admission-owner.suite.ts",
+      "packages/app-shell/test-browser/prompt-retry-native-server.fixture.ts",
+      "packages/app-shell/test-browser/prompt-retry.test.ts",
+      "packages/client/src/index.ts",
+      "packages/client/src/model-execution.ts",
+      "packages/session-ui/src/v2/components/prompt-input/index.tsx",
+      "packages/session-ui/src/v2/components/prompt-input/types.ts",
+      "packages/tui/src/app.tsx",
+      "packages/tui/src/component/dialog-model.tsx",
+      "packages/tui/src/component/dialog-variant.tsx",
+      "packages/tui/src/component/prompt/index.tsx",
+      "packages/tui/src/context/local.tsx",
+      "packages/tui/src/context/sdk.tsx",
+      "packages/tui/src/context/session-actions.ts",
+      "packages/tui/src/context/sync.tsx",
+      "packages/tui/src/ui/dialog-select.tsx",
+      "packages/tui/src/util/persistence.ts",
+      "packages/tui/test/cli/cmd/tui/model-execution-consumer.fixture.tsx",
+      "packages/tui/test/cli/cmd/tui/model-execution-consumer.test.tsx",
+      "packages/tui/test/cli/cmd/tui/model-execution-context.test.tsx",
+      "packages/tui/test/cli/cmd/tui/model-variant-intent.test.tsx",
+      "packages/tui/test/cli/tui/dialog-select-disabled.test.tsx",
+      "packages/tui/test/util/persistence-atomic.test.ts"
+    ]
+  },
+  "evidence_format": "Raw job logs independently retrieved from GitHub. SHA256 hashes identify the saved UTF-8 log text; bounded evidence lines omit only timestamp prefixes."
+}

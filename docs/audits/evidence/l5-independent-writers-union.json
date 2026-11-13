@@ -1,0 +1,225 @@
+{
+  "schemaVersion": 1,
+  "finding": "L5",
+  "doesNotCloseFinding": true,
+  "verifiedFrom": "GitHub run metadata, complete job logs, immutable contents blobs and Git commit parents",
+  "fixtures": [
+    {
+      "path": "packages/core/test/knowledge-writer-order.test.ts",
+      "gitBlob": "38afa0a8d232290907e58fa3683b31287bc350c8",
+      "sha256": "90cf06d45ed523aed16f78a4405645a79579b4e985396dcf8dfd3d4f7deb37cc",
+      "verifiedInRuns": [
+        43369059308,
+        43368749009
+      ]
+    },
+    {
+      "path": "packages/core/test/fixture/knowledge-writer-order.ts",
+      "gitBlob": "ee80a2a84ae0aa2beaf2ca19a967e24ac5e45c08",
+      "sha256": "1faefa2f11eaeaf3eaee4c780c3c3c8030ed34c08c0ddff8714cf39f86125e44",
+      "verifiedInRuns": [
+        43369059308,
+        43368749009
+      ]
+    }
+  ],
+  "runs": [
+    {
+      "id": 43369059308,
+      "purpose": "pre-fix product RED",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43369059308",
+      "snapshot": "f6c9c4cfc04954d22245788bf4f419e4b77dba8c",
+      "snapshotParents": [
+        "0a38f8fd5fa827abf54e9767858cbb082cb8c331"
+      ],
+      "conclusion": "failure",
+      "jobs": [
+        {
+          "id": 131700309525,
+          "os": "linux",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43369059308/job/131700309525",
+          "counts": {
+            "pass": 0,
+            "fail": 2,
+            "assertions": 62
+          },
+          "failedTests": [
+            "L5 independent writers: late G1 log preserves G2 with inverted clocks",
+            "L5 independent writers: late G1 log preserves G2 with equal clocks"
+          ],
+          "l5Cases": [
+            {
+              "name": "L5 independent writers: late G1 log preserves G2 with inverted clocks",
+              "outcome": "fail",
+              "durationMs": 139.23
+            },
+            {
+              "name": "L5 independent writers: late G1 log preserves G2 with equal clocks",
+              "outcome": "fail",
+              "durationMs": 118.82
+            }
+          ],
+          "omni": {
+            "verdict": "pass",
+            "spawns": 4,
+            "delegated": 0
+          },
+          "rawLogSHA256": "0e5c5af5fd2490e7f23719dcd790a70f60e052f19c6d47d544a86f26fcc251d0"
+        }
+      ],
+      "cleanup": [
+        {
+          "id": 131700928946,
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 43368749009,
+      "purpose": "integrated Core seams",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43368749009",
+      "snapshot": "d15bbd630acc6e4b68f6e953491faac60de6e46f",
+      "snapshotParents": [
+        "1ea3a466a7ddaa5b5d1d5c9be1e9bf07f8826990"
+      ],
+      "conclusion": "failure",
+      "jobs": [
+        {
+          "id": 131699287041,
+          "os": "linux",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43368749009/job/131699287041",
+          "counts": {
+            "pass": 100,
+            "fail": 1,
+            "assertions": 768
+          },
+          "failedTests": [
+            "remove refuses new children during its initial stop and deletes admitted descendants"
+          ],
+          "l5Cases": [
+            {
+              "name": "L5 independent writers: late G1 log preserves G2 with inverted clocks",
+              "outcome": "pass",
+              "durationMs": 93.09
+            },
+            {
+              "name": "L5 independent writers: late G1 log preserves G2 with equal clocks",
+              "outcome": "pass",
+              "durationMs": 102.28
+            }
+          ],
+          "omni": {
+            "verdict": "pass",
+            "spawns": 58,
+            "delegated": 0
+          },
+          "rawLogSHA256": "76d3237b8d419f4db49b0cac40b2ff67d9bd2643b5802edf9f349ee2cb502961"
+        },
+        {
+          "id": 131699287300,
+          "os": "windows",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43368749009/job/131699287300",
+          "counts": {
+            "pass": 100,
+            "fail": 1,
+            "assertions": 768
+          },
+          "failedTests": [
+            "remove refuses new children during its initial stop and deletes admitted descendants"
+          ],
+          "l5Cases": [
+            {
+              "name": "L5 independent writers: late G1 log preserves G2 with inverted clocks",
+              "outcome": "pass",
+              "durationMs": 351.41
+            },
+            {
+              "name": "L5 independent writers: late G1 log preserves G2 with equal clocks",
+              "outcome": "pass",
+              "durationMs": 309.72
+            }
+          ],
+          "omni": {
+            "verdict": "pass",
+            "spawns": 78,
+            "delegated": 0
+          },
+          "rawLogSHA256": "d7366fec32e23595dec162744ca2d026f8a86c0a8b3c23b1674f951247a0e83d"
+        }
+      ],
+      "cleanup": [
+        {
+          "id": 131701335374,
+          "conclusion": "success"
+        }
+      ]
+    },
+    {
+      "id": 43369257851,
+      "purpose": "focused lifecycle assertion repair",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43369257851",
+      "snapshot": "ff725c9609a92158251382a1c2f21b590beb225a",
+      "snapshotParents": [
+        "421381c83d4d033555a7da111d50be5b48cbfe8e"
+      ],
+      "conclusion": "success",
+      "jobs": [
+        {
+          "id": 131700917959,
+          "os": "linux",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43369257851/job/131700917959",
+          "counts": {
+            "pass": 3,
+            "fail": 0,
+            "assertions": 10
+          },
+          "failedTests": [],
+          "l5Cases": [],
+          "omni": {
+            "verdict": "not applicable",
+            "spawns": 0,
+            "delegated": 0
+          },
+          "rawLogSHA256": "c6a648928bc3ee3b954d7c85186ba29dfca78a3ee5e2402ae0c900cf12139ecd"
+        },
+        {
+          "id": 131700917652,
+          "os": "windows",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43369257851/job/131700917652",
+          "counts": {
+            "pass": 3,
+            "fail": 0,
+            "assertions": 10
+          },
+          "failedTests": [],
+          "l5Cases": [],
+          "omni": {
+            "verdict": "not applicable",
+            "spawns": 0,
+            "delegated": 0
+          },
+          "rawLogSHA256": "7ef7c1469db4f4c5cff38dc14883c5887689953de5c18d8961a9c33525d8a957"
+        }
+      ],
+      "cleanup": [
+        {
+          "id": 131703092446,
+          "conclusion": "success"
+        }
+      ]
+    }
+  ],
+  "claims": [
+    "Identical approved fixture bytes produce two ordering failures on the preserved pre-fix source and pass both actual-writer cases on integrated source on Linux and Windows.",
+    "Baseline failures occur at knowledge-writer-order.test.ts:86: committed-log fold selects G1 instead of G2. Both real writer ACKs, release, successful child joins and local/fresh-copy replay calls precede this assertion; immediate current projection equals G2.",
+    "Each integrated Core seam job has exactly one failing test, session-lifecycle.test.ts:80: structural comparison of Effect.result containing NotFoundError. L5 cases pass on both systems.",
+    "Focused lifecycle snapshots change only the assertion to length plus toMatchObject, retaining error identity and behavior checks; all three lifecycle tests pass on both systems."
+  ],
+  "limits": [
+    "Baseline assertions after the first folded-row mismatch do not execute; RED does not independently assert later lineage or replay-row expectations.",
+    "Focused lifecycle gate contains no L5 writer cases and makes no omni spawn; it repairs the separate assertion failure and does not replace the integrated L5 evidence.",
+    "Controlled reproof isolates causal ordering; these fixtures do not qualify production index authentication, crash-outbox durability or external-writer semantics.",
+    "This evidence does not certify generated or shipped Atlas boundary bytes, replace final union qualification, or close the finding."
+  ],
+  "focusedAssertionDiffSHA256": "96d9fce831ee26d9b0f4d8ef1c5e29f86b75887ad6caab7abf75b91697f0bef3"
+}
