@@ -9,7 +9,6 @@ import { WorkspaceV2 } from "./workspace"
 import { ModelV2 } from "./model"
 import { Location } from "./location"
 import { SessionMessage } from "./session/message"
-import { Prompt } from "./session/prompt"
 import { PromptInput } from "@orchestra/schema/prompt-input"
 import { EventV2 } from "./event"
 import { Database } from "./database/database"
@@ -22,6 +21,8 @@ import path from "path"
 import { existsSync } from "fs"
 import { SessionRunner } from "./session/runner/index"
 import { SessionStore } from "./session/store"
+import { makeRead } from "./session/read"
+import { resolvePrompt } from "./session/resolve-prompt"
 import { SessionExecution } from "./session/execution"
 import { makeGlobalNode } from "./effect/app-node"
 import { LocationServiceMap } from "./location-service-map"
@@ -32,10 +33,8 @@ import { Snapshot } from "./snapshot"
 import { File } from "./file"
 import { SessionRevert } from "./session/revert"
 import { Revert } from "@orchestra/schema/revert"
-import { FSUtil } from "./fs-util"
 import { Global } from "./global"
 import type { ToolSafety } from "./tool-safety"
-import { SessionDurable } from "@orchestra/schema/durable-event-manifest"
 import { SessionArchive } from "./session/archive"
 import { SessionLifecycle } from "./session/lifecycle"
 import { SessionSubagentModels } from "./session/subagent-models"
@@ -283,19 +282,8 @@ const layer = Layer.effect(
     const store = yield* SessionStore.Service
     const locations = yield* LocationServiceMap.Service
     const global = yield* Global.Service
-    const decodeMessage = Schema.decodeUnknownEffect(SessionMessage.Message)
     const encodeMessage = Schema.encodeSync(SessionMessage.Message)
-    const isDurableSessionEvent = Schema.is(SessionEvent.Durable)
-    const decode = (row: typeof SessionMessageTable.$inferSelect) =>
-      decodeMessage({ ...row.data, id: row.id, type: row.type }).pipe(
-        Effect.mapError(
-          () =>
-            new MessageDecodeError({
-              sessionID: SessionSchema.ID.make(row.session_id),
-              messageID: SessionMessage.ID.make(row.id),
-            }),
-        ),
-      )
+    const reads = makeRead({ db, events, store, get: (id) => result.get(id) })
 
     // Installed hooks on a Session event, through its Location's tool registry: the profile loader and ToolSafety its
     // tool calls use. Only a project with a hooks.json opens its Location for them.
@@ -537,62 +525,7 @@ const layer = Layer.effect(
         )))
       }),
       list: (input) => SessionArchive.list(db, input),
-      messages: Effect.fn("V2Session.messages")(function* (input) {
-        yield* result.get(input.sessionID)
-        const direction = input.cursor?.direction ?? "next"
-        const requestedOrder = input.order ?? "desc"
-        const order = direction === "previous" ? (requestedOrder === "asc" ? "desc" : "asc") : requestedOrder
-        const anchor = input.cursor
-          ? yield* db
-              .select({ seq: SessionMessageTable.seq })
-              .from(SessionMessageTable)
-              .where(
-                and(eq(SessionMessageTable.session_id, input.sessionID), eq(SessionMessageTable.id, input.cursor.id)),
-              )
-              .get()
-              .pipe(Effect.orDie)
-          : undefined
-        if (input.cursor && !anchor) return []
-        const boundary = anchor
-          ? order === "asc"
-            ? gt(SessionMessageTable.seq, anchor.seq)
-            : lt(SessionMessageTable.seq, anchor.seq)
-          : undefined
-        const where = boundary
-          ? and(eq(SessionMessageTable.session_id, input.sessionID), boundary)
-          : eq(SessionMessageTable.session_id, input.sessionID)
-        const query = db
-          .select()
-          .from(SessionMessageTable)
-          .where(where)
-          .orderBy(order === "asc" ? asc(SessionMessageTable.seq) : desc(SessionMessageTable.seq))
-        const rows = yield* (input.limit === undefined ? query.all() : query.limit(input.limit).all()).pipe(
-          Effect.orDie,
-        )
-        return yield* Effect.forEach(direction === "previous" ? rows.toReversed() : rows, decode)
-      }),
-      message: Effect.fn("V2Session.message")(function* (input) {
-        const stored = yield* store.message(input.messageID)
-        return stored?.sessionID === input.sessionID ? stored.message : undefined
-      }),
-      context: Effect.fn("V2Session.context")(function* (sessionID) {
-        yield* result.get(sessionID)
-        return yield* store.context(sessionID)
-      }),
-      events: (input) =>
-        Stream.unwrap(
-          result
-            .get(input.sessionID)
-            .pipe(Effect.as(events.durable({ aggregateID: input.sessionID, after: input.after }))),
-        ).pipe(Stream.filter((event): event is SessionEvent.DurableEvent => isDurableSessionEvent(event))),
-      history: Effect.fn("V2Session.history")(function* (input) {
-        yield* result.get(input.sessionID)
-        return yield* EventV2.readAggregate(db, {
-          ...input,
-          aggregateID: input.sessionID,
-          manifest: SessionDurable,
-        })
-      }),
+      ...reads.api,
       prompt: Effect.fn("V2Session.prompt")((input, options) =>
         Effect.uninterruptibleMask((restore) =>
           Effect.gen(function* () {
@@ -664,7 +597,7 @@ const layer = Layer.effect(
               Effect.forEach(
                 kept,
                 (row, index) =>
-                  decode(row).pipe(
+                  reads.decode(row).pipe(
                     Effect.orDie,
                     Effect.flatMap((message) => {
                       const { id, type, ...data } = encodeMessage({
@@ -867,20 +800,6 @@ function forkedTitle(title: string) {
   if (!match) return `${title} (fork #1)`
   return `${match[1]} (fork #${Number(match[2]) + 1})`
 }
-
-const resolvePrompt = (input: PromptInput.Prompt) =>
-  Prompt.make({
-    text: input.text,
-    agents: input.agents,
-    files: input.files?.map((file) => {
-      const dataMime = file.uri.match(/^data:([^;,]+)[;,]/i)?.[1]
-      const target = URL.canParse(file.uri) ? new URL(file.uri).pathname : (file.name ?? file.uri)
-      return {
-        ...file,
-        mime: dataMime ?? (target.endsWith("/") ? "application/x-directory" : FSUtil.mimeType(target)),
-      }
-    }),
-  })
 
 export const node = makeGlobalNode({
   service: Service,

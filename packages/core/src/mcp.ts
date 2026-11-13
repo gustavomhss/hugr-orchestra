@@ -14,7 +14,6 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js"
 import {
   CallToolResultSchema,
-  LATEST_PROTOCOL_VERSION,
   ToolListChangedNotificationSchema,
   type ListToolsResult,
   type ReadResourceResult,
@@ -29,10 +28,10 @@ import { makeLocationNode } from "./effect/app-node"
 import { FSUtil } from "./fs-util"
 import { Global } from "./global"
 import { Location } from "./location"
-import { InstallationVersion } from "./installation/version"
 import { McpAuth } from "./mcp/auth"
 import type { McpIdentity } from "./mcp/identity"
 import { McpCatalog } from "./mcp/catalog"
+import { inspect } from "./mcp/debug"
 import { McpClient } from "./mcp/client"
 import { McpOAuthCallback } from "./mcp/oauth-callback"
 import {
@@ -813,98 +812,7 @@ const layer = Layer.effect(
       if (!server) return yield* new NotFoundError({ name })
       if (server.type !== "remote")
         return yield* new ConfigError({ message: `MCP server ${name} is not a remote server` })
-      const oauth = server.oauth !== false
-      const stored = oauth ? yield* auth.get(name) : undefined
-      const base = {
-        name,
-        url: server.url,
-        oauth,
-        ...(stored?.tokens
-          ? {
-              tokens: {
-                access:
-                  stored.tokens.accessToken.length > 8
-                    ? `${stored.tokens.accessToken.slice(0, 4)}***${stored.tokens.accessToken.slice(-4)}`
-                    : "***",
-                expiresAt: stored.tokens.expiresAt,
-                refreshToken: stored.tokens.refreshToken !== undefined,
-              },
-            }
-          : {}),
-        ...(stored?.clientInfo
-          ? { client: { id: stored.clientInfo.clientId, secretExpiresAt: stored.clientInfo.clientSecretExpiresAt } }
-          : {}),
-      } satisfies Mcp.Debug
-      // OAuth explicitly disabled: there is no sign-in to debug.
-      if (!oauth) return base
-      const response = yield* Effect.tryPromise({
-        try: () =>
-          fetch(server.url, {
-            method: "POST",
-            headers: {
-              ...server.headers,
-              "Content-Type": "application/json",
-              Accept: "application/json, text/event-stream",
-            },
-            body: JSON.stringify({
-              jsonrpc: "2.0",
-              method: "initialize",
-              params: {
-                protocolVersion: LATEST_PROTOCOL_VERSION,
-                capabilities: {},
-                clientInfo: { name: "orchestra-debug", version: InstallationVersion },
-              },
-              id: 1,
-            }),
-            signal: AbortSignal.timeout(DEFAULT_TIMEOUT),
-          }),
-        catch: messageOf,
-      }).pipe(Effect.result)
-      if (response._tag === "Failure") return { ...base, error: response.failure }
-      const answer = response.success
-      const wwwAuthenticate = answer.headers.get("www-authenticate") ?? undefined
-      const body = yield* Effect.promise(() => answer.text().catch(() => ""))
-      const http = {
-        status: answer.status,
-        statusText: answer.statusText,
-        wwwAuthenticate,
-        ...(answer.ok ? { serverInfo: serverInfo(body) } : { body: body.slice(0, 500) || undefined }),
-      }
-      if (answer.status !== 401 || !oauth) return { ...base, http }
-      const binding = yield* auth.checkout(name, server.url).pipe(Effect.result)
-      if (binding._tag === "Failure")
-        return { ...base, http, flow: { result: "error" as const, message: binding.failure.message } }
-      const provider = new McpOAuthProvider(
-        name,
-        server.url,
-        oauthConfig(server),
-        { onRedirect: () => {} },
-        auth,
-        binding.success,
-      )
-      const attempt = yield* Effect.tryPromise({
-        try: async () => {
-          const client = McpClient.createClient(location.directory)
-          await client.connect(
-            new StreamableHTTPClientTransport(new URL(server.url), {
-              authProvider: provider,
-              ...(server.headers ? { requestInit: { headers: server.headers } } : {}),
-            }),
-          )
-          await client.close()
-        },
-        catch: (error) => (error instanceof Error ? error : new Error(String(error))),
-      }).pipe(Effect.result)
-      if (attempt._tag === "Success") return { ...base, http, flow: { result: "authenticated" as const } }
-      const registered =
-        (yield* Effect.promise(() => provider.clientInformation().catch(() => undefined))) !== undefined
-      return {
-        ...base,
-        http,
-        flow: unauthorized(attempt.failure)
-          ? { result: "unauthorized" as const, message: attempt.failure.message, clientRegistered: registered }
-          : { result: "error" as const, message: attempt.failure.message },
-      }
+      return yield* inspect(name, server, auth, location.directory, DEFAULT_TIMEOUT)
     })
 
     yield* Effect.addFinalizer(() =>
@@ -1012,15 +920,6 @@ export const node = makeLocationNode({
     McpProvided.node,
   ],
 })
-
-function serverInfo(body: string) {
-  try {
-    const info = JSON.parse(body)?.result?.serverInfo
-    return info ? JSON.stringify(info) : undefined
-  } catch {
-    return undefined
-  }
-}
 
 function failed(error: string): Mcp.Status {
   return { status: "failed", error }
