@@ -710,7 +710,7 @@ export function make(options: ClientOptions) {
           while (boundary >= 0) {
             const block = buffer.slice(0, boundary)
             buffer = buffer.slice(boundary + 2)
-            if (block.length > 1_048_576) throw new ClientError("MalformedResponse")
+            if (block.length > 134_217_728) throw new ClientError("MalformedResponse")
             const data = block
               .split("\n")
               .flatMap((line) => (line.startsWith("data:") ? [line.slice(5).trimStart()] : []))
@@ -724,7 +724,8 @@ export function make(options: ClientOptions) {
             }
             boundary = buffer.indexOf("\n\n")
           }
-          if (buffer.length > 1_048_576) throw new ClientError("MalformedResponse")
+          const pendingDelimiter = buffer.endsWith("\n\r") ? 2 : buffer.endsWith("\n") || buffer.endsWith("\r") ? 1 : 0
+          if (buffer.length - pendingDelimiter > 134_217_728) throw new ClientError("MalformedResponse")
           if (next.done) return
         }
       } finally {

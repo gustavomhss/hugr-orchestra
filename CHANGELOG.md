@@ -4,6 +4,7 @@ All notable changes to HuGR Orchestra are recorded here. The format follows [Kee
 
 ## [Unreleased]
 
+- Live session output now accepts events containing uploaded attachments instead of stopping at a 1 MiB event.
 - Replaying knowledge no longer replaces a later commit with an earlier one that was logged afterwards. The later commit stays.
 - Replaying knowledge no longer treats a logged row as proven when its key or claims are not in the fact. That row is held for review.
 - Searching for a file or folder no longer treats a failed search as no matches. That failure is shown.
