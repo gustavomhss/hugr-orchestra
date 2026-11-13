@@ -29,7 +29,7 @@ const CARGO = '[package]\nname="fixture"\nversion="0.1.0"\nedition="2021"\n[depe
 const OUTSIDE_CARGO = '[package]\nname="fixture"\nversion="0.1.0"\nedition="2021"\n[lib]\npath="../outside.rs"\n'
 const SHADOW_CARGO = '[package]\nname="fixture"\nversion="0.1.0"\nedition="2021"\n[lib]\npath="target/lib.rs"\n[dependencies]\nanyhow="1"\n'
 const held = () => Effect.acquireRelease(Effect.promise(tmpdir), (dir) => Effect.promise(() => dir[Symbol.asyncDispose]()))
-const files = (script: string, rust: string, policy: string, manifest = CARGO, shadow = false) => ({ [POLICY_PATH]: policy, ".editorconfig": "root=true\n[*]\nindent_style=space\nindent_size=8\n", "selected.sh": script, ...(shadow ? { "package.json": "{}\n", "target/lib.rs": "pub fn target(){}\n" } : {}), "Cargo.toml": manifest, "src/lib.rs": rust })
+const files = (script: string, rust: string, policy: string, manifest = CARGO, shadow = false) => ({ [POLICY_PATH]: policy, ".editorconfig": "root=true\n[*]\nindent_style=space\nindent_size=8\n", "selected.sh": script, ...(shadow ? { "package.json": "{}\n", ".gitignore": "/target/\n" } : {}), "Cargo.toml": manifest, "src/lib.rs": rust })
 const writeFiles = async (root: string, values: Record<string, string>) => {
   for (const [file, text] of Object.entries(values)) {
     await mkdir(path.dirname(path.join(root, file)), { recursive: true })
@@ -46,6 +46,7 @@ const makeRepo = (parent: string, name: string, headScript: string, headRust: st
   await git(root, "add", "-A"); await git(root, "commit", "-q", "-m", "base"); await git(root, "tag", "base")
   await writeFiles(root, files(headScript, headRust, HEAD_POLICY, manifest, shadow))
   await git(root, "add", "-A"); await git(root, "commit", "-q", "-m", "head"); await git(root, "tag", "head")
+  if (shadow) await writeFiles(root, { "target/lib.rs": "pub fn target(){}\n" })
   return root
 })
 const cards = [ReviewLocalCheckCards.shfmt.pack, ReviewLocalCheckCards.cargoMachete.pack]
