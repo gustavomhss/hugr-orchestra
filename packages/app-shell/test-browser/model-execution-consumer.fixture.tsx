@@ -359,13 +359,18 @@ export function initializeModelExecutionConsumers(): Promise<void> {
     const platformModule: typeof import("../src/context/platform") = await loadRows(Bun.resolveSync("../src/context/platform.tsx", import.meta.dir))
     Bun.plugin({ name: "canonical-model-consumer-draft", setup(build) {
       build.onResolve({ filter: /^consumer-draft:/ }, (args) => ({ path: args.path.slice("consumer-draft:".length), namespace: "consumer-draft" }))
-      build.onLoad({ filter: /.*/, namespace: "consumer-draft" }, (args) => ({ loader: "object", exports: draftHooks[args.path as keyof typeof draftHooks] }))
+      build.onLoad({ filter: /.*/, namespace: "consumer-draft" }, (args) => ({
+        loader: "object",
+        exports: args.path === "local" ? { createModelExecutionView: localModule.createModelExecutionView }
+          : draftHooks[args.path as keyof typeof draftHooks],
+      }))
       build.onLoad({ filter: /prompt-model-selection\.ts\?consumer-draft$/ }, async (args) => ({ loader: "ts",
         contents: (await Bun.file(args.path.replace(/\?consumer-draft$/, "")).text())
           .replace('"@/context/models"', '"consumer-draft:models"').replace('"@/context/prompt"', '"consumer-draft:prompt"')
           .replace('"@/context/sdk"', '"consumer-draft:sdk"').replace('"@/context/sync"', '"consumer-draft:sync"')
           .replace('"@/context/tabs"', '"consumer-draft:tabs"').replace('"@solidjs/router"', '"consumer-draft:router"')
-          .replace('"@/hooks/use-providers"', '"consumer-draft:providers"'),
+          .replace('"@/hooks/use-providers"', '"consumer-draft:providers"')
+          .replace('"@/context/local"', '"consumer-draft:local"'),
       }))
     } })
     const draftModule: typeof import("../src/pages/session/composer/prompt-model-selection") = await import(`${Bun.resolveSync("../src/pages/session/composer/prompt-model-selection.ts", import.meta.dir)}?consumer-draft`)
