@@ -305,7 +305,22 @@ test("CONTROL E6 App real model popover renders catalog rows through its product
 test("E6 App one canonical context query disables an unsupported rendered row without hiding it", async () => {
   const calls = transport()
   const owner = selection(calls, "session-1")
+  const snapshot = () => {
+    const value = owner.local.model.execution.read()
+    return {
+      intent: structuredClone(unwrap(owner.local.model.intent())),
+      input: structuredClone(unwrap(owner.local.model.execution.input())),
+      ready: owner.local.model.execution.ready(),
+      read: value.status === "ready" ? { status: value.status, selection: value.response.data.selection,
+        models: value.response.data.models.map((entry) => ({ providerID: entry.model.providerID, id: entry.model.id,
+          status: entry.status, reason: "reason" in entry ? entry.reason : undefined })) } : { status: value.status },
+      calls: calls.calls.slice(-6).map((call) => ({ path: call.path, method: call.method,
+        body: call.path === "/api/model/execution" ? call.body : undefined })),
+    }
+  }
+  const beforeSelector = snapshot()
   const view = await selectorDOM(owner)
+  const afterSelector = snapshot()
   try {
     const row = view.rows().find((item) => item.textContent?.includes("Blocked model"))
     expect(row, "real selector must retain the catalog entry").toBeDefined()
@@ -314,6 +329,9 @@ test("E6 App one canonical context query disables an unsupported rendered row wi
     row?.click()
     await new Promise<void>((resolve) => setTimeout(resolve, 0))
     expect(owner.local.model.current()?.id).not.toBe("blocked")
+  } catch (error) {
+    console.error("E6 App popover failure snapshot", JSON.stringify({ beforeSelector, afterSelector, failed: snapshot() }).slice(0, 4096))
+    throw error
   } finally { view.dispose(); owner.dispose() }
 })
 

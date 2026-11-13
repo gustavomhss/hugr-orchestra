@@ -89,6 +89,19 @@ async function menu(model: ModelSelection) {
   } }
 }
 
+function variantSnapshot(model: ModelSelection, control: PromptInputV2SelectControl, calls: readonly (readonly unknown[])[]) {
+  const raw = model.intent()
+  return {
+    current: control.current(), options: control.options().map((option) => ({ id: option.id, label: option.label, disabled: option.disabled })),
+    intent: { model: raw.model, variant: { type: typeof raw.variant, isNull: raw.variant === null, value: raw.variant } },
+    input: model.execution.input(), ready: model.execution.ready(), readStatus: model.execution.read().status,
+    setterCalls: calls.map((args) => ({ type: typeof args[0], isNull: args[0] === null, value: args[0] })),
+    rows: [...document.querySelectorAll('[role="menuitemradio"]')].slice(0, 8).map((row) => ({
+      text: row.textContent?.slice(0, 80), checked: row.getAttribute("aria-checked"), disabled: row.getAttribute("aria-disabled"), state: row.getAttribute("data-state"),
+    })), focus: { tag: document.activeElement?.tagName, role: document.activeElement?.getAttribute("role") },
+  }
+}
+
 async function knownDefault() {
   const calls = transport({ reply: async (request) => {
     const input = Schema.decodeUnknownSync(ModelExecution.Input)(await request.clone().json())
@@ -109,6 +122,9 @@ test("E6 App actual variant controller and menu distinguish model default from l
   const { calls, owner } = await knownDefault()
   const sender = composer("default payload", { model: owner.local.model })
   const mounted = await menu(owner.local.model)
+  const originalSet = owner.local.model.variant.set
+  const selecting = spyOn(owner.local.model.variant, "set").mockImplementation((value) => originalSet.call(owner.local.model.variant, value))
+  const before = variantSnapshot(owner.local.model, mounted.control, selecting.mock.calls)
   try {
     const rows = await mounted.open()
     const modelDefault = rows.find((row) => row.textContent?.trim() === "Model default")
@@ -126,7 +142,10 @@ test("E6 App actual variant controller and menu distinguish model default from l
     sender.prompt.set([{ type: "text", content: "literal payload", start: 0, end: 15 }], 15)
     expect(await send(sender)).toBe(true)
     expect(calls.calls.filter((call) => call.path.endsWith("/model")).at(-1)?.body).toEqual({ model: { ...ref, variant: "default" } })
-  } finally { mounted.dispose(); sender.dispose(); owner.dispose() }
+  } catch (error) {
+    console.error("E6 App default variant failure snapshot", JSON.stringify({ before, failed: variantSnapshot(owner.local.model, mounted.control, selecting.mock.calls) }).slice(0, 4096))
+    throw error
+  } finally { selecting.mockRestore(); mounted.dispose(); sender.dispose(); owner.dispose() }
 })
 
 test("E6 App actual variant menu retains a removed literal as disabled and refuses a direct callback", async () => {
@@ -141,7 +160,9 @@ test("E6 App actual variant menu retains a removed literal as disabled and refus
       view.response.data.selection?.status === "unavailable" && view.response.data.selection.ref.variant === "removed"
   }, "current exact removed variant refusal")
   const mounted = await menu(owner.local.model)
-  const selecting = spyOn(owner.local.model.variant, "set")
+  const originalSet = owner.local.model.variant.set
+  const selecting = spyOn(owner.local.model.variant, "set").mockImplementation((value) => originalSet.call(owner.local.model.variant, value))
+  const before = variantSnapshot(owner.local.model, mounted.control, selecting.mock.calls)
   try {
     const rows = await mounted.open()
     const removed = rows.find((row) => row.textContent?.includes("removed"))
@@ -166,5 +187,8 @@ test("E6 App actual variant menu retains a removed literal as disabled and refus
     await wait(() => owner.local.model.intent().variant === null && calls.queries().length > beforeDefault, "actual model default remains an intent correction")
     expect(calls.admissions()).toEqual([])
     expect(selecting.mock.calls).toEqual([["high"], [undefined]])
+  } catch (error) {
+    console.error("E6 App removed variant failure snapshot", JSON.stringify({ before, failed: variantSnapshot(owner.local.model, mounted.control, selecting.mock.calls) }).slice(0, 4096))
+    throw error
   } finally { selecting.mockRestore(); mounted.dispose(); owner.dispose() }
 })
