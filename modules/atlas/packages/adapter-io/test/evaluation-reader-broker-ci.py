@@ -1,0 +1,109 @@
+"""CI-only tests of the SAME generic broker used by the private launcher.
+Synthetic subprocesses and disposable roots only; no Atlas reader, model, network or real quota.
+"""
+from pathlib import Path
+import unittest,tempfile,subprocess,sys,json,hashlib,os,signal,time
+BROKER=Path(__file__).resolve().parents[1]/'script/evaluation-reader-broker.py'
+sha=lambda b:hashlib.sha256(b).hexdigest()
+def put(p,v):p.write_text(json.dumps(v,ensure_ascii=False)+'\n')
+def get(p):return json.loads(p.read_text())
+CHILD=r'''
+import json,sys,os,time,subprocess
+from pathlib import Path
+e=json.loads(sys.argv[1]);control=Path(e['runtime']['control']);mode=(control/'mode').read_text()
+p=control/'spawns';p.write_text(str(int(p.read_text())+1));(control/'started').write_text(str(os.getpid()))
+assert 'ATLAS_RATIFY_TOKEN' not in os.environ
+assert os.environ['ATLAS_ACTOR']==e['actor']
+if mode=='hang':time.sleep(60)
+if mode=='orphan':
+ q=subprocess.Popen([sys.executable,'-c','import time;time.sleep(60)']);(control/'descendant').write_text(str(q.pid));sys.exit(0)
+if mode=='barrier':
+ while not (control/'continue').exists():time.sleep(.01)
+root=Path(e['root']);path=root/'.atlas'/e['ledgerName']
+v=json.loads(path.read_text()) if path.exists() else dict(schema='evaluation-read-budget/v1',candidate=e['candidate'],generation=e['generation'],consumer=e['consumer'],mode=e['mode'],index_calls=0,read_calls=0,body_bytes_total=0)
+v[e['request']['operation']+'_calls']+=1
+body='síntese' if e['request']['operation']=='read' else None
+if body is not None:v['body_bytes_total']+=len(body.encode())
+path.write_text(json.dumps(v)+'\n')
+if mode=='other-change':(root/'.atlas'/('evaluation-budget-'+'b'*64+'.json')).write_text('{}')
+if mode=='other-delete':(root/'.atlas'/('evaluation-budget-'+'b'*64+'.json')).unlink()
+if mode=='partial':(root/'.atlas'/(e['ledgerName']+'.next')).write_text('{}')
+r={'kind':'read' if body else 'index','evaluation':{'phase':'evaluation','evaluationCandidate':e['candidate'],'generation':e['generation'],'manifest':'d'*64}}
+if body:r['body']=body
+else:r.update(bodyBytes=9999,bodiesReturned=False)
+if mode=='hold':r={'kind':'hold','reason':'synthetic-refusal'}
+print(json.dumps(r,ensure_ascii=False))
+'''
+class BrokerCI(unittest.TestCase):
+ def setUp(self):
+  self.tmp=tempfile.TemporaryDirectory();self.base=Path(self.tmp.name);self.root=self.base/'root';self.root.mkdir();self.atlas=self.root/'.atlas';self.atlas.mkdir();self.logs=self.base/'logs';self.control=self.base/'control';self.control.mkdir();(self.control/'mode').write_text('normal');(self.control/'spawns').write_text('0');self.processes=[]
+  self.child=self.base/'fixture-reader.py';self.child.write_text(CHILD);self.name='evaluation-budget-'+'a'*64+'.json';self.case='fixture-case';self.cfgid={'candidate_id':'c'*64,'generation':'e'*64,'ownership':'d'*64,'actor':'fixture-actor','scope':'fixture-scope'}
+  policy={'operations':['read','index'],'consumer':{'id':self.case,'mode':'routine'},'fixture':True};put(self.atlas/'evaluation-policy.json',policy);self.policies=self.base/'policies';self.policies.mkdir();put(self.policies/'policy.json',policy);st=self.root.stat();put(self.atlas/'evaluation-store.json',{'device':st.st_dev,'inode':st.st_ino,'evaluationCandidate':self.cfgid['candidate_id'],'generation':self.cfgid['generation']})
+  self.casefile=self.base/'cases.json';put(self.casefile,{**self.cfgid,'cases':[{'id':self.case,'mode':'routine','limits':{'index_calls':2,'read_calls':2,'body_bytes_total':16000},'policy_sha256':sha((self.atlas/'evaluation-policy.json').read_bytes()),'policy_proposal':'policy.json'}]});self.auth=self.base/'auth.json';self.config=self.base/'config.json'
+  put(self.config,{'root':str(self.root),'policy_directory':str(self.policies),'cases_file':str(self.casefile),'authorization_file':str(self.auth),'logs':str(self.logs),'reader_argv':[sys.executable,str(self.child)],'cwd':str(self.base),'driver_files':{'broker':str(BROKER),'reader':str(self.child)},'runtime':{'control':str(self.control)},'timeout_seconds':2})
+  self.authorize()
+ def authorize(self):put(self.auth,{'state':'RELEASED','config_sha256':sha(self.config.read_bytes()),'cases_sha256':sha(self.casefile.read_bytes()),'active_case':self.case,'ledger_name':self.name,'driver_sha256':{'broker':sha(BROKER.read_bytes()),'reader':sha(self.child.read_bytes())}})
+ def tearDown(self):
+  for p in self.processes:
+   if p.poll() is None:p.kill();p.wait(timeout=5)
+  # Fixture-only cleanup, not a broker reset/recovery path.
+  for name in ['started','descendant']:
+   f=self.control/name
+   if f.exists():
+    try:os.kill(int(f.read_text()),signal.SIGKILL)
+    except ProcessLookupError:pass
+  self.tmp.cleanup()
+ def command(self,operation='index'):
+  args={'need':'entry'} if operation=='index' else {'key':'synthetic','maxBytes':100}
+  return [sys.executable,str(BROKER),str(self.config),self.case,json.dumps({'operation':operation,'args':args})]
+ def call(self,operation='index'):return subprocess.run(self.command(operation),capture_output=True,text=True,timeout=12)
+ def path(self,n=1):return self.logs/self.case/f'{n:04d}'
+ def count(self):return int((self.control/'spawns').read_text())
+ def ack(self,n=1,wrong=False):
+  response=(self.path(n)/'response.json').read_bytes();digest=sha(response);literal=f'I received the complete response for {self.case} call {n:04d}: {len(response)} bytes, SHA256 {digest}.'
+  put(self.path(n)/'consumer-ack.json',{'case':self.case,'sequence':n,'response_sha256':digest,'response_bytes':len(response),'literal_confirmation':literal+('WRONG' if wrong else ''),'source':'literal-consumer-message'})
+ def positive(self):
+  p=self.call();self.assertEqual(p.returncode,0,p.stderr);self.assertEqual(self.count(),1);self.ack();return p
+ def stopped_before_spawn(self):
+  n=self.count();p=self.call();self.assertNotEqual(p.returncode,0);self.assertEqual(self.count(),n);self.assertTrue((self.logs/'active.lock').exists())
+ def start_barrier(self,mode):
+  (self.control/'mode').write_text(mode);p=subprocess.Popen(self.command(),stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True);self.processes.append(p)
+  until=time.monotonic()+5
+  while not (self.control/'started').exists() and time.monotonic()<until:time.sleep(.01)
+  self.assertTrue((self.control/'started').exists());return p
+ def test_positive_index_then_utf8_read(self):
+  self.positive();p=self.call('read');self.assertEqual(p.returncode,0,p.stderr);r=get(self.path(2)/'receipt.json');self.assertEqual(r['body_bytes_charged'],len('síntese'.encode()));self.assertEqual(r['ledger_after']['value']['index_calls'],1);self.assertEqual(r['consumer_delivery_ack'],'UNKNOWN_PENDING_LITERAL_CONSUMER_CONFIRMATION');self.assertNotIn('delivered',r);self.assertTrue(r['response']['persisted']);self.assertFalse((self.logs/'active.lock').exists());self.ack(2)
+ def test_missing_ledger(self):self.positive();(self.atlas/self.name).unlink();self.stopped_before_spawn()
+ def test_regressed_ledger(self):
+  self.positive();v=get(self.atlas/self.name);v['index_calls']=0;put(self.atlas/self.name,v);self.stopped_before_spawn()
+ def test_unexplained_advance(self):
+  self.positive();v=get(self.atlas/self.name);v['index_calls']=2;put(self.atlas/self.name,v);self.stopped_before_spawn()
+ def test_missing_receipt(self):self.positive();(self.path()/'receipt.json').unlink();self.stopped_before_spawn()
+ def test_corrupt_receipt(self):self.positive();(self.path()/'receipt.json').write_text('{}');self.stopped_before_spawn()
+ def test_missing_ack(self):
+  self.assertEqual(self.call().returncode,0);self.stopped_before_spawn()
+ def test_wrong_ack(self):
+  self.assertEqual(self.call().returncode,0);self.ack(wrong=True);self.stopped_before_spawn()
+ def test_other_ledger_changed(self):
+  (self.control/'mode').write_text('other-change');p=self.call();self.assertNotEqual(p.returncode,0);self.assertEqual(self.count(),1);self.assertTrue((self.logs/'active.lock').exists());self.assertFalse((self.path()/'receipt.json').exists())
+ def test_other_ledger_deleted(self):
+  put(self.atlas/('evaluation-budget-'+'b'*64+'.json'),{'consumer':'other'});(self.control/'mode').write_text('other-delete');self.assertNotEqual(self.call().returncode,0);self.assertTrue((self.logs/'active.lock').exists())
+ def test_partial_ledger(self):
+  (self.control/'mode').write_text('partial');self.assertNotEqual(self.call().returncode,0);self.assertTrue((self.atlas/(self.name+'.next')).exists());self.assertTrue((self.logs/'active.lock').exists())
+ def test_interrupt_child_alive(self):
+  p=self.start_barrier('hang');pid=int((self.control/'started').read_text());p.send_signal(signal.SIGTERM);p.communicate(timeout=8);self.assertNotEqual(p.returncode,0);self.assertTrue((self.logs/'active.lock').exists());self.assertTrue((self.logs/'active.lock/STOP.json').exists())
+  with self.assertRaises(ProcessLookupError):os.kill(pid,0)
+  self.stopped_before_spawn()
+ def test_timeout_sticky_lock(self):
+  (self.control/'mode').write_text('hang');self.assertNotEqual(self.call().returncode,0);self.assertTrue((self.logs/'active.lock/STOP.json').exists());self.stopped_before_spawn()
+ def test_hard_kill_parent_leaves_lock(self):
+  p=self.start_barrier('hang');p.kill();p.communicate(timeout=5);self.assertTrue((self.logs/'active.lock').exists());self.stopped_before_spawn()
+ def test_orphan_group_blocks_release(self):
+  (self.control/'mode').write_text('orphan');self.assertNotEqual(self.call().returncode,0);self.assertTrue((self.logs/'active.lock').exists())
+ def test_response_write_failure_keeps_charge(self):
+  p=self.start_barrier('barrier');(self.path()/'response.json').mkdir();(self.control/'continue').write_text('go');p.communicate(timeout=8);self.assertNotEqual(p.returncode,0);self.assertEqual(get(self.atlas/self.name)['index_calls'],1);self.assertFalse((self.path()/'receipt.json').exists());self.assertTrue((self.logs/'active.lock').exists())
+ def test_authorization_changed_while_call_active(self):
+  p=self.start_barrier('barrier');a=get(self.auth);a['active_case']='other';put(self.auth,a);(self.control/'continue').write_text('go');p.communicate(timeout=8);self.assertNotEqual(p.returncode,0);self.assertTrue((self.logs/'active.lock').exists())
+ def test_hold_preserves_charge_and_stops(self):
+  (self.control/'mode').write_text('hold');self.assertNotEqual(self.call().returncode,0);self.assertEqual(get(self.atlas/self.name)['index_calls'],1);self.assertTrue((self.logs/'active.lock').exists())
+if __name__=='__main__':unittest.main(verbosity=2)
