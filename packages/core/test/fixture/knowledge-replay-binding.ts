@@ -23,15 +23,37 @@ export const Proof = Schema.Struct({
   restoredHash: Schema.String, logRejected: Schema.Array(Schema.Number), childCleanup: Schema.Boolean,
 })
 
-export async function make() {
+export const attacks = [
+  "key", "family", "claim-empty", "claim-add", "claim-replace", "scope", "tier", "anchor",
+  "endpointA", "endpointB", "relationKind", "provenance", "sameAs", "sameAsRetracted", "answerRef",
+  "unknown-carrier", "scope-fact",
+] as const
+
+export type Attack = typeof attacks[number] | "same-hash" | "derivedAt"
+
+const SemanticRow = Schema.Record(Schema.String, Schema.Json)
+export const AttackProof = Schema.Struct({
+  pid: Schema.Number, mode: Schema.String, source: Row, candidate: SemanticRow,
+  changedCandidate: Schema.optionalKey(SemanticRow),
+  derived: Schema.Struct({ resolved: Schema.Number, proven: Schema.Number, persisted: Schema.Number, refused: Schema.Number }),
+  sourceReverified: Schema.Number,
+  snapshots: Schema.Array(Schema.Struct({
+    current: Schema.Number, staging: Schema.Number, cas: Schema.Number, row: SemanticRow,
+    edges: Schema.Array(Schema.Number), generations: Schema.Array(Schema.String),
+  })),
+  rejected: Schema.Array(Schema.Number), childCleanup: Schema.Boolean,
+  watermark: Schema.optionalKey(Schema.Struct({ incoming: Schema.String, local: Schema.String, second: Schema.String, head: Schema.String })),
+})
+
+export async function make(attack?: Attack) {
   const root = mkdtempSync(path.join(tmpdir(), "atlas-replay-binding-"))
-  return build(root).catch((error: unknown) => {
+  return build(root, attack).catch((error: unknown) => {
     rmSync(root, { recursive: true, force: true })
     throw error
   })
 }
 
-async function build(root: string) {
+async function build(root: string, attack?: Attack) {
   const source = path.resolve(import.meta.dir, "../../../..")
   const boundary = path.join(source, "modules/atlas/boundary")
   const packages = path.resolve(boundary, "../packages")
@@ -58,6 +80,10 @@ async function build(root: string) {
     `export { atlasDir, membersDir, knowledgeShardPath, blobPath } from ${JSON.stringify(path.join(packages, "adapter-io/src/layout.ts"))}`,
     `export { relationKey } from ${JSON.stringify(path.join(packages, "knowledge/src/index.ts"))}`,
     `export { id } from ${JSON.stringify(path.join(packages, "kernel/src/index.ts"))}`,
+    ...(attack === undefined ? [] : [
+      `export { appendKnowledge } from ${JSON.stringify(path.join(packages, "adapter-io/src/knowledge-log.ts"))}`,
+      `export { headSha } from ${JSON.stringify(path.join(packages, "adapter-io/src/run-git.ts"))}`,
+    ]),
   ].join("\n"))
   const built = await Bun.build({
     entrypoints: [entry], target: "node", format: "esm", external: [parserURL],
@@ -89,10 +115,10 @@ async function build(root: string) {
   const bundle = path.join(root, "actual-atlas.mjs")
   await Bun.write(bundle, output)
   const actor = path.join(root, "actor.mjs")
-  await Bun.write(actor, actorSource)
+  await Bun.write(actor, attack === undefined ? actorSource : attackActorSource)
   await Bun.write(path.join(root, "manifest.json"), JSON.stringify(setup))
   return { root, manifest,
-    command: ChildProcess.make(process.execPath, [actor, bundle, root], { cwd: source }),
+    command: ChildProcess.make(process.execPath, [actor, bundle, root, ...(attack === undefined ? [] : [attack])], { cwd: source }),
     dispose: () => rmSync(root, { recursive: true, force: true }),
   }
 }
@@ -245,6 +271,200 @@ function run() {
       try { cleanup(); return []; } catch (error) { return [error]; }
     });
     if (failures.length > 0) throw new AggregateError([...originalFailure, ...failures], "Actual fixture cleanup failed");
+  }
+}
+const proof = run();
+allocated.forEach((directory) => assert.equal(existsSync(directory), false, "Actual harness directory survived cleanup"));
+process.stdout.write(JSON.stringify({ ...proof, childCleanup: true }) + "\n");
+`
+
+// This actor owns only finite mutations; the positive actor above remains the qualified default control.
+const attackActorSource = String.raw`import assert from "node:assert/strict";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
+const api = await import(pathToFileURL(process.argv[2]).href);
+const owned = process.argv[3];
+const mode = process.argv[4];
+const saved = ["ATLAS_ACTOR", "ATLAS_RATIFY_TOKEN", "TMPDIR", "TMP", "TEMP"].map((key) => [key, process.env[key]]);
+const cleanups = [];
+const allocated = [];
+const originalFailure = [];
+function copy(from, to) {
+  mkdirSync(path.dirname(to), { recursive: true });
+  copyFileSync(from, to);
+}
+function semantic(row) {
+  const { derivedAt, ...value } = row;
+  return value;
+}
+function verify(runtime) {
+  const report = runtime.reverify();
+  assert.equal(report.sealedProven, 1);
+  assert.equal(report.reProven, 1);
+  assert.equal(report.broken, 0);
+  assert.equal(report.unverifiable, 0);
+  return report.reProven;
+}
+function run() {
+  process.env.ATLAS_ACTOR = "bob";
+  process.env.ATLAS_RATIFY_TOKEN = "bob";
+  process.env.TMPDIR = owned;
+  process.env.TMP = owned;
+  process.env.TEMP = owned;
+  try {
+    const source = api.makeFixRepo();
+    cleanups.push(source.cleanup);
+    allocated.push(source.repoPath);
+    const scip = api.makeFixScip();
+    cleanups.push(scip.cleanup);
+    allocated.push(path.dirname(scip.scipPath));
+    mkdirSync(api.atlasDir(source.repoPath), { recursive: true });
+    // Both scopes authorize the seat: only the explicit anchor owner distinguishes them.
+    writeFileSync(path.join(api.atlasDir(source.repoPath), "policy.json"), JSON.stringify({
+      t0Heuristic: { keywords: [] }, authz: { scopes: { src: ["bob"], other: ["bob"] }, anchors: { src: "src" } },
+    }));
+    copy(scip.scipPath, path.join(api.atlasDir(source.repoPath), "index.scip"));
+    const produced = api.composeRuntime(source.repoPath).deriveRelations();
+    assert.equal(produced.resolvedEdgeCount, 1);
+    assert.equal(produced.proven, 1);
+    assert.equal(produced.persisted, 1);
+    assert.equal(produced.refused, 0);
+    const key = String(api.relationKey("src/app.ts", "depends-on", "src/util.ts"));
+    const sourceDisk = api.createDiskStore(path.join(api.atlasDir(source.repoPath), "cas"));
+    const sourceProjection = api.rehydrateProjection(sourceDisk);
+    assert.equal(sourceProjection.current.size, 1);
+    const row = sourceProjection.current.get(key);
+    assert.ok(row);
+    assert.equal(row.family, "relation");
+    assert.deepEqual(row.claims, ["src/app.ts\0depends-on\0src/util.ts"]);
+    assert.equal(row.primaryAnchor, "src/app.ts");
+    assert.equal(row.endpointA, "src/app.ts");
+    assert.equal(row.endpointB, "src/util.ts");
+    assert.equal(row.relationKind, "depends-on");
+    assert.equal(row.scope, "src");
+    assert.equal(row.tier, "T2");
+    assert.equal(row.seal, "proven");
+    const fact = sourceDisk.get(row.contentHash);
+    assert.ok(fact);
+    assert.equal(String(api.id(fact)), row.contentHash);
+    const sourceReverified = verify(api.composeRuntime(source.repoPath));
+    const sourceLog = api.readKnowledge(source.repoPath);
+    assert.equal(sourceLog.rejected, 0);
+    assert.equal(sourceLog.rows.size, 1);
+    const entry = sourceLog.rows.get(key);
+    assert.ok(entry);
+    assert.deepEqual(semantic(entry.row), semantic(row));
+    const peer = String(api.relationKey("src/util.ts", "depends-on", "src/app.ts"));
+    const mutations = {
+      key: { nodeKey: peer }, family: { family: "advisory" },
+      "claim-empty": { claims: [] }, "claim-add": { claims: [...row.claims, "unsupported assertion"] },
+      "claim-replace": { claims: ["unsupported assertion"] }, scope: { scope: "other" }, tier: { tier: "T1" },
+      anchor: { primaryAnchor: "src/util.ts" }, endpointA: { endpointA: "src/util.ts" },
+      endpointB: { endpointB: "src/app.ts" }, relationKind: { relationKind: "calls" },
+      provenance: { provenanceByClaim: { [row.claims[0]]: { source: "forged-replay", trusted: true } } },
+      sameAs: { sameAs: [peer] }, sameAsRetracted: { sameAsRetracted: [peer] }, answerRef: { answerRef: "a".repeat(64) },
+      "unknown-carrier": { unsupportedCarrier: "forged-replay" },
+      "same-hash": { claims: [...row.claims, "unsupported first assertion"] },
+      derivedAt: { derivedAt: "attacker-controlled-watermark" }, "scope-fact": { scope: "other" },
+    };
+    assert.ok(Object.hasOwn(mutations, mode), "Unknown finite attack selector");
+    const incomingFact = mode === "scope-fact" ? { ...fact, scope: "other" } : fact;
+    const candidate = { ...semantic(row), ...mutations[mode], contentHash: String(api.id(incomingFact)) };
+    if (mode !== "scope-fact") assert.equal(candidate.contentHash, row.contentHash);
+    if (mode === "scope-fact") {
+      assert.equal(incomingFact.scope, candidate.scope);
+      assert.notEqual(candidate.contentHash, row.contentHash);
+    }
+    const destination = api.makeFixRepo();
+    cleanups.push(destination.cleanup);
+    allocated.push(destination.repoPath);
+    for (const name of ["policy.json", "index.scip"])
+      copy(path.join(api.atlasDir(source.repoPath), name), path.join(api.atlasDir(destination.repoPath), name));
+    copy(api.blobPath(source.repoPath, row.contentHash), api.blobPath(destination.repoPath, row.contentHash));
+    const disk = api.createDiskStore(path.join(api.atlasDir(destination.repoPath), "cas"));
+    assert.equal(existsSync(path.join(api.atlasDir(destination.repoPath), "cas")), false);
+    assert.equal(api.rehydrateProjection(disk).current.size, 0);
+    assert.equal(api.rehydrateProjection(disk).cas.size, 0);
+    assert.equal(readdirSync(api.atlasDir(destination.repoPath)).some((name) => /^(projection|staging)/.test(name)), false);
+    // Only the mutated entry travels, with the real append door computing its public event hash.
+    api.appendKnowledge(destination.repoPath, { ...entry, row: candidate, at: "9998-01-01T00:00:00.000Z" }, incomingFact);
+    assert.deepEqual(readdirSync(api.atlasDir(destination.repoPath)).sort(), ["blobs", "index.scip", "members", "policy.json"]);
+    assert.deepEqual(readFileSync(api.blobPath(source.repoPath, row.contentHash)), readFileSync(api.blobPath(destination.repoPath, row.contentHash)));
+    assert.deepEqual(disk.get(candidate.contentHash), undefined);
+    const admittedLog = api.readKnowledge(destination.repoPath);
+    assert.equal(admittedLog.rejected, 0);
+    assert.equal(admittedLog.rows.size, 1);
+    assert.deepEqual(admittedLog.rows.get(candidate.nodeKey).row, candidate);
+    const rejected = [];
+    const fileSnapshots = [];
+    function boot(expected) {
+      const runtime = api.composeRuntime(destination.repoPath);
+      const current = api.rehydrateProjection(disk);
+      const staging = disk.commitStaging((projection) => ({ out: projection }));
+      assert.equal(staging.settled, true, "Read actual staging through its read-only decision");
+      const selected = mode === "derivedAt" ? current : staging.out;
+      assert.equal(current.current.size, mode === "derivedAt" ? 1 : 0);
+      assert.equal(staging.out.current.size, mode === "derivedAt" ? 0 : 1);
+      const held = selected.current.get(expected.nodeKey);
+      assert.ok(held, "The complete candidate must survive in its intended store");
+      assert.deepEqual(semantic(held), semantic(expected));
+      assert.equal(selected.cas.size, 1);
+      assert.deepEqual(disk.get(expected.contentHash), incomingFact);
+      const edges = [runtime.relations("src/app.ts", "out"), runtime.relations("src/util.ts", "in"),
+        runtime.relations(expected.endpointA, "out"), runtime.relations(expected.endpointB, "in")].map((list) => list.length);
+      assert.deepEqual(edges, mode === "derivedAt" ? [1, 1, 1, 1] : [0, 0, 0, 0]);
+      const log = api.readKnowledge(destination.repoPath);
+      assert.equal(log.rejected, 0);
+      assert.deepEqual(log.rows.get(expected.nodeKey).row, expected);
+      rejected.push(log.rejected);
+      const generations = readdirSync(api.atlasDir(destination.repoPath)).filter((name) => /^staging(?:\.[0-9]+)?\.json$/.test(name)).sort();
+      fileSnapshots.push(generations.map((name) => [name, readFileSync(path.join(api.atlasDir(destination.repoPath), name), "utf8")]));
+      return { current: current.current.size, staging: staging.out.current.size, cas: selected.cas.size,
+        row: semantic(held), edges, generations, watermark: held.derivedAt };
+    }
+    const first = boot(candidate);
+    const second = boot(candidate);
+    assert.deepEqual(second, first, "Second identical boot must not change the candidate or staging generations");
+    assert.deepEqual(fileSnapshots[1], fileSnapshots[0], "Second boot must not rewrite staging bytes");
+    const snapshots = [first, second];
+    const changed = mode === "same-hash" ? { ...candidate, claims: [...row.claims, "unsupported second assertion"] } : undefined;
+    if (changed) {
+      assert.equal(changed.contentHash, candidate.contentHash);
+      api.appendKnowledge(destination.repoPath, { ...entry, row: changed, at: "9999-01-01T00:00:00.000Z",
+        base: JSON.stringify(semantic(candidate)) }, incomingFact);
+      snapshots.push(boot(changed), boot(changed));
+      assert.notDeepEqual(snapshots[2].row, snapshots[0].row, "Same hash must not hide changed semantic candidate");
+      assert.deepEqual(snapshots[3], snapshots[2]);
+      assert.deepEqual(fileSnapshots[3], fileSnapshots[2]);
+      assert.notDeepEqual(fileSnapshots[2], fileSnapshots[1], "Changed candidate must publish a staging generation");
+    }
+    const head = mode === "derivedAt" ? api.headSha(destination.repoPath) : undefined;
+    if (mode === "derivedAt") {
+      assert.match(head, /^[a-f0-9]{40}$/);
+      assert.equal(first.watermark, head);
+      assert.equal(second.watermark, head);
+      assert.notEqual(first.watermark, candidate.derivedAt);
+      verify(api.composeRuntime(destination.repoPath));
+    }
+    assert.deepEqual(sourceDisk.get(row.contentHash), fact, "Attacks must never edit the original proof blob");
+    return { pid: process.pid, mode, source: semantic(row), candidate,
+      ...(changed ? { changedCandidate: changed } : {}),
+      derived: { resolved: produced.resolvedEdgeCount, proven: produced.proven, persisted: produced.persisted, refused: produced.refused },
+      sourceReverified, snapshots: snapshots.map(({ watermark, ...snapshot }) => snapshot), rejected,
+      ...(mode === "derivedAt" ? { watermark: { incoming: candidate.derivedAt, local: first.watermark, second: second.watermark, head } } : {}) };
+  } catch (error) {
+    originalFailure.push(error);
+    throw error;
+  } finally {
+    const restorations = saved.map(([key, value]) => () => {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    });
+    const failures = [...cleanups.reverse(), ...restorations].flatMap((cleanup) => {
+      try { cleanup(); return []; } catch (error) { return [error]; }
+    });
+    if (failures.length > 0) throw new AggregateError([...originalFailure, ...failures], "Attack fixture cleanup failed");
   }
 }
 const proof = run();
