@@ -18,16 +18,29 @@ export const contents = {
 export const start = Effect.fn("MoveSessionWriter.start")(function* (source: string, control: string) {
   const processes = yield* AppProcess.Service
   yield* Effect.promise(() => Bun.write(path.join(control, "actor.mjs"), actor))
+  const output: { tail: Uint8Array } = { tail: new Uint8Array() }
   const child = yield* processes.run(ChildProcess.make(process.execPath,
     [path.join(control, "actor.mjs"), source, control],
-    { stdin: "ignore", stdout: "pipe", stderr: "pipe" }), { timeout: "30 seconds" }).pipe(Effect.forkScoped)
+    { stdin: "ignore", stdout: "pipe", stderr: "pipe" }), { timeout: "30 seconds", inspect: (chunk) => {
+      output.tail = Buffer.concat([output.tail, chunk]).subarray(-2048)
+    } }).pipe(Effect.forkScoped)
   const ready = Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Struct({
     pid: Schema.Number, descriptorOpen: Schema.Literal(true),
   })))(yield* Effect.raceFirst(
     waitForFile(path.join(control, "READY")),
     Fiber.join(child).pipe(Effect.flatMap(AppProcess.requireSuccess),
       Effect.andThen(Effect.die(new Error("Writer exited before READY")))),
-  ))
+  ).pipe(Effect.catchDefect((cause) => Effect.gen(function* () {
+    const state = yield* Effect.promise(() => Promise.allSettled([
+      fs.readdir(control).then((entries) => entries.sort().slice(0, 16)),
+      Bun.file(path.join(control, "READY")).exists(),
+    ]))
+    return yield* Effect.die(new Error(`${cause instanceof Error ? cause.message : String(cause)}; writer diagnostics: ${JSON.stringify({
+      outputTail: Buffer.from(output.tail).toString("utf8"),
+      entries: state[0].status === "fulfilled" ? state[0].value : "inspection failed",
+      readyExists: state[1].status === "fulfilled" ? state[1].value : "inspection failed",
+    })}`, { cause }))
+  }))))
   return {
     ready,
     release: Effect.gen(function* () {
@@ -94,8 +107,11 @@ const actor = String.raw`import assert from "node:assert/strict";
 import { watch } from "node:fs";
 import { open, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
+console.error("writer phase: entered");
 const [source, control] = process.argv.slice(2);
+console.error("writer phase: before-open");
 const descriptor = await open(path.join(source, "open-fd.txt"), "r+");
+console.error("writer phase: descriptor-open");
 async function publish(name, value) {
   await writeFile(path.join(control, name + ".tmp"), value, { flag: "wx" });
   await rename(path.join(control, name + ".tmp"), path.join(control, name));
@@ -121,7 +137,9 @@ const released = new Promise((resolve, reject) => {
   watcher.on("error", finish);
   check();
 });
+console.error("writer phase: watch-installed");
 await publish("READY", JSON.stringify({ pid: process.pid, descriptorOpen: true }));
+console.error("writer phase: READY-published");
 await released;
 await writeFile(path.join(source, "tracked.txt"), "writer tracked\n");
 await writeFile(path.join(source, "untracked.txt"), "writer captured untracked\n");
