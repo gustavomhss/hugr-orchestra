@@ -120,7 +120,7 @@ describe("evaluation attachment: old loop vs integral helper (stable synthetic s
   for (const fault of ["review", "body", "dependency", "result", "input", "cycle"] as const) {
     it(`both paths refuse a disconnected ${fault} defect`, () => {
       const f = fixture(fault)
-      expect(oldLoop(f)).not.toBeUndefined()
+      expect(newHelper(f)).toBe(oldLoop(f))
       expect(newHelper(f)).not.toBeUndefined()
     })
   }
