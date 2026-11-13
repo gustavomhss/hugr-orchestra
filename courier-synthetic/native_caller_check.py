@@ -61,6 +61,8 @@ def verify_capture(
         grant = json.loads(grant_bytes.decode("utf-8", errors="strict"))
         if not isinstance(grant, dict):
             return failure
+        if grant.get("case") != expected["case"] or type(grant.get("sequence")) is not int or grant["sequence"] != expected["sequence"]:
+            return failure
         if type(grant.get("response_bytes")) is not int or grant["response_bytes"] < 0:
             return failure
         response_sha = grant.get("response_sha256")
