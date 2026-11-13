@@ -6,7 +6,7 @@
   },
   "overhead": {
     "linux": 2,
-    "windows": 1.6
+    "windows": 1.8
   },
   "margin": 1.15,
   "budget": {
@@ -1354,6 +1354,9 @@
   "reserves": {
     "packages/core:linux": {
       "test/review-toolkit/rustsec-native-refresh.test.ts": 300
+    },
+    "packages/core:windows": {
+      "test/tool-safety-appcontainer-runtimes.test.ts": 240
     }
   },
   "provenance": {

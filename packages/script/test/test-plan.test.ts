@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { fileURLToPath } from "node:url"
-import { appBrowserAnchors, balance, coreShards, desktopAnchors, desktopBins, desktopFiles, desktopIgnores, packageLanes, packageShards, plannedBins, shardCount, suiteTimes, weigh, type Timings } from "../src/test-plan.ts"
+import { appBrowserAnchors, balance, coreShards, desktopAnchors, desktopBins, desktopFiles, desktopIgnores, packageLanes, packageShards, plannedBins, shardCount, suiteTimes, timingReport, weigh, type Timings } from "../src/test-plan.ts"
 
 const registry: { modules: { kind: string; scope: string; name: string }[] } = JSON.parse(
   readFileSync(new URL("../../../script/module-registry.json", import.meta.url), "utf8"),
@@ -18,7 +18,7 @@ describe("test shard planner", () => {
     }
   })
 
-  test("package filters cover each package once or its complete App, Desktop or Boundary partition and keep future packages in libs", () => {
+  test("package filters cover each package once or its complete App, Desktop, Boundary or Maestro partition and keep future packages in libs", () => {
     const packages = [...registry.modules.filter((entry) => entry.kind === "bun" && entry.scope === ".").map((entry) => entry.name), "@orchestra/future-package"]
     for (const [platform, host] of [["linux", "ubuntu-24.04"], ["windows", "windows-latest"]] as const) {
       const lanes = [
@@ -32,9 +32,11 @@ describe("test shard planner", () => {
           const included = filters.filter((filter) => !filter.startsWith("!"))
           return (included.length === 0 || included.includes(name)) && !filters.includes(`!${name}`)
         }).map((lane) => lane.part)
-        expect(selected).toHaveLength(name === "@orchestra/desktop" || platform === "windows" && name === "@orchestra/app" ? 4 : platform === "windows" && name === "@orchestra/atlas-boundary" ? 2 : platform === "windows" && name === "@orchestra/httpapi-codegen" ? 0 : 1)
+        expect(selected).toHaveLength(name === "@orchestra/desktop" || platform === "windows" && name === "@orchestra/app" ? 4 : platform === "windows" && ["@orchestra/atlas-boundary", "@orchestra/maestro"].includes(name) ? 2 : platform === "windows" && name === "@orchestra/httpapi-codegen" ? 0 : 1)
         if (name === "@orchestra/script")
           expect(selected).toEqual([platform === "linux" ? "packages-libs" : `windows-${name.slice("@orchestra/".length)}`])
+        if (name === "@orchestra/maestro")
+          expect(selected).toEqual(platform === "linux" ? ["packages-libs"] : ["windows-maestro-1", "windows-maestro-2"])
         if (name === "@orchestra/future-package") expect(selected).toEqual([platform === "linux" ? "packages-libs" : "windows-libs"])
       }
     }
@@ -51,6 +53,7 @@ describe("test shard planner", () => {
     const libs = windows.find((lane) => lane.part === "windows-libs")!
     expect(libs.filters).toContain("--filter=!@orchestra/desktop")
     expect(libs.filters).toContain("--filter=!@orchestra/script")
+    expect(libs.filters).toContain("--filter=!@orchestra/maestro")
   })
 
   test("Desktop shards cover every discovered Bun file once, with a distinct real control on each OS", () => {
@@ -188,7 +191,7 @@ describe("test shard planner", () => {
 
   test("Windows CLI, Server and clients have disjoint owners without changing package wrappers", () => {
     const lanes = packageLanes("windows", "fixture-host") as { part: string; filters?: string; turbo?: boolean; budget?: number }[]
-    expect(lanes).toHaveLength(17)
+    expect(lanes).toHaveLength(19)
     const expected = [
       { name: "windows", host: "fixture-host", part: "windows-cli", label: "cli", turbo: true, filters: "--filter=@orchestra/cli" },
       { name: "windows", host: "fixture-host", part: "windows-server", label: "server", turbo: true, filters: "--filter=@orchestra/server" },
@@ -241,6 +244,51 @@ describe("test shard planner", () => {
     expect(workflow).toContain("bun test --timeout 120000 ./test/windows-process-query.hosted.ts")
     expect(workflow).toContain("bun test test/omni-default-mode.test.ts test/effect/cross-spawn-spawner.test.ts --timeout 30000")
     expect([...workflow.matchAll(/max-parallel: (\d+)/g)].map((match) => Number(match[1]))).toEqual([10, 5])
+    expect(workflow).toContain("timeout-minutes: ${{ matrix.budget || 10 }}")
+    expect(workflow).toContain("timeout-minutes: ${{ matrix.budget && 12 || 8 }}")
+  })
+
+  test("Windows Maestro keeps currency alone and covers every other discovered file exactly once", () => {
+    const timings = JSON.parse(readFileSync(new URL("../src/test-timings.json", import.meta.url), "utf8")) as Timings
+    const directory = "modules/maestro/coordination"
+    const files = [...new Bun.Glob("**/*.test.ts").scanSync({ cwd: fileURLToPath(new URL("../../../modules/maestro/coordination/test/", import.meta.url)), onlyFiles: true })]
+      .map((file) => `test/${file.replaceAll("\\", "/")}`).toSorted()
+    const currency = "test/v2-reservation-currency.test.ts"
+    const bins = plannedBins(timings, directory, "windows")
+    expect(packageShards(timings, directory, "windows")).toBe(2)
+    expect(packageShards(timings, directory, "linux")).toBe(1)
+    expect(bins.map((bin) => bin.names.toSorted())).toEqual([[currency], files.filter((file) => file !== currency)])
+    expect(bins[1]!.names.length).toBeGreaterThan(0)
+    expect(bins.flatMap((bin) => bin.names).toSorted()).toEqual(files)
+    expect(new Set(bins.flatMap((bin) => bin.names)).size).toBe(files.length)
+    expect(plannedBins(timings, directory, "windows")).toEqual(bins)
+    // A later timing refresh must not fill the singleton, even if currency becomes the lightest file.
+    const changed = { ...timings, files: { ...timings.files, [`${directory}:windows`]: Object.fromEntries(files.map((file) => [file, file === currency ? 1 : 1000])) } }
+    expect(plannedBins(changed, directory, "windows").map((bin) => bin.names)).toEqual(bins.map((bin) => bin.names))
+  })
+
+  test("Windows Maestro lanes keep the package command, exact paths and unchanged execution budgets", () => {
+    const lanes = packageLanes("windows", "fixture-host") as { part: string; filters?: string; maestroShard?: string; shard?: string; turbo?: boolean; budget?: number }[]
+    const shards = lanes.filter((lane) => lane.maestroShard)
+    expect(shards.map((lane) => [lane.part, lane.maestroShard])).toEqual([["windows-maestro-1", "1/2"], ["windows-maestro-2", "2/2"]])
+    expect(shards.every((lane) => lane.filters === "--filter=@orchestra/maestro" && lane.turbo && lane.budget === undefined && lane.shard === undefined)).toBe(true)
+    const pkg = JSON.parse(readFileSync(new URL("../../../modules/maestro/coordination/package.json", import.meta.url), "utf8"))
+    expect(pkg.scripts.test).toBe("bun test --timeout 30000")
+    const config = readFileSync(new URL("../../../modules/maestro/coordination/bunfig.toml", import.meta.url), "utf8")
+    expect(config).toContain("../../../script/test-guard.ts")
+    expect(config).toContain("../../../script/test-omni-control.ts")
+    const turbo = JSON.parse(readFileSync(new URL("../../../turbo.json", import.meta.url), "utf8").replace(/^\s*\/\/[^\n]*/gm, ""))
+    expect(turbo.tasks["@orchestra/maestro#test"]).toEqual({ dependsOn: ["transit"], outputs: [] })
+    const workflow = readFileSync(new URL("../../../.github/workflows/test.yml", import.meta.url), "utf8")
+    const branch = workflow.split('if [ -n "$MAESTRO_SHARD" ]; then')[1]?.split("# Core is sharded")[0] ?? ""
+    expect(branch).toContain("test-plan.ts shard modules/maestro/coordination")
+    expect(branch).toContain('bun turbo test --filter=@orchestra/maestro --log-order=stream -- "${files[@]/#/./}" "${report[@]}"')
+    expect(branch).toContain("--reporter=junit")
+    expect(branch).not.toContain("--timeout")
+    expect(branch).not.toContain("--retry")
+    expect(branch).not.toContain("ORCHESTRA_OMNI_CONTROL=")
+    expect(workflow).toContain("MAESTRO_SHARD: ${{ matrix.maestroShard }}")
+    expect(workflow).toContain("matrix.maestroShard || matrix.appBrowserShard")
     expect(workflow).toContain("timeout-minutes: ${{ matrix.budget || 10 }}")
     expect(workflow).toContain("timeout-minutes: ${{ matrix.budget && 12 || 8 }}")
   })
@@ -413,6 +461,25 @@ describe("test shard planner", () => {
       )
       expect(Math.max(...bare.map((bin) => bin.names.length))).toBeGreaterThan(120)
     }
+  })
+
+  test("cold JUnit names retain their package when refreshing timings", () => {
+    for (const [report, directory, platform] of [
+      ["linux-core-1.xml", "packages/core", "linux"],
+      ["windows-core-2-watcher.xml", "packages/core", "windows"],
+      ["linux-packages-desktop-bun-1.xml", "apps/desktop", "linux"],
+      ["windows-windows-desktop-bun-2.xml", "apps/desktop", "windows"],
+      ["windows-windows-atlas-1.xml", "modules/atlas/boundary", "windows"],
+      ["windows-windows-app-browser-1.xml", "packages/app-shell", "windows"],
+      ["windows-windows-maestro-1.xml", "modules/maestro/coordination", "windows"],
+      ["windows-windows-maestro-2.xml", "modules/maestro/coordination", "windows"],
+    ] as const) {
+      expect(timingReport(`artifacts/${report}`)).toEqual({ directory, platform })
+      expect(timingReport(`artifacts\\${report}`)).toEqual({ directory, platform })
+    }
+    expect(timingReport("windows-windows-unknown-1.xml")).toBeUndefined()
+    expect(timingReport("windows-windows-maestro-1.xml.bak")).toBeUndefined()
+    expect(suiteTimes('<testsuite name="modules/maestro/coordination/test/v2-reservation-currency.test.ts" time="243.93"/>')).toEqual([["test/v2-reservation-currency.test.ts", 243.93]])
   })
 
   test("reads per-file times from Bun's JUnit suites and ignores describe blocks", () => {

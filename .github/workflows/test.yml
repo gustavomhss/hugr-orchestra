@@ -467,6 +467,21 @@ jobs:
             GITHUB_ACTIONS=false bun turbo test --filter=@orchestra/atlas-boundary --log-order=stream -- "${files[@]/#/./}" "${report[@]}"
             exit 0
           fi
+          # Maestro's currency file consumed half its whole Windows suite. Each file belongs to exactly
+          # one bin; keep the package command, bunfig preloads and suite-wide omni proof unchanged.
+          if [ -n "$MAESTRO_SHARD" ]; then
+            mapfile -t files < <(bun packages/script/src/test-plan.ts shard modules/maestro/coordination "$(tr '[:upper:]' '[:lower:]' <<< "$RUNNER_OS")" "${MAESTRO_SHARD%/*}" "${MAESTRO_SHARD#*/}")
+            [ -n "${files[0]:-}" ] || { echo "::error::shard $PART selects no Maestro test file"; exit 1; }
+            echo "shard $PART runs ${#files[@]} Maestro files"
+            printf '%s\n' "${files[@]}" >&2
+            report=()
+            if [ "$COLD" = "true" ]; then
+              mkdir -p "$RUNNER_TEMP/junit"
+              report=(--reporter=junit "--reporter-outfile=$RUNNER_TEMP/junit/$(tr '[:upper:]' '[:lower:]' <<< "$RUNNER_OS")-$PART.xml")
+            fi
+            GITHUB_ACTIONS=false bun turbo test --filter=@orchestra/maestro --log-order=stream -- "${files[@]/#/./}" "${report[@]}"
+            exit 0
+          fi
           # Core is sharded on both systems: shard i/n takes the i-th bin of the time-balanced split (packages/script/src/test-plan.ts).
           # The plan job and this step read the same inputs, so the n shards cover every test file once.
           if [ -n "$SHARD" ]; then
@@ -552,6 +567,7 @@ jobs:
           DESKTOP: ${{ matrix.desktop }}
           DESKTOP_SHARD: ${{ matrix.desktopShard }}
           BOUNDARY_SHARD: ${{ matrix.boundaryShard }}
+          MAESTRO_SHARD: ${{ matrix.maestroShard }}
           APP_MODE: ${{ matrix.appMode }}
           APP_BROWSER_SHARD: ${{ matrix.appBrowserShard }}
           COLD: ${{ inputs.cold }}
@@ -569,7 +585,7 @@ jobs:
 
       # A cold run keeps the JUnit reports; `bun packages/script/src/test-plan.ts refresh <dir>` folds them into packages/script/src/test-timings.json.
       - name: Upload JUnit timings
-        if: always() && inputs.cold && (matrix.shard || matrix.desktopShard || matrix.boundaryShard || matrix.appBrowserShard)
+        if: always() && inputs.cold && (matrix.shard || matrix.desktopShard || matrix.boundaryShard || matrix.maestroShard || matrix.appBrowserShard)
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: junit-${{ runner.os }}-${{ matrix.part }}
