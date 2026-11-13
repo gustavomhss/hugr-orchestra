@@ -83,7 +83,7 @@ function Consent() {
           <button
             type="button"
             class="mx-btn primary"
-            disabled={consent() === undefined || flight.store.starting}
+            disabled={consent() === undefined || flight.store.starting || !flight.canStart()}
             onClick={() => {
               const answer = consent()
               if (answer) void flight.start({ consent: answer, retention: retention() })
