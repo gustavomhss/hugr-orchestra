@@ -3,11 +3,13 @@ export * as MemoryDecisionProcess from "./memory-decision-process"
 import { expect } from "bun:test"
 import { chmodSync, existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
+import { copyFile } from "node:fs/promises"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
 import { Effect } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { AppProcess } from "@orchestra/core/process"
+import { buildWindowsScanner } from "./memory-decision-scanner"
 import type { AtlasBinding, DecisionVerdict, MemoryRecord, ProjectRuleDecision } from "@orchestra/atlas-boundary/native-memory"
 
 type Review = { readonly id: string; readonly kind: string; readonly proposalId?: string; readonly verdict?: string }
@@ -27,6 +29,7 @@ export async function make() {
 }
 
 async function build(root: string) {
+  const scannerExecutable = process.platform === "win32" ? await buildWindowsScanner(root) : undefined
   const source = path.resolve(import.meta.dir, "../../../..")
   const boundary = path.join(source, "modules/atlas/boundary")
   const packages = path.resolve(boundary, "../packages")
@@ -68,12 +71,12 @@ writeFileSync(input.result, JSON.stringify({pid:process.pid,result,review,memory
     async fresh() {
       const repo = mkdtempSync(path.join(root, "repo-"))
       const control = mkdtempSync(path.join(root, "control-"))
-      const base = await scanner(control, "proposal")
+      const base = await scanner(control, "proposal", false, scannerExecutable)
       const binding = bindingOf(repo, base)
       return { repo, control, binding, release: path.join(control, "release") }
     },
     async participant(f: { repo: string; control: string }, name: string, decision: ProjectRuleDecision, hold: boolean) {
-      const command = await scanner(f.control, name, hold)
+      const command = await scanner(f.control, name, hold, scannerExecutable)
       const input = { binding: bindingOf(f.repo, command), decision, at: "2026-11-12T14:00:00.000Z",
         entered: path.join(f.control, `${name}.entered`), result: path.join(f.control, `${name}.result`) }
       return { input, reached: path.join(f.control, `${name}.scanned`),
@@ -113,7 +116,16 @@ function bindingOf(repo: string, command: string): AtlasBinding {
     }, scanner: { name: "gitleaks", command } }
 }
 
-async function scanner(control: string, name: string, hold = false) {
+async function scanner(control: string, name: string, hold = false, executable?: string) {
+  if (executable) {
+    const command = path.join(control, `${name}.gitleaks.exe`)
+    await copyFile(executable, command)
+    await Bun.write(command + ".json", JSON.stringify({
+      payload: path.join(control, `${name}.payload`), scanned: path.join(control, `${name}.scanned`),
+      release: path.join(control, "release"), hold,
+    }))
+    return command
+  }
   const command = path.join(control, `${name}.gitleaks`)
   await Bun.write(command, `#!/bin/sh
 if [ "$1" = "--version" ]; then exit 0; fi
