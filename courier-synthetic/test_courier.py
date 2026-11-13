@@ -78,6 +78,7 @@ class Synthetic(unittest.TestCase):
 
 class CallerSpecificationOnly(unittest.TestCase):
  def setUp(self):
+  sys.path.insert(0,str(P))
   from native_caller_check import verify_capture
   self.verify_capture=verify_capture
   self.payload="abc€".encode()
