@@ -327,6 +327,8 @@ function pinnedScanner(id: string): Scanner | undefined {
 
 /** A pinned scanner over the head copy and, for the new-only step, the base copy. */
 const scanned = Effect.fnUntraced(function* (pack: Pack, scanner: Scanner, context: RunContext) {
+  const output = pack.output
+  if (output.format === "check") return only(check(pack, "not-run", "check-output-requires-dispatcher"))
   const template = scanner.templates[pack.template]
   if (!template) return only(check(pack, "not-run", `template unknown: ${pack.template}`))
   const ruleSelection = nativeDrops(context.catalog, pack.id, knownNative(pack.id))
@@ -338,7 +340,7 @@ const scanned = Effect.fnUntraced(function* (pack: Pack, scanner: Scanner, conte
     if ("failed" in copied) return { status: "not-run" as const, reason: copied.failed }
     const snapshot = copied.snapshot
     // Outside the scanned copy. A report-file scanner may write only that file; a stdout scanner writes nothing.
-    const report = path.join(snapshot.scratch, "reports", `${pack.id}.${pack.output.format}`)
+    const report = path.join(snapshot.scratch, "reports", `${pack.id}.${output.format}`)
     yield* Effect.promise(() => mkdir(path.dirname(report), { recursive: true }))
     if (scanner.prepare) yield* scanner.prepare(path.dirname(report), ruleSelection.dropped)
     if (scanner.sink !== "stdout") yield* Effect.promise(() => writeFile(report, ""))
@@ -352,15 +354,15 @@ const scanned = Effect.fnUntraced(function* (pack: Pack, scanner: Scanner, conte
     const text = scanner.sink === "stdout"
       ? ran.outcome.stdout.data.toString("utf8")
       : yield* Effect.promise(() => Bun.file(report).text().catch(() => ""))
-    const uri = yield* context.write(`raw/${pack.id}-${side}.${pack.output.format}`, text)
+    const uri = yield* context.write(`raw/${pack.id}-${side}.${output.format}`, text)
     const unsettled = settle(ran.outcome)
     if (unsettled) return { ...unsettled, uri }
     if (!completed.includes(ran.outcome.exitCode ?? -1))
       return { status: "acquisition-error" as const, reason: `exit ${ran.outcome.exitCode}: ${firstLine(ran.outcome.stderr.data)}`, uri }
     const options = { pack: pack.id, root: snapshot.root }
-    const parsed = pack.output.format === "sarif"
+    const parsed = output.format === "sarif"
       ? ReviewSarif.parseSarif(text, options)
-      : ReviewSarif.parseJson(pack.output.parser, text, options)
+      : ReviewSarif.parseJson(output.parser, text, options)
     if (parsed.status === "acquisition-error") return { status: "acquisition-error" as const, reason: parsed.reason, uri }
     return { status: "ok" as const, results: parsed.results, uri }
   })
