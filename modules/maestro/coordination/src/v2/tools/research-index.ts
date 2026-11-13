@@ -2,6 +2,7 @@ import path from "node:path"
 import { Effect } from "effect"
 import { Config } from "@orchestra/core/config"
 import { AppProcess } from "@orchestra/core/process"
+import type { ReviewTools } from "@orchestra/core/review/tools"
 import { CodeIndexExtract } from "@orchestra/core/research-toolkit/code-index/extract"
 import { CodeIndexQuery } from "@orchestra/core/research-toolkit/code-index/query"
 import { CodeIndex } from "@orchestra/core/research-toolkit/code-index/types"
@@ -31,6 +32,15 @@ export function index(services: Services, worktree: string, input: CodeIndex.Cod
   }).pipe(Effect.provideService(AppProcess.Service, services.processes))
 }
 
+/** Private B scaffold: implementation follows the accepted readonly review query contract. */
+export function reviewIndex(
+  services: Pick<Services, "config" | "git" | "processes">,
+  source: ReviewTools.CodeSource,
+  input: CodeIndex.CodeQuery,
+): ReturnType<typeof index> {
+  return Effect.fail(new Research.Error({ code: "index_unavailable", message: "review index scaffold" }))
+}
+
 /** `ResearchToolkit.Caps` from config `research.limits`, which may only lower the owner caps (the earlier runtime's `code-index.ts`). */
 export function caps(config: Config.Interface) {
   return config.entries().pipe(Effect.map((entries) => ResearchToolkit.caps(Config.latest(entries, "research")?.limits)))
@@ -57,7 +67,11 @@ export function warm(input: { config: Config.Interface; processes: AppProcess.In
  * resolver serves. Without an index, or while it builds, no line has an enclosing symbol, and the first such answer
  * stops further index calls.
  */
-export function enclosing(services: Services, worktree: string) {
+export function enclosing(
+  services: Services,
+  worktree: string,
+  query: (input: CodeIndex.CodeQuery) => ReturnType<typeof index> = (input) => index(services, worktree, input),
+) {
   const outlines = new Map<string, ReadonlyArray<CodeIndex.SymbolRef>>()
   const state = { unavailable: false }
   return (file: string, line: number) =>
@@ -65,7 +79,7 @@ export function enclosing(services: Services, worktree: string) {
       if (state.unavailable) return undefined
       const symbols =
         outlines.get(file) ??
-        (yield* index(services, worktree, { op: "symbols", path: file, limit: 200 }).pipe(
+        (yield* query({ op: "symbols", path: file, limit: 200 }).pipe(
           Effect.map((result) => result.hits.flatMap((hit) => (hit.via && hit.via.range.path === file ? [hit.via] : []))),
           Effect.catch(() =>
             Effect.sync((): ReadonlyArray<CodeIndex.SymbolRef> => {
