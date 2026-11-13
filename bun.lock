@@ -489,6 +489,7 @@
         "@opentelemetry/exporter-trace-otlp-http": "0.214.0",
         "@opentelemetry/sdk-trace-base": "2.6.1",
         "@orchestra/atlas-boundary": "workspace:*",
+        "@orchestra/codemode": "workspace:*",
         "@orchestra/effect-drizzle-sqlite": "workspace:*",
         "@orchestra/effect-sqlite-node": "workspace:*",
         "@orchestra/llm": "workspace:*",
