@@ -5,8 +5,7 @@ import type { LiveHotkeyAction, LiveRecoveryAction, LiveSource } from "@orchestr
 import { hasTranscriptionKey, saveTranscriptionKey } from "./live-key"
 import type { LiveLoop } from "./live-loop"
 import type { LiveIpcOptions } from "./live-ipc-contract"
-import { deliveryReason } from "./live-delivery-error"
-import { isLocalID } from "./live-delivery-values"
+import { isLocalID } from "./live-delivery-id"
 import { readiness, requestPermission } from "./live-readiness"
 
 // Every IPC handler of the live seat. Run state and input levels are broadcast to all windows, so each renderer
@@ -67,6 +66,6 @@ export function registerLiveIpc(loop: LiveLoop, options: LiveIpcOptions) {
     options.handle(`${action}-live-recovery`, async (_event, id: unknown): Promise<LiveRecoveryAction> => {
       if (!isLocalID(id)) return { ok: false, reason: "conflict" }
       try { return await options.recovery[action](id) }
-      catch (error) { return { ok: false, reason: deliveryReason(error) } }
+      catch { return { ok: false, reason: "storage" } }
     })
 }

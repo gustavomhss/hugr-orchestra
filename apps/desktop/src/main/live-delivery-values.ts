@@ -1,4 +1,5 @@
 import { LiveDeliveryError } from "./live-delivery-error.ts"
+import { isLocalID } from "./live-delivery-id.ts"
 import type { LiveDeliveryConnection } from "./live-delivery-contract.ts"
 import type { OutboxMeeting, OutboxRecord, OutboxTarget } from "./live-outbox-contract.ts"
 import type { MeetingSegment } from "./live-meeting-client.ts"
@@ -16,7 +17,7 @@ export type DeliveryInfo = OutboxMeeting & { readonly timeEnded: number | null }
 export type DeliveryIdentity = { readonly directory: string; readonly meeting: DeliveryInfo }
 
 export const serializedBytes = (value: unknown) => Buffer.byteLength(JSON.stringify(value), "utf8")
-export const isLocalID = (value: unknown): value is string => typeof value === "string" && value.length === 36 && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(value)
+export { isLocalID }
 export const finite = (value: unknown): value is number => typeof value === "number" && Number.isFinite(value)
 
 export function deliveryObject(value: unknown) {
