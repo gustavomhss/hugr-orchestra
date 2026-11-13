@@ -6,6 +6,7 @@ import path from "node:path"
 import { pathToFileURL } from "node:url"
 import { Schema } from "effect"
 import { ChildProcess } from "effect/unstable/process"
+import { AtlasParser } from "./atlas-parser"
 
 const JsonObject = Schema.Record(Schema.String, Schema.Json)
 export const Proof = Schema.Struct({
@@ -32,13 +33,13 @@ async function build(root: string) {
   const source = path.resolve(import.meta.dir, "../../../..")
   const boundary = path.join(source, "modules/atlas/boundary")
   const packages = path.resolve(boundary, "../packages")
-  const metadataPath = path.join(boundary, "node_modules/web-tree-sitter/package.json")
+  const metadataPath = path.join(await AtlasParser.directory(source), "package.json")
   const metadataBytes = await Bun.file(metadataPath).arrayBuffer()
   const metadata: unknown = await Bun.file(metadataPath).json()
   if (typeof metadata !== "object" || metadata === null || !("name" in metadata) || metadata.name !== "web-tree-sitter" ||
     !("version" in metadata) || metadata.version !== "0.23.2" || !("main" in metadata) || metadata.main !== "tree-sitter.js")
     throw new Error("Negation fixture needs the actual web-tree-sitter@0.23.2 tree-sitter.js entry")
-  const parser = realpathSync(path.join(boundary, "node_modules/web-tree-sitter/tree-sitter.js"))
+  const parser = realpathSync(path.join(path.dirname(metadataPath), "tree-sitter.js"))
   if (!statSync(parser).isFile()) throw new Error("Actual pinned parser entry must be a regular file")
   const parserURL = pathToFileURL(parser).href
   // initAst's runtime require.resolve must use the installed grammar even though this bundle lives in tmp.
