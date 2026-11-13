@@ -1,0 +1,1606 @@
+{
+  "schema": "orchestra.audit.m13.integrated-runtime.v1",
+  "recordedAtUTC": "2026-11-13T11:30:08.607105+00:00",
+  "reviewMode": "Independent read-only GitHub API raw job logs, immutable snapshot trees/requests and local Git blobs; no test dispatch, local tests, typecheck, build, push or ledger edit.",
+  "integrationTarget": {
+    "commit": "9add986fc1c335c3c74f1ece295a32c2adcf9b53",
+    "devAncestor": "22d326d58f6cbb9fdc46b55620194c5d434a7444",
+    "devIsAncestor": true,
+    "laterRootNoDesktopChange": "cfe68154d2",
+    "laterRootDesktopAndAppLiveUnchanged": true
+  },
+  "nodeIntegrated": {
+    "runID": 43411946093,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43411946093",
+    "snapshot": "d234b7571074e02588030b1889ef3c3a9ba02509",
+    "conclusion": "success",
+    "request": {
+      "package": "desktop",
+      "packageSelector": "packages/desktop",
+      "directory": "apps/desktop",
+      "runner": "node",
+      "args": [
+        "./test/native/live-delivery-owner.node-smoke.mjs",
+        "./test/native/live-delivery-quit.node-smoke.mjs",
+        "./test/native/live-senses-delivery.node-smoke.mjs",
+        "./test/native/live-loop-delivery.node-smoke.mjs",
+        "./test/native/live-recovery-ipc.node-smoke.mjs"
+      ],
+      "env": {}
+    },
+    "requestGitBlob": "a3c4db5bfcee9b3388e19256c8f9579982f319d9",
+    "jobs": {
+      "linux": {
+        "jobID": 131840266412,
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43411946093/job/131840266412",
+        "conclusion": "success",
+        "counts": {
+          "tests": 47,
+          "pass": 47,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        "runtime": [
+          {
+            "kind": "live-delivery-owner-runtime",
+            "node": "v24.22.2",
+            "versions": {
+              "node": "24.22.2",
+              "acorn": "8.18.0",
+              "ada": "4.0.0",
+              "amaro": "1.1.11",
+              "ares": "1.34.9",
+              "brotli": "1.2.0",
+              "cldr": "48.0",
+              "icu": "78.3",
+              "llhttp": "9.4.3",
+              "merve": "1.2.2",
+              "modules": "137",
+              "napi": "10",
+              "nbytes": "0.1.4",
+              "ncrypto": "0.0.1",
+              "nghttp2": "1.70.0",
+              "nghttp3": "",
+              "ngtcp2": "",
+              "openssl": "3.5.9",
+              "simdjson": "4.6.11",
+              "simdutf": "6.4.0",
+              "sqlite": "3.53.4",
+              "tz": "2026e",
+              "undici": "7.30.1",
+              "unicode": "17.0",
+              "uv": "1.52.1",
+              "uvwasi": "0.0.23",
+              "v8": "13.6.233.17-node.63",
+              "zlib": "1.3.2.1-motley-285e94b",
+              "zstd": "1.5.7"
+            },
+            "platform": "linux",
+            "arch": "x64"
+          },
+          {
+            "kind": "live-delivery-quit-runtime",
+            "node": "v24.22.2",
+            "versions": {
+              "node": "24.22.2",
+              "acorn": "8.18.0",
+              "ada": "4.0.0",
+              "amaro": "1.1.11",
+              "ares": "1.34.9",
+              "brotli": "1.2.0",
+              "cldr": "48.0",
+              "icu": "78.3",
+              "llhttp": "9.4.3",
+              "merve": "1.2.2",
+              "modules": "137",
+              "napi": "10",
+              "nbytes": "0.1.4",
+              "ncrypto": "0.0.1",
+              "nghttp2": "1.70.0",
+              "nghttp3": "",
+              "ngtcp2": "",
+              "openssl": "3.5.9",
+              "simdjson": "4.6.11",
+              "simdutf": "6.4.0",
+              "sqlite": "3.53.4",
+              "tz": "2026e",
+              "undici": "7.30.1",
+              "unicode": "17.0",
+              "uv": "1.52.1",
+              "uvwasi": "0.0.23",
+              "v8": "13.6.233.17-node.63",
+              "zlib": "1.3.2.1-motley-285e94b",
+              "zstd": "1.5.7"
+            },
+            "platform": "linux",
+            "arch": "x64"
+          },
+          {
+            "kind": "live-loop-delivery-runtime",
+            "node": "v24.22.2",
+            "versions": {
+              "node": "24.22.2",
+              "acorn": "8.18.0",
+              "ada": "4.0.0",
+              "amaro": "1.1.11",
+              "ares": "1.34.9",
+              "brotli": "1.2.0",
+              "cldr": "48.0",
+              "icu": "78.3",
+              "llhttp": "9.4.3",
+              "merve": "1.2.2",
+              "modules": "137",
+              "napi": "10",
+              "nbytes": "0.1.4",
+              "ncrypto": "0.0.1",
+              "nghttp2": "1.70.0",
+              "nghttp3": "",
+              "ngtcp2": "",
+              "openssl": "3.5.9",
+              "simdjson": "4.6.11",
+              "simdutf": "6.4.0",
+              "sqlite": "3.53.4",
+              "tz": "2026e",
+              "undici": "7.30.1",
+              "unicode": "17.0",
+              "uv": "1.52.1",
+              "uvwasi": "0.0.23",
+              "v8": "13.6.233.17-node.63",
+              "zlib": "1.3.2.1-motley-285e94b",
+              "zstd": "1.5.7"
+            },
+            "platform": "linux",
+            "arch": "x64"
+          },
+          {
+            "kind": "live-recovery-ipc-runtime",
+            "node": "v24.22.2",
+            "versions": {
+              "node": "24.22.2",
+              "acorn": "8.18.0",
+              "ada": "4.0.0",
+              "amaro": "1.1.11",
+              "ares": "1.34.9",
+              "brotli": "1.2.0",
+              "cldr": "48.0",
+              "icu": "78.3",
+              "llhttp": "9.4.3",
+              "merve": "1.2.2",
+              "modules": "137",
+              "napi": "10",
+              "nbytes": "0.1.4",
+              "ncrypto": "0.0.1",
+              "nghttp2": "1.70.0",
+              "nghttp3": "",
+              "ngtcp2": "",
+              "openssl": "3.5.9",
+              "simdjson": "4.6.11",
+              "simdutf": "6.4.0",
+              "sqlite": "3.53.4",
+              "tz": "2026e",
+              "undici": "7.30.1",
+              "unicode": "17.0",
+              "uv": "1.52.1",
+              "uvwasi": "0.0.23",
+              "v8": "13.6.233.17-node.63",
+              "zlib": "1.3.2.1-motley-285e94b",
+              "zstd": "1.5.7"
+            },
+            "platform": "linux",
+            "arch": "x64"
+          },
+          {
+            "kind": "live-senses-delivery-runtime",
+            "node": "v24.22.2",
+            "versions": {
+              "node": "24.22.2",
+              "acorn": "8.18.0",
+              "ada": "4.0.0",
+              "amaro": "1.1.11",
+              "ares": "1.34.9",
+              "brotli": "1.2.0",
+              "cldr": "48.0",
+              "icu": "78.3",
+              "llhttp": "9.4.3",
+              "merve": "1.2.2",
+              "modules": "137",
+              "napi": "10",
+              "nbytes": "0.1.4",
+              "ncrypto": "0.0.1",
+              "nghttp2": "1.70.0",
+              "nghttp3": "",
+              "ngtcp2": "",
+              "openssl": "3.5.9",
+              "simdjson": "4.6.11",
+              "simdutf": "6.4.0",
+              "sqlite": "3.53.4",
+              "tz": "2026e",
+              "undici": "7.30.1",
+              "unicode": "17.0",
+              "uv": "1.52.1",
+              "uvwasi": "0.0.23",
+              "v8": "13.6.233.17-node.63",
+              "zlib": "1.3.2.1-motley-285e94b",
+              "zstd": "1.5.7"
+            },
+            "platform": "linux",
+            "arch": "x64"
+          }
+        ],
+        "casesByWrapper": {
+          "live-delivery-owner-runtime": [
+            "owner: storage-open refusal disables admission without remote start (12.726714ms)",
+            "owner: repeated connection lookups keep the published resource epoch (99.187398ms)",
+            "owner: invalidate closes start admission synchronously and joins capture before replacement publication (24.336882ms)",
+            "owner: broker waiter abort and quit settle without late publication reopening admission (13.168642ms)",
+            "owner: rotation aborts and joins an actual in-flight HTTP start (49.680425ms)",
+            "owner: recovery snapshot exposes only metadata while Finish remains local intent (19.276197ms)",
+            "owner: completion fires only after actual HTTP confirmed end and durable deletion (34.84494ms)",
+            "owner: quit waits capture final append and seal before closing actual SQLite Store (34.214493ms)",
+            "owner: recovery export resolves opaque ID in Main and aborts/joins export on quit (18.172761ms)"
+          ],
+          "live-delivery-quit-runtime": [
+            "owner quit fences before window flush and joins it before final capture append and Store close (88.254337ms)",
+            "owner quit retains window-flush and capture failures while closing Store and preserving accepted final data (48.74342ms)"
+          ],
+          "live-loop-delivery-runtime": [
+            "Loop refuses closed owner admission before creating a Session, including concurrent starts (463.285278ms)",
+            "Loop stop joins a pending actual Senses startup and its late capture handle (52.314518ms)",
+            "user stop returns before real append ACK; only confirmed foreground completion sends one summary (51.540851ms)",
+            "completion after physical seal but before Loop's stop continuation is retained until local close (36.608304ms)",
+            "a real old completion after replacement cannot summarize either the old or new foreground Session (77.970952ms)",
+            "rotation aborts and joins actual prompt and follow before stop returns, suppressing summary (49.397217ms)",
+            "quit aborts and joins actual prompt and follow before stop returns, suppressing summary (23.315832ms)",
+            "rotation during an already pending user stop immediately suppresses its eventual summary (24.260508ms)",
+            "actual Loop rename uses owner cancellation for its held response body (43.221242ms)",
+            "actual Loop rename bounds a held successful response body at its real 10s deadline (10024.471787ms)",
+            "Session create and prompt observe their owner signal through headers and response bodies (15.418817ms)",
+            "real 10s deadlines bound create body, prompt and SSE headers, while established SSE remains owner-lived (10521.725177ms)",
+            "rotation propagates joined capture cleanup failure and still joins owned Session IO without sealing (28.651974ms)",
+            "quit propagates joined capture cleanup failure and still joins owned Session IO without sealing (22.21892ms)"
+          ],
+          "live-recovery-ipc-runtime": [
+            "IPC origin control: actual packaged/development origin policy has the known allow/deny results (1.892556ms)",
+            "IPC guard: packaged renderer (0.215796ms)",
+            "IPC guard: configured development origin (0.128023ms)",
+            "IPC guard: foreign packaged host (0.386013ms)",
+            "IPC guard: foreign HTTPS (0.160973ms)",
+            "IPC guard: file URL (0.141243ms)",
+            "IPC guard: different development port (0.154734ms)",
+            "IPC guard: development URL disabled in packaged app (0.082094ms)",
+            "IPC guard: missing sender frame (0.139972ms)",
+            "Live IPC routes every legacy and recovery registration through the supplied trusted handle (11.371178ms)",
+            "Live recovery IPC forwards only the exact opaque ID and never renderer export paths/transcripts (0.706706ms)",
+            "Live recovery IPC rejects path-like and nonstring IDs before invoking recovery (0.791575ms)",
+            "Live recovery IPC refuses snapshot failure instead of fabricating an empty successful snapshot (0.313783ms)",
+            "Live recovery IPC contains private action errors and preserves ordinary public refusals (2.808107ms)",
+            "actual owner quit joins cancelled export before an uncancellable chooser settles; late resolved choice never writes (59.354912ms)",
+            "actual owner quit joins cancelled export before an uncancellable chooser settles; late rejected choice never writes (48.387864ms)"
+          ],
+          "live-senses-delivery-runtime": [
+            "CONTROL senses integration uses real SQLite admission and actual manager HTTP delivery (92.646406ms)",
+            "senses joins final STT and cutter flush before seal; local stop is memoized before callbacks and does not await ACK (118.453042ms)",
+            "senses sqlite admission refusal synchronously stops capture and preserves an incomplete warning (14.675144ms)",
+            "senses quota admission refusal synchronously stops capture and preserves an incomplete warning (26.632811ms)",
+            "abort during microphone permission settles before the native dialog and a late grant cannot start capture (4.417496ms)",
+            "abort during capture acquisition joins and closes the late handle before rejecting startup (18.579134ms)"
+          ]
+        },
+        "raw": {
+          "localReceipt": "/tmp/m13-independent-node-linux.raw.log",
+          "sha256": "f2e9125d14cf6b7e92adb7c8ad2b85af3c0104d237b60a674b839f1d0e94d5ab",
+          "bytes": 78444
+        }
+      },
+      "windows": {
+        "jobID": 131840265937,
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43411946093/job/131840265937",
+        "conclusion": "success",
+        "counts": {
+          "tests": 47,
+          "pass": 47,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        "runtime": [
+          {
+            "kind": "live-delivery-owner-runtime",
+            "node": "v24.22.2",
+            "versions": {
+              "node": "24.22.2",
+              "acorn": "8.18.0",
+              "ada": "4.0.0",
+              "amaro": "1.1.11",
+              "ares": "1.34.9",
+              "brotli": "1.2.0",
+              "cldr": "48.0",
+              "icu": "78.3",
+              "llhttp": "9.4.3",
+              "merve": "1.2.2",
+              "modules": "137",
+              "napi": "10",
+              "nbytes": "0.1.4",
+              "ncrypto": "0.0.1",
+              "nghttp2": "1.70.0",
+              "nghttp3": "",
+              "ngtcp2": "",
+              "openssl": "3.5.9",
+              "simdjson": "4.6.11",
+              "simdutf": "6.4.0",
+              "sqlite": "3.53.4",
+              "tz": "2026e",
+              "undici": "7.30.1",
+              "unicode": "17.0",
+              "uv": "1.52.1",
+              "uvwasi": "0.0.23",
+              "v8": "13.6.233.17-node.63",
+              "zlib": "1.3.2.1-motley-285e94b",
+              "zstd": "1.5.7"
+            },
+            "platform": "win32",
+            "arch": "x64"
+          },
+          {
+            "kind": "live-delivery-quit-runtime",
+            "node": "v24.22.2",
+            "versions": {
+              "node": "24.22.2",
+              "acorn": "8.18.0",
+              "ada": "4.0.0",
+              "amaro": "1.1.11",
+              "ares": "1.34.9",
+              "brotli": "1.2.0",
+              "cldr": "48.0",
+              "icu": "78.3",
+              "llhttp": "9.4.3",
+              "merve": "1.2.2",
+              "modules": "137",
+              "napi": "10",
+              "nbytes": "0.1.4",
+              "ncrypto": "0.0.1",
+              "nghttp2": "1.70.0",
+              "nghttp3": "",
+              "ngtcp2": "",
+              "openssl": "3.5.9",
+              "simdjson": "4.6.11",
+              "simdutf": "6.4.0",
+              "sqlite": "3.53.4",
+              "tz": "2026e",
+              "undici": "7.30.1",
+              "unicode": "17.0",
+              "uv": "1.52.1",
+              "uvwasi": "0.0.23",
+              "v8": "13.6.233.17-node.63",
+              "zlib": "1.3.2.1-motley-285e94b",
+              "zstd": "1.5.7"
+            },
+            "platform": "win32",
+            "arch": "x64"
+          },
+          {
+            "kind": "live-loop-delivery-runtime",
+            "node": "v24.22.2",
+            "versions": {
+              "node": "24.22.2",
+              "acorn": "8.18.0",
+              "ada": "4.0.0",
+              "amaro": "1.1.11",
+              "ares": "1.34.9",
+              "brotli": "1.2.0",
+              "cldr": "48.0",
+              "icu": "78.3",
+              "llhttp": "9.4.3",
+              "merve": "1.2.2",
+              "modules": "137",
+              "napi": "10",
+              "nbytes": "0.1.4",
+              "ncrypto": "0.0.1",
+              "nghttp2": "1.70.0",
+              "nghttp3": "",
+              "ngtcp2": "",
+              "openssl": "3.5.9",
+              "simdjson": "4.6.11",
+              "simdutf": "6.4.0",
+              "sqlite": "3.53.4",
+              "tz": "2026e",
+              "undici": "7.30.1",
+              "unicode": "17.0",
+              "uv": "1.52.1",
+              "uvwasi": "0.0.23",
+              "v8": "13.6.233.17-node.63",
+              "zlib": "1.3.2.1-motley-285e94b",
+              "zstd": "1.5.7"
+            },
+            "platform": "win32",
+            "arch": "x64"
+          },
+          {
+            "kind": "live-recovery-ipc-runtime",
+            "node": "v24.22.2",
+            "versions": {
+              "node": "24.22.2",
+              "acorn": "8.18.0",
+              "ada": "4.0.0",
+              "amaro": "1.1.11",
+              "ares": "1.34.9",
+              "brotli": "1.2.0",
+              "cldr": "48.0",
+              "icu": "78.3",
+              "llhttp": "9.4.3",
+              "merve": "1.2.2",
+              "modules": "137",
+              "napi": "10",
+              "nbytes": "0.1.4",
+              "ncrypto": "0.0.1",
+              "nghttp2": "1.70.0",
+              "nghttp3": "",
+              "ngtcp2": "",
+              "openssl": "3.5.9",
+              "simdjson": "4.6.11",
+              "simdutf": "6.4.0",
+              "sqlite": "3.53.4",
+              "tz": "2026e",
+              "undici": "7.30.1",
+              "unicode": "17.0",
+              "uv": "1.52.1",
+              "uvwasi": "0.0.23",
+              "v8": "13.6.233.17-node.63",
+              "zlib": "1.3.2.1-motley-285e94b",
+              "zstd": "1.5.7"
+            },
+            "platform": "win32",
+            "arch": "x64"
+          },
+          {
+            "kind": "live-senses-delivery-runtime",
+            "node": "v24.22.2",
+            "versions": {
+              "node": "24.22.2",
+              "acorn": "8.18.0",
+              "ada": "4.0.0",
+              "amaro": "1.1.11",
+              "ares": "1.34.9",
+              "brotli": "1.2.0",
+              "cldr": "48.0",
+              "icu": "78.3",
+              "llhttp": "9.4.3",
+              "merve": "1.2.2",
+              "modules": "137",
+              "napi": "10",
+              "nbytes": "0.1.4",
+              "ncrypto": "0.0.1",
+              "nghttp2": "1.70.0",
+              "nghttp3": "",
+              "ngtcp2": "",
+              "openssl": "3.5.9",
+              "simdjson": "4.6.11",
+              "simdutf": "6.4.0",
+              "sqlite": "3.53.4",
+              "tz": "2026e",
+              "undici": "7.30.1",
+              "unicode": "17.0",
+              "uv": "1.52.1",
+              "uvwasi": "0.0.23",
+              "v8": "13.6.233.17-node.63",
+              "zlib": "1.3.2.1-motley-285e94b",
+              "zstd": "1.5.7"
+            },
+            "platform": "win32",
+            "arch": "x64"
+          }
+        ],
+        "casesByWrapper": {
+          "live-delivery-owner-runtime": [
+            "owner: storage-open refusal disables admission without remote start (42.521ms)",
+            "owner: repeated connection lookups keep the published resource epoch (427.5679ms)",
+            "owner: invalidate closes start admission synchronously and joins capture before replacement publication (156.0255ms)",
+            "owner: broker waiter abort and quit settle without late publication reopening admission (114.7412ms)",
+            "owner: rotation aborts and joins an actual in-flight HTTP start (213.0336ms)",
+            "owner: recovery snapshot exposes only metadata while Finish remains local intent (380.9383ms)",
+            "owner: completion fires only after actual HTTP confirmed end and durable deletion (439.2625ms)",
+            "owner: quit waits capture final append and seal before closing actual SQLite Store (336.0046ms)",
+            "owner: recovery export resolves opaque ID in Main and aborts/joins export on quit (343.6081ms)"
+          ],
+          "live-delivery-quit-runtime": [
+            "owner quit fences before window flush and joins it before final capture append and Store close (521.3388ms)",
+            "owner quit retains window-flush and capture failures while closing Store and preserving accepted final data (404.3185ms)"
+          ],
+          "live-loop-delivery-runtime": [
+            "Loop refuses closed owner admission before creating a Session, including concurrent starts (783.0671ms)",
+            "Loop stop joins a pending actual Senses startup and its late capture handle (377.2996ms)",
+            "user stop returns before real append ACK; only confirmed foreground completion sends one summary (411.3757ms)",
+            "completion after physical seal but before Loop's stop continuation is retained until local close (388.0985ms)",
+            "a real old completion after replacement cannot summarize either the old or new foreground Session (490.7164ms)",
+            "rotation aborts and joins actual prompt and follow before stop returns, suppressing summary (204.0811ms)",
+            "quit aborts and joins actual prompt and follow before stop returns, suppressing summary (233.1331ms)",
+            "rotation during an already pending user stop immediately suppresses its eventual summary (282.2868ms)",
+            "actual Loop rename uses owner cancellation for its held response body (330.1899ms)",
+            "actual Loop rename bounds a held successful response body at its real 10s deadline (10198.6055ms)",
+            "Session create and prompt observe their owner signal through headers and response bodies (72.2908ms)",
+            "real 10s deadlines bound create body, prompt and SSE headers, while established SSE remains owner-lived (10565.1867ms)",
+            "rotation propagates joined capture cleanup failure and still joins owned Session IO without sealing (89.3604ms)",
+            "quit propagates joined capture cleanup failure and still joins owned Session IO without sealing (91.8556ms)"
+          ],
+          "live-recovery-ipc-runtime": [
+            "IPC origin control: actual packaged/development origin policy has the known allow/deny results (29.9979ms)",
+            "IPC guard: packaged renderer (0.1776ms)",
+            "IPC guard: configured development origin (0.0586ms)",
+            "IPC guard: foreign packaged host (0.2337ms)",
+            "IPC guard: foreign HTTPS (0.1173ms)",
+            "IPC guard: file URL (0.0742ms)",
+            "IPC guard: different development port (0.0553ms)",
+            "IPC guard: development URL disabled in packaged app (0.0709ms)",
+            "IPC guard: missing sender frame (0.0547ms)",
+            "Live IPC routes every legacy and recovery registration through the supplied trusted handle (17.8654ms)",
+            "Live recovery IPC forwards only the exact opaque ID and never renderer export paths/transcripts (0.5033ms)",
+            "Live recovery IPC rejects path-like and nonstring IDs before invoking recovery (0.3421ms)",
+            "Live recovery IPC refuses snapshot failure instead of fabricating an empty successful snapshot (0.1627ms)",
+            "Live recovery IPC contains private action errors and preserves ordinary public refusals (0.2128ms)",
+            "actual owner quit joins cancelled export before an uncancellable chooser settles; late resolved choice never writes (375.3481ms)",
+            "actual owner quit joins cancelled export before an uncancellable chooser settles; late rejected choice never writes (404.2262ms)"
+          ],
+          "live-senses-delivery-runtime": [
+            "CONTROL senses integration uses real SQLite admission and actual manager HTTP delivery (447.46ms)",
+            "senses joins final STT and cutter flush before seal; local stop is memoized before callbacks and does not await ACK (360.4963ms)",
+            "senses sqlite admission refusal synchronously stops capture and preserves an incomplete warning (242.828ms)",
+            "senses quota admission refusal synchronously stops capture and preserves an incomplete warning (215.1909ms)",
+            "abort during microphone permission settles before the native dialog and a late grant cannot start capture (169.9518ms)",
+            "abort during capture acquisition joins and closes the late handle before rejecting startup (199.05ms)"
+          ]
+        },
+        "raw": {
+          "localReceipt": "/tmp/m13-independent-node-windows.raw.log",
+          "sha256": "4efd5ec2b41c7379d4319750c752e68c09a60a01cdf247ae5712f11ba40e76fe",
+          "bytes": 79412
+        }
+      }
+    },
+    "cleanupJobs": [
+      {
+        "jobID": 131842148488,
+        "conclusion": "success"
+      }
+    ]
+  },
+  "repairedBunUnits": {
+    "runID": 43415962700,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43415962700",
+    "snapshot": "6b81c712a5a951e4e24995b01ff3940faadf25ae",
+    "request": {
+      "package": "desktop",
+      "packageSelector": "packages/desktop",
+      "directory": "apps/desktop",
+      "runner": "bun",
+      "args": [
+        "./src/main/live-recovery-export.test.ts",
+        "./src/main/desktop-startup.test.ts",
+        "./src/main/live-loop.test.ts",
+        "./src/main/live-senses.test.ts",
+        "./src/main/live-ipc.test.ts",
+        "--timeout",
+        "120000"
+      ],
+      "env": {}
+    },
+    "requestGitBlob": "69f5c821518658185b026ca874fede082f32ca95",
+    "status": "completed",
+    "jobs": {
+      "linux": {
+        "jobID": 131853816961,
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43415962700/job/131853816961",
+        "conclusion": "success",
+        "counts": {
+          "pass": 27,
+          "fail": 0,
+          "tests": 27,
+          "assertions": 122,
+          "files": 5
+        },
+        "omniControl": "omni positive control [336435121a219c2610dca5d31d11edd5]: not applicable (focused: no declaring test ran); this run made no omni spawn and delegated none, so it proved nothing about omni.",
+        "raw": {
+          "localReceipt": "/tmp/m13-independent-units-linux.raw.log",
+          "sha256": "348cfbaeb92d765280be66ebbc80937ac0e0c610282e806c2a1100283bee04e6",
+          "bytes": 74547
+        }
+      },
+      "windows": {
+        "jobID": 131853817335,
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43415962700/job/131853817335",
+        "conclusion": "success",
+        "counts": {
+          "pass": 27,
+          "fail": 0,
+          "tests": 27,
+          "assertions": 118,
+          "files": 5
+        },
+        "omniControl": "omni positive control [0fee4b42958564a9fddd8a9aa2612d96]: not applicable (focused: no declaring test ran); this run made no omni spawn and delegated none, so it proved nothing about omni.\r",
+        "raw": {
+          "localReceipt": "/tmp/m13-independent-units-windows.raw.log",
+          "sha256": "f04ee854df1f216890b369d8fe742f1ca1c72db2f2ba2cdeb8794e66fb4a2462",
+          "bytes": 75984
+        }
+      }
+    },
+    "conclusion": "success",
+    "cleanupJobs": [
+      {
+        "jobID": 131856334442,
+        "conclusion": "success"
+      }
+    ]
+  },
+  "sourceBindings": {
+    "format": "Git blob SHA-1 from full nontruncated GitHub snapshot trees vs git ls-tree -r integrationTarget. Manifest digest is SHA-256 over sorted UTF-8 path<TAB>blob-or-ABSENT<LF>.",
+    "scopedPaths": 88,
+    "vector": [
+      {
+        "path": "apps/desktop/src/main/desktop-startup.ts",
+        "integration": "d669cef8bdd13d85b584995b5b523776c953942c",
+        "nodeSnapshot": "d669cef8bdd13d85b584995b5b523776c953942c",
+        "repairedUnitsSnapshot": "d669cef8bdd13d85b584995b5b523776c953942c",
+        "finalIPCSnapshot": "d669cef8bdd13d85b584995b5b523776c953942c"
+      },
+      {
+        "path": "apps/desktop/src/main/index.ts",
+        "integration": "7ab254543501c3dbe579a79a30c62d3d0d4eed13",
+        "nodeSnapshot": "7ab254543501c3dbe579a79a30c62d3d0d4eed13",
+        "repairedUnitsSnapshot": "7ab254543501c3dbe579a79a30c62d3d0d4eed13",
+        "finalIPCSnapshot": "7ab254543501c3dbe579a79a30c62d3d0d4eed13"
+      },
+      {
+        "path": "apps/desktop/src/main/live-answer.test.ts",
+        "integration": "05cd1180086ec8f0f91dd53ed38fed08cd6340e0",
+        "nodeSnapshot": "05cd1180086ec8f0f91dd53ed38fed08cd6340e0",
+        "repairedUnitsSnapshot": "05cd1180086ec8f0f91dd53ed38fed08cd6340e0",
+        "finalIPCSnapshot": "05cd1180086ec8f0f91dd53ed38fed08cd6340e0"
+      },
+      {
+        "path": "apps/desktop/src/main/live-answer.ts",
+        "integration": "6412cd2d4850509945ed2bcbc844266a4123e33b",
+        "nodeSnapshot": "6412cd2d4850509945ed2bcbc844266a4123e33b",
+        "repairedUnitsSnapshot": "6412cd2d4850509945ed2bcbc844266a4123e33b",
+        "finalIPCSnapshot": "6412cd2d4850509945ed2bcbc844266a4123e33b"
+      },
+      {
+        "path": "apps/desktop/src/main/live-audio.test.ts",
+        "integration": "ecfa542d78ee5532360d2b0f7fb00b68f81c6894",
+        "nodeSnapshot": "ecfa542d78ee5532360d2b0f7fb00b68f81c6894",
+        "repairedUnitsSnapshot": "ecfa542d78ee5532360d2b0f7fb00b68f81c6894",
+        "finalIPCSnapshot": "ecfa542d78ee5532360d2b0f7fb00b68f81c6894"
+      },
+      {
+        "path": "apps/desktop/src/main/live-audio.ts",
+        "integration": "4399819a4bb389ebece75f77efac470970beb199",
+        "nodeSnapshot": "4399819a4bb389ebece75f77efac470970beb199",
+        "repairedUnitsSnapshot": "4399819a4bb389ebece75f77efac470970beb199",
+        "finalIPCSnapshot": "4399819a4bb389ebece75f77efac470970beb199"
+      },
+      {
+        "path": "apps/desktop/src/main/live-capture.test.ts",
+        "integration": "8d2f5e2391f741446da553408659e3ec96d33f8f",
+        "nodeSnapshot": "8d2f5e2391f741446da553408659e3ec96d33f8f",
+        "repairedUnitsSnapshot": "8d2f5e2391f741446da553408659e3ec96d33f8f",
+        "finalIPCSnapshot": "8d2f5e2391f741446da553408659e3ec96d33f8f"
+      },
+      {
+        "path": "apps/desktop/src/main/live-capture.ts",
+        "integration": "cedefba574228cea6723e23e0718619e8ca5a1ea",
+        "nodeSnapshot": "cedefba574228cea6723e23e0718619e8ca5a1ea",
+        "repairedUnitsSnapshot": "cedefba574228cea6723e23e0718619e8ca5a1ea",
+        "finalIPCSnapshot": "cedefba574228cea6723e23e0718619e8ca5a1ea"
+      },
+      {
+        "path": "apps/desktop/src/main/live-delivery-contract.ts",
+        "integration": "943191f8b936d0ab93b76a187f99915de83474c5",
+        "nodeSnapshot": "943191f8b936d0ab93b76a187f99915de83474c5",
+        "repairedUnitsSnapshot": "943191f8b936d0ab93b76a187f99915de83474c5",
+        "finalIPCSnapshot": "943191f8b936d0ab93b76a187f99915de83474c5"
+      },
+      {
+        "path": "apps/desktop/src/main/live-delivery-error.ts",
+        "integration": "7f539783e4db1176db7539b5c69c0a7413b428c2",
+        "nodeSnapshot": "7f539783e4db1176db7539b5c69c0a7413b428c2",
+        "repairedUnitsSnapshot": "7f539783e4db1176db7539b5c69c0a7413b428c2",
+        "finalIPCSnapshot": "7f539783e4db1176db7539b5c69c0a7413b428c2"
+      },
+      {
+        "path": "apps/desktop/src/main/live-delivery-http.ts",
+        "integration": "a44428476cba6b279c9a477f6175248118d9e815",
+        "nodeSnapshot": "a44428476cba6b279c9a477f6175248118d9e815",
+        "repairedUnitsSnapshot": "a44428476cba6b279c9a477f6175248118d9e815",
+        "finalIPCSnapshot": "a44428476cba6b279c9a477f6175248118d9e815"
+      },
+      {
+        "path": "apps/desktop/src/main/live-delivery-id.ts",
+        "integration": "261bc3286083b1332764b69dd4ce2dc80a5d30dd",
+        "nodeSnapshot": null,
+        "repairedUnitsSnapshot": "261bc3286083b1332764b69dd4ce2dc80a5d30dd",
+        "finalIPCSnapshot": "261bc3286083b1332764b69dd4ce2dc80a5d30dd"
+      },
+      {
+        "path": "apps/desktop/src/main/live-delivery-manager-actions.fixture.ts",
+        "integration": "2578e05d4d226dcce4a3434a67269271b7d01289",
+        "nodeSnapshot": "2578e05d4d226dcce4a3434a67269271b7d01289",
+        "repairedUnitsSnapshot": "2578e05d4d226dcce4a3434a67269271b7d01289",
+        "finalIPCSnapshot": "2578e05d4d226dcce4a3434a67269271b7d01289"
+      },
+      {
+        "path": "apps/desktop/src/main/live-delivery-manager-byte-control.node.test.ts",
+        "integration": "0aa3a8e0893e6a17163f0d286b0f0d8750aca97a",
+        "nodeSnapshot": "0aa3a8e0893e6a17163f0d286b0f0d8750aca97a",
+        "repairedUnitsSnapshot": "0aa3a8e0893e6a17163f0d286b0f0d8750aca97a",
+        "finalIPCSnapshot": "0aa3a8e0893e6a17163f0d286b0f0d8750aca97a"
+      },
+      {
+        "path": "apps/desktop/src/main/live-delivery-manager-byte.fixture.ts",
+        "integration": "77e719c86a2935b606cb7156a4b966d74f222d08",
+        "nodeSnapshot": "77e719c86a2935b606cb7156a4b966d74f222d08",
+        "repairedUnitsSnapshot": "77e719c86a2935b606cb7156a4b966d74f222d08",
+        "finalIPCSnapshot": "77e719c86a2935b606cb7156a4b966d74f222d08"
+      },
+      {
+        "path": "apps/desktop/src/main/live-delivery-manager-byte.node.test.ts",
+        "integration": "e4cc7f1051f1331690bea3de4951d233b23fe4be",
+        "nodeSnapshot": "e4cc7f1051f1331690bea3de4951d233b23fe4be",
+        "repairedUnitsSnapshot": "e4cc7f1051f1331690bea3de4951d233b23fe4be",
+        "finalIPCSnapshot": "e4cc7f1051f1331690bea3de4951d233b23fe4be"
+      },
+      {
+        "path": "apps/desktop/src/main/live-delivery-manager-control.node.test.ts",
+        "integration": "0576993e02af41d66fa7f462a2a9123487d3e800",
+        "nodeSnapshot": "0576993e02af41d66fa7f462a2a9123487d3e800",
+        "repairedUnitsSnapshot": "0576993e02af41d66fa7f462a2a9123487d3e800",
+        "finalIPCSnapshot": "0576993e02af41d66fa7f462a2a9123487d3e800"
+      },
+      {
+        "path": "apps/desktop/src/main/live-delivery-manager-test.fixture.ts",
+        "integration": "01bff9662bb049be1be2943fa50293f2e202b7b4",
+        "nodeSnapshot": "01bff9662bb049be1be2943fa50293f2e202b7b4",
+        "repairedUnitsSnapshot": "01bff9662bb049be1be2943fa50293f2e202b7b4",
+        "finalIPCSnapshot": "01bff9662bb049be1be2943fa50293f2e202b7b4"
+      },
+      {
+        "path": "apps/desktop/src/main/live-delivery-manager.fixture.ts",
+        "integration": "159a460c46d7c605575463d559fe4604c1424297",
+        "nodeSnapshot": "159a460c46d7c605575463d559fe4604c1424297",
+        "repairedUnitsSnapshot": "159a460c46d7c605575463d559fe4604c1424297",
+        "finalIPCSnapshot": "159a460c46d7c605575463d559fe4604c1424297"
+      },
+      {
+        "path": "apps/desktop/src/main/live-delivery-manager.native.test.ts",
+        "integration": "4249ce68e8edadc48e75fa43b6665d2cd1563cfa",
+        "nodeSnapshot": "4249ce68e8edadc48e75fa43b6665d2cd1563cfa",
+        "repairedUnitsSnapshot": "4249ce68e8edadc48e75fa43b6665d2cd1563cfa",
+        "finalIPCSnapshot": "4249ce68e8edadc48e75fa43b6665d2cd1563cfa"
+      },
+      {
+        "path": "apps/desktop/src/main/live-delivery-manager.node.test.ts",
+        "integration": "516a74837dead2e86763ee888486b3f9c0a82d3c",
+        "nodeSnapshot": "516a74837dead2e86763ee888486b3f9c0a82d3c",
+        "repairedUnitsSnapshot": "516a74837dead2e86763ee888486b3f9c0a82d3c",
+        "finalIPCSnapshot": "516a74837dead2e86763ee888486b3f9c0a82d3c"
+      },
+      {
+        "path": "apps/desktop/src/main/live-delivery-manager.ts",
+        "integration": "984e890ba7bc1dc170d114bff9c724ab9f95dbee",
+        "nodeSnapshot": "984e890ba7bc1dc170d114bff9c724ab9f95dbee",
+        "repairedUnitsSnapshot": "984e890ba7bc1dc170d114bff9c724ab9f95dbee",
+        "finalIPCSnapshot": "984e890ba7bc1dc170d114bff9c724ab9f95dbee"
+      },
+      {
+        "path": "apps/desktop/src/main/live-delivery-owner-contract.ts",
+        "integration": "a0ab26e2c2fc965e02b18d46e7903b9e41963d41",
+        "nodeSnapshot": "a0ab26e2c2fc965e02b18d46e7903b9e41963d41",
+        "repairedUnitsSnapshot": "a0ab26e2c2fc965e02b18d46e7903b9e41963d41",
+        "finalIPCSnapshot": "a0ab26e2c2fc965e02b18d46e7903b9e41963d41"
+      },
+      {
+        "path": "apps/desktop/src/main/live-delivery-owner-test.fixture.ts",
+        "integration": "28306de50c8cbf6770e61052357a27e3a464a5b6",
+        "nodeSnapshot": "28306de50c8cbf6770e61052357a27e3a464a5b6",
+        "repairedUnitsSnapshot": "28306de50c8cbf6770e61052357a27e3a464a5b6",
+        "finalIPCSnapshot": "28306de50c8cbf6770e61052357a27e3a464a5b6"
+      },
+      {
+        "path": "apps/desktop/src/main/live-delivery-owner.node.test.ts",
+        "integration": "c94bce1df1cd0d77acbd4b9edd28fe13f282dabf",
+        "nodeSnapshot": "c94bce1df1cd0d77acbd4b9edd28fe13f282dabf",
+        "repairedUnitsSnapshot": "c94bce1df1cd0d77acbd4b9edd28fe13f282dabf",
+        "finalIPCSnapshot": "c94bce1df1cd0d77acbd4b9edd28fe13f282dabf"
+      },
+      {
+        "path": "apps/desktop/src/main/live-delivery-owner.ts",
+        "integration": "939ef7d8d55fcfee9d395803a5e7c90833eb0e75",
+        "nodeSnapshot": "939ef7d8d55fcfee9d395803a5e7c90833eb0e75",
+        "repairedUnitsSnapshot": "939ef7d8d55fcfee9d395803a5e7c90833eb0e75",
+        "finalIPCSnapshot": "939ef7d8d55fcfee9d395803a5e7c90833eb0e75"
+      },
+      {
+        "path": "apps/desktop/src/main/live-delivery-quit.node.test.ts",
+        "integration": "4ab27ba651e2279a952a39a844d6889ed4a12bea",
+        "nodeSnapshot": "4ab27ba651e2279a952a39a844d6889ed4a12bea",
+        "repairedUnitsSnapshot": "4ab27ba651e2279a952a39a844d6889ed4a12bea",
+        "finalIPCSnapshot": "4ab27ba651e2279a952a39a844d6889ed4a12bea"
+      },
+      {
+        "path": "apps/desktop/src/main/live-delivery-values.ts",
+        "integration": "8309098e003b3e6efa9f376be1a21c2b5a10b903",
+        "nodeSnapshot": "c27e84b8b52e1b3dbbcc5b5926da4b8fe5523264",
+        "repairedUnitsSnapshot": "8309098e003b3e6efa9f376be1a21c2b5a10b903",
+        "finalIPCSnapshot": "8309098e003b3e6efa9f376be1a21c2b5a10b903"
+      },
+      {
+        "path": "apps/desktop/src/main/live-elapsed.test.ts",
+        "integration": "8265f13ecd50f0f9242aff8eca805220a80bb625",
+        "nodeSnapshot": "8265f13ecd50f0f9242aff8eca805220a80bb625",
+        "repairedUnitsSnapshot": "8265f13ecd50f0f9242aff8eca805220a80bb625",
+        "finalIPCSnapshot": "8265f13ecd50f0f9242aff8eca805220a80bb625"
+      },
+      {
+        "path": "apps/desktop/src/main/live-elapsed.ts",
+        "integration": "0a445fd4478591e92d1e04cfe3b68b1c9eacfd45",
+        "nodeSnapshot": "0a445fd4478591e92d1e04cfe3b68b1c9eacfd45",
+        "repairedUnitsSnapshot": "0a445fd4478591e92d1e04cfe3b68b1c9eacfd45",
+        "finalIPCSnapshot": "0a445fd4478591e92d1e04cfe3b68b1c9eacfd45"
+      },
+      {
+        "path": "apps/desktop/src/main/live-frame.test.ts",
+        "integration": "f18bcee7d6fe398dfbb49fcd8d54df110763ef87",
+        "nodeSnapshot": "f18bcee7d6fe398dfbb49fcd8d54df110763ef87",
+        "repairedUnitsSnapshot": "f18bcee7d6fe398dfbb49fcd8d54df110763ef87",
+        "finalIPCSnapshot": "f18bcee7d6fe398dfbb49fcd8d54df110763ef87"
+      },
+      {
+        "path": "apps/desktop/src/main/live-frame.ts",
+        "integration": "a56708579ded9232cf530bdb3cd14a8a9be0deb5",
+        "nodeSnapshot": "a56708579ded9232cf530bdb3cd14a8a9be0deb5",
+        "repairedUnitsSnapshot": "a56708579ded9232cf530bdb3cd14a8a9be0deb5",
+        "finalIPCSnapshot": "a56708579ded9232cf530bdb3cd14a8a9be0deb5"
+      },
+      {
+        "path": "apps/desktop/src/main/live-ipc-contract.ts",
+        "integration": "2f67e7bffdf31297c7c1325961bad80f8a888b6c",
+        "nodeSnapshot": "2f67e7bffdf31297c7c1325961bad80f8a888b6c",
+        "repairedUnitsSnapshot": "2f67e7bffdf31297c7c1325961bad80f8a888b6c",
+        "finalIPCSnapshot": "2f67e7bffdf31297c7c1325961bad80f8a888b6c"
+      },
+      {
+        "path": "apps/desktop/src/main/live-ipc.test.ts",
+        "integration": "4b18e84eb91de8ef3e1d186f95f958e52d4fe51f",
+        "nodeSnapshot": "4b18e84eb91de8ef3e1d186f95f958e52d4fe51f",
+        "repairedUnitsSnapshot": "4b18e84eb91de8ef3e1d186f95f958e52d4fe51f",
+        "finalIPCSnapshot": "4b18e84eb91de8ef3e1d186f95f958e52d4fe51f"
+      },
+      {
+        "path": "apps/desktop/src/main/live-ipc.ts",
+        "integration": "88bf6abe91a1ae9d8bbbd7c73961aa1fd4aaef35",
+        "nodeSnapshot": "f11306efeda1a4cb1d12d57e562d6cabbabb5efa",
+        "repairedUnitsSnapshot": "88bf6abe91a1ae9d8bbbd7c73961aa1fd4aaef35",
+        "finalIPCSnapshot": "88bf6abe91a1ae9d8bbbd7c73961aa1fd4aaef35"
+      },
+      {
+        "path": "apps/desktop/src/main/live-key.ts",
+        "integration": "b1a22d61949a3eb39d14d4e0ab2490683bfdda6a",
+        "nodeSnapshot": "b1a22d61949a3eb39d14d4e0ab2490683bfdda6a",
+        "repairedUnitsSnapshot": "b1a22d61949a3eb39d14d4e0ab2490683bfdda6a",
+        "finalIPCSnapshot": "b1a22d61949a3eb39d14d4e0ab2490683bfdda6a"
+      },
+      {
+        "path": "apps/desktop/src/main/live-loop-delivery.fixture.ts",
+        "integration": "6270e4bf0d46582822c5f3b534ad63b225fbae76",
+        "nodeSnapshot": "6270e4bf0d46582822c5f3b534ad63b225fbae76",
+        "repairedUnitsSnapshot": "6270e4bf0d46582822c5f3b534ad63b225fbae76",
+        "finalIPCSnapshot": "6270e4bf0d46582822c5f3b534ad63b225fbae76"
+      },
+      {
+        "path": "apps/desktop/src/main/live-loop-delivery.node.test.ts",
+        "integration": "d1639650aeb130a15f50a9ea3cbbb2c4595cc648",
+        "nodeSnapshot": "d1639650aeb130a15f50a9ea3cbbb2c4595cc648",
+        "repairedUnitsSnapshot": "d1639650aeb130a15f50a9ea3cbbb2c4595cc648",
+        "finalIPCSnapshot": "d1639650aeb130a15f50a9ea3cbbb2c4595cc648"
+      },
+      {
+        "path": "apps/desktop/src/main/live-loop.test.ts",
+        "integration": "8a7f4c59f16a02a0586d24221d8eb8b37ee1f107",
+        "nodeSnapshot": "8a7f4c59f16a02a0586d24221d8eb8b37ee1f107",
+        "repairedUnitsSnapshot": "8a7f4c59f16a02a0586d24221d8eb8b37ee1f107",
+        "finalIPCSnapshot": "8a7f4c59f16a02a0586d24221d8eb8b37ee1f107"
+      },
+      {
+        "path": "apps/desktop/src/main/live-loop.ts",
+        "integration": "15ad4fcb53f4c1c205246d92c460551af082eb33",
+        "nodeSnapshot": "15ad4fcb53f4c1c205246d92c460551af082eb33",
+        "repairedUnitsSnapshot": "15ad4fcb53f4c1c205246d92c460551af082eb33",
+        "finalIPCSnapshot": "15ad4fcb53f4c1c205246d92c460551af082eb33"
+      },
+      {
+        "path": "apps/desktop/src/main/live-meeting-client.test.ts",
+        "integration": "29d3ef9493ea8a75c7309c3d89eb839ab6b003e4",
+        "nodeSnapshot": "29d3ef9493ea8a75c7309c3d89eb839ab6b003e4",
+        "repairedUnitsSnapshot": "29d3ef9493ea8a75c7309c3d89eb839ab6b003e4",
+        "finalIPCSnapshot": "29d3ef9493ea8a75c7309c3d89eb839ab6b003e4"
+      },
+      {
+        "path": "apps/desktop/src/main/live-meeting-client.ts",
+        "integration": "f67ff630f0e68b7c4ca5940ffe1d86839f953dc5",
+        "nodeSnapshot": "f67ff630f0e68b7c4ca5940ffe1d86839f953dc5",
+        "repairedUnitsSnapshot": "f67ff630f0e68b7c4ca5940ffe1d86839f953dc5",
+        "finalIPCSnapshot": "f67ff630f0e68b7c4ca5940ffe1d86839f953dc5"
+      },
+      {
+        "path": "apps/desktop/src/main/live-outbox-contract.ts",
+        "integration": "87fa8a8e25b107423750625bce34a3bde447ebf4",
+        "nodeSnapshot": "87fa8a8e25b107423750625bce34a3bde447ebf4",
+        "repairedUnitsSnapshot": "87fa8a8e25b107423750625bce34a3bde447ebf4",
+        "finalIPCSnapshot": "87fa8a8e25b107423750625bce34a3bde447ebf4"
+      },
+      {
+        "path": "apps/desktop/src/main/live-outbox-control.node.test.ts",
+        "integration": "ce81961ee7553e6e082cc35a49695b7983b13b2a",
+        "nodeSnapshot": "ce81961ee7553e6e082cc35a49695b7983b13b2a",
+        "repairedUnitsSnapshot": "ce81961ee7553e6e082cc35a49695b7983b13b2a",
+        "finalIPCSnapshot": "ce81961ee7553e6e082cc35a49695b7983b13b2a"
+      },
+      {
+        "path": "apps/desktop/src/main/live-outbox-crash.fixture.ts",
+        "integration": "1b4cfb16b1d79ee2b3685597cfae2d09b8cbebd5",
+        "nodeSnapshot": "1b4cfb16b1d79ee2b3685597cfae2d09b8cbebd5",
+        "repairedUnitsSnapshot": "1b4cfb16b1d79ee2b3685597cfae2d09b8cbebd5",
+        "finalIPCSnapshot": "1b4cfb16b1d79ee2b3685597cfae2d09b8cbebd5"
+      },
+      {
+        "path": "apps/desktop/src/main/live-outbox-native.test.ts",
+        "integration": "a3a34313808e629668463a1cf9bb73671fdc2304",
+        "nodeSnapshot": "a3a34313808e629668463a1cf9bb73671fdc2304",
+        "repairedUnitsSnapshot": "a3a34313808e629668463a1cf9bb73671fdc2304",
+        "finalIPCSnapshot": "a3a34313808e629668463a1cf9bb73671fdc2304"
+      },
+      {
+        "path": "apps/desktop/src/main/live-outbox.electron.fixture.ts",
+        "integration": "8023985348ae4f07e442e9af260b04d349dc553e",
+        "nodeSnapshot": "8023985348ae4f07e442e9af260b04d349dc553e",
+        "repairedUnitsSnapshot": "8023985348ae4f07e442e9af260b04d349dc553e",
+        "finalIPCSnapshot": "8023985348ae4f07e442e9af260b04d349dc553e"
+      },
+      {
+        "path": "apps/desktop/src/main/live-outbox.electron.native.test.ts",
+        "integration": "eab8bceb61ba65bcde434bcea992ad2ae45376ff",
+        "nodeSnapshot": "eab8bceb61ba65bcde434bcea992ad2ae45376ff",
+        "repairedUnitsSnapshot": "eab8bceb61ba65bcde434bcea992ad2ae45376ff",
+        "finalIPCSnapshot": "eab8bceb61ba65bcde434bcea992ad2ae45376ff"
+      },
+      {
+        "path": "apps/desktop/src/main/live-outbox.node.test.ts",
+        "integration": "be02c89ff7cdca56a0d3aef44f3850b646e76763",
+        "nodeSnapshot": "be02c89ff7cdca56a0d3aef44f3850b646e76763",
+        "repairedUnitsSnapshot": "be02c89ff7cdca56a0d3aef44f3850b646e76763",
+        "finalIPCSnapshot": "be02c89ff7cdca56a0d3aef44f3850b646e76763"
+      },
+      {
+        "path": "apps/desktop/src/main/live-outbox.ts",
+        "integration": "4a1c32bff1f44ec4430924e5b05b34ba1b08a17d",
+        "nodeSnapshot": "4a1c32bff1f44ec4430924e5b05b34ba1b08a17d",
+        "repairedUnitsSnapshot": "4a1c32bff1f44ec4430924e5b05b34ba1b08a17d",
+        "finalIPCSnapshot": "4a1c32bff1f44ec4430924e5b05b34ba1b08a17d"
+      },
+      {
+        "path": "apps/desktop/src/main/live-overlay-state.test.ts",
+        "integration": "6afdffa0127ebf19a65e917fba5e670c973f5c59",
+        "nodeSnapshot": "6afdffa0127ebf19a65e917fba5e670c973f5c59",
+        "repairedUnitsSnapshot": "6afdffa0127ebf19a65e917fba5e670c973f5c59",
+        "finalIPCSnapshot": "6afdffa0127ebf19a65e917fba5e670c973f5c59"
+      },
+      {
+        "path": "apps/desktop/src/main/live-overlay-state.ts",
+        "integration": "a499141cf8a35c1568cc4643497454079ec38486",
+        "nodeSnapshot": "a499141cf8a35c1568cc4643497454079ec38486",
+        "repairedUnitsSnapshot": "a499141cf8a35c1568cc4643497454079ec38486",
+        "finalIPCSnapshot": "a499141cf8a35c1568cc4643497454079ec38486"
+      },
+      {
+        "path": "apps/desktop/src/main/live-overlay.ts",
+        "integration": "06543fff96b5cd528f2daaa75840faf12ed3ea0b",
+        "nodeSnapshot": "06543fff96b5cd528f2daaa75840faf12ed3ea0b",
+        "repairedUnitsSnapshot": "06543fff96b5cd528f2daaa75840faf12ed3ea0b",
+        "finalIPCSnapshot": "06543fff96b5cd528f2daaa75840faf12ed3ea0b"
+      },
+      {
+        "path": "apps/desktop/src/main/live-permissions.ts",
+        "integration": "f045ee043f32385cfa12c3c1edf0477ac3278d54",
+        "nodeSnapshot": "f045ee043f32385cfa12c3c1edf0477ac3278d54",
+        "repairedUnitsSnapshot": "f045ee043f32385cfa12c3c1edf0477ac3278d54",
+        "finalIPCSnapshot": "f045ee043f32385cfa12c3c1edf0477ac3278d54"
+      },
+      {
+        "path": "apps/desktop/src/main/live-readiness.test.ts",
+        "integration": "ebcdde5864b6e986bbe8f0e38cf2240ebf8522ef",
+        "nodeSnapshot": "ebcdde5864b6e986bbe8f0e38cf2240ebf8522ef",
+        "repairedUnitsSnapshot": "ebcdde5864b6e986bbe8f0e38cf2240ebf8522ef",
+        "finalIPCSnapshot": "ebcdde5864b6e986bbe8f0e38cf2240ebf8522ef"
+      },
+      {
+        "path": "apps/desktop/src/main/live-readiness.ts",
+        "integration": "31d5fe7266b2a3168fe481682e32e125324270ce",
+        "nodeSnapshot": "31d5fe7266b2a3168fe481682e32e125324270ce",
+        "repairedUnitsSnapshot": "31d5fe7266b2a3168fe481682e32e125324270ce",
+        "finalIPCSnapshot": "31d5fe7266b2a3168fe481682e32e125324270ce"
+      },
+      {
+        "path": "apps/desktop/src/main/live-recovery-export-test.fixture.ts",
+        "integration": "d13d963ed9358f8ff29bbdf9c83c4eaa112e3741",
+        "nodeSnapshot": "d13d963ed9358f8ff29bbdf9c83c4eaa112e3741",
+        "repairedUnitsSnapshot": "d13d963ed9358f8ff29bbdf9c83c4eaa112e3741",
+        "finalIPCSnapshot": "d13d963ed9358f8ff29bbdf9c83c4eaa112e3741"
+      },
+      {
+        "path": "apps/desktop/src/main/live-recovery-export.test.ts",
+        "integration": "b4a7f60bd7cb9d522162fe977bfcf750360878e3",
+        "nodeSnapshot": "b4a7f60bd7cb9d522162fe977bfcf750360878e3",
+        "repairedUnitsSnapshot": "b4a7f60bd7cb9d522162fe977bfcf750360878e3",
+        "finalIPCSnapshot": "b4a7f60bd7cb9d522162fe977bfcf750360878e3"
+      },
+      {
+        "path": "apps/desktop/src/main/live-recovery-export.ts",
+        "integration": "fc75d201b11a0e24e247335e16ed9fa5a9af1d2c",
+        "nodeSnapshot": "fc75d201b11a0e24e247335e16ed9fa5a9af1d2c",
+        "repairedUnitsSnapshot": "fc75d201b11a0e24e247335e16ed9fa5a9af1d2c",
+        "finalIPCSnapshot": "fc75d201b11a0e24e247335e16ed9fa5a9af1d2c"
+      },
+      {
+        "path": "apps/desktop/src/main/live-recovery-ipc.fixture.ts",
+        "integration": "26984b55db9613b20682f423dbb354bad3b7753e",
+        "nodeSnapshot": "26984b55db9613b20682f423dbb354bad3b7753e",
+        "repairedUnitsSnapshot": "26984b55db9613b20682f423dbb354bad3b7753e",
+        "finalIPCSnapshot": "26984b55db9613b20682f423dbb354bad3b7753e"
+      },
+      {
+        "path": "apps/desktop/src/main/live-recovery-ipc.node.test.ts",
+        "integration": "1b1f82d6ca246c0cf3e30fca369fe2d06a117778",
+        "nodeSnapshot": "1b1f82d6ca246c0cf3e30fca369fe2d06a117778",
+        "repairedUnitsSnapshot": "1b1f82d6ca246c0cf3e30fca369fe2d06a117778",
+        "finalIPCSnapshot": "1b1f82d6ca246c0cf3e30fca369fe2d06a117778"
+      },
+      {
+        "path": "apps/desktop/src/main/live-segmenter.test.ts",
+        "integration": "2d4e1f8fe9ff5d24d409c767a16c7ec5fd1706ce",
+        "nodeSnapshot": "2d4e1f8fe9ff5d24d409c767a16c7ec5fd1706ce",
+        "repairedUnitsSnapshot": "2d4e1f8fe9ff5d24d409c767a16c7ec5fd1706ce",
+        "finalIPCSnapshot": "2d4e1f8fe9ff5d24d409c767a16c7ec5fd1706ce"
+      },
+      {
+        "path": "apps/desktop/src/main/live-segmenter.ts",
+        "integration": "455cdda299f98023b15277ec2167e15c27d7af18",
+        "nodeSnapshot": "455cdda299f98023b15277ec2167e15c27d7af18",
+        "repairedUnitsSnapshot": "455cdda299f98023b15277ec2167e15c27d7af18",
+        "finalIPCSnapshot": "455cdda299f98023b15277ec2167e15c27d7af18"
+      },
+      {
+        "path": "apps/desktop/src/main/live-senses-delivery.fixture.ts",
+        "integration": "5b2fca5a41b88517dc7f03cf946b7295744753de",
+        "nodeSnapshot": "5b2fca5a41b88517dc7f03cf946b7295744753de",
+        "repairedUnitsSnapshot": "5b2fca5a41b88517dc7f03cf946b7295744753de",
+        "finalIPCSnapshot": "5b2fca5a41b88517dc7f03cf946b7295744753de"
+      },
+      {
+        "path": "apps/desktop/src/main/live-senses-delivery.node.test.ts",
+        "integration": "62f75c0b603a8b50ed4f77bcfac49c4a86ec1081",
+        "nodeSnapshot": "62f75c0b603a8b50ed4f77bcfac49c4a86ec1081",
+        "repairedUnitsSnapshot": "62f75c0b603a8b50ed4f77bcfac49c4a86ec1081",
+        "finalIPCSnapshot": "62f75c0b603a8b50ed4f77bcfac49c4a86ec1081"
+      },
+      {
+        "path": "apps/desktop/src/main/live-senses.test.ts",
+        "integration": "4f176084e19824e2a33d19ea49a47ee41483976f",
+        "nodeSnapshot": "4f176084e19824e2a33d19ea49a47ee41483976f",
+        "repairedUnitsSnapshot": "4f176084e19824e2a33d19ea49a47ee41483976f",
+        "finalIPCSnapshot": "4f176084e19824e2a33d19ea49a47ee41483976f"
+      },
+      {
+        "path": "apps/desktop/src/main/live-senses.ts",
+        "integration": "691147d63870b951aa695db0c024ad4b3751010b",
+        "nodeSnapshot": "691147d63870b951aa695db0c024ad4b3751010b",
+        "repairedUnitsSnapshot": "691147d63870b951aa695db0c024ad4b3751010b",
+        "finalIPCSnapshot": "691147d63870b951aa695db0c024ad4b3751010b"
+      },
+      {
+        "path": "apps/desktop/src/main/live-session-client.test.ts",
+        "integration": "e217ef96da9a9398062e8d43b82cfd5ba600f7e1",
+        "nodeSnapshot": "e217ef96da9a9398062e8d43b82cfd5ba600f7e1",
+        "repairedUnitsSnapshot": "e217ef96da9a9398062e8d43b82cfd5ba600f7e1",
+        "finalIPCSnapshot": "e217ef96da9a9398062e8d43b82cfd5ba600f7e1"
+      },
+      {
+        "path": "apps/desktop/src/main/live-session-client.ts",
+        "integration": "1f1bd83fd83100385398996da1b283196034d836",
+        "nodeSnapshot": "1f1bd83fd83100385398996da1b283196034d836",
+        "repairedUnitsSnapshot": "1f1bd83fd83100385398996da1b283196034d836",
+        "finalIPCSnapshot": "1f1bd83fd83100385398996da1b283196034d836"
+      },
+      {
+        "path": "apps/desktop/src/main/live-session-request.ts",
+        "integration": "c413b614069fd21d8870842226e4c225f954d14d",
+        "nodeSnapshot": "c413b614069fd21d8870842226e4c225f954d14d",
+        "repairedUnitsSnapshot": "c413b614069fd21d8870842226e4c225f954d14d",
+        "finalIPCSnapshot": "c413b614069fd21d8870842226e4c225f954d14d"
+      },
+      {
+        "path": "apps/desktop/src/main/live-settings.test.ts",
+        "integration": "80a0d59e79accfde946e6bfbabdf51bef3f4e3ec",
+        "nodeSnapshot": "80a0d59e79accfde946e6bfbabdf51bef3f4e3ec",
+        "repairedUnitsSnapshot": "80a0d59e79accfde946e6bfbabdf51bef3f4e3ec",
+        "finalIPCSnapshot": "80a0d59e79accfde946e6bfbabdf51bef3f4e3ec"
+      },
+      {
+        "path": "apps/desktop/src/main/live-settings.ts",
+        "integration": "eb039bb56147958e2bf00057c33f3294495f251f",
+        "nodeSnapshot": "eb039bb56147958e2bf00057c33f3294495f251f",
+        "repairedUnitsSnapshot": "eb039bb56147958e2bf00057c33f3294495f251f",
+        "finalIPCSnapshot": "eb039bb56147958e2bf00057c33f3294495f251f"
+      },
+      {
+        "path": "apps/desktop/src/main/live-transcriber.test.ts",
+        "integration": "01dbb2b8459de7e0b21439ba8dec13358368ae45",
+        "nodeSnapshot": "01dbb2b8459de7e0b21439ba8dec13358368ae45",
+        "repairedUnitsSnapshot": "01dbb2b8459de7e0b21439ba8dec13358368ae45",
+        "finalIPCSnapshot": "01dbb2b8459de7e0b21439ba8dec13358368ae45"
+      },
+      {
+        "path": "apps/desktop/src/main/live-transcriber.ts",
+        "integration": "09853bc27052e7b343d03b9a3ffd311092d2e9f2",
+        "nodeSnapshot": "09853bc27052e7b343d03b9a3ffd311092d2e9f2",
+        "repairedUnitsSnapshot": "09853bc27052e7b343d03b9a3ffd311092d2e9f2",
+        "finalIPCSnapshot": "09853bc27052e7b343d03b9a3ffd311092d2e9f2"
+      },
+      {
+        "path": "apps/desktop/src/main/live-transport-log.test.ts",
+        "integration": "9ed049a813e0659e415f537b1eb7b3f50f10e492",
+        "nodeSnapshot": "9ed049a813e0659e415f537b1eb7b3f50f10e492",
+        "repairedUnitsSnapshot": "9ed049a813e0659e415f537b1eb7b3f50f10e492",
+        "finalIPCSnapshot": "9ed049a813e0659e415f537b1eb7b3f50f10e492"
+      },
+      {
+        "path": "apps/desktop/src/main/live-transport-log.ts",
+        "integration": "60d0f76aaace469b9ca2b7667dbe2a02b7f17365",
+        "nodeSnapshot": "60d0f76aaace469b9ca2b7667dbe2a02b7f17365",
+        "repairedUnitsSnapshot": "60d0f76aaace469b9ca2b7667dbe2a02b7f17365",
+        "finalIPCSnapshot": "60d0f76aaace469b9ca2b7667dbe2a02b7f17365"
+      },
+      {
+        "path": "apps/desktop/src/main/live-tray.ts",
+        "integration": "3d71645508d5b064114d52f1049092d274894e43",
+        "nodeSnapshot": "3d71645508d5b064114d52f1049092d274894e43",
+        "repairedUnitsSnapshot": "3d71645508d5b064114d52f1049092d274894e43",
+        "finalIPCSnapshot": "3d71645508d5b064114d52f1049092d274894e43"
+      },
+      {
+        "path": "apps/desktop/test/native/live-delivery-manager-byte-control.node-smoke.mjs",
+        "integration": "0c218c57c3e111f98a15402cf7ea866cee44c3de",
+        "nodeSnapshot": "0c218c57c3e111f98a15402cf7ea866cee44c3de",
+        "repairedUnitsSnapshot": "0c218c57c3e111f98a15402cf7ea866cee44c3de",
+        "finalIPCSnapshot": "0c218c57c3e111f98a15402cf7ea866cee44c3de"
+      },
+      {
+        "path": "apps/desktop/test/native/live-delivery-manager-byte.node-smoke.mjs",
+        "integration": "c0004276e79b9f8ac90e271718463b5367f48c88",
+        "nodeSnapshot": "c0004276e79b9f8ac90e271718463b5367f48c88",
+        "repairedUnitsSnapshot": "c0004276e79b9f8ac90e271718463b5367f48c88",
+        "finalIPCSnapshot": "c0004276e79b9f8ac90e271718463b5367f48c88"
+      },
+      {
+        "path": "apps/desktop/test/native/live-delivery-manager-control.node-smoke.mjs",
+        "integration": "6b7c55fd35bbcf5c4c5df316efd010db971aa369",
+        "nodeSnapshot": "6b7c55fd35bbcf5c4c5df316efd010db971aa369",
+        "repairedUnitsSnapshot": "6b7c55fd35bbcf5c4c5df316efd010db971aa369",
+        "finalIPCSnapshot": "6b7c55fd35bbcf5c4c5df316efd010db971aa369"
+      },
+      {
+        "path": "apps/desktop/test/native/live-delivery-manager.node-smoke.mjs",
+        "integration": "686003844b565cab79725fe756a1c19b3125e1eb",
+        "nodeSnapshot": "686003844b565cab79725fe756a1c19b3125e1eb",
+        "repairedUnitsSnapshot": "686003844b565cab79725fe756a1c19b3125e1eb",
+        "finalIPCSnapshot": "686003844b565cab79725fe756a1c19b3125e1eb"
+      },
+      {
+        "path": "apps/desktop/test/native/live-delivery-owner.node-smoke.mjs",
+        "integration": "8fd83621c0194cd72058054b9f03c82d9f17c6bb",
+        "nodeSnapshot": "8fd83621c0194cd72058054b9f03c82d9f17c6bb",
+        "repairedUnitsSnapshot": "8fd83621c0194cd72058054b9f03c82d9f17c6bb",
+        "finalIPCSnapshot": "8fd83621c0194cd72058054b9f03c82d9f17c6bb"
+      },
+      {
+        "path": "apps/desktop/test/native/live-delivery-quit.node-smoke.mjs",
+        "integration": "70f7b62fce17d76e1e93d8af4f7f6bf8f6f39797",
+        "nodeSnapshot": "70f7b62fce17d76e1e93d8af4f7f6bf8f6f39797",
+        "repairedUnitsSnapshot": "70f7b62fce17d76e1e93d8af4f7f6bf8f6f39797",
+        "finalIPCSnapshot": "70f7b62fce17d76e1e93d8af4f7f6bf8f6f39797"
+      },
+      {
+        "path": "apps/desktop/test/native/live-loop-delivery.node-smoke.mjs",
+        "integration": "5ecdd1d269f0215bad2e6674731a18b708e26853",
+        "nodeSnapshot": "5ecdd1d269f0215bad2e6674731a18b708e26853",
+        "repairedUnitsSnapshot": "5ecdd1d269f0215bad2e6674731a18b708e26853",
+        "finalIPCSnapshot": "5ecdd1d269f0215bad2e6674731a18b708e26853"
+      },
+      {
+        "path": "apps/desktop/test/native/live-outbox-control.node-smoke.mjs",
+        "integration": "6fa0f47dd69f63135eb8198043578c04736a024c",
+        "nodeSnapshot": "6fa0f47dd69f63135eb8198043578c04736a024c",
+        "repairedUnitsSnapshot": "6fa0f47dd69f63135eb8198043578c04736a024c",
+        "finalIPCSnapshot": "6fa0f47dd69f63135eb8198043578c04736a024c"
+      },
+      {
+        "path": "apps/desktop/test/native/live-outbox.node-smoke.mjs",
+        "integration": "435d030c86be90c9c97e4eb75cbaa1653ffa9f20",
+        "nodeSnapshot": "435d030c86be90c9c97e4eb75cbaa1653ffa9f20",
+        "repairedUnitsSnapshot": "435d030c86be90c9c97e4eb75cbaa1653ffa9f20",
+        "finalIPCSnapshot": "435d030c86be90c9c97e4eb75cbaa1653ffa9f20"
+      },
+      {
+        "path": "apps/desktop/test/native/live-recovery-ipc.node-smoke.mjs",
+        "integration": "ca0996792ffe1e05743c3f4b7b4f5ac91cca9700",
+        "nodeSnapshot": "ca0996792ffe1e05743c3f4b7b4f5ac91cca9700",
+        "repairedUnitsSnapshot": "ca0996792ffe1e05743c3f4b7b4f5ac91cca9700",
+        "finalIPCSnapshot": "ca0996792ffe1e05743c3f4b7b4f5ac91cca9700"
+      },
+      {
+        "path": "apps/desktop/test/native/live-senses-delivery.node-smoke.mjs",
+        "integration": "dbade7596c200139696fc788c52d003c4a3d0bb5",
+        "nodeSnapshot": "dbade7596c200139696fc788c52d003c4a3d0bb5",
+        "repairedUnitsSnapshot": "dbade7596c200139696fc788c52d003c4a3d0bb5",
+        "finalIPCSnapshot": "dbade7596c200139696fc788c52d003c4a3d0bb5"
+      }
+    ],
+    "desktopAndAppLive": {
+      "paths": 598,
+      "integrationManifestSHA256": "185619c2d90008192395c0f1f9b8343c531c9f969261752aa2d8963a549731ab",
+      "nodeManifestSHA256": "b1f740ebf046619c2cac0b9c0e474f0b634f18f99d3d370713f8bc17292956a6",
+      "repairedUnitsManifestSHA256": "185619c2d90008192395c0f1f9b8343c531c9f969261752aa2d8963a549731ab",
+      "repairedUnitsAllEqual": true,
+      "nodeDifferences": [
+        {
+          "path": "apps/desktop/electron-builder.config.ts",
+          "node": "30cdff984b46f20c76066ff24e4304d76b5a8467",
+          "integration": "9a195385c8d26025703eb9a236c36a2aeb37e6f5"
+        },
+        {
+          "path": "apps/desktop/scripts/cli-staging.test.ts",
+          "node": "39274b955be0e4a7839bcf4a159f301975a277e1",
+          "integration": "12c31783cca50baa4d48569fa83133e017e15ae8"
+        },
+        {
+          "path": "apps/desktop/src/main/cli-install.ts",
+          "node": "8633f0cba5aa23011dc11f3d616eb4dd28dcfe90",
+          "integration": "4d300eb9f083f54bb5219c108ffdcffbfb89e230"
+        },
+        {
+          "path": "apps/desktop/src/main/live-delivery-id.ts",
+          "node": null,
+          "integration": "261bc3286083b1332764b69dd4ce2dc80a5d30dd"
+        },
+        {
+          "path": "apps/desktop/src/main/live-delivery-values.ts",
+          "node": "c27e84b8b52e1b3dbbcc5b5926da4b8fe5523264",
+          "integration": "8309098e003b3e6efa9f376be1a21c2b5a10b903"
+        },
+        {
+          "path": "apps/desktop/src/main/live-ipc.ts",
+          "node": "f11306efeda1a4cb1d12d57e562d6cabbabb5efa",
+          "integration": "88bf6abe91a1ae9d8bbbd7c73961aa1fd4aaef35"
+        },
+        {
+          "path": "apps/desktop/src/main/packaged-debug-maps.test.ts",
+          "node": "de550377a4ad8c7d3bc05d75e1c431be4e0f1c21",
+          "integration": "8382f0434c358f2ff8cc0c7033bd7cd6be9839fa"
+        },
+        {
+          "path": "apps/desktop/src/main/packaged-weight.test.ts",
+          "node": null,
+          "integration": "c56b5d950433e46d55bae468faa3802fa4b51fbf"
+        },
+        {
+          "path": "apps/desktop/src/main/packaged-weight.ts",
+          "node": null,
+          "integration": "0b3a087eea3c656bdbe36c1c733df607805310b2"
+        }
+      ]
+    }
+  },
+  "pureIPCRepair": {
+    "commit": "3f4f8ff41a8882106de12eb36d2fdc06556f3490",
+    "paths": [
+      "apps/desktop/src/main/live-delivery-id.ts",
+      "apps/desktop/src/main/live-delivery-values.ts",
+      "apps/desktop/src/main/live-ipc.ts"
+    ],
+    "change": "Extract byte-identical UUID predicate to pure leaf; delivery-values reexports it; IPC imports pure leaf and returns generic storage action on thrown recovery exception. It no longer loads node:sqlite through storage/error modules in pure Bun IPC units.",
+    "qualification": "Node integrated47 predates this production IPC change and is not claimed byte-identical to final IPC. Repaired Bun27 and focused final NodeIPC16 pass both OS on snapshots whose complete Desktop/AppLive598-path vectors match integrationTarget."
+  },
+  "historicalRejectedGate": {
+    "runID": 43411948213,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43411948213",
+    "conclusion": "failure",
+    "classification": "Harness/module setup failure, not product RED: 24 passing cases plus one module-load failure on each OS, No such built-in module: node:sqlite in pure IPC import.",
+    "jobs": [
+      {
+        "jobID": 131840273984,
+        "os": "linux",
+        "counts": {
+          "pass": 24,
+          "fail": 1,
+          "reportedCases": 25
+        },
+        "raw": {
+          "localReceipt": "/tmp/m13-independent-historical-units-linux.raw.log",
+          "sha256": "4eae0e9c97b1edf84966e01de9dd5c081aa813229073222c3932543220be97b6",
+          "bytes": 72340
+        }
+      },
+      {
+        "jobID": 131840273523,
+        "os": "windows",
+        "counts": {
+          "pass": 24,
+          "fail": 1,
+          "reportedCases": 25
+        },
+        "raw": {
+          "localReceipt": "/tmp/m13-independent-historical-units-windows.raw.log",
+          "sha256": "844a73c089906920abee492d6c15fec718c9ed727fa953c340ac90d8a81fc623",
+          "bytes": 73503
+        }
+      }
+    ]
+  },
+  "claimsAndLimits": {
+    "provedRuntime": [
+      "Actual Node SQLite Store, delivery manager/owner, fetch and real HTTP; controlled external Electron UI/capture/STT boundaries.",
+      "47 passing cases per OS: owner9, quit2, senses6, loop14, recovery IPC16 on the named immutable Node snapshot.",
+      "Cleanup rejection tests close their controlled handle before throwing and retain actual cause/unsealed recoverable Store data while joining owned HTTP.",
+      "Real 10s HTTP request/body deadlines and SSE headers-only deadline with long-lived owner-controlled bodies are exercised by Loop tests.",
+      "Repaired Bun27 per OS (122 Linux/118 Windows assertions) and final current-source Node recoveryIPC16 per OS pass without test failures; focused Bun Omni verdict is not applicable and proves no Omni spawn."
+    ],
+    "notProved": [
+      "Physical microphone/system-audio hardware acquisition, STT provider/network correctness, native screenshot permission or cancellation.",
+      "Full Electron Main bootstrap/IPC/window/OS wiring execution: Main index.ts is snapshot-bound here; separate Main source-cold qualification belongs to Root. Node wrappers exercise isolated actual services with controlled external boundaries.",
+      "No physical OS permission dialog cancellation; the contract aborts the waiter and fences late grant.",
+      "No universal shared daemon restart detection: only known owned PID/exit/credentials epochs and initial shared health.",
+      "No durable summary retry: confirmed completion may prompt once only for the still-foreground matching triple; recovery/stale completion cannot summarize.",
+      "No new whole-package/full-epic CI conclusion; this record contains change-scoped lanes only.",
+      "The other31 integrated Node cases are bound to their earlier snapshot; the three M13 source changes between it and final are listed explicitly. Final IPC16 and Bun27 qualify their current actual source snapshots; no byte identity of all original47 cases at final IPC is claimed."
+    ],
+    "mainSourceBinding": "apps/desktop/src/main/index.ts in sourceBindings.vector binds app-wide userData owner construction, Loop delivery, IPC recovery, connection publication and lifecycle callsites; byte identity is not execution proof.",
+    "separateEarlierCapabilityEvidence": "m13-electron-integrate-proof.json and m13-electron-job-proof.json concern their named earlier Electron capability snapshots; they are not substituted for current full Main execution."
+  },
+  "focusedFinalIPC": {
+    "runID": 43416804061,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43416804061",
+    "snapshot": "e79d2960e02e67664e37e39c99efc29d047edcce",
+    "request": {
+      "package": "desktop",
+      "packageSelector": "packages/desktop",
+      "directory": "apps/desktop",
+      "runner": "node",
+      "args": [
+        "./test/native/live-recovery-ipc.node-smoke.mjs"
+      ],
+      "env": {}
+    },
+    "requestGitBlob": "fc3ff087ab1b773c2c5bf75017dc59dd97cc8816",
+    "status": "completed",
+    "jobs": {
+      "linux": {
+        "jobID": 131856639251,
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43416804061/job/131856639251",
+        "conclusion": "success",
+        "counts": {
+          "tests": 16,
+          "pass": 16,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        "runtime": {
+          "kind": "live-recovery-ipc-runtime",
+          "node": "v24.22.2",
+          "versions": {
+            "node": "24.22.2",
+            "acorn": "8.18.0",
+            "ada": "4.0.0",
+            "amaro": "1.1.11",
+            "ares": "1.34.9",
+            "brotli": "1.2.0",
+            "cldr": "48.0",
+            "icu": "78.3",
+            "llhttp": "9.4.3",
+            "merve": "1.2.2",
+            "modules": "137",
+            "napi": "10",
+            "nbytes": "0.1.4",
+            "ncrypto": "0.0.1",
+            "nghttp2": "1.70.0",
+            "nghttp3": "",
+            "ngtcp2": "",
+            "openssl": "3.5.9",
+            "simdjson": "4.6.11",
+            "simdutf": "6.4.0",
+            "sqlite": "3.53.4",
+            "tz": "2026e",
+            "undici": "7.30.1",
+            "unicode": "17.0",
+            "uv": "1.52.1",
+            "uvwasi": "0.0.23",
+            "v8": "13.6.233.17-node.63",
+            "zlib": "1.3.2.1-motley-285e94b",
+            "zstd": "1.5.7"
+          },
+          "platform": "linux",
+          "arch": "x64"
+        },
+        "cases": [
+          "IPC origin control: actual packaged/development origin policy has the known allow/deny results (1.539267ms)",
+          "IPC guard: packaged renderer (0.328574ms)",
+          "IPC guard: configured development origin (0.137708ms)",
+          "IPC guard: foreign packaged host (0.410347ms)",
+          "IPC guard: foreign HTTPS (0.162925ms)",
+          "IPC guard: file URL (0.125645ms)",
+          "IPC guard: different development port (0.152525ms)",
+          "IPC guard: development URL disabled in packaged app (0.113262ms)",
+          "IPC guard: missing sender frame (0.220863ms)",
+          "Live IPC routes every legacy and recovery registration through the supplied trusted handle (8.379801ms)",
+          "Live recovery IPC forwards only the exact opaque ID and never renderer export paths/transcripts (0.758759ms)",
+          "Live recovery IPC rejects path-like and nonstring IDs before invoking recovery (0.829651ms)",
+          "Live recovery IPC refuses snapshot failure instead of fabricating an empty successful snapshot (1.294461ms)",
+          "Live recovery IPC contains private action errors and preserves ordinary public refusals (0.422651ms)",
+          "actual owner quit joins cancelled export before an uncancellable chooser settles; late resolved choice never writes (52.333866ms)",
+          "actual owner quit joins cancelled export before an uncancellable chooser settles; late rejected choice never writes (40.541769ms)"
+        ],
+        "raw": {
+          "localReceipt": "/tmp/m13-independent-final-ipc-linux.raw.log",
+          "sha256": "64c9615c76ba40f98dd944bbdf64fadadf2adc5e1b244b6871624a093970a681",
+          "bytes": 74248
+        }
+      },
+      "windows": {
+        "jobID": 131856639701,
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43416804061/job/131856639701",
+        "conclusion": "success",
+        "counts": {
+          "tests": 16,
+          "pass": 16,
+          "fail": 0,
+          "cancelled": 0,
+          "skipped": 0,
+          "todo": 0
+        },
+        "runtime": {
+          "kind": "live-recovery-ipc-runtime",
+          "node": "v24.22.2",
+          "versions": {
+            "node": "24.22.2",
+            "acorn": "8.18.0",
+            "ada": "4.0.0",
+            "amaro": "1.1.11",
+            "ares": "1.34.9",
+            "brotli": "1.2.0",
+            "cldr": "48.0",
+            "icu": "78.3",
+            "llhttp": "9.4.3",
+            "merve": "1.2.2",
+            "modules": "137",
+            "napi": "10",
+            "nbytes": "0.1.4",
+            "ncrypto": "0.0.1",
+            "nghttp2": "1.70.0",
+            "nghttp3": "",
+            "ngtcp2": "",
+            "openssl": "3.5.9",
+            "simdjson": "4.6.11",
+            "simdutf": "6.4.0",
+            "sqlite": "3.53.4",
+            "tz": "2026e",
+            "undici": "7.30.1",
+            "unicode": "17.0",
+            "uv": "1.52.1",
+            "uvwasi": "0.0.23",
+            "v8": "13.6.233.17-node.63",
+            "zlib": "1.3.2.1-motley-285e94b",
+            "zstd": "1.5.7"
+          },
+          "platform": "win32",
+          "arch": "x64"
+        },
+        "cases": [
+          "IPC origin control: actual packaged/development origin policy has the known allow/deny results (1.7316ms)",
+          "IPC guard: packaged renderer (0.5902ms)",
+          "IPC guard: configured development origin (0.076ms)",
+          "IPC guard: foreign packaged host (0.2749ms)",
+          "IPC guard: foreign HTTPS (0.1022ms)",
+          "IPC guard: file URL (0.0624ms)",
+          "IPC guard: different development port (0.0598ms)",
+          "IPC guard: development URL disabled in packaged app (0.0409ms)",
+          "IPC guard: missing sender frame (0.0528ms)",
+          "Live IPC routes every legacy and recovery registration through the supplied trusted handle (15.2091ms)",
+          "Live recovery IPC forwards only the exact opaque ID and never renderer export paths/transcripts (0.4814ms)",
+          "Live recovery IPC rejects path-like and nonstring IDs before invoking recovery (0.3697ms)",
+          "Live recovery IPC refuses snapshot failure instead of fabricating an empty successful snapshot (0.2234ms)",
+          "Live recovery IPC contains private action errors and preserves ordinary public refusals (0.2211ms)",
+          "actual owner quit joins cancelled export before an uncancellable chooser settles; late resolved choice never writes (260.0501ms)",
+          "actual owner quit joins cancelled export before an uncancellable chooser settles; late rejected choice never writes (135.6335ms)"
+        ],
+        "raw": {
+          "localReceipt": "/tmp/m13-independent-final-ipc-windows.raw.log",
+          "sha256": "68d812a7b0199605ec3a8edfdf3b494acd9ff54ebc979712468dc41a3a30ea48",
+          "bytes": 72665
+        }
+      }
+    },
+    "sourceBinding": {
+      "desktopAndAppLivePaths": 598,
+      "allEqualToIntegration": true,
+      "manifestSHA256": "185619c2d90008192395c0f1f9b8343c531c9f969261752aa2d8963a549731ab"
+    },
+    "conclusion": "success",
+    "cleanupJobs": [
+      {
+        "jobID": 131858513113,
+        "conclusion": "success"
+      }
+    ]
+  },
+  "rawAPIReceipts": [
+    {
+      "path": "/tmp/m13-independent-node-run.json",
+      "sha256": "45ee84cf630b6a0ee6c1dbbb2bad874aa4198dbeea97dfdd2dc27ee79bbc1d27"
+    },
+    {
+      "path": "/tmp/m13-independent-node-jobs.json",
+      "sha256": "fc7790409b43e6ce4a013f5c5c664ddd8a7c6cd0d14867bddfacd655e9f20432"
+    },
+    {
+      "path": "/tmp/m13-independent-node-tree.json",
+      "sha256": "bbb507f6909754bfa2f6611f71c902b939ad7202ee9569e330c6229cbc5c9338"
+    },
+    {
+      "path": "/tmp/m13-independent-node-request-api.json",
+      "sha256": "562b41403bb9882ac120c2a850376bd6c25797b3100086834a49b55ca968f57d"
+    },
+    {
+      "path": "/tmp/m13-independent-units-run.json",
+      "sha256": "723125302d1abc903656d70a48a6b51d695146f8ce8baac80dd2a9753248eed2"
+    },
+    {
+      "path": "/tmp/m13-independent-units-jobs.json",
+      "sha256": "b88d76f8d88d9f1f5cc0025ed3cf6f9a3000fc2a5d578f0e3581f39462676987"
+    },
+    {
+      "path": "/tmp/m13-independent-units-tree.json",
+      "sha256": "663c2a5085379a619d5b49fce36af2e34047b477a494dcead9ffdc2aad008ac2"
+    },
+    {
+      "path": "/tmp/m13-independent-units-request-api.json",
+      "sha256": "01d8713731c4c360b31b96546e603b2f25f9d4eded8c80b066ddc7533262c0b0"
+    },
+    {
+      "path": "/tmp/m13-independent-final-ipc-run.json",
+      "sha256": "e4c441891732ad8fbc36a722c52acba6e22ac80c3a9162ef25641a3353279831"
+    },
+    {
+      "path": "/tmp/m13-independent-final-ipc-jobs.json",
+      "sha256": "a614a3075140890ed7e80454e252edfbbe5d49fe1953e65486fcc57e579eab03"
+    },
+    {
+      "path": "/tmp/m13-independent-final-ipc-tree.json",
+      "sha256": "2636e150467ceed36a2258492250242fd9afeacf00823f18ccfb7118f8d25aba"
+    },
+    {
+      "path": "/tmp/m13-independent-final-ipc-request-api.json",
+      "sha256": "4045d8a20fc9248f6db517be95652a82927a481853082595f4c83ff66374a9ec"
+    }
+  ]
+}
