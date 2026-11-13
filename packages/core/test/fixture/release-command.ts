@@ -242,6 +242,10 @@ if (tool === "npm") {
   } else if (method === "GET" && resource.startsWith("releases/tags/")) {
     const tag = resource.slice("releases/tags/".length)
     output(await operation(`release.read:${tag}`, false, () => metadata(getRelease(tag))))
+  } else if (method === "GET" && /^releases\/\d+$/.test(resource)) {
+    const release = Object.values(state.releases).find((item) => item.id === Number(resource.split("/")[1])) ??
+      fail("HTTP 404 release id")
+    output(await operation(`release.read:${release.tag_name}`, false, () => metadata(release)))
   } else if (method === "PATCH" && /^releases\/\d+$/.test(resource)) {
     const release =
       Object.values(state.releases).find((item) => item.id === Number(resource.split("/")[1])) ??
