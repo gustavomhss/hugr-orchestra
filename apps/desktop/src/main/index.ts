@@ -65,6 +65,7 @@ import { createLiveDeliveryOwner } from "./live-delivery-owner"
 import type { LiveDeliveryOwner } from "./live-delivery-owner-contract"
 import type { LiveDeliveryConnection } from "./live-delivery-contract"
 import { exportLiveRecovery } from "./live-recovery-export"
+import { createStartupFence } from "./desktop-startup"
 
 // These process names keep their inherited values: Electron names the macOS Keychain item that encrypts saved browser
 // data "<name> Safe Storage", so renaming them would sign the MCP Dock out of every site. Menus, window titles and
@@ -206,13 +207,15 @@ const main = Effect.gen(function* () {
     },
   )
   const stopSidecars = async () => {
-    await killSidecar().finally(() => wslServers.stopAll())
+    await killSidecar().finally(() => Promise.all([wslServers.stopAll(), shutdown.dock?.close()]))
   }
   const shutdown = {
     runtimeStop: undefined as (() => Promise<void>) | undefined,
     promise: undefined as Promise<void> | undefined,
     live: undefined as LiveDeliveryOwner | undefined,
     liveJobs: new Set<Promise<void>>(),
+    startup: createStartupFence(),
+    dock: undefined as Awaited<ReturnType<typeof startDockChannel>> | undefined,
     done: false,
   }
   // Every quit path lets the windows save unsaved work (at most 3 s) before the sidecars stop.
@@ -286,9 +289,11 @@ const main = Effect.gen(function* () {
     if (shutdown.promise) return
     const completed = Promise.withResolvers<void>()
     shutdown.promise = completed.promise
+    const acquisitions = shutdown.startup.close()
     const stopping = shutdown.live?.shutdown(flushWindows) ?? Promise.resolve().then(flushWindows)
     void stopping
       .catch((error: unknown) => logger.error("failed to flush Live and windows", error))
+      .then(() => acquisitions.catch((error: unknown) => logger.error("desktop startup cleanup failed", error)))
       .then(() => Promise.allSettled([...shutdown.liveJobs]))
       .then(() =>
         Promise.all([
@@ -432,7 +437,12 @@ const main = Effect.gen(function* () {
 
     if (SIDECAR_MODE === "shared") {
       logger.log("starting shared background sidecar")
-      const sidecar = yield* Effect.promise(() => startBackgroundCli(logger, shellEnv?.XDG_STATE_HOME))
+      const sidecar = yield* Effect.promise(() => shutdown.startup.acquire(
+        () => startBackgroundCli(logger, shellEnv?.XDG_STATE_HOME),
+        () => {},
+        // This daemon is shared and deliberately outlives this desktop. Only its startup request is joined.
+        async () => {},
+      ))
       yield* Effect.promise(() => liveOwner.setConnection({
         mode: "shared", epoch: liveConnection.epoch,
         server: { url: sidecar.url, username: sidecar.username, password: sidecar.password },
@@ -454,13 +464,13 @@ const main = Effect.gen(function* () {
 
     // The child reaches main's Dock handlers through this channel.
     const dock = yield* Effect.promise(() =>
-      startDockChannel({
+      shutdown.startup.acquire(() => startDockChannel({
         onMessage: (message, reply) => {
           if (!LinuxWorkspaceRPC.handle(message, reply)) handleDockRPC(message, reply)
         },
         onClose: () =>
           void LinuxWorkspaceRPC.close().catch(() => writeLog("utility", "linux access cleanup failed", {}, "warn")),
-      }),
+      }), (channel) => { shutdown.dock = channel }, (channel) => channel.close()),
     )
     // The app's global reads (providers, models) name no directory, so the server boots a Location for its cwd. In the
     // home directory that Location watched the whole home and cost about three more seconds of startup; an empty
@@ -468,7 +478,7 @@ const main = Effect.gen(function* () {
     const cwd = join(app.getPath("userData"), "global")
     mkdirSync(cwd, { recursive: true })
     const owned = yield* Effect.promise(() =>
-      Promise.all([resolveCliBinary(logger, shellEnv?.XDG_STATE_HOME), sidecarLaunchEnv(app.getPath("userData"))]).then(
+      shutdown.startup.acquire(() => Promise.all([resolveCliBinary(logger, shellEnv?.XDG_STATE_HOME), sidecarLaunchEnv(app.getPath("userData"))]).then(
         ([binary, env]) =>
           startOwnedServe({
             logger,
@@ -496,9 +506,8 @@ const main = Effect.gen(function* () {
               OmniSmoke.event(name, data)
             },
           }),
-      ),
+      ), (resource) => { server = { stop: () => resource.listener.stop() } }, (resource) => resource.listener.stop()),
     )
-    server = { stop: () => owned.listener.stop().finally(() => dock.close()) }
 
     if (process.platform === "win32") {
       void wslServers.initialize().catch((error) => logger.error("wsl server initialization failed", error))
