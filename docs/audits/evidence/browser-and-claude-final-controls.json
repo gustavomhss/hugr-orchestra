@@ -1,0 +1,109 @@
+{
+  "version": 1,
+  "scope": "Hosted browser wrapper/JUnit and Claude package controls; separate bounded gates",
+  "browser": {
+    "run": "43466832408",
+    "snapshot": "93a8a27d56f8aa3cc50c4150c69bb8abc0f00957",
+    "request": "core ./test/browser-suite-control.test.ts ./test/test-omni-control.test.ts --timeout 120000 --os both",
+    "conclusion": "success",
+    "linux": {"job":"132028092571","pass":39,"fail":0,"assertions":147,"files":2,"seconds":5.62,"rawLogSHA256":"0bb8be78d52dd34d6d6a9e67350ac03b15b0e0da3a965b9a8a0e4b4c719c6026"},
+    "windows": {"job":"132028092210","pass":39,"fail":0,"assertions":147,"files":2,"seconds":17.57,"rawLogSHA256":"79cc090c493ec200b1547b2deb1023db82b90530359054bf2772af0dcbe1364d"},
+    "actualOmniBothOS": {"verdict":"pass","declaringTests":5,"ownSpawns":5,"delegated":0},
+    "junit": "The real positive wrapper case requested a JUnit report and asserted the actual produced file",
+    "cleanup": {"job":"132031428231","conclusion":"success"}
+  },
+  "claude": {
+    "run": "43467066534",
+    "snapshot": "1289d3b435daea8d7463d753fa135df92d5c810c",
+    "request": "engine-claude-code --timeout 120000 --os both",
+    "conclusion": "success",
+    "linux": {"job":"132028934074","pass":199,"fail":0,"skip":0,"assertions":1051,"discoveredTests":199,"files":18,"seconds":17.29,"rawLogSHA256":"17f8100a88702180a9393fcd8ef7094a0ce1f9b70262da8eb30bf5a99445fc19"},
+    "windows": {"job":"132028934434","pass":189,"fail":0,"skip":10,"assertions":1038,"discoveredTests":199,"files":18,"seconds":28.58,"rawLogSHA256":"e8a92584a9f4cab58a89350de0ed51df7147454b0aef22c369abe3b009c47c3f"},
+    "omniBothOS": "No positive-control verdict emitted; package bunfig preloads test-guard only. These results do not qualify Omni control.",
+    "cleanup": {"job":"132032279466","conclusion":"success"},
+    "olderFailedRunNotReused": "43464785742"
+  },
+  "sourceBinding": {
+    "initialComparedRoot": "05c2cd785982f8c0c2da56235362b5b2048701bc",
+    "unchangedVectorRecheckRoot": "83491434ed39b4229048e00dd3c9d1ca893f01c8",
+    "method": "GitHub recursive Git trees were not truncated; selected blob inventories matched local Git objects, including all 18 Claude test files",
+    "vectors": {
+      "browser": {
+        "count": 7,
+        "qualifiedVectorSHA256": "4fa96d2e77972214f5c422cad49f0bbdcbc2b951fd6a649419b5899d962b3cad",
+        "hashEncoding": "SHA256 of UTF-8 JSON sorted path keys with compact separators",
+        "qualifiedBlobs": {
+          ".github/workflows/test-ci.yml": "5a150416421cff3b3f4886fc6304568d259256ba",
+          "bun.lock": "542ec98f67b758c3c5e998a0de1e60139bb17f9a",
+          "packages/core/package.json": "f5b4fde722737ade2f227d79b71c54c148ed938e",
+          "packages/core/script/test-browser.ts": "d0d1211dbd1c653b484432f9e5efbf065ea58ee8",
+          "packages/core/test/browser-suite-control.test.ts": "3923e638ae08260c1332ce02a78957305d2b7a98",
+          "packages/core/test/test-omni-control.test.ts": "d609e125aec74eee02b7b8d54f32463427df3d89",
+          "script/test-browser.ts": "83425b4897d4668630938269a146fa89d9958cb8"
+        }
+      },
+      "claude": {
+        "count": 40,
+        "qualifiedVectorSHA256": "3b7505d5b392100ef8040ee49dad3afe513d7c3455367f49af93dd36a906385c",
+        "hashEncoding": "SHA256 of UTF-8 JSON sorted path keys with compact separators",
+        "qualifiedBlobs": {
+          "modules/engine-adapters/claude-code/README.md": "111123be6912dd354673f00a9cd3a54cd9e69643",
+          "modules/engine-adapters/claude-code/bunfig.toml": "f3832a4bb25078ca30e4a5bf1b11c989d2079235",
+          "modules/engine-adapters/claude-code/package.json": "6d01691f6d9879e3eaaede46293cffa91b56012a",
+          "modules/engine-adapters/claude-code/src/executable.ts": "76e50bd7d1844e67ec53a174e6d0d0d9e06e9da2",
+          "modules/engine-adapters/claude-code/src/host/options.ts": "1396356d4f998a87becb1474ab3e272544b2f82b",
+          "modules/engine-adapters/claude-code/src/sdk.ts": "41aee3049016ffd91e29000580c19b0fa7898c8d",
+          "modules/engine-adapters/claude-code/src/transcript.ts": "b0f3ff180daef3084134bb88c63fab5a80cc34d8",
+          "modules/engine-adapters/claude-code/src/v2/account.ts": "cf86e1118f4e1dcb38bd9c1c90483fa66d78ba10",
+          "modules/engine-adapters/claude-code/src/v2/catalog.ts": "568ff7f8d67f79af324ac3dd0377c7485ec8498f",
+          "modules/engine-adapters/claude-code/src/v2/context.ts": "f26344760945ecb9395a8bac51a574ff636db9bc",
+          "modules/engine-adapters/claude-code/src/v2/events.ts": "77454edfce0f78da9ba016058b321da4ea70361d",
+          "modules/engine-adapters/claude-code/src/v2/host.ts": "1eaab660baca5e6be04ce5fd592d84ee7bfa5eb3",
+          "modules/engine-adapters/claude-code/src/v2/login.ts": "c17f8aef562089eb2f9e92483e4c26bc93232fef",
+          "modules/engine-adapters/claude-code/src/v2/output.ts": "0c5cac07ea2def653cc850d54508d9b59fbbe6a9",
+          "modules/engine-adapters/claude-code/src/v2/record.ts": "232cf6b1f2834aefda1d7cad2ae7fb6a71d61fdc",
+          "modules/engine-adapters/claude-code/test/credential-access.test.ts": "3bfd323b5d228372f13f6cdc8fc8da53cac02c29",
+          "modules/engine-adapters/claude-code/test/fixture/account.ts": "84eaca9414d265f7c2a98068211fd060092519d9",
+          "modules/engine-adapters/claude-code/test/fixture/host-filesystem.ts": "f65cb645a800573f00ca852a2a07dcdf5a8fe820",
+          "modules/engine-adapters/claude-code/test/fixture/model-eligibility.ts": "fea1fe8825cef9c7f9dd8499c27fe84434058e3d",
+          "modules/engine-adapters/claude-code/test/fixture/scripted-sdk.ts": "4f256cf456cd5810931069a7e4ddc2eeee790b68",
+          "modules/engine-adapters/claude-code/test/fixture/tmpdir.ts": "6b6c066815ae52543cb23b4fdf267293418d0b83",
+          "modules/engine-adapters/claude-code/test/preset-guard.test.ts": "757a7e49634cea27f6037880bcbacdd945c8f9dd",
+          "modules/engine-adapters/claude-code/test/sdk-lifecycle.test.ts": "4fe53ca7e35e0dfb8171855299fe93ac45cd380e",
+          "modules/engine-adapters/claude-code/test/spawn-environment.test.ts": "e54303215735bfc7f7d2dab867084ae7e348e4ac",
+          "modules/engine-adapters/claude-code/test/v2-account.test.ts": "5b89b74c8a4b5e988be033c42028ed2f175d6848",
+          "modules/engine-adapters/claude-code/test/v2-catalog.test.ts": "7aebda2fa65bcf6c6430ba267e0d0204c025467a",
+          "modules/engine-adapters/claude-code/test/v2-context.test.ts": "37538cdbf090950866aa9c3b1fc9fbddbc9691cc",
+          "modules/engine-adapters/claude-code/test/v2-host-delivery.test.ts": "cdd33c10c6ccd3f179e32bc9cf2c619393daccce",
+          "modules/engine-adapters/claude-code/test/v2-host-filesystem-authority.test.ts": "b04d1df3c01d93149f67a1ce826de613e0e952ef",
+          "modules/engine-adapters/claude-code/test/v2-host-filesystem-decisions.test.ts": "e09ab6babf35d8c762430841ee8b77b32a2a4cef",
+          "modules/engine-adapters/claude-code/test/v2-host-filesystem.test.ts": "2ca5a826e318587d9ec6b0b885d5a3af270c9827",
+          "modules/engine-adapters/claude-code/test/v2-host-gate.test.ts": "1a4d94ae4277059253773097f3934fd8313614ef",
+          "modules/engine-adapters/claude-code/test/v2-host-scope.test.ts": "7a4dffe6d2f555895f6b622c1a6ad3be8e3f90d1",
+          "modules/engine-adapters/claude-code/test/v2-host-seats.test.ts": "a5310164e9583db08ca024a09376f41de528059e",
+          "modules/engine-adapters/claude-code/test/v2-host.fixture.ts": "435f0da1cb26b2558d199392cc182da5b27722e6",
+          "modules/engine-adapters/claude-code/test/v2-host.test.ts": "ac3ec952a5c3fa4e4cd5e9611fd379c860dc4dbe",
+          "modules/engine-adapters/claude-code/test/v2-model-eligibility.test.ts": "c9c5a5b4701145d814a5d5bf283ac948244bdacf",
+          "modules/engine-adapters/claude-code/test/v2-model-execution.test.ts": "a48eeb90670ceefb6a722b24b320554d67c4335c",
+          "modules/engine-adapters/claude-code/test/v2-runner-model-eligibility.test.ts": "64c1e58372edd6dff437597740380ece8354607a",
+          "modules/engine-adapters/claude-code/tsconfig.json": "ebf498e9a70943d703288d28a71e1a4e59643498"
+        }
+      }
+    },
+    "subsequentDelta": {
+      "root": "3678c87b8a",
+      "commit": "d07f76c84f",
+      "path": "packages/core/test/browser-suite-control.test.ts",
+      "qualifiedBlob": "3923e638ae08260c1332ce02a78957305d2b7a98",
+      "currentBlob": "d10334207228531abd027a58cc252d318778237a",
+      "change": "Only the pure validator import changed from ../../../script/test-browser to ../script/test-browser for the R5 package boundary",
+      "boundedIdentity": "Implementation and actual test-case bodies unchanged; actual CLI cases still invoke the root thin entry. This changed test blob was not executed by the recorded run."
+    }
+  },
+  "limits": [
+    "Selected vectors are bounded source inventories, not the complete transitive dependency graph or a whole-repository source match.",
+    "The subsequent import delta is explicit; this record does not claim whole-current-source byte equality.",
+    "No union-based full CI GREEN, ledger closure or Omni proof for Claude is claimed.",
+    "No local test, typecheck, build, generation or dispatch was performed for this evidence."
+  ]
+}
