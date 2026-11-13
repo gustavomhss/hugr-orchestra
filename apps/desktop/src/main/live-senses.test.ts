@@ -23,13 +23,13 @@ test.each(["permission", "meeting"])("cancels senses held at %s without starting
         return Response.json({ data: { id: "meeting_pending", timeStarted: 1 } })
       }
       if (new URL(request.url).pathname === "/api/meeting/stop") seen.stopped++
-      return Response.json({ data: {} })
+      return new Response(null, { status: 204 })
     },
   })
   const attempt = new AbortController()
   const starting = startSenses({
     signal: attempt.signal,
-    server: { url: server.url.href },
+    server: { url: `http://127.0.0.1:${server.port}` },
     sessionID: "ses_pending",
     title: "Pending",
     logDirectory,
