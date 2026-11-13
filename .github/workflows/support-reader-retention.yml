@@ -1,0 +1,22 @@
+name: support-reader-retention
+on:
+  workflow_dispatch:
+  push:
+    branches: [genesis-support-08b-retention]
+    paths:
+      - .github/workflows/support-reader-retention.yml
+      - modules/atlas/packages/adapter-io/script/evaluation-reader-broker.py
+      - modules/atlas/packages/adapter-io/script/evaluation-reader-lifecycle.py
+      - modules/atlas/packages/adapter-io/test/evaluation-reader-redaction-ci.py
+permissions:
+  contents: read
+jobs:
+  retention:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Compile lifecycle and broker and run synthetic retention tests
+        run: |
+          python3 -m py_compile modules/atlas/packages/adapter-io/script/evaluation-reader-lifecycle.py modules/atlas/packages/adapter-io/script/evaluation-reader-broker.py modules/atlas/packages/adapter-io/test/evaluation-reader-redaction-ci.py
+          python3 modules/atlas/packages/adapter-io/test/evaluation-reader-redaction-ci.py
