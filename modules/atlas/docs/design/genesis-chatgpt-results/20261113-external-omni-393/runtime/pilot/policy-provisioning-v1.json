@@ -1,0 +1,15 @@
+{
+  "schema": "omni-isolated-policy-provisioning/v1",
+  "created_at": "2026-11-13T15:44:15.516499+00:00",
+  "root": "/workspace/scratch/d3422440cdf1/omni-genesis/runtime-pilot-c01",
+  "policy_path": ".atlas/policy.json",
+  "policy_sha256": "39c860bdc37a4a1af65796f151bcdcf9be04398267a89f9e388094709a2abfb9",
+  "created_if_absent": true,
+  "existing_policy_overwritten": false,
+  "actor": "/root",
+  "ratifier": "/root",
+  "scope": "native/omni",
+  "authorization": "Current user directs actual Genesis execution for the reserved393-source slice and applicable protocol; this config is confined to its newly created isolated pilot state. It grants no other-session, production, global integration or human acceptance authority.",
+  "identity_limit": "Nominal responsible-actor declarations supported by the pinned Atlas implementation; not authentication, credentials, or a cryptographic signature.",
+  "binding_status": "NOT_RUN; provisioning is not a reviewer decision."
+}

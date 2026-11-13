@@ -529,7 +529,8 @@
         "file:native/omni/skills/omni-release/references/new-target.md",
         "file:native/omni/skills/omni-terminals/SKILL.md",
         "file:modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/recipes/inventory-recipe.md",
-        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/manifest.json"
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/manifest.json",
+        "members:native/omni"
       ],
       "source_refs": [
         {
@@ -3152,32 +3153,59 @@
       "layer": 1,
       "need": "evidence",
       "body": {
-        "path": "bodies/core/records-01.json",
+        "path": "bodies/core/records-01.v2.json",
         "encoding": "utf-8",
-        "byte_length": 19710,
-        "sha256": "dc5c374b7ff31bcadbbf10ee7a2e2b224885bc70b9e38f8b1b64549c7d1ec849"
+        "byte_length": 21914,
+        "sha256": "88d3b68a0f9744b2351d7930c5e4cdfe0b7db86d6c8a2d7a2597a0f8c18aac34"
       },
       "authority": {
         "scope": "native/omni",
         "basis": "User-reserved residual393-source external slice; source-only documentary claims at exact baseline; no runtime/publication authority."
       },
-      "validity": "blocked",
+      "validity": "supported",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Documentary source interpretation only; current runtime/platform behavior is not established by these six records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
       ],
       "input_keys": [
+        "file:native/omni/Cargo.toml",
+        "file:native/omni/GUARANTEES.md",
         "file:native/omni/crates/hugr-omni/Cargo.toml",
         "file:native/omni/crates/hugr-omni/README.md",
         "file:native/omni/crates/hugr-omni/src/api/command.rs",
         "file:native/omni/crates/hugr-omni/src/api/mod.rs",
         "file:native/omni/crates/hugr-omni/src/binding.rs",
         "file:native/omni/crates/hugr-omni/src/client/channel.rs",
+        "file:native/omni/crates/hugr-omni/src/client/channel/route.rs",
+        "file:native/omni/crates/hugr-omni/src/client/hold.rs",
+        "file:native/omni/crates/hugr-omni/src/client/keeper.rs",
+        "file:native/omni/crates/hugr-omni/src/client/mod.rs",
+        "file:native/omni/crates/hugr-omni/src/client/start.rs",
+        "file:native/omni/crates/hugr-omni/src/client/unix.rs",
+        "file:native/omni/crates/hugr-omni/src/client/windows.rs",
+        "file:native/omni/crates/hugr-omni/src/process/memory.rs",
+        "file:native/omni/crates/hugr-omni/src/process/mod.rs",
+        "file:native/omni/crates/hugr-omni/src/process/run.rs",
+        "file:native/omni/crates/hugr-omni/src/types.rs",
+        "file:native/omni/crates/omni-proto/src/codec/mod.rs",
+        "file:native/omni/docs/api-contract.md",
         "file:modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/recipes/author-contract.md"
       ],
       "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/Cargo.toml",
+          "git_blob_sha": "7103497ef0bb44c9f2b9c174d4f66f4020d223d9",
+          "sha256": "49e545268f839655573698ee7d2f1d606178b262fb376704360ea2e8d0e063c9"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/GUARANTEES.md",
+          "git_blob_sha": "f51a3796266b532865e59e1b1f8147ff2ff23573",
+          "sha256": "60828f65581529e0a0ef09c80f74ad46dfcea8fd49f5575f7b0673427ad4a527"
+        },
         {
           "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
           "path": "native/omni/crates/hugr-omni/Cargo.toml",
@@ -3213,59 +3241,7 @@
           "path": "native/omni/crates/hugr-omni/src/client/channel.rs",
           "git_blob_sha": "7e47de8854dd70471bdde4ed94974e53ab494583",
           "sha256": "b68784f859ee9387720b8942a5821af41db720faf81423ba938384301c22bf15"
-        }
-      ],
-      "recipe_ref": {
-        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/recipes/author-contract.md",
-        "sha256": "574f2d8677876dd176b83350a4129da44655f494bebcf1c344d4b823519048fe"
-      },
-      "build_dependencies": [],
-      "navigation": [
-        "omni393.index"
-      ],
-      "producer_request_ref": {
-        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/recipes/author-contract.md",
-        "sha256": "574f2d8677876dd176b83350a4129da44655f494bebcf1c344d4b823519048fe"
-      },
-      "producer_response_ref": {
-        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/core/records-01.json",
-        "sha256": "dc5c374b7ff31bcadbbf10ee7a2e2b224885bc70b9e38f8b1b64549c7d1ec849"
-      },
-      "semantic_review_refs": [],
-      "runtime_receipt_refs": []
-    },
-    {
-      "key": "omni393.core.records-02",
-      "scope": "native/omni",
-      "title": "Omni core source records 02 (5 paths)",
-      "layer": 1,
-      "need": "evidence",
-      "body": {
-        "path": "bodies/core/records-02.json",
-        "encoding": "utf-8",
-        "byte_length": 20939,
-        "sha256": "3f8cc0330486e5fc2e5c4e80207a0441e31993782eef594bb220e24d4d5cb185"
-      },
-      "authority": {
-        "scope": "native/omni",
-        "basis": "User-reserved residual393-source external slice; source-only documentary claims at exact baseline; no runtime/publication authority."
-      },
-      "validity": "blocked",
-      "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
-      ],
-      "evidence": [
-        "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
-      ],
-      "input_keys": [
-        "file:native/omni/crates/hugr-omni/src/client/channel/route.rs",
-        "file:native/omni/crates/hugr-omni/src/client/hold.rs",
-        "file:native/omni/crates/hugr-omni/src/client/keeper.rs",
-        "file:native/omni/crates/hugr-omni/src/client/mod.rs",
-        "file:native/omni/crates/hugr-omni/src/client/start.rs",
-        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/recipes/author-contract.md"
-      ],
-      "source_refs": [
+        },
         {
           "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
           "path": "native/omni/crates/hugr-omni/src/client/channel/route.rs",
@@ -3295,6 +3271,54 @@
           "path": "native/omni/crates/hugr-omni/src/client/start.rs",
           "git_blob_sha": "e2183b63187db2578e60c44b24718d0771d1903b",
           "sha256": "bb709e14c250e3557ffe2859d50b1759eebd517e37e71c4b170273e576776852"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/client/unix.rs",
+          "git_blob_sha": "55dfd50c72bdd1e3ea763febfb152f6d937c2126",
+          "sha256": "f67a2e5957d19bf0847cf1aaa71538f28174366e5fb2372df3275c46bbe514e8"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/client/windows.rs",
+          "git_blob_sha": "256b3cf8e5a6c067b4b71ce8024d897e424f5b50",
+          "sha256": "24938bab497dfd342790b8501738361c518bfc0138625de45da15920e66db9b9"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/process/memory.rs",
+          "git_blob_sha": "c7ef222f5a57cf93e250e077d35cd258527aa391",
+          "sha256": "7933963d860d697ccd3895899499257fa593eb20033be9867362fc8e8190d6d6"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/process/mod.rs",
+          "git_blob_sha": "cef9ad00238c99617b6a2ea2329e5fd0556af5c4",
+          "sha256": "2573e21fdf20f5e1087ddcc00a34abf534f5fe487cf3c84bbed6e20b0b28aa15"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/process/run.rs",
+          "git_blob_sha": "c2725d150e579a0c902746a2835196cbbbe3ef59",
+          "sha256": "7e6ea694a726ae0c56af9a76ec38b2e8008770c32ba4caf1f6cd6fd370f4b53a"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/types.rs",
+          "git_blob_sha": "c29f2abd735077630eec9700de2030e01b71143f",
+          "sha256": "628de2e6808a85d1ea6d006eac2f80ac8d105a8f1b057b7e792ddb41ef1fa3f0"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/omni-proto/src/codec/mod.rs",
+          "git_blob_sha": "afc8efe2c99cb3f1f527c5aa154928350627326e",
+          "sha256": "c17f8572ab5957a4371cecf405e531176331659f2e487b15b856628d3cd6b295"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/docs/api-contract.md",
+          "git_blob_sha": "4f61714ede48ad0eb6e8a57c9255ccfd5c71e569",
+          "sha256": "2786d322b4175e84f520a9c6c28a7aec5eed1d6a43d90e65001e66bfc39b20ab"
         }
       ],
       "recipe_ref": {
@@ -3310,10 +3334,215 @@
         "sha256": "574f2d8677876dd176b83350a4129da44655f494bebcf1c344d4b823519048fe"
       },
       "producer_response_ref": {
-        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/core/records-02.json",
-        "sha256": "3f8cc0330486e5fc2e5c4e80207a0441e31993782eef594bb220e24d4d5cb185"
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/core/records-01.v2.json",
+        "sha256": "88d3b68a0f9744b2351d7930c5e4cdfe0b7db86d6c8a2d7a2597a0f8c18aac34"
       },
-      "semantic_review_refs": [],
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/reviews/C01v2-J1-summary.json",
+          "sha256": "2327a7d47b74ccf72164d78ebef38d5cba65767d6fa1ac30f7cb9d9bbdf442e1"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/reviews/C01v2-J2-summary.json",
+          "sha256": "32ec5c11c30fdae78721ace8daafabe39b7aaefeef789955bb3f08560c7c5290"
+        }
+      ],
+      "runtime_receipt_refs": []
+    },
+    {
+      "key": "omni393.core.records-02",
+      "scope": "native/omni",
+      "title": "Omni core source records 02 (5 paths)",
+      "layer": 1,
+      "need": "evidence",
+      "body": {
+        "path": "bodies/core/records-02.v3.json",
+        "encoding": "utf-8",
+        "byte_length": 26792,
+        "sha256": "8c6515b455eba0637b66a6999c83c7c80b2a0624720680034e62d5b450c2f913"
+      },
+      "authority": {
+        "scope": "native/omni",
+        "basis": "User-reserved residual393-source external slice; source-only documentary claims at exact baseline; no runtime/publication authority."
+      },
+      "validity": "supported",
+      "gaps": [
+        "Documentary source interpretation only; current runtime/platform behavior is not established by these records."
+      ],
+      "evidence": [
+        "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
+      ],
+      "input_keys": [
+        "file:native/omni/Cargo.toml",
+        "file:native/omni/crates/hugr-omni/Cargo.toml",
+        "file:native/omni/crates/hugr-omni/README.md",
+        "file:native/omni/crates/hugr-omni/src/api/command.rs",
+        "file:native/omni/crates/hugr-omni/src/api/mod.rs",
+        "file:native/omni/crates/hugr-omni/src/binding.rs",
+        "file:native/omni/crates/hugr-omni/src/client/channel.rs",
+        "file:native/omni/crates/hugr-omni/src/client/channel/route.rs",
+        "file:native/omni/crates/hugr-omni/src/client/hold.rs",
+        "file:native/omni/crates/hugr-omni/src/client/keeper.rs",
+        "file:native/omni/crates/hugr-omni/src/client/mod.rs",
+        "file:native/omni/crates/hugr-omni/src/client/start.rs",
+        "file:native/omni/crates/hugr-omni/src/client/unix.rs",
+        "file:native/omni/crates/hugr-omni/src/client/windows.rs",
+        "file:native/omni/crates/hugr-omni/src/process/memory.rs",
+        "file:native/omni/crates/hugr-omni/src/process/mod.rs",
+        "file:native/omni/crates/hugr-omni/src/process/run.rs",
+        "file:native/omni/crates/hugr-omni/src/types.rs",
+        "file:native/omni/crates/omni-proto/src/codec/mod.rs",
+        "file:native/omni/crates/omni-proto/src/lib.rs",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/recipes/author-contract.md"
+      ],
+      "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/Cargo.toml",
+          "git_blob_sha": "7103497ef0bb44c9f2b9c174d4f66f4020d223d9",
+          "sha256": "49e545268f839655573698ee7d2f1d606178b262fb376704360ea2e8d0e063c9"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/Cargo.toml",
+          "git_blob_sha": "da941bc372f94d998e00b51fba25b2152883db0e",
+          "sha256": "9793a8c1fc11d81a16f4741aef8e9380d8d4b91bd3b0d87d43aca65401407da2"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/README.md",
+          "git_blob_sha": "945f24792c30a37d3d445a28c029a5ec905793cc",
+          "sha256": "7400a8f3171678895fc18b7954d48121b2d1457ebd145b5d45e51b9b5b4da757"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/api/command.rs",
+          "git_blob_sha": "ca33173b6f5b60c213cff9b02ac10bf31eaa9022",
+          "sha256": "9b130c6166ef54e2cad64a9ea058c76db05a3264bb4daae5f150755130c09220"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/api/mod.rs",
+          "git_blob_sha": "4b3f37cc5070adaa0ae9f6d461e23f6faf58054e",
+          "sha256": "9230d7ea1770092ea26abd04ae43abbd60bf2753ada2c230a71e563ae9ea3b5c"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/binding.rs",
+          "git_blob_sha": "e939c1d2c863fd35bde982a1232b4ffc1169c57e",
+          "sha256": "d7ba5604c33899e9612ff68f598b6f5eff9a773273504949eecd02ba9c02f19f"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/client/channel.rs",
+          "git_blob_sha": "7e47de8854dd70471bdde4ed94974e53ab494583",
+          "sha256": "b68784f859ee9387720b8942a5821af41db720faf81423ba938384301c22bf15"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/client/channel/route.rs",
+          "git_blob_sha": "e1eddb04bc55bdfde9cb5ea70f84b0c21b3d40f8",
+          "sha256": "a144d18da03062841d9c6f96919941ce0de099b6bc03ef1619c60825d12521cf"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/client/hold.rs",
+          "git_blob_sha": "1a3ab7d7cef5ae6be67255328b429ce3e958e9d9",
+          "sha256": "775e5364c8a48b99d672a52a4105704327f993ca12cd2f6f59d296db2e1775e4"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/client/keeper.rs",
+          "git_blob_sha": "96424d1b83dc75fdff07824c8979136a81ad31ee",
+          "sha256": "738da168685021d02ab413cc9b534c90cde2322728ff1d84a42ebd2e8372c757"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/client/mod.rs",
+          "git_blob_sha": "3b0722feef193479d9f9c08bcdf6ad2ed27b71e5",
+          "sha256": "c6d0e33c4335ca67fc684bfddb4c192ce70347b2f5b929c58f8e6509b129588c"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/client/start.rs",
+          "git_blob_sha": "e2183b63187db2578e60c44b24718d0771d1903b",
+          "sha256": "bb709e14c250e3557ffe2859d50b1759eebd517e37e71c4b170273e576776852"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/client/unix.rs",
+          "git_blob_sha": "55dfd50c72bdd1e3ea763febfb152f6d937c2126",
+          "sha256": "f67a2e5957d19bf0847cf1aaa71538f28174366e5fb2372df3275c46bbe514e8"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/client/windows.rs",
+          "git_blob_sha": "256b3cf8e5a6c067b4b71ce8024d897e424f5b50",
+          "sha256": "24938bab497dfd342790b8501738361c518bfc0138625de45da15920e66db9b9"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/process/memory.rs",
+          "git_blob_sha": "c7ef222f5a57cf93e250e077d35cd258527aa391",
+          "sha256": "7933963d860d697ccd3895899499257fa593eb20033be9867362fc8e8190d6d6"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/process/mod.rs",
+          "git_blob_sha": "cef9ad00238c99617b6a2ea2329e5fd0556af5c4",
+          "sha256": "2573e21fdf20f5e1087ddcc00a34abf534f5fe487cf3c84bbed6e20b0b28aa15"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/process/run.rs",
+          "git_blob_sha": "c2725d150e579a0c902746a2835196cbbbe3ef59",
+          "sha256": "7e6ea694a726ae0c56af9a76ec38b2e8008770c32ba4caf1f6cd6fd370f4b53a"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/types.rs",
+          "git_blob_sha": "c29f2abd735077630eec9700de2030e01b71143f",
+          "sha256": "628de2e6808a85d1ea6d006eac2f80ac8d105a8f1b057b7e792ddb41ef1fa3f0"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/omni-proto/src/codec/mod.rs",
+          "git_blob_sha": "afc8efe2c99cb3f1f527c5aa154928350627326e",
+          "sha256": "c17f8572ab5957a4371cecf405e531176331659f2e487b15b856628d3cd6b295"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/omni-proto/src/lib.rs",
+          "git_blob_sha": "93fb4621ba2f3d5b195275b81d5554321318287a",
+          "sha256": "ead9e7ece84b1a7e2a0201c427922493ba56f9af85d29bee7350d5f8bc803cd7"
+        }
+      ],
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/recipes/author-contract.md",
+        "sha256": "574f2d8677876dd176b83350a4129da44655f494bebcf1c344d4b823519048fe"
+      },
+      "build_dependencies": [],
+      "navigation": [
+        "omni393.index"
+      ],
+      "producer_request_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/recipes/author-contract.md",
+        "sha256": "574f2d8677876dd176b83350a4129da44655f494bebcf1c344d4b823519048fe"
+      },
+      "producer_response_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/core/records-02.v3.json",
+        "sha256": "8c6515b455eba0637b66a6999c83c7c80b2a0624720680034e62d5b450c2f913"
+      },
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/reviews/C02v3-J2-summary.json",
+          "sha256": "229eba9fa3891475657e3a45a25ded21efa69349a648f8fb26cd38d15dbf3fc3"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/reviews/C02v3-J1-summary.json",
+          "sha256": "b50570898d1e318521d02ee211c47e33533312497193a16ecaa57f89d1e3f0f8"
+        }
+      ],
       "runtime_receipt_refs": []
     },
     {
@@ -3334,7 +3563,7 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
@@ -3437,7 +3666,7 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
@@ -3582,7 +3811,7 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
@@ -3671,7 +3900,7 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
@@ -3802,7 +4031,7 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
@@ -3940,7 +4169,7 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
@@ -4064,7 +4293,7 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
@@ -4174,7 +4403,7 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
@@ -4242,7 +4471,7 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
@@ -4345,7 +4574,7 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
@@ -4427,7 +4656,7 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
@@ -4523,7 +4752,7 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
@@ -4598,7 +4827,7 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
@@ -4701,7 +4930,7 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
@@ -4776,7 +5005,7 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
@@ -4879,7 +5108,7 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
@@ -4947,7 +5176,7 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
@@ -5099,7 +5328,7 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
@@ -5120,6 +5349,8 @@
         "file:native/omni/campaign/v1-background.ts",
         "file:native/omni/campaign/v10-exit.ts",
         "file:native/omni/campaign/v10-natural-exit.ts",
+        "file:native/omni/campaign/v7-overhead.ts",
+        "file:native/omni/campaign/v9-broken-artifacts.ts",
         "file:modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/recipes/author-contract.md"
       ],
       "source_refs": [
@@ -5212,6 +5443,18 @@
           "path": "native/omni/campaign/v10-natural-exit.ts",
           "git_blob_sha": "3873007aa47c77eda08db43627058e9454d6a5a3",
           "sha256": "cd2204a1d4fb47ef44b11fb913da6bf07d607a70bebaa306f7b0cc508a1bd54f"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/campaign/v7-overhead.ts",
+          "git_blob_sha": "eb9817a2edc798267af5fd319b8ac984f69ce385",
+          "sha256": "b481918ac3afa4e241fda35e7464308e46e93d27703a01e4a30b5dcf2a256227"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/campaign/v9-broken-artifacts.ts",
+          "git_blob_sha": "a408ec1837b7f9b078d6fcfae2d174f02caa483f",
+          "sha256": "a6b300bbfd592c280913eb56197447789e946f745f773a8ee9ea3b36a0601fb1"
         }
       ],
       "recipe_ref": {
@@ -5251,7 +5494,7 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
@@ -5382,12 +5625,13 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
       ],
       "input_keys": [
+        "file:native/omni/Cargo.toml",
         "file:native/omni/conformance/FIXTURE.md",
         "file:native/omni/conformance/SPEC.md",
         "file:native/omni/conformance/pending.txt",
@@ -5403,6 +5647,12 @@
         "file:modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/recipes/author-contract.md"
       ],
       "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/Cargo.toml",
+          "git_blob_sha": "7103497ef0bb44c9f2b9c174d4f66f4020d223d9",
+          "sha256": "49e545268f839655573698ee7d2f1d606178b262fb376704360ea2e8d0e063c9"
+        },
         {
           "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
           "path": "native/omni/conformance/FIXTURE.md",
@@ -5513,12 +5763,13 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
       ],
       "input_keys": [
+        "file:native/omni/conformance/SPEC.md",
         "file:native/omni/conformance/scenarios/C-ENV-01.clean.json",
         "file:native/omni/conformance/scenarios/C-ENV-01.inherit.json",
         "file:native/omni/conformance/scenarios/C-ENV-01.windows.json",
@@ -5537,6 +5788,12 @@
         "file:modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/recipes/author-contract.md"
       ],
       "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/conformance/SPEC.md",
+          "git_blob_sha": "f52eec455505c2dfcd95c8e187178291178fb335",
+          "sha256": "bf45956d4bb866cf5b5f528f044cd6c037f6320d9b021fe57b0fad7796128db3"
+        },
         {
           "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
           "path": "native/omni/conformance/scenarios/C-ENV-01.clean.json",
@@ -5665,12 +5922,13 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
       ],
       "input_keys": [
+        "file:native/omni/conformance/SPEC.md",
         "file:native/omni/conformance/scenarios/C-IO-01.merge.json",
         "file:native/omni/conformance/scenarios/C-IO-02.no-consumer.json",
         "file:native/omni/conformance/scenarios/C-IO-02.paused.json",
@@ -5689,6 +5947,12 @@
         "file:modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/recipes/author-contract.md"
       ],
       "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/conformance/SPEC.md",
+          "git_blob_sha": "f52eec455505c2dfcd95c8e187178291178fb335",
+          "sha256": "bf45956d4bb866cf5b5f528f044cd6c037f6320d9b021fe57b0fad7796128db3"
+        },
         {
           "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
           "path": "native/omni/conformance/scenarios/C-IO-01.merge.json",
@@ -5817,12 +6081,13 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
       ],
       "input_keys": [
+        "file:native/omni/conformance/SPEC.md",
         "file:native/omni/conformance/scenarios/C-PTY-03.output.json",
         "file:native/omni/conformance/scenarios/C-PTY-04.tree.json",
         "file:native/omni/conformance/scenarios/C-RUN-01.output-limit.json",
@@ -5841,6 +6106,12 @@
         "file:modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/recipes/author-contract.md"
       ],
       "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/conformance/SPEC.md",
+          "git_blob_sha": "f52eec455505c2dfcd95c8e187178291178fb335",
+          "sha256": "bf45956d4bb866cf5b5f528f044cd6c037f6320d9b021fe57b0fad7796128db3"
+        },
         {
           "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
           "path": "native/omni/conformance/scenarios/C-PTY-03.output.json",
@@ -5969,7 +6240,7 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
@@ -6128,7 +6399,7 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
@@ -6287,7 +6558,7 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
@@ -6446,7 +6717,7 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
@@ -6458,16 +6729,29 @@
         "file:native/omni/.github/workflows/ci.yml",
         "file:native/omni/.github/workflows/release.yml",
         "file:native/omni/.gitignore",
+        "file:native/omni/AGENTS.md",
         "file:native/omni/CLAUDE.md",
+        "file:native/omni/Cargo.toml",
+        "file:native/omni/GUARANTEES.md",
         "file:native/omni/bindings/node/Cargo.toml",
         "file:native/omni/bindings/node/README.md",
         "file:native/omni/bindings/node/build.rs",
         "file:native/omni/bindings/node/examples/quickstart.ts",
+        "file:native/omni/bindings/node/index.d.ts",
+        "file:native/omni/bindings/node/index.js",
+        "file:native/omni/bindings/node/npm/pack.mjs",
+        "file:native/omni/bindings/node/npm/verify.mjs",
+        "file:native/omni/bindings/node/test/overloads.ts",
         "file:native/omni/bindings/node/test/tsconfig.json",
         "file:native/omni/bindings/node/tsconfig.json",
         "file:native/omni/clippy.toml",
+        "file:native/omni/docs/api-contract.md",
+        "file:native/omni/docs/guide/recipes.md",
         "file:native/omni/rust-toolchain.toml",
         "file:native/omni/rustfmt.toml",
+        "file:native/omni/scripts/build-artifacts.mjs",
+        "file:native/omni/scripts/ci.mjs",
+        "file:native/omni/scripts/review-prompt.py",
         "file:modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/recipes/author-contract.md"
       ],
       "source_refs": [
@@ -6509,9 +6793,27 @@
         },
         {
           "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/AGENTS.md",
+          "git_blob_sha": "d934b4eb0318ca6ec9286a944d1bab90d7d80dff",
+          "sha256": "8fbdec6dc4c18c6138040b60e6424e5fea3ad762486b7db692630551b267c07e"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
           "path": "native/omni/CLAUDE.md",
           "git_blob_sha": "43c994c2d3617f947bcb5adf1933e21dabe46bb5",
           "sha256": "336cc4fbf19beaada7ccf9986414fa91851a8d7a07dfb3ccbe800a69eed0ab49"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/Cargo.toml",
+          "git_blob_sha": "7103497ef0bb44c9f2b9c174d4f66f4020d223d9",
+          "sha256": "49e545268f839655573698ee7d2f1d606178b262fb376704360ea2e8d0e063c9"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/GUARANTEES.md",
+          "git_blob_sha": "f51a3796266b532865e59e1b1f8147ff2ff23573",
+          "sha256": "60828f65581529e0a0ef09c80f74ad46dfcea8fd49f5575f7b0673427ad4a527"
         },
         {
           "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
@@ -6539,6 +6841,36 @@
         },
         {
           "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/bindings/node/index.d.ts",
+          "git_blob_sha": "67471a388e5c12c479a3fadf0cd8e07300bae2d5",
+          "sha256": "411309f2d8d7470d7a6123c0f523f7b0fb5293103c6fdeaab0979216319a4020"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/bindings/node/index.js",
+          "git_blob_sha": "e24857529d38c479965318e2ef2d75a6f655440b",
+          "sha256": "aca3883cd5f8212b25757b72b0b2b3353705bc291e9b9697851f9b0b0ccb75df"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/bindings/node/npm/pack.mjs",
+          "git_blob_sha": "a186429e88017fbd881a702669fa73083620024a",
+          "sha256": "e7106238838cad87b862adc8a081b70a9bfe7909a38b23c33b573eee86a6c333"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/bindings/node/npm/verify.mjs",
+          "git_blob_sha": "ea9f40fce52aa33c3a5a4c7d96946e2f8aae056e",
+          "sha256": "93d6921ca3ae1b4155fea4ec5b3179cb7328cd0a4bb28138ec6115f6febe9abf"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/bindings/node/test/overloads.ts",
+          "git_blob_sha": "e3eb49f3cb59c0a7842014e00a1256aeb4a27cac",
+          "sha256": "7c755e577a248106ab8562b8263272509f1113e228a5338649cbf87d816b1606"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
           "path": "native/omni/bindings/node/test/tsconfig.json",
           "git_blob_sha": "25f7345de6b8b400fcaa98da919d3ce82e2e23d0",
           "sha256": "4a2148667eae7ef54e59970207ca84b307686735921f01d3d5708b3b94180f95"
@@ -6557,6 +6889,18 @@
         },
         {
           "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/docs/api-contract.md",
+          "git_blob_sha": "4f61714ede48ad0eb6e8a57c9255ccfd5c71e569",
+          "sha256": "2786d322b4175e84f520a9c6c28a7aec5eed1d6a43d90e65001e66bfc39b20ab"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/docs/guide/recipes.md",
+          "git_blob_sha": "7a34e6d46f69cdffcf0c721b135803ca7b8a1c21",
+          "sha256": "b4550162df4d1c7f649b33e5b7f66e3add230110d235afa95bbe05354c16ea59"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
           "path": "native/omni/rust-toolchain.toml",
           "git_blob_sha": "aa20bc990d6f843fffb559d502c73c74132111d0",
           "sha256": "07487db9d6b45de2f308f9fb578c9c46041381c3ee44ef782eca64150a394772"
@@ -6566,6 +6910,24 @@
           "path": "native/omni/rustfmt.toml",
           "git_blob_sha": "75306517965a54731b94dca8bace640e856af115",
           "sha256": "e090969e99df9360705680cc0097cfaddae10c22dc2e01470592cf3b9787fd36"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/scripts/build-artifacts.mjs",
+          "git_blob_sha": "1943388caead80bf75791e806f1dd44c98a9e27a",
+          "sha256": "074d159af8d1a3382f47fe47c061590a8b147b15020881e975ed15123533366a"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/scripts/ci.mjs",
+          "git_blob_sha": "8cdad20d7be0bdafb9a91fe3d1aeb7384ad4f92d",
+          "sha256": "935505d36abcb62c8a9bcb8e48d918eeae320b662929175ffa24075f2a1ab675"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/scripts/review-prompt.py",
+          "git_blob_sha": "5668ef2c4e1aac476551c554d8db84605b98040d",
+          "sha256": "adeca0fe83d7818089207ba93c5bd278f3be6a39e65ea351243483f8339a43d8"
         }
       ],
       "recipe_ref": {
@@ -6605,7 +6967,7 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
@@ -6625,6 +6987,12 @@
         "file:native/omni/bindings/node/test/host.mjs",
         "file:native/omni/bindings/node/test/hosts.mjs",
         "file:native/omni/bindings/node/test/idioms.mjs",
+        "file:native/omni/bindings/node/test/markers.mjs",
+        "file:native/omni/bindings/node/test/overloads.ts",
+        "file:native/omni/bindings/node/test/runner/suite.mjs",
+        "file:native/omni/bindings/node/test/support.mjs",
+        "file:native/omni/conformance/regex-table.json",
+        "file:native/omni/docs/api-contract.md",
         "file:modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/recipes/author-contract.md"
       ],
       "source_refs": [
@@ -6711,6 +7079,42 @@
           "path": "native/omni/bindings/node/test/idioms.mjs",
           "git_blob_sha": "cec701164083a44d25a1572944ab05dec1128f0a",
           "sha256": "042e16a2225ed9f2736e95563a69e02f597280f7ec2e2465d3328dd04ddd32d8"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/bindings/node/test/markers.mjs",
+          "git_blob_sha": "09a26c1e9b2d80f57686c5c919a19d29bfd90d98",
+          "sha256": "b7e8f841f8f8c6f13fd24681fb63c38462e7b7c9afbe420dbb0adb5558334d88"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/bindings/node/test/overloads.ts",
+          "git_blob_sha": "e3eb49f3cb59c0a7842014e00a1256aeb4a27cac",
+          "sha256": "7c755e577a248106ab8562b8263272509f1113e228a5338649cbf87d816b1606"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/bindings/node/test/runner/suite.mjs",
+          "git_blob_sha": "756089822e80ebeeb21ffc7b33e9fc6e3d2cf84e",
+          "sha256": "661a1282fb0e516d48bba9c3100b7a349682a57eb46e4257e60214f7c0878869"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/bindings/node/test/support.mjs",
+          "git_blob_sha": "7e7b51dc6e3084e5733ed37dcb037f668659fca1",
+          "sha256": "1215e8f658813ff55554b92162a04497bf8f2b8a47af6215b380d3a90f5214b0"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/conformance/regex-table.json",
+          "git_blob_sha": "d1d340205438642841ccbc04e037a62faac9596e",
+          "sha256": "c68466ade09994adbd46535388cc236b65c1b810d5126f811d7a1fc300c4dec0"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/docs/api-contract.md",
+          "git_blob_sha": "4f61714ede48ad0eb6e8a57c9255ccfd5c71e569",
+          "sha256": "2786d322b4175e84f520a9c6c28a7aec5eed1d6a43d90e65001e66bfc39b20ab"
         }
       ],
       "recipe_ref": {
@@ -6750,12 +7154,17 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
       ],
       "input_keys": [
+        "file:native/omni/bindings/node/index.d.ts",
+        "file:native/omni/bindings/node/index.js",
+        "file:native/omni/bindings/node/test/contract.mjs",
+        "file:native/omni/bindings/node/test/host.mjs",
+        "file:native/omni/bindings/node/test/hosts.mjs",
         "file:native/omni/bindings/node/test/markers.mjs",
         "file:native/omni/bindings/node/test/mini.mjs",
         "file:native/omni/bindings/node/test/overloads.ts",
@@ -6770,11 +7179,45 @@
         "file:native/omni/bindings/node/test/runner/suite.mjs",
         "file:native/omni/bindings/node/test/support.mjs",
         "file:native/omni/bindings/node/test/teeth.mjs",
+        "file:native/omni/bindings/node/test/tsconfig.json",
         "file:native/omni/bindings/node/test/worker-host.mjs",
         "file:native/omni/bindings/node/test/worker.mjs",
+        "file:native/omni/conformance/SPEC.md",
+        "file:native/omni/conformance/pending.txt",
+        "file:native/omni/conformance/regex-table.json",
         "file:modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/recipes/author-contract.md"
       ],
       "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/bindings/node/index.d.ts",
+          "git_blob_sha": "67471a388e5c12c479a3fadf0cd8e07300bae2d5",
+          "sha256": "411309f2d8d7470d7a6123c0f523f7b0fb5293103c6fdeaab0979216319a4020"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/bindings/node/index.js",
+          "git_blob_sha": "e24857529d38c479965318e2ef2d75a6f655440b",
+          "sha256": "aca3883cd5f8212b25757b72b0b2b3353705bc291e9b9697851f9b0b0ccb75df"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/bindings/node/test/contract.mjs",
+          "git_blob_sha": "708dc74904a9d25b32d84dbb8b2d9b77d06dcf0a",
+          "sha256": "24135090a8702045dd53fcdf1ac8e5bd97898b734c26c4c070a6b035837f334b"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/bindings/node/test/host.mjs",
+          "git_blob_sha": "d313d05585a22532dd861dda487f70921a8fd1a1",
+          "sha256": "2af757b8ab4bbb4d25d97645518f0c776419a2b257d39d4a33edd4c5fc2271ee"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/bindings/node/test/hosts.mjs",
+          "git_blob_sha": "bc17ad695df0a1d79d0607235cf35cd3898220c4",
+          "sha256": "1a5962765acc697062fb1a6473bbe0378fcd224634045c631dceb3e613b89e0c"
+        },
         {
           "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
           "path": "native/omni/bindings/node/test/markers.mjs",
@@ -6861,6 +7304,12 @@
         },
         {
           "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/bindings/node/test/tsconfig.json",
+          "git_blob_sha": "25f7345de6b8b400fcaa98da919d3ce82e2e23d0",
+          "sha256": "4a2148667eae7ef54e59970207ca84b307686735921f01d3d5708b3b94180f95"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
           "path": "native/omni/bindings/node/test/worker-host.mjs",
           "git_blob_sha": "677d1aac59563cf219346d0a5e968a9765831b16",
           "sha256": "b563c0c760c00f1261212865a7aad567d6aee1f7b2a17d000ebdc777f105692c"
@@ -6870,6 +7319,24 @@
           "path": "native/omni/bindings/node/test/worker.mjs",
           "git_blob_sha": "2f2c99ff7d42144f83782eedea2d8333e7c83479",
           "sha256": "600d63cdea5056a05e4662686608822c5c97f41a8a31fbc6efd7db5330893849"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/conformance/SPEC.md",
+          "git_blob_sha": "f52eec455505c2dfcd95c8e187178291178fb335",
+          "sha256": "bf45956d4bb866cf5b5f528f044cd6c037f6320d9b021fe57b0fad7796128db3"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/conformance/pending.txt",
+          "git_blob_sha": "e2a95660fc8824043b955e26562ee064b9c9bf7d",
+          "sha256": "19c9daea40a9a13acfd35942d7bd842c308d53a8509f06abb5f0b249aa57a454"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/conformance/regex-table.json",
+          "git_blob_sha": "d1d340205438642841ccbc04e037a62faac9596e",
+          "sha256": "c68466ade09994adbd46535388cc236b65c1b810d5126f811d7a1fc300c4dec0"
         }
       ],
       "recipe_ref": {
@@ -6909,15 +7376,21 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
       ],
       "input_keys": [
+        "file:native/omni/.github/workflows/ci.yml",
+        "file:native/omni/Cargo.toml",
+        "file:native/omni/LICENSE-MIT",
+        "file:native/omni/PLAN.md",
         "file:native/omni/bindings/node/npm/README.md",
         "file:native/omni/bindings/node/npm/pack.mjs",
         "file:native/omni/bindings/node/npm/verify.mjs",
+        "file:native/omni/bindings/node/package.json",
+        "file:native/omni/docs/acceptance.md",
         "file:native/omni/scripts/artifacts.node-smoke.mjs",
         "file:native/omni/scripts/brief.py",
         "file:native/omni/scripts/build-artifacts.mjs",
@@ -6931,9 +7404,35 @@
         "file:native/omni/scripts/readme-check/fixture/dev.js",
         "file:native/omni/scripts/readme-check/fixture/package.json",
         "file:native/omni/scripts/readme-check/fixture/test.js",
+        "file:native/omni/scripts/readme-check/run.mjs",
+        "file:native/omni/scripts/test_file_size_guard.py",
         "file:modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/recipes/author-contract.md"
       ],
       "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/.github/workflows/ci.yml",
+          "git_blob_sha": "bf3f2d38a3eeb79bd3d48990e8ed87b4e2745662",
+          "sha256": "c4a46af184a655269ba8e75ff4d3e3e9fe782b03de2cd3b16f50585cde1c4748"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/Cargo.toml",
+          "git_blob_sha": "7103497ef0bb44c9f2b9c174d4f66f4020d223d9",
+          "sha256": "49e545268f839655573698ee7d2f1d606178b262fb376704360ea2e8d0e063c9"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/LICENSE-MIT",
+          "git_blob_sha": "732f302f865abcb11bd44768f0b7339a47903e14",
+          "sha256": "b929c9d704b174f957c690c9651eba9a5e789d9cd6fee0492a5e3876ed657d81"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/PLAN.md",
+          "git_blob_sha": "f8a105e63117dfb8a5ad1c911210b3993c34e1ca",
+          "sha256": "cd01cdec5108fa10da0b1a5e3e816da5670d0a525c8c2fd4efc250978b0e07c5"
+        },
         {
           "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
           "path": "native/omni/bindings/node/npm/README.md",
@@ -6951,6 +7450,18 @@
           "path": "native/omni/bindings/node/npm/verify.mjs",
           "git_blob_sha": "ea9f40fce52aa33c3a5a4c7d96946e2f8aae056e",
           "sha256": "93d6921ca3ae1b4155fea4ec5b3179cb7328cd0a4bb28138ec6115f6febe9abf"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/bindings/node/package.json",
+          "git_blob_sha": "a06265315f503bfd74b8d3be60512f532ef11c0c",
+          "sha256": "46c899676f2da58f457e293caf1f519753b45f63dbc752068022864d56883bfb"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/docs/acceptance.md",
+          "git_blob_sha": "7bbbca24f87d379a7487fa1c3043d620e291aaad",
+          "sha256": "bfdb3b6427263b3b56a0523b0751d67926ea40744e03e3f5b8d5377d41955091"
         },
         {
           "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
@@ -7029,6 +7540,18 @@
           "path": "native/omni/scripts/readme-check/fixture/test.js",
           "git_blob_sha": "20ca01dbc7e6b73a9970f7fc1adb21bf98b2b51d",
           "sha256": "8061493c632750526365cb1e6b608086e92d49fd6b982b725b759931219474cb"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/scripts/readme-check/run.mjs",
+          "git_blob_sha": "5cc35198873071a853e2fe38926c8ccef1cdcaa2",
+          "sha256": "bef817d6d6e86098aae210ff222a04537c5c82f89cfba957c654b5bb77d454a2"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/scripts/test_file_size_guard.py",
+          "git_blob_sha": "c123bf35bcafe56d9fad9fd910049f40332bbce8",
+          "sha256": "aebd4974f7ade0864ed8ca2b1d50fadcfce098e26c715015d3560fa1e41b12ef"
         }
       ],
       "recipe_ref": {
@@ -7068,14 +7591,20 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
       ],
       "input_keys": [
+        "file:native/omni/.github/review/schema.json",
         "file:native/omni/LICENSE-APACHE",
         "file:native/omni/LICENSE-MIT",
+        "file:native/omni/PLAN.md",
+        "file:native/omni/bindings/node/index.d.ts",
+        "file:native/omni/bindings/node/npm/pack.mjs",
+        "file:native/omni/docs/api-contract.md",
+        "file:native/omni/scripts/file-size-guard.py",
         "file:native/omni/scripts/readme-check/check.test.mjs",
         "file:native/omni/scripts/readme-check/run.mjs",
         "file:native/omni/scripts/review-prompt.py",
@@ -7095,6 +7624,12 @@
       "source_refs": [
         {
           "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/.github/review/schema.json",
+          "git_blob_sha": "71d9964db3b8215fdaed19d5838668624feb3583",
+          "sha256": "fa15f8b049fb5cd9443128c969c9b38c271caa2e921d04d28c96f5aeda84531f"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
           "path": "native/omni/LICENSE-APACHE",
           "git_blob_sha": "57bc88a15a0ee8266c259b2667e64608d3f7e292",
           "sha256": "c95bae1d1ce0235ecccd3560b772ec1efb97f348a79f0fbe0a634f0c2ccefe2c"
@@ -7104,6 +7639,36 @@
           "path": "native/omni/LICENSE-MIT",
           "git_blob_sha": "732f302f865abcb11bd44768f0b7339a47903e14",
           "sha256": "b929c9d704b174f957c690c9651eba9a5e789d9cd6fee0492a5e3876ed657d81"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/PLAN.md",
+          "git_blob_sha": "f8a105e63117dfb8a5ad1c911210b3993c34e1ca",
+          "sha256": "cd01cdec5108fa10da0b1a5e3e816da5670d0a525c8c2fd4efc250978b0e07c5"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/bindings/node/index.d.ts",
+          "git_blob_sha": "67471a388e5c12c479a3fadf0cd8e07300bae2d5",
+          "sha256": "411309f2d8d7470d7a6123c0f523f7b0fb5293103c6fdeaab0979216319a4020"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/bindings/node/npm/pack.mjs",
+          "git_blob_sha": "a186429e88017fbd881a702669fa73083620024a",
+          "sha256": "e7106238838cad87b862adc8a081b70a9bfe7909a38b23c33b573eee86a6c333"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/docs/api-contract.md",
+          "git_blob_sha": "4f61714ede48ad0eb6e8a57c9255ccfd5c71e569",
+          "sha256": "2786d322b4175e84f520a9c6c28a7aec5eed1d6a43d90e65001e66bfc39b20ab"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/scripts/file-size-guard.py",
+          "git_blob_sha": "5c1b41d44a73e0f3bf095efc2cb5d8850e9f604d",
+          "sha256": "85f3138572ce570539ddf41df4ed5b1919c70387a04f70b0b5cbfc42d0a5b36b"
         },
         {
           "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
@@ -7227,7 +7792,7 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
@@ -7379,7 +7944,7 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
@@ -7496,7 +8061,7 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
@@ -7571,7 +8136,7 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
@@ -7639,7 +8204,7 @@
       },
       "validity": "blocked",
       "gaps": [
-        "Independent semantic review pending. Runtime execution is not established by these source records."
+        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."

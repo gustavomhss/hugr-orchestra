@@ -1,0 +1,151 @@
+{
+  "schema": "omni-public-review-source-map/v1",
+  "kind": "source_input_summary_not_private_exchange",
+  "artifact": "authors/core/records-01.v2.json",
+  "public_artifact": "bodies/core/records-01.v2.json",
+  "body_sha256": "88d3b68a0f9744b2351d7930c5e4cdfe0b7db86d6c8a2d7a2597a0f8c18aac34",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "scope": "Union of primary source excerpts and additional same-pin source excerpts literally delivered to both judges before the C01v2 final decisions. C01_direct_support marks evidence requested for C01; the C02 role records evidence also made available and explicitly incorporated in the v2 request. It does not assert that each supporting source separately determined a finding. Supporting paths create no additional accepted population entries.",
+  "sources": [
+    {
+      "path": "native/omni/Cargo.toml",
+      "git_blob_sha": "7103497ef0bb44c9f2b9c174d4f66f4020d223d9",
+      "roles": [
+        "C01_direct_support"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/Cargo.toml",
+      "git_blob_sha": "da941bc372f94d998e00b51fba25b2152883db0e",
+      "roles": [
+        "primary_record_source",
+        "C01_direct_support"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/README.md",
+      "git_blob_sha": "945f24792c30a37d3d445a28c029a5ec905793cc",
+      "roles": [
+        "primary_record_source"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/src/api/command.rs",
+      "git_blob_sha": "ca33173b6f5b60c213cff9b02ac10bf31eaa9022",
+      "roles": [
+        "primary_record_source",
+        "C01_direct_support"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/src/api/mod.rs",
+      "git_blob_sha": "4b3f37cc5070adaa0ae9f6d461e23f6faf58054e",
+      "roles": [
+        "primary_record_source"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/src/binding.rs",
+      "git_blob_sha": "e939c1d2c863fd35bde982a1232b4ffc1169c57e",
+      "roles": [
+        "primary_record_source",
+        "C01_direct_support"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/src/client/channel.rs",
+      "git_blob_sha": "7e47de8854dd70471bdde4ed94974e53ab494583",
+      "roles": [
+        "primary_record_source",
+        "C01_direct_support"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/src/client/channel/route.rs",
+      "git_blob_sha": "e1eddb04bc55bdfde9cb5ea70f84b0c21b3d40f8",
+      "roles": [
+        "same_pin_C02_support_available_before_C01v2_final_decision"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/src/client/hold.rs",
+      "git_blob_sha": "1a3ab7d7cef5ae6be67255328b429ce3e958e9d9",
+      "roles": [
+        "same_pin_C02_support_available_before_C01v2_final_decision"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/src/client/keeper.rs",
+      "git_blob_sha": "96424d1b83dc75fdff07824c8979136a81ad31ee",
+      "roles": [
+        "C01_direct_support",
+        "same_pin_C02_support_available_before_C01v2_final_decision"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/src/client/mod.rs",
+      "git_blob_sha": "3b0722feef193479d9f9c08bcdf6ad2ed27b71e5",
+      "roles": [
+        "C01_direct_support",
+        "same_pin_C02_support_available_before_C01v2_final_decision"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/src/client/start.rs",
+      "git_blob_sha": "e2183b63187db2578e60c44b24718d0771d1903b",
+      "roles": [
+        "C01_direct_support",
+        "same_pin_C02_support_available_before_C01v2_final_decision"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/src/client/unix.rs",
+      "git_blob_sha": "55dfd50c72bdd1e3ea763febfb152f6d937c2126",
+      "roles": [
+        "C01_direct_support"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/src/client/windows.rs",
+      "git_blob_sha": "256b3cf8e5a6c067b4b71ce8024d897e424f5b50",
+      "roles": [
+        "C01_direct_support"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/src/process/memory.rs",
+      "git_blob_sha": "c7ef222f5a57cf93e250e077d35cd258527aa391",
+      "roles": [
+        "C01_direct_support"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/src/process/mod.rs",
+      "git_blob_sha": "cef9ad00238c99617b6a2ea2329e5fd0556af5c4",
+      "roles": [
+        "C01_direct_support"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/src/process/run.rs",
+      "git_blob_sha": "c2725d150e579a0c902746a2835196cbbbe3ef59",
+      "roles": [
+        "C01_direct_support"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/src/types.rs",
+      "git_blob_sha": "c29f2abd735077630eec9700de2030e01b71143f",
+      "roles": [
+        "C01_direct_support"
+      ]
+    },
+    {
+      "path": "native/omni/crates/omni-proto/src/codec/mod.rs",
+      "git_blob_sha": "afc8efe2c99cb3f1f527c5aa154928350627326e",
+      "roles": [
+        "same_pin_C02_support_available_before_C01v2_final_decision"
+      ]
+    }
+  ]
+}

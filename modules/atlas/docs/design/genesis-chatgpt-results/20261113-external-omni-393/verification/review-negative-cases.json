@@ -1,0 +1,11 @@
+{
+  "schema": "omni-documentary-negative-plan/v1",
+  "purpose": "Supplementary public-summary binding controls, fixed before these two executions. These are not reserved semantic cases or retroactive author acceptance criteria.",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "cases": [
+    {"id": "REVIEW-N1", "mutation": "Replace one accepted summary's artifact SHA256 with all zeroes in a temporary result copy.", "required_rejection": "REVIEW_BODY_BINDING"},
+    {"id": "REVIEW-N2", "mutation": "Replace the second accepted summary's reviewer identity with the first reviewer's identity in a separate temporary result copy.", "required_rejection": "REVIEWER_PAIR"}
+  ],
+  "product_sources_modified": false,
+  "product_execution": "NOT_RUN"
+}

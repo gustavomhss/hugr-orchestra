@@ -1,0 +1,27 @@
+{
+  "schema": "omni-native-operation/v1",
+  "operation": "prepare",
+  "selection": "C01v2 partial6-of393",
+  "runtime_candidate": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+  "argv": [
+    "/workspace/scratch/d3422440cdf1/omni-genesis/runtime-tools/node_modules/@oven/bun-linux-x64/bin/bun",
+    "scripts/genesis-native.ts",
+    "prepare",
+    "/workspace/scratch/d3422440cdf1/omni-genesis/runtime-pilot-c01",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/pilot-package.json",
+    "/workspace/scratch/d3422440cdf1/omni-genesis/control/pilot/prepared-v1.json"
+  ],
+  "cwd": "/workspace/scratch/d3422440cdf1/omni-genesis/runtime-code/modules/atlas",
+  "started_at": "2026-11-13T15:42:42.669504+00:00",
+  "elapsed_seconds": 0.4200792259998707,
+  "exit_code": 0,
+  "stdout_sha256": "9bd8430b9bc14aa4f819f601d947bece53b7f686e0dd1383f897a92c311a14f8",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "output_exists": true,
+  "candidate_id": "e26f61d43768199a889f8a415639fc9cbc5587005368604000f982e5b6fde71d",
+  "contract": "ad290fab1d7410d7a1afe431573c03ff2e4deafaf8cf8bb058014be12b14fc3c",
+  "artifact_count": 1,
+  "observed_head": null,
+  "candidate_file_sha256": "b142c71975eb1dd0da43cdc711ceeae829b2502259500a0524063e76b1196d7b"
+}

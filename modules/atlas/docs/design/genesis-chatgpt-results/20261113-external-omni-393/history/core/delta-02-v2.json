@@ -1,0 +1,94 @@
+{
+  "source": "records-02.json",
+  "source_sha256": "3f8cc0330486e5fc2e5c4e80207a0441e31993782eef594bb220e24d4d5cb185",
+  "replacement": "records-02.v2.json",
+  "replacement_sha256": "1df9bcebbfc64e06bc85c3a5a2ffa6f0f9c7707ae37a4d2a065ef693c2e5aa1a",
+  "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "review_request": "Parent-delivered independent C02 finding: detached zero-grace Stop request is not immediate confirmed tree termination. No private evaluation material accessed.",
+  "changes": [
+    {
+      "finding": "C02 terminal-end adoption cleanup",
+      "record_index": 4,
+      "path": "native/omni/crates/hugr-omni/src/client/start.rs",
+      "reason": "The error branch calls stop_detached then returns; its implementation does not await Stopped and ignores submission errors.",
+      "fields": [
+        {
+          "field": "behavior[1]",
+          "before": "spawn_on builds Spawn from validated Spec, hands pipes to the supervisor and reclaims transferred Windows handles on pre-admission failure; terminal-end adoption failure stops the created tree immediately.",
+          "after": "spawn_on builds Spawn from validated Spec, hands pipes to the supervisor and reclaims transferred Windows handles on pre-admission failure; terminal-end adoption failure calls stop_detached(Duration::ZERO) to attempt a detached Stop request, then returns an error without awaiting tree-gone confirmation."
+        },
+        {
+          "field": "dependencies",
+          "before": [
+            "client platform modules implement pipe/handle transfer and module location.",
+            "spawn::Spec contains already resolved OS-string inputs."
+          ],
+          "after": [
+            "client platform modules implement pipe/handle transfer and module location.",
+            "spawn::Spec contains already resolved OS-string inputs.",
+            "client/mod.rs::Tree::stop_detached attempts cleanup-request submission without waiting for Stopped."
+          ]
+        },
+        {
+          "field": "failures_or_limits",
+          "before": [
+            "Windows trusted() returns true based on a documented per-user TEMP assumption; it performs no ACL check."
+          ],
+          "after": [
+            "Windows trusted() returns true based on a documented per-user TEMP assumption; it performs no ACL check.",
+            "The detached stop returns early outside the home process or when life is gone/lost, and ignores the tell result; this error path establishes neither successful Stop submission nor confirmed tree disappearance."
+          ]
+        }
+      ],
+      "supporting_evidence": [
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/start.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/client/start.rs",
+          "git_blob_sha": "e2183b63187db2578e60c44b24718d0771d1903b",
+          "source_sha256": "bb709e14c250e3557ffe2859d50b1759eebd517e37e71c4b170273e576776852",
+          "start_line": 162,
+          "end_line": 178,
+          "quote": "    let tree = Tree::new(sup.clone(), id, life, cfg!(unix) && pty.is_some());\n    let stdio = match (ends, host) {\n        (Some(ends), _) => sup.chan().pty(ends),\n        (None, [stdin, Some(stdout), stderr]) => Ok(HostStdio::Pipes { stdin, stdout, stderr }),\n        (None, _) => Err(std::io::Error::other(\"the supervisor sent no terminal ends\")),\n    };\n    match stdio {\n        Ok(stdio) => Ok(Spawned { tree, pid, stdio }),\n        Err(e) => {\n            // The tree exists in the supervisor: end it (dropping it then sends Release).\n            tree.stop_detached(Duration::ZERO);\n            Err(Error::host_ends(\n                \"cannot take the terminal ends of the started program\",\n                &e,\n            ))\n        }\n    }"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/mod.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/client/mod.rs",
+          "git_blob_sha": "3b0722feef193479d9f9c08bcdf6ad2ed27b71e5",
+          "source_sha256": "c6d0e33c4335ca67fc684bfddb4c192ce70347b2f5b929c58f8e6509b129588c",
+          "start_line": 148,
+          "end_line": 180,
+          "quote": "    /// One deadline for the whole tree: graceful now, forced at `grace`; resolves once the tree is gone\n    /// (at once if it already is). Overlapping calls share the earliest deadline (ADR-0005 R2).\n    pub(crate) async fn stop(&self, grace: Duration) -> Result<(), Error> {\n        self.sup.home()?;\n        let life = *self.life.borrow();\n        if life.gone {\n            return Ok(());\n        }\n        if life.lost {\n            return Err(self.lost());\n        }\n        let (id, grace_ms) = (self.id, millis(grace));\n        let stop = |req| Msg::Stop { req, id, grace_ms };\n        match self.sup.ask(Want::Stop, id, Class::Cleanup, stop).await? {\n            Answer::Stopped => Ok(()),\n            other => Err(self.refused(\"Stop\", &other)),\n        }\n    }\n\n    /// `stop` without waiting for the confirmation (for `Drop`); never blocks.\n    pub(crate) fn stop_detached(&self, grace: Duration) {\n        if !self.sup.at_home() {\n            return;\n        }\n        let life = *self.life.borrow();\n        if life.gone || life.lost {\n            return;\n        }\n        let (id, grace_ms) = (self.id, millis(grace));\n        let _ = self\n            .sup\n            .tell(Want::Stop, id, Class::Cleanup, |req| Msg::Stop { req, id, grace_ms });\n    }"
+        }
+      ]
+    }
+  ],
+  "additional_baseline_inputs_by_record": [
+    {
+      "record_index": 4,
+      "record_path": "native/omni/crates/hugr-omni/src/client/start.rs",
+      "additional_inputs": [
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/mod.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/client/mod.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "3b0722feef193479d9f9c08bcdf6ad2ed27b71e5",
+          "source_sha256": "c6d0e33c4335ca67fc684bfddb4c192ce70347b2f5b929c58f8e6509b129588c",
+          "source_bytes": 11037,
+          "line_count": 294,
+          "used_for": "Tree::stop versus stop_detached, lines 148–180: awaited Stopped confirmation versus conditional detached submission with ignored result. This is supporting source input, not a navigation-only reference."
+        }
+      ]
+    }
+  ],
+  "original_preserved": true,
+  "unchanged_record_indices": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "delivery_before_sha256": "d3a96af51ab584d215bd08e5dcd5a6396fa85553e8d74db1b294365ca8d5f926",
+  "delivery_after_sha256": "bf7792e2feafe535268212ec9fec5c3cf5eed1e4a5956c105641abb22821dafe",
+  "runtime_status": "NOT_RUN",
+  "acceptance": "Pending independent review; documentary checks do not constitute self-approval."
+}

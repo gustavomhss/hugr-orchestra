@@ -1,7 +1,7 @@
 {
   "schema": "omni-runtime-preparation/v1",
-  "recorded_at": "2026-11-13T15:11:09.827858+00:00",
-  "runtime_candidate": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "recorded_at": "2026-11-13T15:31:34.453305+00:00",
+  "runtime_candidate": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
   "runtime_release_commit": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
   "runtime_release_blob": "7513fcca63664ca02094e9ed9b8fab090c20295d",
   "local_git_checkout": false,
@@ -31,15 +31,23 @@
     ],
     "cwd": "modules/atlas",
     "exit_code": 0,
-    "scope": "415 source/config/runtime files materialized and hash-verified; test files were not materialized or executed. This is not complete repository or Omni CI."
+    "elapsed_seconds": 5.65587284600042,
+    "scope": "415 MCP-captured and Git-SHA verified runtime/config files; no product tests and no complete repository CI."
   },
   "operations": {
-    "prepare": "NOT_RUN",
+    "prepare": "PROVEN_PARTIAL_C01",
     "binding": "NOT_RUN",
     "publish_isolated": "NOT_RUN",
     "ownership.index": "NOT_RUN",
     "ownership.read": "NOT_RUN",
     "independent_consumer": "NOT_RUN"
   },
-  "product_tests": "NOT_RUN"
+  "product_tests": "NOT_RUN",
+  "source_root_git_index": "New unborn isolated index containing426 captured native/omni blobs with baseline modes; no historical commit, no remote, HEAD remains null.",
+  "runtime_selection_reason": "Pinned S4 release identifies this candidate for its corrected common controls. The native CLI is present unchanged. Five captured runtime files differ from the earlier native sample; all415 selected files were checked against this candidate tree before compilation.",
+  "runtime_source_map": "verification/runtime-source-map.json",
+  "previous_preparation": "history/runtime/preparation-e3a8ab8.json",
+  "operation_receipts": {
+    "prepare": "runtime/pilot/prepare-v1.receipt.json"
+  }
 }

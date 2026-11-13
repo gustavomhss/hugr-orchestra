@@ -1,7 +1,7 @@
 {
   "schema": "genesis-external-production-summary/v1",
   "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
-  "production_state": "COMPLETE_PENDING_INDEPENDENT_REVIEW",
+  "production_state": "L1_PRODUCED_PENDING_INDEPENDENT_REVIEW",
   "actors": [
     {
       "role": "core",
@@ -30,13 +30,13 @@
     "/root/omni_review_courier/omni_j2"
   ],
   "review_coordinator": "/root/omni_review_courier",
-  "private_evidence": "Reserved oracle, original dispatch/session captures and private ledgers are not published. Their existence and public digest commitment do not make withheld material publicly reproducible.",
+  "private_evidence": "Reserved oracle and review-packet/opinion files remain private. Public summaries disclose their digest and visibility limits. A complete automatic host-transcript export or provider usage ledger is not claimed.",
   "model_diversity": "NOT_ESTABLISHED; separate contexts only",
   "token_usage": "UNKNOWN",
   "physical_provider_attempts": "UNKNOWN",
   "billed_cost": "UNKNOWN",
   "layers": {
-    "L1": "393 source records produced; independent review in progress",
+    "L1": "393 source records produced;11 current records accepted by both persistent judges;382 remain pending.",
     "L2": "Authored drafts only; revalidation/release awaits accepted L1",
     "L3": "NOT_PRODUCED",
     "L4": "NOT_PRODUCED"

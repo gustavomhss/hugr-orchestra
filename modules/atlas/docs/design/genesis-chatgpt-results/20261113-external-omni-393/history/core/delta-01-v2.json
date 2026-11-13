@@ -1,0 +1,209 @@
+{
+  "source": "records-01.json",
+  "source_sha256": "dc5c374b7ff31bcadbbf10ee7a2e2b224885bc70b9e38f8b1b64549c7d1ec849",
+  "replacement": "records-01.v2.json",
+  "replacement_sha256": "88d3b68a0f9744b2351d7930c5e4cdfe0b7db86d6c8a2d7a2597a0f8c18aac34",
+  "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "review_request": "Parent-delivered union of independent C01 findings F1, F2, F3 and J2 additional; no private evaluation materials accessed.",
+  "changes": [
+    {
+      "finding": "C01 F1",
+      "reason": "Limit Tokio feature claims to the explicit dependency requests; the manifest does not establish the resolved feature union.",
+      "fields": [
+        {
+          "record_index": 0,
+          "path": "native/omni/crates/hugr-omni/Cargo.toml",
+          "field": "purpose",
+          "before": "Defines the internal Rust host crate and its permitted runtime surfaces.",
+          "after": "Defines the internal Rust host crate's package metadata and requested dependency features."
+        },
+        {
+          "record_index": 0,
+          "path": "native/omni/crates/hugr-omni/Cargo.toml",
+          "field": "behavior[1]",
+          "before": "Runtime Tokio enables threads, synchronization, time, I/O and networking, with no process feature; OS bindings are selected by cfg.",
+          "after": "This manifest requests Tokio rt-multi-thread, sync, time, io-util and net without explicitly requesting process; OS bindings are selected by cfg."
+        },
+        {
+          "record_index": 0,
+          "path": "native/omni/crates/hugr-omni/Cargo.toml",
+          "field": "contracts[0]",
+          "before": "Host process creation belongs to the supervisor; this manifest does not enable tokio::process.",
+          "after": "The listed Tokio features are this manifest's explicit requests, not a statement of Cargo's resolved feature union."
+        },
+        {
+          "record_index": 0,
+          "path": "native/omni/crates/hugr-omni/Cargo.toml",
+          "field": "failures_or_limits[0]",
+          "before": "Inherited versions cannot be established from this manifest alone.",
+          "after": "Inherited versions and the resolved Cargo feature union cannot be established from this manifest alone."
+        }
+      ],
+      "supporting_evidence": [
+        {
+          "path": "native/omni/crates/hugr-omni/Cargo.toml",
+          "git_blob_sha": "da941bc372f94d998e00b51fba25b2152883db0e",
+          "source_sha256": "9793a8c1fc11d81a16f4741aef8e9380d8d4b91bd3b0d87d43aca65401407da2",
+          "start_line": 11,
+          "end_line": 18,
+          "quote": "[dependencies]\nomni-proto.workspace = true\ntokio = { workspace = true, features = [\"rt-multi-thread\", \"sync\", \"time\", \"io-util\", \"net\"] }\ntokio-util.workspace = true\nsysinfo.workspace = true\n\n[target.'cfg(unix)'.dependencies]\nlibc.workspace = true"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/Cargo.toml",
+          "git_blob_sha": "da941bc372f94d998e00b51fba25b2152883db0e",
+          "source_sha256": "9793a8c1fc11d81a16f4741aef8e9380d8d4b91bd3b0d87d43aca65401407da2",
+          "start_line": 31,
+          "end_line": 38,
+          "quote": "[dev-dependencies]\nserde.workspace = true\nserde_json.workspace = true\nregex.workspace = true\ntokio = { workspace = true, features = [\"macros\", \"rt-multi-thread\", \"time\"] }\n\n[lints]\nworkspace = true"
+        }
+      ]
+    },
+    {
+      "finding": "C01 F2",
+      "reason": "Replace absolute identity-safe termination with identity-checked termination and distinguish missing-identity abandonment from the documented macOS check-to-signal PID-reuse interval.",
+      "fields": [
+        {
+          "record_index": 5,
+          "path": "native/omni/crates/hugr-omni/src/client/channel.rs",
+          "field": "dependencies[1]",
+          "before": "client platform Chan provides close and identity-safe termination.",
+          "after": "The platform Chan provides close and identity-checked termination; Unix identity checks are implemented in client/keeper.rs."
+        },
+        {
+          "record_index": 5,
+          "path": "native/omni/crates/hugr-omni/src/client/channel.rs",
+          "field": "failures_or_limits",
+          "before": [
+            "When supervisor identity cannot be checked, failure explicitly reports possible abandonment rather than risking a reused PID."
+          ],
+          "after": [
+            "When required supervisor identity is unavailable, generation failure reports possible abandonment and the keeper declines to signal.",
+            "Distinct from abandonment, macOS keeper.rs checks the exit watch and start time then signals the PID; its documented check-to-signal interval can still permit PID reuse (lines 229–244)."
+          ]
+        }
+      ],
+      "supporting_evidence": [
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/channel.rs",
+          "git_blob_sha": "7e47de8854dd70471bdde4ed94974e53ab494583",
+          "source_sha256": "b68784f859ee9387720b8942a5821af41db720faf81423ba938384301c22bf15",
+          "start_line": 340,
+          "end_line": 351,
+          "quote": "    /// Ends this generation: every waiter gets `Io`, the channel closes (a live supervisor then stops\n    /// every tree, as on host death; one that does not exit within `bound` is killed by identity, or, where\n    /// its identity cannot be checked, left running and named in the error), and later calls fail at once.\n    /// Never blocks.\n    pub(super) fn die(&self, why: String) {\n        let why = match self.chan.can_end() {\n            true => why,\n            false => format!(\n                \"{why}; should it not exit, it is abandoned: its identity cannot be checked here (no pidfd on \\\n                 Linux, no start time on macOS), so ending it could hit another process\"\n            ),\n        };"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/keeper.rs",
+          "git_blob_sha": "96424d1b83dc75fdff07824c8979136a81ad31ee",
+          "source_sha256": "738da168685021d02ab413cc9b534c90cde2322728ff1d84a42ebd2e8372c757",
+          "start_line": 229,
+          "end_line": 244,
+          "quote": "    pub(super) fn kill(&self) -> Kill {\n        use std::sync::atomic::Ordering;\n        if self.exited.load(Ordering::Acquire) || self.exit_fired() {\n            self.exited.store(true, Ordering::Release);\n            return Kill::Gone;\n        }\n        match (self.start, started(self.pid)) {\n            (None, _) => Kill::Abandoned,\n            (Some(then), Some(now)) if then == now => {\n                // The number still names the process we started (same start time). Residual window: it could\n                // exit, be reaped by someone else and its number be reused in the microseconds between this\n                // check and the signal; declared in GUARANTEES.md, row \"A stuck supervisor\".\n                // SAFETY: `kill` changes no memory; the target was just checked as our supervisor.\n                unsafe { libc::kill(self.pid, libc::SIGKILL) };\n                Kill::Sent\n            }"
+        }
+      ]
+    },
+    {
+      "finding": "C01 F3",
+      "reason": "Limit the PID-guard claim to request submission; forget mutates local state without a guard inside that method.",
+      "fields": [
+        {
+          "record_index": 5,
+          "path": "native/omni/crates/hugr-omni/src/client/channel.rs",
+          "field": "contracts[0]",
+          "before": "A generation is bound to the host PID; inherited handles fail before mutation after fork.",
+          "after": "Request submission checks the host PID through home() before incrementing its request ID or mutating request state; forget() directly removes a local tree entry without its own home check."
+        }
+      ],
+      "supporting_evidence": [
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/channel.rs",
+          "git_blob_sha": "7e47de8854dd70471bdde4ed94974e53ab494583",
+          "source_sha256": "b68784f859ee9387720b8942a5821af41db720faf81423ba938384301c22bf15",
+          "start_line": 214,
+          "end_line": 221,
+          "quote": "    /// True in the process that started this generation; false in a forked copy (R6).\n    pub(super) fn at_home(&self) -> bool {\n        std::process::id() == self.home\n    }\n\n    pub(super) fn home(&self) -> Result<(), Error> {\n        super::check_home(self.home)\n    }"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/channel.rs",
+          "git_blob_sha": "7e47de8854dd70471bdde4ed94974e53ab494583",
+          "source_sha256": "b68784f859ee9387720b8942a5821af41db720faf81423ba938384301c22bf15",
+          "start_line": 261,
+          "end_line": 278,
+          "quote": "    /// The host dropped its handle: a later `Exited` for `id` is ignored.\n    pub(super) fn forget(&self, id: u64) {\n        lock(&self.st).trees.remove(&id);\n    }\n\n    /// Registers and writes (or queues) one request; never blocks. An error with the generation still\n    /// alive means nothing was sent: every failure after registration ends the generation.\n    fn request(\n        &self,\n        want: Want,\n        id: u64,\n        class: Class,\n        to: Waiter,\n        msg: impl FnOnce(u64) -> Msg,\n        fds: Vec<Pipe>,\n    ) -> Result<(), Error> {\n        self.home()?;\n        let req = self.next.fetch_add(1, Ordering::Relaxed);"
+        }
+      ],
+      "record_evidence_added": [
+        {
+          "start_line": 214,
+          "end_line": 221,
+          "quote": "    /// True in the process that started this generation; false in a forked copy (R6).\n    pub(super) fn at_home(&self) -> bool {\n        std::process::id() == self.home\n    }\n\n    pub(super) fn home(&self) -> Result<(), Error> {\n        super::check_home(self.home)\n    }"
+        },
+        {
+          "start_line": 261,
+          "end_line": 264,
+          "quote": "    /// The host dropped its handle: a later `Exited` for `id` is ignored.\n    pub(super) fn forget(&self, id: u64) {\n        lock(&self.st).trees.remove(&id);\n    }"
+        }
+      ]
+    },
+    {
+      "finding": "C01 J2 additional",
+      "reason": "Separate collection input bytes from output limits; Options has input data but no input-size-limit field.",
+      "fields": [
+        {
+          "record_index": 2,
+          "path": "native/omni/crates/hugr-omni/src/api/command.rs",
+          "field": "behavior[2]",
+          "before": "Collection input/output limits, cancellation, text decoding and pipe backpressure live in process Options rather than the wire request.",
+          "after": "Run input data, per-stream output limits, cancellation, text decoding and pipe backpressure live in process Options rather than the wire request; Options has no input-size-limit field."
+        }
+      ],
+      "supporting_evidence": [
+        {
+          "path": "native/omni/crates/hugr-omni/src/api/command.rs",
+          "git_blob_sha": "ca33173b6f5b60c213cff9b02ac10bf31eaa9022",
+          "source_sha256": "9b130c6166ef54e2cad64a9ea058c76db05a3264bb4daae5f150755130c09220",
+          "start_line": 116,
+          "end_line": 126,
+          "quote": "    /// Cancels the run when `token` is cancelled: the tree is stopped and the reason is `Aborted`.\n    pub fn cancel_on(&mut self, token: CancellationToken) -> &mut Self {\n        self.opts.cancel = Some(token);\n        self\n    }\n\n    /// `true` (default): output as UTF-8 text (`Data::Text`); `false`: raw bytes (`Data::Bytes`), lossless.\n    pub fn text(&mut self, yes: bool) -> &mut Self {\n        self.opts.text = yes;\n        self\n    }"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/api/command.rs",
+          "git_blob_sha": "ca33173b6f5b60c213cff9b02ac10bf31eaa9022",
+          "source_sha256": "9b130c6166ef54e2cad64a9ea058c76db05a3264bb4daae5f150755130c09220",
+          "start_line": 140,
+          "end_line": 159,
+          "quote": "    /// `run()` only: written to stdin, which is then closed (pipe mode).\n    pub fn input(&mut self, data: impl Into<Vec<u8>>) -> &mut Self {\n        self.opts.input = Some(data.into());\n        self\n    }\n\n    /// `run()` only: per-stream limit (default 16 MiB); above it `run()` fails with `OutputLimit`.\n    pub fn max_output_bytes(&mut self, bytes: usize) -> &mut Self {\n        self.opts.max_output_bytes = bytes;\n        self\n    }\n\n    /// `spawn()` with pipes only (default `false`): while a consumer is attached and a stream has 16 MiB waiting\n    /// for it, the library stops reading that stream instead of dropping, so the pipe fills and the child blocks\n    /// on its writes; nothing is ever lost and no `lost_before` appears. With no consumer attached the usual\n    /// budget applies. `wait()` and `stop()` never depend on the consumer: `stop()` still ends the tree, and\n    /// detaching or stopping lets the output go. Ignored by `run()` and by terminals.\n    pub fn backpressure(&mut self, yes: bool) -> &mut Self {\n        self.opts.backpressure = yes;\n        self"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/process/mod.rs",
+          "git_blob_sha": "cef9ad00238c99617b6a2ea2329e5fd0556af5c4",
+          "source_sha256": "2573e21fdf20f5e1087ddcc00a34abf534f5fe487cf3c84bbed6e20b0b28aa15",
+          "start_line": 25,
+          "end_line": 35,
+          "quote": "/// What `spawn::prepare` does not need (everything validated, incl. `timeout`, is in `spawn::Request`).\n#[derive(Debug, Clone)]\npub(crate) struct Options {\n    pub cancel: Option<CancellationToken>,\n    pub text: bool,\n    pub input: Option<Vec<u8>>,\n    pub max_output_bytes: usize,\n    /// `spawn()` with pipes only (WP-H): an attached consumer that falls behind holds the child back instead of\n    /// losing output.\n    pub backpressure: bool,\n}"
+        }
+      ],
+      "record_evidence_added": [
+        {
+          "start_line": 116,
+          "end_line": 126,
+          "quote": "    /// Cancels the run when `token` is cancelled: the tree is stopped and the reason is `Aborted`.\n    pub fn cancel_on(&mut self, token: CancellationToken) -> &mut Self {\n        self.opts.cancel = Some(token);\n        self\n    }\n\n    /// `true` (default): output as UTF-8 text (`Data::Text`); `false`: raw bytes (`Data::Bytes`), lossless.\n    pub fn text(&mut self, yes: bool) -> &mut Self {\n        self.opts.text = yes;\n        self\n    }"
+        },
+        {
+          "start_line": 140,
+          "end_line": 150,
+          "quote": "    /// `run()` only: written to stdin, which is then closed (pipe mode).\n    pub fn input(&mut self, data: impl Into<Vec<u8>>) -> &mut Self {\n        self.opts.input = Some(data.into());\n        self\n    }\n\n    /// `run()` only: per-stream limit (default 16 MiB); above it `run()` fails with `OutputLimit`.\n    pub fn max_output_bytes(&mut self, bytes: usize) -> &mut Self {\n        self.opts.max_output_bytes = bytes;\n        self\n    }"
+        }
+      ]
+    }
+  ],
+  "original_preserved": true,
+  "unchanged_record_indices": [
+    1,
+    3,
+    4
+  ],
+  "delivery_before_sha256": "c44789b1422deb78a09d978422f4f5fffcaa14015d0359c242f962b9fdf86255",
+  "delivery_after_sha256": "d3a96af51ab584d215bd08e5dcd5a6396fa85553e8d74db1b294365ca8d5f926",
+  "runtime_status": "NOT_RUN",
+  "acceptance": "Pending independent review; documentary checks do not constitute self-approval."
+}

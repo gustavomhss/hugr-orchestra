@@ -1,0 +1,25 @@
+{
+  "schema": "omni-review-negative-results/v1",
+  "plan_sha256": "9db782965967920df352d86f979553a22eb27eb3c7f4581ac2c022ea7985db2e",
+  "verifier_sha256": "fa0c4a7273d9812b9774ed70bc4c92fbb9a4823d24d774ae220c2baec0803d21",
+  "executed_at": "2026-11-13T15:48:13.569933+00:00",
+  "cases": [
+    {
+      "id": "REVIEW-N1",
+      "result": "REJECTED_AS_REQUIRED",
+      "error_codes": [
+        "REVIEW_BODY_BINDING"
+      ]
+    },
+    {
+      "id": "REVIEW-N2",
+      "result": "REJECTED_AS_REQUIRED",
+      "error_codes": [
+        "REVIEWER_PAIR"
+      ]
+    }
+  ],
+  "product_source_changes": 0,
+  "product_execution": "NOT_RUN",
+  "scope": "Temporary documentary artifact corruption only; no new semantic judgments."
+}

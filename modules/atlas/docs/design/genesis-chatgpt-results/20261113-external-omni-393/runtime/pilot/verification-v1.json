@@ -1,0 +1,49 @@
+{
+  "schema": "omni-prepared-cas-verification/v1",
+  "candidate_id": "e26f61d43768199a889f8a415639fc9cbc5587005368604000f982e5b6fde71d",
+  "contract_id": "ad290fab1d7410d7a1afe431573c03ff2e4deafaf8cf8bb058014be12b14fc3c",
+  "contract_object": {
+    "kind": "ownership-contract",
+    "version": 1,
+    "criteria": [
+      "C1",
+      "C2",
+      "C3",
+      "C4",
+      "C5",
+      "C6",
+      "C7",
+      "runtime-import-binding"
+    ]
+  },
+  "preserved_reference_bodies": 6,
+  "current_input_observations": 23,
+  "entries": [
+    {
+      "key": "omni393.core.records-01",
+      "result": "b487fb9f8ad998bea86f8dba85e2d75dcd5e90e1b42c6e63450b7ec97b2835d4",
+      "inputs": "4e1174bae334a10871f921e6fc4eb04b17329e1cac39a4166531a25e0433631b",
+      "body": "81d5d27c8165f5a83ba2d399beb2e636935b9cacd6dd342168da96f6323b4a4d",
+      "body_sha256": "88d3b68a0f9744b2351d7930c5e4cdfe0b7db86d6c8a2d7a2597a0f8c18aac34",
+      "body_bytes": 21914,
+      "result_object": {
+        "kind": "ownership-result",
+        "version": 1,
+        "body": "81d5d27c8165f5a83ba2d399beb2e636935b9cacd6dd342168da96f6323b4a4d",
+        "authority": {
+          "scope": "native/omni",
+          "basis": "User-reserved residual393-source external slice; source-only documentary claims at exact baseline; no runtime/publication authority."
+        },
+        "validity": "supported",
+        "gaps": [
+          "Documentary source interpretation only; current runtime/platform behavior is not established by these six records."
+        ],
+        "evidence": [
+          "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
+        ]
+      }
+    }
+  ],
+  "status": "VERIFIED_CONTENT_IDENTITIES",
+  "limit": "This is a post-operation content verification, not a semantic judgment, runtime binding approval, product test suite or publication."
+}

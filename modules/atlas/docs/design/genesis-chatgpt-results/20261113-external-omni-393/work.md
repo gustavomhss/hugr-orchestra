@@ -12,13 +12,13 @@ Branch: `genesis-external-omni-393`. Only `modules/atlas/docs/design/genesis-cha
 
 | Owner | Paths | Task identity returned by host | State |
 | --- | ---: | --- | --- |
-| core | 134 | /root/omni_core_author | RUNNING |
-| validation | 147 | /root/omni_validation_author | RUNNING |
-| surface | 112 | /root/omni_surface_author | RUNNING |
+| core | 134 | /root/omni_core_author | L1 produced; author corrections under independent review |
+| validation | 147 | /root/omni_validation_author | L1 produced; independent review pending |
+| surface | 112 | /root/omni_surface_author | L1 produced; independent review pending |
 
-Private independent cases and public criteria were fixed before the three fresh author dispatches. The private oracle has a public SHA-256 commitment in criteria-freeze.json; its contents, private ledgers and conversation captures are not published. Exact local author requests and responses are retained privately. The three producers have disjoint write areas and source ownership. Root alone writes remotely.
+Private independent cases and public criteria were fixed before the three fresh author dispatches. The private oracle has a public SHA-256 commitment in criteria-freeze.json; its contents, private ledgers and conversation captures are not published. The exact shared author recipe and authored bodies are preserved. Native dispatches remain part of the host conversation; no complete automatic host-transcript export is claimed. The three producers have disjoint write areas and source ownership. Root alone writes remotely.
 
-Next: finish actual full-blob reads and L1/L2 semantic records, collect exact bytes, form two new independent judges with clean contexts, correct mandatory findings with preserved history, then produce and review dependent L3/L4 relationship/maintenance material. No author judges their own output.
+Current queue: finish both independent reviews of all L1 records, return mandatory corrections to their original authors, then finalize/review L2 and produce/review dependent L3/L4 relationship and maintenance material. No author judges their own output.
 
 ## Evidence and limits
 
@@ -35,3 +35,11 @@ The supplied external-slice scope overrides the original S5 branch/path/populati
 All 393 assigned sources now have authored read-based records; all 393 passed documentary source/blob/byte/quote/coverage checks. Six deliberate artifact-corruption controls were rejected by that verifier. These are documentation controls, not Omni product tests. The three author waves ended; the fresh independent pair is `/root/omni_review_courier/omni_j1` and `/root/omni_review_courier/omni_j2`, coordinated by a nonauthor courier. Formal L1 judgment is active. L2 notes are preserved as drafts and will be revalidated against accepted L1 before release; L3/L4 remain pending. No layer has self-approval.
 
 Bun 1.3.14 and the pinned S4 runtime candidate were materialized in isolated scratch; 415 runtime source/config files were hash-verified and compiled through the package typecheck command. This did not execute Omni tests, full repository CI or any Atlas consumption operation. Detailed scope is in verification/runtime-preparation.json.
+
+## Independent-review correction checkpoint
+
+The first two core batches (11 distinct sources) received documentary review from both persistent judges. Their original versions required corrections; they are preserved under history/core. Current records-01.v2 and records-02.v3 distinguish declared versus resolved Cargo features, input data versus output limits, identity checks versus platform races, protocol decode versus client routing, and a detached Stop attempt versus confirmed disappearance. C01v2 and C02v3 are now accepted by both judges: 11 of 393 current source records, with no layer release. The public review summary separates author findings from corrected courier transmission errors and discloses limits of the private evidence.
+
+The portable verification/verify.py reconstructs the 96 Git trees in the recursive census and checks all 426 captured blobs, the exact 393-source mapping, LF-based excerpts and native body hashes. It is a documentation verifier, not a semantic judge or product test. A new isolated Git index contains the 426 captured source paths, blob identities and modes; it has no commit, remote or historical HEAD. It supports genuine membership observation without claiming a clone or inventing the baseline commit.
+
+Before any native-package operation, the runtime code was moved from the earlier S4 sample candidate to S4's pinned common-control candidate `7102f2e3a1a9a3822bcd0ae054b36ecffe9da553`. All 415 materialized files match that candidate's recursive tree, and its package typecheck returned 0. The earlier preparation evidence remains under history/runtime. The real native prepare operation for the explicitly partial C01v2 selection returned 0 and preserved one artifact covering six sources. Candidate: e26f61d43768199a889f8a415639fc9cbc5587005368604000f982e5b6fde71d. Post-operation verification confirmed its 23 current inputs and exact accepted body/CAS identities. Binding, isolated publication, ownership.index/read and independent consumption remain NOT_RUN. See runtime/pilot for the actual receipt and prepared candidate; the main package remains incomplete.

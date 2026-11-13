@@ -8,15 +8,15 @@
   "warnings": [],
   "record_files": [
     {
-      "path": "authors/core/records-01.json",
-      "sha256": "dc5c374b7ff31bcadbbf10ee7a2e2b224885bc70b9e38f8b1b64549c7d1ec849",
-      "bytes": 19710,
+      "path": "authors/core/records-01.v2.json",
+      "sha256": "88d3b68a0f9744b2351d7930c5e4cdfe0b7db86d6c8a2d7a2597a0f8c18aac34",
+      "bytes": 21914,
       "entries": 6
     },
     {
-      "path": "authors/core/records-02.json",
-      "sha256": "3f8cc0330486e5fc2e5c4e80207a0441e31993782eef594bb220e24d4d5cb185",
-      "bytes": 20939,
+      "path": "authors/core/records-02.v3.json",
+      "sha256": "8c6515b455eba0637b66a6999c83c7c80b2a0624720680034e62d5b450c2f913",
+      "bytes": 26792,
       "entries": 5
     },
     {
@@ -239,7 +239,7 @@
   "records": [
     {
       "path": "native/omni/crates/hugr-omni/Cargo.toml",
-      "record_file": "authors/core/records-01.json",
+      "record_file": "authors/core/records-01.v2.json",
       "index": 0,
       "owner": "core",
       "git_blob_sha": "da941bc372f94d998e00b51fba25b2152883db0e",
@@ -250,7 +250,7 @@
     },
     {
       "path": "native/omni/crates/hugr-omni/README.md",
-      "record_file": "authors/core/records-01.json",
+      "record_file": "authors/core/records-01.v2.json",
       "index": 1,
       "owner": "core",
       "git_blob_sha": "945f24792c30a37d3d445a28c029a5ec905793cc",
@@ -261,18 +261,18 @@
     },
     {
       "path": "native/omni/crates/hugr-omni/src/api/command.rs",
-      "record_file": "authors/core/records-01.json",
+      "record_file": "authors/core/records-01.v2.json",
       "index": 2,
       "owner": "core",
       "git_blob_sha": "ca33173b6f5b60c213cff9b02ac10bf31eaa9022",
       "sha256": "9b130c6166ef54e2cad64a9ea058c76db05a3264bb4daae5f150755130c09220",
       "bytes": 7396,
       "lines": 192,
-      "evidence_excerpts": 3
+      "evidence_excerpts": 5
     },
     {
       "path": "native/omni/crates/hugr-omni/src/api/mod.rs",
-      "record_file": "authors/core/records-01.json",
+      "record_file": "authors/core/records-01.v2.json",
       "index": 3,
       "owner": "core",
       "git_blob_sha": "4b3f37cc5070adaa0ae9f6d461e23f6faf58054e",
@@ -283,7 +283,7 @@
     },
     {
       "path": "native/omni/crates/hugr-omni/src/binding.rs",
-      "record_file": "authors/core/records-01.json",
+      "record_file": "authors/core/records-01.v2.json",
       "index": 4,
       "owner": "core",
       "git_blob_sha": "e939c1d2c863fd35bde982a1232b4ffc1169c57e",
@@ -294,29 +294,29 @@
     },
     {
       "path": "native/omni/crates/hugr-omni/src/client/channel.rs",
-      "record_file": "authors/core/records-01.json",
+      "record_file": "authors/core/records-01.v2.json",
       "index": 5,
       "owner": "core",
       "git_blob_sha": "7e47de8854dd70471bdde4ed94974e53ab494583",
       "sha256": "b68784f859ee9387720b8942a5821af41db720faf81423ba938384301c22bf15",
       "bytes": 13324,
       "lines": 386,
-      "evidence_excerpts": 2
+      "evidence_excerpts": 4
     },
     {
       "path": "native/omni/crates/hugr-omni/src/client/channel/route.rs",
-      "record_file": "authors/core/records-02.json",
+      "record_file": "authors/core/records-02.v3.json",
       "index": 0,
       "owner": "core",
       "git_blob_sha": "e1eddb04bc55bdfde9cb5ea70f84b0c21b3d40f8",
       "sha256": "a144d18da03062841d9c6f96919941ce0de099b6bc03ef1619c60825d12521cf",
       "bytes": 10591,
       "lines": 260,
-      "evidence_excerpts": 3
+      "evidence_excerpts": 4
     },
     {
       "path": "native/omni/crates/hugr-omni/src/client/hold.rs",
-      "record_file": "authors/core/records-02.json",
+      "record_file": "authors/core/records-02.v3.json",
       "index": 1,
       "owner": "core",
       "git_blob_sha": "1a3ab7d7cef5ae6be67255328b429ce3e958e9d9",
@@ -327,36 +327,36 @@
     },
     {
       "path": "native/omni/crates/hugr-omni/src/client/keeper.rs",
-      "record_file": "authors/core/records-02.json",
+      "record_file": "authors/core/records-02.v3.json",
       "index": 2,
       "owner": "core",
       "git_blob_sha": "96424d1b83dc75fdff07824c8979136a81ad31ee",
       "sha256": "738da168685021d02ab413cc9b534c90cde2322728ff1d84a42ebd2e8372c757",
       "bytes": 12132,
       "lines": 291,
-      "evidence_excerpts": 2
+      "evidence_excerpts": 3
     },
     {
       "path": "native/omni/crates/hugr-omni/src/client/mod.rs",
-      "record_file": "authors/core/records-02.json",
+      "record_file": "authors/core/records-02.v3.json",
       "index": 3,
       "owner": "core",
       "git_blob_sha": "3b0722feef193479d9f9c08bcdf6ad2ed27b71e5",
       "sha256": "c6d0e33c4335ca67fc684bfddb4c192ce70347b2f5b929c58f8e6509b129588c",
       "bytes": 11037,
       "lines": 294,
-      "evidence_excerpts": 3
+      "evidence_excerpts": 4
     },
     {
       "path": "native/omni/crates/hugr-omni/src/client/start.rs",
-      "record_file": "authors/core/records-02.json",
+      "record_file": "authors/core/records-02.v3.json",
       "index": 4,
       "owner": "core",
       "git_blob_sha": "e2183b63187db2578e60c44b24718d0771d1903b",
       "sha256": "bb709e14c250e3557ffe2859d50b1759eebd517e37e71c4b170273e576776852",
       "bytes": 11494,
       "lines": 297,
-      "evidence_excerpts": 4
+      "evidence_excerpts": 6
     },
     {
       "path": "native/omni/crates/hugr-omni/src/client/tests/channel.rs",

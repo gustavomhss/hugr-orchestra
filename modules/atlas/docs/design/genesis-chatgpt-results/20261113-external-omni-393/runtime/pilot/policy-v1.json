@@ -1,0 +1,12 @@
+{
+  "t0Heuristic": {
+    "keywords": []
+  },
+  "authz": {
+    "scopes": {
+      "native/omni": [
+        "/root"
+      ]
+    }
+  }
+}

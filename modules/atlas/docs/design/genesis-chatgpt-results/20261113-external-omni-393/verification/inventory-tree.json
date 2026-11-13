@@ -1,0 +1,3561 @@
+{
+  "schema": "omni-baseline-tree/v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "git_tree_sha": "6d1020e8641d699f2f3eeef3007b2749fb6b4c28",
+  "path": "native/omni",
+  "truncated": false,
+  "entries": [
+    {
+      "path": ".cargo",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "ad9c0a324dc6dca402454dd52185f0deedb4d1b7"
+    },
+    {
+      "path": ".cargo/config.toml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e8643e64f4ff385183bc6f0e65b64f34f80bd742",
+      "size": 543
+    },
+    {
+      "path": ".claude-plugin",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "1a1059da8eb9710543ef48d26acba874867cbac4"
+    },
+    {
+      "path": ".claude-plugin/plugin.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "dbc871296a40b77a54780e3ac7464cc1edfead1c",
+      "size": 573
+    },
+    {
+      "path": ".github",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "06e7c3b28e37e5ee919b6e805495fa219bdcd68a"
+    },
+    {
+      "path": ".github/review",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "460e74f1d0a6347bce5ad1b0265b17d7acb4e334"
+    },
+    {
+      "path": ".github/review/schema.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "71d9964db3b8215fdaed19d5838668624feb3583",
+      "size": 1869
+    },
+    {
+      "path": ".github/workflows",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "5fcd782a57a031854c5ba38d90370a512f5a6bba"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bf3f2d38a3eeb79bd3d48990e8ed87b4e2745662",
+      "size": 1993
+    },
+    {
+      "path": ".github/workflows/release.yml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "edbfb28f9f152247e35e9650b37b2fa4172aef88",
+      "size": 4216
+    },
+    {
+      "path": ".gitignore",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a03fe47e270f72fd3bd6d10178a555d4df6aa2e2",
+      "size": 90
+    },
+    {
+      "path": "AGENTS.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d934b4eb0318ca6ec9286a944d1bab90d7d80dff",
+      "size": 7616
+    },
+    {
+      "path": "CLAUDE.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "43c994c2d3617f947bcb5adf1933e21dabe46bb5",
+      "size": 11
+    },
+    {
+      "path": "Cargo.lock",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cc4933b127bf21bb2fc38eb7d54b7b85f9eea057",
+      "size": 16829
+    },
+    {
+      "path": "Cargo.toml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7103497ef0bb44c9f2b9c174d4f66f4020d223d9",
+      "size": 1625
+    },
+    {
+      "path": "GUARANTEES.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f51a3796266b532865e59e1b1f8147ff2ff23573",
+      "size": 7436
+    },
+    {
+      "path": "HANDOFF.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "99832d7179bbc66139680336b53383288f71d9ab",
+      "size": 17278
+    },
+    {
+      "path": "LICENSE-APACHE",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "57bc88a15a0ee8266c259b2667e64608d3f7e292",
+      "size": 11358
+    },
+    {
+      "path": "LICENSE-MIT",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "732f302f865abcb11bd44768f0b7339a47903e14",
+      "size": 1080
+    },
+    {
+      "path": "PLAN.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f8a105e63117dfb8a5ad1c911210b3993c34e1ca",
+      "size": 85875
+    },
+    {
+      "path": "README.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8d6e0747f9669b0fe2482ae9519dd5eb64bc28ef",
+      "size": 5120
+    },
+    {
+      "path": "bindings",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "dec10ef36f4ec50fa2d5b869615a14ca9692ea85"
+    },
+    {
+      "path": "bindings/node",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "563bf8e37d552d9926cdac442641fec4d916dacf"
+    },
+    {
+      "path": "bindings/node/Cargo.toml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1ece738f52f35ebb5f2b133c7e4069ef4f681007",
+      "size": 972
+    },
+    {
+      "path": "bindings/node/README.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f3c7e2d81621457a856aaca9b920416282483e99",
+      "size": 2772
+    },
+    {
+      "path": "bindings/node/build.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6263bc1e8e7436198a3a4cee2231e2b61507fb92",
+      "size": 390
+    },
+    {
+      "path": "bindings/node/examples",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "a11c8b3b97f74ae0a8767dcca1c1098ff4a29dfb"
+    },
+    {
+      "path": "bindings/node/examples/quickstart.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fb0e2ae70b368c4e3209cd8902a955295712fa5a",
+      "size": 414
+    },
+    {
+      "path": "bindings/node/index.d.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "67471a388e5c12c479a3fadf0cd8e07300bae2d5",
+      "size": 9044
+    },
+    {
+      "path": "bindings/node/index.js",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e24857529d38c479965318e2ef2d75a6f655440b",
+      "size": 12580
+    },
+    {
+      "path": "bindings/node/npm",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "4695e1c1d4139e11cb29efbfc0e70fad8ffc70b7"
+    },
+    {
+      "path": "bindings/node/npm/README.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5a2f4714516a2364e183dd24b00565cd7cb90482",
+      "size": 9305
+    },
+    {
+      "path": "bindings/node/npm/pack.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a186429e88017fbd881a702669fa73083620024a",
+      "size": 11593
+    },
+    {
+      "path": "bindings/node/npm/verify.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ea9f40fce52aa33c3a5a4c7d96946e2f8aae056e",
+      "size": 16595
+    },
+    {
+      "path": "bindings/node/package.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a06265315f503bfd74b8d3be60512f532ef11c0c",
+      "size": 1076
+    },
+    {
+      "path": "bindings/node/src",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "bbb3b9c3bc6a3ec987052df5ba940cc4885154da"
+    },
+    {
+      "path": "bindings/node/src/child.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "678d3eefde47f9bf19b6a6385cb4e1aaf211351b",
+      "size": 10901
+    },
+    {
+      "path": "bindings/node/src/convert.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "820839a942c11af58d9f8eb6df9b67ebdf7826a7",
+      "size": 11754
+    },
+    {
+      "path": "bindings/node/src/error.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a3f90fc0b728d5ce9a345b0a05aaf2d68faa8d18",
+      "size": 5277
+    },
+    {
+      "path": "bindings/node/src/exec.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7919dda5105dee62e2872a3df24711880ba6697c",
+      "size": 6679
+    },
+    {
+      "path": "bindings/node/src/lib.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2a751c04a9e4b983e1b557e29d42a38bf76d8510",
+      "size": 1568
+    },
+    {
+      "path": "bindings/node/src/run.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "23aea005dcd0656a090bd5a92a12011f635e790d",
+      "size": 698
+    },
+    {
+      "path": "bindings/node/src/teardown.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cc894d2ad91c0c3ce998f2f9f4f31402463dc515",
+      "size": 2754
+    },
+    {
+      "path": "bindings/node/test",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "267fe041bfb20d992fad3a0a05f16ac93cb7b81f"
+    },
+    {
+      "path": "bindings/node/test/configure-host.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0da3b2dcc6c9fa220dd592110dec21c0aedbcf7b",
+      "size": 2613
+    },
+    {
+      "path": "bindings/node/test/contract.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "708dc74904a9d25b32d84dbb8b2d9b77d06dcf0a",
+      "size": 2527
+    },
+    {
+      "path": "bindings/node/test/hardening.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ee5b1476416a128746e51a56e5aaaa82ff9ddde4",
+      "size": 7954
+    },
+    {
+      "path": "bindings/node/test/host.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d313d05585a22532dd861dda487f70921a8fd1a1",
+      "size": 3836
+    },
+    {
+      "path": "bindings/node/test/hosts.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bc17ad695df0a1d79d0607235cf35cd3898220c4",
+      "size": 3792
+    },
+    {
+      "path": "bindings/node/test/idioms.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cec701164083a44d25a1572944ab05dec1128f0a",
+      "size": 11734
+    },
+    {
+      "path": "bindings/node/test/markers.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "09a26c1e9b2d80f57686c5c919a19d29bfd90d98",
+      "size": 2110
+    },
+    {
+      "path": "bindings/node/test/mini.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "53b6296e708e157c2f0b6add8f572e9ad4245a80",
+      "size": 1164
+    },
+    {
+      "path": "bindings/node/test/overloads.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e3eb49f3cb59c0a7842014e00a1256aeb4a27cac",
+      "size": 4923
+    },
+    {
+      "path": "bindings/node/test/runner",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "778208ca41a4f77bdf2c44a93885a6f7f56d04d4"
+    },
+    {
+      "path": "bindings/node/test/runner/expect.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "125ca2d3ea6e39f0f7f054604f1e9cd6a2d06978",
+      "size": 8619
+    },
+    {
+      "path": "bindings/node/test/runner/ledger.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "245647f91637a3d249c09fbf2fea82990cd1c6e1",
+      "size": 1810
+    },
+    {
+      "path": "bindings/node/test/runner/os.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "45a20347fa80507cf334cf3f67da6e2984c1da7f",
+      "size": 4981
+    },
+    {
+      "path": "bindings/node/test/runner/pattern.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "be1ccb1d7b64cb150bb2871593d943cabd3d8157",
+      "size": 6193
+    },
+    {
+      "path": "bindings/node/test/runner/read.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e81d9df9cc9af4c8fd17eb2fb0f53e74839dd8ee",
+      "size": 5420
+    },
+    {
+      "path": "bindings/node/test/runner/scenario.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3051db10744b09f112d137d1ca2f8ad6703fa0f2",
+      "size": 7527
+    },
+    {
+      "path": "bindings/node/test/runner/schema.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5cdafb26450b94c5e29247c6104f5ee6d681a1a7",
+      "size": 8434
+    },
+    {
+      "path": "bindings/node/test/runner/steps.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "20919fdd1ad11cf96cdd61e21a414f945eefbb90",
+      "size": 9038
+    },
+    {
+      "path": "bindings/node/test/runner/suite.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "756089822e80ebeeb21ffc7b33e9fc6e3d2cf84e",
+      "size": 2556
+    },
+    {
+      "path": "bindings/node/test/support.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7e7b51dc6e3084e5733ed37dcb037f668659fca1",
+      "size": 2231
+    },
+    {
+      "path": "bindings/node/test/teeth.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0631bceac8689516747833b9f29ad72588922070",
+      "size": 20359
+    },
+    {
+      "path": "bindings/node/test/tsconfig.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "25f7345de6b8b400fcaa98da919d3ce82e2e23d0",
+      "size": 152
+    },
+    {
+      "path": "bindings/node/test/worker-host.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "677d1aac59563cf219346d0a5e968a9765831b16",
+      "size": 1577
+    },
+    {
+      "path": "bindings/node/test/worker.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2f2c99ff7d42144f83782eedea2d8333e7c83479",
+      "size": 805
+    },
+    {
+      "path": "bindings/node/tsconfig.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "02a5679d6b7fa68f17e725e5605a0e86fe3e8ec6",
+      "size": 332
+    },
+    {
+      "path": "campaign",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "26b15de1fae78efdbe063cc217bf36e918691bee"
+    },
+    {
+      "path": "campaign/.gitignore",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "333c1e910a3e2bef1b9d0d4587392627d8388974",
+      "size": 6
+    },
+    {
+      "path": "campaign/README.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "873e6bf1494004f72d72511c14efcab77856a6ce",
+      "size": 4864
+    },
+    {
+      "path": "campaign/bunfig.toml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "be6ad1a7e8b95bf8aa515e70c11652dd252fbb8a",
+      "size": 133
+    },
+    {
+      "path": "campaign/delivery-fixtures.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5aa6350e41434ea2021b1168d9751e37b4eb7489",
+      "size": 6891
+    },
+    {
+      "path": "campaign/delivery-tsconfig.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a1a1977d95523257286d469b05a25288d86c70ab",
+      "size": 485
+    },
+    {
+      "path": "campaign/fake-llm.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ab90b2dfdcae67dc5285005925729c7b7f091053",
+      "size": 3230
+    },
+    {
+      "path": "campaign/isolated-user.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4f964993accebbd223e5db797510131b18210df8",
+      "size": 2857
+    },
+    {
+      "path": "campaign/lib.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3ee675802be3ca7e3cf0d986357e5e34e0b22863",
+      "size": 23288
+    },
+    {
+      "path": "campaign/matrix-build.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2b32ed70018039f8eca8a02ddbcbdd93a69b4473",
+      "size": 5982
+    },
+    {
+      "path": "campaign/natural-host.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8604a3d311406f407edf72b60bcc1fdb70bf5632",
+      "size": 4697
+    },
+    {
+      "path": "campaign/package.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b3da731a621865b196d854a42eaf8c4cce37b45d",
+      "size": 358
+    },
+    {
+      "path": "campaign/process-rows.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ac72c969289afd042a023b48a5c06fef0f99d6ce",
+      "size": 3737
+    },
+    {
+      "path": "campaign/protocol-fixtures.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c79ef3a2e389c13bdc1a58c7f5454e4fc361760a",
+      "size": 11029
+    },
+    {
+      "path": "campaign/pty-byte-probe.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "abbf4924ba290f3881d570157e2e90e295c68953",
+      "size": 18659
+    },
+    {
+      "path": "campaign/server-client.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d5c87f622c54d0a024a6123da16b0459c71abe26",
+      "size": 4648
+    },
+    {
+      "path": "campaign/test",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "733a26c4cb22272b2de62a55ca6cb46abbbce38d"
+    },
+    {
+      "path": "campaign/test/omni-broker-sharing.test.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ff30fd176180ed8a5ed2dc640acf11bcf837b631",
+      "size": 11493
+    },
+    {
+      "path": "campaign/test/omni-campaign-inventory.test.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7517069120a789c43af5e7f78193db36d7c9de81",
+      "size": 29037
+    },
+    {
+      "path": "campaign/test/omni-campaign-recorder.test.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2364993be52277136ff8d17feafa93db91886cfb",
+      "size": 3828
+    },
+    {
+      "path": "campaign/test/omni-delivery-campaign.hosted.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2af9e8a9141c8d9c68b85c4dd4f4fd22ec49dedb",
+      "size": 2660
+    },
+    {
+      "path": "campaign/test/omni-fixture-identity.hosted.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0086b39ec87eabdd4f1aa81a71400f75608d2ddc",
+      "size": 7608
+    },
+    {
+      "path": "campaign/test/omni-functional-matrix.hosted.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4e3c27c28326eb965638e56f0ab64a9d19c049e2",
+      "size": 3384
+    },
+    {
+      "path": "campaign/test/omni-macos-overhead.hosted.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fba0221733081c36ea9ea3e12a11b026a1f55213",
+      "size": 2712
+    },
+    {
+      "path": "campaign/test/omni-natural-exit.hosted.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0af1e7faf822b271e7fcc4809bb4801b4908203f",
+      "size": 2154
+    },
+    {
+      "path": "campaign/test/omni-overhead.hosted.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "00cc5a7eb2219150d297cd1879154608fc7c0b12",
+      "size": 4432
+    },
+    {
+      "path": "campaign/test/omni-windows-lifecycle.hosted.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "610200919d737d0ff59637a4bef205346dc7d1df",
+      "size": 7411
+    },
+    {
+      "path": "campaign/test/recorder-turbo.hosted.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "876e12718629cce607cc6b96accd73ab782a9300",
+      "size": 1583
+    },
+    {
+      "path": "campaign/tsconfig.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4df8a0627cfff71b1b4d340d4fd7f318edadeada",
+      "size": 69
+    },
+    {
+      "path": "campaign/v1-background.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e8ffd44c32c08863fd313e14c6364e70be0a07d2",
+      "size": 15102
+    },
+    {
+      "path": "campaign/v10-exit.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "08622c3f4da00d412a08a71f93043992efea57a1",
+      "size": 6991
+    },
+    {
+      "path": "campaign/v10-natural-exit.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3873007aa47c77eda08db43627058e9454d6a5a3",
+      "size": 6690
+    },
+    {
+      "path": "campaign/v2-kill.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "dc5ae7ad47900bbaaa88d00445f3e57331750799",
+      "size": 14248
+    },
+    {
+      "path": "campaign/v3-supervisor.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e5c571e22d66291f4caeead9739fda6edcbf4d61",
+      "size": 11990
+    },
+    {
+      "path": "campaign/v4-lsp.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0c077d10f35ebab735ca7e3108cc634df12375cb",
+      "size": 17952
+    },
+    {
+      "path": "campaign/v5-mcp.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "be49621ec7f9e8092314d40f48de03659ba921a1",
+      "size": 5200
+    },
+    {
+      "path": "campaign/v6-terminal.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "46360c9953a3f7207dde2b668617a6cbf877e03d",
+      "size": 26850
+    },
+    {
+      "path": "campaign/v7-attribution.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ef381a06ec7106345c8323ef8ed0d8d0543eeeb8",
+      "size": 7418
+    },
+    {
+      "path": "campaign/v7-overhead.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "eb9817a2edc798267af5fd319b8ac984f69ce385",
+      "size": 9542
+    },
+    {
+      "path": "campaign/v8-windows.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "06ff99f4b239f6561f07f2c746c60c36b24463fc",
+      "size": 15140
+    },
+    {
+      "path": "campaign/v9-broken-artifacts.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a408ec1837b7f9b078d6fcfae2d174f02caa483f",
+      "size": 11260
+    },
+    {
+      "path": "campaign/wait.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4ec37d42809cd7df9315f926daf06bfa022aeeb4",
+      "size": 1007
+    },
+    {
+      "path": "campaign/windows-inventory.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9f377fec777e53f9c0de635cfab76d5c747e7844",
+      "size": 22275
+    },
+    {
+      "path": "campaign/windows-lifecycle.ts",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6d4c53d9577423d10764643b2017d051eee7661c",
+      "size": 20022
+    },
+    {
+      "path": "clippy.toml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7bada5473be51ed1cb8e03009f020d0c80458ae8",
+      "size": 86
+    },
+    {
+      "path": "conformance",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "7f6e882f70fb8f39cfc393780c32bef65343a64d"
+    },
+    {
+      "path": "conformance/FIXTURE.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e29de10d290bce1c2b81e7c7f916604db7f39950",
+      "size": 4222
+    },
+    {
+      "path": "conformance/SPEC.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f52eec455505c2dfcd95c8e187178291178fb335",
+      "size": 6697
+    },
+    {
+      "path": "conformance/pending.txt",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e2a95660fc8824043b955e26562ee064b9c9bf7d",
+      "size": 329
+    },
+    {
+      "path": "conformance/regex-table.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d1d340205438642841ccbc04e037a62faac9596e",
+      "size": 5004
+    },
+    {
+      "path": "conformance/scenarios",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "1fb7247f63a6e31dee6ae0892742ed5093127eb2"
+    },
+    {
+      "path": "conformance/scenarios/C-ENV-01.clean.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9ce57622594a3d73db7d9014ad72982ea587e98d",
+      "size": 274
+    },
+    {
+      "path": "conformance/scenarios/C-ENV-01.inherit.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d62fe4a3169f646fc75dfc36b03d65e9d5ce90d1",
+      "size": 523
+    },
+    {
+      "path": "conformance/scenarios/C-ENV-01.windows.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6e2d0a924ad995922637274d2281f1e69585b71e",
+      "size": 441
+    },
+    {
+      "path": "conformance/scenarios/C-ERR-01.not-executable.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c08e098e28d14b526721dc2895775295b35753b9",
+      "size": 442
+    },
+    {
+      "path": "conformance/scenarios/C-ERR-01.not-startable.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f02d03b55b2b6c7147b0fb8f420d8fe30787c423",
+      "size": 494
+    },
+    {
+      "path": "conformance/scenarios/C-ERR-01.outcomes.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d9e1983a9adf99c3834d4b749cbce45fdc411aa6",
+      "size": 1255
+    },
+    {
+      "path": "conformance/scenarios/C-ERR-02.inputs.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5815c53660536e3d969b1e55b465e89520978c00",
+      "size": 1370
+    },
+    {
+      "path": "conformance/scenarios/C-ERR-02.numbers.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9b91fa87ace65c29de4b6f81792357831e06aad7",
+      "size": 884
+    },
+    {
+      "path": "conformance/scenarios/C-EXIT-01.codes.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "638c5dd8379c0ed246d99d17de25bd8829ebc2b7",
+      "size": 707
+    },
+    {
+      "path": "conformance/scenarios/C-EXIT-01.precedence.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ac864ebefd689854c6cb22f649bb26a01ee3a36f",
+      "size": 342
+    },
+    {
+      "path": "conformance/scenarios/C-EXIT-01.signal.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "92d4269f4c08ed67ee42af7bbd2c121d39f35fdd",
+      "size": 348
+    },
+    {
+      "path": "conformance/scenarios/C-EXIT-01.windows-codes.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "94c14a9e8754f30518a0bc91b7c432934dcbfd86",
+      "size": 348
+    },
+    {
+      "path": "conformance/scenarios/C-IO-01.decode.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6b6d6afc9bc30abeb983c164dc8aa1db6a0e959b",
+      "size": 487
+    },
+    {
+      "path": "conformance/scenarios/C-IO-01.lines.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "dcb86021db958405bf5e1b82184c3bbf73684345",
+      "size": 1225
+    },
+    {
+      "path": "conformance/scenarios/C-IO-01.live.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f11135f949266a655a50af0cf61fbf211f5568a6",
+      "size": 512
+    },
+    {
+      "path": "conformance/scenarios/C-IO-01.merge.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4576db2adf739f1f00efe1c3ec838600f34758d3",
+      "size": 554
+    },
+    {
+      "path": "conformance/scenarios/C-IO-02.no-consumer.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "595832040d4d5b25edd4122f5a25846c4cf503f6",
+      "size": 416
+    },
+    {
+      "path": "conformance/scenarios/C-IO-02.paused.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fc818e8e78ed7bf6a7505ed123e44103274a92d6",
+      "size": 896
+    },
+    {
+      "path": "conformance/scenarios/C-IO-02.single-consumer.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "dc26230b95a5e38059e6f1ce602531fe6ceb516f",
+      "size": 586
+    },
+    {
+      "path": "conformance/scenarios/C-IO-03.stdin.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "98c7055c8ce9ced4e063b8ce4cea6a3864b420e7",
+      "size": 1052
+    },
+    {
+      "path": "conformance/scenarios/C-IO-04.hold.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4ae4b58a28ea2ab6af4dd768670db6b3afd6c204",
+      "size": 570
+    },
+    {
+      "path": "conformance/scenarios/C-IO-04.run.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "49748875ba874f74847b7f942dbc7e79d6cc98e2",
+      "size": 365
+    },
+    {
+      "path": "conformance/scenarios/C-KILL-01.tree.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9618f92d30c905fbca3c6cc4e3443d28c830fcfd",
+      "size": 1020
+    },
+    {
+      "path": "conformance/scenarios/C-KILL-02.forced.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1395d76f9fa08b350795aa7db5aeb249fb9239b0",
+      "size": 412
+    },
+    {
+      "path": "conformance/scenarios/C-KILL-02.graceful.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "71b15cdb5f03bf69b069310d9372df360be87234",
+      "size": 379
+    },
+    {
+      "path": "conformance/scenarios/C-KILL-03.breakaway.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3774a2f71df8e8ece8f0783ef3caef2ef1dd2540",
+      "size": 330
+    },
+    {
+      "path": "conformance/scenarios/C-KILL-03.setsid.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b0fad84d97d26b10a3eeaee7d323473805a36479",
+      "size": 442
+    },
+    {
+      "path": "conformance/scenarios/C-PROC-01.tree.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fbaf5c56439f6599474521e31c19b6c4e815c88c",
+      "size": 1126
+    },
+    {
+      "path": "conformance/scenarios/C-PTY-01.size.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "22e606632e13ea4848d5834b64d4a739a2b5474d",
+      "size": 864
+    },
+    {
+      "path": "conformance/scenarios/C-PTY-02.interact.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a0fd8c5144f25832a2b25066eb29390cafe93f0c",
+      "size": 435
+    },
+    {
+      "path": "conformance/scenarios/C-PTY-03.output.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3e57287daca8cd34a05135cf342f1a697b2c38e1",
+      "size": 595
+    },
+    {
+      "path": "conformance/scenarios/C-PTY-04.tree.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d3605a149db35878a36897563632a17b66c6f8fe",
+      "size": 418
+    },
+    {
+      "path": "conformance/scenarios/C-RUN-01.output-limit.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "946f507fdfcce7695efc07b045e2acefe1cea5d1",
+      "size": 879
+    },
+    {
+      "path": "conformance/scenarios/C-RUN-01.result.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1308eebe762a874f305adc0a1881e995dbf43ca4",
+      "size": 694
+    },
+    {
+      "path": "conformance/scenarios/C-RUN-01.timeout-after-exit.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e9d0ca6643209b7f2dafd70c98e1b681cc9e161c",
+      "size": 302
+    },
+    {
+      "path": "conformance/scenarios/C-SPAWN-01.child-path.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ee8842ed8f025099ded4e88a9dc737a5850f73b8",
+      "size": 341
+    },
+    {
+      "path": "conformance/scenarios/C-SPAWN-01.no-path.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f0f8a7d5b49f541dcf62df7c812059beffa34d1d",
+      "size": 615
+    },
+    {
+      "path": "conformance/scenarios/C-SPAWN-01.pathext-cmd.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "415e8a859b1436a5a23fd381075056c1af211bbc",
+      "size": 275
+    },
+    {
+      "path": "conformance/scenarios/C-SPAWN-02.args.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "564f680a1662150b530288478fc2d3c5be771be0",
+      "size": 451
+    },
+    {
+      "path": "conformance/scenarios/C-SPAWN-02.batch.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "414d64abc4a7a2522328d9726ccc9b43514670dc",
+      "size": 464
+    },
+    {
+      "path": "conformance/scenarios/C-SPAWN-02.verbatim-unix.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f2311a4f194efcea968c03b451eb4b25e66eea49",
+      "size": 422
+    },
+    {
+      "path": "conformance/scenarios/C-SPAWN-02.verbatim.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5a5a8c0fbcdc63f203664bb1a8423dbd4b34dac4",
+      "size": 1112
+    },
+    {
+      "path": "conformance/scenarios/C-SPAWN-03.relative.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9f2b42fe81ce0cb807734bc4e3d19aca8cbf319c",
+      "size": 567
+    },
+    {
+      "path": "conformance/scenarios/C-TMO-01.tree.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "998d00ac263338ad74ebb633b34d3f00220c9611",
+      "size": 702
+    },
+    {
+      "path": "conformance/scenarios/C-TMO-02.abort.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "14a481c02adaef0d31c54628e6c6fbe69b4ee247",
+      "size": 980
+    },
+    {
+      "path": "crates",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "b32e513d65cac06cb62a1da24b4c0684bbb92e2d"
+    },
+    {
+      "path": "crates/hugr-omni",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "aabfeb7d43644dcbc52f4996cf8065970c9dbd82"
+    },
+    {
+      "path": "crates/hugr-omni/Cargo.toml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "da941bc372f94d998e00b51fba25b2152883db0e",
+      "size": 1010
+    },
+    {
+      "path": "crates/hugr-omni/README.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "945f24792c30a37d3d445a28c029a5ec905793cc",
+      "size": 1528
+    },
+    {
+      "path": "crates/hugr-omni/src",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "f8291eb7ea37dc4dba43398037edcc6ccbaf8145"
+    },
+    {
+      "path": "crates/hugr-omni/src/api",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "101038d790c9cf9ba2ae95b233112bbefa85a95f"
+    },
+    {
+      "path": "crates/hugr-omni/src/api/command.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ca33173b6f5b60c213cff9b02ac10bf31eaa9022",
+      "size": 7396
+    },
+    {
+      "path": "crates/hugr-omni/src/api/mod.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4b3f37cc5070adaa0ae9f6d461e23f6faf58054e",
+      "size": 585
+    },
+    {
+      "path": "crates/hugr-omni/src/binding.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e939c1d2c863fd35bde982a1232b4ffc1169c57e",
+      "size": 5509
+    },
+    {
+      "path": "crates/hugr-omni/src/client",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "2b4c2e34cab7dd4a1ad2e0ad20b1e295b6bc3db8"
+    },
+    {
+      "path": "crates/hugr-omni/src/client/channel.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7e47de8854dd70471bdde4ed94974e53ab494583",
+      "size": 13324
+    },
+    {
+      "path": "crates/hugr-omni/src/client/channel",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "eb4946696cedba53c5f339c9a2333671b7f6b6ff"
+    },
+    {
+      "path": "crates/hugr-omni/src/client/channel/route.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e1eddb04bc55bdfde9cb5ea70f84b0c21b3d40f8",
+      "size": 10591
+    },
+    {
+      "path": "crates/hugr-omni/src/client/hold.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1a3ab7d7cef5ae6be67255328b429ce3e958e9d9",
+      "size": 2427
+    },
+    {
+      "path": "crates/hugr-omni/src/client/keeper.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "96424d1b83dc75fdff07824c8979136a81ad31ee",
+      "size": 12132
+    },
+    {
+      "path": "crates/hugr-omni/src/client/mod.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3b0722feef193479d9f9c08bcdf6ad2ed27b71e5",
+      "size": 11037
+    },
+    {
+      "path": "crates/hugr-omni/src/client/start.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e2183b63187db2578e60c44b24718d0771d1903b",
+      "size": 11494
+    },
+    {
+      "path": "crates/hugr-omni/src/client/tests",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "b85232b5709fd55fc6426022609d7c5f5d80b373"
+    },
+    {
+      "path": "crates/hugr-omni/src/client/tests/channel.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fed89a565b9cd50ce8c5136106c1a256b5fec733",
+      "size": 9246
+    },
+    {
+      "path": "crates/hugr-omni/src/client/tests/deadlines.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c6b797697729f7e99f953bf2b63fe6b50151854a",
+      "size": 3715
+    },
+    {
+      "path": "crates/hugr-omni/src/client/tests/frames.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "af507947c919bdc62125fb5cc6c24741ed066af3",
+      "size": 5417
+    },
+    {
+      "path": "crates/hugr-omni/src/client/tests/go.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7116f6e23fa8dd15045b44a1337da0a07537d41b",
+      "size": 3330
+    },
+    {
+      "path": "crates/hugr-omni/src/client/tests/identity.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "be113fedf9b3fe91a1cca39e215a80ce9d98a3d3",
+      "size": 7684
+    },
+    {
+      "path": "crates/hugr-omni/src/client/tests/ledger.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6d833c8b89e95eb67fc9dd3925e66fd6ca58661e",
+      "size": 11199
+    },
+    {
+      "path": "crates/hugr-omni/src/client/tests/lifetime.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f1176ec3eb6f06b3626766319f7843c161af65b3",
+      "size": 7035
+    },
+    {
+      "path": "crates/hugr-omni/src/client/tests/lookup.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9e6a9c0c652feb940deb1573679129ece6008a46",
+      "size": 3337
+    },
+    {
+      "path": "crates/hugr-omni/src/client/tests/mod.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a899226cb47c0d2181887b39d172b2cd695e8173",
+      "size": 8684
+    },
+    {
+      "path": "crates/hugr-omni/src/client/tests/unix.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d442aff60d6d528ca1745a55efa129db8cd46e2d",
+      "size": 12719
+    },
+    {
+      "path": "crates/hugr-omni/src/client/tests/windows.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d433ffe544125e4ceba69c8463d208923aefa433",
+      "size": 11267
+    },
+    {
+      "path": "crates/hugr-omni/src/client/unix.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "55dfd50c72bdd1e3ea763febfb152f6d937c2126",
+      "size": 14084
+    },
+    {
+      "path": "crates/hugr-omni/src/client/windows.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "256b3cf8e5a6c067b4b71ce8024d897e424f5b50",
+      "size": 13776
+    },
+    {
+      "path": "crates/hugr-omni/src/error",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "d4ba3a9e63c6038aee2a6557906580f05878666b"
+    },
+    {
+      "path": "crates/hugr-omni/src/error/messages",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "b44522550427c124b3af2afb461b3a1a25cca7eb"
+    },
+    {
+      "path": "crates/hugr-omni/src/error/messages/mod.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "78f26c0b6f0bc7a25be915f78cfdf5a7b49a57dd",
+      "size": 1880
+    },
+    {
+      "path": "crates/hugr-omni/src/error/messages/w03.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f31a047d399761f76c77181e5396c8fb75bd4aff",
+      "size": 11040
+    },
+    {
+      "path": "crates/hugr-omni/src/error/messages/w04.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "814ea4e6d0600b2006567aa99e505ef7ad34b1fc",
+      "size": 4996
+    },
+    {
+      "path": "crates/hugr-omni/src/error/messages/w07.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "99685766fe3b3bfbff9f08756abeb7e2721d77be",
+      "size": 1291
+    },
+    {
+      "path": "crates/hugr-omni/src/error/messages/w09.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9caf072ef6082d2e9adc1bac4af56087efae06d2",
+      "size": 2088
+    },
+    {
+      "path": "crates/hugr-omni/src/error/messages/w10.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3e63011d4f3705a399c3665345700d95e4709e7c",
+      "size": 2375
+    },
+    {
+      "path": "crates/hugr-omni/src/error/messages/wp8b.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7fe8b3eb201173cf741ac68872317bfcb13c182f",
+      "size": 2012
+    },
+    {
+      "path": "crates/hugr-omni/src/error/messages/wp_h.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "72b82197c6d358d4721da1b530aa6818b69c4149",
+      "size": 981
+    },
+    {
+      "path": "crates/hugr-omni/src/error/mod.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7e5d1569ad39bcfc4fb28781320f72f6579c4961",
+      "size": 2773
+    },
+    {
+      "path": "crates/hugr-omni/src/io",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "666d8674911e3837deacc68aa12bc95a70f62c96"
+    },
+    {
+      "path": "crates/hugr-omni/src/io/collect.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fec2fa0c0254049ea3b7dab3a25ca05be919c82e",
+      "size": 5590
+    },
+    {
+      "path": "crates/hugr-omni/src/io/mod.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d412bcd0cd982c5e340af805d9b9d320c2c212f0",
+      "size": 7957
+    },
+    {
+      "path": "crates/hugr-omni/src/io/out.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d00bf67b4b42952cf69715dca6d03894f369c394",
+      "size": 12477
+    },
+    {
+      "path": "crates/hugr-omni/src/io/queue",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "e9ff13ef4864fb6beefec0368959d6b9c7ec1180"
+    },
+    {
+      "path": "crates/hugr-omni/src/io/queue/mod.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "999be66865d60b1de30720bec6aacd5e54920cc8",
+      "size": 12551
+    },
+    {
+      "path": "crates/hugr-omni/src/io/queue/reader.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e24b5810b2ad9fcb345decc39302ed641b3d7a6b",
+      "size": 1882
+    },
+    {
+      "path": "crates/hugr-omni/src/io/stdin.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "74359d986b6a739ed3f30a6478f22a94f14b9a42",
+      "size": 5636
+    },
+    {
+      "path": "crates/hugr-omni/src/io/tests",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "d80f259c358ce939033ebc229fc56b0694d0d2c7"
+    },
+    {
+      "path": "crates/hugr-omni/src/io/tests/collect.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cb81fad6d703b4f7efab355f07350d28db32a459",
+      "size": 6904
+    },
+    {
+      "path": "crates/hugr-omni/src/io/tests/hold.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e81ea27f47e3f79664a57556a7e4819c08459f6e",
+      "size": 3327
+    },
+    {
+      "path": "crates/hugr-omni/src/io/tests/lines.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "763914b1d83be5499927c5ff977a72e067982d79",
+      "size": 5595
+    },
+    {
+      "path": "crates/hugr-omni/src/io/tests/mod.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7cbf4571004f797587711e2ac39abbab9eb276c4",
+      "size": 4872
+    },
+    {
+      "path": "crates/hugr-omni/src/io/tests/output.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3072835bb56a71da16148bd9c40719aa662699d5",
+      "size": 10860
+    },
+    {
+      "path": "crates/hugr-omni/src/io/tests/stdin.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a3a848c7879156919807f7e4fcb53ea50043178a",
+      "size": 5086
+    },
+    {
+      "path": "crates/hugr-omni/src/lib.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1d3de6c70615032dc3261886bfa137384f0564b3",
+      "size": 1410
+    },
+    {
+      "path": "crates/hugr-omni/src/process",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "304c8281238ec2bc52690ca76aa53123315c493d"
+    },
+    {
+      "path": "crates/hugr-omni/src/process/child.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "431ba07ac85778f408c37a55d567db40890a0cee",
+      "size": 8900
+    },
+    {
+      "path": "crates/hugr-omni/src/process/deadline.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "106cb5bdebcd7323bbe6f50cad03b66566bac7c9",
+      "size": 8792
+    },
+    {
+      "path": "crates/hugr-omni/src/process/exit.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0fb6eee5990a5a5bcebcc2d6424efecaa2b5ea7c",
+      "size": 3064
+    },
+    {
+      "path": "crates/hugr-omni/src/process/life.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9c703390e6883d195a71ffbc857ee42f405de8c8",
+      "size": 5617
+    },
+    {
+      "path": "crates/hugr-omni/src/process/memory.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c7ef222f5a57cf93e250e077d35cd258527aa391",
+      "size": 3689
+    },
+    {
+      "path": "crates/hugr-omni/src/process/mod.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cef9ad00238c99617b6a2ea2329e5fd0556af5c4",
+      "size": 1460
+    },
+    {
+      "path": "crates/hugr-omni/src/process/run.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c2725d150e579a0c902746a2835196cbbbe3ef59",
+      "size": 16767
+    },
+    {
+      "path": "crates/hugr-omni/src/process/tests",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "167e922ff17b4af9c34a354dddc38634fa6ca428"
+    },
+    {
+      "path": "crates/hugr-omni/src/process/tests/agent_loop.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "16c973ae3d9e7582f4e925fc11077d54dd1afe5b",
+      "size": 7745
+    },
+    {
+      "path": "crates/hugr-omni/src/process/tests/big.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "39e8c7e87e4d1ca3ef5281e5a1202c83628d0726",
+      "size": 1074
+    },
+    {
+      "path": "crates/hugr-omni/src/process/tests/deadline.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8dda1006bcc229c464237a4445baa326ec54d69d",
+      "size": 12605
+    },
+    {
+      "path": "crates/hugr-omni/src/process/tests/exit.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "07ffdc1506af720570fb4464ad12e4043c0adbe2",
+      "size": 2972
+    },
+    {
+      "path": "crates/hugr-omni/src/process/tests/host.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a713a2c4bb3c845d9d060c27882375d225b3e84d",
+      "size": 7688
+    },
+    {
+      "path": "crates/hugr-omni/src/process/tests/host",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "6b7fe804110b1c5fcb9554155863a83bbaa92884"
+    },
+    {
+      "path": "crates/hugr-omni/src/process/tests/host/lost.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "afae67a77b2a8e9577844d024336cf81f90ffdf7",
+      "size": 7058
+    },
+    {
+      "path": "crates/hugr-omni/src/process/tests/memory.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e89d7c7ad83a34819a794429108c231ad72ba93c",
+      "size": 2434
+    },
+    {
+      "path": "crates/hugr-omni/src/process/tests/mod.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "056fe46a611b9d67ebf7ff5093e05e5ae8838b71",
+      "size": 11105
+    },
+    {
+      "path": "crates/hugr-omni/src/process/tests/scope.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f0b3f41cd4d155911de2ba7b222f456366b7f1b8",
+      "size": 2359
+    },
+    {
+      "path": "crates/hugr-omni/src/process/tests/tree.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b1f1c44f0f453012c59fceca7ced6c73dc96229c",
+      "size": 7471
+    },
+    {
+      "path": "crates/hugr-omni/src/pty",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "843e52939163761281a56222b8f62d42ddb98c75"
+    },
+    {
+      "path": "crates/hugr-omni/src/pty/mod.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7e9c31c7fbe63d621900f62718a6106bfe5ad939",
+      "size": 461
+    },
+    {
+      "path": "crates/hugr-omni/src/pty/tests.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c98296d04da2f410d46d657b46e83e55668a6d62",
+      "size": 5218
+    },
+    {
+      "path": "crates/hugr-omni/src/spawn",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "9a9f2f7106cf9c94e98736167baf72f124b53e6d"
+    },
+    {
+      "path": "crates/hugr-omni/src/spawn/env.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c224657c7d68c04bf64836f08e727ec0d3d3ed00",
+      "size": 4145
+    },
+    {
+      "path": "crates/hugr-omni/src/spawn/mod.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5c7e7994bed61341cc6f409f8b0ac96eee22a04a",
+      "size": 4112
+    },
+    {
+      "path": "crates/hugr-omni/src/spawn/path.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7d4ed15c224b9574b8e6d3a4e9d0bd11daf0dfb4",
+      "size": 5365
+    },
+    {
+      "path": "crates/hugr-omni/src/spawn/resolve.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "13896901c9cd416be3dc2d320ce9060cd58d990e",
+      "size": 5964
+    },
+    {
+      "path": "crates/hugr-omni/src/spawn/sys.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5b49379272c7a9cff8264ca78768f6636193ee74",
+      "size": 2125
+    },
+    {
+      "path": "crates/hugr-omni/src/spawn/tests.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1d024312048d457dc072ca8d8ab864379a110b71",
+      "size": 14012
+    },
+    {
+      "path": "crates/hugr-omni/src/spawn/tests",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "12424053e4945912aa24e34e19acd68b2f20e92e"
+    },
+    {
+      "path": "crates/hugr-omni/src/spawn/tests/resolve.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bc5f1b03d05b638314944cc6f279433efc851651",
+      "size": 8537
+    },
+    {
+      "path": "crates/hugr-omni/src/spawn/tests/verbatim.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bcccabb2f0be801a2f6161f5516d88ce7197d2e4",
+      "size": 2253
+    },
+    {
+      "path": "crates/hugr-omni/src/spawn/validate.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "48f840f8b5c42abdecfd0e3ce95257fc849b6619",
+      "size": 5830
+    },
+    {
+      "path": "crates/hugr-omni/src/types.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c29f2abd735077630eec9700de2030e01b71143f",
+      "size": 4649
+    },
+    {
+      "path": "crates/hugr-omni/tests",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "2eda25d93d710d02fff83da7aca487aef103e6e1"
+    },
+    {
+      "path": "crates/hugr-omni/tests/contract.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4adad1487fb13b55fcc1b46105001f6e42900c9b",
+      "size": 3414
+    },
+    {
+      "path": "crates/hugr-omni/tests/runner",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "7fb46b9ada0ad06702fd33caf53e084e3367446a"
+    },
+    {
+      "path": "crates/hugr-omni/tests/runner/command.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d821afbfaec029a662f65b44f2ec310ccdff3720",
+      "size": 4816
+    },
+    {
+      "path": "crates/hugr-omni/tests/runner/expect.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7107cd30a509c7b2a7654fe314bfc1b00347ff53",
+      "size": 10106
+    },
+    {
+      "path": "crates/hugr-omni/tests/runner/ledger.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4dd7eb82054795c6833ea7a04c47e240f6050788",
+      "size": 3000
+    },
+    {
+      "path": "crates/hugr-omni/tests/runner/mod.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "84a5dd002898539bacc1d7b1cf9101ec339edf28",
+      "size": 11565
+    },
+    {
+      "path": "crates/hugr-omni/tests/runner/names.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0600409c934c4dbe8bff70613608359c8055c0b4",
+      "size": 5665
+    },
+    {
+      "path": "crates/hugr-omni/tests/runner/os.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "854630011360fbc4c8664e6620bb36364d8871f4",
+      "size": 5936
+    },
+    {
+      "path": "crates/hugr-omni/tests/runner/pattern.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9f84a53d81d500cf8427d24200922fae5046d680",
+      "size": 7292
+    },
+    {
+      "path": "crates/hugr-omni/tests/runner/read.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d952863dc844de14d5c0bdecd9666c2101d9fc1d",
+      "size": 7426
+    },
+    {
+      "path": "crates/hugr-omni/tests/runner/scenario.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9e62d9c879cb78082cf96253805d0e9b082ad145",
+      "size": 4392
+    },
+    {
+      "path": "crates/hugr-omni/tests/runner/schema.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c7d04d4eee962ad694a43b93379b2a7bff14a223",
+      "size": 9358
+    },
+    {
+      "path": "crates/hugr-omni/tests/runner/suite.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "decc807cac6e2f0554130b636d2f36a514a61e96",
+      "size": 2983
+    },
+    {
+      "path": "crates/hugr-omni/tests/teeth.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ff5019d5d2a142a4fdbdaaf5ec9d9b9a69363be7",
+      "size": 5922
+    },
+    {
+      "path": "crates/omni-fixture",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "e2613de96d94118cab90e415702580e7646b87e9"
+    },
+    {
+      "path": "crates/omni-fixture/Cargo.toml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d203e2130568da36ad0c1993f884df5923dce192",
+      "size": 535
+    },
+    {
+      "path": "crates/omni-fixture/src",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "7897b8c8410f13ad6f483e0d7956aa53fcb40c15"
+    },
+    {
+      "path": "crates/omni-fixture/src/descend.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "70ce78e2fbe84cc4a041132aa275938c33621999",
+      "size": 3192
+    },
+    {
+      "path": "crates/omni-fixture/src/main.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c9156359678f054865edb156316d0e56527f257c",
+      "size": 9638
+    },
+    {
+      "path": "crates/omni-fixture/src/out.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "df5d1335e7942eda22dc9fabf754ca9a010005ea",
+      "size": 4361
+    },
+    {
+      "path": "crates/omni-fixture/src/parse.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5e197c2c3c8a0436556db985bf5aa1964ad1b30e",
+      "size": 6827
+    },
+    {
+      "path": "crates/omni-fixture/src/sys",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "a6f714d03db6dc6a7453d597cf1acc1c48c858d6"
+    },
+    {
+      "path": "crates/omni-fixture/src/sys/mod.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "61ba9a5a27fb7ec96343821f6998eb966a073b10",
+      "size": 562
+    },
+    {
+      "path": "crates/omni-fixture/src/sys/unix.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2c7d42e15f01766fa4cc65e0f7f8720e35f1d713",
+      "size": 4057
+    },
+    {
+      "path": "crates/omni-fixture/src/sys/windows.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "835935f2e9b3f5e68d37e8907c67a2d5f06d76de",
+      "size": 2880
+    },
+    {
+      "path": "crates/omni-proto",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "e717c3cf74aa5b7b887c2c759ef542c3655ae0eb"
+    },
+    {
+      "path": "crates/omni-proto/Cargo.toml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1e8e469154c4edbb16ea8147bc0b6a855dbdde2d",
+      "size": 272
+    },
+    {
+      "path": "crates/omni-proto/README.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7ac4a9ed6a74b3b0073efe2ba1d3604223246b86",
+      "size": 1290
+    },
+    {
+      "path": "crates/omni-proto/src",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "5ce1b7d509c2b003d939de048202e3b0c19b92cd"
+    },
+    {
+      "path": "crates/omni-proto/src/codec",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "660ab375e5d1bc51c7e80be7a1e9b7690b4ba963"
+    },
+    {
+      "path": "crates/omni-proto/src/codec/mod.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "afc8efe2c99cb3f1f527c5aa154928350627326e",
+      "size": 9450
+    },
+    {
+      "path": "crates/omni-proto/src/codec/tests.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "41fd68bc998c4e88c9d7074f3aeea8c1003c61ea",
+      "size": 6755
+    },
+    {
+      "path": "crates/omni-proto/src/codec/wire.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2f793c39b7851cc6a926d038199ea783d84758ee",
+      "size": 3644
+    },
+    {
+      "path": "crates/omni-proto/src/lib.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "93fb4621ba2f3d5b195275b81d5554321318287a",
+      "size": 7391
+    },
+    {
+      "path": "crates/omni-supervisor",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "1f16e549c4f7643444f91a9e82b211a4e6735cad"
+    },
+    {
+      "path": "crates/omni-supervisor/Cargo.toml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "12d9135a16dc2b15288ed4578dfc150f7a208b43",
+      "size": 934
+    },
+    {
+      "path": "crates/omni-supervisor/README.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "dbd8cc7803fc60e8d43309fe0a6381c4a5b8fc62",
+      "size": 1482
+    },
+    {
+      "path": "crates/omni-supervisor/src",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "b5822eea2f781a0abd57993f8c57abaa30d30d57"
+    },
+    {
+      "path": "crates/omni-supervisor/src/main.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fd9569d1055bb52db7d555ac4be1fa0a4fae80b3",
+      "size": 2730
+    },
+    {
+      "path": "crates/omni-supervisor/src/pty_unix",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "7b870d913aa5d0446cccee2862ebc1ebb433520e"
+    },
+    {
+      "path": "crates/omni-supervisor/src/pty_unix/mod.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "59265bad3f08802a3840952116aa1506319a2195",
+      "size": 4412
+    },
+    {
+      "path": "crates/omni-supervisor/src/pty_unix/tests.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cd8fb223ac290823b3a216366f8b979cbfb386f4",
+      "size": 8874
+    },
+    {
+      "path": "crates/omni-supervisor/src/pty_windows",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "bb2e385efd50a06cfdc171247d9a97dced60226a"
+    },
+    {
+      "path": "crates/omni-supervisor/src/pty_windows/mod.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "58433fe7eb2dd5c6cd952c5c660d969b1bb34ef2",
+      "size": 7422
+    },
+    {
+      "path": "crates/omni-supervisor/src/unix",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "f827a63a12d3430b251f3ed25932ef5f70ba4439"
+    },
+    {
+      "path": "crates/omni-supervisor/src/unix/chan.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e78b7d614a9e5e39be996e9345a8452913c39b9c",
+      "size": 14397
+    },
+    {
+      "path": "crates/omni-supervisor/src/unix/diag.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e388fc04d1b427109b5d6e973c448dfb9b5bebce",
+      "size": 3743
+    },
+    {
+      "path": "crates/omni-supervisor/src/unix/exits.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8a852a7bbf900e5628401b14ccf4d7f58de9cdfd",
+      "size": 1697
+    },
+    {
+      "path": "crates/omni-supervisor/src/unix/fork.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "764d844ee2a47e1d7eebcdd274675bdd1e56f717",
+      "size": 9595
+    },
+    {
+      "path": "crates/omni-supervisor/src/unix/mod.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "acc2afe880e046cdb5f0c660052879ce83811961",
+      "size": 14460
+    },
+    {
+      "path": "crates/omni-supervisor/src/unix/procs.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1639c6b3bd53465d8ab19a52005db6a96a566f09",
+      "size": 13966
+    },
+    {
+      "path": "crates/omni-supervisor/src/unix/setup.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d49549ac755cc8dc4dc7f4f9b84405f4e940eaf0",
+      "size": 3171
+    },
+    {
+      "path": "crates/omni-supervisor/src/unix/spawn.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "83becf8ebe206fbc8375df1eda15224562cd21bc",
+      "size": 9202
+    },
+    {
+      "path": "crates/omni-supervisor/src/unix/sweep.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4e566ccc13fccbf21b2d2de171ff008280c0aa68",
+      "size": 12691
+    },
+    {
+      "path": "crates/omni-supervisor/src/unix/sys.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "34d17f2e3542a43bb90cfd774cb714bdc9ddf160",
+      "size": 7211
+    },
+    {
+      "path": "crates/omni-supervisor/src/unix/trees.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "63889bd78e12449d937af22f3345de3beb537ad0",
+      "size": 13299
+    },
+    {
+      "path": "crates/omni-supervisor/src/unix/watch.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "995f6d7b58d0bfdc8e0eab9ff9fe8cd68b6c83f1",
+      "size": 5617
+    },
+    {
+      "path": "crates/omni-supervisor/src/windows",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "8aca6aa487f98d042a78b455074aa50ca7e51146"
+    },
+    {
+      "path": "crates/omni-supervisor/src/windows/boot.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fc2b9f4f7c7e7c5f29fb62ab96fb50a3428078d1",
+      "size": 3276
+    },
+    {
+      "path": "crates/omni-supervisor/src/windows/channel.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "174e5838b68f87222527adb04782d5f499df26c5",
+      "size": 7624
+    },
+    {
+      "path": "crates/omni-supervisor/src/windows/cmdline.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8d0f5371284ccf46e5befa32828381efde0caae7",
+      "size": 13330
+    },
+    {
+      "path": "crates/omni-supervisor/src/windows/container",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "a3eedcf7b3bf4814fbb4439d906c1a4e5dd7d5ca"
+    },
+    {
+      "path": "crates/omni-supervisor/src/windows/container/acl.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "64d8a0f563b87e20416359567b28a39a591fbd70",
+      "size": 16113
+    },
+    {
+      "path": "crates/omni-supervisor/src/windows/container/acl",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "352183194e840493fdcd062d6ec241c8317678f5"
+    },
+    {
+      "path": "crates/omni-supervisor/src/windows/container/acl/dacl.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "eaeda82ef246f6fa8f1b97d877de3b9c807b9447",
+      "size": 5470
+    },
+    {
+      "path": "crates/omni-supervisor/src/windows/container/acl/sid.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5a52b8538c552177cbea4a6f3fecc64aa6cc2cc2",
+      "size": 2350
+    },
+    {
+      "path": "crates/omni-supervisor/src/windows/container/broker.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f87b8d7a51b844e355c61177c9cc43c7caeb7e5c",
+      "size": 5778
+    },
+    {
+      "path": "crates/omni-supervisor/src/windows/container/guard.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c39c2902c492eca3a27dab941ee716636ac1f872",
+      "size": 11952
+    },
+    {
+      "path": "crates/omni-supervisor/src/windows/container/mod.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4a856174674e2be2ed9ce10aeb7880d4c99d924d",
+      "size": 14134
+    },
+    {
+      "path": "crates/omni-supervisor/src/windows/container/tests.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cf803b2a3f44102925c77f48417c2774eded1fb5",
+      "size": 2027
+    },
+    {
+      "path": "crates/omni-supervisor/src/windows/create.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "afeb3c5f7b389205b31f8fdb3d024165fd25477e",
+      "size": 6170
+    },
+    {
+      "path": "crates/omni-supervisor/src/windows/diag.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0c52c46067a1461b5f5fe0b7904e4d8eaa3f0c02",
+      "size": 2369
+    },
+    {
+      "path": "crates/omni-supervisor/src/windows/inventory.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "3702faa0f1dba094b2bafb8dccb12579a066f782",
+      "size": 4428
+    },
+    {
+      "path": "crates/omni-supervisor/src/windows/job.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bace96746cff8d83b507b5ae10dfd97328b31ff5",
+      "size": 7509
+    },
+    {
+      "path": "crates/omni-supervisor/src/windows/members.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "da62deb134121546a6e263c6c86e0b882270997b",
+      "size": 11064
+    },
+    {
+      "path": "crates/omni-supervisor/src/windows/mod.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "97c76451ed7c852756c27a941c71b30ab813bbda",
+      "size": 13118
+    },
+    {
+      "path": "crates/omni-supervisor/src/windows/queues.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "42d0b7606a5e4018ab809eed68861d288116c260",
+      "size": 7433
+    },
+    {
+      "path": "crates/omni-supervisor/src/windows/spawn.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b2c097e9c51e4b4ffd70ffd0721fc8bed8bc5561",
+      "size": 11700
+    },
+    {
+      "path": "crates/omni-supervisor/src/windows/tests",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "dd577a44e22ba879f4d09fb7e282cf4de111282d"
+    },
+    {
+      "path": "crates/omni-supervisor/src/windows/tests/job_lifetime.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "db2b1228c71572654843430f157163cffdb680f0",
+      "size": 7549
+    },
+    {
+      "path": "crates/omni-supervisor/src/windows/tests/members.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "295e9e10893ffcace6bbfc729e017e5fa75fb23e",
+      "size": 2623
+    },
+    {
+      "path": "crates/omni-supervisor/src/windows/tests/mod.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "defc022cfcc336060747f61ebbe1cd0b745f7e9a",
+      "size": 13403
+    },
+    {
+      "path": "crates/omni-supervisor/src/windows/tree.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8ed49805ebf5248ae97df419a7889e622ba6121a",
+      "size": 8786
+    },
+    {
+      "path": "crates/omni-supervisor/tests",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "e61e610ebff40bf549a75ef48838414ff72349d6"
+    },
+    {
+      "path": "crates/omni-supervisor/tests/common",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "dc75e0a02114e86d132e43911b444b21214707bf"
+    },
+    {
+      "path": "crates/omni-supervisor/tests/common/cmd.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a582f48ac84bc21f15faaddc4e78a841f5b6d4be",
+      "size": 2919
+    },
+    {
+      "path": "crates/omni-supervisor/tests/common/host.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "ac1f453b07959ad18f0d5fb97a356579d7090533",
+      "size": 12460
+    },
+    {
+      "path": "crates/omni-supervisor/tests/common/host_role.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "60099eba1f0054357e735351e6954f7c949b4e5f",
+      "size": 3875
+    },
+    {
+      "path": "crates/omni-supervisor/tests/common/mod.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "dc3fb5559aa28cd0407b22514f5dc2c326e17136",
+      "size": 299
+    },
+    {
+      "path": "crates/omni-supervisor/tests/common/os.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "efea0beb267e336b302ef53d357708d49f5b8ace",
+      "size": 11372
+    },
+    {
+      "path": "crates/omni-supervisor/tests/common/role.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "106e4b91f6215044ba28b7a634cb719142882cee",
+      "size": 9913
+    },
+    {
+      "path": "crates/omni-supervisor/tests/unix_host.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0ca3078074e3f2ed508a55d4bdc1d1477db4a168",
+      "size": 12202
+    },
+    {
+      "path": "crates/omni-supervisor/tests/unix_pid_reuse.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0d142c4cdc731365394a31029c03d5ec0cd7cee9",
+      "size": 7776
+    },
+    {
+      "path": "crates/omni-supervisor/tests/unix_spawn.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "922fe6b1990aacd865c8835cc50e0bd7a1c68ab8",
+      "size": 9194
+    },
+    {
+      "path": "crates/omni-supervisor/tests/unix_stop",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "0b730c15436a58c734b04b0a412df37d5af26597"
+    },
+    {
+      "path": "crates/omni-supervisor/tests/unix_stop/inventory.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "73c4a73e52e3e07a7be072a6994c548fa2d2b526",
+      "size": 4547
+    },
+    {
+      "path": "crates/omni-supervisor/tests/unix_stop/main.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fee7bee935412896883ebc719d214ea2da59b00b",
+      "size": 7889
+    },
+    {
+      "path": "crates/omni-supervisor/tests/unix_stop/member_states.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "98aeab0badfdac6c0dcb7126c848decdc1039055",
+      "size": 3390
+    },
+    {
+      "path": "crates/omni-supervisor/tests/windows_channel.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "18048dc1a28dea74a00332b40e8bc110861c0f8b",
+      "size": 2841
+    },
+    {
+      "path": "crates/omni-supervisor/tests/windows_child.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a6b579ca0452abfc6e9d07121142451eeae63ca9",
+      "size": 9317
+    },
+    {
+      "path": "crates/omni-supervisor/tests/windows_host.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fe8569b4ebfbf9efc61fee0b97a28da6b328efec",
+      "size": 14035
+    },
+    {
+      "path": "crates/omni-supervisor/tests/windows_host",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "8ed2dbaaaa3291730263dc40722eb77cacb7acfc"
+    },
+    {
+      "path": "crates/omni-supervisor/tests/windows_host/spawn.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5e07525893021707293a5ea282f7b6341905bf7d",
+      "size": 4838
+    },
+    {
+      "path": "crates/omni-supervisor/tests/windows_os.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bd916ab724f76301930811cba4a33a018253e944",
+      "size": 10892
+    },
+    {
+      "path": "crates/omni-supervisor/tests/windows_pty.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "072467d17ae026e6ae565df8d98cf87e52717eab",
+      "size": 9831
+    },
+    {
+      "path": "crates/omni-supervisor/tests/windows_pty_term.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9cdd9eeff2bffc5bf9152f364659e16acdcc5f44",
+      "size": 10182
+    },
+    {
+      "path": "crates/omni-supervisor/tests/windows_pty_term",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "486587fd0c56c38e7a03bb2d67aee1bd99c427a9"
+    },
+    {
+      "path": "crates/omni-supervisor/tests/windows_pty_term/screen.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "902e72be0f76a737c4c89105c44a931cbd326dd5",
+      "size": 4995
+    },
+    {
+      "path": "crates/omni-supervisor/tests/windows_spawn",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "3d87c33a9d229924e711e6ef388a9d2a426dd00c"
+    },
+    {
+      "path": "crates/omni-supervisor/tests/windows_spawn/main.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4719d200881984fc1295c2da089269859589e133",
+      "size": 9577
+    },
+    {
+      "path": "crates/omni-supervisor/tests/windows_spawn/root.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "85145544ccef0626f322027dac6a06d5daea0c6a",
+      "size": 7105
+    },
+    {
+      "path": "crates/omni-supervisor/tests/windows_tree.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "119f1c6e12d3e4fb3dc8b749b4e6167ca86a281f",
+      "size": 12532
+    },
+    {
+      "path": "docs",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "402a9654a6a486fc068477bfd309bbfffc420e7e"
+    },
+    {
+      "path": "docs/acceptance.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7bbbca24f87d379a7487fa1c3043d620e291aaad",
+      "size": 12906
+    },
+    {
+      "path": "docs/adr",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "3046eebb43cec1503fa1b3a60488934dc1f34e5d"
+    },
+    {
+      "path": "docs/adr/0001-process-model.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "54b9231e2488de5f0ab5c45acd12f01f03e63f94",
+      "size": 29400
+    },
+    {
+      "path": "docs/adr/0002-host-exit.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2bbdbba67e230c4c63b521060d49e13f47fad274",
+      "size": 19459
+    },
+    {
+      "path": "docs/adr/0003-pty.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2cf6ab91d3d77518017fa46dad64ff37f120870b",
+      "size": 30844
+    },
+    {
+      "path": "docs/adr/0004-packaging.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d20f7f76ddfb147d7c5dc8a35b26471ce930386c",
+      "size": 53076
+    },
+    {
+      "path": "docs/adr/0005-supervisor.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e105585bd4ee8981d09e08943f5196aeb5b222b9",
+      "size": 28957
+    },
+    {
+      "path": "docs/api-contract.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4f61714ede48ad0eb6e8a57c9255ccfd5c71e569",
+      "size": 22648
+    },
+    {
+      "path": "docs/decisions",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "5877e1ac35295fb9b781d186c7c1e09eeb57d12d"
+    },
+    {
+      "path": "docs/decisions/G0.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f130353122aa6d6271e30ac04bdb6e67922b0ef0",
+      "size": 4513
+    },
+    {
+      "path": "docs/guide",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "474de4d7f84bd6dd59a8c311eaf8d94cb5ad9a34"
+    },
+    {
+      "path": "docs/guide/recipes.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "7a34e6d46f69cdffcf0c721b135803ca7b8a1c21",
+      "size": 19071
+    },
+    {
+      "path": "docs/orchestra-integration.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "98df62fd106636cbb452e5a1d748df1da460d7db",
+      "size": 45411
+    },
+    {
+      "path": "docs/protocol.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f99250870daa6cfa7ae5d34a4b41d1189f9b83e4",
+      "size": 5965
+    },
+    {
+      "path": "docs/research",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "52d3e3c3929d51d8dcfa5d6621e500269d1d8456"
+    },
+    {
+      "path": "docs/research/adr-reviews-s1-s2.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "123e7af0c054f53ec102d37b341e53a5b491ba38",
+      "size": 37404
+    },
+    {
+      "path": "docs/research/landscape.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cfcf1b71e16a377198104d4995e4a058b5b63cec",
+      "size": 65998
+    },
+    {
+      "path": "docs/research/pain.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8d88b0880eb8f96ff5bd02b10aec7093a1469939",
+      "size": 45907
+    },
+    {
+      "path": "docs/research/processkit-audit.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8997604086b8aa6bbe62587be6e7eaae53154fc2",
+      "size": 15475
+    },
+    {
+      "path": "docs/research/processkit-eval.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bb931c13589a4e3dc04b4e985a92fbaca19f67c1",
+      "size": 25769
+    },
+    {
+      "path": "docs/research/processkit-fit.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0da0d9dcd11e9eb6e6b099cebb542e47adda2389",
+      "size": 40429
+    },
+    {
+      "path": "docs/research/supervisor-review.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "16fb187f79e80ecde2cd1c56d356cdea0bb8c9ab",
+      "size": 22056
+    },
+    {
+      "path": "docs/ux",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "84227d6349f7a46f1cce18296733bf2754a616ae"
+    },
+    {
+      "path": "docs/ux/Q2-cold-users-v0.1.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "aa78aecf5fc389f2c804a326f5647b00184fa00d",
+      "size": 4253
+    },
+    {
+      "path": "docs/ux/WP10-orchestra-integration.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1271db6aff93ca8256c8ffd2596b63944de5465c",
+      "size": 13813
+    },
+    {
+      "path": "docs/ux/WP9a-default-on.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a20d3e122d7fa087bf6f29854788079f94d7e82c",
+      "size": 24445
+    },
+    {
+      "path": "qa",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "109fd7361918d57919d0c4482d2298e73f70169c"
+    },
+    {
+      "path": "qa/.gitignore",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8c6edc00385ae755911a1ba9d44e628f8aa49f74",
+      "size": 24
+    },
+    {
+      "path": "qa/Cargo.lock",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "43e1e75563e1a7c2375a70d0718129aaa3703b05",
+      "size": 5803
+    },
+    {
+      "path": "qa/Cargo.toml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f40d068ee91a366145cc0e342354ea057144fcf1",
+      "size": 821
+    },
+    {
+      "path": "qa/README.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "95ff3153f8f814158c75f272bb72a807160eeb27",
+      "size": 17728
+    },
+    {
+      "path": "qa/node",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "e0c4ec1aed178fb1a991ae253fdec3e577899e51"
+    },
+    {
+      "path": "qa/node/arm.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8fc5cb2347d7439b407094b82b443036600d7010",
+      "size": 9618
+    },
+    {
+      "path": "qa/node/perf.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d81bbf7d0db7471cfbe6e4edf462c7439a7b5e9f",
+      "size": 5052
+    },
+    {
+      "path": "qa/node/qa.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "534ce3a7bdd8ce5e6307d3decb521aa0b0bea92c",
+      "size": 1408
+    },
+    {
+      "path": "qa/node/runner.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9d8fb8bb1f0d9f23d270ac631ee02f83b9995b1e",
+      "size": 8023
+    },
+    {
+      "path": "qa/node/runner.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2abc232dd0a5a24a91451a89605094d69736965a",
+      "size": 573
+    },
+    {
+      "path": "qa/node/workloads.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c995955568638dbf43c79239531889b205483f24",
+      "size": 10654
+    },
+    {
+      "path": "qa/pins",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "3f3038ffdaef44907f0bb861dceac3e35f6af6ac"
+    },
+    {
+      "path": "qa/pins/semver-workspace.lock",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4da33a38e44a59c6dfd8b5c632f37b2411a664bf",
+      "size": 3016
+    },
+    {
+      "path": "qa/run",
+      "mode": "100755",
+      "type": "blob",
+      "sha": "2f3ebf990217865fad06d66ebc90f5e7b83a80f6",
+      "size": 366
+    },
+    {
+      "path": "qa/run.ps1",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e6c6eccbd2c99b1c3e102f3da9d998fa7805d066",
+      "size": 570
+    },
+    {
+      "path": "qa/src",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "4d59d8f300f8487a28d92b6722db24ce06dc45f4"
+    },
+    {
+      "path": "qa/src/bounded.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bea20b58d9e1efaadba867ac0bd4ed9ec5ddcd23",
+      "size": 2450
+    },
+    {
+      "path": "qa/src/control.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "c5c9d4eb6f6867610570e90d31735984a85c85f1",
+      "size": 15734
+    },
+    {
+      "path": "qa/src/control",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "d2b7d919ce1014bb624545320593f49c54990575"
+    },
+    {
+      "path": "qa/src/control/tests.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e7da838169523bb584504c5a48f5e5c94874a097",
+      "size": 6062
+    },
+    {
+      "path": "qa/src/fetch.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "aa7fbad03c29eb82f4ee56b08339517dda325dec",
+      "size": 6519
+    },
+    {
+      "path": "qa/src/invoke.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "508d417ba86aeea0c02594bb6a9a4860ba600d68",
+      "size": 8465
+    },
+    {
+      "path": "qa/src/main.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a4e51f0d0524a0d043e0f43d756ba32b4d671f38",
+      "size": 1150
+    },
+    {
+      "path": "qa/src/oracle",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "c05d662515413f64dc9e01d14ac0a7e872a181b9"
+    },
+    {
+      "path": "qa/src/oracle/mod.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "aa8b1b7c5d524300a3062ad9b53f19859aedb046",
+      "size": 10889
+    },
+    {
+      "path": "qa/src/oracle/rules.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fb24f8fd27e11677b77ba71e40e31c3d24533871",
+      "size": 13888
+    },
+    {
+      "path": "qa/src/oracle/tests.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "46565200d3b9c0fdf3a8d23149911d29e12b679e",
+      "size": 13995
+    },
+    {
+      "path": "qa/src/oracle/tests",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "62cd97db089f1605c022adbb499b0611c675c7f4"
+    },
+    {
+      "path": "qa/src/oracle/tests/kill.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "545d2bf7d8c5f59c1c1024d925a12a97a6b4fae8",
+      "size": 5658
+    },
+    {
+      "path": "qa/src/oracle/tests/parse.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a4cf1fe88b2f666ad43ca2eeeeb38bc590e453c7",
+      "size": 3377
+    },
+    {
+      "path": "qa/src/oracle/unix.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b2a0b92a4a902563ee42d35b82c27efe87842d5b",
+      "size": 8309
+    },
+    {
+      "path": "qa/src/oracle/watch.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "faa8c83db018a292706b56b9d26efcdc702f748e",
+      "size": 8763
+    },
+    {
+      "path": "qa/src/oracle/windows.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "13c363f3702f67fbdced371c524fc42349e324a2",
+      "size": 3462
+    },
+    {
+      "path": "qa/src/plan.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "02756932047a9dbaf71dc8864cb820a7f9494115",
+      "size": 9025
+    },
+    {
+      "path": "qa/src/record.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a635be3073b7d7036575c2d802b25f26a02cd0c8",
+      "size": 2556
+    },
+    {
+      "path": "qa/src/report",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "b34ec92e44b6ff63e34535f628c29e6c88f4628d"
+    },
+    {
+      "path": "qa/src/report/kpis.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "cee53a21eb6d9eb1204227457add3bfa55023d2e",
+      "size": 8563
+    },
+    {
+      "path": "qa/src/report/mod.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d966ff33b25101e32cde8380c7a93c102d1c5399",
+      "size": 12107
+    },
+    {
+      "path": "qa/src/report/tests.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "297ca6ab40e648dc4deebed7e8135f49a8f8eb5e",
+      "size": 4332
+    },
+    {
+      "path": "qa/src/rust",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "a32f403229a3bba9278c12dd0ce39af07d133556"
+    },
+    {
+      "path": "qa/src/rust/agent.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "33ca4afbfec21fca79a83888a56fc148a98c692e",
+      "size": 4062
+    },
+    {
+      "path": "qa/src/rust/arm.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "95fbee1aa1ca2ceed508a2ea4e03478187e0d905",
+      "size": 9850
+    },
+    {
+      "path": "qa/src/rust/arm",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "25f36aa3803e0c188d66227e04c159d25b8de215"
+    },
+    {
+      "path": "qa/src/rust/arm/seen.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b9f87116c586b8ca4149c1b8a265964c53393b11",
+      "size": 1906
+    },
+    {
+      "path": "qa/src/rust/ask.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2a4f9d8a890923fb1f22aad14cad25cbc4623b54",
+      "size": 3096
+    },
+    {
+      "path": "qa/src/rust/misbehave.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d6374c9f86fc84f3f443a9f37a160aa90623953e",
+      "size": 8787
+    },
+    {
+      "path": "qa/src/rust/mod.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "091fda98ab96677024957e8b5e1d0724f0089b03",
+      "size": 11777
+    },
+    {
+      "path": "qa/src/rust/perf.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "20fe0a5da1e8088f7c478fc8aaf0b2754342738f",
+      "size": 7563
+    },
+    {
+      "path": "qa/src/rust/stdlib.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "07031d465e2d041781a0ea35106578a97406c9e7",
+      "size": 6623
+    },
+    {
+      "path": "qa/src/rust/suites.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "001709098254dfffb0c393ae7360ce072e6d0153",
+      "size": 6102
+    },
+    {
+      "path": "qa/src/rust/term.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "119db62c487af11071bc7db49df7000bf589c9ca",
+      "size": 3281
+    },
+    {
+      "path": "qa/src/setup.rs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "35f7611a709d868abf4dad88a1dfc2e1c8c4b6c1",
+      "size": 5777
+    },
+    {
+      "path": "qa/vite",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "058a1c44a179459904dcc018aeb1b0cc647c4174"
+    },
+    {
+      "path": "qa/vite/README.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "67b1253c0e3951727f660c6040321a2517694bcd",
+      "size": 989
+    },
+    {
+      "path": "qa/vite/package-lock.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a94b3cb4e4e9af34391b4a9052ca29f1e720a8c3",
+      "size": 34825
+    },
+    {
+      "path": "qa/vite/package.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "fd04a77c81c6dbbf7f9e9fb1894ea73a8eb91d63",
+      "size": 171
+    },
+    {
+      "path": "qa/workloads",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "176f225b6608f70bdabd8f2c5f14ad6b44e0384f"
+    },
+    {
+      "path": "qa/workloads/agent.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d750f1c7b67783ebf7310532ae5efc4ce7ff319d",
+      "size": 1761
+    },
+    {
+      "path": "qa/workloads/shells.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "2f588057b1d33a0a11f105ee48ff1ffe93cfd3ee",
+      "size": 3001
+    },
+    {
+      "path": "rust-toolchain.toml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "aa20bc990d6f843fffb559d502c73c74132111d0",
+      "size": 66
+    },
+    {
+      "path": "rustfmt.toml",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "75306517965a54731b94dca8bace640e856af115",
+      "size": 16
+    },
+    {
+      "path": "scripts",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "3f9c3cdbe93584688adda904ea302c19120e7469"
+    },
+    {
+      "path": "scripts/artifacts.node-smoke.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d4d70894b77157d67172eed6a837e129892a3242",
+      "size": 6121
+    },
+    {
+      "path": "scripts/brief.py",
+      "mode": "100755",
+      "type": "blob",
+      "sha": "44ea40dcdf7e571a48668e577efc8f2b6e07023e",
+      "size": 3575
+    },
+    {
+      "path": "scripts/build-artifacts.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1943388caead80bf75791e806f1dd44c98a9e27a",
+      "size": 13474
+    },
+    {
+      "path": "scripts/ci.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "8cdad20d7be0bdafb9a91fe3d1aeb7384ad4f92d",
+      "size": 9779
+    },
+    {
+      "path": "scripts/file-size-guard.py",
+      "mode": "100755",
+      "type": "blob",
+      "sha": "5c1b41d44a73e0f3bf095efc2cb5d8850e9f604d",
+      "size": 4834
+    },
+    {
+      "path": "scripts/guarantees-check",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "80f7e921db493ac8cfeb73f6b7c9e40f3926bb76"
+    },
+    {
+      "path": "scripts/guarantees-check/check.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "1e3572cfa3e2df1ccaaecd12f0f63efdb4a5ec70",
+      "size": 11574
+    },
+    {
+      "path": "scripts/guarantees-check/check.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "6583887a485a8607c1d8e218e8f908509271e375",
+      "size": 8503
+    },
+    {
+      "path": "scripts/plan-sections-check.py",
+      "mode": "100755",
+      "type": "blob",
+      "sha": "43d5eb8d7c2b2387f91232990f1c0bad20e269bf",
+      "size": 1072
+    },
+    {
+      "path": "scripts/readme-check",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "57dd5953eafaa370b3e3756115839637019e02b0"
+    },
+    {
+      "path": "scripts/readme-check/blocks.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "06823d41ecbddf4b42783b1fc2994efe1c493a56",
+      "size": 9884
+    },
+    {
+      "path": "scripts/readme-check/check.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "aa839479c29ab604f4ccda6278c345e6300bfbaa",
+      "size": 7649
+    },
+    {
+      "path": "scripts/readme-check/check.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "485c4e665725661d5e3004a51b321e4c95d1f732",
+      "size": 22745
+    },
+    {
+      "path": "scripts/readme-check/fixture",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "30efcb5c0992ea8d420a7c08cbc1c0eedce88f2f"
+    },
+    {
+      "path": "scripts/readme-check/fixture/dev.js",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0b27c8d7c466f181e654178c2b826c84b816f48f",
+      "size": 519
+    },
+    {
+      "path": "scripts/readme-check/fixture/package.json",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f01a0f86e6de3abdad804844eabaac2ee97ce06c",
+      "size": 120
+    },
+    {
+      "path": "scripts/readme-check/fixture/test.js",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "20ca01dbc7e6b73a9970f7fc1adb21bf98b2b51d",
+      "size": 91
+    },
+    {
+      "path": "scripts/readme-check/run.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5cc35198873071a853e2fe38926c8ccef1cdcaa2",
+      "size": 14368
+    },
+    {
+      "path": "scripts/review-prompt.py",
+      "mode": "100755",
+      "type": "blob",
+      "sha": "5668ef2c4e1aac476551c554d8db84605b98040d",
+      "size": 2708
+    },
+    {
+      "path": "scripts/skill-check",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "fa43322c8e98f7d9e44abfb3e952e78864b825c5"
+    },
+    {
+      "path": "scripts/skill-check/check.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "4102a3963994e3d2b418792f269c79ae3f3a16b3",
+      "size": 13205
+    },
+    {
+      "path": "scripts/skill-check/check.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9c3359d208e577bd324af08fb52e686aa1cd2a22",
+      "size": 10764
+    },
+    {
+      "path": "scripts/skill-check/foreign.txt",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "32b39c797414add5e90a45986319d35b4cddd28d",
+      "size": 2139
+    },
+    {
+      "path": "scripts/skill-check/markdown.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "be0a01454c6063387c22606f12ed4f8b509ce615",
+      "size": 4914
+    },
+    {
+      "path": "scripts/surface-check",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "cd3243fc0dd16d41b8a912bce389e6b6dd6d15ad"
+    },
+    {
+      "path": "scripts/surface-check/binding.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "768cf6b6387838222e591812d5be0b3394ffd5bc",
+      "size": 13134
+    },
+    {
+      "path": "scripts/surface-check/dts.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "df3e65de70cb2517428f361a60676a4c13200ba9",
+      "size": 6066
+    },
+    {
+      "path": "scripts/surface-check/parity.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "04b93e9ad2df6f1d86383cc01b3ecbb7a7329e1c",
+      "size": 9609
+    },
+    {
+      "path": "scripts/surface-check/parity.txt",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5efe733d9ab54244c0cd5db9793c1d0ee9f24ad8",
+      "size": 4868
+    },
+    {
+      "path": "scripts/surface-check/rust.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "d3bfd1e75831fe0816b9aecbd81817242aa0cae2",
+      "size": 12679
+    },
+    {
+      "path": "scripts/surface-check/surface.test.mjs",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9b3d33436f1c0bc73824d79550769378af6f6032",
+      "size": 24283
+    },
+    {
+      "path": "scripts/test_file_size_guard.py",
+      "mode": "100755",
+      "type": "blob",
+      "sha": "c123bf35bcafe56d9fad9fd910049f40332bbce8",
+      "size": 3479
+    },
+    {
+      "path": "skills",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "b2af80f6b7654715b0c3bdcb5aeb7e9035127d30"
+    },
+    {
+      "path": "skills/omni-conformance",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "c63296f44defae7ea35f3614914a32814e0f563e"
+    },
+    {
+      "path": "skills/omni-conformance/SKILL.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "e7cd2d4e4ddf7bf970430d7f126f16012c03ba47",
+      "size": 6149
+    },
+    {
+      "path": "skills/omni-core-change",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "2e6c8de819869a3b9500883980c4906e6341854c"
+    },
+    {
+      "path": "skills/omni-core-change/SKILL.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f6192cb120753fb92aed7c74d35f054c9c68163f",
+      "size": 6944
+    },
+    {
+      "path": "skills/omni-gates",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "ee2a90548c0f4f451510e0e557d0a4563f6d4383"
+    },
+    {
+      "path": "skills/omni-gates/SKILL.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "968426a62d9183077b3f5256129139e909ffce34",
+      "size": 6627
+    },
+    {
+      "path": "skills/omni-gates/references",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "7ae7f54708cc7a0302723d76c38fcd3b215f4407"
+    },
+    {
+      "path": "skills/omni-gates/references/ci-history.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "0a5d972b9e268c92ad7f9504e3775ddc80b26d64",
+      "size": 4464
+    },
+    {
+      "path": "skills/omni-lifecycle",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "219ea8579051e27894e88101fb4005e084d26b7a"
+    },
+    {
+      "path": "skills/omni-lifecycle/SKILL.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "bb6fb77fe6162c9b9f1612ad32eecffc5d870238",
+      "size": 8420
+    },
+    {
+      "path": "skills/omni-migrate",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "d4b3ee4e1fafbb03f060bc4a01f264361655c928"
+    },
+    {
+      "path": "skills/omni-migrate/SKILL.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "665a86a1c4e9210c5da7dda9fbe0e597044885c9",
+      "size": 10255
+    },
+    {
+      "path": "skills/omni-migrate/references",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "30f286d9fbee32764b93fb36ce87f314353c78a1"
+    },
+    {
+      "path": "skills/omni-migrate/references/orchestra.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f817cbd370e9e783c4d9ab4c0ccda8d184abec26",
+      "size": 3444
+    },
+    {
+      "path": "skills/omni-os-traps",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "e4f50b604f0d6cf8ceea03927008c37b7adc0c8c"
+    },
+    {
+      "path": "skills/omni-os-traps/SKILL.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "65034dceefaf015f2e14b2d7a49edaf15a334eca",
+      "size": 7143
+    },
+    {
+      "path": "skills/omni-processes",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "7cb2935278f34819f8073909a277415244f6a3c4"
+    },
+    {
+      "path": "skills/omni-processes/SKILL.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "039bc28d4dfe9952e43bea0d474abbd60a74826a",
+      "size": 9146
+    },
+    {
+      "path": "skills/omni-processes/references",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "05c78f9f62ec008069cd4c581d8c4cebdbb99c32"
+    },
+    {
+      "path": "skills/omni-processes/references/windows.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "9d99df79a95ef0743fcf11b3a5d4afca0ea343db",
+      "size": 4021
+    },
+    {
+      "path": "skills/omni-release",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "a7c6afcefb871f388eb850ff22e32ec264e2b532"
+    },
+    {
+      "path": "skills/omni-release/SKILL.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "f7e39c191cf939b581ecea8aee75a784b512e7cd",
+      "size": 5401
+    },
+    {
+      "path": "skills/omni-release/references",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "b821fcfb708f6e06ccc6e5ae4dd81637ddecddaf"
+    },
+    {
+      "path": "skills/omni-release/references/mirror.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "a523ceb67aba1d1ae8d60994273f770c2fef593f",
+      "size": 4732
+    },
+    {
+      "path": "skills/omni-release/references/new-target.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "b44472569b5e39a4c1ca463e8351304eead68167",
+      "size": 2961
+    },
+    {
+      "path": "skills/omni-terminals",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "51e96522a5b69084f5ca81b82e96144b5e04ce08"
+    },
+    {
+      "path": "skills/omni-terminals/SKILL.md",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "799fc1107a2a9ca8d19dad91044f90a9c2c1e14d",
+      "size": 8547
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "schema": "omni-review-public-mirrors/v1",
+  "summary": "reviews/checkpoint-01-summary.md",
+  "note": "Paths are public mirrors of the exact authored bytes. This mapping creates no decision.",
+  "mappings": [
+    {
+      "authored_identifier": "authors/core/records-01.json",
+      "public_path": "history/core/v1/records-01.json",
+      "sha256": "dc5c374b7ff31bcadbbf10ee7a2e2b224885bc70b9e38f8b1b64549c7d1ec849"
+    },
+    {
+      "authored_identifier": "authors/core/records-01.v2.json",
+      "public_path": "bodies/core/records-01.v2.json",
+      "sha256": "88d3b68a0f9744b2351d7930c5e4cdfe0b7db86d6c8a2d7a2597a0f8c18aac34"
+    },
+    {
+      "authored_identifier": "authors/core/records-02.json",
+      "public_path": "history/core/v1/records-02.json",
+      "sha256": "3f8cc0330486e5fc2e5c4e80207a0441e31993782eef594bb220e24d4d5cb185"
+    },
+    {
+      "authored_identifier": "authors/core/records-02.v2.json",
+      "public_path": "history/core/v2/records-02.v2.json",
+      "sha256": "1df9bcebbfc64e06bc85c3a5a2ffa6f0f9c7707ae37a4d2a065ef693c2e5aa1a"
+    },
+    {
+      "authored_identifier": "authors/core/records-02.v3.json",
+      "public_path": "bodies/core/records-02.v3.json",
+      "sha256": "8c6515b455eba0637b66a6999c83c7c80b2a0624720680034e62d5b450c2f913"
+    },
+    {
+      "authored_identifier": "authors/core/delta-01-v2.json",
+      "public_path": "history/core/delta-01-v2.json",
+      "sha256": "0a300b13673a2f563213c5094228946edf7e1206ed0a82610e465828e13227c7"
+    },
+    {
+      "authored_identifier": "authors/core/delta-02-v2.json",
+      "public_path": "history/core/delta-02-v2.json",
+      "sha256": "719ab93e6be1d578b5512b210d65ecaf67225c0104c37c350be0024e76ae1853"
+    },
+    {
+      "authored_identifier": "authors/core/delta-02-v3.json",
+      "public_path": "history/core/delta-02-v3.json",
+      "sha256": "a4fcef82f2d06406a18ec2a9caaa2b3b04048ce331bd5405fe89e02695e5655d"
+    }
+  ]
+}

@@ -1,0 +1,316 @@
+{
+  "schema": "genesis-native-prepared/v1",
+  "candidate_id": "e26f61d43768199a889f8a415639fc9cbc5587005368604000f982e5b6fde71d",
+  "candidate": {
+    "kind": "genesis-native-candidate",
+    "version": 1,
+    "repo_root": "/workspace/scratch/d3422440cdf1/omni-genesis/runtime-pilot-c01",
+    "observed_head": null,
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "scope": "native/omni",
+    "session": "S5",
+    "reference_commit_verification": "external-capture-evidence-required",
+    "transport": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/pilot-package.json",
+      "sha256": "040fd4baf1cf0b6c4b66789c791015bfdded2e0b76302fa2bfa7323ac2f45784",
+      "body": "e7b6d72d5cff052cf5846d633e2494189ae3671ed07aeaafeae3bafd7498a9de"
+    },
+    "implementation": {
+      "adapter": "bb6b0c2bbcb8bc20f804344c9015c3f19dac86a3f60264ccb50fe023308de312",
+      "format": "fe68c090812df6c15fc2dab9d36ec79315e8198908bc7e8570859454da600e21",
+      "io": "04d04c1ad64d5f8f916d5416df650d23e13aba997ad19baf78e6ec32e9397983",
+      "binding": "ef424a0b5bdb9590f48b8b21b418de1aa033189578790c0bb93a92e1c1d38021"
+    },
+    "contract": "ad290fab1d7410d7a1afe431573c03ff2e4deafaf8cf8bb058014be12b14fc3c",
+    "criteria": [
+      "C1",
+      "C2",
+      "C3",
+      "C4",
+      "C5",
+      "C6",
+      "C7",
+      "runtime-import-binding"
+    ],
+    "references": [
+      {
+        "reference": {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "path": ".orchestra/skills/execute-genesis/references/transport.md",
+          "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c"
+        },
+        "body": "3585498d51ea14a376935dd52ca7f09466052f673fbb7824849edccf333d4112"
+      },
+      {
+        "reference": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/criteria-freeze.json",
+          "sha256": "2714540805c84a591e455b5542056c8f6b33100433d286629199c162c9a3eaa7"
+        },
+        "body": "25510edf5623cd51fe2be5e1679dbdb3956acec6a2ccfda242225b3594f5d72f"
+      },
+      {
+        "reference": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/recipes/author-contract.md",
+          "sha256": "574f2d8677876dd176b83350a4129da44655f494bebcf1c344d4b823519048fe"
+        },
+        "body": "197ed890ffa364b110163f4b3da2dc561b9c87bce25c8500754dfdfcf75dc011"
+      },
+      {
+        "reference": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/core/records-01.v2.json",
+          "sha256": "88d3b68a0f9744b2351d7930c5e4cdfe0b7db86d6c8a2d7a2597a0f8c18aac34"
+        },
+        "body": "81d5d27c8165f5a83ba2d399beb2e636935b9cacd6dd342168da96f6323b4a4d"
+      },
+      {
+        "reference": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/reviews/C01v2-J1-summary.json",
+          "sha256": "2327a7d47b74ccf72164d78ebef38d5cba65767d6fa1ac30f7cb9d9bbdf442e1"
+        },
+        "body": "ab293068241dfb335f1d885b3066ea65a055b955eef6f3e98bb802f671d5ec78"
+      },
+      {
+        "reference": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/reviews/C01v2-J2-summary.json",
+          "sha256": "32ec5c11c30fdae78721ace8daafabe39b7aaefeef789955bb3f08560c7c5290"
+        },
+        "body": "fe02c7371c13a477f081a6fb54ea3d44069ec03034924bea5bb96a6d1c0f9878"
+      }
+    ],
+    "observations": [
+      {
+        "key": "file:native/omni/Cargo.toml",
+        "version": "285bbb96227c6efdd30e7eddeb495d92bea1bb3154e9058fe7b23dd8c952c75e",
+        "sha256": "49e545268f839655573698ee7d2f1d606178b262fb376704360ea2e8d0e063c9"
+      },
+      {
+        "key": "file:native/omni/GUARANTEES.md",
+        "version": "88f426c0704f45be850c0e2841c6bc349550c349742c38b88cf05a61e6c8f032",
+        "sha256": "60828f65581529e0a0ef09c80f74ad46dfcea8fd49f5575f7b0673427ad4a527"
+      },
+      {
+        "key": "file:native/omni/crates/hugr-omni/Cargo.toml",
+        "version": "97a68712ba8532b5c00ae08b589f7c2d0f79c28c2e9e576153b8384a5724db2a",
+        "sha256": "9793a8c1fc11d81a16f4741aef8e9380d8d4b91bd3b0d87d43aca65401407da2"
+      },
+      {
+        "key": "file:native/omni/crates/hugr-omni/README.md",
+        "version": "f20991bc9ab495da67aeff15a2572c6e9782ad2bc2d7b529b5c73d780cb92061",
+        "sha256": "7400a8f3171678895fc18b7954d48121b2d1457ebd145b5d45e51b9b5b4da757"
+      },
+      {
+        "key": "file:native/omni/crates/hugr-omni/src/api/command.rs",
+        "version": "fde6368e0a157b7aac327c39a421a85b9c2ed9330b348f3b2b91b05080d2c070",
+        "sha256": "9b130c6166ef54e2cad64a9ea058c76db05a3264bb4daae5f150755130c09220"
+      },
+      {
+        "key": "file:native/omni/crates/hugr-omni/src/api/mod.rs",
+        "version": "c982346cec1be762b2618667337b472980b64c15f521f03a55a4ff26ccd7ab35",
+        "sha256": "9230d7ea1770092ea26abd04ae43abbd60bf2753ada2c230a71e563ae9ea3b5c"
+      },
+      {
+        "key": "file:native/omni/crates/hugr-omni/src/binding.rs",
+        "version": "eb051dabf1d6cafc17d9c567433baef10b54312d6ff3ea4139709b835f168776",
+        "sha256": "d7ba5604c33899e9612ff68f598b6f5eff9a773273504949eecd02ba9c02f19f"
+      },
+      {
+        "key": "file:native/omni/crates/hugr-omni/src/client/channel.rs",
+        "version": "480bb5001268f786328420d1fdc9ba1e09f15bc8a82e7c2518dcb7625559177e",
+        "sha256": "b68784f859ee9387720b8942a5821af41db720faf81423ba938384301c22bf15"
+      },
+      {
+        "key": "file:native/omni/crates/hugr-omni/src/client/channel/route.rs",
+        "version": "cfc096259f597dc4785f996829bb9aafe6fe4d1c68802b691467695b282e524c",
+        "sha256": "a144d18da03062841d9c6f96919941ce0de099b6bc03ef1619c60825d12521cf"
+      },
+      {
+        "key": "file:native/omni/crates/hugr-omni/src/client/hold.rs",
+        "version": "c3b3b21669c2f9e6b639adf7f3db2a7647c282c68492532e3d7289138f293b83",
+        "sha256": "775e5364c8a48b99d672a52a4105704327f993ca12cd2f6f59d296db2e1775e4"
+      },
+      {
+        "key": "file:native/omni/crates/hugr-omni/src/client/keeper.rs",
+        "version": "e7124c0ebb3fbd8dbb1f8a3429be042f22867aa242b04b77d0f9ff2fe150df56",
+        "sha256": "738da168685021d02ab413cc9b534c90cde2322728ff1d84a42ebd2e8372c757"
+      },
+      {
+        "key": "file:native/omni/crates/hugr-omni/src/client/mod.rs",
+        "version": "6db6d673ca1646fd8c99e494337f72cfe961f8f5630a83711924ca00075f4736",
+        "sha256": "c6d0e33c4335ca67fc684bfddb4c192ce70347b2f5b929c58f8e6509b129588c"
+      },
+      {
+        "key": "file:native/omni/crates/hugr-omni/src/client/start.rs",
+        "version": "f5707039bdbc746e1b56135c908cb6c8afb793f92ff7a6e4c0c7357638b9a613",
+        "sha256": "bb709e14c250e3557ffe2859d50b1759eebd517e37e71c4b170273e576776852"
+      },
+      {
+        "key": "file:native/omni/crates/hugr-omni/src/client/unix.rs",
+        "version": "c0bfec1dce171b00cd39845f7ab65a82b928e87154ffcd431cef68edc0a4e2b6",
+        "sha256": "f67a2e5957d19bf0847cf1aaa71538f28174366e5fb2372df3275c46bbe514e8"
+      },
+      {
+        "key": "file:native/omni/crates/hugr-omni/src/client/windows.rs",
+        "version": "a49c878b1b4547e3a9c3fc99ca435303efb244ea1661d7fee1ece8a30178beda",
+        "sha256": "24938bab497dfd342790b8501738361c518bfc0138625de45da15920e66db9b9"
+      },
+      {
+        "key": "file:native/omni/crates/hugr-omni/src/process/memory.rs",
+        "version": "4557cba864ea6d77416ef89a0cee610d9abe8858002063eabe7553358513c829",
+        "sha256": "7933963d860d697ccd3895899499257fa593eb20033be9867362fc8e8190d6d6"
+      },
+      {
+        "key": "file:native/omni/crates/hugr-omni/src/process/mod.rs",
+        "version": "58b2ad3720c6ba26b3c580c0c6c0897fa27475b681c8a7cc3d71f4f391628003",
+        "sha256": "2573e21fdf20f5e1087ddcc00a34abf534f5fe487cf3c84bbed6e20b0b28aa15"
+      },
+      {
+        "key": "file:native/omni/crates/hugr-omni/src/process/run.rs",
+        "version": "bb0e87e5b511be07883d475dc488340baf0a87909b59f33f5c01798cccdd0db3",
+        "sha256": "7e6ea694a726ae0c56af9a76ec38b2e8008770c32ba4caf1f6cd6fd370f4b53a"
+      },
+      {
+        "key": "file:native/omni/crates/hugr-omni/src/types.rs",
+        "version": "aeb7a9a13cfbeb6e22565b2578d3451c45a5fc1e0279231d3706077afd804d4b",
+        "sha256": "628de2e6808a85d1ea6d006eac2f80ac8d105a8f1b057b7e792ddb41ef1fa3f0"
+      },
+      {
+        "key": "file:native/omni/crates/omni-proto/src/codec/mod.rs",
+        "version": "e1be61461cfdeb9fe59e35a42e1912594a6e9c09c44967e2e82c3c9073a6b4a7",
+        "sha256": "c17f8572ab5957a4371cecf405e531176331659f2e487b15b856628d3cd6b295"
+      },
+      {
+        "key": "file:native/omni/docs/api-contract.md",
+        "version": "6b57aeffd12c050111e5f04049f75ccbd9956ef18f7d57212fae9db1685a529a",
+        "sha256": "2786d322b4175e84f520a9c6c28a7aec5eed1d6a43d90e65001e66bfc39b20ab"
+      },
+      {
+        "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/recipes/author-contract.md",
+        "version": "bd1394c3b1a0c56d5be59c31edd2abab790d8d895019076b7e4d0ce856f76988",
+        "sha256": "574f2d8677876dd176b83350a4129da44655f494bebcf1c344d4b823519048fe"
+      },
+      {
+        "key": "file:.orchestra/skills/execute-genesis/references/transport.md",
+        "version": "92abbdae0d28c3b36afa049006e959a23347687de3f94c08896d74ea9af376f0",
+        "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c"
+      }
+    ],
+    "entries": [
+      {
+        "key": "omni393.core.records-01",
+        "artifact": {
+          "kind": "ownership-artifact",
+          "version": 1,
+          "key": "omni393.core.records-01",
+          "scope": "native/omni",
+          "title": "Omni core source records 01 (6 paths)",
+          "layer": 1,
+          "need": "evidence",
+          "result": "b487fb9f8ad998bea86f8dba85e2d75dcd5e90e1b42c6e63450b7ec97b2835d4",
+          "navigation": []
+        },
+        "inputs": [
+          {
+            "key": "file:native/omni/Cargo.toml",
+            "version": "285bbb96227c6efdd30e7eddeb495d92bea1bb3154e9058fe7b23dd8c952c75e"
+          },
+          {
+            "key": "file:native/omni/GUARANTEES.md",
+            "version": "88f426c0704f45be850c0e2841c6bc349550c349742c38b88cf05a61e6c8f032"
+          },
+          {
+            "key": "file:native/omni/crates/hugr-omni/Cargo.toml",
+            "version": "97a68712ba8532b5c00ae08b589f7c2d0f79c28c2e9e576153b8384a5724db2a"
+          },
+          {
+            "key": "file:native/omni/crates/hugr-omni/README.md",
+            "version": "f20991bc9ab495da67aeff15a2572c6e9782ad2bc2d7b529b5c73d780cb92061"
+          },
+          {
+            "key": "file:native/omni/crates/hugr-omni/src/api/command.rs",
+            "version": "fde6368e0a157b7aac327c39a421a85b9c2ed9330b348f3b2b91b05080d2c070"
+          },
+          {
+            "key": "file:native/omni/crates/hugr-omni/src/api/mod.rs",
+            "version": "c982346cec1be762b2618667337b472980b64c15f521f03a55a4ff26ccd7ab35"
+          },
+          {
+            "key": "file:native/omni/crates/hugr-omni/src/binding.rs",
+            "version": "eb051dabf1d6cafc17d9c567433baef10b54312d6ff3ea4139709b835f168776"
+          },
+          {
+            "key": "file:native/omni/crates/hugr-omni/src/client/channel.rs",
+            "version": "480bb5001268f786328420d1fdc9ba1e09f15bc8a82e7c2518dcb7625559177e"
+          },
+          {
+            "key": "file:native/omni/crates/hugr-omni/src/client/channel/route.rs",
+            "version": "cfc096259f597dc4785f996829bb9aafe6fe4d1c68802b691467695b282e524c"
+          },
+          {
+            "key": "file:native/omni/crates/hugr-omni/src/client/hold.rs",
+            "version": "c3b3b21669c2f9e6b639adf7f3db2a7647c282c68492532e3d7289138f293b83"
+          },
+          {
+            "key": "file:native/omni/crates/hugr-omni/src/client/keeper.rs",
+            "version": "e7124c0ebb3fbd8dbb1f8a3429be042f22867aa242b04b77d0f9ff2fe150df56"
+          },
+          {
+            "key": "file:native/omni/crates/hugr-omni/src/client/mod.rs",
+            "version": "6db6d673ca1646fd8c99e494337f72cfe961f8f5630a83711924ca00075f4736"
+          },
+          {
+            "key": "file:native/omni/crates/hugr-omni/src/client/start.rs",
+            "version": "f5707039bdbc746e1b56135c908cb6c8afb793f92ff7a6e4c0c7357638b9a613"
+          },
+          {
+            "key": "file:native/omni/crates/hugr-omni/src/client/unix.rs",
+            "version": "c0bfec1dce171b00cd39845f7ab65a82b928e87154ffcd431cef68edc0a4e2b6"
+          },
+          {
+            "key": "file:native/omni/crates/hugr-omni/src/client/windows.rs",
+            "version": "a49c878b1b4547e3a9c3fc99ca435303efb244ea1661d7fee1ece8a30178beda"
+          },
+          {
+            "key": "file:native/omni/crates/hugr-omni/src/process/memory.rs",
+            "version": "4557cba864ea6d77416ef89a0cee610d9abe8858002063eabe7553358513c829"
+          },
+          {
+            "key": "file:native/omni/crates/hugr-omni/src/process/mod.rs",
+            "version": "58b2ad3720c6ba26b3c580c0c6c0897fa27475b681c8a7cc3d71f4f391628003"
+          },
+          {
+            "key": "file:native/omni/crates/hugr-omni/src/process/run.rs",
+            "version": "bb0e87e5b511be07883d475dc488340baf0a87909b59f33f5c01798cccdd0db3"
+          },
+          {
+            "key": "file:native/omni/crates/hugr-omni/src/types.rs",
+            "version": "aeb7a9a13cfbeb6e22565b2578d3451c45a5fc1e0279231d3706077afd804d4b"
+          },
+          {
+            "key": "file:native/omni/crates/omni-proto/src/codec/mod.rs",
+            "version": "e1be61461cfdeb9fe59e35a42e1912594a6e9c09c44967e2e82c3c9073a6b4a7"
+          },
+          {
+            "key": "file:native/omni/docs/api-contract.md",
+            "version": "6b57aeffd12c050111e5f04049f75ccbd9956ef18f7d57212fae9db1685a529a"
+          },
+          {
+            "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/recipes/author-contract.md",
+            "version": "bd1394c3b1a0c56d5be59c31edd2abab790d8d895019076b7e4d0ce856f76988"
+          },
+          {
+            "key": "file:.orchestra/skills/execute-genesis/references/transport.md",
+            "version": "92abbdae0d28c3b36afa049006e959a23347687de3f94c08896d74ea9af376f0"
+          }
+        ],
+        "dependencies": [],
+        "inputs_id": "4e1174bae334a10871f921e6fc4eb04b17329e1cac39a4166531a25e0433631b"
+      }
+    ],
+    "roots": {
+      "evidence": "omni393.core.records-01"
+    },
+    "required_artifact_keys": [
+      "omni393.core.records-01"
+    ]
+  }
+}
