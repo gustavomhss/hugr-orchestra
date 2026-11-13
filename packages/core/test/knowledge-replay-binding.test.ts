@@ -78,7 +78,9 @@ for (const attack of [...KnowledgeReplayBinding.attacks, "same-hash", "derivedAt
           expect(snapshot.staging).toBe(attack === "derivedAt" ? 0 : 1)
           expect(snapshot.cas).toBe(1)
           expect(snapshot.edges).toEqual(attack === "derivedAt" ? [1, 1, 1, 1] : [0, 0, 0, 0])
-          expect(snapshot.row).toEqual(attack === "derivedAt" ? proof.source : index < 2 ? proof.candidate : proof.changedCandidate)
+          const expected = attack === "derivedAt" ? proof.source : index < 2 ? proof.candidate : proof.changedCandidate
+          if (expected === undefined) throw new Error("Same-hash proof is missing its changed candidate")
+          expect(snapshot.row).toEqual(expected)
         })
         expect(proof.snapshots[1]).toEqual(proof.snapshots[0])
         if (attack === "same-hash") {
