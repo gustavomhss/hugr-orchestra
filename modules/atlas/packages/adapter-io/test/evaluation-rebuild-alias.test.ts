@@ -132,26 +132,34 @@ describe("two-stage private evaluation rebuild, synthetic CI only", () => {
 })
 
 describe("finalize candidate alias isolation", () => {
-  it("detaches deeply nested candidate data before adversarial callbacks mutate caller aliases", () => {
+  it("returns HOLD if an adversarial callback mutates the CAS-backed candidate through an alias", () => {
     const f = changed(), evidence = decisions(f.target)
     const original = f.target.prepared.candidate
-    const expectedTitle = original.entries[0]!.artifact.title
-    const expectedVersion = original.observations[0]!.version
-    const current = (key: string) => {
+    const result = finalizeEvaluationUpdate({ store: f.store, target: f.target, ...evidence, current: (key) => {
       Reflect.set(original.entries[0]!.artifact, "title", "callback-corrupted-title")
       Reflect.set(original.entries[0]!, "semanticEvidence", ["callback-corrupted-evidence"])
       Reflect.set(original.observations[0]!, "version", "callback-corrupted-version")
       Reflect.set(original.evaluation, "evaluationPlan", "callback-corrupted-plan")
       return f.current.get(key)
-    }
-    const result = finalizeEvaluationUpdate({ store: f.store, target: f.target, ...evidence, current })
+    } })
+    expect(result).toMatchObject({ kind: "hold", evidence: ["evaluation-target-integrity-after-callback"] })
+    // The caller-owned alias remains mutated; no rollback is claimed.
+    expect(original.entries[0]!.artifact.title).toBe("callback-corrupted-title")
+  })
+
+  it("returns a deeply detached, frozen graph when callbacks leave source aliases intact", () => {
+    const f = changed(), evidence = decisions(f.target)
+    const original = f.target.prepared.candidate
+    const expectedTitle = original.entries[0]!.artifact.title
+    const expectedVersion = original.observations[0]!.version
+    const result = finalizeEvaluationUpdate({ store: f.store, target: f.target, ...evidence,
+      current: (key) => f.current.get(key) })
     expect(result.kind).toBe("private-evaluation-candidate")
     if (result.kind !== "private-evaluation-candidate") return
     expect(result.prepared.candidate.entries[0]!.artifact.title).toBe(expectedTitle)
-    expect(result.prepared.candidate.entries[0]!.semanticEvidence[0]).not.toBe("callback-corrupted-evidence")
     expect(result.prepared.candidate.observations[0]!.version).toBe(expectedVersion)
-    expect(result.prepared.candidate.evaluation.evaluationPlan).not.toBe("callback-corrupted-plan")
     expect(result.prepared.candidate_id).toBe(f.target.prepared.candidate_id)
+    expect(result.prepared.candidate).not.toBe(original)
     expect(Object.isFrozen(result.prepared.candidate)).toBe(true)
     expect(Object.isFrozen(result.prepared.candidate.entries[0]!.artifact)).toBe(true)
     expect(Object.isFrozen(result.prepared.candidate.entries[0]!.semanticEvidence)).toBe(true)
@@ -159,17 +167,14 @@ describe("finalize candidate alias isolation", () => {
     expect(Reflect.set(result.prepared.candidate.entries[0]!.artifact, "title", "post-finalize")).toBe(false)
   })
 
-  it("does not claim rollback when callback mutates the caller-owned source candidate", () => {
+  it("does not claim rollback after a callback mutates the caller-owned source candidate", () => {
     const f = changed(), evidence = decisions(f.target)
     const original = f.target.prepared.candidate
     const result = finalizeEvaluationUpdate({ store: f.store, target: f.target, ...evidence, current: (key) => {
       Reflect.set(original.entries[0]!.artifact, "title", "caller-side-mutation")
       return f.current.get(key)
     } })
-    // Finalization succeeds from its detached snapshot; the external alias mutation itself is not rolled back.
-    expect(result.kind).toBe("private-evaluation-candidate")
+    expect(result.kind).toBe("hold")
     expect(original.entries[0]!.artifact.title).toBe("caller-side-mutation")
-    if (result.kind === "private-evaluation-candidate")
-      expect(result.prepared.candidate.entries[0]!.artifact.title).not.toBe("caller-side-mutation")
   })
 })

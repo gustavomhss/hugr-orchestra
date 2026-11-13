@@ -258,6 +258,9 @@ export function finalizeEvaluationUpdate(request: {
     if (nativeSha256(bytes) !== reference.sha256) throw new Error("evaluation-rebuild-reference-drift")
     return store.put({ kind: "ownership-body", version: 1, bytes: Array.from(bytes) })
   }))
+  // A callback may also reach the CAS object through an external alias. Detect that drift;
+  // do not pretend that writes already made to the store were rolled back.
+  if (id(store.get(prepared.candidate_id)) !== prepared.candidate_id) return refuse("evaluation-target-integrity-after-callback")
   const entries = candidate.entries.map((entry) => {
     const reviews = binding.decisions.map((decision, index) => {
       const review: EvaluationOwnershipReview = { kind: "ownership-review", version: 2, evaluation: context.evaluation, evaluationCandidate: prepared.candidate_id,
@@ -278,6 +281,7 @@ export function finalizeEvaluationUpdate(request: {
     if (read.kind === "hold") return read
   }
   if (candidate.observations.some((input) => request.current(input.key) !== input.version)) return refuse("evaluation-final-input-drift")
+  if (id(store.get(prepared.candidate_id)) !== prepared.candidate_id) return refuse("evaluation-target-integrity-after-callback")
   return { kind: "private-evaluation-candidate", prepared: finalizedPrepared, manifest: manifestHash, context }
   } catch (error) {
     return refuse(error instanceof Error ? error.message : "evaluation-finalize-invalid-evidence")
