@@ -154,7 +154,8 @@ test("shows a pending permission dock", async ({ page }) => {
   await expect(permission.getByRole("button", { name: "Deny" })).toBeVisible()
   await expect(page.locator('[data-component="session-composer"]')).toHaveCount(0)
 
-  const reply = page.waitForRequest((request) => request.method() === "POST")
+  const reply = page.waitForRequest((request) =>
+    request.method() === "POST" && /(?:^|\/)permission(?:\/|$)/.test(new URL(request.url()).pathname))
   await permission.getByRole("button", { name: "Allow once" }).click()
   const request = await reply
   expect(new URL(request.url()).pathname).toBe(`/api/session/${sessionID}/permission/permission-request/reply`)
