@@ -1,0 +1,57 @@
+{
+  "run": "43369253063",
+  "snapshot": "e2aa9e73d28ea01dc48cf61780de68c00fa0b184",
+  "source": "421381c83d4d033555a7da111d50be5b48cbfe8e",
+  "snapshot_changes": [
+    ".ci-run.json"
+  ],
+  "upstream_fix": "7c338b0da1c1a6b87e4d5521b16fe95dab7bf00b",
+  "jobs": [
+    {
+      "id": 131700903283,
+      "name": "test (windows-latest)",
+      "conclusion": "success"
+    },
+    {
+      "id": 131700903524,
+      "name": "test (ubuntu-24.04)",
+      "conclusion": "success"
+    },
+    {
+      "id": 131704117936,
+      "name": "cleanup",
+      "conclusion": "success"
+    }
+  ],
+  "results": {
+    "linux": {
+      "pass": 45,
+      "fail": 0,
+      "assertions": 180,
+      "omni_spawns": 46,
+      "raw_sha256": "701a74ae65160ad8b5a3261ad459ae6116d23431e94f99425f123ea6b79ed688",
+      "verdict_lines": [
+        "2026-11-13T05:05:47.9699228Z omni positive control [77874db77ef90178f8859a3bbf1b3b38]: pass (declared: 26 test(s) in src/main/omni-process.test.ts); 46 omni spawn(s), 0 delegated.",
+        "2026-11-13T05:05:47.9700416Z  45 pass",
+        "2026-11-13T05:05:47.9700643Z  0 fail",
+        "2026-11-13T05:05:47.9700886Z  180 expect() calls",
+        "2026-11-13T05:05:47.9701186Z Ran 45 tests across 4 files. [149.27s]"
+      ]
+    },
+    "windows": {
+      "pass": 45,
+      "fail": 0,
+      "assertions": 180,
+      "omni_spawns": 46,
+      "raw_sha256": "550e27db5d29f9f7b0ffeafe293d2c4382bb00ba1367253d8408093e5f0462d6",
+      "verdict_lines": [
+        "2026-11-13T05:10:24.4237855Z omni positive control [9ac1bdf72678819d228ef1525f06f7c3]: pass (declared: 26 test(s) in src/main/omni-process.test.ts); 46 omni spawn(s), 0 delegated.",
+        "2026-11-13T05:10:24.4313174Z  45 pass",
+        "2026-11-13T05:10:24.4313625Z  0 fail",
+        "2026-11-13T05:10:24.4314003Z  180 expect() calls",
+        "2026-11-13T05:10:24.4314532Z Ran 45 tests across 4 files. [183.27s]"
+      ]
+    }
+  },
+  "limits": "Real loop/settings/HTTP and owned Omni processes; Electron/capture permission boundary substitutes do not prove physical capture or cancellation of an OS permission dialog. No M13 production outbox wiring."
+}

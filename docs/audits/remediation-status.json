@@ -2753,10 +2753,20 @@
       "id": "M11",
       "severity": "P2",
       "owner": "lead",
-      "status": "planned_unverified",
+      "status": "fixed_verified",
       "runtime_reproduced": false,
-      "commits": [],
-      "evidence": []
+      "commits": [
+        "7c338b0da1c1a6b87e4d5521b16fe95dab7bf00b",
+        "ac64d34f6e"
+      ],
+      "evidence": [
+        {
+          "kind": "upstream_startup_cancellation_integrated_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43369253063",
+          "snapshot": "e2aa9e73d28ea01dc48cf61780de68c00fa0b184",
+          "result": "Each OS45pass/0fail180assertions/46Omni spawns, cleanup/wrapper0. Root independently checked both raw logs/jobs and full snapshot diff only .ci-run.json. Desktop type0 on source union; independent cold review approves original startup cancellation scope. Attempt AbortController reaches permissions/capture and stale callbacks; late acquisition is stopped. No historical runtime RED claimed; no physical capture, OS permission-dialog cancellation or M13 outbox wiring claim."
+        }
+      ]
     },
     {
       "id": "M12",
@@ -3648,9 +3658,9 @@
   ],
   "summary": {
     "original_findings": 65,
-    "new_fixes_verified": 56,
+    "new_fixes_verified": 57,
     "already_fixed_verified": 1,
-    "remaining": 8,
+    "remaining": 7,
     "scope": "Original 65 only; supplemental candidates tracked separately"
   },
   "integration_checkpoint": "c9861968b9",
