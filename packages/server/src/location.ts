@@ -4,7 +4,7 @@ import { LocationServiceMap } from "@orchestra/core/location-services"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { WorkspaceV2 } from "@orchestra/core/workspace"
 import { InvalidRequestError } from "@orchestra/protocol/errors"
-import { Cause, Context, Effect, Layer } from "effect"
+import { Cause, Context, Effect, Layer, RcMap } from "effect"
 import { HttpServerRequest } from "effect/unstable/http"
 import { HttpApiMiddleware } from "effect/unstable/httpapi"
 
@@ -59,12 +59,7 @@ function bootFailure<E>(
       directory: location.directory,
       cause: Cause.pretty(cause),
     })
-    const missing = yield* Effect.promise(() =>
-      stat(location.directory).then(
-        (info) => !info.isDirectory(),
-        (error: NodeJS.ErrnoException) => error.code === "ENOENT" || error.code === "ENOTDIR",
-      ),
-    )
+    const missing = yield* missingDirectory(location.directory)
     if (missing)
       return yield* new InvalidRequestError({
         message: `Directory not found: ${location.directory}`,
@@ -81,6 +76,15 @@ function bootFailure<E>(
   })
 }
 
+function missingDirectory(directory: string) {
+  return Effect.promise(() =>
+    stat(directory).then(
+      (info) => !info.isDirectory(),
+      (error: NodeJS.ErrnoException) => error.code === "ENOENT" || error.code === "ENOTDIR",
+    ),
+  )
+}
+
 export const layer = Layer.effect(
   LocationMiddleware,
   Effect.gen(function* () {
@@ -89,6 +93,14 @@ export const layer = Layer.effect(
       Effect.gen(function* () {
         const request = yield* HttpServerRequest.HttpServerRequest
         const location = ref(request)
+        // Preserve cached removals. This observation is not an atomic lease: entries may expire or paths change before get.
+        const cached = yield* RcMap.has(locations.rcMap, location)
+        if (!cached && (yield* missingDirectory(location.directory)))
+          return yield* new InvalidRequestError({
+            message: `Directory not found: ${location.directory}`,
+            kind: "location_not_found",
+            field: "location.directory",
+          })
         return yield* effect.pipe(Effect.provide(bootLocation(locations.get(location), location)))
       }),
     )
