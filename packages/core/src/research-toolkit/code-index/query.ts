@@ -29,6 +29,8 @@ export type Overlay = (input: {
 }) => Effect.Effect<ReadonlyArray<{ readonly path: string; readonly lines: number; readonly symbols: ReadonlyArray<OverlaySymbol> }>, Research.Error>
 
 export type Context = CodeIndexBuild.Input & {
+  /** Exact prepared cache only; implementation follows the frozen acceptance suite. */
+  readonly readOnly?: boolean
   readonly overlay: Overlay
   /** When present, a query that finds shards missing starts their build in the background. */
   readonly extract?: CodeIndexBuild.Extract
