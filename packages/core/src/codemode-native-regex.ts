@@ -19,12 +19,15 @@ export const make = Effect.map(AppProcess.Service, (processes): NativeRegex.Prov
     if (Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")
       return Effect.fail(new Error("Native regex unavailable: Omni is off"))
     return Effect.gen(function* () {
-      const request = yield* Effect.try(() => Schema.decodeUnknownSync(NativeRegex.Request, { onExcessProperty: "error" })(input))
+      const request = yield* Effect.try({
+        try: () => Schema.decodeUnknownSync(NativeRegex.Request, { onExcessProperty: "error" })(input),
+        catch: (cause) => cause,
+      })
       return yield* Effect.acquireUseRelease(
-        Effect.tryPromise(() => mkdtemp(path.join(tmpdir(), "orchestra-native-regex-"))),
+        Effect.tryPromise({ try: () => mkdtemp(path.join(tmpdir(), "orchestra-native-regex-")), catch: (cause) => cause }),
         (root) => Effect.gen(function* () {
           const config = path.join(root, "empty.toml")
-          yield* Effect.tryPromise(() => Bun.write(config, ""))
+          yield* Effect.tryPromise({ try: () => Bun.write(config, ""), catch: (cause) => cause })
           const result = yield* processes.run(ChildProcess.make(process.execPath, [
             "--no-env-file", `--config=${config}`, "-e", script,
           ], {
@@ -39,12 +42,15 @@ export const make = Effect.map(AppProcess.Service, (processes): NativeRegex.Prov
           yield* AppProcess.requireSuccess(result)
           if (result.stdoutTruncated || result.stderrTruncated)
             return yield* Effect.fail(new Error("Native regex helper output was truncated"))
-          return yield* Effect.try(() => NativeRegex.decodeReply(request,
-            Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(result.stdout.toString("utf8")),
-          ))
+          return yield* Effect.try({
+            try: () => NativeRegex.decodeReply(request,
+              Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(result.stdout.toString("utf8")),
+            ),
+            catch: (cause) => cause,
+          })
         }),
         // Finalizer defects combine with the original cause; cleanup failure cannot replace a native/infrastructure failure.
-        (root) => Effect.tryPromise(() => rm(root, { recursive: true, force: true })).pipe(Effect.orDie),
+        (root) => Effect.tryPromise({ try: () => rm(root, { recursive: true, force: true }), catch: (cause) => cause }).pipe(Effect.orDie),
       )
     }).pipe(Effect.scoped, Effect.timeout(remainingMs))
   }),
