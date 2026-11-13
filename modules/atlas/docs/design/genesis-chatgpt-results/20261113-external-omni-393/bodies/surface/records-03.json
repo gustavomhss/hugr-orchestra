@@ -1,0 +1,721 @@
+[
+  {
+    "path": "native/omni/bindings/node/test/markers.mjs",
+    "git_blob_sha": "09a26c1e9b2d80f57686c5c919a19d29bfd90d98",
+    "source_sha256": "b7e8f841f8f8c6f13fd24681fb63c38462e7b7c9afbe420dbb0adb5558334d88",
+    "source_bytes": 2110,
+    "line_count": 37,
+    "disposition": "analyzed",
+    "kind": "test",
+    "purpose": "Share strict readiness-marker parsing between lifecycle host fixtures and their parent tests.",
+    "behavior": [
+      "parseMarker considers only newline-terminated lines and returns undefined until the named marker is complete.",
+      "Requires exactly the requested count of distinct positive integer PID tokens separated by single internal spaces; malformed markers return Error.",
+      "untilTree consumes fixture lines until READY and every numbered descendant level have appeared, returns PIDs in level order and leaves the loop."
+    ],
+    "contracts": [
+      "Premature output end is an error; no sleep substitutes for readiness.",
+      "Helpers are side-effect free so importing them does not install host hooks."
+    ],
+    "dependencies": [
+      "native/omni/bindings/node/test/host.mjs",
+      "native/omni/bindings/node/test/hosts.mjs",
+      "native/omni/bindings/node/test/teeth.mjs"
+    ],
+    "failures_or_limits": [
+      "Number conversion does not explicitly check Number.isSafeInteger for PID text."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 10,
+        "end_line": 19,
+        "quote": "export function parseMarker(out, name, count) {\n  const lines = out.split(\"\\n\");\n  lines.pop(); // what follows the last newline is not a line yet\n  const line = lines.find((l) => l === `HOST-${name}` || l.startsWith(`HOST-${name} `));\n  if (line === undefined) return undefined;\n  const tokens = line.slice(`HOST-${name}`.length).trim().split(\" \");\n  if (tokens.length !== count || !tokens.every((t) => /^[1-9]\\d*$/.test(t)) || new Set(tokens).size !== count) {\n    return new Error(`malformed marker ${JSON.stringify(line)}: want ${count} distinct pids`);\n  }\n  return tokens.map(Number);"
+      },
+      {
+        "start_line": 26,
+        "end_line": 36,
+        "quote": "export async function untilTree(lines, descendants) {\n  const pids = new Map();\n  let ready = false;\n  const complete = () => ready && Array.from({ length: descendants }, (_, i) => pids.has(i + 1)).every(Boolean);\n  for await (const { text } of lines) {\n    const found = /^PID (\\d+) (\\d+)$/.exec(text);\n    if (found) pids.set(Number(found[1]), Number(found[2]));\n    ready ||= text === \"READY\";\n    if (complete()) return Array.from({ length: descendants }, (_, i) => pids.get(i + 1));\n  }\n  throw new Error(`the fixture's output ended before READY and PID 1..${descendants} (saw READY: ${ready}, levels: ${[...pids.keys()]})`);"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/test/mini.mjs",
+    "git_blob_sha": "53b6296e708e157c2f0b6add8f572e9ad4245a80",
+    "source_sha256": "8cb9e94a47d9ab9ce004bf01fb8bc3285dac110fd568e3b6a7078edfaf93fab1",
+    "source_bytes": 1164,
+    "line_count": 30,
+    "disposition": "analyzed",
+    "kind": "test",
+    "purpose": "Run registered binding assertions sequentially with failure-counting deadlines.",
+    "behavior": [
+      "test appends name/function pairs; runTests races each function with a default 20-second timeout.",
+      "Logs ok or FAIL per case, clears its timer and continues after failure.",
+      "Calls finish with passed/failed counts, OS/runtime and status one if any test failed."
+    ],
+    "contracts": [
+      "Timeout is always a failure; test functions are not canceled when the timeout wins."
+    ],
+    "dependencies": [
+      "native/omni/bindings/node/test/support.mjs finish/runtime.",
+      "native/omni/bindings/node/test/runner/os.mjs OS naming."
+    ],
+    "failures_or_limits": [
+      "The harness's summary is computed during execution; none was produced here."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 11,
+        "end_line": 29,
+        "quote": "/** Runs every registered test; ends the process with the summary `<title>: N passed, M failed (...)`. */\nexport async function runTests(title, ms = 20_000) {\n  let failed = 0;\n  for (const [name, fn] of tests) {\n    let timer;\n    try {\n      const deadline = new Promise((_, reject) => {\n        timer = setTimeout(() => reject(new Error(`timed out after ${ms} ms`)), ms);\n      });\n      await Promise.race([fn(), deadline]);\n      console.log(`ok      ${name}`);\n    } catch (e) {\n      failed++;\n      console.log(`FAIL    ${name}: ${e instanceof Error ? e.message : e}`);\n    } finally {\n      clearTimeout(timer);\n    }\n  }\n  finish(`${title}: ${tests.length - failed} passed, ${failed} failed (${tests.length} tests on ${OS}/ts-${runtime})`, failed === 0 ? 0 : 1);"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/test/overloads.ts",
+    "git_blob_sha": "e3eb49f3cb59c0a7842014e00a1256aeb4a27cac",
+    "source_sha256": "7c755e577a248106ab8562b8263272509f1113e228a5338649cbf87d816b1606",
+    "source_bytes": 4923,
+    "line_count": 119,
+    "disposition": "analyzed",
+    "kind": "test",
+    "purpose": "Assert static inference and prohibited operations in the public TypeScript declarations.",
+    "behavior": [
+      "Checks pipe/terminal overload selection and rejects resize on pipes, closeStdin on PTYs, stdin on run and input on spawn.",
+      "Checks default/true text output as string, false as Uint8Array and dynamic boolean as a union, including both child kinds.",
+      "Asserts the closed OmniError code union and exhaustive Exit reason union including memory_exceeded.",
+      "Exercises AsyncDisposable, await using and typed async chunk/line iteration; @ts-expect-error makes unexpectedly accepted misuse fail compilation."
+    ],
+    "contracts": [
+      "The file explicitly states nothing here runs; tsc -p test/tsconfig.json is its intended validation."
+    ],
+    "dependencies": [
+      "native/omni/bindings/node/index.d.ts",
+      "native/omni/bindings/node/test/tsconfig.json"
+    ],
+    "failures_or_limits": [
+      "Static type acceptance cannot establish startup/cleanup/runtime behavior; compilation was not run."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 22,
+        "end_line": 31,
+        "quote": "// @ts-expect-error a pipe child has no resize\npipe.resize(80, 24);\n// @ts-expect-error a terminal has no closeStdin\npty.closeStdin();\n// @ts-expect-error `pty` never gives a PipeChild\nconst notPipe: PipeChild = spawn(\"x\", [], { pty: true });\n// @ts-expect-error `stdin` is a spawn option, not a run option\nvoid run(\"x\", [], { stdin: \"pipe\" });\n// @ts-expect-error `input` is a run option, not a spawn option\nspawn(\"x\", [], { input: \"x\" });"
+      },
+      {
+        "start_line": 72,
+        "end_line": 85,
+        "quote": "// A `text` known only at run time still picks pipe or terminal by `pty`: the data is either kind, the child is the right one.\nconst pipeDynamic = spawn(\"x\", [], { stdin: \"pipe\", text: flag });\nvoid pipeDynamic.closeStdin();\nconst ptyDynamic = spawn(\"x\", [], { pty: true, text: flag });\nptyDynamic.resize(80, 24);\nconst dynamicData: string | Uint8Array | undefined = (await ptyDynamic.output[Symbol.asyncIterator]().next()).value?.data;\n// @ts-expect-error a pipe child has no resize, whatever `text` is\npipeDynamic.resize(80, 24);\n// @ts-expect-error a terminal has no closeStdin, whatever `text` is\nptyDynamic.closeStdin();\n\nconst code: \"NOT_FOUND\" | \"NOT_EXECUTABLE\" | \"INVALID_CWD\" | \"INVALID_ARGUMENT\" | \"ABORTED\" | \"OUTPUT_LIMIT\" | \"CLOSED\" | \"IO\" = err.code;\n// @ts-expect-error the codes are a closed set\nconst closed: \"NOPE\" = err.code;"
+      },
+      {
+        "start_line": 89,
+        "end_line": 106,
+        "quote": "function reasonText(reason: Exit[\"reason\"]): string {\n  switch (reason) {\n    case \"exit\":\n    case \"signal\":\n    case \"killed\":\n    case \"timeout\":\n    case \"aborted\":\n    case \"memory_exceeded\":\n      return reason;\n    default: {\n      const unreachable: never = reason;\n      return unreachable;\n    }\n  }\n}\n\nawait using scoped = spawn(\"x\");\nconst disposable: AsyncDisposable = scoped;"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/test/runner/expect.mjs",
+    "git_blob_sha": "125ca2d3ea6e39f0f7f054604f1e9cd6a2d06978",
+    "source_sha256": "995a7dfe0aadbc62a27c8c9e7426a5e03b4276d6c4fdc1405c9e60e6f8bddd2a",
+    "source_bytes": 8619,
+    "line_count": 185,
+    "disposition": "analyzed",
+    "kind": "test",
+    "purpose": "Classify conformance failures and compare every declared expectation without loose coercion.",
+    "behavior": [
+      "Fail distinguishes product from harness; unclassified exceptions become harness failures and non-OmniError library throws become product failures.",
+      "check requires expected fields to exist, matches error codes/messages/partial results, and includes elapsedMs.",
+      "Strict scalar matchers support numeric bounds, text/bytes contains/regex/length/hex, nested fields and exact line-piece sequences.",
+      "Process entries match an unordered one-to-one assignment with exact cardinality, supporting PID captures and null parents."
+    ],
+    "contracts": [
+      "Only product failures may later become pending; malformed expectations remain harness failures.",
+      "Text length counts Unicode code points, binary length counts bytes; string equality compares UTF-8 bytes."
+    ],
+    "dependencies": [
+      "native/omni/bindings/node/test/runner/schema.mjs hex conversion.",
+      "native/omni/bindings/node/test/runner/pattern.mjs regex subset.",
+      "suite.mjs consumes failure classification."
+    ],
+    "failures_or_limits": [
+      "No matcher execution was performed."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 7,
+        "end_line": 29,
+        "quote": "/**\n * Why a step failed. Only `product` (the library's outcome differs from the expectation) may count as pending; a\n * `harness` failure (malformed scenario, unknown variable, runner or OS-oracle error) always fails the suite. Anything\n * thrown that is not a `Fail` is treated as `harness` (see `kindOf`), so an unclassified failure fails closed.\n */\nexport class Fail extends Error {\n  constructor(kind, message) {\n    super(message);\n    this.kind = kind;\n  }\n\n  /** The same kind of failure, with `where` in front of the message. */\n  at(where) {\n    return new Fail(this.kind, `${where}: ${this.message}`);\n  }\n}\nexport const product = (message) => new Fail(\"product\", message);\nexport const harness = (message) => new Fail(\"harness\", message);\n\n/** Any thrown value as a `Fail`: a plain `Error` is the runner's own message; any other error is a bug, with its stack. */\nexport const asFail = (e) => {\n  if (e instanceof Fail) return e;\n  return harness(e instanceof Error ? (e.constructor === Error ? e.message : (e.stack ?? e.message)) : String(e));"
+      },
+      {
+        "start_line": 52,
+        "end_line": 76,
+        "quote": "/** Checks `want` (the step's `expect`) against `outcome` (`{ fields }` or `{ error }`); `elapsedMs` is the step's own time. */\nexport function check(want, outcome, elapsedMs) {\n  if (want === null || typeof want !== \"object\") throw harness(\"`expect` must be an object\");\n  if (outcome.error && !(\"error\" in want)) throw product(`unexpected error ${describe(outcome.error)}`);\n  if (\"error\" in want && !outcome.error) throw product(`expected error ${json(want.error)}, got success`);\n  for (const [key, w] of Object.entries(want)) {\n    if (key === \"elapsedMs\") {\n      field(\"elapsedMs\", w, elapsedMs);\n    } else if (key === \"error\") {\n      if (outcome.error.code !== w) throw product(`expected error ${w}, got ${describe(outcome.error)}`);\n    } else if (key === \"message\") {\n      const text = String(outcome.error.message);\n      for (const part of Array.isArray(w) ? w : [w]) {\n        if (!text.includes(part)) throw product(`message ${json(text)} lacks ${json(part)}`);\n      }\n    } else if (key === \"result\") {\n      const r = outcome.error.result;\n      if (r === undefined || r === null) throw product(`error ${describe(outcome.error)} carries no result`);\n      fields(w, runFields(r), \"result\");\n    } else {\n      if (outcome.error) throw product(`${key} expected, got error ${describe(outcome.error)}`);\n      if (!(key in outcome.fields)) throw harness(`${key}: not produced by this step`);\n      field(key, w, outcome.fields[key]);\n    }\n  }"
+      },
+      {
+        "start_line": 113,
+        "end_line": 143,
+        "quote": "/**\n * A scalar against its matcher. The expectation decides what it can match, and a value of any other kind never\n * does (a number is not `true`, and not `\"\"`): null matches only null, a boolean or a number only itself, text or\n * `{contains, regex, length, hex}` only a string or bytes, `{lt, lte, gt, gte}` only a number.\n */\nfunction matches(w, got) {\n  if (w === null) return got === null;\n  if (typeof w === \"boolean\" || typeof w === \"number\") return got === w;\n  if (typeof w === \"string\") return isText(got) && sameBytes(utf8.encode(w), bytesOf(got));\n  if (!isObject(w) || !isMatcher(w)) throw harness(`unknown matcher ${json(w)}`);\n  if (Object.keys(w).every((o) => NUMERIC.includes(o))) return typeof got === \"number\" && bounds(w, got);\n  return isText(got) && textual(Object.keys(w)[0], Object.values(w)[0], got);\n}\n\n/** `{ lt, lte, gt, gte }`: every bound holds. */\nfunction bounds(w, got) {\n  return Object.entries(w).every(([op, n]) => {\n    if (typeof n !== \"number\") throw harness(`${op} wants a number, not ${json(n)}`);\n    return op === \"lt\" ? got < n : op === \"lte\" ? got <= n : op === \"gt\" ? got > n : got >= n;\n  });\n}\n\n/** `{contains}`, `{regex}`, `{length}` (characters of text, bytes of binary) or `{hex}` (raw bytes; UTF-8 for text). */\nfunction textual(op, arg, got) {\n  const text = typeof got === \"string\" ? got : lossy.decode(got);\n  if (op === \"contains\") return text.includes(arg);\n  if (op === \"regex\") return pattern(arg).test(text);\n  if (op === \"hex\") return sameBytes(hexBytes(arg), bytesOf(got));\n  let n = 0; // length\n  if (typeof got === \"string\") for (const _ of text) n++;\n  return arg === (typeof got === \"string\" ? n : got.length);"
+      },
+      {
+        "start_line": 160,
+        "end_line": 175,
+        "quote": "/** `entries`: an unordered list matched one to one. */\nfunction entries(w, got) {\n  const ok = w.map((e) => got.map((p) => entryMatches(e, p)));\n  const used = new Array(got.length).fill(false);\n  const assign = (i) => {\n    if (i === ok.length) return true;\n    for (let j = 0; j < got.length; j++) {\n      if (ok[i][j] && !used[j]) {\n        used[j] = true;\n        if (assign(i + 1)) return true;\n        used[j] = false;\n      }\n    }\n    return false;\n  };\n  return w.length === got.length && assign(0);"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/test/runner/ledger.mjs",
+    "git_blob_sha": "245647f91637a3d249c09fbf2fea82990cd1c6e1",
+    "source_sha256": "f54df3cd02a5cd0a6edb7e2561410ee27976aac69aff67230b5747edd31de6ca",
+    "source_bytes": 1810,
+    "line_count": 49,
+    "disposition": "analyzed",
+    "kind": "test",
+    "purpose": "Represent the explicit pending conformance ledger and reject stale or malformed exemptions.",
+    "behavior": [
+      "Parses nonblank, non-comment lines as exactly an item ID and work-package ID, recording malformed and duplicate lines.",
+      "item maps a scenario suffix to its parent C-* item; pending is simple membership.",
+      "After a suite, check rejects ledger IDs with no scenario and entries whose applicable scenarios all passed."
+    ],
+    "contracts": [
+      "Full-line comments start with #; extra tokens are invalid rather than inline comments.",
+      "Known but nonapplicable items are not treated as passing."
+    ],
+    "dependencies": [
+      "native/omni/conformance/pending.txt",
+      "native/omni/bindings/node/test/runner/suite.mjs supplies known/items sets."
+    ],
+    "failures_or_limits": [
+      "The ledger authorizes only product-failure deferral; harness classification is enforced elsewhere."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 13,
+        "end_line": 27,
+        "quote": "  constructor(text) {\n    this.items = new Map();\n    this.errors = [];\n    text.split(/\\r?\\n/).forEach((raw, n) => {\n      const line = raw.trim();\n      if (line === \"\" || line.startsWith(\"#\")) return;\n      const [id, wp, ...extra] = line.split(/\\s+/);\n      if (!isItem(id) || wp === undefined || !isWp(wp) || extra.length > 0) {\n        this.errors.push(`pending.txt:${n + 1}: want \\`<ID> <WP>\\`, got ${JSON.stringify(line)}`);\n      } else if (this.items.has(id)) {\n        this.errors.push(`pending.txt:${n + 1}: ${id} is listed twice`);\n      } else {\n        this.items.set(id, wp);\n      }\n    });"
+      },
+      {
+        "start_line": 34,
+        "end_line": 46,
+        "quote": "  /**\n   * After the run. `known`: the items that have a scenario file; `passed`: for each item run here, whether every\n   * one of its scenarios passed.\n   */\n  check(known, passed) {\n    const errors = [];\n    for (const [id, wp] of this.items) {\n      if (!known.has(id)) {\n        errors.push(`${id} (${wp}) is in conformance/pending.txt but no scenario proves it`);\n      } else if (passed.get(id) === true) {\n        errors.push(`${id} (${wp}) passes: remove it from conformance/pending.txt`);\n      }\n    }"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/test/runner/os.mjs",
+    "git_blob_sha": "45a20347fa80507cf334cf3f67da6e2984c1da7f",
+    "source_sha256": "83b22a48b87e479d1c40df00f8c27f857ad3d5d7457733bc6ba41132c40d6fc1",
+    "source_bytes": 4981,
+    "line_count": 100,
+    "disposition": "analyzed",
+    "kind": "test",
+    "purpose": "Provide independent OS liveness evidence and canonical temporary directories to the runner.",
+    "behavior": [
+      "Linux reads /proc/PID/stat, treating ENOENT/ESRCH and Z/X as dead; unrecognized states or read errors are unknown.",
+      "macOS/Unix uses ps with strict output/status conditions; Windows uses tasklist CSV, accepting an INFO no-match line as dead.",
+      "expectLife polls every 20 ms until all PIDs match or the bound expires, immediately raising harness failure for an unknown observation.",
+      "tmp creates a scenario-specific directory, resolves macOS path aliases and removes Windows extended-path prefixes."
+    ],
+    "contracts": [
+      "Liveness mismatch is product failure; observation inability is harness failure and cannot count as dead.",
+      "No product API is used as the liveness oracle."
+    ],
+    "dependencies": [
+      "/proc, ps or tasklist OS boundaries.",
+      "native/omni/bindings/node/test/runner/expect.mjs failure constructors."
+    ],
+    "failures_or_limits": [
+      "Tasklist's no-match recognition depends on INFO: text; unavailable or unexpected output fails closed."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 27,
+        "end_line": 42,
+        "quote": "/** Linux: `/proc/<pid>/stat` is `<pid> (<comm>) <state> ...`; no such file means no such process. */\nasync function procStat(pid) {\n  try {\n    return statLife(pid, await readFile(`/proc/${pid}/stat`, \"utf8\"));\n  } catch (e) {\n    // ENOENT: no such process; ESRCH: it exited while its stat file was being read. Both confirm absence.\n    return e.code === \"ENOENT\" || e.code === \"ESRCH\" ? dead : unknown(`/proc/${pid}/stat: ${e.message}`);\n  }\n}\n\nexport function statLife(pid, text) {\n  const id = text.slice(0, Math.max(text.indexOf(\" \"), 0));\n  const state = text.slice(text.lastIndexOf(\")\") + 1).trimStart()[0];\n  if (id !== String(pid) || state === undefined) return unknown(`/proc/${pid}/stat unreadable: ${JSON.stringify(text)}`);\n  if (\"ZX\".includes(state)) return dead;\n  return \"RSDTtWPIK\".includes(state) ? alive : unknown(`/proc/${pid}/stat has the state ${state}`);"
+      },
+      {
+        "start_line": 55,
+        "end_line": 73,
+        "quote": "export function psLife(pid, { code, stdout, stderr }) {\n  const fields = stdout.split(/\\s+/).filter(Boolean);\n  if (code === 1 && fields.length === 0 && stderr.trim() === \"\") return dead;\n  if (code === 0 && fields.length === 2 && fields[0] === String(pid)) return fields[1].startsWith(\"Z\") ? dead : alive;\n  return unknown(`ps for ${pid}: exit ${code} ${JSON.stringify(stdout)} ${JSON.stringify(stderr)}`);\n}\n\n/**\n * Windows: `tasklist /FI \"PID eq <pid>\" /NH /FO CSV` lists `\"<image>\",\"<pid>\",...`, or only an INFO line when no\n * process has that pid (an exited process is not listed, even while handles to it are open).\n */\nconst tasklist = async (pid) => tasklistLife(pid, await run(\"tasklist\", [\"/FI\", `PID eq ${pid}`, \"/NH\", \"/FO\", \"CSV\"]));\n\nexport function tasklistLife(pid, { code, stdout }) {\n  if (code !== 0) return unknown(`tasklist for ${pid}: exit ${code} ${JSON.stringify(stdout)}`);\n  // Every CSV row must carry a pid field; a row without one is unparsable output.\n  const pids = stdout.split(/\\r?\\n/).map((l) => l.trim()).filter((l) => l.startsWith('\"')).map((l) => l.split('\",\"')[1]);\n  if (pids.includes(String(pid))) return alive;\n  return pids.length === 0 && stdout.includes(\"INFO:\") ? dead : unknown(`tasklist for ${pid}: unexpected output ${JSON.stringify(stdout)}`);"
+      },
+      {
+        "start_line": 80,
+        "end_line": 90,
+        "quote": "export async function expectLife(pids, wantAlive, withinMs) {\n  const deadline = Date.now() + withinMs;\n  const wanted = wantAlive ? \"alive\" : \"dead\";\n  for (;;) {\n    const lives = await Promise.all(pids.map(async (pid) => [pid, await life(pid)]));\n    const blind = lives.find(([, l]) => l.state === \"unknown\");\n    if (blind) throw harness(`the OS cannot tell whether ${blind[0]} is alive: ${blind[1].why}`);\n    const wrong = lives.filter(([, l]) => l.state !== wanted).map(([pid]) => pid);\n    if (wrong.length === 0) return;\n    if (Date.now() >= deadline) throw product(`expected ${wanted} per the OS, but not: ${JSON.stringify(wrong)}`);\n    await new Promise((resolve) => setTimeout(resolve, 20));"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/test/runner/pattern.mjs",
+    "git_blob_sha": "be1ccb1d7b64cb150bb2871593d943cabd3d8157",
+    "source_sha256": "cdfc9e1f4b441c592ebe82ae0d5982453ba3506a63b865481666715da660014e",
+    "source_bytes": 6193,
+    "line_count": 148,
+    "disposition": "analyzed",
+    "kind": "test",
+    "purpose": "Restrict scenario regular expressions to the intended common JS/Rust subset.",
+    "behavior": [
+      "Scans syntax before compiling with the JavaScript u flag; supports ordinary groups, noncapturing groups, basic quantifiers, selected classes and numeric escapes.",
+      "Rejects lookarounds, named groups, flags, backreferences, unsupported escapes, nested/set-operation classes, surrogate escapes and malformed quantifier positions.",
+      "checkTable requires accepted and refused cases, verifies positive/negative matches and capture group 1, and reports every mismatch."
+    ],
+    "contracts": [
+      "The differential regex table is mandatory before the contract runner starts scenarios.",
+      "Invalid patterns throw diagnostic errors naming the pattern/construct."
+    ],
+    "dependencies": [
+      "native/omni/conformance/SPEC.md",
+      "native/omni/conformance/regex-table.json",
+      "Rust runner's regex engine is the parity boundary."
+    ],
+    "failures_or_limits": [
+      "The scanner and differential table cover a deliberate subset, not all JS or Rust regex syntax."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 23,
+        "end_line": 27,
+        "quote": "/**\n * The subset: literals; `^ $ | * + ? *? +? ??`; `{n}` `{n,}` `{n,m}`; `( )` and `(?: )`; classes without nesting, set\n * operators or ranges next to a class escape; escapes `\\d \\D \\w \\W` (`\\d \\w` inside a class), `\\n \\r \\t \\f \\v`, `\\xHH`,\n * `\\uHHHH` (not a surrogate), and escaped syntax characters (`\\-` only inside a class, as under the `u` flag).\n * Everything else (look-around, backreferences, named groups, flags, `\\s`, `\\b`, `\\p`, Rust-only syntax) is refused."
+      },
+      {
+        "start_line": 58,
+        "end_line": 66,
+        "quote": "      } else if (e === \"x\" || e === \"u\") {\n        const n = e === \"x\" ? 2 : 4;\n        let digits = \"\";\n        while (digits.length < n && isHex(cs[i])) digits += cs[i++];\n        if (digits.length !== n) throw new Error(`\\\\${e} without ${n} hex digits`);\n        const v = parseInt(digits, 16);\n        if (v >= 0xd800 && v <= 0xdfff) throw new Error(\"a surrogate escape (JS pairs them, Rust refuses them)\");\n      } else {\n        throw new Error(`the escape \\\\${e}`);"
+      },
+      {
+        "start_line": 116,
+        "end_line": 147,
+        "quote": "/** Checks the differential table; returns what is wrong with this engine (empty = the table passes). */\nexport function checkTable(table) {\n  const errors = [];\n  const accepted = table.accepted ?? [];\n  const refused = table.refused ?? [];\n  if (accepted.length === 0 || refused.length === 0) return [\"regex-table: no accepted or no refused cases\"];\n  for (const c of accepted) {\n    let re;\n    try {\n      re = pattern(c.pattern);\n    } catch (e) {\n      errors.push(`${c.pattern} must be accepted: ${e.message}`);\n      continue;\n    }\n    for (const s of c.match ?? []) if (!re.test(s)) errors.push(`${c.pattern} must match ${JSON.stringify(s)}`);\n    for (const s of c.nomatch ?? []) if (re.test(s)) errors.push(`${c.pattern} must not match ${JSON.stringify(s)}`);\n    for (const [s, group] of Object.entries(c.group1 ?? {})) {\n      const got = re.exec(s)?.[1] ?? null;\n      if (got !== group) {\n        errors.push(`${c.pattern} on ${JSON.stringify(s)}: group 1 is ${JSON.stringify(got)}, want ${JSON.stringify(group)}`);\n      }\n    }\n  }\n  for (const p of refused) {\n    try {\n      pattern(p);\n      errors.push(`${p} must be refused`);\n    } catch {\n      // refused, as required\n    }\n  }\n  return errors.map((e) => `regex-table: ${e}`);"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/test/runner/read.mjs",
+    "git_blob_sha": "e81d9df9cc9af4c8fd17eb2fb0f53e74839dd8ee",
+    "source_sha256": "a950784734e9787352ee9b81c9dfb5904494fd403bf91ad9387dbcec963f2546",
+    "source_bytes": 5420,
+    "line_count": 137,
+    "disposition": "analyzed",
+    "kind": "test",
+    "purpose": "Read scenario output with stable consumers, complete-line matching and loss accounting.",
+    "behavior": [
+      "Keeps an iterator and per-stream partial lines across read steps; a new mode tries a new claim and only replaces the old iterator after successful next().",
+      "Captures regex group 1 or full match and checks until against completed lines; chunks split LF and strip one CR, while line mode joins continues pieces.",
+      "Gaps and stream end finish partial lines; all items in a consumed chunk belong to the current step even after its until match.",
+      "Copies byte buffers, accumulates stream data/chunk/loss/continuation/piece counters, optionally returns the iterator on detach and reports child.droppedBytes."
+    ],
+    "contracts": [
+      "Ending before the required match count is product failure; unknown stream or data type is product failure.",
+      "Read-step output is local to that step although partial line/capture state persists."
+    ],
+    "dependencies": [
+      "runner/expect.mjs, pattern.mjs and steps.mjs context.",
+      "Public Child output/lines iterator boundary."
+    ],
+    "failures_or_limits": [
+      "Lossy UTF-8 decoding is used for regex/capture text; raw returned bytes remain available in byte mode."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 28,
+        "end_line": 55,
+        "quote": "export async function read(ctx, name, s) {\n  const lines = s.lines === true;\n  const until = s.until === undefined || s.until === \"end\" ? null : { re: pattern(s.until.match), n: s.until.count ?? 1 };\n  const captures = Object.entries(s.capture ?? {}).map(([k, re]) => [k, pattern(re)]);\n  const { child } = ctx.kid(name);\n  // The consumer of this child, kept between `read` steps; `pending` is the partial line of stdout, stderr, pty.\n  const kept = ctx.readers.get(name) ?? { it: null, lines: false, pending: [[], [], []] };\n  ctx.readers.set(name, kept);\n  const fresh = kept.it === null || kept.lines !== lines;\n  let it = kept.it;\n  if (fresh) {\n    try {\n      it = (lines ? child.lines() : child.output)[Symbol.asyncIterator]();\n    } catch (e) {\n      return failure(ctx.api, e);\n    }\n  }\n\n  let matched = 0;\n  const line = (bytes) => {\n    const text = lossy.decode(bytes);\n    for (const [key, re] of captures) {\n      const m = re.exec(text);\n      if (m) ctx.vars.set(key, [...(ctx.vars.get(key) ?? []), m[1] ?? m[0]]);\n    }\n    if (until?.re.test(text)) matched++;\n  };\n  const done = () => until !== null && matched >= until.n;"
+      },
+      {
+        "start_line": 75,
+        "end_line": 103,
+        "quote": "    if (fresh && kept.it !== it) Object.assign(kept, { it, lines }); // the claim worked: it replaces the old consumer\n    if (r.done) {\n      for (let k = 0; k < 3; k++) if (kept.pending[k].length > 0) line(take(k));\n      if (until !== null && !done()) throw product(`output ended after ${matched} of ${until.n} matching lines`);\n      break;\n    }\n    const item = r.value;\n    const k = STREAMS.indexOf(item?.stream);\n    if (k < 0) throw product(`the library yielded an item of an unknown stream: ${JSON.stringify(item?.stream)}`);\n    const piece = lines ? item.text : item.data;\n    if (typeof piece !== \"string\" && !(piece instanceof Uint8Array)) {\n      throw product(`the library yielded ${lines ? \"text\" : \"data\"} that is neither a string nor a Uint8Array`);\n    }\n    const gap = item.lostBefore ?? 0;\n    chunks++;\n    lost += gap;\n    if (gap > 0 && kept.pending[k].length > 0) line(take(k)); // a gap ends the partial line\n    // A copy: the library may reuse the memory of a chunk it handed over.\n    const bytes = typeof piece === \"string\" ? bytesOf(piece) : piece.slice();\n    if (typeof piece !== \"string\") text = false;\n    data[k].push(bytes);\n    kept.pending[k].push(bytes);\n    if (lines) {\n      const more = item.continues === true;\n      pieces[k].push({ bytes: bytes.length, continues: more });\n      if (more) continues++;\n      else {\n        data[k].push(Uint8Array.of(10));\n        line(take(k));"
+      },
+      {
+        "start_line": 116,
+        "end_line": 135,
+        "quote": "  if (s.detach === true) {\n    // Leaving the loop is what detaches for good.\n    kept.it = null;\n    try {\n      await it.return?.();\n    } catch (e) {\n      return failure(ctx.api, e);\n    }\n  }\n  const [stdout, stderr, pty] = data.map((parts) => {\n    const all = parts.length === 0 ? new Uint8Array(0) : join(parts);\n    return text ? lossy.decode(all) : all;\n  });\n  const [ps, pe, pp] = pieces;\n  return {\n    fields: {\n      stdout, stderr, pty, chunks, lostBefore: lost, continues,\n      pieces: { stdout: ps, stderr: pe, pty: pp },\n      droppedBytes: child.droppedBytes,\n    },"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/test/runner/scenario.mjs",
+    "git_blob_sha": "3051db10744b09f112d137d1ca2f8ad6703fa0f2",
+    "source_sha256": "0c81264eae1d8950724a8244b1c406fb3f39034064dba9cdbed274c839a2487e",
+    "source_bytes": 7527,
+    "line_count": 173,
+    "disposition": "analyzed",
+    "kind": "test",
+    "purpose": "Fully validate scenario structure and dataflow before invoking the product.",
+    "behavior": [
+      "Requires filename/id agreement, a recognized C-item scenario ID, allowed OS/language selectors, text files and nonempty steps.",
+      "Each step must contain exactly one of ten actions plus only its permitted keys.",
+      "Tracks pipe/PTY/asynchronous-run handles and built-in/captured variables; rejects undefined use, closing a PTY, resizing a non-PTY or missing read-until/OS-PIDs.",
+      "Checks every step before execution, including later steps that could otherwise be hidden by an early pending failure."
+    ],
+    "contracts": [
+      "run as goes exactly with await:false; resize dimensions must fit 16 bits.",
+      "Expectation substitutions may reference variables defined by the same step after define is applied."
+    ],
+    "dependencies": [
+      "native/omni/bindings/node/test/runner/schema.mjs validates values.",
+      "native/omni/bindings/node/test/runner/pattern.mjs",
+      "native/omni/conformance/SPEC.md"
+    ],
+    "failures_or_limits": [
+      "Name definition overwrites maps rather than explicitly rejecting duplicate handle names; scenario file paths are not confinement-validated here."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 25,
+        "end_line": 33,
+        "quote": "/** The step's action name and value; any other key must be one this action accepts. */\nexport function action(step) {\n  if (!isObject(step)) throw new Error(\"a step must be an object\");\n  const found = Object.keys(step).filter((k) => Object.hasOwn(ACTIONS, k));\n  if (found.length !== 1) throw new Error(\"a step needs exactly one action\");\n  const [name] = found;\n  const stray = Object.keys(step).find((k) => k !== name && k !== \"timeoutMs\" && !ACTIONS[name].includes(k));\n  if (stray !== undefined) throw new Error(`\\`${name}\\` does not take \\`${stray}\\``);\n  return [name, step[name]];"
+      },
+      {
+        "start_line": 112,
+        "end_line": 146,
+        "quote": "  /** Checks step `s` (action `name`, value `target`) against the earlier steps, then records what it defines. */\n  step(name, target, s) {\n    checkStep(name, target, s);\n    const has = (k) => k in s;\n    const kind = typeof target === \"string\" ? this.handles.get(target) : undefined;\n    const child = kind === \"pipe\" || kind === \"pty\";\n    const closes = s.close ?? !has(\"data\");\n    const required =\n      name === \"run\" && has(\"as\") !== (s.await === false) ? \"`as` goes with `await: false`, and only with it\"\n      : name === \"write\" && !child ? \"needs an earlier spawned child\"\n      // SPEC: `write` without `data` only closes stdin.\n      : name === \"write\" && !has(\"data\") && s.close === false ? \"without `data` it closes stdin\"\n      : name === \"write\" && closes && kind === \"pty\" ? \"closes stdin, which a terminal does not have\"\n      : [\"read\", \"stop\", \"processes\"].includes(name) && !child ? \"needs an earlier spawned child\"\n      : name === \"read\" && !has(\"until\") ? \"needs `until`\"\n      : name === \"wait\" && kind === undefined ? \"needs an earlier spawned child or `run` with `await: false`\"\n      : name === \"resize\" && kind !== \"pty\" ? \"needs an earlier spawned terminal child (`pty`)\"\n      : name === \"resize\" && (!has(\"cols\") || !has(\"rows\")) ? \"needs `cols` and `rows`\"\n      : name === \"resize\" && (s.cols > 65535 || s.rows > 65535) ? \"`cols` and `rows` must fit 16 bits\"\n      : name === \"os\" && !has(\"pids\") ? \"needs `pids`\"\n      : undefined;\n    if (required !== undefined) throw new Error(`\\`${name}\\` ${required}`);\n    for (const [key, v] of Object.entries(s)) {\n      if (key === \"expect\") continue;\n      try {\n        this.varsIn(v);\n      } catch (e) {\n        throw new Error(`${key}: ${e.message}`);\n      }\n    }\n    this.define(name, s);\n    try {\n      if (has(\"expect\")) this.varsIn(s.expect);\n    } catch (e) {\n      throw new Error(`expect: ${e.message}`);"
+      },
+      {
+        "start_line": 150,
+        "end_line": 170,
+        "quote": "  define(name, s) {\n    if (typeof s.as === \"string\") {\n      const kind = name === \"run\" ? \"run\" : s.options?.pty !== undefined && s.options.pty !== false ? \"pty\" : \"pipe\";\n      this.handles.set(s.as, kind);\n      if (kind !== \"run\") this.vars.add(`${s.as}.pid`);\n    }\n    if (typeof s.capture === \"string\") this.vars.add(s.capture);\n    else if (isObject(s.capture)) Object.keys(s.capture).forEach((k) => this.vars.add(k));\n  }\n\n  /** Every `${name}` in `v` names a variable defined so far. */\n  varsIn(v) {\n    if (typeof v === \"string\") {\n      for (const m of v.matchAll(/\\$\\{([^}]*)\\}/g)) {\n        if (!this.vars.has(m[1])) throw new Error(`\\${${m[1]}} is not defined by an earlier step`);\n      }\n      if (/\\$\\{[^}]*$/.test(v)) throw new Error(`unclosed \\${ in ${JSON.stringify(v)}`);\n    } else if (Array.isArray(v)) {\n      v.forEach((x) => this.varsIn(x));\n    } else if (isObject(v)) {\n      Object.values(v).forEach((x) => this.varsIn(x));"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/test/runner/schema.mjs",
+    "git_blob_sha": "5cdafb26450b94c5e29247c6104f5ee6d681a1a7",
+    "source_sha256": "d8b37cc3c8120ca229e47cb4f9a24a655fd53b5c8a4892ab105afee2b74957f3",
+    "source_bytes": 8434,
+    "line_count": 190,
+    "disposition": "analyzed",
+    "kind": "test",
+    "purpose": "Validate action values, options and matchers as harness input before scenario execution.",
+    "behavior": [
+      "Checks command arrays, count/boolean/text fields, capture regexes, positive until-match counts and hex payloads.",
+      "Restricts expectations by action, requires error when using message/result, and validates nested process entries, loss fields and line pieces.",
+      "Allows exceptional numeric option stimuli through {$number:NaN/Infinity/-Infinity}; rejects unknown keys/options.",
+      "The enumerated reason list stops at aborted, and option list lacks maxRssBytes/backpressure despite their presence in the current public binding."
+    ],
+    "contracts": [
+      "Malformed input is a harness failure and must never become pending.",
+      "This schema intentionally validates test DSL types separately from product invalid-value tests."
+    ],
+    "dependencies": [
+      "native/omni/bindings/node/test/runner/scenario.mjs",
+      "native/omni/bindings/node/test/runner/pattern.mjs",
+      "native/omni/bindings/node/index.d.ts provides the broader current API."
+    ],
+    "failures_or_limits": [
+      "A shared JSON scenario cannot express memory_exceeded, maxRssBytes or backpressure through this schema as written; separate tests may cover them."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 6,
+        "end_line": 9,
+        "quote": "const CODES = [\"NOT_FOUND\", \"NOT_EXECUTABLE\", \"INVALID_CWD\", \"INVALID_ARGUMENT\", \"ABORTED\", \"OUTPUT_LIMIT\", \"CLOSED\", \"IO\"];\nconst REASONS = [\"exit\", \"signal\", \"killed\", \"timeout\", \"aborted\"];\nconst EXIT = [\"exitCode\", \"signal\", \"reason\", \"success\"];\nconst STREAMS = [\"stdout\", \"stderr\", \"pty\"];"
+      },
+      {
+        "start_line": 75,
+        "end_line": 97,
+        "quote": "  for (const [key, w] of Object.entries(want)) {\n    const allowed =\n      key === \"error\" || key === \"elapsedMs\" ? true\n      : key === \"message\" || key === \"result\" ? \"error\" in want\n      : name === \"run\" || name === \"wait\" ? EXIT.includes(key) || key === \"stdout\" || key === \"stderr\"\n      : name === \"stop\" ? EXIT.includes(key)\n      : name === \"read\" && key === \"pieces\" ? lines\n      : name === \"read\" ? STREAMS.includes(key) || [\"chunks\", \"lostBefore\", \"continues\", \"droppedBytes\"].includes(key)\n      : name === \"processes\" && key === \"entries\";\n    if (!allowed) fail(`\\`${name}\\` cannot expect \\`${key}\\` (here)`);\n    try {\n      if (key === \"error\") oneOf(w, CODES);\n      else if (key === \"message\") {\n        if (typeof w !== \"string\" && !(Array.isArray(w) && w.length > 0 && w.every((x) => typeof x === \"string\"))) {\n          fail(\"want text or a list of texts\");\n        }\n      } else if (key === \"result\") Object.entries(object(w)).forEach(([k, m]) => resultField(k, m));\n      else if (key === \"droppedBytes\") {\n        Object.entries(object(w)).forEach(([k, m]) => ([\"stdout\", \"stderr\"].includes(k) ? number(m) : fail(`unknown stream ${k}`)));\n      } else if (key === \"pieces\") Object.entries(object(w)).forEach(([k, list]) => pieces(k, list));\n      else if (key === \"entries\") (Array.isArray(w) ? w : fail(\"want a list\")).forEach(entry);\n      else if (STREAMS.includes(key)) string(w);\n      else resultField(key, w);"
+      },
+      {
+        "start_line": 133,
+        "end_line": 149,
+        "quote": "function options(v) {\n  for (const [k, o] of Object.entries(object(v))) {\n    try {\n      if (k === \"cwd\" || k === \"windowsVerbatimArgs\") text(o);\n      else if (k === \"env\") {\n        if (!Object.values(object(o)).every((x) => typeof x === \"string\" || x === null)) fail(\"env values are text or null\");\n      } else if ([\"inheritEnv\", \"text\", \"mergeStderr\"].includes(k)) boolean(o);\n      else if ([\"timeoutMs\", \"graceMs\", \"maxOutputBytes\"].includes(k)) {\n        if (typeof o === \"number\") continue;\n        if (!isObject(o) || Object.keys(o).length !== 1) fail('want a number or {\"$number\": ...}');\n        oneOf(o.$number, [\"NaN\", \"Infinity\", \"-Infinity\"]);\n      } else if (k === \"input\") data(o);\n      else if (k === \"stdin\") oneOf(o, [\"pipe\", \"closed\"]);\n      else if (k === \"pty\") {\n        if (o === true) continue;\n        for (const [d, n] of Object.entries(object(o))) if (![\"cols\", \"rows\"].includes(d) || typeof n !== \"number\") fail(`bad pty ${d}: ${show(n)}`);\n      } else fail(\"unknown option\");"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/test/runner/steps.mjs",
+    "git_blob_sha": "20919fdd1ad11cf96cdd61e21a414f945eefbb90",
+    "source_sha256": "a4624ab7801cfae338bc8cc246b96f8274ccf8e0f8c8f4af510a7aa498aef9c9",
+    "source_bytes": 9038,
+    "line_count": 244,
+    "disposition": "analyzed",
+    "kind": "test",
+    "purpose": "Execute validated scenario steps with explicit state, bounds and cleanup.",
+    "behavior": [
+      "Creates temporary files and built-in variables, then executes ten public-API/OS actions with a shared AbortController.",
+      "Each step defaults to ten seconds; OS timeout is harness failure and library-operation timeout is product failure.",
+      "Stores spawned handles or loose children, asynchronous run outcomes, consumers and captured values; resolves whole captures to lists and embedded captures to their first value.",
+      "Finally aborts and zero-grace-stops every child in parallel with a five-second best-effort bound, then removes the temporary directory."
+    ],
+    "contracts": [
+      "Only OmniError becomes an expected error outcome; unexpected library exceptions become product failures.",
+      "write without data defaults to stdin close and cannot close a terminal; wait on an asynchronous run consumes its stored handle."
+    ],
+    "dependencies": [
+      "runner/scenario.mjs, read.mjs, expect.mjs, os.mjs and schema.mjs.",
+      "Public run/spawn/Child API."
+    ],
+    "failures_or_limits": [
+      "Cleanup ignores stop failures and timeout; it prevents harness hangs but is not itself an asserted tree-death proof."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 53,
+        "end_line": 71,
+        "quote": "  async step(s) {\n    const [name, target] = action(s);\n    const limit = s.timeoutMs ?? STEP_MS;\n    const started = performance.now();\n    let timer;\n    const timeout = new Promise((_, reject) => {\n      // Every action but `os` waits on the library; an `os` timeout is the oracle hanging.\n      const fail = name === \"os\" ? harness(`the OS oracle timed out after ${limit} ms`) : product(`timed out after ${limit} ms`);\n      timer = setTimeout(() => reject(fail), limit);\n    });\n    const acting = this.act(name, target, s);\n    acting.catch(() => {}); // when the timeout wins, a later failure of the step has no one left to tell\n    let outcome;\n    try {\n      outcome = await Promise.race([acting, timeout]);\n    } finally {\n      clearTimeout(timer);\n    }\n    check(s.expect === undefined ? {} : this.resolve(s.expect), outcome, performance.now() - started);"
+      },
+      {
+        "start_line": 129,
+        "end_line": 156,
+        "quote": "  async start(name, target, s) {\n    const options = s.options === undefined ? {} : this.resolve(s.options);\n    const [command, ...args] = this.resolve(target);\n    const opts = { signal: this.abort.signal };\n    for (const [key, v] of Object.entries(options)) {\n      if (v !== null && typeof v === \"object\" && \"$number\" in v) opts[key] = Number(v.$number); // NaN, Infinity, -Infinity\n      else opts[key] = key === \"input\" ? payload(v) : v;\n    }\n    if (name === \"run\") {\n      const outcome = this.lib(async () => runFields(await this.api.run(command, args, opts)));\n      if (s.await !== false) return outcome;\n      outcome.catch(() => {}); // a failure surfaces when the scenario waits for it\n      this.runs.set(s.as, outcome);\n      return { fields: {} };\n    }\n    let child;\n    try {\n      child = this.api.spawn(command, args, opts);\n    } catch (e) {\n      return failure(this.api, e);\n    }\n    if (s.as === undefined) {\n      this.loose.push(child);\n    } else {\n      this.vars.set(`${s.as}.pid`, [String(child.pid)]);\n      this.kids.set(s.as, { child, pty: options.pty !== undefined && options.pty !== false });\n    }\n    return { fields: {} };"
+      },
+      {
+        "start_line": 189,
+        "end_line": 223,
+        "quote": "  /**\n   * Substitutes `${...}`: a string that is exactly one capture becomes its list (when it is not one value); inside a\n   * longer string, a variable is its first value.\n   */\n  resolve(v) {\n    if (typeof v === \"string\") {\n      const whole = /^\\$\\{([^}]*)\\}$/.exec(v);\n      const vals = whole === null ? null : this.var(whole[1]);\n      return vals !== null && vals.length !== 1 ? [...vals] : this.text(v);\n    }\n    if (Array.isArray(v)) return v.map((x) => this.resolve(x));\n    if (v !== null && typeof v === \"object\") return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, this.resolve(x)]));\n    return v;\n  }\n\n  text(s) {\n    return s.replace(/\\$\\{([^}]*)\\}/g, (all, name) => {\n      const [first] = this.var(name);\n      if (first === undefined) throw new Error(`${all} has no value yet`);\n      return first;\n    });\n  }\n\n  var(name) {\n    const vals = this.vars.get(name);\n    if (vals === undefined) throw new Error(`unknown variable \\${${name}}`);\n    return vals;\n  }\n\n  /** Whatever is left: abort the signal, stop every child (best effort, bounded), remove `${TMP}`. */\n  async cleanup(dir) {\n    this.abort.abort();\n    const children = [...this.kids.values()].map((k) => k.child).concat(this.loose);\n    await Promise.all(children.map((c) => within((async () => c.stop({ graceMs: 0 }))(), CLEANUP_MS)));\n    rmSync(dir, { recursive: true, force: true });"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/test/runner/suite.mjs",
+    "git_blob_sha": "756089822e80ebeeb21ffc7b33e9fc6e3d2cf84e",
+    "source_sha256": "661a1282fb0e516d48bba9c3100b7a349682a57eb46e4257e60214f7c0878869",
+    "source_bytes": 2556,
+    "line_count": 62,
+    "disposition": "analyzed",
+    "kind": "test",
+    "purpose": "Select and judge every TypeScript scenario against the pending ledger.",
+    "behavior": [
+      "Sorts JSON files, fails an empty directory, parses each complete scenario before OS/language filtering and counts other selectors separately.",
+      "Runs applicable scenarios sequentially and aggregates whether every run of each item passed.",
+      "Only product failures with ledger membership count as pending; schema, runner and oracle failures append errors.",
+      "Rejects a suite where no scenario ran and adds unknown/stale ledger findings before returning all counts."
+    ],
+    "contracts": [
+      "Malformed scenarios cannot hide behind selection or a pending item.",
+      "Only returned errors determine failure at the entry point."
+    ],
+    "dependencies": [
+      "runner/scenario.mjs, steps.mjs, ledger.mjs and expect.mjs.",
+      "native/omni/bindings/node/test/contract.mjs formats/exits."
+    ],
+    "failures_or_limits": [
+      "No suite invocation occurred; counts are algorithmic definitions rather than observed results."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 16,
+        "end_line": 38,
+        "quote": "export async function suite({ dir, ledgerText, fixture, api, log = console.log }) {\n  const ledger = new Ledger(ledgerText);\n  const names = readdirSync(dir).filter((n) => n.endsWith(\".json\")).sort();\n  if (names.length === 0) throw new Error(`no scenarios in ${dir}`);\n  const sum = { passed: 0, pending: 0, ran: 0, other: 0, files: names.length, errors: [...ledger.errors] };\n  const known = new Set();\n  const items = new Map(); // item -> whether every scenario of it run here passed\n  for (const file of names) {\n    const stem = file.slice(0, -\".json\".length);\n    const id = item(stem);\n    known.add(id);\n    const started = Date.now();\n    let failure = null;\n    let scenario;\n    try {\n      scenario = new Scenario(readFileSync(join(dir, file), \"utf8\"), stem);\n    } catch (e) {\n      failure = harness(`bad scenario: ${e.message}`);\n    }\n    if (scenario !== undefined && !scenario.applies(OS, \"ts\")) {\n      sum.other++;\n      continue;\n    }"
+      },
+      {
+        "start_line": 46,
+        "end_line": 61,
+        "quote": "    sum.ran++;\n    items.set(id, (items.get(id) ?? true) && failure === null);\n    if (failure === null) {\n      sum.passed++;\n      log(`ok      ${stem} (${Date.now() - started} ms)`);\n    } else if (failure.kind === \"product\" && ledger.pending(id)) {\n      sum.pending++;\n      log(`pending ${stem}: ${failure.message}`);\n    } else {\n      sum.errors.push(`${stem}: ${failure.kind === \"harness\" ? \"harness: \" : \"\"}${failure.message}`);\n    }\n  }\n  if (sum.ran === 0) sum.errors.push(\"no scenario ran: every file was classified as meant for another OS or language\");\n  sum.errors.push(...ledger.check(known, items));\n  for (const e of sum.errors) log(`FAIL    ${e}`);\n  return sum;"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/test/support.mjs",
+    "git_blob_sha": "7e7b51dc6e3084e5733ed37dcb037f668659fca1",
+    "source_sha256": "1215e8f658813ff55554b92162a04497bf8f2b8a47af6215b380d3a90f5214b0",
+    "source_bytes": 2231,
+    "line_count": 43,
+    "disposition": "analyzed",
+    "kind": "test",
+    "purpose": "Centralize binding test runtime selection, binary discovery and explicit process completion.",
+    "behavior": [
+      "Detects Bun before Deno, otherwise Node, and resolves the Omni repository root from this module.",
+      "Resolves fixture/supervisor from explicit environment or target/debug with Windows suffix; missing binaries throw and supervisor is written back to JS process.env.",
+      "Loads index.js through createRequire; hostCommand adds Deno -A and runtime-specific exposed-GC flags.",
+      "finish flushes a summary line then process.exit(code), so finished suites cannot be retained by a live child."
+    ],
+    "contracts": [
+      "CARGO_TARGET_DIR changes checkout lookup; absent binaries are failures, never skips."
+    ],
+    "dependencies": [
+      "Built omni-fixture/hugr-omni-supervisor.",
+      "native/omni/bindings/node/index.js"
+    ],
+    "failures_or_limits": [
+      "Explicit suite termination is test harness policy rather than production process-lifetime behavior."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 19,
+        "end_line": 42,
+        "quote": "export function binaries() {\n  const exe = OS === \"windows\" ? \".exe\" : \"\";\n  const target = process.env.CARGO_TARGET_DIR ?? join(root, \"target\");\n  const find = (variable, name) => {\n    const path = process.env[variable] ?? join(target, \"debug\", name + exe);\n    if (!existsSync(path)) throw new Error(`${path} is missing: run \\`cargo build --workspace --bins\\` (or set ${variable})`);\n    return path;\n  };\n  process.env.HUGR_OMNI_SUPERVISOR = find(\"HUGR_OMNI_SUPERVISOR\", \"hugr-omni-supervisor\");\n  return { fixture: find(\"HUGR_OMNI_FIXTURE\", \"omni-fixture\") };\n}\n\n/** The package under test: `bindings/node/index.js` (CommonJS; `createRequire` reads it the same on Node, Bun and Deno). */\nexport const loadApi = () => createRequire(import.meta.url)(\"../index.js\");\n\n/** The command line that runs `script` under this runtime; `gc`: with a way to force a garbage collection (Bun has `Bun.gc`). */\nexport function hostCommand(script, args = [], { gc = false } = {}) {\n  const flags = runtime === \"deno\" ? [\"run\", \"-A\", ...(gc ? [\"--v8-flags=--expose-gc\"] : [])] : runtime === \"node\" && gc ? [\"--expose-gc\"] : [];\n  return [process.execPath, [...flags, script, ...args]];\n}\n\n/** Prints `line`, then ends the process with `code` once it is flushed: a live Child must never keep a finished run waiting. */\nexport function finish(line, code) {\n  process.stdout.write(`${line}\\n`, () => process.exit(code));"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/test/teeth.mjs",
+    "git_blob_sha": "0631bceac8689516747833b9f29ad72588922070",
+    "source_sha256": "9eb7429ebfb7a4f6c8cc5f267031d9770ff53817fb475566d8f74a3b7e81312d",
+    "source_bytes": 20359,
+    "line_count": 315,
+    "disposition": "analyzed",
+    "kind": "test",
+    "purpose": "Probe the contract runner itself with positive controls, mutants and malformed scenarios.",
+    "behavior": [
+      "A scripted fake API/child drives every step and matcher, including binary input, captures, process entries, detach, gap/continuation and abort.",
+      "Mutants assert wrong values/types, unexpected errors, missing markers, duplicate process matching and nonending waits fail as product errors with step context.",
+      "Malformed JSON, regex, variables, files, handles and action combinations remain harness failures even for a pending item; ledger tests reject stale/unknown/duplicate entries.",
+      "Also asserts regex-table negative controls, real self/dead PID observation, OS parser unknown states, strict host marker parsing and readiness detachment."
+    ],
+    "contracts": [
+      "Fake library tests establish runner sensitivity, not the native library's behavior.",
+      "Historical W00-red rationale does not describe the current implementation state."
+    ],
+    "dependencies": [
+      "runner modules, markers.mjs and mini.mjs.",
+      "OS process probes for the oracle controls."
+    ],
+    "failures_or_limits": [
+      "No positive control or mutant was executed here."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 92,
+        "end_line": 112,
+        "quote": "test(\"positive control: a correct library passes a scenario that uses every kind of step and matcher\", async () => {\n  const gone = spawnSync(process.execPath, [\"--version\"]).pid; // reaped: the OS says dead\n  const steps = [\n    { run: [\"x\", \"a\"], options: { env: { K: \"v\" }, timeoutMs: 5 }, expect: { ...EXIT, stdout: { hex: \"68690a\" }, stderr: { length: 0 }, elapsedMs: { gte: 0, lt: 5000 } } },\n    { run: [\"x\"], expect: { stdout: { contains: \"i\\n\" }, stderr: { regex: \"^$\" }, exitCode: { gte: 0, lt: 1 } } },\n    { run: [\"x\"], options: { timeoutMs: { $number: \"NaN\" } }, expect: { error: \"INVALID_ARGUMENT\", message: [\"timeout\"] } },\n    { run: [\"x\"], options: { text: false, input: { hex: \"00ff\" } }, expect: { stdout: { hex: \"00ff\" } } },\n    { spawn: [\"x\"], as: \"c\" },\n    { read: \"c\", until: { match: \"^READY$\" }, capture: { p: \"^PID (\\\\d+)$\" }, expect: { stdout: \"PID 4242\\nREADY\\nmore\\n\", chunks: 3, droppedBytes: { stdout: 3 } } },\n    { processes: \"c\", capture: \"all\", expect: { entries: [{ pid: 4243, parentPid: \"${p}\", name: { regex: \"^fake\\\\d$\" } }, { pid: \"${p}\", parentPid: null, name: \"fake\" }] } },\n    { os: \"alive\", pids: [\"${c.pid}\"] },\n    { os: \"dead\", pids: [gone] },\n    { read: \"c\", until: \"end\", detach: true, expect: { stdout: \"tail\", chunks: 1 } },\n    { read: \"c\", until: \"end\", expect: { error: \"INVALID_ARGUMENT\" } },\n    { stop: \"c\", graceMs: 10, expect: { reason: \"killed\", success: false } },\n    { spawn: [\"x\"], as: \"d\" },\n    { read: \"d\", lines: true, until: \"end\", expect: { stdout: \"a\\nbbc\\n\\n\", chunks: 4, continues: 1, lostBefore: 5, pieces: { stdout: [{ bytes: 1, continues: false }, { bytes: 2, continues: true }, { bytes: 1, continues: false }, { bytes: 0, continues: false }] } } },\n    { abort: \"d\" },\n    { run: [\"x\"], expect: { error: \"ABORTED\" } },\n  ];\n  assert.equal(await failure(fakeApi(), steps), null);"
+      },
+      {
+        "start_line": 200,
+        "end_line": 226,
+        "quote": "test(\"harness failures are never pending: every scenario mistake fails the suite, wherever it is\", async () => {\n  const dir = mkdtempSync(join(tmpdir(), \"omni-teeth-\"));\n  // The library cannot start this program: a product failure, so a pending item stops there as `pending`.\n  const fails = '{\"spawn\": [\"/omni-no-such-dir/omni-nope\"], \"options\": {\"pty\": true}, \"as\": \"c\"}';\n  const cases = {\n    \"broken-json\": \"{\",\n    \"bad-regex\": `{\"steps\": [${fails}, {\"read\": \"c\", \"until\": {\"match\": \"(?!x)\"}}]}`,\n    \"unknown-var\": '{\"steps\": [{\"spawn\": [\"${NOPE}\"]}]}',\n    \"bad-matcher\": '{\"steps\": [{\"run\": [\"/omni-no-such-dir/x\"], \"expect\": {\"exitCode\": {\"bogus\": 0}}}]}',\n    \"late-no-rows\": `{\"steps\": [${fails}, {\"resize\": \"c\", \"cols\": 80}]}`,\n    \"late-bad-files\": `{\"files\": [\"x\"], \"steps\": [${fails}]}`,\n    \"late-no-handle\": `{\"steps\": [${fails}, {\"wait\": \"nope\"}]}`,\n    \"late-unknown-var\": `{\"steps\": [${fails}, {\"os\": \"dead\", \"pids\": \"\\${nope}\"}]}`,\n    \"late-close-pty\": `{\"steps\": [${fails}, {\"write\": \"c\"}]}`,\n    \"late-no-pids\": `{\"steps\": [${fails}, {\"os\": \"dead\", \"pids\": []}]}`,\n    product: `{\"steps\": [${fails}, {\"resize\": \"c\", \"cols\": 80, \"rows\": 24}]}`,\n  };\n  try {\n    for (const [name, body] of Object.entries(cases)) {\n      writeFileSync(join(dir, `C-KILL-01.${name}.json`), body === \"{\" ? body : `{\"id\": \"C-KILL-01.${name}\", ${body.slice(1)}`);\n    }\n    const sum = await suite({ dir, ledgerText: \"C-KILL-01 W07\\n\", fixture: \"none\", api: fakeApi(), log: () => {} });\n    assert.deepEqual([sum.passed, sum.pending, sum.ran, sum.files], [0, 1, 11, 11], JSON.stringify(sum.errors));\n    assert.equal(sum.errors.length, 10, JSON.stringify(sum.errors));\n    for (const name of Object.keys(cases).filter((n) => n !== \"product\")) {\n      const line = sum.errors.find((e) => e.startsWith(`C-KILL-01.${name}:`));\n      assert.ok(line?.includes(\"bad scenario\"), `${name}: ${JSON.stringify(sum.errors)}`);"
+      },
+      {
+        "start_line": 233,
+        "end_line": 259,
+        "quote": "test(\"the ledger: a pending item that passes, an unknown ID, a repeated ID and a malformed line fail the suite\", async () => {\n  const dir = mkdtempSync(join(tmpdir(), \"omni-teeth-\"));\n  try {\n    writeFileSync(join(dir, \"C-TEETH-01.t.json\"), JSON.stringify({ id: \"C-TEETH-01.t\", steps: [{ run: [\"x\"], expect: { exitCode: 0 } }] }));\n    const run = (ledgerText) => suite({ dir, ledgerText, fixture: \"none\", api: fakeApi(), log: () => {} });\n    assert.equal((await run(\"# only a comment\\n\")).errors.length, 0);\n    const passes = await run(\"C-TEETH-01 W99\\n\");\n    assert.ok(passes.errors.length === 1 && passes.errors[0].includes(\"remove it from conformance/pending.txt\"), String(passes.errors));\n    const unknown = await run(\"C-NOPE-01 W99\\n\");\n    assert.ok(unknown.errors.length === 1 && unknown.errors[0].includes(\"no scenario proves it\"), String(unknown.errors));\n    assert.ok(new Ledger(\"C-KILL-01 W07\\nC-KILL-01 W07\\n\").errors[0].includes(\"twice\"));\n    assert.equal(new Ledger(\"C-KILL-01\\nkill W07\\nC-KILL-01 W07 extra\\n\").errors.length, 3);\n    assert.equal(new Ledger(\"# c\\n\\nC-KILL-01 W07\\nC-PTY-02 W12w\\n\").errors.length, 0);\n    assert.equal(item(\"C-KILL-01.tree\"), \"C-KILL-01\");\n  } finally {\n    rmSync(dir, { recursive: true, force: true });\n  }\n});\n\ntest(\"the regex table check can fail, and the engine is the subset (JS `u` flag, by code point)\", () => {\n  assert.equal(checkTable({ accepted: [{ pattern: \"^a$\", match: [\"a\"], nomatch: [\"b\"], group1: {} }], refused: [\"(?=a)\"] }).length, 0);\n  const bad = checkTable({ accepted: [{ pattern: \"^(a)$\", match: [\"b\"], nomatch: [\"a\"], group1: { a: \"x\" } }, { pattern: \"\\\\s\" }], refused: [\"^a$\"] });\n  assert.equal(bad.length, 5, bad.join(\"\\n\"));\n  assert.ok(checkTable({ accepted: [], refused: [] }).length > 0, \"an empty table must not pass\");\n  assert.throws(() => pattern(\"^(?!x)\"), /outside the JS\\/Rust subset/);\n  assert.ok(pattern(\"^\\\\d+$\").test(\"123\") && !pattern(\"^\\\\d+$\").test(\"٣\"));\n  assert.ok(pattern(\"^.$\").test(\"\\u{1F600}\") && !pattern(\"^.$\").test(\"\\n\"));"
+      },
+      {
+        "start_line": 267,
+        "end_line": 312,
+        "quote": "test(\"the OS oracle's reading of /proc, ps and tasklist: gone or a zombie is dead, anything unclear is unknown\", () => {\n  const states = (...lives) => lives.map((l) => l.state);\n  const out = (stdout, code = 0, stderr = \"\") => ({ code, stdout, stderr });\n  assert.deepEqual(states(\n    statLife(7, \"7 (node) S 1 7 7 0 -1\"), statLife(7, \"7 (a b) c) Z 1 7\"), statLife(7, \"8 (node) S 1\"), statLife(7, \"garbage\"), statLife(7, \"7 (x) Q 1\"),\n  ), [\"alive\", \"dead\", \"unknown\", \"unknown\", \"unknown\"]);\n  assert.deepEqual(states(\n    psLife(7, out(\"    7 Ss\\n\")), psLife(7, out(\"    7 Z+\\n\")), psLife(7, out(\"\", 1)),\n    psLife(7, out(\"\", 1, \"ps: Invalid process id: 7\\n\")), psLife(7, out(\"\", \"ENOENT\")), psLife(7, out(\"    8 Ss\\n\")),\n  ), [\"alive\", \"dead\", \"dead\", \"unknown\", \"unknown\", \"unknown\"]);\n  assert.deepEqual(states(\n    tasklistLife(7, out('\"node.exe\",\"7\",\"Console\",\"1\",\"30,000 K\"\\r\\n')), tasklistLife(7, out(\"INFO: No tasks are running which match the specified criteria.\\r\\n\")),\n    tasklistLife(7, out(\"\")), tasklistLife(7, out(\"\", 1)), tasklistLife(7, out('\"node.exe\",\"8\",\"Console\"\\r\\n')),\n  ), [\"alive\", \"dead\", \"unknown\", \"unknown\", \"unknown\"]);\n});\n\ntest(\"a host marker is read from complete lines only, with exactly the pids it promises\", () => {\n  assert.equal(parseMarker(\"HOST-READY 101\", \"READY\", 3), undefined, \"a line without its newline is not a line yet\");\n  assert.equal(parseMarker(\"HOST-READY 101 2\", \"READY\", 3), undefined);\n  // delivered in two pieces, split inside its pids\n  assert.deepEqual(parseMarker(\"HOST-READY 101\" + \" 202 303\\n\", \"READY\", 3), [101, 202, 303]);\n  assert.deepEqual(parseMarker(\"noise\\nHOST-SPAWNED 7\\nHOST-READY 1 2 3\\nHOST-REA\", \"READY\", 3), [1, 2, 3]);\n  assert.equal(parseMarker(\"HOST-READYX 1 2 3\\n\", \"READY\", 3), undefined, \"another marker's name\");\n  for (const bad of [\n    \"HOST-READY 101\\n\", \"HOST-READY 101 202\\n\", \"HOST-READY 101 202 303 404\\n\", \"HOST-READY 1 2 3 3\\n\", \"HOST-READY 101 101 303\\n\",\n    \"HOST-READY 101  202 303\\n\", \"HOST-READY 0 2 3\\n\", \"HOST-READY a b c\\n\", \"HOST-READY -1 2 3\\n\", \"HOST-READY 1.5 2 3\\n\", \"HOST-READY \\n\",\n  ]) {\n    assert.ok(parseMarker(bad, \"READY\", 3) instanceof Error, `${JSON.stringify(bad)} was accepted`);\n  }\n});\n\nconst output = (...texts) => ({\n  async *[Symbol.asyncIterator]() {\n    for (const text of texts) yield { stream: \"stdout\", text };\n  },\n});\n\ntest(\"the host learns its tree only once READY and every level have been seen, and then leaves the loop\", async () => {\n  assert.deepEqual(await untilTree(output(\"PID 2 22\", \"READY\", \"PID 1 11\", \"after\"), 2), [11, 22]);\n  for (const partial of [[], [\"READY\"], [\"READY\", \"PID 1 11\"], [\"PID 1 11\", \"PID 2 22\"], [\"PID 1 11\", \"PID 1 11\", \"READY\"], [\"PID 2 22\", \"PID 3 33\", \"READY\"]]) {\n    await assert.rejects(untilTree(output(...partial), 2), /ended before READY/, JSON.stringify(partial));\n  }\n  let released = false;\n  const watched = { async *[Symbol.asyncIterator]() { try { yield { text: \"READY\" }; yield { text: \"PID 1 11\" }; yield { text: \"never read\" }; } finally { released = true; } } };\n  assert.deepEqual(await untilTree(watched, 1), [11]);\n  assert.ok(released, \"the consumer must be left (detached) once the tree is known\");"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/test/worker-host.mjs",
+    "git_blob_sha": "677d1aac59563cf219346d0a5e968a9765831b16",
+    "source_sha256": "b563c0c760c00f1261212865a7aad567d6aee1f7b2a17d000ebdc777f105692c",
+    "source_bytes": 1577,
+    "line_count": 26,
+    "disposition": "analyzed",
+    "kind": "fixture",
+    "purpose": "Isolate worker termination so host crashes and tree leaks become parent-test observations.",
+    "behavior": [
+      "Main environment loads the API and completes a fixture run, then starts worker.mjs in live or idle mode.",
+      "Waits for the worker's message/error, verifies its run output and awaits worker.terminate().",
+      "Queries each reported PID through the OS while the host still lives, then prints termination PIDs and states."
+    ],
+    "contracts": [
+      "Liveness must be checked before the host itself exits, because host death would independently clean trees.",
+      "Expected normal host exit and dead states are asserted by hardening.mjs."
+    ],
+    "dependencies": [
+      "native/omni/bindings/node/test/worker.mjs",
+      "native/omni/bindings/node/test/runner/os.mjs",
+      "Node-compatible worker_threads APIs."
+    ],
+    "failures_or_limits": [
+      "The historical Bun rc134 comment is background, not current runtime evidence."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 14,
+        "end_line": 26,
+        "quote": "const live = process.argv[2] === \"live\";\nconst { fixture } = binaries();\nconst { run } = loadApi();\nawait run(fixture, [\"out=from-main\"]);\nconst worker = new Worker(new URL(\"./worker.mjs\", import.meta.url), { workerData: { fixture, live } });\nconst report = await new Promise((resolve, reject) => {\n  worker.once(\"message\", resolve);\n  worker.once(\"error\", reject);\n});\nif (report.ran !== \"from-worker\") throw new Error(`the worker's run() said ${JSON.stringify(report.ran)}`);\nawait worker.terminate();\nconst states = await Promise.all(report.pids.map(async (pid) => (await life(pid)).state));\nprocess.stdout.write(`HOST-TERMINATED ${report.pids.length > 0 ? report.pids.join(\" \") : \"none\"}\\nHOST-STATES ${states.join(\" \") || \"none\"}\\n`);"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/test/worker.mjs",
+    "git_blob_sha": "2f2c99ff7d42144f83782eedea2d8333e7c83479",
+    "source_sha256": "600d63cdea5056a05e4662686608822c5c97f41a8a31fbc6efd7db5330893849",
+    "source_bytes": 805,
+    "line_count": 17,
+    "disposition": "analyzed",
+    "kind": "fixture",
+    "purpose": "Load the addon in a worker environment and report a controlled live tree or idle state.",
+    "behavior": [
+      "Completes a fixture run emitting from-worker.",
+      "In live mode spawns tree=1/ready/hang, waits for the descendant marker and posts root/descendant PIDs; idle mode posts an empty PID list."
+    ],
+    "contracts": [
+      "Parent controls termination; the worker reports readiness but does not assert cleanup."
+    ],
+    "dependencies": [
+      "native/omni/bindings/node/test/worker-host.mjs",
+      "native/omni/bindings/node/test/markers.mjs",
+      "Native fixture and public binding."
+    ],
+    "failures_or_limits": [
+      "No worker environment was started in this analysis."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 9,
+        "end_line": 17,
+        "quote": "const { run, spawn } = loadApi();\nconst ran = await run(workerData.fixture, [\"out=from-worker\"]);\nif (workerData.live) {\n  const child = spawn(workerData.fixture, [\"tree=1\", \"ready\", \"hang\"]);\n  const [descendant] = await untilTree(child.lines(), 1);\n  parentPort.postMessage({ ran: ran.stdout, pids: [child.pid, descendant] });\n} else {\n  parentPort.postMessage({ ran: ran.stdout, pids: [] });\n}"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  }
+]

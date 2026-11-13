@@ -25,3 +25,7 @@ Next: finish actual full-blob reads and L1/L2 semantic records, collect exact by
 GitHub MCP is available for source/blob/ref reads and commits. Local shell is available for byte verification and artifact validation. No local product tests are authorized by repository instructions; this task changes knowledge only. Source tests and recorded historical reviews will be classified as source evidence, never current runtime results. Actual Atlas consumption, OS execution, CI, maintenance effects and global Genesis acceptance remain unproven until evidenced. No externally paid provider calls are part of this execution. Tokens, physical provider attempts and billed cost are UNKNOWN; no zero-cost claim is made.
 
 The supplied external-slice scope overrides the original S5 branch/path/population, while evidence, judgment and transport rules remain applicable. Final delivery will be a coordination candidate, not automatic S5/global acceptance.
+
+## Authorship checkpoint
+
+130 of 393 records have been authored and mechanically checked against full captured source bytes. This checkpoint preserves those original bodies, still pending independent semantic judgment. Source metadata and excerpts passed documentary validation; no product/runtime claim follows.

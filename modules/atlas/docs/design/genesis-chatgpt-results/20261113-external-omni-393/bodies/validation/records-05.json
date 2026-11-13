@@ -1,0 +1,622 @@
+[
+  {
+    "path": "native/omni/conformance/scenarios/C-ENV-01.clean.json",
+    "git_blob_sha": "9ce57622594a3d73db7d9014ad72982ea587e98d",
+    "source_sha256": "dae283bc3ee150517d0d6c445164a4330bfce38073856f41f8407740c2125797",
+    "source_bytes": 274,
+    "line_count": 7,
+    "kind": "fixture",
+    "disposition": "analyzed",
+    "purpose": "Tests complete environment replacement on Unix while preserving Unicode values.",
+    "behavior": [
+      "Runs the fixture env command with inheritEnv=false and only OMNI_ONLY=1 and OMNI_U=ü.",
+      "Requires exit 0 and an exact sorted ASCII-escaped JSON environment containing those two keys only."
+    ],
+    "contracts": [
+      "Scenario C-ENV-01.clean; OS=linux,macos; languages=rust,ts,py; default action deadline 10000 ms unless timeoutMs overrides it.",
+      "Exact ordered setup/actions/assertions: {\"steps\":[{\"run\":[\"${FIXTURE}\",\"env\"],\"options\":{\"inheritEnv\":false,\"env\":{\"OMNI_ONLY\":\"1\",\"OMNI_U\":\"ü\"}},\"expect\":{\"exitCode\":0,\"stdout\":\"{\\\"OMNI_ONLY\\\":\\\"1\\\",\\\"OMNI_U\\\":\\\"\\\\u00fc\\\"}\\n\"}}]}"
+    ],
+    "dependencies": [
+      "native/omni/conformance/SPEC.md defines action execution, shared AbortSignal, matchers and deadlines.",
+      "native/omni/crates/omni-fixture supplies the deterministic executable named ${FIXTURE}.",
+      "Rust and TypeScript conformance runners consume the same scenario bytes; Python is a declared future runner in SPEC."
+    ],
+    "failures_or_limits": [
+      "Linux/macOS only; does not define Windows mandatory SystemRoot injection."
+    ],
+    "evidence": [
+      {
+        "start_line": 5,
+        "end_line": 5,
+        "quote": "    {\"run\": [\"${FIXTURE}\", \"env\"], \"options\": {\"inheritEnv\": false, \"env\": {\"OMNI_ONLY\": \"1\", \"OMNI_U\": \"ü\"}}, \"expect\": {\"exitCode\": 0, \"stdout\": \"{\\\"OMNI_ONLY\\\":\\\"1\\\",\\\"OMNI_U\\\":\\\"\\\\u00fc\\\"}\\n\"}}"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation"
+  },
+  {
+    "path": "native/omni/conformance/scenarios/C-ENV-01.inherit.json",
+    "git_blob_sha": "d62fe4a3169f646fc75dfc36b03d65e9d5ce90d1",
+    "source_sha256": "1be9684564302b40db713aa94fdae4c8ecd878e3356ced0ae0717b2175b6cf2a",
+    "source_bytes": 523,
+    "line_count": 7,
+    "kind": "fixture",
+    "disposition": "analyzed",
+    "purpose": "Tests inherited environment overlays, Unicode keys and explicit PATH removal.",
+    "behavior": [
+      "The first run overlays OMNI_SET, OMNI_U and OMNI_KEY_Ü and requires their escaped values followed by an inherited case-insensitive PATH key.",
+      "The second run sets PATH=null and OMNI_SET=1; getenv must emit PATH unset and exactly one OMNI_SET value."
+    ],
+    "contracts": [
+      "Scenario C-ENV-01.inherit; OS=linux,macos,windows; languages=rust,ts,py; default action deadline 10000 ms unless timeoutMs overrides it.",
+      "Exact ordered setup/actions/assertions: {\"steps\":[{\"run\":[\"${FIXTURE}\",\"env\"],\"options\":{\"env\":{\"OMNI_SET\":\"a=b c\",\"OMNI_U\":\"café ✓\",\"OMNI_KEY_Ü\":\"k\"}},\"expect\":{\"exitCode\":0,\"stdout\":{\"regex\":\"\\\"OMNI_KEY_\\\\\\\\u00dc\\\":\\\"k\\\".*\\\"OMNI_SET\\\":\\\"a=b c\\\".*\\\"OMNI_U\\\":\\\"caf\\\\\\\\u00e9 \\\\\\\\u2713\\\".*\\\"[Pp][Aa][Tt][Hh]\\\":\\\"\"}}},{\"run\":[\"${FIXTURE}\",\"getenv=PATH\",\"getenv=OMNI_SET\"],\"options\":{\"env\":{\"PATH\":null,\"OMNI_SET\":\"1\"}},\"expect\":{\"exitCode\":0,\"stdout\":\"PATH unset\\nOMNI_SET=\\\"1\\\"\\n\"}}]}"
+    ],
+    "dependencies": [
+      "native/omni/conformance/SPEC.md defines action execution, shared AbortSignal, matchers and deadlines.",
+      "native/omni/crates/omni-fixture supplies the deterministic executable named ${FIXTURE}.",
+      "Rust and TypeScript conformance runners consume the same scenario bytes; Python is a declared future runner in SPEC."
+    ],
+    "failures_or_limits": [
+      "The first assertion is a regex over the environment, not an exhaustive assertion of every inherited variable."
+    ],
+    "evidence": [
+      {
+        "start_line": 4,
+        "end_line": 4,
+        "quote": "    {\"run\": [\"${FIXTURE}\", \"env\"], \"options\": {\"env\": {\"OMNI_SET\": \"a=b c\", \"OMNI_U\": \"café ✓\", \"OMNI_KEY_Ü\": \"k\"}}, \"expect\": {\"exitCode\": 0, \"stdout\": {\"regex\": \"\\\"OMNI_KEY_\\\\\\\\u00dc\\\":\\\"k\\\".*\\\"OMNI_SET\\\":\\\"a=b c\\\".*\\\"OMNI_U\\\":\\\"caf\\\\\\\\u00e9 \\\\\\\\u2713\\\".*\\\"[Pp][Aa][Tt][Hh]\\\":\\\"\"}}},"
+      },
+      {
+        "start_line": 5,
+        "end_line": 5,
+        "quote": "    {\"run\": [\"${FIXTURE}\", \"getenv=PATH\", \"getenv=OMNI_SET\"], \"options\": {\"env\": {\"PATH\": null, \"OMNI_SET\": \"1\"}}, \"expect\": {\"exitCode\": 0, \"stdout\": \"PATH unset\\nOMNI_SET=\\\"1\\\"\\n\"}}"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation"
+  },
+  {
+    "path": "native/omni/conformance/scenarios/C-ENV-01.windows.json",
+    "git_blob_sha": "6e2d0a924ad995922637274d2281f1e69585b71e",
+    "source_sha256": "2e43a016f4c0dcb909dd6be402585ea1ca4f04516cbc615e00ece9f5010eff3a",
+    "source_bytes": 441,
+    "line_count": 8,
+    "kind": "fixture",
+    "disposition": "analyzed",
+    "purpose": "Defines Windows environment replacement and case-insensitive PATH overlay expectations.",
+    "behavior": [
+      "A clean environment containing OMNI_ONLY must also contain a nonempty SystemRoot, and no other keys in its exact anchored JSON shape.",
+      "Setting lowercase path=omni-x must yield a single case-insensitive PATH spelling with value omni-x."
+    ],
+    "contracts": [
+      "Scenario C-ENV-01.windows; OS=windows; languages=rust,ts,py; default action deadline 10000 ms unless timeoutMs overrides it.",
+      "Exact ordered setup/actions/assertions: {\"steps\":[{\"run\":[\"${FIXTURE}\",\"env\"],\"options\":{\"inheritEnv\":false,\"env\":{\"OMNI_ONLY\":\"1\"}},\"expect\":{\"exitCode\":0,\"stdout\":{\"regex\":\"^\\\\{\\\"OMNI_ONLY\\\":\\\"1\\\",\\\"SystemRoot\\\":\\\"[^\\\"]+\\\"\\\\}\\\\n$\"}}},{\"run\":[\"${FIXTURE}\",\"getenv=PATH\"],\"options\":{\"env\":{\"path\":\"omni-x\"}},\"expect\":{\"exitCode\":0,\"stdout\":{\"regex\":\"^[Pp][Aa][Tt][Hh]=\\\"omni-x\\\"\\n$\"}}}]}"
+    ],
+    "dependencies": [
+      "native/omni/conformance/SPEC.md defines action execution, shared AbortSignal, matchers and deadlines.",
+      "native/omni/crates/omni-fixture supplies the deterministic executable named ${FIXTURE}.",
+      "Rust and TypeScript conformance runners consume the same scenario bytes; Python is a declared future runner in SPEC."
+    ],
+    "failures_or_limits": [
+      "Windows only; the injected SystemRoot value is matched structurally, not hardcoded."
+    ],
+    "evidence": [
+      {
+        "start_line": 5,
+        "end_line": 5,
+        "quote": "    {\"run\": [\"${FIXTURE}\", \"env\"], \"options\": {\"inheritEnv\": false, \"env\": {\"OMNI_ONLY\": \"1\"}}, \"expect\": {\"exitCode\": 0, \"stdout\": {\"regex\": \"^\\\\{\\\"OMNI_ONLY\\\":\\\"1\\\",\\\"SystemRoot\\\":\\\"[^\\\"]+\\\"\\\\}\\\\n$\"}}},"
+      },
+      {
+        "start_line": 6,
+        "end_line": 6,
+        "quote": "    {\"run\": [\"${FIXTURE}\", \"getenv=PATH\"], \"options\": {\"env\": {\"path\": \"omni-x\"}}, \"expect\": {\"exitCode\": 0, \"stdout\": {\"regex\": \"^[Pp][Aa][Tt][Hh]=\\\"omni-x\\\"\\n$\"}}}"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation"
+  },
+  {
+    "path": "native/omni/conformance/scenarios/C-ERR-01.not-executable.json",
+    "git_blob_sha": "c08e098e28d14b526721dc2895775295b35753b9",
+    "source_sha256": "017afd7d21475fe6098fd128ebf53f015b2c6ae96ee425aa594ff2a340e5e8ad",
+    "source_bytes": 442,
+    "line_count": 9,
+    "kind": "fixture",
+    "disposition": "analyzed",
+    "purpose": "Specifies Unix errors for an existing file without execute permission.",
+    "behavior": [
+      "Creates notexec.txt containing non-program text, then attempts both spawn and run on its absolute temporary path.",
+      "Both operations must report NOT_EXECUTABLE with the filename, no-execute-permission cause and Make it executable remediation."
+    ],
+    "contracts": [
+      "Scenario C-ERR-01.not-executable; OS=linux,macos; languages=rust,ts,py; default action deadline 10000 ms unless timeoutMs overrides it.",
+      "Exact ordered setup/actions/assertions: {\"files\":{\"notexec.txt\":\"not a program\\n\"},\"steps\":[{\"spawn\":[\"${TMP}/notexec.txt\"],\"expect\":{\"error\":\"NOT_EXECUTABLE\",\"message\":[\"notexec.txt\",\"has no execute permission\",\"Make it executable\"]}},{\"run\":[\"${TMP}/notexec.txt\"],\"expect\":{\"error\":\"NOT_EXECUTABLE\",\"message\":[\"notexec.txt\",\"has no execute permission\",\"Make it executable\"]}}]}"
+    ],
+    "dependencies": [
+      "native/omni/conformance/SPEC.md defines action execution, shared AbortSignal, matchers and deadlines.",
+      "native/omni/crates/omni-fixture supplies the deterministic executable named ${FIXTURE}.",
+      "Rust and TypeScript conformance runners consume the same scenario bytes; Python is a declared future runner in SPEC."
+    ],
+    "failures_or_limits": [
+      "Linux/macOS only; the fixture file is ordinary text, not an executable-format error case."
+    ],
+    "evidence": [
+      {
+        "start_line": 6,
+        "end_line": 6,
+        "quote": "    {\"spawn\": [\"${TMP}/notexec.txt\"], \"expect\": {\"error\": \"NOT_EXECUTABLE\", \"message\": [\"notexec.txt\", \"has no execute permission\", \"Make it executable\"]}},"
+      },
+      {
+        "start_line": 7,
+        "end_line": 7,
+        "quote": "    {\"run\": [\"${TMP}/notexec.txt\"], \"expect\": {\"error\": \"NOT_EXECUTABLE\", \"message\": [\"notexec.txt\", \"has no execute permission\", \"Make it executable\"]}}"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation"
+  },
+  {
+    "path": "native/omni/conformance/scenarios/C-ERR-01.not-startable.json",
+    "git_blob_sha": "f02d03b55b2b6c7147b0fb8f420d8fe30787c423",
+    "source_sha256": "502886ee48f0d0e4c90d83e210332d0bce09d5b3c847aa0c4550d71900800e6a",
+    "source_bytes": 494,
+    "line_count": 9,
+    "kind": "fixture",
+    "disposition": "analyzed",
+    "purpose": "Specifies Windows errors for an existing ordinary text file used as a program.",
+    "behavior": [
+      "Creates CRLF-terminated notexec.txt and passes its temporary Windows path to spawn and run.",
+      "Both must report NOT_EXECUTABLE with Windows cannot start and guidance to pass the file to the program that opens it."
+    ],
+    "contracts": [
+      "Scenario C-ERR-01.not-startable; OS=windows; languages=rust,ts,py; default action deadline 10000 ms unless timeoutMs overrides it.",
+      "Exact ordered setup/actions/assertions: {\"files\":{\"notexec.txt\":\"not a program\\r\\n\"},\"steps\":[{\"spawn\":[\"${TMP}\\\\notexec.txt\"],\"expect\":{\"error\":\"NOT_EXECUTABLE\",\"message\":[\"notexec.txt\",\"Windows cannot start\",\"Pass it as an argument to the program that opens it\"]}},{\"run\":[\"${TMP}\\\\notexec.txt\"],\"expect\":{\"error\":\"NOT_EXECUTABLE\",\"message\":[\"notexec.txt\",\"Windows cannot start\",\"Pass it as an argument to the program that opens it\"]}}]}"
+    ],
+    "dependencies": [
+      "native/omni/conformance/SPEC.md defines action execution, shared AbortSignal, matchers and deadlines.",
+      "native/omni/crates/omni-fixture supplies the deterministic executable named ${FIXTURE}.",
+      "Rust and TypeScript conformance runners consume the same scenario bytes; Python is a declared future runner in SPEC."
+    ],
+    "failures_or_limits": [
+      "Windows only; executable extensions and valid binaries are separate scenarios."
+    ],
+    "evidence": [
+      {
+        "start_line": 6,
+        "end_line": 6,
+        "quote": "    {\"spawn\": [\"${TMP}\\\\notexec.txt\"], \"expect\": {\"error\": \"NOT_EXECUTABLE\", \"message\": [\"notexec.txt\", \"Windows cannot start\", \"Pass it as an argument to the program that opens it\"]}},"
+      },
+      {
+        "start_line": 7,
+        "end_line": 7,
+        "quote": "    {\"run\": [\"${TMP}\\\\notexec.txt\"], \"expect\": {\"error\": \"NOT_EXECUTABLE\", \"message\": [\"notexec.txt\", \"Windows cannot start\", \"Pass it as an argument to the program that opens it\"]}}"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation"
+  },
+  {
+    "path": "native/omni/conformance/scenarios/C-ERR-01.outcomes.json",
+    "git_blob_sha": "d9e1983a9adf99c3834d4b749cbce45fdc411aa6",
+    "source_sha256": "d010744d58a738f1d32704122f37a61f4bec4b728256646d168014a4f989acfe",
+    "source_bytes": 1255,
+    "line_count": 12,
+    "kind": "fixture",
+    "disposition": "analyzed",
+    "purpose": "Distinguishes missing programs, missing explicit paths and invalid working directories.",
+    "behavior": [
+      "Exercises bare omni-no-such-program through spawn/run, a missing temporary executable through spawn, a missing cwd through spawn/run and a text-file cwd through spawn.",
+      "Requires NOT_FOUND for command resolution and INVALID_CWD for cwd validation, including distinct diagnostic cause and remediation substrings."
+    ],
+    "contracts": [
+      "Scenario C-ERR-01.outcomes; OS=linux,macos,windows; languages=rust,ts,py; default action deadline 10000 ms unless timeoutMs overrides it.",
+      "Exact ordered setup/actions/assertions: {\"files\":{\"notexec.txt\":\"not a program\\n\"},\"steps\":[{\"spawn\":[\"omni-no-such-program\"],\"expect\":{\"error\":\"NOT_FOUND\",\"message\":[\"\\\"omni-no-such-program\\\"\",\"was not found in any directory of the child's PATH\",\"pass the program's full path\"]}},{\"run\":[\"omni-no-such-program\"],\"expect\":{\"error\":\"NOT_FOUND\",\"message\":[\"\\\"omni-no-such-program\\\"\",\"was not found in any directory of the child's PATH\",\"pass the program's full path\"]}},{\"spawn\":[\"${TMP}/missing${EXE}\"],\"expect\":{\"error\":\"NOT_FOUND\",\"message\":[\"missing${EXE}\",\"was not found at\",\"Check the path and cwd\"]}},{\"spawn\":[\"${FIXTURE}\"],\"options\":{\"cwd\":\"${TMP}/no-such-dir\"},\"expect\":{\"error\":\"INVALID_CWD\",\"message\":[\"no-such-dir\",\"does not exist\",\"Create the directory, or pass an existing one as cwd\"]}},{\"run\":[\"${FIXTURE}\"],\"options\":{\"cwd\":\"${TMP}/no-such-dir\"},\"expect\":{\"error\":\"INVALID_CWD\",\"message\":[\"no-such-dir\",\"does not exist\",\"Create the directory, or pass an existing one as cwd\"]}},{\"spawn\":[\"${FIXTURE}\"],\"options\":{\"cwd\":\"${TMP}/notexec.txt\"},\"expect\":{\"error\":\"INVALID_CWD\",\"message\":[\"notexec.txt\",\"is not a directory\",\"Pass a directory as cwd\"]}}]}"
+    ],
+    "dependencies": [
+      "native/omni/conformance/SPEC.md defines action execution, shared AbortSignal, matchers and deadlines.",
+      "native/omni/crates/omni-fixture supplies the deterministic executable named ${FIXTURE}.",
+      "Rust and TypeScript conformance runners consume the same scenario bytes; Python is a declared future runner in SPEC."
+    ],
+    "failures_or_limits": [
+      "Only listed fields and message substrings are asserted; source definitions do not establish any runtime outcome."
+    ],
+    "evidence": [
+      {
+        "start_line": 5,
+        "end_line": 5,
+        "quote": "    {\"spawn\": [\"omni-no-such-program\"], \"expect\": {\"error\": \"NOT_FOUND\", \"message\": [\"\\\"omni-no-such-program\\\"\", \"was not found in any directory of the child's PATH\", \"pass the program's full path\"]}},"
+      },
+      {
+        "start_line": 10,
+        "end_line": 10,
+        "quote": "    {\"spawn\": [\"${FIXTURE}\"], \"options\": {\"cwd\": \"${TMP}/notexec.txt\"}, \"expect\": {\"error\": \"INVALID_CWD\", \"message\": [\"notexec.txt\", \"is not a directory\", \"Pass a directory as cwd\"]}}"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation"
+  },
+  {
+    "path": "native/omni/conformance/scenarios/C-ERR-02.inputs.json",
+    "git_blob_sha": "5815c53660536e3d969b1e55b465e89520978c00",
+    "source_sha256": "ec874e559f7cbca1806fb3e394b4753f6a549df2bc14a5db940af4ed7c3f67ac",
+    "source_bytes": 1370,
+    "line_count": 15,
+    "kind": "fixture",
+    "disposition": "analyzed",
+    "purpose": "Checks argument validation before launching malformed requests.",
+    "behavior": [
+      "Rejects PTY dimensions 0 or 40000, NUL in arguments/cwd/environment values, environment keys containing equals or empty names, and durations of 4294967296.",
+      "Each malformed spawn/run must produce INVALID_ARGUMENT and identify the relevant cols, rows, arg, cwd, env, timeout or grace field."
+    ],
+    "contracts": [
+      "Scenario C-ERR-02.inputs; OS=linux,macos,windows; languages=rust,ts,py; default action deadline 10000 ms unless timeoutMs overrides it.",
+      "Exact ordered setup/actions/assertions: {\"steps\":[{\"spawn\":[\"${FIXTURE}\",\"tty\"],\"options\":{\"pty\":{\"cols\":0,\"rows\":24}},\"expect\":{\"error\":\"INVALID_ARGUMENT\",\"message\":[\"cols\"]}},{\"spawn\":[\"${FIXTURE}\",\"tty\"],\"options\":{\"pty\":{\"cols\":80,\"rows\":40000}},\"expect\":{\"error\":\"INVALID_ARGUMENT\",\"message\":[\"rows\"]}},{\"run\":[\"${FIXTURE}\",\"tty\"],\"options\":{\"pty\":{\"cols\":80,\"rows\":0}},\"expect\":{\"error\":\"INVALID_ARGUMENT\",\"message\":[\"rows\"]}},{\"spawn\":[\"${FIXTURE}\",\"out=a\\u0000b\"],\"expect\":{\"error\":\"INVALID_ARGUMENT\",\"message\":[\"arg\"]}},{\"spawn\":[\"${FIXTURE}\"],\"options\":{\"cwd\":\"${TMP}\\u0000x\"},\"expect\":{\"error\":\"INVALID_ARGUMENT\",\"message\":[\"cwd\"]}},{\"spawn\":[\"${FIXTURE}\"],\"options\":{\"env\":{\"OMNI_K\":\"v\\u0000\"}},\"expect\":{\"error\":\"INVALID_ARGUMENT\",\"message\":[\"env\"]}},{\"spawn\":[\"${FIXTURE}\"],\"options\":{\"env\":{\"OMNI=K\":\"v\"}},\"expect\":{\"error\":\"INVALID_ARGUMENT\",\"message\":[\"env\"]}},{\"spawn\":[\"${FIXTURE}\"],\"options\":{\"env\":{\"\":\"v\"}},\"expect\":{\"error\":\"INVALID_ARGUMENT\",\"message\":[\"env\"]}},{\"spawn\":[\"${FIXTURE}\"],\"options\":{\"timeoutMs\":4294967296},\"expect\":{\"error\":\"INVALID_ARGUMENT\",\"message\":[\"timeout\"]}},{\"run\":[\"${FIXTURE}\"],\"options\":{\"graceMs\":4294967296},\"expect\":{\"error\":\"INVALID_ARGUMENT\",\"message\":[\"grace\"]}}]}"
+    ],
+    "dependencies": [
+      "native/omni/conformance/SPEC.md defines action execution, shared AbortSignal, matchers and deadlines.",
+      "native/omni/crates/omni-fixture supplies the deterministic executable named ${FIXTURE}.",
+      "Rust and TypeScript conformance runners consume the same scenario bytes; Python is a declared future runner in SPEC."
+    ],
+    "failures_or_limits": [
+      "This scenario covers representable values across runners; floating-point and nonfinite inputs are isolated in the numbers scenario."
+    ],
+    "evidence": [
+      {
+        "start_line": 4,
+        "end_line": 4,
+        "quote": "    {\"spawn\": [\"${FIXTURE}\", \"tty\"], \"options\": {\"pty\": {\"cols\": 0, \"rows\": 24}}, \"expect\": {\"error\": \"INVALID_ARGUMENT\", \"message\": [\"cols\"]}},"
+      },
+      {
+        "start_line": 13,
+        "end_line": 13,
+        "quote": "    {\"run\": [\"${FIXTURE}\"], \"options\": {\"graceMs\": 4294967296}, \"expect\": {\"error\": \"INVALID_ARGUMENT\", \"message\": [\"grace\"]}}"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation"
+  },
+  {
+    "path": "native/omni/conformance/scenarios/C-ERR-02.numbers.json",
+    "git_blob_sha": "9b91fa87ace65c29de4b6f81792357831e06aad7",
+    "source_sha256": "8c6743e6e67c723d3a7094790ca343f946d0ea997ac8275da962a9ac06c938a7",
+    "source_bytes": 884,
+    "line_count": 12,
+    "kind": "fixture",
+    "disposition": "analyzed",
+    "purpose": "Checks binding-only rejection of negative, fractional and nonfinite numeric options.",
+    "behavior": [
+      "Supplies timeout=-1 and NaN, grace=Infinity, output limits -1 and 1.5, and PTY cols=1.5.",
+      "Every case expects INVALID_ARGUMENT with the associated field substring; tagged number objects are interpreted by the runner."
+    ],
+    "contracts": [
+      "Scenario C-ERR-02.numbers; OS=linux,macos,windows; languages=ts,py; default action deadline 10000 ms unless timeoutMs overrides it.",
+      "Exact ordered setup/actions/assertions: {\"steps\":[{\"spawn\":[\"${FIXTURE}\"],\"options\":{\"timeoutMs\":-1},\"expect\":{\"error\":\"INVALID_ARGUMENT\",\"message\":[\"timeout\"]}},{\"spawn\":[\"${FIXTURE}\"],\"options\":{\"timeoutMs\":{\"$number\":\"NaN\"}},\"expect\":{\"error\":\"INVALID_ARGUMENT\",\"message\":[\"timeout\"]}},{\"run\":[\"${FIXTURE}\"],\"options\":{\"graceMs\":{\"$number\":\"Infinity\"}},\"expect\":{\"error\":\"INVALID_ARGUMENT\",\"message\":[\"grace\"]}},{\"run\":[\"${FIXTURE}\"],\"options\":{\"maxOutputBytes\":-1},\"expect\":{\"error\":\"INVALID_ARGUMENT\",\"message\":[\"utput\"]}},{\"run\":[\"${FIXTURE}\"],\"options\":{\"maxOutputBytes\":1.5},\"expect\":{\"error\":\"INVALID_ARGUMENT\",\"message\":[\"utput\"]}},{\"spawn\":[\"${FIXTURE}\",\"tty\"],\"options\":{\"pty\":{\"cols\":1.5,\"rows\":24}},\"expect\":{\"error\":\"INVALID_ARGUMENT\",\"message\":[\"cols\"]}}]}"
+    ],
+    "dependencies": [
+      "native/omni/conformance/SPEC.md defines action execution, shared AbortSignal, matchers and deadlines.",
+      "native/omni/crates/omni-fixture supplies the deterministic executable named ${FIXTURE}.",
+      "Rust and TypeScript conformance runners consume the same scenario bytes; Python is a declared future runner in SPEC."
+    ],
+    "failures_or_limits": [
+      "Applies only to TS/Python because these invalid values cannot be expressed through the Rust types; OS scope remains all three."
+    ],
+    "evidence": [
+      {
+        "start_line": 5,
+        "end_line": 5,
+        "quote": "    {\"spawn\": [\"${FIXTURE}\"], \"options\": {\"timeoutMs\": -1}, \"expect\": {\"error\": \"INVALID_ARGUMENT\", \"message\": [\"timeout\"]}},"
+      },
+      {
+        "start_line": 10,
+        "end_line": 10,
+        "quote": "    {\"spawn\": [\"${FIXTURE}\", \"tty\"], \"options\": {\"pty\": {\"cols\": 1.5, \"rows\": 24}}, \"expect\": {\"error\": \"INVALID_ARGUMENT\", \"message\": [\"cols\"]}}"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation"
+  },
+  {
+    "path": "native/omni/conformance/scenarios/C-EXIT-01.codes.json",
+    "git_blob_sha": "638c5dd8379c0ed246d99d17de25bd8829ebc2b7",
+    "source_sha256": "11d22eb56b4d68a9429194d947f5c3bc784ff245bc26c677da18d4f99b9fbcc5",
+    "source_bytes": 707,
+    "line_count": 12,
+    "kind": "fixture",
+    "disposition": "analyzed",
+    "purpose": "Defines normal exit status semantics and repeatable wait results.",
+    "behavior": [
+      "Runs exits 0, 1, 42 and 255, requiring null signals and reason=exit for every case.",
+      "Only exit 0 is successful; a spawned exit=42 child must return the same exit reason and code on two waits."
+    ],
+    "contracts": [
+      "Scenario C-EXIT-01.codes; OS=linux,macos,windows; languages=rust,ts,py; default action deadline 10000 ms unless timeoutMs overrides it.",
+      "Exact ordered setup/actions/assertions: {\"steps\":[{\"run\":[\"${FIXTURE}\",\"exit=0\"],\"expect\":{\"exitCode\":0,\"signal\":null,\"reason\":\"exit\",\"success\":true}},{\"run\":[\"${FIXTURE}\",\"exit=1\"],\"expect\":{\"exitCode\":1,\"signal\":null,\"reason\":\"exit\",\"success\":false}},{\"run\":[\"${FIXTURE}\",\"exit=42\"],\"expect\":{\"exitCode\":42,\"signal\":null,\"reason\":\"exit\",\"success\":false}},{\"run\":[\"${FIXTURE}\",\"exit=255\"],\"expect\":{\"exitCode\":255,\"signal\":null,\"reason\":\"exit\",\"success\":false}},{\"spawn\":[\"${FIXTURE}\",\"exit=42\"],\"as\":\"c\"},{\"wait\":\"c\",\"expect\":{\"exitCode\":42,\"reason\":\"exit\"}},{\"wait\":\"c\",\"expect\":{\"exitCode\":42,\"reason\":\"exit\"}}]}"
+    ],
+    "dependencies": [
+      "native/omni/conformance/SPEC.md defines action execution, shared AbortSignal, matchers and deadlines.",
+      "native/omni/crates/omni-fixture supplies the deterministic executable named ${FIXTURE}.",
+      "Rust and TypeScript conformance runners consume the same scenario bytes; Python is a declared future runner in SPEC."
+    ],
+    "failures_or_limits": [
+      "Assertions concern normal numeric exits; signal and full unsigned Windows codes are specified separately."
+    ],
+    "evidence": [
+      {
+        "start_line": 4,
+        "end_line": 4,
+        "quote": "    {\"run\": [\"${FIXTURE}\", \"exit=0\"], \"expect\": {\"exitCode\": 0, \"signal\": null, \"reason\": \"exit\", \"success\": true}},"
+      },
+      {
+        "start_line": 10,
+        "end_line": 10,
+        "quote": "    {\"wait\": \"c\", \"expect\": {\"exitCode\": 42, \"reason\": \"exit\"}}"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation"
+  },
+  {
+    "path": "native/omni/conformance/scenarios/C-EXIT-01.precedence.json",
+    "git_blob_sha": "ac864ebefd689854c6cb22f649bb26a01ee3a36f",
+    "source_sha256": "a2447a999449407080eaa4a0c8d80b5ac16339585d733602991257088ccc2a71",
+    "source_bytes": 342,
+    "line_count": 9,
+    "kind": "fixture",
+    "disposition": "analyzed",
+    "purpose": "Tests that an explicit abort keeps ownership of the final reason when timeout occurs during grace.",
+    "behavior": [
+      "Spawns an ignore-term fixture with timeoutMs=3000 and graceMs=4000, waits for READY, then aborts.",
+      "The subsequent wait must remain reason=aborted, success=false, and finish in less than 5000 ms."
+    ],
+    "contracts": [
+      "Scenario C-EXIT-01.precedence; OS=linux,macos,windows; languages=rust,ts,py; default action deadline 10000 ms unless timeoutMs overrides it.",
+      "Exact ordered setup/actions/assertions: {\"steps\":[{\"spawn\":[\"${FIXTURE}\",\"ignore-term\",\"ready\",\"hang\"],\"options\":{\"timeoutMs\":3000,\"graceMs\":4000},\"as\":\"c\"},{\"read\":\"c\",\"until\":{\"match\":\"^READY$\"}},{\"abort\":\"c\"},{\"wait\":\"c\",\"expect\":{\"reason\":\"aborted\",\"success\":false,\"elapsedMs\":{\"lt\":5000}}}]}"
+    ],
+    "dependencies": [
+      "native/omni/conformance/SPEC.md defines action execution, shared AbortSignal, matchers and deadlines.",
+      "native/omni/crates/omni-fixture supplies the deterministic executable named ${FIXTURE}.",
+      "Rust and TypeScript conformance runners consume the same scenario bytes; Python is a declared future runner in SPEC."
+    ],
+    "failures_or_limits": [
+      "The source encodes reason precedence and a timing bound; scheduling behavior has not been observed."
+    ],
+    "evidence": [
+      {
+        "start_line": 7,
+        "end_line": 7,
+        "quote": "    {\"wait\": \"c\", \"expect\": {\"reason\": \"aborted\", \"success\": false, \"elapsedMs\": {\"lt\": 5000}}}"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation"
+  },
+  {
+    "path": "native/omni/conformance/scenarios/C-EXIT-01.signal.json",
+    "git_blob_sha": "92d4269f4c08ed67ee42af7bbd2c121d39f35fdd",
+    "source_sha256": "13f2a9d4ff406daf67b2beb5ba1b4c52f639857c33ac890618ef6372afea2a2c",
+    "source_bytes": 348,
+    "line_count": 8,
+    "kind": "fixture",
+    "disposition": "analyzed",
+    "purpose": "Defines Unix signal exits independently of normal exit codes.",
+    "behavior": [
+      "Runs fixtures that reset and raise SIGTERM and SIGKILL.",
+      "Each must yield exitCode=null, its exact signal name, reason=signal and success=false."
+    ],
+    "contracts": [
+      "Scenario C-EXIT-01.signal; OS=linux,macos; languages=rust,ts,py; default action deadline 10000 ms unless timeoutMs overrides it.",
+      "Exact ordered setup/actions/assertions: {\"steps\":[{\"run\":[\"${FIXTURE}\",\"signal=SIGTERM\"],\"expect\":{\"exitCode\":null,\"signal\":\"SIGTERM\",\"reason\":\"signal\",\"success\":false}},{\"run\":[\"${FIXTURE}\",\"signal=SIGKILL\"],\"expect\":{\"exitCode\":null,\"signal\":\"SIGKILL\",\"reason\":\"signal\",\"success\":false}}]}"
+    ],
+    "dependencies": [
+      "native/omni/conformance/SPEC.md defines action execution, shared AbortSignal, matchers and deadlines.",
+      "native/omni/crates/omni-fixture supplies the deterministic executable named ${FIXTURE}.",
+      "Rust and TypeScript conformance runners consume the same scenario bytes; Python is a declared future runner in SPEC."
+    ],
+    "failures_or_limits": [
+      "Linux/macOS only; Windows uses unsigned exit-code expectations instead."
+    ],
+    "evidence": [
+      {
+        "start_line": 5,
+        "end_line": 5,
+        "quote": "    {\"run\": [\"${FIXTURE}\", \"signal=SIGTERM\"], \"expect\": {\"exitCode\": null, \"signal\": \"SIGTERM\", \"reason\": \"signal\", \"success\": false}},"
+      },
+      {
+        "start_line": 6,
+        "end_line": 6,
+        "quote": "    {\"run\": [\"${FIXTURE}\", \"signal=SIGKILL\"], \"expect\": {\"exitCode\": null, \"signal\": \"SIGKILL\", \"reason\": \"signal\", \"success\": false}}"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation"
+  },
+  {
+    "path": "native/omni/conformance/scenarios/C-EXIT-01.windows-codes.json",
+    "git_blob_sha": "94c14a9e8754f30518a0bc91b7c432934dcbfd86",
+    "source_sha256": "a759409461a67c30d9ef70b9e63d525b2db07f9919b52643f592827f2ce2bb0a",
+    "source_bytes": 348,
+    "line_count": 8,
+    "kind": "fixture",
+    "disposition": "analyzed",
+    "purpose": "Protects full unsigned 32-bit Windows exit codes from truncation or signal interpretation.",
+    "behavior": [
+      "Runs fixture exit values 3221225786 and 4294967295.",
+      "Each result must preserve the full numeric value, set signal=null and reason=exit, and mark success=false."
+    ],
+    "contracts": [
+      "Scenario C-EXIT-01.windows-codes; OS=windows; languages=rust,ts,py; default action deadline 10000 ms unless timeoutMs overrides it.",
+      "Exact ordered setup/actions/assertions: {\"steps\":[{\"run\":[\"${FIXTURE}\",\"exit=3221225786\"],\"expect\":{\"exitCode\":3221225786,\"signal\":null,\"reason\":\"exit\",\"success\":false}},{\"run\":[\"${FIXTURE}\",\"exit=4294967295\"],\"expect\":{\"exitCode\":4294967295,\"signal\":null,\"reason\":\"exit\",\"success\":false}}]}"
+    ],
+    "dependencies": [
+      "native/omni/conformance/SPEC.md defines action execution, shared AbortSignal, matchers and deadlines.",
+      "native/omni/crates/omni-fixture supplies the deterministic executable named ${FIXTURE}.",
+      "Rust and TypeScript conformance runners consume the same scenario bytes; Python is a declared future runner in SPEC."
+    ],
+    "failures_or_limits": [
+      "Windows only; no equivalence to POSIX signal exit statuses is asserted."
+    ],
+    "evidence": [
+      {
+        "start_line": 5,
+        "end_line": 5,
+        "quote": "    {\"run\": [\"${FIXTURE}\", \"exit=3221225786\"], \"expect\": {\"exitCode\": 3221225786, \"signal\": null, \"reason\": \"exit\", \"success\": false}},"
+      },
+      {
+        "start_line": 6,
+        "end_line": 6,
+        "quote": "    {\"run\": [\"${FIXTURE}\", \"exit=4294967295\"], \"expect\": {\"exitCode\": 4294967295, \"signal\": null, \"reason\": \"exit\", \"success\": false}}"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation"
+  },
+  {
+    "path": "native/omni/conformance/scenarios/C-IO-01.decode.json",
+    "git_blob_sha": "6b6d6afc9bc30abeb983c164dc8aa1db6a0e959b",
+    "source_sha256": "93168ede75c24d717a7a2ea2df1dc59b0f39cd928087547522aab834fc2830d7",
+    "source_bytes": 487,
+    "line_count": 10,
+    "kind": "fixture",
+    "disposition": "analyzed",
+    "purpose": "Checks incremental UTF-8 decoding across output boundaries and raw-byte mode.",
+    "behavior": [
+      "Reads A followed by an incomplete C3 byte, closes piped stdin to release the fixture, then requires the remaining A9 FF newline bytes to decode as é, replacement character and newline.",
+      "A separate text=false run must preserve NUL, FF, C3 and CRLF exactly as hex 00ffc30d0a."
+    ],
+    "contracts": [
+      "Scenario C-IO-01.decode; OS=linux,macos,windows; languages=rust,ts,py; default action deadline 10000 ms unless timeoutMs overrides it.",
+      "Exact ordered setup/actions/assertions: {\"steps\":[{\"spawn\":[\"${FIXTURE}\",\"out=A\\\\n\\\\xc3\",\"cat\",\"out=\\\\xa9\\\\xff\\\\n\"],\"options\":{\"stdin\":\"pipe\"},\"as\":\"c\"},{\"read\":\"c\",\"until\":{\"match\":\"^A$\"},\"expect\":{\"stdout\":\"A\\n\"}},{\"write\":\"c\",\"close\":true},{\"read\":\"c\",\"until\":\"end\",\"expect\":{\"stdout\":\"é�\\n\"}},{\"run\":[\"${FIXTURE}\",\"out=\\\\x00\\\\xff\\\\xc3\\\\r\\\\n\"],\"options\":{\"text\":false},\"expect\":{\"exitCode\":0,\"stdout\":{\"hex\":\"00ffc30d0a\"}}}]}"
+    ],
+    "dependencies": [
+      "native/omni/conformance/SPEC.md defines action execution, shared AbortSignal, matchers and deadlines.",
+      "native/omni/crates/omni-fixture supplies the deterministic executable named ${FIXTURE}.",
+      "Rust and TypeScript conformance runners consume the same scenario bytes; Python is a declared future runner in SPEC."
+    ],
+    "failures_or_limits": [
+      "The first read's READY-equivalent marker synchronizes the split sequence; replacement applies only to text decoding."
+    ],
+    "evidence": [
+      {
+        "start_line": 5,
+        "end_line": 5,
+        "quote": "    {\"read\": \"c\", \"until\": {\"match\": \"^A$\"}, \"expect\": {\"stdout\": \"A\\n\"}},"
+      },
+      {
+        "start_line": 8,
+        "end_line": 8,
+        "quote": "    {\"run\": [\"${FIXTURE}\", \"out=\\\\x00\\\\xff\\\\xc3\\\\r\\\\n\"], \"options\": {\"text\": false}, \"expect\": {\"exitCode\": 0, \"stdout\": {\"hex\": \"00ffc30d0a\"}}}"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation"
+  },
+  {
+    "path": "native/omni/conformance/scenarios/C-IO-01.lines.json",
+    "git_blob_sha": "dcb86021db958405bf5e1b82184c3bbf73684345",
+    "source_sha256": "afc32caa6c5293dab1c4c30e5fb5ccaaec26178ba50c8d6206c972e04343080b",
+    "source_bytes": 1225,
+    "line_count": 11,
+    "kind": "fixture",
+    "disposition": "analyzed",
+    "purpose": "Defines line normalization and UTF-8-safe splitting of lines larger than one MiB.",
+    "behavior": [
+      "CRLF, LF, an empty line and a final unterminated line must produce four pieces of 3, 3, 0 and 5 bytes, without continuation or loss.",
+      "After READY and stdin closure, each stream emits x plus 600000 é characters: pieces must be 1048575 continued bytes, 151426 final bytes and a 3-byte END line, six chunks total."
+    ],
+    "contracts": [
+      "Scenario C-IO-01.lines; OS=linux,macos,windows; languages=rust,ts,py; default action deadline 10000 ms unless timeoutMs overrides it.",
+      "Exact ordered setup/actions/assertions: {\"steps\":[{\"spawn\":[\"${FIXTURE}\",\"out=one\\\\r\\\\ntwo\\\\n\\\\nthree\"],\"as\":\"a\"},{\"read\":\"a\",\"lines\":true,\"until\":\"end\",\"expect\":{\"stdout\":\"one\\ntwo\\n\\nthree\\n\",\"pieces\":{\"stdout\":[{\"bytes\":3,\"continues\":false},{\"bytes\":3,\"continues\":false},{\"bytes\":0,\"continues\":false},{\"bytes\":5,\"continues\":false}],\"stderr\":[]},\"chunks\":4,\"continues\":0,\"lostBefore\":0}},{\"spawn\":[\"${FIXTURE}\",\"ready\",\"cat\",\"out=x\",\"err=x\",\"repeat=stdout:600000:é\",\"repeat=stderr:600000:é\",\"out=\\\\nEND\\\\n\",\"err=\\\\nEND\\\\n\"],\"options\":{\"stdin\":\"pipe\"},\"as\":\"b\"},{\"read\":\"b\",\"lines\":true,\"until\":{\"match\":\"^READY$\"}},{\"write\":\"b\"},{\"read\":\"b\",\"lines\":true,\"until\":{\"match\":\"^END$\",\"count\":2},\"expect\":{\"stdout\":{\"regex\":\"^xé+\\nEND\\n$\"},\"stderr\":{\"regex\":\"^xé+\\nEND\\n$\"},\"pieces\":{\"stdout\":[{\"bytes\":1048575,\"continues\":true},{\"bytes\":151426,\"continues\":false},{\"bytes\":3,\"continues\":false}],\"stderr\":[{\"bytes\":1048575,\"continues\":true},{\"bytes\":151426,\"continues\":false},{\"bytes\":3,\"continues\":false}]},\"chunks\":6,\"continues\":2,\"lostBefore\":0,\"droppedBytes\":{\"stdout\":0,\"stderr\":0}}}]}"
+    ],
+    "dependencies": [
+      "native/omni/conformance/SPEC.md defines action execution, shared AbortSignal, matchers and deadlines.",
+      "native/omni/crates/omni-fixture supplies the deterministic executable named ${FIXTURE}.",
+      "Rust and TypeScript conformance runners consume the same scenario bytes; Python is a declared future runner in SPEC."
+    ],
+    "failures_or_limits": [
+      "Both streams must report zero dropped bytes and two continued pieces overall; exact byte lengths depend on preserving multibyte boundaries."
+    ],
+    "evidence": [
+      {
+        "start_line": 5,
+        "end_line": 5,
+        "quote": "    {\"read\": \"a\", \"lines\": true, \"until\": \"end\", \"expect\": {\"stdout\": \"one\\ntwo\\n\\nthree\\n\", \"pieces\": {\"stdout\": [{\"bytes\": 3, \"continues\": false}, {\"bytes\": 3, \"continues\": false}, {\"bytes\": 0, \"continues\": false}, {\"bytes\": 5, \"continues\": false}], \"stderr\": []}, \"chunks\": 4, \"continues\": 0, \"lostBefore\": 0}},"
+      },
+      {
+        "start_line": 9,
+        "end_line": 9,
+        "quote": "    {\"read\": \"b\", \"lines\": true, \"until\": {\"match\": \"^END$\", \"count\": 2}, \"expect\": {\"stdout\": {\"regex\": \"^xé+\\nEND\\n$\"}, \"stderr\": {\"regex\": \"^xé+\\nEND\\n$\"}, \"pieces\": {\"stdout\": [{\"bytes\": 1048575, \"continues\": true}, {\"bytes\": 151426, \"continues\": false}, {\"bytes\": 3, \"continues\": false}], \"stderr\": [{\"bytes\": 1048575, \"continues\": true}, {\"bytes\": 151426, \"continues\": false}, {\"bytes\": 3, \"continues\": false}]}, \"chunks\": 6, \"continues\": 2, \"lostBefore\": 0, \"droppedBytes\": {\"stdout\": 0, \"stderr\": 0}}}"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation"
+  },
+  {
+    "path": "native/omni/conformance/scenarios/C-IO-01.live.json",
+    "git_blob_sha": "f11135f949266a655a50af0cf61fbf211f5568a6",
+    "source_sha256": "8645cdc66fa431d328528b36b5ee689278e93f9456984bb2739faf4137bfbdbe",
+    "source_bytes": 512,
+    "line_count": 10,
+    "kind": "fixture",
+    "disposition": "analyzed",
+    "purpose": "Checks live separated stdout/stderr before and after a stdin handshake.",
+    "behavior": [
+      "Waits for OUT-1 and ERR-1 from a piped fixture, requiring each marker on its own stream before sending go.",
+      "The remaining output must be GOT go plus OUT-2 on stdout and ERR-2 on stderr, followed by exit 0."
+    ],
+    "contracts": [
+      "Scenario C-IO-01.live; OS=linux,macos,windows; languages=rust,ts,py; default action deadline 10000 ms unless timeoutMs overrides it.",
+      "Exact ordered setup/actions/assertions: {\"steps\":[{\"spawn\":[\"${FIXTURE}\",\"out=OUT-1\\\\n\",\"err=ERR-1\\\\n\",\"read-line\",\"out=OUT-2\\\\n\",\"err=ERR-2\\\\n\"],\"options\":{\"stdin\":\"pipe\"},\"as\":\"c\"},{\"read\":\"c\",\"until\":{\"match\":\"^(OUT|ERR)-1$\",\"count\":2},\"expect\":{\"stdout\":\"OUT-1\\n\",\"stderr\":\"ERR-1\\n\"}},{\"write\":\"c\",\"data\":\"go\\n\"},{\"read\":\"c\",\"until\":\"end\",\"expect\":{\"stdout\":\"GOT go\\nOUT-2\\n\",\"stderr\":\"ERR-2\\n\"}},{\"wait\":\"c\",\"expect\":{\"exitCode\":0,\"reason\":\"exit\"}}]}"
+    ],
+    "dependencies": [
+      "native/omni/conformance/SPEC.md defines action execution, shared AbortSignal, matchers and deadlines.",
+      "native/omni/crates/omni-fixture supplies the deterministic executable named ${FIXTURE}.",
+      "Rust and TypeScript conformance runners consume the same scenario bytes; Python is a declared future runner in SPEC."
+    ],
+    "failures_or_limits": [
+      "No inter-stream arrival order is asserted; matching requires both complete initial marker lines."
+    ],
+    "evidence": [
+      {
+        "start_line": 5,
+        "end_line": 5,
+        "quote": "    {\"read\": \"c\", \"until\": {\"match\": \"^(OUT|ERR)-1$\", \"count\": 2}, \"expect\": {\"stdout\": \"OUT-1\\n\", \"stderr\": \"ERR-1\\n\"}},"
+      },
+      {
+        "start_line": 8,
+        "end_line": 8,
+        "quote": "    {\"wait\": \"c\", \"expect\": {\"exitCode\": 0, \"reason\": \"exit\"}}"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "validation"
+  }
+]

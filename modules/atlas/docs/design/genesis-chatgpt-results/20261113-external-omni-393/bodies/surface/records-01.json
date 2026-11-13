@@ -1,0 +1,618 @@
+[
+  {
+    "path": "native/omni/.cargo/config.toml",
+    "git_blob_sha": "e8643e64f4ff385183bc6f0e65b64f34f80bd742",
+    "source_sha256": "e2f1bc690ec08d9d0676cb7a348efff4b0089d6559cf6251d6c65213f3601af2",
+    "source_bytes": 543,
+    "line_count": 9,
+    "disposition": "analyzed",
+    "kind": "config",
+    "purpose": "Set static MSVC C-runtime linkage for both shipped Windows architectures.",
+    "behavior": [
+      "Adds -C target-feature=+crt-static for x86_64-pc-windows-msvc and aarch64-pc-windows-msvc.",
+      "Comments tie the setting to H5/WP-H and the package verifier's PE import-table check."
+    ],
+    "contracts": [
+      "Cargo must run from the Omni directory so this configuration is discovered; a RUSTFLAGS environment value replaces these flags."
+    ],
+    "dependencies": [
+      "native/omni/bindings/node/npm/verify.mjs checks runtime imports.",
+      "native/omni/scripts/ci.mjs and workflows supply the Cargo working directory."
+    ],
+    "failures_or_limits": [
+      "This config alone does not prove that produced binaries omit VCRUNTIME140.dll; no build was run."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 9,
+        "quote": "# H5 (WP-H): the Windows binaries (the addon and the supervisor) link the C runtime statically, so they need no Visual\n# C++ Redistributable (VCRUNTIME140.dll) on the user's machine. `bindings/node/npm/verify.mjs` checks the import table.\n# Cargo reads this file when it runs from this directory (scripts/ci.mjs, the workflows); a RUSTFLAGS variable would\n# replace these flags.\n[target.x86_64-pc-windows-msvc]\nrustflags = [\"-C\", \"target-feature=+crt-static\"]\n\n[target.aarch64-pc-windows-msvc]\nrustflags = [\"-C\", \"target-feature=+crt-static\"]"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/.claude-plugin/plugin.json",
+    "git_blob_sha": "dbc871296a40b77a54780e3ac7464cc1edfead1c",
+    "source_sha256": "af818475c0e55b9c3facdbc156decfd1d354bcc7e9b2337527ffc10b0055765b",
+    "source_bytes": 573,
+    "line_count": 11,
+    "disposition": "analyzed",
+    "kind": "config",
+    "purpose": "Describe the hugr-omni Claude skill plugin for distribution.",
+    "behavior": [
+      "Declares plugin identity and version 0.1.0, with Gustavo Schneiter as author.",
+      "Advertises use and maintenance skills for cross-platform processes and terminals, with the hugr-omni mirror as homepage and repository."
+    ],
+    "contracts": [
+      "License metadata is MIT OR Apache-2.0; keywords cover spawning, PTYs, terminals and process trees."
+    ],
+    "dependencies": [
+      "native/omni/skills contains the advertised skill bodies.",
+      "The public hugr-omni repository is the advertised distribution boundary."
+    ],
+    "failures_or_limits": [
+      "Metadata is descriptive and does not demonstrate plugin loading or runtime behavior."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 2,
+        "end_line": 10,
+        "quote": "  \"name\": \"hugr-omni\",\n  \"displayName\": \"hugr-omni\",\n  \"version\": \"0.1.0\",\n  \"description\": \"Skills for using hugr-omni (processes and terminals with the same, tested behavior on Windows, macOS and Linux) and for maintaining it: gates, core changes, OS traps, conformance, release.\",\n  \"author\": { \"name\": \"Gustavo Schneiter\" },\n  \"homepage\": \"https://github.com/gustavomhss/hugr-omni\",\n  \"repository\": \"https://github.com/gustavomhss/hugr-omni\",\n  \"license\": \"MIT OR Apache-2.0\",\n  \"keywords\": [\"process\", \"spawn\", \"pty\", \"terminal\", \"process-tree\", \"cross-platform\"]"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/.github/review/schema.json",
+    "git_blob_sha": "71d9964db3b8215fdaed19d5838668624feb3583",
+    "source_sha256": "fa15f8b049fb5cd9443128c969c9b38c271caa2e921d04d28c96f5aeda84531f",
+    "source_bytes": 1869,
+    "line_count": 102,
+    "disposition": "analyzed",
+    "kind": "config",
+    "purpose": "Constrain structured reviewer output to a five-part scorecard, findings and decision.",
+    "behavior": [
+      "Requires card, findings and verdict and rejects extra keys at the root, card, finding and field-object levels.",
+      "Each card dimension (completude, sucesso, invariantes, qualidade, dod) requires status pass/fail and textual evidence.",
+      "Findings require severity P0–P3, file, integer line, problem and fix; verdict is approve or changes_requested."
+    ],
+    "contracts": [
+      "The schema allows an empty findings array and does not constrain line numbers to positive values.",
+      "It does not cross-validate an approve verdict against failed card dimensions."
+    ],
+    "dependencies": [
+      "native/omni/scripts/review-prompt.py supplies review instructions whose output can use this schema."
+    ],
+    "failures_or_limits": [
+      "Schema validity cannot establish substantive review sufficiency."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 4,
+        "end_line": 19,
+        "quote": "  \"required\": [\n    \"card\",\n    \"findings\",\n    \"verdict\"\n  ],\n  \"properties\": {\n    \"card\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\n        \"completude\",\n        \"sucesso\",\n        \"invariantes\",\n        \"qualidade\",\n        \"dod\"\n      ],"
+      },
+      {
+        "start_line": 43,
+        "end_line": 57,
+        "quote": "        \"required\": [\n          \"severity\",\n          \"file\",\n          \"line\",\n          \"problem\",\n          \"fix\"\n        ],\n        \"properties\": {\n          \"severity\": {\n            \"enum\": [\n              \"P0\",\n              \"P1\",\n              \"P2\",\n              \"P3\"\n            ]"
+      },
+      {
+        "start_line": 74,
+        "end_line": 78,
+        "quote": "    \"verdict\": {\n      \"enum\": [\n        \"approve\",\n        \"changes_requested\"\n      ]"
+      },
+      {
+        "start_line": 85,
+        "end_line": 98,
+        "quote": "      \"required\": [\n        \"status\",\n        \"evidence\"\n      ],\n      \"properties\": {\n        \"status\": {\n          \"enum\": [\n            \"pass\",\n            \"fail\"\n          ]\n        },\n        \"evidence\": {\n          \"type\": \"string\"\n        }"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/.github/workflows/ci.yml",
+    "git_blob_sha": "bf3f2d38a3eeb79bd3d48990e8ed87b4e2745662",
+    "source_sha256": "c4a46af184a655269ba8e75ff4d3e3e9fe782b03de2cd3b16f50585cde1c4748",
+    "source_bytes": 1993,
+    "line_count": 50,
+    "disposition": "analyzed",
+    "kind": "build",
+    "purpose": "Define the mirror's three-OS CI gate and release-mode selection.",
+    "behavior": [
+      "Runs only for v* tag pushes or manual workflow_dispatch; the manual request supplies release and test_filter.",
+      "Uses Ubuntu 24.04, macOS 14 and Windows 2022 with Node 22, fail-fast disabled, a 40-minute limit and per-ref cancellation.",
+      "RELEASE becomes 1 for v tags or a true manual release input; Linux release runs install the musl target and Linux always relaxes the user-namespace AppArmor restriction."
+    ],
+    "contracts": [
+      "Contents permission is read-only; cache saves only on refs/heads/main.",
+      "All jobs execute node scripts/ci.mjs; TEST_FILTER is passed through the environment."
+    ],
+    "dependencies": [
+      "native/omni/scripts/ci.mjs implements the actual gate.",
+      "native/omni/rust-toolchain.toml selects Rust.",
+      "External GitHub Actions and Linux sysctl are execution dependencies."
+    ],
+    "failures_or_limits": [
+      "The comment still names packages/omni whereas this baseline is native/omni.",
+      "A workflow definition is not an observed CI result."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 6,
+        "end_line": 16,
+        "quote": "on:\n  push:\n    tags: [\"v*\"]\n  workflow_dispatch:\n    inputs:\n      release: { type: boolean, default: false, description: \"Run the release checks too\" }\n      test_filter: { type: string, default: \"\", description: \"Passed to cargo test\" }\n\nconcurrency:\n  group: ci-${{ github.ref }}\n  cancel-in-progress: true"
+      },
+      {
+        "start_line": 23,
+        "end_line": 33,
+        "quote": "    strategy:\n      fail-fast: false\n      matrix:\n        os: [ubuntu-24.04, macos-14, windows-2022]\n    runs-on: ${{ matrix.os }}\n    timeout-minutes: 40\n    env:\n      CARGO_TERM_COLOR: always\n      CARGO_INCREMENTAL: \"0\"\n      RELEASE: ${{ (startsWith(github.ref, 'refs/tags/v') || inputs.release) && '1' || '' }}\n      TEST_FILTER: ${{ inputs.test_filter }}"
+      },
+      {
+        "start_line": 38,
+        "end_line": 50,
+        "quote": "      - name: Rust toolchain (rust-toolchain.toml)\n        shell: bash\n        run: |\n          rustup show active-toolchain || rustup toolchain install\n          if [ \"$RUNNER_OS\" = Linux ] && [ -n \"$RELEASE\" ]; then rustup target add x86_64-unknown-linux-musl; fi\n      # One cache per OS and lockfile. Only main saves it (a run by hand on main), so tags read it without filling the quota.\n      - uses: Swatinem/rust-cache@v2\n        with:\n          save-if: ${{ github.ref == 'refs/heads/main' }}\n      - name: Linux PID-reuse test needs unprivileged user namespaces\n        if: runner.os == 'Linux'\n        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0\n      - run: node scripts/ci.mjs"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/.github/workflows/release.yml",
+    "git_blob_sha": "edbfb28f9f152247e35e9650b37b2fa4172aef88",
+    "source_sha256": "2c60739c7921c082341c0ac9ee804c4667d1a0e3a7a33c4fb11a361b2efa22db",
+    "source_bytes": 4216,
+    "line_count": 83,
+    "disposition": "analyzed",
+    "kind": "build",
+    "purpose": "Build and verify installable npm tarballs for all eight platform packages.",
+    "behavior": [
+      "Manual-only workflow has GNU/musl Linux x64/arm64, Darwin x64/arm64 and MSVC Windows x64/arm64 rows; fail-fast is off and each has 40 minutes.",
+      "GNU Linux installs Zig and cargo-zigbuild; musl builds in Alpine; Windows bootstraps rustup if absent.",
+      "Builds with build-artifacts.mjs, packs the selected platform, then clean-installs on Node/Bun/Deno except musl, which checks Node and Bun inside node:22-alpine.",
+      "Uploads dist/tarballs/*.tgz and errors when no files exist."
+    ],
+    "contracts": [
+      "Contents permission is read-only; package publication is explicitly a separate manual lead action requiring the owner's consent.",
+      "Non-Alpine cache reuse is read-only; Bun 1 and Deno 2 runners are selected through npx."
+    ],
+    "dependencies": [
+      "native/omni/scripts/build-artifacts.mjs",
+      "native/omni/bindings/node/npm/pack.mjs",
+      "native/omni/bindings/node/npm/verify.mjs",
+      "GitHub runner images, Docker, Zig and rustup."
+    ],
+    "failures_or_limits": [
+      "No release job or installation proof was executed in this analysis."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 19,
+        "end_line": 27,
+        "quote": "        include:\n          - { id: linux-x64-gnu, os: ubuntu-24.04, build: zig, runtimes: node bun deno }\n          - { id: linux-arm64-gnu, os: ubuntu-24.04-arm, build: zig, runtimes: node bun deno }\n          - { id: linux-x64-musl, os: ubuntu-24.04, build: alpine, runtimes: node bun }\n          - { id: linux-arm64-musl, os: ubuntu-24.04-arm, build: alpine, runtimes: node bun }\n          - { id: darwin-arm64, os: macos-14, build: native, runtimes: node bun deno }\n          - { id: darwin-x64, os: macos-15-intel, build: native, runtimes: node bun deno }\n          - { id: win32-x64-msvc, os: windows-2022, build: native, runtimes: node bun deno }\n          - { id: win32-arm64-msvc, os: windows-11-arm, build: native, runtimes: node bun deno }"
+      },
+      {
+        "start_line": 62,
+        "end_line": 82,
+        "quote": "      - name: Build (${{ matrix.build }})\n        shell: bash\n        run: node scripts/build-artifacts.mjs ${{ matrix.id }}\n      - name: Pack\n        shell: bash\n        run: node bindings/node/npm/pack.mjs dist ${{ matrix.id }}\n      - name: Clean install and run (${{ matrix.runtimes }})\n        if: matrix.build != 'alpine'\n        shell: bash\n        run: for rt in ${{ matrix.runtimes }}; do node bindings/node/npm/verify.mjs dist/tarballs $rt; done\n      # musl: the proof runs under Alpine (node:22-alpine), with npm and Bun's musl build; Deno has no musl build.\n      - name: Clean install and run on Alpine (${{ matrix.runtimes }})\n        if: matrix.build == 'alpine'\n        run: |\n          docker run --rm -v \"$PWD\":/w -w /w -e HUGR_BUN node:22-alpine sh -euc '\n            apk add --no-cache git tar >/dev/null\n            for rt in ${{ matrix.runtimes }}; do node bindings/node/npm/verify.mjs dist/tarballs $rt; done'\n      - uses: actions/upload-artifact@v4\n        with:\n          name: npm-${{ matrix.id }}\n          path: dist/tarballs/*.tgz"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/.gitignore",
+    "git_blob_sha": "a03fe47e270f72fd3bd6d10178a555d4df6aa2e2",
+    "source_sha256": "f195de3f0f34dc8d7e7273ce129a6e4c10df878383a6e367de6a4b5236caeef2",
+    "source_bytes": 90,
+    "line_count": 10,
+    "disposition": "analyzed",
+    "kind": "config",
+    "purpose": "Exclude generated build, package and local-tool artifacts from Git tracking.",
+    "behavior": [
+      "Ignores root target, node_modules, native .node addons, Python caches and virtual environments.",
+      "Also ignores dist, wheels, .DS_Store and the .claude directory."
+    ],
+    "contracts": [
+      "The /target pattern is root-anchored; the other directory patterns apply recursively."
+    ],
+    "dependencies": [
+      "Cargo target output, npm distribution output and local Python/Claude tooling."
+    ],
+    "failures_or_limits": [
+      "Ignore rules affect untracked files, not already tracked files."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 10,
+        "quote": "/target\nnode_modules/\n*.node\n__pycache__/\n*.py[cod]\n.venv/\ndist/\n*.whl\n.DS_Store\n.claude/"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/CLAUDE.md",
+    "git_blob_sha": "43c994c2d3617f947bcb5adf1933e21dabe46bb5",
+    "source_sha256": "336cc4fbf19beaada7ccf9986414fa91851a8d7a07dfb3ccbe800a69eed0ab49",
+    "source_bytes": 11,
+    "line_count": 1,
+    "disposition": "analyzed",
+    "kind": "config",
+    "purpose": "Point Claude's repository instructions at the canonical agent guidance.",
+    "behavior": [
+      "Contains only the @AGENTS.md reference."
+    ],
+    "contracts": [
+      "Instruction content is delegated to the sibling AGENTS.md."
+    ],
+    "dependencies": [
+      "native/omni/AGENTS.md"
+    ],
+    "failures_or_limits": [
+      "This file supplies no independent implementation or test result."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 1,
+        "quote": "@AGENTS.md"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/Cargo.toml",
+    "git_blob_sha": "1ece738f52f35ebb5f2b133c7e4069ef4f681007",
+    "source_sha256": "9e4e76b9308524aea61eeb2459cb9e9c3149026e4d9b4d6ac4713bbcb4e89334",
+    "source_bytes": 972,
+    "line_count": 29,
+    "disposition": "analyzed",
+    "kind": "build",
+    "purpose": "Build the private Rust Node-API cdylib backing the JavaScript package.",
+    "behavior": [
+      "Names the library hugr_omni_node, emits only cdylib, and disables Rust test/doctest harnesses because Node-API symbols resolve from the host.",
+      "Inherits package version, edition, Rust requirement, license, repository and lints from the workspace.",
+      "Depends on the local hugr-omni core, napi 3 without default features and with napi8, napi-derive 3 and build-time napi-build 2."
+    ],
+    "contracts": [
+      "publish=false reserves npm packaging for W14.",
+      "The comment excludes napi tokio_rt and an async-runtime SPI because the core owns the runtime; Node/Bun/Deno tests are the intended host proof."
+    ],
+    "dependencies": [
+      "native/omni/Cargo.toml supplies workspace metadata.",
+      "native/omni/crates/hugr-omni is the implementation dependency.",
+      "native/omni/bindings/node/build.rs configures linking."
+    ],
+    "failures_or_limits": [
+      "Dependency ranges alone do not prove host compatibility; Cargo.lock records actual resolutions."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 9,
+        "end_line": 26,
+        "quote": "publish = false # npm packaging is W14's (ADR-0004)\n\n[lib]\nname = \"hugr_omni_node\"\ncrate-type = [\"cdylib\"]\n# The addon resolves the Node-API symbols from the host process at load time, so it only links as a cdylib: a test\n# harness of it would not link. Its proof is the TS suite (`bindings/node/test`), run on Node, Bun and Deno.\ntest = false\ndoctest = false\n\n[dependencies]\nhugr-omni = { path = \"../../crates/hugr-omni\" }\n# ADR-0004: Node-API 8 (Node 22+, Bun, Deno); no `tokio_rt` (the core owns the one tokio runtime), no async-runtime SPI.\nnapi = { version = \"3\", default-features = false, features = [\"napi8\"] }\nnapi-derive = \"3\"\n\n[build-dependencies]\nnapi-build = \"2\""
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/README.md",
+    "git_blob_sha": "f3c7e2d81621457a856aaca9b920416282483e99",
+    "source_sha256": "482ad4416772e91f98d2ce5191ce3f3d1289e4de6a633442c8e19259db3cba58",
+    "source_bytes": 2772,
+    "line_count": 60,
+    "disposition": "analyzed",
+    "kind": "doc",
+    "purpose": "Present the npm binding's installation path, quickstart and public documentation entry points.",
+    "behavior": [
+      "Documents Node 22+, Bun and Deno with prebuilt Windows/macOS/Linux variants and claims no install-time compilation or download.",
+      "Quickstart runs git with a ten-second timeout, then scopes an npm development server, waits for a ready line and lists its process tree.",
+      "Explains ESM setup, CommonJS loading and the Node 24+/Bun/Deno or TypeScript 5.2+ requirement for await using."
+    ],
+    "contracts": [
+      "Links recipes, API contract and guarantees as deeper authorities.",
+      "Generated module-contract section identifies the canonical native-layer package, Omni maintainer and index.js public entry."
+    ],
+    "dependencies": [
+      "native/omni/bindings/node/index.js and index.d.ts implement/type the shown surface.",
+      "native/omni/docs/guide/recipes.md",
+      "native/omni/docs/api-contract.md",
+      "native/omni/GUARANTEES.md"
+    ],
+    "failures_or_limits": [
+      "Cross-platform and cleanup claims are documented promises, not fresh execution observations."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 18,
+        "end_line": 19,
+        "quote": "Node 22+, Bun or Deno; prebuilt for Windows (x64, arm64), macOS (arm64, x64) and Linux (x64, arm64; glibc, and musl\nfor Node and Bun on Alpine). Nothing is compiled or downloaded at install time."
+      },
+      {
+        "start_line": 25,
+        "end_line": 38,
+        "quote": "```ts quickstart\nimport { run, spawn } from \"hugr-omni\";\n\nconst r = await run(\"git\", [\"status\", \"--short\"], { timeoutMs: 10_000 });\nconsole.log(r.success, r.stdout);\n\nawait using server = spawn(\"npm\", [\"run\", \"dev\"]);\nfor await (const line of server.lines()) if (line.text.includes(\"ready\")) break;\nconsole.log(await server.processes()); // every process the server started, with parent links\n// leaving the scope stops the server and everything it started\n```\n\nCommonJS works too: `const { run, spawn } = require(\"hugr-omni\")`. `await using` needs Node 24+, Bun, Deno, or TypeScript\n5.2+ compiling for Node 22; elsewhere write `try { ... } finally { await server.stop(); }`."
+      },
+      {
+        "start_line": 50,
+        "end_line": 59,
+        "quote": "<!-- module-contract:start (generated by script/module-readme.ts from script/module-architecture.json; do not edit) -->\n## Module contract\n- Package: `hugr-omni` at `native/omni/bindings/node` (alias `omni/bindings/node`)\n- Summary: Node bindings that run processes and terminals with the same tested behavior on every platform.\n- Layer: `native`; may depend on: nothing (base layer)\n- Status: `canonical`\n- Owner: Omni maintainer\n- Public entry: `main` field (`index.js`)\n- Legacy and compatibility: none\n- Enforced by `bun run check:boundaries`; exceptions in `script/boundary-ledger.json`."
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/build.rs",
+    "git_blob_sha": "6263bc1e8e7436198a3a4cee2231e2b61507fb92",
+    "source_sha256": "414a552e91e632dab2d9f9a524bc741305d36ed1d8cf33d4bad97db57328c920",
+    "source_bytes": 390,
+    "line_count": 9,
+    "disposition": "analyzed",
+    "kind": "build",
+    "purpose": "Configure Node-API linking and a relocatable macOS addon install name.",
+    "behavior": [
+      "Always calls napi_build::setup().",
+      "Only when CARGO_CFG_TARGET_OS equals macos emits the cdylib linker argument -Wl,-install_name,@rpath/hugr_omni.node."
+    ],
+    "contracts": [
+      "The stable install name is intended to let Homebrew preserve checksum-verified addon bytes."
+    ],
+    "dependencies": [
+      "napi-build build dependency in native/omni/bindings/node/Cargo.toml.",
+      "macOS linker handling of @rpath install names."
+    ],
+    "failures_or_limits": [
+      "No linker or binary inspection was performed."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 3,
+        "end_line": 8,
+        "quote": "fn main() {\n    napi_build::setup();\n    // A prefix-independent ID lets Homebrew preserve the checksum-verified addon.\n    if std::env::var(\"CARGO_CFG_TARGET_OS\").as_deref() == Ok(\"macos\") {\n        println!(\"cargo:rustc-link-arg-cdylib=-Wl,-install_name,@rpath/hugr_omni.node\");\n    }"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/examples/quickstart.ts",
+    "git_blob_sha": "fb0e2ae70b368c4e3209cd8902a955295712fa5a",
+    "source_sha256": "4f7ea2c1417cd07e430c3429c5014f563d0253a9fdd1f40626cc99f073a2e953",
+    "source_bytes": 414,
+    "line_count": 9,
+    "disposition": "analyzed",
+    "kind": "doc",
+    "purpose": "Provide the source quickstart used by TypeScript checking and the documented runtime flow.",
+    "behavior": [
+      "Awaits run('git',['status','--short']) with timeoutMs 10000 and prints success/stdout.",
+      "Creates an await-using npm dev server, reads lines until text includes ready, then awaits processes()."
+    ],
+    "contracts": [
+      "Assumes a project with npm run dev; scope disposal is the intended cleanup mechanism.",
+      "The source comment says CI type-checks against index.d.ts and runtime execution begins from W13."
+    ],
+    "dependencies": [
+      "native/omni/bindings/node/index.d.ts",
+      "native/omni/bindings/node/tsconfig.json",
+      "hugr-omni run/spawn and async-disposal boundary."
+    ],
+    "failures_or_limits": [
+      "A loop stopping at a ready substring is an example, not an assertion that every project emits it.",
+      "Example execution was not performed."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 9,
+        "quote": "// README quickstart; type-checked against index.d.ts in CI (W00), run for real from W13 on.\nimport { run, spawn } from \"hugr-omni\";\n\nconst r = await run(\"git\", [\"status\", \"--short\"], { timeoutMs: 10_000 });\nconsole.log(r.success, r.stdout);\n\nawait using server = spawn(\"npm\", [\"run\", \"dev\"]);\nfor await (const line of server.lines()) if (line.text.includes(\"ready\")) break;\nconsole.log(await server.processes());"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/test/tsconfig.json",
+    "git_blob_sha": "25f7345de6b8b400fcaa98da919d3ce82e2e23d0",
+    "source_sha256": "4a2148667eae7ef54e59970207ca84b307686735921f01d3d5708b3b94180f95",
+    "source_bytes": 152,
+    "line_count": 5,
+    "disposition": "analyzed",
+    "kind": "config",
+    "purpose": "Type-check binding overload assertions using the package compiler policy.",
+    "behavior": [
+      "Extends ../tsconfig.json and remaps hugr-omni to ../index.d.ts.",
+      "Limits files to the declaration file and overloads.ts."
+    ],
+    "contracts": [
+      "Inherits strict/noEmit and library settings; this config exercises static declarations."
+    ],
+    "dependencies": [
+      "native/omni/bindings/node/tsconfig.json",
+      "native/omni/bindings/node/test/overloads.ts"
+    ],
+    "failures_or_limits": [
+      "Type checking was not executed and cannot by itself verify native behavior."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 5,
+        "quote": "{\n  \"extends\": \"../tsconfig.json\",\n  \"compilerOptions\": { \"paths\": { \"hugr-omni\": [\"../index.d.ts\"] } },\n  \"files\": [\"../index.d.ts\", \"overloads.ts\"]\n}"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/tsconfig.json",
+    "git_blob_sha": "02a5679d6b7fa68f17e725e5605a0e86fe3e8ec6",
+    "source_sha256": "2f07f4d3487a5b01b7f23cb53b2be595a7c310d8869e5677f1fbb0687d2c6727",
+    "source_bytes": 332,
+    "line_count": 13,
+    "disposition": "analyzed",
+    "kind": "config",
+    "purpose": "Strictly type-check the declaration surface and quickstart without emitting code.",
+    "behavior": [
+      "Uses ES2022 target, ESNext modules, bundler resolution and strict checking.",
+      "Includes es2022, esnext.disposable and dom libraries, maps hugr-omni to index.d.ts and keeps skipLibCheck false.",
+      "Explicit files are index.d.ts and examples/quickstart.ts."
+    ],
+    "contracts": [
+      "noEmit=true makes this a validation configuration rather than a JavaScript build."
+    ],
+    "dependencies": [
+      "TypeScript compiler.",
+      "native/omni/bindings/node/index.d.ts",
+      "native/omni/bindings/node/examples/quickstart.ts"
+    ],
+    "failures_or_limits": [
+      "No compiler invocation was run."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 2,
+        "end_line": 12,
+        "quote": "  \"compilerOptions\": {\n    \"strict\": true,\n    \"noEmit\": true,\n    \"target\": \"es2022\",\n    \"module\": \"esnext\",\n    \"moduleResolution\": \"bundler\",\n    \"lib\": [\"es2022\", \"esnext.disposable\", \"dom\"],\n    \"paths\": { \"hugr-omni\": [\"./index.d.ts\"] },\n    \"skipLibCheck\": false\n  },\n  \"files\": [\"index.d.ts\", \"examples/quickstart.ts\"]"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/clippy.toml",
+    "git_blob_sha": "7bada5473be51ed1cb8e03009f020d0c80458ae8",
+    "source_sha256": "8ec7e3fb41b2f1432047753297048c99b1f62a1b9aef81f4042d20590fbf313c",
+    "source_bytes": 86,
+    "line_count": 3,
+    "disposition": "analyzed",
+    "kind": "config",
+    "purpose": "Allow panic-oriented assertion helpers specifically in tests under Clippy.",
+    "behavior": [
+      "Enables allow-unwrap-in-tests, allow-expect-in-tests and allow-panic-in-tests."
+    ],
+    "contracts": [
+      "These switches apply to tests; they do not authorize panic/unwrap in library code."
+    ],
+    "dependencies": [
+      "Workspace Clippy lint configuration and native/omni/AGENTS.md library rules."
+    ],
+    "failures_or_limits": [
+      "Actual lint outcomes were not observed."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 3,
+        "quote": "allow-unwrap-in-tests = true\nallow-expect-in-tests = true\nallow-panic-in-tests = true"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/rust-toolchain.toml",
+    "git_blob_sha": "aa20bc990d6f843fffb559d502c73c74132111d0",
+    "source_sha256": "07487db9d6b45de2f308f9fb578c9c46041381c3ee44ef782eca64150a394772",
+    "source_bytes": 66,
+    "line_count": 3,
+    "disposition": "analyzed",
+    "kind": "config",
+    "purpose": "Pin Omni's Rust toolchain and required checking components.",
+    "behavior": [
+      "Selects Rust channel 1.98.0.",
+      "Requests rustfmt and clippy components."
+    ],
+    "contracts": [
+      "Rustup consumers use this exact channel instead of ambient stable."
+    ],
+    "dependencies": [
+      "native/omni/.github/workflows/ci.yml",
+      "native/omni/scripts/build-artifacts.mjs",
+      "rustup toolchain availability."
+    ],
+    "failures_or_limits": [
+      "Installation and availability of this version were not tested."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 3,
+        "quote": "[toolchain]\nchannel = \"1.98.0\"\ncomponents = [\"rustfmt\", \"clippy\"]"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/rustfmt.toml",
+    "git_blob_sha": "75306517965a54731b94dca8bace640e856af115",
+    "source_sha256": "e090969e99df9360705680cc0097cfaddae10c22dc2e01470592cf3b9787fd36",
+    "source_bytes": 16,
+    "line_count": 1,
+    "disposition": "analyzed",
+    "kind": "config",
+    "purpose": "Set the shared Rust formatter line-width policy.",
+    "behavior": [
+      "Sets max_width to 120."
+    ],
+    "contracts": [
+      "Applies when rustfmt discovers this configuration."
+    ],
+    "dependencies": [
+      "rustfmt selected by native/omni/rust-toolchain.toml."
+    ],
+    "failures_or_limits": [
+      "No formatting check was executed."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 1,
+        "quote": "max_width = 120"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  }
+]

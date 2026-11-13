@@ -1,0 +1,278 @@
+[
+  {
+    "path": "native/omni/crates/hugr-omni/src/io/collect.rs",
+    "git_blob_sha": "fec2fa0c0254049ea3b7dab3a25ca05be919c82e",
+    "source_sha256": "484f95f4f494eda698683acb4c85e25a9494543d553f83a7a6926e716090dee7",
+    "source_bytes": 5590,
+    "line_count": 154,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Collects run output as per-stream prefixes with explicit loss, limit and drain semantics.",
+    "behavior": [
+      "Claims the output consumer when collect is called, before its future is polled; collection budget is max+1 per stream.",
+      "Processes queued events in order so first limit/loss/read failure wins; each stream truncates to max on limit and gaps yield Io with partial prefixes.",
+      "After end(), waits on a deadline running on the library runtime; pending unreported drops still fail a bounded finish."
+    ],
+    "contracts": [
+      "Dropping even an unpolled collection future permanently detaches its claim."
+    ],
+    "dependencies": [
+      "io/queue Shared supplies ordered events and budgets; process/run.rs stops trees and attaches results."
+    ],
+    "failures_or_limits": [
+      "Text conversion uses UTF-8 replacement; byte mode preserves captured bytes."
+    ],
+    "evidence": [
+      {
+        "start_line": 21,
+        "end_line": 24,
+        "quote": "/// Claims the consumer at once (when `collect()` is called, not when its future is first polled).\npub(super) fn claim(shared: &Shared, max: usize) -> Result<Release<'_>, Error> {\n    shared.claim(Claim::Collecting(max)).map(|()| Release(shared))\n}"
+      },
+      {
+        "start_line": 49,
+        "end_line": 74,
+        "quote": "            let failure = match item.what {\n                _ if item.lost > 0 => Some(Error::output_lost(stream, item.lost)),\n                What::Failed(err) => Some(err),\n                What::Data(bytes) => {\n                    let buf = &mut kept[item.slot];\n                    let room = max.saturating_add(1).saturating_sub(buf.len());\n                    buf.extend_from_slice(&bytes[..room.min(bytes.len())]);\n                    if buf.len() > max && limit.is_none() {\n                        limit = Some(stream);\n                    }\n                    None\n                }\n                What::Eof => None,\n            };\n            if let Some(err) = failure {\n                if limit.is_some() {\n                    break; // the limit came first; the other stream keeps its prefix\n                }\n                return Ok(collected(shared.text, kept, None, Some(err)));\n            }\n        }\n        if limit.is_some() {\n            for buf in &mut kept {\n                buf.truncate(max);\n            }\n            return Ok(collected(shared.text, kept, limit, None));"
+      },
+      {
+        "start_line": 91,
+        "end_line": 98,
+        "quote": "/// The output is over. An end bounded by the drain or by `within` comes without the end of file that would\n/// report a drop still pending on a stream: it is a hole all the same.\nfn finished(shared: &Shared, kept: [Vec<u8>; 2], pending: [u64; 2]) -> Collected {\n    let failed = (0..2)\n        .find(|&slot| pending[slot] > 0)\n        .map(|slot| Error::output_lost(shared.streams[slot], pending[slot]));\n    collected(shared.text, kept, None, failed)\n}"
+      },
+      {
+        "start_line": 121,
+        "end_line": 128,
+        "quote": "/// The claim of a collection: once it is over (returned, or its future dropped, even unpolled), the output\n/// has no consumer any more.\npub(super) struct Release<'a>(&'a Shared);\n\nimpl Drop for Release<'_> {\n    fn drop(&mut self) {\n        self.0.detach([0; 2]);\n    }"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/io/mod.rs",
+    "git_blob_sha": "d412bcd0cd982c5e340af805d9b9d320c2c212f0",
+    "source_sha256": "c53ab2e6b6835284b5b50e196bcd3d7f0292c341e1a0fcd6905aa618ed552d1e",
+    "source_bytes": 7957,
+    "line_count": 194,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Connects source pipes or terminal output to pumps, single-consumer views, collection and stdin.",
+    "behavior": [
+      "Starts one reader per existing source; terminal output is labeled Pty in stdout slot.",
+      "Claiming output or lines reserves the sole consumer; dropped counters are per stream and collect claims synchronously.",
+      "end starts a one-second drain deadline, while dropping pumps cuts immediately; Stdin wraps an independent writer thread and abandons on drop."
+    ],
+    "contracts": [
+      "Pipe backpressure is explicitly enabled before claim and released by end or detach."
+    ],
+    "dependencies": [
+      "io/queue, out, collect and stdin own mechanics; process/pty modules are callers."
+    ],
+    "failures_or_limits": [
+      "Introductory unconditional no-loss wording must be read with the actual bounded-drop policy and backpressure exception. A blocked external pipe holder may keep a reader thread until its next wake."
+    ],
+    "evidence": [
+      {
+        "start_line": 73,
+        "end_line": 89,
+        "quote": "    /// Backpressure (WP-H, before any claim): while a consumer is attached, a full stream stops being read\n    /// instead of dropping; the pipe fills and the child blocks. `end()` (the tree is stopped or gone) and\n    /// detaching release the readers, so `wait()` and `stop()` never depend on the consumer.\n    pub(crate) fn hold(&self) {\n        self.shared.hold();\n    }\n\n    /// Claims the single consumer, as chunks.\n    pub(crate) fn output(&self) -> Result<Output, Error> {\n        self.shared.claim(Claim::Attached)?;\n        Ok(Output::new(Arc::clone(&self.shared)))\n    }\n\n    /// Claims the single consumer, as lines (always text).\n    pub(crate) fn lines(&self) -> Result<Lines, Error> {\n        self.shared.claim(Claim::Attached)?;\n        Ok(Lines::new(Arc::clone(&self.shared)))"
+      },
+      {
+        "start_line": 103,
+        "end_line": 132,
+        "quote": "    /// Stops reading (the tree is gone, contract §5), without losing what the pipes already hold: the\n    /// readers keep queueing it under the usual budgets until end of file, which follows it once every holder\n    /// is gone, and for at most 1 s (`DRAIN`) when something outside the tree still holds a pipe. Then a\n    /// consumer gets what is buffered, then the end. Idempotent.\n    pub(crate) fn end(&self) {\n        if self.shared.end() {\n            let shared = Arc::downgrade(&self.shared);\n            self.rt.spawn(async move {\n                tokio::time::sleep(DRAIN).await;\n                if let Some(shared) = shared.upgrade() {\n                    shared.cut(false);\n                }\n            });\n        }\n    }\n\n    /// For `run()`: claims the consumer when called (not at the first poll, so `start` then `collect` leaves\n    /// no window in which output beyond the unattached budget is dropped), then the future keeps every byte,\n    /// up to `max` per stream. It resolves once the output ended, or as soon as a stream went over `max` (then\n    /// `over_limit` names it and each stream holds its first `max` bytes; the caller stops the tree), or at a\n    /// read failure or a drop (then `failed` holds the error and each stream what was kept before it).\n    /// `within` bounds the wait after `end()`. `Err` only when the consumer was already claimed.\n    pub(crate) fn collect(\n        &self,\n        max: usize,\n        within: Duration,\n    ) -> impl Future<Output = Result<Collected, Error>> + Send + '_ {\n        let claim = collect::claim(&self.shared, max);\n        collect::collect(&self.shared, &self.rt, max, within, claim)\n    }"
+      },
+      {
+        "start_line": 135,
+        "end_line": 141,
+        "quote": "/// Dropping the pumps ends the output and lets the readers go: each closes its end at its next wake-up (a\n/// reader blocked on a pipe that something outside the tree still holds leaves when that holder writes or\n/// closes it).\nimpl Drop for Pumps {\n    fn drop(&mut self) {\n        self.shared.cut(true);\n    }"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/io/out.rs",
+    "git_blob_sha": "d00bf67b4b42952cf69715dca6d03894f369c394",
+    "source_sha256": "a6fd825ea474e5803265b5cdf649b9484640ea5203921687542e44808c0363fe",
+    "source_bytes": 12477,
+    "line_count": 372,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Provides chunk and line consumer views with per-stream UTF-8 continuity and exact drop accounting.",
+    "behavior": [
+      "Output retains incomplete UTF-8 across adjacent chunks, flushes replacement characters at gaps/end, and reports lost_before on the next stream item or final empty item.",
+      "Lines strips LF and optional preceding CR, preserves bare CR, emits final unterminated lines and breaks long text into at most 1 MiB UTF-8-safe pieces marked continues.",
+      "Dropping a view credits buffered unpublished bytes, partial lines and decoder tails to dropped totals."
+    ],
+    "contracts": [
+      "Views consume the same permanent single claim; no data may be stitched across a reported gap."
+    ],
+    "dependencies": [
+      "io/queue supplies ordered per-stream events and wake notifications."
+    ],
+    "failures_or_limits": [
+      "Invalid UTF-8 is replacement-decoded in text and lines; byte Output is required for lossless raw content."
+    ],
+    "evidence": [
+      {
+        "start_line": 107,
+        "end_line": 126,
+        "quote": "    /// An incomplete character cut by a gap or the end becomes U+FFFD.\n    fn flush(&mut self, slot: usize) {\n        let raw = self.feed.flush(slot);\n        if raw > 0 {\n            self.chunk(slot, Data::Text(char::REPLACEMENT_CHARACTER.into()), 0, raw);\n        }\n    }\n\n    fn end(&mut self, slot: usize, lost: u64) {\n        if self.feed.text {\n            self.flush(slot);\n        }\n        if self.lost[slot] + lost > 0 {\n            let empty = if self.feed.text {\n                Data::Text(String::new())\n            } else {\n                Data::Bytes(Vec::new())\n            };\n            self.chunk(slot, empty, lost, 0);\n        }"
+      },
+      {
+        "start_line": 186,
+        "end_line": 203,
+        "quote": "    fn data(&mut self, slot: usize, mut bytes: &[u8]) {\n        while let Some(at) = bytes.iter().position(|&b| b == b'\\n') {\n            let mut line = take(&mut self.partial[slot]);\n            line.extend_from_slice(&bytes[..at]);\n            let raw = line.len() + 1;\n            if line.last() == Some(&b'\\r') {\n                line.pop();\n            }\n            self.line(slot, &line, raw - line.len());\n            bytes = &bytes[at + 1..];\n        }\n        self.partial[slot].extend_from_slice(bytes);\n        // A trailing `\\r` may still turn out to be the line end, so it does not count yet.\n        while self.partial[slot].len() - usize::from(self.partial[slot].ends_with(b\"\\r\")) > PIECE {\n            let (text, used) = piece(&self.partial[slot]);\n            self.partial[slot].drain(..used);\n            self.push(slot, text, true, used);\n        }"
+      },
+      {
+        "start_line": 255,
+        "end_line": 260,
+        "quote": "impl Drop for Lines {\n    fn drop(&mut self) {\n        let [out, err] = held(&self.ready);\n        let partial = self.partial.each_ref().map(|p| p.len() as u64);\n        self.feed.shared.detach([out + partial[0], err + partial[1]]);\n    }"
+      },
+      {
+        "start_line": 348,
+        "end_line": 363,
+        "quote": "            match std::str::from_utf8(input) {\n                Ok(valid) => break text.push_str(valid),\n                Err(e) => {\n                    let (valid, rest) = input.split_at(e.valid_up_to());\n                    text.push_str(std::str::from_utf8(valid).unwrap_or_default());\n                    match e.error_len() {\n                        Some(bad) => {\n                            text.push(char::REPLACEMENT_CHARACTER);\n                            input = &rest[bad..];\n                        }\n                        None => break tail.extend_from_slice(rest),\n                    }\n                }\n            }\n        }\n        (text, (total - tail.len()) as u64)"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/io/queue/mod.rs",
+    "git_blob_sha": "999be66865d60b1de30720bec6aacd5e54920cc8",
+    "source_sha256": "17ad048ab2812a5cac26424fabb081450ce1a92b35ca0e6697292cf2fcad16f1",
+    "source_bytes": 12551,
+    "line_count": 366,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Maintains bounded per-stream output queues, loss ledgers and optional attached-reader backpressure.",
+    "behavior": [
+      "Budgets are 1 MiB before claim, 16 MiB attached, max+1 collecting, and zero detached; adjacent same-stream chunks coalesce up to 64 KiB.",
+      "Overflow counts dropped bytes and attaches gap counts to the next event; permanent detach counts queued and consumer-held bytes and releases blocked readers.",
+      "Backpressure waits only for an attached consumer before tree end; end/cut/detach release it. cut injects EOF markers including pending loss for active views."
+    ],
+    "contracts": [
+      "A second claim is InvalidArgument; root/process completion may observe ended independently of consumer drain."
+    ],
+    "dependencies": [
+      "queue/reader.rs feeds Shared; out.rs consumes one event at a time; collect.rs drains batches."
+    ],
+    "failures_or_limits": [
+      "The module introduction predates optional hold behavior; implementation deliberately blocks readers when hold is active."
+    ],
+    "evidence": [
+      {
+        "start_line": 28,
+        "end_line": 38,
+        "quote": "/// Kept per stream while nobody ever claimed the output, for a later first consumer.\npub(super) const UNATTACHED: usize = 1 << 20;\n/// Kept per stream while a consumer is attached.\npub(super) const ATTACHED: usize = 16 << 20;\n/// The most one read takes; small reads of one stream are merged into one item up to this size, so the\n/// queue's overhead stays proportional to its bytes.\nconst CHUNK: usize = 64 << 10;\n/// A reader thread needs little stack: its buffer is on the heap.\npub(super) const STACK: usize = 256 << 10;\n/// After `end()`, how long the pipes may still deliver before the output is cut.\npub(super) const DRAIN: Duration = Duration::from_secs(1);"
+      },
+      {
+        "start_line": 124,
+        "end_line": 132,
+        "quote": "    /// A reader of `slot` with `len` new bytes must wait: backpressure is on, a consumer is attached, the tree is\n    /// not ended, and the bytes do not fit the stream's budget.\n    fn holds_back(&self, slot: usize, len: usize) -> bool {\n        self.hold\n            && self.claim == Claim::Attached\n            && !self.ended\n            && !self.cut\n            && !self.closed\n            && self.slots[slot].queued.saturating_add(len) > ATTACHED"
+      },
+      {
+        "start_line": 209,
+        "end_line": 240,
+        "quote": "    /// Takes the single consumer.\n    pub(super) fn claim(&self, claim: Claim) -> Result<(), Error> {\n        let mut st = self.lock();\n        if st.claim != Claim::Free {\n            return Err(Error::output_claimed());\n        }\n        st.claim = claim;\n        Ok(())\n    }\n\n    /// The consumer is gone for good: what waits for it is dropped and counted, and so is everything after.\n    /// `held`: raw bytes per stream the consumer took from the queue and never yielded; they count too.\n    pub(super) fn detach(&self, held: [u64; 2]) {\n        let mut st = self.lock();\n        let st = &mut *st;\n        for (slot, held) in st.slots.iter_mut().zip(held) {\n            slot.dropped += held;\n        }\n        if st.claim == Claim::Detached {\n            return;\n        }\n        st.claim = Claim::Detached;\n        for item in st.queue.drain(..) {\n            if let What::Data(data) = item.what {\n                st.slots[item.slot].dropped += data.len() as u64;\n            }\n        }\n        for slot in &mut st.slots {\n            slot.queued = 0;\n            slot.lost = 0;\n        }\n        self.room.notify_all();"
+      },
+      {
+        "start_line": 306,
+        "end_line": 324,
+        "quote": "    /// Queues what fits the budget of `slot` and counts the rest as dropped. `false`: stop reading.\n    pub(super) fn accept(&self, slot: usize, bytes: &[u8]) -> bool {\n        let mut guard = self.lock();\n        // Backpressure: wait for room while an attached consumer's stream is full (no drop, so no gap).\n        while guard.holds_back(slot, bytes.len()) {\n            guard = self.room.wait(guard).unwrap_or_else(PoisonError::into_inner);\n        }\n        let st = &mut *guard;\n        if st.closed {\n            return false;\n        }\n        let budget = if st.feeding() { st.claim.budget() } else { 0 };\n        let s = &mut st.slots[slot];\n        let take = budget.saturating_sub(s.queued).min(bytes.len());\n        let gone = (bytes.len() - take) as u64;\n        s.dropped += gone;\n        if take > 0 {\n            let lost = std::mem::take(&mut s.lost);\n            s.queued += take;"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/io/queue/reader.rs",
+    "git_blob_sha": "e24b5810b2ad9fcb345decc39302ed641b3d7a6b",
+    "source_sha256": "db465d28936949115fa735abc2dbb5a8078736f2434aa62102954121e0b611e9",
+    "source_bytes": 1882,
+    "line_count": 57,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Runs one blocking OS reader thread per output source and feeds bounded Shared state.",
+    "behavior": [
+      "Creates a small-stack named reader and allocates a 64 KiB buffer on heap; terminal start waits for the worker startup signal.",
+      "Retries Interrupted reads, emits EOF on zero bytes and maps Unix PTY EIO to EOF; other read errors become stream-specific Io."
+    ],
+    "contracts": [
+      "PTY startup synchronization precedes held-root Go to address immediate-exit output loss."
+    ],
+    "dependencies": [
+      "io/queue Shared accepts bytes and records finish; process startup performs Go after pump startup."
+    ],
+    "failures_or_limits": [
+      "Blocking reads finish only when the OS wakes them; the startup signal precedes the pump call, not a confirmed completed OS read."
+    ],
+    "evidence": [
+      {
+        "start_line": 12,
+        "end_line": 28,
+        "quote": "/// Starts the reader of `slot`. A terminal's reader is running when this returns, so the held root may\n/// exec (ADR-0005 R9): a terminal drops what nobody read once its session leader exits (macOS).\npub(in crate::io) fn read(shared: &Arc<Shared>, slot: usize, source: Pipe, pty: bool) -> Result<(), Error> {\n    let shared = Arc::clone(shared);\n    let (running, started) = mpsc::sync_channel(1);\n    thread::Builder::new()\n        .name(\"hugr-omni-out\".into())\n        .stack_size(STACK)\n        .spawn(move || {\n            let _ = running.send(());\n            pump(&shared, slot, File::from(source), pty);\n        })\n        .map_err(|e| Error::io_thread(\"an output reader\", &e))?;\n    if pty {\n        let _ = started.recv();\n    }\n    Ok(())"
+      },
+      {
+        "start_line": 31,
+        "end_line": 45,
+        "quote": "fn pump(shared: &Shared, slot: usize, mut source: File, pty: bool) {\n    let mut buf = vec![0; CHUNK];\n    loop {\n        match source.read(&mut buf) {\n            Ok(0) => break shared.finish(slot, None),\n            Ok(n) => {\n                if !shared.accept(slot, &buf[..n]) {\n                    break;\n                }\n            }\n            Err(e) if e.kind() == ErrorKind::Interrupted => {}\n            // Linux reports the end of a terminal's output as EIO once its last holder closed it.\n            Err(e) if pty && is_eio(&e) => break shared.finish(slot, None),\n            Err(e) => break shared.finish(slot, Some(Error::read_failed(shared.streams[slot], &e))),\n        }"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/io/stdin.rs",
+    "git_blob_sha": "74359d986b6a739ed3f30a6478f22a94f14b9a42",
+    "source_sha256": "be121e58dc316408012c74d0d18ade8147859dd85f101770f21e9e2d8f2a7a31",
+    "source_bytes": 5636,
+    "line_count": 166,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Serializes stdin writes on a dedicated blocking thread with asynchronous completion replies.",
+    "behavior": [
+      "Queues copied byte buffers under a mutex and completes each oneshot after write_all; close waits behind earlier queued writes before closing the handle.",
+      "abandon immediately fails current and queued writes with Closed and makes later writes fail; queued closes succeed idempotently.",
+      "BrokenPipe becomes Closed; another I/O failure becomes Io for that write and closes future admission."
+    ],
+    "contracts": [
+      "Thread writes never interleave; the first shutdown reason is retained."
+    ],
+    "dependencies": [
+      "io/mod.rs owns the Stdin wrapper; oneshot replies bridge the worker to any caller executor."
+    ],
+    "failures_or_limits": [
+      "An OS write cannot be interrupted here: abandonment settles futures but worker exits only when the write returns. Concurrent unawaited writes can accumulate copied buffers."
+    ],
+    "evidence": [
+      {
+        "start_line": 75,
+        "end_line": 111,
+        "quote": "    pub(super) async fn write(&self, data: &[u8]) -> Result<(), Error> {\n        let (reply, done) = oneshot::channel();\n        {\n            let mut jobs = self.lock();\n            if let Some(why) = jobs.shut {\n                return Err(Error::stdin_closed(why));\n            }\n            jobs.queue.push_back(Job::Write(data.to_vec(), reply));\n        }\n        self.wake.notify_one();\n        done.await.unwrap_or_else(|_| Err(Error::stdin_closed(BY_EXIT)))\n    }\n\n    pub(super) async fn close(&self) -> Result<(), Error> {\n        let (reply, done) = oneshot::channel();\n        {\n            let mut jobs = self.lock();\n            if jobs.shut.is_some() {\n                return Ok(());\n            }\n            jobs.queue.push_back(Job::Close(reply));\n        }\n        self.wake.notify_one();\n        done.await.unwrap_or(Ok(()))\n    }\n\n    pub(super) fn abandon(&self) {\n        {\n            let mut jobs = self.lock();\n            jobs.gone = true;\n            if let Some(reply) = jobs.current.take() {\n                let _ = reply.send(Err(Error::stdin_closed(BY_EXIT)));\n            }\n            shut(&mut jobs, BY_EXIT);\n        }\n        self.wake.notify_all();\n    }"
+      },
+      {
+        "start_line": 138,
+        "end_line": 151,
+        "quote": "            let wrote = sink.write_all(&data);\n            let mut jobs = self.lock();\n            let reply = jobs.current.take();\n            let (result, stop) = match wrote {\n                Ok(()) => (Ok(()), None),\n                Err(e) if e.kind() == ErrorKind::BrokenPipe => (Err(Error::stdin_closed(BY_CHILD)), Some(BY_CHILD)),\n                Err(e) => (Err(Error::write_failed(&e)), Some(BY_FAILURE)),\n            };\n            if let Some(reply) = reply {\n                let _ = reply.send(result);\n            }\n            if let Some(why) = stop {\n                shut(&mut jobs, why);\n                return;"
+      }
+    ],
+    "inference": [
+      "Bounded memory is strongest when callers await write backpressure instead of queueing many concurrent writes."
+    ],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  }
+]

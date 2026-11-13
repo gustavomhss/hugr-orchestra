@@ -1,0 +1,662 @@
+[
+  {
+    "path": "native/omni/bindings/node/index.d.ts",
+    "git_blob_sha": "67471a388e5c12c479a3fadf0cd8e07300bae2d5",
+    "source_sha256": "411309f2d8d7470d7a6123c0f523f7b0fb5293103c6fdeaab0979216319a4020",
+    "source_bytes": 9044,
+    "line_count": 163,
+    "disposition": "analyzed",
+    "kind": "implementation",
+    "purpose": "Declare the public TypeScript process, terminal, configuration and error contracts.",
+    "behavior": [
+      "run overloads infer string output by default and Uint8Array for text:false; spawn additionally chooses PipeChild or PtyChild from pty.",
+      "Common options include inherited/removed environment, timeout, RSS cap, cancellation, grace, byte/text mode, stderr merge and Windows verbatim arguments.",
+      "Child exposes single-consumer output/lines, dropped-byte accounting, write/wait/stop/processes and async disposal; only pipe children close stdin and only PTY children resize.",
+      "Exit reasons include memory_exceeded; OmniError has eight codes and optional collected RunResult."
+    ],
+    "contracts": [
+      "Documents synchronous spawn startup failures versus Promise-returning run; nonzero process exits resolve unsuccessfully.",
+      "configure must precede the first run/spawn; backpressure is pipe-only and applies only while a consumer is attached."
+    ],
+    "dependencies": [
+      "native/omni/bindings/node/index.js provides runtime adaptation.",
+      "native/omni/docs/api-contract.md is the declared contract source.",
+      "native/omni/bindings/node/test/overloads.ts checks inference."
+    ],
+    "failures_or_limits": [
+      "Declarations do not validate runtime input; text and pty values only known at runtime produce unions."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 14,
+        "end_line": 16,
+        "quote": "export function run(command: string, args?: readonly string[], options?: RunOptions & { text?: true }): Promise<RunResult<string>>;\nexport function run(command: string, args: readonly string[] | undefined, options: RunOptions & { text: false }): Promise<RunResult<Uint8Array>>;\nexport function run(command: string, args?: readonly string[], options?: RunOptions): Promise<RunResult>;"
+      },
+      {
+        "start_line": 27,
+        "end_line": 34,
+        "quote": "export function spawn(command: string, args?: readonly string[], options?: SpawnOptions & { pty?: undefined; text?: true }): PipeChild<string>;\nexport function spawn(command: string, args: readonly string[] | undefined, options: SpawnOptions & { pty?: undefined; text: false }): PipeChild<Uint8Array>;\nexport function spawn(command: string, args: readonly string[] | undefined, options: SpawnOptions & { pty: PtyOption; text?: true }): PtyChild<string>;\nexport function spawn(command: string, args: readonly string[] | undefined, options: SpawnOptions & { pty: PtyOption; text: false }): PtyChild<Uint8Array>;\n// `text` known only at run time: the child kind still follows `pty`, and the data is either kind.\nexport function spawn(command: string, args: readonly string[] | undefined, options: SpawnOptions & { pty: PtyOption }): PtyChild;\nexport function spawn(command: string, args?: readonly string[], options?: SpawnOptions & { pty?: undefined }): PipeChild;\nexport function spawn(command: string, args?: readonly string[], options?: SpawnOptions): PipeChild | PtyChild;"
+      },
+      {
+        "start_line": 95,
+        "end_line": 105,
+        "quote": "export interface SpawnOptions extends CommonOptions {\n  /** Pipe mode only; default `\"closed\"` (end of input at once). */\n  stdin?: \"closed\" | \"pipe\";\n  /**\n   * Pipe mode only, default `false` (amendment WP-H): while a consumer is attached and 16 MiB of a stream wait for it,\n   * the library stops reading that stream, so the child blocks on its writes instead of output being dropped (no\n   * `lostBefore`). `wait()` and `stop()` never wait for the consumer; with no consumer attached, the usual budget applies.\n   */\n  backpressure?: boolean;\n  /** Run inside a terminal; returns a `PtyChild`. */\n  pty?: PtyOption;"
+      },
+      {
+        "start_line": 114,
+        "end_line": 137,
+        "quote": "export interface Child<D = string | Uint8Array> extends AsyncDisposable {\n  readonly pid: number;\n  /** Single consumer: the first iteration claims it; leaving the loop detaches for good. */\n  readonly output: AsyncIterable<Chunk<D>>;\n  /** Line view of the same single consumer. */\n  lines(): AsyncIterable<Line>;\n  /** Bytes dropped because nobody was reading (terminal output counts as stdout). */\n  readonly droppedBytes: { stdout: number; stderr: number };\n  /** Resolves when the OS accepted the bytes. */\n  write(data: string | Uint8Array): Promise<void>;\n  /** Resolves when the root process exits; every call returns the same `Exit`. */\n  wait(): Promise<Exit>;\n  /** Ends the whole tree with one deadline (graceful, then forced after `graceMs`); resolves once it is gone. */\n  stop(options?: { graceMs?: number }): Promise<Exit>;\n  /** The live processes `stop()` would end right now; `[]` once the tree is gone. */\n  processes(): Promise<ProcessInfo[]>;\n}\nexport interface PipeChild<D = string | Uint8Array> extends Child<D> {\n  /** Waits for queued writes, then closes stdin; idempotent. */\n  closeStdin(): Promise<void>;\n}\nexport interface PtyChild<D = string | Uint8Array> extends Child<D> {\n  resize(cols: number, rows: number): void;\n}"
+      },
+      {
+        "start_line": 158,
+        "end_line": 163,
+        "quote": "export class OmniError extends Error {\n  readonly code: \"NOT_FOUND\" | \"NOT_EXECUTABLE\" | \"INVALID_CWD\" | \"INVALID_ARGUMENT\"\n               | \"ABORTED\" | \"OUTPUT_LIMIT\" | \"CLOSED\" | \"IO\";\n  /** What `run()` collected, on `ABORTED` / `OUTPUT_LIMIT` / `IO`. */\n  readonly result?: RunResult;\n}"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/index.js",
+    "git_blob_sha": "e24857529d38c479965318e2ef2d75a6f655440b",
+    "source_sha256": "aca3883cd5f8212b25757b72b0b2b3353705bc291e9b9697851f9b0b0ccb75df",
+    "source_bytes": 12580,
+    "line_count": 314,
+    "disposition": "analyzed",
+    "kind": "implementation",
+    "purpose": "Adapt JavaScript idioms and load the Rust addon without implementing process supervision.",
+    "behavior": [
+      "Addon precedence is configure.addon, JS HUGR_OMNI_ADDON, installed platform package, then checkout debug/release only when no explicit configuration path was given; Linux libc is detected from ldd, then process.report, with glibc fallback.",
+      "configure eagerly loads, rejects invalid path fields, addon replacement and calls after run/spawn; supervisor precedence is configure then JS environment then native lookup.",
+      "Snapshots JS process.env into env with inheritEnv:false, preserving override/removal and case-insensitive Windows key replacement; one WeakMap cancellation and one listener are shared per signal.",
+      "Async iteration claims once and detaches in finally; Child caches the exit promise, exposes kind-specific methods and disposes through stop."
+    ],
+    "contracts": [
+      "spawn throws synchronously; run/write/stop wrap immediate conversion errors as rejections.",
+      "started is set before native spawn/run invocation, so a native startup failure still prevents later configure."
+    ],
+    "dependencies": [
+      "Native addon setup, configure, Cancel, spawn and run exports.",
+      "native/omni/bindings/node/src/child.rs and convert.rs.",
+      "Eight hugr-omni platform packages."
+    ],
+    "failures_or_limits": [
+      "Unsupported/missing addon/load errors are plain Error; no platform loading was exercised."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 76,
+        "end_line": 91,
+        "quote": "function addonPath() {\n  const explicit = given(config.addon) ?? given(process.env.HUGR_OMNI_ADDON);\n  if (explicit !== undefined) return explicit;\n  const platform = platformKey();\n  const id = PLATFORMS[platform];\n  const installed = platformPackage(id);\n  if (installed !== undefined) return installed;\n  const built = config.explicit ? undefined : checkoutBuild();\n  if (built !== undefined) return built;\n  if (id === undefined) {\n    throw new Error(`hugr-omni: ${platform} is not supported. Supported: ${Object.values(PLATFORMS).join(\", \")}.`);\n  }\n  throw new Error(\n    `hugr-omni: the package hugr-omni-${id} (the native addon for ${platform}) is not installed. Reinstall hugr-omni with optional ` +\n      `dependencies enabled (no --omit=optional / --no-optional). ` +\n      \"In a checkout, run `cargo build -p hugr-omni-node`; configure({ addon }) or HUGR_OMNI_ADDON sets the path.\","
+      },
+      {
+        "start_line": 126,
+        "end_line": 142,
+        "quote": "function configure(options) {\n  if (options === null || typeof options !== \"object\") throw refused(\"configure() takes an object { addon?, supervisor? }; pass one.\");\n  for (const field of [\"addon\", \"supervisor\"]) {\n    const value = options[field];\n    if (value !== undefined && (typeof value !== \"string\" || value === \"\")) {\n      throw refused(`configure(): ${field} is ${JSON.stringify(value) ?? typeof value}, which index.d.ts does not allow there; pass the full path as a non-empty string instead.`);\n    }\n  }\n  if (started) throw refused(\"configure() was called after run() or spawn(); call it before the first run() or spawn().\");\n  if (native !== undefined && options.addon !== undefined && options.addon !== loadedFrom) {\n    throw refused(`configure(): the addon is already loaded from \"${loadedFrom}\" and cannot change; call configure() once, before anything else.`);\n  }\n  if (options.addon !== undefined) config.addon = options.addon;\n  if (options.supervisor !== undefined) config.supervisor = options.supervisor;\n  config.explicit ||= options.addon !== undefined || options.supervisor !== undefined;\n  if (native === undefined) load();\n  else if (options.supervisor !== undefined) native.configure(options.supervisor);"
+      },
+      {
+        "start_line": 174,
+        "end_line": 181,
+        "quote": "  for (const [name, value] of Object.entries(process.env)) {\n    // Names the OS cannot carry as variables (Windows' per-drive `=C:`) stay out.\n    if (typeof value === \"string\" && name !== \"\" && !name.includes(\"=\") && !name.includes(\"\\0\")) put(name, value);\n  }\n  for (const name of Object.keys(own ?? {})) {\n    if (own[name] !== undefined) put(name, own[name]);\n  }\n  return { ...options, inheritEnv: false, env };"
+      },
+      {
+        "start_line": 299,
+        "end_line": 310,
+        "quote": "function spawn(command, args, options) {\n  const native = load();\n  started = true;\n  const child = native.spawn(command, args ?? [], withEnv(options), cancelOf(options?.signal));\n  return child.isPty ? new PtyChild(child) : new PipeChild(child);\n}\n\nfunction run(command, args, options) {\n  return later(() => {\n    const native = load();\n    started = true;\n    return native.run(command, args ?? [], withEnv(options), cancelOf(options?.signal));"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/src/child.rs",
+    "git_blob_sha": "678d3eefde47f9bf19b6a6385cb4e1aaf211351b",
+    "source_sha256": "72aa5f29a48932eb769069287ee14558c80b490ee738998c4b74255a292c2304",
+    "source_bytes": 10901,
+    "line_count": 300,
+    "disposition": "analyzed",
+    "kind": "implementation",
+    "purpose": "Expose native Child operations while preserving JS collection, output and environment lifetime rules.",
+    "behavior": [
+      "Converts spawn arguments, chooses pipe or PTY creation and registers an Arc-backed child with the current JS environment.",
+      "Delegates write, close, wait, stop and process inventory to core futures; terminal resize applies core numeric validation.",
+      "GC transfers an Arc to a keeper that awaits root exit then checks inventory at most once a second until empty; wait/inventory errors release it too.",
+      "Single-consumer NativeStream returns batches up to 8192 items; a later batch error is deferred to the next next(), null ends the stream, and detach drops reader/error state."
+    ],
+    "contracts": [
+      "JS wrapper exposes closeStdin only for pipes and resize only for terminals; native cross-kind calls are no-ops.",
+      "Pending operations and readers retain the child; repeated wait identity is supplied by index.js."
+    ],
+    "dependencies": [
+      "native/omni/crates/hugr-omni Child/PipeChild/PtyChild.",
+      "native/omni/bindings/node/src/exec.rs promises and keeper scheduling.",
+      "native/omni/bindings/node/src/teardown.rs ownership tracking."
+    ],
+    "failures_or_limits": [
+      "Keeper release on inventory error follows the documented lost-supervisor policy; no lifecycle execution observed."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 45,
+        "end_line": 63,
+        "quote": "/// Starts a child: throws (synchronously) what the core refuses or fails to start (contract §3, §8).\n#[napi]\npub fn spawn(\n    env: Env,\n    command: Js<'_, String>,\n    args: Js<'_, Vec<Js<'_, String>>>,\n    options: Option<Js<'_, Object<'_>>>,\n    cancel: Option<&Cancel>,\n) -> napi::Result<NativeChild> {\n    let (cmd, pty) = convert::command(&env, command, args, options, cancel)?;\n    let kid = match pty {\n        true => cmd.spawn_pty().map(Kid::Pty),\n        false => cmd.spawn().map(Kid::Pipe),\n    };\n    let kid = Arc::new(kid.map_err(|e| error::omni(&env, &e))?);\n    if let Some(owned) = error::owned(&env) {\n        owned.add(&kid); // stopped when this JS environment goes away (H1)\n    }\n    Ok(NativeChild { kid })"
+      },
+      {
+        "start_line": 170,
+        "end_line": 196,
+        "quote": "/// The JS object was collected: its tree is left alone, never killed.\nimpl Drop for NativeChild {\n    fn drop(&mut self) {\n        keep(Arc::clone(&self.kid));\n    }\n}\n\n/// Holds a collected child until its tree is gone: the root exited and `processes()` is empty, asked at most once a\n/// second; only then is the core's child dropped (which then ends nothing). Its output: a consumer still reading holds\n/// the child itself (`NativeStream`); without one, nobody can read it, and it ends within the core's drain.\n///\n/// An error ends the keeping too, by the rule of the core's own lingering check (`process/deadline.rs`, lead decision\n/// on W13 r1): the client does not tell a lost supervisor from a failed inventory, and through a lost one nothing can\n/// be stopped, so the drop kills nothing; holding on would keep the child, its dead generation and its I/O for the\n/// life of the host (INV-08).\nfn keep(kid: Arc<Kid>) {\n    exec::spawn(async move {\n        if kid.wait().await.is_err() {\n            return;\n        }\n        while let Ok(left) = kid.processes().await {\n            if left.is_empty() {\n                return;\n            }\n            exec::sleep(RECHECK).await;\n        }\n    });"
+      },
+      {
+        "start_line": 223,
+        "end_line": 267,
+        "quote": "    /// The next items, in order: at least one, and every other one already queued (at most `BATCH`); `null` at the\n    /// end (and after `detach`).\n    #[napi]\n    pub fn next<'env>(&self, env: &'env Env) -> napi::Result<Object<'env>> {\n        let (slot, failed, kid) = (\n            Arc::clone(&self.reader),\n            Arc::clone(&self.failed),\n            Arc::clone(&self.kid),\n        );\n        let next = async move {\n            let _holds = kid; // the child lives while its output is read\n            if let Some(e) = lock(&failed).take() {\n                return Err(e);\n            }\n            let Some(mut reader) = lock(&slot).take() else {\n                return Ok(None);\n            };\n            let first = match reader.next().await {\n                None => return Ok(None), // the end: nothing is left to read, and the reader is dropped\n                Some(Err(e)) => {\n                    *lock(&slot) = Some(reader);\n                    return Err(e);\n                }\n                Some(Ok(item)) => item,\n            };\n            let mut batch = vec![first];\n            let mut more = true;\n            while more && batch.len() < BATCH {\n                // Only what is queued now: a pending `next()` holds nothing yet, so dropping it loses nothing.\n                match pin!(reader.next()).poll(&mut Context::from_waker(Waker::noop())) {\n                    Poll::Ready(Some(Ok(item))) => batch.push(item),\n                    Poll::Ready(Some(Err(e))) => {\n                        *lock(&failed) = Some(e);\n                        break;\n                    }\n                    Poll::Ready(None) => more = false,\n                    Poll::Pending => break,\n                }\n            }\n            if more {\n                *lock(&slot) = Some(reader); // at the end it is dropped: nothing is left to read\n            }\n            Ok(Some(batch))\n        };\n        exec::promise(env, next, items)"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/src/convert.rs",
+    "git_blob_sha": "820839a942c11af58d9f8eb6df9b67ebdf7826a7",
+    "source_sha256": "e9a497070f842e76158619d667c90e2645a3cb5da2477916fe6e6adda8cfc43b",
+    "source_bytes": 11754,
+    "line_count": 344,
+    "disposition": "analyzed",
+    "kind": "implementation",
+    "purpose": "Translate JavaScript arguments into core commands and core values into plain JS output objects.",
+    "behavior": [
+      "Wrong types become field/value-specific INVALID_ARGUMENT; nullish optional fields are omitted, while getter exceptions propagate.",
+      "Copies string UTF-8 or Uint8Array input; reads environment entries with nullish removal, booleans, stdin choices, cancellation, verbatim arguments, time/byte limits and PTY sizes.",
+      "Delegates millisecond, byte-limit and PTY-side numeric rules to hugr_omni::binding; true/default PTY is 80×24 and false/nullish disables PTY.",
+      "Serializes nullable exit/process fields, text or Uint8Array data, six reason strings, stream labels and optional loss/continuation markers."
+    ],
+    "contracts": [
+      "Conversion reads run and spawn option families alike; the core ignores options irrelevant to the invoked operation.",
+      "Signal without a supplied native Cancel is rejected unless nullish; env getter errors remain caller errors."
+    ],
+    "dependencies": [
+      "native/omni/crates/hugr-omni/src/binding numeric validation.",
+      "native/omni/bindings/node/src/error.rs error construction.",
+      "native/omni/bindings/node/index.js supplies cancellation/env adaptation."
+    ],
+    "failures_or_limits": [
+      "Counter conversion to f64 follows JS number representation; this file does not establish OS process behavior."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 45,
+        "end_line": 68,
+        "quote": "/// `T`, or the `INVALID_ARGUMENT` that names `field`, its value and what it must be (QS-05).\npub(crate) fn one<T>(env: &Env, field: &str, value: Js<'_, T>, want: &str) -> napi::Result<T> {\n    match value {\n        Either::A(value) => Ok(value),\n        Either::B(other) => Err(error::refused(env, field, &other, want)),\n    }\n}\n\n/// An optional value: `undefined` and `null` leave it out.\npub(crate) fn opt<T>(env: &Env, field: &str, value: Option<Js<'_, T>>, want: &str) -> napi::Result<Option<T>> {\n    match value {\n        Some(Either::B(other)) if nullish(&other) => Ok(None),\n        Some(value) => one(env, field, value, want).map(Some),\n        None => Ok(None),\n    }\n}\n\n/// The bytes of `data`: a string's UTF-8, or a `Uint8Array`'s content.\npub(crate) fn bytes(env: &Env, field: &str, data: Bytes<'_>) -> napi::Result<Vec<u8>> {\n    match data {\n        Either3::A(text) => Ok(text.into_bytes()),\n        Either3::B(raw) => Ok(raw.to_vec()),\n        Either3::C(other) => Err(error::refused(env, field, &other, \"a string or a Uint8Array\")),\n    }"
+      },
+      {
+        "start_line": 112,
+        "end_line": 138,
+        "quote": "    match cancel {\n        Some(cancel) => _ = cmd.cancel_on(cancel.0.clone()),\n        // `index.js` hands over the cancellation of every AbortSignal: anything else here is not one.\n        None => match o.get::<Unknown>(\"signal\")? {\n            Some(signal) if !nullish(&signal) => return Err(error::refused(env, \"signal\", &signal, \"an AbortSignal\")),\n            _ => {}\n        },\n    }\n    if let Some(cwd) = field::<String>(env, &o, \"cwd\", \"a string, the path of a directory\")? {\n        cmd.cwd(cwd);\n    }\n    if let Some(vars) = field::<Object>(env, &o, \"env\", \"an object of strings\")? {\n        for key in Object::keys(&vars)? {\n            match vars.get::<Js<String>>(&key)? {\n                Some(Either::A(value)) => _ = cmd.env(key, value),\n                Some(Either::B(other)) if nullish(&other) => _ = cmd.env_remove(key),\n                Some(Either::B(other)) => {\n                    return Err(error::refused(\n                        env,\n                        &format!(\"env.{key}\"),\n                        &other,\n                        \"a string, or null to remove it\",\n                    ));\n                }\n                None => {} // `undefined`: as if absent\n            }\n        }"
+      },
+      {
+        "start_line": 179,
+        "end_line": 205,
+        "quote": "    if let Some(max) = field::<f64>(env, &o, \"maxOutputBytes\", \"a number of bytes\")? {\n        cmd.max_output_bytes(binding::byte_limit(\"maxOutputBytes\", max).map_err(omni)?);\n    }\n    let pty = match o.get::<Either3<bool, Object, Unknown>>(\"pty\")? {\n        None | Some(Either3::A(false)) => false,\n        Some(Either3::C(other)) if nullish(&other) => false,\n        Some(Either3::A(true)) => {\n            cmd.pty(PtySize::default());\n            true\n        }\n        Some(Either3::B(size)) => {\n            let side = |key: &str, default: u16| {\n                let name = format!(\"pty.{key}\");\n                match opt(env, &name, size.get::<Js<f64>>(key)?, \"a number of cells\")? {\n                    Some(n) => binding::pty_side(&name, n).map_err(omni),\n                    None => Ok(default),\n                }\n            };\n            cmd.pty(PtySize {\n                cols: side(\"cols\", 80)?,\n                rows: side(\"rows\", 24)?,\n            });\n            true\n        }\n        Some(Either3::C(other)) => return Err(error::refused(env, \"pty\", &other, \"true, or { cols, rows }\")),\n    };\n    Ok((cmd, pty))"
+      },
+      {
+        "start_line": 327,
+        "end_line": 343,
+        "quote": "fn reason(r: Reason) -> &'static str {\n    match r {\n        Reason::Exit => \"exit\",\n        Reason::Signal => \"signal\",\n        Reason::Killed => \"killed\",\n        Reason::Timeout => \"timeout\",\n        Reason::Aborted => \"aborted\",\n        Reason::MemoryExceeded => \"memory_exceeded\",\n    }\n}\n\nfn stream(s: Stream) -> &'static str {\n    match s {\n        Stream::Stdout => \"stdout\",\n        Stream::Stderr => \"stderr\",\n        Stream::Pty => \"pty\",\n    }"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/src/error.rs",
+    "git_blob_sha": "a3f90fc0b728d5ce9a345b0a05aaf2d68faa8d18",
+    "source_sha256": "bd4c1f097e3fc05a85b5ba1bffb02bc8480bbc59191977294cbb01fd21431fed",
+    "source_bytes": 5277,
+    "line_count": 116,
+    "disposition": "analyzed",
+    "kind": "implementation",
+    "purpose": "Preserve core errors as the correct per-environment JavaScript OmniError class.",
+    "behavior": [
+      "setup starts the binding executor, registers the environment cleanup hook and stores a strong constructor reference plus Owned child registry.",
+      "Core errors retain code/message and cloned collected run result; malformed JS values get INVALID_ARGUMENT with field, shown value and correction.",
+      "Primitive display avoids running user conversion code, truncates strings at 80 Unicode scalar positions and names object/function/symbol/bigint kinds.",
+      "Environment finalization deliberately forgets the constructor reference because the dying engine frees it and deleting it can fail during Bun worker teardown."
+    ],
+    "contracts": [
+      "configure delegates the process-wide supervisor path rule to the core binding.",
+      "If setup/constructor access fails, make returns that napi error instead of manufacturing OmniError."
+    ],
+    "dependencies": [
+      "native/omni/bindings/node/index.js passes its OmniError constructor.",
+      "native/omni/bindings/node/src/exec.rs",
+      "native/omni/bindings/node/src/teardown.rs"
+    ],
+    "failures_or_limits": [
+      "The no-finalizer-panic rationale is source documentation, not a newly observed Bun result."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 25,
+        "end_line": 36,
+        "quote": "/// Called once by `index.js` as it loads: keeps its `OmniError` class for this JS environment, starts the thread that\n/// polls the binding's futures, and arranges that the environment's trees are stopped when it goes away (H1).\n#[napi]\npub fn setup(env: Env, omni_error: Function<'_, Args, ()>) -> napi::Result<()> {\n    exec::start().map_err(|e| napi::Error::from_reason(format!(\"hugr-omni: cannot start its thread: {e}\")))?;\n    let owned = Arc::new(Owned::default());\n    env.add_env_cleanup_hook(Arc::clone(&owned), |owned| owned.stop_all())?;\n    let instance = Instance {\n        ctor: omni_error.create_ref()?,\n        owned,\n    };\n    env.set_instance_data(instance, (), |done| release(done.value))"
+      },
+      {
+        "start_line": 47,
+        "end_line": 54,
+        "quote": "/// The environment's data goes with it. Its `OmniError` reference is let go of, not deleted: the environment is being\n/// torn down and frees it itself, and a dying environment may refuse the delete (Bun, with the termination of a Worker\n/// pending), which napi-rs would turn into a panic inside a finalizer.\nfn release(instance: Instance) {\n    let Instance { ctor, owned } = instance;\n    std::mem::forget(ctor);\n    drop(owned);\n}"
+      },
+      {
+        "start_line": 64,
+        "end_line": 88,
+        "quote": "/// The `OmniError` for `e`, ready to throw or to reject with (it keeps the JS object itself).\npub(crate) fn omni(env: &Env, e: &hugr_omni::Error) -> napi::Error {\n    let result = e.result().cloned().map(convert::run_result);\n    make(env, e.code().as_str(), e.to_string(), result)\n}\n\n/// `INVALID_ARGUMENT` for `field`, whose JS value `value` is not `want` (contract §3: nothing has started).\npub(crate) fn refused(env: &Env, field: &str, value: &Unknown<'_>, want: &str) -> napi::Error {\n    let message = format!(\n        \"INVALID_ARGUMENT: {field} is {}, which index.d.ts does not allow there; pass {want} instead.\",\n        shown(value)\n    );\n    make(env, \"INVALID_ARGUMENT\", message, None)\n}\n\nfn make(env: &Env, code: &str, message: String, result: Option<RunResultJs>) -> napi::Error {\n    let made = || -> napi::Result<napi::Error> {\n        let ctor = &env\n            .get_instance_data::<Instance>()?\n            .ok_or_else(|| napi::Error::from_reason(\"hugr-omni: index.js did not call setup()\"))?\n            .ctor;\n        let args = FnArgs::from((code.to_owned(), message, result));\n        Ok(napi::Error::from(ctor.borrow_back(env)?.new_instance(args)?))\n    };\n    made().unwrap_or_else(|failed| failed)"
+      },
+      {
+        "start_line": 91,
+        "end_line": 115,
+        "quote": "/// A JS value as a message shows it: a string quoted (and cut at 80 characters), a number, `true`, `null`, or its kind.\n/// Only primitives are read, so no user code runs.\nfn shown(value: &Unknown<'_>) -> String {\n    let read = || -> napi::Result<String> {\n        Ok(match value.get_type()? {\n            ValueType::String => {\n                let text = convert::text_of(value).unwrap_or_default();\n                match text.char_indices().nth(80) {\n                    Some((cut, _)) => format!(\"{:?}...\", &text[..cut]),\n                    None => format!(\"{text:?}\"),\n                }\n            }\n            ValueType::Number => value.coerce_to_number()?.get_double()?.to_string(),\n            ValueType::Boolean => value.coerce_to_bool()?.to_string(),\n            ValueType::Null => \"null\".to_owned(),\n            ValueType::Undefined => \"undefined\".to_owned(),\n            ValueType::Object if value.is_array()? => \"an array\".to_owned(),\n            ValueType::Object => \"an object\".to_owned(),\n            ValueType::Function => \"a function\".to_owned(),\n            ValueType::Symbol => \"a symbol\".to_owned(),\n            ValueType::BigInt => \"a bigint\".to_owned(),\n            _ => \"a value of another kind\".to_owned(),\n        })\n    };\n    read().unwrap_or_else(|_| \"a value that cannot be shown\".to_owned())"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/src/exec.rs",
+    "git_blob_sha": "7919dda5105dee62e2872a3df24711880ba6697c",
+    "source_sha256": "2e45831a084e52773dfd9548ff48c490f90d53b9851d7787bd129bb216a9af0b",
+    "source_bytes": 6679,
+    "line_count": 174,
+    "disposition": "analyzed",
+    "kind": "implementation",
+    "purpose": "Poll core futures and settle JS promises without introducing another Tokio runtime.",
+    "behavior": [
+      "Starts one process-global hugr-omni-node thread behind a mutex and OnceLock queue.",
+      "promise creates a JsDeferred, polls the job once on the calling JS thread to preserve invocation order, then resumes it on wakeups through the executor.",
+      "Timer storage is executor-thread-local and used by the GC keeper; queued tasks hold a mutex-protected future.",
+      "A Settle drop rejects an unfinished deferred; polling catches unwinds and drops completed or panicked jobs so promises do not hold the event loop indefinitely."
+    ],
+    "contracts": [
+      "Core futures must be Send/static and runtime-independent; the JS thread may perform run's bounded spawn during the initial poll.",
+      "Task creation before setup drops the job, triggering settlement cleanup."
+    ],
+    "dependencies": [
+      "napi JsDeferred/threadsafe function boundary.",
+      "native/omni/bindings/node/src/error.rs starts the executor and maps failures.",
+      "native/omni/bindings/node/src/child.rs uses keep/sleep."
+    ],
+    "failures_or_limits": [
+      "Queue/thread shutdown is intentionally absent; comments assume the global sender keeps the receiver alive."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 34,
+        "end_line": 45,
+        "quote": "/// Starts the executor thread (once per process; `setup` calls it when `index.js` loads), so that `spawn` never fails.\npub(crate) fn start() -> std::io::Result<()> {\n    static STARTING: Mutex<()> = Mutex::new(());\n    let _once = STARTING.lock().unwrap_or_else(PoisonError::into_inner);\n    if QUEUE.get().is_none() {\n        let (queue, tasks) = mpsc::channel();\n        std::thread::Builder::new()\n            .name(\"hugr-omni-node\".to_owned())\n            .spawn(move || run(tasks))?;\n        let _ = QUEUE.set(queue);\n    }\n    Ok(())"
+      },
+      {
+        "start_line": 67,
+        "end_line": 105,
+        "quote": "/// A promise settled by `work`: with `to_js` of its value, or with the `OmniError` of its error.\n///\n/// `work` is polled once right here, on the calling (JS) thread, before the executor thread takes over: what it does\n/// at once happens at the call and in call order, as with any JS API (`run()` has started its process when it returns,\n/// so a signal aborted after the call cancels a launched run, contract §8).\npub(crate) fn promise<'env, V, D, W>(env: &'env Env, work: W, to_js: fn(V) -> D) -> napi::Result<Object<'env>>\nwhere\n    V: Send + 'static,\n    D: ToNapiValue + 'static,\n    W: Future<Output = Result<V, hugr_omni::Error>> + Send + 'static,\n{\n    let (deferred, promise) = env.create_deferred::<D, Resolver<D>>()?;\n    let mut settle = Settle(Some(deferred));\n    let job = async move {\n        let done = work.await;\n        if let Some(deferred) = settle.0.take() {\n            deferred.resolve(Box::new(move |env| match done {\n                Ok(value) => Ok(to_js(value)),\n                Err(e) => Err(error::omni(&env, &e)),\n            }));\n        }\n    };\n    if let Some(task) = Task::new(job) {\n        poll(&task);\n    }\n    Ok(promise)\n}\n\n/// A promise that is settled whatever happens to its job: an unsettled `JsDeferred` would hold the event loop forever.\nstruct Settle<D: ToNapiValue>(Option<JsDeferred<D, Resolver<D>>>);\n\nimpl<D: ToNapiValue> Drop for Settle<D> {\n    fn drop(&mut self) {\n        if let Some(deferred) = self.0.take() {\n            deferred.reject(napi::Error::from_reason(\n                \"hugr-omni: the operation ended without a result\",\n            ));\n        }\n    }"
+      },
+      {
+        "start_line": 164,
+        "end_line": 173,
+        "quote": "/// Polls a task once; a job that is done, or that panicked, is dropped (its promise is then settled by `Settle`).\nfn poll(task: &Arc<Task>) {\n    let waker = Waker::from(Arc::clone(task));\n    let mut slot = task.job.lock().unwrap_or_else(PoisonError::into_inner);\n    if let Some(job) = slot.as_mut() {\n        let polled = catch_unwind(AssertUnwindSafe(|| job.as_mut().poll(&mut Context::from_waker(&waker))));\n        if !matches!(polled, Ok(Poll::Pending)) {\n            *slot = None;\n        }\n    }"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/src/run.rs",
+    "git_blob_sha": "23aea005dcd0656a090bd5a92a12011f635e790d",
+    "source_sha256": "f4874a43cf1cd3f4a3d619fdf1c02f0289f3ef6d391ef7f857c81d578f7ed2e4",
+    "source_bytes": 698,
+    "line_count": 21,
+    "disposition": "analyzed",
+    "kind": "implementation",
+    "purpose": "Bridge native run to a JS promise containing the core's collected output.",
+    "behavior": [
+      "Converts command, argument vector, options and optional cancellation using convert::command.",
+      "Awaits cmd.run() through exec::promise and converts successful RunOutput with convert::run_result."
+    ],
+    "contracts": [
+      "Conversion can throw synchronously at the native boundary; index.js converts that throw to a rejected Promise."
+    ],
+    "dependencies": [
+      "native/omni/bindings/node/src/convert.rs",
+      "native/omni/bindings/node/src/exec.rs",
+      "native/omni/bindings/node/index.js"
+    ],
+    "failures_or_limits": [
+      "Run completion semantics and output limits remain the core's responsibility."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 10,
+        "end_line": 21,
+        "quote": "/// Runs to completion. An argument refused while it is converted is thrown; `index.js` turns that into a rejection.\n#[napi]\npub fn run<'env>(\n    env: &'env Env,\n    command: Js<'_, String>,\n    args: Js<'_, Vec<Js<'_, String>>>,\n    options: Option<Js<'_, Object<'_>>>,\n    cancel: Option<&Cancel>,\n) -> napi::Result<Object<'env>> {\n    let (cmd, _) = convert::command(env, command, args, options, cancel)?;\n    exec::promise(env, async move { cmd.run().await }, convert::run_result)\n}"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/src/teardown.rs",
+    "git_blob_sha": "cc894d2ad91c0c3ce998f2f9f4f31402463dc515",
+    "source_sha256": "9498de25483615db7acaaf074b366771d85568dd955c240dfc39034c085562b5",
+    "source_bytes": 2754,
+    "line_count": 62,
+    "disposition": "analyzed",
+    "kind": "implementation",
+    "purpose": "Stop trees belonging to a terminating JS environment within one bounded cleanup wait.",
+    "behavior": [
+      "Owned keeps Weak child references, pruning dead entries when adding a child.",
+      "stop_all drains and upgrades live children, schedules zero-grace stops on the binding executor and waits for completion signals until one shared five-second deadline.",
+      "Stop errors are ignored for cleanup completion; timeout or receiver error returns from the hook."
+    ],
+    "contracts": [
+      "The ending JS thread waits but never calls back into JS; process operations run on the binding thread.",
+      "Collection of one Child still does not kill its tree; environment teardown is a separate lifetime boundary."
+    ],
+    "dependencies": [
+      "native/omni/bindings/node/src/error.rs registers the cleanup hook.",
+      "native/omni/bindings/node/src/child.rs supplies Arc<Kid>.",
+      "native/omni/bindings/node/src/exec.rs schedules stop futures."
+    ],
+    "failures_or_limits": [
+      "Returning at the bound does not prove every failed stop succeeded; final host-death supervision is separate."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 20,
+        "end_line": 25,
+        "quote": "/// The longest an environment's teardown waits for its trees: a forced stop is one round trip to the supervisor.\nconst BOUND: Duration = Duration::from_secs(5);\n\n/// The children one JS environment spawned.\n#[derive(Default)]\npub(crate) struct Owned(Mutex<Vec<Weak<Kid>>>);"
+      },
+      {
+        "start_line": 35,
+        "end_line": 56,
+        "quote": "    /// The environment is going away: force-stops every tree still held, and returns once they are all gone or\n    /// `BOUND` has passed. Runs on the JS thread, which is ending; the stops run on the binding's thread.\n    pub(crate) fn stop_all(&self) {\n        let kids: Vec<Arc<Kid>> = lock(&self.0).drain(..).filter_map(|k| k.upgrade()).collect();\n        let (done, all_done) = mpsc::channel();\n        let count = kids.len();\n        for kid in kids {\n            let done = done.clone();\n            exec::spawn(async move {\n                let _ = kid.stop(Some(Duration::ZERO)).await;\n                let _ = done.send(());\n            });\n        }\n        let until = Instant::now() + BOUND;\n        for _ in 0..count {\n            if all_done\n                .recv_timeout(until.saturating_duration_since(Instant::now()))\n                .is_err()\n            {\n                return;\n            }\n        }"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/test/configure-host.mjs",
+    "git_blob_sha": "0da3b2dcc6c9fa220dd592110dec21c0aedbcf7b",
+    "source_sha256": "648b9fc8d4c2122c479c27cc049707f1d0341292848668b9ae5831ee30f0d080",
+    "source_bytes": 2613,
+    "line_count": 50,
+    "disposition": "analyzed",
+    "kind": "fixture",
+    "purpose": "Provide isolated subprocess cases for one-time addon/supervisor configuration and JS environment inheritance.",
+    "behavior": [
+      "order loads the built addon with an intentionally missing supervisor, then attempts addon replacement, spawn, late configure and an invalid supervisor field.",
+      "no-fallback and env-addon select nonexistent explicit addons; env-run sets a late process.env value and compares inherited with inheritEnv:false output.",
+      "Collects each synchronous attempt as [operation, ok/code, message] and emits one final JSON line before exit."
+    ],
+    "contracts": [
+      "Each scenario requires a fresh process because native loading/configuration is sticky.",
+      "hardening.mjs interprets outcomes; this host records observations rather than asserting them."
+    ],
+    "dependencies": [
+      "native/omni/bindings/node/test/support.mjs locates fixture/addon paths.",
+      "native/omni/bindings/node/test/hardening.mjs"
+    ],
+    "failures_or_limits": [
+      "Only the debug checkout addon path is constructed here; unknown case throws."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 31,
+        "end_line": 50,
+        "quote": "if (which === \"order\") {\n  attempt(\"configure\", () => omni.configure({ addon: built, supervisor: \"/nonexistent/omni-wph/hugr-omni-supervisor\" }));\n  attempt(\"configure other addon\", () => omni.configure({ addon: \"/nonexistent/omni-wph/other.node\" }));\n  attempt(\"spawn\", () => omni.spawn(fixture, [\"exit=0\"]));\n  attempt(\"configure after spawn\", () => omni.configure({}));\n  attempt(\"configure bad field\", () => omni.configure({ supervisor: 5 }));\n} else if (which === \"no-fallback\") {\n  attempt(\"configure missing addon\", () => omni.configure({ addon: \"/nonexistent/omni-wph/hugr_omni.node\" }));\n} else if (which === \"env-addon\") {\n  process.env.HUGR_OMNI_ADDON = \"/nonexistent/omni-wph/from-env.node\";\n  attempt(\"spawn\", () => omni.spawn(fixture, [\"exit=0\"]));\n} else if (which === \"env-run\") {\n  process.env.OMNI_WPH_LATE = \"set-at-run-time\";\n  const got = await omni.run(fixture, [\"getenv=OMNI_WPH_LATE\"]);\n  const clean = await omni.run(fixture, [\"getenv=OMNI_WPH_LATE\"], { inheritEnv: false });\n  outcomes.push([\"inherited\", got.stdout], [\"clean\", clean.stdout]);\n} else {\n  throw new Error(`unknown case ${which}`);\n}\nprocess.stdout.write(`${JSON.stringify({ case: which, outcomes })}\\n`, () => process.exit(0));"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/test/contract.mjs",
+    "git_blob_sha": "708dc74904a9d25b32d84dbb8b2d9b77d06dcf0a",
+    "source_sha256": "24135090a8702045dd53fcdf1ac8e5bd97898b734c26c4c070a6b035837f334b",
+    "source_bytes": 2527,
+    "line_count": 51,
+    "disposition": "analyzed",
+    "kind": "test",
+    "purpose": "Run the shared conformance scenario corpus through the public TypeScript binding.",
+    "behavior": [
+      "Checks the cross-language regex table before any scenarios; mismatch immediately returns a failed summary.",
+      "Warms the fixture executable, then invokes suite with scenarios, pending ledger, fixture path and loaded public API.",
+      "Reports passed/pending/failed plus OS/runtime and selection counts; only failures make the returned exit code one."
+    ],
+    "contracts": [
+      "Requires fixture and supervisor binaries built first.",
+      "Pending product failures are allowed only through the ledger; skipped is not a result category."
+    ],
+    "dependencies": [
+      "native/omni/conformance/regex-table.json and pending.txt.",
+      "native/omni/bindings/node/test/runner/suite.mjs",
+      "native/omni/bindings/node/test/support.mjs"
+    ],
+    "failures_or_limits": [
+      "Source describes execution policy; no conformance scenarios were executed in this analysis."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 20,
+        "end_line": 42,
+        "quote": "async function main() {\n  const conformance = join(root, \"conformance\");\n  // The regex engine first: a runner that reads `until`/`capture` differently from the Rust one proves nothing.\n  const table = checkTable(JSON.parse(readFileSync(join(conformance, \"regex-table.json\"), \"utf8\")));\n  if (table.length > 0) {\n    table.forEach((e) => console.log(`FAIL    ${e}`));\n    return [`contract: ${table.length} failed (conformance/regex-table.json; no scenario was run)`, 1];\n  }\n  const { fixture } = binaries();\n  // Warm-up, not synchronization: an OS may validate a freshly built executable on its first exec (seconds on macOS\n  // under load), which must not eat into the first scenario's step timeout.\n  const warm = spawnSync(fixture);\n  if (warm.status !== 0) throw new Error(`${fixture} does not run: ${warm.error?.message ?? `exit ${warm.status}`}`);\n  const sum = await suite({\n    dir: join(conformance, \"scenarios\"),\n    ledgerText: readFileSync(join(conformance, \"pending.txt\"), \"utf8\"),\n    fixture,\n    api: loadApi(),\n  });\n  const line =\n    `contract: ${sum.passed} passed, ${sum.pending} pending, ${sum.errors.length} failed ` +\n    `(${sum.ran} scenarios run on ${OS}/ts-${runtime}; ${sum.files} files, ${sum.other} for other OSes or languages)`;\n  return [line, sum.errors.length === 0 ? 0 : 1];"
+      },
+      {
+        "start_line": 45,
+        "end_line": 50,
+        "quote": "main().then(\n  ([line, code]) => finish(line, code),\n  (e) => {\n    console.log(`FAIL    ${e.stack ?? e}`);\n    finish(\"contract: could not run\", 1);\n  },"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/test/hardening.mjs",
+    "git_blob_sha": "ee5b1476416a128746e51a56e5aaaa82ff9ddde4",
+    "source_sha256": "3c0f355c3653809718c3bd92a220bd53d233b9da04e248cd868d02f37766166c",
+    "source_bytes": 7954,
+    "line_count": 146,
+    "disposition": "analyzed",
+    "kind": "test",
+    "purpose": "Assert WP-H worker, configuration, environment and output-hardening behavior across JS hosts.",
+    "behavior": [
+      "Worker cases require normal host exit, no panic/abort diagnostics and both live-tree PIDs already dead when terminate resolves.",
+      "Fresh-host cases assert explicit paths outrank environment, missing paths do not fall back, late/invalid configure rejects, and JS process.env updates propagate or are removed.",
+      "Checks Windows PATH case folding and override spelling.",
+      "Floods 64 MiB with a stalled consumer: backpressure must deliver every byte exactly with no loss; default mode must account for received plus lost bytes and match droppedBytes."
+    ],
+    "contracts": [
+      "Runs through mini.mjs with a 60-second per-test deadline; subprocesses default to 30 seconds.",
+      "The default-mode test does not require loss to occur, only correct accounting if it does."
+    ],
+    "dependencies": [
+      "configure-host.mjs, worker-host.mjs and support.mjs.",
+      "Native fixture and the public index.js API."
+    ],
+    "failures_or_limits": [
+      "Runtime/OS assertions were read, not executed."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 39,
+        "end_line": 49,
+        "quote": "for (const [mode, what] of [[\"live\", \"with a live tree\"], [\"idle\", \"with nothing running\"]]) {\n  test(`H1: terminating a Worker that loaded the library (${what}) neither crashes the host nor leaves its tree`, async () => {\n    const end = await host(\"worker-host.mjs\", [mode]);\n    assert.doesNotMatch(end.err, /panicked|fatal runtime error|Abort/i, end.err);\n    assert.deepEqual([end.code, end.signal], [0, null], `the host ended as ${JSON.stringify([end.code, end.signal])}: ${end.err}`);\n    if (mode === \"idle\") return assert.match(end.out, /^HOST-TERMINATED none$/m, end.out);\n    const pids = parseMarker(end.out, \"TERMINATED\", 2);\n    assert.ok(Array.isArray(pids), `no HOST-TERMINATED line with the tree's pids: ${end.out} ${end.err}`);\n    // Asked by the host while it still ran: the Worker's teardown stopped its tree before terminate() resolved.\n    assert.match(end.out, /^HOST-STATES dead dead$/m, `the terminated Worker's tree outlived it: ${end.out}`);\n  });"
+      },
+      {
+        "start_line": 59,
+        "end_line": 86,
+        "quote": "test(\"H4: configure() paths win, a loaded addon cannot change, and configure() after spawn() is INVALID_ARGUMENT\", async () => {\n  const [load, other, spawned, late, bad] = await configured(\"order\");\n  assert.deepEqual(load, [\"configure\", \"ok\"]);\n  assert.deepEqual(other.slice(0, 2), [\"configure other addon\", \"INVALID_ARGUMENT\"]);\n  assert.match(other[2], /already loaded/);\n  // The configured supervisor, not HUGR_OMNI_SUPERVISOR (which names a real one), is what spawn() tried to start.\n  assert.deepEqual(spawned.slice(0, 2), [\"spawn\", \"IO\"]);\n  assert.match(spawned[2], /omni-wph/);\n  assert.deepEqual(late.slice(0, 2), [\"configure after spawn\", \"INVALID_ARGUMENT\"]);\n  assert.match(late[2], /before the first run\\(\\) or spawn\\(\\)/);\n  assert.deepEqual(bad.slice(0, 2), [\"configure bad field\", \"INVALID_ARGUMENT\"]);\n  assert.match(bad[2], /supervisor is 5/);\n});\n\ntest(\"H4: an explicit addon that is missing fails loudly; nothing falls back to this checkout's build\", async () => {\n  const [missing] = await configured(\"no-fallback\");\n  assert.equal(missing[0], \"configure missing addon\");\n  assert.notEqual(missing[1], \"ok\", \"a missing explicit addon loaded something\");\n  assert.match(missing[2], /omni-wph/);\n  const [fromEnv] = await configured(\"env-addon\");\n  assert.notEqual(fromEnv[1], \"ok\", \"HUGR_OMNI_ADDON set through process.env was not the addon tried\");\n  assert.match(fromEnv[2], /from-env/);\n});\n\ntest(\"H4: a variable set through process.env at run time reaches the child; inheritEnv: false still starts clean\", async () => {\n  const outcomes = Object.fromEntries(await configured(\"env-run\"));\n  assert.equal(outcomes.inherited, 'OMNI_WPH_LATE=\"set-at-run-time\"\\n');\n  assert.equal(outcomes.clean, \"OMNI_WPH_LATE unset\\n\");"
+      },
+      {
+        "start_line": 131,
+        "end_line": 143,
+        "quote": "test(\"H7: with backpressure, a consumer that blocks the event loop for 200 ms gets all 64 MiB, byte-exact, no gap\", async () => {\n  const r = await flood({ backpressure: true }, () => stall(200));\n  assert.deepEqual([r.got, r.lost, r.dropped, r.exact], [r.total, [], 0, true]);\n});\n\ntest(\"H7: without backpressure, whatever a consumer that falls behind loses is reported as lostBefore\", async () => {\n  // Whether anything is dropped depends on how fast the child writes on this runner (on Linux CI nothing was), so the\n  // assertion is the accounting, not the loss: what arrived plus what was reported lost is the whole, and the data\n  // before the first gap is exact. Loss being reported at all is C-IO-03's scenario.\n  const r = await flood({}, () => stall(2_000));\n  assert.equal(r.got + r.lost.reduce((a, b) => a + b, 0), r.total, \"what arrived plus what was reported lost is not the whole\");\n  assert.equal(r.dropped, r.lost.reduce((a, b) => a + b, 0), \"droppedBytes and the lostBefore marks disagree\");\n  assert.ok(r.exact, \"the bytes before the first gap are not the fixture's\");"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/test/host.mjs",
+    "git_blob_sha": "d313d05585a22532dd861dda487f70921a8fd1a1",
+    "source_sha256": "2af757b8ab4bbb4d25d97645518f0c776419a2b257d39d4a33edd4c5fc2271ee",
+    "source_bytes": 3836,
+    "line_count": 72,
+    "disposition": "analyzed",
+    "kind": "fixture",
+    "purpose": "Create controlled host-lifecycle states for idiom tests without installing product cleanup hooks.",
+    "behavior": [
+      "Starts fixture trees and prints HOST markers only after required PIDs/readiness are known.",
+      "end releases the root by a watched file; exit/throw wait for a parent stdin line; wait remains alive until signaled.",
+      "retain starts a child without awaiting; gc drops all references then forces ten collections; orphan does the same after root exit while a descendant survives."
+    ],
+    "contracts": [
+      "Uses Bun.gc or exposed global gc and fails if unavailable.",
+      "The parent process decides when to terminate or release the host; modes emit evidence rather than assertions."
+    ],
+    "dependencies": [
+      "native/omni/bindings/node/test/hosts.mjs",
+      "native/omni/bindings/node/test/markers.mjs",
+      "Native omni-fixture tree/watch behavior."
+    ],
+    "failures_or_limits": [
+      "Marker existence alone does not prove later cleanup; idioms.mjs checks liveness independently."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 27,
+        "end_line": 35,
+        "quote": "/** Forces full collections, letting finalizers run between them. */\nasync function collectAll() {\n  const collect = globalThis.Bun ? () => globalThis.Bun.gc(true) : globalThis.gc;\n  if (!collect) throw new Error(\"no way to force a garbage collection: run with --expose-gc (node), --v8-flags=--expose-gc (deno) or bun\");\n  for (let round = 0; round < 10; round++) {\n    collect();\n    await new Promise((resolve) => setImmediate(resolve));\n  }\n}"
+      },
+      {
+        "start_line": 37,
+        "end_line": 71,
+        "quote": "const tree = [\"ignore-term\", \"tree=2:resist\", \"ready\"]; // a root and two descendants that all ignore the polite stop\nif (mode === \"retain\") {\n  const child = spawn(fixture, [`watch=stdout:1:${release}`, \"exit=0\"]);\n  say(\"SPAWNED\", child.pid); // and nothing else: no await, no timer, no listener\n} else if (mode === \"gc\") {\n  const pid = (() => spawn(fixture, [\"hang\"]).pid)(); // the Child is unreachable from here on\n  await collectAll();\n  say(\"DROPPED\", pid);\n  setInterval(() => {}, 2 ** 30); // keeps this process up on its own account: the parent ends it\n} else if (mode === \"orphan\") {\n  const descendant = await (async () => {\n    const child = spawn(fixture, [\"tree=1:resist\", \"ready\", \"exit=0\"], { graceMs: 500 });\n    const [pid] = await untilTree(child.lines(), 1);\n    await child.wait(); // the root has exited; its descendant, which ignores a polite stop, lives on\n    return pid;\n  })(); // the Child is unreachable from here on\n  await collectAll();\n  // A round trip through the same supervisor after the collection: whatever stop it caused was sent before this ends.\n  await spawn(fixture, [\"exit=0\"]).wait();\n  say(\"ORPHANED\", descendant);\n  setInterval(() => {}, 2 ** 30); // keeps this process up on its own account: the parent ends it\n} else {\n  const child =\n    mode === \"end\"\n      ? spawn(fixture, [...tree, `watch=stdout:1:${release}`, \"exit=0\"], { graceMs: 500 })\n      : spawn(fixture, [...tree, \"hang\"], { graceMs: 500 });\n  say(\"READY\", child.pid, ...(await untilTree(child.lines(), 2))); // only once all three pids are known\n  if (mode === \"end\") await child.wait(); // the root exits, its descendants are orphaned, and nothing is left to wait for\n  else if (mode === \"exit\" || mode === \"throw\") {\n    await goAhead(); // the parent has looked at the tree; now end\n    if (mode === \"exit\") process.exit(0);\n    setImmediate(() => {\n      throw new Error(\"uncaught, on purpose\");\n    });\n  }"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/test/hosts.mjs",
+    "git_blob_sha": "bc17ad695df0a1d79d0607235cf35cd3898220c4",
+    "source_sha256": "1a5962765acc697062fb1a6473bbe0378fcd224634045c631dceb3e613b89e0c",
+    "source_bytes": 3792,
+    "line_count": 83,
+    "disposition": "analyzed",
+    "kind": "test",
+    "purpose": "Manage lifecycle-test host subprocesses and expose bounded marker/exit observations.",
+    "behavior": [
+      "Launches host.mjs under the current runtime with a temporary release file and captured output/error streams.",
+      "marker validates complete HOST marker PID sets and rejects a host that exits before the marker; end waits for close with a diagnostic bound.",
+      "go writes a synchronized input line, kill forwards the requested signal, and getters expose termination timing.",
+      "finally kills the host, removes the temporary directory and, on a failed test only, force-kills every reported PID; a parent exit hook also kills live host subprocesses."
+    ],
+    "contracts": [
+      "Marker waits default to 15 seconds and host-end waits to 10 seconds; timeout rejects, never silently skips."
+    ],
+    "dependencies": [
+      "native/omni/bindings/node/test/host.mjs",
+      "native/omni/bindings/node/test/markers.mjs",
+      "native/omni/bindings/node/test/support.mjs"
+    ],
+    "failures_or_limits": [
+      "Cleanup is test harness behavior and must not be confused with hooks in the production binding."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 21,
+        "end_line": 34,
+        "quote": "/** Resolves with `check()`'s result once it is not `undefined`, re-checking whenever `poke`d; rejects after `ms`. */\nfunction until(watchers, ms, what, check) {\n  return new Promise((resolve, reject) => {\n    const timer = setTimeout(() => reject(new Error(`${what()}: not within ${ms} ms`)), ms);\n    const look = () => {\n      const got = check();\n      if (got === undefined) return;\n      clearTimeout(timer);\n      watchers.delete(look);\n      got instanceof Error ? reject(got) : resolve(got);\n    };\n    watchers.add(look);\n    look();\n  });"
+      },
+      {
+        "start_line": 55,
+        "end_line": 81,
+        "quote": "  const host = {\n    /** The `count` pids of the host's `HOST-<name>` line; fails, with what the host said, if the host ends first. */\n    marker: (name, count, ms = 15_000) =>\n      until(watchers, ms, () => `no HOST-${name} from the host (${gist(err)})`, () => {\n        const pids = parseMarker(out, name, count);\n        if (pids === undefined && ended !== null) return new Error(`the host ended (${JSON.stringify(ended)}) before HOST-${name}: ${gist(err)}`);\n        if (Array.isArray(pids)) known.push(...pids);\n        return pids;\n      }),\n    /** Tells a host in mode `exit` or `throw` to go ahead and end (it waits for this line). */\n    go: () => proc.stdin.write(\"go\\n\"),\n    /** How the host ended: `{ code, signal, at }`; `hint` says what a host that does not end is getting wrong. */\n    end: (ms = 10_000, hint = \"\") => until(watchers, ms, () => `the host did not end${hint && ` (${hint})`}`, () => ended ?? undefined),\n    get ended() {\n      return ended;\n    },\n    kill: (signal) => proc.kill(signal),\n  };\n  let passed = false;\n  try {\n    await body(host, release);\n    passed = true;\n  } finally {\n    proc.kill(\"SIGKILL\");\n    live.delete(proc);\n    if (!passed) for (const pid of known) try { process.kill(pid, \"SIGKILL\"); } catch { /* already gone */ }\n    rmSync(dir, { recursive: true, force: true });"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  },
+  {
+    "path": "native/omni/bindings/node/test/idioms.mjs",
+    "git_blob_sha": "cec701164083a44d25a1572944ab05dec1128f0a",
+    "source_sha256": "042e16a2225ed9f2736e95563a69e02f597280f7ec2e2465d3328dd04ddd32d8",
+    "source_bytes": 11734,
+    "line_count": 238,
+    "disposition": "analyzed",
+    "kind": "test",
+    "purpose": "Assert TypeScript-specific API idioms and whole-host lifecycle guarantees.",
+    "behavior": [
+      "Checks exact async chunk output, permanent consumer detachment, async disposal tree death, AbortSignal behavior, OmniError identity/messages and PipeChild/PtyChild method separation.",
+      "Exercises wrong JS option/value types and preserves the identity of a caller getter exception; strips comments before rejecting any in declarations.",
+      "For normal return, process.exit, uncaught exception, SIGINT, SIGTERM and SIGKILL, requires a live three-PID tree before host termination and dead tree within five seconds afterward.",
+      "Separately verifies a child holds the event loop and GC leaves both live roots and orphan descendants running until host death."
+    ],
+    "contracts": [
+      "Uses fixture markers rather than delays for readiness; per-test deadline is 60 seconds.",
+      "POSIX signal exit identity is checked only off Windows."
+    ],
+    "dependencies": [
+      "host.mjs/hosts.mjs, runner/os.mjs and mini.mjs.",
+      "Native fixture plus the public binding."
+    ],
+    "failures_or_limits": [
+      "The opening RED-until-W13 comment is historical; this source is not evidence of a current failure or pass."
+    ],
+    "inference": [],
+    "gaps": [],
+    "evidence": [
+      {
+        "start_line": 149,
+        "end_line": 169,
+        "quote": "test(\"a value index.d.ts does not allow is INVALID_ARGUMENT naming the field and the value: thrown by spawn, rejected by run and the methods\", async () => {\n  const options = [\n    [{ stdin: \"bogus\" }, 'stdin is \"bogus\"'],\n    [{ timeoutMs: \"x\" }, 'timeoutMs is \"x\"'],\n    [{ env: { OMNI_K: 1 } }, \"env.OMNI_K is 1\"],\n    [{ pty: { cols: \"80\" } }, 'pty.cols is \"80\"'],\n    [{ signal: {} }, \"signal is an object\"],\n  ];\n  for (const [given, says] of options) {\n    for (const e of [thrown(() => spawn(fixture, [], given), \"INVALID_ARGUMENT\"), await rejects(run(fixture, [], given), \"INVALID_ARGUMENT\")]) {\n      assert.ok(e.message.includes(says) && e.message.includes(\"pass \"), e.message);\n    }\n  }\n  assert.ok(thrown(() => spawn(fixture, [\"ok\", 5]), \"INVALID_ARGUMENT\").message.includes(\"args[1] is 5\"));\n  await withChild([\"hang\"], { stdin: \"pipe\" }, async (child) => {\n    assert.ok((await rejects(child.write(5), \"INVALID_ARGUMENT\")).message.includes(\"data is 5\"));\n    assert.ok((await rejects(child.stop({ graceMs: \"soon\" }), \"INVALID_ARGUMENT\")).message.includes('graceMs is \"soon\"'));\n  });\n  // What the caller's own code throws is not the library's to rename.\n  const own = new Error(\"thrown by a getter\");\n  assert.throws(() => spawn(fixture, [], { get cwd() { throw own; } }), (e) => e === own);"
+      },
+      {
+        "start_line": 179,
+        "end_line": 204,
+        "quote": "/** [how the host ends, what it says about it]: every one leaves a root and two descendants running when it ends. */\nconst ENDINGS = [\n  [\"end\", \"ends normally, with nothing left to wait for\"],\n  [\"exit\", \"calls process.exit()\"],\n  [\"throw\", \"dies of an uncaught exception\"],\n  [\"SIGINT\", \"is sent SIGINT\"],\n  [\"SIGTERM\", \"is sent SIGTERM\"],\n  [\"SIGKILL\", \"is hard killed (SIGKILL; TerminateProcess on Windows)\"],\n];\nfor (const [ending, how] of ENDINGS) {\n  const signal = ending.startsWith(\"SIG\");\n  test(`host: when it ${how}, its whole tree is gone within ${BOUND} ms`, () =>\n    withHost(signal ? \"wait\" : ending, async (host, release) => {\n      const tree = await host.marker(\"READY\", 3); // the root, then its two descendants\n      await expectLife(tree, true, 0); // all running now\n      if (ending === \"end\") appendFileSync(release, \"go\\n\"); // the root exits; the host has nothing left to wait for\n      if (signal) host.kill(ending);\n      else if (ending === \"exit\" || ending === \"throw\") host.go(); // the host waited for this: it ends only after the check above\n      const stuck = \"after wait() resolved, a Child with no consumer attached must not keep the event loop alive, whatever its orphans hold\";\n      const end = await host.end(10_000, ending === \"end\" ? stuck : \"\");\n      // The library changes nothing about how the host itself ends (GUARANTEES.md: Ctrl-C and SIGTERM stay the host's own).\n      if (signal && OS !== \"windows\") assert.equal(end.signal, ending, `the host ended as ${JSON.stringify(end)}`);\n      else if (ending === \"throw\") assert.ok(end.signal === null && end.code !== 0, `the host ended as ${JSON.stringify(end)}`);\n      else if (!signal) assert.deepEqual([end.code, end.signal], [0, null]);\n      await expectLife(tree, false, BOUND);\n    }));"
+      },
+      {
+        "start_line": 220,
+        "end_line": 236,
+        "quote": "test(\"GC never kills a child: every reference dropped and a collection forced, the child still runs, until the host dies\", () =>\n  withHost(\"gc\", async (host) => {\n    const [child] = await host.marker(\"DROPPED\", 1);\n    await expectLife([child], true, 0);\n    host.kill(\"SIGKILL\");\n    await host.end();\n    await expectLife([child], false, BOUND); // the host's death ended it, not the collector\n  }, { gc: true }));\n\ntest(\"GC never kills a child after its root exited: the collected Child's live descendant still runs, until the host dies\", () =>\n  withHost(\"orphan\", async (host) => {\n    const [descendant] = await host.marker(\"ORPHANED\", 1);\n    await expectLife([descendant], true, 0);\n    host.kill(\"SIGKILL\");\n    await host.end();\n    await expectLife([descendant], false, BOUND); // the host's death ended it (the supervisor's stop), not the collector\n  }, { gc: true }));"
+      }
+    ],
+    "runtime_status": "NOT_RUN",
+    "author_role": "SURFACE"
+  }
+]

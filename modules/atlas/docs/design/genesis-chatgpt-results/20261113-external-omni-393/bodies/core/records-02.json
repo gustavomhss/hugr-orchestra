@@ -1,0 +1,222 @@
+[
+  {
+    "path": "native/omni/crates/hugr-omni/src/client/channel/route.rs",
+    "git_blob_sha": "e1eddb04bc55bdfde9cb5ea70f84b0c21b3d40f8",
+    "source_sha256": "a144d18da03062841d9c6f96919941ce0de099b6bc03ef1619c60825d12521cf",
+    "source_bytes": 10591,
+    "line_count": 260,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Validates and routes every supervisor reply and drives generation I/O/deadline tasks.",
+    "behavior": [
+      "Decoder accumulates partial frames and rejects EOF mid-frame, malformed messages and unaccounted descriptors.",
+      "Ready must be first with the exact protocol version; replies must match request kind and tree ID; reused tree IDs and duplicate exits end the generation.",
+      "Waiters are removed only after validation; life notifications and reply delivery occur outside the lock. Earliest missed asynchronous deadline kills the generation."
+    ],
+    "contracts": [
+      "Descriptors ride the first byte of their frame and are cleared after a positive send.",
+      "Exited for a forgotten tree is ignored."
+    ],
+    "dependencies": [
+      "omni-proto::decode supplies framing/version validation.",
+      "client/channel.rs owns pending requests, trees and death propagation."
+    ],
+    "failures_or_limits": [
+      "Ack is accepted for any non-Spawn request after ID validation; caller-level methods interpret the result."
+    ],
+    "evidence": [
+      {
+        "start_line": 91,
+        "end_line": 101,
+        "quote": "            while let Some((msg, len)) =\n                decode(buf.get(used..).unwrap_or_default()).map_err(|e| format!(\"it sent a malformed frame ({e})\"))?\n            {\n                used += len;\n                self.dispatch(msg, &mut fds)?;\n            }\n            buf.drain(..used.min(buf.len()));\n            // A descriptor rides on the first byte of its frame: only a partial frame may own one.\n            if fds.len() > usize::from(!buf.is_empty()) {\n                return Err(\"it sent a descriptor that no frame accounts for\".into());\n            }"
+      },
+      {
+        "start_line": 153,
+        "end_line": 178,
+        "quote": "            Msg::Spawned { req, id, pid, pty_ends } => {\n                let want = check(st, req, |w| matches!(w, Want::Spawn { .. }), None)?;\n                let ends = self.chan.ends(pty_ends, fds)?;\n                if want != (Want::Spawn { pty: ends.is_some() }) {\n                    return Err(format!(\n                        \"it answered a Spawn request with the wrong terminal ends {pty_ends:?}\"\n                    ));\n                }\n                if st.trees.contains_key(&id) {\n                    return Err(format!(\"it reused tree id {id}\"));\n                }\n                let life = Arc::new(watch::Sender::new(Life::default()));\n                st.trees.insert(id, life.clone());\n                (req, Answer::Spawned { id, pid, ends, life }, None)\n            }\n            Msg::SpawnFailed { req, code, errno, msg } => {\n                check(st, req, |w| matches!(w, Want::Spawn { .. } | Want::Go), None)?;\n                (req, Answer::Failed { code, errno, msg }, None)\n            }\n            Msg::Ack { req, id, result } => {\n                check(st, req, |w| !matches!(w, Want::Spawn { .. }), Some(id))?;\n                (req, Answer::Ack(result), None)\n            }\n            Msg::Stopped { req, id } => {\n                check(st, req, |w| w == Want::Stop, Some(id))?;\n                (req, Answer::Stopped, st.trees.get(&id).map(|l| Event::Gone(l.clone())))"
+      },
+      {
+        "start_line": 228,
+        "end_line": 241,
+        "quote": "/// The kind of the waiting request `req`, if it `fits` and, for tree requests, its tree is `id`.\nfn check(st: &State, req: u64, fits: impl Fn(Want) -> bool, id: Option<u64>) -> Result<Want, String> {\n    let p = st.pending.get(&req);\n    let p = p.ok_or_else(|| format!(\"it answered request {req}, which is not waiting\"))?;\n    if !fits(p.want) {\n        let want = p.want.name();\n        return Err(format!(\n            \"it answered a {want} request (req {req}) with the wrong message\"\n        ));\n    }\n    match id {\n        Some(id) if id != p.id => Err(format!(\"it answered for tree {id} a request about tree {}\", p.id)),\n        _ => Ok(p.want),\n    }"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/client/hold.rs",
+    "git_blob_sha": "1a3ab7d7cef5ae6be67255328b429ce3e958e9d9",
+    "source_sha256": "775e5364c8a48b99d672a52a4105704327f993ca12cd2f6f59d296db2e1775e4",
+    "source_bytes": 2427,
+    "line_count": 80,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Serializes the Unix PTY Go handshake across competing callers.",
+    "behavior": [
+      "Held transitions to Sending for one sender; concurrent callers wait on a condvar and then share Done.",
+      "A send error means no request was admitted and returns state to Held, allowing retry; an accepted result, including failure, is memoized."
+    ],
+    "contracts": [
+      "The waiting caller has a bounded wait and receives a supervisor-refused error if another Go remains in flight."
+    ],
+    "dependencies": [
+      "client/mod.rs maps GoEnd into public errors and confirms exec."
+    ],
+    "failures_or_limits": [
+      "This helper is synchronous and relies on the supplied send operation being bounded."
+    ],
+    "evidence": [
+      {
+        "start_line": 48,
+        "end_line": 78,
+        "quote": "    /// The outcome of the one `Go`: the first caller of a held root runs `send`; callers meanwhile wait (at\n    /// most `wait`) for its outcome. `send` returning `Err` means nothing was sent: the root stays held and\n    /// that caller gets the error.\n    pub(super) fn go(&self, wait: Duration, send: impl FnOnce() -> Result<GoEnd, Error>) -> Result<GoEnd, Error> {\n        let mut go = lock(&self.go);\n        if matches!(*go, Go::Sending) {\n            go = self\n                .changed\n                .wait_timeout_while(go, wait, |g| matches!(g, Go::Sending))\n                .unwrap_or_else(PoisonError::into_inner)\n                .0;\n        }\n        match &*go {\n            Go::Done(end) => return Ok(end.clone()),\n            Go::Sending => {\n                return Err(Error::supervisor_refused(\n                    \"Go\",\n                    \"a terminal\",\n                    \"another Go did not finish\",\n                ));\n            }\n            Go::Held => *go = Go::Sending,\n        }\n        drop(go);\n        let sent = send();\n        *lock(&self.go) = match &sent {\n            Ok(end) => Go::Done(end.clone()),\n            Err(_) => Go::Held,\n        };\n        self.changed.notify_all();\n        sent"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/client/keeper.rs",
+    "git_blob_sha": "96424d1b83dc75fdff07824c8979136a81ad31ee",
+    "source_sha256": "738da168685021d02ab413cc9b534c90cde2322728ff1d84a42ebd2e8372c757",
+    "source_bytes": 12132,
+    "line_count": 291,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Prepares reaping and identity-based termination of Unix supervisor processes.",
+    "behavior": [
+      "Creates a reaper thread before process creation, then adopts the Child and records an identity before handoff.",
+      "Linux opens a pidfd, verifies a live child in /proc and signal-0 liveness, and sends SIGKILL only through that descriptor.",
+      "macOS precreates a kqueue, tracks NOTE_EXIT and records start time; kill checks the watch and start time immediately before signaling."
+    ],
+    "contracts": [
+      "Unknown identity means Abandoned; no unverified numeric PID is intentionally signaled."
+    ],
+    "dependencies": [
+      "client/unix.rs owns supervisor startup and delayed close; libc provides pidfd/kqueue APIs."
+    ],
+    "failures_or_limits": [
+      "macOS retains a documented check-to-signal PID-reuse window. Missing Linux pidfd or macOS identity leaves a stuck process running."
+    ],
+    "evidence": [
+      {
+        "start_line": 119,
+        "end_line": 139,
+        "quote": "    pub(super) fn adopt(_: Prepared, pid: u32) -> Ident {\n        let pid = libc::pid_t::try_from(pid).unwrap_or(-1);\n        // SAFETY: pidfd_open(pid, 0) only creates a descriptor (CLOEXEC) for the process now numbered `pid`.\n        let fd = unsafe { libc::syscall(libc::SYS_pidfd_open, pid, 0) };\n        let pidfd = libc::c_int::try_from(fd).ok().filter(|fd| *fd >= 0).map(|fd| {\n            // SAFETY: the kernel just returned this descriptor for us; nothing else owns it.\n            unsafe { OwnedFd::from_raw_fd(fd) }\n        });\n        let pidfd = pidfd.filter(|fd| our_live_child(pid) && signal(fd, 0) == 0);\n        Ident { pid, pidfd }\n    }\n\n    pub(super) fn kill(&self) -> Kill {\n        let Some(pidfd) = &self.pidfd else {\n            return Kill::Abandoned;\n        };\n        match signal(pidfd, libc::SIGKILL) {\n            0 => Kill::Sent,\n            _ if io::Error::last_os_error().raw_os_error() == Some(libc::ESRCH) => Kill::Gone,\n            _ => Kill::Abandoned,\n        }"
+      },
+      {
+        "start_line": 229,
+        "end_line": 245,
+        "quote": "    pub(super) fn kill(&self) -> Kill {\n        use std::sync::atomic::Ordering;\n        if self.exited.load(Ordering::Acquire) || self.exit_fired() {\n            self.exited.store(true, Ordering::Release);\n            return Kill::Gone;\n        }\n        match (self.start, started(self.pid)) {\n            (None, _) => Kill::Abandoned,\n            (Some(then), Some(now)) if then == now => {\n                // The number still names the process we started (same start time). Residual window: it could\n                // exit, be reaped by someone else and its number be reused in the microseconds between this\n                // check and the signal; declared in GUARANTEES.md, row \"A stuck supervisor\".\n                // SAFETY: `kill` changes no memory; the target was just checked as our supervisor.\n                unsafe { libc::kill(self.pid, libc::SIGKILL) };\n                Kill::Sent\n            }\n            (Some(_), _) => Kill::Gone,"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/client/mod.rs",
+    "git_blob_sha": "3b0722feef193479d9f9c08bcdf6ad2ed27b71e5",
+    "source_sha256": "c6d0e33c4335ca67fc684bfddb4c192ce70347b2f5b929c58f8e6509b129588c",
+    "source_bytes": 11037,
+    "line_count": 294,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Exposes the private host-side supervisor runtime and generation-bound Tree operations.",
+    "behavior": [
+      "Lazily creates a dedicated multithread Tokio runtime with I/O and time, independent of the caller runtime and checked against creator PID.",
+      "spawn uses a shared registry with a 10 s request deadline and 20 s join bound; Unix PTY roots stay held until reader setup and Go.",
+      "Tree caches exit via watch state; stop uses cleanup admission and awaits Stopped, resize is fire-and-forget, and process inventory returns empty only once gone."
+    ],
+    "contracts": [
+      "Dropping Tree sends Release without waiting; forked copies neither lock nor command the inherited generation.",
+      "Generation loss is Io, distinct from a confirmed gone tree."
+    ],
+    "dependencies": [
+      "client/start.rs starts and encodes requests.",
+      "client/channel.rs handles routing, capacity and shared life state."
+    ],
+    "failures_or_limits": [
+      "Root exit and whole-tree disappearance are separate facts; Release alone preserves supervisor cleanup duty."
+    ],
+    "evidence": [
+      {
+        "start_line": 65,
+        "end_line": 92,
+        "quote": "/// The deadline of every request and of the supervisor's start (a `Stop` gets its grace on top); past it\n/// the supervisor counts as stuck, its generation dies, and a process that does not exit is killed.\nconst REPLY_WITHIN: Duration = Duration::from_secs(10);\n\n/// The current generation of this host process. A caller waits at most this for a start another\n/// caller is running (a start takes at most `REPLY_WITHIN` once the binary is executed).\nstatic CURRENT: Registry = Registry::new(Duration::from_secs(20));\n\n/// The library's own tokio runtime (ADR-0004), started lazily and never the caller's: every background task\n/// of the library (channel reader, output pumps, deadlines) runs here, so it works under Node, Python, a\n/// user's tokio runtime or none. Built without tokio's process and signal features (INV-16).\npub(crate) fn runtime() -> Result<&'static tokio::runtime::Runtime, Error> {\n    static RT: OnceLock<(u32, tokio::runtime::Runtime)> = OnceLock::new();\n    static INIT: Mutex<()> = Mutex::new(());\n    if let Some((home, rt)) = RT.get() {\n        return check_home(*home).map(|()| rt);\n    }\n    let _once = lock(&INIT);\n    if let Some((home, rt)) = RT.get() {\n        return check_home(*home).map(|()| rt);\n    }\n    let rt = tokio::runtime::Builder::new_multi_thread()\n        .thread_name(\"hugr-omni\")\n        .enable_io()\n        .enable_time()\n        .build()\n        .map_err(|e| Error::runtime_unavailable(&e))?;\n    Ok(&RT.get_or_init(|| (std::process::id(), rt)).1)"
+      },
+      {
+        "start_line": 148,
+        "end_line": 164,
+        "quote": "    /// One deadline for the whole tree: graceful now, forced at `grace`; resolves once the tree is gone\n    /// (at once if it already is). Overlapping calls share the earliest deadline (ADR-0005 R2).\n    pub(crate) async fn stop(&self, grace: Duration) -> Result<(), Error> {\n        self.sup.home()?;\n        let life = *self.life.borrow();\n        if life.gone {\n            return Ok(());\n        }\n        if life.lost {\n            return Err(self.lost());\n        }\n        let (id, grace_ms) = (self.id, millis(grace));\n        let stop = |req| Msg::Stop { req, id, grace_ms };\n        match self.sup.ask(Want::Stop, id, Class::Cleanup, stop).await? {\n            Answer::Stopped => Ok(()),\n            other => Err(self.refused(\"Stop\", &other)),\n        }"
+      },
+      {
+        "start_line": 264,
+        "end_line": 275,
+        "quote": "impl Drop for Tree {\n    fn drop(&mut self) {\n        // A forked copy never commands the supervisor, and touches no lock.\n        if !self.sup.at_home() {\n            return;\n        }\n        self.sup.forget(self.id);\n        let id = self.id;\n        let _ = self\n            .sup\n            .tell(Want::Release, id, Class::Cleanup, |req| Msg::Release { req, id });\n    }"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/client/start.rs",
+    "git_blob_sha": "e2183b63187db2578e60c44b24718d0771d1903b",
+    "source_sha256": "bb709e14c250e3557ffe2859d50b1759eebd517e37e71c4b170273e576776852",
+    "source_bytes": 11494,
+    "line_count": 297,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Serializes lazy supervisor startup, resolves the binary, and transfers launch stdio.",
+    "behavior": [
+      "Concurrent startup joiners share one attempt; later callers retry after failure with a new generation number.",
+      "spawn_on builds Spawn from validated Spec, hands pipes to the supervisor and reclaims transferred Windows handles on pre-admission failure; terminal-end adoption failure stops the created tree immediately.",
+      "Lookup prioritizes configured path, nonempty environment override, trusted native-module directory, then executable and canonical executable directories."
+    ],
+    "contracts": [
+      "Changing configured path after startup is refused, but setting the same path is idempotent.",
+      "Unix module candidate and binary must be owned by user/root and not group/other writable."
+    ],
+    "dependencies": [
+      "client platform modules implement pipe/handle transfer and module location.",
+      "spawn::Spec contains already resolved OS-string inputs."
+    ],
+    "failures_or_limits": [
+      "Windows trusted() returns true based on a documented per-user TEMP assumption; it performs no ACL check."
+    ],
+    "evidence": [
+      {
+        "start_line": 61,
+        "end_line": 88,
+        "quote": "    /// The live generation, or a new one from `open(number)`. `open` runs without the lock held.\n    pub(super) fn get(&self, open: impl FnOnce(u64) -> Result<Arc<Gen>, Error>) -> Result<Arc<Gen>, Error> {\n        let (num, attempt) = {\n            let mut reg = lock(&self.st);\n            if let Some(sup) = reg.live.as_ref().filter(|g| g.alive()) {\n                return Ok(sup.clone());\n            }\n            if let Some(running) = &reg.starting {\n                let running = running.clone();\n                drop(reg);\n                return running.join(self.wait);\n            }\n            reg.num += 1;\n            let attempt = Arc::new(Attempt::default());\n            reg.starting = Some(attempt.clone());\n            (reg.num, attempt)\n        };\n        let outcome = open(num);\n        {\n            let mut reg = lock(&self.st);\n            reg.starting = None;\n            if let Ok(sup) = &outcome {\n                reg.live = Some(sup.clone());\n            }\n        }\n        *lock(&attempt.done) = Some(outcome.as_ref().map(Arc::clone).map_err(ToString::to_string));\n        attempt.cv.notify_all();\n        outcome"
+      },
+      {
+        "start_line": 142,
+        "end_line": 176,
+        "quote": "    let answer = sup\n        .call(Want::Spawn { pty: pty.is_some() }, 0, frame, fds)\n        .inspect_err(|_| {\n            // An error with the generation alive means nothing was sent (too big, admission): take the ends back.\n            if sup.alive() {\n                sup.chan().reclaim(handles);\n            }\n        });\n    let program = spec.program.display().to_string();\n    let (id, pid, ends, life) = match answer? {\n        Answer::Spawned { id, pid, ends, life } => (id, pid, ends, life),\n        Answer::Failed { code, errno, msg } => return Err(failed(code, errno, &msg, &program)),\n        _ => {\n            return Err(Error::supervisor_refused(\n                \"Spawn\",\n                &program,\n                \"it sent an unexpected reply\",\n            ));\n        }\n    };\n    let tree = Tree::new(sup.clone(), id, life, cfg!(unix) && pty.is_some());\n    let stdio = match (ends, host) {\n        (Some(ends), _) => sup.chan().pty(ends),\n        (None, [stdin, Some(stdout), stderr]) => Ok(HostStdio::Pipes { stdin, stdout, stderr }),\n        (None, _) => Err(std::io::Error::other(\"the supervisor sent no terminal ends\")),\n    };\n    match stdio {\n        Ok(stdio) => Ok(Spawned { tree, pid, stdio }),\n        Err(e) => {\n            // The tree exists in the supervisor: end it (dropping it then sends Release).\n            tree.stop_detached(Duration::ZERO);\n            Err(Error::host_ends(\n                \"cannot take the terminal ends of the started program\",\n                &e,\n            ))"
+      },
+      {
+        "start_line": 238,
+        "end_line": 246,
+        "quote": "/// The configured path, then `HUGR_OMNI_SUPERVISOR`, then next to the native module (only when that directory is\n/// trusted, H2), then next to the current executable as started and as its real path (a symlinked install, H3).\npub(super) fn locate() -> Result<PathBuf, Error> {\n    if let Some(path) = lock(&CONFIGURED).clone() {\n        return Ok(path);\n    }\n    let module = sys::module_dir().filter(|dir| trusted(dir));\n    let [raw, real] = exe_dirs(std::env::current_exe().ok());\n    pick(std::env::var_os(\"HUGR_OMNI_SUPERVISOR\"), &[module, raw, real])"
+      },
+      {
+        "start_line": 279,
+        "end_line": 285,
+        "quote": "/// H2 on Windows: the module directory stays a candidate. The place a runtime extracts an embedded addon to is\n/// `%TEMP%`, which is per user (`C:\\Users\\<user>\\AppData\\Local\\Temp`, writable by that user, SYSTEM and the\n/// administrators only), unlike a shared Unix `/tmp`; an ACL check would need new `windows-sys` features\n/// (Security_Authorization), which INV-12 reserves to the lead.\n#[cfg(windows)]\npub(super) fn trusted(_dir: &Path) -> bool {\n    true"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  }
+]
