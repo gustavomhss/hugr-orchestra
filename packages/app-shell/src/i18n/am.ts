@@ -60,6 +60,8 @@ export const dict = {
   "desktop.recovery.action.keepWaiting": "መጠበቅዎን ይቀጥሉ",
   "desktop.recovery.action.quit": "አቁም",
   "desktop.recovery.loadFailed": "HuGR Orchestra መጫን አልቻለም",
+  "desktop.startup.failed": "HuGR Orchestra could not start",
+  "desktop.startup.failed.detail": "{{reason}}\n\nLogs: {{logs}}",
   "desktop.recovery.terminated": "የHuGR Orchestra መስኮት በድንገት ተቋርጧል",
   "desktop.recovery.unresponsive": "HuGR Orchestra ምላሽ እየሰጠ አይደለም",
   "desktop.recovery.unresponsive.detail": "መተግበሪያውን እንደገና ማስጀመር፣ መዝገቦችን መክፈት ወይም መጠበቅ ትችላለህ።",

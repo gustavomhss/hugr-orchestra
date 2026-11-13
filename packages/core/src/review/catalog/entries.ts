@@ -2,9 +2,24 @@ import gitleaks from "../../backend-toolkit/packs/gitleaks"
 import type { ReviewCatalog } from "./index"
 import { actionlint } from "./actionlint"
 import { oxlint } from "./oxlint"
+import { languagesRest } from "./languages-rest"
+import { releaseChecks } from "./release-checks"
+import { phase5Options, releaseProfile } from "./phase5"
 import { phase3 } from "./phase3"
 import { phase4 } from "./phase4"
+import { engagementProfiles } from "./phase6"
 import { ruff } from "./ruff"
+import { golangci } from "./golangci"
+import { osv } from "./osv"
+import { syft } from "./syft"
+import { jscpd } from "./jscpd"
+import { cargoAudit } from "./cargo-audit"
+import { hadolint, shellcheck } from "./invoke"
+import { gosec } from "./gosec"
+import { govet } from "./govet"
+import { staticcheck } from "./staticcheck"
+import { tsc } from "./tsc"
+import { typeAware } from "./type-aware"
 import { zizmor } from "./zizmor"
 
 // Phase 1 entries (plan WP 1.2). Budgets, rungs, caps and thresholds are design §8.3, §8.4 and §8.6's starting values
@@ -18,9 +33,23 @@ const test = { option: "probe:test", proves: "a reproduction test drives the tri
 const script = { option: "probe:script", proves: "a short script prints the observed value beside the expected one" }
 const typecheck = { option: "probe:typecheck", proves: "a type error at the cited line shows the caller or implementation no longer matches" }
 const regress = { option: "probe:regress", proves: "the test stays green with the hunk reverted, or base and head differ on the input" }
+const race = { option: "probe:race", proves: "a race-instrumented run of the test that drives the concurrent path" }
 
 const ran = (id: string, proves: string) => ({ id, node: "lucy-review-prove-regress", options: { "*": [quote(proves), test, script] } })
-const quoted = (id: string, proves: string) => ({ id, node: "lucy-review-prove-quote", options: { "*": [quote(proves), test, script] } })
+const raced = (id: string, proves: string): ReviewCatalog.Catalog["classes"][number] => ({
+  id,
+  node: id === "concurrency.atomicity" ? "lucy-review-prove-interleave" : "lucy-review-prove-race",
+  options: id === "concurrency.atomicity"
+    ? { "*": [quote(proves), test, script], go: [quote(proves), test, race], "js-ts": [quote(proves), test, { option: "probe:interleave", proves: "the same gated schedule fails on base and passes on head" }] }
+    : { "*": [quote(proves), test, script], go: [quote(proves), test, race] },
+})
+const quoted = (id: string, proves: string): ReviewCatalog.Catalog["classes"][number] => ({
+  id,
+  node: id === "logic.invariant" ? "lucy-review-prove-property" : "lucy-review-prove-quote",
+  options: id === "logic.invariant"
+    ? { "*": [quote(proves), test, script], "js-ts": [quote(proves), { option: "probe:property", proves: "the stated law fails on a retained shrunk input" }, test] }
+    : { "*": [quote(proves), test, script] },
+})
 const plain = (id: string, proves: string) => ({ id, node: "lucy-review-prove-quote", options: { "*": [quote(proves)] } })
 
 const DOCS = ["**/*.md", "**/*.mdx", "**/*.rst", "**/*.adoc", "docs/**", "**/docs/**"]
@@ -78,6 +107,18 @@ export const current = {
     actionlint.pack,
     oxlint.pack,
     zizmor.pack,
+    tsc.pack,
+    govet.pack,
+    staticcheck.pack,
+    gosec.pack,
+    golangci.pack,
+    shellcheck.pack,
+    hadolint.pack,
+    osv.pack,
+    syft.pack,
+    typeAware.pack,
+    jscpd.pack,
+    cargoAudit.pack,
   ],
   rules: [
     {
@@ -95,7 +136,10 @@ export const current = {
     ...ruff.rules,
     ...actionlint.rules,
     ...oxlint.rules,
+    ...typeAware.rules,
     ...zizmor.rules,
+    ...jscpd.rules,
+    ...cargoAudit.rules,
   ],
   overlays: [
     {
@@ -122,6 +166,7 @@ export const current = {
     actionlint.overlay,
   ],
   lenses: [
+    releaseChecks.lens,
     {
       id: "correctness-logic",
       node: "lucy-lens-correctness-logic",
@@ -153,14 +198,14 @@ export const current = {
     ...phase3.lenses,
   ],
   classes: [
-    ran("concurrency.atomicity", "the read, the scheduling point and the dependent write on one path"),
-    ran("concurrency.order", "the action and the missing happens-before between it and its prerequisite"),
-    ran("concurrency.toctou", "the check, the window and the use of the same resource"),
-    ran("concurrency.double-execution", "two paths that start the same work with nothing that deduplicates them"),
-    ran("concurrency.use-after-dispose", "the release and the work that continues on the released resource"),
-    ran("concurrency.reentrancy", "the callback that re-enters the unit while its update is half done"),
-    ran("concurrency.stale-read", "the captured value, the scheduling point and its later use as current"),
-    ran("concurrency.aba", "the comparison that passes while the state behind the value moved"),
+    raced("concurrency.atomicity", "the read, the scheduling point and the dependent write on one path"),
+    raced("concurrency.order", "the action and the missing happens-before between it and its prerequisite"),
+    raced("concurrency.toctou", "the check, the window and the use of the same resource"),
+    raced("concurrency.double-execution", "two paths that start the same work with nothing that deduplicates them"),
+    raced("concurrency.use-after-dispose", "the release and the work that continues on the released resource"),
+    raced("concurrency.reentrancy", "the callback that re-enters the unit while its update is half done"),
+    raced("concurrency.stale-read", "the captured value, the scheduling point and its later use as current"),
+    raced("concurrency.aba", "the comparison that passes while the state behind the value moved"),
     quoted("logic.invariant", "the exit or update that leaves the stated invariant broken"),
     {
       id: "logic.contract",
@@ -187,8 +232,11 @@ export const current = {
     },
     {
       id: "tests.weak-oracle",
-      node: "lucy-review-prove-regress",
-      options: { "*": [quote("the assertion that cannot fail for the hunk it claims to cover"), regress] },
+      node: "lucy-review-prove-mutants",
+      options: {
+        "*": [quote("the assertion that cannot fail for the hunk it claims to cover"), regress],
+        rust: [quote("the assertion that cannot fail for the hunk it claims to cover"), regress, { option: "probe:mutants", proves: "a viable changed-line mutant survives the tests" }],
+      },
     },
     {
       id: "security.boundary",
@@ -222,6 +270,9 @@ export const current = {
     { id: "probe:test", rung: "probe", cost: "medium" },
     { id: "probe:typecheck", rung: "probe", cost: "medium" },
     { id: "probe:script", rung: "probe", cost: "medium" },
+    { id: "probe:race", rung: "probe", cost: "high" },
+    ...phase5Options,
+    ...releaseChecks.options,
   ],
   languages: [
     {
@@ -250,6 +301,7 @@ export const current = {
     },
     { id: "php", detection: { manifests: ["composer.json", "composer.lock"], extensions: [".php"], absent: [] }, node: "team-stack-php" },
     phase4.language,
+    ...languagesRest,
   ],
   route: {
     version: "route-v1",
@@ -299,6 +351,8 @@ export const current = {
         lenses: { quick: ["correctness-logic", "tests"], standard: STANDARD_LENSES, deep: ALL_LENSES },
         variants: 1,
       },
+      releaseProfile,
+      ...engagementProfiles,
     ],
     tiers: [
       {
@@ -340,10 +394,10 @@ export const current = {
         probeAttempts: 2,
       },
       {
-        // Requestable; until phase 5 builds it, the route records the request and runs Standard (R3).
+        // Qualified Deep adapters, independent samples and release checks run under their own budget.
         id: "deep",
-        built: false,
-        runs: "standard",
+        built: true,
+        runs: "deep",
         report: ["P0", "P1", "P2", "P3"],
         budget: {
           lenses: { min: 3, max: 8 },

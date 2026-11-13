@@ -60,6 +60,8 @@ export const dict = {
   "desktop.recovery.action.keepWaiting": "Turpināt gaidīt",
   "desktop.recovery.action.quit": "Iziet",
   "desktop.recovery.loadFailed": "Neizdevās ielādēt HuGR Orchestra",
+  "desktop.startup.failed": "HuGR Orchestra could not start",
+  "desktop.startup.failed.detail": "{{reason}}\n\nLogs: {{logs}}",
   "desktop.recovery.terminated": "HuGR Orchestra logs negaidīti aizvērts",
   "desktop.recovery.unresponsive": "HuGR Orchestra neatbild",
   "desktop.recovery.unresponsive.detail": "Varat palaist lietotni no jauna, atvērt žurnālus vai turpināt gaidīt.",

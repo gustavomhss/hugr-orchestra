@@ -68,6 +68,18 @@ jobs:
         with:
           node-version: "24"
 
+      - name: Record qualification scope
+        env:
+          TEST_INPUTS: ${{ toJSON(inputs) }}
+        run: |
+          jq -n --arg sha "$GITHUB_SHA" --argjson inputs "$TEST_INPUTS" \
+            '{sourceSha: $sha, packages: ($inputs.packages // "")}' > test-scope.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: test-scope
+          path: test-scope.json
+          if-no-files-found: error
+
       - name: Plan the shards
         id: plan
         run: node packages/script/src/test-plan.ts plan
@@ -257,6 +269,19 @@ jobs:
       - name: Linux sandbox dependencies
         if: runner.os == 'Linux'
         run: |
+          # Hosted ubuntu-24.04 sometimes cannot resolve azure.archive.ubuntu.com. apt reads that
+          # name from apt-mirrors.txt. Fall back to archive.ubuntu.com only after the fetch fails.
+          install_sandbox() {
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq bubblewrap socat
+          }
+          if ! install_sandbox; then
+            for file in /etc/apt/apt-mirrors.txt /etc/apt/sources.list /etc/apt/sources.list.d/*.sources /etc/apt/sources.list.d/*.list; do
+              [ -f "$file" ] || continue
+              sudo sed -i 's|azure.archive.ubuntu.com|archive.ubuntu.com|g' "$file"
+            done
+            install_sandbox
+          fi
           # Ubuntu 24.04 blocks unprivileged user namespaces through AppArmor; bubblewrap needs them.
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
           if command -v bwrap >/dev/null && command -v socat >/dev/null; then
@@ -499,10 +524,15 @@ jobs:
 
       - name: Run HttpApi exerciser gates
         if: matrix.httpapi
-        # Effect mode runs every scenario against a fresh in-memory server; fail instead of holding the runner if one wedges.
+        # Coverage and auth stay full. Effect runs one partition; fail instead of holding the runner if one wedges.
         timeout-minutes: 8
         working-directory: packages/server
-        run: bun run test:httpapi
+        run: |
+          bun run script/httpapi-exercise.ts --mode coverage --fail-on-missing --fail-on-skip
+          bun run script/httpapi-exercise.ts --mode auth --fail-on-missing --fail-on-skip
+          bun run script/httpapi-exercise.ts --mode effect --fail-on-missing --fail-on-skip --shard "$HTTPAPI_SHARD"
+        env:
+          HTTPAPI_SHARD: ${{ matrix.httpapiShard }}
 
       # Hosted proofs are excluded from Bun's suffix discovery and run by exact path, so they run here and nowhere else.
       # Linux needs the AppArmor relaxation above for bubblewrap; the srt endpoint proof starts Cassandra, ScyllaDB and
@@ -623,6 +653,19 @@ jobs:
       - name: Linux sandbox dependencies
         if: runner.os == 'Linux'
         run: |
+          # Hosted ubuntu-24.04 sometimes cannot resolve azure.archive.ubuntu.com. apt reads that
+          # name from apt-mirrors.txt. Fall back to archive.ubuntu.com only after the fetch fails.
+          install_sandbox() {
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq bubblewrap socat
+          }
+          if ! install_sandbox; then
+            for file in /etc/apt/apt-mirrors.txt /etc/apt/sources.list /etc/apt/sources.list.d/*.sources /etc/apt/sources.list.d/*.list; do
+              [ -f "$file" ] || continue
+              sudo sed -i 's|azure.archive.ubuntu.com|archive.ubuntu.com|g' "$file"
+            done
+            install_sandbox
+          fi
           # Ubuntu 24.04 blocks unprivileged user namespaces through AppArmor; bubblewrap needs them.
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
           if command -v bwrap >/dev/null && command -v socat >/dev/null; then

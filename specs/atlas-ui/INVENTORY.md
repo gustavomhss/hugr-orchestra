@@ -1,5 +1,7 @@
 # Atlas UI — inventory of what the code exposes
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../docs/architecture/source-paths.md); old line numbers do not identify current code.
+
 2026-10-18. Every field below exists in code; the UI may show these and nothing else. Paths are relative to `modules/atlas/packages/` (Atlas) or `packages/orchestra/src/` (Orchestra). "Real store" = the standalone Atlas repository's `.atlas/` used by the mock.
 
 ## 1. Envelope and exit codes (every command)

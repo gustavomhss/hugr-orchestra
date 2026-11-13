@@ -62,11 +62,14 @@ const makeApiFromGroup = <
   const Group extends HttpApiGroup.Any,
   LocationId extends HttpApiMiddleware.AnyId,
   LocationService,
+  InboxLocationId extends HttpApiMiddleware.AnyId,
+  InboxLocationService,
   SessionLocationId extends HttpApiMiddleware.AnyId,
   SessionLocationService,
 >(
   eventGroup: Group,
   locationMiddleware: Context.Key<LocationId, LocationService>,
+  inboxLocationMiddleware: Context.Key<InboxLocationId, InboxLocationService>,
   sessionLocationMiddleware: Context.Key<SessionLocationId, SessionLocationService>,
 ) =>
   HttpApi.make("server")
@@ -125,7 +128,7 @@ const makeApiFromGroup = <
     .add(makeCapabilityArtifactsGroup(locationMiddleware))
     .add(makeCapabilitySchedulesGroup(locationMiddleware))
     .add(CapabilityContentGroup)
-    .add(InboxGroup.middleware(locationMiddleware))
+    .add(InboxGroup.middleware(inboxLocationMiddleware))
     .annotateMerge(
       OpenApi.annotations({
         title: "orchestra HttpApi",
@@ -139,21 +142,38 @@ const makeApiFromGroup = <
 export const makeApi = <
   LocationId extends HttpApiMiddleware.AnyId,
   LocationService,
+  InboxLocationId extends HttpApiMiddleware.AnyId,
+  InboxLocationService,
   SessionLocationId extends HttpApiMiddleware.AnyId,
   SessionLocationService,
 >(options: {
   readonly definitions: ReadonlyArray<Definition>
   readonly locationMiddleware: Context.Key<LocationId, LocationService>
+  readonly inboxLocationMiddleware: Context.Key<InboxLocationId, InboxLocationService>
   readonly sessionLocationMiddleware: Context.Key<SessionLocationId, SessionLocationService>
 }) =>
-  makeApiFromGroup(makeEventGroup(options.definitions), options.locationMiddleware, options.sessionLocationMiddleware)
+  makeApiFromGroup(
+    makeEventGroup(options.definitions),
+    options.locationMiddleware,
+    options.inboxLocationMiddleware,
+    options.sessionLocationMiddleware,
+  )
 
 export const makeDefaultApi = <
   LocationId extends HttpApiMiddleware.AnyId,
   LocationService,
+  InboxLocationId extends HttpApiMiddleware.AnyId,
+  InboxLocationService,
   SessionLocationId extends HttpApiMiddleware.AnyId,
   SessionLocationService,
 >(options: {
   readonly locationMiddleware: Context.Key<LocationId, LocationService>
+  readonly inboxLocationMiddleware: Context.Key<InboxLocationId, InboxLocationService>
   readonly sessionLocationMiddleware: Context.Key<SessionLocationId, SessionLocationService>
-}) => makeApiFromGroup(EventGroup, options.locationMiddleware, options.sessionLocationMiddleware)
+}) =>
+  makeApiFromGroup(
+    EventGroup,
+    options.locationMiddleware,
+    options.inboxLocationMiddleware,
+    options.sessionLocationMiddleware,
+  )

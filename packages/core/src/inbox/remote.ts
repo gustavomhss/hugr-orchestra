@@ -21,6 +21,13 @@ import type { Pulled, SourceKind } from "./types"
 type AccountSource = Inbox.AccountSource
 
 const transport = { timeoutMs: 10_000, maxResponseBytes: 256 * 1024 }
+
+export function httpsOrigin(input: string) {
+  if (!URL.canParse(input)) return
+  const url = new URL(input)
+  if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash || url.pathname !== "/") return
+  return url
+}
 const integrationOf = {
   calendar: "inbox.calendar",
   mail: "inbox.mail",
@@ -118,7 +125,11 @@ export function provenCi(raw: unknown, login: string, evidence: CiEvidence) {
 }
 
 
-export const pull = Effect.fn("InboxRemote.pull")(function* (credentials: Credential.Interface, owner: string) {
+export const pull = Effect.fn("InboxRemote.pull")(function* (
+  credentials: Credential.Interface,
+  owner: string,
+  options: Options = transport,
+) {
   // Work snapshots have their own explicit sync with a durable success/failure receipt.
   const saved = yield* Effect.forEach(
     accountSources.filter((source) => source === "jira"),
@@ -126,7 +137,7 @@ export const pull = Effect.fn("InboxRemote.pull")(function* (credentials: Creden
   )
   const pages = yield* Effect.forEach(
     saved.flatMap((item) => (item ? [item] : [])),
-    (item) => read(item),
+    (item) => read(item, options),
   )
   return pages.flat()
 })
@@ -179,10 +190,8 @@ export const collectWork = Effect.fn("InboxRemote.collectWork")(function* (
   if (source === "gitlab") {
     const configuration = yield* gitlabConfiguration(credentials, owner)
     const origin = saved.site || "https://gitlab.com"
-    if (!URL.canParse(origin)) return yield* new Failure({ reason: "invalid_response" })
-    const url = new URL(origin)
-    if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash || url.pathname !== "/")
-      return yield* new Failure({ reason: "invalid_response" })
+    const url = httpsOrigin(origin)
+    if (!url) return yield* new Failure({ reason: "invalid_response" })
     const items = yield* gitlabTodos(
       (input) => requestWithMetadata(url.origin, `Bearer ${saved.token}`, input, options),
       url.origin,
@@ -493,11 +502,12 @@ export const release = Effect.fn("InboxRemote.release")(function* (
   threadId: string,
   actor: string,
   text: string,
+  options: Options = transport,
 ) {
   if (!accountSources.includes(source as AccountSource)) return yield* Effect.fail("unavailable" as const)
   const saved = yield* credential(credentials, source as AccountSource, owner)
   if (!saved) return yield* Effect.fail("unavailable" as const)
-  yield* send(saved, threadId, actor, text)
+  yield* send(saved, threadId, actor, text, options)
 })
 
 export const originDraft = Effect.fn("InboxRemote.originDraft")(function* (
@@ -507,21 +517,35 @@ export const originDraft = Effect.fn("InboxRemote.originDraft")(function* (
   threadId: string,
   actor: string,
   text: string,
+  options?: Options,
 ) {
   if (source !== "mail") return
   const saved = yield* credential(credentials, "mail", owner)
-  if (!saved) return
+  if (!saved) return yield* Effect.fail("unavailable" as const)
+  const http = options ?? transport
   if (saved.account === "outlook") {
-    yield* post("https://graph.microsoft.com", "/v1.0/me/messages", saved.token, {
-      subject: "",
-      body: { content: text },
-      toRecipients: [{ emailAddress: { address: address(actor) } }],
-    }).pipe(Effect.catch(() => Effect.succeed(undefined)))
+    yield* post(
+      "https://graph.microsoft.com",
+      "/v1.0/me/messages",
+      saved.token,
+      {
+        subject: "",
+        body: { content: text },
+        toRecipients: [{ emailAddress: { address: address(actor) } }],
+      },
+      http,
+    )
     return
   }
-  yield* post("https://gmail.googleapis.com", "/gmail/v1/users/me/drafts", saved.token, {
-    message: { threadId, raw: rawMessage(actor, text) },
-  }).pipe(Effect.catch(() => Effect.succeed(undefined)))
+  yield* post(
+    "https://gmail.googleapis.com",
+    "/gmail/v1/users/me/drafts",
+    saved.token,
+    {
+      message: { threadId, raw: rawMessage(actor, text) },
+    },
+    http,
+  )
 })
 
 export const connect = Effect.fn("InboxRemote.connect")(function* (
@@ -648,12 +672,12 @@ function read(
         yield* assignedIssues((input) => request("https://api.linear.app", saved.token, input, options)),
       )
     }
-    const site = saved.site
     // Missing site or email is a configuration failure, not an empty mailbox. Returning [] here is
     // indistinguishable from a genuine empty search and hides the acquisition from the account receipt.
+    const site = httpsOrigin(saved.site ?? "")
     if (!site || !saved.email) return yield* new Failure({ reason: "invalid_response" })
     const basic = Buffer.from(`${saved.email}:${saved.token}`).toString("base64")
-    return workItems("jira", yield* search((input) => request(site, `Basic ${basic}`, input, transport)))
+    return workItems("jira", yield* search((input) => request(site.origin, `Basic ${basic}`, input, options)))
   })
 }
 
@@ -662,8 +686,9 @@ function send(
   threadId: string,
   actor: string,
   text: string,
+  options: Options = transport,
 ) {
-  return postFor(saved, threadId, actor, text).pipe(
+  return postFor(saved, threadId, actor, text, options).pipe(
     Effect.asVoid,
     Effect.mapError(() => "unavailable" as const),
   )
@@ -684,6 +709,7 @@ function postFor(
   threadId: string,
   actor: string,
   text: string,
+  options: Options = transport,
 ) {
   if (saved.source === "github") {
     const match = threadId.match(/repos\/([^/]+)\/([^/]+)\/(?:issues|pulls)\/(\d+)/)
@@ -732,18 +758,18 @@ function postFor(
       ),
     )
   }
-  if (!saved.site) return Effect.fail(new Error("unavailable"))
-  if (!saved.email) return Effect.fail(new Error("unavailable"))
+  const site = httpsOrigin(saved.site ?? "")
+  if (!site || !saved.email) return Effect.fail(new Error("unavailable"))
   const basic = Buffer.from(`${saved.email}:${saved.token}`).toString("base64")
   return request(
-    saved.site,
+    site.origin,
     `Basic ${basic}`,
     {
       method: "POST",
       path: `/rest/api/3/issue/${threadId}/comment`,
       body: { body: jiraDocument(text) },
     },
-    transport,
+    options,
   )
 }
 
@@ -760,6 +786,6 @@ function get(endpoint: string, path: string, token: string) {
   return request(endpoint, `Bearer ${token}`, { method: "GET", path }, transport)
 }
 
-function post(endpoint: string, path: string, token: string, body: Schema.Json) {
-  return request(endpoint, `Bearer ${token}`, { method: "POST", path, body }, transport)
+function post(endpoint: string, path: string, token: string, body: Schema.Json, options: Options = transport) {
+  return request(endpoint, `Bearer ${token}`, { method: "POST", path, body }, options)
 }

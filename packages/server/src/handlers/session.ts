@@ -57,6 +57,7 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
 
     const admit = (input: Parameters<SessionV2.Interface["prompt"]>[0]) =>
       session.prompt(input).pipe(
+        Effect.catchTag("Session.BusyError", operationErrors["Session.BusyError"]),
         Effect.catchTag("Session.NotFoundError", (error) =>
           Effect.fail(
             new SessionNotFoundError({
@@ -495,6 +496,7 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
         Effect.fn(function* (ctx) {
           return {
             data: yield* session.revert.stage({ ...ctx.params, ...ctx.payload }).pipe(
+              Effect.catchTag("Session.BusyError", operationErrors["Session.BusyError"]),
               Effect.catchTag(
                 "Session.NotFoundError",
                 (error) =>
@@ -533,6 +535,7 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
         "session.revert.clear",
         Effect.fn(function* (ctx) {
           yield* session.revert.clear(ctx.params.sessionID).pipe(
+            Effect.catchTag("Session.BusyError", operationErrors["Session.BusyError"]),
             Effect.catchTag(
               "Session.NotFoundError",
               (error) =>
@@ -562,6 +565,7 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
         "session.revert.commit",
         Effect.fn(function* (ctx) {
           yield* session.revert.commit(ctx.params.sessionID).pipe(
+            Effect.catchTag("Session.BusyError", operationErrors["Session.BusyError"]),
             Effect.catchTag(
               "Session.NotFoundError",
               (error) =>
@@ -638,11 +642,12 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
       )
       .handle(
         "session.events",
-        Effect.fn((ctx) =>
-          Effect.succeed(
-            session.events({ sessionID: ctx.params.sessionID, after: ctx.query.after }).pipe(Stream.orDie),
-          ),
-        ),
+        Effect.fn(function* (ctx) {
+          // The stream's missing-session error is raised when the stream is pulled, after this handler has already
+          // succeeded. Check first so the declared 404 is the response, not a defect inside an open event stream.
+          yield* session.get(ctx.params.sessionID).pipe(typedNotFound)
+          return session.events({ sessionID: ctx.params.sessionID, after: ctx.query.after }).pipe(Stream.orDie)
+        }),
       )
       .handle(
         "session.interrupt",

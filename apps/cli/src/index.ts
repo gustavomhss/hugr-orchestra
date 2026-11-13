@@ -45,6 +45,8 @@ const Handlers = Runtime.handlers(Commands, {
   plugin: () => import("./commands/handlers/plugin"),
   toolkit: {
     status: () => import("./commands/handlers/toolkit/status"),
+    osv: () => import("./commands/handlers/toolkit/osv"),
+    rustsec: () => import("./commands/handlers/toolkit/rustsec"),
     prefetch: () => import("./commands/handlers/toolkit/prefetch"),
   },
   stats: () => import("./commands/handlers/stats"),

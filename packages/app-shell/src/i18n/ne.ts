@@ -60,6 +60,8 @@ export const dict: Record<string, string> = {
   "desktop.recovery.action.keepWaiting": "प्रतीक्षा गरिरहनुहोस्",
   "desktop.recovery.action.quit": "छोड्नुहोस्",
   "desktop.recovery.loadFailed": "HuGR Orchestra लोड हुन सकेन",
+  "desktop.startup.failed": "HuGR Orchestra could not start",
+  "desktop.startup.failed.detail": "{{reason}}\n\nLogs: {{logs}}",
   "desktop.recovery.terminated": "HuGR Orchestra विन्डो अप्रत्याशित रूपमा बन्द भयो",
   "desktop.recovery.unresponsive": "HuGR Orchestra ले प्रतिक्रिया दिइरहेको छैन",
   "desktop.recovery.unresponsive.detail":

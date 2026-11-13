@@ -48,7 +48,7 @@ describe("squawk catalog", () => {
       status: "probation",
     })
     expect(pack?.version).toBe(squawk.version)
-    expect(pack?.pin).toEqual({
+    expect(pack && "pin" in pack ? pack.pin : undefined).toEqual({
       source: "backend-toolkit/packs/squawk",
       integrity: Object.fromEntries(Object.entries(squawk.targets).map(([target, entry]) => [target, entry.artifact.integrity])),
     })

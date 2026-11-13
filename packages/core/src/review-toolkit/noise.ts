@@ -24,6 +24,8 @@ export type Input = {
   head: readonly ReviewSarif.Entry[]
   base?: readonly ReviewSarif.Entry[]
   changed: Readonly<Record<string, ReadonlyArray<Range>>>
+  /** Host-only caller ranges. Location honours a valid overlap only when the requested tier is built Deep that runs deep. */
+  blastRadius?: Readonly<Record<string, ReadonlyArray<Range>>>
   addedSuppressions?: readonly AddedSuppression[]
   tier: string
   catalog: ReviewCatalog.Catalog
@@ -42,9 +44,24 @@ export function pipeline(input: Input): Result {
   // Dropped rules do not run; an entry that still carries one is kept out before any step sees it.
   const head = normalize(input.head, input.changed)
   const split = newOnly(head, input.base && normalize(input.base, input.changed))
-  // Phase 1 runs every tier as Quick or Standard (Deep is unbuilt, R3), so only changed lines are kept; Deep's blast
-  // radius needs code intelligence input the analyze slice does not supply yet.
-  const located = split.fresh.filter((flow) => flow.item.onChangedLine)
+  // Changed lines always stay. A host blast radius also keeps an inclusive overlap on that exact path, and only when
+  // the requested tier is built Deep that runs deep. Caller matches do not become changed lines. A missing map stays narrow.
+  const requested = input.catalog.route.tiers.find((entry) => entry.id === input.tier)
+  const admitCallers = requested !== undefined && requested.id === "deep" && requested.built && requested.runs === "deep"
+  const located = split.fresh.filter(
+    (flow) =>
+      flow.item.onChangedLine ||
+      (admitCallers &&
+        (input.blastRadius?.[flow.item.path] ?? []).some(
+          (range) =>
+            Number.isSafeInteger(range.start) &&
+            Number.isSafeInteger(range.end) &&
+            range.start >= 1 &&
+            range.end >= range.start &&
+            range.start <= (flow.item.endLine ?? flow.item.line) &&
+            range.end >= flow.item.line,
+        )),
+  )
   const kept = suppress(dedup(located), input.addedSuppressions ?? [])
   return { ...capPerLens(kept.toSorted(compare), cap), debt: split.debt }
 }

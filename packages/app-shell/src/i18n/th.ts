@@ -62,6 +62,8 @@ export const dict = {
   "desktop.recovery.action.keepWaiting": "รอต่อไป",
   "desktop.recovery.action.quit": "ออก",
   "desktop.recovery.loadFailed": "โหลด HuGR Orchestra ไม่สำเร็จ",
+  "desktop.startup.failed": "HuGR Orchestra could not start",
+  "desktop.startup.failed.detail": "{{reason}}\n\nLogs: {{logs}}",
   "desktop.recovery.terminated": "หน้าต่าง HuGR Orchestra หยุดทำงานโดยไม่คาดคิด",
   "desktop.recovery.unresponsive": "HuGR Orchestra ไม่ตอบสนอง",
   "desktop.recovery.unresponsive.detail": "คุณสามารถเปิดแอปอีกครั้ง เปิดบันทึก หรือรอต่อไป",

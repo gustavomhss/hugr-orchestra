@@ -25,6 +25,8 @@ const BACKOFF = [1_000, 2_000, 4_000, 8_000, 16_000, 30_000]
 const STABLE_AFTER = 60_000
 // How many of the server's last output lines a startup failure quotes.
 const FAILURE_TAIL = 15
+// UTF-16 units: even four-byte code points fit within a 16 KiB emitted segment.
+const OUTPUT_SEGMENT = 4096
 
 export async function startOwnedServe(options: {
   logger: Logger
@@ -64,9 +66,27 @@ export async function startOwnedServe(options: {
     state.closed = new Promise<void>((resolve) => child.once("close", () => resolve()))
     // An omni child learns its pid asynchronously, so the witness waits for the spawn event.
     child.once("spawn", () => options.onSpawn?.(child.pid))
-    forward(child.stdout, (line) => write("stdout", line.replaceAll(password, "[redacted]")))
-    forward(child.stderr, (line) => write("stderr", line.replaceAll(password, "[redacted]")))
-    child.once("error", (error) => options.logger.error("owned serve error", { message: error.message }))
+    // Keep a bounded witness, independent of the diagnostic tail, even across output segments.
+    const refusal = { seen: false, stdout: "", stderr: "" }
+    const phrase = "newer Orchestra version"
+    const record = (stream: "stdout" | "stderr", line: string) => {
+      const text = line.replaceAll(password, "[redacted]")
+      const witness = refusal[stream] + line
+      refusal.seen ||= witness.includes(phrase)
+      refusal[stream] = witness.slice(-(phrase.length - 1))
+      write(stream, text)
+    }
+    forward(child.stdout, (line) => record("stdout", line), password)
+    forward(child.stderr, (line) => record("stderr", line), password)
+    // A failed spawn emits error and never exit. Without this, health waits out the two-minute timeout
+    // and the renderer never sees why the process did not start.
+    const failed = new Promise<never>((_, reject) => {
+      child.once("error", (error) => {
+        options.logger.error("owned serve error", { message: error.message })
+        reject(error instanceof Error ? error : new Error(String(error)))
+      })
+    })
+    void failed.catch(() => undefined)
     const exited = new Promise<void>((resolve) =>
       child.once("exit", (code, signal) => {
         resolve()
@@ -76,17 +96,42 @@ export async function startOwnedServe(options: {
         const requested = state.stopping && !state.killed && (code === 143 || signal === "SIGTERM" || process.platform === "win32")
         options.onEvent?.("utility-exit", { utilityPID: child.pid, code: requested ? 0 : code })
         options.logger.log("owned serve exited", { code, signal, stopping: state.stopping })
-        if (state.stopping) return
-        state.failures = Date.now() - startedAt > STABLE_AFTER ? 0 : state.failures + 1
-        const wait = BACKOFF[state.failures - 1]
-        if (wait === undefined) return options.logger.error("owned serve crash loop; not restarting", { url })
-        options.logger.log("owned serve restarting", { attempt: state.failures, wait })
-        setTimeout(() => {
-          if (!state.stopping) launch()
-        }, wait).unref()
       }),
     )
-    return { child, exited }
+    // `close` is emitted before stdout/stderr emit "end", and forward flushes a partial line only on end.
+    // Decide once both have ended, against this child's bounded refusal witness.
+    const drained = { stdout: false, stderr: false, closed: false, decided: false }
+    const decide = () => {
+      if (drained.decided || !drained.closed || !drained.stdout || !drained.stderr) return
+      drained.decided = true
+      if (state.stopping) return
+      // A database this build does not know will fail the same way on every start. Restarting only
+      // hides that behind a health timeout.
+      if (refusal.seen) {
+        options.logger.error("owned serve will not restart: the database is newer than this build", { url })
+        return
+      }
+      state.failures = Date.now() - startedAt > STABLE_AFTER ? 1 : state.failures + 1
+      const wait = BACKOFF[state.failures - 1]
+      if (wait === undefined) return options.logger.error("owned serve crash loop; not restarting", { url })
+      options.logger.log("owned serve restarting", { attempt: state.failures, wait })
+      setTimeout(() => {
+        if (!state.stopping) launch()
+      }, wait).unref()
+    }
+    child.stdout.once("end", () => {
+      drained.stdout = true
+      decide()
+    })
+    child.stderr.once("end", () => {
+      drained.stderr = true
+      decide()
+    })
+    child.once("close", () => {
+      drained.closed = true
+      decide()
+    })
+    return { child, exited, failed }
   }
 
   options.logger.log("owned serve starting", { command: options.command, url })
@@ -94,6 +139,7 @@ export async function startOwnedServe(options: {
   const health = Promise.race([
     poll(() => healthy(url, password)),
     first.exited.then(() => Promise.reject(new Error("Owned serve exited before its health check passed"))),
+    first.failed,
     delay(READY_TIMEOUT).then(() => Promise.reject(new Error(`Owned serve not healthy within ${READY_TIMEOUT}ms`))),
   ]).catch((error: unknown) => {
     // The renderer shows this message, so it carries what the server last said about why it did not come up.
@@ -146,16 +192,32 @@ async function poll(check: () => Promise<boolean>) {
   while (!(await check())) await delay(100)
 }
 
-function forward(stream: Readable, write: (line: string) => void) {
+function forward(stream: Readable, write: (line: string) => void, password: string) {
   const buffer = { text: "" }
   stream.setEncoding("utf8")
   stream.on("data", (chunk: string) => {
-    const lines = (buffer.text + chunk).split(/\r?\n/)
-    buffer.text = lines.pop() ?? ""
-    lines.filter((line) => line.trim()).forEach(write)
+    buffer.text += chunk
+    for (;;) {
+      const newline = buffer.text.indexOf("\n")
+      // Hold a secret-length suffix until the next chunk, so redaction cannot straddle an emitted segment.
+      if (newline < 0 && buffer.text.length < OUTPUT_SEGMENT + password.length) return
+      let end = newline >= 0 && newline <= OUTPUT_SEGMENT ? newline : OUTPUT_SEGMENT
+      const secret = buffer.text.lastIndexOf(password, end)
+      if (secret >= 0 && secret < end && secret + password.length > end) end = secret
+      const line = buffer.text.slice(0, end).replace(/\r$/, "")
+      buffer.text = buffer.text.slice(end + (end === newline ? 1 : 0))
+      if (line.trim()) write(line)
+    }
   })
   stream.on("end", () => {
-    if (buffer.text.trim()) write(buffer.text)
+    while (buffer.text.length) {
+      let end = Math.min(OUTPUT_SEGMENT, buffer.text.length)
+      const secret = buffer.text.lastIndexOf(password, end)
+      if (secret >= 0 && secret < end && secret + password.length > end) end = secret
+      const line = buffer.text.slice(0, end)
+      buffer.text = buffer.text.slice(end)
+      if (line.trim()) write(line)
+    }
   })
 }
 

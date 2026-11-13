@@ -67,7 +67,7 @@ O que a pessoa configura, porque mudar isso muda quem volta ou torna o índice i
 - a fronteira do corte, e com qual tokenizador se conta;
 - preâmbulo ligado ou não, separado do intervalo;
 - busca por palavra, sempre ligada na primeira versão;
-- busca por sentido, desligada até a decisão de embedding ser reaberta por escrito;
+- busca por sentido, desligada até um modelo ser nomeado;
 - se as duas existirem: fusão por posto, não soma de score cru. A escala do BM25 muda com a pergunta. Fundir só reordena o que as duas pernas já trouxeram. Não inventa documento que as duas perderam;
 - profundidade de candidatos, reranker, e quantos pedaços entram no prompt. O K da prova é o K que a tela mostra. Prova em 100 e tela em 5 faz o recall parecer bom;
 - métrica, e se o número é similaridade ou distância. Distância invertida parece ranking bom.
@@ -129,11 +129,11 @@ Se um assento for usar um trecho, o texto entra como Context Source, rotulado co
 
 ## Primeira versão e embedding
 
-A primeira versão não liga embedding. Liga o que o repositório já sabe fazer e o que a pesquisa mediu como amplificador que não pede um segundo modelo neural: identidade da fonte, parse honesto, intervalo, busca por palavra, traço em estágios, prova presa ao retrato, diagnóstico das quatro luzes.
+Sem modelo nomeado, embedding fica desligado. O que liga sem ele é o que o repositório já sabe fazer e o que a pesquisa mediu como amplificador que não pede um segundo modelo neural: identidade da fonte, parse honesto, intervalo, busca por palavra, traço em estágios, prova presa ao retrato, diagnóstico das quatro luzes. Nomear um modelo liga embedding e não escreve vetor por si.
 
 Busca por palavra é a que um desktop acrescenta sem GPU. O caso trabalhado da Anthropic é o identificador `TS-999`, que o embedding perde e a busca por palavra acha.
 
-Embedding entra só se o dono reabrir a decisão, por escrito, e só no acervo admitido. Nunca no código. O contrato fica ao lado do intervalo, em linha do SQLite que já existe ou em arquivo local ignorado pelo git. Nunca em `.atlas/`. O encoder passa pelo caminho de provedor que já devolve a string do modelo, ou por um arquivo de modelo que o índice nomeia. Não há processo de índice ao lado da sessão. Quantização e corte de dimensão são troca explícita, medida no conjunto da pessoa, não assumida.
+Embedding entra quando um modelo é nomeado, e só no acervo admitido. Nunca no código. O contrato fica ao lado do intervalo, em linha do SQLite que já existe ou em arquivo local ignorado pelo git. Nunca em `.atlas/`. O encoder passa pelo caminho de provedor que já devolve a string do modelo, ou por um arquivo de modelo que o índice nomeia. Não há processo de índice ao lado da sessão. Quantização e corte de dimensão são troca explícita, medida no conjunto da pessoa, não assumida.
 
 Não se confirmou, nesta pesquisa, se o SQLite do Orchestra tem FTS5 ou extensão vetorial. Recomendar um motor agora seria inventar.
 

@@ -4,6 +4,7 @@ import type { SessionProcess } from "@/v2-wire"
 import { IconButton } from "@orchestra/ui/icon-button"
 import { ButtonV2 } from "@orchestra/ui/v2/button-v2"
 import { useLanguage } from "@/context/language"
+import { showToast } from "@/utils/toast"
 import { useSDK } from "@/context/sdk"
 import { useServerSDK } from "@/context/server-sdk"
 import { useSessionLayout } from "./session-layout"
@@ -11,6 +12,7 @@ import {
   PROCESS_POLL_MS,
   createProcessStops,
   descendants,
+  refreshAfterStop,
   sortProcesses,
   tailLines,
   type ProcessStop,
@@ -138,6 +140,7 @@ export function ProcessesList(props: {
  * visible, with a stop button per tree. Renders nothing while the session has none.
  */
 export function BackgroundProcessesPanel() {
+  const language = useLanguage()
   const sdk = useSDK()
   const serverSDK = useServerSDK()
   const { params } = useSessionLayout()
@@ -163,7 +166,6 @@ export function BackgroundProcessesPanel() {
         if (params.id !== sessionID) return
         setState("items", reconcile(sortProcesses([...items]), { key: "id" }))
       })
-      .catch(() => undefined)
 
   const stops = createProcessStops((processID) => {
     const sessionID = params.id
@@ -172,7 +174,16 @@ export function BackgroundProcessesPanel() {
       .ready.then(async () => {
         await serverSDK().orchestra.sessions.processStop({ sessionID: sessionID!, processID })
       })
-      .then(() => refresh(sessionID))
+      .then(() =>
+        refreshAfterStop(refresh(sessionID), (error) => {
+          console.error(error)
+          showToast({
+            variant: "error",
+            title: language.t("common.requestFailed"),
+            description: error instanceof Error ? error.message : undefined,
+          })
+        }),
+      )
   })
 
   onMount(() => {
@@ -191,8 +202,10 @@ export function BackgroundProcessesPanel() {
   createEffect(() => {
     const sessionID = params.id
     if (!sessionID || !state.foreground) return
-    void refresh(sessionID)
-    const timer = setInterval(() => void refresh(sessionID), PROCESS_POLL_MS)
+    // A poll is a background read. The next tick retries. A stop's own refresh reports above.
+    const quiet = (sessionID: string) => void refresh(sessionID).catch(() => undefined)
+    quiet(sessionID)
+    const timer = setInterval(() => quiet(sessionID), PROCESS_POLL_MS)
     onCleanup(() => clearInterval(timer))
   })
 

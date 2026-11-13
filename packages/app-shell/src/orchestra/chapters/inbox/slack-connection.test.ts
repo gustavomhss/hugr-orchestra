@@ -4,14 +4,14 @@ import { createSlackConnection, type SlackConnectionState } from "./slack-connec
 
 async function fixture(run: (input: {
   model: ReturnType<typeof createSlackConnection>
-  state: { value?: SlackConnectionState; opened: string[]; changes: number; connected: number; malicious: boolean; failDisconnect: boolean; autoComplete: boolean; delayStart: boolean }
+  state: { value?: SlackConnectionState; opened: string[]; changes: number; connected: number; malicious: boolean; failDisconnect: boolean; failCancel: boolean; autoComplete: boolean; delayStart: boolean }
   calls: { path: string; method: string; directory: string | null }[]
   started: PromiseWithResolvers<void>
   release: PromiseWithResolvers<void>
   completed: PromiseWithResolvers<void>
 }) => Promise<void>, enabled = true) {
   const state = { value: undefined as SlackConnectionState | undefined, opened: [] as string[], changes: 0,
-    connected: 0, malicious: false, failDisconnect: false, autoComplete: false, delayStart: false }
+    connected: 0, malicious: false, failDisconnect: false, failCancel: false, autoComplete: false, delayStart: false }
   const calls: { path: string; method: string; directory: string | null }[] = []
   const started = Promise.withResolvers<void>()
   const release = Promise.withResolvers<void>()
@@ -24,7 +24,7 @@ async function fixture(run: (input: {
       if (state.delayStart) await release.promise
       return Response.json({ data: { id: "attempt-1", url: state.malicious ? "https://evil.example/steal" : "https://slack.com/oauth/v2/authorize?client_id=test", expiresAt: Date.now() + 300_000 } })
     }
-    if (url.pathname.endsWith("/cancel")) return new Response(null, { status: 204 })
+    if (url.pathname.endsWith("/cancel")) return new Response(null, { status: state.failCancel ? 500 : 204 })
     if (url.pathname.endsWith("/disconnect")) return new Response(null, { status: state.failDisconnect ? 500 : 204 })
     return Response.json({ data: state.autoComplete
       ? { connected: true, state: "connected", user: "ada", team: "Test workspace" }
@@ -78,6 +78,18 @@ describe("Slack connection flow", () => {
       await model.cancel()
       expect(state.value?.busy).toBe(false)
       expect(state.value?.authorization).toBeUndefined()
+      expect(calls.some((call) => call.path === "/api/inbox/slack/cancel")).toBe(true)
+    })
+  })
+
+  test("U3b a failed cancel keeps the attempt and does not claim it was cleared", async () => {
+    await fixture(async ({ model, state, calls }) => {
+      await model.start()
+      const authorization = state.value?.authorization
+      state.failCancel = true
+      await model.cancel()
+      expect(state.value?.failed).toBe(true)
+      expect(state.value?.authorization).toEqual(authorization)
       expect(calls.some((call) => call.path === "/api/inbox/slack/cancel")).toBe(true)
     })
   })

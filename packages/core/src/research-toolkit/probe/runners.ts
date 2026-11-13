@@ -32,6 +32,7 @@ export const plan = Effect.fn("ProbeRunners.plan")(function* (input: {
   readonly scratch: string
   readonly heapMiB: number
   readonly unused?: boolean
+  readonly race?: boolean
   readonly env: Record<string, string>
 }) {
   const runner = input.runner
@@ -52,13 +53,19 @@ export const plan = Effect.fn("ProbeRunners.plan")(function* (input: {
   const found = yield* Effect.promise(() => detect(file, root))
   if (!found) return yield* denied(`test-runner-unknown: no test runner config found for ${runner.file}`)
   if (found.runners.length > 1) return yield* denied(`test-runner-ambiguous: ${runner.file}`, found.runners)
+  if (input.race && found.runners[0] !== "go") return yield* denied("race-detector-absent")
   return yield* test(found.runners[0], { file: path.relative(found.dir, file), name: runner.name, cwd: found.dir, root }, input)
 })
+
+/** Closed `go test` arguments. `-race` is the only extra flag, and only for the race probe. */
+export function goTestArgs(pkg: string, name: string | undefined, race: boolean) {
+  return ["test", ...(race ? ["-race"] : []), pkg, ...(name === undefined ? [] : ["-run", name])]
+}
 
 const test = Effect.fnUntraced(function* (
   runner: TestRunner,
   target: { file: string; name?: string; cwd: string; root: string },
-  input: { heapMiB: number; env: Record<string, string>; scratch: string },
+  input: { heapMiB: number; env: Record<string, string>; scratch: string; race?: boolean },
 ) {
   const filter = (flag: string) => (target.name === undefined ? [] : [flag, target.name])
   if (runner === "bun")
@@ -80,8 +87,9 @@ const test = Effect.fnUntraced(function* (
   }
   const go = yield* program("go", input.env)
   const dir = path.dirname(target.file)
+  const pkg = dir === "." ? "." : `./${dir.split(path.sep).join("/")}`
   return { kind: "test", binary: go, version: yield* version(go, ["version"], input), cwd: target.cwd, env: GO,
-    argv: [go, "test", dir === "." ? "." : `./${dir.split(path.sep).join("/")}`, ...filter("-run")] } satisfies Plan
+    argv: [go, ...goTestArgs(pkg, target.name, input.race === true)] } satisfies Plan
 })
 
 const script = Effect.fnUntraced(function* (

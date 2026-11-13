@@ -204,10 +204,10 @@ test("argv checks the real file, not the .sql suffix, and leaves outside bytes u
     expect(await invoke([space], { root: repo, config: path.resolve(made.path, "via-repo", "inside.toml") })).toEqual({
       status: "not-run", reason: "config-inside",
     })
-    const sealed = path.join(repo, "sealed.sql")
-    await writeFile(sealed, "SELECT 1;\n")
-    // Windows chmod does not revoke read, so this refusal is not provable there.
+    // Windows keeps the owner able to read a mode-0 file, so this refusal is a POSIX proof.
     if (process.platform !== "win32") {
+      const sealed = path.join(repo, "sealed.sql")
+      await writeFile(sealed, "SELECT 1;\n")
       await chmod(sealed, 0o000)
       expect(await invoke([sealed], { root: repo, config })).toEqual({ status: "not-run", reason: "unreadable" })
       await chmod(sealed, 0o644)

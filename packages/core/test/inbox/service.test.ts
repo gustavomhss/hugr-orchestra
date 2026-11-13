@@ -1,6 +1,10 @@
 import { describe, expect } from "bun:test"
 import { eq } from "drizzle-orm"
 import { Context, DateTime, Effect, Layer } from "effect"
+import { IntegrationID } from "@orchestra/schema/integration-id"
+import { Capability } from "@orchestra/schema/capability"
+import { CapabilitySlack } from "../../src/capability/providers/slack"
+import { CapabilityConnectionTable, CapabilityTargetTable } from "../../src/capability/sql"
 import { SlackAuth } from "../../src/inbox/slack-auth"
 import { AgentV2 } from "@orchestra/core/agent"
 import { Database } from "@orchestra/core/database/database"
@@ -8,6 +12,7 @@ import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { Credential } from "@orchestra/core/credential"
 import { Inbox, InboxHandoff } from "@orchestra/core/inbox"
+import { adoptCredentials, hashOwner, installOwner } from "../../src/inbox/install"
 import { InboxDraftTable, InboxEgressTable, InboxRowTable } from "../../src/inbox/sql"
 import { Location } from "@orchestra/core/location"
 import { Project, ProjectV2 } from "@orchestra/core/project"
@@ -40,7 +45,7 @@ const pulled = {
 
 describe("inbox service", () => {
   it.effect(
-    "isolates identical provider ids, drafts and mutations across locations and preserves unassigned rows",
+    "shares one installation inbox across locations and adopts unassigned rows",
     () =>
       Effect.gen(function* () {
         const inbox = yield* Inbox.Service
@@ -63,7 +68,6 @@ describe("inbox service", () => {
             ]),
           ),
         ).pipe(Effect.map((context) => Context.get(context, Inbox.Service)))
-        // A pre-scoping row must remain stored without being silently adopted by either location.
         yield* database.db
           .insert(InboxRowTable)
           .values({
@@ -82,20 +86,101 @@ describe("inbox service", () => {
         yield* inbox.originDraft(first.id, "first draft")
         const second = yield* other.upsert({ ...pulled, snippet: "other location" })
         yield* other.saveDraft(second.id, "second draft")
-        expect(second.id).not.toBe(first.id)
-        expect((yield* inbox.list()).map((item) => item.snippet)).toEqual(["ignore bob"])
-        expect((yield* other.list()).map((item) => item.snippet)).toEqual(["other location"])
-        expect((yield* other.archive(first.id).pipe(Effect.flip)).reason).toBe("missing")
-        yield* other.archive(second.id)
-        expect((yield* inbox.list())[0]?.waiting).toBe(true)
-        expect((yield* other.list())[0]?.waiting).toBe(false)
+        expect(second.id).toBe(first.id)
+        expect((yield* inbox.list()).some((item) => item.snippet === "other location")).toBe(true)
+        expect((yield* other.list()).map((item) => item.id).sort()).toEqual(
+          (yield* inbox.list()).map((item) => item.id).sort(),
+        )
+        yield* other.archive(first.id)
+        expect((yield* inbox.list()).find((item) => item.id === first.id)?.waiting).toBe(false)
         const rows = yield* database.db.select().from(InboxRowTable).all().pipe(Effect.orDie)
-        expect(rows).toHaveLength(3)
+        expect(rows.every((row) => row.owner === "install")).toBe(true)
         expect(rows.find((row) => row.external_id === "legacy")?.snippet).toBe("unassigned")
-        const drafts = yield* database.db.select().from(InboxDraftTable).all().pipe(Effect.orDie)
-        expect(drafts.map((draft) => draft.text).sort()).toEqual(["first draft", "second draft"])
       }),
   )
+  it.effect("does not pull a location Slack binding into the installation inbox", () =>
+    Effect.gen(function* () {
+      const inbox = yield* Inbox.Service
+      const database = yield* Database.Service
+      const credentials = yield* Credential.Service
+      yield* database.db
+        .insert(ProjectTable)
+        .values({ id: ProjectV2.ID.global, worktree: directory, sandboxes: [] })
+        .run()
+        .pipe(Effect.orDie)
+      const saved = yield* credentials.create({
+        integrationID: IntegrationID.make("inbox.slack.probe"),
+        value: { type: "key", key: "not-a-token" },
+      })
+      const connection = Capability.ConnectionID.create()
+      const target = Capability.TargetID.create()
+      yield* database.db
+        .insert(CapabilityConnectionTable)
+        .values({
+          id: connection,
+          project_id: ProjectV2.ID.global,
+          directory,
+          provider: "slack",
+          integration_id: IntegrationID.make("inbox.slack.probe"),
+          credential_id: saved.id,
+          subject_id: "probe",
+          endpoint: CapabilitySlack.endpoint,
+          scope_hash: "probe",
+          state: "active",
+        })
+        .run()
+        .pipe(Effect.orDie)
+      yield* database.db
+        .insert(CapabilityTargetTable)
+        .values({
+          id: target,
+          connection_id: connection,
+          environment: "test",
+          resource: { channelID: "C123", teamID: "T123" },
+        })
+        .run()
+        .pipe(Effect.orDie)
+      expect(yield* inbox.list()).toEqual([])
+    }),
+  )
+  it.effect("adopts a hashed project credential and leaves every other suffix", () =>
+    Effect.gen(function* () {
+      const credentials = yield* Credential.Service
+      const project = hashOwner("project-a")
+      const slot = IntegrationID.make(`inbox.mail.${hashOwner(installOwner)}`)
+      const hashed = yield* credentials.create({
+        integrationID: IntegrationID.make(`inbox.mail.${project}`),
+        value: { type: "key", key: "project-mail", metadata: { owner: "project-a" } },
+      })
+      const bare = yield* credentials.create({
+        integrationID: IntegrationID.make("inbox.mail"),
+        value: { type: "key", key: "bare-mail" },
+      })
+      const probe = yield* credentials.create({
+        integrationID: IntegrationID.make("inbox.mail.probe"),
+        value: { type: "key", key: "probe-mail" },
+      })
+      yield* adoptCredentials(credentials)
+      const stored = yield* credentials.all()
+      expect(stored.find((row) => row.integrationID === slot)?.value).toMatchObject({
+        type: "key",
+        key: "project-mail",
+        metadata: { owner: "install" },
+      })
+      expect(stored.some((row) => row.id === hashed.id)).toBe(false)
+      expect(yield* credentials.get(bare.id)).toMatchObject({ value: { type: "key", key: "bare-mail" } })
+      expect(yield* credentials.get(probe.id)).toMatchObject({ value: { type: "key", key: "probe-mail" } })
+      const kept = yield* credentials.create({
+        integrationID: IntegrationID.make(`inbox.mail.${hashOwner("project-kept")}`),
+        value: { type: "key", key: "kept-mail" },
+      })
+      yield* adoptCredentials(credentials)
+      const after = yield* credentials.all()
+      expect(after.find((row) => row.integrationID === slot)?.value).toMatchObject({ type: "key", key: "project-mail" })
+      expect(after.some((row) => row.id === kept.id)).toBe(true)
+    }),
+  )
+
   it.effect("writes the item to the local database and does not duplicate it", () =>
     Effect.gen(function* () {
       const inbox = yield* Inbox.Service

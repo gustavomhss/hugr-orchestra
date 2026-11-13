@@ -9,6 +9,7 @@ import { ReviewRouting } from "../../src/review/routing"
 // de3254b1a1), hardcoded, not read back from the lists under test. The authored-tree
 // loader, runtime discovery and catalog check live in the maestro tree test. This file
 // does not close analyzer acquisition, the PR-slice route suite, or A9 source gaps.
+// Phase-3 membership remains required when later phases extend classes and languages.
 
 const catalog: ReviewCatalog.Catalog = ReviewCatalog.current
 const settings = { acceptedUnavailable: [] }
@@ -108,7 +109,7 @@ describe("phase 3 acceptance", () => {
     for (const [id, node, classes] of LENSES) {
       const entry = catalog.lenses.find((lens) => lens.id === id)
       expect(entry?.node).toBe(node)
-      expect(entry?.classes.toSorted()).toEqual([...classes].toSorted())
+      expect(entry?.classes).toEqual(expect.arrayContaining([...classes]))
     }
     expect(catalog.lenses.find((lens) => lens.id === "security")?.classes.toSorted()).toEqual([
       "security.boundary",
@@ -118,7 +119,7 @@ describe("phase 3 acceptance", () => {
       "security.supply-chain",
     ])
     expect(catalog.lenses.filter((lens) => lens.id === "security" || lens.id.startsWith("security-")).map((lens) => lens.id)).toEqual([
-      "security",
+      "security-release", "security",
     ])
     for (const [id, node] of CLASSES) {
       const entry = catalog.classes.find((item) => item.id === id)
@@ -147,13 +148,14 @@ describe("phase 3 acceptance", () => {
       ...catalog.overlays.flatMap((overlay) => overlay.lenses),
     ])
     for (const [id] of LENSES) expect(routed.has(id)).toBe(true)
-    expect(catalog.languages.map((language) => language.id)).toEqual(["js-ts", "python", "go", "ruby", "php", "sql"])
+    expect(catalog.languages.map((language) => language.id)).toEqual(expect.arrayContaining(["js-ts", "python", "go", "ruby", "php", "sql"]))
     expect(catalog.route.tiers.map((tier) => [tier.id, tier.built, tier.runs])).toEqual([
       ["quick", true, "quick"],
       ["standard", true, "standard"],
-      ["deep", false, "standard"],
+      ["deep", true, "deep"],
     ])
-    expect(catalog.options.map((option) => option.id)).not.toContain("probe:mutants")
+    expect(catalog.options.map((option) => option.id)).toEqual(expect.arrayContaining(["probe:mutants", "probe:interleave", "probe:property"]))
+    for (const id of ["probe:formal", "probe:fuzz"]) expect(catalog.options.map((option) => option.id)).not.toContain(id)
   })
 
   test("profile pr keeps risk code overlays and the quick standard deep budget contract", () => {
@@ -181,25 +183,17 @@ describe("phase 3 acceptance", () => {
       candidatesPerVerifier: 4,
       toolCallsPerSession: 30,
     })
-    expect(catalog.route.tiers.find((tier) => tier.id === "deep")).toMatchObject({ built: false, runs: "standard" })
+    expect(catalog.route.tiers.find((tier) => tier.id === "deep")).toMatchObject({ built: true, runs: "deep" })
     const quick = ReviewRoute.route(request("pr", "quick"), { files: [] }, head("src/plain.ts"), catalog)
     expect(quick.profile).toEqual({ id: "pr", source: "request" })
     expect(quick.tier).toEqual({ id: "quick", source: "request", signals: [] })
     expect(quick.budget).toEqual(QUICK)
     const deep = ReviewRoute.route(request("pr", "deep"), { files: [] }, head("src/plain.ts"), catalog)
-    expect(deep.tier).toEqual({ id: "standard", source: "request", requested: "deep", signals: [] })
+    expect(deep.tier).toEqual({ id: "deep", source: "request", signals: [] })
     expect(deep.budget).toMatchObject({
-      samples: 1,
-      verifiers: 4,
-      itemsPerLens: 15,
-      loadsPerSession: 3,
-      candidatesPerChild: 8,
-      candidatesPerVerifier: 4,
-      toolCallsPerSession: 30,
-      probeAttempts: 2,
+      samples: 2, verifiers: 10, itemsPerLens: 30, loadsPerSession: 4, candidatesPerChild: 12,
+      candidatesPerVerifier: 4, toolCallsPerSession: 50, probeAttempts: 3,
     })
-    expect(deep.budget.samples).not.toBe(2)
-    expect(deep.budget.verifiers).not.toBe(10)
     const bound = head("service.proto", 'syntax = "proto3";')
     const plain = ReviewRoute.route(request("pr", "standard"), { files: bound.files }, bound, catalog)
     const told = ReviewRoute.route(
@@ -349,8 +343,8 @@ describe("phase 3 acceptance", () => {
     const standard = ReviewRoute.route(request("code", "standard"), js, { ...change, files: js.files }, catalog)
     expect(standard.packs).toContainEqual({ id: "ast-grep", source: "catalog", lane: "no-build", status: "routed" })
     const deep = ReviewRoute.route(request("code", "deep"), js, { ...change, files: js.files }, catalog)
-    expect(deep.tier.id).toBe("standard")
-    expect(deep.tier.requested).toBe("deep")
+    expect(deep.tier.id).toBe("deep")
+    expect(deep.tier.requested).toBeUndefined()
     expect(deep.packs).toContainEqual({ id: "ast-grep", source: "catalog", lane: "no-build", status: "routed" })
     const quick = ReviewRoute.route(request("code", "quick"), js, { ...change, files: js.files }, catalog)
     expect(quick.packs.map((entry) => entry.id)).not.toContain("ast-grep")

@@ -60,6 +60,8 @@ export const dict = {
   "desktop.recovery.action.keepWaiting": "Fortsätt vänta",
   "desktop.recovery.action.quit": "Avsluta",
   "desktop.recovery.loadFailed": "HuGR Orchestra kunde inte läsas in",
+  "desktop.startup.failed": "HuGR Orchestra could not start",
+  "desktop.startup.failed.detail": "{{reason}}\n\nLogs: {{logs}}",
   "desktop.recovery.terminated": "HuGR Orchestra-fönstret avslutades oväntat",
   "desktop.recovery.unresponsive": "HuGR Orchestra svarar inte",
   "desktop.recovery.unresponsive.detail": "Du kan starta om appen, öppna loggarna eller fortsätta vänta.",

@@ -413,7 +413,6 @@ export function createServerSession(
   })
 
   const dropped = new Set<string>()
-
   const evict = (sessionIDs: string[]) => {
     if (sessionIDs.length === 0) return
     sessionIDs.forEach((sessionID) => {
@@ -873,9 +872,11 @@ export function createServerSession(
     !sameValue(data.part[part.messageID]?.find((item) => item.id === part.id), part)
 
   const hydrateV2Message = (sessionID: string, messageID: string) => {
+    const active = recovery.generation(sessionID)
     void sessionApi
       .message({ sessionID, messageID })
       .then((message) => {
+        if (generations.get(sessionID) !== active) return
         const current = data.session_message[sessionID] ?? []
         const messages = [...current.filter((item) => item.id !== message.id), message].sort(compareMessages)
         projectV2({ sessionID, messages, touched: [message.id], replace: true })

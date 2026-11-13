@@ -1,6 +1,6 @@
 # actionlint 1.7.12 static qualification
 
-Static-only ABI floor measurement of the approved release artifacts. The existing `packages/core/script/toolkit-floors.ts` `measure` and `reduce` exports verified archive integrity, extracted the named executable member, and inspected its header; no actionlint executable was run. Reproduce with the temporary driver procedure and cache documented in the work package.
+Static-only ABI floor measurement of the approved release artifacts. The existing `packages/core/script/toolkit-floors.ts` `measure` and `reduce` exports verified archive integrity, extracted the named executable member, and inspected its header; no actionlint executable was run. The measured rows are the table below. Reproduce with the temporary driver procedure and cache documented in the work package.
 
 | Target | Archive SHA-256 | Executable / recognized header | Measurement / recorded floor |
 | --- | --- | --- | --- |

@@ -65,6 +65,8 @@ const desktop = [
   "Langas: {{window}}\nURL: {{url}}\nKlaida: {{code}} {{description}}",
   "Langas: {{window}}\nPriežastis: {{reason}}\nKodas: {{code}}",
   "<nežinoma>",
+  "HuGR Orchestra could not start",
+  "{{reason}}\n\nLogs: {{logs}}",
   "Pasirinkite aplanką",
   "Pasirinkite failą",
   "Įrašyti failą",

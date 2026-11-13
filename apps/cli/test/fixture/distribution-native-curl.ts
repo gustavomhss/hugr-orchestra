@@ -1,10 +1,11 @@
 import { expect } from "bun:test"
 import { chmod, lstat, readFile, readlink, readdir, rm, writeFile } from "node:fs/promises"
-import { join } from "node:path"
+import { join, sep } from "node:path"
 import { verifyDistribution } from "../../script/distribution-payload"
 import { assertVersion, cli, command, sandbox, successful, snapshot, skillIdentity, target } from "./distribution-native"
 import type { Built } from "./distribution-native"
 import { qualify, stopServices } from "./distribution-native-proof"
+import { holdBackLastMigration, isolatedMigrationApplied, restoreIsolatedDatabase } from "./distribution-restore"
 
 export async function curlChannel(directory: string, built: Built) {
   const box = await sandbox(join(directory, "curl"))
@@ -48,7 +49,9 @@ export async function curlChannel(directory: string, built: Built) {
       expect(await verifyDistribution(installed, { version: payload.version, target })).toEqual(payload.manifest)
       expect(await snapshot(installed)).toEqual(payload.snapshot)
       retained.set(installed, await snapshot(installed))
-      const root = await qualify({ launcher, payload: installed, box, version: payload.version, oracle: built.oracle, negative: index === 1 })
+      const root = index === 0
+        ? await qualifyRestored({ launcher, payload: installed, box, version: payload.version, oracle: built.oracle })
+        : await qualify({ launcher, payload: installed, box, version: payload.version, oracle: built.oracle, negative: index === 1 })
       skills.set(root, await snapshot(root))
       for (const [old, expected] of retained) expect(await snapshot(old)).toEqual(expected)
       for (const [old, expected] of skills) expect(await snapshot(old)).toEqual(expected)
@@ -89,4 +92,23 @@ export async function curlChannel(directory: string, built: Built) {
   } finally {
     await stopServices().finally(() => server.stop(true))
   }
+}
+
+export async function qualifyRestored(input: Omit<Parameters<typeof qualify>[0], "negative" | "reopen">) {
+  const root = await qualify(input)
+  const file = input.box.env.ORCHESTRA_DB
+  const box = process.platform === "win32" ? input.box.directory.toLowerCase() : input.box.directory
+  const database = process.platform === "win32" ? file.toLowerCase() : file
+  if (!database.startsWith(box + sep)) throw new Error("ISOLATED_DB_OUTSIDE_SANDBOX")
+  // A fresh open writes no backup. Hold back the last table so the next open of
+  // this installed CLI takes one, then restore that file and open it again.
+  // Health is not the proof: the restored file must lack that table, and the
+  // second open of this same CLI must put the table and journal id back.
+  const held = await holdBackLastMigration(file)
+  await qualify({ ...input, reopen: true })
+  await restoreIsolatedDatabase(file)
+  if (isolatedMigrationApplied(file, held.id, held.table)) throw new Error("ISOLATED_DB_RESTORE_NOT_HELD")
+  await qualify({ ...input, reopen: true })
+  if (!isolatedMigrationApplied(file, held.id, held.table)) throw new Error("ISOLATED_DB_RESTORE_NOT_REAPPLIED")
+  return root
 }

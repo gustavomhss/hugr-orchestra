@@ -20,7 +20,7 @@ import { ReviewResultV2 } from "../governance/review-result"
 import type { ReviewCardV2 } from "./review-card"
 import { ReviewChecksV2 } from "./review-checks"
 import { ReviewVerdictV2 } from "./review-verdict"
-import { sliceDiff } from "./review-diff"
+import { reorderDiff, sliceDiff } from "./review-diff"
 import { ReviewCandidatesV2 } from "./review-candidates"
 import { ReviewFanoutSupportV2 } from "./review-fanout-support"
 
@@ -236,6 +236,10 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
     })
   const teamStack = ReviewFanoutSupportV2.stackNodes(routed.record, catalog)
   const auditNodes = new Set(["lucy-audit", ...ReviewFanoutSupportV2.below(input.skills, "lucy-audit")])
+  const releaseNodes = new Set([ReviewCatalog.releaseChecks.lens.node, ...ReviewFanoutSupportV2.below(input.skills, ReviewCatalog.releaseChecks.lens.node)])
+  // The generic security tree contains this specialized child; its ancestry does not grant the release route.
+  const allowedNodes = (nodes: readonly string[], record: ReviewRouting.Record) => nodes.filter((name) =>
+    !auditNodes.has(name) && (!releaseNodes.has(name) || (record.profile.id === "release" && record.tier.id === "deep")))
   const lead = yield* port.create({ key: "lead", role: "lead" })
   const delivered = new Map<string, ReviewItem.ToolItem[]>()
   let sealedReads: ReadonlyArray<ReviewLedger.Read> | undefined
@@ -254,7 +258,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
     skills: {
       entry: ENTRY_NODE,
       // At Quick the lead also hunts, so the leaves below its lens nodes are on its route from the start.
-      allow: quick ? unique([...routed.record.lenses.flatMap((lens) => lens.node === "lucy-audit-compliance-privacy" ? [lens.node] : ReviewFanoutSupportV2.below(input.skills, lens.node).filter((name) => !auditNodes.has(name))), ...teamStack]) : [],
+      allow: quick ? unique([...routed.record.lenses.flatMap((lens) => lens.node === "lucy-audit-compliance-privacy" ? [lens.node] : allowedNodes(ReviewFanoutSupportV2.below(input.skills, lens.node), routed.record)), ...teamStack]) : [],
     },
     // K4 writes a scope once, so the lead holds its final turn's set; the record tool refuses outside that turn.
     tools: stageTools(quick ? [...input.stages.lead, ...input.stages.lens, ...input.stages.final] : [...input.stages.lead, ...input.stages.final]),
@@ -400,13 +404,16 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
   const lensCap = Math.max(tier.budget.lenses.max, routed.record.lenses.length)
   const routedLenses = afterEntry.lenses.slice(0, lensCap)
   const running = routedLenses.filter((lens) => routed.runs(lens, open))
-  const notRun: ReadonlyArray<{ item: string; reason: string }> = [
+  const notRun: ReadonlyArray<{ item: string; reason: string }> = Array.from(new Map([
+    ...afterEntry.deviations
+      .filter((deviation) => deviation.kind === "lens-cap" && deviation.ref !== undefined)
+      .map((deviation) => ({ item: `lens:${deviation.ref}`, reason: "budget" })),
     ...afterEntry.lenses.slice(lensCap).map((lens) => ({ item: `lens:${lens.id}`, reason: "budget" })),
     ...routedLenses.filter((lens) => !running.includes(lens)).map((lens) => ({ item: `lens:${lens.id}`, reason: "rereview: no open finding and not routed by the delta" })),
     ...afterEntry.packs
       .filter((pack) => pack.status === "not-run" || pack.status === "skipped")
       .map((pack) => ({ item: `pack:${pack.id}`, reason: pack.reason ?? pack.status })),
-  ]
+  ].map((item) => [item.item, item] as const)).values())
   const capItems = (lens: string) => (items[lens] ?? []).slice(0, tier.budget.itemsPerLens)
   const unreadOf = (lens: string) => {
     const seen = new Set<string>()
@@ -440,18 +447,22 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
     )
   }
 
-  // 4. Hunt (lens children, in parallel under the host cap).
+  // 4. Hunt (one fresh child per lens, slice and sample, in parallel under the host cap).
   const slices = entry.slices.length ? entry.slices : [{ id: "all", paths: files }]
   const sheet = ReviewFanoutSupportV2.data("context sheet", JSON.stringify(entry.context))
+  const jobs = running.flatMap((lens) =>
+    slices.flatMap((slice) => Array.from({ length: tier.budget.samples }, (_, sample) => ({ lens, slice, sample }))),
+  )
   const hunts = yield* Effect.forEach(
-    running.flatMap((lens) => slices.map((slice) => ({ lens, slice }))),
+    jobs,
     (job) =>
       Effect.gen(function* () {
-        const key = `lens:${job.lens.id}:${job.slice.id}`
+        // Sample 0 keeps the historical key. Later samples append `:sample:<n>` (1-based).
+        const key = huntKey(job.lens.id, job.slice.id, job.sample, tier.budget.samples)
         const child = yield* port.create({ key, role: "lens" })
         yield* bind(child, "lens", { lens: job.lens.id, cap: tier.probeAttempts, observeItems: observeFor(child) })
         const scope: SessionScope.Scope = {
-          skills: { entry: job.lens.node, allow: unique([...ReviewFanoutSupportV2.below(input.skills, job.lens.node).filter((name) => !auditNodes.has(name)), ...teamStack]) },
+          skills: { entry: job.lens.node, allow: unique([...allowedNodes(ReviewFanoutSupportV2.below(input.skills, job.lens.node), afterEntry), ...teamStack]) },
           tools: stageTools(input.stages.lens),
           budgets: { loads: tier.budget.loadsPerSession, toolCalls: tier.budget.toolCallsPerSession },
         }
@@ -459,8 +470,12 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
         const shown = capItems(job.lens.id)
         observeFor(child)(shown)
         const reopened = open.filter((finding) => finding.lens === job.lens.id)
+        const sliced = sliceDiff(input.facts.diff, job.slice.paths)
         const brief = [
           `Stage: hunt, lens ${job.lens.id}, slice ${job.slice.id}. Return candidates only; every candidate names the node whose rule it applies. Return at most ${tier.budget.candidatesPerLens} candidates and ${ReviewResultV2.CAPS.observations} one-line observations outside your lens.`,
+          ...(tier.budget.samples > 1
+            ? [`Sample ${job.sample + 1} of ${tier.budget.samples}. Independent hunt; no other sample's transcript or reply is included.`]
+            : []),
           yield* ReviewFanoutSupportV2.deliver(input, scope, job.lens.node),
           ...(teamStack.length ? [`team-stack nodes you may load: ${teamStack.join(", ")}`] : []),
           ...ReviewFanoutSupportV2.rules(input),
@@ -471,7 +486,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
             JSON.stringify(shown),
           ),
           ...(reopened.length ? [ReviewFanoutSupportV2.data("open findings of the first round in your lens", JSON.stringify(reopened))] : []),
-          ReviewFanoutSupportV2.data("diff slice", sliceDiff(input.facts.diff, job.slice.paths)),
+          ReviewFanoutSupportV2.data("diff slice", job.sample === 0 ? sliced : reorderDiff(sliced)),
           `Reply with exactly one \`\`\`${TAGS.lens} block holding your lens return as JSON.`,
         ].join("\n\n")
         const reply = yield* RUNNING.withPermit(port.run(child, brief, { key: "hunt", finish: false }))
@@ -481,6 +496,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
         const scoped = yield* ReviewFanoutSupportV2.deviationsOf(input.store, child, "hunt", 0)
         return {
           lens: job.lens,
+          sample: job.sample,
           value: result?.value,
           sources: boundSources.sources,
           deviations: [
@@ -498,6 +514,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
   const tool = Object.values(items).flat()
   const merged = ReviewCandidatesV2.merge(hunts.flatMap((hunt) => hunt.value ? [{
     lens: hunt.lens.id,
+    sample: hunt.sample,
     candidates: hunt.value.candidates,
     observations: hunt.value.observations,
     sources: hunt.sources,
@@ -541,8 +558,10 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
         }
         const proof = catalog.classes.find((entry) => entry.id === batch.class)?.node ?? QUOTE_NODE
         if (auditNodes.has(proof)) return yield* new Tool.Failure({ message: "Review verifier cannot receive an audit node" })
+        if (!allowedNodes([proof], afterEntry).includes(proof))
+          return yield* new Tool.Failure({ message: "Review verifier cannot receive an unrouted release node" })
         const scope: SessionScope.Scope = {
-          skills: { entry: proof, allow: unique([...batch.candidates.map((candidate) => candidate.node), ...teamStack]).filter((name) => name !== proof && !auditNodes.has(name)) },
+          skills: { entry: proof, allow: allowedNodes(unique([...batch.candidates.map((candidate) => candidate.node), ...teamStack]), afterEntry).filter((name) => name !== proof) },
           tools: stageTools(input.stages.verifier),
           budgets: { loads: tier.budget.loadsPerSession, toolCalls: tier.budget.toolCallsPerSession },
         }
@@ -686,6 +705,14 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
       rungs: item.rungs, evidence: item.evidence })),
   )
 })
+
+/** Encode untrusted slice ids in sampled keys so a slice cannot impersonate another sample. */
+function huntKey(lens: string, slice: string, sample: number, samples: number) {
+  const address = [lens, slice].map((id) => samples === 1 || /^[a-z0-9._-]+$/i.test(id)
+    ? id
+    : `~${Buffer.from(JSON.stringify(id)).toString("base64url")}`).join(":")
+  return `lens:${address}${sample === 0 ? "" : `:sample:${sample + 1}`}`
+}
 
 function byProbeIdentity(left: ReviewProbe.Observed, right: ReviewProbe.Observed) {
   const order = probeIdentity(left)

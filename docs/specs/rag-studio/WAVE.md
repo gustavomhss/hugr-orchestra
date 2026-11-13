@@ -1,18 +1,18 @@
 # TechLead WAVE PLAN — rag-studio-v1
 
-Official cut: `work-packages.md`. `plan-check` ok. `conflict-map` conflict-free. Contract `7c2ae7a5`. Seam from `stub-gen`: `seam.ts`. Not dispatched.
+Official cut: `work-packages.md`. `plan-check` ok. `conflict-map` conflict-free. Contract `17a340bf`. Seam from `stub-gen`: `seam.ts`. Not dispatched.
 
 The four-package note in `TASKS.md` is withdrawn. It dropped the ownership the tool had already checked.
 
 Baseline: `f927028fe5` (branch `rag-studio`). Data: 4 de novembro de 2026.
-Contrato: `docs/specs/rag-studio/CONTRACT.md`, hash `7c2ae7a5`.
+Contrato: `docs/specs/rag-studio/CONTRACT.md`, hash `17a340bf`.
 Suíte: `docs/specs/rag-studio/ACCEPTANCE.md`. Crítico frio: duas passagens seguidas sem furo novo. Itens ausentes no runner, portanto vermelhos. Nenhum teste foi executado; a ausência é o vermelho.
 
 ```
 GO/NO-GO     : HYBRID, não disparado
 DISJOINTNESS : shared-file eliminated. api.ts, navigation.ts, chapter-route.tsx
                e module-architecture.json ficam com o lead. Cada WP escreve um arquivo.
-CONTRACT     : frozen, docs/specs/rag-studio/CONTRACT.md #7c2ae7a5
+CONTRACT     : frozen, docs/specs/rag-studio/CONTRACT.md #17a340bf
 CONFLICT-MAP : CONFLICT_FREE em todos os pares. parallelSafe true.
 CAP          : 6 por leva, quando o dono mandar implementar. Não nesta sessão.
 RETURN-SHAPE : não se aplica. Nada foi despachado.

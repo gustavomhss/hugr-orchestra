@@ -2,6 +2,7 @@ export * as InboxHandoff from "./handoff"
 
 import { Effect, Layer } from "effect"
 import { AgentV2 } from "../agent"
+import { ProjectV2 } from "../project"
 import { Database } from "../database/database"
 import { makeLocationNode } from "../effect/app-node"
 import { Location } from "../location"
@@ -35,7 +36,7 @@ const layer = Layer.effect(
       })
       yield* send.pipe(
         Effect.catchIf(
-          (reason) => reason === "no_conversation",
+          (reason) => reason === "no_conversation" && location.project.id !== ProjectV2.ID.global,
           () =>
             sessions
               .create({ agent: AgentV2.defaultID, location: { directory: location.directory } })

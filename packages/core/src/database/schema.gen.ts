@@ -765,7 +765,12 @@ export default {
           \`boundary\` text NOT NULL,
           \`tokenizer\` text NOT NULL,
           \`k\` integer NOT NULL,
-          \`blocked\` integer DEFAULT 0 NOT NULL
+          \`blocked\` integer DEFAULT 0 NOT NULL,
+          \`embedding_model\` text DEFAULT '' NOT NULL,
+          \`query_model\` text DEFAULT '' NOT NULL,
+          \`dimension\` integer DEFAULT 0 NOT NULL,
+          \`numeric_type\` text DEFAULT 'float32' NOT NULL,
+          \`metric\` text DEFAULT 'cosine' NOT NULL
         );
       `)
       yield* tx.run(`
@@ -796,7 +801,8 @@ export default {
           \`parser\` text NOT NULL,
           \`boundary\` text NOT NULL,
           \`tokenizer\` text NOT NULL,
-          \`k\` integer NOT NULL
+          \`k\` integer NOT NULL,
+          \`embedding_model\` text DEFAULT '' NOT NULL
         );
       `)
       yield* tx.run(`
@@ -815,6 +821,15 @@ export default {
           \`hits\` text NOT NULL,
           \`dropped\` text NOT NULL,
           \`k\` integer
+        );
+      `)
+      yield* tx.run(`
+        CREATE TABLE \`rag_vector\` (
+          \`chunk_id\` text NOT NULL,
+          \`model\` text NOT NULL,
+          \`location_id\` text NOT NULL,
+          \`values\` text NOT NULL,
+          CONSTRAINT \`rag_vector_pk\` PRIMARY KEY(\`chunk_id\`, \`model\`)
         );
       `)
       yield* tx.run(`
@@ -1021,6 +1036,7 @@ export default {
       yield* tx.run(`CREATE INDEX \`rag_chunk_source_idx\` ON \`rag_chunk\` (\`source_id\`);`)
       yield* tx.run(`CREATE INDEX \`rag_chunk_location_idx\` ON \`rag_chunk\` (\`location_id\`);`)
       yield* tx.run(`CREATE INDEX \`rag_source_location_path\` ON \`rag_source\` (\`location_id\`,\`path\`);`)
+      yield* tx.run(`CREATE INDEX \`rag_vector_location_idx\` ON \`rag_vector\` (\`location_id\`);`)
       yield* tx.run(
         `CREATE UNIQUE INDEX \`scheduled_task_run_slot_idx\` ON \`scheduled_task_run\` (\`task_id\`,\`revision\`,\`slot\`);`,
       )

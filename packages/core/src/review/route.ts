@@ -24,7 +24,7 @@ export type Request = {
   readonly text?: readonly string[]
 }
 
-/** A revision as routing sees it: its repository-relative file paths (manifests match by file name). */
+/** A revision as routing sees it: its repository-relative file paths (language manifests match by basename glob; literal names and absent stay exact). */
 export type Tree = { readonly files: readonly string[] }
 
 export type Change = {
@@ -60,7 +60,8 @@ export function route(request: Request, base: Tree, head: Head, catalog: Catalog
   const choice = chooseTier(request, profile, changes, overlays, catalog)
   const tier = requireTier(choice, catalog)
   const languages = routeLanguages([...base.files, ...head.files], changes, catalog)
-  const lenses = routeLenses(profile, tier.run.id, overlays, catalog)
+  const packs = routePacks(base.files, changes, languages, overlays, tier.requested.id, tier.run.id, catalog)
+  const lenses = routeLenses(profile, tier.run.id, overlays, packs, catalog)
   const max = tier.run.budget.lenses.max
   return {
     version: ReviewRouting.VERSION,
@@ -76,7 +77,7 @@ export function route(request: Request, base: Tree, head: Head, catalog: Catalog
     overlays,
     languages,
     lenses: lenses.slice(0, max),
-    packs: routePacks(base.files, changes, languages, overlays, tier.requested.id, tier.run.id, catalog),
+    packs,
     budget: {
       lensChildren: tier.run.budget.lensChildren ? Math.min(lenses.length, max) : 0,
       samples: tier.run.budget.samples,
@@ -106,7 +107,8 @@ function requireProfile(request: Request, catalog: Catalog) {
       "unsupported-profile",
       `Unsupported review profile "${id}"; this build supports ${catalog.route.profiles.map((entry) => entry.id).join(", ")}.`,
     )
-  if (profile.stage !== "first-round" && profile.stage !== request.stage)
+  // `outside-validation` is an explicit engagement profile. It does not record a receipt and does not have to match the request stage.
+  if (profile.stage !== "first-round" && profile.stage !== "outside-validation" && profile.stage !== request.stage)
     throw new RouteError("profile-stage", `Review profile "${id}" records under stage "${profile.stage}", not "${request.stage}".`)
   return profile
 }
@@ -193,18 +195,19 @@ function routeOverlays(changes: readonly Change[], catalog: Catalog): ReviewRout
 }
 
 function routeLanguages(files: readonly string[], changes: readonly Change[], catalog: Catalog): ReviewRouting.Language[] {
-  const names = new Set(files.map((file) => path.posix.basename(file)))
+  // route() does not sort files. Sort unique basenames so a glob signal is a stable project name, not input order or the pattern.
+  const names = [...new Set(files.map((file) => path.posix.basename(file)))].toSorted(compare)
   return catalog.languages.flatMap((language): ReviewRouting.Language[] => {
-    if (language.detection.absent.some((name) => names.has(name))) return []
+    if (language.detection.absent.some((name) => names.includes(name))) return []
     const signal =
-      language.detection.manifests.find((name) => names.has(name)) ??
+      language.detection.manifests.flatMap((pattern) => names.filter((name) => Glob.match(pattern, name)))[0] ??
       changes.find((change) => language.detection.extensions.includes(path.posix.extname(change.path)))?.path
     return signal ? [{ id: language.id, source: "path", signal }] : []
   })
 }
 
 // Lenses in the profile's lowest tier are the profile's own; the rest arrive with the tier.
-function routeLenses(profile: Profile, tier: string, overlays: readonly ReviewRouting.Overlay[], catalog: Catalog) {
+function routeLenses(profile: Profile, tier: string, overlays: readonly ReviewRouting.Overlay[], packs: readonly ReviewRouting.Pack[], catalog: Catalog) {
   const listed = profile.lenses[tier]
   if (!listed) throw new RouteError("unsupported-tier", `Review profile "${profile.id}" has no lenses for tier "${tier}".`)
   const floor = profile.lenses[catalog.route.tiers[0]?.id ?? tier] ?? []
@@ -220,6 +223,11 @@ function routeLenses(profile: Profile, tier: string, overlays: readonly ReviewRo
           because: `overlay:${overlay.id}`,
         })),
       ),
+    // The duplication pack has a separate finding class under change; other pack lenses are not routing signals.
+    ...(tier === "quick" ? [] : packs
+      .filter((pack) => pack.id === "jscpd" && pack.status === "routed")
+      .flatMap((pack) => (catalog.packs.find((entry) => entry.id === pack.id)?.lenses ?? [])
+        .map((id) => ({ id, source: "path" as const, because: `pack:${pack.id}` })))),
   ]
   return routed
     .filter((lens, index) => routed.findIndex((other) => other.id === lens.id) === index)

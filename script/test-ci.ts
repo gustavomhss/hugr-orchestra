@@ -27,6 +27,7 @@ import os from "node:os"
 import path from "node:path"
 import { mkdtemp, rm } from "node:fs/promises"
 import { closestBase, parseResponse, rateLimitDelay, workflowRun } from "./test-ci-upload.ts"
+import { RUNNER_QUEUE_WAIT_MS, shouldWaitForRunners } from "./test-ci-queue.ts"
 import { controlVerdict, parseOptions, preloadsControl, reportLines, requireTestJobs, validateRequest } from "./test-ci-request.ts"
 import { resolveTestPackage } from "./test-ci-package.ts"
 import { testPathsAt } from "./test-ci-paths.ts"
@@ -270,18 +271,20 @@ async function uploadBlobs() {
 }
 
 // The account runs at most 20 hosted jobs at once, shared by every session, and GitHub cancels jobs it cannot place.
-// A queued run means no runner is free, so this run waits its turn before pushing the branch that starts it, for at
-// most 30 minutes.
+// Queue activity receives at most 30 minutes of waiting. Old records must not restart that bound for each caller.
 async function waitForRunners() {
-  const deadline = Date.now() + 30 * 60_000
+  const deadline = Date.now() + RUNNER_QUEUE_WAIT_MS
   for (let announced = false; Date.now() < deadline; announced = true) {
-    const queued: { total_count: number } = await api("GET", `repos/${repo}/actions/runs?status=queued&per_page=1`)
-    if (queued.total_count === 0) return
+    const queued: { total_count: number } = await api("GET", `repos/${repo}/actions/runs?status=queued&per_page=100`)
+    if (!shouldWaitForRunners(queued)) {
+      if (queued.total_count > 0) console.log("test-ci: queued records exceed the 30-minute wait bound; starting")
+      return
+    }
     if (!announced)
-      console.log(`test-ci: ${queued.total_count} workflow runs are waiting for runners; waiting for room`)
+      console.log("test-ci: workflow queue has recent or uncertain activity; waiting for room")
     await Bun.sleep(30_000)
   }
-  console.log("test-ci: still no free runners after 30 minutes; starting anyway")
+  console.log("test-ci: workflow queue still active after 30 minutes; starting anyway")
 }
 
 async function follow(id: number) {

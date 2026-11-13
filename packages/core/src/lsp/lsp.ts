@@ -19,6 +19,8 @@ import { LspEvent } from "@orchestra/schema/lsp-event"
 
 export const Event = LspEvent
 
+export { readDiagnostics, ABSENT as diagnosticsAbsent } from "./read-diagnostics"
+
 const Position = Schema.Struct({
   line: NonNegativeInt,
   character: NonNegativeInt,

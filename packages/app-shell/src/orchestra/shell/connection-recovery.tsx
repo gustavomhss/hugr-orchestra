@@ -5,6 +5,8 @@ import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
 import { normalizeServerUrl, ServerConnection, useServer } from "@/context/server"
 import { useCheckServerHealth } from "@/utils/server-health"
+import { showToast } from "@/utils/toast"
+import { moveDefaultWithReplacedEntry } from "./default-server"
 
 // Startup recovery has no router, Tabs, Command or server-scoped provider dependencies.
 export function ConnectionRecovery(props: {
@@ -15,6 +17,7 @@ export function ConnectionRecovery(props: {
   const language = useLanguage()
   const platform = usePlatform()
   const check = useCheckServerHealth()
+  let replaceRead = 0
   const [state, setState] = createStore({
     open: false,
     // The unreachable entry being edited. Saving a different address replaces it instead of adding a second one.
@@ -71,11 +74,22 @@ export function ConnectionRecovery(props: {
     if (state.replace && state.replace !== key) await replaceEntry(state.replace, key)
     props.onServerSelected?.(key)
   }
-  // The default server is what the app opens on launch, so it moves with the entry it pointed at.
-  const replaceEntry = async (previous: ServerConnection.Key, next: ServerConnection.Key) => {
-    server.remove(previous)
-    const isDefault = (await platform.getDefaultServer?.().catch(() => null)) === previous
-    if (isDefault) await Promise.resolve(platform.setDefaultServer?.(next)).catch(() => undefined)
+  const replaceEntry = (previous: ServerConnection.Key, next: ServerConnection.Key) => {
+    const started = ++replaceRead
+    return moveDefaultWithReplacedEntry({
+      previous,
+      next,
+      remove: (key) => server.remove(key),
+      getDefault: platform.getDefaultServer,
+      setDefault: platform.setDefaultServer,
+      current: () => started === replaceRead,
+      report: (error) =>
+        showToast({
+          variant: "error",
+          title: language.t("common.requestFailed"),
+          description: error instanceof Error ? error.message : String(error),
+        }),
+    })
   }
   return (
     <section class="w-full max-w-sm shrink-0 flex flex-col gap-3" aria-label={language.t("status.popover.tab.servers")}>

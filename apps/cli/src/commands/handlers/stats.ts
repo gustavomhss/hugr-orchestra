@@ -121,8 +121,7 @@ async function allMessages(client: Client, sessionID: string) {
   const messages: Message[] = []
   let cursor: string | undefined
   do {
-    const page = await client.messages.list({ sessionID, limit: 200, order: "asc", cursor }).catch(() => undefined)
-    if (!page) break
+    const page = await client.messages.list({ sessionID, limit: 200, order: "asc", cursor })
     messages.push(...page.data)
     cursor = page.cursor.next ?? undefined
   } while (cursor)

@@ -30,8 +30,11 @@ const repo = Effect.acquireRelease(Effect.promise(async () => {
   await git(root, "config", "user.name", "Probe")
   await mkdir(path.join(root, "src"))
   await mkdir(path.join(root, "node_modules"))
-  // A symlink out of the repo is snapshot-dependency-path-outside. The copy stays inside, so the graft can hardlink it.
-  await cp(path.dirname(Bun.resolveSync("typescript/package.json", import.meta.dir)), path.join(root, "node_modules", "typescript"), { recursive: true, dereference: true })
+  // The dependency shadow refuses a symlink that leaves the repo. The project's own typescript has to be bytes inside it.
+  await cp(path.dirname(Bun.resolveSync("typescript/package.json", import.meta.dir)), path.join(root, "node_modules", "typescript"), {
+    recursive: true,
+    dereference: true,
+  })
   await writeFile(path.join(root, ".gitignore"), "node_modules\n")
   await writeFile(path.join(root, "tsconfig.json"), JSON.stringify({ compilerOptions: { strict: true, skipLibCheck: true, types: [] }, include: ["src"] }))
   await writeFile(path.join(root, "src", "a.ts"), BROKEN)

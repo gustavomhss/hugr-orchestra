@@ -4,6 +4,7 @@ export { SessionScope } from "./scope"
 
 import { asc, eq, sql } from "drizzle-orm"
 import { Context, Effect, Layer, Schema, Semaphore } from "effect"
+import { ProviderMetadata } from "@orchestra/schema/llm"
 import type { Permission } from "@orchestra/schema/permission"
 import { Database } from "../database/database"
 import { makeGlobalNode } from "../effect/app-node"
@@ -26,6 +27,11 @@ export interface Interface {
   readonly entries: (
     sessionID: SessionSchema.ID,
   ) => Effect.Effect<ReadonlyArray<{ readonly seq: number; readonly message: SessionMessage.Message }>, MessageDecodeError>
+  /**
+   * Pending or running tools on assistant rows hidden by the latest compaction.
+   * Selects the message id, call id, and provider fields only. Not tool output or other message types.
+   */
+  readonly unsettledHiddenTools: (sessionID: SessionSchema.ID) => Effect.Effect<ReadonlyArray<UnsettledHiddenTool>>
   readonly message: (
     messageID: SessionMessage.ID,
   ) => Effect.Effect<{ readonly sessionID: SessionSchema.ID; readonly message: SessionMessage.Message } | undefined>
@@ -43,6 +49,27 @@ export interface Interface {
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/SessionStore") {}
+
+export interface UnsettledHiddenTool {
+  readonly assistantMessageID: SessionMessage.ID
+  readonly callID: string
+  readonly provider: {
+    readonly executed: boolean
+    readonly metadata?: ProviderMetadata
+  }
+}
+
+// json_extract yields SQLite's 0/1 for a JSON boolean, and text for an object.
+const hiddenProvider = (row: { readonly executed: unknown; readonly metadata: unknown }) =>
+  Effect.gen(function* () {
+    if (row.metadata === null || row.metadata === undefined)
+      return { executed: row.executed === true || row.executed === 1 }
+    const json = typeof row.metadata === "string"
+      ? yield* Schema.decodeUnknownEffect(Schema.UnknownFromJsonString)(row.metadata)
+      : row.metadata
+    const metadata = yield* Schema.decodeUnknownEffect(ProviderMetadata)(json)
+    return { executed: row.executed === true || row.executed === 1, metadata }
+  }).pipe(Effect.orDie)
 
 const layer = Layer.effect(
   Service,
@@ -105,6 +132,42 @@ const layer = Layer.effect(
                 }),
             ),
           ),
+        )
+      }),
+      unsettledHiddenTools: Effect.fn("SessionStore.unsettledHiddenTools")(function* (sessionID) {
+        // session_message_session_type_seq_idx is (session_id, type, seq). Hidden means seq before the latest compaction.
+        const rows = yield* db
+          .all<{
+            assistantMessageID: string
+            callID: unknown
+            executed: unknown
+            metadata: unknown
+          }>(sql`SELECT ${SessionMessageTable.id} AS assistantMessageID,
+              json_extract(part.value, '$.id') AS callID,
+              json_extract(part.value, '$.provider.executed') AS executed,
+              json_extract(part.value, '$.provider.metadata') AS metadata
+            FROM ${SessionMessageTable} INDEXED BY session_message_session_type_seq_idx
+            INNER JOIN json_each(${SessionMessageTable.data}, '$.content') AS part
+            WHERE ${SessionMessageTable.session_id} = ${sessionID}
+              AND ${SessionMessageTable.type} = 'assistant'
+              AND ${SessionMessageTable.seq} < (
+                SELECT compaction.seq FROM ${SessionMessageTable} AS compaction INDEXED BY session_message_session_type_seq_idx
+                WHERE compaction.session_id = ${sessionID} AND compaction.type = 'compaction'
+                ORDER BY compaction.seq DESC
+                LIMIT 1
+              )
+              AND json_extract(part.value, '$.type') = 'tool'
+              AND json_extract(part.value, '$.state.status') IN ('pending', 'running')`)
+          .pipe(Effect.orDie)
+        return yield* Effect.forEach(rows, (row) =>
+          Effect.gen(function* () {
+            if (typeof row.callID !== "string") return yield* Effect.die("hidden tool call id is not text")
+            return {
+              assistantMessageID: SessionMessage.ID.make(row.assistantMessageID),
+              callID: row.callID,
+              provider: yield* hiddenProvider(row),
+            }
+          }),
         )
       }),
       message: Effect.fn("SessionStore.message")(function* (messageID) {

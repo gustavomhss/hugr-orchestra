@@ -47,8 +47,32 @@ The §8.3 budgets, §8.4 rungs and probe attempts, the §5.3 triggers and the §
   stale, and no landing protocol is needed for a catalog-only change.
 - Budgets are host counts (`SessionScope` loads and tool calls, `ReviewResultV2.CAPS`, the fan-out's child counts);
   never move one into prompt or skill prose.
-- Deep is requestable with `built: false` and `runs: "standard"`; the route records `tier.requested` (R3). A profile,
-  lens or option that is not built is refused or reported `not-built`, never silently skipped.
+- Deep is built and runs its own tier after P0–P3/D1–D3 qualification. Two hunt samples rank agreement only; caller context requires complete revision-bound evidence. An explicitly unbuilt catalog still records `tier.requested` and falls back (R3). Missing individual adapters remain `not-run`.
+- Advanced targets are host-closed: JS/TS integer properties and gated base/head schedules; installed cargo-mutants 27.1.0 is qualified on Linux x64 only. The JS invariant row replaces generic script with property; lower tiers filter that advanced option. Formal/fuzz remain unbuilt.
+- Governed code-stage release captures live candidate bytes once before salting both Session and cache identities. Five fixed host proofs are required even without supplied paths. Failed proofs and acquisition errors block; unavailable proofs use explicit R2 acceptance. The release lens is Deep-only; Quick/Standard security routes stay unchanged. Syft remains the generator, and attachment co-signature does not qualify runtime coverage. Behavioural eval remains `owner-permission`.
+
+## Adding a pack
+
+Reuse an engine the toolkit already lists (`gitleaks`, `squawk`, `actionlint`) when the review pack is that same pin.
+A Lucy-only pin stays out of `ENGINES`. `osv-scanner` is that shape: the catalog imports
+`packages/core/src/backend-toolkit/packs/osv-scanner.ts`, and that file is not an `ENGINES` entry. Its asset is `raw`,
+not an archive. Name the member the release actually publishes.
+
+- Read the licence text at the tag. Copy each target's SRI from that release's checksum. Leave `floor` empty unless a
+  floor was measured. Do not claim a minimum OS from memory. A pin declaration that does not match the catalog check
+  fails the build; it is not a runtime absence.
+- The argv lives in a facts module. A test asserts that array. Do not invent a flag. Linux x64 is the only qualified
+  native runtime. Another host records `native-runtime-unqualified` and does not block. A failed install on that
+  runtime is `<tool> absent: <cause>`, as `osv-scanner` writes it, and blocks until `review.acceptedUnavailable`
+  accepts that check.
+- GPL and AGPL stay backend `path` and licence `invoke`. They are not bundled. Do not assume one absence string.
+  `shellcheck` and `hadolint` use `not run: <tool> absent`. `golangci-lint` uses `golangci-lint absent`. Neither blocks.
+- Each rule the pack actually emits gets a catalog entry with class, lens, severity, triage note, and status
+  `probation`. Do not add a rule for a tool that emits no defect rule.
+- Ledger thresholds live in `entries.ts` `route.ledger`: activate at 20 reads with at least half confirmed; demote when
+  fewer than one in five of the last 20 are confirmed; drop only when a later demoted window of 20, or 10 for a high
+  cost class, has no new unique confirmed finding. A catalog edit returns a rule to probation only when it changes the
+  hashed pack or rule fields. A precision number never goes in a prompt or a card.
 
 ## Tree
 

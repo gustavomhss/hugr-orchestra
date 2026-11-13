@@ -1,4 +1,3 @@
-import { A } from "@solidjs/router"
 import { useDialog } from "@orchestra/ui/context/dialog"
 import { Icon } from "@orchestra/ui/icon"
 import { createEffect, createMemo, For, onCleanup, Show } from "solid-js"
@@ -68,13 +67,14 @@ export default function Inbox(props: ChapterPageProps) {
     waiting: shown(store.items, "waiting", store.source, store.query, store.kind).length,
     all: shown(store.items, "all", store.source, store.query, store.kind).length,
   }))
-  const location = () => ({ directory: props.directory })
+  // Storage is the installation inbox. A selected project only scopes Board projection and handoff.
+  const directory = () => props.directory
+  const location = () => ({ directory: directory() })
   const refresh = () => setStore("revision", (value) => value + 1)
 
   createEffect(() => {
-    const directory = props.directory
+    directory()
     store.revision
-    if (!directory && !preview) return
     const controller = new AbortController()
     onCleanup(() => controller.abort())
     setStore({ loading: true, failed: false })
@@ -84,7 +84,7 @@ export default function Inbox(props: ChapterPageProps) {
         if (!controller.signal.aborted) setStore({ items, loading: false })
         return
       }
-      const result = await api().list({ location: { directory } }, { signal: controller.signal })
+      const result = await api().list({ location: location() }, { signal: controller.signal })
       if (!controller.signal.aborted) setStore({ items: result.data, loading: false })
     })().catch(() => !controller.signal.aborted && setStore({ loading: false, failed: true }))
   })
@@ -153,12 +153,11 @@ export default function Inbox(props: ChapterPageProps) {
               class="inbox-icon-button"
               aria-label={t("orchestra.inbox.sources")}
               title={t("orchestra.inbox.sources")}
-              disabled={!props.directory && !preview}
               onClick={() =>
                 dialog.show(() => (
                   <InboxConnections
                     api={api()}
-                    directory={props.directory}
+                    directory={directory()}
                     connected={refresh}
                     preview={preview}
                     local={["localhost", "127.0.0.1", "[::1]"].includes(new URL(props.server.http.url).hostname)}
@@ -181,20 +180,7 @@ export default function Inbox(props: ChapterPageProps) {
           </div>
         }
       >
-        <Show
-          when={props.directory || preview}
-          fallback={
-            <div class="inbox-empty">
-              <InboxMark />
-              <h2>{t("orchestra.inbox.noProject")}</h2>
-              <p>{t("orchestra.inbox.noProjectBody")}</p>
-              <A class="inbox-button outlined" href="/">
-                {t("orchestra.inbox.chooseProject")}
-              </A>
-            </div>
-          }
-        >
-          <Show when={preview}>
+        <Show when={preview}>
             <div class="inbox-preview-note">
               <span>{t("orchestra.inbox.designPreview")}</span>
               {t("orchestra.inbox.previewBody")}
@@ -433,7 +419,7 @@ export default function Inbox(props: ChapterPageProps) {
                   store={store}
                   setStore={setStore}
                   api={api()}
-                  directory={props.directory}
+                  directory={directory()}
                   quick={preferences.quick}
                   primary={preferences.primary}
                   act={act}
@@ -442,7 +428,6 @@ export default function Inbox(props: ChapterPageProps) {
               )}
             </Show>
           </div>
-        </Show>
       </MxPage>
     </div>
   )

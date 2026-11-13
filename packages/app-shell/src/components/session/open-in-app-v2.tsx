@@ -83,6 +83,9 @@ export function OpenInAppV2(props: { directory: () => string }) {
                   </For>
                 </MenuV2.RadioGroup>
               </MenuV2.Group>
+              <Show when={state.checkFailed()}>
+                <p role="alert">{language.t("common.requestFailed")}</p>
+              </Show>
               <MenuV2.Separator />
               <MenuV2.Item
                 onSelect={() => {

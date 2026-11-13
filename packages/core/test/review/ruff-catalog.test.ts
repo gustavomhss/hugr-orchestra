@@ -30,11 +30,11 @@ describe("ruff catalog", () => {
       status: "probation",
     })
     expect(pack?.version).toBe(ruffPin.version)
-    expect(pack?.pin).toEqual({
+    expect(pack && "pin" in pack ? pack.pin : undefined).toEqual({
       source: "backend-toolkit/packs/ruff",
       integrity: Object.fromEntries(Object.entries(ruffPin.targets).map(([target, entry]) => [target, entry.artifact.integrity])),
     })
-    expect(Object.keys(pack?.pin?.integrity ?? {}).sort()).toEqual(["darwin-arm64", "darwin-x64", "linux-arm64", "linux-x64", "win32-x64"])
+    expect(Object.keys(pack && "pin" in pack ? pack.pin?.integrity ?? {} : {}).sort()).toEqual(["darwin-arm64", "darwin-x64", "linux-arm64", "linux-x64", "win32-x64"])
     expect(pack?.tiers).not.toContain("quick")
     if (!pack) throw new Error("missing ruff pack")
     expect(pack).toEqual(ruff.pack)

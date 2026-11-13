@@ -5,6 +5,7 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { WorkspacePaths } from "@orchestra/script/workspace-paths"
 import { promisify } from "node:util"
+import { packagedDebugMapExclusions } from "./src/main/packaged-debug-maps"
 
 import type { AfterPackContext, Configuration } from "electron-builder"
 import { packagedElectronLanguages, packagedFileExclusions } from "./src/main/packaged-weight"
@@ -149,6 +150,7 @@ const getBase = (appId: string): Configuration => ({
     "!resources/omni/**",
     "!resources/claude-code{,/**/*}",
     ...packagedFileExclusions,
+    ...packagedDebugMapExclusions,
   ],
   electronLanguages: packagedElectronLanguages,
   beforePack: async (context) => {

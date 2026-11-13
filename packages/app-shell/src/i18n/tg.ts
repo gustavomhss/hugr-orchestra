@@ -60,6 +60,8 @@ export const dict = {
   "desktop.recovery.action.keepWaiting": "Интизор бошед",
   "desktop.recovery.action.quit": "Истед",
   "desktop.recovery.loadFailed": "HuGR Orchestra бор карда нашуд",
+  "desktop.startup.failed": "HuGR Orchestra could not start",
+  "desktop.startup.failed.detail": "{{reason}}\n\nLogs: {{logs}}",
   "desktop.recovery.terminated": "Тирезаи HuGR Orchestra ногаҳон баста шуд",
   "desktop.recovery.unresponsive": "HuGR Orchestra ҷавоб намедиҳад",
   "desktop.recovery.unresponsive.detail":

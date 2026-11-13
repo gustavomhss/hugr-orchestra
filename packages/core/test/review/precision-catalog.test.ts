@@ -10,7 +10,7 @@ const pack = {
   version: "1",
   licence: "pinned",
   backend: "pinned",
-  pin: { source: "fixture", integrity: { "fixture-host": "sha256-fixture" } },
+  pin: { source: "fixture", integrity: { "linux-x64": "sha256-fixture" } },
   languages: "any",
   detection: { manifests: [], extensions: [], absent: [] },
   lane: "no-build",

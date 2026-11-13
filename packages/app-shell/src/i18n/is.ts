@@ -65,6 +65,8 @@ const desktop = [
   "Gluggi: {{window}}\nSlóð: {{url}}\nVilla: {{code}} {{description}}",
   "Gluggi: {{window}}\nÁstæða: {{reason}}\nKóði: {{code}}",
   "<óþekkt>",
+  "HuGR Orchestra could not start",
+  "{{reason}}\n\nLogs: {{logs}}",
   "Veldu möppu",
   "Veldu skrá",
   "Vista skrá",

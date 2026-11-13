@@ -54,6 +54,7 @@ import { startDockChannel } from "./dock-channel"
 import { readWslExpectedVersion } from "./cli-version"
 import { nativeT, setNativeTranslations } from "./native-translations"
 import { applyDiskCacheCap } from "./disk-cache"
+import { startupFailureDialog } from "./startup-failure"
 import { OmniBoot } from "./omni-boot"
 import { OmniSmoke } from "./omni-smoke"
 import { createDeepLinkDelivery } from "./deep-links"
@@ -201,8 +202,7 @@ const main = Effect.gen(function* () {
     },
   )
   const stopSidecars = async () => {
-    await killSidecar()
-    wslServers.stopAll()
+    await killSidecar().finally(() => wslServers.stopAll())
   }
   const shutdown = {
     runtimeStop: undefined as (() => Promise<void>) | undefined,
@@ -330,7 +330,7 @@ const main = Effect.gen(function* () {
   // The About panel would show the inherited process name (APP_NAMES); it names the product instead. Its icon is
   // still the bundle's, until HuGR desktop icons exist.
   app.setAboutPanelOptions({ applicationName: nativeT("desktop.menu.app"), applicationVersion: app.getVersion() })
-  const updater = setupAutoUpdater(() => flushWindows().then(stopSidecars))
+  const updater = setupAutoUpdater()
   const menuDeps = {
     trigger: (id: string) => {
       const win = getLastFocusedWindow()
@@ -428,7 +428,7 @@ const main = Effect.gen(function* () {
     const cwd = join(app.getPath("userData"), "global")
     mkdirSync(cwd, { recursive: true })
     const owned = yield* Effect.promise(() =>
-      Promise.all([resolveCliBinary(logger), sidecarLaunchEnv(app.getPath("userData"))]).then(
+      Promise.all([resolveCliBinary(logger, shellEnv?.XDG_STATE_HOME), sidecarLaunchEnv(app.getPath("userData"))]).then(
         ([binary, env]) =>
           startOwnedServe({
             logger,
@@ -505,9 +505,7 @@ Effect.runFork(main).addObserver((exit) => {
   if (Exit.isSuccess(exit)) return
   const reason = Cause.pretty(exit.cause)
   writeLog("main", "desktop startup failed", { reason }, "error")
-  dialog.showErrorBox(
-    "HuGR Orchestra could not start",
-    `${reason.split("\n")[0]}\n\nLogs: ${join(app.getPath("userData"), "logs")}`,
-  )
+  const failure = startupFailureDialog(reason, join(app.getPath("userData"), "logs"))
+  dialog.showErrorBox(failure.title, failure.message)
   app.exit(1)
 })

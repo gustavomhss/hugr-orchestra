@@ -60,6 +60,8 @@ export const dict: Record<string, string> = {
   "desktop.recovery.action.keepWaiting": "දිගටම රැඳී සිටින්න",
   "desktop.recovery.action.quit": "ඉවත් වන්න",
   "desktop.recovery.loadFailed": "HuGR Orchestra පූරණය කිරීමට අසමත් විය",
+  "desktop.startup.failed": "HuGR Orchestra could not start",
+  "desktop.startup.failed.detail": "{{reason}}\n\nLogs: {{logs}}",
   "desktop.recovery.terminated": "HuGR Orchestra කවුළුව අනපේක්ෂිත ලෙස අවසන් විය",
   "desktop.recovery.unresponsive": "HuGR Orchestra ප්‍රතිචාර නොදක්වයි",
   "desktop.recovery.unresponsive.detail": "ඔබට යෙදුම නැවත දියත් කිරීමට, ලඝු-සටහන් විවෘත කිරීමට හෝ රැඳී සිටීමට හැකිය.",

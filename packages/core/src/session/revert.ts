@@ -47,12 +47,20 @@ const plan = Effect.fn("SessionRevert.plan")(function* (input: BoundaryInput) {
     .all()
     .pipe(Effect.orDie)
   const decode = Schema.decodeUnknownEffect(SessionMessage.Message)
+  const snapshot = yield* Snapshot.Service
   const files = new Map<RelativePath, Snapshot.ID>()
   for (const row of rows) {
     const message = yield* decode({ ...row.data, id: row.id, type: row.type }).pipe(Effect.orDie)
     if (message.type !== "assistant" || !message.snapshot?.start) continue
-    for (const file of message.snapshot.files ?? [])
-      if (!files.has(file)) files.set(file, Snapshot.ID.make(message.snapshot.start))
+    const start = Snapshot.ID.make(message.snapshot.start)
+    // An empty list is a listing that found nothing. An omitted list, with both trees stored, is a listing that
+    // failed. Recompute that one. A missing end tree cannot be recomputed.
+    const listed = message.snapshot.files
+      ? message.snapshot.files
+      : message.snapshot.end
+        ? yield* snapshot.files({ from: start, to: Snapshot.ID.make(message.snapshot.end) })
+        : []
+    for (const file of listed) if (!files.has(file)) files.set(file, start)
   }
   return files
 })

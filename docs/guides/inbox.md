@@ -1,7 +1,11 @@
 # Inbox
 
 Open **Inbox** in the main navigation. It is separate from Flight Engineer and does not need a meeting running.
-Choose a project first: its items live in the local database.
+It does not follow the open project. Messages, credentials and drafts live in this installation's database.
+Opening Inbox still lists them when no project is selected or the selected folder is missing.
+
+First connection: [Inbox onboarding](inbox-onboarding.md). Day to day: [Inbox operation](inbox-operation.md).
+Changing the code: [Inbox maintenance](inbox-maintenance.md).
 
 ## Find your next move
 
@@ -30,6 +34,7 @@ Write a reply, then choose **Save draft** to keep it in the local database witho
 item, **Review reply** (or **Review comment**) shows the exact text and thread destination. Only **Send reply**
 or **Post comment** sends. Editing, opening, searching and refreshing do not send. No account connection means
 the provider refuses sending; the pane retains your text. Mail can also create an unsent draft in the mail account.
+That button reports saved only when the account accepted the draft. No mail credential, or a failed write, is a refusal; the pane keeps the text.
 
 ## Sources
 
@@ -81,7 +86,7 @@ enter Inbox. Repeated entries update their text in place without reopening read 
 retains imported history. There is no automatic polling, complete historical archive, attachment retrieval or send.
 
 Transport refuses private/special network addresses and validates each redirect; XML parsing rejects DTD/custom
-entities and malformed/oversized content. Feeds are limited to 50 subscriptions per location, 256 KiB per response,
+entities and malformed/oversized content. Feeds are limited to 50 subscriptions for this installation, 256 KiB per response,
 2,000 entries per document and 10,000 remembered IDs or 1 MiB per subscription. Limit exhaustion fails without
 silently evicting history. Validators avoid re-downloading unchanged feeds when the publisher supports them.
 These are implemented safeguards, not a claim of completed independent security review or live-provider validation.
@@ -101,7 +106,7 @@ fails instead of stopping it. Finish the sign-in on the same computer running th
 This public client requests user-only conversation list/history read permissions. It has no bot scopes or message
 write permission. Slack/workspace approval policies still apply; a development app registration is not public
 distribution. All code/token exchanges go directly to Slack, without a HuGR relay. Tokens are kept in the existing
-encrypted credential store, separately for each project/directory/workspace, and expiring access tokens are
+encrypted credential store for this installation, not for the project that was open, and expiring access tokens are
 refreshed when the connection is used. Slack PKCE refresh tokens expire after 30 days; expired/revoked grants may
 require signing in again. A dev profile does not adopt or refresh the installed app's inherited Slack credential.
 
@@ -133,9 +138,9 @@ credential, not the Slack installation or provider grant. Revoke provider author
 Remote-server login is not supported by this loopback flow; the button is disabled for non-loopback server URLs.
 The configuration token used by a maintainer to register the app is never an end user's runtime credential.
 
-Inbox messages, drafts and egress are isolated by project/directory/workspace. Existing rows from before this
-isolation remain in the database under an unassigned owner; Orchestra does not guess which project owns them or
-silently display them in every project. There is not yet a UI to assign those legacy records to a project.
+Inbox messages, drafts and credentials belong to this installation, not to the project open in the sidebar.
+Older rows stored under a project or with no owner are moved into that installation inbox. Disconnect removes
+the installation credential. It does not revoke the provider grant.
 
 ### Mail, Teams and Discord collection
 
@@ -170,11 +175,12 @@ snapshot as a new connection; deduplication is within a connection, not an unver
 
 ### Project Board
 
-Opening Inbox projects local owner requests from Board projects linked to the selected repository: open
-questions, intake cards requiring manual acceptance, and held deliveries in Review. It does not start Board
+When a project folder is open and present, Inbox also projects that repository's local Board requests: open
+questions, intake cards requiring manual acceptance, and held deliveries in Review. Without an open project, or when that folder is missing, that projection is absent and stored rows still list. It does not start Board
 runners, refresh GitHub, approve work or answer a question. Use **Open decision/approval** to act on the Board.
 Questions that are answered or withdrawn, projects that are archived, and cards no longer requiring approval
-leave Inbox attention on the next refresh; their imported history is retained. A later edit of the same request
+leave Inbox attention on the next refresh of that same project; their imported history is retained. Opening
+Inbox on another project, or with no project, does not close them. A later edit of the same request
 updates the stored text in place and does not reopen read or archived attention. Board references never join an
 address-book contact or commitment.
 Owner decisions cannot be handed back to Maestro, even through a direct handoff API request.
@@ -223,9 +229,9 @@ acquisition is what enters waiting attention. GitHub applies the same rule: a ch
 updates content and does not reopen a closed item. Issues no longer assigned are not yet reconciled.
 Mentions/comments/subscriptions are not claimed by the Linear query.
 
-All existing manual account credentials are now scoped by project/directory/workspace too. Earlier global
-`inbox.*` credentials remain stored but are not adopted into an arbitrary project. Reconnect explicitly in the
-desired location. A development profile neither adopts nor overwrites an inherited installed-app credential.
+Manual account credentials belong to this installation. Hashed credentials that were stored under a project
+are copied onto that installation slot. An older unhashed `inbox.*` id is left in place and is not adopted.
+A development profile neither adopts nor overwrites an inherited installed-app credential.
 Changing a GitHub filter does not remove previous items or reduce provider permissions. No HuGR relay is used.
 Sync, GitHub settings and disconnect requests are bound to the current connection generation, so an old open
 panel cannot silently configure or disconnect a replacement connection. **Disconnect on this installation**

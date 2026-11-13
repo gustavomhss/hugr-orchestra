@@ -30,7 +30,14 @@ export function createSlackConnection(input: {
     state.value = { ...state.value, ...patch }
     input.change(state.value)
   }
-  const cancel = (id: string) => input.api.slackCancel({ location, id }).catch(() => undefined)
+  const cancel = (id: string) =>
+    input.api.slackCancel({ location, id }).then(
+      () => true,
+      (error: unknown) => {
+        console.error(error)
+        return false
+      },
+    )
   const poll = async () => {
     const authorization = state.value.authorization
     if (state.disposed || !authorization) return
@@ -90,8 +97,9 @@ export function createSlackConnection(input: {
       const authorization = state.value.authorization
       if (!authorization) return
       if (state.timer) clearTimeout(state.timer)
+      const done = await cancel(authorization.id)
+      if (!done) return change({ busy: false, failed: true })
       change({ authorization: undefined, busy: false, failed: false })
-      await cancel(authorization.id)
     },
     disconnect: async () => {
       if (!input.enabled || state.disposed || state.value.busy) return

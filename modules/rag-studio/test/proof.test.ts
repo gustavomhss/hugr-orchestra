@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { memoryStore, withStore } from "../src/context"
 import { citationProof, retrievalProof, saveQuestion } from "../src/proof"
+import { openRevision } from "../src/revision"
 
 test("A28 — A saved question stores the text, the labeled span, and the revision id.", async () => {
   const store = memoryStore({ projectRoot: "/project" })
@@ -137,4 +138,28 @@ test("A31 — A prefix added to stored chunk text that shifts the old coordinate
     })
     expect(await citationProof(saved.id, "sentence")).toBe(false)
   })
+})
+
+test("a rebuilt store keeps a loaded question and revision when the next one is saved", async () => {
+  const store = memoryStore({ projectRoot: "/project" })
+  store.putRevision({
+    id: "rev_1",
+    snapshot: "snap",
+    pipelineHash: "pipe",
+    fill: "complete",
+    locationId: "loc_1",
+    members: [],
+  })
+  store.putQuestion({
+    id: "q_1",
+    revisionId: "rev_1",
+    text: "kept",
+    span: { sourceId: "src_1", start: 0, end: 4 },
+  })
+  const saved = await withStore(store, () => saveQuestion("rev_1", "next", { sourceId: "src_1", start: 0, end: 4 }))
+  const opened = await withStore(store, () => openRevision("loc_1"))
+  expect(saved.id).toBe("q_2")
+  expect(opened.id).toBe("rev_2")
+  expect(store.questions().map((row) => row.id).sort()).toEqual(["q_1", "q_2"])
+  expect(store.revision("rev_1")?.snapshot).toBe("snap")
 })

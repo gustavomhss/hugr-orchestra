@@ -65,6 +65,8 @@ const desktop = [
   "Prozor: {{window}}\nURL: {{url}}\nPogreška: {{code}} {{description}}",
   "Prozor: {{window}}\nRazlog: {{reason}}\nKod: {{code}}",
   "<nepoznato>",
+  "HuGR Orchestra could not start",
+  "{{reason}}\n\nLogs: {{logs}}",
   "Odaberite mapu",
   "Odaberite datoteku",
   "Spremi datoteku",

@@ -94,6 +94,18 @@ export function sliceDiff(diff: string, paths: ReadonlyArray<string>) {
     .join("")
 }
 
+/** Sample-2 view: reverse file sections and whole hunks. Lines inside a hunk, headers and anchors stay put. */
+export function reorderDiff(diff: string) {
+  if (diff.length === 0) return diff
+  const parts = diff.split(/^(?=diff --git )/m)
+  const files = parts.filter((part) => part.startsWith("diff --git "))
+  if (files.length === 0) return diff
+  const rest = parts.filter((part) => !part.startsWith("diff --git ")).join("")
+  const ordered = (files.length < 2 ? files : files.toReversed()).map(reorderHunks)
+  // A terminal patch line may lack a newline; moving it must not join it to the next file header.
+  return rest + ordered.map((section, index) => index < ordered.length - 1 && !section.endsWith("\n") ? `${section}\n` : section).join("")
+}
+
 function sections(diff: string) {
   return diff
     .split(/^(?=diff --git )/m)
@@ -101,6 +113,27 @@ function sections(diff: string) {
       const header = /^diff --git a\/(.+?) b\/(.+)$/m.exec(text)
       return header ? [{ path: header[2], text }] : []
     })
+}
+
+function reorderHunks(section: string) {
+  const ended = section.endsWith("\n")
+  const lines = (ended ? section.slice(0, -1) : section).split("\n")
+  const start = lines.findIndex((line) => line.startsWith("@@ "))
+  if (start < 0) return section
+  const blocks: string[][] = []
+  let current: string[] | undefined
+  for (const line of lines.slice(start)) {
+    if (line.startsWith("@@ ")) {
+      if (current) blocks.push(current)
+      current = [line]
+      continue
+    }
+    if (current) current.push(line)
+  }
+  if (current) blocks.push(current)
+  if (blocks.length < 2) return section
+  const text = [...lines.slice(0, start), ...blocks.toReversed().flat()].join("\n")
+  return ended ? `${text}\n` : text
 }
 
 function ancestors(file: string) {

@@ -1,5 +1,7 @@
 # I0 / independent integration review wave
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../../../../docs/architecture/source-paths.md); old line numbers do not identify current code.
+
 Baseline: `5e4bea3b519c04cebfb787e98dfa171f5771d25c`. Lead source: `/Users/gustavoschneiter/Documents/HuGR/_worktrees/dock-accessibility`. User explicitly requested parallel execution on 2026-10-03.
 
 Decision: HYBRID. Two independent readonly reviewers; lead owns runtime seam analysis and decisions. No GUI, Docker or heavyweight tests in reviewer tasks. No shared edits; source under review stays frozen until both reports return. Each reviewer hashes its exact input files before/after and reports drift rather than reviewing a moving target.

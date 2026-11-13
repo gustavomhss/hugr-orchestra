@@ -1086,6 +1086,8 @@ export const dict = {
   "desktop.recovery.action.keepWaiting": "계속 기다리기",
   "desktop.recovery.action.quit": "종료",
   "desktop.recovery.loadFailed": "HuGR Orchestra를 불러오지 못했습니다",
+  "desktop.startup.failed": "HuGR Orchestra could not start",
+  "desktop.startup.failed.detail": "{{reason}}\n\nLogs: {{logs}}",
   "desktop.recovery.terminated": "HuGR Orchestra 윈도우가 예기치 않게 종료되었습니다",
   "desktop.recovery.unresponsive": "HuGR Orchestra가 응답하지 않습니다",
   "desktop.recovery.unresponsive.detail": "앱을 다시 실행하거나 로그를 열거나 계속 기다릴 수 있습니다.",

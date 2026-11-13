@@ -7,6 +7,7 @@ import { verifyDistribution } from "../../script/distribution-payload"
 import { sandbox, successful, snapshot, skillIdentity, target } from "./distribution-native"
 import type { Built, Sandbox } from "./distribution-native"
 import { qualify, stopServices } from "./distribution-native-proof"
+import { qualifyRestored } from "./distribution-native-curl"
 
 type RegistryVersion = Record<string, unknown> & { dist: { tarball: string; integrity: string; shasum: string } }
 
@@ -93,7 +94,7 @@ export async function npmChannel(
       }
     }
     expect(extracted).toHaveLength(2)
-    for (const payload of [built.payloads[0], built.payloads[1], built.payloads[0]]) {
+    for (const [index, payload] of [built.payloads[0], built.payloads[1], built.payloads[0]].entries()) {
       await stopServices()
       // Async child lets the same-loop registry serve metadata and tarballs.
       await successful(["npm", "install", "--no-audit", "--no-fund", "--save-exact", "--include=optional",
@@ -130,8 +131,10 @@ export async function npmChannel(
       // Optional host diagnostic runs the exact verified npm-installed closure.
       // Public launcher qualification remains mandatory after this control.
       if (beforePublic) await beforePublic({ payload: platform, version: payload.version, box })
-      const root = await qualify({ launcher: join(modules, `.bin/orchestra${process.platform === "win32" ? ".cmd" : ""}`), payload: platform, version: payload.version,
-        box, oracle: built.oracle, negative: payload === built.payloads[1] })
+      const launched = { launcher: join(modules, `.bin/orchestra${process.platform === "win32" ? ".cmd" : ""}`), payload: platform, version: payload.version, box, oracle: built.oracle }
+      const root = index === 0
+        ? await qualifyRestored(launched)
+        : await qualify({ ...launched, negative: payload === built.payloads[1] })
       skills.set(root, await snapshot(root))
       for (const [old, expected] of skills) expect(await snapshot(old)).toEqual(expected)
       for (const old of extracted) {

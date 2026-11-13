@@ -31,6 +31,16 @@ export function sortProcesses(items: readonly SessionProcess[]) {
  * Stop asks the server to end one tree and keeps the outcome visible: pending while in flight, failed with retry on
  * rejection.
  */
+/** A reload after stop. Failure is reported and does not reject, so a stop that landed is not shown as a failed stop. */
+export function refreshAfterStop(refresh: Promise<unknown>, report: (error: unknown) => void) {
+  return refresh.then(
+    () => undefined,
+    (error: unknown) => {
+      report(error)
+    },
+  )
+}
+
 export function createProcessStops(stop: (id: string) => Promise<unknown>) {
   const [stops, setStops] = createStore<Record<string, ProcessStop | undefined>>({})
   return {

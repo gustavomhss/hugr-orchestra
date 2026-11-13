@@ -1,7 +1,11 @@
-import { dirname, join, resolve, sep } from "node:path"
+import { existsSync } from "node:fs"
 import { access } from "node:fs/promises"
+import { homedir } from "node:os"
+import { dirname, join, resolve, sep } from "node:path"
 import { fileURLToPath } from "node:url"
 import { app } from "electron"
+import { credentialKeyEnv } from "./credential-key-env"
+import { MAC_SIGNED } from "./constants"
 import { getLogger } from "./logging"
 import { ripgrepEnv } from "./ripgrep-env"
 import { getUserShell, loadShellEnv } from "./shell-env"
@@ -61,6 +65,13 @@ export async function sidecarLaunchEnv(userDataPath: string) {
     ORCHESTRA_PLAYBOOKS_DIR: app.isPackaged
       ? join(process.resourcesPath, "playbooks")
       : resolve(outDir, "../../../../modules/maestro/coordination/playbooks"),
+    ...credentialKeyEnv({
+      platform: process.platform,
+      signed: MAC_SIGNED,
+      dataHome: process.env.XDG_DATA_HOME,
+      home: homedir(),
+      exists: existsSync,
+    }),
   }
 }
 

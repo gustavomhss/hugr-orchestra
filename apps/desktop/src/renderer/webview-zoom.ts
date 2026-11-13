@@ -4,6 +4,7 @@
 
 import { createSignal } from "solid-js"
 import { rendererHandlesZoomKey } from "../main/menu-zoom"
+import { createZoomSession } from "./zoom-failure"
 
 const OS_NAME = (() => {
   if (navigator.userAgent.includes("Mac")) return "macos"
@@ -14,7 +15,6 @@ const OS_NAME = (() => {
 
 const [webviewZoom, setWebviewZoom] = createSignal(1)
 let requestedZoom = 1
-let zoomGeneration = 0
 let pinchZoomEnabled = false
 let wheelPinch = undefined as
   | {
@@ -33,34 +33,42 @@ const WHEEL_PINCH_END_DELAY = 160
 
 const clamp = (value: number) => Math.min(Math.max(value, MIN_ZOOM_LEVEL), MAX_ZOOM_LEVEL)
 
+let reportZoom = (error: unknown) => {
+  console.error(error)
+}
+
+function setZoomFailureReport(report: (error: unknown) => void) {
+  reportZoom = report
+}
+
+const zoom = createZoomSession({
+  write: (factor) => window.api.setZoomFactor(factor),
+  report: (error) => reportZoom(error),
+  apply: (factor) => {
+    requestedZoom = factor
+    setWebviewZoom(factor)
+  },
+  revert: (factor) => {
+    requestedZoom = factor
+  },
+})
+
 const applyZoom = (next: number) => {
-  const generation = ++zoomGeneration
   requestedZoom = next
-  void window.api
-    .setZoomFactor(next)
-    .then(() => {
-      if (generation !== zoomGeneration) return
-      setWebviewZoom(next)
-    })
-    .catch(() => {
-      if (generation !== zoomGeneration) return
-      requestedZoom = webviewZoom()
-    })
+  void zoom.ask(next)
 }
 
 window.api.onZoomFactorChanged((factor) => {
-  zoomGeneration++
-  requestedZoom = clamp(factor)
-  setWebviewZoom(requestedZoom)
+  zoom.echo(clamp(factor))
 })
 
-const initialZoomGeneration = zoomGeneration
+const opened = zoom.stamp()
+// Startup read of the current factor. A miss keeps the default; the next zoom the user asks for still reports.
 void window.api
   .getZoomFactor()
   .then((factor) => {
-    if (initialZoomGeneration !== zoomGeneration) return
-    requestedZoom = clamp(factor)
-    setWebviewZoom(requestedZoom)
+    if (zoom.stamp() !== opened) return
+    zoom.seen(clamp(factor))
   })
   .catch(() => undefined)
 
@@ -150,4 +158,4 @@ window.addEventListener("keydown", (event) => {
   }
 })
 
-export { webviewZoom, resetZoom, setPinchZoomEnabled, zoomIn, zoomOut }
+export { webviewZoom, resetZoom, setPinchZoomEnabled, zoomIn, zoomOut, setZoomFailureReport }

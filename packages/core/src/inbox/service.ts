@@ -4,7 +4,8 @@ import { and, eq } from "drizzle-orm"
 import { randomUUID } from "node:crypto"
 import { Clock, Context, Effect, Layer, Schema, Semaphore } from "effect"
 import { Inbox as InboxSchema } from "@orchestra/schema/inbox"
-import { pull as channelPull, release as channelRelease } from "./channel"
+import { release as channelRelease } from "./channel"
+import { adoptCredentials, adoptRows, installOwner } from "./install"
 import {
   accounts,
   collectWork,
@@ -25,7 +26,10 @@ import {
 import { Credential } from "../credential"
 import { Database } from "../database/database"
 import { makeLocationNode } from "../effect/app-node"
+import { Global } from "../global"
 import { Location } from "../location"
+import { ProjectV2 } from "../project"
+import { AbsolutePath } from "../schema"
 import { door } from "./door"
 import { InboxAccountTable, InboxCalendarTable, InboxRowTable } from "./sql"
 import { reconcileCalendar } from "./calendar"
@@ -34,7 +38,7 @@ import { open } from "./store"
 import { known, load, loadPeople, save } from "./persist"
 import { SlackAuth } from "./slack-auth"
 import { makeSlackSync } from "./slack-sync"
-import { boardItems } from "./board"
+import { boardItems, boardScope } from "./board"
 import { makeFeedSync } from "./feed-sync"
 import type { DoorInput, Item, Person, Pulled } from "./types"
 
@@ -121,7 +125,9 @@ export interface HandoffInterface {
 
 export class HandoffService extends Context.Service<HandoffService, HandoffInterface>()("@orchestra/v2/InboxHandoff") {}
 
-export const layer = (options: { workTransport?: Options; feedTransport?: Options } = {}) =>
+export const layer = (
+  options: { workTransport?: Options; feedTransport?: Options; projectBoard?: boolean } = {},
+) =>
   Layer.effect(
     Service,
     Effect.gen(function* () {
@@ -129,7 +135,10 @@ export const layer = (options: { workTransport?: Options; feedTransport?: Option
       const location = yield* Location.Service
       const credentials = yield* Credential.Service
       const slack = yield* SlackAuth.Service
-      const owner = JSON.stringify([location.project.id, location.directory, location.workspaceID ?? null])
+      const owner = installOwner
+      // Home and a missing folder have no project board to reconcile. Projecting one would archive the wrong rows.
+      const projectBoard = options.projectBoard !== false
+      yield* adoptCredentials(credentials)
       const lock = Semaphore.makeUnsafe(1)
       const sync = makeSlackSync({
         db: database.db,
@@ -145,7 +154,10 @@ export const layer = (options: { workTransport?: Options; feedTransport?: Option
           }),
       })
       const slackOperation = <A, E>(operation: Effect.Effect<A, E>) =>
-        lock.withPermit(operation).pipe(Effect.mapError(() => new InboxError({ reason: "unavailable" })))
+        adoptRows(database.db).pipe(
+          Effect.andThen(lock.withPermit(operation)),
+          Effect.mapError(() => new InboxError({ reason: "unavailable" })),
+        )
       const feeds = makeFeedSync({
         db: database.db,
         owner,
@@ -223,11 +235,12 @@ export const layer = (options: { workTransport?: Options; feedTransport?: Option
         list: () =>
           lock.withPermit(
             Effect.gen(function* () {
-              const channels = yield* channelPull(database.db, location, credentials).pipe(
-                Effect.catch(() => Effect.succeed([])),
-              )
+              // Legacy bindings are keyed to the open folder. Pulling them here would copy that folder into the installation inbox.
+              const channels = [] as Pulled[]
               const started = yield* Clock.currentTimeMillis
-              const jira = (yield* accounts(credentials, owner)).find((account) => account.source === "jira")
+              const jira = (yield* accounts(credentials, owner).pipe(Effect.orDie)).find(
+                (account) => account.source === "jira",
+              )
               const cooling = yield* database.db
                 .select()
                 .from(InboxAccountTable)
@@ -237,7 +250,7 @@ export const layer = (options: { workTransport?: Options; feedTransport?: Option
               const waiting = jira?.connected === true && cooling?.retry_at != null && cooling.retry_at > started
               const acquired = waiting
                 ? { items: [] as Pulled[], error: undefined as unknown }
-                : yield* remotePull(credentials, owner).pipe(
+                : yield* remotePull(credentials, owner, options.workTransport).pipe(
                     Effect.map((items) => ({ items, error: undefined as unknown })),
                     Effect.catch((error) => Effect.succeed({ items: [] as Pulled[], error })),
                   )
@@ -255,14 +268,16 @@ export const layer = (options: { workTransport?: Options; feedTransport?: Option
                   .pipe(Effect.orDie)
               }
               const remote = acquired.items
-              const board = yield* boardItems(database.db, location).pipe(Effect.orDie)
-              const previousBoard = yield* database.db
-                .select({ id: InboxRowTable.list_id })
-                .from(InboxRowTable)
-                .where(and(eq(InboxRowTable.owner, owner), eq(InboxRowTable.source, "board")))
-                .limit(1)
-                .all()
-                .pipe(Effect.orDie)
+              const board = projectBoard ? yield* boardItems(database.db, location).pipe(Effect.orDie) : []
+              const previousBoard = projectBoard
+                ? yield* database.db
+                    .select({ id: InboxRowTable.list_id })
+                    .from(InboxRowTable)
+                    .where(and(eq(InboxRowTable.owner, owner), eq(InboxRowTable.source, "board")))
+                    .limit(1)
+                    .all()
+                    .pipe(Effect.orDie)
+                : []
               const pulled = [...channels, ...remote, ...board]
               const jiraSynced = jira?.connected === true && !waiting && acquired.error === undefined
               if (pulled.length > 0 || previousBoard.length > 0 || jiraSynced)
@@ -273,12 +288,19 @@ export const layer = (options: { workTransport?: Options; feedTransport?: Option
                       const people = yield* loadPeople(tx)
                       const store = open(people, saved, () => `in_${randomUUID()}`)
                       for (const item of pulled) store.upsert(item)
-                      // Resolved/withdrawn owner requests leave attention; imported history is retained.
-                      saved.rows
-                        .filter(
-                          (row) => row.source === "board" && !board.some((item) => item.externalId === row.externalId),
-                        )
-                        .forEach((row) => store.archive(row.listId))
+                      // Only this location's resolved requests leave attention. Another project's row is absent
+                      // from this projection and must stay waiting.
+                      if (projectBoard) {
+                        const scope = yield* boardScope(tx, location)
+                        saved.rows
+                          .filter(
+                            (row) =>
+                              row.source === "board" &&
+                              scope.has(row.externalId) &&
+                              !board.some((item) => item.externalId === row.externalId),
+                          )
+                          .forEach((row) => store.archive(row.listId))
+                      }
                       yield* save(tx, owner, store.snapshot())
                       if (!jiraSynced) return
                       const receipt = jiraReceipt(owner, undefined, finished)
@@ -315,9 +337,15 @@ export const layer = (options: { workTransport?: Options; feedTransport?: Option
               return yield* new InboxError({ reason: "unavailable" })
             const saved = yield* withId(id, (store) => store.originDraft(id, text))
             if (row)
-              yield* remoteOrigin(credentials, owner, row.source, row.threadId, row.actor, text).pipe(
-                Effect.catch(() => Effect.succeed(undefined)),
-              )
+              yield* remoteOrigin(
+                credentials,
+                owner,
+                row.source,
+                row.threadId,
+                row.actor,
+                text,
+                options.workTransport,
+              ).pipe(Effect.mapError(() => new InboxError({ reason: "unavailable" })))
             return saved
           }),
         send: (id, text) =>
@@ -339,7 +367,7 @@ export const layer = (options: { workTransport?: Options; feedTransport?: Option
                       Effect.as(true),
                       Effect.catch(() => Effect.succeed(false)),
                     )
-                  : yield* remoteRelease(credentials, owner, row.source, row.threadId, row.actor, text).pipe(
+                  : yield* remoteRelease(credentials, owner, row.source, row.threadId, row.actor, text, options.workTransport).pipe(
                       Effect.as(true),
                       Effect.catch(() => Effect.succeed(false)),
                     )
@@ -676,6 +704,38 @@ export const node = makeLocationNode({
   layer: layer(),
   deps: [Database.node, Location.node, Credential.node, SlackAuth.node],
 })
+
+// Installation store for a request that names no mounted project. Board is not projected. Handoff does not create a session.
+export function unmounted(database: Database.Interface, credentials: Credential.Interface) {
+  const directory = AbsolutePath.make(Global.Path.data)
+  const location = {
+    directory,
+    project: { id: ProjectV2.ID.global, directory },
+  }
+  return Effect.acquireRelease(
+    Effect.sync(() => SlackAuth.make(credentials)),
+    (auth) => Effect.promise(() => auth.close()),
+  ).pipe(
+    Effect.map((slack) =>
+      Layer.mergeAll(
+        Layer.succeed(Location.Service, location),
+        Layer.succeed(HandoffService, {
+          handoff: () => Effect.fail(new InboxError({ reason: "unavailable" })),
+        }),
+        layer({ projectBoard: false }).pipe(
+          Layer.provide(
+            Layer.mergeAll(
+              Layer.succeed(Database.Service, database),
+              Layer.succeed(Credential.Service, credentials),
+              Layer.succeed(SlackAuth.Service, slack),
+              Layer.succeed(Location.Service, location),
+            ),
+          ),
+        ),
+      ),
+    ),
+  )
+}
 
 function jiraReceipt(owner: string, error: unknown, now: number) {
   const limited = error instanceof Failure && (error.rateLimited || error.status === 429) ? error : undefined

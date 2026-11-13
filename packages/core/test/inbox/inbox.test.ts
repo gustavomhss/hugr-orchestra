@@ -20,7 +20,8 @@ import {
   teamsItems,
   workItems,
 } from "../../src/inbox/remote"
-import { fromSlack } from "../../src/inbox/source/slack"
+import { CapabilitySlack } from "../../src/capability/providers/slack"
+import { fromSlack, slackSystem } from "../../src/inbox/source/slack"
 import { fromTeams } from "../../src/inbox/source/teams"
 import { sourceKinds } from "../../src/inbox/types"
 
@@ -357,6 +358,22 @@ describe("inbox", () => {
     const proved = provenCi(notes, "ada", evidence)
     const items = githubItems(notes, "ada", proved)
     expect(items.map((item) => item.externalId)).toEqual(["own", "suite", "review"])
+    const mixed = {
+      pulls: evidence.pulls,
+      suites: {
+        "/repos/a/b/check-suites/4": {
+          pull_requests: [
+            { url: "https://api.github.com/repos/a/b/pulls/2" },
+            { url: "https://api.github.com/repos/a/b/pulls/9" },
+          ],
+        },
+      },
+      commits: evidence.commits,
+    }
+    expect(githubItems(notes, "ada", provenCi(notes, "ada", mixed)).map((item) => item.externalId)).toEqual([
+      "own",
+      "review",
+    ])
     expect(items.find((item) => item.externalId === "own")).toMatchObject({
       actor: "a/b",
       threadId: "https://api.github.com/repos/a/b/pulls/2",
@@ -438,6 +455,12 @@ describe("inbox", () => {
     expect(fromSlack({ kind: "canvas", id: "1", actor: "a", text: "a", threadId: "t" })).toBeUndefined()
     expect(fromSlack({ kind: "call", id: "1", actor: "a", text: "a", threadId: "t" })).toBeUndefined()
     expect(fromSlack(message)?.source).toBe("slack")
+    expect(slackSystem).toBe(CapabilitySlack.slackSystem)
+    expect(slackSystem("channel_join")).toBe(true)
+    expect(slackSystem("group_topic")).toBe(true)
+    expect(slackSystem("bot_add")).toBe(true)
+    expect(slackSystem("group_archive")).toBe(true)
+    expect(slackSystem(undefined)).toBe(false)
   })
 
   test("A12 discord drops voice and stage", () => {

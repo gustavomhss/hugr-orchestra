@@ -1,0 +1,212 @@
+name: release-promote
+on:
+  workflow_dispatch:
+    inputs:
+      version: { description: Stable X.Y.Z, required: true, type: string }
+      source_sha: { description: Frozen release source when using the reviewed dev publisher, type: string }
+      cli_run: { description: Successful release-cli dry run, required: true, type: string }
+      desktop_run: { description: Successful release-desktop dry run, required: true, type: string }
+      qualification_run: { description: Successful distribution-bundle run, required: true, type: string }
+      full_run: { description: Successful full test run, required: true, type: string }
+      receipt_sha256: { description: SHA256 of validated candidate VALIDATION.json, required: true, type: string }
+      publish: { description: Publish the verified bytes and update feed, type: boolean, default: false }
+concurrency:
+  group: release-desktop
+  cancel-in-progress: false
+permissions:
+  actions: read
+  contents: read
+defaults:
+  run:
+    shell: bash
+env:
+  GH_TOKEN: ${{ github.token }}
+  VERSION: ${{ inputs.version }}
+  SOURCE_SHA: ${{ inputs.source_sha || github.sha }}
+  REQUESTED_SOURCE: ${{ inputs.source_sha }}
+  CLI_RUN_ID: ${{ inputs.cli_run }}
+  DESKTOP_RUN_ID: ${{ inputs.desktop_run }}
+  QUALIFICATION_RUN_ID: ${{ inputs.qualification_run }}
+  FULL_RUN_ID: ${{ inputs.full_run }}
+  RECEIPT_SHA256: ${{ inputs.receipt_sha256 }}
+jobs:
+  promote:
+    permissions:
+      actions: read
+      contents: write
+      id-token: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: ${{ inputs.publish == true && 'release' || '' }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+      - name: Bind the cut to reviewed source and successful producers
+        run: |
+          set -euo pipefail
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          [[ "$RECEIPT_SHA256" =~ ^[a-f0-9]{64}$ ]]
+          [[ "$SOURCE_SHA" =~ ^[a-f0-9]{40}$ ]]
+          case "$GITHUB_REF" in
+            "refs/heads/release-$VERSION") [ "$SOURCE_SHA" = "$GITHUB_SHA" ] ;;
+            refs/heads/dev) [ -n "$REQUESTED_SOURCE" ] ;;
+            *) echo RELEASE_PUBLISHER_REF_INVALID >&2; exit 1 ;;
+          esac
+          frozen=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/release-$VERSION" --jq .object.sha)
+          [ "$frozen" = "$SOURCE_SHA" ]
+          for id in "$CLI_RUN_ID" "$DESKTOP_RUN_ID" "$QUALIFICATION_RUN_ID" "$FULL_RUN_ID"; do [[ "$id" =~ ^[1-9][0-9]*$ ]]; done
+          relation=$(gh api "repos/$GITHUB_REPOSITORY/compare/$SOURCE_SHA...dev" --jq .status)
+          case "$relation" in identical|ahead) ;; *) echo "RELEASE_SOURCE_NOT_IN_DEV" >&2; exit 1 ;; esac
+          while read -r id workflow; do
+            gh api "repos/$GITHUB_REPOSITORY/actions/runs/$id" | jq -e \
+              --arg sha "$SOURCE_SHA" --arg repo "$GITHUB_REPOSITORY" --arg branch "release-$VERSION" \
+              --arg path ".github/workflows/$workflow" \
+              '.head_sha == $sha and .head_repository.full_name == $repo and .head_branch == $branch and
+               .path == $path and .event == "workflow_dispatch" and .status == "completed" and .conclusion == "success"' >/dev/null
+          done <<EOF
+          $CLI_RUN_ID release-cli.yml
+          $DESKTOP_RUN_ID release-desktop.yml
+          $QUALIFICATION_RUN_ID distribution-bundle.yml
+          $FULL_RUN_ID test.yml
+          EOF
+          mkdir -p "$RUNNER_TEMP/validated"
+          gh release download "release-candidate-v$VERSION" --repo "$GITHUB_REPOSITORY" \
+            --pattern VALIDATION.json --dir "$RUNNER_TEMP/validated"
+          printf '%s  %s\n' "$RECEIPT_SHA256" "$RUNNER_TEMP/validated/VALIDATION.json" | sha256sum --check -
+          jq -e --argjson id "$FULL_RUN_ID" '.fullRunId == $id' "$RUNNER_TEMP/validated/VALIDATION.json" >/dev/null
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.full_run }}
+          name: test-scope
+          path: ${{ runner.temp }}/qualification
+      - name: Require the full test scope
+        run: jq -e --arg sha "$SOURCE_SHA" '.sourceSha == $sha and .packages == ""' "$RUNNER_TEMP/qualification/test-scope.json"
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.cli_run }}
+          name: release-assembled
+          path: ${{ runner.temp }}/validated/cli
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.desktop_run }}
+          pattern: desktop-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/validated/desktop
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.desktop_run }}
+          name: release-desktop-feed
+          path: ${{ runner.temp }}/validated/feed
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version-file: package.json
+      - name: Verify the exact bytes approved by installed-app validation
+        run: |
+          bun --eval 'import { verifyReleaseArtifacts } from "./packages/script/src/release-artifact-identity.ts"; const root=process.env.RUNNER_TEMP+"/validated"; const receipt=await Bun.file(root+"/VALIDATION.json").json(); await verifyReleaseArtifacts(root,receipt,{version:process.env.VERSION,sourceSha:process.env.SOURCE_SHA,cliRunId:Number(process.env.CLI_RUN_ID),desktopRunId:Number(process.env.DESKTOP_RUN_ID),qualificationRunId:Number(process.env.QUALIFICATION_RUN_ID)});'
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        if: inputs.publish == true
+        with:
+          node-version: "22"
+          registry-url: https://registry.npmjs.org
+      - name: Create immutable annotated source tags
+        if: inputs.publish == true
+        run: |
+          set -euo pipefail
+          for tag in "v$VERSION" "desktop-v$VERSION"; do
+            if ref=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$tag" 2>/dev/null); then
+              [ "$(jq -r .object.type <<<"$ref")" = tag ]
+              object=$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$(jq -r .object.sha <<<"$ref")")
+              jq -e --arg sha "$SOURCE_SHA" --arg receipt "$RECEIPT_SHA256" \
+                '.object.type == "commit" and .object.sha == $sha and (.message | contains($receipt))' <<<"$object" >/dev/null
+            else
+              object=$(gh api --method POST "repos/$GITHUB_REPOSITORY/git/tags" -f tag="$tag" \
+                -f message="Validated release $VERSION; receipt SHA256 $RECEIPT_SHA256" -f object="$SOURCE_SHA" -f type=commit --jq .sha)
+              gh api --method POST "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/$tag" -f sha="$object" >/dev/null
+            fi
+          done
+      - name: Publish the verified npm tarballs, platform packages before wrapper
+        if: inputs.publish == true
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          [ -n "${NODE_AUTH_TOKEN:-}" ] || { echo RELEASE_NPM_TOKEN_MISSING >&2; exit 1; }
+          packs="$RUNNER_TEMP/validated/cli/npm-packs"
+          for package in "$packs"/humanguardrail-cli-*-"$VERSION".tgz "$packs/humanguardrail-cli-$VERSION.tgz"; do
+            metadata=$(tar -xOf "$package" package/package.json)
+            name=$(jq -er .name <<<"$metadata")
+            [ "$(jq -r .version <<<"$metadata")" = "$VERSION" ]
+            case "$name" in @humanguardrail/cli|@humanguardrail/cli-*) ;; *) exit 1 ;; esac
+            integrity="sha512-$(openssl dgst -sha512 -binary "$package" | base64 -w0)"
+            if previous=$(npm view "$name@$VERSION" dist.integrity --registry=https://registry.npmjs.org 2>"$RUNNER_TEMP/npm-view-error"); then
+              [ "$previous" = "$integrity" ] || { echo "RELEASE_NPM_BYTES_DIFFER: $name" >&2; exit 1; }
+            elif grep -q E404 "$RUNNER_TEMP/npm-view-error"; then
+              npm publish "$package" --ignore-scripts --access public --provenance --registry=https://registry.npmjs.org
+            else
+              cat "$RUNNER_TEMP/npm-view-error" >&2; exit 1
+            fi
+          done
+      - name: Publish versioned releases only after asset digest verification
+        if: inputs.publish == true
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/validated"
+          for kind in cli desktop; do
+            if [ "$kind" = cli ]; then tag="v$VERSION"; title="Orchestra CLI $VERSION"; files=("$root"/cli/*.tar.gz "$root/cli/SHA256SUMS" "$root/cli/install.sh"); else
+              tag="desktop-v$VERSION"; title="HuGR Orchestra $VERSION"; files=("$root"/desktop/* "$root/feed/SHA256SUMS"); fi
+            files+=("$root/VALIDATION.json")
+            if ! gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+              gh release create "$tag" --repo "$GITHUB_REPOSITORY" --verify-tag --draft --latest=false --title "$title" \
+                --notes "Validated source $SOURCE_SHA. Exact artifact identities and runtime checks are in VALIDATION.json. These binaries are unsigned, matching the validated build."
+            fi
+            draft=$(gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft)
+            if [ "$draft" = true ]; then gh release upload "$tag" --repo "$GITHUB_REPOSITORY" --clobber "${files[@]}"; fi
+            for attempt in {1..10}; do
+              api=$(gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json apiUrl --jq .apiUrl)
+              gh api "$api" > "$root/assets.json"
+              if node --input-type=module - "$root/assets.json" "${files[@]}" <<'NODE'
+          import { readFileSync } from 'node:fs'; import { basename } from 'node:path'; import { createHash } from 'node:crypto';
+          const [metadata, ...files] = process.argv.slice(2); const assets = JSON.parse(readFileSync(metadata)).assets;
+          if (assets.length !== files.length) process.exit(1);
+          for (const file of files) { const hash = 'sha256:' + createHash('sha256').update(readFileSync(file)).digest('hex');
+            if (!assets.some(asset => asset.name === basename(file) && asset.digest === hash)) process.exit(1); }
+          NODE
+              then break; fi
+              [ "$attempt" -lt 10 ] || { echo RELEASE_ASSET_DIGEST_MISMATCH >&2; exit 1; }; sleep 3
+            done
+            if [ "$kind" = cli ]; then gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --draft=false --latest; else
+              gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --draft=false --latest=false; fi
+          done
+      - name: Promote the validated desktop update feed, payloads before metadata
+        if: inputs.publish == true
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/validated"
+          backup="$RUNNER_TEMP/feed-backup"
+          mkdir -p "$backup"
+          gh release download desktop-latest --repo "$GITHUB_REPOSITORY" --dir "$backup"
+          rollback() {
+            status=$?
+            trap - ERR
+            echo "Feed promotion failed; restoring the previous update feed" >&2
+            mapfile -d '' payloads < <(find "$backup" -maxdepth 1 -type f ! -name 'latest*.yml' -print0)
+            gh release upload desktop-latest --repo "$GITHUB_REPOSITORY" --clobber "${payloads[@]}"
+            gh release upload desktop-latest --repo "$GITHUB_REPOSITORY" --clobber "$backup"/latest*.yml
+            exit "$status"
+          }
+          trap rollback ERR
+          gh release upload desktop-latest --repo "$GITHUB_REPOSITORY" --clobber "$root"/desktop/*
+          gh release upload desktop-latest --repo "$GITHUB_REPOSITORY" --clobber "$root"/feed/latest*.yml
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/desktop-latest" > "$root/feed-assets.json"
+          node --input-type=module - "$root/feed-assets.json" "$root"/desktop/* "$root"/feed/latest*.yml <<'NODE'
+          import { readFileSync } from 'node:fs'; import { basename } from 'node:path'; import { createHash } from 'node:crypto';
+          const [metadata, ...files] = process.argv.slice(2); const assets = JSON.parse(readFileSync(metadata)).assets;
+          for (const file of files) { const hash = 'sha256:' + createHash('sha256').update(readFileSync(file)).digest('hex');
+            if (!assets.some(asset => asset.name === basename(file) && asset.digest === hash)) process.exit(1); }
+          NODE
+          trap - ERR

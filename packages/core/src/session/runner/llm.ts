@@ -239,8 +239,15 @@ const layer = Layer.effect(
         return yield* Effect.die(continueAfterCompaction(currentStep))
       // Capture overlaps the provider stream. A host can write during authorize, so that path still joins first.
       // The provider path joins before the first write and again at step end, so the file list revert uses is not dropped.
-      const captureFiber = yield* snapshots.capture().pipe(Effect.forkChild)
-      const snapshotReady = Fiber.join(captureFiber)
+      let captured = Option.none<Snapshot.ID | undefined>()
+      const captureFiber = yield* snapshots.capture().pipe(
+        Effect.tap((snapshot) => Effect.sync(() => { captured = Option.some(snapshot) })),
+        Effect.forkChild,
+      )
+      // A pending capture must be cancellable. An already captured snapshot stays available to masked accounting.
+      const snapshotReady = Effect.suspend(() => Option.isSome(captured)
+        ? Effect.succeed(captured.value)
+        : Fiber.join(captureFiber).pipe(Effect.interruptible))
       const startSnapshot = host ? yield* snapshotReady : undefined
       const publisher = createLLMEventPublisher(events, {
         sessionID: session.id,
@@ -364,7 +371,7 @@ const layer = Layer.effect(
           Effect.gen(function* () {
             yield* events.publish(SessionEvent.Synthetic, {
               sessionID: session.id,
-              messageID: SessionMessage.ID.create(),
+              messageID: input.messageID ?? SessionMessage.ID.create(),
               timestamp: yield* DateTime.now,
               text: `Engine compaction summary (${input.trigger}):\nNative owner: ${input.nativeSessionID}\n\n${input.summary}`,
             })

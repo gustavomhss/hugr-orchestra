@@ -60,6 +60,8 @@ export const dict = {
   "desktop.recovery.action.keepWaiting": "ဆက်စောင့်ပါ။",
   "desktop.recovery.action.quit": "ထွက်လိုက်ပါ။",
   "desktop.recovery.loadFailed": "HuGR Orchestra ကို ဖွင့်၍မရပါ။",
+  "desktop.startup.failed": "HuGR Orchestra could not start",
+  "desktop.startup.failed.detail": "{{reason}}\n\nLogs: {{logs}}",
   "desktop.recovery.terminated": "HuGR Orchestra ဝင်းဒိုးသည် မမျှော်လင့်ဘဲ ပိတ်သွားသည်။",
   "desktop.recovery.unresponsive": "HuGR Orchestra သည် တုံ့ပြန်ခြင်းမရှိပါ။",
   "desktop.recovery.unresponsive.detail":

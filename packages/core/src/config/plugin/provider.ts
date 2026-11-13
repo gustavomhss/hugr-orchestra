@@ -1,18 +1,28 @@
 export * as ConfigProviderPlugin from "./provider"
 
 import { define } from "../../plugin/internal"
-import { Effect } from "effect"
+import { Effect, Option } from "effect"
 import { Config } from "../../config"
 import { ModelV2 } from "../../model"
-import { ProviderV2 } from "../../provider"
+import { Global } from "../../global"
+import { Location } from "../../location"
+import { ConfigTrust } from "../trust"
 
 export const Plugin = define({
   id: "config-provider",
   effect: Effect.fn(function* (ctx) {
     const config = yield* Config.Service
+    const global = yield* Global.Service
+    const location = Option.getOrUndefined(yield* Effect.serviceOption(Location.Service))
+    const approved = Effect.fn(function* () {
+      const entries = yield* config.entries()
+      return location
+        ? ConfigTrust.runnable(entries, global.config, location.directory)
+        : entries.filter((entry) => ConfigTrust.isUser(global.config, entry))
+    })
     yield* ctx.integration.transform(
       Effect.fn(function* (integrations) {
-        const files = (yield* config.entries()).filter((entry): entry is Config.Document => entry.type === "document")
+        const files = (yield* approved()).filter((entry): entry is Config.Document => entry.type === "document")
         const configuredIntegrations = new Set(
           files.flatMap((file) =>
             Object.entries(file.info.providers ?? {}).flatMap(([id, provider]) =>
@@ -40,7 +50,7 @@ export const Plugin = define({
 
     yield* ctx.catalog.transform(
       Effect.fn(function* (catalog) {
-        const entries = yield* config.entries()
+        const entries = yield* approved()
         const files = entries.filter((entry): entry is Config.Document => entry.type === "document")
         const configuredDefault = Config.latest(entries, "model")
         if (configuredDefault !== undefined) {

@@ -38,7 +38,7 @@ export const ConfigHandler = HttpApiBuilder.group(Api, "server.config", (handler
                   yield* Context.get(context, AgentV2.Service).reload()
                   yield* Context.get(context, Catalog.Service).reload()
                 }),
-              ).pipe(Effect.ignore),
+              ),
             { discard: true },
           )
           return HttpApiSchema.NoContent.make()

@@ -1,8 +1,9 @@
 // Lead-owned. Work packages import this file. They do not edit it.
-// Contract rag-studio-v1 @ fb61d451. The spec stub stays in docs/specs/rag-studio/seam.ts.
+// Contract rag-studio-v1 @ 17a340bf. The spec stub stays in docs/specs/rag-studio/seam.ts.
 // The package keeps its own copy of those shapes so production code does not import outside itself.
 
 import { AsyncLocalStorage } from "node:async_hooks"
+import fs from "node:fs"
 import path from "node:path"
 import { blake3 } from "@noble/hashes/blake3"
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils"
@@ -15,19 +16,56 @@ export function digest(value: string) {
 }
 
 export function canonical(file: string) {
-  return path.posix.normalize(file)
+  return path.normalize(file).split(path.sep).join("/")
+}
+
+// Compare by the real path of the longest prefix that exists, so /var and /private/var are one directory
+// even when the file itself has not been created yet. A path with no existing prefix stays lexical.
+export function placed(file: string) {
+  const normalized = canonical(file)
+  // Rooted logical IDs have no Windows drive; do not adopt the process current drive.
+  if (path.sep === "\\" && normalized.startsWith("/") && !normalized.startsWith("//")) return normalized
+  const existing = existingAncestor(normalized)
+  if (!existing) return normalized
+  try {
+    const real = fs.realpathSync(existing)
+    if (real === existing) return normalized
+    return canonical(`${real}${normalized.slice(existing.length)}`)
+  } catch {
+    return normalized
+  }
+}
+
+function existingAncestor(file: string) {
+  let current = file
+  while (true) {
+    try {
+      if (fs.existsSync(current)) return current
+    } catch {
+      return undefined
+    }
+    const parent = canonical(path.dirname(current))
+    if (parent === current) return undefined
+    current = parent
+  }
 }
 
 export function inProject(file: string, projectRoot: string) {
-  const normalized = canonical(file)
-  return normalized === projectRoot || normalized.startsWith(`${projectRoot}/`)
+  const root = placed(projectRoot)
+  const normalized = placed(
+    path.isAbsolute(projectRoot) && (path.sep !== "\\" || path.parse(projectRoot).root.length > 1)
+      ? path.resolve(file)
+      : file,
+  )
+  return normalized === root || normalized.startsWith(root.endsWith("/") ? root : `${root}/`)
 }
 
 export function insideLocation(file: string, locationId: string, locationRoot?: string) {
-  const normalized = canonical(file)
+  const normalized = placed(file)
   if (normalized.startsWith(`/location/${locationId}/`)) return true
   if (!locationRoot) return false
-  return normalized === locationRoot || normalized.startsWith(`${locationRoot}/`)
+  const root = placed(locationRoot)
+  return normalized === root || normalized.startsWith(root.endsWith("/") ? root : `${root}/`)
 }
 
 export function gate(
@@ -35,8 +73,8 @@ export function gate(
   locationId: string,
   file: string,
 ): { path: string } | { refused: "atlas" | "permission" } {
-  const normalized = canonical(file)
-  if (inProject(normalized, store.projectRoot)) return { refused: "atlas" }
+  const normalized = placed(file)
+  if (store.projectRoot !== undefined && inProject(file, store.projectRoot)) return { refused: "atlas" }
   if (!insideLocation(normalized, locationId, store.locationRoot) && store.permission(locationId, normalized) !== "allow") {
     return { refused: "permission" }
   }
@@ -50,6 +88,11 @@ export function defaultPipeline(): Pipeline {
     tokenizer: "utf16",
     lexical: true,
     embedding: false,
+    embeddingModel: "",
+    queryModel: "",
+    dimension: 0,
+    numericType: "float32",
+    metric: "cosine",
     k: 4,
   }
 }
@@ -85,12 +128,19 @@ export interface StoredRevision extends Revision {
   boundary?: string
   tokenizer?: string
   k?: number
+  embeddingModel?: string
+}
+
+export interface VectorRow {
+  chunkId: string
+  model: string
+  values: number[]
 }
 
 export type ReadBytes = { text: string } | { failed: "no_text_layer"; bytes: string } | { failed: "missing" }
 
 export interface Store {
-  projectRoot: string
+  projectRoot: string | undefined
   locationRoot?: string
   atlasWrites: number
   chats: number
@@ -111,6 +161,9 @@ export interface Store {
   deleteChunk(id: string): void
   chunkCut(id: string): string
   setChunkCut(id: string, boundary: string): void
+  vectors(): VectorRow[]
+  putVector(chunkId: string, model: string, values: number[]): void
+  vector(chunkId: string, model: string): number[] | undefined
   pipeline(locationId: string): Pipeline
   setPipeline(locationId: string, pipeline: Pipeline): void
   revision(id: string): StoredRevision | undefined
@@ -148,7 +201,7 @@ export function textAt(store: Store, span: SpanRef) {
 }
 
 export function memoryStore(input: {
-  projectRoot: string
+  projectRoot: string | undefined
   locationRoot?: string
   allowExternal?: (locationId: string, file: string) => boolean
   files?: Record<string, string | { failed: "no_text_layer"; bytes: string }>
@@ -157,6 +210,7 @@ export function memoryStore(input: {
   const sources = new Map<string, SourceRow>()
   const chunks = new Map<string, Chunk>()
   const cuts = new Map<string, string>()
+  const vectors = new Map<string, number[]>()
   const pipelines = new Map<string, Pipeline>()
   const revisions = new Map<string, StoredRevision>()
   const failed = new Set<string>()
@@ -195,8 +249,15 @@ export function memoryStore(input: {
       return found
     },
     allocate(prefix) {
-      seq += 1
-      return `${prefix}_${seq}`
+      const used = prefix === "rev" ? revisions : prefix === "q" ? questions : undefined
+      if (!used) {
+        seq += 1
+        return `${prefix}_${seq}`
+      }
+      // The store is rebuilt per request. A fresh counter would reuse q_1 and rev_1 and erase the loaded row.
+      let n = 1
+      while (used.has(`${prefix}_${n}`)) n += 1
+      return `${prefix}_${n}`
     },
     sources: () => [...sources.values()],
     putSource(row) {
@@ -212,12 +273,26 @@ export function memoryStore(input: {
     deleteChunk(id) {
       chunks.delete(id)
       cuts.delete(id)
+      for (const key of [...vectors.keys()]) {
+        if (key.startsWith(`${id}\t`)) vectors.delete(key)
+      }
     },
     chunkCut(id) {
       return cuts.get(id) ?? "document"
     },
     setChunkCut(id, boundary) {
       cuts.set(id, boundary)
+    },
+    vectors: () =>
+      [...vectors.entries()].map(([key, values]) => {
+        const split = key.indexOf("\t")
+        return { chunkId: key.slice(0, split), model: key.slice(split + 1), values }
+      }),
+    putVector(chunkId, model, values) {
+      vectors.set(`${chunkId}\t${model}`, values)
+    },
+    vector(chunkId, model) {
+      return vectors.get(`${chunkId}\t${model}`)
     },
     pipeline(locationId) {
       return pipelines.get(locationId) ?? defaultPipeline()

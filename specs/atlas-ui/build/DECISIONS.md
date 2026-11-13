@@ -1,5 +1,7 @@
 # Atlas UI build: decisions
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../../docs/architecture/source-paths.md); old line numbers do not identify current code.
+
 Every decision is made here, before any task runs. A worker never chooses: if a brief leaves a choice open, the worker stops and reports it (see [README.md](README.md), "Worker contract"). The mock in `specs/atlas-ui/mock` is the reference for every screen, string and derivation; `specs/atlas-ui/DESIGN.md` explains it and `specs/atlas-ui/REQUIREMENTS.md` defines R1–R11.
 
 ## Architecture

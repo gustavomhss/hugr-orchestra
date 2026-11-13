@@ -8,19 +8,33 @@ import {
   RagRevisionTable,
   RagSourceTable,
   RagTraceTable,
+  RagVectorTable,
 } from "@orchestra/core/rag-studio/sql"
 import { extract } from "@orchestra/rag-studio/extract"
-import { memoryStore, noteBytes, withStore } from "@orchestra/rag-studio"
+import { admit, memoryStore, noteBytes, placed, withStore } from "@orchestra/rag-studio"
 import type { Store } from "@orchestra/rag-studio"
+import { Project } from "@orchestra/schema/project"
+import { parse, resolve } from "node:path"
 import { eq, inArray } from "drizzle-orm"
 import { Effect } from "effect"
 
 export function session<A>(db: Database.Interface["db"], run: (store: Store, locationId: string) => Promise<A>) {
   return Effect.gen(function* () {
     const location = yield* Location.Service
-    const locationId = location.directory
-    const sources = yield* db.select().from(RagSourceTable).where(eq(RagSourceTable.location_id, locationId)).all().pipe(Effect.orDie)
-    const chunks = yield* db.select().from(RagChunkTable).where(eq(RagChunkTable.location_id, locationId)).all().pipe(Effect.orDie)
+    const locationId = placed(location.directory)
+    yield* adopt(db, locationId)
+    const sources = yield* db
+      .select()
+      .from(RagSourceTable)
+      .where(eq(RagSourceTable.location_id, locationId))
+      .all()
+      .pipe(Effect.orDie)
+    const chunks = yield* db
+      .select()
+      .from(RagChunkTable)
+      .where(eq(RagChunkTable.location_id, locationId))
+      .all()
+      .pipe(Effect.orDie)
     const pipeline = yield* db
       .select()
       .from(RagPipelineTable)
@@ -43,11 +57,21 @@ export function session<A>(db: Database.Interface["db"], run: (store: Store, loc
           .pipe(Effect.orDie)
       : []
     const questions = revisionIds.length
-      ? yield* db.select().from(RagQuestionTable).where(inArray(RagQuestionTable.revision_id, revisionIds)).all().pipe(Effect.orDie)
+      ? yield* db
+          .select()
+          .from(RagQuestionTable)
+          .where(inArray(RagQuestionTable.revision_id, revisionIds))
+          .all()
+          .pipe(Effect.orDie)
       : []
     const questionIds = questions.map((row) => row.id)
     const traces = questionIds.length
-      ? yield* db.select().from(RagTraceTable).where(inArray(RagTraceTable.question_id, questionIds)).all().pipe(Effect.orDie)
+      ? yield* db
+          .select()
+          .from(RagTraceTable)
+          .where(inArray(RagTraceTable.question_id, questionIds))
+          .all()
+          .pipe(Effect.orDie)
       : []
     const files = yield* Effect.promise(async () => {
       const next: Record<string, string | { failed: "no_text_layer"; bytes: string }> = {}
@@ -59,8 +83,15 @@ export function session<A>(db: Database.Interface["db"], run: (store: Store, loc
       return next
     })
     const store = memoryStore({
-      projectRoot: location.project.directory,
-      locationRoot: location.directory,
+      // Project.resolve returns id global and the filesystem root outside any repo. That root is a
+      // placeholder, so a folder outside a repository keeps its own corpus.
+      projectRoot:
+        location.project.id === Project.ID.global &&
+        location.vcs === undefined &&
+        parse(location.project.directory).root === location.project.directory
+          ? undefined
+          : placed(location.project.directory),
+      locationRoot: locationId,
       files,
     })
     if (pipeline?.blocked) store.fail(locationId)
@@ -70,7 +101,12 @@ export function session<A>(db: Database.Interface["db"], run: (store: Store, loc
         boundary: pipeline.boundary,
         tokenizer: pipeline.tokenizer,
         lexical: true,
-        embedding: false,
+        embedding: pipeline.embedding_model.length > 0,
+        embeddingModel: pipeline.embedding_model,
+        queryModel: pipeline.query_model,
+        dimension: pipeline.dimension,
+        numericType: numeric(pipeline.numeric_type),
+        metric: metric(pipeline.metric),
         k: pipeline.k,
       })
     }
@@ -97,6 +133,13 @@ export function session<A>(db: Database.Interface["db"], run: (store: Store, loc
       })
       store.setChunkCut(row.id, row.boundary)
     }
+    const vectors = yield* db
+      .select()
+      .from(RagVectorTable)
+      .where(eq(RagVectorTable.location_id, locationId))
+      .all()
+      .pipe(Effect.orDie)
+    for (const row of vectors) store.putVector(row.chunk_id, row.model, JSON.parse(row.values) as number[])
     for (const row of revisions) {
       store.putRevision({
         id: row.id,
@@ -108,6 +151,7 @@ export function session<A>(db: Database.Interface["db"], run: (store: Store, loc
         boundary: row.boundary,
         tokenizer: row.tokenizer,
         k: row.k,
+        embeddingModel: row.embedding_model,
         members: members
           .filter((member) => member.revision_id === row.id)
           .map((member) => ({ sourceId: member.source_id, contentHash: member.content_hash })),
@@ -136,6 +180,117 @@ export function session<A>(db: Database.Interface["db"], run: (store: Store, loc
   })
 }
 
+export async function admitFile(store: Store, locationId: string, file: string) {
+  const path = placed(resolve(file))
+  const read = await extract(path)
+  if ("text" in read) store.writeFile(path, read.text)
+  if ("failed" in read && read.failed === "no_text_layer") store.writeFile(path, read)
+  return admit({ locationId, path })
+}
+
+function adopt(db: Database.Interface["db"], locationId: string) {
+  return Effect.gen(function* () {
+    const aliases = (yield* storedLocationIds(db)).filter(
+      (alias) => alias !== locationId && placed(alias) === locationId,
+    )
+    yield* Effect.forEach(aliases, (alias) => moveCorpus(db, alias, locationId), { discard: true })
+  })
+}
+
+function storedLocationIds(db: Database.Interface["db"]) {
+  return Effect.gen(function* () {
+    const rows = [
+      yield* db
+        .selectDistinct({ location_id: RagSourceTable.location_id })
+        .from(RagSourceTable)
+        .all()
+        .pipe(Effect.orDie),
+      yield* db.selectDistinct({ location_id: RagChunkTable.location_id }).from(RagChunkTable).all().pipe(Effect.orDie),
+      yield* db
+        .selectDistinct({ location_id: RagPipelineTable.location_id })
+        .from(RagPipelineTable)
+        .all()
+        .pipe(Effect.orDie),
+      yield* db
+        .selectDistinct({ location_id: RagRevisionTable.location_id })
+        .from(RagRevisionTable)
+        .all()
+        .pipe(Effect.orDie),
+      yield* db
+        .selectDistinct({ location_id: RagVectorTable.location_id })
+        .from(RagVectorTable)
+        .all()
+        .pipe(Effect.orDie),
+    ]
+    return [...new Set(rows.flat().map((row) => row.location_id))]
+  })
+}
+
+function moveCorpus(db: Database.Interface["db"], from: string, to: string) {
+  return Effect.gen(function* () {
+    const destination = yield* db
+      .select()
+      .from(RagPipelineTable)
+      .where(eq(RagPipelineTable.location_id, to))
+      .get()
+      .pipe(Effect.orDie)
+    const alias = yield* db
+      .select()
+      .from(RagPipelineTable)
+      .where(eq(RagPipelineTable.location_id, from))
+      .get()
+      .pipe(Effect.orDie)
+    if (destination && alias && destination.embedding_model.length === 0 && alias.embedding_model.length > 0) {
+      yield* db
+        .update(RagPipelineTable)
+        .set({
+          embedding_model: alias.embedding_model,
+          query_model: alias.query_model,
+          dimension: alias.dimension,
+          numeric_type: alias.numeric_type,
+          metric: alias.metric,
+        })
+        .where(eq(RagPipelineTable.location_id, to))
+        .run()
+        .pipe(Effect.orDie)
+    }
+    if (destination)
+      yield* db.delete(RagPipelineTable).where(eq(RagPipelineTable.location_id, from)).run().pipe(Effect.orDie)
+    if (!destination) {
+      yield* db
+        .update(RagPipelineTable)
+        .set({ location_id: to })
+        .where(eq(RagPipelineTable.location_id, from))
+        .run()
+        .pipe(Effect.orDie)
+    }
+    yield* db
+      .update(RagSourceTable)
+      .set({ location_id: to })
+      .where(eq(RagSourceTable.location_id, from))
+      .run()
+      .pipe(Effect.orDie)
+    yield* db
+      .update(RagChunkTable)
+      .set({ location_id: to })
+      .where(eq(RagChunkTable.location_id, from))
+      .run()
+      .pipe(Effect.orDie)
+    yield* db
+      .update(RagRevisionTable)
+      .set({ location_id: to })
+      .where(eq(RagRevisionTable.location_id, from))
+      .run()
+      .pipe(Effect.orDie)
+    yield* db
+      .update(RagVectorTable)
+      .set({ location_id: to })
+      .where(eq(RagVectorTable.location_id, from))
+      .run()
+      .pipe(Effect.orDie)
+  })
+}
+
 function save(
   db: Database.Interface["db"],
   store: Store,
@@ -145,10 +300,18 @@ function save(
 ) {
   return Effect.gen(function* () {
     if (previousQuestionIds.length) {
-      yield* db.delete(RagTraceTable).where(inArray(RagTraceTable.question_id, previousQuestionIds)).run().pipe(Effect.orDie)
+      yield* db
+        .delete(RagTraceTable)
+        .where(inArray(RagTraceTable.question_id, previousQuestionIds))
+        .run()
+        .pipe(Effect.orDie)
     }
     if (previousRevisionIds.length) {
-      yield* db.delete(RagQuestionTable).where(inArray(RagQuestionTable.revision_id, previousRevisionIds)).run().pipe(Effect.orDie)
+      yield* db
+        .delete(RagQuestionTable)
+        .where(inArray(RagQuestionTable.revision_id, previousRevisionIds))
+        .run()
+        .pipe(Effect.orDie)
       yield* db
         .delete(RagRevisionSourceTable)
         .where(inArray(RagRevisionSourceTable.revision_id, previousRevisionIds))
@@ -158,6 +321,7 @@ function save(
     yield* db.delete(RagRevisionTable).where(eq(RagRevisionTable.location_id, locationId)).run().pipe(Effect.orDie)
     yield* db.delete(RagChunkTable).where(eq(RagChunkTable.location_id, locationId)).run().pipe(Effect.orDie)
     yield* db.delete(RagSourceTable).where(eq(RagSourceTable.location_id, locationId)).run().pipe(Effect.orDie)
+    yield* db.delete(RagVectorTable).where(eq(RagVectorTable.location_id, locationId)).run().pipe(Effect.orDie)
     yield* db.delete(RagPipelineTable).where(eq(RagPipelineTable.location_id, locationId)).run().pipe(Effect.orDie)
     const sources = store.sources().filter((row) => row.locationId === locationId)
     if (sources.length) {
@@ -205,6 +369,11 @@ function save(
         tokenizer: pipeline.tokenizer,
         k: pipeline.k,
         blocked: store.failed(locationId) ? 1 : 0,
+        embedding_model: pipeline.embeddingModel,
+        query_model: pipeline.queryModel,
+        dimension: pipeline.dimension,
+        numeric_type: pipeline.numericType,
+        metric: pipeline.metric,
       })
       .run()
       .pipe(Effect.orDie)
@@ -223,6 +392,7 @@ function save(
             boundary: row.boundary ?? pipeline.boundary,
             tokenizer: row.tokenizer ?? pipeline.tokenizer,
             k: row.k ?? pipeline.k,
+            embedding_model: row.embeddingModel ?? pipeline.embeddingModel,
           })),
         )
         .run()
@@ -273,7 +443,32 @@ function save(
         .run()
         .pipe(Effect.orDie)
     }
+    const vectors = store.vectors().filter((row) => store.chunks().some((chunk) => chunk.id === row.chunkId))
+    if (vectors.length) {
+      yield* db
+        .insert(RagVectorTable)
+        .values(
+          vectors.map((row) => ({
+            chunk_id: row.chunkId,
+            model: row.model,
+            location_id: locationId,
+            values: JSON.stringify(row.values),
+          })),
+        )
+        .run()
+        .pipe(Effect.orDie)
+    }
   })
+}
+
+function numeric(value: string) {
+  if (value === "int8" || value === "binary") return value
+  return "float32" as const
+}
+
+function metric(value: string) {
+  if (value === "dot" || value === "distance") return value
+  return "cosine" as const
 }
 
 function status(value: string) {

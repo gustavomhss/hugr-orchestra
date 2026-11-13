@@ -98,7 +98,7 @@ const baseLayer = Layer.effect(
           mime: FSUtil.mimeType(target.real),
         }
       }),
-      list: (input = {}) => list(fs, location.directory, input),
+      list: (input = {}) => list(fs, location.directory, input).pipe(Effect.orDie),
     })
   }),
 )
@@ -122,7 +122,7 @@ export const list = Effect.fn("FileSystem.list")(function* (
   directory: string,
   input: ListInput = {},
 ) {
-  const target = yield* within(fs, directory, input.path).pipe(Effect.orDie)
+  const target = yield* within(fs, directory, input.path)
   const info = yield* fs.stat(target.real).pipe(Effect.orDie)
   if (info.type !== "Directory") return yield* Effect.die(new Error("Path is not a directory"))
   return yield* fs.readDirectoryEntries(target.real).pipe(

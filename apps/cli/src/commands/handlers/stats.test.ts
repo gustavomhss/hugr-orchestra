@@ -77,6 +77,21 @@ describe("stats", () => {
     }
   })
 
+  test("a failed message page is an error, not a partial total", async () => {
+    const server = stubServer((request) => {
+      const url = new URL(request.url)
+      if (request.method === "GET" && url.pathname === "/api/session")
+        return Response.json({ data: [session("ses_a", "proj_1", now, 100, 1)], cursor: {} })
+      return new Response("unavailable", { status: 500 })
+    })
+    const client = Orchestra.make({ baseUrl: clientUrl(server) })
+    try {
+      await expect(aggregate(client, {})).rejects.toThrow()
+    } finally {
+      server.stop(true)
+    }
+  })
+
   test("renders the overview, the optional model table and the tool bars", async () => {
     const s = stub()
     try {

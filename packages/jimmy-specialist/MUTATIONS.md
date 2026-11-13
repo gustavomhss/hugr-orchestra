@@ -1,5 +1,7 @@
 # Detecting mutation evidence
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../docs/architecture/source-paths.md); old line numbers do not identify current code.
+
 Measured on 2026-10-09 against baseline `f6d80d742a3372aa8559c339668b4af44c885147`, in isolated branch `jimmy-mutation-gates`. Each mutant was applied separately to production source, exercised by existing tests on GitHub Actions, then restored with the inverse patch. Tests and fixtures were not changed.
 
 ## Preserved positive controls

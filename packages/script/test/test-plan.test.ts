@@ -2,7 +2,46 @@ import { describe, expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { balance, packageLanes, packageShards, plannedBins, shardCount, suiteTimes, weigh, type Timings } from "../src/test-plan.ts"
 
+const registry: { modules: { kind: string; scope: string; name: string }[] } = JSON.parse(
+  readFileSync(new URL("../../../script/module-registry.json", import.meta.url), "utf8"),
+)
+
 describe("test shard planner", () => {
+  test("package filters cover each registered package once and keep future packages in libs", () => {
+    const packages = [...registry.modules.filter((entry) => entry.kind === "bun" && entry.scope === ".").map((entry) => entry.name), "@orchestra/future-package"]
+    for (const [platform, host] of [["linux", "ubuntu-24.04"], ["windows", "windows-latest"]] as const) {
+      const lanes = [
+        { part: "core", filters: "--filter=@orchestra/core" },
+        ...packageLanes(platform, host),
+      ] as { part: string; filters?: string }[]
+      for (const name of packages) {
+        const selected = lanes.filter((lane) => {
+          if (!lane.filters) return false
+          const filters = lane.filters.split(" ").map((filter) => filter.slice("--filter=".length))
+          const included = filters.filter((filter) => !filter.startsWith("!"))
+          return (included.length === 0 || included.includes(name)) && !filters.includes(`!${name}`)
+        }).map((lane) => lane.part)
+        expect(selected).toHaveLength(platform === "windows" && name === "@orchestra/httpapi-codegen" ? 0 : 1)
+        if (["@orchestra/desktop", "@orchestra/script"].includes(name))
+          expect(selected).toEqual([platform === "linux" ? "packages-libs" : `windows-${name.slice("@orchestra/".length)}`])
+        if (name === "@orchestra/future-package") expect(selected).toEqual([platform === "linux" ? "packages-libs" : "windows-libs"])
+      }
+    }
+  })
+
+  test("dedicated lanes preserve package filters and partition Linux HttpApi", () => {
+    const linux = packageLanes("linux", "ubuntu-24.04")
+    expect(linux.map((lane) => lane.part)).toEqual([
+      "packages-app", "packages-cli", "packages-atlas", "packages-relay", "packages-libs", "gates", "httpapi-1", "httpapi-2", "sandbox",
+    ])
+    expect(linux.filter((lane) => "httpapi" in lane && lane.httpapi).map((lane) => "httpapiShard" in lane ? lane.httpapiShard : undefined)).toEqual(["1/2", "2/2"])
+    const windows = packageLanes("windows", "windows-latest") as { part: string; filters?: string; budget?: number }[]
+    expect(windows.filter((lane) => ["windows-desktop", "windows-script", "windows-libs"].includes(lane.part)).map((lane) => lane.budget)).toEqual([15, 15, 15])
+    const libs = windows.find((lane) => lane.part === "windows-libs")!
+    expect(libs.filters).toContain("--filter=!@orchestra/desktop")
+    expect(libs.filters).toContain("--filter=!@orchestra/script")
+  })
+
   test("a platform's overhead scales its total before the shard count", () => {
     const timings: Timings = {
       target: { linux: 300, windows: 300, e2e: 300 },
@@ -15,6 +54,23 @@ describe("test shard planner", () => {
     expect(packageShards(timings, "packages/core", "linux")).toBe(3)
     expect(packageShards(timings, "packages/core", "windows")).toBe(5)
     expect(packageShards(timings, "packages/missing", "windows")).toBe(1)
+  })
+
+  test("new unmeasured files contribute to the package shard count", () => {
+    const actual = JSON.parse(readFileSync(new URL("../src/test-timings.json", import.meta.url), "utf8")) as Timings
+    const timings = { ...actual, target: { ...actual.target, linux: 1 }, margin: 1, files: { "packages/core:linux": { "test/behavior.test.ts": 1 } }, totals: { "packages/core": { linux: 1, windows: 1 } } }
+    expect(packageShards(timings, "packages/core", "linux")).toBeGreaterThan(1)
+  })
+
+  test("a network proof reserves its declared budget without rewriting its measured time", () => {
+    const actual = JSON.parse(readFileSync(new URL("../src/test-timings.json", import.meta.url), "utf8")) as Timings
+    const file = "test/review-toolkit/rustsec-native-refresh.test.ts"
+    const measured = { ...actual.files["packages/core:linux"], [file]: 1 }
+    const timings = { ...actual, reserves: {}, files: { ...actual.files, "packages/core:linux": measured } }
+    const reserved = { ...timings, reserves: { "packages/core:linux": { [file]: 300 } } }
+    expect(weigh("packages/core", measured, actual.totals["packages/core"]!.linux, reserved.reserves["packages/core:linux"]).find((entry) => entry.name === file)?.weight).toBe(300)
+    expect(packageShards(reserved, "packages/core", "linux")).toBeGreaterThan(packageShards(timings, "packages/core", "linux"))
+    expect(measured[file]).toBe(1)
   })
 
   test("relay, gates and rollback never share a lane with a bulk package", () => {
@@ -71,7 +127,7 @@ describe("test shard planner", () => {
     expect(start).not.toContain("console.")
     const shadow = strip(readFileSync(new URL("../../core/test/review-toolkit/dependency-shadow.test.ts", import.meta.url), "utf8"))
     const capsCall = (shadow.split("entry, path-byte and shared caps are inclusive")[0] ?? "").trimEnd().split("\n").at(-1) ?? ""
-    expect(capsCall).toBe(';(process.platform === "win32" ? it.live.skip : it.live)("')
+    expect(capsCall).toBe('if (process.platform !== "win32") it.live("')
     const recovery = strip(readFileSync(new URL("./recovery-bundle.test.ts", import.meta.url), "utf8"))
     const injection = recovery.split("destination %s injection cannot replace private restore publication")[1]?.split("\nasync function makeFixture")[0] ?? ""
     expect(injection.trimEnd().endsWith("}, 20_000)")).toBe(true)

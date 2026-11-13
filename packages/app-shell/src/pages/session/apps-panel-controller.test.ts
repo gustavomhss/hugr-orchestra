@@ -183,6 +183,30 @@ describe("MCP Dock controller", () => {
     expect(dock.calls.at(-1)).toEqual(["close-tab", "tab-1"])
   })
 
+  test("a tab that opens after the owner changed is not left up when close fails", async () => {
+    const dock = fakeDock()
+    dock.failClose(true)
+    const controller = createAppDockController(dock.api, translate)
+    const logged = capture()
+    try {
+      controller.attach(element(), profileA)
+      await until(() => controller.state.status === "ready")
+      const gate = Promise.withResolvers<void>()
+      dock.gate(gate.promise)
+      controller.setURL("https://example.com/late")
+      const late = controller.launch()
+      controller.attach(element(), profileB)
+      await until(() => controller.state.status === "ready")
+      gate.resolve()
+      await late
+      await settle()
+    } finally {
+      logged.restore()
+    }
+    expect(controller.state.error).toBe("close failed")
+    expect((logged.errors[0] as Error).message).toBe("close failed")
+  })
+
   test("an overlay over the Dock occludes the browser; closing it releases whichever tab is current", async () => {
     const dock = fakeDock()
     const controller = createAppDockController(dock.api, translate)
@@ -282,6 +306,26 @@ describe("MCP Dock controller", () => {
     ])
   })
 
+  test("a failed hide of a tab attached while no view shows the Dock is shown", async () => {
+    const dock = fakeDock()
+    dock.failHide(true)
+    dock.seed({
+      profiles: [{ id: "default", name: "default" }],
+      tabs: { default: [], [profileA]: [{ url: "https://example.com/a", pinned: false }] },
+    })
+    const controller = createAppDockController(dock.api, translate)
+    const logged = capture()
+    try {
+      controller.attach(element(), profileA)()
+      await until(() => controller.state.status === "ready")
+      await settle()
+    } finally {
+      logged.restore()
+    }
+    expect(controller.state.error).toBe("hide failed")
+    expect((logged.errors[0] as Error).message).toBe("hide failed")
+  })
+
   test("a tab the desktop attaches while no view shows the Dock is hidden by name", async () => {
     const dock = fakeDock()
     dock.seed({
@@ -364,6 +408,35 @@ describe("MCP Dock controller", () => {
       ["hide", tab("tab-2", 2)],
       ["select", tab("tab-1", 3)],
     ])
+  })
+
+  test("a failed hide of the tab shown before a crashed selection is shown", async () => {
+    const dock = fakeDock()
+    const controller = createAppDockController(dock.api, translate)
+    controller.attach(element(), profileA)
+    await until(() => controller.state.status === "ready")
+    controller.setURL("https://example.com/a")
+    await controller.launch()
+    await controller.openNewTab()
+    dock.emit({ type: "tab-crashed", payload: { identity: tab("tab-1", 1), reason: "crashed" } })
+    dock.failHide(true)
+    const logged: unknown[] = []
+    const original = console.error
+    console.error = (...args) => {
+      logged.push(args[0])
+    }
+
+    try {
+      controller.select(controller.state.tabs[0]!)
+      await settle()
+    } finally {
+      console.error = original
+    }
+
+    expect(controller.state.error).toBe("hide failed")
+    expect(logged.length).toBe(1)
+    expect(logged[0]).toBeInstanceOf(Error)
+    expect((logged[0] as Error).message).toBe("hide failed")
   })
 
   test("an evicted tab leaves the strip", async () => {
@@ -640,6 +713,54 @@ describe("MCP Dock controller with the Linux workspace", () => {
     await setup.controller.duplicate(linux)
     expect(setup.dock.calls.slice(calls).filter((call) => call[0] === "navigate" || call[0] === "open")).toEqual([])
   })
+
+  test("a failed hide when the last browser tab closes is shown", async () => {
+    const setup = await ready()
+    await openLinux(setup, workspace("linux-1", 10))
+    setup.controller.showBrowser()
+    setup.dock.failHide(true)
+    setup.dock.onCloseTab(() => setup.dock.emit({ type: "tab-selected", payload: tab("linux-1", 10) }))
+    const logged = capture()
+    try {
+      await setup.controller.close()
+    } finally {
+      logged.restore()
+    }
+    expect(setup.controller.state.error).toBe("hide failed")
+    expect((logged.errors[0] as Error).message).toBe("hide failed")
+  })
+
+  test("a failed hide when returning to an empty browser is shown", async () => {
+    const setup = await ready()
+    await openLinux(setup, workspace("linux-1", 10))
+    setup.controller.showBrowser()
+    const linux = setup.controller.state.tabs.find((item) => item.tabID === "linux-1")!
+    await setup.controller.closeTabs(linux, "others")
+    setup.dock.failHide(true)
+    const logged = capture()
+    try {
+      setup.controller.showBrowser()
+      await settle()
+    } finally {
+      logged.restore()
+    }
+    expect(setup.controller.state.error).toBe("hide failed")
+    expect((logged.errors[0] as Error).message).toBe("hide failed")
+  })
+
+  test("a failed hide when opening the Linux workspace is shown", async () => {
+    const setup = await ready()
+    setup.dock.failHide(true)
+    const logged = capture()
+    try {
+      expect(await setup.controller.openLinux()).toEqual({ status: "failed", code: "failed" })
+    } finally {
+      logged.restore()
+    }
+    expect(setup.dock.linuxPending()).toBe(0)
+    expect(setup.controller.state.error).toBe("hide failed")
+    expect((logged.errors[0] as Error).message).toBe("hide failed")
+  })
 })
 
 function element() {
@@ -679,6 +800,15 @@ function sized<T extends Element>(item: T, area: { x: number; y: number; width: 
   return item
 }
 
+function capture() {
+  const errors: unknown[] = []
+  const original = console.error
+  console.error = (...args) => {
+    errors.push(args[0])
+  }
+  return { errors, restore: () => (console.error = original) }
+}
+
 async function settle() {
   for (let index = 0; index < 10; index++) await new Promise((resolve) => setTimeout(resolve, 0))
 }
@@ -707,6 +837,8 @@ function fakeDock() {
     tabs: 0,
     gate: undefined as Promise<void> | undefined,
     failManifest: false,
+    failHide: false,
+    failClose: false,
     linux: [] as Array<(result: LinuxOpenResult) => void>,
     closing: undefined as ((tabID: string) => void) | undefined,
   }
@@ -733,6 +865,7 @@ function fakeDock() {
     },
     appDockHide: async (target: TabIdentity) => {
       calls.push(["hide", target])
+      if (state.failHide) throw new Error("hide failed")
     },
     appDockOcclude: async (occluded: boolean) => {
       calls.push(["occlude", occluded])
@@ -743,6 +876,7 @@ function fakeDock() {
     appDockCloseTab: async (tabID: string) => {
       calls.push(["close-tab", tabID])
       state.closing?.(tabID)
+      if (state.failClose) throw new Error("close failed")
     },
     appDockCloseTabs: async (tabID: string, scope: string) => {
       calls.push(["close-tabs", tabID, scope])
@@ -786,6 +920,8 @@ function fakeDock() {
     gate: (promise: Promise<void>) => (state.gate = promise),
     seed: (manifest: Pick<Manifest, "profiles" | "tabs">) => (state.manifest = { ...state.manifest, ...manifest }),
     failManifest: (value: boolean) => (state.failManifest = value),
+    failHide: (value: boolean) => (state.failHide = value),
+    failClose: (value: boolean) => (state.failClose = value),
     linuxPending: () => state.linux.length,
     resolveLinux: (result: LinuxOpenResult) => state.linux.shift()?.(result),
     onCloseTab: (callback: (tabID: string) => void) => (state.closing = callback),

@@ -2,7 +2,7 @@ export * as SandboxParents from "./sandbox-parents"
 
 import path from "node:path"
 import { lstat } from "node:fs/promises"
-import { lstatSync, mkdirSync, realpathSync, rmdirSync } from "node:fs"
+import { type BigIntStats, lstatSync, mkdirSync, realpathSync, rmdirSync } from "node:fs"
 import { Effect, Exit, Result } from "effect"
 import { FSUtil } from "./fs-util"
 import { ToolSafety } from "./tool-safety"
@@ -50,7 +50,7 @@ export const prepare = Effect.fn("SandboxParents.prepare")(function* (
   directory: string,
   targets: readonly string[],
 ) {
-  const created: { path: string; dev: number; ino: number }[] = []
+  const created: { path: string; dev: bigint; ino: bigint; birthtimeNs: bigint }[] = []
   return yield* Effect.gen(function* () {
     yield* Effect.forEach(targets, (target) => Effect.gen(function* () {
       if ((yield* fs.realPath(path.dirname(target)).pipe(
@@ -60,8 +60,8 @@ export const prepare = Effect.fn("SandboxParents.prepare")(function* (
       const info = yield* Effect.try({
         try: () => {
           mkdirSync(target, { mode: 0o755 })
-          const info = lstatSync(target)
-          created.push({ path: target, dev: info.dev, ino: info.ino })
+          const info = lstatSync(target, { bigint: true })
+          created.push({ path: target, dev: info.dev, ino: info.ino, birthtimeNs: info.birthtimeNs })
           return info
         },
         catch: () => new ToolSafety.Denied({ reason: "sandbox-parent-exclusive-mkdir" }),
@@ -82,14 +82,24 @@ export const prepare = Effect.fn("SandboxParents.prepare")(function* (
     // Nonrecursive rmdir refuses unfamiliar bytes. Changed identities or redirected ancestors are left alone.
     // Synchronous cleanup also runs on interruption with this Effect version.
     created.toReversed().forEach((entry) => Result.try(() => {
-      const info = lstatSync(entry.path)
-      if (!info.isDirectory() || info.isSymbolicLink() || info.dev !== entry.dev || info.ino !== entry.ino ||
+      const info = lstatSync(entry.path, { bigint: true })
+      if (!info.isDirectory() || info.isSymbolicLink() || !sameIdentity(info, entry) ||
         realpathSync(path.dirname(entry.path)) !== path.dirname(entry.path) || realpathSync(entry.path) !== entry.path)
         return
       rmdirSync(entry.path)
     }))
   })))
 })
+
+/** Full 64-bit IDs are required: Windows replacements can share even the exact creation timestamp. */
+export function sameIdentity(
+  left: Pick<BigIntStats, "dev" | "ino" | "birthtimeNs">,
+  right: Pick<BigIntStats, "dev" | "ino" | "birthtimeNs">,
+) {
+  // An omitted file ID cannot prove ownership, even when creation timestamps match.
+  return left.ino !== 0n && right.ino !== 0n &&
+    left.dev === right.dev && left.ino === right.ino && left.birthtimeNs === right.birthtimeNs
+}
 
 const stat = (target: string) => Effect.tryPromise({
   try: () => lstat(target).catch((error: unknown) => {

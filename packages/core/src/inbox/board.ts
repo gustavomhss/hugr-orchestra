@@ -9,6 +9,26 @@ import type { Pulled } from "./types"
 type Db = Database.Interface["db"]
 type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0]
 
+/** Ids that belong to this location's Board, open or not. Another location's rows are not in this set. */
+export const boardScope = Effect.fn("InboxBoard.scope")(function* (db: Db | Tx, location: Location.Interface) {
+  const questions = yield* db
+    .select({ id: BoardQuestionTable.id })
+    .from(BoardQuestionTable)
+    .innerJoin(BoardProjectTable, eq(BoardQuestionTable.project_id, BoardProjectTable.id))
+    .where(eq(BoardProjectTable.repo_project_id, location.project.id))
+    .all()
+  const issues = yield* db
+    .select({ id: BoardIssueTable.id })
+    .from(BoardIssueTable)
+    .innerJoin(BoardProjectTable, eq(BoardIssueTable.project_id, BoardProjectTable.id))
+    .where(eq(BoardProjectTable.repo_project_id, location.project.id))
+    .all()
+  return new Set([
+    ...questions.map((question) => `question:${question.id}`),
+    ...issues.map((issue) => `approval:${issue.id}`),
+  ])
+})
+
 /** A read-only projection of owner questions/intake/held deliveries; never invokes the Board runner or Maestro. */
 export const boardItems = Effect.fn("InboxBoard.items")(function* (db: Db | Tx, location: Location.Interface) {
   const questions = yield* db

@@ -31,6 +31,7 @@ export function splitThread(threadId: string) {
   return { channelID: threadId.slice(0, index), threadID: threadId.slice(index + 1) }
 }
 
+// Not called from Inbox.list. A location-scoped binding must not enter the installation inbox on open.
 export const pull = Effect.fn("InboxChannel.pull")(function* (
   db: Database.Interface["db"],
   location: Location.Interface,
@@ -40,7 +41,7 @@ export const pull = Effect.fn("InboxChannel.pull")(function* (
   // Discord acquisition now uses explicit, connection-bound Inbox selection and durable sync receipts.
   const pages = yield* Effect.forEach(
     targets.filter((target) => target.provider !== "discord"),
-    (target) => page(credentials, target).pipe(Effect.catch(() => Effect.succeed([]))),
+    (target) => page(credentials, target),
   )
   return pages.flat()
 })

@@ -28,16 +28,31 @@ export function noticeArtifacts(
   if (!Array.isArray(notices)) return "notice-invalid"
   const names = new Set<string>()
   const artifacts: PinnedArtifact.Artifact[] = []
+  const groups = new Map<string, number>()
   for (const notice of notices) {
     const source = noticeSource(notice)
     if (!source || names.has(source.filename) || collides(layout, source.filename)) return "notice-invalid"
     names.add(source.filename)
-    artifacts.push({
-      url: source.url,
-      integrity: source.integrity,
-      format: "raw",
-      entries: [{ from: source.from, to: `notices/${source.filename}` }],
-    })
+    const entry = { from: source.from, to: `notices/${source.filename}` }
+    if (!source.archive) {
+      artifacts.push({ url: source.url, integrity: source.integrity, format: "raw", entries: [entry] })
+      continue
+    }
+    const key = JSON.stringify([source.url, source.archive.format, source.archive.integrity])
+    const index = groups.get(key)
+    if (index === undefined) {
+      groups.set(key, artifacts.length)
+      artifacts.push({
+        url: source.url,
+        integrity: source.archive.integrity,
+        format: source.archive.format,
+        entries: [entry],
+      })
+      continue
+    }
+    const previous = artifacts[index]
+    if (previous.entries.some((existing) => existing.from === entry.from)) return "notice-invalid"
+    artifacts[index] = { ...previous, entries: [...previous.entries, entry] }
   }
   return artifacts
 }
@@ -62,10 +77,15 @@ export function noticeReadiness(
     if (parent.isSymbolicLink()) return "notice-symlink"
     if (!parent.isDirectory()) return "notice-missing"
     for (const artifact of checked) {
-      const filename = artifact.entries[0]?.to.slice("notices/".length) ?? ""
-      const read = yield* Effect.promise(() => readNotice(directory, filename, parent))
-      if (typeof read === "string") return read
-      if (`sha256-${createHash("sha256").update(read).digest("base64")}` !== artifact.integrity) return "notice-modified"
+      for (const entry of artifact.entries) {
+        const filename = entry.to.slice("notices/".length)
+        const declared = notices?.find((item) => item.filename === filename)
+        if (!declared) return "notice-invalid"
+        const read = yield* Effect.promise(() => readNotice(directory, filename, parent, artifact.format !== "raw"))
+        if (typeof read === "string") return read
+        // Archive integrity pins the download. Installed bytes are checked against the per-file digest before publication.
+        if (`sha256-${createHash("sha256").update(read).digest("base64")}` !== declared.integrity) return "notice-modified"
+      }
     }
     return undefined
   })
@@ -79,10 +99,32 @@ function noticeSource(notice: unknown) {
   try {
     const from = path.posix.basename(new URL(notice.url).pathname)
     if (from.length === 0 || from === "." || from === "..") return
-    return { filename: notice.filename, integrity: notice.integrity, url: notice.url, from }
+    if (!("archive" in notice) || notice.archive === undefined) {
+      return { filename: notice.filename, integrity: notice.integrity, url: notice.url, from, archive: undefined }
+    }
+    const archive = archiveSource(notice.archive)
+    if (!archive) return
+    return { filename: notice.filename, integrity: notice.integrity, url: notice.url, from: archive.member, archive }
   } catch {
     return
   }
+}
+
+function archiveSource(archive: unknown) {
+  if (archive === null || typeof archive !== "object") return
+  const format = "format" in archive ? archive.format : undefined
+  if (format !== "tar.gz" && format !== "zip") return
+  const integrity = "integrity" in archive ? archive.integrity : undefined
+  if (!sha256(integrity)) return
+  const member = "member" in archive ? archive.member : undefined
+  if (typeof member !== "string" || !memberPath(member)) return
+  return { format, integrity, member } as const
+}
+
+function memberPath(member: string) {
+  if (member.includes("\0") || member.includes("\\") || member.includes(":")) return false
+  if (path.posix.isAbsolute(member) || path.win32.isAbsolute(member)) return false
+  return member.split("/").every((part) => part.length > 0 && part !== "." && part !== "..")
 }
 
 function sha256(integrity: unknown): integrity is `sha256-${string}` {
@@ -111,7 +153,12 @@ function normalize(relative: string, caseFold: boolean) {
   return caseFold ? normal.toLowerCase() : normal
 }
 
-async function readNotice(directory: string, filename: string, parent: { dev: number; ino: number }): Promise<Uint8Array | string> {
+async function readNotice(
+  directory: string,
+  filename: string,
+  parent: { dev: number; ino: number },
+  singleLink = false,
+): Promise<Uint8Array | string> {
   const noticesDir = path.join(directory, "notices")
   const file = path.join(noticesDir, filename)
   let handle: FileHandle | undefined
@@ -119,15 +166,18 @@ async function readNotice(directory: string, filename: string, parent: { dev: nu
     const before = await lstat(file)
     if (before.isSymbolicLink()) return "notice-symlink"
     if (!before.isFile()) return "notice-missing"
+    if (singleLink && before.nlink !== 1) return "notice-linked"
     handle = await open(file, constants.O_RDONLY | NOFOLLOW)
     const opened = await handle.stat()
     if (!opened.isFile() || opened.dev !== before.dev || opened.ino !== before.ino) return "notice-symlink"
+    if (singleLink && opened.nlink !== 1) return "notice-linked"
     const bytes = new Uint8Array(await handle.readFile())
     const parentAfter = await lstat(noticesDir)
     if (parentAfter.isSymbolicLink() || !parentAfter.isDirectory() || parentAfter.dev !== parent.dev || parentAfter.ino !== parent.ino)
       return "notice-symlink"
     const after = await lstat(file)
     if (after.isSymbolicLink() || !after.isFile() || after.dev !== before.dev || after.ino !== before.ino) return "notice-symlink"
+    if (singleLink && after.nlink !== 1) return "notice-linked"
     return bytes
   } catch (error) {
     const code = error && typeof error === "object" && "code" in error ? error.code : undefined

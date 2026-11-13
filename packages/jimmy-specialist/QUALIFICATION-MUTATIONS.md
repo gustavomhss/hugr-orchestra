@@ -1,5 +1,7 @@
 # Qualification handoff mutation evidence
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../docs/architecture/source-paths.md); old line numbers do not identify current code.
+
 ## Baseline and scope
 
 Source: `594820460e8f8073a3665c98efa01f605a816417`; product tree: `3eea61b50e6a3e082ac6bcc557ed5cca18585802`.

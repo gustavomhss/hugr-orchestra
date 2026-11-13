@@ -2186,6 +2186,138 @@ describe("SessionRunnerLLM", () => {
     }),
   )
 
+  it.effect("durably fails a tool left running behind a compaction", () =>
+    Effect.gen(function* () {
+      yield* setup
+      const session = yield* SessionV2.Service
+      const events = yield* EventV2.Service
+      const store = yield* SessionStore.Service
+      const database = yield* Database.Service
+      yield* session.prompt({ sessionID, prompt: Prompt.make({ text: "Recover hidden tool" }), resume: false })
+      yield* SessionInput.promoteSteers(database.db, events, sessionID, Number.MAX_SAFE_INTEGER)
+      const tool = (callID: string, settle: "running" | "pending" | "completed") =>
+        Effect.gen(function* () {
+          const assistantMessageID = SessionMessage.ID.create()
+          const timestamp = yield* DateTime.now
+          yield* events.publish(SessionEvent.Step.Started, {
+            sessionID,
+            assistantMessageID,
+            timestamp,
+            agent: "maestro",
+            model: { id: ModelV2.ID.make("fake-model"), providerID: ProviderV2.ID.make("fake") },
+          })
+          yield* events.publish(SessionEvent.Tool.Input.Started, {
+            sessionID,
+            timestamp,
+            assistantMessageID,
+            callID,
+            name: "echo",
+          })
+          if (settle === "pending") return assistantMessageID
+          yield* events.publish(SessionEvent.Tool.Input.Ended, {
+            sessionID,
+            timestamp,
+            assistantMessageID,
+            callID,
+            text: "{\"text\":\"stale\"}",
+          })
+          yield* events.publish(SessionEvent.Tool.Called, {
+            sessionID,
+            timestamp,
+            assistantMessageID,
+            callID,
+            tool: "echo",
+            input: { text: "stale" },
+            provider: { executed: false },
+          })
+          if (settle === "running") return assistantMessageID
+          yield* events.publish(SessionEvent.Tool.Success, {
+            sessionID,
+            timestamp,
+            assistantMessageID,
+            callID,
+            structured: {},
+            content: [],
+            provider: { executed: false },
+          })
+          return assistantMessageID
+        })
+      const assistantMessageID = yield* tool("call-hidden", "running")
+      const pendingMessageID = yield* tool("call-pending-hidden", "pending")
+      const completedMessageID = yield* tool("call-done", "completed")
+      yield* events.publish(SessionEvent.Compaction.Ended, {
+        sessionID,
+        messageID: SessionMessage.ID.create(),
+        timestamp: yield* DateTime.now,
+        reason: "manual",
+        text: "summary hides the running tool",
+        recent: "",
+      })
+      const windowMessageID = yield* tool("call-window", "running")
+      const inWindow = (messages: ReadonlyArray<{ readonly id: string; readonly type: string }>, messageID: string) =>
+        messages.some((message) => message.type === "assistant" && message.id === messageID)
+      expect(inWindow(yield* store.context(sessionID), assistantMessageID)).toBe(false)
+      requests.length = 0
+      response = []
+      streamGate = yield* Deferred.make<void>()
+      streamStarted = yield* Deferred.make<void>()
+      const resumed = yield* session.resume(sessionID).pipe(Effect.forkChild)
+      yield* Deferred.await(streamStarted)
+      const interrupted = {
+        type: "tool",
+        state: { status: "error", error: { type: "unknown", message: "Tool execution interrupted" } },
+      }
+      const storedAtRequest = (yield* store.entries(sessionID)).find((entry) => entry.message.id === assistantMessageID)
+      expect(storedAtRequest?.message).toMatchObject({
+        type: "assistant",
+        content: [{ ...interrupted, id: "call-hidden" }],
+      })
+      expect(JSON.stringify(requests)).not.toContain("call-hidden")
+      expect(JSON.stringify(requests)).toContain("call-window")
+      yield* Deferred.succeed(streamGate, undefined)
+      yield* Fiber.join(resumed)
+      streamGate = undefined
+      streamStarted = undefined
+
+      const window = yield* store.context(sessionID)
+      expect(inWindow(window, assistantMessageID)).toBe(false)
+      expect(inWindow(window, pendingMessageID)).toBe(false)
+      expect(inWindow(window, completedMessageID)).toBe(false)
+      const stored = yield* store.entries(sessionID)
+      const message = (id: SessionMessage.ID) => stored.find((entry) => entry.message.id === id)?.message
+      expect(message(assistantMessageID)).toMatchObject({
+        type: "assistant",
+        content: [{ ...interrupted, id: "call-hidden" }],
+      })
+      expect(message(pendingMessageID)).toMatchObject({
+        type: "assistant",
+        content: [{ ...interrupted, id: "call-pending-hidden" }],
+      })
+      expect(message(completedMessageID)).toMatchObject({
+        type: "assistant",
+        content: [{ type: "tool", id: "call-done", state: { status: "completed" } }],
+      })
+      expect(message(windowMessageID)).toMatchObject({
+        type: "assistant",
+        content: [{ ...interrupted, id: "call-window" }],
+      })
+      expect(window.find((entry) => entry.id === windowMessageID)).toMatchObject({
+        type: "assistant",
+        content: [{ ...interrupted, id: "call-window" }],
+      })
+      expect(requests).toHaveLength(1)
+      expect(requests[0]?.messages.map((entry) => entry.role)).toContain("tool")
+      const failed = (yield* database.db
+        .select()
+        .from(EventTable)
+        .where(eq(EventTable.aggregate_id, sessionID))
+        .all()
+        .pipe(Effect.orDie)).filter((event) => event.type === EventV2.versionedType(SessionEvent.Tool.Failed.type, 1))
+      expect(failed.some((event) => event.data.callID === "call-hidden")).toBe(true)
+      expect(failed.some((event) => event.data.callID === "call-done")).toBe(false)
+    }),
+  )
+
   it.effect("durably fails hosted tools left running by a prior process before continuing inline", () =>
     Effect.gen(function* () {
       yield* setup

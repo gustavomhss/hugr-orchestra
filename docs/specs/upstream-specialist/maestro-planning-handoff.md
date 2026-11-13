@@ -1,5 +1,7 @@
 # Maestro planning-authorship transfer handoff
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../architecture/source-paths.md); old line numbers do not identify current code.
+
 Current identity correction: active upstream ID `archie`, profile `upstream`, assets `modules/specialists/archie`, config `agent.archie.name`; see [NAMING-CORRECTION.md](NAMING-CORRECTION.md) for exact parent-owned active-text replacements. Quoted replacements, source paths and pins below remain historical; they do not define an active old-ID alias.
 
 Status: documentation handoff on branch `upstream-docs`. Original worktree/live-prompt and playbook-anchor

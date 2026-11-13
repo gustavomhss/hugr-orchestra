@@ -1,5 +1,6 @@
 export * as ReviewCandidatesV2 from "./review-candidates"
 
+import { ReviewProbe } from "@orchestra/core/review-toolkit/probe"
 import { ReviewCatalog } from "@orchestra/core/review/catalog"
 import type { ReviewOutcomes } from "@orchestra/core/review/outcomes"
 import { ReviewRouting } from "@orchestra/core/review/routing"
@@ -19,8 +20,8 @@ export type Merged = Omit<ReviewResultV2.Candidate, "source"> & {
   readonly observation: boolean
 }
 
-// Fingerprint dedup across lens children, with agreement counted per lens and per overlapping analyzer item. An
-// observation outside a lens becomes a candidate of its class with the lowest rank. Agreement only orders the queue.
+// Fingerprint dedup across lens children and Deep samples. Agreement is unique (lens, sample) pairs plus overlapping
+// analyzer items, never duplicate emissions of one lens sample. It only orders the queue.
 export function decisionState(state: string | undefined) {
   if (state === "confirmed") return "confirmed" as const
   if (state === "dropped") return "refuted" as const
@@ -81,6 +82,8 @@ export function claimKey(fingerprint: string, candidate: { readonly line: number
 export function merge(
   returns: ReadonlyArray<{
     readonly lens: string
+    /** Zero when a caller predates sampling. */
+    readonly sample?: number
     readonly candidates: ReadonlyArray<ReviewResultV2.Candidate>
     readonly observations: ReviewResultV2.LensReturn["observations"]
     readonly sources: ReadonlyArray<string | undefined>
@@ -94,6 +97,7 @@ export function merge(
       return {
         candidate,
         lens: value.lens,
+        sample: value.sample ?? 0,
         observation: false,
         sources: source ? [source] : [],
       }
@@ -112,6 +116,7 @@ export function merge(
         quote: item.text,
       },
       lens: value.lens,
+      sample: value.sample ?? 0,
       observation: true,
       sources: [] as string[],
     })),
@@ -143,7 +148,7 @@ export function merge(
         fingerprint,
         lenses,
         sources: unique(group.flatMap((item) => item.sources)),
-        agreement: lenses.length + tools,
+        agreement: unique(group.map((item) => JSON.stringify([item.lens, item.sample]))).length + tools,
         observation: group.every((item) => item.observation),
       }
     })
@@ -165,6 +170,7 @@ export function options(catalog: ReviewCatalog.Catalog, tier: Tier, record: Revi
   const language = record.languages.map((item) => item.id).find((id) => entry.options[id])
   return (entry.options[language ?? "*"] ?? entry.options["*"] ?? [])
     .filter((option) => {
+      if (ReviewProbe.ADVANCED.some((id) => id === option.option) && (tier.id !== "deep" || !tier.built || tier.runs !== "deep")) return false
       const rung = catalog.options.find((item) => item.id === option.option)?.rung
       return rung !== undefined && tier.rungs[rung].includes(candidate.severity)
     })

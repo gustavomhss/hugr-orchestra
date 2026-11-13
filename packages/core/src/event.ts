@@ -143,7 +143,28 @@ export interface PublishOptions {
   readonly persist?: boolean
 }
 
+/** A lifecycle guard around the SQL transaction only, released before observer delivery. */
+export type CommitBoundary<A, E, R, E2 = never, R2 = never> =
+  (effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E | E2, R | R2>
+
+type PendingNotification = { readonly ticket: EventOrder.Ticket | undefined; readonly notifying: Effect.Effect<void> }
+const TransactionBatch = Context.Reference<{
+  readonly owner: object
+  readonly pending: PendingNotification[]
+} | undefined>("@orchestra/Event/TransactionBatch", { defaultValue: () => undefined })
+
 export interface Interface {
+  /**
+   * Commit nested publications atomically, then deliver their notifications outside SQL/lifecycle guards.
+   * Boundary-less nested calls flatten. New nested boundaries or unmanaged ambient SQL transactions are programmer
+   * defects, rejected before their effects run. Replay/replayAll composition is likewise rejected before effects.
+   * Cancellation after commit still schedules all committed notifications in the event service scope.
+   */
+  readonly transact: <A, E, R, E2 = never, R2 = never>(
+    effect: Effect.Effect<A, E, R>,
+    boundary?: CommitBoundary<A, E, R, E2, R2>,
+  ) => Effect.Effect<A, E | E2, R | R2>
+
   readonly publish: <D extends Definition>(
     /**
      * Reentrant persisted publishes to the same aggregate return after commit and scheduling.
@@ -209,8 +230,41 @@ export const layerWith = (options?: LayerOptions) =>
       const projectors = new Map<string, Projector[]>()
       // TODO: Bind durable projectors to exact type+version before supporting incompatible historical payloads.
       const listeners = new Array<Subscriber>()
-      const { db } = yield* Database.Service
+      const database = yield* Database.Service
+      const db = database.db
       const order = EventOrder.make(yield* Scope.Scope)
+      const owner = {}
+      const batch = Effect.map(TransactionBatch, (current) => current?.owner === owner ? current : undefined)
+      const wake = (aggregateID: string) => Effect.forEach(
+        pubsub.durable.get(aggregateID) ?? [], (signal) => PubSub.publish(signal, undefined), { discard: true },
+      )
+      const transact: Interface["transact"] = (effect, boundary) => Effect.uninterruptibleMask((restore) =>
+        Effect.gen(function* () {
+          if (yield* batch) {
+            if (boundary) return yield* Effect.die(new InvalidDurableEventError({
+              type: "event.transaction", message: "Nested event transactions cannot introduce a commit boundary",
+            }))
+            return yield* effect
+          }
+          if (database.inTransaction && (yield* database.inTransaction)) return yield* Effect.die(new InvalidDurableEventError({
+            type: "event.transaction", message: "Event transactions cannot begin inside an unmanaged SQL transaction",
+          }))
+          const current = { owner, pending: [] as PendingNotification[], committed: false }
+          const transaction = Effect.uninterruptible(db.transaction(
+            () => effect.pipe(Effect.provideService(TransactionBatch, current)), { behavior: "immediate" },
+          ).pipe(Effect.catchTag("SqlError", Effect.die), Effect.tap(() => Effect.sync(() => { current.committed = true }))))
+          // Acquisition is interruptible; SQL commit plus recording its outcome is masked. If cancellation arrives
+          // on guard release after commit, schedule the committed notifications before returning that interruption.
+          const outcome = yield* restore(boundary ? boundary(transaction) : transaction).pipe(Effect.exit)
+          if (!current.committed) {
+            yield* Effect.forEach(current.pending, (pending) => order.release(pending.ticket), { discard: true })
+            return yield* outcome
+          }
+          const waits = yield* Effect.forEach(current.pending, (pending) => order.schedule(pending.ticket, pending.notifying))
+          yield* restore(Effect.all(waits, { concurrency: "unbounded", discard: true }))
+          return yield* outcome
+        }),
+      )
 
       const getOrCreate = (definition: Definition) =>
         Effect.gen(function* () {
@@ -442,13 +496,7 @@ export const layerWith = (options?: LayerOptions) =>
                       { behavior: "immediate" },
                     )
                     .pipe(order.guard(box), Effect.orDie)
-                  if (committed) {
-                    yield* Effect.forEach(
-                      pubsub.durable.get(committed.aggregateID) ?? [],
-                      (wake) => PubSub.publish(wake, undefined),
-                      { discard: true },
-                    )
-                  }
+                  if (committed && !(yield* batch)) yield* wake(committed.aggregateID)
                   return committed
                 }),
               )
@@ -480,16 +528,30 @@ export const layerWith = (options?: LayerOptions) =>
             )
           if (definition?.durable) {
             const durable = definition.durable
-            const published = yield* order.commit(
-              commitDurableEvent(definition, event as Payload, undefined, commit, persist, true),
-              (committed) => {
+            const pending = yield* batch
+            if (pending) {
+              const committed = yield* commitDurableEvent(definition, event as Payload, undefined, commit, persist, true)
+              if (committed) {
                 const result = committedPayload(event as Payload, committed, durable.version)
-                return { value: result, notifying: notify(result, true) }
-              },
-            )
-            if (published) return published as Payload<D>
+                pending.pending.push({ ticket: committed.ticket, notifying: wake(committed.aggregateID).pipe(
+                  Effect.andThen(notify(result, true)),
+                ) })
+                return result as Payload<D>
+              }
+            } else {
+              const published = yield* order.commit(
+                commitDurableEvent(definition, event as Payload, undefined, commit, persist, true),
+                (committed) => {
+                  const result = committedPayload(event as Payload, committed, durable.version)
+                  return { value: result, notifying: notify(result, true) }
+                },
+              )
+              if (published) return published as Payload<D>
+            }
           }
-          yield* notify(event as Payload, false)
+          const pending = yield* batch
+          if (pending) pending.pending.push({ ticket: undefined, notifying: notify(event as Payload, false) })
+          else yield* notify(event as Payload, false)
           return event
         })
       }
@@ -543,6 +605,9 @@ export const layerWith = (options?: LayerOptions) =>
         options?: { readonly publish?: boolean; readonly ownerID?: string; readonly strictOwner?: boolean },
       ) {
         return Effect.gen(function* () {
+          if (yield* batch) return yield* Effect.die(new InvalidDurableEventError({
+            type: "event.transaction", message: "Replay is not supported inside an event transaction",
+          }))
           const definition = Durable.get(event.type)
           if (!definition?.durable) {
             yield* Effect.die(
@@ -584,6 +649,9 @@ export const layerWith = (options?: LayerOptions) =>
         options?: { readonly publish?: boolean; readonly ownerID?: string; readonly strictOwner?: boolean },
       ) {
         return Effect.gen(function* () {
+          if (yield* batch) return yield* Effect.die(new InvalidDurableEventError({
+            type: "event.transaction", message: "Replay is not supported inside an event transaction",
+          }))
           const source = events[0]?.aggregateID
           if (!source) return undefined
           if (events.some((event) => event.aggregateID !== source)) {
@@ -595,7 +663,7 @@ export const layerWith = (options?: LayerOptions) =>
             )
           }
           const box: { ticket?: EventOrder.Ticket } = {}
-          const batch = db
+          const committing = db
             .transaction(
               () =>
                 Effect.gen(function* () {
@@ -619,7 +687,7 @@ export const layerWith = (options?: LayerOptions) =>
               { behavior: "immediate" },
             )
             .pipe(order.guard(box), Effect.orDie)
-          yield* order.commit(batch, (committed) => ({
+          yield* order.commit(committing, (committed) => ({
             value: undefined,
             notifying: Effect.forEach(
               options?.publish ? committed.replayed.filter((event): event is Payload => event !== undefined) : [],
@@ -742,6 +810,7 @@ export const layerWith = (options?: LayerOptions) =>
         })
 
       return Service.of({
+        transact,
         publish,
         subscribe,
         all: streamAll,

@@ -45,6 +45,7 @@ export const makeFileSystemGroup = <I extends HttpApiMiddleware.AnyId, S>(locati
     HttpApiEndpoint.get("fs.list", "/api/fs/list", {
       query: ListQuery,
       success: Location.response(Schema.Array(FileSystem.Entry)),
+      error: InvalidRequestError,
     })
       .annotateMerge(locationQueryOpenApi)
       .annotateMerge(

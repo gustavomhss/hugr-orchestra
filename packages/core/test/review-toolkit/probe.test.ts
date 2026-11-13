@@ -1,4 +1,4 @@
-import { expect } from "bun:test"
+import { expect, test } from "bun:test"
 import path from "path"
 import { existsSync } from "fs"
 import { mkdir, readdir, readFile, readlink, writeFile } from "fs/promises"
@@ -6,6 +6,7 @@ import { Effect } from "effect"
 import { LayerNode } from "../../src/effect/layer-node"
 import { AppProcess } from "../../src/process"
 import { ProbeRun } from "../../src/research-toolkit/probe/run"
+import { ProbeRunners } from "../../src/research-toolkit/probe/runners"
 import { ReviewProbe, ReviewScratch } from "../../src/review-toolkit"
 import { testEffect } from "../lib/effect"
 import { jail } from "../lib/sandbox-host"
@@ -154,13 +155,68 @@ it.live("the host refuses an option not offered, a repeat on the same candidate 
   }), 120_000,
 )
 
-it.live("Deep and other unbuilt options answer not-run: not-built", () =>
+test("go test -race adds only that flag", () => {
+  expect(ProbeRunners.goTestArgs("./pkg", "Name", true)).toEqual(["test", "-race", "./pkg", "-run", "Name"])
+  expect(ProbeRunners.goTestArgs(".", undefined, false)).toEqual(["test", "."])
+})
+
+live("a non-go file is not a race probe", () =>
   Effect.gen(function* () {
     expectSpawn(import.meta.path)
     const fixture = yield* repo
     yield* Effect.scoped(Effect.gen(function* () {
       const head = yield* ReviewScratch.create({ worktree: fixture.root, tree: true })
-      const options = ["probe:mutants", "probe:interleave", "probe:race", "probe:property", "probe:fuzz"]
+      const shared = context(head, { offered: { c1: ["probe:race"] } })
+      const result = yield* ReviewProbe.run(probe("probe:race", { test: { file: "src/a.test.ts" } }), shared)
+      expect(result.result).toMatchObject({ status: "not-run", reason: "race-detector-absent" })
+    }))
+  }),
+)
+
+const goRepo = Effect.acquireRelease(Effect.promise(async () => {
+  const dir = await tmpdir()
+  const root = path.join(dir.path, "repo")
+  await mkdir(path.join(root, "pkg"), { recursive: true })
+  await git(root, "init", "-q")
+  await git(root, "config", "user.email", "probe@example.com")
+  await git(root, "config", "user.name", "Probe")
+  await writeFile(path.join(root, "go.mod"), "module example.com/probe\n\ngo 1.22\n")
+  await writeFile(path.join(root, "pkg", "a_test.go"), "package pkg\n\nimport \"testing\"\n\nfunc TestQuiet(t *testing.T) {}\n")
+  await git(root, "add", ".")
+  await git(root, "commit", "-q", "-m", "head")
+  return { dir, root }
+}), (fixture) => Effect.promise(() => fixture.dir[Symbol.asyncDispose]()))
+
+live("a go file is go test -race, or go itself is absent", () =>
+  Effect.gen(function* () {
+    expectSpawn(import.meta.path)
+    const fixture = yield* goRepo
+    const before = yield* Effect.promise(() => image(fixture.root))
+    yield* Effect.scoped(Effect.gen(function* () {
+      const head = yield* ReviewScratch.create({ worktree: fixture.root, tree: true })
+      const shared = context(head, { offered: { c1: ["probe:race"] }, timeoutSeconds: 120 })
+      const result = yield* ReviewProbe.run(probe("probe:race", { test: { file: "pkg/a_test.go", name: "TestQuiet" } }), shared)
+      if (result.result.reason === "runner-binary-missing: go") return
+      expect(result.result.status, result.artifact.text).not.toBe("not-run")
+      expect(result.artifact.text).toContain("-race")
+      expect(result.artifact.text).toContain("./pkg")
+      expect(result.artifact.text).toContain("-run")
+      expect(result.artifact.text).toContain("TestQuiet")
+      expect(result.evidence?.command).toContain("-race")
+      expect(result.evidence?.command).not.toContain("-count")
+    }))
+    expect(yield* Effect.promise(() => image(fixture.root))).toEqual(before)
+  }), 180_000,
+)
+
+it.live("unsupported formal and fuzz options answer not-run: not-built", () =>
+  Effect.gen(function* () {
+    expectSpawn(import.meta.path)
+    const fixture = yield* repo
+    yield* Effect.scoped(Effect.gen(function* () {
+      const head = yield* ReviewScratch.create({ worktree: fixture.root, tree: true })
+      // mutants, interleave and property are built; only these two still refuse before an attempt.
+      const options = ["probe:formal", "probe:fuzz"]
       const shared = context(head, { offered: { c1: options } })
       const results = yield* Effect.forEach(options, (option) => ReviewProbe.run(probe(option, { test: { file: "src/a.test.ts" } }), shared))
       results.forEach((result) => expect(result.result).toMatchObject({ status: "not-run", reason: "not-built", excerpt: "not-built" }))

@@ -275,7 +275,7 @@ function qaFixture(
       yield* run({
         inbox,
         credentials,
-        origin: server.url.origin,
+        origin: "https://jira.example.test",
         db: database.db,
         calls,
         auths,
@@ -365,6 +365,25 @@ qaFixture(
       expect(yield* db.select().from(InboxRowTable).all().pipe(Effect.orDie)).toEqual([])
     }),
 )
+
+for (const site of [
+  "http://jira.example.test",
+  "https://user:password@jira.example.test",
+  "https://jira.example.test/path",
+  "https://jira.example.test?query=1",
+  "https://jira.example.test#fragment",
+]) {
+  qaFixture(`QA-37 Jira refuses a non-origin site before transport: ${site}`, ({ inbox, calls }) =>
+    Effect.gen(function* () {
+      yield* inbox.connect({ source: "jira", token: "qa37-jira-secret", site, email: "ada@example.com" } as Parameters<
+        Inbox.Interface["connect"]
+      >[0] & { email?: string })
+      expect(yield* inbox.list()).toEqual([])
+      expect(calls).toHaveLength(0)
+      expect((yield* inbox.accounts()).find((item) => item.source === "jira")?.state).toBe("failed")
+    }),
+  )
+}
 
 qaFixture(
   "QA-37 Jira Basic control delivers and a later 401 stays failed with history",

@@ -1,5 +1,7 @@
 # R23 — OpenClaw tools, plugins, skills, execution policy
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../../architecture/source-paths.md); old line numbers do not identify current code.
+
 ## Decision
 
 Adopt **progressive, exact contracts; host-owned execution; complete skill bundles; deterministic read/reduce operations**. The backend specialist stays independent Orchestra plugin; Maestro integration optional; native Atlas owns grounding identity. Highest-value efficiency candidate: fetch bounded structured data once, join/filter locally, return useful evidence plus completeness. Smaller prompt alone does not mean cheaper execution.

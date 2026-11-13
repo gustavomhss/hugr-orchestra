@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "3ef1dd08-953e-44f5-92b5-48debd5c9d63",
+  "id": "06438ff3-666f-4a77-a0ea-2ca8c9dbd4ab",
   "prevIds": [
-    "85301028-fd53-42f5-8e9b-8d02789babb1"
+    "3ef1dd08-953e-44f5-92b5-48debd5c9d63"
   ],
   "ddl": [
     {
@@ -236,6 +236,10 @@
     },
     {
       "name": "rag_trace",
+      "entityType": "tables"
+    },
+    {
+      "name": "rag_vector",
       "entityType": "tables"
     },
     {
@@ -5410,6 +5414,56 @@
     },
     {
       "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "''",
+      "generated": null,
+      "name": "embedding_model",
+      "entityType": "columns",
+      "table": "rag_pipeline"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "''",
+      "generated": null,
+      "name": "query_model",
+      "entityType": "columns",
+      "table": "rag_pipeline"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "0",
+      "generated": null,
+      "name": "dimension",
+      "entityType": "columns",
+      "table": "rag_pipeline"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "'float32'",
+      "generated": null,
+      "name": "numeric_type",
+      "entityType": "columns",
+      "table": "rag_pipeline"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "'cosine'",
+      "generated": null,
+      "name": "metric",
+      "entityType": "columns",
+      "table": "rag_pipeline"
+    },
+    {
+      "type": "text",
       "notNull": false,
       "autoincrement": false,
       "default": null,
@@ -5590,6 +5644,16 @@
     },
     {
       "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": "''",
+      "generated": null,
+      "name": "embedding_model",
+      "entityType": "columns",
+      "table": "rag_revision"
+    },
+    {
+      "type": "text",
       "notNull": false,
       "autoincrement": false,
       "default": null,
@@ -5687,6 +5751,46 @@
       "name": "k",
       "entityType": "columns",
       "table": "rag_trace"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "chunk_id",
+      "entityType": "columns",
+      "table": "rag_vector"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "model",
+      "entityType": "columns",
+      "table": "rag_vector"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "location_id",
+      "entityType": "columns",
+      "table": "rag_vector"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "values",
+      "entityType": "columns",
+      "table": "rag_vector"
     },
     {
       "type": "text",
@@ -7839,6 +7943,16 @@
     },
     {
       "columns": [
+        "chunk_id",
+        "model"
+      ],
+      "nameExplicit": false,
+      "name": "rag_vector_pk",
+      "entityType": "pks",
+      "table": "rag_vector"
+    },
+    {
+      "columns": [
         "session_id",
         "position"
       ],
@@ -8778,6 +8892,20 @@
       "name": "rag_source_location_path",
       "entityType": "indexes",
       "table": "rag_source"
+    },
+    {
+      "columns": [
+        {
+          "value": "location_id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "rag_vector_location_idx",
+      "entityType": "indexes",
+      "table": "rag_vector"
     },
     {
       "columns": [

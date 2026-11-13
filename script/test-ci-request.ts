@@ -9,9 +9,12 @@ export const systems = {
 // Variables a run may set (--env), and the only values they may take. test-ci.yml checks the same. The omni flag takes
 // only its two omni states: "0" (legacy rollback) turns the omni positive control off, and any other value is invalid,
 // which core's flag parser also reads as legacy, so either would run a request on legacy with the control silenced.
-// Legacy rollback runs only in test.yml's named lanes.
-const envKeys = ["ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER"]
-const envValue = /^(?:1|strict)$/
+// Legacy rollback runs only in test.yml's named lanes. The production channel is
+// also allowed so browser checks exercise the configuration shipped to users.
+const envValues: Record<string, readonly string[]> = {
+  ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: ["1", "strict"],
+  ORCHESTRA_CHANNEL: ["prod"],
+}
 const configs = {
   "e2e/playwright.production.config.ts": { prefix: "e2e/", repeat: 1 },
   "e2e/performance/playwright.config.ts": { prefix: "e2e/performance/", repeat: 3 },
@@ -132,8 +135,9 @@ export function validateRequest(
 function requireEnv(env: unknown, source: string) {
   if (!env || typeof env !== "object" || Array.isArray(env)) throw new Error(`${source} must be an object`)
   return Object.fromEntries(Object.entries(env).map(([key, value]) => {
-    if (!envKeys.includes(key)) throw new Error(`${source} takes KEY=VALUE with KEY one of ${envKeys.join(", ")}`)
-    if (typeof value !== "string" || !envValue.test(value)) throw new Error(`${source} ${key} needs a value matching ${envValue}`)
+    if (!Object.hasOwn(envValues, key)) throw new Error(`${source} takes KEY=VALUE with KEY one of ${Object.keys(envValues).join(", ")}`)
+    const values = envValues[key]!
+    if (typeof value !== "string" || !values.includes(value)) throw new Error(`${source} ${key} needs a value matching ${values.join("|")}`)
     return [key, value]
   }))
 }

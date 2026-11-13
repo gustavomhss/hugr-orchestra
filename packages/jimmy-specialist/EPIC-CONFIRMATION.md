@@ -1,5 +1,7 @@
 # Frozen principal five-workflow confirmation
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../docs/architecture/source-paths.md); old line numbers do not identify current code.
+
 ## Final closure checkpoint — GREEN main CI
 
 Main [38030684084](https://github.com/gustavomhss/hugr-orchestra/actions/runs/38030684084), attempt 1, completed with all 12 jobs successful. This checkpoint supersedes the mechanical RED verdicts below while retaining their exact historical identities and failures. Model qualification remains blocked: 35/42 confirmation slots passed.

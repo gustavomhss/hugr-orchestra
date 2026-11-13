@@ -180,6 +180,9 @@ function Permissions() {
         </For>
       </ul>
       <Note>{t("orchestra.flightEngineer.permissions.hint")}</Note>
+      <Show when={flight.store.readinessFailed}>
+        <Note tone="bad">{t("common.requestFailed")}</Note>
+      </Show>
       <Show when={flight.store.waiting}>
         <p class="fe-waiting" role="status">
           {t("orchestra.flightEngineer.permissions.waiting")}

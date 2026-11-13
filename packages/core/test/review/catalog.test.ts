@@ -6,7 +6,7 @@ import astGrep from "../../src/backend-toolkit/packs/ast-grep"
 import gitleaks from "../../src/backend-toolkit/packs/gitleaks"
 import { ReviewCatalog } from "../../src/review/catalog"
 
-const catalog = ReviewCatalog.current
+const catalog: ReviewCatalog.Catalog = ReviewCatalog.current
 
 function star(severity: ReviewCatalog.Catalog["rules"][number]["severity"]) {
   return "*" in severity ? severity["*"] : undefined
@@ -28,7 +28,7 @@ const PHASE3_CLASSES = [
   "resources.lifetime", "performance.cost",
   "contracts.api", "contracts.semver", "contracts.data", "contracts.third-party", "contracts.ipc",
   "security.supply-chain", "security.ci", "security.infra",
-  "change.structure", "change.history", "change.merge", "change.provenance", "change.health",
+  "change.structure", "change.history", "change.merge", "change.provenance", "change.health", "change.duplication",
   "experience.interaction", "experience.a11y", "experience.visual", "experience.content",
   "privacy.processing",
 ] as const
@@ -39,14 +39,17 @@ const REGRESS = ["resources.lifetime", "performance.cost"] as const
 describe("review catalog", () => {
   test("entries decode and name exactly the phase 1 and phase 3 ids", () => {
     expect(() => Schema.decodeUnknownSync(ReviewCatalog.Catalog)(catalog)).not.toThrow()
-    expect(catalog.route.profiles.map((profile) => profile.id)).toEqual(["plan", "code", "rereview", "pr"])
+    expect(catalog.route.profiles.map((profile) => profile.id)).toEqual([
+      "plan", "code", "rereview", "pr", "release", "audit", "diligence", "artifact",
+    ])
     expect(catalog.route.tiers.map((tier) => [tier.id, tier.built, tier.runs])).toEqual([
-      ["quick", true, "quick"], ["standard", true, "standard"], ["deep", false, "standard"],
+      ["quick", true, "quick"], ["standard", true, "standard"], ["deep", true, "deep"],
     ])
     expect(catalog.overlays.map((overlay) => overlay.id)).toEqual([
       "docs", "concurrency", "api-wire", "data-migration", "performance", "ci-infra", "dependency", "ui", "personal-data", "github-actions",
     ])
     expect(catalog.lenses.map((lens) => [lens.id, lens.node])).toEqual([
+      ["security-release", "lucy-lens-security-release"],
       ["correctness-logic", "lucy-lens-correctness-logic"],
       ["correctness-edges", "lucy-lens-correctness-edges"],
       ["correctness-concurrency", "lucy-lens-correctness-concurrency"],
@@ -61,15 +64,36 @@ describe("review catalog", () => {
       ["privacy", "lucy-audit-compliance-privacy"],
     ])
     expect(catalog.classes.map((entry) => entry.id).toSorted()).toEqual(CLASSES.toSorted())
-    expect(new Set(catalog.classes.map((entry) => entry.node))).toEqual(new Set(["lucy-review-prove-quote", "lucy-review-prove-regress"]))
-    expect(catalog.lenses.flatMap((lens) => lens.classes).toSorted()).toEqual(CLASSES.toSorted())
+    expect(new Set(catalog.classes.map((entry) => entry.node))).toEqual(new Set([
+      "lucy-review-prove-quote", "lucy-review-prove-regress", "lucy-review-prove-race",
+      "lucy-review-prove-interleave", "lucy-review-prove-property", "lucy-review-prove-mutants",
+    ]))
+    expect(catalog.classes.find((entry) => entry.id === "concurrency.order")?.node).toBe("lucy-review-prove-race")
+    const atomicity = catalog.classes.find((entry) => entry.id === "concurrency.atomicity")
+    expect(atomicity?.node).toBe("lucy-review-prove-interleave")
+    expect(atomicity?.options["*"]?.map((option) => option.option)).toEqual(["quote", "probe:test", "probe:script"])
+    expect(atomicity?.options.go?.map((option) => option.option)).toEqual(["quote", "probe:test", "probe:race"])
+    expect(atomicity?.options["js-ts"]?.map((option) => option.option)).toEqual(["quote", "probe:test", "probe:interleave"])
+    const invariant = catalog.classes.find((entry) => entry.id === "logic.invariant")
+    expect(invariant?.node).toBe("lucy-review-prove-property")
+    expect(invariant?.options["*"]?.map((option) => option.option)).toEqual(["quote", "probe:test", "probe:script"])
+    expect(invariant?.options["js-ts"]?.map((option) => option.option)).toEqual(["quote", "probe:property", "probe:test"])
+    expect([...new Set(catalog.lenses.flatMap((lens) => lens.classes))].toSorted()).toEqual(CLASSES.toSorted())
     expect(catalog.options.map((option) => option.id)).toEqual([
-      "quote", "tool:gitleaks", "tool:repo", "tool:ast-grep", "probe:regress", "probe:test", "probe:typecheck", "probe:script",
+      "quote", "tool:gitleaks", "tool:repo", "tool:ast-grep", "probe:regress", "probe:test", "probe:typecheck", "probe:script", "probe:race",
+      "probe:mutants", "probe:interleave", "probe:property",
+      "tool:release-provenance", "tool:release-signing", "tool:release-updater", "tool:release-sbom", "tool:release-notes",
     ])
+    const order = catalog.classes.find((entry) => entry.id === "concurrency.order")
+    const go = order && "go" in order.options ? order.options.go : undefined
+    expect(go?.map((option) => option.option)).toEqual(["quote", "probe:test", "probe:race"])
+    expect(order?.options["*"]?.map((option) => option.option)).toEqual(["quote", "probe:test", "probe:script"])
     expect(catalog.languages.map((language) => [language.id, language.node])).toEqual([
       ["js-ts", "team-stack-js-ts"], ["python", "team-stack-python"], ["go", "team-stack-go"],
       ["ruby", "team-stack-ruby"], ["php", "team-stack-php"],
       ["sql", "team-stack-sql"],
+      ["rust", "team-stack-compiled-rust"], ["jvm", "team-stack-compiled-jvm"], ["native", "team-stack-compiled-native"],
+      ["dotnet", "team-stack-compiled-dotnet"], ["swift", "team-stack-compiled-swift"],
     ])
   })
 
@@ -83,6 +107,18 @@ describe("review catalog", () => {
       ["actionlint", "pinned", "probation"],
       ["oxlint", "pinned", "probation"],
       ["zizmor", "pinned", "probation"],
+      ["tsc", "path", "probation"],
+      ["go-vet", "path", "probation"],
+      ["staticcheck", "pinned", "probation"],
+      ["gosec", "pinned", "probation"],
+      ["golangci-lint", "path", "probation"],
+      ["shellcheck", "path", "probation"],
+      ["hadolint", "path", "probation"],
+      ["osv-scanner", "pinned", "probation"],
+      ["syft", "pinned", "probation"],
+      ["oxlint-type-aware", "pinned", "probation"],
+      ["jscpd", "pinned", "probation"],
+      ["cargo-audit", "pinned", "probation"],
     ])
     expect(catalog.rules.every((rule) => rule.status === "probation")).toBe(true)
   })
@@ -90,7 +126,7 @@ describe("review catalog", () => {
   test("lucy's gitleaks entry carries the backend toolkit's pin", () => {
     const entry = catalog.packs.find((pack) => pack.id === "gitleaks")
     expect(entry?.version).toBe(gitleaks.version)
-    expect(entry?.pin?.integrity).toEqual(
+    expect(entry && "pin" in entry ? entry.pin?.integrity : undefined).toEqual(
       Object.fromEntries(Object.entries(gitleaks.targets).map(([target, value]) => [target, value.artifact.integrity])),
     )
   })
@@ -99,7 +135,7 @@ describe("review catalog", () => {
     const entry = catalog.packs.find((pack) => pack.id === "ast-grep")
     expect(entry?.version).toBe("0.45.3")
     expect(entry?.version).toBe(astGrep.version)
-    expect(entry?.pin).toEqual({
+    expect(entry && "pin" in entry ? entry.pin : undefined).toEqual({
       source: "backend-toolkit/packs/ast-grep",
       integrity: Object.fromEntries(Object.entries(astGrep.targets).map(([target, value]) => [target, value.artifact.integrity])),
     })
@@ -143,7 +179,7 @@ describe("review catalog", () => {
     expect(lens("correctness-performance")?.classes).toEqual(["performance.cost"])
     expect(lens("contracts")?.classes).toEqual(["contracts.api", "contracts.semver", "contracts.data", "contracts.third-party", "contracts.ipc"])
     expect(lens("security")?.classes).toEqual(["security.boundary", "security.secret", "security.supply-chain", "security.ci", "security.infra"])
-    expect(lens("change")?.classes).toEqual(["change.structure", "change.history", "change.merge", "change.provenance", "change.health"])
+    expect(lens("change")?.classes).toEqual(["change.structure", "change.history", "change.merge", "change.provenance", "change.health", "change.duplication"])
     expect(lens("experience")?.classes).toEqual(["experience.interaction", "experience.a11y", "experience.visual", "experience.content"])
     expect(lens("privacy")?.classes).toEqual(["privacy.processing"])
     expect(lens("tests")?.classes).toEqual(["tests.missing", "tests.weak-oracle"])
@@ -160,7 +196,9 @@ describe("review catalog", () => {
     expect(boundary?.options["*"]?.map((option) => option.option)).toEqual(["quote", "tool:ast-grep", "probe:test"])
     expect(catalog.options.find((option) => option.id === "tool:ast-grep")).toEqual({ id: "tool:ast-grep", rung: "tool", cost: "low" })
     expect(klass("tests.missing")?.node).toBe("lucy-review-prove-regress")
-    expect(klass("tests.weak-oracle")?.node).toBe("lucy-review-prove-regress")
+    expect(klass("tests.weak-oracle")?.node).toBe("lucy-review-prove-mutants")
+    expect(klass("tests.weak-oracle")?.options["*"]?.map((option) => option.option)).toEqual(["quote", "probe:regress"])
+    expect(klass("tests.weak-oracle")?.options.rust?.map((option) => option.option)).toEqual(["quote", "probe:regress", "probe:mutants"])
   })
 
   test("phase 3 ast-grep rules stay on security.boundary, P2, probation, and require a quoted trigger", () => {
@@ -245,9 +283,16 @@ describe("review catalog", () => {
   })
 
   test("every language names a team-stack node that exists", async () => {
-    await Promise.all(catalog.languages.map(async (language) => {
-      expect(await Bun.file(path.join(team, language.node.replace(/^team-stack-/, "team-stack/"), "SKILL.md")).exists()).toBe(true)
-    }))
+    const names = new Set<string>()
+    const walk = async (dir: string, prefix: string) => {
+      for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
+        const next = prefix ? `${prefix}/${entry.name}` : entry.name
+        if (entry.isDirectory()) await walk(path.join(dir, entry.name), next)
+        else if (entry.name === "SKILL.md") names.add(next.slice(0, -"/SKILL.md".length).split("/").join("-"))
+      }
+    }
+    await walk(team, "")
+    for (const language of catalog.languages) expect(names.has(language.node)).toBe(true)
   })
 })
 
@@ -304,7 +349,7 @@ describe("review catalog id check", () => {
   test.each([
     ["lucy-lens/unused/SKILL.md", "lucy-lens-unused"],
     ["lucy-lens/correctness/unused/SKILL.md", "lucy-lens-correctness-unused"],
-    ["lucy-review/prove/mutants/SKILL.md", "lucy-review-prove-mutants"],
+    ["lucy-review/prove/formal/SKILL.md", "lucy-review-prove-formal"],
   ])("a node no route reaches fails: %s", async (file, name) => {
     const tree = await read(fixture)
     expect(() => ReviewCatalog.check(catalog, { ...tree, [file]: `---\nname: ${name}\n---\n` })).toThrow(`unreached-node: ${name} (${file})`)
@@ -314,11 +359,12 @@ describe("review catalog id check", () => {
     const tree = await read(fixture)
     const profiles = catalog.route.profiles.map((profile) => ({
       ...profile,
-      lenses: Object.fromEntries(Object.entries(profile.lenses).map(([tier, lenses]) => [tier, lenses.filter((lens: string) => lens !== "security")])),
+      lenses: Object.fromEntries(Object.entries(profile.lenses).map(([tier, lenses]) => [tier, lenses.filter((lens: string) => lens !== "security" && lens !== "security-release")])),
     }))
-    const overlays = catalog.overlays.map((overlay) => ({ ...overlay, lenses: overlay.lenses.filter((lens) => lens !== "security") }))
+    const overlays = catalog.overlays.map((overlay) => ({ ...overlay, lenses: overlay.lenses.filter((lens) => lens !== "security" && lens !== "security-release") }))
     const broken = { ...catalog, overlays, route: { ...catalog.route, profiles } }
     expect(() => ReviewCatalog.check(broken, tree)).toThrow("unreached-node: lucy-lens-security (lucy-lens/security/SKILL.md)")
+    expect(() => ReviewCatalog.check(broken, tree)).toThrow("unreached-node: lucy-lens-security-release (lucy-lens/security/release/SKILL.md)")
     expect(() => ReviewCatalog.check(broken, tree)).toThrow("unreached-node: lucy-lens-security-secrets (lucy-lens/security/secrets/SKILL.md)")
     // A routed node is reached through its own lens, never through an unrouted sibling's classes.
     const unrouted = { ...catalog, overlays: catalog.overlays.map((overlay) => ({ ...overlay, lenses: [] })) }

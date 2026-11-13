@@ -133,6 +133,11 @@ test("pipeline hash, revision identity, and embedding stays off", async () => {
       tokenizer: "utf16",
       lexical: true,
       embedding: false,
+      embeddingModel: "",
+      queryModel: "",
+      dimension: 0,
+      numericType: "float32",
+      metric: "cosine",
       k: 4,
     })
     const first = await openRevision("a")
@@ -232,7 +237,7 @@ test("boundary change waits for rechunk, then comparison names both questions", 
     const movedRow = after.questions.find((row) => row.id === moved.id)
     const keptRow = after.questions.find((row) => row.id === kept.id)
     expect(movedRow?.startChanged || movedRow?.endChanged || movedRow?.textChanged).toBe(true)
-    expect(keptRow).toEqual({ id: kept.id, startChanged: false, endChanged: false, textChanged: false })
+    expect(keptRow).toEqual({ id: kept.id, text: "solo", startChanged: false, endChanged: false, textChanged: false })
     expect(await compareRevisions(left.id, right.id, "other")).toEqual({ rejected: true })
     const twin = await openRevision("a")
     await setPipeline("a", "k", 2)

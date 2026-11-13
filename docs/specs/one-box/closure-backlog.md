@@ -15,7 +15,7 @@ This ledger is the active closure state. It does not certify live provider behav
 
 ## Still open without inventing evidence
 
-1. **Live provider scope that has never produced samples:** human-authored Slack messages and thread replies; provider-side revocation; YouTube's next genuinely new upload. These are not code debts; they are unobserved provider events.
+1. **Live provider scope that has never produced samples:** human-authored Slack messages and thread replies; provider-side revocation; YouTube's next genuinely new upload. These are not code debts; they are unobserved provider events. Rechecked 2026-11-10 on the isolated server: the 3 Slack rows are one join notice, not a human message or a thread reply. GitHub had 50 unread notifications, all `ci_activity`. QA-1 and the QA-52 keyboard step are closed in `qa-receipts.md`. Discord, GitLab, Trello, Sentry and PagerDuty stay deferred. Teams stays skipped.
 2. **Other providers' legitimate grants/registrations:** Jira, GitHub, Linear, Outlook mail and Calendar now have live
    installation grants (see addendum); Teams, Discord, GitLab, Trello, Sentry and PagerDuty remain
    manual-credential/interim, with Teams blocked on a legitimate work tenant (Microsoft 365 Developer Program sandbox
@@ -66,8 +66,18 @@ This ledger is the active closure state. It does not certify live provider behav
   `dev` after #1363 and #1364, so the landed tree also contains those distribution-payload files. The Inbox
   files in the squash match the pin. `test` workflow_dispatch run 42842000206 built `4d43e4762d`, not the
   squash tree, and completed success, 36/36 jobs; `guards` and `atlas-guard` were success on that pin. A chat
-  note about `0a3958feea` was not copied into `evidence/` and is not a repository record. This merge does not
-  declare go-live. Items 1–3 and 5 stay open.
+  note about `0a3958feea` was not copied into `evidence/` and is not a repository record. On 2026-11-10 this merge did not
+  declare go-live, and items 1–3 and 5 were still open. That sentence is not the current decision. The owner decision of 2026-11-11, below, is the go-live cut. Do not revive the 2026-11-10 refusal.
+
+  **Audit fixes, 2026-11-11.** The home rebind in `0ca1509c01` is not the installation inbox. Storage is the
+  installation owner, not `~` and not the open project. A selected project only projects Board and receives handoff.
+  Jira sites must be https origins. GitHub CI proof failures are failures. A check suite that also names someone
+  else's pull is not imported. Slack join and topic subtypes are not waiting items.
+
+  **Owner decision, 2026-11-11.** The leftovers are not a go-live gate. Human Slack messages, thread replies,
+  provider revocation and a new YouTube upload stay unobserved. Teams stays skipped. Discord, GitLab, Trello,
+  Sentry and PagerDuty stay deferred. None of that is a missing fix. The Inbox cut on `dev` is the go-live cut.
+  This does not certify those missing samples and does not tag a release.
 
 ## Live acceptance addendum — 2026-11-09 (this session, inbox-clean branch, PR #1350)
 

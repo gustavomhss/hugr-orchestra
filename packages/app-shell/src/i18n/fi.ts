@@ -1066,6 +1066,8 @@ export const dict = {
   "desktop.recovery.action.keepWaiting": "Jatka odottamista",
   "desktop.recovery.action.quit": "Lopeta",
   "desktop.recovery.loadFailed": "HuGR Orchestran lataaminen epäonnistui",
+  "desktop.startup.failed": "HuGR Orchestra could not start",
+  "desktop.startup.failed.detail": "{{reason}}\n\nLogs: {{logs}}",
   "desktop.recovery.terminated": "HuGR Orchestra -ikkuna sulkeutui odottamatta",
   "desktop.recovery.unresponsive": "HuGR Orchestra ei vastaa",
   "desktop.recovery.unresponsive.detail": "Voit käynnistää sovelluksen uudelleen, avata lokit tai jatkaa odottamista.",

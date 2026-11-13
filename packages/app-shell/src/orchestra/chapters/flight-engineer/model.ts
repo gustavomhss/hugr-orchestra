@@ -98,6 +98,27 @@ export function refusal(error: unknown): Refusal {
   return "other"
 }
 
+// Check again, and the reload after a write. A failed read is reported and does not reject, so a write that
+// landed is not shown as a meeting that failed to load.
+export function refreshMeeting<T>(input: {
+  read: Promise<T> | undefined
+  apply: (detail: T) => void
+  report: (error: unknown) => void
+}) {
+  const read = input.read
+  if (!read) return Promise.resolve(false)
+  return read.then(
+    (detail) => {
+      input.apply(detail)
+      return true
+    },
+    (error: unknown) => {
+      input.report(error)
+      return false
+    },
+  )
+}
+
 export type StartOptions = { retention: "kept" | "ephemeral"; consent: "announced" | "not-needed" | "unknown" }
 
 const symbols: Record<string, string> = {

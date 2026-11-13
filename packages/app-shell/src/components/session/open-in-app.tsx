@@ -6,6 +6,7 @@ import { useServer } from "@/context/server"
 import { Persist, persisted } from "@/utils/persist"
 import { showToast } from "@/utils/toast"
 import { openAppsForOS, type OpenApp, type OpenAppOS } from "@/open-apps"
+import { appPresent, settleAppCheck } from "./app-check"
 
 export function detectOpenAppOS(platform: ReturnType<typeof usePlatform>): OpenAppOS {
   if (platform.platform === "desktop" && platform.os) return platform.os
@@ -43,32 +44,40 @@ export function useOpenInApp(input: { directory: () => string }) {
   const [exists, setExists] = createStore<Partial<Record<OpenApp, boolean>>>({
     finder: true,
   })
+  const [check, setCheck] = createStore({ failed: false })
+  let appCheck = 0
+  const reportCheck = (error: unknown) => {
+    console.error(error)
+    if (check.failed) return
+    setCheck("failed", true)
+    showToast({ variant: "error", title: language.t("common.requestFailed") })
+  }
 
   createEffect(() => {
     if (platform.platform !== "desktop") return
-    if (!platform.checkAppExists) return
+    const read = platform.checkAppExists
+    if (!read) return
 
     const list = apps()
-
-    setExists(Object.fromEntries(list.map((app) => [app.id, undefined])) as Partial<Record<OpenApp, boolean>>)
-
-    void Promise.all(
-      list.map((app) =>
-        Promise.resolve(platform.checkAppExists?.(app.openWith))
-          .then((value) => Boolean(value))
-          .catch(() => false)
-          .then((ok) => [app.id, ok] as const),
-      ),
-    ).then((entries) => {
-      setExists(Object.fromEntries(entries) as Partial<Record<OpenApp, boolean>>)
-    })
+    const started = ++appCheck
+    setCheck("failed", false)
+    for (const app of list) {
+      void settleAppCheck({
+        read: Promise.resolve()
+          .then(() => read(app.openWith))
+          .then((value) => Boolean(value)),
+        current: () => started === appCheck,
+        apply: (value) => setExists(app.id, value),
+        report: reportCheck,
+      })
+    }
   })
 
   const options = createMemo(() => {
     return [
       { id: "finder", label: language.t(fileManager().label), icon: fileManager().icon },
       ...apps()
-        .filter((app) => exists[app.id])
+        .filter((app) => appPresent(exists[app.id]))
         .map((app) => ({ ...app, label: language.t(app.label) })),
     ] as const
   })
@@ -128,6 +137,7 @@ export function useOpenInApp(input: { directory: () => string }) {
   return {
     canOpen,
     opening,
+    checkFailed: () => check.failed,
     current,
     options,
     menu,

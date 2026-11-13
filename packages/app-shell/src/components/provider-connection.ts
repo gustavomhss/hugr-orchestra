@@ -104,6 +104,17 @@ export function createProviderConnectionState(
   return [store, setStore, dispatch, method, methodLabel, methodDetails] as const
 }
 
+// A sign-in cancel the user asked for. Failure is reported and does not reject, so the caller can keep the attempt.
+export function releaseAttempt(cancel: Promise<unknown>, report: (error: unknown) => void) {
+  return cancel.then(
+    () => true,
+    (error: unknown) => {
+      report(error)
+      return false
+    },
+  )
+}
+
 export function formatError(value: unknown, fallback: string): string {
   if (value && typeof value === "object" && "data" in value) {
     const data = (value as { data?: { message?: unknown } }).data

@@ -63,6 +63,36 @@ const read = (file: string, directory: string) =>
     HttpClient.execute,
   )
 
+const list = (file: string, directory: string) =>
+  HttpClientRequest.get("/api/fs/list").pipe(
+    HttpClientRequest.setUrlParam("path", file),
+    HttpClientRequest.setUrlParam("location[directory]", directory),
+    HttpClient.execute,
+  )
+
+it.live("fs.list answers the declared 400 for a path it cannot serve", () =>
+  Effect.gen(function* () {
+    const tmp = yield* Effect.acquireRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    )
+    const directory = yield* Effect.promise(() => fs.realpath(tmp.path))
+    yield* Effect.promise(() => fs.writeFile(path.join(directory, "hello.txt"), "hello"))
+
+    const served = yield* list(".", directory)
+    expect(served.status).toBe(200)
+
+    for (const [file, kind] of [
+      ["missing", "file_not_found"],
+      ["../outside", "path_outside_location"],
+    ] as const) {
+      const refused = yield* list(file, directory)
+      expect(refused.status).toBe(400)
+      expect(yield* refused.json).toMatchObject({ _tag: "InvalidRequestError", kind, field: "path" })
+    }
+  }),
+)
+
 it.live("fs.read serves a file and answers the declared 400 for a path it cannot serve", () =>
   Effect.gen(function* () {
     const tmp = yield* Effect.acquireRelease(

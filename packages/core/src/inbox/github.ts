@@ -148,10 +148,14 @@ export function listedPulls(raw: unknown) {
 }
 
 export function ownedUrl(item: CiTarget, login: string, evidence: CiEvidence) {
-  return relatedPulls(item, evidence).flatMap((path) => {
+  const related = relatedPulls(item, evidence)
+  if (related.length === 0) return
+  const owned = related.flatMap((path) => {
     const url = ownPull(evidence.pulls[path], login)
     return url === `${githubHost}${path}` ? [url] : []
-  })[0]
+  })
+  if (owned.length !== related.length) return
+  return owned[0]
 }
 
 export function relatedPulls(item: CiTarget, evidence: CiEvidence) {
@@ -168,19 +172,17 @@ export function loadCi(targets: readonly CiTarget[], token: string, options: Opt
     yield* Effect.forEach(targets, (item) =>
       Effect.gen(function* () {
         if (item.kind === "pull") {
-          const body = yield* githubGet(item.path, token, options).pipe(Effect.catch(() => Effect.succeed(undefined)))
+          const body = yield* githubGet(item.path, token, options)
           if (body) pulls[item.path] = body
           return
         }
         if (item.kind === "suite") {
-          const body = yield* githubGet(item.path, token, options).pipe(Effect.catch(() => Effect.succeed(undefined)))
+          const body = yield* githubGet(item.path, token, options)
           if (body) suites[item.path] = body
           yield* rememberPulls(body ? suitePulls(body) : [], pulls, token, options)
           return
         }
-        const body = yield* githubGet(`${item.path}/pulls`, token, options).pipe(
-          Effect.catch(() => Effect.succeed(undefined)),
-        )
+        const body = yield* githubGet(`${item.path}/pulls`, token, options)
         if (body) commits[item.path] = body
         yield* rememberPulls(body ? listedPulls(body) : [], pulls, token, options)
       }),
@@ -193,7 +195,7 @@ export function rememberPulls(paths: readonly string[], pulls: Record<string, un
   return Effect.forEach(paths, (path) =>
     Effect.gen(function* () {
       if (pulls[path]) return
-      const body = yield* githubGet(path, token, options).pipe(Effect.catch(() => Effect.succeed(undefined)))
+      const body = yield* githubGet(path, token, options)
       if (body) pulls[path] = body
     }),
   )

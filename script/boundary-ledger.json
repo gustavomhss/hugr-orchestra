@@ -452,18 +452,6 @@
     },
     {
       "rule": "R5",
-      "file": "packages/session-ui/src/components/lean-tool-metrics.test.ts",
-      "specifier": "../../../schema/src/lean-metrics",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "packages/session-ui/src/components/lean-tool-metrics.tsx",
-      "specifier": "../../../schema/src/lean-metrics",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
       "file": "tooling/httpapi-codegen/test/capability-contract.test.ts",
       "specifier": "../../../packages/schema/src/capability",
       "reason": "D8: relative import across a package root; retargets are deferred"
@@ -514,12 +502,6 @@
       "rule": "R7",
       "file": "packages/server/src/handlers/project-copy.ts",
       "specifier": "@orchestra/core/project/copy",
-      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
-    },
-    {
-      "rule": "R7",
-      "file": "packages/server/src/handlers/pty.ts",
-      "specifier": "@orchestra/core/pty/protocol",
       "reason": "D8: deep import into a cohesive module; retargets are optional later work"
     },
     {

@@ -33,7 +33,7 @@ import { formatServerError } from "@/utils/server-errors"
 import { authorizationURL, connectableIntegration } from "@/orchestra/chapters/providers-data"
 import { useClaudeMode } from "@/orchestra/use-claude-mode"
 import { CustomProviderForm } from "./dialog-custom-provider"
-import { createProviderConnectionState, formatError, type ConnectMethod } from "./provider-connection"
+import { createProviderConnectionState, formatError, releaseAttempt, type ConnectMethod } from "./provider-connection"
 
 const CUSTOM_ID = "_custom"
 // Not a provider: the first picker row enables Claude mode (Maestro on the user's Claude subscription).
@@ -304,12 +304,6 @@ function ProviderConnection(props: {
     timer.current = undefined
   })
 
-  // Releases the server's sign-in attempt (and the local port its listener holds); a finished attempt ignores it.
-  const cancelAttempt = (attemptID: string) =>
-    void serverSDK()
-      .api.integration.oauth.cancel({ integrationID: props.provider, attemptID, location: location() })
-      .catch(() => undefined)
-
   const provider = () => providers.all().get(props.provider) ?? { name: integration.data()?.name ?? props.provider }
   const fallback = createMemo<ConnectMethod[]>(() => [
     {
@@ -340,6 +334,30 @@ function ProviderConnection(props: {
     return values?.length ? values : fallback()
   })
   const [store, setStore, dispatch, method, , methodDetails] = createProviderConnectionState(methods, language.t)
+
+  // Releases the server's sign-in attempt (and the local port its listener holds); a finished attempt ignores it.
+  // One request per attempt, so Back and unmount do not cancel twice.
+  const cancelling = new Map<string, Promise<boolean>>()
+  const cancelAttempt = (attemptID: string) => {
+    const current = cancelling.get(attemptID)
+    if (current) return current
+    const pending = releaseAttempt(
+      serverSDK().api.integration.oauth.cancel({ integrationID: props.provider, attemptID, location: location() }),
+      (error) => {
+        console.error(error)
+        const text = formatError(error, language.t("orchestra.providers.oauth.failed"))
+        if (!alive.value) {
+          showToast({ variant: "error", title: language.t("common.requestFailed"), description: text })
+          return
+        }
+        setStore("error", text)
+      },
+    ).finally(() => {
+      if (cancelling.get(attemptID) === pending) cancelling.delete(attemptID)
+    })
+    cancelling.set(attemptID, pending)
+    return pending
+  }
 
   async function selectMethod(index: number, inputs?: Record<string, string>) {
     if (timer.current !== undefined) {
@@ -537,12 +555,21 @@ function ProviderConnection(props: {
     })
   }
 
-  function goBack() {
+  function leave() {
     if (methods().length > 1 && store.methodIndex !== undefined) {
       dispatch({ type: "method.reset" })
       return
     }
     props.onBack()
+  }
+
+  function goBack() {
+    const attemptID = store.authorization?.attemptID
+    if (!attemptID) return leave()
+    void cancelAttempt(attemptID).then((done) => {
+      if (!done || !alive.value) return
+      leave()
+    })
   }
 
   props.setBack(goBack)
@@ -852,6 +879,11 @@ function ProviderConnection(props: {
       </div>
       <div class="flex min-h-0 flex-1 flex-col">
         <div>
+          <Show when={store.error && store.state !== "error"}>
+            <div role="alert" class="px-3 pb-3 text-xs text-v2-state-fg-danger">
+              {store.error}
+            </div>
+          </Show>
           <Switch>
             <Match when={loading()}>
               <div class="text-14-regular text-text-base">

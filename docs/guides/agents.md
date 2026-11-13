@@ -34,7 +34,7 @@ Maestro agrees the goal with you, makes small changes itself, sends larger or pa
 | Enforced by | Rule |
 | --- | --- |
 | Playbook | Never merge a card's pull request directly. |
-| Host | A direct merge asks you first unless your configuration allows it. The merge queue bundles cards, runs the full suite once and merges. |
+| Host | Maestro cannot run `gh pr merge`. The host refuses that bash command and tells it to queue the card with `board_queue`. No setting lets that command succeed. Claude mode still asks you on the publish rule before that refusal; allowing that ask does not run the command. The merge queue bundles cards, runs the full suite once and merges. |
 | Host | **Governed mode** (opt-in, for auditable work): needs Atlas, a clean tree and fresh ownership facts; the code review seat approves the plan first; each step leaves an immutable record; you approve one exact dispatch (seat, prompt, model) with "approve" or "aprovo". The approval covers one dispatch with byte-identical input and lapses if the input changes or you send a newer message. |
 
 *Example:* Maestro sends the "why" question to the research seat and the plan to the product and architecture seat, then routes the fix and its new test to the backend seat with the plan's brief. When the fix returns, it removes the fix's key line, checks that the new test goes red and restores the line. With your go-ahead to open the pull request, it queues the card.
@@ -79,7 +79,7 @@ Domain rules from its skills:
 | Enforced by | Rule |
 | --- | --- |
 | Host | Write paths, the OS sandbox (macOS and Linux), refusal of publish commands. |
-| Host | Its result card can lower its own outcome but cannot mark the work verified; only the host's check run and the caller decide that. |
+| Host | Its result is recorded as not verified by the host. The tool that would record the caller's decision does not record one yet; Maestro reports the result to you instead. |
 
 *Example:* the brief says "repair: the handler creates a new provider request per submission; reuse the checkout id as the idempotency key". The seat gets the handler slice; the adapter slice follows against the frozen key format. It runs the supplied concurrency test (two submissions, one charge) and a control that drops the provider's response and retries with the same key. It returns the changed paths and each check with its exit code, with no claim that the work is verified.
 
@@ -96,7 +96,7 @@ Answers questions with evidence. Its method targets three usual failures: answer
 | --- | --- |
 | Host | Cannot edit project files; writes only research records and its own Atlas memory. |
 | Host | On close, mechanical citation checks: every cited line is inside text the seat captured; "only", "always" or "never" are backed by a complete search; a claim of absence names its search scope; no cited URL is dead, invented or outside the allowed domains (an unverifiable URL is named as a limitation). The result card is built from this checked record, not the seat's summary. The checks confirm the evidence exists, not that the reasoning is sound. |
-| Host | Depth budgets set by Maestro. When one runs out, the seat returns a partial answer and says what it did not examine. |
+| Host | Depth budgets set by Maestro. A spent tool-call budget refuses further tools except inquiry close. A spent provider budget refuses further turns; near the end only close runs. The time budget is a notice: past it, tools still run, and closing the inquiry is not refused. |
 
 | Depth | Tool calls | Time |
 | --- | --- | --- |

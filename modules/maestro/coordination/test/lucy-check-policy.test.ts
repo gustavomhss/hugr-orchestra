@@ -1,10 +1,11 @@
 import { expect, test } from "bun:test"
 import { Schema } from "effect"
-import type { ReviewAnalyze } from "@orchestra/core/review-toolkit/analyze"
+import { ReviewAnalyze } from "@orchestra/core/review-toolkit/analyze"
 import { ReviewCatalog } from "@orchestra/core/review/catalog"
 import { ReviewRouting } from "@orchestra/core/review/routing"
 import type { ReviewResultV2 } from "../src/v2/governance/review-result"
 import { ReviewChecksV2 } from "../src/v2/workflow/review-checks"
+import { MaestroReviewTools } from "../src/v2/tools/review"
 
 const budget = {
   lensChildren: 0, samples: 1, verifiers: 0, itemsPerLens: 1, loadsPerSession: 1,
@@ -76,6 +77,96 @@ const collect = (
   settings?: { review: { acceptedUnavailable: string[] } },
   extra: Partial<Pick<Parameters<typeof ReviewChecksV2.collect>[0], "entryBlockers" | "probes" | "catalog">> = {},
 ) => ReviewChecksV2.collect({ routing: routing(packs), checks, settings, catalog: ReviewCatalog.current, ...extra })
+
+test("the opened project enters the build lane; an external target does not", () => {
+  expect(MaestroReviewTools.analyzeLane(true)).toBe("build")
+  expect(MaestroReviewTools.analyzeLane(false)).toBe("repo")
+})
+
+test("citing typecheck.yml is not a missing tool, and a missing compiler still blocks", () => {
+  const routed = [pack("tsc", "routed")]
+  const cited = collect(routed, [analyzer({
+    id: "tsc", pack: "tsc", lane: "build", status: "not-run", reason: ReviewAnalyze.TYPECHECK_CI,
+  })])
+  expect(cited.checks[0]).toMatchObject({ status: "not-run", reason: ReviewAnalyze.TYPECHECK_CI })
+  expect(cited.checks[0]?.accepted).toBeUndefined()
+  expect(cited.blockers).toEqual([])
+  expect(() => ReviewChecksV2.authorize("APPROVE", cited)).not.toThrow()
+
+  const absent = collect(routed, [analyzer({
+    id: "tsc", pack: "tsc", lane: "build", status: "not-run", reason: "tsc absent",
+  })])
+  expect(absent.checks[0]).toMatchObject({ status: "check-unavailable", accepted: false })
+  expect(absent.blockers[0]?.kind).toBe("check-unavailable")
+  expect(() => ReviewChecksV2.authorize("APPROVE", absent)).toThrow("checks-blocked")
+})
+
+test("a missing language server is recorded and does not block, and its error does not veto", () => {
+  const absent = collect([], [analyzer({
+    id: "lsp", pack: "lsp", lane: "build", status: "not-run", reason: ReviewAnalyze.LSP_ABSENT,
+  })])
+  expect(absent.checks[0]).toMatchObject({ status: "not-run", reason: ReviewAnalyze.LSP_ABSENT })
+  expect(absent.checks[0]?.accepted).toBeUndefined()
+  expect(absent.blockers).toEqual([])
+  expect(() => ReviewChecksV2.authorize("APPROVE", absent)).not.toThrow()
+
+  const failed = collect([], [analyzer({
+    id: "lsp", pack: "lsp", lane: "build", status: "fail", reason: "fixture-diagnostic", workspaceExecuted: true,
+  })])
+  expect(failed.checks[0]?.status).toBe("fail")
+  expect(failed.blockers).toEqual([])
+  expect(() => ReviewChecksV2.authorize("APPROVE", failed)).not.toThrow()
+})
+
+test("an osv database age on the card does not turn a non-blocking absence into a blocker", () => {
+  const aged = collect([], [analyzer({
+    id: "osv-scanner", pack: "osv-scanner", lane: "no-build", status: "not-run",
+    reason: `${ReviewAnalyze.NATIVE_UNQUALIFIED}; ${ReviewAnalyze.OSV_DATABASE_AGE}2026-11-11T00:00:00.000Z`,
+  })])
+  expect(aged.checks[0]?.reason).toContain(ReviewAnalyze.OSV_DATABASE_AGE)
+  expect(aged.blockers).toEqual([])
+  expect(() => ReviewChecksV2.authorize("APPROVE", aged)).not.toThrow()
+})
+
+test("a missing osv advisory database is recorded and does not block", () => {
+  const absent = collect([], [analyzer({
+    id: "osv-scanner", pack: "osv-scanner", lane: "no-build", status: "not-run",
+    reason: ReviewAnalyze.OSV_DATABASE_ABSENT,
+  })])
+  expect(absent.checks[0]).toMatchObject({ status: "not-run", reason: ReviewAnalyze.OSV_DATABASE_ABSENT })
+  expect(absent.blockers).toEqual([])
+  expect(() => ReviewChecksV2.authorize("APPROVE", absent)).not.toThrow()
+})
+
+test("a missing invoke-if-installed tool is recorded and does not block", () => {
+  const absent = collect([], [analyzer({
+    id: "shellcheck", pack: "shellcheck", lane: "no-build", status: "not-run",
+    reason: "not run: shellcheck absent",
+  })])
+  expect(absent.checks[0]).toMatchObject({ status: "not-run", reason: "not run: shellcheck absent" })
+  expect(absent.blockers).toEqual([])
+  expect(() => ReviewChecksV2.authorize("APPROVE", absent)).not.toThrow()
+})
+
+test("a missing golangci-lint is recorded and does not block", () => {
+  const absent = collect([], [analyzer({
+    id: "golangci-lint", pack: "golangci-lint", lane: "build", status: "not-run",
+    reason: ReviewAnalyze.GOLANGCI_ABSENT,
+  })])
+  expect(absent.checks[0]).toMatchObject({ status: "not-run", reason: ReviewAnalyze.GOLANGCI_ABSENT })
+  expect(absent.blockers).toEqual([])
+  expect(() => ReviewChecksV2.authorize("APPROVE", absent)).not.toThrow()
+})
+
+test("an unqualified native runtime is recorded and does not block", () => {
+  const unqualified = collect([], [analyzer({
+    id: "oxlint-type-aware", pack: "oxlint-type-aware", lane: "build", status: "not-run",
+    reason: ReviewAnalyze.NATIVE_UNQUALIFIED,
+  })])
+  expect(unqualified.checks[0]).toMatchObject({ status: "not-run", reason: ReviewAnalyze.NATIVE_UNQUALIFIED })
+  expect(unqualified.blockers).toEqual([])
+  expect(() => ReviewChecksV2.authorize("APPROVE", unqualified)).not.toThrow()
+})
 
 test("accepts an exact id, not a pack name or a similarly named gate", () => {
   const checks = [analyzer({ id: "lint", status: "not-run", reason: "absent" })]

@@ -1,5 +1,7 @@
 # R26 — Hermes tools, middleware, MCP, programmatic execution
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../../architecture/source-paths.md); old line numbers do not identify current code.
+
 ## Decision
 
 Adapt **call-scoped composition over Orchestra's existing tools**: derive discovery from host-visible definitions; bind stable identity, effective arguments, authorization, cancellation and settlement to every nested call; return compact aggregates with honest outcome/cost metadata. Existing CodeMode supplies interpreter and discovery. Hermes contributes boundary lessons, not another runtime.

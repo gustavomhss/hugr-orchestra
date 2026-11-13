@@ -60,6 +60,8 @@ export const dict: Record<string, string> = {
   "desktop.recovery.action.keepWaiting": "བསྒུག་སྡོད།",
   "desktop.recovery.action.quit": "བཞག༌ནི",
   "desktop.recovery.loadFailed": "HuGR Orchestra མངོན་གསལ་འབད་ནི་ལུ་འཐུས་ཤོར་བྱུང་ཡོདཔ།",
+  "desktop.startup.failed": "HuGR Orchestra could not start",
+  "desktop.startup.failed.detail": "{{reason}}\n\nLogs: {{logs}}",
   "desktop.recovery.terminated": "HuGR Orchestra སྒོ་སྒྲིག་འདི་ རེ་བ་མེད་པར་ མཇུག་བསྡུ་ཡོདཔ།",
   "desktop.recovery.unresponsive": "HuGR Orchestra གིས་ ལན་གསལ་འབད་མི་བཏུབ།",
   "desktop.recovery.unresponsive.detail":

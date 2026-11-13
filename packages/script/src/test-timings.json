@@ -5,8 +5,8 @@
     "e2e": 270
   },
   "overhead": {
-    "linux": 1.7,
-    "windows": 2.2
+    "linux": 2,
+    "windows": 1.6
   },
   "margin": 1.15,
   "budget": {
@@ -880,6 +880,7 @@
       "test/research-toolkit/code-index-structural.test.ts": 1.2,
       "test/research-toolkit/code-index-toolkit.test.ts": 0.3,
       "test/research-toolkit/code-index-tree-sitter.test.ts": 0,
+      "test/review-toolkit/dependency-shadow.test.ts": 400,
       "test/ripgrep-binary.test.ts": 3.2,
       "test/ripgrep-bundle.test.ts": 2.3,
       "test/ripgrep.test.ts": 0.2,
@@ -996,7 +997,12 @@
   "totals": {
     "packages/core": {
       "linux": 1078,
-      "windows": 1400
+      "windows": 1644
+    }
+  },
+  "reserves": {
+    "packages/core:linux": {
+      "test/review-toolkit/rustsec-native-refresh.test.ts": 300
     }
   }
 }

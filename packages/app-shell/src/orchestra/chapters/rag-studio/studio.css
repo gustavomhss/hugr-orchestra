@@ -1,0 +1,248 @@
+/* Rag Studio additions to the shared kit. Tokens only. The reading pane is content material, not another glass. */
+
+.rag-studio > section:first-child > .mx-section {
+  margin-block-start: 0;
+}
+
+.rag-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rag-section-head .mx-section {
+  margin-block-end: 12px;
+}
+
+.rag-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-block-end: 16px;
+}
+
+.rag-form .mx-field {
+  flex: 1;
+  min-inline-size: 0;
+  margin-block-end: 0;
+}
+
+.rag-stage {
+  flex-wrap: wrap;
+  align-items: flex-start;
+  row-gap: 12px;
+  column-gap: 16px;
+}
+
+.rag-stage .mx-grow {
+  flex: 1 1 16rem;
+  min-inline-size: min(100%, 16rem);
+}
+
+.rag-stage .rag-segment,
+.rag-stage .mx-badge,
+.rag-stage .mx-btn,
+.rag-stage .rag-k {
+  flex: none;
+}
+
+.rag-stage .rag-span {
+  flex: 1 1 100%;
+  margin-block-end: 0;
+}
+
+.rag-stage .rag-k {
+  inline-size: 5.5rem;
+  margin-block-end: 0;
+}
+
+.rag-section-head .mx-badge {
+  max-inline-size: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.rag-studio .mx-field input[spellcheck="false"] {
+  font-family: var(--mx-mono);
+}
+
+.rag-lights {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.rag-lights li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--mx-line);
+  border-radius: var(--orchestra-radius-md);
+  background: var(--mx-soft);
+  color: var(--mx-dim);
+}
+
+.rag-lights li[data-on="true"] {
+  border-color: var(--mx-blue);
+  background: var(--mx-enabled);
+  color: var(--mx-strong);
+}
+
+.rag-light-mark {
+  inline-size: 8px;
+  block-size: 8px;
+  flex: none;
+  margin-block-start: 4px;
+  border: 1px solid var(--mx-line);
+  border-radius: 50%;
+  background: transparent;
+}
+
+.rag-lights li[data-on="true"] .rag-light-mark {
+  border-color: var(--mx-blue);
+  background: var(--mx-blue);
+}
+
+.rag-light-name {
+  min-inline-size: 0;
+  font-family: var(--mx-emphasis);
+  font-size: var(--orchestra-font-size-sm);
+  font-weight: 600;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.rag-open-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-block-end: 8px;
+}
+
+.rag-open-head .mx-note {
+  margin: 0;
+}
+
+.rag-path {
+  font-family: var(--mx-mono);
+  overflow-wrap: anywhere;
+}
+
+.rag-source {
+  max-block-size: 360px;
+  overflow: auto;
+  margin: 0;
+}
+
+.rag-source mark {
+  border-radius: var(--orchestra-radius-sm);
+  outline: 1px solid var(--mx-blue);
+  background: var(--mx-enabled);
+  color: var(--mx-strong);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.rag-studio .mx-row[data-selected="true"],
+.rag-studio .mx-row[data-changed="true"] {
+  background: var(--mx-enabled);
+}
+
+.rag-studio .mx-row strong,
+.rag-studio .mx-row small {
+  overflow-wrap: anywhere;
+}
+
+.rag-studio .mx-row small {
+  font-family: var(--mx-mono);
+}
+
+button.rag-pick {
+  inline-size: 100%;
+  border: 0;
+  border-block-start: 1px solid var(--mx-line);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.mx-table > button.rag-pick:first-child {
+  border-block-start: 0;
+}
+
+button.rag-pick:hover {
+  background: var(--mx-soft);
+}
+
+button.rag-pick[aria-pressed="true"] {
+  background: var(--mx-enabled);
+  color: var(--mx-strong);
+}
+
+button.rag-pick:focus-visible,
+.rag-segment .mx-btn:focus-visible {
+  outline: 2px solid var(--mx-blue);
+  outline-offset: 2px;
+}
+
+.rag-segment {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--mx-line);
+  border-radius: var(--orchestra-radius-md);
+  background: var(--mx-soft);
+}
+
+.rag-segment .mx-btn {
+  border-color: transparent;
+  background: transparent;
+}
+
+.rag-segment .mx-btn[aria-pressed="true"] {
+  border-color: var(--mx-line);
+  background: var(--mx-raised);
+  color: var(--mx-strong);
+}
+
+.rag-label {
+  color: var(--mx-dim);
+  font-size: var(--orchestra-font-size-sm);
+}
+
+.rag-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-block-start: 12px;
+}
+
+.rag-passage {
+  display: block;
+  color: var(--mx-strong);
+  font-size: var(--orchestra-font-size-sm);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.rag-follow {
+  margin-block-start: 16px;
+}
+
+@media (max-width: 860px) {
+  .rag-lights {
+    grid-template-columns: 1fr 1fr;
+  }
+}

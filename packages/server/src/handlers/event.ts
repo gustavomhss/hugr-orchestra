@@ -26,19 +26,45 @@ export const eventFrames = (encode: (data: unknown) => string = encodeEvent) => 
 // still retain substantial memory per slow subscriber.
 export const subscriberCapacity = 4096
 
+function eventType(data: object) {
+  const type = "type" in data ? data.type : undefined
+  return typeof type === "string" ? type : "unknown"
+}
+
 export const eventStream = (events: EventV2.Interface, frame = eventFrames()) => {
   const connected = {
     id: EventV2.ID.create(),
     type: "server.connected",
     data: {},
   }
+  // Research, LSP and project events are published on this bus and are not in the public schema. Encoding
+  // them used to throw and end every open subscription. Skip the event and say so once per type.
+  const skipped = new Set<string>()
   const output = Stream.unwrap(
     Effect.gen(function* () {
       // Acquiring the bounded stream installs its listener before readiness is observable.
       const live = yield* EventV2.allBounded(events, subscriberCapacity)
       return Stream.make(connected).pipe(Stream.concat(live))
     }),
-  ).pipe(Stream.map(frame), Stream.pipeThroughChannel(Sse.encode()))
+  ).pipe(
+    Stream.mapEffect((data) =>
+      Effect.try({
+        try: () => frame(data),
+        catch: () => eventType(data),
+      }).pipe(
+        Effect.catch((type) =>
+          skipped.has(type)
+            ? Effect.succeed(undefined)
+            : Effect.logWarning("event stream skipped an event the public schema cannot name", { type }).pipe(
+                Effect.andThen(Effect.sync(() => skipped.add(type))),
+                Effect.as(undefined),
+              ),
+        ),
+      ),
+    ),
+    Stream.filter((event): event is Sse.Event => event !== undefined),
+    Stream.pipeThroughChannel(Sse.encode()),
+  )
   // A comment frame keeps idle connections open and tells the client the server is alive.
   const heartbeat = Stream.tick("15 seconds").pipe(Stream.map(() => ": heartbeat\n\n"))
   return output.pipe(Stream.merge(heartbeat, { haltStrategy: "left" }), Stream.encodeText)

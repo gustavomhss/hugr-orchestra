@@ -2,11 +2,16 @@ import { SessionProcess } from "@orchestra/core/session-process"
 import { MoveSession } from "@orchestra/core/control-plane/move-session"
 import { TaskBackground } from "@orchestra/core/tool/task-background"
 import { expect } from "bun:test"
+import fs from "fs/promises"
+import os from "os"
+import path from "path"
 import { NodeHttpServer, NodeServices } from "@effect/platform-node"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { Database } from "@orchestra/core/database/database"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { Location } from "@orchestra/core/location"
 import { LocationServiceMap } from "@orchestra/core/location-service-map"
+import { AbsolutePath } from "@orchestra/core/schema"
 import { AppProcess } from "@orchestra/core/process"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { SessionV2 } from "@orchestra/core/session"
@@ -23,6 +28,7 @@ import { testEffect } from "@orchestra/core/test/lib/effect"
 import { ServerAuth } from "../src/auth"
 import { SessionHandler } from "../src/handlers/session"
 import { authorizationLayer } from "../src/middleware/authorization"
+import { bootLocation } from "../src/location"
 import { SessionLocationMiddleware, sessionLocationLayer } from "../src/middleware/session-location"
 import { schemaErrorLayer } from "../src/middleware/schema-error"
 
@@ -103,6 +109,47 @@ it.live("real HTTP background releases the foreground subagent the Session waits
     expect(again.data).toBe(0)
     const missing = yield* post("/api/session/ses_missing/background")
     expect(missing.status).toBe(404)
+    expect(yield* missing.json).toMatchObject({ _tag: "SessionNotFoundError", sessionID: "ses_missing" })
+  }),
+)
+
+// The real session-location middleware already 404s a missing row before the handler runs. This one boots a location
+// and does not look up the session, so the test fails if session.events still returns the stream and Stream.orDie.
+const reachHandler = Layer.effect(
+  SessionLocationMiddleware,
+  Effect.gen(function* () {
+    const locations = yield* LocationServiceMap.Service
+    const directory = yield* Effect.promise(() => fs.mkdtemp(path.join(os.tmpdir(), "orchestra-events-")))
+    const location = Location.Ref.make({ directory: AbsolutePath.make(directory) })
+    return SessionLocationMiddleware.of((effect) =>
+      Effect.gen(function* () {
+        return yield* effect.pipe(Effect.provide(bootLocation(locations.get(location), location)))
+      }),
+    )
+  }),
+)
+const handlerRoutes = HttpApiBuilder.layer(
+  HttpApi.make("server").add(makeSessionGroup(SessionLocationMiddleware)).middleware(SchemaErrorMiddleware),
+).pipe(
+  Layer.provide(SessionHandler),
+  Layer.provide(reachHandler),
+  Layer.provide(schemaErrorLayer),
+  Layer.provide(authorizationLayer),
+  Layer.provide(ServerAuth.Config.configLayer({ username: "orchestra", password: Option.none() })),
+)
+const handlerIt = testEffect(
+  HttpRouter.serve(handlerRoutes, { disableListenLog: true, disableLogger: true }).pipe(
+    Layer.provideMerge(NodeHttpServer.layerTest),
+    Layer.provideMerge(NodeServices.layer),
+    Layer.provideMerge(services),
+  ),
+)
+
+handlerIt.live("a missing session that reaches the handler is the declared 404, not an event stream", () =>
+  Effect.gen(function* () {
+    const missing = yield* request("/api/session/ses_missing/event")
+    expect(missing.status).toBe(404)
+    expect(missing.headers["content-type"] ?? "").not.toContain("text/event-stream")
     expect(yield* missing.json).toMatchObject({ _tag: "SessionNotFoundError", sessionID: "ses_missing" })
   }),
 )

@@ -55,7 +55,16 @@ export const FileSystemHandler = HttpApiBuilder.group(Api, "server.fs", (handler
               workspaceID: location.workspaceID,
               project: { id: project.id, directory: project.directory },
             }),
-            data: yield* FileSystem.list(fsUtil, location.directory, { path: ctx.query.path }),
+            data: yield* FileSystem.list(fsUtil, location.directory, { path: ctx.query.path }).pipe(
+              Effect.mapError(
+                (error) =>
+                  new InvalidRequestError({
+                    message: `${readFailure[error.reason].message}: ${error.path}`,
+                    kind: readFailure[error.reason].kind,
+                    field: "path",
+                  }),
+              ),
+            ),
           }
         }),
       )

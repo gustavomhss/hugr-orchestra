@@ -6,6 +6,7 @@ import { useLanguage } from "@/context/language"
 import { useSDK } from "@/context/sdk"
 import { useSync } from "@/context/sync"
 import { errorMessage } from "@/pages/layout/helpers"
+import { showToast } from "@/utils/toast"
 import { Identifier } from "@/utils/id"
 import { normalizeSessionInfo } from "@/utils/session"
 import { claimStorage, createClaims } from "./schedule-claims"
@@ -139,9 +140,18 @@ export function createDeviceSchedule(props: { directory: string; store: DeviceSt
               // An unprompted session is noise. Keep it only when Run now released the slot on V2,
               // where a retry of the slot adopts it through the same deterministic IDs.
               if (!(v2 && ids && forced))
-                await sdk()
-                  .api.session.remove({ sessionID: session.id, directory: props.directory })
-                  .catch(() => undefined)
+                await dropUnprompted(
+                  sdk().api.session.remove({ sessionID: session.id, directory: props.directory }),
+                  (cause) => {
+                    console.error(cause)
+                    if (lifetime.disposed) return
+                    showToast({
+                      variant: "error",
+                      title: language.t("common.requestFailed"),
+                      description: cause instanceof Error ? cause.message : undefined,
+                    })
+                  },
+                )
               throw error
             },
           )
@@ -231,6 +241,17 @@ export function createDeviceSchedule(props: { directory: string; store: DeviceSt
 }
 
 // The server rejects with the parsed error body, which may carry only `message`.
+/** Deletes the empty session a failed run left behind. Failure is reported and does not reject. */
+export function dropUnprompted(remove: Promise<unknown>, report: (error: unknown) => void) {
+  return remove.then(
+    () => true,
+    (error: unknown) => {
+      report(error)
+      return false
+    },
+  )
+}
+
 export function runError(language: Pick<ReturnType<typeof useLanguage>, "t">, name: string, error: unknown) {
   const message =
     error && typeof error === "object" && "message" in error && typeof error.message === "string"

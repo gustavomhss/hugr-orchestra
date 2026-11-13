@@ -24,10 +24,13 @@ export const ragStudioScenarios: Scenario[] = [
       headers: ctx.headers(),
       body: { path: `${ctx.directory}/note.txt` },
     }))
-    .json(200, locationData((value) => {
-      object(value)
-      check(value.refused === "atlas", "a path inside the project stays in Atlas")
-    })),
+    .json(
+      200,
+      locationData((value) => {
+        object(value)
+        check(value.refused === "atlas", "a path inside the project stays in Atlas")
+      }),
+    ),
   http.protected
     .delete("/api/rag-studio/sources/{sourceId}", "v2.ragStudio.remove")
     .at((ctx) => ({ path: missingSource, headers: ctx.headers() }))
@@ -67,7 +70,10 @@ export const ragStudioScenarios: Scenario[] = [
       200,
       locationData((value) => {
         object(value)
-        check(typeof value.id === "string" && value.fill === "complete", "an empty location still opens a complete revision")
+        check(
+          typeof value.id === "string" && value.fill === "complete",
+          "an empty location still opens a complete revision",
+        )
       }),
       "status",
     ),
@@ -110,10 +116,13 @@ export const ragStudioScenarios: Scenario[] = [
       headers: ctx.headers(),
       body: { revisionId: "rev_httpapi_missing" },
     }))
-    .json(200, locationData((value) => {
-      object(value)
-      check(value.ok === false, "a missing question is not a retrieval hit")
-    })),
+    .json(
+      200,
+      locationData((value) => {
+        object(value)
+        check(value.ok === false, "a missing question is not a retrieval hit")
+      }),
+    ),
   http.protected
     .post("/api/rag-studio/questions/{questionId}/citation", "v2.ragStudio.citation")
     .at((ctx) => ({
@@ -121,10 +130,13 @@ export const ragStudioScenarios: Scenario[] = [
       headers: ctx.headers(),
       body: { sentence: "beta" },
     }))
-    .json(200, locationData((value) => {
-      object(value)
-      check(value.ok === false, "a missing question is not a citation")
-    })),
+    .json(
+      200,
+      locationData((value) => {
+        object(value)
+        check(value.ok === false, "a missing question is not a citation")
+      }),
+    ),
   http.protected
     .post("/api/rag-studio/compare", "v2.ragStudio.compare")
     .at((ctx) => ({
@@ -132,10 +144,13 @@ export const ragStudioScenarios: Scenario[] = [
       headers: ctx.headers(),
       body: { leftId: "rev_a", rightId: "rev_b", proofSetId: "other" },
     }))
-    .json(200, locationData((value) => {
-      object(value)
-      check(value.rejected === true, "revisions that were never opened cannot be compared")
-    })),
+    .json(
+      200,
+      locationData((value) => {
+        object(value)
+        check(value.rejected === true, "revisions that were never opened cannot be compared")
+      }),
+    ),
   http.protected.post("/api/rag-studio/embedding", "v2.ragStudio.embedding").json(
     200,
     locationData((value) => {
@@ -150,10 +165,13 @@ export const ragStudioScenarios: Scenario[] = [
       headers: ctx.headers(),
       body: { pass: "redo_numbers", sourceId: "src_httpapi_missing" },
     }))
-    .json(200, locationData((value) => {
-      object(value)
-      check(value.pass === "redo_numbers" && value.result === "not_applicable", "redo numbers writes nothing")
-    })),
+    .json(
+      200,
+      locationData((value) => {
+        object(value)
+        check(value.pass === "redo_numbers" && value.result === "not_applicable", "redo numbers writes nothing")
+      }),
+    ),
   http.protected
     .post("/api/rag-studio/passes/batch", "v2.ragStudio.passes")
     .at((ctx) => ({
@@ -161,8 +179,30 @@ export const ragStudioScenarios: Scenario[] = [
       headers: ctx.headers(),
       body: { passes: ["reparse", "rechunk"] },
     }))
-    .json(200, locationData((value) => {
-      object(value)
-      check(value.refused === "one_pass", "two passes do not run")
-    })),
+    .json(
+      200,
+      locationData((value) => {
+        object(value)
+        check(value.refused === "one_pass", "two passes do not run")
+      }),
+    ),
+  http.protected
+    .patch("/api/rag-studio/pipeline", "v2.ragStudio.pipelineUpdate")
+    .mutating()
+    .at((ctx) => ({
+      path: "/api/rag-studio/pipeline",
+      headers: ctx.headers(),
+      body: { field: "embedding_model", value: "nvidia/nemotron-3-embed-1b:free" },
+    }))
+    .json(
+      200,
+      locationData((value) => {
+        object(value)
+        check(
+          value.embedding === true && value.embeddingModel === "nvidia/nemotron-3-embed-1b:free",
+          "naming a model turns embedding on",
+        )
+        check(value.k === 4, "naming a model does not change K")
+      }),
+    ),
 ]

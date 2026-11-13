@@ -287,6 +287,8 @@ async function companionSuccess(payload: string, box: Sandbox) {
 
 export async function qualify(input: {
   launcher: string; payload: string; version: string; box: Sandbox; oracle: Oracle; negative?: boolean
+  // Skip companion and catalog probes. The open still uses this installed CLI.
+  reopen?: boolean
 }) {
   const launcher = await realpath(input.launcher)
   if (!launcher.startsWith((await realpath(input.box.directory)) + sep))
@@ -304,9 +306,9 @@ export async function qualify(input: {
     expect(await snapshot(input.box.namespace)).toEqual(before)
     if (await registration(input.box)) throw new Error("NATIVE_DAEMON_PREEXISTING_REGISTRATION")
     expect(await successful([input.launcher, "service", "status"], input.box, 15_000)).toBe("stopped")
-    if (input.negative) await companionFailures(input.launcher, input.payload, input.box, input.version)
-    if (!input.negative) await companionSuccess(input.payload, input.box)
-    if (nativeLibc?.kind !== "musl") {
+    if (!input.reopen && input.negative) await companionFailures(input.launcher, input.payload, input.box, input.version)
+    if (!input.reopen && !input.negative) await companionSuccess(input.payload, input.box)
+    if (!input.reopen && nativeLibc?.kind !== "musl") {
       const { denoInstalledProbe } = await import("./distribution-native-deno")
       const deno = await denoInstalledProbe(input.payload, input.box)
       expect(deno.code, deno.stderr).toBe(0)
@@ -316,15 +318,17 @@ export async function qualify(input: {
       expect(receipt.controls).toHaveLength(4)
       console.info(`NATIVE_DENO_COMPANION ${deno.stdout.trim()}`)
     }
-    await symbols(input.launcher, input.box)
-    const { RipgrepBundle } = await import("@orchestra/core/ripgrep/bundle")
-    const { RipgrepRelease } = await import("@orchestra/core/ripgrep/release")
-    const key = RipgrepRelease.key({ arch: process.arch, platform: process.platform, musl: nativeLibc?.kind === "musl" })
-    const rg = join(input.payload, "bin/ripgrep")
-    await RipgrepBundle.verify(rg, key)
-    const rgVersion = (await successful([join(rg, RipgrepRelease.executable()), "--version"], input.box)).split("\n")[0]?.trim()
-    expect(rgVersion?.match(/^ripgrep (\d+\.\d+\.\d+)(?: \(rev [0-9a-f]+\))?$/)?.[1]).toBe(RipgrepRelease.VERSION)
-    expect(await successful([join(rg, RipgrepRelease.executable()), "--fixed-strings", "--count-matches", "export interface Shape", "sample.ts"], input.box)).toBe("1")
+    if (!input.reopen) await symbols(input.launcher, input.box)
+    if (!input.reopen) {
+      const { RipgrepBundle } = await import("@orchestra/core/ripgrep/bundle")
+      const { RipgrepRelease } = await import("@orchestra/core/ripgrep/release")
+      const key = RipgrepRelease.key({ arch: process.arch, platform: process.platform, musl: nativeLibc?.kind === "musl" })
+      const rg = join(input.payload, "bin/ripgrep")
+      await RipgrepBundle.verify(rg, key)
+      const rgVersion = (await successful([join(rg, RipgrepRelease.executable()), "--version"], input.box)).split("\n")[0]?.trim()
+      expect(rgVersion?.match(/^ripgrep (\d+\.\d+\.\d+)(?: \(rev [0-9a-f]+\))?$/)?.[1]).toBe(RipgrepRelease.VERSION)
+      expect(await successful([join(rg, RipgrepRelease.executable()), "--fixed-strings", "--count-matches", "export interface Shape", "sample.ts"], input.box)).toBe("1")
+    }
     lease.attempted = true
     const startedAt = performance.now()
     const started = await (process.platform === "win32"
@@ -365,6 +369,10 @@ export async function qualify(input: {
     const health = await request(new URL("/api/health", endpoint), password)
     expect(health.status).toBe(200)
     expect(await health.json()).toMatchObject({ healthy: true })
+    if (input.reopen) {
+      expect((await readFile(input.box.env.ORCHESTRA_DB)).length).toBeGreaterThan(0)
+      return ""
+    }
     for (const credential of [undefined, `${password}-wrong`])
       expect([401, 403]).toContain((await request(new URL("/api/health", endpoint), credential)).status)
     const url = new URL("/api/skill", endpoint)

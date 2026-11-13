@@ -701,7 +701,6 @@ export function make(options: ClientOptions) {
             throw new ClientError("Transport", { cause })
           }
           buffer += decoder.decode(next.value, { stream: !next.done })
-          if (buffer.length > 1_048_576) throw new ClientError("MalformedResponse")
           const trailingCarriageReturn = !next.done && buffer.endsWith("\r")
           if (trailingCarriageReturn) buffer = buffer.slice(0, -1)
           buffer = buffer.replaceAll("\r\n", "\n").replaceAll("\r", "\n")
@@ -711,6 +710,7 @@ export function make(options: ClientOptions) {
           while (boundary >= 0) {
             const block = buffer.slice(0, boundary)
             buffer = buffer.slice(boundary + 2)
+            if (block.length > 134_217_728) throw new ClientError("MalformedResponse")
             const data = block
               .split("\n")
               .flatMap((line) => (line.startsWith("data:") ? [line.slice(5).trimStart()] : []))
@@ -724,6 +724,8 @@ export function make(options: ClientOptions) {
             }
             boundary = buffer.indexOf("\n\n")
           }
+          const pendingDelimiter = buffer.endsWith("\n\r") ? 2 : buffer.endsWith("\n") || buffer.endsWith("\r") ? 1 : 0
+          if (buffer.length - pendingDelimiter > 134_217_728) throw new ClientError("MalformedResponse")
           if (next.done) return
         }
       } finally {
@@ -1152,7 +1154,7 @@ export function make(options: ClientOptions) {
             path: `/api/session/${encodeURIComponent(input.sessionID)}/revert/stage`,
             body: { messageID: input["messageID"], files: input["files"] },
             successStatus: 200,
-            declaredStatuses: [404, 500, 400, 401],
+            declaredStatuses: [404, 409, 500, 400, 401],
             empty: false,
           },
           requestOptions,
@@ -1163,7 +1165,7 @@ export function make(options: ClientOptions) {
             method: "POST",
             path: `/api/session/${encodeURIComponent(input.sessionID)}/revert/clear`,
             successStatus: 204,
-            declaredStatuses: [404, 500, 400, 401],
+            declaredStatuses: [404, 409, 500, 400, 401],
             empty: true,
           },
           requestOptions,
@@ -1174,7 +1176,7 @@ export function make(options: ClientOptions) {
             method: "POST",
             path: `/api/session/${encodeURIComponent(input.sessionID)}/revert/commit`,
             successStatus: 204,
-            declaredStatuses: [404, 400, 401],
+            declaredStatuses: [404, 409, 400, 401],
             empty: true,
           },
           requestOptions,
@@ -1649,7 +1651,7 @@ export function make(options: ClientOptions) {
             path: `/api/fs/list`,
             query: { location: input?.["location"], path: input?.["path"] },
             successStatus: 200,
-            declaredStatuses: [401, 400],
+            declaredStatuses: [400, 401],
             empty: false,
           },
           requestOptions,

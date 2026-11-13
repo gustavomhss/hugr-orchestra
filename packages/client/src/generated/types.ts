@@ -4505,7 +4505,12 @@ export type RagStudioPipelineOutput = {
     readonly boundary: string
     readonly tokenizer: string
     readonly lexical: true
-    readonly embedding: false
+    readonly embedding: boolean
+    readonly embeddingModel: string
+    readonly queryModel: string
+    readonly dimension: number
+    readonly numericType: "float32" | "int8" | "binary"
+    readonly metric: "cosine" | "dot" | "distance"
     readonly k: number
   }
 }
@@ -4515,11 +4520,29 @@ export type RagStudioPipelineUpdateInput = {
     readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
   }["location"]
   readonly field: {
-    readonly field: "parser" | "boundary" | "tokenizer" | "k"
+    readonly field:
+      | "parser"
+      | "boundary"
+      | "tokenizer"
+      | "k"
+      | "embedding_model"
+      | "query_model"
+      | "dimension"
+      | "numeric_type"
+      | "metric"
     readonly value: string | number
   }["field"]
   readonly value: {
-    readonly field: "parser" | "boundary" | "tokenizer" | "k"
+    readonly field:
+      | "parser"
+      | "boundary"
+      | "tokenizer"
+      | "k"
+      | "embedding_model"
+      | "query_model"
+      | "dimension"
+      | "numeric_type"
+      | "metric"
     readonly value: string | number
   }["value"]
 }
@@ -4535,7 +4558,12 @@ export type RagStudioPipelineUpdateOutput = {
     readonly boundary: string
     readonly tokenizer: string
     readonly lexical: true
-    readonly embedding: false
+    readonly embedding: boolean
+    readonly embeddingModel: string
+    readonly queryModel: string
+    readonly dimension: number
+    readonly numericType: "float32" | "int8" | "binary"
+    readonly metric: "cosine" | "dot" | "distance"
     readonly k: number
   }
 }
@@ -4635,6 +4663,7 @@ export type RagStudioAskOutput = {
     readonly promptText: string
     readonly promptChunkIds: ReadonlyArray<string>
     readonly retrievalOptional: boolean
+    readonly sense: "off" | "missing" | "fused"
   }
 }
 
@@ -4722,6 +4751,7 @@ export type RagStudioCompareOutput = {
     | {
         readonly questions: ReadonlyArray<{
           readonly id: string
+          readonly text: string
           readonly startChanged: boolean
           readonly endChanged: boolean
           readonly textChanged: boolean
@@ -4765,7 +4795,7 @@ export type RagStudioPassOutput = {
     readonly project: { readonly id: string; readonly directory: string }
   }
   readonly data:
-    | { readonly pass: "redo_numbers"; readonly result: "not_applicable" }
+    | { readonly pass: "redo_numbers"; readonly result: "not_applicable" | "no_key" }
     | { readonly pass: "reparse" | "rechunk" | "redo_numbers" | "orphan_delete"; readonly fill: "complete" | "failed" }
 }
 

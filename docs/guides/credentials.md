@@ -34,6 +34,9 @@ not answer it within 10 seconds, Orchestra falls back to the key file for that r
 not lost. `mcp-auth.json` is left in place: MCP servers show as logged out and new MCP logins fail rather than
 overwrite it. Restart Orchestra and allow the prompt to get everything back.
 
+An unsigned macOS build cannot remember that permission. If `credential.key` is already in the data directory, that
+build uses the file and does not ask. A signed build still uses the Keychain.
+
 If `mcp-auth.json` is damaged (it cannot be parsed, or its contents have the wrong shape), Orchestra moves it aside to `mcp-auth.json.corrupt-<timestamp>`,
 logs where it went, and starts with no MCP logins. The original file is kept for inspection; MCP servers need a new
 login.

@@ -20,13 +20,13 @@ Round 4. A37 was dropped: a repeated sentence in one file is not a failed fill. 
 - A12 — A request to replace chunk text with text the file does not contain is rejected. The stored text is unchanged.
 - A15 — A revision is the corpus snapshot hash, the pipeline hash, and the fill state. A display name is not accepted as a revision id.
 - A16 — Diagnosis without a revision id is rejected.
-- A70 — Reading the pipeline returns parser, boundary policy, tokenizer, lexical on, embedding off, and K. Changing K, the parser, or the boundary policy changes the pipeline hash. Leaving those values unchanged does not.
+- A70 — Reading the pipeline returns parser, boundary policy, tokenizer, lexical on, embedding, and K. Embedding is off until a model is named, and on after one is. Changing K, the parser, or the boundary policy changes the pipeline hash. Leaving those values unchanged does not.
 - A79 — Word search and question hits return no chunk id from a `not_yet_read`, `failed`, or hash-stale source, even when another current `read` file contains the same word. They return the current `read` file's matching chunk ids and invent no span.
 - A52 — Given a current `read` file whose text contains the word W and not the word Z, word search for W returns only chunk ids whose stored text contains W. Word search for Z returns no chunk ids and no invented span.
 - A74 — Running a question for a word that is in a current `read` file returns only chunk ids whose stored text contains that word. A question for a word in no current chunk returns no chunk ids and no span.
 - A19 — A search hit's stored span is the chunk's `start` and `end`. The FTS snippet is not stored as that span.
-- A83 — Admitting, parsing, word search, running a question, and the redo-numbers pass do not invoke an embedding model and do not compute a vector. The pipeline stays embedding off.
-- A65 — A request to set an embedding model or to enable embedding search is rejected and the pipeline stays embedding off. The redo-numbers pass returns `not_applicable` and writes no vector, chunk, or hash.
+- A83 — While no model is named, admitting, parsing, word search, running a question, and the redo-numbers pass do not invoke an embedding model and do not compute a vector, and the pipeline stays embedding off. Naming a model turns embedding on and does not itself write a vector.
+- A65 — While no model is named, redo-numbers returns `not_applicable` and writes no vector. Naming a model does not itself write a vector. Redo-numbers writes vectors only when a key is present at that call. A request to enable embedding with no model is rejected. A question hit is a chunk whose stored text contains the word, even after fusion.
 - A20 — A completed question records the hits and the dropped list of chunk ids. Neither field is missing and neither is the literal `not_recorded`.
 - A75 — If the hits or the dropped list is missing, the question does not complete and none of the four lights is on.
 - A63 — When the relevant files are `read`, the result includes the four lights and, for `search_miss`, `dropped_before_model`, and `sent`, the source id and `start`/`end`. When the only relevant file is `not_yet_read` or `failed`, the result includes that status and no lights. The result contains no assistant answer and no conversation transcript.
@@ -50,7 +50,7 @@ Round 4. A37 was dropped: a repeated sentence in one file is not a failed fill. 
 - A73 — After one boundary-policy change and a separate rechunk pass, the comparison lists every saved question and whether its labeled `start`/`end` or the text at that span changed, including one question that changed and one that did not.
 - A60 — When the number of word-matching chunks on current `read` files is less than or equal to K, `retrievalOptional` is true. Word search still returns those chunks. The index is not deleted. When the count is greater than K, `retrievalOptional` is not true.
 - A82 — When a question has more word-matching chunks than K, the result does not set `retrievalOptional` true. Word search still returns the matching chunks. The index is not deleted.
-- A84 — No single call runs more than one of reparse, rechunk, redo-numbers, and orphan-delete. A call that runs any pair is rejected and writes nothing. Redo-numbers, invoked alone, returns `not_applicable`, writes nothing, and does not turn embedding on.
+- A84 — No single call runs more than one of reparse, rechunk, redo-numbers, and orphan-delete. A call that runs any pair is rejected and writes nothing. While no model is named, redo-numbers returns `not_applicable` and writes nothing. After a model is named, redo-numbers writes vectors only when a key is present at that call, and writes nothing when it is not. Redo-numbers does not turn embedding on.
 - A66 — Changing bytes does not reparse or rechunk. Changing the boundary policy does not rechunk. Removing a source does not orphan-delete.
 - A81 — After the boundary policy changes and before rechunk is invoked, diagnosis against the new pipeline does not light `sent`, and a comparison does not report the saved questions as already recut.
 - A67 — After the admitted bytes change and before reparse is invoked, that source's status is not `read`, the inventory does not list it as `read`, a question does not light `sent`, and no chunk from that source is in the prompt block.
@@ -59,7 +59,7 @@ Round 4. A37 was dropped: a repeated sentence in one file is not a failed fill. 
 - A55 — A reparse pass and a rechunk pass, invoked as two calls in that order, store chunk text equal to the new bytes. A sentence present only in the old bytes is not sent. A sentence present only in the new bytes can be sent. The reparse call does not rechunk. The rechunk call does not reparse.
 - A97 — After orphan-delete, that source's chunks are absent from the corpus store. A later word search or rechunk does not recreate them. Their absence from search before orphan-delete does not satisfy this.
 - A86 — With two admitted `read` sources, removing one and running orphan-delete leaves the other listed as `read`, with its content hash and chunk text unchanged, and word search still returns that survivor's matching chunk ids.
-- A87 — Changing K, the parser, or the boundary policy, and running rechunk or orphan-delete, invokes no embedding model, writes no vector, and leaves the pipeline embedding off.
+- A87 — Changing K, the parser, or the boundary policy, and running rechunk or orphan-delete, invokes no embedding model and writes no vector. Those calls leave embedding as it was.
 - A88 — An admitted `read` file whose bytes are unchanged keeps the same source id and content hash, stays `read`, is not hash-stale, and word search still returns its matching chunk ids without a reparse.
 - A89 — Opening the files screen or the maintain screen, and reading the inventory or the pipeline, does not reparse, rechunk, redo-numbers, or orphan-delete, and does not change source status, content hashes, or chunk text.
 - A68 — If reparse or rechunk fails partway, fill is `failed`, no source has a mix of old and new chunk text, and diagnosis does not light `sent`.
@@ -73,7 +73,7 @@ Round 4. A37 was dropped: a repeated sentence in one file is not a failed fill. 
 - A48 — An empty corpus lights `not_in_corpus`, names no source span, and returns no invented hits.
 - A49 — Removing a source and running orphan-delete leaves zero chunks for that source.
 - A91 — After admit, parse, reparse, rechunk, word search, a question, source removal, and orphan-delete, the admitted path still exists on disk and its bytes equal what the person supplied.
-- A92 — Reparse, source removal, comparison, and reading the inventory, the pipeline, or a screen do not invoke an embedding model, do not write a vector, and leave embedding off.
+- A92 — Reparse, source removal, comparison, and reading the inventory, the pipeline, or a screen do not invoke an embedding model and do not write a vector. Those calls leave embedding as it was.
 - A93 — Changing admitted bytes or source membership changes the corpus snapshot identity, and a span comparison against the previous revision is rejected. If bytes and membership are unchanged, the snapshot identity stays the same.
 - A94 — With two `read` sources, reparse or rechunk of one leaves the other `read`, with the same id, hash, and chunk text, and word search still returns the other's matches.
 - A95 — A path that is not lexically inside the project source tree, but whose canonical path is, is refused the same way as A77.

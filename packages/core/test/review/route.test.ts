@@ -5,7 +5,12 @@ import { ReviewCatalog } from "../../src/review/catalog"
 import { ReviewRoute } from "../../src/review/route"
 import { ReviewRouting } from "../../src/review/routing"
 
-const catalog = ReviewCatalog.current
+// Preserve the R3 regression matrix for catalogs whose Deep adapters are genuinely unavailable.
+const catalog: ReviewCatalog.Catalog = {
+  ...ReviewCatalog.current,
+  route: { ...ReviewCatalog.current.route, tiers: ReviewCatalog.current.route.tiers.map((tier) =>
+    tier.id === "deep" ? { ...tier, built: false, runs: "standard" } : tier) },
+}
 const fixture = (name: string) => path.join(import.meta.dir, "route-fixture", name)
 const owner: { base: ReviewRoute.Tree; head: ReviewRoute.Head } = await Bun.file(fixture("owner-example.json")).json()
 const docs: { base: ReviewRoute.Tree; head: ReviewRoute.Head } = await Bun.file(fixture("docs-only.json")).json()
@@ -62,9 +67,12 @@ describe("review route", () => {
         { id: "ast-grep", source: "catalog", lane: "no-build", status: "routed" },
         { id: "squawk", source: "path", lane: "no-build", status: "routed" },
         { id: "oxlint", source: "catalog", lane: "no-build", status: "routed" },
+        { id: "tsc", source: "catalog", lane: "build", status: "routed" },
+        { id: "oxlint-type-aware", source: "catalog", lane: "build", status: "routed" },
+        { id: "jscpd", source: "catalog", lane: "no-build", status: "routed" },
       ],
       budget: { ...STANDARD, lensChildren: 6 },
-      deviations: [],
+      deviations: [deviation("change", "pack:jscpd")],
     })
     expect(Schema.decodeUnknownSync(ReviewRouting.Record)(record)).toEqual(record)
   })
@@ -174,7 +182,7 @@ describe("review route", () => {
       expect(error).toBeInstanceOf(ReviewRoute.RouteError)
       expect((error as ReviewRoute.RouteError).code).toBe(expected)
     }
-    fails({ ...code, profile: "audit" }, "unsupported-profile")
+    fails({ ...code, profile: "nope" }, "unsupported-profile")
     fails({ ...code, profile: "plan" }, "profile-stage")
     fails({ ...code, tier: "ultra" }, "unsupported-tier")
     fails({ ...code, settings: { acceptedUnavailable: [], tier: "ultra" } }, "unsupported-tier")
@@ -187,6 +195,32 @@ describe("review route", () => {
     const plan = ReviewRoute.route({ stage: "plan", settings: { acceptedUnavailable: [] } }, owner.base, owner.head, catalog)
     expect(plan.profile).toEqual({ id: "plan", source: "request" })
     expect(plan.overlays).toEqual([])
+  })
+
+  test("an explicit engagement profile does not replace the governed code request", () => {
+    expect(ReviewRoute.route(code, docs.base, docs.head, catalog).profile).toEqual({ id: "code", source: "request" })
+    const audit = ReviewRoute.route({ ...code, profile: "audit" }, docs.base, docs.head, catalog)
+    expect(audit.profile).toEqual({ id: "audit", source: "request" })
+    expect(audit.overlays).toEqual([])
+    const release = ReviewRoute.route({ ...code, profile: "release" }, docs.base, docs.head, catalog)
+    expect(release.profile).toEqual({ id: "release", source: "request" })
+    expect(release.tier).toEqual({ id: "standard", source: "catalog", requested: "deep", signals: [] })
+  })
+
+  test("standard routes syft when a named lockfile changes and quick does not", () => {
+    const lockBase = { files: ["bun.lock"] }
+    const lockHead = {
+      files: ["bun.lock"],
+      changes: [{ path: "bun.lock", added: [{ line: 1, text: "{}" }], removed: 0 }],
+    }
+    const settings = { acceptedUnavailable: [] }
+    expect(ReviewRoute.route({ stage: "code", tier: "standard", settings }, lockBase, lockHead, catalog).packs).toContainEqual({ id: "syft", source: "catalog", lane: "no-build", status: "routed" })
+    expect(ReviewRoute.route({ stage: "code", tier: "quick", settings }, lockBase, lockHead, catalog).packs.some((pack) => pack.id === "syft")).toBe(false)
+    const nested = ReviewRoute.route({ stage: "code", tier: "standard", settings }, { files: ["apps/desktop/yarn.lock"] }, {
+      files: ["apps/desktop/yarn.lock"],
+      changes: [{ path: "apps/desktop/yarn.lock", added: [{ line: 1, text: "#" }], removed: 0 }],
+    }, catalog)
+    expect(nested.packs).toContainEqual({ id: "syft", source: "catalog", lane: "no-build", status: "routed" })
   })
 
   test("an explicit pr request uses pr and the same lenses as code", () => {
@@ -261,7 +295,7 @@ describe("phase 3 overlays", () => {
   ] as const)("%s content on %s suggests and does not bind %s", (id, file, text, pattern, lens) => {
     const record = routed(file, [text])
     expect(found(record, id)).toEqual({ id, source: "content", signal: `${file}:1 ${pattern}` })
-    expect(record.lenses.some((entry) => entry.id === lens)).toBe(false)
+    expect(record.lenses.some((entry) => entry.id === lens && entry.because === `overlay:${id}`)).toBe(false)
   })
 
   test.each([

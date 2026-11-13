@@ -60,6 +60,8 @@ export const dict = {
   "desktop.recovery.action.keepWaiting": "منتظر باشید",
   "desktop.recovery.action.quit": "ترک کنید",
   "desktop.recovery.loadFailed": "HuGR Orchestra بارگیری نشد",
+  "desktop.startup.failed": "HuGR Orchestra could not start",
+  "desktop.startup.failed.detail": "{{reason}}\n\nLogs: {{logs}}",
   "desktop.recovery.terminated": "پنجره HuGR Orchestra به‌طور غیرمنتظره بسته شد",
   "desktop.recovery.unresponsive": "HuGR Orchestra پاسخ نمی‌دهد",
   "desktop.recovery.unresponsive.detail":

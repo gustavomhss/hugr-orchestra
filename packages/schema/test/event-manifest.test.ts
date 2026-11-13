@@ -144,10 +144,8 @@ describe("public event manifest", () => {
     expect(EventManifest.Latest.size).toBe(publicEventTypes.length)
     // Research's ten durable-only definitions are already canonical; the two Session settings events add two more,
     // Maestro's durable-only workflow review hold, workflow rebind, review findings and resume admission four,
-    // and the review-precision observation one.
+    // and the host review-precision observation one more.
     expect(EventManifest.Durable.size).toBe(77)
-    expect(EventManifest.Durable.get("review.precision.observed.1")).toBe(ReviewPrecisionEvent.Observed)
-    expect(EventManifest.Latest.has("review.precision.observed")).toBe(false)
     expect(EventManifest.Durable.get("maestro.task.workflow_review_held.1")).toBe(MaestroEvent.Task.WorkflowReviewHeld)
     expect(EventManifest.Latest.has("maestro.task.workflow_review_held")).toBe(false)
     expect(EventManifest.Durable.get("maestro.task.workflow_rebound.1")).toBe(MaestroEvent.Task.WorkflowRebound)
@@ -156,6 +154,8 @@ describe("public event manifest", () => {
     expect(EventManifest.Latest.has("maestro.task.workflow_review_findings")).toBe(false)
     expect(EventManifest.Durable.get("maestro.task.resume_admitted.1")).toBe(MaestroEvent.Task.ResumeAdmitted)
     expect(EventManifest.Latest.has("maestro.task.resume_admitted")).toBe(false)
+    expect(EventManifest.Durable.get("review.precision.observed.1")).toBe(ReviewPrecisionEvent.Observed)
+    expect(EventManifest.Latest.has("review.precision.observed")).toBe(false)
   })
 
   test("owns canonical research definitions only on the durable surface", () => {

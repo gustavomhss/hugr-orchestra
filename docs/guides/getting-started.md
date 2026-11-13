@@ -46,6 +46,7 @@ The sidebar keeps Home, Chat, Project Board, Agents and Actions in view. Everyth
 - **Context savings**: how much context Orchestra saved you. See [Context savings](context-savings.md).
 - **Atlas**: the project's knowledge, with a **History** view of how it changed. See [The Atlas screen](atlas-screen.md).
 - **Search**: opens the command palette. See [Search](search.md).
+- **Inbox**: one list for this installation, not for the open project. See [Inbox onboarding](inbox-onboarding.md) and [Inbox operation](inbox-operation.md).
 
 You can open this guide from the command palette (⌘K): search for "help" or "Getting started guide".
 

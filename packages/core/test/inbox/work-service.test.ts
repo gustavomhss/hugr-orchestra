@@ -3,6 +3,7 @@ import { Effect } from "effect"
 import { eq } from "drizzle-orm"
 import { Board } from "@orchestra/schema/board"
 import { BoardIssueTable, BoardProjectTable, BoardQuestionTable } from "../../src/board/sql"
+import { InboxDraftTable, InboxRowTable } from "../../src/inbox/sql"
 import { ProjectTable } from "../../src/project/sql"
 import { directory, fixture, location } from "./work-service-fixture"
 
@@ -116,5 +117,109 @@ fixture(
       yield* db.update(BoardProjectTable).set({ status: "archived" }).where(eq(BoardProjectTable.id, project)).run()
       expect((yield* inbox.list()).every((entry) => !entry.waiting)).toBe(true)
       expect(calls).toHaveLength(0)
+    }),
+)
+
+fixture(
+  "opening this location does not close another project's board attention",
+  ({ inbox, db }) =>
+    Effect.gen(function* () {
+      yield* db
+        .insert(ProjectTable)
+        .values({ id: location.project.id, worktree: directory, sandboxes: [] })
+        .onConflictDoNothing()
+        .run()
+      const project = Board.ProjectID.create()
+      const foreign = Board.ProjectID.create()
+      const foreignQuestion = Board.QuestionID.create()
+      yield* db
+        .insert(BoardProjectTable)
+        .values([
+          {
+            id: project,
+            key: "HERE",
+            name: "Here",
+            goal: "This repo",
+            repo_project_id: location.project.id,
+            status: "active",
+            github_state: "off",
+            next_issue_number: 1,
+            next_epic_number: 1,
+          },
+          {
+            id: foreign,
+            key: "ELSE",
+            name: "Elsewhere",
+            goal: "Other repo",
+            status: "active",
+            github_state: "off",
+            next_issue_number: 1,
+            next_epic_number: 1,
+          },
+        ])
+        .run()
+      yield* db
+        .insert(BoardQuestionTable)
+        .values({
+          id: foreignQuestion,
+          project_id: foreign,
+          text: "Still open elsewhere",
+          options: [],
+          recommended: "",
+          blocking: true,
+          status: "open",
+        })
+        .run()
+      yield* db
+        .insert(InboxRowTable)
+        .values({
+          owner: "install",
+          source: "board",
+          external_id: `question:${foreignQuestion}`,
+          list_id: "in_foreign",
+          actor: "ELSE",
+          snippet: "Still open elsewhere",
+          thread_id: foreignQuestion,
+          reply: false,
+          open: true,
+        })
+        .run()
+      const kept = (yield* inbox.list()).find((item) => item.externalId === `question:${foreignQuestion}`)
+      expect(kept?.waiting).toBe(true)
+      yield* db.update(BoardProjectTable).set({ status: "archived" }).where(eq(BoardProjectTable.id, foreign)).run()
+      expect((yield* inbox.list()).find((item) => item.id === kept?.id)?.waiting).toBe(true)
+    }),
+)
+
+fixture(
+  "a mail origin draft is saved only when the account accepts the unsent draft",
+  ({ inbox, db, calls, provider }) =>
+    Effect.gen(function* () {
+      const item = yield* inbox.upsert({
+        source: "mail",
+        externalId: "legacy-mail",
+        actor: "ada@example.com",
+        snippet: "hello",
+        threadId: "thread-1",
+        reply: true,
+      })
+      const before = calls.length
+      expect((yield* inbox.originDraft(item.id, "unsent").pipe(Effect.flip)).reason).toBe("unavailable")
+      expect(calls).toHaveLength(before)
+      expect(yield* db.select().from(InboxDraftTable).all()).toMatchObject([
+        { list_id: item.id, text: "unsent", sent: false },
+      ])
+      yield* inbox.connect({ source: "mail", account: "gmail", token: "fixture-mail" })
+      provider.failPage = true
+      expect((yield* inbox.originDraft(item.id, "failed write").pipe(Effect.flip)).reason).toBe("unavailable")
+      expect(calls.some((url) => url.pathname === "/gmail/v1/users/me/drafts")).toBe(true)
+      provider.failPage = false
+      const accepted = calls.length
+      expect(yield* inbox.originDraft(item.id, "accepted")).toEqual({ drafted: true })
+      expect(calls.slice(accepted).some((url) => url.pathname === "/gmail/v1/users/me/drafts")).toBe(true)
+      yield* inbox.connect({ source: "mail", account: "outlook", token: "fixture-mail" })
+      provider.failPage = true
+      expect((yield* inbox.originDraft(item.id, "outlook failed").pipe(Effect.flip)).reason).toBe("unavailable")
+      expect(calls.some((url) => url.pathname === "/v1.0/me/messages")).toBe(true)
     }),
 )

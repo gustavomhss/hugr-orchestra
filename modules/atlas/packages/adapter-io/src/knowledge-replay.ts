@@ -5,21 +5,25 @@
 //
 //   applied  the fact's bytes carry `seal:'proven'`, its seat is in the row's scope (`actorInScope`), and it
 //            RE-PROVES now against this checkout's index (`reproven`, the same oracle `atlas verify-store`
-//            rides). One batched `commitProjection`, through the raw store, so a replayed row is not logged twice.
+//            rides). The row's key must be that fact's id, and every claim on the row must be that fact's
+//            own sentence. A line can name the fact's hash and still carry another key or extra claims;
+//            those are staged, not applied. One batched `commitProjection`, through the raw store, so a
+//            replayed row is not logged twice.
 //   staged   every other line: a candidate in the staging sidecar (ADR-0008), held for ratify like any mined
 //            candidate. There is no merged-PR check; the ratify door is where a person decides.
 //   missing  the row's bytes are not under `.atlas/blobs/`, or they do not hash to the row's `contentHash`.
 //
 // A line is considered only when its row differs from the projection's row at that key (ignoring the store's `derivedAt` stamp), so a replay after a
-// replay does nothing. Known limit: a staged candidate that ratify rejected is staged again on a later boot,
-// because nothing records the rejection in the logs yet.
+// replay does nothing. A logged row that an already-held row was built on is not applied: that is a regression,
+// not a clone catching up. An empty projection still receives the folded winner. Known limit: a staged candidate
+// that ratify rejected is staged again on a later boot, because nothing records the rejection in the logs yet.
 
 import { readFileSync } from "node:fs"
 import type { Hash } from "@atlas/contracts"
 import type { CasObject } from "@atlas/kernel"
 import type { CurrentNode, GroundedFact, StoreProjection } from "@atlas/knowledge"
 import { blobPath } from "./layout.js"
-import { readKnowledge } from "./knowledge-log.js"
+import { knowledgeRegresses, readKnowledge } from "./knowledge-log.js"
 import type { KnowledgeEntry } from "./knowledge-log.js"
 import { actorInScope } from "./policy.js"
 import type { AtlasPolicy } from "./policy.js"
@@ -46,13 +50,15 @@ export function replayKnowledge(
 ): KnowledgeReplay {
   const read = readKnowledge(repoPath)
   const projection = rehydrateProjection(disk)
-  const pending = [...read.rows.values()].filter(
-    (e) => !sameRow(projection.current.get(e.row.nodeKey), e.row),
-  )
+  const pending = [...read.rows.values()].filter((e) => {
+    const held = projection.current.get(e.row.nodeKey)
+    if (sameRow(held, e.row)) return false
+    return held === undefined || !knowledgeRegresses(held, e.row, read.lines)
+  })
   const resolved = pending.filter((e) => restoreBlob(repoPath, disk, e))
   const proven = resolved.filter((e) => {
     const fact = disk.get(e.row.contentHash as Hash) as GroundedFact
-    return fact.seal === "proven" && actorInScope(policy, e.seat, e.row.scope) && reproven(e.row, fact)
+    return fact.seal === "proven" && actorInScope(policy, e.seat, e.row.scope) && boundToFact(e.row, fact) && reproven(e.row, fact)
   })
   const candidates = resolved.filter((e) => !proven.includes(e))
   const applied = proven.length === 0 ? undefined : disk.commitProjection((p) => ({ out: proven.length, next: withRows(p, proven) }))
@@ -98,6 +104,13 @@ function sameRow(held: CurrentNode | undefined, logged: CurrentNode): boolean {
   const { derivedAt: _held, ...heldRest } = held
   const { derivedAt: _logged, ...loggedRest } = logged
   return JSON.stringify(heldRest) === JSON.stringify(loggedRest)
+}
+
+// The fact authenticates its own id and its own sentence. A logged row is not that fact.
+function boundToFact(row: CurrentNode, fact: GroundedFact) {
+  if (typeof fact.id !== "string" || row.nodeKey !== fact.id) return false
+  const sentence = "claimNorm" in fact && typeof fact.claimNorm === "string" ? fact.claimNorm : undefined
+  return row.claims.every((claim) => claim === sentence)
 }
 
 const withRows = (p: StoreProjection, entries: readonly KnowledgeEntry[]): StoreProjection => ({

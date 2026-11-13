@@ -51,6 +51,20 @@ export const failInterruptedTools = Effect.fn("SessionRunner.failInterruptedTool
       })
     }
   }
+  // Those publishes have committed. A failure reading rows hidden by compaction may fail the drain; it must not skip them.
+  for (const tool of yield* deps.store.unsettledHiddenTools(sessionID)) {
+    yield* deps.events.publish(SessionEvent.Tool.Failed, {
+      sessionID,
+      timestamp: yield* DateTime.now,
+      assistantMessageID: tool.assistantMessageID,
+      callID: tool.callID,
+      error: { type: "unknown", message: "Tool execution interrupted" },
+      provider: {
+        executed: tool.provider.executed === true,
+        ...(tool.provider.metadata === undefined ? {} : { metadata: tool.provider.metadata }),
+      },
+    })
+  }
 })
 
 // Attachments are read once, as the inputs are promoted; an admitted prompt keeps its URIs.

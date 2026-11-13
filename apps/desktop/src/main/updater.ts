@@ -1,32 +1,37 @@
-import { app, dialog } from "electron"
+import { app, autoUpdater, dialog } from "electron"
 import pkg from "electron-updater"
 import { MAC_SIGNED, UPDATER_ENABLED } from "./constants"
-import { createUpdaterController, type UpdaterReadyRecord } from "./updater-controller"
+import { confirmUpdaterQuit, createUpdaterController, prepareNativeUpdate, type UpdaterReadyRecord } from "./updater-controller"
 import { getLogger } from "./logging"
 import { getStore } from "./store"
 import { openExternalURL, setAppQuitting } from "./windows"
 import { nativeT } from "./native-translations"
 
-const { autoUpdater } = pkg
+const updater = pkg.autoUpdater
 const key = "ready"
 // electron-updater replaces only a signed macOS app, an NSIS install and an AppImage ($APPIMAGE is set inside one).
 // A deb, an rpm or an unsigned macOS build announces the update with its release page instead.
 const notify = (process.platform === "darwin" && !MAC_SIGNED) || (process.platform === "linux" && !process.env.APPIMAGE)
 
-export function setupAutoUpdater(stop: () => Promise<void>) {
+export function setupAutoUpdater() {
   const logger = getLogger()
-  autoUpdater.logger = logger
-  autoUpdater.channel = "latest"
-  autoUpdater.allowPrerelease = false
+  const native = process.platform === "darwin" && MAC_SIGNED ? autoUpdater : undefined
+  let nativeReady = false
+  const onNativeReady = () => { nativeReady = true }
+  native?.on("update-downloaded", onNativeReady)
+  app.once("will-quit", () => native?.off("update-downloaded", onNativeReady))
+  updater.logger = logger
+  updater.channel = "latest"
+  updater.allowPrerelease = false
   // Only a newer release is offered: a build ahead of the feed (or a feed moved back) never offers an older one.
-  autoUpdater.allowDowngrade = false
-  autoUpdater.autoDownload = false
-  autoUpdater.autoInstallOnAppQuit = false
+  updater.allowDowngrade = false
+  updater.autoDownload = false
+  updater.autoInstallOnAppQuit = false
   logger.log("auto updater configured", {
-    channel: autoUpdater.channel,
+    channel: updater.channel,
     notify,
-    allowPrerelease: autoUpdater.allowPrerelease,
-    allowDowngrade: autoUpdater.allowDowngrade,
+    allowPrerelease: updater.allowPrerelease,
+    allowDowngrade: updater.allowDowngrade,
     currentVersion: app.getVersion(),
   })
 
@@ -40,21 +45,39 @@ export function setupAutoUpdater(stop: () => Promise<void>) {
       : undefined,
     currentVersion: app.getVersion(),
     backend: {
-      checkForUpdates: () => autoUpdater.checkForUpdates(),
+      checkForUpdates: () => updater.checkForUpdates(),
       downloadUpdate: (onProgress) => {
+        nativeReady = false
         const listener = (progress: { percent: number }) => onProgress(progress.percent)
-        autoUpdater.on("download-progress", listener)
-        return autoUpdater.downloadUpdate().finally(() => autoUpdater.off("download-progress", listener))
+        updater.on("download-progress", listener)
+        return updater.downloadUpdate().finally(() => updater.off("download-progress", listener))
       },
-      quitAndInstall: () => {
-        // quitAndInstall closes all windows before emitting before-quit, so
-        // flag the quit first to keep window ids persisted for restore.
-        setAppQuitting()
+      quitAndInstall: async () => {
+        // electron-updater 6.8.9 stages the proxy but does not start Squirrel when autoInstallOnAppQuit=false.
+        // Prepare natively before invoking MacUpdater.quitAndInstall, which otherwise arms a late automatic quit.
+        if (native && !nativeReady) await prepareNativeUpdate({
+          subscribe: (onReady, onError) => {
+            native.once("update-downloaded", onReady)
+            native.once("error", onError)
+            return () => { native.off("update-downloaded", onReady); native.off("error", onError) }
+          },
+          prepare: () => native.checkForUpdates(),
+        })
         try {
-          autoUpdater.quitAndInstall()
+          const exiting = await confirmUpdaterQuit({
+            subscribe: (onQuit, onQuitting) => {
+              app.once("will-quit", onQuit)
+              app.once("before-quit", onQuitting)
+              return () => { app.off("will-quit", onQuit); app.off("before-quit", onQuitting) }
+            },
+            install: () => {
+              setAppQuitting()
+              updater.quitAndInstall()
+            },
+          })
+          if (!exiting) setAppQuitting(false)
+          return exiting
         } catch (error) {
-          // The install failed and the app keeps running; clear the flag so
-          // deliberate window closes prune ids again.
           setAppQuitting(false)
           throw error
         }
@@ -69,7 +92,6 @@ export function setupAutoUpdater(stop: () => Promise<void>) {
       set: (value) => store.set(key, value),
       clear: () => store.delete(key),
     },
-    stop,
     log: (message, data) => logger.log(message, data),
   })
 }

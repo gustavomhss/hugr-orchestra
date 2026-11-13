@@ -408,20 +408,8 @@
       "authorizedBy": "Gustavo, standing rule that generated outputs may raise their ceiling (2026-10-10)",
       "authorizedAt": "2026-10-29"
     },
-    "packages/app-shell/src/client-events.ts": {
-      "maximumLines": 1420,
-      "reason": "Campaign growth consolidated in this merge; splitting deferred with Maestro authorization 2026-11-09.",
-      "authorizedBy": "maestro",
-      "authorizedAt": "2026-11-09"
-    },
     "packages/app-shell/src/context/server-session.test.ts": {
       "maximumLines": 900,
-      "reason": "Campaign growth consolidated in this merge; splitting deferred with Maestro authorization 2026-11-09.",
-      "authorizedBy": "maestro",
-      "authorizedAt": "2026-11-09"
-    },
-    "packages/app-shell/src/v2-wire.ts": {
-      "maximumLines": 3400,
       "reason": "Campaign growth consolidated in this merge; splitting deferred with Maestro authorization 2026-11-09.",
       "authorizedBy": "maestro",
       "authorizedAt": "2026-11-09"

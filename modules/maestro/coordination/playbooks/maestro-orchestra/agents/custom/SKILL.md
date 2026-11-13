@@ -64,4 +64,4 @@ of at most 200,000 characters. The screen crops an upload to 192 px. SVG is refu
 
 A read-only reviewer: a file `.orchestra/agents/reviewer.md` with `mode: subagent`, `permissions` that deny `edit`, and a
 body describing the review method. Restricting a command: a `bash` rule with resource `git push *` and effect `deny`.
-Maestro and `general` ask before `git push`, `gh pr create`, `gh pr merge` and `gh release`; config can allow them.
+Maestro and `general` ask before `git push`, `gh pr create` and `gh release`; config can allow those. The owner is asked before `general` runs `gh pr merge`, and config can allow that ask so the command can run. The host refuses Maestro's `gh pr merge` bash command and tells it to queue the card with `board_queue`. No setting lets that command succeed. Claude mode still asks the owner on the publish rule before that refusal; allowing the ask does not run the command.

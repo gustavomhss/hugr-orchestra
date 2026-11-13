@@ -65,6 +65,8 @@ const desktop = [
   "Ablak: {{window}}\nURL: {{url}}\nHiba: {{code}} {{description}}",
   "Ablak: {{window}}\nOk: {{reason}}\nKód: {{code}}",
   "<ismeretlen>",
+  "HuGR Orchestra could not start",
+  "{{reason}}\n\nLogs: {{logs}}",
   "Mappa kiválasztása",
   "Fájl kiválasztása",
   "Fájl mentése",

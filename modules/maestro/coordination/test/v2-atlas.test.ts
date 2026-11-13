@@ -476,6 +476,7 @@ describe("V2 workflow knowledge resolve", () => {
                 : undefined,
             ),
           entries: () => Effect.succeed(input.messages.map((message, seq) => ({ seq, message }))),
+          unsettledHiddenTools: () => Effect.succeed([]),
           context: () => Effect.die("unused"),
           runnerContext: () => Effect.die("unused"),
           message: () => Effect.die("unused"),

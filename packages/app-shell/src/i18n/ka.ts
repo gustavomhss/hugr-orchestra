@@ -60,6 +60,8 @@ export const dict = {
   "desktop.recovery.action.keepWaiting": "მოელოდეთ",
   "desktop.recovery.action.quit": "გამოსვლა",
   "desktop.recovery.loadFailed": "HuGR Orchestra ვერ ჩაიტვირთა",
+  "desktop.startup.failed": "HuGR Orchestra could not start",
+  "desktop.startup.failed.detail": "{{reason}}\n\nLogs: {{logs}}",
   "desktop.recovery.terminated": "HuGR Orchestra-ს ფანჯარა მოულოდნელად დაიხურა",
   "desktop.recovery.unresponsive": "HuGR Orchestra არ პასუხობს",
   "desktop.recovery.unresponsive.detail": "შეგიძლიათ ხელახლა გაუშვათ აპი, გახსნათ ჟურნალები ან გააგრძელოთ ლოდინი.",

@@ -251,6 +251,33 @@ test("events.subscribe exposes the Promise event stream wire projection", async 
   expect(events[1]?.type === "session.next.model.switched" && events[1].data.timestamp).toBe(1_717_171_717_000)
 })
 
+test("events.subscribe yields a complete frame before refusing an oversized remainder", async () => {
+  const frame = `data: ${JSON.stringify({ id: "evt_ok", type: "server.connected", data: {} })}\n\n`
+  const stream = new ReadableStream({
+    start(controller) {
+      controller.enqueue(new TextEncoder().encode(frame + "x".repeat(134_217_729)))
+      controller.close()
+    },
+  })
+  const client = Orchestra.make({
+    baseUrl: "http://localhost:3000",
+    fetch: async () => new Response(stream, { headers: { "content-type": "text/event-stream" } }),
+  })
+  const iterator = client.events.subscribe()[Symbol.asyncIterator]()
+  expect(await iterator.next()).toMatchObject({
+    done: false,
+    value: { id: "evt_ok", type: "server.connected", data: {} },
+  })
+  expect(
+    await iterator.next().then(
+      () => {
+        throw new Error("Expected the oversized remainder to fail")
+      },
+      (error: unknown) => error,
+    ),
+  ).toMatchObject({ name: "ClientError", reason: "MalformedResponse" })
+})
+
 test("events.subscribe terminates on malformed Promise SSE data", async () => {
   const client = Orchestra.make({
     baseUrl: "http://localhost:3000",

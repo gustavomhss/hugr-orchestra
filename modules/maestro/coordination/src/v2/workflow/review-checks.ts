@@ -1,8 +1,8 @@
 export * as ReviewChecksV2 from "./review-checks"
 
-import type { ReviewAnalyze } from "@orchestra/core/review-toolkit/analyze"
+import { ReviewAnalyze } from "@orchestra/core/review-toolkit/analyze"
 import type { ReviewProbe } from "@orchestra/core/review-toolkit/probe"
-import type { ReviewCatalog } from "@orchestra/core/review/catalog"
+import { ReviewCatalog } from "@orchestra/core/review/catalog"
 import { ReviewRouting } from "@orchestra/core/review/routing"
 import { ReviewSettings } from "@orchestra/core/review/settings"
 import { Schema } from "effect"
@@ -32,16 +32,18 @@ export function collect(input: {
   const accepted = new Set(ReviewSettings.read(input.settings ?? {}).acceptedUnavailable)
   const accepts = (id: string, lane?: string) => accepted.has(id) || (lane !== undefined && accepted.has(lane))
   const projected = input.checks.map((check) => projectAnalyzer(check, accepts))
+  const releaseMissing = input.routing.profile.id === "release" ? missingRelease(projected) : []
   const probeRows = (input.probes ?? []).map((probe) => projectProbe(probe, accepts))
   const requiredPacks = input.routing.packs.filter((pack) => pack.status === "routed" || pack.source === "path")
   const produced = new Set(projected.flatMap((check) => (check.pack ? [check.pack] : [])))
   const missing = requiredPacks.flatMap((pack) => (produced.has(pack.id) ? [] : [missingCheck(pack, accepts)]))
-  const analyzerRows = [...projected, ...missing]
+  const analyzerRows = [...projected, ...missing, ...releaseMissing]
   const checks = sort(dedupe([...analyzerRows, ...probeRows]))
   const requiredIds = new Set(requiredPacks.map((pack) => pack.id))
   const required = listed([
     ...analyzerRows.flatMap((check) => (requiredIds.has(check.pack ?? "") ? [identity(check)] : [])),
     ...probeRows.map((check) => identity(check)),
+    ...(input.routing.profile.id === "release" ? releaseIdentities() : []),
   ])
   const blockers = derived(checks, new Set(required), input.entryBlockers ?? [])
   const repositoryPacks = new Set<string>(input.catalog.packs.flatMap((pack) => (pack.backend === "repo" ? [pack.id] : [])))
@@ -75,6 +77,16 @@ function requireFacts(facts: unknown): Facts {
 }
 
 function projectAnalyzer(check: ReviewAnalyze.Check, accepts: (id: string, lane?: string) => boolean): Check {
+  // R19 cites typecheck.yml instead of running tsc. A missing language server is recorded and is not a required gate.
+  // The database age is a suffix on the same reason; it does not change the classification.
+  const reason = classified(check.reason)
+  if (check.status === "not-run" && (
+    reason === ReviewAnalyze.TYPECHECK_CI ||
+    reason === ReviewAnalyze.LSP_ABSENT ||
+    reason === ReviewAnalyze.NATIVE_UNQUALIFIED ||
+    reason === ReviewAnalyze.GOLANGCI_ABSENT ||
+    (reason?.startsWith("not run: ") && reason.endsWith(" absent"))
+  )) return projected(check, "not-run", false)
   const status = check.status === "not-run" ? "check-unavailable" : check.status
   return projected(check, status, status === "check-unavailable" && accepts(check.id, check.lane))
 }
@@ -111,6 +123,12 @@ function missingCheck(pack: ReviewRouting.Pack, accepts: (id: string, lane?: str
   )
 }
 
+function classified(reason?: string) {
+  const marker = `; ${ReviewAnalyze.OSV_DATABASE_AGE}`
+  const at = reason?.lastIndexOf(marker) ?? -1
+  return at === -1 ? reason : reason?.slice(0, at)
+}
+
 function projected(
   check: {
     readonly id: string
@@ -137,12 +155,37 @@ function projected(
 }
 
 function derived(checks: readonly Check[], required: ReadonlySet<string>, entry: readonly Blocker[]): Blocker[] {
+  const proofs = checks.flatMap((check) =>
+    required.has(identity(check)) && check.status === "fail" && releaseProof(check) ? [blocker("release-proof", check)] : [],
+  )
   return checks.reduce<Blocker[]>((blockers, check) => {
     if (!required.has(identity(check))) return blockers
     if (check.status === "acquisition-error") return add(blockers, blocker("acquisition-error", check))
     if (check.status === "check-unavailable" && check.accepted !== true) return add(blockers, blocker("check-unavailable", check))
     return blockers
-  }, canonical(entry))
+  }, canonical([...proofs, ...entry]))
+}
+
+function releaseIdentities() {
+  return ReviewCatalog.releaseChecks.ids.map((id) => JSON.stringify(["release", "no-build", id]))
+}
+
+function missingRelease(checks: readonly Check[]): Check[] {
+  return ReviewCatalog.releaseChecks.ids.flatMap((id) => {
+    if (checks.some((check) => check.pack === "release" && check.lane === "no-build" && check.id === id)) return []
+    return [projected({
+      id,
+      pack: "release",
+      lane: "no-build",
+      version: "unknown",
+      reason: "missing-release-check",
+      workspaceExecuted: false,
+    }, "acquisition-error", false)]
+  })
+}
+
+function releaseProof(check: Check) {
+  return check.pack === "release" && check.lane === "no-build" && ReviewCatalog.releaseChecks.ids.some((id) => id === check.id)
 }
 
 function canonical(blockers: readonly Blocker[]) {

@@ -1,4 +1,7 @@
+import { slackSystem } from "../../capability/providers/slack"
 import type { Pulled } from "../types"
+
+export { slackSystem }
 
 const banned = new Set(["huddle", "canvas", "call"])
 

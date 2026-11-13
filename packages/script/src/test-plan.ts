@@ -29,7 +29,9 @@ export type Timings = {
   budget: { limit: number; fixed: number }
   // Seconds per test file of a sharded package, keyed `<package directory>:<platform>`, measured by a cold run.
   files: Record<string, Record<string, number>>
-  // Seconds per sharded package in total, keyed `<package directory>`; it sets the shard count.
+  // Declared scheduling floors, separate from cold-run measurements. Same keys as `files`.
+  reserves?: Record<string, Record<string, number>>
+  // Seconds per sharded package in total, keyed `<package directory>`.
   totals: Record<string, Record<Platform, number>>
 }
 
@@ -37,9 +39,13 @@ export function shardCount(seconds: number, target: number, margin: number) {
   return Math.max(1, Math.ceil((seconds * margin) / target))
 }
 
-// Shards of a time-sharded package on one platform: its measured total, scaled by the platform's overhead.
+// Size from the larger of the measured total and current file weights, scaled by platform overhead.
 export function packageShards(timings: Timings, directory: string, platform: Platform) {
-  return shardCount((timings.totals[directory]?.[platform] ?? 0) * timings.overhead[platform], timings.target[platform], timings.margin)
+  const total = timings.totals[directory]?.[platform]
+  if (total === undefined) return 1
+  const weights = weigh(directory, timings.files[`${directory}:${platform}`] ?? {}, total, UNTIMED_FLOOR, timings.reserves?.[`${directory}:${platform}`])
+  const seconds = Math.round(weights.reduce((sum, entry) => sum + entry.weight, 0) * 1000) / 1000
+  return shardCount(Math.max(total, seconds) * timings.overhead[platform], timings.target[platform], timings.margin)
 }
 
 // Longest-processing-time first: each item goes to the currently lightest bin. Deterministic for equal weights.
@@ -62,12 +68,24 @@ const UNTIMED_FLOOR = 1
 /** The bins `shard` prints. The floor lives here, so a test of this function is a test of the split CI runs. */
 export function plannedBins(timings: Timings, directory: string, platform: Platform) {
   return balance(
-    weigh(directory, timings.files[`${directory}:${platform}`] ?? {}, timings.totals[directory]?.[platform] ?? 0, UNTIMED_FLOOR),
+    weigh(
+      directory,
+      timings.files[`${directory}:${platform}`] ?? {},
+      timings.totals[directory]?.[platform] ?? 0,
+      UNTIMED_FLOOR,
+      timings.reserves?.[`${directory}:${platform}`],
+    ),
     packageShards(timings, directory, platform),
   )
 }
 
-export function weigh(directory: string, measured: Record<string, number>, total: number, floor = 0) {
+export function weigh(
+  directory: string,
+  measured: Record<string, number>,
+  total: number,
+  floorOrReserves: number | Record<string, number> = 0,
+  reserves: Record<string, number> = {},
+) {
   const files = testFiles(path.join(root, directory)).map((file) => ({ file, bytes: statSync(path.join(root, directory, file)).size }))
   const known = files.filter((entry) => measured[entry.file] !== undefined)
   const unknown = files.filter((entry) => measured[entry.file] === undefined)
@@ -77,9 +95,11 @@ export function weigh(directory: string, measured: Record<string, number>, total
   // With no measurement the package total is spread over the files by size.
   const rate =
     knownBytes > 0 ? knownSeconds / knownBytes : unknownBytes > 0 ? Math.max(total - knownSeconds, 0) / unknownBytes : 0
+  const floor = typeof floorOrReserves === "number" ? floorOrReserves : 0
+  const held = typeof floorOrReserves === "number" ? reserves : floorOrReserves
   return files.map((entry) => {
     const recorded = measured[entry.file]
-    const estimated = recorded === undefined ? Math.max(entry.bytes * rate, 0.05) : recorded
+    const estimated = Math.max(recorded === undefined ? Math.max(entry.bytes * rate, 0.05) : recorded, held[entry.file] ?? 0)
     return { name: entry.file, weight: floor > 0 && estimated < floor ? floor : estimated }
   })
 }
@@ -166,6 +186,8 @@ function coreShards(name: Platform, host: string, count: number) {
     shard: `${index + 1}/${count}`,
     turbo: true,
     filters: "--filter=@orchestra/core",
+    // The dependency-shadow cap proof is allowed 10 minutes. An 8-minute step killed the Windows shard that held it.
+    ...(name === "windows" ? { budget: 15 } : {}),
   }))
 }
 
@@ -178,11 +200,11 @@ function coreShards(name: Platform, host: string, count: number) {
 // lane that carried them with the other packages ran past the 10-minute limit). The legacy rollback proof rides in the
 // Windows atlas lane beside the process query proof, for the same reason.
 export function packageLanes(name: Platform, host: string) {
-  const claimed = ["core", "cli", "app", "server", "sdk-next", "client", "tui", "session-ui", "atlas-boundary", "relay"].map((entry) => `@orchestra/${entry}`)
+  const linux = name === "linux"
+  const claimed = ["core", "cli", "app", "server", "sdk-next", "client", "tui", "session-ui", "atlas-boundary", "relay", ...(linux ? [] : ["desktop", "script"])].map((entry) => `@orchestra/${entry}`)
   // httpapi-codegen is a build-time generator whose tests pin POSIX paths, so it runs on Linux only.
   const excluded = name === "windows" ? [...claimed, "@orchestra/httpapi-codegen"] : claimed
   const filters = (packages: string[]) => packages.map((entry) => `--filter=@orchestra/${entry}`).join(" ")
-  const linux = name === "linux"
   const lane = (part: string, label: string, selected: string, extra: object = {}) => ({
     name,
     host,
@@ -201,6 +223,11 @@ export function packageLanes(name: Platform, host: string) {
       rollback: !linux,
     }),
     lane("relay", "relay", "--filter=@orchestra/relay"),
+    // Windows desktop and script together exceed the libs lane's serial test budget.
+    ...(linux ? [] : [
+      lane("desktop", "desktop", filters(["desktop"]), { budget: 15 }),
+      lane("script", "script", filters(["script"]), { budget: 15 }),
+    ]),
     lane("libs", "other packages", excluded.map((entry) => `--filter=!${entry}`).join(" "), {
       electron: linux,
       // The Windows lane left past the step's 8 minutes without assertions; the workflow gives that one a 12/15 budget.
@@ -209,7 +236,14 @@ export function packageLanes(name: Platform, host: string) {
     ...(linux
       ? [
           { name, host, part: "gates", label: "gates, relay", repo_gates: true, relay: true },
-          { name, host, part: "httpapi", label: "httpapi", httpapi: true },
+          ...[1, 2].map((index) => ({
+            name,
+            host,
+            part: `httpapi-${index}`,
+            label: `httpapi ${index}/2`,
+            httpapi: true,
+            httpapiShard: `${index}/2`,
+          })),
           { name, host, part: "sandbox", label: "sandbox proofs", hosted: true },
         ]
       : []),

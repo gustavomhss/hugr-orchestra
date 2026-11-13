@@ -8,13 +8,14 @@ import { Credential } from "../../src/credential"
 import { Location } from "../../src/location"
 import { ProjectV2 } from "../../src/project"
 import { AbsolutePath } from "../../src/schema"
+import { installOwner } from "../../src/inbox/install"
 import { Inbox } from "../../src/inbox/service"
 import { SlackAuth } from "../../src/inbox/slack-auth"
 import { InboxRowTable, InboxSlackTable } from "../../src/inbox/sql"
 import { testEffect } from "../lib/effect"
 
 const directory = AbsolutePath.make("/slack-fixture")
-const owner = JSON.stringify([ProjectV2.ID.global, directory, null])
+const owner = installOwner
 const it = testEffect(
   AppNodeBuilder.build(LayerNode.group([Database.node, Credential.node]), [
     [Location.node, Layer.succeed(Location.Service, { directory, project: { id: ProjectV2.ID.global, directory } })],

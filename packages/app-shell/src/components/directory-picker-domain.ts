@@ -1,3 +1,5 @@
+import { settlePickerSearch, StalePickerSearch } from "./picker-search"
+
 export function treeEntries(parent: string, nodes: ReadonlyArray<{ name: string; type: "file" | "directory" }>) {
   const prefix = parent.replace(/^\/+|\/+$/g, "")
   return nodes.map((node) => {
@@ -328,9 +330,15 @@ export function displayPickerPath(path: string, input: string, home: string) {
   return pickerTilde(value, home) || value
 }
 
-export function createDirectorySearch(args: { sdk: ServerSDK; base: () => string | undefined; home: () => string }) {
+export function createDirectorySearch(args: {
+  sdk: ServerSDK
+  base: () => string | undefined
+  home: () => string
+  report?: (error: unknown) => void
+}) {
   const cache = new Map<string, Promise<Array<{ name: string; absolute: string }>>>()
   let current = 0
+  let tell: (error: unknown) => void = () => {}
 
   const scoped = (value: string) => {
     const raw = normalizePickerDrive(value)
@@ -349,6 +357,7 @@ export function createDirectorySearch(args: { sdk: ServerSDK; base: () => string
     const key = trimPickerPath(directory)
     const existing = cache.get(key)
     if (existing) return existing
+    const notify = tell
     const request = args.sdk.api.file
       .list({ location: { directory: key } })
       .then((result) =>
@@ -359,10 +368,13 @@ export function createDirectorySearch(args: { sdk: ServerSDK; base: () => string
             return { name: getFilename(relative), absolute: joinPickerPath(key, relative) }
           }),
       )
-      // A failed listing reads as empty for this call but is not cached, so the next keystroke retries it.
-      .catch(() => {
+      // A failed listing is not cached, so the next keystroke retries it. It is not "no folders".
+      // A newer search has replaced `tell`; this rejection belongs to the search that started the read.
+      .catch((error: unknown) => {
         cache.delete(key)
-        return []
+        if (notify !== tell) throw new StalePickerSearch()
+        notify(error)
+        throw error
       })
     cache.set(key, request)
     return request
@@ -377,6 +389,12 @@ export function createDirectorySearch(args: { sdk: ServerSDK; base: () => string
   return async (filter: string) => {
     const token = ++current
     const active = () => token === current
+    let told = false
+    tell = (error) => {
+      if (!active() || told) return
+      told = true
+      args.report?.(error)
+    }
     const value = cleanPickerInput(filter)
     const input = scoped(value)
     if (!input) return [] as string[]
@@ -384,18 +402,26 @@ export function createDirectorySearch(args: { sdk: ServerSDK; base: () => string
     const pathInput = raw.startsWith("~") || !!pickerRoot(raw) || raw.includes("/")
     const query = normalizePickerDrive(input.path)
     if (!pathInput) {
-      const results = await args.sdk.api.file
-        .find({ location: { directory: input.directory }, query, type: "directory", limit: 50 })
-        .then((result) => result.data.map((entry) => entry.path))
-        .catch(() => [])
-      if (!active()) return []
+      let results: string[] = []
+      const found = await settlePickerSearch({
+        read: args.sdk.api.file
+          .find({ location: { directory: input.directory }, query, type: "directory", limit: 50 })
+          .then((result) => result.data.map((entry) => entry.path)),
+        current: active,
+        apply: (value) => {
+          results = value
+        },
+        report: tell,
+      })
+      if (!active()) throw new StalePickerSearch()
+      if (!found) throw new Error("picker search failed")
       if (results.length) {
         return results.map((path) => joinPickerPath(input.directory, path)).slice(0, 50)
       }
       const fallback = query
         ? await match(input.directory, query, 50)
         : (await directories(input.directory)).map((item) => item.absolute)
-      if (!active()) return []
+      if (!active()) throw new StalePickerSearch()
       return fallback
     }
     const segments = query.replace(/^\/+/, "").split("/")
@@ -403,22 +429,23 @@ export function createDirectorySearch(args: { sdk: ServerSDK; base: () => string
     const tail = segments.at(-1) ?? ""
     let paths = [input.directory]
     for (const part of head) {
-      if (!active()) return []
+      if (!active()) throw new StalePickerSearch()
       if (part === "..") {
         paths = paths.map(pickerParent)
         continue
       }
       paths = Array.from(new Set((await Promise.all(paths.map((path) => match(path, part, 4)))).flat())).slice(0, 12)
-      if (!active() || paths.length === 0) return []
+      if (!active()) throw new StalePickerSearch()
+      if (paths.length === 0) return []
     }
     const matches = Array.from(new Set((await Promise.all(paths.map((path) => match(path, tail, 50)))).flat()))
-    if (!active()) return []
+    if (!active()) throw new StalePickerSearch()
     const base = raw.startsWith("~") ? trimPickerPath(input.directory) : ""
     if (raw.endsWith("/") || !tail) return Array.from(new Set([base, ...matches].filter(Boolean))).slice(0, 50)
     const target = matches.find((path) => getFilename(path).toLowerCase() === tail.toLowerCase())
     if (!target) return matches.slice(0, 50)
     const children = await match(target, "", 30)
-    if (!active()) return []
+    if (!active()) throw new StalePickerSearch()
     return Array.from(new Set([base, ...matches, ...children].filter(Boolean))).slice(0, 50)
   }
 }

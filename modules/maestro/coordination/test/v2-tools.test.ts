@@ -21,6 +21,7 @@ import { SessionMessage } from "@orchestra/core/session/message"
 import { SessionSchema } from "@orchestra/core/session/schema"
 import { SessionMessageTable, SessionTable } from "@orchestra/core/session/sql"
 import { MaestroArsenal } from "@orchestra/core/tool/maestro-arsenal"
+import { ReviewSeatTools } from "@orchestra/core/review/seat-tools"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { ToolOutputStore } from "@orchestra/core/tool-output-store"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
@@ -219,14 +220,14 @@ test("Maestro sees its tools and the Arsenal, each seat only its own, every othe
       const visible = (id: string) =>
         registry.materialize(rulesOf(id)).pipe(Effect.map((item) => item.definitions.map((tool) => tool.name).sort()))
       expect(yield* visible("maestro")).toEqual([...governance, ...arsenal].sort())
-      expect(yield* visible("lucy")).toEqual(["maestro_record_review"])
+      expect(yield* visible("lucy")).toEqual([...ReviewSeatTools.REVIEW, ...ReviewSeatTools.CODE, "maestro_record_review"].sort())
       expect(yield* visible("archie")).toEqual([...arsenal, ...memory, ...drafting].sort())
       expect(yield* visible("backend")).toEqual([...memory].sort())
       expect(yield* visible("jimmy")).toEqual([...memory, ...research].sort())
       for (const id of ["general", "explore", "custom"]) expect(yield* visible(id)).toEqual([])
       // Everything is registered: unfiltered materialization lists every tool.
       expect((yield* registry.materialize()).definitions.map((tool) => tool.name).sort()).toEqual(
-        [...governance, ...arsenal, "maestro_record_review", ...memory, ...research, ...drafting].sort(),
+        [...governance, ...arsenal, "maestro_record_review", ...ReviewSeatTools.REVIEW, ...memory, ...research, ...drafting].sort(),
       )
     }),
   ))

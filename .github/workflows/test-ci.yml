@@ -107,6 +107,19 @@ jobs:
       - name: Linux sandbox dependencies
         if: runner.os == 'Linux'
         run: |
+          # Hosted ubuntu-24.04 sometimes cannot resolve azure.archive.ubuntu.com. apt reads that
+          # name from apt-mirrors.txt. Fall back to archive.ubuntu.com only after the fetch fails.
+          install_sandbox() {
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq bubblewrap socat
+          }
+          if ! install_sandbox; then
+            for file in /etc/apt/apt-mirrors.txt /etc/apt/sources.list /etc/apt/sources.list.d/*.sources /etc/apt/sources.list.d/*.list; do
+              [ -f "$file" ] || continue
+              sudo sed -i 's|azure.archive.ubuntu.com|archive.ubuntu.com|g' "$file"
+            done
+            install_sandbox
+          fi
           # Ubuntu 24.04 blocks unprivileged user namespaces through AppArmor; bubblewrap needs them.
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
           if command -v bwrap >/dev/null && command -v socat >/dev/null; then
@@ -152,12 +165,13 @@ jobs:
             key=${line%%=*}
             value=${line#*=}
             case "$key" in
-              ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER) ;;
+              ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER) pattern='^(1|strict)$' ;;
+              ORCHESTRA_CHANNEL) pattern='^prod$' ;;
               *) echo "::error::.ci-run.json env key $key is not allow-listed"; exit 2 ;;
             esac
-            # Only omni's two on states: "0" or an invalid value would run on legacy with the omni control off.
-            if ! printf '%s' "$value" | grep -Eq '^(1|strict)$'; then
-              echo "::error::.ci-run.json env value for $key is not 1 or strict"
+            # Omni permits only its two on states; channel checks permit only the production value.
+            if ! printf '%s' "$value" | grep -Eq "$pattern"; then
+              echo "::error::.ci-run.json env value for $key is not allowed"
               exit 2
             fi
             echo "$key=$value" >> "$GITHUB_ENV"

@@ -1,6 +1,6 @@
 import { expect } from "bun:test"
-import { LLMClient, LLMEvent, Model, type LLMRequest } from "@orchestra/llm"
-import * as OpenAIChat from "@orchestra/llm/protocols/openai-chat"
+import { LLMClient, LLMError, LLMEvent, Model, TransportReason, type LLMRequest } from "@orchestra/llm"
+import { route } from "@orchestra/llm/protocols/openai-chat"
 import { AgentV2 } from "@orchestra/core/agent"
 import { EventV2 } from "@orchestra/core/event"
 import { SessionEvent } from "@orchestra/schema/session-event"
@@ -10,16 +10,19 @@ import { ExecutionHost } from "@orchestra/core/session/runner"
 import { SessionRunnerModel } from "@orchestra/core/session/runner/model"
 import { SkillGuidance } from "@orchestra/core/skill/guidance"
 import { Snapshot } from "@orchestra/core/snapshot"
+import { RelativePath } from "@orchestra/core/schema"
 import { SystemContext } from "@orchestra/core/system-context"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { Tool } from "@orchestra/core/tool/tool"
-import { Deferred, Effect, Exit, Fiber, Layer, Schema, Stream } from "effect"
+import { Deferred, Effect, Exit, Fiber, Layer, Option, Schema, Stream } from "effect"
 import { fragmentFixture, Harness, sessionID } from "./session-runner-harness"
 
 const order: string[] = []
 let releaseCapture: Deferred.Deferred<void> | undefined
 let releaseStream: Deferred.Deferred<void> | undefined
 const requests: LLMRequest[] = []
+const comparisons: Snapshot.CompareInput[] = []
+let responseMode: "text" | "empty" | "error" = "text"
 
 const client = Layer.succeed(
   LLMClient.Service,
@@ -33,9 +36,12 @@ const client = Layer.succeed(
           order.push("stream")
           const gate = releaseStream
           if (gate) yield* Deferred.await(gate)
+          if (responseMode === "error") return Stream.fail(new LLMError({ module: "test", method: "stream",
+            reason: new TransportReason({ message: "early failure" }) }))
+          if (responseMode === "empty") return Stream.make(LLMEvent.stepStart({ index: 0 }), LLMEvent.stepFinish({ index: 0, reason: "stop" }))
           return Stream.fromIterable(fragmentFixture("text", "text", ["ok"]).completeEvents)
         }),
-      ),
+      ).pipe(Stream.ensuring(Effect.sync(() => { order.push("stream-end") }))),
   }),
 )
 
@@ -53,8 +59,8 @@ const slowSnapshot = Layer.succeed(
           return Snapshot.ID.make("snap-start")
         }
         return Snapshot.ID.make("snap-end")
-      }),
-    files: () => Effect.succeed([]),
+      }).pipe(Effect.onInterrupt(() => Effect.sync(() => { order.push("capture-interrupted") }))),
+    files: (input) => Effect.sync(() => { comparisons.push(input); return [RelativePath.make("changed.txt")] }),
     diff: () => Effect.succeed([]),
     preview: () => Effect.succeed([]),
     restore: () => Effect.void,
@@ -64,7 +70,7 @@ const slowSnapshot = Layer.succeed(
 
 const it = Harness.make({
   client,
-  models: SessionRunnerModel.layerWith(() => Effect.succeed(Model.make({ id: "fake-model", provider: "fake", route: OpenAIChat.route }))),
+  models: SessionRunnerModel.layerWith(() => Effect.succeed(Model.make({ id: "fake-model", provider: "fake", route }))),
   echo: Layer.effectDiscard(ToolRegistry.Service.use((registry) => registry.register({}))),
   systemContext: Harness.systemContextLayer,
   skillGuidance: Layer.mock(SkillGuidance.Service, { load: () => Effect.succeed(SystemContext.empty) }),
@@ -75,6 +81,8 @@ it.effect("the provider stream starts before snapshot capture finishes, and the 
   Effect.gen(function* () {
     order.length = 0
     requests.length = 0
+    comparisons.length = 0
+    responseMode = "text"
     releaseCapture = yield* Deferred.make<void>()
     releaseStream = yield* Deferred.make<void>()
     yield* Harness.setup
@@ -99,15 +107,45 @@ it.effect("the provider stream starts before snapshot capture finishes, and the 
 
     const messages = yield* session.messages({ sessionID })
     expect(messages.find((message) => message.type === "assistant")).toMatchObject({
-      snapshot: { start: "snap-start", end: "snap-end", files: [] },
+      snapshot: { start: "snap-start", end: "snap-end", files: ["changed.txt"] },
     })
+    expect(comparisons).toEqual([{ from: Snapshot.ID.make("snap-start"), to: Snapshot.ID.make("snap-end") }])
   }),
 )
+
+for (const mode of ["empty", "error"] as const) {
+  it.live(`cancelling an ${mode} provider response interrupts pending snapshot capture`, () =>
+    Effect.gen(function* () {
+      order.length = 0
+      responseMode = mode
+      releaseStream = undefined
+      const gate = yield* Deferred.make<void>()
+      releaseCapture = gate
+      yield* Harness.setup
+      const session = yield* SessionV2.Service
+      yield* session.prompt({ sessionID, prompt: Prompt.make({ text: "hi" }), resume: false })
+      const running = yield* session.resume(sessionID).pipe(Effect.forkChild)
+      const stopped = yield* Effect.gen(function* () {
+        let spins = 0
+        while (!order.includes("capture-start") || !order.includes("stream-end")) {
+          if (++spins > 5000) return yield* Effect.die(`provider did not finish: ${order}`)
+          yield* Effect.yieldNow
+        }
+        const stopping = yield* session.interrupt(sessionID).pipe(Effect.forkChild)
+        return yield* Fiber.await(stopping).pipe(Effect.timeoutOption("1 second"))
+      }).pipe(Effect.ensuring(Deferred.succeed(gate, undefined)))
+      expect(Option.isSome(stopped)).toBe(true)
+      yield* Fiber.await(running)
+      expect(order).toContain("capture-interrupted")
+    }),
+  )
+}
 
 const hostOrder: string[] = []
 let hostRelease: Deferred.Deferred<void> | undefined
 const hostSettled: string[] = []
 const providerSettled: string[] = []
+let toolRelease: Deferred.Deferred<void> | undefined
 
 function settledAfterPublish(record: string[]) {
   const settleAt = record.indexOf("settle")
@@ -134,7 +172,10 @@ function echo(record: string[]) {
     toModelOutput: ({ output }) => [{ type: "text", text: output.text }],
     execute: () => {
       record.push("settle")
-      return Effect.succeed({ text: "ok" })
+      return Effect.gen(function* () {
+        if (toolRelease) yield* Deferred.await(toolRelease)
+        return { text: "ok" }
+      })
     },
   })
 }
@@ -243,34 +284,73 @@ const toolClient = Layer.succeed(
     prepare: () => Effect.die("unused"),
     generate: () => Effect.die("unused"),
     stream: () => {
+      providerSettled.push("stream")
       toolTurns++
       if (toolTurns > 1) return Stream.make(LLMEvent.stepStart({ index: 0 }), LLMEvent.stepFinish({ index: 0, reason: "stop" }))
       return Stream.make(
         LLMEvent.stepStart({ index: 0 }),
         LLMEvent.toolCall({ id: "call-1", name: "echo", input: { text: "hi" } }),
         LLMEvent.stepFinish({ index: 0, reason: "tool-calls" }),
-      )
+      ).pipe(Stream.ensuring(Effect.sync(() => { providerSettled.push("provider-ended") })))
     },
   }),
 )
 
 const tooled = Harness.make({
   client: toolClient,
-  models: SessionRunnerModel.layerWith(() => Effect.succeed(Model.make({ id: "fake-model", provider: "fake", route: OpenAIChat.route }))),
+  models: SessionRunnerModel.layerWith(() => Effect.succeed(Model.make({ id: "fake-model", provider: "fake", route }))),
   echo: Layer.effectDiscard(ToolRegistry.Service.use((registry) => registry.register({ echo: echo(providerSettled) }))),
   systemContext: Harness.systemContextLayer,
   skillGuidance: Layer.mock(SkillGuidance.Service, { load: () => Effect.succeed(SystemContext.empty) }),
+  replacements: [[Snapshot.node, slowSnapshot]],
 })
 
 tooled.effect("a provider tool settles only after its call is published", () =>
   Effect.gen(function* () {
     providerSettled.length = 0
+    toolRelease = undefined
+    order.length = 0
+    releaseCapture = yield* Deferred.make<void>()
     toolTurns = 0
     yield* Harness.setup
     yield* watchToolCalled(providerSettled)
     const session = yield* SessionV2.Service
     yield* session.prompt({ sessionID, prompt: Prompt.make({ text: "hi" }), resume: false })
-    yield* session.resume(sessionID)
+    const running = yield* session.resume(sessionID).pipe(Effect.forkChild)
+    let spins = 0
+    while (!providerSettled.includes("stream") || !order.includes("capture-start")) {
+      if (++spins > 5000) return yield* Effect.die(`provider did not start: ${providerSettled}`)
+      yield* Effect.yieldNow
+    }
+    expect(providerSettled).not.toContain("settle")
+    yield* Deferred.succeed(releaseCapture, undefined)
+    yield* Fiber.join(running)
     expect(settledAfterPublish(providerSettled), providerSettled.join(",")).toBe(true)
+  }),
+)
+
+tooled.effect("cancelling after a tool write preserves end snapshot and revert files", () =>
+  Effect.gen(function* () {
+    providerSettled.length = 0
+    order.length = 0
+    releaseCapture = undefined
+    toolRelease = yield* Deferred.make<void>()
+    toolTurns = 0
+    yield* Harness.setup
+    const session = yield* SessionV2.Service
+    yield* session.prompt({ sessionID, prompt: Prompt.make({ text: "hi" }), resume: false })
+    const running = yield* session.resume(sessionID).pipe(Effect.forkChild)
+    let spins = 0
+    while (!providerSettled.includes("settle") || !providerSettled.includes("provider-ended")) {
+      if (++spins > 5000) return yield* Effect.die(`tool did not write: ${providerSettled}`)
+      yield* Effect.yieldNow
+    }
+    yield* session.interrupt(sessionID)
+    yield* Fiber.await(running)
+    const messages = yield* session.messages({ sessionID })
+    expect(messages.find((message) => message.type === "assistant")).toMatchObject({
+      finish: "error", snapshot: { start: "snap-start", end: "snap-end", files: ["changed.txt"] },
+    })
+    toolRelease = undefined
   }),
 )

@@ -12,6 +12,7 @@ import {
   pollDelay,
   pollLimit,
   polling,
+  refreshMeeting,
   refusal,
   segmentAt,
   speaker,
@@ -145,6 +146,35 @@ describe("hotkeys", () => {
     expect(accelerator({ ...base, key: "m" }, true)).toBeUndefined()
     expect(accelerator({ ...base, key: "m", metaKey: true, shiftKey: true }, true)).toBe("Command+Shift+M")
     expect(accelerator({ ...base, key: "ArrowUp", ctrlKey: true }, false)).toBe("Control+Up")
+  })
+})
+
+describe("refreshMeeting", () => {
+  test("a failed refresh is reported and does not reject", async () => {
+    const error = new Error("read failed")
+    const reported: unknown[] = []
+    const applied: string[] = []
+    const ok = await refreshMeeting({
+      read: Promise.reject(error),
+      apply: (detail) => applied.push(detail),
+      report: (cause) => reported.push(cause),
+    })
+    expect(ok).toBe(false)
+    expect(applied).toEqual([])
+    expect(reported).toEqual([error])
+  })
+
+  test("a refresh applies the detail and does not report", async () => {
+    const reported: unknown[] = []
+    const applied: string[] = []
+    const ok = await refreshMeeting({
+      read: Promise.resolve("detail"),
+      apply: (detail) => applied.push(detail),
+      report: (cause) => reported.push(cause),
+    })
+    expect(ok).toBe(true)
+    expect(applied).toEqual(["detail"])
+    expect(reported).toEqual([])
   })
 })
 

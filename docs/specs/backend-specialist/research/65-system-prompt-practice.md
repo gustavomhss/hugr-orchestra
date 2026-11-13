@@ -1,5 +1,7 @@
 # R65 — System-prompt practice for an implementation specialist (the backend specialist charter)
 
+> Path note: references to the removed `packages/orchestra` monolith retain their historical source context. For current implementation, use the [source path map](../../../architecture/source-paths.md); old line numbers do not identify current code.
+
 Scope: how to write the system prompt ("charter") for the backend specialist, the backend implementation specialist that receives a complete work packet, implements inside it, runs the assigned checks, and returns delta + evidence + blockers. This note does not write the charter. It builds on R01 (Codex mechanisms), R02 (Claude mechanisms), R05 (OpenHands/SWE-agent), R11 (Devin) and R27 (agent failures); those covered host mechanisms (skills, permissions, evidence, recovery). None of them analysed prompt text itself, so this note focuses on wording, length, ordering, boundaries, return format and model-family deltas.
 
 Evidence labels used below:

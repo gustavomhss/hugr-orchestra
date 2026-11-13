@@ -35,10 +35,35 @@ function bus() {
     const event = { id, type: "server.connected", data: {} } as never
     return Effect.forEach(listeners, (listener) => listener(event), { discard: true })
   }
-  return { service, publish, broadcast }
+  const publishUnknown = () => {
+    const event = { id: EventV2.ID.create(), type: "research.record.committed", data: { sessionID: "ses_x" } } as never
+    return Effect.forEach(listeners, (listener) => listener(event), { discard: true })
+  }
+  return { service, publish, broadcast, publishUnknown }
 }
 
 describe("event stream", () => {
+  test("skips an event the public schema cannot name and keeps the subscription", () =>
+    Effect.runPromise(
+      Effect.scoped(
+        Effect.gen(function* () {
+          const events = bus()
+          const pull = yield* Stream.toPull(eventStream(events.service))
+          const decoder = new TextDecoder()
+          const text = (chunk: ReadonlyArray<Uint8Array>) => chunk.map((bytes) => decoder.decode(bytes)).join("")
+          // The first pull installs the subscriber and delivers the connected event.
+          expect(text(yield* pull)).toContain("server.connected")
+          yield* events.publishUnknown()
+          const id = EventV2.ID.create()
+          yield* events.broadcast(id)
+          let received = ""
+          while (!received.includes(id)) received += text(yield* pull)
+          expect(received).toContain(id)
+          expect(received).not.toContain("research.record.committed")
+        }),
+      ),
+    ))
+
   test("keeps a reader that falls behind by a burst of events", () =>
     Effect.runPromise(
       Effect.scoped(

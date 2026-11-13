@@ -3,6 +3,7 @@ import { Effect } from "effect"
 import { canonical } from "../session/meeting-memory"
 import { MeetingItemTable, MeetingPersonTable } from "../session/meeting-memory.sql"
 import { Database } from "../database/database"
+import { adoptRows } from "./install"
 import { open, type Saved } from "./store"
 import { InboxDraftTable, InboxEgressTable, InboxRowTable } from "./sql"
 import type { Person } from "./types"
@@ -16,6 +17,7 @@ export function known(store: ReturnType<typeof open>, id: string) {
 
 export function load(db: Db | Tx, owner: string) {
   return Effect.gen(function* () {
+    yield* adoptRows(db)
     const rows = yield* db.select().from(InboxRowTable).where(eq(InboxRowTable.owner, owner)).all().pipe(Effect.orDie)
     const drafts = yield* db
       .select()

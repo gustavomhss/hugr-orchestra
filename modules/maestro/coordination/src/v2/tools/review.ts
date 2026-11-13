@@ -17,6 +17,8 @@ import { ReviewPrecisionStore } from "@orchestra/core/review/precision-store"
 import { ReviewRouting } from "@orchestra/core/review/routing"
 import { ReviewSeatTools } from "@orchestra/core/review/seat-tools"
 import { ReviewSettings } from "@orchestra/core/review/settings"
+import { ReviewReleaseEvidence } from "@orchestra/core/review-toolkit/release-evidence"
+import { ReviewReleaseRequestV2 } from "./review-release"
 import { ReviewAnalyze } from "@orchestra/core/review-toolkit/analyze"
 import { ReviewProbe } from "@orchestra/core/review-toolkit/probe"
 import { ReviewScratch } from "@orchestra/core/review-toolkit/scratch-copy"
@@ -92,6 +94,7 @@ const GovernedInput = Schema.Struct({
   // Catalog ids of the running build. The profile defaults from `stage`; the tier from the project pin, else the
   // route's risk rule.
   profile: Schema.optional(Schema.NonEmptyString),
+  release: Schema.optional(ReviewReleaseEvidence.Input),
   tier: Schema.optional(Schema.NonEmptyString),
 }).annotate({ parseOptions: { onExcessProperty: "error" } })
 const RequestInput = Schema.Union([GovernedInput, ReviewPRRequestV2.Input])
@@ -122,6 +125,7 @@ const ReviewInput = Schema.Struct({
 export type Analyze = (
   input: ReviewFanoutV2.AnalyzeInput & {
     readonly worktree: string
+    readonly release?: ReviewReleaseEvidence.Captured
     readonly base: string
     readonly head: string
     readonly sessionID: SessionSchema.ID
@@ -130,6 +134,11 @@ export type Analyze = (
   },
 ) => Effect.Effect<ReviewFanoutV2.Analysis, Tool.Failure>
 
+/** D6 ceiling. The opened project may enter the build lane. An external target must pass false and stay at repo. */
+export function analyzeLane(trusted: boolean) {
+  return trusted ? "build" as const : "repo" as const
+}
+
 const analyzeStep = (processes: AppProcess.Interface): Analyze => (input) => {
   const changed: Record<string, { start: number; end: number }[]> = {}
   for (const change of input.changes ?? []) {
@@ -137,16 +146,20 @@ const analyzeStep = (processes: AppProcess.Interface): Analyze => (input) => {
     if (lines.length === 0) continue
     changed[change.path] = [{ start: Math.min(...lines), end: Math.max(...lines) }]
   }
+  // This call reviews the project the owner opened. An external target must not reuse it with trusted true.
+  const trusted = true
   return ReviewAnalyze.run({
     worktree: input.worktree,
     base: input.base,
     head: input.head,
     tier: input.executionTier ?? ReviewRouting.tier(input.routing),
+    profile: input.routing.profile.id,
+    ...(input.release === undefined ? {} : { release: input.release }),
     store: ReviewBindingV2.analysisStore(input.cache),
     changed,
-    trusted: true,
+    trusted,
     catalog: input.catalog,
-    lane: "repo",
+    lane: analyzeLane(trusted),
     packs: input.packs.map((pack) => pack.id),
     scope: "diff",
     files: [...input.files],
@@ -336,8 +349,11 @@ export function tools(input: {
               message:
                 "ReviewRequestRejected: rereview-first-round-missing. No earlier code-stage review receipt exists for this validation; request profile \"code\" first.",
             })
-          // The lead derives from the reviewed tree, so a retried call adopts the same Sessions and a rereview finds them.
-          const lead = leadID(parent.id, params.validationRecordID, stage, artifact.headSHA)
+          const release = yield* ReviewReleaseRequestV2.capture({
+            profile, stage, release: params.release, previousProfile: first?.routing.profile.id,
+          }, worktree)
+          // Proof identity salts Sessions and analysis together; the reviewed source tree remains the same.
+          const lead = leadID(parent.id, params.validationRecordID, stage, ReviewReleaseRequestV2.key(artifact.headSHA, release))
           const delta =
             first && first.reviewed !== artifact.headSHA
               ? yield* MaestroReviewRecords.diffArtifact(git, worktree, first.reviewed, artifact.headSHA)
@@ -378,7 +394,7 @@ export function tools(input: {
           if (!current) return "LUCY_ERROR: Error: Review context changed before provider execution"
           const sessionID = (key: string) =>
             key === "lead" ? lead : SessionSchema.ID.make(`ses_lucy_review_${sha256(`${lead}\0${key}`)}`)
-          const cache = `review_${params.validationRecordID}_${stage}`
+          const cache = ReviewReleaseRequestV2.key(`review_${params.validationRecordID}_${stage}`, release)
           const leadLenses: string[] = []
           const ledger = ReviewProbe.ledger()
           const copies = yield* Effect.cached(
@@ -438,7 +454,7 @@ export function tools(input: {
                 )
               }),
             analyze: (step) =>
-              analyze({ ...step, catalog, worktree, base: artifact.baseSHA, head: artifact.headSHA, sessionID: lead, changes }),
+              analyze({ ...step, catalog, worktree, base: artifact.baseSHA, head: artifact.headSHA, sessionID: lead, changes, ...(release === undefined ? {} : { release }) }),
             region: (file, start, end) =>
               git
                 .run(["show", `${artifact.headSHA}:${file}`], { cwd: worktree })

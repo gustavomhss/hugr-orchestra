@@ -9,6 +9,7 @@ import {
   num,
   pollDelay,
   polling,
+  refreshMeeting,
   refusal,
   segmentAt,
   speaker,
@@ -39,6 +40,7 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
     attempts: 0,
     missing: false,
     failed: false,
+    refreshFailed: false,
     handoffFailed: false,
     busy: false,
     erasing: false,
@@ -64,7 +66,7 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
       abort.abort()
       clearTimeout(timer)
     })
-    setStore({ attempts: 0, missing: false, failed: false, refused: undefined })
+    setStore({ attempts: 0, missing: false, failed: false, refreshFailed: false, refused: undefined })
     setStore("detail", undefined)
     setStore("receipt", undefined)
     setDismissed(new Set<string>())
@@ -94,7 +96,7 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
   // Resolves true when the request went through.
   const run = async (work: () => Promise<unknown> | undefined, failure: "failed" | "handoffFailed" = "failed") => {
     if (store.busy) return false
-    setStore({ busy: true, refused: undefined, handoffFailed: false })
+    setStore({ busy: true, refused: undefined, handoffFailed: false, refreshFailed: false })
     const ok = await Promise.resolve(work()).then(
       () => true,
       (error) => {
@@ -110,10 +112,14 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
   }
 
   const reload = () =>
-    props.meetings
-      ?.read(props.id)
-      .then((detail) => setStore("detail", detail))
-      .catch(() => undefined)
+    refreshMeeting({
+      read: props.meetings?.read(props.id),
+      apply: (detail) => setStore({ detail, refreshFailed: false }),
+      report: (error) => {
+        console.error(error)
+        setStore("refreshFailed", true)
+      },
+    })
 
   const verdict = async (id: string, value: Verdict) => {
     if (store.busy) return
@@ -363,6 +369,9 @@ export function MeetingDetail(props: { meetings: Meetings | undefined; id: strin
                 </Show>
                 <Show when={store.handoffFailed}>
                   <Note tone="bad">{t("orchestra.flightEngineer.detail.handoffFailed")}</Note>
+                </Show>
+                <Show when={store.refreshFailed}>
+                  <Note tone="bad">{t("common.requestFailed")}</Note>
                 </Show>
                 <Show when={store.sent > 0}>
                   <Note>{language.plural("orchestra.flightEngineer.detail.sentCount", store.sent)}</Note>

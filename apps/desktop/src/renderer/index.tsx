@@ -25,11 +25,13 @@ import { render } from "solid-js/web"
 import pkg from "../../package.json"
 import { t } from "./i18n"
 import { dict } from "../../../../packages/app-shell/src/i18n/en"
+import { showToast } from "@orchestra/app/toast"
+import { publishNativeTranslations } from "./native-menu"
 import { openRendererPath } from "./open-path"
 import { listenForDeepLinks } from "./deep-links"
 import { checkedLocalServer, initializationData, recoverRemoteServer } from "./initialization"
 import { DesktopFirstLaunchOnboarding } from "./onboarding"
-import { resetZoom, setPinchZoomEnabled, webviewZoom, zoomIn, zoomOut } from "./webview-zoom"
+import { resetZoom, setPinchZoomEnabled, setZoomFailureReport, webviewZoom, zoomIn, zoomOut } from "./webview-zoom"
 import { windowFullscreen } from "./window-fullscreen"
 import { caffeinate, setCaffeinate } from "./caffeinate"
 import { createResponseDownloader } from "./response-download"
@@ -67,6 +69,13 @@ if (import.meta.env.VITE_SENTRY_DSN) {
 
 const [updaterState, setUpdaterState] = createSignal<UpdaterState>({ status: "disabled" })
 let requestFailed = () => dict["common.requestFailed"]
+setZoomFailureReport((error) => {
+  showToast({
+    variant: "error",
+    title: requestFailed(),
+    description: error instanceof Error ? error.message : String(error),
+  })
+})
 void window.api.updater.subscribe(setUpdaterState)
 
 type DesktopWindowState = {
@@ -278,7 +287,7 @@ const createPlatform = (windowState: DesktopWindowState): Platform => {
     },
 
     getDefaultServer: async () => {
-      const url = await window.api.getDefaultServerUrl().catch(() => null)
+      const url = await window.api.getDefaultServerUrl()
       if (!url) return null
       return ServerConnection.Key.make(url)
     },
@@ -483,7 +492,17 @@ function DesktopRoot(props: { windowState: DesktopWindowState }) {
     <PlatformProvider value={platform}>
       <AppBaseProviders
         locale={locale.latest}
-        onNativeTranslations={(bundle) => void window.api.setNativeTranslations(bundle).catch(() => undefined)}
+        onNativeTranslations={(bundle) => {
+          void publishNativeTranslations({
+            write: () => window.api.setNativeTranslations(bundle),
+            report: (error) =>
+              showToast({
+                variant: "error",
+                title: requestFailed(),
+                description: error instanceof Error ? error.message : String(error),
+              }),
+          })
+        }}
       >
         <Show when={true}>{(_) => <App />}</Show>
       </AppBaseProviders>

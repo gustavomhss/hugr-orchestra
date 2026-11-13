@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import type { SessionProcess } from "@/v2-wire"
 
-import { createProcessStops, descendants, sortProcesses, tailLines } from "./processes-data"
+import { createProcessStops, descendants, refreshAfterStop, sortProcesses, tailLines } from "./processes-data"
 
 function item(id: string, started: number, pids = [100, 101]): SessionProcess {
   return {
@@ -55,5 +55,12 @@ describe("processes data", () => {
     await Promise.resolve()
     expect(stops.state("job_1")).toBeUndefined()
     expect(calls).toEqual(["job_1", "job_1"])
+  })
+
+  test("a failed refresh after stop is reported and does not reject", async () => {
+    const error = new Error("list failed")
+    const reported: unknown[] = []
+    await refreshAfterStop(Promise.reject(error), (cause) => reported.push(cause))
+    expect(reported).toEqual([error])
   })
 })

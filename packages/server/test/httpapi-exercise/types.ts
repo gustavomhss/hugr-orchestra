@@ -31,6 +31,7 @@ export type Options = {
   scenarioTimeout: Duration.Duration
   progress: boolean
   trace: boolean
+  shard: { index: number; count: number } | undefined
 }
 
 export type RequestSpec = {
