@@ -169,6 +169,10 @@ class ReaderErrorRedaction(unittest.TestCase):
                 self.assertEqual(evidence["capture_completeness"], "COMPLETE_AFTER_TERMINATION_PROOF")
                 self.assertTrue(evidence["outputs"]["stdout_anonymous"]["complete"])
                 self.assertTrue(evidence["outputs"]["stderr_anonymous"]["complete"])
+                retained = run / "private-failure-evidence"
+                self.assertEqual((retained / "stdout-anonymous.bin").read_bytes(), b"safe-output")
+                self.assertEqual((retained / "stderr-anonymous.bin").read_bytes(), b"safe-diagnostic")
+                self.assertTrue(evidence["payload_retention"]["streams"]["stdout-anonymous"]["complete"])
             finally:
                 out.close();err.close()
 
