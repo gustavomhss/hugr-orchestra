@@ -2,6 +2,7 @@ import { expect, test, type Page, type Request } from "@playwright/test"
 import { base64Encode } from "@orchestra/core/util/encode"
 import { currentSession, mockOrchestraServer } from "../utils/mock-server"
 import { expectAppVisible } from "../utils/waits"
+import { installSseTransport } from "../utils/sse-transport"
 
 // Production benchmark baseline reused: 38521663841 @ e6c39ff; audited UI source unchanged at e87fd95799.
 // These tests run the production routes/composer with HTTP receipts, never provider or Agent/tool frames.
@@ -24,38 +25,50 @@ const userCard = '[data-component="user-message"]'
 const userText = `${userCard} [data-slot="user-message-text"]`
 
 test("fresh Send admits exactly one first turn before route/tab remount", async ({ page }) => {
-  const fixture = await setup(page)
+  const transport = await installSseTransport(page, { server })
   const gate = Promise.withResolvers<void>()
-  fixture.promptGate = gate.promise
-  const original = await page.locator(editor).elementHandle()
-  if (!original) throw new Error("Missing draft composer")
-  await page.locator(editor).fill("first draft turn")
-  const request = page.waitForRequest(isPromptRequest)
-  const response = page.waitForResponse((response) => isPromptRequest(response.request()))
-  await page.locator(submit).click()
-  const sent = await request
-  await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "true")
-  await expect(page).toHaveURL(draftURL)
-  await expect(page.locator(draftTab)).toHaveCount(1)
-  await expect(page.locator(editor)).toHaveText("first draft turn")
-  expect(await original.evaluate((element) => element.isConnected)).toBe(true)
-  expect(fixture.creates).toHaveLength(1)
-  expect(fixture.prompts).toHaveLength(1)
-  gate.resolve()
-  const receipt = await response
-  expect(receipt.request()).toBe(sent)
-  expect(receipt.status()).toBe(200)
-  await expect(page).toHaveURL(sessionURL)
-  await expect(page.locator(draftTab)).toHaveCount(0)
-  await expect(page.locator(userCard)).toHaveCount(1)
-  await expect(page.locator(userText)).toHaveText("first draft turn")
-  await expect(page.locator(editor)).toHaveText("")
-  await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "false")
-  expect(await original.evaluate((element) => element.isConnected)).toBe(false)
-  expect(fixture.prompts).toEqual([expect.objectContaining({ text: "first draft turn", url: draftURL, draft: true })])
-  expect(fixture.messages).toHaveLength(1)
-  expect(fixture.admissions).toHaveLength(1)
-  expect(fixture.creates).toHaveLength(1)
+  try {
+    const fixture = await setup(page)
+    fixture.promptGate = gate.promise
+    const original = await page.locator(editor).elementHandle()
+    if (!original) throw new Error("Missing draft composer")
+    await page.locator(editor).fill("first draft turn")
+    const request = page.waitForRequest(isPromptRequest)
+    const response = page.waitForResponse((response) => isPromptRequest(response.request()))
+    expect((await transport.connections()).map((connection) => ({ path: connection.path, endedAt: connection.endedAt })))
+      .toEqual([{ path: "/api/event", endedAt: undefined }])
+    await page.locator(submit).click()
+    const sent = await request
+    await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "true")
+    await expect(page).toHaveURL(draftURL)
+    await expect(page.locator(draftTab)).toHaveCount(1)
+    await expect(page.locator(editor)).toHaveText("first draft turn")
+    expect(await original.evaluate((element) => element.isConnected)).toBe(true)
+    expect(fixture.creates).toHaveLength(1)
+    expect(fixture.prompts).toHaveLength(1)
+    expect((await transport.connections()).map((connection) => ({ path: connection.path, endedAt: connection.endedAt })))
+      .toEqual([{ path: "/api/event", endedAt: undefined }])
+    gate.resolve()
+    const receipt = await response
+    expect(receipt.request()).toBe(sent)
+    expect(receipt.status()).toBe(200)
+    await expect(page).toHaveURL(sessionURL)
+    await expect(page.locator(draftTab)).toHaveCount(0)
+    await expect(page.locator(userCard)).toHaveCount(1)
+    await expect(page.locator(userText)).toHaveText("first draft turn")
+    await expect(page.locator(editor)).toHaveText("")
+    await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "false")
+    expect(await original.evaluate((element) => element.isConnected)).toBe(false)
+    expect(fixture.prompts).toEqual([expect.objectContaining({ text: "first draft turn", url: draftURL, draft: true })])
+    expect(fixture.messages).toHaveLength(1)
+    expect(fixture.admissions).toHaveLength(1)
+    expect(fixture.creates).toHaveLength(1)
+    expect((await transport.connections()).map((connection) => ({ path: connection.path, endedAt: connection.endedAt })))
+      .toEqual([{ path: "/api/event", endedAt: undefined }])
+  } finally {
+    gate.resolve()
+    await transport.close()
+  }
 })
 
 test("delayed failure keeps draft and retries same Session/message ID", async ({ page }) => {
