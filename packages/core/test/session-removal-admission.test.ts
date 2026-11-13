@@ -506,21 +506,6 @@ function fixture() {
       yield* Layer.build(AppNodeBuilder.build(EventV2.node, [[Database.node, databaseLayer]]).pipe(Layer.fresh)),
       EventV2.Service,
     )
-    const observedEvents = Layer.succeed(
-      EventV2.Service,
-      EventV2.Service.of({
-        ...events,
-        // Observe before the real publish begins: no transaction or projector is held while the test gate waits.
-        publish: (definition, data, options) =>
-          Effect.gen(function* () {
-            if (definition.type === SessionEvent.Deleted.type && state.beforeDelete) {
-              const deleted = Schema.decodeUnknownSync(Schema.toType(SessionEvent.Deleted.data))(data)
-              yield* state.beforeDelete(deleted.sessionID)
-            }
-            return yield* events.publish(definition, data, options)
-          }),
-      }),
-    )
     const tool = Tool.make({
       description: "Lifecycle acceptance effect",
       input: Schema.Struct({}),
@@ -564,7 +549,13 @@ function fixture() {
             }
             yield* coordinator.interrupt(sessionID, options)
           }),
-        exclusive: coordinator.exclusive,
+        exclusive: (sessionID, effect, options) =>
+          coordinator.exclusive(
+            sessionID,
+            // Hold real execution ownership before tree, topology and SQL acquisition.
+            Effect.suspend(() => state.beforeDelete?.(sessionID) ?? Effect.void).pipe(Effect.andThen(effect)),
+            options,
+          ),
         withRunner: () => Effect.die("Lifecycle fixture does not resolve providers"),
       }),
     )
@@ -595,7 +586,7 @@ function fixture() {
       ]),
       [
         [Database.node, databaseLayer],
-        [EventV2.node, observedEvents],
+        [EventV2.node, Layer.succeed(EventV2.Service, events)],
         [ProjectV2.node, projects],
         [SessionExecution.node, execution],
       ],

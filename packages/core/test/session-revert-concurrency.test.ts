@@ -84,7 +84,7 @@ it.live("a running tool fences stage, clear and commit without changing files or
       yield* sessions.revert.clear(created.id)
       yield* sessions.revert.stage({ sessionID: created.id, messageID: boundary, files: false })
       yield* sessions.revert.commit(created.id)
-      expect((yield* store.entries(created.id)).map((entry) => entry.message.id)).toEqual([boundary])
+      expect((yield* store.entries(created.id)).map((entry) => entry.message.id)).toEqual([])
     }).pipe(Effect.provide(f.layer), Effect.ensuring(Deferred.succeed(f.release, undefined)))
   }),
 )

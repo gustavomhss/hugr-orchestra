@@ -125,9 +125,9 @@ it.live("CONTROL L3: real provider receives the initialized context before any r
 it.live("CONTROL L3: revert without a context delta retains the source snapshot and user boundary", () =>
   Effect.gen(function* () {
     yield* setup
-    const boundary = yield* turn("retained user without delta")
+    yield* turn("retained user without delta")
     const stored = yield* epoch
-    yield* turn("removed user without delta")
+    const boundary = yield* turn("removed user without delta")
     yield* revert(boundary)
     yield* turn("after no delta revert")
     expect(latestRequest().match(/CTX-A/g)).toHaveLength(1)
@@ -141,9 +141,9 @@ for (const legacy of [false, true]) {
     it.live(`${legacy ? "legacy persisted" : "current"} revert retains admitted context with source ${unavailable ? "unavailable" : "unchanged"}`, () =>
       Effect.gen(function* () {
         yield* setup
-        const boundary = yield* turn("first user")
+        yield* turn("first user")
         state.value = "CTX-B"
-        yield* turn("removed user")
+        const boundary = yield* turn("removed user")
         expect(latestRequest()).toContain("CTX-B")
         const before = yield* epoch
         yield* revert(boundary)
@@ -181,9 +181,9 @@ for (const unavailable of [false, true]) {
   it.live(`legacy repair stops at the committed boundary and retains a later delta with source ${unavailable ? "unavailable" : "unchanged"}`, () =>
     Effect.gen(function* () {
       yield* setup
-      const boundary = yield* turn("first user")
+      yield* turn("first user")
       state.value = "CTX-B"
-      yield* turn("removed user")
+      const boundary = yield* turn("removed user")
       const original = yield* epoch
       yield* revert(boundary)
       state.value = "CTX-C"
@@ -218,9 +218,9 @@ for (const unavailable of [false, true]) {
 it.live("malformed durable context cannot advance the epoch or erase projections during revert", () =>
   Effect.gen(function* () {
     yield* setup
-    const boundary = yield* turn("retained user")
+    yield* turn("retained user")
     state.value = "CTX-B"
-    yield* turn("removed user")
+    const boundary = yield* turn("removed user")
     yield* stage(boundary)
     const stored = yield* epoch
     const database = yield* Database.Service
@@ -246,9 +246,9 @@ it.live("folds retained and removed source deltas once while retaining earlier u
     state.value = "CTX-B"
     yield* turn("retained second user")
     state.other = "AUX-Y"
-    const boundary = yield* turn("retained boundary user")
+    yield* turn("retained boundary user")
     state.value = "CTX-C"
-    yield* turn("removed branch user")
+    const boundary = yield* turn("removed branch user")
     yield* revert(boundary)
     yield* turn("after multi source revert")
     expect(latestRequest()).toContain("retained first user")
@@ -284,9 +284,9 @@ for (const boundaryAfterCompaction of [false, true]) {
 it.live("replaying committed events twice with a retained epoch cannot duplicate folded context", () =>
   Effect.gen(function* () {
     yield* setup
-    const boundary = yield* turn("retained user")
+    yield* turn("retained user")
     state.value = "CTX-B"
-    yield* turn("deleted user")
+    const boundary = yield* turn("deleted user")
     yield* revert(boundary)
     const database = yield* Database.Service
     const events = yield* EventV2.Service
@@ -309,9 +309,9 @@ it.live("replaying committed events twice with a retained epoch cannot duplicate
 it.live("a failed projection delete rolls back the epoch update and the committed event", () =>
   Effect.gen(function* () {
     yield* setup
-    const boundary = yield* turn("retained user")
+    yield* turn("retained user")
     state.value = "CTX-B"
-    yield* turn("deleted user")
+    const boundary = yield* turn("deleted user")
     const session = yield* SessionV2.Service
     yield* stage(boundary)
     const stored = yield* epoch
