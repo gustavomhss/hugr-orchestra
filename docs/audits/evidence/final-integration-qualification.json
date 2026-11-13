@@ -103,7 +103,16 @@
       "reviewer": "ui_recovery",
       "verdict": "APPROVE"
     },
-    "hosted_requalification": "pending"
+    "hosted_requalification": "success",
+    "run": 43417489414,
+    "source_sha": "cfe68154d2",
+    "platforms": [
+      "ubuntu-24.04",
+      "windows-2022",
+      "macos-15"
+    ],
+    "raw_log_sha256": "0c5bf388a6b1f78bd8300da6ffa314aa04293d60922505c53f32128149c35fab",
+    "note": "All three actual compiled CLI crash smoke jobs passed. No test oracle changed. Later local commits are audit documentation only."
   },
   "architecture_export_followup": {
     "commit": "6f977bbe1b",
