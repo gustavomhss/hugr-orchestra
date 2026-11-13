@@ -126,6 +126,7 @@ test("CONTROL deadline: caller interruption remains interruption and runs host c
       onToolCallEnd: () => Effect.sync(() => { state.ends++ }),
     }))
     yield* Deferred.await(entered)
+    yield* Effect.yieldNow
     yield* Fiber.interrupt(fiber)
     const exit = yield* Fiber.await(fiber)
     expect(Exit.isFailure(exit)).toBe(true)
