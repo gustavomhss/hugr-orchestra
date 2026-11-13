@@ -1,7 +1,7 @@
 import { expect } from "bun:test"
 import { Deferred, Effect, Fiber } from "effect"
 import { NativeRegex } from "@orchestra/codemode"
-import { makeDriver } from "../../codemode/src/native-regex-driver"
+import { makeDriver } from "@orchestra/codemode/native-regex-driver"
 import { CodeModeNativeRegex } from "../src/codemode-native-regex"
 import { LayerNode } from "../src/effect/layer-node"
 import { AppProcess } from "../src/process"
