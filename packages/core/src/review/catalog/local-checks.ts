@@ -12,6 +12,6 @@ const card = (pin: typeof shfmtPin | typeof cargoMachetePin, extensions: string[
   network: { kind: "none" }, scratchWrites: false, template, lenses: ["correctness-logic"], status: "probation",
 } } as const)
 
-// Frozen data seam; default-catalog registration waits for the raw dispatcher qualification.
+// Linux x64 raw check cards; host preparation remains explicit.
 export const shfmt = card(shfmtPin, [".sh", ".bash", ".bats", ".ksh"], [], "any", "low", "shfmt-local-check")
 export const cargoMachete = card(cargoMachetePin, [".rs"], ["Cargo.toml", "**/Cargo.toml", "Cargo.lock", "**/Cargo.lock"], ["rust"], "medium", "cargo-machete-local-check")
