@@ -9,8 +9,10 @@ import {
   acknowledgeDraftPolicy, createPromptSubmit, createdSessions, promptInputs, savedPolicies,
   policyWrites, policyFixture, serverFor, sdkFor, promoted,
   state, submitInput, sentShell, promotedDrafts,
-  storedSessions, canonicalPolicies,
+  storedSessions, canonicalPolicies, registerSubmitHarnessLifecycle,
 } from "./submit-harness"
+
+registerSubmitHarnessLifecycle()
 
 const deferred = () => Promise.withResolvers<void>()
 
