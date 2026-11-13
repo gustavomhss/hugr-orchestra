@@ -1,0 +1,110 @@
+{
+  "schema": "omni-public-interim-review/v1",
+  "kind": "summary_not_original_transcript",
+  "packet": "C10",
+  "layer": "L1",
+  "artifact": {
+    "author_path": "authors/core/records-10.json",
+    "public_path_at_review": "bodies/core/records-10.json",
+    "public_history_path_when_superseded": "history/core/v1/records-10.json",
+    "sha256": "8f776990fc5d8bb5141ffa034d5fae8d5707d8e72077ee4bb2d4fde7c3805e63",
+    "bytes": 14688
+  },
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "records": 3,
+  "population": 393,
+  "status": "V1_FIX_FIRST; AUTHOR_CORRECTION_PENDING_SAME_PAIR_REVIEW",
+  "decisions": {
+    "J1": {
+      "judge_identity": "/root/omni_review_courier/omni_j1",
+      "per_record": [
+        {
+          "index": 0,
+          "path": "native/omni/crates/hugr-omni/tests/runner/schema.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 1,
+          "path": "native/omni/crates/hugr-omni/tests/runner/suite.rs",
+          "verdict": "FIX-FIRST"
+        },
+        {
+          "index": 2,
+          "path": "native/omni/crates/hugr-omni/tests/teeth.rs",
+          "verdict": "PASS"
+        }
+      ],
+      "private_opinion_sha256": "9b40ab976bf7cc2438af79911daa03339b94f34207f00cf9f8de8124f02e80a9",
+      "private_opinion_bytes": 4718
+    },
+    "J2": {
+      "judge_identity": "/root/omni_review_courier/omni_j2",
+      "per_record": [
+        {
+          "index": 0,
+          "path": "native/omni/crates/hugr-omni/tests/runner/schema.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 1,
+          "path": "native/omni/crates/hugr-omni/tests/runner/suite.rs",
+          "verdict": "FIX-FIRST"
+        },
+        {
+          "index": 2,
+          "path": "native/omni/crates/hugr-omni/tests/teeth.rs",
+          "verdict": "PASS"
+        }
+      ],
+      "private_opinion_sha256": "d96db1664d1e4c9b08dbb7ff4f547282f421402767cd0b0a52b0b877b5673849",
+      "private_opinion_bytes": 3868
+    }
+  },
+  "mandatory_findings": [
+    {
+      "id": "C10-F1",
+      "judges": [
+        "J1",
+        "J2"
+      ],
+      "index": 1,
+      "field": "/1/behavior/2",
+      "finding": "The ran counter includes read/load/validation failures without scenario execution. Describe all nonfiltered cases and preserve the valid-inapplicable other counter, passed/pending outcomes and discovered JSON-path count.",
+      "source_path": "native/omni/crates/hugr-omni/tests/runner/suite.rs",
+      "source_lines": [
+        [
+          48,
+          78
+        ]
+      ],
+      "support_path": "native/omni/crates/hugr-omni/tests/teeth.rs",
+      "support_lines": [
+        [
+          38,
+          105
+        ]
+      ]
+    }
+  ],
+  "missing_evidence": [],
+  "optional_suggestions": [
+    {
+      "judge": "J1",
+      "field": "/2/behavior/1",
+      "suggestion": "Clarify that malformed later steps are rejected by whole-scenario loading before the initial potentially failing action executes."
+    },
+    {
+      "judge": "J2",
+      "field": "/1/behavior/1",
+      "suggestion": "Clarify that failed loads contribute false to item-success aggregation, while valid nonapplicable cases are excluded."
+    }
+  ],
+  "transport_note": "A root-operator source supplement to J2 changed one fixture action and reformatted a second tuple. Its actual divergent operator copy is privately preserved. A full canonical replay was sent before J2 END, and J2 expressly binds it; the same correction was sent to J1, whose original source excerpt was already canonical. Candidate-body reconstruction matches the unchanged author body for both. These are transport-only errors, not author or baseline defects; operator copies do not authenticate host envelopes.",
+  "current_accepted_population": 84,
+  "limitations": [
+    "Documentary L1 opinions only; no current execution or runtime binding.",
+    "All three complete candidate objects were supplied with selected decisive evidence; no claim every source line was transmitted.",
+    "No C10 body acceptance or complete-layer release is recorded here.",
+    "Original opinions, message packets and reserved material remain private."
+  ]
+}

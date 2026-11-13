@@ -5152,14 +5152,23 @@
         "scope": "native/omni",
         "basis": "User-reserved residual393-source external slice; source-only documentary claims at exact baseline; no runtime/publication authority."
       },
-      "validity": "blocked",
+      "validity": "supported",
       "gaps": [
-        "Independent semantic review pending on these exact bytes. Runtime execution is not established by source records."
+        "Documentary source interpretation only; current runtime/platform behavior is not established by these records."
       ],
       "evidence": [
         "Baseline Git blobs and exact source excerpts in this body; manifest.json binds disjoint source ownership."
       ],
       "input_keys": [
+        "file:native/omni/crates/hugr-omni/src/api/command.rs",
+        "file:native/omni/crates/hugr-omni/src/io/collect.rs",
+        "file:native/omni/crates/hugr-omni/src/io/mod.rs",
+        "file:native/omni/crates/hugr-omni/src/io/out.rs",
+        "file:native/omni/crates/hugr-omni/src/io/queue/mod.rs",
+        "file:native/omni/crates/hugr-omni/src/io/queue/reader.rs",
+        "file:native/omni/crates/hugr-omni/src/io/stdin.rs",
+        "file:native/omni/crates/hugr-omni/src/process/child.rs",
+        "file:native/omni/crates/hugr-omni/src/types.rs",
         "file:native/omni/crates/hugr-omni/tests/runner/command.rs",
         "file:native/omni/crates/hugr-omni/tests/runner/expect.rs",
         "file:native/omni/crates/hugr-omni/tests/runner/ledger.rs",
@@ -5171,9 +5180,64 @@
         "file:native/omni/crates/hugr-omni/tests/runner/scenario.rs",
         "file:native/omni/crates/hugr-omni/tests/runner/schema.rs",
         "file:native/omni/crates/hugr-omni/tests/runner/suite.rs",
+        "file:native/omni/crates/hugr-omni/tests/teeth.rs",
         "file:modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/recipes/author-contract.md"
       ],
       "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/api/command.rs",
+          "git_blob_sha": "ca33173b6f5b60c213cff9b02ac10bf31eaa9022",
+          "sha256": "9b130c6166ef54e2cad64a9ea058c76db05a3264bb4daae5f150755130c09220"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/io/collect.rs",
+          "git_blob_sha": "fec2fa0c0254049ea3b7dab3a25ca05be919c82e",
+          "sha256": "484f95f4f494eda698683acb4c85e25a9494543d553f83a7a6926e716090dee7"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/io/mod.rs",
+          "git_blob_sha": "d412bcd0cd982c5e340af805d9b9d320c2c212f0",
+          "sha256": "c53ab2e6b6835284b5b50e196bcd3d7f0292c341e1a0fcd6905aa618ed552d1e"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/io/out.rs",
+          "git_blob_sha": "d00bf67b4b42952cf69715dca6d03894f369c394",
+          "sha256": "a6fd825ea474e5803265b5cdf649b9484640ea5203921687542e44808c0363fe"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/io/queue/mod.rs",
+          "git_blob_sha": "999be66865d60b1de30720bec6aacd5e54920cc8",
+          "sha256": "17ad048ab2812a5cac26424fabb081450ce1a92b35ca0e6697292cf2fcad16f1"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/io/queue/reader.rs",
+          "git_blob_sha": "e24b5810b2ad9fcb345decc39302ed641b3d7a6b",
+          "sha256": "db465d28936949115fa735abc2dbb5a8078736f2434aa62102954121e0b611e9"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/io/stdin.rs",
+          "git_blob_sha": "74359d986b6a739ed3f30a6478f22a94f14b9a42",
+          "sha256": "be121e58dc316408012c74d0d18ade8147859dd85f101770f21e9e2d8f2a7a31"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/process/child.rs",
+          "git_blob_sha": "431ba07ac85778f408c37a55d567db40890a0cee",
+          "sha256": "d13216ad75127aafb89bbb1f88704a61d30f40c1d8561cc49c6ab6055f9bb4ac"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/src/types.rs",
+          "git_blob_sha": "c29f2abd735077630eec9700de2030e01b71143f",
+          "sha256": "628de2e6808a85d1ea6d006eac2f80ac8d105a8f1b057b7e792ddb41ef1fa3f0"
+        },
         {
           "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
           "path": "native/omni/crates/hugr-omni/tests/runner/command.rs",
@@ -5239,6 +5303,12 @@
           "path": "native/omni/crates/hugr-omni/tests/runner/suite.rs",
           "git_blob_sha": "decc807cac6e2f0554130b636d2f36a514a61e96",
           "sha256": "34f5dc73b80294c02802f4829d356bf59334df4b55bef447090bb9d5f1c23b50"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "native/omni/crates/hugr-omni/tests/teeth.rs",
+          "git_blob_sha": "ff5019d5d2a142a4fdbdaaf5ec9d9b9a69363be7",
+          "sha256": "c60f4c582fe6fed3f5fdd1934dacafe38eb5431e0d02ae46017e8b8dc3aec7d3"
         }
       ],
       "recipe_ref": {
@@ -5257,7 +5327,16 @@
         "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/core/records-09.v3.json",
         "sha256": "53e546b5c1a628577bbaa136a4c2349f084668afd371318138cc4f0f0bd7fdc6"
       },
-      "semantic_review_refs": [],
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/reviews/C09v3-J2-summary.json",
+          "sha256": "b076d3e6a789ec922f371e803ce50bef43bcd46cbf58dfc331ce8537500a4e3a"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/reviews/C09v3-J1-summary.json",
+          "sha256": "71eb68f83856b864f33d27df3455d07b8fb9cafdff61d3ddfd3b22f0fac99a80"
+        }
+      ],
       "runtime_receipt_refs": []
     },
     {

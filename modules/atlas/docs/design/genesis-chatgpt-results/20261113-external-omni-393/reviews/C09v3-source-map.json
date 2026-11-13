@@ -1,0 +1,159 @@
+{
+  "schema": "omni-public-review-source-map/v1",
+  "kind": "source_input_summary_not_private_exchange",
+  "artifact": "authors/core/records-09.v3.json",
+  "public_artifact": "bodies/core/records-09.v3.json",
+  "body_sha256": "53e546b5c1a628577bbaa136a4c2349f084668afd371318138cc4f0f0bd7fdc6",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "scope": "Nine primary paths supplied as complete candidate records, selected supplementary implementation, and expressly retained C08 value types/suite/ledger, C01 command API, C05 I/O and C06 child-cleanup support. Schema and teeth sources are support inputs only for this artifact. E2 adds exact validator bodies in the already identified schema source. No claim of full-source judge reading or additional accepted entries from supporting paths.",
+  "sources": [
+    {
+      "path": "native/omni/crates/hugr-omni/src/api/command.rs",
+      "git_blob_sha": "ca33173b6f5b60c213cff9b02ac10bf31eaa9022",
+      "roles": [
+        "retained_same_pin_C01_command_builder_API"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/src/io/collect.rs",
+      "git_blob_sha": "fec2fa0c0254049ea3b7dab3a25ca05be919c82e",
+      "roles": [
+        "retained_same_pin_C05_IO_single_consumer_and_output"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/src/io/mod.rs",
+      "git_blob_sha": "d412bcd0cd982c5e340af805d9b9d320c2c212f0",
+      "roles": [
+        "retained_same_pin_C05_IO_single_consumer_and_output"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/src/io/out.rs",
+      "git_blob_sha": "d00bf67b4b42952cf69715dca6d03894f369c394",
+      "roles": [
+        "retained_same_pin_C05_IO_single_consumer_and_output"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/src/io/queue/mod.rs",
+      "git_blob_sha": "999be66865d60b1de30720bec6aacd5e54920cc8",
+      "roles": [
+        "retained_same_pin_C05_IO_single_consumer_and_output"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/src/io/queue/reader.rs",
+      "git_blob_sha": "e24b5810b2ad9fcb345decc39302ed641b3d7a6b",
+      "roles": [
+        "retained_same_pin_C05_IO_single_consumer_and_output"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/src/io/stdin.rs",
+      "git_blob_sha": "74359d986b6a739ed3f30a6478f22a94f14b9a42",
+      "roles": [
+        "retained_same_pin_C05_IO_single_consumer_and_output"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/src/process/child.rs",
+      "git_blob_sha": "431ba07ac85778f408c37a55d567db40890a0cee",
+      "roles": [
+        "retained_same_pin_C06_child_cleanup"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/src/types.rs",
+      "git_blob_sha": "c29f2abd735077630eec9700de2030e01b71143f",
+      "roles": [
+        "retained_same_pin_C08_public_value_types_and_PtySize_default"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/tests/runner/command.rs",
+      "git_blob_sha": "d821afbfaec029a662f65b44f2ec310ccdff3720",
+      "roles": [
+        "primary_complete_candidate_with_quotes_and_selected_supplements"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/tests/runner/expect.rs",
+      "git_blob_sha": "7107cd30a509c7b2a7654fe314bfc1b00347ff53",
+      "roles": [
+        "primary_complete_candidate_with_quotes_and_selected_supplements"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/tests/runner/ledger.rs",
+      "git_blob_sha": "4dd7eb82054795c6833ea7a04c47e240f6050788",
+      "roles": [
+        "primary_complete_candidate_with_quotes_and_selected_supplements",
+        "retained_same_pin_C08_ledger_classification"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/tests/runner/mod.rs",
+      "git_blob_sha": "84a5dd002898539bacc1d7b1cf9101ec339edf28",
+      "roles": [
+        "primary_complete_candidate_with_quotes_and_selected_supplements"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/tests/runner/names.rs",
+      "git_blob_sha": "0600409c934c4dbe8bff70613608359c8055c0b4",
+      "roles": [
+        "primary_complete_candidate_with_quotes_and_selected_supplements"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/tests/runner/os.rs",
+      "git_blob_sha": "854630011360fbc4c8664e6620bb36364d8871f4",
+      "roles": [
+        "primary_complete_candidate_with_quotes_and_selected_supplements"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/tests/runner/pattern.rs",
+      "git_blob_sha": "9f84a53d81d500cf8427d24200922fae5046d680",
+      "roles": [
+        "primary_complete_candidate_with_quotes_and_selected_supplements"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/tests/runner/read.rs",
+      "git_blob_sha": "d952863dc844de14d5c0bdecd9666c2101d9fc1d",
+      "roles": [
+        "primary_complete_candidate_with_quotes_and_selected_supplements"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/tests/runner/scenario.rs",
+      "git_blob_sha": "9e62d9c879cb78082cf96253805d0e9b082ad145",
+      "roles": [
+        "primary_complete_candidate_with_quotes_and_selected_supplements"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/tests/runner/schema.rs",
+      "git_blob_sha": "c7d04d4eee962ad694a43b93379b2a7bff14a223",
+      "roles": [
+        "direct_support_selected_schema_or_regex_test_source"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/tests/runner/suite.rs",
+      "git_blob_sha": "decc807cac6e2f0554130b636d2f36a514a61e96",
+      "roles": [
+        "retained_same_pin_C08_suite_classification"
+      ]
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/tests/teeth.rs",
+      "git_blob_sha": "ff5019d5d2a142a4fdbdaaf5ec9d9b9a69363be7",
+      "roles": [
+        "direct_support_selected_schema_or_regex_test_source"
+      ]
+    }
+  ]
+}

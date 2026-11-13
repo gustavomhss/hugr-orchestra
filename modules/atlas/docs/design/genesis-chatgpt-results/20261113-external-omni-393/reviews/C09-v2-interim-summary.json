@@ -1,0 +1,159 @@
+{
+  "schema": "omni-public-interim-review/v1",
+  "kind": "summary_not_original_transcript",
+  "packet": "C09v2",
+  "layer": "L1",
+  "artifact": {
+    "author_path": "authors/core/records-09.v2.json",
+    "public_path": "history/core/v2/records-09.v2.json",
+    "sha256": "8e5718778a6e24f54a79f2c456f858946d36cc796e15268ca1b6859f21b89adf",
+    "bytes": 41900
+  },
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "records": 9,
+  "population": 393,
+  "status": "HISTORICAL_V2_FIX_FIRST; SUPERSEDED_BY_SEPARATELY_REVIEWED_V3",
+  "decisions": {
+    "J1": {
+      "judge_identity": "/root/omni_review_courier/omni_j1",
+      "per_record": [
+        {
+          "index": 0,
+          "path": "native/omni/crates/hugr-omni/tests/runner/command.rs",
+          "verdict": "FIX-FIRST"
+        },
+        {
+          "index": 1,
+          "path": "native/omni/crates/hugr-omni/tests/runner/expect.rs",
+          "verdict": "FIX-FIRST"
+        },
+        {
+          "index": 2,
+          "path": "native/omni/crates/hugr-omni/tests/runner/ledger.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 3,
+          "path": "native/omni/crates/hugr-omni/tests/runner/mod.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 4,
+          "path": "native/omni/crates/hugr-omni/tests/runner/names.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 5,
+          "path": "native/omni/crates/hugr-omni/tests/runner/os.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 6,
+          "path": "native/omni/crates/hugr-omni/tests/runner/pattern.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 7,
+          "path": "native/omni/crates/hugr-omni/tests/runner/read.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 8,
+          "path": "native/omni/crates/hugr-omni/tests/runner/scenario.rs",
+          "verdict": "PASS"
+        }
+      ],
+      "private_opinion_sha256": "a81fdfc1b67844abdc5b30f2998d761e5ae271d0a2fd300cc3d57b90984a1cdf",
+      "private_opinion_bytes": 7006
+    },
+    "J2": {
+      "judge_identity": "/root/omni_review_courier/omni_j2",
+      "per_record": [
+        {
+          "index": 0,
+          "path": "native/omni/crates/hugr-omni/tests/runner/command.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 1,
+          "path": "native/omni/crates/hugr-omni/tests/runner/expect.rs",
+          "verdict": "FIX-FIRST"
+        },
+        {
+          "index": 2,
+          "path": "native/omni/crates/hugr-omni/tests/runner/ledger.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 3,
+          "path": "native/omni/crates/hugr-omni/tests/runner/mod.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 4,
+          "path": "native/omni/crates/hugr-omni/tests/runner/names.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 5,
+          "path": "native/omni/crates/hugr-omni/tests/runner/os.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 6,
+          "path": "native/omni/crates/hugr-omni/tests/runner/pattern.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 7,
+          "path": "native/omni/crates/hugr-omni/tests/runner/read.rs",
+          "verdict": "PASS"
+        },
+        {
+          "index": 8,
+          "path": "native/omni/crates/hugr-omni/tests/runner/scenario.rs",
+          "verdict": "PASS"
+        }
+      ],
+      "private_opinion_sha256": "1f9ac1d49252ef44c11568169b6703f8cc095e121085cdf83ccc180e16559bbe",
+      "private_opinion_bytes": 5715
+    }
+  },
+  "mandatory_findings": [
+    {
+      "id": "C09-F1",
+      "judges": [
+        "J1"
+      ],
+      "index": 0,
+      "fields": [
+        "/0/behavior/1",
+        "/0/failures_or_limits"
+      ],
+      "finding": "The duration-conversion description overstates the supported finite nonnegative input domain; distinguish branches and document the unguarded floating conversion upper-range boundary."
+    },
+    {
+      "id": "C09-F2",
+      "judges": [
+        "J1",
+        "J2"
+      ],
+      "index": 1,
+      "field": "/1/behavior/1",
+      "finding": "Distinguish absent ordinary generated fields from absent requested partial results and assign malformed-shape checking to schema preflight."
+    }
+  ],
+  "evidence_request": {
+    "judge": "J2",
+    "request": "Supply schema expectation, piece and process-entry validators and their call relationships.",
+    "resolution": "Literal E2 supplement supplied to both; J2 explicitly closed the evidence request while retaining the wording finding. J1 considered E2 with the separate v3 delta.",
+    "supplemental_private_opinion_sha256": "d7ad102339ffc6e0d922ef6c246292f1c5c240f1816f50032a6f8044035555ce"
+  },
+  "transport_note": "Complete body reconstruction from operator copies matches the canonical v2 body for both. No observed transport discrepancy. Copies are not authenticated host-message exports.",
+  "limitations": [
+    "Historical documentary L1 opinions only; no execution or runtime binding.",
+    "Full candidate coverage and selected decisive source evidence do not imply every source line was transmitted.",
+    "This summary preserves v2 findings; it does not itself accept v3 or release any layer.",
+    "Original opinions and message packets remain private."
+  ]
+}
