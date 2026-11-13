@@ -219,57 +219,73 @@ test("closing admitting draft tears down its owner and stays Home on a late crea
 })
 
 test("server A to B to A remount cannot resurrect late creation; explicit retry adopts it", async ({ page }) => {
-  const fixture = await setup(page)
+  const transport = await installSseTransport(page, { server })
   const gate = Promise.withResolvers<void>()
-  fixture.createGate = gate.promise
-  const original = await page.locator(editor).elementHandle()
-  if (!original) throw new Error("Missing draft composer")
-  await page.locator(editor).fill("server A retained turn")
-  const request = page.waitForRequest((request) => new URL(request.url()).pathname === "/api/session" && request.method() === "POST")
-  const response = page.waitForResponse((response) => new URL(response.url()).pathname === "/api/session" && response.request().method() === "POST")
-  await page.locator(submit).click()
-  const sent = await request
-  await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "true")
-  // The tab strip is profile-scoped. Switch profiles through the real app to navigate A -> B -> A.
-  await selectProfile(page, "draft-handoff-b")
-  await expect(page).toHaveURL(otherURL)
-  // The sortable wrapper also exposes a link role. Target the desktop portal's actual navigation anchor.
-  const otherTab = page.locator(`#orchestra-session-tabs:visible [data-titlebar-tab-link][href="${otherURL}"]`)
-  await expect(otherTab).toHaveCount(1)
-  await expect(otherTab).toBeVisible()
-  await expect(otherTab).toHaveAttribute("href", otherURL)
-  await expect(otherTab.locator('[data-slot="tab-title"]')).toHaveText("Other server session")
-  await expect(page.getByRole("heading", { name: "Other server session", exact: true })).toBeVisible()
-  expect(await original.evaluate((element) => element.isConnected)).toBe(false)
-  await selectProfile(page, "draft-handoff")
-  await expect(page).toHaveURL(draftURL)
-  await expect(page.locator(draftTab)).toHaveCount(1)
-  await expect(page.locator(editor)).toHaveText("server A retained turn")
-  // Positive control after A -> B -> A: this is the same retained source, not a fresh false counter.
-  await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "true")
-  gate.resolve()
-  const created = await response
-  expect(created.request()).toBe(sent)
-  expect(created.status()).toBe(200)
-  expect(await created.json()).toMatchObject({ data: { id: sessionID, location: { directory } } })
-  await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "false")
-  await expect(page).toHaveURL(draftURL)
-  expect(fixture.admissions).toEqual([])
-  // Positive control uses the same HTTP matcher and real composer after the cancelled attempt.
-  const retried = page.waitForResponse((response) => isPromptRequest(response.request()))
-  const retryRequest = page.waitForRequest(isPromptRequest)
-  await page.locator(submit).click()
-  const retryReceipt = await retried
-  expect(retryReceipt.request()).toBe(await retryRequest)
-  expect(retryReceipt.status()).toBe(200)
-  await expect(page).toHaveURL(sessionURL)
-  await expect(page.locator(userCard)).toHaveCount(1)
-  await expect(page.locator(userText)).toHaveText("server A retained turn")
-  await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "false")
-  expect(fixture.creates).toHaveLength(1)
-  expect(fixture.prompts).toHaveLength(1)
-  expect(fixture.prompts[0]?.server).toBe(server)
-  expect(fixture.admissions).toHaveLength(1)
+  try {
+    const fixture = await setup(page)
+    fixture.createGate = gate.promise
+    const original = await page.locator(editor).elementHandle()
+    if (!original) throw new Error("Missing draft composer")
+    await page.locator(editor).fill("server A retained turn")
+    const request = page.waitForRequest((request) => new URL(request.url()).pathname === "/api/session" && request.method() === "POST")
+    const response = page.waitForResponse((response) => new URL(response.url()).pathname === "/api/session" && response.request().method() === "POST")
+    expect((await transport.connections()).map((connection) => ({ path: connection.path, endedAt: connection.endedAt })))
+      .toEqual([{ path: "/api/event", endedAt: undefined }])
+    await page.locator(submit).click()
+    const sent = await request
+    await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "true")
+    // The tab strip is profile-scoped. Switch profiles through the real app to navigate A -> B -> A.
+    expect((await transport.connections()).map((connection) => ({ path: connection.path, endedAt: connection.endedAt })))
+      .toEqual([{ path: "/api/event", endedAt: undefined }])
+    await selectProfile(page, "draft-handoff-b")
+    await expect(page).toHaveURL(otherURL)
+    // The sortable wrapper also exposes a link role. Target the desktop portal's actual navigation anchor.
+    const otherTab = page.locator(`#orchestra-session-tabs:visible [data-titlebar-tab-link][href="${otherURL}"]`)
+    await expect(otherTab).toHaveCount(1)
+    await expect(otherTab).toBeVisible()
+    await expect(otherTab).toHaveAttribute("href", otherURL)
+    await expect(otherTab.locator('[data-slot="tab-title"]')).toHaveText("Other server session")
+    await expect(page.getByRole("heading", { name: "Other server session", exact: true })).toBeVisible()
+    expect(await original.evaluate((element) => element.isConnected)).toBe(false)
+    await selectProfile(page, "draft-handoff")
+    await expect(page).toHaveURL(draftURL)
+    await expect(page.locator(draftTab)).toHaveCount(1)
+    await expect(page.locator(editor)).toHaveText("server A retained turn")
+    // Positive control after A -> B -> A: this is the same retained source, not a fresh false counter.
+    await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "true")
+    expect((await transport.connections()).map((connection) => ({ path: connection.path, endedAt: connection.endedAt })))
+      .toEqual([{ path: "/api/event", endedAt: undefined }])
+    gate.resolve()
+    const created = await response
+    expect(created.request()).toBe(sent)
+    expect(created.status()).toBe(200)
+    expect(await created.json()).toMatchObject({ data: { id: sessionID, location: { directory } } })
+    await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "false")
+    await expect(page).toHaveURL(draftURL)
+    expect(fixture.admissions).toEqual([])
+    // Positive control uses the same HTTP matcher and real composer after the cancelled attempt.
+    const retried = page.waitForResponse((response) => isPromptRequest(response.request()))
+    const retryRequest = page.waitForRequest(isPromptRequest)
+    expect((await transport.connections()).map((connection) => ({ path: connection.path, endedAt: connection.endedAt })))
+      .toEqual([{ path: "/api/event", endedAt: undefined }])
+    await page.locator(submit).click()
+    const retryReceipt = await retried
+    expect(retryReceipt.request()).toBe(await retryRequest)
+    expect(retryReceipt.status()).toBe(200)
+    await expect(page).toHaveURL(sessionURL)
+    await expect(page.locator(userCard)).toHaveCount(1)
+    await expect(page.locator(userText)).toHaveText("server A retained turn")
+    await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "false")
+    expect(fixture.creates).toHaveLength(1)
+    expect(fixture.prompts).toHaveLength(1)
+    expect(fixture.prompts[0]?.server).toBe(server)
+    expect(fixture.admissions).toHaveLength(1)
+    expect((await transport.connections()).map((connection) => ({ path: connection.path, endedAt: connection.endedAt })))
+      .toEqual([{ path: "/api/event", endedAt: undefined }])
+  } finally {
+    gate.resolve()
+    await transport.close()
+  }
 })
 
 async function setup(page: Page) {
