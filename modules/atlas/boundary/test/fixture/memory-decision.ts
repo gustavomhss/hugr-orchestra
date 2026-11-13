@@ -4,6 +4,7 @@ import { chmodSync, mkdtempSync, rmSync } from "node:fs"
 import path from "node:path"
 import { tmpdir } from "node:os"
 import { pathToFileURL } from "node:url"
+import { buildWindowsScanner } from "./memory-decision-scanner"
 import { expect } from "bun:test"
 import type { AtlasBinding, MemoryRecord } from "../../src/generated/native-memory"
 
@@ -25,10 +26,13 @@ type Api = typeof import("../../src/generated/native-memory") & {
 
 export async function make() {
   const root = mkdtempSync(path.join(tmpdir(), "atlas-memory-decision-"))
-  const api = await bundle(root).catch((error: unknown) => {
+  const fixture = await bundle(root).then(async (api) => ({
+    api, scanner: process.platform === "win32" ? await buildWindowsScanner(root) : undefined,
+  })).catch((error: unknown) => {
     rmSync(root, { recursive: true, force: true })
     throw error
   })
+  const api = fixture.api
   return {
     api,
     async fresh() {
@@ -40,9 +44,14 @@ export async function make() {
       const scans = path.join(repo, "actual-scans")
       const payload = path.join(repo, "scan-input")
       const faultPayload = path.join(repo, "fault-input")
-      const command = path.join(repo, "controlled-gitleaks")
-      const quote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`
-      await Bun.write(command, `#!/bin/sh
+      const command = fixture.scanner
+        ? await fixture.scanner(path.join(repo, "controlled-gitleaks.exe"), {
+            profile: "atomic", payload, scans, armed, witness, faultPayload, review, backup,
+          })
+        : path.join(repo, "controlled-gitleaks")
+      if (!fixture.scanner) {
+        const quote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`
+        await Bun.write(command, `#!/bin/sh
 if [ "$1" = "--version" ]; then exit 0; fi
 /bin/cat > ${quote(payload)} || exit 1
 printf 'scan\\n' >> ${quote(scans)} || exit 1
@@ -55,7 +64,8 @@ if [ -f ${quote(armed)} ] && [ ! -f ${quote(witness)} ]; then
 fi
 exit 0
 `)
-      chmodSync(command, 0o755)
+        chmodSync(command, 0o755)
+      }
       const binding: AtlasBinding = {
         storage: { projectID: "project", root: repo }, source: { worktree: repo, revision: "test-revision" },
         memoryOwner: "backend", execution: {
