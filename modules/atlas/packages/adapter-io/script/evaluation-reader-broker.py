@@ -254,6 +254,6 @@ def entrypoint():
   for sig in (signal.SIGTERM,signal.SIGINT,signal.SIGHUP):
    try:signal.signal(sig,signal.SIG_IGN)
    except (ValueError,OSError):pass
-  sys.stderr.write(json.dumps({'status':'UNKNOWN','diagnostic':safe_error_diagnostic(error)},separators=(',',':'))+'\\n')
+  sys.stderr.write(json.dumps({'status':'UNKNOWN','diagnostic':safe_error_diagnostic(error)},separators=(',',':'))+'\n')
   raise SystemExit(1)
 if __name__=='__main__':entrypoint()
