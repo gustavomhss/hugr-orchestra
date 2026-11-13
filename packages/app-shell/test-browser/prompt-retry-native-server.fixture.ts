@@ -76,7 +76,7 @@ const catalogSeed = makeLocationNode({
       })
       draft.model.update(ProviderV2.ID.make("provider"), ModelV2.ID.make("model-next"), (model) => {
         model.enabled = true
-        model.variants = [{ id: ModelV2.VariantID.make("default") }]
+        model.variants = [{ id: ModelV2.VariantID.make("default"), headers: {}, body: {} }]
       })
     })
   })),
