@@ -101,7 +101,7 @@ test("busy state is rechecked after confirmation opens", async ({ page }) => {
       timestamp: 1700000004000,
       assistantMessageID: "msg_busy",
       agent: "maestro",
-      model: { id: "model", providerID: "provider" },
+      model: fixture.model,
     },
   })
   await expect(dialog).toContainText("This session is working")
