@@ -73,6 +73,7 @@ class ReaderErrorRedaction(unittest.TestCase):
             self.assertEqual(stored["outputs"]["response_persisted"]["sha256"], hashlib.sha256(response).hexdigest())
             self.assertTrue(stored["lifecycle_records"]["process-start.json"])
             self.assertFalse(stored["payload_retained"])
+            self.assertEqual(stored["capture_completeness"], "INCOMPLETE_UNKNOWN")
             for name in ("stdout.json", "stderr.txt", "response.json"):
                 self.assertEqual((run / name).read_bytes(), b"")
             self.assertNotIn(sentinel, (run / "failure-evidence.json").read_text())
@@ -96,6 +97,35 @@ class ReaderErrorRedaction(unittest.TestCase):
                 self.assertNotIn(secret.decode(), (run / "failure-evidence.json").read_text())
             finally:
                 out.close();err.close()
+
+
+    def test_failure_after_exit_proof_reuses_proof_without_resignaling(self):
+        with tempfile.TemporaryDirectory() as temp:
+            run = Path(temp)
+            anchor = {"pid": 41, "pgid": 41, "sid": 41, "starttime": 900,
+                      "pid_namespace": "pid:[synthetic]", "boot_id": "synthetic"}
+            proof = {"lifecycle_state": "TERMINATION_PROVEN", "group_absent": True,
+                     "kernel_probe": "killpg-zero-ESRCH", "members": [], "anchor": anchor}
+            (run / "process-exit.json").write_text(json.dumps(proof))
+            proc = mock.Mock(returncode=0)
+            with mock.patch.object(lifecycle, "stop_group") as stop:
+                outcome = broker.failure_process_outcome(proc, anchor, run)
+            self.assertEqual(outcome, proof)
+            stop.assert_not_called()
+
+    def test_mismatched_exit_record_stays_unknown_without_signal(self):
+        with tempfile.TemporaryDirectory() as temp:
+            run = Path(temp)
+            anchor = {"pid": 41}
+            (run / "process-exit.json").write_text(json.dumps({
+                "lifecycle_state": "TERMINATION_PROVEN", "group_absent": True,
+                "kernel_probe": "killpg-zero-ESRCH", "members": [], "anchor": {"pid": 42}}))
+            proc = mock.Mock(returncode=0)
+            with mock.patch.object(lifecycle, "stop_group") as stop:
+                outcome = broker.failure_process_outcome(proc, anchor, run)
+            self.assertEqual(outcome["state"], "UNKNOWN")
+            self.assertEqual(outcome["lifecycle_state"], "PROCESS_EXIT_RECORD_UNPROVEN")
+            stop.assert_not_called()
 
     def test_cli_failure_has_no_traceback_or_exception_payload(self):
         completed = subprocess.run([sys.executable, str(BROKER)],
