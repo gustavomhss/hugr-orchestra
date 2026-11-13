@@ -135,7 +135,7 @@ The record commit is the one commit the host adds on top of a bundle: the cards'
 
 ## Testing and landing
 
-Atlas runs vitest, which `bun run test:ci` cannot reach (`TEST_PACKAGE_NOT_FOUND:atlas`). Never run vitest on this machine: its tests run only in test.yml's atlas job (npm ci, typecheck, the Atlas guards, vitest), on the `epic` label or a workflow dispatch (`gh workflow run test.yml --ref <branch> -f packages=atlas`). Typecheck through the typecheck.yml workflow. Consumers outside the module (`maestro`, `app`) do run through `test:ci`.
+Atlas runs vitest. Never run it on this machine. The exact hosted request `bun run test:ci core test/atlas-quality.test.ts --timeout 900000 --os linux` runs npm ci, typecheck, all standalone Atlas guards and both Vitest projects serially. Its harness is inert for other requests, including full Core lanes. The `atlas` selector is not registered: do not dispatch test.yml with `packages=atlas`, whose fallback also launches the Core matrix. The epic workflow still includes Atlas normally. Boundary tests use the registered `atlas-boundary` alias; consumers outside the module (`maestro`, `app`) also run through `test:ci`.
 
 The unit project caps each test at 10s (`modules/atlas/vitest.config.ts`); the lane runs files in parallel beside gate tests that take minutes, so a sweep near the cap times out on a busy runner. Give a measurement that is slow by design its own cap as the third argument of `it` (as `scrub-adjacent-fuzz.test.ts` does with `MEASURE_MS`), never cut its sample count, and leave the suite cap alone.
 

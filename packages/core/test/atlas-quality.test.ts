@@ -1,5 +1,7 @@
 import { expect, test } from "bun:test"
 import path from "node:path"
+import os from "node:os"
+import { mkdtemp, rm } from "node:fs/promises"
 import { Effect, Option, Schema } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
@@ -20,17 +22,23 @@ test.skipIf(!selected(request))("hosted standalone Atlas quality lane", async ()
   expect(process.env.RUNNER_OS).toBe("Linux")
   expect(process.env.CI).toBe("true")
   expect(process.env.GITHUB_RUN_ID).toMatch(/^[1-9][0-9]*$/)
-  expect(process.env.GITHUB_SHA).toMatch(/^[a-f0-9]{40}$/)
+  const snapshot = process.env.GITHUB_SHA
+  if (snapshot === undefined) throw new Error("Hosted snapshot identity is missing")
+  expect(snapshot).toMatch(/^[a-f0-9]{40}$/)
   const started = performance.now()
   await Effect.runPromise(Effect.gen(function* () {
     const proc = yield* AppProcess.Service
-    const command = (stage: string, program: string, args: readonly string[], cwd: string, maximumMs = 120_000) =>
+    const temporary = yield* Effect.acquireRelease(
+      Effect.promise(() => mkdtemp(path.join(os.tmpdir(), "atlas-quality-"))),
+      (directory) => Effect.promise(() => rm(directory, { recursive: true, force: true })),
+    )
+    const command = (stage: string, program: string, args: readonly string[], cwd: string, maximumMs = 120_000, env: Record<string, string> = {}) =>
       Effect.gen(function* () {
         const remaining = Math.min(maximumMs, 870_000 - (performance.now() - started))
         if (remaining <= 0) return yield* Effect.die(new Error("Atlas qualification budget exhausted"))
         yield* Effect.promise(() => Bun.write(Bun.stdout, `atlas quality stage: ${stage}\n`))
         const result = yield* proc.run(ChildProcess.make(program, args, {
-          cwd, env: { CI: "true", GITHUB_ACTIONS: "true" }, extendEnv: true,
+          cwd, env: { CI: "true", GITHUB_ACTIONS: "true", ...env }, extendEnv: true,
         }), { timeout: remaining, maxOutputBytes: 4 * 1024 * 1024, maxErrorBytes: 4 * 1024 * 1024 })
         // Preserve actual nested suite summaries and failures; qualification never accepts truncated output.
         yield* Effect.promise(() => Bun.write(Bun.stdout, result.stdout))
@@ -41,17 +49,24 @@ test.skipIf(!selected(request))("hosted standalone Atlas quality lane", async ()
         expect(result.exitCode, stage).toBe(0)
         return result.stdout.toString("utf8")
       })
-    expect((yield* command("snapshot", "git", ["rev-parse", "HEAD"], root, 15_000)).trim()).toBe(process.env.GITHUB_SHA)
+    expect((yield* command("snapshot", "git", ["rev-parse", "HEAD"], root, 15_000)).trim()).toBe(snapshot)
     const atlas = path.join(root, "modules/atlas")
     yield* command("install", "npm", ["ci", "--no-audit", "--no-fund"], atlas, 240_000)
     yield* command("typecheck", "npm", ["run", "typecheck"], atlas, 240_000)
     // Match the standalone workflow's manual-dispatch EARS baseline, without its unrelated Core matrix.
-    yield* command("baseline", "node", ["../../script/atlas-baseline.mjs", process.env.GITHUB_SHA!], atlas, 30_000)
+    const baseline = Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(
+      yield* command("baseline", "node", ["../../script/atlas-baseline.mjs", snapshot], atlas, 30_000, {
+        GITHUB_ENV: path.join(temporary, "github-env"),
+      }),
+    )
+    const base = Schema.decodeUnknownSync(Schema.Struct({ base: Schema.String }))(baseline).base
+    expect(base).toMatch(/^[a-f0-9]{40}$/)
     yield* Effect.forEach([
       "godfile-guard", "layer-guard", "reference-model-guard", "spec-conformance-guard", "id-integrity",
       "command-doc-guard", "wiring-guard", "adr-citation-guard", "req-clause-guard", "ears-coamend-guard",
       "doc-transcript-guard", "service-gate-guard", "own-snapshot-guard",
-    ], (guard) => command(guard, "npm", ["run", guard], atlas, 60_000), { concurrency: 1, discard: true })
+    ], (guard) => command(guard, "npm", ["run", guard], atlas, 60_000,
+      guard === "ears-coamend-guard" ? { EARS_COAMEND_BASE: base } : {}), { concurrency: 1, discard: true })
     yield* command("vitest", "npm", ["run", "test", "--", "--reporter=dot"], atlas, 480_000)
   }).pipe(Effect.scoped, Effect.provide(AppNodeBuilder.build(AppProcess.node))))
   expect(performance.now() - started).toBeLessThan(900_000)
