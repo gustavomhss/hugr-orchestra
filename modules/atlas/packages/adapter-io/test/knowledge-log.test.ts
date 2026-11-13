@@ -82,7 +82,7 @@ describe("knowledge log", () => {
 describe("replayKnowledge", () => {
   it("applies a proven fact that re-proves for an in-scope seat, and stages everything else", () => {
     const writer = withKnowledgeLog(store("a"), { repoPath: repo, seat: "backend", source: {} })
-    emit(writer, "proven", { claim: "p", seal: "proven" })
+    emit(writer, "proven", { id: "proven", claim: "p", seal: "proven" })
     emit(writer, "advisory", { claim: "a" })
     emit(writer, "out-of-scope", { claim: "o", seal: "proven" }, "other")
     emit(writer, "broken", { claim: "b", seal: "proven" })
@@ -94,6 +94,38 @@ describe("replayKnowledge", () => {
     expect([...staged(clone).keys()].sort()).toEqual(["advisory", "broken", "out-of-scope"])
     // A second replay finds nothing new.
     expect(replayKnowledge(repo, clone, policy, reproven)).toEqual({ applied: 0, staged: 0, missing: 0, rejected: 0 })
+  })
+
+  it("stages a row whose key or claims the fact does not authenticate", () => {
+    const writer = withKnowledgeLog(store("a"), { repoPath: repo, seat: "backend", source: {} })
+    const honest = emit(writer, "fact-id", { id: "fact-id", claimNorm: "the sentence", seal: "proven" })
+    appendKnowledge(
+      repo,
+      {
+        seat: "backend",
+        row: { ...honest, nodeKey: "forged-key", claims: ["forged claim"] },
+        at: "2099-01-01T00:00:00.000Z",
+        source: {},
+      },
+      undefined,
+    )
+    appendKnowledge(
+      repo,
+      {
+        seat: "backend",
+        row: { ...honest, claims: ["forged claim"] },
+        at: "2099-01-01T00:00:01.000Z",
+        source: {},
+      },
+      undefined,
+    )
+
+    const clone = store("b")
+    replayKnowledge(repo, clone, policy, () => true)
+    const own = rehydrateProjection(clone).current
+    expect(own.has("forged-key")).toBe(false)
+    expect(own.get("fact-id")?.claims ?? []).not.toContain("forged claim")
+    expect([...staged(clone).keys()].sort()).toEqual(["fact-id", "forged-key"])
   })
 
   it("counts a row whose bytes are gone or do not match its hash as missing", () => {
