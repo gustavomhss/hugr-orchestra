@@ -3,6 +3,11 @@ export * as AtlasParser from "./atlas-parser"
 import { readdir, realpath, stat } from "node:fs/promises"
 import path from "node:path"
 
+/** Physical installed grammar package; both real WASM files must belong to version0.23.2. */
+export async function grammarDirectory(_root: string): Promise<string> {
+  throw new Error("Pinned grammar resolver scaffold is not implemented")
+}
+
 /** Test setup only: return the physical installed web-tree-sitter@0.23.2 directory, never another version. */
 export async function directory(root: string): Promise<string> {
   const boundary = path.join(root, "modules/atlas/boundary")
