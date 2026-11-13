@@ -8,6 +8,8 @@ Orchestra starts its own local server when it opens. If that server exits, the s
 
 After a server has run for a minute, an unexpected exit starts a fresh restart attempt. Repeated early crashes use increasing delays and eventually stop retrying. Startup checks end when startup finishes or the app stops.
 
+Quitting during startup cancels pending CLI verification and service-discovery commands. The app waits for those commands to stop and releases resources that arrive during shutdown. An existing shared background service keeps running. If a helper's termination cannot be confirmed, the shutdown diagnostics retain that failure.
+
 A server program that cannot start reports its start error immediately. If its process supervisor is lost later, Orchestra closes that connection and reports the failure; it does not treat a lost connection as proof that every child process was reaped.
 
 The first launch after you install or update an unsigned build is slower: macOS scans the new server program before its first run, which can take about half a minute. Later launches skip that scan.

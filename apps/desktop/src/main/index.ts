@@ -439,7 +439,7 @@ const main = Effect.gen(function* () {
     if (SIDECAR_MODE === "shared") {
       logger.log("starting shared background sidecar")
       const sidecar = yield* Effect.promise(() => shutdown.startup.acquire(
-        () => startBackgroundCli(logger, shellEnv?.XDG_STATE_HOME),
+        (signal) => startBackgroundCli(logger, shellEnv?.XDG_STATE_HOME, signal),
         () => {},
         // This daemon is shared and deliberately outlives this desktop. Only its startup request is joined.
         async () => {},
@@ -479,12 +479,15 @@ const main = Effect.gen(function* () {
     const cwd = join(app.getPath("userData"), "global")
     mkdirSync(cwd, { recursive: true })
     const owned = yield* Effect.promise(() =>
-      shutdown.startup.acquire(() => Promise.all([resolveCliBinary(logger, shellEnv?.XDG_STATE_HOME), sidecarLaunchEnv(app.getPath("userData"))]).then(
-        ([binary, env]) =>
-          startOwnedServe({
+      shutdown.startup.acquire((signal) => Promise.allSettled([resolveCliBinary(logger, shellEnv?.XDG_STATE_HOME, signal), sidecarLaunchEnv(app.getPath("userData"))]).then(
+        ([binary, env]) => {
+          if (binary.status === "rejected") throw binary.reason
+          if (env.status === "rejected") throw env.reason
+          signal.throwIfAborted()
+          return startOwnedServe({
             logger,
-            command: [binary],
-            env: { ...env, ...dock.env },
+            command: [binary.value],
+            env: { ...env.value, ...dock.env },
             cwd,
             write: (stream, message) =>
               writeLog("server", stream, { message }, stream === "stderr" ? "warn" : "info"),
@@ -506,7 +509,8 @@ const main = Effect.gen(function* () {
               }
               OmniSmoke.event(name, data)
             },
-          }),
+          })
+        },
       ), (resource) => { server = { stop: () => resource.listener.stop() } }, (resource) => {
         // A late acquisition skips the normal health await below. Observe before stop aborts that startup.
         const health = resource.health.wait.catch(() => undefined)

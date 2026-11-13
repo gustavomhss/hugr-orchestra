@@ -1,12 +1,14 @@
 import { expect, test } from "bun:test"
 import { randomUUID } from "node:crypto"
-import { mkdtemp, open, readdir, rm } from "node:fs/promises"
+import { mkdtemp, open, readdir, readFile, rm } from "node:fs/promises"
 import type { FileHandle } from "node:fs/promises"
+import { createServer } from "node:http"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
+import { runStartupCommand } from "./background-cli"
 import { createStartupFence } from "./desktop-startup"
 
-// Real OS handle ownership only; this does not substitute for Main's process-acquisition source review.
+// Actual files and subprocesses; the fence is Main's boundary, not a full Electron bootstrap.
 async function withFiles(body: (f: {
   open(): Promise<FileHandle>
   entries(): Promise<string[]>
@@ -30,9 +32,9 @@ async function withFiles(body: (f: {
   }
 }
 
-async function bounded<A>(job: Promise<A>, label: string) {
+async function bounded<A>(job: Promise<A>, label: string, timeoutMs = 1500) {
   const expired = Promise.withResolvers<never>()
-  const timer = setTimeout(() => expired.reject(new Error(label)), 1500)
+  const timer = setTimeout(() => expired.reject(new Error(label)), timeoutMs)
   try { return await Promise.race([job, expired.promise]) }
   finally { clearTimeout(timer) }
 }
@@ -40,6 +42,185 @@ async function bounded<A>(job: Promise<A>, label: string) {
 function leaves(error: unknown): unknown[] {
   return error instanceof AggregateError ? error.errors.flatMap(leaves) : [error]
 }
+
+function processGone(pid: number) {
+  try { process.kill(pid, 0); return false }
+  catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ESRCH") return true
+    throw error
+  }
+}
+
+async function withHeldStartupCommand(args: string[], ignoreTerm: boolean, body: (child: {
+  start(signal?: AbortSignal, timeoutMs?: number): ReturnType<typeof runStartupCommand>
+  ready: Promise<{ pid: number; args: string[] }>
+  term(): Promise<string>
+}) => Promise<void>) {
+  const root = await mkdtemp(join(tmpdir(), "desktop-startup-command-"))
+  const ready = Promise.withResolvers<{ pid: number; args: string[] }>()
+  void ready.promise.catch(() => undefined)
+  const cleanup = new AbortController()
+  const state = { pid: undefined as number | undefined }
+  const jobs: Promise<unknown>[] = []
+  const server = createServer((request, response) => {
+    const url = new URL(request.url ?? "/", "http://127.0.0.1")
+    const pid = Number(url.searchParams.get("pid"))
+    response.setHeader("Connection", "close")
+    response.end()
+    if (url.pathname !== "/ready" || !Number.isSafeInteger(pid) || pid <= 0) {
+      ready.reject(new Error("Invalid startup subprocess handshake"))
+      return
+    }
+    state.pid = pid
+    ready.resolve({ pid, args: url.searchParams.getAll("arg") })
+  })
+  server.on("error", ready.reject)
+  try {
+    await new Promise<void>((resolve, reject) => {
+      server.once("error", reject)
+      server.listen(0, "127.0.0.1", () => { server.off("error", reject); resolve() })
+    })
+    const address = server.address()
+    if (!address || typeof address === "string") throw new Error("Expected a local subprocess handshake address")
+    const program = [
+      `const { get } = require("node:http")`,
+      `const { writeFileSync } = require("node:fs")`,
+      ignoreTerm ? `process.on("SIGTERM", () => writeFileSync(${JSON.stringify(join(root, "term"))}, "SIGTERM"))` : "",
+      `const ready = new URL(${JSON.stringify(`http://127.0.0.1:${address.port}/ready`)})`,
+      `ready.searchParams.set("pid", String(process.pid))`,
+      `for (const arg of process.argv.slice(-${args.length})) ready.searchParams.append("arg", arg)`,
+      `setInterval(() => {}, 1000)`,
+      `get(ready, { headers: { Connection: "close" } }, response => response.resume()).on("error", error => { console.error(error); process.exit(2) })`,
+    ].join("\n")
+    await body({
+      start(signal, timeoutMs = 30_000) {
+        if (jobs.length) throw new Error("The startup subprocess fixture owns one command")
+        // The cleanup signal also makes the pre-fix RED release its real child after the assertion fails.
+        const job = runStartupCommand(process.execPath, ["-e", program, "--", ...args], {
+          signal: AbortSignal.any([cleanup.signal, ...(signal ? [signal] : [])]),
+          timeoutMs,
+          killGraceMs: ignoreTerm ? 1000 : 100,
+          killWaitMs: 3000,
+        })
+        jobs.push(job)
+        void job.catch(() => undefined)
+        return job
+      },
+      ready: ready.promise,
+      term: () => readFile(join(root, "term"), "utf8"),
+    })
+  } finally {
+    cleanup.abort()
+    try {
+      if (state.pid !== undefined && !processGone(state.pid)) {
+        try { process.kill(state.pid, "SIGKILL") }
+        catch (error) { if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error }
+      }
+      await bounded(Promise.allSettled(jobs), "Startup subprocess fixture did not join its command", 5000)
+    } finally {
+      server.closeAllConnections()
+      if (server.listening) await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()))
+      await rm(root, { recursive: true, force: true })
+    }
+  }
+}
+
+async function expectStartupCancellation(args: string[], ignoreTerm = false) {
+  await withHeldStartupCommand(args, ignoreTerm, async (child) => {
+    const fence = createStartupFence()
+    const state = { adopts: 0, releases: 0, signal: undefined as AbortSignal | undefined }
+    const acquiring = fence.acquire((signal) => {
+      state.signal = signal
+      return child.start(signal)
+    }, () => { state.adopts++ }, async () => { state.releases++ })
+    const outcome = acquiring.then(() => ({ ok: true as const }), (error: unknown) => ({ ok: false as const, error }))
+    const started = await bounded(child.ready, "Startup subprocess did not reach its handshake", 5000)
+    expect(started.args).toEqual(args)
+    expect(processGone(started.pid)).toBe(false)
+    const closing = fence.close()
+    expect(fence.close()).toBe(closing)
+    await bounded(closing, "Quit did not cancel and join its startup subprocess", 5000)
+    const result = await outcome
+    expect(result.ok).toBe(false)
+    if (result.ok) throw new Error("Cancelled startup command unexpectedly succeeded")
+    expect(state.signal?.aborted).toBe(true)
+    expect(result.error).toBe(state.signal?.reason)
+    expect(state.adopts).toBe(0)
+    expect(state.releases).toBe(0)
+    expect(processGone(started.pid)).toBe(true)
+    if (ignoreTerm) expect(await child.term()).toBe("SIGTERM")
+  })
+}
+
+test("Quit cancels and reaps a pending owned --version subprocess before adopting", () => expectStartupCancellation(["--version"]), 15_000)
+
+test("Quit cancels and reaps a pending shared service status subprocess before adopting", () => expectStartupCancellation(["service", "status"]), 15_000)
+
+test.skipIf(process.platform === "win32")("Quit escalates a startup subprocess that ignores SIGTERM and joins SIGKILL", () => expectStartupCancellation(["--version"], true), 15_000)
+
+test("startup command preserves stdout, stderr and its explicit environment", async () => {
+  const output = await bounded(runStartupCommand(process.execPath, ["-e", `process.stdout.write(process.env.ORCHESTRA_STARTUP_TEST_VALUE); process.stderr.write("startup stderr")`], {
+    env: { ...process.env, ORCHESTRA_STARTUP_TEST_VALUE: "startup stdout" },
+    timeoutMs: 5000,
+  }), "Successful startup command did not finish", 10_000)
+  expect(output).toEqual({ stdout: "startup stdout", stderr: "startup stderr" })
+}, 15_000)
+
+test("startup command reports spawn failure without waiting for its execution deadline", async () => {
+  const error = await bounded(runStartupCommand(join(tmpdir(), `missing-startup-command-${randomUUID()}`), [], {
+    timeoutMs: 30_000,
+  }).then(() => undefined, (failure: unknown) => failure), "Missing startup executable did not fail promptly", 5000)
+  expect(error).toMatchObject({ code: "ENOENT" })
+}, 10_000)
+
+test("startup command deadline reaps a real pending subprocess without a Quit request", () => withHeldStartupCommand(["--version"], false, async (child) => {
+  const outcome = child.start(undefined, 5000).then(() => undefined, (error: unknown) => error)
+  const started = await bounded(child.ready, "Deadline subprocess did not reach its handshake", 5000)
+  const error = await bounded(outcome, "Startup command deadline did not join its subprocess", 10_000)
+  expect(error).toBeInstanceOf(Error)
+  expect((error as Error).message).toBe("startup-process-timeout")
+  expect(processGone(started.pid)).toBe(true)
+}), 20_000)
+
+test("close aborts every pending acquisition before joining and remains reentrant from abort", () => withFiles(async (f) => {
+  const fence = createStartupFence(), enteredA = f.hold(), enteredB = f.hold(), finish = f.hold()
+  const state = { aborts: 0, adopts: 0, closed: false, reentered: undefined as Promise<void> | undefined }
+  const start = async (signal: AbortSignal | undefined, entered: ReturnType<typeof f.hold>) => {
+    signal?.addEventListener("abort", () => { state.aborts++; state.reentered = fence.close() }, { once: true })
+    entered.resolve()
+    await finish.promise
+    if (signal?.aborted) throw signal.reason
+    return f.open()
+  }
+  const first = f.watch(fence.acquire((signal) => start(signal, enteredA), () => { state.adopts++ }, (file) => file.close()))
+  const second = f.watch(fence.acquire((signal) => start(signal, enteredB), () => { state.adopts++ }, (file) => file.close()))
+  await bounded(Promise.all([enteredA.promise, enteredB.promise]), "Pending acquisitions did not start")
+  const closing = fence.close()
+  f.watch(closing.then(() => { state.closed = true }))
+  expect(state.aborts).toBe(2)
+  expect(state.reentered).toBe(closing)
+  expect(state.closed).toBe(false)
+  finish.resolve()
+  await bounded(closing, "Close did not join cancelled acquisition cleanup")
+  expect((await Promise.allSettled([first, second])).map((result) => result.status)).toEqual(["rejected", "rejected"])
+  expect(state.adopts).toBe(0)
+  expect(await f.entries()).toEqual([])
+}))
+
+test("close reports an acquisition cleanup failure instead of treating abort as confirmed termination", () => withFiles(async (f) => {
+  const fence = createStartupFence(), entered = f.hold(), finish = f.hold()
+  const failure = new Error("startup termination unknown sentinel")
+  const acquiring = f.watch(fence.acquire(async (signal) => {
+    signal?.addEventListener("abort", () => finish.resolve(), { once: true })
+    entered.resolve()
+    await finish.promise
+    throw failure
+  }, () => { throw new Error("Failed acquisition cannot be adopted") }, async () => {}))
+  await bounded(entered.promise, "Failing acquisition did not start")
+  const closed = await bounded(fence.close().then(() => undefined, (error: unknown) => error), "Close did not report acquisition failure")
+  expect(leaves(closed)).toContain(failure)
+  await expect(acquiring).rejects.toBe(failure)
+}))
 
 test("startup fence joins late acquired real handle closure without adopting it", () => withFiles(async (f) => {
   const fence = createStartupFence(), entered = f.hold(), allocated = f.hold(), closingFile = f.hold(), releaseFile = f.hold()
