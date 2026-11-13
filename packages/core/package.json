@@ -601,7 +601,7 @@
     "pdf-lib": "1.17.1",
     "saxes": "6.0.0",
     "semver": "^7.6.3",
-    "toml": "4.1.1",
+    "toml": "5.0.1",
     "tree-sitter-go": "0.25.0",
     "tree-sitter-javascript": "0.23.1",
     "tree-sitter-python": "0.25.0",
