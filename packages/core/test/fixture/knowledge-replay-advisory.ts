@@ -6,6 +6,7 @@ import path from "node:path"
 import { pathToFileURL } from "node:url"
 import { Schema } from "effect"
 import { ChildProcess } from "effect/unstable/process"
+import { AtlasParser } from "./atlas-parser"
 
 export const modes = [
   "single-legacy", "history", "history-missing-blob", "history-missing-support", "history-scope", "history-key",
@@ -36,13 +37,13 @@ async function build(root: string, mode: Mode) {
   const source = path.resolve(import.meta.dir, "../../../..")
   const boundary = path.join(source, "modules/atlas/boundary")
   const packages = path.resolve(boundary, "../packages")
-  const metadataPath = path.join(boundary, "node_modules/web-tree-sitter/package.json")
+  const metadataPath = path.join(await AtlasParser.directory(source), "package.json")
   const metadataBytes = await Bun.file(metadataPath).arrayBuffer()
   const metadata: unknown = await Bun.file(metadataPath).json()
   if (typeof metadata !== "object" || metadata === null || !("name" in metadata) || metadata.name !== "web-tree-sitter" ||
     !("version" in metadata) || metadata.version !== "0.23.2" || !("main" in metadata) || metadata.main !== "tree-sitter.js")
     throw new Error("Actual boundary parser must be web-tree-sitter@0.23.2 with main tree-sitter.js")
-  const parser = realpathSync(path.join(boundary, "node_modules/web-tree-sitter/tree-sitter.js"))
+  const parser = realpathSync(path.join(path.dirname(metadataPath), "tree-sitter.js"))
   if (!statSync(parser).isFile()) throw new Error("Actual pinned parser entry is not a regular file")
   const parserURL = pathToFileURL(parser).href
   const manifest = { parser: { resolved: parser, version: metadata.version, package: metadataPath,
