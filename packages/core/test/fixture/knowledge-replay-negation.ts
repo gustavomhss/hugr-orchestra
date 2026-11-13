@@ -43,7 +43,7 @@ async function build(root: string) {
   if (!statSync(parser).isFile()) throw new Error("Actual pinned parser entry must be a regular file")
   const parserURL = pathToFileURL(parser).href
   // initAst's runtime require.resolve must use the installed grammar even though this bundle lives in tmp.
-  const grammar = realpathSync(path.join(source, "packages/core/node_modules/tree-sitter-typescript"))
+  const grammar = await AtlasParser.grammarDirectory(source)
   mkdirSync(path.join(root, "node_modules"))
   symlinkSync(grammar, path.join(root, "node_modules/tree-sitter-typescript"), process.platform === "win32" ? "junction" : "dir")
   const fixture = path.join(packages, "adapter-io/test/fixtures/neg-collapsed-local")
@@ -73,7 +73,7 @@ async function build(root: string) {
       builder.onResolve({ filter: /^@bufbuild\/protobuf(\/.*)?$/ }, (args) => ({ path: Bun.resolveSync(args.path, boundary) }))
       builder.onResolve({ filter: /^@c4312\/scip$/ }, (args) => ({ path: Bun.resolveSync(args.path, boundary) }))
       builder.onResolve({ filter: /^tree-sitter-typescript\/tree-sitter-(typescript|tsx)\.wasm$/ }, (args) => ({
-        path: Bun.resolveSync(args.path, path.join(source, "packages/core")), external: true,
+        path: realpathSync(path.join(grammar, args.path.slice("tree-sitter-typescript/".length))), external: true,
       }))
       builder.onResolve({ filter: /^web-tree-sitter$/ }, () => ({ path: "parser", namespace: "atlas-pinned-parser" }))
       builder.onLoad({ filter: /.*/, namespace: "atlas-pinned-parser" }, () => ({

@@ -50,9 +50,10 @@ async function build(root: string, mode: Mode = "positive") {
     packageSha256: new Bun.CryptoHasher("sha256").update(metadataBytes).digest("hex"),
     entrySha256: new Bun.CryptoHasher("sha256").update(await Bun.file(parser).arrayBuffer()).digest("hex"),
   }, astWarmup: true, scip: "actual serialized SCIP fixture; vacuity oracle is the real AST scan" }
+  const grammar = await AtlasParser.grammarDirectory(source)
   const entry = path.join(root, "entry.ts")
   const grammarOutcomes = await Promise.allSettled(["tree-sitter-typescript.wasm", "tree-sitter-tsx.wasm"].map(async (name) => {
-    const resolved = realpathSync(path.join(source, "packages/core/node_modules/tree-sitter-typescript", name))
+    const resolved = realpathSync(path.join(grammar, name))
     const bytes = await Bun.file(resolved).arrayBuffer()
     await Bun.write(path.join(root, "node_modules/tree-sitter-typescript", name), bytes)
     return { name, resolved, sha256: new Bun.CryptoHasher("sha256").update(bytes).digest("hex") }
@@ -87,9 +88,9 @@ async function build(root: string, mode: Mode = "positive") {
       builder.onResolve({ filter: /^@noble\/hashes\// }, (args) => ({ path: Bun.resolveSync(args.path, boundary) }))
       builder.onResolve({ filter: /^@bufbuild\/protobuf(\/.*)?$/ }, (args) => ({ path: Bun.resolveSync(args.path, boundary) }))
       builder.onResolve({ filter: /^@c4312\/scip$/ }, (args) => ({ path: Bun.resolveSync(args.path, boundary) }))
-      // Use the same physically installed Core grammar resolver as the qualified negation fixture.
+      // Resolve WASM against the same validated physical grammar directory used for the byte copies.
       builder.onResolve({ filter: /^tree-sitter-typescript\/tree-sitter-(typescript|tsx)\.wasm$/ }, (args) => ({
-        path: Bun.resolveSync(args.path, path.join(source, "packages/core")), external: true,
+        path: realpathSync(path.join(grammar, args.path.slice("tree-sitter-typescript/".length))), external: true,
       }))
       // The bridge's literal external is already absolute; no bare external rewrite is assumed.
       builder.onResolve({ filter: /^web-tree-sitter$/ }, () => ({ path: "parser", namespace: "atlas-pinned-parser" }))
