@@ -170,10 +170,16 @@ describe("maintenance caller real host/core DAG integration, synthetic fifteen-n
   it("reuses the entire graph with no recipe calls when no captured input changed", () => {
     const f = fixture()
     const out = prepareMaintenanceCaller(f.envelope, f.descriptor, f.ports)
-    expect(out.result.kind).toBe("evaluation-reuse")
+    // The host always targets a distinct isolated root, so core returns a new
+    // prepared envelope even when every ownership result is reused unchanged.
+    expect(out.result.kind).toBe("prepared-evaluation-update")
     expect(out.accounting.recipeCalls).toEqual([])
     expect(out.accounting.outputBytes).toBe(0)
-    if (out.result.kind !== "evaluation-reuse") throw Error(JSON.stringify(out.result))
-    expect(out.result.manifest).toBe(f.ports.manifest)
+    if (out.result.kind !== "prepared-evaluation-update") throw Error(JSON.stringify(out.result))
+    expect(out.result.calls).toEqual([])
+    expect(out.result.prepared.candidate.repo_root).toBe(f.envelope.targetRoot)
+    expect(out.result.prepared.candidate.entries.map(entry => entry.artifact.result))
+      .toEqual(f.ports.baseline.candidate.entries.map(entry => entry.artifact.result))
+    expect(out.result.prepared.candidate_id).toBe(id(out.result.prepared.candidate))
   })
 })
