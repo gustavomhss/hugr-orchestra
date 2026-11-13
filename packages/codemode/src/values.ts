@@ -15,7 +15,7 @@ export class SandboxDate {
 
 export class SandboxRegExp {
   readonly regex: RegExp
-  constructor(pattern: string, flags: string) {
+  constructor(pattern: string, flags: string, _metadata?: State) {
     this.regex = new RegExp(pattern, flags)
   }
 
