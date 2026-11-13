@@ -1,0 +1,26 @@
+name: s4-l4-dispatch-synthetic
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Verify frozen central and exact route source pins
+        run: python3 -I -S -B s4-l4-dispatch-ci/verify-pins.py
+      - name: Synthetic route and central lifecycle suites only
+        shell: bash
+        run: |
+          set -o pipefail
+          python3 -I -S -B s4-l4-dispatch-ci/ci/central/modules/atlas/packages/adapter-io/test/evaluation-reader-broker-ci.py 2>&1 | tee central.log
+          python3 -I -S -B s4-l4-dispatch-ci/source/test-s4-l4-dispatch.py 2>&1 | tee route-unit.log
+          python3 -I -S -B s4-l4-dispatch-ci/source/test-s4-l4-integration.py 2>&1 | tee route-integration.log
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: s4-l4-dispatch-synthetic-${{ github.sha }}
+          path: '*.log'
+          if-no-files-found: warn

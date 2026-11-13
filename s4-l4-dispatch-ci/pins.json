@@ -1,0 +1,38 @@
+{
+  "source/build-launcher.py": {
+    "bytes": 2061,
+    "sha256": "f0f4d4a1547312ed3b66d72163aae75f5fc7fefa3cd27a92c137047be9400627"
+  },
+  "source/s4-l4-dispatch.py": {
+    "bytes": 14743,
+    "sha256": "d33a8a748eb33121f175304f108556ac88a5743d872aa0d8a30c83f2b9caf287"
+  },
+  "source/test-s4-l4-dispatch.py": {
+    "bytes": 4917,
+    "sha256": "d2ed0b2c4b5b900a583a69e2cda8deed34b42caf48c2748bccd696c2980aff44"
+  },
+  "source/test-s4-l4-integration.py": {
+    "bytes": 19695,
+    "sha256": "8e6d3755e29c38ac477f3e2eeb3ec473c718e204f5926b447e35c3b7535dd27b"
+  },
+  "ci/central/.github/workflows/atlas-reader-broker.yml": {
+    "bytes": 1525,
+    "sha256": "905134e394602980ea96199aca7b3ebb3919662452090471c3d6e59e87d109db"
+  },
+  "ci/central/modules/atlas/packages/adapter-io/script/evaluation-reader-broker.py": {
+    "bytes": 19962,
+    "sha256": "8c8d542bc25e292f8bee5e252e214a5b0fd6d0d30ef88dc9edb38b443289100e"
+  },
+  "ci/central/modules/atlas/packages/adapter-io/script/evaluation-reader-call.mjs": {
+    "bytes": 1341,
+    "sha256": "f673c4d67c975e69dc634a6349401a05f12212156c85c630e6a5f8854adfdb47"
+  },
+  "ci/central/modules/atlas/packages/adapter-io/script/evaluation-reader-lifecycle.py": {
+    "bytes": 8600,
+    "sha256": "71ac284180284839fad98219d662235bda32e9ff9ffcb87f26dd13430f5a1df1"
+  },
+  "ci/central/modules/atlas/packages/adapter-io/test/evaluation-reader-broker-ci.py": {
+    "bytes": 30491,
+    "sha256": "e61870f398809be90a55213fb71c7d0b6ad28ff029fb7e0e05b05bf5f957c292"
+  }
+}

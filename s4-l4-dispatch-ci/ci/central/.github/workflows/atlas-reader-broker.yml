@@ -1,0 +1,34 @@
+name: atlas-reader-broker
+on:
+  workflow_dispatch:
+  push:
+    branches: [genesis-reader-broker-v5-lifecycle]
+    paths:
+      - .github/workflows/atlas-reader-broker.yml
+      - modules/atlas/packages/adapter-io/script/evaluation-reader-broker.py
+      - modules/atlas/packages/adapter-io/script/evaluation-reader-call.mjs
+      - modules/atlas/packages/adapter-io/script/evaluation-reader-lifecycle.py
+      - modules/atlas/packages/adapter-io/test/evaluation-reader-broker-ci.py
+permissions:
+  contents: read
+jobs:
+  broker:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Check public driver syntax
+        run: |
+          python3 -m py_compile modules/atlas/packages/adapter-io/script/evaluation-reader-lifecycle.py modules/atlas/packages/adapter-io/script/evaluation-reader-broker.py modules/atlas/packages/adapter-io/test/evaluation-reader-broker-ci.py
+          node --check modules/atlas/packages/adapter-io/script/evaluation-reader-call.mjs
+      - name: Exercise actual generic broker with isolated subprocess fixtures
+        shell: bash
+        run: |
+          set -o pipefail
+          python3 modules/atlas/packages/adapter-io/test/evaluation-reader-broker-ci.py 2>&1 | tee broker-ci.log
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: broker-ci-${{ github.sha }}
+          path: broker-ci.log
+          if-no-files-found: warn
