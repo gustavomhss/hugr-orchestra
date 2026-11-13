@@ -340,6 +340,7 @@
     "./review-toolkit/index": "./src/review-toolkit/index.ts",
     "./review-toolkit/item": "./src/review-toolkit/item.ts",
     "./review-toolkit/manifest": "./src/review-toolkit/manifest.ts",
+    "./review-toolkit/local-tools": "./src/review-toolkit/local-tools.ts",
     "./review-toolkit/noise": "./src/review-toolkit/noise.ts",
     "./review-toolkit/osv-refresh": "./src/review-toolkit/osv-refresh.ts",
     "./review-toolkit/rustsec-refresh": "./src/review-toolkit/rustsec-refresh.ts",
