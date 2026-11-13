@@ -34,10 +34,9 @@ const sdk = {
   }) satisfies Execute } },
 }
 const server = { scope: "local" }
-const entries = ([
-  ["anthropic", "claude-host"], ["anthropic#api-key", "claude-api"], ["openai", "gpt-api"],
-  ["opencode", "zen-free"], ["custom", "api-model"], ["custom", "host-only-model"],
-] as const).map(([providerID, id]) => Model.Info.empty(Provider.ID.make(providerID), Model.ID.make(id)))
+const entries = [...mixedEngineCatalog().all.values()].flatMap((provider) =>
+  Object.values(provider.models).map((model) => Model.Info.empty(Provider.ID.make(provider.id), Model.ID.make(model.id))),
+)
 const responseSchema = Location.response(ModelExecution.Response)
 const ref = Model.Ref.make({ providerID: Provider.ID.make(host.providerID), id: Model.ID.make(host.modelID),
   variant: Model.VariantID.make(host.variant) })
