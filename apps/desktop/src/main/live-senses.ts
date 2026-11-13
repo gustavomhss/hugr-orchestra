@@ -142,7 +142,7 @@ export async function startSenses(options: {
         try { producer.abandon() } catch (cleanup) { failures.push(cleanup) }
       }
       log.write({ event: "capture", state: "stopped" })
-      await log.flush()
+      try { await log.flush() } catch (error) { failures.push(error) }
       if (failures.length) throw new AggregateError(failures, "Live capture cleanup failed; recent audio may be missing")
       return { unsent: pending() }
     })()
