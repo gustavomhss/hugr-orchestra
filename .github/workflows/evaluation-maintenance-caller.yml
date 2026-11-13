@@ -42,7 +42,7 @@ jobs:
         run: |
           set -o pipefail
           npx vitest run packages/adapter-io/test/evaluation-maintenance-caller.test.ts packages/adapter-io/test/evaluation-maintenance-caller.integration.test.ts 2>&1 | tee maintenance-caller.log
-          { printf '\\n[toolchain]\nnode='; node --version; printf 'npm='; npm --version; } >> maintenance-caller.log
+          { printf '\n[toolchain]\nnode='; node --version; printf 'npm='; npm --version; } >> maintenance-caller.log
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
