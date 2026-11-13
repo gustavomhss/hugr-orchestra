@@ -26,9 +26,9 @@
       "entries": 8
     },
     {
-      "path": "authors/core/records-04.json",
-      "sha256": "05fbc2a4f3c988d433a04b60b8e94a1ea1cbfa053006fb41c829e8bdf65b18c5",
-      "bytes": 44072,
+      "path": "authors/core/records-04.v2.json",
+      "sha256": "755803f84794922bcbeab91ab1fc9535b78eac04c4b0ab86bcf277b96114e819",
+      "bytes": 44635,
       "entries": 14
     },
     {
@@ -448,7 +448,7 @@
     },
     {
       "path": "native/omni/crates/hugr-omni/src/client/tests/mod.rs",
-      "record_file": "authors/core/records-04.json",
+      "record_file": "authors/core/records-04.v2.json",
       "index": 0,
       "owner": "core",
       "git_blob_sha": "a899226cb47c0d2181887b39d172b2cd695e8173",
@@ -459,7 +459,7 @@
     },
     {
       "path": "native/omni/crates/hugr-omni/src/client/tests/unix.rs",
-      "record_file": "authors/core/records-04.json",
+      "record_file": "authors/core/records-04.v2.json",
       "index": 1,
       "owner": "core",
       "git_blob_sha": "d442aff60d6d528ca1745a55efa129db8cd46e2d",
@@ -470,7 +470,7 @@
     },
     {
       "path": "native/omni/crates/hugr-omni/src/client/tests/windows.rs",
-      "record_file": "authors/core/records-04.json",
+      "record_file": "authors/core/records-04.v2.json",
       "index": 2,
       "owner": "core",
       "git_blob_sha": "d433ffe544125e4ceba69c8463d208923aefa433",
@@ -481,7 +481,7 @@
     },
     {
       "path": "native/omni/crates/hugr-omni/src/client/unix.rs",
-      "record_file": "authors/core/records-04.json",
+      "record_file": "authors/core/records-04.v2.json",
       "index": 3,
       "owner": "core",
       "git_blob_sha": "55dfd50c72bdd1e3ea763febfb152f6d937c2126",
@@ -492,7 +492,7 @@
     },
     {
       "path": "native/omni/crates/hugr-omni/src/client/windows.rs",
-      "record_file": "authors/core/records-04.json",
+      "record_file": "authors/core/records-04.v2.json",
       "index": 4,
       "owner": "core",
       "git_blob_sha": "256b3cf8e5a6c067b4b71ce8024d897e424f5b50",
@@ -503,7 +503,7 @@
     },
     {
       "path": "native/omni/crates/hugr-omni/src/error/messages/mod.rs",
-      "record_file": "authors/core/records-04.json",
+      "record_file": "authors/core/records-04.v2.json",
       "index": 5,
       "owner": "core",
       "git_blob_sha": "78f26c0b6f0bc7a25be915f78cfdf5a7b49a57dd",
@@ -514,7 +514,7 @@
     },
     {
       "path": "native/omni/crates/hugr-omni/src/error/messages/w03.rs",
-      "record_file": "authors/core/records-04.json",
+      "record_file": "authors/core/records-04.v2.json",
       "index": 6,
       "owner": "core",
       "git_blob_sha": "f31a047d399761f76c77181e5396c8fb75bd4aff",
@@ -525,7 +525,7 @@
     },
     {
       "path": "native/omni/crates/hugr-omni/src/error/messages/w04.rs",
-      "record_file": "authors/core/records-04.json",
+      "record_file": "authors/core/records-04.v2.json",
       "index": 7,
       "owner": "core",
       "git_blob_sha": "814ea4e6d0600b2006567aa99e505ef7ad34b1fc",
@@ -536,7 +536,7 @@
     },
     {
       "path": "native/omni/crates/hugr-omni/src/error/messages/w07.rs",
-      "record_file": "authors/core/records-04.json",
+      "record_file": "authors/core/records-04.v2.json",
       "index": 8,
       "owner": "core",
       "git_blob_sha": "99685766fe3b3bfbff9f08756abeb7e2721d77be",
@@ -547,7 +547,7 @@
     },
     {
       "path": "native/omni/crates/hugr-omni/src/error/messages/w09.rs",
-      "record_file": "authors/core/records-04.json",
+      "record_file": "authors/core/records-04.v2.json",
       "index": 9,
       "owner": "core",
       "git_blob_sha": "9caf072ef6082d2e9adc1bac4af56087efae06d2",
@@ -558,7 +558,7 @@
     },
     {
       "path": "native/omni/crates/hugr-omni/src/error/messages/w10.rs",
-      "record_file": "authors/core/records-04.json",
+      "record_file": "authors/core/records-04.v2.json",
       "index": 10,
       "owner": "core",
       "git_blob_sha": "3e63011d4f3705a399c3665345700d95e4709e7c",
@@ -569,7 +569,7 @@
     },
     {
       "path": "native/omni/crates/hugr-omni/src/error/messages/wp8b.rs",
-      "record_file": "authors/core/records-04.json",
+      "record_file": "authors/core/records-04.v2.json",
       "index": 11,
       "owner": "core",
       "git_blob_sha": "7fe8b3eb201173cf741ac68872317bfcb13c182f",
@@ -580,7 +580,7 @@
     },
     {
       "path": "native/omni/crates/hugr-omni/src/error/messages/wp_h.rs",
-      "record_file": "authors/core/records-04.json",
+      "record_file": "authors/core/records-04.v2.json",
       "index": 12,
       "owner": "core",
       "git_blob_sha": "72b82197c6d358d4721da1b530aa6818b69c4149",
@@ -591,7 +591,7 @@
     },
     {
       "path": "native/omni/crates/hugr-omni/src/error/mod.rs",
-      "record_file": "authors/core/records-04.json",
+      "record_file": "authors/core/records-04.v2.json",
       "index": 13,
       "owner": "core",
       "git_blob_sha": "7e5d1569ad39bcfc4fb28781320f72f6579c4961",

@@ -1,0 +1,194 @@
+{
+  "schema": "omni-public-interim-review-summary/v1",
+  "kind": "summary_not_original_transcript",
+  "packet": "C04",
+  "artifact": "authors/core/records-04.json",
+  "public_artifact_at_review": "bodies/core/records-04.json",
+  "prior_version_public_location_after_supersession": "history/core/v1/records-04.json",
+  "body_sha256": "05fbc2a4f3c988d433a04b60b8e94a1ea1cbfa053006fb41c829e8bdf65b18c5",
+  "body_bytes": 44072,
+  "covered_records": 14,
+  "population": 393,
+  "records": [
+    {
+      "index": 0,
+      "path": "native/omni/crates/hugr-omni/src/client/tests/mod.rs"
+    },
+    {
+      "index": 1,
+      "path": "native/omni/crates/hugr-omni/src/client/tests/unix.rs"
+    },
+    {
+      "index": 2,
+      "path": "native/omni/crates/hugr-omni/src/client/tests/windows.rs"
+    },
+    {
+      "index": 3,
+      "path": "native/omni/crates/hugr-omni/src/client/unix.rs"
+    },
+    {
+      "index": 4,
+      "path": "native/omni/crates/hugr-omni/src/client/windows.rs"
+    },
+    {
+      "index": 5,
+      "path": "native/omni/crates/hugr-omni/src/error/messages/mod.rs"
+    },
+    {
+      "index": 6,
+      "path": "native/omni/crates/hugr-omni/src/error/messages/w03.rs"
+    },
+    {
+      "index": 7,
+      "path": "native/omni/crates/hugr-omni/src/error/messages/w04.rs"
+    },
+    {
+      "index": 8,
+      "path": "native/omni/crates/hugr-omni/src/error/messages/w07.rs"
+    },
+    {
+      "index": 9,
+      "path": "native/omni/crates/hugr-omni/src/error/messages/w09.rs"
+    },
+    {
+      "index": 10,
+      "path": "native/omni/crates/hugr-omni/src/error/messages/w10.rs"
+    },
+    {
+      "index": 11,
+      "path": "native/omni/crates/hugr-omni/src/error/messages/wp8b.rs"
+    },
+    {
+      "index": 12,
+      "path": "native/omni/crates/hugr-omni/src/error/messages/wp_h.rs"
+    },
+    {
+      "index": 13,
+      "path": "native/omni/crates/hugr-omni/src/error/mod.rs"
+    }
+  ],
+  "judges": {
+    "J1": {
+      "identity": "/root/omni_review_courier/omni_j1",
+      "per_record_verdicts": [
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "FIX-FIRST",
+        "PASS",
+        "PASS",
+        "PASS",
+        "FIX-FIRST",
+        "PASS",
+        "PASS"
+      ],
+      "private_opinion_sha256": "d5cf18d902ab22bc29a7b734b3b11efa740bdb1baeb7772159bf21a7f6e9acbf",
+      "criteria": {
+        "C1": "PASS",
+        "C2": "FIX-FIRST",
+        "C3": "FIX-FIRST",
+        "C4": "FIX-FIRST",
+        "C5": "PASS",
+        "C6": "PASS",
+        "C7": "PASS"
+      }
+    },
+    "J2": {
+      "identity": "/root/omni_review_courier/omni_j2",
+      "per_record_verdicts": [
+        "FIX-FIRST",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "FIX-FIRST",
+        "FIX-FIRST",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS",
+        "PASS"
+      ],
+      "private_opinion_sha256": "4cad5dcfc3dd72101808e375e5adeef387574a2cf3687413bb4133146a9fcd95",
+      "criteria": {
+        "C1": "PASS",
+        "C2": "PASS",
+        "C3": "FIX-FIRST",
+        "C4": "FIX-FIRST",
+        "C5": "PASS",
+        "C6": "PASS",
+        "C7": "PASS"
+      }
+    }
+  },
+  "status": "FIX_FIRST_AUTHOR_CORRECTION_PENDING",
+  "mandatory_findings": [
+    {
+      "id": "C04-F1",
+      "judges": [
+        "J2"
+      ],
+      "index": 0,
+      "fields": [
+        "/0/behavior/1"
+      ],
+      "finding": "Qualify the three child pipes as the Mode::Pipe fixture; the PTY fixture carries zero child descriptors."
+    },
+    {
+      "id": "C04-F2",
+      "judges": [
+        "J2"
+      ],
+      "index": 6,
+      "fields": [
+        "/6/behavior/0",
+        "/6/behavior/2"
+      ],
+      "finding": "Distinguish InvalidArgument for drive-relative command paths and NUL cwd validation, InvalidCwd for drive-relative cwd and cwd resolution/access, and Io for remaining lookup failures beyond missing/non-directory and permission cases. J1 treated wording precision here as optional."
+    },
+    {
+      "id": "C04-F3",
+      "judges": [
+        "J1",
+        "J2"
+      ],
+      "index": 7,
+      "fields": [
+        "/7/behavior/2"
+      ],
+      "finding": "The initial Go/SpawnFailed failure preserves its mapped code; requesting an exit status after terminal exec failed produces Io through terminal_never_started."
+    },
+    {
+      "id": "C04-F4",
+      "judges": [
+        "J1"
+      ],
+      "index": 11,
+      "fields": [
+        "/11/dependencies/0"
+      ],
+      "finding": "Attribute verbatim checks to spawn/validate.rs and sequencing to spawn::prepare; spawn/resolve.rs supplies the resolved program path."
+    }
+  ],
+  "missing_evidence": [],
+  "observed_transport_errata": [
+    {
+      "id": "T1",
+      "scope": "J1 G02 source excerpt only",
+      "finding": "Courier inserted an extra drop(report) after polling-failure block; original baseline and candidate were unchanged. J2 original was canonical. Both received the correction and explicitly bound it in their final opinions.",
+      "status": "CORRECTED_AND_BOUND_BOTH"
+    }
+  ],
+  "limitations": [
+    "The complete body is not accepted by both; ten per-record PASS intersections remain within the unreleased body. The accepted total remains 19 of 393.",
+    "Both judges must reassess corrected candidate bytes; no author/source quote identity discrepancy was found.",
+    "Documentary L1 source review only; no current product test, runtime import, publication or layer release follows from these opinions.",
+    "Private-opinion digests cover retained UTF-8 text with final LF. Literal message copies were manually reconciled; no authenticated host-envelope or transport claim."
+  ]
+}

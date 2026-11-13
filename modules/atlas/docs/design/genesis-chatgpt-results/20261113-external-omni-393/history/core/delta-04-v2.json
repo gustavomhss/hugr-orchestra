@@ -1,0 +1,570 @@
+{
+  "source": "records-04.json",
+  "source_sha256": "05fbc2a4f3c988d433a04b60b8e94a1ea1cbfa053006fb41c829e8bdf65b18c5",
+  "source_bytes": 44072,
+  "replacement": "records-04.v2.json",
+  "replacement_sha256": "755803f84794922bcbeab91ab1fc9535b78eac04c4b0ab86bcf277b96114e819",
+  "replacement_bytes": 44635,
+  "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "public_request": {
+    "path": "control/C04-author-corrections-v2.md",
+    "sha256": "0cc5f43e14dc9e09eb1f5c3a4ffb9472514996116bd1453dee6fd693109cfb69",
+    "bytes": 2861,
+    "scope": "Union of four mandatory findings from the persistent independent pair, delivered as a public original-author correction request."
+  },
+  "author_role": "CORE original producer correction; no acceptance review performed.",
+  "changes": [
+    {
+      "finding": "C04 F1: pipe fixture versus PTY Spawn transfer",
+      "record_index": 0,
+      "path": "native/omni/crates/hugr-omni/src/client/tests/mod.rs",
+      "field": "behavior[1]",
+      "before": "Constructs requests with three pipes, explicit environment and 1500 ms grace; bounded block() runs futures on a caller runtime separate from the library runtime.",
+      "after": "The Mode::Pipe fixture uses three stdio pipes; its Mode::Pty variant sends no child stdio descriptors or handles with Spawn. Both use explicit environment and 1500 ms grace; bounded block() runs futures on a caller runtime separate from the library runtime.",
+      "reason": "spec selects Mode::Pipe or Mode::Pty while retaining the explicit environment and grace. spawn_on creates three stdio pipes only for this unmerged piped-input fixture; its PTY branch has zero child stdio handles and an empty descriptor vector. The Unix helper asserts zero received descriptors for PTY.",
+      "supporting_evidence": [
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/tests/mod.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/client/tests/mod.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "a899226cb47c0d2181887b39d172b2cd695e8173",
+          "source_sha256": "be1dddc959730e0b3d2317aa897e8a41d8c002d2f760d4e16f69087dd5be26e6",
+          "source_bytes": 8684,
+          "line_count": 272,
+          "start_line": 49,
+          "end_line": 74,
+          "quote": "/// Runs `fut` to completion on a separate current-thread runtime (the caller's, not the library's).\nfn block<F: Future>(fut: F) -> F::Output {\n    let caller = tokio::runtime::Builder::new_current_thread()\n        .enable_time()\n        .build()\n        .expect(\"caller runtime\");\n    caller.block_on(async { tokio::time::timeout(LIMIT, fut).await.expect(\"timed out\") })\n}\n\nfn spec(pty: bool) -> Spec {\n    Spec {\n        program: \"/bin/fixture\".into(),\n        argv: vec![\"fixture\".into(), \"arg with space\".into()],\n        env: vec![(\"K\".into(), \"V\".into())],\n        cwd: std::env::temp_dir(),\n        mode: if pty {\n            Mode::Pty(PtySize { cols: 100, rows: 30 })\n        } else {\n            Mode::Pipe\n        },\n        stdin: Stdin::Pipe,\n        merge_stderr: false,\n        grace: Duration::from_millis(1500),\n        verbatim: None,\n    }\n}"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/start.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/client/start.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "e2183b63187db2578e60c44b24718d0771d1903b",
+          "source_sha256": "bb709e14c250e3557ffe2859d50b1759eebd517e37e71c4b170273e576776852",
+          "source_bytes": 11494,
+          "line_count": 297,
+          "start_line": 109,
+          "end_line": 126,
+          "quote": "pub(super) fn spawn_on(sup: &Arc<Gen>, spec: &Spec) -> Result<Spawned, Error> {\n    sup.home()?;\n    let pty = match spec.mode {\n        Mode::Pty(size) => Some((size.cols, size.rows)),\n        Mode::Pipe => None,\n    };\n    let piped = pty.is_none() && spec.stdin == Stdin::Pipe;\n    let merged = pty.is_none() && spec.merge_stderr;\n    let (host, handles, fds) = match pty {\n        Some(_) => ([None, None, None], [0; 3], Vec::new()),\n        None => {\n            let created = pipes(piped, merged);\n            let (host, child) = created.map_err(|e| Error::host_ends(\"cannot create the child's pipes\", &e))?;\n            let given = sup.chan().hand_over(child);\n            let (handles, fds) = given.map_err(|e| Error::host_ends(\"cannot pass the pipes to the supervisor\", &e))?;\n            (host, handles, fds)\n        }\n    };"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/start.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/client/start.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "e2183b63187db2578e60c44b24718d0771d1903b",
+          "source_sha256": "bb709e14c250e3557ffe2859d50b1759eebd517e37e71c4b170273e576776852",
+          "source_bytes": 11494,
+          "line_count": 297,
+          "start_line": 181,
+          "end_line": 195,
+          "quote": "/// The host's and the child's ends, in stdin, stdout, stderr order (stdout is always a pipe).\ntype Ends3 = [Option<Pipe>; 3];\n\nfn pipes(piped: bool, merged: bool) -> std::io::Result<(Ends3, Ends3)> {\n    let (in_host, in_child) = match piped {\n        true => sys::pipe().map(|(r, w)| (Some(w), Some(r)))?,\n        false => (None, None),\n    };\n    let (out_r, out_w) = sys::pipe()?;\n    let (err_host, err_child) = match merged {\n        true => (None, None),\n        false => sys::pipe().map(|(r, w)| (Some(r), Some(w)))?,\n    };\n    Ok(([in_host, Some(out_r), err_host], [in_child, Some(out_w), err_child]))\n}"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/tests/unix.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/client/tests/unix.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "d442aff60d6d528ca1745a55efa129db8cd46e2d",
+          "source_sha256": "d546253fd3fe64a11a80d529dcaa845e196ea764ae7556b62ea7868c3d3c208e",
+          "source_bytes": 12719,
+          "line_count": 349,
+          "start_line": 38,
+          "end_line": 56,
+          "quote": "fn pipe_ends_travel_with_the_spawn_frame() {\n    let (sup, mut peer) = pair(BOUND);\n    let mut big = spec(false);\n    big.env = (0..2000)\n        .map(|i| (format!(\"VAR_{i}\").into(), \"x\".repeat(300).into()))\n        .collect();\n    let caller = {\n        let sup = sup.clone();\n        std::thread::spawn(move || spawn_on(&sup, &big))\n    };\n    let Msg::Spawn(s) = peer.recv() else {\n        panic!(\"expected Spawn\")\n    };\n    assert_eq!(\n        (s.env.len(), s.stdin, s.stderr, s.pty),\n        (2000, Slot::Pipe, Slot::Pipe, None)\n    );\n    let fds: Vec<OwnedFd> = peer.fds.drain(..).collect();\n    assert_eq!(fds.len(), 3, \"one descriptor per pipe, sent once\");"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/tests/unix.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/client/tests/unix.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "d442aff60d6d528ca1745a55efa129db8cd46e2d",
+          "source_sha256": "d546253fd3fe64a11a80d529dcaa845e196ea764ae7556b62ea7868c3d3c208e",
+          "source_bytes": 12719,
+          "line_count": 349,
+          "start_line": 110,
+          "end_line": 130,
+          "quote": "/// Starts a PTY tree `id`; the peer returns a pipe end as the \"master\".\npub(super) fn pty_spawn(sup: &Arc<Gen>, peer: &mut Peer, id: u64) -> (Spawned, OwnedFd) {\n    let caller = {\n        let sup = sup.clone();\n        std::thread::spawn(move || spawn_on(&sup, &spec(true)))\n    };\n    let Msg::Spawn(s) = peer.recv() else {\n        panic!(\"expected Spawn\")\n    };\n    assert_eq!((s.pty, peer.fds.len()), (Some((100, 30)), 0));\n    let (master, _other) = pipe().unwrap();\n    let reply = Msg::Spawned {\n        req: s.req,\n        id,\n        pid: 7,\n        pty_ends: [1, 0],\n    };\n    let mut bytes = Vec::new();\n    omni_proto::encode(&reply, &mut bytes).unwrap();\n    super::platform::write(&mut peer.end, &bytes, Some(&master));\n    (caller.join().unwrap().unwrap(), master)"
+        }
+      ]
+    },
+    {
+      "finding": "C04 F2a: drive-relative command and NUL validation categories",
+      "record_index": 6,
+      "path": "native/omni/crates/hugr-omni/src/error/messages/w03.rs",
+      "field": "behavior[0]",
+      "before": "InvalidArgument covers empty command, NUL fields, malformed env keys, drive-relative paths, PTY sides and numeric ranges.",
+      "after": "InvalidArgument covers empty command, NUL fields (including nul_in_cwd), malformed env keys, drive_relative_command, PTY sides and numeric ranges.",
+      "reason": "drive_relative_command uses invalid(), which constructs InvalidArgument. nul_in_cwd also goes through nul() and invalid(); it must not be grouped with the distinct drive_relative_cwd constructor.",
+      "supporting_evidence": [
+        {
+          "path": "native/omni/crates/hugr-omni/src/error/messages/w03.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/error/messages/w03.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "f31a047d399761f76c77181e5396c8fb75bd4aff",
+          "source_sha256": "4e95f4283e33820df227a8056cf35696c08d007fbcd418748b07f3c735e0da03",
+          "source_bytes": 11040,
+          "line_count": 278,
+          "start_line": 32,
+          "end_line": 34,
+          "quote": "    pub(crate) fn nul_in_cwd(cwd: &Path, at: usize) -> Error {\n        nul(&format!(\"cwd {:?}\", cwd.as_os_str()), \"cwd\", at)\n    }"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/error/messages/w03.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/error/messages/w03.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "f31a047d399761f76c77181e5396c8fb75bd4aff",
+          "source_sha256": "4e95f4283e33820df227a8056cf35696c08d007fbcd418748b07f3c735e0da03",
+          "source_bytes": 11040,
+          "line_count": 278,
+          "start_line": 55,
+          "end_line": 62,
+          "quote": "    /// Windows `C:dir\\x.exe`: relative to a per-drive current directory (contract §3).\n    pub(crate) fn drive_relative_command(command: &OsStr) -> Error {\n        invalid(&format!(\n            \"command \\\"{}\\\" is relative to its drive's current directory, which cwd does not set. Write the full \\\n             path instead, with \\\"\\\\\\\" after the drive letter.\",\n            command.display()\n        ))\n    }"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/error/messages/mod.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/error/messages/mod.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "78f26c0b6f0bc7a25be915f78cfdf5a7b49a57dd",
+          "source_sha256": "3c993b99c2de48bea5bdcfa0fb9d8b7d887813655438c9b2075a5b699895a6e6",
+          "source_bytes": 1880,
+          "line_count": 47,
+          "start_line": 25,
+          "end_line": 34,
+          "quote": "fn invalid(message: &str) -> Error {\n    Error::new(ErrorCode::InvalidArgument, message)\n}\n\nfn nul(what: &str, field: &str, at: usize) -> Error {\n    invalid(&format!(\n        \"{what} contains a NUL byte at byte {at}; no operating system can pass one to a process. Remove it from \\\n         {field}.\"\n    ))\n}"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/spawn/validate.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/spawn/validate.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "48f840f8b5c42abdecfd0e3ce95257fc849b6619",
+          "source_sha256": "87adc8102077a9f08c8b2f13c2ff0002b3f979ec34f1f10cc458fd242d0f1fee",
+          "source_bytes": 5830,
+          "line_count": 157,
+          "start_line": 22,
+          "end_line": 47,
+          "quote": "    if let Some(at) = nul(&req.program) {\n        return Err(Error::nul_in_command(&req.program, at));\n    }\n    if path::kind(&req.program, os) == Kind::DriveRelative {\n        return Err(Error::drive_relative_command(&req.program));\n    }\n    for (index, arg) in req.args.iter().enumerate() {\n        if let Some(at) = nul(arg) {\n            return Err(Error::nul_in_arg(index, at));\n        }\n    }\n    if let Some(tail) = &req.verbatim {\n        if os != Os::Windows {\n            return Err(Error::verbatim_not_windows());\n        }\n        if !req.args.is_empty() {\n            return Err(Error::verbatim_with_args(req.args.len()));\n        }\n        if let Some(at) = nul(tail) {\n            return Err(Error::nul_in_verbatim(at));\n        }\n    }\n    if let Some(cwd) = &req.cwd\n        && let Some(at) = nul(cwd.as_os_str())\n    {\n        return Err(Error::nul_in_cwd(cwd, at));"
+        }
+      ]
+    },
+    {
+      "finding": "C04 F2b: residual lookup failure and cwd resolution/access categories",
+      "record_index": 6,
+      "path": "native/omni/crates/hugr-omni/src/error/messages/w03.rs",
+      "field": "behavior[2]",
+      "before": "NotExecutable distinguishes directory, permission and unsupported Windows extension; filesystem lookup failures become Io and cwd failures InvalidCwd.",
+      "after": "NotExecutable distinguishes directory, permission and unsupported Windows extension. lookup_failed returns Io for residual filesystem errors, apart from separately classified missing and permission cases; drive_relative_cwd and cwd resolution/access failures return InvalidCwd, while nul_in_cwd remains InvalidArgument.",
+      "reason": "lookup_failed constructs Io for residual filesystem errors. Resolution separately skips missing/non-directory candidates and classifies permission refusal. drive_relative_cwd and the cwd resolution/access constructors use bad_cwd(), which constructs InvalidCwd; the earlier NUL validation remains InvalidArgument.",
+      "supporting_evidence": [
+        {
+          "path": "native/omni/crates/hugr-omni/src/error/messages/w03.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/error/messages/w03.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "f31a047d399761f76c77181e5396c8fb75bd4aff",
+          "source_sha256": "4e95f4283e33820df227a8056cf35696c08d007fbcd418748b07f3c735e0da03",
+          "source_bytes": 11040,
+          "line_count": 278,
+          "start_line": 179,
+          "end_line": 204,
+          "quote": "// IO: the lookup itself failed; nothing was started.\nimpl Error {\n    /// Asking the file system about `candidate` failed with something other than missing or permission denied.\n    pub(crate) fn lookup_failed(command: &OsStr, candidate: &Path, err: &io::Error) -> Error {\n        Error::new(\n            ErrorCode::Io,\n            format!(\n                \"command \\\"{}\\\" could not be looked up: checking \\\"{}\\\" failed ({err}). Fix that path (e.g. a \\\n                 symlink loop, or a failing disk or network share), or point command or PATH elsewhere.\",\n                command.display(),\n                candidate.display()\n            ),\n        )\n    }\n}\n\n// INVALID_CWD (contract §3). `given` is the cwd as passed (`None`: the host's), `dir` the absolute directory.\nimpl Error {\n    /// Windows `C:dir`: relative to a per-drive current directory (contract §3).\n    pub(crate) fn drive_relative_cwd(given: &Path) -> Error {\n        bad_cwd(&format!(\n            \"cwd \\\"{}\\\" is relative to its drive's current directory, which the child cannot rely on. Write the \\\n             full path instead, with \\\"\\\\\\\" after the drive letter.\",\n            given.display()\n        ))\n    }"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/error/messages/w03.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/error/messages/w03.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "f31a047d399761f76c77181e5396c8fb75bd4aff",
+          "source_sha256": "4e95f4283e33820df227a8056cf35696c08d007fbcd418748b07f3c735e0da03",
+          "source_bytes": 11040,
+          "line_count": 278,
+          "start_line": 206,
+          "end_line": 240,
+          "quote": "    pub(crate) fn cwd_missing(given: Option<&Path>, dir: &Path) -> Error {\n        bad_cwd(&format!(\n            \"{} does not exist. Create the directory, or pass an existing one as cwd.\",\n            cwd_named(given, dir)\n        ))\n    }\n\n    pub(crate) fn cwd_not_directory(given: Option<&Path>, dir: &Path) -> Error {\n        bad_cwd(&format!(\n            \"{} is not a directory. Pass a directory as cwd.\",\n            cwd_named(given, dir)\n        ))\n    }\n\n    pub(crate) fn cwd_inaccessible(given: Option<&Path>, dir: &Path, err: &io::Error) -> Error {\n        bad_cwd(&format!(\n            \"{} cannot be accessed ({err}). Pass a directory the host process can access as cwd.\",\n            cwd_named(given, dir)\n        ))\n    }\n\n    /// The host's working directory was needed (no cwd, or a relative one) and could not be read.\n    pub(crate) fn host_cwd_unreadable(given: Option<&Path>, err: &io::Error) -> Error {\n        bad_cwd(&match given {\n            None => format!(\n                \"the host's working directory cannot be read ({err}), so the child has none to inherit. Pass an \\\n                 absolute cwd.\"\n            ),\n            Some(given) => format!(\n                \"cwd \\\"{}\\\" is relative, but the host's working directory it resolves against cannot be read \\\n                 ({err}). Pass an absolute cwd.\",\n                given.display()\n            ),\n        })\n    }"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/error/messages/w03.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/error/messages/w03.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "f31a047d399761f76c77181e5396c8fb75bd4aff",
+          "source_sha256": "4e95f4283e33820df227a8056cf35696c08d007fbcd418748b07f3c735e0da03",
+          "source_bytes": 11040,
+          "line_count": 278,
+          "start_line": 243,
+          "end_line": 256,
+          "quote": "fn not_executable(command: &OsStr, resolved: &Path, why_and_fix: &str) -> Error {\n    Error::new(\n        ErrorCode::NotExecutable,\n        format!(\n            \"command \\\"{}\\\" resolved to \\\"{}\\\", {why_and_fix}\",\n            command.display(),\n            resolved.display()\n        ),\n    )\n}\n\nfn bad_cwd(message: &str) -> Error {\n    Error::new(ErrorCode::InvalidCwd, message)\n}"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/spawn/resolve.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/spawn/resolve.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "13896901c9cd416be3dc2d320ce9060cd58d990e",
+          "source_sha256": "15ee82093eb3c3dee7b3e5950c87b1a67ef5931675e261edecb3a15dbd1ad0d4",
+          "source_bytes": 5964,
+          "line_count": 143,
+          "start_line": 63,
+          "end_line": 83,
+          "quote": "    let mut skipped = None;\n    for candidate in bases.iter().flat_map(|base| candidates(base, &exts, os)) {\n        let refusal: fn(&OsStr, &Path) -> Error = match probe(&candidate) {\n            Err(err) if matches!(err.kind(), io::ErrorKind::NotFound | io::ErrorKind::NotADirectory) => continue,\n            Err(err) if err.kind() == io::ErrorKind::PermissionDenied => Error::access_denied,\n            Err(err) => return Err(Error::lookup_failed(program, &candidate, &err)),\n            Ok(Entry::Dir) => Error::is_directory,\n            Ok(Entry::File { executable }) => match os {\n                Os::Unix if executable => return Ok(candidate),\n                Os::Unix => Error::no_execute_permission,\n                Os::Windows if startable(&candidate) => return Ok(candidate),\n                Os::Windows => Error::not_startable,\n            },\n        };\n        skipped.get_or_insert((candidate, refusal));\n    }\n    Err(match (skipped, path) {\n        (Some((candidate, refusal)), _) => refusal(program, &candidate),\n        (None, Some(path)) => Error::not_on_path(program, path, &exts),\n        (None, None) => Error::no_such_program(program, bases.first().map_or(cwd, PathBuf::as_path), &exts),\n    })"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/spawn/validate.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/spawn/validate.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "48f840f8b5c42abdecfd0e3ce95257fc849b6619",
+          "source_sha256": "87adc8102077a9f08c8b2f13c2ff0002b3f979ec34f1f10cc458fd242d0f1fee",
+          "source_bytes": 5830,
+          "line_count": 157,
+          "start_line": 104,
+          "end_line": 134,
+          "quote": "/// `cwd` made absolute against the host's working directory (`host`, read only when needed). A Windows\n/// drive-relative cwd is refused before anything is read.\npub(super) fn absolute(\n    cwd: Option<&Path>,\n    host: impl FnOnce() -> io::Result<PathBuf>,\n    os: Os,\n) -> Result<PathBuf, Error> {\n    let Some(given) = cwd else {\n        return host().map_err(|err| Error::host_cwd_unreadable(None, &err));\n    };\n    match path::kind(given.as_os_str(), os) {\n        Kind::Absolute => Ok(given.to_path_buf()),\n        Kind::DriveRelative => Err(Error::drive_relative_cwd(given)),\n        Kind::RootRelative | Kind::Relative => {\n            let host = host().map_err(|err| Error::host_cwd_unreadable(cwd, &err))?;\n            path::join(&host, given.as_os_str(), os).ok_or_else(|| Error::drive_relative_cwd(given))\n        }\n    }\n}\n\n/// `dir` checked to be a directory (symlinks followed). `given` is the cwd as passed, for the message.\npub(super) fn directory(given: Option<&Path>, dir: PathBuf) -> Result<PathBuf, Error> {\n    match std::fs::metadata(&dir) {\n        Ok(meta) if meta.is_dir() => Ok(dir),\n        Ok(_) => Err(Error::cwd_not_directory(given, &dir)),\n        Err(err) if matches!(err.kind(), io::ErrorKind::NotFound | io::ErrorKind::NotADirectory) => {\n            Err(Error::cwd_missing(given, &dir))\n        }\n        Err(err) => Err(Error::cwd_inaccessible(given, &dir, &err)),\n    }\n}"
+        }
+      ]
+    },
+    {
+      "finding": "C04 F3: initial Go failure versus later exited query",
+      "record_index": 7,
+      "path": "native/omni/crates/hugr-omni/src/error/messages/w04.rs",
+      "field": "behavior[2]",
+      "before": "Resize after observed exit is Closed; failed terminal exec produces Io because no exit status exists.",
+      "after": "Resize after observed exit is Closed. For a held Unix terminal, Go preserves the translated SpawnFailed code (NotFound in the supplied test); a subsequent exited() query reports Io, using terminal_never_started while the generation remains alive because no exit status exists.",
+      "reason": "Tree::go maps a GoEnd::Failed through failed(), retaining the translated SpawnFailed code. The failed Go marks life gone/lost without creating an exit status. exited() then uses lost(); with a live generation this is terminal_never_started/Io. The test explicitly requires initial NotFound and subsequent Io while the generation remains alive.",
+      "supporting_evidence": [
+        {
+          "path": "native/omni/crates/hugr-omni/src/error/messages/w04.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/error/messages/w04.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "814ea4e6d0600b2006567aa99e505ef7ad34b1fc",
+          "source_sha256": "354028ad6d11b50af5d2f156f683179ebc01014cd7844d13f36f4486aa7d3f2e",
+          "source_bytes": 4996,
+          "line_count": 118,
+          "start_line": 96,
+          "end_line": 117,
+          "quote": "    /// The supervisor could not start `program`; `code` is the one its reply maps to.\n    pub(crate) fn spawn_refused(code: ErrorCode, program: &str, msg: &str, errno: i32) -> Error {\n        Error::new(code, format!(\"cannot start {program}: {msg} (os error {errno}).\"))\n    }\n\n    /// The host could not create, pass or take the child's pipe or terminal ends.\n    pub(crate) fn host_ends(what: &str, err: &io::Error) -> Error {\n        io_error(format!(\n            \"{what}: {err}. The process is probably out of file descriptors or handles; close some and retry.\"\n        ))\n    }\n\n    pub(crate) fn terminal_never_started() -> Error {\n        io_error(\"the terminal program never started (its exec failed), so it has no exit status.\".to_string())\n    }\n\n    pub(crate) fn resize_after_exit(cols: u16, rows: u16) -> Error {\n        Error::new(\n            ErrorCode::Closed,\n            format!(\"cannot resize the terminal to {cols}x{rows}: its program already exited.\"),\n        )\n    }"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/mod.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/client/mod.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "3b0722feef193479d9f9c08bcdf6ad2ed27b71e5",
+          "source_sha256": "c6d0e33c4335ca67fc684bfddb4c192ce70347b2f5b929c58f8e6509b129588c",
+          "source_bytes": 11037,
+          "line_count": 294,
+          "start_line": 124,
+          "end_line": 146,
+          "quote": "impl Tree {\n    /// Unix PTY roots: lets the held root exec, once the host's reader runs, and returns when exec\n    /// succeeded or failed (the second bounded round trip of a PTY spawn). A no-op elsewhere.\n    pub(crate) fn go(&self) -> Result<(), Error> {\n        self.sup.home()?;\n        match self.hold.go(self.sup.bound() * 2, || self.send_go())? {\n            GoEnd::Ok => Ok(()),\n            GoEnd::Failed(code, errno, msg) => Err(failed(code, errno, &msg, \"the terminal program\")),\n            GoEnd::Refused(ack) => Err(self.refused(\"Go\", &Answer::Ack(ack))),\n            GoEnd::Gone => Err(self.sup.gone()),\n        }\n    }\n\n    /// Resolves at root exit; every call returns the same value.\n    pub(crate) async fn exited(&self) -> Result<RootExit, Error> {\n        self.sup.home()?;\n        let mut rx = self.life.subscribe();\n        let life = match rx.wait_for(|l| l.exit.is_some() || l.lost).await {\n            Ok(life) => *life,\n            Err(_) => *self.life.borrow(),\n        };\n        life.exit.ok_or_else(|| self.lost())\n    }"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/mod.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/client/mod.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "3b0722feef193479d9f9c08bcdf6ad2ed27b71e5",
+          "source_sha256": "c6d0e33c4335ca67fc684bfddb4c192ce70347b2f5b929c58f8e6509b129588c",
+          "source_bytes": 11037,
+          "line_count": 294,
+          "start_line": 228,
+          "end_line": 250,
+          "quote": "    /// The `Go` round trip. `Err` only when nothing was sent (the generation is alive: every failure\n    /// after sending ends it), so the root stays held.\n    fn send_go(&self) -> Result<GoEnd, Error> {\n        let id = self.id;\n        match self.sup.call(Want::Go, id, |req| Msg::Go { req, id }, Vec::new()) {\n            Err(e) if self.sup.alive() => Err(e),\n            Err(_) => Ok(GoEnd::Gone),\n            Ok(Answer::Ack(Ack::Ok)) => Ok(GoEnd::Ok),\n            Ok(Answer::Failed { code, errno, msg }) => {\n                self.life.send_modify(|l| (l.gone, l.lost) = (true, true));\n                Ok(GoEnd::Failed(code, errno, msg))\n            }\n            Ok(Answer::Ack(ack)) => Ok(GoEnd::Refused(ack)),\n            Ok(_) => Ok(GoEnd::Refused(Ack::Error)),\n        }\n    }\n\n    /// Why no exit will come: the generation died, or the root never started.\n    fn lost(&self) -> Error {\n        match self.sup.alive() {\n            false => self.sup.gone(),\n            true => Error::terminal_never_started(),\n        }"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/start.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/client/start.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "e2183b63187db2578e60c44b24718d0771d1903b",
+          "source_sha256": "bb709e14c250e3557ffe2859d50b1759eebd517e37e71c4b170273e576776852",
+          "source_bytes": 11494,
+          "line_count": 297,
+          "start_line": 202,
+          "end_line": 212,
+          "quote": "/// The error for a `SpawnFailed` reply about `program`.\npub(super) fn failed(code: FailCode, errno: i32, msg: &str, program: &str) -> Error {\n    let code = match code {\n        FailCode::NotFound => ErrorCode::NotFound,\n        FailCode::NotExecutable => ErrorCode::NotExecutable,\n        FailCode::BadCwd => ErrorCode::InvalidCwd,\n        FailCode::Invalid => ErrorCode::InvalidArgument,\n        FailCode::Io => ErrorCode::Io,\n    };\n    Error::spawn_refused(code, program, msg, errno)\n}"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/tests/unix.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/client/tests/unix.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "d442aff60d6d528ca1745a55efa129db8cd46e2d",
+          "source_sha256": "d546253fd3fe64a11a80d529dcaa845e196ea764ae7556b62ea7868c3d3c208e",
+          "source_bytes": 12719,
+          "line_count": 349,
+          "start_line": 160,
+          "end_line": 176,
+          "quote": "    let (failed, _master) = pty_spawn(&sup, &mut peer, 2);\n    let go = std::thread::spawn(move || (failed.tree.go(), failed));\n    let Msg::Go { req, id: 2 } = peer.recv() else {\n        panic!(\"expected Go\")\n    };\n    let msg = \"execve /bin/fixture: no such file\".into();\n    peer.send(&Msg::SpawnFailed {\n        req,\n        code: FailCode::NotFound,\n        errno: 2,\n        msg,\n    });\n    let (result, failed) = go.join().unwrap();\n    assert_eq!(result.unwrap_err().code(), ErrorCode::NotFound);\n    assert_io(super::block(failed.tree.exited()), \"never started\");\n    super::block(failed.tree.stop(Duration::ZERO)).expect(\"nothing is left to stop\");\n    assert!(sup.alive());"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/error/messages/mod.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/error/messages/mod.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "78f26c0b6f0bc7a25be915f78cfdf5a7b49a57dd",
+          "source_sha256": "3c993b99c2de48bea5bdcfa0fb9d8b7d887813655438c9b2075a5b699895a6e6",
+          "source_bytes": 1880,
+          "line_count": 47,
+          "start_line": 36,
+          "end_line": 38,
+          "quote": "fn io_error(message: String) -> Error {\n    Error::new(ErrorCode::Io, message)\n}"
+        }
+      ]
+    },
+    {
+      "finding": "C04 F4: verbatim validation ownership",
+      "record_index": 11,
+      "path": "native/omni/crates/hugr-omni/src/error/messages/wp8b.rs",
+      "field": "dependencies[0]",
+      "before": "spawn/validate.rs and spawn/resolve.rs enforce these checks.",
+      "after": "spawn/validate.rs owns the verbatim option and resolved-target checks, orchestrated by spawn::prepare; spawn/resolve.rs supplies the resolved executable path.",
+      "reason": "validate::check owns option/platform/argv/NUL checks; validate::verbatim_program owns batch-target refusal. prepare invokes validation before resolution and resolved-target validation afterward. resolve::program supplies the resolved path.",
+      "supporting_evidence": [
+        {
+          "path": "native/omni/crates/hugr-omni/src/error/messages/wp8b.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/error/messages/wp8b.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "7fe8b3eb201173cf741ac68872317bfcb13c182f",
+          "source_sha256": "4ef83a4eb7e3c97112ca2174cabd3d576bd70dbc27f134124b430444224fcf8b",
+          "source_bytes": 2012,
+          "line_count": 48,
+          "start_line": 13,
+          "end_line": 46,
+          "quote": "    /// The option on a system that has no command line to write.\n    pub(crate) fn verbatim_not_windows() -> Error {\n        invalid(\n            \"windowsVerbatimArgs is set, but this is not Windows: Unix passes a list of arguments, not a command \\\n             line, so there is nothing to write verbatim. Set it only on Windows, and pass args elsewhere.\",\n        )\n    }\n\n    /// The option together with `args`.\n    pub(crate) fn verbatim_with_args(count: usize) -> Error {\n        invalid(&format!(\n            \"windowsVerbatimArgs is set together with {count} args, but the verbatim text is the whole command line \\\n             after the program. Put every argument into windowsVerbatimArgs, or pass args without it.\"\n        ))\n    }\n\n    /// A NUL in the verbatim text.\n    pub(crate) fn nul_in_verbatim(at: usize) -> Error {\n        nul(\n            \"windowsVerbatimArgs (not shown: arguments often carry secrets)\",\n            \"windowsVerbatimArgs\",\n            at,\n        )\n    }\n\n    /// The program resolved to a batch file, which Windows would run through `cmd.exe` with the text unescaped.\n    pub(crate) fn verbatim_batch(command: &OsStr, resolved: &Path) -> Error {\n        invalid(&format!(\n            \"windowsVerbatimArgs is set, but command {command:?} is the batch file \\\"{}\\\", which only cmd.exe can \\\n             run, and the library never adds cmd.exe to a verbatim command line. Name cmd.exe as the command and \\\n             write the batch file into windowsVerbatimArgs (e.g. /d /s /c \\\"\\\"script.cmd\\\" arg\\\"), or pass args \\\n             without windowsVerbatimArgs to get batch-safe quoting.\",\n            resolved.display()\n        ))"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/spawn/validate.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/spawn/validate.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "48f840f8b5c42abdecfd0e3ce95257fc849b6619",
+          "source_sha256": "87adc8102077a9f08c8b2f13c2ff0002b3f979ec34f1f10cc458fd242d0f1fee",
+          "source_bytes": 5830,
+          "line_count": 157,
+          "start_line": 33,
+          "end_line": 43,
+          "quote": "    if let Some(tail) = &req.verbatim {\n        if os != Os::Windows {\n            return Err(Error::verbatim_not_windows());\n        }\n        if !req.args.is_empty() {\n            return Err(Error::verbatim_with_args(req.args.len()));\n        }\n        if let Some(at) = nul(tail) {\n            return Err(Error::nul_in_verbatim(at));\n        }\n    }"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/spawn/validate.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/spawn/validate.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "48f840f8b5c42abdecfd0e3ce95257fc849b6619",
+          "source_sha256": "87adc8102077a9f08c8b2f13c2ff0002b3f979ec34f1f10cc458fd242d0f1fee",
+          "source_bytes": 5830,
+          "line_count": 157,
+          "start_line": 73,
+          "end_line": 96,
+          "quote": "/// A verbatim command line (amendment WP8b) never reaches a batch file: Windows would run it through `cmd.exe` with\n/// the caller's tail unescaped, so the caller must name `cmd.exe` itself. `resolved` is the program as resolved; its\n/// last component is compared the way Windows opens it (trailing dots and spaces dropped, any case).\npub(super) fn verbatim_program(command: &OsStr, resolved: &Path, os: Os) -> Result<(), Error> {\n    let bytes = resolved.as_os_str().as_encoded_bytes();\n    let name = match bytes.iter().rposition(|&b| path::is_sep(b, os)) {\n        Some(at) => bytes.get(at + 1..).unwrap_or_default(),\n        None => bytes,\n    };\n    let end = name\n        .iter()\n        .rposition(|&b| b != b'.' && b != b' ')\n        .map_or(0, |last| last + 1);\n    let name = name.get(..end).unwrap_or_default();\n    let ext = name\n        .len()\n        .checked_sub(4)\n        .and_then(|at| name.get(at..))\n        .unwrap_or_default();\n    if os == Os::Windows && (ext.eq_ignore_ascii_case(b\".bat\") || ext.eq_ignore_ascii_case(b\".cmd\")) {\n        return Err(Error::verbatim_batch(command, resolved));\n    }\n    Ok(())\n}"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/spawn/mod.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/spawn/mod.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "5c7e7994bed61341cc6f409f8b0ac96eee22a04a",
+          "source_sha256": "c32798524c01df631f5b1519e9747fa096fe10565e409ff1591291de19dbed46",
+          "source_bytes": 4112,
+          "line_count": 127,
+          "start_line": 104,
+          "end_line": 113,
+          "quote": "/// Validates `req` per contract §3 (InvalidArgument / InvalidCwd), builds the final environment and resolves the program\n/// against the child's final PATH (NotFound / NotExecutable). Never starts or executes anything.\npub(crate) fn prepare(req: &Request) -> Result<Spec, Error> {\n    validate::check(req, HOST)?;\n    let env = env::build(req);\n    let cwd = validate::cwd(req)?;\n    let program = resolve::program(&req.program, &env, &cwd)?;\n    if req.verbatim.is_some() {\n        validate::verbatim_program(&req.program, &program, HOST)?;\n    }"
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/spawn/resolve.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/spawn/resolve.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "13896901c9cd416be3dc2d320ce9060cd58d990e",
+          "source_sha256": "15ee82093eb3c3dee7b3e5950c87b1a67ef5931675e261edecb3a15dbd1ad0d4",
+          "source_bytes": 5964,
+          "line_count": 143,
+          "start_line": 24,
+          "end_line": 27,
+          "quote": "/// Absolute path of the program to execute. Never executes anything.\npub(super) fn program(program: &OsStr, env: &[(OsString, OsString)], cwd: &Path) -> Result<PathBuf, Error> {\n    find(program, env, cwd, HOST, probe)\n}"
+        }
+      ]
+    }
+  ],
+  "additional_baseline_inputs_by_record": [
+    {
+      "record_index": 0,
+      "record_path": "native/omni/crates/hugr-omni/src/client/tests/mod.rs",
+      "additional_inputs": [
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/start.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/client/start.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "e2183b63187db2578e60c44b24718d0771d1903b",
+          "source_sha256": "bb709e14c250e3557ffe2859d50b1759eebd517e37e71c4b170273e576776852",
+          "source_bytes": 11494,
+          "line_count": 297,
+          "used_for": "spawn_on 109–126 distinguishes pipe/PTY transfers; pipes 181–195 establishes the three stdio pipes for this piped-input, separate-stderr fixture."
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/tests/unix.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/client/tests/unix.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "d442aff60d6d528ca1745a55efa129db8cd46e2d",
+          "source_sha256": "d546253fd3fe64a11a80d529dcaa845e196ea764ae7556b62ea7868c3d3c208e",
+          "source_bytes": 12719,
+          "line_count": 349,
+          "used_for": "Pipe test 38–56 asserts three descriptors; pty_spawn 110–130 asserts zero child descriptors with the PTY Spawn and separately transfers the reply master."
+        }
+      ]
+    },
+    {
+      "record_index": 6,
+      "record_path": "native/omni/crates/hugr-omni/src/error/messages/w03.rs",
+      "additional_inputs": [
+        {
+          "path": "native/omni/crates/hugr-omni/src/error/messages/mod.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/error/messages/mod.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "78f26c0b6f0bc7a25be915f78cfdf5a7b49a57dd",
+          "source_sha256": "3c993b99c2de48bea5bdcfa0fb9d8b7d887813655438c9b2075a5b699895a6e6",
+          "source_bytes": 1880,
+          "line_count": 47,
+          "used_for": "invalid and nul at 25–34 establish InvalidArgument, including the NUL-in-cwd constructor."
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/spawn/validate.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/spawn/validate.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "48f840f8b5c42abdecfd0e3ce95257fc849b6619",
+          "source_sha256": "87adc8102077a9f08c8b2f13c2ff0002b3f979ec34f1f10cc458fd242d0f1fee",
+          "source_bytes": 5830,
+          "line_count": 157,
+          "used_for": "22–47 distinguishes command/NUL validation; 104–134 invokes the separate cwd resolution/access error constructors."
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/spawn/resolve.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/spawn/resolve.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "13896901c9cd416be3dc2d320ce9060cd58d990e",
+          "source_sha256": "15ee82093eb3c3dee7b3e5950c87b1a67ef5931675e261edecb3a15dbd1ad0d4",
+          "source_bytes": 5964,
+          "line_count": 143,
+          "used_for": "63–83 separates missing/non-directory candidates, permission refusal, and residual lookup_failed/Io cases."
+        }
+      ]
+    },
+    {
+      "record_index": 7,
+      "record_path": "native/omni/crates/hugr-omni/src/error/messages/w04.rs",
+      "additional_inputs": [
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/mod.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/client/mod.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "3b0722feef193479d9f9c08bcdf6ad2ed27b71e5",
+          "source_sha256": "c6d0e33c4335ca67fc684bfddb4c192ce70347b2f5b929c58f8e6509b129588c",
+          "source_bytes": 11037,
+          "line_count": 294,
+          "used_for": "124–146 and 228–250 distinguish Go error-code translation and failed-life marking from subsequent exited/lost error construction."
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/start.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/client/start.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "e2183b63187db2578e60c44b24718d0771d1903b",
+          "source_sha256": "bb709e14c250e3557ffe2859d50b1759eebd517e37e71c4b170273e576776852",
+          "source_bytes": 11494,
+          "line_count": 297,
+          "used_for": "failed at 202–212 maps each FailCode to the public ErrorCode before spawn_refused."
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/tests/unix.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/client/tests/unix.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "d442aff60d6d528ca1745a55efa129db8cd46e2d",
+          "source_sha256": "d546253fd3fe64a11a80d529dcaa845e196ea764ae7556b62ea7868c3d3c208e",
+          "source_bytes": 12719,
+          "line_count": 349,
+          "used_for": "160–176 supplies the concrete initial NotFound versus later exited Io/never-started assertion, with the generation alive."
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/error/messages/mod.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/error/messages/mod.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "78f26c0b6f0bc7a25be915f78cfdf5a7b49a57dd",
+          "source_sha256": "3c993b99c2de48bea5bdcfa0fb9d8b7d887813655438c9b2075a5b699895a6e6",
+          "source_bytes": 1880,
+          "line_count": 47,
+          "used_for": "io_error at 36–38 establishes the Io category used by terminal_never_started."
+        }
+      ]
+    },
+    {
+      "record_index": 11,
+      "record_path": "native/omni/crates/hugr-omni/src/error/messages/wp8b.rs",
+      "additional_inputs": [
+        {
+          "path": "native/omni/crates/hugr-omni/src/spawn/validate.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/spawn/validate.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "48f840f8b5c42abdecfd0e3ce95257fc849b6619",
+          "source_sha256": "87adc8102077a9f08c8b2f13c2ff0002b3f979ec34f1f10cc458fd242d0f1fee",
+          "source_bytes": 5830,
+          "line_count": 157,
+          "used_for": "33–43 owns verbatim option checks; 73–96 owns the resolved batch-target check."
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/spawn/mod.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/spawn/mod.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "5c7e7994bed61341cc6f409f8b0ac96eee22a04a",
+          "source_sha256": "c32798524c01df631f5b1519e9747fa096fe10565e409ff1591291de19dbed46",
+          "source_bytes": 4112,
+          "line_count": 127,
+          "used_for": "prepare at 104–113 orchestrates input validation, cwd/environment preparation, program resolution, and resolved-target validation."
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/spawn/resolve.rs",
+          "baseline_path": "baseline/native/omni/crates/hugr-omni/src/spawn/resolve.rs",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "13896901c9cd416be3dc2d320ce9060cd58d990e",
+          "source_sha256": "15ee82093eb3c3dee7b3e5950c87b1a67ef5931675e261edecb3a15dbd1ad0d4",
+          "source_bytes": 5964,
+          "line_count": 143,
+          "used_for": "program at 24–27 supplies the resolved executable path."
+        }
+      ]
+    }
+  ],
+  "cross_reference_check": {
+    "active_record_files_checked": [
+      "records-01.v2.json",
+      "records-02.v3.json",
+      "records-03.v2.json",
+      "records-04.json",
+      "records-05.json",
+      "records-06.json",
+      "records-07.json",
+      "records-08.json",
+      "records-09.v2.json",
+      "records-10.json",
+      "records-11.v2.json",
+      "records-12.json",
+      "records-13.json",
+      "records-14.json",
+      "records-15.json",
+      "records-16.json",
+      "records-17.json",
+      "records-18.json"
+    ],
+    "method": "Searched relevant wording with rg, then inspected matching semantic fields from all active CORE records and the L2 synopsis; source quotes were not rewritten.",
+    "notes": [
+      "The large-Spawn descriptor assertion in record 1 describes the specific pipe test and is supported by its existing source evidence; no PTY-wide three-descriptor claim was found there.",
+      "records-03.v2.json already preserves NotFound for Go failure; records-08.json already attributes verbatim checks to validate and separates residual lookup Io from missing/permission cases.",
+      "No repetition of the four disputed claims requiring a dependent change was found outside the five requested cells."
+    ],
+    "dependent_changes": [],
+    "l2_drafts_modified": [],
+    "l2_notes_sha256_preserved": "71b3dd5e454625a8cbe79141b1b8d91bce82ebf4a460f337b2555fbf2aaba6c8",
+    "l2_status": "Candidate synopsis remains unaccepted; no formal L2/L3/L4 authoring or acceptance review performed."
+  },
+  "courier_transmission_note": "The request identifies a separately corrected duplicate drop(report) in a support excerpt. No source or candidate change was made for that courier issue.",
+  "original_preserved": true,
+  "unchanged_record_indices": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    8,
+    9,
+    10,
+    12,
+    13
+  ],
+  "strict_change_scope": "Only record 0 behavior[1], record 6 behavior[0] and behavior[2], record 7 behavior[2], and record 11 dependencies[0] changed. All 14 source paths/identities and every other field remain unchanged; decisive correction evidence is in this delta.",
+  "delivery_before_sha256": "991521815e0583a9cb5f77a5a75ca1a96c45d8773a2f22670a6824136b509b60",
+  "delivery_after_sha256": "f527ac9c991902ac0b39046f397c30a8aafd1586f4c01cc09632f176dcfcaa81",
+  "runtime_status": "NOT_RUN",
+  "acceptance": "Pending independent review; the original author does not self-approve."
+}

@@ -1,0 +1,2 @@
+ERROR /workspace/scratch/d3422440cdf1/omni-genesis/control/guard-inspection/source is not a git repository
+guards: 0 rules, 0 changed paths, 0 gate and 0 warn findings, 1 errors.

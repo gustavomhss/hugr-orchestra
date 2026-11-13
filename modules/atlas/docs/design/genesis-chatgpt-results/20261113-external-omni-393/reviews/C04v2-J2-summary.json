@@ -1,0 +1,152 @@
+{
+  "schema": "omni-public-review-summary/v1",
+  "kind": "summary_not_original_transcript",
+  "packet": "C04v2",
+  "layer": "L1",
+  "judge_identity": "/root/omni_review_courier/omni_j2",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "artifact": {
+    "author_path": "authors/core/records-04.v2.json",
+    "public_path": "bodies/core/records-04.v2.json",
+    "sha256": "755803f84794922bcbeab91ab1fc9535b78eac04c4b0ab86bcf277b96114e819",
+    "bytes": 44635
+  },
+  "verdict": "PASS",
+  "covered_records": 14,
+  "population": 393,
+  "records": [
+    {
+      "index": 0,
+      "path": "native/omni/crates/hugr-omni/src/client/tests/mod.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 1,
+      "path": "native/omni/crates/hugr-omni/src/client/tests/unix.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 2,
+      "path": "native/omni/crates/hugr-omni/src/client/tests/windows.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 3,
+      "path": "native/omni/crates/hugr-omni/src/client/unix.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 4,
+      "path": "native/omni/crates/hugr-omni/src/client/windows.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 5,
+      "path": "native/omni/crates/hugr-omni/src/error/messages/mod.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 6,
+      "path": "native/omni/crates/hugr-omni/src/error/messages/w03.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 7,
+      "path": "native/omni/crates/hugr-omni/src/error/messages/w04.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 8,
+      "path": "native/omni/crates/hugr-omni/src/error/messages/w07.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 9,
+      "path": "native/omni/crates/hugr-omni/src/error/messages/w09.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 10,
+      "path": "native/omni/crates/hugr-omni/src/error/messages/w10.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 11,
+      "path": "native/omni/crates/hugr-omni/src/error/messages/wp8b.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 12,
+      "path": "native/omni/crates/hugr-omni/src/error/messages/wp_h.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 13,
+      "path": "native/omni/crates/hugr-omni/src/error/mod.rs",
+      "verdict": "PASS"
+    }
+  ],
+  "criteria": {
+    "C1": {
+      "label": "Every covered path has an actual read-based, file-specific useful disposition",
+      "verdict": "PASS"
+    },
+    "C2": {
+      "label": "Assertions distinguish implementation, documentation/declaration, inference and gaps",
+      "verdict": "PASS"
+    },
+    "C3": {
+      "label": "Source identities, paths and exact quote evidence support claims",
+      "verdict": "PASS"
+    },
+    "C4": {
+      "label": "Contracts, failures, relations and maintenance implications are useful at L1",
+      "verdict": "PASS"
+    },
+    "C5": {
+      "label": "Test source, old reviews and docs are never current execution",
+      "verdict": "PASS"
+    },
+    "C6": {
+      "label": "Ownership/exclusions and authorized external scope preserved",
+      "verdict": "PASS"
+    },
+    "C7": {
+      "label": "No secrets/private evaluation/session material in candidate",
+      "verdict": "PASS"
+    }
+  },
+  "mandatory_findings_remaining": [],
+  "missing_evidence": [],
+  "private_opinion_sha256": "818ca9e1bfc36df4dd5cfd3ecfae5a28a089200ebd0c86d2cca6712b27346b01",
+  "private_opinion_digest_scope": "SHA256 of the privately retained UTF-8 opinion text with final LF; not a host-message envelope or authenticated transport receipt",
+  "transport_note": "Both reviewers assessed complete replacement objects 0,6,7,11 together with ten exact unchanged objects previously read in C04. The manually preserved literal argument copies reconstruct the complete current body. Both opinions bind the corrected T1 courier insertion in the earlier source transmission; it was not an author or baseline defect. No unresolved discrepancy remains. These copies are not authenticated host-message exports.",
+  "limitations": [
+    "Documentary semantic review only; judge used no tools or execution.",
+    "Acceptance covers fourteen L1 records only and does not release complete L1 or later layers.",
+    "No runtime-import binding, current platform test, release or global integration acceptance is established.",
+    "Original private exchanges and reserved evaluation material are withheld; no public reproducibility of those withheld materials is claimed."
+  ],
+  "resolved_findings": [
+    {
+      "id": "C04-F1",
+      "record_index": 0,
+      "resolution": "Qualifies pipe-mode three-pipe fixtures and PTY absence of child stdio transfers."
+    },
+    {
+      "id": "C04-F2",
+      "record_index": 6,
+      "resolution": "Distinguishes command/cwd validation and residual filesystem error categories, including NUL cwd."
+    },
+    {
+      "id": "C04-F3",
+      "record_index": 7,
+      "resolution": "Separates the mapped initial Go/SpawnFailed error from later exit-status unavailability while the generation is alive."
+    },
+    {
+      "id": "C04-F4",
+      "record_index": 11,
+      "resolution": "Assigns verbatim validation to spawn/validate, orchestration to prepare, and path resolution to resolve."
+    }
+  ]
+}

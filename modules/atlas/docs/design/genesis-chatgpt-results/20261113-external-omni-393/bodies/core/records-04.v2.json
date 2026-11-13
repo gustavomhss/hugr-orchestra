@@ -1,0 +1,580 @@
+[
+  {
+    "path": "native/omni/crates/hugr-omni/src/client/tests/mod.rs",
+    "git_blob_sha": "a899226cb47c0d2181887b39d172b2cd695e8173",
+    "source_sha256": "be1dddc959730e0b3d2317aa897e8a41d8c002d2f760d4e16f69087dd5be26e6",
+    "source_bytes": 8684,
+    "line_count": 272,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Provides deterministic protocol peers for cross-platform host-client unit tests.",
+    "behavior": [
+      "Uses real Unix socketpairs or Windows named pipes while the peer controls Ready, Spawned and arbitrary encoded replies.",
+      "The Mode::Pipe fixture uses three stdio pipes; its Mode::Pty variant sends no child stdio descriptors or handles with Spawn. Both use explicit environment and 1500 ms grace; bounded block() runs futures on a caller runtime separate from the library runtime.",
+      "Unix peers carry SCM_RIGHTS descriptors; Windows peers duplicate a real current-process handle for transfer tests."
+    ],
+    "contracts": [
+      "Healthy request bound is 5 s and async test bound 20 s; malformed client frames panic the test."
+    ],
+    "dependencies": [
+      "client platform Chan implementations and omni-proto codec are used directly."
+    ],
+    "failures_or_limits": [
+      "The peer substitutes for the supervisor and does not execute requested fixture commands."
+    ],
+    "evidence": [
+      {
+        "start_line": 34,
+        "end_line": 55,
+        "quote": "/// Round-trip bound for a healthy peer (generous: CI machines stall).\nconst BOUND: Duration = Duration::from_secs(5);\n/// Every wait of a test fails after this, so a broken client fails instead of hanging.\nconst LIMIT: Duration = Duration::from_secs(20);\n\nconst READY: Msg = Msg::Ready {\n    version: VERSION,\n    pid: 4242,\n    info: 0,\n};\n\nfn rt() -> &'static tokio::runtime::Runtime {\n    super::runtime().expect(\"runtime\")\n}\n\n/// Runs `fut` to completion on a separate current-thread runtime (the caller's, not the library's).\nfn block<F: Future>(fut: F) -> F::Output {\n    let caller = tokio::runtime::Builder::new_current_thread()\n        .enable_time()\n        .build()\n        .expect(\"caller runtime\");\n    caller.block_on(async { tokio::time::timeout(LIMIT, fut).await.expect(\"timed out\") })"
+      },
+      {
+        "start_line": 89,
+        "end_line": 103,
+        "quote": "impl Peer {\n    /// The next frame; `None` once the client closed the channel.\n    fn next(&mut self) -> Option<Msg> {\n        loop {\n            if let Some((msg, n)) = decode(&self.buf).expect(\"the client sent a malformed frame\") {\n                self.buf.drain(..n);\n                return Some(msg);\n            }\n            let mut chunk = [0u8; 64 * 1024];\n            let n = platform::read(&mut self.end, &mut chunk, &mut self.fds);\n            if n == 0 {\n                return None;\n            }\n            self.buf.extend_from_slice(&chunk[..n]);\n        }"
+      },
+      {
+        "start_line": 228,
+        "end_line": 245,
+        "quote": "    pub(super) fn pair() -> (End, impl FnOnce() -> io::Result<Chan>) {\n        static N: AtomicU64 = AtomicU64::new(0);\n        let name = format!(\n            r\"\\\\.\\pipe\\hugr-omni-test-{}-{}\",\n            std::process::id(),\n            N.fetch_add(1, Ordering::Relaxed)\n        );\n        let pipe = {\n            let _ctx = super::rt().enter();\n            server(&name).expect(\"pipe server\")\n        };\n        let end = OpenOptions::new()\n            .read(true)\n            .write(true)\n            .open(&name)\n            .expect(\"pipe client\");\n        (end, move || Chan::new(pipe, me(), std::process::id(), false))\n    }"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/client/tests/unix.rs",
+    "git_blob_sha": "d442aff60d6d528ca1745a55efa129db8cd46e2d",
+    "source_sha256": "d546253fd3fe64a11a80d529dcaa845e196ea764ae7556b62ea7868c3d3c208e",
+    "source_bytes": 12719,
+    "line_count": 349,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Covers Unix descriptor transfer, PTY release handshake, fork refusal and channel latency.",
+    "behavior": [
+      "A large Spawn must carry exactly three descriptors once in stdin/stdout/stderr order; merged output with closed stdin carries only stdout.",
+      "PTY input duplicates the master; Go synchronously reports exec success/failure. A forked client must refuse every operation and emit no frame.",
+      "Stray descriptors kill the generation; K4 compares best interleaved p50 batches with a raw socket ping-pong baseline."
+    ],
+    "contracts": [
+      "Linux release budget is max(200 microseconds, 3x bare); other builds use max(5 ms, 10x bare)."
+    ],
+    "dependencies": [
+      "client/unix.rs handles SCM_RIGHTS; client/hold.rs coordinates Go."
+    ],
+    "failures_or_limits": [
+      "The performance case measures protocol round trips with a fake supervisor, not process execution latency."
+    ],
+    "evidence": [
+      {
+        "start_line": 51,
+        "end_line": 76,
+        "quote": "    assert_eq!(\n        (s.env.len(), s.stdin, s.stderr, s.pty),\n        (2000, Slot::Pipe, Slot::Pipe, None)\n    );\n    let fds: Vec<OwnedFd> = peer.fds.drain(..).collect();\n    assert_eq!(fds.len(), 3, \"one descriptor per pipe, sent once\");\n    peer.send(&Msg::Spawned {\n        req: s.req,\n        id: 1,\n        pid: 5,\n        pty_ends: [0, 0],\n    });\n    let (mut stdin, mut stdout, mut stderr) = pipes(caller.join().unwrap().unwrap());\n    let [child_in, child_out, child_err] = fds.try_into().unwrap();\n    File::from(child_out).write_all(b\"out\").unwrap();\n    File::from(child_err).write_all(b\"err\").unwrap();\n    stdin.write_all(b\"in\").unwrap();\n    drop(stdin);\n    let read = |f: &mut dyn Read| {\n        let mut s = String::new();\n        f.read_to_string(&mut s).unwrap();\n        s\n    };\n    assert_eq!(read(&mut stdout), \"out\");\n    assert_eq!(read(&mut stderr), \"err\");\n    assert_eq!(read(&mut File::from(child_in)), \"in\");"
+      },
+      {
+        "start_line": 188,
+        "end_line": 200,
+        "quote": "        let mut ok = spawn_on(&sup, &spec(false)).is_err();\n        ok &= spawned.tree.go().is_err() && spawned.tree.resize(80, 24).is_err();\n        let waker = Waker::noop();\n        let mut cx = Context::from_waker(waker);\n        ok &= matches!(\n            pin!(spawned.tree.stop(Duration::ZERO)).poll(&mut cx),\n            Poll::Ready(Err(_))\n        );\n        ok &= matches!(pin!(spawned.tree.processes()).poll(&mut cx), Poll::Ready(Err(_)));\n        ok &= matches!(pin!(spawned.tree.exited()).poll(&mut cx), Poll::Ready(Err(_)));\n        ok &= crate::client::runtime().is_err();\n        spawned.tree.stop_detached(Duration::ZERO);\n        drop(spawned);"
+      },
+      {
+        "start_line": 339,
+        "end_line": 344,
+        "quote": "    let budget = match cfg!(target_os = \"linux\") && !cfg!(debug_assertions) {\n        true => Duration::from_micros(200).max(bare * 3),\n        false => Duration::from_millis(5).max(bare * 10),\n    };\n    eprintln!(\"K4 spawn round trip: p50 {client:?} (bare ping-pong {bare:?}, budget {budget:?})\");\n    assert!(client <= budget, \"p50 {client:?} over {budget:?}\");"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/client/tests/windows.rs",
+    "git_blob_sha": "d433ffe544125e4ceba69c8463d208923aefa433",
+    "source_sha256": "c697e2ddbb3c2ecae44fd890503d5920978faa89d47b55bec63ce2f04f537a59",
+    "source_bytes": 11267,
+    "line_count": 265,
+    "kind": "test",
+    "disposition": "analyzed",
+    "purpose": "Tests Windows bootstrap isolation, named-pipe identity and bounded supervisor termination.",
+    "behavior": [
+      "Plants an inheritable host handle, starts an Omni helper and a std control, and compares actual object handles while both helpers remain alive.",
+      "Requires no inherited planted handle in the Omni helper, a visible one in the control, noninheritable bootstrap handles and a single pipe instance.",
+      "Rejects a connecting PID other than the started one; an unreleased helper must terminate only after its cooperative window."
+    ],
+    "contracts": [
+      "Named events synchronize helpers; helper liveness is checked to prevent vacuous inheritance evidence."
+    ],
+    "dependencies": [
+      "client/windows::{create_process,server,Chan} are exercised."
+    ],
+    "failures_or_limits": [
+      "Ignored idle_child is a subprocess role; source describes a mutation probe but no probe or Windows test ran here."
+    ],
+    "evidence": [
+      {
+        "start_line": 198,
+        "end_line": 210,
+        "quote": "    assert!(\n        started_alive && control_alive,\n        \"a helper died before its inspection: the proof would be vacuous\"\n    );\n    assert!(\n        !inheritable(started.as_raw_handle()),\n        \"the supervisor's process handle is inheritable\"\n    );\n    assert!(\n        seen,\n        \"control: a child started with bInheritHandles = TRUE must see the planted handle\"\n    );\n    assert!(!leaked, \"the started process inherited a host handle\");"
+      },
+      {
+        "start_line": 224,
+        "end_line": 227,
+        "quote": "    let started = Gen::start(rt(), 1, BOUND, move || {\n        Chan::new(pipe, super::platform::me(), u32::MAX, false)\n    });\n    assert_io(started, \"connected instead of process 4294967295\");"
+      },
+      {
+        "start_line": 249,
+        "end_line": 263,
+        "quote": "    let sup = Gen::start(rt(), 1, window, move || Chan::new(pipe, helper, me, true)).unwrap();\n    assert!(\n        alive(watch.as_raw_handle()),\n        \"the stand-in supervisor exited on its own: the test would be vacuous\"\n    );\n    let t0 = Instant::now();\n    sup.die(\"the test declared it stuck\".into());\n    // SAFETY: waits on our own duplicate of the helper's process handle.\n    let r = unsafe { WaitForSingleObject(watch.as_raw_handle(), limit_ms()) };\n    if r != WAIT_OBJECT_0 {\n        // SAFETY: ends the helper we started, so a failed test leaves nothing running.\n        unsafe { TerminateProcess(watch.as_raw_handle(), 1) };\n    }\n    assert_eq!(r, WAIT_OBJECT_0, \"the stuck supervisor was not terminated\");\n    assert!(t0.elapsed() >= window, \"terminated before its cooperative window\");"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/client/unix.rs",
+    "git_blob_sha": "55dfd50c72bdd1e3ea763febfb152f6d937c2126",
+    "source_sha256": "f67a2e5957d19bf0847cf1aaa71538f28174366e5fb2372df3275c46bbe514e8",
+    "source_bytes": 14084,
+    "line_count": 339,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Implements Unix host socket transport, pipe creation and supervisor bootstrap.",
+    "behavior": [
+      "Starts supervisor with control socket on stdin, null stdout/stderr and a separate process group after preparing its reaper/watch.",
+      "Sends descriptors by SCM_RIGHTS once; EMSGSIZE retries descriptor transfer with one byte; receives reject control-buffer truncation and set close-on-exec.",
+      "Channel close shuts down both directions then schedules identity-based kill after the cooperative window; PTY output master is duplicated for input."
+    ],
+    "contracts": [
+      "Linux pipe2 and MSG_CMSG_CLOEXEC make descriptor inheritance atomic.",
+      "Unix PTY reply marker must be [1,0] with one received master."
+    ],
+    "dependencies": [
+      "client/keeper.rs owns identity and reaping; Tokio owns nonblocking socket readiness."
+    ],
+    "failures_or_limits": [
+      "macOS sets FD_CLOEXEC after creation/receipt, leaving the explicitly documented inheritance window."
+    ],
+    "evidence": [
+      {
+        "start_line": 152,
+        "end_line": 174,
+        "quote": "/// Starts `path` as the supervisor by exec (posix_spawn in std), its socket end on fd 0, in its own process\n/// group so a terminal's Ctrl-C to the host's job does not reach it. The reaper thread (from `reaper`) is\n/// created first: without it, nothing is started.\npub(super) fn start(\n    rt: &Runtime,\n    num: u64,\n    bound: Duration,\n    path: &Path,\n    reaper: thread::Builder,\n) -> Result<Arc<Gen>, Error> {\n    let keeper = Keeper::new(reaper).map_err(|e| Error::supervisor_not_started(\"its reaper or exit watch\", &e))?;\n    let (host, sup) = StdStream::pair().map_err(|e| Error::supervisor_not_started(\"its channel\", &e))?;\n    let child = Command::new(path)\n        .arg(\"--host-pid\")\n        .arg(std::process::id().to_string())\n        .stdin(Stdio::from(OwnedFd::from(sup)))\n        .stdout(Stdio::null())\n        .stderr(Stdio::null())\n        .process_group(0)\n        .spawn()\n        .map_err(|e| Error::supervisor_not_started(&format!(\"\\\"{}\\\"\", path.display()), &e))?;\n    let watch = keeper.adopt(child);\n    Gen::start(rt, num, bound, move || Chan::new(host, Some(watch)))"
+      },
+      {
+        "start_line": 278,
+        "end_line": 284,
+        "quote": "        if e.raw_os_error() == Some(libc::EMSGSIZE) && !fds.is_empty() {\n            if iov.iov_len <= 1 {\n                return Err(io::ErrorKind::WouldBlock.into());\n            }\n            iov.iov_len = 1;\n        } else if e.kind() != io::ErrorKind::Interrupted {\n            return Err(e);"
+      },
+      {
+        "start_line": 331,
+        "end_line": 337,
+        "quote": "    #[cfg(not(target_os = \"linux\"))]\n    for fd in fds.iter().skip(first) {\n        cloexec(fd.as_fd())?;\n    }\n    if msg.msg_flags & libc::MSG_CTRUNC != 0 {\n        return Err(io::Error::other(\"more descriptors arrived than a frame may carry\"));\n    }"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/client/windows.rs",
+    "git_blob_sha": "256b3cf8e5a6c067b4b71ce8024d897e424f5b50",
+    "source_sha256": "24938bab497dfd342790b8501738361c518bfc0138625de45da15920e66db9b9",
+    "source_bytes": 13776,
+    "line_count": 349,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Implements Windows host bootstrap with process-handle identity and noninheritable transfers.",
+    "behavior": [
+      "Creates a first-instance local named pipe, starts supervisor with bInheritHandles FALSE and CREATE_NO_WINDOW, and accepts only its PID.",
+      "Duplicates child ends into supervisor without inheritance; rollback closes remote values. PTY ends are taken back with DUPLICATE_CLOSE_SOURCE.",
+      "Disconnect schedules termination through the retained process handle after a window, avoiding numeric-PID reuse."
+    ],
+    "contracts": [
+      "Spawned terminal ends must be both nonzero or both zero; bootstrap arguments must be nonempty plain tokens."
+    ],
+    "dependencies": [
+      "windows-sys supplies CreateProcessW and DuplicateHandle; Tokio supplies named-pipe readiness."
+    ],
+    "failures_or_limits": [
+      "Pipe name uses two keyed standard-hasher outputs; this file declares unpredictability but provides no cryptographic proof."
+    ],
+    "evidence": [
+      {
+        "start_line": 63,
+        "end_line": 77,
+        "quote": "    /// Waits for the client and refuses any process but the one we started.\n    pub(super) async fn accept(&self) -> io::Result<()> {\n        self.pipe.connect().await?;\n        let mut pid = 0;\n        // SAFETY: the pipe handle is valid for the call and `pid` is a writable u32.\n        if unsafe { GetNamedPipeClientProcessId(self.pipe.as_raw_handle(), &mut pid) } == 0 {\n            return Err(io::Error::last_os_error());\n        }\n        match pid == self.pid {\n            true => Ok(()),\n            false => Err(io::Error::other(format!(\n                \"process {pid} connected instead of process {}\",\n                self.pid\n            ))),\n        }"
+      },
+      {
+        "start_line": 143,
+        "end_line": 161,
+        "quote": "    /// Duplicates the child's pipe ends into the supervisor; their values go in `Spawn.handles`.\n    pub(super) fn hand_over(&self, child: [Option<OwnedHandle>; 3]) -> io::Result<([u64; 3], Vec<OwnedHandle>)> {\n        let mut values = [0u64; 3];\n        for (value, handle) in values.iter_mut().zip(child) {\n            let Some(handle) = handle else { continue };\n            match self.give(&handle) {\n                Ok(v) => *value = v,\n                Err(e) => {\n                    self.reclaim(values);\n                    return Err(e);\n                }\n            }\n        }\n        Ok((values, Vec::new()))\n    }\n\n    /// Closes, in the supervisor, handed-over ends that no frame will mention (spawn rollback).\n    pub(super) fn reclaim(&self, values: [u64; 3]) {\n        values.iter().filter(|v| **v != 0).for_each(|v| self.discard(*v));"
+      },
+      {
+        "start_line": 238,
+        "end_line": 245,
+        "quote": "/// The first and only instance of `name`, local clients only, not inheritable (null security attributes).\npub(super) fn server(name: &str) -> io::Result<NamedPipeServer> {\n    ServerOptions::new()\n        .first_pipe_instance(true)\n        .reject_remote_clients(true)\n        .max_instances(1)\n        .create(name)\n}"
+      },
+      {
+        "start_line": 268,
+        "end_line": 282,
+        "quote": "    // SAFETY: both strings are NUL-terminated and alive, `line` is writable as CreateProcessW requires, and\n    // `si`/`pi` are valid. bInheritHandles = FALSE: the new process inherits no handle of the host (R7).\n    let ok = unsafe {\n        CreateProcessW(\n            app.as_ptr(),\n            line.as_mut_ptr(),\n            null(),\n            null(),\n            FALSE,\n            CREATE_NO_WINDOW,\n            null(),\n            null(),\n            &si,\n            &mut pi,\n        )"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/error/messages/mod.rs",
+    "git_blob_sha": "78f26c0b6f0bc7a25be915f78cfdf5a7b49a57dd",
+    "source_sha256": "3c993b99c2de48bea5bdcfa0fb9d8b7d887813655438c9b2075a5b699895a6e6",
+    "source_bytes": 1880,
+    "line_count": 47,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Centralizes shared error construction policy and message ownership.",
+    "behavior": [
+      "Private constructors bind each message to its ErrorCode, with public option names shared by language bindings.",
+      "Declares append-only per-work-package message modules; common helpers create InvalidArgument, Io and stream labels.",
+      "Argument bodies and environment values are withheld; PATH/PATHEXT lookup diagnostics are the explicitly declared exception."
+    ],
+    "contracts": [
+      "Diagnostics identify fields and offsets without echoing ordinary argument/environment values."
+    ],
+    "dependencies": [
+      "error/mod.rs owns Error and ErrorCode; per-WP modules add constructors."
+    ],
+    "failures_or_limits": [
+      "Policy is stated here; individual formatting sites still determine what is disclosed."
+    ],
+    "evidence": [
+      {
+        "start_line": 4,
+        "end_line": 13,
+        "quote": "//! Each text comes with its code, as an `Error` constructor: this module is private to `error`, so callers write\n//! `Error::not_on_path(..)`, and no call site can pair a text with the wrong code. Fields carry their contract\n//! names (`command`, `args[i]`, `cwd`, `env`, `inheritEnv`, `timeoutMs`, `graceMs`, `pty.cols`), so one text serves\n//! every language. Shared and append-only (AGENTS.md): each WP owns one submodule, named after it, and adds\n//! its `impl Error` blocks at the end of it; a new WP adds a new submodule. Shared helpers stay here.\n//!\n//! Secrets: argument text and env values are never echoed, because they often carry secrets; the field and the\n//! byte offset point at the problem instead. One exception, decided by the lead (UX-D): the NOT_FOUND texts of a\n//! PATH lookup show the PATH and PATHEXT values that were searched, because they are the values that failed and\n//! the user needs them to fix the lookup. No other env value appears in any text."
+      },
+      {
+        "start_line": 25,
+        "end_line": 37,
+        "quote": "fn invalid(message: &str) -> Error {\n    Error::new(ErrorCode::InvalidArgument, message)\n}\n\nfn nul(what: &str, field: &str, at: usize) -> Error {\n    invalid(&format!(\n        \"{what} contains a NUL byte at byte {at}; no operating system can pass one to a process. Remove it from \\\n         {field}.\"\n    ))\n}\n\nfn io_error(message: String) -> Error {\n    Error::new(ErrorCode::Io, message)"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/error/messages/w03.rs",
+    "git_blob_sha": "f31a047d399761f76c77181e5396c8fb75bd4aff",
+    "source_sha256": "4e95f4283e33820df227a8056cf35696c08d007fbcd418748b07f3c735e0da03",
+    "source_bytes": 11040,
+    "line_count": 278,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Defines validation, executable-resolution and cwd diagnostics with stable error categories.",
+    "behavior": [
+      "InvalidArgument covers empty command, NUL fields (including nul_in_cwd), malformed env keys, drive_relative_command, PTY sides and numeric ranges.",
+      "NotFound distinguishes missing child PATH, unsuccessful search and explicit path lookup; it includes searched PATH/PATHEXT.",
+      "NotExecutable distinguishes directory, permission and unsupported Windows extension. lookup_failed returns Io for residual filesystem errors, apart from separately classified missing and permission cases; drive_relative_cwd and cwd resolution/access failures return InvalidCwd, while nul_in_cwd remains InvalidArgument."
+    ],
+    "contracts": [
+      "NUL argument/value messages reveal field/index/offset but omit the secret-bearing value."
+    ],
+    "dependencies": [
+      "spawn validation and resolution plus binding numeric checks call these constructors."
+    ],
+    "failures_or_limits": [
+      "Messages are diagnostic intent, not evidence that a particular validation ran; raw OS errors may add platform text."
+    ],
+    "evidence": [
+      {
+        "start_line": 23,
+        "end_line": 42,
+        "quote": "    pub(crate) fn nul_in_arg(index: usize, at: usize) -> Error {\n        let field = format!(\"args[{index}]\");\n        nul(\n            &format!(\"{field} (not shown: arguments often carry secrets)\"),\n            &field,\n            at,\n        )\n    }\n\n    pub(crate) fn nul_in_cwd(cwd: &Path, at: usize) -> Error {\n        nul(&format!(\"cwd {:?}\", cwd.as_os_str()), \"cwd\", at)\n    }\n\n    pub(crate) fn nul_in_env_name(name: &OsStr, at: usize) -> Error {\n        nul(&format!(\"env name {name:?}\"), \"the name\", at)\n    }\n\n    pub(crate) fn nul_in_env_value(name: &OsStr, at: usize) -> Error {\n        let what = format!(\"the value of env {name:?} (not shown: environment values often carry secrets)\");\n        nul(&what, \"the value\", at)"
+      },
+      {
+        "start_line": 106,
+        "end_line": 119,
+        "quote": "    /// A bare name that no directory of the child's PATH holds. `exts`: the PATHEXT extensions tried (Windows).\n    pub(crate) fn not_on_path(command: &OsStr, path: &OsStr, exts: &[String]) -> Error {\n        Error::new(\n            ErrorCode::NotFound,\n            format!(\n                \"command \\\"{}\\\" was not found in any directory of the child's PATH (\\\"{}\\\"){}. Install it, add its \\\n                 directory to PATH (in env, or in the host's environment when inheritEnv is true), or pass the \\\n                 program's full path.\",\n                command.display(),\n                path.display(),\n                tried(exts)\n            ),\n        )\n    }"
+      },
+      {
+        "start_line": 168,
+        "end_line": 175,
+        "quote": "    /// Windows: a file whose extension `CreateProcess` cannot start (`.py`, `.ps1`, `.js`, ...).\n    pub(crate) fn not_startable(command: &OsStr, resolved: &Path) -> Error {\n        not_executable(\n            command,\n            resolved,\n            \"which Windows cannot start: only .exe, .com, .bat and .cmd files start directly. Pass it as an \\\n             argument to the program that opens it (e.g. command \\\"python\\\" for a .py file).\",\n        )"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/error/messages/w04.rs",
+    "git_blob_sha": "814ea4e6d0600b2006567aa99e505ef7ad34b1fc",
+    "source_sha256": "354028ad6d11b50af5d2f156f683179ebc01014cd7844d13f36f4486aa7d3f2e",
+    "source_bytes": 4996,
+    "line_count": 118,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Names supervisor bootstrap, generation, admission and stdio failures for callers.",
+    "behavior": [
+      "Most constructors produce Io with generation number, failed operation or resource boundary and an actionable recovery suggestion.",
+      "SpawnFailed preserves the translated error code and errno supplied by the caller.",
+      "Resize after observed exit is Closed. For a held Unix terminal, Go preserves the translated SpawnFailed code (NotFound in the supplied test); a subsequent exited() query reports Io, using terminal_never_started while the generation remains alive because no exit status exists."
+    ],
+    "contracts": [
+      "Gone-generation text says later spawn creates a new supervisor; saturated admission advises retry after requests finish."
+    ],
+    "dependencies": [
+      "client generation/start/platform code supplies operation-specific values."
+    ],
+    "failures_or_limits": [
+      "Error wording cannot prove cleanup or restart happened; it reports the failure path chosen by implementation."
+    ],
+    "evidence": [
+      {
+        "start_line": 70,
+        "end_line": 98,
+        "quote": "    pub(crate) fn supervisor_gone(generation: u64, why: &str) -> Error {\n        io_error(format!(\n            \"the hugr-omni supervisor (generation {generation}) is gone: {why}. Calls on its processes fail with IO; \\\n             the next spawn starts a new supervisor.\"\n        ))\n    }\n\n    pub(crate) fn supervisor_saturated(waiting: usize, limit: usize) -> Error {\n        io_error(format!(\n            \"{waiting} requests are already waiting for the hugr-omni supervisor (the limit is {limit}): it is not \\\n             keeping up. Retry once some of them have finished.\"\n        ))\n    }\n\n    pub(crate) fn request_too_big(err: &dyn Display) -> Error {\n        io_error(format!(\n            \"cannot send this request to the hugr-omni supervisor: {err}. Pass a smaller environment or fewer \\\n             arguments.\"\n        ))\n    }\n\n    /// `about` names what the request was about (`tree 3`, `the spawn`).\n    pub(crate) fn supervisor_refused(op: &str, about: &str, why: &str) -> Error {\n        io_error(format!(\"the hugr-omni supervisor refused {op} for {about}: {why}.\"))\n    }\n\n    /// The supervisor could not start `program`; `code` is the one its reply maps to.\n    pub(crate) fn spawn_refused(code: ErrorCode, program: &str, msg: &str, errno: i32) -> Error {\n        Error::new(code, format!(\"cannot start {program}: {msg} (os error {errno}).\"))"
+      },
+      {
+        "start_line": 108,
+        "end_line": 117,
+        "quote": "    pub(crate) fn terminal_never_started() -> Error {\n        io_error(\"the terminal program never started (its exec failed), so it has no exit status.\".to_string())\n    }\n\n    pub(crate) fn resize_after_exit(cols: u16, rows: u16) -> Error {\n        Error::new(\n            ErrorCode::Closed,\n            format!(\"cannot resize the terminal to {cols}x{rows}: its program already exited.\"),\n        )\n    }"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/error/messages/w07.rs",
+    "git_blob_sha": "99685766fe3b3bfbff9f08756abeb7e2721d77be",
+    "source_sha256": "3ba856e6fe2051e559e6030d8f2efd035f3ffbeef2891a78b120c6fe23dd5ed4",
+    "source_bytes": 1291,
+    "line_count": 34,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Provides process-layer misuse messages and the retained terminal-support placeholder.",
+    "behavior": [
+      "spawn with pty set gives InvalidArgument directing callers to spawn_pty.",
+      "Writing without a piped stdin gives InvalidArgument naming Stdin::Pipe; terminal_unsupported returns Io with historical W12 wording."
+    ],
+    "contracts": [
+      "Message constructors are append-only work-package-owned entries."
+    ],
+    "dependencies": [
+      "process child/spawn paths consume misuse constructors; terminal support is implemented elsewhere."
+    ],
+    "failures_or_limits": [
+      "The existence of terminal_unsupported does not establish terminal support is absent at this pin."
+    ],
+    "evidence": [
+      {
+        "start_line": 10,
+        "end_line": 33,
+        "quote": "    /// `Command::spawn()` with `pty()` set: a terminal child comes from `spawn_pty()`.\n    pub(crate) fn pty_needs_spawn_pty() -> Error {\n        invalid(\n            \"spawn() starts a child with pipes, but pty() was set. Call spawn_pty() to start it inside a terminal, \\\n             or remove pty().\",\n        )\n    }\n\n    /// `write()` to a pipe child spawned without a stdin pipe (contract §9).\n    pub(crate) fn no_stdin_pipe() -> Error {\n        invalid(\n            \"write() needs a stdin pipe, but this child was spawned with stdin \\\"closed\\\" (the default), so it reads \\\n             end of input at once. Spawn it with stdin: \\\"pipe\\\" (Rust: .stdin(Stdin::Pipe)).\",\n        )\n    }\n\n    /// Until terminal children are wired into `process` (W12).\n    pub(crate) fn terminal_unsupported() -> Error {\n        io_error(\n            \"terminal children are not available in this build yet (terminal support arrives with W12). Spawn the \\\n             program with pipes instead.\"\n                .to_string(),\n        )\n    }"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/error/messages/w09.rs",
+    "git_blob_sha": "9caf072ef6082d2e9adc1bac4af56087efae06d2",
+    "source_sha256": "f7f2015d56884630a8b76c85b242560a16c3433579ec5d3bafb456da5c24e441",
+    "source_bytes": 2088,
+    "line_count": 48,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Defines cancellation, output-limit and PTY-input error messages.",
+    "behavior": [
+      "Pre-start cancellation reports Aborted and that nothing ran; in-run cancellation reports stopped tree and attached partial result.",
+      "OutputLimit names the affected stream and configured byte cap, describes truncated per-stream results and suggests streamed spawn output.",
+      "PTY plus run input is InvalidArgument because terminal input lacks separate EOF."
+    ],
+    "contracts": [
+      "Constructors only create errors; process::run attaches the collected result."
+    ],
+    "dependencies": [
+      "process/run.rs and deadline cancellation paths select these messages."
+    ],
+    "failures_or_limits": [
+      "The PTY-input guidance mentions spawn with pty, while public Rust launch is spawn_pty; readers should use the API-specific entrypoint."
+    ],
+    "evidence": [
+      {
+        "start_line": 19,
+        "end_line": 46,
+        "quote": "    /// run() was cancelled after the start; its tree was stopped first (contract §8).\n    pub(crate) fn run_cancelled() -> Error {\n        Error::new(\n            ErrorCode::Aborted,\n            \"run() was cancelled, so the command's whole process tree was stopped. What it had written until then \\\n             is in the error's result.\",\n        )\n    }\n\n    /// run(): `stream` went over `max` bytes, and the tree was stopped (contract §6).\n    pub(crate) fn output_limit(stream: crate::types::Stream, max: usize) -> Error {\n        Error::new(\n            ErrorCode::OutputLimit,\n            format!(\n                \"the child's {} went over maxOutputBytes ({max} bytes), so its process tree was stopped; the first \\\n                 {max} bytes of each stream are in the error's result. Raise maxOutputBytes, or read the output as \\\n                 it comes with spawn().\",\n                stream_name(stream)\n            ),\n        )\n    }\n\n    /// run() with both pty and input (contract §10).\n    pub(crate) fn pty_run_input() -> Error {\n        invalid(\n            \"run() got both pty and input, but a terminal has no separate end of input, so the input would never \\\n             end. Remove input, or start the program with spawn() and pty and type into it with write().\",\n        )"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/error/messages/w10.rs",
+    "git_blob_sha": "3e63011d4f3705a399c3665345700d95e4709e7c",
+    "source_sha256": "a59508b744640650b1d82599e5dc331ebc9560b156e4a1b5f3d3d5f610a145fb",
+    "source_bytes": 2375,
+    "line_count": 60,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Defines stream-consumer, pump and stdin diagnostics.",
+    "behavior": [
+      "A second output/lines claim is InvalidArgument and explicitly says detach is permanent.",
+      "Reader failure and lost pre-collection bytes produce Io, distinguishing an incomplete run from successful output.",
+      "Closed stdin yields Closed with the closing cause; write failure and thread-start failure are Io."
+    ],
+    "contracts": [
+      "Loss is reported as an error for collection rather than silently returning complete-looking bytes."
+    ],
+    "dependencies": [
+      "io queue/output/collect/stdin implementations provide stream and failure context."
+    ],
+    "failures_or_limits": [
+      "Messages classify failure and guide callers but do not themselves cancel pumps or stop trees."
+    ],
+    "evidence": [
+      {
+        "start_line": 12,
+        "end_line": 17,
+        "quote": "    /// `output` or `lines()` claimed a second time, or after the consumer was left.\n    pub(crate) fn output_claimed() -> Error {\n        invalid(\n            \"output already has its consumer: output and lines() are two views of a single consumer, the first \\\n             one claims it, and leaving it detaches for good. Read everything through that first consumer.\",\n        )"
+      },
+      {
+        "start_line": 35,
+        "end_line": 51,
+        "quote": "    /// `run()` found `bytes` of `stream` dropped before it began collecting.\n    pub(crate) fn output_lost(stream: crate::types::Stream, bytes: u64) -> Error {\n        io_error(format!(\n            \"{bytes} bytes of the child's {} were dropped before run() began collecting them, so its result would \\\n             be incomplete. Retry; if it happens again, report it as a hugr-omni bug.\",\n            stream_name(stream)\n        ))\n    }\n\n    /// `why` says what closed it: closeStdin(), the child, its exit or stop, or an earlier failure.\n    pub(crate) fn stdin_closed(why: &str) -> Error {\n        Error::new(\n            ErrorCode::Closed,\n            format!(\n                \"cannot write to the child's stdin: {why}. Write only before closeStdin() and while the child is \\\n                 running and reading its input.\"\n            ),"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/error/messages/wp8b.rs",
+    "git_blob_sha": "7fe8b3eb201173cf741ac68872317bfcb13c182f",
+    "source_sha256": "4ef83a4eb7e3c97112ca2174cabd3d576bd70dbc27f134124b430444224fcf8b",
+    "source_bytes": 2012,
+    "line_count": 48,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Explains Windows verbatim-argument validation failures without exposing tail contents.",
+    "behavior": [
+      "Rejects the option on Unix or together with normal argv; NUL diagnostics name the option and byte offset while withholding the argument tail.",
+      "Batch-file target refusal explains that the library will not silently introduce cmd.exe for a verbatim command."
+    ],
+    "contracts": [
+      "All constructors return InvalidArgument; callers may explicitly select cmd.exe when they accept its parsing contract."
+    ],
+    "dependencies": [
+      "spawn/validate.rs owns the verbatim option and resolved-target checks, orchestrated by spawn::prepare; spawn/resolve.rs supplies the resolved executable path."
+    ],
+    "failures_or_limits": [
+      "Suggested command-line syntax is explanatory text, not an executed or sanitized command."
+    ],
+    "evidence": [
+      {
+        "start_line": 13,
+        "end_line": 35,
+        "quote": "    /// The option on a system that has no command line to write.\n    pub(crate) fn verbatim_not_windows() -> Error {\n        invalid(\n            \"windowsVerbatimArgs is set, but this is not Windows: Unix passes a list of arguments, not a command \\\n             line, so there is nothing to write verbatim. Set it only on Windows, and pass args elsewhere.\",\n        )\n    }\n\n    /// The option together with `args`.\n    pub(crate) fn verbatim_with_args(count: usize) -> Error {\n        invalid(&format!(\n            \"windowsVerbatimArgs is set together with {count} args, but the verbatim text is the whole command line \\\n             after the program. Put every argument into windowsVerbatimArgs, or pass args without it.\"\n        ))\n    }\n\n    /// A NUL in the verbatim text.\n    pub(crate) fn nul_in_verbatim(at: usize) -> Error {\n        nul(\n            \"windowsVerbatimArgs (not shown: arguments often carry secrets)\",\n            \"windowsVerbatimArgs\",\n            at,\n        )"
+      },
+      {
+        "start_line": 38,
+        "end_line": 46,
+        "quote": "    /// The program resolved to a batch file, which Windows would run through `cmd.exe` with the text unescaped.\n    pub(crate) fn verbatim_batch(command: &OsStr, resolved: &Path) -> Error {\n        invalid(&format!(\n            \"windowsVerbatimArgs is set, but command {command:?} is the batch file \\\"{}\\\", which only cmd.exe can \\\n             run, and the library never adds cmd.exe to a verbatim command line. Name cmd.exe as the command and \\\n             write the batch file into windowsVerbatimArgs (e.g. /d /s /c \\\"\\\"script.cmd\\\" arg\\\"), or pass args \\\n             without windowsVerbatimArgs to get batch-safe quoting.\",\n            resolved.display()\n        ))"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/error/messages/wp_h.rs",
+    "git_blob_sha": "72b82197c6d358d4721da1b530aa6818b69c4149",
+    "source_sha256": "916436c869cd2071663752b9ba743c91895315b3721ee87b8aa3440735e10c34",
+    "source_bytes": 981,
+    "line_count": 26,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Produces binding supervisor-path configuration diagnostics.",
+    "behavior": [
+      "Empty supervisor path is InvalidArgument and directs caller to a full binary path or default addon-relative lookup.",
+      "A different path after startup is InvalidArgument and says configuration belongs before first run/spawn."
+    ],
+    "contracts": [
+      "This file names the path but owns no global configuration state."
+    ],
+    "dependencies": [
+      "client/start.rs invokes these constructors when configuring its shared slot."
+    ],
+    "failures_or_limits": [
+      "The constructor alone does not validate filesystem existence or executable compatibility."
+    ],
+    "evidence": [
+      {
+        "start_line": 10,
+        "end_line": 25,
+        "quote": "    /// `configure({ supervisor: \"\" })`.\n    pub(crate) fn supervisor_path_empty() -> Error {\n        invalid(\n            \"configure() got an empty supervisor path. Pass the full path of hugr-omni-supervisor, or leave \\\n             supervisor out to use the one next to the addon.\",\n        )\n    }\n\n    /// A different supervisor after one was started in this process.\n    pub(crate) fn supervisor_configured_late(path: &std::path::Path) -> Error {\n        invalid(&format!(\n            \"configure() got the supervisor \\\"{}\\\", but this process already started a supervisor with another \\\n             path, and every child of a process shares one. Call configure() before the first run() or spawn().\",\n            path.display()\n        ))\n    }"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  },
+  {
+    "path": "native/omni/crates/hugr-omni/src/error/mod.rs",
+    "git_blob_sha": "7e5d1569ad39bcfc4fb28781320f72f6579c4961",
+    "source_sha256": "51ad6bb3efdd5ab6b8a70c975aefbff9bdab36f296af4147504ed324ff1145f9",
+    "source_bytes": 2773,
+    "line_count": 92,
+    "kind": "implementation",
+    "disposition": "analyzed",
+    "purpose": "Defines the stable public error vocabulary and optional collected run result.",
+    "behavior": [
+      "Nonexhaustive ErrorCode provides eight categories and fixed uppercase strings shared with other languages.",
+      "Error keeps a private code/message and optional boxed RunOutput; result() exposes partial collection for Aborted, OutputLimit or Io.",
+      "Display writes CODE: message and std::error::Error is implemented without a nested source chain."
+    ],
+    "contracts": [
+      "New errors start without a result; only internal with_result attaches one."
+    ],
+    "dependencies": [
+      "types::RunOutput supplies the result shape; private messages constructors bind semantic code/text."
+    ],
+    "failures_or_limits": [
+      "Code stability does not promise stable OS-specific message fragments."
+    ],
+    "evidence": [
+      {
+        "start_line": 31,
+        "end_line": 43,
+        "quote": "impl ErrorCode {\n    /// The code as written in every language: `\"NOT_FOUND\"`, `\"INVALID_ARGUMENT\"`, ...\n    pub fn as_str(self) -> &'static str {\n        match self {\n            ErrorCode::NotFound => \"NOT_FOUND\",\n            ErrorCode::NotExecutable => \"NOT_EXECUTABLE\",\n            ErrorCode::InvalidCwd => \"INVALID_CWD\",\n            ErrorCode::InvalidArgument => \"INVALID_ARGUMENT\",\n            ErrorCode::Aborted => \"ABORTED\",\n            ErrorCode::OutputLimit => \"OUTPUT_LIMIT\",\n            ErrorCode::Closed => \"CLOSED\",\n            ErrorCode::Io => \"IO\",\n        }"
+      },
+      {
+        "start_line": 53,
+        "end_line": 82,
+        "quote": "/// An error with a stable code and a message that says what failed, with which value, and how to fix it.\n#[derive(Debug)]\npub struct Error {\n    code: ErrorCode,\n    message: String,\n    result: Option<Box<RunOutput>>,\n}\n\nimpl Error {\n    /// The stable code.\n    pub fn code(&self) -> ErrorCode {\n        self.code\n    }\n\n    /// What `run()` collected before failing with `Aborted`, `OutputLimit` or `Io`.\n    pub fn result(&self) -> Option<&RunOutput> {\n        self.result.as_deref()\n    }\n\n    pub(crate) fn new(code: ErrorCode, message: impl Into<String>) -> Error {\n        Error {\n            code,\n            message: message.into(),\n            result: None,\n        }\n    }\n\n    pub(crate) fn with_result(mut self, result: RunOutput) -> Error {\n        self.result = Some(Box::new(result));\n        self"
+      }
+    ],
+    "inference": [],
+    "gaps": [],
+    "runtime_status": "NOT_RUN",
+    "author_role": "CORE producer"
+  }
+]

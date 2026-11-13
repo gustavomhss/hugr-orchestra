@@ -1,0 +1,92 @@
+{
+  "schema": "omni-public-review-summary/v1",
+  "kind": "summary_not_original_transcript",
+  "packet": "C05",
+  "layer": "L1",
+  "judge_identity": "/root/omni_review_courier/omni_j1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "artifact": {
+    "author_path": "authors/core/records-05.json",
+    "public_path": "bodies/core/records-05.json",
+    "sha256": "2e1caa9eab8be2675a8090c14bf4ebf37443d63bdb957c56ece2ffacdcd2a0d4",
+    "bytes": 24363
+  },
+  "verdict": "PASS",
+  "covered_records": 6,
+  "population": 393,
+  "records": [
+    {
+      "index": 0,
+      "path": "native/omni/crates/hugr-omni/src/io/collect.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 1,
+      "path": "native/omni/crates/hugr-omni/src/io/mod.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 2,
+      "path": "native/omni/crates/hugr-omni/src/io/out.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 3,
+      "path": "native/omni/crates/hugr-omni/src/io/queue/mod.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 4,
+      "path": "native/omni/crates/hugr-omni/src/io/queue/reader.rs",
+      "verdict": "PASS"
+    },
+    {
+      "index": 5,
+      "path": "native/omni/crates/hugr-omni/src/io/stdin.rs",
+      "verdict": "PASS"
+    }
+  ],
+  "criteria": {
+    "C1": {
+      "label": "Every covered path has an actual read-based, file-specific useful disposition",
+      "verdict": "PASS"
+    },
+    "C2": {
+      "label": "Assertions distinguish implementation, documentation/declaration, inference and gaps",
+      "verdict": "PASS"
+    },
+    "C3": {
+      "label": "Source identities, paths and exact quote evidence support claims",
+      "verdict": "PASS"
+    },
+    "C4": {
+      "label": "Contracts, failures, relations and maintenance implications are useful at L1",
+      "verdict": "PASS"
+    },
+    "C5": {
+      "label": "Test source, old reviews and docs are never current execution",
+      "verdict": "PASS"
+    },
+    "C6": {
+      "label": "Ownership/exclusions and authorized external scope preserved",
+      "verdict": "PASS"
+    },
+    "C7": {
+      "label": "No secrets/private evaluation/session material in candidate",
+      "verdict": "PASS"
+    }
+  },
+  "mandatory_findings_remaining": [],
+  "missing_evidence": [],
+  "private_opinion_sha256": "774a23d7f4746f3e9d57ccf5dc254598fde5b117b18230c8e2a04331462c5b62",
+  "private_opinion_digest_scope": "SHA256 of the privately retained UTF-8 opinion text with final LF; not a host-message envelope or authenticated transport receipt",
+  "transport_note": "Both reviewers received all six complete candidate objects through exact contiguous subsets and the same selected implementation excerpts. The manually preserved literal argument copies reconstruct the complete current body and the additional excerpts match the captured source lines. No observed discrepancy remained. These copies are not authenticated host-message exports.",
+  "limitations": [
+    "Documentary semantic review only; judge used no tools or execution.",
+    "Acceptance covers six L1 records only and does not release complete L1 or later layers.",
+    "Judges received complete candidate records and selected decisive source evidence; no claim of full-source judge reading.",
+    "No runtime-import binding, current platform test, release or global integration acceptance is established.",
+    "Original private exchanges and reserved evaluation material are withheld; no public reproducibility of those withheld materials is claimed."
+  ],
+  "resolved_findings": []
+}

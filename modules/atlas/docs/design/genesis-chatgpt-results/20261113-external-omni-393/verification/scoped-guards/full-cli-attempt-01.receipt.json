@@ -1,0 +1,26 @@
+{
+  "schema": "omni-guard-cli-attempt/v1",
+  "started_at": "2026-11-13T17:13:09.524576+00:00",
+  "argv": [
+    "/workspace/scratch/d3422440cdf1/omni-genesis/runtime-tools/node_modules/@oven/bun-linux-x64/bin/bun",
+    "run",
+    "check:guards",
+    "--base",
+    "origin/dev"
+  ],
+  "cwd": "/workspace/scratch/d3422440cdf1/omni-genesis/control/guard-inspection/source",
+  "root_package_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "root_package_git_blob": "59b01ce720d2fbc13ac27b0f93e444e4e7e42bd0",
+  "guard_source_commit": "7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249",
+  "guard_run_git_blob": "24c89b6fdbce07d778d2d1520ff4680d51c8c0f3",
+  "materialization": "Verified source files; not an original repository checkout or Git history.",
+  "approval_overrides": [],
+  "exit_code": 1,
+  "elapsed_seconds": 0.11960592099967471,
+  "completed_at": "2026-11-13T17:13:09.644562+00:00",
+  "stdout_sha256": "f6ced101a969c73437cded72a9bb3a8760b9f09e38139f72101b3109befcc058",
+  "stderr_sha256": "1d94fca7cd039cb028502c2ed2c275f74238d3dc240f237a5c1fb958daaede4b",
+  "stdout_bytes": 179,
+  "stderr_bytes": 97,
+  "candidate_gate_proven": false
+}
