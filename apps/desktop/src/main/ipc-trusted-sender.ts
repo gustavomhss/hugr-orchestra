@@ -1,8 +1,10 @@
+import { isRendererOrigin } from "./renderer-origin.ts"
+
 // Shared security boundary for the existing Main wrapper and its Live registrations.
 export function requireTrustedSender(
-  _event: { readonly senderFrame?: { readonly url: string } | null },
-  _rendererDevURL: string | undefined,
-  _channel: string,
+  event: { readonly senderFrame?: { readonly url: string } | null },
+  rendererDevURL: string | undefined,
+  channel: string,
 ): void {
-  throw new Error("Trusted IPC boundary is not implemented")
+  if (!isRendererOrigin(event.senderFrame?.url, rendererDevURL)) throw new Error(`Untrusted IPC sender: ${channel}`)
 }
