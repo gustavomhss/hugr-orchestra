@@ -1,0 +1,57 @@
+{
+  "schema": "omni-gate-observation/v1",
+  "candidate_revision": "678088829ffee0d76dc81453337aa1093baea360",
+  "branch": "genesis-external-omni-393",
+  "own_actions_query": {
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/runs?head_sha=678088829ffee0d76dc81453337aa1093baea360&per_page=100",
+    "total_count": 0,
+    "workflow_runs": []
+  },
+  "exposed_action_capabilities": {
+    "workflow_dispatch": false,
+    "rerun_existing_failed_jobs": true,
+    "rerun_existing_job": true,
+    "read_runs_jobs_logs_artifacts": true,
+    "claim": "Names and descriptions inspected in the enabled GitHub MCP registry; no workflow-dispatch capability was exposed. This does not claim the GitHub service itself lacks dispatch."
+  },
+  "user_scope": {
+    "no_pr": true,
+    "no_workflow_changes": true,
+    "no_other_session_branch_changes": true,
+    "no_product_source_changes": true
+  },
+  "guard_context": {
+    "required_command": "bun run check:guards --base origin/dev",
+    "status": "NOT_RUN",
+    "source_baseline": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "observed_dev_tip": "6f577a73b93a700a9b41542f4dfac0a405e138da",
+    "github_compare": {
+      "status": "diverged",
+      "ahead_by": 226,
+      "behind_by": 1253,
+      "merge_base": "7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249",
+      "returned_files": 300,
+      "listing_note": "The 300-file response is not treated as a complete scope inventory."
+    },
+    "source_files": [
+      {
+        "path": "script/guards/run.ts",
+        "git_blob_sha": "24c89b6fdbce07d778d2d1520ff4680d51c8c0f3"
+      },
+      {
+        "path": "script/guards/diff.ts",
+        "git_blob_sha": "e0336749f5b9f6dc471dedff2bfa0674ab18ebd7"
+      }
+    ],
+    "context": "The local runtime is a verified source materialization, not a historical checkout with origin/dev. The runtime pilot's new 426-entry index intentionally has no historical HEAD or remote. No historical Git state was fabricated for this gate.",
+    "scope_note": "The complete baseline-to-candidate comparison has 120 changed paths, all in the authorized prefix. The separately observed dev comparison includes inherited history outside this external change and is not substituted for that scope proof."
+  },
+  "product_tests": {
+    "local": "NOT_RUN; root AGENTS.md directs product tests to GitHub Actions",
+    "omni_os": "NOT_RUN",
+    "shared_s4": "Reused exact pinned run evidence is recorded separately; it is not own-branch CI"
+  },
+  "next_condition": "Reconcile the applicable scoped gate through an authorized real Git checkout or an exposed remote dispatch route. No green status or scope exemption is inferred from missing execution.",
+  "status": "OBSERVATION_ONLY_NOT_A_FINAL_BLOCKER_DISPOSITION",
+  "observed_at": "2026-11-13T16:32:59.315475+00:00"
+}

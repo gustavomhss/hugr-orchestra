@@ -1,0 +1,107 @@
+{
+  "schema": "omni-scoped-guard-public-summary/v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "candidate_revision": "d11a92ece3e2df20f63f4a802a6f73f17a09aafc",
+  "scope": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/",
+  "guard_rule_revision": "7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249",
+  "diff_sha256": "ebd28c8c09067898e2b0698faabf9d0e0e2c7c219d6dcca4a0ad777cb063d4b2",
+  "mode": "Existing pure guard evaluate API over MCP-verified owned additions; no Git diff or full CLI invocation",
+  "report": {
+    "base": null,
+    "bootstrap": false,
+    "rules": 78,
+    "files": 132,
+    "findings": [
+      {
+        "rule": "local-tests-escape",
+        "severity": "warn",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/validation/records-01.json",
+        "line": 67,
+        "message": "ORCHESTRA_LOCAL_TESTS set in a file. Only the owner opts into local runs, per shell; run tests with bun run test:ci.",
+        "match": [
+          261,
+          284
+        ],
+        "excerpt_sha256": "a7fad1a21847672e8d297605de7273ca255df48b8d254aba652feca8581960f1",
+        "disposition": "Acknowledged source/archival quotation: the reported string describes a baseline test opt-in. This operation did not set the variable or authorize local product tests. Preserve exact source evidence; no ignore or approval added."
+      },
+      {
+        "rule": "local-tests-escape",
+        "severity": "warn",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/validation/records-01.json",
+        "line": 122,
+        "message": "ORCHESTRA_LOCAL_TESTS set in a file. Only the owner opts into local runs, per shell; run tests with bun run test:ci.",
+        "match": [
+          36,
+          59
+        ],
+        "excerpt_sha256": "980dad420a1de7fe6e0c46c074d867166bd3c827d56d2b8df7e7844f8f942775",
+        "disposition": "Acknowledged source/archival quotation: the reported string describes a baseline test opt-in. This operation did not set the variable or authorize local product tests. Preserve exact source evidence; no ignore or approval added."
+      },
+      {
+        "rule": "local-tests-escape",
+        "severity": "warn",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/history/validation/v1/records-01.json",
+        "line": 67,
+        "message": "ORCHESTRA_LOCAL_TESTS set in a file. Only the owner opts into local runs, per shell; run tests with bun run test:ci.",
+        "match": [
+          261,
+          284
+        ],
+        "excerpt_sha256": "a7fad1a21847672e8d297605de7273ca255df48b8d254aba652feca8581960f1",
+        "disposition": "Acknowledged source/archival quotation: the reported string describes a baseline test opt-in. This operation did not set the variable or authorize local product tests. Preserve exact source evidence; no ignore or approval added."
+      },
+      {
+        "rule": "local-tests-escape",
+        "severity": "warn",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/history/validation/v1/records-01.json",
+        "line": 122,
+        "message": "ORCHESTRA_LOCAL_TESTS set in a file. Only the owner opts into local runs, per shell; run tests with bun run test:ci.",
+        "match": [
+          36,
+          59
+        ],
+        "excerpt_sha256": "980dad420a1de7fe6e0c46c074d867166bd3c827d56d2b8df7e7844f8f942775",
+        "disposition": "Acknowledged source/archival quotation: the reported string describes a baseline test opt-in. This operation did not set the variable or authorize local product tests. Preserve exact source evidence; no ignore or approval added."
+      }
+    ],
+    "errors": [],
+    "approved": [],
+    "touchesGuards": false
+  },
+  "exit_code": 0,
+  "limits": [
+    "Not bun run check:guards --base origin/dev",
+    "Not repository-wide CI",
+    "No product tests executed",
+    "No guard approvals or suppressions supplied"
+  ],
+  "raw_result_sha256": "5d8d2b469a7d652caba30c60e604c27c5ecb3c58ab480aa723866fba44f486fc",
+  "raw_result_note": "Original operational output is preserved locally with source excerpts. This public summary keeps exact finding locations and excerpt digests without duplicating the assignment-like source text.",
+  "operation_receipt": {
+    "schema": "omni-scoped-guard-operation/v1",
+    "argv": [
+      "/workspace/scratch/d3422440cdf1/omni-genesis/runtime-tools/node_modules/@oven/bun-linux-x64/bin/bun",
+      "control/guard-inspection/evaluate-owned.ts"
+    ],
+    "cwd": "/workspace/scratch/d3422440cdf1/omni-genesis",
+    "started_at": "2026-11-13T16:48:42.205630+00:00",
+    "elapsed_seconds": 0.5058872899999187,
+    "exit_code": 0,
+    "stdout_sha256": "620bf46144da7c265cfba5814ad7fbce66ccafaee5a8cf68161fae47caa4b4f1",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "runner_sha256": "730a73b82d96d824e25f3fbee014f19f242e2cfb99aadfce55cf1400cdf88a82",
+    "guard_capture_sha256": "1625ec961a805c4a625e3f62f2466eadff3a35cbc1e028c6c9b9e8a38f3f570e",
+    "input_sha256": "ebd28c8c09067898e2b0698faabf9d0e0e2c7c219d6dcca4a0ad777cb063d4b2",
+    "scope": "Actual existing guard evaluate API over 132 MCP-verified owned additions; not the full origin/dev Git CLI gate or product tests."
+  },
+  "guardrail_usage_ref": {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": ".orchestra/skills/guardrail-usage/SKILL.md",
+    "git_blob_sha": "c2333f8b46d780f6b52bba2ae9f6696e840d18a0",
+    "sha256": "28a463e6bb2d7b6cbad3d331c56a4cf6bf871574163e534166f02d19431dae51"
+  },
+  "classification": "78 actual captured rules evaluated 132 committed added files; 0 gate findings, 4 warnings, 0 errors. WARN is advisory under the pinned usage skill. The historical skill text mentions 73 rules; the executed, verified rules tree contains 78.",
+  "full_origin_dev_cli_status": "NOT_RUN; this report is not a substitute claim.",
+  "public_scope_note": "Baseline source objects and rule definitions were unchanged. No product tests, approval label, ignore comment, workflow change, PR or global integration occurred."
+}

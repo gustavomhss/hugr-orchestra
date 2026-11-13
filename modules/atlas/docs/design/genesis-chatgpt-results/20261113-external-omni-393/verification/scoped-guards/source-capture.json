@@ -1,0 +1,591 @@
+{
+  "schema": "omni-scoped-guard-capture/v1",
+  "recorded_at": "2026-11-13T16:47:19.920449+00:00",
+  "guard_rule_revision": "7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249",
+  "rules_tree": "97ac7ace9c86a40419f5cf83d27e0e0f200fdb56",
+  "rule_files": 78,
+  "files": [
+    {
+      "path": "script/guards/engine.ts",
+      "git_blob_sha": "7ff689772ac0460e7aa9b3ad93ca3b003b992c0f",
+      "sha256": "6f16d7b83c63f590569815e5bbb26488be3dd31063788af4488e0680fb720fe1",
+      "bytes": 5573,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/engine.ts"
+    },
+    {
+      "path": "script/guards/rule.ts",
+      "git_blob_sha": "e831bd89a05d4bbea86cbabf0a461b9b124cb185",
+      "sha256": "707473799508f7f8959ac6c0b8804e49ccdc2f1b64b11d8354beb4d62c343949",
+      "bytes": 10290,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rule.ts"
+    },
+    {
+      "path": "script/guards/config.toml",
+      "git_blob_sha": "61aed25b70c0689a4d52fd86ea47e1ca4d00c19f",
+      "sha256": "25d8c63c635ac2233746523ba8e7a05dc3ba2e2f7ac43907cbc6cbb4028ca5ef",
+      "bytes": 884,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/config.toml"
+    },
+    {
+      "path": "script/guards/rules/agent-scratch.toml",
+      "git_blob_sha": "71ce321c30465faaf957a08256bd6b7d007d4173",
+      "sha256": "48577cb08b39c11874b3833cdfb095d9f9c1975fb325c5b3d6195f40b8728485",
+      "bytes": 866,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/agent-scratch.toml"
+    },
+    {
+      "path": "script/guards/rules/arsenal-evaluator-file.toml",
+      "git_blob_sha": "3d642628553c18c95d99106a5d6b75f76cd16c02",
+      "sha256": "d833db4542c9fae0b584750ddcb466adb9f4a3932296827942a6a6163cb29d43",
+      "bytes": 658,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/arsenal-evaluator-file.toml"
+    },
+    {
+      "path": "script/guards/rules/binary-added.toml",
+      "git_blob_sha": "64bf8f514688a1bdff706c07a2f70bbe4fcb43ee",
+      "sha256": "2250fceb5971c05756c69aa5964e5039587cd37e070702427be90f337ed91046",
+      "bytes": 761,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/binary-added.toml"
+    },
+    {
+      "path": "script/guards/rules/build-output.toml",
+      "git_blob_sha": "7a6cac05da6c37d592eb7c857b0ced4e8bfdd99c",
+      "sha256": "bec2d2858e3d07894265da944aee77ee348e63fc560f0eaa4fc658725c1eab64",
+      "bytes": 786,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/build-output.toml"
+    },
+    {
+      "path": "script/guards/rules/cargo-lockfile-stale.toml",
+      "git_blob_sha": "39b66bd7f74b12cf5ec0bac1ee81a6d9f273fd34",
+      "sha256": "1005b6e9807f371f64289c8774fbf93618842e59733602822f858f3bf851524d",
+      "bytes": 978,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/cargo-lockfile-stale.toml"
+    },
+    {
+      "path": "script/guards/rules/client-env-secret.toml",
+      "git_blob_sha": "1ba0cc81f5bc59ba2b78e0f2c7cea46edeb3b1f6",
+      "sha256": "e674b61679181a2bba05f8cb9be131bdfdb3f72abf7811d54123a2c32c69e844",
+      "bytes": 1110,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/client-env-secret.toml"
+    },
+    {
+      "path": "script/guards/rules/conflict-markers.toml",
+      "git_blob_sha": "361c0e8f68e4b76a834c7e23cc47a7878837fda0",
+      "sha256": "c46334fa1e21fa0093e84985501bf570fba91acb4fe69d50f613051089fae409",
+      "bytes": 904,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/conflict-markers.toml"
+    },
+    {
+      "path": "script/guards/rules/dep-git-source.toml",
+      "git_blob_sha": "322b2bf96166972d8bab3f610f5c03fa05eee60b",
+      "sha256": "39b9a4ce1fbf3dadf9ef35300f576be58fd529b90ca9b8d79a052cba12652f78",
+      "bytes": 1410,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/dep-git-source.toml"
+    },
+    {
+      "path": "script/guards/rules/dep-lifecycle-script.toml",
+      "git_blob_sha": "d4b192a9fb87a045c81ff2685dc41eecebce8f56",
+      "sha256": "f28e16e870d3707214607c4c36d80fc1e6cc9368c0113e086e23b530b70cbf5b",
+      "bytes": 916,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/dep-lifecycle-script.toml"
+    },
+    {
+      "path": "script/guards/rules/dep-new-added.toml",
+      "git_blob_sha": "da8680944fcf26c61e2702d88f259d51455a8be2",
+      "sha256": "26ae7c88e9b3fdc93c6219aee9ca668047a5dd4a4b23ecf81a7bb6f28a658bd9",
+      "bytes": 1154,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/dep-new-added.toml"
+    },
+    {
+      "path": "script/guards/rules/dep-registry-override.toml",
+      "git_blob_sha": "f2f404cb274e3e6839f9d851e4c7b9e7dd136d02",
+      "sha256": "2e90139de54330a478b5be1ef0f4009d86ced27a48434ba4144cab41fd8e11b0",
+      "bytes": 1280,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/dep-registry-override.toml"
+    },
+    {
+      "path": "script/guards/rules/destructive-shell.toml",
+      "git_blob_sha": "97f26fa09eaea58e3021c6f1685ff960ab514c6e",
+      "sha256": "0424dd5423e1c10089e94de482f7af81edd66d390ebab7f795ff0a9e54e50955",
+      "bytes": 1306,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/destructive-shell.toml"
+    },
+    {
+      "path": "script/guards/rules/env-file.toml",
+      "git_blob_sha": "020e8b6e1de549bd948bfdc5d09a9b82883f37fd",
+      "sha256": "7de7dfb925f3521bbb28e2b2dfe34554717bbf227a574d1207cb90e8855e34d7",
+      "bytes": 699,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/env-file.toml"
+    },
+    {
+      "path": "script/guards/rules/exec-bit.toml",
+      "git_blob_sha": "7b1f369cdefe4d7e3b24ea036b4a813e76dc565a",
+      "sha256": "a85ba3e3c96b0ec204c9b5580bd31c3b4d74380c2a2e93721c27f0cd75876540",
+      "bytes": 732,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/exec-bit.toml"
+    },
+    {
+      "path": "script/guards/rules/gha-continue-on-error.toml",
+      "git_blob_sha": "7efda1507f57a80d2cf0a535d05b30b460c53c5a",
+      "sha256": "2e90abfde712064bc2f9adbca9494e5db7400134ee0c551c59aae93a26177494",
+      "bytes": 743,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/gha-continue-on-error.toml"
+    },
+    {
+      "path": "script/guards/rules/gha-curl-pipe-sh.toml",
+      "git_blob_sha": "a556630bee0e72d7216fc0d4c043878788190a75",
+      "sha256": "c2b61e94ef212265dfafd1be7e2130d9c046deb49c3c1827499fb7b9b3d71559",
+      "bytes": 1075,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/gha-curl-pipe-sh.toml"
+    },
+    {
+      "path": "script/guards/rules/gha-deprecated-commands.toml",
+      "git_blob_sha": "4fbb193c694b024cc561a86694eec5323d14ff41",
+      "sha256": "bd62919029782b95ba40f8a84c40d31b135aa9bc8791dd3bdad4826f6bfba72e",
+      "bytes": 729,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/gha-deprecated-commands.toml"
+    },
+    {
+      "path": "script/guards/rules/gha-env-write.toml",
+      "git_blob_sha": "153727ce7ca3bc746da45fa09dacee73b1a881b8",
+      "sha256": "8f0ce047faa5dfb7b75f52c62f9a6ec89e4646f24823c57bd6b80ad89b29e319",
+      "bytes": 966,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/gha-env-write.toml"
+    },
+    {
+      "path": "script/guards/rules/gha-insecure-commands.toml",
+      "git_blob_sha": "96c9dcb29e1a6cbacf262ebd848fa4f49e694557",
+      "sha256": "86565a2f2518549f7fdc2dbab4da1eafb9f9887a59a82f3e753394f45d550c1b",
+      "bytes": 779,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/gha-insecure-commands.toml"
+    },
+    {
+      "path": "script/guards/rules/gha-job-disabled.toml",
+      "git_blob_sha": "f96cf195971c73d1635a2736f4abfdbecf3f0774",
+      "sha256": "94748c71446715626db27803ff24604521270e65520cbc5d528643ae2f4e92fd",
+      "bytes": 697,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/gha-job-disabled.toml"
+    },
+    {
+      "path": "script/guards/rules/gha-permissions-broad.toml",
+      "git_blob_sha": "94fa4604726d98a4db19e572d79a4ec615a6124b",
+      "sha256": "a1c837111a0ba08532480643165f8fb64f7f6707640c8bccb9b4cb720eaf086c",
+      "bytes": 1054,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/gha-permissions-broad.toml"
+    },
+    {
+      "path": "script/guards/rules/gha-pull-request-target.toml",
+      "git_blob_sha": "3c4507759782e63168efb381516a87b02f06b463",
+      "sha256": "00b708e1e630696c26701305dccc0a27a484eb981705c9570ee4aaa0420ac88d",
+      "bytes": 858,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/gha-pull-request-target.toml"
+    },
+    {
+      "path": "script/guards/rules/gha-secrets-inherit.toml",
+      "git_blob_sha": "ea9c577993a480020ac32ea3638616a16ae8eaad",
+      "sha256": "cf27f8305f5084cd1ca0a17f67f93a9d2ba1228c38de92da044117e1cad47373",
+      "bytes": 557,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/gha-secrets-inherit.toml"
+    },
+    {
+      "path": "script/guards/rules/gha-secrets-tojson.toml",
+      "git_blob_sha": "dce5a4df7051e56f02b845ac9d8bb44870bfd11a",
+      "sha256": "5d3e488a4b72d4cdf9646935555053ccac74b056d56efcec4024148b745a8a89",
+      "bytes": 665,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/gha-secrets-tojson.toml"
+    },
+    {
+      "path": "script/guards/rules/gha-template-injection.toml",
+      "git_blob_sha": "bf8798bd84b5b8021484e15852339f97cb8d7d90",
+      "sha256": "8d640c299e352a303d3f7ed6b33d1411b36d3eae469a437eb906a165c3c814ac",
+      "bytes": 1476,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/gha-template-injection.toml"
+    },
+    {
+      "path": "script/guards/rules/gha-unpinned-uses.toml",
+      "git_blob_sha": "0104e23ccdb9d5aa600d8d2f66a7af15528fd7d2",
+      "sha256": "5af64403c6a85a559a22595ebe249aeac04ec77a011b7ef41f4d356465ef8c12",
+      "bytes": 1086,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/gha-unpinned-uses.toml"
+    },
+    {
+      "path": "script/guards/rules/guardrail-ignore-added.toml",
+      "git_blob_sha": "2397fd3107210ef63c4156aa42bfbe2623fe8c00",
+      "sha256": "ffbf082a90ea663c78464f4a3538fb99262731df10a508e7455c468a5aa1e0ad",
+      "bytes": 876,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/guardrail-ignore-added.toml"
+    },
+    {
+      "path": "script/guards/rules/heredoc-residue.toml",
+      "git_blob_sha": "5c3b81ee0f4ee4973f7df9481061bf5aeab7e009",
+      "sha256": "57f11a31c6e991f309d914d7f109baf9ff19e6c2401a4e37332586de5a48a621",
+      "bytes": 710,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/heredoc-residue.toml"
+    },
+    {
+      "path": "script/guards/rules/hook-bypass.toml",
+      "git_blob_sha": "5c916264ffc1970af8ac01aeb905abc4a60f9a83",
+      "sha256": "eacf229b1df233e2739e6a4c7dfc669597a445a72506b8d45b708daa4a9fa801",
+      "bytes": 702,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/hook-bypass.toml"
+    },
+    {
+      "path": "script/guards/rules/js-console-log.toml",
+      "git_blob_sha": "e8e6a2075f5bb4e513a0dbb743538396cd4d9cf6",
+      "sha256": "74ca17f272860b68910dc2f146572fea34fd4edc18a618d9d0e33a6a5ba941c8",
+      "bytes": 903,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/js-console-log.toml"
+    },
+    {
+      "path": "script/guards/rules/js-debugger.toml",
+      "git_blob_sha": "cf4f09cde087b5007bbfcc15dcd04c064f29b7c6",
+      "sha256": "5e6299b652346fc09adfe473a7132e73b4fea41eeb27845413131ce5b6896328",
+      "bytes": 502,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/js-debugger.toml"
+    },
+    {
+      "path": "script/guards/rules/js-empty-catch.toml",
+      "git_blob_sha": "7c36bc5a103c4d41d41a71fb5ad4a34e9b2673d4",
+      "sha256": "1109d909ae0fdff57a4115338f84415bb0a42b559ebbc1267435263b3fd89928",
+      "bytes": 751,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/js-empty-catch.toml"
+    },
+    {
+      "path": "script/guards/rules/js-loose-assertion.toml",
+      "git_blob_sha": "9de6cf1ccea546b0dfad084eb392063a3f8ff073",
+      "sha256": "cf79e1960e4987783cf6711e0687f14aae4d90f7604db3fa5481565afdb8771d",
+      "bytes": 994,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/js-loose-assertion.toml"
+    },
+    {
+      "path": "script/guards/rules/js-test-focused.toml",
+      "git_blob_sha": "98c95527746fcfaaa657fc410ab7764aa712946c",
+      "sha256": "1d5f9dfa2318f11fe367671ff45898fecf0668f6ffb94dd5099cd691d3f04f76",
+      "bytes": 1079,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/js-test-focused.toml"
+    },
+    {
+      "path": "script/guards/rules/js-test-skipped.toml",
+      "git_blob_sha": "c8ffa3738f820eaa006f6c4d7640d1942e418e60",
+      "sha256": "74c7da8dcab9ec9a70ae8c59038b73978d30e81448fc910a7e27126303ff60d6",
+      "bytes": 859,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/js-test-skipped.toml"
+    },
+    {
+      "path": "script/guards/rules/large-file.toml",
+      "git_blob_sha": "e5011c230e68365b0d7a6a48ed1601cf7fd256a0",
+      "sha256": "13014b3d1844b55321fd8ee70fb098f1dd7504c46f513d5b6b73ffacc53ea671",
+      "bytes": 746,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/large-file.toml"
+    },
+    {
+      "path": "script/guards/rules/lint-disable.toml",
+      "git_blob_sha": "92922d6803242a22f381222301e0dfe83a441e3b",
+      "sha256": "ea3e05b22c5d71cdb5cd046c571c8b67dbad829351f6dc88662f7bcf89eef1b1",
+      "bytes": 1009,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/lint-disable.toml"
+    },
+    {
+      "path": "script/guards/rules/llm-elision.toml",
+      "git_blob_sha": "700806025af6cd29eae91331bbe8441843a875c9",
+      "sha256": "f6b52256130be040013ac222bf6c1746ce6434bd437225411c3a2b313cff45f4",
+      "bytes": 1176,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/llm-elision.toml"
+    },
+    {
+      "path": "script/guards/rules/local-abs-path.toml",
+      "git_blob_sha": "bb112b6ec7ab79b49c2cba2cf9c52d3d749886e5",
+      "sha256": "2825ac99dc0b541447c0882cb7ebb654f85ec9bbc98be3787ea78f814fc04751",
+      "bytes": 1338,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/local-abs-path.toml"
+    },
+    {
+      "path": "script/guards/rules/local-tests-escape.toml",
+      "git_blob_sha": "99c1befc806dfdd571c197c3851520feb2374978",
+      "sha256": "3056a564c4fe81083bcf1198a19a4eae6619882bf07121bbce6f7449ce641968",
+      "bytes": 868,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/local-tests-escape.toml"
+    },
+    {
+      "path": "script/guards/rules/lockfile-stale.toml",
+      "git_blob_sha": "776d21664e9a8e5dba637e382156236fb9aba54d",
+      "sha256": "822554296e7d886bf24261e4e7075a66d5cb14c59a20a59a86cef643ec3d9f26",
+      "bytes": 1107,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/lockfile-stale.toml"
+    },
+    {
+      "path": "script/guards/rules/merge-artifacts.toml",
+      "git_blob_sha": "cb1d462608b1f2a31dc597abdfb1498f6ca56dd7",
+      "sha256": "a876a9e58f0abb4af42c17903741ceb9ca81893d0a2682b6adddcc98f4f2ee54",
+      "bytes": 533,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/merge-artifacts.toml"
+    },
+    {
+      "path": "script/guards/rules/merge-outside-conveyor.toml",
+      "git_blob_sha": "34fd7095379da22eb10cc3b15b4403149ddcd706",
+      "sha256": "ba014bd78bebb9c135c992ae20ecef7dd7b7e7460233c5a239c44257bc8f4c89",
+      "bytes": 1338,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/merge-outside-conveyor.toml"
+    },
+    {
+      "path": "script/guards/rules/migration-add-required-column.toml",
+      "git_blob_sha": "4e439968ab5834ba0865a23985bf53606c974dac",
+      "sha256": "2be925687f29231150f3987828df123c0924a7693de25dd6a7a1f82bd2927541",
+      "bytes": 1168,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/migration-add-required-column.toml"
+    },
+    {
+      "path": "script/guards/rules/migration-destructive.toml",
+      "git_blob_sha": "a3d577f6e58033377fbdec8c448e96abcd0f6584",
+      "sha256": "36041496113b7321d55e6350dfc590b1a55875219a98d395a435a71a6057dc28",
+      "bytes": 1118,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/migration-destructive.toml"
+    },
+    {
+      "path": "script/guards/rules/migration-edited.toml",
+      "git_blob_sha": "4edae7f4c28608b8a4e733fcbc757ce8079ff6da",
+      "sha256": "a01dea8cd98fd87d7d956ed846b916ee8753d42ece394d30830e96e04bc9a6df",
+      "bytes": 807,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/migration-edited.toml"
+    },
+    {
+      "path": "script/guards/rules/os-junk.toml",
+      "git_blob_sha": "6608677698853abc68a374d3cda492678116fc68",
+      "sha256": "a05ad4e3bbde2f046b9d7c6748cd2a85a29a20a05ac86ce886f4c5334849eb5e",
+      "bytes": 531,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/os-junk.toml"
+    },
+    {
+      "path": "script/guards/rules/plugin-legacy-sdk.toml",
+      "git_blob_sha": "f3b3c0815cb199c0c710bf7c60dbe0389c31e1bd",
+      "sha256": "2150249881c6770f9b743eea62814e8cc4c8761f9c568ce7b8620b49da4dd54b",
+      "bytes": 1005,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/plugin-legacy-sdk.toml"
+    },
+    {
+      "path": "script/guards/rules/private-key.toml",
+      "git_blob_sha": "5965245bd31124a4fa01524029186851e5dc90df",
+      "sha256": "007dcaf73f0538ac32ca9df5e23f41786765d1d399739b3632bd15bcc84b8748",
+      "bytes": 1096,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/private-key.toml"
+    },
+    {
+      "path": "script/guards/rules/protected-paths.toml",
+      "git_blob_sha": "c8f48c58c20bd1840950df459fd1b131e55597b8",
+      "sha256": "bcbcfc0e480f91a55bca51ca13c69816b35c105227f253a3a5375d44977817d1",
+      "bytes": 1169,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/protected-paths.toml"
+    },
+    {
+      "path": "script/guards/rules/py-assert-trivial.toml",
+      "git_blob_sha": "240a353a8c54e852ec97adfd850ce65569c71896",
+      "sha256": "6b700dc9e6c6f9a6d9f917dbcd25c47c21a6481c407547e705ad02e61ecf9982",
+      "bytes": 564,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/py-assert-trivial.toml"
+    },
+    {
+      "path": "script/guards/rules/py-bare-except.toml",
+      "git_blob_sha": "f94826de25ea9d0dd762370317bea154fc88cc17",
+      "sha256": "0b30ec68c4b257bb9d4bf8885d8eac6b1eb31572b27a0ae417eab07bb60ee607",
+      "bytes": 663,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/py-bare-except.toml"
+    },
+    {
+      "path": "script/guards/rules/py-breakpoint.toml",
+      "git_blob_sha": "07cc65869ca235295439ade828408b941b0f8183",
+      "sha256": "1f7625e19f57dc9df1eaa55d4c1493060324f237104d9107b8931a61386fe686",
+      "bytes": 603,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/py-breakpoint.toml"
+    },
+    {
+      "path": "script/guards/rules/py-no-cover.toml",
+      "git_blob_sha": "09ef21a83917463231808c3ec9659cdcc630e0ae",
+      "sha256": "56c14f3efaaf45fc26a0c85a02afcc20382dd58314848929cfc2cdde9a02b925",
+      "bytes": 540,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/py-no-cover.toml"
+    },
+    {
+      "path": "script/guards/rules/py-noqa-blanket.toml",
+      "git_blob_sha": "2a877abd8d1a66762bed47a9d81186896c1ce922",
+      "sha256": "f3dcad77b23677c47065c17f5aecb877a89256a65a430ba0b7930ee3ed8f442d",
+      "bytes": 517,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/py-noqa-blanket.toml"
+    },
+    {
+      "path": "script/guards/rules/py-test-skipped.toml",
+      "git_blob_sha": "1117be94b678f5cca115dd46534f422f145aefa6",
+      "sha256": "602d842d2bd040a76f2f7897b7c7f3c2dc8c36870f6585b54406e36efa5aeb68",
+      "bytes": 1225,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/py-test-skipped.toml"
+    },
+    {
+      "path": "script/guards/rules/py-type-ignore.toml",
+      "git_blob_sha": "2e31859c62cb4afa87e7fcae08aabb0e4f6ca46a",
+      "sha256": "65cf3b54b0d7399e9c6684de807ec6c2f73f676e3c807ae3f73ca15994998c87",
+      "bytes": 773,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/py-type-ignore.toml"
+    },
+    {
+      "path": "script/guards/rules/removed-evaluator.toml",
+      "git_blob_sha": "afbffb67e3c5024ea032b8ff6e0c0a7c1f879ac2",
+      "sha256": "3916a0a2f5181f0910b07d484258b86c8542ada43b26be2f0adfb10dae14a76c",
+      "bytes": 1361,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/removed-evaluator.toml"
+    },
+    {
+      "path": "script/guards/rules/rs-dbg-macro.toml",
+      "git_blob_sha": "8ed4fe04d0e24011eb54f09ee8883c879967c196",
+      "sha256": "b4ea631c0407f8c31d0d436cd3a3969f5f12d39638da808f84736a5e9f1fe4db",
+      "bytes": 537,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/rs-dbg-macro.toml"
+    },
+    {
+      "path": "script/guards/rules/rs-should-panic-bare.toml",
+      "git_blob_sha": "494cd31fba3605d7f999adbf89940a09b96284a1",
+      "sha256": "3b6da6fd57f8c3d2ea9a95fc273f5dae9e7cc5542845861a5223bde1e0f4ecce",
+      "bytes": 606,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/rs-should-panic-bare.toml"
+    },
+    {
+      "path": "script/guards/rules/rs-test-ignored.toml",
+      "git_blob_sha": "7b230401f838cf8f9178beac0921703387bdb2ca",
+      "sha256": "93e7d1e0ab24bab1a50439161adffc5c79c4ad345a2663dded135db1c048d559",
+      "bytes": 719,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/rs-test-ignored.toml"
+    },
+    {
+      "path": "script/guards/rules/rs-todo-macros.toml",
+      "git_blob_sha": "11e157f7c2030892e913ca7f616d30a8cd30ecc3",
+      "sha256": "86b7512ec6bfa9fd01dbc2091e9a4fe199b23cde03fd5e757c0ba9bbb4ab3042",
+      "bytes": 637,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/rs-todo-macros.toml"
+    },
+    {
+      "path": "script/guards/rules/schema-any-mutable.toml",
+      "git_blob_sha": "b77081da607dcf7b04a2f36fc6e0188c15702b45",
+      "sha256": "b1e6f70f82ae6afda2baefe2fa0276f2e649c9da9e520984785dc0713d6a7dbb",
+      "bytes": 1065,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/schema-any-mutable.toml"
+    },
+    {
+      "path": "script/guards/rules/secret-token.toml",
+      "git_blob_sha": "33d9dbb80c2450bcc741cf505e1426065760a5e2",
+      "sha256": "7ef1bbe71bbf4490998082395cb74f799a056587c75a7734bef8f7fef9e70444",
+      "bytes": 1554,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/secret-token.toml"
+    },
+    {
+      "path": "script/guards/rules/submodule-added.toml",
+      "git_blob_sha": "0e7eefd3771350aa270e82d2b866c60bd4b7288e",
+      "sha256": "74d9329c27d028705b5c53636c58f1a8becaf0c0096a6be89694038104d24ac1",
+      "bytes": 515,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/submodule-added.toml"
+    },
+    {
+      "path": "script/guards/rules/symlink-added.toml",
+      "git_blob_sha": "7007ccb6228503d745d3a840f457c50b3c2c1603",
+      "sha256": "7bda1f9cff6b92c67622bbc3f5e976b51dbc8f43dfc1a14e77fb037ea9b82078",
+      "bytes": 504,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/symlink-added.toml"
+    },
+    {
+      "path": "script/guards/rules/test-assertions-removed.toml",
+      "git_blob_sha": "c285ddde38cf8b787f08346c7ee969d51d28ee0a",
+      "sha256": "42aa515ad6180cbc7e65732df4207cc714aa5189edd17f9129365379e38c02bb",
+      "bytes": 1009,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/test-assertions-removed.toml"
+    },
+    {
+      "path": "script/guards/rules/test-declaration-removed.toml",
+      "git_blob_sha": "634b78979fc155d0bc0ad344e70255dbd1a71286",
+      "sha256": "f7c046d9bf887750dcebe13625b7ce762c23d3bb42d469c11f8691788d1b35d8",
+      "bytes": 814,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/test-declaration-removed.toml"
+    },
+    {
+      "path": "script/guards/rules/test-file-deleted.toml",
+      "git_blob_sha": "d731a5c89af7533405ce0b344d2aa6c6990de78c",
+      "sha256": "2a037d0c192f2f727c04f9f1dc362ceb56a4324084f7ee6505bf0396d7333fd0",
+      "bytes": 1008,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/test-file-deleted.toml"
+    },
+    {
+      "path": "script/guards/rules/test-globalthis.toml",
+      "git_blob_sha": "30235e4d2545a51cf316f00c89cd8716a3239ead",
+      "sha256": "f97ce87d54d1f9abfa00c4b9c4499de0045fd867e091e3551a2a2f743cebdac9",
+      "bytes": 897,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/test-globalthis.toml"
+    },
+    {
+      "path": "script/guards/rules/test-retry-added.toml",
+      "git_blob_sha": "0c74c829a926f13b8a829f89d9ddfb2b7dc96257",
+      "sha256": "82c960705192d92ff3a5311048bba9a0bba7d4832c19195e5c0d62bdd71f3fb1",
+      "bytes": 786,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/test-retry-added.toml"
+    },
+    {
+      "path": "script/guards/rules/test-timeout-raised.toml",
+      "git_blob_sha": "f625a8ddcb51e4723141b2b06809db9b9bc57d3e",
+      "sha256": "bc535c87d2e77ffe8978de3b05c6280aa0d675f5a9717d5cf94c36320e848351",
+      "bytes": 895,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/test-timeout-raised.toml"
+    },
+    {
+      "path": "script/guards/rules/tls-verify-off.toml",
+      "git_blob_sha": "eab553942de6e47178194b61005f8dc8d6aab44a",
+      "sha256": "469e42c64396eb1de245edd9a535751cc3b201d5fc56151fcb273208348e2c99",
+      "bytes": 1255,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/tls-verify-off.toml"
+    },
+    {
+      "path": "script/guards/rules/ts-any-added.toml",
+      "git_blob_sha": "b7c0a065b5a81688a491bebc60f86775036beced",
+      "sha256": "d2a06668a2ad4aff2dca2a6bf04453fdc9f5f5fe5a856dfd1024f583297bfe43",
+      "bytes": 946,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/ts-any-added.toml"
+    },
+    {
+      "path": "script/guards/rules/ts-double-cast.toml",
+      "git_blob_sha": "4ca21801be1fbaf49c25af5e17b6ebc821f0462b",
+      "sha256": "912715be8c45f6caa92002b1f1e90e80bdf4babaf53b7a6d390c17ba4f8024b2",
+      "bytes": 888,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/ts-double-cast.toml"
+    },
+    {
+      "path": "script/guards/rules/ts-ignore.toml",
+      "git_blob_sha": "799d1a0a67acba74cf6bbe5d6fd61dfa26c42c76",
+      "sha256": "c34ff6b7ed0218e33c6e8496f38952f5b4b694f3ed09bddaf60957131e8da84a",
+      "bytes": 888,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/ts-ignore.toml"
+    },
+    {
+      "path": "script/guards/rules/ts-strict-relaxed.toml",
+      "git_blob_sha": "eada84f74fcf4c033de12cedbecfb98bc56c2b63",
+      "sha256": "6b888f6790df537d5576b4e6864aeea045a88f82d2df9f4e44829a24baa9db7f",
+      "bytes": 876,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/ts-strict-relaxed.toml"
+    },
+    {
+      "path": "script/guards/rules/wip-marker.toml",
+      "git_blob_sha": "22040c5bb0c46b6dd4af61a1b6d22eb9b356d706",
+      "sha256": "19c1393afa5d38bf9b413197cb0321cfbf21326ae33245962d4d58834de6968e",
+      "bytes": 925,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249/script/guards/rules/wip-marker.toml"
+    },
+    {
+      "path": "script/guards/diff.ts",
+      "git_blob_sha": "e0336749f5b9f6dc471dedff2bfa0674ab18ebd7",
+      "sha256": "a783cf3a5dbf7527bd240b4cc147dd7e2fe9acae73428a1e70d6493dde8c419e",
+      "bytes": 7910,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/script/guards/diff.ts"
+    },
+    {
+      "path": "script/guards/run.ts",
+      "git_blob_sha": "24c89b6fdbce07d778d2d1520ff4680d51c8c0f3",
+      "sha256": "2dfe91f11b237588f8f07e6119ab7ed28d3b6f524060519734517ce5d2bf83c7",
+      "bytes": 11882,
+      "capture_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/script/guards/run.ts"
+    }
+  ],
+  "scope": "Actual guard code/rules from the MCP-observed merge-base. This capture is not a Git checkout and is not a guard execution."
+}
