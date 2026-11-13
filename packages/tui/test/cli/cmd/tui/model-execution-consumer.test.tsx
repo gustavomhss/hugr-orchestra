@@ -199,6 +199,7 @@ test("CONTROL E6 TUI shell is not blocked solely by unavailable model eligibilit
     const queriesBeforeShell = fixture.queries().length
     fixture.prompt.set({ input: "", parts: [], mode: "normal" })
     fixture.prompt.focus()
+    await fixture.app.renderOnce()
     observe("before pressKey(\"!\")")
     await fixture.app.mockInput.pressKey("!")
     await fixture.app.renderOnce()

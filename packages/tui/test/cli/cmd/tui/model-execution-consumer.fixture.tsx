@@ -1,5 +1,6 @@
 /** @jsxImportSource @opentui/solid */
 import { testRender, useRenderer } from "@opentui/solid"
+import { TextareaRenderable } from "@opentui/core"
 import { createDefaultOpenTuiKeymap } from "@opentui/keymap/opentui"
 import { createStore } from "solid-js/store"
 import { onCleanup, onMount, Show, type ParentProps } from "solid-js"
@@ -196,6 +197,8 @@ export async function mount(options: { draft?: boolean; initial?: ModelExecution
           console.error("E6 TUI input observation", JSON.stringify({
             sequence: observation.count, label,
             focus: focused ? { id: focused.id, type: focused.constructor.name, isFocused: focused.focused } : null,
+            textarea: focused instanceof TextareaRenderable ? { plainTextLength: focused.plainText.length,
+              visualCursorOffset: focused.visualCursor.offset } : undefined,
             prompt: { focused: prompt?.focused, storedModeHint: prompt?.current.mode, inputLength: prompt?.current.input.length },
             keymapMode: observation.mode(), dialogStackLength: context.dialog.stack.length,
             counters: detail.counters,
