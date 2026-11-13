@@ -3,7 +3,7 @@ import type { TargetId } from "../target"
 import { BackendToolkitNoticeSources } from "../notice-sources"
 import sources from "./cargo-machete.notices.json"
 
-// Private host-preparation pin. Not registered in ENGINES or the Lucy catalog.
+// Pinned artifact for explicit preparation; Lucy analysis is qualified only on Linux x64, outside ENGINES.
 // Byte/layout/floor proof is separate from an analysis qualification.
 export default {
   id: "cargo-machete", version: "0.9.2", license: "MIT", upstream: "bnjbvr/cargo-machete",

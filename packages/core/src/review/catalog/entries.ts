@@ -14,6 +14,7 @@ import { osv } from "./osv"
 import { syft } from "./syft"
 import { jscpd } from "./jscpd"
 import { cargoAudit } from "./cargo-audit"
+import { ReviewLocalCheckCards } from "./local-checks"
 import { hadolint, shellcheck } from "./invoke"
 import { gosec } from "./gosec"
 import { govet } from "./govet"
@@ -119,6 +120,8 @@ export const current = {
     typeAware.pack,
     jscpd.pack,
     cargoAudit.pack,
+    ReviewLocalCheckCards.shfmt.pack,
+    ReviewLocalCheckCards.cargoMachete.pack,
   ],
   rules: [
     {

@@ -32,7 +32,7 @@ if (process.platform === "linux") {
   it.live("missing pinned sandbox refuses without execution or acquisition", () => Effect.gen(function* () {
     const temp = yield* held()
     const executable = yield* Effect.promise(() => realpath(process.execPath))
-    const result = yield* ReviewLocalReadProcess.run({ executable, args: [], root: temp.path }, () => Effect.die("unexpected execution")).pipe(Effect.provideService(ToolSafetySandboxRuntime.Source, undefined))
+    const result = yield* ReviewLocalReadProcess.run({ executable, args: [], root: temp.path }, () => Effect.die("unexpected execution")).pipe(Effect.provideService(ToolSafetySandboxRuntime.Source, { directory: path.join(temp.path, "missing-runtime"), dependencies: [path.join(temp.path, "missing-sandbox-dependency")], artifacts: [] }))
     expect(result).toEqual({ denied: "read-sandbox-unavailable" })
     expect(yield* Effect.promise(() => FileDigests.capture(temp.path))).toEqual([])
   }))
