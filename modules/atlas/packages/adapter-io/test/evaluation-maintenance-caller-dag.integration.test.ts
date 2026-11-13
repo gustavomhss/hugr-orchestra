@@ -94,9 +94,10 @@ function fixture() {
       store.put({ newSemantic: "b", key, target }),
     ],
   }
+  const targetGeneration = id({ generation: "target" })
   const envelope: MaintenanceHostEnvelope = {
     stage: "prepare", candidate: candidateId, targetRoot: "/synthetic-target",
-    targetGeneration: id({ generation: "target" }), maxEntries: 15, maxRecipeCalls: 15,
+    targetGeneration, maxEntries: 15, maxRecipeCalls: 15,
     maxCapturedBytes: 1048576, maxOutputBytes: 1048576,
     releaseReference: "synthetic-only-no-authority",
   }
