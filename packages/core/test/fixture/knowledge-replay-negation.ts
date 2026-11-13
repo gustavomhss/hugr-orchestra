@@ -160,9 +160,14 @@ async function run() {
     }));
     copy(path.join(fixture, "collapsed-local.scip"), path.join(api.atlasDir(source), "index.scip"));
     const runtime = api.composeRuntime(source);
-    const anchors = runtime.anchors(scope + "/companion.ts");
+    // The planner lists proper descendants; query the scope to include the companion file itself.
+    const anchors = runtime.anchors(scope);
     const anchor = anchors.units.find((unit) => unit.kind === "file" && unit.qualifiedPath === scope + "/companion.ts");
-    assert.ok(anchor, "Use the actual HEAD anchor, never a fabricated subtree hash");
+    assert.ok(anchor, "Actual scope planner must include the companion file: " + JSON.stringify({
+      reason: anchors.reason?.slice(0, 200), units: anchors.units.slice(0, 8).map((unit) => ({
+        kind: unit.kind, qualifiedPath: unit.qualifiedPath.slice(0, 180), subtreeHash: unit.subtreeHash.slice(0, 80),
+      })),
+    }));
     const built = api.buildNegation({ kind: "negation", relationKind: "calls", target, scope, tier: "T2",
       site: { site: { kind: "file", qualifiedPath: anchor.qualifiedPath, subtreeHash: anchor.subtreeHash },
         signals: { hotspot: 0, szzBugCommits: 0, coChanged: [], owners: [], messages: [] }, ppr: 0, rank: 1 } });
