@@ -29,6 +29,7 @@ describe("lucy durable fanout", () => {
       if (!model) return yield* Effect.die("fixture parent has no model")
       const database = yield* Database.Service
       const before = yield* database.db.select().from(SessionInputTable).all().pipe(Effect.orDie)
+      expect(before).toEqual([])
       const request = call(ctx.registry, "maestro", ctx.parent.id, { kind: "pr", baseRef: ctx.base, headRef: ctx.head, tier: "standard" })
       if (process.platform === "win32") {
         const refused = yield* request
@@ -110,6 +111,7 @@ describe("lucy durable fanout", () => {
       if (!model) return yield* Effect.die("fixture parent has no model")
       const database = yield* Database.Service
       const before = yield* database.db.select().from(SessionInputTable).all().pipe(Effect.orDie)
+      expect(before).toEqual([])
       const request = call(ctx.registry, "maestro", ctx.parent.id, { kind: "pr", baseRef: ctx.base, headRef: ctx.head, tier: "quick" })
       if (process.platform === "win32") {
         const refused = yield* request

@@ -166,6 +166,10 @@
       "dependsOn": ["transit"],
       "outputs": []
     },
+    "@orchestra/maestro#test": {
+      "dependsOn": ["transit"],
+      "outputs": []
+    },
     "@orchestra/maestro-arsenal#test": {
       "dependsOn": ["transit"],
       "outputs": []

@@ -68,6 +68,7 @@ export function reviewSkills() {
     skill("lucy-lens-correctness-reliability", "lucy-lens/correctness/reliability/SKILL.md"),
     skill("lucy-lens-tests", "lucy-lens/tests/SKILL.md"),
     skill("lucy-review-prove-quote", "lucy-review/prove/quote/SKILL.md"),
+    skill("lucy-review-prove-property", "lucy-review/prove/property/SKILL.md"),
   ]
 }
 

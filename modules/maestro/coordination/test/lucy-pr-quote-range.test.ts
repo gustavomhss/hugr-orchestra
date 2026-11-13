@@ -14,6 +14,8 @@ import { authoredSkills, run } from "./fixture/lucy-pr-entry"
 // The fixture card stays the host's routing, scope, checks, blockers, outcome and verdict.
 
 const skills = await authoredSkills()
+// A PR quote is evaluated only after private Unix-store admission; lucy-pr-entry proves Windows refuses earlier.
+const posix = process.platform === "linux" || process.platform === "darwin" ? test : test.skip
 const fence = (value: unknown) => "```" + ReviewResultV2.TAG + "\n" + JSON.stringify(value) + "\n```"
 
 const finding = (line: number, endLine: number) => ({
@@ -61,7 +63,7 @@ const commitHead = (directory: string, bytes: string) =>
     return yield* git(["rev-parse", "HEAD"])
   })
 
-test("a Quick blocked card admits one real added quote line and one precision row", () =>
+posix("a Quick blocked card admits one real added quote line and one precision row", () =>
   Effect.runPromise(run(skills, { finishCard: withFinding(1, 1) }, (ctx) => Effect.gen(function* () {
     const result = yield* ctx.invoke("maestro", request(ctx.base, ctx.head))
     expect(result.text).not.toContain("pr-card-invalid")
@@ -75,7 +77,7 @@ test("a Quick blocked card admits one real added quote line and one precision ro
   }))),
 )
 
-test("a quote that includes the trailing split sentinel is unavailable and admits nothing", () =>
+posix("a quote that includes the trailing split sentinel is unavailable and admits nothing", () =>
   Effect.runPromise(run(skills, { finishCard: withFinding(1, 2) }, (ctx) => Effect.gen(function* () {
     const result = yield* ctx.invoke("maestro", request(ctx.base, ctx.head))
     expect(result.type).toBe("error")
@@ -86,7 +88,7 @@ test("a quote that includes the trailing split sentinel is unavailable and admit
   }))),
 )
 
-test("a finding on a line the diff did not add is rejected before the blob is read", () =>
+posix("a finding on a line the diff did not add is rejected before the blob is read", () =>
   Effect.runPromise(run(skills, { finishCard: withFinding(2, 2) }, (ctx) => Effect.gen(function* () {
     const result = yield* ctx.invoke("maestro", request(ctx.base, ctx.head))
     expect(result.type).toBe("error")
@@ -97,7 +99,7 @@ test("a finding on a line the diff did not add is rejected before the blob is re
   }))),
 )
 
-test("a blank-only added range is unavailable", () =>
+posix("a blank-only added range is unavailable", () =>
   Effect.runPromise(run(skills, { finishCard: withFinding(1, 2) }, (ctx) => Effect.gen(function* () {
     const head = yield* commitHead(ctx.directory, "\n\n")
     const result = yield* ctx.invoke("maestro", request(ctx.base, head))
@@ -108,7 +110,7 @@ test("a blank-only added range is unavailable", () =>
   }))),
 )
 
-test("CRLF and a final line without a newline still admit the one real line", () =>
+posix("CRLF and a final line without a newline still admit the one real line", () =>
   Effect.runPromise(run(skills, { finishCard: withFinding(1, 1) }, (ctx) => Effect.gen(function* () {
     for (const bytes of ["export const value = 2\r\n", "export const value = 2"]) {
       const head = yield* commitHead(ctx.directory, bytes)

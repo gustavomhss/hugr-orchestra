@@ -91,7 +91,24 @@ describe("phase 3 authored tree", () => {
       expect(loaded).toContain(node.split("/").join("-"))
     }
     const audit = loaded.filter((node) => node === "lucy-audit" || node.startsWith("lucy-audit-"))
-    expect(audit.toSorted()).toEqual(["lucy-audit", "lucy-audit-compliance", "lucy-audit-compliance-privacy"])
+    // The full authored audit inventory in design §9.1, independent of catalog or discovery output.
+    expect(audit.toSorted()).toEqual([
+      "lucy-audit",
+      "lucy-audit-compliance",
+      "lucy-audit-compliance-accessibility-law",
+      "lucy-audit-compliance-ai-act",
+      "lucy-audit-compliance-cyber",
+      "lucy-audit-compliance-evidence",
+      "lucy-audit-compliance-licensing",
+      "lucy-audit-compliance-privacy",
+      "lucy-audit-context",
+      "lucy-audit-controls",
+      "lucy-audit-diligence",
+      "lucy-audit-forensics",
+      "lucy-audit-report",
+      "lucy-audit-spec-map",
+      "lucy-audit-variant",
+    ])
     for (const id of CLASSES) expect(Object.values(files).some((text) => text.includes(`class:${id}`))).toBe(true)
     expect(() => ReviewCatalog.check(catalog, files)).not.toThrow()
 

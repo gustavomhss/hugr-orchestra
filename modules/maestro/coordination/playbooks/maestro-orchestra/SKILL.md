@@ -28,6 +28,7 @@ dispatch the research seat.
 | `team_message` | Reach `live`, the meeting copilot, and read its notes. |
 | `maestro_workflows` | Resolve a published workflow before governed work. |
 | `maestro_record_admission`, `maestro_record_context`, `maestro_catalog_context`, `maestro_record_plan_revision`, `maestro_present_approval`, `maestro_record_approval`, `maestro_grant_authorization`, `maestro_request_review`, `maestro_record_validation`, `maestro_record_result_decision` | Governed work only, in the order `maestro-run-governed` gives. |
+| `maestro_prepare_review_checks` | Prepare pinned `shfmt` and/or `cargo-machete` checks and their read sandbox, only on an explicit owner request and after one-time permission. Linux x64 only; repeat explicitly after a host restart. |
 | `maestro_arsenal_catalog`, `maestro_arsenal_describe`, `maestro_arsenal_execute` | Repository and conflict maps, plan checks and wave scheduling for large work. |
 | `atlas_context` | The project's ownership and history before you route or review a change in an area you do not know. |
 | `context_recall`, `context_compact` | Recover a masked result or an exact earlier message; compact after a milestone. |

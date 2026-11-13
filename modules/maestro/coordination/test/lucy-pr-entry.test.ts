@@ -26,12 +26,16 @@ const block = (brief: string, name: string) => {
 }
 
 const skills = await authoredSkills()
+// Positive replay requires the private Unix store. Keep input refusals and an explicit unsupported-host proof on Windows.
+// Select by platform, so a regression in the store's supported() check still fails the positive Unix tests.
+const posix = process.platform === "linux" || process.platform === "darwin" ? test : test.skip
+const windows = process.platform === "win32" ? test : test.skip
 
 describe("lucy pr entry", () => {
   const open = <A, E>(body: (ctx: Ctx) => Effect.Effect<A, E, HostEnv>) =>
     Effect.runPromise(run(skills, {}, body))
 
-  test("Maestro PR without validation returns one host-bound review-result", () =>
+  posix("Maestro PR without validation returns one host-bound review-result", () =>
     open((ctx) => Effect.gen(function* () {
       const settled = yield* ctx.invoke("maestro", input(ctx.base, ctx.head))
       const card = ReviewResultV2.parse(settled.text)
@@ -72,7 +76,7 @@ describe("lucy pr entry", () => {
       expect(ctx.touches.children.length).toBe(children)
     })))
 
-  test("base rules bind and PR text cannot suppress the changed path", () =>
+  posix("base rules bind and PR text cannot suppress the changed path", () =>
     open((ctx) => Effect.gen(function* () {
       yield* ctx.invoke("maestro", input(ctx.base, ctx.head))
       const brief = ctx.touches.prompts.join("\n")
@@ -88,7 +92,7 @@ describe("lucy pr entry", () => {
       expect(work.scope).toEqual(scope(ctx.base, ctx.head))
     })))
 
-  test("Quick and Standard cards write no review receipt or board review note", () =>
+  posix("Quick and Standard cards write no review receipt or board review note", () =>
     open((ctx) => Effect.gen(function* () {
       const sibling = yield* seedReceipt(ctx.directory)
       expect((yield* reviewRows()).some((row) => row.aggregate_id === sibling)).toBe(true)
@@ -105,7 +109,7 @@ describe("lucy pr entry", () => {
       expect(yield* reviewNotes()).toEqual(notes)
     })))
 
-  test("a card-only child cannot record a receipt through the registered tool", () =>
+  posix("a card-only child cannot record a receipt through the registered tool", () =>
     open((ctx) => Effect.gen(function* () {
       yield* ctx.invoke("maestro", input(ctx.base, ctx.head, "standard"))
       const child = ctx.touches.children[0]
@@ -118,5 +122,15 @@ describe("lucy pr entry", () => {
       }, MaestroReviewTools.names.review)
       expect(recorded.text).toContain("Review recording opens only in the lead's final turn")
       expect((yield* reviewRows()).filter((row) => ctx.touches.children.includes(row.aggregate_id))).toEqual([])
+    })))
+
+  windows("Windows refuses a PR review before creating a child or admitting a prompt", () =>
+    open((ctx) => Effect.gen(function* () {
+      const settled = yield* ctx.invoke("maestro", input(ctx.base, ctx.head))
+      expect(settled.type).toBe("error")
+      expect(settled.text).toContain("pr-facts-unsupported: private replay store requires supported Unix")
+      expect(ctx.touches.children).toEqual([])
+      expect(ctx.touches.prompts).toEqual([])
+      expect(ctx.touches.resumes).toBe(0)
     })))
 })
