@@ -28,6 +28,7 @@ export function createLiveDeliveryOwner(options: LiveDeliveryOwnerOptions): Live
     if (!store) return undefined
     try {
       return createLiveDeliveryManager({ store, connection, onComplete(completion) {
+        if (closing || rotating) return
         for (const listener of [...listeners]) {
           try { listener({ ...completion }) } catch { console.warn("Live delivery completion observer failed") }
         }
@@ -154,16 +155,21 @@ export function createLiveDeliveryOwner(options: LiveDeliveryOwnerOptions): Live
   }
   function retry(id: string): LiveRecoveryAction {
     const reason = refusal()
-    return reason ? failure(reason) : delivery!.retry(id)
+    if (reason) return failure(reason)
+    if (!delivery) return failure("storage")
+    return delivery.retry(id)
   }
   function finish(id: string): LiveRecoveryAction {
     const reason = refusal()
-    return reason ? failure(reason) : delivery!.finish(id)
+    if (reason) return failure(reason)
+    if (!delivery) return failure("storage")
+    return delivery.finish(id)
   }
   function discard(id: string): Promise<LiveRecoveryAction> {
     const reason = refusal()
     if (reason) return Promise.resolve(failure(reason))
-    const job = delivery!.discard(id)
+    if (!delivery) return Promise.resolve(failure("storage"))
+    const job = delivery.discard(id)
     actions.add(job)
     job.then(() => actions.delete(job), () => actions.delete(job))
     return job
@@ -172,8 +178,9 @@ export function createLiveDeliveryOwner(options: LiveDeliveryOwnerOptions): Live
     const reason = refusal()
     if (reason) return Promise.resolve(failure(reason))
     if (!isLocalID(id)) return Promise.resolve(failure("conflict"))
+    if (!delivery) return Promise.resolve(failure("storage"))
     try {
-      const data = delivery!.export(id), controller = new AbortController()
+      const data = delivery.export(id), controller = new AbortController()
       const job = Promise.resolve().then(() => controller.signal.aborted ? failure("cancelled") : options.exportData(data, controller.signal))
         .catch((error: unknown) => failure(controller.signal.aborted ? "cancelled" : deliveryReason(error)))
         .finally(() => exportJobs.delete(controller))
