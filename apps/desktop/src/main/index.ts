@@ -507,7 +507,11 @@ const main = Effect.gen(function* () {
               OmniSmoke.event(name, data)
             },
           }),
-      ), (resource) => { server = { stop: () => resource.listener.stop() } }, (resource) => resource.listener.stop()),
+      ), (resource) => { server = { stop: () => resource.listener.stop() } }, (resource) => {
+        // A late acquisition skips the normal health await below. Observe before stop aborts that startup.
+        const health = resource.health.wait.catch(() => undefined)
+        return resource.listener.stop().finally(() => health)
+      }),
     )
 
     if (process.platform === "win32") {
