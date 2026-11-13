@@ -3543,8 +3543,8 @@
     "url": "https://github.com/gustavomhss/hugr-orchestra/pull/1463",
     "draft": true
   },
-  "integration_dev": "22d326d58f6cbb9fdc46b55620194c5d434a7444",
-  "integration_sync_commit": "2117a6d4989492367899fad6f33e723d3343f1a1",
+  "integration_dev": "5804b4f794ba31f49890b79565cff62b65e37725",
+  "integration_sync_commit": "2712582d1b",
   "recovery": "Server restart: preserved worktrees and hosted runs; final local checkers restarted with durable log and exit receipts when old pipes lost status.",
   "cold_blob_checks": [
     {
@@ -3999,8 +3999,8 @@
     }
   },
   "dev_sync_pending": {
-    "state": "Merge complete; final qualification in progress, no source conflict pending.",
-    "dev": "22d326d58f6cbb9fdc46b55620194c5d434a7444",
+    "state": "Merge complete through dev 5804b4f794; Atlas producer vector unchanged; final cold qualification pending.",
+    "dev": "5804b4f794ba31f49890b79565cff62b65e37725",
     "generation": "Official Client/Atlas/configuration artifacts verified for their recorded source scopes; no manual generated-source edits.",
     "full_epic": "43427741510 and43453802489 completed with failure. Current integration repairs and focused hosted qualification continue; no full-suite green or closure of E10/M13."
   },
