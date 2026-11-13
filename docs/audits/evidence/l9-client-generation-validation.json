@@ -1,0 +1,15 @@
+{
+  "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43382932112",
+  "job": 131744685583,
+  "cleanupJob": 131745707458,
+  "artifactID": 14017592273,
+  "archiveSHA256": "661550bf5bea08342ba24a62af5c6efa3aff5f017a5849e0a5c44fc9d46a0cf9",
+  "snapshot": "bce28586fbca2ec8ea1ac12731816c894d282d12",
+  "validationParent": "9a8fff0563ccbe141051740c95431992b5883ce9",
+  "qualified": true,
+  "sourceInputsMatched": 258,
+  "generatedFiles": 56,
+  "exactZipEntries": 57,
+  "changedGeneratedFiles": [],
+  "method": "Official packages/client generator ran twice after public HttpApi description change; all commands and installed Promise/Effect/codegen gates passed. Produced bytes already equal installed files, so no emitted edit or recovery was necessary. Full provenance records the temporary-index check basis."
+}
