@@ -75,12 +75,21 @@ export async function loopFixture(t: TestContext, load: ReturnType<typeof loadLo
     acquisition: undefined as Promise<void> | undefined,
     close: undefined as Promise<void> | undefined,
     postSeal: undefined as Promise<void> | undefined,
+    captureFailure: undefined as Error | undefined,
+    captureJoined: false, cleaning: false,
     captureEntered: gate(), captureStopped: gate(), postSealEntered: gate(),
     sttEvent: undefined as ((event: TranscriberEvent) => void) | undefined,
     completions: [] as Array<{ localID: string; sessionID: string; meetingID: string }>,
   }
   const binding: { loop?: Loop } = {}
-  const owner = f.create({ stopCapture: async (reason) => { await binding.loop?.stop(reason) } })
+  const expected = (error: unknown): boolean => state.captureFailure !== undefined &&
+    (error === state.captureFailure || (error instanceof AggregateError && error.errors.length > 0 && error.errors.every(expected)))
+  const owner = f.create({ stopCapture: async (reason) => {
+    await binding.loop?.stop(reason).catch((error: unknown) => {
+      // Only teardown acknowledges the exact already-observed injected failure. Other causes still fail cleanup.
+      if (!state.cleaning || !expected(error)) throw error
+    })
+  } })
   owner.onComplete((completion) => state.completions.push(completion))
   f.remote.handlers.set("POST /api/session", (_, response) => {
     const id = `ses_loop_delivery_${++state.sessionCount}`
@@ -119,7 +128,9 @@ export async function loopFixture(t: TestContext, load: ReturnType<typeof loadLo
       closed ??= (async () => {
         state.captureStops++
         if (state.close) await state.close
+        state.captureJoined = true
         state.captureStopped.resolve()
+        if (state.captureFailure) throw state.captureFailure
       })()
       return closed
     } }
@@ -163,6 +174,7 @@ export async function loopFixture(t: TestContext, load: ReturnType<typeof loadLo
   const loop: Loop = implementation.registerLiveLoop(options)
   binding.loop = loop
   f.releaseOnCleanup(() => {
+    state.cleaning = true
     held.forEach((release) => release())
     requests.forEach((controller) => controller.abort())
     // Failure containment only: release hardware gates and abort the actual Loop before the owner scope closes.
@@ -171,7 +183,9 @@ export async function loopFixture(t: TestContext, load: ReturnType<typeof loadLo
   t.after(async () => {
     try {
       await bounded(Promise.allSettled([...starts]), "Fixture startup resources did not join")
-      await bounded(Promise.all([...handles].map((handle) => handle.stop())), "Fixture capture/STT handles did not join")
+      const closed = await bounded(Promise.allSettled([...handles].map((handle) => handle.stop())), "Fixture capture/STT handles did not join")
+      const failures = closed.flatMap((result) => result.status === "rejected" && !expected(result.reason) ? [result.reason] : [])
+      if (failures.length) throw new AggregateError(failures, "Fixture capture/STT cleanup failed")
     } finally { active = undefined }
   })
   if (publish) await owner.setConnection(f.connection)

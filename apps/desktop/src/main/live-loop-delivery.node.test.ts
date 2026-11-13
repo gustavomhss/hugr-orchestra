@@ -269,3 +269,56 @@ test("real 10s deadlines bound create body, prompt and SSE headers, while establ
   assert.equal(followOwner.signal.aborted, false)
   await until(() => f.follows().every((request) => request.closed), "Owner abort left an SSE request open")
 })
+
+
+for (const reason of ["rotation", "quit"] as const) {
+  test(`${reason} propagates joined capture cleanup failure and still joins owned Session IO without sealing`, { timeout: 10_000 }, async (t) => {
+    const f = await loopFixture(t, boundary.load), ack = f.hold(), reply = f.hold()
+    const sentinel = new Error("controlled capture handle closed before cleanup rejection")
+    f.remote.handlers.set("POST /api/meeting/segments", async (_, response) => { await ack.promise; response.writeHead(204); response.end() })
+    await f.running()
+    const foreground = f.owner.manager.snapshot().items[0]
+    assert.ok(foreground)
+    f.state.captureFailure = sentinel
+    f.piece("Durable final retained despite cleanup rejection")
+    f.remote.handlers.set(`POST /api/session/${foreground.meeting.sessionID}/prompt`, async (_, response) => { await reply.promise; response.writeHead(204); response.end() })
+    f.remote.handlers.set("PATCH /api/meeting", async (_, response) => {
+      response.writeHead(200, { "content-type": "application/json" }); response.write('{"data":{"title":"')
+      await reply.promise; response.end('late"}}')
+    })
+    f.fire({ kind: "ask", question: "Owned held prompt during cleanup failure" })
+    const rename = { settled: false }
+    const renamed = f.loop.rename(foreground.meeting.id, "held rename").then(
+      () => { rename.settled = true; return false },
+      () => { rename.settled = true; return true },
+    )
+    await until(() => f.prompts().length === 1 && f.remote.requests.some((request) => request.method === "PATCH"), "Actual prompt/rename did not enter HTTP")
+    const contains = (error: unknown): boolean => error === sentinel ||
+      (error instanceof AggregateError && error.errors.some(contains)) ||
+      (error instanceof Error && error.cause !== undefined && contains(error.cause))
+    await assert.rejects(bounded(f.loop.stop(reason), "Cleanup rejection failed to join bounded Session IO"), (error: unknown) => {
+      assert.equal(f.state.captureJoined, true, "Controlled physical handle must be joined before its error is delivered")
+      assert.equal(rename.settled, true, "Rename ownership must join even when capture cleanup rejects")
+      return contains(error)
+    })
+    assert.equal(await renamed, true)
+    assert.equal(f.state.captureStops, 1)
+    assert.equal(f.state.sttStops, 1)
+    assert.equal(f.loop.running(), false)
+    assert.deepEqual(f.loop.runState(), { running: false })
+    await until(() => [...f.prompts(), ...f.follows(), ...f.remote.requests.filter((request) => request.method === "PATCH")].every((request) => request.closed), "Cleanup failure left owned HTTP bodies/readers open")
+    const retained = f.owner.manager.snapshot().items.find((item) => item.id === foreground.id)
+    assert.ok(retained)
+    assert.equal(retained.activeProducer, false)
+    assert.equal(retained.closeRequested, true)
+    assert.equal(retained.sealed, false, "Failed capture cleanup cannot certify a complete local tail")
+    assert.equal(retained.pendingCount, 1)
+    const exported = f.owner.manager.export(foreground.id)
+    assert.equal(exported.kind, "stored")
+    assert.ok(exported.kind === "stored")
+    assert.deepEqual(exported.data.segments.map((segment) => segment.text), ["Durable final retained despite cleanup rejection"])
+    assert.equal(f.state.completions.length, 0)
+    assert.equal(f.summaries().length, 0)
+    assert.equal(f.remote.requests.filter((request) => request.path === "/api/meeting/stop").length, 0)
+  })
+}
