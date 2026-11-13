@@ -11,6 +11,32 @@ code run in a throwaway copy of the tree, which is deleted when the review ends.
 The committed PR workflow described below is for the PR-capable campaign build, pending lead acceptance with the
 campaign bundle. This guide does not mean your installed app has already been updated.
 
+## Prepare local review checks
+
+Ask Maestro explicitly: “Prepare `shfmt`, `cargo-machete`, or both for review.” Maestro asks for one-time permission
+before downloads, licence notices or version probes. If permission is declined, preparation does not proceed.
+
+Analysis with these checks is supported only on Linux x64. After a host restart, ask Maestro to prepare them again.
+Preparation does not enable every check for every project or review. Review cards report actual check statuses and
+reasons, including checks that could not run; a partial preparation is not reported as fully ready.
+
+To opt in for a project, commit `.orchestra/lucy-local-checks.json` at the review base:
+
+```json
+{
+  "version": 1,
+  "shfmt": { "indent": 2, "language": "bash" },
+  "cargoMachete": { "enabled": true }
+}
+```
+
+`shfmt` checks each selected shell file as a whole, not only changed lines. `cargo-machete` requires workspace scope;
+a `files` request is refused rather than widened to a workspace. Cargo's native ignore metadata is honored, and the
+projected tree excludes detected dependency directories such as `node_modules`, `.venv` and `target`. Cards show the
+actual `pass`, `fail`, `not-run` or `acquisition-error` status, its reason, and a raw evidence URI. Coverage is tool-level:
+it does not claim per-file completion, new-only results or review findings. Unsupported platforms and unavailable read
+supervision are reported as unavailable, not as successful checks.
+
 ## The card
 
 Every review ends with one `review-result` card:

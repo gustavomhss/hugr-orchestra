@@ -37,6 +37,7 @@ import { ReviewGoPinned } from "./go-pinned"
 import { ReviewGoVet } from "./govet"
 import { ReviewLspDiagnostics } from "./lsp-diagnostics"
 import { ReviewTypeAware } from "./type-aware"
+import { ReviewLocalChecksAnalyze } from "./local-checks-analyze"
 
 export const TYPECHECK_CI = ReviewBuildLane.TYPECHECK_CI
 export const LSP_ABSENT = ReviewLspDiagnostics.ABSENT
@@ -176,8 +177,15 @@ export const run = Effect.fn("ReviewAnalyze.run")(function* (input: RunInput, pi
     })))
   }
   // No-build packs first: a repository gate may rewrite files in the head copy.
+  const localSeen = new Set<string>()
   const ordered = input.packs
     .map((packID) => ({ packID, pack: catalog.packs.find((entry) => entry.id === packID) }))
+    .filter((entry) => {
+      if (!entry.pack || !ReviewLocalChecksAnalyze.supports(entry.pack.template)) return true
+      if (localSeen.has(entry.packID)) return false
+      localSeen.add(entry.packID)
+      return true
+    })
     .toSorted((a, b) => LANES.indexOf(a.pack?.lane ?? "build") - LANES.indexOf(b.pack?.lane ?? "build"))
   const outcomes = yield* Effect.forEach(ordered, (entry) => runPack(entry.packID, entry.pack, context), { concurrency: 1 })
   const inScope = (entry: ReviewSarif.Entry) => selected.scope === "diff" || (selected.files ?? []).includes(entry.item.path)
@@ -273,6 +281,7 @@ export type OxlintHooks = {
 const runPack = Effect.fnUntraced(function* (packID: string, pack: Pack | undefined, context: RunContext) {
   const lane = context.input.lane
   if (!pack) return only({ id: packID, pack: packID, version: "unknown", lane, status: "not-run", reason: "unknown pack", workspaceExecuted: false })
+  if (ReviewLocalChecksAnalyze.supports(pack.template)) return yield* ReviewLocalChecksAnalyze.run(pack, context)
   const refused = (reason: string) => only(check(pack, "not-run", reason))
   const files = context.input.files ?? []
   if (context.input.scope === "files" && files.some((file) => !ReviewNativeFiles.containedPath(context.input.worktree, file)))

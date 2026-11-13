@@ -24,6 +24,7 @@ import { normalizePermissionRequest } from "./global-sync/utils"
 import { createV2SessionReducer, projectionTargets, touchedIndexes } from "./server-session-v2-reducer"
 import type { V2SessionReduction } from "./server-session-v2-reducer"
 import { executionStatus, sessionSelection, sessionUsage } from "./server-event-native"
+import { keepTranscript } from "./server-session-transcript"
 import { eventSessionID, projectSessionManagementEvent } from "./session-management-state"
 import { createSessionRecovery } from "./session-recovery"
 
@@ -922,18 +923,12 @@ export function createServerSession(
     if (!("data" in event) || !("sessionID" in event.data) || typeof event.data.sessionID !== "string") return
     const sessionID = event.data.sessionID
     const status = executionStatus(event)
-    if (
-      !dropped.has(sessionID) ||
-      data.session_message[sessionID] !== undefined ||
-      status === "busy" ||
-      protectedSessions().has(sessionID)
-    ) {
-      const reduction = v2.reduce(data.session_message[sessionID] ?? [], event)
-      if (reduction) {
-        dropped.delete(sessionID)
-        projectV2(reduction)
-        if (reduction.missing) hydrateV2Message(sessionID, reduction.missing)
-      }
+    const reduction = v2.reduce(data.session_message[sessionID] ?? [], event)
+    const loaded = data.session_message[sessionID] !== undefined
+    if (reduction && keepTranscript(dropped, sessionID, status, dropped.has(sessionID) && !loaded && status !== "busy" && protectedSessions().has(sessionID), loaded)) {
+      dropped.delete(sessionID)
+      projectV2(reduction)
+      if (reduction.missing) hydrateV2Message(sessionID, reduction.missing)
     }
 
     const info = data.info[sessionID]

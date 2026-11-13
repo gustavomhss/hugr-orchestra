@@ -2,19 +2,27 @@
 name: maestro-run-governed
 description: Run the governed approval chain from preconditions to verified dispatch, covering admission, grounding, validation, the cold review (`lucy`), owner approval, authorization and task. Use before the first governed tool call whenever the owner asks for a governed or auditable flow.
 internal: true
-when: The owner asks for a governed or auditable flow; load it before the first governed tool call.
-not-when: Normal work, which is the default.
+when: The owner asks for a governed or auditable flow, or explicitly asks to prepare local review checks; for preparation, load before calling its tool.
+not-when: Normal work, which is the default, except for explicit local review-check preparation. Preparation alone does not start governed admission.
 ---
 
 # Maestro Governed
 
 ## Trigger and rationale
 
-Use only when the owner explicitly asks for governed or auditable work; normal work never needs it. The chain exists so
-the owner approves exactly what will run and a durable record shows why. Each step is a `maestro_*` tool that writes an
-immutable record, and later steps re-check the earlier ones. Authority comes only from those records and from the owner's
-direct reply to a presentation. Copy every ID and hash from the previous tool output; never compose, shorten or guess
-one. Inside the chain, call only the governed tools in order.
+Use for explicitly requested governed or auditable work, and for the preparation exception below; normal work never
+starts the governed chain. The chain exists so the owner approves exactly what will run and a durable record shows why.
+Each step is a `maestro_*` tool that writes an immutable record, and later steps re-check the earlier ones. Authority
+comes only from those records and from the owner's direct reply to a presentation. Copy every ID and hash from the
+previous tool output; never compose, shorten or guess one. Inside the chain, call only the governed tools in order.
+
+## Explicit local-check preparation
+
+Before admission, when the owner explicitly asks to prepare local review checks, call `maestro_prepare_review_checks`
+for the requested tools and wait for its actual permission request and result. Never prepare implicitly during a review.
+Report the returned readiness and each tool's actual status and reason; keep partial or failed preparation visible.
+After reporting, continue the ordinary review flow, or continue below with Preconditions if the owner also requested
+governed work. A preparation request alone does not start admission.
 
 ## Preconditions
 

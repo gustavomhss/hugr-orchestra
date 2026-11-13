@@ -3,13 +3,19 @@ import fs from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
 import { and, eq, like } from "drizzle-orm"
-import { DateTime, Effect, Layer, Schema, Scope } from "effect"
+import { DateTime, Deferred, Effect, Fiber, Layer, Schema, Scope } from "effect"
 import { AgentV2 } from "@orchestra/core/agent"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { EventV2 } from "@orchestra/core/event"
 import { EventTable } from "@orchestra/core/event/sql"
+import { AppProcess } from "@orchestra/core/process"
+import { PermissionV2 } from "@orchestra/core/permission"
+import { PermissionSaved } from "@orchestra/core/permission/saved"
+import { ToolSafetySandboxRuntime } from "@orchestra/core/tool-safety-sandbox-runtime"
+import { ReviewLocalTools } from "@orchestra/core/review-toolkit/local-tools"
+import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 import { Global } from "@orchestra/core/global"
 import { Location } from "@orchestra/core/location"
 import { ModelV2 } from "@orchestra/core/model"
@@ -42,6 +48,7 @@ const governance = [
   "maestro_record_result_decision",
   "maestro_request_review",
   "maestro_record_validation",
+  "maestro_prepare_review_checks",
   "maestro_workflows",
 ]
 const arsenal = Object.values(MaestroArsenal.names)
@@ -65,7 +72,7 @@ const temporary = (prefix: string) =>
   )
 
 const host = AppNodeBuilder.build(
-  LayerNode.group([MaestroToolsV2.node, ToolRegistry.node, Database.node, EventV2.node, AgentV2.node, Location.node]),
+  LayerNode.group([MaestroToolsV2.node, ToolRegistry.node, Database.node, EventV2.node, AgentV2.node, Location.node, PermissionV2.node, PermissionSaved.node]),
   [
     [Database.node, Database.layerFromPath(":memory:")],
     [
@@ -94,14 +101,14 @@ const run = <A, E>(
   body: Effect.Effect<
     A,
     E,
-    ToolRegistry.Service | Database.Service | EventV2.Service | AgentV2.Service | Location.Service | Scope.Scope
+    ToolRegistry.Service | Database.Service | EventV2.Service | AppProcess.Service | AgentV2.Service | PermissionV2.Service | PermissionSaved.Service | Location.Service | Scope.Scope
   >,
 ) =>
   Effect.runPromise(
     body.pipe(
       Effect.provide(
         host as Layer.Layer<
-          ToolRegistry.Service | Database.Service | EventV2.Service | AgentV2.Service | Location.Service
+          ToolRegistry.Service | Database.Service | EventV2.Service | AppProcess.Service | AgentV2.Service | PermissionV2.Service | PermissionSaved.Service | Location.Service
         >,
       ),
       Effect.scoped,
@@ -192,6 +199,56 @@ const call = (agent: string, name: string, input: unknown, assistantMessageID = 
     })
   })
 
+const temporaryCheckRoots = (base: string) => ({
+  tools: path.join(base, "review-local-tools"),
+  runtime: path.join(base, "sandbox-runtime"),
+})
+
+const exists = (target: string) => Effect.promise(() => fs.access(target).then(() => true, () => false))
+
+const withCheckRoots = <A, E, R>(
+  effect: Effect.Effect<A, E, R>,
+  roots: ReturnType<typeof temporaryCheckRoots>,
+  dependencies?: ReadonlyArray<string>,
+) =>
+  Effect.gen(function* () {
+    const source = yield* ToolSafetySandboxRuntime.Source
+    return yield* effect.pipe(
+      Effect.provideService(ReviewLocalTools.Root, roots.tools),
+      Effect.provideService(ToolSafetySandboxRuntime.Source, source && {
+        ...source,
+        directory: roots.runtime,
+        ...(dependencies === undefined ? {} : { dependencies }),
+      }),
+    )
+  })
+
+const prepareRequest = (
+  roots: ReturnType<typeof temporaryCheckRoots>,
+  tools: ReadonlyArray<"shfmt" | "cargo-machete"> = ["shfmt", "cargo-machete"],
+) =>
+  Effect.gen(function* () {
+    const service = yield* PermissionV2.Service
+    const events = yield* EventV2.Service
+    const asked = yield* Deferred.make<PermissionV2.Request>()
+    const unsubscribe = yield* events.listen((event) => {
+      if (event.type !== PermissionV2.Event.Asked.type) return Effect.void
+      const request = Schema.decodeUnknownSync(PermissionV2.Request)(event.data)
+      if (request.action !== "review_checks_prepare") return Effect.void
+      return Deferred.succeed(asked, request).pipe(Effect.asVoid)
+    })
+    yield* Effect.addFinalizer(() => unsubscribe)
+    const running = yield* withCheckRoots(
+      call("maestro", "maestro_prepare_review_checks", { tools }),
+      roots,
+    ).pipe(Effect.forkChild)
+    const request = yield* Effect.raceFirst(
+      Deferred.await(asked),
+      Fiber.join(running).pipe(Effect.flatMap(() => Effect.fail(new Error("preparation completed without requesting explicit permission")))),
+    )
+    return { service, running, request }
+  })
+
 const reviewInput = {
   validationRecordID: "evt_v",
   workCard: "card",
@@ -229,6 +286,217 @@ test("Maestro sees its tools and the Arsenal, each seat only its own, every othe
       expect((yield* registry.materialize()).definitions.map((tool) => tool.name).sort()).toEqual(
         [...governance, ...arsenal, "maestro_record_review", ...ReviewSeatTools.REVIEW, ...memory, ...research, ...drafting].sort(),
       )
+    }),
+  ))
+
+test("review-check preparation is owner-visible only and rejects non-Maestro callers", () =>
+  run(
+    Effect.gen(function* () {
+      yield* setup
+      const registry = yield* ToolRegistry.Service
+      expect((yield* registry.materialize(rulesOf("maestro"))).definitions.map((tool) => tool.name)).toContain("maestro_prepare_review_checks")
+      expect((yield* registry.materialize(rulesOf("lucy"))).definitions.map((tool) => tool.name)).not.toContain("maestro_prepare_review_checks")
+      const unrestricted = yield* registry.materialize()
+      const refusal = yield* unrestricted.settle({
+        sessionID,
+        agent: AgentV2.ID.make("general"),
+        assistantMessageID: SessionMessage.ID.make("msg_calling"),
+        call: { type: "tool-call", id: "call_unrestricted_prepare", name: "maestro_prepare_review_checks", input: { tools: ["shfmt"] } },
+      })
+      expect(refusal.result.type).toBe("error")
+    }),
+  ))
+
+test("preparation input rejects unknown tools, empty requests and more than two entries", () =>
+  run(Effect.gen(function* () {
+    yield* setup
+    for (const tools of [[], ["unknown-tool"], ["shfmt", "shfmt", "shfmt"]])
+      expect((yield* call("maestro", "maestro_prepare_review_checks", { tools })).result.type).toBe("error")
+    const permission = yield* PermissionV2.Service
+    expect(yield* permission.list()).toEqual([])
+  })))
+
+test("unsupported preparation host refuses before permission or cache writes", () =>
+  run(
+    Effect.gen(function* () {
+      if (process.platform !== "win32" && !(process.platform === "linux" && process.arch !== "x64")) return
+      yield* setup
+      const temp = yield* temporary("maestro-review-check-unsupported-")
+      const roots = temporaryCheckRoots(temp)
+      const result = yield* withCheckRoots(
+        call("maestro", "maestro_prepare_review_checks", { tools: ["shfmt"] }),
+        roots,
+      )
+      expect(JSON.parse(String(result.result.value))).toMatchObject({ status: "not-run", reason: "read-sandbox-unsupported-host" })
+      const permission = yield* PermissionV2.Service
+      expect(yield* permission.list()).toEqual([])
+      expect(yield* exists(roots.tools)).toBe(false)
+      expect(yield* exists(roots.runtime)).toBe(false)
+    }),
+  ))
+
+test("approved preparation reports a supported-host sandbox dependency refusal without acquiring tools", () =>
+  run(
+    Effect.gen(function* () {
+      if (process.platform !== "linux" || process.arch !== "x64") return
+      yield* setup
+      const agents = yield* AgentV2.Service
+      yield* agents.transform((draft) => draft.update(AgentV2.ID.make("maestro"), (agent) => {
+        agent.permissions = [{ action: "review_checks_prepare", resource: "*", effect: "allow" }]
+      }))
+      const temp = yield* temporary("maestro-review-check-runtime-refusal-")
+      const roots = temporaryCheckRoots(temp)
+      const missing = `orchestra-test-missing-${Date.now()}`
+      const prompt = yield* Effect.gen(function* () {
+        const service = yield* PermissionV2.Service
+        const events = yield* EventV2.Service
+        const asked = yield* Deferred.make<PermissionV2.Request>()
+        const unsubscribe = yield* events.listen((event) => {
+          if (event.type !== PermissionV2.Event.Asked.type) return Effect.void
+          const request = Schema.decodeUnknownSync(PermissionV2.Request)(event.data)
+          if (request.action !== "review_checks_prepare") return Effect.void
+          return Deferred.succeed(asked, request).pipe(Effect.asVoid)
+        })
+        yield* Effect.addFinalizer(() => unsubscribe)
+        const running = yield* withCheckRoots(
+          call("maestro", "maestro_prepare_review_checks", { tools: ["shfmt"] }),
+          roots,
+          [missing],
+        ).pipe(Effect.forkChild)
+        const request = yield* Effect.raceFirst(
+          Deferred.await(asked),
+          Fiber.join(running).pipe(Effect.flatMap(() => Effect.fail(new Error("preparation completed without requesting explicit permission")))),
+        )
+        return { service, running, request }
+      })
+      yield* prompt.service.reply({ requestID: prompt.request.id, reply: "once" })
+      const result = yield* Fiber.join(prompt.running)
+      expect(JSON.parse(String(result.result.value))).toMatchObject({
+        status: "not-run",
+        reason: expect.stringContaining("sandbox-dependency-missing"),
+        tools: [],
+      })
+      expect(yield* exists(roots.runtime)).toBe(false)
+      expect(yield* exists(roots.tools)).toBe(false)
+    }),
+  ))
+
+test("explicit preparation permission carries canonical tool context and writes no cache before once", () =>
+  run(
+    Effect.gen(function* () {
+      if (process.platform !== "linux" || process.arch !== "x64") return
+      yield* setup
+      const agents = yield* AgentV2.Service
+      yield* agents.transform((draft) => draft.update(AgentV2.ID.make("maestro"), (agent) => {
+        agent.permissions = [{ action: "review_checks_prepare", resource: "*", effect: "allow" }]
+      }))
+      const saved = yield* PermissionSaved.Service
+      yield* saved.add({ projectID: Project.ID.global, action: "review_checks_prepare", resources: ["*"] })
+      const temp = yield* temporary("maestro-review-check-pending-")
+      const roots = temporaryCheckRoots(temp)
+      const prompt = yield* prepareRequest(roots)
+      expect(prompt.request).toMatchObject({
+        sessionID,
+        action: "review_checks_prepare",
+        resources: ["review-check:read-sandbox", "review-check:shfmt", "review-check:cargo-machete"],
+        source: { type: "tool", messageID: "msg_calling", callID: "call_maestro_prepare_review_checks" },
+      })
+      expect(prompt.request.save).toBeUndefined()
+      expect(yield* exists(roots.tools)).toBe(false)
+      expect(yield* exists(roots.runtime)).toBe(false)
+      yield* prompt.service.reply({ requestID: prompt.request.id, reply: "reject" })
+      expect((yield* Fiber.join(prompt.running)).result.type).toBe("error")
+      expect(yield* prompt.service.list()).toEqual([])
+      expect(yield* exists(roots.tools)).toBe(false)
+      expect(yield* exists(roots.runtime)).toBe(false)
+    }),
+  ))
+
+test("configured deny refuses preparation without creating runtime or toolkit cache", () =>
+  run(
+    Effect.gen(function* () {
+      if (process.platform !== "linux" || process.arch !== "x64") return
+      yield* setup
+      const agents = yield* AgentV2.Service
+      yield* agents.transform((draft) => draft.update(AgentV2.ID.make("maestro"), (agent) => {
+        agent.permissions = [{ action: "review_checks_prepare", resource: "*", effect: "deny" }]
+      }))
+      const temp = yield* temporary("maestro-review-check-denied-")
+      const roots = temporaryCheckRoots(temp)
+      const result = yield* withCheckRoots(
+        call("maestro", "maestro_prepare_review_checks", { tools: ["shfmt"] }),
+        roots,
+      )
+      expect(result.result.type).toBe("error")
+      const permission = yield* PermissionV2.Service
+      expect(yield* permission.list()).toEqual([])
+      expect(yield* exists(roots.tools)).toBe(false)
+      expect(yield* exists(roots.runtime)).toBe(false)
+    }),
+  ))
+
+test("one explicit once prepares both pinned checks and locate sees the same-process identities", () =>
+  run(
+    Effect.gen(function* () {
+      if (process.platform !== "linux" || process.arch !== "x64") return
+      yield* setup
+      const agents = yield* AgentV2.Service
+      yield* agents.transform((draft) => draft.update(AgentV2.ID.make("maestro"), (agent) => {
+        agent.permissions = [{ action: "review_checks_prepare", resource: "*", effect: "allow" }]
+      }))
+      const temp = yield* temporary("maestro-review-check-ready-")
+      const roots = temporaryCheckRoots(temp)
+      expectSpawn(import.meta.path)
+      const prompt = yield* prepareRequest(roots, ["cargo-machete", "shfmt"])
+      yield* prompt.service.reply({ requestID: prompt.request.id, reply: "once" })
+      const settled = yield* Fiber.join(prompt.running)
+      const runtime = yield* withCheckRoots(ToolSafetySandboxRuntime.resolve(false), roots)
+      expect(runtime).toMatchObject({ directory: roots.runtime })
+      expect(yield* exists(roots.runtime)).toBe(true)
+      const result = JSON.parse(String(settled.result.value)) as {
+        status: string
+        tools: ReadonlyArray<{ tool: string; ok: boolean; identity?: ReviewLocalTools.Identity }>
+      }
+      expect(result.status).toBe("ready")
+      expect(result.tools.map((item) => item.tool)).toEqual(["cargo-machete", "shfmt"])
+      for (const tool of ["shfmt", "cargo-machete"] as const) {
+        const located = yield* ReviewLocalTools.locate(tool).pipe(Effect.provideService(ReviewLocalTools.Root, roots.tools))
+        expect(located.ok).toBe(true)
+        if (located.ok) {
+          const item = result.tools.find((candidate) => candidate.tool === tool)
+          expect(item?.identity).toEqual(located.identity)
+          expect(located.identity.target).toBe("linux-x64")
+          expect(located.identity.proof).toBe("version-probe")
+        }
+      }
+      const duplicatePrompt = yield* prepareRequest(roots, ["shfmt", "shfmt"])
+      expect(duplicatePrompt.request.resources).toEqual(["review-check:read-sandbox", "review-check:shfmt"])
+      yield* duplicatePrompt.service.reply({ requestID: duplicatePrompt.request.id, reply: "once" })
+      const duplicateSettled = yield* Fiber.join(duplicatePrompt.running)
+      const duplicateResult = JSON.parse(String(duplicateSettled.result.value)) as { status: string; tools: ReadonlyArray<{ tool: string; ok: boolean }> }
+      expect(duplicateResult.status).toBe("ready")
+      expect(duplicateResult.tools).toEqual([expect.objectContaining({ tool: "shfmt", ok: true })])
+      const cargo = result.tools.find((item) => item.tool === "cargo-machete")
+      if (!cargo?.identity) throw new Error("cargo-machete preparation omitted its pinned identity")
+      const cargoDirectory = path.dirname(cargo.identity.executable)
+      expect(cargoDirectory.startsWith(roots.tools)).toBe(true)
+      const mode = (yield* Effect.promise(() => fs.stat(cargoDirectory))).mode & 0o777
+      yield* Effect.acquireRelease(
+        Effect.promise(() => fs.chmod(cargoDirectory, 0)),
+        () => Effect.promise(() => fs.chmod(cargoDirectory, mode)),
+      )
+      const partialPrompt = yield* prepareRequest(roots)
+      yield* partialPrompt.service.reply({ requestID: partialPrompt.request.id, reply: "once" })
+      const partialSettled = yield* Fiber.join(partialPrompt.running)
+      const partial = JSON.parse(String(partialSettled.result.value)) as {
+        status: string
+        tools: ReadonlyArray<{ tool: string; ok: boolean; reason?: string }>
+      }
+      expect(partial.status).toBe("not-run")
+      const refused = yield* ReviewLocalTools.prepare("cargo-machete").pipe(Effect.provideService(ReviewLocalTools.Root, roots.tools))
+      expect(refused.ok).toBe(false)
+      expect(partial.tools[0]).toMatchObject({ tool: "shfmt", ok: true })
+      expect(partial.tools[1]).toEqual({ tool: "cargo-machete", ...refused })
     }),
   ))
 
