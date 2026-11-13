@@ -50,6 +50,7 @@ export const reviewBinding = (held: {
     unknown,
     Scope.Scope
   >
+  readonly codeCopy?: Effect.Effect<ReviewScratch.Snapshot, unknown, Scope.Scope>
   readonly headCommit?: string
 }) => (bound: ReviewFanoutV2.BindInput) =>
   Effect.gen(function* () {
