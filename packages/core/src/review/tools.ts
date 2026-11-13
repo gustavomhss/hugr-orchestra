@@ -1,6 +1,6 @@
 export * as ReviewTools from "./tools"
 
-import { Effect, Schema } from "effect"
+import { Effect, Schema, Scope } from "effect"
 import { optional } from "@orchestra/schema/schema"
 import type { PermissionV2 } from "../permission"
 import { AppProcess } from "../process"
@@ -43,10 +43,13 @@ export type Page = {
 
 export type PageResult = { readonly items: ReadonlyArray<ReviewItem.ToolItem>; readonly cursor?: string }
 
+export type CodeSource = { readonly directory: string; readonly worktree: string; readonly commit?: string }
+
 /** What a review Session may reach, set by the fan-out for the Session's stage. */
 export type Binding = {
   /** The repository `review_history` reads. */
   readonly repository: string
+  readonly codeSource?: Effect.Effect<CodeSource, Tool.Failure, Scope.Scope>
   /** Lens children: the Session's lens and `ReviewAnalyze.page` (review-toolkit/analyze.ts) over the review's retained run. */
   readonly analyze?: {
     readonly lens: string
@@ -84,6 +87,20 @@ export const bind = (sessionID: string, binding: Binding) =>
         if (bindings.get(sessionID) === binding) bindings.delete(sessionID)
       }),
   )
+
+export function readCode(
+  sessionID: string,
+): Effect.Effect<{ readonly source: CodeSource; readonly retain?: Binding["retain"] }, Tool.Failure, Scope.Scope> {
+  return Effect.gen(function* () {
+    const binding = bindings.get(sessionID)
+    if (!binding?.codeSource) return yield* new Tool.Failure({ message: `review-code-binding-missing: ${sessionID}` })
+    const source = yield* binding.codeSource.pipe(
+      Effect.mapError(() => new Tool.Failure({ message: "review-code-source-unavailable" })),
+    )
+    if (bindings.get(sessionID) !== binding) return yield* new Tool.Failure({ message: `review-code-binding-missing: ${sessionID}` })
+    return { source, ...(binding.retain ? { retain: binding.retain } : {}) }
+  })
+}
 
 export function tools(services: Services) {
   const bound = Effect.fn("ReviewTools.bound")(function* (name: string, context: Tool.Context) {
