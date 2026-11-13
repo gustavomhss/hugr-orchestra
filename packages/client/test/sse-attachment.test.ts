@@ -66,19 +66,31 @@ test.each([["\n", "\n"], ["\r", "\n\r\n"], ["\n\r", "\n"]])(
 )
 
 test.each([true, false])("SSE refuses an oversized frame, complete=%j", async (complete) => {
+  const state = { cancelled: false }
+  const deadline = Promise.withResolvers<void>()
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
       controller.enqueue(new TextEncoder().encode("x".repeat(128 * 1024 * 1024)))
       controller.enqueue(new TextEncoder().encode(complete ? "x\n\n" : "x"))
-      controller.close()
+      if (complete) controller.close()
+      if (!complete) void deadline.promise.then(() => controller.error(new Error("Incomplete frame was not bounded")))
+    },
+    cancel() {
+      state.cancelled = true
     },
   })
   const client = Orchestra.make({
     baseUrl: "http://localhost:3000",
     fetch: async () => new Response(stream, { headers: { "content-type": "text/event-stream" } }),
   })
-  await expect(client.events.subscribe()[Symbol.asyncIterator]().next()).rejects.toMatchObject({
-    name: "ClientError",
-    reason: "MalformedResponse",
-  })
+  const timer = setTimeout(() => deadline.resolve(), 3000)
+  try {
+    await expect(client.events.subscribe()[Symbol.asyncIterator]().next()).rejects.toMatchObject({
+      name: "ClientError",
+      reason: "MalformedResponse",
+    })
+    if (!complete) expect(state.cancelled).toBe(true)
+  } finally {
+    clearTimeout(timer)
+  }
 })
