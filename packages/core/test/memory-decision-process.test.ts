@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, expect } from "bun:test"
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import { Effect, Fiber } from "effect"
 import { AppProcess } from "@orchestra/core/process"
@@ -39,7 +39,14 @@ it.live("CONTROL L11 process: actual actor and Git complete through AppProcess b
   expect(initialized.exitCode, initialized.stderr.toString()).toBe(0)
   const root = yield* MemoryDecisionProcess.git(proc, f.repo, ["rev-parse", "--show-toplevel"])
   expect(root.exitCode, root.stderr.toString()).toBe(0)
-  expect(root.stdout.toString().trim()).toBe(f.repo)
+  const expected = statSync(f.repo, { bigint: true })
+  const actual = statSync(root.stdout.toString().trim(), { bigint: true })
+  expect(expected.isDirectory()).toBe(true)
+  expect(actual.isDirectory()).toBe(true)
+  expect(expected.ino).toBeGreaterThan(0n)
+  expect(actual.dev).toBe(expected.dev)
+  expect(actual.ino).toBe(expected.ino)
+  if (process.platform !== "win32") expect(root.stdout.toString().trim()).toBe(f.repo)
 }))
 
 for (const contender of ["indexed", "discarded"] as const) {
