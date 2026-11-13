@@ -1,0 +1,26 @@
+name: support-finalize-alias
+on:
+  push:
+    branches: [genesis-support-01-finalize-alias]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  finalize-alias:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: modules/atlas
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: modules/atlas/package-lock.json
+      - run: npm ci
+      - name: Build Atlas
+        run: npm run build
+      - name: Finalize alias adversarial regression
+        run: npx vitest run packages/adapter-io/test/evaluation-rebuild-alias.test.ts

@@ -237,24 +237,28 @@ export function finalizeEvaluationUpdate(request: {
   readonly readReference: (reference: NativeReference) => Uint8Array
 }): OwnershipRefusal | { readonly kind: "private-evaluation-candidate"; readonly prepared: PreparedEvaluation; readonly manifest: Hash; readonly context: OwnershipEvaluationContext } {
   const { store, target } = request, prepared = target.prepared
-  const context: OwnershipEvaluationContext = { evaluation: prepared.candidate.evaluation, evaluationCandidate: prepared.candidate_id, generation: target.targetGeneration }
+  // Detach the graph from caller-owned aliases before invoking any external callback.
+  // The snapshot is the only candidate used to build and return the finalized graph.
+  const candidate = deepFreeze(structuredClone(prepared.candidate))
+  const finalizedPrepared: PreparedEvaluation = { ...prepared, candidate }
+  const context: OwnershipEvaluationContext = { evaluation: candidate.evaluation, evaluationCandidate: prepared.candidate_id, generation: target.targetGeneration }
   // No target manifest exists yet. Label intended context without inventing a manifest identity.
   const refuse = (message: string): OwnershipRefusal & { phase: "evaluation"; evaluationCandidate: Hash; generation: Hash } => ({
     kind: "hold", reason: "ownership-review", evidence: [message], phase: "evaluation", evaluationCandidate: prepared.candidate_id, generation: target.targetGeneration })
   try {
-  if (prepared.candidate_id !== id(prepared.candidate) || id(store.get(prepared.candidate_id)) !== prepared.candidate_id ||
-    JSON.stringify(prepared.candidate.runtime_identity) !== JSON.stringify(evaluationRuntimeIdentity())) return refuse("evaluation-target-integrity")
-  const plan = store.get(prepared.candidate.evaluation.evaluationPlan)
-  if (!isRecord(plan) || id(plan) !== prepared.candidate.evaluation.evaluationPlan || plan.schema !== "genesis-evaluation-rebuild-plan/v1" || plan.target_generation !== target.targetGeneration)
+  if (prepared.candidate_id !== id(candidate) || id(store.get(prepared.candidate_id)) !== prepared.candidate_id ||
+    JSON.stringify(candidate.runtime_identity) !== JSON.stringify(evaluationRuntimeIdentity())) return refuse("evaluation-target-integrity")
+  const plan = store.get(candidate.evaluation.evaluationPlan)
+  if (!isRecord(plan) || id(plan) !== candidate.evaluation.evaluationPlan || plan.schema !== "genesis-evaluation-rebuild-plan/v1" || plan.target_generation !== target.targetGeneration)
     return refuse("evaluation-target-plan")
-  if (prepared.candidate.observations.some((input) => request.current(input.key) !== input.version)) return refuse("evaluation-target-input-drift")
-  const binding = validateEvaluationBinding(request.binding, prepared)
+  if (candidate.observations.some((input) => request.current(input.key) !== input.version)) return refuse("evaluation-target-input-drift")
+  const binding = validateEvaluationBinding(request.binding, finalizedPrepared)
   const evidence = binding.decisions.map((decision) => [decision.request_ref, decision.response_ref].map((reference) => {
     const bytes = request.readReference(reference)
     if (nativeSha256(bytes) !== reference.sha256) throw new Error("evaluation-rebuild-reference-drift")
     return store.put({ kind: "ownership-body", version: 1, bytes: Array.from(bytes) })
   }))
-  const entries = prepared.candidate.entries.map((entry) => {
+  const entries = candidate.entries.map((entry) => {
     const reviews = binding.decisions.map((decision, index) => {
       const review: EvaluationOwnershipReview = { kind: "ownership-review", version: 2, evaluation: context.evaluation, evaluationCandidate: prepared.candidate_id,
         reviewer: decision.reviewer, contract: entry.contract, inputs: entry.inputs_id, result: entry.artifact.result, criteria: [...OWNERSHIP_ADMISSION_CRITERIA], verdict: "pass",
@@ -267,17 +271,23 @@ export function finalizeEvaluationUpdate(request: {
     return { key: entry.key, artifact: store.put(artifact) }
   })
   const manifest: EvaluationOwnershipManifest = { kind: "ownership-manifest", version: 2, evaluation: context.evaluation, evaluationCandidate: prepared.candidate_id,
-    generation: context.generation, scope: prepared.candidate.scope, entries, roots: prepared.candidate.roots }
+    generation: context.generation, scope: candidate.scope, entries, roots: candidate.roots }
   const manifestHash = store.put(manifest)
   for (const entry of entries) {
     const read = readOwnership(store, manifestHash, { scope: manifest.scope, key: entry.key, maxBytes: Number.MAX_SAFE_INTEGER }, request.current, context)
     if (read.kind === "hold") return read
   }
-  if (prepared.candidate.observations.some((input) => request.current(input.key) !== input.version)) return refuse("evaluation-final-input-drift")
-  return { kind: "private-evaluation-candidate", prepared, manifest: manifestHash, context }
+  if (candidate.observations.some((input) => request.current(input.key) !== input.version)) return refuse("evaluation-final-input-drift")
+  return { kind: "private-evaluation-candidate", prepared: finalizedPrepared, manifest: manifestHash, context }
   } catch (error) {
     return refuse(error instanceof Error ? error.message : "evaluation-finalize-invalid-evidence")
   }
+}
+
+function deepFreeze<T>(value: T): T {
+  if (typeof value !== "object" || value === null || Object.isFrozen(value)) return value
+  for (const child of Object.values(value as Record<string, unknown>)) deepFreeze(child)
+  return Object.freeze(value)
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
