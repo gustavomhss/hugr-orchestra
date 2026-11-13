@@ -1,0 +1,12 @@
+{
+  "schema": "omni-freeze/v1",
+  "frozen_at": "2026-11-13T14:51:13.270559+00:00",
+  "oracle_sha256": "9bcd0b2abc40c249963a774a3bc644337cec7735f714cc91f5b32f0bce80da1c",
+  "execution_id": "b5970766-80d8-4664-a9a8-1db37d6485af",
+  "criteria_version": "omni-public-v1",
+  "oracle_public": false,
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "criteria_sha256": "397d9e237f8d9663ae57045e75501857abe775f809ee9b9e4004e6aaf27b35bc",
+  "reserved_cases": "Frozen before producer dispatch; private material intentionally not published. Public digest is a commitment, not public reproduction of evaluation."
+}
