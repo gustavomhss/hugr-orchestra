@@ -1,4 +1,9 @@
 import type { Page, Route } from "@playwright/test"
+import type { ModelsExecutionInput, ModelsExecutionOutput } from "@orchestra/client"
+import { Location } from "@orchestra/schema/location"
+import { Model } from "@orchestra/schema/model"
+import { ModelExecution } from "@orchestra/schema/model-execution"
+import { Schema } from "effect"
 import { railDefaulted } from "./review-rail"
 
 const emptyList = new Set(["/skill", "/command", "/lsp", "/formatter", "/vcs/status", "/vcs/diff", "/pty/shells"])
@@ -9,6 +14,7 @@ export interface MockServerConfig {
   // spec asks for a fresh profile, so specs that toggle the rail keep exact open/closed oracles.
   freshRail?: boolean
   provider: unknown | (() => unknown)
+  modelExecution?: (input: ModelsExecutionInput) => ModelsExecutionOutput | Promise<ModelsExecutionOutput>
   integrationMethods?: Record<string, unknown[]>
   onConnectKey?: (input: { integrationID: string; body: unknown }) => void
   onInstanceDispose?: () => void
@@ -177,6 +183,41 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
           },
         ],
       })
+    if (path === "/api/model/execution" && route.request().method() === "POST") {
+      const workspace = url.searchParams.get("location[workspace]")
+      const input: ModelsExecutionInput = {
+        ...Schema.decodeUnknownSync(ModelExecution.Input)(route.request().postDataJSON()),
+        location: {
+          directory: url.searchParams.get("location[directory]") ?? config.directory,
+          ...(workspace === null ? {} : { workspace }),
+        },
+      }
+      if (config.modelExecution) return json(route, await config.modelExecution(input))
+      const catalog = currentCatalog(typeof config.provider === "function" ? config.provider() : config.provider)
+      const selected = input.model
+      // This UI fixture declares its advertised catalog ready; policy scenarios supply their own typed verdict.
+      const data: ModelsExecutionOutput["data"] = {
+        models: catalog.models.map((model) => ({
+          status: "ready",
+          engine: "orchestra",
+          model: {
+            ...model,
+            status: Schema.decodeUnknownSync(Model.Info.fields.status)(model.status),
+            api: { id: model.id, type: "aisdk", package: "@ai-sdk/openai-compatible", settings: {} },
+            request: { headers: {}, body: {} },
+            variants: model.variants.map((variant) => ({ id: variant.id, headers: {}, body: {} })),
+          },
+        })),
+        ...(selected === undefined ? {} : {
+          selection: catalog.models.some((model) => model.id === selected.id && model.providerID === selected.providerID)
+            ? { status: "ready", engine: "orchestra", ref: { ...selected } }
+            : { status: "unavailable", reason: "model-missing", engine: "orchestra", ref: { ...selected } },
+        }),
+      }
+      Schema.decodeUnknownSync(ModelExecution.Response)(data)
+      const response: ModelsExecutionOutput = { location: Schema.decodeUnknownSync(Location.Info)(location(config)), data }
+      return json(route, response)
+    }
     if (path === "/api/provider" || path === "/api/model" || path === "/api/model/default") {
       const catalog = currentCatalog(typeof config.provider === "function" ? config.provider() : config.provider)
       const data =
