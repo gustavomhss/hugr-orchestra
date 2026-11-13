@@ -22,7 +22,7 @@
     "qualifiedSHA256": "14d9c2c828fc7a5ec43c2af849ad20c142a33f9b84b8509d1ab7766c798b2c9b",
     "productionRepair": "dff203ead8",
     "laterUnexecutedCommit": "651b738403e48f94871b27924de83a9e4b9a81fb",
-    "laterDelta": "Adds held-before-ACK user-row data-timeline-part-id assertion equal to messageID:text:0; absent from focused qualified file. Must be qualified in full cold; no whole-current-file identity claimed."
+    "laterDelta": "Adds held-before-ACK user-row partID assertion; absent from focused qualified file. Subsequently executed successfully in third-cold bin8, as recorded below; earlier focused source identity is unchanged."
   },
   "artifact": {
     "id": "14064353063",
@@ -64,7 +64,27 @@
     "After failed ACK, original editor text restores; deliberate retry has identical entire POST bytes and message ID, succeeds once, clears editor and leaves one rendered user row.",
     "One continuously open /api/event connection is asserted through completion; delivery receipt is connection1,348bytes,onechunk."
   ],
-  "DOMLimit": "Successful artifact has HTML report/attachment, but no trace.zip or DOM snapshot under retain-on-failure. Actual rendered partID was not independently captured. Expected canonical partID is msg_1d617a6bc001vsEB7GL60BN6St:text:0; the explicit DOM attribute assertion was added later and is pending full-cold qualification.",
+  "DOMLimit": "Historical focused43478975351 artifact retains HTML report/attachment but no trace.zip/DOM snapshot under retain-on-failure. It did not execute the later explicit partID assertion. Third-cold bin8 now provides actual successful execution of that stronger assertion; no retroactive focused DOM claim.",
+  "strongerDOMQualification": {
+    "run": "43479893813",
+    "snapshot": "c9ffb56cb19050f65946b54ff9c5f799d0e6becb",
+    "job": "132073530965",
+    "bin": "linux8/8",
+    "artifact": "14065013205",
+    "caseOutcome": "passed",
+    "retry": 0,
+    "durationMs": 3487,
+    "actualAssertedPartID": "msg_1d623c256001T3rNxjaQozMQmp:text:0",
+    "beforeACKAbort": true,
+    "canonicalGETStatus": 200,
+    "canonicalGETCount": 1,
+    "eventDeliveryBytes": 348,
+    "entireRetryPOSTBytesIdentical": true,
+    "reportSHA256": "ed5a452caddd5ec90a9e561f1e8b08368f8568d20926481d4d766589a8aa8a15",
+    "receiptSHA256": "1f300063c284c48fa87295b001dae0b0a4ab1b6029d04bdcc88668818f35b0b4",
+    "artifactSHA256": "d48fb4656390162c573bf937e8aa316441c3642deb110432469bf6d9fd320cb9",
+    "sourceOfObservation": "Embedded HTML report records successful line128 toHaveAttribute(data-timeline-part-id,messageID:text:0) before ACK abort; receipt supplies actual messageID. No successful-run raw DOM trace is claimed."
+  },
   "history": [
     {"run": "43475865859", "result": "1 failure: actual baseline first-Send product RED; canonical ready/bootstrap pass, Send click succeeds, no agent/model/prompt POST; first-request wait times out60s; closed-page cleanup masks original timeout. Projection/ACK stages never reached."},
     {"run": "43476825941", "result": "25 pass,1 failure: all14 bytes, Draft and Chat cases pass; new test races Playwright request event against fixture request-ledger push. Same exact equality oracle changed to await expect.poll; production not changed for this failure."},
