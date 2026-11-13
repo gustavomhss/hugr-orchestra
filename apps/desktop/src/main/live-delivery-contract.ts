@@ -3,6 +3,11 @@ import type { MeetingSegment, MeetingServer } from "./live-meeting-client"
 
 export type DeliveryFailureReason = "active" | "closed" | "cancelled" | "storage" | "quota" | "target" | "offline" | "deadline" | "authentication" | "missing" | "ended" | "conflict"
 export type DeliveryAction = { readonly ok: true } | { readonly ok: false; readonly reason: DeliveryFailureReason }
+export type LiveDeliveryCompletion = {
+  readonly localID: string
+  readonly sessionID: string
+  readonly meetingID: string
+}
 export type LiveDeliveryConnection = {
   readonly mode: "shared" | "owned"
   readonly epoch: object
@@ -54,6 +59,8 @@ export type LiveDeliveryOptions = {
   readonly store: LiveOutbox
   readonly connection: (signal: AbortSignal) => Promise<LiveDeliveryConnection>
   readonly onChange?: () => void
+  /** Runs after committed completion; observer failures cannot undo deletion. */
+  readonly onComplete?: (completion: LiveDeliveryCompletion) => void
   /** Private deterministic backoff port only; HTTP's real 10s deadline never uses this seam. */
   readonly sleep?: (milliseconds: number, signal: AbortSignal) => Promise<void>
 }
