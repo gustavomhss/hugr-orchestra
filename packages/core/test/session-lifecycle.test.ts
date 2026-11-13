@@ -77,9 +77,10 @@ testEffect(Layer.empty).live("remove refuses new children during its initial sto
         admissions.push(yield* session.create({ location, parentID: root.id }).pipe(Effect.result))
       })
       yield* session.remove(root.id)
-      expect(admissions).toEqual([{ _tag: "Failure", failure: expect.objectContaining({
+      expect(admissions).toHaveLength(1)
+      expect(admissions[0]).toMatchObject({ _tag: "Failure", failure: {
         _tag: "Session.NotFoundError", sessionID: root.id,
-      }) }])
+      } })
       expect(interrupted).toEqual([root.id, child.id])
       expect(yield* db.select().from(SessionTable).all().pipe(Effect.orDie)).toEqual([])
     }).pipe(Effect.provide(AppNodeBuilder.build(
