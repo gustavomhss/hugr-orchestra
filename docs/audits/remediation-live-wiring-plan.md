@@ -1,6 +1,8 @@
 # M13 Main, capture and recovery integration — architectural plan
 
-The private outbox, manager, real Core/SQL bridges and actual Electron SQLite gate are qualified separately. Production wiring is still absent. This plan does not authorize implementation before its exact shared contracts, scaffold and acceptance have independent review.
+Current checkpoint: production wiring is implemented, integrated and independently reviewed. The integrated Node acceptance passed 47 cases on each of Linux and Windows; the recovery UI passed 34 cases on each OS. Final IPC dependency-boundary qualification and the full cold epic remain pending, so M13 is still open in the ledger. Hardware capture and native permission dialogs are not claimed by these controlled-boundary tests.
+
+The sections below preserve the architectural decisions and staged acceptance history that preceded implementation. Statements about absent wiring or withheld implementation authorization describe those earlier checkpoints. The private outbox, manager, real Core/SQL bridges and actual Electron SQLite gate remain separate qualifications.
 
 ## Local ownership and placement
 
