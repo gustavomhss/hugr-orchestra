@@ -67,3 +67,11 @@ A-01, A-02, A-03, B-01, B-02, C-01 e C-02 somam 81 fontes distintas aceitas docu
 A-04 acrescenta oito fontes examinadas por ambos, mas permanece com duas correções materiais em revisão: admissão por variável de ambiente não autentica a origem da execução, e sujeira no status Git final não equivale a detecção de toda mutação. Assim, 89 fontes foram examinadas por ambos e 81 estão aceitas; 111 ainda aguardam o primeiro par de pareceres. O total não aceito é 119, sem dupla contagem.
 
 Registros privados deste checkpoint têm custódia real `libfile_fde3_f-338e795aa89c8191b147fe8afe609589_3a07899f8a4481918837fffaac5a42fc`, versão 0, SHA-256 `1a42022d89cbdeb1246ffe068698dcfcf43434cc545656c39a90dc8a18863916`. O identificador não torna os pareceres públicos. As camadas integradas L3–L4 continuam sem promoção. Nenhuma execução operacional foi acrescentada.
+
+## Checkpoint de revisão: 110 fontes aceitas
+
+As dez unidades A-01–A-04, B-01–B-02 e C-01–C-04 somam 110 fontes distintas aceitas documentalmente nas versões atuais. A dupla reavaliou e encerrou as correções de P109/P112; os dois grupos de contratos e guias de C passaram na mesma versão, sem achados materiais. Permanece uma sugestão não bloqueante para a síntese de navegação: distinguir Actions no guia de Checks (anteriormente Actions) no changelog, sem inferir a interface instalada.
+
+B-03 tem 12 fontes examinadas pelos dois, com correções documentais localizadas em preparação/revisão: separação de casos da fixture de inventário e alinhamento do nome exportMissing. O resultado é 122 fontes examinadas por ambos, 110 aceitas, 78 aguardando primeiro par e 90 ainda não aceitas. Os demais corpos continuam produzidos; não são aceitos por extrapolação.
+
+Custódia privada confirmada dos registros deste checkpoint: `libfile_fde3_f-720a2dca401081919a454ae2fb4bd084_3a07899f8a4481918837fffaac5a42fc`, versão 0, SHA-256 `400a8d51ae61a0cec3bd119257a0712b3b3c3787dff0c417c4b062741bbc6b70`. Os próximos transportes são limitados à capacidade de leitura do par: texto literal completo e evidência decisiva permanecem requisitos. Não houve promoção de L3–L4 nem execução de produto.

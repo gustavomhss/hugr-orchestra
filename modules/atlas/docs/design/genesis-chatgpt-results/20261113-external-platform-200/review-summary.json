@@ -8,11 +8,11 @@
   "counts": {
     "inventoried": 200,
     "produced": 200,
-    "reviewed_by_both": 89,
-    "documentary_pair_accepted": 81,
-    "reviewed_with_material_findings": 8,
-    "awaiting_initial_pair_review": 111,
-    "pending_acceptance": 119
+    "reviewed_by_both": 122,
+    "documentary_pair_accepted": 110,
+    "reviewed_with_material_findings": 12,
+    "awaiting_initial_pair_review": 78,
+    "pending_acceptance": 90
   },
   "accepted_units": [
     {
@@ -97,6 +97,32 @@
         "Lista de argumentos não vazia e unicidade textual separadas de tamanho do arquivo e identidade física."
       ],
       "optional_open": []
+    },
+    {
+      "id": "A-04",
+      "resolved_findings": [
+        "Condição GITHUB_ACTIONS separada de autenticação; trap limitado ao estado Git final; stripping/ELF descritos com seu alcance específico."
+      ],
+      "optional_open": [],
+      "body": {
+        "path": "bodies/a-04.md",
+        "sha256": "ce0b80571ed5985df188996f604dfb5fe8cea91e128fe1c6fa9257fc0f8c271d",
+        "byte_length": 13244
+      },
+      "source_ids": [
+        "P104",
+        "P105",
+        "P106",
+        "P108",
+        "P109",
+        "P110",
+        "P111",
+        "P112"
+      ],
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      }
     },
     {
       "id": "B-01",
@@ -221,11 +247,65 @@
         "Dependências de ui/session-ui no Turbo distinguidas dos sete testes enumerados."
       ],
       "optional_open": []
+    },
+    {
+      "id": "C-03",
+      "resolved_findings": [],
+      "optional_open": [],
+      "body": {
+        "path": "bodies/c-03.md",
+        "sha256": "ba2d13b34111d4b32922c3177e80032c9d39e274d19634015a7e4455b1cfdd30",
+        "byte_length": 21393
+      },
+      "source_ids": [
+        "P065",
+        "P066",
+        "P067",
+        "P068",
+        "P069",
+        "P070",
+        "P071",
+        "P107",
+        "P173"
+      ],
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      }
+    },
+    {
+      "id": "C-04",
+      "resolved_findings": [],
+      "optional_open": [
+        "Diferença não bloqueante de rótulos: o guia conserva Actions e o changelog registra Checks, anteriormente Actions; considerar na navegação integrada."
+      ],
+      "body": {
+        "path": "bodies/c-04.md",
+        "sha256": "87458bdd131efcec6e3f0fdc2d7bc7fdeafb00aa9222abd305f5f5049efbebc8",
+        "byte_length": 16921
+      },
+      "source_ids": [
+        "P074",
+        "P093",
+        "P094",
+        "P095",
+        "P096",
+        "P097",
+        "P098",
+        "P099",
+        "P100",
+        "P101",
+        "P102",
+        "P103"
+      ],
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      }
     }
   ],
   "open_semantic_findings_in_accepted_units": [],
   "pending_units": [
-    "A-04",
     "A-05",
     "A-06",
     "B-03",
@@ -233,8 +313,6 @@
     "B-05",
     "B-06",
     "B-07",
-    "C-03",
-    "C-04",
     "C-05",
     "C-06",
     "C-07",
@@ -247,28 +325,28 @@
     "No global PASS. Private original judgments are not published here."
   ],
   "private_custody": {
-    "opaque_ref": "libfile_fde3_f-338e795aa89c8191b147fe8afe609589_3a07899f8a4481918837fffaac5a42fc",
+    "opaque_ref": "libfile_fde3_f-720a2dca401081919a454ae2fb4bd084_3a07899f8a4481918837fffaac5a42fc",
     "version": 0,
-    "sha256": "1a42022d89cbdeb1246ffe068698dcfcf43434cc545656c39a90dc8a18863916",
-    "scope": "Originals through seven accepted units (81 unique sources), plus A04 initial opinions and open findings; no final closure."
+    "sha256": "400a8d51ae61a0cec3bd119257a0712b3b3c3787dff0c417c4b062741bbc6b70",
+    "scope": "Originals through ten accepted units (110 unique sources), plus B03 initial opinions and unaccepted candidate delta; no final closure."
   },
   "reviewed_pending_units": [
     {
-      "id": "A-04",
-      "reviewed_body_sha256": "35fd265ea9dc9a878ae18a43e0a6e067c68f7ac74ef2f48f640513e4283d84a8",
-      "source_count": 8,
-      "state": "FIX_FIRST_DELTA_IN_REVIEW",
+      "id": "B-03",
+      "reviewed_body_sha256": "13ce583952395c4b8b770d575fe408af8a7de13b25a05dd43901eae39590578d",
+      "source_count": 12,
+      "state": "FIX_FIRST_DELTA_PENDING_PAIR",
       "findings": [
         {
-          "id": "A04-F1",
-          "summary": "Condição de ambiente não autentica sozinha execução em Actions."
+          "id": "B03-F1",
+          "summary": "Separar os dois casos de teste de inventário e atribuir a ordem de validação à evidência correta."
         },
         {
-          "id": "A04-F2",
-          "summary": "Estado Git observado no encerramento não detecta toda mutação intermediária."
+          "id": "B03-J1-F2",
+          "summary": "Alinhar o identificador documentado a exportMissing."
         }
       ]
     }
   ],
-  "counting_note": "Revisadas por ambos inclui A04 na versão inicial com correção obrigatória; aceitas pela dupla usa somente os hashes atuais explicitamente listados. Apoios não são recontados."
+  "counting_note": "Revisadas por ambos inclui B03 na versão inicial com correções obrigatórias; aceitas pela dupla usa somente os hashes atuais listados. Apoios não são recontados."
 }
