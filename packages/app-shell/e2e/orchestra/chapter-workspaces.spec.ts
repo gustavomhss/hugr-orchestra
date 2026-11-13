@@ -1,4 +1,8 @@
 import { expect, test, type Page, type Route } from "@playwright/test"
+import { Schema } from "effect"
+import { Location } from "@orchestra/schema/location"
+import { Model } from "@orchestra/schema/model"
+import { ModelExecution } from "@orchestra/schema/model-execution"
 import { currentSession } from "../utils/mock-server"
 import { expandAdvanced } from "./compact-navigation.fixture"
 
@@ -493,7 +497,8 @@ async function openHomeDraft(page: Page) {
 }
 
 function writes(requests: Request[]) {
-  return requests.filter((request) => request.method !== "GET" && request.method !== "OPTIONS")
+  return requests.filter((request) => request.method !== "GET" && request.method !== "OPTIONS" &&
+    !(request.method === "POST" && request.path === "/api/model/execution"))
 }
 
 async function openHome(page: Page) {
@@ -630,20 +635,44 @@ async function setup(page: Page, options: { scheme?: "dark" | "light"; profile?:
     if (url.pathname === "/api/mcp/resource")
       return json(route, { location: { directory, project: { id: current.id, directory: root } }, data: { resources: [], templates: [] } })
     if (url.pathname === "/api/config") return json(route, { data: {} })
-    if (["/api/provider", "/api/model", "/api/model/default"].includes(url.pathname)) {
-      const model = {
-        id: "mock-model",
-        modelID: "mock-model",
-        providerID: "mock-provider",
-        name: "Mock model",
-        capabilities: { input: ["text"], output: ["text"], tools: true },
-        variants: [],
-        time: { released: 1 },
-        cost: [],
-        status: "active",
-        enabled: true,
-        limit: { context: 200000, output: 8192 },
+    const model = {
+      id: "mock-model",
+      modelID: "mock-model",
+      providerID: "mock-provider",
+      name: "Mock model",
+      capabilities: { input: ["text"], output: ["text"], tools: true },
+      variants: [],
+      time: { released: 1 },
+      cost: [],
+      status: "active",
+      enabled: true,
+      limit: { context: 200000, output: 8192 },
+    }
+    if (url.pathname === "/api/model/execution" && request.method() === "POST") {
+      const input = Schema.decodeUnknownSync(ModelExecution.Input)(request.postDataJSON())
+      const canonical = Schema.decodeUnknownSync(Model.Info)({
+        ...model,
+        api: { id: model.id, type: "aisdk", package: "@ai-sdk/openai-compatible", settings: {} },
+        request: { headers: {}, body: {} },
+      })
+      // Controlled public eligibility for this fixture's advertised model, not a Core policy implementation.
+      const data: ModelExecution.Response = {
+        models: [{ model: canonical, status: "ready", engine: "orchestra" }],
+        ...(input.model === undefined ? {} : {
+          selection: {
+            ref: input.model,
+            engine: "orchestra",
+            ...(input.model.id === canonical.id && input.model.providerID === canonical.providerID
+              ? { status: "ready" as const }
+              : { status: "unavailable" as const, reason: "model-missing" as const }),
+          },
+        }),
       }
+      return json(route, Schema.decodeUnknownSync(Location.response(ModelExecution.Response))({
+        location: { directory, project: { id: current.id, directory: root } }, data,
+      }))
+    }
+    if (["/api/provider", "/api/model", "/api/model/default"].includes(url.pathname)) {
       return json(route, {
         location: { directory, project: { id: current.id, directory: root } },
         data: url.pathname === "/api/provider"
