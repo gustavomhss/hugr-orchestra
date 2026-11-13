@@ -134,6 +134,8 @@ def history(case_logs,c,cfg,live):
   start=read(d/'process-start.json');release=read(d/'process-release.json');ended=read(d/'process-exit.json')
   if start['identity']!=release['identity'] or ended.get('anchor')!=start['identity'] or ended.get('group_absent') is not True or ended.get('kernel_probe')!='killpg-zero-ESRCH' or ended.get('members')!=[]:fail('history-process-lifecycle')
   if receipt.get('process_identity')!=start['identity']:fail('history-process-identity')
+  bootstrap=_lifecycle.validate_bootstrap(start.get('python_bootstrap'))
+  if release.get('python_bootstrap')!=bootstrap:fail('history-python-bootstrap')
   attempt=read(d/'attempt.json')
   if start['native_argv']!=attempt['argv'] or release['native_argv']!=attempt['argv'] or release.get('attempt_registered') is not True or release.get('release_intent') is not True:fail('history-native-release')
   if attempt['identity']!=identity(c,cfg) or attempt['sequence']!=number or attempt['ledger_before']!=previous_after:fail('attempt-chain')

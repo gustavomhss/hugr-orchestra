@@ -305,6 +305,28 @@ class BrokerCI(unittest.TestCase):
     with self.assertRaises(OSError):lifecycle.durable_directory(target)
    self.assertEqual(len(calls),fail_at)
 
+
+ def test_pybootstrap_gate_uses_isolated_no_site_no_bytecode(self):
+  self.positive();start=get(self.path()/'process-start.json');release=get(self.path()/'process-release.json');boot=start['python_bootstrap']
+  self.assertEqual(boot,{**lifecycle.executable_identity(),'flags':{'isolated':1,'no_site':1,'dont_write_bytecode':True}});self.assertEqual(release['python_bootstrap'],boot)
+ def test_pybootstrap_engine_mismatch_before_release_no_native(self):
+  run=self.base/'engine-mismatch';run.mkdir();marker=self.base/'engine-native-ran';argv=[sys.executable,'-c',f'from pathlib import Path;Path({str(marker)!r}).write_text("BAD")']
+  actual=lifecycle.executable_identity()
+  with (run/'stdout').open('wb') as out,(run/'stderr').open('wb') as err,mock.patch.object(lifecycle,'executable_identity',return_value={**actual,'sha256':'0'*64}):
+   with self.assertRaisesRegex(RuntimeError,'bootstrap-mismatch'):lifecycle.gated_spawn(argv,str(self.base),os.environ.copy(),out,err,run,3)
+  self.assertTrue((run/'process-start.json').exists());self.assertFalse((run/'process-release.json').exists());self.assertFalse(marker.exists());self.assertFalse((self.atlas/self.name).exists())
+ def test_pybootstrap_wrong_flags_rejected(self):
+  valid={**lifecycle.executable_identity(),'flags':{'isolated':1,'no_site':1,'dont_write_bytecode':True}}
+  for key,value in [('isolated',0),('no_site',0),('dont_write_bytecode',False)]:
+   bad={**valid,'flags':{**valid['flags'],key:value}}
+   with self.assertRaisesRegex(RuntimeError,'bootstrap-mismatch'):lifecycle.validate_bootstrap(bad)
+ def test_pybootstrap_isolated_gate_eof_keeps_receipt_no_exec(self):
+  run=self.base/'isolated-eof';run.mkdir();rd,wr=os.pipe();marker=self.base/'isolated-eof-native';argv=[sys.executable,'-c',f'from pathlib import Path;Path({str(marker)!r}).write_text("BAD")']
+  p=subprocess.Popen([sys.executable,'-I','-S','-B',str(LIFECYCLE),'gate',str(rd),str(run),json.dumps(argv)],pass_fds=(rd,),start_new_session=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE);self.processes.append(p);os.close(rd);os.close(wr);p.communicate(timeout=5)
+  self.assertEqual(p.returncode,78);self.assertFalse(marker.exists());self.assertFalse((self.atlas/self.name).exists());lifecycle.validate_bootstrap(get(run/'process-start.json')['python_bootstrap'])
+ def test_pybootstrap_receipt_missing_rejects_history(self):
+  self.positive();v=get(self.path()/'process-start.json');del v['python_bootstrap'];put(self.path()/'process-start.json',v);self.stopped_before_spawn()
+
 # Every S3 cap is exercised through the real broker until its own index quota.
 def s3_cap_test(index,reads,total):
  def test(self):

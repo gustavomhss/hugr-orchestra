@@ -2,7 +2,7 @@
 Gate child persists identity before waiting for a one-byte release. EOF never execs.
 """
 from pathlib import Path
-import os,sys,json,time,signal,subprocess
+import os,sys,json,time,signal,subprocess,hashlib
 
 def durable(path,value):
  data=(json.dumps(value,sort_keys=True)+'\n').encode()
@@ -11,6 +11,21 @@ def durable(path,value):
  try:os.fsync(fd)
  finally:os.close(fd)
  if Path(path).read_bytes()!=data:raise RuntimeError('lifecycle-readback')
+
+def executable_identity():
+ executable=str(Path(sys.executable).resolve(strict=True))
+ actual=str(Path('/proc/self/exe').resolve(strict=True))
+ digest=hashlib.sha256(Path('/proc/self/exe').read_bytes()).hexdigest()
+ if actual!=executable or hashlib.sha256(Path(executable).read_bytes()).hexdigest()!=digest:raise RuntimeError('python-executable-identity-drift')
+ return {'executable':executable,'sha256':digest}
+
+def bootstrap_receipt():
+ return {**executable_identity(),'flags':{'isolated':sys.flags.isolated,'no_site':sys.flags.no_site,'dont_write_bytecode':sys.dont_write_bytecode}}
+
+def validate_bootstrap(value):
+ expected={**executable_identity(),'flags':{'isolated':1,'no_site':1,'dont_write_bytecode':True}}
+ if value!=expected:raise RuntimeError('gate-python-bootstrap-mismatch')
+ return expected
 
 def stat_identity(pid):
  raw=(Path('/proc')/str(pid)/'stat').read_text();tail=raw[raw.rfind(')')+2:].split()
@@ -98,7 +113,7 @@ def gated_spawn(argv,cwd,env,out,err,run,timeout):
  # Child inherits ONLY read end. Parent death closes release write end => EOF.
  rd,wr=os.pipe();proc=None;anchor=None
  try:
-  proc=subprocess.Popen([sys.executable,str(Path(__file__).resolve()),'gate',str(rd),str(run),json.dumps(argv)],cwd=cwd,env=env,stdout=out,stderr=err,start_new_session=True,pass_fds=(rd,))
+  proc=subprocess.Popen([sys.executable,'-I','-S','-B',str(Path(__file__).resolve()),'gate',str(rd),str(run),json.dumps(argv)],cwd=cwd,env=env,stdout=out,stderr=err,start_new_session=True,pass_fds=(rd,))
   os.close(rd);rd=None
   end=time.monotonic()+min(timeout,10)
   while not (run/'process-start.json').exists():
@@ -107,10 +122,12 @@ def gated_spawn(argv,cwd,env,out,err,run,timeout):
    time.sleep(.01)
   # Child's durable() completion is confirmed with a ready pipe? A separate file
   # is atomically renamed only AFTER fsync/readback, so existence means complete.
-  anchor=json.loads((run/'process-start.json').read_bytes())['identity']
+  registration=json.loads((run/'process-start.json').read_bytes())
+  bootstrap=validate_bootstrap(registration['python_bootstrap'])
+  anchor=registration['identity']
   if anchor['pid']!=proc.pid or anchor['pgid']!=proc.pid or anchor['sid']!=proc.pid or not same_identity(identity(proc.pid),anchor):raise RuntimeError('gate-identity-mismatch')
   d=os.open(run,os.O_RDONLY);os.fsync(d);os.close(d)
-  durable(run/'process-release.json',{'identity':anchor,'native_argv':argv,'attempt_registered':True,'release_intent':True,'lifecycle_state':'RELEASE_INTENT_EXEC_UNKNOWN'})
+  durable(run/'process-release.json',{'identity':anchor,'native_argv':argv,'attempt_registered':True,'release_intent':True,'python_bootstrap':bootstrap,'lifecycle_state':'RELEASE_INTENT_EXEC_UNKNOWN'})
   os.write(wr,b'G');os.close(wr);wr=None
   return proc,anchor
  except BaseException:
@@ -133,14 +150,15 @@ def gated_spawn(argv,cwd,env,out,err,run,timeout):
   if wr is not None:os.close(wr)
 
 def gate(fd,run,argv):
- run=Path(run);anchor=identity(os.getpid())
+ run=Path(run);anchor=identity(os.getpid());bootstrap=bootstrap_receipt()
  # Registration completed atomically before parent can release native work.
  tmp=run/'process-start.pending'
- durable(tmp,{'identity':anchor,'gate':'waiting-release','lifecycle_state':'GATE_CREATED_NOT_RELEASED','native_argv':argv})
+ durable(tmp,{'identity':anchor,'gate':'waiting-release','lifecycle_state':'GATE_CREATED_NOT_RELEASED','python_bootstrap':bootstrap,'native_argv':argv})
  os.rename(tmp,run/'process-start.json');d=os.open(run,os.O_RDONLY);os.fsync(d);os.close(d)
  try:token=os.read(fd,1)
  finally:os.close(fd)
  if token!=b'G':raise SystemExit(78)
+ validate_bootstrap(bootstrap)
  # Parent committed attempt and registration before releasing this byte.
  os.execvpe(argv[0],argv,os.environ)
 
