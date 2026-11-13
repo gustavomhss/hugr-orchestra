@@ -16,7 +16,7 @@ Os 200 caminhos foram resolvidos em árvores Git completas, sem truncamento. Há
 | Lote | População | Responsabilidade | Estado |
 | --- | ---: | --- | --- |
 | A | 54 | Distribuição, Nix, CI e contratos de distribuição | PRODUZIDO; REVISÃO PENDENTE |
-| B | 69 | Tooling, scripts, patches e lockfile | AUTORIA_EM_CURSO |
+| B | 69 | Tooling, scripts, patches e lockfile | PRODUZIDO; REVISÃO PENDENTE |
 | C | 77 | Arquitetura, guias, configs e visual QA | AUTORIA_EM_CURSO |
 
 Três subagentes distintos receberam autoria disjunta em paralelo. A principal mantém exclusividade de escrita remota. A revisão usará dois novos juízes, independentes da autoria, com o mesmo pacote e correções vinculadas; nenhum autor julga o próprio lote.
@@ -39,3 +39,7 @@ Uso de tokens, custo e tentativas físicas internas do provedor: UNKNOWN. A publ
 ## Checkpoint de autoria A
 
 Os seis corpos `bodies/a-01.md` a `bodies/a-06.md` contêm seções para 54/54 fontes de A, lidas integralmente pelo autor. Os bytes capturados foram conferidos independentemente pela principal. Os corpos ainda não têm aceite do par de juízes. B e C continuam em autoria; o mapa consolidado de cobertura e os vínculos de revisão serão incorporados ao pacote final.
+
+## Checkpoint de autoria B
+
+Os sete corpos `bodies/b-01.md` a `bodies/b-07.md` cobrem as 69 fontes de B. A leitura do lockfile é estrutural integral, com todos os registros percorridos; não afirma julgamento semântico individual de cada dependência. As demais 68 fontes foram lidas integralmente como texto. `coverage-a.json` agora preserva o mapeamento das 54 fontes de A. Nenhum desses estados substitui o juízo independente.
