@@ -1,0 +1,26 @@
+name: support-reader-redaction
+on:
+  workflow_dispatch:
+  push:
+    branches: [genesis-support-08-reader-error-redaction]
+    paths:
+      - .github/workflows/support-reader-redaction.yml
+      - modules/atlas/packages/adapter-io/script/evaluation-reader-lifecycle.py
+      - modules/atlas/packages/adapter-io/script/evaluation-reader-broker.py
+      - modules/atlas/packages/adapter-io/test/evaluation-reader-redaction-ci.py
+permissions:
+  contents: read
+jobs:
+  reader-error-redaction:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Check Python syntax
+        run: |
+          python3 -m py_compile \
+            modules/atlas/packages/adapter-io/script/evaluation-reader-lifecycle.py \
+            modules/atlas/packages/adapter-io/script/evaluation-reader-broker.py \
+            modules/atlas/packages/adapter-io/test/evaluation-reader-redaction-ci.py
+      - name: Run synthetic redaction tests
+        run: python3 modules/atlas/packages/adapter-io/test/evaluation-reader-redaction-ci.py
