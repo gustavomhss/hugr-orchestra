@@ -128,7 +128,7 @@ def reap_adopted():
             return
 
 
-def terminate_tree(root_pid, root_start, proc, timeout=TREE_TIMEOUT):
+def terminate_tree(root_pid, root_start, proc, child_start, timeout=TREE_TIMEOUT):
     """Bounded TERM/KILL/reap loop. Return proof only after repeated empty census."""
     deadline = time.monotonic() + timeout
     term_sent = set()
@@ -144,8 +144,10 @@ def terminate_tree(root_pid, root_start, proc, timeout=TREE_TIMEOUT):
             raise
         current = descendants(snapshot, root_pid, root_start)
         if proc.poll() is None:
-            # The direct child is part of the tree even if a census raced.
-            current[root_pid] = root_start
+            # The direct child is tracked separately from this supervisor root.
+            if child_start is None:
+                raise RuntimeError('CHILD_IDENTITY_UNKNOWN')
+            current[proc.pid] = child_start
         if not current:
             empty_samples += 1
             reap_adopted()
@@ -205,6 +207,7 @@ def main():
 
     proc = None
     root_start = None
+    child_start = None
     try:
         enable_subreaper()
         own = proc_row(os.getpid())
@@ -226,7 +229,7 @@ def main():
                 code = proc.wait(timeout=120)
             except subprocess.TimeoutExpired:
                 code = None
-            proof = terminate_tree(os.getpid(), root_start, proc)
+            proof = terminate_tree(os.getpid(), root_start, proc, child_start)
             if code is None:
                 code = proc.wait(timeout=1)
                 raise RuntimeError('CHILD_TIMEOUT')
@@ -261,7 +264,7 @@ def main():
         # caller must classify the missing terminal proof as UNKNOWN.
         if proc is not None and root_start is not None:
             try:
-                terminate_tree(os.getpid(), root_start, proc)
+                terminate_tree(os.getpid(), root_start, proc, child_start)
             except BaseException:
                 pass
         try:
