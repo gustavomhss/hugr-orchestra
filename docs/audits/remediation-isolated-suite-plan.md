@@ -13,3 +13,20 @@ Hosted acceptance: actual two-file isolated command passes with one real AppProc
 Ownership: Memory owns the root thin entry, Core implementation and new Core acceptance file; Root owns package command/Turbo/closed-source registration integration. IO independently reviews the runner against this contract after its release packet. Preserve actual producer counts and distinguish wrapper qualification from full App success.
 
 The first local Core typecheck identified that a root-owned script cannot resolve Effect from the root package. Implementation therefore lives in packages/core/script/test-browser.ts with its existing Effect dependency; the root script is a thin import/re-export and CLI invocation. No new dependency was added. Preserve explicit ./test-browser in the package command; shard invocations call the root entry with exact files.
+
+## Static wiring integration discovered by third cold
+
+Third cold43479893813 Core Linux4 ran348P/1F: the converse wiring guard recognized direct Bun preload
+commands but did not recognize the new audited browser entry. Its four findings name the existing declaring
+browser files; the runtime suite control itself passed with1067 own Omni spawns and zero delegated.
+Keep this failure recorded and let all other jobs finish. Do not add a preload globally or weaken runtime control.
+
+Root freezes a narrow guard extension: accept only the exact app-shell package script
+`bun run ../../script/test-browser.ts ./test-browser`, only for its `test-browser` directory, and only when
+both the root entry and Core implementation are tracked. Preserve the existing direct-preload branch.
+Negative controls must reject missing runner files, another entry, shell command suffixes, a different target
+directory and the same spelling in another package. The actual CLI acceptance suite remains the proof that
+this named runner enforces the preload and aggregate verdict; this static check proves wiring only.
+Memory owns only the existing Core guard and its fixture; UI cold-reviews. Gate the repair through hosted
+guard plus actual browser CLI controls on both OS, then qualify the completed integration again. No bypass,
+allowlist addition, runtime scope change or weakening of declaring-test ownership is authorized.
