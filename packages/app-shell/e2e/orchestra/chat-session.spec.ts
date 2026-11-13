@@ -301,7 +301,7 @@ test("V2: the composer names its reasoning level and toggles permission auto-acc
     "Reasoning: max",
   ])
   await page.getByRole("menuitemradio", { name: "Reasoning: high" }).click()
-  await expect(reasoning).toHaveText("high")
+  await expect(reasoning).toHaveText("Reasoning: high")
 
   const permissions = page.locator('[data-action="prompt-permissions"]')
   await expect(permissions).toHaveText("Ask")
