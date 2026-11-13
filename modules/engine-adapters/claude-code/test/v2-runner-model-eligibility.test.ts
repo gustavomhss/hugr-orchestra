@@ -117,13 +117,13 @@ for (const variant of ["missing", "other"]) {
   }))
 }
 
-it.live("BEHAVIOR E6: configured default variant is normalized before the real Claude SDK call", () => Effect.gen(function* () {
+it.live("BEHAVIOR E6: configured variant inheritance reaches the real Claude SDK call", () => Effect.gen(function* () {
   const session = yield* setup
   const catalog = yield* Catalog.Service
   yield* catalog.transform((draft) => draft.model.update(ProviderV2.ID.anthropic, ModelV2.ID.make("fixture"), (model) => {
     model.request.variant = "high"
   }))
-  yield* session.switchModel({ sessionID: Harness.sessionID, model: EligibilityFixture.ref("anthropic", "default") })
+  yield* session.switchModel({ sessionID: Harness.sessionID, model: EligibilityFixture.ref("anthropic") })
   yield* admitOnly()
   yield* session.resume(Harness.sessionID)
   expect(EligibilityFixture.state.options).toHaveLength(1)

@@ -126,14 +126,14 @@ for (const condition of ["unregistered", "signed-out", "account-error", "provide
   }))
 }
 
-it.effect("API E6: default variant normalization exposes canonical host options instead of ignoring them", () => Effect.gen(function* () {
+it.effect("API E6: configured variant inheritance exposes canonical host options instead of ignoring them", () => Effect.gen(function* () {
   yield* setup
   const catalog = yield* Catalog.Service
   yield* catalog.transform((draft) => draft.model.update(ProviderV2.ID.anthropic, ModelV2.ID.make("fixture"), (model) => {
     model.request.variant = "high"
     Object.assign(model.variants[0], { generation: GenerationOptions.make({ temperature: 0 }) })
   }))
-  expect((yield* describe({ context: draft("host-seat"), model: EligibilityFixture.ref("anthropic", "default") })).selection)
+  expect((yield* describe({ context: draft("host-seat"), model: EligibilityFixture.ref("anthropic") })).selection)
     .toMatchObject({ status: "unsupported", reason: "host-options-unsupported" })
   expect((yield* describe({ context: draft("host-seat"), model: EligibilityFixture.ref("anthropic", "missing") })).selection)
     .toMatchObject({ status: "unavailable", reason: "variant-unavailable" })
