@@ -17,7 +17,7 @@ Os 200 caminhos foram resolvidos em árvores Git completas, sem truncamento. Há
 | --- | ---: | --- | --- |
 | A | 54 | Distribuição, Nix, CI e contratos de distribuição | PRODUZIDO; REVISÃO PENDENTE |
 | B | 69 | Tooling, scripts, patches e lockfile | PRODUZIDO; REVISÃO PENDENTE |
-| C | 77 | Arquitetura, guias, configs e visual QA | AUTORIA_EM_CURSO |
+| C | 77 | Arquitetura, guias, configs e visual QA | PRODUZIDO; REVISÃO PENDENTE |
 
 Três subagentes distintos receberam autoria disjunta em paralelo. A principal mantém exclusividade de escrita remota. A revisão usará dois novos juízes, independentes da autoria, com o mesmo pacote e correções vinculadas; nenhum autor julga o próprio lote.
 
@@ -43,3 +43,7 @@ Os seis corpos `bodies/a-01.md` a `bodies/a-06.md` contêm seções para 54/54 f
 ## Checkpoint de autoria B
 
 Os sete corpos `bodies/b-01.md` a `bodies/b-07.md` cobrem as 69 fontes de B. A leitura do lockfile é estrutural integral, com todos os registros percorridos; não afirma julgamento semântico individual de cada dependência. As demais 68 fontes foram lidas integralmente como texto. `coverage-a.json` agora preserva o mapeamento das 54 fontes de A. Nenhum desses estados substitui o juízo independente.
+
+## Checkpoint de autoria completa
+
+Os 200 caminhos têm seção semântica própria e mapeamento em `coverage-a.json`, `coverage-b.json` e `coverage-c.json`. Há 198 leituras textuais integrais, uma constatação integral de blob vazio (`.sh`, zero bytes/linhas) e uma leitura estrutural integral de `bun.lock`. Não se inventa comportamento para o blob vazio nem semântica individual das dependências do lockfile. A verificação documental conferiu todos os bindings e faixas possíveis, sem erro. Revisão independente permanece em andamento; produção completa não é aceitação.

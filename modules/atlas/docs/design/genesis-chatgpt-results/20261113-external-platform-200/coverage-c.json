@@ -1,0 +1,2433 @@
+[
+  {
+    "id": "P001",
+    "path": ".claude/skills/orchestra-design-system/SKILL.md",
+    "git_blob_sha": "ee1c5f77b226bf9af98322a112975267a758e201",
+    "sha256": "a1a3d0622dcd5a57011ebec7ed8457cf447e3df076fffb16a9e232283c743918",
+    "byte_length": 3411,
+    "line_count": 53,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "orientação de design e manutenção",
+    "artifact_path": "bodies/c-01.md",
+    "section": "P001 — .claude/skills/orchestra-design-system/SKILL.md",
+    "evidence": [
+      {
+        "start_line": 13,
+        "end_line": 17,
+        "anchor": "autoridade dos stylesheets e vínculo com DESIGN"
+      },
+      {
+        "start_line": 21,
+        "end_line": 36,
+        "anchor": "materiais, tokens, contraste e geração"
+      },
+      {
+        "start_line": 38,
+        "end_line": 53,
+        "anchor": "estados verdadeiros e critérios de acabamento"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "as specs e folhas citadas não foram observadas neste caminho. A skill não prova contraste atual, qualidade visual, quantidade efetiva de idiomas nem passagem de e2e."
+  },
+  {
+    "id": "P002",
+    "path": ".claude/skills/orchestra-visual-qa/SKILL.md",
+    "git_blob_sha": "ccbed690b5a7177d6b548b13c709e6d3a4c9e6c5",
+    "sha256": "d29ad617cc588fbe77ebb6970b612befb8486d5592d29c81031d2c1f94591aa6",
+    "byte_length": 8015,
+    "line_count": 108,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "procedimento de QA e relato de incidentes",
+    "artifact_path": "bodies/c-01.md",
+    "section": "P002 — .claude/skills/orchestra-visual-qa/SKILL.md",
+    "evidence": [
+      {
+        "start_line": 18,
+        "end_line": 45,
+        "anchor": "modalidades e isolamento"
+      },
+      {
+        "start_line": 47,
+        "end_line": 71,
+        "anchor": "CDP e limite da injeção"
+      },
+      {
+        "start_line": 73,
+        "end_line": 95,
+        "anchor": "geração, medição e transformação"
+      },
+      {
+        "start_line": 97,
+        "end_line": 108,
+        "anchor": "gates e evidência computada"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "não houve app aberto, captura, medição, restart, acesso a logs ou CI. As instruções específicas de máquina e os caminhos pessoais do procedimento não são reproduzidos nesta base."
+  },
+  {
+    "id": "P003",
+    "path": ".claude/skills/orchestra-visual-qa/scripts/aa.ts",
+    "git_blob_sha": "3580e97e8cd6ad528482b7ccfa053f2f221f0cd5",
+    "sha256": "485537b08e8fef3877023e01b0d593fad376f559a98982fb2ede82de05db0c78",
+    "byte_length": 749,
+    "line_count": 12,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "auxiliar de medição estática da paleta",
+    "artifact_path": "bodies/c-01.md",
+    "section": "P003 — .claude/skills/orchestra-visual-qa/scripts/aa.ts",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 5,
+        "anchor": "dependências e leitura"
+      },
+      {
+        "start_line": 6,
+        "end_line": 12,
+        "anchor": "medição, filtro e relatório"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "o próprio arquivo não define AA nem a fórmula de medição e não retorna código de falha quando encontra contraste insuficiente. Saída informativa não equivale a gate aprovado; os módulos importados não são implementação demonstrada por este blob."
+  },
+  {
+    "id": "P004",
+    "path": ".claude/skills/orchestra-visual-qa/scripts/bands.js",
+    "git_blob_sha": "ca8b60241eccde95d375c0fd7f09c00bc78bda74",
+    "sha256": "ed09a4ee1b8429cd593a6a54af0b4c032769ccdbea0b83bf7ab743aa9db1f6ad",
+    "byte_length": 1258,
+    "line_count": 29,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "medidor de imagem em contexto de navegador",
+    "artifact_path": "bodies/c-01.md",
+    "section": "P004 — .claude/skills/orchestra-visual-qa/scripts/bands.js",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 13,
+        "anchor": "imagem, escala e função de comparação"
+      },
+      {
+        "start_line": 15,
+        "end_line": 29,
+        "anchor": "bandas, exclusão de borda e resultado"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "embora o comentário fale em espelhamento, o código mostrado faz um único `drawImage`; não há operação explícita de espelhar pixels. A soma RGB não implementa aqui a linearização de luminância WCAG. Dimensões, fotografia e dois blurs são fixos; não representa automaticamente qualquer viewport ou material."
+  },
+  {
+    "id": "P005",
+    "path": ".claude/skills/orchestra-visual-qa/scripts/cdp.ts",
+    "git_blob_sha": "fecb87bff555d4f460cba6c946e4dd721cb15c87",
+    "sha256": "3007e92a6b4bc5d44b99cfa3fe642874ec56f2da8f4a0f993f6d9cac3206c978",
+    "byte_length": 1404,
+    "line_count": 26,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "cliente operacional mínimo de CDP",
+    "artifact_path": "bodies/c-01.md",
+    "section": "P005 — .claude/skills/orchestra-visual-qa/scripts/cdp.ts",
+    "evidence": [
+      {
+        "start_line": 2,
+        "end_line": 15,
+        "anchor": "seleção do alvo e correlação"
+      },
+      {
+        "start_line": 16,
+        "end_line": 26,
+        "anchor": "screenshot, avaliação, tecla e encerramento"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "não seleciona aba por identidade, não configura 1280×800/DPR apesar do contexto mencionado na skill, não valida crop e não implementa timeout, rejeição em close ou tratamento dedicado de erro CDP. Ausência de page falha no acesso ao alvo; socket sem resposta pode permanecer pendente. A recomendação documental de timeout externo compensa parcialmente esse desenho."
+  },
+  {
+    "id": "P006",
+    "path": ".claude/skills/orchestra-visual-qa/scripts/fix-aa.ts",
+    "git_blob_sha": "4fea7a4093f3594f1aaf0349771a857ae36d58db",
+    "sha256": "dc4abcb889218c4baf583c7b0de6d941da0745fcfea8272cb5685fdd5d3099ef",
+    "byte_length": 1365,
+    "line_count": 24,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "transformação destrutiva de fontes CSS quando executada",
+    "artifact_path": "bodies/c-01.md",
+    "section": "P006 — .claude/skills/orchestra-visual-qa/scripts/fix-aa.ts",
+    "evidence": [
+      {
+        "start_line": 2,
+        "end_line": 11,
+        "anchor": "conversores, metas e seleção"
+      },
+      {
+        "start_line": 12,
+        "end_line": 24,
+        "anchor": "unicidade, ajuste, gravação e parada"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "parada sem alteração pode significar ambiguidades, e quarenta rodadas não garantem atingir metas. Não há rollback, verificação final obrigatória, erro por contraste restante ou proteção contra colapso semântico entre tokens. O non-null assertion em `parseColor` pressupõe cor parseável. Nenhuma fonte CSS foi modificada nesta entrega."
+  },
+  {
+    "id": "P007",
+    "path": ".claude/skills/orchestra-visual-qa/scripts/inject.ts",
+    "git_blob_sha": "4703c5690d7b065ec7286866ee0560e73ac017b7",
+    "sha256": "8523fb311879cf3523fe4fc7eaa758126c633f33036eda6e1a1d6ca7d268c22f",
+    "byte_length": 466,
+    "line_count": 4,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "gerador de expressão para injeção CSS",
+    "artifact_path": "bodies/c-01.md",
+    "section": "P007 — .claude/skills/orchestra-visual-qa/scripts/inject.ts",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 4,
+        "anchor": "leitura, expressão e saída"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "gerar o arquivo não aplica CSS nem confirma resultado. Sem arquivos, a expressão esvazia a injeção. Não remove regras anteriores do build nem corrige diferenças TSX; a atribuição não declarada depende do contexto de avaliação."
+  },
+  {
+    "id": "P008",
+    "path": ".claude/skills/orchestra-visual-qa/scripts/lits.py",
+    "git_blob_sha": "f6f3a0ca102f59b22fc069eed7ce084ee0327b9c",
+    "sha256": "3f889e8ad8bd4f78d5a5060993e4eb0f1894c093cb1e35814946e734e7cf586d",
+    "byte_length": 557,
+    "line_count": 9,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "inspeção textual de CSS",
+    "artifact_path": "bodies/c-01.md",
+    "section": "P008 — .claude/skills/orchestra-visual-qa/scripts/lits.py",
+    "evidence": [
+      {
+        "start_line": 2,
+        "end_line": 9,
+        "anchor": "reconhecimento, exceções e localização"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "a heurística não é parser CSS, não reconhece todas as notações de cor e não reprova o processo nem modifica o arquivo. Nenhuma conclusão de conformidade completa pode decorrer de uma saída vazia."
+  },
+  {
+    "id": "P009",
+    "path": ".claude/skills/orchestra-visual-qa/scripts/motion.py",
+    "git_blob_sha": "da0d669965aef4b6a5c04dd7a609f805bb536b65",
+    "sha256": "d3ffcca4f1fa64b7a8ca6593dd50a016f554d84b0bb273f2d63235d350d0bc05",
+    "byte_length": 1373,
+    "line_count": 31,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "reescritor textual de motion",
+    "artifact_path": "bodies/c-01.md",
+    "section": "P009 — .claude/skills/orchestra-visual-qa/scripts/motion.py",
+    "evidence": [
+      {
+        "start_line": 2,
+        "end_line": 14,
+        "anchor": "gramática e decisão de conversão"
+      },
+      {
+        "start_line": 15,
+        "end_line": 31,
+        "anchor": "tratamento conjunto, escrita e contagem"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "a contagem mede declarações reconhecidas, não necessariamente arquivos alterados ou animações testadas. Regex não cobre a gramática CSS inteira e não elimina comentários antes de buscar. A transformação não mede experiência nem acessibilidade em execução."
+  },
+  {
+    "id": "P010",
+    "path": ".claude/skills/orchestra-visual-qa/scripts/sheet.py",
+    "git_blob_sha": "8f94370e554d70236c4bdd40ffe947f746c480d2",
+    "sha256": "e764c7d328cd85da4c5ee5324ff6a93ee9d38f25cab7f040ea0863341eba58ef",
+    "byte_length": 262,
+    "line_count": 8,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "montagem de evidência visual",
+    "artifact_path": "bodies/c-01.md",
+    "section": "P010 — .claude/skills/orchestra-visual-qa/scripts/sheet.py",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 8,
+        "anchor": "contrato de argumentos e montagem"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "redimensionar para proporção fixa pode deformar a captura e a conversão perde alfa. Quantidade ímpar deixa a última célula vazia; entrada vazia ou inválida não tem tratamento próprio. A folha facilita comparação humana, sem comprovar fidelidade do app."
+  },
+  {
+    "id": "P011",
+    "path": ".dockerignore",
+    "git_blob_sha": "487e9eb94ae2a3df6f55310fe6225f5e63f66bb2",
+    "sha256": "8a37d5d6b60366d54a7ff7185345cbf739835bd7eaf46778068959b3f2115fcc",
+    "byte_length": 117,
+    "line_count": 12,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "filtro de contexto Docker",
+    "artifact_path": "bodies/c-02.md",
+    "section": "P011 — .dockerignore",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 12,
+        "anchor": "lista completa de exclusões"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "não há regra explícita para `.env` neste arquivo; proteção ou inclusão de outros arquivos depende do contexto e do Dockerfile, não observado aqui. Não comprova imagem produzida."
+  },
+  {
+    "id": "P012",
+    "path": ".editorconfig",
+    "git_blob_sha": "aada95f26a8221428758ea0b22f886f3e5a8da8b",
+    "sha256": "25c8697d37ab1e8bcd34528e5458f32adfe98433a290166e4355f833aeb5c5c3",
+    "byte_length": 136,
+    "line_count": 9,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "convenção de edição",
+    "artifact_path": "bodies/c-02.md",
+    "section": "P012 — .editorconfig",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 9,
+        "anchor": "escopo e valores"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "adesão do editor e sobreposição por ferramentas não estão demonstradas. A convenção não substitui contratos de bytes específicos de gerados."
+  },
+  {
+    "id": "P013",
+    "path": ".gitattributes",
+    "git_blob_sha": "ab990df12bf47e70e5033bdeecb0db030b391902",
+    "sha256": "093bdb56bf7251861f44460f5e0debf2456b7bdc4cdf7a2780921838abdec589",
+    "byte_length": 3680,
+    "line_count": 48,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "atributos Git de transporte e apresentação",
+    "artifact_path": "bodies/c-02.md",
+    "section": "P013 — .gitattributes",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 13,
+        "anchor": "gerados, fixtures e união"
+      },
+      {
+        "start_line": 14,
+        "end_line": 39,
+        "anchor": "texto embarcado e derivados"
+      },
+      {
+        "start_line": 40,
+        "end_line": 48,
+        "anchor": "preservação de contratos congelados"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "`merge=union` não prova deduplicação, coerência causal, ordem correta nem resolução semântica de registros. O atributo define tratamento Git; não demonstra que os arquivos correspondentes existem ou que seus geradores foram executados."
+  },
+  {
+    "id": "P043",
+    "path": ".gitignore",
+    "git_blob_sha": "f87b0cd6e00813278e36474cf332bae735394518",
+    "sha256": "dd0aa40ba5e0fb4ec231c24b60b1c20beaf872910abbb8bc00be485af3ffa99b",
+    "byte_length": 1037,
+    "line_count": 53,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "política de arquivos locais não rastreados",
+    "artifact_path": "bodies/c-02.md",
+    "section": "P043 — .gitignore",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 40,
+        "anchor": "classes locais e sobras"
+      },
+      {
+        "start_line": 42,
+        "end_line": 53,
+        "anchor": "exceções Atlas e staging"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "ignore não remove arquivos já rastreados nem impede leitura ou vazamento por outras vias. A recusa do Atlas a stores comprometidos é afirmação do comentário; sua implementação não está neste blob."
+  },
+  {
+    "id": "P044",
+    "path": ".gitleaksignore",
+    "git_blob_sha": "cc01a286fb70faa6d30cf42b60de097e3ffe4c1d",
+    "sha256": "73d99e5b8e5b36f1c6aa545f7c84c1bfb4e70037c0443b227842ec6161f96c3e",
+    "byte_length": 506,
+    "line_count": 5,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "exceções de scanner por fingerprint",
+    "artifact_path": "bodies/c-02.md",
+    "section": "P044 — .gitleaksignore",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 5,
+        "anchor": "justificativa e quatro fingerprints"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "não comprova que todos os valores daquele teste são fictícios nem que o scanner passou no baseline. Nenhum valor de segredo é reproduzido nesta base."
+  },
+  {
+    "id": "P045",
+    "path": ".orchestra/.gitignore",
+    "git_blob_sha": "c072cfe070993e55dccceb038cae99aabe8cbf3b",
+    "sha256": "8f90f82092551404760d0a02ea996f2c711dbb03adf6949dd0ed3152223415bf",
+    "byte_length": 82,
+    "line_count": 7,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "exclusões locais da configuração Orchestra",
+    "artifact_path": "bodies/c-02.md",
+    "section": "P045 — .orchestra/.gitignore",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 7,
+        "anchor": "conjunto completo"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "não define instalação, limpeza ou distribuição; não altera a identidade dos blobs existentes."
+  },
+  {
+    "id": "P046",
+    "path": ".orchestra/ci.json",
+    "git_blob_sha": "f5b3ede980cec671af3401ee8d9e41380f0c6253",
+    "sha256": "43a2aaaf4d732fbf4f1b182a6a355d01da45d0116eaed47bb8c88a27921dd197",
+    "byte_length": 635,
+    "line_count": 22,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "contrato declarativo de coordenação CI",
+    "artifact_path": "bodies/c-02.md",
+    "section": "P046 — .orchestra/ci.json",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 22,
+        "anchor": "base, escopos, controle, agrupamento e seleção"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "são valores consumíveis por um coordenador; o arquivo não demonstra que orçamento, marcador ou política de merge são efetivamente aplicados. Nenhum workflow foi disparado."
+  },
+  {
+    "id": "P047",
+    "path": ".orchestra/command/ai-deps.md",
+    "git_blob_sha": "5a50c22749c387a3d2d43e4d7134b15cdbe3cc98",
+    "sha256": "bfa6b27ae7d46a8a307c2b1251bf2f521775423687397d46ed7f47ba7571951f",
+    "byte_length": 1029,
+    "line_count": 24,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "template de comando de pesquisa",
+    "artifact_path": "bodies/c-02.md",
+    "section": "P047 — .orchestra/command/ai-deps.md",
+    "evidence": [
+      {
+        "start_line": 5,
+        "end_line": 24,
+        "anchor": "entradas, restrição de versão e saída"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "nenhuma versão disponível é estabelecida pelo template; executá-lo exigiria pesquisa temporal e permissões próprias. Não houve upgrade ou criação de relatório de dependências aqui."
+  },
+  {
+    "id": "P048",
+    "path": ".orchestra/command/commit.md",
+    "git_blob_sha": "5fb08dfbe6f34a7c43db5c6d241f018644a967be",
+    "sha256": "9cbfad4c187cadd23bb93985a8dcff38807e18ced8bce399535c568b8ad3cab2",
+    "byte_length": 547,
+    "line_count": 35,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "template de subtask para publicação Git",
+    "artifact_path": "bodies/c-02.md",
+    "section": "P048 — .orchestra/command/commit.md",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 23,
+        "anchor": "finalidade e conflito"
+      },
+      {
+        "start_line": 25,
+        "end_line": 35,
+        "anchor": "entradas dinâmicas"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "não especifica lease, branch, verificação de destino ou tratamento de falha de push. As expansões e o pedido são dados da fonte; não foram executados nem ampliam a autorização desta entrega."
+  },
+  {
+    "id": "P049",
+    "path": ".orchestra/command/learn.md",
+    "git_blob_sha": "fe4965a5887e0e1c175f0b3d5961f343353eb9e4",
+    "sha256": "891675a8519c637290b675f6671c451e30e14ac3a50e6759bd513c414e50cd22",
+    "byte_length": 1628,
+    "line_count": 42,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "procedimento de captura de conhecimento",
+    "artifact_path": "bodies/c-02.md",
+    "section": "P049 — .orchestra/command/learn.md",
+    "evidence": [
+      {
+        "start_line": 5,
+        "end_line": 30,
+        "anchor": "critérios e escopo"
+      },
+      {
+        "start_line": 32,
+        "end_line": 42,
+        "anchor": "processo e argumentos"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "a alegação de carregamento automático de AGENTS depende do host; o template não implementa esse mecanismo. Não transforma observação ocasional em regra válida nem valida os aprendizados produzidos."
+  },
+  {
+    "id": "P050",
+    "path": ".orchestra/command/rmslop.md",
+    "git_blob_sha": "02c9fc0844a7010572352e6f29efa97a965c6ee0",
+    "sha256": "066e981569517dc46dc34360e17bc40a02e4790ebbc75c4a360ce0745c377c64",
+    "byte_length": 576,
+    "line_count": 15,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "orientação de revisão de estilo",
+    "artifact_path": "bodies/c-02.md",
+    "section": "P050 — .orchestra/command/rmslop.md",
+    "evidence": [
+      {
+        "start_line": 5,
+        "end_line": 15,
+        "anchor": "seleção, exemplos e saída"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "não implementa detecção objetiva de origem AI e não prova que remover uma defesa seja seguro. Nenhum diff de produto foi alterado nesta análise."
+  },
+  {
+    "id": "P051",
+    "path": ".orchestra/command/spellcheck.md",
+    "git_blob_sha": "0abf23c4fd090d5350a65b2ffe406b3e5e4b3a80",
+    "sha256": "680b0616829f8710065c23cb089b042ef51691bfdb664028f718dfeff783a372",
+    "byte_length": 204,
+    "line_count": 5,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "comando editorial restrito",
+    "artifact_path": "bodies/c-02.md",
+    "section": "P051 — .orchestra/command/spellcheck.md",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 5,
+        "anchor": "extensão e recorte"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "não define idioma, dicionário, aplicação de correções ou critério de aprovação; não é um linter executável."
+  },
+  {
+    "id": "P052",
+    "path": ".orchestra/command/translate.md",
+    "git_blob_sha": "64df08d6c1049ae6eb255a9935f333ef5a8ce71b",
+    "sha256": "b96ad105ff0255dafe60c61dfa91c3656476cc4192507def1c795e070ac4bdfe",
+    "byte_length": 773,
+    "line_count": 13,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "contrato editorial de tradução",
+    "artifact_path": "bodies/c-02.md",
+    "section": "P052 — .orchestra/command/translate.md",
+    "evidence": [
+      {
+        "start_line": 5,
+        "end_line": 13,
+        "anchor": "entradas e invariantes"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "menciona glossário Do-Not-Translate “abaixo”, mas este blob termina sem fornecê-lo. Não enumera idiomas nem evidencia qualidade de tradução ou existência dos glossários externos."
+  },
+  {
+    "id": "P053",
+    "path": ".orchestra/env.d.ts",
+    "git_blob_sha": "f2b13a934c43620d93061017edf65f12122dc0a0",
+    "sha256": "e6db1326fc512cd3a8fa595f9556a1ba46969618be710403ec28339b3e1a2d1b",
+    "byte_length": 76,
+    "line_count": 4,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "declaração ambiente TypeScript",
+    "artifact_path": "bodies/c-02.md",
+    "section": "P053 — .orchestra/env.d.ts",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 4,
+        "anchor": "módulo e tipo exportado"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "compatibilidade real de importação depende do runtime/bundler; este arquivo apenas descreve o contrato de tipos."
+  },
+  {
+    "id": "P054",
+    "path": ".orchestra/orchestra.jsonc",
+    "git_blob_sha": "9421004e51e5b007a7d291fa24ed94c14e1f156d",
+    "sha256": "32220d1fb5853ddab38feb3fe95537f47f3c122ab394428c7086d390069c66d4",
+    "byte_length": 469,
+    "line_count": 16,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "configuração de workspace",
+    "artifact_path": "bodies/c-02.md",
+    "section": "P054 — .orchestra/orchestra.jsonc",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 16,
+        "anchor": "schema, mapas vazios e referências"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "schema em branch móvel não é um pin de contrato. Mapas vazios não demonstram ausência de providers nem política efetiva, que podem vir de defaults/camadas externas. O endereço local da referência não é reproduzido."
+  },
+  {
+    "id": "P055",
+    "path": ".orchestra/plugins/smoke-theme.json",
+    "git_blob_sha": "dfe73305d2d8cfaaec14691c5fc0471d0a3a67ec",
+    "sha256": "18a68ad360ebbe182b207d6a29d7cc9fff3b5d2ce7324b97b8863f5322b81500",
+    "byte_length": 4278,
+    "line_count": 222,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "dados de tema para smoke da TUI",
+    "artifact_path": "bodies/c-01.md",
+    "section": "P055 — .orchestra/plugins/smoke-theme.json",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 20,
+        "anchor": "tabela de definições"
+      },
+      {
+        "start_line": 21,
+        "end_line": 128,
+        "anchor": "UI e diff"
+      },
+      {
+        "start_line": 129,
+        "end_line": 220,
+        "anchor": "Markdown e sintaxe"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "o JSON não contém validador, fallback, cálculo de contraste nem carregamento automático. O vínculo de uso demonstrado é o install/set em P056. Não deve receber as regras CSS de vidro como se fosse implementação do app-shell."
+  },
+  {
+    "id": "P056",
+    "path": ".orchestra/plugins/tui-smoke.tsx",
+    "git_blob_sha": "d45fc50b3db8dc8e67218c269eb6c44f16c6a429",
+    "sha256": "1b6099c920893d7b1cecfbe72049607b485901f6485b78474d5b2ee0853b0bdd",
+    "byte_length": 31255,
+    "line_count": 1019,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "plugin demonstrativo executável, analisado estaticamente",
+    "artifact_path": "bodies/c-01.md",
+    "section": "P056 — .orchestra/plugins/tui-smoke.tsx",
+    "evidence": [
+      {
+        "start_line": 8,
+        "end_line": 115,
+        "anchor": "comandos, defaults e configuração"
+      },
+      {
+        "start_line": 129,
+        "end_line": 198,
+        "anchor": "resolução de cores e parâmetros"
+      },
+      {
+        "start_line": 218,
+        "end_line": 297,
+        "anchor": "diálogos e transições"
+      },
+      {
+        "start_line": 299,
+        "end_line": 494,
+        "anchor": "arbitragem de teclado"
+      },
+      {
+        "start_line": 538,
+        "end_line": 638,
+        "anchor": "estados visíveis e overlay local"
+      },
+      {
+        "start_line": 641,
+        "end_line": 709,
+        "anchor": "rota modal"
+      },
+      {
+        "start_line": 711,
+        "end_line": 866,
+        "anchor": "slots e ordem"
+      },
+      {
+        "start_line": 868,
+        "end_line": 1019,
+        "anchor": "registro, inicialização e descarte"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "não há asserções nem resultado automático pass/fail. A seleção do tema tem efeito observável pretendido, mas não há restauração explícita do tema anterior neste blob. A remoção explícita cobre o postprocessamento; descarte de keymap, rotas e slots depende do host. Não houve carregamento do plugin, renderização ou verificação dos imports externos."
+  },
+  {
+    "id": "P057",
+    "path": ".orchestra/skills/vcs-maintenance/SKILL.md",
+    "git_blob_sha": "1031f1840484ee904c286b426050aee67bb57350",
+    "sha256": "29a9ad70d992a5863c87a086482219fc35c0b6fa4c747bd928a1d810aaf5c139",
+    "byte_length": 2267,
+    "line_count": 21,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "conhecimento de manutenção documentado",
+    "artifact_path": "bodies/c-02.md",
+    "section": "P057 — .orchestra/skills/vcs-maintenance/SKILL.md",
+    "evidence": [
+      {
+        "start_line": 8,
+        "end_line": 15,
+        "anchor": "responsáveis, janela e invalidação"
+      },
+      {
+        "start_line": 17,
+        "end_line": 21,
+        "anchor": "contagem, exceções e teste citado"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "descreve implementação em outros arquivos, não a demonstra. Mover governança para cache sacrificaria frescor segundo o contrato; paridade de contagem e limite de processos não foram executados."
+  },
+  {
+    "id": "P058",
+    "path": ".orchestra/skills/windows-test-portability/SKILL.md",
+    "git_blob_sha": "0f7955bb52127ebcf6b84e66bde9cec7b861150b",
+    "sha256": "1d9332dd2ab5515c0daae1ca267e04ca33bd4b399cdade622c9dd0dc50ed8564",
+    "byte_length": 3339,
+    "line_count": 29,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "orientação de portabilidade e diagnóstico",
+    "artifact_path": "bodies/c-02.md",
+    "section": "P058 — .orchestra/skills/windows-test-portability/SKILL.md",
+    "evidence": [
+      {
+        "start_line": 8,
+        "end_line": 14,
+        "anchor": "política de correção"
+      },
+      {
+        "start_line": 18,
+        "end_line": 24,
+        "anchor": "causas e diagnóstico"
+      },
+      {
+        "start_line": 26,
+        "end_line": 29,
+        "anchor": "fontes relacionadas"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "comandos e exemplos são prescrição histórica. Nenhum teste Windows, inspeção de CI ou teste de dependência foi executado; caminhos específicos de máquina foram omitidos desta base."
+  },
+  {
+    "id": "P059",
+    "path": ".oxlintrc.json",
+    "git_blob_sha": "4dce1ec7a1dcd8f9837d9f0b047bda69769ce414",
+    "sha256": "047ffb42ce8d09e184665fa351dfe23de695582a853789b13fd5358bb0a053a6",
+    "byte_length": 2077,
+    "line_count": 53,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "configuração comentada de lint",
+    "artifact_path": "bodies/c-02.md",
+    "section": "P059 — .oxlintrc.json",
+    "evidence": [
+      {
+        "start_line": 3,
+        "end_line": 20,
+        "anchor": "opções e exceções por framework"
+      },
+      {
+        "start_line": 22,
+        "end_line": 42,
+        "anchor": "supressões e warnings relevantes"
+      },
+      {
+        "start_line": 44,
+        "end_line": 52,
+        "anchor": "escopo ignorado"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "não existe resultado de lint neste arquivo. Warnings e exclusões não comprovam ausência de defeitos; não foi analisado o gate externo mencionado."
+  },
+  {
+    "id": "P060",
+    "path": ".prettierignore",
+    "git_blob_sha": "dc65965b09963d0c3409d1accf4408d1139f84a5",
+    "sha256": "b172f99ca72de2c3bc208665d9a4a976069c8ad7474273bef9542237878192d1",
+    "byte_length": 679,
+    "line_count": 14,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "fronteira de formatação",
+    "artifact_path": "bodies/c-02.md",
+    "section": "P060 — .prettierignore",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 14,
+        "anchor": "exclusões e justificativas de geração"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "não congela edição manual nem comprova regeneração ou validade dos bytes; só orienta o formatter que consumir a lista."
+  },
+  {
+    "id": "P061",
+    "path": ".sh",
+    "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "byte_length": 0,
+    "line_count": 0,
+    "read_mode": "empty-blob-complete",
+    "classification": "blob vazio",
+    "artifact_path": "bodies/c-02.md",
+    "section": "P061 — .sh",
+    "evidence": [],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "nome e existência não permitem inferir finalidade histórica."
+  },
+  {
+    "id": "P062",
+    "path": ".vscode/launch.example.json",
+    "git_blob_sha": "744ce92aabfdafa29799f26f0a247b754cad1ad8",
+    "sha256": "56dd5d3112824b8ca533238d8060e7849fdf80c26c03d6972fe2ae050da5da83",
+    "byte_length": 184,
+    "line_count": 11,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "exemplo de configuração de debugger",
+    "artifact_path": "bodies/c-02.md",
+    "section": "P062 — .vscode/launch.example.json",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 11,
+        "anchor": "versão e configuração attach"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "ser arquivo de exemplo não prova instalação no editor, conexão ativa ou suporte da extensão."
+  },
+  {
+    "id": "P063",
+    "path": ".vscode/settings.example.json",
+    "git_blob_sha": "05bbf7fe11c12f09097dd23a4cafbf70ff56c183",
+    "sha256": "6ed27f58dc0c3773a1379d043ddb22c7256cd23d132744df5131e1ead1de84a9",
+    "byte_length": 53,
+    "line_count": 5,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "exemplo de recomendação de extensão",
+    "artifact_path": "bodies/c-02.md",
+    "section": "P063 — .vscode/settings.example.json",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 5,
+        "anchor": "única recomendação"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "não demonstra que esse nome de arquivo/chave seja consumido automaticamente pelo editor nem que a extensão esteja presente."
+  },
+  {
+    "id": "P064",
+    "path": ".zed/settings.json",
+    "git_blob_sha": "a3a5e1e2b219b4e8389b1d0f43ba3d3aba55c6e3",
+    "sha256": "409f3baae05f69dc873181a7a4d9d7729363bd4431a9bd83f997842860f501e5",
+    "byte_length": 169,
+    "line_count": 9,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "integração de editor",
+    "artifact_path": "bodies/c-02.md",
+    "section": "P064 — .zed/settings.json",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 9,
+        "anchor": "evento e comando externo"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "não fixa versão do formatter nem trata falha do executável; depende do ambiente do editor e da resolução de pacotes."
+  },
+  {
+    "id": "P065",
+    "path": "CHANGELOG.md",
+    "git_blob_sha": "1a7d0ab88e4cc04bd3830fc3ad41cfa00657319c",
+    "sha256": "c2c94f3c88baef065adb45d1e657c1029c1992c92110df4a528524adea5fc1d4",
+    "byte_length": 7536,
+    "line_count": 97,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "histórico de releases e resumo de produto",
+    "artifact_path": "bodies/c-03.md",
+    "section": "P065 — CHANGELOG.md",
+    "evidence": [
+      {
+        "start_line": 9,
+        "end_line": 27,
+        "anchor": "releases desktop e startup"
+      },
+      {
+        "start_line": 28,
+        "end_line": 46,
+        "anchor": "0.3.1, migração e distribuição"
+      },
+      {
+        "start_line": 48,
+        "end_line": 62,
+        "anchor": "convenção de release e mudança de autoridade da lista"
+      },
+      {
+        "start_line": 64,
+        "end_line": 97,
+        "anchor": "capacidades e mudanças agregadas"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "lista uma versão 0.3.3 sem detalhar seu diff; não comprova disponibilidade atual, assinatura, execução de migração nem compatibilidade de binários instalados. Datas e versões são do histórico capturado."
+  },
+  {
+    "id": "P066",
+    "path": "CONTEXT.md",
+    "git_blob_sha": "06d6824458dcaf9e207dcabe4dcdff126617dd48",
+    "sha256": "fd0ba787590e9e93454bcc4e47a31c9f718e140ce2b9a60f6682f6019c23058b",
+    "byte_length": 32758,
+    "line_count": 227,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "contrato conceitual e decisões de arquitetura, incluindo pendências explícitas",
+    "artifact_path": "bodies/c-03.md",
+    "section": "P066 — CONTEXT.md",
+    "evidence": [
+      {
+        "start_line": 7,
+        "end_line": 85,
+        "anchor": "linguagem"
+      },
+      {
+        "start_line": 90,
+        "end_line": 115,
+        "anchor": "admissão, snapshot, epoch e indisponibilidade"
+      },
+      {
+        "start_line": 116,
+        "end_line": 140,
+        "anchor": "responsabilidades, agentes, metadados e PTY"
+      },
+      {
+        "start_line": 141,
+        "end_line": 166,
+        "anchor": "fronteira Client/IR/SDK"
+      },
+      {
+        "start_line": 167,
+        "end_line": 190,
+        "anchor": "streams, paginação e operações"
+      },
+      {
+        "start_line": 191,
+        "end_line": 201,
+        "anchor": "bounding/retention"
+      },
+      {
+        "start_line": 203,
+        "end_line": 227,
+        "anchor": "arquitetura e questões abertas"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "contrato documental denso, não inspeção dos serviços, geradores ou testes citados. As passagens beta, first slice, follow-up e open question delimitam maturidade. Não há prova de atomicidade, isolamento, compatibilidade de provider, distribuição de execução ou retenção real fornecida por este blob."
+  },
+  {
+    "id": "P067",
+    "path": "CONTRIBUTING.md",
+    "git_blob_sha": "a2e75315cf33e7618a05717a161fa63fc402dd86",
+    "sha256": "250f3ac7ca930b6166ba520c2e6989d44731aa8175247178c2b8434128d62870",
+    "byte_length": 11324,
+    "line_count": 275,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "guia de colaboração e desenvolvimento",
+    "artifact_path": "bodies/c-03.md",
+    "section": "P067 — CONTRIBUTING.md",
+    "evidence": [
+      {
+        "start_line": 3,
+        "end_line": 30,
+        "anchor": "escopo de contribuição e providers"
+      },
+      {
+        "start_line": 32,
+        "end_line": 149,
+        "anchor": "desenvolvimento, componentes e geração"
+      },
+      {
+        "start_line": 153,
+        "end_line": 205,
+        "anchor": "debugger e mapa"
+      },
+      {
+        "start_line": 207,
+        "end_line": 275,
+        "anchor": "revisão, estilo e novas features"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "comandos não foram executados. A exigência Bun 1.3+ é mais ampla que o pin específico documentado pelo README; deve-se consultar o pin quando executando. Lista de caminhos e alegação de CI não garantem que qualquer build ou check passe."
+  },
+  {
+    "id": "P068",
+    "path": "LICENSE",
+    "git_blob_sha": "8503aa75d211d2106ccf9ff44bbdf3248744b860",
+    "sha256": "245741b1bae133888ab77f43868ff7b26db8fbb1c0618141da4bd304e9e4fcfb",
+    "byte_length": 1111,
+    "line_count": 22,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "texto de licença MIT",
+    "artifact_path": "bodies/c-03.md",
+    "section": "P068 — LICENSE",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 14,
+        "anchor": "identificação, permissão e condição"
+      },
+      {
+        "start_line": 16,
+        "end_line": 22,
+        "anchor": "garantia e responsabilidade"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "descrição do texto capturado, sem interpretação jurídica sobre um caso concreto. Não determina licenças de dependências ou de módulos com arquivos próprios nem demonstra cumprimento no pacote publicado."
+  },
+  {
+    "id": "P069",
+    "path": "NOTICE",
+    "git_blob_sha": "c6241d2c1d7bd91496600b620eef8ac11999d0de",
+    "sha256": "5728280a1e169fe5b0b2a7553797141d8501ff559422ff71638c6df93e2e0563",
+    "byte_length": 267,
+    "line_count": 6,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "atribuição de derivação",
+    "artifact_path": "bodies/c-03.md",
+    "section": "P069 — NOTICE",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 6,
+        "anchor": "identidade e retenção do aviso"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "não é inventário de terceiros, SBOM nem prova de que cada distribuição contém os arquivos citados."
+  },
+  {
+    "id": "P070",
+    "path": "README.md",
+    "git_blob_sha": "16e36fecddd898e1eeac5f33371088a9c4ec07df",
+    "sha256": "46831bd9b919fea2164f6177e079f157b79027aba62731dd006b3c91d5bd48c4",
+    "byte_length": 8555,
+    "line_count": 138,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "entrada de produto, capacidades declaradas e instalação",
+    "artifact_path": "bodies/c-03.md",
+    "section": "P070 — README.md",
+    "evidence": [
+      {
+        "start_line": 8,
+        "end_line": 39,
+        "anchor": "proposta e fluxo ilustrativo"
+      },
+      {
+        "start_line": 41,
+        "end_line": 77,
+        "anchor": "onboarding, mapa e limites"
+      },
+      {
+        "start_line": 79,
+        "end_line": 118,
+        "anchor": "distribuição e atualização"
+      },
+      {
+        "start_line": 120,
+        "end_line": 138,
+        "anchor": "construção, suporte e licenças"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "badges e “latest” são referências móveis, não valores fixados pelo blob. A frase ampla sobre sandbox na comparação deve ser lida junto ao escopo opt-in de SECURITY: não prova confinamento universal. Nenhuma release, checksum de download, instalador ou disponibilidade de provider foi consultado."
+  },
+  {
+    "id": "P071",
+    "path": "SECURITY.md",
+    "git_blob_sha": "a8ce7932938b93a3a6685cfc3fa8b5cdc5123baa",
+    "sha256": "96f6b1218dfe5595fdb06b4f59047fcc0f10fecbebec2a23b7a47f991c6a6c5a",
+    "byte_length": 3900,
+    "line_count": 47,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "modelo de ameaça e política de relato",
+    "artifact_path": "bodies/c-03.md",
+    "section": "P071 — SECURITY.md",
+    "evidence": [
+      {
+        "start_line": 5,
+        "end_line": 7,
+        "anchor": "política de relatos"
+      },
+      {
+        "start_line": 13,
+        "end_line": 19,
+        "anchor": "execução local e sandbox"
+      },
+      {
+        "start_line": 21,
+        "end_line": 27,
+        "anchor": "servidor e credenciais"
+      },
+      {
+        "start_line": 29,
+        "end_line": 47,
+        "anchor": "exclusões e canal privado"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "são garantias e fronteiras declaradas, não auditoria de implementação. Não houve leitura de credenciais, teste de isolamento, inspeção de logs ou verificação de criptografia em execução."
+  },
+  {
+    "id": "P073",
+    "path": "bunfig.toml",
+    "git_blob_sha": "c506ff57c4bf3fa3a6bd3501b8ce2fc29122accb",
+    "sha256": "ed50f5745fbcb845251debe79cc464a2142c62cf17a013c2a29de38bf248f158",
+    "byte_length": 1024,
+    "line_count": 8,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "política de instalação e seleção de testes",
+    "artifact_path": "bodies/c-02.md",
+    "section": "P073 — bunfig.toml",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 5,
+        "anchor": "versões, idade e exceções"
+      },
+      {
+        "start_line": 7,
+        "end_line": 8,
+        "anchor": "raiz de testes"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "idade não é prova de segurança; exceções retiram essa espera dos nomes listados. A configuração não impede por si só todas as formas de rodar testes nem comprova versão do Bun em uso."
+  },
+  {
+    "id": "P074",
+    "path": "docs/architecture/module-scaffold-exit.md",
+    "git_blob_sha": "a7cd9f546cc796f3180b79a7820c0cfae8971447",
+    "sha256": "058b1315b1791753ab75274e9284b53d267ccb0e20c6473f68faadc9cfced997",
+    "byte_length": 1954,
+    "line_count": 29,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "correção de critérios de milestone baseada em ensaio relatado",
+    "artifact_path": "bodies/c-04.md",
+    "section": "P074 — docs/architecture/module-scaffold-exit.md",
+    "evidence": [
+      {
+        "start_line": 3,
+        "end_line": 5,
+        "anchor": "origem do ensaio"
+      },
+      {
+        "start_line": 7,
+        "end_line": 21,
+        "anchor": "critérios e dívida retida"
+      },
+      {
+        "start_line": 23,
+        "end_line": 29,
+        "anchor": "correções de contagem"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "números são critérios/resultado de rehearsal declarado, não novo censo ou gates observados. O baseline deste estudo não recebe uma aprovação de milestone por corresponder a uma narrativa anterior."
+  },
+  {
+    "id": "P075",
+    "path": "docs/architecture/monolith-map.md",
+    "git_blob_sha": "d06cafc23fac3c113661e8cc80b1d9fead7c01aa",
+    "sha256": "2a1e13bea704373ed1e0e14030162488973d4e2c173144f675a34a53d311ddd6",
+    "byte_length": 33949,
+    "line_count": 310,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "mapa de auditoria histórica, proposta de ownership e adendo de movimentos publicados",
+    "artifact_path": "bodies/c-05.md",
+    "section": "P075 — docs/architecture/monolith-map.md",
+    "evidence": [
+      {
+        "start_line": 3,
+        "end_line": 27,
+        "anchor": "alcance e correções do diagnóstico"
+      },
+      {
+        "start_line": 29,
+        "end_line": 103,
+        "anchor": "unidades, destinos e toolchains"
+      },
+      {
+        "start_line": 105,
+        "end_line": 154,
+        "anchor": "domínios e legado"
+      },
+      {
+        "start_line": 158,
+        "end_line": 198,
+        "anchor": "dados, APIs, UI e assets"
+      },
+      {
+        "start_line": 199,
+        "end_line": 224,
+        "anchor": "limpeza/readers"
+      },
+      {
+        "start_line": 226,
+        "end_line": 243,
+        "anchor": "acoplamentos e guard"
+      },
+      {
+        "start_line": 245,
+        "end_line": 291,
+        "anchor": "checks e limites"
+      },
+      {
+        "start_line": 293,
+        "end_line": 310,
+        "anchor": "adendo histórico de publicação"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "as fontes de implementação citadas pelo mapa não foram expandidas neste lote. As identidades, contagens e condições descritas pertencem à auditoria histórica e seus adendos. Não se afirma que todos os paths propostos tenham sido movidos, que toda dívida tenha fechado ou que as suites passaram no baseline de novembro."
+  },
+  {
+    "id": "P076",
+    "path": "docs/architecture/phase-plans/70-80-source.md",
+    "git_blob_sha": "97e5ee07b55a84a15cd5f9f5ece80920e2e55b45",
+    "sha256": "b0f071c219e24019bf933b1a2592438ab796901a6f6ef8e058c3477a8080b96b",
+    "byte_length": 94781,
+    "line_count": 629,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "plano de origem de modularidade interna, com auditoria histórica, decisões propostas, desenho de gates e cards de execução",
+    "artifact_path": "bodies/c-06.md",
+    "section": "P076 — docs/architecture/phase-plans/70-80-source.md",
+    "evidence": [
+      {
+        "start_line": 5,
+        "end_line": 71,
+        "anchor": "baseline, tiers e medições"
+      },
+      {
+        "start_line": 73,
+        "end_line": 116,
+        "anchor": "decisões e trabalho adiado"
+      },
+      {
+        "start_line": 118,
+        "end_line": 188,
+        "anchor": "tags, regras e ledger"
+      },
+      {
+        "start_line": 190,
+        "end_line": 320,
+        "anchor": "ownership e scaffold de README"
+      },
+      {
+        "start_line": 333,
+        "end_line": 419,
+        "anchor": "inventário, snapshots, codemods e tarefas do lead"
+      },
+      {
+        "start_line": 428,
+        "end_line": 558,
+        "anchor": "cards de código, docs e retarget"
+      },
+      {
+        "start_line": 565,
+        "end_line": 629,
+        "anchor": "DAG, traps, estimativa e convergência fora de escopo"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "fonte prescritiva com medições históricas, não implementação dos scanners ou gates; tolerâncias, contagens e estimativas não foram reexecutadas; este plano contém opções diferentes das do plano 80–90 e não deve ser usado isoladamente para inferir a decisão consolidada posterior."
+  },
+  {
+    "id": "P077",
+    "path": "docs/architecture/phase-plans/70-90-briefs/FAC-CORE-CLI.md",
+    "git_blob_sha": "5e51e5b687c154824e9efb003a59c7550f8bc1f4",
+    "sha256": "d8caa2d82a84669f417585850e15eddaebddb6b3458bd2a691df069765e5bd90",
+    "byte_length": 4317,
+    "line_count": 75,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "brief histórico de transformação mecânica de imports para fachadas",
+    "artifact_path": "bodies/c-07.md",
+    "section": "P077 — docs/architecture/phase-plans/70-90-briefs/FAC-CORE-CLI.md",
+    "evidence": [
+      {
+        "start_line": 5,
+        "end_line": 19,
+        "anchor": "precondições e restrições"
+      },
+      {
+        "start_line": 26,
+        "end_line": 30,
+        "anchor": "helpers de população e escopo"
+      },
+      {
+        "start_line": 33,
+        "end_line": 44,
+        "anchor": "arquivos e transformação"
+      },
+      {
+        "start_line": 56,
+        "end_line": 75,
+        "anchor": "expectativas e retorno"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "brief não contém o diff resultante nem a execução do codemod; valores de aceitação pertencem ao seu BASE e não foram medidos nesta entrega."
+  },
+  {
+    "id": "P078",
+    "path": "docs/architecture/phase-plans/70-90-briefs/RB-BLOCKS.md",
+    "git_blob_sha": "4e36e30ccf77cef73a60c6615027e328698e98b4",
+    "sha256": "3e4ce679dce115b9a181e4683d111f25a4bb62b9e4141bf6a5a7383ed1651160",
+    "byte_length": 5190,
+    "line_count": 87,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "brief histórico para acrescentar blocos contratuais gerados a READMEs existentes",
+    "artifact_path": "bodies/c-07.md",
+    "section": "P078 — docs/architecture/phase-plans/70-90-briefs/RB-BLOCKS.md",
+    "evidence": [
+      {
+        "start_line": 10,
+        "end_line": 17,
+        "anchor": "limites do executor"
+      },
+      {
+        "start_line": 31,
+        "end_line": 57,
+        "anchor": "21 arquivos e geração"
+      },
+      {
+        "start_line": 69,
+        "end_line": 87,
+        "anchor": "aceitação e retorno"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "os READMEs referenciados não foram incorporados à população por este link; números descrevem o rehearsal de origem, sem disponibilidade ou correção atual implícita."
+  },
+  {
+    "id": "P079",
+    "path": "docs/architecture/phase-plans/70-90-briefs/RD-TOOLKIT.md",
+    "git_blob_sha": "31fcaf47a871384ed32e3b9e901323763f543f06",
+    "sha256": "e080170bb35be49525bbdf8fd92e4c9cea1708c36bd266403c994648d4b0ef6b",
+    "byte_length": 4805,
+    "line_count": 103,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "brief com conteúdo exato proposto para um README de domínio",
+    "artifact_path": "bodies/c-07.md",
+    "section": "P079 — docs/architecture/phase-plans/70-90-briefs/RD-TOOLKIT.md",
+    "evidence": [
+      {
+        "start_line": 5,
+        "end_line": 19,
+        "anchor": "criação prescrita e escopo"
+      },
+      {
+        "start_line": 33,
+        "end_line": 74,
+        "anchor": "README proposto, ownership, cache e contratos"
+      },
+      {
+        "start_line": 87,
+        "end_line": 103,
+        "anchor": "asserções e retorno"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "conteúdo de documentação embutido em brief; não é leitura da implementação de toolkit nem demonstração de que o README foi criado ou de que o corte posterior ocorreu."
+  },
+  {
+    "id": "P080",
+    "path": "docs/architecture/phase-plans/70-90-briefs/README.md",
+    "git_blob_sha": "8ee22e913a19e7dacdfd248af54ebbfe9102b22d",
+    "sha256": "2b1a911b6de3d0e3f8b22b60395d143e12f6ca3c26640e531866b437a0468f86",
+    "byte_length": 1650,
+    "line_count": 44,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "índice histórico de 37 briefs de cards",
+    "artifact_path": "bodies/c-07.md",
+    "section": "P080 — docs/architecture/phase-plans/70-90-briefs/README.md",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 6,
+        "anchor": "origem, BASE e ordem"
+      },
+      {
+        "start_line": 8,
+        "end_line": 44,
+        "anchor": "índice dos 37 cards"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "navegação histórica; sem prova de execução, disponibilidade de worktrees ou conteúdo dos briefs fora desta lista."
+  },
+  {
+    "id": "P081",
+    "path": "docs/architecture/phase-plans/70-90-briefs/REN-TEETH.md",
+    "git_blob_sha": "a61d03697509ab1d5d8694e975f518d16329f869",
+    "sha256": "811259c8158d0b8eb37bd13219ee8df98cd6edd5f5e5a4a4970018dd14ffc03a",
+    "byte_length": 4924,
+    "line_count": 94,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "brief com script de edição textual para reforçar uma asserção de teste",
+    "artifact_path": "bodies/c-07.md",
+    "section": "P081 — docs/architecture/phase-plans/70-90-briefs/REN-TEETH.md",
+    "evidence": [
+      {
+        "start_line": 5,
+        "end_line": 19,
+        "anchor": "finalidade e restrições"
+      },
+      {
+        "start_line": 33,
+        "end_line": 66,
+        "anchor": "ownership, substituições e inserção"
+      },
+      {
+        "start_line": 78,
+        "end_line": 94,
+        "anchor": "aceitação sintática e retorno"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "script apresentado como fonte, não executado; o efeito descrito é a mudança proposta no predicado, sem aferição dos arquivos ou exceções efetivamente cobertos."
+  },
+  {
+    "id": "P082",
+    "path": "docs/architecture/phase-plans/70-90-briefs/RN-SCRIPT.md",
+    "git_blob_sha": "d51e434709c494e96dcc0a687066df27e5b85ccd",
+    "sha256": "1a8eb3549b47093be64cd0db527f553c971a63f31a021e3d4d6176ef462b4d04",
+    "byte_length": 4995,
+    "line_count": 111,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "brief de criação de README de pacote com bloco gerado adicional",
+    "artifact_path": "bodies/c-07.md",
+    "section": "P082 — docs/architecture/phase-plans/70-90-briefs/RN-SCRIPT.md",
+    "evidence": [
+      {
+        "start_line": 5,
+        "end_line": 19,
+        "anchor": "arquivo novo e limites"
+      },
+      {
+        "start_line": 33,
+        "end_line": 82,
+        "anchor": "texto proposto e geração do bloco"
+      },
+      {
+        "start_line": 94,
+        "end_line": 111,
+        "anchor": "forma e aceitação"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "especificação de documentação, sem inspeção adicional dos CLIs ou prova de geração; declarações de dependência e exports não substituem leitura dos manifests efetivos."
+  },
+  {
+    "id": "P083",
+    "path": "docs/architecture/phase-plans/70-90.md",
+    "git_blob_sha": "f340d61b1edf002cb49d9123ee0421252267b4aa",
+    "sha256": "768202bec8e3ac8c61347f619b5b1de7ad9aa9a8727e2837b89944fa65d54d12",
+    "byte_length": 78527,
+    "line_count": 756,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "plano consolidado de scaffold, com reconciliação dos dois planos de origem e contratos para execução posterior",
+    "artifact_path": "bodies/c-07.md",
+    "section": "P083 — docs/architecture/phase-plans/70-90.md",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 41,
+        "anchor": "recorte, cancelamentos e decisões"
+      },
+      {
+        "start_line": 63,
+        "end_line": 94,
+        "anchor": "reconciliação e restrições"
+      },
+      {
+        "start_line": 97,
+        "end_line": 194,
+        "anchor": "registro e ownership"
+      },
+      {
+        "start_line": 196,
+        "end_line": 246,
+        "anchor": "escopo, regras e modos do guard"
+      },
+      {
+        "start_line": 248,
+        "end_line": 331,
+        "anchor": "ferramentas, fachadas e scaffold"
+      },
+      {
+        "start_line": 335,
+        "end_line": 420,
+        "anchor": "preparação e controles"
+      },
+      {
+        "start_line": 424,
+        "end_line": 591,
+        "anchor": "famílias de cards e fatos dos READMEs"
+      },
+      {
+        "start_line": 595,
+        "end_line": 638,
+        "anchor": "integração e saída"
+      },
+      {
+        "start_line": 642,
+        "end_line": 710,
+        "anchor": "adiamentos, riscos e estimativas"
+      },
+      {
+        "start_line": 714,
+        "end_line": 756,
+        "anchor": "população histórica dos apêndices"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "plano consolidado não é o código do guard nem o registro de sua execução; valores de auditoria e contratos de desempenho não foram reexecutados; os documentos ligados não expandem esta cobertura; encerramento desejado não demonstra conclusão atual da convergência."
+  },
+  {
+    "id": "P084",
+    "path": "docs/architecture/phase-plans/70c/edges.py",
+    "git_blob_sha": "3b9b7a038de4bef72dfbd11f164cf4dcf42853e4",
+    "sha256": "d5c88fad37b035913ba8c49914ee0cad5968871ecf5bfa273d963d5d3f0c8626",
+    "byte_length": 2760,
+    "line_count": 60,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "script Python de inventário aproximado de imports e ownership do legado",
+    "artifact_path": "bodies/c-08.md",
+    "section": "P084 — docs/architecture/phase-plans/70c/edges.py",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 20,
+        "anchor": "entradas, registry e ownership"
+      },
+      {
+        "start_line": 21,
+        "end_line": 45,
+        "anchor": "regex, resolução e classificação"
+      },
+      {
+        "start_line": 46,
+        "end_line": 60,
+        "anchor": "população, saída e contadores"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "código lido estaticamente, sem execução; aproximação textual e filesystem-local, sem garantia de completude AST, ambiguidades, portabilidade de padrões ou aderência a um commit por conta própria."
+  },
+  {
+    "id": "P085",
+    "path": "docs/architecture/phase-plans/70c/plan-b1c.md",
+    "git_blob_sha": "ed482c638a957540f2bc2e44a2e428ad07fe5386",
+    "sha256": "7544670d352e3db9aa9e3fdbd6fc770c88d8c85dff4dad7d97edff0ceb170f71",
+    "byte_length": 45774,
+    "line_count": 371,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "desenho de sucessores V2 para engine Claude Code, governança Maestro e continuidade, com contratos propostos e pontos explicitamente não verificados",
+    "artifact_path": "bodies/c-08.md",
+    "section": "P085 — docs/architecture/phase-plans/70c/plan-b1c.md",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 36,
+        "anchor": "baseline, destinos e decisões"
+      },
+      {
+        "start_line": 40,
+        "end_line": 90,
+        "anchor": "gaps G1–G28"
+      },
+      {
+        "start_line": 94,
+        "end_line": 163,
+        "anchor": "nodes por Location e ExecutionHost"
+      },
+      {
+        "start_line": 165,
+        "end_line": 221,
+        "anchor": "state, permissions, governança e compaction"
+      },
+      {
+        "start_line": 225,
+        "end_line": 275,
+        "anchor": "cards e composição"
+      },
+      {
+        "start_line": 279,
+        "end_line": 326,
+        "anchor": "DAG e riscos"
+      },
+      {
+        "start_line": 330,
+        "end_line": 371,
+        "anchor": "condições do flip, estimativas e steer"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "desenho não implementado por este blob; exemplos dependem de contratos V1 depois removidos; tipos LayerNode, projeção de filho sem inbox e equivalência de permissions são explicitamente não verificados; nenhuma exploração, credencial, query ou execução de produto foi realizada."
+  },
+  {
+    "id": "P086",
+    "path": "docs/architecture/phase-plans/70c/plan.md",
+    "git_blob_sha": "a8a9dd1516885987c8fa8103d29b4718278fadae",
+    "sha256": "774a983be83e2bf83524c85fc7b34718cf3145f09380c74fd79c87252a103601",
+    "byte_length": 61558,
+    "line_count": 702,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "plano histórico de extração de camadas de produto, portas de composição e integração de movimentos",
+    "artifact_path": "bodies/c-08.md",
+    "section": "P086 — docs/architecture/phase-plans/70c/plan.md",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 66,
+        "anchor": "método, aviso, divisão B1/B1-C e decisões"
+      },
+      {
+        "start_line": 70,
+        "end_line": 188,
+        "anchor": "grafo e conjunto móvel"
+      },
+      {
+        "start_line": 192,
+        "end_line": 244,
+        "anchor": "camada, pacotes e preparação"
+      },
+      {
+        "start_line": 246,
+        "end_line": 378,
+        "anchor": "Host, routes e referências"
+      },
+      {
+        "start_line": 380,
+        "end_line": 446,
+        "anchor": "pequenos ports e seams futuros"
+      },
+      {
+        "start_line": 450,
+        "end_line": 476,
+        "anchor": "matriz de composição"
+      },
+      {
+        "start_line": 480,
+        "end_line": 547,
+        "anchor": "preparação, cards e integração"
+      },
+      {
+        "start_line": 549,
+        "end_line": 572,
+        "anchor": "readiness e readers indexados por path"
+      },
+      {
+        "start_line": 576,
+        "end_line": 647,
+        "anchor": "riscos e estimativa"
+      },
+      {
+        "start_line": 651,
+        "end_line": 702,
+        "anchor": "apêndice condensado e precedência do mapa exato"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "auditoria histórica e contrato de movimentos, sem execução nesta entrega; schemas V1 citados foram supersedidos pelo aviso; Nix, embed virtual, algumas dependências LayerNode e cobertura de certos testes são explicitamente não verificados; fechar R11 por movimento não comprova remover acoplamento ou substituir o engine."
+  },
+  {
+    "id": "P087",
+    "path": "docs/architecture/phase-plans/70c/r11-map.md",
+    "git_blob_sha": "c8dea65d31e434b22b999d4184a2dabbfee10401",
+    "sha256": "15ff154300c47e45bf8aa5c80cd96c037c1d3dccf47ed7994947fcdc0bdae5ee",
+    "byte_length": 7932,
+    "line_count": 102,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "mapa histórico de atribuição de 98 arestas a cards ou trabalho futuro",
+    "artifact_path": "bodies/c-08.md",
+    "section": "P087 — docs/architecture/phase-plans/70c/r11-map.md",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 44,
+        "anchor": "formato e grupos iniciais"
+      },
+      {
+        "start_line": 45,
+        "end_line": 100,
+        "anchor": "ferramentas e Task"
+      },
+      {
+        "start_line": 102,
+        "end_line": 102,
+        "anchor": "totais por card e abertas"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "fotografia histórica sem timestamp próprio no corpo, baseline ou prova de merge; não reconta o estado atual dos imports e não demonstra que as 35 ocorrências foram removidas."
+  },
+  {
+    "id": "P088",
+    "path": "docs/architecture/phase-plans/70c/v2-route-inventory.md",
+    "git_blob_sha": "de1bfc6182005d3b6c8c50815600c2ed68a70913",
+    "sha256": "f45b7c778e3581277214253829cfd0fd0555a2b174b37b8d05eaf5bd949afdb5",
+    "byte_length": 6058,
+    "line_count": 64,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "inventário histórico de gaps renderer/V2 com atualização de uma segunda rodada na mesma branch",
+    "artifact_path": "bodies/c-08.md",
+    "section": "P088 — docs/architecture/phase-plans/70c/v2-route-inventory.md",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 14,
+        "anchor": "baseline, mecanismo antigo e contagens"
+      },
+      {
+        "start_line": 16,
+        "end_line": 39,
+        "anchor": "gaps e ações propostas"
+      },
+      {
+        "start_line": 41,
+        "end_line": 54,
+        "anchor": "incompatibilidade de eventos e rotas existentes"
+      },
+      {
+        "start_line": 56,
+        "end_line": 64,
+        "anchor": "segunda rodada, degradações e pendências"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "inventário estático histórico com atualização parcial, sem prova atual de endpoint, UI ou evento; helper de detecção já marcado como removido; números variam com baseline e definição de população."
+  },
+  {
+    "id": "P089",
+    "path": "docs/architecture/phase-plans/70c/w1-rules.md",
+    "git_blob_sha": "a3e1fcb2ef79f3b5baba53da14ebf02fea2ef29e",
+    "sha256": "3ebd31c9f46baadae986921ed3350e7d31067d4bc2f0636cae1d0c9536bb20ad",
+    "byte_length": 2523,
+    "line_count": 31,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "regras operacionais históricas para executores da onda de movimentos W1",
+    "artifact_path": "bodies/c-08.md",
+    "section": "P089 — docs/architecture/phase-plans/70c/w1-rules.md",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 9,
+        "anchor": "referência e setup"
+      },
+      {
+        "start_line": 11,
+        "end_line": 24,
+        "anchor": "restrições, exceções e mapa"
+      },
+      {
+        "start_line": 25,
+        "end_line": 31,
+        "anchor": "naming, parada e retorno"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "instruções de uma campanha passada, tratadas apenas como fonte; nenhum setup, install, movimento de produto, commit ou publicação foi executado por esta autoria."
+  },
+  {
+    "id": "P090",
+    "path": "docs/architecture/phase-plans/80-90-source.md",
+    "git_blob_sha": "97681fcc8053bba2307e85cf244050baeb2ed889",
+    "sha256": "7af365d5e8c5e76950c0b49120e2cb6ac758101413f34355e470cbc5074194f9",
+    "byte_length": 67328,
+    "line_count": 784,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "plano de origem para scaffold de arquitetura, exports, fachadas de compatibilidade e reforço de gates",
+    "artifact_path": "bodies/c-06.md",
+    "section": "P090 — docs/architecture/phase-plans/80-90-source.md",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 50,
+        "anchor": "finalidade e divisão por tier"
+      },
+      {
+        "start_line": 52,
+        "end_line": 173,
+        "anchor": "auditoria de CLI, SDK, UI, duplicações e scaffold"
+      },
+      {
+        "start_line": 175,
+        "end_line": 208,
+        "anchor": "registro de decisões"
+      },
+      {
+        "start_line": 210,
+        "end_line": 339,
+        "anchor": "registry, guard, ledger e gerador de exports"
+      },
+      {
+        "start_line": 341,
+        "end_line": 424,
+        "anchor": "módulos internos e fachadas"
+      },
+      {
+        "start_line": 426,
+        "end_line": 560,
+        "anchor": "preparação e cards EXP"
+      },
+      {
+        "start_line": 562,
+        "end_line": 651,
+        "anchor": "FAC, LeanMetrics, rename, README e opções"
+      },
+      {
+        "start_line": 655,
+        "end_line": 739,
+        "anchor": "DAG, riscos e critérios de saída"
+      },
+      {
+        "start_line": 742,
+        "end_line": 784,
+        "anchor": "comandos e populações de despacho como apêndices documentais"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "nenhuma execução do plano é demonstrada por este blob; medições de importadores, waivers, diretórios e duração pertencem à revisão histórica citada; código gerado, registries e gates descritos não foram abertos como expansão desta população; critérios de saída não equivalem a resultados atuais."
+  },
+  {
+    "id": "P091",
+    "path": "docs/architecture/phase-plans/convergence.md",
+    "git_blob_sha": "5408a9104f34474e2fa173f41089de4667471e3f",
+    "sha256": "b60ad869785ebd762bc9a14dc08eec034e018cce91861c6ffdbe4ef7c858c2a8",
+    "byte_length": 40725,
+    "line_count": 460,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "plano histórico de convergência de clientes, servidor e CLI, com aviso posterior que invalida parte dos contratos usados no levantamento",
+    "artifact_path": "bodies/c-07.md",
+    "section": "P091 — docs/architecture/phase-plans/convergence.md",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 8,
+        "anchor": "atualização e método histórico"
+      },
+      {
+        "start_line": 12,
+        "end_line": 55,
+        "anchor": "diferenças de client/protocolo/wire"
+      },
+      {
+        "start_line": 57,
+        "end_line": 193,
+        "anchor": "inventário e classificações por consumidor"
+      },
+      {
+        "start_line": 195,
+        "end_line": 263,
+        "anchor": "contrato externo, lotes, decisões e riscos A"
+      },
+      {
+        "start_line": 266,
+        "end_line": 347,
+        "anchor": "composição, rotas e CLI"
+      },
+      {
+        "start_line": 349,
+        "end_line": 392,
+        "anchor": "desktop, handshake e dados"
+      },
+      {
+        "start_line": 394,
+        "end_line": 438,
+        "anchor": "sequência, decisões e riscos B"
+      },
+      {
+        "start_line": 442,
+        "end_line": 460,
+        "anchor": "vista combinada e limites da medição"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "documento histórico parcialmente supersedido pelo próprio aviso; não autoriza importar schemas removidos nem demonstra estado atual de releases, sidecar, endpoints ou migrations; nenhum port, teste ou exploração do produto foi executado nesta análise."
+  },
+  {
+    "id": "P092",
+    "path": "docs/architecture/restructure-plan.md",
+    "git_blob_sha": "04f2cf81056797514188017a6b4335c9a3468419",
+    "sha256": "fc3e43ce4f29a9b8f601513a30cca58f9ef0653aae5f816017960dbb6fa0394d",
+    "byte_length": 116246,
+    "line_count": 871,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "plano normativo de migração com longo registro histórico de execução parcial",
+    "artifact_path": "bodies/c-05.md",
+    "section": "P092 — docs/architecture/restructure-plan.md",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 57,
+        "anchor": "prioridade, invariantes e dados"
+      },
+      {
+        "start_line": 59,
+        "end_line": 180,
+        "anchor": "árvore/scaffold/direção"
+      },
+      {
+        "start_line": 182,
+        "end_line": 219,
+        "anchor": "limpeza e retenção"
+      },
+      {
+        "start_line": 223,
+        "end_line": 307,
+        "anchor": "marcos 0–60"
+      },
+      {
+        "start_line": 309,
+        "end_line": 384,
+        "anchor": "marcos 60–100 e cortes"
+      },
+      {
+        "start_line": 386,
+        "end_line": 444,
+        "anchor": "DAG, coordenação e evidência"
+      },
+      {
+        "start_line": 446,
+        "end_line": 497,
+        "anchor": "matriz/critério final e campanhas separadas"
+      },
+      {
+        "start_line": 499,
+        "end_line": 600,
+        "anchor": "primeiros checkpoints e dados CLI"
+      },
+      {
+        "start_line": 602,
+        "end_line": 677,
+        "anchor": "desktop e alcance limitado"
+      },
+      {
+        "start_line": 679,
+        "end_line": 760,
+        "anchor": "navegação, resolver e recovery"
+      },
+      {
+        "start_line": 762,
+        "end_line": 812,
+        "anchor": "retenção/módulos simples"
+      },
+      {
+        "start_line": 814,
+        "end_line": 853,
+        "anchor": "readers históricos e moves especiais"
+      },
+      {
+        "start_line": 855,
+        "end_line": 871,
+        "anchor": "landing relatado, reconstrução e pendências"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "não foram consultados pareceres, arquivos de controle reservados, recibos externos ou transcrições; nenhum desses conteúdos foi reproduzido. Fonte grande não equivale a conjunto de provas novas: nomes de runs e estados no texto são histórico. Não se verifica disponibilidade atual de artifacts temporários, archive externo, branches, autorização humana antiga ou estado de implementação no baseline. Este corpo não executa nem autoriza os comandos do plano."
+  },
+  {
+    "id": "P093",
+    "path": "docs/archives/README.md",
+    "git_blob_sha": "1fb495eab264450ee3c0d4935277ae66405a2a0b",
+    "sha256": "b92ae89dec71c04a5f3a650cf9096eed079606d51468831c7ff715c9d25a4da8",
+    "byte_length": 3608,
+    "line_count": 40,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "índice e procedimento de recuperação histórica externa ao Git",
+    "artifact_path": "bodies/c-04.md",
+    "section": "P093 — docs/archives/README.md",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 7,
+        "anchor": "modelo de retenção e handoff"
+      },
+      {
+        "start_line": 9,
+        "end_line": 26,
+        "anchor": "retenção, verificação e reconstrução"
+      },
+      {
+        "start_line": 28,
+        "end_line": 40,
+        "anchor": "demais escopos e leitores preservados"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "não acessamos o local externo, recibos, payloads, tarball ou utilitário de restauração. Os números e verificações são história documentada. Índice e links não provam que o bundle esteja disponível ou íntegro hoje; endereços pessoais não são reproduzidos."
+  },
+  {
+    "id": "P094",
+    "path": "docs/archives/actions-parity.json",
+    "git_blob_sha": "e522f83097c81563b58d8c5b8ec16e9ab153ed1a",
+    "sha256": "84e467b2dee72543317fdb731065f8acec3be45279edb0c233af339d8a0be514",
+    "byte_length": 983,
+    "line_count": 33,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "índice de retenção de paridade visual Actions",
+    "artifact_path": "bodies/c-04.md",
+    "section": "P094 — docs/archives/actions-parity.json",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 19,
+        "anchor": "identidade e tamanho"
+      },
+      {
+        "start_line": 20,
+        "end_line": 33,
+        "anchor": "verificação histórica, leitor e remoção"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "os 35 hashes individuais não estão neste índice; a frase de verification não é prova reexecutada. Não demonstra qualidade visual, aceitação de UI ou disponibilidade atual dos arquivos."
+  },
+  {
+    "id": "P095",
+    "path": "docs/archives/backend-evidence.json",
+    "git_blob_sha": "83621ff3da2133986203e24053ad02ab8b549621",
+    "sha256": "22c00a65a516617a4bf5901cead900a7d08bb78102219407cdc5b146666f14b7",
+    "byte_length": 1004,
+    "line_count": 33,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "índice de retenção de evidência backend",
+    "artifact_path": "bodies/c-04.md",
+    "section": "P095 — docs/archives/backend-evidence.json",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 19,
+        "anchor": "pin e população"
+      },
+      {
+        "start_line": 20,
+        "end_line": 33,
+        "anchor": "relato de restauração e consumidor"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "não contém corpos de evidência, suas decisões nem prova operacional do especialista. Não se acessou acceptance ou bundle; referências históricas não estabelecem aceite atual."
+  },
+  {
+    "id": "P096",
+    "path": "docs/archives/visual-evidence.json",
+    "git_blob_sha": "86228a7e720da21a38d5a0fc3f1d16e9e49c14b1",
+    "sha256": "d93878a17e256a0b07541c4fb15e585594a2dee56c8a81f5a0f59dd40f0449db",
+    "byte_length": 1137,
+    "line_count": 33,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "índice de dois escopos de evidência visual",
+    "artifact_path": "bodies/c-04.md",
+    "section": "P096 — docs/archives/visual-evidence.json",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 17,
+        "anchor": "escopos e identidade"
+      },
+      {
+        "start_line": 18,
+        "end_line": 33,
+        "anchor": "verificação, leitores e disposição"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "agrega dois escopos sem contagem separada por um; não fornece imagens nem conteúdo dos documentos leitores. Não comprova que a UI atual corresponda às capturas ou que estas ainda sejam recuperáveis."
+  },
+  {
+    "id": "P097",
+    "path": "docs/archives/visual-handoff.json",
+    "git_blob_sha": "900f7254ab3498114d80b913ad5865eaf08d17be",
+    "sha256": "4ce947e1cb42e88cca4999f7982914b411b5f60674dd6b001d815e2412403164",
+    "byte_length": 1578,
+    "line_count": 41,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "índice de handoff e reconstrução de arquivo histórico",
+    "artifact_path": "bodies/c-04.md",
+    "section": "P097 — docs/archives/visual-handoff.json",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 18,
+        "anchor": "identidade e população"
+      },
+      {
+        "start_line": 19,
+        "end_line": 33,
+        "anchor": "controles e arquivo reconstruído"
+      },
+      {
+        "start_line": 35,
+        "end_line": 40,
+        "anchor": "leitores e fonte removida"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "esta análise não verifica modos, membros negativos ou reconstrução. O receipt é apenas referido; sua existência atual não foi observada. Não se publica aqui o local pessoal de retenção nem se atribui PASS ao bundle."
+  },
+  {
+    "id": "P098",
+    "path": "docs/guides/README.md",
+    "git_blob_sha": "783edb92da8d64af84ea991f4d132a0bfb90f2f1",
+    "sha256": "e015b6b2c8613b83b6370e749c37db869ec27df4318adafbbc1b326c6dd55404",
+    "byte_length": 2448,
+    "line_count": 54,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "índice de navegação para guias de usuário",
+    "artifact_path": "bodies/c-04.md",
+    "section": "P098 — docs/guides/README.md",
+    "evidence": [
+      {
+        "start_line": 3,
+        "end_line": 15,
+        "anchor": "guia conceitual"
+      },
+      {
+        "start_line": 17,
+        "end_line": 54,
+        "anchor": "usos e sintomas"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "não demonstra publicação, resolução ou atualidade de todos os destinos e não autoriza expandir a população para cada link."
+  },
+  {
+    "id": "P099",
+    "path": "docs/guides/architecture.md",
+    "git_blob_sha": "f9791f2055663c866ed4d2c70b6ff568ab72a947",
+    "sha256": "0933179f0f34753b37573280032aec5a71a3bb5ccc4ed3a4db11506b6a6593e3",
+    "byte_length": 7371,
+    "line_count": 93,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "explicação pública de arquitetura e segurança",
+    "artifact_path": "bodies/c-04.md",
+    "section": "P099 — docs/guides/architecture.md",
+    "evidence": [
+      {
+        "start_line": 12,
+        "end_line": 14,
+        "anchor": "fronteiras e processos"
+      },
+      {
+        "start_line": 20,
+        "end_line": 34,
+        "anchor": "sessão/contexto"
+      },
+      {
+        "start_line": 40,
+        "end_line": 64,
+        "anchor": "sandbox e terminal"
+      },
+      {
+        "start_line": 66,
+        "end_line": 93,
+        "anchor": "interfaces e camadas de segurança"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "são comportamentos documentados, não execução de guard, sandbox, nonce ou backups. A tabela de especialistas delimita macOS/Linux e não autoriza inferir confinamento equivalente no Windows. Contagens aproximadas de grupos API e recursos podem ser históricas."
+  },
+  {
+    "id": "P100",
+    "path": "docs/guides/environment.md",
+    "git_blob_sha": "3c9dd8068f73c9a21b35728f603f35da68f81157",
+    "sha256": "9890ee2bca81d3af403470297432c5a71d29278b632f4e47f194290d21279226",
+    "byte_length": 3239,
+    "line_count": 41,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "guia de switches, edição de arquivo e logs",
+    "artifact_path": "bodies/c-04.md",
+    "section": "P100 — docs/guides/environment.md",
+    "evidence": [
+      {
+        "start_line": 3,
+        "end_line": 10,
+        "anchor": "variáveis"
+      },
+      {
+        "start_line": 12,
+        "end_line": 35,
+        "anchor": "ciclo do editor e mensagens"
+      },
+      {
+        "start_line": 37,
+        "end_line": 41,
+        "anchor": "persistência e export de logs"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "não se leu `.env`, log ou segredo; não se verificou masking, parser, download nem remoção de ambiente. Os caminhos de logs e conteúdo privado não foram reproduzidos."
+  },
+  {
+    "id": "P101",
+    "path": "docs/guides/getting-started.md",
+    "git_blob_sha": "008f60ac8a07a532f809589e9943b796faf31156",
+    "sha256": "68024913aab9877e72e808bf827c63109a5420f3711b97e5b7bfec3216dadc5a",
+    "byte_length": 3711,
+    "line_count": 57,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "roteiro de primeiro uso",
+    "artifact_path": "bodies/c-04.md",
+    "section": "P101 — docs/guides/getting-started.md",
+    "evidence": [
+      {
+        "start_line": 5,
+        "end_line": 28,
+        "anchor": "instalação, trust e chat"
+      },
+      {
+        "start_line": 30,
+        "end_line": 49,
+        "anchor": "board, Actions e navegação"
+      },
+      {
+        "start_line": 51,
+        "end_line": 57,
+        "anchor": "comportamento de CLI e erros"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "não demonstra a interface atualmente instalada nem que todas as etapas possam ser concluídas. As instruções de Auto-accept são descrição de opção de produto, não alteração de permissão nesta sessão."
+  },
+  {
+    "id": "P102",
+    "path": "docs/guides/omni.md",
+    "git_blob_sha": "bfaf9807bf5d42a4f6c6096ab19342e2b6d8fd9d",
+    "sha256": "93df09ea8bb621e04dd84c10cda99906776e85ff9a90cd4a8ce162c069753996",
+    "byte_length": 4217,
+    "line_count": 46,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "guia de camada nativa e seus limites documentados",
+    "artifact_path": "bodies/c-04.md",
+    "section": "P102 — docs/guides/omni.md",
+    "evidence": [
+      {
+        "start_line": 3,
+        "end_line": 26,
+        "anchor": "finalidade, arquitetura, shutdown e saída"
+      },
+      {
+        "start_line": 28,
+        "end_line": 39,
+        "anchor": "plataformas e switch"
+      },
+      {
+        "start_line": 41,
+        "end_line": 46,
+        "anchor": "escapes, allowlist e maturidade"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "não houve leitura extra de native/omni, testes de árvore, conformance ou CI. Números de sites e cenários são contagens declaradas no guia. Não se transfere PASS histórico para o baseline."
+  },
+  {
+    "id": "P103",
+    "path": "docs/guides/workspaces.md",
+    "git_blob_sha": "05cfa98531ea2a0b954191c1e761db7273fb438e",
+    "sha256": "83a0298e1833967d9405d2ddf9e00deb2dc8d0f8f5f9f3485ef61e561835a900",
+    "byte_length": 2820,
+    "line_count": 45,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "guia de gerenciamento de worktrees",
+    "artifact_path": "bodies/c-04.md",
+    "section": "P103 — docs/guides/workspaces.md",
+    "evidence": [
+      {
+        "start_line": 3,
+        "end_line": 20,
+        "anchor": "modelo, seleção e criação"
+      },
+      {
+        "start_line": 22,
+        "end_line": 30,
+        "anchor": "configuração e exclusão"
+      },
+      {
+        "start_line": 32,
+        "end_line": 45,
+        "anchor": "estados e perdas possíveis"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "worktree separa diretórios/branches, sem provar isolamento de todos os recursos externos ou ausência de disputa entre agentes. Não houve criação, remoção ou troca de workspace. O nome de perfil não é metadado compartilhado."
+  },
+  {
+    "id": "P107",
+    "path": "godfile-waivers.json",
+    "git_blob_sha": "2a7a3269086a5d6e3d3d4b29f96c88d67afaaf5f",
+    "sha256": "17a67faf7be0e659c523de1d6bc4b13c3765065b9319071f3ddeb8ddcbb8084b",
+    "byte_length": 20042,
+    "line_count": 412,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "registro declarativo de exceções por arquivo",
+    "artifact_path": "bodies/c-03.md",
+    "section": "P107 — godfile-waivers.json",
+    "evidence": [
+      {
+        "start_line": 3,
+        "end_line": 8,
+        "anchor": "waiver do diálogo"
+      },
+      {
+        "start_line": 9,
+        "end_line": 380,
+        "anchor": "população completa de locales"
+      },
+      {
+        "start_line": 381,
+        "end_line": 398,
+        "anchor": "clientes gerados e histórico"
+      },
+      {
+        "start_line": 399,
+        "end_line": 410,
+        "anchor": "board e schema"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "valores autorizados são dados registrados, não aprovação desta sessão. Não se leu nem contou o conteúdo dos arquivos sujeitos ao teto; não se executou guard. O JSON não prova existência, necessidade atual, correção arquitetural ou validade independente de cada exceção."
+  },
+  {
+    "id": "P173",
+    "path": "perf/test-suite.md",
+    "git_blob_sha": "d48d5d0a3291a809c5094fa5c462c0269aa11162",
+    "sha256": "28849ec6bf1a56c8b6598cba2e456e0b8240eadd4fd915c25b599d27694db6df",
+    "byte_length": 20313,
+    "line_count": 145,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "caderno histórico de experimentos de desempenho",
+    "artifact_path": "bodies/c-03.md",
+    "section": "P173 — perf/test-suite.md",
+    "evidence": [
+      {
+        "start_line": 3,
+        "end_line": 50,
+        "anchor": "objetivo, métricas e escopo"
+      },
+      {
+        "start_line": 54,
+        "end_line": 89,
+        "anchor": "hipóteses e decisões mantidas"
+      },
+      {
+        "start_line": 99,
+        "end_line": 126,
+        "anchor": "profiling histórico e ruído"
+      },
+      {
+        "start_line": 128,
+        "end_line": 145,
+        "anchor": "sanity checks, falha e alternativas descartadas"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "números são relatos do caderno, sem novos benchmarks, revisão de logs ou confirmação de cobertura. Não demonstram performance atual nem estabilidade da suite. Os comandos históricos não foram executados."
+  },
+  {
+    "id": "P199",
+    "path": "tsconfig.json",
+    "git_blob_sha": "65fa6c7f31c11e2a1ff643ea263f97815c6bac5d",
+    "sha256": "3566d273bac7985b182fde3fc49e3d9a6b8d1451c122c31a4f87877faa9ae7aa",
+    "byte_length": 126,
+    "line_count": 5,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "configuração TypeScript de raiz",
+    "artifact_path": "bodies/c-02.md",
+    "section": "P199 — tsconfig.json",
+    "evidence": [
+      {
+        "start_line": 1,
+        "end_line": 5,
+        "anchor": "herança sem overrides"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "as opções efetivas dependem da versão e do conteúdo do pacote base, não contidos neste arquivo. Não demonstra typecheck aprovado nem substitui tsconfigs de workspaces."
+  },
+  {
+    "id": "P200",
+    "path": "turbo.json",
+    "git_blob_sha": "c375d67bc4b2738991a62994d3a81e01cdc7c639",
+    "sha256": "fbe803ff0db57acdd0c1272f4bc09beee0f4778bc270e4bc7c6dc1b68e822fa1",
+    "byte_length": 7461,
+    "line_count": 200,
+    "read_mode": "full-text-read-in-contiguous-numbered-chunks",
+    "classification": "grafo declarativo de tarefas e identidade de cache",
+    "artifact_path": "bodies/c-02.md",
+    "section": "P200 — turbo.json",
+    "evidence": [
+      {
+        "start_line": 3,
+        "end_line": 37,
+        "anchor": "identidade global e transit"
+      },
+      {
+        "start_line": 38,
+        "end_line": 83,
+        "anchor": "core/app/CLI e ambiente"
+      },
+      {
+        "start_line": 84,
+        "end_line": 138,
+        "anchor": "testes e typecheck do script"
+      },
+      {
+        "start_line": 139,
+        "end_line": 200,
+        "anchor": "restantes das tarefas"
+      }
+    ],
+    "disposition": "produced-static-awaiting-review",
+    "limitations": "o arquivo não prova que dependências externas estejam completas, que comandos existam ou que um cache observado tenha invalidado corretamente. Pass-through de ambiente difere de participação no hash. Nenhuma tarefa, pacote Omni ou workflow citado foi executado ou expandido nesta unidade."
+  }
+]
