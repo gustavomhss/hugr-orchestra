@@ -375,11 +375,13 @@ export function registerLiveLoop(options: {
 
   overlay.onAction((action) => {
     if (action.kind === "stop" && state.starting) {
-      void stop()
+      void stop().catch(() => console.warn("Could not finish stopping the live meeting."))
       return
     }
     const meeting = state.meeting
-    if (meeting) void handle(meeting, action)
+    if (!meeting) return
+    const task = handle(meeting, action)
+    if (task) void task.catch(() => console.warn("Could not finish the live overlay action."))
   })
 
   return {
@@ -396,7 +398,9 @@ export function registerLiveLoop(options: {
     },
     toggleCaptions() {
       const meeting = state.meeting
-      if (meeting?.senses) void handle(meeting, { kind: "toggle-captions" })
+      if (!meeting?.senses) return
+      const task = handle(meeting, { kind: "toggle-captions" })
+      if (task) void task.catch(() => console.warn("Could not finish the live captions action."))
     },
     rename(meetingID: string, title: string) {
       const next = title.trim()

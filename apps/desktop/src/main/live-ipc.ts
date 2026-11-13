@@ -27,7 +27,7 @@ export function registerLiveIpc(loop: LiveLoop, options: LiveIpcOptions) {
     loop.settings.bind("toggle-captions", state.running ? loop.toggleCaptions : undefined)
   })
   loop.onLevels((levels) => broadcast("live-levels", levels))
-  loop.settings.bind("start-stop", () => void (loop.running() ? loop.stop() : loop.start()))
+  loop.settings.bind("start-stop", () => void (loop.running() ? loop.stop() : loop.start()).catch(() => console.warn("Could not finish the live meeting hotkey action.")))
 
   options.handle("start-live-meeting", (_event: IpcMainInvokeEvent, title: unknown) =>
     loop.start(typeof title === "string" ? title : undefined),
