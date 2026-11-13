@@ -30,6 +30,7 @@ jobs:
           npx --no-install vitest run \
             packages/adapter-io/test/evaluation-attachment-batch.test.ts \
             packages/adapter-io/test/evaluation-attachment-coverage.test.ts \
+            packages/adapter-io/test/evaluation-attachment-integration.test.ts \
             packages/adapter-io/test/evaluation-admission-read.test.ts \
             packages/adapter-io/test/genesis-evaluation.test.ts \
             packages/adapter-io/test/evaluation-boundaries.test.ts \
@@ -39,7 +40,7 @@ jobs:
         if: always()
         run: |
           printf 'commit=%s\nrun=%s\nattempt=%s\n' "$GITHUB_SHA" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" > attachment-pins.txt
-          sha256sum packages/adapter-io/src/ownership-attachment.ts packages/adapter-io/src/evaluation-admission-read.ts packages/knowledge/src/ownership/read.ts packages/adapter-io/test/evaluation-attachment-batch.test.ts packages/adapter-io/test/evaluation-attachment-coverage.test.ts ../../.github/workflows/evaluation-attachment-batch.yml >> attachment-pins.txt
+          sha256sum packages/adapter-io/src/ownership-attachment.ts packages/adapter-io/src/evaluation-admission-read.ts packages/knowledge/src/ownership/read.ts packages/adapter-io/test/evaluation-attachment-batch.test.ts packages/adapter-io/test/evaluation-attachment-coverage.test.ts packages/adapter-io/test/evaluation-attachment-integration.test.ts ../../.github/workflows/evaluation-attachment-batch.yml >> attachment-pins.txt
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -51,4 +52,5 @@ jobs:
             modules/atlas/packages/adapter-io/src/ownership-attachment.ts
             modules/atlas/packages/adapter-io/test/evaluation-attachment-batch.test.ts
             modules/atlas/packages/adapter-io/test/evaluation-attachment-coverage.test.ts
+            modules/atlas/packages/adapter-io/test/evaluation-attachment-integration.test.ts
           if-no-files-found: error
