@@ -104,6 +104,13 @@ export function registerLiveLoop(options: {
   const joinRenames = async () => {
     while (renames.size) await Promise.allSettled([...renames].map((rename) => rename.done))
   }
+  const settleAndJoin = async (task: Promise<unknown> | undefined, meeting?: Meeting) => {
+    const outcome = await Promise.allSettled([task])
+    const cleanup = await Promise.allSettled([meeting ? join(meeting) : Promise.resolve(), joinRenames()])
+    const failures = [...outcome, ...cleanup].flatMap((result) => result.status === "rejected" ? [result.reason] : [])
+    if (failures.length === 1) throw failures[0]
+    if (failures.length) throw new AggregateError(failures, "Live local close and Session IO cleanup failed")
+  }
   const suppress = (meeting: Meeting) => {
     meeting.suppressSummary = true
     meeting.abort.abort()
@@ -283,23 +290,19 @@ export function registerLiveLoop(options: {
     meeting.stopping ??= Promise.resolve().then(async () => {
       overlay.stop()
       overlay.setView({ kind: "stop-pending", title: meeting.title, durationMs: Date.now() - meeting.startedAt })
-      const result = await meeting.senses?.stop().catch((error) => {
-        meeting.log.write({ event: "senses-stop-failed", reason: String(error) })
-        return undefined
-      })
+      const [outcome] = await Promise.allSettled([meeting.senses?.stop()])
+      if (outcome.status === "rejected") meeting.log.write({ event: "senses-stop-failed", reason: String(outcome.reason) })
+      const result = outcome.status === "fulfilled" ? outcome.value : undefined
       meeting.log.write({ event: "stopped", unsent: result?.unsent })
       meeting.localClosed = result !== undefined
       meeting.senses = undefined
       meeting.request = undefined
       emitRunState()
       maybeSummary(meeting)
+      if (outcome.status === "rejected") throw outcome.reason
     })
     if (reason === "user") return meeting.stopping
-    meeting.closing ??= Promise.resolve().then(async () => {
-      await meeting.stopping
-      await join(meeting)
-      await joinRenames()
-    })
+    meeting.closing ??= settleAndJoin(meeting.stopping, meeting)
     return meeting.closing
   }
 
@@ -315,11 +318,7 @@ export function registerLiveLoop(options: {
         overlay.stop()
         const startup = state.startup
         const meeting = state.meeting
-        state.startupStop ??= Promise.resolve().then(async () => {
-          await startup
-          if (meeting) await join(meeting)
-          await joinRenames()
-        })
+        state.startupStop ??= settleAndJoin(startup, meeting)
         return state.startupStop
       }
       if (state.meeting) return stopMeeting(state.meeting, reason)
@@ -449,12 +448,13 @@ export function registerLiveLoop(options: {
         if (attempt.signal.aborted || !options.delivery.canStart()) return { ok: false as const, reason: "server" as const }
         return begin(title?.trim() || defaultTitle(), sources, wanted, attempt)
       }).catch(async (error) => {
-        const meeting = state.meeting
-        if (meeting?.abort === attempt) {
-          await stopMeeting(meeting, "rotation")
-          if (state.meeting === meeting) state.meeting = undefined
-        }
         transportLog(options.logDirectory, "session").write({ event: "session-failed", reason: String(error) })
+        const meeting = state.meeting
+        const cleanup = meeting?.abort === attempt ? await Promise.allSettled([stopMeeting(meeting, "rotation")]) : []
+        if (meeting?.abort === attempt && state.meeting === meeting) state.meeting = undefined
+        const failures = cleanup.flatMap((result) => result.status === "rejected" ? [result.reason] : [])
+        if (failures.length) throw new AggregateError([error, ...failures], "Live startup and local cleanup failed")
+        if (error instanceof AggregateError) throw error
         return { ok: false as const, reason: "server" as const }
       }).finally(() => {
         if (state.starting === attempt) state.starting = undefined
@@ -518,11 +518,14 @@ export function registerLiveLoop(options: {
       onEvent: (event) => onSenses(meeting, event),
     }).catch((error) => {
       meeting.log.write({ event: "senses-failed", reason: String(error) })
+      if (error instanceof AggregateError) throw error
       return undefined
     })
-    if (attempt.signal.aborted && senses) await senses.stop().catch((error) => {
-      meeting.log.write({ event: "senses-stop-failed", reason: String(error) })
-    })
+    if (attempt.signal.aborted && senses) {
+      // Retain the acquired handle so the outer failure path can join/re-emit its memoized cleanup outcome.
+      meeting.senses = senses
+      await senses.stop()
+    }
     if (!senses || attempt.signal.aborted) {
       overlay.stop()
       meeting.abort.abort()
