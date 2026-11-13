@@ -846,9 +846,14 @@
           ],
           "document": "docs/audits/evidence/e10-isolated-runtime.json",
           "result": "Independent source-bound final runtime evidence, original twelve acceptance cases retained. Baseline and intermediate Linux/Windows differences, compiled setup repair, and post-dev harness/lock deltas are explicitly recorded. Source review APPROVE at9add986fc1; subsequent6f977bbe1b fixes architecture ownership and switches driver test to explicit package export, without runtime changes."
+        },
+        {
+          "kind": "explicit_driver_export_final_green",
+          "run": "43416806305",
+          "result": "Both OS3pass0fail19assertions6Omni0delegated, cleanup success. Architecture ownership assigned to existing Core process domain, explicit package subpath replaces cross-package relative test import; runtime and oracles unchanged. Independent source review APPROVE."
         }
       ],
-      "remaining": "Implementation and independent source review complete. Final 47-case Linux/Windows runtime pack, all six original CPU cases, full CodeMode419-case pack, and18-case provider packs on macOS ARM/Intel passed. Architecture export adjustment is in focused hosted qualification; final cold epic remains pending. No general parent CPU preemption or whole E10 closure yet."
+      "remaining": "Implementation and independent source review complete. Final47-case Linux/Windows runtime pack including all six original CPU cases, fullCodeMode419-case pack,18-case provider packs on macOS ARM/Intel and explicit-export driver3-case pack per OS passed. Final cold epic remains pending. No general parent CPU preemption claim."
     },
     {
       "id": "E11",
@@ -3056,9 +3061,19 @@
             "43415962700"
           ],
           "result": "Integrated Node47 per OS binds production before pure IPC dependency repair3f4f8ff41a; repaired Bun27 per OS binds current Desktop/App Live source. Source integration review APPROVE9add986fc1 includes Main startup fence, joined failure cleanup, synchronous admission fencing and metadata-only trusted recovery. Final focused Node IPC qualification will bind repaired source directly."
+        },
+        {
+          "kind": "production_wiring_final_scoped_qualification",
+          "document": "docs/audits/evidence/m13-integrated-runtime.json",
+          "runs": [
+            "43411946093",
+            "43415962700",
+            "43416804061"
+          ],
+          "result": "Independent exact-source vectors distinguish pre-purefix integratedNode47 from finalBun27 and focusedNodeIPC16 on current production source. All runs both OS success with cleanup; Main actual hardware behavior remains source-reviewed only."
         }
       ],
-      "remaining": "Owner, durable capture, Loop, recovery UI, trusted IPC/export, Main startup/rotation/quit wiring implemented and independently reviewed. Integrated Node47 and UI34 passed per OS. Repaired Bun27 passed per OS; focused current-production IPC Node16 qualification and final cold epic remain pending. Physical capture and native permission-dialog behavior are outside this controlled-boundary proof."
+      "remaining": "Production wiring implemented and independently reviewed. IntegratedNode47, recoveryUI34, repairedBun27 and current-productionIPC Node16 passed per OS. Final cold epic remains pending; physical hardware capture and native permission dialogs are outside this controlled-boundary proof."
     },
     {
       "id": "M14",

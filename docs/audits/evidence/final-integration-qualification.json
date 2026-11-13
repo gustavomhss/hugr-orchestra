@@ -108,14 +108,21 @@
   "architecture_export_followup": {
     "commit": "6f977bbe1b",
     "focused_run": 43416806305,
-    "status": "pending",
+    "status": "success",
     "runtime_changed": false,
-    "oracles_changed": false
+    "oracles_changed": false,
+    "cases_per_os": 3,
+    "assertions_per_os": 19,
+    "omni_spawns_per_os": 6,
+    "delegated_per_os": 0,
+    "raw_log_sha256": "99ca974773564243eeea5093d86e6d2c3e524de6345d508bb75fffd04a34c9e4"
   },
   "m13_final_pure_ipc": {
     "run": 43416804061,
     "status": "success",
     "cases_per_os": 16,
-    "note": "Current IPC pure-leaf dependency graph; independent detailed receipt pending integration."
-  }
+    "note": "Current IPC pure-leaf dependency graph; independent detailed receipt pending integration.",
+    "evidence": "docs/audits/evidence/m13-integrated-runtime.json"
+  },
+  "official_generation_evidence": "docs/audits/evidence/final-generation-provenance.json"
 }
