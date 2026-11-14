@@ -40,3 +40,27 @@ Preservar todo avanço posterior e publicar payload/selo pelo conector com lease
 - Próximo passo exato: disponibilizar dois juízes nativos independentes (fork_turns none) para esta execução; primeiro avaliar os quatro corpos A1 + correção persistence e suplementos E1–E4 contra oracle autorizado, depois julgar B15 candidato exato sem transferir os NO_CHANGE históricos. Retomar esta mesma branch após reconciliar HEAD.
 
 Estado: BLOCKED — nenhum produtor, juiz, consumidor, Atlas import/read, teste, CI ou gate foi executado nesta sessão.
+
+## Continuação nativa autorizada — execução 6e9b2070-17eb-4e92-bba6-64ce616d6116
+
+Estado atual: IN_PROGRESS. O bloqueio de criação de juízes da execução anterior é histórico; esta execução dispõe de subagentes nativos. A autorização atual solicita continuação da mesma branch e conclusão da subfatia. O handoff anterior está encerrado em INCOMPLETE_BLOCKED, sem agentes em voo declarados.
+
+- HEAD inicial verificado: 9daa0e1203cc7c772ae04398ec326faba6874c99; descendente do kit 70234d541a9a3539935ef16f19e33c8f2d5f30ec por 3 commits, sem mudança de produto nesse intervalo.
+- Principal: /root; execution_id local: 6e9b2070-17eb-4e92-bba6-64ce616d6116 (não é ID de conversa).
+- Fonte: 1cde2ff7a71bcf7aecb5d030917b577165135d38; protocolo: ee2521a5b966bd505cc95bd1c733e09e12f33531.
+- Retoma A1 e B15 pelos bytes existentes; não transfere supported/NO_CHANGE para PASS. Preserva integralmente a história anterior.
+- Agentes reais despachados: /root/a1_packet (captura/assemblagem A1), /root/l1_config_project (configuração/projeto), /root/l1_runtime_models (runtime/modelos/economia). Todos leem pelo conector, escrevem apenas áreas locais disjuntas e não publicam remotamente.
+- Inventário carregado integralmente: 555 paths únicos. Matriz final usará os 50 IDs normativos.
+- Juízes: dois novos contextos fork_turns=none no primeiro pacote julgável; mesmos IDs até o fim. Ainda não despachados neste checkpoint.
+- Runtime redescoberto em genesis-fresh-s4 @ db9b4235022c4df32fe3bfd4faeea8adcd69abb7: release r3; publicação/leitura e3a8ab8cf56dbff1ee91272df51ffa398d882aa1; controles comuns 7102f2e3a1a9a3822bcd0ae054b36ecffe9da553. Binding não transfere.
+
+### Fila finita da entrega
+
+1. A1: preservar quatro corpos, correção de replay e E1–E4; julgar evidência/fidelidade; corrigir findings obrigatórios com o mesmo par.
+2. B15 e famílias configuration/project/models/runtime: preservar aceites exatos; completar deltas necessários de propósito, limites, contratos e manutenção; julgar os cinco artefatos e complementos.
+3. Reconciliar 555 fontes e necessidades; liberar somente predecessores aceitos para L2–L4 locais úteis, com casos/oracles congelados previamente e autoria separada.
+4. Construir pacote genesis-native-package/v1, session S1, scope orchestra.s1, closure local; verificar bytes, inputs, receitas, dependências, critérios e autoria.
+5. Descobrir/preparar runtime isolado autorizado; executar importação, binding pelo mesmo par, publicação, index/read, consumidores sem fonte/oracle e manutenção própria; reutilizar somente controles S4 compatíveis.
+6. Executar gates aplicáveis ou registrar impedimento concreto; finalizar matriz, economia UNKNOWN onde não observada, handoff payload/selo e releitura GitHub.
+
+Nenhum checkpoint encerra a missão. Sem alegação de testes, Atlas, consumidores ou aceite novo neste registro inicial. Tokens/tentativas físicas/cobrança: UNKNOWN; o histórico não reconciliado não foi zerado.
