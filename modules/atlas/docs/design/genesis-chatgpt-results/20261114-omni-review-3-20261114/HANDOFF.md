@@ -93,3 +93,15 @@ Continuar pela posição 21 (`bodies/surface/records-03.json`) após reconciliar
 ## Próximo passo executável
 
 Encaminhar os oito pareceres e os corpos exatos (SHAs registrados em `REVIEW.md`) ao mesmo par persistente J1/J2 exigido pelo protocolo. Resolver FIX-FIRST/REQUEST_EVIDENCE com o autor e reavaliar pelo mesmo par; não substituir juiz nem converter parecer consultivo em aceite. Em particular, encaminhar as discrepâncias stale das skills de Surface 06 ao responsável documental/owner para decisão, sem corrigir fontes fora desta branch.
+
+
+## Coordenação — reconciliação das cinco fatias e unidades dedicadas
+
+- Relatório publicado: [COORDINATION-RECONCILIATION-20261114.md](COORDINATION-RECONCILIATION-20261114.md).
+- Foram reconciliados os HEADs/HANDOFFs de S1–S5, C15, C16 e Surface-03; nenhum trabalho de revisão foi iniciado ou repetido.
+- S1 positions 1–8 e C09/posição 9 têm aceite dual público; C10 FIX-FIRST; C11 permanece UNKNOWN quanto ao veredito final público.
+- Pareceres consultivos públicos: posições 12–16, 17–24 e 26–28 (16 corpos); não são aceite formal J1/J2.
+- S4 mantém reserva 25 e 29–31; S5 mantém reserva 32–38. Surface-03 tem reserva antiga da posição 21, supersedida pelo parecer publicado em S3; handoff dedicado ainda precisa de reconciliação pelo seu owner.
+- C15 e C16 têm branches unitárias e findings consultivos pendentes de disposição do autor e reavaliação pelo mesmo par persistente.
+- A lista de até 15 tarefas finitas, com arquivos e body blob SHAs, está no relatório. Atividade privada de autores/courier/J1/J2 não foi inferida.
+- Estado desta coordenação: PARTIAL; inventário público reconciliado, sem aceite global/L1, sem CI/testes/PR/merge.
