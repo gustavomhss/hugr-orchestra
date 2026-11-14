@@ -18,6 +18,10 @@
 - `modules/atlas/docs/design/genesis-chatgpt-results/20261114-omni-review-3-20261114/REVIEW.md` — dois pareceres, evidências e limites.
 - `modules/atlas/docs/design/genesis-chatgpt-results/20261114-omni-review-3-20261114/HANDOFF.md` — este registro.
 
+## SHAs desta publicação
+- Commit do parecer `REVIEW.md`: `061fe74ff8ce28cb35d7eace97f39ba2178f1f2a`.
+- Blob SHA do `REVIEW.md` e SHA do `HANDOFF.md` serão verificáveis no HEAD publicado; o SHA final do commit é informado no retorno da sessão.
+
 ## Estado externo reconciliado
 - Snapshot: `343d056ffef7f4a0052da8e2e55559c95169f462`.
 - HEAD de `genesis-external-omni-393` observado: `bdfebdb9fe6b5f2a921aef207cebe33b65cd6d20`; `work.md` blob `6b1b2f73ec124ab86bdaea5f584f7cfe34b94d0b`.
