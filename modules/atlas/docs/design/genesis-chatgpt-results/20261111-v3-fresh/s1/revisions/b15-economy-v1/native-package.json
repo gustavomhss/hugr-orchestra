@@ -1545,7 +1545,7 @@
       "layer": 1,
       "need": "evidence",
       "body": {
-        "path": "revisions/b15-economy-v1/bodies/economy.md",
+        "path": "bodies/economy.md",
         "encoding": "utf-8",
         "byte_length": 3288,
         "sha256": "74a59d062ae560dc633abd7561b1a763a7a9982db587d5c0076b8fc8f4a9b6bf"
