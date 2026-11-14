@@ -96,7 +96,7 @@ Legenda:
 ### Totais sem misturar estados
 
 - 9 corpos com aceite dual público: posições 1–9.
-- 18 corpos com parecer consultivo público nesta reconciliação: posições 12–16, 17–24 e 26–28. Esses pareceres não são aceite formal.
+- 16 corpos com parecer consultivo público nesta reconciliação: posições 12–16, 17–24 e 26–28. Esses pareceres não são aceite formal.
 - 5 corpos sem parecer consultivo público na faixa S4: posições 25 e 29–31.
 - 7 corpos sem parecer consultivo público na faixa S5: posições 32–38.
 - C10 tem FIX-FIRST formal; C11 tem estado final público desconhecido.
