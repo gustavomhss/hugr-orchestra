@@ -165,7 +165,7 @@ Nenhum defeito obrigatório identificado.
 
 ## Parecer — posição 21: Surface 03
 
-**Fontes verificadas:** 16/16. **Trechos de evidência:** 39/39.
+**Fontes verificadas:** 16/16. **Trechos de evidência:** 49/49.
 
 Todos os Git blob SHAs declarados nos 16 registros coincidem com os blobs recuperados no baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Os 39 trechos foram comparados com os intervalos de linha correspondentes e coincidem exatamente após normalização de separadores CRLF para LF. Não foram recalculados `source_sha256` nem `source_bytes`.
 
@@ -188,7 +188,7 @@ A limitação de `parseMarker` quanto a `Number.isSafeInteger` está explicitada
 
 ## Parecer — posição 22: Surface 04
 
-**Fontes verificadas:** 16/16. **Trechos de evidência:** 47/47.
+**Fontes verificadas:** 16/16. **Trechos de evidência:** 50/50.
 
 Todos os Git blob SHAs declarados coincidem com os blobs recuperados no baseline; os 47 trechos citados coincidem exatamente com seus intervalos de linha. Não foram recalculados `source_sha256` nem `source_bytes`.
 
@@ -283,3 +283,6 @@ Também conserva o escopo exato do `file-size-guard` (arquivos rastreados e clas
 - Nenhum teste, CI, workflow, Atlas runtime, infraestrutura ou shell foi executado. Nenhum corpo de produção, fonte, branch alheia ou parecer anterior foi alterado.
 
 **Conclusão:** posições 23 e 24 podem ser encaminhadas ao par persistente para avaliação das versões exatas, com as limitações registradas. Não se declara aceite formal.
+
+
+**Achados de atualidade documental preservados no próprio corpo:** a posição 24 aponta contradições materiais nas skills existentes, entre elas Bun descrito como release-only apesar de CI fast atual, instruções de triggers antigas, versão Docker 1.96 frente à toolchain 1.98, ausência de `memory_exceeded` em tabelas de reason, descrições antigas de backpressure e `windowsVerbatimArgs`, checklist release com cinco optional dependencies frente às oito da matriz, e notas de terminal que omitem backpressure. Esses são limites/gaps reais das fontes documentadas; o registro os identifica em vez de apresentar as skills como autoridade atual incontestada. A conclusão de fidelidade deste parecer é sobre a representação desses arquivos e seus limites, não sobre a atualidade integral de cada instrução.
