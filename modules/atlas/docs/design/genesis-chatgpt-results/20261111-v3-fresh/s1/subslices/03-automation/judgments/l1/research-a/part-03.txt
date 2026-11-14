@@ -1,0 +1,64 @@
+**Limite.** Os testes descrevem servidores controlados e diferenças Cassandra/Scylla, mas nada foi conectado nesta produção. Uma alteração de hash, API do driver ou protocolo requer rever o overlay completo e as duas pontas do túnel. Não há claim de compatibilidade com um serviço real a partir do nome `cassandra4`.
+
+## R5. Orçamentos, planning e prewarm de pesquisa
+
+**Observação.** `ResearchToolkit` tem raiz própria, default por ambiente/cache, e delega status/ensure/prefetch ao backend com manifesto research. Pack canônico ausente aparece `unsupported:pack-not-shipped`, inclusive quando o manifesto inteiro está vazio. Não existe inferência “nenhum pack na lista, logo tudo pronto”. [E14]
+
+Os caps default são 2 GiB para indexer, 1 GiB para probe, 2 GiB de scratch e 4 GiB de índice, oito commits e 15 minutos por shard. `caps()` aplica `Math.min` a quatro limites de bytes; permite reduzi-los, não elevá-los. Essa função sozinha não valida positividade/finitude, e não reconfigura as duas outras dimensões. A validade de configuração e a propagação de caps aos chamadores são obrigações distintas. [E14]
+
+**Observação que impede falso sucesso.** O adapter default de `Index` retorna plano vazio e falha `index-builder-unavailable` ao construir. Portanto, `shards=[]` ou warm sem trabalho não provam ausência de código nem execução do índice. O adapter real está em `code-index/extract.ts`: usa Git, CodeIndexBuild, engines reais e store. Seu mapeamento para prewarm filtra os ids que não são engines research; um shard estrutural tree-sitter pode ser construível pelo caminho direto e não aparecer nesse aquecimento. [E14, E18]
+
+**Observação.** `prewarm` deduplica worktree no processo e inicia fibra detached; segunda chamada não recebe join da primeira. O warm planeja, ordena shards pendentes por rank descendente, garante cada engine e prossegue após skips/falhas. O adapter real fornece rank como contagem de arquivos do shard, embora o tipo comente aggregated file_rank. Builds usam singleFlight por shard e lock `research-toolkit:indexer` sob a raiz para serializar indexadores entre worktrees; tratam timeout/lock comprometido/falha de engine com razões. [E14–E18]
+
+**Limite de status.** Erro de plan é convertido em lista vazia no warm. Estado auxiliar é persistido fora do worktree, com nome derivado do caminho; leitura inválida vira mapa vazio e falha de escrita é ignorada. `building` expira após o timeout; `ready` deriva do plano/store. Esse estado auxilia operação, mas não certifica um build concluído ou uma evidência de execução durável. A resposta vazia pode significar adapter default, erro de observação, nenhum shard elegível ou plano realmente vazio. Um consumidor precisa distinguir essas origens antes de alegar cobertura. [E14]
+
+## R6. Identidade e persistência do índice
+
+### R6.1 Partição e chave
+
+**Observação.** `shard.ts` lê Git com variáveis potencialmente influentes removidas, prompts/configs globais desabilitados e limites de processo. `ls-tree` considera blobs e exclui submodules; status identifica modificados, adicionados, removidos e untracked. `cat-file --batch` respeita tamanhos em bytes. Erro/truncamento vira `source_unavailable`, não árvore vazia válida. [E16]
+
+A descoberta usa projetos mais próximos por tsconfig, pyproject/setup, go.mod e Cargo.toml. TS configs que só estendem outro ou declaram files=[] sem include não são tratados da mesma forma que projetos com fontes próprias. JavaScript participa de TS. Python pode usar raiz de fallback quando não há projetos Python descobertos; se há projetos, arquivos fora deles não ganham automaticamente um projeto inventado. Órfãos ficam discriminados. `.pyi` é reconhecido pelo filtro/grammar, mas não está na função de linguagem usada para descoberta de shards; logo a presença de suporte no parser não implica inclusão autônoma no plano. [E16, E19–E22]
+
+A chave SHA-256 incorpora id/versão de indexer, identidade do shard, pares path/blob das fontes e locks/configs do projeto/raiz, incluindo cadeia relativa de extends com proteção de repetição/profundidade. Não é simplesmente o HEAD: conteúdo idêntico pode reutilizar a mesma chave entre commits. Mudança de lock, config ou engine altera impacto mesmo sem mudança no arquivo consultado. Projeto aninhado tem ownership próprio. [E16]
+
+### R6.2 Planejamento, build e retenção
+
+**Observação.** `build.ts` memoiza até 16 planos por raiz/HEAD e conjunto de indexers. A identidade do repositório usa o caminho real do Git common directory. Constrói somente shards ausentes; singleFlight compartilha o trabalho em processo. Uma chamada com build já em curso pode devolver progresso vazio, não join nem sucesso coletivo. Falha de um shard não encerra todos os demais; razões ficam disponíveis. [E17]
+
+`store.ts` usa SQLite por repoKey/shardKey com tabelas de documentos, símbolos, ocorrências, relações, imports, rank e FTS. Escreve banco temporário em transações e renomeia, sem WAL de longa duração. Leitura é readonly e scoped. `exists()` só verifica existência de arquivo, não saúde integral de schema/conteúdo. Falha de singleFlight fica registrada até sucesso posterior; interrupção tem motivo próprio. [E17]
+
+A retenção mantém referências de commits e remove bancos não usados. O commit mais novo sempre fica, mesmo que ultrapasse o budget de bytes; oito commits e 4 GiB são política de retenção, não garantia rígida de que o disco jamais ultrapassa esse tamanho. Stat com falha contribui zero ao cálculo; manifesto ilegível vira lista vazia. Remoção de bancos precede persistência final do manifesto, e não há serialização multiprocesso explícita nesse arquivo para toda a retenção. Essas escolhas exigem cautela ao interpretar “cache existe” ou “budget aplicado”. [E17, E45]
+
+### R6.3 Extração real e sua base
+
+**Observação.** O adapter de extração aceita Linux/Darwin; pins Windows dos packs não criam suporte de indexação nesse caminho. Estados ready/absent/fetching podem tornar um indexer utilizável para planejamento/aquisição. Go e Rust podem cair para tree-sitter quando falta o indexer preciso ou toolchain; o motivo participa da versão estrutural e de `coverage.skipped`. Se nenhum indexer está disponível antes dessa etapa, o caminho pode falhar `index_unavailable`; a existência do fallback não é promessa de cobertura universal. [E18]
+
+O build real recebe fontes do worktree, extrai estrutura, executa SCIP quando aplicável, decodifica e monta conteúdo no store. Confere HEAD antes de um build de shard disparado pelo toolkit, mas não produz snapshot imutável de todos os arquivos enquanto extrai. O texto e seu SHA-256 armazenado vêm da leitura efetiva; não é lícito afirmar que todos os bytes são exatamente os blobs do commit só porque o plano foi identificado por HEAD. [E18]
+
+A invocação SCIP tem argv específico por engine, confine externo, timeout de 15 minutos, RSS e captura de logs delimitada. A função verifica exitCode; ela não transforma todos os flags de truncamento do resultado em erro explícito nesse local. As propriedades de rede/escrita dependem de confine, e não foram executadas aqui. [E18]
+
+## R7. Parsers, símbolos, imports e relações
+
+### R7.1 Camada estrutural
+
+**Observação.** `filter.ts` seleciona linguagens suportadas e exclui vendor/build/generated, locks e binários com razões. Não impõe um censo artificial de 200 arquivos. Linguagem não suportada é excluída da seleção; essa exclusão não é contada como cobertura semântica do repositório inteiro. Tree-sitter limita cada arquivo a 2 MiB; falha de grammar, excesso de bytes e parse parcial têm razões. Parse com erro pode conservar definições úteis, mantendo complete=false. [E19]
+
+A extração estrutural fornece tipos, funções, membros, enums, constantes e containers. Inclui função local, mas exclui variável local comum; export é heurística sintática: underscore em Python, maiúscula em Go, pub em Rust, com pub(crate) não equivalendo a export público. TS/JS conservam imports estáticos/reexports e dynamic import/require literais; Python tem extração de imports de topo. Wrappers/decorators e linhas de nome têm tratamento específico. Não se trata de typechecker nem de execução da linguagem. [E19, E22]
+
+Go adiciona tipos/fields/métodos e aliases de import, com comando SCIP offline e GOTOOLCHAIN=local. Python define args de projeto/version/output e filtra símbolos de módulo `__init__`. Rust adiciona regras de impl/trait/mod e pub, comando `rust-analyzer scip` com cargo offline, e imports com crate/self/super. Os tests de cada linguagem congelam exemplos, inclusive funções aninhadas, unicode e aliases; não substituem revisão do limite do parser. [E22, E45]
+
+### R7.2 SCIP, encoding e associação de ocorrências
+
+**Observação.** `scip.ts` recusa entrada não regular antes de decodificar protobuf. Memoiza no máximo dois dumps por path, mtime e tamanho; isso não detecta reescrita de mesmo tamanho no mesmo timestamp. Extrações temporárias liberam explicitamente o memo. `readScipOrEmpty` existe para consumidores tolerantes e degrada erro a índice vazio, mas o adapter real usa o leitor que propaga falha. Não se deve projetar a semântica tolerante de um helper para todo build. [E20]
+
+O leitor converte offsets UTF-8/UTF-32 para unidades UTF-16 quando encontra texto do dump ou callback de fonte; Go/Rust têm encoding default específico. Sem texto, conserva ranges emitidos: unicode pode permanecer deslocado. A validação de range reconhece formatos de três/quatro números e conta formas malformadas; não prova toda propriedade numérica ou ligação com conteúdo. As linhas expostas são 1-based e fechadas; a representação de início de coluna do leitor é 1-based, enquanto o store subtrai um para início 0-based e mantém fim exclusivo. Confundir esses espaços causa deslocamento. [E20, E18, E45]
+
+`enclosing.ts` combina ranges SCIP com estrutura por nome e linha do nome quando falta intervalo preciso. Escolhe o container mais interno que envolve a ocorrência e impede que uma definição se contenha a si mesma. Imports ganham role próprio. É uma associação de posição e nome, não análise dinâmica. [E21]
+
+`callers.ts` distingue definições globais, símbolos locais, referências resolvidas e casos opacos do scip-typescript. A canonicalização entre dist/.d.ts/src é heurística e pode não representar bundles de declaração arbitrários. Callers agrupam referências não-import por enclosing; “call” não é prova de chamada de runtime. [E21]
+
+**Limite concreto de persistência.** Em `extract.ts`, a montagem descarta símbolos que não considera indexáveis e grava `opaque: false` nas ocorrências persistidas, mesmo existindo detecção de opacidade em Callers. O contador `opaqueSites` consultado depois não pode ser lido como certificado de que não existem lacunas opacas. A observação é sobre a ligação atual entre módulos; não foi corrigida para tornar a alegação mais forte. [E18, E21, E24]
+
+### R7.3 Resolução de import e rank
+

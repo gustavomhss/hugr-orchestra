@@ -1,0 +1,94 @@
+{
+  "schema": "genesis-s1-03-historical-reuse/v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "inheritance_revision": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+  "bodies": [
+    {
+      "key": "s1.core.automation",
+      "original": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/bodies/automation.md",
+        "git_blob_sha": "83679961541fcbd73e5a79d8fea1ff14fc1aa4cb",
+        "byte_length": 4377,
+        "sha256": "83d483f7f56a0e3dfa7a29e89fea01b29d1b5529e36693b20a06fe9cc0db8b88"
+      },
+      "local_copy": "inherited/automation.md",
+      "copy_role": "preserved input; new local body judged separately",
+      "historical_validity": "supported",
+      "historical_review_disposition": "No A3/A4 decisions found among the preserved judgments in inheritance revision; supported alone is not dual acceptance. New pair required for changed/extended local bodies."
+    },
+    {
+      "key": "s1.core.research",
+      "original": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/bodies/research.md",
+        "git_blob_sha": "d7c550b41f36ba6ae001ef5f7d8c041b26854f2f",
+        "byte_length": 3942,
+        "sha256": "76a39828caccbb41b99fe0f7d480f4a35abac7722d5c34ddfe5c7ddd67c7c202"
+      },
+      "local_copy": "inherited/research.md",
+      "copy_role": "preserved input; new local body judged separately",
+      "historical_validity": "supported",
+      "historical_review_disposition": "No A3/A4 decisions found among the preserved judgments in inheritance revision; supported alone is not dual acceptance. New pair required for changed/extended local bodies."
+    },
+    {
+      "key": "s1.core.boundaries",
+      "original": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/bodies/boundaries.md",
+        "git_blob_sha": "7c4b50cdc6f00552c1289c4221855d3120dd6572",
+        "byte_length": 3905,
+        "sha256": "7b20ed7cedf86c24fb1d9c3471250fcddf666f9c66e7de2dba9852df1fa17143"
+      },
+      "local_copy": "inherited/boundaries.md",
+      "copy_role": "preserved input; new local body judged separately",
+      "historical_validity": "supported",
+      "historical_review_disposition": "No A3/A4 decisions found among the preserved judgments in inheritance revision; supported alone is not dual acceptance. New pair required for changed/extended local bodies."
+    },
+    {
+      "key": "s1.core.entry",
+      "original": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/bodies/entry.md",
+        "git_blob_sha": "894266bd4543763fb1ee2a4dbf0ba749a244ec48",
+        "byte_length": 7312,
+        "sha256": "6a488ca8f9717a497949b71ed41db84d995f23b90c31cc59c22c5bd86239ca6c"
+      },
+      "local_copy": "inherited/entry.md",
+      "copy_role": "historical global entry preserved, not local selected root",
+      "historical_validity": "supported",
+      "historical_review_disposition": "No A3/A4 decisions found among the preserved judgments in inheritance revision; supported alone is not dual acceptance. New pair required for changed/extended local bodies."
+    }
+  ],
+  "native_negative_controls": {
+    "decision_refs": [
+      {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/native-negative-v1-j1.md"
+      },
+      {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/native-negative-v1-j2.md"
+      }
+    ],
+    "dossier_sha256": "8c6e2ac69e54ab10a280d0c425cdaaf7d15e6ac017ae073daebab7cb7a1bf4af",
+    "oracle_sha256": "bcaeea762d7ef7c51d3593a9b2b4a3555946e5aa885854fc31a9f9436f398a2d",
+    "response_sha256": "03535e963b70ab3d5984d891981d03dcd645ac6d23bcb15ff53f6784c458c345",
+    "reuse_limit": "Historical native handling of stale/conflicting/missing/malicious inputs only. Not an Atlas refusal, technical isolation proof or automation/provider acceptance."
+  },
+  "s4_controls": {
+    "release_commit": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+    "release_id": "20261111-v3-fresh-s4-r3",
+    "candidate": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+    "native_entrypoint_candidate": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+    "receipt": {
+      "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+      "sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330"
+    },
+    "run_id": 43077975153,
+    "job_id": 130722742703,
+    "reuse_limit": "Common engine controls on exact 7102f2e candidate and explicitly synthetic producers/reviewers. No transfer of native bindings, domain consumer answers, own maintenance, or exact candidate gate."
+  },
+  "preservation": "No central S1 history or other subslices is written. Remote namespace has only new execution records so far."
+}

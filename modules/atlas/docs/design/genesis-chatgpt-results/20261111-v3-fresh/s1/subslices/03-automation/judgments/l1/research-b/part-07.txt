@@ -1,0 +1,115 @@
+202:       return mutation(committed)
+203:     })
+204:     return yield* publish.pipe(Effect.catchCauseIf((cause) => !Cause.hasInterrupts(cause), (cause) => Effect.gen(function* () {
+205:       const stored = yield* replay(yield* entries(binding), operation, inputHash)
+206:       if (stored?.type === "research.source.admitted")
+207:         return yield* new Research.Error({ code: "conflict", message: "Operation is not a record mutation" })
+208:       if (stored) return mutation(stored)
+209:       const conflict = cause.reasons.flatMap((reason) => Cause.isDieReason(reason) ? [reason.defect]
+210:         : Cause.isFailReason(reason) ? [reason.error] : []).find((error) => error instanceof Research.Error)
+211:       if (conflict instanceof Research.Error) return yield* conflict
+212:       const raced = (yield* entries(binding)).some((entry) => entry.id === eventID)
+213:       return yield* new Research.Error({ code: raced ? "conflict" : "publication_uncertain", message: raced ? "Research revision conflicts" : "Research event publication is uncertain" })
+```
+
+Linhas 238–258:
+
+```text
+238:     if (previous) {
+239:       if (previous.type !== "research.source.admitted") return yield* new Research.Error({ code: "conflict", message: "Capture operation conflicts" })
+240:       // Replay returns the original admission; availability is checked separately on retrieval.
+241:       return previous.data.receipt
+242:     }
+243:     if (Boolean(input.derivedFrom) !== Boolean(input.transformation) || (input.origin.kind === "atlas-own" && !input.atlas))
+244:       return yield* new Research.Error({ code: "reference_invalid", message: "Derived and Atlas captures require their provenance" })
+245:     // A partial received-byte parent can end inside a UTF-8 scalar. Verify custody, not textual decodability.
+246:     if (input.derivedFrom) yield* artifacts.verifySource(binding, input.derivedFrom)
+247:     const staged = yield* artifacts.prepare(binding, {
+248:       id: ResearchLedger.eventID(binding, `source:${operation}`), type: "research.source.admitted", data,
+249:     })
+250:     if (staged.type !== "research.source.admitted")
+251:       return yield* new Research.Error({ code: "conflict", message: "Source publication intent conflicts" })
+252:     yield* artifacts.put(binding, { content, representation: input.representation, artifact: staged.data.receipt.ref.artifact }, operation)
+253:     return yield* events.publish(ResearchEvent.SourceAdmitted, staged.data, {
+254:       id: staged.id, persist: true,
+255:     }).pipe(Effect.map(() => staged.data.receipt), Effect.catchCauseIf((cause) => !Cause.hasInterrupts(cause), () => Effect.gen(function* () {
+256:       const stored = yield* replay(yield* entries(binding), operation, inputHash)
+257:       if (stored?.type === "research.source.admitted") return stored.data.receipt
+258:       return yield* new Research.Error({ code: "publication_uncertain", message: "Source event publication is uncertain" })
+```
+
+## E41 — Attempt e aquisição sem retry oculto
+
+`packages/core/src/research/records.ts`
+
+Mesma identidade de fonte já declarada nesta projeção.
+
+Linhas 300–320:
+
+```text
+300:     const replay = Effect.gen(function* () {
+301:       const request = yield* database.db.select().from(EventTable).where(eq(EventTable.id, id)).get().pipe(Effect.orDie)
+302:       const saved = request ? yield* Schema.decodeUnknownEffect(ResearchEvent.SourceRequested.data)(request.data).pipe(
+303:         Effect.mapError(() => new Research.Error({ code: "publication_uncertain", message: "Retained acquisition request is invalid" })),
+304:       ) : undefined
+305:       if (!request || !saved || request.type !== "research.source.requested.1" || request.aggregate_id !== binding.executionSessionID ||
+306:         ResearchLedger.canonical(saved) !== ResearchLedger.canonical(data))
+307:         return yield* new Research.Error({ code: "conflict", message: "Acquisition request conflicts with retained invocation" })
+308:       const outcome = yield* database.db.select().from(EventTable).where(eq(EventTable.id,
+309:         ResearchLedger.eventID(binding, ResearchLedger.operation(context, "acquisition-outcome")),
+310:       )).get().pipe(Effect.orDie)
+311:       if (!outcome || outcome.type !== "research.source.attempted.1" || outcome.aggregate_id !== binding.executionSessionID)
+312:         return yield* new Research.Error({ code: "publication_uncertain", message: "Prior acquisition has no settled outcome; live reacquisition is forbidden" })
+313:       const receipt = yield* Schema.decodeUnknownEffect(ResearchEvent.SourceAttempted.data)(outcome.data).pipe(
+314:         Effect.mapError(() => new Research.Error({ code: "publication_uncertain", message: "Retained acquisition outcome is invalid" })),
+315:       )
+316:       if (ResearchLedger.canonical(receipt.binding) !== ResearchLedger.canonical(binding) ||
+317:         ResearchLedger.canonical(receipt.receipt.binding) !== ResearchLedger.canonical(binding))
+318:         return yield* new Research.Error({ code: "binding_mismatch", message: "Retained acquisition outcome scope differs" })
+319:       if (!receipt.receipt.returned || !receipt.receipt.source)
+320:         return yield* new Research.Error({ code: "source_unavailable", message: "Prior acquisition did not return retained evidence; use a new native call for a new attempt" })
+```
+
+## E42 — Views, inquiry e citações Markdown
+
+`packages/core/src/research/records.ts`
+
+Mesma identidade de fonte já declarada nesta projeção.
+
+Linhas 447–455:
+
+```text
+447:     const id = ResearchLedger.eventID(binding, `inquiry:${allowance.dispatchCallID}:${operation}`)
+448:     const shared = { sessionID: binding.executionSessionID, operation, inputHash, binding }
+449:     // The native event transaction owns this check: a dispatch opens and closes its inquiry once, and nothing follows a close.
+450:     const commit = () => dispatch(allowance).pipe(Effect.flatMap((list) => {
+451:       const inquiries = list.filter(isInquiry)
+452:       if (inquiries.some((step) => step.type === "research.inquiry.closed"))
+453:         return Effect.die(new Research.Error({ code: "inquiry_state", message: "inquiry closed: this dispatch admits no further inquiry events" }))
+454:       if (input.type !== "research.inquiry.checked" && inquiries.some((step) => step.type === input.type))
+455:         return Effect.die(new Research.Error({ code: "inquiry_state", message: `${input.type} already happened in this dispatch` }))
+```
+
+Linhas 564–577:
+
+```text
+564:   // Research labels are Markdown links with research:<label> destinations. Code and raw HTML are not citations.
+565:   const walk = (raw: unknown) => Schema.decodeUnknownSync(Schema.Array(MarkdownToken))(raw).forEach((token) => {
+566:     if (token.type === "link" && token.href?.startsWith("research:") && !Object.hasOwn(document.citations, token.href.slice(9)))
+567:       throw new Research.Error({ code: "reference_invalid", message: "Document citation label is not admitted" })
+568:     if (token.tokens) walk(token.tokens)
+569:     if (token.type === "list") token.items?.forEach((item) => walk(Schema.decodeUnknownSync(MarkdownToken)(item).tokens))
+570:     if (token.type === "table") {
+571:       const cell = Schema.Struct({ tokens: Schema.Array(Schema.Unknown) })
+572:       token.header?.forEach((value) => walk(Schema.decodeUnknownSync(cell)(value).tokens))
+573:       token.rows?.forEach((row) => row.forEach((value) => walk(Schema.decodeUnknownSync(cell)(value).tokens)))
+574:     }
+575:   })
+576:   yield* Effect.try({ try: () => walk(Lexer.lex(document.body)), catch: () => new Research.Error({ code: "reference_invalid", message: "Document citation label is not admitted" }) })
+577: })
+```
+
+
+FIM_EVIDENCIA_LITERAL
+
+FIM_DO_LOTE

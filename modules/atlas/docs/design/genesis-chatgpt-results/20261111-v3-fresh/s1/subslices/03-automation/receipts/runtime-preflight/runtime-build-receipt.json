@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/runtime-preflight/bun-runtime/node_modules/.bin/bun",
+    "typecheck"
+  ],
+  "cwd": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/runtime-preflight/candidate/modules/atlas/packages/adapter-io",
+  "returncode": 0,
+  "stdout": "",
+  "stderr": "$ tsc -b\n",
+  "utc": "2026-11-14T22:42:14.414141+00:00",
+  "scope": "runtime preparation: src-only materialization; not full package test/typecheck gate"
+}

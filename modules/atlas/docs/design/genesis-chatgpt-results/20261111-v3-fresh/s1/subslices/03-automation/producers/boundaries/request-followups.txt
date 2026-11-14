@@ -1,0 +1,5 @@
+Mensagem da principal /root:
+Preserve integral evidence.md202k. Para os juízes sem ferramentas, entregue também evidence-review.md como projeção de trechos LITERAIS decisivos vinculados ao evidence-index: pacote delimitado por body (boundaries/support/proposta), sem repetir todas as folhas/fixtures e sem substituir prova por resumo. Principal enviará corpos integrais + esses recortes; juiz poderá pedir trecho faltante. Não imponho teto que corte prova necessária, mas selecione os ramos que decidem os claims e mantenha os restantes no arquivo original.
+
+Mensagem da principal /root:
+Orientação para evidence-review: trechos literais pequenos (branches/conditions/error paths) separados e vinculados ao archive; não blocos integrais quase iguais ao evidence.md. Juízes podem REQUEST_EVIDENCE. Objetivo dezenas de KB por necessidade, preservando corpo completo e archive; suporte/fixtures agrupados podem usar contrato representativo + cobertura explícita sem recitar todos testes.

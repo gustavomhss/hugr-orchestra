@@ -1,0 +1,18 @@
+{
+  "kind": "guard-capability-probe",
+  "command": [
+    "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/runtime-preflight/bun-runtime/node_modules/.bin/bun",
+    "run",
+    "check:guards",
+    "--base",
+    "origin/dev",
+    "--json"
+  ],
+  "cwd": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/guard-source",
+  "status": "FAILED",
+  "exit_code": 1,
+  "stdout": "{\"base\":null,\"bootstrap\":false,\"rules\":0,\"files\":0,\"findings\":[],\"errors\":[{\"kind\":\"no-repository\",\"message\":\"/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/guard-source is not a git repository\"}],\"approved\":[],\"touchesGuards\":false}\n",
+  "stderr": "$ bun run script/guards/run.ts --base origin/dev --json\nerror: script \"check:guards\" exited with code 1\n",
+  "scope": "preflight of official gate, not final payload gate",
+  "policy": "No git history/ref fabricated; no warning mode/approval/ignore used."
+}

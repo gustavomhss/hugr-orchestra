@@ -1,0 +1,26 @@
+{
+  "schema": "genesis-s1-03-source-verification/v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "expected_count": 462,
+  "captured_count": 462,
+  "unique_paths": 462,
+  "all_git_blobs_match": true,
+  "total_bytes": 4740213,
+  "oversize": [
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/backend-toolkit/packs/modelina.package-lock.json",
+      "git_blob_sha": "9fc9ef1bc7124fcead2d83cea20f2bff4340949c",
+      "sha256": "0fc1a48c86b45b4749fda6d5e811a1f9b3f55a246fa5e8dd035435e84d2149d2",
+      "byte_length": 266885,
+      "family": "backend-toolkit",
+      "legacy_artifact_key": "s1.core.research",
+      "capture_owner": "/root/research_l1",
+      "atlas_file_limit_compatible": false
+    }
+  ],
+  "inherited_body_copies_byte_identical": 4,
+  "semantic_acceptance": "SEPARATE",
+  "product_tests": "NOT_RUN",
+  "manifest_sha256": "844daac9f5828c606404f7acadf5c712a4ecb2a8686dd9e114b8a9422adf0560"
+}

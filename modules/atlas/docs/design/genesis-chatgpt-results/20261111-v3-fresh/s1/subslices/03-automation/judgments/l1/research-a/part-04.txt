@@ -1,0 +1,207 @@
+**Observação.** `resolve.ts` usa a API TypeScript, tsconfig mais próximo e caminhos/workspaces. Erro de config cai em defaults Bundler/ESNext, allowJs/JSON. Alias/workspace conhecido mas quebrado fica unresolved; pacote bare desconhecido fica package. Esse contraste conserva uma lacuna que seria perdida ao chamar qualquer import de dependência externa. Python tenta src layout antes da raiz e formas .py/.pyi/__init__, respeitando imports relativos. Go resolve pacote do mesmo módulo para o primeiro arquivo não-test ordenado; não resolve “o símbolo exato” dentro dele. Rust resolve crate/self/super por layout Cargo/src e prefixo mais longo; macros, layouts customizados e resolução completa do compilador não são prometidos. [E22–E23]
+
+`rank.ts` calcula PageRank de arquivos com damping 0,85 e 20 iterações, deduplicando arestas, sem self/outside-shard, redistribuindo dangling nodes. É um sinal de navegação, não confiança factual. Sua existência não significa que o prewarm usa esse score: o adapter descrito em R5 usa número de arquivos. [E23, E18]
+
+
+FIM_CORPO_LITERAL
+
+INICIO_EVIDENCIA_LITERAL
+# Projeção literal por necessidade — RESEARCH-L1
+
+**Uso:** acompanhar o corpo integral `body.md`. Esta projeção seleciona precondições, estados, falhas, identidade e freshness que decidem os limites principais. Não é arquivo de todos os contratos. Para aprofundar qualquer claim, pedir **REQUEST_EVIDENCE <ID> <path/intervalo>** à principal, usando `evidence-index.json`; ela fornece o trecho literal do archive, sem exigir ferramentas do juiz. Nenhum teste foi executado e esta projeção não emite aceite.
+
+**Identidade:** fontes no baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; E01 é histórico em `a8df22ae3a140c58c63f62ce2a634c84f415c943`. Archive `evidence.md`, SHA-256 `e8cc0b447e48f26b3a059dc70c7ad7e607ec9b60a9af3d605e76f4c10b1da05b`. Cada bloco informa path, blob Git, SHA-256 integral e linhas originais. Prefixos de linha são apresentação; o archive contém também SHA-256 de cada intervalo original. Cortes ocorrem somente entre intervalos identificados.
+
+**Navegação por necessidade:** aquisição/readiness E02–E10; manifests/runtimes/locks E11–E13 no archive; planejamento/store E14–E18; parser/consulta E19–E27 (adapters/resolução E22–E23 no archive); liveness E28; probes E29–E33 (runners/processo/typecheck no archive); autoridade E34–E43; contratos de teste, somente intenção, E44–E46 no archive. Pins repetitivos, fixtures e listas completas não substituem os ramos decisivos abaixo.
+
+## E01 — Reúso histórico e lacunas originais
+
+`modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/bodies/research.md`
+
+Blob `d7c550b41f36ba6ae001ef5f7d8c041b26854f2f` · SHA-256 `76a39828caccbb41b99fe0f7d480f4a35abac7722d5c34ddfe5c7ddd67c7c202`.
+
+Linhas 1–5:
+
+```text
+1: # Pinned toolkits and retained research evidence
+2: 
+3: Layer: **L1 — pinned factual basis**. Need: `component`. Scope: `orchestra.s1`.
+4: Source revision: `1cde2ff7a71bcf7aecb5d030917b577165135d38`.
+5: 
+```
+
+## E02 — Ownership, gerado e tipos de manifesto
+
+`packages/core/src/backend-toolkit/README.md`
+
+Blob `a7efc8b49f165ad767f51cb49ad9bdbb220215d1` · SHA-256 `c121de28e34b278db6e4868eeea3b09ab793c1aca1cdf0b5c304cc9d8a12529d`.
+
+Linhas 5–18:
+
+```text
+5: - Engine (core-owned): `index.ts` (`@orchestra/core/backend-toolkit`), `hosted.ts`, `launcher.ts`, `manifest.ts`, `target.ts`, `runtimes/`.
+6: - Packs (`packs/`, `entry-skills.gen.ts`) describe each pinned engine: how to acquire it and which entry skills it exposes.
+7: 
+8: ## Public entry points and consumers
+9: 
+10: - Consumers include `apps/cli/src/commands/handlers/toolkit/` and `modules/maestro/coordination/src/v2/tools/atlas-memory.ts`.
+11: 
+12: ## Dependencies and boundaries
+13: 
+14: - The engine must not import product code.
+15: 
+16: ## Assets, schemas and generated files
+17: 
+18: - `packages/core/src/backend-toolkit/entry-skills.gen.ts` is generated from `modules/specialists/backend/skills` by `packages/core/script/toolkit-pack.ts`; never edit it by hand. The `*.package-lock.json` files under `packs/` are pinned inputs.
+```
+
+## E03 — Dependências, preparo e readiness
+
+`packages/core/src/backend-toolkit/index.ts`
+
+Blob `e5c8e61d202f8a79a5b967d5abc467a97b58f4a3` · SHA-256 `d420651f26050d31c924b078a59fff12081be914cb8cb94685aad720a9275d9a`.
+
+Linhas 137–146:
+
+```text
+137: export function dependencyOrder(manifest: Readonly<Record<string, Engine>>, id: string): string[] | string {
+138:   const active = new Set<string>()
+139:   const done = new Set<string>()
+140:   const ordered: string[] = []
+141:   const visit = (current: string): string | undefined => {
+142:     const engine = Object.entries(manifest).find(([key]) => key === current)?.[1]
+143:     if (!engine) return `toolkit-dependency-missing:${current}`
+144:     if (active.has(current)) return `toolkit-dependency-cycle:${[...active, current].join("->")}`
+145:     if (done.has(current)) return
+146:     active.add(current)
+```
+
+Linhas 246–279:
+
+```text
+246:         const item = manifest[dependency]
+247:         const install = path.join(root, "engines", dependency, `${item.version}-${target}`)
+248:         const excluded = "runtime" in item ? item.unsupported?.[target] : undefined
+249:         if (excluded) return { ...base, status: "unsupported", reason: excluded } satisfies State<Id>
+250:         for (const key of [requestKey(install, local), install]) {
+251:           const attempt = attempts.get(key)
+252:           if (attempt && "running" in attempt) return { ...base, status: "fetching", at: attempt.at, budgetMs: INSTALL_MS } satisfies State<Id>
+253:           if (attempt && "failed" in attempt) {
+254:             const prefix = `toolkit-not-ready:failed:${id}:`
+255:             return { ...base, status: "failed", cause: dependency !== id ? `dependency:${dependency}:${attempt.failed}`
+256:               : attempt.failed.startsWith(prefix) ? attempt.failed.slice(prefix.length) : attempt.failed, at: attempt.at } satisfies State<Id>
+257:           }
+258:         }
+259:         if (yield* readiness(root, item, runtimes, install, target, local)) return { ...base, status: "absent" } satisfies State<Id>
+260:       }
+261:       return { ...base, status: "ready", directory, executable: executable(engine, directory, target) } satisfies State<Id>
+262:     }),
+263:   )
+264: })
+265: 
+266: /** Cache markers alone are not executable readiness. Status observes; acquisition repairs launchers before success. */
+267: const readiness = Effect.fnUntraced(function* (root: string, engine: Engine, runtimes: Readonly<Record<RuntimeId, Runtime>>, directory: string, target: TargetId, host: boolean) {
+268:   if (!(yield* PinnedArtifact.installed(directory))) return "install-incomplete"
+269:   if (!(yield* fileReady(executable(engine, directory, target), target))) return "executable-missing"
+270:   if ("runtime" in engine) {
+271:     const runtime = runtimes[engine.runtime]
+272:     const home = path.join(root, "runtimes", runtime.id, `${runtime.version}-${target}`)
+273:     if (!(yield* PinnedArtifact.installed(home)) || !(yield* fileReady(path.join(home, runtime.targets[target].executable), target))) return "runtime-executable-missing"
+274:   }
+275:   if (!host) return
+276:   const file = path.join(root, "bin", target === "win32-x64" ? `${engine.id}.cmd` : engine.id)
+277:   if (!(yield* fileReady(file, target))) return "host-shim-missing"
+278:   if ((yield* Effect.promise(() => readFile(file, "utf8").catch(() => undefined))) !== launchText(root, engine, runtimes, directory, target)) return "host-shim-stale"
+279: })
+```
+
+## E04 — Aquisição compartilhada e cooldown
+
+`packages/core/src/backend-toolkit/acquisition.ts`
+
+Blob `9d55862001f9a206018a288d9847ca7d1811b2c9` · SHA-256 `11b7834f6537e1d2556136dc50306dc3bda0a3381cca07f640b5c93e2f8c54d8`.
+
+Linhas 14–33:
+
+```text
+14:     if (attempt && "running" in attempt) return yield* Effect.promise(() => attempt.running)
+15:     if (attempt && Date.now() - attempt.at < retryMs) return attempt.failed
+16:     const running = Promise.withResolvers<string | undefined>()
+17:     attempts.set(key, { running: running.promise, at: Date.now() })
+18:     const settle = (failed?: string) => {
+19:       if (failed === undefined) attempts.delete(key)
+20:       if (failed !== undefined) attempts.set(key, { failed, at: Date.now() })
+21:       running.resolve(failed)
+22:     }
+23:     // Even a runner rejection or a throwing diagnostic formatter must resolve the shared promise. Neither exposes
+24:     // uninspected exception text. Effect captures finalizer rejection, defects and interruption in the Exit.
+25:     void Promise.resolve().then(() => Effect.runPromiseExit(work)).then((exit) => {
+26:       if (Exit.isSuccess(exit)) return settle()
+27:       const formatted = Effect.runSyncExit(Effect.sync(() => describe(exit.cause)))
+28:       settle(Exit.isSuccess(formatted) && formatted.value ? formatted.value : "acquisition-diagnostics-unavailable")
+29:     }, () => settle("acquisition-runtime-rejected"))
+30:     return yield* Effect.promise(() => running.promise)
+31:   })
+32:   return { once, get: (key: string) => attempts.get(key) }
+33: }
+```
+
+`packages/core/src/backend-toolkit/attempts.ts`
+
+Blob `320456d5837420999da0034870cedf86b5b8dc05` · SHA-256 `75382ae48fcc113ed71ea4a61d4122dc24b5ad5c6e4f3d5af52d3938688290eb`.
+
+Linhas 20–25:
+
+```text
+20: // A failed fetch is retried by a later need after this window, not by every command.
+21: const RETRY_MS = 5 * 60_000
+22: // A cold cargo build of a CLI with its whole dependency graph takes minutes.
+23: export const INSTALL_MS = 30 * 60_000
+24: 
+25: // Install keys coalesce shared dependencies; request keys own continuation through the entire dependency chain.
+```
+
+## E05 — Targets, pisos e detecção permissiva
+
+`packages/core/src/backend-toolkit/target.ts`
+
+Blob `38c19f508bf3c5ab49fdfb0e10b60d762cf9a457` · SHA-256 `fc76f5c887936816fc46826cacb01a4f19d04fe823ca16a82fac83f9337bffd7`.
+
+Linhas 31–38:
+
+```text
+31: export function detect(host: Host = current()): { readonly target: TargetId } | { readonly unsupported: string } {
+32:   if (host.platform === "linux" && host.musl) return { unsupported: "libc-musl" }
+33:   if (host.platform === "win32" && host.arch === "arm64") return { unsupported: "cpu-arm64-windows" }
+34:   if (host.platform === "darwin" && host.arch === "x64" && host.rosetta) return { target: "darwin-arm64" }
+35:   const target = TARGETS.find((id) => id === `${host.platform}-${host.arch}`)
+36:   if (!target) return { unsupported: `platform-${host.platform}-${host.arch}` }
+37:   const below = floor(host)
+38:   return below ? { unsupported: below } : { target }
+```
+
+Linhas 46–52:
+
+```text
+46: function floor(host: Host) {
+47:   if (host.arch === "x64" && !host.avx2) return "cpu-baseline"
+48:   const kernel = Number.parseInt(host.kernel, 10)
+49:   if (host.platform === "darwin" && kernel < 20) return "macos-below-11"
+50:   if (host.platform === "win32" && kernel < 10) return "windows-below-10"
+51:   // An unreadable glibc applies no floor.
+52:   if (host.platform === "linux" && host.glibc && compareVersions(host.glibc, "2.28") < 0) return "glibc-below-2.28"
+```
+
+Linhas 81–88:
+
+```text
+81: export function below(host: Host, target: TargetId, floor: Floor | undefined) {
+82:   if (!floor || !target.startsWith(host.platform)) return
+83:   if (host.platform === "linux" && floor.glibc && host.glibc && compareVersions(host.glibc, floor.glibc) < 0)
+84:     return `glibc-below-${floor.glibc}`
+85:   const major = Number.parseInt(floor.macos ?? "", 10)
+86:   if (host.platform === "darwin" && major >= 11 && Number.parseInt(host.kernel, 10) < (major >= 26 ? major - 1 : major + 9)) return `macos-below-${major}`
+87:   if (host.platform === "win32" && floor.windows && compareVersions(host.kernel, floor.windows) < 0)
+88:     return `windows-below-${floor.windows}`
+```
+

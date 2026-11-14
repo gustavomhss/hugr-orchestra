@@ -1,0 +1,3262 @@
+{
+  "schema": "genesis-evidence-index/v1",
+  "artifact_key": "s1.core.research",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "body": {
+    "path": "body.md",
+    "sha256": "1213f85cf16f73feed220e8c1b33ed52b2af75afd570b154a29eaf8f99f27d73"
+  },
+  "archive": {
+    "path": "evidence.md",
+    "bytes": 599806,
+    "sha256": "e8cc0b447e48f26b3a059dc70c7ad7e607ec9b60a9af3d605e76f4c10b1da05b"
+  },
+  "review": {
+    "path": "evidence-review.md",
+    "bytes": 89675,
+    "sha256": "3496f3e102e5db734d2954cf18e9bea6da5fbc418d2084f56814eefb5347788e",
+    "literal_source_lines": 1112
+  },
+  "request_protocol": "REQUEST_EVIDENCE <ID> <path and source line range>; principal supplies literal retained excerpt with source identity. No judge tooling or reserved answers needed.",
+  "groups": [
+    {
+      "id": "E01",
+      "title": "Reúso histórico e lacunas originais",
+      "archive_lines": [
+        7,
+        86
+      ],
+      "source_intervals": [
+        {
+          "path": "@history/bodies/research.md",
+          "ranges": [
+            [
+              1,
+              25
+            ]
+          ]
+        },
+        {
+          "path": "@history/a3-dossier.md",
+          "ranges": [
+            [
+              485,
+              499
+            ],
+            [
+              587,
+              601
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "@history/bodies/research.md",
+          "ranges": [
+            [
+              1,
+              5
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E02",
+      "title": "Ownership, gerado e tipos de manifesto",
+      "archive_lines": [
+        87,
+        268
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/backend-toolkit/README.md",
+          "ranges": [
+            [
+              1,
+              32
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/entry-skills.gen.ts",
+          "ranges": [
+            [
+              1,
+              10
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/manifest.ts",
+          "ranges": [
+            [
+              13,
+              123
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "packages/core/src/backend-toolkit/README.md",
+          "ranges": [
+            [
+              5,
+              18
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E03",
+      "title": "Dependências, preparo e readiness",
+      "archive_lines": [
+        269,
+        528
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/backend-toolkit/index.ts",
+          "ranges": [
+            [
+              27,
+              67
+            ],
+            [
+              80,
+              134
+            ],
+            [
+              137,
+              279
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "packages/core/src/backend-toolkit/index.ts",
+          "ranges": [
+            [
+              137,
+              146
+            ],
+            [
+              246,
+              279
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E04",
+      "title": "Aquisição compartilhada e cooldown",
+      "archive_lines": [
+        529,
+        600
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/backend-toolkit/acquisition.ts",
+          "ranges": [
+            [
+              8,
+              33
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/attempts.ts",
+          "ranges": [
+            [
+              8,
+              33
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "packages/core/src/backend-toolkit/acquisition.ts",
+          "ranges": [
+            [
+              14,
+              33
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/attempts.ts",
+          "ranges": [
+            [
+              20,
+              25
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E05",
+      "title": "Targets, pisos e detecção permissiva",
+      "archive_lines": [
+        601,
+        743
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/backend-toolkit/target.ts",
+          "ranges": [
+            [
+              7,
+              138
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "packages/core/src/backend-toolkit/target.ts",
+          "ranges": [
+            [
+              31,
+              38
+            ],
+            [
+              46,
+              52
+            ],
+            [
+              81,
+              88
+            ],
+            [
+              129,
+              130
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E06",
+      "title": "PinnedArtifact: integridade, staging e limites",
+      "archive_lines": [
+        744,
+        891
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/pinned-artifact.ts",
+          "ranges": [
+            [
+              20,
+              156
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "packages/core/src/pinned-artifact.ts",
+          "ranges": [
+            [
+              46,
+              75
+            ],
+            [
+              77,
+              95
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E07",
+      "title": "Hosted: npm/pip/source e encerramento",
+      "archive_lines": [
+        892,
+        1090
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/backend-toolkit/hosted.ts",
+          "ranges": [
+            [
+              38,
+              225
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "packages/core/src/backend-toolkit/hosted.ts",
+          "ranges": [
+            [
+              39,
+              46
+            ],
+            [
+              68,
+              70
+            ],
+            [
+              87,
+              91
+            ],
+            [
+              142,
+              146
+            ],
+            [
+              158,
+              166
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E08",
+      "title": "Launchers, shims e diagnóstico",
+      "archive_lines": [
+        1091,
+        1194
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/backend-toolkit/launcher.ts",
+          "ranges": [
+            [
+              7,
+              67
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/diagnostics.ts",
+          "ranges": [
+            [
+              7,
+              29
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "packages/core/src/backend-toolkit/launcher.ts",
+          "ranges": [
+            [
+              41,
+              47
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/diagnostics.ts",
+          "ranges": [
+            [
+              7,
+              14
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E09",
+      "title": "Guard de versão e parser de config",
+      "archive_lines": [
+        1195,
+        1401
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/backend-toolkit/project-version.ts",
+          "ranges": [
+            [
+              15,
+              105
+            ],
+            [
+              115,
+              214
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "packages/core/src/backend-toolkit/project-version.ts",
+          "ranges": [
+            [
+              33,
+              49
+            ],
+            [
+              61,
+              76
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E10",
+      "title": "Compatibilidade Cassandra e dialer fechado",
+      "archive_lines": [
+        1402,
+        1717
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/backend-toolkit/cassandra-metadata.ts",
+          "ranges": [
+            [
+              9,
+              87
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/cassandra-dialer.ts",
+          "ranges": [
+            [
+              1,
+              217
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "packages/core/src/backend-toolkit/cassandra-metadata.ts",
+          "ranges": [
+            [
+              31,
+              45
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/cassandra-dialer.ts",
+          "ranges": [
+            [
+              49,
+              69
+            ],
+            [
+              99,
+              126
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E11",
+      "title": "Todos os packs backend: versão, receita e fit",
+      "archive_lines": [
+        1718,
+        2773
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/backend-toolkit/packs/ast-grep.ts",
+          "ranges": [
+            [
+              3,
+              30
+            ],
+            [
+              54,
+              59
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/buf.ts",
+          "ranges": [
+            [
+              3,
+              30
+            ],
+            [
+              38,
+              39
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/controller-gen.ts",
+          "ranges": [
+            [
+              3,
+              19
+            ],
+            [
+              67,
+              72
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/datafusion-cli.ts",
+          "ranges": [
+            [
+              3,
+              41
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/datamodel-codegen.ts",
+          "ranges": [
+            [
+              3,
+              31
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/datamodel-codegen.wheels.ts",
+          "ranges": [
+            [
+              1,
+              24
+            ],
+            [
+              76,
+              93
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/gitleaks.ts",
+          "ranges": [
+            [
+              3,
+              33
+            ],
+            [
+              41,
+              42
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/gocqlx-schemagen.ts",
+          "ranges": [
+            [
+              3,
+              75
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/index.ts",
+          "ranges": [
+            [
+              23,
+              47
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/kiota.ts",
+          "ranges": [
+            [
+              3,
+              34
+            ],
+            [
+              42,
+              43
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/kopium.ts",
+          "ranges": [
+            [
+              3,
+              37
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/kubeconform.ts",
+          "ranges": [
+            [
+              3,
+              19
+            ],
+            [
+              67,
+              72
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/kysely-codegen.ts",
+          "ranges": [
+            [
+              3,
+              37
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/modelina.ts",
+          "ranges": [
+            [
+              3,
+              28
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/ogen.ts",
+          "ranges": [
+            [
+              3,
+              83
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/openapi-generator.ts",
+          "ranges": [
+            [
+              3,
+              23
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/orval.ts",
+          "ranges": [
+            [
+              3,
+              31
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/postgres-language-server.ts",
+          "ranges": [
+            [
+              3,
+              34
+            ],
+            [
+              46,
+              51
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/protoc-gen-es.ts",
+          "ranges": [
+            [
+              3,
+              25
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/sqlc.ts",
+          "ranges": [
+            [
+              3,
+              29
+            ],
+            [
+              37,
+              38
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/sqlglot.ts",
+          "ranges": [
+            [
+              3,
+              26
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/sqlx.ts",
+          "ranges": [
+            [
+              3,
+              40
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/squawk.ts",
+          "ranges": [
+            [
+              3,
+              29
+            ],
+            [
+              37,
+              42
+            ]
+          ]
+        }
+      ],
+      "review_included": false,
+      "review_intervals": []
+    },
+    {
+      "id": "E12",
+      "title": "Cinco runtimes: versões, layouts e floors",
+      "archive_lines": [
+        2774,
+        3090
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/backend-toolkit/runtimes/go.ts",
+          "ranges": [
+            [
+              3,
+              62
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/runtimes/java.ts",
+          "ranges": [
+            [
+              3,
+              45
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/runtimes/node.ts",
+          "ranges": [
+            [
+              3,
+              56
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/runtimes/python.ts",
+          "ranges": [
+            [
+              3,
+              65
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/runtimes/rust.ts",
+          "ranges": [
+            [
+              3,
+              52
+            ]
+          ]
+        }
+      ],
+      "review_included": false,
+      "review_intervals": []
+    },
+    {
+      "id": "E13",
+      "title": "Research packs e contratos de locks",
+      "archive_lines": [
+        3091,
+        3583
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/manifest.ts",
+          "ranges": [
+            [
+              5,
+              17
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/packs/index.ts",
+          "ranges": [
+            [
+              1,
+              15
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/packs/rust-analyzer.ts",
+          "ranges": [
+            [
+              3,
+              38
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/packs/scip-go.ts",
+          "ranges": [
+            [
+              3,
+              35
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/packs/scip-python.ts",
+          "ranges": [
+            [
+              3,
+              32
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/packs/scip-typescript.ts",
+          "ranges": [
+            [
+              3,
+              31
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/packs/typescript.ts",
+          "ranges": [
+            [
+              3,
+              26
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/kysely-codegen.package-lock.json",
+          "ranges": [
+            [
+              1,
+              22
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/modelina.package-lock.json",
+          "ranges": [
+            [
+              1,
+              22
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/modelina.package-lock.json",
+          "ranges": [
+            [
+              4468,
+              4493
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/orval.package-lock.json",
+          "ranges": [
+            [
+              1,
+              22
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/protoc-gen-es.package-lock.json",
+          "ranges": [
+            [
+              1,
+              22
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/packs/scip-python.package-lock.json",
+          "ranges": [
+            [
+              1,
+              22
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/packs/scip-typescript.package-lock.json",
+          "ranges": [
+            [
+              1,
+              22
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/packs/typescript.package-lock.json",
+          "ranges": [
+            [
+              1,
+              22
+            ]
+          ]
+        }
+      ],
+      "review_included": false,
+      "review_intervals": []
+    },
+    {
+      "id": "E14",
+      "title": "Caps, default adapter, packs ausentes e warm",
+      "archive_lines": [
+        3584,
+        3833
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/index.ts",
+          "ranges": [
+            [
+              15,
+              145
+            ],
+            [
+              164,
+              218
+            ],
+            [
+              251,
+              263
+            ],
+            [
+              276,
+              300
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/index.ts",
+          "ranges": [
+            [
+              31,
+              38
+            ],
+            [
+              103,
+              108
+            ],
+            [
+              164,
+              178
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E15",
+      "title": "Prewarm detached, status de shard e lock",
+      "archive_lines": [
+        3834,
+        3927
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/index.ts",
+          "ranges": [
+            [
+              146,
+              163
+            ],
+            [
+              191,
+              250
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/index.ts",
+          "ranges": [
+            [
+              149,
+              158
+            ],
+            [
+              191,
+              201
+            ],
+            [
+              276,
+              281
+            ],
+            [
+              293,
+              300
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E16",
+      "title": "Git, descoberta e identidade de shards",
+      "archive_lines": [
+        3928,
+        4119
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/shard.ts",
+          "ranges": [
+            [
+              24,
+              204
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/shard.ts",
+          "ranges": [
+            [
+              181,
+              204
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E17",
+      "title": "Build, singleFlight, SQLite e retenção",
+      "archive_lines": [
+        4120,
+        4401
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/build.ts",
+          "ranges": [
+            [
+              25,
+              122
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/code-index/store.ts",
+          "ranges": [
+            [
+              70,
+              233
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/store.ts",
+          "ranges": [
+            [
+              75,
+              77
+            ],
+            [
+              184,
+              191
+            ],
+            [
+              203,
+              208
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E18",
+      "title": "Adapter real, source worktree, estrutural e opacidade",
+      "archive_lines": [
+        4402,
+        4731
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/extract.ts",
+          "ranges": [
+            [
+              46,
+              225
+            ],
+            [
+              238,
+              371
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/extract.ts",
+          "ranges": [
+            [
+              87,
+              100
+            ],
+            [
+              118,
+              128
+            ],
+            [
+              151,
+              166
+            ],
+            [
+              286,
+              295
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E19",
+      "title": "Filtro e parser estrutural",
+      "archive_lines": [
+        4732,
+        5033
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/filter.ts",
+          "ranges": [
+            [
+              7,
+              79
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/code-index/tree-sitter.ts",
+          "ranges": [
+            [
+              19,
+              80
+            ],
+            [
+              120,
+              198
+            ],
+            [
+              210,
+              267
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/tree-sitter.ts",
+          "ranges": [
+            [
+              54,
+              79
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E20",
+      "title": "SCIP: arquivo regular, memo, encoding e empty helper",
+      "archive_lines": [
+        5034,
+        5261
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/scip.ts",
+          "ranges": [
+            [
+              8,
+              224
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/scip.ts",
+          "ranges": [
+            [
+              97,
+              105
+            ],
+            [
+              124,
+              133
+            ],
+            [
+              163,
+              171
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E21",
+      "title": "Callers, canonicalização e enclosing",
+      "archive_lines": [
+        5262,
+        5465
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/callers.ts",
+          "ranges": [
+            [
+              23,
+              135
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/code-index/enclosing.ts",
+          "ranges": [
+            [
+              22,
+              92
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/callers.ts",
+          "ranges": [
+            [
+              111,
+              135
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E22",
+      "title": "Adapters e resolução Go/Python/Rust",
+      "archive_lines": [
+        5466,
+        5668
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/go.ts",
+          "ranges": [
+            [
+              7,
+              63
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/code-index/python.ts",
+          "ranges": [
+            [
+              3,
+              22
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/code-index/rust.ts",
+          "ranges": [
+            [
+              7,
+              103
+            ]
+          ]
+        }
+      ],
+      "review_included": false,
+      "review_intervals": []
+    },
+    {
+      "id": "E23",
+      "title": "Resolução TS/Python e rank",
+      "archive_lines": [
+        5669,
+        5881
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/resolve.ts",
+          "ranges": [
+            [
+              21,
+              164
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/code-index/rank.ts",
+          "ranges": [
+            [
+              10,
+              58
+            ]
+          ]
+        }
+      ],
+      "review_included": false,
+      "review_intervals": []
+    },
+    {
+      "id": "E24",
+      "title": "Query: basis, stale e dirty overlay",
+      "archive_lines": [
+        5882,
+        6187
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/types.ts",
+          "ranges": [
+            [
+              7,
+              88
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/code-index/query.ts",
+          "ranges": [
+            [
+              58,
+              261
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/query.ts",
+          "ranges": [
+            [
+              119,
+              135
+            ],
+            [
+              187,
+              226
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E25",
+      "title": "Query: resolução, hits e limites de overlay",
+      "archive_lines": [
+        6188,
+        6460
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/query.ts",
+          "ranges": [
+            [
+              263,
+              524
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/query.ts",
+          "ranges": [
+            [
+              228,
+              247
+            ],
+            [
+              417,
+              422
+            ],
+            [
+              429,
+              437
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E26",
+      "title": "Busca lexical e limites de captura",
+      "archive_lines": [
+        6461,
+        6630
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/search.ts",
+          "ranges": [
+            [
+              17,
+              175
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/search.ts",
+          "ranges": [
+            [
+              50,
+              54
+            ],
+            [
+              73,
+              85
+            ],
+            [
+              101,
+              122
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E27",
+      "title": "Locate: budget, ranking e verificação",
+      "archive_lines": [
+        6631,
+        6888
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/locate.ts",
+          "ranges": [
+            [
+              24,
+              270
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/locate.ts",
+          "ranges": [
+            [
+              37,
+              43
+            ],
+            [
+              228,
+              250
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E28",
+      "title": "Liveness: alcance, HTTP, DNS e limites",
+      "archive_lines": [
+        6889,
+        7019
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/liveness.ts",
+          "ranges": [
+            [
+              7,
+              126
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/liveness.ts",
+          "ranges": [
+            [
+              54,
+              64
+            ],
+            [
+              89,
+              94
+            ],
+            [
+              111,
+              116
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E29",
+      "title": "Probe: contrato fechado, execução e verdict",
+      "archive_lines": [
+        7020,
+        7249
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/probe/types.ts",
+          "ranges": [
+            [
+              10,
+              84
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/probe/run.ts",
+          "ranges": [
+            [
+              18,
+              152
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/probe/types.ts",
+          "ranges": [
+            [
+              10,
+              21
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/probe/run.ts",
+          "ranges": [
+            [
+              42,
+              64
+            ],
+            [
+              95,
+              110
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E30",
+      "title": "Processos: ambiente, limites e encerramento",
+      "archive_lines": [
+        7250,
+        7371
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/process.ts",
+          "ranges": [
+            [
+              16,
+              126
+            ]
+          ]
+        }
+      ],
+      "review_included": false,
+      "review_intervals": []
+    },
+    {
+      "id": "E31",
+      "title": "Snapshots e dependências compartilhadas",
+      "archive_lines": [
+        7372,
+        7484
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/probe/snapshot.ts",
+          "ranges": [
+            [
+              12,
+              113
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/probe/snapshot.ts",
+          "ranges": [
+            [
+              94,
+              113
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E32",
+      "title": "Assets e runners fechados",
+      "archive_lines": [
+        7485,
+        7696
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/probe/assets.ts",
+          "ranges": [
+            [
+              11,
+              64
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/probe/runners.ts",
+          "ranges": [
+            [
+              15,
+              152
+            ]
+          ]
+        }
+      ],
+      "review_included": false,
+      "review_intervals": []
+    },
+    {
+      "id": "E33",
+      "title": "Typecheck e diagnóstico estruturado",
+      "archive_lines": [
+        7697,
+        7812
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/research-toolkit/probe/typecheck.ts",
+          "ranges": [
+            [
+              14,
+              118
+            ]
+          ]
+        }
+      ],
+      "review_included": false,
+      "review_intervals": []
+    },
+    {
+      "id": "E34",
+      "title": "Binding nativo e invocação persistida",
+      "archive_lines": [
+        7813,
+        7906
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/research/binding.ts",
+          "ranges": [
+            [
+              22,
+              104
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "packages/core/src/research/binding.ts",
+          "ranges": [
+            [
+              25,
+              32
+            ],
+            [
+              49,
+              52
+            ],
+            [
+              65,
+              76
+            ],
+            [
+              100,
+              103
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E35",
+      "title": "Allowance, charge idempotente e reserva irreversível",
+      "archive_lines": [
+        7907,
+        8095
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/research/allowance.ts",
+          "ranges": [
+            [
+              16,
+              32
+            ],
+            [
+              40,
+              181
+            ],
+            [
+              189,
+              197
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "packages/core/src/research/allowance.ts",
+          "ranges": [
+            [
+              117,
+              142
+            ],
+            [
+              155,
+              163
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E36",
+      "title": "Ledger, escopo, dispatch, retenção e replay",
+      "archive_lines": [
+        8096,
+        8249
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/research/ledger.ts",
+          "ranges": [
+            [
+              15,
+              157
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "packages/core/src/research/ledger.ts",
+          "ranges": [
+            [
+              62,
+              84
+            ],
+            [
+              145,
+              157
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E37",
+      "title": "Custódia e admissão são contratos diferentes",
+      "archive_lines": [
+        8250,
+        8377
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/research/artifacts.ts",
+          "ranges": [
+            [
+              32,
+              148
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "packages/core/src/research/artifacts.ts",
+          "ranges": [
+            [
+              85,
+              94
+            ],
+            [
+              104,
+              112
+            ],
+            [
+              134,
+              145
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E38",
+      "title": "Intent estável e filesystem imutável",
+      "archive_lines": [
+        8378,
+        8499
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/research/artifacts.ts",
+          "ranges": [
+            [
+              149,
+              259
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "packages/core/src/research/artifacts.ts",
+          "ranges": [
+            [
+              174,
+              190
+            ],
+            [
+              237,
+              255
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E39",
+      "title": "Records e locators de evidência",
+      "archive_lines": [
+        8500,
+        8634
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/research/records.ts",
+          "ranges": [
+            [
+              73,
+              128
+            ],
+            [
+              492,
+              554
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "packages/core/src/research/records.ts",
+          "ranges": [
+            [
+              103,
+              115
+            ],
+            [
+              521,
+              552
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E40",
+      "title": "CAS de registros e captura admitida",
+      "archive_lines": [
+        8635,
+        8776
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/research/records.ts",
+          "ranges": [
+            [
+              129,
+              259
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "packages/core/src/research/records.ts",
+          "ranges": [
+            [
+              149,
+              165
+            ],
+            [
+              191,
+              213
+            ],
+            [
+              238,
+              258
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E41",
+      "title": "Attempt e aquisição sem retry oculto",
+      "archive_lines": [
+        8777,
+        8857
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/research/records.ts",
+          "ranges": [
+            [
+              262,
+              331
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "packages/core/src/research/records.ts",
+          "ranges": [
+            [
+              300,
+              320
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E42",
+      "title": "Views, inquiry e citações Markdown",
+      "archive_lines": [
+        8858,
+        9034
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/research/records.ts",
+          "ranges": [
+            [
+              334,
+              472
+            ],
+            [
+              556,
+              577
+            ]
+          ]
+        }
+      ],
+      "review_included": true,
+      "review_intervals": [
+        {
+          "path": "packages/core/src/research/records.ts",
+          "ranges": [
+            [
+              447,
+              455
+            ],
+            [
+              564,
+              577
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E43",
+      "title": "Declarações de seat e ferramentas retidas",
+      "archive_lines": [
+        9035,
+        9070
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/src/research/seat-tools.ts",
+          "ranges": [
+            [
+              1,
+              25
+            ]
+          ]
+        }
+      ],
+      "review_included": false,
+      "review_intervals": []
+    },
+    {
+      "id": "E44",
+      "title": "Contratos backend e artefatos pinados — NÃO EXECUTADOS",
+      "archive_lines": [
+        9071,
+        9771
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/test/backend-toolkit-acquisition.test.ts",
+          "ranges": [
+            [
+              7,
+              9
+            ],
+            [
+              34,
+              36
+            ],
+            [
+              43,
+              45
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/backend-toolkit-cassandra.test.ts",
+          "ranges": [
+            [
+              31,
+              33
+            ],
+            [
+              68,
+              70
+            ],
+            [
+              113,
+              115
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/backend-toolkit-cli.test.ts",
+          "ranges": [
+            [
+              33,
+              35
+            ],
+            [
+              70,
+              72
+            ],
+            [
+              107,
+              109
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/backend-toolkit-floors.test.ts",
+          "ranges": [
+            [
+              53,
+              55
+            ],
+            [
+              60,
+              62
+            ],
+            [
+              73,
+              75
+            ],
+            [
+              107,
+              109
+            ],
+            [
+              116,
+              118
+            ],
+            [
+              124,
+              126
+            ],
+            [
+              133,
+              135
+            ],
+            [
+              142,
+              144
+            ],
+            [
+              149,
+              151
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/backend-toolkit-hosted.test.ts",
+          "ranges": [
+            [
+              159,
+              161
+            ],
+            [
+              193,
+              195
+            ],
+            [
+              219,
+              221
+            ],
+            [
+              234,
+              236
+            ],
+            [
+              268,
+              270
+            ],
+            [
+              278,
+              280
+            ],
+            [
+              299,
+              301
+            ],
+            [
+              331,
+              333
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/backend-toolkit-packs.test.ts",
+          "ranges": [
+            [
+              54,
+              56
+            ],
+            [
+              58,
+              60
+            ],
+            [
+              71,
+              73
+            ],
+            [
+              83,
+              85
+            ],
+            [
+              91,
+              93
+            ],
+            [
+              102,
+              104
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/backend-toolkit-process.test.ts",
+          "ranges": [
+            [
+              140,
+              143
+            ],
+            [
+              164,
+              167
+            ],
+            [
+              181,
+              184
+            ],
+            [
+              199,
+              202
+            ],
+            [
+              211,
+              214
+            ],
+            [
+              233,
+              236
+            ],
+            [
+              276,
+              279
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/backend-toolkit-project-version.test.ts",
+          "ranges": [
+            [
+              32,
+              34
+            ],
+            [
+              41,
+              43
+            ],
+            [
+              52,
+              54
+            ],
+            [
+              65,
+              67
+            ],
+            [
+              77,
+              79
+            ],
+            [
+              93,
+              95
+            ],
+            [
+              124,
+              126
+            ],
+            [
+              141,
+              143
+            ],
+            [
+              158,
+              160
+            ],
+            [
+              170,
+              172
+            ],
+            [
+              192,
+              194
+            ],
+            [
+              199,
+              201
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/backend-toolkit-source-readiness.test.ts",
+          "ranges": [
+            [
+              109,
+              111
+            ],
+            [
+              124,
+              126
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/backend-toolkit-source.test.ts",
+          "ranges": [
+            [
+              182,
+              184
+            ],
+            [
+              224,
+              226
+            ],
+            [
+              251,
+              253
+            ],
+            [
+              263,
+              265
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/backend-toolkit-target.test.ts",
+          "ranges": [
+            [
+              43,
+              45
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/backend-toolkit.test.ts",
+          "ranges": [
+            [
+              101,
+              103
+            ],
+            [
+              122,
+              124
+            ],
+            [
+              135,
+              137
+            ],
+            [
+              148,
+              150
+            ],
+            [
+              161,
+              163
+            ],
+            [
+              176,
+              178
+            ],
+            [
+              187,
+              189
+            ],
+            [
+              196,
+              198
+            ],
+            [
+              214,
+              216
+            ],
+            [
+              229,
+              231
+            ],
+            [
+              245,
+              247
+            ],
+            [
+              256,
+              258
+            ],
+            [
+              274,
+              276
+            ],
+            [
+              310,
+              312
+            ],
+            [
+              320,
+              322
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/pinned-artifact.test.ts",
+          "ranges": [
+            [
+              66,
+              68
+            ],
+            [
+              83,
+              85
+            ],
+            [
+              93,
+              95
+            ],
+            [
+              104,
+              106
+            ],
+            [
+              120,
+              122
+            ],
+            [
+              142,
+              144
+            ],
+            [
+              156,
+              158
+            ]
+          ]
+        }
+      ],
+      "review_included": false,
+      "review_intervals": []
+    },
+    {
+      "id": "E45",
+      "title": "Contratos de índice/toolkit — NÃO EXECUTADOS",
+      "archive_lines": [
+        9772,
+        10593
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/test/code-index-query.test.ts",
+          "ranges": [
+            [
+              170,
+              172
+            ],
+            [
+              182,
+              184
+            ],
+            [
+              204,
+              206
+            ],
+            [
+              214,
+              216
+            ],
+            [
+              226,
+              228
+            ],
+            [
+              241,
+              243
+            ],
+            [
+              255,
+              257
+            ],
+            [
+              265,
+              267
+            ],
+            [
+              283,
+              285
+            ],
+            [
+              296,
+              298
+            ],
+            [
+              309,
+              311
+            ],
+            [
+              324,
+              326
+            ],
+            [
+              347,
+              349
+            ],
+            [
+              362,
+              364
+            ],
+            [
+              374,
+              376
+            ],
+            [
+              397,
+              399
+            ],
+            [
+              427,
+              429
+            ],
+            [
+              443,
+              445
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/code-index-rank.test.ts",
+          "ranges": [
+            [
+              6,
+              8
+            ],
+            [
+              21,
+              23
+            ],
+            [
+              32,
+              34
+            ],
+            [
+              41,
+              43
+            ],
+            [
+              49,
+              51
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/code-index-store.test.ts",
+          "ranges": [
+            [
+              23,
+              25
+            ],
+            [
+              28,
+              30
+            ],
+            [
+              53,
+              55
+            ],
+            [
+              79,
+              81
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-toolkit-callers.test.ts",
+          "ranges": [
+            [
+              30,
+              32
+            ],
+            [
+              42,
+              44
+            ],
+            [
+              50,
+              52
+            ],
+            [
+              64,
+              66
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-toolkit-enclosing.test.ts",
+          "ranges": [
+            [
+              24,
+              26
+            ],
+            [
+              34,
+              36
+            ],
+            [
+              44,
+              46
+            ],
+            [
+              62,
+              64
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-toolkit-liveness.test.ts",
+          "ranges": [
+            [
+              25,
+              27
+            ],
+            [
+              31,
+              33
+            ],
+            [
+              35,
+              37
+            ],
+            [
+              41,
+              43
+            ],
+            [
+              51,
+              53
+            ],
+            [
+              58,
+              60
+            ],
+            [
+              62,
+              64
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-toolkit-packs.test.ts",
+          "ranges": [
+            [
+              15,
+              17
+            ],
+            [
+              26,
+              28
+            ],
+            [
+              37,
+              39
+            ],
+            [
+              53,
+              55
+            ],
+            [
+              68,
+              70
+            ],
+            [
+              78,
+              80
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-toolkit-scip.test.ts",
+          "ranges": [
+            [
+              23,
+              25
+            ],
+            [
+              36,
+              38
+            ],
+            [
+              60,
+              62
+            ],
+            [
+              71,
+              73
+            ],
+            [
+              91,
+              93
+            ],
+            [
+              107,
+              109
+            ],
+            [
+              116,
+              118
+            ],
+            [
+              129,
+              131
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-toolkit.test.ts",
+          "ranges": [
+            [
+              75,
+              77
+            ],
+            [
+              87,
+              89
+            ],
+            [
+              123,
+              125
+            ],
+            [
+              165,
+              167
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-toolkit/capability.test.ts",
+          "ranges": [
+            [
+              21,
+              23
+            ],
+            [
+              37,
+              39
+            ],
+            [
+              65,
+              67
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-toolkit/code-index-filter.test.ts",
+          "ranges": [
+            [
+              8,
+              10
+            ],
+            [
+              38,
+              40
+            ],
+            [
+              42,
+              44
+            ],
+            [
+              46,
+              48
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-toolkit/code-index-go.test.ts",
+          "ranges": [
+            [
+              44,
+              46
+            ],
+            [
+              52,
+              54
+            ],
+            [
+              60,
+              62
+            ],
+            [
+              83,
+              85
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-toolkit/code-index-python.test.ts",
+          "ranges": [
+            [
+              6,
+              8
+            ],
+            [
+              13,
+              15
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-toolkit/code-index-resolve.test.ts",
+          "ranges": [
+            [
+              41,
+              43
+            ],
+            [
+              62,
+              64
+            ],
+            [
+              69,
+              71
+            ],
+            [
+              81,
+              83
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-toolkit/code-index-rust.test.ts",
+          "ranges": [
+            [
+              41,
+              43
+            ],
+            [
+              49,
+              51
+            ],
+            [
+              71,
+              73
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-toolkit/code-index-scip-encoding.test.ts",
+          "ranges": [
+            [
+              31,
+              33
+            ],
+            [
+              38,
+              40
+            ],
+            [
+              46,
+              48
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-toolkit/code-index-structural.test.ts",
+          "ranges": [
+            [
+              30,
+              32
+            ],
+            [
+              46,
+              48
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-toolkit/code-index-toolkit.test.ts",
+          "ranges": [
+            [
+              18,
+              20
+            ],
+            [
+              29,
+              31
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-toolkit/code-index-tree-sitter.test.ts",
+          "ranges": [
+            [
+              37,
+              39
+            ],
+            [
+              58,
+              60
+            ],
+            [
+              69,
+              71
+            ],
+            [
+              76,
+              78
+            ],
+            [
+              93,
+              95
+            ],
+            [
+              99,
+              101
+            ]
+          ]
+        }
+      ],
+      "review_included": false,
+      "review_intervals": []
+    },
+    {
+      "id": "E46",
+      "title": "Contratos de evidência/budget/probes — NÃO EXECUTADOS",
+      "archive_lines": [
+        10594,
+        11143
+      ],
+      "source_intervals": [
+        {
+          "path": "packages/core/test/research-allowance.test.ts",
+          "ranges": [
+            [
+              38,
+              40
+            ],
+            [
+              55,
+              57
+            ],
+            [
+              72,
+              74
+            ],
+            [
+              90,
+              92
+            ],
+            [
+              110,
+              112
+            ],
+            [
+              129,
+              131
+            ],
+            [
+              165,
+              167
+            ],
+            [
+              184,
+              186
+            ],
+            [
+              194,
+              196
+            ],
+            [
+              205,
+              207
+            ],
+            [
+              219,
+              221
+            ],
+            [
+              232,
+              234
+            ],
+            [
+              246,
+              248
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-artifacts.test.ts",
+          "ranges": [
+            [
+              15,
+              17
+            ],
+            [
+              40,
+              42
+            ],
+            [
+              65,
+              67
+            ],
+            [
+              94,
+              96
+            ],
+            [
+              115,
+              117
+            ],
+            [
+              130,
+              132
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-binding.test.ts",
+          "ranges": [
+            [
+              95,
+              97
+            ],
+            [
+              109,
+              111
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-inquiry-ledger.test.ts",
+          "ranges": [
+            [
+              20,
+              22
+            ],
+            [
+              55,
+              57
+            ],
+            [
+              71,
+              73
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-locate.test.ts",
+          "ranges": [
+            [
+              67,
+              69
+            ],
+            [
+              83,
+              85
+            ],
+            [
+              90,
+              92
+            ],
+            [
+              98,
+              100
+            ],
+            [
+              107,
+              109
+            ],
+            [
+              116,
+              118
+            ],
+            [
+              123,
+              125
+            ],
+            [
+              128,
+              130
+            ],
+            [
+              132,
+              134
+            ],
+            [
+              139,
+              141
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-probe-units.test.ts",
+          "ranges": [
+            [
+              12,
+              14
+            ],
+            [
+              27,
+              29
+            ],
+            [
+              44,
+              46
+            ],
+            [
+              62,
+              64
+            ],
+            [
+              106,
+              108
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-probe.test.ts",
+          "ranges": [
+            [
+              51,
+              53
+            ],
+            [
+              71,
+              73
+            ],
+            [
+              84,
+              86
+            ],
+            [
+              104,
+              106
+            ],
+            [
+              116,
+              118
+            ],
+            [
+              135,
+              137
+            ],
+            [
+              149,
+              151
+            ],
+            [
+              162,
+              164
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-records.test.ts",
+          "ranges": [
+            [
+              23,
+              25
+            ],
+            [
+              46,
+              48
+            ],
+            [
+              68,
+              70
+            ],
+            [
+              134,
+              136
+            ],
+            [
+              159,
+              161
+            ],
+            [
+              190,
+              192
+            ],
+            [
+              224,
+              226
+            ],
+            [
+              254,
+              256
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-search.test.ts",
+          "ranges": [
+            [
+              30,
+              32
+            ],
+            [
+              40,
+              42
+            ],
+            [
+              51,
+              53
+            ],
+            [
+              62,
+              64
+            ],
+            [
+              74,
+              76
+            ],
+            [
+              92,
+              94
+            ],
+            [
+              102,
+              104
+            ],
+            [
+              114,
+              116
+            ],
+            [
+              125,
+              127
+            ]
+          ]
+        }
+      ],
+      "review_included": false,
+      "review_intervals": []
+    }
+  ]
+}

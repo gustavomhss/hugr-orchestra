@@ -1,0 +1,280 @@
+63: 		socket := string(decoded)
+64: 		if err != nil || !utf8.Valid(decoded) || strings.ContainsRune(socket, 0) || !orchestraAbsolute(socket) || len(decoded) >= 104 {
+65: 			return nil, fmt.Errorf("orchestra-cassandra-dialer:invalid-routes")
+66: 		}
+67: 		if _, duplicate := routes[port]; duplicate || paths[socket] {
+68: 			return nil, fmt.Errorf("orchestra-cassandra-dialer:invalid-routes")
+69: 		}
+```
+
+Linhas 99–126:
+
+```text
+99: 	parsed, err := url.Parse(proxy)
+100: 	if err != nil || parsed.Scheme != "http" || parsed.Opaque != "" || (parsed.Path != "" && parsed.Path != "/") || parsed.RawQuery != "" || parsed.Fragment != "" ||
+101: 		(parsed.Hostname() != "localhost" && parsed.Hostname() != "127.0.0.1") {
+102: 		return nil, fmt.Errorf("orchestra-cassandra-dialer:invalid-proxy")
+103: 	}
+104: 	n, err := strconv.Atoi(parsed.Port())
+105: 	if err != nil || n < 1 || n > 65535 || strconv.Itoa(n) != parsed.Port() {
+106: 		return nil, fmt.Errorf("orchestra-cassandra-dialer:invalid-proxy")
+107: 	}
+108: 	auth := ""
+109: 	if parsed.User != nil {
+110: 		password, _ := parsed.User.Password()
+111: 		auth = "Proxy-Authorization: Basic " + base64.StdEncoding.EncodeToString([]byte(parsed.User.Username()+":"+password)) + "\r\n"
+112: 	}
+113: 	return &orchestraGeneratorDialer{routes: routes, proxy: "127.0.0.1:" + parsed.Port(), auth: auth, dialer: net.Dialer{Timeout: timeout}}, nil
+114: }
+115: 
+116: func (d *orchestraGeneratorDialer) address(network, addr string) (string, int, error) {
+117: 	host, port, err := net.SplitHostPort(addr)
+118: 	n, numberErr := strconv.Atoi(port)
+119: 	if network != "tcp" || err != nil || host != "127.0.0.1" || numberErr != nil || n < 1 || n > 65535 || strconv.Itoa(n) != port {
+120: 		return "", 0, fmt.Errorf("orchestra-cassandra-dialer:invalid-address")
+121: 	}
+122: 	socket, declared := d.routes[port]
+123: 	if !declared {
+124: 		return "", 0, fmt.Errorf("orchestra-cassandra-dialer:undeclared-port")
+125: 	}
+126: 	return socket, n, nil
+```
+
+## E14 — Caps, default adapter, packs ausentes e warm
+
+`packages/core/src/research-toolkit/index.ts`
+
+Blob `a6e7b3bf6dd0ba44d0f0de5cac3eebe5c9f36095` · SHA-256 `9c1bfe5c5a7bc0c8d4d1f835e61031e0cca06b9ed6567415d9d04ff6e84b599c`.
+
+Linhas 31–38:
+
+```text
+31: export const Limits = Object.freeze({
+32:   indexerBytes: 2 * 1024 * 1024 * 1024,
+33:   probeBytes: 1024 * 1024 * 1024,
+34:   scratchBytes: 2 * 1024 * 1024 * 1024,
+35:   indexBytes: 4 * 1024 * 1024 * 1024,
+36:   indexCommits: 8,
+37:   shardTimeoutMs: 15 * 60_000,
+38: })
+```
+
+Linhas 103–108:
+
+```text
+103: }>("@orchestra/ResearchToolkit/Index", {
+104:   defaultValue: () => ({
+105:     plan: () => Effect.succeed([]),
+106:     build: () => Effect.fail(new ShardFailed({ reason: "index-builder-unavailable" })),
+107:   }),
+108: })
+```
+
+Linhas 164–178:
+
+```text
+164: export const warm = Effect.fn("ResearchToolkit.warm")(function* (worktree: string) {
+165:   const index = yield* Index
+166:   const caps = yield* Caps
+167:   const root = yield* Root
+168:   const plan = yield* index.plan(worktree).pipe(Effect.orElseSucceed((): ReadonlyArray<Shard> => []))
+169:   const pending = plan.filter((shard) => shard.state !== "ready").toSorted((a, b) => b.rank - a.rank)
+170:   const engines = new Map(
+171:     yield* Effect.forEach([...new Set(pending.map((shard) => shard.engine))], (engine) =>
+172:       ensure(engine).pipe(
+173:         Effect.match({ onSuccess: (ready) => ready, onFailure: (error) => ({ reason: error.reason }) }),
+174:         Effect.map((ready) => [engine, ready] as const),
+175:       ),
+176:     ),
+177:   )
+178:   const flock = yield* EffectFlock.Service
+```
+
+## E15 — Prewarm detached, status de shard e lock
+
+`packages/core/src/research-toolkit/index.ts`
+
+Mesma identidade de fonte já declarada nesta projeção.
+
+Linhas 149–158:
+
+```text
+149: export const prewarm: (worktree: string) => Effect.Effect<void> = (worktree) =>
+150:   Effect.gen(function* () {
+151:     if (warming.has(worktree)) return
+152:     warming.add(worktree)
+153:     yield* warm(worktree).pipe(
+154:       Effect.ensuring(Effect.sync(() => warming.delete(worktree))),
+155:       Effect.forkDetach,
+156:     )
+157:   })
+158: 
+```
+
+Linhas 191–201:
+
+```text
+191:               yield* record(root, worktree, shard.id, { status: "building" })
+192:               return yield* index
+193:                 .build(shard, { worktree, executable: ready.executable, memoryBytes: caps.indexerBytes })
+194:                 .pipe(
+195:                   Effect.timeoutOrElse({
+196:                     duration: caps.shardTimeoutMs,
+197:                     orElse: () => Effect.fail(new ShardFailed({ reason: `timeout:${caps.shardTimeoutMs}ms` })),
+198:                   }),
+199:                 )
+200:             }),
+201:             "research-toolkit:indexer",
+```
+
+Linhas 276–281:
+
+```text
+276: const read = (root: string, worktree: string) =>
+277:   Effect.promise(() => readFile(recordFile(root, worktree), "utf8").catch(() => "{}")).pipe(
+278:     Effect.map((text) => Option.getOrElse(decodeRecords(text), (): typeof Records.Type => ({}))),
+279:   )
+280: 
+281: /** Replace one shard's record (none clears it) through a temp file and one rename; a failed write loses only status. */
+```
+
+Linhas 293–300:
+
+```text
+293:           const temp = `${file}.${randomUUID()}`
+294:           await writeFile(temp, JSON.stringify(next))
+295:           await rename(temp, file).catch(() => rm(temp, { force: true }))
+296:         },
+297:         catch: () => new ShardFailed({ reason: "record-write" }),
+298:       }).pipe(Effect.ignore),
+299:     ),
+300:   )
+```
+
+## E16 — Git, descoberta e identidade de shards
+
+`packages/core/src/research-toolkit/code-index/shard.ts`
+
+Blob `2065d1521347762a7ea3599f97ff9c2f96d9036c` · SHA-256 `5177e7c28ec2351c637e199497126c1cf5ee19eba364705b2feedc84d27fb7f0`.
+
+Linhas 181–204:
+
+```text
+181: export function key(shard: Shard, indexer: Indexer, tree: Tree, configs: ReadonlyMap<string, string>) {
+182:   const blob = (file: string) => [file, tree.blobs.get(file)] as const
+183:   const lockfiles = [...new Set([".", shard.project])].flatMap((dir) =>
+184:     LOCKFILES.map((name) => path.posix.join(dir, name)).filter((file) => tree.blobs.has(file)))
+185:   return createHash("sha256")
+186:     .update(JSON.stringify([
+187:       indexer.id, indexer.version, shard.id,
+188:       shard.files.map(blob), lockfiles.map(blob), chain(shard.config, configs).map(blob),
+189:     ]))
+190:     .digest("hex")
+191: }
+192: 
+193: // The config and its relative `extends` chain; package extends are pinned by the lockfiles.
+194: function chain(config: string | undefined, configs: ReadonlyMap<string, string>, seen: ReadonlyArray<string> = []): string[] {
+195:   if (config === undefined || seen.includes(config) || seen.length > 16) return []
+196:   const text = configs.get(config)
+197:   if (text === undefined || !config.endsWith(".json")) return [config]
+198:   const parsed = parse(text)
+199:   const extended = parsed && typeof parsed === "object" ? [parsed.extends].flat() : []
+200:   return [config, ...extended
+201:     .filter((entry): entry is string => typeof entry === "string" && entry.startsWith("."))
+202:     .map((entry) => path.posix.normalize(path.posix.join(path.posix.dirname(config), entry.endsWith(".json") ? entry : `${entry}.json`)))
+203:     .flatMap((next) => chain(next, configs, [...seen, config]))]
+204: }
+```
+
+## E17 — Build, singleFlight, SQLite e retenção
+
+`packages/core/src/research-toolkit/code-index/store.ts`
+
+Blob `f71cdf0ae1979f002fce68b53eae445647682d73` · SHA-256 `570a81a04360d060a7c67a436e531b4c079ba7a9951130a2648ca986846b5e11`.
+
+Linhas 75–77:
+
+```text
+75: export const file = (dir: string, shardKey: string) => path.join(dir, `${shardKey}.sqlite`)
+76: 
+77: export const exists = (dir: string, shardKey: string) => Effect.promise(() => Bun.file(file(dir, shardKey)).exists())
+```
+
+Linhas 184–191:
+
+```text
+184:   const sizes = new Map(yield* Effect.promise(() => readdir(dir).then((names) => Promise.all(names
+185:     .filter((name) => name.endsWith(".sqlite"))
+186:     .map((name) => stat(path.join(dir, name)).then((info) => [name.slice(0, -".sqlite".length), info.size] as const, () => [name.slice(0, -".sqlite".length), 0] as const))))))
+187:   const kept = fit(ordered, sizes, limits.bytes)
+188:   const live = new Set(kept.flatMap((entry) => entry.shards.map((shard) => shard.key)))
+189:   const removed = [...sizes.keys()].filter((key) => !live.has(key))
+190:   yield* Effect.promise(() => Promise.all(removed.map((key) => rm(file(dir, key), { force: true }))))
+191:   yield* save(dir, kept)
+```
+
+Linhas 203–208:
+
+```text
+203: function fit(ordered: ReadonlyArray<Entry>, sizes: ReadonlyMap<string, number>, bytes: number): ReadonlyArray<Entry> {
+204:   const total = [...new Set(ordered.flatMap((entry) => entry.shards.map((shard) => shard.key)))]
+205:     .reduce((sum, key) => sum + (sizes.get(key) ?? 0), 0)
+206:   if (total <= bytes || ordered.length <= 1) return ordered
+207:   return fit(ordered.slice(0, -1), sizes, bytes)
+208: }
+```
+
+## E18 — Adapter real, source worktree, estrutural e opacidade
+
+`packages/core/src/research-toolkit/code-index/extract.ts`
+
+Blob `ccd710035774d754490d00f36eb16c0103355175` · SHA-256 `80b2e9c6091bb6c342bfefa9582bd164fc5dffc239cdf67417dba4c0e79747af`.
+
+Linhas 87–100:
+
+```text
+87: export function structural(
+88:   indexers: Partial<Record<Language, CodeIndexShard.Indexer>>,
+89:   which: (command: string) => string | null,
+90:   blocked: (language: Language) => string,
+91: ): Partial<Record<Language, CodeIndexShard.Indexer>> {
+92:   const toolchains = { go: CodeIndexGo.TOOLCHAIN, rust: CodeIndexRust.TOOLCHAIN }
+93:   return {
+94:     ...indexers,
+95:     ...Object.fromEntries((["go", "rust"] as const).flatMap((language) => {
+96:       const missing = !indexers[language] ? blocked(language) : which(toolchains[language]) ? undefined : `toolchain-missing:${toolchains[language]}`
+97:       return missing ? [[language, { id: STRUCTURAL, version: missing }] as const] : []
+98:     })),
+99:   }
+100: }
+```
+
+Linhas 118–128:
+
+```text
+118:         ? pack.fit.languages.map((language) => [language, { id: pack.id, version: pack.version }] as const) : [])),
+119:       Bun.which, () => "toolkit-not-ready:unsupported:pack-not-shipped"),
+120:     }).pipe(Effect.mapError(failed))
+121:     return { root, plan }
+122:   }).pipe(Effect.provideService(AppProcess.Service, proc))
+123:   return {
+124:     plan: (worktree: string) => prepared(worktree).pipe(Effect.flatMap(({ plan }) => Effect.forEach(plan.shards, (planned) =>
+125:       CodeIndexStore.exists(plan.dir, planned.key).pipe(Effect.map((ready) => {
+126:         const engine = IDS.find((id) => id === planned.indexer.id)
+127:         // An unbuilt shard has no file_rank yet; its file count stands in for the project's aggregated rank.
+128:         return engine ? [{ id: planned.key, language: planned.shard.language, project: planned.shard.project,
+```
+
+Linhas 151–166:
+
+```text
+151: const extract = Effect.fn("CodeIndexExtract.extract")(function* (
+152:   input: Parameters<CodeIndexBuild.Extract>[0],
+153:   launch?: { readonly executable: string; readonly memoryBytes: number },
+154: ) {
+155:   const selected = CodeIndexFilter.select(input.shard.files)
+156:   const read = yield* Effect.forEach(selected.files, (file) =>
+157:     text(input.root, file.path).pipe(Effect.map((content) => ({ ...file, text: content }))), { concurrency: 16 })
+158:   const sources = read.flatMap((file) => file.text === undefined ? [] : [{ path: file.path, grammar: file.grammar, text: file.text }])
+159:   const outlines = yield* Effect.forEach(sources, (file) => CodeIndexTreeSitter.extract(file.path, file.text, file.grammar), { concurrency: 8 })
+160:   const dump: Scip.Index = input.indexer.id === STRUCTURAL ? { indexer: undefined, documents: [], malformed: 0 } : yield* scip(input, launch, new Map(sources.map((file) => [file.path, file.text])))

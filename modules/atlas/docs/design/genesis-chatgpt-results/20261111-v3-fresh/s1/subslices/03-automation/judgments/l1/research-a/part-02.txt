@@ -1,0 +1,82 @@
+| Sinal observado | O que permite concluir | O que não permite concluir |
+| --- | --- | --- |
+| Pack/version/target constam no manifesto | Existe receita fixada | Download acessível ou executável funcional |
+| `.complete` existe | Instalador já publicou o marker | Dependência, runtime, shim ou binário ainda válido |
+| Estado `fetching` | Tentativa compartilhada registrada | Engine pronta ou progresso garantido |
+| Processo de build saiu 0 | Processo reportou sucesso | Executável obrigatório foi produzido; há verificação posterior |
+| `ready` no host | Checks locais de readiness satisfeitos | Uso real da engine, compatibilidade integral ou saída semanticamente correta |
+| Preparação para outro target | Artefatos daquele target tratados pela receita | Execução naquela plataforma ou shim local de plataforma alheia |
+| `prefetch` retornou estados | Tentativas foram observadas | Todos os estados são `ready` |
+
+### R2.4 Hosted e seus pré-requisitos
+
+**Observação.** `hosted.ts` recusa execução de receitas não-JAR para cross-target. Npm usa o npm do runtime com `ci --ignore-scripts --no-audit --no-fund --offline=false`; “scriptless” não significa offline. Pip usa hashes obrigatórios, sem resolução de dependências e somente wheels. Java materializa JAR. Go compila com toolchain local, mod readonly, trimpath, checksum DB e CGO desabilitado; Cargo usa lock, features explícitas, sem features default e RUSTC do runtime. Builds source verificam que o executável existe e é executável antes de completar a instalação. [E07]
+
+Cargo pode precisar de C/linker do host mesmo usando rustc privado. A aquisição de uma engine source tampouco certifica indexação offline de um projeto: o projeto pode requerer seu próprio toolchain/dependências. A compatibilidade Cassandra é permitida apenas no caso dedicado, em staging, não uma regra genérica de alteração de upstream. Execução usa limite de 30 minutos e até 64 MiB por stream; finalizadores de interrupção aguardam encerramento antes de remover staging. A eficácia do mecanismo de processos permanece com seu dono externo. [E07, E10–E13]
+
+### R2.5 Targets e floors
+
+**Observação.** O domínio de targets é fechado: Darwin arm64/x64, Linux arm64/x64 e Windows x64. Musl e Windows arm64 são recusados. Rosetta muda o alvo detectado para ARM antes dos floors. O baseline local considera macOS 11, Windows 10, glibc 2.28 e AVX2 para x64, além dos floors por artefato. A comparação de floors de outro sistema é omitida em cross-target. Detecção do host é memoizada. [E05]
+
+**Limites decisivos.** Glibc ilegível não produz um número inventado: o check não acrescenta essa restrição. A verificação AVX2 em Windows sem Bun retorna permissivamente. O código tem conversão especial de kernel para macOS 26+. Nenhum desses caminhos mede a máquina desta produção; tampouco autoriza chamar o pack de qualificado para todas as cinco plataformas. Mudança de floor afeta admissão/readiness, mesmo se a versão do pack não mudar. [E05]
+
+## R3. Receitas concretas e inputs de aquisição
+
+### R3.1 Backend: 21 engines com papéis distintos
+
+**Observação de manifesto.** A tabela conserva as versões literais do baseline. `native` significa artefato baixado com executable declarado; as demais linhas nomeiam runtime e mecanismo. A fonte de cada linha é o arquivo homônimo em `backend-toolkit/packs/`; os trechos de fit/receita estão em E11, e todos os pins integrais em `sources/`.
+
+| Engine e versão | Aquisição | Finalidade e limite relevante |
+| --- | --- | --- |
+| ast-grep 0.45.3 | native | Gera rewrite por padrão sintático. Expõe somente `ast-grep`, evitando colisão com `sg` do sistema. |
+| sqlc 1.31.1 | native | Gera a partir de SQL e schema DDL. A receita não fornece um banco ou prova o SQL. |
+| buf 1.73.0 | native + dependência protoc-gen-es | Check de módulo Proto; dependência owned participa de readiness. |
+| gitleaks 8.30.1 | native | Check de texto de Memory antes de armazenamento; fit sem entry skill, uso pelo host. |
+| kiota 1.35.0 | native .NET self-contained | Gera OpenAPI; conserva appsettings.json, exclui símbolos de debug; ambiente declara offline e telemetry opt-out. |
+| orval 8.39.0 | Node/npm + lock | Gera OpenAPI; lock inclui opcionais de plataforma esbuild. Instalação ignora lifecycle scripts. |
+| protoc-gen-es 2.16.0 | Node/npm + lock | Geração Proto, também dependência do Buf. |
+| openapi-generator 7.25.0 | Java/JAR | Gera OpenAPI; guard de versão do projeto é necessário antes da geração, R4. |
+| datamodel-codegen 0.83.0 | Python/pip + wheels | Gera OpenAPI/JSON Schema; lista explícita de wheels e hashes, ambiente Python sem user site/safe path. |
+| ogen 1.24.0 | Go/source | Gera OpenAPI; árvore de fontes selecionadas inclui go.mod/go.sum e o pacote compilado. |
+| sqlx 0.9.0 | Rust/Cargo source | Gera a partir de migrations e DB descartável; features rustls/postgres/mysql/sqlite/sqlx-toml. Windows x64 recusado por linker. |
+| controller-gen 0.22.0 | native raw | Gera a partir de tipos Go e marcadores kubebuilder atribuídos. |
+| kubeconform 0.8.0 | native | Check de manifests Kubernetes usando os schemas fornecidos pelo pacote de trabalho. |
+| kopium 0.24.1 | Rust/Cargo source | Gera a partir de CRD; feature cli, requer ferramentas C quando pertinentes; Windows x64 recusado. |
+| squawk 2.67.0 | native | Check de migrations Postgres; não é execução da migração no banco. |
+| postgres-language-server 0.27.1 | native raw | Check de SQL com PostgreSQL descartável fornecido pelo trabalho. |
+| sqlglot 30.21.0 | Python/pip | Check de SQL/dialeto, wheel fixado sem dependências; ambiente Python controlado. |
+| kysely-codegen 0.20.0 | Node/npm + lock | Geração com PostgreSQL/MySQL; pg 8.23.1, mysql2 3.24.5 e TypeScript 6.0.3. SQLite omitido por instalação sem scripts. |
+| datafusion-cli 55.1.0 | Rust/Cargo source | Check de DDL/SQL; optLevel 0 reduz custo do cold build; Windows x64 recusado, C/linker continuam relevantes. |
+| gocqlx-schemagen 3.0.4+orchestra.cassandra4 | Go/source + compatibilidade fixada | Gera a partir de Cassandra/Scylla descartável; overlay de driver e dialer é parte da identidade da receita. |
+| modelina 5.10.1 | Node/npm + lock | Gera AsyncAPI com @asyncapi/modelina-cli; dependências bundled do npm seguem a integridade do tarball que as contém. |
+
+**Limite.** Nenhuma linha desta tabela autoriza efeitos externos, cria o DB descartável, resolve privilégios ou comprova output. `fit` serve para escolher a receita e localizar suas dependências de entrada. Entradas substituídas, version bump, alterações em launch/env/features ou em files extraídos são impacto semântico, mesmo se o nome da engine permanecer.
+
+### R3.2 Runtimes e pesquisa
+
+**Observação de manifesto.** Os cinco runtimes são Go 1.25.14 (GOROOT completo), Temurin JRE 17.0.20.1+1, Node 22.23.2 com npm 10.9.8, CPython 3.13.16 standalone release 20261003 e Rust 1.99.0 com cargo/rustc/stdlib/sysroot. O runtime Python conserva a estrutura necessária ao stdlib, pip e DLLs; Node conserva intérprete, lib/npm e licença; Rust não fornece linker C do host. Cada runtime declara targets, executável e floors. [E12]
+
+Os cinco packs research são separados dos backend: `scip-typescript 0.4.0` e `scip-python 0.6.6` usam Node/npm; `scip-go 0.2.7` é source compilado com Go; `rust-analyzer 0.3.3065` usa o VSIX do release 2026-09-28; `typescript 6.0.3` é oracle de typecheck. O compilador 5.x transitivo de scip-typescript não é o oracle TypeScript 6.0.3. Scip-python carrega o fork Pyright e não requer Python do host para indexar seus próprios arquivos; scip-go/rust-analyzer exigem toolchain Go/cargo do projeto/host no caminho de indexação. As bibliotecas de grammar tree-sitter e decoder SCIP são dependências do Core, não engines do manifesto. [E13, E19, E45]
+
+### R3.3 Locks, wheels e integridade
+
+**Observação de dados fixados.** Os sete locks npm foram decodificados como JSON e suas relações de package/root, versões, resolved/integrity e bundled/install scripts foram inspecionadas: backend kysely, modelina, orval, protoc-gen-es; research scip-python, scip-typescript, typescript. Isso confirma o contrato de aquisição representado pelos bytes, sem baixar nem executar dependência. Os locks de pesquisa têm entradas não-root com resolved registry e integrity; Modelina contém subpacotes bundled do npm sem integrity individual, cobertos pelo pacote pai. A presença de `hasInstallScript` em locks backend não cancela o `--ignore-scripts` do instalador. O arquivo de wheels do datamodel fixa o conjunto Python por versão/hash, sem delegar a escolha livre de dependências ao pip. [E07, E11–E13, E45]
+
+**Limite de transporte informado.** O lock Modelina possui **266.885 bytes** e foi preservado integralmente. A principal informou que isso excede o limite de fonte de 256.000 bytes do release Atlas S4 r3, bloqueando a seleção integral naquele runtime. Este produtor não verificou a porta Atlas nem removeu, dividiu, resumiu ou substituiu a fonte por hash. A fonte permanece input obrigatório; identidade e suficiência semântica não implicam admissibilidade de transporte. A solução e o recibo de runtime pertencem à principal.
+
+## R4. Guards de versão e compatibilidade Cassandra
+
+### R4.1 OpenAPI Generator
+
+**Observação.** `project-version.ts` inspeciona o caso owned de `generate`; comandos somente leitura como validate, version, help, list e config-help passam sem exigir metadados de geração. A gramática de flags é fechada, rejeita output ambíguo, caminhos/substituições adiadas, cwd fora do projeto e formas não reconhecidas. Resolve caminho físico, inclusive symlinks, e limita arquivos de configuração a 1 MiB. Ausência ENOENT é distinta de arquivo ilegível ou inválido. [E09]
+
+Os dois registros relevantes são `openapitools.json → generator-cli.version` e `<output>/.openapi-generator/VERSION`. Qualquer versão presente deve corresponder ao bundle 7.25.0; ambas ausentes permitem primeira geração. Valores conflitantes ou stale não viram confiança no “binário mais novo”. JSON tem leitura estrita. YAML aceita um subconjunto de mappings/escalars, recusando aliases, tags, coleções e formas ambíguas: não é equivalência completa com o parser do gerador. [E09]
+
+**Uso e impacto.** Para mudar versão, é necessário reconsiderar manifesto, registros de projeto/output, gramática e testes do guard. Um caminho que apenas adquira o JAR não prova que esse guard foi aplicado pelo chamador. O corpo não inventa uma integração além das chamadas visíveis na população.
+
+### R4.2 Driver e rede da geração Cassandra
+
+**Observação.** `cassandra-metadata.ts` aplica um overlay privado, hash-fixado, sobre scylladb/gocql 1.15.3 e gocqlx 3.0.4. Verifica bytes de go.mod, go.sum, gerador e driver antes da modificação; verifica resultados, adiciona replace local em staging e preserva licença/notices. A adaptação de metadata evita tratar tabela opcional do Scylla como requisito Cassandra; falhas verdadeiras de consulta não são apagadas. A receita não autoriza patch genérico para qualquer versão upstream. [E10]
+
+`cassandra-dialer.ts` introduz um hook de rede com dois modos exclusivos: rotas por socket Unix ou proxy CONNECT. São no máximo 32 rotas, portas canônicas 1–65535, socket absoluto válido com tamanho limitado e sem duplicatas. CONNECT aceita proxy HTTP loopback, com path vazio ou `/`, sem query/fragment e com porta canônica. Userinfo é permitido e convertido em header de autenticação Basic; o destino permitido pelo código é tcp para 127.0.0.1 na porta declarada. Lê uma resposta CONNECT 200 com headers limitados e deadline, fechando conexões em cancelamento/falha. A allowlist efetiva do proxy é responsabilidade externa; a existência do dialer não a amplia. [E10]
+

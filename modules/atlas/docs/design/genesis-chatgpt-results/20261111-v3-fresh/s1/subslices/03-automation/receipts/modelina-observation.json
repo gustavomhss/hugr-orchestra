@@ -1,0 +1,19 @@
+{
+  "operation": "observeOwnershipInput",
+  "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "path": "packages/core/src/backend-toolkit/packs/modelina.package-lock.json",
+  "byte_length": 266885,
+  "sha256": "0fc1a48c86b45b4749fda6d5e811a1f9b3f55a246fa5e8dd035435e84d2149d2",
+  "git_blob_sha": "9fc9ef1bc7124fcead2d83cea20f2bff4340949c",
+  "command": [
+    "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/runtime-preflight/bun-runtime/node_modules/.bin/bun",
+    "-e",
+    "import { observeOwnershipInput } from \"./packages/adapter-io/src/ownership-input.ts\"; console.log(JSON.stringify(observeOwnershipInput(\"/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/producers/research/sources\", \"file:packages/core/src/backend-toolkit/packs/modelina.package-lock.json\")));"
+  ],
+  "cwd": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/runtime-preflight/candidate/modules/atlas",
+  "exit_code": 0,
+  "stdout": "{\"kind\":\"unavailable\"}\n",
+  "stderr": "",
+  "interpretation": "Actual read-only observer operation; unavailable is not absent. Full native prepare remains to be attempted on reviewed package. No product tests run."
+}

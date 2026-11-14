@@ -1,0 +1,73 @@
+{
+  "schema": "s1-03-common-control-compatibility/v1",
+  "executed_native_candidate": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "common_control_candidate": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+  "common_receipt_commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+  "common_receipt_sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330",
+  "parity": [
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/read.ts",
+      "git_blob_sha": "952593d8371224614bfac7c1bca7c3f3808ddcb3",
+      "error": false,
+      "byte_length": 9229,
+      "sha256": "2f0183c0e9e7c57eee19cbae881bf9463aecdd7686d3c12d5c3542f76825cb15",
+      "same_at_executed_and_control_candidate": true
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/ownership/update-plan.ts",
+      "git_blob_sha": "a0aeefe85adf859ac7dbcaddbacf33b8e99878d7",
+      "error": false,
+      "byte_length": 5323,
+      "sha256": "4b181d2720a002dbb65891a27e2c9769d0f8b3bd5d32458efd9c6edc517ac4bb",
+      "same_at_executed_and_control_candidate": true
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+      "git_blob_sha": "233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "error": false,
+      "byte_length": 20859,
+      "sha256": "83d3228e62d4f1ecbb027971a5263d39a0fa7fb78424f818e4d0cf07879583fa",
+      "same_at_executed_and_control_candidate": true
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "git_blob_sha": "c6afd6a35071a2487a1168cea5ed1ad26379c376",
+      "error": false,
+      "byte_length": 10101,
+      "sha256": "71c14819e60f81482c34f3fd84b47a08a972bcba5b19914e3b95d5a78161bc78",
+      "same_at_executed_and_control_candidate": true
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/sidecar-commit.ts",
+      "git_blob_sha": "37049c8ebd8dba2c8b387ef4f459f66bf446fe64",
+      "error": false,
+      "byte_length": 29968,
+      "sha256": "89042790cf9b6065af58205887a565f1aa1208e977831ee1745d04118c815d9b",
+      "same_at_executed_and_control_candidate": true
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-access.ts",
+      "git_blob_sha": "90c2f289b15916acf4764b67fa4c3903ec440c4e",
+      "error": false,
+      "byte_length": 2682,
+      "sha256": "722070af827077f75f438d81747174037671aabc7128ddc869e538f290f99271",
+      "same_at_executed_and_control_candidate": true
+    }
+  ],
+  "native_adapter_difference": "Two source files differ only by replacing chained TypeScript casts with direct casts. They have distinct implementation hashes; own native candidate bindings remain mandatory.",
+  "generated_boundary_difference": "Three generated boundary JS bundles differ in common-control candidate; no transfer of generated parity gate to our candidate.",
+  "reuse_scope": [
+    "Named read/input-observation/planner/rebuild/coherent-sidecar runtime controls on the recorded common candidate",
+    "No duplicate synthetic suite execution in this subslice"
+  ],
+  "not_transferred": [
+    "Native semantic acceptance",
+    "Native runtime binding decisions",
+    "Local package publication",
+    "Independent consumer results",
+    "Own maintenance cases",
+    "Local or final aggregate gate"
+  ],
+  "compare_file_count": 161,
+  "compare_status": "ahead"
+}

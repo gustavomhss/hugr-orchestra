@@ -1,0 +1,32 @@
+{
+  "owner": "S4",
+  "status": "PROPOSED_NOT_APPLIED_NOT_TESTED",
+  "reason": "Modelina lock 266885 bytes is required; native read limit and live file observer both refuse >256000. Do not remove/split/normalize source.",
+  "proposal": "Use one shared bounded1MiB cap for observer and native capture. S4 must ratify resource envelope; proposal does not authorize policy changes or permit larger files universally.",
+  "files": [
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "source_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+      "original_sha256": "71c14819e60f81482c34f3fd84b47a08a972bcba5b19914e3b95d5a78161bc78",
+      "proposed_sha256": "5cd6958348ade54989a428f0daf7ec7c0df99a9a4f432dedad061672bdd91b1d"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/genesis-native.ts",
+      "source_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+      "original_sha256": "bb6b0c2bbcb8bc20f804344c9015c3f19dac86a3f60264ccb50fe023308de312",
+      "proposed_sha256": "ce6110705336f680ef476e7c7f8db2ba23fe7f88623398c2ad40cf49b850da55"
+    }
+  ],
+  "required_verification": [
+    "actual266885 byte Modelina lock accepted with exact bytes and kernel input identity",
+    "at cap present; cap+1 unavailable/native-file-limit, never absent",
+    "preserve symlink/path/regular-file/identity/race rejection controls",
+    "prepare/publish/read new candidate on source drift; new native bindings for changed implementation",
+    "run scoped product tests in GitHub Actions and package-local bun typecheck; rerun affected shared controls only"
+  ],
+  "retained_limits": [
+    "Other files above proposed cap remain unsupported; coverage preserved",
+    "No candidate code, policy, approvals, guard or workflow changed by S1-03",
+    "Owner must publish new capability-scoped runtime release before S1-03 can use it"
+  ]
+}

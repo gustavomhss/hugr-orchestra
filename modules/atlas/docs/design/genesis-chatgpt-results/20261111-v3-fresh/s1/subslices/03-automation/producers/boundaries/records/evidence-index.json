@@ -1,0 +1,911 @@
+[
+  {
+    "id": "B01",
+    "path": "packages/core/src/atlas.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 38,
+    "last_line": 48,
+    "sha256": "563edd58082b309091eeacfece73526e772a0c2f51682d233f5c8683fcd832f9",
+    "byte_length": 851
+  },
+  {
+    "id": "B01",
+    "path": "packages/core/src/atlas.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 103,
+    "last_line": 195,
+    "sha256": "8653201720bc5334b3a28c31bd7f2cbe29df67c51196c3269fc4add1aa6b6710",
+    "byte_length": 5138
+  },
+  {
+    "id": "B02",
+    "path": "packages/core/src/atlas.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 208,
+    "last_line": 218,
+    "sha256": "2212093f028c423db5cb4247db1b0a453073c8608a77550c09e2e27a8f12684a",
+    "byte_length": 648
+  },
+  {
+    "id": "B02",
+    "path": "packages/core/src/atlas.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 239,
+    "last_line": 280,
+    "sha256": "587c8e07e96ff82814e378ecd0f6f08f11b2e79b50e4a8f2a129d5b6d404aa2c",
+    "byte_length": 1944
+  },
+  {
+    "id": "B02",
+    "path": "packages/core/src/atlas.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 301,
+    "last_line": 321,
+    "sha256": "2618316a0792e3bbed537b39bb8e1171fc8b050ffc3987b59811858d0fea7eac",
+    "byte_length": 1421
+  },
+  {
+    "id": "B03",
+    "path": "packages/core/src/control-plane/move-session.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 77,
+    "last_line": 148,
+    "sha256": "289527b81757ac45703c12b91320926875b5705ae39a6db1f902aeaacf86ee1d",
+    "byte_length": 2986
+  },
+  {
+    "id": "B04",
+    "path": "packages/core/src/control-plane/workspace.sql.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 1,
+    "last_line": 20,
+    "sha256": "b85701f8a1ee137d04553459849e84e85e191e89641a2f779cf06140b8612cae",
+    "byte_length": 644
+  },
+  {
+    "id": "B05",
+    "path": "packages/core/src/rag-studio/sql.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 1,
+    "last_line": 36,
+    "sha256": "a4d614da7c783ba232af27472a5a6a6ee4043b8613e27cceabf08861c4d8ce87",
+    "byte_length": 1198
+  },
+  {
+    "id": "B05",
+    "path": "packages/core/src/rag-studio/sql.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 38,
+    "last_line": 81,
+    "sha256": "074ff197712fb9b4a64e37c8d3c6b7ea2ebbac667e243d1024e37847405f4a9d",
+    "byte_length": 1291
+  },
+  {
+    "id": "B06",
+    "path": "packages/core/src/relay-commands.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 7,
+    "last_line": 11,
+    "sha256": "1b10e66b73f48419d09d5f21ab9627e6b4291cb073acc57aca298945a820446e",
+    "byte_length": 258
+  },
+  {
+    "id": "B06",
+    "path": "packages/core/src/relay-commands.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 25,
+    "last_line": 39,
+    "sha256": "0e28271e6dd45dc8256624f1aee1af6acca5d44c77e537f4e6c4f14f6eba43ad",
+    "byte_length": 779
+  },
+  {
+    "id": "B06",
+    "path": "packages/core/src/relay-commands.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 75,
+    "last_line": 114,
+    "sha256": "b8ed2afbbb69aa88e9a291580d9f2f79ae40a8882ed73fe1b1ff4f86d43ad2f2",
+    "byte_length": 1745
+  },
+  {
+    "id": "B07",
+    "path": "packages/core/src/relay.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 184,
+    "last_line": 217,
+    "sha256": "28a32af448c8895f67973af828ff748d5e493eb44427ccca90d344251827057e",
+    "byte_length": 1466
+  },
+  {
+    "id": "B07",
+    "path": "packages/core/src/relay.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 568,
+    "last_line": 592,
+    "sha256": "c4f70f2e59cc93a95dc9646511765748f33d7f16e04483d12d31d745d093f973",
+    "byte_length": 1176
+  },
+  {
+    "id": "B07",
+    "path": "packages/core/src/relay.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 611,
+    "last_line": 629,
+    "sha256": "f1d0922996fd362809255b3e4444e69a9fa18abb9188565cfbd213af70b6d668",
+    "byte_length": 815
+  },
+  {
+    "id": "B08",
+    "path": "packages/core/src/relay.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 219,
+    "last_line": 264,
+    "sha256": "b581fe7cb2f04390b8e740987537f61ad21f6aa3915a996599419084e1ae76d3",
+    "byte_length": 2853
+  },
+  {
+    "id": "B08",
+    "path": "packages/core/src/relay.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 267,
+    "last_line": 283,
+    "sha256": "ed5fa25dccd1ecf91e1ec68e4988261614d02ba1400b4d2b15f493da78f7c0d3",
+    "byte_length": 823
+  },
+  {
+    "id": "B09",
+    "path": "packages/core/src/relay.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 319,
+    "last_line": 372,
+    "sha256": "0148813b98da387c867452ad84debb428b11e61321a199736fe46da53c9ceb44",
+    "byte_length": 2848
+  },
+  {
+    "id": "B10",
+    "path": "packages/core/src/relay.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 374,
+    "last_line": 418,
+    "sha256": "6a7d296f8bc751558ef6afe335e9d27e21d733460fa1bbd75508da4569484ebb",
+    "byte_length": 2246
+  },
+  {
+    "id": "B10",
+    "path": "packages/core/src/relay.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 420,
+    "last_line": 481,
+    "sha256": "c687548e24a7ca7a528299278ccc4e480e125d8fa085b6d5c0fe33601e7b5f42",
+    "byte_length": 2608
+  },
+  {
+    "id": "B10",
+    "path": "packages/core/src/relay.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 491,
+    "last_line": 515,
+    "sha256": "41c3e85faf05a4d053d91949607b03fd1d7fcd58458613aa5532afabaff775f4",
+    "byte_length": 1825
+  },
+  {
+    "id": "B11",
+    "path": "packages/core/src/relay-hook-install.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 217,
+    "last_line": 252,
+    "sha256": "b5645de8d779c8a7c09423c107dae8ee08a7cb249b3f3714745f279c236c3b17",
+    "byte_length": 2228
+  },
+  {
+    "id": "B11",
+    "path": "packages/core/src/relay-hook-install.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 300,
+    "last_line": 410,
+    "sha256": "d0384bca0ddebab36c02f64ce5f8e0d14f5588bee1ccb300afc7891ce751d2eb",
+    "byte_length": 5633
+  },
+  {
+    "id": "B11",
+    "path": "packages/core/src/relay-hook-install.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 454,
+    "last_line": 474,
+    "sha256": "bfb6fedc4e20189ff392d1bf9bc4c0be1fe87eee3eae00c35cabc62ed9853b5e",
+    "byte_length": 1317
+  },
+  {
+    "id": "B12",
+    "path": "packages/core/src/relay-hook-install.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 166,
+    "last_line": 194,
+    "sha256": "3f91b26f23d0a39db489e5e49dd94e851e648714d0024b2d74153b402133aaf9",
+    "byte_length": 1636
+  },
+  {
+    "id": "B12",
+    "path": "packages/core/src/relay-hook-install.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 254,
+    "last_line": 295,
+    "sha256": "d28a75055a357dea8aa7a0be02b66ecf37fbf555573804704160d60e74e72f3f",
+    "byte_length": 2366
+  },
+  {
+    "id": "B13",
+    "path": "packages/core/src/relay-hook-recovery.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 25,
+    "last_line": 88,
+    "sha256": "db5f605c8824f1d6a03fed7d2effd0a75f89e9ef7b154d9b4fcd0dd9982aac53",
+    "byte_length": 2772
+  },
+  {
+    "id": "B14",
+    "path": "packages/core/src/relay-hook-shipper.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 26,
+    "last_line": 65,
+    "sha256": "cabc9ad8fd246fa25c39ae154eacfe6c9844b051670bb6059ed43c43059e3c46",
+    "byte_length": 1705
+  },
+  {
+    "id": "B14",
+    "path": "packages/core/src/relay-hook-shipper.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 67,
+    "last_line": 130,
+    "sha256": "a7a51e9ed20e1d3bd97cd8eeeef66aed3a04809b006956b897d7aa5aeb708d5f",
+    "byte_length": 2508
+  },
+  {
+    "id": "B15",
+    "path": "packages/core/src/relay-workflow-binding.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 17,
+    "last_line": 48,
+    "sha256": "d3d0e845d6cad8eebfb7b7334e0600d1026880500a5427661134916ee8a97fcb",
+    "byte_length": 1751
+  },
+  {
+    "id": "B15",
+    "path": "packages/core/src/relay-workflow-binding.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 50,
+    "last_line": 75,
+    "sha256": "1fc9d7af757a2793d138af03553860ba6dc1f90a8a19202c9039185d8bb2917e",
+    "byte_length": 1698
+  },
+  {
+    "id": "B15",
+    "path": "packages/core/src/relay-workflow-binding.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 106,
+    "last_line": 147,
+    "sha256": "725144108218df1f23f6a91ef66c511eca0115596c9e5e9746d674b70bb0f436",
+    "byte_length": 2399
+  },
+  {
+    "id": "B16",
+    "path": "packages/core/src/relay-workflow-binding.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 149,
+    "last_line": 261,
+    "sha256": "e043e7c2a1a15985ab1878dce469c6969942414a1cb5a2d6e9f1f437c47fe98d",
+    "byte_length": 6003
+  },
+  {
+    "id": "B17",
+    "path": "packages/core/src/relay-workflow-currentstep.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 38,
+    "last_line": 90,
+    "sha256": "75b655bf985e80518d9fcb8dc4894e49f9835af87b70306a490717351ccada82",
+    "byte_length": 4073
+  },
+  {
+    "id": "B17",
+    "path": "packages/core/src/relay-workflow-currentstep.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 116,
+    "last_line": 139,
+    "sha256": "e37118e6f18f44dcb641b70897ccdd1375ff64081606b2b72350164cb1a41527",
+    "byte_length": 1403
+  },
+  {
+    "id": "B18",
+    "path": "packages/core/src/relay-workflow-session.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 31,
+    "last_line": 96,
+    "sha256": "816793af24f443d6d7f73757b98fc3afaad89143281866539893577b7bf64731",
+    "byte_length": 3952
+  },
+  {
+    "id": "B19",
+    "path": "packages/core/src/relay-workflow-transition.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 35,
+    "last_line": 99,
+    "sha256": "cca6222f0e496ba99497061023b8f53a34dee1a450179dd5aba5b0a1c2335f4c",
+    "byte_length": 4076
+  },
+  {
+    "id": "B19",
+    "path": "packages/core/src/relay-workflow-transition.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 108,
+    "last_line": 125,
+    "sha256": "48521fd9757787ed8065f1b3edb7f935a964819abf1cdb5cf2c923f9aa500e15",
+    "byte_length": 965
+  },
+  {
+    "id": "B20",
+    "path": "packages/core/src/relay-workflow-evaluator.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 29,
+    "last_line": 125,
+    "sha256": "b2ff315b323aad1a8cfec88c2fe086bf19be81ff3fbf7e51ab1ef5e8942c69b7",
+    "byte_length": 6406
+  },
+  {
+    "id": "B20",
+    "path": "packages/core/src/relay-workflow-evaluator.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 130,
+    "last_line": 208,
+    "sha256": "adfa33f9a0804266ff47eab398efba65afe60ffa4961608073f69ca1e101884c",
+    "byte_length": 5037
+  },
+  {
+    "id": "T01",
+    "path": "packages/core/test/move-session.test.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 83,
+    "last_line": 117,
+    "sha256": "f51a156cbcc4f20eb160cee8afa3ab4b42a4f87b89408c710da280a640516e9f",
+    "byte_length": 1402
+  },
+  {
+    "id": "T02",
+    "path": "packages/core/test/relay-workflow-evaluator.test.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 89,
+    "last_line": 126,
+    "sha256": "466f6842fb0b7246dbb50153912d3c387505c81555fccd41f3fd33bf7c5b1032",
+    "byte_length": 2487
+  },
+  {
+    "id": "T02",
+    "path": "packages/core/test/relay-workflow-evaluator.test.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 162,
+    "last_line": 190,
+    "sha256": "02859a130af0a4a6ec2c9da157b1fa239607de94b9454766b570a9ac76ffd797",
+    "byte_length": 1870
+  },
+  {
+    "id": "T03",
+    "path": "packages/core/test/relay-hook-recovery.test.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 211,
+    "last_line": 249,
+    "sha256": "6d58dc97aeb4b00019b1f9fc48ab2c675a4ae0e50ff713ae82a925dc23cce043",
+    "byte_length": 1746
+  },
+  {
+    "id": "S01",
+    "path": "packages/core/README.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 1,
+    "last_line": 46,
+    "sha256": "d6c77411c0ec3dbaaf526cec86a88a562567bbd3ba64679f2fe4fcc125ca291a",
+    "byte_length": 3085
+  },
+  {
+    "id": "S01",
+    "path": "packages/core/README.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 48,
+    "last_line": 88,
+    "sha256": "a1340c1578666257849577c1a955a15f9ae569f1d5c4de1e600d1e923abef7f0",
+    "byte_length": 4691
+  },
+  {
+    "id": "S02",
+    "path": "packages/core/package.json",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 1,
+    "last_line": 22,
+    "sha256": "63b49e189893202b209c0c4406a32483d1b641a7a12c888378d0f6bfb4eae4e3",
+    "byte_length": 776
+  },
+  {
+    "id": "S03",
+    "path": "packages/core/bunfig.toml",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 1,
+    "last_line": 2,
+    "sha256": "bc68812446e4beefbffc44973ea98521f9d95ea9096849ff2d2ac30fa1ad4ca2",
+    "byte_length": 106
+  },
+  {
+    "id": "S04",
+    "path": "packages/core/test/preload.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 1,
+    "last_line": 11,
+    "sha256": "8ee7e50f9fb549aa4d76a9adbff3064be26e18fc3c5dec196d058908bf7166f3",
+    "byte_length": 660
+  },
+  {
+    "id": "S05",
+    "path": "packages/core/script/migration.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 14,
+    "last_line": 90,
+    "sha256": "2f40cfa2c13810b80a9d641a418972e8ed1bad697442bf9fb9ff6bedd0452472",
+    "byte_length": 3051
+  },
+  {
+    "id": "S05",
+    "path": "packages/core/script/migration.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 92,
+    "last_line": 134,
+    "sha256": "6c7b0f8a68492de1cdd274b7e0675c8f9c03e57c804aaa7d709b5e736709af6f",
+    "byte_length": 1489
+  },
+  {
+    "id": "S06",
+    "path": "packages/core/script/toolkit-pack.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 1,
+    "last_line": 29,
+    "sha256": "00a8ebfd67a9d5ba6eef0977e0edc20e512c1bbc93a905a29e6914e90e34ac6f",
+    "byte_length": 2124
+  },
+  {
+    "id": "S06",
+    "path": "packages/core/script/toolkit-pack.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 79,
+    "last_line": 111,
+    "sha256": "32ba9664670d7cb7ea2e27d3713af01c8ac9f6a95fd1e8c63bf6290c1d2719bc",
+    "byte_length": 1362
+  },
+  {
+    "id": "S06",
+    "path": "packages/core/script/toolkit-pack.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 251,
+    "last_line": 298,
+    "sha256": "91ab84a5fb3a5b35b0825061c2a3479ae2adee806532022e89c0253eeb57c6de",
+    "byte_length": 2068
+  },
+  {
+    "id": "S06",
+    "path": "packages/core/script/toolkit-pack.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 345,
+    "last_line": 360,
+    "sha256": "f8498e7a54b8f6da483e9c3af1e03b3a8fa9b741f54b1abfb73a63eea2bd625f",
+    "byte_length": 534
+  },
+  {
+    "id": "S07",
+    "path": "packages/core/script/toolkit-floors.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 1,
+    "last_line": 28,
+    "sha256": "1a5deacf354ce362e1ada0605c47d162af4f25e4250b796ad8f762945e762805",
+    "byte_length": 1992
+  },
+  {
+    "id": "S07",
+    "path": "packages/core/script/toolkit-floors.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 188,
+    "last_line": 223,
+    "sha256": "db7db30c1630b42bfa5db3a0865847ddfa3d9b5f7029028d800ce1effbaeba5d",
+    "byte_length": 1552
+  },
+  {
+    "id": "S07",
+    "path": "packages/core/script/toolkit-floors.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 319,
+    "last_line": 359,
+    "sha256": "d1d2c2d6f5d9bfcb7d0954645618d01b00316b3eb1a23d8299cfc835a1ae1a54",
+    "byte_length": 2034
+  },
+  {
+    "id": "S08",
+    "path": "packages/core/vendor/README.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 1,
+    "last_line": 43,
+    "sha256": "7a9db9610c6d43bedcf630e4dfe3e831cf31128adf88b165337750923db0351f",
+    "byte_length": 2871
+  },
+  {
+    "id": "S09",
+    "path": "docs/architecture/phase-plans/70-90-briefs/EXP-CORE.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 1,
+    "last_line": 24,
+    "sha256": "1b17764ffc36e05331048cf614898ddce9de483839e4182b38a7d90c2421b1d2",
+    "byte_length": 1696
+  },
+  {
+    "id": "S09",
+    "path": "docs/architecture/phase-plans/70-90-briefs/EXP-CORE.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 39,
+    "last_line": 56,
+    "sha256": "109eb9544601a2cd426ef6e9b360ba8719ecc2f160709e095844ed004ef85db3",
+    "byte_length": 1142
+  },
+  {
+    "id": "S10",
+    "path": "docs/specs/runtime-closure/PRODUCER-BOUNDARY.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 1,
+    "last_line": 29,
+    "sha256": "053f69069503f5d07ad072083b4b3810c4b4082b437241d9e7c9a255c3a8b96c",
+    "byte_length": 1505
+  },
+  {
+    "id": "S10",
+    "path": "docs/specs/runtime-closure/PRODUCER-BOUNDARY.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 55,
+    "last_line": 75,
+    "sha256": "7dceef6f489fbd36a79f79c1ee01b8f330b6fd5f38b5d0d980ff6e24016aa0d4",
+    "byte_length": 1291
+  },
+  {
+    "id": "S11",
+    "path": "docs/specs/runtime-closure/CHECKPOINT.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 1,
+    "last_line": 20,
+    "sha256": "cff1d1e2e4e7ce8b9418dc619f398ca463acead8c2b16876bd8134f62af2a460",
+    "byte_length": 3839
+  },
+  {
+    "id": "S11",
+    "path": "docs/specs/runtime-closure/CHECKPOINT.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 39,
+    "last_line": 56,
+    "sha256": "f9825b4497f2fd8dbb3cf2ae042c83fb35c67d7dd7d57a83ee57eefc6fc066ea",
+    "byte_length": 2036
+  },
+  {
+    "id": "S12",
+    "path": "docs/specs/runtime-closure/ARCHIE-QUALIFICATION.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 1,
+    "last_line": 23,
+    "sha256": "cec4f33dd9f8897532f7a7186b2a5a91c43475d39f0e9160df23681ecd962368",
+    "byte_length": 1784
+  },
+  {
+    "id": "S12",
+    "path": "docs/specs/runtime-closure/ARCHIE-QUALIFICATION.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 52,
+    "last_line": 76,
+    "sha256": "b38dc0822be2732f0e0947a3b37258248eac6e4cd4492566ab0ffe08bc1cddc0",
+    "byte_length": 4403
+  },
+  {
+    "id": "S13",
+    "path": "docs/specs/v2/api.html",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 906,
+    "last_line": 936,
+    "sha256": "5bc967fb19f80c0860e2f3aedd42bdbcaa1043dade2ead097704daf69be7adfb",
+    "byte_length": 1705
+  },
+  {
+    "id": "S14",
+    "path": "docs/specs/v2/todo.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 56,
+    "last_line": 74,
+    "sha256": "aae64b83c19d85d938b0bfd00c1afdbbc90859dd2a0f3eb72dbb0e8eabd39097",
+    "byte_length": 978
+  },
+  {
+    "id": "S15",
+    "path": "packages/core/test/fixture/omni-expect.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 1,
+    "last_line": 28,
+    "sha256": "33272d6488f070f4ca10fbaa5e9c113e4ed9eabd4c2d148dbd2321b6dc4d4ab9",
+    "byte_length": 1376
+  },
+  {
+    "id": "S16",
+    "path": "packages/core/test/fixture/actions-transport.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 15,
+    "last_line": 26,
+    "sha256": "aeaec0f2a9f4961e76763afc2df0ab439d2b0c70b6199d296b20434db90390c6",
+    "byte_length": 898
+  },
+  {
+    "id": "S16",
+    "path": "packages/core/test/fixture/actions-transport.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 55,
+    "last_line": 67,
+    "sha256": "ca8fd0d63f34a480badc8b39a7f33da1823a2d982f37e3b4cea4dc97cee1adef",
+    "byte_length": 737
+  },
+  {
+    "id": "S16",
+    "path": "packages/core/test/fixture/actions-transport.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 88,
+    "last_line": 115,
+    "sha256": "0e77ace55d17706949baccdb7e522181919e953465fcd2cfdd54652608ab2704",
+    "byte_length": 1403
+  },
+  {
+    "id": "S17",
+    "path": "packages/core/test/fixture/board-queue.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 27,
+    "last_line": 49,
+    "sha256": "0a3ae43957cbc9cd3249f53b839f4ecd327dc049ab72a6dcd078c190ddc0ea2f",
+    "byte_length": 1221
+  },
+  {
+    "id": "S17",
+    "path": "packages/core/test/fixture/board-queue.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 124,
+    "last_line": 151,
+    "sha256": "7e199d4b78ad4e80e11a1044f96559c1e09afc7b3b2f95907b724fbc78da9539",
+    "byte_length": 1276
+  },
+  {
+    "id": "S17",
+    "path": "packages/core/test/fixture/board-queue.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 333,
+    "last_line": 355,
+    "sha256": "f3cc439766ef8582cc2dd234c3d18da317d820a600adcdf2fe626e4c8ee8444b",
+    "byte_length": 807
+  },
+  {
+    "id": "S18",
+    "path": "packages/core/test/fixture/capability-schedule.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 37,
+    "last_line": 52,
+    "sha256": "5fb24b30119eb80629e0d98c9b731843b96209af31b78739500f7640d98220ce",
+    "byte_length": 1230
+  },
+  {
+    "id": "S18",
+    "path": "packages/core/test/fixture/capability-schedule.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 65,
+    "last_line": 89,
+    "sha256": "2c44c26fe56c7bb030db52c1fc8e9334568fcddfe983537565d99f5b735d5794",
+    "byte_length": 2234
+  },
+  {
+    "id": "S19",
+    "path": "packages/core/test/fixture/capability-connection-management.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 29,
+    "last_line": 41,
+    "sha256": "edb457744d32aab8a3d5e42561838214653b722cd061f9d8948b5ada8ed15aac",
+    "byte_length": 776
+  },
+  {
+    "id": "S19",
+    "path": "packages/core/test/fixture/capability-connection-management.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 43,
+    "last_line": 64,
+    "sha256": "ee148163944be16aed46f26149d2b91ef115ba6a9ccf32488a99a2c69fe611d5",
+    "byte_length": 1658
+  },
+  {
+    "id": "S20",
+    "path": "packages/core/test/distribution-bundle-execution.test.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 13,
+    "last_line": 34,
+    "sha256": "a2c0777c40af4b678f2ef9da9626ab2b99c9a08d2c378858be37c541b23ec15b",
+    "byte_length": 1341
+  },
+  {
+    "id": "S21",
+    "path": "packages/core/test/distribution-bundle-boundaries.test.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 12,
+    "last_line": 23,
+    "sha256": "e274385abc2ec9483e63f95da5c3d85184d3ddb12250263c0eb9df7da90da14c",
+    "byte_length": 547
+  },
+  {
+    "id": "S22",
+    "path": "packages/core/test/fixture/github-read.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 19,
+    "last_line": 32,
+    "sha256": "f656ca1e225d2a9948841e970def046db752528936e954c2e2a5f70655904942",
+    "byte_length": 1192
+  },
+  {
+    "id": "S23",
+    "path": "packages/core/test/fixture/process-tree.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 1,
+    "last_line": 21,
+    "sha256": "fe00b9fe38b671f18f9071458a0c7493e26464ce46616e2c8a6a7c28cfd50737",
+    "byte_length": 1458
+  },
+  {
+    "id": "S24",
+    "path": "packages/core/test/windows-process-query.hosted.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 1,
+    "last_line": 24,
+    "sha256": "6176a5377e79e6a25fc0bc2f090e4dc037c61b16e600c277196586b24d2b1c9a",
+    "byte_length": 1409
+  },
+  {
+    "id": "S25",
+    "path": "packages/core/test/lib/effect.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 9,
+    "last_line": 20,
+    "sha256": "843ba3353fbdb52b3e8aa83570d14e8cb770211968de9313942e7fb95e858c68",
+    "byte_length": 523
+  },
+  {
+    "id": "S25",
+    "path": "packages/core/test/lib/effect.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 41,
+    "last_line": 60,
+    "sha256": "b4fb05ecf3b4ddb316c7c7f3e7eb65ceae8273045b4245d4fb43417273a3087e",
+    "byte_length": 955
+  },
+  {
+    "id": "S26",
+    "path": "packages/core/test/lib/sandbox-host.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 1,
+    "last_line": 17,
+    "sha256": "5d18fdea9e71de604d225a3f5ed71dcba1fdcd416813d7970c019a566800e01d",
+    "byte_length": 1023
+  },
+  {
+    "id": "S27",
+    "path": "packages/core/test/upstream-settlement-preservation.test.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 25,
+    "last_line": 45,
+    "sha256": "ea01c3d13f9f71287df3029a46c74002479e5010b4c76b1fe6e30f3bb188bd56",
+    "byte_length": 924
+  },
+  {
+    "id": "S28",
+    "path": "packages/core/test/fixture/packaged-skills.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 9,
+    "last_line": 27,
+    "sha256": "e7ee1405719784c0b8221de1c10507bde7c5a73579454f2f652eaf8586b8872a",
+    "byte_length": 736
+  },
+  {
+    "id": "S28",
+    "path": "packages/core/test/fixture/packaged-skills.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "first_line": 30,
+    "last_line": 53,
+    "sha256": "e1c25bad28dd93d727ea38bf07afe3e1686f0534ea2e37e422c21f2956700fe8",
+    "byte_length": 1533
+  },
+  {
+    "id": "K01",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/partition.json",
+    "commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+    "first_line": 1,
+    "last_line": 127,
+    "sha256": "959a3c024337c8082625082cba4fad6ceea3243690fb0850634546dc33f2684c",
+    "byte_length": 3929
+  },
+  {
+    "id": "K02",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/dependencies.json",
+    "commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+    "first_line": 1,
+    "last_line": 103,
+    "sha256": "4b796650828c62b4534a22613976dd12a35ce5fc54e8c236bd92f06c794a0cec",
+    "byte_length": 3574
+  },
+  {
+    "id": "K02",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/dependencies.json",
+    "commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+    "first_line": 160,
+    "last_line": 202,
+    "sha256": "c207f5967d5b8f36290f031148d6486efa4a71f0b4856ea65915d5a298e74693",
+    "byte_length": 2008
+  },
+  {
+    "id": "K03",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/01-sessions/mission.json",
+    "commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+    "first_line": 1,
+    "last_line": 43,
+    "sha256": "ce22e5ff3c1bda20e47bf2e2e82d59e080aa39c4d7292fbdb05207c014f02a04",
+    "byte_length": 3041
+  },
+  {
+    "id": "K04",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/02-tools/mission.json",
+    "commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+    "first_line": 1,
+    "last_line": 38,
+    "sha256": "00004504e1c737350b4639e9af428a3f18a5f7ffb3ab86443494978eaee9c1b6",
+    "byte_length": 2570
+  },
+  {
+    "id": "K05",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/03-automation/mission.json",
+    "commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+    "first_line": 1,
+    "last_line": 38,
+    "sha256": "1f9a551e5829e8b169935745c073322d4e6e28de364afc782db3f5956cfb8d41",
+    "byte_length": 2524
+  },
+  {
+    "id": "K06",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/04-api/mission.json",
+    "commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+    "first_line": 1,
+    "last_line": 43,
+    "sha256": "25820c41a60e17193063e5ed1eb509c26409b8bde7794f23a93f6befb56201ed",
+    "byte_length": 2751
+  },
+  {
+    "id": "K07",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/05-libraries/mission.json",
+    "commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+    "first_line": 1,
+    "last_line": 44,
+    "sha256": "cc00b640bd0a59dfe24f6f3118d8eaac3e1064a8b413682ffb27df53587b1507",
+    "byte_length": 2997
+  },
+  {
+    "id": "K08",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/roster.json",
+    "commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+    "first_line": 1,
+    "last_line": 18,
+    "sha256": "a044bae96d9444cfd5ec800e3dc498b12ac7f9329dc89722a888aef706cf79b4",
+    "byte_length": 788
+  },
+  {
+    "id": "K08",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/roster.json",
+    "commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+    "first_line": 69,
+    "last_line": 129,
+    "sha256": "2525420f903c88de98c93d070957c6e3bf3a863c257148dccc165bd0873d1de7",
+    "byte_length": 3797
+  }
+]

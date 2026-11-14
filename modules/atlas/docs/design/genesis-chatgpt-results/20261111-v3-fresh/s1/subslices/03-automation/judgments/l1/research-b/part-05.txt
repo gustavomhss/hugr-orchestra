@@ -1,0 +1,212 @@
+60:   const outcome = yield* ResearchProcess.run({
+61:     command: launch.command, args: launch.args, cwd: plan.cwd,
+62:     env: Object.fromEntries(Object.entries(launch.env).filter((entry): entry is [string, string] => entry[1] !== undefined)),
+63:     timeoutMs: seconds * 1000, maxBytes: Probe.Limits.outputBytes, maxRssBytes: context.rssBytes ?? Probe.Limits.rssBytes,
+64:   })
+```
+
+Linhas 95–110:
+
+```text
+95: export function memoryCap(): Probe.ProbeResult["memoryCap"] {
+96:   return Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER !== "off" ? "rss" : "heap-only"
+97: }
+98: 
+99: function verdict(expect: Probe.ProbeInput["expect"], outcome: ResearchProcess.Outcome, text: string, diagnostics?: ReadonlyArray<ProbeTypecheck.Diagnostic>): Probe.Verdict {
+100:   if (outcome.timedOut) return "timeout"
+101:   if (outcome.memoryExceeded) return "memory_exceeded"
+102:   if (outcome.failure !== undefined || outcome.overflow) return "error"
+103:   if (text.includes(GUARD)) return "blocked_by_repo_guard"
+104:   if (!expect) return outcome.exitCode === 0 ? "passed" : "failed"
+105:   const code = (value: string) => value.replace(/^TS/i, "")
+106:   const met = (expect.exitCode === undefined || expect.exitCode === outcome.exitCode) &&
+107:     (expect.stdoutIncludes === undefined || outcome.stdout.data.toString("utf8").includes(expect.stdoutIncludes)) &&
+108:     (expect.stderrIncludes === undefined || outcome.stderr.data.toString("utf8").includes(expect.stderrIncludes)) &&
+109:     (expect.diagnosticCode === undefined || (diagnostics ?? []).some((item) => code(item.code) === code(expect.diagnosticCode!)))
+110:   return met ? "reproduced" : "not_reproduced"
+```
+
+## E31 — Snapshots e dependências compartilhadas
+
+`packages/core/src/research-toolkit/probe/snapshot.ts`
+
+Blob `0e89bf342e5c4567c4c2cfc180a3d3961ffec91e` · SHA-256 `c376cc01e1e893d3fac7cff70f6858888b29145546e36c36ce4d4b0a4655ea77`.
+
+Linhas 94–113:
+
+```text
+94:     return hasher.digest("hex")
+95:   }) : undefined
+96:   return { revision, dirtyDigest, paths: present.map((entry) => entry.file) }
+97: })
+98: 
+99: /** Dependency directories of the original enter as symlinks, at the root and next to every package.json. */
+100: const link = Effect.fnUntraced(function* (repo: string, root: string, paths: ReadonlyArray<string>) {
+101:   const dirs = new Set(["", ...paths.filter((file) => path.basename(file) === "package.json" && !file.split("/").some((part) => DEPENDENCIES.includes(part)))
+102:     .map((file) => path.dirname(file)).map((dir) => (dir === "." ? "" : dir))])
+103:   yield* Effect.forEach([...dirs].flatMap((dir) => DEPENDENCIES.map((name) => path.join(dir, name))), (relative) => Effect.promise(async () => {
+104:     const source = path.join(repo, relative)
+105:     const stat = await lstat(source).catch(() => undefined)
+106:     if (!stat?.isDirectory()) return
+107:     if (await lstat(path.join(root, relative)).then(() => true, () => false)) return
+108:     await mkdir(path.dirname(path.join(root, relative)), { recursive: true })
+109:     await symlink(source, path.join(root, relative))
+110:   }), { concurrency: 16, discard: true })
+111: })
+112: 
+113: const fail = (error: ResearchProcess.Failed) => denied(`snapshot-git-failed: ${error.command}: ${error.detail}`)
+```
+
+## E34 — Binding nativo e invocação persistida
+
+`packages/core/src/research/binding.ts`
+
+Blob `5f5c7f92d7ade9c902d54c0e9bce713871952e78` · SHA-256 `b64e476309f22af194c1459389814939887c117819be494adaac0b2fa73d1701`.
+
+Linhas 25–32:
+
+```text
+25:   if (!session || session.project_id !== projectID || session.agent !== "jimmy")
+26:     return yield* new Research.Error({ code: "not_found", message: "Research binding not found" })
+27:   const rows = yield* database.db.select().from(EventTable).where(and(
+28:     eq(EventTable.aggregate_id, sessionID),
+29:     eq(EventTable.type, EventV2.versionedType(MaestroEvent.Task.Bound.type, 1)),
+30:   )).all().pipe(Effect.orDie)
+31:   if (rows.length !== 1)
+32:     return yield* new Research.Error({ code: "binding_missing", message: "Retained task binding is missing or ambiguous" })
+```
+
+Linhas 49–52:
+
+```text
+49:   if (bound.memberID !== "jimmy" || bound.projectID !== projectID || bound.executionSessionID !== sessionID ||
+50:     !authority || authority.project_id !== projectID ||
+51:     (session.parent_id ?? session.id) !== authority.id)
+52:     return yield* new Research.Error({ code: "binding_mismatch", message: "Retained task placement does not match" })
+```
+
+Linhas 65–76:
+
+```text
+65: export const require = Effect.fn("ResearchBinding.require")(function* (binding: Research.Binding, context: Tool.Context) {
+66:   const frame = yield* CapabilityInvocation.require(context, {
+67:     projectID: binding.projectID, location: { directory: binding.directory },
+68:   }).pipe(Effect.mapError((error) => new Research.Error({
+69:     code: error.code === "invocation_binding_missing" ? "binding_missing" : "binding_mismatch",
+70:     message: "Research invocation is not bound",
+71:   })))
+72:   if (frame.owner.agentID !== "jimmy" || context.agent !== "jimmy" || context.sessionID !== binding.executionSessionID)
+73:     return yield* new Research.Error({ code: "binding_mismatch", message: "Research invocation owner does not match" })
+74:   const retained = yield* resolve(binding.executionSessionID, binding.projectID)
+75:   if (!isDeepStrictEqual(retained, binding))
+76:     return yield* new Research.Error({ code: "binding_mismatch", message: "Research binding does not match retained placement" })
+```
+
+Linhas 100–103:
+
+```text
+100:   if (assistant?.type === "assistant" && assistant.agent === "jimmy" && assistant.content.some((part) =>
+101:     part.type === "tool" && part.id === context.toolCallID && part.name === frame.rootToolName))
+102:     return retained
+103:   return yield* new Research.Error({ code: "binding_missing", message: "Native assistant/tool part is missing" })
+```
+
+## E35 — Allowance, charge idempotente e reserva irreversível
+
+`packages/core/src/research/allowance.ts`
+
+Blob `2a2b412f57e8b34016ff5bdbfe6f638e9616cf80` · SHA-256 `177b564304a9d79e9144da70a6c97107b604d40dde16ae8185467d801fd3c3eb`.
+
+Linhas 117–142:
+
+```text
+117:     const charge: Interface["charge"] = Effect.fn("ResearchAllowance.charge")((allowance, kind, operation, amount = 1) =>
+118:       Effect.gen(function* () {
+119:         if (!operation.trim() || operation.length > 256 || !Number.isSafeInteger(amount) || amount < 0 ||
+120:           (kind !== "bytes" && kind !== "probe" && amount !== 1))
+121:           return yield* new Research.Error({ code: "over_cap", message: "Invalid allowance charge operation or amount" })
+122:         const data = yield* Schema.decodeUnknownEffect(ResearchEvent.AllowanceCharged.data)({
+123:           sessionID: allowance.binding.executionSessionID, dispatchCallID: allowance.dispatchCallID, operation, kind, amount,
+124:         })
+125:         yield* bound(allowance)
+126:         const retry = yield* charged(allowance, operation)
+127:         if (retry) {
+128:           if (isDeepStrictEqual(retry, data)) return
+129:           return yield* new Research.Error({ code: "conflict", message: "Charge operation was reused with different kind or amount" })
+130:         }
+131:         yield* events.publish(ResearchEvent.AllowanceCharged, data, {
+132:           id: eventID("charged", data.sessionID, data.dispatchCallID, operation),
+133:           persist: true,
+134:           // EventV2 runs this callback before insertion under BEGIN IMMEDIATE on the same native connection.
+135:           // A preflight total outside this transaction would allow concurrent tools to overspend.
+136:           commit: () => Effect.gen(function* () {
+137:             yield* bound(allowance)
+138:             const used = yield* spent(allowance, kind)
+139:             const limit = kind === "provider" ? allowance.providerLimit : kind === "tool" ? allowance.toolLimit
+140:               : kind === "probe" ? allowance.probeSecondsLimit : allowance.byteLimit
+141:             if (!Number.isSafeInteger(used) || amount > limit - used)
+142:               return yield* Effect.die(new Research.Error({ code: "budget_exhausted", message: `Research ${kind} allowance exhausted (${used}/${limit}); retained work remains available` }))
+```
+
+Linhas 155–163:
+
+```text
+155:         yield* bound(allowance)
+156:         const reservation = yield* charged(allowance, operation)
+157:         if (!reservation || reservation.kind !== "bytes")
+158:           return yield* new Research.Error({ code: "binding_missing", message: "Byte reservation is not admitted" })
+159:         if (!Number.isSafeInteger(bytes) || bytes < 0 || bytes > reservation.amount)
+160:           return yield* new Research.Error({ code: "over_cap", message: "Observed bytes exceed reservation or are invalid" })
+161:         // The frozen ledger has no credit event. Even a known unused remainder stays charged; uncertain
+162:         // publication and repeated reconciliation cannot release bytes or admit a second write for free.
+163:       }).pipe(researchFailure),
+```
+
+## E36 — Ledger, escopo, dispatch, retenção e replay
+
+`packages/core/src/research/ledger.ts`
+
+Blob `6b6ca2931b6aa8bdd2156b47fc13005aab93dcbf` · SHA-256 `67e07368ea820ec0c1cb791d601a10acdfa2e9259605a1bec4f556f6bb121839`.
+
+Linhas 62–84:
+
+```text
+62: export const entries = Effect.fn("ResearchLedger.entries")(function* (binding: Research.Binding, explicitID?: string, executionOnly = false) {
+63:   const database = yield* Database.Service
+64:   const rows = yield* database.db.select().from(EventTable).where(and(
+65:     inArray(EventTable.type, types),
+66:     sql`json_extract(${EventTable.data}, '$.binding.projectID') = ${binding.projectID}`,
+67:     executionOnly ? eq(EventTable.aggregate_id, binding.executionSessionID) : undefined,
+68:     explicitID === undefined ? eq(EventTable.aggregate_id, binding.executionSessionID) : sql`(
+69:       json_extract(${EventTable.data}, '$.record.id') = ${explicitID} OR
+70:       json_extract(${EventTable.data}, '$.receipt.ref.id') = ${explicitID} OR
+71:       json_extract(${EventTable.data}, '$.receipt.ref.artifact.id') = ${explicitID} OR
+72:       json_extract(${EventTable.data}, '$.receipt.artifact.id') = ${explicitID})`,
+73:   )).orderBy(asc(EventTable.seq)).all().pipe(Effect.orDie)
+74:   return yield* Effect.forEach(rows, (row) => Schema.decodeUnknownEffect(Entry)({
+75:     id: row.id, type: row.type.slice(0, -2), data: row.data,
+76:     durable: { aggregateID: row.aggregate_id, seq: row.seq, version: 1 },
+77:   }).pipe(
+78:     Effect.mapError(() => new Research.Error({ code: "source_unavailable", message: "Invalid retained research event" })),
+79:     Effect.flatMap((entry) => entry.data.sessionID !== row.aggregate_id || entry.data.binding.executionSessionID !== row.aggregate_id ||
+80:       (entry.type !== "research.record.committed" && !isDeepStrictEqual(entry.data.receipt.binding, entry.data.binding))
+81:       ? Effect.fail(new Research.Error({ code: "source_unavailable", message: "Research event scope does not match admission" }))
+82:       : Effect.succeed(entry)),
+83:   ))
+84: })
+```
+
+Linhas 145–157:
+
+```text
+145: export const retained = Effect.fn("ResearchLedger.retained")(function* (binding: Research.Binding) {
+146:   const actual = yield* ResearchBinding.resolve(binding.executionSessionID, binding.projectID)
+147:   if (!isDeepStrictEqual(actual, binding))
+148:     return yield* new Research.Error({ code: "binding_mismatch", message: "Research placement changed" })
+149:   return actual
+150: })
+151: 
+152: export function replay(entries: readonly Entry[], operation: string, inputHash: string) {
+153:   const found = entries.filter((entry) => entry.data.operation === operation)
+154:   if (found.length > 1 || found.some((entry) => entry.data.inputHash !== inputHash))
+155:     throw new Research.Error({ code: "conflict", message: "Research operation was reused with different input" })

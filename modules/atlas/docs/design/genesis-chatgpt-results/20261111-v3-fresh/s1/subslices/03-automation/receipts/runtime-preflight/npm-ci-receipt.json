@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "npm",
+    "ci",
+    "--no-audit",
+    "--no-fund"
+  ],
+  "cwd": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/runtime-preflight/candidate/modules/atlas",
+  "returncode": 0,
+  "stdout": "\n> atlas@0.0.0 postinstall\n> node scripts/fix-scip-types.mjs\n\n[fix-scip-types] added types/exports to @c4312/scip (upstream packaging shim)\n\nadded 167 packages in 10s\n",
+  "stderr": "npm warn Unknown env config \"http-proxy\". This will stop working in the next major version of npm.\n",
+  "utc": "2026-11-14T22:42:02.290339+00:00"
+}

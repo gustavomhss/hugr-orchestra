@@ -1,0 +1,149 @@
+161:   const resolver = yield* CodeIndexResolve.make(input.root)
+162:   return assemble({
+163:     sources, outlines, dump,
+164:     resolve: resolver.resolve,
+165:     skipped: [
+166:       ...selected.skipped,
+```
+
+Linhas 286–295:
+
+```text
+286:   const occurrences = docs.flatMap((doc) => doc.occurrences.flatMap((occ, index): CodeIndexStore.Content["occurrences"] => {
+287:     if (!indexable(occ.symbol)) return []
+288:     const resolution = view.resolution(occ)
+289:     const container = enclosing(doc, index)
+290:     return [{
+291:       symbolId: row(resolution?.kind === "resolved" ? resolution.symbol : occ.symbol),
+292:       path: doc.path, line: occ.startLine, col: occ.startCol - 1, endLine: occ.endLine, endCol: occ.endCol, role: occ.role,
+293:       ...(container && ids.has(container) ? { enclosingId: ids.get(container)! } : {}),
+294:       opaque: false,
+295:     }]
+```
+
+## E19 — Filtro e parser estrutural
+
+`packages/core/src/research-toolkit/code-index/tree-sitter.ts`
+
+Blob `b470c5e20ba95693296a1ac4d2520ac4bc1a10d5` · SHA-256 `b0e13b1436402cd34060218f8845de757486769df22824a357bbc05dfc39d8e2`.
+
+Linhas 54–79:
+
+```text
+54: export const extract = Effect.fn("CodeIndexTreeSitter.extract")(function* (path: string, source: string, grammar: Grammar) {
+55:   const lines = source.length === 0 ? 0 : source.split("\n").length - (source.endsWith("\n") ? 1 : 0)
+56:   if (Buffer.byteLength(source) > MAX_BYTES)
+57:     return { path, lines, definitions: [], imports: [], coverage: { complete: false, reason: "too-large" } } satisfies Extract
+58:   // The wasm runtime and grammar load are the genuinely fallible boundary; the pipeline survives them with a reason.
+59:   const loaded = yield* Effect.promise(() => grammars().then(
+60:     (value) => ({ value }),
+61:     (cause: unknown) => ({ detail: cause instanceof Error ? cause.message : String(cause) }),
+62:   ))
+63:   if (!("value" in loaded))
+64:     return { path, lines, definitions: [], imports: [], coverage: { complete: false, reason: "parser-unavailable", detail: loaded.detail } } satisfies Extract
+65:   const entry = loaded.value[grammar]
+66:   const tree = entry.parser.parse(source)
+67:   if (!tree) return { path, lines, definitions: [], imports: [], coverage: { complete: false, reason: "partial-parse" } } satisfies Extract
+68:   const result = {
+69:     path,
+70:     lines,
+71:     definitions: definitions(entry.tags, tree.rootNode, grammar),
+72:     imports: entry.calls ? scriptImports(entry.calls, tree.rootNode)
+73:       : grammar === "go" ? CodeIndexGo.imports(tree.rootNode)
+74:       : grammar === "rust" ? CodeIndexRust.imports(tree.rootNode)
+75:       : pythonImports(tree.rootNode),
+76:     coverage: tree.rootNode.hasError ? { complete: false, reason: "partial-parse" } : { complete: true },
+77:   } satisfies Extract
+78:   tree.delete()
+79:   return result
+```
+
+## E20 — SCIP: arquivo regular, memo, encoding e empty helper
+
+`packages/core/src/research-toolkit/code-index/scip.ts`
+
+Blob `2e8f9fa18bf6661bc7510dae3106010ef0babf81` · SHA-256 `fa1f6dee8938ca64e416758acedf759e44904e1a8d6a44c0778ae610ee9f9947`.
+
+Linhas 97–105:
+
+```text
+97:   const stat = statSync(file)
+98:   if (!stat.isFile()) throw new Error(`scip: '${file}' is not a regular file, so it is not an indexer dump`)
+99:   const cached = memo.get(file)
+100:   if (cached && cached.mtimeMs === stat.mtimeMs && cached.size === stat.size) {
+101:     // Map keeps insertion order: re-insert so the entry evicted below is the least recently used.
+102:     memo.delete(file)
+103:     memo.set(file, cached)
+104:     return cached.raw
+105:   }
+```
+
+Linhas 124–133:
+
+```text
+124:   const documents = raw.documents.map((doc) => {
+125:     const relative = path.posix.join(prefix, doc.relativePath.replaceAll("\\", "/"))
+126:     const encoding = doc.positionEncoding || DEFAULT_ENCODING[tool?.name ?? ""] || PositionEncoding.UTF16CodeUnitOffsetFromLineStart
+127:     const text = encoding === PositionEncoding.UTF16CodeUnitOffsetFromLineStart ? undefined : doc.text || options?.source?.(relative)
+128:     const convert = text === undefined ? (range: ReadonlyArray<number>) => range : utf16(text.split("\n"), encoding)
+129:     const occurrences = doc.occurrences.flatMap((occ) => {
+130:       const range = span(convert(occ.range))
+131:       if (!range) return []
+132:       const enclosingRange = span(convert(occ.enclosingRange))
+133:       return [{ ...range, symbol: occ.symbol, role: role(occ.symbolRoles), ...(enclosingRange ? { enclosingRange } : {}) }]
+```
+
+Linhas 163–171:
+
+```text
+163:     return readScip(file, options)
+164:   } catch {
+165:     return { indexer: undefined, documents: [], malformed: 0 }
+166:   }
+167: }
+168: 
+169: /** The indexer name in the dump's metadata, or undefined on the same failures `readScipOrEmpty` absorbs. */
+170: export function readScipIndexerName(file: string) {
+171:   try {
+```
+
+## E21 — Callers, canonicalização e enclosing
+
+`packages/core/src/research-toolkit/code-index/callers.ts`
+
+Blob `dbfb863c0f57df3b85f33456188a1532e9cffe6c` · SHA-256 `c5f23cb31a51945af79347ffe03db97c1ff7f184abc22d99c13c852bb48ed39c`.
+
+Linhas 111–135:
+
+```text
+111:       return Scip.isLocalSymbol(symbol) ? undefined : defs.get(symbol)
+112:     },
+113:     /** How a reference occurrence resolved; undefined for a definition occurrence or one from another view. */
+114:     resolution(occ: Scip.Occurrence) {
+115:       return resolutions.get(occ)
+116:     },
+117:     /** Sites of references to global symbols no shard defines. */
+118:     holes: () => sorted(holes),
+119:     /** Sites of collapsed local references: `coverage.opaqueSites` and `occurrence.opaque`. */
+120:     opaque: () => sorted(opaque),
+121:   }
+122: }
+123: 
+124: type Group = { path: string; enclosing: string | undefined; range: Scip.Span | undefined; sites: Set<number> }
+125: 
+126: /** Code-unit order, so output does not depend on the host locale. */
+127: function byPath(a: string, b: string) {
+128:   return a < b ? -1 : a > b ? 1 : 0
+129: }
+130: 
+131: function sorted(sites: ReadonlyArray<Site>) {
+132:   return [...new Map(sites.map((site) => [`${site.path}\0${site.line}`, site])).values()].toSorted(
+133:     (a, b) => byPath(a.path, b.path) || a.line - b.line,
+134:   )
+135: }
+```
+
+
+FIM_EVIDENCIA_LITERAL
+
+FIM_DO_LOTE

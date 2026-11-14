@@ -1,0 +1,50 @@
+{
+  "source": "review-packets/research-b.txt",
+  "bytes": 79384,
+  "sha256": "c030e45d44e0f710d6f3612ff92a965bb450ef834e3ca794e2f3f0313f66f498",
+  "part_count": 7,
+  "parts": [
+    {
+      "number": 1,
+      "file": "part-01.txt",
+      "bytes": 11865,
+      "sha256": "580764aa6261d213dc5ddf88aed25f2e40c310cb4f148a1c5e0062b8e727b9c8"
+    },
+    {
+      "number": 2,
+      "file": "part-02.txt",
+      "bytes": 11810,
+      "sha256": "a4324179e3884eff5ca0123b569fe63e3d2ac3d099472ce45f612844cecf0bd0"
+    },
+    {
+      "number": 3,
+      "file": "part-03.txt",
+      "bytes": 11929,
+      "sha256": "554717c01ba2c606bb1d484367de467e029a2d221adbe999b1552029bb8781df"
+    },
+    {
+      "number": 4,
+      "file": "part-04.txt",
+      "bytes": 11995,
+      "sha256": "75dc45e1a5c0ad1496f5247d5236e98e3efe8c9196a845d310d25888d747b58f"
+    },
+    {
+      "number": 5,
+      "file": "part-05.txt",
+      "bytes": 11998,
+      "sha256": "5f3ec831dd9b18f776f0c3cfb0fd23db1d116910d8b1c65247680e45d5963627"
+    },
+    {
+      "number": 6,
+      "file": "part-06.txt",
+      "bytes": 11987,
+      "sha256": "34e78ed368bc186b0f36820f65094b4f9f0bd046a41dc628ac3ce8faf979006a"
+    },
+    {
+      "number": 7,
+      "file": "part-07.txt",
+      "bytes": 7800,
+      "sha256": "e51ac6ac9fb07dbb5413de506bcaa3b12b5f7443250a176a8c1d7a6f50163f3d"
+    }
+  ]
+}

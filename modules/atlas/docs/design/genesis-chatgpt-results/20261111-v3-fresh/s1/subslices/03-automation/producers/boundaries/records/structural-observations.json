@@ -1,0 +1,83 @@
+{
+  "method": "Python JSON/archive metadata parsing only; no import, extraction to execution path, installation, build or test",
+  "package": {
+    "exports_count": 437,
+    "has_bare_export": false,
+    "has_wildcard": false,
+    "selected_exports": {
+      "./atlas": "./src/atlas.ts",
+      "./control-plane/move-session": "./src/control-plane/move-session.ts",
+      "./control-plane/workspace.sql": "./src/control-plane/workspace.sql.ts",
+      "./test/fixture/omni-expect": "./test/fixture/omni-expect.ts",
+      "./test/lib/effect": "./test/lib/effect.ts",
+      "./test/fixture/windows-process-query": "./test/fixture/windows-process-query.ts",
+      "./test/fixture/tmpdir": "./test/fixture/tmpdir.ts",
+      "./test/fixture/process-tree": "./test/fixture/process-tree.ts",
+      "./test/fixture/omni-effect": "./test/fixture/omni-effect.ts",
+      "./rag-studio/sql": "./src/rag-studio/sql.ts",
+      "./relay": "./src/relay.ts",
+      "./relay-commands": "./src/relay-commands.ts",
+      "./relay-hook-install": "./src/relay-hook-install.ts",
+      "./relay-hook-recovery": "./src/relay-hook-recovery.ts",
+      "./relay-workflow-binding": "./src/relay-workflow-binding.ts",
+      "./relay-workflow-currentstep": "./src/relay-workflow-currentstep.ts",
+      "./relay-workflow-evaluator": "./src/relay-workflow-evaluator.ts",
+      "./relay-workflow-session": "./src/relay-workflow-session.ts",
+      "./relay-workflow-transition": "./src/relay-workflow-transition.ts"
+    }
+  },
+  "schema": {
+    "version": "7",
+    "dialect": "sqlite",
+    "id": "e6e8468f-7bbe-4c35-aef1-3303e28aaf44",
+    "prevIds": [
+      "71037a02-42ad-482f-b987-e20674ec0701"
+    ],
+    "ddl_entities": {
+      "tables": 63,
+      "columns": 637,
+      "fks": 59,
+      "pks": 63,
+      "indexes": 52,
+      "uniques": 3,
+      "checks": 1
+    }
+  },
+  "vendor": {
+    "archive_sha256": "5ff983c58aa056d82059d5edd5b428478dda50a7683a201b7d844949aa1712a3",
+    "archive_bytes": 205370,
+    "member_count": 191,
+    "package_json_sha256": "eb1e4264a0ddc9a050fe30490415dc020f33d2bb7a3de73e768943ef499851fa",
+    "name": "hugr-lean",
+    "version": "0.4.0",
+    "license": "MIT",
+    "engines": {
+      "node": ">=22"
+    },
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      },
+      "./server": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      },
+      "./core": {
+        "types": "./dist/core/index.d.ts",
+        "import": "./dist/core/index.js"
+      },
+      "./raw": {
+        "types": "./dist/raw/index.d.ts",
+        "import": "./dist/raw/index.js"
+      }
+    }
+  },
+  "zip_fixture": [
+    {
+      "member": "bin/tool",
+      "bytes": 22,
+      "sha256": "25eda55137747802ce9a30f1ce9a86b1c75e8a43797a2284eed853f1d4f7243e"
+    }
+  ]
+}

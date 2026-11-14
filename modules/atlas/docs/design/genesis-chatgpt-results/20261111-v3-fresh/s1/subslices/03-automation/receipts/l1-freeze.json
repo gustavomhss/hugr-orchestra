@@ -1,0 +1,319 @@
+{
+  "schema": "s1-03-l1-freeze/v1",
+  "source_count": 462,
+  "producer_ids": [
+    "/root/automation_l1",
+    "/root/research_l1",
+    "/root/boundaries_l1"
+  ],
+  "judge_ids": [
+    "/root/s1_03_j1",
+    "/root/s1_03_j2"
+  ],
+  "files": [
+    {
+      "path": "producers/automation/body.md",
+      "bytes": 59832,
+      "sha256": "2ed7670affc680005840d0918489cb1ac36e1c5a4021defcc57ae44186ae7459",
+      "owner": "/root/automation_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/automation/evidence.md",
+      "bytes": 953016,
+      "sha256": "de46e809f97346c81701ee8af0144abbe8458386787a2598b2bc88b81ec2b400",
+      "owner": "/root/automation_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/automation/evidence-review.md",
+      "bytes": 181923,
+      "sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "owner": "/root/automation_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/automation/captures.json",
+      "bytes": 100039,
+      "sha256": "d705eeab9e7ade1461f151f3b72556696cd3bbac473baf3ab13bb14192cd28e1",
+      "owner": "/root/automation_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/automation/coverage.jsonl",
+      "bytes": 223656,
+      "sha256": "580c1885a277f378d9f5c44f0dd335e58cb4dc02f23bc002179103dc90dcfd5f",
+      "owner": "/root/automation_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/automation/recipe.json",
+      "bytes": 15037,
+      "sha256": "0bea2453bc31f3f93109b9c64c7952aa690e6e6e8e5794c35a5630b8f9b38b21",
+      "owner": "/root/automation_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/automation/request.txt",
+      "bytes": 6568,
+      "sha256": "9753f217c3879889af8399e36f9024a52d5188500c03e83485bd04fea0448b27",
+      "owner": "/root/automation_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/automation/response.md",
+      "bytes": 8967,
+      "sha256": "486a533d95528df339e354b68243052203c08141f2dae43c96f58e7dfd9a31d9",
+      "owner": "/root/automation_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/automation/document-integrity.json",
+      "bytes": 1220,
+      "sha256": "fdbc36f75b6f753405e19c65e65abd7fdbb7a7cd93893efbb6b7b6acaa4a5217",
+      "owner": "/root/automation_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/research/body.md",
+      "bytes": 63389,
+      "sha256": "1213f85cf16f73feed220e8c1b33ed52b2af75afd570b154a29eaf8f99f27d73",
+      "owner": "/root/research_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/research/evidence.md",
+      "bytes": 599806,
+      "sha256": "e8cc0b447e48f26b3a059dc70c7ad7e607ec9b60a9af3d605e76f4c10b1da05b",
+      "owner": "/root/research_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/research/evidence-review.md",
+      "bytes": 89675,
+      "sha256": "3496f3e102e5db734d2954cf18e9bea6da5fbc418d2084f56814eefb5347788e",
+      "owner": "/root/research_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/research/captures.json",
+      "bytes": 52221,
+      "sha256": "4275f6f649be64c3e0fb948115f3260b618d633e98a650824f58b17ac3036a52",
+      "owner": "/root/research_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/research/coverage.jsonl",
+      "bytes": 127215,
+      "sha256": "bb06bcef77a2dbeccabc70dd00dc10d70bf22cb338588661d7ecc9f49e01eec9",
+      "owner": "/root/research_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/research/recipe.json",
+      "bytes": 134003,
+      "sha256": "a5bd9215347a9eb06ab008846f2ef169e1d3269f0f6c0a75f73da72d914178a2",
+      "owner": "/root/research_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/research/request.txt",
+      "bytes": 3325,
+      "sha256": "4e11428b6ece1d3fe3769a5f1ca7c4d3eb36654ccdec504500bb6622aec86adc",
+      "owner": "/root/research_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/research/response.md",
+      "bytes": 5451,
+      "sha256": "d91be8e07e1f38bd712a2f178fd0ee800af5e6fb0e5c4a92cccdf672e5922780",
+      "owner": "/root/research_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/research/evidence-index.json",
+      "bytes": 63265,
+      "sha256": "219182fe48272b4eb6c8f21507e337730c09b86e1c9ef47e973d7846ec75a4c0",
+      "owner": "/root/research_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/research/history/body-initial.md",
+      "bytes": 63291,
+      "sha256": "172e61c2f199fe1b9c4fc787922d669e95da2dcaa35aa065aea01d2a146bc6e5",
+      "owner": "/root/research_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/boundaries/bodies/boundaries.md",
+      "bytes": 22938,
+      "sha256": "c557b33392cae8d0078a7da17f3421bb57ec2434f3bf5bba3b54f4172faeadae",
+      "owner": "/root/boundaries_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/boundaries/bodies/support.md",
+      "bytes": 22388,
+      "sha256": "3a4ef5ee6925eb3c80404181f00a0e4e012750459f2dbb1ab11076b69449d684",
+      "owner": "/root/boundaries_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/boundaries/union-navigation-proposal.md",
+      "bytes": 14671,
+      "sha256": "f4362077ed7eb2f0dff7bb76acd60debeaa41bd37886551977b92c02addfcb6e",
+      "owner": "/root/boundaries_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/boundaries/evidence.md",
+      "bytes": 250095,
+      "sha256": "e43364ba942d4b2c3946513ca092c1f372d1dee236935b88be2ef001e5117234",
+      "owner": "/root/boundaries_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/boundaries/evidence-review.md",
+      "bytes": 123767,
+      "sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "owner": "/root/boundaries_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/boundaries/captures.json",
+      "bytes": 90599,
+      "sha256": "0500a1208b1767f90af8ed8e439106d1c995242f1d5b1707714e031b364a4d73",
+      "owner": "/root/boundaries_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/boundaries/coverage.jsonl",
+      "bytes": 157032,
+      "sha256": "d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9",
+      "owner": "/root/boundaries_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/boundaries/recipe.json",
+      "bytes": 15087,
+      "sha256": "b55bbbda05c426500409dfb49610dc2f83e520dd6dd37721ec1cb93507687a51",
+      "owner": "/root/boundaries_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/boundaries/request.txt",
+      "bytes": 3838,
+      "sha256": "e3501cb9a1875d843bb317cd7ff030df23c33fa884403d4f3e952c145991bf1d",
+      "owner": "/root/boundaries_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/boundaries/request-followups.txt",
+      "bytes": 998,
+      "sha256": "28d07060842e1976e119a822ef6c2f227b031c19cac09a97b98c419c50772d04",
+      "owner": "/root/boundaries_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/boundaries/response.md",
+      "bytes": 5105,
+      "sha256": "8b4c8f014f5e4b06ee996b1015af2e1c14ef4207eb1ab965f43944793f4e9708",
+      "owner": "/root/boundaries_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/boundaries/records/evidence-index.json",
+      "bytes": 29827,
+      "sha256": "d407a9ff2d069e97e32fab6f92c7b205d8e9a3122bab8b3745cc2618630766ee",
+      "owner": "/root/boundaries_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/boundaries/records/evidence-review-index.json",
+      "bytes": 54777,
+      "sha256": "27eed78e9f1ec64e8569ddc0615b00018930256638dac4081d87621d84951312",
+      "owner": "/root/boundaries_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/boundaries/records/verification.json",
+      "bytes": 2691,
+      "sha256": "edb87a8eb4a5db5b4d49126dc943df03981104e7a01067c2cab4a608528e8d22",
+      "owner": "/root/boundaries_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/boundaries/records/coverage-summary.json",
+      "bytes": 2044,
+      "sha256": "4aeedcef30a07ed0cef9e43a6f20141900cb63e752a5daa34de6b9f7b7cca5f8",
+      "owner": "/root/boundaries_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/boundaries/records/structural-observations.json",
+      "bytes": 2817,
+      "sha256": "547d40fecc9f0df21a190d56e4ebd261382b6b5a01158cf493cb8945590475c4",
+      "owner": "/root/boundaries_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/boundaries/history/manifest.json",
+      "bytes": 3215,
+      "sha256": "05d97ef28360e32115f24dcb5bb764dc013ed2a00a14fb09d0733f767746c87a",
+      "owner": "/root/boundaries_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/boundaries/history/entry.md",
+      "bytes": 7312,
+      "sha256": "6a488ca8f9717a497949b71ed41db84d995f23b90c31cc59c22c5bd86239ca6c",
+      "owner": "/root/boundaries_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    },
+    {
+      "path": "producers/boundaries/history/boundaries.md",
+      "bytes": 3905,
+      "sha256": "7b20ed7cedf86c24fb1d9c3471250fcddf666f9c66e7de2dba9852df1fa17143",
+      "owner": "/root/boundaries_l1",
+      "phase": "L1",
+      "status": "PRODUCED_NOT_JUDGED"
+    }
+  ]
+}

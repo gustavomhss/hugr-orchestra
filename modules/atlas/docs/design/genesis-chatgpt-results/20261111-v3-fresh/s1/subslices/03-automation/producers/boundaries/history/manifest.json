@@ -1,0 +1,73 @@
+[
+  {
+    "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/bodies/boundaries.md",
+    "git_blob_sha": "7c4b50cdc6f00552c1289c4221855d3120dd6572",
+    "byte_length": 3905,
+    "sha256": "7b20ed7cedf86c24fb1d9c3471250fcddf666f9c66e7de2dba9852df1fa17143",
+    "artifact_key": "s1.core.boundaries",
+    "local_path": "history/boundaries.md",
+    "handling": "byte-identical inherited body; not a new accepted version",
+    "verified": true
+  },
+  {
+    "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/bodies/entry.md",
+    "git_blob_sha": "894266bd4543763fb1ee2a4dbf0ba749a244ec48",
+    "byte_length": 7312,
+    "sha256": "6a488ca8f9717a497949b71ed41db84d995f23b90c31cc59c22c5bd86239ca6c",
+    "artifact_key": "s1.core.entry",
+    "local_path": "history/entry.md",
+    "handling": "byte-identical inherited body; not a new accepted version",
+    "verified": true
+  },
+  {
+    "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/review-packets/l1-a3-v1-dossier.md",
+    "git_blob_sha": "285e56c1680153ce75c71fd99bcf9455bde70d4d",
+    "byte_length": 177076,
+    "sha256": "36416073165d59eec9c7d847a26f414d855cc2a40758d548f4dd49669dccc5d4",
+    "local_path": "history/a3-dossier-selected.md",
+    "selection": [
+      {
+        "first_line": 3395,
+        "last_line": 3442,
+        "sha256": "f2f241c3451bf6bac571a35f266e77bb784540ae06a07a9351bcf9d1dbcac7c9",
+        "bytes": 4900
+      }
+    ],
+    "handling": "literal excerpts, original line ranges; inherited evidence, not new acceptance"
+  },
+  {
+    "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/review-packets/l1-a4-v1-dossier.md",
+    "git_blob_sha": "6f872ea0e22097d8084fd587f585751a436f607e",
+    "byte_length": 155061,
+    "sha256": "83b544ac46f99b2bf3585ff4e607bcd403e49eb20dd128deb5b6a029a772ead0",
+    "local_path": "history/a4-dossier-selected.md",
+    "selection": [
+      {
+        "first_line": 2134,
+        "last_line": 2202,
+        "sha256": "40fec05b8e78a4219fcaaceb0c7ad9b19fab5959ae42f3c27b0091044287f542",
+        "bytes": 4539
+      },
+      {
+        "first_line": 2757,
+        "last_line": 2989,
+        "sha256": "3fdcba7fe96a24ef7ad6cfc3ba3f4ef6b9c3ce28a075b5555aa9fd54bab43cc4",
+        "bytes": 14713
+      }
+    ],
+    "handling": "literal excerpts, original line ranges; inherited evidence, not new acceptance"
+  },
+  {
+    "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/a-l1-evidence-v1/coverage-needs-projection.json",
+    "git_blob_sha": "2e91d0f916dfa95a2dd0ef7ae74ff8c1bb427045",
+    "byte_length": 726892,
+    "sha256": "05485c4bd0ac9c76814e44537788818bbcf1fbcbfb87dd8063ce30bf1a67e0cf",
+    "local_path": "history/coverage-needs-selected.json",
+    "handling": "exact JSON records selected; whitespace of original projection not retained"
+  }
+]

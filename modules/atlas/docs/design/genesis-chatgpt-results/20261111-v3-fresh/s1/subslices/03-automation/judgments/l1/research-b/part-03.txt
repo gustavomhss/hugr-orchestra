@@ -1,0 +1,130 @@
+| research-toolkit-callers, enclosing, scip, code-index-scip-encoding | Relações SCIP, enclosing, opacidade, memo e unicode UTF-8/16/32 | Não amplia semântica persistida além de extract |
+| code-index-filter, go, python, resolve, rust, structural, tree-sitter | Linguagens, resolução, parse parcial, tamanho, fallback estrutural e nomes/exports | Fixtures pequenas não provam semântica de linguagem completa |
+| research-search, research-locate, research-toolkit-liveness | Flags/injeção, bounds, ranking, verificação de ranges, liveness e rede privada | Nenhuma busca de produto ou URL foi executada |
+| research-probe-units, research-probe | Snapshot/runners, diagnóstico, memória/timeout, write/network/guard e concorrência | Guard de testes locais respeitado |
+| research-binding, allowance, artifacts, records, inquiry-ledger | Vínculo nativo, idempotência, concorrência, bytes/UTF-8, corrupção/symlink, citações/CAS e retomada | Sem eventos reais novos no produto |
+
+Nos rows acima, os nomes que começam por `code-index-` na subpasta de research-toolkit são discriminados pelo path exato no inventário; não são testes ausentes com nomes aproximados. E44–E46 preservam as expectations decisivas, e a cobertura possui uma linha por arquivo para impedir que o agrupamento apague sua disposição.
+
+**Limite de fidelidade dos dados.** Nenhuma das 130 fontes foi rejeitada ou substituída: todas correspondem ao blob normativo. “Fonte inválida” neste corpo descreve as recusas do componente a dados de pesquisa ou caches inválidos, não afirma que o inventário veio corrompido. Dados que referenciam fixtures/helpers, schemas, scripts geradores ou módulos fora da lista são tratados como dependências externas de implementação/validação; não foram incluídos silenciosamente na população e não sustentam qualificação que exigiria ler/executá-los.
+
+## R14. Uso, impacto e obrigações ainda separadas
+
+**Inferência de manutenção com base nas relações lidas.** Um consumidor pode começar pela tabela R0 e aprofundar somente a cadeia pertinente. Para mudar uma receita, reveja manifesto/pins/lock ou wheels, runtime/executable/layout, floors, launch/env, readiness e contratos de instalação; mudar só uma versão pode invalidar guard de projeto ou overlay Cassandra. Para mudar índice, reveja chave de shard/config/lock, versão de engine, extração/encoding, schema/store, query/freshness e projeção de basis. Para mudar autoridade, reveja binding, hash de operação, allowance, intent/bytes, evento de admissão, cursor/locator e CAS de revisão. Esses conjuntos são consequências documentadas da implementação; não substituem L3/L4 aceitos nem alegam uma simulação de manutenção executada. [E03–E43]
+
+| Situação de consumo ou manutenção | Ação sustentada por este L1 | Motivo para abster-se de uma conclusão mais forte |
+| --- | --- | --- |
+| Engine listada, instalação ausente | Ler estado/razão, dependências e receita antes de aquisição autorizada | Pin não é qualificação |
+| Warm retornou sem shards | Conferir adapter, falha de plan, linguagens e filtro estrutural | Vazio é ambíguo e status é best effort |
+| Índice stale ou arquivo dirty | Preservar basis e usar leitura atual para validar range; solicitar rebuild autorizado quando necessário | Overlay não atualiza todas as relações |
+| Nenhum hit ou opaqueSites zero | Restringir conclusão à query/base/limites efetivos | Skips, structural-only e ligação opaque limitam ausência |
+| Probe devolveu resultado | Cobrar/reter pela chamada nativa e conferir receipt antes de usá-lo como fonte | Result object não é SourceAdmitted |
+| Captura parcial/binária/derivada | Preservar representation, complete, parent/transformation e locator cabível | Terminar páginas não torna fonte completa |
+| Arquivo presente mas evento/manifest/digest faltante | Tratar como indisponível/inadmitido conforme erro | Custódia não é autoridade |
+| Publicação incerta | Consultar operação/evento exatos; não refazer ação live silenciosamente | Erro não prova ausência de efeito |
+| Fontes contraditórias ou texto hostil | Registrar contrary/conflito e tratar texto como dado | Locator válido não julga verdade nem cria permissão |
+| Fonte obrigatória maior que limite Atlas | Preservar bytes/dependência e reportar bloqueio concreto | Prepare não pode ser “consertado” removendo evidência necessária |
+
+**Limites intencionais preservados.** Não há qualificação de host/engine/plataforma, disponibilidade upstream, execution receipt de teste, prova externa de jail/DB/Atlas nem consumo semanticamente julgado. L2–L4 não foram produzidos porque dependem de aceite e novo despacho. O L1 está produzido para revisão, não autoaceito. A revisão independente deve decidir suficiência por necessidade nos bytes desta versão; histórico supported, contagem de fontes, hashes, seções, testes e qualidade aparente de redação não substituem os dois pareceres.
+
+**Escopo AC-01/AC-04.** As necessidades, fontes, artefato e desconhecidos públicos estão reconciliados nesta produção real e na receita. Casos/oracle reservados ficaram fora do contexto do produtor; não foram inventados casos adicionais nem resultados de consumidores. Esta entrega contribui conteúdo verificável de L1 para AC-01/04, CC-1/3/7, axiomas, invariantes e QS declarados; publicação, uso real, manutenção executada e fechamento da subfatia são obrigações posteriores da principal. O custo/token de modelo não exposto permanece UNKNOWN, e não zero.
+
+
+FIM_CORPO_LITERAL
+
+INICIO_EVIDENCIA_LITERAL
+# Projeção literal por necessidade — RESEARCH-L1
+
+**Uso:** acompanhar o corpo integral `body.md`. Esta projeção seleciona precondições, estados, falhas, identidade e freshness que decidem os limites principais. Não é arquivo de todos os contratos. Para aprofundar qualquer claim, pedir **REQUEST_EVIDENCE <ID> <path/intervalo>** à principal, usando `evidence-index.json`; ela fornece o trecho literal do archive, sem exigir ferramentas do juiz. Nenhum teste foi executado e esta projeção não emite aceite.
+
+**Identidade:** fontes no baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; E01 é histórico em `a8df22ae3a140c58c63f62ce2a634c84f415c943`. Archive `evidence.md`, SHA-256 `e8cc0b447e48f26b3a059dc70c7ad7e607ec9b60a9af3d605e76f4c10b1da05b`. Cada bloco informa path, blob Git, SHA-256 integral e linhas originais. Prefixos de linha são apresentação; o archive contém também SHA-256 de cada intervalo original. Cortes ocorrem somente entre intervalos identificados.
+
+**Navegação por necessidade:** aquisição/readiness E02–E10; manifests/runtimes/locks E11–E13 no archive; planejamento/store E14–E18; parser/consulta E19–E27 (adapters/resolução E22–E23 no archive); liveness E28; probes E29–E33 (runners/processo/typecheck no archive); autoridade E34–E43; contratos de teste, somente intenção, E44–E46 no archive. Pins repetitivos, fixtures e listas completas não substituem os ramos decisivos abaixo.
+
+## E24 — Query: basis, stale e dirty overlay
+
+`packages/core/src/research-toolkit/code-index/query.ts`
+
+Blob `25d652ee0ce78d327427837466b5d7fe5886013f` · SHA-256 `ec1dd4a297e6e798c497d67ac5ed21cd4c6484e2aba3c2bed60dbd8f174f05e8`.
+
+Linhas 119–135:
+
+```text
+119:       coverage: {
+120:         documents,
+121:         skipped: skipped.length > SKIPPED_LIMIT
+122:           ? [...skipped.slice(0, SKIPPED_LIMIT), { path: "*", reason: `${skipped.length - SKIPPED_LIMIT} more skipped paths` }]
+123:           : skipped,
+124:         languagesMissing,
+125:         opaqueSites: findings.hits.filter((hit) => hit.opaque).reduce((sum, hit) => sum + (hit.sites?.length ?? 1), 0),
+126:         complete: skipped.length === 0 && languagesMissing.length === 0,
+127:       },
+128:       freshness: scope.ready.some((ready) => ready.stale) ? "stale"
+129:         : paths.some((file) => file !== undefined && scope.dirty.has(file)) ? "dirty-overlay" : "fresh",
+130:       bounds: { limit, truncated: offset + limit < findings.hits.length },
+131:     },
+132:   }
+133:   return result
+134: })
+135: 
+```
+
+Linhas 187–226:
+
+```text
+187:     const choices = yield* Effect.forEach(shards, (planned) => Effect.gen(function* () {
+188:       if (yield* CodeIndexStore.exists(plan.dir, planned.key)) return { planned, key: planned.key } satisfies Ready
+189:       const previous = records.flatMap((record) => record.shards
+190:         .filter((shard) => shard.id === planned.shard.id && shard.key !== planned.key)
+191:         .map((shard) => ({ commit: record.commit, key: shard.key })))
+192:       const present = yield* Effect.forEach(previous, (entry) => CodeIndexStore.exists(plan.dir, entry.key))
+193:       const fallback = previous.find((_, index) => present[index])
+194:       const reason = failed.get(planned.key)
+195:       if (reason !== undefined) skipped.push({ path: planned.shard.project, reason: `index-failed: ${reason}` })
+196:       if (fallback) return { planned, key: fallback.key, stale: fallback.commit } satisfies Ready
+197:       if (reason === undefined) skipped.push({ path: planned.shard.project, reason: "index-building" })
+198:       return undefined
+199:     }))
+200:     const missing = choices.some((choice) => choice === undefined || choice.stale)
+201:     const progress = CodeIndexBuild.building(plan.dir)
+202:     const building = progress !== undefined || shards.some((planned) => CodeIndexStore.building(ctx.storeRoot, planned.key))
+203:     // A failed build is retried by the next query that finds the shard still missing; the build is single-flight.
+204:     if (missing && !building && ctx.extract)
+205:       yield* Effect.forkDetach(CodeIndexBuild.build({ ...ctx, extract: ctx.extract }).pipe(Effect.ignore))
+206:     const ready = choices.filter((choice): choice is NonNullable<typeof choice> => choice !== undefined)
+207:     if (ready.length === 0) {
+208:       const cause = [...failed.values()][0]
+209:       if (cause !== undefined && !building)
+210:         return yield* new Research.Error({ code: "index_unavailable", message:
+211:           `Index build failed${ctx.extract ? " (retrying)" : ""}: ${cause}` })
+212:       if (building || ctx.extract)
+213:         return yield* new Research.Error({ code: "index_building", message:
+214:           `Index is building: shardsDone ${progress?.shardsDone ?? 0} of shardsTotal ${progress?.shardsTotal ?? shards.length}` +
+215:           (cause === undefined ? "" : `; last attempt failed: ${cause}`) })
+216:       return yield* new Research.Error({ code: "index_unavailable", message: "Index has not been built for this commit" })
+217:     }
+218:     if (!missing) yield* CodeIndexStore.touch(plan.dir, plan.commit)
+219:     const stale = [...new Set(ready.flatMap((choice) => choice.stale ? [choice.stale] : []))]
+220:     const changes = new Set((yield* Effect.forEach(stale, (from) => CodeIndexShard.changed(ctx.git, from, plan.commit))).flat())
+221:     ready.filter((choice) => choice.stale).forEach((choice) =>
+222:       choice.planned.shard.files.filter((file) => changes.has(file)).forEach((file) => skipped.push({ path: file, reason: "changed-since-index" })))
+223:     return yield* overlay(ctx, plan, ready, skipped)
+224:   })
+225: }
+226: 
+```
+
+## E25 — Query: resolução, hits e limites de overlay
+
+`packages/core/src/research-toolkit/code-index/query.ts`
+
+Mesma identidade de fonte já declarada nesta projeção.
+
+Linhas 228–247:
+
+```text
+228: function overlay(ctx: Context, plan: CodeIndexBuild.Plan, ready: ReadonlyArray<Ready>, skipped: Array<{ path: string; reason: string }>) {
+229:   return Effect.gen(function* () {
+230:     const changes = yield* CodeIndexShard.dirty(ctx.git)
+231:     const owner = (file: string) => ready
+232:       .filter((choice) => choice.planned.shard.files.includes(file) ||

@@ -1,0 +1,264 @@
+Linhas 129–130:
+
+```text
+129:     // bun:ffi exists only under Bun. Anywhere else there is no cheap probe, so the floor is skipped rather than guessed.
+130:     if (!process.versions.bun) return true
+```
+
+## E06 — PinnedArtifact: integridade, staging e limites
+
+`packages/core/src/pinned-artifact.ts`
+
+Blob `360018d80541459f1a6caab9d8b2de5653411fb6` · SHA-256 `896dbe5b74a60a2bcae81e9d7b4634aad178debddfeeeb452734552cd0aa504f`.
+
+Linhas 46–75:
+
+```text
+46: export const install = Effect.fn("PinnedArtifact.install")(function* (
+47:   directory: string,
+48:   artifacts: ReadonlyArray<Artifact>,
+49:   populate?: (staging: string) => Effect.Effect<void, Failed>,
+50: ) {
+51:   if (yield* installed(directory)) return directory
+52:   const parent = path.dirname(directory)
+53:   yield* step("filesystem", () => mkdir(parent, { recursive: true }))
+54:   const staging = yield* step("filesystem", () => mkdtemp(path.join(parent, ".staging-")))
+55:   yield* Effect.gen(function* () {
+56:     yield* Effect.forEach(artifacts, (artifact) => unpack(staging, artifact), { discard: true })
+57:     if (populate) yield* populate(staging)
+58:     yield* step("filesystem", () => writeFile(path.join(staging, ".complete"), ""))
+59:     // A concurrent install may have renamed its staging dir first; its complete install wins.
+60:     yield* step("filesystem", () => rename(staging, directory)).pipe(
+61:       Effect.catch((error) =>
+62:         installed(directory).pipe(Effect.flatMap((done) => (done ? Effect.void : Effect.fail(error)))),
+63:       ),
+64:     )
+65:   }).pipe(Effect.ensuring(Effect.promise(() => rm(staging, { recursive: true, force: true }))))
+66:   return directory
+67: })
+68: 
+69: export const installed = (directory: string) =>
+70:   Effect.promise(() =>
+71:     access(path.join(directory, ".complete")).then(
+72:       () => true,
+73:       () => false,
+74:     ),
+75:   )
+```
+
+Linhas 77–95:
+
+```text
+77: const unpack = Effect.fnUntraced(function* (staging: string, artifact: Artifact) {
+78:   const separator = artifact.integrity.indexOf("-")
+79:   const algorithm = artifact.integrity.slice(0, separator)
+80:   if (algorithm !== "sha256" && algorithm !== "sha512") return yield* new Failed({ cause: "integrity-unsupported" })
+81:   if (!artifact.entries.every((entry) => contained(entry.from) && contained(entry.to)))
+82:     return yield* new Failed({ cause: "layout" })
+83:   const extractor = artifact.format === "raw" ? undefined : command(artifact.format)
+84:   if (extractor && !(yield* Effect.promise(() => which(extractor[0], { nothrow: true }))))
+85:     return yield* new Failed({ cause: `extractor-missing:${extractor[0]}` })
+86: 
+87:   const response = yield* Effect.tryPromise({
+88:     try: () => fetch(artifact.url, { redirect: "follow", signal: AbortSignal.timeout(DOWNLOAD_MS) }),
+89:     catch: () => new Failed({ cause: "download:network" }),
+90:   })
+91:   if (!response.ok) return yield* new Failed({ cause: `download:${response.status}` })
+92:   const bytes = yield* step("download:network", async () => new Uint8Array(await response.arrayBuffer()))
+93:   // Nothing from the download reaches the disk before its digest matches the pin.
+94:   if (createHash(algorithm).update(bytes).digest("base64") !== artifact.integrity.slice(separator + 1))
+95:     return yield* new Failed({ cause: "integrity-mismatch" })
+```
+
+## E07 — Hosted: npm/pip/source e encerramento
+
+`packages/core/src/backend-toolkit/hosted.ts`
+
+Blob `987657dcb1ce8d9cc9f623713673f99dd376e86c` · SHA-256 `6d3ea35691832eddb90ce8563679390a1030b71d636a01a4c5cd59ad78ebeb34`.
+
+Linhas 39–46:
+
+```text
+39:     if (install.kind !== "jar" && !host)
+40:       return yield* new PinnedArtifact.Failed({ cause: `cross-target:${install.kind}` })
+41:     // The common runtime primitive owns the attempt, so capability callers and hosted engines share one download.
+42:     yield* ToolkitRuntime.ensure({ root, runtime, target }).pipe(
+43:       Effect.mapError((error) => new PinnedArtifact.Failed({ cause: `runtime-${error.cause}` })),
+44:     )
+45:     if (install.kind === "source" && install.compatibility && (engine.id !== "gocqlx-schemagen" || install.build !== "go"))
+46:       return yield* new PinnedArtifact.Failed({ cause: "compatibility:cassandra-metadata:unsupported-engine" })
+```
+
+Linhas 68–70:
+
+```text
+68:                   await run(
+69:                     interpreter,
+70:                     [npm, "ci", "--ignore-scripts", "--no-audit", "--no-fund", "--offline=false"],
+```
+
+Linhas 87–91:
+
+```text
+87:                       "install",
+88:                       "--require-hashes",
+89:                       "--no-deps",
+90:                       "--only-binary=:all:",
+91:                       "--target",
+```
+
+Linhas 142–146:
+
+```text
+142:                 if (install.kind === "source") {
+143:                   // Reject invalid builder output before PinnedArtifact publishes its complete cache.
+144:                   if (!(await Effect.runPromise(fileReady(executable(engine, staging, target), target))))
+145:                     throw new Error("source-executable-not-ready")
+146:                   return
+```
+
+Linhas 158–166:
+
+```text
+158:             // tryPromise aborts before its Promise settles. Join the nested root's process finalizers before install()
+159:             // removes staging, including interruption during the async filesystem work preceding the spawn.
+160:             Effect.onInterrupt(() =>
+161:               Effect.promise(
+162:                 () =>
+163:                   pending.work?.then(
+164:                     () => undefined,
+165:                     () => undefined,
+166:                   ) ?? Promise.resolve(),
+```
+
+## E08 — Launchers, shims e diagnóstico
+
+`packages/core/src/backend-toolkit/launcher.ts`
+
+Blob `79c8f7643e6aa23fe628a597422f63d7a033aace` · SHA-256 `12a6f931b7e080fc25722c966b88822d572fd5ebec86ca52e9e8710ac59d7c36`.
+
+Linhas 41–47:
+
+```text
+41: function launcher(windows: boolean, command: ReadonlyArray<string>, env: Readonly<Record<string, string>>, bin?: string) {
+42:   const vars = Object.entries(env)
+43:   if (windows)
+44:     return ["@echo off", "setlocal", ...vars.map(([key, value]) => `set "${key}=${value}"`), ...(bin ? [`set "PATH=${bin};%PATH%"`] : []), `${command.map((part) => `"${part}"`).join(" ")} %*`, "exit /b %errorlevel%", ""].join("\r\n")
+45:   return ["#!/bin/sh", ...vars.map(([key, value]) => `export ${key}=${quote(value)}`), ...(bin ? [`export PATH=${quote(bin)}:"$PATH"`] : []), `exec ${command.map(quote).join(" ")} "$@"`, ""].join("\n")
+46: }
+47: 
+```
+
+`packages/core/src/backend-toolkit/diagnostics.ts`
+
+Blob `82c79df31ad65365a2945d516a2e890e2da0d9af` · SHA-256 `d556fb8a95fdaff9ca4ec23b8ff137f37c3a7547c8ceb4d2d83810e7c2c86814`.
+
+Linhas 7–14:
+
+```text
+7: export function details(text: string, env: NodeJS.ProcessEnv = process.env) {
+8:   const normalized = stripVTControlCharacters(text)
+9:   if (OutputInspector.reason(text) || OutputInspector.reason(normalized)) return
+10:   // These repository settings are boolean policy switches, not credential material (tests set the value to "0").
+11:   if (Object.entries(env).some(([key, value]) => value && !/^ORCHESTRA_INHERIT_CREDENTIALS$/i.test(key) &&
+12:     /(?:^|_)(?:SECRET|TOKEN|PASSWORD|CREDENTIALS?|AUTH|(?:API|ACCESS|PRIVATE|CLIENT)_KEY)$/i.test(key) &&
+13:     (text.includes(value) || normalized.includes(stripVTControlCharacters(value))))) return
+14:   return normalized.slice(-4096).trim()
+```
+
+## E09 — Guard de versão e parser de config
+
+`packages/core/src/backend-toolkit/project-version.ts`
+
+Blob `00be68470409c48e585aa1ab764e6d8872ddd44e` · SHA-256 `c82bf83182a6d03b13755e5c97eed67bf4dd8298226bd9f79277c94bff94e263`.
+
+Linhas 33–49:
+
+```text
+33: export const checkProjectVersion = Effect.fn("BackendToolkitProject.checkProjectVersion")(function* (input: {
+34:   engine: "openapi-generator"
+35:   argv: readonly string[]
+36:   cwd: string
+37:   projectDirectory: string
+38: }) {
+39:   if (["validate", "version", "help", "list", "config-help"].includes(input.argv[0])) return
+40:   if (input.argv[0] !== "generate") return yield* blocked("unsupported-owned-call")
+41:   const options = yield* Effect.try({ try: () => generationOptions(input.argv), catch: (error) =>
+42:     error instanceof Blocked ? error : blocked("unsupported-owned-call") })
+43:   const root = yield* Effect.tryPromise({
+44:     try: () => realpath(input.projectDirectory),
+45:     catch: () => blocked("unreadable-project"),
+46:   })
+47:   if (input.cwd.split(/[\\/]/).includes("..")) return yield* blocked("unbound-cwd")
+48:   const cwd = yield* Effect.tryPromise({ try: () => realpath(input.cwd), catch: () => blocked("unreadable-cwd") })
+49:   yield* physical(root, cwd, "cwd")
+```
+
+Linhas 61–76:
+
+```text
+61:   const tools = yield* readMetadata(root, path.join(root, "openapitools.json"), "project-metadata")
+62:   const project = tools === undefined ? undefined : yield* document(tools, "project-metadata", true)
+63:   const cli = project?.["generator-cli"]
+64:   if (cli !== undefined && (typeof cli !== "object" || cli === null || Array.isArray(cli)))
+65:     return yield* blocked("malformed-project-metadata")
+66:   const declared = cli !== undefined && "version" in cli ? cli.version : undefined
+67:   const directory = path.resolve(cwd, output, ".openapi-generator")
+68:   const metadata = yield* physical(root, directory, "output-metadata")
+69:   const generated = yield* readMetadata(root, path.join(directory, "VERSION"), "output-metadata", metadata !== undefined)
+70:   const pins = [declared, generated?.trim()].filter((pin) => pin !== undefined)
+71:   if (pins.some((pin) => typeof pin !== "string" || !/^\d+\.\d+\.\d+(?:[-+][A-Za-z0-9.-]+)?$/.test(pin)))
+72:     return yield* blocked("malformed-version")
+73:   const mismatch = pins.find((pin) => pin !== openapiGenerator.version)
+74:   if (mismatch !== undefined)
+75:     return yield* new Blocked({ reason: `engine-version-mismatch(project=${mismatch}, bundled=${openapiGenerator.version})` })
+76: })
+```
+
+## E10 — Compatibilidade Cassandra e dialer fechado
+
+`packages/core/src/backend-toolkit/cassandra-metadata.ts`
+
+Blob `be309cc1fe2edeeefe82c5c042987a26622d964a` · SHA-256 `adffa5bbb4e9ab695e7879cf4db83d4982562e69aa74b60b7a016072079428cb`.
+
+Linhas 31–45:
+
+```text
+31:   '\tif err := iter.Close(); err != nil {\n' +
+32:   '\t\treturn nil, fmt.Errorf("error querying scylla table schema availability: %v", err)\n' +
+33:   '\t}\n' +
+34:   '\tif !hasScyllaTables {\n' +
+35:   '\t\treturn tables, nil\n' +
+36:   '\t}\n'
+37: 
+38: export function patch(source: Uint8Array) {
+39:   requireHash(source, BEFORE, "driver-source")
+40:   const anchor = '\n\tstmt = `SELECT * FROM system_schema.scylla_tables WHERE keyspace_name = ? AND table_name = ?`'
+41:   const patched = Buffer.from(Buffer.from(source).toString("utf8").replace(anchor, `${GUARD}${anchor}`))
+42:   requireHash(patched, AFTER, "patched-driver-source")
+43:   return patched
+44: }
+45: 
+```
+
+`packages/core/src/backend-toolkit/cassandra-dialer.ts`
+
+Blob `94282bf8f1c851b477f80a57b006df309c243c67` · SHA-256 `3943c718ce59b671dcbd21085bd1907ad5d91de0f0e2fc34e5b2d7f85dc1e2da`.
+
+Linhas 49–69:
+
+```text
+49: func newOrchestraGeneratorDialer(text string, timeout time.Duration) (*orchestraGeneratorDialer, error) {
+50: 	entries := strings.Split(text, ";")
+51: 	if len(text) == 0 || len(text) > 32*213 || len(entries) > 32 {
+52: 		return nil, fmt.Errorf("orchestra-cassandra-dialer:invalid-routes")
+53: 	}
+54: 	routes := make(map[string]string, len(entries))
+55: 	paths := make(map[string]bool, len(entries))
+56: 	for _, entry := range entries {
+57: 		port, encoded, ok := strings.Cut(entry, ":")
+58: 		n, err := strconv.Atoi(port)
+59: 		if !ok || err != nil || n < 1 || n > 65535 || strconv.Itoa(n) != port || len(encoded) == 0 || len(encoded) > 206 {
+60: 			return nil, fmt.Errorf("orchestra-cassandra-dialer:invalid-routes")
+61: 		}
+62: 		decoded, err := hex.DecodeString(encoded)

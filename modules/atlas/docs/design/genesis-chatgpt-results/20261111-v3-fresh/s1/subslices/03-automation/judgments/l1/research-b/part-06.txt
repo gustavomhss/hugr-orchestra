@@ -1,0 +1,211 @@
+156:   return found[0]
+157: }
+```
+
+## E37 — Custódia e admissão são contratos diferentes
+
+`packages/core/src/research/artifacts.ts`
+
+Blob `7c8bb90f269ad00d3779923dd1d8211e3d4edbd4` · SHA-256 `57e6e7d99c507014c52b887d21dfe766311a1a20a5e3e24837665fed7091d24f`.
+
+Linhas 85–94:
+
+```text
+85:     yield* retained(binding)
+86:     const admitted = (yield* entries(binding, ref.id, scope)).filter((entry) => {
+87:       if (entry.type === "research.source.admitted") return entry.data.receipt.ref.artifact.revision === ref.revision
+88:       if (entry.type === "research.document.published") return entry.data.receipt.artifact.revision === ref.revision
+89:       return false
+90:     })
+91:     const event = admitted[0]
+92:     if (admitted.length !== 1 || !event || event.type === "research.record.committed")
+93:       return yield* new Research.Error({ code: "not_found", message: "Research artifact not found" })
+94:     yield* retained(event.data.binding)
+```
+
+Linhas 104–112:
+
+```text
+104:         if (manifest.operation !== event.data.operation || manifest.ref.id !== ref.id || manifest.ref.revision !== ref.revision || manifest.digest !== digest ||
+105:           manifest.representation !== representation || manifest.bytes !== receipt.bytes ||
+106:           ResearchLedger.canonical(manifest.binding) !== ResearchLedger.canonical(event.data.binding))
+107:           throw new Error("Manifest differs from admission")
+108:         const body = await bytes(path.join(root, `${ref.id}-${ref.revision}.body`), Research.Limits.sourceBytes)
+109:         if (body.byteLength !== receipt.bytes || ResearchLedger.digest(body) !== digest) throw new Error("Body differs from admission")
+110:         return body
+111:       },
+112:       catch: () => new Research.Error({ code: "source_unavailable", message: "Admitted research bytes are missing or corrupt" }),
+```
+
+Linhas 134–145:
+
+```text
+134:     // Validate the whole admitted representation before returning any textual page; binary is never replacement-decoded.
+135:     yield* Effect.try({ try: () => new TextDecoder("utf-8", { fatal: true }).decode(stored.content),
+136:       catch: () => new Research.Error({ code: "unsupported", message: "Research artifact is not supported UTF-8 text" }) })
+137:     const end = Math.min(offset + Research.Limits.pageBytes, stored.content.byteLength)
+138:     const boundary = end === stored.content.byteLength ? end : end - ([0, 1, 2, 3].find((back) => (stored.content[end - back] & 0xc0) !== 0x80) ?? 0)
+139:     const next = boundary < stored.content.byteLength ? Buffer.from(ResearchLedger.canonical({
+140:       bindingHash: ResearchLedger.digest(ResearchLedger.canonical(binding)), ref: stored.ref, digest: stored.digest, representation: stored.representation,
+141:       offset: boundary, size: Research.Limits.pageBytes,
+142:     })).toString("base64url") : undefined
+143:     return {
+144:       ref: stored.ref, representation: stored.representation, text: stored.content.subarray(offset, boundary).toString("utf8"), receipt: stored.receipt,
+145:       complete: next === undefined && (stored.event.type !== "research.source.admitted" || stored.event.data.receipt.complete),
+```
+
+## E38 — Intent estável e filesystem imutável
+
+`packages/core/src/research/artifacts.ts`
+
+Mesma identidade de fonte já declarada nesta projeção.
+
+Linhas 174–190:
+
+```text
+174:         const reconcile = async () => {
+175:           const saved = Schema.decodeUnknownSync(Schema.fromJsonString(ResearchLedger.Entry))((await bytes(filename, Research.Limits.eventBytes)).toString("utf8"))
+176:           if (saved.type !== entry.type || saved.id !== entry.id || saved.data.operation !== entry.data.operation ||
+177:             saved.data.inputHash !== entry.data.inputHash || ResearchLedger.canonical(saved.data.binding) !== ResearchLedger.canonical(binding))
+178:             throw new Research.Error({ code: "conflict", message: "Research intent was reused with different input" })
+179:           return saved
+180:         }
+181:         const existing = await reconcile().catch((error: unknown) => {
+182:           if (missing(error)) return undefined
+183:           throw error
+184:         })
+185:         if (existing) return existing
+186:         await publish(filename, Buffer.from(ResearchLedger.canonical(entry))).catch((error: unknown) => {
+187:           // Concurrent identical intent may differ only in its host capture/publication timestamp.
+188:           if (!(error instanceof Research.Error && error.code === "conflict")) throw error
+189:         })
+190:         return reconcile()
+```
+
+Linhas 237–255:
+
+```text
+237: async function publish(filename: string, content: Buffer) {
+238:   const staging = `${filename}.${randomUUID()}.staging`
+239:   const file = await fs.open(staging, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW, 0o600)
+240:   try {
+241:     try {
+242:       await file.writeFile(content)
+243:       await file.sync()
+244:     } finally {
+245:       await file.close()
+246:     }
+247:     await fs.link(staging, filename).catch(async (error: unknown) => {
+248:       if (!(error instanceof Error && "code" in error && error.code === "EEXIST")) throw error
+249:       if (!(await bytes(filename, content.byteLength)).equals(content))
+250:         throw new Research.Error({ code: "conflict", message: "Immutable research artifact already has different bytes" })
+251:     })
+252:   } finally {
+253:     await fs.unlink(staging)
+254:   }
+255: }
+```
+
+## E39 — Records e locators de evidência
+
+`packages/core/src/research/records.ts`
+
+Blob `17f942640c19e3057ef463252be56ad72a9fa4e7` · SHA-256 `6f38acb52606d54c2b070057b301cfc82cba29f814599a0dee480c110cee558d`.
+
+Linhas 103–115:
+
+```text
+103:   const evidence = Effect.fn("ResearchRecords.evidence")(function* (binding: Research.Binding, ref: Research.EvidenceRef) {
+104:     const content = yield* source(binding, ref.source)
+105:     // A code_locate snapshot holds ranges of many worktree files: original lines resolve inside one of its ranges.
+106:     const snapshot = ref.locator.kind === "lines" && ref.locator.basis === "original" && "origin" in content.receipt &&
+107:       content.receipt.origin.kind === "file" && content.receipt.origin.uri === binding.worktree ? Locate.blocks(content.text) : undefined
+108:     if (snapshot && ref.locator.kind === "lines") {
+109:       const lines = ref.locator
+110:       if (snapshot.some((block) => block.start <= lines.start && lines.end <= block.end && lines.start <= lines.end)) return
+111:       return yield* new Research.Error({ code: "reference_invalid", message: `Lines ${lines.start}-${lines.end} are not inside one range of this code_locate snapshot` })
+112:     }
+113:     return yield* Effect.try({ try: () => checkLocator(content.text, ref.source.representation, retainedLocator(ref.locator, content.receipt)),
+114:       catch: (error) => error instanceof Research.Error ? error : new Research.Error({ code: "reference_invalid", message: "Source locator does not match" }) })
+115:   })
+```
+
+Linhas 521–552:
+
+```text
+521: function checkLocator(text: string, representation: typeof Research.Representation.Type, locator: Research.Locator) {
+522:   if (locator.kind === "lines") {
+523:     if (locator.start > locator.end || locator.end > text.split(/\r\n|\n|\r/).length)
+524:       throw new Research.Error({ code: "reference_invalid", message: "Source line range does not exist" })
+525:     return
+526:   }
+527:   if (locator.kind === "quote") {
+528:     // Lookahead includes overlapping matches ("aa" occurs twice in "aaa").
+529:     const matches: number[] = []
+530:     for (const match of text.matchAll(new RegExp(`(?=${escapeLiteral(locator.exact)})`, "gu"))) {
+531:       if ((locator.prefix && !text.slice(Math.max(0, match.index - locator.prefix.length), match.index).endsWith(locator.prefix)) ||
+532:         (locator.suffix && !text.slice(match.index + locator.exact.length, match.index + locator.exact.length + locator.suffix.length).startsWith(locator.suffix))) continue
+533:       if (matches.length) throw new Research.Error({ code: "locator_ambiguous", message: "Quote matches more than one location" })
+534:       matches.push(match.index)
+535:     }
+536:     if (!matches.length) throw new Research.Error({ code: "reference_invalid", message: "Quote does not match admitted representation" })
+537:     return
+538:   }
+539:   if (representation !== "structured-json") throw new Research.Error({ code: "reference_invalid", message: "JSON locator requires structured-json representation; cite a text source by lines or quote" })
+540:   const parsed = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(text)
+541:   if (parsed._tag === "None") throw new Research.Error({ code: "source_unavailable", message: "Admitted JSON representation cannot be decoded" })
+542:   if (locator.pointer !== "" && (!locator.pointer.startsWith("/") || /~(?:[^01]|$)/.test(locator.pointer)))
+543:     throw new Research.Error({ code: "reference_invalid", message: "Invalid JSON pointer" })
+544:   if (locator.pointer === "") return
+545:   locator.pointer.slice(1).split("/").reduce((value: unknown, part) => {
+546:     const key = part.replace(/~1/g, "/").replace(/~0/g, "~")
+547:     if (value === null || typeof value !== "object" || !Object.hasOwn(value, key) ||
+548:       (Array.isArray(value) && !/^(0|[1-9][0-9]*)$/.test(key)))
+549:       throw new Research.Error({ code: "reference_invalid", message: "JSON pointer does not resolve" })
+550:     return Reflect.get(value, key)
+551:   }, parsed.value)
+552: }
+```
+
+## E40 — CAS de registros e captura admitida
+
+`packages/core/src/research/records.ts`
+
+Mesma identidade de fonte já declarada nesta projeção.
+
+Linhas 149–165:
+
+```text
+149:       yield* checkCitations(input.document)
+150:     }
+151:     const supplied = input.action === "relation" ? undefined : input.id
+152:     const base = input.action === "relation" ? undefined : input.baseRevision
+153:     if ((supplied === undefined) !== (base === undefined))
+154:       return yield* new Research.Error({ code: "conflict", message: "Updates require both an admitted identity and base revision" })
+155:     const id = supplied ?? mint(input.action, operation)
+156:     const history = current.flatMap((entry) => {
+157:       if (entry.type === "research.record.committed" && entry.data.record.id === id) return [entry.data.record.revision]
+158:       if (entry.type === "research.document.published" && entry.data.receipt.ref.id === id) return [entry.data.receipt.ref.revision]
+159:       return []
+160:     })
+161:     const latest = Math.max(0, ...history)
+162:     if ((base ?? 0) !== latest || (supplied && !latest))
+163:       return yield* new Research.Error({ code: "conflict", message: "Research base revision is stale or missing" })
+164:     if (supplied && input.action === "finding" && !input.reason)
+165:       return yield* new Research.Error({ code: "reference_invalid", message: "Material finding revision requires its reason" })
+```
+
+Linhas 191–213:
+
+```text
+191:           if (entry.type === "research.record.committed" && entry.data.record.id === id) return [entry.data.record.revision]
+192:           if (entry.type === "research.document.published" && entry.data.receipt.ref.id === id) return [entry.data.receipt.ref.revision]
+193:           return []
+194:         })
+195:         if (Math.max(0, ...revisions) !== latest)
+196:           yield* Effect.die(new Research.Error({ code: "conflict", message: "Research revision changed during publication" }))
+197:       }).pipe(Effect.orDie)
+198:       if (committed.type === "research.record.committed")
+199:         yield* events.publish(ResearchEvent.RecordCommitted, committed.data, { id: eventID, persist: true, commit })
+200:       if (committed.type === "research.document.published")
+201:         yield* events.publish(ResearchEvent.DocumentPublished, committed.data, { id: eventID, persist: true, commit })

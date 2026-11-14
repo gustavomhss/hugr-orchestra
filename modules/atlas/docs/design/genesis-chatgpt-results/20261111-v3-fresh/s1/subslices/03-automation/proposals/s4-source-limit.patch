@@ -1,0 +1,58 @@
+--- a/modules/atlas/packages/adapter-io/src/ownership-input.ts
++++ b/modules/atlas/packages/adapter-io/src/ownership-input.ts
+@@ -5,6 +5,8 @@
+ import { isContainedIn } from "./containment.js"
+ import { runGitStrict } from "./run-git.js"
+ import type { RunGitStrictResult } from "./run-git.js"
++
++export const OWNERSHIP_INPUT_MAX_BYTES = 1_048_576
+ 
+ export type OwnershipInputObservation = KnowledgeOwnershipInputObservation
+ 
+@@ -169,7 +171,7 @@
+           if (n === 0) break
+           chunks.push(Buffer.from(probe.subarray(0, n)))
+           total += n
+-          if (total > 256000) return { kind: "unavailable" }
++          if (total > OWNERSHIP_INPUT_MAX_BYTES) return { kind: "unavailable" }
+         }
+         bytes = Buffer.concat(chunks, total)
+       } finally { closeSync(fd) }
+@@ -178,7 +180,7 @@
+   let after: ReturnType<typeof lstatSync>
+   try { after = lstatSync(requested) } catch { return { kind: "unavailable" } }
+   if (after.ino !== before.ino || after.size !== before.size) return { kind: "unavailable" }
+-  if (bytes.length > 256000) return { kind: "unavailable" }
++  if (bytes.length > OWNERSHIP_INPUT_MAX_BYTES) return { kind: "unavailable" }
+   return { kind: "present", version: String(id({ kind: "ownership-source", version: 1, bytes: Array.from(bytes) })) }
+ }
+ 
+--- a/modules/atlas/packages/adapter-io/src/genesis-native.ts
++++ b/modules/atlas/packages/adapter-io/src/genesis-native.ts
+@@ -7,7 +7,7 @@
+ import type { NativeReference } from "./genesis-native-format.js"
+ import { decodeNativeUtf8, nativeBlobSha, nativeBody, nativeCasDirectory, nativeImplementation, nativeIoUrl, nativePut, nativeRoot, nativeSha256, readNativeFile } from "./genesis-native-io.js"
+ import { nativeBindingUrl, validateNativeBinding } from "./genesis-native-binding.js"
+-import { observeOwnershipInput, ownershipInput } from "./ownership-input.js"
++import { observeOwnershipInput, ownershipInput, OWNERSHIP_INPUT_MAX_BYTES } from "./ownership-input.js"
+ import { ownershipClaim } from "./ownership-access.js"
+ import { headSha } from "./run-git.js"
+ import { createDiskStore } from "./store.js"
+@@ -54,7 +54,7 @@
+     for (const reference of [source.recipe_ref, source.producer_request_ref, source.producer_response_ref, ...source.semantic_review_refs, ...source.runtime_receipt_refs]) preserve(reference)
+     for (const reference of source.source_refs) {
+       expectFile(reference.path, reference.sha256)
+-      const bytes = readNativeFile(root, reference.path, 256000)
++      const bytes = readNativeFile(root, reference.path, OWNERSHIP_INPUT_MAX_BYTES)
+       if (nativeSha256(bytes) !== reference.sha256 || nativeBlobSha(bytes) !== reference.git_blob_sha)
+         throw new Error(`native-source-drift: ${reference.path}`)
+     }
+@@ -64,7 +64,7 @@
+     const inputs = inputKeys.map((key) => {
+       const observed = observeOwnershipInput(root, key)
+       if (observed.kind !== "present") throw new Error(`native-input-${observed.kind}: ${key}`)
+-      const bytes = key.startsWith("file:") ? readNativeFile(root, key.slice(5), 256000) : undefined
++      const bytes = key.startsWith("file:") ? readNativeFile(root, key.slice(5), OWNERSHIP_INPUT_MAX_BYTES) : undefined
+       if (bytes !== undefined && expectedFiles.has(key.slice(5)) && nativeSha256(bytes) !== expectedFiles.get(key.slice(5)))
+         throw new Error(`native-source-drift: ${key}`)
+       if (bytes !== undefined && observed.version !== String(id({ kind: "ownership-source", version: 1, bytes: Array.from(bytes) })))
