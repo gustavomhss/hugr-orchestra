@@ -1,0 +1,34 @@
+{
+  "schema": "genesis-s1-subdivision-handoff/v1",
+  "campaign": "20261111-v1",
+  "protocol_epoch": "parallel-v3-fresh",
+  "results_epoch": "20261111-v3-fresh",
+  "session": "S1",
+  "subslice_id": "S1-03",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "branch": "genesis-s1-automation",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "observed_branch_head": "89c78249e63060acf7c41f45f14af88fd51aa0c4",
+  "artifact_revision": "fde931e0551a540b8020346122ca22456a875cdc",
+  "candidate_revision": null,
+  "work": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/work.md",
+  "ledger": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/execution-ledger.jsonl",
+  "completion_state": "IN_PROGRESS",
+  "local_obligations_open": [
+    "L1 leaf coverage",
+    "two independent native judges",
+    "L2-L4",
+    "native package and Atlas operations",
+    "consumers",
+    "maintenance",
+    "gates",
+    "criteria matrix and final seal"
+  ],
+  "global_integration": {
+    "owner": "S1_COORDINATION",
+    "branch": "genesis-fresh-s1",
+    "status": "NOT_REVIEWED"
+  },
+  "supersedes": null
+}
