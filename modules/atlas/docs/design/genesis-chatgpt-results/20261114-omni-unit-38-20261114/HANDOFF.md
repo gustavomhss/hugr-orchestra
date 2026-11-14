@@ -7,7 +7,7 @@
 - Repositório: `gustavomhss/hugr-orchestra`
 - Branch própria: `genesis-omni-unit-38-20261114`
 - Base reconciliada: `75df3f4ad95e33829442e3be5f223f16d3c4e7ba` (HEAD observado de `genesis-omni-review-5-20261114`)
-- HEAD desta branch após publicação do parecer e deste handoff: `983ef490a31753908907f0341d51cb35fa318a1c`
+- HEAD da branch após a publicação inicial do parecer e do handoff: `983ef490a31753908907f0341d51cb35fa318a1c`; o commit posterior atualiza somente este handoff.
 - Snapshot: `343d056ffef7f4a0052da8e2e55559c95169f462`
 - Baseline: `1cde2ff7a71bcf7aecb5d030917b577165135d38`
 - Protocolo: `ee2521a5b966bd505cc95bd1c733e09e12f33531`
