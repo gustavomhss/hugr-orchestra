@@ -1,0 +1,4 @@
+{"event":"execution_started","execution_id":"347b9fda-68c4-44e3-822b-51e792e0d801","observed_head":"89c78249e63060acf7c41f45f14af88fd51aa0c4","source_revision":"1cde2ff7a71bcf7aecb5d030917b577165135d38","scope":"S1-05","tokens":"UNKNOWN","physical_attempts":"UNKNOWN","billing":"UNKNOWN","historical_accounting":"UNRECONCILED_NOT_ZERO"}
+{"event":"native_dispatch","task":"runtime_audit","agent_id":"/root/runtime_audit","purpose":"runtime capability discovery and isolated materialization"}
+{"event":"native_dispatch","task":"core_boundaries","agent_id":"/root/core_boundaries","purpose":"supplier reconciliation and exact raw evidence"}
+{"event":"oracle_frozen","sha256":"587abf203a63d727a93029222416d1971f72598c343eec9d83920172b038e4ec","before":"L2 producer","public_contract_sha256":"1cd73b1018832e313632e6803b8ccc433bbd6fbfd795632e0f9bd34b772566ce"}
