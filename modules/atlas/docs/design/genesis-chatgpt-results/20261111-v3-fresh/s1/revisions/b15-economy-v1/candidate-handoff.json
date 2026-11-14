@@ -1,0 +1,43 @@
+{
+  "schema": "genesis-s1-b15-candidate-handoff/v1",
+  "campaign": "20261111-v1",
+  "protocol_epoch": "parallel-v3-fresh",
+  "results_epoch": "20261111-v3-fresh",
+  "session": "s1",
+  "branch": "genesis-s1-b15-reconciliation-20261113",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "observed_branch_head": "5e34e464e0c504261287ad7b4cfa2cf25f65c834",
+  "candidate_revision": null,
+  "artifact_revision": "5e34e464e0c504261287ad7b4cfa2cf25f65c834",
+  "package": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b15-economy-v1/native-package.json",
+    "sha256": "fe4b807717cfd2b623e89eb29ae8a13dc1e35c3a0cbc57bf02773a4faf4e045e"
+  },
+  "body": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b15-economy-v1/bodies/economy.md",
+    "sha256": "74a59d062ae560dc633abd7561b1a763a7a9982db587d5c0076b8fc8f4a9b6bf",
+    "byte_length": 3288
+  },
+  "manifest": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b15-economy-v1/manifest.json",
+  "judgments": [],
+  "completion_state": "IN_PROGRESS",
+  "local_obligations_open": [
+    "Independent J1 and J2 semantic judgments must assess the exact candidate package and body; no reviewer IDs or decisions are available in this Chat/GitHub-MCP session.",
+    "Any required binding/runtime review and Atlas consumer evidence remain separate; none is claimed."
+  ],
+  "global_integration": {
+    "owner": "root",
+    "status": "NOT_REVIEWED"
+  },
+  "consumed_dependencies": [
+    "7bfb9a4f69cd5ea1dc31b33d4afd26ec9e6c7f4a — impact 1/2 findings and four NO_CHANGE dispositions",
+    "51a7c500835c48b35cdfc2348484482d41c9770f — corrected B15 body and three NO_CHANGE dispositions"
+  ],
+  "supersedes": null,
+  "limits": [
+    "Candidate is isolated on the authorized reconciliation branch; genesis-fresh-s1 remains unchanged.",
+    "The seven dependent NO_CHANGE dispositions remain historical provenance and are not new judgments on this candidate.",
+    "No CI, runtime, provider, consumer, maintenance, private material, merge, or global acceptance."
+  ]
+}
