@@ -218,3 +218,68 @@ Pontos de precisão confirmados:
 - Nenhum teste de produto, CI, workflow, Atlas runtime, infraestrutura ou shell foi executado. Nenhum corpo de produção, fonte, branch alheia ou parecer anterior foi alterado.
 
 **Conclusão:** posições 21 e 22 podem ser encaminhadas ao par persistente para julgamento das mesmas versões exatas, com as limitações registradas. Não se declara aceite formal.
+
+
+---
+
+# Rodada 4 — posições 23–24 (Surface 05–06)
+
+**Resultado: dois pareceres documentais consultivos concluídos; sem defeito obrigatório identificado.**
+
+## Reconciliação antes da seleção e escrita
+
+- HEAD próprio antes da rodada: `1a7963c8063c8254f484fb0303bf386c6a7d3125`. `REVIEW.md` e `HANDOFF.md` foram lidos e conferidos; as três rodadas anteriores (17–22) permanecem no histórico.
+- HEAD de `genesis-external-omni-393`: `bdfebdb9fe6b5f2a921aef207cebe33b65cd6d20`. Os corpos 05 e 06 foram lidos nesse checkpoint e correspondem aos blobs do snapshot de partição `343d056ffef7f4a0052da8e2e55559c95169f462`.
+- HEADs atuais consultados: S1 `c9c14b41802348022d9c39cd4ab9a377fa8dfc5a`; S2 `436edb688f18923f160a09939869652f9ee3f286`; S4 `a0b79b78bb573d232e37143ab6d64319321c4a4b`; S5 `75df3f4ad95e33829442e3be5f223f16d3c4e7ba`. Seus handoffs delimitam faixas 1–8, 9–16, 25–31 e 32–38; não há interseção com 23–24.
+- S4 registra 25 e 29–31 pendentes e pareceres individuais em 26–28; S5 mantém a faixa 32–38. Nenhum desses estados concorre com esta seleção.
+- O diretório público `reviews/` do checkpoint externo contém resumos CORE até C10 e nenhum parecer publicado para Surface 05/06. Isso não prova ausência de atividade privada; não reivindico que a fila privada J1/J2 esteja inativa.
+- O protocolo `judging.md` e os critérios `principles.md`, `completion.md` e `transport.md` foram lidos no pin `ee2521a5b966bd505cc95bd1c733e09e12f33531`. O protocolo exige o mesmo par persistente e proíbe terceiro voto/substituição; distingue parecer semântico de binding, runtime e consumo real.
+
+## Identidade dos corpos
+
+| Posição | Corpo | Blob SHA | Fontes |
+|---:|---|---|---:|
+| 23 | `bodies/surface/records-05.json` | `36144e88d1d7230fb7754c68a10b09007d092abb` | 16 |
+| 24 | `bodies/surface/records-06.json` | `5fbc746c327eb8c1b3d0d3c5f264679c56f6c9bc` | 16 |
+
+## Parecer — posição 23: Surface 05
+
+**Fontes verificadas:** 16/16. **Trechos de evidência:** 39/39.
+
+Todos os Git blob SHAs declarados nos 16 registros coincidem com os blobs recuperados no baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Os 39 trechos foram comparados com os intervalos de linha correspondentes e coincidem exatamente após normalização de CRLF para LF. Os campos `source_sha256` e `source_bytes` não foram recalculados.
+
+Cobertura examinada:
+- Fixtures e harness do binding Node: `test/markers.mjs`, `mini.mjs`, `overloads.ts`, `worker-host.mjs`, `worker.mjs`.
+- Oráculo/runner de conformance: `runner/expect.mjs`, `ledger.mjs`, `os.mjs`, `pattern.mjs`, `read.mjs`, `scenario.mjs`, `schema.mjs`, `steps.mjs`, `suite.mjs`, `support.mjs`, `teeth.mjs`.
+
+**Parecer:** fiel e útil, com limites importantes explícitos. O corpo diferencia corretamente falha de produto de falha de harness, recusa de oráculo desconhecido, matching estrito de expectativas e prova de liveness baseada no SO. Também distingue testes com fake API/mutantes de evidência de comportamento nativo; os cenários e seus resultados não foram executados nesta revisão.
+
+As lacunas listadas são proporcionais às fontes: parsing de PID sem `Number.isSafeInteger`; sobrescrita de nomes duplicados no mapa de cenário e ausência de validação de confinamento de paths no schema/runner; cobertura intencionalmente parcial do DSL para algumas opções da API pública; e cleanup de runner que ignora erros/timeouts como mecanismo anti-hang, não como prova de árvore encerrada. O corpo não converte essas limitações em aprovação ou em falha de runtime não observada.
+
+**Decisão:** nenhum defeito documental obrigatório identificado nesta leitura consultiva.
+
+## Parecer — posição 24: Surface 06
+
+**Fontes verificadas:** 16/16. **Trechos de evidência:** 47/47.
+
+Todos os Git blob SHAs declarados coincidem com os blobs recuperados no baseline; os 47 trechos citados coincidem exatamente com os intervalos de linha. Os campos `source_sha256` e `source_bytes` não foram recalculados.
+
+Cobertura examinada:
+- Empacotamento e instalação npm: `bindings/node/npm/README.md`, `pack.mjs`, `verify.mjs`.
+- Artefatos, CI e guardrails: `scripts/artifacts.node-smoke.mjs`, `brief.py`, `build-artifacts.mjs`, `ci.mjs`, `file-size-guard.py`.
+- Checagem de garantias, plano e documentação: `guarantees-check/check.mjs`, `check.test.mjs`, `plan-sections-check.py`, `readme-check/blocks.mjs`, `readme-check/check.mjs` e fixtures.
+
+**Parecer:** fiel às implementações examinadas. O corpo preserva a diferença entre empacotar e compilar/publicar, validação de headers e carregamento efetivo, build de um alvo nativo e matriz de release, verificação estática de documentação e execução dos exemplos. Registra corretamente os limites destrutivos do `pack.mjs`, a exceção de bit executável em Windows, as limitações de variáveis de ambiente removidas em `verify.mjs`, as pré-condições de musl guest e o fato de que `guarantees-check` verifica forma/presença de referências, não a realidade do run linkado.
+
+Também conserva o escopo exato do `file-size-guard` (arquivos rastreados e classificação fechada), a natureza superficial dos marcadores verificados por `plan-sections-check`, a diferença entre modo estático e execução no checker de README e o caráter demonstrativo das fixtures. Não afirma que scripts, gates, builds, pacotes ou exemplos tenham sido executados nesta sessão.
+
+**Decisão:** nenhum defeito documental obrigatório identificado nesta leitura consultiva.
+
+## Critérios, limites e autoridade
+
+- Aplicados QS-1/QS-2/QS-5, GO-I1/GO-I2/GO-I8 e DOD-1 na extensão cabível à revisão documental: afirmações rastreáveis, limites explícitos, preservação de versões e separação entre fidelidade textual e suficiência semântica.
+- Verificados Git blob SHAs e igualdade exata dos trechos citados. Não foram recalculados SHA-256 de conteúdo ou comprimentos de bytes do manifesto.
+- Pareceres consultivos adicionais; não são votos J1/J2, terceiro voto, PASS protocolar, aceite dual, `OwnershipReview`, binding/runtime, prova de consumidor ou liberação de L1.
+- Nenhum teste, CI, workflow, Atlas runtime, infraestrutura ou shell foi executado. Nenhum corpo de produção, fonte, branch alheia ou parecer anterior foi alterado.
+
+**Conclusão:** posições 23 e 24 podem ser encaminhadas ao par persistente para avaliação das versões exatas, com as limitações registradas. Não se declara aceite formal.
