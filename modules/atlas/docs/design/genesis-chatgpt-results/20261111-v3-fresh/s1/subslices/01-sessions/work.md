@@ -25,3 +25,18 @@ Reaproveitar a recuperação A1 já publicada, conferir os corpos e suplementos 
 
 A preparação criou somente a partição e as instruções. Não há juízes novos, pareceres, importação, consumidores, manutenção ou gates atribuídos a esta execução.
 Preservar todo avanço posterior e publicar payload/selo pelo conector com lease de HEAD. A composição S1 pertence à coordenação após os cinco handoffs.
+
+
+## Execução Chat/GitHub MCP — 2026-11-14
+
+- execution_id: s1-01-chat-20261114-1917-8f4d7c21
+- Protocolo: `ee2521a5b966bd505cc95bd1c733e09e12f33531`; skill blob `852e1d66539be5df895ba4cdbd2f9ab6e2331877`.
+- HEAD observado antes da execução: `89c78249e63060acf7c41f45f14af88fd51aa0c4`; branch confirmada por compare self = identical.
+- Escopo permitido: somente documentação e GitHub MCP; nenhum Codex, Work, CI, teste de produto ou merge.
+- Reconciliação A1: candidato local de recuperação preservado em `a8df22ae3a140c58c63f62ce2a634c84f415c943`; body persistence SHA-256 `0b43f9bd316aca25361f934e63723f2aa6220a3deb97a4447266fbbc5d350762`; suplementos E1–E4 preservados; pareceres originais J1 `REQUEST_EVIDENCE` e J2 `FIX-FIRST`; não há novo aceite. A recuperação só altera o parágrafo de replay.
+- Reconciliação B15: candidato corrigido preservado em `882752dea940817edbc261d8b5763bde32872e7e`; handoff `bee4b39f8f316704fc497131952932679ae25069` declara `IN_PROGRESS`, judgments vazio e sem reviewer IDs. Impact-1/2 são propagação com NO_CHANGE, não revisão semântica.
+- Atividade/branches: `genesis-fresh-s1` = `a8df22ae3a140c58c63f62ce2a634c84f415c943`; `genesis-s1-b15-reconciliation-20261113` = `882752dea940817edbc261d8b5763bde32872e7e`; `genesis-b15-judging-prep` = `824d80dac0a25d510dd4d07640d00d493beb7227`. Nenhuma evidência de juízo novo/aceite nessas pontas.
+- Decisão: BLOCKED antes de produzir candidato avaliado. Não existe unidade documental de julgamento/aceite livre demonstrável sem duplicar A1/B15; o primeiro pacote exige dois juízes novos reais e persistentes, mas este ambiente Chat + GitHub MCP não expõe criação/execução de subagentes. Não simular IDs, votos ou PASS.
+- Próximo passo exato: disponibilizar dois juízes nativos independentes (fork_turns none) para esta execução; primeiro avaliar os quatro corpos A1 + correção persistence e suplementos E1–E4 contra oracle autorizado, depois julgar B15 candidato exato sem transferir os NO_CHANGE históricos. Retomar esta mesma branch após reconciliar HEAD.
+
+Estado: BLOCKED — nenhum produtor, juiz, consumidor, Atlas import/read, teste, CI ou gate foi executado nesta sessão.
