@@ -1,0 +1,1573 @@
+{
+  "schema_version": 1,
+  "purpose": "Documentary reconciliation, not semantic acceptance or Genesis completion",
+  "repository": "gustavomhss/hugr-orchestra",
+  "snapshot_date": "2026-11-14",
+  "prepared_at_utc": "2026-11-14T11:23:36.059Z",
+  "source_baseline": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "normative_protocol": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "prompt_manifest_revision": "d2d985c28947c7f984a36b07ad34ede3d4d2d6b4",
+  "own_branch": "genesis-control-reconciliation-20261114",
+  "own_directory": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/control-reconciliation-20261114/",
+  "publication_base": {
+    "branch": "genesis-fresh-final",
+    "commit": "7ad0271e2bfbcf52d7ce890f97c3c1b498ddb820",
+    "tree": "3760a2539c8c4a9fe1e918611934417b49ebc633",
+    "reason": "Existing coordination checkpoint; publication only adds its own documentary directory."
+  },
+  "ref_check": {
+    "endpoint": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/matching-refs/heads/genesis",
+    "count": 70,
+    "rechecked_before_publication": true,
+    "changed_from_initial_capture": [],
+    "own_branch_existing_before_creation": false
+  },
+  "observed_heads": [
+    {
+      "branch": "genesis-b15-judging-prep",
+      "sha": "824d80dac0a25d510dd4d07640d00d493beb7227",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/824d80dac0a25d510dd4d07640d00d493beb7227"
+    },
+    {
+      "branch": "genesis-campaign-s1-economy-impact-1",
+      "sha": "7bfb9a4f69cd5ea1dc31b33d4afd26ec9e6c7f4a",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/7bfb9a4f69cd5ea1dc31b33d4afd26ec9e6c7f4a"
+    },
+    {
+      "branch": "genesis-campaign-s1-economy-impact-2",
+      "sha": "51a7c500835c48b35cdfc2348484482d41c9770f",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/51a7c500835c48b35cdfc2348484482d41c9770f"
+    },
+    {
+      "branch": "genesis-campaign-s4-tail-precision",
+      "sha": "e8828a9780ba253a27a55a433dcb22bad6286cab",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/e8828a9780ba253a27a55a433dcb22bad6286cab"
+    },
+    {
+      "branch": "genesis-cas-boundary-ci",
+      "sha": "10624b53f2270e8c0a406c04a1ddaddc25c8e959",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/10624b53f2270e8c0a406c04a1ddaddc25c8e959"
+    },
+    {
+      "branch": "genesis-chatgpt-kit",
+      "sha": "d2d985c28947c7f984a36b07ad34ede3d4d2d6b4",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/d2d985c28947c7f984a36b07ad34ede3d4d2d6b4"
+    },
+    {
+      "branch": "genesis-chatgpt-s1",
+      "sha": "950e531d036a29be303a052382e55f31377ad7e8",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/950e531d036a29be303a052382e55f31377ad7e8"
+    },
+    {
+      "branch": "genesis-chatgpt-s2",
+      "sha": "f274ddd57f65ff3e3b36ba57c307d09d9c19c8a5",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/f274ddd57f65ff3e3b36ba57c307d09d9c19c8a5"
+    },
+    {
+      "branch": "genesis-chatgpt-s3",
+      "sha": "c9fcdb6215b9c939cedab0c044144366d4da74bb",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/c9fcdb6215b9c939cedab0c044144366d4da74bb"
+    },
+    {
+      "branch": "genesis-chatgpt-s4",
+      "sha": "002c1efa8d8b84b45dc47736a3dab683d18ec1aa",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/002c1efa8d8b84b45dc47736a3dab683d18ec1aa"
+    },
+    {
+      "branch": "genesis-chatgpt-s5",
+      "sha": "adfcbc639d31d2ae01f72e58d21f2657d5c6b63c",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/adfcbc639d31d2ae01f72e58d21f2657d5c6b63c"
+    },
+    {
+      "branch": "genesis-checkpoints",
+      "sha": "d17066d00961c523e5da4d41327168d275183e2c",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/d17066d00961c523e5da4d41327168d275183e2c"
+    },
+    {
+      "branch": "genesis-claim-reducer",
+      "sha": "0d339d45161188a2a01bde564610321acde745ec",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/0d339d45161188a2a01bde564610321acde745ec"
+    },
+    {
+      "branch": "genesis-claim-staging",
+      "sha": "cbd0cf7ecab0fe5b4e3ad8a9f7d089f9d71ef39d",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/cbd0cf7ecab0fe5b4e3ad8a9f7d089f9d71ef39d"
+    },
+    {
+      "branch": "genesis-courier-synthetic-v5",
+      "sha": "f4a225fae0c584bfaf80dae8e0d9d5a512227b3d",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/f4a225fae0c584bfaf80dae8e0d9d5a512227b3d"
+    },
+    {
+      "branch": "genesis-economy-green",
+      "sha": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    {
+      "branch": "genesis-eval-recovery",
+      "sha": "b8cb9a9f8144745348c5d08a9490cc216199e8b7",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/b8cb9a9f8144745348c5d08a9490cc216199e8b7"
+    },
+    {
+      "branch": "genesis-evaluation-attachment-batch-ci",
+      "sha": "158e612d4d7bd0f486a4bac91e812d7b615375da",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/158e612d4d7bd0f486a4bac91e812d7b615375da"
+    },
+    {
+      "branch": "genesis-evaluation-maintenance-caller-ci",
+      "sha": "920794008c16169c486bbd1ca8ef8e962d83f29c",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/920794008c16169c486bbd1ca8ef8e962d83f29c"
+    },
+    {
+      "branch": "genesis-evaluation-maintenance-host-ci",
+      "sha": "23e9c61e2471852069beb594faedc6ebdfc0b111",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/23e9c61e2471852069beb594faedc6ebdfc0b111"
+    },
+    {
+      "branch": "genesis-external-integration-static",
+      "sha": "44c2d7f8574d0dfbdfdcac9fb405951211272d5d",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/44c2d7f8574d0dfbdfdcac9fb405951211272d5d"
+    },
+    {
+      "branch": "genesis-external-omni-393",
+      "sha": "bdfebdb9fe6b5f2a921aef207cebe33b65cd6d20",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/bdfebdb9fe6b5f2a921aef207cebe33b65cd6d20"
+    },
+    {
+      "branch": "genesis-external-platform-remainder",
+      "sha": "0af4bcc4bcfcd4d58c5e45a21c319fe10d47b9f3",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/0af4bcc4bcfcd4d58c5e45a21c319fe10d47b9f3"
+    },
+    {
+      "branch": "genesis-facts-contract",
+      "sha": "3a7c54771801666dc57472f900e5a94697b3b39b",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/3a7c54771801666dc57472f900e5a94697b3b39b"
+    },
+    {
+      "branch": "genesis-fresh-final",
+      "sha": "7ad0271e2bfbcf52d7ce890f97c3c1b498ddb820",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/7ad0271e2bfbcf52d7ce890f97c3c1b498ddb820"
+    },
+    {
+      "branch": "genesis-fresh-s1",
+      "sha": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/a8df22ae3a140c58c63f62ce2a634c84f415c943"
+    },
+    {
+      "branch": "genesis-fresh-s2",
+      "sha": "7c8905a0e833f057bca359bb8debd548440bc23e",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/7c8905a0e833f057bca359bb8debd548440bc23e"
+    },
+    {
+      "branch": "genesis-fresh-s3",
+      "sha": "68fca8e90c3150416e4e7ef8410df1cc42ee9d1b",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/68fca8e90c3150416e4e7ef8410df1cc42ee9d1b"
+    },
+    {
+      "branch": "genesis-fresh-s4",
+      "sha": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/db9b4235022c4df32fe3bfd4faeea8adcd69abb7"
+    },
+    {
+      "branch": "genesis-fresh-s5",
+      "sha": "df6d83b011b7cc2b4d6edef3c796b001dea71837",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/df6d83b011b7cc2b4d6edef3c796b001dea71837"
+    },
+    {
+      "branch": "genesis-fresh-s5-runtime-probe",
+      "sha": "cd4bf8bc7c29e02e9ae1b60e6aac3dcb4365dea8",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/cd4bf8bc7c29e02e9ae1b60e6aac3dcb4365dea8"
+    },
+    {
+      "branch": "genesis-hotspot",
+      "sha": "bfb3ce5f3552d97495b0ab566bdbaf12db292998",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/bfb3ce5f3552d97495b0ab566bdbaf12db292998"
+    },
+    {
+      "branch": "genesis-judge-index",
+      "sha": "c24013b7931e1b720b9f457e211dc823d7edc5ea",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/c24013b7931e1b720b9f457e211dc823d7edc5ea"
+    },
+    {
+      "branch": "genesis-judge-source",
+      "sha": "85fd54d69921f5a9f783cd982bb38b0061a978fd",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/85fd54d69921f5a9f783cd982bb38b0061a978fd"
+    },
+    {
+      "branch": "genesis-lazy-signals",
+      "sha": "e019eebe1a48d60b2e2ea84c50b5f14bf109e712",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/e019eebe1a48d60b2e2ea84c50b5f14bf109e712"
+    },
+    {
+      "branch": "genesis-local-loader-integration-ci",
+      "sha": "1b1a03f289743c812c3f8e289d067699a1a31404",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/1b1a03f289743c812c3f8e289d067699a1a31404"
+    },
+    {
+      "branch": "genesis-maintenance-descriptor-loader-ci",
+      "sha": "539913d6b39eb057b06f7d2c365a0cc931f34848",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/539913d6b39eb057b06f7d2c365a0cc931f34848"
+    },
+    {
+      "branch": "genesis-origin-codec",
+      "sha": "258c295bb8ad1054b0b66a7a3f8cce1df2d80505",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/258c295bb8ad1054b0b66a7a3f8cce1df2d80505"
+    },
+    {
+      "branch": "genesis-owner-options",
+      "sha": "7fe6d7a7f7120caf82da246aa7a12ae0d17306fb",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/7fe6d7a7f7120caf82da246aa7a12ae0d17306fb"
+    },
+    {
+      "branch": "genesis-policy-guard",
+      "sha": "a17d2755030ce37d3b91471b9086e160a4acb1de",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/a17d2755030ce37d3b91471b9086e160a4acb1de"
+    },
+    {
+      "branch": "genesis-pool-bound",
+      "sha": "436cd990062edc8837cb85da9dda393776aceb9e",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/436cd990062edc8837cb85da9dda393776aceb9e"
+    },
+    {
+      "branch": "genesis-preservation-helper",
+      "sha": "37e9cac4202bc4c1f4a81f0781a7c9e2cfbf04f4",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/37e9cac4202bc4c1f4a81f0781a7c9e2cfbf04f4"
+    },
+    {
+      "branch": "genesis-reader-broker-v3",
+      "sha": "77392ea535622a9c51733a82146202e3ba366e79",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/77392ea535622a9c51733a82146202e3ba366e79"
+    },
+    {
+      "branch": "genesis-reader-broker-v4-precheck",
+      "sha": "5c1fb35e55d756cef28f6d99b55dbccbdbcdbf96",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/5c1fb35e55d756cef28f6d99b55dbccbdbcdbf96"
+    },
+    {
+      "branch": "genesis-reader-broker-v5-lifecycle",
+      "sha": "098fb6104c99621feff8d1ad35db48f1c140b8bb",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/098fb6104c99621feff8d1ad35db48f1c140b8bb"
+    },
+    {
+      "branch": "genesis-realdata-eval",
+      "sha": "047b918599f030abea120bc9fb7686cc6f63aaf8",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/047b918599f030abea120bc9fb7686cc6f63aaf8"
+    },
+    {
+      "branch": "genesis-retain-import",
+      "sha": "2762289f60377705b2eeea2d649edb9ef527b4b1",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/2762289f60377705b2eeea2d649edb9ef527b4b1"
+    },
+    {
+      "branch": "genesis-run-fix",
+      "sha": "c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/c9b8e54cbf2c6c2c4bb59bbda2dc878430a54085"
+    },
+    {
+      "branch": "genesis-s1-b15-reconciliation-20261113",
+      "sha": "882752dea940817edbc261d8b5763bde32872e7e",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/882752dea940817edbc261d8b5763bde32872e7e"
+    },
+    {
+      "branch": "genesis-s2-publish",
+      "sha": "b5e02be4c5be46be5dd9c001e411683561f9cb47",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/b5e02be4c5be46be5dd9c001e411683561f9cb47"
+    },
+    {
+      "branch": "genesis-s2-resume-unit-20261114",
+      "sha": "6d49a6a821c3bcb153f794326ab757346f87bcf6",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/6d49a6a821c3bcb153f794326ab757346f87bcf6"
+    },
+    {
+      "branch": "genesis-s3-resume-unit-20261114",
+      "sha": "7233f437b4a46c5845e9d88f68dadf8106224fe5",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/7233f437b4a46c5845e9d88f68dadf8106224fe5"
+    },
+    {
+      "branch": "genesis-s4-l4-dispatch-v3-ci",
+      "sha": "1034b874215077ef1307673e64473330c36cf5cb",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/1034b874215077ef1307673e64473330c36cf5cb"
+    },
+    {
+      "branch": "genesis-s4-resume-unit-20261114",
+      "sha": "db86cb85018b9525fdce56faeab6c0ffdfa65dba",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/db86cb85018b9525fdce56faeab6c0ffdfa65dba"
+    },
+    {
+      "branch": "genesis-secret-scan",
+      "sha": "c8dfd08121ca09152584398dce0de9954418306b",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/c8dfd08121ca09152584398dce0de9954418306b"
+    },
+    {
+      "branch": "genesis-single-pass",
+      "sha": "52d1e55f522174a2363bf784ebf1c432731f3c42",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/52d1e55f522174a2363bf784ebf1c432731f3c42"
+    },
+    {
+      "branch": "genesis-source-export-s3",
+      "sha": "8e8cd9e867fa842b75e57e1eaf28d39a26497f96",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/8e8cd9e867fa842b75e57e1eaf28d39a26497f96"
+    },
+    {
+      "branch": "genesis-source-router",
+      "sha": "f2abf4a5cb2b42133f0094f55e3950e5ba4ba995",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/f2abf4a5cb2b42133f0094f55e3950e5ba4ba995"
+    },
+    {
+      "branch": "genesis-staged-metrics",
+      "sha": "a616bf895657772e05cfd2b4704a50b0b3b6067f",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/a616bf895657772e05cfd2b4704a50b0b3b6067f"
+    },
+    {
+      "branch": "genesis-support-01-finalize-alias",
+      "sha": "9de85baea03cbfa20b603153b2c6e80f294a2795",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/9de85baea03cbfa20b603153b2c6e80f294a2795"
+    },
+    {
+      "branch": "genesis-support-02-courier-checker",
+      "sha": "7f138ac125e3776b7a1c2ba974719393164e4f81",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/7f138ac125e3776b7a1c2ba974719393164e4f81"
+    },
+    {
+      "branch": "genesis-support-03-attachment-differential",
+      "sha": "150ccf8e483fafef0923b49a785a3e2003e64f2b",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/150ccf8e483fafef0923b49a785a3e2003e64f2b"
+    },
+    {
+      "branch": "genesis-support-04-caller-dag",
+      "sha": "4ac5be9798418cef77a169e4eeebf3be85ba16dd",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/4ac5be9798418cef77a169e4eeebf3be85ba16dd"
+    },
+    {
+      "branch": "genesis-support-05-caller-caps",
+      "sha": "cb7b7a59376317ae5b7565b97098616e5bee588d",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/cb7b7a59376317ae5b7565b97098616e5bee588d"
+    },
+    {
+      "branch": "genesis-support-06-caller-toolchain",
+      "sha": "02f270f2fbae81da4e6f4ccc519f0f83071500be",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/02f270f2fbae81da4e6f4ccc519f0f83071500be"
+    },
+    {
+      "branch": "genesis-support-07-overlay-verifier",
+      "sha": "c1b1d28b4515a5976c12c86998d17a82c4dc337e",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/c1b1d28b4515a5976c12c86998d17a82c4dc337e"
+    },
+    {
+      "branch": "genesis-support-08-reader-error-redaction",
+      "sha": "a1a4314eed34e3611b77a31025cfcc06e4568d26",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/a1a4314eed34e3611b77a31025cfcc06e4568d26"
+    },
+    {
+      "branch": "genesis-support-08b-retention",
+      "sha": "793670cab3ec798930a169ee4f2af8bdcbad82dc",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/793670cab3ec798930a169ee4f2af8bdcbad82dc"
+    },
+    {
+      "branch": "genesis-support-09-courier-descendants",
+      "sha": "2a849dacb30bf3a60ee95ca541ad833184e0f605",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/2a849dacb30bf3a60ee95ca541ad833184e0f605"
+    },
+    {
+      "branch": "genesis-support-10-binding-index",
+      "sha": "4f58e54a2ebb8635a9b6156e7d72f62bfa1087fd",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/commit/4f58e54a2ebb8635a9b6156e7d72f62bfa1087fd"
+    }
+  ],
+  "support_commit_metadata": [
+    {
+      "branch": "genesis-cas-boundary-ci",
+      "sha": "10624b53f2270e8c0a406c04a1ddaddc25c8e959",
+      "date": "2026-11-13T16:25:39Z",
+      "message": "Test exact CAS boundary with eight synthetic controls",
+      "tree": "d1d191bc001efe9e29e8f332b83bd731fd391411",
+      "parents": [
+        "098fb6104c99621feff8d1ad35db48f1c140b8bb"
+      ]
+    },
+    {
+      "branch": "genesis-courier-synthetic-v5",
+      "sha": "f4a225fae0c584bfaf80dae8e0d9d5a512227b3d",
+      "date": "2026-11-13T16:11:41Z",
+      "message": "Run isolated synthetic courier V5 tests only",
+      "tree": "7f0f216b1f1fd353caf31943b20c9b37550f8665",
+      "parents": [
+        "f9b790fb80c29eb03cb70c5b3ab837ce8d9ba603"
+      ]
+    },
+    {
+      "branch": "genesis-evaluation-attachment-batch-ci",
+      "sha": "158e612d4d7bd0f486a4bac91e812d7b615375da",
+      "date": "2026-11-13T19:01:15Z",
+      "message": "ci(atlas): capture verified public attachment runtime build",
+      "tree": "49438f4c8bd96c6c5eda98d59d037f5859b7fa71",
+      "parents": [
+        "8be7afbd65d047a8a1a91f46050d4dddad8d0cc7"
+      ]
+    },
+    {
+      "branch": "genesis-evaluation-maintenance-caller-ci",
+      "sha": "920794008c16169c486bbd1ca8ef8e962d83f29c",
+      "date": "2026-11-13T18:56:02Z",
+      "message": "Add maintenance caller overlay and isolated synthetic integration CI",
+      "tree": "d4dba7eea6af12ed11c3caaad9b43eff491d773b",
+      "parents": [
+        "3aa3bd492f852cbf3711b7b6fb4647316560d0ec"
+      ]
+    },
+    {
+      "branch": "genesis-evaluation-maintenance-host-ci",
+      "sha": "23e9c61e2471852069beb594faedc6ebdfc0b111",
+      "date": "2026-11-13T18:28:46Z",
+      "message": "Export exact compiled maintenance host from successful synthetic CI",
+      "tree": "b8a92d7ddb57f31e6e5f81d56224cc19e29cb780",
+      "parents": [
+        "3aa3bd492f852cbf3711b7b6fb4647316560d0ec"
+      ]
+    },
+    {
+      "branch": "genesis-local-loader-integration-ci",
+      "sha": "1b1a03f289743c812c3f8e289d067699a1a31404",
+      "date": "2026-11-13T19:36:11Z",
+      "message": "Test strict descriptor loader through real synthetic caller integration",
+      "tree": "69bd92606a19df322daf4613dbdef4f162edabc2",
+      "parents": [
+        "539913d6b39eb057b06f7d2c365a0cc931f34848"
+      ]
+    },
+    {
+      "branch": "genesis-maintenance-descriptor-loader-ci",
+      "sha": "539913d6b39eb057b06f7d2c365a0cc931f34848",
+      "date": "2026-11-13T19:21:39Z",
+      "message": "Add strict descriptor loader and isolated synthetic boundary CI",
+      "tree": "4b7a78e4accfc2aeb411d1a99207a70ee77ad045",
+      "parents": [
+        "920794008c16169c486bbd1ca8ef8e962d83f29c"
+      ]
+    },
+    {
+      "branch": "genesis-reader-broker-v3",
+      "sha": "77392ea535622a9c51733a82146202e3ba366e79",
+      "date": "2026-11-13T02:36:51Z",
+      "message": "test(atlas): verify isolated evaluation reader broker controls",
+      "tree": "adec21daedbe9c7869845c40e46e7c0c7040134d",
+      "parents": [
+        "db9b4235022c4df32fe3bfd4faeea8adcd69abb7"
+      ]
+    },
+    {
+      "branch": "genesis-reader-broker-v4-precheck",
+      "sha": "5c1fb35e55d756cef28f6d99b55dbccbdbcdbf96",
+      "date": "2026-11-13T03:15:57Z",
+      "message": "test(atlas): enforce evaluation reader caps before invocation",
+      "tree": "1f203918d0833aaf989d72e3beb9af4de5b24bb1",
+      "parents": [
+        "77392ea535622a9c51733a82146202e3ba366e79"
+      ]
+    },
+    {
+      "branch": "genesis-reader-broker-v5-lifecycle",
+      "sha": "098fb6104c99621feff8d1ad35db48f1c140b8bb",
+      "date": "2026-11-13T12:53:16Z",
+      "message": "Verify isolated Python bootstrap identity before reader gate release",
+      "tree": "d0467f1839b75acac69d659a457f9be5d89f5ff0",
+      "parents": [
+        "bbf780cfdd541f621005c380b791b5a92f7fab62"
+      ]
+    },
+    {
+      "branch": "genesis-s2-publish",
+      "sha": "b5e02be4c5be46be5dd9c001e411683561f9cb47",
+      "date": "2026-11-12T14:05:36Z",
+      "message": "docs(genesis): preserve recovered S2 L1-L4 bodies and layer manifests",
+      "tree": "35c3673b16157962a6d2fb8814897a3c80c11214",
+      "parents": [
+        "ac972ff8dc1126b02f8a16f3942a142e417039ed"
+      ]
+    },
+    {
+      "branch": "genesis-s4-l4-dispatch-v3-ci",
+      "sha": "1034b874215077ef1307673e64473330c36cf5cb",
+      "date": "2026-11-13T15:28:16Z",
+      "message": "Trigger S4 synthetic CI only on its isolated review branch",
+      "tree": "d1e13c6953012189bb0f0af3272af7b96ada5007",
+      "parents": [
+        "b0a03f514ec2938e67ad06ed8c37008122e9b3af"
+      ]
+    },
+    {
+      "branch": "genesis-source-export-s3",
+      "sha": "8e8cd9e867fa842b75e57e1eaf28d39a26497f96",
+      "date": "2026-11-13T01:57:00Z",
+      "message": "ci: export fixed public Genesis source objects read-only",
+      "tree": "dc46bb4ac2b602109fd565d1d7dd75ab8169252a",
+      "parents": [
+        "db9b4235022c4df32fe3bfd4faeea8adcd69abb7"
+      ]
+    },
+    {
+      "branch": "genesis-support-01-finalize-alias",
+      "sha": "9de85baea03cbfa20b603153b2c6e80f294a2795",
+      "date": "2026-11-13T19:31:26Z",
+      "message": "test(atlas): correct adversarial reference fixtures",
+      "tree": "f447665c54a73b36a31e9ce8cdb3e9aca45a4ea1",
+      "parents": [
+        "42f099ce9d12c6ec95b3866b1754be0fa55e175e"
+      ]
+    },
+    {
+      "branch": "genesis-support-02-courier-checker",
+      "sha": "7f138ac125e3776b7a1c2ba974719393164e4f81",
+      "date": "2026-11-13T19:20:00Z",
+      "message": "Cover grant case and sequence binding in fixtures",
+      "tree": "c17cdae382012d9a312cc7b6f1ca031f655f05b1",
+      "parents": [
+        "639cb0051100b9720c2b3d93602cd34006c808a2"
+      ]
+    },
+    {
+      "branch": "genesis-support-03-attachment-differential",
+      "sha": "150ccf8e483fafef0923b49a785a3e2003e64f2b",
+      "date": "2026-11-13T19:20:35Z",
+      "message": "test(atlas): assert stable attachment outcome parity",
+      "tree": "d14e7ff1dfdefad174bb02e388652e6e8d2fe96a",
+      "parents": [
+        "58eea884855afb76123785aeb2b216facf8bcb9a"
+      ]
+    },
+    {
+      "branch": "genesis-support-04-caller-dag",
+      "sha": "4ac5be9798418cef77a169e4eeebf3be85ba16dd",
+      "date": "2026-11-13T19:32:41Z",
+      "message": "test(atlas): assert isolated-root reuse semantics",
+      "tree": "43c0f75bf0845ccd44e3b3b8b27bfabd8f999cdd",
+      "parents": [
+        "14d21646f1c68854f207241b68e06f2f02e92666"
+      ]
+    },
+    {
+      "branch": "genesis-support-05-caller-caps",
+      "sha": "cb7b7a59376317ae5b7565b97098616e5bee588d",
+      "date": "2026-11-13T19:22:22Z",
+      "message": "test(atlas): preserve baseline candidate entry order assertion",
+      "tree": "34ace35047a388334c4ff5a14bc4d77af3eed898",
+      "parents": [
+        "e15c6807dccec558e7bccb46603417a743669ff7"
+      ]
+    },
+    {
+      "branch": "genesis-support-06-caller-toolchain",
+      "sha": "02f270f2fbae81da4e6f4ccc519f0f83071500be",
+      "date": "2026-11-13T19:31:18Z",
+      "message": "ci(atlas): record toolchain versions in caller log",
+      "tree": "490e7570e1d7e63e2ba027c22ed15a10789305a1",
+      "parents": [
+        "832b630ecea7df301a8ea33886a69691d323467f"
+      ]
+    },
+    {
+      "branch": "genesis-support-07-overlay-verifier",
+      "sha": "c1b1d28b4515a5976c12c86998d17a82c4dc337e",
+      "date": "2026-11-13T19:22:15Z",
+      "message": "Test immutable overlay source pins",
+      "tree": "1f1c9e1bf8bf9726521addb31d7ff4e9d2882341",
+      "parents": [
+        "16860979e803e1a9a70b26d69e63ff7ec71363c6"
+      ]
+    },
+    {
+      "branch": "genesis-support-08-reader-error-redaction",
+      "sha": "a1a4314eed34e3611b77a31025cfcc06e4568d26",
+      "date": "2026-11-13T19:36:37Z",
+      "message": "Test complete forensic stream evidence after termination proof",
+      "tree": "7f68095392246d99d17159b443bb5c091b110819",
+      "parents": [
+        "4d645dba5976c1411c919cfc6e03fb321b0cd9d1"
+      ]
+    },
+    {
+      "branch": "genesis-support-08b-retention",
+      "sha": "793670cab3ec798930a169ee4f2af8bdcbad82dc",
+      "date": "2026-11-13T19:45:54Z",
+      "message": "Verify complete anonymous streams survive exit proof",
+      "tree": "7c5a702add4830b256f5e5dd36d31ba72e96b8fd",
+      "parents": [
+        "15e192004312a0a319220ec79597f8a724c12334"
+      ]
+    },
+    {
+      "branch": "genesis-support-09-courier-descendants",
+      "sha": "2a849dacb30bf3a60ee95ca541ad833184e0f605",
+      "date": "2026-11-13T19:33:20Z",
+      "message": "Run courier regressions and descendant fixtures in one Linux CI job",
+      "tree": "e4ee2967f8b96c86df75472dadb59349134191be",
+      "parents": [
+        "c4a92114a46466039ffd7e62464af57abfc6b0ea"
+      ]
+    },
+    {
+      "branch": "genesis-support-10-binding-index",
+      "sha": "4f58e54a2ebb8635a9b6156e7d72f62bfa1087fd",
+      "date": "2026-11-13T19:42:48Z",
+      "message": "test(atlas): complete synthetic manifest and receipt invariants",
+      "tree": "f2373232b803052c2e6720faac477931b8a89a27",
+      "parents": [
+        "6a2ab2faac321373896430fc560faff6c973ba5f"
+      ]
+    }
+  ],
+  "representative_comparisons": [
+    {
+      "key": "compare:s4-dispatch",
+      "base": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "head": "1034b874215077ef1307673e64473330c36cf5cb",
+      "status": "ahead",
+      "ahead_by": 6,
+      "behind_by": 0,
+      "file_count": 17,
+      "files": [
+        {
+          "path": ".github/workflows/atlas-reader-broker.yml",
+          "status": "added"
+        },
+        {
+          "path": ".github/workflows/s4-l4-dispatch-synthetic.yml",
+          "status": "added"
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/script/evaluation-reader-broker.py",
+          "status": "added"
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/script/evaluation-reader-call.mjs",
+          "status": "added"
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/script/evaluation-reader-lifecycle.py",
+          "status": "added"
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/test/evaluation-reader-broker-ci.py",
+          "status": "added"
+        },
+        {
+          "path": "s4-l4-dispatch-ci/ci/central/.github/workflows/atlas-reader-broker.yml",
+          "status": "added"
+        },
+        {
+          "path": "s4-l4-dispatch-ci/ci/central/modules/atlas/packages/adapter-io/script/evaluation-reader-broker.py",
+          "status": "added"
+        },
+        {
+          "path": "s4-l4-dispatch-ci/ci/central/modules/atlas/packages/adapter-io/script/evaluation-reader-call.mjs",
+          "status": "added"
+        },
+        {
+          "path": "s4-l4-dispatch-ci/ci/central/modules/atlas/packages/adapter-io/script/evaluation-reader-lifecycle.py",
+          "status": "added"
+        },
+        {
+          "path": "s4-l4-dispatch-ci/ci/central/modules/atlas/packages/adapter-io/test/evaluation-reader-broker-ci.py",
+          "status": "added"
+        },
+        {
+          "path": "s4-l4-dispatch-ci/pins.json",
+          "status": "added"
+        },
+        {
+          "path": "s4-l4-dispatch-ci/source/build-launcher.py",
+          "status": "added"
+        },
+        {
+          "path": "s4-l4-dispatch-ci/source/s4-l4-dispatch.py",
+          "status": "added"
+        },
+        {
+          "path": "s4-l4-dispatch-ci/source/test-s4-l4-dispatch.py",
+          "status": "added"
+        },
+        {
+          "path": "s4-l4-dispatch-ci/source/test-s4-l4-integration.py",
+          "status": "added"
+        },
+        {
+          "path": "s4-l4-dispatch-ci/verify-pins.py",
+          "status": "added"
+        }
+      ],
+      "scope": "Representative code/test/workflow diff; does not demonstrate current execution or need to integrate every support branch."
+    },
+    {
+      "key": "compare:reader",
+      "base": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "head": "098fb6104c99621feff8d1ad35db48f1c140b8bb",
+      "status": "ahead",
+      "ahead_by": 4,
+      "behind_by": 0,
+      "file_count": 5,
+      "files": [
+        {
+          "path": ".github/workflows/atlas-reader-broker.yml",
+          "status": "added"
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/script/evaluation-reader-broker.py",
+          "status": "added"
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/script/evaluation-reader-call.mjs",
+          "status": "added"
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/script/evaluation-reader-lifecycle.py",
+          "status": "added"
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/test/evaluation-reader-broker-ci.py",
+          "status": "added"
+        }
+      ],
+      "scope": "Representative code/test/workflow diff; does not demonstrate current execution or need to integrate every support branch."
+    },
+    {
+      "key": "compare:loader",
+      "base": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "head": "1b1a03f289743c812c3f8e289d067699a1a31404",
+      "status": "ahead",
+      "ahead_by": 4,
+      "behind_by": 0,
+      "file_count": 13,
+      "files": [
+        {
+          "path": ".github/workflows/evaluation-maintenance-caller.yml",
+          "status": "added"
+        },
+        {
+          "path": ".github/workflows/evaluation-maintenance-host.yml",
+          "status": "added"
+        },
+        {
+          "path": ".github/workflows/maintenance-descriptor-loader.yml",
+          "status": "added"
+        },
+        {
+          "path": ".github/workflows/support-local-loader-integration.yml",
+          "status": "added"
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/evaluation-maintenance-caller.ts",
+          "status": "added"
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/evaluation-maintenance-host.ts",
+          "status": "added"
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/test/evaluation-maintenance-caller.integration.test.ts",
+          "status": "added"
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/test/evaluation-maintenance-caller.test.ts",
+          "status": "added"
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/test/evaluation-maintenance-host.test.ts",
+          "status": "added"
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/test/evaluation-maintenance-loader.integration.test.ts",
+          "status": "added"
+        },
+        {
+          "path": "modules/atlas/scripts/maintenance-descriptor-loader.d.mts",
+          "status": "added"
+        },
+        {
+          "path": "modules/atlas/scripts/maintenance-descriptor-loader.mjs",
+          "status": "added"
+        },
+        {
+          "path": "modules/atlas/scripts/maintenance-descriptor-loader.test.mjs",
+          "status": "added"
+        }
+      ],
+      "scope": "Representative code/test/workflow diff; does not demonstrate current execution or need to integrate every support branch."
+    },
+    {
+      "key": "compare:attachment",
+      "base": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "head": "158e612d4d7bd0f486a4bac91e812d7b615375da",
+      "status": "ahead",
+      "ahead_by": 5,
+      "behind_by": 0,
+      "file_count": 9,
+      "files": [
+        {
+          "path": ".github/workflows/evaluation-admission-single-pass.yml",
+          "status": "added"
+        },
+        {
+          "path": ".github/workflows/evaluation-attachment-batch.yml",
+          "status": "added"
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/evaluation-admission-read.ts",
+          "status": "added"
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/genesis-evaluation.ts",
+          "status": "modified"
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/ownership-attachment.ts",
+          "status": "modified"
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/test/evaluation-admission-read.test.ts",
+          "status": "added"
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/test/evaluation-attachment-batch.test.ts",
+          "status": "added"
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/test/evaluation-attachment-coverage.test.ts",
+          "status": "added"
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/test/evaluation-attachment-integration.test.ts",
+          "status": "added"
+        }
+      ],
+      "scope": "Representative code/test/workflow diff; does not demonstrate current execution or need to integrate every support branch."
+    }
+  ],
+  "reconciliation_of_preserved_history": [
+    {
+      "topic": "S2 publication",
+      "status": "1109/1109 published; zero remaining",
+      "source_ids": [
+        "S2PUB"
+      ],
+      "supersedes_for_current_state": "Historical publication approval failure; historical record is preserved."
+    },
+    {
+      "topic": "S2 publish branch",
+      "branch": "genesis-s2-publish",
+      "head": "b5e02be4c5be46be5dd9c001e411683561f9cb47",
+      "canonical": "7c8905a0e833f057bca359bb8debd548440bc23e",
+      "ahead_by": 0,
+      "behind_by": 7,
+      "result": "Already incorporated, not orphaned work."
+    },
+    {
+      "topic": "S3 collision",
+      "source_ids": [
+        "S3W",
+        "S3REC"
+      ],
+      "result": "Alternatives and preservation copies are not additional knowledge units. Original accepted upper payload remains claimed but unpublished."
+    },
+    {
+      "topic": "S4 residual",
+      "source_ids": [
+        "S4P5",
+        "S4J1",
+        "S4J2A"
+      ],
+      "result": "Evidence supplement already dispatched; final J1 after it not located."
+    },
+    {
+      "topic": "S4 tail precision",
+      "source_ids": [
+        "S4TAIL"
+      ],
+      "result": "Prospective/code evidence; canonical package, work, handoff and knowledge bodies unchanged."
+    },
+    {
+      "topic": "S1 B15",
+      "source_ids": [
+        "B15",
+        "B15PREP",
+        "B15IMPACT1",
+        "B15IMPACT2"
+      ],
+      "result": "Same existing L1 key; historical NO_CHANGE and static analysis are not final dual review of current candidate."
+    },
+    {
+      "topic": "External source overlap",
+      "source_ids": [
+        "OM",
+        "PM",
+        "STATICINV"
+      ],
+      "result": "All 593 external primary path/blob records match the frozen baseline and resolve to S5; Omni and Platform primary sets are disjoint."
+    }
+  ],
+  "observed_actions_run": {
+    "api_url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/runs/43154719978",
+    "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43154719978",
+    "id": 43154719978,
+    "status": "completed",
+    "conclusion": "success",
+    "head_sha": "22815b6821dce26562624b4711c705c7cd786268",
+    "name": "atlas-pilot",
+    "created_at": "2026-11-12T04:25:36Z",
+    "updated_at": "2026-11-12T04:27:46Z",
+    "verified_by": "/root",
+    "verification": "Read existing GitHub Actions metadata only; no workflow dispatch.",
+    "limitation": "Success of this run and exact head does not imply current runtime release, full-package binding or independent consumer success."
+  },
+  "method": {
+    "repository_operations": "GitHub MCP only",
+    "calculations": "In-memory JavaScript over MCP responses; no product execution, tests, CI dispatch or local Git checkout.",
+    "analysts": [
+      {
+        "id": "/root/reconcile_s1_s2",
+        "scope": "S1/S2 bodies, coverage, acceptance and publication"
+      },
+      {
+        "id": "/root/reconcile_s3_s4",
+        "scope": "S3/S4 bodies, recovery lineage, acceptance and runtime distinctions"
+      },
+      {
+        "id": "/root/reconcile_s5_external",
+        "scope": "S5, Omni, Platform, frozen source joins and residual"
+      }
+    ],
+    "analyst_context": "Shared parent context; these analysts are not independent formal judges.",
+    "root_scope": "Normative documents, decisive records, root coordination, support refs/diffs, existing Actions run, consolidation and publication readback.",
+    "large_files": "GitHub blob MCP used when file transport omitted large content.",
+    "null_git_blob_sha": "Metadata was not retained in the root evidence catalog for that analyst source; null does not mean missing file or verified hash mismatch.",
+    "immutable_links": "All repository file evidence links are pinned to commits.",
+    "historical_claims": "Historical execution, acceptance and hashes are not reexecuted or universally reauthenticated. Per-source verification_scope controls.",
+    "private_content_accessed": false,
+    "live_conversation_status": "UNKNOWN",
+    "physical_tokens_cost_or_ETA_estimated": false
+  },
+  "normative_criteria": {
+    "count": 50,
+    "source_id": "N10",
+    "rule": "One evidence-backed disposition matrix per scope, preserving all 50 IDs; local PASS does not close the union. This report does not issue 50 new judgments."
+  },
+  "sources": [
+    {
+      "id": "N01",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-plan.md",
+      "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "verification_scope": "Read complete; original pilot boundary, 50 obligations, global DoD",
+      "verified_by": "/root"
+    },
+    {
+      "id": "N02",
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/campaign.md",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/campaign.md",
+      "git_blob_sha": "41a2aded10fbe639d4a0df1c4354da651543c47d",
+      "verification_scope": "Read complete pinned contract",
+      "verified_by": "/root"
+    },
+    {
+      "id": "N03",
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/completion.md",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/completion.md",
+      "git_blob_sha": "a843c2c312eefc80ecbad3890764d9d65ce45c43",
+      "verification_scope": "Read complete pinned contract",
+      "verified_by": "/root"
+    },
+    {
+      "id": "N04",
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/judging.md",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/judging.md",
+      "git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+      "verification_scope": "Read complete pinned contract",
+      "verified_by": "/root"
+    },
+    {
+      "id": "N05",
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/runtime.md",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/runtime.md",
+      "git_blob_sha": "0e0f1607003ff49946ed7a155c268b31239930e6",
+      "verification_scope": "Read complete pinned contract",
+      "verified_by": "/root"
+    },
+    {
+      "id": "N06",
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/integration.md",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/integration.md",
+      "git_blob_sha": "e9bd813f08eaad30e829c27e0f73ff0e3aef602d",
+      "verification_scope": "Read complete pinned contract",
+      "verified_by": "/root"
+    },
+    {
+      "id": "N07",
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/handoffs.md",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/handoffs.md",
+      "git_blob_sha": "e6dda45da04f507bab745b67b5b053fcf19be32b",
+      "verification_scope": "Read complete pinned contract",
+      "verified_by": "/root"
+    },
+    {
+      "id": "N08",
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/principles.md",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/principles.md",
+      "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+      "verification_scope": "Read complete pinned contract",
+      "verified_by": "/root"
+    },
+    {
+      "id": "N09",
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/transport.md",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/transport.md",
+      "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+      "verification_scope": "Read complete pinned contract",
+      "verified_by": "/root"
+    },
+    {
+      "id": "N10",
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/criteria.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/criteria.json",
+      "git_blob_sha": "6171f3d23d3e0263e578c04338067ecb8012016d",
+      "verification_scope": "Read complete pinned contract",
+      "verified_by": "/root"
+    },
+    {
+      "id": "N11",
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/parallel-partition.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/parallel-partition.json",
+      "git_blob_sha": "cdd2fba881059af6152371b417d8a791d8090a9f",
+      "verification_scope": "Parsed partition and exact ownership resolver",
+      "verified_by": "/root"
+    },
+    {
+      "id": "N12",
+      "commit": "d2d985c28947c7f984a36b07ad34ede3d4d2d6b4",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-sessions/manifest.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d2d985c28947c7f984a36b07ad34ede3d4d2d6b4/modules/atlas/docs/design/genesis-chatgpt-sessions/manifest.json",
+      "git_blob_sha": "b7178678bf553c1d6f2b46d8f745c0570f64f5b6",
+      "verification_scope": "Read complete; fresh S1-S5 and ROOT assignment",
+      "verified_by": "/root"
+    },
+    {
+      "id": "N13",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "AGENTS.md",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/AGENTS.md",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "verification_scope": "Read complete; test/CI rules; explicit user documentary-only scope governs this task",
+      "verified_by": "/root"
+    },
+    {
+      "id": "N14",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-global-completion-plan.md",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-global-completion-plan.md",
+      "git_blob_sha": "804d936d4e9c5509485100625215e3f5f3e3b8bb",
+      "verification_scope": "Read complete; distinguishes historical pilot, reusable controls and global closure",
+      "verified_by": "/root"
+    },
+    {
+      "id": "S1W",
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/work.md",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/a8df22ae3a140c58c63f62ce2a634c84f415c943/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/work.md",
+      "git_blob_sha": "7573759c19f76b0c640c750db671c749139a4653",
+      "verification_scope": "Read current work and historical/recovery distinctions",
+      "verified_by": "/root"
+    },
+    {
+      "id": "S1M",
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/native-package.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/a8df22ae3a140c58c63f62ce2a634c84f415c943/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/native-package.json",
+      "git_blob_sha": null,
+      "verification_scope": "Parsed 36 unique L1 keys; all body paths/declared lengths found",
+      "verified_by": "/root/reconcile_s1_s2"
+    },
+    {
+      "id": "S1C",
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/coverage.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/a8df22ae3a140c58c63f62ce2a634c84f415c943/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/coverage.json",
+      "git_blob_sha": null,
+      "verification_scope": "Parsed 2236 unique paths; A1441 B472 C323; all mapped artifact keys exist",
+      "verified_by": "/root/reconcile_s1_s2"
+    },
+    {
+      "id": "S1C-j1",
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-c-v1-supplement-j1.md",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/a8df22ae3a140c58c63f62ce2a634c84f415c943/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-c-v1-supplement-j1.md",
+      "git_blob_sha": null,
+      "verification_scope": "Read bounded semantic decision for ten C bodies",
+      "verified_by": "/root/reconcile_s1_s2"
+    },
+    {
+      "id": "S1C-j2",
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-c-v1-supplement-j2.md",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/a8df22ae3a140c58c63f62ce2a634c84f415c943/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-c-v1-supplement-j2.md",
+      "git_blob_sha": null,
+      "verification_scope": "Read bounded semantic decision for ten C bodies",
+      "verified_by": "/root/reconcile_s1_s2"
+    },
+    {
+      "id": "B15",
+      "commit": "882752dea940817edbc261d8b5763bde32872e7e",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b15-economy-v1/candidate-handoff.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/882752dea940817edbc261d8b5763bde32872e7e/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b15-economy-v1/candidate-handoff.json",
+      "git_blob_sha": null,
+      "verification_scope": "No current independent judgments; revised same s1.core.economy key",
+      "verified_by": "/root/reconcile_s1_s2"
+    },
+    {
+      "id": "B15PREP",
+      "commit": "824d80dac0a25d510dd4d07640d00d493beb7227",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b15-economy-v1/judging-preparation.md",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/824d80dac0a25d510dd4d07640d00d493beb7227/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b15-economy-v1/judging-preparation.md",
+      "git_blob_sha": "51ec0cf53ae1fc77f5b457752d5948e8c17e8335",
+      "verification_scope": "Read complete; blocked native-agent capability in that session; no new judgment",
+      "verified_by": "/root"
+    },
+    {
+      "id": "B15IMPACT1",
+      "commit": "7bfb9a4f69cd5ea1dc31b33d4afd26ec9e6c7f4a",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-s1-economy-impact-1/findings.md",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/7bfb9a4f69cd5ea1dc31b33d4afd26ec9e6c7f4a/modules/atlas/docs/design/genesis-chatgpt-results/20261113-s1-economy-impact-1/findings.md",
+      "git_blob_sha": null,
+      "verification_scope": "Historical NO_CHANGE dispositions; seven higher-level IDs referenced, remote bodies not located in checked sources",
+      "verified_by": "/root/reconcile_s1_s2"
+    },
+    {
+      "id": "B15IMPACT2",
+      "commit": "51a7c500835c48b35cdfc2348484482d41c9770f",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-s1-economy-impact-2/findings.md",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/51a7c500835c48b35cdfc2348484482d41c9770f/modules/atlas/docs/design/genesis-chatgpt-results/20261113-s1-economy-impact-2/findings.md",
+      "git_blob_sha": null,
+      "verification_scope": "Historical NO_CHANGE dispositions; seven higher-level IDs referenced, remote bodies not located in checked sources",
+      "verified_by": "/root/reconcile_s1_s2"
+    },
+    {
+      "id": "S2W",
+      "commit": "7c8905a0e833f057bca359bb8debd548440bc23e",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/work.md",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/7c8905a0e833f057bca359bb8debd548440bc23e/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/work.md",
+      "git_blob_sha": null,
+      "verification_scope": "Parsed historical 50-row matrix: 9 PASS 41 HOLD; not a current publication ledger",
+      "verified_by": "/root/reconcile_s1_s2"
+    },
+    {
+      "id": "S2C",
+      "commit": "7c8905a0e833f057bca359bb8debd548440bc23e",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/coverage.tsv",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/7c8905a0e833f057bca359bb8debd548440bc23e/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/coverage.tsv",
+      "git_blob_sha": null,
+      "verification_scope": "Parsed 4506 unique paths, disjoint S1; group/family mapping reconciled",
+      "verified_by": "/root/reconcile_s1_s2"
+    },
+    {
+      "id": "S2L1",
+      "commit": "7c8905a0e833f057bca359bb8debd548440bc23e",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/accepted/l1.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/7c8905a0e833f057bca359bb8debd548440bc23e/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/accepted/l1.json",
+      "git_blob_sha": null,
+      "verification_scope": "Parsed accepted IDs and both historical PASS references; body tree presence/length checked",
+      "verified_by": "/root/reconcile_s1_s2"
+    },
+    {
+      "id": "S2L2",
+      "commit": "7c8905a0e833f057bca359bb8debd548440bc23e",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/accepted/l2.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/7c8905a0e833f057bca359bb8debd548440bc23e/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/accepted/l2.json",
+      "git_blob_sha": null,
+      "verification_scope": "Parsed accepted IDs and both historical PASS references; body tree presence/length checked",
+      "verified_by": "/root/reconcile_s1_s2"
+    },
+    {
+      "id": "S2L3",
+      "commit": "7c8905a0e833f057bca359bb8debd548440bc23e",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/accepted/l3.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/7c8905a0e833f057bca359bb8debd548440bc23e/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/accepted/l3.json",
+      "git_blob_sha": null,
+      "verification_scope": "Parsed accepted IDs and both historical PASS references; body tree presence/length checked",
+      "verified_by": "/root/reconcile_s1_s2"
+    },
+    {
+      "id": "S2L4",
+      "commit": "7c8905a0e833f057bca359bb8debd548440bc23e",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/accepted/l4.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/7c8905a0e833f057bca359bb8debd548440bc23e/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/accepted/l4.json",
+      "git_blob_sha": null,
+      "verification_scope": "Parsed accepted IDs and both historical PASS references; body tree presence/length checked",
+      "verified_by": "/root/reconcile_s1_s2"
+    },
+    {
+      "id": "S2PUB",
+      "commit": "7c8905a0e833f057bca359bb8debd548440bc23e",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/git-publication/state.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/7c8905a0e833f057bca359bb8debd548440bc23e/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/git-publication/state.json",
+      "git_blob_sha": "2e9b1ffd51c594497775683a1ab1849c5693b2f4",
+      "verification_scope": "Read archive publication complete 1109/1109, remaining 0",
+      "verified_by": "/root"
+    },
+    {
+      "id": "S2PREP",
+      "commit": "7c8905a0e833f057bca359bb8debd548440bc23e",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/evidence/recovery-prepare-r4/public-summary.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/7c8905a0e833f057bca359bb8debd548440bc23e/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/evidence/recovery-prepare-r4/public-summary.json",
+      "git_blob_sha": "72a104c694c78fdfecd5c5a552c05dc992669abf",
+      "verification_scope": "Read derived/redacted success summary; not original full prepare evidence",
+      "verified_by": "/root"
+    },
+    {
+      "id": "S2RESUME",
+      "commit": "6d49a6a821c3bcb153f794326ab757346f87bcf6",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261114/handoff.md",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/6d49a6a821c3bcb153f794326ab757346f87bcf6/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261114/handoff.md",
+      "git_blob_sha": "f34f3a7b2941fb17355090b8f5a9fdceb47989fc",
+      "verification_scope": "Read PARTIAL handoff and finished documentary unit",
+      "verified_by": "/root"
+    },
+    {
+      "id": "S3W",
+      "commit": "68fca8e90c3150416e4e7ef8410df1cc42ee9d1b",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/work.md",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/68fca8e90c3150416e4e7ef8410df1cc42ee9d1b/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/work.md",
+      "git_blob_sha": "5e2cabcefec52afdba0ee0432152a8c90a2a6f41",
+      "verification_scope": "Read exact collision notice and original local payload not published",
+      "verified_by": "/root"
+    },
+    {
+      "id": "S3M",
+      "commit": "68fca8e90c3150416e4e7ef8410df1cc42ee9d1b",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/native-package.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/68fca8e90c3150416e4e7ef8410df1cc42ee9d1b/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/native-package.json",
+      "git_blob_sha": null,
+      "verification_scope": "3 accepted/indexed; required 11; full L1 input membership checked",
+      "verified_by": "/root/reconcile_s3_s4"
+    },
+    {
+      "id": "S3A",
+      "commit": "68fca8e90c3150416e4e7ef8410df1cc42ee9d1b",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/L1-acceptance.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/68fca8e90c3150416e4e7ef8410df1cc42ee9d1b/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/L1-acceptance.json",
+      "git_blob_sha": null,
+      "verification_scope": "Read three bounded static acceptances with both reviewers",
+      "verified_by": "/root/reconcile_s3_s4"
+    },
+    {
+      "id": "S3REC",
+      "commit": "68fca8e90c3150416e4e7ef8410df1cc42ee9d1b",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/recovery-candidate-state.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/68fca8e90c3150416e4e7ef8410df1cc42ee9d1b/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/recovery-candidate-state.json",
+      "git_blob_sha": null,
+      "verification_scope": "Read eight alternative L2-L4 candidate identities; all eight substantive bodies read",
+      "verified_by": "/root/reconcile_s3_s4"
+    },
+    {
+      "id": "S3CA",
+      "commit": "68fca8e90c3150416e4e7ef8410df1cc42ee9d1b",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-A/coverage.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/68fca8e90c3150416e4e7ef8410df1cc42ee9d1b/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-A/coverage.json",
+      "git_blob_sha": null,
+      "verification_scope": "Full JSON read; 424/3700/429 unique paths; all covered by corresponding L1 input keys",
+      "verified_by": "/root/reconcile_s3_s4"
+    },
+    {
+      "id": "S3CB",
+      "commit": "68fca8e90c3150416e4e7ef8410df1cc42ee9d1b",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/coverage.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/68fca8e90c3150416e4e7ef8410df1cc42ee9d1b/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/coverage.json",
+      "git_blob_sha": null,
+      "verification_scope": "Full JSON read; 424/3700/429 unique paths; all covered by corresponding L1 input keys",
+      "verified_by": "/root/reconcile_s3_s4"
+    },
+    {
+      "id": "S3CC",
+      "commit": "68fca8e90c3150416e4e7ef8410df1cc42ee9d1b",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/coverage.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/68fca8e90c3150416e4e7ef8410df1cc42ee9d1b/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/coverage.json",
+      "git_blob_sha": null,
+      "verification_scope": "Full JSON read; 424/3700/429 unique paths; all covered by corresponding L1 input keys",
+      "verified_by": "/root/reconcile_s3_s4"
+    },
+    {
+      "id": "S3DISPATCH",
+      "commit": "68fca8e90c3150416e4e7ef8410df1cc42ee9d1b",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/review-packets/recovery-dispatch.md",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/68fca8e90c3150416e4e7ef8410df1cc42ee9d1b/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/review-packets/recovery-dispatch.md",
+      "git_blob_sha": null,
+      "verification_scope": "Read existing L2-L3-L4 sequence; L1 locator correction can use L1-acceptance.json",
+      "verified_by": "/root/reconcile_s3_s4"
+    },
+    {
+      "id": "S3RESUME",
+      "commit": "7233f437b4a46c5845e9d88f68dadf8106224fe5",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3-resume-20261114/handoff.md",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/7233f437b4a46c5845e9d88f68dadf8106224fe5/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3-resume-20261114/handoff.md",
+      "git_blob_sha": "c01ea7815b29a82b64fdf03381a15737e81e1e80",
+      "verification_scope": "Read PARTIAL reconciliation-only output; no new bodies",
+      "verified_by": "/root"
+    },
+    {
+      "id": "S4H",
+      "commit": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/handoff.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/handoff.json",
+      "git_blob_sha": "f3037c1755daa3f99c1188e3e51962ba1d3bd0bf",
+      "verification_scope": "Read handoff: 11 indexed of 15; J1 residual pending; historical CI status reconciled separately",
+      "verified_by": "/root"
+    },
+    {
+      "id": "S4M",
+      "commit": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/native-package.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/native-package.json",
+      "git_blob_sha": null,
+      "verification_scope": "11 indexed, 15 required; 15 current body paths present across producers",
+      "verified_by": "/root/reconcile_s3_s4"
+    },
+    {
+      "id": "S4C",
+      "commit": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage.json",
+      "git_blob_sha": null,
+      "verification_scope": "Read 2220 unique rows, equal inventory; every artifact key exists; overlapping assignments deduplicated",
+      "verified_by": "/root/reconcile_s3_s4"
+    },
+    {
+      "id": "S4L1",
+      "commit": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/l1-acceptance.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/l1-acceptance.json",
+      "git_blob_sha": null,
+      "verification_scope": "Read accepted layer 7/3/1 artifacts",
+      "verified_by": "/root/reconcile_s3_s4"
+    },
+    {
+      "id": "S4L2",
+      "commit": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/l2-acceptance.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/l2-acceptance.json",
+      "git_blob_sha": null,
+      "verification_scope": "Read accepted layer 7/3/1 artifacts",
+      "verified_by": "/root/reconcile_s3_s4"
+    },
+    {
+      "id": "S4L3",
+      "commit": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/l3-acceptance.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/l3-acceptance.json",
+      "git_blob_sha": null,
+      "verification_scope": "Read accepted layer 7/3/1 artifacts",
+      "verified_by": "/root/reconcile_s3_s4"
+    },
+    {
+      "id": "S4P5",
+      "commit": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/requests/part-05.txt",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/requests/part-05.txt",
+      "git_blob_sha": "b226e8354247c04454a7775d0d0a83003cd860e6",
+      "verification_scope": "Read already-published exact residual supplement; not newly produced",
+      "verified_by": "/root"
+    },
+    {
+      "id": "S4J1",
+      "commit": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/responses/j1-canonical-r1.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/responses/j1-canonical-r1.json",
+      "git_blob_sha": null,
+      "verification_scope": "Read REQUEST_EVIDENCE, sole remaining J1-E02",
+      "verified_by": "/root/reconcile_s3_s4"
+    },
+    {
+      "id": "S4J2A",
+      "commit": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/responses/j2-canonical-addendum.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/responses/j2-canonical-addendum.json",
+      "git_blob_sha": null,
+      "verification_scope": "Read unchanged PASS after supplement",
+      "verified_by": "/root/reconcile_s3_s4"
+    },
+    {
+      "id": "S4REL",
+      "commit": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+      "git_blob_sha": "7513fcca63664ca02094e9ed9b8fab090c20295d",
+      "verification_scope": "Parsed r3; five native sample capabilities and six common-control capabilities with distinct candidates",
+      "verified_by": "/root"
+    },
+    {
+      "id": "S4RESUME",
+      "commit": "db86cb85018b9525fdce56faeab6c0ffdfa65dba",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/resume-handoff-20261114.md",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/db86cb85018b9525fdce56faeab6c0ffdfa65dba/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/resume-handoff-20261114.md",
+      "git_blob_sha": "ab5ac23cdfdfc984319bb33db0f386e97b720ae2",
+      "verification_scope": "Read supplement-only PARTIAL handoff",
+      "verified_by": "/root"
+    },
+    {
+      "id": "S4TAIL",
+      "commit": "e8828a9780ba253a27a55a433dcb22bad6286cab",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-s4-tail-precision/s4-tail-precision.md",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/e8828a9780ba253a27a55a433dcb22bad6286cab/modules/atlas/docs/design/genesis-chatgpt-results/20261113-s4-tail-precision/s4-tail-precision.md",
+      "git_blob_sha": null,
+      "verification_scope": "Read prospective correction; canonical S4 bodies/package unchanged",
+      "verified_by": "/root/reconcile_s3_s4"
+    },
+    {
+      "id": "S5W",
+      "commit": "df6d83b011b7cc2b4d6edef3c796b001dea71837",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/work.md",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/df6d83b011b7cc2b4d6edef3c796b001dea71837/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/work.md",
+      "git_blob_sha": "fd8b6f4e4af7a6185aff8474c3ad827698c20c89",
+      "verification_scope": "Read author-side cumulative candidate, independent judgments absent, exact prepare recorded",
+      "verified_by": "/root"
+    },
+    {
+      "id": "S5M",
+      "commit": "df6d83b011b7cc2b4d6edef3c796b001dea71837",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/native-package.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/df6d83b011b7cc2b4d6edef3c796b001dea71837/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/native-package.json",
+      "git_blob_sha": null,
+      "verification_scope": "Read one blocked cumulative body and limited exact source captures; no complete 927-source artifact map",
+      "verified_by": "/root/reconcile_s5_external"
+    },
+    {
+      "id": "S5BODY",
+      "commit": "df6d83b011b7cc2b4d6edef3c796b001dea71837",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/bodies/s5-cli-omni-platform-l1-l4.md",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/df6d83b011b7cc2b4d6edef3c796b001dea71837/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/bodies/s5-cli-omni-platform-l1-l4.md",
+      "git_blob_sha": null,
+      "verification_scope": "Read cumulative body and 26-source ledger, including 18 residual-source mentions",
+      "verified_by": "/root/reconcile_s5_external"
+    },
+    {
+      "id": "OM",
+      "commit": "bdfebdb9fe6b5f2a921aef207cebe33b65cd6d20",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/manifest.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bdfebdb9fe6b5f2a921aef207cebe33b65cd6d20/modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/manifest.json",
+      "git_blob_sha": null,
+      "verification_scope": "393 unique paths/blobs matched baseline; all joined to 38 current source-record bodies",
+      "verified_by": "/root/reconcile_s5_external"
+    },
+    {
+      "id": "OW",
+      "commit": "bdfebdb9fe6b5f2a921aef207cebe33b65cd6d20",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/work.md",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bdfebdb9fe6b5f2a921aef207cebe33b65cd6d20/modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/work.md",
+      "git_blob_sha": "6b1b2f73ec124ab86bdaea5f584f7cfe34b94d0b",
+      "verification_scope": "Read sequential checkpoints; final current 84 sources in 9 bodies accepted, C10 correction remains",
+      "verified_by": "/root"
+    },
+    {
+      "id": "OP",
+      "commit": "bdfebdb9fe6b5f2a921aef207cebe33b65cd6d20",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/native-package.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bdfebdb9fe6b5f2a921aef207cebe33b65cd6d20/modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/native-package.json",
+      "git_blob_sha": null,
+      "verification_scope": "48 required keys,39 indexed; three L2 drafts also exist; six L3/L4 bodies absent",
+      "verified_by": "/root/reconcile_s5_external"
+    },
+    {
+      "id": "OSERVE",
+      "commit": "bdfebdb9fe6b5f2a921aef207cebe33b65cd6d20",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/runtime/pilot/serving-verification-v1.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bdfebdb9fe6b5f2a921aef207cebe33b65cd6d20/modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/runtime/pilot/serving-verification-v1.json",
+      "git_blob_sha": "1716bf1f2b8767b352bd0aa8a97f0143d9da7d96",
+      "verification_scope": "Read exact six-source pilot: actual publish/index/read, independent_consumer_evaluation=false",
+      "verified_by": "/root"
+    },
+    {
+      "id": "OC10",
+      "commit": "bdfebdb9fe6b5f2a921aef207cebe33b65cd6d20",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/history/core/C10-author-corrections-v2.md",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bdfebdb9fe6b5f2a921aef207cebe33b65cd6d20/modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/history/core/C10-author-corrections-v2.md",
+      "git_blob_sha": null,
+      "verification_scope": "Read bounded C10-F1 mandatory correction to ran counter description",
+      "verified_by": "/root/reconcile_s5_external"
+    },
+    {
+      "id": "PM",
+      "commit": "0af4bcc4bcfcd4d58c5e45a21c319fe10d47b9f3",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-platform-200/manifest.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/0af4bcc4bcfcd4d58c5e45a21c319fe10d47b9f3/modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-platform-200/manifest.json",
+      "git_blob_sha": null,
+      "verification_scope": "200 unique S5 paths/blobs, disjoint Omni;21 L2 bodies and coverage A/B/C matched",
+      "verified_by": "/root/reconcile_s5_external"
+    },
+    {
+      "id": "PR",
+      "commit": "0af4bcc4bcfcd4d58c5e45a21c319fe10d47b9f3",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-platform-200/README.md",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/0af4bcc4bcfcd4d58c5e45a21c319fe10d47b9f3/modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-platform-200/README.md",
+      "git_blob_sha": "d63b19e30bdae5047b1a9d05d2195402ac3ba8b6",
+      "verification_scope": "Read complete source-to-body catalog and operational limits",
+      "verified_by": "/root"
+    },
+    {
+      "id": "PH",
+      "commit": "0af4bcc4bcfcd4d58c5e45a21c319fe10d47b9f3",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-platform-200/handoff.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/0af4bcc4bcfcd4d58c5e45a21c319fe10d47b9f3/modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-platform-200/handoff.json",
+      "git_blob_sha": "10fcad136597cabdf7f3557067220f6c613d2f05",
+      "verification_scope": "Read documentary scope, 26 artifacts,6 HOLDs,28 PASS16 N/A, no material semantic finding",
+      "verified_by": "/root"
+    },
+    {
+      "id": "ROOTW",
+      "commit": "7ad0271e2bfbcf52d7ce890f97c3c1b498ddb820",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/integration/work.md",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/7ad0271e2bfbcf52d7ce890f97c3c1b498ddb820/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/integration/work.md",
+      "git_blob_sha": "8a917959fac1c4baa5fbdccf927ce8eacb9c4557",
+      "verification_scope": "Read complete; coordination only, missing local accepted payloads and recovered CLI body claim",
+      "verified_by": "/root"
+    },
+    {
+      "id": "ROOTH",
+      "commit": "7ad0271e2bfbcf52d7ce890f97c3c1b498ddb820",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/integration/handoff.json",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/7ad0271e2bfbcf52d7ce890f97c3c1b498ddb820/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/integration/handoff.json",
+      "git_blob_sha": "dea8078e8401be084fe772f9d3652b9331d5944a",
+      "verification_scope": "Read IN_PROGRESS; candidate_revision null, no integrated union",
+      "verified_by": "/root"
+    },
+    {
+      "id": "STATIC",
+      "commit": "44c2d7f8574d0dfbdfdcac9fb405951211272d5d",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/README.md",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/44c2d7f8574d0dfbdfdcac9fb405951211272d5d/modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/README.md",
+      "git_blob_sha": "a32becc5e995699b153552accf6cdd38bc9c36bb",
+      "verification_scope": "Read existing static audit; 50-ID matrix and13 NOT_RUN controls reusable, no global acceptance",
+      "verified_by": "/root"
+    },
+    {
+      "id": "STATICINV",
+      "commit": "44c2d7f8574d0dfbdfdcac9fb405951211272d5d",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/tree-inventory.tsv",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/44c2d7f8574d0dfbdfdcac9fb405951211272d5d/modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/tree-inventory.tsv",
+      "git_blob_sha": null,
+      "verification_scope": "Full blob read by analyst; resolver reproduced927S5; all593 external path/blob records match",
+      "verified_by": "/root/reconcile_s5_external"
+    }
+  ],
+  "related_files": {
+    "report": "REPORT.md",
+    "backlog": "BACKLOG.md",
+    "counts": "COUNTS.json",
+    "publication_seal": "HANDOFF.md"
+  }
+}

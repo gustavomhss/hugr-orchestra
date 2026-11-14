@@ -1,0 +1,561 @@
+{
+  "schema_version": 1,
+  "repository": "gustavomhss/hugr-orchestra",
+  "snapshot_date": "2026-11-14",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "measurement_rules": [
+    "Sources, knowledge bodies, required artifact keys, semantic acceptance, Git publication and Atlas operations are distinct units.",
+    "Omni393 and Platform200 are disjoint subsets of S5, not additions to the repository denominator.",
+    "Association to a body may use a family/unit; it does not prove whole-source reading, semantic sufficiency, acceptance or operational ownership.",
+    "A historical judgment applies only to its exact bytes and scope.",
+    "Unknown is not zero. Residual mapping is not demonstrated absence of production.",
+    "Historical hashes are reported unless the per-source verification explicitly says recomputed."
+  ],
+  "population": {
+    "total": 14442,
+    "unit": "tracked source entries at frozen baseline; directories excluded",
+    "shards": {
+      "S1": 2236,
+      "S2": 4506,
+      "S3": 4553,
+      "S4": 2220,
+      "S5": 927
+    },
+    "static_inventory": {
+      "blobs": 14442,
+      "directories": 2268,
+      "total_records": 16710
+    },
+    "sources": [
+      {
+        "id": "N11",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/parallel-partition.json"
+      },
+      {
+        "id": "STATIC",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/blob/44c2d7f8574d0dfbdfdcac9fb405951211272d5d/modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/README.md"
+      },
+      {
+        "id": "STATICINV",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/blob/44c2d7f8574d0dfbdfdcac9fb405951211272d5d/modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-integration-static/tree-inventory.tsv"
+      }
+    ]
+  },
+  "comparable_structural_association": {
+    "numerator": 14108,
+    "denominator": 14442,
+    "percentage": 97.68730092784934,
+    "display_percentage": "97.69%",
+    "terms": {
+      "S1": 2236,
+      "S2": 4506,
+      "S3": 4553,
+      "S4": 2220,
+      "Omni_S5_subset": 393,
+      "Platform_S5_subset": 200
+    },
+    "unit": "distinct baseline sources with reconciled structural association to produced knowledge bodies",
+    "lower_bound": true,
+    "residual": 334,
+    "residual_components": {
+      "CLI": 162,
+      "Omni_excluded_from_external_subset": 33,
+      "other_S5": 139
+    },
+    "other_S5_components": {
+      "script_guards": 89,
+      "packages_script": 13,
+      "other_script": 12,
+      "nix": 9,
+      "docs_guardrail": 5,
+      "guardrail_skills": 4,
+      "workflows": 3,
+      "root_files": 4
+    },
+    "additional_residual_sources_in_S5_ledger": {
+      "count": 18,
+      "included_in_comparable_numerator": false,
+      "matching_explicit_baseline_blob": 16,
+      "path_and_revision_without_explicit_blob": 2,
+      "reason": "Source ledger identification is not yet reconciled to the same source-record/body association standard."
+    },
+    "complete_knowledge_percentage": null,
+    "accepted_global_percentage": null,
+    "not_measured": [
+      "full reading",
+      "semantic depth",
+      "L1-L4 completeness",
+      "acceptance of whole repository",
+      "operational ownership",
+      "global completion"
+    ],
+    "sources": [
+      {
+        "id": "S1C",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/blob/a8df22ae3a140c58c63f62ce2a634c84f415c943/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/coverage.json"
+      },
+      {
+        "id": "S1M",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/blob/a8df22ae3a140c58c63f62ce2a634c84f415c943/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/native-package.json"
+      },
+      {
+        "id": "S2C",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/blob/7c8905a0e833f057bca359bb8debd548440bc23e/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/coverage.tsv"
+      },
+      {
+        "id": "S2L1",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/blob/7c8905a0e833f057bca359bb8debd548440bc23e/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/accepted/l1.json"
+      },
+      {
+        "id": "S2L2",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/blob/7c8905a0e833f057bca359bb8debd548440bc23e/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/accepted/l2.json"
+      },
+      {
+        "id": "S2L3",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/blob/7c8905a0e833f057bca359bb8debd548440bc23e/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/accepted/l3.json"
+      },
+      {
+        "id": "S2L4",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/blob/7c8905a0e833f057bca359bb8debd548440bc23e/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/accepted/l4.json"
+      },
+      {
+        "id": "S3M",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/blob/68fca8e90c3150416e4e7ef8410df1cc42ee9d1b/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/native-package.json"
+      },
+      {
+        "id": "S3CA",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/blob/68fca8e90c3150416e4e7ef8410df1cc42ee9d1b/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-A/coverage.json"
+      },
+      {
+        "id": "S3CB",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/blob/68fca8e90c3150416e4e7ef8410df1cc42ee9d1b/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/coverage.json"
+      },
+      {
+        "id": "S3CC",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/blob/68fca8e90c3150416e4e7ef8410df1cc42ee9d1b/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/coverage.json"
+      },
+      {
+        "id": "S4C",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/blob/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage.json"
+      },
+      {
+        "id": "S4M",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/blob/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/native-package.json"
+      },
+      {
+        "id": "OM",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bdfebdb9fe6b5f2a921aef207cebe33b65cd6d20/modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/manifest.json"
+      },
+      {
+        "id": "PM",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/blob/0af4bcc4bcfcd4d58c5e45a21c319fe10d47b9f3/modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-platform-200/manifest.json"
+      },
+      {
+        "id": "S5BODY",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/blob/df6d83b011b7cc2b4d6edef3c796b001dea71837/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/bodies/s5-cli-omni-platform-l1-l4.md"
+      }
+    ]
+  },
+  "domains": {
+    "S1": {
+      "head": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "sources": 2236,
+      "source_groups": {
+        "A": 1441,
+        "B": 472,
+        "C": 323
+      },
+      "produced_canonical_L1": 36,
+      "produced_L1_groups": {
+        "A": 17,
+        "B": 9,
+        "C": 10
+      },
+      "L1_bodies_with_bounded_dual_acceptance": 10,
+      "L1_without_demonstrated_final_dual_acceptance": 26,
+      "accepted_group_C_metadata_only_sources": 39,
+      "canonical_indexed_upper_bodies": 0,
+      "upper_artifact_identities_referenced_by_hash_without_remote_body_located": 7,
+      "final_required_upper_body_denominator": null,
+      "legacy_269_requirements_are_produced_count": false,
+      "B15_is_existing_L1_key": true,
+      "evidence": [
+        {
+          "id": "S1C",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/a8df22ae3a140c58c63f62ce2a634c84f415c943/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/coverage.json"
+        },
+        {
+          "id": "S1M",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/a8df22ae3a140c58c63f62ce2a634c84f415c943/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/native-package.json"
+        },
+        {
+          "id": "S1C-j1",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/a8df22ae3a140c58c63f62ce2a634c84f415c943/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-c-v1-supplement-j1.md"
+        },
+        {
+          "id": "S1C-j2",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/a8df22ae3a140c58c63f62ce2a634c84f415c943/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-c-v1-supplement-j2.md"
+        },
+        {
+          "id": "B15",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/882752dea940817edbc261d8b5763bde32872e7e/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b15-economy-v1/candidate-handoff.json"
+        },
+        {
+          "id": "B15PREP",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/824d80dac0a25d510dd4d07640d00d493beb7227/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b15-economy-v1/judging-preparation.md"
+        },
+        {
+          "id": "B15IMPACT1",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/7bfb9a4f69cd5ea1dc31b33d4afd26ec9e6c7f4a/modules/atlas/docs/design/genesis-chatgpt-results/20261113-s1-economy-impact-1/findings.md"
+        },
+        {
+          "id": "B15IMPACT2",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/51a7c500835c48b35cdfc2348484482d41c9770f/modules/atlas/docs/design/genesis-chatgpt-results/20261113-s1-economy-impact-2/findings.md"
+        }
+      ]
+    },
+    "S2": {
+      "head": "7c8905a0e833f057bca359bb8debd548440bc23e",
+      "sources": 4506,
+      "families": 156,
+      "classification": {
+        "inspected": 565,
+        "family": 3893,
+        "metadata": 48
+      },
+      "required_bodies": 13,
+      "remote_bodies": 13,
+      "bodies_by_layer": {
+        "L1": 3,
+        "L2": 3,
+        "L3": 3,
+        "L4": 4
+      },
+      "recorded_accepted_bodies": 13,
+      "preservation_archive": {
+        "total": 1109,
+        "published": 1109,
+        "restored": 925,
+        "remaining": 0,
+        "content_commit": "8b8aeccb310ba8f2f38f70ef952f87687958efac"
+      },
+      "prepare_r4": {
+        "evidence_type": "DERIVED_REDACTED_SUMMARY_NOT_VERBATIM_EXECUTION_RECEIPT",
+        "artifacts": 13,
+        "observations": 626,
+        "reported_exit_code": 0,
+        "candidate_code": "22815b6821dce26562624b4711c705c7cd786268",
+        "candidate_id": "f310ec9b3844d6833ea5a867f9ed14ce099669492c66d8b133116642310310dd",
+        "full_receipt_accessed": false
+      },
+      "consumer_cases": 14,
+      "consumer_status": "NOT_RUN",
+      "maintenance_case": "S2-U1",
+      "historical_criterion_matrix": {
+        "PASS": 9,
+        "HOLD": 41,
+        "measures_knowledge_percentage": false
+      },
+      "evidence": [
+        {
+          "id": "S2C",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/7c8905a0e833f057bca359bb8debd548440bc23e/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/coverage.tsv"
+        },
+        {
+          "id": "S2L1",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/7c8905a0e833f057bca359bb8debd548440bc23e/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/accepted/l1.json"
+        },
+        {
+          "id": "S2L2",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/7c8905a0e833f057bca359bb8debd548440bc23e/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/accepted/l2.json"
+        },
+        {
+          "id": "S2L3",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/7c8905a0e833f057bca359bb8debd548440bc23e/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/accepted/l3.json"
+        },
+        {
+          "id": "S2L4",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/7c8905a0e833f057bca359bb8debd548440bc23e/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/accepted/l4.json"
+        },
+        {
+          "id": "S2PUB",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/7c8905a0e833f057bca359bb8debd548440bc23e/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/git-publication/state.json"
+        },
+        {
+          "id": "S2PREP",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/7c8905a0e833f057bca359bb8debd548440bc23e/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/evidence/recovery-prepare-r4/public-summary.json"
+        },
+        {
+          "id": "S2RESUME",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/6d49a6a821c3bcb153f794326ab757346f87bcf6/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261114/handoff.md"
+        }
+      ]
+    },
+    "S3": {
+      "head": "68fca8e90c3150416e4e7ef8410df1cc42ee9d1b",
+      "sources": 4553,
+      "source_groups": {
+        "A": 424,
+        "B": 3700,
+        "C": 429
+      },
+      "declared_required_bodies": 11,
+      "remote_bodies": 11,
+      "bodies_by_layer": {
+        "L1": 3,
+        "L2": 3,
+        "L3": 1,
+        "L4": 4
+      },
+      "accepted_indexed_L1": 3,
+      "unaccepted_recovery_alternatives": 8,
+      "original_upper_accepted_payload_status": "CLAIMED_BYTES_NOT_PUBLISHED",
+      "collision": {
+        "commits": 8,
+        "changed_files": 21
+      },
+      "consumer_cases": 7,
+      "maintenance_cases": [
+        "M0",
+        "M1",
+        "M2",
+        "M3"
+      ],
+      "evidence": [
+        {
+          "id": "S3M",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/68fca8e90c3150416e4e7ef8410df1cc42ee9d1b/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/native-package.json"
+        },
+        {
+          "id": "S3CA",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/68fca8e90c3150416e4e7ef8410df1cc42ee9d1b/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-A/coverage.json"
+        },
+        {
+          "id": "S3CB",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/68fca8e90c3150416e4e7ef8410df1cc42ee9d1b/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/coverage.json"
+        },
+        {
+          "id": "S3CC",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/68fca8e90c3150416e4e7ef8410df1cc42ee9d1b/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/coverage.json"
+        },
+        {
+          "id": "S3A",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/68fca8e90c3150416e4e7ef8410df1cc42ee9d1b/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/L1-acceptance.json"
+        },
+        {
+          "id": "S3REC",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/68fca8e90c3150416e4e7ef8410df1cc42ee9d1b/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/recovery-candidate-state.json"
+        },
+        {
+          "id": "S3W",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/68fca8e90c3150416e4e7ef8410df1cc42ee9d1b/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/work.md"
+        },
+        {
+          "id": "S3DISPATCH",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/68fca8e90c3150416e4e7ef8410df1cc42ee9d1b/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/review-packets/recovery-dispatch.md"
+        }
+      ]
+    },
+    "S4": {
+      "head": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "sources": 2220,
+      "declared_required_bodies": 15,
+      "remote_bodies": 15,
+      "bodies_by_layer": {
+        "L1": 7,
+        "L2": 3,
+        "L3": 1,
+        "L4": 4
+      },
+      "accepted_indexed_bodies": 11,
+      "L4_bodies": 4,
+      "L4_decisions": {
+        "J2": "PASS",
+        "last_published_J1": "REQUEST_EVIDENCE",
+        "residual_finding": "J1-E02",
+        "supplement": "already published and recorded SENT_VERBATIM",
+        "final_J1_after_supplement": "NOT_LOCATED"
+      },
+      "release_r3": {
+        "native_capabilities_on_one_L1A_sample": 5,
+        "native_sample_candidate": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+        "common_controls": 6,
+        "common_controls_candidate": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+        "proves_admission_of_15_bodies": false
+      },
+      "CI_r4": {
+        "run_id": 43154719978,
+        "status": "completed",
+        "conclusion": "success",
+        "head_sha": "22815b6821dce26562624b4711c705c7cd786268",
+        "release_or_binding_implied": false
+      },
+      "evidence": [
+        {
+          "id": "S4C",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage.json"
+        },
+        {
+          "id": "S4M",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/native-package.json"
+        },
+        {
+          "id": "S4L1",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/l1-acceptance.json"
+        },
+        {
+          "id": "S4L2",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/l2-acceptance.json"
+        },
+        {
+          "id": "S4L3",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/l3-acceptance.json"
+        },
+        {
+          "id": "S4P5",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/requests/part-05.txt"
+        },
+        {
+          "id": "S4J1",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/responses/j1-canonical-r1.json"
+        },
+        {
+          "id": "S4J2A",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/responses/j2-canonical-addendum.json"
+        },
+        {
+          "id": "S4REL",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json"
+        }
+      ]
+    },
+    "S5": {
+      "head": "df6d83b011b7cc2b4d6edef3c796b001dea71837",
+      "sources": 927,
+      "cumulative_body_count": 1,
+      "cumulative_body_reported_bytes": 35657,
+      "transport_layer": 4,
+      "original_formal_independent_acceptance": false,
+      "original_prepare_proven": true,
+      "canonical_full_source_artifact_map_demonstrated": false,
+      "external_comparable_mapped_sources": 593,
+      "residual_mapping_sources": 334,
+      "recovered_CLI_body_reported_bytes": 12877,
+      "recovered_CLI_remote_body_located": false,
+      "evidence": [
+        {
+          "id": "S5W",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/df6d83b011b7cc2b4d6edef3c796b001dea71837/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/work.md"
+        },
+        {
+          "id": "S5M",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/df6d83b011b7cc2b4d6edef3c796b001dea71837/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/native-package.json"
+        },
+        {
+          "id": "S5BODY",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/df6d83b011b7cc2b4d6edef3c796b001dea71837/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s5/bodies/s5-cli-omni-platform-l1-l4.md"
+        },
+        {
+          "id": "ROOTW",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/7ad0271e2bfbcf52d7ce890f97c3c1b498ddb820/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/integration/work.md"
+        }
+      ]
+    },
+    "Omni_external": {
+      "head": "bdfebdb9fe6b5f2a921aef207cebe33b65cd6d20",
+      "parent_shard": "S5",
+      "sources": 393,
+      "L1_source_record_bodies": 38,
+      "L1_index": 1,
+      "required_keys": 48,
+      "indexed_artifacts": 39,
+      "draft_L2_bodies": 3,
+      "required_L3_bodies": 3,
+      "remote_L3_bodies": 0,
+      "required_L4_bodies": 3,
+      "remote_L4_bodies": 0,
+      "accepted_L1_bodies": 9,
+      "accepted_L1_sources": 84,
+      "pending_L1_bodies": 29,
+      "pending_L1_sources": 309,
+      "pilot": {
+        "version": "C01 v2",
+        "sources": 6,
+        "publish_index_read_proven": true,
+        "independent_consumer_evaluation": false
+      },
+      "evidence": [
+        {
+          "id": "OM",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bdfebdb9fe6b5f2a921aef207cebe33b65cd6d20/modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/manifest.json"
+        },
+        {
+          "id": "OW",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bdfebdb9fe6b5f2a921aef207cebe33b65cd6d20/modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/work.md"
+        },
+        {
+          "id": "OP",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bdfebdb9fe6b5f2a921aef207cebe33b65cd6d20/modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/native-package.json"
+        },
+        {
+          "id": "OC10",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bdfebdb9fe6b5f2a921aef207cebe33b65cd6d20/modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/history/core/C10-author-corrections-v2.md"
+        },
+        {
+          "id": "OSERVE",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bdfebdb9fe6b5f2a921aef207cebe33b65cd6d20/modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/runtime/pilot/serving-verification-v1.json"
+        }
+      ]
+    },
+    "Platform_external": {
+      "head": "0af4bcc4bcfcd4d58c5e45a21c319fe10d47b9f3",
+      "parent_shard": "S5",
+      "sources": 200,
+      "source_groups": {
+        "A": 54,
+        "B": 69,
+        "C": 77
+      },
+      "artifacts": 26,
+      "artifacts_by_layer": {
+        "L1": 1,
+        "L2": 21,
+        "L3": 1,
+        "L4": 3
+      },
+      "L4_includes": [
+        "README entry",
+        "ownership",
+        "maintenance"
+      ],
+      "documentary_acceptance_recorded": true,
+      "public_payload_files": 35,
+      "payload_commit": "bfc1e638df1a5eb8a9bae56a88d10eec4b65a3dd",
+      "local_matrix": {
+        "PASS": 28,
+        "HOLD": 6,
+        "NOT_APPLICABLE": 16
+      },
+      "HOLD_topics": {
+        "historical_capture": 1,
+        "usage_cost_physical_guarantees": 5
+      },
+      "runtime_consumption_claimed": false,
+      "evidence": [
+        {
+          "id": "PM",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/0af4bcc4bcfcd4d58c5e45a21c319fe10d47b9f3/modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-platform-200/manifest.json"
+        },
+        {
+          "id": "PR",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/0af4bcc4bcfcd4d58c5e45a21c319fe10d47b9f3/modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-platform-200/README.md"
+        },
+        {
+          "id": "PH",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/0af4bcc4bcfcd4d58c5e45a21c319fe10d47b9f3/modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-platform-200/handoff.json"
+        }
+      ]
+    }
+  }
+}
