@@ -139,3 +139,82 @@ Nenhum defeito obrigatório identificado.
 - Nenhum teste, CI, Atlas runtime, workflow, infraestrutura ou shell foi executado. Nenhum corpo de conhecimento, fonte, branch alheia ou parecer anterior foi alterado.
 
 **Conclusão:** Surface 01 e Surface 02 podem seguir para o par persistente, com os limites acima. Não é aceite dual, liberação de L1 nem aceite global.
+
+
+---
+
+# Rodada 3 — posições 21–22 (Surface 03–04)
+
+**Resultado: dois pareceres documentais consultivos concluídos; sem defeito obrigatório identificado.**
+
+## Reconciliação antes da escrita
+
+- HEAD desta branch antes da rodada: `5a4fa541bf3e497081410943e08cf4967956c570`. `REVIEW.md` e `HANDOFF.md` foram lidos e confirmados; as rodadas 1 e 2 foram preservadas integralmente.
+- HEAD externo `genesis-external-omni-393`: `bdfebdb9fe6b5f2a921aef207cebe33b65cd6d20`. Os corpos Surface 03 e 04 foram obtidos desse HEAD; seus blobs coincidem com o snapshot congelado `343d056ffef7f4a0052da8e2e55559c95169f462`.
+- HEADs atuais consultados: S1 `c9c14b41802348022d9c39cd4ab9a377fa8dfc5a`; S2 `436edb688f18923f160a09939869652f9ee3f286`; S4 `a0b79b78bb573d232e37143ab6d64319321c4a4b`; S5 `75df3f4ad95e33829442e3be5f223f16d3c4e7ba`. Seus handoffs públicos registram, respectivamente, faixas 1–8, 9–16, 25–31 e 32–38. Nenhuma delas intersecta 21–22.
+- S4 registra posições 26–28 concluídas e 25/29–31 pendentes; S5 registra 32–38 como sua faixa. Portanto, não há colisão pública de ownership com esta seleção.
+- O diretório público `reviews/` do checkpoint externo contém resumos CORE C01–C10, mas nenhum parecer público para Surface 03/04. A ausência de parecer público específico não demonstra ausência de trabalho privado; não afirmo que a fila privada dos juízes esteja inativa.
+- Protocolo exato lido: `.orchestra/skills/execute-genesis/references/judging.md` no commit `ee2521a5b966bd505cc95bd1c733e09e12f33531`. Ele exige o mesmo par persistente J1/J2, proíbe terceiro voto/substituição e distingue parecer semântico de binding/runtime/consumidor.
+
+## Seleção e identidade
+
+| Posição | Corpo | Blob SHA | Fontes |
+|---:|---|---|---:|
+| 21 | `bodies/surface/records-03.json` | `8d3b61c0691ee6b0d584a400360a7e2f3c92f0c0` | 16 |
+| 22 | `bodies/surface/records-04.json` | `f6190bb5f3607edf22101e5e995d13d9f4cf1b7d` | 16 |
+
+## Parecer — posição 21: Surface 03
+
+**Fontes verificadas:** 16/16. **Trechos de evidência:** 39/39.
+
+Todos os Git blob SHAs declarados nos 16 registros coincidem com os blobs recuperados no baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Os 39 trechos foram comparados com os intervalos de linha correspondentes e coincidem exatamente após normalização de separadores CRLF para LF. Não foram recalculados `source_sha256` nem `source_bytes`.
+
+Cobertura examinada:
+- Fixtures e helpers: `test/markers.mjs`, `mini.mjs`, `overloads.ts`, `host.mjs`/consumidores já referenciados por estes helpers, `worker-host.mjs`, `worker.mjs` e `teeth.mjs`.
+- Runner de conformance: `runner/expect.mjs`, `ledger.mjs`, `os.mjs`, `pattern.mjs`, `read.mjs`, `scenario.mjs`, `schema.mjs`, `steps.mjs`, `suite.mjs` e `support.mjs`.
+
+**Parecer:** descrição documental fiel às fontes e cuidadosa ao separar o que é validação estática, execução de harness e comportamento de produto. O corpo preserva corretamente que:
+- `mini.mjs` conta timeout como falha, mas não cancela a função que perdeu a corrida;
+- o ledger só permite deferir falhas de produto, enquanto falhas de schema/runner/oráculo continuam sendo falhas de harness;
+- observação OS desconhecida não equivale a processo morto;
+- o subconjunto regex é deliberado e a tabela diferencial é gate anterior aos cenários;
+- o schema do DSL não expõe `memory_exceeded`, `maxRssBytes` ou `backpressure`, apesar da API pública atual, e testes separados podem cobrir esses aspectos;
+- cleanup best-effort do runner não é prova independente de morte da árvore;
+- testes com fake API/mutantes provam sensibilidade do runner, não comportamento da biblioteca nativa.
+
+A limitação de `parseMarker` quanto a `Number.isSafeInteger` está explicitada. `untilTree` é descrito como helper sobre saída controlada do fixture, não como parser de processo hostil. Nenhuma afirmação do corpo transforma os trechos de teste em resultados de execução atuais.
+
+**Decisão:** nenhum defeito documental obrigatório identificado nesta revisão.
+
+## Parecer — posição 22: Surface 04
+
+**Fontes verificadas:** 16/16. **Trechos de evidência:** 47/47.
+
+Todos os Git blob SHAs declarados coincidem com os blobs recuperados no baseline; os 47 trechos citados coincidem exatamente com seus intervalos de linha. Não foram recalculados `source_sha256` nem `source_bytes`.
+
+Cobertura examinada:
+- Empacotamento e instalação: `bindings/node/npm/README.md`, `npm/pack.mjs`, `npm/verify.mjs`.
+- Construção e gates: `scripts/artifacts.node-smoke.mjs`, `brief.py`, `build-artifacts.mjs`, `ci.mjs`, `file-size-guard.py`.
+- Verificadores documentais: `guarantees-check/check.mjs`, `guarantees-check/check.test.mjs`, `plan-sections-check.py`, `readme-check/blocks.mjs`, `readme-check/check.mjs` e fixtures de README.
+
+**Parecer:** descrição documental fiel e com limites importantes preservados. A documentação de pacote é distinguida de execução atual; o packer verifica formato/arquitetura/linkagem declarada e conteúdo do tarball, mas isso não prova carregamento funcional; `verify.mjs` cobre instalação limpa e quickstart, mas nenhuma prova foi executada aqui. O corpo também conserva a distinção entre build-artifacts de um alvo nativo, matriz de release, e o subconjunto de alvos empacotados pelo CI release.
+
+Pontos de precisão confirmados:
+- A matriz documentada contém oito pacotes de plataforma mais o pacote principal; a ordem de publicação é necessária por causa da resolução de optional dependencies em Deno.
+- O packer remove/recria o diretório de saída e pula a verificação de bit executável quando roda em Windows; isso está explicitado.
+- `verify.mjs` remove apenas três variáveis de ambiente de checkout, apesar da formulação mais ampla de seu cabeçalho; a limitação consta no corpo.
+- `build-artifacts.mjs` exige OS/CPU alvo iguais aos do processo Node, e o modo musl guest tem pré-condições verificadas; hash de HEAD/tree não prova worktree limpo.
+- `ci.mjs` tem seleção de passos diferente por OS e modo release; os comentários históricos de trigger não foram confundidos com os triggers efetivos do workflow.
+- `guarantees-check` valida presença/forma de referências, não consulta nem prova o resultado de runs; `plan-sections-check` verifica marcadores, não suficiência semântica.
+- O checker de README distingue execução real de modo estático e preserva as exceções pré-release; fixtures imprimem mensagens fixas, não medições ou resultados de teste do produto.
+
+**Decisão:** nenhum defeito documental obrigatório identificado nesta revisão.
+
+## Critérios, limites e autoridade
+
+- Aplicados QS-1/QS-2/QS-5, GO-I1/GO-I2/GO-I8 e DOD-1 no limite de uma revisão documental: fidelidade rastreável, utilidade/limites explícitos e separação entre estrutura/evidência e suficiência semântica.
+- Foram verificados Git blob SHAs e igualdade exata dos trechos citados. Não foram recalculados SHA-256 de conteúdo ou comprimentos de bytes do manifesto.
+- Este registro é parecer consultivo adicional. Não é voto J1/J2, não é terceiro voto, não é PASS protocolar, aceite dual, `OwnershipReview`, binding/runtime, execução de consumidor ou liberação da camada L1.
+- Nenhum teste de produto, CI, workflow, Atlas runtime, infraestrutura ou shell foi executado. Nenhum corpo de produção, fonte, branch alheia ou parecer anterior foi alterado.
+
+**Conclusão:** posições 21 e 22 podem ser encaminhadas ao par persistente para julgamento das mesmas versões exatas, com as limitações registradas. Não se declara aceite formal.
