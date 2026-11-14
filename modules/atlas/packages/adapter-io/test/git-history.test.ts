@@ -7,14 +7,16 @@
 //   • SCN-ADAPTER-8b-1 — the signals are byte-identical across two runs at a fixed rev        (happy)
 //   • SCN-ADAPTER-8c-1 — ranking mints no fact (a fact-store write-spy records 0 mints)       (guard)
 //
-// The 8a oracle recomputes each signal with the SAME git commands the adapter shells, at the SAME rev r0
+// The 8a oracle recomputes the non-hotspot signals with the SAME git commands at the SAME rev r0
 // (== mainTip; the fixture is checked out on `topic`, so every read is rev-scoped). A hardcoded stub would
 // diverge from the oracle (8a teeth); an unsorted list would diverge across runs (8b teeth); an upsert
 // would fire the spy (8c teeth).
 
 import { describe, it, expect, afterEach } from "vitest"
 import { execFileSync } from "node:child_process"
-import { readFileSync } from "node:fs"
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { createHistorySource } from "../src/git-history.js"
 import { makeGitSbx, type GitSbx } from "./harness/git-sbx.js"
@@ -70,7 +72,10 @@ describe("git-history HistorySource (ADAPT-GIT-1)", () => {
     expect(g(repoPath, "log", "-1", "--format=%s", farewellBlame.split(" ")[0]!).trim()).toBe("feat: add farewell")
     expect(s.szzBugCommits).toBe(1)
 
-    expect(s.hotspot).toBe(nonEmpty(g(repoPath, "log", "--format=%H", "--follow", r0, "--", QP)).length)
+    // Fresh-fixture smoke: weighted hotspot is not the raw `--follow` count. Exact age and complexity
+    // goldens live in the fixed-timestamp fixture below, not in a duplicate algorithm here.
+    const churn = nonEmpty(g(repoPath, "log", "--format=%H", "--follow", r0, "--", QP))
+    expect(s.hotspot).toBeGreaterThan(churn.length)
 
     const oOwners = [...new Set(nonEmpty(g(repoPath, "log", "--format=%an", r0, "--", QP)))].sort(byPath)
     expect(s.owners).toEqual(oOwners)
@@ -144,4 +149,119 @@ describe("git-history HistorySource (ADAPT-GIT-1)", () => {
       .join("\n")
     expect(imports).not.toMatch(/knowledge|store|upsert/i)
   })
+
+  // Literal goldens for the requested calendar-recency enhancement: 180-day half-life at the pinned
+  // revision's committer time. These must fail the old positional recency sum, even for one commit.
+  it("hotspot — pinned committer age decays single commits and shared histories with exact goldens", () => {
+    const repo = mkdtempSync(join(tmpdir(), "atlas-hotspot-"))
+    const git = (...args: string[]): void => {
+      execFileSync("git", args, { cwd: repo, stdio: "pipe" })
+    }
+    const write = (rel: string, content: string): void => {
+      const abs = join(repo, rel)
+      mkdirSync(dirname(abs), { recursive: true })
+      writeFileSync(abs, content)
+    }
+    const commit = (msg: string, date: string, files: Readonly<Record<string, string>>, authorDate = date): void => {
+      for (const [rel, content] of Object.entries(files)) write(rel, content)
+      git("add", "--", ...Object.keys(files))
+      execFileSync("git", ["commit", "-q", "-m", msg], {
+        cwd: repo,
+        stdio: "pipe",
+        env: { ...process.env, GIT_AUTHOR_DATE: authorDate, GIT_COMMITTER_DATE: date },
+      })
+    }
+    try {
+      git("init", "-q")
+      git("config", "user.email", "hotspot@atlas.test")
+      git("config", "user.name", "atlas-fixture")
+      git("config", "commit.gpgsign", "false")
+
+      // Literal Unix seconds, separated by exactly 180 days (15,552,000 seconds).
+      // Author dates deliberately differ for the old single and pinned revision: only %ct may matter.
+      commit("chore: oldest pair", "1668896000 +0000", { "old-pair.ts": "export const n = 0\n" })
+      commit(
+        "chore: old single and pair",
+        "1684448000 +0000",
+        {
+          "old-single.ts": "export const n = 1\n",
+          "old-pair.ts": "export const n = 1\n",
+          "flat.ts": "export const n = 0\n",
+          "deep.ts": "export const n = 0\n",
+          "original.ts": DEEP,
+          "deleted.ts": "\t\t\t\tconst deleted = 1\n",
+        },
+        "1700000000 +0000",
+      )
+      commit("chore: future timestamp", "1715552000 +0000", { "future.ts": "export const n = 1\n" })
+      git("mv", "original.ts", "renamed.ts")
+      git("rm", "deleted.ts")
+      commit(
+        "chore: current pair and single",
+        "1700000000 +0000",
+        {
+          "current-single.ts": "export const n = 1\n",
+          "flat.ts": "export const n = 1\n",
+          "deep.ts": DEEP,
+        },
+        "1668896000 +0000",
+      )
+
+      const rev = g(repo, "rev-parse", "HEAD").trim()
+      const hist = createHistorySource(repo, rev)
+      const score = (path: string): number =>
+        hist.signals({ kind: "file", qualifiedPath: path, subtreeHash: "" as never }).hotspot
+
+      const flatLog = nonEmpty(g(repo, "log", "--format=%H", "--follow", rev, "--", "flat.ts"))
+      const deepLog = nonEmpty(g(repo, "log", "--format=%H", "--follow", rev, "--", "deep.ts"))
+      expect(flatLog).toEqual(deepLog)
+      expect(flatLog).toHaveLength(2)
+      expect(nonEmpty(g(repo, "log", "--format=%H", "--follow", rev, "--", "old-single.ts"))).toHaveLength(1)
+      expect(nonEmpty(g(repo, "log", "--format=%H", "--follow", rev, "--", "current-single.ts"))).toHaveLength(1)
+      expect(score("old-single.ts")).toBe(64)
+      expect(score("current-single.ts")).toBe(128)
+      // Ages 180/0 days: 64+128 = 192; complexity 1 vs 4 (tabs 1+2, spaces floor(2/2)=1).
+      expect(score("flat.ts")).toBe(192)
+      expect(score("deep.ts")).toBe(768)
+      expect(score("deep.ts")).toBeGreaterThan(score("flat.ts"))
+      // Ages 360/180 days: 32+64 = 96, not a positional transform of the two-commit count.
+      expect(nonEmpty(g(repo, "log", "--format=%H", "--follow", rev, "--", "old-pair.ts"))).toHaveLength(2)
+      expect(score("old-pair.ts")).toBe(96)
+      expect(score("future.ts")).toBe(128) // negative age clamps to zero
+      expect(nonEmpty(g(repo, "log", "--format=%H", "--follow", rev, "--", "renamed.ts"))).toHaveLength(2)
+      expect(score("renamed.ts")).toBe(768) // follows original.ts, using renamed.ts's pinned blob
+      expect(nonEmpty(g(repo, "log", "--format=%H", "--follow", rev, "--", "deleted.ts"))).toHaveLength(2)
+      expect(score("deleted.ts")).toBe(192) // missing blob: complexity 1, not the old deep blob
+      expect(score("never.ts")).toBe(0)
+
+      const paths = [
+        "old-single.ts",
+        "current-single.ts",
+        "flat.ts",
+        "deep.ts",
+        "old-pair.ts",
+        "future.ts",
+        "renamed.ts",
+        "deleted.ts",
+        "never.ts",
+      ]
+      const before = paths.map((path) => hist.signals({ kind: "file", qualifiedPath: path, subtreeHash: "" as never }))
+      // Construct before moving HEAD, but defer all reads until afterward (memoization cannot hide drift).
+      const unread = createHistorySource(repo, rev)
+      commit("chore: advance head", "1731104000 +0000", { "deep.ts": "export const n = 2\n" })
+      write("deep.ts", "\t\t\t\t\t\t\t\tdirty\n")
+      expect(g(repo, "rev-parse", "HEAD").trim()).not.toBe(rev)
+      expect(g(repo, "status", "--porcelain")).toContain("deep.ts")
+      for (const source of [unread, createHistorySource(repo, rev)]) {
+        expect(
+          paths.map((path) => source.signals({ kind: "file", qualifiedPath: path, subtreeHash: "" as never })),
+        ).toEqual(before)
+      }
+    } finally {
+      rmSync(repo, { recursive: true, force: true })
+    }
+  })
 })
+
+/** Blob at the pinned revision of the indent pair: tab levels 1 and 2, plus one 2-space line. Sum 4. */
+const DEEP = "function f() {\n\tconst a = 1\n\t\tconst b = 2\n  const c = 3\n}\n"

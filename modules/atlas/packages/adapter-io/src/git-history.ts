@@ -80,8 +80,15 @@ const FIX_SUBJECT = /^fix(?:e[sd])?\b/i
 
 /** Hotspot bar: a file must have been CHANGED after introduction (≥2 touching commits). A file added once
  *  and never touched again has change-frequency 0 — it is un-churned code, which REQ-GEN-3b forbids from
- *  raising spend (`frontierBudget` IS the ranked-site count, genesis/rank.ts:370). */
+ *  raising spend (`frontierBudget` IS the ranked-site count, genesis/rank.ts:370). This bar is the RAW
+ *  commit count. `signals().hotspot` is a different number (recency × indent) and must not be read back
+ *  into admission. */
 const HOTSPOT_MIN_CHURN = 2
+
+/** Calendar-recency enhancement: committer age relative to the pinned revision, never wall-clock time.
+ *  The 180-day half-life is an initial engineering choice, not a calibrated optimum. */
+const HOTSPOT_INITIAL_WEIGHT = 128
+const HOTSPOT_HALF_LIFE_SECONDS = 180 * 86400
 
 /** SZZ cost bounds. Only the newest `SZZ_MAX_FIX_COMMITS` fix commits in `git log` order at the rev are
  *  blamed, and a fix that modifies more than `SZZ_MAX_FILES_PER_FIX` kept files is skipped whole: a sweeping
@@ -146,6 +153,53 @@ const BASKET_HEADER = /^([0-9a-f]{40})\x1f([\s\S]*)$/
 /** A `git blame --line-porcelain` line-block header: `<sha> <orig-line> <final-line> [<count>]`. */
 const BLAME_HEADER = /^([0-9a-f]{40}) \d+ \d+/
 
+/** `git show <rev>:<path>` when the path is not a blob at that rev (deleted, or never there). That is a
+ *  missing blob — complexity 1 — not a broken git. */
+const MISSING_BLOB = /does not exist in|exists on disk, but not in/i
+
+/** Parse git's `%ct` seconds without silently turning malformed output into an absent-history signal. */
+function committerSeconds(text: string): number {
+  const seconds = Number(text)
+  if (!/^-?\d+$/.test(text) || !Number.isSafeInteger(seconds)) {
+    throw new Error(`Invalid git committer timestamp: ${JSON.stringify(text)}`)
+  }
+  return seconds
+}
+
+/** Sum calendar-decayed weights over the existing `--follow` walk. Future timestamps weigh 128. */
+function recencySum(commits: readonly string[], revisionSeconds: number): number {
+  return commits.reduce(
+    (sum, timestamp) =>
+      sum +
+      HOTSPOT_INITIAL_WEIGHT *
+        2 ** (-Math.max(0, revisionSeconds - committerSeconds(timestamp)) / HOTSPOT_HALF_LIFE_SECONDS),
+    0,
+  )
+}
+
+/** Tornhill indentation complexity, language-agnostic, of the blob text at the pinned rev. Each non-blank
+ *  line contributes its leading tab count, or `floor(leading spaces / 2)` when it has no leading tab.
+ *  At least 1, so an empty or missing blob multiplies instead of zeroing the hotspot. */
+function indentComplexity(text: string): number {
+  const sum = text.split("\n").reduce((n, line) => {
+    if (line.trim().length === 0) return n
+    if (line.startsWith("\t")) return n + (line.match(/^\t*/)?.[0].length ?? 0)
+    return n + Math.floor((line.match(/^ */)?.[0].length ?? 0) / 2)
+  }, 0)
+  return Math.max(1, sum)
+}
+
+/** The blob of `path` at `rev`, or `""` when it is missing (complexity 1). Every other failure stays loud
+ *  through `git()`. */
+function blobText(repo: string, rev: string, path: string): string {
+  try {
+    return git(repo, ["show", `${rev}:${path}`])
+  } catch (e) {
+    if (e instanceof GitHistoryError && MISSING_BLOB.test(e.message)) return ""
+    throw e
+  }
+}
+
 /** The old-side line ranges of a `-U0` patch, as `[start, count]`: each hunk header is
  *  `@@ -<start>[,<count>] +… @@`, an omitted count is 1, and a count of 0 is a pure insertion (nothing was
  *  deleted, so nothing is blamed). */
@@ -200,8 +254,8 @@ function atlasRulesOnly(repo: string, sha: string): boolean {
 
 /** A trivial per-key memo — `fn` runs at most once per distinct `key`, cached for the LIFETIME of the
  *  enclosing `createHistorySource` instance. Sufficient because every cached read here (`commitCount`,
- *  `shallow`, `blameConcentration`, `frontier`, SZZ, `signals`) is a PURE function of `(repo, rev[, path])`: this
- *  process never commits/rewrites the repo mid-`atlas mine`, so a given rev's blame/log output cannot change
+ *  `shallow`, `blameConcentration`, `frontier`, revision time, SZZ, `signals`) is a PURE function of
+ *  `(repo, rev[, path])`: this process never commits/rewrites the repo mid-`atlas mine`, so its output cannot change
  *  between the first caller (arm 1) and the third (arm 3). The scar this is deliberately UNLIKE (#211, a
  *  cache that went wrong after ~24 builds in one process) keyed on something narrower than its inputs; here
  *  the key is exactly the arguments the memoized call depends on — never the closed-over `repoPath`/`rev`
@@ -253,6 +307,10 @@ export function createHistorySource(
   // Keyed on the ACTUAL call args (`repo\0rev`), not the closed-over `repoPath`/`rev` — see the `memo` note.
   const rk = (repo: string, r: string): string => `${repo}\0${r}`
 
+  const revisionSecondsMemo = memo((k: string): number => {
+    const [repo, r] = k.split("\0") as [string, string]
+    return committerSeconds(git(repo, ["show", "-s", "--format=%ct", r]).trim())
+  })
   const commitCountMemo = memo((k: string): number => {
     const [repo, r] = k.split("\0") as [string, string]
     const n = Number(git(repo, ["rev-list", "--count", r]).trim())
@@ -368,8 +426,13 @@ export function createHistorySource(
     // szzBugCommits — the distinct bug-introducing commits SZZ blamed in qp (deterministic at a fixed rev).
     const szzBugCommits = szzMemo(rk(repoPath, rev)).get(qp)?.size ?? 0
 
-    // hotspot — change-frequency (churn count, complexity factor deferred to v0), --follow across renames.
-    const hotspot = nonEmpty(git(repoPath, ["log", "--format=%H", "--follow", rev, "--", qp])).length
+    // hotspot — calendar-recency-weighted churn × pinned-blob indent complexity. The existing `--follow`
+    // walk is unchanged; both its timestamps and the revision's time are %ct, not author dates or now.
+    const churn = nonEmpty(git(repoPath, ["log", "--format=%ct", "--follow", rev, "--", qp]))
+    const hotspot =
+      churn.length === 0
+        ? 0
+        : recencySum(churn, revisionSecondsMemo(rk(repoPath, rev))) * indentComplexity(blobText(repoPath, rev, qp))
 
     // owners — distinct authors of commits touching qp, sorted.
     const owners = [...new Set(nonEmpty(git(repoPath, ["log", "--format=%an", rev, "--", qp])))].sort(byPath)
