@@ -9,26 +9,79 @@
   "branch": "genesis-s1-automation",
   "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
   "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
-  "observed_branch_head": "89c78249e63060acf7c41f45f14af88fd51aa0c4",
-  "artifact_revision": "fde931e0551a540b8020346122ca22456a875cdc",
-  "candidate_revision": null,
+  "observed_branch_head": "e23c1c695071af92d8f4d78a715daaeb7ef213db",
+  "artifact_revision": "5eefca63b48970f3abb4d22e8dc2b1323487da92",
+  "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "completion_state": "IN_PROGRESS",
   "work": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/work.md",
   "ledger": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/execution-ledger.jsonl",
-  "completion_state": "IN_PROGRESS",
+  "coverage": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/coverage.jsonl",
+    "source_count": 462,
+    "sha256": "9311d15c6d6d361edf15de1bd98e52040b7430915e2418e50bc671212acc186e",
+    "source_bytes": 4740213,
+    "all_source_git_blobs_verified": true,
+    "semantic_acceptance": "PENDING_INDEPENDENT_JUDGMENT"
+  },
+  "production": {
+    "phase": "L1",
+    "producer_ids": [
+      "/root/automation_l1",
+      "/root/research_l1",
+      "/root/boundaries_l1"
+    ],
+    "freeze": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/receipts/l1-freeze.json",
+    "entry_historical_sha256": "6a488ca8f9717a497949b71ed41db84d995f23b90c31cc59c22c5bd86239ca6c"
+  },
+  "judges": {
+    "ids": [
+      "/root/s1_03_j1",
+      "/root/s1_03_j2"
+    ],
+    "fork_turns": "none",
+    "tools_permitted": false,
+    "research_a": "REQUEST_EVIDENCE",
+    "research_b": "REVIEW_IN_PROGRESS_AT_SNAPSHOT",
+    "no_full_L1_pass": true
+  },
   "local_obligations_open": [
-    "L1 leaf coverage",
-    "two independent native judges",
-    "L2-L4",
-    "native package and Atlas operations",
-    "consumers",
-    "maintenance",
-    "gates",
-    "criteria matrix and final seal"
+    "Resolve independent L1 evidence requests and any mandatory corrections",
+    "Produce and review necessary L2-L4 on accepted predecessors",
+    "Complete native package and own runtime binding/publication/index/read",
+    "Fresh Atlas-only consumers for seven fixed cases and direct intermediates",
+    "Two own maintenance cases",
+    "Required gates and final 50-ID matrix",
+    "Final payload/seal and readback"
+  ],
+  "observed_constraints": [
+    {
+      "id": "S4-LARGE-SOURCE",
+      "state": "OBSERVER_UNAVAILABLE",
+      "path": "packages/core/src/backend-toolkit/packs/modelina.package-lock.json",
+      "bytes": 266885,
+      "limit": 256000,
+      "source_preserved": true,
+      "proposal": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/proposals/s4-source-limit.patch"
+    },
+    {
+      "id": "ATLAS-AUTHORITY",
+      "state": "PRECONDITION_UNRESOLVED",
+      "publish_attempt": "PENDING_EXACT_PACKAGE_AND_BINDING",
+      "policy_changes_authorized": false
+    },
+    {
+      "id": "GIT-GUARD",
+      "state": "CAPABILITY_PROBE_FAILED_NO_REPOSITORY",
+      "final_gate": "NOT_RUN",
+      "receipt": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/receipts/guard-preflight.json"
+    }
   ],
   "global_integration": {
     "owner": "S1_COORDINATION",
     "branch": "genesis-fresh-s1",
     "status": "NOT_REVIEWED"
   },
-  "supersedes": null
+  "supersedes": "e23c1c695071af92d8f4d78a715daaeb7ef213db",
+  "checkpoint_only": true,
+  "execution_continues": true
 }
