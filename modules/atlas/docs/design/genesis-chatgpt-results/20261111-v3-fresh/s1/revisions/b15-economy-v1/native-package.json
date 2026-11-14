@@ -1548,7 +1548,7 @@
         "path": "revisions/b15-economy-v1/bodies/economy.md",
         "encoding": "utf-8",
         "byte_length": 3288,
-        "sha256": "f8cf15c4dae638f632bcd9fb3375f07ef949ba08d1c19b2154298ddb2727420b"
+        "sha256": "74a59d062ae560dc633abd7561b1a763a7a9982db587d5c0076b8fc8f4a9b6bf"
       },
       "authority": {
         "scope": "orchestra.s1",
@@ -1574,12 +1574,12 @@
         {
           "commit": "51a7c500835c48b35cdfc2348484482d41c9770f",
           "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-s1-economy-impact-2/findings.md",
-          "sha256": "38dc37619c007ddeed2c1c7a6c6a24baa923a0ad089b9fdc8e4bff3fd90268d8"
+          "sha256": "dbcd92a10aa9532bb174e408d78d4b66836d04112e242d362bbda58212e0d1f3"
         },
         {
           "commit": "7bfb9a4f69cd5ea1dc31b33d4afd26ec9e6c7f4a",
           "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-s1-economy-impact-1/findings.md",
-          "sha256": "44871139d0d14a5d97c684d6e1beff319a94464d2a55d470dba5aa0d74f6e92e"
+          "sha256": "17c1c42f4c0867ea2a3f6b2d81c99e3f3a22fa8facced2e2f45f6fb983ade93d"
         }
       ],
       "input_keys": [
