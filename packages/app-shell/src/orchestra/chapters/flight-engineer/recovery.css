@@ -1,0 +1,34 @@
+.fe-recovery {
+  display: grid;
+  gap: 12px;
+  margin-block: 16px;
+  padding: 16px;
+  color: var(--mx-dim);
+  font: var(--orchestra-font-size-md) / 1.5 var(--mx-sans);
+}
+.fe-recovery h2,
+.fe-recovery h3,
+.fe-recovery p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.fe-recovery h2,
+.fe-recovery h3 {
+  color: var(--mx-strong);
+  font-size: inherit;
+}
+.fe-recovery-item,
+.fe-recovery-confirm {
+  display: grid;
+  gap: 8px;
+  padding-block-start: 12px;
+  border-block-start: 1px solid var(--mx-line);
+}
+.fe-recovery-warning {
+  color: var(--mx-bad);
+}
+.fe-recovery-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

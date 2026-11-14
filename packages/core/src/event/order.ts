@@ -1,7 +1,6 @@
 export * as EventOrder from "./order"
 
-import { Context, Deferred, Effect, Exit } from "effect"
-import type * as Scope from "effect/Scope"
+import { Context, Deferred, Effect, Exit, type Scope } from "effect"
 
 /**
  * Notification turn for one committed durable event. Tickets of an aggregate are taken inside the commit
@@ -22,6 +21,14 @@ type Restore = <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, 
 const Delivering = Context.Reference<ReadonlySet<string>>("@orchestra/Event/Delivering", {
   defaultValue: () => new Set(),
 })
+
+const DeferNotifications = Context.Reference<boolean>("@orchestra/Event/DeferNotifications", {
+  defaultValue: () => false,
+})
+
+/** Commit durable events and register their ordered delivery without waiting for arbitrary listeners. */
+export const deferNotifications = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+  Effect.provideService(effect, DeferNotifications, true)
 
 /** Per-aggregate notify order for one event service. Different aggregates never wait on each other. */
 export function make(scope: Scope.Scope) {
@@ -57,7 +64,7 @@ export function make(scope: Scope.Scope) {
     })
 
   // Waits for the actual predecessor and releases on every exit. Only the wait and notification
-  // are interruptible. Reentrant delivery is handed to the event service's scope.
+  // are interruptible. Explicitly deferred and reentrant delivery belongs to the event service's scope.
   const deliver = (ticket: Ticket | undefined, notifying: Effect.Effect<void>, restore: Restore) =>
     Effect.gen(function* () {
       const run = restore(
@@ -70,9 +77,10 @@ export function make(scope: Scope.Scope) {
         }),
       ).pipe(Effect.ensuring(release(ticket)))
 
-      if (ticket && (yield* Delivering).has(ticket.aggregateID)) {
+      if (ticket && ((yield* Delivering).has(ticket.aggregateID) || (yield* DeferNotifications))) {
         yield* run.pipe(
           Effect.provideService(Delivering, new Set<string>()),
+          Effect.provideService(DeferNotifications, false),
           Effect.forkIn(scope, { startImmediately: true }),
         )
         return
@@ -81,7 +89,7 @@ export function make(scope: Scope.Scope) {
     })
 
   // Keep commit and worker registration masked; only the wait and notification restore interruption.
-  // Reentrant calls acknowledge commit and scheduling; ordinary calls await their own notification.
+  // Deferred and reentrant calls acknowledge commit and scheduling; ordinary calls await their own notification.
   const commit = <C extends { readonly ticket: Ticket | undefined }, A>(
     committing: Effect.Effect<C | undefined>,
     prepare: (committed: C) => {
@@ -102,15 +110,16 @@ export function make(scope: Scope.Scope) {
   /** Register delivery now; the returned effect waits unless this is a same-aggregate reentrant publication. */
   const schedule = (ticket: Ticket | undefined, notifying: Effect.Effect<void>) =>
     Effect.uninterruptible(Effect.gen(function* () {
-      const reentrant = ticket !== undefined && (yield* Delivering).has(ticket.aggregateID)
+      const deferred = ticket !== undefined && ((yield* Delivering).has(ticket.aggregateID) || (yield* DeferNotifications))
       const done = yield* Deferred.make<void>()
       yield* deliver(ticket, notifying, Effect.interruptible).pipe(
         Effect.provideService(Delivering, new Set<string>()),
+        Effect.provideService(DeferNotifications, false),
         Effect.onExit((exit) => Deferred.done(done, exit)),
         Effect.ignore,
         Effect.forkIn(scope, { startImmediately: true }),
       )
-      return reentrant ? Effect.void : Deferred.await(done)
+      return deferred ? Effect.void : Deferred.await(done)
     }))
 
   // Pipe a commit transaction through this when its body takes a ticket as the last step: a commit that then fails

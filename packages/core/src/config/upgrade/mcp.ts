@@ -2,6 +2,7 @@ export * as ConfigUpgradeMCP from "./mcp"
 
 import { Schema } from "effect"
 import { PositiveInt } from "../../schema"
+import { ConfigMCP } from "@orchestra/schema/config-mcp"
 
 export const Local = Schema.Struct({
   type: Schema.Literal("local").annotate({ description: "Type of MCP server connection" }),
@@ -17,8 +18,8 @@ export const Local = Schema.Struct({
   enabled: Schema.optional(Schema.Boolean).annotate({
     description: "Enable or disable the MCP server on startup",
   }),
-  timeout: Schema.optional(PositiveInt).annotate({
-    description: "Timeout in ms for MCP server requests. Defaults to 5000 (5 seconds) if not specified.",
+  timeout: Schema.optional(Schema.Union([PositiveInt, ConfigMCP.Timeout])).annotate({
+    description: "Request timeout in ms, or an object with startup and request timeouts in ms.",
   }),
 }).annotate({ identifier: "McpLocalConfig" })
 export type Local = Schema.Schema.Type<typeof Local>
@@ -53,8 +54,8 @@ export const Remote = Schema.Struct({
   oauth: Schema.optional(Schema.Union([OAuth, Schema.Literal(false)])).annotate({
     description: "OAuth authentication configuration for the MCP server. Set to false to disable OAuth auto-detection.",
   }),
-  timeout: Schema.optional(PositiveInt).annotate({
-    description: "Timeout in ms for MCP server requests. Defaults to 5000 (5 seconds) if not specified.",
+  timeout: Schema.optional(Schema.Union([PositiveInt, ConfigMCP.Timeout])).annotate({
+    description: "Request timeout in ms, or an object with startup and request timeouts in ms.",
   }),
 }).annotate({ identifier: "McpRemoteConfig" })
 export type Remote = Schema.Schema.Type<typeof Remote>

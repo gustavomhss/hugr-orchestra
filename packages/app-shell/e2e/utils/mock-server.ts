@@ -1,4 +1,10 @@
+import { currentCatalog } from "./mock-catalog"
 import type { Page, Route } from "@playwright/test"
+import type { ModelsExecutionInput, ModelsExecutionOutput } from "@orchestra/client"
+import { Location } from "@orchestra/schema/location"
+import { Model } from "@orchestra/schema/model"
+import { ModelExecution } from "@orchestra/schema/model-execution"
+import { Schema } from "effect"
 import { railDefaulted } from "./review-rail"
 
 const emptyList = new Set(["/skill", "/command", "/lsp", "/formatter", "/vcs/status", "/vcs/diff", "/pty/shells"])
@@ -9,6 +15,7 @@ export interface MockServerConfig {
   // spec asks for a fresh profile, so specs that toggle the rail keep exact open/closed oracles.
   freshRail?: boolean
   provider: unknown | (() => unknown)
+  modelExecution?: (input: ModelsExecutionInput) => ModelsExecutionOutput | Promise<ModelsExecutionOutput>
   integrationMethods?: Record<string, unknown[]>
   onConnectKey?: (input: { integrationID: string; body: unknown }) => void
   onInstanceDispose?: () => void
@@ -177,6 +184,41 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
           },
         ],
       })
+    if (path === "/api/model/execution" && route.request().method() === "POST") {
+      const workspace = url.searchParams.get("location[workspace]")
+      const input: ModelsExecutionInput = {
+        ...Schema.decodeUnknownSync(ModelExecution.Input)(route.request().postDataJSON()),
+        location: {
+          directory: url.searchParams.get("location[directory]") ?? config.directory,
+          ...(workspace === null ? {} : { workspace }),
+        },
+      }
+      if (config.modelExecution) return json(route, await config.modelExecution(input))
+      const catalog = currentCatalog(typeof config.provider === "function" ? config.provider() : config.provider)
+      const selected = input.model
+      // This UI fixture declares its advertised catalog ready; policy scenarios supply their own typed verdict.
+      const data: ModelsExecutionOutput["data"] = {
+        models: catalog.models.map((model) => ({
+          status: "ready",
+          engine: "orchestra",
+          model: {
+            ...model,
+            status: Schema.decodeUnknownSync(Model.Info.fields.status)(model.status),
+            api: { id: model.id, type: "aisdk", package: "@ai-sdk/openai-compatible", settings: {} },
+            request: { headers: {}, body: {} },
+            variants: model.variants.map((variant) => ({ id: variant.id, headers: {}, body: {} })),
+          },
+        })),
+        ...(selected === undefined ? {} : {
+          selection: catalog.models.some((model) => model.id === selected.id && model.providerID === selected.providerID)
+            ? { status: "ready", engine: "orchestra", ref: { ...selected } }
+            : { status: "unavailable", reason: "model-missing", engine: "orchestra", ref: { ...selected } },
+        }),
+      }
+      const response: ModelsExecutionOutput = { location: Schema.decodeUnknownSync(Location.Info)(location(config)), data }
+      Schema.decodeUnknownSync(Schema.fromJsonString(Location.response(ModelExecution.Response)))(JSON.stringify(response))
+      return json(route, response)
+    }
     if (path === "/api/provider" || path === "/api/model" || path === "/api/model/default") {
       const catalog = currentCatalog(typeof config.provider === "function" ? config.provider() : config.provider)
       const data =
@@ -397,6 +439,9 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
       return json(route, message)
     }
 
+    const currentTodoMatch = path.match(/^\/api\/session\/([^/]+)\/todo$/)
+    if (currentTodoMatch) return json(route, { location: location(config), data: config.todos?.(currentTodoMatch[1]!) ?? [] })
+
     const todoMatch = path.match(/^\/session\/([^/]+)\/todo$/)
     if (todoMatch) return json(route, config.todos?.(todoMatch[1]!) ?? [])
     if (/^\/session\/[^/]+\/(children|diff)$/.test(path)) return json(route, [])
@@ -493,64 +538,6 @@ function location(config: MockServerConfig) {
   return {
     directory: config.directory,
     project: { id: (config.project as { id?: string }).id, directory: config.directory },
-  }
-}
-
-// Serves a fixture's legacy-shaped provider catalog through the V2 provider, model and default model routes. Only
-// connected providers are listed, as the V2 server lists only the providers it can run; a fixture without a
-// connected list connects all of them.
-function currentCatalog(value: unknown) {
-  type LegacyModel = {
-    id: string
-    name?: string
-    family?: string
-    status?: string
-    attachment?: boolean
-    limit?: { context: number; output?: number }
-    cost?: { input?: number; output?: number; cache?: { read?: number; write?: number } }
-    variants?: Record<string, Record<string, unknown>>
-  }
-  const catalog = (value ?? {}) as {
-    all?: { id: string; name?: string; models?: Record<string, LegacyModel> }[]
-    connected?: string[]
-    default?: Record<string, string>
-  }
-  const providers = (catalog.all ?? []).filter((provider) => catalog.connected?.includes(provider.id) ?? true)
-  const models = providers.flatMap((provider) =>
-    Object.values(provider.models ?? {}).map((model) => ({
-      id: model.id,
-      modelID: model.id,
-      providerID: provider.id,
-      name: model.name ?? model.id,
-      family: model.family,
-      capabilities: { input: model.attachment ? ["text", "image"] : ["text"], output: ["text"], tools: true },
-      variants: Object.entries(model.variants ?? {}).map(([id, settings]) => ({ id, settings })),
-      time: { released: 1 },
-      cost: model.cost
-        ? [
-            {
-              input: model.cost.input ?? 0,
-              output: model.cost.output ?? 0,
-              cache: { read: model.cost.cache?.read ?? 0, write: model.cost.cache?.write ?? 0 },
-            },
-          ]
-        : [],
-      status: model.status ?? "active",
-      enabled: true,
-      limit: { context: model.limit?.context ?? 200_000, output: model.limit?.output ?? 8192 },
-    })),
-  )
-  // The fixture default is either one { providerID, modelID } pair or a model per provider.
-  const preferred = catalog.default?.providerID
-    ? [{ providerID: catalog.default.providerID, modelID: catalog.default.modelID }]
-    : Object.entries(catalog.default ?? {}).map(([providerID, modelID]) => ({ providerID, modelID }))
-  const defaults = preferred.flatMap((pick) =>
-    models.filter((model) => model.providerID === pick.providerID && model.id === pick.modelID),
-  )
-  return {
-    providers: providers.map((provider) => ({ id: provider.id, name: provider.name ?? provider.id, settings: {} })),
-    models,
-    default: defaults[0] ?? models[0] ?? null,
   }
 }
 

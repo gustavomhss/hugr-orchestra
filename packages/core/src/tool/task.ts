@@ -403,9 +403,7 @@ const resolveModel = Effect.fn("TaskTool.resolveModel")(function* (
 })
 
 function hasVariant(model: ModelV2.Info, ref: ModelV2.Ref) {
-  return (
-    ref.variant === undefined || ref.variant === "default" || model.variants.some((variant) => variant.id === ref.variant)
-  )
+  return ref.variant === undefined || model.variants.some((variant) => variant.id === ref.variant)
 }
 
 // Length-delimited JSON avoids collisions between arbitrary provider call IDs.
@@ -417,7 +415,7 @@ const identity = (domain: string, context: Tool.Context, childID?: SessionSchema
 const sameModel = (left: ModelV2.Ref | undefined, right: ModelV2.Ref | undefined) =>
   left?.providerID === right?.providerID &&
   left?.id === right?.id &&
-  (left?.variant ?? "default") === (right?.variant ?? "default")
+  left?.variant === right?.variant
 
 const samePlacement = (session: SessionSchema.Info, location: Location.Info) =>
   session.location.directory === location.directory && session.location.workspaceID === location.workspaceID

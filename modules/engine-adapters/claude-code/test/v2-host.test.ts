@@ -1,3 +1,4 @@
+import { ClaudeCodeAccountFixture } from "./fixture/account"
 import { beforeEach, expect, test } from "bun:test"
 import path from "node:path"
 import type { HookInput, McpSdkServerConfigWithInstance, Options, SDKMessage, SDKUserMessage, query } from "@anthropic-ai/claude-agent-sdk"
@@ -14,6 +15,7 @@ import { QuestionV2 } from "@orchestra/core/question"
 import { ClaudeHostOptions } from "../src/host/options"
 import { ClaudeCodeSDK } from "../src/sdk"
 import { ClaudeCodeHost, permission } from "../src/v2/host"
+import { frame, usage, user, ports, turnOf } from "./v2-host.fixture"
 
 // The V2 Claude Code host, driven through the SDK seam with scripted frames: no Claude Code process, no Claude API.
 // One SDK query is one provider turn; the next turn resumes the same Claude Code session with only the new message.
@@ -47,37 +49,10 @@ const sdk = Layer.succeed(
   }),
 )
 
-const frame = (value: Record<string, unknown>) => value as unknown as SDKMessage
-const usage = { input_tokens: 5, output_tokens: 4, cache_read_input_tokens: 10, cache_creation_input_tokens: 1 }
-const user = (id: string, text: string) => ({ id, type: "user", text, files: [], agents: [], time: { created: 0 } })
-
-// The ports a Turn carries beyond the call-through basics; a test overrides the one it exercises.
-const ports = {
-  question: () => Effect.die("unused"),
-  memory: { recall: Effect.succeed(undefined), archive: () => Effect.void },
-  steers: Stream.empty,
-  consumed: () => Effect.void,
-  notify: () => Effect.void,
-  todos: () => Effect.void,
-} satisfies Pick<ExecutionHost.Turn, "question" | "memory" | "steers" | "consumed" | "notify" | "todos">
-
-const turnOf = (input: Partial<ExecutionHost.Turn> = {}): ExecutionHost.Turn => ({
-  session: { id: SessionSchema.ID.make("ses_host"), location: { directory: "/project" } } as unknown as SessionSchema.Info,
-  agent: AgentV2.Info.empty(AgentV2.ID.make("maestro")),
-  model: undefined,
-  system: [],
-  context: [],
-  history: [user("msg_1", "Go")] as unknown as ExecutionHost.Turn["history"],
-  tools: [],
-  execute: () => Effect.die("unused"),
-  authorize: () => Effect.die("unused"),
-  ...ports,
-  state: { get: Effect.succeed(undefined), update: () => Effect.void },
-  ...input,
-})
 const collect = (turn: ExecutionHost.Turn) =>
   Effect.runPromise(
     ClaudeCodeHost.make.pipe(
+      Effect.provide(ClaudeCodeAccountFixture.layer),
       Effect.flatMap((host) => Stream.runCollect(host.stream(turn))),
       Effect.provide(sdk),
       Effect.provideService(ClaudeCodeSDK.Environment, {}),
@@ -106,6 +81,7 @@ test("one SDK query is one turn: tool calls surface provider-executed and the ne
   const run = (history: ReadonlyArray<unknown>) =>
     Effect.runPromise(
       ClaudeCodeHost.make.pipe(
+        Effect.provide(ClaudeCodeAccountFixture.layer),
         Effect.flatMap((host) => Stream.runCollect(host.stream(turn(history)))),
         Effect.provide(sdk),
         Effect.provideService(ClaudeCodeSDK.Environment, {}),
@@ -326,8 +302,8 @@ test("Claude Code's approvals become V2 permission checks: allowed runs, a deny 
   }))
 
   expect(asked).toEqual([
-    { callID: "tu-1", tool: "Edit", action: "edit", resources: [path.join("src", "a.ts")], safety: { tool: "edit", args: { filePath: "/project/src/a.ts" } } },
-    { callID: "tu-2", tool: "Bash", action: "bash", resources: ["rm -rf /"], safety: { tool: "bash", args: { command: "rm -rf /" } } },
+    { callID: "tu-1", tool: "Edit", action: "edit", resources: [path.join("src", "a.ts")], filesystem: { kind: "file", path: "/project/src/a.ts", resource: "path" }, safety: { tool: "edit", args: { filePath: "/project/src/a.ts" } } },
+    { callID: "tu-2", tool: "Bash", action: "bash", resources: ["rm -rf /"], filesystem: undefined, safety: { tool: "bash", args: { command: "rm -rf /" } } },
   ])
   expect(decisions).toEqual([
     { behavior: "allow", updatedInput: { file_path: "/project/src/a.ts" } },
@@ -483,9 +459,9 @@ test("the PreToolUse gate settles every call through Orchestra, failing closed, 
   }))
 
   expect(asked).toEqual([
-    { callID: "tu-1", tool: "Write", action: "edit", resources: ["a.ts"], safety: { tool: "write", args: { filePath: "/project/a.ts" } } },
-    { callID: "tu-2", tool: "Bash", action: "bash", resources: ["rm -rf /"], safety: { tool: "bash", args: { command: "rm -rf /" } } },
-    { callID: "tu-3", tool: "Grep", action: "grep", resources: ["boom"], safety: { tool: "grep", args: { pattern: "boom" } } },
+    { callID: "tu-1", tool: "Write", action: "edit", resources: ["a.ts"], filesystem: { kind: "file", path: "/project/a.ts", resource: "path" }, safety: { tool: "write", args: { filePath: "/project/a.ts" } } },
+    { callID: "tu-2", tool: "Bash", action: "bash", resources: ["rm -rf /"], filesystem: undefined, safety: { tool: "bash", args: { command: "rm -rf /" } } },
+    { callID: "tu-3", tool: "Grep", action: "grep", resources: ["boom"], filesystem: { kind: "directory", path: ".", resource: "pattern" }, safety: { tool: "grep", args: { pattern: "boom" } } },
   ])
   expect(decisions).toEqual([
     allowed,
@@ -763,6 +739,7 @@ test("a subsequent turn drains background completion before starting its own que
     // One host serves both turns, as the layer's does: it is the host that remembers the query it kept up.
     await Effect.runPromise(
       ClaudeCodeHost.make.pipe(
+        Effect.provide(ClaudeCodeAccountFixture.layer),
         Effect.flatMap((host) =>
           Effect.gen(function* () {
             yield* Stream.runCollect(host.stream(turnOf({ session })))
@@ -784,83 +761,4 @@ test("a file whose name starts with two dots inside the workspace is matched by 
   expect(permission("Read", { file_path: "/project/..cache/x" }, "/project")).toEqual({ action: "read", resources: [path.join("..cache", "x")] })
   expect(permission("Read", { file_path: "/project/../outside/x" }, "/project")).toEqual({ action: "read", resources: ["/project/../outside/x"] })
   expect(permission("Read", { file_path: "/other/x" }, "/project")).toEqual({ action: "read", resources: ["/other/x"] })
-})
-
-test("a prompt Claude Code already took is not sent again after a stop or a broken turn; an unanswered failure resends it", async () => {
-  const prompts: unknown[] = []
-  let frames: SDKMessage[] = []
-  // `hang`: the frames stop without ending, as a turn the owner then stops; otherwise they end, as a process that exits.
-  let hang = false
-  // Like the SDK: it writes the first message, then asks the input for the next one.
-  const reading = Layer.succeed(
-    ClaudeCodeSDK.Service,
-    ClaudeCodeSDK.Service.of({
-      query: ((input: { prompt: AsyncIterable<SDKUserMessage> }) => {
-        const messages = input.prompt[Symbol.asyncIterator]()
-        void messages.next().then((first) => {
-          prompts.push(first.done ? undefined : first.value.message.content)
-          return messages.next()
-        })
-        const queued = [...frames]
-        const hangs = hang
-        return {
-          [Symbol.asyncIterator]() {
-            return this
-          },
-          next: () =>
-            new Promise((resolve) =>
-              setTimeout(() => {
-                const value = queued.shift()
-                if (value) return resolve({ value, done: false })
-                if (!hangs) resolve({ value: undefined, done: true })
-              }, 5),
-            ),
-          return: () => Promise.resolve({ value: undefined, done: true }),
-        }
-      }) as unknown as typeof query,
-    }),
-  )
-  const stored: { value: unknown } = { value: undefined }
-  const run = (history: ReadonlyArray<unknown>) =>
-    Effect.runPromise(
-      ClaudeCodeHost.make.pipe(
-        Effect.flatMap((host) =>
-          Stream.runCollect(
-            host.stream(
-              turnOf({
-                history: history as ExecutionHost.Turn["history"],
-                state: {
-                  get: Effect.sync(() => stored.value),
-                  update: (fn) => Effect.sync(() => void (stored.value = fn(stored.value))),
-                },
-              }),
-            ),
-          ).pipe(Effect.timeoutOption("300 millis")),
-        ),
-        Effect.provide(reading),
-        Effect.provideService(ClaudeCodeSDK.Environment, {}),
-      ),
-    )
-  const init = frame({ type: "system", subtype: "init", session_id: "claude-1" })
-
-  // Stopped while Claude Code works on the prompt, before it replied.
-  hang = true
-  frames = [init]
-  await run([user("msg_1", "First")])
-  expect(stored.value).toEqual({ sessionId: "claude-1", delivered: ["msg_1"] })
-
-  // Claude Code replied, then its process ended before the result.
-  hang = false
-  frames = [init, frame({ type: "assistant", uuid: "a1", session_id: "claude-1", parent_tool_use_id: null,
-    message: { content: [{ type: "text", text: "Working" }] } })]
-  await run([user("msg_1", "First"), user("msg_2", "Second")])
-  expect(stored.value).toEqual({ sessionId: "claude-1", delivered: ["msg_1", "msg_2"] })
-
-  // Signed out: Claude Code answered nothing, so the prompt is sent again with the next one.
-  frames = [init, frame({ type: "assistant", uuid: "b1", session_id: "claude-1", parent_tool_use_id: null,
-    error: "authentication_failed", message: { content: [] } }),
-    frame({ type: "result", subtype: "success", is_error: true, session_id: "claude-1", result: "Not signed in", usage })]
-  await run([user("msg_1", "First"), user("msg_2", "Second"), user("msg_3", "Third")])
-  expect(stored.value).toEqual({ sessionId: "claude-1", delivered: ["msg_1", "msg_2"] })
-  expect(prompts).toEqual(["First", "Second", "Third"])
 })

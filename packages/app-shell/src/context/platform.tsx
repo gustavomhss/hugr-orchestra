@@ -12,6 +12,7 @@ import type {
   LiveHotkeyAction,
   LivePermission,
   LiveReadiness,
+  LiveRecoveryPort,
   LiveRunState,
   LiveSettings,
   LiveSource,
@@ -29,10 +30,11 @@ export type {
 } from "../live"
 
 export type LiveSeatPlatform = {
+  recovery?: LiveRecoveryPort
   // "permission": the microphone is denied. With only system audio denied the meeting starts on the microphone.
   start(title?: string): Promise<
     | { ok: true; meetingID: string }
-    | { ok: false; reason: "running" | "no-key" | "server" | "capture" | "permission" }
+    | { ok: false; reason: "running" | "no-key" | "server" | "capture" | "permission" | "storage" | "unavailable" }
   >
   stop(): Promise<void>
   running(): Promise<boolean>

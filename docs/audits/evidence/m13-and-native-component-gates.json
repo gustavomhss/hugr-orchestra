@@ -1,0 +1,560 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Completed component gates only; not M13/E10 closure or a final integrated product verdict",
+  "repository": "gustavomhss/hugr-orchestra",
+  "referenceCommit": "8052be0efd899464df37680c4ae0b60a79621570",
+  "method": "GitHub REST run/jobs and complete raw hosted job logs independently retrieved; snapshot recursive trees non-truncated; explicit relevant-file Git blob comparison to reference. No local tests/types/builds or new dispatch.",
+  "gates": [
+    {
+      "name": "core_native_provider",
+      "runId": 43405038254,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43405038254",
+      "conclusion": "success",
+      "snapshotCommit": "65b7bc2b6e1ac437a2443c147ddbe8e50938f2f2",
+      "snapshotBranch": "ci-run-both-mwesvjft-65b7bc2",
+      "request": {
+        "package": "core",
+        "packageSelector": "packages/core",
+        "directory": "packages/core",
+        "runner": "bun",
+        "args": [
+          "./test/codemode-native-regex.test.ts",
+          "--timeout",
+          "120000"
+        ],
+        "env": {}
+      },
+      "requestGitBlob": "2f94081960956812e034cdc6c4f91ae601f089d1",
+      "requestSha256": "2dc6b37e68a12f36a1fd8e48965a4949ceac3c91495ff48978d16030acdc2193",
+      "cleanupJobs": [
+        {
+          "id": 131819446567,
+          "conclusion": "success"
+        }
+      ],
+      "jobs": [
+        {
+          "id": 131817194649,
+          "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43405038254/job/131817194649",
+          "name": "test (ubuntu-24.04)",
+          "conclusion": "success",
+          "startedAt": "2026-11-13T09:54:37Z",
+          "completedAt": "2026-11-13T09:55:57Z",
+          "rawLogSha256": "6152ad00110bb372cef84b265d4cb7b00fdfa80fcba8d9153c1d2fe2fdd527ad",
+          "counts": {
+            "pass": 18,
+            "fail": 0,
+            "assertions": 38,
+            "tests": 18,
+            "files": 1
+          },
+          "omni": [
+            "omni positive control [81033ad7a16d33e505b87d306c827f00]: pass (declared: 17 test(s) in test/codemode-native-regex.test.ts); 17 omni spawn(s), 0 delegated."
+          ],
+          "snapshotShaObservedInRawLog": true
+        },
+        {
+          "id": 131817194951,
+          "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43405038254/job/131817194951",
+          "name": "test (windows-latest)",
+          "conclusion": "success",
+          "startedAt": "2026-11-13T09:54:37Z",
+          "completedAt": "2026-11-13T10:00:10Z",
+          "rawLogSha256": "aaa10a12a54d991ac629599b2639f3d9fe9ed67dd2ffebc60280eb27e2faec43",
+          "counts": {
+            "pass": 18,
+            "fail": 0,
+            "assertions": 38,
+            "tests": 18,
+            "files": 1
+          },
+          "omni": [
+            "omni positive control [1be83d85189f95cef7bfa95f0056e8ea]: pass (declared: 17 test(s) in test/codemode-native-regex.test.ts); 17 omni spawn(s), 0 delegated."
+          ],
+          "snapshotShaObservedInRawLog": true
+        }
+      ],
+      "sourceBindings": {
+        "scope": "Only the explicit relevant component/test files listed; not a whole-checkout/dependency identity claim",
+        "allEqualToReference": true,
+        "fileCount": 9,
+        "matchingGitBlobs": {
+          "packages/codemode/src/native-regex.ts": "bcb9639e9c667c8351769512700963ebd3925654",
+          "packages/core/src/codemode-native-regex-script.ts": "75479c1493d1fdbb91aa209abf589cb50b3ffece",
+          "packages/core/src/codemode-native-regex.ts": "18da2976af133ce809560cd2997af0043ab1106c",
+          "packages/core/src/cross-spawn-spawner.ts": "fc402c69792bd6b4a55bb04c0be6e72800ce871b",
+          "packages/core/src/flag/flag.ts": "98dc57a53f2fec5baa7afdd316758d9aa744f0c7",
+          "packages/core/src/omni-spawner.ts": "ff176729415c15d4644c69cac19e23ad5559f196",
+          "packages/core/src/omni.ts": "94a19789cef782806a80432c9a86f28bccbdecac",
+          "packages/core/src/process.ts": "a2c29d4a18c44ff407e6055b27830fade5d43f20",
+          "packages/core/test/codemode-native-regex.test.ts": "48716e713672c63b0a789d15e09b43dd2c053ba6"
+        }
+      },
+      "qualificationLimits": [
+        "Provider boundary only: actual Core provider/AppProcess/Omni and native child operations; not interpreter integration, final CPU-deadline qualification, compiled capability, or a production caller selection.",
+        "18 cases per OS: 17 declared spawning cases and one explicit-Omni-off refusal."
+      ]
+    },
+    {
+      "name": "senses_delivery",
+      "runId": 43405064276,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43405064276",
+      "conclusion": "success",
+      "snapshotCommit": "6d50eecc1e496c57fc36a5c91b384f8d6a516200",
+      "snapshotBranch": "ci-run-both-mwesvtm8-6d50eec",
+      "request": {
+        "package": "desktop",
+        "packageSelector": "packages/desktop",
+        "directory": "apps/desktop",
+        "runner": "node",
+        "args": [
+          "./test/native/live-senses-delivery.node-smoke.mjs"
+        ],
+        "env": {}
+      },
+      "requestGitBlob": "c4fe87c3ef52fa425641bc890743af09c64e57d8",
+      "requestSha256": "312665448f8b8b1c4840ce203675b9b4b5c2a219e485eec8619b67a5e867e11c",
+      "cleanupJobs": [
+        {
+          "id": 131819425803,
+          "conclusion": "success"
+        }
+      ],
+      "jobs": [
+        {
+          "id": 131817280239,
+          "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43405064276/job/131817280239",
+          "name": "test (windows-latest)",
+          "conclusion": "success",
+          "startedAt": "2026-11-13T09:54:51Z",
+          "completedAt": "2026-11-13T10:00:07Z",
+          "rawLogSha256": "1a7ec50bc466ed404e4e604395905834bddb39620e86ae93430b7e2a60525b9d",
+          "counts": {
+            "tests": 6,
+            "pass": 6,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "assertions": null,
+            "assertionNote": "Node test runner does not report assertion totals"
+          },
+          "omni": [
+            "No Omni control verdict emitted; no Omni qualification inferred"
+          ],
+          "runtime": [
+            {
+              "kind": "live-senses-delivery-runtime",
+              "node": "v24.22.2",
+              "sqlite": "3.53.4",
+              "platform": "win32",
+              "arch": "x64"
+            }
+          ],
+          "snapshotShaObservedInRawLog": true
+        },
+        {
+          "id": 131817280565,
+          "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43405064276/job/131817280565",
+          "name": "test (ubuntu-24.04)",
+          "conclusion": "success",
+          "startedAt": "2026-11-13T09:54:50Z",
+          "completedAt": "2026-11-13T09:56:23Z",
+          "rawLogSha256": "1666629012a67fed79ec609b056d29bcf6cdc24343a7499ddc9e242a50f52435",
+          "counts": {
+            "tests": 6,
+            "pass": 6,
+            "fail": 0,
+            "cancelled": 0,
+            "skipped": 0,
+            "todo": 0,
+            "assertions": null,
+            "assertionNote": "Node test runner does not report assertion totals"
+          },
+          "omni": [
+            "No Omni control verdict emitted; no Omni qualification inferred"
+          ],
+          "runtime": [
+            {
+              "kind": "live-senses-delivery-runtime",
+              "node": "v24.22.2",
+              "sqlite": "3.53.4",
+              "platform": "linux",
+              "arch": "x64"
+            }
+          ],
+          "snapshotShaObservedInRawLog": true
+        }
+      ],
+      "sourceBindings": {
+        "scope": "Only the explicit relevant component/test files listed; not a whole-checkout/dependency identity claim",
+        "allEqualToReference": true,
+        "fileCount": 16,
+        "matchingGitBlobs": {
+          "apps/desktop/src/main/live-audio.ts": "4399819a4bb389ebece75f77efac470970beb199",
+          "apps/desktop/src/main/live-delivery-contract.ts": "943191f8b936d0ab93b76a187f99915de83474c5",
+          "apps/desktop/src/main/live-delivery-error.ts": "7f539783e4db1176db7539b5c69c0a7413b428c2",
+          "apps/desktop/src/main/live-delivery-http.ts": "a44428476cba6b279c9a477f6175248118d9e815",
+          "apps/desktop/src/main/live-delivery-manager-actions.fixture.ts": "2578e05d4d226dcce4a3434a67269271b7d01289",
+          "apps/desktop/src/main/live-delivery-manager-test.fixture.ts": "01bff9662bb049be1be2943fa50293f2e202b7b4",
+          "apps/desktop/src/main/live-delivery-manager.ts": "984e890ba7bc1dc170d114bff9c724ab9f95dbee",
+          "apps/desktop/src/main/live-delivery-values.ts": "c27e84b8b52e1b3dbbcc5b5926da4b8fe5523264",
+          "apps/desktop/src/main/live-outbox-contract.ts": "87fa8a8e25b107423750625bce34a3bde447ebf4",
+          "apps/desktop/src/main/live-outbox.ts": "4a1c32bff1f44ec4430924e5b05b34ba1b08a17d",
+          "apps/desktop/src/main/live-segmenter.ts": "455cdda299f98023b15277ec2167e15c27d7af18",
+          "apps/desktop/src/main/live-senses-delivery.fixture.ts": "5b2fca5a41b88517dc7f03cf946b7295744753de",
+          "apps/desktop/src/main/live-senses-delivery.node.test.ts": "62f75c0b603a8b50ed4f77bcfac49c4a86ec1081",
+          "apps/desktop/src/main/live-senses.ts": "691147d63870b951aa695db0c024ad4b3751010b",
+          "apps/desktop/src/main/live-transport-log.ts": "60d0f76aaace469b9ca2b7667dbe2a02b7f17365",
+          "apps/desktop/test/native/live-senses-delivery.node-smoke.mjs": "dbade7596c200139696fc788c52d003c4a3d0bb5"
+        }
+      },
+      "qualificationLimits": [
+        "Actual Node24.22.2 / SQLite3.53.4 Store, manager and HTTP peer. Only OS capture/STT/permission boundaries are controlled; scheduler/backoff sleep is fixture-controlled.",
+        "Six cases include real manager control, final-tail/seal/ACK ordering, SQLite/quota refusal, permission cancellation and late capture cleanup. Does not exercise actual microphone, native STT, Electron Main, global broker/rotation or complete app shutdown."
+      ]
+    },
+    {
+      "name": "recovery_ui",
+      "runId": 43405244040,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43405244040",
+      "conclusion": "success",
+      "snapshotCommit": "8e299e4633deeb4b40b527714a07d560bd84376d",
+      "snapshotBranch": "ci-run-both-mwesxpdu-8e299e4",
+      "request": {
+        "package": "app",
+        "packageSelector": "packages/app",
+        "directory": "packages/app-shell",
+        "runner": "bun",
+        "args": [
+          "./test-browser/live-recovery.test.ts",
+          "--timeout",
+          "120000"
+        ],
+        "env": {}
+      },
+      "requestGitBlob": "1f66ba57d44093df124470085dfd02c1986a3a39",
+      "requestSha256": "9cb97d0798bc01b808ba39e1b756d204d178719e5d18f4f1c0a7014df07d8e8e",
+      "cleanupJobs": [
+        {
+          "id": 131820295238,
+          "conclusion": "success"
+        }
+      ],
+      "jobs": [
+        {
+          "id": 131817868942,
+          "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43405244040/job/131817868942",
+          "name": "test (ubuntu-24.04)",
+          "conclusion": "success",
+          "startedAt": "2026-11-13T09:56:18Z",
+          "completedAt": "2026-11-13T09:58:10Z",
+          "rawLogSha256": "2c410dec79af26f2488ff957b2f9448125c8d914c3602287a6f9418ae7888c6f",
+          "counts": {
+            "pass": 34,
+            "fail": 0,
+            "assertions": 114,
+            "tests": 34,
+            "files": 1
+          },
+          "omni": [
+            "omni positive control [bd8d6846bf9c5b46881f1d4e600d37cd]: not applicable (focused: no declaring test ran); this run made no omni spawn and delegated none, so it proved nothing about omni."
+          ],
+          "snapshotShaObservedInRawLog": true
+        },
+        {
+          "id": 131817869405,
+          "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43405244040/job/131817869405",
+          "name": "test (windows-latest)",
+          "conclusion": "success",
+          "startedAt": "2026-11-13T09:56:17Z",
+          "completedAt": "2026-11-13T10:02:06Z",
+          "rawLogSha256": "9535893a4fc2a482dff509bcba64323a1bc37003b84927a3c81bee20c5773fac",
+          "counts": {
+            "pass": 34,
+            "fail": 0,
+            "assertions": 114,
+            "tests": 34,
+            "files": 1
+          },
+          "omni": [
+            "omni positive control [c63a94592c6d9858afcafd867b7f4e2d]: not applicable (focused: no declaring test ran); this run made no omni spawn and delegated none, so it proved nothing about omni."
+          ],
+          "snapshotShaObservedInRawLog": true
+        }
+      ],
+      "sourceBindings": {
+        "scope": "Only the explicit relevant component/test files listed; not a whole-checkout/dependency identity claim",
+        "allEqualToReference": true,
+        "fileCount": 11,
+        "matchingGitBlobs": {
+          "packages/app-shell/src/i18n/orchestra-chapters/flight-engineer.ts": "29b07ecdb3370fc6d953de8e786c691006853490",
+          "packages/app-shell/src/live.ts": "b1351dd47014c89863868214166d84e4bce8fdf5",
+          "packages/app-shell/src/orchestra/chapters/flight-engineer/dialogs.tsx": "8c570dfc2d1363164ad7444ebf57c6d107027e40",
+          "packages/app-shell/src/orchestra/chapters/flight-engineer/entry.tsx": "b85f2b89149a2b33443f2226673dd538498f07ab",
+          "packages/app-shell/src/orchestra/chapters/flight-engineer/flight-engineer.tsx": "0d55bd7faacc855c73454b7dbcffc44654fdcd98",
+          "packages/app-shell/src/orchestra/chapters/flight-engineer/recovery.css": "3659899e8992314187a88a8c5cb1b4419c6fd50f",
+          "packages/app-shell/src/orchestra/chapters/flight-engineer/recovery.tsx": "1a1b495d74e5ade5a34eb05020d89c5964ce3c4b",
+          "packages/app-shell/src/orchestra/chapters/flight-engineer/run.ts": "6183f57b35b9a853a896fbd3ed880b1fe4318480",
+          "packages/app-shell/src/orchestra/chapters/flight-engineer/session.tsx": "90bbb9868e3c3fd204885312276602eca2f579db",
+          "packages/app-shell/test-browser/live-recovery.fixture.ts": "586450fceab65c021f59f5c2672bfdc87548c633",
+          "packages/app-shell/test-browser/live-recovery.test.ts": "9eb5bbdac7d5b923659d31f2c7e79756d4a22a01"
+        }
+      },
+      "qualificationLimits": [
+        "Isolated Solid/Happydom component acceptance with controlled public port, EN/BR: not an Electron Main/window or production IPC integration test.",
+        "34 cases qualify metadata/actions/polling/late disposal at the component boundary. Mounting code in Home/chapter is source-bound but not a whole-app runtime claim."
+      ]
+    },
+    {
+      "name": "codemode_full",
+      "runId": 43410822105,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43410822105",
+      "conclusion": "success",
+      "snapshotCommit": "893f0cf2049412f57adb3cdbd6d4b86bce7e568f",
+      "snapshotBranch": "ci-run-both-mweuhy81-893f0cf",
+      "request": {
+        "package": "codemode",
+        "packageSelector": "packages/codemode",
+        "directory": "packages/codemode",
+        "runner": "bun",
+        "args": [
+          "--timeout",
+          "120000"
+        ],
+        "env": {}
+      },
+      "requestGitBlob": "80706cb4bc272ae068f68e2975b7b83a33457e46",
+      "requestSha256": "9605c220d3da79dca1e41b52ce5d146087533c75fc0eab86653403ac220b6500",
+      "cleanupJobs": [
+        {
+          "id": 131839043046,
+          "conclusion": "success"
+        }
+      ],
+      "jobs": [
+        {
+          "id": 131836509443,
+          "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43410822105/job/131836509443",
+          "name": "test (windows-latest)",
+          "conclusion": "success",
+          "startedAt": "2026-11-13T10:40:03Z",
+          "completedAt": "2026-11-13T10:45:45Z",
+          "rawLogSha256": "9daf5b36af2c1b21bd6155c3a0d8bc5bc4f0d11db89ffb8aec587faeb0824884",
+          "counts": {
+            "pass": 419,
+            "fail": 0,
+            "assertions": 1420,
+            "tests": 419,
+            "files": 12
+          },
+          "omni": [
+            "No Omni control verdict emitted; no Omni qualification inferred"
+          ],
+          "testFiles": [],
+          "snapshotShaObservedInRawLog": true
+        },
+        {
+          "id": 131836509762,
+          "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43410822105/job/131836509762",
+          "name": "test (ubuntu-24.04)",
+          "conclusion": "success",
+          "startedAt": "2026-11-13T10:40:03Z",
+          "completedAt": "2026-11-13T10:41:51Z",
+          "rawLogSha256": "4d5c4b168b0ac7de4c3386b4ab50d9559683fd6ae5756b7a7dda87851afa50f8",
+          "counts": {
+            "pass": 419,
+            "fail": 0,
+            "assertions": 1420,
+            "tests": 419,
+            "files": 12
+          },
+          "omni": [
+            "No Omni control verdict emitted; no Omni qualification inferred"
+          ],
+          "testFiles": [
+            "test/native-regex-protocol.test.ts:",
+            "test/native-regexp-parser.test.ts:",
+            "test/execution-deadline.test.ts:",
+            "test/execution-isolation.test.ts:",
+            "test/promise.test.ts:",
+            "test/enumeration.test.ts:",
+            "test/parity.test.ts:",
+            "test/signature.test.ts:",
+            "test/native-regex-values.test.ts:",
+            "test/openapi.test.ts:",
+            "test/codemode.test.ts:",
+            "test/stdlib.test.ts:"
+          ],
+          "snapshotShaObservedInRawLog": true
+        }
+      ],
+      "sourceBindings": {
+        "scope": "Only the explicit relevant component/test files listed; not a whole-checkout/dependency identity claim",
+        "allEqualToReference": true,
+        "fileCount": 46,
+        "matchingGitBlobs": {
+          "packages/codemode/package.json": "1e1facca4d10cd39a12772af5c454236774c9c52",
+          "packages/codemode/src/codemode.ts": "14782d7c8aaed7b4647e64f6631459bdd4684a64",
+          "packages/codemode/src/index.ts": "408c5e4a4ad0d463cc9a78ae363bc230f438b067",
+          "packages/codemode/src/interpreter/model.ts": "d95351451035ead43c7ad9876bd49654aa163626",
+          "packages/codemode/src/interpreter/runtime.ts": "963464ae84933366c398b2fe5b59dd0f34608fa1",
+          "packages/codemode/src/native-regex-driver.ts": "faa3765ba52892b8d9b59eb8babfcab4102485d7",
+          "packages/codemode/src/native-regex-values.ts": "43b1c13c9dadf73412d6d235439fea7e1ca445b6",
+          "packages/codemode/src/native-regex.ts": "bcb9639e9c667c8351769512700963ebd3925654",
+          "packages/codemode/src/native-regexp-parser.ts": "2ba3bdb61c8baa1480065a6b1f5d1382329af77e",
+          "packages/codemode/src/openapi/TODO.md": "cbcfe81a68c8df2fa7aae622ddf2997e3ab29433",
+          "packages/codemode/src/openapi/index.ts": "7f1770ef362792996f6026dced24ab4b570added",
+          "packages/codemode/src/openapi/runtime.ts": "2515621792b22f23fa52967362ecf69828e21ee4",
+          "packages/codemode/src/openapi/spec.ts": "bd4dc5aed63e44d81e4976a7e2e374cc44c53d6d",
+          "packages/codemode/src/openapi/types.ts": "cab772e701486b9a1af29dfe0798ce8bf77124ef",
+          "packages/codemode/src/stdlib/collections.ts": "f4760ff7061a7b93f495323abbf9b14027431b60",
+          "packages/codemode/src/stdlib/console.ts": "798563128e560a501f44494c53a99f7e47b72696",
+          "packages/codemode/src/stdlib/date.ts": "c492f58f94b1e7246b8d098b309c047024861dc2",
+          "packages/codemode/src/stdlib/json.ts": "8a479d2c8c72b86298b402e9defee31659d1a93c",
+          "packages/codemode/src/stdlib/math.ts": "cc8dd0670e969929366e3fe8f07b700cc5f219f7",
+          "packages/codemode/src/stdlib/number.ts": "79710e1ad226672554233d09478cb84c9e706e6a",
+          "packages/codemode/src/stdlib/object.ts": "2beda0bf5cae137b0715b61c603de05c6320f287",
+          "packages/codemode/src/stdlib/promise.ts": "d0b442ccf74f2230e0e8cbe060b0be86a120ce6a",
+          "packages/codemode/src/stdlib/regexp.ts": "65a65a78ba17a2bbca77e1eefae7c927d6426542",
+          "packages/codemode/src/stdlib/string.ts": "3ac4372e363fe60ee9b68ad01780171f13d75fd5",
+          "packages/codemode/src/stdlib/url.ts": "583d776d22ad434d7f41fe26c7f54461e0389425",
+          "packages/codemode/src/stdlib/value.ts": "512f279c82785384a26450016528d5ff3b5b50e5",
+          "packages/codemode/src/tool-error.ts": "16460a019ae1e901a29ac4a3dda872d75acfcf0a",
+          "packages/codemode/src/tool-runtime.ts": "5c721d39586c8baf2ff8aab56b22dba0024540ea",
+          "packages/codemode/src/tool-schema.ts": "16213fa8eeb2d146350a368aeab13e7bf923a16a",
+          "packages/codemode/src/tool.ts": "6c6863f99dcf7e659a4e1a2b582095694404e39c",
+          "packages/codemode/src/values.ts": "f3c309caf50152bfb6cd81c69474b41ad8954c3d",
+          "packages/codemode/test/codemode.test.ts": "221b5e07dfe1f6be5239dbcd660050435516bca1",
+          "packages/codemode/test/enumeration.test.ts": "0de3dc3ea0ddd7e5b415159163c33e4306ecbca2",
+          "packages/codemode/test/execution-deadline.test.ts": "ec84fdb737a010bb20fd82b247314061af2f9fe8",
+          "packages/codemode/test/execution-isolation.test.ts": "f8cb666d4724bf99a7b121f575790501c8b1c06d",
+          "packages/codemode/test/fixtures/openapi-happy-path.json": "8052dd739113cd9001748c83832df2fab22d7a97",
+          "packages/codemode/test/fixtures/opencode-v2-openapi.json": "934b22e389f4ae86039967dd8134d750780b025c",
+          "packages/codemode/test/native-regex-protocol.test.ts": "0bbf5fa6dc86c6fc22dc7c70b28dc6f0e67e979f",
+          "packages/codemode/test/native-regex-values.test.ts": "712cc52f9e2c59a242d9a89d4112d85256f86bb3",
+          "packages/codemode/test/native-regexp-parser.test.ts": "d6c10d3d42f20685c9a16baf7805d97553768e55",
+          "packages/codemode/test/openapi.test.ts": "2d74ef905e422a24e66749d697fc703674d597d6",
+          "packages/codemode/test/parity.test.ts": "dfa85831837cf7a8cea70a57901b061d3fb6ad1e",
+          "packages/codemode/test/promise.test.ts": "545d463abfac49288a138251f55cbd9eb01ed56a",
+          "packages/codemode/test/rejection.ts": "1687c3e363bab431a4e9e9b0a12f901f9bec1c49",
+          "packages/codemode/test/signature.test.ts": "232c6dcb221d3193c2b6024d3454dcd2eec73120",
+          "packages/codemode/test/stdlib.test.ts": "f7831a060338939f3a1dc3b7f9186bfe58db145f"
+        }
+      },
+      "qualificationLimits": [
+        "Whole requested CodeMode package suite: 419 tests across12files per OS, including actual interpreter, protocol and metadata/codec tests.",
+        "No Core provider layer is selected by these package tests; this is not the integrated real-provider/compiled CPU gate. No Omni control verdict emitted, so no Omni qualification inferred."
+      ]
+    }
+  ],
+  "laterReferenceChanges": {
+    "relevantFiles": "All82 explicitly compared bindings match snapshot bytes at reference8052be0efd. No later difference in those selected files is being waived as semantic-equivalent.",
+    "codemodeRuntimeCommit": "46388a0c0417062f8be0330611ec652084fc1f38",
+    "protocolMatcherTypingCommit": "06ec572593efb2e5c7cd77f3c8948a0d8235647d",
+    "excludedLaterCoreParentSetup": {
+      "commit": "8052be0efd899464df37680c4ae0b60a79621570",
+      "path": "packages/core/test/codemode-deadline.test.ts",
+      "description": "Retains one compiled deadline artifact per suite; this file is outside the four component gates. Pending integrated rerun required; no new result inferred."
+    }
+  },
+  "openIntegrationLimits": {
+    "m13IntegratedNodeAndBun": "Runs43411946093 and43411948213 are excluded from this completed-component qualification. At collection, NodeWindows was pending and BunLinux had failed; no final M13 integrated verdict inferred.",
+    "e10PriorIntegratedLinux": {
+      "runId": 43410822249,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43410822249",
+      "status": "FAILED:46pass2fail, including compiled setup and aggregate Omni control. Not a green E10 proof.",
+      "rawLogSha256": "e44e55a0963029dce50c39e2c9bce1b09279ffb0eaae3deae690c7aeda416842",
+      "failure": "Second compiled Bun.build reported Unexpected reading file fast-check/lib/fast-check.js. Compiled setup did not qualify.",
+      "sourceWitnesses": [
+        {
+          "scenario": "literal-test",
+          "artifact": "index.ts",
+          "ready": true,
+          "warmup": true,
+          "elapsedToMark": 44.17499099999998,
+          "containmentKill": false,
+          "exitCode": 0,
+          "resultPresent": true,
+          "resultStatus": "failure",
+          "resultKind": "TimeoutExceeded",
+          "heartbeats": 29,
+          "fixtureErrors": {
+            "count": 0,
+            "first": null
+          }
+        },
+        {
+          "scenario": "dynamic-exec",
+          "artifact": "index.ts",
+          "ready": true,
+          "warmup": true,
+          "elapsedToMark": 45.004117000000065,
+          "containmentKill": false,
+          "exitCode": 0,
+          "resultPresent": true,
+          "resultStatus": "failure",
+          "resultKind": "TimeoutExceeded",
+          "heartbeats": 29,
+          "fixtureErrors": {
+            "count": 0,
+            "first": null
+          }
+        },
+        {
+          "scenario": "string-match",
+          "artifact": "index.ts",
+          "ready": true,
+          "warmup": true,
+          "elapsedToMark": 34.71128299999998,
+          "containmentKill": false,
+          "exitCode": 0,
+          "resultPresent": true,
+          "resultStatus": "failure",
+          "resultKind": "TimeoutExceeded",
+          "heartbeats": 29,
+          "fixtureErrors": {
+            "count": 0,
+            "first": null
+          }
+        },
+        {
+          "scenario": "replace-callback",
+          "artifact": "index.ts",
+          "ready": true,
+          "warmup": true,
+          "elapsedToMark": 77.77958000000001,
+          "containmentKill": false,
+          "exitCode": 0,
+          "resultPresent": true,
+          "resultStatus": "failure",
+          "resultKind": "TimeoutExceeded",
+          "heartbeats": 28,
+          "fixtureErrors": {
+            "count": 0,
+            "first": null
+          }
+        },
+        {
+          "scenario": "match-all",
+          "artifact": "index.ts",
+          "ready": true,
+          "warmup": true,
+          "elapsedToMark": 74.28396799999996,
+          "containmentKill": false,
+          "exitCode": 0,
+          "resultPresent": true,
+          "resultStatus": "failure",
+          "resultKind": "TimeoutExceeded",
+          "heartbeats": 28,
+          "fixtureErrors": {
+            "count": 0,
+            "first": null
+          }
+        }
+      ],
+      "sourceWitnessLimit": "Five source-artifact CPU cases only: actual TimeoutExceeded, naturalexit0,28–29heartbeats, no outer containment kill. Does not qualify the failed compiled cases or close E10."
+    },
+    "closure": "No ledger/issue closure, final epic verdict, production caller selection, complete Main hardware runtime or final compiled qualification is claimed."
+  }
+}

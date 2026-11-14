@@ -1,0 +1,9 @@
+# Controlled release backoff qualification
+
+Frozen before implementation after cold43453802489 Core Linux11/15 failed three published-asset conflict cases at the normal30s per-test limit. Earlier scoped43439795053 passed the same workflow/fixture bytes at31.003s,30.754s and31.228s because its uploader allowed120s. The workflow intentionally performs10 metadata/digest attempts with nine3-second waits. This is a controlled static GitHub/tool fixture, not evidence of a leaked process or an actual release attempt.
+
+Root freezes a fixture-only adapter for the external `sleep 3` command through the fixture's existing private tool PATH. It accepts exactly the one argument3, records a non-mutation backoff event and returns immediately. Every other invocation fails. Do not alter the actual workflow, retry count, wait duration, publishing behavior, test timeout, global clock, production process system or Omni control.
+
+The three cases must continue executing the actual promotion Bash and all10 real mocked metadata/digest checks, then fail with RELEASE_ASSET_DIGEST_MISMATCH. Add assertions for exactly10 reads of the affected versioned release metadata and9 recorded backoffs. Preserve the existing exact changed-asset set, release-state equality and absence of uploads/overwrites. The first successful promotion must exercise the same actual workflow and perform no backoff. Reject unknown tool operations.
+
+Only packages/core/test/fixture/release-promotion.ts, its existing command adapter if separate, and packages/core/test/release-promotion.test.ts are owned by this packet. Integrate after independent source review and hosted tests with explicit --timeout30000, then the complete repository gate. The production27-second eventual-consistency allowance remains intact and is not wall-clock qualified by this controlled fixture.

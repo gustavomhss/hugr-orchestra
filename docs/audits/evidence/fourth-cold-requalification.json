@@ -1,0 +1,586 @@
+{
+  "version": 1,
+  "run": 43492035272,
+  "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43492035272",
+  "source": "46530d548a6a7713231d9f30bc9bd1bc0321c01f",
+  "inputs": {
+    "packages": "",
+    "cold": true,
+    "windows_e2e": false
+  },
+  "attempt1": {
+    "conclusion": "failure",
+    "counts": {
+      "success": 68,
+      "failure": 2,
+      "cancelled": 0
+    },
+    "jobs": [
+      {
+        "id": 132115428235,
+        "name": "plan",
+        "conclusion": "success"
+      },
+      {
+        "id": 132115428689,
+        "name": "omni test binaries (windows-latest)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132115428727,
+        "name": "atlas scope",
+        "conclusion": "success"
+      },
+      {
+        "id": 132115428847,
+        "name": "omni test binaries (ubuntu-24.04)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132115564942,
+        "name": "e2e (linux 5/8)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132115564962,
+        "name": "e2e (linux 2/8)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132115564983,
+        "name": "e2e (linux 7/8)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132115564994,
+        "name": "e2e (linux 4/8)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132115565003,
+        "name": "e2e (linux 6/8)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132115565069,
+        "name": "e2e (linux 3/8)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132115565148,
+        "name": "e2e (linux 8/8)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132115565303,
+        "name": "e2e (linux 1/8)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132115660130,
+        "name": "atlas",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116381748,
+        "name": "unit (linux core 13/15)",
+        "conclusion": "failure"
+      },
+      {
+        "id": 132116381790,
+        "name": "unit (linux core 12/15)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116381794,
+        "name": "unit (linux core 3/15)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116381818,
+        "name": "unit (windows core 5/12)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116381849,
+        "name": "unit (linux core 14/15)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116381852,
+        "name": "unit (linux core 10/15)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116381879,
+        "name": "unit (linux core 11/15)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116381880,
+        "name": "unit (linux core 2/15)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116381881,
+        "name": "unit (linux core 6/15)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116381894,
+        "name": "unit (windows core 2/12)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116381899,
+        "name": "unit (linux core 9/15)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116381911,
+        "name": "unit (linux core 1/15)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116381914,
+        "name": "unit (linux core 5/15)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116381917,
+        "name": "unit (windows core 3/12)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116381918,
+        "name": "unit (linux core 15/15)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116381934,
+        "name": "unit (windows core 1/12)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116381988,
+        "name": "unit (linux core 7/15)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116381990,
+        "name": "unit (linux core 4/15)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116381998,
+        "name": "unit (windows core 4/12)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116382006,
+        "name": "unit (linux core 8/15)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116384662,
+        "name": "unit (windows core 7/12)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116384664,
+        "name": "unit (windows core 9/12)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116384712,
+        "name": "unit (windows core 6/12)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116384772,
+        "name": "unit (windows core 8/12)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116384920,
+        "name": "unit (windows core 12/12)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116384957,
+        "name": "unit (linux app)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116384972,
+        "name": "unit (linux cli, server, clients)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116385021,
+        "name": "unit (windows core 10/12)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116385060,
+        "name": "unit (windows core 11/12)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116385187,
+        "name": "unit (linux atlas boundary)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116387051,
+        "name": "unit (linux desktop Bun 1/3)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116387148,
+        "name": "unit (linux relay)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116387278,
+        "name": "unit (linux desktop Bun 2/3)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116387307,
+        "name": "unit (linux desktop Bun 3/3)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116387534,
+        "name": "unit (linux desktop Node)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116387581,
+        "name": "unit (linux other packages)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116387711,
+        "name": "unit (linux gates, relay)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116387769,
+        "name": "unit (linux httpapi 1/2)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116387994,
+        "name": "unit (linux httpapi 2/2)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116388113,
+        "name": "unit (linux sandbox proofs)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116389725,
+        "name": "unit (windows app unit)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116389947,
+        "name": "unit (windows app browser 3/3)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116389975,
+        "name": "unit (windows app browser 2/3)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116390077,
+        "name": "unit (windows app browser 1/3)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116390204,
+        "name": "unit (windows cli)",
+        "conclusion": "failure"
+      },
+      {
+        "id": 132116390247,
+        "name": "unit (windows clients, SDK, TUI)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116390310,
+        "name": "unit (windows server)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116390481,
+        "name": "unit (windows atlas boundary 1/2)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116390595,
+        "name": "unit (windows atlas boundary 2/2)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116390721,
+        "name": "unit (windows process query, rollback)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116392377,
+        "name": "unit (windows desktop Bun 1/3)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116392422,
+        "name": "unit (windows relay)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116392466,
+        "name": "unit (windows desktop Bun 2/3)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116392547,
+        "name": "unit (windows desktop Bun 3/3)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116392666,
+        "name": "unit (windows desktop Node)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116392764,
+        "name": "unit (windows other packages)",
+        "conclusion": "success"
+      },
+      {
+        "id": 132116392807,
+        "name": "unit (windows script)",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "failures": [
+    {
+      "job": 132116381748,
+      "test": "tool-safety-loopback.test.ts:134",
+      "result": "485 pass, 1 fail; Omni636 own, zero delegated. TcpProxy.listen refused acquisition before parser assertions; timeout, child exit and readiness failure share the same HOLD reason. Actual cause unknown. Same source passed the third cold. No timeout increase or refusal bypass.",
+      "raw": {
+        "file": "root-fourth-core-linux13.log",
+        "sha256": "0be3cc56c2dc5ec687728b5b4491066d9131053ac0fac8d87a3b1205e55615e8"
+      }
+    },
+    {
+      "job": 132116390204,
+      "test": "apps/cli/test/build-runtime.test.ts:116",
+      "result": "286 pass, 52 skip, 1 fail. EBUSY renaming executable after awaited Node launcher version. Helper joins stdout, stderr and child.exited; launcher child exit is joined. Actual handle holder unknown. Same source passed third cold.",
+      "raw": {
+        "file": "root-fourth-ui-windows-cli.log",
+        "sha256": "c925e0b4e019b3a131d32fe37e40cc42d65c7af51116b2209ce570fb59159f2b"
+      }
+    }
+  ],
+  "attempt2": {
+    "status": "completed",
+    "scope": "One bounded rerun of failed jobs only, on identical source, preserving all assertions and timeouts; original failure evidence retained.",
+    "coreLinux13": {
+      "job": 132136307234,
+      "conclusion": "success",
+      "passed": 486,
+      "failed": 0,
+      "skipped": 1,
+      "assertions": 3912,
+      "files": 55,
+      "seconds": 91.37,
+      "omniSpawns": 642,
+      "delegated": 0,
+      "actualExecution": "Turbo cache miss c10968d09d7d878c; zero cached tasks",
+      "targetCase": {
+        "passed": true,
+        "seconds": 13.337539,
+        "assertions": 18,
+        "junitArtifact": 14072123128
+      },
+      "rawSHA256": "b204969b8f8e14591e979cfc8fbabf28e191e905848ba345ec3fde6075a2cc55",
+      "junitZIP_SHA256": "322c0d6fd29a60919cd772da766658cc62d8ee50c97f949fce15c567ab44d4c9",
+      "limit": "No mechanism established for first-attempt HOLD; original failure retained. Identical source, all deadlines and refusal behavior preserved."
+    },
+    "conclusion": "success",
+    "source": "46530d548a6a7713231d9f30bc9bd1bc0321c01f",
+    "windowsCLI": {
+      "job": 132136307279,
+      "conclusion": "success",
+      "passed": 287,
+      "skipped": 52,
+      "failed": 0,
+      "assertions": 2556,
+      "files": 51,
+      "seconds": 168.51,
+      "omniSpawns": 12,
+      "delegated": 0,
+      "actualExecution": "Turbo cache miss d4e261db480cf308; zero cached tasks",
+      "formerlyFailingCase": {
+        "name": "compiled native CLI exposes owned help/version and isolated service/serve lifecycle",
+        "passed": true,
+        "milliseconds": 20795.1
+      },
+      "rawSHA256": "22a60a54fcd3f4a741167bd93974dd7cad95f34128e8981e308d5644fd9bb66b",
+      "limit": "Actual first-attempt EBUSY handle holder remains unknown; original failure retained."
+    }
+  },
+  "e2e": {
+    "run": "43492035272",
+    "source": "46530d548a6a7713231d9f30bc9bd1bc0321c01f",
+    "bins": [
+      {
+        "bin": 1,
+        "passed": 53,
+        "failed": 0,
+        "skipped": 0,
+        "flaky": 0,
+        "retryAttempts": 0,
+        "rawSHA256": "83b4a02e697b2a2e0ac1221fff34aa90c2013486f2ed846893ed8276b2c9d604"
+      },
+      {
+        "bin": 2,
+        "passed": 58,
+        "failed": 0,
+        "skipped": 0,
+        "flaky": 0,
+        "retryAttempts": 0,
+        "rawSHA256": "fd8f2b4e9366df2591248f515087658fe1f37932ae6eca786ad93ad84f2234e9"
+      },
+      {
+        "bin": 3,
+        "passed": 62,
+        "failed": 0,
+        "skipped": 1,
+        "flaky": 0,
+        "retryAttempts": 0,
+        "rawSHA256": "6952aa9c61e65f705055323cf2ffbf63ae78c06a74336bb7184d5b24e4b5d913"
+      },
+      {
+        "bin": 4,
+        "passed": 62,
+        "failed": 0,
+        "skipped": 0,
+        "flaky": 0,
+        "retryAttempts": 0,
+        "rawSHA256": "3792af322332d602cccd044347ae6fbb458e343e6bd14c145c70edc42d343045"
+      },
+      {
+        "bin": 5,
+        "passed": 115,
+        "failed": 0,
+        "skipped": 1,
+        "flaky": 1,
+        "retryAttempts": 1,
+        "rawSHA256": "52a53e4cabaea923f907c346ebdd6909aa537053892f821792b9569407d50147"
+      },
+      {
+        "bin": 6,
+        "passed": 88,
+        "failed": 0,
+        "skipped": 0,
+        "flaky": 0,
+        "retryAttempts": 0,
+        "rawSHA256": "e61bcbb0b28b2654ce6c7ebae8fa8895aa70168518fc9aaa9a71ce3d44f76628"
+      },
+      {
+        "bin": 7,
+        "passed": 72,
+        "failed": 0,
+        "skipped": 0,
+        "flaky": 0,
+        "retryAttempts": 0,
+        "rawSHA256": "187276bdd73e49ad8ee4fc6183f3ef0bff0e1a19b72134d4922b8d6c1064bf91"
+      },
+      {
+        "bin": 8,
+        "passed": 60,
+        "failed": 0,
+        "skipped": 1,
+        "flaky": 0,
+        "retryAttempts": 0,
+        "rawSHA256": "f3bb8883ce1b2e727d05228e217892d750e073d97b5af2985b71c710af899028"
+      }
+    ],
+    "totalPass": 570,
+    "totalFail": 0,
+    "totalSkip": 3,
+    "totalFlaky": 1,
+    "configuredRetries": 2,
+    "shardStepMinutes": 12
+  },
+  "laterFixtureDelta": {
+    "commits": [
+      "6e6c6bcce2",
+      "9f8c96e1e7"
+    ],
+    "file": "packages/app-shell/e2e/regression/session-request-docks.spec.ts",
+    "reason": "Original permission observer accepted any POST and captured /api/model/execution, a metadata read. Exclude exactly that read; all unexpected writes remain observable and exact reply assertions stay unchanged. Original full attempt needed one configured retry for this case.",
+    "focusedRun": 43496472513,
+    "snapshot": "a1c86317d7b84a0dc3fc959aadd4671cc05339d3",
+    "result": "4 passed; one worker, zero retries. Full suite source remains46530, not the later fixture snapshot.",
+    "blob": "23dcf64e6475376ae24579da7e8e14bcd7a11cfb",
+    "blobIdentityVerified": "Current worktree hash-object equals GitHub snapshot blob."
+  },
+  "typechecks": {
+    "coreLocal": {
+      "command": "GOMAXPROCS=2 GOMEMLIMIT=6GiB bun typecheck",
+      "directory": "packages/core",
+      "exit": 0
+    },
+    "coreHosted": {
+      "run": 43494850470,
+      "source": "46530d548a6a7713231d9f30bc9bd1bc0321c01f",
+      "result": "success"
+    },
+    "e2eLaterObserver": {
+      "command": "bun run typecheck:e2e",
+      "directory": "packages/app-shell",
+      "exit": 0
+    }
+  },
+  "ledger": {
+    "closed": 65,
+    "total": 65,
+    "pending": []
+  },
+  "scope": "Complete workflow concluded success on attempt2, identical46530 source. First attempt68success2failure; only the two failed jobs reran. One E2E flaky and three skips remain explicit. Final code delta is the separately qualified permission observer; no full final-HEAD claim.",
+  "staticChecks": {
+    "guards": {
+      "command": "bun run check:guards --base origin/dev",
+      "exit": 0,
+      "rules": 78,
+      "changedPaths": 753,
+      "gate": 0,
+      "warnings": 25,
+      "errors": 0
+    },
+    "boundaries": {
+      "exit": 0,
+      "files": 5926,
+      "ledgered": 91,
+      "new": 0,
+      "stale": 0
+    },
+    "spawnImports": {
+      "exit": 0,
+      "files": 4146,
+      "allowlistedSites": 66
+    },
+    "godfile": {
+      "exit": 0
+    }
+  },
+  "leadVerdict": "APPROVE original65 bounded findings; all runtime sources are the integrated fourth snapshot, later observer is independently scoped green. No merge/release authorization inferred."
+}

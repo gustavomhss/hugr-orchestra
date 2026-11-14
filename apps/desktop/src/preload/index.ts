@@ -209,6 +209,11 @@ const api: ElectronAPI = {
     ipcRenderer.on("live-levels", handler)
     return () => ipcRenderer.removeListener("live-levels", handler)
   },
+  getLiveRecoverySnapshot: () => ipcRenderer.invoke("get-live-recovery"),
+  retryLiveRecovery: (id) => ipcRenderer.invoke("retry-live-recovery", id),
+  finishLiveRecovery: (id) => ipcRenderer.invoke("finish-live-recovery", id),
+  exportLiveRecovery: (id) => ipcRenderer.invoke("export-live-recovery", id),
+  discardLiveRecovery: (id) => ipcRenderer.invoke("discard-live-recovery", id),
   getLiveRunState: () => ipcRenderer.invoke("get-live-run-state"),
   onLiveRunState: (cb) => {
     const handler = (_: unknown, state: Parameters<typeof cb>[0]) => cb(state)

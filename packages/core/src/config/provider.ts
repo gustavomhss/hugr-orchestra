@@ -1,6 +1,7 @@
 export * as ConfigProvider from "./provider"
 
 import { Schema } from "effect"
+import { GenerationOptions, ProviderOptions } from "@orchestra/schema/llm"
 import { ProviderV2 } from "../provider"
 import { ModelV2 } from "../model"
 
@@ -56,6 +57,8 @@ class Model extends Schema.Class<Model>("ConfigV2.Model")({
   variants: Schema.Struct({
     id: ModelV2.VariantID,
     ...Request.fields,
+    generation: GenerationOptions.annotate({ parseOptions: { onExcessProperty: "error" } }).pipe(Schema.optional),
+    providerOptions: ProviderOptions.pipe(Schema.optional),
   }).pipe(Schema.Array, Schema.optional),
   cost: Schema.Union([Cost, Cost.pipe(Schema.Array)]).pipe(Schema.optional),
   disabled: Schema.Boolean.pipe(Schema.optional),

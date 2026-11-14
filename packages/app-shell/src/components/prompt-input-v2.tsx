@@ -38,6 +38,8 @@ import {
   type PromptInputV2Interaction,
 } from "@orchestra/session-ui/v2/prompt-input/interaction"
 
+const modelDefaultVariantID = JSON.stringify(["model-default"])
+
 export type PromptInputV2ComposerProps = {
   class?: string
   controller: PromptInputV2ComposerController
@@ -78,9 +80,9 @@ export function PromptInputV2Composer(props: PromptInputV2ComposerProps) {
           variant.options().map((option) => ({
             ...option,
             label:
-              option.id === "default"
-                ? language.t("orchestra.chat.reasoning.default")
-                : language.t("orchestra.chat.reasoning", { level: option.id }),
+              option.id === modelDefaultVariantID
+                ? option.label
+                : language.t("orchestra.chat.reasoning", { level: option.label }),
           })),
       },
     },
@@ -264,6 +266,7 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
       if (!popover) controller.dispatch({ type: "popover.close" })
     },
     newSessionWorktree: () => props.newSessionWorktree,
+    newSessionWorkspaceReady: () => props.newSessionWorkspaceReady ?? true,
     onNewSessionWorktreeReset: props.onNewSessionWorktreeReset,
     shouldQueue: props.shouldQueue,
     onQueue: props.onQueue,
@@ -373,7 +376,18 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
       keybind: command.keybindParts(item.id),
     })),
   )
-  const variants = createMemo(() => ["default", ...props.controls.model.selection.variant.list()])
+  const variants = createMemo(() => {
+    const selection = props.controls.model.selection
+    const known = selection.variant.list()
+    const raw = selection.variant.selected()
+    const values = typeof raw === "string" && !known.includes(raw) ? [...known, raw] : known
+    return [
+      { id: modelDefaultVariantID, label: language.t("model.variant.default"), value: undefined,
+        disabled: false },
+      ...values.map((value) => ({ id: JSON.stringify(["variant", value]), label: value, value,
+        disabled: !known.includes(value) })),
+    ]
+  })
   const controller = createPromptInputV2Controller({
     store: () => prompt.capture().store,
     state: interaction,
@@ -440,9 +454,19 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
     view: {
       placeholder: designPlaceholder,
       variant: {
-        options: () => variants().map((value) => ({ id: value, label: value })),
-        current: () => props.controls.model.selection.variant.current() ?? "default",
-        onSelect: (value) => props.controls.model.selection.variant.set(value === "default" ? undefined : value),
+        options: () => variants().map((option) => ({ id: option.id, label: option.label, disabled: option.disabled })),
+        current: () => {
+          const raw = props.controls.model.selection.variant.selected()
+          const effective = props.controls.model.selection.variant.current()
+          return typeof raw === "string" ? JSON.stringify(["variant", raw])
+            : raw === null ? modelDefaultVariantID
+              : typeof effective === "string" ? JSON.stringify(["variant", effective]) : modelDefaultVariantID
+        },
+        onSelect: (id) => {
+          const option = variants().find((value) => value.id === id)
+          if (!option || option.disabled) return
+          props.controls.model.selection.variant.set(option.value)
+        },
         keybind: () => command.keybindParts("model.variant.cycle"),
       },
       submit: {

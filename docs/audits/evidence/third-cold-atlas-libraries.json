@@ -1,0 +1,121 @@
+{
+  "version": 1,
+  "scope": "Third cold Atlas/libraries results and bounded follow-up Core fixture/wiring receipts; no epic closure.",
+  "fullCold": {
+    "runID": "43479893813",
+    "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43479893813",
+    "source": "c9ffb56cb19050f65946b54ff9c5f799d0e6becb",
+    "conclusion": "failure",
+    "jobs": {
+      "success": 63,
+      "failure": 7,
+      "cancelled": 0
+    },
+    "limit": "Passing owned lanes and later focused repairs do not rewrite this failed full run."
+  },
+  "atlas": {
+    "jobID": 132073705914,
+    "conclusion": "success",
+    "typecheck": "pass",
+    "guards": 13,
+    "guardsResult": "pass",
+    "ownDedicatedTests": 18,
+    "ownSnapshot": "Fresh: 1 Genesis unit, 2 static Own files; committed skills exactly recomposed.",
+    "product": {
+      "pass": 4529,
+      "skip": 17,
+      "todo": 3,
+      "total": 4549,
+      "filesPass": 589,
+      "filesSkip": 2,
+      "filesTotal": 591
+    }
+  },
+  "libraries": {
+    "linux": {"jobID": 132074164847, "conclusion": "success", "actualTasks": 11, "cachedTasks": 0, "pass": 1849, "skip": 31, "fail": 0, "assertions": 9224, "files": 144},
+    "windows": {"jobID": 132074171228, "conclusion": "success", "actualTasks": 9, "cachedTasks": 0, "pass": 1382, "skip": 41, "fail": 0, "assertions": 6951, "files": 109},
+    "claude": {
+      "linux": {"pass": 199, "skip": 0, "fail": 0, "assertions": 1051, "files": 18},
+      "windows": {"pass": 189, "skip": 10, "fail": 0, "assertions": 1038, "files": 18},
+      "qualification": "Actual engine-claude-code Bun task output, not package-scope selection. Windows skips are ten sign-in/account/status CLI controls."
+    },
+    "codeMode": {
+      "passPerOS": 419,
+      "failPerOS": 0,
+      "assertionsPerOS": 1420,
+      "filesPerOS": 12
+    },
+    "platformLimits": [
+      "Linux additionally executes Script 318P and HttpApiCodegen 139P; those tasks are not in the Windows nine-task set.",
+      "Only the Arsenal task supplies a verified suite Omni line: 2 spawns, 0 delegated per OS. Do not borrow it as Claude or CodeMode control proof.",
+      "No separate invented incoming-seat/default-label coverage claim; qualification follows actual named tasks and their reported test counts."
+    ]
+  },
+  "wiringAndCLI": {
+    "runID": "43484346251",
+    "snapshot": "9a1921a3136d439647673ddbbb4da67bc2212e06",
+    "conclusion": "success",
+    "files": [
+      "packages/core/test/omni-expect-guard.test.ts",
+      "packages/core/test/browser-suite-control.test.ts"
+    ],
+    "linuxJobID": 132088702844,
+    "windowsJobID": 132088702403,
+    "perOS": {"pass": 31, "fail": 0, "assertions": 94, "files": 2, "omniDeclared": 5, "omniSpawns": 5, "delegated": 0},
+    "limit": "Closed audited-wrapper wiring plus actual CLI acceptance only; not the full Core package."
+  },
+  "seedTransaction": {
+    "runID": "43484348604",
+    "snapshot": "29e000fb54e8630e073fcd9aec839f355394957a",
+    "conclusion": "failure",
+    "explicitPerTestTimeoutMs": 30000,
+    "files": [
+      "packages/core/test/move-session.test.ts",
+      "packages/core/test/actions/operations-recovery.test.ts"
+    ],
+    "ledgerCase": {
+      "records": 100000,
+      "linuxElapsedMs": 5368.81,
+      "windowsElapsedMs": 7340.91,
+      "resultPerOS": "pass"
+    },
+    "linux": {"jobID": 132088709966, "pass": 13, "fail": 1, "assertions": 110, "omniSpawns": 102, "delegated": 0},
+    "windows": {"jobID": 132088710437, "pass": 14, "fail": 0, "assertions": 125, "omniSpawns": 122, "delegated": 0},
+    "remainingFailure": "MoveSession independent-writer case: Writer acknowledgement timed out: READY after the unchanged 20000ms observer timer, move-session-writer.ts:81, called by move-session.test.ts:314.",
+    "limit": "The fixture bulk seed passes under 30s, but this mixed cohort is not green on Linux. This does not prove a full Core package gate."
+  },
+  "filteredDiagnostic": {
+    "runID": "43486151874",
+    "snapshot": "16b405b0514d7f0c0ce1e3102be10fe63172b8b6",
+    "linuxJobID": 132095026522,
+    "conclusion": "success",
+    "pass": 1,
+    "fail": 0,
+    "assertions": 15,
+    "omniSpawns": 26,
+    "delegated": 0,
+    "filter": "independent writer byte",
+    "limit": "One filtered Linux case; not the original whole cohort."
+  },
+  "newCohort": {
+    "runID": "43488702717",
+    "snapshot": "2bb0f515b635aa3c37813021f83568f8f1fc6fae",
+    "apiStatusAtCollection": "completed/success after this packet was frozen",
+    "rawQualificationIncluded": false,
+    "limit": "No resolution or whole-cohort qualification claim in this frozen evidence packet; Root owns subsequent qualification."
+  },
+  "rawLogSHA256": {
+    "atlas": "86a6bbdf024ff9e2e577c4de575cca4c53eb2afa1014de8dfc33339de7c26337",
+    "librariesLinux": "98ce648196013c41dc9ad102d9189f8cd36b84bf081ee9e8f2b9b6b09bd53c66",
+    "librariesWindows": "dfba92c0cc1699b543ef3e9967d4969d3d69d5085587057f005a411f90a2d80b",
+    "wiringLinux": "a5c2c5ac73f4b9239743fafbc14896c1ff6b2572490dc766b450bfb24cf8a4bd",
+    "wiringWindows": "b7b0e15d456a0694b452549de7de87e936898fe98d861c41ae68e98f1acb5ea7",
+    "seedCohortLinux": "3400cf1d51426e40f81d59f9db73e40bd9afc03e2f74217ff6d60427d0e0377b",
+    "seedCohortWindows": "d6b78860be9b9b2c2886c276361f9fb21e929396f8a6fa0611f6445590806354",
+    "writerProbeLinux": "0fdef724ebc1e250ac2ba0d49aa876e580f3d19fab3408c4e6c6d1fa31b728a2"
+  },
+  "limits": [
+    "Current ledger remains unclosed; complete repaired cold aggregate acceptance is required.",
+    "No code changes, local tests, typecheck, build, generation, dispatch, retry or cancellation in this documentation packet."
+  ]
+}

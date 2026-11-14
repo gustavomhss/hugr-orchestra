@@ -52,8 +52,8 @@ testEffect(Layer.empty).live("child creation revalidates a parent deleted during
   }),
 )
 
-// Admit a new branch precisely after remove's first descendant snapshot, while it interrupts the root.
-testEffect(Layer.empty).live("remove stops children admitted during its initial stop before deleting them", () =>
+// A removal closes parent admission before stopping the existing tree.
+testEffect(Layer.empty).live("remove refuses new children during its initial stop and deletes admitted descendants", () =>
   Effect.gen(function* () {
     const interrupted: SessionV2.ID[] = []
     let onInterrupt = (_id: SessionV2.ID): Effect.Effect<void> => Effect.void
@@ -70,15 +70,18 @@ testEffect(Layer.empty).live("remove stops children admitted during its initial 
       const session = yield* SessionV2.Service
       const { db } = yield* Database.Service
       const root = yield* session.create({ location })
-      const arrivals: SessionV2.ID[] = []
+      const child = yield* session.create({ location, parentID: root.id })
+      const admissions: unknown[] = []
       onInterrupt = () => Effect.gen(function* () {
         onInterrupt = () => Effect.void
-        const child = yield* session.create({ location, parentID: root.id })
-        const grandchild = yield* session.create({ location, parentID: child.id })
-        arrivals.push(child.id, grandchild.id)
-      }).pipe(Effect.orDie)
+        admissions.push(yield* session.create({ location, parentID: root.id }).pipe(Effect.result))
+      })
       yield* session.remove(root.id)
-      expect(interrupted).toEqual([root.id, root.id, ...arrivals])
+      expect(admissions).toHaveLength(1)
+      expect(admissions[0]).toMatchObject({ _tag: "Failure", failure: {
+        _tag: "Session.NotFoundError", sessionID: root.id,
+      } })
+      expect(interrupted).toEqual([root.id, child.id])
       expect(yield* db.select().from(SessionTable).all().pipe(Effect.orDie)).toEqual([])
     }).pipe(Effect.provide(AppNodeBuilder.build(
       LayerNode.group([Database.node, EventV2.node, SessionV2.node, SessionExecution.node]),

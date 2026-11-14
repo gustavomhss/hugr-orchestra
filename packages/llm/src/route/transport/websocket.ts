@@ -143,38 +143,75 @@ export const fromWebSocket = (
     yield* waitOpen(ws, input)
     const messages = yield* Queue.bounded<string | Uint8Array, LLMError | Cause.Done<void>>(128)
 
-    const onMessage = (event: MessageEvent) => {
-      if (typeof event.data === "string") return Queue.offerUnsafe(messages, event.data)
-      const binary = binaryMessage(event.data)
-      if (binary) return Queue.offerUnsafe(messages, binary)
-      Queue.failCauseUnsafe(
-        messages,
-        Cause.fail(
-          transportError("message", "Unsupported WebSocket message payload", { url: input.url, kind: "message" }),
-        ),
-      )
-    }
-    const onError = (event: Event) => {
-      Queue.failCauseUnsafe(
-        messages,
-        Cause.fail(
-          transportError("message", `WebSocket error: ${eventMessage(event)}`, { url: input.url, kind: "message" }),
-        ),
-      )
-    }
-    const onClose = (event: CloseEvent) => {
-      if (event.code === 1000 || event.code === 1005) return Queue.endUnsafe(messages)
-      Queue.failCauseUnsafe(
-        messages,
-        Cause.fail(
-          transportError("message", `WebSocket closed with code ${event.code}`, { url: input.url, kind: "close" }),
-        ),
-      )
-    }
-    const cleanup = Effect.sync(() => {
+    const state = { terminal: false, closing: false }
+    const removeHandlers = () => {
       ws.removeEventListener("message", onMessage)
       ws.removeEventListener("error", onError)
       ws.removeEventListener("close", onClose)
+    }
+    const closeSocket = (code: number) => {
+      if (
+        state.closing ||
+        ws.readyState === globalThis.WebSocket.CLOSED ||
+        ws.readyState === globalThis.WebSocket.CLOSING
+      )
+        return
+      state.closing = true
+      try {
+        ws.close(code)
+      } catch (error) {
+        // A failure already recorded by overflow keeps ownership of the terminal cause.
+        Queue.failCauseUnsafe(
+          messages,
+          Cause.fail(
+            transportError("close", error instanceof Error ? error.message : "Failed to close WebSocket", {
+              url: input.url,
+              kind: "close",
+            }),
+          ),
+        )
+      }
+    }
+    const fail = (error: LLMError) => {
+      if (state.terminal) return
+      state.terminal = true
+      Queue.failCauseUnsafe(messages, Cause.fail(error))
+      removeHandlers()
+      closeSocket(1011)
+    }
+    const onMessage = (event: MessageEvent) => {
+      if (state.terminal) return
+      const message = typeof event.data === "string" ? event.data : binaryMessage(event.data)
+      if (message === undefined)
+        return fail(
+          transportError("message", "Unsupported WebSocket message payload", { url: input.url, kind: "message" }),
+        )
+      if (!Queue.offerUnsafe(messages, message))
+        fail(
+          transportError("message", "WebSocket receive queue overflow (capacity 128)", {
+            url: input.url,
+            kind: "overflow",
+          }),
+        )
+    }
+    const onError = (event: Event) =>
+      fail(transportError("message", `WebSocket error: ${eventMessage(event)}`, { url: input.url, kind: "message" }))
+    const onClose = (event: CloseEvent) => {
+      if (state.terminal) return
+      state.terminal = true
+      if (event.code === 1000 || event.code === 1005) Queue.endUnsafe(messages)
+      if (event.code !== 1000 && event.code !== 1005)
+        Queue.failCauseUnsafe(
+          messages,
+          Cause.fail(
+            transportError("message", `WebSocket closed with code ${event.code}`, { url: input.url, kind: "close" }),
+          ),
+        )
+      removeHandlers()
+    }
+    const cleanup = Effect.sync(() => {
+      state.terminal = true
+      removeHandlers()
     }).pipe(Effect.andThen(Queue.shutdown(messages)))
 
     ws.addEventListener("message", onMessage)
@@ -192,14 +229,7 @@ export const fromWebSocket = (
             }),
         }),
       messages: Stream.fromQueue(messages),
-      close: cleanup.pipe(
-        Effect.andThen(
-          Effect.sync(() => {
-            if (ws.readyState === globalThis.WebSocket.CLOSED || ws.readyState === globalThis.WebSocket.CLOSING) return
-            ws.close(1000)
-          }),
-        ),
-      ),
+      close: cleanup.pipe(Effect.andThen(Effect.sync(() => closeSocket(1000)))),
     }
   })
 

@@ -13,12 +13,15 @@ const layer = Layer.effect(
   Effect.gen(function* () {
     const store = yield* SessionStore.Service
     const locations = yield* LocationServiceMap.Service
-    const coordinator = yield* SessionRunCoordinator.make<SessionSchema.ID, SessionRunner.RunError>({
+    const coordinator = yield* SessionRunCoordinator.make<
+      SessionSchema.ID,
+      SessionRunner.RunError | SessionExecution.MissingSessionError
+    >({
       drain: Effect.fnUntraced(function* (sessionID: SessionSchema.ID, force) {
         const session = yield* store.get(sessionID)
-        // A coalesced wake can outlive its Session (removal interrupts, then deletes); only an explicit run is a defect.
+        // A coalesced wake can outlive its Session; an explicit resume reports the vanished placement to its caller.
         if (!session && !force) return
-        if (!session) return yield* Effect.die(`Session not found: ${sessionID}`)
+        if (!session) return yield* new SessionExecution.MissingSessionError({ sessionID })
         // Undo remains reversible while staged. A wake admitted during its filesystem window must not promote the
         // pending input or read the hidden history; explicit continuation reports the same busy contract.
         if (session.revert) {

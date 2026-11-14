@@ -19,7 +19,7 @@ export const escapeRegexHint =
   'To match special characters like ( ) [ ] { } + * ? . literally, escape them with a backslash (e.g. "\\\\(") or test for them with String.includes instead.'
 
 export const toHostRegex = (arg: unknown, method: string, node: AstNode, extraFlags = ""): RegExp => {
-  if (arg instanceof SandboxRegExp) return arg.regex
+  if (arg instanceof SandboxRegExp) return arg.native()
   if (typeof arg === "string") {
     try {
       return new RegExp(arg, extraFlags)
@@ -57,9 +57,9 @@ export const invokeRegExpMethod = (
 ): unknown => {
   switch (name) {
     case "test":
-      return value.regex.test(coerceToString(args[0]))
+      return value.native().test(coerceToString(args[0]))
     case "exec": {
-      const matched = value.regex.exec(coerceToString(args[0]))
+      const matched = value.native().exec(coerceToString(args[0]))
       return matched === null ? null : matchToValue(matched)
     }
     case "toString":

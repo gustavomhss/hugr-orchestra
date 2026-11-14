@@ -386,6 +386,10 @@ interface ScannerBinarySpec {
 	readonly cleanExitCodes: readonly number[];
 	readonly hitExitCodes: readonly number[];
 }
+export interface RecordRef {
+	readonly contentHash: string;
+	readonly eventId: string;
+}
 /** F3 clause 1. Supplied by the harness, frozen on entry; the model never supplies any field of it. */
 export interface AtlasBinding {
 	readonly storage: {
@@ -426,10 +430,6 @@ export interface AtlasBinding {
 	};
 }
 export type StoreState = "complete" | "partial" | "unavailable";
-export interface RecordRef {
-	readonly contentHash: string;
-	readonly eventId: string;
-}
 interface SlabStates {
 	readonly awareness: {
 		readonly [F in keyof Awareness]: FacetState;
@@ -546,10 +546,9 @@ export type ProjectRuleDecision = {
 	readonly scope?: string;
 	readonly by: string;
 };
-/** R1 (D30) — `indexed` writes the rule through the bound `write` AS THE PROPOSAL'S MEMBER (template, MEM-3 cap and
- *  named scanner judged there), then appends the `memory-decision`; a refused write appends nothing and the proposal
- *  stays open. `discarded` only appends. A non-empty `rule`/`scope` replaces the proposal's text. The binding gives the
- *  storage root and the scanner; its `memoryOwner` never writes. */
+/** R1 (D30) — candidate preparation runs the actual emit gates AS THE PROPOSAL'S MEMBER. A single create-only
+ *  receipt then publishes both review and Memory, with no second append. Discard publishes no Memory record.
+ *  Same-intent receipt retries precede scanner/cap; legacy decisions retain their historical closed semantics. */
 export declare function decideProjectRule(input: AtlasBinding, decision: ProjectRuleDecision, at: string): DecisionVerdict;
 
 export {};

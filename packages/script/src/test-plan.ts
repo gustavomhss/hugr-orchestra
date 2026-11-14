@@ -31,6 +31,8 @@ export type Timings = {
   files: Record<string, Record<string, number>>
   // Declared scheduling floors, separate from cold-run measurements. Same keys as `files`.
   reserves?: Record<string, Record<string, number>>
+  // Scheduling evidence, including estimates that must not be mistaken for platform measurements.
+  provenance?: Record<string, unknown>
   // Seconds per sharded package in total, keyed `<package directory>`.
   totals: Record<string, Record<Platform, number>>
 }
@@ -41,6 +43,10 @@ export function shardCount(seconds: number, target: number, margin: number) {
 
 // Size from the larger of the measured total and current file weights, scaled by platform overhead.
 export function packageShards(timings: Timings, directory: string, platform: Platform) {
+  if (directory === "apps/desktop") return desktopAnchors.length
+  if (directory === "packages/app-shell") return platform === "windows" ? appBrowserAnchors.length : 1
+  if (directory === "modules/atlas/boundary") return platform === "windows" ? 2 : 1
+  if (directory === "modules/maestro/coordination") return platform === "windows" ? 2 : 1
   const total = timings.totals[directory]?.[platform]
   if (total === undefined) return 1
   const weights = weigh(directory, timings.files[`${directory}:${platform}`] ?? {}, total, UNTIMED_FLOOR, timings.reserves?.[`${directory}:${platform}`])
@@ -49,9 +55,16 @@ export function packageShards(timings: Timings, directory: string, platform: Pla
 }
 
 // Longest-processing-time first: each item goes to the currently lightest bin. Deterministic for equal weights.
-export function balance(items: { name: string; weight: number }[], bins: number) {
-  const result = Array.from({ length: bins }, () => ({ seconds: 0, names: [] as string[] }))
-  for (const item of items.toSorted((a, b) => b.weight - a.weight || a.name.localeCompare(b.name))) {
+export function balance(items: { name: string; weight: number }[], bins: number, anchors: string[] = []) {
+  if (anchors.length > bins || new Set(anchors).size !== anchors.length) throw new Error("Invalid shard control anchors")
+  const result = Array.from({ length: bins }, (_, index) => {
+    const name = anchors[index]
+    if (name === undefined) return { seconds: 0, names: [] as string[] }
+    const anchor = items.find((item) => item.name === name)
+    if (!anchor) throw new Error(`Missing real process control: ${name}`)
+    return { seconds: anchor.weight, names: [name] }
+  })
+  for (const item of items.filter((item) => !anchors.includes(item.name)).toSorted((a, b) => b.weight - a.weight || a.name.localeCompare(b.name))) {
     const lightest = result.reduce((best, candidate) => (candidate.seconds < best.seconds ? candidate : best))
     lightest.seconds += item.weight
     lightest.names.push(item.name)
@@ -67,16 +80,28 @@ const UNTIMED_FLOOR = 1
 
 /** The bins `shard` prints. The floor lives here, so a test of this function is a test of the split CI runs. */
 export function plannedBins(timings: Timings, directory: string, platform: Platform) {
-  return balance(
-    weigh(
-      directory,
-      timings.files[`${directory}:${platform}`] ?? {},
-      timings.totals[directory]?.[platform] ?? 0,
-      UNTIMED_FLOOR,
-      timings.reserves?.[`${directory}:${platform}`],
-    ),
-    packageShards(timings, directory, platform),
+  if (directory === "apps/desktop") return desktopBins(timings, platform)
+  if (directory === "packages/app-shell" && platform === "windows")
+    return balance(weigh(directory, timings.files[`${directory}:${platform}`] ?? {}, 0, UNTIMED_FLOOR), appBrowserAnchors.length, appBrowserAnchors)
+  const weights = weigh(
+    directory,
+    timings.files[`${directory}:${platform}`] ?? {},
+    timings.totals[directory]?.[platform] ?? 0,
+    UNTIMED_FLOOR,
+    timings.reserves?.[`${directory}:${platform}`],
   )
+  // Currency consumed half the whole Windows Maestro run. Keep it alone; ordinary anchor balancing
+  // would add files to that bin, and a new file must join the complement without editing a list.
+  if (directory === "modules/maestro/coordination" && platform === "windows") {
+    const currency = weights.find((entry) => entry.name === "test/v2-reservation-currency.test.ts")
+    const remaining = weights.filter((entry) => entry !== currency)
+    if (!currency || remaining.length === 0) throw new Error("Windows Maestro requires currency and a nonempty complement")
+    return [
+      { seconds: currency.weight, names: [currency.name] },
+      { seconds: remaining.reduce((sum, entry) => sum + entry.weight, 0), names: remaining.map((entry) => entry.name) },
+    ]
+  }
+  return balance(weights, packageShards(timings, directory, platform))
 }
 
 export function weigh(
@@ -86,7 +111,7 @@ export function weigh(
   floorOrReserves: number | Record<string, number> = 0,
   reserves: Record<string, number> = {},
 ) {
-  const files = testFiles(path.join(root, directory)).map((file) => ({ file, bytes: statSync(path.join(root, directory, file)).size }))
+  const files = (directory === "apps/desktop" ? desktopFiles().bun : testFiles(path.join(root, directory), directory === "packages/app-shell" ? "test-browser" : "test")).map((file) => ({ file, bytes: statSync(path.join(root, directory, file)).size }))
   const known = files.filter((entry) => measured[entry.file] !== undefined)
   const unknown = files.filter((entry) => measured[entry.file] === undefined)
   const knownSeconds = known.reduce((sum, entry) => sum + (measured[entry.file] ?? 0), 0)
@@ -107,16 +132,88 @@ export function weigh(
 // Per-file seconds from a Bun JUnit report: only the top-level suites, which are named after the test file. Describe
 // blocks are nested suites with other names and are skipped.
 export function suiteTimes(xml: string) {
-  return [...xml.matchAll(/<testsuite\s[^>]*?name="([^"]+\.test\.ts)"[^>]*?time="([\d.]+)"/g)].map((match) => {
+  return [...xml.matchAll(/<testsuite\s[^>]*?name="([^"]+(?:\.test|_test|\.spec|_spec)\.[jt]sx?)"[^>]*?time="([\d.]+)"/g)].map((match) => {
     const name = (match[1] ?? "").replaceAll("\\", "/")
-    return [name.match(/(?:^|\/)(test\/.+)$/)?.[1] ?? name, Number(match[2])] as [string, number]
+    return [name.match(/(?:^|\/)((?:test-browser|test|src|scripts)\/.+)$/)?.[1] ?? name, Number(match[2])] as [string, number]
   })
 }
 
-function testFiles(directory: string) {
-  return (readdirSync(path.join(directory, "test"), { recursive: true }) as string[])
-    .map((file) => `test/${file.replaceAll("\\", "/")}`)
-    .filter((file) => file.endsWith(".test.ts"))
+// Report names carry their package identity; an unknown lane must never be folded into Core timings.
+export function timingReport(report: string) {
+  const name = report.replaceAll("\\", "/").split("/").at(-1) ?? ""
+  const match = name.match(/^(linux|windows)-(core-\d+(?:-watcher)?|(?:packages|windows)-desktop-bun-\d+|windows-atlas-\d+|windows-app-browser-\d+|windows-maestro-\d+)\.xml$/)
+  if (!match) return
+  const platform: Platform = match[1] === "linux" ? "linux" : "windows"
+  const part = match[2]!
+  const directory = part.includes("desktop-bun-") ? "apps/desktop"
+    : part.startsWith("windows-atlas-") ? "modules/atlas/boundary"
+    : part.startsWith("windows-app-browser-") ? "packages/app-shell"
+    : part.startsWith("windows-maestro-") ? "modules/maestro/coordination" : "packages/core"
+  return { platform, directory }
+}
+
+// The plan job has Node but no dependencies. Accept the current literal exclusions, never guess at new glob syntax.
+export function desktopIgnores(config: string) {
+  if (Buffer.byteLength(config) > 32_768) throw new Error("Desktop bunfig exceeds the bounded exclusion parser")
+  const section = config.split(/^\[test\]\s*$/m)[1]?.split(/^\[/m)[0]
+  const source = section?.replace(/#[^\n]*/g, "") ?? ""
+  const matches = [...source.matchAll(/(?:^|\n)\s*pathIgnorePatterns\s*=\s*\[([^\]]*)\][ \t]*(?=\r?\n|$)/g)]
+  if (matches.length !== 1 || [...source.matchAll(/\bpathIgnorePatterns\b/g)].length !== 1) throw new Error("Expected one literal Desktop pathIgnorePatterns array")
+  const body = matches[0]![1]!
+  const paths = [...body.matchAll(/"([^"\\]*)"/g)].map((match) => match[1]!)
+  if (!/^\s*"[^"\\]*"(?:\s*,\s*"[^"\\]*")*\s*,?\s*$/.test(body) || paths.length === 0 || new Set(paths).size !== paths.length)
+    throw new Error("Unsupported Desktop exclusion syntax")
+  if (paths.some((file) => file !== "src/**/*.node.test.ts" && !/^(?:[a-zA-Z0-9_-]+\/)*[a-zA-Z0-9_.-]+\.test\.[jt]sx?$/.test(file)))
+    throw new Error("Unsupported Desktop exclusion pattern")
+  if (!paths.includes("src/**/*.node.test.ts")) throw new Error("Desktop Node exclusion is missing")
+  return paths
+}
+
+export function desktopFiles() {
+  const directory = path.join(root, "apps/desktop")
+  const ignores = desktopIgnores(readFileSync(path.join(directory, "bunfig.toml"), "utf8"))
+  const files = desktopTree(directory).filter((file) => /(?:\.test|_test|\.spec|_spec)\.[jt]sx?$/.test(file)).toSorted()
+  const node = files.filter((file) => file.startsWith("src/") && file.endsWith(".node.test.ts"))
+  const excluded = files.filter((file) => ignores.includes(file))
+  const bun = files.filter((file) => !node.includes(file) && !excluded.includes(file))
+  if (!bun.length || !node.length) throw new Error("Desktop discovery selected an empty runner")
+  return { bun, node, excluded }
+}
+
+function desktopTree(directory: string, prefix = ""): string[] {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    if (entry.name === "node_modules" || entry.name === ".git") return []
+    const file = `${prefix}${entry.name}`
+    if (entry.isDirectory()) return desktopTree(path.join(directory, entry.name), `${file}/`)
+    return entry.isFile() ? [file] : []
+  })
+}
+
+export const desktopAnchors = ["src/main/omni-process.test.ts", "src/main/owned-serve.test.ts", "src/main/owned-serve-omni.test.ts"]
+
+export function desktopBins(timings: Timings, platform: Platform) {
+  const weights = weigh("apps/desktop", timings.files[`apps/desktop:${platform}`] ?? {}, timings.totals["apps/desktop"]?.[platform] ?? 0, UNTIMED_FLOOR)
+  const bins = desktopAnchors.map((name) => {
+    const anchor = weights.find((entry) => entry.name === name)
+    if (!anchor) throw new Error(`Missing Desktop real process control: ${name}`)
+    return { seconds: anchor.weight, names: [name] }
+  })
+  for (const entry of weights.filter((entry) => !desktopAnchors.includes(entry.name)).toSorted((a, b) => b.weight - a.weight || a.name.localeCompare(b.name))) {
+    const bin = bins.reduce((best, candidate) => candidate.seconds < best.seconds ? candidate : best)
+    bin.seconds += entry.weight
+    bin.names.push(entry.name)
+  }
+  return bins
+}
+
+export const appBrowserAnchors = [
+  "test-browser/lean-chapter-route.test.ts", "test-browser/lean-native-product.test.ts", "test-browser/prompt-retry.test.ts",
+]
+
+function testFiles(directory: string, folder = "test") {
+  return (readdirSync(path.join(directory, folder), { recursive: true }) as string[])
+    .map((file) => `${folder}/${file.replaceAll("\\", "/")}`)
+    .filter((file) => folder === "test-browser" ? /(?:\.test|_test|\.spec|_spec)\.[jt]sx?$/.test(file) : file.endsWith(".test.ts"))
     .toSorted()
 }
 
@@ -158,6 +255,13 @@ function shard(timings: Timings, args: string[]) {
 }
 
 function plan(timings: Timings) {
+  // Validate the current Desktop discovery and all three real controls before emitting matrix entries.
+  desktopBins(timings, "linux")
+  desktopBins(timings, "windows")
+  plannedBins(timings, "packages/app-shell", "windows")
+  if (plannedBins(timings, "modules/atlas/boundary", "windows").some((bin) => bin.names.length === 0))
+    throw new Error("Windows Boundary selected an empty shard")
+  plannedBins(timings, "modules/maestro/coordination", "windows")
   const linuxCore = packageShards(timings, "packages/core", "linux")
   const windowsCore = packageShards(timings, "packages/core", "windows")
   const unit = [
@@ -189,17 +293,15 @@ export function coreShards(name: Platform, host: string, count: number) {
   }))
 }
 
-// The package lanes. Core is sharded by time above; these stay fixed and are sized from the round 2 epic run (seconds of test
-// time, Linux / Windows): app 283 / 301, cli 223 / 177, server 37 / 65, the four small clients 38 / 39, and `atlas-boundary`,
-// whose one generator test takes about 210 / 294 s and so gets a lane of its own. `@orchestra/relay` has its own turbo
-// lane on both platforms: its package tests took over 6 minutes inside the libs complement. The libs lane is the
-// complement of every claimed package, so a package added later lands in it instead of in no lane. Repo-wide gates and
-// the Relay pytest suite are not package tests: they share the Linux gates lane and share it with no bulk package (the
-// lane that carried them with the other packages ran past the 10-minute limit). The legacy rollback proof rides in the
-// Windows atlas lane beside the process query proof, for the same reason.
+// Core is sharded by measured time above. Linux keeps its original package/proof lanes. Windows CLI, Server and
+// clients have separate clocks after cold 43453802489 exhausted the combined job before CLI started. Boundary's
+// dominant producer file gets one of two bins; Maestro's currency file has its own Windows bin, with all other
+// Maestro files in the second. Process-query and rollback have an independent lane. Package scopes
+// stay disjoint except those explicit file partitions. The libs complement still owns future packages. Relay and
+// repo gates keep their existing lanes; neither shares a bulk package's clock.
 export function packageLanes(name: Platform, host: string) {
   const linux = name === "linux"
-  const claimed = ["core", "cli", "app", "server", "sdk-next", "client", "tui", "session-ui", "atlas-boundary", "relay", ...(linux ? [] : ["desktop", "script"])].map((entry) => `@orchestra/${entry}`)
+  const claimed = ["core", "cli", "app", "server", "sdk-next", "client", "tui", "session-ui", "atlas-boundary", "relay", "desktop", ...(linux ? [] : ["script", "maestro"])].map((entry) => `@orchestra/${entry}`)
   // httpapi-codegen is a build-time generator whose tests pin POSIX paths, so it runs on Linux only.
   const excluded = name === "windows" ? [...claimed, "@orchestra/httpapi-codegen"] : claimed
   const filters = (packages: string[]) => packages.map((entry) => `--filter=@orchestra/${entry}`).join(" ")
@@ -213,17 +315,31 @@ export function packageLanes(name: Platform, host: string) {
     ...extra,
   })
   return [
-    lane("app", "app", filters(["app"]), { electron: linux }),
-    lane("cli", "cli, server, clients", filters(["cli", "server", "sdk-next", "client", "tui", "session-ui"]), { electron: linux }),
-    lane("atlas", linux ? "atlas boundary" : "atlas boundary, process query, rollback", filters(["atlas-boundary"]), {
-      electron: linux,
-      hosted: !linux,
-      rollback: !linux,
-    }),
+    ...(linux
+      ? [lane("app", "app", filters(["app"]), { electron: linux })]
+      : [
+          lane("app-unit", "app unit", filters(["app"]), { appMode: "unit" }),
+          ...[1, 2, 3].map((index) => lane(`app-browser-${index}`, `app browser ${index}/3`, filters(["app"]), { appMode: "browser", appBrowserShard: `${index}/3` })),
+        ]),
+    ...(linux
+      ? [lane("cli", "cli, server, clients", filters(["cli", "server", "sdk-next", "client", "tui", "session-ui"]), { electron: linux })]
+      : [
+          lane("cli", "cli", filters(["cli"])),
+          lane("server", "server", filters(["server"])),
+          lane("clients", "clients, SDK, TUI", filters(["client", "sdk-next", "tui", "session-ui"])),
+        ]),
+    ...(linux
+      ? [lane("atlas", "atlas boundary", filters(["atlas-boundary"]), { electron: linux, hosted: false, rollback: false })]
+      : [
+          ...[1, 2].map((index) => lane(`atlas-${index}`, `atlas boundary ${index}/2`, filters(["atlas-boundary"]), { boundaryShard: `${index}/2` })),
+          { name, host, part: "windows-process", label: "process query, rollback", hosted: true, rollback: true },
+        ]),
     lane("relay", "relay", "--filter=@orchestra/relay"),
-    // Windows desktop and script together exceed the libs lane's serial test budget.
+    ...[1, 2, 3].map((index) => lane(`desktop-bun-${index}`, `desktop Bun ${index}/3`, filters(["desktop"]), { desktop: "bun", desktopShard: `${index}/3`, electron: linux })),
+    lane("desktop-node", "desktop Node", filters(["desktop"]), { desktop: "node", electron: linux }),
+    ...(linux ? [] : [1, 2].map((index) => lane(`maestro-${index}`, `maestro ${index}/2`, filters(["maestro"]), { maestroShard: `${index}/2` }))),
+    // Windows script remains separate from the libs lane.
     ...(linux ? [] : [
-      lane("desktop", "desktop", filters(["desktop"]), { budget: 15 }),
       lane("script", "script", filters(["script"]), { budget: 15 }),
     ]),
     lane("libs", "other packages", excluded.map((entry) => `--filter=!${entry}`).join(" "), {
@@ -267,27 +383,28 @@ function refresh(timings: Timings, directory: string | undefined) {
     console.error("usage: test-plan.ts refresh <junit directory>")
     process.exit(2)
   }
-  const reports = (readdirSync(directory, { recursive: true }) as string[]).filter((file) =>
-    /(^|[\\/])(linux|windows)-core-\d+(-watcher)?\.xml$/.test(file),
-  )
+  const reports = (readdirSync(directory, { recursive: true }) as string[]).flatMap((file) => {
+    const source = timingReport(file)
+    return source ? [{ file, ...source }] : []
+  })
   if (reports.length === 0) {
-    console.error(`no core JUnit report under ${directory}`)
+    console.error(`no Core, Desktop, Boundary, App browser or Maestro JUnit report under ${directory}`)
     process.exit(1)
   }
   const measured = new Map<string, Record<string, number>>()
   for (const report of reports) {
-    const platform = path.basename(report).startsWith("linux") ? "linux" : "windows"
-    const key = `packages/core:${platform}`
+    const key = `${report.directory}:${report.platform}`
     const files = measured.get(key) ?? {}
-    for (const [file, seconds] of suiteTimes(readFileSync(path.join(directory, report), "utf8"))) files[file] = Number(seconds.toFixed(2))
+    for (const [file, seconds] of suiteTimes(readFileSync(path.join(directory, report.file), "utf8"))) files[file] = Number(seconds.toFixed(2))
     measured.set(key, files)
   }
   for (const [key, files] of measured) {
     const platform = key.endsWith("linux") ? "linux" : "windows"
     timings.files[key] = Object.fromEntries(Object.entries(files).toSorted(([a], [b]) => a.localeCompare(b)))
-    const core = timings.totals["packages/core"] ?? { linux: 0, windows: 0 }
-    core[platform] = Math.round(Object.values(files).reduce((sum, seconds) => sum + seconds, 0))
-    timings.totals["packages/core"] = core
+    const packageDirectory = key.slice(0, key.lastIndexOf(":"))
+    const total = timings.totals[packageDirectory] ?? { linux: 0, windows: 0 }
+    total[platform] = Math.round(Object.values(files).reduce((sum, seconds) => sum + seconds, 0))
+    timings.totals[packageDirectory] = total
   }
   writeFileSync(timingsFile, JSON.stringify(timings, null, 2) + "\n")
   console.error(`refreshed ${[...measured.keys()].join(", ")} from ${reports.length} reports`)

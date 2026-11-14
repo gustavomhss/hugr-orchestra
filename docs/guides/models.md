@@ -15,6 +15,81 @@ Which model providers Orchestra can use and how they are routed, plus Claude mod
 | Gemini | Not yet (implemented in the model layer) |
 | OpenAI Chat | Not yet (implemented in the model layer) |
 
+## Project provider configuration
+
+Provider settings from your global config, including custom providers, keep their full behavior. A project must be [trusted](mcp-project-trust.md) before its configuration can change provider destinations, credential environment variables, request headers or bodies, variants, execution limits, capabilities, enabled models or the default model.
+
+Before approval, project provider declarations may change only provider/model names, model families and costs. A project cannot approve itself through its own `trusted_projects` setting. Review its provider configuration before trusting it; approved settings are applied when the catalog is loaded again.
+
+## Native model variants
+
+The app and TUI check whether a model can run in the current Session before sending a prompt or known command. The check includes the selected agent, workspace and exact variant. Provider connection and agent settings changes refresh the check. A model can appear in the catalog while being unavailable in that context. Loading or a failed check keeps the draft unsent; shell commands keep their existing behavior.
+
+An explicit choice stays selected when it becomes unavailable or disappears from the catalog. Choose another available model or retry the check. Leaving the variant unset inherits the configured variant; choosing the default explicitly does not inherit a prior override. Automatic model selection waits for a successful execution check.
+
+In the TUI, “Model default” clears the variant override. A variant named `default` is a separate choice and keeps that exact name, including when it later disappears from the catalog.
+
+Older TUI preferences used the same stored `default` value for both choices. When known model metadata first becomes available, Orchestra records a separate intent: the literal variant if that model has a variant named `default`, otherwise “Model default”. This resolves the old ambiguity once; it cannot recover which choice was originally intended. The original stored variant values remain unchanged, and the recorded intent survives later catalog changes and reloads. Other explicit variant names, including an empty string, keep their exact values.
+
+Queued prompts are checked when they are admitted. In the app, an existing Session prompt whose admission acknowledgement was lost can reconcile the same retained request from its live composer, even if a later model check fails. Editing its text or raw selection creates a fresh action. This does not extend retry identity across a composer remount or reload. The TUI currently uses English interface messages.
+
+For Orchestra's native engine, put sampling and token options in `generation`. The model's base options remain in `api.settings.generation`; a selected variant overrides only the fields it supplies. Zero is a valid override, and a variant's `stop` array replaces the base array. In this example, replace `MODEL_ID` with your connected model's ID:
+
+```json
+{
+  "providers": {
+    "openai": {
+      "models": {
+        "MODEL_ID": {
+          "api": {
+            "type": "aisdk",
+            "package": "@ai-sdk/openai",
+            "settings": { "generation": { "temperature": 0.7, "maxTokens": 1024 } }
+          },
+          "variants": [{ "id": "precise", "generation": { "temperature": 0 } }]
+        }
+      }
+    }
+  }
+}
+```
+
+The canonical generation fields are `maxTokens`, `temperature`, `topP`, `topK`, `frequencyPenalty`, `presencePenalty`, `seed` and `stop`. Each protocol supports its own subset. Use `providerOptions` for protocol-specific settings, such as Anthropic thinking:
+
+```json
+{
+  "providers": {
+    "anthropic": {
+      "models": {
+        "MODEL_ID": {
+          "variants": [{
+            "id": "thinking",
+            "generation": { "maxTokens": 16000 },
+            "providerOptions": {
+              "anthropic": { "thinking": { "type": "enabled", "budgetTokens": 12000 } }
+            }
+          }]
+        }
+      }
+    }
+  }
+}
+```
+
+Move an old variant's `body.temperature` to `generation.temperature`, and its Anthropic `body.thinking` to `providerOptions.anthropic.thinking`. The old body spellings are rejected during native model resolution, before a provider request. Misspelled generation fields are rejected too. Headers and permitted body extensions retain their overlays; protocol-owned fields such as `messages`, `tools` and `model` cannot be overridden through `body`.
+
+Later trusted configuration layers merge generation fields and nested provider options into a variant with the same ID. If `request.variant` names a default variant, that variant must exist. Claude mode retains its host effort selection; this canonical variant lowering applies to the native engine.
+
+Availability is assessed for the selected executor. A connected provider can expose an API that the native engine does not support. A ready assessment checks executor support, current availability, model policies and structural variant options; protocol-specific combinations are checked when preparing the actual request. For example, enabled Anthropic thinking still requires a token budget.
+
+Claude mode checks its cached account status and accepts enabled Anthropic catalog models with supported effort levels. Canonical generation/provider options run through the native engine; Claude mode refuses those options instead of silently ignoring them. Its account status is advisory and cannot guarantee that a later provider call will be accepted.
+
+Clients can request a contextual assessment with `models.execution({ location, context, model })`, backed by `POST /api/model/execution`. Use a context with `type: "session"` and `sessionID` for a prospective selection in an existing Session, or `type: "draft"` before creating one. Both accept an optional `agentID`; a draft can also name a `parentID`. The response retains its Location and contains model entries plus an optional assessment of the exact requested Ref. An unknown candidate remains in `selection` with `model-missing`; it does not become an invented catalog entry. Omitting `model` omits `selection` and does not resolve the execution host's SDK default.
+
+This request does not create a Session, admit a prompt, change its selected agent/model, or start provider/tool work. Invalid Session, parent, agent or Location context returns a declared 404; an invalid Session chain returns 400 and unavailable policy storage returns 503. An assessment can become stale and does not replace validation when executing. Existing model list/default methods keep their global catalog behavior; a secondary host's eligibility does not enable its models globally.
+
+When an assessment is canceled, the server waits for the lookup's cleanup before ending request processing.
+
 ## Prompt estimate
 
 For automatic compaction, the heuristic prompt estimate reuses bounded JSON-encoded lengths of identical long text values. The current request structure is serialized afresh for each estimate; whole requests or conversation histories are not cached.

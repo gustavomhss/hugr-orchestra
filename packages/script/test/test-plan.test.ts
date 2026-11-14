@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
-import { balance, coreShards, packageLanes, packageShards, plannedBins, shardCount, suiteTimes, weigh, type Timings } from "../src/test-plan.ts"
+import { fileURLToPath } from "node:url"
+import { appBrowserAnchors, balance, coreShards, desktopAnchors, desktopBins, desktopFiles, desktopIgnores, packageLanes, packageShards, plannedBins, shardCount, suiteTimes, timingReport, weigh, type Timings } from "../src/test-plan.ts"
 
 const registry: { modules: { kind: string; scope: string; name: string }[] } = JSON.parse(
   readFileSync(new URL("../../../script/module-registry.json", import.meta.url), "utf8"),
@@ -17,7 +18,7 @@ describe("test shard planner", () => {
     }
   })
 
-  test("package filters cover each registered package once and keep future packages in libs", () => {
+  test("package filters cover each package once or its complete App, Desktop, Boundary or Maestro partition and keep future packages in libs", () => {
     const packages = [...registry.modules.filter((entry) => entry.kind === "bun" && entry.scope === ".").map((entry) => entry.name), "@orchestra/future-package"]
     for (const [platform, host] of [["linux", "ubuntu-24.04"], ["windows", "windows-latest"]] as const) {
       const lanes = [
@@ -31,9 +32,11 @@ describe("test shard planner", () => {
           const included = filters.filter((filter) => !filter.startsWith("!"))
           return (included.length === 0 || included.includes(name)) && !filters.includes(`!${name}`)
         }).map((lane) => lane.part)
-        expect(selected).toHaveLength(platform === "windows" && name === "@orchestra/httpapi-codegen" ? 0 : 1)
-        if (["@orchestra/desktop", "@orchestra/script"].includes(name))
+        expect(selected).toHaveLength(name === "@orchestra/desktop" || platform === "windows" && name === "@orchestra/app" ? 4 : platform === "windows" && ["@orchestra/atlas-boundary", "@orchestra/maestro"].includes(name) ? 2 : platform === "windows" && name === "@orchestra/httpapi-codegen" ? 0 : 1)
+        if (name === "@orchestra/script")
           expect(selected).toEqual([platform === "linux" ? "packages-libs" : `windows-${name.slice("@orchestra/".length)}`])
+        if (name === "@orchestra/maestro")
+          expect(selected).toEqual(platform === "linux" ? ["packages-libs"] : ["windows-maestro-1", "windows-maestro-2"])
         if (name === "@orchestra/future-package") expect(selected).toEqual([platform === "linux" ? "packages-libs" : "windows-libs"])
       }
     }
@@ -42,14 +45,270 @@ describe("test shard planner", () => {
   test("dedicated lanes preserve package filters and partition Linux HttpApi", () => {
     const linux = packageLanes("linux", "ubuntu-24.04")
     expect(linux.map((lane) => lane.part)).toEqual([
-      "packages-app", "packages-cli", "packages-atlas", "packages-relay", "packages-libs", "gates", "httpapi-1", "httpapi-2", "sandbox",
+      "packages-app", "packages-cli", "packages-atlas", "packages-relay", "packages-desktop-bun-1", "packages-desktop-bun-2", "packages-desktop-bun-3", "packages-desktop-node", "packages-libs", "gates", "httpapi-1", "httpapi-2", "sandbox",
     ])
     expect(linux.filter((lane) => "httpapi" in lane && lane.httpapi).map((lane) => "httpapiShard" in lane ? lane.httpapiShard : undefined)).toEqual(["1/2", "2/2"])
     const windows = packageLanes("windows", "windows-latest") as { part: string; filters?: string; budget?: number }[]
-    expect(windows.filter((lane) => ["windows-desktop", "windows-script", "windows-libs"].includes(lane.part)).map((lane) => lane.budget)).toEqual([15, 15, 15])
+    expect(windows.filter((lane) => ["windows-script", "windows-libs"].includes(lane.part)).map((lane) => lane.budget)).toEqual([15, 15])
     const libs = windows.find((lane) => lane.part === "windows-libs")!
     expect(libs.filters).toContain("--filter=!@orchestra/desktop")
     expect(libs.filters).toContain("--filter=!@orchestra/script")
+    expect(libs.filters).toContain("--filter=!@orchestra/maestro")
+  })
+
+  test("Desktop shards cover every discovered Bun file once, with a distinct real control on each OS", () => {
+    const directory = fileURLToPath(new URL("../../../apps/desktop/", import.meta.url))
+    const all = [...new Bun.Glob("**/*").scanSync({ cwd: directory, onlyFiles: true, followSymlinks: false })]
+      .map((file) => file.replaceAll("\\", "/"))
+      .filter((file) => !file.split("/").includes("node_modules") && /(?:\.test|_test|\.spec|_spec)\.[jt]sx?$/.test(file)).toSorted()
+    const files = desktopFiles()
+    expect([...files.bun, ...files.node, ...files.excluded].toSorted()).toEqual(all)
+    expect(files.node.length).toBeGreaterThan(0)
+    expect(files.node.every((file) => file.startsWith("src/") && file.endsWith(".node.test.ts"))).toBe(true)
+    expect(files.excluded).toEqual([
+      "src/main/app-dock-live.test.ts", "src/main/app-dock-rpc.test.ts", "src/main/app-dock-security.test.ts",
+      "src/main/app-dock-tools.test.ts", "src/main/app-dock-youtube.test.ts",
+    ])
+    expect(files.bun).toContain("electron-builder.config.test.ts")
+    expect(files.bun).toContain("scripts/finalize-latest-yml.test.ts")
+    expect(files.bun).toContain("test/live-plist.test.ts")
+    expect(files.bun).toContain("src/renderer/html.test.ts")
+    const timings = JSON.parse(readFileSync(new URL("../src/test-timings.json", import.meta.url), "utf8")) as Timings
+    for (const platform of ["linux", "windows"] as const) {
+      const bins = desktopBins(timings, platform)
+      expect(bins).toHaveLength(3)
+      expect(packageShards(timings, "apps/desktop", platform)).toBe(3)
+      expect(bins.flatMap((bin) => bin.names).toSorted()).toEqual(files.bun)
+      expect(new Set(bins.flatMap((bin) => bin.names)).size).toBe(files.bun.length)
+      expect(desktopBins(timings, platform)).toEqual(bins)
+      for (const [index, bin] of bins.entries()) {
+        expect(bin.names.filter((name) => desktopAnchors.includes(name))).toEqual([desktopAnchors[index]!])
+        expect(readFileSync(new URL(`../../../apps/desktop/${desktopAnchors[index]}`, import.meta.url), "utf8")).toContain("expectSpawn(import.meta.path)")
+      }
+    }
+  })
+
+  test("Desktop exclusion parsing accepts current literals and fails closed on new syntax", () => {
+    const config = readFileSync(new URL("../../../apps/desktop/bunfig.toml", import.meta.url), "utf8")
+    expect(desktopIgnores(config)).toContain("src/**/*.node.test.ts")
+    expect(() => desktopIgnores(config.replace('"src/**/*.node.test.ts"', '"src/**/*.test.ts"'))).toThrow("Unsupported Desktop exclusion pattern")
+    expect(() => desktopIgnores(config.replace('"src/**/*.node.test.ts"', "NODE_TESTS"))).toThrow("Unsupported Desktop exclusion syntax")
+    expect(() => desktopIgnores(`${config}\npathIgnorePatterns = []`)).toThrow()
+    expect(() => desktopIgnores(config.replace(/\]\s*$/, "] + EXTRA"))).toThrow()
+    expect(() => desktopIgnores(config.replace('"src/main/app-dock-live.test.ts",', '"src/main/app-dock-live.test.ts"'))).toThrow()
+    expect(() => desktopIgnores(config.replace('"src/**/*.node.test.ts"', "'src/**/*.node.test.ts'"))).toThrow()
+  })
+
+  test("Desktop tasks preserve complete Node execution, package filtering and bounded scheduling", () => {
+    const pkg = JSON.parse(readFileSync(new URL("../../../apps/desktop/package.json", import.meta.url), "utf8"))
+    expect(pkg.scripts.test).toBe("bun run test:bun && bun run test:node")
+    expect(pkg.scripts["test:bun"]).toBe("bun test")
+    expect(pkg.scripts["test:node"]).toBe('node --experimental-strip-types --test "src/**/*.node.test.ts"')
+    for (const platform of ["linux", "windows"] as const) {
+      const lanes = packageLanes(platform, "fixture-host") as { part: string; filters?: string; desktop?: string; desktopShard?: string; budget?: number }[]
+      const desktop = lanes.filter((lane) => lane.desktop)
+      expect(desktop.map((lane) => lane.desktop)).toEqual(["bun", "bun", "bun", "node"])
+      expect(desktop.map((lane) => lane.desktopShard)).toEqual(["1/3", "2/3", "3/3", undefined])
+      expect(desktop.every((lane) => lane.filters === "--filter=@orchestra/desktop" && lane.budget === undefined)).toBe(true)
+      expect(lanes.find((lane) => lane.part.endsWith("libs"))?.filters).toContain("--filter=!@orchestra/desktop")
+    }
+    const workflow = readFileSync(new URL("../../../.github/workflows/test.yml", import.meta.url), "utf8")
+    expect([...workflow.matchAll(/max-parallel: (\d+)/g)].map((match) => Number(match[1]))).toEqual([10, 5])
+    expect(workflow).toContain("needs: [omni, plan]")
+    expect(workflow).toContain('"${files[@]/#/./}" "${report[@]}"')
+    const desktop = workflow.split('if [ -n "$DESKTOP" ]; then')[1]?.split("# Core is sharded")[0] ?? ""
+    expect(desktop).not.toContain("ORCHESTRA_OMNI_CONTROL=declared")
+    expect(desktop).not.toContain("--timeout")
+    const turbo = JSON.parse(readFileSync(new URL("../../../turbo.json", import.meta.url), "utf8").replace(/^\s*\/\/[^\n]*/gm, ""))
+    expect(turbo.$schema).toBe("https://v2-8-13.turborepo.dev/schema.json")
+    expect(turbo.tasks["@orchestra/desktop#test:bun"]).toEqual(turbo.tasks["@orchestra/desktop#test"])
+    expect(turbo.tasks["@orchestra/desktop#test:node"]).toEqual(turbo.tasks["@orchestra/desktop#test"])
+  })
+
+  test("Windows App browser bins retain all99 files and distinct real process controls", () => {
+    const timings = JSON.parse(readFileSync(new URL("../src/test-timings.json", import.meta.url), "utf8")) as Timings
+    const directory = fileURLToPath(new URL("../../../packages/app-shell/test-browser/", import.meta.url))
+    const files = [...new Bun.Glob("**/*").scanSync({ cwd: directory, onlyFiles: true, followSymlinks: false })]
+      .map((file) => `test-browser/${file.replaceAll("\\", "/")}`)
+      .filter((file) => /(?:\.test|_test|\.spec|_spec)\.[jt]sx?$/.test(file)).toSorted()
+    const bins = plannedBins(timings, "packages/app-shell", "windows")
+    expect(files).toHaveLength(99)
+    expect(packageShards(timings, "packages/app-shell", "windows")).toBe(3)
+    expect(packageShards(timings, "packages/app-shell", "linux")).toBe(1)
+    expect(bins).toHaveLength(3)
+    expect(bins.flatMap((bin) => bin.names).toSorted()).toEqual(files)
+    expect(new Set(bins.flatMap((bin) => bin.names)).size).toBe(files.length)
+    expect(bins.flatMap((bin) => bin.names).filter((file) => file === "test-browser/model-execution-consumer.test.tsx")).toHaveLength(1)
+    expect(plannedBins(timings, "packages/app-shell", "windows")).toEqual(bins)
+    expect(appBrowserAnchors).toEqual(["test-browser/lean-chapter-route.test.ts", "test-browser/lean-native-product.test.ts", "test-browser/prompt-retry.test.ts"])
+    for (const [index, bin] of bins.entries()) {
+      expect(bin.names.filter((file) => appBrowserAnchors.includes(file))).toEqual([appBrowserAnchors[index]!])
+      expect(readFileSync(new URL(`../../../packages/app-shell/${appBrowserAnchors[index]}`, import.meta.url), "utf8")).toContain("expectSpawn(import.meta.path)")
+    }
+    const evidence = JSON.parse(readFileSync(new URL("../src/test-timings.json", import.meta.url), "utf8")).provenance["packages/app-shell"]
+    expect(evidence.observedFiles).toBe(99)
+    expect(evidence.observedTopLevelCases).toBe(644)
+    expect(evidence.nestedPrintedOutcomesNotTopLevelCases).toBe(700)
+    expect(evidence.observedTopLevelPass + evidence.observedTopLevelFail).toBe(evidence.observedTopLevelCases)
+  })
+
+  test("Windows App uses its exact unit task and direct browser wrapper without a whole-directory argument", () => {
+    const lanes = packageLanes("windows", "fixture-host") as { part: string; filters?: string; appMode?: string; appBrowserShard?: string; turbo?: boolean; budget?: number }[]
+    const app = lanes.filter((lane) => lane.appMode)
+    expect(app.map((lane) => [lane.part, lane.appMode, lane.appBrowserShard])).toEqual([
+      ["windows-app-unit", "unit", undefined], ["windows-app-browser-1", "browser", "1/3"],
+      ["windows-app-browser-2", "browser", "2/3"], ["windows-app-browser-3", "browser", "3/3"],
+    ])
+    expect(app.every((lane) => lane.turbo && lane.filters === "--filter=@orchestra/app" && lane.budget === undefined)).toBe(true)
+    const pkg = JSON.parse(readFileSync(new URL("../../../packages/app-shell/package.json", import.meta.url), "utf8"))
+    expect(pkg.scripts["test:unit"]).toBe("bun test --conditions=solid --only-failures --preload ./happydom.ts ./src")
+    expect(pkg.scripts["test:browser"]).toBe("bun run ../../script/test-browser.ts ./test-browser")
+    const turbo = JSON.parse(readFileSync(new URL("../../../turbo.json", import.meta.url), "utf8").replace(/^\s*\/\/[^\n]*/gm, ""))
+    expect(turbo.tasks["@orchestra/app#test:unit"]).toEqual(turbo.tasks["@orchestra/app#test"])
+    const workflow = readFileSync(new URL("../../../.github/workflows/test.yml", import.meta.url), "utf8")
+    const branch = workflow.split('if [ -n "$APP_MODE" ]; then')[1]?.split("# Desktop's full package command")[0] ?? ""
+    expect(branch).toContain("bun turbo run test:unit --filter=@orchestra/app --only --log-order=stream")
+    expect(branch).toContain('(cd packages/app-shell && GITHUB_ACTIONS=false bun run ../../script/test-browser.ts "${files[@]/#/./}" "${report[@]}")')
+    expect(branch).not.toContain("bun run test:browser")
+    expect(branch).not.toContain('"./test-browser"')
+    expect(branch).not.toContain("ORCHESTRA_OMNI_CONTROL=")
+    expect(branch).not.toContain("--timeout")
+    expect(branch).not.toContain("--retry")
+    expect(workflow).toContain("APP_MODE: ${{ matrix.appMode }}")
+    expect(workflow).toContain("APP_BROWSER_SHARD: ${{ matrix.appBrowserShard }}")
+    expect(workflow).toContain("matrix.appBrowserShard)")
+  })
+
+  test("anchored balancing refuses missing or duplicate real controls rather than falling back", () => {
+    const files = [{ name: "one", weight: 1 }, { name: "two", weight: 2 }, { name: "heavy", weight: 9 }]
+    expect(() => balance(files, 2, ["missing", "two"])).toThrow("Missing real process control")
+    expect(() => balance(files, 2, ["one", "one"])).toThrow("Invalid shard control anchors")
+    expect(() => balance(files, 1, ["one", "two"])).toThrow("Invalid shard control anchors")
+    expect(balance(files, 2, ["one", "two"])).toEqual([
+      { seconds: 10, names: ["one", "heavy"] }, { seconds: 2, names: ["two"] },
+    ])
+  })
+
+  test("Windows CLI, Server and clients have disjoint owners without changing package wrappers", () => {
+    const lanes = packageLanes("windows", "fixture-host") as { part: string; filters?: string; turbo?: boolean; budget?: number }[]
+    expect(lanes).toHaveLength(19)
+    const expected = [
+      { name: "windows", host: "fixture-host", part: "windows-cli", label: "cli", turbo: true, filters: "--filter=@orchestra/cli" },
+      { name: "windows", host: "fixture-host", part: "windows-server", label: "server", turbo: true, filters: "--filter=@orchestra/server" },
+      { name: "windows", host: "fixture-host", part: "windows-clients", label: "clients, SDK, TUI", turbo: true, filters: "--filter=@orchestra/client --filter=@orchestra/sdk-next --filter=@orchestra/tui --filter=@orchestra/session-ui" },
+    ]
+    expect(lanes.filter((lane) => ["windows-cli", "windows-server", "windows-clients"].includes(lane.part))).toEqual(expected)
+    const cli = JSON.parse(readFileSync(new URL("../../../apps/cli/package.json", import.meta.url), "utf8"))
+    expect(cli.scripts.test).toBe("bun run script/test.ts")
+    const workflow = readFileSync(new URL("../../../.github/workflows/test.yml", import.meta.url), "utf8")
+    expect(workflow).toContain('bun turbo test --concurrency="$concurrency" --continue=dependencies-successful "${only[@]}" "${filters[@]}"')
+  })
+
+  test("Windows Boundary partitions all seven files and retained 74-case evidence exactly once", () => {
+    const timings = JSON.parse(readFileSync(new URL("../src/test-timings.json", import.meta.url), "utf8")) as Timings
+    const directory = "modules/atlas/boundary"
+    const files = [...new Bun.Glob("**/*.test.ts").scanSync({ cwd: fileURLToPath(new URL("../../../modules/atlas/boundary/test/", import.meta.url)), onlyFiles: true })]
+      .map((file) => `test/${file.replaceAll("\\", "/")}`).toSorted()
+    const bins = plannedBins(timings, directory, "windows")
+    expect(packageShards(timings, directory, "windows")).toBe(2)
+    expect(packageShards(timings, directory, "linux")).toBe(1)
+    expect(files).toHaveLength(7)
+    expect(bins.map((bin) => bin.names.toSorted())).toEqual([
+      ["test/build.test.ts"], files.filter((file) => file !== "test/build.test.ts"),
+    ])
+    expect(bins.flatMap((bin) => bin.names).toSorted()).toEqual(files)
+    expect(new Set(bins.flatMap((bin) => bin.names)).size).toBe(7)
+    expect(plannedBins(timings, directory, "windows")).toEqual(bins)
+    const evidence: { platforms: { windows: { observedCases: Record<string, number> } } } = JSON.parse(readFileSync(new URL("../src/test-timings.json", import.meta.url), "utf8")).provenance[directory]
+    expect(Object.keys(evidence.platforms.windows.observedCases).toSorted()).toEqual(files)
+    expect(bins.map((bin) => bin.names.reduce((sum, file) => sum + evidence.platforms.windows.observedCases[file]!, 0))).toEqual([1, 73])
+    const pkg = JSON.parse(readFileSync(new URL("../../../modules/atlas/boundary/package.json", import.meta.url), "utf8"))
+    expect(pkg.scripts.test).toBe("bun test --timeout 30000")
+    const lanes = packageLanes("windows", "fixture-host") as { part: string; filters?: string; boundaryShard?: string; hosted?: boolean; rollback?: boolean; turbo?: boolean; budget?: number }[]
+    const shards = lanes.filter((lane) => lane.boundaryShard)
+    expect(shards.map((lane) => lane.boundaryShard)).toEqual(["1/2", "2/2"])
+    expect(shards.every((lane) => lane.filters === "--filter=@orchestra/atlas-boundary" && lane.turbo && !lane.hosted && !lane.rollback && lane.budget === undefined)).toBe(true)
+    const expected = [
+      { name: "windows", host: "fixture-host", part: "windows-process", label: "process query, rollback", hosted: true, rollback: true },
+    ]
+    expect(lanes.filter((lane) => lane.hosted || lane.rollback)).toEqual(expected)
+    const workflow = readFileSync(new URL("../../../.github/workflows/test.yml", import.meta.url), "utf8")
+    expect(workflow).toContain('bun turbo test --filter=@orchestra/atlas-boundary --log-order=stream -- "${files[@]/#/./}" "${report[@]}"')
+    const boundary = workflow.split('if [ -n "$BOUNDARY_SHARD" ]; then')[1]?.split("# Core is sharded")[0] ?? ""
+    expect(boundary).not.toContain("--timeout")
+    expect(boundary).not.toContain("--retry")
+    expect(workflow.match(/- name: Run hosted process query proof/g)).toHaveLength(1)
+    expect(workflow.match(/- name: Real AppProcess default and legacy backend selection/g)).toHaveLength(1)
+    expect(workflow).toContain("if: ${{ !cancelled() && matrix.hosted }}")
+    expect(workflow).toContain("if: ${{ !cancelled() && matrix.rollback && (inputs.packages == '' || contains(format(',{0},', inputs.packages), ',@orchestra/core,')) }}")
+    expect(workflow).toContain("bun test --timeout 120000 ./test/windows-process-query.hosted.ts")
+    expect(workflow).toContain("bun test test/omni-default-mode.test.ts test/effect/cross-spawn-spawner.test.ts --timeout 30000")
+    expect([...workflow.matchAll(/max-parallel: (\d+)/g)].map((match) => Number(match[1]))).toEqual([10, 5])
+    expect(workflow).toContain("timeout-minutes: ${{ matrix.budget || 10 }}")
+    expect(workflow).toContain("timeout-minutes: ${{ matrix.budget && 12 || 8 }}")
+  })
+
+  test("Windows Maestro keeps currency alone and covers every other discovered file exactly once", () => {
+    const timings = JSON.parse(readFileSync(new URL("../src/test-timings.json", import.meta.url), "utf8")) as Timings
+    const directory = "modules/maestro/coordination"
+    const files = [...new Bun.Glob("**/*.test.ts").scanSync({ cwd: fileURLToPath(new URL("../../../modules/maestro/coordination/test/", import.meta.url)), onlyFiles: true })]
+      .map((file) => `test/${file.replaceAll("\\", "/")}`).toSorted()
+    const currency = "test/v2-reservation-currency.test.ts"
+    const bins = plannedBins(timings, directory, "windows")
+    expect(packageShards(timings, directory, "windows")).toBe(2)
+    expect(packageShards(timings, directory, "linux")).toBe(1)
+    expect(bins.map((bin) => bin.names.toSorted())).toEqual([[currency], files.filter((file) => file !== currency)])
+    expect(bins[1]!.names.length).toBeGreaterThan(0)
+    expect(bins.flatMap((bin) => bin.names).toSorted()).toEqual(files)
+    expect(new Set(bins.flatMap((bin) => bin.names)).size).toBe(files.length)
+    expect(plannedBins(timings, directory, "windows")).toEqual(bins)
+    // A later timing refresh must not fill the singleton, even if currency becomes the lightest file.
+    const changed = { ...timings, files: { ...timings.files, [`${directory}:windows`]: Object.fromEntries(files.map((file) => [file, file === currency ? 1 : 1000])) } }
+    expect(plannedBins(changed, directory, "windows").map((bin) => bin.names)).toEqual(bins.map((bin) => bin.names))
+  })
+
+  test("Windows Maestro lanes keep the package command, exact paths and unchanged execution budgets", () => {
+    const lanes = packageLanes("windows", "fixture-host") as { part: string; filters?: string; maestroShard?: string; shard?: string; turbo?: boolean; budget?: number }[]
+    const shards = lanes.filter((lane) => lane.maestroShard)
+    expect(shards.map((lane) => [lane.part, lane.maestroShard])).toEqual([["windows-maestro-1", "1/2"], ["windows-maestro-2", "2/2"]])
+    expect(shards.every((lane) => lane.filters === "--filter=@orchestra/maestro" && lane.turbo && lane.budget === undefined && lane.shard === undefined)).toBe(true)
+    const pkg = JSON.parse(readFileSync(new URL("../../../modules/maestro/coordination/package.json", import.meta.url), "utf8"))
+    expect(pkg.scripts.test).toBe("bun test --timeout 30000")
+    const config = readFileSync(new URL("../../../modules/maestro/coordination/bunfig.toml", import.meta.url), "utf8")
+    expect(config).toContain("../../../script/test-guard.ts")
+    expect(config).toContain("../../../script/test-omni-control.ts")
+    const turbo = JSON.parse(readFileSync(new URL("../../../turbo.json", import.meta.url), "utf8").replace(/^\s*\/\/[^\n]*/gm, ""))
+    expect(turbo.tasks["@orchestra/maestro#test"]).toEqual({ dependsOn: ["transit"], outputs: [] })
+    const workflow = readFileSync(new URL("../../../.github/workflows/test.yml", import.meta.url), "utf8")
+    const branch = workflow.split('if [ -n "$MAESTRO_SHARD" ]; then')[1]?.split("# Core is sharded")[0] ?? ""
+    expect(branch).toContain("test-plan.ts shard modules/maestro/coordination")
+    expect(branch).toContain('bun turbo test --filter=@orchestra/maestro --log-order=stream -- "${files[@]/#/./}" "${report[@]}"')
+    expect(branch).toContain("--reporter=junit")
+    expect(branch).not.toContain("--timeout")
+    expect(branch).not.toContain("--retry")
+    expect(branch).not.toContain("ORCHESTRA_OMNI_CONTROL=")
+    expect(workflow).toContain("MAESTRO_SHARD: ${{ matrix.maestroShard }}")
+    expect(workflow).toContain("matrix.maestroShard || matrix.appBrowserShard")
+    expect(workflow).toContain("timeout-minutes: ${{ matrix.budget || 10 }}")
+    expect(workflow).toContain("timeout-minutes: ${{ matrix.budget && 12 || 8 }}")
+  })
+
+  test("Linux package matrix remains exactly the pre-split contract", () => {
+    const common: { name: "linux"; host: string } = { name: "linux", host: "fixture-host" }
+    const expected = [
+      { ...common, part: "packages-app", label: "app", turbo: true, filters: "--filter=@orchestra/app", electron: true },
+      { ...common, part: "packages-cli", label: "cli, server, clients", turbo: true, filters: "--filter=@orchestra/cli --filter=@orchestra/server --filter=@orchestra/sdk-next --filter=@orchestra/client --filter=@orchestra/tui --filter=@orchestra/session-ui", electron: true },
+      { ...common, part: "packages-atlas", label: "atlas boundary", turbo: true, filters: "--filter=@orchestra/atlas-boundary", electron: true, hosted: false, rollback: false },
+      { ...common, part: "packages-relay", label: "relay", turbo: true, filters: "--filter=@orchestra/relay" },
+      ...[1, 2, 3].map((index) => ({ ...common, part: `packages-desktop-bun-${index}`, label: `desktop Bun ${index}/3`, turbo: true, filters: "--filter=@orchestra/desktop", desktop: "bun", desktopShard: `${index}/3`, electron: true })),
+      { ...common, part: "packages-desktop-node", label: "desktop Node", turbo: true, filters: "--filter=@orchestra/desktop", desktop: "node", electron: true },
+      { ...common, part: "packages-libs", label: "other packages", turbo: true, filters: "--filter=!@orchestra/core --filter=!@orchestra/cli --filter=!@orchestra/app --filter=!@orchestra/server --filter=!@orchestra/sdk-next --filter=!@orchestra/client --filter=!@orchestra/tui --filter=!@orchestra/session-ui --filter=!@orchestra/atlas-boundary --filter=!@orchestra/relay --filter=!@orchestra/desktop", electron: true },
+      { ...common, part: "gates", label: "gates, relay", repo_gates: true, relay: true },
+      { ...common, part: "httpapi-1", label: "httpapi 1/2", httpapi: true, httpapiShard: "1/2" },
+      { ...common, part: "httpapi-2", label: "httpapi 2/2", httpapi: true, httpapiShard: "2/2" },
+      { ...common, part: "sandbox", label: "sandbox proofs", hosted: true },
+    ]
+    expect(packageLanes("linux", common.host)).toEqual(expected)
   })
 
   test("a platform's overhead scales its total before the shard count", () => {
@@ -93,7 +352,8 @@ describe("test shard planner", () => {
       expect(new Set(lanes.map((lane) => lane.part)).size).toBe(lanes.length)
       for (const lane of lanes.filter((entry) => entry.relay || entry.repo_gates)) expect(lane.turbo).toBeUndefined()
       const rollback = lanes.filter((lane) => lane.rollback)
-      expect(rollback.map((lane) => lane.filters)).toEqual(name === "windows" ? ["--filter=@orchestra/atlas-boundary"] : [])
+      expect(rollback.map((lane) => lane.part)).toEqual(name === "windows" ? ["windows-process"] : [])
+      expect(rollback.every((lane) => lane.filters === undefined && lane.turbo === undefined)).toBe(true)
       const libs = lanes.find((lane) => lane.part.endsWith("libs"))
       expect(libs?.filters).toContain("--filter=!@orchestra/atlas-boundary")
       expect(libs?.filters).toContain("--filter=!@orchestra/relay")
@@ -203,9 +463,30 @@ describe("test shard planner", () => {
     }
   })
 
+  test("cold JUnit names retain their package when refreshing timings", () => {
+    for (const [report, directory, platform] of [
+      ["linux-core-1.xml", "packages/core", "linux"],
+      ["windows-core-2-watcher.xml", "packages/core", "windows"],
+      ["linux-packages-desktop-bun-1.xml", "apps/desktop", "linux"],
+      ["windows-windows-desktop-bun-2.xml", "apps/desktop", "windows"],
+      ["windows-windows-atlas-1.xml", "modules/atlas/boundary", "windows"],
+      ["windows-windows-app-browser-1.xml", "packages/app-shell", "windows"],
+      ["windows-windows-maestro-1.xml", "modules/maestro/coordination", "windows"],
+      ["windows-windows-maestro-2.xml", "modules/maestro/coordination", "windows"],
+    ] as const) {
+      expect(timingReport(`artifacts/${report}`)).toEqual({ directory, platform })
+      expect(timingReport(`artifacts\\${report}`)).toEqual({ directory, platform })
+    }
+    expect(timingReport("windows-windows-unknown-1.xml")).toBeUndefined()
+    expect(timingReport("windows-windows-maestro-1.xml.bak")).toBeUndefined()
+    expect(suiteTimes('<testsuite name="modules/maestro/coordination/test/v2-reservation-currency.test.ts" time="243.93"/>')).toEqual([["test/v2-reservation-currency.test.ts", 243.93]])
+  })
+
   test("reads per-file times from Bun's JUnit suites and ignores describe blocks", () => {
     const xml = `<testsuites><testsuite name="test/a.test.ts" tests="2" time="1.25"><testsuite name="inner" time="1.0"/></testsuite>` +
       `<testsuite name="test\\b.test.ts" tests="1" time="0.5"/></testsuites>`
     expect(suiteTimes(xml)).toEqual([["test/a.test.ts", 1.25], ["test/b.test.ts", 0.5]])
+    expect(suiteTimes(`<testsuite name="packages/app-shell/test-browser/model-execution-consumer.test.tsx" time="13.2"/>`)).toEqual([["test-browser/model-execution-consumer.test.tsx", 13.2]])
+    expect(suiteTimes(`<testsuite name="C:\\repo\\apps\\desktop\\src\\main\\owned-serve.test.ts" time="65.5"/><testsuite name="apps/desktop/scripts/stage-claude.test.ts" time="2"/><testsuite name="electron-builder.config.test.ts" time="0.2"/>`)).toEqual([["src/main/owned-serve.test.ts", 65.5], ["scripts/stage-claude.test.ts", 2], ["electron-builder.config.test.ts", 0.2]])
   })
 })

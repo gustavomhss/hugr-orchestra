@@ -6,14 +6,13 @@ import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { PermissionSaved } from "@orchestra/core/permission/saved"
 import { SessionV2 } from "@orchestra/core/session"
-import { Context, Layer, Option } from "effect"
-import * as Effect from "effect/Effect"
+import { Context, Effect, Layer, Option } from "effect"
 import { HttpRouter, HttpServer } from "effect/unstable/http"
-import { createServer } from "node:http"
 import { writeSync } from "node:fs"
 import path from "node:path"
 import { WebUi } from "@orchestra/server/web-ui"
 import { createRoutes } from "@orchestra/server/routes"
+import { ServerNode } from "@orchestra/server/node-server"
 import { AppDockSocket } from "@orchestra/app-dock/socket-transport"
 import { Commands } from "../commands"
 import { ProductHost } from "../../host"
@@ -141,7 +140,7 @@ function bind(
   allowedHosts: ReadonlyArray<string>,
   cors?: ReadonlyArray<string>,
 ) {
-  const server = createServer()
+  const server = ServerNode.create()
   return Layer.build(
     HttpRouter.serve(createRoutes({ password, host, webRoot: root, cors, allowedHosts }), {
       disableListenLog: true,

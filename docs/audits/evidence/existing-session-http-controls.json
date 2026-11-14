@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "scope": "Existing empty Session first-Send UI/HTTP regression; no ledger closure or aggregate-green claim.",
+  "final": {
+    "run": "43478975351",
+    "snapshot": "0e4062f3cf7adad9833eb447635648edc728f0e8",
+    "platform": "linux",
+    "job": "132070194885",
+    "cleanupJob": "132072052596",
+    "testConclusion": "success",
+    "cleanupConclusion": "success",
+    "pass": 1,
+    "fail": 0,
+    "skip": 0,
+    "testDurationMs": 7625,
+    "playwrightTotalSeconds": 51.3,
+    "omni": "No verdict reported; Playwright UI boundary."
+  },
+  "source": {
+    "path": "packages/app-shell/e2e/regression/existing-session-admission.spec.ts",
+    "qualifiedBlob": "34d306091bc264b5661334a83d2a208c12a4ad56",
+    "qualifiedSHA256": "14d9c2c828fc7a5ec43c2af849ad20c142a33f9b84b8509d1ab7766c798b2c9b",
+    "productionRepair": "dff203ead8",
+    "laterUnexecutedCommit": "651b738403e48f94871b27924de83a9e4b9a81fb",
+    "laterDelta": "Adds held-before-ACK user-row partID assertion; absent from focused qualified file. Subsequently executed successfully in third-cold bin8, as recorded below; earlier focused source identity is unchanged."
+  },
+  "artifact": {
+    "id": "14064353063",
+    "name": "playwright-ubuntu-24.04-1",
+    "downloadedZIP_SHA256": "87ad51b8e62f4d48b4f46e2ca105523b1467eda81ae03d70d118cf237cc2caf0",
+    "rawJobLogSHA256": "338599d465dd39c7f68b92682fe891e4d75cfee78d1cb398f5ec459d677d275e",
+    "embeddedReportSHA256": "9299c748946368fc74ba99afaa06cea9f0f82d65938f0f7953971a23c2680c64",
+    "attachmentSHA256": "d537515073cb95233ce24abc27e38dafdd09005af5b428406bd7ca52a6a3447b"
+  },
+  "observedHTTP": {
+    "messageID": "msg_1d617a6bc001vsEB7GL60BN6St",
+    "canonicalGET": [
+      "/api/session/ses_existing_admission/message/msg_1d617a6bc001vsEB7GL60BN6St"
+    ],
+    "eventDelivery": {
+      "deliveryID": 1,
+      "connectionID": 1,
+      "bytes": 348,
+      "chunkCount": 1,
+      "deliveredAt": 1547.2999999999884
+    },
+    "writes": [
+      "POST /api/session/ses_existing_admission/agent",
+      "POST /api/session/ses_existing_admission/model",
+      "POST /api/session/ses_existing_admission/prompt",
+      "POST /api/session/ses_existing_admission/agent",
+      "POST /api/session/ses_existing_admission/model",
+      "POST /api/session/ses_existing_admission/prompt"
+    ],
+    "promptPOSTCount": 2,
+    "entirePOSTBodiesIdentical": true,
+    "canonicalGETStatus": 200,
+    "retryStatus": 200,
+    "retryAdmittedSeq": 1
+  },
+  "projectionProof": [
+    "Schema-validated genuine session.next.prompted alone exercises the supported missed-admission-event hydration path; not a complete admission event sequence.",
+    "Embedded successful report records canonical GET200 and exact response-body/read-counter assertions before one-user-row/text assertions, empty in-flight editor and busy=true; only then held first HTTP ACK is aborted.",
+    "After failed ACK, original editor text restores; deliberate retry has identical entire POST bytes and message ID, succeeds once, clears editor and leaves one rendered user row.",
+    "One continuously open /api/event connection is asserted through completion; delivery receipt is connection1,348bytes,onechunk."
+  ],
+  "DOMLimit": "Historical focused43478975351 artifact retains HTML report/attachment but no trace.zip/DOM snapshot under retain-on-failure. It did not execute the later explicit partID assertion. Third-cold bin8 now provides actual successful execution of that stronger assertion; no retroactive focused DOM claim.",
+  "strongerDOMQualification": {
+    "run": "43479893813",
+    "snapshot": "c9ffb56cb19050f65946b54ff9c5f799d0e6becb",
+    "job": "132073530965",
+    "bin": "linux8/8",
+    "artifact": "14065013205",
+    "caseOutcome": "passed",
+    "retry": 0,
+    "durationMs": 3487,
+    "actualAssertedPartID": "msg_1d623c256001T3rNxjaQozMQmp:text:0",
+    "beforeACKAbort": true,
+    "canonicalGETStatus": 200,
+    "canonicalGETCount": 1,
+    "eventDeliveryBytes": 348,
+    "entireRetryPOSTBytesIdentical": true,
+    "reportSHA256": "ed5a452caddd5ec90a9e561f1e8b08368f8568d20926481d4d766589a8aa8a15",
+    "receiptSHA256": "1f300063c284c48fa87295b001dae0b0a4ab1b6029d04bdcc88668818f35b0b4",
+    "artifactSHA256": "d48fb4656390162c573bf937e8aa316441c3642deb110432469bf6d9fd320cb9",
+    "sourceOfObservation": "Embedded HTML report records successful line128 toHaveAttribute(data-timeline-part-id,messageID:text:0) before ACK abort; receipt supplies actual messageID. No successful-run raw DOM trace is claimed."
+  },
+  "history": [
+    {"run": "43475865859", "result": "1 failure: actual baseline first-Send product RED; canonical ready/bootstrap pass, Send click succeeds, no agent/model/prompt POST; first-request wait times out60s; closed-page cleanup masks original timeout. Projection/ACK stages never reached."},
+    {"run": "43476825941", "result": "25 pass,1 failure: all14 bytes, Draft and Chat cases pass; new test races Playwright request event against fixture request-ledger push. Same exact equality oracle changed to await expect.poll; production not changed for this failure."},
+    {"run": "43478143602", "result": "1 failure after actual agent/model/prompt POST and busy=true: new test incorrectly expected visible held editor text. Existing Session contract clears in flight and restores snapshot on failure; two held-text expectations corrected to empty, without weakening failed-ACK restoration/retry/projection assertions."}
+  ],
+  "limits": [
+    "Controlled HTTP/SSE on actual production route, Local, model follower, composer and SDK. No backend SQL durability, provider/tool execution or exactly-once execution claim.",
+    "Scoped Linux single-case success, not both-platform/full browser/full CI proof. Historical REDs remain evidence; E10/M13 and aggregate closure are not asserted."
+  ]
+}

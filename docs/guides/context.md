@@ -4,6 +4,8 @@ Long sessions are where agents degrade. This guide covers the two parts that kee
 
 ## Context continuity
 
+Reverting a session retains system context that the session already received. Before removing later messages, Orchestra folds their durable context updates into the session baseline and keeps the source snapshot. The next turn can still reconcile subsequent source changes. Older reverted sessions receive the same repair when their next turn prepares context, even if a source is temporarily unavailable.
+
 Long sessions are where agents degrade: the window fills, old tool output crowds out the task, and a summary loses the detail that mattered. The core session has plain compaction. The continuity module, on by default, wraps it with the same summary prompt and checkpoint but changes when the summary is written, what happens to old tool output and what stays reachable.
 
 <picture>

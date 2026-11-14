@@ -71,7 +71,7 @@ function mountReconnectFixture() {
   const events = createGlobalEmitter<{ [key: string]: ServerEvent }>()
   const reads = { active: 0, get: 0, list: 0 }
   const transport = {
-    rejectActive: false,
+    rejectActive: false, rejectedActive: 0,
     message: { id: "msg_before", type: "user", text: "Before gap", time: { created: 1 } },
   }
   const sessionID = "ses_reconnect"
@@ -83,7 +83,10 @@ function mountReconnectFixture() {
       session: {
         active: async () => {
           reads.active++
-          if (transport.rejectActive) throw new Error("active sessions GET denied")
+          if (transport.rejectActive) {
+            transport.rejectedActive++
+            throw new Error("active sessions GET denied")
+          }
           return {}
         },
         get: async () => {
@@ -190,7 +193,7 @@ test("back-to-back global greetings still recover the pinned page when the fresh
     fixture.transport.message = { id: "msg_before", type: "user", text: "Recovered gap", time: { created: 1 } }
     fixture.connected()
     fixture.connected()
-    await until(() => fixture.active()?.status === "error" && fixture.sync.session.data.session_message[fixture.sessionID]?.some((message) => message.id === "msg_before" && message.type === "user" && message.text === "Recovered gap") === true)
+    await until(() => fixture.transport.rejectedActive === 1 && fixture.sync.session.data.session_message[fixture.sessionID]?.some((message) => message.id === "msg_before" && message.type === "user" && message.text === "Recovered gap") === true)
     await fixture.settled()
     expect(fixture.active()?.fetchStatus).toBe("idle")
     expect(fixture.reads).toEqual({ active: 1, get: 1, list: 1 })

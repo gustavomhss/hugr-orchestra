@@ -274,6 +274,7 @@ describe("reconnect resync", () => {
     return { gets, lists, store }
   }
 
+
   test("reloads the open session even when it is already cached", async () => {
     const { gets, lists, store } = setup()
     store.pin("ses_open")

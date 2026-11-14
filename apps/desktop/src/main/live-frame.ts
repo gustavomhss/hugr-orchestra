@@ -6,19 +6,33 @@ import { desktopCapturer, screen, type BrowserWindow } from "electron"
 const LONG_SIDE = 1280
 const MAX_BYTES = 350 * 1024
 const QUALITIES = [85, 75, 65, 55, 45, 35, 25]
+// Overlapping captures share the first snapshot until the last capture releases the window.
+const opacity = new WeakMap<BrowserWindow, { value: number; captures: number }>()
 
 export async function captureFrame(exclude: BrowserWindow[]) {
   const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint())
   const scale = LONG_SIDE / Math.max(display.size.width, display.size.height)
   const thumbnailSize = { width: Math.round(display.size.width * scale), height: Math.round(display.size.height * scale) }
   const visible = exclude.filter((win) => !win.isDestroyed() && win.isVisible())
-  const opacity = visible.map((win) => win.getOpacity())
-  visible.forEach((win) => win.setOpacity(0))
+  visible.forEach((win) => {
+    const held = opacity.get(win) ?? { value: win.getOpacity(), captures: 0 }
+    held.captures += 1
+    opacity.set(win, held)
+    win.setOpacity(0)
+  })
   // One compositor frame so the transparent overlay is what gets captured.
   await new Promise((resolve) => setTimeout(resolve, 50))
   const sources = await desktopCapturer
     .getSources({ types: ["screen"], thumbnailSize })
-    .finally(() => visible.forEach((win, index) => win.isDestroyed() || win.setOpacity(opacity[index])))
+    .finally(() => {
+      visible.forEach((win) => {
+        const held = opacity.get(win)!
+        held.captures -= 1
+        if (held.captures) return
+        opacity.delete(win)
+        if (!win.isDestroyed()) win.setOpacity(held.value)
+      })
+    })
   const source = sources.find((item) => item.display_id === String(display.id)) ?? sources[0]
   if (!source || source.thumbnail.isEmpty()) throw new Error("No screen frame was captured")
   return { jpeg: encodeJpeg(source.thumbnail), width: thumbnailSize.width, height: thumbnailSize.height }

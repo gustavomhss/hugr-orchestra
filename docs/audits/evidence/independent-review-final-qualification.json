@@ -1,0 +1,4669 @@
+{
+  "schema_version": 1,
+  "repository": "gustavomhss/hugr-orchestra",
+  "pull_request": 1463,
+  "verdict": "INCOMPLETE",
+  "status": "review concluded INCOMPLETE: confirmed fixes committed; two failed integration gates have unknown original causes",
+  "review_requested_head": "33466a9dbd944c3b190b981b397cddd8484f9ab4",
+  "full_epic_head": "1ff367925fb59b0985bab2f76fb4f30751603b14",
+  "full_epic_checkout": "959e6f612320112a16c5ed56df61cc80079b7e59",
+  "full_epic_tree": "f27d504e8f6aaf3da71589ca88441db0c459c980",
+  "base_branch": "dev",
+  "base_sha": "5e0807b5ff953508f792b8a965883985b05a7066",
+  "source_note": "The tested synthetic PR merge and published HEAD 1ff367925fb59b0985bab2f76fb4f30751603b14 have identical trees. Clean commit 9ca458fb5606a420ba1cee0c4e9792193650c1e5 changes only the separately qualified one-line CI checkout expression. The following documentation commit adds this receipt and the plan addendum; it does not change product or test code.",
+  "prior_receipts": [
+    "desktop-startup-cancellation.json",
+    "independent-review-integration.json",
+    "fourth-cold-requalification.json"
+  ],
+  "full_epic": {
+    "run": 43529329253,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253",
+    "attempt": 1,
+    "event": "pull_request",
+    "conclusion": "failure",
+    "completed_at": "2026-11-14T00:25:39Z",
+    "counts": {
+      "success": 72,
+      "failure": 2,
+      "cancelled": 1
+    },
+    "total_jobs": 75,
+    "mode": "normal cache-aware epic, not a cold workflow; actual execution was checked in the cited lane logs",
+    "reruns": 0,
+    "jobs": [
+      {
+        "id": 132242823859,
+        "name": "omni test binaries (ubuntu-24.04)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:44:22Z",
+        "completed_at": "2026-11-13T23:45:03Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132242823859"
+      },
+      {
+        "id": 132242824108,
+        "name": "atlas scope",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:44:22Z",
+        "completed_at": "2026-11-13T23:44:44Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132242824108"
+      },
+      {
+        "id": 132242824200,
+        "name": "plan",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:44:22Z",
+        "completed_at": "2026-11-13T23:44:32Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132242824200"
+      },
+      {
+        "id": 132242824211,
+        "name": "omni test binaries (windows-latest)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:44:23Z",
+        "completed_at": "2026-11-13T23:46:04Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132242824211"
+      },
+      {
+        "id": 132242900665,
+        "name": "e2e (linux 2/8)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:44:34Z",
+        "completed_at": "2026-11-13T23:50:13Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132242900665"
+      },
+      {
+        "id": 132242900676,
+        "name": "e2e (linux 5/8)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:44:45Z",
+        "completed_at": "2026-11-13T23:51:51Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132242900676"
+      },
+      {
+        "id": 132242900701,
+        "name": "e2e (linux 4/8)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:44:39Z",
+        "completed_at": "2026-11-13T23:50:31Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132242900701"
+      },
+      {
+        "id": 132242900705,
+        "name": "e2e (linux 1/8)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:44:47Z",
+        "completed_at": "2026-11-13T23:50:03Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132242900705"
+      },
+      {
+        "id": 132242900706,
+        "name": "e2e (linux 6/8)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:50:15Z",
+        "completed_at": "2026-11-13T23:57:27Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132242900706"
+      },
+      {
+        "id": 132242900727,
+        "name": "e2e (linux 8/8)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:50:33Z",
+        "completed_at": "2026-11-13T23:55:36Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132242900727"
+      },
+      {
+        "id": 132242900732,
+        "name": "e2e (linux 7/8)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:50:20Z",
+        "completed_at": "2026-11-13T23:56:32Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132242900732"
+      },
+      {
+        "id": 132242900738,
+        "name": "e2e (linux 3/8)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:44:53Z",
+        "completed_at": "2026-11-13T23:52:34Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132242900738"
+      },
+      {
+        "id": 132242976566,
+        "name": "atlas",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:45:13Z",
+        "completed_at": "2026-11-13T23:50:26Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132242976566"
+      },
+      {
+        "id": 132243525740,
+        "name": "unit (linux core 11/15)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:50:05Z",
+        "completed_at": "2026-11-13T23:53:10Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243525740"
+      },
+      {
+        "id": 132243525782,
+        "name": "unit (linux core 5/15)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:47:20Z",
+        "completed_at": "2026-11-13T23:51:13Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243525782"
+      },
+      {
+        "id": 132243525791,
+        "name": "unit (linux core 12/15)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:50:13Z",
+        "completed_at": "2026-11-13T23:53:07Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243525791"
+      },
+      {
+        "id": 132243525793,
+        "name": "unit (windows core 3/15)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:52:29Z",
+        "completed_at": "2026-11-13T23:58:18Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243525793"
+      },
+      {
+        "id": 132243525811,
+        "name": "unit (linux core 3/15)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:49:27Z",
+        "completed_at": "2026-11-13T23:52:27Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243525811"
+      },
+      {
+        "id": 132243525817,
+        "name": "unit (linux core 6/15)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:47:52Z",
+        "completed_at": "2026-11-13T23:51:14Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243525817"
+      },
+      {
+        "id": 132243525820,
+        "name": "unit (linux core 1/15)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:46:06Z",
+        "completed_at": "2026-11-13T23:52:13Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243525820"
+      },
+      {
+        "id": 132243525829,
+        "name": "unit (linux core 13/15)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:50:25Z",
+        "completed_at": "2026-11-13T23:52:52Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243525829"
+      },
+      {
+        "id": 132243525835,
+        "name": "unit (linux core 2/15)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:47:31Z",
+        "completed_at": "2026-11-13T23:49:03Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243525835"
+      },
+      {
+        "id": 132243525851,
+        "name": "unit (linux core 10/15)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:48:06Z",
+        "completed_at": "2026-11-13T23:50:33Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243525851"
+      },
+      {
+        "id": 132243525863,
+        "name": "unit (windows core 1/15)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:51:16Z",
+        "completed_at": "2026-11-13T23:54:41Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243525863"
+      },
+      {
+        "id": 132243525866,
+        "name": "unit (linux core 4/15)",
+        "conclusion": "failure",
+        "started_at": "2026-11-13T23:49:05Z",
+        "completed_at": "2026-11-13T23:52:37Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243525866"
+      },
+      {
+        "id": 132243525887,
+        "name": "unit (linux core 7/15)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:46:51Z",
+        "completed_at": "2026-11-13T23:49:59Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243525887"
+      },
+      {
+        "id": 132243525896,
+        "name": "unit (windows core 2/15)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:52:15Z",
+        "completed_at": "2026-11-13T23:57:25Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243525896"
+      },
+      {
+        "id": 132243525928,
+        "name": "unit (linux core 14/15)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:50:35Z",
+        "completed_at": "2026-11-13T23:53:16Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243525928"
+      },
+      {
+        "id": 132243525966,
+        "name": "unit (linux core 8/15)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:48:39Z",
+        "completed_at": "2026-11-13T23:53:29Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243525966"
+      },
+      {
+        "id": 132243525972,
+        "name": "unit (linux core 9/15)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:47:59Z",
+        "completed_at": "2026-11-13T23:50:19Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243525972"
+      },
+      {
+        "id": 132243525981,
+        "name": "unit (windows core 5/15)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:52:55Z",
+        "completed_at": "2026-11-14T00:00:10Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243525981"
+      },
+      {
+        "id": 132243526011,
+        "name": "unit (windows core 4/15)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:52:40Z",
+        "completed_at": "2026-11-13T23:57:42Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243526011"
+      },
+      {
+        "id": 132243526071,
+        "name": "unit (linux core 15/15)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:51:15Z",
+        "completed_at": "2026-11-13T23:54:01Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243526071"
+      },
+      {
+        "id": 132243528173,
+        "name": "unit (windows core 7/15)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:53:12Z",
+        "completed_at": "2026-11-13T23:58:48Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243528173"
+      },
+      {
+        "id": 132243528217,
+        "name": "unit (windows core 9/15)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:53:31Z",
+        "completed_at": "2026-11-13T23:59:46Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243528217"
+      },
+      {
+        "id": 132243528225,
+        "name": "unit (windows core 8/15)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:53:18Z",
+        "completed_at": "2026-11-14T00:00:13Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243528225"
+      },
+      {
+        "id": 132243528268,
+        "name": "unit (windows core 11/15)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:54:43Z",
+        "completed_at": "2026-11-13T23:59:51Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243528268"
+      },
+      {
+        "id": 132243528304,
+        "name": "unit (windows core 12/15)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:57:27Z",
+        "completed_at": "2026-11-14T00:03:41Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243528304"
+      },
+      {
+        "id": 132243528308,
+        "name": "unit (windows core 6/15)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:53:09Z",
+        "completed_at": "2026-11-14T00:00:22Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243528308"
+      },
+      {
+        "id": 132243528327,
+        "name": "unit (windows core 10/15)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:54:02Z",
+        "completed_at": "2026-11-13T23:59:12Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243528327"
+      },
+      {
+        "id": 132243528510,
+        "name": "unit (windows core 13/15)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:57:44Z",
+        "completed_at": "2026-11-14T00:03:14Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243528510"
+      },
+      {
+        "id": 132243528673,
+        "name": "unit (windows core 15/15)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:58:50Z",
+        "completed_at": "2026-11-14T00:03:48Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243528673"
+      },
+      {
+        "id": 132243528704,
+        "name": "unit (windows core 14/15)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:58:19Z",
+        "completed_at": "2026-11-14T00:05:10Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243528704"
+      },
+      {
+        "id": 132243529845,
+        "name": "unit (linux app)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:59:14Z",
+        "completed_at": "2026-11-14T00:08:29Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243529845"
+      },
+      {
+        "id": 132243529915,
+        "name": "unit (linux atlas boundary)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:59:53Z",
+        "completed_at": "2026-11-14T00:06:50Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243529915"
+      },
+      {
+        "id": 132243529977,
+        "name": "unit (linux relay)",
+        "conclusion": "success",
+        "started_at": "2026-11-14T00:00:12Z",
+        "completed_at": "2026-11-14T00:01:50Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243529977"
+      },
+      {
+        "id": 132243530008,
+        "name": "unit (linux cli, server, clients)",
+        "conclusion": "success",
+        "started_at": "2026-11-13T23:59:48Z",
+        "completed_at": "2026-11-14T00:06:35Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243530008"
+      },
+      {
+        "id": 132243530044,
+        "name": "unit (linux desktop Bun 3/3)",
+        "conclusion": "success",
+        "started_at": "2026-11-14T00:01:51Z",
+        "completed_at": "2026-11-14T00:07:39Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243530044"
+      },
+      {
+        "id": 132243530078,
+        "name": "unit (linux desktop Bun 1/3)",
+        "conclusion": "success",
+        "started_at": "2026-11-14T00:00:15Z",
+        "completed_at": "2026-11-14T00:02:26Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243530078"
+      },
+      {
+        "id": 132243530165,
+        "name": "unit (linux desktop Bun 2/3)",
+        "conclusion": "success",
+        "started_at": "2026-11-14T00:00:23Z",
+        "completed_at": "2026-11-14T00:05:45Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243530165"
+      },
+      {
+        "id": 132243530232,
+        "name": "unit (linux desktop Node)",
+        "conclusion": "success",
+        "started_at": "2026-11-14T00:02:28Z",
+        "completed_at": "2026-11-14T00:04:37Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243530232"
+      },
+      {
+        "id": 132243530409,
+        "name": "unit (linux gates, relay)",
+        "conclusion": "success",
+        "started_at": "2026-11-14T00:03:44Z",
+        "completed_at": "2026-11-14T00:08:10Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243530409"
+      },
+      {
+        "id": 132243530551,
+        "name": "unit (linux other packages)",
+        "conclusion": "success",
+        "started_at": "2026-11-14T00:03:16Z",
+        "completed_at": "2026-11-14T00:08:00Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243530551"
+      },
+      {
+        "id": 132243531775,
+        "name": "unit (linux httpapi 1/2)",
+        "conclusion": "success",
+        "started_at": "2026-11-14T00:03:50Z",
+        "completed_at": "2026-11-14T00:08:10Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243531775"
+      },
+      {
+        "id": 132243531849,
+        "name": "unit (linux httpapi 2/2)",
+        "conclusion": "success",
+        "started_at": "2026-11-14T00:04:38Z",
+        "completed_at": "2026-11-14T00:08:32Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243531849"
+      },
+      {
+        "id": 132243531889,
+        "name": "unit (linux sandbox proofs)",
+        "conclusion": "success",
+        "started_at": "2026-11-14T00:05:12Z",
+        "completed_at": "2026-11-14T00:12:49Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243531889"
+      },
+      {
+        "id": 132243531948,
+        "name": "unit (windows app browser 1/3)",
+        "conclusion": "success",
+        "started_at": "2026-11-14T00:06:37Z",
+        "completed_at": "2026-11-14T00:14:22Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243531948"
+      },
+      {
+        "id": 132243531971,
+        "name": "unit (windows app unit)",
+        "conclusion": "success",
+        "started_at": "2026-11-14T00:05:46Z",
+        "completed_at": "2026-11-14T00:09:46Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243531971"
+      },
+      {
+        "id": 132243532039,
+        "name": "unit (windows app browser 2/3)",
+        "conclusion": "success",
+        "started_at": "2026-11-14T00:06:53Z",
+        "completed_at": "2026-11-14T00:14:55Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243532039"
+      },
+      {
+        "id": 132243532148,
+        "name": "unit (windows app browser 3/3)",
+        "conclusion": "success",
+        "started_at": "2026-11-14T00:07:42Z",
+        "completed_at": "2026-11-14T00:14:11Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243532148"
+      },
+      {
+        "id": 132243532185,
+        "name": "unit (windows cli)",
+        "conclusion": "success",
+        "started_at": "2026-11-14T00:08:02Z",
+        "completed_at": "2026-11-14T00:15:44Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243532185"
+      },
+      {
+        "id": 132243532296,
+        "name": "unit (windows server)",
+        "conclusion": "success",
+        "started_at": "2026-11-14T00:08:11Z",
+        "completed_at": "2026-11-14T00:15:42Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243532296"
+      },
+      {
+        "id": 132243532356,
+        "name": "unit (windows clients, SDK, TUI)",
+        "conclusion": "success",
+        "started_at": "2026-11-14T00:08:12Z",
+        "completed_at": "2026-11-14T00:14:17Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243532356"
+      },
+      {
+        "id": 132243533688,
+        "name": "unit (windows atlas boundary 1/2)",
+        "conclusion": "cancelled",
+        "started_at": "2026-11-14T00:08:31Z",
+        "completed_at": "2026-11-14T00:18:36Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243533688"
+      },
+      {
+        "id": 132243533799,
+        "name": "unit (windows desktop Bun 2/3)",
+        "conclusion": "success",
+        "started_at": "2026-11-14T00:14:19Z",
+        "completed_at": "2026-11-14T00:22:52Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243533799"
+      },
+      {
+        "id": 132243533814,
+        "name": "unit (windows desktop Bun 1/3)",
+        "conclusion": "failure",
+        "started_at": "2026-11-14T00:14:13Z",
+        "completed_at": "2026-11-14T00:22:03Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243533814"
+      },
+      {
+        "id": 132243533817,
+        "name": "unit (windows process query, rollback)",
+        "conclusion": "success",
+        "started_at": "2026-11-14T00:09:48Z",
+        "completed_at": "2026-11-14T00:15:00Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243533817"
+      },
+      {
+        "id": 132243533877,
+        "name": "unit (windows relay)",
+        "conclusion": "success",
+        "started_at": "2026-11-14T00:12:51Z",
+        "completed_at": "2026-11-14T00:18:10Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243533877"
+      },
+      {
+        "id": 132243533947,
+        "name": "unit (windows atlas boundary 2/2)",
+        "conclusion": "success",
+        "started_at": "2026-11-14T00:08:33Z",
+        "completed_at": "2026-11-14T00:14:24Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243533947"
+      },
+      {
+        "id": 132243533959,
+        "name": "unit (windows desktop Node)",
+        "conclusion": "success",
+        "started_at": "2026-11-14T00:14:26Z",
+        "completed_at": "2026-11-14T00:20:16Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243533959"
+      },
+      {
+        "id": 132243534031,
+        "name": "unit (windows maestro 1/2)",
+        "conclusion": "success",
+        "started_at": "2026-11-14T00:14:57Z",
+        "completed_at": "2026-11-14T00:22:11Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243534031"
+      },
+      {
+        "id": 132243534042,
+        "name": "unit (windows desktop Bun 3/3)",
+        "conclusion": "success",
+        "started_at": "2026-11-14T00:14:24Z",
+        "completed_at": "2026-11-14T00:21:28Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243534042"
+      },
+      {
+        "id": 132243534297,
+        "name": "unit (windows maestro 2/2)",
+        "conclusion": "success",
+        "started_at": "2026-11-14T00:15:02Z",
+        "completed_at": "2026-11-14T00:21:53Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243534297"
+      },
+      {
+        "id": 132243535495,
+        "name": "unit (windows script)",
+        "conclusion": "success",
+        "started_at": "2026-11-14T00:15:44Z",
+        "completed_at": "2026-11-14T00:25:38Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243535495"
+      },
+      {
+        "id": 132243535739,
+        "name": "unit (windows other packages)",
+        "conclusion": "success",
+        "started_at": "2026-11-14T00:15:46Z",
+        "completed_at": "2026-11-14T00:21:34Z",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243535739"
+      }
+    ]
+  },
+  "other_gates": {
+    "typecheck": {
+      "run": 43529329125,
+      "job": 132242822828,
+      "conclusion": "success",
+      "tasks_successful": 31,
+      "tasks_total": 31,
+      "cached": 0,
+      "execution_seconds": 288.361,
+      "checkout": "959e6f612320112a16c5ed56df61cc80079b7e59"
+    },
+    "guard": {
+      "run": 43529329283,
+      "job": 132242831722,
+      "result": "success",
+      "rules": 78,
+      "paths": 780,
+      "gates": 0,
+      "warnings": 28,
+      "errors": 0,
+      "warningsNote": "Three test-declaration warnings refer to supported-platform wrapper changes in lucy-pr-{entry,retry,quote-range}; original positive bodies/assertions preserved and Windows negative no-effects cases added. No warning rule was disabled."
+    },
+    "atlas": {
+      "run": 43529329253,
+      "job": 132242976566,
+      "conclusion": "success",
+      "suite": {
+        "pass": 4529,
+        "skip": 17,
+        "todo": 3,
+        "files_pass": 589,
+        "files_skip": 2
+      },
+      "guard_test": {
+        "pass": 18
+      },
+      "actual_execution": true,
+      "checkout": "959e6f612320112a16c5ed56df61cc80079b7e59"
+    },
+    "native": {
+      "run": 43529329197,
+      "conclusion": "success",
+      "jobs": [
+        132242823458,
+        132242823718,
+        132242823809
+      ],
+      "limits": "Workflow metadata success only; no physical capture/native permission/Main bootstrap claim."
+    }
+  },
+  "workflow_metadata": [
+    {
+      "id": 43529329253,
+      "name": "test",
+      "status": "completed",
+      "conclusion": "failure",
+      "attempt": 1,
+      "created": "2026-11-13T23:44:20Z"
+    },
+    {
+      "id": 43529329283,
+      "name": "guards",
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "created": "2026-11-13T23:44:20Z"
+    },
+    {
+      "id": 43529329188,
+      "name": "omni-artifacts-proof",
+      "status": "completed",
+      "conclusion": "skipped",
+      "attempt": 1,
+      "created": "2026-11-13T23:44:20Z"
+    },
+    {
+      "id": 43529329170,
+      "name": "nix-eval",
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "created": "2026-11-13T23:44:20Z"
+    },
+    {
+      "id": 43529329314,
+      "name": "storybook",
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "created": "2026-11-13T23:44:20Z"
+    },
+    {
+      "id": 43529329197,
+      "name": "native",
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "created": "2026-11-13T23:44:20Z"
+    },
+    {
+      "id": 43529329125,
+      "name": "typecheck",
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "created": "2026-11-13T23:44:20Z"
+    },
+    {
+      "id": 43529329499,
+      "name": "omni",
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "created": "2026-11-13T23:44:20Z"
+    },
+    {
+      "id": 43529329179,
+      "name": "nix-toolchain",
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "created": "2026-11-13T23:44:20Z"
+    },
+    {
+      "id": 43529326204,
+      "name": "guards",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "attempt": 1,
+      "created": "2026-11-13T23:44:19Z"
+    },
+    {
+      "id": 43529301605,
+      "name": "omni",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "attempt": 1,
+      "created": "2026-11-13T23:44:07Z"
+    },
+    {
+      "id": 43529301719,
+      "name": "guards",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "attempt": 1,
+      "created": "2026-11-13T23:44:07Z"
+    },
+    {
+      "id": 43529301610,
+      "name": "atlas-guard",
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "created": "2026-11-13T23:44:07Z"
+    },
+    {
+      "id": 43529301657,
+      "name": "omni-cli-smoke",
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "created": "2026-11-13T23:44:07Z"
+    },
+    {
+      "id": 43529301997,
+      "name": "nix-toolchain",
+      "status": "completed",
+      "conclusion": "success",
+      "attempt": 1,
+      "created": "2026-11-13T23:44:07Z"
+    }
+  ],
+  "core_linux": {
+    "coreTotals": {
+      "jobsWithLogs": 15,
+      "pass": 6070,
+      "skip": 56,
+      "fail": 1,
+      "assertions": 52900,
+      "files": 703,
+      "omniSpawns": 10567,
+      "omniDelegated": 5,
+      "cacheHitTasks": 0,
+      "cacheMissTasks": 15,
+      "tests": 6127
+    },
+    "coreStatus": "completed: fourteen successful jobs and one failed job; all fifteen test tasks executed without replay",
+    "criticalSessionFiles": [
+      {
+        "job": 132243525782,
+        "lane": "unit (linux core 5/15)",
+        "files": [
+          "test/prompt-context.test.ts"
+        ]
+      },
+      {
+        "job": 132243525811,
+        "lane": "unit (linux core 3/15)",
+        "files": [
+          "test/session-runner-stream-terminal.test.ts"
+        ]
+      },
+      {
+        "job": 132243525817,
+        "lane": "unit (linux core 6/15)",
+        "files": [
+          "test/session-removal-admission.test.ts",
+          "test/session-prompt.test.ts"
+        ]
+      },
+      {
+        "job": 132243525866,
+        "lane": "unit (linux core 4/15)",
+        "files": [
+          "test/prompt-estimate.test.ts"
+        ]
+      },
+      {
+        "job": 132243525928,
+        "lane": "unit (linux core 14/15)",
+        "files": [
+          "test/hook-prompt-context.test.ts",
+          "test/session-runner-stop.test.ts"
+        ]
+      },
+      {
+        "job": 132243525966,
+        "lane": "unit (linux core 8/15)",
+        "files": [
+          "test/session-run-coordinator.test.ts"
+        ]
+      },
+      {
+        "job": 132243526071,
+        "lane": "unit (linux core 15/15)",
+        "files": [
+          "test/prompt-context-compaction.test.ts",
+          "test/session-revert-concurrency.test.ts",
+          "test/session-run-coordinator-exclusive.test.ts"
+        ]
+      }
+    ],
+    "tcpProxySameSourceCounterevidence": [
+      {
+        "job": 132243525972,
+        "lane": "unit (linux core 9/15)",
+        "marker": [
+          "2026-11-13T23:49:11.7648581Z @orchestra/core:test: shard file starts /home/runner/work/hugr-orchestra/hugr-orchestra/packages/core/test/tcp-proxy.test.ts"
+        ],
+        "cache": [
+          "2026-11-13T23:49:11.5449457Z @orchestra/core:test: cache miss, executing 4fea2f94134204db",
+          "2026-11-13T23:50:17.2963969Z  Tasks:    1 successful, 1 total",
+          "2026-11-13T23:50:17.2964459Z Cached:    0 cached, 1 total"
+        ],
+        "counts": [
+          "2026-11-13T23:50:17.2432426Z @orchestra/core:test: omni positive control: pass (suite: every run must spawn through omni); 1581 omni spawn(s), 4 delegated.",
+          "2026-11-13T23:50:17.2441704Z @orchestra/core:test:  534 pass",
+          "2026-11-13T23:50:17.2441926Z @orchestra/core:test:  3 skip",
+          "2026-11-13T23:50:17.2442159Z @orchestra/core:test:  0 fail",
+          "2026-11-13T23:50:17.2442405Z @orchestra/core:test:  4199 expect() calls",
+          "2026-11-13T23:50:17.2442723Z @orchestra/core:test: Ran 537 tests across 55 files. [65.69s]"
+        ]
+      }
+    ],
+    "sourceBlobChecks": [
+      {
+        "path": "modules/maestro/coordination/src/v2/workflow/review.ts",
+        "expected": "6bbb30a6ecf038699cd0add49ca4d301a26611db",
+        "actual": "6bbb30a6ecf038699cd0add49ca4d301a26611db",
+        "match": true
+      },
+      {
+        "path": "modules/maestro/coordination/test/v2-workflow-review.test.ts",
+        "expected": "f84a4dc9f26067de8249616dfc9105bba163b263",
+        "actual": "f84a4dc9f26067de8249616dfc9105bba163b263",
+        "match": true
+      },
+      {
+        "path": "modules/maestro/coordination/test/v2-guide.test.ts",
+        "expected": "b30fc5d4a0f5dae6ba3bbc46990a833297627a37",
+        "actual": "b30fc5d4a0f5dae6ba3bbc46990a833297627a37",
+        "match": true
+      }
+    ],
+    "unresolvedFailure": {
+      "job": 132243525866,
+      "file": "packages/core/test/backend-toolkit-cassandra.test.ts",
+      "test": "original, cassandra1, cassandra2 or cassandra3 ready binaries cannot satisfy cassandra4 cache identity",
+      "error": "ToolSafety.Denied: sandbox-tcp-proxy-listen-acquisition",
+      "location": "packages/core/src/tcp-proxy.ts:123",
+      "testCaller": "packages/core/test/backend-toolkit-cassandra.test.ts:196",
+      "durationMs": 43232.08,
+      "classification": "observed test failure; deeper cause not identified by this monitor; root assigned investigation to isolation_release_review",
+      "reruns": 0
+    }
+  },
+  "core_windows": {
+    "conclusion": "15/15 Windows Core jobs succeeded on attempt 1; actual execution observed for every scheduled file. The overall epic still contains the separate Linux Cassandra failure.",
+    "summary": {
+      "jobs": 15,
+      "success": 15,
+      "failure": 0,
+      "cancelled": 0,
+      "plannedFileEntries": 703,
+      "uniquePlannedFiles": 703,
+      "startedFileEntries": 703,
+      "uniqueStartedFiles": 703,
+      "missingStartedFiles": [],
+      "unexpectedStartedFiles": [],
+      "mainTurboProcesses": 14,
+      "turboCacheMisses": 14,
+      "turboCacheHits": 0,
+      "directBunProcesses": 5,
+      "reportedBunCounts": {
+        "pass": 5772,
+        "skip": 277,
+        "fail": 0,
+        "expectCalls": 47505,
+        "tests": 6049,
+        "filesSummarized": 701
+      },
+      "countsQualification": "Bun summaries cover 701 files: 5772 pass, 277 skip, 0 fail and 47505 expect calls. Two additional Windows-only separate processes self-exit after explicit HOLD proof messages; they are included in the 703 reached files, not invented into Bun test/assert counts.",
+      "omni": {
+        "passVerdicts": 16,
+        "notApplicableVerdicts": 1,
+        "spawns": 7520,
+        "delegated": 5
+      },
+      "omniQualification": "16 pass verdicts and 1 declared/not-applicable verdict appear in summarized processes. Two self-exiting HOLD proof processes print no process-local Omni verdict; no Omni enforcement/conformance claim is made for those.",
+      "checkoutMatchesAll15": true,
+      "previouslyUnstartedFiles": 28,
+      "previouslyUnstartedNowReached": 28,
+      "maxJobSeconds": 435,
+      "maxTestStepSeconds": 195,
+      "maxBeforeTestsSeconds": 270,
+      "maxSetupBunSeconds": 252,
+      "minJobBudgetRemainingSeconds": 165,
+      "minTestStepBudgetRemainingSeconds": 285
+    },
+    "specialSelfExitingProofs": [
+      {
+        "jobId": 132243528308,
+        "lane": 6,
+        "path": "test/tool-safety-loopback.test.ts",
+        "observed": "2026-11-13T23:57:02.6260253Z win32: working TCP controls and exact loopback HOLD without a ready sandbox measured",
+        "classification": "Direct separate process reached its explicit Windows HOLD proof and exited successfully; no Bun summary or process-local Omni verdict is emitted.",
+        "testCount": null,
+        "assertCount": null
+      },
+      {
+        "jobId": 132243528304,
+        "lane": 12,
+        "path": "test/tool-safety-sandbox-repairs.test.ts",
+        "observed": "2026-11-14T00:00:41.1750881Z Windows: exact Unix socket enforcement unsupported; HOLD measured, no conformance claim",
+        "classification": "Direct separate process reached its explicit Windows unsupported/HOLD proof and exited successfully; no Bun summary or process-local Omni verdict is emitted.",
+        "testCount": null,
+        "assertCount": null
+      }
+    ],
+    "appContainer": {
+      "jobId": 132243525896,
+      "lane": 2,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243525896",
+      "plannedAndStartedFiles": [
+        "test/tool-safety-appcontainer-runtimes.test.ts"
+      ],
+      "cache": "miss",
+      "taskHash": "27978fdb468d2693",
+      "pass": 1,
+      "skip": 0,
+      "fail": 0,
+      "expectCalls": 16,
+      "bunElapsedSeconds": 108.85,
+      "confinedProcessElapsedMs": [
+        540,
+        2004
+      ],
+      "omni": {
+        "verdict": "pass",
+        "spawns": 3,
+        "delegated": 0
+      },
+      "setupBunSeconds": 177,
+      "beforeTestsSeconds": 196,
+      "testStepSeconds": 109,
+      "totalJobSeconds": 310,
+      "jobBudgetSeconds": 600,
+      "testStepBudgetSeconds": 480,
+      "historicalMeasuredWeightSeconds": 69.3,
+      "declaredReserveSeconds": 240,
+      "overheadWindows": 1.8,
+      "qualification": "Original uninstrumented test passed in the dedicated full-suite lane. There are no phase markers here to allocate the 108.85s to settled versus other scope cleanup, and this does not retroactively explain the previous cancelled run."
+    },
+    "coverageOfPreviouslyUnstartedFiles": [
+      {
+        "path": "test/actions/authoring-outcomes.test.ts",
+        "jobs": [
+          {
+            "jobId": 132243528268,
+            "lane": 11,
+            "conclusion": "success",
+            "execution": "actual",
+            "evidence": [
+              "2026-11-13T23:59:36.5445817Z @orchestra/core:test: shard file starts D:\\a\\hugr-orchestra\\hugr-orchestra\\packages\\core\\test\\actions\\authoring-outcomes.test.ts"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "test/actions/github-command-preflight.test.ts",
+        "jobs": [
+          {
+            "jobId": 132243525793,
+            "lane": 3,
+            "conclusion": "success",
+            "execution": "actual",
+            "evidence": [
+              "2026-11-13T23:58:01.8118686Z @orchestra/core:test: shard file starts D:\\a\\hugr-orchestra\\hugr-orchestra\\packages\\core\\test\\actions\\github-command-preflight.test.ts"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "test/actions/gitlab-read-http.test.ts",
+        "jobs": [
+          {
+            "jobId": 132243528225,
+            "lane": 8,
+            "conclusion": "success",
+            "execution": "actual",
+            "evidence": [
+              "2026-11-14T00:00:00.7268617Z @orchestra/core:test: shard file starts D:\\a\\hugr-orchestra\\hugr-orchestra\\packages\\core\\test\\actions\\gitlab-read-http.test.ts"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "test/actions/output-process.test.ts",
+        "jobs": [
+          {
+            "jobId": 132243528268,
+            "lane": 11,
+            "conclusion": "success",
+            "execution": "actual",
+            "evidence": [
+              "2026-11-13T23:59:36.6790567Z @orchestra/core:test: shard file starts D:\\a\\hugr-orchestra\\hugr-orchestra\\packages\\core\\test\\actions\\output-process.test.ts"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "test/config/provider-policy-migration.test.ts",
+        "jobs": [
+          {
+            "jobId": 132243528217,
+            "lane": 9,
+            "conclusion": "success",
+            "execution": "actual",
+            "evidence": [
+              "2026-11-13T23:59:32.1873544Z @orchestra/core:test: shard file starts D:\\a\\hugr-orchestra\\hugr-orchestra\\packages\\core\\test\\config\\provider-policy-migration.test.ts"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "test/effect/keyed-mutex.test.ts",
+        "jobs": [
+          {
+            "jobId": 132243525981,
+            "lane": 5,
+            "conclusion": "success",
+            "execution": "actual",
+            "evidence": [
+              "2026-11-13T23:59:50.2919448Z @orchestra/core:test: shard file starts D:\\a\\hugr-orchestra\\hugr-orchestra\\packages\\core\\test\\effect\\keyed-mutex.test.ts"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "test/inbox/calendar.test.ts",
+        "jobs": [
+          {
+            "jobId": 132243528304,
+            "lane": 12,
+            "conclusion": "success",
+            "execution": "actual",
+            "evidence": [
+              "2026-11-14T00:03:18.1021507Z @orchestra/core:test: shard file starts D:\\a\\hugr-orchestra\\hugr-orchestra\\packages\\core\\test\\inbox\\calendar.test.ts"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "test/inbox/work-service.test.ts",
+        "jobs": [
+          {
+            "jobId": 132243528673,
+            "lane": 15,
+            "conclusion": "success",
+            "execution": "actual",
+            "evidence": [
+              "2026-11-14T00:03:41.3022174Z @orchestra/core:test: shard file starts D:\\a\\hugr-orchestra\\hugr-orchestra\\packages\\core\\test\\inbox\\work-service.test.ts"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "test/mcp/identity-manager.test.ts",
+        "jobs": [
+          {
+            "jobId": 132243528327,
+            "lane": 10,
+            "conclusion": "success",
+            "execution": "actual",
+            "evidence": [
+              "2026-11-13T23:58:20.4716216Z @orchestra/core:test: shard file starts D:\\a\\hugr-orchestra\\hugr-orchestra\\packages\\core\\test\\mcp\\identity-manager.test.ts"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "test/mcp/oauth-callback.test.ts",
+        "jobs": [
+          {
+            "jobId": 132243528308,
+            "lane": 6,
+            "conclusion": "success",
+            "execution": "actual",
+            "evidence": [
+              "2026-11-13T23:59:38.3550720Z @orchestra/core:test: shard file starts D:\\a\\hugr-orchestra\\hugr-orchestra\\packages\\core\\test\\mcp\\oauth-callback.test.ts"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "test/mcp/oauth-manager-authority.test.ts",
+        "jobs": [
+          {
+            "jobId": 132243528308,
+            "lane": 6,
+            "conclusion": "success",
+            "execution": "actual",
+            "evidence": [
+              "2026-11-13T23:59:38.6166534Z @orchestra/core:test: shard file starts D:\\a\\hugr-orchestra\\hugr-orchestra\\packages\\core\\test\\mcp\\oauth-manager-authority.test.ts"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "test/plugin/provider-cohere.test.ts",
+        "jobs": [
+          {
+            "jobId": 132243528704,
+            "lane": 14,
+            "conclusion": "success",
+            "execution": "actual",
+            "evidence": [
+              "2026-11-14T00:04:54.7954525Z @orchestra/core:test: shard file starts D:\\a\\hugr-orchestra\\hugr-orchestra\\packages\\core\\test\\plugin\\provider-cohere.test.ts"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "test/plugin/provider-openai-compatible.test.ts",
+        "jobs": [
+          {
+            "jobId": 132243528173,
+            "lane": 7,
+            "conclusion": "success",
+            "execution": "actual",
+            "evidence": [
+              "2026-11-13T23:58:36.0958418Z @orchestra/core:test: shard file starts D:\\a\\hugr-orchestra\\hugr-orchestra\\packages\\core\\test\\plugin\\provider-openai-compatible.test.ts"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "test/pty/shell-cwd.test.ts",
+        "jobs": [
+          {
+            "jobId": 132243528217,
+            "lane": 9,
+            "conclusion": "success",
+            "execution": "actual",
+            "evidence": [
+              "2026-11-13T23:59:33.4379405Z @orchestra/core:test: shard file starts D:\\a\\hugr-orchestra\\hugr-orchestra\\packages\\core\\test\\pty\\shell-cwd.test.ts"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "test/research-toolkit/code-index-structural.test.ts",
+        "jobs": [
+          {
+            "jobId": 132243528510,
+            "lane": 13,
+            "conclusion": "success",
+            "execution": "actual",
+            "evidence": [
+              "2026-11-14T00:03:05.6892394Z @orchestra/core:test: shard file starts D:\\a\\hugr-orchestra\\hugr-orchestra\\packages\\core\\test\\research-toolkit\\code-index-structural.test.ts"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "test/review-toolkit/actionlint-report.test.ts",
+        "jobs": [
+          {
+            "jobId": 132243528327,
+            "lane": 10,
+            "conclusion": "success",
+            "execution": "actual",
+            "evidence": [
+              "2026-11-13T23:58:25.7824461Z @orchestra/core:test: shard file starts D:\\a\\hugr-orchestra\\hugr-orchestra\\packages\\core\\test\\review-toolkit\\actionlint-report.test.ts"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "test/review-toolkit/local-cargo-input.test.ts",
+        "jobs": [
+          {
+            "jobId": 132243525793,
+            "lane": 3,
+            "conclusion": "success",
+            "execution": "actual",
+            "evidence": [
+              "2026-11-13T23:58:06.8685596Z @orchestra/core:test: shard file starts D:\\a\\hugr-orchestra\\hugr-orchestra\\packages\\core\\test\\review-toolkit\\local-cargo-input.test.ts"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "test/review-toolkit/local-read-process.test.ts",
+        "jobs": [
+          {
+            "jobId": 132243528173,
+            "lane": 7,
+            "conclusion": "success",
+            "execution": "actual",
+            "evidence": [
+              "2026-11-13T23:58:39.9188978Z @orchestra/core:test: shard file starts D:\\a\\hugr-orchestra\\hugr-orchestra\\packages\\core\\test\\review-toolkit\\local-read-process.test.ts"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "test/review-toolkit/local-tools-conformance.test.ts",
+        "jobs": [
+          {
+            "jobId": 132243526011,
+            "lane": 4,
+            "conclusion": "success",
+            "execution": "actual",
+            "evidence": [
+              "2026-11-13T23:57:31.7238234Z @orchestra/core:test: shard file starts D:\\a\\hugr-orchestra\\hugr-orchestra\\packages\\core\\test\\review-toolkit\\local-tools-conformance.test.ts"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "test/review-toolkit/native-pack-adapters.test.ts",
+        "jobs": [
+          {
+            "jobId": 132243525981,
+            "lane": 5,
+            "conclusion": "success",
+            "execution": "actual",
+            "evidence": [
+              "2026-11-14T00:00:03.8676164Z @orchestra/core:test: shard file starts D:\\a\\hugr-orchestra\\hugr-orchestra\\packages\\core\\test\\review-toolkit\\native-pack-adapters.test.ts"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "test/review-toolkit/oxlint-linux-conformance.test.ts",
+        "jobs": [
+          {
+            "jobId": 132243528704,
+            "lane": 14,
+            "conclusion": "success",
+            "execution": "actual",
+            "evidence": [
+              "2026-11-14T00:05:04.7362168Z @orchestra/core:test: shard file starts D:\\a\\hugr-orchestra\\hugr-orchestra\\packages\\core\\test\\review-toolkit\\oxlint-linux-conformance.test.ts"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "test/review-toolkit/probe-property.test.ts",
+        "jobs": [
+          {
+            "jobId": 132243528308,
+            "lane": 6,
+            "conclusion": "success",
+            "execution": "actual",
+            "evidence": [
+              "2026-11-13T23:59:51.6591558Z @orchestra/core:test: shard file starts D:\\a\\hugr-orchestra\\hugr-orchestra\\packages\\core\\test\\review-toolkit\\probe-property.test.ts"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "test/review-toolkit/snapshot-mutation.test.ts",
+        "jobs": [
+          {
+            "jobId": 132243528225,
+            "lane": 8,
+            "conclusion": "success",
+            "execution": "actual",
+            "evidence": [
+              "2026-11-14T00:00:06.2278567Z @orchestra/core:test: shard file starts D:\\a\\hugr-orchestra\\hugr-orchestra\\packages\\core\\test\\review-toolkit\\snapshot-mutation.test.ts"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "test/review/local-check-routing.test.ts",
+        "jobs": [
+          {
+            "jobId": 132243528225,
+            "lane": 8,
+            "conclusion": "success",
+            "execution": "actual",
+            "evidence": [
+              "2026-11-14T00:00:06.0648463Z @orchestra/core:test: shard file starts D:\\a\\hugr-orchestra\\hugr-orchestra\\packages\\core\\test\\review\\local-check-routing.test.ts"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "test/review/pack-license.test.ts",
+        "jobs": [
+          {
+            "jobId": 132243528268,
+            "lane": 11,
+            "conclusion": "success",
+            "execution": "actual",
+            "evidence": [
+              "2026-11-13T23:59:39.2705193Z @orchestra/core:test: shard file starts D:\\a\\hugr-orchestra\\hugr-orchestra\\packages\\core\\test\\review\\pack-license.test.ts"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "test/tool-task-cold.test.ts",
+        "jobs": [
+          {
+            "jobId": 132243528268,
+            "lane": 11,
+            "conclusion": "success",
+            "execution": "actual",
+            "evidence": [
+              "2026-11-13T23:59:34.1482246Z @orchestra/core:test: shard file starts D:\\a\\hugr-orchestra\\hugr-orchestra\\packages\\core\\test\\tool-task-cold.test.ts"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "test/tool-todowrite.test.ts",
+        "jobs": [
+          {
+            "jobId": 132243528217,
+            "lane": 9,
+            "conclusion": "success",
+            "execution": "actual",
+            "evidence": [
+              "2026-11-13T23:58:31.9025325Z @orchestra/core:test: shard file starts D:\\a\\hugr-orchestra\\hugr-orchestra\\packages\\core\\test\\tool-todowrite.test.ts"
+            ]
+          }
+        ]
+      },
+      {
+        "path": "test/util/flock.test.ts",
+        "jobs": [
+          {
+            "jobId": 132243528268,
+            "lane": 11,
+            "conclusion": "success",
+            "execution": "actual",
+            "evidence": [
+              "2026-11-13T23:59:40.2218115Z @orchestra/core:test: shard file starts D:\\a\\hugr-orchestra\\hugr-orchestra\\packages\\core\\test\\util\\flock.test.ts"
+            ]
+          }
+        ]
+      }
+    ],
+    "limitations": [
+      "This record covers Windows Core only. Overall run 43529329253 contains Linux Core4 failure 132243525866 in Cassandra broker acquisition; it is not reclassified as green.",
+      "Epic inputs were {}; cold mode was not requested. Nevertheless all fourteen Core Turbo tasks explicitly logged cache miss, and the five direct Bun processes ran; no Core task log replay or prior-pass skip was observed.",
+      "A file-start marker proves that the module was reached; successful containing runs and their summaries establish lane outcome. The 277 existing platform skips remain skips, including any within the 28 formerly unstarted files.",
+      "Two Windows-only separate processes self-exit after explicit HOLD/unsupported proof lines and have no Bun summary or process-local Omni verdict. Their missing counts were not fabricated.",
+      "Same-run Windows Omni binaries were freshly built after an exact-source cache miss. This is not physical-hardware, native-permission-dialog or published-release qualification.",
+      "No reruns, no timeout increase, no test changes and no GitHub mutations were performed by this monitor."
+    ]
+  },
+  "maestro": {
+    "maestroLinux": {
+      "task": "@orchestra/maestro:test",
+      "pass": 713,
+      "skip": 4,
+      "fail": 0,
+      "assertions": 4973,
+      "files": 92,
+      "tests": 717,
+      "omniSpawns": 9734,
+      "omniDelegated": 0,
+      "cache": "miss",
+      "hash": "a8df1ffc2a47cc30",
+      "duration": "107.77s",
+      "job": 132243530551,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243530551",
+      "criticalFiles": [
+        {
+          "file": "test/lucy-tier-retention.test.ts",
+          "pass": 2,
+          "skip": 0,
+          "fail": 0,
+          "oracles": [
+            "2026-11-14T00:07:37.5991594Z (pass) a retained Standard round does not upgrade when Deep later becomes built [93.15ms]",
+            "2026-11-14T00:07:37.5993151Z (pass) a retained Standard tier that is unbuilt or gone is refused before analysis or a child [80.73ms]"
+          ]
+        },
+        {
+          "file": "test/seat-framework.test.ts",
+          "pass": 8,
+          "skip": 0,
+          "fail": 0,
+          "oracles": [
+            "2026-11-14T00:07:37.6003671Z (pass) native seat framework > definitions correspond to registered files, charters and skill artifacts [50.86ms]",
+            "2026-11-14T00:07:37.6005010Z (pass) native seat framework > the review seat is defined as design §10.2 and its charter forbids what it declares [0.34ms]",
+            "2026-11-14T00:07:37.6005886Z (pass) native seat framework > the review capability is refused for any seat but lucy [0.28ms]",
+            "2026-11-14T00:07:37.6006720Z (pass) native seat framework > unsupported ownership and malformed definitions fail before registration [0.23ms]",
+            "2026-11-14T00:07:37.6007939Z (pass) native seat framework > every routed seat tells Maestro which work it takes, and each team role has one seat [0.36ms]",
+            "2026-11-14T00:07:37.6009742Z (pass) native seat framework > Atlas Memory remains closed to approved native owners [0.22ms]",
+            "2026-11-14T00:07:37.6011249Z (pass) native seat framework > upstream identity preserves bounded authoring and backend-only toolkit [0.18ms]",
+            "2026-11-14T00:07:37.6012890Z (pass) native seat framework > scaffold refuses collisions and invalid ids without overwriting artifacts [26.73ms]"
+          ]
+        },
+        {
+          "file": "test/v2-guide.test.ts",
+          "pass": 5,
+          "skip": 0,
+          "fail": 0,
+          "oracles": [
+            "2026-11-14T00:07:37.6020920Z (pass) every app, package and module is covered by a guide leaf with its own heading [1.22ms]",
+            "2026-11-14T00:07:37.6022312Z (pass) positive control: the name check sees a default display name in prose and not in an id [0.26ms]",
+            "2026-11-14T00:07:37.6023636Z (pass) the guide names agents by id, never by a default display name [2.00ms]",
+            "2026-11-14T00:07:37.6024706Z (pass) the guide states the limits the code enforces [0.16ms]",
+            "2026-11-14T00:07:37.6025753Z (pass) Maestro's guide index lists every leaf within its budget [0.21ms]"
+          ]
+        },
+        {
+          "file": "test/lucy-governed-checks.test.ts",
+          "pass": 6,
+          "skip": 0,
+          "fail": 0,
+          "oracles": [
+            "2026-11-14T00:07:37.6039196Z (pass) a scoped finish refuses a governed receipt before a review event or board note [954.98ms]",
+            "2026-11-14T00:07:37.6039874Z (pass) card-only finish cannot record a receipt [309.88ms]",
+            "2026-11-14T00:07:37.6040632Z (pass) a Quick finish pages before record, then seals that snapshot [1177.82ms]",
+            "2026-11-14T00:07:37.6041514Z (pass) a Standard finish refuses a forged finding and publishes the host-confirmed P1 [1222.05ms]",
+            "2026-11-14T00:07:37.6042249Z (pass) a Quick finish refuses a fabricated quote and publishes an in-range P1 [992.43ms]",
+            "2026-11-14T00:07:37.6043174Z (pass) a newer APPROVE or REJECT code receipt refuses rereview before any child prompt [1831.79ms]"
+          ]
+        },
+        {
+          "file": "test/lucy-durable-fanout.test.ts",
+          "pass": 2,
+          "skip": 0,
+          "fail": 0,
+          "oracles": [
+            "2026-11-14T00:07:37.6195368Z (pass) lucy durable fanout > Standard admits distinct lens children and reuses the completed facts [860.69ms]",
+            "2026-11-14T00:07:37.6204124Z (pass) lucy durable fanout > Quick drains hunt and finish in the lead and admits no extra user turn [529.76ms]"
+          ]
+        },
+        {
+          "file": "test/lucy-code-binding.test.ts",
+          "pass": 2,
+          "skip": 0,
+          "fail": 0,
+          "oracles": [
+            "2026-11-14T00:07:37.6205230Z (pass) lead codeSource is the captured full commit and outlives a short read [99.11ms]",
+            "2026-11-14T00:07:37.6205852Z (pass) omitted headCommit does not invent a semantic commit [122.87ms]"
+          ]
+        },
+        {
+          "file": "test/lucy-outcome-binding.test.ts",
+          "pass": 7,
+          "skip": 1,
+          "fail": 0,
+          "oracles": [
+            "2026-11-14T00:07:37.6230477Z (pass) delivered primaries default to not-pursued and ignore secondary sources [6.94ms]",
+            "2026-11-14T00:07:37.6231092Z (pass) a star mapping binds generation to the native rule id [0.32ms]",
+            "2026-11-14T00:07:37.6231688Z (pass) only a matching source class path and inclusive range can confirm [1.25ms]",
+            "2026-11-14T00:07:37.6232371Z (pass) one fingerprint keeps every delivered range, and placement is not a conflict [1.23ms]",
+            "2026-11-14T00:07:37.6233092Z (pass) reads sort by pack rule generation and fingerprint and reject a bad source [0.52ms]",
+            "2026-11-14T00:07:37.6233750Z (pass) production page reads retained items only when a page succeeds [1.63ms]",
+            "2026-11-14T00:07:37.6234348Z (pass) a completed PR retry admits immutable host outcomes once [407.35ms]",
+            "2026-11-14T00:07:37.6235024Z (skip) Windows refuses PR outcomes and retries without precision rows or child execution"
+          ]
+        },
+        {
+          "file": "test/orchestra-map.test.ts",
+          "pass": 1,
+          "skip": 0,
+          "fail": 0,
+          "oracles": [
+            "2026-11-14T00:07:37.6239529Z (pass) the maestro-orchestra map names exactly the Maestro and board tools Maestro is given [64.26ms]"
+          ]
+        },
+        {
+          "file": "test/lucy-pr-concurrency.test.ts",
+          "pass": 3,
+          "skip": 0,
+          "fail": 0,
+          "oracles": [
+            "2026-11-14T00:07:37.6264130Z (pass) same candidate waits for its predecessor and a later call enters after release [6.28ms]",
+            "2026-11-14T00:07:37.6264789Z (pass) an observer failure still releases the registered candidate [0.36ms]",
+            "2026-11-14T00:07:37.6265490Z (pass) cancelling owner and queued waiter releases slots; 64 active keys enforce the limit [2.57ms]"
+          ]
+        },
+        {
+          "file": "test/lucy-check-binding.test.ts",
+          "pass": 1,
+          "skip": 1,
+          "fail": 0,
+          "oracles": [
+            "2026-11-14T00:07:37.6287045Z (pass) lucy check binding > first response and completed retry keep the host's checks and reject a forged card [330.27ms]",
+            "2026-11-14T00:07:37.6287885Z (skip) lucy check binding > Windows refuses PR check binding and retries before any child or prompt"
+          ]
+        },
+        {
+          "file": "test/v2-workflow-review.test.ts",
+          "pass": 6,
+          "skip": 0,
+          "fail": 0,
+          "oracles": [
+            "2026-11-14T00:07:37.6293227Z (pass) the workers' result is the working tree as a Git tree, bounded by HEAD and the writePaths [265.11ms]",
+            "2026-11-14T00:07:37.6294773Z (pass) a racily clean tracked edit remains in the review tree without changing the real index [113.32ms]",
+            "2026-11-14T00:07:37.6296265Z (pass) staged review snapshots keep the real index and refuse divergent worktree bytes [135.40ms]",
+            "2026-11-14T00:07:37.6297632Z (pass) an echoed code-stage artifact verifies only against the recomputed result of a bound revision [244.54ms]",
+            "2026-11-14T00:07:37.6298478Z (pass) the cold review reads the newest code-stage receipt for exactly the result tree [55.43ms]",
+            "2026-11-14T00:07:37.6299723Z (pass) a graded step's retry carries the code review's full finding record; a legacy finding renders as before [65.70ms]"
+          ]
+        },
+        {
+          "file": "test/lucy-phase3-tree.test.ts",
+          "pass": 4,
+          "skip": 0,
+          "fail": 0,
+          "oracles": [
+            "2026-11-14T00:07:37.6334775Z (pass) phase 3 authored tree > loader discovery and catalog check close on the authored skill tree [57.64ms]",
+            "2026-11-14T00:07:37.6335594Z (pass) phase 3 authored tree > owned copy missing a required phase 3 node fails missing-node [19.65ms]",
+            "2026-11-14T00:07:37.6336359Z (pass) phase 3 authored tree > owned copy citing an unknown id fails unknown-cited-id [22.57ms]",
+            "2026-11-14T00:07:37.6337130Z (pass) phase 3 authored tree > owned copy with an unreached lens node fails unreached-node [24.14ms]"
+          ]
+        },
+        {
+          "file": "test/lucy-pr-entry.test.ts",
+          "pass": 6,
+          "skip": 1,
+          "fail": 0,
+          "oracles": [
+            "2026-11-14T00:07:37.6685870Z (pass) lucy pr entry > Maestro PR without validation returns one host-bound review-result [262.68ms]",
+            "2026-11-14T00:07:37.6687312Z (pass) lucy pr entry > non-Maestro is refused before git or a child exists [138.08ms]",
+            "2026-11-14T00:07:37.6688587Z (pass) lucy pr entry > mixed governed fields and excess properties are refused [250.21ms]",
+            "2026-11-14T00:07:37.6690225Z (pass) lucy pr entry > base rules bind and PR text cannot suppress the changed path [243.81ms]",
+            "2026-11-14T00:07:37.6691740Z (pass) lucy pr entry > Quick and Standard cards write no review receipt or board review note [385.54ms]",
+            "2026-11-14T00:07:37.6693263Z (pass) lucy pr entry > a card-only child cannot record a receipt through the registered tool [267.72ms]",
+            "2026-11-14T00:07:37.6694700Z (skip) lucy pr entry > Windows refuses a PR review before creating a child or admitting a prompt"
+          ]
+        },
+        {
+          "file": "test/lucy-pr-retry.test.ts",
+          "pass": 3,
+          "skip": 0,
+          "fail": 0,
+          "oracles": [
+            "2026-11-14T00:07:37.6835217Z (pass) lucy pr retry > a held first resume admits one same-candidate retry and a later call adds no drain [399.07ms]",
+            "2026-11-14T00:07:37.6836042Z (pass) lucy pr retry > a failed first leave is pr-retry-incomplete and adds no prompt [263.74ms]",
+            "2026-11-14T00:07:37.6836812Z (pass) lucy pr retry > tier, text, and head each get a distinct candidate and retained artifact [629.36ms]"
+          ]
+        }
+      ]
+    },
+    "maestroWindows": [
+      {
+        "job": 132243534031,
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243534031",
+        "pass": 27,
+        "skip": 0,
+        "fail": 0,
+        "assertions": 165,
+        "files": 1,
+        "tests": 27,
+        "omniSpawns": 5119,
+        "omniDelegated": 0,
+        "cache": "miss",
+        "hash": "d68e638671f4cad4",
+        "duration": "181.65s",
+        "executedFiles": [
+          "test/v2-reservation-currency.test.ts"
+        ],
+        "criticalFiles": []
+      },
+      {
+        "job": 132243534297,
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243534297",
+        "pass": 665,
+        "skip": 26,
+        "fail": 0,
+        "assertions": 4564,
+        "files": 91,
+        "tests": 691,
+        "omniSpawns": 3767,
+        "omniDelegated": 0,
+        "cache": "miss",
+        "hash": "b26569ed14527ff7",
+        "duration": "186.76s",
+        "executedFiles": [
+          "test/admit-request.test.ts",
+          "test/advanced-review-binding.test.ts",
+          "test/advanced-review-catalog.test.ts",
+          "test/approval.test.ts",
+          "test/archie-native-fields.test.ts",
+          "test/context-tool-plan.test.ts",
+          "test/governed-task.test.ts",
+          "test/jimmy-method.test.ts",
+          "test/lucy-atlas-read.test.ts",
+          "test/lucy-atlas-scope.test.ts",
+          "test/lucy-check-binding.test.ts",
+          "test/lucy-check-policy.test.ts",
+          "test/lucy-code-binding.test.ts",
+          "test/lucy-durable-fanout.test.ts",
+          "test/lucy-engagement-evidence.test.ts",
+          "test/lucy-engagement-policy.test.ts",
+          "test/lucy-engagement-source.test.ts",
+          "test/lucy-finding-policy.test.ts",
+          "test/lucy-governed-checks.test.ts",
+          "test/lucy-governed-round.test.ts",
+          "test/lucy-outcome-binding.test.ts",
+          "test/lucy-phase3-tree.test.ts",
+          "test/lucy-pr-concurrency.test.ts",
+          "test/lucy-pr-entry.test.ts",
+          "test/lucy-pr-evidence.test.ts",
+          "test/lucy-pr-facts.test.ts",
+          "test/lucy-pr-publication-lock.test.ts",
+          "test/lucy-pr-quote-range.test.ts",
+          "test/lucy-pr-retry.test.ts",
+          "test/lucy-precision-routing.test.ts",
+          "test/lucy-privacy-scope.test.ts",
+          "test/lucy-receipt.test.ts",
+          "test/lucy-review-bind.test.ts",
+          "test/lucy-review-card.test.ts",
+          "test/lucy-review-result.test.ts",
+          "test/lucy-round-authority.test.ts",
+          "test/lucy-tier-retention.test.ts",
+          "test/lucy-tools.test.ts",
+          "test/orchestra-map.test.ts",
+          "test/project-config.test.ts",
+          "test/release-catalog.test.ts",
+          "test/release-check-facts.test.ts",
+          "test/release-request.test.ts",
+          "test/release-scope.test.ts",
+          "test/review-cap-coverage.test.ts",
+          "test/review-diff-order.test.ts",
+          "test/review-samples.test.ts",
+          "test/roster.test.ts",
+          "test/route-grant.test.ts",
+          "test/seat-framework.test.ts",
+          "test/seat-scaffold.test.ts",
+          "test/seat-skill-root.test.ts",
+          "test/seat-skills-build.test.ts",
+          "test/specialist-name-guard.test.ts",
+          "test/task-hash.test.ts",
+          "test/upstream-proposal.test.ts",
+          "test/v2-atlas-header.test.ts",
+          "test/v2-atlas-memory.test.ts",
+          "test/v2-atlas-restore.test.ts",
+          "test/v2-atlas.test.ts",
+          "test/v2-background-retry.test.ts",
+          "test/v2-background.test.ts",
+          "test/v2-board-drift.test.ts",
+          "test/v2-chain.test.ts",
+          "test/v2-conductor.test.ts",
+          "test/v2-governance-inherit.test.ts",
+          "test/v2-guide.test.ts",
+          "test/v2-logical-task.test.ts",
+          "test/v2-research-tools.test.ts",
+          "test/v2-research.test.ts",
+          "test/v2-reservation.test.ts",
+          "test/v2-resume-admission.test.ts",
+          "test/v2-review-fanout.test.ts",
+          "test/v2-seats-service.test.ts",
+          "test/v2-seats.test.ts",
+          "test/v2-settle.test.ts",
+          "test/v2-skills.test.ts",
+          "test/v2-task-governance.test.ts",
+          "test/v2-team.test.ts",
+          "test/v2-tools.test.ts",
+          "test/v2-upstream-provenance.test.ts",
+          "test/v2-workflow-admission.test.ts",
+          "test/v2-workflow-arm.test.ts",
+          "test/v2-workflow-host.test.ts",
+          "test/v2-workflow-plan-e2e.test.ts",
+          "test/v2-workflow-relay.test.ts",
+          "test/v2-workflow-review.test.ts",
+          "test/v2-workflow-revision.test.ts",
+          "test/v2-workflow-transfer.test.ts",
+          "test/v2-write-roots.test.ts",
+          "test/work-contract.test.ts"
+        ],
+        "criticalFiles": [
+          {
+            "file": "test/lucy-check-binding.test.ts",
+            "pass": 1,
+            "skip": 1,
+            "fail": 0,
+            "oracles": [
+              "2026-11-14T00:18:49.1434878Z @orchestra/maestro:test: (skip) lucy check binding > first response and completed retry keep the host's checks and reject a forged card",
+              "2026-11-14T00:18:50.1783635Z @orchestra/maestro:test: (pass) lucy check binding > Windows refuses PR check binding and retries before any child or prompt [1034.63ms]"
+            ]
+          },
+          {
+            "file": "test/lucy-code-binding.test.ts",
+            "pass": 2,
+            "skip": 0,
+            "fail": 0,
+            "oracles": [
+              "2026-11-14T00:18:50.8259428Z @orchestra/maestro:test: (pass) lead codeSource is the captured full commit and outlives a short read [600.27ms]",
+              "2026-11-14T00:18:51.6637165Z @orchestra/maestro:test: (pass) omitted headCommit does not invent a semantic commit [837.73ms]"
+            ]
+          },
+          {
+            "file": "test/lucy-durable-fanout.test.ts",
+            "pass": 2,
+            "skip": 0,
+            "fail": 0,
+            "oracles": [
+              "2026-11-14T00:18:52.9949464Z @orchestra/maestro:test: (pass) lucy durable fanout > Standard PR refuses the unsupported private replay store before durable admission [1314.48ms]",
+              "2026-11-14T00:18:54.2207389Z @orchestra/maestro:test: (pass) lucy durable fanout > Quick PR refuses the unsupported private replay store before durable admission [1225.75ms]"
+            ]
+          },
+          {
+            "file": "test/lucy-governed-checks.test.ts",
+            "pass": 6,
+            "skip": 0,
+            "fail": 0,
+            "oracles": [
+              "2026-11-14T00:19:06.2154587Z @orchestra/maestro:test: (pass) a scoped finish refuses a governed receipt before a review event or board note [4846.89ms]",
+              "2026-11-14T00:19:06.9133527Z @orchestra/maestro:test: (pass) card-only PR refuses the unsupported private replay store before a child or receipt [697.87ms]",
+              "2026-11-14T00:19:13.7520888Z @orchestra/maestro:test: (pass) a Quick finish pages before record, then seals that snapshot [6838.66ms]",
+              "2026-11-14T00:19:20.1485933Z @orchestra/maestro:test: (pass) a Standard finish refuses a forged finding and publishes the host-confirmed P1 [6396.42ms]",
+              "2026-11-14T00:19:26.2585430Z @orchestra/maestro:test: (pass) a Quick finish refuses a fabricated quote and publishes an in-range P1 [6109.87ms]",
+              "2026-11-14T00:19:36.9787302Z @orchestra/maestro:test: (pass) a newer APPROVE or REJECT code receipt refuses rereview before any child prompt [10720.01ms]"
+            ]
+          },
+          {
+            "file": "test/lucy-outcome-binding.test.ts",
+            "pass": 7,
+            "skip": 1,
+            "fail": 0,
+            "oracles": [
+              "2026-11-14T00:19:47.2712948Z @orchestra/maestro:test: (pass) delivered primaries default to not-pursued and ignore secondary sources [1.13ms]",
+              "2026-11-14T00:19:47.2715784Z @orchestra/maestro:test: (pass) a star mapping binds generation to the native rule id [0.41ms]",
+              "2026-11-14T00:19:47.2730345Z @orchestra/maestro:test: (pass) only a matching source class path and inclusive range can confirm [1.45ms]",
+              "2026-11-14T00:19:47.2747211Z @orchestra/maestro:test: (pass) one fingerprint keeps every delivered range, and placement is not a conflict [1.65ms]",
+              "2026-11-14T00:19:47.2755416Z @orchestra/maestro:test: (pass) reads sort by pack rule generation and fingerprint and reject a bad source [0.81ms]",
+              "2026-11-14T00:19:47.2845789Z @orchestra/maestro:test: (pass) production page reads retained items only when a page succeeds [8.93ms]",
+              "2026-11-14T00:19:47.2846420Z @orchestra/maestro:test: (skip) a completed PR retry admits immutable host outcomes once",
+              "2026-11-14T00:19:48.2271698Z @orchestra/maestro:test: (pass) Windows refuses PR outcomes and retries without precision rows or child execution [942.47ms]"
+            ]
+          },
+          {
+            "file": "test/lucy-phase3-tree.test.ts",
+            "pass": 4,
+            "skip": 0,
+            "fail": 0,
+            "oracles": [
+              "2026-11-14T00:19:48.3353409Z @orchestra/maestro:test: (pass) phase 3 authored tree > loader discovery and catalog check close on the authored skill tree [100.61ms]",
+              "2026-11-14T00:19:48.3675429Z @orchestra/maestro:test: (pass) phase 3 authored tree > owned copy missing a required phase 3 node fails missing-node [32.23ms]",
+              "2026-11-14T00:19:48.3957252Z @orchestra/maestro:test: (pass) phase 3 authored tree > owned copy citing an unknown id fails unknown-cited-id [28.16ms]",
+              "2026-11-14T00:19:48.4233372Z @orchestra/maestro:test: (pass) phase 3 authored tree > owned copy with an unreached lens node fails unreached-node [27.56ms]"
+            ]
+          },
+          {
+            "file": "test/lucy-pr-concurrency.test.ts",
+            "pass": 3,
+            "skip": 0,
+            "fail": 0,
+            "oracles": [
+              "2026-11-14T00:19:48.4568728Z @orchestra/maestro:test: (pass) same candidate waits for its predecessor and a later call enters after release [25.76ms]",
+              "2026-11-14T00:19:48.4574061Z @orchestra/maestro:test: (pass) an observer failure still releases the registered candidate [0.61ms]",
+              "2026-11-14T00:19:48.4605288Z @orchestra/maestro:test: (pass) cancelling owner and queued waiter releases slots; 64 active keys enforce the limit [3.03ms]"
+            ]
+          },
+          {
+            "file": "test/lucy-pr-entry.test.ts",
+            "pass": 3,
+            "skip": 4,
+            "fail": 0,
+            "oracles": [
+              "2026-11-14T00:19:48.4947605Z @orchestra/maestro:test: (skip) lucy pr entry > Maestro PR without validation returns one host-bound review-result",
+              "2026-11-14T00:19:48.9366823Z @orchestra/maestro:test: (pass) lucy pr entry > non-Maestro is refused before git or a child exists [442.02ms]",
+              "2026-11-14T00:19:49.6327211Z @orchestra/maestro:test: (pass) lucy pr entry > mixed governed fields and excess properties are refused [695.97ms]",
+              "2026-11-14T00:19:49.6328012Z @orchestra/maestro:test: (skip) lucy pr entry > base rules bind and PR text cannot suppress the changed path",
+              "2026-11-14T00:19:49.6328681Z @orchestra/maestro:test: (skip) lucy pr entry > Quick and Standard cards write no review receipt or board review note",
+              "2026-11-14T00:19:49.6329337Z @orchestra/maestro:test: (skip) lucy pr entry > a card-only child cannot record a receipt through the registered tool",
+              "2026-11-14T00:19:50.3700680Z @orchestra/maestro:test: (pass) lucy pr entry > Windows refuses a PR review before creating a child or admitting a prompt [737.26ms]"
+            ]
+          },
+          {
+            "file": "test/lucy-pr-retry.test.ts",
+            "pass": 0,
+            "skip": 3,
+            "fail": 0,
+            "oracles": [
+              "2026-11-14T00:19:56.0980695Z @orchestra/maestro:test: (skip) lucy pr retry > a held first resume admits one same-candidate retry and a later call adds no drain",
+              "2026-11-14T00:19:56.0981607Z @orchestra/maestro:test: (skip) lucy pr retry > a failed first leave is pr-retry-incomplete and adds no prompt",
+              "2026-11-14T00:19:56.0982274Z @orchestra/maestro:test: (skip) lucy pr retry > tier, text, and head each get a distinct candidate and retained artifact"
+            ]
+          },
+          {
+            "file": "test/lucy-tier-retention.test.ts",
+            "pass": 2,
+            "skip": 0,
+            "fail": 0,
+            "oracles": [
+              "2026-11-14T00:20:10.6881763Z @orchestra/maestro:test: (pass) a retained Standard round does not upgrade when Deep later becomes built [94.61ms]",
+              "2026-11-14T00:20:10.7772542Z @orchestra/maestro:test: (pass) a retained Standard tier that is unbuilt or gone is refused before analysis or a child [89.01ms]"
+            ]
+          },
+          {
+            "file": "test/orchestra-map.test.ts",
+            "pass": 1,
+            "skip": 0,
+            "fail": 0,
+            "oracles": [
+              "2026-11-14T00:20:11.0716428Z @orchestra/maestro:test: (pass) the maestro-orchestra map names exactly the Maestro and board tools Maestro is given [52.65ms]"
+            ]
+          },
+          {
+            "file": "test/seat-framework.test.ts",
+            "pass": 8,
+            "skip": 0,
+            "fail": 0,
+            "oracles": [
+              "2026-11-14T00:20:12.1720879Z @orchestra/maestro:test: (pass) native seat framework > definitions correspond to registered files, charters and skill artifacts [62.39ms]",
+              "2026-11-14T00:20:12.1724802Z @orchestra/maestro:test: (pass) native seat framework > the review seat is defined as design §10.2 and its charter forbids what it declares [0.37ms]",
+              "2026-11-14T00:20:12.1727807Z @orchestra/maestro:test: (pass) native seat framework > the review capability is refused for any seat but lucy [0.39ms]",
+              "2026-11-14T00:20:12.1730687Z @orchestra/maestro:test: (pass) native seat framework > unsupported ownership and malformed definitions fail before registration [0.28ms]",
+              "2026-11-14T00:20:12.1735013Z @orchestra/maestro:test: (pass) native seat framework > every routed seat tells Maestro which work it takes, and each team role has one seat [0.42ms]",
+              "2026-11-14T00:20:12.1738016Z @orchestra/maestro:test: (pass) native seat framework > Atlas Memory remains closed to approved native owners [0.29ms]",
+              "2026-11-14T00:20:12.1741488Z @orchestra/maestro:test: (pass) native seat framework > upstream identity preserves bounded authoring and backend-only toolkit [0.30ms]",
+              "2026-11-14T00:20:12.2219368Z @orchestra/maestro:test: (pass) native seat framework > scaffold refuses collisions and invalid ids without overwriting artifacts [47.66ms]"
+            ]
+          },
+          {
+            "file": "test/v2-guide.test.ts",
+            "pass": 5,
+            "skip": 0,
+            "fail": 0,
+            "oracles": [
+              "2026-11-14T00:21:16.2094104Z @orchestra/maestro:test: (pass) every app, package and module is covered by a guide leaf with its own heading [2.17ms]",
+              "2026-11-14T00:21:16.2096415Z @orchestra/maestro:test: (pass) positive control: the name check sees a default display name in prose and not in an id [0.28ms]",
+              "2026-11-14T00:21:16.2139761Z @orchestra/maestro:test: (pass) the guide names agents by id, never by a default display name [4.31ms]",
+              "2026-11-14T00:21:16.2142089Z @orchestra/maestro:test: (pass) the guide states the limits the code enforces [0.21ms]",
+              "2026-11-14T00:21:16.2144869Z @orchestra/maestro:test: (pass) Maestro's guide index lists every leaf within its budget [0.27ms]"
+            ]
+          },
+          {
+            "file": "test/v2-workflow-review.test.ts",
+            "pass": 6,
+            "skip": 0,
+            "fail": 0,
+            "oracles": [
+              "2026-11-14T00:21:28.3125564Z @orchestra/maestro:test: (pass) the workers' result is the working tree as a Git tree, bounded by HEAD and the writePaths [1822.36ms]",
+              "2026-11-14T00:21:28.9406329Z @orchestra/maestro:test: (pass) a racily clean tracked edit remains in the review tree without changing the real index [628.01ms]",
+              "2026-11-14T00:21:29.6578906Z @orchestra/maestro:test: (pass) staged review snapshots keep the real index and refuse divergent worktree bytes [717.26ms]",
+              "2026-11-14T00:21:31.2899754Z @orchestra/maestro:test: (pass) an echoed code-stage artifact verifies only against the recomputed result of a bound revision [1632.05ms]",
+              "2026-11-14T00:21:31.4785406Z @orchestra/maestro:test: (pass) the cold review reads the newest code-stage receipt for exactly the result tree [188.48ms]",
+              "2026-11-14T00:21:31.6761106Z @orchestra/maestro:test: (pass) a graded step's retry carries the code review's full finding record; a legacy finding renders as before [197.56ms]"
+            ]
+          }
+        ]
+      }
+    ],
+    "maestroWindowsTotals": {
+      "pass": 692,
+      "skip": 26,
+      "fail": 0,
+      "assertions": 4729,
+      "files": 92,
+      "tests": 718,
+      "omniSpawns": 8886,
+      "omniDelegated": 0
+    },
+    "maestroFileCoverage": {
+      "linux": 92,
+      "windowsUnique": 92,
+      "overlapBetweenWindowsShards": [],
+      "linuxOnly": [],
+      "windowsOnly": []
+    },
+    "maestroStatus": "Linux full and both Windows shards passed with no task cache replay"
+  },
+  "desktop_and_e2e": {
+    "e2e": {
+      "pass": 571,
+      "skip": 3,
+      "fail": 0,
+      "flaky": 0,
+      "retries": 0,
+      "jobs": 8,
+      "all_jobs_success": true
+    },
+    "desktop_linux": {
+      "pass": 1099,
+      "skip": 17,
+      "fail": 0,
+      "jobs": 4,
+      "all_jobs_success": true
+    },
+    "desktop_windows": {
+      "pass": 964,
+      "skip": 148,
+      "fail": 4,
+      "jobs": 4,
+      "all_jobs_success": false
+    },
+    "failed_job": {
+      "id": 132243533814,
+      "name": "unit (windows desktop Bun 1/3)",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-11-14T00:14:13Z",
+      "completed_at": "2026-11-14T00:22:03Z",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43529329253/job/132243533814",
+      "attempt": 1,
+      "checkout": "959e6f612320112a16c5ed56df61cc80079b7e59",
+      "execution": [
+        "2026-11-14T00:18:38.2488809Z @orchestra/desktop:test:bun: cache miss, executing bce4e8785fb84f96",
+        "2026-11-14T00:18:38.2971903Z @orchestra/desktop:test:bun: $ bun test ./scripts/cli-native.integration.test.ts ./scripts/cli-staging.test.ts ./scripts/finalize-latest-yml.test.ts ./scripts/install-electron.integration.test.ts ./src/main/app-dock-linux-display.test.ts ./src/main/app-dock-linux-prewarm.test.ts ./src/main/app-dock-native-client-admission.test.ts ./src/main/app-dock-native-client.test.ts ./src/main/app-dock-native-wire.test.ts ./src/main/app-dock-native.test.ts ./src/main/app-dock-profile-registry.test.ts ./src/main/app-dock-rpc-proof.test.ts ./src/main/app-dock-rpc-workspace-rebind.test.ts ./src/main/app-dock-runtime-backend.test.ts ./src/main/app-dock-runtime-docker.test.ts ./src/main/app-dock-runtime-native.test.ts ./src/main/app-dock-runtime.test.ts ./src/main/app-dock-utils.test.ts ./src/main/attachment-picker.test.ts ./src/main/cli-cache.test.ts ./src/main/credential-key-env.test.ts ./src/main/desktop-startup.test.ts ./src/main/dock-channel.test.ts ./src/main/external-url.test.ts ./src/main/install-state.test.ts ./src/main/ipc-validate.test.ts ./src/main/janitor.test.ts ./src/main/linux-workspace.integration.test.ts ./src/main/live-audio.test.ts ./src/main/live-delivery-manager.native.test.ts ./src/main/live-elapsed.test.ts ./src/main/live-ipc.test.ts ./src/main/live-meeting-client.test.ts ./src/main/live-outbox-native.test.ts ./src/main/live-outbox.electron.native.test.ts ./src/main/live-readiness.test.ts ./src/main/live-segmenter.test.ts ./src/main/live-session-client.test.ts ./src/main/live-transport-log.test.ts ./src/main/menu-availability.test.ts ./src/main/omni-appcontainer.test.ts ./src/main/omni-process.test.ts ./src/main/packaged-weight.test.ts ./src/main/response-download.test.ts ./src/main/shell-env.test.ts ./src/main/store-cleanup.test.ts ./src/main/titlebar-frame.test.ts ./src/main/updater-subscriptions.test.ts ./src/main/window-recovery.test.ts ./src/main/window-state.test.ts ./src/main/wsl/runtime.test.ts ./src/renderer/html.test.ts ./src/renderer/native-menu.test.ts ./src/renderer/response-download.test.ts ./src/renderer/zoom-failure.test.ts ./test/native/workspace-proof.test.ts",
+        "2026-11-14T00:18:38.3065483Z @orchestra/desktop:test:bun: bun test v1.3.14 (0d9b296a)"
+      ],
+      "summary": [
+        "2026-11-14T00:21:59.5335150Z @orchestra/desktop:test:bun:  420 pass",
+        "2026-11-14T00:21:59.5335711Z @orchestra/desktop:test:bun:  10 skip",
+        "2026-11-14T00:21:59.5336102Z @orchestra/desktop:test:bun:  4 fail",
+        "2026-11-14T00:21:59.5767228Z  Tasks:    0 successful, 1 total",
+        "2026-11-14T00:21:59.5767458Z Cached:    0 cached, 1 total",
+        "2026-11-14T00:21:59.5767659Z   Time:    3m21.745s "
+      ],
+      "counts": {
+        "passed": 420,
+        "failed": 4,
+        "skipped": 10
+      },
+      "retry_markers": [],
+      "retry_note": "Bun test ran once; repeated fail/skip lines at the end are the same-run summary, not retries.",
+      "test_results_from_cache": false,
+      "cache_note": "Turbo cache miss executing bce4e8785fb84f96; Cached: 0 cached, 1 total.",
+      "selected_file_evidence": [
+        {
+          "path": "apps/desktop/src/main/desktop-startup.test.ts",
+          "counts": {
+            "passed": 13,
+            "failed": 0,
+            "skipped": 1
+          },
+          "results": [
+            "2026-11-14T00:20:32.3021277Z @orchestra/desktop:test:bun: (pass) Quit cancels and reaps a pending owned --version subprocess before adopting [107.27ms]",
+            "2026-11-14T00:20:32.3958518Z @orchestra/desktop:test:bun: (pass) Quit cancels and reaps a pending shared service status subprocess before adopting [93.66ms]",
+            "2026-11-14T00:20:32.3959776Z @orchestra/desktop:test:bun: (skip) Quit escalates a startup subprocess that ignores SIGTERM and joins SIGKILL",
+            "2026-11-14T00:20:32.4703885Z @orchestra/desktop:test:bun: (pass) startup command preserves stdout, stderr and its explicit environment [74.48ms]",
+            "2026-11-14T00:20:32.4720406Z @orchestra/desktop:test:bun: (pass) startup command reports spawn failure without waiting for its execution deadline [1.70ms]",
+            "2026-11-14T00:20:37.4935803Z @orchestra/desktop:test:bun: (pass) startup command deadline reaps a real pending subprocess without a Quit request [5021.52ms]",
+            "2026-11-14T00:20:37.4956417Z @orchestra/desktop:test:bun: (pass) close aborts every pending acquisition before joining and remains reentrant from abort [2.07ms]",
+            "2026-11-14T00:20:37.4967191Z @orchestra/desktop:test:bun: (pass) close reports an acquisition cleanup failure instead of treating abort as confirmed termination [1.10ms]",
+            "2026-11-14T00:20:37.4987957Z @orchestra/desktop:test:bun: (pass) startup fence joins late acquired real handle closure without adopting it [2.04ms]",
+            "2026-11-14T00:20:37.4999010Z @orchestra/desktop:test:bun: (pass) startup fence rejects new acquisition after close without allocating a file [1.11ms]",
+            "2026-11-14T00:20:37.5036448Z @orchestra/desktop:test:bun: (pass) normal synchronous adoption transfers actual handle lifetime to Main's owner [3.71ms]",
+            "2026-11-14T00:20:37.5053525Z @orchestra/desktop:test:bun: (pass) a close reentered from start still joins the tracked acquisition and closes its real late handle [1.69ms]",
+            "2026-11-14T00:20:37.5069520Z @orchestra/desktop:test:bun: (pass) adoption failure releases the real handle and retains original plus cleanup causes [1.56ms]",
+            "2026-11-14T00:20:37.8889210Z @orchestra/desktop:test:bun: (pass) close reports a release failure only after every other actual late handle cleanup joins [381.85ms]"
+          ],
+          "log_section_found": true
+        },
+        {
+          "path": "apps/desktop/src/main/omni-process.test.ts",
+          "counts": {
+            "passed": 22,
+            "failed": 0,
+            "skipped": 0
+          },
+          "results": [
+            "2026-11-14T00:21:05.8961101Z @orchestra/desktop:test:bun: (pass) execFile resolves and rejects like child_process.execFile [462.48ms]",
+            "2026-11-14T00:21:11.9322522Z @orchestra/desktop:test:bun: (pass) execFile's timeout stops the whole tree [6036.16ms]",
+            "2026-11-14T00:21:12.0088087Z @orchestra/desktop:test:bun: (pass) spawn pipes stdin, stdout and stderr as bytes and reports exit then close [76.50ms]",
+            "2026-11-14T00:21:17.6108328Z @orchestra/desktop:test:bun: (pass) spawn's kill stops the whole tree, and a missing program errors with ENOENT [5602.03ms]",
+            "2026-11-14T00:21:19.0148913Z @orchestra/desktop:test:bun: (pass) close is bounded when a grandchild keeps the pipes after the root exits, and it is stopped [1403.90ms]",
+            "2026-11-14T00:21:23.3212286Z @orchestra/desktop:test:bun: (pass) an aborted spawn fails with AbortError and leaves no tree [4306.37ms]",
+            "2026-11-14T00:21:29.8434884Z @orchestra/desktop:test:bun: (pass) terminal: queued output, resize, exit code and kill of the whole tree [6522.38ms]",
+            "2026-11-14T00:21:30.0237393Z @orchestra/desktop:test:bun: (pass) a real spawn failure emits error then one close, removes abort ownership, and invents no exit [180.14ms]",
+            "2026-11-14T00:21:30.2151871Z @orchestra/desktop:test:bun: (pass) abort racing with a real failed start still settles error and close once [191.48ms]",
+            "2026-11-14T00:21:34.0463835Z @orchestra/desktop:test:bun: (pass) supervisor wait rejection after tree readiness closes pipes and releases stdin [3831.13ms]",
+            "2026-11-14T00:21:38.2052284Z @orchestra/desktop:test:bun: (pass) pump rejection after tree readiness is observed before wait and reaps the child [4158.88ms]",
+            "2026-11-14T00:21:38.3352056Z @orchestra/desktop:test:bun: (pass) pump failure after OS exit preserves the one real exit status [129.96ms]",
+            "2026-11-14T00:21:38.4692977Z @orchestra/desktop:test:bun: (pass) stop failure after OS exit preserves the one real exit status [134.03ms]",
+            "2026-11-14T00:21:43.0301326Z @orchestra/desktop:test:bun: (pass) failed wait bounds a stalled iterator return and reaper without claiming successful cleanup [4560.80ms]",
+            "2026-11-14T00:21:46.0995550Z @orchestra/desktop:test:bun: (pass) PTY wait rejection reaps the tree, ends data, and replays fallback exit once with disposable listeners [3069.36ms]",
+            "2026-11-14T00:21:48.5450978Z @orchestra/desktop:test:bun: (pass) PTY pump failure settles fallback exit and never delivers output after termination [2445.54ms]",
+            "2026-11-14T00:21:48.7345838Z @orchestra/desktop:test:bun: (pass) PTY normal exit uses a listener snapshot and respects disposal before late replay [189.47ms]",
+            "2026-11-14T00:21:48.9121561Z @orchestra/desktop:test:bun: (pass) abort wins a missing start (already aborted: %s) with one error and close [177.58ms]",
+            "2026-11-14T00:21:49.0881581Z @orchestra/desktop:test:bun: (pass) abort wins a missing start (already aborted: %s) with one error and close [175.99ms]",
+            "2026-11-14T00:21:50.5807388Z @orchestra/desktop:test:bun: (pass) pipe EOF still observes a failed kill while OS wait remains pending [1492.55ms]",
+            "2026-11-14T00:21:54.1974619Z @orchestra/desktop:test:bun: (pass) PTY failed kill settles fallback exit while wait remains pending [3616.67ms]",
+            "2026-11-14T00:21:56.4193985Z @orchestra/desktop:test:bun: (pass) iterator return failure after drain grace reports error and preserves real OS exit [2221.84ms]"
+          ],
+          "log_section_found": true
+        },
+        {
+          "path": "apps/desktop/src/main/live-delivery-manager.native.test.ts",
+          "counts": {
+            "passed": 0,
+            "failed": 3,
+            "skipped": 0
+          },
+          "results": [
+            "2026-11-14T00:20:46.9845285Z @orchestra/desktop:test:bun: (fail) actual Core pending503 remains open, then abrupt Node restart retries same durable ID before stop [5695.61ms]",
+            "2026-11-14T00:20:51.1318878Z @orchestra/desktop:test:bun: (fail) actual Core append307 cannot forward transcript/credentials or prematurely stop [4146.51ms]",
+            "2026-11-14T00:20:56.0165742Z @orchestra/desktop:test:bun: (fail) actual Core append308 cannot forward transcript/credentials or prematurely stop [4884.88ms]"
+          ],
+          "log_section_found": true
+        },
+        {
+          "path": "apps/desktop/src/main/live-outbox-native.test.ts",
+          "counts": {
+            "passed": 0,
+            "failed": 1,
+            "skipped": 0
+          },
+          "results": [
+            "2026-11-14T00:21:01.2272375Z @orchestra/desktop:test:bun: (fail) actual Node abrupt death after committed append preserves profile, IDs, digest and pending body [3058.65ms]"
+          ],
+          "log_section_found": true
+        }
+      ],
+      "failures": [
+        {
+          "path": "apps/desktop/src/main/live-delivery-manager.native.test.ts",
+          "line": 113,
+          "callers": [
+            131,
+            169
+          ],
+          "failed_cases": [
+            "actual Core pending503 remains open, then abrupt Node restart retries same durable ID before stop",
+            "actual Core append307 cannot forward transcript/credentials or prematurely stop",
+            "actual Core append308 cannot forward transcript/credentials or prematurely stop"
+          ],
+          "messages": [
+            "Owned Node did not reach committed paused marker",
+            "Owned Node did not reach blocked redirect"
+          ],
+          "known": "The test's three-second marker wait failed; whether the child exited or was slow is not distinguished by this log. No product root cause established."
+        },
+        {
+          "path": "apps/desktop/src/main/live-outbox-native.test.ts",
+          "failed_cases": [
+            "actual Node abrupt death after committed append preserves profile, IDs, digest and pending body"
+          ],
+          "messages": [
+            "TimeoutError"
+          ],
+          "elapsed_ms": 3058.65,
+          "known": "Timeout in actual Node fixture test; product versus fixture/environment cause not yet established."
+        }
+      ],
+      "skipped_tests": [
+        "helper admission runs beside the workspace queue and concurrent callers share one helper",
+        "stop during a cold admission refuses it and leaves no helper behind",
+        "dispose during a cold admission waits for it and leaves no helper behind a running workspace",
+        "a helper whose channel cleanup failed is reaped by ID instead of blocking later admissions",
+        "a session without accessibility still starts the workspace and refuses only native calls",
+        "persistent workspace installs and launches through actual Gio/Xpra",
+        "refuses foreign owner and changed recorded ID before stopping a disposable fixture",
+        "an undeletable stale installation never prevents using the verified current CLI",
+        "Quit escalates a startup subprocess that ignores SIGTERM and joins SIGKILL",
+        "[real Docker + PTY] Linux access proof (full)"
+      ],
+      "raw_log": "final-desktop-e2e-43529329253/job-132243533814.log",
+      "raw_log_characters": 257402,
+      "raw_log_note": "Downloaded log text preserved with line endings normalized to LF."
+    },
+    "limits": [
+      "Browser E2E uses a controlled backend, not a live provider qualification.",
+      "No physical capture, native permission dialogs or complete Electron Main bootstrap claim.",
+      "An isolated Electron main process reopened the real outbox; that is narrower than the full product bootstrap."
+    ]
+  },
+  "cassandra_diagnostic": {
+    "repository": "gustavomhss/hugr-orchestra",
+    "pr": 1463,
+    "runId": 43532079002,
+    "attempt": 1,
+    "sourceSha": "7e5dcef7ea2b5ed8c128ccfb6c254087b416e60c",
+    "parentSha": "1ff367925fb59b0985bab2f76fb4f30751603b14",
+    "treeSha": "40279d3aee075c270f4b74b8746eb4eb52f33484",
+    "sourceKind": "Temporary diagnostic snapshot; only workflow and request differ in committed source. Proxy instrumented only during CI test step, then restored.",
+    "result": "success",
+    "jobId": 132251996303,
+    "cleanupJobId": 132252877163,
+    "checkouts": {
+      "actual": "7e5dcef7ea2b5ed8c128ccfb6c254087b416e60c",
+      "parentValidatedByWorkflow": true
+    },
+    "tests": {
+      "pass": 12,
+      "skip": 1,
+      "fail": 0,
+      "expectCalls": 140,
+      "total": 13,
+      "files": 2,
+      "bunElapsedSeconds": 38.21,
+      "cassandraCacheIdentityCaseMs": 35825.44,
+      "skippedCase": "Darwin open supplies only owned routes and removed scoped sockets, without a library"
+    },
+    "omni": {
+      "verdict": "pass",
+      "scope": "declared: 1 test in test/tcp-proxy.test.ts",
+      "spawns": 39,
+      "delegated": 0
+    },
+    "diagnostic": {
+      "records": 24,
+      "acquisitionCount": 12,
+      "successfulAcquisitions": 12,
+      "allReadyFramesSixBytes": true,
+      "successfulReleases": 12,
+      "deadlineMs": 5000,
+      "totalAcquireMilliseconds": [
+        167,
+        31,
+        34,
+        30,
+        33,
+        33,
+        31,
+        34,
+        29,
+        30,
+        30,
+        34
+      ],
+      "readyWaitMilliseconds": [
+        164,
+        30,
+        32,
+        29,
+        31,
+        31,
+        29,
+        32,
+        28,
+        29,
+        28,
+        32
+      ],
+      "selectedNodePaths": [
+        "/usr/local/bin/node"
+      ],
+      "cassandra": {
+        "pid": 9137,
+        "routes": 2,
+        "workerReadyWriteMs": 8,
+        "hostFrameCompleteMs": 165,
+        "hostAcquisitionCompleteMs": 167,
+        "hostWaitDurationMs": 164,
+        "stdoutBytes": 6,
+        "releaseChildExitCode": 0,
+        "releaseCompletedMs": 1778
+      },
+      "noAcquisitionFailureReproduced": true,
+      "interruptionInterpretation": "All twelve ready-race-child-exit failures were waiter interruption after READY won. They are not child death: every matching release-child-exit recorded exitCode 0 after normal stdin EOF.",
+      "boundedCaptureLimit": "Host keeps 16 KiB; sanitizer emits at most the last 4096 characters. The 32-route control therefore has a truncated worker prefix, recorded as a limit rather than missing evidence reclassified as no error."
+    },
+    "sourceIdentity": {
+      "snapshot": "7e5dcef7ea2b5ed8c128ccfb6c254087b416e60c",
+      "parent": "1ff367925fb59b0985bab2f76fb4f30751603b14",
+      "originalProxyBlob": "b07f1e36c85f3f9913a77f6eeccddd2cfb8e303c",
+      "observedProxyBlob": "bcc5e83912b68bfdd01e89684ae3315827b0244c",
+      "cassandraTestBlob": "a0aa5c53d74b10062ad26fe52c712487c0b4f9b0",
+      "proxyTestBlob": "62c97bfa3914d550ee0efc38f9bb334bb2324f81",
+      "acquisitionDeadlineMs": 5000,
+      "scope": "temporary observation only; not a product fix or retry of the epic"
+    },
+    "restoration": {
+      "step": "Restore clean production and verify unchanged oracles",
+      "conclusion": "success",
+      "originalProxyBlob": "b07f1e36c85f3f9913a77f6eeccddd2cfb8e303c",
+      "testBlobsUnchanged": true,
+      "archiveRestoredReceiptPresent": true
+    },
+    "artifact": {
+      "id": 14086834318,
+      "name": "cassandra-proxy-diagnostic-43532079002-1",
+      "sha256": "a934aee04afa88400921f01b6a1d3ad27ed7cc6b9da4b3530ccb4e0189e0906d",
+      "bytes": 15057,
+      "downloadedAndZipDigestVerified": true,
+      "entries": [
+        {
+          "name": "identity.json",
+          "bytes": 495
+        },
+        {
+          "name": "instrumentation.patch",
+          "bytes": 9640
+        },
+        {
+          "name": "request.json",
+          "bytes": 210
+        },
+        {
+          "name": "restored.txt",
+          "bytes": 85
+        },
+        {
+          "name": "tcp-proxy.observed.ts",
+          "bytes": 13877
+        },
+        {
+          "name": "tcp-proxy.original.ts",
+          "bytes": 9771
+        },
+        {
+          "name": "test.log",
+          "bytes": 59046
+        }
+      ],
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43532079002/artifacts/14086834318",
+      "localPath": "/workspace/scratch/477a20fef09e/cassandra-proxy-diagnostic/artifact-14086834318.zip"
+    },
+    "cleanup": {
+      "conclusion": "success",
+      "branch": "ci-run-linux-cassandra-diag-7e5dcef7",
+      "branchAbsenceConfirmedByGitHub404": true
+    },
+    "historicalIncident": {
+      "runId": 43529329253,
+      "jobId": 132243525866,
+      "caseMs": 43232.08,
+      "reason": "sandbox-tcp-proxy-listen-acquisition",
+      "classification": "Unresolved cause. The historical generic error erased timeout/exit/READY distinction and worker stderr. This green diagnostic neither explains it nor changes the epic failure.",
+      "proxyAndCassandraTestIdenticalToDev": true,
+      "omniInfrastructureMayStillDifferFromDev": true
+    },
+    "disposition": "No product fix justified by the current evidence. No new run, timeout increase, assertion change or infrastructure attribution is proposed.",
+    "updatedAt": "2026-11-14 00:16:59 UTC",
+    "followup": {
+      "report": "/workspace/scratch/477a20fef09e/cassandra-proxy-diagnostic/predecessor-review.json",
+      "conclusion": "No concrete parent environment, Context/service or process-lifetime leak found in these predecessors and direct fixtures. Cause remains unresolved; no minimal product fix or additional execution control is justified by this reading.",
+      "observedCassandraMarkerIndex": 30,
+      "readImmediatePredecessors": [
+        "host.test.ts",
+        "omni-control-isolate.test.ts",
+        "knowledge-replay-vacuity.test.ts"
+      ],
+      "newExecution": false
+    }
+  },
+  "cassandra_predecessor_review": {
+    "sourceSha": "1ff367925fb59b0985bab2f76fb4f30751603b14",
+    "runId": 43529329253,
+    "jobId": 132243525866,
+    "mode": "Bounded static follow-up. No local tests, new CI run or edits to product/tests.",
+    "observedOrder": {
+      "cassandraIndex1Based": 30,
+      "immediatePredecessors": [
+        {
+          "index": 27,
+          "path": "test/host.test.ts",
+          "at": "2026-11-13T23:51:13.2477667Z"
+        },
+        {
+          "index": 28,
+          "path": "test/omni-control-isolate.test.ts",
+          "at": "2026-11-13T23:51:13.2644497Z"
+        },
+        {
+          "index": 29,
+          "path": "test/knowledge-replay-vacuity.test.ts",
+          "at": "2026-11-13T23:51:14.0189482Z"
+        }
+      ],
+      "cassandraAt": "2026-11-13T23:51:15.0875376Z",
+      "requestedOrderIsNotExecutionOrder": true,
+      "actionsFilesWereLater": [
+        {
+          "index": 40,
+          "path": "test/actions/config-policy.test.ts",
+          "at": "2026-11-13T23:52:01.5754060Z"
+        },
+        {
+          "index": 41,
+          "path": "test/actions/output-mutations.test.ts",
+          "at": "2026-11-13T23:52:01.5988536Z"
+        },
+        {
+          "index": 42,
+          "path": "test/actions/gitlab-command-launch.test.ts",
+          "at": "2026-11-13T23:52:01.6273182Z"
+        }
+      ]
+    },
+    "conclusion": "No concrete parent environment, Context/service or process-lifetime leak found in these predecessors and direct fixtures. Cause remains unresolved; no minimal product fix or additional execution control is justified by this reading.",
+    "reasoning": [
+      {
+        "path": "packages/core/test/omni-control-isolate.test.ts",
+        "details": "Uses a scoped AppProcess layer and runs both positive/negative controls in separate Bun OS processes. Fixture builds a separate env object, never mutates parent process.env, uses explicit cwd and extendEnv:false, awaits AppProcess.run, and removes only its private temporary root after completion. --isolate and the strict/nonce changes belong to the child process."
+      },
+      {
+        "path": "packages/core/test/host.test.ts",
+        "details": "Constructs test-only nodes and invokes synchronous Host.merge validation. Host.merge returns arrays/merged layer values; it does not build a runtime, apply replacements globally or close AppProcess. No parent environment mutation or process launch in these assertions."
+      },
+      {
+        "path": "packages/core/test/knowledge-replay-vacuity.test.ts",
+        "details": "Each mode acquires a private root and awaits AppProcess.run with bounded output before disposing it. Fixture's parent-side build writes only under the private root and installs plugins in Bun.build options, not a global runtime plugin. ATLAS/TMP environment mutations are inside actorSource, executed in another PID, with its own finally cleanup. Parser helper only resolves/reads installed package files. The test asserts a distinct PID, child cleanup and absence of the fixture root."
+      },
+      {
+        "path": "packages/core/src/process.ts",
+        "details": "These predecessor calls share the native Omni subsystem with the later broker, but AppProcess.run scopes child ownership and awaits output/exit. That shared subsystem is a possible investigation boundary, not demonstrated causal evidence. No Env teardown or global service replacement is established by the predecessor paths."
+      }
+    ],
+    "files": [
+      {
+        "path": "packages/core/test/host.test.ts",
+        "blob": "fdaf28e4e4c64ad69f0b2a0af547f15e1eef4b00",
+        "read": "full",
+        "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/1ff367925fb59b0985bab2f76fb4f30751603b14/packages/core/test/host.test.ts"
+      },
+      {
+        "path": "packages/core/src/host.ts",
+        "blob": "a0fc5bc9a36e50315b0ddddf4de3566555711250",
+        "read": "full",
+        "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/1ff367925fb59b0985bab2f76fb4f30751603b14/packages/core/src/host.ts"
+      },
+      {
+        "path": "packages/core/test/omni-control-isolate.test.ts",
+        "blob": "a00c134110124a36483630f26cee00433211e114",
+        "read": "full",
+        "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/1ff367925fb59b0985bab2f76fb4f30751603b14/packages/core/test/omni-control-isolate.test.ts"
+      },
+      {
+        "path": "packages/core/test/fixture/omni-control-isolate.ts",
+        "blob": "7e94b0d5ffc2702c8433831d841d92cfd6340ea0",
+        "read": "full",
+        "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/1ff367925fb59b0985bab2f76fb4f30751603b14/packages/core/test/fixture/omni-control-isolate.ts"
+      },
+      {
+        "path": "packages/core/test/knowledge-replay-vacuity.test.ts",
+        "blob": "5e41b1523a5880c2c3f6eb64baf4a356b930ec4c",
+        "read": "full",
+        "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/1ff367925fb59b0985bab2f76fb4f30751603b14/packages/core/test/knowledge-replay-vacuity.test.ts"
+      },
+      {
+        "path": "packages/core/test/fixture/knowledge-replay-vacuity.ts",
+        "blob": "d1ec4adc4d1057a2cf389f81d89a0b540b5f42e2",
+        "read": "full",
+        "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/1ff367925fb59b0985bab2f76fb4f30751603b14/packages/core/test/fixture/knowledge-replay-vacuity.ts"
+      },
+      {
+        "path": "packages/core/test/fixture/atlas-parser.ts",
+        "blob": "f2227ed3755ce9ad25603337e9197f0d436e9f32",
+        "read": "full",
+        "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/1ff367925fb59b0985bab2f76fb4f30751603b14/packages/core/test/fixture/atlas-parser.ts"
+      },
+      {
+        "path": "packages/core/test/lib/effect.ts",
+        "blob": "26effa581ccb9940dfeacaa6a35693ff95529584",
+        "read": "full",
+        "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/1ff367925fb59b0985bab2f76fb4f30751603b14/packages/core/test/lib/effect.ts"
+      },
+      {
+        "path": "packages/core/src/process.ts",
+        "blob": "a2c29d4a18c44ff407e6055b27830fade5d43f20",
+        "read": "full",
+        "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/1ff367925fb59b0985bab2f76fb4f30751603b14/packages/core/src/process.ts"
+      },
+      {
+        "path": "packages/core/test/actions/config-policy.test.ts",
+        "blob": "f88e5a4cde994e20566458b0225c9da361496172",
+        "read": "full",
+        "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/1ff367925fb59b0985bab2f76fb4f30751603b14/packages/core/test/actions/config-policy.test.ts"
+      },
+      {
+        "path": "packages/core/test/actions/gitlab-command-launch.test.ts",
+        "blob": "ae826c598911f449a7b352fb8c3945e02c60afbd",
+        "read": "full",
+        "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/1ff367925fb59b0985bab2f76fb4f30751603b14/packages/core/test/actions/gitlab-command-launch.test.ts"
+      },
+      {
+        "path": "packages/core/test/actions/output-mutations.test.ts",
+        "blob": "c64155a49b980bba48d84e2d4529e74f16d71685",
+        "read": "full",
+        "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/1ff367925fb59b0985bab2f76fb4f30751603b14/packages/core/test/actions/output-mutations.test.ts"
+      }
+    ],
+    "limits": [
+      "Did not review every earlier file in the 53-file shard or assert that all possible suite-state interactions are excluded.",
+      "File-start markers show the observed resolution sequence; argument order alone was not treated as execution proof.",
+      "A passed scoped diagnostic does not establish why the full-shard broker acquisition failed.",
+      "No new run proposed without concrete additional causal evidence."
+    ],
+    "updatedAt": "2026-11-14 00:16:59 UTC"
+  },
+  "atlas_budget_qualification": {
+    "status": "passed_scoped_qualification",
+    "scope": "Windows Atlas Boundary producer lane only, shallow checkout compatibility and existing job budget",
+    "repository": "gustavomhss/hugr-orchestra",
+    "pr": 1463,
+    "productionParent": "1ff367925fb59b0985bab2f76fb4f30751603b14",
+    "productionParentTree": "f27d504e8f6aaf3da71589ca88441db0c459c980",
+    "source": "13a7db21e7c641fbddabe6b20d3b1176c9988c0d",
+    "tree": "596de726d69fd7cdc0ba4f4cb11af60830661a4e",
+    "productionChange": {
+      "path": ".github/workflows/test.yml",
+      "line": 260,
+      "blob": "c190fb4802ebd4ed93a65473f4cb2df03184be65",
+      "originalBlob": "2fbdaa6970ba4cdce2f4e3c7625a27a914159ed5",
+      "changedLines": 1
+    },
+    "harness": {
+      "path": ".github/workflows/test-ci.yml",
+      "blob": "4d966783c01f353235ab50ea1a379e6c88442cce",
+      "sha256": "c8768f87454060009db5e2d1652e3432afcb3314813c51e8a63497302d8179b2",
+      "temporaryOnly": true
+    },
+    "run": {
+      "id": 43534862899,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43534862899",
+      "attempt": 1,
+      "conclusion": "success",
+      "started": "2026-11-14T00:32:25Z",
+      "completedBy": "2026-11-14T00:40:03Z",
+      "wallSeconds": 458,
+      "reruns": 0
+    },
+    "job": {
+      "id": 132261741814,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43534862899/job/132261741814",
+      "name": "unit (windows atlas boundary 1/2)",
+      "conclusion": "success",
+      "started": "2026-11-14T00:33:40Z",
+      "completed": "2026-11-14T00:39:53Z",
+      "totalSeconds": 373,
+      "jobBudgetSeconds": 600,
+      "jobMarginSeconds": 227,
+      "stepBudgetSeconds": 480,
+      "stepSeconds": 162,
+      "stepMarginSeconds": 318,
+      "allPostActionsPassed": true,
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-14T00:33:40Z",
+          "completed_at": "2026-11-14T00:33:41Z"
+        },
+        {
+          "name": "Checkout repository",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-14T00:33:41Z",
+          "completed_at": "2026-11-14T00:33:51Z"
+        },
+        {
+          "name": "Setup Bun",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-14T00:33:51Z",
+          "completed_at": "2026-11-14T00:36:53Z"
+        },
+        {
+          "name": "ripgrep",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-14T00:36:53Z",
+          "completed_at": "2026-11-14T00:36:54Z"
+        },
+        {
+          "name": "Linux sandbox dependencies",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 5,
+          "started_at": "2026-11-14T00:36:54Z",
+          "completed_at": "2026-11-14T00:36:54Z"
+        },
+        {
+          "name": "Linux Electron dependencies",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 6,
+          "started_at": "2026-11-14T00:36:54Z",
+          "completed_at": "2026-11-14T00:36:54Z"
+        },
+        {
+          "name": "Native test binaries",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-14T00:36:54Z",
+          "completed_at": "2026-11-14T00:36:56Z"
+        },
+        {
+          "name": "Rust toolchain (rust-toolchain.toml)",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-14T00:36:56Z",
+          "completed_at": "2026-11-14T00:37:04Z"
+        },
+        {
+          "name": "Configure git identity",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-14T00:37:04Z",
+          "completed_at": "2026-11-14T00:37:04Z"
+        },
+        {
+          "name": "Restore Turbo cache",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 10,
+          "started_at": "2026-11-14T00:37:04Z",
+          "completed_at": "2026-11-14T00:37:04Z"
+        },
+        {
+          "name": "Check generated Atlas boundary",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 11,
+          "started_at": "2026-11-14T00:37:04Z",
+          "completed_at": "2026-11-14T00:37:04Z"
+        },
+        {
+          "name": "Fetch target branch for godfile",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 12,
+          "started_at": "2026-11-14T00:37:04Z",
+          "completed_at": "2026-11-14T00:37:04Z"
+        },
+        {
+          "name": "Test godfile gate",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 13,
+          "started_at": "2026-11-14T00:37:04Z",
+          "completed_at": "2026-11-14T00:37:04Z"
+        },
+        {
+          "name": "Test guards",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 14,
+          "started_at": "2026-11-14T00:37:04Z",
+          "completed_at": "2026-11-14T00:37:04Z"
+        },
+        {
+          "name": "Run godfile gate",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 15,
+          "started_at": "2026-11-14T00:37:04Z",
+          "completed_at": "2026-11-14T00:37:04Z"
+        },
+        {
+          "name": "Run spawn-import gate",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 16,
+          "started_at": "2026-11-14T00:37:04Z",
+          "completed_at": "2026-11-14T00:37:04Z"
+        },
+        {
+          "name": "Run module-boundary gate",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 17,
+          "started_at": "2026-11-14T00:37:04Z",
+          "completed_at": "2026-11-14T00:37:04Z"
+        },
+        {
+          "name": "Run ripgrep pin gate",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 18,
+          "started_at": "2026-11-14T00:37:04Z",
+          "completed_at": "2026-11-14T00:37:04Z"
+        },
+        {
+          "name": "Assert exact shallow source and cold cache",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 19,
+          "started_at": "2026-11-14T00:37:04Z",
+          "completed_at": "2026-11-14T00:37:05Z"
+        },
+        {
+          "name": "Run unit tests",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 20,
+          "started_at": "2026-11-14T00:37:05Z",
+          "completed_at": "2026-11-14T00:39:47Z"
+        },
+        {
+          "name": "Save Turbo cache",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 21,
+          "started_at": "2026-11-14T00:39:47Z",
+          "completed_at": "2026-11-14T00:39:48Z"
+        },
+        {
+          "name": "Upload JUnit timings",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 22,
+          "started_at": "2026-11-14T00:39:48Z",
+          "completed_at": "2026-11-14T00:39:49Z"
+        },
+        {
+          "name": "Check generated client",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 23,
+          "started_at": "2026-11-14T00:39:49Z",
+          "completed_at": "2026-11-14T00:39:49Z"
+        },
+        {
+          "name": "Run HttpApi exerciser gates",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 24,
+          "started_at": "2026-11-14T00:39:49Z",
+          "completed_at": "2026-11-14T00:39:49Z"
+        },
+        {
+          "name": "Run hosted sandbox proofs",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 25,
+          "started_at": "2026-11-14T00:39:49Z",
+          "completed_at": "2026-11-14T00:39:49Z"
+        },
+        {
+          "name": "Run hosted process query proof",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 26,
+          "started_at": "2026-11-14T00:39:49Z",
+          "completed_at": "2026-11-14T00:39:49Z"
+        },
+        {
+          "name": "Setup Python for Relay",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 27,
+          "started_at": "2026-11-14T00:39:49Z",
+          "completed_at": "2026-11-14T00:39:49Z"
+        },
+        {
+          "name": "Install Relay test dependencies",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 28,
+          "started_at": "2026-11-14T00:39:49Z",
+          "completed_at": "2026-11-14T00:39:49Z"
+        },
+        {
+          "name": "Test Relay",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 29,
+          "started_at": "2026-11-14T00:39:49Z",
+          "completed_at": "2026-11-14T00:39:49Z"
+        },
+        {
+          "name": "Real AppProcess default and legacy backend selection",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 30,
+          "started_at": "2026-11-14T00:39:49Z",
+          "completed_at": "2026-11-14T00:39:49Z"
+        },
+        {
+          "name": "Post Setup Bun",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 59,
+          "started_at": "2026-11-14T00:39:49Z",
+          "completed_at": "2026-11-14T00:39:49Z"
+        },
+        {
+          "name": "Post Checkout repository",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 60,
+          "started_at": "2026-11-14T00:39:49Z",
+          "completed_at": "2026-11-14T00:39:51Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 61,
+          "started_at": "2026-11-14T00:39:51Z",
+          "completed_at": "2026-11-14T00:39:51Z"
+        }
+      ]
+    },
+    "tests": {
+      "pass": 1,
+      "fail": 0,
+      "assertions": 43,
+      "skipped": 0,
+      "files": 1,
+      "tests": 1,
+      "bunSeconds": 161.38,
+      "junitSeconds": 161.3787127,
+      "testBodySeconds": 161.308034,
+      "turboSeconds": 161.655
+    },
+    "execution": {
+      "cacheMissKey": "53df00560f69e7ba",
+      "cachedTasks": 0,
+      "successfulTasks": 1,
+      "selectedFile": "test/build.test.ts",
+      "shallowFetchCommand": "2026-11-14T00:33:44.4348081Z [command]\"C:\\Program Files\\Git\\bin\\git.exe\" -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +13a7db21e7c641fbddabe6b20d3b1176c9988c0d:refs/remotes/origin/ci-run-windows-atlas-shallow-13a7db21",
+      "identity": {
+        "source": "13a7db21e7c641fbddabe6b20d3b1176c9988c0d",
+        "tree": "596de726d69fd7cdc0ba4f4cb11af60830661a4e",
+        "parents": [
+          "1ff367925fb59b0985bab2f76fb4f30751603b14"
+        ],
+        "shallow": "true",
+        "workflowBlob": "4d966783c01f353235ab50ea1a379e6c88442cce",
+        "identities": {
+          "modules": "a1f7931fe3ab01879adf1e1a89d92426389236a2",
+          "native": "214e01194fdcdab4277ce4cf32efeb7c7bf8b994",
+          "packages": "a3fb7ebbbcb70a60dc4c2c853cd824abfff222f6",
+          "script": "d423fbd2abc6a5c8ef267932ba38b6397ede3e01",
+          "patches": "6c78174cbb1d4855fc516be4a8906f8722af247e",
+          "bun.lock": "542ec98f67b758c3c5e998a0de1e60139bb17f9a",
+          "package.json": "59b01ce720d2fbc13ac27b0f93e444e4e7e42bd0",
+          "turbo.json": "b3954a456ac110724e7e7f11362bb1bf567bc178",
+          ".github/actions": "119899a7b13b664e2962bb05f456f7332fda937d",
+          ".github/workflows/test.yml": "c190fb4802ebd4ed93a65473f4cb2df03184be65",
+          "modules/atlas/boundary/test/build.test.ts": "91528ae8532e68b2b9f93261b2e1fc23304e1471",
+          "modules/atlas/boundary/script/build.ts": "df0a875e47e98e8803e00818d178166d0b1cb8dd",
+          "modules/atlas/boundary/bunfig.toml": "f3832a4bb25078ca30e4a5bf1b11c989d2079235",
+          "modules/atlas/boundary/script/tsconfig.json": "966c9920ac613a90e84dda1129fc7f55b2b2b06f",
+          "script/test-guard.ts": "f2f55d97fd05a5136e17eac7043bbf315de88bb6"
+        },
+        "part": "windows-atlas-1",
+        "cold": true,
+        "turboCacheEmpty": true,
+        "requiredJobMinutes": 10,
+        "requiredStepMinutes": 8,
+        "requiredTestDeadlineMs": 900000
+      }
+    },
+    "native": {
+      "job": 132261287130,
+      "conclusion": "success",
+      "exactSourceCache": "miss",
+      "releaseBuildSeconds": 42.02,
+      "artifact": 14088343595,
+      "artifactDigest": "sha256:1e140de3a6c0a50cc2285b5a78fd2b0c60369d585f7e03254c6e8549f655b587",
+      "omniRuntimeProofClaimed": false
+    },
+    "plan": {
+      "job": 132261287731,
+      "conclusion": "success",
+      "fullUnitJobs": 62,
+      "target": "windows-atlas-1",
+      "selectedFiles": [
+        "test/build.test.ts"
+      ],
+      "artifact": 14089475374,
+      "artifactDigest": "sha256:d0479f274401acbdef4909e20e7e9a7e8174d8a9c2b4c86d4257c64db3aa9226",
+      "archiveVerified": true
+    },
+    "junit": {
+      "artifact": 14088774596,
+      "digest": "sha256:c629975e608f095cf740936c7f6a407eb8a1c69e3bcb08ec183beed243289209",
+      "bytes": 1490,
+      "archiveVerified": true,
+      "files": [
+        "atlas-shallow-identity.json",
+        "windows-windows-atlas-1.xml"
+      ]
+    },
+    "cleanup": {
+      "job": 132264030136,
+      "conclusion": "success",
+      "started": "2026-11-14T00:39:55Z",
+      "completed": "2026-11-14T00:40:02Z",
+      "branch": "ci-run-windows-atlas-shallow-13a7db21",
+      "branchAbsent": true,
+      "branchGetStatus": 404
+    },
+    "originalIncident": {
+      "run": 43529329253,
+      "job": 132243533688,
+      "conclusion": "cancelled",
+      "source": "959e6f612320112a16c5ed56df61cc80079b7e59",
+      "testPass": 1,
+      "testFail": 0,
+      "assertions": 43,
+      "bunSeconds": 306.99,
+      "cancellationPhase": "Post Setup Bun / Post Setup Node",
+      "jobRecordedSeconds": 605
+    },
+    "comparison": [
+      {
+        "phase": "checkout",
+        "originalSeconds": 28,
+        "qualifiedSeconds": 10,
+        "deltaSeconds": -18
+      },
+      {
+        "phase": "setup_bun",
+        "originalSeconds": 243,
+        "qualifiedSeconds": 182,
+        "deltaSeconds": -61
+      },
+      {
+        "phase": "before_test_step",
+        "originalSeconds": 289,
+        "qualifiedSeconds": 205,
+        "deltaSeconds": -84
+      },
+      {
+        "phase": "run_unit_tests_step",
+        "originalSeconds": 309,
+        "qualifiedSeconds": 162,
+        "deltaSeconds": -147
+      },
+      {
+        "phase": "bun_test_report",
+        "originalSeconds": 306.99,
+        "qualifiedSeconds": 161.38,
+        "deltaSeconds": -145.61
+      },
+      {
+        "phase": "test_end_to_job_end",
+        "originalSeconds": 7,
+        "qualifiedSeconds": 6,
+        "deltaSeconds": -1
+      },
+      {
+        "phase": "whole_job",
+        "originalSeconds": 605,
+        "qualifiedSeconds": 373,
+        "deltaSeconds": -232
+      }
+    ],
+    "interpretation": [
+      "The exact original producer, all positive and mismatch/absence negative controls, passed on an actual depth-1 checkout under the preserved 10/8-minute budgets.",
+      "The whole test job, including cold artifact upload and action post-cleanups, completed successfully in 373 seconds. This closes the requested scoped qualification for the one-line checkout change.",
+      "Checkout was 18 seconds shorter in this run. Dependency setup and test execution were also faster; their reductions are not attributed to the checkout change.",
+      "The observed 227-second margin is not a future latency upper bound. Neither run controls for runner load or all environmental performance variables.",
+      "The original cancelled job remains cancelled. Cassandra and Desktop qualification gaps are separate and unchanged; this result is not a green full epic.",
+      "No runtime retry, rerun, timeout increase, oracle change, local test execution, or skill-rule edit was used."
+    ],
+    "minimalReferences": [
+      {
+        "path": ".github/workflows/test.yml",
+        "lines": "257-260",
+        "purpose": "one-line shallow checkout change"
+      },
+      {
+        "path": ".github/workflows/test.yml",
+        "lines": "249-252;394-396;455-468",
+        "purpose": "preserved job/step budgets and exact Boundary dispatch"
+      },
+      {
+        "path": "modules/atlas/boundary/test/build.test.ts",
+        "lines": "7-80",
+        "purpose": "unaltered producer case, fixture without .git, 43 assertions and explicit test deadline"
+      }
+    ],
+    "artifactDirectory": "/workspace/scratch/477a20fef09e/atlas-shallow-qualification"
+  },
+  "desktop_native_diagnostic": {
+    "version": 1,
+    "run": 43536328355,
+    "attempt": 1,
+    "event": "push",
+    "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43536328355",
+    "snapshot": "2d662ecc4bb73bc42e0e04e9e484083720c82d6f",
+    "expected_parent": "1ff367925fb59b0985bab2f76fb4f30751603b14",
+    "original_run": 43529329253,
+    "original_job": 132243533814,
+    "expected_shard_files": 56,
+    "expected_runtime": {
+      "node": "v24.22.2",
+      "bun": "1.3.14",
+      "bun_revision_prefix": "0d9b296a",
+      "platform": "win32"
+    },
+    "expected_environment": {
+      "omni_control": "suite",
+      "disable_filewatcher": "true",
+      "test_github_actions": "false",
+      "request_env": {}
+    },
+    "expected_overlays": [
+      {
+        "path": "apps/desktop/src/main/live-delivery-manager.native.test.ts",
+        "originalBlob": "4249ce68e8edadc48e75fa43b6665d2cd1563cfa",
+        "overlayBlob": "15ff2f60af8b175d1c856d57307b01db8dd99c78",
+        "overlaySha256": "1ef9d751f7dee926d76e48d34eda6c87f19125e42ac2d6a444d745d2029df11d"
+      },
+      {
+        "path": "apps/desktop/src/main/live-delivery-manager.fixture.ts",
+        "originalBlob": "159a460c46d7c605575463d559fe4604c1424297",
+        "overlayBlob": "b3889cf4df8ec8b851bcc40b721318d256bd10c5",
+        "overlaySha256": "6aca11d792b3ae10a36a2ba18cf3248f39b263e62395a84942d00d0e06ab88f7"
+      },
+      {
+        "path": "apps/desktop/src/main/live-outbox-native.test.ts",
+        "originalBlob": "a3a34313808e629668463a1cf9bb73671fdc2304",
+        "overlayBlob": "dba9b06551b9f6ea8564ff6221fb5690fa4a5d00",
+        "overlaySha256": "534b1f1bc03714ee0096fefa0bb3157e0348078e885d01420fea964d41940538"
+      },
+      {
+        "path": "apps/desktop/src/main/live-outbox-crash.fixture.ts",
+        "originalBlob": "1b4cfb16b1d79ee2b3685597cfae2d09b8cbebd5",
+        "overlayBlob": "f51540c2e41be37503e093989244b2991bb19e06",
+        "overlaySha256": "01b3dcef5d8b1eefc94d226a39d4c747626aa5a7c37a62e49435cc975189953b"
+      }
+    ],
+    "status": "completed",
+    "last_observed": "2026-11-14 00:57:13 UTC",
+    "jobs": [
+      {
+        "id": 132266094306,
+        "name": "test (windows-latest)",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-14T00:45:35Z",
+        "completed_at": "2026-11-14T00:53:01Z",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43536328355/job/132266094306"
+      },
+      {
+        "id": 132268597332,
+        "name": "cleanup",
+        "status": "completed",
+        "conclusion": "success",
+        "started_at": "2026-11-14T00:53:04Z",
+        "completed_at": "2026-11-14T00:53:08Z",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43536328355/job/132268597332"
+      }
+    ],
+    "limits": [
+      "The first fixture phases occur after static imports; no pre-import bootstrap was instrumented.",
+      "The same 56 files and order ran directly under Bun rather than Turbo; diagnostic observations and tee are deltas to the original job.",
+      "The standard test-ci job retains a 45-minute job bound; the original per-case waits and cleanup bounds were unchanged.",
+      "No local tests, reruns or GitHub mutations were performed by this monitor. Temporary overlays were restored and the temporary branch was deleted.",
+      "No native permission dialogs, physical audio hardware, full production Electron Main bootstrap or performance-health claim follows from this run."
+    ],
+    "conclusion": "success",
+    "checkout": "2d662ecc4bb73bc42e0e04e9e484083720c82d6f",
+    "parent_verified": "1ff367925fb59b0985bab2f76fb4f30751603b14",
+    "runtime": {
+      "node": "v24.22.2",
+      "bun": {
+        "version": "1.3.14",
+        "revision": "0d9b296af33f2b851fcbf4df3e9ec89751734ba4",
+        "platform": "win32"
+      },
+      "platform": "win32"
+    },
+    "environment": {
+      "omniControl": "suite",
+      "disableFilewatcher": "true",
+      "omniFlag": null,
+      "testGithubActions": "false"
+    },
+    "selection": {
+      "files": 56,
+      "tests": 434,
+      "expects": 2575,
+      "order_matches_original_and_planner": true,
+      "args": [
+        "./scripts/cli-native.integration.test.ts",
+        "./scripts/cli-staging.test.ts",
+        "./scripts/finalize-latest-yml.test.ts",
+        "./scripts/install-electron.integration.test.ts",
+        "./src/main/app-dock-linux-display.test.ts",
+        "./src/main/app-dock-linux-prewarm.test.ts",
+        "./src/main/app-dock-native-client-admission.test.ts",
+        "./src/main/app-dock-native-client.test.ts",
+        "./src/main/app-dock-native-wire.test.ts",
+        "./src/main/app-dock-native.test.ts",
+        "./src/main/app-dock-profile-registry.test.ts",
+        "./src/main/app-dock-rpc-proof.test.ts",
+        "./src/main/app-dock-rpc-workspace-rebind.test.ts",
+        "./src/main/app-dock-runtime-backend.test.ts",
+        "./src/main/app-dock-runtime-docker.test.ts",
+        "./src/main/app-dock-runtime-native.test.ts",
+        "./src/main/app-dock-runtime.test.ts",
+        "./src/main/app-dock-utils.test.ts",
+        "./src/main/attachment-picker.test.ts",
+        "./src/main/cli-cache.test.ts",
+        "./src/main/credential-key-env.test.ts",
+        "./src/main/desktop-startup.test.ts",
+        "./src/main/dock-channel.test.ts",
+        "./src/main/external-url.test.ts",
+        "./src/main/install-state.test.ts",
+        "./src/main/ipc-validate.test.ts",
+        "./src/main/janitor.test.ts",
+        "./src/main/linux-workspace.integration.test.ts",
+        "./src/main/live-audio.test.ts",
+        "./src/main/live-delivery-manager.native.test.ts",
+        "./src/main/live-elapsed.test.ts",
+        "./src/main/live-ipc.test.ts",
+        "./src/main/live-meeting-client.test.ts",
+        "./src/main/live-outbox-native.test.ts",
+        "./src/main/live-outbox.electron.native.test.ts",
+        "./src/main/live-readiness.test.ts",
+        "./src/main/live-segmenter.test.ts",
+        "./src/main/live-session-client.test.ts",
+        "./src/main/live-transport-log.test.ts",
+        "./src/main/menu-availability.test.ts",
+        "./src/main/omni-appcontainer.test.ts",
+        "./src/main/omni-process.test.ts",
+        "./src/main/packaged-weight.test.ts",
+        "./src/main/response-download.test.ts",
+        "./src/main/shell-env.test.ts",
+        "./src/main/store-cleanup.test.ts",
+        "./src/main/titlebar-frame.test.ts",
+        "./src/main/updater-subscriptions.test.ts",
+        "./src/main/window-recovery.test.ts",
+        "./src/main/window-state.test.ts",
+        "./src/main/wsl/runtime.test.ts",
+        "./src/renderer/html.test.ts",
+        "./src/renderer/native-menu.test.ts",
+        "./src/renderer/response-download.test.ts",
+        "./src/renderer/zoom-failure.test.ts",
+        "./test/native/workspace-proof.test.ts"
+      ]
+    },
+    "execution": {
+      "actual": true,
+      "test_result_cache": false,
+      "test_invocations": 1,
+      "retries": 0,
+      "omni": {
+        "mode": "suite",
+        "verdict": "pass",
+        "spawns": 39,
+        "delegated": 0
+      },
+      "duration_seconds": 167.1
+    },
+    "counts": {
+      "passed": 424,
+      "skipped": 10,
+      "failed": 0
+    },
+    "target_cases": [
+      {
+        "name": "actual Core pending503 remains open, then abrupt Node restart retries same durable ID before stop",
+        "path": "apps/desktop/src/main/live-delivery-manager.native.test.ts",
+        "result": "pass",
+        "duration_ms": 892.29,
+        "actors": [
+          {
+            "mode": "pending",
+            "pid": 5788,
+            "node": "C:\\hostedtoolcache\\windows\\node\\24.22.2\\x64\\node.exe",
+            "parent_phases": [
+              {
+                "phase": "spawned",
+                "elapsedMs": 7,
+                "markerExists": false
+              },
+              {
+                "phase": "wait-start",
+                "elapsedMs": 7,
+                "label": "committed paused marker",
+                "markerExists": false
+              },
+              {
+                "phase": "wait-ready",
+                "elapsedMs": 399,
+                "label": "committed paused marker",
+                "markerExists": true
+              },
+              {
+                "phase": "collect-start",
+                "elapsedMs": 413,
+                "markerExists": true
+              },
+              {
+                "phase": "collect-done",
+                "elapsedMs": 414,
+                "markerExists": true,
+                "success": true,
+                "code": 1
+              },
+              {
+                "phase": "cleanup-start",
+                "elapsedMs": 414,
+                "markerExists": true
+              },
+              {
+                "phase": "cleanup-done",
+                "elapsedMs": 414,
+                "markerExists": true
+              }
+            ],
+            "fixture_phases": [
+              {
+                "kind": "native-manager-fixture",
+                "phase": "static-imports-ready",
+                "pid": 5788,
+                "mode": "pending",
+                "node": "v24.22.2",
+                "uptimeMs": 89
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "outbox-open-start",
+                "pid": 5788,
+                "mode": "pending",
+                "node": "v24.22.2",
+                "uptimeMs": 89
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "outbox-open-done",
+                "pid": 5788,
+                "mode": "pending",
+                "node": "v24.22.2",
+                "uptimeMs": 128
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "manager-created",
+                "pid": 5788,
+                "mode": "pending",
+                "node": "v24.22.2",
+                "uptimeMs": 129
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "manager-start",
+                "pid": 5788,
+                "mode": "pending",
+                "node": "v24.22.2",
+                "uptimeMs": 129
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "manager-started",
+                "pid": 5788,
+                "mode": "pending",
+                "node": "v24.22.2",
+                "uptimeMs": 194
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "waiting-for-campaign",
+                "pid": 5788,
+                "mode": "pending",
+                "node": "v24.22.2",
+                "uptimeMs": 209
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "campaign-held",
+                "pid": 5788,
+                "mode": "pending",
+                "node": "v24.22.2",
+                "uptimeMs": 370
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "report-start",
+                "pid": 5788,
+                "mode": "pending",
+                "node": "v24.22.2",
+                "uptimeMs": 370,
+                "report": "held"
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "report-done",
+                "pid": 5788,
+                "mode": "pending",
+                "node": "v24.22.2",
+                "uptimeMs": 376,
+                "report": "held"
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "marker-published",
+                "pid": 5788,
+                "mode": "pending",
+                "node": "v24.22.2",
+                "uptimeMs": 381
+              }
+            ],
+            "cleanup_done": true,
+            "stdout_bytes": 0,
+            "stderr_bytes": 1724
+          },
+          {
+            "mode": "recover",
+            "pid": 7836,
+            "node": "C:\\hostedtoolcache\\windows\\node\\24.22.2\\x64\\node.exe",
+            "parent_phases": [
+              {
+                "phase": "spawned",
+                "elapsedMs": 2,
+                "markerExists": true
+              },
+              {
+                "phase": "wait-start",
+                "elapsedMs": 3,
+                "label": "actual reopen",
+                "markerExists": true
+              },
+              {
+                "phase": "wait-ready",
+                "elapsedMs": 141,
+                "label": "actual reopen",
+                "markerExists": true
+              },
+              {
+                "phase": "wait-start",
+                "elapsedMs": 141,
+                "label": "drain and close",
+                "markerExists": true
+              },
+              {
+                "phase": "wait-ready",
+                "elapsedMs": 225,
+                "label": "drain and close",
+                "markerExists": true
+              },
+              {
+                "phase": "collect-start",
+                "elapsedMs": 225,
+                "markerExists": true
+              },
+              {
+                "phase": "collect-done",
+                "elapsedMs": 246,
+                "markerExists": true,
+                "success": true,
+                "code": 0
+              },
+              {
+                "phase": "cleanup-start",
+                "elapsedMs": 250,
+                "markerExists": true
+              },
+              {
+                "phase": "cleanup-done",
+                "elapsedMs": 251,
+                "markerExists": true
+              }
+            ],
+            "fixture_phases": [
+              {
+                "kind": "native-manager-fixture",
+                "phase": "static-imports-ready",
+                "pid": 7836,
+                "mode": "recover",
+                "node": "v24.22.2",
+                "uptimeMs": 87
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "outbox-open-start",
+                "pid": 7836,
+                "mode": "recover",
+                "node": "v24.22.2",
+                "uptimeMs": 88
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "outbox-open-done",
+                "pid": 7836,
+                "mode": "recover",
+                "node": "v24.22.2",
+                "uptimeMs": 91
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "manager-created",
+                "pid": 7836,
+                "mode": "recover",
+                "node": "v24.22.2",
+                "uptimeMs": 92
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "recovery-start",
+                "pid": 7836,
+                "mode": "recover",
+                "node": "v24.22.2",
+                "uptimeMs": 92
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "report-start",
+                "pid": 7836,
+                "mode": "recover",
+                "node": "v24.22.2",
+                "uptimeMs": 92,
+                "report": "recovered"
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "report-done",
+                "pid": 7836,
+                "mode": "recover",
+                "node": "v24.22.2",
+                "uptimeMs": 128,
+                "report": "recovered"
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "report-start",
+                "pid": 7836,
+                "mode": "recover",
+                "node": "v24.22.2",
+                "uptimeMs": 205,
+                "report": "done"
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "report-done",
+                "pid": 7836,
+                "mode": "recover",
+                "node": "v24.22.2",
+                "uptimeMs": 210,
+                "report": "done"
+              }
+            ],
+            "cleanup_done": true,
+            "stdout_bytes": 0,
+            "stderr_bytes": 1300
+          }
+        ]
+      },
+      {
+        "name": "actual Core append307 cannot forward transcript/credentials or prematurely stop",
+        "path": "apps/desktop/src/main/live-delivery-manager.native.test.ts",
+        "result": "pass",
+        "duration_ms": 524.21,
+        "actors": [
+          {
+            "mode": "redirect307",
+            "pid": 5960,
+            "node": "C:\\hostedtoolcache\\windows\\node\\24.22.2\\x64\\node.exe",
+            "parent_phases": [
+              {
+                "phase": "spawned",
+                "elapsedMs": 3,
+                "markerExists": false
+              },
+              {
+                "phase": "wait-start",
+                "elapsedMs": 3,
+                "label": "blocked redirect",
+                "markerExists": false
+              },
+              {
+                "phase": "wait-ready",
+                "elapsedMs": 245,
+                "label": "blocked redirect",
+                "markerExists": false
+              },
+              {
+                "phase": "wait-start",
+                "elapsedMs": 253,
+                "label": "joined manager shutdown",
+                "markerExists": false
+              },
+              {
+                "phase": "wait-ready",
+                "elapsedMs": 383,
+                "label": "joined manager shutdown",
+                "markerExists": false
+              },
+              {
+                "phase": "collect-start",
+                "elapsedMs": 383,
+                "markerExists": false
+              },
+              {
+                "phase": "collect-done",
+                "elapsedMs": 395,
+                "markerExists": false,
+                "success": true,
+                "code": 0
+              },
+              {
+                "phase": "cleanup-start",
+                "elapsedMs": 396,
+                "markerExists": false
+              },
+              {
+                "phase": "cleanup-done",
+                "elapsedMs": 396,
+                "markerExists": false
+              }
+            ],
+            "fixture_phases": [
+              {
+                "kind": "native-manager-fixture",
+                "phase": "static-imports-ready",
+                "pid": 5960,
+                "mode": "redirect307",
+                "node": "v24.22.2",
+                "uptimeMs": 85
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "outbox-open-start",
+                "pid": 5960,
+                "mode": "redirect307",
+                "node": "v24.22.2",
+                "uptimeMs": 85
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "outbox-open-done",
+                "pid": 5960,
+                "mode": "redirect307",
+                "node": "v24.22.2",
+                "uptimeMs": 122
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "manager-created",
+                "pid": 5960,
+                "mode": "redirect307",
+                "node": "v24.22.2",
+                "uptimeMs": 122
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "manager-start",
+                "pid": 5960,
+                "mode": "redirect307",
+                "node": "v24.22.2",
+                "uptimeMs": 122
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "manager-started",
+                "pid": 5960,
+                "mode": "redirect307",
+                "node": "v24.22.2",
+                "uptimeMs": 180
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "waiting-for-campaign",
+                "pid": 5960,
+                "mode": "redirect307",
+                "node": "v24.22.2",
+                "uptimeMs": 195
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "campaign-held",
+                "pid": 5960,
+                "mode": "redirect307",
+                "node": "v24.22.2",
+                "uptimeMs": 206
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "report-start",
+                "pid": 5960,
+                "mode": "redirect307",
+                "node": "v24.22.2",
+                "uptimeMs": 207,
+                "report": "held"
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "report-done",
+                "pid": 5960,
+                "mode": "redirect307",
+                "node": "v24.22.2",
+                "uptimeMs": 208,
+                "report": "held"
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "report-start",
+                "pid": 5960,
+                "mode": "redirect307",
+                "node": "v24.22.2",
+                "uptimeMs": 363,
+                "report": "done"
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "report-done",
+                "pid": 5960,
+                "mode": "redirect307",
+                "node": "v24.22.2",
+                "uptimeMs": 368,
+                "report": "done"
+              }
+            ],
+            "cleanup_done": true,
+            "stdout_bytes": 0,
+            "stderr_bytes": 1737
+          }
+        ]
+      },
+      {
+        "name": "actual Core append308 cannot forward transcript/credentials or prematurely stop",
+        "path": "apps/desktop/src/main/live-delivery-manager.native.test.ts",
+        "result": "pass",
+        "duration_ms": 710,
+        "actors": [
+          {
+            "mode": "redirect308",
+            "pid": 2284,
+            "node": "C:\\hostedtoolcache\\windows\\node\\24.22.2\\x64\\node.exe",
+            "parent_phases": [
+              {
+                "phase": "spawned",
+                "elapsedMs": 3,
+                "markerExists": false
+              },
+              {
+                "phase": "wait-start",
+                "elapsedMs": 3,
+                "label": "blocked redirect",
+                "markerExists": false
+              },
+              {
+                "phase": "wait-ready",
+                "elapsedMs": 407,
+                "label": "blocked redirect",
+                "markerExists": false
+              },
+              {
+                "phase": "wait-start",
+                "elapsedMs": 416,
+                "label": "joined manager shutdown",
+                "markerExists": false
+              },
+              {
+                "phase": "wait-ready",
+                "elapsedMs": 446,
+                "label": "joined manager shutdown",
+                "markerExists": false
+              },
+              {
+                "phase": "collect-start",
+                "elapsedMs": 446,
+                "markerExists": false
+              },
+              {
+                "phase": "collect-done",
+                "elapsedMs": 466,
+                "markerExists": false,
+                "success": true,
+                "code": 0
+              },
+              {
+                "phase": "cleanup-start",
+                "elapsedMs": 466,
+                "markerExists": false
+              },
+              {
+                "phase": "cleanup-done",
+                "elapsedMs": 466,
+                "markerExists": false
+              }
+            ],
+            "fixture_phases": [
+              {
+                "kind": "native-manager-fixture",
+                "phase": "static-imports-ready",
+                "pid": 2284,
+                "mode": "redirect308",
+                "node": "v24.22.2",
+                "uptimeMs": 87
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "outbox-open-start",
+                "pid": 2284,
+                "mode": "redirect308",
+                "node": "v24.22.2",
+                "uptimeMs": 88
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "outbox-open-done",
+                "pid": 2284,
+                "mode": "redirect308",
+                "node": "v24.22.2",
+                "uptimeMs": 127
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "manager-created",
+                "pid": 2284,
+                "mode": "redirect308",
+                "node": "v24.22.2",
+                "uptimeMs": 127
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "manager-start",
+                "pid": 2284,
+                "mode": "redirect308",
+                "node": "v24.22.2",
+                "uptimeMs": 127
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "manager-started",
+                "pid": 2284,
+                "mode": "redirect308",
+                "node": "v24.22.2",
+                "uptimeMs": 186
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "waiting-for-campaign",
+                "pid": 2284,
+                "mode": "redirect308",
+                "node": "v24.22.2",
+                "uptimeMs": 372
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "campaign-held",
+                "pid": 2284,
+                "mode": "redirect308",
+                "node": "v24.22.2",
+                "uptimeMs": 381
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "report-start",
+                "pid": 2284,
+                "mode": "redirect308",
+                "node": "v24.22.2",
+                "uptimeMs": 381,
+                "report": "held"
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "report-done",
+                "pid": 2284,
+                "mode": "redirect308",
+                "node": "v24.22.2",
+                "uptimeMs": 382,
+                "report": "held"
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "report-start",
+                "pid": 2284,
+                "mode": "redirect308",
+                "node": "v24.22.2",
+                "uptimeMs": 426,
+                "report": "done"
+              },
+              {
+                "kind": "native-manager-fixture",
+                "phase": "report-done",
+                "pid": 2284,
+                "mode": "redirect308",
+                "node": "v24.22.2",
+                "uptimeMs": 432,
+                "report": "done"
+              }
+            ],
+            "cleanup_done": true,
+            "stdout_bytes": 0,
+            "stderr_bytes": 1737
+          }
+        ]
+      },
+      {
+        "name": "actual Node abrupt death after committed append preserves profile, IDs, digest and pending body",
+        "path": "apps/desktop/src/main/live-outbox-native.test.ts",
+        "result": "pass",
+        "duration_ms": 339.05,
+        "actors": [
+          {
+            "mode": "commit",
+            "pid": 6708,
+            "node": "C:\\hostedtoolcache\\windows\\node\\24.22.2\\x64\\node.exe",
+            "parent_phases": [
+              {
+                "phase": "spawn",
+                "elapsedMs": 0.05809999999473803,
+                "pid": 0,
+                "wallTimeMs": 1794617530840
+              },
+              {
+                "phase": "spawned",
+                "elapsedMs": 2.9798999999911757,
+                "pid": 6708,
+                "wallTimeMs": 1794617530843
+              },
+              {
+                "phase": "await-committed",
+                "elapsedMs": 3.602499999993597,
+                "pid": 6708,
+                "wallTimeMs": 1794617530843
+              },
+              {
+                "phase": "committed-observed",
+                "elapsedMs": 203.86699999999837,
+                "pid": 6708,
+                "wallTimeMs": 1794617531044
+              },
+              {
+                "phase": "kill",
+                "elapsedMs": 203.909799999994,
+                "pid": 6708,
+                "wallTimeMs": 1794617531044
+              },
+              {
+                "phase": "await-exit",
+                "elapsedMs": 211.0213999999978,
+                "pid": 6708,
+                "wallTimeMs": 1794617531051
+              },
+              {
+                "phase": "join-stdout",
+                "elapsedMs": 211.07209999999031,
+                "pid": 6708,
+                "wallTimeMs": 1794617531051
+              },
+              {
+                "phase": "join-stderr",
+                "elapsedMs": 211.097299999994,
+                "pid": 6708,
+                "wallTimeMs": 1794617531051
+              },
+              {
+                "phase": "validate-dead",
+                "elapsedMs": 211.123299999992,
+                "pid": 6708,
+                "wallTimeMs": 1794617531051
+              },
+              {
+                "phase": "complete",
+                "elapsedMs": 211.32420000000275,
+                "pid": 6708,
+                "wallTimeMs": 1794617531051
+              }
+            ],
+            "fixture_phases": [
+              {
+                "kind": "live-outbox-fixture-phase",
+                "mode": "commit",
+                "phase": "entry-after-static-imports",
+                "pid": 6708,
+                "elapsedMs": 0.04630000000000223,
+                "wallTimeMs": 1794617530934,
+                "clock": "after-static-imports"
+              },
+              {
+                "kind": "live-outbox-fixture-phase",
+                "mode": "commit",
+                "phase": "before-open-outbox",
+                "pid": 6708,
+                "elapsedMs": 0.850200000000001,
+                "wallTimeMs": 1794617530934,
+                "clock": "after-static-imports"
+              },
+              {
+                "kind": "live-outbox-fixture-phase",
+                "mode": "commit",
+                "phase": "opened-outbox",
+                "pid": 6708,
+                "elapsedMs": 65.49879999999999,
+                "wallTimeMs": 1794617530999,
+                "clock": "after-static-imports"
+              },
+              {
+                "kind": "live-outbox-fixture-phase",
+                "mode": "commit",
+                "phase": "before-create",
+                "pid": 6708,
+                "elapsedMs": 65.55799999999999,
+                "wallTimeMs": 1794617530999,
+                "clock": "after-static-imports"
+              },
+              {
+                "kind": "live-outbox-fixture-phase",
+                "mode": "commit",
+                "phase": "created",
+                "pid": 6708,
+                "elapsedMs": 77.9898,
+                "wallTimeMs": 1794617531011,
+                "clock": "after-static-imports"
+              },
+              {
+                "kind": "live-outbox-fixture-phase",
+                "mode": "commit",
+                "phase": "before-append",
+                "pid": 6708,
+                "elapsedMs": 81.4803,
+                "wallTimeMs": 1794617531015,
+                "clock": "after-static-imports"
+              },
+              {
+                "kind": "live-outbox-fixture-phase",
+                "mode": "commit",
+                "phase": "append-accepted",
+                "pid": 6708,
+                "elapsedMs": 87.4939,
+                "wallTimeMs": 1794617531021,
+                "clock": "after-static-imports"
+              },
+              {
+                "kind": "live-outbox-fixture-phase",
+                "mode": "commit",
+                "phase": "before-marker-write",
+                "pid": 6708,
+                "elapsedMs": 87.6945,
+                "wallTimeMs": 1794617531021,
+                "clock": "after-static-imports"
+              },
+              {
+                "kind": "live-outbox-fixture-phase",
+                "mode": "commit",
+                "phase": "committed-published",
+                "pid": 6708,
+                "elapsedMs": 92.8819,
+                "wallTimeMs": 1794617531026,
+                "clock": "after-static-imports"
+              }
+            ],
+            "completed": true,
+            "stdout_bytes": 0,
+            "stderr_bytes": 1562,
+            "stdout_truncated": false,
+            "stderr_truncated": false
+          },
+          {
+            "mode": "reopen",
+            "pid": 9348,
+            "node": "C:\\hostedtoolcache\\windows\\node\\24.22.2\\x64\\node.exe",
+            "parent_phases": [
+              {
+                "phase": "spawn",
+                "elapsedMs": 0.004300000000512227,
+                "pid": 0,
+                "wallTimeMs": 1794617531052
+              },
+              {
+                "phase": "spawned",
+                "elapsedMs": 2.888600000005681,
+                "pid": 9348,
+                "wallTimeMs": 1794617531055
+              },
+              {
+                "phase": "await-reopen-exit",
+                "elapsedMs": 3.094700000001467,
+                "pid": 9348,
+                "wallTimeMs": 1794617531055
+              },
+              {
+                "phase": "await-reopen-exit",
+                "elapsedMs": 3.1049000000057276,
+                "pid": 9348,
+                "wallTimeMs": 1794617531055
+              },
+              {
+                "phase": "await-exit",
+                "elapsedMs": 3.1079999999928987,
+                "pid": 9348,
+                "wallTimeMs": 1794617531055
+              },
+              {
+                "phase": "join-stdout",
+                "elapsedMs": 117.24060000000463,
+                "pid": 9348,
+                "wallTimeMs": 1794617531169
+              },
+              {
+                "phase": "join-stderr",
+                "elapsedMs": 117.29279999999562,
+                "pid": 9348,
+                "wallTimeMs": 1794617531169
+              },
+              {
+                "phase": "validate-dead",
+                "elapsedMs": 117.30680000000575,
+                "pid": 9348,
+                "wallTimeMs": 1794617531169
+              },
+              {
+                "phase": "complete",
+                "elapsedMs": 117.32809999999881,
+                "pid": 9348,
+                "wallTimeMs": 1794617531169
+              }
+            ],
+            "fixture_phases": [
+              {
+                "kind": "live-outbox-fixture-phase",
+                "mode": "reopen",
+                "phase": "entry-after-static-imports",
+                "pid": 9348,
+                "elapsedMs": 0.04059999999999775,
+                "wallTimeMs": 1794617531138,
+                "clock": "after-static-imports"
+              },
+              {
+                "kind": "live-outbox-fixture-phase",
+                "mode": "reopen",
+                "phase": "before-open-outbox",
+                "pid": 9348,
+                "elapsedMs": 0.8761999999999972,
+                "wallTimeMs": 1794617531139,
+                "clock": "after-static-imports"
+              },
+              {
+                "kind": "live-outbox-fixture-phase",
+                "mode": "reopen",
+                "phase": "opened-outbox",
+                "pid": 9348,
+                "elapsedMs": 8.292900000000003,
+                "wallTimeMs": 1794617531146,
+                "clock": "after-static-imports"
+              },
+              {
+                "kind": "live-outbox-fixture-phase",
+                "mode": "reopen",
+                "phase": "before-reopen-evidence",
+                "pid": 9348,
+                "elapsedMs": 8.349499999999992,
+                "wallTimeMs": 1794617531146,
+                "clock": "after-static-imports"
+              },
+              {
+                "kind": "live-outbox-fixture-phase",
+                "mode": "reopen",
+                "phase": "reopen-verified",
+                "pid": 9348,
+                "elapsedMs": 10.627600000000001,
+                "wallTimeMs": 1794617531149,
+                "clock": "after-static-imports"
+              },
+              {
+                "kind": "live-outbox-fixture-phase",
+                "mode": "reopen",
+                "phase": "reopen-closed",
+                "pid": 9348,
+                "elapsedMs": 20.274599999999992,
+                "wallTimeMs": 1794617531158,
+                "clock": "after-static-imports"
+              }
+            ],
+            "completed": true,
+            "stdout_bytes": 326,
+            "stderr_bytes": 1090,
+            "stdout_truncated": false,
+            "stderr_truncated": false
+          }
+        ]
+      }
+    ],
+    "target_log_lines": [
+      "2026-11-14T00:52:07.4660843Z (pass) actual Core pending503 remains open, then abrupt Node restart retries same durable ID before stop [892.29ms]",
+      "2026-11-14T00:52:07.9905358Z (pass) actual Core append307 cannot forward transcript/credentials or prematurely stop [524.21ms]",
+      "2026-11-14T00:52:08.7016717Z (pass) actual Core append308 cannot forward transcript/credentials or prematurely stop [710.00ms]",
+      "2026-11-14T00:52:12.0390262Z (pass) actual Node abrupt death after committed append preserves profile, IDs, digest and pending body [339.05ms]"
+    ],
+    "restoration": {
+      "applied": true,
+      "restored": true,
+      "payload_hashes_match": true,
+      "backup_hashes_verified": true,
+      "restored_hashes_match": true,
+      "git_diff_against_head_passed": true,
+      "files": [
+        {
+          "path": "apps/desktop/src/main/live-delivery-manager.native.test.ts",
+          "originalBlob": "4249ce68e8edadc48e75fa43b6665d2cd1563cfa",
+          "originalSha256": "29869668f761dd4259b631f295d4c424432b4d960439427f489f1a798d0bdf3f",
+          "overlayBlob": "15ff2f60af8b175d1c856d57307b01db8dd99c78",
+          "overlaySha256": "1ef9d751f7dee926d76e48d34eda6c87f19125e42ac2d6a444d745d2029df11d",
+          "backupVerified": true
+        },
+        {
+          "path": "apps/desktop/src/main/live-delivery-manager.fixture.ts",
+          "originalBlob": "159a460c46d7c605575463d559fe4604c1424297",
+          "originalSha256": "b07491c39b56c5530332af135ff67f2e7b78c322edd51cc7825037eb2acdced5",
+          "overlayBlob": "b3889cf4df8ec8b851bcc40b721318d256bd10c5",
+          "overlaySha256": "6aca11d792b3ae10a36a2ba18cf3248f39b263e62395a84942d00d0e06ab88f7",
+          "backupVerified": true
+        },
+        {
+          "path": "apps/desktop/src/main/live-outbox-native.test.ts",
+          "originalBlob": "a3a34313808e629668463a1cf9bb73671fdc2304",
+          "originalSha256": "1587d7d2aca8b9690f5fd679c99bf47801360b64418a21f8dff67482daa7e6ff",
+          "overlayBlob": "dba9b06551b9f6ea8564ff6221fb5690fa4a5d00",
+          "overlaySha256": "534b1f1bc03714ee0096fefa0bb3157e0348078e885d01420fea964d41940538",
+          "backupVerified": true
+        },
+        {
+          "path": "apps/desktop/src/main/live-outbox-crash.fixture.ts",
+          "originalBlob": "1b4cfb16b1d79ee2b3685597cfae2d09b8cbebd5",
+          "originalSha256": "4c0b1aa1b7c872a914ddf96c6a1fdf99786be37bd7fcd98b4ee42a4f76935c4c",
+          "overlayBlob": "f51540c2e41be37503e093989244b2991bb19e06",
+          "overlaySha256": "01b3dcef5d8b1eefc94d226a39d4c747626aa5a7c37a62e49435cc975189953b",
+          "backupVerified": true
+        }
+      ]
+    },
+    "branch_cleanup": {
+      "job": 132268597332,
+      "conclusion": "success",
+      "ref": "refs/heads/ci-run-windows-native-diag-2d662ecc",
+      "get_ref_status": 404,
+      "ref_absent_confirmed": true
+    },
+    "artifact": {
+      "id": 14090770555,
+      "name": "desktop-native-diagnostic-windows-latest",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43536328355/artifacts/14090770555",
+      "bytes": 32562,
+      "sha256": "56267a4ff3e2ba21b335df37874f76c0835d09c5c1fa3013ff9af6475093c57a",
+      "downloaded_sha256_verified": true,
+      "local_archive": "artifact-14090770555.zip",
+      "manifest": "overlay-manifest.json",
+      "applied": "overlay-applied.json",
+      "restored": "overlay-restored.json"
+    },
+    "logs": {
+      "job": "job-132266094306.log",
+      "cleanup": "cleanup-132268597332.log",
+      "test_command_output": "bun-diagnostic.log",
+      "original_log_characters": 295403
+    },
+    "causal_result": {
+      "original_failures_reproduced": false,
+      "first_failure_phase": null,
+      "original_failure_cause": "unknown",
+      "permanent_fix_identified": false,
+      "interpretation": "One full-shard diagnostic execution passed with unchanged product code, oracles and test deadlines. It does not identify why the four cases failed in the original epic run and is not a full green run of the unchanged PR HEAD."
+    },
+    "source_compare": {
+      "base": "1ff367925fb59b0985bab2f76fb4f30751603b14",
+      "head": "2d662ecc4bb73bc42e0e04e9e484083720c82d6f",
+      "total_commits": 1,
+      "files": [
+        {
+          "path": ".ci-native-diagnostic.json",
+          "status": "added",
+          "blob": "8ffb07d60b003d120ee31bdb11d2ca7a928410af"
+        },
+        {
+          "path": ".ci-run.json",
+          "status": "added",
+          "blob": "afc78e0d1c02383ba13cc14d156b372e3074808a"
+        },
+        {
+          "path": ".github/workflows/test-ci.yml",
+          "status": "modified",
+          "blob": "27da03393478c1541e68c1a1bda2fc1e3acc4fa9"
+        }
+      ],
+      "only_diagnostic_metadata": true
+    }
+  },
+  "additional_bounded_code_review": {
+    "source": "1ff367925fb59b0985bab2f76fb4f30751603b14",
+    "base": "5e0807b5ff953508f792b8a965883985b05a7066",
+    "scope": "Finite completion of requested process/isolation review while the final epic runs; no new implementation campaign",
+    "files": [
+      {
+        "path": "packages/core/src/codemode-native-regex.ts",
+        "blob": "18da2976af133ce809560cd2997af0043ab1106c",
+        "read": "full",
+        "ranges": [
+          [
+            1,
+            59
+          ]
+        ]
+      },
+      {
+        "path": "packages/core/src/codemode-native-regex-script.ts",
+        "blob": "75479c1493d1fdbb91aa209abf589cb50b3ffece",
+        "read": "full",
+        "ranges": [
+          [
+            1,
+            71
+          ]
+        ]
+      },
+      {
+        "path": "packages/codemode/src/native-regex.ts",
+        "blob": "bcb9639e9c667c8351769512700963ebd3925654",
+        "read": "full",
+        "ranges": [
+          [
+            1,
+            97
+          ]
+        ]
+      },
+      {
+        "path": "packages/codemode/src/native-regex-driver.ts",
+        "blob": "faa3765ba52892b8d9b59eb8babfcab4102485d7",
+        "read": "full",
+        "ranges": [
+          [
+            1,
+            39
+          ]
+        ]
+      },
+      {
+        "path": "packages/core/src/process.ts",
+        "blob": "a2c29d4a18c44ff407e6055b27830fade5d43f20",
+        "read": "full unchanged caller",
+        "ranges": [
+          [
+            1,
+            324
+          ]
+        ]
+      },
+      {
+        "path": "packages/core/src/tool-safety.ts",
+        "blob": "45b09f27b9b52132c4336a1d4d1d203727eec836",
+        "read": "changed hunk and surrounding selected flows",
+        "ranges": [
+          [
+            365,
+            510
+          ],
+          [
+            588,
+            654
+          ]
+        ]
+      },
+      {
+        "path": "packages/core/test/codemode-native-process.test.ts",
+        "blob": "5ea439be594b6a8f5c04f861c4c8ba9ebc02c857",
+        "read": "full",
+        "ranges": [
+          [
+            1,
+            330
+          ]
+        ]
+      },
+      {
+        "path": "packages/core/test/codemode-native-regex.test.ts",
+        "blob": "48716e713672c63b0a789d15e09b43dd2c053ba6",
+        "read": "full",
+        "ranges": [
+          [
+            1,
+            137
+          ]
+        ]
+      },
+      {
+        "path": "packages/core/test/tool-safety-binding.test.ts",
+        "blob": "f5b56d9862173873efdbac3bc32f100986f5d8e3",
+        "read": "full",
+        "ranges": [
+          [
+            1,
+            166
+          ]
+        ]
+      }
+    ],
+    "findings": [],
+    "observations": [
+      "Timed native regex uses a fixed helper script and typed stdin/reply; no interpreted program text becomes helper code. Explicit Bun/Omni requirements refuse unsupported runtime/fallback.",
+      "Private temporary cwd, empty Bun config, no dotenv and filtered child environment are deliberate. AppProcess scope joins spawn/stream/exit ownership; outer remaining-budget timeout encompasses provider IO and cleanup.",
+      "Driver serializes stateful regex operations and checks the remaining absolute budget after acquiring the permit; cancellation is not remapped as a native regex success.",
+      "Tests use actual processes/Omni for provider replies, staged compiled executable identity, poisoned cwd configuration, independently observed live PID/CPU entry before kill, responsive parent and dead PID after full scope. Their outer watchdog cannot satisfy the product oracle.",
+      "ToolSafety changed hunk checks both path and filePath. Real WriteTool/EditTool registry tests include conflicting aliases and unchanged refused bytes; filesystem is real, permission service in that test is a controlled stub."
+    ],
+    "limits": [
+      "No complete interpreter/stdlib review or arbitrary parent CPU/memory preemption guarantee.",
+      "Provider stdout is not generically byte-bounded by this patch; no general bounded heap claim. Existing E10 scope is native regex interruption/ownership, not universal limits for all parent transformations.",
+      "Core AppProcess is an unchanged caller in this PR; no claim to have reread all spawner/OS sandbox implementations.",
+      "No new tests run for this static reading; all executable qualification remains GitHub Actions."
+    ],
+    "local_tests": 0
+  },
+  "review_limits": [
+    "Risk-directed sampling, not exhaustive certification of all 65 original findings or all changed files.",
+    "Full PR patch metadata was available; 11 large audit/generated files lacked inline patches. Critical cited sources, callers and tests were read directly in bounded ranges. Generated Atlas JavaScript and all consumer paths were not manually reviewed.",
+    "No local tests were executed. Repository tests and typechecks used GitHub Actions.",
+    "No production defect is inferred merely from a failed wait. Diagnostic success without reproduction does not explain or dismiss the original failed gate.",
+    "Historical failed attempts, one original flaky E2E, existing skips, 53/54 higher AFTER benchmark medians and absent Grok approval remain explicit.",
+    "No merge, release, PR comment or review approval was submitted."
+  ],
+  "required_before_merge": [
+    "Identify and resolve the failed Cassandra broker acquisition, or establish a specific reproducible non-product cause with evidence; a green isolated diagnostic is insufficient.",
+    "Identify and resolve the four Desktop Windows native timeouts while preserving durable IDs/digest/pending-body/redirect and stop assertions.",
+    "Bind any subsequent fixes to the current dev and exact tested source, with change-scoped hosted gates; obtain a coherent passing integration gate after the causes are resolved."
+  ],
+  "recorded_at": "2026-11-14T00:58:25.916603+00:00",
+  "clean_ci_commit": {
+    "sha": "9ca458fb5606a420ba1cee0c4e9792193650c1e5",
+    "parent": "1ff367925fb59b0985bab2f76fb4f30751603b14",
+    "tree": "bc212dc5846bfb5d7ffe03046197a627d642a656",
+    "files": [
+      {
+        "path": ".github/workflows/test.yml",
+        "blob": "c190fb4802ebd4ed93a65473f4cb2df03184be65"
+      }
+    ],
+    "qualification": 43534862899
+  },
+  "confirmed_fixes": [
+    {
+      "id": "F1",
+      "severity": "high",
+      "classification": "confirmed by original code and actual RED reproducer; fixed",
+      "commit": "317f85533614a4c73de2e31e27d84fe6e9600236",
+      "paths": [
+        "apps/desktop/src/main/background-cli.ts",
+        "apps/desktop/src/main/desktop-startup.ts",
+        "apps/desktop/src/main/index.ts"
+      ],
+      "trigger": "Quit during a pending CLI version/service/signature helper",
+      "consequence": "Quit waits for an acquisition that cannot be cancelled",
+      "correction": "Propagate owner abort, retain helper through close, use the existing bounded TERM/KILL ownership and join concurrent discovery",
+      "qualification": [
+        43508401847,
+        43510345140,
+        43529329253
+      ]
+    },
+    {
+      "id": "review-index",
+      "severity": "high",
+      "classification": "confirmed Linux same-stat content omission; fixed",
+      "commit": "8e846a62d17815a19b1e5a2f5a553003e0e1f914",
+      "path": "modules/maestro/coordination/src/v2/workflow/review.ts",
+      "line": 52,
+      "trigger": "Copy Git index under a new timestamp while a same-size edited file still matches cached stat data",
+      "consequence": "Review artifact can omit actual changes and return unchanged; settlement can therefore lack the intended review receipt",
+      "correction": "Observe original index timestamp before copy and assign a conservative timestamp to the clone; preserve real index bytes and timestamp",
+      "qualification": [
+        43527267379,
+        43529329253
+      ],
+      "windows_note": "Baseline Windows already passed; no false RED claimed"
+    },
+    {
+      "id": "review-scope",
+      "severity": "high",
+      "classification": "confirmed current-dev integration type failure; fixed",
+      "commit": "9bac70a36c8c44367af78896637a13f7681e979a",
+      "path": "modules/maestro/coordination/src/v2/tools/review.ts",
+      "line": 266,
+      "trigger": "Compose the remediation with dev5e0807, whose PR review acquires a scoped scratch-copy resource",
+      "consequence": "Tool execute requires an unprovided Scope; TS2322 fails the integration gate",
+      "correction": "Own Scope around the complete ReviewPRRequestV2.run operation",
+      "qualification": [
+        43516093636,
+        43529329125,
+        43529329253
+      ]
+    },
+    {
+      "id": "maestro-missing-task",
+      "severity": "high-validation",
+      "classification": "confirmed missing executable coverage; fixed",
+      "commit": "4e610d4bcce67927be87713ea2007b69cec6ede7",
+      "path": "turbo.json",
+      "line": 169,
+      "trigger": "Full lane filters Maestro by package name while its Turbo test task is absent",
+      "consequence": "A green lane does not execute the Maestro test suite",
+      "correction": "Register test task and repair fixtures/contracts revealed by actual execution, preserving supported positives and unsupported-platform no-effects checks",
+      "qualification": [
+        43519292900,
+        43522392940,
+        43529329253
+      ]
+    },
+    {
+      "id": "move-fixture",
+      "severity": "medium-validation",
+      "classification": "confirmed by suppressed-notification controls; fixed",
+      "commit": "21ba7dc1f9f03b618e47e6f5ffe63aa2e68004b1",
+      "path": "packages/core/test/fixture/move-session-writer.ts",
+      "line": 61,
+      "trigger": "Filesystem notification is not delivered while the READY/release file already exists",
+      "consequence": "The test fixture misses an actual barrier and reports timeout",
+      "correction": "Reconcile file state alongside notifications, retaining deadlines and assertions",
+      "qualification": [
+        43518298592,
+        43529329253
+      ]
+    },
+    {
+      "id": "tui-observer",
+      "severity": "medium-validation",
+      "classification": "confirmed premature test observation; fixed",
+      "commit": "a54bea022327e9f0b7797cf86008d066b659e878",
+      "path": "packages/tui/test/cli/cmd/tui/sync-live-hydration.test.tsx",
+      "line": 546,
+      "trigger": "Begin the hydration retry before the batched live text is fully visible",
+      "consequence": "Observer races the 16ms SDK batch; the test cannot distinguish incomplete live observation from hydration regression",
+      "correction": "Wait for the complete live text first; keep text and exact read-count assertions before and after hydration",
+      "qualification": [
+        43518465440,
+        43529329253
+      ]
+    },
+    {
+      "id": "atlas-budget",
+      "severity": "medium-validation",
+      "classification": "confirmed full-history checkout cost in a cancelled job; targeted mitigation qualified",
+      "commit": "9ca458fb5606a420ba1cee0c4e9792193650c1e5",
+      "path": ".github/workflows/test.yml",
+      "line": 260,
+      "trigger": "Windows generator lane spends most of the10min budget on setup plus its single build test",
+      "consequence": "Test passes but the job is cancelled in post-action cleanup",
+      "correction": "Use depth1 only for Boundary1/2, whose fixture does not use repository history; retain10min job/8min step",
+      "qualification": [
+        43534862899
+      ],
+      "limit": "Green lane demonstrates compatibility and observed budget margin, not a future runtime bound or causal attribution of faster install/build"
+    }
+  ],
+  "receipt_consistency": {
+    "checked_independently": true,
+    "unique_jobs": 75,
+    "success": 72,
+    "failure": 2,
+    "cancelled": 1,
+    "source_and_attempt_agree": true,
+    "specialized_ledgers_cover_disjoint_jobs": 49,
+    "other_global_jobs": 26,
+    "no_subreport_double_counting": true,
+    "local_tests": false
+  },
+  "atlas_clean_source_identity": {
+    "repository": "gustavomhss/hugr-orchestra",
+    "recordedAt": "2026-11-14T00:46:42Z",
+    "method": "Direct Git commit and non-recursive Git tree APIs. Compare each entry by path, mode, type and object SHA; descend only tree entries whose object SHA differs. No compare endpoint or three-dot sibling diff was used.",
+    "clean": {
+      "commit": "9ca458fb5606a420ba1cee0c4e9792193650c1e5",
+      "tree": "bc212dc5846bfb5d7ffe03046197a627d642a656",
+      "parents": [
+        "1ff367925fb59b0985bab2f76fb4f30751603b14"
+      ],
+      "apiUrl": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/commits/9ca458fb5606a420ba1cee0c4e9792193650c1e5"
+    },
+    "atlasSnapshot": {
+      "commit": "13a7db21e7c641fbddabe6b20d3b1176c9988c0d",
+      "tree": "596de726d69fd7cdc0ba4f4cb11af60830661a4e",
+      "parents": [
+        "1ff367925fb59b0985bab2f76fb4f30751603b14"
+      ],
+      "apiUrl": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/commits/13a7db21e7c641fbddabe6b20d3b1176c9988c0d"
+    },
+    "result": {
+      "comparisonComplete": true,
+      "allTreeResponsesUntruncated": true,
+      "sameParent": "1ff367925fb59b0985bab2f76fb4f30751603b14",
+      "differingTrackedLeafPaths": 1,
+      "addedPaths": 0,
+      "removedPaths": 0,
+      "modeChanges": 0,
+      "typeChanges": 0,
+      "onlyDifference": ".github/workflows/test-ci.yml",
+      "cleanBlob": "5a150416421cff3b3f4886fc6304568d259256ba",
+      "atlasSnapshotBlob": "4d966783c01f353235ab50ea1a379e6c88442cce",
+      "allOtherTrackedPathsIdentical": true,
+      "commonTestWorkflow": {
+        "path": ".github/workflows/test.yml",
+        "type": "blob",
+        "mode": "100644",
+        "sha": "c190fb4802ebd4ed93a65473f4cb2df03184be65"
+      },
+      "conclusion": "The clean commit and Atlas snapshot are identical in all tracked content and entry modes except .github/workflows/test-ci.yml. In particular .github/workflows/test.yml is the same c190fb4802ebd4ed93a65473f4cb2df03184be65 blob in both."
+    },
+    "traversal": [
+      {
+        "path": "/",
+        "cleanTree": "bc212dc5846bfb5d7ffe03046197a627d642a656",
+        "atlasTree": "596de726d69fd7cdc0ba4f4cb11af60830661a4e",
+        "cleanEntries": 43,
+        "atlasEntries": 43,
+        "equalEntries": 42,
+        "differingEntries": [
+          ".github"
+        ]
+      },
+      {
+        "path": ".github",
+        "cleanTree": "ac589568f2059a04825f3d72c062b6e6d9579b18",
+        "atlasTree": "7c729181f73d370837a1111b1130e4ee49715064",
+        "cleanEntries": 5,
+        "atlasEntries": 5,
+        "equalEntries": 4,
+        "differingEntries": [
+          ".github/workflows"
+        ]
+      },
+      {
+        "path": ".github/workflows",
+        "cleanTree": "4f91b6a172ce6408b6942723e4310137787a22ee",
+        "atlasTree": "739db72949b4f76f3e99d7346824b2548b911d14",
+        "cleanEntries": 29,
+        "atlasEntries": 29,
+        "equalEntries": 28,
+        "differingEntries": [
+          ".github/workflows/test-ci.yml"
+        ]
+      }
+    ],
+    "coverageExplanation": "An equal Git tree object SHA covers the complete descendant tree, so unchanged subtrees were not expanded. Both complete entry sets were compared at each changed level: repository root, .github and .github/workflows. The only remaining differing entries are blobs, leaving no unresolved subtree.",
+    "execution": {
+      "testsRun": 0,
+      "remoteMutations": 0,
+      "codeChanges": 0,
+      "comparisonEndpointCalls": 0,
+      "gitCommitReads": 2,
+      "gitTreeReads": 6
+    },
+    "limits": [
+      "This is a tracked-source identity proof; it does not assert a test outcome or identity of runner environments."
+    ]
+  },
+  "open_material_gaps": [
+    {
+      "id": "desktop-native-windows",
+      "severity": "high-validation",
+      "classification": "confirmed failed gate; product cause remains a hypothesis",
+      "job": 132243533814,
+      "test_paths": [
+        {
+          "path": "apps/desktop/src/main/live-delivery-manager.native.test.ts",
+          "line": 113,
+          "callers": [
+            131,
+            169
+          ]
+        },
+        {
+          "path": "apps/desktop/src/main/live-outbox-native.test.ts",
+          "line": 57
+        }
+      ],
+      "trigger": "Windows full Desktop Bun1/3 reaches pending503, append307/308 and abrupt Node death proofs",
+      "observable_consequence": "Three marker waits fail and the outbox proof exceeds its3s scope; required durability/redirect/stop oracles do not complete in the integration run",
+      "root_cause": "Unknown. The single instrumented diagnostic of the same56-file shard passed424 tests with10skips and0failures, including all four original failures. It did not reproduce or explain their original causes.",
+      "smallest_correction": "Cannot prescribe a product patch without identifying the failing phase; preserve all durability and no-forwarding assertions while investigating",
+      "diagnostic": 43536328355,
+      "diagnostic_is_product_fix": false
+    },
+    {
+      "id": "cassandra-broker-acquisition",
+      "severity": "high-validation",
+      "classification": "confirmed failed gate; failure cause unknown",
+      "job": 132243525866,
+      "test_path": "packages/core/test/backend-toolkit-cassandra.test.ts",
+      "test_line": 196,
+      "path": "packages/core/src/tcp-proxy.ts",
+      "line": 118,
+      "trigger": "Cassandra cache-identity test acquires its Node TCP broker after installation/parser assertions",
+      "observable_consequence": "ToolSafety.Denied sandbox-tcp-proxy-listen-acquisition prevents broker acquisition and the test fails",
+      "root_cause": "Readiness timeout, child exit and invalid frame/error map to the same public reason; the original log does not retain sufficient cause",
+      "same_as_dev": [
+        "packages/core/src/tcp-proxy.ts",
+        "packages/core/test/backend-toolkit-cassandra.test.ts"
+      ],
+      "same_leaf_limit": "Omni/process infrastructure also changed in the PR, so identical leaf blobs do not exonerate integration",
+      "diagnostic": 43532079002,
+      "diagnostic_result": "12pass1skip, 12 real broker acquisitions succeeded with the original5s limit; original failure not reproduced or explained",
+      "smallest_correction": "No product patch justified by current evidence; obtain the failing cause and requalify the affected lane without discarding the original failure"
+    }
+  ],
+  "pr_description": {
+    "read": true,
+    "unchanged_since_initial_read": true,
+    "meaning": "Historical campaign description; not updated by this reviewer and not independent evidence of current closure"
+  },
+  "coverage_receipt": "independent-review-integration.json#complementary_code_review",
+  "additional_desktop_review": {
+    "source": "1ff367925fb59b0985bab2f76fb4f30751603b14",
+    "scope": "M2 pipe adapter start/error/exit/close and supervisor-loss outcomes; adjacent terminal code read as part of same file, no whole Desktop audit.",
+    "files": [
+      {
+        "path": "apps/desktop/src/main/omni-process.ts",
+        "sha": "fc87385fdd20e632e3e1bb342b10fe86222e77a9",
+        "read": [
+          [
+            1,
+            386
+          ]
+        ],
+        "coverage": "full production plus PR patch"
+      },
+      {
+        "path": "apps/desktop/src/main/omni-process.test.ts",
+        "sha": "c4fbe1b796cd0468eed54d7b1cef5b32ca70f830",
+        "read": [
+          [
+            1,
+            612
+          ]
+        ],
+        "coverage": "full tests"
+      },
+      {
+        "path": "apps/desktop/src/main/omni-process.fixture.ts",
+        "sha": "382773500af2b6566e018571852eb92332acd077",
+        "read": [
+          [
+            1,
+            7
+          ]
+        ],
+        "coverage": "full fixture"
+      },
+      {
+        "path": "apps/desktop/src/main/owned-serve.ts",
+        "sha": "f87e322fa03dab8c5c57cad7fbcae597ffd91283",
+        "read": [
+          [
+            1,
+            220
+          ]
+        ],
+        "coverage": "principal owned server caller and process lifecycle"
+      },
+      {
+        "path": "apps/desktop/src/main/linux-workspace-omni.ts",
+        "sha": "115f3bfc83ab07eac592bdf81eb5d12c67693403",
+        "read": [
+          [
+            1,
+            40
+          ]
+        ],
+        "coverage": "complete adapter dispatch"
+      },
+      {
+        "path": "apps/desktop/src/main/linux-workspace-access.ts",
+        "sha": "f9972acc76f2157b23184f8d0126bbfc202a5900",
+        "read": [
+          [
+            50,
+            74
+          ],
+          [
+            140,
+            255
+          ]
+        ],
+        "coverage": "prepare/run event consumers; other methods not rereviewed"
+      }
+    ],
+    "confirmed_defects": [],
+    "conclusion": "No new demonstrated blocker in inspected M2 adapter/caller paths.",
+    "evidence": [
+      "Single guarded finish closes streams/releases stdin and removes AbortSignal listener; startup failure emits error+close without inventing exit.",
+      "Run observes both wait and output failures, reaps through stop, and emits actual exit only if wait supplied one. Stop/iterator uncertainty becomes process-termination-unknown rather than a fabricated successful exit.",
+      "Tests use real native spawned children/nonce process trees; injected load wrapper replaces wait/output/stop operations to control failure. Swept OS process-table assertions substantiate the cases that claim tree death.",
+      "Unknown cleanup test deliberately stalls stop and iterator-return, requires bounded error+close and does not assert universal reaping.",
+      "owned-serve listens to error for health failure and close/output end for restart/stop joining; workspace prepare/run consume error as failure rather than close:null as successful execution."
+    ],
+    "limits": [
+      "No physical supervisor SIGKILL loss experiment was performed in this reading; wait rejection is injected over a real native child. Never generalize to universal reaping after supervisor loss.",
+      "No local test or workflow was executed by this reader. Final CI omni-process.test.ts executed 22 cases on each OS, all passed; Windows containing shard failed four other native fixture tests.",
+      "Known owned-serve and LinuxWorkspace callers were inspected. GitHub default-branch code search returned no hits; that is not proof of complete callgraph coverage."
+    ],
+    "final_ci_execution": [
+      {
+        "job": 132243530078,
+        "os": "linux",
+        "path": "apps/desktop/src/main/omni-process.test.ts",
+        "passed": 22,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "job": 132243533814,
+        "os": "windows",
+        "path": "apps/desktop/src/main/omni-process.test.ts",
+        "passed": 22,
+        "failed": 0,
+        "skipped": 0
+      }
+    ]
+  }
+}

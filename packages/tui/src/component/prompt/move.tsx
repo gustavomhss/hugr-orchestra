@@ -117,7 +117,12 @@ export function usePromptMove(input: { projectID: () => string | undefined; sess
     const status = session
       ? await sdk.api.vcs.status({ location: { directory: session.location.directory } }).catch(() => undefined)
       : undefined
-    const choice = status?.data.length ? await DialogWorkspaceFileChanges.show(dialog, status.data) : "no"
+    const choice = status?.data.length
+      ? await DialogWorkspaceFileChanges.show(dialog, status.data, {
+          message:
+            "Copy these file changes to the destination with the Session? The original files and changes will stay here.",
+        })
+      : "no"
     if (!choice) return
     dialog.clear()
     const directory = selection.type === "new" ? await create(sessionContext(sessionID)) : selection.directory

@@ -2,6 +2,12 @@
 
 The Skills chapter lists the skills Orchestra finds in the project's skill folders (`.orchestra/skills/`, `.claude/skills/`, `.agents/skills/`), the global folder and the built-in modules.
 
+## Markdown frontmatter
+
+Skill, agent and command frontmatter is data. Orchestra accepts YAML (including `yaml` and `yml` labels) and JSON, and refuses executable languages such as `javascript` and `js` before parsing. YAML values containing unquoted colons keep the existing compatibility fallback.
+
+Automatically discovered project `AGENTS.md` files must resolve physically inside the project, including through symlinks. An escaping file is ignored without reading its target. Your global `AGENTS.md` and safe configured instructions remain available.
+
 ## Agent-only skills
 
 Some skills exist only for an agent to load, for example the planning skills of a specialist seat. Mark them in the frontmatter so the catalog does not show them to users:
@@ -35,6 +41,16 @@ For example, if Orchestra has loaded a skill whose description is “Review API 
 A read already in progress may finish with its earlier snapshot. It cannot put that old content back into the current cache after a reload or successful write. This protects against a slow reader undoing a newer refresh.
 
 **A page refresh and a source reload are not the same operation.** Asking the server for the catalog again can still use its in-memory source cache. This section describes source reloads, not a promise that every UI refresh rescans the disk. Cache invalidation also does not rewrite messages already recorded in a session.
+
+## Remote URL sources
+
+A remote acquisition admits at most 2 MiB per requested file and 32 MiB of file content in total. Cached files and non-Markdown companions count toward that same total. The index is limited to 1 MiB, 128 skills, 256 files per skill and 4,096 files across all entries, including invalid entries. A cached version marker may contain at most 4 KiB.
+
+Each complete request, including redirects, the existing transient retries and body transfer, has a 10-second deadline. The whole acquisition, including cache reads, has a 60-second deadline. Timeouts await cancellation and cleanup; blocking filesystem operations or cleanup can extend the elapsed time.
+
+A skill becomes available only when every requested file succeeds. A failed version refresh preserves the previous cache, but does not present unchecked old contents as a successful refresh. Other complete skills may still load; a whole-acquisition timeout returns no remote skills. An incomplete unversioned download can leave partial cache files without making that skill available.
+
+Remote Markdown is read from the validated acquisition snapshot: only indexed root-level `*.md` files and nested `SKILL.md` files are considered, including dotfiles. Stale files left in the cache are not added to the snapshot. These limits govern admitted file content, rather than total network traffic or process memory: transport buffers may receive bytes that are subsequently refused. Local folders and embedded sources keep their existing discovery behavior, and skill permissions remain independent.
 
 ## What this saves — and what it does not
 

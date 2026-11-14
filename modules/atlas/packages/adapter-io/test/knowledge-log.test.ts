@@ -7,8 +7,10 @@ import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSyn
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
-import type { CurrentNode, StoreProjection } from "@atlas/knowledge"
-import { emptyStore } from "@atlas/knowledge"
+import type { Candidate, CurrentNode, StoreProjection } from "@atlas/knowledge"
+import { emptyStore, nodeKey, primaryAnchorId, upsert } from "@atlas/knowledge"
+import { asNodeKey, asSubtreeHash, id } from "@atlas/kernel"
+import { claimNormOf } from "../src/governed-emit-identity.js"
 import { appendKnowledge, readKnowledge, withKnowledgeLog } from "../src/knowledge-log.js"
 import { replayKnowledge } from "../src/knowledge-replay.js"
 import { blobPath, knowledgeShardPath } from "../src/layout.js"
@@ -28,16 +30,38 @@ afterEach(() => rmSync(repo, { recursive: true, force: true }))
 // The sidecar sits beside the CAS directory (`dirname(casPath)`), so each checkout needs a folder of its own.
 const store = (name: string): DiskStore => createDiskStore(join(repo, name, "cas"))
 
-/** Put `fact` and commit one row naming it, as a door would. */
-function emit(s: DiskStore, nodeKey: string, fact: object, scope = "svc"): CurrentNode {
-  const contentHash = s.put(fact)
-  const row: CurrentNode = { nodeKey, family: "advisory", contentHash, claims: [], scope }
-  const result = s.commitProjection((p: StoreProjection) => ({
-    out: row,
-    next: { ...p, current: new Map([...p.current, [nodeKey, row]]), cas: new Set([...p.cas, contentHash]) },
-  }))
+// These are canonical-shaped unit inputs, not production admission receipts. The controlled reproof callbacks
+// below isolate ordering/scope behavior; the Core replay acceptance runs the real index-backed proof boundary.
+function fact(site: string, raw: { id?: string; claim?: string; claimNorm?: string; seal?: "proven" | "justified" }, scope = "svc") {
+  return {
+    ...raw, kind: "advisory" as const, id: asNodeKey(raw.id ?? `src/${site}.ts`), tier: "T2" as const,
+    claimNorm: raw.claimNorm ?? raw.claim ?? site,
+    grounding: { entries: [{ path: `src/${site}.ts`, anchor: { kind: "file" as const,
+      qualifiedPath: `src/${site}.ts`, subtreeHash: asSubtreeHash(id({ unitFixture: site })) } }] },
+    freshness: "FRESH" as const, claims: [], authoring: "ADVISORY" as const,
+    predicateSlot: "dependency" as const, scope,
+  }
+}
+
+const keyOf = (site: string) => String(nodeKey({ ...fact(site, {}), slot: "dependency" } as unknown as Candidate))
+
+/** Put the complete fact and let the actual upsert reducer construct its canonical row/history. */
+function emit(s: DiskStore, site: string, raw: Parameters<typeof fact>[1], scope = "svc"): CurrentNode {
+  const value = fact(site, raw, scope)
+  const contentHash = s.put(value)
+  const view = { ...value, slot: value.predicateSlot } as unknown as Candidate
+  const key = String(nodeKey(view))
+  const result = s.commitProjection((p: StoreProjection) => {
+    const next = upsert(p, { nodeKey: key, family: "advisory", contentHash,
+      claimNorm: claimNormOf(value, "advisory"), primaryAnchor: String(primaryAnchorId(view)), slot: value.predicateSlot,
+      scope: value.scope, tier: value.tier, ...(value.seal === undefined ? {} : { seal: value.seal }) }).store
+    const row = next.current.get(key)
+    if (row === undefined) throw new Error("Canonical unit upsert did not produce its row")
+    return { out: row, next }
+  })
   expect(result.settled).toBe(true)
-  return row
+  if (!result.settled) throw new Error("Canonical unit projection did not settle")
+  return result.out
 }
 
 const staged = (s: DiskStore): ReadonlyMap<string, CurrentNode> => {
@@ -54,28 +78,28 @@ describe("knowledge log", () => {
     // Committing an unchanged projection logs nothing.
     s.commitProjection((p) => ({ out: 0, next: p }))
 
-    const lines = readFileSync(knowledgeShardPath(repo, "backend", "nk-1"), "utf8").trim().split("\n")
+    const lines = readFileSync(knowledgeShardPath(repo, "backend", keyOf("nk-1")), "utf8").trim().split("\n")
     expect(lines).toHaveLength(2)
     const read = readKnowledge(repo)
     expect(read.rejected).toBe(0)
-    expect(read.rows.get("nk-1")?.row).toEqual(second)
-    expect(read.rows.get("nk-1")?.source).toEqual({ card: "C1" })
-    expect(JSON.parse(readFileSync(blobPath(repo, second.contentHash), "utf8"))).toEqual({ claim: "two" })
+    expect(read.rows.get(keyOf("nk-1"))?.row).toEqual(second)
+    expect(read.rows.get(keyOf("nk-1"))?.source).toEqual({ card: "C1" })
+    expect(JSON.parse(readFileSync(blobPath(repo, second.contentHash), "utf8"))).toEqual(fact("nk-1", { claim: "two" }))
   })
 
   it("rejects an edited line and a line filed under another seat", () => {
-    const row: CurrentNode = { nodeKey: "nk-2", family: "advisory", contentHash: "h", claims: [] }
+    const row = emit(store("a"), "nk-2", { claim: "untampered line" })
     appendKnowledge(repo, { seat: "backend", row, at: "2026-10-28T10:00:00.000Z", source: {} }, undefined)
-    const path = knowledgeShardPath(repo, "backend", "nk-2")
-    writeFileSync(path, readFileSync(path, "utf8").replace('"h"', '"forged"'))
+    const path = knowledgeShardPath(repo, "backend", keyOf("nk-2"))
+    writeFileSync(path, readFileSync(path, "utf8").replace(`"contentHash":"${row.contentHash}"`, '"contentHash":"forged"'))
     appendKnowledge(repo, { seat: "frontend", row, at: "2026-10-28T10:00:00.000Z", source: {} }, undefined)
-    const elsewhere = knowledgeShardPath(repo, "backend", "nk-3")
+    const elsewhere = knowledgeShardPath(repo, "backend", keyOf("nk-3"))
     mkdirSync(join(elsewhere, ".."), { recursive: true })
-    appendFileSync(elsewhere, readFileSync(knowledgeShardPath(repo, "frontend", "nk-2")))
+    appendFileSync(elsewhere, readFileSync(knowledgeShardPath(repo, "frontend", keyOf("nk-2"))))
 
     const read = readKnowledge(repo)
     expect(read.rejected).toBe(2)
-    expect(read.rows.get("nk-2")?.seat).toBe("frontend")
+    expect(read.rows.get(keyOf("nk-2"))?.seat).toBe("frontend")
   })
 })
 
@@ -88,10 +112,10 @@ describe("replayKnowledge", () => {
     emit(writer, "broken", { claim: "b", seal: "proven" })
 
     const clone = store("b")
-    const reproven = (node: CurrentNode) => node.nodeKey !== "broken"
+    const reproven = (node: CurrentNode) => node.nodeKey !== keyOf("broken")
     expect(replayKnowledge(repo, clone, policy, reproven)).toEqual({ applied: 1, staged: 3, missing: 0, rejected: 0 })
-    expect([...rehydrateProjection(clone).current.keys()]).toEqual(["proven"])
-    expect([...staged(clone).keys()].sort()).toEqual(["advisory", "broken", "out-of-scope"])
+    expect([...rehydrateProjection(clone).current.keys()]).toEqual([keyOf("proven")])
+    expect([...staged(clone).keys()].sort()).toEqual([keyOf("advisory"), keyOf("broken"), keyOf("out-of-scope")].sort())
     // A second replay finds nothing new.
     expect(replayKnowledge(repo, clone, policy, reproven)).toEqual({ applied: 0, staged: 0, missing: 0, rejected: 0 })
   })
@@ -99,11 +123,14 @@ describe("replayKnowledge", () => {
   it("stages a row whose key or claims the fact does not authenticate", () => {
     const writer = withKnowledgeLog(store("a"), { repoPath: repo, seat: "backend", source: {} })
     const honest = emit(writer, "fact-id", { id: "fact-id", claimNorm: "the sentence", seal: "proven" })
+    const legitimate = store("legitimate")
+    expect(replayKnowledge(repo, legitimate, policy, () => true)).toEqual({ applied: 1, staged: 0, missing: 0, rejected: 0 })
+    expect(rehydrateProjection(legitimate).current.get(keyOf("fact-id"))?.claims).toEqual(["the sentence"])
     appendKnowledge(
       repo,
       {
         seat: "backend",
-        row: { ...honest, nodeKey: "forged-key", claims: ["forged claim"] },
+        row: { ...honest, nodeKey: keyOf("forged-key"), claims: ["forged claim"] },
         at: "2099-01-01T00:00:00.000Z",
         source: {},
       },
@@ -121,11 +148,13 @@ describe("replayKnowledge", () => {
     )
 
     const clone = store("b")
-    replayKnowledge(repo, clone, policy, () => true)
+    expect(replayKnowledge(repo, clone, policy, () => true)).toEqual({ applied: 0, staged: 2, missing: 0, rejected: 0 })
     const own = rehydrateProjection(clone).current
-    expect(own.has("forged-key")).toBe(false)
-    expect(own.get("fact-id")?.claims ?? []).not.toContain("forged claim")
-    expect([...staged(clone).keys()].sort()).toEqual(["fact-id", "forged-key"])
+    expect(own.has(keyOf("forged-key"))).toBe(false)
+    expect(own.get(keyOf("fact-id"))?.claims ?? []).not.toContain("forged claim")
+    expect([...staged(clone).keys()].sort()).toEqual([keyOf("fact-id"), keyOf("forged-key")].sort())
+    expect(staged(clone).get(keyOf("forged-key"))).toEqual({ ...honest, nodeKey: keyOf("forged-key"), claims: ["forged claim"] })
+    expect(staged(clone).get(keyOf("fact-id"))).toEqual({ ...honest, claims: ["forged claim"] })
   })
 
   it("counts a row whose bytes are gone or do not match its hash as missing", () => {
@@ -163,8 +192,8 @@ describe("migrateLayout knowledge export", () => {
     emit(local, "shared", { claim: "y" }, "nobody")
 
     expect(migrateLayout(repo).knowledge).toBe(2)
-    expect(readKnowledge(repo).rows.get("owned")).toMatchObject({ seat: "backend", source: { migrated: true } })
-    expect(readKnowledge(repo).rows.get("shared")?.seat).toBe("maestro")
+    expect(readKnowledge(repo).rows.get(keyOf("owned"))).toMatchObject({ seat: "backend", source: { migrated: true } })
+    expect(readKnowledge(repo).rows.get(keyOf("shared"))?.seat).toBe("maestro")
     expect(existsSync(blobPath(repo, owned.contentHash))).toBe(true)
     expect(migrateLayout(repo).knowledge).toBe(0)
   })
@@ -192,21 +221,21 @@ describe("replay order", () => {
     const earlier = emit(ahead, "nk", { id: "nk", claimNorm: "first", seal: "proven" })
     if (later === undefined) throw new Error("the later commit did not run")
 
-    expect(readKnowledge(repo).rows.get("nk")?.row.contentHash).toBe(later.contentHash)
-    expect(rehydrateProjection(disk).current.get("nk")?.contentHash).toBe(later.contentHash)
+    expect(readKnowledge(repo).rows.get(keyOf("nk"))?.row.contentHash).toBe(later.contentHash)
+    expect(rehydrateProjection(disk).current.get(keyOf("nk"))?.contentHash).toBe(later.contentHash)
     replayKnowledge(repo, disk, policy, () => true)
-    expect(rehydrateProjection(disk).current.get("nk")?.contentHash).toBe(later.contentHash)
+    expect(rehydrateProjection(disk).current.get(keyOf("nk"))?.contentHash).toBe(later.contentHash)
 
     const clone = store("clone")
     replayKnowledge(repo, clone, policy, () => true)
-    expect(rehydrateProjection(clone).current.get("nk")?.contentHash).toBe(later.contentHash)
-    expect(rehydrateProjection(clone).current.get("nk")?.contentHash).not.toBe(earlier.contentHash)
+    expect(rehydrateProjection(clone).current.get(keyOf("nk"))?.contentHash).toBe(later.contentHash)
+    expect(rehydrateProjection(clone).current.get(keyOf("nk"))?.contentHash).not.toBe(earlier.contentHash)
   })
 
   it("keeps the later commit when the earlier one ties on time and has the greater hash", () => {
     const disk = store("a")
-    const alpha = disk.put({ claim: "alpha" })
-    const beta = disk.put({ claim: "beta" })
+    const alpha = disk.put(fact("nk", { claim: "alpha" }))
+    const beta = disk.put(fact("nk", { claim: "beta" }))
     const first = alpha > beta ? { claim: "alpha" } : { claim: "beta" }
     const second = alpha > beta ? { claim: "beta" } : { claim: "alpha" }
     const writer = withKnowledgeLog(disk, {
@@ -215,8 +244,9 @@ describe("replay order", () => {
       source: {},
       now: () => "2026-10-28T10:00:00.000Z",
     })
-    emit(writer, "nk", first)
+    const ancestor = emit(writer, "nk", first)
     const descendant = emit(writer, "nk", second)
-    expect(readKnowledge(repo).rows.get("nk")?.row.contentHash).toBe(descendant.contentHash)
+    expect(ancestor.contentHash > descendant.contentHash).toBe(true)
+    expect(readKnowledge(repo).rows.get(keyOf("nk"))?.row.contentHash).toBe(descendant.contentHash)
   })
 })

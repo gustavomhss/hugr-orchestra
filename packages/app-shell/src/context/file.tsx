@@ -25,6 +25,7 @@ import {
 import { createFileViewCache } from "./file/view-cache"
 import { useServerSDK } from "./server-sdk"
 import { SessionRouteKey, SessionStateKey } from "@/utils/server-scope"
+import { createFileLoadQueue } from "./file/load-queue"
 import { createFileTreeStore } from "./file/tree-store"
 import { invalidateFromWatcher } from "./file/watcher"
 import {
@@ -70,7 +71,7 @@ export const { use: useFile, provider: FileProvider } = createSimpleContext({
       SessionStateKey.from(serverSDK().scope, SessionRouteKey.fromRoute(base64Encode(sdk().directory), params.id)),
     )
 
-    const inflight = new Map<string, Promise<void>>()
+    const inflight = createFileLoadQueue()
     const [store, setStore] = createStore<{
       file: Record<string, FileState>
     }>({
@@ -173,30 +174,23 @@ export const { use: useFile, provider: FileProvider } = createSimpleContext({
       const current = store.file[file]
       if (!options?.force && current?.loaded) return Promise.resolve()
 
-      const pending = inflight.get(key)
-      if (pending) return pending
-
       setLoading(file)
 
-      const promise = readFileContent(sdk(), file)
-        .then((content) => {
-          if (scope() !== directory) return
-          setLoaded(file, content)
+      return inflight.run(key, Boolean(options?.force), () =>
+        readFileContent(sdk(), file)
+          .then((content) => {
+            if (scope() !== directory) return
+            setLoaded(file, content)
 
-          if (!content) return
-          touchFileContent(file, approxBytes(content))
-          evictContent(new Set([file]))
-        })
-        .catch((e) => {
-          if (scope() !== directory) return
-          setLoadError(file, errorMessage(e, language.t("error.chain.unknown")))
-        })
-        .finally(() => {
-          inflight.delete(key)
-        })
-
-      inflight.set(key, promise)
-      return promise
+            if (!content) return
+            touchFileContent(file, approxBytes(content))
+            evictContent(new Set([file]))
+          })
+          .catch((e) => {
+            if (scope() !== directory) return
+            setLoadError(file, errorMessage(e, language.t("error.chain.unknown")))
+          }),
+      )
     }
 
     const search = (query: string, dirs: "true" | "false", options?: { limit?: number; signal?: AbortSignal }) =>

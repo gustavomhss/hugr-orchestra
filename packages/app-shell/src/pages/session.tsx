@@ -1,33 +1,18 @@
+export { SessionRouteErrorBoundary } from "./session/session-route-frame"
+import { SessionProviders, TargetServerScopedProviders, SessionRouteErrorBoundary, SessionRouteFrame, SessionPanelFrame } from "./session/session-route-frame"
 import type { FilePart } from "@/v2-types"
 import type { UserMessage } from "@/v2-wire"
-
 import type { Project } from "@/v2-types"
 import { getFilename } from "@orchestra/core/util/path"
 import { useDialog } from "@orchestra/ui/context/dialog"
 import { useMutation } from "@tanstack/solid-query"
-import {
-  batch,
-  ErrorBoundary,
-  onCleanup,
-  Suspense,
-  Show,
-  Match,
-  Switch,
-  createMemo,
-  createEffect,
-  createComputed,
-  createSignal,
-  on,
-  onMount,
-  type ParentProps,
-  untrack,
-} from "solid-js"
+import { batch, ErrorBoundary, onCleanup, Suspense, Show, Match, Switch, createMemo, createEffect, createComputed, createSignal, on, onMount, untrack } from "solid-js"
 import { makeEventListener } from "@solid-primitives/event-listener"
 import { createMediaQuery } from "@solid-primitives/media"
 import { createResizeObserver } from "@solid-primitives/resize-observer"
 import { useLocal } from "@/context/local"
-import { FileProvider, selectionFromLines, useFile, type FileSelection, type SelectedLineRange } from "@/context/file"
-import { createStore } from "solid-js/store"
+import { selectionFromLines, useFile, type FileSelection, type SelectedLineRange } from "@/context/file"
+import { createStore, unwrap } from "solid-js/store"
 import type { SessionReviewLineComment } from "@orchestra/session-ui/session-review"
 import { ResizeHandle } from "@orchestra/ui/resize-handle"
 import { Select } from "@orchestra/ui/select"
@@ -42,36 +27,28 @@ import { base64Encode, checksum } from "@orchestra/core/util/encode"
 import { useLocation, useNavigate, useParams, useSearchParams } from "@solidjs/router"
 import { NewSessionView, SessionHeader } from "@/components/session"
 import { SessionErrorFallback, SessionLoading } from "@/pages/session/session-fallback"
-import { CommentsProvider, useComments } from "@/context/comments"
+import { useComments } from "@/context/comments"
 import { useCommand } from "@/context/command"
 import { DirectoryDataProvider } from "@/pages/directory-layout"
 import { useServerSync } from "@/context/server-sync"
 import { useLanguage } from "@/context/language"
 import { useLayout } from "@/context/layout"
-import { ModelsProvider } from "@/context/models"
-import { useNotification } from "@/context/notification"
-import { isPromptEqual, PromptProvider, usePrompt } from "@/context/prompt"
+import { isPromptEqual, usePrompt } from "@/context/prompt"
 import { usePlatform } from "@/context/platform"
 import { SDKProvider, useSDK } from "@/context/sdk"
 import { useServerSDK } from "@/context/server-sdk"
-import { ServerConnection } from "@/context/server"
 import { useSettings } from "@/context/settings"
 import { useSync } from "@/context/sync"
 import { useTabs } from "@/context/tabs"
-import { TerminalProvider, useTerminal } from "@/context/terminal"
+import { useTerminal } from "@/context/terminal"
 import { PromptInputV2Composer, usePromptInputV2Controller } from "@/components/prompt-input-v2"
 import { useSettingsCommand } from "@/components/settings-dialog"
 import { setCursorPosition } from "@/components/prompt-input/editor-dom"
 import { promptLength } from "@/components/prompt-input/history"
 import { type FollowupDraft, sendFollowupDraft } from "@/components/prompt-input/submit"
+import { createSubmissionOwner } from "@/components/prompt-input/submission-policy"
 import { type QueuedPrompt, createQueuedPromptStore, queuedPromptPayload, queuedPromptSources } from "@/components/prompt-input/queued-prompt"
-import {
-  createEvidenceComposerActions,
-  createPromptInputController,
-  createSessionComposerController,
-  createSessionComposerRegionController,
-  SessionComposerRegion,
-} from "@/pages/session/composer"
+import { createEvidenceComposerActions, createPromptInputController, createSessionComposerController, createSessionComposerRegionController, SessionComposerRegion } from "@/pages/session/composer"
 import { createOpenReviewFile, createSessionTabs, createSizing, shouldShowFileTree } from "@/pages/session/helpers"
 import { MessageTimeline } from "@/pages/session/timeline/message-timeline"
 import { createExecutionEvidenceRenderer } from "@/pages/session/orchestra-evidence"
@@ -96,10 +73,10 @@ import { Identifier } from "@/utils/id"
 import { diffs as list } from "@/utils/diffs"
 import { extractPromptFromParts } from "@/utils/prompt"
 import { formatServerError } from "@/utils/server-errors"
+import { modelExecutionReasonKey } from "@/i18n/frontend-recovery"
 import { legacySessionHref, requireServerKey, sessionHref } from "@/utils/session-route"
 import { createSessionOwnership } from "./session/session-ownership"
 import { createSessionLineage } from "./session/session-lineage"
-import { SessionLineageBoundary } from "./session/session-lineage-boundary"
 import { createSessionVcsReview } from "./session/session-vcs-review"
 import { SessionCapabilitiesProvider } from "./session/capabilities"
 import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
@@ -171,25 +148,6 @@ function TargetSessionSettingsCommand() {
   return null
 }
 
-export function SessionRouteErrorBoundary(
-  props: ParentProps<{ sessionID?: string; serverKey?: ServerConnection.Key; padded?: boolean }>,
-) {
-  return (
-    <SessionLineageBoundary
-      identity={() => JSON.stringify([props.serverKey, props.sessionID])}
-      fallback={(error, reset) => (
-        <SessionRouteFrame padded={props.padded}>
-          <SessionPanelFrame raised={!!props.sessionID}>
-            <SessionErrorFallback error={error} sessionID={props.sessionID} serverKey={props.serverKey} onRetry={reset} />
-          </SessionPanelFrame>
-        </SessionRouteFrame>
-      )}
-    >
-      {props.children}
-    </SessionLineageBoundary>
-  )
-}
-
 function ResolvedTargetSessionRoute() {
   const params = useParams<{ serverKey: string; id: string }>()
   const tabs = useTabs()
@@ -236,67 +194,6 @@ function TargetSessionPage() {
     <Show when={`${serverSDK().scope}\0${sdk().directory}`} keyed>
       <SessionPage />
     </Show>
-  )
-}
-
-function TargetServerScopedProviders(
-  props: ParentProps<{ directory?: () => string | undefined; sessionID?: () => string | undefined }>,
-) {
-  return (
-    <>
-      <MarkSessionNotificationsViewed sessionID={props.sessionID} />
-      <ModelsProvider directory={props.directory}>{props.children}</ModelsProvider>
-    </>
-  )
-}
-
-function MarkSessionNotificationsViewed(props: { sessionID?: () => string | undefined }) {
-  const notification = useNotification()
-  createEffect(() => {
-    const sessionID = props.sessionID?.()
-    if (!notification.ready() || !sessionID) return
-    if (notification.session.unseenCount(sessionID) === 0) return
-    notification.session.markViewed(sessionID)
-  })
-  return null
-}
-
-function SessionProviders(props: ParentProps) {
-  return (
-    <TerminalProvider>
-      <FileProvider>
-        <PromptProvider>
-          <CommentsProvider>{props.children}</CommentsProvider>
-        </PromptProvider>
-      </FileProvider>
-    </TerminalProvider>
-  )
-}
-
-function SessionRouteFrame(props: ParentProps<{ padded?: boolean }>) {
-  return (
-    <div
-      data-session-layout="surface"
-      class="relative size-full overflow-hidden flex flex-col"
-      classList={{ "p-2": props.padded }}
-    >
-      {props.children}
-    </div>
-  )
-}
-
-function SessionPanelFrame(props: ParentProps<{ raised?: boolean }>) {
-  return (
-    <div
-      data-session-layout="body"
-      data-raised={props.raised ? "" : undefined}
-      classList={{
-        "flex-1 min-h-0 flex flex-col bg-v2-background-bg-base rounded-[10px] overflow-hidden": true,
-        "shadow-[var(--v2-elevation-raised)]": !!props.raised,
-      }}
-    >
-      {props.children}
-    </div>
   )
 }
 
@@ -523,6 +420,42 @@ export default function Page() {
 
   const followupOwner = { serverScopeKey: serverSDK().scope, directory: sdk().directory }
   const [followup, setFollowup] = createQueuedPromptStore(followupOwner)
+  const followupBaseOwnership = createSubmissionOwner(() => ({
+    server: serverSDK(), sdk: sdk(), credentials: JSON.stringify(serverSDK().server.http),
+    scope: sdk().scope, directory: sdk().directory, sessionID: params.id, client: sdk().orchestra, api: sdk().api,
+    active: serverSDK().transportCurrent?.() !== false && sdk().transportCurrent?.() !== false,
+  }))
+  const followupOwnership = createSubmissionOwner(() => ({
+    server: serverSDK(), sdk: sdk(), credentials: JSON.stringify(serverSDK().server.http),
+    scope: sdk().scope, directory: sdk().directory, sessionID: params.id, client: sdk().orchestra, api: sdk().api,
+    epoch: serverSDK().connectionEpoch?.() ?? 0,
+    context: local.model.execution.context(),
+    policyVersion: params.id ? serverSDK().sessionManagement.subagentModelsWriteVersion?.(params.id) ?? 0 : 0,
+  }))
+  const queuedItemOwner = (() => {
+    const entries = new Map<string, { item: QueuedPrompt; fingerprint: string; token: AbortController }>()
+    onCleanup(() => {
+      const tokens = [...entries.values()].map((entry) => entry.token)
+      entries.clear()
+      tokens.forEach((token) => token.abort())
+    })
+    return createMemo(() => {
+      const present = new Set<string>()
+      Object.entries(followup.items).forEach(([sessionID, items]) => items?.forEach((item) => {
+        const key = JSON.stringify([sessionID, item.id])
+        present.add(key)
+        const fingerprint = JSON.stringify(item)
+        const previous = entries.get(key)
+        if (previous?.item === item && previous.fingerprint === fingerprint) return
+        entries.set(key, { item, fingerprint, token: new AbortController() })
+        previous?.token.abort()
+      }))
+      entries.forEach((value, key) => { if (!present.has(key)) { entries.delete(key); value.token.abort() } })
+      return entries
+    })
+  })()
+  // Observe intermediate edit/removal generations even when the eventual payload returns to the same text.
+  createComputed(queuedItemOwner)
 
   createComputed((prev) => {
     const key = sessionKey()
@@ -1591,16 +1524,30 @@ export default function Page() {
   const followupMutation = useMutation(() => ({
     mutationFn: async (input: { sessionID: string; id: string; manual?: boolean }) => {
       const owner = sessionOwnership.capture()
+      const base = followupBaseOwnership.capture()
+      const binding = followupOwnership.capture()
       const directorySDK = sdk()
       const server = serverSDK()
       const directorySync = sync()
       const state = serverSync()
       const sessionID = params.id
       const credentials = JSON.stringify(server.server.http)
-      const current = () => owner.current() && serverSDK() === server && sdk().scope === directorySDK.scope &&
-        sdk().directory === directorySDK.directory && params.id === sessionID && JSON.stringify(server.server.http) === credentials
       const item = (followup.items[input.sessionID] ?? []).find((entry) => entry.id === input.id)
       if (!item) return
+      const capturedItem = unwrap(item)
+      const draft = structuredClone(capturedItem)
+      const identity = JSON.stringify([input.sessionID, input.id])
+      const itemOwner = queuedItemOwner().get(identity)?.token
+      if (!itemOwner) return
+      const policyVersion = server.sessionManagement.subagentModelsWriteVersion?.(input.sessionID) ?? 0
+      const baseCurrent = () => owner.current() && base.current() &&
+        serverSDK() === server && sdk().scope === directorySDK.scope && server.transportCurrent?.() !== false &&
+        directorySDK.transportCurrent?.() !== false && sdk().directory === directorySDK.directory && params.id === sessionID &&
+        sdk().orchestra === directorySDK.orchestra && sdk().api === directorySDK.api &&
+        JSON.stringify(server.server.http) === credentials
+      const itemCurrent = () => queuedItemOwner().get(identity)?.token === itemOwner
+      const current = () => baseCurrent() && binding.current() && itemCurrent() &&
+        (server.sessionManagement.subagentModelsWriteVersion?.(input.sessionID) ?? 0) === policyVersion
 
       if (input.manual) setFollowup("paused", input.sessionID, undefined)
       setFollowup("failed", input.sessionID, undefined)
@@ -1609,7 +1556,9 @@ export default function Page() {
         api: directorySDK.api.session,
         sync: directorySync,
         serverSync: state,
-        draft: item,
+        draft,
+        signal: AbortSignal.any([binding.signal, itemOwner.signal]),
+        onUnavailable: (reason) => showToast({ title: language.t(modelExecutionReasonKey(reason)) }),
         optimisticBusy: item.sessionDirectory === directorySDK.directory,
         deliberate: input.manual === true,
         currentSource: {
@@ -1625,8 +1574,10 @@ export default function Page() {
       if (ok === false && current()) setFollowup("failed", input.sessionID, input.id)
       if (!ok) return
 
-      if (item.source) queuedPromptSources.release(item.source)
-      setFollowup("items", input.sessionID, (items) => (items ?? []).filter((entry) => entry.id !== input.id))
+      if (!baseCurrent() || !itemCurrent()) return
+      if (draft.source) queuedPromptSources.release(draft.source)
+      if (!baseCurrent() || !itemCurrent()) return
+      setFollowup("items", input.sessionID, (items) => (items ?? []).filter((entry) => entry !== capturedItem))
       if (input.manual) owner.run(resumeScroll)
     },
   }))

@@ -3,6 +3,7 @@ import { describe, expect } from "bun:test"
 import { LLMClient, LLMEvent, type LLMClientShape } from "@orchestra/llm"
 import { AgentV2 } from "@orchestra/core/agent"
 import { Config } from "@orchestra/core/config"
+import { Mcp } from "@orchestra/core/mcp"
 import { PermissionV2 } from "@orchestra/core/permission"
 import { SessionV2 } from "@orchestra/core/session"
 import { Prompt } from "@orchestra/core/session/prompt"
@@ -24,6 +25,7 @@ const seen: string[][] = []
 const host: ExecutionHost.Interface = {
   id: "claude-code",
   stateKey: "claudeCode",
+  describeModel: () => Effect.succeed({ status: "ready" as const }),
   stream: (turn) =>
     Stream.unwrap(
       Effect.sync(() => {
@@ -34,6 +36,7 @@ const host: ExecutionHost.Interface = {
 }
 
 const it = Harness.make({
+  nodes: [Mcp.node],
   client: Layer.succeed(
     LLMClient.Service,
     LLMClient.Service.of({
@@ -92,7 +95,11 @@ describe("SessionRunner execution host with MCP", () => {
         yield* session.resume(sessionID)
 
         expect(seen).toHaveLength(1)
-        expect(seen[0]).toContain("fixture_probe")
+        const mcp = yield* Mcp.Service
+        const id = (yield* mcp.toolIds()).fixture[0]
+        expect(id).toMatch(/^mcp_[A-Za-z0-9_-]{43}$/)
+        expect(seen[0]).toContain(id)
+        expect(yield* mcp.tools()).toEqual({ fixture: ["probe"] })
       }),
     30_000,
   )

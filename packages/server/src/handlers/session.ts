@@ -326,7 +326,7 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
         "session.move",
         Effect.fn(function* (ctx) {
           if (ctx.payload.moveChanges) {
-            // Carrying uncommitted changes is the control-plane move: capture, apply at the destination, then reset the source.
+            // Carrying uncommitted changes captures and applies the patch at the destination while retaining source files and index.
             yield* moveSession
               .moveSession({
                 sessionID: ctx.params.sessionID,
@@ -357,6 +357,7 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
                         resource: ctx.payload.location.directory,
                       }),
                     ),
+                  // Legacy compatibility mapping; Session moves retain source changes and no longer emit this error.
                   "MoveSession.ResetSourceChangesError": (error) =>
                     Effect.fail(
                       new ConflictError({

@@ -1,0 +1,215 @@
+{
+  "run": 43492035272,
+  "source": "46530d548a6a7713231d9f30bc9bd1bc0321c01f",
+  "windowsBrowserBins": [
+    [
+      "test-browser/actions-library.test.ts",
+      "test-browser/actions-resource-scopes.test.ts",
+      "test-browser/board-views.test.ts",
+      "test-browser/capability-artifacts.test.ts",
+      "test-browser/cicd-connection.test.ts",
+      "test-browser/context-usage-ring.test.ts",
+      "test-browser/dialog-fork.test.ts",
+      "test-browser/dialog-owner.test.ts",
+      "test-browser/editor-v2-dom.test.ts",
+      "test-browser/followup-idle.test.ts",
+      "test-browser/lean-chapter-route.test.ts",
+      "test-browser/lean-controller.test.ts",
+      "test-browser/lean-types.test.ts",
+      "test-browser/live-recovery.test.ts",
+      "test-browser/model-catalog.test.ts",
+      "test-browser/motion-spring.test.ts",
+      "test-browser/orchestra/agents-dialog.test.ts",
+      "test-browser/orchestra/integrations-native-reactive.test.ts",
+      "test-browser/orchestra/integrations-screen-controls.test.ts",
+      "test-browser/orchestra/integrations-screen-setup.test.ts",
+      "test-browser/orchestra/panel-sizing.test.ts",
+      "test-browser/orchestra/workflow-authoring.test.ts",
+      "test-browser/prompt-admission-owner.test.ts",
+      "test-browser/prompt-attachments.test.ts",
+      "test-browser/prompt-submission-state.test.ts",
+      "test-browser/provider-dialog-owner.test.ts",
+      "test-browser/provider-resource.test.ts",
+      "test-browser/server-management.test.ts",
+      "test-browser/server-resync.test.ts",
+      "test-browser/session-ownership.test.ts",
+      "test-browser/session-policy.test.ts",
+      "test-browser/solid-router-cleanup.test.ts",
+      "test-browser/timeline-projection-streaming.test.ts"
+    ],
+    [
+      "test-browser/actions-dispatch.test.ts",
+      "test-browser/actions-navigation.test.ts",
+      "test-browser/actions-policy.test.ts",
+      "test-browser/board.test.ts",
+      "test-browser/command-palette.test.ts",
+      "test-browser/deep-link-ingress.test.ts",
+      "test-browser/draft-session-key.test.ts",
+      "test-browser/grouped-virtualizer.test.ts",
+      "test-browser/guardrails.test.ts",
+      "test-browser/lean-native-product.test.ts",
+      "test-browser/lean-profile-view.test.ts",
+      "test-browser/lean-tool-preservation.test.ts",
+      "test-browser/llm-behaviors-store.test.ts",
+      "test-browser/model-execution-selection.test.ts",
+      "test-browser/model-variant-intent.test.ts",
+      "test-browser/notification-origin.test.ts",
+      "test-browser/orchestra/integrations-native-api.test.ts",
+      "test-browser/orchestra/integrations-native-lifetime.test.ts",
+      "test-browser/orchestra/integrations-screen-connect.test.ts",
+      "test-browser/orchestra/prompt-model-selection.test.ts",
+      "test-browser/orchestra/workflow-description.test.ts",
+      "test-browser/peer-policy-projection.test.ts",
+      "test-browser/prompt-persistence.test.ts",
+      "test-browser/prompt-v2-submit.test.ts",
+      "test-browser/review-panel-v2-state.test.ts",
+      "test-browser/server-health.test.tsx",
+      "test-browser/server-transport.test.ts",
+      "test-browser/session-lineage-boundary.test.ts",
+      "test-browser/session-state-regressions.test.ts",
+      "test-browser/solid-virtual.test.ts",
+      "test-browser/staged-edit.test.ts",
+      "test-browser/terminal-theme.test.ts",
+      "test-browser/toast-owner.test.ts"
+    ],
+    [
+      "test-browser/actions-source-store.test.ts",
+      "test-browser/board-money.test.ts",
+      "test-browser/command-registration.test.ts",
+      "test-browser/desktop-zoom.test.ts",
+      "test-browser/draft-subagent-models.test.ts",
+      "test-browser/inbox-acquisition.test.ts",
+      "test-browser/janitor-enabled.test.ts",
+      "test-browser/lean-dashboard-capture.test.ts",
+      "test-browser/lean-settings-live.test.ts",
+      "test-browser/mcp-fresh-editor.test.ts",
+      "test-browser/model-execution-consumer.test.tsx",
+      "test-browser/model-execution-context.test.ts",
+      "test-browser/model-preferences.test.ts",
+      "test-browser/orchestra-compact-navigation.test.ts",
+      "test-browser/orchestra/cockpit-list.test.ts",
+      "test-browser/orchestra/integrations-native.test.ts",
+      "test-browser/orchestra/relay-policy.test.ts",
+      "test-browser/orchestra/titlebar-tab-order.test.ts",
+      "test-browser/orchestra/workflow-import.test.ts",
+      "test-browser/prompt-retry.test.ts",
+      "test-browser/prompt-scope.test.ts",
+      "test-browser/provider-hooks.test.ts",
+      "test-browser/review-detail.test.ts",
+      "test-browser/schedule-cold-review.test.ts",
+      "test-browser/server-sync-config.test.ts",
+      "test-browser/session-archive.test.ts",
+      "test-browser/session-lineage.test.ts",
+      "test-browser/session-list-regressions.test.ts",
+      "test-browser/session-management.test.ts",
+      "test-browser/session-recovery-fixes.test.ts",
+      "test-browser/solid-dom.test.ts",
+      "test-browser/subagent-policy.test.ts",
+      "test-browser/tasks-streaming.test.ts"
+    ]
+  ],
+  "union": 99,
+  "expected": 99,
+  "duplicates": 0,
+  "missing": [],
+  "extra": [],
+  "rawSHA256": {
+    "root-fourth-ui-app-linux.log": "3bd31352e033caded82c54c84c993861ea8accf33015594fa2409d88f87bc151",
+    "root-fourth-ui-windows-server.log": "b6778bd03136cd60e3f972be50acc5b601f7f30aeaa5c352c234a57ef549e322",
+    "root-fourth-ui-windows-clients.log": "dfa78c597d8623f03d595c7033fbee09f573d0d9cefdbe3c37f8d1797ad37e71",
+    "root-fourth-ui-app-windows-unit.log": "7bc5653172568927895237d955e440d83dce0d691142fe77f5ae450c95a2fe2d",
+    "root-fourth-ui-windows-app-browser3.log": "a90e789114ada1fe3b3e102d551024c0e36545b0ae3df87301a6fa38a2bb8543",
+    "root-fourth-ui-windows-app-browser2.log": "c8ce768c1f43888cdc2dadbb74c2f83c2e11d4aaeaafe130f3bb0e090d66736e",
+    "root-fourth-ui-windows-app-browser1.log": "6b4515857755642d3bc2e895c88708597d31219d56b755ef4791113dc8989c67",
+    "root-fourth-ui-windows-cli.log": "c925e0b4e019b3a131d32fe37e40cc42d65c7af51116b2209ce570fb59159f2b"
+  },
+  "appLinux": {
+    "unitPassed": 2454,
+    "assertions": 14636,
+    "unitFiles": 282,
+    "isolatedPassed": 1,
+    "isolatedAssertions": 21,
+    "browserPassed": 656,
+    "browserAssertions": 14806,
+    "browserFiles": 99,
+    "omniSpawns": 9,
+    "delegated": 0
+  },
+  "appWindows": {
+    "unitPassed": 2429,
+    "unitSkipped": 1,
+    "unitAssertions": 14592,
+    "unitFiles": 282,
+    "browserPassedByBin": [
+      222,
+      152,
+      282
+    ],
+    "omniSpawnsByBin": [
+      1,
+      3,
+      5
+    ],
+    "delegated": 0
+  },
+  "windowsOther": {
+    "server": {
+      "passed": 205,
+      "assertions": 2718,
+      "files": 46,
+      "omniSpawns": 1300
+    },
+    "clientPassed": 108,
+    "tuiPassed": 331,
+    "tuiAssertions": 11116,
+    "suiPassed": 112,
+    "sdk": {
+      "childPassed": 4,
+      "mainPassed": 32,
+      "skipped": 2,
+      "omniSpawns": 18
+    },
+    "cli": {
+      "passed": 286,
+      "skipped": 52,
+      "failed": 1,
+      "job": 132116390204,
+      "result": "First-attempt EBUSY preserved; exact-source attempt2 job132136307279 passed287 tests,52skip,2556assert,12ownOmni0delegated, zero cached tasks. Actual handle holder remains unknown."
+    }
+  },
+  "raws": [
+    {
+      "file": "root-fourth-ui-app-linux.log",
+      "sha256": "3bd31352e033caded82c54c84c993861ea8accf33015594fa2409d88f87bc151"
+    },
+    {
+      "file": "root-fourth-ui-windows-server.log",
+      "sha256": "b6778bd03136cd60e3f972be50acc5b601f7f30aeaa5c352c234a57ef549e322"
+    },
+    {
+      "file": "root-fourth-ui-windows-clients.log",
+      "sha256": "dfa78c597d8623f03d595c7033fbee09f573d0d9cefdbe3c37f8d1797ad37e71"
+    },
+    {
+      "file": "root-fourth-ui-app-windows-unit.log",
+      "sha256": "7bc5653172568927895237d955e440d83dce0d691142fe77f5ae450c95a2fe2d"
+    },
+    {
+      "file": "root-fourth-ui-windows-app-browser3.log",
+      "sha256": "a90e789114ada1fe3b3e102d551024c0e36545b0ae3df87301a6fa38a2bb8543"
+    },
+    {
+      "file": "root-fourth-ui-windows-app-browser2.log",
+      "sha256": "c8ce768c1f43888cdc2dadbb74c2f83c2e11d4aaeaafe130f3bb0e090d66736e"
+    },
+    {
+      "file": "root-fourth-ui-windows-app-browser1.log",
+      "sha256": "6b4515857755642d3bc2e895c88708597d31219d56b755ef4791113dc8989c67"
+    },
+    {
+      "file": "root-fourth-ui-windows-cli.log",
+      "sha256": "c925e0b4e019b3a131d32fe37e40cc42d65c7af51116b2209ce570fb59159f2b"
+    }
+  ],
+  "scope": "Fourth-run scoped receipts. Original CLI failure preserved; complete aggregate later succeeded on bounded failed-jobs retry. See fourth-cold-requalification.json."
+}

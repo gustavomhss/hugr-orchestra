@@ -1,0 +1,36 @@
+{
+  "qualificationRun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43379170345",
+  "job": 131732658634,
+  "cleanupJob": 131733446753,
+  "artifactID": 14015981987,
+  "archiveSHA256": "d2dee031ba6990640ca9e293023e8f55434a0b0c54cb70ed9f04a804e2cb5853",
+  "snapshot": "b3f06d322110b6be7d85061db0340115a3e31746",
+  "snapshotParent": "6a0d01d332fa0ef2583391a6ddfa6b7efbebc3d1",
+  "snapshotChanges": [
+    ".ci-run.json",
+    ".github/workflows/test-ci.yml",
+    "docs/audits/remediation-client-generation-plan.md",
+    "docs/audits/remediation-replay-binding-contract-draft.md"
+  ],
+  "recoveryParent": "0af31ce9a64c9d072fedfab8c8f07f5e745bc11f",
+  "qualified": true,
+  "sourceInputsMatched": 258,
+  "generatedFiles": 56,
+  "zipEntries": 57,
+  "exactInventory": true,
+  "noSymlinksOrPathEscape": true,
+  "allArchiveAndInstalledHashesMatched": true,
+  "provenanceSHA256": "cda811444759e7233610db8d32c9174e9833cd1116bbd42de70c1f95f3f7c160",
+  "changedFiles": [
+    "packages/client/src/generated/client.ts"
+  ],
+  "method": "Recover only exact official produced bytes after independent archive/source-vector checks; no local generation or hand edit. Generation/check-generated basis and every child outcome are in provenance. Runtime consumer gate remains pending.",
+  "priorArchiveOmission": {
+    "run": 43376315150,
+    "missing": [
+      "packages/client/src/generated/.httpapi-codegen.json",
+      "packages/client/src/generated-effect/.httpapi-codegen.json"
+    ],
+    "recovered": false
+  }
+}

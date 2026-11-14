@@ -3,6 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import type { LiveRunState } from "@orchestra/app/live"
+import type { LiveDeliveryManager } from "./live-delivery-contract"
 import type { LiveOverlay } from "./live-overlay"
 import { mockElectron } from "./electron-mock.fixture"
 
@@ -51,7 +52,17 @@ test.each(["server", "session", "senses", "overlay", "running", "subscriber"])("
       return Response.json({ data: {} })
     },
   })
+  // Private startup unit port only. Canonical admission/completion use real owner/Store/HTTP in the Node acceptance.
+  const unavailable = () => { throw new Error("Startup unit fixture must not execute delivery operations") }
+  const manager: LiveDeliveryManager = {
+    start: unavailable, snapshot: unavailable, retry: unavailable, finish: unavailable,
+    discard: unavailable, export: unavailable, shutdown: unavailable,
+  }
   const loop = registerLiveLoop({
+    delivery: {
+      manager, canStart: () => true, onComplete: () => () => {},
+      connection: async () => ({ mode: "owned", epoch: {}, server: { url: server.url.href } }),
+    },
     overlay,
     logDirectory,
     openSettings: () => undefined,
@@ -66,13 +77,15 @@ test.each(["server", "session", "senses", "overlay", "running", "subscriber"])("
       settings,
       readKey: () => "test-key-not-a-credential",
       permissions: () => ({ microphone: "granted", "system-audio": "granted" }),
-      senses: async () => {
+      senses: async (input) => {
+        expect(input.delivery).toBe(manager)
         state.opened++
         if (stage === "senses" || stage === "overlay") {
           entered.resolve()
           await release.promise
         }
         return {
+          localID: "local_start",
           meetingID: "meeting_start",
           look: async () => { throw new Error("No frame requested") },
           stop: async () => {
@@ -102,8 +115,10 @@ test.each(["server", "session", "senses", "overlay", "running", "subscriber"])("
     await entered.promise
     expect(loop.running()).toBe(true)
     if (stage === "overlay") overlayActions.forEach((listener) => listener({ kind: "stop" }))
-    if (stage !== "overlay") await loop.stop()
+    // Stop now joins pending startup. Release this unit fixture's held resource before awaiting that join.
+    const stopping = loop.stop()
     release.resolve()
+    await stopping
     expect((await starting).ok).toBe(false)
     expect(loop.running()).toBe(false)
     expect(loop.runState()).toEqual({ running: false })

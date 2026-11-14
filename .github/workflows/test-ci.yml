@@ -23,7 +23,7 @@ jobs:
         # ci-run-both-* (Linux and Windows) or ci-run-all-*. script/test-ci-request.ts maps the same names.
         # The dedicated Intel lane precedes the generic macOS prefix and records x64 measurement reach separately.
         # Extension: ci-run-linux-arm64-* selects only ubuntu-24.04-arm before the generic Linux fallback.
-        host: ${{ fromJSON(startsWith(github.ref_name, 'ci-run-macos-intel-') && '["macos-15-intel"]' || startsWith(github.ref_name, 'ci-run-all-') && '["ubuntu-24.04","windows-latest","macos-14"]' || startsWith(github.ref_name, 'ci-run-both-') && '["ubuntu-24.04","windows-latest"]' || startsWith(github.ref_name, 'ci-run-windows-') && '["windows-latest"]' || startsWith(github.ref_name, 'ci-run-macos-') && '["macos-14"]' || startsWith(github.ref_name, 'ci-run-linux-arm64-') && '["ubuntu-24.04-arm"]' || '["ubuntu-24.04"]') }}
+        host: ${{ fromJSON(startsWith(github.ref_name, 'ci-run-macos-intel-') && '["macos-15-intel"]' || startsWith(github.ref_name, 'ci-run-all-') && '["ubuntu-24.04","windows-latest","macos-15"]' || startsWith(github.ref_name, 'ci-run-both-') && '["ubuntu-24.04","windows-latest"]' || startsWith(github.ref_name, 'ci-run-windows-') && '["windows-latest"]' || startsWith(github.ref_name, 'ci-run-macos-') && '["macos-15"]' || startsWith(github.ref_name, 'ci-run-linux-arm64-') && '["ubuntu-24.04-arm"]' || '["ubuntu-24.04"]') }}
     runs-on: ${{ matrix.host }}
     timeout-minutes: 45
     defaults:
@@ -64,6 +64,8 @@ jobs:
           import path from 'node:path'
           import { omniControlScope, validateRequest } from './script/test-ci-request.ts'
           import { locateTestPackage } from './script/test-ci-location.ts'
+          import { isAtlasGeneratedRequest } from './packages/core/test/fixture/atlas-generated-request.ts'
+          import { isClientGeneratedRequest } from './packages/core/test/fixture/client-generated-request.ts'
           const request = validateRequest(JSON.parse(readFileSync('.ci-run.json', 'utf8')),
             (file) => (statSync(file, { throwIfNoEntry: false })?.isFile() ?? false) &&
               realpathSync(file).startsWith(realpathSync('.') + path.sep),
@@ -73,7 +75,7 @@ jobs:
           writeFileSync('test-ci-evidence/request.json', JSON.stringify({ request,
             platform: process.platform, arch: process.arch, sha: process.env.GITHUB_SHA }))
           appendFileSync(process.env.GITHUB_OUTPUT,
-            `package=${request.package}\ndirectory=${request.directory}\nrunner=${request.runner}\nomni_control=${omniControlScope(request)}\n`)
+            `package=${request.package}\ndirectory=${request.directory}\nrunner=${request.runner}\nomni_control=${omniControlScope(request)}\natlas_generated=${isAtlasGeneratedRequest(request)}\nclient_generated=${isClientGeneratedRequest(request)}\n`)
           NODE
 
       - name: Fetch source history for Script fixtures
@@ -276,7 +278,8 @@ jobs:
                     -*)
                       common+=("$arg")
                       ;;
-                    test-browser|test-browser/*|./test-browser/*) browser+=("$arg") ;;
+                    test-browser|./test-browser) browser+=("./test-browser") ;;
+                    test-browser/*|./test-browser/*) browser+=("$arg") ;;
                     *) unit+=("$arg") ;;
                   esac
                 done
@@ -285,7 +288,7 @@ jobs:
                   GITHUB_ACTIONS=false bun test --conditions=solid "${unit[@]}" "${common[@]}" || status=$?
                 fi
                 if [ ${#browser[@]} -gt 0 ]; then
-                  GITHUB_ACTIONS=false bun test --conditions=browser --preload ../../script/test-omni-control.ts --preload ./happydom.ts "${browser[@]}" "${common[@]}" || status=$?
+                  GITHUB_ACTIONS=false bun test --isolate --conditions=browser --preload ../../script/test-omni-control.ts --preload ./happydom.ts "${browser[@]}" "${common[@]}" || status=$?
                 fi
                 exit $status
               fi
@@ -301,6 +304,35 @@ jobs:
               node --experimental-strip-types --test "${args[@]}"
               ;;
           esac
+
+      - name: Upload Client generation qualification evidence
+        if: always() && runner.os == 'Linux' && steps.request.outputs.client_generated == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: client-generated-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.sha }}
+          path: test-ci-evidence/client-generated/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload Atlas boundary qualification evidence
+        if: always() && runner.os == 'Linux' && steps.request.outputs.atlas_generated == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: atlas-generated-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.sha }}
+          path: test-ci-evidence/atlas-generated/
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload configuration schema qualification evidence
+        if: always() && runner.os == 'Linux' && hashFiles('test-ci-evidence/config-generated/provenance.json') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: config-generated-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.sha }}
+          path: test-ci-evidence/config-generated/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Upload Lean dashboard previews (extension)
         if: always() && hashFiles(format('{0}/e2e/test-results/lean-visual/*.png', steps.request.outputs.directory)) != ''

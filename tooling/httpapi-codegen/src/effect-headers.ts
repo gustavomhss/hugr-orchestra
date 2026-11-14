@@ -41,7 +41,5 @@ export function renderInputField(
   const key = JSON.stringify(field.name)
   const value = `input${inputMode === "optional" ? "?." : ""}[${key}]`
   // Strict optional keys accept absence, not an own property whose value is undefined.
-  return field.source === "query" && field.optional
-    ? `...(${value} === undefined ? {} : { ${key}: ${value} })`
-    : `${key}: ${value}`
+  return field.optional ? `...(${value} === undefined ? {} : { ${key}: ${value} })` : `${key}: ${value}`
 }

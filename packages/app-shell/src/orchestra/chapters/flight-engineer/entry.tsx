@@ -9,6 +9,7 @@ import { homeLastClaim, settleLastMeeting } from "./last-meeting"
 import { runClaim } from "./run-state"
 import { clock, num } from "./model"
 import { Keys, Note } from "./parts"
+import { FlightRecovery } from "./recovery"
 import { useFlight } from "./run"
 import { serverMeetings, type Page } from "./source"
 import { createWarm } from "../../warm"
@@ -115,7 +116,7 @@ export function HomeFlightCard(props: { sdk: ServerSDK; directory: string }) {
                   </Show>
                 </div>
                 <div class="fe-home-actions">
-                  <button type="button" class="mx-btn primary" onClick={flight.requestStart}>
+                  <button type="button" class="mx-btn primary" disabled={flight.store.starting || !flight.canStart()} onClick={flight.requestStart}>
                     {t("orchestra.flightEngineer.start")}
                   </button>
                   <Keys accelerator={hotkey()} />
@@ -148,6 +149,9 @@ export function HomeFlightCard(props: { sdk: ServerSDK; directory: string }) {
           )}
         </Show>
       </section>
+      <Show when={flight.seat()?.recovery} keyed>
+        {(port) => <FlightRecovery port={port} onSnapshot={(value) => flight.setRecovery(value, port)} />}
+      </Show>
     </Show>
   )
 }

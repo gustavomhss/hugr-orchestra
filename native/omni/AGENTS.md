@@ -18,6 +18,7 @@ path. Read it; never copy it wholesale. It is throwaway code, with files above t
 
 | Where | What | May use |
 |---|---|---|
+| `crates/hugr-omni/src/binding` | hidden language adapter: numeric validation, supervisor configuration, Env run custody | `api`, `process` (only the non-owning `RunHandle`), `error`, `client` (only `configure_supervisor`) |
 | `crates/hugr-omni/src/api` | public surface (frozen) | everything below |
 | `crates/hugr-omni/src/process` | `Child`, timeout/cancel, `run` | `pty`, `client`, `io`, `spawn`, `error`, `types` |
 | `crates/hugr-omni/src/pty` | host side of terminals | `client`, `io`, `error`, `types` |
@@ -26,7 +27,6 @@ path. Read it; never copy it wholesale. It is throwaway code, with files above t
 | `crates/hugr-omni/src/spawn` | validation, resolution, env (pure) | `error`, `types` |
 | `crates/hugr-omni/src/error` | `Error`, `ErrorCode`, messages | `types` |
 | `crates/hugr-omni/src/types` | public value types (frozen) | – |
-| `crates/hugr-omni/src/binding` | number rules and the configured supervisor for bindings (hidden, W03, WP-H) | `error`, `client` (only `configure_supervisor`) |
 | `crates/omni-proto` | messages + codec | – |
 | `crates/omni-supervisor/src/{unix,windows,pty_unix,pty_windows}` | the supervisor | `omni-proto` |
 | `crates/omni-fixture` | test program | – |
@@ -93,8 +93,8 @@ docker run --rm -v "$PWD":/w -w /w -v omni-cargo:/usr/local/cargo/registry -v om
 - **Supervisor tests in Docker** need `--privileged`: the Linux PID-reuse test steers `ns_last_pid`, and it fails
   rather than skips without it.
 - **CI** is one script, `node scripts/ci.mjs` (the fast gate; `--release` adds the release checks). The source of truth
-   is Orchestra's `native/omni`; Orchestra's `.github/workflows/omni.yml` runs it on Ubuntu 24.04, macOS 14 arm64 and
-   Windows Server 2022 for pull requests and `dev` pushes that touch `native/omni`, and by hand (`ref`,
+   is Orchestra's `native/omni`; Orchestra's `.github/workflows/omni.yml` runs it on Ubuntu 24.04, macOS 15 arm64 and
+   Windows Server 2022 for epic-labeled pull requests that touch `native/omni`, and by hand (`ref`,
   `test_filter`). `omni-mirror.yml` publishes the folder to the read-only mirror; the mirror's own `ci.yml` runs only on
   tags and by hand. Only the lead pushes.
 - **First time:** `rustup target add x86_64-pc-windows-msvc --toolchain 1.98.0`.

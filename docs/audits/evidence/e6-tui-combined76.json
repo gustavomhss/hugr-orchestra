@@ -1,0 +1,54 @@
+{
+  "run": "43366810851",
+  "snapshot": "8020cedd286a87abe4ce92bfcbe5a827d65ecf70",
+  "source": "f914f19c8042f8f1f6544d6254a4fb91702d7bec",
+  "snapshot_changes": [
+    ".ci-run.json"
+  ],
+  "jobs": [
+    {
+      "id": 131693031455,
+      "name": "test (ubuntu-24.04)",
+      "conclusion": "success"
+    },
+    {
+      "id": 131693031897,
+      "name": "test (windows-latest)",
+      "conclusion": "success"
+    },
+    {
+      "id": 131695174897,
+      "name": "cleanup",
+      "conclusion": "success"
+    }
+  ],
+  "results": {
+    "linux": {
+      "tests": 76,
+      "pass": 76,
+      "fail": 0,
+      "files": 8,
+      "raw_sha256": "15521b5486f170199386305af96555214b4b634d9618dcfe036a16364c1cd4b5",
+      "verdict_lines": [
+        "2026-11-13T04:39:49.4738970Z  76 pass",
+        "2026-11-13T04:39:49.4739343Z  0 fail",
+        "2026-11-13T04:39:49.4739778Z  1333 expect() calls",
+        "2026-11-13T04:39:49.4740056Z Ran 76 tests across 8 files. [7.23s]"
+      ]
+    },
+    "windows": {
+      "tests": 76,
+      "pass": 76,
+      "fail": 0,
+      "files": 8,
+      "raw_sha256": "b912d3f3bf8b164d7b6d5e71106f6f0a302f19a0d1b7cb223b739f29123f5339",
+      "verdict_lines": [
+        "2026-11-13T04:44:31.5841900Z  76 pass",
+        "2026-11-13T04:44:31.5842229Z  0 fail",
+        "2026-11-13T04:44:31.5842430Z  7906 expect() calls",
+        "2026-11-13T04:44:31.5842715Z Ran 76 tests across 8 files. [12.35s]"
+      ]
+    }
+  },
+  "scope": "Exact combined76 TUI cases only; before final dev integration, App aggregate and AFTER benchmark."
+}

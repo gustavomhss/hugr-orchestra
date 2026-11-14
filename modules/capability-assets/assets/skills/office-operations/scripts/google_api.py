@@ -712,6 +712,8 @@ def drive_download(args):
     meta = service.files().get(fileId=args.file_id, fields="id, name, mimeType").execute()
     mime = meta.get("mimeType", "")
     name = meta.get("name", args.file_id)
+    if not args.output:
+        _require_drive_download_name(name)
 
     # Map Google-native MIME types to a sensible export default.
     native_export_map = {
@@ -733,12 +735,15 @@ def drive_download(args):
         request = service.files().get_media(fileId=args.file_id)
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    fh = io.FileIO(str(out_path), "wb")
-    downloader = MediaIoBaseDownload(fh, request)
-    done = False
-    while not done:
-        _, done = downloader.next_chunk()
-    fh.close()
+    with io.FileIO(
+        str(out_path),
+        "wb" if args.output else "xb",
+        opener=None if args.output else _drive_download_opener,
+    ) as fh:
+        downloader = MediaIoBaseDownload(fh, request)
+        done = False
+        while not done:
+            _, done = downloader.next_chunk()
 
     print(json.dumps({
         "status": "downloaded",
@@ -747,6 +752,29 @@ def drive_download(args):
         "path": str(out_path),
         "mimeType": mime,
     }, indent=2, ensure_ascii=False))
+
+
+def _require_drive_download_name(name):
+    message = "Invalid default Drive filename; use --output to choose a local path."
+    if (
+        not isinstance(name, str)
+        or not name
+        or name in (".", "..")
+        or name.endswith((".", " "))
+        or any(char in '/\\<>:"|?*' or ord(char) < 32 or ord(char) == 127 for char in name)
+    ):
+        raise ValueError(message)
+    # Windows device names remain reserved with extensions, on every host OS.
+    device = name.split(".", 1)[0].rstrip(" ").upper()
+    if device in {"CON", "PRN", "AUX", "NUL", "CONIN$", "CONOUT$"} or (
+        len(device) == 4 and device[:3] in {"COM", "LPT"} and device[3] in "123456789¹²³"
+    ):
+        raise ValueError(message)
+
+
+def _drive_download_opener(path, flags):
+    # Exclusive creation also refuses existing links where O_NOFOLLOW is unavailable.
+    return os.open(path, flags | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0), 0o600)
 
 
 def drive_create_folder(args):

@@ -66,7 +66,11 @@ before a real meeting by watching your own share from a second device.
 
 ## After the meeting
 
-Stop ends capture and the hotkeys at once. The card arrives when the model finishes. On it you confirm, dispute or
+Stop ends capture and the hotkeys at once. Transcription may deliver its last words for up to three seconds, then
+its connection closes and later replies are ignored. Concurrent screen captures keep the overlay transparent until
+every capture finishes, then restore its original opacity.
+
+The card arrives when the model finishes. On it you confirm, dispute or
 dismiss items, track commitments, and confirm new people. A dismiss or handoff that fails comes back with an error
 instead of staying hidden, and its buttons wait until the request ends. **Hand to Maestro** on an item sends that item
 to Maestro; **Send open items to Maestro** sends all the open ones as one message. Maestro does not act on them until
@@ -75,6 +79,26 @@ Orchestra.
 
 A card that fails shows its reason and is not retried.
 
+## Saved segments awaiting delivery
+
+Home and Flight Engineer show local recovery records separately from active recording. Final transcript segments are
+saved on this desktop before they are queued for delivery. Stopping capture joins final transcription and saves close
+intent; it does not wait for the network. The foreground meeting requests its summary only after local capture has
+closed and the server has confirmed delivery and the end of that meeting.
+
+If delivery is interrupted, **Retry** sends the saved segments to the same meeting. **Finish saved segments** saves
+the intention to finish using those segments; success is not a delivery receipt. A paused or blocked record may still
+need **Retry**. Recovery does not create another session or automatically request a new summary.
+
+**Export** writes a JSON recovery record, including available transcript text, to a file you choose. **Discard** asks
+for confirmation and removes local recovery data; it does not erase already delivered segments or close the remote
+meeting. Stop an active recording before finishing or discarding its recovery record.
+
+If storage is unavailable, new recording is disabled. A storage or quota error can leave recent audio missing even
+when one failed segment remains available to export. Only admitted saved segments have the durable guarantee. Quit
+and connection changes close capture and join owned work; pending saved segments remain available for recovery.
+Recovery belongs to this desktop's app data and is shared across its Dock profiles.
+
 ## Deleting
 
 Delete a meeting from its card or the meetings list. Its transcript, items and proposals go; people stay in your
@@ -82,5 +106,6 @@ address book. Deleting the chat session keeps its meetings.
 
 ## Privacy
 
-Meeting data stays in Orchestra's local database. It is never synced, uploaded or sent to telemetry. Only the audio
+Meeting data stays in Orchestra's local database. Orchestra does not automatically sync it or send it to telemetry;
+an explicit recovery export writes transcript data to your chosen file. Only the audio
 goes to Deepgram for transcription, and the text you ask about goes to your answer model's provider.

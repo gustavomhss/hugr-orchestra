@@ -1,7 +1,7 @@
 export * as SessionV2 from "./session"
 export * from "./session/schema"
 
-import { Cause, DateTime, Effect, Layer, Option, Schema, Context, Stream } from "effect"
+import { Cause, DateTime, Effect, Layer, Option, Schema, Context, Semaphore, Stream } from "effect"
 import { ListAnchor } from "@orchestra/schema/session"
 import { and, asc, desc, eq, gt, lt } from "drizzle-orm"
 import { ProjectV2 } from "./project"
@@ -9,7 +9,6 @@ import { WorkspaceV2 } from "./workspace"
 import { ModelV2 } from "./model"
 import { Location } from "./location"
 import { SessionMessage } from "./session/message"
-import { Prompt } from "./session/prompt"
 import { PromptInput } from "@orchestra/schema/prompt-input"
 import { EventV2 } from "./event"
 import { Database } from "./database/database"
@@ -22,6 +21,8 @@ import path from "path"
 import { existsSync } from "fs"
 import { SessionRunner } from "./session/runner/index"
 import { SessionStore } from "./session/store"
+import { makeRead } from "./session/read"
+import { resolvePrompt } from "./session/resolve-prompt"
 import { SessionExecution } from "./session/execution"
 import { makeGlobalNode } from "./effect/app-node"
 import { LocationServiceMap } from "./location-service-map"
@@ -32,10 +33,8 @@ import { Snapshot } from "./snapshot"
 import { File } from "./file"
 import { SessionRevert } from "./session/revert"
 import { Revert } from "@orchestra/schema/revert"
-import { FSUtil } from "./fs-util"
 import { Global } from "./global"
 import type { ToolSafety } from "./tool-safety"
-import { SessionDurable } from "@orchestra/schema/durable-event-manifest"
 import { SessionArchive } from "./session/archive"
 import { SessionLifecycle } from "./session/lifecycle"
 import { SessionSubagentModels } from "./session/subagent-models"
@@ -151,9 +150,14 @@ export type Error =
   | PromptConflictError
   | PromptBlockedError
 
+/** Internal admission checkpoint; never serialized or inherited by Session execution. */
+export interface CommitOptions {
+  readonly beforeCommit?: Effect.Effect<void>
+}
+
 export interface Interface {
   readonly list: (input?: ListInput) => Effect.Effect<SessionSchema.Info[]>
-  readonly create: (input: CreateInput) => Effect.Effect<SessionSchema.Info, NotFoundError>
+  readonly create: (input: CreateInput, options?: CommitOptions) => Effect.Effect<SessionSchema.Info, NotFoundError>
   readonly get: (sessionID: SessionSchema.ID) => Effect.Effect<SessionSchema.Info, NotFoundError>
   readonly archive: (input: { sessionID: SessionSchema.ID; archived: boolean }) => Effect.Effect<void, NotFoundError>
   readonly rename: (input: { sessionID: SessionSchema.ID; title: string }) => Effect.Effect<void, NotFoundError>
@@ -190,14 +194,17 @@ export interface Interface {
     model: ModelV2.Ref
   }) => Effect.Effect<void, NotFoundError>
   readonly getPermission: (sessionID: SessionSchema.ID) => Effect.Effect<Permission.SessionRuleset, NotFoundError>
-  readonly setPermission: (input: { sessionID: SessionSchema.ID; permission: Permission.SessionRuleset }) => Effect.Effect<Permission.SessionRuleset, NotFoundError>
+  readonly setPermission: (input: {
+    sessionID: SessionSchema.ID
+    permission: Permission.SessionRuleset
+  }) => Effect.Effect<Permission.SessionRuleset, NotFoundError>
   readonly prompt: (input: {
     id?: SessionMessage.ID
     sessionID: SessionSchema.ID
     prompt: PromptInput.Prompt
     delivery?: SessionInput.Delivery
     resume?: boolean
-  }) => Effect.Effect<SessionInput.Admitted, NotFoundError | BusyError | PromptConflictError | PromptBlockedError>
+  }, options?: CommitOptions) => Effect.Effect<SessionInput.Admitted, NotFoundError | BusyError | PromptConflictError | PromptBlockedError>
   /** Copies the history before `messageID` (and before a staged revert) into a new Session. */
   readonly fork: (input: {
     sessionID: SessionSchema.ID
@@ -269,22 +276,14 @@ const layer = Layer.effect(
     const events = yield* EventV2.Service
     const projects = yield* ProjectV2.Service
     const execution = yield* SessionExecution.Service
+    // Topology admission is separate from execution ownership: a running parent may create a Task child.
+    const topology = Semaphore.makeUnsafe(1)
+    const closing = new Map<SessionSchema.ID, object>()
     const store = yield* SessionStore.Service
     const locations = yield* LocationServiceMap.Service
     const global = yield* Global.Service
-    const decodeMessage = Schema.decodeUnknownEffect(SessionMessage.Message)
     const encodeMessage = Schema.encodeSync(SessionMessage.Message)
-    const isDurableSessionEvent = Schema.is(SessionEvent.Durable)
-    const decode = (row: typeof SessionMessageTable.$inferSelect) =>
-      decodeMessage({ ...row.data, id: row.id, type: row.type }).pipe(
-        Effect.mapError(
-          () =>
-            new MessageDecodeError({
-              sessionID: SessionSchema.ID.make(row.session_id),
-              messageID: SessionMessage.ID.make(row.id),
-            }),
-        ),
-      )
+    const reads = makeRead({ db, events, store, get: (id) => result.get(id) })
 
     // Installed hooks on a Session event, through its Location's tool registry: the profile loader and ToolSafety its
     // tool calls use. Only a project with a hooks.json opens its Location for them.
@@ -316,8 +315,14 @@ const layer = Layer.effect(
           return Effect.fail(
             new PromptBlockedError({
               sessionID: session.id,
-              reason: err._tag === "ToolSafety.Denied" ? (err.reason ?? "relay-hook-location-acquisition") : "relay-hook-location-acquisition",
-              detail: err._tag === "ToolSafety.Denied" ? (err.message ?? "Prompt hooks could not be evaluated.") : "Prompt hooks could not be evaluated.",
+              reason:
+                err._tag === "ToolSafety.Denied"
+                  ? (err.reason ?? "relay-hook-location-acquisition")
+                  : "relay-hook-location-acquisition",
+              detail:
+                err._tag === "ToolSafety.Denied"
+                  ? (err.message ?? "Prompt hooks could not be evaluated.")
+                  : "Prompt hooks could not be evaluated.",
             }),
           )
         }),
@@ -330,12 +335,32 @@ const layer = Layer.effect(
 
     // Session operations hold the Session as a drain would, so none interleaves with a running turn.
     const exclusive = <A, E>(session: Pick<SessionSchema.Info, "id">, effect: Effect.Effect<A, E>) =>
+      execution.exclusive(session.id, effect).pipe(
+        Effect.flatMap(
+          Option.match({
+            onNone: () => Effect.fail(new BusyError({ sessionID: session.id })),
+            onSome: Effect.succeed,
+          }),
+        ),
+      )
+
+    // Revert owns the Session before reading its state. Cancelling its caller only detaches the waiter.
+    const exclusiveRevert = <A, E>(
+      sessionID: SessionSchema.ID,
+      use: (session: SessionSchema.Info) => Effect.Effect<A, E>,
+    ): Effect.Effect<A, E | NotFoundError | BusyError> =>
       execution
-        .exclusive(session.id, effect)
+        .exclusive(
+          sessionID,
+          Effect.gen(function* () {
+            const session = yield* result.get(sessionID)
+            return yield* use(session)
+          }),
+        )
         .pipe(
           Effect.flatMap(
             Option.match({
-              onNone: () => Effect.fail(new BusyError({ sessionID: session.id })),
+              onNone: () => Effect.fail(new BusyError({ sessionID })),
               onSome: Effect.succeed,
             }),
           ),
@@ -360,65 +385,82 @@ const layer = Layer.effect(
       )
 
     const result = Service.of({
-      create: Effect.fn("V2Session.create")(function* (input) {
+      create: Effect.fn("V2Session.create")(function* (input, options) {
+        const beforeCommit = options?.beforeCommit
         const sessionID = input.id ?? SessionSchema.ID.create()
-        const recorded = yield* store.get(sessionID)
+        const recorded = yield* topology.withPermit(
+          Effect.gen(function* () {
+            if (closing.has(sessionID)) return yield* new NotFoundError({ sessionID })
+            const recorded = yield* store.get(sessionID)
+            if (recorded) return recorded
+            if (input.parentID) {
+              if (closing.has(input.parentID)) return yield* new NotFoundError({ sessionID: input.parentID })
+              yield* result.get(input.parentID)
+            }
+          }),
+        )
         if (recorded) return recorded
-        if (input.parentID) yield* result.get(input.parentID)
         const project = yield* projects.resolve(input.location.directory)
         yield* ProjectV2.record(db, events, project)
         const timestamp = yield* DateTime.now
-        const publish = events
-          .publish(
-            SessionEvent.Created,
-            {
-              sessionID,
-              timestamp,
-              projectID: project.id,
-              location: input.location,
-              subdirectory: RelativePath.make(
-                path.relative(project.directory, input.location.directory).replaceAll("\\", "/"),
-              ),
-              title: `New session - ${DateTime.formatIso(timestamp)}`,
-              // Optional event keys must be absent, not undefined, to encode.
-              ...(input.parentID ? { parentID: input.parentID } : {}),
-              ...(input.agent ? { agent: input.agent } : {}),
-              ...(input.model
-                ? {
-                    model: {
-                      id: ModelV2.ID.make(input.model.id),
-                      providerID: input.model.providerID,
-                      ...(input.model.variant ? { variant: input.model.variant } : {}),
+        const projected = yield* events.transact(
+          Effect.gen(function* () {
+                if (closing.has(sessionID)) return yield* new NotFoundError({ sessionID })
+                const recorded = yield* store.get(sessionID)
+                if (recorded) return { type: "existing", session: recorded } as const
+                if (input.parentID) {
+                  if (closing.has(input.parentID)) return yield* new NotFoundError({ sessionID: input.parentID })
+                  yield* result.get(input.parentID)
+                }
+                return yield* events
+                  .publish(
+                    SessionEvent.Created,
+                    {
+                      sessionID,
+                      timestamp,
+                      projectID: project.id,
+                      location: input.location,
+                      subdirectory: RelativePath.make(
+                        path.relative(project.directory, input.location.directory).replaceAll("\\", "/"),
+                      ),
+                      title: `New session - ${DateTime.formatIso(timestamp)}`,
+                      // Optional event keys must be absent, not undefined, to encode.
+                      ...(input.parentID ? { parentID: input.parentID } : {}),
+                      ...(input.agent ? { agent: input.agent } : {}),
+                      ...(input.model
+                        ? {
+                            model: {
+                              id: ModelV2.ID.make(input.model.id),
+                              providerID: input.model.providerID,
+                              ...(input.model.variant !== undefined ? { variant: input.model.variant } : {}),
+                            },
+                          }
+                        : {}),
                     },
-                  }
-                : {}),
-            },
-            { location: input.location },
-          )
-          .pipe(
-            Effect.as({ type: "created" } as const),
-            Effect.catchDefect((defect) => {
-              if (!(defect instanceof SessionProjector.SessionAlreadyProjected)) {
-                return Effect.die(defect)
-              }
-              // Concurrent creation lost the projection race. The existing Session identity wins.
-              return store
-                .get(sessionID)
-                .pipe(
-                  Effect.flatMap((session) =>
-                    session ? Effect.succeed({ type: "existing", session } as const) : Effect.die(defect),
-                  ),
-                )
-            }),
-          )
-        const projected = yield* (input.parentID
-          ? events.transact(Effect.gen(function* () {
-              // Project resolution can suspend. Parent deletion must win before this Created publication or wait
-              // until it can discover the child, so the preflight parent read is not sufficient.
-              yield* result.get(input.parentID!)
-              return yield* publish
-            }), (transaction) => SessionLifecycle.withParent(input.parentID!, transaction))
-          : publish)
+                    { location: input.location, ...(beforeCommit ? { commit: () => beforeCommit } : {}) },
+                  )
+                  .pipe(
+                    Effect.as({ type: "created" } as const),
+                    Effect.catchCause((cause) => {
+                      const reason = cause.reasons.length === 1 ? cause.reasons[0] : undefined
+                      if (reason?._tag !== "Die" || !(reason.defect instanceof SessionProjector.SessionAlreadyProjected)) {
+                        return Effect.failCause(cause)
+                      }
+                      // Concurrent creation lost the projection race. The existing Session identity wins.
+                      return store
+                        .get(sessionID)
+                        .pipe(
+                          Effect.flatMap((session) =>
+                            session ? Effect.succeed({ type: "existing", session } as const) : Effect.failCause(cause),
+                          ),
+                        )
+                    }),
+                  )
+          }),
+          (transaction) => input.parentID
+            ? SessionLifecycle.withParent(input.parentID, topology.withPermit(transaction))
+            : topology.withPermit(transaction),
+        )
         if (projected.type === "existing") return projected.session
         // TODO: Restore recorded sessions onto replacement synchronized workspaces in a future API slice.
         const created = yield* result.get(sessionID).pipe(Effect.orDie)
@@ -447,83 +489,44 @@ const layer = Layer.effect(
           return yield* new NotFoundError({ sessionID: input.sessionID })
       }),
       remove: Effect.fn("V2Session.remove")(function* (sessionID) {
-        yield* result.get(sessionID)
-        const remove = (ids: ReadonlyArray<SessionSchema.ID>): Effect.Effect<void, NotFoundError> => Effect.suspend(() => {
-          const tree = { ids }
-          return events.transact(Effect.gen(function* () {
-            // A child admitted during the stop was absent from the initial snapshot. Release every lifecycle and
-            // execution guard before retrying; all guards also release before committed Deleted notifications run.
-            if (tree.ids.some((id) => !ids.includes(id))) return { retry: tree.ids }
-            if (!(yield* SessionLifecycle.remove(db, events, sessionID)))
-              return yield* new NotFoundError({ sessionID })
-            return { retry: undefined }
-          }), (transaction) => stopped(ids, SessionLifecycle.withTree(db, sessionID, (current) => {
-            tree.ids = current
-            return transaction
-          }), { discardPending: true })).pipe(
-            Effect.flatMap((outcome) => outcome.retry ? remove(outcome.retry) : Effect.void),
-          )
-        })
-        yield* remove([sessionID, ...(yield* SessionLifecycle.descendants(db, sessionID))])
+        const token = {}
+        const marked = new Set<SessionSchema.ID>()
+        const initial = [sessionID]
+        yield* events.transact(Effect.gen(function* () {
+          if (!(yield* SessionLifecycle.remove(db, events, sessionID)))
+            return yield* new NotFoundError({ sessionID })
+        }).pipe(Effect.asVoid), (transaction) => Effect.uninterruptible(Effect.acquireUseRelease(
+          Effect.void,
+          () => {
+            const run = (ids: ReadonlyArray<SessionSchema.ID>): Effect.Effect<void, NotFoundError> => Effect.suspend(() =>
+              topology.withPermit(Effect.gen(function* () {
+                yield* result.get(sessionID)
+                const covered = [...new Set([...ids, ...(yield* SessionLifecycle.descendants(db, sessionID))])]
+                if (covered.some((id) => closing.has(id) && closing.get(id) !== token))
+                  return yield* new NotFoundError({ sessionID })
+                covered.forEach((id) => { closing.set(id, token); marked.add(id) })
+                return covered
+              })).pipe(
+                Effect.flatMap((covered) => stopped(covered, SessionLifecycle.withTree(db, sessionID, (current) =>
+                  current.some((id) => !covered.includes(id))
+                    ? Effect.succeed<{ retry: ReadonlyArray<SessionSchema.ID> | undefined }>({ retry: current })
+                    : topology.withPermit(transaction).pipe(Effect.as({ retry: undefined })),
+                ), { discardPending: true }).pipe(
+                  // Every execution/tree hold has settled before expanding ownership. Keep the closing token.
+                  Effect.flatMap((outcome) => outcome.retry ? run([...new Set([...covered, ...outcome.retry])]) : Effect.void),
+                )),
+              ),
+            )
+            return run(initial)
+          },
+          () => topology.withPermit(Effect.sync(() => {
+            marked.forEach((id) => { if (closing.get(id) === token) closing.delete(id) })
+          })),
+        )))
       }),
       list: (input) => SessionArchive.list(db, input),
-      messages: Effect.fn("V2Session.messages")(function* (input) {
-        yield* result.get(input.sessionID)
-        const direction = input.cursor?.direction ?? "next"
-        const requestedOrder = input.order ?? "desc"
-        const order = direction === "previous" ? (requestedOrder === "asc" ? "desc" : "asc") : requestedOrder
-        const anchor = input.cursor
-          ? yield* db
-              .select({ seq: SessionMessageTable.seq })
-              .from(SessionMessageTable)
-              .where(
-                and(eq(SessionMessageTable.session_id, input.sessionID), eq(SessionMessageTable.id, input.cursor.id)),
-              )
-              .get()
-              .pipe(Effect.orDie)
-          : undefined
-        if (input.cursor && !anchor) return []
-        const boundary = anchor
-          ? order === "asc"
-            ? gt(SessionMessageTable.seq, anchor.seq)
-            : lt(SessionMessageTable.seq, anchor.seq)
-          : undefined
-        const where = boundary
-          ? and(eq(SessionMessageTable.session_id, input.sessionID), boundary)
-          : eq(SessionMessageTable.session_id, input.sessionID)
-        const query = db
-          .select()
-          .from(SessionMessageTable)
-          .where(where)
-          .orderBy(order === "asc" ? asc(SessionMessageTable.seq) : desc(SessionMessageTable.seq))
-        const rows = yield* (input.limit === undefined ? query.all() : query.limit(input.limit).all()).pipe(
-          Effect.orDie,
-        )
-        return yield* Effect.forEach(direction === "previous" ? rows.toReversed() : rows, decode)
-      }),
-      message: Effect.fn("V2Session.message")(function* (input) {
-        const stored = yield* store.message(input.messageID)
-        return stored?.sessionID === input.sessionID ? stored.message : undefined
-      }),
-      context: Effect.fn("V2Session.context")(function* (sessionID) {
-        yield* result.get(sessionID)
-        return yield* store.context(sessionID)
-      }),
-      events: (input) =>
-        Stream.unwrap(
-          result
-            .get(input.sessionID)
-            .pipe(Effect.as(events.durable({ aggregateID: input.sessionID, after: input.after }))),
-        ).pipe(Stream.filter((event): event is SessionEvent.DurableEvent => isDurableSessionEvent(event))),
-      history: Effect.fn("V2Session.history")(function* (input) {
-        yield* result.get(input.sessionID)
-        return yield* EventV2.readAggregate(db, {
-          ...input,
-          aggregateID: input.sessionID,
-          manifest: SessionDurable,
-        })
-      }),
-      prompt: Effect.fn("V2Session.prompt")((input) =>
+      ...reads.api,
+      prompt: Effect.fn("V2Session.prompt")((input, options) =>
         Effect.uninterruptibleMask((restore) =>
           Effect.gen(function* () {
             const messageID = input.id ?? SessionMessage.ID.create()
@@ -537,30 +540,32 @@ const layer = Layer.effect(
               prompt,
               ...(notes.length === 0 ? {} : { promptContext: { reminders: [...notes] } }),
               delivery,
-            }).pipe(
-              Effect.catchDefect((defect) =>
-                defect instanceof SessionInput.LifecycleConflict
+            }, options?.beforeCommit).pipe(
+              Effect.catchCause((cause) => {
+                const reason = cause.reasons.length === 1 ? cause.reasons[0] : undefined
+                return reason?._tag === "Die" && reason.defect instanceof SessionInput.LifecycleConflict
                   ? new PromptConflictError({ sessionID: input.sessionID, messageID })
-                  : Effect.die(defect),
-              ),
+                  : Effect.failCause(cause)
+              }),
             )
             const ownership = { exclusive: false }
             const admitted = yield* events.transact(Effect.gen(function* () {
-              // The global message ID check, inclusive undo commit and admission share one immediate SQL
-              // transaction. A competing Session can neither claim the ID between them nor leave a rejected undo.
+              if (closing.has(input.sessionID)) return yield* new NotFoundError({ sessionID: input.sessionID })
+              yield* result.get(input.sessionID)
+              // Reconcile an exact retry before touching staged history.
               if ((yield* SessionInput.find(db, messageID)) || (yield* store.message(messageID))) return yield* admit
               const session = yield* result.get(input.sessionID)
               if (session.revert) {
-                // Stage may have won after the boundary preflight. Roll back rather than commit without ownership.
                 if (!ownership.exclusive) return yield* new BusyError({ sessionID: input.sessionID })
                 yield* SessionRevert.commit(session).pipe(Effect.provideService(EventV2.Service, events))
               }
               return yield* admit
             }), (transaction) => Effect.gen(function* () {
-              if ((yield* SessionInput.find(db, messageID)) || (yield* store.message(messageID))) return yield* transaction
-              if (!(yield* result.get(input.sessionID)).revert) return yield* transaction
+              const guarded = topology.withPermit(transaction)
+              if ((yield* SessionInput.find(db, messageID)) || (yield* store.message(messageID))) return yield* guarded
+              if (!(yield* result.get(input.sessionID)).revert) return yield* guarded
               return yield* exclusive({ id: input.sessionID }, Effect.sync(() => { ownership.exclusive = true }).pipe(
-                Effect.andThen(transaction),
+                Effect.andThen(guarded),
               ))
             }))
             if (!SessionInput.equivalent(admitted, expected))
@@ -592,7 +597,7 @@ const layer = Layer.effect(
               Effect.forEach(
                 kept,
                 (row, index) =>
-                  decode(row).pipe(
+                  reads.decode(row).pipe(
                     Effect.orDie,
                     Effect.flatMap((message) => {
                       const { id, type, ...data } = encodeMessage({
@@ -697,7 +702,7 @@ const layer = Layer.effect(
         if (
           session.model?.providerID === input.model.providerID &&
           session.model.id === input.model.id &&
-          (session.model.variant ?? "default") === (input.model.variant ?? "default")
+          session.model.variant === input.model.variant
         )
           return
         yield* events.publish(SessionEvent.ModelSwitched, {
@@ -733,8 +738,15 @@ const layer = Layer.effect(
       }),
       active: execution.active,
       resume: Effect.fn("V2Session.resume")(function* (sessionID) {
-        yield* result.get(sessionID)
-        yield* execution.resume(sessionID)
+        yield* topology.withPermit(
+          Effect.gen(function* () {
+            if (closing.has(sessionID)) return yield* new NotFoundError({ sessionID })
+            yield* result.get(sessionID)
+          }),
+        )
+        yield* execution
+          .resume(sessionID)
+          .pipe(Effect.catchTag("SessionExecution.MissingSessionError", () => new NotFoundError({ sessionID })))
       }),
       interrupt: Effect.fn("V2Session.interrupt")((sessionID) =>
         Effect.uninterruptible(execution.interrupt(sessionID)),
@@ -748,38 +760,30 @@ const layer = Layer.effect(
         )
       }),
       revert: {
-        stage: Effect.fn("V2Session.revert.stage")((input) => exclusive(
-          { id: input.sessionID },
-          Effect.gen(function* () {
-            const session = yield* result.get(input.sessionID)
-            return yield* SessionRevert.stage({ session, messageID: input.messageID, files: input.files }).pipe(
+        stage: Effect.fn("V2Session.revert.stage")(function* (input) {
+          return yield* exclusiveRevert(input.sessionID, (session) =>
+            SessionRevert.stage({ session, messageID: input.messageID, files: input.files }).pipe(
               Effect.provideService(Database.Service, database),
               Effect.provideService(EventV2.Service, events),
               Effect.provide(locations.get(session.location)),
               Effect.mapError((error) => error as NotFoundError | MessageNotFoundError | Snapshot.Error),
-            )
-          }),
-        )),
-        clear: Effect.fn("V2Session.revert.clear")((sessionID) => exclusive(
-          { id: sessionID },
-          Effect.gen(function* () {
-            const session = yield* result.get(sessionID)
-            // Avoid opening a Location when there is no filesystem redo to perform.
-            if (!session.revert) return
-            yield* SessionRevert.clear(session).pipe(
+            ),
+          )
+        }),
+        clear: Effect.fn("V2Session.revert.clear")(function* (sessionID) {
+          return yield* exclusiveRevert(sessionID, (session) =>
+            (session.revert ? SessionRevert.clear(session).pipe(
               Effect.provideService(EventV2.Service, events),
               Effect.provide(locations.get(session.location)),
               Effect.mapError((error) => error as NotFoundError | Snapshot.Error),
-            )
-          }),
-        )),
-        commit: Effect.fn("V2Session.revert.commit")((sessionID) => exclusive(
-          { id: sessionID },
-          Effect.gen(function* () {
-            const session = yield* result.get(sessionID)
-            yield* SessionRevert.commit(session).pipe(Effect.provideService(EventV2.Service, events))
-          }),
-        )),
+            ) : Effect.void),
+          )
+        }),
+        commit: Effect.fn("V2Session.revert.commit")(function* (sessionID) {
+          return yield* exclusiveRevert(sessionID, (session) =>
+            SessionRevert.commit(session).pipe(Effect.provideService(EventV2.Service, events)),
+          )
+        }),
       },
     })
 
@@ -796,20 +800,6 @@ function forkedTitle(title: string) {
   if (!match) return `${title} (fork #1)`
   return `${match[1]} (fork #${Number(match[2]) + 1})`
 }
-
-const resolvePrompt = (input: PromptInput.Prompt) =>
-  Prompt.make({
-    text: input.text,
-    agents: input.agents,
-    files: input.files?.map((file) => {
-      const dataMime = file.uri.match(/^data:([^;,]+)[;,]/i)?.[1]
-      const target = URL.canParse(file.uri) ? new URL(file.uri).pathname : (file.name ?? file.uri)
-      return {
-        ...file,
-        mime: dataMime ?? (target.endsWith("/") ? "application/x-directory" : FSUtil.mimeType(target)),
-      }
-    }),
-  })
 
 export const node = makeGlobalNode({
   service: Service,

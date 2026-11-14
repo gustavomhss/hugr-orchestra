@@ -12,11 +12,13 @@ import type { ServerSession } from "./server-session"
 export function reconcileActiveSessionStatuses(
   session: Pick<ServerSession, "data" | "set">,
   active: SessionActiveOutput | Record<string, SessionStatus>,
+  touched?: ReadonlySet<string>,
 ) {
   Object.keys(session.data.session_status)
-    .filter((sessionID) => active[sessionID] === undefined && session.data.session_status[sessionID]?.type !== "idle")
+    .filter((sessionID) => !touched?.has(sessionID) && active[sessionID] === undefined && session.data.session_status[sessionID]?.type !== "idle")
     .forEach((sessionID) => session.set("session_status", sessionID, reconcile({ type: "idle" })))
   for (const sessionID of Object.keys(active)) {
+    if (touched?.has(sessionID)) continue
     const status = active[sessionID]
     if (!status) continue
     // reconcile replaces the entry; a plain set would merge and keep a retry's attempt/message/next.
@@ -32,15 +34,17 @@ export function reconcileActiveSessionStatuses(
 export function resyncAfterReconnect(
   session: Pick<ServerSession, "data" | "set" | "sync" | "open">,
   active?: SessionActiveOutput,
+  touched?: ReadonlySet<string>,
+  removed?: ReadonlySet<string>,
 ) {
   const wasBusy = Object.keys(session.data.session_status).filter(
     (sessionID) => session.data.session_status[sessionID]?.type !== "idle",
   )
-  if (active) reconcileActiveSessionStatuses(session, active)
+  if (active) reconcileActiveSessionStatuses(session, active, touched)
   // A session that was never loaded has nothing stale; it loads when opened.
   const loaded = [...wasBusy, ...Object.keys(active ?? {})].filter((sessionID) => session.data.message[sessionID] !== undefined)
   return Promise.all(
-    [...new Set([...session.open(), ...loaded])].map((sessionID) =>
+    [...new Set([...session.open(), ...loaded])].filter((sessionID) => !removed?.has(sessionID)).map((sessionID) =>
       session.sync(sessionID, { force: true }).catch(() => undefined),
     ),
   ).then(() => undefined)

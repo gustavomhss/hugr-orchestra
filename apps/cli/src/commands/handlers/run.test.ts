@@ -28,9 +28,11 @@ const event = (seq: number | undefined, type: string, data: Record<string, unkno
 function stub(
   options: {
     sessions?: unknown[]
+    pages?: (query: URLSearchParams) => { data: unknown[]; cursor: { next?: string } }
     history?: (waits: number) => unknown[]
     stream?: unknown[]
     permissions?: unknown[]
+    promptError?: string
     waitMs?: number
     forkTo?: string
   } = {},
@@ -40,21 +42,35 @@ function stub(
   const server = stubServer(async (request) => {
     const url = new URL(request.url)
     const route = `${request.method} ${url.pathname.replace(/^\/api/, "")}`
-    const body = request.method === "POST" || request.method === "PUT" ? await request.json().catch(() => undefined) : undefined
+    const body =
+      request.method === "POST" || request.method === "PUT" ? await request.json().catch(() => undefined) : undefined
     calls.push({ route, body })
     const generic = route.replace(/^(\w+ \/session)\/[^/]+/, "$1/:id")
-    if (generic === "GET /session") return Response.json({ data: options.sessions ?? [], cursor: {} })
+    if (generic === "GET /session")
+      return Response.json(options.pages?.(url.searchParams) ?? { data: options.sessions ?? [], cursor: {} })
     if (generic === "POST /session") return Response.json({ data: session("ses_1") })
     if (generic === "GET /session/:id") return Response.json({ data: session(route.split("/")[2]) })
     if (generic === "POST /session/:id/fork") return Response.json({ data: session(options.forkTo ?? "ses_fork") })
+    if ((generic === "POST /session/:id/prompt" || generic === "POST /session/:id/command") && options.promptError)
+      return Response.json({ _tag: "ConflictError", message: options.promptError }, { status: 409 })
     if (generic === "POST /session/:id/prompt" || generic === "POST /session/:id/command")
-      return Response.json({ data: { id: "msg_1", sessionID: "ses_1", admittedSeq: 1, prompt: { text: "" }, delivery: "steer", timeCreated: 1 } })
+      return Response.json({
+        data: {
+          id: "msg_1",
+          sessionID: "ses_1",
+          admittedSeq: 1,
+          prompt: { text: "" },
+          delivery: "steer",
+          timeCreated: 1,
+        },
+      })
     if (generic === "POST /session/:id/wait") {
       await Bun.sleep(options.waitMs ?? 0)
       waits++
       return new Response(null, { status: 204 })
     }
-    if (generic === "GET /session/:id/history") return Response.json({ data: options.history?.(waits) ?? [], hasMore: false })
+    if (generic === "GET /session/:id/history")
+      return Response.json({ data: options.history?.(waits) ?? [], hasMore: false })
     if (generic === "GET /session/:id/event")
       return new Response((options.stream ?? []).map((item) => `data: ${JSON.stringify(item)}\n\n`).join(""), {
         headers: { "content-type": "text/event-stream" },
@@ -119,8 +135,23 @@ describe("run", () => {
       expect(result.ok).toBe(true)
       expect(result.out).toContain("> build · gpt-x")
       expect(result.out).toContain("hi there")
-      expect(s.calls.find((call) => call.route === "POST /session")?.body).toMatchObject({ location: { directory: "/work" } })
-      expect(s.calls.find((call) => call.route === "POST /session/ses_1/prompt")?.body).toMatchObject({ prompt: { text: "hello" } })
+      expect(s.calls.find((call) => call.route === "POST /session")?.body).toMatchObject({
+        location: { directory: "/work" },
+      })
+      expect(s.calls.find((call) => call.route === "POST /session/ses_1/prompt")?.body).toMatchObject({
+        prompt: { text: "hello" },
+      })
+    } finally {
+      s.server.stop(true)
+    }
+  })
+
+  test("reports a declared client submit failure as a failed run", async () => {
+    const s = stub({ promptError: "submit refused" })
+    try {
+      const result = await exec(s.url, { json: true })
+      expect(result.ok).toBe(false)
+      expect(JSON.parse(result.out).data.message).toBe("submit refused")
     } finally {
       s.server.stop(true)
     }
@@ -131,7 +162,10 @@ describe("run", () => {
       history: (waits) =>
         waits < 2
           ? []
-          : [event(1, "session.next.prompted", { messageID: "msg_1" }), event(2, "session.next.text.ended", { text: "late answer" })],
+          : [
+              event(1, "session.next.prompted", { messageID: "msg_1" }),
+              event(2, "session.next.text.ended", { text: "late answer" }),
+            ],
     })
     try {
       const result = await exec(s.url, {})
@@ -144,7 +178,10 @@ describe("run", () => {
   })
 
   test("prints each event once even when the stream and the history both carry it", async () => {
-    const events = [event(1, "session.next.prompted", { messageID: "msg_1" }), event(2, "session.next.text.ended", { text: "once" })]
+    const events = [
+      event(1, "session.next.prompted", { messageID: "msg_1" }),
+      event(2, "session.next.text.ended", { text: "once" }),
+    ]
     const s = stub({ stream: events, history: (waits) => (waits > 0 ? events : []) })
     try {
       const result = await exec(s.url, {})
@@ -156,12 +193,20 @@ describe("run", () => {
 
   test("emits JSON lines with --format json", async () => {
     const s = stub({
-      stream: [event(1, "session.next.prompted", { messageID: "msg_1" }), event(2, "session.next.text.ended", { text: "hi" })],
+      stream: [
+        event(1, "session.next.prompted", { messageID: "msg_1" }),
+        event(2, "session.next.text.ended", { text: "hi" }),
+      ],
     })
     try {
       const result = await exec(s.url, { json: true })
-      const lines = result.out.trim().split("\n").map((line) => JSON.parse(line))
-      expect(lines).toEqual([expect.objectContaining({ type: "text", sessionID: "ses_1", data: expect.objectContaining({ text: "hi" }) })])
+      const lines = result.out
+        .trim()
+        .split("\n")
+        .map((line) => JSON.parse(line))
+      expect(lines).toEqual([
+        expect.objectContaining({ type: "text", sessionID: "ses_1", data: expect.objectContaining({ text: "hi" }) }),
+      ])
     } finally {
       s.server.stop(true)
     }
@@ -197,6 +242,30 @@ describe("run", () => {
     }
   })
 
+  test("--continue follows the server cursor past pages containing only children", async () => {
+    const queries: URLSearchParams[] = []
+    const s = stub({
+      pages: (query) => {
+        queries.push(query)
+        if (query.get("cursor") === "opaque-root-page") return { data: [session("ses_1")], cursor: {} }
+        return { data: [session("ses_child", "ses_1")], cursor: { next: "opaque-root-page" } }
+      },
+      stream: [event(1, "session.next.prompted", { messageID: "msg_1" })],
+    })
+    try {
+      const result = await exec(s.url, { continue: true })
+      expect(result.ok).toBe(true)
+      expect(result.err).toBe("")
+      expect(queries.map((query) => Object.fromEntries(query))).toEqual([
+        { limit: "25", order: "desc", directory: "/work" },
+        { limit: "25", cursor: "opaque-root-page" },
+      ])
+      expect(s.calls.some((call) => call.route === "POST /session")).toBe(false)
+    } finally {
+      s.server.stop(true)
+    }
+  })
+
   test("--continue with no earlier session warns on stderr, then starts a new one", async () => {
     const s = stub({ stream: [event(1, "session.next.prompted", { messageID: "msg_1" })] })
     try {
@@ -225,7 +294,9 @@ describe("run", () => {
       const s = stub({ stream, ...(extra as object) })
       try {
         await exec(s.url, options)
-        expect(s.calls.find((call) => call.route === `POST /session/${target}/permission-rules`)?.body).toEqual({ permission: denied })
+        expect(s.calls.find((call) => call.route === `POST /session/${target}/permission-rules`)?.body).toEqual({
+          permission: denied,
+        })
       } finally {
         s.server.stop(true)
       }
@@ -251,10 +322,14 @@ describe("run", () => {
     try {
       const rejected = await exec(denied.url, {})
       const granted = await exec(allowed.url, { auto: true })
-      expect(denied.calls.find((call) => call.route.endsWith("/permission/per_1/reply"))?.body).toEqual({ reply: "reject" })
+      expect(denied.calls.find((call) => call.route.endsWith("/permission/per_1/reply"))?.body).toEqual({
+        reply: "reject",
+      })
       expect(rejected.ok).toBe(false)
       expect(rejected.err).toContain("auto-rejecting. Pass --auto to allow it.")
-      expect(allowed.calls.find((call) => call.route.endsWith("/permission/per_1/reply"))?.body).toEqual({ reply: "once" })
+      expect(allowed.calls.find((call) => call.route.endsWith("/permission/per_1/reply"))?.body).toEqual({
+        reply: "once",
+      })
       expect(granted.ok).toBe(true)
       expect(granted.err).toBe("")
     } finally {
@@ -267,7 +342,10 @@ describe("run", () => {
     const s = stub({ stream: [event(1, "session.next.prompted", { messageID: "msg_1" })] })
     try {
       await exec(s.url, { command: "init", message: "args" })
-      expect(s.calls.find((call) => call.route === "POST /session/ses_1/command")?.body).toMatchObject({ command: "init", arguments: "args" })
+      expect(s.calls.find((call) => call.route === "POST /session/ses_1/command")?.body).toMatchObject({
+        command: "init",
+        arguments: "args",
+      })
     } finally {
       s.server.stop(true)
     }
@@ -281,7 +359,16 @@ describe("run", () => {
       auto: false,
     })
     expect(
-      miniArgs({ message: "fix it", model: "p/m", agent: "build", variant: "high", session: "ses_1", continue: false, fork: true, auto: true }),
+      miniArgs({
+        message: "fix it",
+        model: "p/m",
+        agent: "build",
+        variant: "high",
+        session: "ses_1",
+        continue: false,
+        fork: true,
+        auto: true,
+      }),
     ).toEqual({
       mini: true,
       prompt: "fix it",

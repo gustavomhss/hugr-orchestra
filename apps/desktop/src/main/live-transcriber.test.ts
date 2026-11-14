@@ -6,8 +6,8 @@ import { createTranscriber, type TranscriberEvent } from "./live-transcriber"
 // lets each test script its replies per connection as audio arrives, so no reply races the first sent chunk.
 type Connection = { index: number; audio: number }
 
-function fakeEngine(onAudio: (socket: ServerWebSocket<Connection>) => void) {
-  const seen = { connections: 0, protocols: [] as string[], query: [] as URLSearchParams[], audio: 0 }
+function fakeEngine(onAudio: (socket: ServerWebSocket<Connection>) => void, flush?: (socket: ServerWebSocket<Connection>) => void) {
+  const seen = { connections: 0, protocols: [] as string[], query: [] as URLSearchParams[], audio: 0, closed: 0, sockets: [] as ServerWebSocket<Connection>[] }
   const server = Bun.serve<Connection, undefined>({
     port: 0,
     fetch(request, server) {
@@ -20,8 +20,10 @@ function fakeEngine(onAudio: (socket: ServerWebSocket<Connection>) => void) {
       return upgraded ? undefined : new Response("no", { status: 400 })
     },
     websocket: {
+      open(socket) { seen.sockets.push(socket) },
+      close() { seen.closed += 1 },
       message(socket, message) {
-        if (typeof message === "string") return message.includes("CloseStream") ? socket.close(1000) : undefined
+        if (typeof message === "string") return message.includes("CloseStream") ? (flush ? flush(socket) : socket.close(1000)) : undefined
         seen.audio += 1
         socket.data.audio += 1
         onAudio(socket)
@@ -130,3 +132,24 @@ test("rejects an unknown engine, a malformed model and a missing key", () => {
   expect(() => createTranscriber({ engine: "deepgram", model: "nova 3&x", key: "k" }, onEvent)).toThrow()
   expect(() => createTranscriber({ engine: "deepgram", model: "nova-3", key: "" }, onEvent)).toThrow()
 })
+
+
+test("stop flushes within its grace window then closes an uncooperative socket and ignores late events", async () => {
+  const events: TranscriberEvent[] = []
+  const engine = fakeEngine(() => {}, (socket) => socket.send(results(0, 0, 0.02, "flushed")))
+  const transcriber = createTranscriber({ engine: "deepgram", model: "nova-3", key: "secret", url: engine.url }, (event) => events.push(event))
+  await until(() => events.some((event) => event.kind === "open"))
+  transcriber.send(0, chunk())
+  const stopped = transcriber.stop()
+  expect(transcriber.stop()).toBe(stopped)
+  await stopped
+  await transcriber.stop()
+  expect(events.some((event) => event.kind === "piece" && event.piece.text === "flushed")).toBe(true)
+  engine.seen.sockets[0].send(results(0, 0.02, 0.02, "late"))
+  transcriber.send(20, chunk())
+  await until(() => engine.seen.closed === 1, 500)
+  await Bun.sleep(1100)
+  expect(engine.seen.connections).toBe(1)
+  expect(engine.seen.audio).toBe(1)
+  expect(events.some((event) => event.kind === "piece" && event.piece.text === "late")).toBe(false)
+}, 10_000)

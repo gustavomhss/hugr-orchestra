@@ -1,4 +1,4 @@
-import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js"
+import type { OAuthClientProvider, OAuthDiscoveryState } from "@modelcontextprotocol/sdk/client/auth.js"
 import type {
   OAuthClientMetadata,
   OAuthTokens,
@@ -32,7 +32,10 @@ export class McpOAuthProvider implements OAuthClientProvider {
     protected config: McpOAuthConfig,
     private callbacks: McpOAuthCallbacks,
     protected auth: McpAuth.Interface,
+    protected binding: McpAuth.Binding,
   ) {}
+
+  protected observedIssuer?: string
 
   get redirectUrl(): string {
     if (this.config.redirectUri) {
@@ -53,53 +56,105 @@ export class McpOAuthProvider implements OAuthClientProvider {
     }
   }
 
+  // The transport calls tokens() before discovery. Legacy bytes must already fail at that boundary.
+  protected async checked() {
+    if (this.binding.name !== this.mcpName || this.binding.serverUrl !== this.serverUrl)
+      throw new McpAuth.ReauthRequired()
+    const entry = await Effect.runPromise(this.auth.readBinding(this.binding))
+    if (entry.issuer !== undefined && !McpAuth.issuerUrl(entry.issuer)) throw new McpAuth.ReauthRequired()
+    if (this.observedIssuer && !McpAuth.sameIssuer(entry.issuer, this.observedIssuer))
+      throw new McpAuth.ReauthRequired()
+    if (
+      entry.clientInfo &&
+      (!McpAuth.sameIssuer(entry.issuer, entry.clientInfo.issuer) ||
+        entry.clientInfo.source !== (this.config.clientId ? "configured" : "dynamic") ||
+        (this.config.clientId && entry.clientInfo.clientId !== this.config.clientId) ||
+        (entry.clientInfo.source === "configured" && entry.clientInfo.clientSecret !== undefined))
+    )
+      throw new McpAuth.ReauthRequired()
+    if (entry.tokens && (!entry.clientInfo || !McpAuth.sameIssuer(entry.issuer, entry.tokens.issuer)))
+      throw new McpAuth.ReauthRequired()
+    if (
+      this.config.clientId &&
+      entry.staticClientBinding &&
+      (entry.staticClientBinding.clientId !== this.config.clientId ||
+        (entry.issuer && !McpAuth.sameIssuer(entry.staticClientBinding.issuer, entry.issuer)))
+    )
+      throw new McpAuth.ReauthRequired()
+    return entry
+  }
+
+  protected issuer(stamp?: string) {
+    if (!this.observedIssuer || (stamp !== undefined && !McpAuth.sameIssuer(stamp, this.observedIssuer)))
+      throw new McpAuth.ReauthRequired()
+    return this.observedIssuer
+  }
+
+  async saveDiscoveryState(state: OAuthDiscoveryState): Promise<void> {
+    const issuer = McpAuth.issuerUrl(String(state.authorizationServerUrl))
+    if (!issuer) throw new McpAuth.ReauthRequired()
+    const entry = await this.checked()
+    if (entry.issuer && !McpAuth.sameIssuer(entry.issuer, issuer)) throw new McpAuth.ReauthRequired()
+    if (
+      this.config.clientId &&
+      entry.staticClientBinding &&
+      (entry.staticClientBinding.clientId !== this.config.clientId ||
+        !McpAuth.sameIssuer(entry.staticClientBinding.issuer, issuer))
+    )
+      throw new McpAuth.ReauthRequired()
+    await Effect.runPromise(this.auth.updateBinding(this.binding, { issuer }))
+    this.observedIssuer = issuer
+  }
+
   async clientInformation(): Promise<OAuthClientInformation | undefined> {
+    const entry = await this.checked()
     if (this.config.clientId) {
+      if (!entry.staticClientBinding || !McpAuth.sameIssuer(entry.staticClientBinding.issuer, entry.issuer))
+        throw new McpAuth.ReauthRequired()
       return {
         client_id: this.config.clientId,
         client_secret: this.config.clientSecret,
+        issuer: entry.staticClientBinding.issuer,
       }
     }
-
-    // Check stored client info (from dynamic registration)
-    // Use getForUrl to validate credentials are for the current server URL
-    const entry = await Effect.runPromise(this.auth.getForUrl(this.mcpName, this.serverUrl))
-    if (entry?.clientInfo) {
-      // Check if client secret has expired
-      if (entry.clientInfo.clientSecretExpiresAt && entry.clientInfo.clientSecretExpiresAt < Date.now() / 1000) {
-        return undefined
-      }
-      return {
-        client_id: entry.clientInfo.clientId,
-        client_secret: entry.clientInfo.clientSecret,
-      }
+    if (!entry.clientInfo) return undefined
+    if (entry.clientInfo.clientSecretExpiresAt && entry.clientInfo.clientSecretExpiresAt < Date.now() / 1000)
+      return undefined
+    return {
+      issuer: entry.clientInfo.issuer,
+      client_id: entry.clientInfo.clientId,
+      client_secret: entry.clientInfo.clientSecret,
     }
+  }
 
-    // No client info or URL changed - will trigger dynamic registration
-    return undefined
+  protected clientEntry(info: OAuthClientInformationFull): McpAuth.StampedClientInfo {
+    const issuer = this.issuer(info.issuer)
+    if (!info.issuer || (this.config.clientId && info.client_id !== this.config.clientId))
+      throw new McpAuth.ReauthRequired()
+    return {
+      issuer,
+      source: this.config.clientId ? "configured" : "dynamic",
+      clientId: info.client_id,
+      ...(this.config.clientId
+        ? {}
+        : {
+            clientSecret: info.client_secret,
+            clientIdIssuedAt: info.client_id_issued_at,
+            clientSecretExpiresAt: info.client_secret_expires_at,
+          }),
+    }
   }
 
   async saveClientInformation(info: OAuthClientInformationFull): Promise<void> {
-    await Effect.runPromise(
-      this.auth.updateClientInfo(
-        this.mcpName,
-        {
-          clientId: info.client_id,
-          clientSecret: info.client_secret,
-          clientIdIssuedAt: info.client_id_issued_at,
-          clientSecretExpiresAt: info.client_secret_expires_at,
-        },
-        this.serverUrl,
-      ),
-    )
+    await this.checked()
+    await Effect.runPromise(this.auth.updateBinding(this.binding, { clientInfo: this.clientEntry(info) }))
   }
 
   async tokens(): Promise<OAuthTokens | undefined> {
-    // Use getForUrl to validate tokens are for the current server URL
-    const entry = await Effect.runPromise(this.auth.getForUrl(this.mcpName, this.serverUrl))
-    if (!entry?.tokens) return undefined
-
+    const entry = await this.checked()
+    if (!entry.tokens) return undefined
     return {
+      issuer: entry.tokens.issuer,
       access_token: entry.tokens.accessToken,
       token_type: "Bearer",
       refresh_token: entry.tokens.refreshToken,
@@ -110,130 +165,129 @@ export class McpOAuthProvider implements OAuthClientProvider {
     }
   }
 
+  protected tokenEntry(tokens: OAuthTokens): McpAuth.StampedTokens {
+    if (!tokens.issuer) throw new McpAuth.ReauthRequired()
+    return {
+      issuer: this.issuer(tokens.issuer),
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token,
+      expiresAt: tokens.expires_in ? Date.now() / 1000 + tokens.expires_in : undefined,
+      scope: tokens.scope,
+    }
+  }
+
   async saveTokens(tokens: OAuthTokens): Promise<void> {
-    await Effect.runPromise(
-      this.auth.updateTokens(
-        this.mcpName,
-        {
-          accessToken: tokens.access_token,
-          refreshToken: tokens.refresh_token,
-          expiresAt: tokens.expires_in ? Date.now() / 1000 + tokens.expires_in : undefined,
-          scope: tokens.scope,
-        },
-        this.serverUrl,
-      ),
-    )
+    const entry = await this.checked()
+    if (!entry.clientInfo || !McpAuth.sameIssuer(entry.clientInfo.issuer, this.issuer(tokens.issuer)))
+      throw new McpAuth.ReauthRequired()
+    await Effect.runPromise(this.auth.updateBinding(this.binding, { tokens: this.tokenEntry(tokens) }))
   }
 
   async redirectToAuthorization(authorizationUrl: URL): Promise<void> {
+    await this.checked()
     await this.callbacks.onRedirect(authorizationUrl)
   }
 
   async saveCodeVerifier(codeVerifier: string): Promise<void> {
-    await Effect.runPromise(this.auth.updateCodeVerifier(this.mcpName, codeVerifier))
+    await this.checked()
+    await Effect.runPromise(this.auth.updateBinding(this.binding, { codeVerifier }))
   }
 
   async codeVerifier(): Promise<string> {
-    const entry = await Effect.runPromise(this.auth.get(this.mcpName))
-    if (!entry?.codeVerifier) {
-      throw new Error(`No code verifier saved for MCP server: ${this.mcpName}`)
-    }
+    const entry = await this.checked()
+    if (!entry.codeVerifier) throw new McpAuth.ReauthRequired()
     return entry.codeVerifier
   }
 
   async saveState(state: string): Promise<void> {
-    await Effect.runPromise(this.auth.updateOAuthState(this.mcpName, state))
+    await this.checked()
+    await Effect.runPromise(this.auth.updateBinding(this.binding, { oauthState: state }))
   }
 
   async state(): Promise<string> {
-    const entry = await Effect.runPromise(this.auth.get(this.mcpName))
-    if (entry?.oauthState) {
-      return entry.oauthState
-    }
-
-    // Generate a new state if none exists — the SDK calls state() as a
-    // generator, not just a reader, so we need to produce a value even when
-    // startAuth() hasn't pre-saved one (e.g. during automatic auth on first
-    // connect).
-    const newState = Array.from(crypto.getRandomValues(new Uint8Array(32)))
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("")
-    await Effect.runPromise(this.auth.updateOAuthState(this.mcpName, newState))
-    return newState
+    const entry = await this.checked()
+    if (entry.oauthState) return entry.oauthState
+    const state = Array.from(crypto.getRandomValues(new Uint8Array(32)), (byte) =>
+      byte.toString(16).padStart(2, "0"),
+    ).join("")
+    await Effect.runPromise(this.auth.updateBinding(this.binding, { oauthState: state }))
+    return state
   }
 
   async invalidateCredentials(type: "all" | "client" | "tokens"): Promise<void> {
-    const entry = await Effect.runPromise(this.auth.get(this.mcpName))
-    if (!entry) return
-    switch (type) {
-      case "all":
-        await Effect.runPromise(this.auth.remove(this.mcpName))
-        break
-      case "client":
-        delete entry.clientInfo
-        await Effect.runPromise(this.auth.set(this.mcpName, entry))
-        break
-      case "tokens":
-        delete entry.tokens
-        await Effect.runPromise(this.auth.set(this.mcpName, entry))
-        break
-    }
+    await Effect.runPromise(this.auth.invalidateBinding(this.binding, type))
   }
 }
 
 export class McpOAuthPendingProvider extends McpOAuthProvider {
-  private pendingClientInfo?: OAuthClientInformationFull
-  private pendingTokens?: OAuthTokens
+  private pendingClientInfo?: McpAuth.StampedClientInfo
+  private pendingTokens?: McpAuth.StampedTokens
 
   override async clientInformation(): Promise<OAuthClientInformation | undefined> {
-    if (!this.config.clientId) return this.pendingClientInfo
-    return {
-      client_id: this.config.clientId,
-      client_secret: this.config.clientSecret,
+    const entry = await this.checked()
+    if (this.config.clientId) {
+      const issuer = this.issuer()
+      if (
+        entry.staticClientBinding &&
+        (entry.staticClientBinding.clientId !== this.config.clientId ||
+          !McpAuth.sameIssuer(entry.staticClientBinding.issuer, issuer))
+      )
+        throw new McpAuth.ReauthRequired()
+      const identity = { clientId: this.config.clientId, issuer, source: "configured" as const }
+      // Bind public identity before the SDK can use the configured secret, even if exchange never commits.
+      await Effect.runPromise(this.auth.updateBinding(this.binding, { clientInfo: identity }))
+      this.pendingClientInfo = identity
+      return { client_id: this.config.clientId, client_secret: this.config.clientSecret, issuer }
     }
+    return this.pendingClientInfo
+      ? {
+          issuer: this.pendingClientInfo.issuer,
+          client_id: this.pendingClientInfo.clientId,
+          client_secret: this.pendingClientInfo.clientSecret,
+        }
+      : undefined
   }
 
   override async saveClientInformation(info: OAuthClientInformationFull): Promise<void> {
-    this.pendingClientInfo = info
+    await this.checked()
+    this.pendingClientInfo = this.clientEntry(info)
   }
 
   override async tokens(): Promise<OAuthTokens | undefined> {
+    await this.checked()
     return this.pendingTokens
+      ? {
+          issuer: this.pendingTokens.issuer,
+          access_token: this.pendingTokens.accessToken,
+          token_type: "Bearer",
+          refresh_token: this.pendingTokens.refreshToken,
+          scope: this.pendingTokens.scope,
+        }
+      : undefined
   }
 
   override async saveTokens(tokens: OAuthTokens): Promise<void> {
-    this.pendingTokens = tokens
+    await this.checked()
+    if (!this.pendingClientInfo || !McpAuth.sameIssuer(this.pendingClientInfo.issuer, this.issuer(tokens.issuer)))
+      throw new McpAuth.ReauthRequired()
+    this.pendingTokens = this.tokenEntry(tokens)
   }
 
   override async invalidateCredentials(type: "all" | "client" | "tokens"): Promise<void> {
+    await super.invalidateCredentials(type)
     if (type === "all" || type === "client") this.pendingClientInfo = undefined
-    if (type === "all" || type === "tokens") this.pendingTokens = undefined
+    this.pendingTokens = undefined
   }
 
   async commit(): Promise<void> {
-    if (!this.pendingTokens) return
+    await this.checked()
+    if (!this.pendingTokens || !this.pendingClientInfo) throw new McpAuth.ReauthRequired()
     await Effect.runPromise(
-      this.auth.set(
-        this.mcpName,
-        {
-          tokens: {
-            accessToken: this.pendingTokens.access_token,
-            refreshToken: this.pendingTokens.refresh_token,
-            expiresAt: this.pendingTokens.expires_in ? Date.now() / 1000 + this.pendingTokens.expires_in : undefined,
-            scope: this.pendingTokens.scope,
-          },
-          clientInfo:
-            this.pendingClientInfo && !this.config.clientId
-              ? {
-                  clientId: this.pendingClientInfo.client_id,
-                  clientSecret: this.pendingClientInfo.client_secret,
-                  clientIdIssuedAt: this.pendingClientInfo.client_id_issued_at,
-                  clientSecretExpiresAt: this.pendingClientInfo.client_secret_expires_at,
-                }
-              : undefined,
-        },
-        this.serverUrl,
-      ),
+      this.auth.commitBinding(this.binding, {
+        issuer: this.issuer(),
+        tokens: this.pendingTokens,
+        clientInfo: this.pendingClientInfo,
+      }),
     )
   }
 }
@@ -276,6 +330,7 @@ export function unauthorized(error: Error) {
 
 // An OAuth failure needs a sign-in, unless the server cannot register a client and needs a configured client ID.
 export function authStatus(error: Error, oauth: boolean): Mcp.Status | undefined {
+  if (error instanceof McpAuth.ReauthRequired) return { status: "needs_auth" }
   if (!unauthorized(error) && !(oauth && error.message.includes("OAuth"))) return undefined
   if (/registration|client_id/.test(error.message))
     return {

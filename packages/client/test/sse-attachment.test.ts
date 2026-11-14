@@ -38,7 +38,7 @@ test.each([0, 16_384])("session SSE preserves a CLI-sized attachment with chunk 
 })
 
 test.each([["\n", "\n"], ["\r", "\n\r\n"], ["\n\r", "\n"]])(
-  "SSE accepts an exact-limit frame with split delimiter %j",
+  "SSE accepts a 128-Mi-unit frame with split delimiter %j",
   async (first, last) => {
     const limit = 128 * 1024 * 1024
     const overhead = 'data: {"padding":""}'.length
@@ -56,7 +56,7 @@ test.each([["\n", "\n"], ["\r", "\n\r\n"], ["\n\r", "\n"]])(
     const iterator = client.events.subscribe()[Symbol.asyncIterator]()
     const received = await iterator.next()
     expect(received.done).toBe(false)
-    if (received.done) throw new Error("Expected an exact-limit frame")
+    if (received.done) throw new Error("Expected a large frame")
     // Do not copy or print the 128-Mi-unit payload in the assertion.
     expect("padding" in received.value && typeof received.value.padding === "string" && received.value.padding.length).toBe(
       limit - overhead,
@@ -65,15 +65,15 @@ test.each([["\n", "\n"], ["\r", "\n\r\n"], ["\n\r", "\n"]])(
   },
 )
 
-test.each([true, false])("SSE refuses an oversized frame, complete=%j", async (complete) => {
+test.each([true, false])("SSE refuses malformed JSON and cancels an open source, closed=%j", async (complete) => {
   const state = { cancelled: false }
   const deadline = Promise.withResolvers<void>()
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
-      controller.enqueue(new TextEncoder().encode("x".repeat(128 * 1024 * 1024)))
-      controller.enqueue(new TextEncoder().encode(complete ? "x\n\n" : "x"))
+      controller.enqueue(new TextEncoder().encode("data: {not-json"))
+      controller.enqueue(new TextEncoder().encode("}\n\n"))
       if (complete) controller.close()
-      if (!complete) void deadline.promise.then(() => controller.error(new Error("Incomplete frame was not bounded")))
+      if (!complete) void deadline.promise.then(() => controller.error(new Error("Malformed frame was not rejected before EOF")))
     },
     cancel() {
       state.cancelled = true

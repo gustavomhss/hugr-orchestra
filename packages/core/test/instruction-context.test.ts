@@ -385,3 +385,67 @@ describe("InstructionContext", () => {
     ),
   )
 })
+
+it.live("refuses discovered AGENTS symlinks outside the physical project before reading", () =>
+  Effect.acquireRelease(
+    Effect.promise(() => tmpdir()),
+    (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+  ).pipe(
+    Effect.flatMap((tmp) =>
+      Effect.gen(function* () {
+        const project = path.join(tmp.path, "project")
+        const global = path.join(tmp.path, "global")
+        const external = path.join(tmp.path, "external-instructions.txt")
+        const readPaths: string[] = []
+        yield* Effect.promise(async () => {
+          await fs.mkdir(project)
+          await fs.mkdir(global)
+          await fs.writeFile(external, "EXTERNAL_INSTRUCTION_SENTINEL")
+          await fs.writeFile(path.join(project, "rules.md"), "legitimate configured")
+          await fs.writeFile(path.join(global, "AGENTS.md"), "legitimate global")
+          await fs.symlink(external, path.join(project, "AGENTS.md"))
+        })
+        const observingFS = Layer.effect(
+          FSUtil.Service,
+          FSUtil.Service.pipe(
+            Effect.map((service) =>
+              FSUtil.Service.of({
+                ...service,
+                readFileStringSafe: (file) =>
+                  Effect.sync(() => readPaths.push(file)).pipe(Effect.andThen(service.readFileStringSafe(file))),
+              }),
+            ),
+          ),
+        ).pipe(Layer.provide(LayerNode.compile(FSUtil.node)))
+        const load = SystemContextRegistry.Service.pipe(
+          Effect.flatMap((service) => service.load()),
+          Effect.provide(
+            instructionLayer({
+              config: global,
+              entries: [new Config.Document({
+                type: "document", path: path.join(project, "orchestra.json"),
+                info: new Config.Info({ instructions: ["rules.md"] }),
+              })],
+              filesystemLayer: observingFS,
+              locationServiceLayer: Layer.succeed(
+                Location.Service,
+                Location.Service.of(
+                  location({ directory: AbsolutePath.make(project) }, { projectDirectory: AbsolutePath.make(project) }),
+                ),
+              ),
+            }),
+          ),
+        )
+        const context = yield* load
+        expect(readPaths).not.toContain(yield* Effect.promise(() => fs.realpath(external)))
+        const initial = yield* SystemContext.initialize(context)
+        expect(initial.baseline).toContain("legitimate global")
+        expect(initial.baseline).toContain("legitimate configured")
+        expect(initial.baseline).not.toContain("EXTERNAL_INSTRUCTION_SENTINEL")
+        yield* Effect.promise(() => fs.rm(path.join(project, "AGENTS.md")))
+        yield* Effect.promise(() => fs.writeFile(path.join(project, "AGENTS.md"), "project rules"))
+        expect((yield* SystemContext.initialize(yield* load)).baseline).toContain("legitimate global")
+      }),
+    ),
+  ),
+)

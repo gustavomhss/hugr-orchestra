@@ -67,7 +67,7 @@ const PROTOCOL_BODY_OVERLAY_DENYLIST = new Set([
   "top_p",
 ])
 
-const forbiddenBodyOverlayKeys = (body: Record<string, unknown>) =>
+export const forbiddenBodyOverlayKeys = (body: Record<string, unknown>) =>
   Object.keys(body).filter((key) => PROTOCOL_BODY_OVERLAY_DENYLIST.has(key))
 
 const bodyWithOverlay = <Body>(body: Body, request: LLMRequest, encodeBody: (body: Body) => string) =>

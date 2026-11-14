@@ -187,7 +187,7 @@ export async function evidencePage(
       data: { ...call, metadata: value.metadata, content: [{ type: "text", text: value.output }] },
     })
   }
-  return { transport, send: (event: unknown) => transport.send(event), revise, writes, sessionID, records }
+  return { transport, send: (event: unknown) => transport.send(event), revise, writes, sessionID, records, model: { id: model.id, providerID: model.providerID } }
 }
 
 export async function attachImage(page: Page) {

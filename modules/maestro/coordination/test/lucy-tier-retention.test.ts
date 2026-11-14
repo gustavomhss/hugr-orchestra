@@ -9,7 +9,17 @@ test("a retained Standard round does not upgrade when Deep later becomes built",
   run((directory) =>
     Effect.gen(function* () {
       const opened = yield* harness(directory, "tier_deep")
-      const round = yield* ReviewFanoutV2.run(opened.input("deep"), opened.port)
+      const input = opened.input("deep")
+      const round = yield* ReviewFanoutV2.run({
+        ...input,
+        catalog: {
+          ...input.catalog,
+          route: {
+            ...input.catalog.route,
+            tiers: input.catalog.route.tiers.map((tier) => tier.id === "deep" ? { ...tier, built: false, runs: "standard" } : tier),
+          },
+        },
+      }, opened.port)
       if (round.status !== "ran") throw new Error("expected a run")
       expect(round.method).toBe("review-v2/code/standard")
       expect(round.routing.tier.id).toBe("standard")
@@ -17,10 +27,10 @@ test("a retained Standard round does not upgrade when Deep later becomes built",
       const findings: ReadonlyArray<ReviewResultV2.Finding> = []
       const firstRound = { routing: round.routing, findings, reviewed: "tree-1", executionTier: "standard" }
       const builtDeep = {
-        ...ReviewCatalog.current,
+        ...input.catalog,
         route: {
-          ...ReviewCatalog.current.route,
-          tiers: ReviewCatalog.current.route.tiers.map((tier) => tier.id === "deep" ? { ...tier, built: true } : tier),
+          ...input.catalog.route,
+          tiers: input.catalog.route.tiers.map((tier) => tier.id === "deep" ? { ...tier, built: true, runs: "deep" } : tier),
         },
       }
       const kept = yield* harness(directory, "tier_keep")

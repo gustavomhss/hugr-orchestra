@@ -45,7 +45,6 @@
 // writing `project` rules for one owner at once can each pass the cap against the same pre-state. Each
 // append is still a single `O_APPEND` write, so no record is lost or spliced — the bound is on the GATES.
 
-import { isAbsolute } from "node:path"
 import { INITIAL_PROJECT_FRECENCY, prClosingFold, put, taskClosingFold, tok, validate, versioned } from "@atlas/memory"
 import type {
   Awareness,
@@ -64,6 +63,7 @@ import type {
   TurnHeader,
 } from "@atlas/memory"
 import type { Hash } from "@atlas/contracts"
+import { freezeBinding } from "./native-memory-binding.js"
 import { createDurableMemory } from "./memory-store.js"
 import type { DurableMemory, MemoryRead } from "./memory-store.js"
 import { createMemoryEmit } from "./memory-emit.js"
@@ -74,6 +74,10 @@ import { createAwarenessStore } from "./awareness-store.js"
 import { createDurableOrientation } from "./orientation-store.js"
 import { KNOWN_SCANNERS, detectAvailableScanner, runScanner } from "./scanner.js"
 import type { ScannerBinarySpec } from "./scanner.js"
+import { memoryDecisionInput, prepareMemoryDecision, publishMemoryDecisionReceipt, readMemoryDecisionReceipts } from "./memory-decision-receipts.js"
+import type { RecordRef } from "./memory-decision-receipts.js"
+
+export type { RecordRef } from "./memory-decision-receipts.js"
 
 /** F3 clause 1. Supplied by the harness, frozen on entry; the model never supplies any field of it. */
 export interface AtlasBinding {
@@ -100,11 +104,6 @@ export interface AtlasBinding {
 }
 
 export type StoreState = "complete" | "partial" | "unavailable"
-export interface RecordRef {
-  readonly contentHash: string
-  readonly eventId: string
-}
-
 export interface SlabStates {
   readonly awareness: { readonly [F in keyof Awareness]: FacetState }
   readonly rules: StoreState
@@ -394,29 +393,42 @@ export type DecisionVerdict =
   | { readonly ok: false; readonly refusal: "proposal-not-open"; readonly reason: string }
 export type ProjectRuleDecision = { readonly proposalId: string; readonly verdict: "indexed" | "discarded"; readonly rule?: string; readonly scope?: string; readonly by: string }
 
-/** R1 (D30) — `indexed` writes the rule through the bound `write` AS THE PROPOSAL'S MEMBER (template, MEM-3 cap and
- *  named scanner judged there), then appends the `memory-decision`; a refused write appends nothing and the proposal
- *  stays open. `discarded` only appends. A non-empty `rule`/`scope` replaces the proposal's text. The binding gives the
- *  storage root and the scanner; its `memoryOwner` never writes. */
+/** R1 (D30) — candidate preparation runs the actual emit gates AS THE PROPOSAL'S MEMBER. A single create-only
+ *  receipt then publishes both review and Memory, with no second append. Discard publishes no Memory record.
+ *  Same-intent receipt retries precede scanner/cap; legacy decisions retain their historical closed semantics. */
 export function decideProjectRule(input: AtlasBinding, decision: ProjectRuleDecision, at: string): DecisionVerdict {
   const binding = freezeBinding(input)
   const root = binding.storage.root
-  const read = readReview(root)
-  if (read.unreadable === true || read.rejected > 0) {
-    const reason = `the review log at '${reviewLogPath(root)}' cannot be fully read, so the proposal's state is unknown`
-    return { ok: false, refusal: read.unreadable === true ? "store-unavailable" : "store-partial", reason }
+  const normalized = memoryDecisionInput(decision, at)
+  if (normalized === undefined) return rejectDecision("template-invalid", "a memory decision requires a valid verdict, actor, timestamp and string overrides")
+  const ready = prepareMemoryDecision(readMemoryDecisionReceipts(root), normalized)
+  if ("ok" in ready) return ready
+  if (normalized.verdict === "discarded") {
+    const read = readMemoryDecisionReceipts(root)
+    const current = prepareMemoryDecision(read, normalized, ready.proposal)
+    return "ok" in current ? current : publishMemoryDecisionReceipt(root, current.proposal, normalized, read.raw)
   }
-  const proposal = foldReview(read.records).openMemoryProposals.find((p) => p.id === decision.proposalId)
-  if (proposal === undefined) return { ok: false, refusal: "proposal-not-open", reason: `no open memory proposal has id '${decision.proposalId}'` }
-  const decided = (verdict: "indexed" | "discarded") =>
-    appendReview(root, { kind: "memory-decision", proposalId: proposal.id, verdict, ...(decision.rule ? { rule: decision.rule } : {}),
-      ...(decision.scope ? { scope: decision.scope } : {}), at, by: decision.by }).id
-  if (decision.verdict === "discarded") return { ok: true, decisionId: decided("discarded") }
-  const member = { storage: binding.storage, source: binding.source, memoryOwner: proposal.member, execution: binding.execution }
-  const entry = { rule: decision.rule || proposal.rule, scope: decision.scope || proposal.scope }
-  const written = createNativeMemory({ ...member, ...(binding.scanner ? { scanner: binding.scanner } : {}) }).write(entry)
+  const store = createDurableMemory(root)
+  const captured: MemoryRecord[] = []
+  const written = createMemoryEmit({ actor: ready.proposal.member, ...scannerFor(binding),
+    store: { path: store.path, read: store.read, append: (record) => { captured.push(record) } } }).emit({
+      rule: normalized.rule || ready.proposal.rule, scope: normalized.scope || ready.proposal.scope, frecency: INITIAL_PROJECT_FRECENCY,
+    })
   if (!written.ok) return written
-  return { ok: true, decisionId: decided("indexed"), ref: written.ref }
+  if (captured.length !== 1 || captured[0] !== written.record) return rejectDecision("store-partial", "the memory candidate could not be prepared")
+  const read = readMemoryDecisionReceipts(root)
+  const current = prepareMemoryDecision(read, normalized, ready.proposal)
+  if ("ok" in current) return current
+  const durable = store.read()
+  if (durable.unreadable === true || durable.rejected > 0) return rejectDecision(durable.unreadable === true ? "store-unavailable" : "store-partial", "the effective Memory log cannot be fully read")
+  const sequence = Math.max(0, ...[...durable.log.values()].map((event) => event.seq)) + 1
+  if (!Number.isSafeInteger(sequence) || sequence <= 0) return rejectDecision("store-partial", "the effective Memory sequence cannot advance safely")
+  return publishMemoryDecisionReceipt(root, current.proposal, normalized, read.raw,
+    { record: written.record, ref: refOfRecord(written.record), sequence })
+}
+
+function rejectDecision(refusal: MemoryRejected["refusal"], reason: string): MemoryRejected {
+  return { ok: false, refusal, reason }
 }
 
 /** The proposal's own two fields, or why it is not one. D14's memory-proposal record has no `grounding`. */
@@ -559,32 +571,4 @@ function scannerFor(binding: AtlasBinding): { readonly scanner?: NamedScanner } 
       },
     },
   }
-}
-
-/** Clause 1: a deep, frozen COPY, so neither the caller's object nor a later mutation of it can move the
- *  owner or the root after composition. Validated, because an empty owner or root is a host bug that would
- *  otherwise surface as an `unowned` refusal or a write into `cwd`. */
-function freezeBinding<T extends HeaderBinding>(input: T): T {
-  if (typeof input.memoryOwner !== "string" || input.memoryOwner === "") {
-    throw new Error("native-memory: AtlasBinding.memoryOwner must be a non-empty roster member id")
-  }
-  if (
-    input.legacyOwners !== undefined &&
-    (!Array.isArray(input.legacyOwners) ||
-      input.legacyOwners.some((o) => typeof o !== "string" || o === "" || o === input.memoryOwner))
-  ) {
-    throw new Error("native-memory: AtlasBinding.legacyOwners must be non-empty ids other than memoryOwner")
-  }
-  if (typeof input.storage?.root !== "string" || !isAbsolute(input.storage.root)) {
-    throw new Error("native-memory: AtlasBinding.storage.root must be an absolute path")
-  }
-  return deepFreeze(structuredClone(input))
-}
-
-function deepFreeze<T>(value: T): T {
-  if (typeof value === "object" && value !== null) {
-    for (const v of Object.values(value)) deepFreeze(v)
-    Object.freeze(value)
-  }
-  return value
 }

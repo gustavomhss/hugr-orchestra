@@ -8,14 +8,15 @@ import { Effect } from "effect"
 import { sql } from "drizzle-orm"
 import { DatabaseMigration } from "@orchestra/core/database/migration"
 import { tmpdir } from "./fixture/tmpdir"
+import { inspectBackupFootprint } from "./fixture/migration-safety"
 
 const makeDb = EffectDrizzleSqlite.makeWithDefaults()
 
-const run = <A, E>(file: string, body: (db: Effect.Success<typeof makeDb>) => Effect.Effect<A, E>) =>
+const run = <A, E>(file: string, body: (db: Effect.Success<typeof makeDb>) => Effect.Effect<A, E>, readonly = false) =>
   Effect.runPromise(
     Effect.gen(function* () {
       return yield* body(yield* makeDb)
-    }).pipe(Effect.provide(SqliteClient.layer({ filename: file })), Effect.scoped),
+    }).pipe(Effect.provide(SqliteClient.layer({ filename: file, ...(readonly ? { readonly: true, readwrite: false, create: false, disableWAL: true } : {}) })), Effect.scoped),
   )
 
 const addNote = (id: string): DatabaseMigration.Migration => ({
@@ -46,9 +47,9 @@ describe("DatabaseMigration backup and newer-schema guard", () => {
 
     const [name, ...rest] = await backups(tmp.path)
     expect(rest).toEqual([])
-    expect(name).toMatch(/^orchestra\.db\.backup-001_a-\d+$/)
+    expect((await inspectBackupFootprint(file)).backupNames).toContain(name)
     // the copy holds the pre-migration state; the live database moved on
-    const copy = await run(path.join(tmp.path, name), (db) => db.all(sql`SELECT body FROM note`))
+    const copy = await run(path.join(tmp.path, name), (db) => db.all(sql`SELECT body FROM note`), true)
     expect(copy).toEqual([{ body: "precious" }])
     const live = await run(file, (db) => db.all(sql`SELECT body FROM note ORDER BY rowid`))
     expect(live).toEqual([{ body: "precious" }, { body: "002_b" }])
@@ -60,7 +61,7 @@ describe("DatabaseMigration backup and newer-schema guard", () => {
     await seed(file, ["001_a"])
     await run(file, (db) => DatabaseMigration.apply(db, [addNote("001_a"), addNote("002_b")]))
     const [name] = await backups(tmp.path)
-    expect(name).toMatch(/^orchestra\.db\.backup-001_a-\d+$/)
+    expect((await inspectBackupFootprint(file)).backupNames).toContain(name)
     const backup = path.join(tmp.path, name)
     const backupBytes = await fs.readFile(backup)
     const backupHash = createHash("sha256").update(backupBytes).digest("hex")
@@ -99,20 +100,17 @@ describe("DatabaseMigration backup and newer-schema guard", () => {
     expect(await backups(tmp.path)).toEqual([])
   })
 
-  test("keeps only the three newest backups", async () => {
+  test("refuses invalid legacy backups without pruning them or migrating", async () => {
     await using tmp = await tmpdir()
     const file = path.join(tmp.path, "orchestra.db")
     await seed(file, ["001_a"])
     await Promise.all(
       [1, 2, 3, 4].map((n) => Bun.write(path.join(tmp.path, `orchestra.db.backup-old-${n}`), "x")),
     )
-
-    await run(file, (db) => DatabaseMigration.apply(db, [addNote("001_a"), addNote("002_b")]))
-
-    const kept = await backups(tmp.path)
-    expect(kept).toHaveLength(3)
-    expect(kept).not.toContain("orchestra.db.backup-old-1")
-    expect(kept).not.toContain("orchestra.db.backup-old-2")
+    const result = await run(file, (db) => DatabaseMigration.apply(db, [addNote("001_a"), addNote("002_b")]).pipe(Effect.exit))
+    expect(result._tag).toBe("Failure")
+    expect(await backups(tmp.path)).toEqual([1, 2, 3, 4].map((n) => `orchestra.db.backup-old-${n}`))
+    expect(await run(file, (db) => db.all(sql`SELECT body FROM note`))).toEqual([{ body: "precious" }])
   })
 
   test("refuses a database migrated by a newer build and leaves it untouched", async () => {
@@ -149,4 +147,35 @@ describe("DatabaseMigration backup and newer-schema guard", () => {
     const columns = await run(file, (db) => db.all<{ name: string }>(sql`SELECT name FROM pragma_table_info('note')`))
     expect(columns.filter((column) => column.name === "extra")).toHaveLength(1)
   })
+})
+
+test("migration backup fingerprints preserve a real multi-chunk SQLite blob and its exact header, size and SHA256", async () => {
+  await using tmp = await tmpdir()
+  const file = path.join(tmp.path, "orchestra.db")
+  await seed(file, ["001_a"])
+  const legacy = `${file}.backup-legacy-large`
+  await run(file, (db) => Effect.gen(function* () {
+    yield* db.run("CREATE TABLE payload (body BLOB NOT NULL)")
+    yield* db.run("INSERT INTO payload VALUES (randomblob(1048576))")
+    yield* db.run(sql`VACUUM INTO ${legacy}`)
+  }))
+  const targets = [addNote("001_a"), addNote("002_b")]
+  await run(file, (db) => DatabaseMigration.apply(db, targets))
+  const state = JSON.parse(await fs.readFile(`${file}.migration-backups.json`, "utf8")) as {
+    legacyPins: { name: string; bytes: number; sha256: string }[]
+    currentBaselinePin: { name: string; bytes: number; sha256: string }
+  }
+  expect(state.legacyPins.map((copy) => copy.name)).toEqual([path.basename(legacy)])
+  for (const copy of [...state.legacyPins, state.currentBaselinePin]) {
+    const bytes = await fs.readFile(path.join(tmp.path, copy.name))
+    expect(bytes.byteLength).toBeGreaterThan(1048576)
+    expect(bytes.subarray(0, 16).toString("latin1")).toBe("SQLite format 3\0")
+    expect(copy.bytes).toBe(bytes.byteLength)
+    expect(copy.sha256).toBe(createHash("sha256").update(bytes).digest("hex"))
+    expect(await run(path.join(tmp.path, copy.name), (db) => db.get<{ bytes: number }>("SELECT length(body) AS bytes FROM payload"), true))
+      .toEqual({ bytes: 1048576 })
+  }
+  // Reopening the existing protocol state verifies the same large files through the normal load path.
+  await run(file, (db) => DatabaseMigration.apply(db, targets))
+  expect((await backups(tmp.path)).sort()).toEqual([...state.legacyPins, state.currentBaselinePin].map((copy) => copy.name).sort())
 })

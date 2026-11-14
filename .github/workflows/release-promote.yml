@@ -107,7 +107,52 @@ jobs:
           bun-version-file: package.json
       - name: Verify the exact bytes approved by installed-app validation
         run: |
-          bun --eval 'import { verifyReleaseArtifacts } from "./packages/script/src/release-artifact-identity.ts"; const root=process.env.RUNNER_TEMP+"/validated"; const receipt=await Bun.file(root+"/VALIDATION.json").json(); await verifyReleaseArtifacts(root,receipt,{version:process.env.VERSION,sourceSha:process.env.SOURCE_SHA,cliRunId:Number(process.env.CLI_RUN_ID),desktopRunId:Number(process.env.DESKTOP_RUN_ID),qualificationRunId:Number(process.env.QUALIFICATION_RUN_ID)});'
+          bun --eval 'import { verifyReleaseArtifacts } from "./packages/script/src/release-artifact-identity.ts"; const root=process.env.RUNNER_TEMP+"/validated"; const receipt=await Bun.file(root+"/VALIDATION.json").json(); await verifyReleaseArtifacts(root,receipt,{version:process.env.VERSION,sourceSha:process.env.SOURCE_SHA,repository:process.env.GITHUB_REPOSITORY,cliRunId:Number(process.env.CLI_RUN_ID),desktopRunId:Number(process.env.DESKTOP_RUN_ID),qualificationRunId:Number(process.env.QUALIFICATION_RUN_ID)});'
+      - name: Refuse newer or ambiguous desktop feed state before mutation
+        run: |
+          set -euo pipefail
+          root="$RUNNER_TEMP/validated"
+          mkdir -p "$root/current-feeds"
+          if gh api --include "repos/$GITHUB_REPOSITORY/releases/tags/desktop-latest" > "$root/feed-response" 2> "$root/feed-read-error"; then
+            status=$(sed -n '1s/^HTTP\/[^ ]* \([0-9][0-9][0-9]\).*/\1/p' "$root/feed-response")
+            [ "$status" = 200 ] || { echo RELEASE_FEED_READ_FAILED >&2; exit 1; }
+            sed '1,/^[[:space:]]*$/d' "$root/feed-response" > "$root/current-release.json"
+            printf true > "$root/feed-exists.json"
+          else
+            status=$(sed -n '1s/^HTTP\/[^ ]* \([0-9][0-9][0-9]\).*/\1/p' "$root/feed-response")
+            [ "$status" = 404 ] || { cat "$root/feed-read-error" >&2; echo RELEASE_FEED_READ_FAILED >&2; exit 1; }
+            printf '{}' > "$root/current-release.json"
+            printf false > "$root/feed-exists.json"
+          fi
+          bun --eval '
+          import { readFile, writeFile } from "node:fs/promises";
+          const root = process.env.RUNNER_TEMP + "/validated";
+          const exists = JSON.parse(await readFile(root + "/feed-exists.json", "utf8"));
+          const current = JSON.parse(await readFile(root + "/current-release.json", "utf8"));
+          if (exists && (!current || typeof current !== "object" || !Array.isArray(current.assets) || !("body" in current) || (current.body !== null && typeof current.body !== "string"))) throw Error("RELEASE_FEED_CURRENT_INVALID");
+          const allowed = new Set(["latest.yml", "latest-mac.yml", "latest-linux.yml", "latest-linux-arm64.yml"]);
+          const names = [];
+          for (const asset of exists ? current.assets : []) {
+            if (!asset || typeof asset.name !== "string") throw Error("RELEASE_FEED_CURRENT_INVALID");
+            if (!/^latest.*\.yml$/.test(asset.name)) continue;
+            if (!allowed.has(asset.name) || names.includes(asset.name)) throw Error("RELEASE_FEED_MANIFEST_SET_INVALID");
+            names.push(asset.name);
+          }
+          await writeFile(root + "/current-feed-names", names.join("\n") + (names.length ? "\n" : ""));
+          await writeFile(root + "/current-feed-body", exists ? current.body ?? "" : "");'
+          while IFS= read -r name; do
+            gh release download desktop-latest --repo "$GITHUB_REPOSITORY" --pattern "$name" --dir "$root/current-feeds" || { echo RELEASE_FEED_READ_FAILED >&2; exit 1; }
+          done < "$root/current-feed-names"
+          bun --eval '
+          import { readFile, writeFile } from "node:fs/promises";
+          import { parseDesktopFeed, parseDesktopFeedFloor, withDesktopFeedFloor, assertDesktopFeedVersion } from "./packages/script/src/desktop-feed.ts";
+          const root = process.env.RUNNER_TEMP + "/validated";
+          const body = await readFile(root + "/current-feed-body", "utf8");
+          const names = (await readFile(root + "/current-feed-names", "utf8")).trim().split("\n").filter(Boolean);
+          const currentFeeds = await Promise.all(names.map(async name => ({ name, feed: parseDesktopFeed(await readFile(root + "/current-feeds/" + name, "utf8")) })));
+          const candidate = { version: process.env.VERSION, receiptSha256: process.env.RECEIPT_SHA256 };
+          assertDesktopFeedVersion({ ...candidate, currentFeeds, floor: parseDesktopFeedFloor(body), releaseExists: JSON.parse(await readFile(root + "/feed-exists.json", "utf8")) });
+          await writeFile(root + "/next-feed-body", withDesktopFeedFloor(body, candidate));'
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         if: inputs.publish == true
         with:
@@ -162,7 +207,7 @@ jobs:
             files+=("$root/VALIDATION.json")
             if ! gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
               gh release create "$tag" --repo "$GITHUB_REPOSITORY" --verify-tag --draft --latest=false --title "$title" \
-                --notes "Validated source $SOURCE_SHA. Exact artifact identities and runtime checks are in VALIDATION.json. These binaries are unsigned, matching the validated build."
+                --notes "Validated source $SOURCE_SHA. Exact artifact identities and runtime checks are in VALIDATION.json. Signing status is established by the retained candidate validation evidence."
             fi
             draft=$(gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft)
             if [ "$draft" = true ]; then gh release upload "$tag" --repo "$GITHUB_REPOSITORY" --clobber "${files[@]}"; fi
@@ -170,10 +215,12 @@ jobs:
               api=$(gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json apiUrl --jq .apiUrl)
               gh api "$api" > "$root/assets.json"
               if node --input-type=module - "$root/assets.json" "${files[@]}" <<'NODE'
-          import { readFileSync } from 'node:fs'; import { basename } from 'node:path'; import { createHash } from 'node:crypto';
+          import { readFileSync, createReadStream } from 'node:fs'; import { basename } from 'node:path'; import { createHash } from 'node:crypto';
           const [metadata, ...files] = process.argv.slice(2); const assets = JSON.parse(readFileSync(metadata)).assets;
           if (assets.length !== files.length) process.exit(1);
-          for (const file of files) { const hash = 'sha256:' + createHash('sha256').update(readFileSync(file)).digest('hex');
+          for (const file of files) { const digest = createHash('sha256');
+            for await (const chunk of createReadStream(file, { highWaterMark: 65536 })) digest.update(chunk);
+            const hash = 'sha256:' + digest.digest('hex');
             if (!assets.some(asset => asset.name === basename(file) && asset.digest === hash)) process.exit(1); }
           NODE
               then break; fi
@@ -182,31 +229,40 @@ jobs:
             if [ "$kind" = cli ]; then gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --draft=false --latest; else
               gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --draft=false --latest=false; fi
           done
-      - name: Promote the validated desktop update feed, payloads before metadata
+      - name: Promote only validated desktop metadata after recording its durable floor
         if: inputs.publish == true
         run: |
           set -euo pipefail
           root="$RUNNER_TEMP/validated"
-          backup="$RUNNER_TEMP/feed-backup"
-          mkdir -p "$backup"
-          gh release download desktop-latest --repo "$GITHUB_REPOSITORY" --dir "$backup"
-          rollback() {
-            status=$?
-            trap - ERR
-            echo "Feed promotion failed; restoring the previous update feed" >&2
-            mapfile -d '' payloads < <(find "$backup" -maxdepth 1 -type f ! -name 'latest*.yml' -print0)
-            gh release upload desktop-latest --repo "$GITHUB_REPOSITORY" --clobber "${payloads[@]}"
-            gh release upload desktop-latest --repo "$GITHUB_REPOSITORY" --clobber "$backup"/latest*.yml
-            exit "$status"
-          }
-          trap rollback ERR
-          gh release upload desktop-latest --repo "$GITHUB_REPOSITORY" --clobber "$root"/desktop/*
+          if [ "$(cat "$root/feed-exists.json")" = false ]; then
+            gh release create desktop-latest --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --latest=false \
+              --title "HuGR Orchestra desktop update feed" --notes-file "$root/next-feed-body"
+          else
+            # Preserve current notes and refuse an observed newer/conflicting floor before updating the body.
+            gh api "repos/$GITHUB_REPOSITORY/releases/tags/desktop-latest" > "$root/feed-before-floor.json"
+            bun --eval '
+            import { readFile, writeFile } from "node:fs/promises";
+            import { withDesktopFeedFloor } from "./packages/script/src/desktop-feed.ts";
+            const root = process.env.RUNNER_TEMP + "/validated";
+            const current = JSON.parse(await readFile(root + "/feed-before-floor.json", "utf8"));
+            if (current.body !== null && typeof current.body !== "string") throw Error("RELEASE_FEED_CURRENT_INVALID");
+            await writeFile(root + "/next-feed-body", withDesktopFeedFloor(current.body ?? "", { version: process.env.VERSION, receiptSha256: process.env.RECEIPT_SHA256 }));'
+            gh release edit desktop-latest --repo "$GITHUB_REPOSITORY" --notes-file "$root/next-feed-body"
+          fi
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/desktop-latest" > "$root/feed-floor-readback.json"
+          bun --eval '
+          import { readFile } from "node:fs/promises";
+          import { parseDesktopFeedFloor } from "./packages/script/src/desktop-feed.ts";
+          const current = JSON.parse(await readFile(process.env.RUNNER_TEMP + "/validated/feed-floor-readback.json", "utf8"));
+          if (typeof current.body !== "string") throw Error("RELEASE_FEED_FLOOR_READBACK_INVALID");
+          const floor = parseDesktopFeedFloor(current.body);
+          if (floor?.version !== process.env.VERSION || floor?.receiptSha256 !== process.env.RECEIPT_SHA256) throw Error("RELEASE_FEED_FLOOR_READBACK_MISMATCH");'
+          # Payloads are already verified immutable assets in desktop-v<VERSION>. Existing fixed-name payloads stay untouched.
           gh release upload desktop-latest --repo "$GITHUB_REPOSITORY" --clobber "$root"/feed/latest*.yml
           gh api "repos/$GITHUB_REPOSITORY/releases/tags/desktop-latest" > "$root/feed-assets.json"
-          node --input-type=module - "$root/feed-assets.json" "$root"/desktop/* "$root"/feed/latest*.yml <<'NODE'
+          node --input-type=module - "$root/feed-assets.json" "$root"/feed/latest*.yml <<'NODE'
           import { readFileSync } from 'node:fs'; import { basename } from 'node:path'; import { createHash } from 'node:crypto';
           const [metadata, ...files] = process.argv.slice(2); const assets = JSON.parse(readFileSync(metadata)).assets;
           for (const file of files) { const hash = 'sha256:' + createHash('sha256').update(readFileSync(file)).digest('hex');
             if (!assets.some(asset => asset.name === basename(file) && asset.digest === hash)) process.exit(1); }
           NODE
-          trap - ERR

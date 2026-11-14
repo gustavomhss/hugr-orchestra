@@ -1,14 +1,7 @@
 name: release-cli
 
-# Builds the Orchestra CLI on each native host the distribution bundle qualifies, assembles the public channels and,
-# only with publish=true, publishes the GitHub release and npm (@humanguardrail/cli).
-# A publish first runs the full distribution bundle at the release SHA and stops if it is red.
-# A dry run (the default) uploads every assembled artifact and publishes nothing. With sign=true the native build jobs sign
-# every macOS and Windows executable before the payload is hashed, archived, packed or checksummed, so every channel ships
-# the signed bytes. An unsigned publish is allowed: npm and install.sh download without the browser quarantine
-# mark, so Gatekeeper and SmartScreen do not check the binaries they install.
-# musl targets build inside the pinned
-# Alpine guests that distribution-bundle qualifies.
+# Builds and qualifies original CLI artifacts. Publishing is exclusively release-promote.
+# sign=true signs before hashing/packing; publish=true is retained only to return migration guidance.
 on:
   workflow_dispatch:
     inputs:
@@ -17,7 +10,7 @@ on:
         required: true
         type: string
       publish:
-        description: Publish the GitHub release and npm
+        description: Deprecated; publish=true refuses. Use release-promote with approved dry-run artifacts.
         type: boolean
         default: false
       sign:
@@ -40,22 +33,19 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Require a stable, unreleased version
+      - name: Validate build-only release inputs
         env:
           PUBLISH: ${{ inputs.publish }}
-          SIGN: ${{ inputs.sign }}
-          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "RELEASE_VERSION_INVALID: $VERSION" >&2; exit 1; }
           if [ "$PUBLISH" = true ]; then
-            [ "$SIGN" = true ] || echo "::warning::Publishing unsigned binaries; a binary downloaded from the release page in a browser trips Gatekeeper and SmartScreen"
-            [ "$GITHUB_REF" = refs/heads/dev ] || { echo "RELEASE_PUBLISH_REQUIRES_DEV: $GITHUB_REF" >&2; exit 1; }
-            if gh release view "v$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then echo "RELEASE_TAG_EXISTS: v$VERSION" >&2; exit 1; fi
-            if npm view "@humanguardrail/cli@$VERSION" version >/dev/null 2>&1; then echo "RELEASE_NPM_VERSION_EXISTS: $VERSION" >&2; exit 1; fi
+            echo "RELEASE_BUILD_ONLY: run dry builds with publish=false, validate their original artifacts, then use release-promote." >&2
+            exit 1
           fi
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "RELEASE_VERSION_INVALID: $VERSION" >&2; exit 1; }
 
   models:
+    needs: [plan]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -340,48 +330,3 @@ jobs:
           path: ${{ runner.temp }}/assembled/
           if-no-files-found: error
           include-hidden-files: true
-
-  # A publish runs the full distribution bundle at the release SHA.
-  qualify:
-    if: inputs.publish
-    uses: ./.github/workflows/distribution-bundle.yml
-
-  publish:
-    if: inputs.publish
-    needs: [assemble, qualify]
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    environment: release
-    permissions:
-      contents: write
-      id-token: write
-    steps:
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
-        with:
-          name: release-assembled
-          path: assembled
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
-        with:
-          node-version: "22"
-          registry-url: https://registry.npmjs.org
-      # npm first: a failed publish leaves no release or tag, so the plan guard lets the run be repeated.
-      # Platform packages first: the wrapper pins each one exactly in optionalDependencies.
-      - name: Publish npm packages
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          set -euo pipefail
-          [ -n "${NODE_AUTH_TOKEN:-}" ] || { echo "RELEASE_NPM_TOKEN_MISSING" >&2; exit 1; }
-          for package in assembled/npm-packs/humanguardrail-cli-*-"$VERSION".tgz; do npm publish "$package" --access public --provenance; done
-          npm publish "assembled/npm-packs/humanguardrail-cli-$VERSION.tgz" --access public --provenance
-      - name: Create the GitHub release
-        env:
-          GH_TOKEN: ${{ github.token }}
-          SIGN: ${{ inputs.sign }}
-        run: |
-          set -euo pipefail
-          SIGNING_NOTE="macOS binaries are signed and notarized; Windows binaries are signed."
-          if [ "$SIGN" != true ]; then SIGNING_NOTE="These binaries are not signed. The installers above never trip Gatekeeper or SmartScreen; a binary downloaded here in a browser can."; fi
-          gh release create "v$VERSION" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "Orchestra CLI $VERSION" \
-            --notes "Install with \`npm install -g @humanguardrail/cli\` or \`install.sh\` with an archive and its SHA-256 from SHA256SUMS. $SIGNING_NOTE" \
-            assembled/*.tar.gz assembled/SHA256SUMS assembled/install.sh

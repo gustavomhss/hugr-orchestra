@@ -257,7 +257,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          fetch-depth: ${{ matrix.shard && '1' || '0' }}
+          fetch-depth: ${{ (matrix.shard || matrix.boundaryShard == '1/2') && '1' || '0' }}
 
       - name: Setup Bun
         uses: ./.github/actions/setup-bun
@@ -412,6 +412,76 @@ jobs:
             echo "shard $PART tests lane packages: ${lane[*]}"
             filters=("${lane[@]/#/--filter=}")
           fi
+          # Windows App's unit command and browser wrapper have separate clocks. Calling the wrapper
+          # directly avoids test:browser's fixed ./test-browser argument expanding every file in every shard.
+          if [ -n "$APP_MODE" ]; then
+            if [ "$APP_MODE" = "unit" ]; then
+              GITHUB_ACTIONS=false bun turbo run test:unit --filter=@orchestra/app --only --log-order=stream
+              exit 0
+            fi
+            mapfile -t files < <(bun packages/script/src/test-plan.ts shard packages/app-shell "$(tr '[:upper:]' '[:lower:]' <<< "$RUNNER_OS")" "${APP_BROWSER_SHARD%/*}" "${APP_BROWSER_SHARD#*/}")
+            [ -n "${files[0]:-}" ] || { echo "::error::shard $PART selects no App browser test file"; exit 1; }
+            echo "shard $PART runs ${#files[@]} App browser files"
+            printf '%s\n' "${files[@]}" >&2
+            report=()
+            if [ "$COLD" = "true" ]; then
+              mkdir -p "$RUNNER_TEMP/junit"
+              report=(--reporter=junit "--reporter-outfile=$RUNNER_TEMP/junit/$(tr '[:upper:]' '[:lower:]' <<< "$RUNNER_OS")-$PART.xml")
+            fi
+            (cd packages/app-shell && GITHUB_ACTIONS=false bun run ../../script/test-browser.ts "${files[@]/#/./}" "${report[@]}")
+            exit 0
+          fi
+          # Desktop's full package command composes Bun and Node. Separate jobs keep setup plus execution
+          # inside the existing clock; each Bun file belongs to one bin and each bin owns a real omni control.
+          if [ -n "$DESKTOP" ]; then
+            if [ "$DESKTOP" = "node" ]; then
+              GITHUB_ACTIONS=false bun turbo run test:node --filter=@orchestra/desktop --log-order=stream
+              exit 0
+            fi
+            mapfile -t files < <(bun packages/script/src/test-plan.ts shard apps/desktop "$(tr '[:upper:]' '[:lower:]' <<< "$RUNNER_OS")" "${DESKTOP_SHARD%/*}" "${DESKTOP_SHARD#*/}")
+            [ -n "${files[0]:-}" ] || { echo "::error::shard $PART selects no Desktop test file"; exit 1; }
+            echo "shard $PART runs ${#files[@]} Desktop files"
+            printf '%s\n' "${files[@]}" >&2
+            report=()
+            if [ "$COLD" = "true" ]; then
+              mkdir -p "$RUNNER_TEMP/junit"
+              report=(--reporter=junit "--reporter-outfile=$RUNNER_TEMP/junit/$(tr '[:upper:]' '[:lower:]' <<< "$RUNNER_OS")-$PART.xml")
+            fi
+            # ./ makes each argument an exact path rather than a Bun substring filter. Keep bunfig preloads,
+            # suite-wide omni proof and the package's default per-test timeout unchanged.
+            GITHUB_ACTIONS=false bun turbo run test:bun --filter=@orchestra/desktop --log-order=stream -- "${files[@]/#/./}" "${report[@]}"
+            exit 0
+          fi
+          # Boundary's existing test task keeps its default 30-second per-test limit. The heavy producer
+          # file owns one Windows bin; the remaining files own the other. Proof steps have their own lane.
+          if [ -n "$BOUNDARY_SHARD" ]; then
+            mapfile -t files < <(bun packages/script/src/test-plan.ts shard modules/atlas/boundary "$(tr '[:upper:]' '[:lower:]' <<< "$RUNNER_OS")" "${BOUNDARY_SHARD%/*}" "${BOUNDARY_SHARD#*/}")
+            [ -n "${files[0]:-}" ] || { echo "::error::shard $PART selects no Boundary test file"; exit 1; }
+            echo "shard $PART runs ${#files[@]} Boundary files"
+            printf '%s\n' "${files[@]}" >&2
+            report=()
+            if [ "$COLD" = "true" ]; then
+              mkdir -p "$RUNNER_TEMP/junit"
+              report=(--reporter=junit "--reporter-outfile=$RUNNER_TEMP/junit/$(tr '[:upper:]' '[:lower:]' <<< "$RUNNER_OS")-$PART.xml")
+            fi
+            GITHUB_ACTIONS=false bun turbo test --filter=@orchestra/atlas-boundary --log-order=stream -- "${files[@]/#/./}" "${report[@]}"
+            exit 0
+          fi
+          # Maestro's currency file consumed half its whole Windows suite. Each file belongs to exactly
+          # one bin; keep the package command, bunfig preloads and suite-wide omni proof unchanged.
+          if [ -n "$MAESTRO_SHARD" ]; then
+            mapfile -t files < <(bun packages/script/src/test-plan.ts shard modules/maestro/coordination "$(tr '[:upper:]' '[:lower:]' <<< "$RUNNER_OS")" "${MAESTRO_SHARD%/*}" "${MAESTRO_SHARD#*/}")
+            [ -n "${files[0]:-}" ] || { echo "::error::shard $PART selects no Maestro test file"; exit 1; }
+            echo "shard $PART runs ${#files[@]} Maestro files"
+            printf '%s\n' "${files[@]}" >&2
+            report=()
+            if [ "$COLD" = "true" ]; then
+              mkdir -p "$RUNNER_TEMP/junit"
+              report=(--reporter=junit "--reporter-outfile=$RUNNER_TEMP/junit/$(tr '[:upper:]' '[:lower:]' <<< "$RUNNER_OS")-$PART.xml")
+            fi
+            GITHUB_ACTIONS=false bun turbo test --filter=@orchestra/maestro --log-order=stream -- "${files[@]/#/./}" "${report[@]}"
+            exit 0
+          fi
           # Core is sharded on both systems: shard i/n takes the i-th bin of the time-balanced split (packages/script/src/test-plan.ts).
           # The plan job and this step read the same inputs, so the n shards cover every test file once.
           if [ -n "$SHARD" ]; then
@@ -494,6 +564,12 @@ jobs:
           FILTERS: ${{ matrix.filters }}
           PART: ${{ matrix.part }}
           SHARD: ${{ matrix.shard }}
+          DESKTOP: ${{ matrix.desktop }}
+          DESKTOP_SHARD: ${{ matrix.desktopShard }}
+          BOUNDARY_SHARD: ${{ matrix.boundaryShard }}
+          MAESTRO_SHARD: ${{ matrix.maestroShard }}
+          APP_MODE: ${{ matrix.appMode }}
+          APP_BROWSER_SHARD: ${{ matrix.appBrowserShard }}
           COLD: ${{ inputs.cold }}
           PACKAGES: ${{ inputs.packages }}
           ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ runner.os == 'Windows' && 'true' || 'false' }}
@@ -509,7 +585,7 @@ jobs:
 
       # A cold run keeps the JUnit reports; `bun packages/script/src/test-plan.ts refresh <dir>` folds them into packages/script/src/test-timings.json.
       - name: Upload JUnit timings
-        if: always() && inputs.cold && matrix.shard
+        if: always() && inputs.cold && (matrix.shard || matrix.desktopShard || matrix.boundaryShard || matrix.maestroShard || matrix.appBrowserShard)
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: junit-${{ runner.os }}-${{ matrix.part }}

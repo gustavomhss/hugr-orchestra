@@ -229,12 +229,28 @@ export function written(server: ConfigMCP.Local | ConfigMCP.Remote): Written {
       command: [...server.command],
       ...(server.cwd === undefined ? {} : { cwd: server.cwd }),
       ...(server.environment === undefined ? {} : { environment: server.environment }),
+      ...(server.timeout === undefined ? {} : { timeout: server.timeout }),
       ...enabled,
     }
   return {
     type: "remote",
     url: server.url,
     ...(server.headers === undefined ? {} : { headers: server.headers }),
+    ...(server.oauth === undefined
+      ? {}
+      : {
+          oauth:
+            server.oauth === false
+              ? false
+              : {
+                  clientId: server.oauth.client_id,
+                  clientSecret: server.oauth.client_secret,
+                  scope: server.oauth.scope,
+                  callbackPort: server.oauth.callback_port,
+                  redirectUri: server.oauth.redirect_uri,
+                },
+        }),
+    ...(server.timeout === undefined ? {} : { timeout: server.timeout }),
     ...enabled,
   }
 }

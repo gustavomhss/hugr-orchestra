@@ -111,7 +111,7 @@ export class Service extends Context.Service<Service, Interface>()("@orchestra/v
 interface Pending {
   readonly request: Request
   readonly agent?: AgentV2.ID
-  readonly deferred: Deferred.Deferred<void, DeclinedError | CorrectedError>
+  readonly deferred: Deferred.Deferred<void, DeclinedError | CorrectedError | BlockedError>
   readonly explicit: boolean
 }
 
@@ -150,7 +150,8 @@ const layer = Layer.effect(
       const session = yield* sessions.get(sessionID)
       if (!session) return yield* new SessionV2.NotFoundError({ sessionID })
       const agent = yield* agents.resolve(agentID ?? session.agent)
-      return agent?.permissions ?? missingAgentPermissions
+      if (!agent) return missingAgentPermissions
+      return merge(agent.permissions, yield* sessions.permissions(sessionID))
     })
 
     function denied(input: AssertInput, rules: Permission.Ruleset) {
@@ -185,7 +186,7 @@ const layer = Layer.effect(
     const create = (request: Request, agent?: AgentV2.ID, explicit = false) =>
       EffectRuntime.uninterruptible(
         EffectRuntime.gen(function* () {
-          const deferred = yield* Deferred.make<void, DeclinedError | CorrectedError>()
+          const deferred = yield* Deferred.make<void, DeclinedError | CorrectedError | BlockedError>()
           const item = { request, agent, deferred, explicit }
           if (pending.has(request.id)) return yield* EffectRuntime.die(`Duplicate pending permission ID: ${request.id}`)
           pending.set(request.id, item)
@@ -273,6 +274,25 @@ const layer = Layer.effect(
         EffectRuntime.gen(function* () {
           const existing = pending.get(input.requestID)
           if (!existing) return yield* new NotFoundError({ requestID: input.requestID })
+          if (input.reply !== "reject") {
+            // Approval uses the current effective policy, before a grant is saved or the waiting action is released.
+            const rules = yield* configured(existing.request.sessionID, existing.agent).pipe(
+              EffectRuntime.catchTag("Session.NotFoundError", () => EffectRuntime.succeed(undefined)),
+            )
+            if (!rules || denied(existing.request, rules)) {
+              yield* events.publish(Event.Replied, {
+                sessionID: existing.request.sessionID,
+                requestID: existing.request.id,
+                reply: "reject",
+              })
+              yield* Deferred.fail(
+                existing.deferred,
+                rules ? new BlockedError({ rules: relevant(existing.request, rules) }) : new DeclinedError(),
+              )
+              pending.delete(input.requestID)
+              return
+            }
+          }
           yield* events.publish(Event.Replied, {
             sessionID: existing.request.sessionID,
             requestID: existing.request.id,

@@ -7,6 +7,7 @@ import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { EventV2 } from "@orchestra/core/event"
 import { GitCli } from "@orchestra/core/git-cli"
+import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { GovernanceRecordsV2 } from "../src/v2/governance/records"
 import { WorkflowRecordsV2 } from "../src/v2/workflow/records"
@@ -23,8 +24,9 @@ const run = <A, E>(
     directory: string,
     git: (...args: string[]) => Effect.Effect<string>,
   ) => Effect.Effect<A, E, Layer.Success<ReturnType<typeof governanceLayer>> | GitCli.Service | Scope.Scope>,
-) =>
-  Effect.runPromise(
+) => {
+  expectSpawn(import.meta.path)
+  return Effect.runPromise(
     Effect.scoped(
       Effect.gen(function* () {
         const directory = yield* worktree
@@ -50,6 +52,7 @@ const run = <A, E>(
       }).pipe(Effect.provide(gitLayer)),
     ),
   )
+}
 
 const write = (directory: string, file: string, text: string) =>
   Effect.promise(async () => {
@@ -126,6 +129,64 @@ test("the workers' result is the working tree as a Git tree, bounded by HEAD and
       yield* git("add", "-A")
       yield* git("commit", "-q", "-m", "moved")
       expect(yield* WorkflowReviewV2.result(cli, input)).toEqual({ status: "head-moved" })
+    }),
+  ))
+
+test("a racily clean tracked edit remains in the review tree without changing the real index", () =>
+  run((directory, git) =>
+    Effect.gen(function* () {
+      const cli = yield* GitCli.Service
+      const base = yield* git("rev-parse", "HEAD")
+      const file = path.join(directory, "src/a.ts")
+      const index = yield* git("rev-parse", "--path-format=absolute", "--git-path", "index")
+      const timestamp = new Date("2000-01-01T00:00:00Z")
+
+      // The real index is racily clean: Git must inspect bytes even when size and mtime match.
+      // Copying its cached entries into a newer index would wrongly make that stat match trusted.
+      yield* git("config", "core.trustctime", "false")
+      yield* Effect.promise(() => fs.utimes(file, timestamp, timestamp))
+      yield* git("update-index", "--refresh", "--", "src/a.ts")
+      yield* Effect.promise(() => fs.utimes(index, timestamp, timestamp))
+      const before = yield* Effect.promise(() => fs.readFile(index))
+      yield* write(directory, "src/a.ts", "export const a = 2\n")
+      yield* Effect.promise(() => fs.utimes(file, timestamp, timestamp))
+      expect((yield* Effect.promise(() => fs.stat(file))).mtimeMs).toBe(timestamp.getTime())
+      expect((yield* Effect.promise(() => fs.stat(index))).mtimeMs).toBe(timestamp.getTime())
+
+      const ready = yield* WorkflowReviewV2.result(cli, { worktree: directory, base, writePaths: ["src"], maxOutputBytes: 1024 * 1024 })
+      expect(yield* Effect.promise(() => fs.readFile(index))).toEqual(before)
+      expect((yield* Effect.promise(() => fs.stat(index))).mtimeMs).toBe(timestamp.getTime())
+      if (ready.status !== "ready") throw new Error(`expected ready for a same-stat content change, got ${ready.status}`)
+      expect(ready.changedPaths).toEqual(["src/a.ts"])
+      expect(ready.diff).toContain("+export const a = 2")
+      expect(yield* git("show", `${ready.tree}:src/a.ts`)).toBe("export const a = 2")
+    }),
+  ))
+
+test("staged review snapshots keep the real index and refuse divergent worktree bytes", () =>
+  run((directory, git) =>
+    Effect.gen(function* () {
+      const cli = yield* GitCli.Service
+      const base = yield* git("rev-parse", "HEAD")
+      yield* write(directory, "src/a.ts", "export const a = 2\n")
+      yield* git("add", "--", "src/a.ts")
+      const index = yield* git("rev-parse", "--path-format=absolute", "--git-path", "index")
+      const before = yield* Effect.promise(() => fs.readFile(index))
+
+      const ready = yield* WorkflowReviewV2.result(cli, { worktree: directory, base, writePaths: ["src"], maxOutputBytes: 1024 * 1024 })
+      expect(yield* Effect.promise(() => fs.readFile(index))).toEqual(before)
+      if (ready.status !== "ready") throw new Error(`expected ready, got ${ready.status}`)
+      expect(ready.changedPaths).toEqual(["src/a.ts"])
+      expect(yield* git("show", `${ready.tree}:src/a.ts`)).toBe("export const a = 2")
+      expect(yield* git("show", ":src/a.ts")).toBe("export const a = 2")
+
+      // read-tree -m refuses to replace staged bytes when the worktree has also diverged.
+      // Change the size here so this contract check is independent of the racy-stat control above.
+      yield* write(directory, "src/a.ts", "export const a = 300\n")
+      expect(yield* WorkflowReviewV2.result(cli, { worktree: directory, base, writePaths: ["src"], maxOutputBytes: 1024 * 1024 })).toEqual({ status: "unavailable" })
+      expect(yield* Effect.promise(() => fs.readFile(index))).toEqual(before)
+      expect(yield* git("show", ":src/a.ts")).toBe("export const a = 2")
+      expect(yield* Effect.promise(() => fs.readFile(path.join(directory, "src/a.ts"), "utf8"))).toBe("export const a = 300\n")
     }),
   ))
 

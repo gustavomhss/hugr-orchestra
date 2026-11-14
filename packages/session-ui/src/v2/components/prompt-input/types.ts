@@ -89,6 +89,7 @@ export type PromptInputV2History = {
 }
 
 export type PromptInputV2Option = {
+  disabled?: boolean
   id: string
   label: string
   providerID?: string

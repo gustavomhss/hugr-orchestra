@@ -1,76 +1,57 @@
+import { createSubmissionExecutor } from "./submission-execute"
+import { pending, trackPendingPrompt, interruptPendingSession } from "./submission-pending"
+export { submitShellCommand } from "./submission-transport"
+export { readBackStatus } from "./submission-pending"
 import type { Session } from "@/v2-wire"
-
 import { showToast } from "@/utils/toast"
-import { base64Encode } from "@orchestra/core/util/encode"
 import { Binary } from "@orchestra/core/util/binary"
 import { useNavigate, useParams, useSearchParams } from "@solidjs/router"
-import { batch, onCleanup, startTransition, untrack, type Accessor } from "solid-js"
+import { onCleanup, untrack, type Accessor } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useTabs } from "@/context/tabs"
 import { useServerSync, type ServerSync } from "@/context/server-sync"
 import { useLanguage } from "@/context/language"
 import { useLayout } from "@/context/layout"
 import { useLocal, type ModelSelection } from "@/context/local"
-import { agentKey } from "@/context/agent-identity"
 import { usePermission } from "@/context/permission"
 import { type ImageAttachmentPart, type Prompt, type usePrompt } from "@/context/prompt"
-import { useSDK, type DirectorySDK } from "@/context/sdk"
-import { useServerSDK, type ServerSDK } from "@/context/server-sdk"
-import { ServerConnection } from "@/context/server"
-import { clearPending, pendingSnapshot } from "@/components/draft-subagent-models"
-import { sessionManagementUnsupported } from "@/utils/session-management-errors"
+import { useSDK } from "@/context/sdk"
+import { useServerSDK } from "@/context/server-sdk"
 import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
 import { useSync } from "@/context/sync"
 import { Identifier } from "@/utils/id"
-import { Worktree as WorktreeState } from "@/utils/worktree"
-import { defaultCopyParent, repositoryProject, WORKTREE_STRATEGY } from "@/orchestra/chapters/workspaces-model"
-import { setCursorPosition } from "./editor-dom"
-import { formatServerError, hookRefusal } from "@/utils/server-errors"
-import { pathKey } from "@/utils/path-key"
-import { ScopedKey, type ServerScope } from "@/utils/server-scope"
+import { hookRefusal } from "@/utils/server-errors"
+import { ScopedKey } from "@/utils/server-scope"
 import { createPromptSubmissionState } from "./submission-state"
-import { normalizeSessionInfo } from "@/utils/session"
 import { Event } from "@orchestra/schema/event"
 import { draftSessionKey } from "./draft-session"
-import { createCompatibleApi } from "@/utils/server-compat"
-import { createSubmissionOwner, createSubmissionPolicy, sendFollowupRequest, waitForSubagentPolicy, waitForSubmissionWorktree } from "./submission-policy"
-import { sourceAdmission, handoffAdmission, type Admission } from "./submission-admission"
+import { createSubmissionOwner, sendFollowupRequest, waitForSubagentPolicy } from "./submission-policy"
+import { sourceAdmission, type Admission, type ExistingAdmission } from "./submission-admission"
 import { queuedPromptSources } from "./queued-prompt"
-import type { AdmissionRequest, FollowupDraft, FollowupSendInput, PromptDispatch } from "./submission-types"
+import type { AdmissionRequest, FollowupDraft, FollowupSendInput } from "./submission-types"
 export type { FollowupDraft, FollowupSendInput } from "./submission-types"
 export { acknowledgeDraftPolicy } from "./submission-policy"
 
 type PromptTarget = ReturnType<ReturnType<typeof usePrompt>["capture"]>
 
-type PendingPrompt = {
-  abort: AbortController
-  cleanup: VoidFunction
-  draft?: {
-    key: string
-    target: PromptTarget
-    scope: ServerScope
-    directory: string
-    sessionID: string
-    api: DirectorySDK["api"]["session"]
-    serverState: ServerSync
-  }
-}
-
-const pending = new Map<string, Set<PendingPrompt>>()
-
 export const sendFollowupDraft = createFollowupSender()
 
 export function createFollowupSender(sources = queuedPromptSources) {
   return async (input: FollowupSendInput) => {
-    const controller = !input.signal ? new AbortController() : undefined
+    const controller = !input.signal || input.currentSource ? new AbortController() : undefined
+    const signal = controller && input.signal ? AbortSignal.any([controller.signal, input.signal]) : input.signal ?? controller?.signal
     const current = input.currentSource
     const rebound = current?.sessionID ? {
       serverScopeKey: current.serverScopeKey, directory: current.directory, sessionID: current.sessionID,
       api: input.api, sync: input.sync, serverSync: input.serverSync, current: current.current,
-      before: (signal = input.signal ?? controller!.signal) => waitForSubagentPolicy({ ...current, sessionID: current.sessionID!, signal }),
+      before: (active = signal!) => waitForSubagentPolicy({ ...current, sessionID: current.sessionID!, signal: active }),
+      readPolicyVersion: () => current.management.subagentModelsWriteVersion?.(current.sessionID!) ?? 0,
     } : undefined
     const source = input.runtime ?? sources.resolve(input.draft.source, input.draft, rebound, input.deliberate)
     if (!source && (input.currentSource || "source" in input.draft)) return false
+    const policyVersion = source?.readPolicyVersion?.()
+    const runtime = source && { ...source, current: () => source.current() &&
+      (!!input.dispatch || source.readPolicyVersion?.() === policyVersion) && current?.current() !== false }
     const untrack = controller && source ? trackPendingPrompt(source.serverScopeKey, input.draft.sessionID, {
       abort: controller,
       cleanup: () => {},
@@ -81,46 +62,13 @@ export function createFollowupSender(sources = queuedPromptSources) {
         api: source?.api ?? input.api,
         sync: source?.sync ?? input.sync,
         serverSync: source?.serverSync ?? input.serverSync,
-        signal: input.signal ?? controller?.signal,
-        runtime: source,
+        signal,
+        runtime,
       })
     } finally {
       untrack?.()
     }
   }
-}
-
-// Shared by the composer and evidence replay: exact draft retries retain their event ID, and
-// the request carries no workdir, so callers must only replay in the session directory.
-export async function submitShellCommand(input: {
-  api: DirectorySDK["api"]["session"]
-  sessionID: string
-  command: string
-  agent: string
-  model: { providerID: string; modelID: string }
-  signal?: AbortSignal
-  before?: () => Promise<boolean> | boolean
-  current?: () => boolean
-  request?: AdmissionRequest
-  dispatch?: PromptDispatch
-}) {
-  if (input.signal?.aborted || input.current?.() === false) return false
-  if ((await input.before?.()) === false || input.signal?.aborted || input.current?.() === false) return false
-  const send = (request = input.request, current = () => !input.signal?.aborted && input.current?.() !== false) => {
-    const shell = request?.shell ?? {
-      sessionID: input.sessionID,
-      id: request ? Event.ID.make(request.id) : Event.ID.create(),
-      command: input.command,
-      agent: input.agent,
-      model: input.model,
-    }
-    if (request) request.shell = shell
-    if (!current()) return Promise.resolve(false)
-    return input.api.shell(shell, { signal: input.signal })
-  }
-  if (input.dispatch) return input.dispatch(send)
-  if (input.request?.admitted) return true
-  return send()
 }
 
 type PromptSubmitInput = {
@@ -139,6 +87,7 @@ type PromptSubmitInput = {
   setMode: (mode: "normal" | "shell") => void
   setPopover: (popover: "at" | "slash" | null) => void
   newSessionWorktree?: Accessor<string | undefined>
+  newSessionWorkspaceReady?: Accessor<boolean>
   pendingKey?: Accessor<string>
   onNewSessionWorktreeReset?: () => void
   shouldQueue?: Accessor<boolean>
@@ -164,6 +113,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
   const [search] = useSearchParams<{ draftId?: string }>()
   const tabs = useTabs()
   const queueOwner = {}
+  const existingOwner = {}
   onCleanup(() => queuedPromptSources.releaseOwner(queueOwner))
   const ownership = createSubmissionOwner(() => {
     const source = sdk()
@@ -171,6 +121,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     const tab = tabs.store.find((tab) => tab.type === "draft" && tab.draftID === draftID)
     return {
       server: serverSDK(), credentials: JSON.stringify(serverSDK().server?.http), scope: source.scope, directory: source.directory,
+      client: source.orchestra, api: source.api, worktree: input.newSessionWorktree?.(),
       sessionID: params.id, draftID, target: prompt.capture(),
       draftServer: tab?.type === "draft" ? tab.server : undefined,
       draftDirectory: tab?.type === "draft" ? tab.directory : undefined, draftExists: tab !== undefined,
@@ -178,6 +129,12 @@ export function createPromptSubmit(input: PromptSubmitInput) {
   })
 
   const [activity, setActivity] = createStore({ existing: 0 })
+  const choiceOwner = createSubmissionOwner(() => ({
+    intent: JSON.stringify((input.model ?? local.model).intent()), agent: local.agent.current()?.id,
+    epoch: serverSDK().connectionEpoch?.() ?? 0,
+    context: (input.model ?? local.model).execution.context(),
+    policyVersion: params.id ? serverSDK().sessionManagement.subagentModelsWriteVersion?.(params.id) ?? 0 : 0,
+  }))
   const admissionSource = () => sourceAdmission(prompt.capture(),
     input.pendingKey?.() ?? draftSessionKey(sdk().scope, sdk().directory, search.draftId))
   // Create the store before the composer reads busy, untracked: a caller inside a tracked scope (such as a provider's
@@ -235,465 +192,52 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     })
   }
 
-  const submit = async (target: PromptTarget, admission: Admission) => {
-    const owner = ownership.capture()
-    const controller = new AbortController()
-    admission.abort = controller
-    const submission = createPromptSubmissionState({
-      target,
-      prompt: target.current(),
-      context: target.context.items().slice(),
-    })
-    const currentPrompt = submission.prompt
-    const context = submission.context
-    const text = currentPrompt.map((part) => ("content" in part ? part.content : "")).join("")
-    const images = input.imageAttachments().slice()
-    const mode = input.mode()
-
-    if (text.trim().length === 0 && images.length === 0 && input.commentCount() === 0) {
-      if (input.working()) void abort()
-      return
-    }
-
+  const capture = (target: PromptTarget) => {
     const modelSelection = input.model ?? local.model
-    const currentModel = modelSelection.current()
-    const currentAgent = local.agent.current()
-    const variant = modelSelection.variant.current()
-    if (!currentModel || !currentAgent) {
-      // On a first run there is no model to choose yet; the toast leads to where one is connected.
-      showToast({
-        title: language.t("prompt.toast.modelRequired.title"),
-        description: language.t("prompt.toast.modelRequired.description"),
-        actions: [
-          {
-            label: language.t("orchestra.chat.send.openProviders"),
-            onClick: () => {
-              // Chapters read the Home selection; keep this draft's project selected on the way to Providers.
-              layout.home.setSelection({ server: ServerConnection.key(serverSDK().server), directory: sdk().directory })
-              navigate("/orchestra/providers")
-            },
-          },
-        ],
-      })
-      return
+    const intent = modelSelection.intent()
+    const agentID = local.agent.key?.() ?? local.agent.current()?.id
+    const selected: { value?: { model: { id: string; provider: { id: string } } | undefined;
+      agent: { id: string; name: string } | undefined; variant: string | undefined } } = {}
+    const selection = () => {
+      if (selected.value) return selected.value
+      const model = modelSelection.current()
+      const agent = local.agent.current()
+      const provisional = modelSelection.execution?.input().model
+      const candidate = intent.model ?? (provisional && { providerID: provisional.providerID, modelID: provisional.id }) ??
+        (model && { providerID: model.provider.id, modelID: model.id })
+      const variant = typeof intent.variant === "string" ? intent.variant : intent.variant === null ? undefined
+        : candidate && agent?.model?.providerID === candidate.providerID && agent.model.modelID === candidate.modelID && agent.variant !== undefined
+          ? agent.variant : modelSelection.execution ? provisional?.variant : modelSelection.variant.current()
+      selected.value = { model: candidate && { id: candidate.modelID, provider: { id: candidate.providerID } },
+        agent: agentID ? { id: agentID, name: agent?.name ?? agentID } : undefined, variant }
+      return selected.value
     }
-
-    input.addToHistory(currentPrompt, mode)
-    input.resetHistoryNavigation()
-
-    const directorySDK = sdk()
     const server = serverSDK()
-    const credentials = JSON.stringify(server.server?.http)
-    const serverState = serverSync()
-    const syncState = sync()
-    const projectDirectory = directorySDK.directory
-    const permissionState = permission.currentServerState()
-    const isNewSession = !params.id
     const sessionID = params.id
-    const draftID = search.draftId
-    const draftServer = draftID ? tabs.draft(draftID).server : undefined
-    const ownsSource = () => {
-      if (!owner.current()) return false
-      const source = sdk()
-      if (serverSDK() !== server || source.scope !== directorySDK.scope || JSON.stringify(server.server?.http) !== credentials) return false
-      if (source.directory !== projectDirectory || params.id !== sessionID || prompt.capture() !== target || search.draftId !== draftID) return false
-      return !draftID || tabs.store.some((tab) =>
-        tab.type === "draft" && tab.draftID === draftID && tab.server === draftServer && tab.directory === projectDirectory,
-      )
+    const mode = input.mode()
+    const readPolicyVersion = () => sessionID && server.sessionManagement.subagentModelsWriteVersion
+      ? server.sessionManagement.subagentModelsWriteVersion(sessionID) : 0
+    return {
+      owner: ownership.capture(),
+      choiceOwner: choiceOwner.capture(), intent, intentKey: JSON.stringify(intent),
+      epoch: server.connectionEpoch?.() ?? 0,
+      submission: createPromptSubmissionState({ target, prompt: target.current(), context: target.context.items().slice() }),
+      images: input.imageAttachments().map((image) => ({ ...image, blob: { ...image.blob } })),
+      mode, modelSelection, sessionID, agentID,
+      commentCount: input.commentCount(),
+      get currentModel() { return selection().model },
+      get currentAgent() { return selection().agent },
+      get variant() { return selection().variant },
+      delivery: sessionID ? input.delivery?.() : undefined,
+      shouldQueue: !!sessionID && mode === "normal" && input.shouldQueue?.(),
+      directorySDK: sdk(), client: sdk().orchestra, api: sdk().api, server,
+      policyVersion: readPolicyVersion(), readPolicyVersion,
     }
-    const rulesKey = input.pendingKey?.() ?? draftSessionKey(directorySDK.scope, projectDirectory, draftID)
-    const shouldAutoAccept = isNewSession && input.autoAccept()
-    const delivery = isNewSession ? undefined : input.delivery?.()
-    const shouldQueue = !isNewSession && mode === "normal" && input.shouldQueue?.()
-    const queued = delivery === "queue" && input.working()
-    const worktreeSelection = admission.selection
-
-    let sessionDirectory = admission.directory ?? projectDirectory
-    let session = admission.session ?? input.info()
-
-    if (isNewSession) {
-      if (!admission.directory && worktreeSelection === "create") {
-        const project = repositoryProject(serverState.data.project, projectDirectory)
-        // The server names the copy; it lands beside the repository like a Workspaces copy.
-        const createdWorktree = await (project
-          ? server.api.projectCopy.create({
-              projectID: project.id,
-              strategy: WORKTREE_STRATEGY,
-              directory: defaultCopyParent(project.worktree),
-              location: { directory: projectDirectory },
-            })
-          : Promise.resolve(undefined)
-        )
-          .catch((err) => {
-            if (ownsSource()) showToast({
-              title: language.t("prompt.toast.worktreeCreateFailed.title"),
-              description: errorMessage(err),
-            })
-            return undefined
-          })
-
-        if (!createdWorktree?.directory) {
-          if (!ownsSource()) return false
-          showToast({
-            title: language.t("prompt.toast.worktreeCreateFailed.title"),
-            description: language.t("common.requestFailed"),
-          })
-          return
-        }
-        sessionDirectory = createdWorktree.directory
-        admission.directory = sessionDirectory
-        if (!ownsSource() || controller.signal.aborted) return false
-        WorktreeState.ready(directorySDK.scope, sessionDirectory)
-      }
-
-      if (!admission.directory && worktreeSelection !== "main" && worktreeSelection !== "create") {
-        sessionDirectory = worktreeSelection
-      }
-
-      // Persisted workspace lists can outlive a removed copy. Refuse before creating a Session in a stale placement.
-      if (!session && sessionDirectory !== projectDirectory && worktreeSelection !== "create") {
-        const valid = await server.api.project.current({ location: { directory: projectDirectory } })
-          .then(async (project) => pathKey(project.directory) === pathKey(sessionDirectory) ||
-            (await server.api.project.directories({ projectID: project.id }))
-              .some((entry) => pathKey(entry.directory) === pathKey(sessionDirectory)))
-          .catch((error: unknown) => {
-            console.error("Failed to validate session workspace", error)
-            return false
-          })
-        if (!ownsSource() || controller.signal.aborted) return false
-        if (!valid) {
-          console.error("Session workspace is not available in the owning project", sessionDirectory)
-          showToast({
-            variant: "error",
-            title: language.t("prompt.toast.sessionCreateFailed.title"),
-            description: language.t("common.requestFailed"),
-          })
-          return false
-        }
-      }
-      if (sessionDirectory !== projectDirectory) {
-        serverState.child(sessionDirectory)
-      }
-      admission.directory = sessionDirectory
-    }
-
-    const api =
-      sessionDirectory === projectDirectory
-        ? directorySDK.api.session
-        : createCompatibleApi({
-            current: server.currentApi,
-            directory: sessionDirectory,
-          }).session
-
-    if (!session && isNewSession) {
-      const created = await api
-        .create({
-          agent: agentKey(currentAgent),
-          model: { id: currentModel.id, providerID: currentModel.provider.id, variant },
-          location: { directory: sessionDirectory },
-        })
-        .then(normalizeSessionInfo)
-        .catch((err) => {
-          if (ownsSource()) showToast({
-            title: language.t("prompt.toast.sessionCreateFailed.title"),
-            description: errorMessage(err),
-          })
-          return undefined
-        })
-      if (created) {
-        admission.session = created
-        admission.directory = sessionDirectory
-        session = created
-      }
-    }
-    if (!ownsSource() || controller.signal.aborted) return false
-    if (!session) {
-      showToast({
-        title: language.t("prompt.toast.promptSendFailed.title"),
-        description: language.t("prompt.toast.promptSendFailed.description"),
-      })
-      return
-    }
-
-    const model = {
-      modelID: currentModel.id,
-      providerID: currentModel.provider.id,
-    }
-    const agent = agentKey(currentAgent)
-    const draft: FollowupDraft = {
-      sessionID: session.id,
-      sessionDirectory,
-      prompt: currentPrompt,
-      context,
-      agent,
-      model,
-      variant,
-      delivery,
-    }
-
-    const consumed = { input: false }
-    const clearInput = (context: "none" | "comments" | "all" = "none") => {
-      if (isNewSession || !ownsSource()) return
-      consumed.input = true
-      if (!submission.clear(context) || !submission.current(prompt.capture())) return
-      input.setMode("normal")
-      input.setPopover(null)
-    }
-
-    // Leaving the Session abandons a send that has not reached the server, so the text goes back to the composer it
-    // came from; the checks below only touch the editor when that composer is still on screen.
-    const restoreInput = () => {
-      if (!consumed.input) return false
-      const restored = submission.restore()
-      if (!restored) return false
-      restored.target.set(restored.prompt, input.promptLength(restored.prompt))
-      if (!ownsSource() || !submission.current(prompt.capture())) return true
-      input.setMode(mode)
-      input.setPopover(null)
-      requestAnimationFrame(() => {
-        if (!ownsSource() || !submission.current(prompt.capture())) return
-        const editor = input.editor()
-        if (!editor) return
-        editor.focus()
-        setCursorPosition(editor, input.promptLength(currentPrompt))
-        input.queueScroll()
-      })
-      return true
-    }
-
-    const messageID = Identifier.ascending("message")
-    const removeOptimisticMessage = () => {
-      if (ownsSource()) syncState.session.optimistic.remove({ directory: sessionDirectory, sessionID: session.id,
-        messageID: isNewSession ? admission.request?.id ?? messageID : messageID })
-    }
-    admission.cleanup = trackPendingPrompt(directorySDK.scope, session.id, {
-      abort: controller,
-      cleanup: () => { removeOptimisticMessage(); restoreInput() },
-      draft: isNewSession ? {
-        key: rulesKey, target, scope: directorySDK.scope, directory: projectDirectory,
-        sessionID: session.id, api, serverState,
-      } : undefined,
-    })
-    // A first send that fails leaves the Session this draft created behind, empty, in the sidebar. The draft itself
-    // (text, context, subagent models, worktree) stays as it was for the next try.
-    // Once the prompt was dispatched, the Session is kept and labelled: the server may have admitted it before the
-    // failure (an admitted input is not a message until it is promoted), so the retry must reuse this Session and
-    // message ID. Only a send that never left (its policy write failed) deletes a Session the server confirms empty.
-    const settleEmptySession = async (dispatched: boolean) => {
-      const created = admission.session
-      if (!isNewSession || !created || admission.request?.admitted) return
-      const empty = await sessionHasNoMessages(server, created.id, sessionDirectory).catch(() => undefined)
-      if (empty === false) return
-      const removed = !dispatched && empty === true &&
-        (await api.remove({ sessionID: created.id, directory: sessionDirectory }).then(() => true, () => false))
-      if (!removed) return seed(serverState, sessionDirectory, { ...created, title: language.t("orchestra.chat.send.emptySession") })
-      const [, setStore] = serverState.child(sessionDirectory)
-      setStore("session", (list: Session[]) => list.filter((item) => item.id !== created.id))
-      // The next try creates a new Session, so nothing tied to the deleted one may carry over.
-      admission.session = undefined
-      admission.request = undefined
-      admission.policyWritten = undefined
-      admission.acknowledgedPolicy = undefined
-      admission.failedWrite = undefined
-    }
-    const policy = createSubmissionPolicy({
-      key: rulesKey, sessionID: session.id,
-      management: server.sessionManagement, admission, current: ownsSource,
-      initialPolicy: isNewSession ? { mode: "inherit" } : undefined,
-      failedMessage: language.t("common.requestFailed"),
-    })
-    const policyError = async (err: unknown) => {
-      if (controller.signal.aborted) return false as const
-      if (ownsSource()) showToast({
-        title: language.t("common.requestFailed"),
-        description: sessionManagementUnsupported(err) ? language.t("session.subagentModels.unsupported") : errorMessage(err),
-      })
-      await settleEmptySession(false)
-      return false as const
-    }
-    const receipt = { revision: undefined as number | undefined }
-    const waitPolicy = async (): Promise<boolean> => {
-      while (ownsSource() && !controller.signal.aborted) {
-        if (isNewSession && receipt.revision !== pendingSnapshot(rulesKey).revision) {
-          const acknowledged = await policy.acknowledge(controller.signal).catch(policyError)
-          if (!acknowledged || !ownsSource()) return false
-          receipt.revision = acknowledged.revision
-        }
-        if (!(await policy.wait(controller.signal).catch(policyError))) return false
-        if (!isNewSession || pendingSnapshot(rulesKey).revision === receipt.revision) return ownsSource()
-      }
-      return false
-    }
-    const runtime = {
-      serverScopeKey: directorySDK.scope, directory: sessionDirectory, sessionID: session.id,
-      api, sync: syncState, serverSync: serverState, current: ownsSource,
-      before: (signal = controller.signal) => isNewSession ? waitPolicy() : policy.wait(signal),
-    }
-    if (isNewSession && admission.session) seed(serverState, sessionDirectory, admission.session)
-    if (!(await waitPolicy()) || !ownsSource()) return false
-
-    const actionKey = JSON.stringify({ currentPrompt, context, images, mode, agent, model, variant, worktreeSelection })
-    const selectRequest = () => {
-      if (admission.request?.key !== actionKey || admission.request.revision !== receipt.revision) {
-        admission.request = {
-          key: actionKey,
-          id: mode === "shell" ? Event.ID.create() : Identifier.ascending("message"),
-          admitted: false,
-          revision: receipt.revision,
-        }
-      }
-      return admission.request
-    }
-    const dispatch: PromptDispatch = async (send) => {
-      if (!(await waitForWorktree())) return false
-      while (ownsSource() && !controller.signal.aborted) {
-        if (!(await waitPolicy()) || !ownsSource()) return false
-        if (pendingSnapshot(rulesKey).revision !== receipt.revision) continue
-        if (shouldAutoAccept) permissionState.enableAutoAccept(session.id, sessionDirectory)
-        if (!ownsSource() || controller.signal.aborted) return false
-        if (pendingSnapshot(rulesKey).revision !== receipt.revision) continue
-        const request = selectRequest()
-        if (!request.admitted) {
-          request.revision = receipt.revision
-          // Store observers can change ownership or policy; validate again after those mutations, at the API call.
-          const sent = await send(request, () => ownsSource() && !controller.signal.aborted && pendingSnapshot(rulesKey).revision === receipt.revision)
-          if (sent === false) continue
-          request.admitted = true
-        }
-        return true
-      }
-      return false
-    }
-    const promote = async () => {
-      if (!isNewSession || !admission.request?.admitted || admission.promoted || !ownsSource()) return
-      // Subagent models picked while the prompt was in flight are acknowledged on its Session before the handoff.
-      if (pendingSnapshot(rulesKey).revision !== admission.request.revision) await waitPolicy()
-      await startTransition(() => {
-        if (!ownsSource() || controller.signal.aborted || admission.promoted) return
-        const request = admission.request
-        if (!request?.admitted || request.revision === undefined) return
-        // An admitted prompt always hands the draft off to its Session, so Enter on the draft can never post it again.
-        // Edits made during the send (text, context, model, agent) move into the Session composer unsent.
-        clearPending(rulesKey, receipt.revision ?? request.revision)
-        const selectedModel = modelSelection.current()
-        const selectedAgent = local.agent.current()
-        const next = prompt.capture({ dir: base64Encode(sessionDirectory), id: session.id })
-        handoffAdmission(next, draftSessionKey(directorySDK.scope, sessionDirectory), sourceAdmission(target, rulesKey).source)
-        batch(() => {
-          admission.promoted = true
-          submission.retarget(next)
-          submission.clear("comments")
-          input.setMode("normal")
-          input.setPopover(null)
-          input.onNewSessionWorktreeReset?.()
-          input.onSubmit?.()
-          local.session.promote(sessionDirectory, session.id, selectedModel && selectedAgent ? {
-            agent: agentKey(selectedAgent),
-            model: { modelID: selectedModel.id, providerID: selectedModel.provider.id },
-            variant: modelSelection.variant.current() ?? null,
-          } : { agent, model, variant: variant ?? null })
-          layout.handoff.setTabs(base64Encode(sessionDirectory), session.id)
-          if (draftID && draftServer) tabs.promoteDraft(draftID, { server: draftServer, sessionId: session.id })
-          if (!draftID) navigate(`/${base64Encode(sessionDirectory)}/session/${session.id}`)
-        })
-      })
-    }
-    if (isNewSession && selectRequest().admitted) {
-      await promote()
-      return true
-    }
-    if (!(await waitPolicy()) || !ownsSource()) return false
-    if (shouldQueue) {
-      draft.source = queuedPromptSources.capture(runtime, queueOwner)
-      input.onQueue?.(draft)
-      clearInput("all")
-      return
-    }
-
-    if (!isNewSession) input.onSubmit?.()
-    if (!(await waitPolicy()) || !ownsSource()) return false
-
-    if (mode === "shell") {
-      const sent = await submitShellCommand({
-        api,
-        sessionID: session.id,
-        command: text,
-        agent,
-        model,
-        signal: controller.signal,
-        current: ownsSource,
-        request: isNewSession ? selectRequest() : undefined,
-        dispatch: isNewSession ? dispatch : undefined,
-        before: async () => {
-          if (!(await waitPolicy()) || !ownsSource()) return false
-          clearInput()
-          return !controller.signal.aborted && ownsSource()
-        },
-      }).catch(async (err) => {
-        if (controller.signal.aborted) return false
-        if (ownsSource()) showToast({
-          title: language.t("prompt.toast.shellSendFailed.title"),
-          description: errorMessage(err),
-        })
-        restoreInput()
-        await settleEmptySession(true)
-        return false
-      })
-      if (sent !== false) await promote()
-      return sent
-    }
-
-    const request = isNewSession ? selectRequest() : undefined
-    const isCommand = !request?.preparation && !!(request?.command ||
-      text.startsWith("/") && syncState.data.command.some((command) => command.name === text.split(" ")[0].slice(1)))
-    clearInput(isCommand ? "none" : "comments")
-
-    function waitForWorktree() {
-      return waitForSubmissionWorktree({
-        scope: directorySDK.scope, directory: sessionDirectory, signal: controller.signal,
-        current: ownsSource,
-        onWaiting: () => {
-          if (sessionDirectory === projectDirectory) syncState.set("session_status", draft.sessionID, { type: "busy" })
-        },
-        failedMessage: language.t("workspace.error.stillPreparing"),
-      })
-    }
-
-    return sendFollowupDraft({
-      api,
-      sync: syncState,
-      serverSync: serverState,
-      draft,
-      messageID,
-      optimisticBusy: isCommand || sessionDirectory === projectDirectory,
-      pending: queued,
-      signal: controller.signal,
-      before: waitForWorktree,
-      runtime,
-      request,
-      dispatch: isNewSession ? dispatch : undefined,
-    })
-      .then(async (sent) => {
-        if (!sent) restoreInput()
-        if (sent) await promote()
-        if (sent && queued && ownsSource()) showToast({ title: language.t("orchestra.chat.delivery.queued") })
-        return sent
-      })
-      .catch(async (err) => {
-        if (controller.signal.aborted) return false
-        if (ownsSource() && (isCommand || sessionDirectory === projectDirectory) && !queued) {
-          syncState.set("session_status", session.id, { type: "idle" })
-        }
-        if (ownsSource()) showToast({
-          title: language.t(isCommand ? "prompt.toast.commandSendFailed.title" : "prompt.toast.promptSendFailed.title"),
-          description: isCommand && !hookRefusal(err) ? formatServerError(err, language.t, language.t("common.requestFailed")) : errorMessage(err),
-        })
-        removeOptimisticMessage()
-        restoreInput()
-        await settleEmptySession(true)
-        return false
-      })
   }
+
+  const submit = createSubmissionExecutor({
+    input, navigate, sdk, sync, serverSync, serverSDK, local, permission, prompt, layout, language, params, search, tabs, queueOwner, errorMessage, abort, seed, capture, sendFollowupDraft,
+  })
 
   return {
     abort,
@@ -704,15 +248,74 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     },
     handleSubmit(event: Event) {
       event.preventDefault()
-      if (ownership.disposed()) return Promise.resolve(false)
+      if (ownership.disposed() || (!params.id && input.newSessionWorkspaceReady?.() === false)) return Promise.resolve(false)
       const target = prompt.capture()
       if (params.id) {
-        const admission: Admission = { selection: input.newSessionWorktree?.() || "main" }
+        const text = target.current().map((part) => "content" in part ? part.content : "").join("")
+        const command = text.startsWith("/") && sync().data.command.some((command) => command.name === text.split(" ")[0].slice(1))
+        const selection = input.model ?? local.model
+        if (selection === local.model && selection.ready?.() === true && input.mode() === "normal" &&
+          !input.shouldQueue?.() && !command && (text.trim().length || input.imageAttachments().length || input.commentCount())) {
+          const model = selection.execution.input().model
+          const agent = local.agent.key?.() ?? local.agent.current()?.id
+          // Commit the Send's choice before ownership: its first optimistic row must not restore a new intent mid-send.
+          if (model && agent) local.session.restore({ sessionID: params.id, agent,
+            model: { providerID: model.providerID, modelID: model.id, variant: model.variant } })
+        }
+        const captured = capture(target)
+        const owners = admissionSource().source.existing
+        const actions = owners.get(existingOwner) ?? new Map<string, ExistingAdmission>()
+        owners.set(existingOwner, actions)
+        actions.forEach((action, key) => { if (!action.current()) actions.delete(key) })
+        const agent = captured.agentID
+        const intentKey = captured.mode === "normal" && !captured.shouldQueue && agent &&
+          (text.trim().length || captured.images.length || captured.commentCount) ? JSON.stringify({
+          currentPrompt: captured.submission.prompt, context: captured.submission.context, images: captured.images,
+          mode: captured.mode, agent, model: captured.intent.model, variant: captured.intent.variant,
+          delivery: captured.delivery, policyVersion: captured.policyVersion,
+        }) : undefined
+        // A retained request keeps its original kind even if the command catalog changed after its lost ACK.
+        const previous = intentKey ? actions.get(intentKey) : undefined
+        if (previous?.task) return previous.task
+        const model = previous?.request.selection?.model ?? (captured.currentModel && {
+          modelID: captured.currentModel.id, providerID: captured.currentModel.provider.id,
+        })
+        const kind = previous?.request.kind ?? (command ? "command" : "prompt")
+        const key = previous?.request.key ?? JSON.stringify({
+          currentPrompt: captured.submission.prompt, context: captured.submission.context, images: captured.images,
+          mode: captured.mode, agent, model, variant: captured.variant, delivery: captured.delivery, policyVersion: captured.policyVersion,
+        })
+        const request: AdmissionRequest | undefined = intentKey && (previous || captured.modelSelection.ready?.() !== false && model) ? previous?.request ?? {
+          key, intentKey, id: Identifier.ascending("message"), admitted: false, kind,
+          selection: kind === "prompt" && agent && model ? {
+            agent, model, variant: captured.variant, delivery: captured.delivery, policyVersion: captured.policyVersion,
+          } : undefined,
+        } : undefined
+        const action: ExistingAdmission | undefined = request?.kind === "prompt" ? previous ?? {
+          request,
+          current: () => captured.owner.current() && captured.policyVersion === captured.readPolicyVersion(),
+        } : undefined
+        if (intentKey && action) actions.set(intentKey, action)
+        const admission: Admission = { selection: input.newSessionWorktree?.() || "main", request }
+        const task = Promise.withResolvers<boolean | undefined>()
+        // Publish the joined task before callbacks, policy waits, or attachment preparation can reenter submit.
+        if (action) action.task = task.promise
         setActivity("existing", (count) => count + 1)
-        return submit(target, admission).finally(() => {
+        void submit(target, admission, captured).then((sent) => {
+          if (sent === false && action && captured.owner.current() && !admission.abort?.signal.aborted &&
+            captured.policyVersion !== captured.readPolicyVersion()) {
+            const description = language.t("dialog.subagentModels.saveFailed")
+            console.error(new Error(description))
+            showToast({ variant: "error", title: language.t("common.requestFailed"), description })
+          }
+          if ((sent || action?.request.admitted) && intentKey && actions.get(intentKey) === action) actions.delete(intentKey)
+          return typeof sent === "boolean" ? sent : undefined
+        }).finally(() => {
           setActivity("existing", (count) => count - 1)
           admission.cleanup?.()
-        })
+          if (action?.task === task.promise) action.task = undefined
+        }).then(task.resolve, task.reject)
+        return task.promise
       }
       const current = admissionSource()
       if (current.source.state.busy) return Promise.resolve()
@@ -729,70 +332,4 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       })
     },
   }
-}
-
-// Reads one message of the Session from the server. A request that fails or takes too long rejects, which callers
-// treat as "cannot confirm".
-async function sessionHasNoMessages(server: ServerSDK, sessionID: string, directory: string) {
-  const signal = AbortSignal.timeout(5_000)
-  const page = await server.currentApi.message.list({ sessionID, limit: 1, order: "desc" }, { signal })
-  return page.data.length === 0
-}
-
-function trackPendingPrompt(scope: ServerScope, sessionID: string, job: PendingPrompt) {
-  const key = ScopedKey.from(scope, sessionID)
-  const jobs = pending.get(key) ?? new Set<PendingPrompt>()
-  jobs.add(job)
-  pending.set(key, jobs)
-  return () => {
-    jobs.delete(job)
-    if (pending.get(key) === jobs && jobs.size === 0) pending.delete(key)
-  }
-}
-
-function interruptPendingSession(
-  scope: ServerScope,
-  sessionID: string,
-  api: DirectorySDK["api"]["session"],
-  state: ServerSync,
-  failed: (error: unknown) => void,
-) {
-  state.session.set("todo", sessionID, [])
-  const key = ScopedKey.from(scope, sessionID)
-  const jobs = pending.get(key)
-  if (jobs) {
-    pending.delete(key)
-    state.session.set("session_status", sessionID, { type: "idle" })
-    ;[...jobs].reverse().forEach((job) => { job.abort.abort(); job.cleanup() })
-  }
-  // The run may have ended or kept going while events were missed: read its status back instead of keeping a stale spinner.
-  const readBack = (report: boolean) =>
-    readBackStatus(
-      Promise.resolve()
-        .then(() => api.active())
-        .then((active) =>
-          state.session.set("session_status", sessionID, active[sessionID] ? { type: "busy" } : { type: "idle" }),
-        ),
-      (error) => {
-        console.error(error)
-        if (report) failed(error)
-      },
-    )
-  return api.interrupt({ sessionID }).then(
-    () => readBack(true),
-    (error: unknown) => {
-      failed(error)
-      return readBack(false)
-    },
-  )
-}
-
-/** The status read after stop. Failure is reported and does not reject, so a stop that landed is not lost. */
-export function readBackStatus(read: Promise<unknown>, report: (error: unknown) => void) {
-  return read.then(
-    () => undefined,
-    (error: unknown) => {
-      report(error)
-    },
-  )
 }

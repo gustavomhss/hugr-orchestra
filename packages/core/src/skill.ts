@@ -119,13 +119,29 @@ const layer = Layer.effect(
     const load = Effect.fn("SkillV2.load")(function* (source: Source) {
       const skills: Info[] = []
       if (source.type === "embedded") return [source.skill]
-      const directories = source.type === "directory" ? [source.path] : yield* discovery.pull(source.url)
-      for (const directory of directories) {
-        const files = yield* fs
-          .glob("{*.md,**/SKILL.md}", { cwd: directory, absolute: true, include: "file", symlink: true, dot: true })
-          .pipe(Effect.catch(() => Effect.succeed([] as string[])))
+      const directories =
+        source.type === "directory" ? [{ directory: source.path, markdown: [] }] : yield* discovery.pull(source.url)
+      for (const remote of directories) {
+        const directory = remote.directory
+        const captured = new Map(remote.markdown.map((file) => [file.filepath, file.content]))
+        // URL content is the admitted snapshot; only local directories may glob or read file bodies here.
+        const files =
+          source.type === "url"
+            ? [...captured.keys()]
+            : yield* fs
+                .glob("{*.md,**/SKILL.md}", {
+                  cwd: directory,
+                  absolute: true,
+                  include: "file",
+                  symlink: true,
+                  dot: true,
+                })
+                .pipe(Effect.catch(() => Effect.succeed([] as string[])))
         for (const filepath of files.toSorted()) {
-          const content = yield* fs.readFileStringSafe(filepath).pipe(Effect.catch(() => Effect.succeed(undefined)))
+          const content =
+            source.type === "url"
+              ? captured.get(filepath)
+              : yield* fs.readFileStringSafe(filepath).pipe(Effect.catch(() => Effect.succeed(undefined)))
           if (!content) continue
           const markdown = ConfigMarkdown.parseOption(content)
           if (!markdown) {

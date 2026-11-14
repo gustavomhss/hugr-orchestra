@@ -70,6 +70,19 @@ describe("rename guard", () => {
     ).toEqual([])
   })
 
+  test("historical component evidence protects only its exact upstream fixture path and blob", () => {
+    const evidence = "docs/audits/evidence/m13-and-native-component-gates.json"
+    const receipt = '"packages/codemode/test/fixtures/opencode-v2-openapi.json": "934b22e389f4ae86039967dd8134d750780b025c"'
+    const changed = receipt.replace("934b22e389f4ae86039967dd8134d750780b025c", "0".repeat(40))
+    expect(oldNames(evidence, receipt)).toEqual([])
+    expect(oldNames("docs/audits/evidence/other.json", receipt)).toEqual([
+      `docs/audits/evidence/other.json:1: ${receipt}`,
+    ])
+    expect(oldNames(evidence, changed)).toEqual([`${evidence}:1: ${changed}`])
+    expect(oldNames(evidence, `${receipt}\nOpenCode UI`)).toEqual([`${evidence}:2: OpenCode UI`])
+    expect(kept(evidence)).toBe(false)
+  })
+
   test("flags an unprotected old name in text and in a path, and lets protected strings through", () => {
     expect(kept("packages/x/evidence/opencode.ts")).toBe(false)
     expect(kept("packages/x/opencode.log")).toBe(false)

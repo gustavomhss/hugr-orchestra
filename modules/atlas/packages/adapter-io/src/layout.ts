@@ -4,6 +4,7 @@
 // `docs/design/repo-layout.md` §2 (branch `atlas-repo-layout`) is written down once:
 //
 //   .atlas/project/{orientation,review,board}.jsonl      shared, owned by nobody
+//   .atlas/project/memory-decisions/<proposal>.jsonl    one immutable joint Memory/review decision
 //   .atlas/members/<seat>/memory/project.jsonl           one seat's project rules
 //   .atlas/members/<seat>/memory/task/<taskId>.jsonl     one task's memory
 //   .atlas/members/<seat>/memory/pr/<prId>.jsonl         one PR's memory
@@ -14,9 +15,10 @@
 //   .atlas/cards/<CARD>/attempts/a<n>.jsonl              one attempt's metering
 //   .atlas/blobs/<h[0:2]>/<h>                            the bytes a knowledge, transcript or context row names
 //
-// A file name is a SHARD HINT, never identity: every line still carries its own content id, and a read folds
+// An append-log file name is a SHARD HINT, never identity: every line still carries its own content id, and a read folds
 // every file of a kind by that id. So two ids that sanitize to the same segment, or a case-insensitive
 // filesystem that folds `A` and `a`, only put two records in one file — nothing is lost or merged wrongly.
+// A joint decision receipt instead names one proposal id, checked against its raw review proposal.
 //
 // The single-file logs written before this tree (`.atlas/{memory,orientation,review}.jsonl`) are still read,
 // first, so a store that has not run `atlas migrate-layout` keeps every record. Nothing appends to them.
@@ -34,6 +36,8 @@ export const legacyLogPath = (repoPath: string, log: LegacyLog): string => join(
 
 export const projectLogPath = (repoPath: string, log: ProjectLog): string =>
   join(atlasDir(repoPath), "project", `${log}.jsonl`)
+
+export const memoryDecisionsDir = (repoPath: string): string => join(atlasDir(repoPath), "project", "memory-decisions")
 
 export const membersDir = (repoPath: string): string => join(atlasDir(repoPath), "members")
 

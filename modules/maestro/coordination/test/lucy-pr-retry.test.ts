@@ -26,6 +26,8 @@ const input = (base: string, head: string, tier?: string, prText = text) =>
   ({ kind: "pr", baseRef: base, headRef: head, prText, ...(tier ? { tier } : {}) })
 const scope = (base: string, head: string) => ({ base, head, files: 2, changedLines: 4 })
 const skills = await authoredSkills()
+// Replay is a private Unix-store contract; the registered-tool Windows refusal is covered in lucy-pr-entry.
+const posix = process.platform === "linux" || process.platform === "darwin" ? test : test.skip
 
 function identity(reply: string) {
   return JSON.parse(reply.slice("PR identity: ".length).split("\n")[0] ?? "") as {
@@ -42,7 +44,7 @@ function retainedCount(candidate: string) {
 }
 
 describe("lucy pr retry", () => {
-  test("a held first resume admits one same-candidate retry and a later call adds no drain", () =>
+  posix("a held first resume admits one same-candidate retry and a later call adds no drain", () =>
     Effect.runPromise(Effect.gen(function* () {
       const release = yield* Deferred.make<void>()
       let held = false
@@ -132,7 +134,7 @@ describe("lucy pr retry", () => {
       }))
     })))
 
-  test("a failed first leave is pr-retry-incomplete and adds no prompt", () =>
+  posix("a failed first leave is pr-retry-incomplete and adds no prompt", () =>
     Effect.runPromise(run(skills, {
       beforeResume: () => Effect.fail(new SessionRunnerModel.ModelUnavailableError({
         providerID: ProviderV2.ID.make("provider"),
@@ -149,7 +151,7 @@ describe("lucy pr retry", () => {
       expect((yield* reviewRows()).filter((row) => ctx.touches.children.includes(row.aggregate_id))).toEqual([])
     }))))
 
-  test("tier, text, and head each get a distinct candidate and retained artifact", () =>
+  posix("tier, text, and head each get a distinct candidate and retained artifact", () =>
     Effect.runPromise(run(skills, {}, (ctx) => Effect.gen(function* () {
       const quick = yield* ctx.invoke("maestro", input(ctx.base, ctx.head, "quick"))
       const quickId = identity(quick.text).candidate

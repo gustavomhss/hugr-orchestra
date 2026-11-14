@@ -33,6 +33,21 @@ await Effect.runPromise(Effect.scoped(program))
 
 `Orchestra.create()` needs an Effect Scope; closing it disposes the router, Location services, fibers and scoped tool registrations. Tools registered with `orchestra.tools.register` are shared across the host's Locations.
 
+You can select a store and supply existing Core host contributions:
+
+    yield* Orchestra.create({
+      database: "/absolute/path/orchestra.sqlite",
+      host: [contribution],
+    })
+
+Omitting `database` keeps the default filename captured when Core loaded. An explicit filename must be absolute; literal `:memory:` creates a separate private database for each host. Empty or relative filenames, `file:` URIs and named/shared memory are refused. Host contributions are trusted application code using the existing Core `Host.Contribution` contract. They can supply model resolvers and scoped resources; they cannot replace Database or the reserved Session execution services.
+
+Only one live embedded host can own a physical file store within the same process and SDK module instance. Existing symlink, hardlink and filesystem case aliases identify that same store. A second create fails with `Orchestra.StoreInUseError`, leaving the first host running. Use separate files or separate private memory stores when hosts must coexist. Closing a host's Scope releases custody after its router, execution, database and retained file handle finish closing; await that teardown before reopening the store.
+
+Store acquisition can create missing parents and an empty file before SQLite opens. Constructor failure closes its resources and releases custody even if the caller catches the failure in a still-live Scope. It retains the selected file for retry, including any valid SQLite data already initialized. An interruption waits for a filesystem operation already in progress to hand off its handle safely before returning. Invalid or unverifiable stores fail with `Orchestra.UnsupportedStoreError`. Both error classes are available from the `Orchestra` namespace and as named package exports.
+
+The assembled router still initializes on its first request. A later request or router initialization failure does not release a successfully created host's custody; close its owning Scope when finished. Custody does not coordinate other processes, Workers or duplicated SDK bundles, and does not protect against an external actor replacing or renaming an active database file.
+
 ## Commands
 
 From this directory: `bun typecheck`. Tests run on CI from the repository root: `bun run test:ci sdk-next test/embedded.test.ts test/import-boundaries.test.ts`.

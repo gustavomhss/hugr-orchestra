@@ -7,6 +7,7 @@ if (import.meta.main) {
   if (!root || !receipt) throw new Error("Usage: release-artifact-identity.ts ROOT RECEIPT")
   await verifyReleaseArtifacts(root, JSON.parse(await readFile(receipt, "utf8")), {
     version: process.env.VERSION,
+    repository: process.env.GITHUB_REPOSITORY,
     sourceSha: process.env.GITHUB_SHA,
     cliRunId: Number(process.env.CLI_RUN_ID),
     desktopRunId: Number(process.env.DESKTOP_RUN_ID),

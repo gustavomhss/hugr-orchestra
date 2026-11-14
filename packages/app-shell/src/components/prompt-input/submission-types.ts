@@ -6,12 +6,17 @@ import type { ServerScope } from "@/utils/server-scope"
 import type { buildRequestParts } from "./build-request-parts"
 import type { QueuedPromptSource, QueuedPromptRuntime } from "./queued-prompt"
 import type { createSubmissionPolicy } from "./submission-policy"
+import type { ModelExecution } from "@orchestra/schema/model-execution"
 
 /** One durable action retains its exact prepared payload across an ambiguous HTTP retry. */
 export type AdmissionRequest = {
   key: string
   id: string
   admitted: boolean
+  admissionAttempted?: boolean
+  intentKey?: string
+  kind?: "prompt" | "command"
+  selection?: Pick<FollowupDraft, "agent" | "model" | "variant" | "delivery"> & { policyVersion: number }
   revision?: number
   preparation?: ReturnType<typeof buildRequestParts>
   command?: Parameters<DirectorySDK["api"]["session"]["command"]>[0]
@@ -46,6 +51,10 @@ export type FollowupSendInput = {
   deliberate?: boolean
   request?: AdmissionRequest
   dispatch?: PromptDispatch
+  preflight?: () => boolean
+  onUnavailable?: (reason?: ModelExecution.Reason) => void
+  signalForAdmission?: () => AbortSignal
+  admissionSignal?: AbortSignal
   currentSource?: {
     serverScopeKey: ServerScope
     directory: string

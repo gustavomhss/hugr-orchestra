@@ -1,0 +1,374 @@
+{
+  "version": 1,
+  "scope": "PR #1463 independent-review F1: cancellable Desktop startup commands",
+  "reviewed_head": "33466a9dbd944c3b190b981b397cddd8484f9ab4",
+  "target_branch": "audit-remediation",
+  "base_branch": "dev",
+  "dev_at_qualification": "5e0807b5ff953508f792b8a965883985b05a7066",
+  "merge_base": "5804b4f794ba31f49890b79565cff62b65e37725",
+  "finding": {
+    "trigger": "Quit while CLI --version, service discovery/start/password or signature verification is pending.",
+    "original_failure": "before-quit joined StartupFence.close(), which awaited acquisitions without cancelling the execFile helpers.",
+    "correction": [
+      "One AbortSignal reaches pending CLI commands from the startup fence.",
+      "The command owner waits for the execFile callback and close; a failed spawn without a PID is handled separately.",
+      "Cancellation and a command deadline request SIGTERM, escalate to SIGKILL and retain an explicit termination-unknown failure if close is not confirmed.",
+      "All discovery helpers and owned-startup preparation are joined before propagation; late-resource cleanup and reentrant close remain owned.",
+      "An existing shared background daemon deliberately keeps its independent lifetime."
+    ],
+    "command_defaults_ms": {
+      "deadline": 120000,
+      "term_grace": 1000,
+      "kill_join": 5000
+    }
+  },
+  "red": {
+    "run": 43508401847,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43508401847",
+    "source": "81d6f37d2967785c7881908f5f67cd2090788fec",
+    "attempt": 1,
+    "conclusion": "expected failure",
+    "composition": "Original startup-fence blob, new command helper and the same new tests; no patched Main integration.",
+    "original_fence_blob": "d669cef8bdd13d85b584995b5b523776c953942c",
+    "selection": {
+      "package": "desktop",
+      "packageSelector": "packages/desktop",
+      "directory": "apps/desktop",
+      "runner": "bun",
+      "args": [
+        "./src/main/desktop-startup.test.ts",
+        "-t",
+        "Quit cancels and reaps a pending",
+        "--timeout",
+        "30000"
+      ],
+      "env": {
+        "ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER": "strict"
+      }
+    },
+    "jobs": [
+      {
+        "id": 132171950369,
+        "host": "ubuntu-24.04",
+        "pass": 0,
+        "fail": 2,
+        "filtered_out": 12,
+        "assertions": 6,
+        "seconds": 10.23
+      },
+      {
+        "id": 132171950836,
+        "host": "windows-latest",
+        "pass": 0,
+        "fail": 2,
+        "filtered_out": 12,
+        "assertions": 6,
+        "seconds": 10.31
+      }
+    ],
+    "expected_error": "Quit did not cancel and join its startup subprocess",
+    "oracle": "Each real child completed its handshake, received the expected args and was alive before close. The failure occurred at the bounded Quit join; cleanup subsequently killed/joined the child.",
+    "omni": "not applicable (focused: no declaring test ran); no Omni spawn or delegation in these two tests",
+    "cleanup_job": {
+      "id": 132174500090,
+      "conclusion": "success"
+    },
+    "reruns": 0
+  },
+  "change_blobs": [
+    {
+      "path": "apps/desktop/src/main/background-cli.ts",
+      "sha": "fc2eb14054824a598f37ecbaa83658084eead47d"
+    },
+    {
+      "path": "apps/desktop/src/main/desktop-startup.ts",
+      "sha": "01f0b73b5ec04b336a38d1a4eba466b4306c518e"
+    },
+    {
+      "path": "apps/desktop/src/main/desktop-startup.test.ts",
+      "sha": "d0656bc733885a47b47dc8311c64dc671822de0f"
+    },
+    {
+      "path": "apps/desktop/src/main/index.ts",
+      "sha": "4309e27c4eb476620bd1b79fb932a1b08592e95e"
+    },
+    {
+      "path": "docs/guides/desktop-startup.md",
+      "sha": "d1a07754db6fcfa4e2867511b7c02aeed2fcee34"
+    },
+    {
+      "path": "apps/desktop/src/main/cli-cache.test.ts",
+      "sha": "cc41543c00bfb902cd1bf0286793ea7154800aaa"
+    }
+  ],
+  "existing_startup_tests_preserved_verbatim": 6,
+  "new_startup_tests": 8,
+  "limits": [
+    "The tests exercise the production command owner and startup fence using real subprocesses; the Main call-site wiring is inspected, not a complete Electron Main bootstrap.",
+    "Direct helper processes and their pipes are covered; this does not claim a generic descendant-tree termination guarantee. The shared daemon is intentionally independent.",
+    "This is change-scoped qualification. It does not replace the historical epic run or qualify physical hardware, native permission dialogs or performance."
+  ],
+  "fix_commit": "317f85533614a4c73de2e31e27d84fe6e9600236",
+  "status": "F1 fixed and change-scoped qualified",
+  "recorded_at": "2026-11-13T21:32:03Z",
+  "first_qualification": {
+    "run": 43508580024,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43508580024",
+    "source": "63fb39054a43d5c90ea6b5ae6ca7ae5d5806d63d",
+    "attempt": 1,
+    "request": {
+      "package": "desktop",
+      "packageSelector": "packages/desktop",
+      "directory": "apps/desktop",
+      "runner": "bun",
+      "args": [
+        "./src/main/desktop-startup.test.ts",
+        "./src/main/cli-cache.test.ts",
+        "./src/main/cli-env.test.ts",
+        "./src/main/cli-artifacts.test.ts",
+        "./src/main/owned-serve.test.ts",
+        "./src/main/owned-serve-omni.test.ts",
+        "./src/main/omni-process.test.ts",
+        "./src/main/startup-failure.test.ts",
+        "--timeout",
+        "30000"
+      ],
+      "env": {
+        "ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER": "strict"
+      }
+    },
+    "harness": "Temporary ci-run snapshot adds Desktop typecheck and Linux guardrail, module-boundary and spawn-import checks, with fetch-depth 0. The production test-ci workflow is unchanged in the PR.",
+    "gates": [
+      {
+        "cwd": "apps/desktop",
+        "command": "bun typecheck",
+        "hosts": [
+          "ubuntu-24.04",
+          "windows-latest"
+        ]
+      },
+      {
+        "cwd": ".",
+        "command": "bun run check:guards --base 5e0807b5ff953508f792b8a965883985b05a7066",
+        "hosts": [
+          "ubuntu-24.04"
+        ]
+      },
+      {
+        "cwd": ".",
+        "command": "bun run check:boundaries --base 5e0807b5ff953508f792b8a965883985b05a7066",
+        "hosts": [
+          "ubuntu-24.04"
+        ]
+      },
+      {
+        "cwd": ".",
+        "command": "bun run check:spawn-imports",
+        "hosts": [
+          "ubuntu-24.04"
+        ]
+      }
+    ],
+    "conclusion": "failure",
+    "failure_cause": "The CLI-cache source-wiring test still required two-argument resolveCliBinary calls after production began forwarding signal.",
+    "jobs": [
+      {
+        "id": 132172552658,
+        "host": "ubuntu-24.04",
+        "pass": 90,
+        "fail": 1,
+        "skip": 0,
+        "assertions": 284,
+        "seconds": 399.9,
+        "startup_tests": {
+          "pass": 14,
+          "fail": 0
+        },
+        "omni": {
+          "declaring_tests": 30,
+          "spawns": 56,
+          "delegated": 0,
+          "verdict": "pass"
+        },
+        "typecheck": "success",
+        "guards": {
+          "conclusion": "success",
+          "rules": 78,
+          "changed_paths": 756,
+          "gate": 0,
+          "warnings": 25,
+          "errors": 0
+        },
+        "boundaries": {
+          "conclusion": "success",
+          "files": 5926,
+          "cross_package_edges": 5575,
+          "ledgered": 91,
+          "new": 0,
+          "stale": 0
+        },
+        "spawn_imports": {
+          "conclusion": "success",
+          "files": 4146,
+          "allowlisted": 66
+        },
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43508580024/job/132172552658"
+      },
+      {
+        "id": 132172552214,
+        "host": "windows-latest",
+        "pass": 88,
+        "fail": 1,
+        "skip": 2,
+        "assertions": 272,
+        "seconds": 432.91,
+        "startup_tests": {
+          "pass": 13,
+          "fail": 0,
+          "skip": 1
+        },
+        "omni": {
+          "declaring_tests": 30,
+          "spawns": 56,
+          "delegated": 0,
+          "verdict": "pass"
+        },
+        "typecheck": "success",
+        "skip_reasons": [
+          "SIGTERM-ignore escalation is POSIX-only",
+          "Read-only directory permissions are POSIX-only"
+        ],
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43508580024/job/132172552214"
+      }
+    ],
+    "cleanup_job": {
+      "id": 132179863103,
+      "conclusion": "success"
+    },
+    "reruns": 0
+  },
+  "final_scoped_qualification": {
+    "run": 43510345140,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43510345140",
+    "source": "2ffd7e50d6d1e7a7a00a010175fa462a35278699",
+    "attempt": 1,
+    "request": {
+      "package": "desktop",
+      "packageSelector": "packages/desktop",
+      "directory": "apps/desktop",
+      "runner": "bun",
+      "args": [
+        "./src/main/desktop-startup.test.ts",
+        "./src/main/cli-cache.test.ts",
+        "--timeout",
+        "30000"
+      ],
+      "env": {
+        "ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER": "strict"
+      }
+    },
+    "production_unchanged_from": "63fb39054a43d5c90ea6b5ae6ca7ae5d5806d63d",
+    "test_adjustment": "Preserve shell-state-root checks, require the cancellation signal in both resolveCliBinary calls, and additionally require it in Main's startBackgroundCli call. No assertion removed, optional argument, new skip or timeout change.",
+    "scope": "Only desktop-startup.test.ts and cli-cache.test.ts rerun; this is not a second execution of all eight earlier files.",
+    "jobs": [
+      {
+        "id": 132178638309,
+        "host": "ubuntu-24.04",
+        "pass": 22,
+        "fail": 0,
+        "skip": 0,
+        "assertions": 103,
+        "seconds": 6.34,
+        "startup_tests": {
+          "pass": 14,
+          "fail": 0
+        },
+        "omni": "not applicable (focused: no declaring test ran); no Omni spawn or delegation",
+        "typecheck": "success",
+        "guards": {
+          "conclusion": "success",
+          "rules": 78,
+          "changed_paths": 757,
+          "gate": 0,
+          "warnings": 25,
+          "errors": 0
+        },
+        "boundaries": {
+          "conclusion": "success",
+          "files": 5926,
+          "cross_package_edges": 5575,
+          "ledgered": 91,
+          "new": 0,
+          "stale": 0
+        },
+        "spawn_imports": {
+          "conclusion": "success",
+          "files": 4146,
+          "allowlisted": 66
+        },
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43510345140/job/132178638309"
+      },
+      {
+        "id": 132178638967,
+        "host": "windows-latest",
+        "pass": 20,
+        "fail": 0,
+        "skip": 2,
+        "assertions": 91,
+        "seconds": 5.65,
+        "startup_tests": {
+          "pass": 13,
+          "fail": 0,
+          "skip": 1
+        },
+        "omni": "not applicable (focused: no declaring test ran); no Omni spawn or delegation",
+        "typecheck": "success",
+        "skip_reasons": [
+          "SIGTERM-ignore escalation is POSIX-only",
+          "Read-only directory permissions are POSIX-only"
+        ],
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43510345140/job/132178638967"
+      }
+    ],
+    "conclusion": "success",
+    "cleanup_job": {
+      "id": 132181720411,
+      "conclusion": "success"
+    },
+    "reruns": 0,
+    "gates": [
+      {
+        "cwd": "apps/desktop",
+        "command": "bun typecheck",
+        "hosts": [
+          "ubuntu-24.04",
+          "windows-latest"
+        ]
+      },
+      {
+        "cwd": ".",
+        "command": "bun run check:guards --base 5e0807b5ff953508f792b8a965883985b05a7066",
+        "hosts": [
+          "ubuntu-24.04"
+        ]
+      },
+      {
+        "cwd": ".",
+        "command": "bun run check:boundaries --base 5e0807b5ff953508f792b8a965883985b05a7066",
+        "hosts": [
+          "ubuntu-24.04"
+        ]
+      },
+      {
+        "cwd": ".",
+        "command": "bun run check:spawn-imports",
+        "hosts": [
+          "ubuntu-24.04"
+        ]
+      }
+    ],
+    "harness": "Temporary ci-run snapshot adds Desktop typecheck and Linux guardrail, module-boundary and spawn-import checks, with fetch-depth 0. The production test-ci workflow is unchanged in the PR."
+  },
+  "guard_warnings": "All 25 guard warnings are in pre-existing PR paths outside this six-file F1 fix. No guard suppression or allowlist addition was used.",
+  "final_source_equivalence": "The six listed blobs in fix_commit are identical to the final qualified snapshot. A separate documentation commit adds this evidence and the remediation-plan addendum; neither temporary .ci-run.json nor the temporary workflow changes enter the PR."
+}

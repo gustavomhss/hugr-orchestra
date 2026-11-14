@@ -6,10 +6,12 @@ import type { Capability } from "@orchestra/schema/capability"
 import { ScheduledTask } from "@orchestra/schema/scheduled-task"
 import type { CapabilityScheduleContract } from "../capability/schedule/contract"
 import type { SessionV2 } from "../session"
+import type { AgentV2 } from "../agent"
 import { SessionInput } from "../session/input"
 import { ScheduledTaskCapabilityModel } from "./capability-model"
 import { ScheduledTaskModel } from "./model"
 import { ScheduledTaskShared } from "./shared"
+import { failureCause, rememberFailureCause } from "./failure-cause"
 import { ScheduledTaskRunTable, ScheduledTaskTable } from "./sql"
 
 type ID = ScheduledTask.ID
@@ -44,18 +46,20 @@ export interface Interface {
     id: ID,
     input: CapabilityUpdate,
   ) => Effect.Effect<Schedule, ScheduledTaskShared.NotFoundError | ScheduledTaskShared.InvalidError>
-  readonly pause: (owner: Capability.Owner, id: ID) => Effect.Effect<Schedule, ScheduledTaskShared.NotFoundError>
+  readonly pause: (owner: Capability.Owner, id: ID, options?: SessionV2.CommitOptions) => Effect.Effect<Schedule, ScheduledTaskShared.NotFoundError>
   /** Rolls to the next future slot; a past once or an exhausted repeat cannot resume. */
   readonly resume: (
     owner: Capability.Owner,
     id: ID,
+    options?: SessionV2.CommitOptions,
   ) => Effect.Effect<Schedule, ScheduledTaskShared.NotFoundError | ScheduledTaskShared.InvalidError>
-  readonly remove: (owner: Capability.Owner, id: ID) => Effect.Effect<void, ScheduledTaskShared.NotFoundError>
+  readonly remove: (owner: Capability.Owner, id: ID, options?: SessionV2.CommitOptions) => Effect.Effect<void, ScheduledTaskShared.NotFoundError>
   /** Manual run deduped on `manualKey`: a retry returns the same Session. Never moves `next` or counts. */
   readonly run: (
     owner: Capability.Owner,
     id: ID,
     manualKey: string,
+    options?: SessionV2.CommitOptions,
   ) => Effect.Effect<
     { sessionID: SessionV2.ID; reused: boolean },
     ScheduledTaskShared.NotFoundError | ScheduledTaskShared.RunError
@@ -64,7 +68,11 @@ export interface Interface {
 
 // Capability halves of the Service layer. `plan`, `holds` and `present` serve the shared claim, dispatch and
 // settle path; `api` builds the public methods once that path exists.
-export function make(store: ScheduledTaskShared.Store, sessions: SessionV2.Interface) {
+export function make<E>(
+  store: ScheduledTaskShared.Store,
+  sessions: SessionV2.Interface,
+  resolveAgent: (session: SessionV2.Info) => Effect.Effect<AgentV2.Selection, E>,
+) {
   const { db, lease, immediate, find, lastRuns, advance, claim } = store
 
   const owned = (owner: Capability.Owner, id: ID) =>
@@ -145,16 +153,21 @@ export function make(store: ScheduledTaskShared.Store, sessions: SessionV2.Inter
       )
 
   const present = (owner: Capability.Owner) =>
-    sessions.get(owner.sessionID).pipe(
-      Effect.map(
-        (session) =>
-          session.projectID === owner.projectID &&
-          session.location.directory === owner.location.directory &&
-          session.location.workspaceID === owner.location.workspaceID &&
-          session.agent === owner.agentID,
-      ),
-      Effect.catchTag("Session.NotFoundError", () => Effect.succeed(false)),
-    )
+    Effect.gen(function* () {
+      const session = yield* sessions
+        .get(owner.sessionID)
+        .pipe(Effect.catchTag("Session.NotFoundError", () => Effect.succeed(undefined)))
+      if (
+        !session ||
+        session.projectID !== owner.projectID ||
+        session.location.directory !== owner.location.directory ||
+        session.location.workspaceID !== owner.location.workspaceID
+      )
+        return false
+      if (session.agent !== undefined) return session.agent === owner.agentID
+      const selected = yield* resolveAgent(session)
+      return selected.info !== undefined && selected.id === owner.agentID
+    })
 
   // Runs `edit` on the owner's schedule under the write lock, then reads it back. Errors come back as values so
   // the transaction commits only what the edit wrote.
@@ -162,6 +175,7 @@ export function make(store: ScheduledTaskShared.Store, sessions: SessionV2.Inter
     owner: Capability.Owner,
     id: ID,
     edit: (task: Task, now: number) => Effect.Effect<E | undefined, unknown>,
+    options?: SessionV2.CommitOptions,
   ) =>
     Effect.gen(function* () {
       const now = yield* Clock.currentTimeMillis
@@ -169,7 +183,10 @@ export function make(store: ScheduledTaskShared.Store, sessions: SessionV2.Inter
         Effect.gen(function* () {
           const task = yield* owned(owner, id)
           if (!task) return new ScheduledTaskShared.NotFoundError({ id })
-          return yield* edit(task, now)
+          const failed = yield* edit(task, now)
+          if (failed) return failed
+          if (options?.beforeCommit) yield* options.beforeCommit
+          return undefined
         }),
       )
       if (failed) return yield* failed
@@ -201,7 +218,7 @@ export function make(store: ScheduledTaskShared.Store, sessions: SessionV2.Inter
 
   // The public methods, over the shared dispatch and settle path.
   const api = (ops: {
-    dispatch: (claimed: Claim) => Effect.Effect<Outcome>
+    dispatch: (claimed: Claim, options?: SessionV2.CommitOptions) => Effect.Effect<Outcome>
     settle: (claimed: Claim, outcome: Outcome) => Effect.Effect<void>
   }): Interface => ({
     create: Effect.fn("ScheduledTask.capability.create")(function* (owner, input) {
@@ -300,15 +317,16 @@ export function make(store: ScheduledTaskShared.Store, sessions: SessionV2.Inter
         }),
       ),
     // Pausing revokes unstarted slot claims; a manual run may still start while paused.
-    pause: (owner, id) =>
+    pause: (owner, id, options) =>
       change<never>(owner, id, (task, now) =>
         Effect.gen(function* () {
           yield* advance(task, { enabled: false }, now)
           yield* revoke(task, now, isNotNull(ScheduledTaskRunTable.slot))
           return undefined
         }),
+        options,
       ),
-    resume: (owner, id) =>
+    resume: (owner, id, options) =>
       change(owner, id, (task, now) =>
         Effect.gen(function* () {
           if (task.enabled) return
@@ -321,18 +339,20 @@ export function make(store: ScheduledTaskShared.Store, sessions: SessionV2.Inter
           if (typeof next !== "number") return next
           yield* advance(task, { enabled: true, disabled_reason: null, next }, now)
         }),
+        options,
       ),
-    remove: Effect.fn("ScheduledTask.capability.remove")(function* (owner, id) {
+    remove: Effect.fn("ScheduledTask.capability.remove")(function* (owner, id, options) {
       const removed = yield* immediate(
         Effect.gen(function* () {
           if (!(yield* owned(owner, id))) return false
           yield* db.delete(ScheduledTaskTable).where(eq(ScheduledTaskTable.id, id)).run()
+          if (options?.beforeCommit) yield* options.beforeCommit
           return true
         }),
       )
       if (!removed) return yield* new ScheduledTaskShared.NotFoundError({ id })
     }),
-    run: Effect.fn("ScheduledTask.capability.run")(function* (owner, id, manualKey) {
+    run: Effect.fn("ScheduledTask.capability.run")(function* (owner, id, manualKey, options) {
       const now = yield* Clock.currentTimeMillis
       const begun = yield* immediate(
         Effect.gen(function* () {
@@ -344,7 +364,9 @@ export function make(store: ScheduledTaskShared.Store, sessions: SessionV2.Inter
             .where(and(eq(ScheduledTaskRunTable.task_id, id), eq(ScheduledTaskRunTable.manual_key, manualKey)))
             .get()
           if (prior) return { type: "prior", run: prior } as const
-          return { type: "claimed", claim: yield* claim(task, undefined, now, manualKey) } as const
+          const claimed = yield* claim(task, undefined, now, manualKey)
+          if (options?.beforeCommit) yield* options.beforeCommit
+          return { type: "claimed", claim: claimed } as const
         }),
       )
       if (begun.type === "missing") return yield* new ScheduledTaskShared.NotFoundError({ id })
@@ -360,14 +382,14 @@ export function make(store: ScheduledTaskShared.Store, sessions: SessionV2.Inter
           return yield* new ScheduledTaskShared.RunError({ reason: "This run is still starting; retry shortly." })
         return { sessionID: begun.run.session_id, reused: true }
       }
-      const outcome = yield* ops.dispatch(begun.claim)
+      const outcome = yield* ops.dispatch(begun.claim, options)
       if (outcome.type === "started") {
         yield* ops.settle(begun.claim, outcome)
         return { sessionID: outcome.sessionID, reused: false }
       }
       // Nothing was admitted, so the same call may retry; a missing owner disables the schedule.
       yield* ops.settle(begun.claim, outcome.type === "revoked" ? outcome : { type: "void" })
-      return yield* new ScheduledTaskShared.RunError({
+      const failed = new ScheduledTaskShared.RunError({
         reason:
           outcome.type === "failed"
             ? outcome.error
@@ -375,6 +397,9 @@ export function make(store: ScheduledTaskShared.Store, sessions: SessionV2.Inter
               ? "The schedule changed before the run started."
               : "owner-missing",
       })
+      const original = outcome.type === "failed" ? failureCause(outcome) : undefined
+      if (original) rememberFailureCause(failed, original)
+      return yield* failed
     }),
   })
 

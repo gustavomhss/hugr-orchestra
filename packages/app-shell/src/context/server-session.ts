@@ -1,23 +1,16 @@
+import { needsOlderTurnRoot, wireMessageSource, mergeOptimisticPage, merge, reconcileFetched, type OptimisticItem, type MessagePage } from "./server-session-pages"
 import { Binary } from "@orchestra/core/util/binary"
 import { retry } from "@orchestra/core/util/retry"
 import type { SessionMessageInfo } from "@/session-types"
-
 import type { ServerCurrentEvent } from "./server-sdk"
 import type { PermissionRequest, PermissionV2Request, QuestionRequest } from "@/v2-types"
 import type { Message, Part, SessionStatus, Todo } from "@/v2-wire"
-
 import type { ServerApi } from "@/utils/server"
-import { batch } from "solid-js"
+import { batch, getOwner, onCleanup } from "solid-js"
 import { createStore, produce, reconcile } from "solid-js/store"
 import { message as cleanMessage } from "@/utils/diffs"
 import { rootSession } from "@/utils/session-route"
-import {
-  decodeSessionLifecycleEvent,
-  decodeSessionManagementEvent,
-  normalizeSessionInfo,
-  renameSession,
-  type AppSession,
-} from "@/utils/session"
+import { decodeSessionLifecycleEvent, decodeSessionManagementEvent, normalizeSessionInfo, renameSession, type AppSession,  } from "@/utils/session"
 import { compareMessages, messageKey, normalizeSessionMessages, sameValue } from "@/utils/session-message"
 import { dropSessionCaches, pickSessionCacheEvictions, SESSION_CACHE_LIMIT } from "./global-sync/session-cache"
 import { normalizePermissionRequest } from "./global-sync/utils"
@@ -37,58 +30,6 @@ const historyMessagePageSize = 200
 const sessionInfoLimit = 2_048
 const emptyIDs: ReadonlySet<string> = new Set()
 
-function needsOlderTurnRoot(source: readonly SessionMessageInfo[]) {
-  const boundary = source.find(
-    (message) =>
-      message.type === "user" ||
-      message.type === "shell" ||
-      message.type === "assistant" || message.type === "compaction" ||
-      (message.type === "synthetic" && message.description?.trim()),
-  )
-  return boundary?.type === "assistant"
-}
-
-type OptimisticItem = {
-  message: Message
-  parts: Part[]
-  confirmedParts?: Part[]
-  confirmedMessage?: boolean
-}
-
-type MessagePage = {
-  session: Message[]
-  part: { id: string; part: Part[] }[]
-  source?: SessionMessageInfo[]
-  sourceMode?: "latest" | "older"
-  projectSource?: boolean
-  cursor?: string
-  complete: boolean
-}
-
-function wireMessageSource(items: { info: Message; parts: Part[] }[]): SessionMessageInfo[] {
-  return items
-    .slice()
-    .sort((a, b) => compareMessages(a.info, b.info))
-    .map((item) => {
-      if (item.info.role === "user") {
-        return {
-          id: item.info.id,
-          type: "user" as const,
-          text: item.parts.flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n"),
-          time: item.info.time,
-        }
-      }
-      return {
-        id: item.info.id,
-        type: "assistant" as const,
-        agent: item.info.agent ?? item.info.mode,
-        model: { id: item.info.modelID, providerID: item.info.providerID, variant: item.info.variant },
-        content: [],
-        time: item.info.time,
-      }
-    })
-}
-
 // The markers describe the current HTTP attempt.
 type MessageLoadState = {
   touchedMessages: Set<string>
@@ -107,34 +48,6 @@ type MessageLoadBaseline = Pick<
   "touchedMessages" | "retainedMessages" | "touchedParts" | "clearedMessageParts"
 >
 
-function mergeOptimisticPage(page: MessagePage, items: OptimisticItem[]) {
-  if (items.length === 0) return { ...page, observed: [] as { messageID: string; parts: Part[] }[] }
-  const session = [...page.session]
-  const part = new Map(page.part.map((item) => [item.id, item.part]))
-  const observed: { messageID: string; parts: Part[] }[] = []
-  for (const item of items) {
-    const result = Binary.search(session, messageKey(item.message), messageKey)
-    const found = result.found
-    if (!found) session.splice(result.index, 0, item.message)
-    const current = part.get(item.message.id)
-    const confirmed = found ? item.parts.filter((part) => current?.some((value) => value.id === part.id)) : []
-    if (found) observed.push({ messageID: item.message.id, parts: confirmed })
-    part.set(
-      item.message.id,
-      merge(
-        found ? (current ?? []) : merge(item.confirmedParts ?? [], current ?? []),
-        item.parts.filter((part) => !confirmed.includes(part)),
-      ),
-    )
-  }
-  return {
-    ...page,
-    session,
-    part: [...part.entries()].sort((a, b) => cmp(a[0], b[0])).map(([id, parts]) => ({ id, part: parts })),
-    observed,
-  }
-}
-
 function runInflight(map: Map<string, Promise<void>>, key: string, task: () => Promise<void>) {
   const pending = map.get(key)
   if (pending) return pending
@@ -143,48 +56,6 @@ function runInflight(map: Map<string, Promise<void>>, key: string, task: () => P
   })
   map.set(key, promise)
   return promise
-}
-
-// Keeps the order of `a`, replacing items in place and appending new ones: part order is content order, not ID order.
-function merge<T extends { id: string }>(a: readonly T[], b: readonly T[]) {
-  const items = new Map(a.map((item) => [item.id, item] as const))
-  for (const item of b) items.set(item.id, item)
-  return [...items.values()]
-}
-
-function reconcileFetched<T extends { id: string }>(
-  fetched: T[],
-  current: readonly T[],
-  options: {
-    touched?: ReadonlySet<string>
-    retained?: ReadonlySet<string>
-    removed?: ReadonlySet<string>
-    preserveUnfetched?: boolean | ((item: T) => boolean)
-    compare?: (a: T, b: T) => number
-  } = {},
-) {
-  const result = new Map(fetched.map((item) => [item.id, item]))
-  const live = new Map(current.map((item) => [item.id, item]))
-  if (options.preserveUnfetched) {
-    for (const item of current) {
-      if (!result.has(item.id) && (options.preserveUnfetched === true || options.preserveUnfetched(item)))
-        result.set(item.id, item)
-    }
-  }
-  for (const id of options.retained ?? emptyIDs) {
-    if (result.has(id)) continue
-    const item = live.get(id)
-    if (item) result.set(id, item)
-  }
-  // Events observed while the request is pending are the freshest client state for those identities.
-  for (const id of options.touched ?? emptyIDs) {
-    const item = live.get(id)
-    if (item) result.set(id, item)
-    if (!item) result.delete(id)
-  }
-  for (const id of options.removed ?? emptyIDs) result.delete(id)
-  const items = [...result.values()]
-  return options.compare ? items.sort(options.compare) : items
 }
 
 type TodoRead = (sessionID: string) => Promise<readonly { content: string; status: string; priority: string }[]>
@@ -209,6 +80,9 @@ export function createServerSession(
   })
   const requests = new Map<string, Promise<AppSession>>()
   const inflight = new Map<string, Promise<void>>()
+  const trailing = new Map<string, { predecessor: Promise<void>; task: Promise<void> }>()
+  const statusReads = new Set<{ touched: Set<string>; removed: Set<string> }>()
+  const lifetime = { disposed: false }
   const inflightTodo = new Map<string, Promise<void>>()
   const optimistic = new Map<string, Map<string, OptimisticItem>>()
   const v2 = createV2SessionReducer()
@@ -222,6 +96,17 @@ export function createServerSession(
   const infoSeen = new Set<string>()
   const pinned = new Map<string, number>()
   const generations = new Map<string, object>()
+  if (getOwner()) onCleanup(() => {
+    lifetime.disposed = true
+    generations.clear()
+    inflight.clear()
+    trailing.clear()
+    statusReads.clear()
+  })
+  const statusChanged = (sessionID: string, removed = false) => statusReads.forEach((read) => {
+    read.touched.add(sessionID)
+    if (removed) read.removed.add(sessionID)
+  })
   const [meta, setMeta] = createStore({
     limit: {} as Record<string, number | undefined>,
     cursor: {} as Record<string, string | undefined>,
@@ -416,11 +301,13 @@ export function createServerSession(
   const evict = (sessionIDs: string[]) => {
     if (sessionIDs.length === 0) return
     sessionIDs.forEach((sessionID) => {
+      statusChanged(sessionID, true)
       dropped.add(sessionID)
       generations.delete(sessionID)
       clearOptimistic(sessionID)
       requests.delete(sessionID)
       inflight.delete(sessionID)
+      trailing.delete(sessionID)
       inflightTodo.delete(sessionID)
       messageLoads.delete(sessionID)
       v2.clear(sessionID)
@@ -707,12 +594,14 @@ export function createServerSession(
   }
 
   const sync = (sessionID: string, options?: { force?: boolean; messageLimit?: number }) => {
+    if (lifetime.disposed) return Promise.resolve()
     touch(sessionID)
-    return runInflight(inflight, sessionID, async () => {
-      const active = recovery.generation(sessionID)
+    const active = recovery.generation(sessionID)
+    const read = () => runInflight(inflight, sessionID, async () => {
       const cached = data.message[sessionID] !== undefined && meta.limit[sessionID] !== undefined
       if (cached && data.info[sessionID] && !options?.force) return
-      await Promise.all([
+      // A rejected metadata read must not release ownership while history is still on the wire.
+      const results = await Promise.allSettled([
         recovery.resolve(sessionID, options).catch((error: unknown) => {
           if (generations.get(sessionID) !== active && error instanceof DOMException && error.name === "AbortError") return
           throw error
@@ -721,12 +610,27 @@ export function createServerSession(
           ? Promise.resolve()
           : loadMessages(sessionID, options?.messageLimit ?? meta.limit[sessionID] ?? initialMessagePageSize),
       ])
+      const failure = results.find((result) => result.status === "rejected")
+      if (failure?.status === "rejected") throw failure.reason
     })
+    const pending = inflight.get(sessionID)
+    if (!options?.force || !pending) return read()
+    const queued = trailing.get(sessionID)
+    if (queued?.predecessor === pending) return queued.task
+    const next = () => lifetime.disposed || generations.get(sessionID) !== active ? undefined : read()
+    const task = pending.then(next, next).finally(() => {
+      if (trailing.get(sessionID)?.task === task) trailing.delete(sessionID)
+    })
+    trailing.set(sessionID, { predecessor: pending, task })
+    return task
   }
 
   const prefetch = async (sessionID: string, limit: number) => {
+    if (lifetime.disposed) return
     touch(sessionID)
+    const active = recovery.generation(sessionID)
     await inflight.get(sessionID)
+    if (lifetime.disposed || generations.get(sessionID) !== active) return
     if (
       Date.now() - (meta.at[sessionID] ?? 0) <= 15_000 &&
       (meta.complete[sessionID] || (data.message[sessionID]?.length ?? 0) >= limit)
@@ -910,6 +814,7 @@ export function createServerSession(
       })
     const usage = info && (sessionSelection(info, event) ?? sessionUsage(info, event))
     if (usage) remember(usage)
+    if (status || event.type === "session.retry.scheduled") statusChanged(sessionID)
     if (status) setData("session_status", sessionID, reconcile({ type: status }))
     if (event.type === "session.retry.scheduled")
       setData("session_status", sessionID, {
@@ -972,6 +877,7 @@ export function createServerSession(
       case "session.next.deleted": {
         const decoded = decodeSessionLifecycleEvent(event)
         if (decoded?.type !== "deleted") return
+        statusChanged(decoded.sessionID, true)
         recovery.forget(decoded.sessionID)
         infoSeen.delete(decoded.sessionID)
         setData(
@@ -1052,6 +958,11 @@ export function createServerSession(
   return {
     data,
     set: setData,
+    captureStatusChanges() {
+      const read = { touched: new Set<string>(), removed: new Set<string>() }
+      if (!lifetime.disposed) statusReads.add(read)
+      return { ...read, release: () => { statusReads.delete(read) } }
+    },
     get: (sessionID: string) => data.info[sessionID],
     peek: (sessionID: string) => data.info[sessionID],
     remember,
@@ -1116,6 +1027,7 @@ export function createServerSession(
       },
     },
     async todo(sessionID: string, request?: { force?: boolean }) {
+      if (lifetime.disposed) return
       touch(sessionID)
       if (data.todo[sessionID] !== undefined && !request?.force) return
       return runInflight(inflightTodo, sessionID, () => {
@@ -1133,9 +1045,11 @@ export function createServerSession(
         meta.limit[sessionID] !== undefined && !meta.complete[sessionID] && !!meta.cursor[sessionID],
       loading: (sessionID: string) => meta.loading[sessionID] ?? false,
       async loadMore(sessionID: string, count = historyMessagePageSize) {
+        if (lifetime.disposed) return
         touch(sessionID)
-        if (meta.loading[sessionID] || meta.complete[sessionID] || !meta.cursor[sessionID]) return
-        await loadMessages(sessionID, count, meta.cursor[sessionID], "prepend")
+        const cursor = meta.cursor[sessionID]
+        if (meta.loading[sessionID] || meta.complete[sessionID] || !cursor) return
+        await runInflight(inflight, sessionID, () => loadMessages(sessionID, count, cursor, "prepend"))
       },
     },
     evict(sessionID: string) {

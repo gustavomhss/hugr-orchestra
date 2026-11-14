@@ -31,12 +31,13 @@ The picture is Atlas run on its own repository: 29 units, 596 facts, 74 dependen
 
 ## Versioned by git
 
-No server and no database of its own. What Atlas knows is a set of append-only files under `.atlas/`, versioned, branched, reviewed and merged like the code, and present in every clone.
+No server and no database of its own. What Atlas knows is stored in append-only logs and immutable decision receipts under `.atlas/`, versioned, branched, reviewed and merged like the code, and present in every clone.
 
 ```text
 .atlas/
   policy.json                      who may write what (reviewed like code)
   project/                         orientation, review decisions, board
+  project/memory-decisions/        one joint receipt per decided memory proposal
   members/<seat>/memory/           project rules, logbook, task and PR memory
   members/<seat>/knowledge/        facts, sharded by hash
   members/<seat>/context/          continuity archive events per session
@@ -46,12 +47,28 @@ No server and no database of its own. What Atlas knows is a set of append-only f
 
 | Property | How |
 | --- | --- |
-| Only logs travel | The working store (`cas/`, `projection*.json`, `staging*.json`) and the code index are local caches ignored by git. Atlas refuses to serve a store that arrived by commit, because a commit skips every write door. |
+| Only durable records travel | The working store (`cas/`, `projection*.json`, `staging*.json`) and the code index are local caches ignored by git. Atlas refuses to serve a store that arrived by commit, because a commit skips every write door. |
 | A fresh clone rebuilds itself | On start, Atlas replays the committed logs into a new local projection. A fact sealed as proven is re-proven against this checkout's code index (as `atlas verify-store` does): kept if it holds, dropped and reported if not. Every other line returns as a candidate held for ratification, whoever committed it. Replay is idempotent. |
-| Nothing is overwritten | Every line is keyed by its content hash; state is the fold of the set of lines, so a rebase or cherry-pick gives the same state. Superseded memory is archived, not deleted; forgetting hides it from the active view only. |
-| Branches merge cleanly | `.gitattributes` sets `merge=union` on `.atlas/**/*.jsonl` and the fold dedupes, so two branches that wrote memory merge without conflicts. GitHub's server-side merge ignores that setting, which is why the merge queue merges locally and fast-forwards. |
+| Nothing is overwritten | Append records are keyed by their content hash and decision receipts are created once per proposal. State folds the validated records; superseded memory is archived, not deleted, and forgetting hides it from the active view only. |
+| Append logs merge by union | `.gitattributes` sets `merge=union` on append-only `.atlas/**/*.jsonl` and the fold dedupes. Joint Memory decision receipts override that driver: divergent decisions on the same proposal conflict and require resolution. GitHub's server-side merge ignores custom merge drivers, which is why the merge queue merges locally and fast-forwards. |
 | Public repositories keep hashes only | Card messages, decisions and continuity chunks keep only their hashes. Visibility is read from the GitHub remote, never configured; any doubt counts as public. |
 | Old layouts move forward | `atlas migrate-layout` converts the earlier single-file layout. |
+
+Atlas validates a local cached object before reusing it. A truncated or corrupt entry can be repaired from matching
+content on the next write or replay; valid entries are kept. A write that cannot publish and read back the complete
+object is refused before its projection advances. During replay, unavailable content is counted as missing and cannot
+become knowledge or a candidate until it can be restored. The existing scope and reproof checks still apply.
+
+A new decision on a memory proposal publishes one immutable receipt at
+`.atlas/project/memory-decisions/<proposal-id>.jsonl`. An indexed receipt makes the decision and its scanned Memory
+record effective together; a discarded receipt closes only the proposal. Both readers check the same receipt against
+the original review proposal. Invalid, conflicting or unreadable data is reported as partial or unavailable, and a
+decision is refused while its review state is unknown. Retrying the same intent returns its original decision and
+Memory reference, including after restart. The raw review append log alone does not contain every new decision.
+Legacy logs remain readable; an old Memory entry without a joint receipt is neither deleted nor retroactively certified.
+
+Create-only publication chooses one same-proposal winner between local processes. It does not serialize the existing
+per-owner cap across different proposals, coordinate old binaries, or promise atomicity over NFS or power loss.
 
 ## What each task cost
 

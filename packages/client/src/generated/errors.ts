@@ -69,6 +69,18 @@ export type ResearchArtifactNotFoundError = { readonly _tag: "ResearchArtifactNo
 export const isResearchArtifactNotFoundError = (value: unknown): value is ResearchArtifactNotFoundError =>
   typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "ResearchArtifactNotFoundError"
 
+export type ModelExecutionContextNotFoundError = {
+  readonly _tag: "ModelExecutionContextNotFoundError"
+  readonly reason: "session-missing" | "parent-missing" | "location-mismatch" | "agent-missing"
+  readonly message: string
+}
+
+export const isModelExecutionContextNotFoundError = (value: unknown): value is ModelExecutionContextNotFoundError =>
+  typeof value === "object" &&
+  value !== null &&
+  "_tag" in value &&
+  value["_tag"] === "ModelExecutionContextNotFoundError"
+
 export type ProviderNotFoundError = {
   readonly _tag: "ProviderNotFoundError"
   readonly providerID: string

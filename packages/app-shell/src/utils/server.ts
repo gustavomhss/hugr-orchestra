@@ -2,6 +2,7 @@ import { Orchestra } from "@orchestra/client"
 import type { ServerConnection } from "@/context/server"
 import type {
   RequestOptions,
+  AdmissionOptions,
   ServerApi,
   SessionCommandInput,
   SessionCompactInput,
@@ -9,6 +10,7 @@ import type {
   SessionStageInput,
 } from "@/server-api"
 import { decode64 } from "@/utils/base64"
+import { registerSessionModelExecution } from "./session-model-execution"
 
 export function authTokenFromCredentials(input: { username?: string; password: string }) {
   return btoa(`${input.username ?? "orchestra"}:${input.password}`)
@@ -57,7 +59,7 @@ function buildServerApi(input: {
     const model = "model" in value ? selectedModel(value.model, "variant" in value ? value.variant : undefined) : undefined
     if (model) await orchestra.sessions.switchModel({ sessionID, model }, requestOptions)
   }
-  return {
+  const api = {
     health: orchestra.health,
     location: orchestra.location,
     agent: {
@@ -88,8 +90,10 @@ function buildServerApi(input: {
         orchestra.sessions.rename(value, requestOptions),
       move: (value: Parameters<typeof orchestra.sessions.move>[0], requestOptions?: Parameters<typeof orchestra.sessions.move>[1]) =>
         orchestra.sessions.move(value, requestOptions),
-      prompt: async (value: SessionPromptInput, requestOptions?: RequestOptions) => {
+      prompt: async (value: SessionPromptInput, options?: AdmissionOptions) => {
+        const requestOptions = options && { signal: options.signal, headers: options.headers }
         await select(value.sessionID, value, requestOptions)
+        options?.beforeAdmission?.()
         return orchestra.sessions
           .prompt(
             {
@@ -108,7 +112,7 @@ function buildServerApi(input: {
               delivery: value.delivery,
               resume: value.resume,
             },
-            requestOptions,
+            options && { signal: options.admissionSignal ?? options.signal, headers: options.headers },
           )
           .then((admitted: Awaited<ReturnType<typeof orchestra.sessions.prompt>>) => ({
             admittedSeq: admitted.admittedSeq,
@@ -120,8 +124,10 @@ function buildServerApi(input: {
             delivery: admitted.delivery,
           }))
       },
-      command: async (value: SessionCommandInput, requestOptions?: RequestOptions) => {
+      command: async (value: SessionCommandInput, options?: AdmissionOptions) => {
+        const requestOptions = options && { signal: options.signal, headers: options.headers }
         await select(value.sessionID, value, requestOptions)
+        options?.beforeAdmission?.()
         return orchestra.sessions
           .command(
             {
@@ -139,7 +145,7 @@ function buildServerApi(input: {
               delivery: value.delivery,
               resume: value.resume,
             },
-            requestOptions,
+            options && { signal: options.admissionSignal ?? options.signal, headers: options.headers },
           )
           .then((admitted: Awaited<ReturnType<typeof orchestra.sessions.command>>) => ({
             admittedSeq: admitted.admittedSeq,
@@ -357,6 +363,8 @@ function buildServerApi(input: {
         orchestra.config.update(value, requestOptions),
     },
   }
+  registerSessionModelExecution(api.session, (value, options) => orchestra.models.execution(value, options))
+  return api
 }
 
 /** The adapter's own shape: the groups and inputs the current API client answers. */

@@ -2,6 +2,8 @@
   "$schema": "https://v2-8-13.turborepo.dev/schema.json",
   "globalDependencies": [
     "script/test-omni-control.ts",
+    "script/test-browser.ts",
+    "packages/core/script/test-browser.ts",
     ".github/actions/omni-binaries/action.yml",
     "script/module-registry.json",
     "script/toolchain-registry.json",
@@ -52,6 +54,10 @@
       // Windows PowerShell initializes its module-analysis cache before the recorder's first CIM query.
       // Hash and preserve the runner's cache path; strict mode otherwise triggers cold discovery past 10 s.
       "env": ["PSModuleAnalysisCachePath"]
+    },
+    "@orchestra/app#test:unit": {
+      "dependsOn": ["transit", "^build", "@orchestra/web#transit"],
+      "outputs": []
     },
     "@orchestra/app#test": {
       // Extension: the shell-owned E2E harness consumes the separate web entry.
@@ -136,6 +142,10 @@
         "$TURBO_ROOT$/packages/core/test/fixture/tmpdir.ts"
       ]
     },
+    "@orchestra/engine-claude-code#test": {
+      "dependsOn": ["transit"],
+      "outputs": []
+    },
     "@orchestra/codemode#test": {
       "dependsOn": ["transit"],
       "outputs": []
@@ -153,6 +163,10 @@
       "outputs": []
     },
     "@orchestra/llm#test": {
+      "dependsOn": ["transit"],
+      "outputs": []
+    },
+    "@orchestra/maestro#test": {
       "dependsOn": ["transit"],
       "outputs": []
     },
@@ -189,6 +203,14 @@
       "outputs": []
     },
     "@orchestra/tui#test": {
+      "dependsOn": ["transit"],
+      "outputs": []
+    },
+    "@orchestra/desktop#test:bun": {
+      "dependsOn": ["transit"],
+      "outputs": []
+    },
+    "@orchestra/desktop#test:node": {
       "dependsOn": ["transit"],
       "outputs": []
     },

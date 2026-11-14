@@ -45,10 +45,15 @@ export interface Turn {
    * Runs an Orchestra tool the engine invoked: the runner records the call (provider-executed, executor "orchestra"),
    * settles it through the Location registry and records the result. The host never emits these calls itself.
    */
-  readonly execute: (call: { readonly id: string; readonly name: string; readonly input: unknown }) => Effect.Effect<ToolRegistry.Settlement>
+  readonly execute: (call: {
+    readonly id: string
+    readonly name: string
+    readonly input: unknown
+  }) => Effect.Effect<ToolRegistry.Settlement>
   /**
-   * Orchestra's decision on a call the engine runs itself: V2 permission first (an ask waits for the owner's reply, a
-   * deny or decline fails), then, when `safety` names the call as Orchestra's tool would see it, the Location's
+   * Orchestra's decision on a call the engine runs itself: resolve any filesystem target and approve external access,
+   * then V2 action permission (an ask waits for the owner's reply, a deny or decline fails). When `safety` names the call
+   * as Orchestra's tool would see it, apply the Location's
    * ToolSafety under the Session's profile: write roots, never-touch paths, protected writes, the dispatch charge and,
    * for a shell command, the sandbox the profile requires. Any refusal fails the effect and the host must deny the call.
    */
@@ -57,6 +62,12 @@ export interface Turn {
     readonly tool: string
     readonly action: string
     readonly resources: ReadonlyArray<string>
+    /** The engine's original filesystem target; the runner resolves it in the current Location before permission. */
+    readonly filesystem?: {
+      readonly path: string
+      readonly kind: "file" | "directory"
+      readonly resource: "path" | "pattern"
+    }
     /** The call as ToolSafety reads it: Orchestra's tool name (`bash`, `write`, `edit`, `read`, ...) and argument names. */
     readonly safety?: { readonly tool: string; readonly args: Readonly<Record<string, unknown>> }
   }) => Effect.Effect<Authorization, PermissionV2.Error | PermissionV2.DeclinedError | ToolSafety.Denied>
@@ -135,8 +146,19 @@ export interface Steer {
 export interface Interface {
   readonly id: string
   readonly stateKey: string
+  readonly describeModel: (input: {
+    readonly ref?: ModelV2.Ref
+    readonly model?: ModelV2.Info
+  }) => Effect.Effect<Decision>
   readonly stream: (turn: Turn) => Stream.Stream<LLMEvent, LLMError>
 }
+
+export type Decision =
+  | { readonly status: "ready" }
+  | {
+      readonly status: "unsupported" | "unavailable"
+      readonly reason: "host-unavailable" | "host-model-unsupported" | "host-options-unsupported"
+    }
 
 export interface Registry {
   readonly get: (engine: string) => Interface | undefined
@@ -158,17 +180,22 @@ export const node = makeLocationNode({ service: Service, layer, deps: [] })
  * own loop, as in normal mode. `orchestra` names no host.
  */
 export function engineOf(agents: AgentV2.Interface, store: SessionStore.Interface) {
-  const of: (session: SessionSchema.Info) => Effect.Effect<string | undefined> = Effect.fn("ExecutionHost.engineOf")(
-    function* (session: SessionSchema.Info) {
-      const own = (yield* agents.select(session.agent)).info?.engine
-      if (own) return own === "orchestra" ? undefined : own
-      if (session.model && session.model.providerID !== ProviderV2.ID.anthropic) return undefined
-      const parent = session.parentID ? yield* store.get(session.parentID) : undefined
-      return parent ? yield* of(parent) : undefined
-    },
-  )
-  return of
+  return (session: SessionSchema.Info) => engineForSelection(agents, store, session)
 }
+
+export const engineForSelection: (
+  agents: AgentV2.Interface,
+  store: SessionStore.Interface,
+  input: { readonly agent?: AgentV2.ID; readonly model?: ModelV2.Ref; readonly parentID?: SessionSchema.ID },
+) => Effect.Effect<string | undefined> = Effect.fn("ExecutionHost.engineForSelection")(
+  function* (agents, store, input) {
+    const own = (yield* agents.select(input.agent)).info?.engine
+    if (own) return own === "orchestra" ? undefined : own
+    if (input.model && input.model.providerID !== ProviderV2.ID.anthropic) return undefined
+    const parent = input.parentID ? yield* store.get(input.parentID) : undefined
+    return parent ? yield* engineForSelection(agents, store, parent) : undefined
+  },
+)
 
 /**
  * Read-modify-write of one `session.metadata` key. The Session's drain serializes this key's writers; the write

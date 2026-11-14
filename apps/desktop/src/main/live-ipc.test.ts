@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { mockElectron } from "./electron-mock.fixture"
+import type { LiveRecoveryPort } from "@orchestra/app/live"
+import type { LiveIpcOptions } from "./live-ipc-contract"
 
 type Handler = (event: unknown, ...args: unknown[]) => unknown
 type Loop = Parameters<typeof import("./live-ipc").registerLiveIpc>[0]
@@ -8,10 +10,24 @@ const handlers = new Map<string, Handler>()
 const sent: { channel: string; payload: unknown }[] = []
 const window = { isDestroyed: () => false, webContents: { send: (channel: string, payload: unknown) => sent.push({ channel, payload }) } }
 mockElectron({
-  ipcMain: { handle: (channel: string, handler: Handler) => handlers.set(channel, handler) },
   BrowserWindow: { getAllWindows: () => [window] },
 })
 const { registerLiveIpc } = await import("./live-ipc")
+
+// Legacy argument/broadcast routing unit only; actual sender security is covered by the Node recovery IPC suite.
+const recovery: LiveRecoveryPort = {
+  snapshot: async () => ({ state: "ready", canStart: true, items: [], unconfirmedStarts: [] }),
+  retry: async () => ({ ok: false, reason: "closed" }),
+  finish: async () => ({ ok: false, reason: "closed" }),
+  export: async () => ({ ok: false, reason: "closed" }),
+  discard: async () => ({ ok: false, reason: "closed" }),
+}
+const options: LiveIpcOptions = {
+  handle: (channel, listener) => {
+    handlers.set(channel, (event, ...args) => listener(event as Parameters<typeof listener>[0], ...args))
+  },
+  recovery,
+}
 
 function fakeLoop() {
   const runListeners: ((state: unknown) => void)[] = []
@@ -36,7 +52,7 @@ function fakeLoop() {
 describe("live IPC", () => {
   test("broadcasts run state and levels to every window", () => {
     const { loop, runListeners, levelListeners } = fakeLoop()
-    registerLiveIpc(loop)
+    registerLiveIpc(loop, options)
     sent.length = 0
     runListeners.forEach((listener) => listener({ running: true, meetingID: "m1", startedAt: 1 }))
     levelListeners.forEach((listener) => listener({ microphone: 0.2, "system-audio": 0 }))
@@ -48,7 +64,7 @@ describe("live IPC", () => {
 
   test("holds the captions hotkey only while a meeting runs", () => {
     const { loop, runListeners, bound } = fakeLoop()
-    registerLiveIpc(loop)
+    registerLiveIpc(loop, options)
     runListeners.forEach((listener) => listener({ running: true }))
     expect(bound.get("toggle-captions")).toBe(loop.toggleCaptions)
     runListeners.forEach((listener) => listener({ running: false }))
@@ -57,7 +73,7 @@ describe("live IPC", () => {
   })
 
   test("validates what a renderer sends", async () => {
-    registerLiveIpc(fakeLoop().loop)
+    registerLiveIpc(fakeLoop().loop, options)
     expect(() => handlers.get("request-live-permission")!({}, "camera")).toThrow()
     expect(handlers.get("set-live-hotkey")!({}, "nope", "Alt+M")).toEqual({ ok: false, reason: "invalid" })
     expect(() => handlers.get("rename-live-meeting")!({}, 1, "x")).toThrow()

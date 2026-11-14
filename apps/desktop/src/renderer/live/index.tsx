@@ -9,164 +9,13 @@ import type {
   LiveOverlayState,
   LiveOverlayView,
 } from "../../main/live-overlay-state"
+import { copy } from "./copy"
 import "./live.css"
 
 // The live seat overlay. Main owns the state and pushes it whole; this window only draws it and reports clicks back.
 // Its copy lives here in English and Brazilian Portuguese, outside the desktop i18n dictionaries, which are checked
 // against every locale. The window has no app settings, so it follows the system language.
-const en = {
-  label: "Live",
-  listening: "Listening",
-  thinking: "Thinking…",
-  answering: "Answering…",
-  answered: (seconds: string) => `Answered in ${seconds} s`,
-  page: (index: number, total: number) => `${index} of ${total}`,
-  ask: "Ask",
-  look: "Look",
-  move: "Move",
-  captions: "Captions",
-  suggestions: "Suggestions",
-  protected: "Hidden from screen sharing",
-  stop: "Stop meeting",
-  copy: "Copy",
-  placeholder: "Ask about this call…",
-  quick: { say: "What should I say?", "follow-up": "Follow-up questions", "fact-check": "Fact-check", recap: "Recap so far" },
-  sources: { heard: "Heard in the meeting", screen: "On screen", memory: "From memory" },
-  tracks: { me: "Me", them: "Them" },
-  status: {
-    micOff: "Mic off · them only",
-    audioOff: "Call audio off · you only",
-    sttPaused: "Captions paused",
-    offline: (elapsed: string) => `Offline · ${elapsed}`,
-  },
-  permission: {
-    microphone: ["Orchestra can't use the microphone", "Your side isn't captioned. Their audio still is."],
-    systemAudio: ["Orchestra can't hear the call audio", "Their side isn't captioned. Yours still is."],
-    screen: ["Orchestra can't see the screen", "Look is off until you allow screen recording. Captions still work."],
-    senses: { microphone: "Microphone", systemAudio: "System audio", screen: "Screen" },
-    states: { granted: "On", denied: "No permission", "on-request": "On request" },
-    settings: "Open System Settings",
-  },
-  stt: {
-    title: (attempt: number) => `Reconnecting to transcription · attempt ${attempt}`,
-    body: (watermark: string) =>
-      `Audio from the last 30 s is kept and resent when the link is back. Answers use the transcript up to ${watermark}.`,
-    next: (seconds: number) => `next try in ${seconds} s`,
-    retry: "Retry now",
-  },
-  hotkey: {
-    title: "is taken by another app",
-    body: (name: string) => `${name} has no shortcut until you pick a new one. The other shortcuts still work.`,
-    change: "Change shortcut",
-    names: { ask: "Ask", look: "Look", toggle: "Show and hide", stop: "Stop", previous: "Paging", next: "Paging" },
-  },
-  network: {
-    title: "No network",
-    body: "Captions and answers are paused. The last 30 s of audio is kept and sent once you're back online; anything older isn't captioned.",
-    recording: "Recording continues",
-  },
-  answer: {
-    title: "Couldn't answer",
-    body: "The model returned an error before any text. Ask again, or pick another model in the live seat's settings.",
-    dismiss: "Dismiss",
-  },
-  ended: "Meeting ended",
-  minutes: (title: string, minutes: number) => `${title} · ${minutes} min`,
-  pending: {
-    off: "Capture and shortcuts are off.",
-    writing: "Writing the summary and a follow-up draft…",
-    hint: "Usually under 20 s. You can close this; it lands in the live seat's session.",
-  },
-  ready: {
-    saved: "Saved to memory",
-    decisions: "Decisions",
-    openItems: "Open items",
-    followUp: "Follow-up draft",
-    nothingSent: "Nothing is sent from here.",
-    copyDraft: "Copy draft",
-    send: (count: number) => `Send ${count} open ${count === 1 ? "item" : "items"} to Maestro`,
-  },
-  suggestion: { why: "Asked of you · clears when the topic moves on", dismiss: "Not now", answer: "Answer" },
-  close: "Close",
-}
 
-const br: typeof en = {
-  label: "Ao vivo",
-  listening: "Ouvindo",
-  thinking: "Pensando…",
-  answering: "Respondendo…",
-  answered: (seconds) => `Respondido em ${seconds} s`,
-  page: (index, total) => `${index} de ${total}`,
-  ask: "Perguntar",
-  look: "Olhar",
-  move: "Mover",
-  captions: "Legendas",
-  suggestions: "Sugestões",
-  protected: "Oculto no compartilhamento de tela",
-  stop: "Encerrar reunião",
-  copy: "Copiar",
-  placeholder: "Pergunte sobre esta chamada…",
-  quick: { say: "O que devo dizer?", "follow-up": "Perguntas de acompanhamento", "fact-check": "Checar fatos", recap: "Resumo até agora" },
-  sources: { heard: "Ouvido na reunião", screen: "Na tela", memory: "Da memória" },
-  tracks: { me: "Eu", them: "Eles" },
-  status: {
-    micOff: "Microfone desligado · só eles",
-    audioOff: "Áudio da chamada desligado · só você",
-    sttPaused: "Legendas pausadas",
-    offline: (elapsed) => `Offline · ${elapsed}`,
-  },
-  permission: {
-    microphone: ["O Orchestra não pode usar o microfone", "Seu lado não tem legenda. O áudio deles ainda tem."],
-    systemAudio: ["O Orchestra não consegue ouvir o áudio da chamada", "O lado deles não tem legenda. O seu ainda tem."],
-    screen: ["O Orchestra não consegue ver a tela", "Olhar fica desligado até você permitir a gravação de tela. As legendas continuam."],
-    senses: { microphone: "Microfone", systemAudio: "Áudio do sistema", screen: "Tela" },
-    states: { granted: "Ligado", denied: "Sem permissão", "on-request": "Sob pedido" },
-    settings: "Abrir Ajustes do Sistema",
-  },
-  stt: {
-    title: (attempt) => `Reconectando à transcrição · tentativa ${attempt}`,
-    body: (watermark) =>
-      `O áudio dos últimos 30 s fica guardado e é reenviado quando a conexão voltar. As respostas usam a transcrição até ${watermark}.`,
-    next: (seconds) => `próxima tentativa em ${seconds} s`,
-    retry: "Tentar agora",
-  },
-  hotkey: {
-    title: "está em uso por outro app",
-    body: (name) => `${name} fica sem atalho até você escolher um novo. Os outros atalhos continuam funcionando.`,
-    change: "Trocar atalho",
-    names: { ask: "Perguntar", look: "Olhar", toggle: "Mostrar e ocultar", stop: "Encerrar", previous: "Paginação", next: "Paginação" },
-  },
-  network: {
-    title: "Sem rede",
-    body: "Legendas e respostas estão pausadas. Os últimos 30 s de áudio ficam guardados e são enviados quando você voltar a ficar online; o que for mais antigo fica sem legenda.",
-    recording: "A gravação continua",
-  },
-  answer: {
-    title: "Não foi possível responder",
-    body: "O modelo retornou um erro antes de qualquer texto. Pergunte de novo ou escolha outro modelo nos ajustes do assento ao vivo.",
-    dismiss: "Dispensar",
-  },
-  ended: "Reunião encerrada",
-  minutes: (title, minutes) => `${title} · ${minutes} min`,
-  pending: {
-    off: "Captura e atalhos estão desligados.",
-    writing: "Escrevendo o resumo e um rascunho de acompanhamento…",
-    hint: "Costuma levar menos de 20 s. Pode fechar; ele chega na sessão do assento ao vivo.",
-  },
-  ready: {
-    saved: "Salvo na memória",
-    decisions: "Decisões",
-    openItems: "Itens em aberto",
-    followUp: "Rascunho de acompanhamento",
-    nothingSent: "Nada é enviado daqui.",
-    copyDraft: "Copiar rascunho",
-    send: (count) => `Enviar ${count} ${count === 1 ? "item em aberto" : "itens em aberto"} ao Maestro`,
-  },
-  suggestion: { why: "Perguntaram a você · some quando o assunto mudar", dismiss: "Agora não", answer: "Responder" },
-  close: "Fechar",
-}
-
-const copy = navigator.language.toLowerCase().startsWith("pt") ? br : en
 
 const sourceIcons: Record<LiveOverlaySource, string> = { heard: "ear", screen: "screen", memory: "memory" }
 const mac = navigator.userAgent.includes("Mac")
@@ -613,6 +462,13 @@ function ErrorNote(props: { error: LiveOverlayError; state: LiveOverlayState }) 
           </div>
         </div>
       </Match>
+      <Match when={props.error.kind === "storage"}>
+        <div class="note">
+          <Icon id="x" />
+          <b>{copy.storage.title}</b>
+          <p>{copy.storage.body}</p>
+        </div>
+      </Match>
       <Match when={props.error.kind === "answer" && props.error}>
         {(error) => (
           <div class="note">
@@ -735,6 +591,7 @@ function Ended(props: {
 
 function status(state: LiveOverlayState) {
   const error = state.error
+  if (error?.kind === "storage") return copy.storage.title
   if (error?.kind === "network") return copy.status.offline(clock(error.offlineMs))
   if (error?.kind === "stt") return copy.status.sttPaused
   if (error?.kind === "permission" && error.microphone === "denied") return copy.status.micOff

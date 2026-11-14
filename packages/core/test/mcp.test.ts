@@ -90,7 +90,9 @@ describe("Mcp", () => {
                   yield* Effect.sleep("100 millis")
               })
               expect(yield* status("fixture")).toBe("connected")
-              expect((yield* registry.materialize()).definition("fixture_probe")).toBeDefined()
+              const toolID = (yield* mcp.toolIds()).fixture[0]
+              expect(toolID).toMatch(/^mcp_[A-Za-z0-9_-]{43}$/)
+              expect((yield* registry.materialize()).definition(toolID)).toBeDefined()
               expect(yield* mcp.tools()).toEqual({ fixture: ["probe"] })
               // Config shows only type, command and url: the resolved server and the file's own entry, never its env.
               const command = [process.execPath, fixture, "probe"]
@@ -127,7 +129,7 @@ describe("Mcp", () => {
 
               yield* mcp.disconnect("fixture")
               expect(yield* status("fixture")).toBe("disabled")
-              expect((yield* registry.materialize()).definition("fixture_probe")).toBeUndefined()
+              expect((yield* registry.materialize()).definition(toolID)).toBeUndefined()
               expect((yield* mcp.resources()).resources).toEqual([])
               expect(yield* mcp.tools()).toEqual({})
 

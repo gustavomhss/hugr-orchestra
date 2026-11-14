@@ -119,7 +119,9 @@ test("the Location's ToolSafety holds a scoped Session's writes to its bound roo
     }),
   ))
 
-test("a native seat's shell is confined to its worktree reads and refused without a sandbox; other agents are not", () =>
+test(process.platform === "win32"
+  ? "a bound native seat keeps its write sandbox on Windows without claiming read confinement"
+  : "a native seat's shell is confined to its worktree reads and refused without a sandbox; other agents are not", () =>
   run(safetyLayer, (directory) =>
     Effect.gen(function* () {
       const safety = yield* ToolSafety.Service
@@ -143,15 +145,22 @@ test("a native seat's shell is confined to its worktree reads and refused withou
       expect(backend?.requireSandbox).toBe(true)
       expect(backend?.writeRoots).toEqual([path.join(directory, "src")])
       expect(backend?.sandbox?.unconfinedFallback).toBe(false)
+      const lucy = yield* shell(plain, "lucy")
+      expect(yield* shell(general, "general")).toBeUndefined()
+      if (process.platform === "win32") {
+        // WriteRootsV2.confine is a macOS/Linux read policy; Windows retains the bound write profile.
+        expect(backend?.sandbox).toEqual({ enabled: true, scratch: true, unconfinedFallback: false })
+        expect(backend?.sandbox?.readRoots).toBeUndefined()
+        expect(lucy).toBeUndefined()
+        return
+      }
       expect(backend?.sandbox?.readRoots?.slice(0, 2)).toEqual([directory, TRUNCATION_DIR])
       expect(backend?.sandbox?.readRoots).toContain(yield* BackendToolkit.Root)
       expect(backend?.sandbox?.readRoots?.every((root) => root !== path.parse(root).root)).toBe(true)
-      const lucy = yield* shell(plain, "lucy")
       expect(lucy?.requireSandbox).toBe(true)
       expect(lucy?.writeRoots).toEqual([directory])
       expect(lucy?.sandbox).toMatchObject({ enabled: true, unconfinedFallback: false })
       expect(lucy?.sandbox?.readRoots?.slice(0, 2)).toEqual([directory, TRUNCATION_DIR])
       expect(lucy?.sandbox?.readRoots).not.toContain(yield* BackendToolkit.Root)
-      expect(yield* shell(general, "general")).toBeUndefined()
     }),
   ))

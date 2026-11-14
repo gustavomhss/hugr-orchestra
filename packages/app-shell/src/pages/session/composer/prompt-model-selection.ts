@@ -3,8 +3,8 @@ import { createStore } from "solid-js/store"
 import { useSearchParams } from "@solidjs/router"
 import { useTabs } from "@/context/tabs"
 import { useModels } from "@/context/models"
-import type { ModelKey, ModelSelection } from "@/context/local"
-import { cycleModelVariant, getConfiguredAgentVariant, resolveModelVariant } from "@/context/model-variant"
+import { createModelExecutionView, type ModelKey, type ModelSelection } from "@/context/local"
+import { cycleModelVariant, getConfiguredAgentVariant } from "@/context/model-variant"
 import { usePrompt } from "@/context/prompt"
 import { useSDK } from "@/context/sdk"
 import { useSync } from "@/context/sync"
@@ -36,7 +36,7 @@ export function selectPromptModel(
 }
 
 export function createPromptModelSelection(input: {
-  agent: () => { model?: ModelKey; variant?: string; engine?: string } | undefined
+  agent: () => { id?: string; model?: ModelKey; variant?: string; engine?: string } | undefined
 }) {
   const sdk = useSDK()
   const sync = useSync()
@@ -65,39 +65,42 @@ export function createPromptModelSelection(input: {
     )
   }
 
-  const configured = () => {
-    const model = resolveDefaultModel(providers.defaultModel(), sync().data.config.model)
-    if (!model) return
-    if (valid(model)) return model
-  }
+  const configured = () => resolveDefaultModel(providers.defaultModel(), sync().data.config.model)
 
   const fallback = () => {
     const defaults = providers.default()
-    return providers.connected().flatMap((provider) => {
+    return [...providers.all().values()].flatMap((provider) => {
       const preferred = defaults[provider.id]
       const modelID =
-        preferred && valid({ providerID: provider.id, modelID: preferred })
-          ? preferred
-          : Object.values(provider.models).find((model) => valid({ providerID: provider.id, modelID: model.id }))?.id
+        preferred ?? Object.values(provider.models)[0]?.id
       return modelID ? [{ providerID: provider.id, modelID }] : []
     })[0]
   }
 
-  const current = () => {
-    const key = selectPromptModel(
-      {
-        chosen: prompt.model.current(),
-        agent: input.agent()?.model,
-        configured: configured(),
-        recent: models.recent.list(),
-        fallback: fallback(),
-        engine: engine(),
-      },
-      { all: providers.all(), connected: providers.connected().map((item) => item.id) },
-    )
-    if (!key) return
-    return models.find(key)
+  const intent = () => {
+    const value = prompt.model.current()
+    return { model: value ? { providerID: value.providerID, modelID: value.modelID } : undefined, variant: value?.variant }
   }
+  const candidate = () => intent().model ?? input.agent()?.model ?? configured() ?? models.recent.list()[0] ?? fallback()
+  const execution = createModelExecutionView({ sdk, sessionID: () => undefined, ready: () => models.ready() && prompt.ready(),
+    metadata: () => ({ agents: sync().data.agent, config: sync().data.config, providers: [...providers.all()],
+      connected: providers.connected().map((provider) => provider.id), semanticEpoch: sdk().modelExecutionEpoch() }),
+    agentID: () => input.agent()?.id ?? "maestro", agent: input.agent, intent, candidate,
+    savedVariant: (key) => models.variant.get(key),
+  })
+  const known = new Map<string, NonNullable<ReturnType<typeof models.find>>>()
+  const display = (key: ModelKey | undefined) => {
+    if (!key) return
+    const provider = providers.all().get(key.providerID)
+    const metadata = provider?.models[key.modelID]
+    const item = models.find(key) ?? (provider && metadata ? { ...metadata, provider,
+      name: metadata.name.replace("(latest)", "").trim(), latest: metadata.name.includes("(latest)") } : undefined)
+    const token = JSON.stringify([key.providerID, key.modelID])
+    const selected = intent().model ?? candidate()
+    if (item && selected?.providerID === key.providerID && selected.modelID === key.modelID) known.set(token, item)
+    return item ?? known.get(token)
+  }
+  const current = () => display(intent().model ?? (execution.ready() ? candidate() : undefined))
   const recentModels = createMemo(() =>
     models.recent
       .list()
@@ -107,10 +110,21 @@ export function createPromptModelSelection(input: {
   )
 
   const selection = {
-    ready: models.ready,
+    intent,
+    execution,
+    ready: Object.assign(() => models.ready() && prompt.ready(), { promise: models.ready.promise }),
     current,
     recent: recentModels,
-    list: () => models.list().filter((model) => valid({ providerID: model.provider.id, modelID: model.id })),
+    list: () => {
+      const response = execution.read()
+      const items = response.status === "ready" ? response.response.data.models.flatMap((entry) => {
+        const item = display({ providerID: entry.model.providerID, modelID: entry.model.id })
+        return item ? [item] : []
+      }) : models.list()
+      const selected = display(intent().model)
+      return selected && !items.some((item) => item.id === selected.id && item.provider.id === selected.provider.id)
+        ? [...items, selected] : items
+    },
     cycle(direction: 1 | -1) {
       const items = recentModels()
       const item = current()
@@ -118,10 +132,10 @@ export function createPromptModelSelection(input: {
       const index = items.findIndex((entry) => entry.provider.id === item.provider.id && entry.id === item.id)
       if (index === -1) return
       const next = items[(index + direction + items.length) % items.length]
-      if (next) selection.set({ providerID: next.provider.id, modelID: next.id })
+      if (next && execution.allows({ providerID: next.provider.id, modelID: next.id }))
+        selection.set({ providerID: next.provider.id, modelID: next.id })
     },
     set(item: ModelKey | undefined, options?: { recent?: boolean }) {
-      if (item && !valid(item)) return
       startTransition(() =>
         batch(() => {
           prompt.model.set(item ? { ...item, variant: prompt.model.current()?.variant } : undefined)
@@ -147,16 +161,7 @@ export function createPromptModelSelection(input: {
         return prompt.model.current()?.variant
       },
       current() {
-        const resolved = resolveModelVariant({
-          variants: this.list(),
-          selected: this.selected(),
-          configured: this.configured(),
-        })
-        if (resolved) return resolved
-        const model = current()
-        if (!model) return
-        const saved = models.variant.get({ providerID: model.provider.id, modelID: model.id })
-        if (saved && this.list().includes(saved)) return saved
+        return execution.input().model?.variant
       },
       list() {
         return Object.keys(current()?.variants ?? {})

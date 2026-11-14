@@ -1,10 +1,10 @@
 ---
 name: maestro-orchestra-tools-context
-description: How Orchestra keeps long sessions sharp: System Context and epochs, continuity summaries, masking, context_recall, context_compact, and Lean.
+description: How Orchestra manages context in long sessions and searches admitted documents using System Context, continuity, masking, recall, compaction, Lean, and Rag Studio.
 internal: true
-when: The owner asks why an agent forgot something, how long sessions are handled, what a masked tool result stub is, or when to recall or compact.
+when: The owner asks why an agent forgot something, how long sessions are handled, what a masked tool result stub is, when to recall or compact, or how Rag Studio handles admitted documents.
 not-when: The question is about project memory or the code map (open tools/atlas) or about a session transcript export.
-covers: [modules/continuity]
+covers: [modules/continuity, modules/rag-studio]
 ---
 
 # Context
@@ -72,3 +72,10 @@ Claude Code owns compaction inside its own session. Orchestra hashes the baselin
 ## `modules/continuity`
 
 The package `@orchestra/continuity`. `src/v2` is the strategy that replaces core Session compaction (`ContinuityStrategy`) and registers the `context_recall` and `context_compact` tools; `alias.ts`, `archive.ts` and `masking.ts` support it. `src/archive-search.ts` ranks archived chunks lexically and `src/masking-rules.ts` decides which tool output stays verbatim. It persists nothing itself: archived context is written through the atlas boundary and the host owns lifetime. The CLI host registers `ContinuityV2.contribution`.
+
+## `modules/rag-studio`
+
+Admitted-document studio (`@orchestra/rag-studio`), with source, revision, chunk and pipeline state. Its default
+pipeline uses lexical search with embeddings disabled. Its path gate refuses project source, which belongs to Atlas,
+and requires permission for documents outside the Location. Wire schemas live in `packages/schema/src/rag-studio.ts`;
+the HTTP group is `packages/protocol/src/groups/rag-studio.ts`.

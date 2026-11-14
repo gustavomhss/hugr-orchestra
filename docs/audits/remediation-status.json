@@ -1,0 +1,4068 @@
+{
+  "schema_version": 1,
+  "implementation_base": "74bfb2f4474e3c8a2657af6730edbfd90504816c",
+  "integration_branch": "audit-remediation",
+  "pull_request_policy": "single PR targeting dev",
+  "benchmark_before": {
+    "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43109842284",
+    "verdict": "success",
+    "tests_passed": 6
+  },
+  "findings": [
+    {
+      "id": "E1",
+      "severity": "P2",
+      "owner": "ui",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "3c1190230f",
+        "d947c0f3e0",
+        "6f137ac20f",
+        "b667b81155",
+        "f0c0f48f09",
+        "d00e908fa0",
+        "2e66c62cac",
+        "14f97e7363"
+      ],
+      "evidence": [
+        {
+          "kind": "controls_compositional_green_both_os",
+          "runs": [
+            "43223282235",
+            "43225383063"
+          ],
+          "result": "Four UI controls pass in original run; native control corrected to exact204 selection/200 prompt and versioned SQL event counts then passes29assertions perOS. Original native failure was fixture, not product RED."
+        },
+        {
+          "kind": "full_baseline_behavioral_red_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43227911160",
+          "result": "16pass/18behavioral failures/260assertions/2Omni spawns perOS; all34outcomes and18first-failure lines match. RealHTTP200+SQL admission/event1 witnessed BEFORE ACK loss; retry200 rotates ID. Later final row count and part identity assertions remain final-green obligations."
+        },
+        {
+          "kind": "full_final_green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43235251521",
+          "result": "34pass/295assertions/2Omni spawns perOS; exact4026 source and9032a053f798243485f64e86dfa03ef06fec8021 snapshot. Final SQL row/event and immutable parts criteria reached and pass after commit-before-ACK-loss."
+        },
+        {
+          "kind": "production_benchmark_comparison",
+          "before": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43197751238",
+          "after": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43236422033",
+          "result": "6pass per run;90PAGE+6summary records each. Existing BEFORE predates E1 source, seven frontend trees equal E1 baseline, only unrelated engine Drizzle devDependency lock delta. Same production/current-renderer/one-worker harness. AFTER312306.4ms versus BEFORE317432.572ms; collection/completion only, no threshold or causal performance claim."
+        },
+        {
+          "kind": "integrated_hashes_types_cold_review",
+          "result": "Root and Elon SOURCE APPROVE4026. Eight own commits integrated through14f97e7363;7/7 exact hashes including unchanged final acceptance files. App typecheck0, root guards78rules337paths0gate0error/one inherited advisory; boundaries0new0stale; spawn0."
+        }
+      ],
+      "remaining": "Closed for retries within one live existing-Session composer owner. No remount/reload, atomic configuration transaction or provider/tool exactly-once guarantee; native fixture proves admission only."
+    },
+    {
+      "id": "E2",
+      "severity": "P2",
+      "owner": "ui",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "732b7964f87968af7e28f2e569ae31d6a0afc0c9",
+        "c676700dfd77a284ed7d341cde5241671c9f588c",
+        "84e44ac885e64760f5a20d0a775de840fa00d09d",
+        "d72a9b1808a57c63431c952ce6b4d2101de4b591",
+        "26b1f224e9fa4fd1aa8fe9b8f5568e180d3c2377",
+        "2a6249daa3a72def52dec9f9feb4ffea97f42f6f",
+        "f13ba00abce99a5499f2fda784d8ccd7b092c02a",
+        "e21ba52401cf129078e903ce918588c03344779e",
+        "8f0a52cf3606f387e136b421ef258123e8ed56b6",
+        "99d9325124fec8090f2dfbf3ff2332815a7e67c7",
+        "8498854e1f12560d573b52a7d9bd72233efa3523",
+        "4402107a43c141eff69937770b1569558273c2ff",
+        "5a4ffadf638a464a046b6cafe508750807a4041e",
+        "eab4e2b0dde43b2e7a8e2a8a143a7d12dc8f5cc4",
+        "e07e070d0e0de3ba900d405c12dcb73143e14c29",
+        "50d7eaf6855c21a7ac34f78701f7da40c66d5d0b",
+        "a5d4085c8d6fafbdde73f76a472adbc804538d41",
+        "c9bfdb162f68c8c448f0f7ba7ca982024e329084",
+        "c564f5f1a7cb5203a6727e114c84296469a10cb5"
+      ],
+      "evidence": [
+        {
+          "kind": "behavioral_red",
+          "runs": [
+            "43167013539",
+            "43171883724",
+            "43174178542"
+          ],
+          "result": "Original force, mounted TUI reconnect and stale active snapshot races"
+        },
+        {
+          "kind": "compositional_green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43196556019",
+          "result": "75 unchanged unit cases and3 browser cases pass;2 final fixture assertions corrected without source changes"
+        },
+        {
+          "kind": "corrected_cases_green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43197297560",
+          "result": "2pass/46assertions; same message IDs assert refreshed text while preserving unfetched history"
+        },
+        {
+          "kind": "green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43196823687",
+          "result": "TUI28pass/169assertions per OS"
+        },
+        {
+          "kind": "production_benchmark",
+          "before": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43179487933",
+          "after": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43197751238",
+          "result": "6 scenarios each,90PAGE+6summary per run; no causal speed or threshold claim"
+        },
+        {
+          "kind": "cold_source",
+          "reviewer": "elon_musk",
+          "verdict": "APPROVE final18ef; root read all5 source diffs and resolved each later delta"
+        },
+        {
+          "kind": "typechecks",
+          "result": "App finalef496 and TUI invariant18ef exit0",
+          "receipts": [
+            "/tmp/orchestra-e2-app-type-fixture.exit",
+            "/tmp/orchestra-e2-tui-type-final.exit"
+          ]
+        },
+        {
+          "kind": "integrated_hashes",
+          "result": "all13 owned paths exactly match ef4961ca6afaa33132ab6e42817553db5536069f"
+        },
+        {
+          "kind": "integrated_checks",
+          "guards": 0,
+          "boundaries": 0,
+          "spawn_imports": 0,
+          "note": "Only existing explained Drizzle guard advisory remains"
+        }
+      ]
+    },
+    {
+      "id": "E3",
+      "severity": "P2",
+      "owner": "clients",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "33cf7d64ee5bc53b204bdce8b2b15e0bfb4d2dd9",
+        "630147c8b85d39be25a22353c6267cc55331109f"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112614483"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43117445498",
+          "result": "non-Error submit failure"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43114934467",
+          "result": "38 pass"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43117768085",
+          "result": "2 pass; non-Error failure normalized, cleanup preserved"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "elon_musk",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/audit-clients-cli-type-verified.exit"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E4",
+      "severity": "P2",
+      "owner": "clients",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "33cf7d64ee5bc53b204bdce8b2b15e0bfb4d2dd9",
+        "630147c8b85d39be25a22353c6267cc55331109f"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112614483"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43117445498",
+          "result": "non-Error submit failure"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43114934467",
+          "result": "38 pass"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43117768085",
+          "result": "2 pass; non-Error failure normalized, cleanup preserved"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "elon_musk",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/audit-clients-cli-type-verified.exit"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E5",
+      "severity": "P2",
+      "owner": "clients",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "33cf7d64ee5bc53b204bdce8b2b15e0bfb4d2dd9",
+        "630147c8b85d39be25a22353c6267cc55331109f"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112614483"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43117445498",
+          "result": "non-Error submit failure"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43114934467",
+          "result": "38 pass"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43117768085",
+          "result": "2 pass; non-Error failure normalized, cleanup preserved"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "elon_musk",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/audit-clients-cli-type-verified.exit"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E6",
+      "severity": "P2",
+      "owner": "clients",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "8253290d1d",
+        "ca0b8fc657",
+        "011474d4a5",
+        "3e6ace81ea",
+        "e2ef2e05ad",
+        "dd772e7242",
+        "6eccdf0b91",
+        "08dd672ba8",
+        "6c1f7bb14d",
+        "7daa49b325",
+        "76236cb726",
+        "65f6931a93",
+        "a872842eb9",
+        "696793eae0",
+        "e288a0387a",
+        "a2870ff7e8",
+        "e14cf72118",
+        "2ba68435ec",
+        "f914f19c8042f8f1f6544d6254a4fb91702d7bec",
+        "1ea3a466a7ddaa5b5d1d5c9be1e9bf07f8826990"
+      ],
+      "evidence": [
+        {
+          "kind": "core_host_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43160056512"
+        },
+        {
+          "kind": "claude_host_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43160277386"
+        },
+        {
+          "kind": "http_factory_baseline_controls",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43203850056",
+          "result": "Six real HTTP/Node fallback controls pass; future Bun factory absent at this baseline."
+        },
+        {
+          "kind": "completed_body_disconnect_behavioral_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43204148939",
+          "result": "Plain real HttpRouter plus production bridge fails strict5s server interruption after completed JSON body and actual peer disconnect."
+        },
+        {
+          "kind": "http_factory_and_bridge_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43209675765",
+          "result": "13pass/51assertions/1 Omni Node child; actual completed-body peer disconnect now interrupts. Same GitHub run recovered after local monitor network failure, no rerun."
+        },
+        {
+          "kind": "wire_full_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43216224161",
+          "result": "25pass/179assertions/3 Omni exerciser children. Strict generated Promise/Effect server interruption assertions unchanged; no temporary diagnostic waiver."
+        },
+        {
+          "kind": "wire_quiet_final_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43219521038",
+          "result": "2 strict cancellation cases pass9assertions/2.81s after TEMP/trace removal."
+        },
+        {
+          "kind": "integrated_api_generated_typeproof",
+          "result": "9 owncommits througha872842eb9;24files exact SHA256 match; official packages/client bun run generate0 and all24hashes still identical. Root Core+Server+CLI final types0. Root guard0/boundaries0/spawn0;92existing ledger entries, zero new/stale."
+        },
+        {
+          "kind": "ui_control",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43272578484",
+          "result": "App nine valid controls/64 assertions per OS, one popover fixture setup failure excluded."
+        },
+        {
+          "kind": "ui_control",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43275571435",
+          "result": "TUI five controls/21 assertions per OS."
+        },
+        {
+          "kind": "ui_control",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43282763415",
+          "source": "3bd38316d8cdd1a385f610090a109a758cd08a51",
+          "result": "Actual popover/controller/TanStack rows: one control/two assertions per OS; isolated synthetic600x220 layout, no physical-browser geometry claim. Composes15/15 controls. Fault baselines not yet run."
+        },
+        {
+          "kind": "ui_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43285868925",
+          "source": "3bd38316d8cdd1a385f610090a109a758cd08a51",
+          "result": "36 valid App first-behavior RED per OS; deferred queue return expectation is one fixture setup miss, excluded. Later assertion tails unexecuted."
+        },
+        {
+          "kind": "ui_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43286041103",
+          "source": "3bd38316d8cdd1a385f610090a109a758cd08a51",
+          "result": "22 valid TUI first-behavior RED per OS, no setup misses; downstream ownership/ABA assertions unexecuted after missing query witnesses."
+        },
+        {
+          "kind": "ui_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43287303247",
+          "source": "8983671c77199fd8eacae6f2eb0f1697c9b52cb5",
+          "result": "Deferred public sender returns true instead of false; captured draft and no prior POST assertions pass,1F/3assertions per OS. One invalid queue return assertion removed in separately reviewed fixture correction; sender/query/draft requirements unchanged. Completes59 original first-witness cases compositionally, not59 distinct defects or proven later tails."
+        },
+        {
+          "kind": "literal_variant_identity_integrated_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43319261692",
+          "source": "2b56c6cc9f0eb70eb96653bdd80d48fb441500da",
+          "snapshot": "473bd697b5bec75f768561b4a301e25986453e5c",
+          "result": "Five complete Core files:104pass/0fail/430assertions per OS, including21new acceptance cases. Eleven actual hosted blobs equal frozen source and integrated Root. Core type0; only undefined inherits, every string including default and empty is literal. No API/schema/dependency/generated changes. Root aggregate Server bun typecheck0. Root guards78rules390paths0gates0errors/one existing advisory; boundaries5639files5297edges92existing0new0stale, spawn4021files66allowed; all exit0. Entire integrated Core git tree equals the independently typed/tested unit (3fcfd93c349a7e80e1255e88deb26bc6fc1a6fc4)."
+        },
+        {
+          "kind": "consumer_correction_static_approved_pending_runtime",
+          "source": "a678f8e108abbb4c8711e7725f06b83841333ff4",
+          "result": "Root and independent cold critic read all22 correction paths and approve.132consumer/safety cases (94original+38new) plus34unchanged E1 and existing owner/delivery/roster/Sync regressions frozen. Base ACK/item raw identity, scoped semantic context, DirSDK last-ref lifetime and empty-string semantics corrected. Four package types now authorized serially; official A/B/C gates conditional on types, no AFTER yet. No consumer runtime GREEN claimed."
+        },
+        {
+          "kind": "consumer_typecheck_fixture_and_callsite_errors",
+          "source": "a678f8e108abbb4c8711e7725f06b83841333ff4",
+          "result": "Client and SessionUI typecheck0; App typecheck1 with exactly two errors: excess scope/directory keys in waitForSubagentPolicy call, optional test identity value after an explicit defined assertion. Chain stops before TUI; no consumer hosted gate dispatched. Root and independent critic approve removing only unused call arguments and asserting that already-validated test value nonnull; no authority or assertion requirement changed. App/TUI rerun required after narrow patch."
+        },
+        {
+          "kind": "consumer_functional_first_gate_failed_unresolved",
+          "source": "cbb84e10d6ca58a06eff1da2a9d6080f4c9c7c27",
+          "runs": [
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43325725994",
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43325724696",
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43325816365"
+          ],
+          "result": "Client/SessionUI/App/TUI typechecks compose0 after narrow static fixes (historical failures retained). Linux A69pass44fail564assertions; C65pass7fail305assertions; B regression wrapper failures/timeouts, other wrappers and refcount/roster pass. Existing-Session early policy wait occurs before Stop tracking and collapses original error formatting: concrete source regression to repair. Shared submit-harness cross-file hooks may contaminate E1; isolated unchanged34 diagnostic authorized, no SQL regression claim without HTTP witness. TUI metadata bootstrap assertion also matches intentional GETs instead of mutation-only POSTs; fix proposal pending. Other key/frame/selector witnesses and Windows verdicts unresolved. No consumer integration or AFTER benchmark authorized."
+        },
+        {
+          "kind": "isolated_original_retry_diagnostic",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43326635728",
+          "source": "cbb84e10d6ca58a06eff1da2a9d6080f4c9c7c27",
+          "result": "Both OS32pass/2fail249assertions/Omni2. All nonnative32 pass, separating most combined-A retry failures from product behavior. Native two receive canonical route404 before any prompt POST/SQL ACK witness; their existing fixture exposes SessionGroup only. Actual ModelsGroup service wiring and shared-harness isolation are proposed fixture ports, no fake canonical READY or assertion waiver. Direct Stop/policy formatting and captured draft restoration source repairs planned before edits; benchmark remains blocked."
+        },
+        {
+          "kind": "consumer_repair_runtime_partial_green_remaining_failures",
+          "runs": [
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43332023004",
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43332023796",
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43332080659"
+          ],
+          "source": "1fb41779e33733f65a2d12eadd4c2b4c4a4f8f7a",
+          "result": "Repair App and TUI typechecks0; Client/SessionUI unchanged previously0. A both109pass4fail756assertions/Omni4: raw-intent/context and after-selector restore+optimistic cleanup now pass; native ACK-loss actual HTTP+SQL same-ID passes. Remaining popover query0, two variant callback deadlines and native control transport whitelist fixture. B unit9pass2wrapperfail25assertions+browser3pass15assertions per OS; early Stop/policy errors repaired, worktree prerequisite still waits two actions that identical E1 intent coalesces. TUI context14pass94assertions both; full TUI72 not rerun, six key/frame failures and Windows actual async model.json EPERM remain unresolved. Root+Elon approved exact native execution stage fixture776d05 and distinct real worktree prompts c092; no eligibility relaxation or SQL assertion removal. Further native34/B regression gates authorized, AFTER benchmark blocked until functional green."
+        },
+        {
+          "kind": "native_retry_setup_fixed_green_both_and_regression_tail_diagnosis",
+          "runs": [
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43336072471",
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43336071748"
+          ],
+          "source": "c0924fa7ab85bac3dcf66bcff6c5cf8cb7d224d3",
+          "result": "Native E1alone34pass0fail299assertions/Omni2 each OS after exact execution-stage fixture whitelist. Both actual worktree waiters now reached; double-click, owner-switch and reactive-owner ABA ACK controls pass. B now reaches five independent tails: copied queued SessionAPI lost private execution association, three command optimistic observer/status failures due explicit kind suppressing busy mutation, and rawmodel edit after positive draft ACK blocking promotion. No admission-phase workaround. Root documented bounded repairs, base-signal/raw-intent handoff requirements and realHTTP post-admission signal separation; acceptance/cold review precede source. Three remaining App rendering/callback diagnostics authorized separately, no product modification or AFTERbenchmark."
+        },
+        {
+          "kind": "rendering_fixture_corrected_canonical_and_keyboard_baseline",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43340984879",
+          "snapshot": "b1875cb9e4f9bbfcabb4f76dcf023931ff7faf7b",
+          "result": "Corrected3 BOTH2pass1realRED17assertions: wait for actual canonical response preserves exactonequery/disabledrow; actualKobalte keyboard Enter preserves disabled/directcallback/high/default corrections. RemainingrealRED: reselecting checked Modeldefault suppresses callback, rawundefined never becomesexplicitnull. Root+Elon approve2lineSharedUI per-itemonSelect fix, not yet applied. Five additional controlled ACK/raw-intent/policy-refusal cases plus actual SERVER-heldSQL-committed true-draft HTTP case authored/coldapproved; App type0 atb14 (browserfixtures excluded). Runtime acceptance pending; no production ACK or AFTERbenchmark claim."
+        },
+        {
+          "kind": "app_consumers_final_green_before_tui_completion",
+          "source": "6bbc92c20f2dd4f3668812ad7749f6e29c0a8165",
+          "runs": [
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43353090848",
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43353092858"
+          ],
+          "snapshots": [
+            "6f5fb04ea840c576db92d44086e8f761eed892eb",
+            "71c08b7d9ccb80a0d8aaf9645a3c4015ebb50606"
+          ],
+          "result": "Both OS A114pass/0fail849assertions/5Omni; B outer11pass34assertions plus browser3pass15assertions, both isolated real children exit0. Existing wrapper hides successful child stdout:90/110 are static registrations, not independently emitted runtime counts. Actual draft HTTP200+SQL durable admission, later model/policy edits, original POST preserved, current policy ACK and raw handoff/no second POST pass. Root independently downloaded alljobs/raw and compared52 owned path blobs across both snapshots (104 exact comparisons). App and SharedUI package types0. Six original TUI key/frame witnesses and Windows real atomic-file EPERM remain unresolved; context14 separately green. No AFTER benchmark or aggregate UI integration claimed."
+        },
+        {
+          "kind": "combined_tui76_green_before_dev_integration",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43366810851",
+          "source": "f914f19c8042f8f1f6544d6254a4fb91702d7bec",
+          "snapshot": "8020cedd286a87abe4ce92bfcbe5a827d65ecf70",
+          "result": "Both OS76pass/0fail/8files, all six original variant cases and four actual atomic I/O cases executed. Root independently checked both jobs/raw and snapshot diff only .ci-run.json. TUI type0. Previous43364979791 actual76 failed Linux74/2/1error and Windows73/3 because real preference writes raced fixture removal; owner-local bootstrap/write flush and joined teardown fixed lifetime without changing oracles. One GitHub422 before dispatch preserved, followed by exactly one authorized official retry. Final dev integration/App aggregate/AFTER benchmark pending; E6 remains open."
+        },
+        {
+          "kind": "final_integrated_functional_union_both_os",
+          "runs": [
+            "43368851805",
+            "43368851179",
+            "43369898441"
+          ],
+          "result": "PerOS: A114P849assertions, B11unitP34assertions+3browserP15assertions and2isolatedwrappers exit0; TUI76P including6variants+4realatomiccases. Exact snapshots/54ownedpaths and rawjobs independently checked. evidence/e6-final-functional-union.json."
+        },
+        {
+          "kind": "requested_production_before_after_collection",
+          "runs": [
+            "43265220168",
+            "43380610880"
+          ],
+          "result": "Both6passed,90PAGE+6BENCHMARK each, Linux/current/1worker/repeat3/retries0. Both ZIP digests and embedded HTML/runtime records match. AFTER108critical blobs exact. Effective selectedconfig equivalent; metadata and serializedgrepInvert differ, no causal performance claim. evidence/e6-benchmark-comparison.json."
+        }
+      ],
+      "remaining": "Closed for explicit model/variant identity and current App/TUI consumers under preserved preference storage compatibility. Legacy stored default intent cannot be recovered; first-known-model metadata performs documented one-time inference. No causal benchmark improvement or durable preference transaction guarantee; full epic remains final PR gate."
+    },
+    {
+      "id": "E7",
+      "severity": "P2",
+      "owner": "clients",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "08aeb55758",
+        "73c4bd4852",
+        "16a7eccb889a37bed2f33d454aa9a16c55020e46",
+        "a3fe129981f576eeb6e35f1f6dde1ceb105a7dc8"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43135005845",
+          "result": "15 behavioral failures; one omitted-default control was corrected separately"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43134282791",
+          "result": "Canonical class identity absent"
+        },
+        {
+          "kind": "baseline_control",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43135991053",
+          "result": "1 pass; real HTTP final JSON omits temperature and keeps existing route defaults"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43136817655",
+          "result": "49 Core pass"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43136818348",
+          "result": "91 LLM pass"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43136816634",
+          "result": "6 Schema pass"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43137315301",
+          "result": "5 plugin fixture pass after readonly stop projection correction"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "elon_musk",
+          "verdict": "APPROVE source; root independently read production diff"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "Schema,LLM,Core final exit0",
+          "receipts": [
+            "/tmp/audit-variant-type-schema.exit",
+            "/tmp/audit-variant-type-llm.exit",
+            "/tmp/audit-variant-type-core-final.exit"
+          ]
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43139464094",
+          "result": "31 Client pass, 6files,108assertions; actual HTTP Promise/Effect model variant roundtrip and typed409 retained"
+        },
+        {
+          "kind": "official_generation",
+          "base": "73c4bd4852d5dc44992c8cd34793305800173b0d",
+          "result": "Combined L2/E7 baseline, two official generations exit0, diff and all56 file hashes identical; only types.ts22added lines",
+          "blob": "b1d36735a6c239b7522f5773cc02bbcb8f6e8cce",
+          "receipt": "/tmp/audit-variant-wire-state.json"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "Client exit0; root read receipt",
+          "receipt": "/tmp/audit-variant-wire-type-client.exit"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "lead",
+          "verdict": "Read generated-only diff and both actual HTTP consumer tests; source previously approved independently by elon_musk"
+        }
+      ]
+    },
+    {
+      "id": "E8",
+      "severity": "P2",
+      "owner": "clients",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "edf0acee6d23625a8e1ef287feda1c4d92452bc6"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43121722733"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43121723099"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43122491916",
+          "result": "concurrent materializations"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43125564276",
+          "result": "11 LLM/WebSocket pass"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43126317958",
+          "result": "4 Core persistence/replay pass"
+        },
+        {
+          "kind": "compat_partial",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43125563407",
+          "result": "155 pass, 1 obsolete expected-success assertion failed; this workflow was NOT green"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43126320570",
+          "result": "Corrected EOF assertion passes; incomplete tool call still absent"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "elon_musk",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/audit-stream-llm-type.exit",
+            "/tmp/audit-stream-core-type.exit"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E9",
+      "severity": "P2",
+      "owner": "clients",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "edf0acee6d23625a8e1ef287feda1c4d92452bc6"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43121722733"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43121723099"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43122491916",
+          "result": "concurrent materializations"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43125564276",
+          "result": "11 LLM/WebSocket pass"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43126317958",
+          "result": "4 Core persistence/replay pass"
+        },
+        {
+          "kind": "compat_partial",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43125563407",
+          "result": "155 pass, 1 obsolete expected-success assertion failed; this workflow was NOT green"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43126320570",
+          "result": "Corrected EOF assertion passes; incomplete tool call still absent"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "elon_musk",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/audit-stream-llm-type.exit",
+            "/tmp/audit-stream-core-type.exit"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E10",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "fa4edeb7b0",
+        "58aa2d4751",
+        "6229d287b1",
+        "450dc9bad7",
+        "412ef9205a",
+        "5024bbf7b2",
+        "30b6151bcc",
+        "851c0b6d72",
+        "4e4beaab61",
+        "76ccf04378",
+        "816e98492e",
+        "a4a68c5f1d",
+        "5e74c47dc6",
+        "ed27b27f94",
+        "753406a957"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43265565788",
+          "source": "9ffff1633968b3a17325c4653afd4e2b13f0dbdf",
+          "os": [
+            "linux",
+            "windows"
+          ],
+          "result": "Six behavioral failures per OS with valid setup; Linux owned containment, Windows late timeout after native CPU completed. Later assertions not reached."
+        },
+        {
+          "kind": "control",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43248008786",
+          "result": "Six unchanged controls/41 assertions per OS; compositional."
+        },
+        {
+          "kind": "diagnostic",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43264461440",
+          "result": "Bounded Linux workload calibration only; not product GREEN."
+        },
+        {
+          "kind": "rejected_source_gate",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43275767597",
+          "source": "341215e6ba0f169edacbce5b6dbb7a0c2ef4b30a",
+          "result": "Both OS fail ordinary controls without RESULT; CPU cases fail startup before mark. This is a worker integration regression, not a new CPU RED or GREEN."
+        },
+        {
+          "kind": "cancelled_source_gate",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43275581639",
+          "source": "341215e6ba0f169edacbce5b6dbb7a0c2ef4b30a",
+          "result": "Lead cancelled only this owned full-package run after the same-source Core gate proved universal ordinary hangs; avoid repeating hundreds of 120-second timeouts. Both jobs cancelled, cleanup successful. Not GREEN."
+        },
+        {
+          "kind": "diagnostic",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43279188151",
+          "source": "f0083529770a2effafb722443899dfa04ba7904a",
+          "result": "Pinned Linux actual Worker reaches READY and parent sends start; no DONE/result by3s snapshot or owned6.5s containment. Does not establish worker received start or top-level-await causality; protocol pass is not product GREEN."
+        },
+        {
+          "kind": "diagnostic",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43285225960",
+          "source": "a8f44cc3e4cfba338dad71386f0d3ba2b2b1dd98",
+          "result": "Pinned Linux controlled A/B: default awaited entry hangs after READY/start; test-only no-await entry using identical runtime produces1, original terminate Promise settles, actual worker exits threadId=-1, child naturalexit0. Protocol2pass/9assertions/Omni2; not product GREEN."
+        },
+        {
+          "kind": "staged_source_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43286717038",
+          "source": "1b9f30afc25c6a7aa1e34c57cdc5704f1cb59f19",
+          "result": "Eleven actual lifecycle/safety cases per OS,68assertions each;10 actual Worker exits/threadId=-1 plus constructor-fault case. Includes entry rejection safeFailure/exit1, caller Scope, exact cancel-finalizer ACK and absolute clock guards."
+        },
+        {
+          "kind": "staged_source_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43286840580",
+          "source": "1b9f30afc25c6a7aa1e34c57cdc5704f1cb59f19",
+          "result": "Six public controls per OS,42assertions/Omni6: source/compiled public semantics, R/hooks/receipts, sparse arguments, safeerrors and reuse. Extra conditional artifact assertion reflects actual worker-entry.js existence; original parent unchanged."
+        },
+        {
+          "kind": "source_cpu_gate_incomplete",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43288176957",
+          "source": "1b9f30afc25c6a7aa1e34c57cdc5704f1cb59f19",
+          "result": "Linux six cases reach valid CPU marks256\u2013307ms, produce TimeoutExceeded and naturalexit0 with parent heartbeatgap51\u201352ms/noafterCalls/slowInterrupted1. First exception is test matcher mutation: expect.any(Number) overwrites observed heartbeats before Schema decode. Independently archived raw elapsedAfterMark4.79\u20135.00s exceeds unchanged3000ms acceptance; timing assertion not reached. This is a material source failure observation, not GREEN or merely a harmless fixture issue. Windows/full-package pending at receipt."
+        },
+        {
+          "kind": "rejected_full_source_gate",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43288281159",
+          "source": "1b9f30afc25c6a7aa1e34c57cdc5704f1cb59f19",
+          "result": "Both OS275pass/5fail/867assertions,280cases finish; no universal hangs. Four legacy100ms cases miss intended host admission because worker startup consumes budget. Fifth concurrent fixture assumes task index equals host arrival order. Neither limits nor order fixture changed/waived. Whole Worker implementation not integrated."
+        },
+        {
+          "kind": "rejected_cpu_source_gate",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43288176957",
+          "source": "1b9f30afc25c6a7aa1e34c57cdc5704f1cb59f19",
+          "result": "Windows all6 have valid marks421\u2013637ms<750, warmup/ready true,106\u2013109 heartbeats but NO RESULT before owned6500ms containment. First required result assertion fails; independent of Linux matcher mutation. This directly rejects timely settlement."
+        },
+        {
+          "kind": "native_cpu_termination_diagnostic",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43290694993",
+          "source": "a597d5c002a9e401e898ee6ce8c48a9568b7dcb1",
+          "result": "Pinned Linux actual Worker with native2048regex/8MiB and ZEROhosttools: ready622ms/start623/log712, original terminate invoked1521ms. Snapshot3019ms still pending original terminate Promise/live thread1; no actual exit/result before owned6500ms kill. Protocol1pass/5assertions/Omni1 is not productGREEN. Delayed termination is independent of host cleanup."
+        },
+        {
+          "kind": "rejected_corrected_cpu_case",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43290827027",
+          "source": "a597d5c002a9e401e898ee6ce8c48a9568b7dcb1",
+          "result": "Original literal source case after read-before-matcher fixture correction fails RESULT absent: valid408ms mark,129 heartbeats, no setup errors, owned6500ms containment. Timing/decode tails unexecuted; no criterion/workload relaxation."
+        },
+        {
+          "kind": "os_process_capability_not_product_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43301049199",
+          "source": "14657189e4a94095cd1dd1b51ecc984c4fb1c164",
+          "result": "Both OS1pass/17assertions/Omni1. Actual child enters2048regex/8MiB at40.411ms Linux/63.484ms Windows. Requested1500ms kill, actual exit1506.181/1519.258ms and join1515.776/1519.380ms; no CPU_DONE/outer containment, parent heartbeat maxgap96.872/84.268ms. PID identity and owned-handle liveness/death observed, without independent syscall reap proof; backend signal null, no observed SIGKILL-report claim. Core type0. This supports native-op isolation planning, not CodeMode/default/compiled/Electron GREEN."
+        },
+        {
+          "kind": "private_parser_preparatory_stage_integrated_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43314982070",
+          "source": "cc371ed21bb42bd031e80e3a929ffa772b5d1dcd",
+          "snapshot": "0b1096b5d4ac31aa9269fc0a8797a8abe5ec2c7f",
+          "result": "89pass/0fail/282assertions per OS (44original controls+45future acceptance), cleanup/wrapper0. Two actual hosted blobs equal integrated Root. CodeMode type0; Root guards78rules382paths0errors/one inherited advisory, boundaries0new0stale, spawn0. Private utility is not wired into execution. Acorn8.15 grammar/errors/positions/callbacks preserved; user native construction omitted. Compiled legal-notice retention still pending."
+        },
+        {
+          "kind": "hardened_source_compiled_capability_mixed_verdict",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43326689238",
+          "source": "9999cd2d8d825c5096f6c49f7995c1e14e2317cc",
+          "result": "Core type0. Windows5pass/0fail163assertions; Linux1pass/4fail105assertions, all four fail independent OS PID sample taken after exit/readers but before kill join and full Scope. CPU marks27/25ms Linux and44/47ms Windows; kills/exits/readers around1.5s, no CPU_DONE/outer containment; compiled BUN_BE_BUN eval with trailing embedded -- works observationally, no complete Linux GREEN. Primary source confirms Unix Exited uses WNOWAIT and Stopped follows reap; no /proc state was observed, so do not label actual PIDs zombies. Original146 used kill join plus cached child.isRunning, not independent syscall0: earlier claim of independently verified reap is corrected. Root/critic authorize a proposed observation-boundary repair preserving early sample and original absolute3s full-settlement/OS-absence deadline; no rerun or product timeout proof yet."
+        },
+        {
+          "kind": "hardened_source_compiled_capability_integrated_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43330836910",
+          "snapshot": "f835f546d8e583714f5d40f0349ebed76d045b1b",
+          "source": "2fe953b51bf73dcc9b072ce876d0dc158e0779df",
+          "result": "Both OS5pass/0fail177assertions/Omni5, wrappers/cleanup0. Source/compiled eval, normal-entry sentinel and native CPU cases pass. Full owned Scope settlement plus independent OS PID absence at about1.509\u20131.515s; pidPolls0 all10, no CPU_DONE/outer containment/config canary execution. Earlier Linux pre-Scope PID sample retained as evidence, not called a zombie. Root independently fetched jobs/raw/snapshot blobs; two files and entire Core tree match typed source at integration4e4beaab61. Capability only: no production parser/codec/interpreter wiring, Mac/Electron qualification or product timeout closure."
+        },
+        {
+          "kind": "absolute_deadline_preparatory_stage_qualified_controls_and_red",
+          "runs": [
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43339796899",
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43342504803"
+          ],
+          "result": "Baseline20 BOTH8pass12fail72assertions: eleven valid behavioral REDs and one caller-IRQ handshake failure, not twelve product REDs. One explicit yield permits actual child registration before caller IRQ; focusedcorrective2 BOTH1pass1fail9assertions: pureIRQ/cleanup1/noEnd pass; uncaught late refusal returns ToolFailure insteadTimeoutExceeded. Composed9controls/12behavioralREDs BOTH; all21 not rerun. Root independently fetched alljobs/raw and checkedactual source/test snapshotblobs; private optionalguard scaffold type0. Root+Lamport full acceptance/architecture approve; sourceGO ONLYruntime/tool-runtime absolute deadline guards/outcome barrier, no native process/parser wiring or product closure."
+        },
+        {
+          "kind": "absolute_deadline_integrated_full_package_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43345280622",
+          "snapshot": "c146351148a61aee7bdbe45e3aae71fcd908e3a8",
+          "source": "8355a3b591832155a1a66761dc5df4eb1129c558",
+          "result": "Both OS379pass/0fail1210assertions across all10 current package files:269 original runtime cases,89 private parser and21 deadline acceptance. Earlier rejected Worker prototype280 included11 prototype cases absent from this tree; no current case excluded. All original100ms, eager parallelism, Scope and pure caller interruption controls pass. Root independently verified jobs/raw, snapshot blobs and whole CodeMode tree equal integrateded27. CodeMode type0, Root guards/boundaries/spawn0. Preparatory absolute deadline guards only; native regex still requires isolated operation wiring."
+        },
+        {
+          "kind": "hardened_macos_arm_intel_capability_integrated_green",
+          "runs": [
+            "43354169059",
+            "43353582278"
+          ],
+          "snapshots": [
+            "81fadc842f9e6314b5ec6e88a3252ccc1bfa2d68",
+            "fd87bae09e51a27ceb542ddb0a4a488473c3a606"
+          ],
+          "result": "Both actual macOS architectures5pass/0fail177assertions/Omni5, wrappers/cleanup0; child Bun1.3.14. Source and compiled CPU helper kill/fullScope/independent PID absence about1.518\u20131.534s, pidPolls0, no CPU_DONE/watchdog/canaries. Root independently downloaded alljobs/raw and checked2 exact blobs per snapshot plus all11 structured records perOS. Intel architecture is bound by the executed unique compileTarget branch and manifest, not nominal runner label; direct request.json echo is not retained in normal Core jobs. Earlier ARM macos14 unsupported runner failure preserved, never product RED. Evidence/e10-macos-capability.json records provenance."
+        },
+        {
+          "kind": "isolated_runtime_integrated_green_final_epic_pending",
+          "runs": [
+            "43412871502",
+            "43410822105",
+            "43412873472",
+            "43415059223"
+          ],
+          "document": "docs/audits/evidence/e10-isolated-runtime.json",
+          "result": "Independent source-bound final runtime evidence, original twelve acceptance cases retained. Baseline and intermediate Linux/Windows differences, compiled setup repair, and post-dev harness/lock deltas are explicitly recorded. Source review APPROVE at9add986fc1; subsequent6f977bbe1b fixes architecture ownership and switches driver test to explicit package export, without runtime changes."
+        },
+        {
+          "kind": "explicit_driver_export_final_green",
+          "run": "43416806305",
+          "result": "Both OS3pass0fail19assertions6Omni0delegated, cleanup success. Architecture ownership assigned to existing Core process domain, explicit package subpath replaces cross-package relative test import; runtime and oracles unchanged. Independent source review APPROVE."
+        },
+        {
+          "kind": "integrated_cold_epic_terminal_green_with_bounded_retry",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43492035272",
+          "source": "46530d548a6a7713231d9f30bc9bd1bc0321c01f",
+          "result": "70-job all-package cold workflow success on attempt2: first68success2failure; only failed CoreLinux13 and WindowsCLI rerun, actual cache-miss execution486P/287P. All original failure evidence retained. E2E570P1flaky3skip; later observer4P zero retry in43496472513. See evidence/fourth-cold-requalification.json."
+        }
+      ],
+      "remaining": "Closed for isolated native-regex/parser execution and explicit export driver with source/compiled CPU, provider and CodeMode controls. No general parent CPU preemption or automatic host selection claim."
+    },
+    {
+      "id": "E11",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "746595ea8167ca2c15c3279b33c947956e2ed9f9"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113336734",
+          "result": "0 pass, 4 fail; shared budget and mutable prior result reproduced"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113860311",
+          "snapshot_sha": "8ad52fd02ebd03f56abb08e8d95436d2e6a66a54",
+          "result": "49 pass, 0 fail across isolation and public contract tests"
+        },
+        {
+          "kind": "typecheck",
+          "command": "bun typecheck",
+          "cwd": "packages/codemode",
+          "result": "pass after explicit suspend result annotation"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "elon_musk",
+          "verdict": "APPROVE; root inspected code and hosted results"
+        }
+      ]
+    },
+    {
+      "id": "E12",
+      "severity": "P2",
+      "owner": "ui",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "9c5be3414584bf5deace379b0615eb2790c09ac7"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112550030"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43116667193",
+          "result": "123 pass in scoped app suite; exact source blobs verified"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "leslie_lamport",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/orchestra-ui-app-typecheck-jsx-fix.exit"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E13",
+      "severity": "P2",
+      "owner": "ui",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "9c5be3414584bf5deace379b0615eb2790c09ac7"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112550030"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43116667193",
+          "result": "123 pass in scoped app suite; exact source blobs verified"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "leslie_lamport",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/orchestra-ui-app-typecheck-jsx-fix.exit"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E14",
+      "severity": "P2",
+      "owner": "clients",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "33cf7d64ee5bc53b204bdce8b2b15e0bfb4d2dd9",
+        "630147c8b85d39be25a22353c6267cc55331109f"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112614483"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43117445498",
+          "result": "non-Error submit failure"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43114934467",
+          "result": "38 pass"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43117768085",
+          "result": "2 pass; non-Error failure normalized, cleanup preserved"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "elon_musk",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/audit-clients-cli-type-verified.exit"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E15",
+      "severity": "P2",
+      "owner": "ui",
+      "status": "fixed_verified",
+      "runtime_reproduced": false,
+      "commits": [
+        "23bf00b8800199e5fc66443d8613b95cb7cc9549",
+        "7b605e13f32d4dd0790e2f3664c15617b09d21e9"
+      ],
+      "evidence": [
+        {
+          "kind": "compile_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112859187",
+          "result": "Missing new seam; not a baseline runtime reproduction"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43119837673",
+          "result": "15 pass; persisted per-tab worktree, readiness and stale snapshot checks"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "leslie_lamport",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/orchestra-ui-app-typecheck-jsx-fix.exit"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "G1",
+      "severity": "P2",
+      "owner": "clients",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "e2e250b7e3efc5c16a2994b03e1444536162b668"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112615865"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113793857",
+          "result": "14 pass"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43117450334",
+          "result": "2 imported consumer tests pass; official regeneration idempotent"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "elon_musk",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/audit-clients-client-type-final.exit",
+            "/tmp/audit-clients-generate-verified.exit",
+            "/tmp/audit-clients-generate-idempotence.exit"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "G2",
+      "severity": "P2",
+      "owner": "ui",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "72afa84e9e",
+        "03f2135224",
+        "50388b3d23",
+        "632f69f07e",
+        "4edc087b30",
+        "5bcf1e5ab9",
+        "dd92dce704",
+        "a862305c0d",
+        "d49e6e2abb",
+        "9ec1751833"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43149079101",
+          "snapshot": "53166e2ed7efeb3548737282ad81e18bf7ae99cb",
+          "result": "Linux existing create API admits duplicate default-file hosts; one assertion fails, first-host survival and real default SQLite controls pass. Not yet a concurrent-provider corruption reproduction."
+        },
+        {
+          "kind": "api-red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43151943193",
+          "snapshot": "ad64e17789f06557a497f0cedf54e84752b65b93",
+          "result": "Future options/contributions ignored and helper absent; not provider-corruption reproduction"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43153604637",
+          "result": "Equivalent graph clones falsely conflict in two replacement orders; cycles hidden/misclassified"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43154505105",
+          "snapshot": "a45a0a2bb8f8957f6a3d7cc1a134b4d31e33f2ce",
+          "result": "24 tests/3 files, Core hoist"
+        },
+        {
+          "kind": "partial-green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43154562447",
+          "snapshot": "09e1e2da6d877915dc3a1ccb7ca963267c328c62",
+          "result": "Linux28pass1skip1fail, Windows27pass2skip1fail; sole failure fixture counted legitimate automatic SessionTitle request. Workflow failure, not green"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43155138978",
+          "snapshot": "a9e2dac1831e4dd5158371b6407eeaf58071f5d0",
+          "result": "Corrected sole provider case1pass10assertions eachOS, real rename before prompt excludes automatic title, one provider request and constructor, A text persisted"
+        },
+        {
+          "kind": "typecheck",
+          "result": "SDK final head0 and Core exact0",
+          "receipts": [
+            "/tmp/orchestra-embedded-sdk-type-head.exit",
+            "/tmp/orchestra-embedded-core-type-final-exact.exit"
+          ]
+        },
+        {
+          "kind": "review",
+          "result": "Elon APPROVE SDK/DB/README, Lamport APPROVE hoist f026; lead read both and integrated without conflict"
+        },
+        {
+          "kind": "limits",
+          "result": "One process/SDK module only; no workers/cross-process/duplicated-bundle or active file replacement protection. May create parents/empty file, never deletes selected DB on failure. SDK evidence compositional on identical production, no single full SDK green claimed."
+        }
+      ]
+    },
+    {
+      "id": "H1",
+      "severity": "P1",
+      "owner": "security",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "cc3ffb47d7e3a1736606e72e5115a0ae01cd7fc8",
+        "4f3f912cdcf2fa745f04246bb527e3bb969a06f6",
+        "bd7f91846be76017ef82c50fb730bb73b13d45ac"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43118297966",
+          "result": "1 pass, 7 fail after fixture correction"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43119879419",
+          "result": "34 pass per OS across authorization/trust"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "dr_house",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/audit-authorization-core-recheck.exit"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "H2",
+      "severity": "P1",
+      "owner": "security",
+      "status": "already_fixed_verified",
+      "runtime_reproduced": false,
+      "commits": [
+        "d8b4663b8b"
+      ],
+      "evidence": [
+        {
+          "kind": "revalidation",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113389706",
+          "snapshot_sha": "926d207c3679a30607348ab3fcede37fcaf3a082",
+          "result": "3 pass; actual HTML/SVG response sandbox CSP+nosniff and bytes intact; no browser execution attempted"
+        }
+      ]
+    },
+    {
+      "id": "H3",
+      "severity": "P2",
+      "owner": "security",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "165c590f5a"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113800370"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113741903",
+          "os": [
+            "linux",
+            "windows"
+          ],
+          "verified_by_lead": "workflow conclusions, selected exact source blobs, source and tests inspected"
+        },
+        {
+          "kind": "local_typecheck",
+          "core_exit": 0,
+          "server_exit": 0,
+          "command": "GOMAXPROCS=2 bun typecheck",
+          "receipts": [
+            "/tmp/audit-security-core-final.exit",
+            "/tmp/audit-security-server-final.exit"
+          ]
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "dr_house",
+          "verdict": "APPROVE; root requested and reviewed H13 preservation refinement"
+        }
+      ]
+    },
+    {
+      "id": "H4",
+      "severity": "P2",
+      "owner": "security",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "518ff7d982",
+        "7273d6c76b",
+        "24ef87114e",
+        "515a480932",
+        "877d3e0eb0",
+        "b03e2b093e",
+        "05649073ff",
+        "9850d20eb7"
+      ],
+      "evidence": [
+        {
+          "kind": "actual_permission_behavioral_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43197836127",
+          "result": "Seven alias/external cases reproduce actual authorization mismatch."
+        },
+        {
+          "kind": "source_partial_green_ancestor_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43202147748",
+          "result": "41 pass,1 missing directory-ancestor failure per OS; source corrected afterward."
+        },
+        {
+          "kind": "unsupported_diagnostic_witness",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43204592393",
+          "result": "Actual pinned FileSystem realPath normalizes raw link/../secret to inside path; expected outside witness failed before resolver comparison. Not product RED and no raw-path rewrite."
+        },
+        {
+          "kind": "final_engine_green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43205364693",
+          "result": "42pass/0fail/528assertions per OS."
+        },
+        {
+          "kind": "final_core_green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43205755207",
+          "result": "Linux29pass/61assertions; Windows26pass/3 pre-existing skips/58assertions. All five new ancestor cases executed on both OSes."
+        },
+        {
+          "kind": "integrated_mcp_model_authorization_seam",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43209710312",
+          "result": "4pass/18assertions/1 actual Omni spawn. Original wrapper exit1 was network monitor failure; same run job131153892528 and cleanup success recovered with GitHub connector, raw logs retained; no duplicate run."
+        },
+        {
+          "kind": "typechecks_and_cold_review",
+          "result": "Core and Engine final package types0 on source-equivalent934; House initial72a and ancestor7f APPROVE; root inspected incremental source and9 exact hashes plus retained H6-only llm diff."
+        }
+      ],
+      "remaining": "Closed. Nine owned files exactly match tested7f; llm.ts preserves integrated H6 MCP materialization hunks and passes four-case integration seam. Scripted SDK Query with real Host/runner/Permission/SQL/FS; no Claude binary execution or hostile symlink-swap guarantee."
+    },
+    {
+      "id": "H5",
+      "severity": "P1",
+      "owner": "lead",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "02054e2716",
+        "98cda7b13b8b2d34b62c57a3b58831dfecf6873f"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43135443951",
+          "result": "8 fail, 2 pass; corrected branch snapshot keeps callable identity; incoming approval join and partial setup reproduced"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43135397913",
+          "result": "52 pass: 10 new real-LangGraph, 9 existing gate, 33 documentation tests"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "rodney_mckay",
+          "verdict": "APPROVE frozen 98cda7b13b; source, tests, docs and final run logs inspected"
+        },
+        {
+          "kind": "static_checks",
+          "guards": "78 rules, 116 paths, 0 gate/warn/errors",
+          "boundaries": "5540 files, 4954 cross-package edges, 92 existing ledger entries, 0 new/stale",
+          "docs": "local structural guard and index check exit0; hosted documentation tests passed",
+          "receipts": [
+            "/tmp/orchestra-audit-relay-final-guards.exit",
+            "/tmp/orchestra-audit-integrated-boundaries-final.exit",
+            "/tmp/orchestra-audit-relay-doc-guard-final.exit",
+            "/tmp/orchestra-audit-relay-doc-index-final-check.exit"
+          ]
+        },
+        {
+          "kind": "scope_limit",
+          "result": "Separately packaged Python LangGraph library; incoming approval joins are refused before mutations. No native/ARM authenticated-approval claim."
+        }
+      ]
+    },
+    {
+      "id": "H6",
+      "severity": "P1",
+      "owner": "security",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "6c579f21f2",
+        "b2265ff4ee",
+        "5d65e7f75b",
+        "557573eb13",
+        "7da391dd5e",
+        "d3571c34cd",
+        "2a10f43a8b",
+        "e04beb4627",
+        "106a0c1933",
+        "aabd0ce791",
+        "24bdd9ed65",
+        "ca4f845b4b",
+        "ce46eb7c0f"
+      ],
+      "evidence": [
+        {
+          "kind": "source_partial_fail",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43159770050"
+        },
+        {
+          "kind": "after_hoist_narrow_fail",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43162642145"
+        },
+        {
+          "kind": "sdk_transport_control",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43179887247",
+          "result": "actual SDK per-session HTTP transport, concurrent clients, close and disposal"
+        },
+        {
+          "kind": "green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43181842637",
+          "result": "17 files: Linux87 pass/613 assertions/7 omni; Windows86 pass/1 POSIX skip/612 assertions/11 omni"
+        },
+        {
+          "kind": "integrated_seam_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43188088063",
+          "snapshot_sha": "a247ecd0184adcd75541e780f0dc4345936f419e",
+          "result": "4 tests across2files; merged E6/H6 execution-host and MCP identity seam"
+        },
+        {
+          "kind": "integrated_typecheck",
+          "exit": 0,
+          "receipt": "/tmp/orchestra-h6-l1-core-type.exit"
+        },
+        {
+          "kind": "cold_source",
+          "reviewer": "dr_house",
+          "verdict": "APPROVE plus final Context/SDK incremental approvals; root inspected all24 own-file hashes and both E6 unions"
+        }
+      ]
+    },
+    {
+      "id": "H7",
+      "severity": "P1",
+      "owner": "security",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "bb82852e2d",
+        "b3f29662ac",
+        "fe06f9f2ca",
+        "708eca85df",
+        "1a168a58b2",
+        "e2fa04be37",
+        "8a6289e0b3",
+        "bd17430207",
+        "0bac4fd17c"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43134904734",
+          "result": "Historical actual SDK sends fictitious refresh/secret A to issuerB; original manager2fixtures invalid and excluded"
+        },
+        {
+          "kind": "red_mixed",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43137450064",
+          "snapshot_sha": "6638568d37f71815e317f8ce84b4345540a154e6",
+          "result": "1pass21fail: oauthfalsepositive; actual callbackcrosscancel and managerstate mismatch; missingBinding/scheduler APIs are not CAS execution proof"
+        },
+        {
+          "kind": "cold_acceptance_review",
+          "reviewers": [
+            "dr_house",
+            "leslie_lamport"
+          ],
+          "verdict": "APPROVE202c2924b002; production GO frozen92b99dff79"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43140492241",
+          "snapshot_sha": "c51b9061a7defdf2cc0d23a59b9243eab7ce459d",
+          "result": "41 pass per OS, actual independent2Managers after Layer.fresh correction; issuer/CAS/callback/compat. Source before later duplicate-cleanup correction."
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43139673191",
+          "result": "Static secret first exposure lacked persistent pin before failed token exchange; fixed before integration"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43141237217",
+          "result": "2 duplicate-finish failures: rejected contender cancelled owner"
+        },
+        {
+          "kind": "compat_partial",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43141577327",
+          "result": "8 pass,1 test-assertion failure per OS; workflow NOT green. MCP/debug4 passed on final production source; Result assertion corrected separately."
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43141939609",
+          "snapshot_sha": "5e7aecc0e37e3761f4c9d88fef72f3322540e488",
+          "result": "5 manager tests pass per OS,65 assertions; manual+automatic owners survive duplicates, commit once"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "Final Core exit0; guards0, diffcheck0",
+          "receipts": [
+            "/tmp/audit-h7-duplicate-core-recheck.exit",
+            "/tmp/audit-h7-duplicate-final-guards.exit"
+          ]
+        },
+        {
+          "kind": "cold_source_review",
+          "reviewers": [
+            "dr_house",
+            "leslie_lamport",
+            "lead"
+          ],
+          "verdict": "APPROVE composed final Auth/provider257763 + managercleanup92a2; root read all production paths and exact narrow changes"
+        },
+        {
+          "kind": "limits",
+          "result": "No same-generation refresh single-flight; no guarantee to cancel a request already legitimately sent. Earlier reused-manager fixture is not independent2Manager evidence."
+        }
+      ]
+    },
+    {
+      "id": "H8",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "d75ef4b541",
+        "edb8f5dd4b",
+        "2e3d1e2803",
+        "0b7a36c301",
+        "43e44e6412",
+        "d655f46a8b",
+        "87c658af0f",
+        "16830c27b2",
+        "c82062b15c",
+        "9dac901ab7",
+        "81334089ff",
+        "b1d1ad98a5",
+        "27923836e2",
+        "404d7fd26e",
+        "68b620ca4b",
+        "776ee0ba81",
+        "9630aebc2c"
+      ],
+      "evidence": [
+        {
+          "kind": "control",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43278533576",
+          "result": "Five controls/22 assertions per OS; same-run logs recovered after monitor HTTP504. No rerun."
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43279974654",
+          "result": "12 original semantic RED per OS; one writer fixture boundary miss excluded. Later rollback/provider tails not reached."
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43282798153",
+          "source": "c647f21975158ad21e0b7e45a8d7f240eaefcdef",
+          "result": "Remaining writer-after-SQL original RED both OS: real SQL barrier and active transaction assertions pass, revocation completes, target_denied absent. 0P/1F/3assertions each; composes13 valid originals per OS. Later tails not reached."
+        },
+        {
+          "kind": "integrated_focused_green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43301047387",
+          "source": "33a65714297d414b12d59c773d7204c6954da461",
+          "snapshot": "1819c574bbc6d34ccc1ff46eded4e5174bfb655c",
+          "result": "50pass/0fail/303assertions per OS; all original13 tails reached. Root14 reviewed blobs equal actual hosted snapshot. Two earlier source gates38P12F and44P6F retained; pinned runtime Context annotation and explicitly composed finalizer fixture repairs independently reviewed. Core type0; integrated Server type and scoped aggregate regressions pending."
+        },
+        {
+          "kind": "aggregate_core_regression_green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43306653200",
+          "snapshot": "705f8b946981d69f6e6efeda2c40edd381fda37c",
+          "result": "70pass/0fail/236assertions per OS across actual Sessioncreate/prompt/Eventpersist/scheduledtaskcapability/operator suites. Cleanup and officialwrapper0. Focused Omni control notapplicable; no broadspawnerclaim."
+        },
+        {
+          "kind": "aggregate_server_http_regression_green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43306658757",
+          "snapshot": "f7e6ef7895102beaa1eae94949eec078ead38aec",
+          "result": "5pass/0fail/87assertions per OS; actual HTTP list/pause/resume/run/keyretry/delete/foreign/denied behavior. Cleanup and officialwrapper0."
+        },
+        {
+          "kind": "integrated_root_types_guards",
+          "source": "9630aebc2c",
+          "result": "Root Server bun typecheck0;78guards/373changedpaths/0gates/0errors/1inheriteddependencyadvisory. Boundaries5635files/5297edges/92existing/0new/0stale;spawn4020files/66allowlisted. No Schema/Protocol/HttpApi/dependency/generated change."
+        },
+        {
+          "kind": "aggregate_regression_actual_snapshot_blob_checks",
+          "snapshots": [
+            "705f8b946981d69f6e6efeda2c40edd381fda37c",
+            "f7e6ef7895102beaa1eae94949eec078ead38aec"
+          ],
+          "result": "All14reviewed/integratedpathSHAs match EACH actual aggregate regression snapshot (28checks), in addition to14focused snapshotchecks. No source drift."
+        }
+      ],
+      "remaining": "Closed: focused50 and aggregate Core70 + ServerHTTP5 pass EACH Linux/Windows; integrated Server type0,14 actual snapshot blobs match, global guards/boundaries/spawn0. Checkpoint/empty-Session/hook limits are documented; no revocation linearizability after last checkpoint or commercial SDK claim."
+    },
+    {
+      "id": "H9",
+      "severity": "P2",
+      "owner": "security",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "2d66cffbb2"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112717706"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113741903",
+          "os": [
+            "linux",
+            "windows"
+          ],
+          "verified_by_lead": "workflow conclusions, selected exact source blobs, source and tests inspected"
+        },
+        {
+          "kind": "local_typecheck",
+          "core_exit": 0,
+          "server_exit": 0,
+          "command": "GOMAXPROCS=2 bun typecheck",
+          "receipts": [
+            "/tmp/audit-security-core-final.exit",
+            "/tmp/audit-security-server-final.exit"
+          ]
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "dr_house",
+          "verdict": "APPROVE; root requested and reviewed H13 preservation refinement"
+        }
+      ]
+    },
+    {
+      "id": "H10",
+      "severity": "P2",
+      "owner": "desktop",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "0769224dea",
+        "fc84e0ca8d",
+        "e690863175",
+        "5b6b9bb290"
+      ],
+      "evidence": [
+        {
+          "kind": "controls_green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43182872196",
+          "result": "17pass per OS"
+        },
+        {
+          "kind": "behavioral_red_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43186656369",
+          "result": "Linux43fail/17pass; Windows42fail/18pass; no skips/setup errors; five original regressions each OS"
+        },
+        {
+          "kind": "green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43189160340",
+          "snapshot_sha": "0e32a0be18ea79561a25c0742c9ad053eb813930",
+          "result": "60pass each OS, zero skips/failures"
+        },
+        {
+          "kind": "cold_source",
+          "reviewer": "dr_house",
+          "verdict": "APPROVE; root also read complete source/guide diff"
+        },
+        {
+          "kind": "integrated_hashes",
+          "result": "five files byte-identical to source122a68eb940ddcfe74e0e0a8782a221a83edf1e8"
+        },
+        {
+          "kind": "integrated_guards",
+          "exit": 0,
+          "receipt": "/tmp/orchestra-h10-integrated-guards.exit"
+        }
+      ]
+    },
+    {
+      "id": "H11",
+      "severity": "P1",
+      "owner": "security",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "210aca7e70"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113193398"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113741903",
+          "os": [
+            "linux",
+            "windows"
+          ],
+          "verified_by_lead": "workflow conclusions, selected exact source blobs, source and tests inspected"
+        },
+        {
+          "kind": "local_typecheck",
+          "core_exit": 0,
+          "server_exit": 0,
+          "command": "GOMAXPROCS=2 bun typecheck",
+          "receipts": [
+            "/tmp/audit-security-core-final.exit",
+            "/tmp/audit-security-server-final.exit"
+          ]
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "dr_house",
+          "verdict": "APPROVE; root requested and reviewed H13 preservation refinement"
+        }
+      ]
+    },
+    {
+      "id": "H12",
+      "severity": "P1",
+      "owner": "security",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "cc3ffb47d7e3a1736606e72e5115a0ae01cd7fc8",
+        "f68cf3cc077822281a3b97dba733f33c099f64ff",
+        "bd7f91846be76017ef82c50fb730bb73b13d45ac"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43117938181",
+          "result": "unauthorized localhost receives secret/request"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43119879419",
+          "result": "34 pass per OS across authorization/trust"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "dr_house",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/audit-authorization-core-recheck.exit"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "H13",
+      "severity": "P1",
+      "owner": "security",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "210aca7e70",
+        "041848de86"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43114935845"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43115612435",
+          "os": [
+            "linux",
+            "windows"
+          ],
+          "verified_by_lead": "workflow conclusions, selected exact source blobs, source and tests inspected"
+        },
+        {
+          "kind": "local_typecheck",
+          "core_exit": 0,
+          "server_exit": 0,
+          "command": "GOMAXPROCS=2 bun typecheck",
+          "receipts": [
+            "/tmp/audit-security-core-final.exit",
+            "/tmp/audit-security-server-final.exit"
+          ]
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "dr_house",
+          "verdict": "APPROVE; root requested and reviewed H13 preservation refinement"
+        }
+      ]
+    },
+    {
+      "id": "H14",
+      "severity": "P2",
+      "owner": "security",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "916a6fe200",
+        "b28daf99d0",
+        "70329694cf",
+        "214a880644",
+        "042909f8d7",
+        "4055d1571a",
+        "41792857d7"
+      ],
+      "evidence": [
+        {
+          "kind": "actual_controls_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43242437066",
+          "result": "5pass/26assertions perOS after separately documented zero-match-filter and Scope setup corrections; real HTTP/cache/refresh/matching/exact limits."
+        },
+        {
+          "kind": "behavioral_red_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43244686169",
+          "result": "15semantic failures/36assertions perOS. Pending get13s/pull65s, concurrent cache39,846,068B Linux/58,720,496B Windows and admitted cached companions67,109,104B exceed33,554,432B. No loader/Scope/Bun-timeout classification."
+        },
+        {
+          "kind": "version_write_counterexample_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43250488480",
+          "result": "Source8d: exact4096 control passes; ASCII4097 and UTF84098 invalid versions still return roots,2semantic failures perOS/14assertions. Physical preservation/no-HTTP tails not reached in RED."
+        },
+        {
+          "kind": "full_final_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43252419320",
+          "result": "66pass/277assertions perOS across5files,23target+43compatibility, all17previousRED and final cancellation/cleanup/no-fileHTTP/sentinel checks reached. Snapshot235e53e82e10aa55206fd78b02e3b1be40d93ad9."
+        },
+        {
+          "kind": "integration_source_types_cold",
+          "result": "Root+House SOURCE APPROVE8d plus6375 version guard. Seven owncommits integrated through41792857d7, all9hashes exact. Core final type0; integrated guards78rules354paths0gates0errors/one inherited advisory, boundaries0new0stale/spawn0. No dependencies, Config, Protocol or generated code changes."
+        }
+      ],
+      "remaining": "Closed for remote URL acquisitions: strict admitted-content and metadata/cardinality bounds, cache snapshots and deadlines. No physical TCP-prefetch/heap32MiB, rigid cleanup/syscall wallclock, crash-atomic unversioned publication, local/embedded acquisition or LLM-memory guarantee."
+    },
+    {
+      "id": "L1",
+      "severity": "P1",
+      "owner": "lead",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "767a65691b",
+        "d04657434a",
+        "f36c1dc682"
+      ],
+      "evidence": [
+        {
+          "kind": "revalidation",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43114062388",
+          "snapshot_sha": "184d086ff93f7f4f31b05cb57fe306a5ef16785a",
+          "result": "6 pass, 0 fail, real coordinator; dev already stops held descendants and discards wakes; creation after enumeration remains separate unverified residual"
+        },
+        {
+          "kind": "residual_behavioral_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43192631788",
+          "result": "Two corrected cancellation/cleanup races fail actual assertions, no fixture timeout."
+        },
+        {
+          "kind": "source_compositional_green_pending_one_fixture",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43197884622",
+          "result": "63 pass,1 duplicate-projector fixture failure per OS; not full green."
+        },
+        {
+          "kind": "corrected_missing_row_behavioral_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43205258696",
+          "result": "Old source returns success/undefined instead of typed Session.NotFoundError after row vanishes;3 assertions reached. Earlier43202125865 was import/setup failure, not behavioral RED."
+        },
+        {
+          "kind": "corrected_case_and_cold_task_green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43205394985",
+          "result": "2 pass,17 assertions per OS. Linux1.90s/Windows1.84s. Omni control Windows pass1spawn; Linux declared-focused not applicable, no spawn. This gate is not Linux process-spawn proof."
+        }
+      ],
+      "remaining": "Closed with compositional proof:63 unchanged cases per OS plus corrected missing-row case and cold Task acquisition control. No distributed execution or provider crash-recovery claim."
+    },
+    {
+      "id": "L2",
+      "severity": "P1",
+      "owner": "ui",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "ca5c8fa69b",
+        "63f7f303a4",
+        "33cd9abc3c",
+        "e7f0dd8580",
+        "8051c8c1af"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43138014275",
+          "result": "35 pass, 3 fail: exclusive success/failure budget8 return residual Busy; Session serial revert Busy. Budget32, cancellation, pending wake and failure recovery controls pass"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43136455446",
+          "result": "2 Server tests, real409 stage/clear/commit"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43136457342",
+          "result": "27 Client tests; typed Protocol.ConflictError decoding for all3reverts"
+        },
+        {
+          "kind": "generation",
+          "result": "Official Client generation exit0; diff adds409 only for stage/clear/commit, not message.diff"
+        },
+        {
+          "kind": "scope_limit",
+          "result": "Snapshot concurrency harness is non-Git; no Git restore claim"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43138330714",
+          "result": "98 pass, 9 Core files, 54 real omni spawns, positive control pass; completion callers do not poll"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "leslie_lamport",
+          "verdict": "APPROVE final706899168f; exact-owner completion supersedes earlier FIX-FIRST"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "Core, Server, Protocol, Client exit0",
+          "receipts": [
+            "/tmp/orchestra-session-integrity-core-type-completion.exit",
+            "/tmp/orchestra-session-integrity-server-type-seal.exit",
+            "/tmp/orchestra-session-integrity-protocol-type-seal.exit",
+            "/tmp/orchestra-session-integrity-client-type-seal.exit"
+          ]
+        },
+        {
+          "kind": "guards",
+          "result": "78 rules, 117 paths, 0 findings",
+          "receipt": "/tmp/orchestra-session-integrity-guards-seal-final.exit"
+        }
+      ]
+    },
+    {
+      "id": "L3",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "be7fbd96fd",
+        "d232818a89",
+        "2d7cf5872a"
+      ],
+      "evidence": [
+        {
+          "kind": "controls_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43155876906"
+        },
+        {
+          "kind": "behavioral_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43160405654"
+        },
+        {
+          "kind": "green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43166399141",
+          "snapshot_sha": "1bf52bff4bb404ea9a9ecdb51be0dc0ffabed715",
+          "result": "45 pass/244 assertions/57 omni spawns per OS across five files"
+        },
+        {
+          "kind": "typecheck",
+          "exit": 0,
+          "receipt": "/tmp/orchestra-l3-source-type-final.exit"
+        },
+        {
+          "kind": "cold_source",
+          "reviewer": "leslie_lamport",
+          "verdict": "APPROVE",
+          "source": "d232818a89"
+        }
+      ]
+    },
+    {
+      "id": "L4",
+      "severity": "P1",
+      "owner": "lead",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "11d0310bb7",
+        "caea3b7887",
+        "ce5b620445"
+      ],
+      "evidence": [
+        {
+          "kind": "real_family_and_independent_writer_runtime",
+          "runs": [
+            "43386082292",
+            "43389219992",
+            "43394966905",
+            "43369059308",
+            "43397106568"
+          ],
+          "result": "Linux38 pass; Windows34 plus focused4 pass on same production, not a single Windows38 run. Real four-family producers/reproof and independent writers retained. CAS7 pass/144 assertions per OS; three erased cast-only source differences disclosed. Earlier setup failures and product REDs remain separate. See l4-l6-physical-grammar-runtime.json and l5-independent-writers-union.json."
+        },
+        {
+          "kind": "standalone_atlas_quality_and_official_shipping_generation",
+          "runs": [
+            "43402056638",
+            "43402139621"
+          ],
+          "result": "Standalone Atlas types and all13guards pass; Vitest4529pass17skip3todo/589files. Official generation twice equal18outputs;354inputs+2locks and exact19entry ZIP independently verified, installedMemory proof included. Root recovered only exact qualified bytes. See atlas-quality-generation-independent.json and atlas-binding-extraction-recovery.json."
+        }
+      ],
+      "remaining": "Closed within frozen replay contract; no historical log authentication, local-row purge or generalized trust claim. Final aggregate epic remains pending."
+    },
+    {
+      "id": "L5",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "7c338b0da1",
+        "ce5b620445"
+      ],
+      "evidence": [
+        {
+          "kind": "real_family_and_independent_writer_runtime",
+          "runs": [
+            "43386082292",
+            "43389219992",
+            "43394966905",
+            "43369059308",
+            "43397106568"
+          ],
+          "result": "Linux38 pass; Windows34 plus focused4 pass on same production, not a single Windows38 run. Real four-family producers/reproof and independent writers retained. CAS7 pass/144 assertions per OS; three erased cast-only source differences disclosed. Earlier setup failures and product REDs remain separate. See l4-l6-physical-grammar-runtime.json and l5-independent-writers-union.json."
+        },
+        {
+          "kind": "standalone_atlas_quality_and_official_shipping_generation",
+          "runs": [
+            "43402056638",
+            "43402139621"
+          ],
+          "result": "Standalone Atlas types and all13guards pass; Vitest4529pass17skip3todo/589files. Official generation twice equal18outputs;354inputs+2locks and exact19entry ZIP independently verified, installedMemory proof included. Root recovered only exact qualified bytes. See atlas-quality-generation-independent.json and atlas-binding-extraction-recovery.json."
+        }
+      ],
+      "remaining": "Closed within frozen replay contract; no historical log authentication, local-row purge or generalized trust claim. Final aggregate epic remains pending."
+    },
+    {
+      "id": "L6",
+      "severity": "P2",
+      "owner": "security",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "1ceb97962a",
+        "877a32ca83",
+        "cce2186c25",
+        "90420b0721"
+      ],
+      "evidence": [
+        {
+          "kind": "actual_implementation_bridge_controls",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43221084330",
+          "result": "2pass/27assertions; actual Bun.build and8export controls pass. Production unchanged; five fault cases pending."
+        },
+        {
+          "kind": "behavioral_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43222105190",
+          "result": "Five actual behavioral failures; post-first-failure sentinel/projection assertions were not reached and are not counted as observed damage."
+        },
+        {
+          "kind": "final_green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43227447509",
+          "result": "7pass/126assertions per OS; actual source bundled at runtime, snapshot4b121d20f9a17be805352020fb510b9fec82e70c."
+        },
+        {
+          "kind": "integrated_source_generation_types",
+          "result": "4 owncommits through90420b0721; all6raw/test+18generated hashes match seal. Official generator twice0 and18files identical;4runtimeJS changed,9DTS preserved. Atlas15project references andboundary types0. OwnGuard0/no stale units/no L6 anchors. Rootguards0/boundaries0/spawn0."
+        },
+        {
+          "kind": "cold_source",
+          "reviewer": "dr_house",
+          "verdict": "APPROVE246a +root read exact four files and24hashes."
+        }
+      ],
+      "remaining": "Closed with seven actual-implementation cases per OS and official shipped bundle generation. No concurrency, mid-write kill, power-loss, hostile filesystem swap or full Vitest-suite proof claimed."
+    },
+    {
+      "id": "L7",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "3ff797b202",
+        "b6f9ddc42d",
+        "0b07d81627",
+        "f9fc9a5470",
+        "c5d1da93e0",
+        "96c6be683d",
+        "e7c3599a6e"
+      ],
+      "evidence": [
+        {
+          "kind": "actual_chain_controls_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43229482293",
+          "result": "6pass/33assertions and1020Omni spawns per OS; current evidence, real approval, collision and receipt controls."
+        },
+        {
+          "kind": "behavioral_red_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43230769654",
+          "result": "21fail/52assertions and3623Omni spawns per OS; every refusal assertion instead receives actual success after real stale/binding/missing preconditions. No later SQL-zero/provider-zero assertion is claimed from RED."
+        },
+        {
+          "kind": "full_final_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43238996076",
+          "result": "36pass/189assertions/5119Omni spawns perOS, exact frozenfceb source+fixture. All27 currency and9 legacy cases pass; final SQL refusal/receipt/collision assertions reached."
+        },
+        {
+          "kind": "integrated_source_cold_types",
+          "result": "Root+Lamport source APPROVE097b; exacttwo-line fixture type correction approvedfceb. Seven own commits integrated through e7c3599a6e,5/5 SHA256 match. Maestro typecheck0. Root guards78rules342paths0gates0errors/one inherited advisory, boundaries0new0stale, spawn0. No Protocol/generated/dependency/event/ID/permission changes."
+        }
+      ],
+      "remaining": "Closed at explicit new-reservation and first-consumption evidence checkpoints. Exact historical consumed receipts remain idempotent; unbound legacy rows cannot acquire new authority. Actual beforeTurn hook/SQL tested; no provider-zero observation or atomic external-filesystem snapshot guarantee."
+    },
+    {
+      "id": "L8",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "c332738e83",
+        "6fd130a6a4",
+        "36c275208f",
+        "fb0689ae60"
+      ],
+      "evidence": [
+        {
+          "kind": "actual_controls_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43240572296",
+          "result": "5pass/44assertions per OS; real provider entry/normal finish with later workflow escalation is not a full-workflow success claim."
+        },
+        {
+          "kind": "behavioral_red_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43241928664",
+          "result": "Corrected1fff fixture:6pass/3fail/57assertions perOS, all5controls plus listener pass. Idle old-provider entry, caller cancellation releases ownership, and explicit interrupt fails to settle actual post-rebind move. Later tails not reached until final."
+        },
+        {
+          "kind": "full_final_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43245223397",
+          "result": "17pass/127assertions perOS:9transfer+8existinghost. Linux329/Windows302Omni spawns,9declared; exact reviewed54984 uploaded as24b8b1b07f749870d7fa4fb5f8f95f4fb8b14d3a. All recovery/new-holder/current-step/lease tails execute."
+        },
+        {
+          "kind": "integration_source_types_cold",
+          "result": "Root+Lamport SOURCE APPROVE54984. Four owncommits integrated throughfb0689ae60;4/4 source/test hashes exact, guide resolves sole textual conflict preserving L7 andL8 paragraphs exactly once. Maestro final type0. Root guards78rules346paths0gates0errors/one existing advisory; boundaries0new0stale, spawn0."
+        }
+      ],
+      "remaining": "Closed for process-local Session ownership. Caller cancellation detaches its waiter; explicit holder interruption can leave filesystem/SQL partial state recovered by exact retry. No clustered ownership or cross-store atomicity claim."
+    },
+    {
+      "id": "L9",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "751067c627",
+        "8cc1a85090",
+        "a3ea655858"
+      ],
+      "evidence": [
+        {
+          "kind": "actual_paired_writer_red_green_both_os",
+          "runs": [
+            "43388260391",
+            "43388297401"
+          ],
+          "result": "Same exact tests/fixture. PerOS baseline3P3F28assertions versus final6P0F42; real5writes ACK after childexit0 inside awaited durable projector precedes oldcleanup. Full Core runtime993blobvectors differ only move-session.ts; 992others unchanged. Earlier notification/ACK-watch attempts remain historical and are not claimed deterministic RED."
+        },
+        {
+          "kind": "actual_http_and_official_sdk_generation",
+          "runs": [
+            "43382931356",
+            "43382932112"
+          ],
+          "result": "HTTP3P0F16assertions eachOS. Official Client generate twice, installed Promise/Effect and codegen passed;258inputs and exact57entry ZIP/56outputs verified, produced bytes already installed. No manual generated edit."
+        },
+        {
+          "kind": "types_static_cold_review",
+          "result": "Core/Protocol/Server/TUI package types0, repeated currentCoremetadata types0. Independent coldsource+projector fixture reviews APPROVE. Rootguards78rules554paths0gate7advice0errors; boundaries0new0stale; spawn0. Full epic remains final scope."
+        }
+      ],
+      "remaining": "Closed by deliberate source retention for moveChanges=true: copy captured changes and move Session, preserve source files/index and late external writes. Protocol, TUI carry wording and user guide agree. No atomic multi-file capture, destination conflict elimination or apply+publication transaction claim; false/omitted transfer unchanged."
+    },
+    {
+      "id": "L10",
+      "severity": "P2",
+      "owner": "ui",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "ca5c8fa69b",
+        "63f7f303a4",
+        "7307c1dfad"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43136529953",
+          "result": "5 pass, 2 fail on exact final test harness: custom default and selectable fallback admit0 instead of1; no-info, changed default and explicit owner controls pass"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43138330714",
+          "result": "98 pass, 9 Core files, 54 real omni spawns, positive control pass; completion callers do not poll"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "leslie_lamport",
+          "verdict": "APPROVE final706899168f; exact-owner completion supersedes earlier FIX-FIRST"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "Core, Server, Protocol, Client exit0",
+          "receipts": [
+            "/tmp/orchestra-session-integrity-core-type-completion.exit",
+            "/tmp/orchestra-session-integrity-server-type-seal.exit",
+            "/tmp/orchestra-session-integrity-protocol-type-seal.exit",
+            "/tmp/orchestra-session-integrity-client-type-seal.exit"
+          ]
+        },
+        {
+          "kind": "guards",
+          "result": "78 rules, 117 paths, 0 findings",
+          "receipt": "/tmp/orchestra-session-integrity-guards-seal-final.exit"
+        }
+      ]
+    },
+    {
+      "id": "L11",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "fixed_verified",
+      "runtime_reproduced": false,
+      "commits": [
+        "74d2bb1323",
+        "3a600f1ca4",
+        "e418464cf9",
+        "2d55a19dbe",
+        "45b6a69443",
+        "84301c40aa",
+        "d733340852",
+        "717b06c359"
+      ],
+      "evidence": [
+        {
+          "kind": "actual_memory_decision_controls_linux",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43310548546",
+          "snapshot": "458ea1c6dfe2823aef179e928c3ed54998993a7b",
+          "result": "2pass/0fail/17assertions; actual canonical modules hosted bundle, namedscanner recordstdin, Memory/review/fold/returnedref, indexed and discarded. Official wrapper0/cleanup success. No local build or Vitest substitution."
+        },
+        {
+          "kind": "actual_memory_decision_joint_publication_red_linux",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43311045470",
+          "result": "0pass/1behavioral failure/12assertions. Fault scanner witness, immutable recordstdin, original review restoration, openproposal and no decision checks all pass; final effective Memory equality fails: actual backend project rule/frecency1 remains active versus original empty store. No missingmodule/setup miss. Cleanup succeeds; operation error code/kill/powerloss not claimed."
+        },
+        {
+          "kind": "acceptance_typecheck",
+          "source": "bdb0872ef0",
+          "result": "Root Atlas boundary package bun typecheck0 (tsgo), new fixture/tests included; no local test or runtime build executed."
+        },
+        {
+          "kind": "joint_receipt_acceptance_static_approved",
+          "source": "56e9b573fc359da1cc441cc30e26a9dd8b2e9eee",
+          "result": "62declared Linux cases across4new test/fixture files; original split-publication baseline untouched. Full Root/independent cold review, then one added internally coherent forged-proposal case isolates actual raw review authority; previous61 byte-identical. No runtime of new suite. Boundary/Core serial types now authorized, positive4controls precede any source implementation. Production generated boundary remains a separate official hosted qualification obligation."
+        },
+        {
+          "kind": "joint_receipt_positive_controls_green",
+          "source": "811ab81451d5ed7ee2749970bc045d6c49340315",
+          "runs": [
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43327595307",
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43327594693"
+          ],
+          "result": "Linux boundary3pass28assertions and Core1pass13assertions/3Omni spawns, cleanup/wrapper0. Boundary/Core type0 after one explicit numeric fixture guard; failed56e9type2 retained. Original Root baseline type log was overwritten by initial acceptance type attempt; do not fabricate a backfill. Runtime baseline/controls remain separately hosted and immutable. Source-only implementation authorized against frozen contract;62future suite and installed generated bundle remain unverified."
+        },
+        {
+          "kind": "joint_receipt_source_integrated_green_linux",
+          "runs": [
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43331830032",
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43331830533"
+          ],
+          "source": "b3f7fa84f786a3caa3890581bc7a196e7579cbd9",
+          "integration": "45b6a69443",
+          "snapshots": [
+            "8d2fe0cd1c84c7a5356afaf11da1a5d3834e91eb",
+            "617f704a9648bb0fa26906a9710be600f9aa90fb"
+          ],
+          "result": "Linux boundary60pass/0fail508assertions plus Core5pass/0fail138assertions/Omni39; total65pass646assertions, both wrappers and cleanup success. Root independently fetched jobs/raw and checked68 actual snapshot blobs, then34 integrated blobs; complete Atlas packages and boundary trees equal source. Actual adapter-io canonical bun typecheck(tsc-b,11projects)0 with own nested dependencies and existing SCIP metadata shim only. Root+Lamport full source approve; same-intent independent-process/restart races and real Git conflicts covered. All18 generated artifacts still unchanged/old; source qualification does not close installed-product L11. Official hosted generation, idempotence, generated guard and installed-bundle qualification remain required."
+        },
+        {
+          "kind": "official_generated_artifact_qualification_contract_approved",
+          "result": "Root and independent cold reviewer approve exact existing Core qualification request, official hosted generate twice/idempotence/check,18file artifact allowlist/provenance and actual installed native-memory public reconcile/decision witness. No new runner/env/CLI/workflow, no local generator. Authoring only; no generated bytes or installed qualification result yet."
+        },
+        {
+          "kind": "official_generated_boundary_qualification_green_artifact_verified",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43342972122",
+          "snapshot": "2e0f6ea9f62ae52ec53b6272596feeef06a4ec72",
+          "artifact": 13999554590,
+          "zip_sha256": "24bc86046ff827633afb0b6d580bebb6ad70b9fadd5ed64a10a53e7a859359af",
+          "result": "Official hosted producer twice with exact18hash idempotence and check-generated, installed public native-memory facade/reconcile/decision/reopen/same-ref retry/scanner-refusal allpass1test67assertions, Omni7, uploader/cleanup/wrapper0. Root independently verified jobs/raw, ZIPdigest/19entry allowlist/18outputhashes/352actualRoot source-config hashes/2locks/7completednontruncatedexit0commands, qualified=true AFTERcleanup. Coretype0 after one explicit snapshot-string guard; historicaltype2 preserved. Exact producer bytes ready for Root recovery, no local generator. Linux qualification does not assert Windows/fullAtlasVitest/Own."
+        },
+        {
+          "kind": "qualified_official_bytes_recovered_and_static_gates_green",
+          "integration": "717b06c359",
+          "result": "Root recovered all18 official output bytes, six files changed; durable original provenance and recovery receipt in docs/audits/evidence/. RecordRef declaration shape unchanged (moved only); other declaration changes are comments. All4 route files equal typed/tested snapshot. Root guards78rules420paths0gates0errors/1inheritedadvisory, boundaries5648files5302edges92existing0new0stale, spawn4023/66 all exit0. No local generator/test executed."
+        }
+      ],
+      "remaining": "Closed for the updated implementation on local filesystem: one immutable receipt publishes review and indexed Memory together. Source65 plus official installed-boundary qualification pass on Linux; exact generated bytes recovered and static gates pass. No Windows, NFS/power-loss, global cap serialization, old-binary coordination or historical legacy-orphan cleanup claim. Full Atlas/Vitest/Own and final aggregate CI remain PR gates."
+    },
+    {
+      "id": "M1",
+      "severity": "P2",
+      "owner": "desktop",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "030b850667"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112720389"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113803154",
+          "os": [
+            "linux",
+            "windows"
+          ],
+          "verified_by_lead": true
+        },
+        {
+          "kind": "typecheck",
+          "command": "bun typecheck --verbose",
+          "cwd": "apps/desktop",
+          "result": "exit 0 on ce324eee3894; code identical to integrated commits"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "rodney_mckay",
+          "verdict": "APPROVE, source/test read; root inspected source, ancestry and workflow conclusions"
+        }
+      ]
+    },
+    {
+      "id": "M2",
+      "severity": "P2",
+      "owner": "desktop",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "3bfb15cdfd7e6ff000104131752e6f58f5743861",
+        "1a07cf9ac2e5b013b8fb8e0f2a0d732edbc8732c",
+        "0cc27e0a71fa45fb7b0705018c097cf1560e214c",
+        "43b157e7d770b8cdbcd6cf5559255922484386b5",
+        "c4166f5a92c605c6693acdad5f7d3d1e4082cb72",
+        "9d48126477385e27f4d5dcc485dd7ed20e97dfa9"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43115786939"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43119306530",
+          "result": "late pump/stop/iterator failures"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43119723416",
+          "result": "30 pass per OS, 36 real child spawns per OS, positive control"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "rodney_mckay",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/audit-processes-final-typecheck.exit"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "M3",
+      "severity": "P2",
+      "owner": "desktop",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "3bfb15cdfd7e6ff000104131752e6f58f5743861",
+        "1a07cf9ac2e5b013b8fb8e0f2a0d732edbc8732c",
+        "0cc27e0a71fa45fb7b0705018c097cf1560e214c",
+        "43b157e7d770b8cdbcd6cf5559255922484386b5",
+        "c4166f5a92c605c6693acdad5f7d3d1e4082cb72",
+        "9d48126477385e27f4d5dcc485dd7ed20e97dfa9"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43115786939"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43119306530",
+          "result": "late pump/stop/iterator failures"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43119723416",
+          "result": "30 pass per OS, 36 real child spawns per OS, positive control"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "rodney_mckay",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/audit-processes-final-typecheck.exit"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "M4",
+      "severity": "P3",
+      "owner": "desktop",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "030b850667"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112720389"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113803154",
+          "os": [
+            "linux",
+            "windows"
+          ],
+          "verified_by_lead": true
+        },
+        {
+          "kind": "typecheck",
+          "command": "bun typecheck --verbose",
+          "cwd": "apps/desktop",
+          "result": "exit 0 on ce324eee3894; code identical to integrated commits"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "rodney_mckay",
+          "verdict": "APPROVE, source/test read; root inspected source, ancestry and workflow conclusions"
+        }
+      ]
+    },
+    {
+      "id": "M5",
+      "severity": "P2",
+      "owner": "desktop",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "1f8f4f0ef5",
+        "4a215c2d06",
+        "d95b100d56",
+        "ee05774595",
+        "ff35777b7f",
+        "b99a301225",
+        "1f0ea9becc",
+        "861e597f7f",
+        "405ac1a7d4",
+        "a76dace604",
+        "7a3438372f",
+        "77e728a767",
+        "5377c6305b",
+        "8f4b6dc7a0",
+        "1691632a77"
+      ],
+      "evidence": [
+        {
+          "kind": "red_mixed",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43137375117",
+          "result": "42cases perOS,3pass39fail; journal/pins/batch/invalidFS behavioral, missingOptions observer faults are APIacceptance only"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43137719365",
+          "result": "Real process crash insideB leavesA committed-too-early; both OS, positive omni control"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43136333451",
+          "result": "Readonly proof original backup is lost across retries/success"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43143188539",
+          "result": "Both OS: retired known null-name timestamp rejected and active captured final wrongly accepted in garbage"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43145434373",
+          "result": "Both OS: interruption finishes while actual link Promise remains gated; proves early ownership release, not reproduced corruption"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43145857503",
+          "snapshot_sha": "aded471b9f835cdeae3b57bae305e19ac1f96e39",
+          "result": "79 pass per OS, Linux additionally1Windows-onlyskip;20realomni spawns per OS, positive control pass"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43145857489",
+          "result": "Both OS: cancellation retains fence until real pending IO settles, then interruption+retry"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43142245390",
+          "result": "Node actual sqlite.node,WAL/DELETE commit/rollback both OS;8s test/6s build budgets. Proof source unchanged by migration helper deltas."
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "Final Core exit0; guards0; diffcheck0",
+          "receipt": "/tmp/migration-safety-core-typecheck-fenced.exit"
+        },
+        {
+          "kind": "cold_source_review",
+          "reviewers": [
+            "dr_house",
+            "rodney_mckay",
+            "leslie_lamport",
+            "lead"
+          ],
+          "verdict": "APPROVE journal/atomicity, namespace/state, publication/GC, then streaming/IO-fence deltas; root read all696production lines and final narrow changes"
+        },
+        {
+          "kind": "limits",
+          "result": "Process crash/retry guarantee; no power-loss/OS durability upgrade, restored-store GUID or adversarial filesystem CAS. Large-file functional streaming test is not an OOM reproduction."
+        }
+      ]
+    },
+    {
+      "id": "M6",
+      "severity": "P2",
+      "owner": "desktop",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "1f8f4f0ef5",
+        "4a215c2d06",
+        "d95b100d56",
+        "ee05774595",
+        "ff35777b7f",
+        "b99a301225",
+        "1f0ea9becc",
+        "861e597f7f",
+        "405ac1a7d4",
+        "a76dace604",
+        "7a3438372f",
+        "77e728a767",
+        "5377c6305b",
+        "8f4b6dc7a0",
+        "1691632a77"
+      ],
+      "evidence": [
+        {
+          "kind": "red_mixed",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43137375117",
+          "result": "42cases perOS,3pass39fail; journal/pins/batch/invalidFS behavioral, missingOptions observer faults are APIacceptance only"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43137719365",
+          "result": "Real process crash insideB leavesA committed-too-early; both OS, positive omni control"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43136333451",
+          "result": "Readonly proof original backup is lost across retries/success"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43143188539",
+          "result": "Both OS: retired known null-name timestamp rejected and active captured final wrongly accepted in garbage"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43145434373",
+          "result": "Both OS: interruption finishes while actual link Promise remains gated; proves early ownership release, not reproduced corruption"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43145857503",
+          "snapshot_sha": "aded471b9f835cdeae3b57bae305e19ac1f96e39",
+          "result": "79 pass per OS, Linux additionally1Windows-onlyskip;20realomni spawns per OS, positive control pass"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43145857489",
+          "result": "Both OS: cancellation retains fence until real pending IO settles, then interruption+retry"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43142245390",
+          "result": "Node actual sqlite.node,WAL/DELETE commit/rollback both OS;8s test/6s build budgets. Proof source unchanged by migration helper deltas."
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "Final Core exit0; guards0; diffcheck0",
+          "receipt": "/tmp/migration-safety-core-typecheck-fenced.exit"
+        },
+        {
+          "kind": "cold_source_review",
+          "reviewers": [
+            "dr_house",
+            "rodney_mckay",
+            "leslie_lamport",
+            "lead"
+          ],
+          "verdict": "APPROVE journal/atomicity, namespace/state, publication/GC, then streaming/IO-fence deltas; root read all696production lines and final narrow changes"
+        },
+        {
+          "kind": "limits",
+          "result": "Process crash/retry guarantee; no power-loss/OS durability upgrade, restored-store GUID or adversarial filesystem CAS. Large-file functional streaming test is not an OOM reproduction."
+        }
+      ]
+    },
+    {
+      "id": "M7",
+      "severity": "P2",
+      "owner": "desktop",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "1f8f4f0ef5",
+        "4a215c2d06",
+        "d95b100d56",
+        "ee05774595",
+        "ff35777b7f",
+        "b99a301225",
+        "1f0ea9becc",
+        "861e597f7f",
+        "405ac1a7d4",
+        "a76dace604",
+        "7a3438372f",
+        "77e728a767",
+        "5377c6305b",
+        "8f4b6dc7a0",
+        "1691632a77"
+      ],
+      "evidence": [
+        {
+          "kind": "red_mixed",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43137375117",
+          "result": "42cases perOS,3pass39fail; journal/pins/batch/invalidFS behavioral, missingOptions observer faults are APIacceptance only"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43137719365",
+          "result": "Real process crash insideB leavesA committed-too-early; both OS, positive omni control"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43136333451",
+          "result": "Readonly proof original backup is lost across retries/success"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43143188539",
+          "result": "Both OS: retired known null-name timestamp rejected and active captured final wrongly accepted in garbage"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43145434373",
+          "result": "Both OS: interruption finishes while actual link Promise remains gated; proves early ownership release, not reproduced corruption"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43145857503",
+          "snapshot_sha": "aded471b9f835cdeae3b57bae305e19ac1f96e39",
+          "result": "79 pass per OS, Linux additionally1Windows-onlyskip;20realomni spawns per OS, positive control pass"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43145857489",
+          "result": "Both OS: cancellation retains fence until real pending IO settles, then interruption+retry"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43142245390",
+          "result": "Node actual sqlite.node,WAL/DELETE commit/rollback both OS;8s test/6s build budgets. Proof source unchanged by migration helper deltas."
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "Final Core exit0; guards0; diffcheck0",
+          "receipt": "/tmp/migration-safety-core-typecheck-fenced.exit"
+        },
+        {
+          "kind": "cold_source_review",
+          "reviewers": [
+            "dr_house",
+            "rodney_mckay",
+            "leslie_lamport",
+            "lead"
+          ],
+          "verdict": "APPROVE journal/atomicity, namespace/state, publication/GC, then streaming/IO-fence deltas; root read all696production lines and final narrow changes"
+        },
+        {
+          "kind": "limits",
+          "result": "Process crash/retry guarantee; no power-loss/OS durability upgrade, restored-store GUID or adversarial filesystem CAS. Large-file functional streaming test is not an OOM reproduction."
+        }
+      ]
+    },
+    {
+      "id": "M8",
+      "severity": "P2",
+      "owner": "desktop",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "56883d625b"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112544616"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43114219529",
+          "os": [
+            "linux",
+            "windows"
+          ],
+          "verified_by_lead": true
+        },
+        {
+          "kind": "typecheck",
+          "command": "bun typecheck --verbose",
+          "cwd": "apps/desktop",
+          "result": "exit 0 on ce324eee3894; code identical to integrated commits"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "rodney_mckay",
+          "verdict": "APPROVE, source/test read; root inspected source, ancestry and workflow conclusions"
+        }
+      ]
+    },
+    {
+      "id": "M9",
+      "severity": "P2",
+      "owner": "desktop",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "932225d649a3826c7bdc961f973ed31b9d564a81",
+        "e11a8f63e9c7ab13ae523e54b5ee45c8ef2c1159",
+        "c31e3b5b43406c93bb8f3978a72c088bcba528d8",
+        "d6faad55fe1a96f8527f6f07d3c39f4d0013ca7e",
+        "f60f19ce4280b1f36e1ee247a676fb43655291f7",
+        "d96a0bc78983149151fda7b044479f9455b617f1",
+        "d157503e16f76c4386d21f34c6871a818d264ed5",
+        "4b4e057d172928e13caaf3a8607929420d84fe4c",
+        "3246ae11ee4c6881716303acb9526434008ff693",
+        "257c8bc44aebfb82cba916444218c02d83cc1bcd",
+        "488fe76a094ca260dbcf31a8faf37d241b694252",
+        "8f43bc577110bd858017bb1643f69fdfda15ce2f",
+        "41f43829f91f148e28cfd4a38fb3308cfeea3c8e",
+        "7ebe09e38fe23a371509cd7d0b89e3bb12fcf57b",
+        "e8ab184d1535886a704a6b5f9c0f5ac447d7f70c"
+      ],
+      "evidence": [
+        {
+          "kind": "isolated_clean_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43161728304"
+        },
+        {
+          "kind": "isolated_clean_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43166739187",
+          "result": "1 pass/6 assertions/2 omni spawns; Bun --no-install outside repo"
+        },
+        {
+          "kind": "script_green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43167100416",
+          "result": "61 pass/121 assertions per OS"
+        },
+        {
+          "kind": "core_green_linux",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43167754798",
+          "result": "36 pass/277 assertions/243 omni spawns"
+        },
+        {
+          "kind": "desktop_green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43167964882",
+          "result": "19 pass/48 assertions/1 omni spawn per OS"
+        },
+        {
+          "kind": "seal",
+          "source": "6ebcac0f168e81b0bf6cc9cdfadc4599c5b94e87",
+          "receipt": "/tmp/audit-release-seal.json",
+          "integrated_hashes": 16,
+          "hash_mismatches": 0,
+          "typechecks": "Script6eb=0; Core53d=0, identical Core afterward; Desktopdf243=0, identical Desktop afterward",
+          "cold_review": "Rodney APPROVE plus lead verified exact receipt predicate condition"
+        }
+      ]
+    },
+    {
+      "id": "M10",
+      "severity": "P2",
+      "owner": "desktop",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "932225d649a3826c7bdc961f973ed31b9d564a81",
+        "e11a8f63e9c7ab13ae523e54b5ee45c8ef2c1159",
+        "c31e3b5b43406c93bb8f3978a72c088bcba528d8",
+        "d6faad55fe1a96f8527f6f07d3c39f4d0013ca7e",
+        "f60f19ce4280b1f36e1ee247a676fb43655291f7",
+        "d96a0bc78983149151fda7b044479f9455b617f1",
+        "d157503e16f76c4386d21f34c6871a818d264ed5",
+        "4b4e057d172928e13caaf3a8607929420d84fe4c",
+        "3246ae11ee4c6881716303acb9526434008ff693",
+        "257c8bc44aebfb82cba916444218c02d83cc1bcd",
+        "488fe76a094ca260dbcf31a8faf37d241b694252",
+        "8f43bc577110bd858017bb1643f69fdfda15ce2f",
+        "41f43829f91f148e28cfd4a38fb3308cfeea3c8e",
+        "7ebe09e38fe23a371509cd7d0b89e3bb12fcf57b",
+        "e8ab184d1535886a704a6b5f9c0f5ac447d7f70c"
+      ],
+      "evidence": [
+        {
+          "kind": "isolated_clean_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43161728304"
+        },
+        {
+          "kind": "isolated_clean_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43166739187",
+          "result": "1 pass/6 assertions/2 omni spawns; Bun --no-install outside repo"
+        },
+        {
+          "kind": "script_green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43167100416",
+          "result": "61 pass/121 assertions per OS"
+        },
+        {
+          "kind": "core_green_linux",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43167754798",
+          "result": "36 pass/277 assertions/243 omni spawns"
+        },
+        {
+          "kind": "desktop_green_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43167964882",
+          "result": "19 pass/48 assertions/1 omni spawn per OS"
+        },
+        {
+          "kind": "seal",
+          "source": "6ebcac0f168e81b0bf6cc9cdfadc4599c5b94e87",
+          "receipt": "/tmp/audit-release-seal.json",
+          "integrated_hashes": 16,
+          "hash_mismatches": 0,
+          "typechecks": "Script6eb=0; Core53d=0, identical Core afterward; Desktopdf243=0, identical Desktop afterward",
+          "cold_review": "Rodney APPROVE plus lead verified exact receipt predicate condition"
+        }
+      ]
+    },
+    {
+      "id": "M11",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "fixed_verified",
+      "runtime_reproduced": false,
+      "commits": [
+        "7c338b0da1c1a6b87e4d5521b16fe95dab7bf00b",
+        "ac64d34f6e"
+      ],
+      "evidence": [
+        {
+          "kind": "upstream_startup_cancellation_integrated_both_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43369253063",
+          "snapshot": "e2aa9e73d28ea01dc48cf61780de68c00fa0b184",
+          "result": "Each OS45pass/0fail180assertions/46Omni spawns, cleanup/wrapper0. Root independently checked both raw logs/jobs and full snapshot diff only .ci-run.json. Desktop type0 on source union; independent cold review approves original startup cancellation scope. Attempt AbortController reaches permissions/capture and stale callbacks; late acquisition is stopped. No historical runtime RED claimed; no physical capture, OS permission-dialog cancellation or M13 outbox wiring claim."
+        }
+      ]
+    },
+    {
+      "id": "M12",
+      "severity": "P2",
+      "owner": "desktop",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "c8c487f829"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112458714"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113319685",
+          "os": [
+            "linux",
+            "windows"
+          ],
+          "verified_by_lead": true
+        },
+        {
+          "kind": "typecheck",
+          "command": "bun typecheck --verbose",
+          "cwd": "apps/desktop",
+          "result": "exit 0 on ce324eee3894; code identical to integrated commits"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "rodney_mckay",
+          "verdict": "APPROVE, source/test read; root inspected source, ancestry and workflow conclusions"
+        }
+      ]
+    },
+    {
+      "id": "M13",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "c56655e891",
+        "00c209b560",
+        "bb3cbaa9e6",
+        "fecacc06cd",
+        "e43559eb0b",
+        "34071d747d",
+        "e724fc8c52",
+        "80555b5f5f",
+        "114f1ecc35",
+        "f4f34349e0",
+        "bbe4f155ff",
+        "f788febe37",
+        "56d4536a07",
+        "bb2bfddcab",
+        "1aa41359fc",
+        "2474a806cf",
+        "11c68108ee",
+        "cc466b408f",
+        "ef158edff4",
+        "ecadc57481",
+        "34f71f454d",
+        "6f7ad9b573",
+        "aadd12445d",
+        "f256d3e61b",
+        "c9861968b9"
+      ],
+      "evidence": [
+        {
+          "kind": "control",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43269304058",
+          "source": "a7a204e5db30113ff104e9cecfa7c987712f47b0",
+          "os": [
+            "linux",
+            "windows"
+          ],
+          "result": "Three controls/14 assertions/three Omni spawns per OS: actual Core SQL lifecycle, auth/Location and retry identity."
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43271231681",
+          "source": "a7a204e5db30113ff104e9cecfa7c987712f47b0",
+          "os": [
+            "linux",
+            "windows"
+          ],
+          "result": "Three behavioral failures per OS: remote close with known pending text; foreign transcript forwarding for 307/308. Authorization absent at foreign peer, no credential-leak claim. Later tails not reached."
+        },
+        {
+          "kind": "private_store_runtime_control",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43285750973",
+          "source": "baaa0296bc7544428e50fa49500b86c8dff65f82",
+          "result": "One actual Node SQLite/FULL/FK control per OS; Node24.22.2/SQLite3.53.4 measured, cleanup success. Setup Bun action selects Node24 after validator24.15; no Electron qualification. Future37 store cases/crash not executed against refusing scaffold."
+        },
+        {
+          "kind": "cold_source_fix_first",
+          "source": "47601e11e5d710c64458d1d4440b84cf96fab368",
+          "result": "Root and independent critic find quota authorization trusts stored body_bytes. Reducing existing segment/receipt charge can permit new unrelated append against an incorrect subtotal. Source rejected before any compile/runtime gate; frozen repair validates actual global UTF8 body/receipt charges inside same transaction before operations, with two added real-SQL counter-corruption regressions. Other37future cases unchanged."
+        },
+        {
+          "kind": "private_store_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43291099304",
+          "source": "d1613bd057a1e91eec65999f95d27d72226ea130",
+          "result": "Actual Node24.22.2/SQLite3.53.4 both OS:40pass/0fail/0skip; includes original37 store cases,2 charge-corruption regressions and1 runtimecontrol. Exact SQL json_object charge port executed; Linux4.48s/Windows14.98s. Desktop type0 and independent full-source approval."
+        },
+        {
+          "kind": "private_store_parent_kill_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43291173235",
+          "source": "d1613bd057a1e91eec65999f95d27d72226ea130",
+          "result": "One case/14 assertions/2 actual Omni Node children per OS. After committed atomic marker actual PID/live checks, parent SIGKILL, no normal-exit witnesses, actual exit/readers before exact profile/ID/body reopen. Signal exit numbers diagnostic only; no Electron/powerloss/fullsender claim."
+        },
+        {
+          "kind": "private_store_integrated_stage",
+          "source": "80555b5f5f",
+          "result": "Eight store paths integrated, byte-identical to BOTH actual hosted snapshots84308ab/e78d584 (16 checks). Root aggregate Desktop type0; guards78rules/364paths/0gates/0errors/one existing advisory; boundaries5629files/5292edges/92existing/0new/0stale; spawn4018files/66allowlisted. No PhaseA RED files integrated; client/sender still unchanged."
+        },
+        {
+          "kind": "private_manager_independent_runtime_controls_green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43319471495",
+          "source": "ecdb6bb8ffb299fb40acaab89bd25608783c81ad",
+          "snapshot": "17867ef69b42341096173365d3d0a424c4750787",
+          "result": "Six controls pass per OS on actual Node24.22.2/SQLite3.53.4: reopen, Basic/location, manual307/308, real response-body abort/socket closure, valid exact128MiB detail. No manager import. Full102Node acceptance (6controls+96future) and3Core bridges cold-reviewed; future96 and bridges not yet run. Desktop package type0 excludes test harness. Root source-only GO after frozen contract; no compiler/CI GO yet."
+        },
+        {
+          "kind": "manager_acceptance_three_edge_cases_cold_approved",
+          "source": "f00d794f514e7e1e8824219a82b9a8b962884df5",
+          "result": "Three new real SQLite/HTTP cases preserve original102 byte-for-byte: Finish paused8 does not restart budget, recovered closed paused/blocked does not auto-send, seal after append latch releases producer without durable seal until retained retry+Finish. Root and independent cold critic approve. Now105Node=6controls+99future,3Core bridges; no future runtime yet. Recovery close-intent interrupted remains eligible under original single-instance contract; no13fixture rewrite."
+        },
+        {
+          "kind": "manager_source_frozen_pending_cold",
+          "source": "6186b56dbf8147f7f257bc015165992481b411f1",
+          "result": "Four private source files750lines; contract/Store/105Node+3Core unchanged. No type or runtime yet. Synchronous producer abort can reenter shutdown before memoized Promise assignment; Root confirmed author finding, one acceptance case plus publish-Promise-first proposal required before source delta. Full independent cold review in progress. No production Main/IPC/UI wiring."
+        },
+        {
+          "kind": "manager_source_cold_fixed_typed_runtime_pending",
+          "source": "0c63edf83da1287b00716837297b1944b1d03e84",
+          "runs": [
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43328346012",
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43328345986"
+          ],
+          "result": "Root and critic full source review found shutdown reentry and terminal headers delayed until body. Three added acceptance cases, including valid heldGET for shutdown, preserve original105; final108Node=6controls+102future and3Core bridges. Exact approved source patches publish shutdown Promise before callbacks and classify headers before body with owned cancellation/join and no terminal-to-deadline retry conversion. Desktop type0 excludes harness files; runtime gates pending, no wholeM13/source GREEN."
+        },
+        {
+          "kind": "manager_first_runtime_partial_failure_and_focused_diagnostic",
+          "runs": [
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43328346012",
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43328345986"
+          ],
+          "source": "0c63edf83da1287b00716837297b1944b1d03e84",
+          "result": "Node108: Linux106pass2fail; Windows107pass1fail. Shared immediate peer-close observation failed after client shutdown join; one Linux oversized128MiB+1 witness missed7s, cause not established. Valid128MiB, reentrant shutdown and held307/401 cases pass both. Core3pass70assertions/Omni4 per OS, cleanup/wrapper0; do not rerun absent relevant changes. Root+Rodney approved bounded peer-close observer and exact seven-file fixture/test extraction preserving all108 bodies/criteria and controls without transitive manager import. No production changes after typed0c63. Dedicated two-case Linux diagnostic43335770647 launched atf751; outcome pending, no Node -t or CI workaround."
+        },
+        {
+          "kind": "byte_transport_independent_native_control_failed",
+          "runs": [
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43335770647",
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43337238305"
+          ],
+          "result": "Focused manager two-case Linux1pass1fail; independent nativefetch control0pass1fail7.021s, both cleanup success. Exact same2,686,988body bytes offered and read by nativecontrol, headers200 resolved, readCalls44/readSettled43, drain40; producer awaits next drain while consumer awaits next chunk. This localizes the observed stall to transport fixture progress independently of Manager, without naming an unproven Node defect or proving manager byte-cap correctness. Root plans write-callback completion fixture repair only, preserving UTF8/openbody/limits/7s/10s; source0c63 unchanged."
+        },
+        {
+          "kind": "private_manager_final_green_integrated",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43347085870",
+          "snapshot": "1408937d24f62ccd12bcd80526763abc53784f4a",
+          "source": "c2d0284730243d9094d2905a4999e78467f36190",
+          "result": "Both OS108pass/0fail/0skip, cleanup/wrapper0. Root independently checked jobs/raw and all18 snapshot blobs; integrated17 own commits throughc9861968b9 match exactly. Three actual Core SQL bridges remain green43328345986 with identical four production/two actor blobs. Desktop type0 on unchanged production source; tsconfig excludes test harness. Real native HTTP fixture was repaired using write-completion callbacks and observed peer close while preserving original cap/time/strict error criteria; production unchanged after0c63. No Main/Senses/IPC/UI or Electron wiring."
+        },
+        {
+          "kind": "actual_electron_sqlite_capability_green_integrated",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43355280790",
+          "snapshot": "4d23c8297d83ed5ba6a64bb5e1c5da55beb07a67",
+          "commit": "3799aa8bfdcffe75f88188bdaf242ad8f27cac63",
+          "result": "Linux and Windows each1pass/37assertions/2Omni spawns. Actual Electron42.11.16 main embeds Node24.19.0 and SQLite3.53.3. Real Store reopen, pending batch, exact UTF8 digest and integrity_check passed; owned process/profile cleanup completed. Root independently checked jobs, raw records, both snapshot source blobs, LF/CRLF transformations and identical hosted bundles. This is isolated Electron capability, not production Main/Senses/IPC/UI wiring."
+        },
+        {
+          "kind": "production_wiring_integrated_scoped_green_final_epic_pending",
+          "runs": [
+            "43411946093",
+            "43405244040",
+            "43415962700"
+          ],
+          "result": "Integrated Node47 per OS binds production before pure IPC dependency repair3f4f8ff41a; repaired Bun27 per OS binds current Desktop/App Live source. Source integration review APPROVE9add986fc1 includes Main startup fence, joined failure cleanup, synchronous admission fencing and metadata-only trusted recovery. Final focused Node IPC qualification will bind repaired source directly."
+        },
+        {
+          "kind": "production_wiring_final_scoped_qualification",
+          "document": "docs/audits/evidence/m13-integrated-runtime.json",
+          "runs": [
+            "43411946093",
+            "43415962700",
+            "43416804061"
+          ],
+          "result": "Independent exact-source vectors distinguish pre-purefix integratedNode47 from finalBun27 and focusedNodeIPC16 on current production source. All runs both OS success with cleanup; Main actual hardware behavior remains source-reviewed only."
+        },
+        {
+          "kind": "integrated_cold_epic_terminal_green_with_bounded_retry",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43492035272",
+          "source": "46530d548a6a7713231d9f30bc9bd1bc0321c01f",
+          "result": "70-job all-package cold workflow success on attempt2: first68success2failure; only failed CoreLinux13 and WindowsCLI rerun, actual cache-miss execution486P/287P. All original failure evidence retained. E2E570P1flaky3skip; later observer4P zero retry in43496472513. See evidence/fourth-cold-requalification.json."
+        }
+      ],
+      "remaining": "Closed for durable controlled capture/STT/Store, recovery, manager ownership and production wiring. Controlled Node/Electron boundaries and source review do not prove physical hardware capture, native permission dialogs or full Main bootstrap."
+    },
+    {
+      "id": "M14",
+      "severity": "P2",
+      "owner": "desktop",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "c8c487f829"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112458714"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113319685",
+          "os": [
+            "linux",
+            "windows"
+          ],
+          "verified_by_lead": true
+        },
+        {
+          "kind": "typecheck",
+          "command": "bun typecheck --verbose",
+          "cwd": "apps/desktop",
+          "result": "exit 0 on ce324eee3894; code identical to integrated commits"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "rodney_mckay",
+          "verdict": "APPROVE, source/test read; root inspected source, ancestry and workflow conclusions"
+        }
+      ]
+    },
+    {
+      "id": "M15",
+      "severity": "P2",
+      "owner": "desktop",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "6420fa2d34"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113135887"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113633807",
+          "os": [
+            "linux",
+            "windows"
+          ],
+          "verified_by_lead": true
+        },
+        {
+          "kind": "typecheck",
+          "command": "bun typecheck --verbose",
+          "cwd": "apps/desktop",
+          "result": "exit 0 on ce324eee3894; code identical to integrated commits"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "rodney_mckay",
+          "verdict": "APPROVE, source/test read; root inspected source, ancestry and workflow conclusions"
+        }
+      ]
+    },
+    {
+      "id": "N1",
+      "severity": "P2",
+      "owner": "desktop",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "84bd538a84",
+        "29bcc68821",
+        "699527e136",
+        "f06d8653e3"
+      ],
+      "evidence": [
+        {
+          "kind": "behavioral_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43194968284",
+          "result": "Node Linux/Windows10controls pass,N1 fails actual worker tree alive; Bun not reached; mac14 unsupported before steps"
+        },
+        {
+          "kind": "native_gate_green_three_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43197913690",
+          "snapshot_sha": "b9c2ac3747cac64fa582524f3dd474ba83ed19b4",
+          "result": "Linux/Windows/macOS15: clippy/build/addon/Cargo pass; Node11+Bun11 hardening perOS,66total;6N1 executions"
+        },
+        {
+          "kind": "cold_source",
+          "reviewer": "rodney_mckay",
+          "verdict": "APPROVE b95; root inspected complete8file source diff"
+        },
+        {
+          "kind": "integrated_hashes",
+          "result": "8source files match b95 and4test files match adfa; root-owned workflow/AGENT docs match tested b9"
+        }
+      ]
+    },
+    {
+      "id": "N2",
+      "severity": "P2",
+      "owner": "desktop",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "20cb8095f2",
+        "5e9e2fce91",
+        "db0cfd5da0",
+        "6d76fd8766",
+        "20f44175d0",
+        "b0707d0ec4",
+        "c33a3e32ec"
+      ],
+      "evidence": [
+        {
+          "kind": "baseline_setup_failure_not_behavioral_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43221281046",
+          "result": "Pinnedfbb checkout; Linux clippy zombie_processes prevents all new tests; Windows succeeds with0 Linux-only test matches and existing Node11/Bun11 controls; Mac queued at recording. Actor-only4a94 adds real wait thread, no suppression or production change, cold approved."
+        },
+        {
+          "kind": "rss_and_timeout_behavioral_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43222763304",
+          "result": "Linux3actual enforcement failures (RSS/two original timeouts) after realAckError+restore. Two cancellation tests initially passed by race, not RED; Windows/Mac0Linux-only matches."
+        },
+        {
+          "kind": "cancellation_behavioral_red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43225258741",
+          "result": "Linux2actual cancellation failures after realAckError+restore, observed old watcher ended, then original token cancelled and OS descendant remains alive3s. Checkpoint is not OS death proof; actual OS assertions remain mandatory. Source retry authorized only afterward."
+        },
+        {
+          "kind": "full_native_final_green_three_os",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43230439779",
+          "result": "Full c7b25c59fcc3d43e6a60323e899dd712987257ec on controller and all three checkouts; blank filter. Linux7N2+2helpers pass; Rust main library139/131/107pass Linux/macOS/Windows,0fail1ignored each. Node and Bun contracts38/38 Linux/macOS,40/40 Windows; hardening11 each runtime and OS. Build/clippy/Cargo all green."
+        },
+        {
+          "kind": "integration_and_cold_source",
+          "result": "Root and Rodney APPROVE. Seven own commits integrated serially;11/11 source/test/guide SHA256 exactly match frozen manifest. Public API/Error/protocol/contracts/deps unchanged. Root guards0gate/0error/1 inherited advisory; boundaries0new0stale; spawn0."
+        }
+      ],
+      "remaining": "Closed. Injected inventory failures exercised on Linux only; macOS/Windows run existing native controls. Dynamic sampler JoinError not claimed; no release/Node24/Deno qualification, atomic prlimit identity or universal reaping after supervisor loss claim."
+    },
+    {
+      "id": "T1",
+      "severity": "P2",
+      "owner": "ui",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "51b4c6ab8435955b57a4c789d4b9121f1b948366",
+        "0e54911f788b4d8b9cd52b51bd452a704cc2afbc",
+        "f0a4137123b0f2b0d19c3639681953b4e30a8473"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112713356"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43121477546",
+          "result": "15 pass; final TUI types and behavior"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "leslie_lamport",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/orchestra-ui-tui-typecheck-types-fix.exit"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "T2",
+      "severity": "P2",
+      "owner": "lead",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "bcbc6a4767",
+        "d4bd2d3592",
+        "e91d6f1606",
+        "61bbafc727"
+      ],
+      "evidence": [
+        {
+          "kind": "actual_http_sql_behavioral_red_and_controls",
+          "runs": [
+            "43174322667",
+            "43175111696"
+          ],
+          "result": "3positive controls53assertions; largePromise actualMalformedResponse after12admission/SQL witnesses."
+        },
+        {
+          "kind": "official_generation_exact_archive_recovered",
+          "run": "43379170345",
+          "result": "Twoidentical56filevectors,258readonlyinputsmatch,11successfulOmnicommands,57exactarchiveentries includinghiddenmanifests; qualifiedrecovery receipt."
+        },
+        {
+          "kind": "integrated_runtime_both_os",
+          "runs": [
+            "43379794072",
+            "43379793584"
+          ],
+          "result": "Server4P0F70assertions and Client33P0F106assertions perOS; exactsnapshot/generatedblob verified. See evidence/t2-integrated-runtime.json."
+        }
+      ],
+      "remaining": "Closed for valid event compatibility. Promise SSE deliberately has no fixed ceiling, matching existing Effect/JSON transport; no bounded-memory or media execution claim."
+    },
+    {
+      "id": "T3",
+      "severity": "P2",
+      "owner": "clients",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "33cf7d64ee5bc53b204bdce8b2b15e0bfb4d2dd9",
+        "630147c8b85d39be25a22353c6267cc55331109f"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112614483"
+        },
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43117445498",
+          "result": "non-Error submit failure"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43114934467",
+          "result": "38 pass"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43117768085",
+          "result": "2 pass; non-Error failure normalized, cleanup preserved"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "elon_musk",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/audit-clients-cli-type-verified.exit"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "X1",
+      "severity": "P2",
+      "owner": "ui",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "51b4c6ab8435955b57a4c789d4b9121f1b948366",
+        "0e54911f788b4d8b9cd52b51bd452a704cc2afbc",
+        "f0a4137123b0f2b0d19c3639681953b4e30a8473"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112713356"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43121477546",
+          "result": "15 pass; final TUI types and behavior"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "leslie_lamport",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/orchestra-ui-tui-typecheck-types-fix.exit"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "X2",
+      "severity": "P2",
+      "owner": "ui",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "51b4c6ab8435955b57a4c789d4b9121f1b948366",
+        "0e54911f788b4d8b9cd52b51bd452a704cc2afbc",
+        "f0a4137123b0f2b0d19c3639681953b4e30a8473"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112713356"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43121477546",
+          "result": "15 pass; final TUI types and behavior"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "leslie_lamport",
+          "verdict": "APPROVE; root inspected source and integration ancestry"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "exit 0",
+          "receipts": [
+            "/tmp/orchestra-ui-tui-typecheck-types-fix.exit"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "X3",
+      "severity": "P2",
+      "owner": "ui",
+      "status": "fixed_verified",
+      "runtime_reproduced": true,
+      "commits": [
+        "ca5c8fa69b",
+        "1035907ebd"
+      ],
+      "evidence": [
+        {
+          "kind": "red",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43126026813",
+          "result": "Second independent Location performs physical read while first writer holds target; final green includes keyed-mutex cancellation/failure tests"
+        },
+        {
+          "kind": "green",
+          "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43138330714",
+          "result": "98 pass, 9 Core files, 54 real omni spawns, positive control pass; completion callers do not poll"
+        },
+        {
+          "kind": "cold_review",
+          "reviewer": "leslie_lamport",
+          "verdict": "APPROVE final706899168f; exact-owner completion supersedes earlier FIX-FIRST"
+        },
+        {
+          "kind": "local_typecheck",
+          "result": "Core, Server, Protocol, Client exit0",
+          "receipts": [
+            "/tmp/orchestra-session-integrity-core-type-completion.exit",
+            "/tmp/orchestra-session-integrity-server-type-seal.exit",
+            "/tmp/orchestra-session-integrity-protocol-type-seal.exit",
+            "/tmp/orchestra-session-integrity-client-type-seal.exit"
+          ]
+        },
+        {
+          "kind": "guards",
+          "result": "78 rules, 117 paths, 0 findings",
+          "receipt": "/tmp/orchestra-session-integrity-guards-seal-final.exit"
+        }
+      ]
+    }
+  ],
+  "verified_workflow_runs": [
+    {
+      "run": 43113860311,
+      "result": {
+        "conclusion": "success",
+        "headSha": "8ad52fd02ebd03f56abb08e8d95436d2e6a66a54",
+        "status": "completed",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113860311"
+      }
+    },
+    {
+      "run": 43114062388,
+      "result": {
+        "conclusion": "success",
+        "headSha": "184d086ff93f7f4f31b05cb57fe306a5ef16785a",
+        "status": "completed",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43114062388"
+      }
+    },
+    {
+      "run": 43113803154,
+      "result": {
+        "conclusion": "success",
+        "headSha": "7ed2e7b20f71316383cebdcf414785dc9cdf26f6",
+        "status": "completed",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113803154"
+      }
+    },
+    {
+      "run": 43114219529,
+      "result": {
+        "conclusion": "success",
+        "headSha": "c3e41dbdd19fd9b4201eb062eaf5e25d6c77b01c",
+        "status": "completed",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43114219529"
+      }
+    },
+    {
+      "run": 43113633807,
+      "result": {
+        "conclusion": "success",
+        "headSha": "c24e9fff53667b70b3d2b6d3d55242dc27a6a35c",
+        "status": "completed",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113633807"
+      }
+    },
+    {
+      "run": 43113741903,
+      "result": {
+        "conclusion": "success",
+        "headSha": "4e67bbed1d5a0c54c755c22c20e59049e2c11105",
+        "status": "completed",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113741903"
+      }
+    },
+    {
+      "run": 43114109157,
+      "result": {
+        "conclusion": "success",
+        "headSha": "c616276fa79bcc4fd39ad1533d2169211716d6d6",
+        "status": "completed",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43114109157"
+      }
+    },
+    {
+      "run": 43113389706,
+      "result": {
+        "conclusion": "success",
+        "headSha": "926d207c3679a30607348ab3fcede37fcaf3a082",
+        "status": "completed",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113389706"
+      }
+    },
+    {
+      "run": 43113793857,
+      "result": {
+        "conclusion": "success",
+        "headSha": "d8ad9cdd105aacc409329771601746161a3c3e2b",
+        "status": "completed",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43113793857"
+      }
+    }
+  ],
+  "pull_request": {
+    "number": 1463,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/pull/1463",
+    "draft": true
+  },
+  "integration_dev": "5804b4f794ba31f49890b79565cff62b65e37725",
+  "integration_sync_commit": "2712582d1b",
+  "recovery": "Server restart: preserved worktrees and hosted runs; final local checkers restarted with durable log and exit receipts when old pipes lost status.",
+  "cold_blob_checks": [
+    {
+      "owner": "security",
+      "run": 43113741903,
+      "snapshot_sha": "4e67bbed1d5a0c54c755c22c20e59049e2c11105",
+      "conclusion": "success",
+      "path": "packages/core/src/config/markdown.ts",
+      "snapshot_blob": "1fa31942137ef5313aa54dc74d882886de442723",
+      "local_blob": "1fa31942137ef5313aa54dc74d882886de442723",
+      "exact": true
+    },
+    {
+      "owner": "security",
+      "run": 43113741903,
+      "snapshot_sha": "4e67bbed1d5a0c54c755c22c20e59049e2c11105",
+      "conclusion": "success",
+      "path": "packages/core/src/tool-safety.ts",
+      "snapshot_blob": "45b09f27b9b52132c4336a1d4d1d203727eec836",
+      "local_blob": "45b09f27b9b52132c4336a1d4d1d203727eec836",
+      "exact": true
+    },
+    {
+      "owner": "security",
+      "run": 43115612435,
+      "snapshot_sha": "d80428e735ac16be052acd91d8b25b8afc558337",
+      "conclusion": "success",
+      "path": "packages/core/src/instruction-context.ts",
+      "snapshot_blob": "fae9453dde2388f4a065ed4c550ec877fa3bb0fc",
+      "local_blob": "fae9453dde2388f4a065ed4c550ec877fa3bb0fc",
+      "exact": true
+    },
+    {
+      "owner": "security",
+      "run": 43113741903,
+      "snapshot_sha": "4e67bbed1d5a0c54c755c22c20e59049e2c11105",
+      "conclusion": "success",
+      "path": "packages/core/src/mcp/project-config.ts",
+      "snapshot_blob": "e326fb8109baaa9f6ae8012f8129a9ab9a0f8ac8",
+      "local_blob": "e326fb8109baaa9f6ae8012f8129a9ab9a0f8ac8",
+      "exact": true
+    },
+    {
+      "owner": "clients",
+      "run": 43117768085,
+      "snapshot_sha": "9f9b01ade237dca3793446d5532df09c76069694",
+      "conclusion": "success",
+      "path": "apps/cli/src/turn.ts",
+      "snapshot_blob": "550ee68550061b4511521790ced82a6195b25f9a",
+      "local_blob": "550ee68550061b4511521790ced82a6195b25f9a",
+      "exact": true
+    },
+    {
+      "owner": "clients",
+      "run": 43114934467,
+      "snapshot_sha": "b3d4154f5a7fc5a5b3d9e2b01204eceace044036",
+      "conclusion": "success",
+      "path": "apps/cli/src/commands/handlers/import.ts",
+      "snapshot_blob": "fe3f8cef6de01ca7b5627918c7786caa8af5b4d6",
+      "local_blob": "fe3f8cef6de01ca7b5627918c7786caa8af5b4d6",
+      "exact": true
+    },
+    {
+      "owner": "clients",
+      "run": 43113793857,
+      "snapshot_sha": "d8ad9cdd105aacc409329771601746161a3c3e2b",
+      "conclusion": "success",
+      "path": "tooling/httpapi-codegen/src/effect-headers.ts",
+      "snapshot_blob": "041bf78d5dd744f8396bec77b679cd8a70b874da",
+      "local_blob": "cd6db4e5b5128fe0464830b4e971b79d0cdaca5d",
+      "exact": false,
+      "equivalence": "Only ternary line formatting differs; lead fetched full source and inspected diff; runtime expression identical."
+    },
+    {
+      "owner": "ui",
+      "run": 43116667193,
+      "snapshot_sha": "c16e5e77ca8024a1deceda7eba7d48815baaf58a",
+      "conclusion": "success",
+      "path": "packages/app-shell/src/pages/new-session/new-session-workspace-controller.ts",
+      "snapshot_blob": "a5b2b89daf1cefdecefa22163fd78bafda1ea9a3",
+      "local_blob": "a5b2b89daf1cefdecefa22163fd78bafda1ea9a3",
+      "exact": true
+    },
+    {
+      "owner": "ui",
+      "run": 43116667193,
+      "snapshot_sha": "c16e5e77ca8024a1deceda7eba7d48815baaf58a",
+      "conclusion": "success",
+      "path": "packages/app-shell/src/context/file/load-queue.ts",
+      "snapshot_blob": "4b00d1419272821b9396de798f6a475629622797",
+      "local_blob": "4b00d1419272821b9396de798f6a475629622797",
+      "exact": true
+    },
+    {
+      "owner": "ui",
+      "run": 43117735906,
+      "snapshot_sha": "8af492be4bcc00af1760f8076164584c660bcdf3",
+      "conclusion": "success",
+      "path": "packages/tui/src/context/sync.tsx",
+      "snapshot_blob": "0362c01ea5c9bc02a75bd08fa5ff0d64fd197cc7",
+      "local_blob": "0362c01ea5c9bc02a75bd08fa5ff0d64fd197cc7",
+      "exact": true
+    },
+    {
+      "owner": "desktop",
+      "run": 43291099304,
+      "snapshot_sha": "84308ab56c6a6ceed0d833c02f80132ee1974476",
+      "conclusion": "success",
+      "path": "apps/desktop/src/main/live-outbox-contract.ts",
+      "sha256": "bc4782db64df0ca430dfdca81be727a73975103c77c50d5523246ba8bcabf6fc",
+      "exact": true
+    },
+    {
+      "owner": "desktop",
+      "run": 43291099304,
+      "snapshot_sha": "84308ab56c6a6ceed0d833c02f80132ee1974476",
+      "conclusion": "success",
+      "path": "apps/desktop/src/main/live-outbox-control.node.test.ts",
+      "sha256": "f38ae90efd3fa53fd1957464cf7f404c9c5fd679409cce04378ccbfae0609c22",
+      "exact": true
+    },
+    {
+      "owner": "desktop",
+      "run": 43291099304,
+      "snapshot_sha": "84308ab56c6a6ceed0d833c02f80132ee1974476",
+      "conclusion": "success",
+      "path": "apps/desktop/src/main/live-outbox.ts",
+      "sha256": "67b4744ef2ae5848fa08a08eb503bf11becaed0245912979b2c8475dec6aaa5d",
+      "exact": true
+    },
+    {
+      "owner": "desktop",
+      "run": 43291099304,
+      "snapshot_sha": "84308ab56c6a6ceed0d833c02f80132ee1974476",
+      "conclusion": "success",
+      "path": "apps/desktop/src/main/live-outbox-crash.fixture.ts",
+      "sha256": "a1fbc33eff18c2c2631b467536fa08e073e3b893125d7d2c36f34f1984a97cc5",
+      "exact": true
+    },
+    {
+      "owner": "desktop",
+      "run": 43291099304,
+      "snapshot_sha": "84308ab56c6a6ceed0d833c02f80132ee1974476",
+      "conclusion": "success",
+      "path": "apps/desktop/src/main/live-outbox-native.test.ts",
+      "sha256": "1fd6e7b83c7776b1a318e1908e8dc6795b664c9b12fedae18f2f3d74db2615bf",
+      "exact": true
+    },
+    {
+      "owner": "desktop",
+      "run": 43291099304,
+      "snapshot_sha": "84308ab56c6a6ceed0d833c02f80132ee1974476",
+      "conclusion": "success",
+      "path": "apps/desktop/src/main/live-outbox.node.test.ts",
+      "sha256": "623f56713d0296f008a05ebfa95bf136a96c47812beaadbf1b7e174252fa38c7",
+      "exact": true
+    },
+    {
+      "owner": "desktop",
+      "run": 43291099304,
+      "snapshot_sha": "84308ab56c6a6ceed0d833c02f80132ee1974476",
+      "conclusion": "success",
+      "path": "apps/desktop/test/native/live-outbox.node-smoke.mjs",
+      "sha256": "5854fc15c52760bbf77be085b8dbe29f8a7dcc8c47b222a081e2e871553f707a",
+      "exact": true
+    },
+    {
+      "owner": "desktop",
+      "run": 43291099304,
+      "snapshot_sha": "84308ab56c6a6ceed0d833c02f80132ee1974476",
+      "conclusion": "success",
+      "path": "apps/desktop/test/native/live-outbox-control.node-smoke.mjs",
+      "sha256": "a20cfa7e49906aed2aa156f34e3034b116f0371848c7677a8aeb51804b34df1a",
+      "exact": true
+    },
+    {
+      "owner": "desktop",
+      "run": 43291173235,
+      "snapshot_sha": "e78d584e0ef024dd14bc03e0ef9556c0a1466499",
+      "conclusion": "success",
+      "path": "apps/desktop/src/main/live-outbox-contract.ts",
+      "sha256": "bc4782db64df0ca430dfdca81be727a73975103c77c50d5523246ba8bcabf6fc",
+      "exact": true
+    },
+    {
+      "owner": "desktop",
+      "run": 43291173235,
+      "snapshot_sha": "e78d584e0ef024dd14bc03e0ef9556c0a1466499",
+      "conclusion": "success",
+      "path": "apps/desktop/src/main/live-outbox-control.node.test.ts",
+      "sha256": "f38ae90efd3fa53fd1957464cf7f404c9c5fd679409cce04378ccbfae0609c22",
+      "exact": true
+    },
+    {
+      "owner": "desktop",
+      "run": 43291173235,
+      "snapshot_sha": "e78d584e0ef024dd14bc03e0ef9556c0a1466499",
+      "conclusion": "success",
+      "path": "apps/desktop/src/main/live-outbox.ts",
+      "sha256": "67b4744ef2ae5848fa08a08eb503bf11becaed0245912979b2c8475dec6aaa5d",
+      "exact": true
+    },
+    {
+      "owner": "desktop",
+      "run": 43291173235,
+      "snapshot_sha": "e78d584e0ef024dd14bc03e0ef9556c0a1466499",
+      "conclusion": "success",
+      "path": "apps/desktop/src/main/live-outbox-crash.fixture.ts",
+      "sha256": "a1fbc33eff18c2c2631b467536fa08e073e3b893125d7d2c36f34f1984a97cc5",
+      "exact": true
+    },
+    {
+      "owner": "desktop",
+      "run": 43291173235,
+      "snapshot_sha": "e78d584e0ef024dd14bc03e0ef9556c0a1466499",
+      "conclusion": "success",
+      "path": "apps/desktop/src/main/live-outbox-native.test.ts",
+      "sha256": "1fd6e7b83c7776b1a318e1908e8dc6795b664c9b12fedae18f2f3d74db2615bf",
+      "exact": true
+    },
+    {
+      "owner": "desktop",
+      "run": 43291173235,
+      "snapshot_sha": "e78d584e0ef024dd14bc03e0ef9556c0a1466499",
+      "conclusion": "success",
+      "path": "apps/desktop/src/main/live-outbox.node.test.ts",
+      "sha256": "623f56713d0296f008a05ebfa95bf136a96c47812beaadbf1b7e174252fa38c7",
+      "exact": true
+    },
+    {
+      "owner": "desktop",
+      "run": 43291173235,
+      "snapshot_sha": "e78d584e0ef024dd14bc03e0ef9556c0a1466499",
+      "conclusion": "success",
+      "path": "apps/desktop/test/native/live-outbox.node-smoke.mjs",
+      "sha256": "5854fc15c52760bbf77be085b8dbe29f8a7dcc8c47b222a081e2e871553f707a",
+      "exact": true
+    },
+    {
+      "owner": "desktop",
+      "run": 43291173235,
+      "snapshot_sha": "e78d584e0ef024dd14bc03e0ef9556c0a1466499",
+      "conclusion": "success",
+      "path": "apps/desktop/test/native/live-outbox-control.node-smoke.mjs",
+      "sha256": "a20cfa7e49906aed2aa156f34e3034b116f0371848c7677a8aeb51804b34df1a",
+      "exact": true
+    }
+  ],
+  "benchmark_before_current_dev": {
+    "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43117649677",
+    "tests_passed": 6,
+    "integration_commit": "78b8e1a46b"
+  },
+  "supplemental_candidates": [
+    {
+      "id": "G3-candidate",
+      "status": "runtime_fixture_only",
+      "title": "Imported emitter omits required empty Struct payload",
+      "scope": "Public generator fixture; productive endpoint not established",
+      "severity": "unclassified",
+      "evidence": {
+        "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112615865",
+        "snapshot_sha": "ea0afd36197790ecf053baa6b7fb70f696aeddee",
+        "case": "optional-payload.test.ts empty (imported)"
+      },
+      "disposition": "Recorded separately from original 65; no silent G1 scope expansion."
+    }
+  ],
+  "summary": {
+    "original_findings": 65,
+    "new_fixes_verified": 64,
+    "already_fixed_verified": 1,
+    "remaining": 0,
+    "scope": "Original 65 only; supplemental candidates tracked separately"
+  },
+  "integration_checkpoint": "c9861968b9",
+  "complex_wave_2": {
+    "base": "78b8e1a46b",
+    "units": {
+      "authorization": [
+        "H1",
+        "H12"
+      ],
+      "processes": [
+        "M2",
+        "M3"
+      ],
+      "streams": [
+        "E8",
+        "E9"
+      ],
+      "ownership": [
+        "L2",
+        "L10",
+        "X3"
+      ]
+    },
+    "mechanical_plan_check": "9 unique acceptance IDs, exact coverage; 6 pairwise conflict-free profiles",
+    "generated_writer": "ownership only after generator fix integrated",
+    "typechecks": "globally serial, GOMAXPROCS=2; hosted tests only"
+  },
+  "benchmark_after": {
+    "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43132687463",
+    "tests_passed": 6,
+    "integration_commit": "e46ab2cbc9",
+    "comparison": "before_current_dev; descriptive measurements in remediation-benchmark.json, no causal speed claim"
+  },
+  "dev_sync": {
+    "commit": "2117a6d4989492367899fad6f33e723d3343f1a1",
+    "dev": "22d326d58f6cbb9fdc46b55620194c5d434a7444",
+    "previous_frozen_dev": "7c338b0da1c1a6b87e4d5521b16fe95dab7bf00b",
+    "result": "Merged53 upstream files; four overlapping files auto-merged. Hidden Client qualification upload, direct CodeMode dependency/export and model-consumer changes retained. Post-sync package types, current generated provenance and final epic remain required."
+  },
+  "migration_viability": {
+    "commit": "d2a4c512b1cbc0c09a219eafaf68da410d35227b",
+    "bun": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43134602779",
+    "node": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43134611288",
+    "scope": "WAL/DELETE \u00d7 commit/rollback, both OS, real leaf reader under writer IMMEDIATE; not retention/crash/prune proof"
+  },
+  "integrated_checks": {
+    "guards": {
+      "exit": 0,
+      "rules": 78,
+      "changed_paths": 273,
+      "gate": 0,
+      "warn": 1,
+      "receipt": "/tmp/orchestra-e2-l1-integrated-guards.exit",
+      "warning_resolution": "dep-new-added: existing repo catalog drizzle-orm is required as Engine devDependency by relocated SQL integration tests; same version, one workspace lock entry; PR explains need, no ignore or approval label."
+    },
+    "boundaries": {
+      "exit": 0,
+      "parsed_files": 5595,
+      "cross_package_edges": 5087,
+      "ledgered": 92,
+      "new": 0,
+      "stale": 0,
+      "receipt": "/tmp/orchestra-e2-l1-integrated-boundaries-final.exit"
+    },
+    "spawn_imports": {
+      "exit": 0,
+      "receipt": "/tmp/orchestra-e2-l1-integrated-spawn.exit"
+    },
+    "desktop_boundary_import": {
+      "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43134685283",
+      "os": [
+        "linux",
+        "windows"
+      ],
+      "typecheck_exit": 0,
+      "receipt": "/tmp/orchestra-audit-desktop-boundary-type.exit"
+    },
+    "core_typecheck": {
+      "exit": 0,
+      "source": "ce46eb7c0f",
+      "receipt": "/tmp/orchestra-h6-l1-core-type.exit",
+      "scope": "H6 merged E6 plus initial4 L1 acceptance; later acceptance extensions not included"
+    },
+    "engine_typecheck": {
+      "exit": 0,
+      "source": "610603b94e",
+      "receipt": "/tmp/orchestra-e6-relocation-type.exit"
+    },
+    "source_qualification_checkpoint": {
+      "head": "45b6a69443",
+      "guards": 0,
+      "boundaries": 0,
+      "spawn_imports": 0,
+      "guards_rules": 78,
+      "guards_changed_paths": 408,
+      "existing_advisories": 1,
+      "boundary_files": 5645,
+      "boundary_edges": 5299,
+      "boundary_new": 0,
+      "boundary_stale": 0,
+      "spawn_files": 4023,
+      "allowlisted": 66
+    },
+    "generated_memory_checkpoint": {
+      "head": "717b06c359",
+      "guards": 0,
+      "boundaries": 0,
+      "spawn_imports": 0,
+      "rules": 78,
+      "changed_paths": 420,
+      "existing_advisories": 1,
+      "new_boundary_violations": 0,
+      "stale_boundary_violations": 0
+    },
+    "manager_deadline_checkpoint": {
+      "head": "c9861968b9",
+      "guards": 0,
+      "boundaries": 0,
+      "spawn_imports": 0,
+      "rules": 78,
+      "changed_paths": 442,
+      "warnings": 4,
+      "explanation": "Existing Drizzle test devDependency plus three real-deadline fixture advisories: two14s cases measure actual10s deadlines; independent transport control outer10s contains original7s oracle and1s cleanup. No ignore or approval label."
+    }
+  },
+  "next_contracts": {
+    "G2": "Integrated9ec1751833; fixed with compositional SDK evidence and hoist24green, both independent approvals",
+    "E6": "Core/host integrated; Schema5/Client5 and five package types green. Wire HTTP omitted-agent fixture and baseline transport cancellation diagnostics remain open.",
+    "H6": "Integrated ce46eb7c0f; full both-OS source proof plus root merged seam4green and Coretype0. Closed.",
+    "M9_M10": "Integrated e8ab184d15, all four scoped gates green, source hashes16 equal, closed.",
+    "L1": "Source767 type0; first4file gate63pass1fixturefail perOS. Fresh row-race facade duplicated real projectors; tests-only d046/f36 reuse existing registration. Earlier row baseline failure was setup, not behavior RED; isolated baseline and corrected source narrow pending.",
+    "M11_M13": "M11 trusted permission/WS seams explicitly planned; implementation sequenced after M13 delivery/close-intent contract. No production GO.",
+    "E2": "Integrated c564f5f1a7;13 exact paths, compositional App80/TUI28 perOS,6before/after benchmarks, package types0. Closed.",
+    "T2": "Legitimate800KiB admitted-event acceptance cold GO; no size/transport policy selected.",
+    "H10": "Integrated5b6b9bb290; 60pass perOS, exact hashes5, independent source approval, guards0. Closed.",
+    "N1": "Integrated29bcc68821; exact Rust/test hashes and3OS native gate Node+Bun green. Closed.",
+    "H4": "Source72a+38f independent APPROVE, Core/Engine types0; finalEngine42both and Core3both gates in progress."
+  },
+  "wave4": {
+    "agents": {
+      "security": {
+        "branch": "mcp-identity",
+        "baseline": "5d4733127f405a89e77a6319cbba3da1e45f1635",
+        "scope": "H6 source frozen; type0, runtime gate awaiting API reset"
+      },
+      "desktop": {
+        "scope": "M9/M10 implementation after cold acceptance and scoped RED",
+        "branch": "release-recovery",
+        "baseline": "017b3118a92edb61f0963596203e1f94dbda3e56"
+      },
+      "clients": {
+        "branch": "model-eligibility",
+        "baseline": "cdd57cd1723c47219d347034520a7a255dbd1403",
+        "scope": "E6 Core/host source frozen, typechecking; wire/UI later stage"
+      },
+      "ui": {
+        "branch": "embedded-custody",
+        "baseline": "367b8ef87948fe1d67d02d238ef2becc491f03ac",
+        "scope": "G2 integrated, readonly E2/T2 revalidation complete"
+      }
+    },
+    "conflicts": "G2 Core DB export only; E6 Core model/host then wire/UI; H6 MCP/Registry/Config readDocument; releases workflow/tools. Shared docs owned by root. Client generation serialized, no writer currently active.",
+    "checks": "globally serial typechecks GOMAXPROCS=2; hosted tests only; full epic suite once final scope"
+  },
+  "ci_runner_repair": {
+    "commit": "a6022d9922",
+    "old_arm_run": "43353582325",
+    "failure": "Runner rejected unsupported macos-14-arm64-us-default before any test/build/architecture witness; cleanup success. Not product RED.",
+    "source": "https://github.com/actions/runner-images/blob/main/README.md",
+    "change": "Update only ARM/all selectors macos-14 to macos-15 in workflow and shared request map; two existing exact-host test literals updated; Intel and architecture gate unchanged.",
+    "parser_control": {
+      "run": "43354069467",
+      "pass_count": 39,
+      "fail_count": 0,
+      "assertions": 211,
+      "omni": "not applicable",
+      "scope": "Scoped hosted Linux existing request/parser/matrix/report tests."
+    }
+  },
+  "dev_sync_pending": {
+    "state": "Merge complete through dev 5804b4f794; Atlas producer vector unchanged; final cold qualification pending.",
+    "dev": "5804b4f794ba31f49890b79565cff62b65e37725",
+    "generation": "Official Client/Atlas/configuration artifacts verified for their recorded source scopes; no manual generated-source edits.",
+    "full_epic": "43427741510,43453802489 and43479893813 completed with failure; third63 success/7 failure/0 cancelled. Focused wiring, transport, writer/ledger gates now pass. Final aggregate still pending; E10/M13 remain open."
+  },
+  "integration_history": [
+    {
+      "integration_dev": "ca3f2e60937e5a154df8a4505b03605d2da1e729",
+      "integration_sync_commit": "78b8e1a46b",
+      "dev_sync": {
+        "commit": "015d034153",
+        "dev": "7c8b9d4f66899cdff5f335aed8dd99892b21d0aa",
+        "result": "merged without conflicts",
+        "boundary_findings": "Two inherited R5 imports were already corrected by this upstream; owned-serve test import corrected through existing package export."
+      },
+      "dev_sync_pending": {
+        "parent": "3799aa8bfdcffe75f88188bdaf242ad8f27cac63",
+        "dev": "04026786c46d8e6b3e7a66e75e03d545459d632d",
+        "state": "First142commit sync244299816d committed; next3commit sync in progress. Core/App/Server/Engine/Desktop/Client package typechecks passed on recorded phase trees. Newly combined scoped hosted/generation gates remain pending.",
+        "generated": "One whole previously qualified Atlas surface retained temporarily; official hosted generation required for source union.",
+        "last_seam_gate": {
+          "run": "43365618269",
+          "result": "Both OS64pass/11fail/567assertions,75tests9files. Root independently checked raw/jobs and cleanup success. Epoch deletion contradicted rebase; old exclusive-boundary fixtures and in-transaction removal barriers reconciled after cold review; rerun pending."
+        },
+        "next_frozen_dev": "7c338b0da1c1a6b87e4d5521b16fe95dab7bf00b"
+      }
+    }
+  ],
+  "final_qualification": {
+    "date": "2026-11-13",
+    "closed": 65,
+    "total": 65,
+    "workflow": 43492035272,
+    "attempt": 2,
+    "source": "46530d548a6a7713231d9f30bc9bd1bc0321c01f",
+    "later_test_only_delta": {
+      "commits": [
+        "6e6c6bcce2",
+        "9f8c96e1e7"
+      ],
+      "run": 43496472513,
+      "passed": 4,
+      "retries": 0
+    },
+    "core_typecheck_hosted": 43494850470,
+    "core_typecheck_local_exit": 0,
+    "e2e_typecheck_local_exit": 0,
+    "guards_exit": 0,
+    "boundaries_exit": 0,
+    "spawn_imports_exit": 0,
+    "godfile_exit": 0,
+    "evidence": "evidence/fourth-cold-requalification.json",
+    "limits": "First-attempt failures, E2E flake/skips, benchmark regression observations and bounded native/runtime proof remain explicit. No merge or release."
+  }
+}

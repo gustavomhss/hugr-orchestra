@@ -47,7 +47,7 @@ export function fromRow(row: Pick<typeof SessionTable.$inferSelect, keyof typeof
       ? {
           id: ModelV2.ID.make(row.model.id),
           providerID: ProviderV2.ID.make(row.model.providerID),
-          variant: ModelV2.VariantID.make(row.model.variant ?? "default"),
+          ...(row.model.variant === undefined ? {} : { variant: ModelV2.VariantID.make(row.model.variant) }),
         }
       : undefined,
     cost: row.cost,

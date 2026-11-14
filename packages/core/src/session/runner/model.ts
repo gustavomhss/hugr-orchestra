@@ -1,20 +1,27 @@
 export * as SessionRunnerModel from "./model"
 
 import { makeLocationNode } from "../../effect/app-node"
-import { GenerationOptions, type Model } from "@orchestra/llm"
-import * as AnthropicMessages from "@orchestra/llm/protocols/anthropic-messages"
-import * as OpenAICompatibleChat from "@orchestra/llm/protocols/openai-compatible-chat"
-import * as OpenAIResponses from "@orchestra/llm/protocols/openai-responses"
+import { GenerationOptions, ProviderOptions, type Model } from "@orchestra/llm"
+import { AnthropicMessages, OpenAICompatibleChat, OpenAIResponses } from "@orchestra/llm/protocols"
 import { Auth, type AnyRoute } from "@orchestra/llm/route"
-import { Context, Effect, Layer, Option, Schema } from "effect"
+import { Context, Effect, Layer, Schema } from "effect"
 import { produce } from "immer"
 import { Catalog } from "../../catalog"
 import { Credential } from "../../credential"
 import { Integration } from "../../integration"
 import { ModelV2 } from "../../model"
+import {
+  ModelExecutionOptions,
+  ModelUnavailableError,
+  VariantUnavailableError,
+  UnsupportedApiError,
+} from "../../model-execution-options"
+
 import { ProviderV2 } from "../../provider"
 import { SessionSchema } from "../schema"
 import { SessionSubagentModels } from "../subagent-models"
+
+export { ModelUnavailableError, VariantUnavailableError, UnsupportedApiError }
 
 const references = new WeakMap<Model, ModelV2.Ref>()
 const prices = new WeakMap<Model, ReadonlyArray<ModelV2.Cost>>()
@@ -30,7 +37,12 @@ export const pricing = (model: Model): ReadonlyArray<ModelV2.Cost> => prices.get
  */
 export const cost = (
   list: ReadonlyArray<ModelV2.Cost>,
-  tokens: { readonly input: number; readonly output: number; readonly reasoning: number; readonly cache: { readonly read: number; readonly write: number } },
+  tokens: {
+    readonly input: number
+    readonly output: number
+    readonly reasoning: number
+    readonly cache: { readonly read: number; readonly write: number }
+  },
 ) => {
   const prompt = tokens.input + tokens.cache.read + tokens.cache.write
   const tier = list
@@ -71,45 +83,6 @@ export class ModelNotSelectedError extends Schema.TaggedErrorClass<ModelNotSelec
   }
 }
 
-export class ModelUnavailableError extends Schema.TaggedErrorClass<ModelUnavailableError>()(
-  "SessionRunnerModel.ModelUnavailableError",
-  {
-    providerID: ProviderV2.ID,
-    modelID: ModelV2.ID,
-    cause: Schema.String.pipe(Schema.optional),
-  },
-) {
-  override get message() {
-    return `Model unavailable: ${this.providerID}/${this.modelID}`
-  }
-}
-
-export class VariantUnavailableError extends Schema.TaggedErrorClass<VariantUnavailableError>()(
-  "SessionRunnerModel.VariantUnavailableError",
-  {
-    providerID: ProviderV2.ID,
-    modelID: ModelV2.ID,
-    variant: ModelV2.VariantID,
-  },
-) {
-  override get message() {
-    return `Variant unavailable for ${this.providerID}/${this.modelID}: ${this.variant}`
-  }
-}
-
-export class UnsupportedApiError extends Schema.TaggedErrorClass<UnsupportedApiError>()(
-  "SessionRunnerModel.UnsupportedApiError",
-  {
-    providerID: ProviderV2.ID,
-    modelID: ModelV2.ID,
-    api: Schema.String,
-  },
-) {
-  override get message() {
-    return `Unsupported API for ${this.providerID}/${this.modelID}: ${this.api}`
-  }
-}
-
 export type Error =
   | SessionSubagentModels.Error
   | ModelNotSelectedError
@@ -144,7 +117,12 @@ const apiKey = (model: ModelV2.Info, credential?: Credential.Value) => {
   if (typeof value === "string") return Auth.value(value)
 }
 
-const withDefaults = (model: ModelV2.Info, route: AnyRoute, generation: GenerationOptions) => {
+const withDefaults = (
+  model: ModelV2.Info,
+  route: AnyRoute,
+  generation: GenerationOptions | undefined,
+  providerOptions: ProviderOptions,
+) => {
   const body = model.request.body
   const httpBody = Object.hasOwn(body, "apiKey")
     ? Object.fromEntries(Object.entries(body).filter(([key]) => key !== "apiKey"))
@@ -160,31 +138,8 @@ const withDefaults = (model: ModelV2.Info, route: AnyRoute, generation: Generati
       output: model.limit.output,
     },
     generation,
+    providerOptions,
   })
-}
-
-const withVariant = (
-  model: ModelV2.Info,
-  variantID: ModelV2.VariantID | undefined,
-): Effect.Effect<ModelV2.Info, VariantUnavailableError> => {
-  const id = variantID === "default" || variantID === undefined ? model.request.variant : variantID
-  const variant = model.variants.find((item) => item.id === id)
-  if (!variant && variantID !== undefined && variantID !== "default")
-    return Effect.fail(
-      new VariantUnavailableError({
-        providerID: model.providerID,
-        modelID: model.id,
-        variant: variantID,
-      }),
-    )
-  return Effect.succeed(
-    variant
-      ? produce(model, (draft) => {
-          Object.assign(draft.request.headers, variant.headers)
-          Object.assign(draft.request.body, variant.body)
-        })
-      : model,
-  )
 }
 
 const apiName = (model: ModelV2.Info) =>
@@ -193,56 +148,47 @@ const apiName = (model: ModelV2.Info) =>
 export const fromCatalogModel = (
   model: ModelV2.Info,
   credential?: Credential.Value,
-): Effect.Effect<Model, UnsupportedApiError | ModelUnavailableError> => {
-  // Native V2 api.settings.generation uses canonical LLM options, not http.body.
-  // Strict decoding rejects misspellings/coercion; absence keeps empty defaults.
-  const generation = Schema.decodeUnknownOption(GenerationOptions, { onExcessProperty: "error" })(
-    model.api.settings?.generation === undefined ? {} : model.api.settings.generation,
-  )
-  if (Option.isNone(generation))
-    return Effect.fail(
-      new ModelUnavailableError({
-        providerID: model.providerID,
-        modelID: model.id,
-        cause: "Invalid api.settings.generation: expected canonical GenerationOptions",
+  variant?: ModelV2.Info["variants"][number],
+): Effect.Effect<Model, UnsupportedApiError | ModelUnavailableError> =>
+  Effect.gen(function* () {
+    const options = yield* ModelExecutionOptions.options(model, variant)
+    const resolved =
+      credential?.type !== "key" || credential.metadata === undefined
+        ? model
+        : produce(model, (draft) => {
+            Object.assign(draft.request.body, credential.metadata)
+          })
+    yield* ModelExecutionOptions.validateBody(resolved)
+    const key = apiKey(resolved, credential)
+    if (resolved.api.type === "aisdk" && resolved.api.package === "@ai-sdk/openai") {
+      return yield* Effect.succeed(
+        withDefaults(resolved, OpenAIResponses.route, options.generation, options.providerOptions)
+          .with({ auth: key === undefined ? Auth.none : Auth.bearer(key) })
+          .model({ id: resolved.api.id }),
+      ).pipe(Effect.map((value) => withPrices(withReference(value, model), model)))
+    }
+    if (resolved.api.type === "aisdk" && resolved.api.package === "@ai-sdk/anthropic") {
+      return yield* Effect.succeed(
+        withDefaults(resolved, AnthropicMessages.route, options.generation, options.providerOptions)
+          .with({ auth: key === undefined ? Auth.none : Auth.header("x-api-key", key) })
+          .model({ id: resolved.api.id }),
+      ).pipe(Effect.map((value) => withPrices(withReference(value, model), model)))
+    }
+    if (openAICompatible(resolved)) {
+      return yield* Effect.succeed(
+        withDefaults(resolved, OpenAICompatibleChat.route, options.generation, options.providerOptions)
+          .with({ auth: key === undefined ? Auth.none : Auth.bearer(key) })
+          .model({ id: resolved.api.id }),
+      ).pipe(Effect.map((value) => withPrices(withReference(value, model), model)))
+    }
+    return yield* Effect.fail(
+      new UnsupportedApiError({
+        providerID: resolved.providerID,
+        modelID: resolved.id,
+        api: apiName(resolved),
       }),
     )
-  const resolved =
-    credential?.type !== "key" || credential.metadata === undefined
-      ? model
-      : produce(model, (draft) => {
-          Object.assign(draft.request.body, credential.metadata)
-        })
-  const key = apiKey(resolved, credential)
-  if (resolved.api.type === "aisdk" && resolved.api.package === "@ai-sdk/openai") {
-    return Effect.succeed(
-      withDefaults(resolved, OpenAIResponses.route, generation.value)
-        .with({ auth: key === undefined ? Auth.none : Auth.bearer(key) })
-        .model({ id: resolved.api.id }),
-    ).pipe(Effect.map((value) => withPrices(withReference(value, model), model)))
-  }
-  if (resolved.api.type === "aisdk" && resolved.api.package === "@ai-sdk/anthropic") {
-    return Effect.succeed(
-      withDefaults(resolved, AnthropicMessages.route, generation.value)
-        .with({ auth: key === undefined ? Auth.none : Auth.header("x-api-key", key) })
-        .model({ id: resolved.api.id }),
-    ).pipe(Effect.map((value) => withPrices(withReference(value, model), model)))
-  }
-  if (openAICompatible(resolved)) {
-    return Effect.succeed(
-      withDefaults(resolved, OpenAICompatibleChat.route, generation.value)
-        .with({ auth: key === undefined ? Auth.none : Auth.bearer(key) })
-        .model({ id: resolved.api.id }),
-    ).pipe(Effect.map((value) => withPrices(withReference(value, model), model)))
-  }
-  return Effect.fail(
-    new UnsupportedApiError({
-      providerID: resolved.providerID,
-      modelID: resolved.id,
-      api: apiName(resolved),
-    }),
-  )
-}
+  })
 
 const withPrices = (value: Model, model: ModelV2.Info) => {
   prices.set(value, model.cost)
@@ -250,24 +196,16 @@ const withPrices = (value: Model, model: ModelV2.Info) => {
 }
 
 export const resolve = (session: SessionSchema.Info, model: ModelV2.Info, credential?: Credential.Value) =>
-  withVariant(model, session.model?.variant).pipe(
-    Effect.flatMap((model) => fromCatalogModel(model, credential)),
+  ModelExecutionOptions.selectVariant(model, session.model?.variant).pipe(
+    Effect.flatMap((selected) => fromCatalogModel(selected.model, credential, selected.variant)),
     Effect.map((value) =>
       withReference(value, { id: model.id, providerID: model.providerID, variant: session.model?.variant }),
     ),
   )
 
-export const supported = (model: ModelV2.Info) =>
-  openAICompatible(model) ||
-  (model.api.type === "aisdk" && (model.api.package === "@ai-sdk/openai" || model.api.package === "@ai-sdk/anthropic"))
+export const supported = ModelExecutionOptions.supported
 
-// A native model with an endpoint and no package speaks the OpenAI-compatible chat API, the earlier runtime's default
-// package. OpenRouter's own AI SDK package is a client for the same chat API.
-const openAICompatible = (model: ModelV2.Info) =>
-  model.api.url !== undefined &&
-  (model.api.type === "native" ||
-    model.api.package === "@ai-sdk/openai-compatible" ||
-    model.api.package === "@openrouter/ai-sdk-provider")
+const openAICompatible = ModelExecutionOptions.openAICompatible
 
 /** Resolves models from the catalog belonging to the current Location runtime. */
 export const locationLayer = Layer.effect(

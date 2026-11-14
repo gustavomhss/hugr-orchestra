@@ -3,6 +3,7 @@ import { AgentV2 } from "./agent"
 import { Actions } from "./actions"
 import { AISDK } from "./aisdk"
 import { BehaviorV2 } from "./behavior"
+import { ModelExecution } from "./model-execution"
 import { Catalog } from "./catalog"
 import { CommandV2 } from "./command"
 import { Config } from "./config"
@@ -67,6 +68,7 @@ export const locationServices = LayerNode.group([
   Reference.node,
   Integration.node,
   Catalog.node,
+  ModelExecution.node,
   AISDK.node,
   PluginV2.node,
   PluginInternal.node,
