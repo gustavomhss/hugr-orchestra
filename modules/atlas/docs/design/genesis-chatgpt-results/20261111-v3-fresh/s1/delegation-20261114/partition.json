@@ -1,0 +1,127 @@
+{
+  "schema": "genesis-s1-subdivision-partition/v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "input": {
+    "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/coverage.json",
+    "git_blob_sha": "88f3b32e60823fb6ddc9459a994f41db7c58a116",
+    "byte_length": 763566
+  },
+  "inherited_paths_sha256": "67d80c0e398b495140ef3b9fd4d0a8058036290919856635298b9007ed153889",
+  "allocation": "Exact legacy artifact_key -> owner; sources.jsonl is exhaustive, not a prefix heuristic.",
+  "primary_source_ownership": {
+    "s1.core.session-admission": "S1-01",
+    "s1.core.session-execution": "S1-01",
+    "s1.core.persistence": "S1-01",
+    "s1.core.context": "S1-01",
+    "s1.core.configuration": "S1-01",
+    "s1.core.project": "S1-01",
+    "s1.core.models": "S1-01",
+    "s1.core.economy": "S1-01",
+    "s1.core.runtime": "S1-01",
+    "s1.core.tools": "S1-02",
+    "s1.core.security": "S1-02",
+    "s1.core.extensions": "S1-02",
+    "s1.core.capability": "S1-02",
+    "s1.core.automation": "S1-03",
+    "s1.core.research": "S1-03",
+    "s1.core.boundaries": "S1-03",
+    "s1.core.entry": "S1-03",
+    "s1.api.boundaries": "S1-04",
+    "s1.api.schema-contracts": "S1-04",
+    "s1.api.session-contract": "S1-04",
+    "s1.api.server-edge": "S1-04",
+    "s1.api.stream-contract": "S1-04",
+    "s1.api.client-projection": "S1-04",
+    "s1.api.codegen": "S1-04",
+    "s1.api.sdk-composition": "S1-04",
+    "s1.api.surface-disposition": "S1-04",
+    "s1.runtime.llm_turns.l1": "S1-05",
+    "s1.runtime.llm_providers.l1": "S1-05",
+    "s1.runtime.llm_recording.l1": "S1-05",
+    "s1.runtime.plugin.l1": "S1-05",
+    "s1.runtime.codemode.l1": "S1-05",
+    "s1.runtime.codemode_openapi.l1": "S1-05",
+    "s1.runtime.effect_sqlite.l1": "S1-05",
+    "s1.runtime.http_recorder.l1": "S1-05",
+    "s1.runtime.guides_intent.l1": "S1-05",
+    "s1.runtime.maintenance_intent.l1": "S1-05"
+  },
+  "expected_sources": 2236,
+  "expected_legacy_artifacts": 36,
+  "allowed_cross_reads": true,
+  "shared_source_write_ownership": false,
+  "per_subslice": [
+    {
+      "id": "S1-01",
+      "count": 555,
+      "keys": [
+        "s1.core.session-admission",
+        "s1.core.session-execution",
+        "s1.core.persistence",
+        "s1.core.context",
+        "s1.core.configuration",
+        "s1.core.project",
+        "s1.core.models",
+        "s1.core.economy",
+        "s1.core.runtime"
+      ],
+      "sources": "01-sessions/sources.jsonl"
+    },
+    {
+      "id": "S1-02",
+      "count": 424,
+      "keys": [
+        "s1.core.tools",
+        "s1.core.security",
+        "s1.core.extensions",
+        "s1.core.capability"
+      ],
+      "sources": "02-tools/sources.jsonl"
+    },
+    {
+      "id": "S1-03",
+      "count": 462,
+      "keys": [
+        "s1.core.automation",
+        "s1.core.research",
+        "s1.core.boundaries",
+        "s1.core.entry"
+      ],
+      "sources": "03-automation/sources.jsonl"
+    },
+    {
+      "id": "S1-04",
+      "count": 472,
+      "keys": [
+        "s1.api.boundaries",
+        "s1.api.schema-contracts",
+        "s1.api.session-contract",
+        "s1.api.server-edge",
+        "s1.api.stream-contract",
+        "s1.api.client-projection",
+        "s1.api.codegen",
+        "s1.api.sdk-composition",
+        "s1.api.surface-disposition"
+      ],
+      "sources": "04-api/sources.jsonl"
+    },
+    {
+      "id": "S1-05",
+      "count": 323,
+      "keys": [
+        "s1.runtime.llm_turns.l1",
+        "s1.runtime.llm_providers.l1",
+        "s1.runtime.llm_recording.l1",
+        "s1.runtime.plugin.l1",
+        "s1.runtime.codemode.l1",
+        "s1.runtime.codemode_openapi.l1",
+        "s1.runtime.effect_sqlite.l1",
+        "s1.runtime.http_recorder.l1",
+        "s1.runtime.guides_intent.l1",
+        "s1.runtime.maintenance_intent.l1"
+      ],
+      "sources": "05-libraries/sources.jsonl"
+    }
+  ]
+}

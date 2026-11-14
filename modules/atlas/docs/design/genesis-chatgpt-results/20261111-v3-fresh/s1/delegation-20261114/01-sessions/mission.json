@@ -1,0 +1,102 @@
+{
+  "schema": "genesis-s1-subdivision-mission/v1",
+  "id": "S1-01",
+  "title": "Sessões, estado e infraestrutura de execução",
+  "repository": "gustavomhss/hugr-orchestra",
+  "branch": "genesis-s1-sessions",
+  "start_mode": "fresh_chat",
+  "history_required": false,
+  "execution_state": "NOT_STARTED",
+  "campaign": "20261111-v1",
+  "protocol_epoch": "parallel-v3-fresh",
+  "results_epoch": "20261111-v3-fresh",
+  "transport_session": "S1",
+  "transport_scope": "orchestra.s1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "inheritance_revision": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+  "kit_reading": "Read COMMON.md, this mission, inputs.json and sources.jsonl at the immutable kit commit named in the opening prompt.",
+  "source_count": 555,
+  "owned_legacy_artifact_keys": [
+    "s1.core.session-admission",
+    "s1.core.session-execution",
+    "s1.core.persistence",
+    "s1.core.context",
+    "s1.core.configuration",
+    "s1.core.project",
+    "s1.core.models",
+    "s1.core.economy",
+    "s1.core.runtime"
+  ],
+  "source_inventory": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/01-sessions/sources.jsonl",
+  "input_manifest": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/01-sessions/inputs.json",
+  "output_prefix": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions",
+  "objective": "Concluir o conhecimento cumulativo e operacional de admissão/execução de sessões, estado/eventos/banco, contexto, configuração, projetos/Location, modelos/economia e infraestrutura de execução do Core.",
+  "first_concrete_action": "Reaproveitar a recuperação A1 já publicada, conferir os corpos e suplementos E1–E4 e fechar a correção de replay com dois juízes novos desta execução. Em paralelo, incorporar a recuperação B15 de economy sem atribuir aprovação inexistente.",
+  "work_packages": [
+    "Fechar os findings históricos de admissão, equivalência/retry, inbox/promoção, execução/queue/continuação, persistência/replay e contexto. Preservar os pareceres antigos e julgar o novo candidato exato.",
+    "Completar propósito, contratos, fluxo e limites de configuração, Location/projeto, providers/modelos, economia e processos. Cobrir as necessidades reais; não inferir todas as folhas pela interface.",
+    "Produzir L2–L4 locais úteis: mudança segura, diagnóstico, impacto, verificação e abstenção em recuperação distribuída não implementada.",
+    "Fornecer à S1-05 evidência precisa de adoção de providers, política de banco/backup/restore/pós-commit e decoder/publisher de configuração; à S1-04, contratos de sessão; à S1-02, fronteira de execução de ferramentas.",
+    "Comprovar pacote, consumo e manutenção próprios no Atlas compatível; preservar limites de provider, OS, PTY e garantia econômica."
+  ],
+  "inherited_consumers": {
+    "lead": [
+      "S1-O1",
+      "S1-O2",
+      "S1-O4",
+      "S1-O5"
+    ],
+    "support": [
+      "S1-O3",
+      "S1-O6",
+      "S1-O9"
+    ],
+    "oracle_handling": "Reserved; use only public questions for consumers, preserve expected answers for independent evaluation."
+  },
+  "additional_case_requirements": [
+    "Conferir lacunas reais das cinco classes de consumidor e uso direto dos intermediários; congelar casos novos necessários antes da produção avaliada."
+  ],
+  "maintenance_scenarios_to_freeze": [
+    "Mudança de input/admissão e dependências de persistência, com conjunto afetado esperado independente.",
+    "Mudança de configuração/receita: distinguir reuso válido, renovação de recibo e reconstrução necessária."
+  ],
+  "retained_limits": [
+    "A recuperação A1 altera somente o parágrafo de replay de persistence; os demais corpos e decisões históricas permanecem preservados.",
+    "B15 é s1.core.economy, não a antiga fatia B/API. O candidato tem judgments vazio.",
+    "Não declarar recuperação automática pós-crash, ownership distribuído ou cobrança física provados por inspeção de fonte."
+  ],
+  "authority": {
+    "remote_writer": "The principal of this subslice only, on its assigned branch.",
+    "knowledge_write_prefix": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions",
+    "product_write_paths": "Only exact paths in this sources.jsonl, and only the strictly necessary Genesis changes permitted by COMMON.md.",
+    "new_test_prefix": "s1-01-",
+    "excluded": [
+      "Other subslice namespaces",
+      "Frozen delegation kit",
+      "Central historical S1 files",
+      "genesis-fresh-s1",
+      "genesis-fresh-final",
+      "Policy/approvals/secrets/AGENTS/campaign contracts/guards/workflows"
+    ],
+    "generated_files": "Official generator only, by the corresponding owner; never edit generated outputs manually.",
+    "cross_scope_changes": "Complete patch/proposal to its owner; continue independent work."
+  },
+  "deliverables": [
+    "work.md: finite complete queue, execution identity, decisions and exact open work",
+    "native-package.json plus actual bodies, recipes, source/dependency identities and preserved producer records",
+    "judgments/: two real independent local judges, mandatory corrections and same-pair reevaluations",
+    "receipts/: actual isolated Atlas import/publication/index/read, consumers and maintenance as required",
+    "one criteria matrix covering the 50 inherited IDs with local evidence and named union complements",
+    "execution-ledger.jsonl: actual new work and UNKNOWN where usage is not exposed",
+    "handoff.json: payload commit then seal commit, read back from GitHub"
+  ],
+  "completion": "Apply COMMON.md and original completion.md. DELIVERY_COMPLETE refers only to this subslice. Do not stop at a plan, census, proposal, checkpoint or partial semantic PASS.",
+  "integration_recipient": {
+    "owner": "S1_COORDINATION",
+    "branch": "genesis-fresh-s1",
+    "global_owner": "ROOT",
+    "global_branch": "genesis-fresh-final"
+  },
+  "execution_boundary": "This preparation did not run new production, judges, tests or Atlas operations. Discover capabilities and proceed with all authorized independent work."
+}

@@ -1,0 +1,98 @@
+{
+  "schema": "genesis-s1-subdivision-mission/v1",
+  "id": "S1-05",
+  "title": "LLM, plugins, CodeMode, SQLite e gravação",
+  "repository": "gustavomhss/hugr-orchestra",
+  "branch": "genesis-s1-libraries",
+  "start_mode": "fresh_chat",
+  "history_required": false,
+  "execution_state": "NOT_STARTED",
+  "campaign": "20261111-v1",
+  "protocol_epoch": "parallel-v3-fresh",
+  "results_epoch": "20261111-v3-fresh",
+  "transport_session": "S1",
+  "transport_scope": "orchestra.s1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "inheritance_revision": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+  "kit_reading": "Read COMMON.md, this mission, inputs.json and sources.jsonl at the immutable kit commit named in the opening prompt.",
+  "source_count": 323,
+  "owned_legacy_artifact_keys": [
+    "s1.runtime.llm_turns.l1",
+    "s1.runtime.llm_providers.l1",
+    "s1.runtime.llm_recording.l1",
+    "s1.runtime.plugin.l1",
+    "s1.runtime.codemode.l1",
+    "s1.runtime.codemode_openapi.l1",
+    "s1.runtime.effect_sqlite.l1",
+    "s1.runtime.http_recorder.l1",
+    "s1.runtime.guides_intent.l1",
+    "s1.runtime.maintenance_intent.l1"
+  ],
+  "source_inventory": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/05-libraries/sources.jsonl",
+  "input_manifest": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/05-libraries/inputs.json",
+  "output_prefix": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/05-libraries",
+  "objective": "Concluir a cadeia de entendimento e uso das bibliotecas LLM/plugins/CodeMode/SQLite/recorder e seus guias, preservando os dez corpos L1 já aceitos e fechando as necessidades dependentes.",
+  "first_concrete_action": "Conferir native-package.c-r1-v2.json, os dez corpos e os dois pareceres complementares. Reutilizar o L1 aceito no escopo exato e começar as sínteses locais seguintes; não reabrir a mesma mineração por rotina.",
+  "work_packages": [
+    "Preservar os dez aceites limitados de L1 e declarar o reuso exato por bytes/fonte/escopo. O par novo avalia os deltas, camadas superiores, binding e a entrega final sem apagar a história.",
+    "Produzir L2–L4 úteis sobre provider turns, tipos/reducers, plugins, intérprete/bridge OpenAPI, adapters SQLite e gravação/replay.",
+    "Fechar N04/N06 locais conforme a necessidade e obter evidências N01/N02/N05 dos donos Core nomeados em dependencies.json. Preservar N03/X01 e limites reais.",
+    "Consumir a preparação histórica C como evidência do seu candidato; executar novas operações e bindings quando o pacote/candidato mudar. Prepare não prova publish/read/consumer.",
+    "Executar os consumidores O6/O7/O8 e manutenção próprios; reconciliar guias/intenção com implementação sem atribuir adoção de um pacote pela sua simples existência."
+  ],
+  "inherited_consumers": {
+    "lead": [
+      "S1-O6",
+      "S1-O7",
+      "S1-O8"
+    ],
+    "support": [],
+    "oracle_handling": "Reserved; use only public questions for consumers, preserve expected answers for independent evaluation."
+  },
+  "additional_case_requirements": [
+    "Conferir lacunas reais das cinco classes de consumidor e uso direto dos intermediários; congelar casos novos necessários antes da produção avaliada."
+  ],
+  "maintenance_scenarios_to_freeze": [
+    "Mudança de contrato ToolRuntime/LLM ou CodeMode: invalidar e reconstruir os artefatos realmente dependentes.",
+    "Mudança de adapter/adoção ou intenção documental: distinguir resultado idêntico de alteração de autoridade/validade."
+  ],
+  "retained_limits": [
+    "N01/N02/N05 não viram fora de escopo: seus donos estão explicitamente definidos, com consumo de evidência e integração posterior.",
+    "39 fixtures/media têm disposição metadata-only; ler bytes quando uma afirmação dependente exigir. A fixture OpenAPI grande não pode ser observada ficticiamente.",
+    "Node executeStream e demais limites não implementados devem continuar explícitos; ausência de capacidade pode exigir abstenção correta, não implementação incidental."
+  ],
+  "authority": {
+    "remote_writer": "The principal of this subslice only, on its assigned branch.",
+    "knowledge_write_prefix": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/05-libraries",
+    "product_write_paths": "Only exact paths in this sources.jsonl, and only the strictly necessary Genesis changes permitted by COMMON.md.",
+    "new_test_prefix": "s1-05-",
+    "excluded": [
+      "Other subslice namespaces",
+      "Frozen delegation kit",
+      "Central historical S1 files",
+      "genesis-fresh-s1",
+      "genesis-fresh-final",
+      "Policy/approvals/secrets/AGENTS/campaign contracts/guards/workflows"
+    ],
+    "generated_files": "Official generator only, by the corresponding owner; never edit generated outputs manually.",
+    "cross_scope_changes": "Complete patch/proposal to its owner; continue independent work."
+  },
+  "deliverables": [
+    "work.md: finite complete queue, execution identity, decisions and exact open work",
+    "native-package.json plus actual bodies, recipes, source/dependency identities and preserved producer records",
+    "judgments/: two real independent local judges, mandatory corrections and same-pair reevaluations",
+    "receipts/: actual isolated Atlas import/publication/index/read, consumers and maintenance as required",
+    "one criteria matrix covering the 50 inherited IDs with local evidence and named union complements",
+    "execution-ledger.jsonl: actual new work and UNKNOWN where usage is not exposed",
+    "handoff.json: payload commit then seal commit, read back from GitHub"
+  ],
+  "completion": "Apply COMMON.md and original completion.md. DELIVERY_COMPLETE refers only to this subslice. Do not stop at a plan, census, proposal, checkpoint or partial semantic PASS.",
+  "integration_recipient": {
+    "owner": "S1_COORDINATION",
+    "branch": "genesis-fresh-s1",
+    "global_owner": "ROOT",
+    "global_branch": "genesis-fresh-final"
+  },
+  "execution_boundary": "This preparation did not run new production, judges, tests or Atlas operations. Discover capabilities and proceed with all authorized independent work."
+}

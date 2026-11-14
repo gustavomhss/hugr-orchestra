@@ -1,0 +1,92 @@
+{
+  "schema": "genesis-s1-subdivision-mission/v1",
+  "id": "S1-02",
+  "title": "Ferramentas, segurança, extensões e capacidades",
+  "repository": "gustavomhss/hugr-orchestra",
+  "branch": "genesis-s1-tools",
+  "start_mode": "fresh_chat",
+  "history_required": false,
+  "execution_state": "NOT_STARTED",
+  "campaign": "20261111-v1",
+  "protocol_epoch": "parallel-v3-fresh",
+  "results_epoch": "20261111-v3-fresh",
+  "transport_session": "S1",
+  "transport_scope": "orchestra.s1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "inheritance_revision": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+  "kit_reading": "Read COMMON.md, this mission, inputs.json and sources.jsonl at the immutable kit commit named in the opening prompt.",
+  "source_count": 424,
+  "owned_legacy_artifact_keys": [
+    "s1.core.tools",
+    "s1.core.security",
+    "s1.core.extensions",
+    "s1.core.capability"
+  ],
+  "source_inventory": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/02-tools/sources.jsonl",
+  "input_manifest": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/02-tools/inputs.json",
+  "output_prefix": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/02-tools",
+  "objective": "Concluir o entendimento operacional das ferramentas e suas permissões, sandbox/segredos, agentes/skills, plugins/MCP/OAuth e capacidades do Core.",
+  "first_concrete_action": "Retomar os quatro corpos do antigo lote A2 e seu dossiê. Refinar e resolver as lacunas de leitura decisiva de folhas, com dois juízes locais; não refazer o inventário.",
+  "work_packages": [
+    "Concluir os quatro artefatos históricos com evidência de implementação suficiente para as necessidades atribuídas, preservando o que já é válido.",
+    "Cobrir identidade/settlement de chamadas, retenção e proveniência de outputs, execução de ferramentas e limites de Lean/atestados quando pertinentes.",
+    "Conferir aplicação real de permissões por contexto, sandbox e credenciais; distinguir configuração, intenção e enforcement observado.",
+    "Fechar loaders/ordering/disposal, instalação, trust, OAuth/MCP, agentes/skills e capacidades relevantes. A leitura do port comum não prova todas as folhas.",
+    "Produzir L2–L4 locais, provas de consumo e manutenção; fornecer à S1-05 a parte de host/plugins/autoridade da necessidade histórica N01."
+  ],
+  "inherited_consumers": {
+    "lead": [
+      "S1-O9"
+    ],
+    "support": [
+      "S1-O6"
+    ],
+    "oracle_handling": "Reserved; use only public questions for consumers, preserve expected answers for independent evaluation."
+  },
+  "additional_case_requirements": [
+    "Conferir lacunas reais das cinco classes de consumidor e uso direto dos intermediários; congelar casos novos necessários antes da produção avaliada."
+  ],
+  "maintenance_scenarios_to_freeze": [
+    "Mudança de declaração/política de ferramenta: impacto sobre materialização, autorização e uso documentado.",
+    "Mudança de contrato de plugin/capacidade: preservar escopos independentes e recusar binding desatualizado."
+  ],
+  "retained_limits": [
+    "As 89 folhas Capability ainda sem leitura substantiva na projeção são pistas de lacunas, não uma quota de documentos.",
+    "Distinguir futuro documentado em packages/core/src/tool/AGENTS.md do comportamento implementado.",
+    "Não inferir autorização universal ou segurança em todos os sistemas operacionais a partir de contratos ou testes não executados."
+  ],
+  "authority": {
+    "remote_writer": "The principal of this subslice only, on its assigned branch.",
+    "knowledge_write_prefix": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/02-tools",
+    "product_write_paths": "Only exact paths in this sources.jsonl, and only the strictly necessary Genesis changes permitted by COMMON.md.",
+    "new_test_prefix": "s1-02-",
+    "excluded": [
+      "Other subslice namespaces",
+      "Frozen delegation kit",
+      "Central historical S1 files",
+      "genesis-fresh-s1",
+      "genesis-fresh-final",
+      "Policy/approvals/secrets/AGENTS/campaign contracts/guards/workflows"
+    ],
+    "generated_files": "Official generator only, by the corresponding owner; never edit generated outputs manually.",
+    "cross_scope_changes": "Complete patch/proposal to its owner; continue independent work."
+  },
+  "deliverables": [
+    "work.md: finite complete queue, execution identity, decisions and exact open work",
+    "native-package.json plus actual bodies, recipes, source/dependency identities and preserved producer records",
+    "judgments/: two real independent local judges, mandatory corrections and same-pair reevaluations",
+    "receipts/: actual isolated Atlas import/publication/index/read, consumers and maintenance as required",
+    "one criteria matrix covering the 50 inherited IDs with local evidence and named union complements",
+    "execution-ledger.jsonl: actual new work and UNKNOWN where usage is not exposed",
+    "handoff.json: payload commit then seal commit, read back from GitHub"
+  ],
+  "completion": "Apply COMMON.md and original completion.md. DELIVERY_COMPLETE refers only to this subslice. Do not stop at a plan, census, proposal, checkpoint or partial semantic PASS.",
+  "integration_recipient": {
+    "owner": "S1_COORDINATION",
+    "branch": "genesis-fresh-s1",
+    "global_owner": "ROOT",
+    "global_branch": "genesis-fresh-final"
+  },
+  "execution_boundary": "This preparation did not run new production, judges, tests or Atlas operations. Discover capabilities and proceed with all authorized independent work."
+}

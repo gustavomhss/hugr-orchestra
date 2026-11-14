@@ -1,0 +1,79 @@
+{
+  "schema": "genesis-s1-subdivision-validation/v1",
+  "verified_at_utc": "2026-11-14T21:26:36.267Z",
+  "state": "PASS_MECHANICAL_PARTITION_ONLY",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "inherited_s1_revision": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+  "input_inventory_ref": {
+    "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/coverage.json",
+    "git_blob_sha": "88f3b32e60823fb6ddc9459a994f41db7c58a116",
+    "byte_length": 763566
+  },
+  "total_unique_sources": 2236,
+  "total_unique_legacy_artifacts": 36,
+  "missing_sources": 0,
+  "overlapping_sources": 0,
+  "unowned_legacy_artifacts": 0,
+  "criteria_preserved": 50,
+  "historical_consumer_cases_assigned": 9,
+  "whole_source_set_sha256": "67d80c0e398b495140ef3b9fd4d0a8058036290919856635298b9007ed153889",
+  "digest_encoding": "UTF-8 paths sorted by JS default code-unit ordering, joined with LF plus one trailing LF",
+  "subslices": [
+    {
+      "id": "S1-01",
+      "source_count": 555,
+      "legacy_artifact_count": 9,
+      "source_inventory_sha256": "5f97e58cc82a12b24c148e473ba354b35a02c1bb54560c23c92f8e9c9e73333e",
+      "source_set_sha256": "be1ea2827b83a3ad792d5e9b54bd864d9d1e4a60fc6e397fafaaabe93251c8a5",
+      "branch": "genesis-s1-sessions",
+      "output_prefix": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions"
+    },
+    {
+      "id": "S1-02",
+      "source_count": 424,
+      "legacy_artifact_count": 4,
+      "source_inventory_sha256": "377ffcc34dd2ecec5b484ed553fcc951ce6a7a7dd81a0825224523ae7af0d013",
+      "source_set_sha256": "4e6c66d223b3ae6b1e01365ff037afd56e5dcc08db64e957f3c48e4a7e86a99f",
+      "branch": "genesis-s1-tools",
+      "output_prefix": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/02-tools"
+    },
+    {
+      "id": "S1-03",
+      "source_count": 462,
+      "legacy_artifact_count": 4,
+      "source_inventory_sha256": "1643a358ccaafe0ca9e6a9051d7c1a9bc9a1922834d6183e52703f6de2db077c",
+      "source_set_sha256": "85e2d100e4bde80c60a4027d00d0574ff106a4455c9090ab64fe3e92e21da0e8",
+      "branch": "genesis-s1-automation",
+      "output_prefix": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation"
+    },
+    {
+      "id": "S1-04",
+      "source_count": 472,
+      "legacy_artifact_count": 9,
+      "source_inventory_sha256": "b4e1db0082ddf39998f6352751290b1193a90736224c570c46c24aa95fcebeb5",
+      "source_set_sha256": "dda7b0973f39f8b23109c01a91fc063b3151f2ee47e80e9275241ae4191a0bfb",
+      "branch": "genesis-s1-api",
+      "output_prefix": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api"
+    },
+    {
+      "id": "S1-05",
+      "source_count": 323,
+      "legacy_artifact_count": 10,
+      "source_inventory_sha256": "af7febb2566a05bbf92982be14955311412f6c00167f8525b11dd9831c13d544",
+      "source_set_sha256": "a7bdf6c3ef0aba9a104973ee75dea92e8c14c91c7c258315a94ba3c5b069b160",
+      "branch": "genesis-s1-libraries",
+      "output_prefix": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/05-libraries"
+    }
+  ],
+  "native_production_started": false,
+  "semantic_judgments_performed": false,
+  "product_tests_or_ci_run": false,
+  "atlas_operations_performed": false,
+  "product_code_changed_by_preparation": false,
+  "limits": [
+    "This verifies the partition and preparation, not semantic sufficiency, runtime or campaign completion.",
+    "Source identities are inherited from the pinned S1 coverage inventory; source content was not re-mined.",
+    "Formal repository check:guards is not represented by this mechanical validation."
+  ]
+}

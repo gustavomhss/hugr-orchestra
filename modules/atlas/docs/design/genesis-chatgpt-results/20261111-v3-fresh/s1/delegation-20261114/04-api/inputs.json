@@ -1,0 +1,304 @@
+{
+  "schema": "genesis-s1-subdivision-inputs/v1",
+  "subslice_id": "S1-04",
+  "common_history": [
+    {
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/work.md",
+      "git_blob_sha": "7573759c19f76b0c640c750db671c749139a4653",
+      "byte_length": 6275
+    },
+    {
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/handoff.json",
+      "git_blob_sha": "6eacc1b3d58664aa09f1ddbfb83ba9d395c0ea67",
+      "byte_length": 3711
+    },
+    {
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/native-package.json",
+      "git_blob_sha": "4651fed21ac52e8a4c979ce2ea46703c737b2b39",
+      "byte_length": 492780
+    },
+    {
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/coverage.json",
+      "git_blob_sha": "88f3b32e60823fb6ddc9459a994f41db7c58a116",
+      "byte_length": 763566
+    }
+  ],
+  "bodies": [
+    {
+      "artifact_key": "s1.api.boundaries",
+      "layer": 1,
+      "need": "ownership",
+      "body": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/bodies/boundaries.md",
+        "git_blob_sha": "dee4164e1681aa5f6f1a185ecf6b2b7c4eaae030",
+        "byte_length": 4634,
+        "sha256": "f6b230ed8578b6bd9fdb1e4eaca26892df9355a58fc1f5e2e6a157bffabf7310"
+      },
+      "inherited_validity": "supported",
+      "inherited_gaps": [
+        "No semantic judge acceptance or runtime receipt yet; downstream L2-L4 work remains gated.",
+        "No local product tests, generation, builds, or runtime operations were executed.",
+        "Package declarations and inspected imports do not prove the complete transitive browser dependency graph."
+      ],
+      "source_ref_count": 20,
+      "acceptance_notice": "Historical metadata is not final dual acceptance; consume actual decisions and close mandatory findings."
+    },
+    {
+      "artifact_key": "s1.api.schema-contracts",
+      "layer": 1,
+      "need": "component",
+      "body": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/bodies/schema-contracts.md",
+        "git_blob_sha": "fed24979c1906c753754b22c3b528631849e3cab",
+        "byte_length": 5188,
+        "sha256": "c6ebd6124d89092e859aaa6a6a07c2a6fca5e2cdc82a62254b701b2de60266b2"
+      },
+      "inherited_validity": "supported",
+      "inherited_gaps": [
+        "No semantic judge acceptance or runtime receipt yet; downstream L2-L4 work remains gated.",
+        "No local product tests, generation, builds, or runtime operations were executed.",
+        "Historical 94-domain surface-only state preserved; B-v3 full reads supply bounded purpose/contract/ownership triage for review. Broader service/runtime claims remain conditional.",
+        "V2 annotations/brands remain despite unversioned naming intent."
+      ],
+      "source_ref_count": 114,
+      "acceptance_notice": "Historical metadata is not final dual acceptance; consume actual decisions and close mandatory findings."
+    },
+    {
+      "artifact_key": "s1.api.session-contract",
+      "layer": 1,
+      "need": "flow",
+      "body": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/bodies/session-contract.md",
+        "git_blob_sha": "6b5bb4b3358f67d773e29be7c6f5e74ddb920f1d",
+        "byte_length": 5155,
+        "sha256": "22b526a2423572f2bbc17f3bfccd2eb0ea8f7fb16f2215bb0904f1cc5c2125bc"
+      },
+      "inherited_validity": "supported",
+      "inherited_gaps": [
+        "No semantic judge acceptance or runtime receipt yet; downstream L2-L4 work remains gated.",
+        "No local product tests, generation, builds, or runtime operations were executed.",
+        "Literal Core evidence supports the specific stored sessionID/messageID check; broader Core persistence, scheduling, execution and recovery remain delegated, unproven boundaries."
+      ],
+      "source_ref_count": 8,
+      "acceptance_notice": "Historical metadata is not final dual acceptance; consume actual decisions and close mandatory findings."
+    },
+    {
+      "artifact_key": "s1.api.server-edge",
+      "layer": 1,
+      "need": "operational",
+      "body": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/bodies/server-edge.md",
+        "git_blob_sha": "9af2aa541e523dd1809b00907839dcf8b287df78",
+        "byte_length": 5596,
+        "sha256": "711c744e089e59a11ee0b56ba4ec495277993dc7a58e351c8e2af4dc557ce404"
+      },
+      "inherited_validity": "supported",
+      "inherited_gaps": [
+        "No semantic judge acceptance or runtime receipt yet; downstream L2-L4 work remains gated.",
+        "No local product tests, generation, builds, or runtime operations were executed.",
+        "No runtime authorization, location, provider or socket checks; PTY output queue is unbounded in source."
+      ],
+      "source_ref_count": 25,
+      "acceptance_notice": "Historical metadata is not final dual acceptance; consume actual decisions and close mandatory findings."
+    },
+    {
+      "artifact_key": "s1.api.stream-contract",
+      "layer": 1,
+      "need": "flow",
+      "body": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/bodies/stream-contract.md",
+        "git_blob_sha": "97c5b7e3b109d8a252c29650578a3829688651df",
+        "byte_length": 3824,
+        "sha256": "d1f68eb106131ba1efd61c4157b91826a25b176ab87ff74defc140ef9f4d67d8"
+      },
+      "inherited_validity": "supported",
+      "inherited_gaps": [
+        "No semantic judge acceptance or runtime receipt yet; downstream L2-L4 work remains gated.",
+        "No local product tests, generation, builds, or runtime operations were executed.",
+        "No replay/overflow/network experiment; global live readiness is not durable replay or automatic reconnect."
+      ],
+      "source_ref_count": 8,
+      "acceptance_notice": "Historical metadata is not final dual acceptance; consume actual decisions and close mandatory findings."
+    },
+    {
+      "artifact_key": "s1.api.client-projection",
+      "layer": 1,
+      "need": "component",
+      "body": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/bodies/client-projection.md",
+        "git_blob_sha": "07576b1077c203d689684ad0e5b9927204b1e623",
+        "byte_length": 5193,
+        "sha256": "089304921b004984de3b15b75af18fea3c7ebf15191f3874e9f668066569d478"
+      },
+      "inherited_validity": "supported",
+      "inherited_gaps": [
+        "No semantic judge acceptance or runtime receipt yet; downstream L2-L4 work remains gated.",
+        "No local product tests, generation, builds, or runtime operations were executed.",
+        "Generated freshness unverified; most generated modules are inventory-only.",
+        "generated/types.ts is 462732 bytes; current runtime observer refuses inputs above 256000 bytes, so its binding remains unresolved.",
+        "README raw-file omission conflicts with generated fs.read; handwritten upload route lacks a corresponding declaration in the inspected Actions transfer group/handler."
+      ],
+      "source_ref_count": 26,
+      "acceptance_notice": "Historical metadata is not final dual acceptance; consume actual decisions and close mandatory findings."
+    },
+    {
+      "artifact_key": "s1.api.codegen",
+      "layer": 1,
+      "need": "maintenance",
+      "body": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/bodies/codegen.md",
+        "git_blob_sha": "b88989e670070ff151107ed9b9b3bf9d8e739240",
+        "byte_length": 4752,
+        "sha256": "2ec55afad54a871de673a252b6b7c604a8ecdb648cc1df9c80128d83a3f8e270"
+      },
+      "inherited_validity": "supported",
+      "inherited_gaps": [
+        "No semantic judge acceptance or runtime receipt yet; downstream L2-L4 work remains gated.",
+        "No local product tests, generation, builds, or runtime operations were executed.",
+        "Regeneration/freshness and generator test fixtures were not executed.",
+        "Line-bounded selected type modules do not guarantee every generated input is below the runtime observer byte limit."
+      ],
+      "source_ref_count": 13,
+      "acceptance_notice": "Historical metadata is not final dual acceptance; consume actual decisions and close mandatory findings."
+    },
+    {
+      "artifact_key": "s1.api.sdk-composition",
+      "layer": 1,
+      "need": "component",
+      "body": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/bodies/sdk-composition.md",
+        "git_blob_sha": "85195fb178208da9141b789f66a955499163c91e",
+        "byte_length": 3478,
+        "sha256": "a2cb2fc21fc1a771d81cd83e75dfe8b07c82c1712b15396ff4e40774f861d4d3"
+      },
+      "inherited_validity": "supported",
+      "inherited_gaps": [
+        "No semantic judge acceptance or runtime receipt yet; downstream L2-L4 work remains gated.",
+        "No local product tests, generation, builds, or runtime operations were executed.",
+        "Embedded tests were read but not run; Core lifecycle/recovery and all concurrency isolation remain unproven."
+      ],
+      "source_ref_count": 10,
+      "acceptance_notice": "Historical metadata is not final dual acceptance; consume actual decisions and close mandatory findings."
+    },
+    {
+      "artifact_key": "s1.api.surface-disposition",
+      "layer": 1,
+      "need": "entry",
+      "body": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/bodies/surface-disposition.md",
+        "git_blob_sha": "5e1c8add7724e525f4ae118beb905b3f96f5ec24",
+        "byte_length": 6726,
+        "sha256": "595e0d404064429a953b276141f5601a1bbecceb30242a9914132ebdd26ed5c0"
+      },
+      "inherited_validity": "supported",
+      "inherited_gaps": [
+        "No semantic judge acceptance or runtime receipt yet; downstream L2-L4 work remains gated.",
+        "No local product tests, generation, builds, or runtime operations were executed.",
+        "183 assigned entries remain inventory-only. The historical 190 surface-indexed modules have separate B-v3 full-read domain triage, which remains unjudged and does not establish all implementation/runtime behavior.",
+        "Required oversized generated input retained; no unavailable runtime observation is relabeled absent or supplied with a fabricated version."
+      ],
+      "source_ref_count": 293,
+      "acceptance_notice": "Historical metadata is not final dual acceptance; consume actual decisions and close mandatory findings."
+    }
+  ],
+  "decisive_history": [
+    {
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/review-entry.md",
+      "git_blob_sha": "dbf93d1e537753c622aba5c84dd31818441dab53",
+      "byte_length": 1580
+    },
+    {
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/findings-resolution.md",
+      "git_blob_sha": "dbbabb9dcc91be0fb4afb6fdc5e7b2210d20b7a0",
+      "byte_length": 3341
+    },
+    {
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/body-identities.json",
+      "git_blob_sha": "0c55b52c07ff3a269b6626641c6d90d9994cb532",
+      "byte_length": 6680
+    },
+    {
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/review-domain-disposition.md",
+      "git_blob_sha": "b25b8d836a3ccc00e7a2f0dbbc8067395fdf7753",
+      "byte_length": 65726
+    },
+    {
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/conditional-needs.json",
+      "git_blob_sha": "80907a2f69a174cbf4ee780e9a338b3d5d3c66c6",
+      "byte_length": 81780
+    },
+    {
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/fragment-metadata.json",
+      "git_blob_sha": "07f83d3da24e02b7147e52f3832169dc6756f98d",
+      "byte_length": 255131
+    },
+    {
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/manifest.json",
+      "git_blob_sha": "40c0423d3caeaccaf7c7ada2e2566b1748e7f9f5",
+      "byte_length": 15401
+    },
+    {
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/response.md",
+      "git_blob_sha": "816537a513effe55a0395c794f2ad12133a2fd21",
+      "byte_length": 8049
+    },
+    {
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-b-v2-j1.md",
+      "git_blob_sha": "92df7b2cc4d9aef82b097528b27a145589ba2b17",
+      "byte_length": 11163
+    },
+    {
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-b-v2-j2.md",
+      "git_blob_sha": "d431940609ba87466acf6218e9bc51a72213ba08",
+      "byte_length": 7143
+    },
+    {
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/runtime-needs.json",
+      "git_blob_sha": "adb8286b53917688fd2a09b1f292131f1223ec03",
+      "byte_length": 4265
+    }
+  ],
+  "additional_external_inputs": [
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/schema/AGENTS.md",
+      "purpose": "Instruções de Schema e geração aplicáveis."
+    }
+  ],
+  "protected_oracle": {
+    "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/oracles/consumer-v1.json",
+    "handling": "Principal/evaluator only; do not send expected answers to producer/consumer. Known cases are regressions."
+  },
+  "runtime_discovery": {
+    "branch": "genesis-fresh-s4",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+    "observed_commit": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+    "observed_release_id": "20261111-v3-fresh-s4-r3",
+    "rule": "Rediscover before use; pin exact release/candidate per capability. No native binding transfer from a later CI green."
+  }
+}

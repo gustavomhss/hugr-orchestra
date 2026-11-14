@@ -1,0 +1,172 @@
+{
+  "schema": "genesis-s1-subdivision-roster/v1",
+  "campaign": "20261111-v1",
+  "protocol_epoch": "parallel-v3-fresh",
+  "results_epoch": "20261111-v3-fresh",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "inheritance_revision": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+  "preparation_kind": "NEW_BRANCHES_ONLY_PARENT_S1_UNCHANGED",
+  "state": "PREPARED_NOT_EXECUTED",
+  "total_sources": 2236,
+  "source_inventory": {
+    "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/coverage.json",
+    "git_blob_sha": "88f3b32e60823fb6ddc9459a994f41db7c58a116",
+    "byte_length": 763566
+  },
+  "criterion_count": 50,
+  "criteria": [
+    "GO-A1",
+    "GO-A2",
+    "GO-A3",
+    "GO-A4",
+    "GO-A5",
+    "GO-A6",
+    "GO-A7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I3",
+    "GO-I4",
+    "GO-I5",
+    "GO-I6",
+    "GO-I7",
+    "GO-I8",
+    "AC-01",
+    "AC-02",
+    "AC-03",
+    "AC-04",
+    "AC-05",
+    "AC-06",
+    "AC-07",
+    "AC-08",
+    "AC-09",
+    "AC-10",
+    "CC-1",
+    "CC-2",
+    "CC-3",
+    "CC-4",
+    "CC-5",
+    "CC-6",
+    "CC-7",
+    "SC-1",
+    "SC-2",
+    "SC-3",
+    "SC-4",
+    "SC-5",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-4",
+    "QS-5",
+    "QS-6",
+    "DOD-1",
+    "DOD-2",
+    "DOD-3",
+    "DOD-4",
+    "DOD-5",
+    "DOD-6",
+    "DOD-7"
+  ],
+  "branches_created_by": "coordination",
+  "new_execution_id_policy": "Generate on actual start; no historical handle is claimed.",
+  "subslices": [
+    {
+      "id": "S1-01",
+      "title": "Sessões, estado e infraestrutura de execução",
+      "branch": "genesis-s1-sessions",
+      "source_count": 555,
+      "owned_legacy_artifact_count": 9,
+      "mission": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/01-sessions/mission.json",
+      "sources": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/01-sessions/sources.jsonl",
+      "inputs": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/01-sessions/inputs.json",
+      "output_prefix": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions"
+    },
+    {
+      "id": "S1-02",
+      "title": "Ferramentas, segurança, extensões e capacidades",
+      "branch": "genesis-s1-tools",
+      "source_count": 424,
+      "owned_legacy_artifact_count": 4,
+      "mission": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/02-tools/mission.json",
+      "sources": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/02-tools/sources.jsonl",
+      "inputs": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/02-tools/inputs.json",
+      "output_prefix": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/02-tools"
+    },
+    {
+      "id": "S1-03",
+      "title": "Automação, pesquisa e fronteiras do Core",
+      "branch": "genesis-s1-automation",
+      "source_count": 462,
+      "owned_legacy_artifact_count": 4,
+      "mission": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/03-automation/mission.json",
+      "sources": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/03-automation/sources.jsonl",
+      "inputs": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/03-automation/inputs.json",
+      "output_prefix": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation"
+    },
+    {
+      "id": "S1-04",
+      "title": "Schema, contratos públicos, APIs, clientes e SDKs",
+      "branch": "genesis-s1-api",
+      "source_count": 472,
+      "owned_legacy_artifact_count": 9,
+      "mission": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/04-api/mission.json",
+      "sources": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/04-api/sources.jsonl",
+      "inputs": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/04-api/inputs.json",
+      "output_prefix": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api"
+    },
+    {
+      "id": "S1-05",
+      "title": "LLM, plugins, CodeMode, SQLite e gravação",
+      "branch": "genesis-s1-libraries",
+      "source_count": 323,
+      "owned_legacy_artifact_count": 10,
+      "mission": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/05-libraries/mission.json",
+      "sources": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/05-libraries/sources.jsonl",
+      "inputs": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/05-libraries/inputs.json",
+      "output_prefix": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/05-libraries"
+    }
+  ],
+  "composition": {
+    "owner": "S1_COORDINATION",
+    "owner_description": "Coordenação da conversa que preparou este kit",
+    "target_branch": "genesis-fresh-s1",
+    "inputs": [
+      {
+        "subslice_id": "S1-01",
+        "branch": "genesis-s1-sessions",
+        "handoff_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/handoff.json"
+      },
+      {
+        "subslice_id": "S1-02",
+        "branch": "genesis-s1-tools",
+        "handoff_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/02-tools/handoff.json"
+      },
+      {
+        "subslice_id": "S1-03",
+        "branch": "genesis-s1-automation",
+        "handoff_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/handoff.json"
+      },
+      {
+        "subslice_id": "S1-04",
+        "branch": "genesis-s1-api",
+        "handoff_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/handoff.json"
+      },
+      {
+        "subslice_id": "S1-05",
+        "branch": "genesis-s1-libraries",
+        "handoff_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/05-libraries/handoff.json"
+      }
+    ],
+    "required": [
+      "Reconciliar os cinco payloads e alterações de produto sem sobrescrever avanços.",
+      "Conferir a união das 2236 fontes e das necessidades locais, mantendo exclusões justificadas e gaps.",
+      "Selecionar corpos/receitas/dependências/roots e o índice geral do Core, com closure compatível com Atlas.",
+      "Provar os fluxos cruzados relevantes de API, Session, LLM, tools, persistência, automação e bibliotecas.",
+      "Reconciliar versões, aceites e bindings; obter revisão independente da união S1 e seus gates.",
+      "Entregar S1 ao ROOT global sem declarar encerrada a campanha S1–S5."
+    ],
+    "global_owner": "ROOT",
+    "global_branch": "genesis-fresh-final"
+  }
+}
