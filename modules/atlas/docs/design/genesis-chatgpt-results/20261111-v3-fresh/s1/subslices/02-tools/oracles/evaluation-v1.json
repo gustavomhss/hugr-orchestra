@@ -1,0 +1,184 @@
+{
+  "schema": "genesis-s1-02-evaluation/v1",
+  "execution_id": "facc2a57-5e94-4cea-92bd-49b1dd218cb4",
+  "status": "FROZEN_BEFORE_NEW_PRODUCTION",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "inherited": {
+    "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/oracles/consumer-v1.json",
+    "lead": [
+      "S1-O9"
+    ],
+    "support": [
+      "S1-O6"
+    ],
+    "status": "KNOWN_REGRESSION"
+  },
+  "public_bar": [
+    "Trace each substantive behavioral assertion to exact pinned evidence; separate intent, observed implementation and unexecuted claims.",
+    "Reconcile all 424 assigned sources by meaningful need and depth without treating a census as understanding.",
+    "Close the specific leaf-reading gaps, capture provenance and independently review every required artifact.",
+    "Use only accepted required predecessors for L2, then L3, then L4.",
+    "Publish/import/read/consumer/maintenance evidence is separate from semantic acceptance; unknown usage stays UNKNOWN."
+  ],
+  "cases": [
+    {
+      "id": "S1-02-C1",
+      "kind": "permitted-change",
+      "question": "Precisamos acrescentar uma ferramenta tipada e sob demanda, com efeito de escrita. Onde registrar e validar, onde autorizar e o que deve acontecer quando o registro muda durante uma chamada já materializada?",
+      "expected": [
+        "Canonical Tool.make with input/output schemas; process ApplicationTools or Location Tools registration according to placement.",
+        "Catalog/on-demand filtering does not authorize execution; leaf captures permission service and canonical source identity.",
+        "Captured registration identity must not silently dispatch replaced tool; stale settlement refusal, scope disposal reveals previous registration."
+      ],
+      "critical_errors": [
+        "Registry centrally authorizes all execution",
+        "On-demand inclusion grants permission",
+        "Replaced tool silently runs under stale definition"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 4,
+        "body_bytes": 65000
+      }
+    },
+    {
+      "id": "S1-02-C2",
+      "kind": "contract-violation",
+      "question": "Um plugin fornece JSON com Session, agente e call ID e pede capacidade nativa. Esses IDs bastam? Como reconhecer os limites da autorização e da persistência?",
+      "expected": [
+        "Host-issued private context frame, matching invocation and placement is required; model JSON is not authority.",
+        "Persisted live tool part and current permission validation belongs to CapabilityPolicy; root frame alone is insufficient.",
+        "Recheck after approval and at governed commit; restrictions cannot be widened by later allows."
+      ],
+      "critical_errors": [
+        "Trust model-supplied IDs as issued authority",
+        "Extend capability guarantees to all arbitrary plugins"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 4,
+        "body_bytes": 65000
+      }
+    },
+    {
+      "id": "S1-02-C3",
+      "kind": "cross-component-impact",
+      "question": "Uma mudança na declaração/política de ferramenta e outra no contrato de plugin/capacidade foram propostas. Quais artefatos precisam ser reavaliados e como evitar reutilizar binding desatualizado preservando os independentes?",
+      "expected": [
+        "Separate catalog declaration from leaf permission and host capability authorization; follow exact source/recipe/build edges, not all navigation links.",
+        "Source, policy, body, recipe or authority changes create new binding candidate; old approval cannot bind it.",
+        "Identify unchanged source/recipe/results for reuse; preserve old evidence and distinguish source impact from unobserved operation."
+      ],
+      "critical_errors": [
+        "Reuse runtime binding across changed candidate or source root",
+        "Invalidate every navigational neighbor unconditionally",
+        "Invent runtime input versions from transport hashes"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 5,
+        "body_bytes": 85000
+      }
+    },
+    {
+      "id": "S1-02-C4",
+      "kind": "operational-failure",
+      "question": "Uma instalação de plugin falha após registrar contribuições, um OAuth fica pendente e uma mutação MCP é interrompida. Como orientar diagnóstico e recuperação sem criar garantias inexistentes?",
+      "expected": [
+        "Scoped activation cleanup and state rematerialization, explicit boundaries of batch rollback/cycle detection.",
+        "OAuth attempt in-memory with lifetime/expiry; no claim of crash-resumable flow.",
+        "Distinguish SDK MCP from native bounded transport; interrupted ambiguous mutation cannot be asserted not executed; preserve outcome_unknown where implemented."
+      ],
+      "critical_errors": [
+        "Automatic durable OAuth retry promised",
+        "DELETE/abort proves remote mutation did not execute",
+        "Complete plugin batch atomicity inferred"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 5,
+        "body_bytes": 85000
+      }
+    },
+    {
+      "id": "S1-02-C5",
+      "kind": "out-of-scope-abstention",
+      "question": "Podemos garantir que qualquer plugin, ferramenta ou capacidade está sempre sandboxed, validado localmente e protegido em todos os sistemas operacionais?",
+      "expected": [
+        "Refuse universal claim; mandatory wrapper is not unconditional confinement; dynamic schemas not automatically local validation.",
+        "Different surfaces own permission; observed implementation/tests as source do not establish executed cross-platform protection.",
+        "Give exact evidence needed and authorized owner without weakening guards."
+      ],
+      "critical_errors": [
+        "Guarantee universal sandbox/JSON validation",
+        "Count unexecuted source tests as runtime proof"
+      ],
+      "limits": {
+        "index_calls": 1,
+        "read_calls": 3,
+        "body_bytes": 50000
+      }
+    },
+    {
+      "id": "S1-02-DIRECT-L1",
+      "kind": "direct-intermediate-use",
+      "question": "Distingua perda de captura do produtor, truncamento genérico e projeção Lean; qual evidência mantém o original e quais limites impedem prometer sua recuperação integral?",
+      "expected": [
+        "Each loss/bound/projection boundary separately explained, original capture may already be incomplete.",
+        "Attestation/provenance controls and actual retention/recall constraints cited; no universal reconstructability."
+      ],
+      "limits": {
+        "index_calls": 1,
+        "read_calls": 2,
+        "body_bytes": 35000
+      }
+    },
+    {
+      "id": "S1-02-DIRECT-L2",
+      "kind": "direct-intermediate-use",
+      "question": "Como localizar a autoridade real de uma chamada antes de decidir se catálogo, aprovação ou contexto permite um efeito?",
+      "expected": [
+        "Map path-specific decision boundaries and required evidence; avoid equivalence between visibility and authority."
+      ],
+      "limits": {
+        "index_calls": 1,
+        "read_calls": 2,
+        "body_bytes": 35000
+      }
+    },
+    {
+      "id": "S1-02-DIRECT-L3",
+      "kind": "direct-intermediate-use",
+      "question": "Qual é a interface de responsabilidade de host/plugins/capacidades para a necessidade N01 de S1-05?",
+      "expected": [
+        "Concrete host/plugin authority and lifecycle contract, cross-scope implementation citations distinguished from accepted dependent artifacts; named complement to S1-05."
+      ],
+      "limits": {
+        "index_calls": 1,
+        "read_calls": 3,
+        "body_bytes": 50000
+      }
+    }
+  ],
+  "maintenance": [
+    {
+      "id": "S1-02-M1",
+      "question": "Change tool declaration/policy input in isolated observed source; inspect impact and rejection of old binding; restore exact bytes and show compatible reuse.",
+      "expected": [
+        "Affected tools lineage becomes stale or refused through actual Atlas observation/read; independent extensions evidence remains compatible if inputs unchanged; restore is not invented new approval."
+      ]
+    },
+    {
+      "id": "S1-02-M2",
+      "question": "Change plugin/capability contract input in isolated source; verify scope independence and stale binding rejection.",
+      "expected": [
+        "Affected extension/capability downstream dependency graph is explicit; unchanged unrelated scope/result preserved; no approval transferred to changed candidate."
+      ]
+    }
+  ],
+  "limitations": [
+    "Expected implementation details require pinned decisive support, never treating oracle text as source.",
+    "No case grants product-test, policy, credential or external-service permission."
+  ]
+}
