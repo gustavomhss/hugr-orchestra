@@ -1,0 +1,2 @@
+{"event":"execution_started","execution_id":"94f1e157-8c44-4e6e-a4af-7690a8845ecf","time_utc":"2026-11-14 22:40:30 UTC","head":"89c78249e63060acf7c41f45f14af88fd51aa0c4","source_revision":"1cde2ff7a71bcf7aecb5d030917b577165135d38","agent":"/root","tokens":"UNKNOWN","physical_attempts":"UNKNOWN","cost":"UNKNOWN","history":"UNRECONCILED_NOT_ZERO"}
+{"event":"native_dispatch","task":"runtime capability discovery","agent_id":"/root/runtime_scout","role":"read_only_scout","fork_turns":"none","status":"RUNNING","tokens":"UNKNOWN","cost":"UNKNOWN"}
