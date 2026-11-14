@@ -68,5 +68,5 @@ mesmos bytes. A revisão não fecha o domínio nem a camada L1.
 
 ## Registro de publicação
 
-A publicação deste handoff e `REVIEW.md` será registrada pelo commit da branch;
-o SHA será acrescentado após a verificação do HEAD publicado.
+Commit de revisão publicado e verificado: `36d69fcec46bdadde0be47e1561748f7106d0c34`.
+A atualização deste próprio recibo será publicada em commit subsequente; o HEAD final será confirmado após a escrita.
