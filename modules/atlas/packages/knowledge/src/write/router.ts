@@ -305,7 +305,7 @@ function isAnchorPath(v: unknown): v is string {
  * declared types are erased. A malformed shape yields the EMPTY list, which the caller refuses; it never
  * throws a raw `TypeError` out of a door and it never silently contributes a coerced path to the prefix.
  */
-function identityAnchorPaths(node: Candidate): readonly string[] {
+function identityAnchorPaths(node: Pick<Candidate, "grounding">): readonly string[] {
   const entries: unknown = (node as { grounding?: { entries?: unknown } } | null | undefined)?.grounding?.entries
   if (!Array.isArray(entries)) return []
   const anchorOf = (e: unknown): { kind?: unknown; qualifiedPath?: unknown } | undefined =>
@@ -336,7 +336,7 @@ function identityAnchorPaths(node: Candidate): readonly string[] {
  * shape of the recent regression in this area was a pair where one half was validated and the other was
  * not, which left an anchor that passed one gate and failed the other forever.
  */
-export function primaryAnchorId(node: Candidate): NodeKey {
+export function primaryAnchorId(node: Pick<Candidate, "grounding">): NodeKey {
   const paths = identityAnchorPaths(node)
   const common = paths.length > 0 ? deepestCommonUnit(paths) : ""
   // The whole defect in one line: an empty common unit is a wildcard, so it is REFUSED, never minted.
@@ -352,7 +352,7 @@ export function primaryAnchorId(node: Candidate): NodeKey {
  * canonical preimage (`canonicalForm`, sorted keys / NFC / floats-forbidden), hashed through
  * `defaultEncoder` and branded `asNodeKey` — the sole sanctioned nodeKey mint (no raw hashing).
  */
-export function nodeKey(node: Candidate): NodeKey {
+export function nodeKey(node: Pick<Candidate, "grounding"> & Partial<Pick<Candidate, "slot" | "check">>): NodeKey {
   const anchor = primaryAnchorId(node) as string
   const preimage = node.check
     ? { a: anchor, c: normalizeCheck(node.check), s: node.slot } // predicate: folds in normalize(check)

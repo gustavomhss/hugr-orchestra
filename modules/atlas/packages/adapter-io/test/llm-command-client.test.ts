@@ -223,7 +223,7 @@ describe("createCommandClient('block') — the reason-freely fenced-atlas-fact c
       "let me think about this unit...\nI will check the bytes.\n" + block("charge() re-reads the ledger")
     const r = client.complete(envelope, budget)
     expect(r.claim).toBe("charge() re-reads the ledger")
-    expect(r.rawAnswer).toBe(envelope) //                        the whole validated envelope rides back
+    expect(r.rawAnswer).toBe(block("charge() re-reads the ledger")) // canonical receipt excludes discarded scratch
   })
 
   it("ZERO blocks (reasoned then declined / botched format) ⇒ untagged abstention, never a fabricated claim", () => {

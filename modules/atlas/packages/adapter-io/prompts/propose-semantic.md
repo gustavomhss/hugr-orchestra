@@ -20,7 +20,8 @@ Every clause is traceable. HTML comments are stripped before the text reaches th
     and stated it, #201); reasoning-first + one fenced block measured 100%/0-hallucination. The model reasons
     in a discarded scratch region, actively refutes its candidate against the bytes, THEN emits exactly one
     fenced `atlas-fact` block. GEN-4d holds (no self-declaration/confidence field). GEN-12 holds — the free
-    reasoning is SCRATCH, parsed away; only the block survives (`llm.ts admitFactBlock`).
+     reasoning is SCRATCH, parsed away; only accepted fields survive (`llm.ts admitFactBlock`). The bounded
+     multi-fact extension keeps one block, with one to four independently useful facts and per-item grounds.
 
   · THREE FIELDS, `{slot, claim, derivation}` — this is the 196c amendment over the 196b two-field gotcha
     block. `slot` is the model's CLASSIFICATION into one of the eight semantic slots (listed in STEP 2). `claim`
@@ -28,7 +29,7 @@ Every clause is traceable. HTML comments are stripped before the text reaches th
     bytes that leads a reader to the same conclusion. `derivation` is PERSISTED (the `justified` seal's
     witness-analog), so it must cite the bytes — the declaration, control flow, types or literals that force
     the claim — NOT the model's private train of thought. The parser (`semanticClaimParser`, llm.ts) lifts all
-    three; a block with no non-empty `derivation`, or a `slot` OUTSIDE the eight, ABSTAINS. COUPLED to `llm.ts`;
+     three per item; an item with no non-empty `derivation`, or a `slot` OUTSIDE the eight, ABSTAINS. COUPLED to `llm.ts`;
     pinned by test.
 
   · A LOAD-BEARING FACT, NOT A RESTATED SIGNATURE — a semantic fact is a property a competent engineer would
@@ -62,9 +63,10 @@ You are shown ONE anchored unit from a real codebase, and nothing else.
 {{SOURCE}}
 </unit>
 
-State ONE **non-obvious, load-bearing fact** about this unit: a property a competent engineer would NOT read
-off its name and signature, and that would change what they do. Then CLASSIFY it into exactly one of these
-eight slots — pick the BEST-fitting one:
+State one to four distinct, independently useful **non-obvious, load-bearing facts** about this unit:
+properties a competent engineer would NOT read off its name and signature, and that would change what they do.
+Four is a ceiling, NOT a quota: do not split or paraphrase one fact to fill it, and never lower the quality bar
+to emit more. CLASSIFY each fact independently into exactly one of these eight slots — pick the BEST-fitting one:
 
 - `invariant` — a property that ALWAYS holds for this unit (a relationship among its state/inputs/outputs).
 - `contract` — an obligation or guarantee at the boundary: what the CALLER must ensure, or what the unit promises.
@@ -77,8 +79,8 @@ eight slots — pick the BEST-fitting one:
 
 Work in two steps.
 
-STEP 1 — REASON FREELY (scratch, never stored). Read the bytes closely. Draft a candidate fact, then actively
-try to REFUTE it against the source:
+STEP 1 — REASON FREELY (scratch, never stored). Read the bytes closely. For each candidate fact, actively
+try to REFUTE it independently against the source:
 
 - Is it derivable from THESE bytes — the declarations, control flow, types or literals — or are you leaning on
   what you know about a library/framework/convention that is not visible here, or on a stale/past-tense COMMENT
@@ -93,8 +95,8 @@ try to REFUTE it against the source:
   restated signature is not worth recording.
   Discard any candidate that does not survive. This reasoning is scratch: it is parsed away and never persisted.
 
-STEP 2 — EMIT THE RESULT. If a fact survived, emit it as EXACTLY ONE fenced block tagged `atlas-fact`, holding
-a JSON object with THREE fields:
+STEP 2 — EMIT THE RESULT. If any facts survived, emit them in EXACTLY ONE fenced block tagged `atlas-fact`,
+holding a JSON object with a `facts` array of one to four objects. Each object has THREE fields:
 
 - `slot` — exactly one of the eight slot names above (the BEST-fitting classification), lowercase, verbatim.
 - `claim` — one sentence of plain prose naming the fact, derivable from the CODE bytes above.
@@ -103,10 +105,13 @@ a JSON object with THREE fields:
   rambling — it is persisted alongside the claim so a reader can CONTEST it against the same bytes.
 
 ```atlas-fact
-{"slot": "<one of the eight slot names above>", "claim": "<the one surviving fact>", "derivation": "<the compact chain from THIS unit's cited bytes to the same conclusion>"}
+{"facts":[{"claim":"<one surviving independently useful fact>","slot":"<one of the eight slot names above>","derivation":"<the compact chain from THIS unit's cited bytes to this claim>"},{"claim":"<a distinct surviving independently useful fact, only if present>","slot":"<its best-fitting slot>","derivation":"<this fact's own compact grounds from the cited bytes>"}]}
 ```
 
-Emit exactly ONE such block, and put NO fenced block anywhere in your reasoning — only the final fact is fenced.
+Include only facts that independently survived refutation; the two-item example is not a target count.
+Each fact must carry its OWN derivation, even when two facts share a slot. Keep the JSON body within 8 KiB of
+UTF-8. Emit exactly ONE such block, and put NO fenced block anywhere in your reasoning — only the final accepted
+envelope is fenced. No confidence, scratch or other JSON fields.
 
 If no such fact survives, emit NO fact block at all (a bare `NO-FACT` on its own line is also accepted). Most
 units hold none. That is a correct, expected result — recorded as a deliberate abstention, never a failure. A

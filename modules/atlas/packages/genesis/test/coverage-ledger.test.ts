@@ -206,6 +206,22 @@ describe("SCN-GEN-12g-4 — a site the run never visited is distinguishable from
 // ── SCN-GEN-8a-3 — the ledger survives the interruption ──────────────────────────────────────────────
 
 describe("SCN-GEN-8a-3 — a resumed run reports the WHOLE run's ledger, so the site set still closes", () => {
+  it("carries admitted items across resume independently of site and write-dedup counts", () => {
+    const sites = [cand("a", 0), cand("b", 1), cand("c", 2)]
+    let armed = true
+    const ctrl = makeRunController(depsWith(sites, (c): ExtractResult => {
+      if (armed && c.rank === 1) {
+        armed = false
+        throw new Error("interrupted before admitting this site")
+      }
+      return { facts: [factFor(c, "-1"), factFor(c, "-2")], abstained: [] }
+    }))
+    const first = ctrl.genesis("repo", "HEAD", budgetOf(10))
+    expect(first).toMatchObject({ admittedClaims: 2, llmCalls: 1, budgetSpent: 1 })
+    const resumed = ctrl.resume(first.resumeToken!)
+    expect(resumed).toMatchObject({ admittedClaims: 6, llmCalls: 3, budgetSpent: 3 })
+  })
+
   it("resume carries the first leg's rows forward and re-drives only the remainder, with no duplicate", () => {
     const sites = [cand("a", 0), cand("b", 1), cand("c", 2), cand("d", 3)]
     let armed = true // the interruption fires ONCE, at rank 1, then the resumed run gets through

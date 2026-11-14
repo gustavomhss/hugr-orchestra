@@ -50,8 +50,8 @@
 // CLI before the pass, so the staging sidecar, `StoreProjection` and the wire format stay exactly as they were.
 //
 // ── THE COUNT IS SETTLED, NEVER ATTEMPTED ────────────────────────────────────────────────────────────
-// `promoted` counts `EmitOut.emitted === true` and nothing else. The measured failure this exists to
-// prevent: 8 mine processes × 5 sites reported 40 candidates committed with 5 durable, every process
+// `promoted` counts rows whose EVERY claim answered `EmitOut.emitted === true`. The failure this prevents:
+// 8 mine processes × 5 sites reported 40 candidates committed with 5 durable, every process
 // exiting 0. A count of what was tried is not a count of what happened.
 
 import type { Hash } from "@atlas/contracts"
@@ -60,12 +60,13 @@ import type { GroundedFact, StoreProjection } from "@atlas/knowledge"
 import type { EmitOut } from "@atlas/tools"
 import type { CommitRefusal } from "./sidecar.js"
 import type { DiskStore } from "./store.js"
+import { prepareClaimReceipts, REJECTED_QUARANTINED } from "./claim-receipt.js"
+import type { GovernedEmitOptions } from "./claim-receipt.js"
 
 /** A staged row whose `contentHash` names bytes the CAS cannot return. NOT a skip and NOT a batch throw: the
  *  row is real, its fact is unreadable, and a curator has to know WHICH row so they can re-mine it. `mine`
  *  puts the bytes before it publishes the row, so this state means the CAS was pruned/corrupted underneath. */
-export const REJECTED_CANDIDATE_UNREADABLE =
-  "candidate bytes absent from CAS — the staged row names a contentHash the store cannot return, so there is no fact to promote"
+export { REJECTED_CANDIDATE_UNREADABLE } from "./claim-receipt.js"
 
 /** A staged row whose grounding names no single containing unit, so `primaryAnchorId` cannot mint an
  *  identity for it. `governed-emit.ts` throws `DegenerateAnchorError` by design at that gate; ONE such row
@@ -76,8 +77,7 @@ export const REJECTED_DEGENERATE_CANDIDATE =
 /** A staged candidate carrying `quarantine` (knowledge `AdvisoryNode`): `mine` admitted it only because a sound
  *  proof ABSTAINED. Refused BEFORE the emit door is consulted, so no ratifier, policy or token can promote it —
  *  the row stays staged. Owner decision D1 (genesis-hardening A8). */
-export const REJECTED_QUARANTINED =
-  "quarantined: admitted only because a sound proof abstained (could not prove the claim, did not refute it) — a quarantined candidate stays staged and is never promoted"
+export { REJECTED_QUARANTINED } from "./claim-receipt.js"
 
 /** What the promotion door is composed over: the durable store the staging sidecar lives beside, and the
  *  GOVERNED EMIT LEG itself — passed in already bound (with `origin:'promoted'`) by the composition root, so
@@ -85,7 +85,7 @@ export const REJECTED_QUARANTINED =
 export interface GovernedPromoteDeps {
   readonly store: DiskStore
   /** `createGovernedEmit({…, origin: 'promoted'}).emit` — the SAME leg `atlas-emit` binds, never a copy. */
-  readonly emit: (node: GroundedFact, at: Hash) => EmitOut
+  readonly emit: (node: GroundedFact, at: Hash, opts?: GovernedEmitOptions) => EmitOut
 }
 
 /** One staged row's outcome. `settled` is the DURABLE fact: the door answered `emitted:true`. */
@@ -94,7 +94,7 @@ export interface PromotedRow {
   readonly settled: boolean
   /** The CAS address the durable write landed on (present iff `settled`). */
   readonly id?: string
-  /** The refusal — the emit door's own `rejected` string, or one of this module's two per-row refusals. */
+  /** The refusal — the emit door's own `rejected` string, or a whole-place preflight refusal. */
   readonly rejected?: string
 }
 
@@ -134,8 +134,9 @@ function isDegenerateAnchor(e: unknown): boolean {
 }
 
 /**
- * Build the governed promotion leg. `promote(at)` reads the staging sidecar ONCE, rehydrates each staged
- * row's whole `GroundedFact` from CAS, and presents it to the governed emit door — one row, one decision.
+ * Build the governed promotion leg. `promote(at)` reads staging ONCE, rehydrates each row's claims from
+ * CAS, preflights the whole place, then presents each claim to the same governed emit door.
+ * One row succeeds only if every claim settles; earlier successful emits are NOT rolled back on refusal.
  *
  * TOTAL over the batch: a row that cannot be read, and a row whose anchor is degenerate, are each filed as
  * THAT ROW's refusal and the pass continues. Nothing else is caught — an `ENOSPC` from the commit, an
@@ -170,27 +171,24 @@ export function createGovernedPromote(deps: GovernedPromoteDeps): {
 
     const rows: PromotedRow[] = []
     for (const row of selected.filter((r) => !held.has(r.nodeKey))) {
-      // 3. REHYDRATE — `store.get(contentHash)` returns the WHOLE fact `mine` put before it published the
-      //    row (the CAS bytes ARE the fact), which is structurally the `GroundedFact` `emit(node, at)` takes.
-      //    `get` is total: a miss / tampered / oversized / traversal read all answer `undefined`.
-      const fact = deps.store.get(row.contentHash as unknown as Hash) as GroundedFact | undefined
-      if (fact === undefined) {
-        rows.push({ nodeKey: row.nodeKey, settled: false, rejected: REJECTED_CANDIDATE_UNREADABLE })
-        continue
-      }
-      // 3b. QUARANTINE — read off the rehydrated BYTES (the mark rides the fact `mine` put), and decided before
-      //     the door, so it does not depend on any gate refusing. Nothing reaches the projection, so `own-export`
-      //     (which reads only the projection) never sees it either.
-      if (fact.kind === "advisory" && fact.quarantine !== undefined) {
-        rows.push({ nodeKey: row.nodeKey, settled: false, rejected: REJECTED_QUARANTINED })
-        continue
-      }
-      // 4. THE GOVERNED DOOR, ONE ROW AT A TIME. Every gate is the emit door's: the truth door re-derives the
-      //    citation, KNOW-11 authz refuses an actor outside `atlas:mined`, the ARCH-10 incumbent guard prices
-      //    the write against whatever node the minted identity actually resolves to, and KNOW-8 ratification
-      //    runs because `origin:'promoted'` took the fast path off the table.
       try {
-        const out = deps.emit(fact, at)
+        // Preflight ALL receipts and quarantine marks before presenting even the first claim.
+        const prepared = prepareClaimReceipts(deps.store, row)
+        if ("rejected" in prepared) {
+          rows.push({ nodeKey: row.nodeKey, settled: false, rejected: prepared.rejected })
+          continue
+        }
+        if (prepared.claims.some(({ fact }) => fact.kind === "advisory" && fact.quarantine !== undefined)) {
+          rows.push({ nodeKey: row.nodeKey, settled: false, rejected: REJECTED_QUARANTINED })
+          continue
+        }
+        // Authz, truth and ratification remain per-claim. Stop on refusal, without pretending that
+        // separate successful emit commits can be rolled back as a cross-claim transaction.
+        let out: EmitOut = { emitted: false }
+        for (const claim of prepared.claims) {
+          out = deps.emit(claim.fact, at, claim.receipt === undefined ? undefined : { claimReceipt: claim.receipt })
+          if (!out.emitted) break
+        }
         rows.push(
           out.emitted
             ? { nodeKey: row.nodeKey, settled: true, ...(out.id !== undefined ? { id: String(out.id) } : {}) }
@@ -206,7 +204,7 @@ export function createGovernedPromote(deps: GovernedPromoteDeps): {
       }
     }
 
-    // 5. THE FOLD — `promoted` is the count of rows the store actually holds because of this call.
+    // 5. THE FOLD — count fully settled rows, never individual claims or partially successful places.
     const promoted = rows.filter((r) => r.settled).length
     return {
       read: true,

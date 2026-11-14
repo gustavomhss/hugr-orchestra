@@ -8,7 +8,8 @@
 //   contested — two or more live facts on the same file with the same slot.
 //   intent    — a unit with no `rationale` fact.
 // Ranked by blast × tier weight (T0 3, T1 2, T2 1), where blast is how many files depend on a file in the code index.
-// PURE: the caller supplies the facts, the owner lookup and the blast lookup; nothing here reads a store or a file.
+// PURE: the caller supplies the facts, the owner lookup, an optional mined-author lookup and the blast lookup;
+// nothing here reads a store or a file.
 //
 // A question's `id` is the kernel content hash of its kind and subject, so the same open question carries the same id
 // in every session — which is what lets an answered question drop out of the next batch.
@@ -34,6 +35,11 @@ export interface QuestionInput {
   readonly facts: readonly QuestionFact[]
   /** The unit's owner, or `""` when nobody owns it. */
   readonly ownerOf: (unit: string) => string
+  /**
+   * Mined author names for the unit. Absent, or a return of `[]`, keeps the three fixed owner options.
+   * Names are sorted, de-duplicated, and any that equal a fixed option are dropped before those three.
+   */
+  readonly authorsOf?: (unit: string) => readonly string[]
   /** How many files depend on `file` in the code index (0 when it knows none). */
   readonly blast: (file: string) => number
   /** Ids of questions already answered; they are not asked again. */
@@ -54,6 +60,7 @@ export interface RankedQuestion extends OpenQ {
 const TIER_WEIGHT: Readonly<Record<Tier, number>> = { T0: 3, T1: 2, T2: 1 }
 const RULE_SLOTS: ReadonlySet<string> = new Set(["invariant", "contract", "security-property"])
 const ROOT_UNIT = "(root)"
+const OWNER_OPTIONS = ["seat:orchestrator", "a person on the team", "nobody yet"] as const
 
 /** The unit a file belongs to: `<top>/<name>` under `packages`, `docs` or `harness` when the path is deeper than two
  *  segments, else the shared root unit — the grain the Atlas screen groups by (mock `model.js` `unitOf`). */
@@ -74,7 +81,7 @@ export function deriveOpenQuestions(input: QuestionInput): readonly RankedQuesti
       const b = unitBlast(u.files)
       return question("owner", u.id, directorySite(u.id), {
         ask: `Who owns ${u.id}?`,
-        options: ["seat:orchestrator", "a person on the team", "nobody yet"],
+        options: ownerOptions(input.authorsOf?.(u.id)),
         rank: b,
         rankReason: `${u.facts} facts, ${b} files depend on it, no owner named`,
       })
@@ -154,6 +161,17 @@ function groupsOf(facts: readonly QuestionFact[]): readonly (readonly QuestionFa
       groups.set(key, [...(groups.get(key) ?? []), f])
     })
   return [...groups.values()]
+}
+
+/** Mined names first (sorted, unique, minus any fixed choice), then the three fixed options. Absent or empty is
+ *  exactly those three — a fresh array, same strings as before `authorsOf` existed. */
+function ownerOptions(authors: readonly string[] | undefined): readonly string[] {
+  const fixed = [...OWNER_OPTIONS]
+  if (authors === undefined || authors.length === 0) return fixed
+  const reserved = new Set<string>(OWNER_OPTIONS)
+  const mined = [...new Set(authors)].filter((name) => !reserved.has(name)).sort()
+  if (mined.length === 0) return fixed
+  return [...mined, ...fixed]
 }
 
 function question(

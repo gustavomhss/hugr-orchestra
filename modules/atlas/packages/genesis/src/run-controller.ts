@@ -166,6 +166,7 @@ interface PendingRun {
   /** Carried for the same reason `llmCalls` is: a resumed run's report describes the WHOLE run, and spend
    *  that stopped being counted at the interruption would understate what the operator was billed. */
   readonly modelCalls: number
+  readonly admittedClaims: number
   readonly budget: GenesisBudget
   /** The ledger SO FAR. Carried across `resume` for the same reason `seeded` is: a resumed run's report
    *  describes the WHOLE run, so its coverage must account for the sites the first leg already drove —
@@ -183,6 +184,7 @@ function emptyReport(token: ResumeToken | undefined, modelIdentity: string, fail
     open: [],
     llmCalls: 0,
     budgetSpent: 0,
+    admittedClaims: 0,
     modelCalls: 0, // ALWAYS present, including zero — a counter that appeared only when non-zero would
     modelIdentity, //           read as "this never happens", which is exactly the claim it must not make —
     ...answersWitness(undefined), // the same reason #210/#209's fields are stamped on a total-degrade report too.
@@ -226,6 +228,7 @@ function toReport(
     open: [],
     llmCalls: res.llmCalls,
     budgetSpent: res.budgetSpent,
+    admittedClaims: res.admittedClaims,
     modelCalls: res.modelCalls, // what the run PAID FOR; `llmCalls` is what it USED (they differ on a fault)
     modelIdentity, // [#210] which CLI+version produced this run's answers (NO_MODEL_IDENTITY if none wired)
     ...answersWitness(answerReceipts), // [#209] answersStored + answersDigest — the "issued vs stored" witness
@@ -254,6 +257,7 @@ export function makeRunController(deps: ControllerDeps): GenesisApi & HandoffApi
       llmCalls: res.llmCalls,
       budgetSpent: res.budgetSpent,
       modelCalls: res.modelCalls,
+      admittedClaims: res.admittedClaims,
       budget,
       // ONLY the rows for sites the resume will NOT re-drive. `resume` re-drives every site past the
       // cursor, so carrying THEIR rows too would double-count them in the resumed report's ledger — a
@@ -297,6 +301,7 @@ export function makeRunController(deps: ControllerDeps): GenesisApi & HandoffApi
         pending.modelCalls,
         pending.seeded,
         deps,
+        pending.admittedClaims,
       )
       const planned = pending.sites.length
       // The carried rows are cut to the SAME cursor `remaining` was cut to. Read off the TOKEN, not off
@@ -309,6 +314,7 @@ export function makeRunController(deps: ControllerDeps): GenesisApi & HandoffApi
         llmCalls: res.llmCalls,
         budgetSpent: res.budgetSpent,
         modelCalls: res.modelCalls,
+        admittedClaims: res.admittedClaims,
         outcomes: [...prior, ...res.outcomes.filter((o) => o.rank <= res.lastCompletedRank)],
       }
       // The resumed report's ledger is the WHOLE run's: the rows the first leg completed, plus this leg's.

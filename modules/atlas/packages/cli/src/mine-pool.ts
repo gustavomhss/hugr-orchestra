@@ -19,8 +19,9 @@ import { existsSync } from "node:fs"
 import { fileURLToPath } from "node:url"
 import { MessageChannel, receiveMessageOnPort, Worker } from "node:worker_threads"
 import type { MessagePort } from "node:worker_threads"
+import { loadModelConfig, ModelCommandError, ModelConfigError } from "@atlas/adapter-io"
 import { POOL_WIDTH } from "@atlas/genesis"
-import type { Candidate, ExtractResult, SeedProposal, SiteProposer, VisitAttempt } from "@atlas/genesis"
+import type { Candidate, ExtractResult, SiteProposer, VisitAttempt } from "@atlas/genesis"
 import type { MineSlot } from "./mine-proposer.js"
 import type { PoolAnswer } from "./mine-worker.js"
 
@@ -45,16 +46,15 @@ export function proposerPoolAvailable(): boolean {
   return existsSync(fileURLToPath(WORKER_ENTRY))
 }
 
-/** How long a single `Atomics.wait` slice may block before re-checking the counter. A bound rather than an
- *  infinite wait so a worker that dies without answering cannot wedge the pass forever — the loop re-reads
- *  liveness each slice and gives up if a worker has gone. */
+/** Poll the shared completion counter without relying on parent-thread event callbacks. */
 const WAIT_SLICE_MS = 250
+/** Initial allowance for worker/module/prompt initialization, in addition to every queued command's cap.
+ *  This is a liveness policy, not a calibrated model latency limit. */
+const STARTUP_GRACE_MS = 30_000
 
 /** The pool's answer for one site — the proposer's seed, or the fault that stopped it. */
 export type PoolResult =
-  // [#195c] `{ abstain }` rides alongside `SeedProposal | null` (see `PoolAnswer`, mine-worker.ts): a
-  // malformed-answer abstention must reach the main-thread admit loop DISTINCT from a plain model-abstain.
-  | { readonly ok: true; readonly seed: SeedProposal | { readonly abstain: string } | null }
+  | { readonly ok: true; readonly seed: ReturnType<SiteProposer["propose"]> }
   | { readonly ok: false; readonly error: Error }
 
 export interface ProposerPool {
@@ -67,8 +67,12 @@ export interface ProposerPool {
 
 /** Rebuild an Error carrying the worker's ORIGINAL `name`. The name is what `mine.ts` classifies on
  *  (`ModelCommandError` ⇒ a wiring fault, not a mining outcome), and it does not survive a structured clone
- *  of a custom subclass — so it is carried as a field and reattached here. */
+ *  of a custom subclass — so it is carried as a field and reattached here. Known model failure tags rebuild
+ *  their original error class; arbitrary worker error names/reasons never select that constructor. */
 function rehydrate(a: Extract<PoolAnswer, { ok: false }>): Error {
+  if (a.name === "ModelCommandError" && (a.reason === "not-found" || a.reason === "timeout" || a.reason === "nonzero-exit")) {
+    return new ModelCommandError(a.reason, a.message)
+  }
   const e = new Error(a.message)
   e.name = a.name
   return e
@@ -96,6 +100,12 @@ export function createProposerPool(
   slot?: MineSlot,
   width: number = POOL_WIDTH,
 ): ProposerPool {
+  if (!Number.isSafeInteger(width) || width <= 0) throw new Error("the proposer pool width must be a positive integer")
+  // No config means no model call; otherwise use the resolved operator timeout, including its default.
+  const modelTimeoutMs = loadModelConfig(repoPath, env)?.timeoutMs ?? 0
+  if (!Number.isSafeInteger(modelTimeoutMs) || modelTimeoutMs < 0) {
+    throw new ModelConfigError("malformed", "the proposer pool timeout must be a safely representable integer")
+  }
   const sab = new SharedArrayBuffer(4)
   const done = new Int32Array(sab)
   const seats: Seat[] = []
@@ -112,11 +122,19 @@ export function createProposerPool(
   }
   let closed = false
   let died = 0
-  // BOTH events count as death. Without the `error` leg a worker that fails to load is never counted, the
-  // wait bound is never short-circuited, and an unhandled `error` on a Worker is thrown into the parent.
+  // These callbacks run between synchronous calls, NOT while the parent is blocked in Atomics.wait.
+  // They can short-circuit a later call; only the clock deadline below guarantees this call terminates.
   for (const s of seats) {
     s.worker.on("exit", () => void (died += 1))
     s.worker.on("error", () => void (died += 1))
+  }
+  const close = (): void => {
+    if (closed) return
+    closed = true
+    for (const s of seats) {
+      s.port.close()
+      void s.worker.terminate()
+    }
   }
 
   const proposeAll = (cands: readonly Candidate[]): readonly PoolResult[] => {
@@ -125,17 +143,31 @@ export function createProposerPool(
     if (n === 0) return []
     if (closed) return cands.map(() => ({ ok: false, error: new Error("the proposer pool is closed") }))
 
+    const waitMs = Math.ceil(n / seats.length) * modelTimeoutMs + STARTUP_GRACE_MS
+    const deadline = performance.now() + waitMs
+    if (!Number.isSafeInteger(waitMs) || !Number.isFinite(deadline) || deadline > Number.MAX_SAFE_INTEGER) {
+      return cands.map(() => ({
+        ok: false,
+        error: new ModelCommandError("timeout", "the proposer pool cannot represent the configured batch liveness bound"),
+      }))
+    }
     Atomics.store(done, 0, 0)
     cands.forEach((cand, slot) => seats[slot % seats.length]!.port.postMessage({ slot, cand }))
 
     // BLOCK until every job has answered. `Atomics.wait` is the only primitive that lets a synchronous
-    // function wait on work happening on other threads; the timeout slice is what keeps a dead worker from
-    // turning a pass into a hang.
+    // function wait on work happening on other threads. Slices alone do NOT guarantee liveness: a dead
+    // worker cannot increment the counter, and the parent's exit/error callbacks cannot run here.
     let landed = 0
+    let expired = false
     while (landed < n) {
       const seen = Atomics.load(done, 0)
       if (seen >= n) break
-      Atomics.wait(done, 0, seen, WAIT_SLICE_MS)
+      const remaining = deadline - performance.now()
+      if (remaining <= 0) {
+        expired = true
+        break
+      }
+      Atomics.wait(done, 0, seen, Math.min(WAIT_SLICE_MS, remaining))
       landed = Atomics.load(done, 0)
       if (landed < n && died > 0) break // a worker exited without answering — stop waiting, fault below
     }
@@ -151,19 +183,21 @@ export function createProposerPool(
     // A slot with no answer is a fault for THAT SITE — never a silently dropped site, and never an
     // abstention: "the model said nothing" and "the worker never answered" are different claims and only
     // one of them is a fact about the repository.
-    return out.map((r) => r ?? { ok: false, error: new Error("the proposer pool returned no answer for this site") })
+    // Drain first, then retire the pool so a late response cannot be mistaken for another batch's slot.
+    if (expired || died > 0) close()
+    // Array#map skips holes. Every missing position must instead become a dense, governed run fault.
+    return Array.from({ length: n }, (_, slot): PoolResult => out[slot] ?? {
+      ok: false,
+      error: new ModelCommandError(
+        died > 0 ? "nonzero-exit" : "timeout",
+        "the proposer pool returned no answer for this site within its worker liveness bound",
+      ),
+    })
   }
 
   return {
     proposeAll,
-    close: (): void => {
-      if (closed) return
-      closed = true
-      for (const s of seats) {
-        s.port.close()
-        void s.worker.terminate()
-      }
-    },
+    close,
   }
 }
 
@@ -212,10 +246,16 @@ export function makeVisitAll(
       // identity-equal, and the gate receives both the seed and the candidate — so handing it a cloned
       // `seed.cand` would put two different objects for one site into a seam that has every right to
       // expect one.
-      // A `{ abstain }` seed carries no candidate, so it is passed THROUGH untouched; only a real
-      // `SeedProposal` is rebuilt around the LOCAL `cand` (the identity-equality reason above).
+      // Tags carry no candidate. Rebind EVERY real proposal, including nested collection members.
       const held: SiteProposer = {
-        propose: () => (r.seed === null || "abstain" in r.seed ? r.seed : { ...r.seed, cand }),
+        propose: () => {
+          const seed = r.seed
+          if (seed === null || "abstain" in seed) return seed
+          if ("proposals" in seed) {
+            return { proposals: seed.proposals.map((item) => "abstain" in item ? item : { ...item, cand }) }
+          }
+          return { ...seed, cand }
+        },
       }
       try {
         attempts.push({ ok: true, value: visitWith(cand, held) })
