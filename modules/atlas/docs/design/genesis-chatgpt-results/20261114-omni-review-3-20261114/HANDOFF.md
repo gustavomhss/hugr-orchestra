@@ -1,6 +1,6 @@
 # HANDOFF — GENESIS / OMNI — FATIA 3 DE 5
 
-**Status: PARTIAL** — seis dos oito corpos da faixa foram revisados em três rodadas; duas Surface permanecem.
+**Status: PARTIAL** — os oito corpos da faixa foram revisados em quatro rodadas consultivas; a decisão formal do par persistente J1/J2 permanece pendente.
 **Branch:** `genesis-omni-review-3-20261114`
 **Base/snapshot de partição:** `343d056ffef7f4a0052da8e2e55559c95169f462`
 **Fonte:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`
@@ -66,3 +66,30 @@ Continuar pela posição 21 (`bodies/surface/records-03.json`) após reconciliar
 - Nenhum voto J1/J2, aceite dual, liberação L1 ou aceite global foi reivindicado.
 - Nenhum teste, CI, Atlas runtime, workflow, infraestrutura, shell, PR ou merge foi executado/criado. Nenhuma branch alheia ou fonte foi alterada.
 - Próxima rodada finita: posições 23–24, após nova reconciliação de HEADs/atribuições públicas, preservando todos os pareceres anteriores.
+
+
+## Rodada 4 — posições 23–24
+
+- Posição 23: `bodies/surface/records-05.json`, body blob `36144e88d1d7230fb7754c68a10b09007d092abb`; 16 fontes, 49 trechos de evidência.
+- Posição 24: `bodies/surface/records-06.json`, body blob `5fbc746c327eb8c1b3d0d3c5f264679c56f6c9bc`; 15 fontes, 50 trechos de evidência.
+- Foram conferidos 31/31 Git blob SHAs de fontes e 99/99 trechos citados contra o baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; todos correspondem exatamente após normalização CRLF→LF.
+- Não foram recalculados os campos de SHA-256 de conteúdo e `source_bytes` dos registros.
+- Nenhum defeito obrigatório de fidelidade documental foi identificado nos corpos. Surface 06 registra, como limitações das próprias skills, várias instruções stale/inconsistentes com a implementação atual (Bun/CI, triggers, toolchain, `memory_exceeded`, backpressure, `windowsVerbatimArgs`, contagem de optional dependencies e terminal buffering); isso foi destacado no parecer para não confundir fidelidade do registro com atualidade dessas instruções.
+
+### Reconciliação antes da rodada 4
+
+- HEAD próprio antes da rodada: `1a7963c8063c8254f484fb0303bf386c6a7d3125`; REVIEW e HANDOFF anteriores foram relidos.
+- HEAD externo: `bdfebdb9fe6b5f2a921aef207cebe33b65cd6d20`.
+- S1 `c9c14b41802348022d9c39cd4ab9a377fa8dfc5a`; S2 `436edb688f18923f160a09939869652f9ee3f286`; S4 `a0b79b78bb573d232e37143ab6d64319321c4a4b`; S5 `75df3f4ad95e33829442e3be5f223f16d3c4e7ba`.
+- Handoffs das demais fatias mantêm escopos 1–8, 9–16, 25–31 e 32–38, sem sobreposição com 23–24. O checkpoint público não contém parecer Surface 05/06; isso não demonstra ausência de atividade privada.
+- `judging.md`, `principles.md`, `completion.md` e `transport.md` foram consultados no commit de protocolo `ee2521a5b966bd505cc95bd1c733e09e12f33531`.
+
+### Estado da fatia 17–24
+
+- Oito corpos receberam parecer consultivo nesta branch: Core 17–18 e Surface 01–06 (posições 17–24), em quatro rodadas preservadas no mesmo `REVIEW.md`.
+- Nenhum voto J1/J2 foi recebido/reivindicado. Não há PASS protocolar, aceite dual, `OwnershipReview`, liberação L1 ou aceite global. Status permanece PARTIAL até o par persistente avaliar as versões exatas e qualquer correção obrigatória ser reavaliada.
+- Nenhum teste de produto, CI, workflow, Atlas runtime, infraestrutura ou shell foi executado. Nenhum corpo de produção, fonte, branch alheia ou parecer anterior foi alterado. Sem PR ou merge.
+
+## Próximo passo executável
+
+Encaminhar os oito pareceres e os corpos exatos (SHAs registrados em `REVIEW.md`) ao mesmo par persistente J1/J2 exigido pelo protocolo. Resolver FIX-FIRST/REQUEST_EVIDENCE com o autor e reavaliar pelo mesmo par; não substituir juiz nem converter parecer consultivo em aceite. Em particular, encaminhar as discrepâncias stale das skills de Surface 06 ao responsável documental/owner para decisão, sem corrigir fontes fora desta branch.
