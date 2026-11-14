@@ -131,3 +131,22 @@ A retomada de J2 conservou o mesmo ID, corpo e critérios. Após o host informar
 Os três mapas de cobertura foram reconciliados para explicitar cada disposição e o vínculo do corpo corrente. O manifesto continua autoridade para ID, path e blob; as explicações e evidências semânticas permanecem nos corpos. A junção mecânica confirmou 200 IDs únicos com hashes corretos. Essa transformação de metadados ainda requer a revisão independente final, separada do aceite dos corpos. As versões detalhadas anteriores foram preservadas no histórico.
 
 Custódia privada confirmada dos registros disponíveis: `libfile_fde3_f-c8dabdfdcfa08191936e7dee79cc646d_3a07899f8a4481918837fffaac5a42fc`, versão 0, SHA-256 `f3a8fe31d3cd62769d3804f5436de25403cad12999b30e5794987669afc4b445`. Ambos os juízes receberam os critérios e os casos congelados para a nova síntese. A premissa de apoio aguarda o segundo julgamento antes da liberação de L3; L4 depende de L3. Este marco fecha a cobertura documental de fontes, sem declarar encerrada a entrega ou provar runtime.
+
+
+## Checkpoint: relações e orientações L4 aceitas
+
+O mesmo par aceitou as versões exatas de [relations](bodies/relations.md), [ownership](bodies/ownership.md) e [maintenance](bodies/maintenance.md), sem achados obrigatórios abertos. São 25 artefatos de conhecimento aceitos: manifesto L1, 21 corpos L2, uma síntese L3 e duas orientações L4. A população continua sendo 200 primárias distintas, sem acrescentar apoios ou versões de revisão.
+
+As relações L3 foram produzidas após aceite dos predecessores; ownership e manutenção foram produzidos depois do aceite real de L3. A entrada README foi liberada para nova autoria somente após os dois L4 receberem os dois pareceres e ainda aguarda sua avaliação. A transformação nativa, a matriz e os registros finais de entrega também continuam pendentes de revisão específica. Os mapas compactos A/B/C, por sua vez, já receberam a avaliação independente dos mesmos juízes nos bytes preservados neste histórico.
+
+| Corpo integrado | SHA-256 aceito | Observações opcionais |
+| --- | --- | ---: |
+| relations | `61901fbd8504aa98215999cd35dbfde64f31c68e950db894c23e05fd48a343e4` | 2 |
+| ownership | `b89ea2748dfe188f2fc8e81ae065ac9104c15853c1ca6cd01c68687c8a8f26e9` | 0 |
+| maintenance | `c622e3fb0406c66e8ce57ed33f9cd683acd501f2044ca6683388759860365c91` | 1 |
+
+As três observações não bloqueantes permanecem preservadas: o pin da premissa de apoio está no envelope, sem repetição na tabela isolada de L3; a referência a manifests em R2 tem o alcance do manifesto raiz de P019; manutenção remete aos critérios para revisão dos deltas pelo mesmo par, sem repetir essa ação no fechamento. Não se alterou a barra de aceite por polimento opcional.
+
+Uma tentativa de transporte de manutenção foi abortada antes do despacho. A suspensão, a tentativa abortada e a nova tentativa autorizada ficaram em registros distintos. A revisão só foi contada após o destinatário confirmar disponibilidade literal e emitir decisão. O ajuste das chaves privadas de navegação de ownership não mudou o corpo; sua transformação nativa terá avaliação própria.
+
+Custódia privada confirmada do snapshot de registros até este marco: `libfile_fde3_f-66f84c1a63188191a919883fb6d6f944_3a07899f8a4481918837fffaac5a42fc`, versão 0, SHA-256 `b0cb65e9ae0b9fa453daa2f010215544fe7db2e607ff742278bba9502f98fca7`. O snapshot não afirma aceite de uma entrada ainda em autoria ou de metadados futuros. Este checkpoint preserva conhecimento documental revisado, sem executar produto, testes, CI, runtime, consumidores, manutenção operacional ou integração global.
