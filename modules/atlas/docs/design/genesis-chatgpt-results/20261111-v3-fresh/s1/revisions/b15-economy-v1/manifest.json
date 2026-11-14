@@ -1,0 +1,75 @@
+{
+  "schema": "genesis-s1-b15-candidate/v1",
+  "repository": "gustavomhss/hugr-orchestra",
+  "branch": "genesis-s1-b15-reconciliation-20261113",
+  "status": "CANDIDATE_BLOCKED_PENDING_INDEPENDENT_REVIEW",
+  "sourceRevision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocolRevision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "baseS1Head": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+  "priorReconciliationCommit": "11a209574c68bdca1d45ed1a7eb2c751231edbee",
+  "candidate": {
+    "packagePath": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b15-economy-v1/native-package.json",
+    "bodyPath": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b15-economy-v1/bodies/economy.md",
+    "artifactKey": "s1.core.economy",
+    "bodyBytes": 3288,
+    "bodySha256": "f8cf15c4dae638f632bcd9fb3375f07ef949ba08d1c19b2154298ddb2727420b",
+    "packageSha256": "65b9667e61c258506546a9ba0de05d16d0b105ef90296cc7ef508e473d64c74d"
+  },
+  "impactResults": [
+    {
+      "commit": "7bfb9a4f69cd5ea1dc31b33d4afd26ec9e6c7f4a",
+      "branch": "genesis-campaign-s1-economy-impact-1",
+      "findingsPath": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-s1-economy-impact-1/findings.md",
+      "findingsSha256": "44871139d0d14a5d97c684d6e1beff319a94464d2a55d470dba5aa0d74f6e92e",
+      "dependents": [
+        {
+          "key": "s1.l2.runtime-ownership",
+          "disposition": "NO_CHANGE"
+        },
+        {
+          "key": "s1.l3.session-provider-flow",
+          "disposition": "NO_CHANGE"
+        },
+        {
+          "key": "s1.l3.persistence-evidence-failures",
+          "disposition": "NO_CHANGE"
+        },
+        {
+          "key": "s1.l3.ownership-impact-map",
+          "disposition": "NO_CHANGE"
+        }
+      ]
+    },
+    {
+      "commit": "51a7c500835c48b35cdfc2348484482d41c9770f",
+      "branch": "genesis-campaign-s1-economy-impact-2",
+      "findingsPath": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-s1-economy-impact-2/findings.md",
+      "findingsSha256": "38dc37619c007ddeed2c1c7a6c6a24baa923a0ad089b9fdc8e4bff3fd90268d8",
+      "dependents": [
+        {
+          "key": "s1.l4.ownership-entry",
+          "disposition": "NO_CHANGE"
+        },
+        {
+          "key": "s1.l4.safe-change",
+          "disposition": "NO_CHANGE"
+        },
+        {
+          "key": "s1.l4.diagnosis-maintenance",
+          "disposition": "NO_CHANGE"
+        }
+      ]
+    }
+  ],
+  "historicalDecisions": "Preserved verbatim as prior findings; not re-evaluated and not transferred as approval of the changed s1.core.economy candidate.",
+  "open": [
+    "Independent J1 and J2 semantic decisions for exact candidate package/body.",
+    "Binding/runtime review and any required Atlas consumer evidence remain separate obligations."
+  ],
+  "limits": [
+    "No private session state inferred.",
+    "No canonical genesis-fresh-s1 writes.",
+    "No CI/runtime/provider/consumer/maintenance operations.",
+    "No global acceptance."
+  ]
+}
