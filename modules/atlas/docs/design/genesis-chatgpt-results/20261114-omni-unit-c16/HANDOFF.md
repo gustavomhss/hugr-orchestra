@@ -69,4 +69,4 @@ mesmos bytes. A revisão não fecha o domínio nem a camada L1.
 ## Registro de publicação
 
 Commit de revisão publicado e verificado: `36d69fcec46bdadde0be47e1561748f7106d0c34`.
-A atualização deste próprio recibo será publicada em commit subsequente; o HEAD final será confirmado após a escrita.
+HEAD final após o recibo: `29854a265c222d0be5f004879ca6463f04f475e7`.
