@@ -1,38 +1,42 @@
 # HANDOFF — GENESIS / OMNI — FATIA 3 DE 5
 
-**Status: DONE** — escopo desta sessão concluído (dois pareceres documentais).  
-**Branch:** `genesis-omni-review-3-20261114`  
-**Base:** `343d056ffef7f4a0052da8e2e55559c95169f462`  
-**Commit:** verificar no HEAD da branch após publicação.  
-**Fonte:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`  
+**Status: PARTIAL** — quatro dos oito corpos da faixa foram revisados em duas rodadas; quatro Surface permanecem.
+**Branch:** `genesis-omni-review-3-20261114`
+**Base/snapshot de partição:** `343d056ffef7f4a0052da8e2e55559c95169f462`
+**Fonte:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`
 **Protocolo:** `ee2521a5b966bd505cc95bd1c733e09e12f33531`
 
-## Trabalho realizado
-- Inventariados e ordenados os 38 corpos L1 do snapshot por caminho completo byte/ASCII.
-- Faixa 17–24 confirmada: Core 17, Core 18, Surface 01–06.
-- Revisados os dois primeiros corpos elegíveis da faixa: Core 17 e Core 18.
-- Pareceres, fontes e hashes exatos estão em [REVIEW.md](REVIEW.md).
-- Ambos os corpos tiveram fidelidade documental confirmada nos trechos citados e Git blob SHAs; nenhum defeito obrigatório foi encontrado. Não foi necessário corrigir conteúdo.
+## Rodada 1 preservada
+- Posições 17–18: Core 17 e Core 18.
+- Pareceres originais preservados em `REVIEW.md`; sem correção necessária.
+- Commit de handoff anterior: `2a50b02ccbffa5ad0303040ed0f3797571f8bc30`.
 
-## Arquivos publicados
-- `modules/atlas/docs/design/genesis-chatgpt-results/20261114-omni-review-3-20261114/REVIEW.md` — dois pareceres, evidências e limites.
-- `modules/atlas/docs/design/genesis-chatgpt-results/20261114-omni-review-3-20261114/HANDOFF.md` — este registro.
+## Rodada 2 publicada
+- Posições 19–20: Surface 01 e Surface 02.
+- Surface 01: 16 fontes, 24 trechos de evidência; todos os blobs e trechos citados conferem com o baseline.
+- Surface 02: 14 fontes, 39 trechos de evidência; todos os blobs e trechos citados conferem com o baseline.
+- Nenhum defeito documental obrigatório identificado.
+- Pareceres completos e limitações em `REVIEW.md`, após os dois pareceres anteriores, que foram preservados sem alteração.
 
-## SHAs desta publicação
-- Commit do parecer `REVIEW.md`: `061fe74ff8ce28cb35d7eace97f39ba2178f1f2a`.
-- Blob SHA do `REVIEW.md` e SHA do `HANDOFF.md` serão verificáveis no HEAD publicado; o SHA final do commit é informado no retorno da sessão.
+## HEADs reconciliados antes da rodada 2
+- Própria branch antes da rodada: `2a50b02ccbffa5ad0303040ed0f3797571f8bc30`.
+- `genesis-external-omni-393`: `bdfebdb9fe6b5f2a921aef207cebe33b65cd6d20`.
+- `genesis-omni-review-1-20261114`: `c9c14b41802348022d9c39cd4ab9a377fa8dfc5a`; handoff da fatia 1 registra posições 1–8 aceitas e puladas.
+- `genesis-omni-review-2-20261114`: `91f1a76da6765e6adb4a5ea08731e17baaf00061`; handoff da fatia 2 registra C12-R1 consultivo e fila core, sem reivindicar Surface 01/02.
+- Não havia parecer Surface publicado no diretório público `reviews/` nem atribuição item-específica pública para Surface 01/02. A revisão L1 geral permanece em andamento; não se infere inatividade privada.
 
-## Estado externo reconciliado
-- Snapshot: `343d056ffef7f4a0052da8e2e55559c95169f462`.
-- HEAD de `genesis-external-omni-393` observado: `bdfebdb9fe6b5f2a921aef207cebe33b65cd6d20`; `work.md` blob `6b1b2f73ec124ab86bdaea5f584f7cfe34b94d0b`.
-- HEADs observados de `genesis-omni-review-1-20261114` e `genesis-omni-review-2-20261114`: ambos no snapshot. Isso não permite inferir atividade privada.
-- O checkpoint externo descreve a revisão L1 persistente como em andamento. Este parecer não substitui o par persistente nem conta como aceite dual.
+## SHAs da rodada 2
+- Corpo Surface 01: `9b55a9f873eb6fc10e59a25588bd8b9c8742a77d`.
+- Corpo Surface 02: `b404cca79f3c5676f45e8b3d931066ad03dbf678`.
+- Os SHAs dos 30 blobs de fonte e a igualdade dos 63 trechos de evidência foram verificados contra o baseline; os detalhes constam em `REVIEW.md`.
+- Os campos `source_sha256` e `source_bytes` declarados nos corpos não foram recalculados nesta sessão.
 
-## Limitações explícitas
-- Somente dois dos oito corpos da faixa 17–24 foram revisados, conforme o limite solicitado de até dois.
-- Não foram emitidos votos por J1/J2, aceite dual, liberação de camada ou aceite global.
-- Não foram executados testes de produto, CI, workflows, infraestrutura ou Atlas.
-- Nenhuma branch alheia foi modificada; sem merge ou PR.
+## Estado e autoridade
+- Quatro corpos revisados nesta branch: Core 17, Core 18, Surface 01, Surface 02.
+- Restam na faixa: Surface 03–06 (posições 21–24).
+- Nenhum voto J1/J2 foi emitido ou reivindicado; nenhum aceite dual, liberação de camada ou aceite global foi declarado.
+- Sem testes, CI, Atlas runtime, workflow, infraestrutura, shell, merge ou PR.
+- Nenhuma branch alheia ou conteúdo anterior foi modificado.
 
 ## Próximo passo executável
-A coordenação deve vincular os pareceres persistentes reais de Core 17 e Core 18 aos mesmos blobs de corpo e, separadamente, atribuir/revisar os seis corpos Surface restantes da faixa (posições 19–24), depois de confirmar que não há atribuição ativa concorrente.
+Continuar pela posição 21 (`bodies/surface/records-03.json`) após reconciliar novamente HEADs e atribuições públicas; revisar no máximo dois corpos, preservando este histórico e os pareceres anteriores.
