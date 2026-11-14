@@ -1,0 +1,966 @@
+{
+  "schema": "platform-200-criteria-disposition/v1",
+  "scope": "external-platform-200",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "normative_source": {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+    "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+    "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+    "locator_rule": "original_source_line identifies the preserved normative obligation in the baseline document."
+  },
+  "criteria_registry_ref": {
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "path": ".orchestra/skills/execute-genesis/references/criteria.json",
+    "git_blob_sha": "6171f3d23d3e0263e578c04338067ecb8012016d",
+    "sha256": "8f86bdd36949185df39f729a2de16c5ea7166ccd1638f74b197cad60d1551116"
+  },
+  "assessment_kind": "DOCUMENTARY_LOCAL_SPECIALIZATION",
+  "review_binding": "The final handoff binds the exact matrix bytes and actual independent metadata decisions. Body acceptance alone does not approve this mapping or an operational transformation.",
+  "interpretation": "Local PASS is not a global PASS or the original broad S5 DELIVERY_COMPLETE. NOT_APPLICABLE records explicit user scope exclusions; HOLD records an unproved obligation or qualified provenance.",
+  "criterion_count": 50,
+  "counts": {
+    "PASS": 28,
+    "HOLD": 6,
+    "NOT_APPLICABLE": 16
+  },
+  "evidence_sets": {
+    "knowledge": {
+      "references": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-platform-200/manifest.json",
+          "sha256": "293392e28b20da40124af6ed710f3fb29fc6f208446ff966448617562c4e8c1d"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-platform-200/native-package.json",
+          "sha256": "68005f84c4a0e3ada83b56097ba25b7fd53888ba9dd33d6a45b4333155c40477"
+        }
+      ],
+      "meaning": "Exact 200-source population, 26 accepted knowledge bodies, real causal predecessors and opaque records of the same independent pair."
+    },
+    "mapping": {
+      "references": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-platform-200/coverage-a.json",
+          "sha256": "94f092f0f350954f0e71a3f664ba34b86bb7e0cd5382db94df40ec3a4ffb84d0"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-platform-200/coverage-b.json",
+          "sha256": "a96e45e5428a17f3958324ff52560de61aac89992931eb4af0428f15b1419be4"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-platform-200/coverage-c.json",
+          "sha256": "81fa90bd4f3fafa9efb44f11754de8b4a40997ee90324c58890da2954268f7e8"
+        }
+      ],
+      "meaning": "Explicit unique source dispositions and accepted body bindings; empty/structural reading exceptions remain visible."
+    },
+    "criteria": {
+      "references": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-platform-200/criteria.md",
+          "sha256": "be6ef5e8c121baef75a82adc3e15078d456ba914be96b7cc65481141fa91c85e"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-platform-200/layer-criteria.md",
+          "sha256": "4ed955becf334cf7120f7fc0ae9334c0266e86a0808bdcc9bf93b9b4dced91ba"
+        }
+      ],
+      "meaning": "Frozen public documentary criteria; reserved cases have confirmed private custody and were not supplied to authors."
+    },
+    "provenance": {
+      "references": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-platform-200/review-summary.json",
+          "sha256": "2063d42d58685f0f4540c27e5f57ec2464e3b035b4ea8f231d55609be16ce64a"
+        }
+      ],
+      "meaning": "Actual independent decisions, correction chains and limits of visible record capture; original records remain private."
+    },
+    "scope": {
+      "references": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-platform-200/work.md",
+          "sha256": "1157db3ff4d1d1e9d37182a870972c63f4e3724d470750d3eb55b99f4c047f02"
+        }
+      ],
+      "meaning": "Explicit user restriction to static knowledge in the reserved slice, real Git checkpoints, excluded operational work and unknown provider telemetry."
+    },
+    "guidance": {
+      "references": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-platform-200/bodies/relations.md",
+          "sha256": "61901fbd8504aa98215999cd35dbfde64f31c68e950db894c23e05fd48a343e4"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-platform-200/bodies/ownership.md",
+          "sha256": "b89ea2748dfe188f2fc8e81ae065ac9104c15853c1ca6cd01c68687c8a8f26e9"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-platform-200/bodies/maintenance.md",
+          "sha256": "c622e3fb0406c66e8ce57ed33f9cd683acd501f2044ca6683388759860365c91"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-platform-200/README.md",
+          "sha256": "9d4f47bf4e55ed09cd4669a93fcff794f0c75430017ff12e3a22409da70375b0"
+        }
+      ],
+      "meaning": "Progressive entry, typed relationships, functional ownership and maintenance guidance; no operational execution inferred."
+    }
+  },
+  "rows": [
+    {
+      "id": "GO-A1",
+      "original_source_line": 52,
+      "obligation_summary": "Entendimento transferível de propósito, comportamento, contratos, impacto e manutenção.",
+      "basis": "Corpos L2 e sínteses L3–L4; revisão da mesma dupla.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "documentary_specialization",
+      "local_status": "PASS",
+      "local_disposition_reason": "Pass is restricted to the documented static specialization stated in basis and the cited evidence sets. It does not assert satisfaction of operational portions of the original campaign obligation.",
+      "evidence_sets": [
+        "knowledge",
+        "mapping",
+        "criteria",
+        "provenance",
+        "guidance"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "GO-A2",
+      "original_source_line": 53,
+      "obligation_summary": "Construção cumulativa com saídas persistidas e úteis.",
+      "basis": "Commits recuperáveis, predecessores aceitos e versões preservadas.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "documentary_specialization",
+      "local_status": "PASS",
+      "local_disposition_reason": "Pass is restricted to the documented static specialization stated in basis and the cited evidence sets. It does not assert satisfaction of operational portions of the original campaign obligation.",
+      "evidence_sets": [
+        "knowledge",
+        "mapping",
+        "criteria",
+        "provenance"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "GO-A3",
+      "original_source_line": 54,
+      "obligation_summary": "Entrada pequena e consulta progressiva por necessidade.",
+      "basis": "Entrada estática e rotas do pacote; não demonstra leitura por consumidor Atlas.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "documentary_specialization",
+      "local_status": "PASS",
+      "local_disposition_reason": "Pass is restricted to the documented static specialization stated in basis and the cited evidence sets. It does not assert satisfaction of operational portions of the original campaign obligation.",
+      "evidence_sets": [
+        "knowledge",
+        "mapping",
+        "criteria",
+        "provenance",
+        "guidance"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "GO-A4",
+      "original_source_line": 55,
+      "obligation_summary": "Reuso de conhecimento inalterado e revalidação do que muda.",
+      "basis": "Deltas documentais reutilizam pareceres não afetados; propagação runtime não exercida.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "documentary_specialization",
+      "local_status": "PASS",
+      "local_disposition_reason": "Pass is restricted to the documented static specialization stated in basis and the cited evidence sets. It does not assert satisfaction of operational portions of the original campaign obligation.",
+      "evidence_sets": [
+        "knowledge",
+        "mapping",
+        "criteria",
+        "provenance"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "GO-A5",
+      "original_source_line": 56,
+      "obligation_summary": "Fonte e conhecimento vinculados por Git; separar frescor, validade e autoridade.",
+      "basis": "Baseline fixo, blobs, hashes de corpos e commits; não é frescor do HEAD atual do produto.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "documentary_specialization",
+      "local_status": "PASS",
+      "local_disposition_reason": "Pass is restricted to the documented static specialization stated in basis and the cited evidence sets. It does not assert satisfaction of operational portions of the original campaign obligation.",
+      "evidence_sets": [
+        "knowledge",
+        "mapping",
+        "criteria",
+        "provenance"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "GO-A6",
+      "original_source_line": 57,
+      "obligation_summary": "Determinações mecânicas separadas da interpretação e preservação do trabalho.",
+      "basis": "Captura, hashes e contagens por ferramentas próprias; sem execução do produto.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "documentary_specialization",
+      "local_status": "PASS",
+      "local_disposition_reason": "Pass is restricted to the documented static specialization stated in basis and the cited evidence sets. It does not assert satisfaction of operational portions of the original campaign obligation.",
+      "evidence_sets": [
+        "knowledge",
+        "mapping",
+        "criteria",
+        "provenance"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "GO-A7",
+      "original_source_line": 58,
+      "obligation_summary": "Mecanismo mínimo e preservação das portas Atlas.",
+      "basis": "Somente documentos no prefixo autorizado; nenhum runtime ou store paralelo.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "documentary_specialization",
+      "local_status": "PASS",
+      "local_disposition_reason": "Pass is restricted to the documented static specialization stated in basis and the cited evidence sets. It does not assert satisfaction of operational portions of the original campaign obligation.",
+      "evidence_sets": [
+        "knowledge",
+        "mapping",
+        "criteria",
+        "provenance"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "GO-I1",
+      "original_source_line": 120,
+      "obligation_summary": "Preservar identidades, respostas e história; vincular reavaliações.",
+      "basis": "Custódia privada real, cadeia de commits recuperável e limites explícitos de preservação dos registros originais.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "documentary_specialization",
+      "local_status": "HOLD",
+      "local_disposition_reason": "Real bodies, visible requests/responses, identities, independent judgments, corrections and transport incidents are privately retained. The initial judge spawn/activation strings, original branch-creation API receipt and full argument records for the first twelve Git ref updates are not separately preserved. A remotely verified sixteen-commit single-parent chain and exact conditional update records for its latest four checkpoints are retained; present ancestry does not establish every historical API force flag. Complete original-host capture is not proved. No replacement original was fabricated.",
+      "evidence_sets": [
+        "provenance",
+        "knowledge",
+        "scope"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "GO-I2",
+      "original_source_line": 121,
+      "obligation_summary": "Distinguir observação, intenção, interpretação e lacuna.",
+      "basis": "Revisões de autoridade por unidade e correções materiais.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "documentary_specialization",
+      "local_status": "PASS",
+      "local_disposition_reason": "Pass is restricted to the documented static specialization stated in basis and the cited evidence sets. It does not assert satisfaction of operational portions of the original campaign obligation.",
+      "evidence_sets": [
+        "knowledge",
+        "mapping",
+        "criteria",
+        "provenance"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "GO-I3",
+      "original_source_line": 122,
+      "obligation_summary": "Vincular versões exatas a inputs/contratos sem tornar histórico atual.",
+      "basis": "Binding documental fixo; serving/reader/rollback runtime não demonstrados.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "documentary_specialization",
+      "local_status": "PASS",
+      "local_disposition_reason": "Pass is restricted to the documented static specialization stated in basis and the cited evidence sets. It does not assert satisfaction of operational portions of the original campaign obligation.",
+      "evidence_sets": [
+        "knowledge",
+        "mapping",
+        "criteria",
+        "provenance"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "GO-I4",
+      "original_source_line": 123,
+      "obligation_summary": "Reutilizar partes válidas e distinguir dependência de navegação.",
+      "basis": "Deltas e dependências declaradas; zero proposers em cache runtime não medido.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "documentary_specialization",
+      "local_status": "PASS",
+      "local_disposition_reason": "Pass is restricted to the documented static specialization stated in basis and the cited evidence sets. It does not assert satisfaction of operational portions of the original campaign obligation.",
+      "evidence_sets": [
+        "knowledge",
+        "mapping",
+        "criteria",
+        "provenance"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "GO-I5",
+      "original_source_line": 124,
+      "obligation_summary": "Entradas relevantes e indisponibilidade entram na análise de impacto.",
+      "basis": "Orientação de manutenção e lacuna do lockfile; cálculo operacional não executado.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "documentary_specialization",
+      "local_status": "PASS",
+      "local_disposition_reason": "Pass is restricted to the documented static specialization stated in basis and the cited evidence sets. It does not assert satisfaction of operational portions of the original campaign obligation.",
+      "evidence_sets": [
+        "knowledge",
+        "mapping",
+        "criteria",
+        "provenance"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "GO-I6",
+      "original_source_line": 125,
+      "obligation_summary": "Reconciliar requisições e consumo sem fallback ou uso invisível igual a zero.",
+      "basis": "IDs reais e registros visíveis efetivamente preservados; qualificações de captura permanecem explícitas e tokens/custo/tentativas internas permanecem UNKNOWN.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "unproved_economics",
+      "local_status": "HOLD",
+      "local_disposition_reason": "Provider tokens, cost, hidden physical attempts and economic guarantees were not exposed. Unknown values are retained as unknown; no zero, budget compliance or complete economic reconciliation is asserted.",
+      "evidence_sets": [
+        "scope",
+        "provenance"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "GO-I7",
+      "original_source_line": 126,
+      "obligation_summary": "Respeitar portas, segredos, limites de projeto e tratar fontes como dados.",
+      "basis": "Escrita limitada, privacidade dos pareceres/oráculos e ausência de execução induzida.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "documentary_specialization",
+      "local_status": "PASS",
+      "local_disposition_reason": "Pass is restricted to the documented static specialization stated in basis and the cited evidence sets. It does not assert satisfaction of operational portions of the original campaign obligation.",
+      "evidence_sets": [
+        "knowledge",
+        "mapping",
+        "criteria",
+        "provenance"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "GO-I8",
+      "original_source_line": 127,
+      "obligation_summary": "Não confundir cobertura estrutural com suficiência semântica.",
+      "basis": "200 fontes produzidas separadas de versões aceitas pelo par; sem PASS global.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "documentary_specialization",
+      "local_status": "PASS",
+      "local_disposition_reason": "Pass is restricted to the documented static specialization stated in basis and the cited evidence sets. It does not assert satisfaction of operational portions of the original campaign obligation.",
+      "evidence_sets": [
+        "knowledge",
+        "mapping",
+        "criteria",
+        "provenance"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "AC-01",
+      "original_source_line": 138,
+      "obligation_summary": "Inventário finito e suporte aceito às necessidades obrigatórias.",
+      "basis": "Manifesto, união das coberturas, corpos e pareceres por versão.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "documentary_specialization",
+      "local_status": "PASS",
+      "local_disposition_reason": "Pass is restricted to the documented static specialization stated in basis and the cited evidence sets. It does not assert satisfaction of operational portions of the original campaign obligation.",
+      "evidence_sets": [
+        "knowledge",
+        "mapping",
+        "criteria",
+        "provenance"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "AC-02",
+      "original_source_line": 139,
+      "obligation_summary": "Consumidor Atlas-only resolve casos reservados de ownership.",
+      "basis": "Consumidor e sua execução excluídos expressamente pelo pedido.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "outside_authorized_operational_scope",
+      "local_status": "NOT_APPLICABLE",
+      "local_disposition_reason": "Explicitly excluded from this documentary slice by the user: product tools/code, tests, CI, runtime readers/consumers, integration and operational activation were not authorized. This is a scope exclusion, not a missing-tool or time justification.",
+      "evidence_sets": [
+        "scope"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "AC-03",
+      "original_source_line": 140,
+      "obligation_summary": "Leitores reais comprovam consulta progressiva e limites de contexto.",
+      "basis": "Leitores Atlas não executados; navegação Markdown não substitui essa prova.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "outside_authorized_operational_scope",
+      "local_status": "NOT_APPLICABLE",
+      "local_disposition_reason": "Explicitly excluded from this documentary slice by the user: product tools/code, tests, CI, runtime readers/consumers, integration and operational activation were not authorized. This is a scope exclusion, not a missing-tool or time justification.",
+      "evidence_sets": [
+        "scope"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "AC-04",
+      "original_source_line": 141,
+      "obligation_summary": "Portas reais constroem/ingerem conhecimento e tratam fixtures adversariais.",
+      "basis": "Autoria documental ocorreu; portas de produção e fixtures de runtime não exercidas.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "outside_authorized_operational_scope",
+      "local_status": "NOT_APPLICABLE",
+      "local_disposition_reason": "Explicitly excluded from this documentary slice by the user: product tools/code, tests, CI, runtime readers/consumers, integration and operational activation were not authorized. This is a scope exclusion, not a missing-tool or time justification.",
+      "evidence_sets": [
+        "scope"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "AC-05",
+      "original_source_line": 142,
+      "obligation_summary": "Cache e identidade de resultado controlam reuso e propagação.",
+      "basis": "Nenhum mecanismo runtime de reuso foi executado.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "outside_authorized_operational_scope",
+      "local_status": "NOT_APPLICABLE",
+      "local_disposition_reason": "Explicitly excluded from this documentary slice by the user: product tools/code, tests, CI, runtime readers/consumers, integration and operational activation were not authorized. This is a scope exclusion, not a missing-tool or time justification.",
+      "evidence_sets": [
+        "scope"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "AC-06",
+      "original_source_line": 143,
+      "obligation_summary": "Mudanças/adições/remoções/receitas reconciliam conjunto afetado com controles.",
+      "basis": "Matriz de manutenção é orientação; não houve mutação nem execução de produto.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "outside_authorized_operational_scope",
+      "local_status": "NOT_APPLICABLE",
+      "local_disposition_reason": "Explicitly excluded from this documentary slice by the user: product tools/code, tests, CI, runtime readers/consumers, integration and operational activation were not authorized. This is a scope exclusion, not a missing-tool or time justification.",
+      "evidence_sets": [
+        "scope"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "AC-07",
+      "original_source_line": 144,
+      "obligation_summary": "Publicação/recuperação e leituras concorrentes observam geração coerente ou HOLD.",
+      "basis": "Git de documentos não é ativação/reader Atlas; operações excluídas.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "outside_authorized_operational_scope",
+      "local_status": "NOT_APPLICABLE",
+      "local_disposition_reason": "Explicitly excluded from this documentary slice by the user: product tools/code, tests, CI, runtime readers/consumers, integration and operational activation were not authorized. This is a scope exclusion, not a missing-tool or time justification.",
+      "evidence_sets": [
+        "scope"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "AC-08",
+      "original_source_line": 145,
+      "obligation_summary": "Economia tem garantia de adapter, orçamento, liquidação e autorização.",
+      "basis": "Não há medição de tokens/custo nem recibo de conformidade econômica do host; não inventar aprovação.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "unproved_economics",
+      "local_status": "HOLD",
+      "local_disposition_reason": "Provider tokens, cost, hidden physical attempts and economic guarantees were not exposed. Unknown values are retained as unknown; no zero, budget compliance or complete economic reconciliation is asserted.",
+      "evidence_sets": [
+        "scope",
+        "provenance"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "AC-09",
+      "original_source_line": 146,
+      "obligation_summary": "Gates Git/CI/host recusam estados inválidos e isolam escopos.",
+      "basis": "Commits e limite de escrita verificados; controles CI/readers/proteção de branch não executados.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "outside_authorized_operational_scope",
+      "local_status": "NOT_APPLICABLE",
+      "local_disposition_reason": "Explicitly excluded from this documentary slice by the user: product tools/code, tests, CI, runtime readers/consumers, integration and operational activation were not authorized. This is a scope exclusion, not a missing-tool or time justification.",
+      "evidence_sets": [
+        "scope"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "AC-10",
+      "original_source_line": 147,
+      "obligation_summary": "Preservação/migração e ativação governada conservam objetos e escopos.",
+      "basis": "Baseline/ancestralidade/prefixo conservados; migração e ativação não autorizadas.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "documentary_specialization",
+      "local_status": "PASS",
+      "local_disposition_reason": "Pass is restricted to the documented static specialization stated in basis and the cited evidence sets. It does not assert satisfaction of operational portions of the original campaign obligation.",
+      "evidence_sets": [
+        "knowledge",
+        "mapping",
+        "criteria",
+        "provenance"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "CC-1",
+      "original_source_line": 159,
+      "obligation_summary": "Fontes, escopo, lacunas e artefatos finitos identificados.",
+      "basis": "Lista explícita de 200 e catálogo de artefatos; apoios não contados.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "documentary_specialization",
+      "local_status": "PASS",
+      "local_disposition_reason": "Pass is restricted to the documented static specialization stated in basis and the cited evidence sets. It does not assert satisfaction of operational portions of the original campaign obligation.",
+      "evidence_sets": [
+        "knowledge",
+        "mapping",
+        "criteria",
+        "provenance"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "CC-2",
+      "original_source_line": 160,
+      "obligation_summary": "Níveis cumulativos úteis, persistidos e alcançáveis.",
+      "basis": "Pacote documental e navegação estática; nenhum reader real certificado.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "documentary_specialization",
+      "local_status": "PASS",
+      "local_disposition_reason": "Pass is restricted to the documented static specialization stated in basis and the cited evidence sets. It does not assert satisfaction of operational portions of the original campaign obligation.",
+      "evidence_sets": [
+        "knowledge",
+        "mapping",
+        "criteria",
+        "provenance",
+        "guidance"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "CC-3",
+      "original_source_line": 161,
+      "obligation_summary": "Propósito, contratos, decisões, impacto e manutenção sustentados.",
+      "basis": "Corpos completos e julgamentos locais independentes.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "documentary_specialization",
+      "local_status": "PASS",
+      "local_disposition_reason": "Pass is restricted to the documented static specialization stated in basis and the cited evidence sets. It does not assert satisfaction of operational portions of the original campaign obligation.",
+      "evidence_sets": [
+        "knowledge",
+        "mapping",
+        "criteria",
+        "provenance",
+        "guidance"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "CC-4",
+      "original_source_line": 162,
+      "obligation_summary": "Construção e atualização incremental funcionam ponta a ponta.",
+      "basis": "Execução de mecanismos de atualização fora da autorização documental.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "outside_authorized_operational_scope",
+      "local_status": "NOT_APPLICABLE",
+      "local_disposition_reason": "Explicitly excluded from this documentary slice by the user: product tools/code, tests, CI, runtime readers/consumers, integration and operational activation were not authorized. This is a scope exclusion, not a missing-tool or time justification.",
+      "evidence_sets": [
+        "scope"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "CC-5",
+      "original_source_line": 163,
+      "obligation_summary": "Publicação coerente, recuperação e rollback respeitam governança.",
+      "basis": "Runtime/publicação/rollback não executados.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "outside_authorized_operational_scope",
+      "local_status": "NOT_APPLICABLE",
+      "local_disposition_reason": "Explicitly excluded from this documentary slice by the user: product tools/code, tests, CI, runtime readers/consumers, integration and operational activation were not authorized. This is a scope exclusion, not a missing-tool or time justification.",
+      "evidence_sets": [
+        "scope"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "CC-6",
+      "original_source_line": 164,
+      "obligation_summary": "Economia é aplicada e o run reconciliado segundo garantia do adapter.",
+      "basis": "Uso/custo do provedor não expostos; somente despachos/retornos observáveis registrados.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "unproved_economics",
+      "local_status": "HOLD",
+      "local_disposition_reason": "Provider tokens, cost, hidden physical attempts and economic guarantees were not exposed. Unknown values are retained as unknown; no zero, budget compliance or complete economic reconciliation is asserted.",
+      "evidence_sets": [
+        "scope",
+        "provenance"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "CC-7",
+      "original_source_line": 165,
+      "obligation_summary": "Compatibilidade, superfícies geradas e obrigações históricas têm disposição.",
+      "basis": "Cada fonte mantém natureza/limites; contexto histórico não amplia escopo.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "documentary_specialization",
+      "local_status": "PASS",
+      "local_disposition_reason": "Pass is restricted to the documented static specialization stated in basis and the cited evidence sets. It does not assert satisfaction of operational portions of the original campaign obligation.",
+      "evidence_sets": [
+        "knowledge",
+        "mapping",
+        "criteria",
+        "provenance",
+        "guidance"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "SC-1",
+      "original_source_line": 169,
+      "obligation_summary": "Consumidor passa casos reservados sem descoberta de fonte.",
+      "basis": "Não houve avaliação de consumidor Atlas-only.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "outside_authorized_operational_scope",
+      "local_status": "NOT_APPLICABLE",
+      "local_disposition_reason": "Explicitly excluded from this documentary slice by the user: product tools/code, tests, CI, runtime readers/consumers, integration and operational activation were not authorized. This is a scope exclusion, not a missing-tool or time justification.",
+      "evidence_sets": [
+        "scope"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "SC-2",
+      "original_source_line": 170,
+      "obligation_summary": "Consumo real respeita limites de leitura/contexto.",
+      "basis": "Não houve leitura pelo runtime nem medição de consumo.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "outside_authorized_operational_scope",
+      "local_status": "NOT_APPLICABLE",
+      "local_disposition_reason": "Explicitly excluded from this documentary slice by the user: product tools/code, tests, CI, runtime readers/consumers, integration and operational activation were not authorized. This is a scope exclusion, not a missing-tool or time justification.",
+      "evidence_sets": [
+        "scope"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "SC-3",
+      "original_source_line": 171,
+      "obligation_summary": "Incrementalidade preserva independência e reconcilia impactos.",
+      "basis": "Não houve execução de invalidação/rebuild.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "outside_authorized_operational_scope",
+      "local_status": "NOT_APPLICABLE",
+      "local_disposition_reason": "Explicitly excluded from this documentary slice by the user: product tools/code, tests, CI, runtime readers/consumers, integration and operational activation were not authorized. This is a scope exclusion, not a missing-tool or time justification.",
+      "evidence_sets": [
+        "scope"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "SC-4",
+      "original_source_line": 172,
+      "obligation_summary": "Economia real por fase é reportada e permanece no envelope.",
+      "basis": "Não há medições do provedor; ausência não recebe valor zero nem economia estimada.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "unproved_economics",
+      "local_status": "HOLD",
+      "local_disposition_reason": "Provider tokens, cost, hidden physical attempts and economic guarantees were not exposed. Unknown values are retained as unknown; no zero, budget compliance or complete economic reconciliation is asserted.",
+      "evidence_sets": [
+        "scope",
+        "provenance"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "SC-5",
+      "original_source_line": 173,
+      "obligation_summary": "Leituras coerentes recusam os estados inválidos especificados.",
+      "basis": "Não houve execução de leitores/gates Atlas.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "outside_authorized_operational_scope",
+      "local_status": "NOT_APPLICABLE",
+      "local_disposition_reason": "Explicitly excluded from this documentary slice by the user: product tools/code, tests, CI, runtime readers/consumers, integration and operational activation were not authorized. This is a scope exclusion, not a missing-tool or time justification.",
+      "evidence_sets": [
+        "scope"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "QS-1",
+      "original_source_line": 180,
+      "obligation_summary": "Fidelidade e rótulos epistêmicos adequados.",
+      "basis": "Fatos das fontes, interpretação e lacunas separados e revisados.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "documentary_specialization",
+      "local_status": "PASS",
+      "local_disposition_reason": "Pass is restricted to the documented static specialization stated in basis and the cited evidence sets. It does not assert satisfaction of operational portions of the original campaign obligation.",
+      "evidence_sets": [
+        "knowledge",
+        "mapping",
+        "criteria",
+        "provenance"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "QS-2",
+      "original_source_line": 181,
+      "obligation_summary": "Utilidade operacional de orientação concisa e consulta focada.",
+      "basis": "Ownership/manutenção documentais, sem alegar execução dos procedimentos.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "documentary_specialization",
+      "local_status": "PASS",
+      "local_disposition_reason": "Pass is restricted to the documented static specialization stated in basis and the cited evidence sets. It does not assert satisfaction of operational portions of the original campaign obligation.",
+      "evidence_sets": [
+        "knowledge",
+        "mapping",
+        "criteria",
+        "provenance",
+        "guidance"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "QS-3",
+      "original_source_line": 182,
+      "obligation_summary": "Simplicidade e ausência de mecanismos sem necessidade demonstrada.",
+      "basis": "Pacote de transporte e Markdown; nenhum framework/store implementado.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "documentary_specialization",
+      "local_status": "PASS",
+      "local_disposition_reason": "Pass is restricted to the documented static specialization stated in basis and the cited evidence sets. It does not assert satisfaction of operational portions of the original campaign obligation.",
+      "evidence_sets": [
+        "knowledge",
+        "mapping",
+        "criteria",
+        "provenance"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "QS-4",
+      "original_source_line": 183,
+      "obligation_summary": "Disciplina de engenharia, persistência, limites e segredos.",
+      "basis": "Escrita documental isolada e revisão de privacidade; produto intocado.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "documentary_specialization",
+      "local_status": "PASS",
+      "local_disposition_reason": "Pass is restricted to the documented static specialization stated in basis and the cited evidence sets. It does not assert satisfaction of operational portions of the original campaign obligation.",
+      "evidence_sets": [
+        "knowledge",
+        "mapping",
+        "criteria",
+        "provenance"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "QS-5",
+      "original_source_line": 184,
+      "obligation_summary": "Evidência real, revisão limitada e escopo de prova explícito.",
+      "basis": "Dupla fixa, fontes decisivas e deltas; controles de produto não executados.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "documentary_specialization",
+      "local_status": "PASS",
+      "local_disposition_reason": "Pass is restricted to the documented static specialization stated in basis and the cited evidence sets. It does not assert satisfaction of operational portions of the original campaign obligation.",
+      "evidence_sets": [
+        "knowledge",
+        "mapping",
+        "criteria",
+        "provenance"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "QS-6",
+      "original_source_line": 185,
+      "obligation_summary": "Evidência focada, reuso e contabilidade honesta.",
+      "basis": "Mesmos juízes e partes inalteradas reutilizadas; sem métricas de economia inventadas.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "documentary_specialization",
+      "local_status": "PASS",
+      "local_disposition_reason": "Pass is restricted to the documented static specialization stated in basis and the cited evidence sets. It does not assert satisfaction of operational portions of the original campaign obligation.",
+      "evidence_sets": [
+        "knowledge",
+        "mapping",
+        "criteria",
+        "provenance"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "DOD-1",
+      "original_source_line": 223,
+      "obligation_summary": "Critérios têm evidência/disposição, sem aprovação inferida.",
+      "basis": "Matriz de 50 IDs com limitações e complemento global explícito.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "documentary_specialization",
+      "local_status": "PASS",
+      "local_disposition_reason": "Pass is restricted to the documented static specialization stated in basis and the cited evidence sets. It does not assert satisfaction of operational portions of the original campaign obligation.",
+      "evidence_sets": [
+        "knowledge",
+        "mapping",
+        "criteria",
+        "provenance"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "DOD-2",
+      "original_source_line": 224,
+      "obligation_summary": "Invariantes e qualidade revistos; controles rejeitam defeitos onde aplicável.",
+      "basis": "Parcela documental revisada; controles de runtime/CI fora desta autorização.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "documentary_specialization",
+      "local_status": "PASS",
+      "local_disposition_reason": "Pass is restricted to the documented static specialization stated in basis and the cited evidence sets. It does not assert satisfaction of operational portions of the original campaign obligation.",
+      "evidence_sets": [
+        "knowledge",
+        "mapping",
+        "criteria",
+        "provenance"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "DOD-3",
+      "original_source_line": 225,
+      "obligation_summary": "Consumidores reais e ciclo completo de atualização/publicação/recuperação verificados.",
+      "basis": "Não autorizado nesta fatia estática.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "outside_authorized_operational_scope",
+      "local_status": "NOT_APPLICABLE",
+      "local_disposition_reason": "Explicitly excluded from this documentary slice by the user: product tools/code, tests, CI, runtime readers/consumers, integration and operational activation were not authorized. This is a scope exclusion, not a missing-tool or time justification.",
+      "evidence_sets": [
+        "scope"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "DOD-4",
+      "original_source_line": 226,
+      "obligation_summary": "Testes/typechecks/gates remotos e épico integrado reconciliados.",
+      "basis": "Execução expressamente proibida; não registrar gates verdes.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "outside_authorized_operational_scope",
+      "local_status": "NOT_APPLICABLE",
+      "local_disposition_reason": "Explicitly excluded from this documentary slice by the user: product tools/code, tests, CI, runtime readers/consumers, integration and operational activation were not authorized. This is a scope exclusion, not a missing-tool or time justification.",
+      "evidence_sets": [
+        "scope"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "DOD-5",
+      "original_source_line": 227,
+      "obligation_summary": "Uso/custo real e requisições não resolvidas reconciliados.",
+      "basis": "Despachos visíveis registrados; uso/custo/tentativas internas UNKNOWN.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "unproved_economics",
+      "local_status": "HOLD",
+      "local_disposition_reason": "Provider tokens, cost, hidden physical attempts and economic guarantees were not exposed. Unknown values are retained as unknown; no zero, budget compliance or complete economic reconciliation is asserted.",
+      "evidence_sets": [
+        "scope",
+        "provenance"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "DOD-6",
+      "original_source_line": 228,
+      "obligation_summary": "Orientações, migração, rollback e obrigações históricas corretos e revistos.",
+      "basis": "Orientação documental revisada; nenhuma migração/limpeza/landing executada.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "documentary_specialization",
+      "local_status": "PASS",
+      "local_disposition_reason": "Pass is restricted to the documented static specialization stated in basis and the cited evidence sets. It does not assert satisfaction of operational portions of the original campaign obligation.",
+      "evidence_sets": [
+        "knowledge",
+        "mapping",
+        "criteria",
+        "provenance",
+        "guidance"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    },
+    {
+      "id": "DOD-7",
+      "original_source_line": 229,
+      "obligation_summary": "Aceite do dono e integração governada registrados em estados próprios.",
+      "basis": "Candidato para coordenação principal e sua dupla; nenhum aceite global autoatribuído.",
+      "global_status": "DEFERRED_TO_INTEGRATION",
+      "global_owner": "coordenação principal; S4 for common runtime capabilities where applicable",
+      "local_scope_class": "outside_authorized_operational_scope",
+      "local_status": "NOT_APPLICABLE",
+      "local_disposition_reason": "Explicitly excluded from this documentary slice by the user: product tools/code, tests, CI, runtime readers/consumers, integration and operational activation were not authorized. This is a scope exclusion, not a missing-tool or time justification.",
+      "evidence_sets": [
+        "scope"
+      ],
+      "original_global_obligation_status": "NOT_CLAIMED_AS_SATISFIED"
+    }
+  ],
+  "global_integration": {
+    "owner": "coordenação principal",
+    "status": "DEFERRED_TO_INTEGRATION"
+  }
+}

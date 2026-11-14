@@ -1,152 +1,108 @@
-# Platform 200 — trabalho e limites
+# Platform 200 — execução documental, decisões e limites
 
-Execução local: `e37ea00f-15fd-4383-b64c-4448ac34c9fe`.
+O conjunto de **200 fontes** foi inventariado, lido e coberto por **21 corpos L2**, aceitos nas versões exatas pelos mesmos dois juízes independentes. O manifesto L1, a síntese de relações L3 e três entradas L4 também têm aceite documental local: **26 artefatos de conhecimento**. O alcance da revisão da transformação final de metadados e sua publicação estão vinculados no [handoff](handoff.json). O resultado permanece candidato à verificação própria da coordenação.
 
-- Repositório: `gustavomhss/hugr-orchestra`.
-- Branch: `genesis-external-platform-remainder`, criada exatamente no baseline.
-- Fonte imutável: `1cde2ff7a71bcf7aecb5d030917b577165135d38`; árvore `a522a53e5f046f1758151b0f558531bbded04592`.
-- Prompt S5: `d2d985c28947c7f984a36b07ad34ede3d4d2d6b4`.
-- Skill/protocolo: `ee2521a5b966bd505cc95bd1c733e09e12f33531`.
-- Escopo: a lista explícita de 200 caminhos desta sessão, reproduzida em [manifest.json](manifest.json). A população ampla da S5 serve de contexto, não amplia este escopo.
+## Identidade e fronteira
 
-## Inventário e fila finita
+| Campo | Vínculo |
+| --- | --- |
+| Repositório | `gustavomhss/hugr-orchestra` |
+| Branch exclusiva | `genesis-external-platform-remainder` |
+| Execução local | `e37ea00f-15fd-4383-b64c-4448ac34c9fe`; identificador gerado pela orquestradora, sem alegação de ID do host |
+| Fontes | `1cde2ff7a71bcf7aecb5d030917b577165135d38` |
+| Árvore das fontes | `a522a53e5f046f1758151b0f558531bbded04592` |
+| Prompt original S5 | `d2d985c28947c7f984a36b07ad34ede3d4d2d6b4` |
+| Skill e referências | `ee2521a5b966bd505cc95bd1c733e09e12f33531` |
+| Prefixo de escrita | `modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-platform-200/` |
 
-Os 200 caminhos foram resolvidos em árvores Git completas, sem truncamento. Há 200 caminhos únicos e 200 blobs; nenhum ausente, duplicado ou tipo divergente. Somam 2.295.653 bytes. Fontes de apoio não contam na população.
+A lista explícita do usuário é a autoridade dos 200 caminhos, sem expansão de prefixos. Os pins de prompt e protocolo não substituem o baseline das fontes. O escopo amplo da S5 contextualiza a campanha; este pedido especializa sua população, branch, destino e modalidade estática. Omni e guardrails continuam com os respectivos responsáveis. O estudo dos workflows Omni expressamente listados não confere ownership da implementação Omni.
 
-| Lote | População | Responsabilidade | Estado |
-| --- | ---: | --- | --- |
-| A | 54 | Distribuição, Nix, CI e contratos de distribuição | PRODUZIDO; REVISÃO PENDENTE |
-| B | 69 | Tooling, scripts, patches e lockfile | PRODUZIDO; REVISÃO PENDENTE |
-| C | 77 | Arquitetura, guias, configs e visual QA | PRODUZIDO; REVISÃO PENDENTE |
+## Fila inteira e autoria
 
-Três subagentes distintos receberam autoria disjunta em paralelo. A principal mantém exclusividade de escrita remota. A revisão usará dois novos juízes, independentes da autoria, com o mesmo pacote e correções vinculadas; nenhum autor julga o próprio lote.
+| Lote | Fontes primárias | Corpos | Responsabilidade | Disposição atual |
+| --- | ---: | ---: | --- | --- |
+| A | 54 | 6 | Distribuição, Nix, CI e contratos de distribuição | Aceite documental do par |
+| B | 69 | 7 | Tooling, scripts, patches e lockfile | Aceite documental do par |
+| C | 77 | 8 | Arquitetura, guias, configurações e visual QA | Aceite documental do par |
+| Total | 200 | 21 | União disjunta dos três lotes | Sem primárias pendentes |
 
-## Critérios e custódia
+Três subagentes reais receberam lotes disjuntos e trabalharam em paralelo. A orquestradora foi a única escritora remota. Dois outros contextos foram criados para julgar, separados da autoria, e os mesmos IDs foram preservados nas correções. Cada juiz aplica todos os critérios pertinentes; nenhum autor julga o próprio lote. Separação de contexto e instrução não é alegação de isolamento por permissões do sistema ou diversidade de modelo.
 
-[criteria.md](criteria.md) foi congelado antes dos despachos. Os casos reservados foram fixados e hashados antes da autoria e não entregues aos autores. Sua referência opaca real é `libfile_fde3_f-03b718ea6e448191a9b6abd41aa64940_3a07899f8a4481918837fffaac5a42fc`, SHA-256 `b217c44958074cc0ed19c22fe2b931716d10ca2d944c8ab9d3fdbb45d77cb42c`. A gravação em custódia pessoal foi confirmada. Esta referência identifica conteúdo privado; não concede acesso público. Separação dos autores é de contexto e instrução, sem alegação de isolamento por permissões de sistema operacional.
+O [manifesto](manifest.json) resolve exatamente cada path em blob Git e registra SHA-256, bytes e lote. Os mapas [A](coverage-a.json), [B](coverage-b.json) e [C](coverage-c.json) ligam cada ID uma única vez ao corpo exato e à disposição. A síntese [relations](bodies/relations.md) distingue tipos de relação; [ownership](bodies/ownership.md) e [maintenance](bodies/maintenance.md) orientam responsabilidade funcional e reconsideração de mudanças; a [entrada](README.md) permite consulta progressiva. O [índice nativo](native-package.json) conserva autoria, corpos, fontes, dependências reais e referências privadas opacas.
 
-O repositório público conterá apenas conhecimento próprio, manifesto, vínculos, disposições e resumo de revisão. Oráculos, pareceres integrais, registros privados de execução e capturas não pertencem aos commits.
+## Leitura e identidade verificável
 
-## Limites desta entrega
+As fontes somam **2.295.653 bytes e 33.484 linhas**. Há 198 leituras textuais integrais, uma constatação integral do blob vazio `.sh` e uma travessia estrutural completa de `bun.lock`, com 1.921 registros de pacotes. A leitura estrutural não equivale à revisão do código de cada dependência, ao download/conferência de tarballs ou à aplicação de patches. Fontes de apoio não acrescentam entradas à população.
 
-O pedido desta sessão autoriza estudo estático e candidato documental. Não autoriza executar testes, ferramentas/código do produto, workflows, consumidores Atlas, gates de runtime, PR/merge/deploy ou integração da campanha. Comandos presentes nas fontes são dados estudados. Documentos e testes podem descrever comportamento ou runs anteriores, sem provar execução nesta sessão.
+Os digests populacionais usam UTF-8 e ordenação pelos bytes UTF-8 de cada path, com LF após cada registro. Para caminhos, o registro é `path + LF`. Para a árvore, é `mode + TAB + object_type + TAB + git_blob_sha + TAB + path + LF`.
 
-L1–L2 precedem a aceitação de L3–L4. O candidato final deve manter lacunas e achados abertos, se houver. Nenhum status deste pacote representa PASS global, binding Atlas, proteção de branch observada, manutenção executada ou aceite da coordenação.
+- Paths: `87b27e391d91a7371e5266ecbda370576032b7e125467d0a744b0585dea40e6f`.
+- Registros da árvore: `49d641fae826831e1af5c9f162df8a1d0b2564ba16f07825142088de9f39a1c0`.
+- Modos: 197 blobs `100644` e três `100755`.
 
-Uso de tokens, custo e tentativas físicas internas do provedor: UNKNOWN. A publicação observará HEAD/parent/tree reais e lease sem força, com conferência remota. O estado atual é IN_PROGRESS; este checkpoint não é conclusão.
+Hashing, parsing e junções dos próprios artefatos conferem identidade e consistência interna. São distintos da leitura semântica dos autores e do exame dos corpos e excertos decisivos pelos juízes. Os 200 aceites de fonte significam cobertura pelos corpos examinados pela dupla; não afirmam releitura integral de todos os bytes originais pelos juízes.
 
+## Construção cumulativa e critérios
 
-## Checkpoint de autoria A
+[criteria.md](criteria.md) foi fixado antes da autoria de fontes; [layer-criteria.md](layer-criteria.md) foi fixado antes do despacho da síntese integrada final. Os casos reservados têm custódia real e não foram entregues aos autores. Propostas privadas anteriores permaneceram rascunhos, sem aprovação retroativa.
 
-Os seis corpos `bodies/a-01.md` a `bodies/a-06.md` contêm seções para 54/54 fontes de A, lidas integralmente pelo autor. Os bytes capturados foram conferidos independentemente pela principal. Os corpos ainda não têm aceite do par de juízes. B e C continuam em autoria; o mapa consolidado de cobertura e os vínculos de revisão serão incorporados ao pacote final.
+A liberação da nova autoria L3 foi registrada em `2026-11-13T22:54:36.240489+00:00`, depois de aceitos L1, os 21 L2 e a premissa de apoio pertinente. L4 só foi liberada após aceite do L3; a entrada final depende das unidades aceitas de ownership e manutenção. Dependência de construção é registrada quando o predecessor realmente sustentou a produção; links de navegação não são convertidos em causalidade.
 
-## Checkpoint de autoria B
+A [matriz de critérios](criteria-matrix.json) preserva os 50 IDs normativos e separa a especialização documental, as exclusões operacionais impostas pelo usuário e as obrigações sem comprovação. PASS documental em uma linha não fecha a obrigação global original. Falta de ferramenta ou tempo não é usada como motivo de N/A.
 
-Os sete corpos `bodies/b-01.md` a `bodies/b-07.md` cobrem as 69 fontes de B. A leitura do lockfile é estrutural integral, com todos os registros percorridos; não afirma julgamento semântico individual de cada dependência. As demais 68 fontes foram lidas integralmente como texto. `coverage-a.json` agora preserva o mapeamento das 54 fontes de A. Nenhum desses estados substitui o juízo independente.
+## Correções e observações preservadas
 
-## Checkpoint de autoria completa
+O [resumo de revisão](review-summary.json) vincula as versões correntes e as cadeias de decisões. Não há achado semântico obrigatório aberto nos 26 corpos aceitos. Entre as correções materiais, foram delimitadas a validação de argumentos do bundle ([A-03](bodies/a-03.md)), a comparação de ambiente e o estado Git final ([A-04](bodies/a-04.md)), o destino lexical de R5 ([B-02](bodies/b-02.md)), as asserções das fixtures ([B-03](bodies/b-03.md)) e a direção ancestral→descendente do replay ([B-04](bodies/b-04.md)).
 
-Os 200 caminhos têm seção semântica própria e mapeamento em `coverage-a.json`, `coverage-b.json` e `coverage-c.json`. Há 198 leituras textuais integrais, uma constatação integral de blob vazio (`.sh`, zero bytes/linhas) e uma leitura estrutural integral de `bun.lock`. Não se inventa comportamento para o blob vazio nem semântica individual das dependências do lockfile. A verificação documental conferiu todos os bindings e faixas possíveis, sem erro. Revisão independente permanece em andamento; produção completa não é aceitação.
+As revisões de [C-06](bodies/c-06.md) e [C-07](bodies/c-07.md) preservam App Dock como módulo lógico distribuído por pacotes. O complemento integral da fonte confirmou que o alias MCP Dock já estava no card RD-DESKTOP; a deficiência era a sustentação do recorte anterior. [C-08](bodies/c-08.md) distingue `re.S`/DOTALL e o contrato de IDs únicos da limitação do predicado truthy do exemplo. As correções e seus pareceres anteriores permanecem no histórico; foram alterações de conhecimento, sem modificação do produto.
 
-## Checkpoint de revisão A-01
+Ocorrências de transporte literal foram registradas e corrigidas com os mesmos juízes. Retorno de envio sem erro, reconhecimento de disponibilidade textual e decisão semântica são fatos separados. A rechecagem das 68 correspondências compactadas de patches confirmou os recortes preservados; as transcrições incorretas recebidas em uma rodada foram substituídas e não usadas como prova final.
 
-O par independente aceitou documentalmente o corpo `bodies/a-01.md`, com 11 fontes, após complemento explícito sobre método de leitura e critérios herdados. O corpo permaneceu inalterado. As duas pendências documentais do primeiro juiz foram resolvidas; o segundo confirmou sua decisão com o mesmo complemento. Os outros 189 caminhos continuam pendentes de revisão. [review-summary.json](review-summary.json) registra o alcance exato; não contém os pareceres privados.
+Permanecem 12 observações não bloqueantes em L2, sem ampliar a barra fixa de aceite:
 
-Os critérios da síntese integrada final estão congelados em [layer-criteria.md](layer-criteria.md), antes do respectivo despacho. Casos adicionais têm custódia real `libfile_fde3_f-f844acdc30508191a34085a0e5416579_3a07899f8a4481918837fffaac5a42fc`, versão 0, SHA-256 `7ec1eca16ccc6bffc8a078d46e8414bed529ea516168b3f81dfbef29d5fa8b44`. Aplicam-se à nova síntese integrada, sem aprovação retroativa de propostas privadas anteriores. A liberação de L3–L4 continua condicionada aos predecessores aceitos.
+| Unidade | ID | Precisão ou limite conservado |
+| --- | --- | --- |
+| A-05 | A05-O1 | Skip limita-se às consultas isDirectory selecionadas; o readdir inicial de bunRoot ainda pode falhar. |
+| A-05 | A05-O2 | A seleção de owners verifica o endereço inicial da seção dentro de PT_LOAD gravável, não toda a extensão da seção. |
+| B-04 | B04-O1 | A dispensa Windows é inferida dos targets textuais dos builds, não do sistema operacional do runner. |
+| B-04 | B04-O2 | Resolve-Path exige paths resolvidos; não há filtro explícito de arquivo regular no predicado local. |
+| B-05 | B05-O1 | O caso pré-importação usa commit sintético sem pai e sem domínio; a fixture não prova cronologia/ancestralidade. |
+| B-05 | B05-O2 | A assertion verifica round-trip JSON em memória e baseUrl absoluto; não grava configuração em diretório externo. |
+| B-06 | B06-O1 | O caminho externo providerMetadata.anthropic permanece inferência delimitada; hunk mostra somente inclusão do campo. |
+| B-06 | B06-O2 | Opção promptCacheKey aparece também nas declarações; comentário de roteamento aparece nos hunks de fonte e JavaScript distribuído. |
+| C-04 | C04-O1 | Actions in guide versus Checks (formerly Actions) in changelog; optional integrated-navigation precision; existing source summaries faithful. |
+| C-06 | C06-O1 | A invariância formal do gerador abrange specifiers retidos e enumerados pela política full após filtros; R6b sobre imports é obrigação distinta. |
+| C-06 | C06-O2 | 25 grupos canônicos não equivale à identidade de todos os caminhos /api/*; projectCopy é exceção de caminho documentada. |
+| C-08 | C08-O1 | A fonte filtra mensagens de usuário ainda ausentes de state.delivered; o corpo resume como mensagens ainda não entregues. Precisão não bloqueante. |
 
-## Checkpoint de revisão: 43 fontes
+As camadas integradas conservam 3 observações não bloqueantes distintas, registradas pelos mesmos juízes:
 
-A-01 (11), A-02 (12), B-01 (8) e C-01 (12) têm aceite documental dos mesmos dois juízes, sem dupla contagem. As duas solicitações específicas de suporte do lockfile foram resolvidas com consulta da travessia preservada e nova conferência documental dos mesmos bytes. Não houve instalação, download de pacotes ou execução de produto. A grafia `modelos.dev` foi corrigida para `models.dev` em uma frase de P038; a versão anterior foi preservada e o delta passou pelos dois juízes. Uma sugestão opcional de precisão sobre indicadores de emulação permanece registrada, sem bloquear o aceite local.
+| Unidade | ID | Precisão ou limite conservado |
+| --- | --- | --- |
+| relations | L3-O1 | A tabela isolada de predecessores não explicita o pin da premissa de apoio; o vínculo exato já está no envelope de evidência. |
+| relations | L3-O2 | Em R2, manifests resume o manifesto raiz usado pelo cache P019; não deve ser lido como cobertura de todos os manifestos de workspace. |
+| maintenance | L4-M-O1 | A atualização das explicações e a submissão do delta ao mesmo par estão nos critérios referidos; explicitá-las no fechamento do roteiro facilitaria a continuidade. Observação opcional, sem alteração da barra. |
 
-A custódia privada dos registros originais dessas quatro unidades foi confirmada: referência opaca `libfile_fde3_f-37490b821af88191b1992581701f56df_3a07899f8a4481918837fffaac5a42fc`, versão 0, SHA-256 `f7a3a109b1cb8d74f9e4585a1febbc8b3aeaf52fbb79ebfb4da418d302f9d2e3`. O estado vigente de revisão fica em `review-summary.json`; os campos de disposição dos arquivos `coverage-*.json` ainda representam o checkpoint de autoria e serão reconciliados na entrega final. Restam 157 fontes para revisão dupla. Nenhuma camada L3–L4 foi promovida.
+A precisão opcional de L1 sobre a serialização dos digests está explicitada acima. Seu histórico continua identificado no resumo de revisão, sem inventar uma decisão adicional de encerramento.
 
-## Checkpoint de revisão: 81 fontes aceitas
+## Lacunas e exclusões operacionais
 
-A-01, A-02, A-03, B-01, B-02, C-01 e C-02 somam 81 fontes distintas aceitas documentalmente pela mesma dupla, nas versões exatas do resumo. Foram corrigidas duas ampliações materiais de garantia: a validação de argumentos do bundle não exige conteúdo não vazio dos arquivos, e R5 modela um destino lexical sem provar confinamento da resolução real. Também foram incorporadas precisões sobre R11, sinais de emulação e dependências Turbo. O suporte de três linhas sobre portabilidade Windows foi completado. Cada alteração voltou ao par; o histórico anterior foi preservado.
+O pedido autoriza conhecimento estático. Não foram executados código, testes, ferramentas ou CI do produto, workflows, importadores, leitores/consumidores Atlas, manutenção operacional ou integração da campanha. Não houve PR, merge ou deploy. Comandos, asserções de testes e runs históricos nas fontes foram tratados como dados. Commits usam `[skip ci]`; isto não é uma afirmação de inspeção de toda atividade automática do provedor.
 
-A-04 acrescenta oito fontes examinadas por ambos, mas permanece com duas correções materiais em revisão: admissão por variável de ambiente não autentica a origem da execução, e sujeira no status Git final não equivale a detecção de toda mutação. Assim, 89 fontes foram examinadas por ambos e 81 estão aceitas; 111 ainda aguardam o primeiro par de pareceres. O total não aceito é 119, sem dupla contagem.
+O lockfile tem 489.909 bytes. O ramo de leitura de conteúdo do observador no baseline retorna `unavailable` acima de 256.000 bytes; a comparação é inferência estática revisada, sem observação executada. O arquivo permanece entre as 200 fontes. Isso não estabelece admissibilidade das outras fontes, versão de input, hash CAS, receipt, importação ou binding de runtime. A forma de referência privada opaca exigida pela publicação pública também não teve compatibilidade comprovada com um adapter.
 
-Registros privados deste checkpoint têm custódia real `libfile_fde3_f-338e795aa89c8191b147fe8afe609589_3a07899f8a4481918837fffaac5a42fc`, versão 0, SHA-256 `1a42022d89cbdeb1246ffe068698dcfcf43434cc545656c39a90dc8a18863916`. O identificador não torna os pareceres públicos. As camadas integradas L3–L4 continuam sem promoção. Nenhuma execução operacional foi acrescentada.
+Evidência histórica, presença de artefato, reuso de previous-pass ou carregamento de saídas não provam execução atual, GUI/OAuth, disponibilidade de archives, proteção de branch ou consumidores. Papéis de manutenção são funcionais: não foram inventados aprovadores humanos ou permissões atuais. A coordenação principal fará sua própria verificação antes de integrar; esta fatia não recebe PASS global nem o estado amplo original S5 DELIVERY_COMPLETE.
 
-## Checkpoint de revisão: 110 fontes aceitas
+## Proveniência, custódia e uso
 
-As dez unidades A-01–A-04, B-01–B-02 e C-01–C-04 somam 110 fontes distintas aceitas documentalmente nas versões atuais. A dupla reavaliou e encerrou as correções de P109/P112; os dois grupos de contratos e guias de C passaram na mesma versão, sem achados materiais. Permanece uma sugestão não bloqueante para a síntese de navegação: distinguir Actions no guia de Checks (anteriormente Actions) no changelog, sem inferir a interface instalada.
+Custódia privada confirmada da base de corpos e registros: `libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc`, versão 0, SHA-256 `11f9447ab1b2656f9aa5e459d45824ece75d1f2f158624167c6a1898fc79a96c`. As referências opacas resolvem para registros existentes no índice privado. Não tornam públicos oráculos, pareceres integrais, ledgers, capturas de sessão, segredos ou caminhos locais. Os registros posteriores de avaliação dos metadados e publicação são vinculados no handoff e na verificação posterior, sem alterar a identidade desta custódia.
 
-B-03 tem 12 fontes examinadas pelos dois, com correções documentais localizadas em preparação/revisão: separação de casos da fixture de inventário e alinhamento do nome exportMissing. O resultado é 122 fontes examinadas por ambos, 110 aceitas, 78 aguardando primeiro par e 90 ainda não aceitas. Os demais corpos continuam produzidos; não são aceitos por extrapolação.
+Há limitações reais de preservação: os textos iniciais de criação/ativação dos juízes não estão salvos separadamente como transcrições originais do provedor. IDs reais, pacotes literais de avaliação, decisões visíveis, pedidos posteriores, correções e incidentes de transporte foram preservados. Também não estão preservados separadamente, nos registros atualmente disponíveis, o recibo original da API de criação da branch e os argumentos completos das primeiras 12 atualizações. Não se fabricou original ausente; representações normalizadas ou cópias visíveis conservam essa qualificação. Essas limitações ficam HOLD na matriz correspondente.
 
-Custódia privada confirmada dos registros deste checkpoint: `libfile_fde3_f-720a2dca401081919a454ae2fb4bd084_3a07899f8a4481918837fffaac5a42fc`, versão 0, SHA-256 `400a8d51ae61a0cec3bd119257a0712b3b3c3787dff0c417c4b062741bbc6b70`. Os próximos transportes são limitados à capacidade de leitura do par: texto literal completo e evidência decisiva permanecem requisitos. Não houve promoção de L3–L4 nem execução de produto.
+Tokens, custo e tentativas físicas internas do provedor permanecem UNKNOWN. Não foram zerados, estimados como recibos, nem transformados em prova de garantia econômica. A custódia é de registros visíveis, sem alegação de transcript integral assinado.
 
+## Git e recuperação
 
-## Checkpoint do delta B-03
+A verificação remota preservada demonstra uma cadeia linear de 16 commits, cada um com um único parent, cujo primeiro parent é o baseline, e escritas restritas ao prefixo autorizado. Para os quatro checkpoints mais recentes, estão preservados os pedidos exatos de atualização condicional com `expected_sha` e `force: false`, além das releituras bem-sucedidas. A criação inicial da branch no baseline permanece registrada no relato contemporâneo de execução da orquestradora; o recibo original dessa chamada e os argumentos completos das primeiras 12 atualizações não estão preservados separadamente nos registros atualmente disponíveis. A ancestralidade atual não prova o valor histórico de `force` em todas as atualizações. Os checkpoints anteriores permanecem recuperáveis. O último checkpoint antes da selagem final registrado aqui é `1362b9383dbf9edff981bcf2812fcd3909d6ff3e`; ele não substitui a revisão de artefatos que ocorreram depois dele.
 
-O corpo B-03 foi corrigido em cinco linhas e o mapa B em dois campos: os casos de readers esparsos e revisão inválida foram separados, a ordem de validação foi atribuída à implementação e o identificador foi alinhado a `exportMissing`. O corpo corrente tem SHA-256 `da129131222a1f111877c1c9eedc8ce130c9373d4f5251b4075f8d35281005d4`. O primeiro juiz aceitou o delta e o segundo está em avaliação; este checkpoint ainda mantém 110 fontes aceitas pela dupla. A versão anterior e seus pareceres permanecem preservados.
-
-
-## Checkpoint de revisão: 122 fontes
-
-A mesma dupla aceitou o delta de B-03 e os dois campos de cobertura correspondentes. Os achados obrigatórios e opcionais dessa unidade foram encerrados, sem alterar a população nem executar produto. São 122 fontes aceitas nos corpos atuais; 78 aguardam aceite da dupla. A tentativa interrompida de um juiz não recebeu resultado presumido: o mesmo contexto foi retomado e emitiu o parecer efetivo. A retransmissão de texto após compactação é registrada separadamente da leitura das fontes e da decisão semântica.
-
-Custódia privada real: referência opaca `libfile_fde3_f-11d3446a1e508191bb7d852a4d0e6bc9_3a07899f8a4481918837fffaac5a42fc`, versão 0, SHA-256 `c0253078b7d887057c7cf24dba76d7eb2aa8fa2dfde0b02201b42a1de40b20cd`. Ela preserva os registros visíveis disponíveis e distingue conclusões de atividades ainda pendentes; não é recibo assinado do provedor, prova de runtime ou conclusão global.
-
-
-## Checkpoint de revisão: 153 fontes
-
-Os mesmos dois juízes aceitaram A-05, A-06, B-04 e C-05, além das onze unidades já aceitas. O total vigente é 153 fontes distintas aceitas, em quinze corpos L2; 47 fontes permanecem em seis unidades pendentes. Em A-06, a alternativa de completion sem system foi incluída e as fronteiras das comparações/erros foram delimitadas. Em B-04, a direção do replay first-parent foi corrigida para ancestral→descendente. Os deltas foram reavaliados pela mesma dupla e os achados obrigatórios dessas unidades estão encerrados. Cinco observações opcionais permanecem registradas em três unidades, sem ampliar a barra de aceite.
-
-Custódia privada real dos registros disponíveis: `libfile_fde3_f-2a7935e2614c819189ceab2bba744e79_3a07899f8a4481918837fffaac5a42fc`, versão 0, SHA-256 `4c801a4a2a887424d0bf96d6e3c73a1f868b0a4e83c47287a0baa3a1a10cb716`. Os originais distinguem leitura da autora, conferência mecânica e exame dos juízes, incluindo retransmissões e continuidade literal. O manifesto L1 tem transporte em preparação/revisão; L3–L4 continuam sem liberação. Nenhum teste, ferramenta ou código do produto, CI ou consumidor foi executado.
-
-## Checkpoint: 164 fontes e manifesto L1
-
-A dupla fixa concluiu B-05 sem alteração de corpo; são 16 unidades L2 e 164 fontes primárias aceitas documentalmente. O manifesto L1 também recebeu os dois pareceres, sem acrescentar fontes à contagem. Permanecem B-06, B-07, C-06, C-07 e C-08 antes da liberação da síntese final L3–L4.
-
-B-07 recebeu suporte literal complementar do bloco patchedDependencies de bun.lock, com 19 entradas e sem vínculo para o patch standard-openapi. Um juiz encerrou essa pendência; a unidade ainda aguarda a dupla. Em B-06, o segundo juiz informou indisponibilidade literal das mensagens apesar de retornos de envio sem erro; a retransmissão usa confirmação por parte. Esses estados não foram contados como aprovação.
-
-A observação estática de ownership-input.ts, no baseline, identifica limite de 256.000 bytes para leitura de arquivo. bun.lock tem 489.909 bytes e continua no escopo de 200: seu transporte a esse observador permanece uma lacuna de integração, sem prova de remoção nem tentativa operacional nesta sessão. A fonte de apoio não é entrada adicional da fatia.
-
-## Checkpoint: 184 fontes aceitas
-
-B-06 e B-07 completaram o aceite dos mesmos dois juízes, sem mudança de corpo. São 18 unidades L2 e 184 fontes primárias aceitas; restam 16 fontes em C-06, C-07 e C-08. O manifesto L1 permanece aceito pela dupla. C-06 recebeu uma correção de cardinalidade: App Dock é um módulo lógico distribuído por três pacotes. A condição de recusa de prefixação node: também foi explicitada. O primeiro juiz fechou os dois apontamentos; o segundo está recebendo a versão completa corrigida. C-07 tem um parecer favorável e C-08 está em transporte; nenhum desses estados parciais foi convertido em aceite da dupla.
-
-Duas transcrições de evidência de P171 foram corrigidas e preservadas. A comparação dos bytes capturados confirmou as 68 correspondências de compactação dos patches B-06/B-07; o erro estava nas cópias enviadas, não na fonte ou no corpo. O mesmo juiz recebeu o complemento correto e manteve o aceite. Retorno de envio sem erro, confirmação literal e decisão semântica permanecem registros distintos.
-
-Custódia privada confirmada: `libfile_fde3_f-85c3faf588908191ade2fc93b8e0d583_3a07899f8a4481918837fffaac5a42fc`, versão 0, SHA-256 `3ca1fb301cc0a4f267fb83ebdaf33e16a1807203f8d4d796e240e5b70055c4cc`. A síntese final L3–L4 ainda não foi liberada. Esta publicação é checkpoint documental, sem execução operacional ou conclusão global.
-
-## Checkpoint: 194 fontes aceitas
-
-C-06 e C-07 completaram a revisão da mesma dupla nas versões atuais. São 20 unidades L2 e 194 fontes primárias aceitas. Em C-07, o complemento da linha integral P083 L561 confirmou que MCP Dock já aparece no card RD-DESKTOP: a redação passou a ligar explicitamente esse alias a App Dock/app-dock, preservando as autoridades distintas dos RPCs. O achado era insuficiência do recorte apresentado, sem demonstrar inexistência do alias na fonte. A anotação local sobre a remoção de server-protocol também foi localizada corretamente. Os apontamentos dessas duas alterações foram encerrados pelos mesmos juízes.
-
-C-08 permanece pendente de decisão do segundo juiz. A versão aqui preservada corrige re.S para DOTALL e separa a exigência documental de IDs únicos da limitação do predicado truthy no exemplo; o primeiro juiz aceitou essas alterações. Os cinco segmentos literais do envelope atual foram efetivamente enviados ao segundo juiz, sem presumir seu resultado. Nenhum desses seis caminhos entrou no total de 194 por extrapolação.
-
-A conferência mecânica cruzada confirmou 200 junções únicas entre manifesto, mapas de cobertura e seções com ID/path/blob nos 21 corpos. Ela verifica correspondência interna, sem substituir juízo semântico ou nova conferência dos blobs remotos. O apoio sobre o limite do leitor de inputs recebeu um parecer; sua revisão dupla e a autoria integrada continuam pendentes. A leitura de bun.lock permanece estrutural completa e a fonte vazia .sh conserva sua disposição própria.
-
-Custódia privada confirmada dos registros disponíveis: `libfile_fde3_f-63fe6843880c8191b4e4e66c3777fad2_3a07899f8a4481918837fffaac5a42fc`, versão 0, SHA-256 `f7649444fd58fa1ebe4af105302e2c3b285d98fec17ca69da208f780f16e2fd9`. Há uma limitação de proveniência explícita: os textos iniciais de criação/ativação dos juízes não estão preservados separadamente como transcrições originais do provedor. Pacotes literais, decisões visíveis, pedidos posteriores, correções e identidades reais estão preservados; nenhum original ausente foi fabricado. Tokens, custos e tentativas internas continuam desconhecidos.
-
-
-## Checkpoint: 200 fontes aceitas em L2
-
-C-08 concluiu o aceite integrado do mesmo segundo juiz, cobrindo P084–P089 e as relações do lote. O primeiro juiz já havia aceitado o corpo corrigido. São 21 corpos L2 e 200 primárias distintas aceitas documentalmente, além do manifesto L1 aceito sem nova contagem. Nenhum achado obrigatório permanece aberto nessas unidades. C08-O1 conserva uma precisão opcional: o filtro da fonte refere-se a mensagens de usuário ainda não entregues.
-
-A retomada de J2 conservou o mesmo ID, corpo e critérios. Após o host informar inicialização pendente, uma checagem explícita confirmou a disponibilidade literal das cinco partes e de todos os excertos. Avaliações delimitadas foram seguidas de uma decisão real sobre a coerência do conjunto; nenhuma tentativa sem resposta ou simples confirmação de transporte foi contada como parecer.
-
-Os três mapas de cobertura foram reconciliados para explicitar cada disposição e o vínculo do corpo corrente. O manifesto continua autoridade para ID, path e blob; as explicações e evidências semânticas permanecem nos corpos. A junção mecânica confirmou 200 IDs únicos com hashes corretos. Essa transformação de metadados ainda requer a revisão independente final, separada do aceite dos corpos. As versões detalhadas anteriores foram preservadas no histórico.
-
-Custódia privada confirmada dos registros disponíveis: `libfile_fde3_f-c8dabdfdcfa08191936e7dee79cc646d_3a07899f8a4481918837fffaac5a42fc`, versão 0, SHA-256 `f3a8fe31d3cd62769d3804f5436de25403cad12999b30e5794987669afc4b445`. Ambos os juízes receberam os critérios e os casos congelados para a nova síntese. A premissa de apoio aguarda o segundo julgamento antes da liberação de L3; L4 depende de L3. Este marco fecha a cobertura documental de fontes, sem declarar encerrada a entrega ou provar runtime.
-
-
-## Checkpoint: relações e orientações L4 aceitas
-
-O mesmo par aceitou as versões exatas de [relations](bodies/relations.md), [ownership](bodies/ownership.md) e [maintenance](bodies/maintenance.md), sem achados obrigatórios abertos. São 25 artefatos de conhecimento aceitos: manifesto L1, 21 corpos L2, uma síntese L3 e duas orientações L4. A população continua sendo 200 primárias distintas, sem acrescentar apoios ou versões de revisão.
-
-As relações L3 foram produzidas após aceite dos predecessores; ownership e manutenção foram produzidos depois do aceite real de L3. A entrada README foi liberada para nova autoria somente após os dois L4 receberem os dois pareceres e ainda aguarda sua avaliação. A transformação nativa, a matriz e os registros finais de entrega também continuam pendentes de revisão específica. Os mapas compactos A/B/C, por sua vez, já receberam a avaliação independente dos mesmos juízes nos bytes preservados neste histórico.
-
-| Corpo integrado | SHA-256 aceito | Observações opcionais |
-| --- | --- | ---: |
-| relations | `61901fbd8504aa98215999cd35dbfde64f31c68e950db894c23e05fd48a343e4` | 2 |
-| ownership | `b89ea2748dfe188f2fc8e81ae065ac9104c15853c1ca6cd01c68687c8a8f26e9` | 0 |
-| maintenance | `c622e3fb0406c66e8ce57ed33f9cd683acd501f2044ca6683388759860365c91` | 1 |
-
-As três observações não bloqueantes permanecem preservadas: o pin da premissa de apoio está no envelope, sem repetição na tabela isolada de L3; a referência a manifests em R2 tem o alcance do manifesto raiz de P019; manutenção remete aos critérios para revisão dos deltas pelo mesmo par, sem repetir essa ação no fechamento. Não se alterou a barra de aceite por polimento opcional.
-
-Uma tentativa de transporte de manutenção foi abortada antes do despacho. A suspensão, a tentativa abortada e a nova tentativa autorizada ficaram em registros distintos. A revisão só foi contada após o destinatário confirmar disponibilidade literal e emitir decisão. O ajuste das chaves privadas de navegação de ownership não mudou o corpo; sua transformação nativa terá avaliação própria.
-
-Custódia privada confirmada do snapshot de registros até este marco: `libfile_fde3_f-66f84c1a63188191a919883fb6d6f944_3a07899f8a4481918837fffaac5a42fc`, versão 0, SHA-256 `b0cb65e9ae0b9fa453daa2f010215544fe7db2e607ff742278bba9502f98fca7`. O snapshot não afirma aceite de uma entrada ainda em autoria ou de metadados futuros. Este checkpoint preserva conhecimento documental revisado, sem executar produto, testes, CI, runtime, consumidores, manutenção operacional ou integração global.
+O commit de payload contém os bytes finais; o commit de selagem acrescenta `handoff.json`, cujo `artifact_revision` aponta ao payload já existente e não ao próprio hash. A atualização usa o HEAD observado como lease, com `force: false`. As releituras remotas conferem referências, parent, árvore e bytes. Os SHAs concretos da entrega ficam no handoff e na resposta de entrega; nenhum SHA futuro é inventado neste arquivo.

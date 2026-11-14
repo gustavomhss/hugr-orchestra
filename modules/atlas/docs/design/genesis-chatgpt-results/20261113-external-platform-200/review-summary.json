@@ -1,27 +1,68 @@
 {
-  "schema": "platform-200-public-review-summary/v1",
+  "schema": "platform-200-public-review-summary/v2",
   "execution_id": "e37ea00f-15fd-4383-b64c-4448ac34c9fe",
   "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
-  "state": "IN_PROGRESS",
+  "state": "DOCUMENTARY_BODY_SET_REVIEWED",
   "method": "Two new persistent judge contexts, independent from authorship; same literal bodies, decisive source excerpts, frozen criteria and private cases; no judge tools or product execution.",
   "review_identity": "J1 fidelity/authority and J2 completeness/utility; both apply all applicable criteria. Real handles and original decisions retained privately. No claim of model diversity or OS-enforced context isolation.",
   "counts": {
     "inventoried": 200,
+    "read": 200,
     "produced": 200,
     "reviewed_by_both": 200,
     "documentary_pair_accepted": 200,
-    "reviewed_with_material_findings": 0,
+    "current_units_with_open_material_findings": 0,
     "awaiting_initial_pair_review": 0,
-    "pending_acceptance": 0
+    "pending_acceptance": 0,
+    "knowledge_artifacts": 26,
+    "L1": 1,
+    "L2": 21,
+    "L3": 1,
+    "L4": 3
   },
   "accepted_units": [
     {
       "id": "A-01",
+      "layer": 2,
       "body": {
         "path": "bodies/a-01.md",
         "sha256": "9ba73c99cdc6c0c05e5cac895320a463d9468b7e4d778ef81486dfd8b83f656e",
         "byte_length": 11752
       },
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "original_decision_refs": [
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "23b68e2b58a9b1d45e2231979f6a726e6a11ab69609de4ad0898e71a3be3edc8",
+          "record_byte_length": 5420
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "47c1eb4806b2e0bbadf440a06149a397b0c603fd9e48505cc64a651eb72860a2",
+          "record_byte_length": 3403
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "a95953df14b31027f53cffedbba6c7d04ab3d3bf26d8e8925e3c61edd92d0142",
+          "record_byte_length": 4193
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "7cdf346df41fcb04497fffa20d2aa7901a9d974b7719bf6098b3664a4efccc23",
+          "record_byte_length": 5174
+        }
+      ],
+      "resolved_findings": [
+        "Método de leitura integral e critérios herdados completados; corpo inalterado."
+      ],
+      "optional_open": [],
       "source_ids": [
         "P014",
         "P015",
@@ -34,23 +75,50 @@
         "P023",
         "P024",
         "P042"
-      ],
-      "judges": {
-        "J1": "DOCUMENTARY_LOCAL_PASS",
-        "J2": "DOCUMENTARY_LOCAL_PASS"
-      },
-      "resolved_findings": [
-        "Método de leitura integral e critérios herdados completados; corpo inalterado."
-      ],
-      "optional_open": []
+      ]
     },
     {
       "id": "A-02",
+      "layer": 2,
       "body": {
         "path": "bodies/a-02.md",
         "sha256": "49417c5c197630418170ec3bf46d3e39aac2d6104ba1b9f5a756c7038cab179b",
         "byte_length": 15164
       },
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "original_decision_refs": [
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "7f028066ea5b02f348f43d4c87cd2de01525ef8b5af18381909c16481927ee93",
+          "record_byte_length": 6112
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "39bce115c9e4e295900b52d17074316be9c88a76dfacdd097e43fe664f933cb8",
+          "record_byte_length": 6442
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "90fed5d4b83e9a26044fed621764225cbdefabbc3be0326a985785549d5b96d5",
+          "record_byte_length": 5041
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "a261509d8b3ba9c4012fa5586ee4bf8148ffe65c092bcb65af0581d7562442aa",
+          "record_byte_length": 4738
+        }
+      ],
+      "resolved_findings": [
+        "Identificador corrigido para models.dev e delta revisto pela mesma dupla."
+      ],
+      "optional_open": [],
       "source_ids": [
         "P022",
         "P026",
@@ -64,23 +132,50 @@
         "P038",
         "P040",
         "P041"
-      ],
-      "judges": {
-        "J1": "DOCUMENTARY_LOCAL_PASS",
-        "J2": "DOCUMENTARY_LOCAL_PASS"
-      },
-      "resolved_findings": [
-        "Identificador corrigido para models.dev e delta revisto pela mesma dupla."
-      ],
-      "optional_open": []
+      ]
     },
     {
       "id": "A-03",
+      "layer": 2,
       "body": {
         "path": "bodies/a-03.md",
         "sha256": "690a9b65eae04a4cba640384e5c699c0654472c057f854622feb7148168d42aa",
         "byte_length": 11786
       },
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "original_decision_refs": [
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "ed373e6726586f071fc7039ec7c0b62a083ddfc436057312ff9fbf94fe6269c1",
+          "record_byte_length": 6281
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "13486bea28929c6b5e479482c43528ec50c53f9b0a2c3c4d540f01f9f4dbd9ea",
+          "record_byte_length": 2850
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "7f8f913b7e344b02960946e8747fc2aa47141246da820c7e84d93661e2779649",
+          "record_byte_length": 5441
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "13ce0df66b992a69a738eb07349bb761fe510de6eb8d6977e63d0b4eb644c6c5",
+          "record_byte_length": 2520
+        }
+      ],
+      "resolved_findings": [
+        "Lista de argumentos não vazia e unicidade textual separadas de tamanho do arquivo e identidade física."
+      ],
+      "optional_open": [],
       "source_ids": [
         "P028",
         "P025",
@@ -88,23 +183,50 @@
         "P036",
         "P037",
         "P039"
-      ],
-      "judges": {
-        "J1": "DOCUMENTARY_LOCAL_PASS",
-        "J2": "DOCUMENTARY_LOCAL_PASS"
-      },
-      "resolved_findings": [
-        "Lista de argumentos não vazia e unicidade textual separadas de tamanho do arquivo e identidade física."
-      ],
-      "optional_open": []
+      ]
     },
     {
       "id": "A-04",
+      "layer": 2,
       "body": {
         "path": "bodies/a-04.md",
         "sha256": "ce0b80571ed5985df188996f604dfb5fe8cea91e128fe1c6fa9257fc0f8c271d",
         "byte_length": 13244
       },
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "original_decision_refs": [
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "91c134942404be8875a690b7e3f38079b1322db2a83965f34e1c7f72978f5a66",
+          "record_byte_length": 9499
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "e1fe70d477b304b876b73f363abe6f98be97c2cefadb284126222042fd0350b6",
+          "record_byte_length": 6223
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "7807febb2eb3b2d98e0a5926abf0ea9fd231f2c715333ee94c2a9073d2019dc8",
+          "record_byte_length": 9757
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "018c17f5317cfe63622c8afee4d7f30cd0234d8e83f49683d1645b050c234ce1",
+          "record_byte_length": 8722
+        }
+      ],
+      "resolved_findings": [
+        "Condição GITHUB_ACTIONS separada de autenticação; trap limitado ao estado Git final; stripping/ELF descritos com seu alcance específico."
+      ],
+      "optional_open": [],
       "source_ids": [
         "P104",
         "P105",
@@ -114,23 +236,67 @@
         "P110",
         "P111",
         "P112"
-      ],
-      "judges": {
-        "J1": "DOCUMENTARY_LOCAL_PASS",
-        "J2": "DOCUMENTARY_LOCAL_PASS"
-      },
-      "resolved_findings": [
-        "Condição GITHUB_ACTIONS separada de autenticação; trap limitado ao estado Git final; stripping/ELF descritos com seu alcance específico."
-      ],
-      "optional_open": []
+      ]
     },
     {
       "id": "A-05",
+      "layer": 2,
       "body": {
         "path": "bodies/a-05.md",
         "sha256": "09a1ad18a45f4c4d23f7c03d05839cd48860f98370af6e6624fd2ec0df771993",
         "byte_length": 14098
       },
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "original_decision_refs": [
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "e50346fa7f1fa2b4e9d2cca8f228e11fa4201747ae4b0e3d1b3ab1cfbca2ccfc",
+          "record_byte_length": 17081
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "0f6264f9ed3aea485c82fa1dca38787cff6479a97d12c153be3d22cb10661e70",
+          "record_byte_length": 5525
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "1513131444de346775701803b48326f6e0638499ada1dc611a62d8b4d0f83dac",
+          "record_byte_length": 9822
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "f07e54e22ade8d99440c6e31588c5c25e174a4deb898d8bba2c00a3b5237c81a",
+          "record_byte_length": 9001
+        }
+      ],
+      "resolved_findings": [
+        "Texto literal retransmitido após compactação; a mesma dupla aceitou o corpo inalterado."
+      ],
+      "optional_open": [
+        {
+          "id": "A05-O1",
+          "source_ids": [
+            "P114"
+          ],
+          "summary": "Skip limita-se às consultas isDirectory selecionadas; o readdir inicial de bunRoot ainda pode falhar.",
+          "blocking": false
+        },
+        {
+          "id": "A05-O2",
+          "source_ids": [
+            "P119"
+          ],
+          "summary": "A seleção de owners verifica o endereço inicial da seção dentro de PT_LOAD gravável, não toda a extensão da seção.",
+          "blocking": false
+        }
+      ],
       "source_ids": [
         "P114",
         "P117",
@@ -143,26 +309,56 @@
         "P127",
         "P128",
         "P129"
-      ],
-      "judges": {
-        "J1": "DOCUMENTARY_LOCAL_PASS",
-        "J2": "DOCUMENTARY_LOCAL_PASS"
-      },
-      "resolved_findings": [
-        "Texto literal retransmitido após compactação; a mesma dupla aceitou o corpo inalterado."
-      ],
-      "optional_open": [
-        "Skip limita-se às consultas isDirectory selecionadas; o readdir inicial de bunRoot ainda pode falhar.",
-        "A seleção de owners verifica o endereço inicial da seção dentro de PT_LOAD gravável, não toda a extensão da seção."
       ]
     },
     {
       "id": "A-06",
+      "layer": 2,
       "body": {
         "path": "bodies/a-06.md",
         "sha256": "da137d618577bc50764ce6a168bf9c05ae03f5bfbcd3836b90acaa3d3db1f079",
         "byte_length": 11721
       },
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "original_decision_refs": [
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "e50346fa7f1fa2b4e9d2cca8f228e11fa4201747ae4b0e3d1b3ab1cfbca2ccfc",
+          "record_byte_length": 17081
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "0f6264f9ed3aea485c82fa1dca38787cff6479a97d12c153be3d22cb10661e70",
+          "record_byte_length": 5525
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "e564d26442394a0a6de1b0e8c7d80ee8126b802230fd9826c662ab605150e8b7",
+          "record_byte_length": 9675
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "1ae194aa7d9ee0e6a3ff678913b0e23eb758711e7b5300e8525d518d9ac55d9a",
+          "record_byte_length": 5939
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "79ebe207906d743d2bed7c9ed168491a52a8ba4142d2ffa12294467d093e5bbb",
+          "record_byte_length": 7701
+        }
+      ],
+      "resolved_findings": [
+        "Admissão de completion sem system incluída; comparações de ambiente, dependencyInputs e alcance do handler JSON delimitados."
+      ],
+      "optional_open": [],
       "source_ids": [
         "P113",
         "P115",
@@ -170,23 +366,69 @@
         "P121",
         "P122",
         "P126"
-      ],
-      "judges": {
-        "J1": "DOCUMENTARY_LOCAL_PASS",
-        "J2": "DOCUMENTARY_LOCAL_PASS"
-      },
-      "resolved_findings": [
-        "Admissão de completion sem system incluída; comparações de ambiente, dependencyInputs e alcance do handler JSON delimitados."
-      ],
-      "optional_open": []
+      ]
     },
     {
       "id": "B-01",
+      "layer": 2,
       "body": {
         "path": "bodies/b-01.md",
         "sha256": "5764f08a06d60c22db605de956a09afab1786af86e126d81be4fc81496d7f1a5",
         "byte_length": 16465
       },
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "original_decision_refs": [
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "b25cb8f10acc53f74f69c13f3a36da4ed68df0d7df64e1ed8cfc66c90107a0b7",
+          "record_byte_length": 6911
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "8c7f0c8f21a0cbe50983154d4b31ad5f3da7c8eea3c130158c71f91edf6645cb",
+          "record_byte_length": 6190
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "90fed5d4b83e9a26044fed621764225cbdefabbc3be0326a985785549d5b96d5",
+          "record_byte_length": 5041
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "a261509d8b3ba9c4012fa5586ee4bf8148ffe65c092bcb65af0581d7562442aa",
+          "record_byte_length": 4738
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "624bebf920f721bd3a8ff58a1e060ed00aa62ab7eec2c05fbdabfa092333e080",
+          "record_byte_length": 8384
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "3fefe2b63341a2e8bf8a05d7a1580ea951c18a2f17c8cdc05b1346bbc599976f",
+          "record_byte_length": 5464
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "91c134942404be8875a690b7e3f38079b1322db2a83965f34e1c7f72978f5a66",
+          "record_byte_length": 9499
+        }
+      ],
+      "resolved_findings": [
+        "Consulta integral de keys/resolutions e resultados de sintaxe de integridade fornecidos.",
+        "Descrição dos indicadores qemu/gcompat limitada ao que o código procura."
+      ],
+      "optional_open": [],
       "source_ids": [
         "P072",
         "P130",
@@ -196,24 +438,56 @@
         "P136",
         "P137",
         "P152"
-      ],
-      "judges": {
-        "J1": "DOCUMENTARY_LOCAL_PASS",
-        "J2": "DOCUMENTARY_LOCAL_PASS"
-      },
-      "resolved_findings": [
-        "Consulta integral de keys/resolutions e resultados de sintaxe de integridade fornecidos.",
-        "Descrição dos indicadores qemu/gcompat limitada ao que o código procura."
-      ],
-      "optional_open": []
+      ]
     },
     {
       "id": "B-02",
+      "layer": 2,
       "body": {
         "path": "bodies/b-02.md",
         "sha256": "f37a19f2ad44d31ac325a9d61cb0b383564bf743f3d530b5b30661dc5d2f076f",
         "byte_length": 19564
       },
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "original_decision_refs": [
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "56f5296bfb2f6a959fb3e7e4d66f09757da4d3f3775ff24d105f06b0db1fe9ab",
+          "record_byte_length": 6695
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "946199acf16e422dc18dbdd23e6497ef0691eadc59bcb54c231738ec22f76c08",
+          "record_byte_length": 5421
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "624bebf920f721bd3a8ff58a1e060ed00aa62ab7eec2c05fbdabfa092333e080",
+          "record_byte_length": 8384
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "3fefe2b63341a2e8bf8a05d7a1580ea951c18a2f17c8cdc05b1346bbc599976f",
+          "record_byte_length": 5464
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "91c134942404be8875a690b7e3f38079b1322db2a83965f34e1c7f72978f5a66",
+          "record_byte_length": 9499
+        }
+      ],
+      "resolved_findings": [
+        "R5 descrito como modelo lexical, sem garantia de confinamento real; alcance intrapacote de R11 explicitado."
+      ],
+      "optional_open": [],
       "source_ids": [
         "P187",
         "P188",
@@ -221,23 +495,51 @@
         "P177",
         "P189",
         "P144"
-      ],
-      "judges": {
-        "J1": "DOCUMENTARY_LOCAL_PASS",
-        "J2": "DOCUMENTARY_LOCAL_PASS"
-      },
-      "resolved_findings": [
-        "R5 descrito como modelo lexical, sem garantia de confinamento real; alcance intrapacote de R11 explicitado."
-      ],
-      "optional_open": []
+      ]
     },
     {
       "id": "B-03",
+      "layer": 2,
       "body": {
         "path": "bodies/b-03.md",
         "sha256": "da129131222a1f111877c1c9eedc8ce130c9373d4f5251b4075f8d35281005d4",
         "byte_length": 22051
       },
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "original_decision_refs": [
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "7807febb2eb3b2d98e0a5926abf0ea9fd231f2c715333ee94c2a9073d2019dc8",
+          "record_byte_length": 9757
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "018c17f5317cfe63622c8afee4d7f30cd0234d8e83f49683d1645b050c234ce1",
+          "record_byte_length": 8722
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "fae690f2732ac0edb5194270f213775724cc29f97155df5ac3bec6abf06a3cf9",
+          "record_byte_length": 8435
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "d147d00924ed678a75509a6c87cb5392d6586adb0d13dc46212cd16729d6f618",
+          "record_byte_length": 6735
+        }
+      ],
+      "resolved_findings": [
+        "Casos de inventário separados; assertions seletivas distinguidas de resolução da árvore pela implementação.",
+        "Identificador exportMissing corrigido no corpo e em dois campos correlatos de cobertura."
+      ],
+      "optional_open": [],
       "source_ids": [
         "P138",
         "P174",
@@ -251,24 +553,61 @@
         "P191",
         "P145",
         "P195"
-      ],
-      "judges": {
-        "J1": "DOCUMENTARY_LOCAL_PASS",
-        "J2": "DOCUMENTARY_LOCAL_PASS"
-      },
-      "resolved_findings": [
-        "Casos de inventário separados; assertions seletivas distinguidas de resolução da árvore pela implementação.",
-        "Identificador exportMissing corrigido no corpo e em dois campos correlatos de cobertura."
-      ],
-      "optional_open": []
+      ]
     },
     {
       "id": "B-04",
+      "layer": 2,
       "body": {
         "path": "bodies/b-04.md",
         "sha256": "3ff6b3065e3e73a7500ecd60781ac8bee401dcd898c106183d7a596f6faf1429",
         "byte_length": 20052
       },
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "original_decision_refs": [
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "e8e3bf881a1ff467eea06758ec439b2141d22ca390047ad6a6daf4fa5de2c48a",
+          "record_byte_length": 8918
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "27e610e4395cc40c701fdb6474a0d75ec5ae1a51e4c412cd2139aa0e0fde9eeb",
+          "record_byte_length": 8771
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "1654e93a792675e4ce7583fde6e8fe5469718822152dc7f4a24dececd971aae4",
+          "record_byte_length": 3961
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "79ebe207906d743d2bed7c9ed168491a52a8ba4142d2ffa12294467d093e5bbb",
+          "record_byte_length": 7701
+        }
+      ],
+      "resolved_findings": [
+        "Direção do replay first-parent corrigida para ancestral→descendente; código e envelope original preservados."
+      ],
+      "optional_open": [
+        {
+          "id": "B04-O1",
+          "summary": "A dispensa Windows é inferida dos targets textuais dos builds, não do sistema operacional do runner.",
+          "blocking": false
+        },
+        {
+          "id": "B04-O2",
+          "summary": "Resolve-Path exige paths resolvidos; não há filtro explícito de arquivo regular no predicado local.",
+          "blocking": false
+        }
+      ],
       "source_ids": [
         "P133",
         "P146",
@@ -282,26 +621,53 @@
         "P194",
         "P196",
         "P198"
-      ],
-      "judges": {
-        "J1": "DOCUMENTARY_LOCAL_PASS",
-        "J2": "DOCUMENTARY_LOCAL_PASS"
-      },
-      "resolved_findings": [
-        "Direção do replay first-parent corrigida para ancestral→descendente; código e envelope original preservados."
-      ],
-      "optional_open": [
-        "A dispensa Windows é inferida dos targets textuais dos builds, não do sistema operacional do runner.",
-        "Resolve-Path exige paths resolvidos; não há filtro explícito de arquivo regular no predicado local."
       ]
     },
     {
       "id": "B-05",
+      "layer": 2,
       "body": {
         "path": "bodies/b-05.md",
         "sha256": "b64091ecd3f1a90507a46ebb3d6597d6a7f88695ca42ea8b69b3f171cc9b1246",
         "byte_length": 14622
       },
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "original_decision_refs": [
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "db0342057ad3dc2dde14ec5a6dfc7693627e34693e6ad7c31a4174fe7c9e4aa3",
+          "record_byte_length": 7093
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "0383df895f0f625398c1215de4c338a305dd40be939bbe6e6e7588188f7fb5ba",
+          "record_byte_length": 6552
+        }
+      ],
+      "resolved_findings": [],
+      "optional_open": [
+        {
+          "id": "B05-O1",
+          "source_ids": [
+            "P139"
+          ],
+          "summary": "O caso pré-importação usa commit sintético sem pai e sem domínio; a fixture não prova cronologia/ancestralidade.",
+          "blocking": false
+        },
+        {
+          "id": "B05-O2",
+          "source_ids": [
+            "P151"
+          ],
+          "summary": "A assertion verifica round-trip JSON em memória e baseUrl absoluto; não grava configuração em diretório externo.",
+          "blocking": false
+        }
+      ],
       "source_ids": [
         "P134",
         "P139",
@@ -314,24 +680,62 @@
         "P179",
         "P180",
         "P197"
-      ],
-      "judges": {
-        "J1": "DOCUMENTARY_LOCAL_PASS",
-        "J2": "DOCUMENTARY_LOCAL_PASS"
-      },
-      "resolved_findings": [],
-      "optional_open": [
-        "O caso pré-importação usa commit sintético sem pai e sem domínio; a fixture não prova cronologia/ancestralidade.",
-        "A assertion verifica round-trip JSON em memória e baseUrl absoluto; não grava configuração em diretório externo."
       ]
     },
     {
       "id": "B-06",
+      "layer": 2,
       "body": {
         "path": "bodies/b-06.md",
         "sha256": "08b1000e5f8222e36200858ebc42d7217c07f0e0c38423af4ff4c96ede0a2311",
         "byte_length": 14318
       },
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "original_decision_refs": [
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "b5a3daf167fd05ef02b3456437d03f297f0016adeb966cf53a0d1a97a8884abb",
+          "record_byte_length": 6818
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "c9fdab0ae944a78773f9ec9da17d9a81b492ae472d4293319c857449ff49bfbe",
+          "record_byte_length": 2289
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "11a195b57228c38cfbefaa46b9d7f7ce6c63f528e6e5d26381e00de08b4a72d9",
+          "record_byte_length": 6145
+        }
+      ],
+      "resolved_findings": [],
+      "optional_open": [
+        {
+          "id": "B06-O1",
+          "aliases": [
+            "B06-J1-O1"
+          ],
+          "source_ids": [
+            "P154"
+          ],
+          "summary": "O caminho externo providerMetadata.anthropic permanece inferência delimitada; hunk mostra somente inclusão do campo.",
+          "blocking": false
+        },
+        {
+          "id": "B06-O2",
+          "source_ids": [
+            "P159"
+          ],
+          "summary": "Opção promptCacheKey aparece também nas declarações; comentário de roteamento aparece nos hunks de fonte e JavaScript distribuído.",
+          "blocking": false
+        }
+      ],
       "source_ids": [
         "P153",
         "P154",
@@ -340,24 +744,51 @@
         "P157",
         "P158",
         "P159"
-      ],
-      "judges": {
-        "J1": "DOCUMENTARY_LOCAL_PASS",
-        "J2": "DOCUMENTARY_LOCAL_PASS"
-      },
-      "resolved_findings": [],
-      "optional_open": [
-        "O caminho externo providerMetadata.anthropic permanece inferência delimitada; hunk mostra somente inclusão do campo.",
-        "Opção promptCacheKey aparece também nas declarações; comentário de roteamento aparece nos hunks de fonte e JavaScript distribuído."
       ]
     },
     {
       "id": "B-07",
+      "layer": 2,
       "body": {
         "path": "bodies/b-07.md",
         "sha256": "5737f501719e35a5cf4149c5fbdd41cd9e547fd3c7a6feaaedb678960d0392da",
         "byte_length": 17165
       },
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "original_decision_refs": [
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "1df46a91ffed8536b18ab19d23b8f41947adc483c3a44b7755f6e9539db5c7ef",
+          "record_byte_length": 6727
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "7ea62229b2fb3aa0e1777fa0c15fc3038007b1c7eda40778f3b6f69985128b11",
+          "record_byte_length": 3202
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "db5e30f9a197d274f1b38ac3accb9974292707fe012d754d3943bcc6f4a24f8f",
+          "record_byte_length": 7891
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "455c23480ac57c289411d623b82be3a6d034d7daf637b1e009a4537c389af934",
+          "record_byte_length": 3239
+        }
+      ],
+      "resolved_findings": [
+        "Ausência do patch P166 entre os 19 patchedDependencies vinculada ao recorte integral do lockfile, sem inferir ausência de qualquer aplicador.",
+        "Duas ocorrências de transcrição de P171 foram preservadas e corrigidas; o corpo permaneceu inalterado e o mesmo J2 manteve o aceite documental."
+      ],
+      "optional_open": [],
       "source_ids": [
         "P160",
         "P161",
@@ -372,24 +803,36 @@
         "P170",
         "P171",
         "P172"
-      ],
-      "judges": {
-        "J1": "DOCUMENTARY_LOCAL_PASS",
-        "J2": "DOCUMENTARY_LOCAL_PASS"
-      },
-      "resolved_findings": [
-        "Ausência do patch P166 entre os 19 patchedDependencies vinculada ao recorte integral do lockfile, sem inferir ausência de qualquer aplicador.",
-        "Duas ocorrências de transcrição de P171 foram preservadas e corrigidas; o corpo permaneceu inalterado e o mesmo J2 manteve o aceite documental."
-      ],
-      "optional_open": []
+      ]
     },
     {
       "id": "C-01",
+      "layer": 2,
       "body": {
         "path": "bodies/c-01.md",
         "sha256": "41b285b84fbbf72693cbeb0784f70352636ec6f55bf952be4d5693edae9f3048",
         "byte_length": 16779
       },
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "original_decision_refs": [
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "a54dddcef3a05d682a27ac4da6fd138cd3b8a881e93f7d18935cf835591917dd",
+          "record_byte_length": 5636
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "a46b5dae2e947a715decd0fd54fbd69f6717a727ef9db6c2233bbfca9b4a5bd0",
+          "record_byte_length": 5136
+        }
+      ],
+      "resolved_findings": [],
+      "optional_open": [],
       "source_ids": [
         "P001",
         "P002",
@@ -403,21 +846,51 @@
         "P010",
         "P055",
         "P056"
-      ],
-      "judges": {
-        "J1": "DOCUMENTARY_LOCAL_PASS",
-        "J2": "DOCUMENTARY_LOCAL_PASS"
-      },
-      "resolved_findings": [],
-      "optional_open": []
+      ]
     },
     {
       "id": "C-02",
+      "layer": 2,
       "body": {
         "path": "bodies/c-02.md",
         "sha256": "655e1baa50f43e5ede9a134f4107f39eab8e72fadacee30e2aa3ad1037513bc7",
         "byte_length": 21932
       },
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "original_decision_refs": [
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "db1e3e0f0398c5401f8f055f30eef84d67a2066868ab8a3e838341f4bcd583c7",
+          "record_byte_length": 6564
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "bc02c095b21233428979e95974112c1d1ff98ab5b4aed2e8952bf08e520008b0",
+          "record_byte_length": 5235
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "09965d42df7f160f72823e682d729bcb57dbf4e44f0d2f4103bebca0bda5d2b7",
+          "record_byte_length": 7216
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "cce9b9bd8c065aedf3d956ac552beabc51b35e2b9a735b25c883e58dbb7e4560",
+          "record_byte_length": 3916
+        }
+      ],
+      "resolved_findings": [
+        "Três linhas de suporte de portabilidade acrescentadas.",
+        "Dependências de ui/session-ui no Turbo distinguidas dos sete testes enumerados."
+      ],
+      "optional_open": [],
       "source_ids": [
         "P011",
         "P012",
@@ -445,24 +918,36 @@
         "P073",
         "P199",
         "P200"
-      ],
-      "judges": {
-        "J1": "DOCUMENTARY_LOCAL_PASS",
-        "J2": "DOCUMENTARY_LOCAL_PASS"
-      },
-      "resolved_findings": [
-        "Três linhas de suporte de portabilidade acrescentadas.",
-        "Dependências de ui/session-ui no Turbo distinguidas dos sete testes enumerados."
-      ],
-      "optional_open": []
+      ]
     },
     {
       "id": "C-03",
+      "layer": 2,
       "body": {
         "path": "bodies/c-03.md",
         "sha256": "ba2d13b34111d4b32922c3177e80032c9d39e274d19634015a7e4455b1cfdd30",
         "byte_length": 21393
       },
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "original_decision_refs": [
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "55ec7a1096b39a06e102663b2dbc411480f2bbfa7f1e6d21700074fe5f144021",
+          "record_byte_length": 11726
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "dd0ce7c1b50c4698be470757355a45f50b39290845b7adb1d522f28196eb414f",
+          "record_byte_length": 9755
+        }
+      ],
+      "resolved_findings": [],
+      "optional_open": [],
       "source_ids": [
         "P065",
         "P066",
@@ -473,21 +958,46 @@
         "P071",
         "P107",
         "P173"
-      ],
-      "judges": {
-        "J1": "DOCUMENTARY_LOCAL_PASS",
-        "J2": "DOCUMENTARY_LOCAL_PASS"
-      },
-      "resolved_findings": [],
-      "optional_open": []
+      ]
     },
     {
       "id": "C-04",
+      "layer": 2,
       "body": {
         "path": "bodies/c-04.md",
         "sha256": "87458bdd131efcec6e3f0fdc2d7bc7fdeafb00aa9222abd305f5f5049efbebc8",
         "byte_length": 16921
       },
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "original_decision_refs": [
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "55ec7a1096b39a06e102663b2dbc411480f2bbfa7f1e6d21700074fe5f144021",
+          "record_byte_length": 11726
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "dd0ce7c1b50c4698be470757355a45f50b39290845b7adb1d522f28196eb414f",
+          "record_byte_length": 9755
+        }
+      ],
+      "resolved_findings": [],
+      "optional_open": [
+        {
+          "id": "C04-O1",
+          "source_ids": [
+            "P101",
+            "P065"
+          ],
+          "summary": "Actions in guide versus Checks (formerly Actions) in changelog; optional integrated-navigation precision; existing source summaries faithful.",
+          "blocking": false
+        }
+      ],
       "source_ids": [
         "P074",
         "P093",
@@ -501,66 +1011,144 @@
         "P101",
         "P102",
         "P103"
-      ],
-      "judges": {
-        "J1": "DOCUMENTARY_LOCAL_PASS",
-        "J2": "DOCUMENTARY_LOCAL_PASS"
-      },
-      "resolved_findings": [],
-      "optional_open": [
-        "Actions in guide versus Checks (formerly Actions) in changelog; optional integrated-navigation precision; existing source summaries faithful."
       ]
     },
     {
       "id": "C-05",
+      "layer": 2,
       "body": {
         "path": "bodies/c-05.md",
         "sha256": "3595ff75ad69dc68897e40852d68b7eee70422f847818f32235a1042bbe2ecf2",
         "byte_length": 19835
       },
-      "source_ids": [
-        "P075",
-        "P092"
-      ],
       "judges": {
         "J1": "DOCUMENTARY_LOCAL_PASS",
         "J2": "DOCUMENTARY_LOCAL_PASS"
       },
+      "original_decision_refs": [
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "d8601512298626935bf831a384cab7a781d0e0baba3b7ab5715939a37b0bd8ce",
+          "record_byte_length": 7715
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "21419e5d2cbf920565221f6ce55b35d87432e88ea4daa70ca495232ce5e3864e",
+          "record_byte_length": 7828
+        }
+      ],
       "resolved_findings": [],
-      "optional_open": []
+      "optional_open": [],
+      "source_ids": [
+        "P075",
+        "P092"
+      ]
     },
     {
       "id": "C-06",
+      "layer": 2,
       "body": {
         "path": "bodies/c-06.md",
         "sha256": "aab4cb35b78d3c48673aed5ccfb7a0f55df8cc6512ecf2762efb53463f96e88a",
         "byte_length": 20149
       },
-      "source_ids": [
-        "P076",
-        "P090"
-      ],
       "judges": {
         "J1": "DOCUMENTARY_LOCAL_PASS",
         "J2": "DOCUMENTARY_LOCAL_PASS"
       },
+      "original_decision_refs": [
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "0cf97f85f06cf5be1e6509cb5db24ae5b3eafb1bc6b5b854803583f3aa4a8ace",
+          "record_byte_length": 5889
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "883d0a1b24d98e22493ad6a8efc8a6518396fc25b01ac902040a03febeb2a013",
+          "record_byte_length": 3588
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "f75c73b6a93295e16d859a046fd2217581fa6ce0df330cf34c0c42a8d9c6db92",
+          "record_byte_length": 6066
+        }
+      ],
       "resolved_findings": [
         "App Dock corrigido para um módulo lógico distribuído por três pacotes.",
         "Recusa do codemod node: com exit 2 para mock.module de builtin sem prefixo explicitada.",
         "Mesmos juízes aceitaram o corpo D1; ocorrência de aspas na transcrição de evidência foi substituída e preservada."
       ],
       "optional_open": [
-        "A invariância formal do gerador abrange specifiers retidos e enumerados pela política full após filtros; R6b sobre imports é obrigação distinta.",
-        "25 grupos canônicos não equivale à identidade de todos os caminhos /api/*; projectCopy é exceção de caminho documentada."
+        {
+          "id": "C06-O1",
+          "source_ids": [
+            "P090"
+          ],
+          "summary": "A invariância formal do gerador abrange specifiers retidos e enumerados pela política full após filtros; R6b sobre imports é obrigação distinta.",
+          "blocking": false
+        },
+        {
+          "id": "C06-O2",
+          "source_ids": [
+            "P090"
+          ],
+          "summary": "25 grupos canônicos não equivale à identidade de todos os caminhos /api/*; projectCopy é exceção de caminho documentada.",
+          "blocking": false
+        }
+      ],
+      "source_ids": [
+        "P076",
+        "P090"
       ]
     },
     {
       "id": "C-07",
+      "layer": 2,
       "body": {
         "path": "bodies/c-07.md",
         "sha256": "35ccb181c5167dd2d093f43ed7a5cdeee221a17981d24e88ad59cb980cd50bf4",
         "byte_length": 28454
       },
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "original_decision_refs": [
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "c75503ea71b35ff6e51046756ddae0eff7c5b74fc7603dbebf2d55aba923eb80",
+          "record_byte_length": 5593
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "f2de163bfdc260d91c9456b381e4c95dd6a40640ae99737bd30847aaf7f5648e",
+          "record_byte_length": 5900
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "1a5fa00b53107829b9d7a735645734f78cce495214d69a18e1177c85a9ec87bf",
+          "record_byte_length": 3469
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "aa64fe03de2588ea170efcd26a00982fff5dd9c79b921a40e3a3d92d8ae577ea",
+          "record_byte_length": 3776
+        }
+      ],
+      "resolved_findings": [
+        "O complemento integral de P083 L561 confirmou o alias MCP Dock já presente na fonte; a redação agora o liga explicitamente ao App Dock/app-dock e preserva autoridades distintas.",
+        "A anotação de remoção de server-protocol foi localizada corretamente no trecho de detecção."
+      ],
+      "optional_open": [],
       "source_ids": [
         "P077",
         "P078",
@@ -570,24 +1158,72 @@
         "P082",
         "P083",
         "P091"
-      ],
-      "judges": {
-        "J1": "DOCUMENTARY_LOCAL_PASS",
-        "J2": "DOCUMENTARY_LOCAL_PASS"
-      },
-      "resolved_findings": [
-        "O complemento integral de P083 L561 confirmou o alias MCP Dock já presente na fonte; a redação agora o liga explicitamente ao App Dock/app-dock e preserva autoridades distintas.",
-        "A anotação de remoção de server-protocol foi localizada corretamente no trecho de detecção."
-      ],
-      "optional_open": []
+      ]
     },
     {
       "id": "C-08",
+      "layer": 2,
       "body": {
         "path": "bodies/c-08.md",
         "sha256": "32bfe540290c320d5761b1535c5cb8f02adcdce57467f7bdff64f26d4e96747c",
         "byte_length": 29025
       },
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "original_decision_refs": [
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "23c835a63ff8acf27b29d669893ed574f7227ea8c61a4e33700a83ab7d0b1ff3",
+          "record_byte_length": 5796
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "a6f4e848329fc179f2b1b020be33e9424f8e1f7e529b1c2b00b6d0a157ea3ba7",
+          "record_byte_length": 3390
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "be3bd18746da4cd27866e4e8d7af72d204f8b3e92e190c3bc21e9c2ca2fe23dc",
+          "record_byte_length": 3448
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "a9de6c650efc7a921a36263829f2918ccffb446820638667e382f0ee73b84c20",
+          "record_byte_length": 3848
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "bca0e87a013004cd83b41506e34d309bc9c609c3f52b74b3a794607938e6f8d2",
+          "record_byte_length": 4055
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "c46a8265f538168fd0ba79834081dfa62617fca9d9dc3399c29e984c9d9063bf",
+          "record_byte_length": 7943
+        }
+      ],
+      "resolved_findings": [
+        "re.S descrito corretamente como DOTALL; unicidade pretendida de IDs separada da limitação truthy no exemplo.",
+        "Mesmo J2 confirmou disponibilidade integral após retomada, examinou seções e emitiu decisão integrada real; tentativas sem resposta não receberam resultado presumido."
+      ],
+      "optional_open": [
+        {
+          "id": "C08-O1",
+          "source_ids": [
+            "P085"
+          ],
+          "summary": "A fonte filtra mensagens de usuário ainda ausentes de state.delivered; o corpo resume como mensagens ainda não entregues. Precisão não bloqueante.",
+          "blocking": false
+        }
+      ],
       "source_ids": [
         "P084",
         "P085",
@@ -595,34 +1231,347 @@
         "P087",
         "P088",
         "P089"
-      ],
-      "judges": {
-        "J1": "DOCUMENTARY_LOCAL_PASS",
-        "J2": "DOCUMENTARY_LOCAL_PASS"
-      },
-      "resolved_findings": [
-        "re.S descrito corretamente como DOTALL; unicidade pretendida de IDs separada da limitação truthy no exemplo.",
-        "Mesmo J2 confirmou disponibilidade integral após retomada, examinou seções e emitiu decisão integrada real; tentativas sem resposta não receberam resultado presumido."
-      ],
-      "optional_open": [
-        "A fonte filtra mensagens de usuário ainda ausentes de state.delivered; o corpo resume como mensagens ainda não entregues. Precisão não bloqueante."
       ]
     }
   ],
   "open_semantic_findings_in_accepted_units": [],
   "pending_units": [],
   "limits": [
-    "Acceptance is documentary and local to the exact listed body.",
-    "No product/tests/CI/runtime/consumers/maintenance exercised.",
-    "No global PASS. Private original judgments are not published here.",
-    "All21 source bodies and L1 are paired; integrated L3/L4 and final metadata transformation remain separate pending work."
+    "Local documentary acceptance applies to the exact bodies, not runtime, consumers, current product operation or global integration.",
+    "198 full textual reads, one inspected empty source and one complete structural lockfile traversal. Judge evidence is the exact body and decisive literal source excerpts; review counts do not assert that judges reread all source bytes.",
+    "No product/tests/CI/runtime/consumers/maintenance executed. Tools used here operate on own documentary artifacts or GitHub publication.",
+    "Original judgments, reserved cases, ledgers, session captures and local paths remain private. Public references are opaque and correspond to confirmed custody.",
+    "Provider tokens, cost, hidden physical attempts and model diversity are not exposed. Separation of roles is contextual and by instruction, not proved OS isolation.",
+    "No global PASS or original broad S5 DELIVERY_COMPLETE is claimed. The main coordination independently verifies this candidate."
   ],
   "private_custody": {
-    "opaque_ref": "libfile_fde3_f-c8dabdfdcfa08191936e7dee79cc646d_3a07899f8a4481918837fffaac5a42fc",
+    "opaque_ref": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
     "version": 0,
-    "sha256": "f3a8fe31d3cd62769d3804f5436de25403cad12999b30e5794987669afc4b445",
-    "scope": "Visible originals and source/artifact records through 21 accepted L2 units (200 unique sources); pending activity explicitly distinguished. No runtime or global acceptance."
+    "sha256": "11f9447ab1b2656f9aa5e459d45824ece75d1f2f158624167c6a1898fc79a96c",
+    "scope": "All26 exact accepted knowledge bodies, visible production and review records, correction chains and supporting premises available at this snapshot."
   },
   "reviewed_pending_units": [],
-  "counting_note": "Aceites contabilizam somente versões atuais listadas e fontes primárias únicas; apoios e repetições de revisão não acrescentam fontes."
+  "counting_note": "Aceites contabilizam somente versões atuais listadas e fontes primárias únicas; apoios e repetições de revisão não acrescentam fontes.",
+  "base_layer": {
+    "id": "L1-manifest",
+    "layer": 1,
+    "body": {
+      "path": "manifest.json",
+      "sha256": "293392e28b20da40124af6ed710f3fb29fc6f208446ff966448617562c4e8c1d",
+      "byte_length": 72487
+    },
+    "judges": {
+      "J1": "DOCUMENTARY_LOCAL_PASS",
+      "J2": "DOCUMENTARY_LOCAL_PASS"
+    },
+    "original_decision_refs": [
+      {
+        "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+        "version": 0,
+        "record_sha256": "57349bb5074676791abde37a672fc30a90bcf093ee06c0ccb54b183716f8e440",
+        "record_byte_length": 5662
+      },
+      {
+        "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+        "version": 0,
+        "record_sha256": "44a1214faf83852a255f9d158ae1940ff3061297bec8a9961e514a433e618387",
+        "record_byte_length": 5628
+      }
+    ],
+    "resolved_findings": [],
+    "optional_open": [
+      "L1-MANIFEST-J1-O1"
+    ]
+  },
+  "integrated_layers": [
+    {
+      "id": "relations",
+      "layer": 3,
+      "body": {
+        "path": "bodies/relations.md",
+        "sha256": "61901fbd8504aa98215999cd35dbfde64f31c68e950db894c23e05fd48a343e4",
+        "byte_length": 16935
+      },
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "original_decision_refs": [
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "319a28e2bd7cd9b8e1a24f79a956b88fb056b764800629e4f85754ac1a988494",
+          "record_byte_length": 7007
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "ff7ec6a98c09ddf0cbc1638915404b30c09d8f1ec34b738ba48d3bf4eb09c029",
+          "record_byte_length": 8177
+        }
+      ],
+      "resolved_findings": [],
+      "optional_open": [
+        {
+          "id": "L3-O1",
+          "judge_finding_ids": [
+            "L3-J1-O1",
+            "L3-O1"
+          ],
+          "summary": "A tabela isolada de predecessores não explicita o pin da premissa de apoio; o vínculo exato já está no envelope de evidência.",
+          "blocking": false
+        },
+        {
+          "id": "L3-O2",
+          "judge_finding_ids": [
+            "L3-O2"
+          ],
+          "summary": "Em R2, manifests resume o manifesto raiz usado pelo cache P019; não deve ser lido como cobertura de todos os manifestos de workspace.",
+          "blocking": false
+        }
+      ]
+    },
+    {
+      "id": "ownership",
+      "layer": 4,
+      "body": {
+        "path": "bodies/ownership.md",
+        "sha256": "b89ea2748dfe188f2fc8e81ae065ac9104c15853c1ca6cd01c68687c8a8f26e9",
+        "byte_length": 9280
+      },
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "original_decision_refs": [
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "e751e646bdd0f1f039bf980c23332fba60f9c39628a4bcc409af29a7c3aef7db",
+          "record_byte_length": 6793
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "ac4ae104a0194d2dac75c114921eebb693bc1b7bd38a89de9f3562a18eeceb44",
+          "record_byte_length": 6229
+        }
+      ],
+      "resolved_findings": [],
+      "optional_open": []
+    },
+    {
+      "id": "maintenance",
+      "layer": 4,
+      "body": {
+        "path": "bodies/maintenance.md",
+        "sha256": "c622e3fb0406c66e8ce57ed33f9cd683acd501f2044ca6683388759860365c91",
+        "byte_length": 9810
+      },
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "original_decision_refs": [
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "4a77dc18f03cfb787088adfff7f81d24cd09c7734ce6649927fed86dc81cf1f3",
+          "record_byte_length": 6481
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "8d51ae15234085a0faaddba53e75dacaa5d1ae1800286bdfc3089f86d8b6f8c2",
+          "record_byte_length": 5380
+        }
+      ],
+      "resolved_findings": [],
+      "optional_open": [
+        {
+          "id": "L4-M-O1",
+          "judge_finding_ids": [
+            "L4-J1-O1"
+          ],
+          "summary": "A atualização das explicações e a submissão do delta ao mesmo par estão nos critérios referidos; explicitá-las no fechamento do roteiro facilitaria a continuidade. Observação opcional, sem alteração da barra.",
+          "blocking": false
+        }
+      ]
+    },
+    {
+      "id": "entry",
+      "layer": 4,
+      "body": {
+        "path": "README.md",
+        "sha256": "9d4f47bf4e55ed09cd4669a93fcff794f0c75430017ff12e3a22409da70375b0",
+        "byte_length": 7441
+      },
+      "judges": {
+        "J1": "DOCUMENTARY_LOCAL_PASS",
+        "J2": "DOCUMENTARY_LOCAL_PASS"
+      },
+      "original_decision_refs": [
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "2b13b1b0b2c527c94cadf369743e9c3d77a6c1bdd77265a8061f8714818a6ee0",
+          "record_byte_length": 6706
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "446b64c183f72abaeb3e1d51073e2c7cce448bb2cc73892b5a1f3a4ffca677ef",
+          "record_byte_length": 5854
+        },
+        {
+          "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+          "version": 0,
+          "record_sha256": "b1967ad5c07282fc640875f9f437aac2c1eb01e48842e471369635215e6a788a",
+          "record_byte_length": 1357
+        }
+      ],
+      "resolved_findings": [
+        "J2 confirmou em adendo a correção de uma omissão na transcrição do hash do critério. Corpo, critério aplicado e decisão permaneceram os mesmos; o parecer anterior foi preservado."
+      ],
+      "optional_open": []
+    }
+  ],
+  "optional_nonblocking_observations": [
+    {
+      "id": "A05-O1",
+      "source_ids": [
+        "P114"
+      ],
+      "summary": "Skip limita-se às consultas isDirectory selecionadas; o readdir inicial de bunRoot ainda pode falhar.",
+      "blocking": false,
+      "unit": "A-05"
+    },
+    {
+      "id": "A05-O2",
+      "source_ids": [
+        "P119"
+      ],
+      "summary": "A seleção de owners verifica o endereço inicial da seção dentro de PT_LOAD gravável, não toda a extensão da seção.",
+      "blocking": false,
+      "unit": "A-05"
+    },
+    {
+      "id": "B04-O1",
+      "summary": "A dispensa Windows é inferida dos targets textuais dos builds, não do sistema operacional do runner.",
+      "blocking": false,
+      "unit": "B-04"
+    },
+    {
+      "id": "B04-O2",
+      "summary": "Resolve-Path exige paths resolvidos; não há filtro explícito de arquivo regular no predicado local.",
+      "blocking": false,
+      "unit": "B-04"
+    },
+    {
+      "id": "B05-O1",
+      "source_ids": [
+        "P139"
+      ],
+      "summary": "O caso pré-importação usa commit sintético sem pai e sem domínio; a fixture não prova cronologia/ancestralidade.",
+      "blocking": false,
+      "unit": "B-05"
+    },
+    {
+      "id": "B05-O2",
+      "source_ids": [
+        "P151"
+      ],
+      "summary": "A assertion verifica round-trip JSON em memória e baseUrl absoluto; não grava configuração em diretório externo.",
+      "blocking": false,
+      "unit": "B-05"
+    },
+    {
+      "id": "B06-O1",
+      "aliases": [
+        "B06-J1-O1"
+      ],
+      "source_ids": [
+        "P154"
+      ],
+      "summary": "O caminho externo providerMetadata.anthropic permanece inferência delimitada; hunk mostra somente inclusão do campo.",
+      "blocking": false,
+      "unit": "B-06"
+    },
+    {
+      "id": "B06-O2",
+      "source_ids": [
+        "P159"
+      ],
+      "summary": "Opção promptCacheKey aparece também nas declarações; comentário de roteamento aparece nos hunks de fonte e JavaScript distribuído.",
+      "blocking": false,
+      "unit": "B-06"
+    },
+    {
+      "id": "C04-O1",
+      "source_ids": [
+        "P101",
+        "P065"
+      ],
+      "summary": "Actions in guide versus Checks (formerly Actions) in changelog; optional integrated-navigation precision; existing source summaries faithful.",
+      "blocking": false,
+      "unit": "C-04"
+    },
+    {
+      "id": "C06-O1",
+      "source_ids": [
+        "P090"
+      ],
+      "summary": "A invariância formal do gerador abrange specifiers retidos e enumerados pela política full após filtros; R6b sobre imports é obrigação distinta.",
+      "blocking": false,
+      "unit": "C-06"
+    },
+    {
+      "id": "C06-O2",
+      "source_ids": [
+        "P090"
+      ],
+      "summary": "25 grupos canônicos não equivale à identidade de todos os caminhos /api/*; projectCopy é exceção de caminho documentada.",
+      "blocking": false,
+      "unit": "C-06"
+    },
+    {
+      "id": "C08-O1",
+      "source_ids": [
+        "P085"
+      ],
+      "summary": "A fonte filtra mensagens de usuário ainda ausentes de state.delivered; o corpo resume como mensagens ainda não entregues. Precisão não bloqueante.",
+      "blocking": false,
+      "unit": "C-08"
+    }
+  ],
+  "base_layer_optional_observations": {
+    "ids": [
+      "L1-MANIFEST-J1-O1"
+    ],
+    "summary": "A formalização da serialização dos digests foi solicitada como precisão não bloqueante de L1; work.md explicita a receita. Esta linha não presume encerramento adicional sem decisão."
+  },
+  "additional_support_premise": {
+    "id": "SUPPORT-INPUT-BOUNDARY",
+    "sha256": "06ee3bfa77c45bb320178eb02fee54bb1c5e1549aaa0a8948c99fba566491978",
+    "status": "DOCUMENTARY_PAIR_ACCEPTED",
+    "primary_count_increment": 0,
+    "knowledge_artifact_count_increment": 0,
+    "meaning": "Static comparison between captured lockfile size and the baseline observer content-reading limit; no runtime observation or ingestion performed.",
+    "original_decision_refs": [
+      {
+        "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+        "version": 0,
+        "record_sha256": "fbcf07c1138b87d3dfcc789a194270a3f48919964b8612ef462efd9982f670b9",
+        "record_byte_length": 4767
+      },
+      {
+        "custody_id": "libfile_fde3_f-31e665d639ec8191a59492028fac26d2_3a07899f8a4481918837fffaac5a42fc",
+        "version": 0,
+        "record_sha256": "d1030a1a9e6752b9eb31c41e3ada4574b2ae919654c9553bb2e83db9d9cc45ad",
+        "record_byte_length": 4474
+      }
+    ]
+  },
+  "metadata_review_binding": "The final handoff binds the exact independently reviewed metadata and real decisions. Semantic acceptance of bodies is not approval of an unseen metadata transformation or runtime import.",
+  "provenance_qualification": "The initial judge spawn/activation strings are not separately preserved as original provider transcripts. Real persistent handles, original literal evaluation packets, visible decisions and later requests are retained. Missing originals were not fabricated; some saved visible-message representations are normalized or explicitly qualified copies."
 }
