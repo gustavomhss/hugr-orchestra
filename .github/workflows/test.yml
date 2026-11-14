@@ -257,7 +257,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
-          fetch-depth: ${{ matrix.shard && '1' || '0' }}
+          fetch-depth: ${{ (matrix.shard || matrix.boundaryShard == '1/2') && '1' || '0' }}
 
       - name: Setup Bun
         uses: ./.github/actions/setup-bun
