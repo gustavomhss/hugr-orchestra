@@ -9,8 +9,8 @@
   "branch": "genesis-s1-automation",
   "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
   "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
-  "observed_branch_head": "63e99146961161b8596bbe8b51e293c92eba4182",
-  "artifact_revision": "f6ffb725704cc01682847d7e175f22b6ead3894c",
+  "observed_branch_head": "332a0b292123de704ec0b4b393e77e0902a00b01",
+  "artifact_revision": "9cd485743dc9c6bde016581e0e6e2818762dab51",
   "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
   "completion_state": "IN_PROGRESS",
   "work": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/work.md",
@@ -21,54 +21,33 @@
     "sha256": "ac5032bd0f71fce700e8471ba2ef2d733d8f0cb906941f4a2310d5855793bc0f",
     "source_bytes": 4740213,
     "all_source_git_blobs_verified": true,
-    "semantic_acceptance": "PENDING_INDEPENDENT_JUDGMENT"
+    "semantic_acceptance": "L1 partial current gates recorded in semantic-acceptances.json; aggregate coverage remains a frozen mapping, not a global PASS."
   },
   "production": {
-    "phase": "L1_REVIEW_AND_CORRECTION",
-    "producer_ids": [
-      "/root/automation_l1",
-      "/root/research_l1",
-      "/root/boundaries_l1"
-    ],
-    "entry_historical_sha256": "6a488ca8f9717a497949b71ed41db84d995f23b90c31cc59c22c5bd86239ca6c",
-    "original_v1_freeze": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/receipts/l1-freeze.json",
-    "bodies": {
-      "s1.core.automation": {
-        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/body.md",
-        "version": "v4",
-        "bytes": 60767,
-        "sha256": "968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae",
-        "git_blob_sha": "e26213eb2fc76dc843dca17d1111334c76f88890",
-        "semantic_acceptance": "PENDING_SAME_PAIR"
+    "phase": "L1_CURRENT_PARENT_ACCEPTED_L2_CORRECTIONS_UNDER_REVIEW",
+    "current_semantic_acceptances": [
+      {
+        "key": "s1.core.boundaries",
+        "version": "3",
+        "body_sha256": "937208953bb286da7bcefad8fd145d935a0ed00ee7d8f87d87c840973033d070",
+        "status": "PASS_SEMANTIC_CURRENT_BODY"
       },
-      "s1.core.research": {
-        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/research/body.md",
-        "version": "v2",
-        "bytes": 63501,
-        "sha256": "d2def4b82495605b491e0d5494b1511e1b68c47dcffa84af87c8d35705468661",
-        "git_blob_sha": "bb0eaa73b4fe9120fb46d9304778649b5c7205dd",
-        "semantic_acceptance": "PENDING_SAME_PAIR"
-      },
-      "s1.core.boundaries": {
-        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/boundaries/bodies/boundaries.md",
-        "version": "v2",
-        "bytes": 23665,
-        "sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
-        "git_blob_sha": "6821d54aec4f8015dd00d634f632dc9960d1bd74",
-        "semantic_acceptance": "PENDING_SAME_PAIR"
-      },
-      "s1.subslice03.support": {
-        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/boundaries/bodies/support.md",
-        "version": "v2",
-        "bytes": 23025,
-        "sha256": "498a0454418a14977b9b2f4c4f515711d941b6d4bbece13f1baaa8feaa76d378",
-        "git_blob_sha": "facd86eb03aa44ba722a9dda77c4d820ad28479c",
-        "semantic_acceptance": "PENDING_SAME_PAIR"
+      {
+        "key": "s1.core.research",
+        "version": "4",
+        "body_sha256": "c3925ca6e27465598796ef21815e79980277d4c3194a8b2fda7cf433700675d1",
+        "status": "PASS_SEMANTIC_CURRENT_BODY"
       }
-    },
-    "correction_count_published": 13,
-    "required_artifact_plan": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/artifact-plan.json",
-    "required_artifact_count": 12
+    ],
+    "required_artifacts": 12,
+    "current_l1_bodies": 4,
+    "current_l2_bodies": 2,
+    "l3_l4_authored": false,
+    "artifact_plan": "artifact-plan.json",
+    "gate_record": "semantic-acceptances.json",
+    "historical_entry_preserved": true,
+    "union_proposal": "NOT_SELECTED_FOR_UNION; concrete 36-key/5-owner proposal awaits own local review and later coordinator selection",
+    "source_fidelity_reopening": "Three inherited L1 claims corrected and accepted by same pair; prior decisions retained at original bytes."
   },
   "judges": {
     "ids": [
@@ -80,16 +59,17 @@
     "no_full_L1_pass": true,
     "original_reviews": "Same pair retained. Original REQUEST_EVIDENCE/FIX-FIRST remain immutable. Current v4/v2 corrections and literal supplements are under same-pair review; no full L1 acceptance yet. Both PASS exact AC-04-local-native historical control reuse only.",
     "reserved_oracle_delivery": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/judgments/oracle/dispatch-receipt.json",
-    "compatible_controls_reuse": "judgments/l1/controls-reuse"
+    "compatible_controls_reuse": "judgments/l1/controls-reuse",
+    "pair_continuity": "Same two native independent judges, reused throughout; no third vote or replacement.",
+    "current_complete_body_acceptances": "s1.core.boundaries L1 v3 and s1.core.research L1 v4; other gates still pending in this frozen snapshot."
   },
   "local_obligations_open": [
-    "Resolve independent L1 evidence requests and any mandatory corrections",
-    "Produce and review necessary L2-L4 on accepted predecessors",
-    "Complete native package and own runtime binding/publication/index/read",
-    "Fresh Atlas-only consumers for seven fixed cases and direct intermediates",
-    "Two own maintenance cases",
-    "Required gates and final 50-ID matrix",
-    "Final payload/seal and readback"
+    "Complete support v2, automation v4, navigation proposal and corrected L2 judgments, with mandatory findings closed by the same pair.",
+    "Produce and review each required L3/L4 after its exact predecessor gate, preserving cumulative inputs.",
+    "Assemble all 12 selected artifacts with exact genuine inputs; publish source payload pins and execute the released native prepare against the whole package.",
+    "Obtain actual runtime binding/publication/read evidence where authority and capability permit; retain precise blocked obligations otherwise.",
+    "Run all seven fresh Atlas-only consumer cases with faithful CLI bridge and frozen limits; assess originals against reserved oracle.",
+    "Complete maintenance or its precise demonstrated precondition block, all 50 criterion dispositions, final accounting, same-pair delivery review and final payload/seal readback."
   ],
   "observed_constraints": [
     {
@@ -136,10 +116,13 @@
   ],
   "global_integration": {
     "owner": "S1_COORDINATION",
-    "branch": "genesis-fresh-s1",
-    "status": "NOT_REVIEWED"
+    "scope": "Compose the five S1 subfatias in genesis-fresh-s1, choose union navigation and cross-slice links; ROOT later composes S1-S5.",
+    "not_claimed": "This checkpoint does not complete S1-03, S1 or the campaign."
   },
-  "supersedes": "63e99146961161b8596bbe8b51e293c92eba4182",
+  "supersedes": {
+    "payload": "f6ffb725704cc01682847d7e175f22b6ead3894c",
+    "seal": "332a0b292123de704ec0b4b393e77e0902a00b01"
+  },
   "checkpoint_only": true,
   "execution_continues": true,
   "criteria_matrix": {
@@ -149,10 +132,35 @@
   },
   "runtime_release_observed": {
     "branch": "genesis-fresh-s4",
-    "head": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
-    "candidate": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
-    "common_controls_candidate": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553"
+    "release_commit": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+    "native_candidate": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+    "common_control_candidate": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+    "refresh_receipt": "receipts/capability-refresh-after-l1-consistency.json",
+    "final_full_selection_prepare": "NOT_RUN_YET",
+    "known_source_cap_bytes": 256000,
+    "whole_inputs_not_split_or_omitted": true,
+    "common_controls": "Scoped reuse only; original 220/220 tests, 22 rejected mutants and guard report captured in receipts/common-control-artifact; no local consumer/runtime proof inferred."
   },
-  "publication_scope": "Git payload and seal only; not Atlas publication or completed subslice.",
-  "payload_file_count": 438
+  "publication_scope": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/",
+    "preserves_historical_s1_and_other_subslices": true,
+    "protocol": "Payload descendant of observed B, then seal referencing P; lease expected_sha=B and force=false",
+    "snapshot_time_utc": "2026-11-15T04:49:12.624641+00:00",
+    "snapshot_bytes": 32296037
+  },
+  "payload_file_count": 827,
+  "preservation_limit": {
+    "missing_separate_native_final": "derived research L2 v2",
+    "retained": "Original producer response.md and later confirmation with explicit non-verbatim/non-reconstruction label",
+    "effect": "Not repaired by a later PASS. GO-I1 full preservation remains separately reviewable; no gap hidden as global integration."
+  },
+  "economy": {
+    "ledger_rows_at_snapshot": 209,
+    "visible_logical_calls": "Recorded; unresolved stages remain open",
+    "physical_attempts": "UNKNOWN",
+    "tokens": "UNKNOWN",
+    "billing_cost": "UNKNOWN",
+    "historical": "GLOBAL_UNRECONCILED; not zero",
+    "no_paid_external_calls": true
+  }
 }
