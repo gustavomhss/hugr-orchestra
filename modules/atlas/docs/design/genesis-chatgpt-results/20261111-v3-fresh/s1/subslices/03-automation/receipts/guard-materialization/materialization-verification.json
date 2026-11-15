@@ -1,0 +1,79 @@
+{
+  "schema": "s1-03-guard-materialization/v1",
+  "head": "63e99146961161b8596bbe8b51e293c92eba4182",
+  "origin_dev": "5e0807b5ff953508f792b8a965883985b05a7066",
+  "merge_base": "7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249",
+  "unique_tree_objects": 2378,
+  "verified_commits": 1660,
+  "head_population": 15367,
+  "base_population": 13892,
+  "changed_paths": 1551,
+  "needed_blobs": 1635,
+  "verified_available_blobs": 1634,
+  "selected_worktree_paths": 1666,
+  "verified_materialized_paths": 1665,
+  "missing_selected_paths": [
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/evidence/source-captures.zip"
+  ],
+  "worktree_byte_drift": [],
+  "branch_head_unchanged": true,
+  "official_guard": "NOT_RUN",
+  "reason": "Cannot satisfy exact worktree precondition with one required changed binary unavailable; running against missing tracked ZIP would silently erase a real addition from the worktree diff. No such run was accepted.",
+  "commands": [
+    {
+      "argv": [
+        "git",
+        "rev-parse",
+        "HEAD",
+        "origin/dev"
+      ],
+      "exit": 0,
+      "stdout_bytes": 82,
+      "stdout": "63e99146961161b8596bbe8b51e293c92eba4182\n5e0807b5ff953508f792b8a965883985b05a7066\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "merge-base",
+        "HEAD",
+        "origin/dev"
+      ],
+      "exit": 0,
+      "stdout_bytes": 41,
+      "stdout": "7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--name-status",
+        "HEAD"
+      ],
+      "exit": 0,
+      "stdout_bytes": 102,
+      "stdout": "D\tmodules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/evidence/source-captures.zip\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "git",
+        "diff",
+        "--numstat",
+        "-z",
+        "-M",
+        "-l0",
+        "7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249",
+        "HEAD"
+      ],
+      "exit": 128,
+      "stdout_bytes": 0,
+      "stdout": null,
+      "stderr": "fatal: unable to read d83941a9d836a23e466ca09ecba1f21d423094cb\n"
+    }
+  ],
+  "utc": "2026-11-15T01:45:46.423694+00:00",
+  "tokens": "UNKNOWN",
+  "billing": "UNKNOWN"
+}

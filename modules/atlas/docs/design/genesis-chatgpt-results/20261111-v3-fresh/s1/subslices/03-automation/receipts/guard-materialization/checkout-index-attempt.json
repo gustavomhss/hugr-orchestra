@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "git",
+    "checkout-index",
+    "--all"
+  ],
+  "cwd": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/guard-checkout",
+  "exit": 1,
+  "stdout": "",
+  "stderr": "error: unable to read sha1 file of modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/evidence/source-captures.zip (d83941a9d836a23e466ca09ecba1f21d423094cb)\n",
+  "utc": "2026-11-15T01:44:34.874616+00:00"
+}

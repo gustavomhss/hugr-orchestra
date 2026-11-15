@@ -1,0 +1,3715 @@
+{
+  "supplement": {
+    "path": "suplemento-boundaries-1.md",
+    "sha256": "665c05eff1fd9db5cc1a75636fc883adf8c43cac6f8069dfe3fc5010225ef0b1",
+    "git_blob_sha": "30ecf397cbb35da0a98b73cbf333ab8031d32c56",
+    "bytes": 285965
+  },
+  "candidate_v2": {
+    "sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+    "git_blob_sha": "6821d54aec4f8015dd00d634f632dc9960d1bd74",
+    "bytes": 23665
+  },
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "history_revision": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+  "kit_revision": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+  "offset_convention": "zero-based UTF-8 bytes; end exclusive; excerpt hashes include original line endings",
+  "requests": {
+    "j1-response.md": {
+      "path": "revisions/boundaries-v2/inputs/j1-response.md",
+      "sha256": "ccad14b91237930376d42ebb54d39bdd3f35e3b7587d5cb8935bc121202ae376",
+      "git_blob_sha": "0b120a7769854058fb6da37770f81ec7d2c55d77",
+      "bytes": 8320
+    },
+    "j2-response.md": {
+      "path": "revisions/boundaries-v2/inputs/j2-response.md",
+      "sha256": "677ce359667553b2e3ab5cc3855897ca003db08ba1ded0e1004b96653c726b0a",
+      "git_blob_sha": "7acc3d649d4194ef350d25fbfc3fd35cbfc2d35a",
+      "bytes": 6656
+    }
+  },
+  "reused_received": [
+    {
+      "id": "R001",
+      "path": "packages/core/src/atlas.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 38,
+      "last_line": 48,
+      "source_start_byte": 1033,
+      "source_end_byte_exclusive": 1884,
+      "excerpt_sha256": "563edd58082b309091eeacfece73526e772a0c2f51682d233f5c8683fcd832f9",
+      "evidence_review_start_byte": 1247,
+      "evidence_review_end_byte_exclusive": 2098,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R002",
+      "path": "packages/core/src/atlas.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 109,
+      "last_line": 125,
+      "source_start_byte": 5174,
+      "source_end_byte_exclusive": 6126,
+      "excerpt_sha256": "0afd3100af381a552b078f72fb9e06a16855a86cbd00623800c1a67ada028df8",
+      "evidence_review_start_byte": 2458,
+      "evidence_review_end_byte_exclusive": 3410,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R003",
+      "path": "packages/core/src/atlas.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 132,
+      "last_line": 148,
+      "source_start_byte": 6545,
+      "source_end_byte_exclusive": 7448,
+      "excerpt_sha256": "60fb78951c8180953fe30027987fe4cbfc7c53d93b8133a88dcfd7f3d427bf1d",
+      "evidence_review_start_byte": 3770,
+      "evidence_review_end_byte_exclusive": 4673,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R004",
+      "path": "packages/core/src/atlas.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 259,
+      "last_line": 280,
+      "source_start_byte": 13119,
+      "source_end_byte_exclusive": 13995,
+      "excerpt_sha256": "a49655487628d72601ba2e9bc01d8d16c282d2b1b4715047fe48a72a9e8632a5",
+      "evidence_review_start_byte": 5033,
+      "evidence_review_end_byte_exclusive": 5909,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R005",
+      "path": "packages/core/src/atlas.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 301,
+      "last_line": 312,
+      "source_start_byte": 14587,
+      "source_end_byte_exclusive": 15454,
+      "excerpt_sha256": "1e5f5ce36026f5eaf1a6f63afc1a18cbfb8e95df7986b8b2cfe5476108531842",
+      "evidence_review_start_byte": 6269,
+      "evidence_review_end_byte_exclusive": 7136,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R006",
+      "path": "packages/core/src/control-plane/move-session.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 87,
+      "last_line": 111,
+      "source_start_byte": 3064,
+      "source_end_byte_exclusive": 4386,
+      "excerpt_sha256": "c125deda18951ae663e9f40e740f9af36835befcacc859d8f547d9508e29fdb5",
+      "evidence_review_start_byte": 7515,
+      "evidence_review_end_byte_exclusive": 8837,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R007",
+      "path": "packages/core/src/control-plane/move-session.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 113,
+      "last_line": 148,
+      "source_start_byte": 4387,
+      "source_end_byte_exclusive": 5381,
+      "excerpt_sha256": "ea6710cb925cd3c0dd6f7bc03aa40a771e1e8420068cbc3fa8ca5269429e031a",
+      "evidence_review_start_byte": 9217,
+      "evidence_review_end_byte_exclusive": 10211,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R008",
+      "path": "packages/core/src/control-plane/workspace.sql.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 7,
+      "last_line": 20,
+      "source_start_byte": 255,
+      "source_end_byte_exclusive": 644,
+      "excerpt_sha256": "058414273bafda8a012099538f352903fe9c455d414956735a8481042424a956",
+      "evidence_review_start_byte": 10587,
+      "evidence_review_end_byte_exclusive": 10976,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R009",
+      "path": "packages/core/src/rag-studio/sql.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 1,
+      "last_line": 11,
+      "source_start_byte": 0,
+      "source_end_byte_exclusive": 447,
+      "excerpt_sha256": "a8d85c912e32f244d5326d7d6502d6df836f9011ae42fbdfa8238df346cdba4c",
+      "evidence_review_start_byte": 11339,
+      "evidence_review_end_byte_exclusive": 11786,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R010",
+      "path": "packages/core/src/rag-studio/sql.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 72,
+      "last_line": 81,
+      "source_start_byte": 2101,
+      "source_end_byte_exclusive": 2519,
+      "excerpt_sha256": "0cb2df26a50267d608c3f24fdb576545f85a57247eda0e8edb2f8405bbf2fc60",
+      "evidence_review_start_byte": 12151,
+      "evidence_review_end_byte_exclusive": 12569,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R011",
+      "path": "packages/core/src/relay-commands.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 7,
+      "last_line": 11,
+      "source_start_byte": 185,
+      "source_end_byte_exclusive": 443,
+      "excerpt_sha256": "1b10e66b73f48419d09d5f21ab9627e6b4291cb073acc57aca298945a820446e",
+      "evidence_review_start_byte": 12932,
+      "evidence_review_end_byte_exclusive": 13190,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R012",
+      "path": "packages/core/src/relay-commands.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 84,
+      "last_line": 98,
+      "source_start_byte": 3678,
+      "source_end_byte_exclusive": 4343,
+      "excerpt_sha256": "ebc649ad188fa75a02bce0668ebda721c9c8880bb6d27350c2d5aecc88250c7b",
+      "evidence_review_start_byte": 13556,
+      "evidence_review_end_byte_exclusive": 14221,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": "R012 includes the transport correction acknowledged by J1; original source/evidence bytes remain unchanged."
+    },
+    {
+      "id": "R013",
+      "path": "packages/core/src/relay.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 219,
+      "last_line": 239,
+      "source_start_byte": 10297,
+      "source_end_byte_exclusive": 11632,
+      "excerpt_sha256": "7c4e1ad44ef73c3a3fb5cb661e45f9cb582bddf34c2353ec7841e0459d75f9a4",
+      "evidence_review_start_byte": 14581,
+      "evidence_review_end_byte_exclusive": 15916,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R014",
+      "path": "packages/core/src/relay.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 247,
+      "last_line": 264,
+      "source_start_byte": 11930,
+      "source_end_byte_exclusive": 13150,
+      "excerpt_sha256": "4b9da786f2913a5807a5405e1912ca380ae6440f19a7434d08e6a0d8a2444617",
+      "evidence_review_start_byte": 16276,
+      "evidence_review_end_byte_exclusive": 17496,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R015",
+      "path": "packages/core/src/relay.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 267,
+      "last_line": 283,
+      "source_start_byte": 13160,
+      "source_end_byte_exclusive": 13983,
+      "excerpt_sha256": "ed5fa25dccd1ecf91e1ec68e4988261614d02ba1400b4d2b15f493da78f7c0d3",
+      "evidence_review_start_byte": 17856,
+      "evidence_review_end_byte_exclusive": 18679,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R016",
+      "path": "packages/core/src/relay.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 335,
+      "last_line": 372,
+      "source_start_byte": 16264,
+      "source_end_byte_exclusive": 18281,
+      "excerpt_sha256": "b4a7fa173877493bd4f3bdf0c1ec2996e53e5806975dab984be97e5f441158ba",
+      "evidence_review_start_byte": 19039,
+      "evidence_review_end_byte_exclusive": 21056,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R017",
+      "path": "packages/core/src/relay.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 374,
+      "last_line": 389,
+      "source_start_byte": 18282,
+      "source_end_byte_exclusive": 19401,
+      "excerpt_sha256": "7b06effb9899018a70362eb83c34f360186ebd02a034729117c1af2179d67d92",
+      "evidence_review_start_byte": 21416,
+      "evidence_review_end_byte_exclusive": 22535,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R018",
+      "path": "packages/core/src/relay.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 420,
+      "last_line": 433,
+      "source_start_byte": 20529,
+      "source_end_byte_exclusive": 21145,
+      "excerpt_sha256": "7a6c814013d5eccf0fd0ccc9baa70cb579749b05df17fd7c156515f0f9c39d5f",
+      "evidence_review_start_byte": 22895,
+      "evidence_review_end_byte_exclusive": 23511,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R019",
+      "path": "packages/core/src/relay.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 491,
+      "last_line": 501,
+      "source_start_byte": 23610,
+      "source_end_byte_exclusive": 24469,
+      "excerpt_sha256": "c9e2066fd654c9f00cd4d661a0d684db2526c41e425d1fa9f4e4580f959d8e2f",
+      "evidence_review_start_byte": 23871,
+      "evidence_review_end_byte_exclusive": 24730,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R020",
+      "path": "packages/core/src/relay-hook-install.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 219,
+      "last_line": 239,
+      "source_start_byte": 9002,
+      "source_end_byte_exclusive": 10632,
+      "excerpt_sha256": "f690f6bc2db567929c864515168032d8ce2de590073c3d3549aaa73ddcb7f575",
+      "evidence_review_start_byte": 25103,
+      "evidence_review_end_byte_exclusive": 26733,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R021",
+      "path": "packages/core/src/relay-hook-install.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 300,
+      "last_line": 302,
+      "source_start_byte": 13695,
+      "source_end_byte_exclusive": 13942,
+      "excerpt_sha256": "00315641cf1c3db04f4e9c71abced754c0ed57d7209f7bb045e40977a52ba919",
+      "evidence_review_start_byte": 27106,
+      "evidence_review_end_byte_exclusive": 27353,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R022",
+      "path": "packages/core/src/relay-hook-install.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 314,
+      "last_line": 335,
+      "source_start_byte": 14422,
+      "source_end_byte_exclusive": 15429,
+      "excerpt_sha256": "fe2684d4adb55d76ba201161d7a7d03269f6e0c7f45004f148b455da0c8750b0",
+      "evidence_review_start_byte": 27726,
+      "evidence_review_end_byte_exclusive": 28733,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R023",
+      "path": "packages/core/src/relay-hook-install.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 454,
+      "last_line": 474,
+      "source_start_byte": 20805,
+      "source_end_byte_exclusive": 22122,
+      "excerpt_sha256": "bfb6fedc4e20189ff392d1bf9bc4c0be1fe87eee3eae00c35cabc62ed9853b5e",
+      "evidence_review_start_byte": 29106,
+      "evidence_review_end_byte_exclusive": 30423,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R024",
+      "path": "packages/core/src/relay-hook-install.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 254,
+      "last_line": 273,
+      "source_start_byte": 11110,
+      "source_end_byte_exclusive": 12547,
+      "excerpt_sha256": "e068c27e94273d9fdefa2c12b5c251462f71669f0550181098d80cb4586df604",
+      "evidence_review_start_byte": 30796,
+      "evidence_review_end_byte_exclusive": 32233,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R025",
+      "path": "packages/core/src/relay-hook-install.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 283,
+      "last_line": 295,
+      "source_start_byte": 13014,
+      "source_end_byte_exclusive": 13476,
+      "excerpt_sha256": "8e52721febcf48e40a6e00fa4f97ccefe85f415e2c5caceef0c65d85bee05cc9",
+      "evidence_review_start_byte": 32606,
+      "evidence_review_end_byte_exclusive": 33068,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R026",
+      "path": "packages/core/src/relay-hook-recovery.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 34,
+      "last_line": 47,
+      "source_start_byte": 1338,
+      "source_end_byte_exclusive": 2193,
+      "excerpt_sha256": "4ca8c0cdd407ea249cfec40813221a71a1e8344bca17085843188aacc675572d",
+      "evidence_review_start_byte": 33438,
+      "evidence_review_end_byte_exclusive": 34293,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R027",
+      "path": "packages/core/src/relay-hook-recovery.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 50,
+      "last_line": 64,
+      "source_start_byte": 2284,
+      "source_end_byte_exclusive": 2968,
+      "excerpt_sha256": "b0d762c34c311a673d11ecb736f55a90056c72a439af7b6f289a6bb6d737afc4",
+      "evidence_review_start_byte": 34663,
+      "evidence_review_end_byte_exclusive": 35347,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R028",
+      "path": "packages/core/src/relay-hook-shipper.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 39,
+      "last_line": 54,
+      "source_start_byte": 1895,
+      "source_end_byte_exclusive": 2672,
+      "excerpt_sha256": "ac0a4368313daf9ef4554603c932eb45c9661538912a163be20e7491f451c582",
+      "evidence_review_start_byte": 35716,
+      "evidence_review_end_byte_exclusive": 36493,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R029",
+      "path": "packages/core/src/relay-hook-shipper.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 101,
+      "last_line": 120,
+      "source_start_byte": 4561,
+      "source_end_byte_exclusive": 5375,
+      "excerpt_sha256": "55ac8cee62d7ad0321671da6898ef04b41e1e6e5e5219104f5338490391dab40",
+      "evidence_review_start_byte": 36865,
+      "evidence_review_end_byte_exclusive": 37679,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R030",
+      "path": "packages/core/src/relay-workflow-binding.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 50,
+      "last_line": 61,
+      "source_start_byte": 2581,
+      "source_end_byte_exclusive": 3413,
+      "excerpt_sha256": "6b77d7505e389d1f7c3673acb018f6029db9c99344f74f60ce63ab599d3bdd1f",
+      "evidence_review_start_byte": 38052,
+      "evidence_review_end_byte_exclusive": 38884,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R031",
+      "path": "packages/core/src/relay-workflow-binding.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 129,
+      "last_line": 147,
+      "source_start_byte": 7632,
+      "source_end_byte_exclusive": 8855,
+      "excerpt_sha256": "1710252f9549c6fcd93155627e8c437cdea654ff20838a84062f27767f90ee90",
+      "evidence_review_start_byte": 39261,
+      "evidence_review_end_byte_exclusive": 40484,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R032",
+      "path": "packages/core/src/relay-workflow-binding.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 223,
+      "last_line": 256,
+      "source_start_byte": 12629,
+      "source_end_byte_exclusive": 14752,
+      "excerpt_sha256": "812d4693000b800603e1f4c0fb0149972e621143de8c7171f0d4fa1c6049b825",
+      "evidence_review_start_byte": 40861,
+      "evidence_review_end_byte_exclusive": 42984,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R033",
+      "path": "packages/core/src/relay-workflow-currentstep.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 38,
+      "last_line": 48,
+      "source_start_byte": 1405,
+      "source_end_byte_exclusive": 2041,
+      "excerpt_sha256": "38cafef22637ca0fd22aa098659a91f2301f8701b40c936261f60aa450a41030",
+      "evidence_review_start_byte": 43361,
+      "evidence_review_end_byte_exclusive": 43997,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R034",
+      "path": "packages/core/src/relay-workflow-currentstep.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 69,
+      "last_line": 90,
+      "source_start_byte": 3837,
+      "source_end_byte_exclusive": 5478,
+      "excerpt_sha256": "cba6fdadbd7213b0b1c3e91922a30c6fd8d7c4757c4237806d7353c08aa7a9b9",
+      "evidence_review_start_byte": 44374,
+      "evidence_review_end_byte_exclusive": 46015,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R035",
+      "path": "packages/core/src/relay-workflow-session.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 51,
+      "last_line": 68,
+      "source_start_byte": 2473,
+      "source_end_byte_exclusive": 3746,
+      "excerpt_sha256": "c311a0febde4327fd4e676d6810bb41489c82eaed923f2e29fdb069938b73286",
+      "evidence_review_start_byte": 46388,
+      "evidence_review_end_byte_exclusive": 47661,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R036",
+      "path": "packages/core/src/relay-workflow-session.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 82,
+      "last_line": 96,
+      "source_start_byte": 4331,
+      "source_end_byte_exclusive": 5399,
+      "excerpt_sha256": "5b0ac6c3d8e6688cb50b416c9cc80e7511351abdcdb665942a698708f9e45650",
+      "evidence_review_start_byte": 48034,
+      "evidence_review_end_byte_exclusive": 49102,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R037",
+      "path": "packages/core/src/relay-workflow-transition.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 67,
+      "last_line": 91,
+      "source_start_byte": 3717,
+      "source_end_byte_exclusive": 5564,
+      "excerpt_sha256": "d0346ca3922a4368c709cd6a685f08c4a3213b66b88f1667f5d1dcd7dcc316b7",
+      "evidence_review_start_byte": 49478,
+      "evidence_review_end_byte_exclusive": 51325,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R038",
+      "path": "packages/core/src/relay-workflow-evaluator.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 50,
+      "last_line": 70,
+      "source_start_byte": 2891,
+      "source_end_byte_exclusive": 4186,
+      "excerpt_sha256": "2ff8a57462a151e60efc1aabc7e0a7dde405cd4254859fe7c0fe5ccb482de405",
+      "evidence_review_start_byte": 51701,
+      "evidence_review_end_byte_exclusive": 52996,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R039",
+      "path": "packages/core/src/relay-workflow-evaluator.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 106,
+      "last_line": 125,
+      "source_start_byte": 6501,
+      "source_end_byte_exclusive": 7885,
+      "excerpt_sha256": "4c9f97a397d330691d0eecca0ad6b5eb2b803c43b4599edbfcb6585cde2053eb",
+      "evidence_review_start_byte": 53374,
+      "evidence_review_end_byte_exclusive": 54758,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R040",
+      "path": "packages/core/src/relay-workflow-evaluator.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 133,
+      "last_line": 149,
+      "source_start_byte": 8113,
+      "source_end_byte_exclusive": 9341,
+      "excerpt_sha256": "c6526b1b1508c6face996eedb24fb6de36f207f3f3a88a3b48d713fd5bfdf8d9",
+      "evidence_review_start_byte": 55137,
+      "evidence_review_end_byte_exclusive": 56365,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    },
+    {
+      "id": "R041",
+      "path": "packages/core/src/relay-workflow-evaluator.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "first_line": 170,
+      "last_line": 193,
+      "source_start_byte": 10819,
+      "source_end_byte_exclusive": 12459,
+      "excerpt_sha256": "f6b605ccca60d026a3d6080e749d7f40b7e528ceb76fab19b660b6bcd4c82f36",
+      "evidence_review_start_byte": 56744,
+      "evidence_review_end_byte_exclusive": 58384,
+      "evidence_review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "acknowledged_by": [
+        "j1-response.md",
+        "j2-response.md"
+      ],
+      "note": ""
+    }
+  ],
+  "request_resolution": [
+    {
+      "request": "RE-BND-02",
+      "evidence_family": "AT01",
+      "path": "packages/core/src/atlas.ts",
+      "requested_first_line": 103,
+      "requested_last_line": 148,
+      "reused": [
+        "R002",
+        "R003"
+      ],
+      "new_intervals": [
+        [
+          103,
+          108
+        ],
+        [
+          126,
+          131
+        ]
+      ],
+      "intentional_repeat": null
+    },
+    {
+      "request": "RE-BND-02",
+      "evidence_family": "AT01",
+      "path": "packages/core/src/atlas.ts",
+      "requested_first_line": 152,
+      "requested_last_line": 195,
+      "reused": [],
+      "new_intervals": [
+        [
+          152,
+          195
+        ]
+      ],
+      "intentional_repeat": null
+    },
+    {
+      "request": "RE-BND-02",
+      "evidence_family": "AT01",
+      "path": "packages/core/src/atlas.ts",
+      "requested_first_line": 208,
+      "requested_last_line": 258,
+      "reused": [],
+      "new_intervals": [
+        [
+          208,
+          258
+        ]
+      ],
+      "intentional_repeat": null
+    },
+    {
+      "request": "RE-BND-02",
+      "evidence_family": "AT01",
+      "path": "packages/core/src/atlas.ts",
+      "requested_first_line": 312,
+      "requested_last_line": 347,
+      "reused": [
+        "R005"
+      ],
+      "new_intervals": [
+        [
+          313,
+          347
+        ]
+      ],
+      "intentional_repeat": null
+    },
+    {
+      "request": "RE-BND-02",
+      "evidence_family": "AT02",
+      "path": "packages/core/src/relay-commands.ts",
+      "requested_first_line": 7,
+      "requested_last_line": 114,
+      "reused": [
+        "R011",
+        "R012"
+      ],
+      "new_intervals": [
+        [
+          12,
+          83
+        ],
+        [
+          99,
+          114
+        ]
+      ],
+      "intentional_repeat": null
+    },
+    {
+      "request": "RE-BND-03",
+      "evidence_family": "RL01",
+      "path": "packages/core/src/relay.ts",
+      "requested_first_line": 42,
+      "requested_last_line": 48,
+      "reused": [],
+      "new_intervals": [
+        [
+          42,
+          48
+        ]
+      ],
+      "intentional_repeat": null
+    },
+    {
+      "request": "RE-BND-03",
+      "evidence_family": "RL01",
+      "path": "packages/core/src/relay.ts",
+      "requested_first_line": 184,
+      "requested_last_line": 217,
+      "reused": [],
+      "new_intervals": [
+        [
+          184,
+          217
+        ]
+      ],
+      "intentional_repeat": null
+    },
+    {
+      "request": "RE-BND-03",
+      "evidence_family": "RL01",
+      "path": "packages/core/src/relay.ts",
+      "requested_first_line": 240,
+      "requested_last_line": 246,
+      "reused": [],
+      "new_intervals": [
+        [
+          240,
+          246
+        ]
+      ],
+      "intentional_repeat": null
+    },
+    {
+      "request": "RE-BND-03",
+      "evidence_family": "RL01",
+      "path": "packages/core/src/relay.ts",
+      "requested_first_line": 284,
+      "requested_last_line": 300,
+      "reused": [],
+      "new_intervals": [
+        [
+          284,
+          300
+        ]
+      ],
+      "intentional_repeat": null
+    },
+    {
+      "request": "RE-BND-03",
+      "evidence_family": "RL01",
+      "path": "packages/core/src/relay.ts",
+      "requested_first_line": 319,
+      "requested_last_line": 334,
+      "reused": [],
+      "new_intervals": [
+        [
+          319,
+          334
+        ]
+      ],
+      "intentional_repeat": null
+    },
+    {
+      "request": "RE-BND-03",
+      "evidence_family": "RL01",
+      "path": "packages/core/src/relay.ts",
+      "requested_first_line": 390,
+      "requested_last_line": 418,
+      "reused": [],
+      "new_intervals": [
+        [
+          390,
+          418
+        ]
+      ],
+      "intentional_repeat": null
+    },
+    {
+      "request": "RE-BND-03",
+      "evidence_family": "RL01",
+      "path": "packages/core/src/relay.ts",
+      "requested_first_line": 434,
+      "requested_last_line": 481,
+      "reused": [],
+      "new_intervals": [
+        [
+          434,
+          481
+        ]
+      ],
+      "intentional_repeat": null
+    },
+    {
+      "request": "RE-BND-03",
+      "evidence_family": "RL01",
+      "path": "packages/core/src/relay.ts",
+      "requested_first_line": 568,
+      "requested_last_line": 629,
+      "reused": [],
+      "new_intervals": [
+        [
+          568,
+          629
+        ]
+      ],
+      "intentional_repeat": null
+    },
+    {
+      "request": "RE-BND-04",
+      "evidence_family": "HK01",
+      "path": "packages/core/src/relay-hook-install.ts",
+      "requested_first_line": 1,
+      "requested_last_line": 215,
+      "reused": [],
+      "new_intervals": [
+        [
+          1,
+          215
+        ]
+      ],
+      "intentional_repeat": null
+    },
+    {
+      "request": "RE-BND-04",
+      "evidence_family": "HK01",
+      "path": "packages/core/src/relay-hook-install.ts",
+      "requested_first_line": 240,
+      "requested_last_line": 252,
+      "reused": [],
+      "new_intervals": [
+        [
+          240,
+          252
+        ]
+      ],
+      "intentional_repeat": null
+    },
+    {
+      "request": "RE-BND-04",
+      "evidence_family": "HK01",
+      "path": "packages/core/src/relay-hook-install.ts",
+      "requested_first_line": 274,
+      "requested_last_line": 282,
+      "reused": [],
+      "new_intervals": [
+        [
+          274,
+          282
+        ]
+      ],
+      "intentional_repeat": null
+    },
+    {
+      "request": "RE-BND-04",
+      "evidence_family": "HK01",
+      "path": "packages/core/src/relay-hook-install.ts",
+      "requested_first_line": 337,
+      "requested_last_line": 500,
+      "reused": [
+        "R023"
+      ],
+      "new_intervals": [
+        [
+          337,
+          453
+        ],
+        [
+          475,
+          500
+        ]
+      ],
+      "intentional_repeat": null
+    },
+    {
+      "request": "RE-BND-04",
+      "evidence_family": "HK02",
+      "path": "packages/core/src/relay-hook-shipper.ts",
+      "requested_first_line": 1,
+      "requested_last_line": 130,
+      "reused": [
+        "R028",
+        "R029"
+      ],
+      "new_intervals": [
+        [
+          1,
+          38
+        ],
+        [
+          55,
+          100
+        ],
+        [
+          121,
+          130
+        ]
+      ],
+      "intentional_repeat": null
+    },
+    {
+      "request": "RE-BND-04",
+      "evidence_family": "HK03",
+      "path": "packages/core/src/relay-hook-recovery.ts",
+      "requested_first_line": 1,
+      "requested_last_line": 88,
+      "reused": [
+        "R026",
+        "R027"
+      ],
+      "new_intervals": [
+        [
+          1,
+          33
+        ],
+        [
+          48,
+          49
+        ],
+        [
+          65,
+          88
+        ]
+      ],
+      "intentional_repeat": null
+    },
+    {
+      "request": "RE-BND-05",
+      "evidence_family": "WF01",
+      "path": "packages/core/src/relay-workflow-binding.ts",
+      "requested_first_line": 1,
+      "requested_last_line": 261,
+      "reused": [
+        "R030",
+        "R031",
+        "R032"
+      ],
+      "new_intervals": [
+        [
+          1,
+          49
+        ],
+        [
+          62,
+          128
+        ],
+        [
+          148,
+          222
+        ],
+        [
+          257,
+          261
+        ]
+      ],
+      "intentional_repeat": null
+    },
+    {
+      "request": "RE-BND-05",
+      "evidence_family": "WF02",
+      "path": "packages/core/src/relay-workflow-currentstep.ts",
+      "requested_first_line": 1,
+      "requested_last_line": 139,
+      "reused": [
+        "R033",
+        "R034"
+      ],
+      "new_intervals": [
+        [
+          1,
+          37
+        ],
+        [
+          49,
+          68
+        ],
+        [
+          91,
+          139
+        ]
+      ],
+      "intentional_repeat": null
+    },
+    {
+      "request": "RE-BND-05",
+      "evidence_family": "WF03",
+      "path": "packages/core/src/relay-workflow-session.ts",
+      "requested_first_line": 1,
+      "requested_last_line": 96,
+      "reused": [
+        "R035",
+        "R036"
+      ],
+      "new_intervals": [
+        [
+          1,
+          50
+        ],
+        [
+          69,
+          81
+        ]
+      ],
+      "intentional_repeat": null
+    },
+    {
+      "request": "RE-BND-05",
+      "evidence_family": "WF04",
+      "path": "packages/core/src/relay-workflow-transition.ts",
+      "requested_first_line": 1,
+      "requested_last_line": 125,
+      "reused": [
+        "R037"
+      ],
+      "new_intervals": [
+        [
+          1,
+          66
+        ],
+        [
+          92,
+          125
+        ]
+      ],
+      "intentional_repeat": null
+    },
+    {
+      "request": "RE-BND-05",
+      "evidence_family": "WF05",
+      "path": "packages/core/src/relay-workflow-evaluator.ts",
+      "requested_first_line": 1,
+      "requested_last_line": 208,
+      "reused": [
+        "R038",
+        "R039",
+        "R040",
+        "R041"
+      ],
+      "new_intervals": [
+        [
+          1,
+          49
+        ],
+        [
+          71,
+          105
+        ],
+        [
+          126,
+          132
+        ],
+        [
+          150,
+          169
+        ],
+        [
+          194,
+          208
+        ]
+      ],
+      "intentional_repeat": null
+    },
+    {
+      "request": "RE-BND-06",
+      "evidence_family": "MV01",
+      "path": "packages/core/src/control-plane/move-session.ts",
+      "requested_first_line": 1,
+      "requested_last_line": 86,
+      "reused": [],
+      "new_intervals": [
+        [
+          1,
+          86
+        ]
+      ],
+      "intentional_repeat": null
+    },
+    {
+      "request": "RE-BND-06",
+      "evidence_family": "RG01",
+      "path": "packages/core/src/rag-studio/sql.ts",
+      "requested_first_line": 1,
+      "requested_last_line": 81,
+      "reused": [],
+      "new_intervals": [
+        [
+          1,
+          81
+        ]
+      ],
+      "intentional_repeat": "J1 requested complete RAG 1-81"
+    }
+  ],
+  "literal_entries": [
+    {
+      "id": "POP-B022",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "local:coverage.jsonl",
+      "local_path": "coverage.jsonl",
+      "source_path": "coverage.jsonl",
+      "commit": null,
+      "sha256": "d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9",
+      "git_blob_sha": "c95f8432d35a98d5a84ca8946b623a1eb5582210",
+      "bytes": 157032,
+      "source_start_byte": 26046,
+      "source_end_byte_exclusive": 27457,
+      "first_line": 22,
+      "last_line": 22,
+      "excerpt_sha256": "6b4a88a0274ae28324f31cd4536e4edec90c816847039c58188a1c40bec55005",
+      "excerpt_bytes": 1411,
+      "output_excerpt_start_byte": 11191,
+      "output_excerpt_end_byte_exclusive": 12602,
+      "common_excerpt_start_byte": 1449,
+      "common_excerpt_end_byte_exclusive": 2860
+    },
+    {
+      "id": "POP-B023",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "local:coverage.jsonl",
+      "local_path": "coverage.jsonl",
+      "source_path": "coverage.jsonl",
+      "commit": null,
+      "sha256": "d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9",
+      "git_blob_sha": "c95f8432d35a98d5a84ca8946b623a1eb5582210",
+      "bytes": 157032,
+      "source_start_byte": 27457,
+      "source_end_byte_exclusive": 28722,
+      "first_line": 23,
+      "last_line": 23,
+      "excerpt_sha256": "38980b082e8211e73cba6bc3be6f8102a9a04da719fe8caf99c2a18e21011782",
+      "excerpt_bytes": 1265,
+      "output_excerpt_start_byte": 13016,
+      "output_excerpt_end_byte_exclusive": 14281,
+      "common_excerpt_start_byte": 3274,
+      "common_excerpt_end_byte_exclusive": 4539
+    },
+    {
+      "id": "POP-B024",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "local:coverage.jsonl",
+      "local_path": "coverage.jsonl",
+      "source_path": "coverage.jsonl",
+      "commit": null,
+      "sha256": "d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9",
+      "git_blob_sha": "c95f8432d35a98d5a84ca8946b623a1eb5582210",
+      "bytes": 157032,
+      "source_start_byte": 28722,
+      "source_end_byte_exclusive": 29962,
+      "first_line": 24,
+      "last_line": 24,
+      "excerpt_sha256": "e94119b048a552925713564b96459541afcafe2556a7922e5bea2935ea37a63a",
+      "excerpt_bytes": 1240,
+      "output_excerpt_start_byte": 14695,
+      "output_excerpt_end_byte_exclusive": 15935,
+      "common_excerpt_start_byte": 4953,
+      "common_excerpt_end_byte_exclusive": 6193
+    },
+    {
+      "id": "POP-B025",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "local:coverage.jsonl",
+      "local_path": "coverage.jsonl",
+      "source_path": "coverage.jsonl",
+      "commit": null,
+      "sha256": "d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9",
+      "git_blob_sha": "c95f8432d35a98d5a84ca8946b623a1eb5582210",
+      "bytes": 157032,
+      "source_start_byte": 29962,
+      "source_end_byte_exclusive": 31239,
+      "first_line": 25,
+      "last_line": 25,
+      "excerpt_sha256": "620547bbd4f8f616200bd60403b45f7d90211937f6ba7791a9c32da93439bc21",
+      "excerpt_bytes": 1277,
+      "output_excerpt_start_byte": 16349,
+      "output_excerpt_end_byte_exclusive": 17626,
+      "common_excerpt_start_byte": 6607,
+      "common_excerpt_end_byte_exclusive": 7884
+    },
+    {
+      "id": "POP-B026",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "local:coverage.jsonl",
+      "local_path": "coverage.jsonl",
+      "source_path": "coverage.jsonl",
+      "commit": null,
+      "sha256": "d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9",
+      "git_blob_sha": "c95f8432d35a98d5a84ca8946b623a1eb5582210",
+      "bytes": 157032,
+      "source_start_byte": 31239,
+      "source_end_byte_exclusive": 32522,
+      "first_line": 26,
+      "last_line": 26,
+      "excerpt_sha256": "f92a8e0d7eca73e649384fbecaa76c87f6418a7830a884914e289b5eafec2aaa",
+      "excerpt_bytes": 1283,
+      "output_excerpt_start_byte": 18040,
+      "output_excerpt_end_byte_exclusive": 19323,
+      "common_excerpt_start_byte": 8298,
+      "common_excerpt_end_byte_exclusive": 9581
+    },
+    {
+      "id": "POP-B027",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "local:coverage.jsonl",
+      "local_path": "coverage.jsonl",
+      "source_path": "coverage.jsonl",
+      "commit": null,
+      "sha256": "d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9",
+      "git_blob_sha": "c95f8432d35a98d5a84ca8946b623a1eb5582210",
+      "bytes": 157032,
+      "source_start_byte": 32522,
+      "source_end_byte_exclusive": 33957,
+      "first_line": 27,
+      "last_line": 27,
+      "excerpt_sha256": "2affa192617113e727d586d77217e2960b99c6ab5269b984b22da71718e1e89a",
+      "excerpt_bytes": 1435,
+      "output_excerpt_start_byte": 19737,
+      "output_excerpt_end_byte_exclusive": 21172,
+      "common_excerpt_start_byte": 9995,
+      "common_excerpt_end_byte_exclusive": 11430
+    },
+    {
+      "id": "POP-B028",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "local:coverage.jsonl",
+      "local_path": "coverage.jsonl",
+      "source_path": "coverage.jsonl",
+      "commit": null,
+      "sha256": "d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9",
+      "git_blob_sha": "c95f8432d35a98d5a84ca8946b623a1eb5582210",
+      "bytes": 157032,
+      "source_start_byte": 33957,
+      "source_end_byte_exclusive": 35175,
+      "first_line": 28,
+      "last_line": 28,
+      "excerpt_sha256": "889b5d76dca75fa6b3b7a391aefb7714954f7648fc09890e008e1cbe36f52e13",
+      "excerpt_bytes": 1218,
+      "output_excerpt_start_byte": 21586,
+      "output_excerpt_end_byte_exclusive": 22804,
+      "common_excerpt_start_byte": 11844,
+      "common_excerpt_end_byte_exclusive": 13062
+    },
+    {
+      "id": "POP-B029",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "local:coverage.jsonl",
+      "local_path": "coverage.jsonl",
+      "source_path": "coverage.jsonl",
+      "commit": null,
+      "sha256": "d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9",
+      "git_blob_sha": "c95f8432d35a98d5a84ca8946b623a1eb5582210",
+      "bytes": 157032,
+      "source_start_byte": 35175,
+      "source_end_byte_exclusive": 36429,
+      "first_line": 29,
+      "last_line": 29,
+      "excerpt_sha256": "5242ef1fa8dd35603e80b0c77adcce40f699ee42e8d5bcc19b757159cc8c4ddb",
+      "excerpt_bytes": 1254,
+      "output_excerpt_start_byte": 23218,
+      "output_excerpt_end_byte_exclusive": 24472,
+      "common_excerpt_start_byte": 13476,
+      "common_excerpt_end_byte_exclusive": 14730
+    },
+    {
+      "id": "POP-B030",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "local:coverage.jsonl",
+      "local_path": "coverage.jsonl",
+      "source_path": "coverage.jsonl",
+      "commit": null,
+      "sha256": "d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9",
+      "git_blob_sha": "c95f8432d35a98d5a84ca8946b623a1eb5582210",
+      "bytes": 157032,
+      "source_start_byte": 36429,
+      "source_end_byte_exclusive": 37831,
+      "first_line": 30,
+      "last_line": 30,
+      "excerpt_sha256": "0fec3c8a661547ca39c3e3b9fa633f02d893427bc8980e2ed0145697d0115cdd",
+      "excerpt_bytes": 1402,
+      "output_excerpt_start_byte": 24886,
+      "output_excerpt_end_byte_exclusive": 26288,
+      "common_excerpt_start_byte": 15144,
+      "common_excerpt_end_byte_exclusive": 16546
+    },
+    {
+      "id": "POP-B031",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "local:coverage.jsonl",
+      "local_path": "coverage.jsonl",
+      "source_path": "coverage.jsonl",
+      "commit": null,
+      "sha256": "d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9",
+      "git_blob_sha": "c95f8432d35a98d5a84ca8946b623a1eb5582210",
+      "bytes": 157032,
+      "source_start_byte": 37831,
+      "source_end_byte_exclusive": 39109,
+      "first_line": 31,
+      "last_line": 31,
+      "excerpt_sha256": "a0a7f095211e66f9a08452f4f67ec6b459a33575bed880d4e6eec9d8d330f776",
+      "excerpt_bytes": 1278,
+      "output_excerpt_start_byte": 26702,
+      "output_excerpt_end_byte_exclusive": 27980,
+      "common_excerpt_start_byte": 16960,
+      "common_excerpt_end_byte_exclusive": 18238
+    },
+    {
+      "id": "POP-B032",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "local:coverage.jsonl",
+      "local_path": "coverage.jsonl",
+      "source_path": "coverage.jsonl",
+      "commit": null,
+      "sha256": "d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9",
+      "git_blob_sha": "c95f8432d35a98d5a84ca8946b623a1eb5582210",
+      "bytes": 157032,
+      "source_start_byte": 39109,
+      "source_end_byte_exclusive": 40401,
+      "first_line": 32,
+      "last_line": 32,
+      "excerpt_sha256": "cef204c2308e9376654529e8d33da9341359d06645b65e60d86c30513682efa8",
+      "excerpt_bytes": 1292,
+      "output_excerpt_start_byte": 28394,
+      "output_excerpt_end_byte_exclusive": 29686,
+      "common_excerpt_start_byte": 18652,
+      "common_excerpt_end_byte_exclusive": 19944
+    },
+    {
+      "id": "POP-B033",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "local:coverage.jsonl",
+      "local_path": "coverage.jsonl",
+      "source_path": "coverage.jsonl",
+      "commit": null,
+      "sha256": "d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9",
+      "git_blob_sha": "c95f8432d35a98d5a84ca8946b623a1eb5582210",
+      "bytes": 157032,
+      "source_start_byte": 40401,
+      "source_end_byte_exclusive": 41635,
+      "first_line": 33,
+      "last_line": 33,
+      "excerpt_sha256": "b5ff6764d14c1a4d7099c949060a962580cede3b823b6890e37cda7928f4fee5",
+      "excerpt_bytes": 1234,
+      "output_excerpt_start_byte": 30100,
+      "output_excerpt_end_byte_exclusive": 31334,
+      "common_excerpt_start_byte": 20358,
+      "common_excerpt_end_byte_exclusive": 21592
+    },
+    {
+      "id": "POP-B034",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "local:coverage.jsonl",
+      "local_path": "coverage.jsonl",
+      "source_path": "coverage.jsonl",
+      "commit": null,
+      "sha256": "d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9",
+      "git_blob_sha": "c95f8432d35a98d5a84ca8946b623a1eb5582210",
+      "bytes": 157032,
+      "source_start_byte": 41635,
+      "source_end_byte_exclusive": 42916,
+      "first_line": 34,
+      "last_line": 34,
+      "excerpt_sha256": "0a48199945576eee6e9114e6139c7e0077fb92f6a80f36c9bc1a497fb2b2e75d",
+      "excerpt_bytes": 1281,
+      "output_excerpt_start_byte": 31748,
+      "output_excerpt_end_byte_exclusive": 33029,
+      "common_excerpt_start_byte": 22006,
+      "common_excerpt_end_byte_exclusive": 23287
+    },
+    {
+      "id": "POP-B035",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "local:coverage.jsonl",
+      "local_path": "coverage.jsonl",
+      "source_path": "coverage.jsonl",
+      "commit": null,
+      "sha256": "d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9",
+      "git_blob_sha": "c95f8432d35a98d5a84ca8946b623a1eb5582210",
+      "bytes": 157032,
+      "source_start_byte": 42916,
+      "source_end_byte_exclusive": 44500,
+      "first_line": 35,
+      "last_line": 35,
+      "excerpt_sha256": "dedbbeb5d1cbd9bc328704b8c4affa7a955bfa8dfd3d3f7345932cc14e56cb32",
+      "excerpt_bytes": 1584,
+      "output_excerpt_start_byte": 33443,
+      "output_excerpt_end_byte_exclusive": 35027,
+      "common_excerpt_start_byte": 23701,
+      "common_excerpt_end_byte_exclusive": 25285
+    },
+    {
+      "id": "POP-B102",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "local:coverage.jsonl",
+      "local_path": "coverage.jsonl",
+      "source_path": "coverage.jsonl",
+      "commit": null,
+      "sha256": "d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9",
+      "git_blob_sha": "c95f8432d35a98d5a84ca8946b623a1eb5582210",
+      "bytes": 157032,
+      "source_start_byte": 124572,
+      "source_end_byte_exclusive": 125792,
+      "first_line": 102,
+      "last_line": 102,
+      "excerpt_sha256": "5cd7649bb2abff1b50b5d4f119f4dfa8cad6f9d6bfdb0e17db74bda0e639cbfc",
+      "excerpt_bytes": 1220,
+      "output_excerpt_start_byte": 35445,
+      "output_excerpt_end_byte_exclusive": 36665,
+      "common_excerpt_start_byte": 25703,
+      "common_excerpt_end_byte_exclusive": 26923
+    },
+    {
+      "id": "POP-B107",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "local:coverage.jsonl",
+      "local_path": "coverage.jsonl",
+      "source_path": "coverage.jsonl",
+      "commit": null,
+      "sha256": "d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9",
+      "git_blob_sha": "c95f8432d35a98d5a84ca8946b623a1eb5582210",
+      "bytes": 157032,
+      "source_start_byte": 130581,
+      "source_end_byte_exclusive": 131766,
+      "first_line": 107,
+      "last_line": 107,
+      "excerpt_sha256": "952578989b42bdbe199f693edabb9a022d082bc4670a80c168fd5bb38e8d8963",
+      "excerpt_bytes": 1185,
+      "output_excerpt_start_byte": 37083,
+      "output_excerpt_end_byte_exclusive": 38268,
+      "common_excerpt_start_byte": 27341,
+      "common_excerpt_end_byte_exclusive": 28526
+    },
+    {
+      "id": "POP-B108",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "local:coverage.jsonl",
+      "local_path": "coverage.jsonl",
+      "source_path": "coverage.jsonl",
+      "commit": null,
+      "sha256": "d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9",
+      "git_blob_sha": "c95f8432d35a98d5a84ca8946b623a1eb5582210",
+      "bytes": 157032,
+      "source_start_byte": 131766,
+      "source_end_byte_exclusive": 132969,
+      "first_line": 108,
+      "last_line": 108,
+      "excerpt_sha256": "aed12a619c2c53f13299b11fed6612bef4ee2593b0e1a21629682dd5efc814fc",
+      "excerpt_bytes": 1203,
+      "output_excerpt_start_byte": 38686,
+      "output_excerpt_end_byte_exclusive": 39889,
+      "common_excerpt_start_byte": 28944,
+      "common_excerpt_end_byte_exclusive": 30147
+    },
+    {
+      "id": "POP-B109",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "local:coverage.jsonl",
+      "local_path": "coverage.jsonl",
+      "source_path": "coverage.jsonl",
+      "commit": null,
+      "sha256": "d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9",
+      "git_blob_sha": "c95f8432d35a98d5a84ca8946b623a1eb5582210",
+      "bytes": 157032,
+      "source_start_byte": 132969,
+      "source_end_byte_exclusive": 134190,
+      "first_line": 109,
+      "last_line": 109,
+      "excerpt_sha256": "ceae0bf0295b51d04152eb7352bfc3d35adfb1c5eaa6db1a9615bd8fd185cb98",
+      "excerpt_bytes": 1221,
+      "output_excerpt_start_byte": 40307,
+      "output_excerpt_end_byte_exclusive": 41528,
+      "common_excerpt_start_byte": 30565,
+      "common_excerpt_end_byte_exclusive": 31786
+    },
+    {
+      "id": "POP-B110",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "local:coverage.jsonl",
+      "local_path": "coverage.jsonl",
+      "source_path": "coverage.jsonl",
+      "commit": null,
+      "sha256": "d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9",
+      "git_blob_sha": "c95f8432d35a98d5a84ca8946b623a1eb5582210",
+      "bytes": 157032,
+      "source_start_byte": 134190,
+      "source_end_byte_exclusive": 135439,
+      "first_line": 110,
+      "last_line": 110,
+      "excerpt_sha256": "41c42348824a628fa0910ff5cf3edd1b170fcf93245735811dbf03d444183878",
+      "excerpt_bytes": 1249,
+      "output_excerpt_start_byte": 41946,
+      "output_excerpt_end_byte_exclusive": 43195,
+      "common_excerpt_start_byte": 32204,
+      "common_excerpt_end_byte_exclusive": 33453
+    },
+    {
+      "id": "POP-B111",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "local:coverage.jsonl",
+      "local_path": "coverage.jsonl",
+      "source_path": "coverage.jsonl",
+      "commit": null,
+      "sha256": "d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9",
+      "git_blob_sha": "c95f8432d35a98d5a84ca8946b623a1eb5582210",
+      "bytes": 157032,
+      "source_start_byte": 135439,
+      "source_end_byte_exclusive": 136636,
+      "first_line": 111,
+      "last_line": 111,
+      "excerpt_sha256": "23c8cbb5395962774e4f23a1f530690934b59856d9f0796bb75c599e8828fd50",
+      "excerpt_bytes": 1197,
+      "output_excerpt_start_byte": 43613,
+      "output_excerpt_end_byte_exclusive": 44810,
+      "common_excerpt_start_byte": 33871,
+      "common_excerpt_end_byte_exclusive": 35068
+    },
+    {
+      "id": "POP-B112",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "local:coverage.jsonl",
+      "local_path": "coverage.jsonl",
+      "source_path": "coverage.jsonl",
+      "commit": null,
+      "sha256": "d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9",
+      "git_blob_sha": "c95f8432d35a98d5a84ca8946b623a1eb5582210",
+      "bytes": 157032,
+      "source_start_byte": 136636,
+      "source_end_byte_exclusive": 137829,
+      "first_line": 112,
+      "last_line": 112,
+      "excerpt_sha256": "3f9c563b6983ec17aa164a2f3bee32136bbcd9871c2b901680719ba6d50bfe91",
+      "excerpt_bytes": 1193,
+      "output_excerpt_start_byte": 45228,
+      "output_excerpt_end_byte_exclusive": 46421,
+      "common_excerpt_start_byte": 35486,
+      "common_excerpt_end_byte_exclusive": 36679
+    },
+    {
+      "id": "POP-B113",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "local:coverage.jsonl",
+      "local_path": "coverage.jsonl",
+      "source_path": "coverage.jsonl",
+      "commit": null,
+      "sha256": "d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9",
+      "git_blob_sha": "c95f8432d35a98d5a84ca8946b623a1eb5582210",
+      "bytes": 157032,
+      "source_start_byte": 137829,
+      "source_end_byte_exclusive": 139040,
+      "first_line": 113,
+      "last_line": 113,
+      "excerpt_sha256": "a3390041624a044a2b989726e39e8da5b4dd842b39da89f902c462579eb5b0ff",
+      "excerpt_bytes": 1211,
+      "output_excerpt_start_byte": 46839,
+      "output_excerpt_end_byte_exclusive": 48050,
+      "common_excerpt_start_byte": 37097,
+      "common_excerpt_end_byte_exclusive": 38308
+    },
+    {
+      "id": "POP-B114",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "local:coverage.jsonl",
+      "local_path": "coverage.jsonl",
+      "source_path": "coverage.jsonl",
+      "commit": null,
+      "sha256": "d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9",
+      "git_blob_sha": "c95f8432d35a98d5a84ca8946b623a1eb5582210",
+      "bytes": 157032,
+      "source_start_byte": 139040,
+      "source_end_byte_exclusive": 140356,
+      "first_line": 114,
+      "last_line": 114,
+      "excerpt_sha256": "932811644e37f03cf88d6517d482909aee23f66dcff411398088f7b5268e48cd",
+      "excerpt_bytes": 1316,
+      "output_excerpt_start_byte": 48468,
+      "output_excerpt_end_byte_exclusive": 49784,
+      "common_excerpt_start_byte": 38726,
+      "common_excerpt_end_byte_exclusive": 40042
+    },
+    {
+      "id": "POP-B115",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "local:coverage.jsonl",
+      "local_path": "coverage.jsonl",
+      "source_path": "coverage.jsonl",
+      "commit": null,
+      "sha256": "d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9",
+      "git_blob_sha": "c95f8432d35a98d5a84ca8946b623a1eb5582210",
+      "bytes": 157032,
+      "source_start_byte": 140356,
+      "source_end_byte_exclusive": 141537,
+      "first_line": 115,
+      "last_line": 115,
+      "excerpt_sha256": "c891480033e060c8446a91eff16d4646116d634e283f6f2b6c8dc0a43b054cc7",
+      "excerpt_bytes": 1181,
+      "output_excerpt_start_byte": 50202,
+      "output_excerpt_end_byte_exclusive": 51383,
+      "common_excerpt_start_byte": 40460,
+      "common_excerpt_end_byte_exclusive": 41641
+    },
+    {
+      "id": "H-BND",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "history-body:boundaries",
+      "local_path": "history/boundaries.md",
+      "source_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/bodies/boundaries.md",
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "sha256": "7b20ed7cedf86c24fb1d9c3471250fcddf666f9c66e7de2dba9852df1fa17143",
+      "git_blob_sha": "7c4b50cdc6f00552c1289c4221855d3120dd6572",
+      "bytes": 3905,
+      "source_start_byte": 0,
+      "source_end_byte_exclusive": 3905,
+      "first_line": 1,
+      "last_line": 25,
+      "excerpt_sha256": "7b20ed7cedf86c24fb1d9c3471250fcddf666f9c66e7de2dba9852df1fa17143",
+      "excerpt_bytes": 3905,
+      "output_excerpt_start_byte": 77536,
+      "output_excerpt_end_byte_exclusive": 81441,
+      "common_excerpt_start_byte": 67794,
+      "common_excerpt_end_byte_exclusive": 71699
+    },
+    {
+      "id": "H-ENTRY",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "history-body:entry",
+      "local_path": "history/entry.md",
+      "source_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/bodies/entry.md",
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "sha256": "6a488ca8f9717a497949b71ed41db84d995f23b90c31cc59c22c5bd86239ca6c",
+      "git_blob_sha": "894266bd4543763fb1ee2a4dbf0ba749a244ec48",
+      "bytes": 7312,
+      "source_start_byte": 0,
+      "source_end_byte_exclusive": 7312,
+      "first_line": 1,
+      "last_line": 72,
+      "excerpt_sha256": "6a488ca8f9717a497949b71ed41db84d995f23b90c31cc59c22c5bd86239ca6c",
+      "excerpt_bytes": 7312,
+      "output_excerpt_start_byte": 81937,
+      "output_excerpt_end_byte_exclusive": 89249,
+      "common_excerpt_start_byte": 72195,
+      "common_excerpt_end_byte_exclusive": 79507
+    },
+    {
+      "id": "H-MANIFEST",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "local:history/manifest.json",
+      "local_path": "history/manifest.json",
+      "source_path": "history/manifest.json",
+      "commit": null,
+      "sha256": "05d97ef28360e32115f24dcb5bb764dc013ed2a00a14fb09d0733f767746c87a",
+      "git_blob_sha": "7b0c84d78080d4bee3655cbc4e9e8812c98dba65",
+      "bytes": 3215,
+      "source_start_byte": 0,
+      "source_end_byte_exclusive": 3215,
+      "first_line": 1,
+      "last_line": 73,
+      "excerpt_sha256": "05d97ef28360e32115f24dcb5bb764dc013ed2a00a14fb09d0733f767746c87a",
+      "excerpt_bytes": 3215,
+      "output_excerpt_start_byte": 89664,
+      "output_excerpt_end_byte_exclusive": 92879,
+      "common_excerpt_start_byte": 79922,
+      "common_excerpt_end_byte_exclusive": 83137
+    },
+    {
+      "id": "H-A3-1",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "history-input:a3-dossier.md",
+      "local_path": "inputs-effective/history/a3-dossier.md",
+      "source_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/review-packets/l1-a3-v1-dossier.md",
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "sha256": "36416073165d59eec9c7d847a26f414d855cc2a40758d548f4dd49669dccc5d4",
+      "git_blob_sha": "285e56c1680153ce75c71fd99bcf9455bde70d4d",
+      "bytes": 177076,
+      "source_start_byte": 172176,
+      "source_end_byte_exclusive": 173006,
+      "first_line": 3395,
+      "last_line": 3408,
+      "excerpt_sha256": "36c75c1722ab35ca398305c8800fd9f7da40154f68fa49571f9f3b0b08cbfb80",
+      "excerpt_bytes": 830,
+      "output_excerpt_start_byte": 93395,
+      "output_excerpt_end_byte_exclusive": 94225,
+      "common_excerpt_start_byte": 83653,
+      "common_excerpt_end_byte_exclusive": 84483
+    },
+    {
+      "id": "H-A4-1",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "history-input:a4-dossier.md",
+      "local_path": "inputs-effective/history/a4-dossier.md",
+      "source_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/review-packets/l1-a4-v1-dossier.md",
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "sha256": "83b544ac46f99b2bf3585ff4e607bcd403e49eb20dd128deb5b6a029a772ead0",
+      "git_blob_sha": "6f872ea0e22097d8084fd587f585751a436f607e",
+      "bytes": 155061,
+      "source_start_byte": 107999,
+      "source_end_byte_exclusive": 109118,
+      "first_line": 2134,
+      "last_line": 2150,
+      "excerpt_sha256": "cfb42e212bfbd02862376c1cea672080dc129fbdbc4c89ed4b4e54a3e6d7dcd5",
+      "excerpt_bytes": 1119,
+      "output_excerpt_start_byte": 94741,
+      "output_excerpt_end_byte_exclusive": 95860,
+      "common_excerpt_start_byte": 84999,
+      "common_excerpt_end_byte_exclusive": 86118
+    },
+    {
+      "id": "H-A4-2",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "history-input:a4-dossier.md",
+      "local_path": "inputs-effective/history/a4-dossier.md",
+      "source_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/review-packets/l1-a4-v1-dossier.md",
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "sha256": "83b544ac46f99b2bf3585ff4e607bcd403e49eb20dd128deb5b6a029a772ead0",
+      "git_blob_sha": "6f872ea0e22097d8084fd587f585751a436f607e",
+      "bytes": 155061,
+      "source_start_byte": 110749,
+      "source_end_byte_exclusive": 111851,
+      "first_line": 2180,
+      "last_line": 2195,
+      "excerpt_sha256": "de354275562af2a7b7f181b6aa675cfd891e787b6de3100234b3a776dfefd8e4",
+      "excerpt_bytes": 1102,
+      "output_excerpt_start_byte": 96376,
+      "output_excerpt_end_byte_exclusive": 97478,
+      "common_excerpt_start_byte": 86634,
+      "common_excerpt_end_byte_exclusive": 87736
+    },
+    {
+      "id": "H-A4-3",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "history-input:a4-dossier.md",
+      "local_path": "inputs-effective/history/a4-dossier.md",
+      "source_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/review-packets/l1-a4-v1-dossier.md",
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "sha256": "83b544ac46f99b2bf3585ff4e607bcd403e49eb20dd128deb5b6a029a772ead0",
+      "git_blob_sha": "6f872ea0e22097d8084fd587f585751a436f607e",
+      "bytes": 155061,
+      "source_start_byte": 140347,
+      "source_end_byte_exclusive": 141341,
+      "first_line": 2757,
+      "last_line": 2772,
+      "excerpt_sha256": "d4b3458c4b570dce95ff4276e942bd603df71d3110e0d7af062c16591245c144",
+      "excerpt_bytes": 994,
+      "output_excerpt_start_byte": 97994,
+      "output_excerpt_end_byte_exclusive": 98988,
+      "common_excerpt_start_byte": 88252,
+      "common_excerpt_end_byte_exclusive": 89246
+    },
+    {
+      "id": "H-A4-4",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "history-input:a4-dossier.md",
+      "local_path": "inputs-effective/history/a4-dossier.md",
+      "source_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/review-packets/l1-a4-v1-dossier.md",
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "sha256": "83b544ac46f99b2bf3585ff4e607bcd403e49eb20dd128deb5b6a029a772ead0",
+      "git_blob_sha": "6f872ea0e22097d8084fd587f585751a436f607e",
+      "bytes": 155061,
+      "source_start_byte": 143470,
+      "source_end_byte_exclusive": 144303,
+      "first_line": 2827,
+      "last_line": 2844,
+      "excerpt_sha256": "a80da331cf35e8e73a9f5eb12c90a8482d6a6a3bfb365492b2c951b45155e544",
+      "excerpt_bytes": 833,
+      "output_excerpt_start_byte": 99504,
+      "output_excerpt_end_byte_exclusive": 100337,
+      "common_excerpt_start_byte": 89762,
+      "common_excerpt_end_byte_exclusive": 90595
+    },
+    {
+      "id": "H-A4-5",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "history-input:a4-dossier.md",
+      "local_path": "inputs-effective/history/a4-dossier.md",
+      "source_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/review-packets/l1-a4-v1-dossier.md",
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "sha256": "83b544ac46f99b2bf3585ff4e607bcd403e49eb20dd128deb5b6a029a772ead0",
+      "git_blob_sha": "6f872ea0e22097d8084fd587f585751a436f607e",
+      "bytes": 155061,
+      "source_start_byte": 146382,
+      "source_end_byte_exclusive": 147299,
+      "first_line": 2918,
+      "last_line": 2932,
+      "excerpt_sha256": "649bd156be8390f46474fced2164296237f7d55a12657dec7c77f9726421986d",
+      "excerpt_bytes": 917,
+      "output_excerpt_start_byte": 100853,
+      "output_excerpt_end_byte_exclusive": 101770,
+      "common_excerpt_start_byte": 91111,
+      "common_excerpt_end_byte_exclusive": 92028
+    },
+    {
+      "id": "H-A4-6",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "history-input:a4-dossier.md",
+      "local_path": "inputs-effective/history/a4-dossier.md",
+      "source_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/review-packets/l1-a4-v1-dossier.md",
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "sha256": "83b544ac46f99b2bf3585ff4e607bcd403e49eb20dd128deb5b6a029a772ead0",
+      "git_blob_sha": "6f872ea0e22097d8084fd587f585751a436f607e",
+      "bytes": 155061,
+      "source_start_byte": 151283,
+      "source_end_byte_exclusive": 155060,
+      "first_line": 2967,
+      "last_line": 2989,
+      "excerpt_sha256": "98f7110b0af334f23d3cc3f03cb87f1690f495167028b82e8f9cd6a933683966",
+      "excerpt_bytes": 3777,
+      "output_excerpt_start_byte": 102286,
+      "output_excerpt_end_byte_exclusive": 106063,
+      "common_excerpt_start_byte": 92544,
+      "common_excerpt_end_byte_exclusive": 96321
+    },
+    {
+      "id": "H-PROJ-BND-derived_population_routing",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "history-input:coverage-needs-projection.json",
+      "local_path": "inputs-effective/history/coverage-needs-projection.json",
+      "source_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/a-l1-evidence-v1/coverage-needs-projection.json",
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "sha256": "05485c4bd0ac9c76814e44537788818bbcf1fbcbfb87dd8063ce30bf1a67e0cf",
+      "git_blob_sha": "2e91d0f916dfa95a2dd0ef7ae74ff8c1bb427045",
+      "bytes": 726892,
+      "source_start_byte": 719455,
+      "source_end_byte_exclusive": 720106,
+      "first_line": 17143,
+      "last_line": 17170,
+      "excerpt_sha256": "9ab67f4c1f3e775f8c56b9c228691eba09fd1d78974ff8578c6825776d2a1112",
+      "excerpt_bytes": 651,
+      "json_artifact_key": "s1.core.boundaries",
+      "json_property": "derived_population_routing",
+      "whole_input_remains_required": true,
+      "output_excerpt_start_byte": 106635,
+      "output_excerpt_end_byte_exclusive": 107286,
+      "common_excerpt_start_byte": 96893,
+      "common_excerpt_end_byte_exclusive": 97544
+    },
+    {
+      "id": "H-PROJ-BND-clarification_authored_in_this_revision",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "history-input:coverage-needs-projection.json",
+      "local_path": "inputs-effective/history/coverage-needs-projection.json",
+      "source_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/a-l1-evidence-v1/coverage-needs-projection.json",
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "sha256": "05485c4bd0ac9c76814e44537788818bbcf1fbcbfb87dd8063ce30bf1a67e0cf",
+      "git_blob_sha": "2e91d0f916dfa95a2dd0ef7ae74ff8c1bb427045",
+      "bytes": 726892,
+      "source_start_byte": 720232,
+      "source_end_byte_exclusive": 720948,
+      "first_line": 17177,
+      "last_line": 17183,
+      "excerpt_sha256": "467c96dc047d8abb73e56c844796268b9913e20ab51dc1398d287db8715af10a",
+      "excerpt_bytes": 716,
+      "json_artifact_key": "s1.core.boundaries",
+      "json_property": "clarification_authored_in_this_revision",
+      "whole_input_remains_required": true,
+      "output_excerpt_start_byte": 107871,
+      "output_excerpt_end_byte_exclusive": 108587,
+      "common_excerpt_start_byte": 98129,
+      "common_excerpt_end_byte_exclusive": 98845
+    },
+    {
+      "id": "H-PROJ-ENTRY-derived_population_routing",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "history-input:coverage-needs-projection.json",
+      "local_path": "inputs-effective/history/coverage-needs-projection.json",
+      "source_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/a-l1-evidence-v1/coverage-needs-projection.json",
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "sha256": "05485c4bd0ac9c76814e44537788818bbcf1fbcbfb87dd8063ce30bf1a67e0cf",
+      "git_blob_sha": "2e91d0f916dfa95a2dd0ef7ae74ff8c1bb427045",
+      "bytes": 726892,
+      "source_start_byte": 724811,
+      "source_end_byte_exclusive": 725670,
+      "first_line": 17266,
+      "last_line": 17299,
+      "excerpt_sha256": "32dc324b7e626414d6548b23c24386fd3b38ab45b39861101b49f68bcdcf902d",
+      "excerpt_bytes": 859,
+      "json_artifact_key": "s1.core.entry",
+      "json_property": "derived_population_routing",
+      "whole_input_remains_required": true,
+      "output_excerpt_start_byte": 109161,
+      "output_excerpt_end_byte_exclusive": 110020,
+      "common_excerpt_start_byte": 99419,
+      "common_excerpt_end_byte_exclusive": 100278
+    },
+    {
+      "id": "H-PROJ-ENTRY-clarification_authored_in_this_revision",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "history-input:coverage-needs-projection.json",
+      "local_path": "inputs-effective/history/coverage-needs-projection.json",
+      "source_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/a-l1-evidence-v1/coverage-needs-projection.json",
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "sha256": "05485c4bd0ac9c76814e44537788818bbcf1fbcbfb87dd8063ce30bf1a67e0cf",
+      "git_blob_sha": "2e91d0f916dfa95a2dd0ef7ae74ff8c1bb427045",
+      "bytes": 726892,
+      "source_start_byte": 725788,
+      "source_end_byte_exclusive": 726552,
+      "first_line": 17304,
+      "last_line": 17310,
+      "excerpt_sha256": "bed9c234230fc79b7ae501b4510ddea69df6d37dc793c942313f8aa9cb35c14b",
+      "excerpt_bytes": 764,
+      "json_artifact_key": "s1.core.entry",
+      "json_property": "clarification_authored_in_this_revision",
+      "whole_input_remains_required": true,
+      "output_excerpt_start_byte": 110607,
+      "output_excerpt_end_byte_exclusive": 111371,
+      "common_excerpt_start_byte": 100865,
+      "common_excerpt_end_byte_exclusive": 101629
+    },
+    {
+      "id": "COMMON-S01",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "packages/core/README.md",
+      "local_path": "sources/packages/core/README.md",
+      "source_path": "packages/core/README.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "e74885e18e96297fd931989505937559ecbdce42c595cf8846411d4f0c4de324",
+      "git_blob_sha": "742921238462659e1a5a314f2e0238102c6e9f3a",
+      "bytes": 7777,
+      "source_start_byte": 0,
+      "source_end_byte_exclusive": 7777,
+      "first_line": 1,
+      "last_line": 88,
+      "excerpt_sha256": "e74885e18e96297fd931989505937559ecbdce42c595cf8846411d4f0c4de324",
+      "excerpt_bytes": 7777,
+      "output_excerpt_start_byte": 112003,
+      "output_excerpt_end_byte_exclusive": 119780,
+      "common_excerpt_start_byte": 102261,
+      "common_excerpt_end_byte_exclusive": 110038
+    },
+    {
+      "id": "COMMON-I01",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "input:AGENTS.md",
+      "local_path": "inputs-effective/AGENTS.md",
+      "source_path": "provided-inputs/AGENTS.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "bytes": 16501,
+      "source_start_byte": 12802,
+      "source_end_byte_exclusive": 15915,
+      "first_line": 207,
+      "last_line": 217,
+      "excerpt_sha256": "405cd0b08a53f053f88de7fd615712564267b65a3cfcdaafd0b86a7e177fb1c1",
+      "excerpt_bytes": 3113,
+      "output_excerpt_start_byte": 120215,
+      "output_excerpt_end_byte_exclusive": 123328,
+      "common_excerpt_start_byte": 110473,
+      "common_excerpt_end_byte_exclusive": 113586
+    },
+    {
+      "id": "COMMON-K01",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/partition.json",
+      "local_path": "sources/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/partition.json",
+      "source_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/partition.json",
+      "commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+      "sha256": "959a3c024337c8082625082cba4fad6ceea3243690fb0850634546dc33f2684c",
+      "git_blob_sha": "b834eb19daea27f173afb1dd011a19f77b491f24",
+      "bytes": 3929,
+      "source_start_byte": 480,
+      "source_end_byte_exclusive": 2044,
+      "first_line": 11,
+      "last_line": 51,
+      "excerpt_sha256": "cf3a1bb7cc656f9f124f923520212a7758f2983959251a0e7bf83a7a4eae6fff",
+      "excerpt_bytes": 1564,
+      "output_excerpt_start_byte": 124080,
+      "output_excerpt_end_byte_exclusive": 125644,
+      "common_excerpt_start_byte": 114338,
+      "common_excerpt_end_byte_exclusive": 115902
+    },
+    {
+      "id": "COMMON-K02-1",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/dependencies.json",
+      "local_path": "sources/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/dependencies.json",
+      "source_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/dependencies.json",
+      "commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+      "sha256": "83dfbbe0a1f585dc548643dc04f5f85eb2d4c1531d176a068582829e80375ee9",
+      "git_blob_sha": "a65c72a33599afec662649c8ebf86808c99e320b",
+      "bytes": 6445,
+      "source_start_byte": 0,
+      "source_end_byte_exclusive": 641,
+      "first_line": 1,
+      "last_line": 9,
+      "excerpt_sha256": "6026d8a3dbf6ae17e5e2d81b6b7d11d026a7864edb8f2b76606a941bc1c8e174",
+      "excerpt_bytes": 641,
+      "output_excerpt_start_byte": 126153,
+      "output_excerpt_end_byte_exclusive": 126794,
+      "common_excerpt_start_byte": 116411,
+      "common_excerpt_end_byte_exclusive": 117052
+    },
+    {
+      "id": "COMMON-K02-2",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/dependencies.json",
+      "local_path": "sources/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/dependencies.json",
+      "source_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/dependencies.json",
+      "commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+      "sha256": "83dfbbe0a1f585dc548643dc04f5f85eb2d4c1531d176a068582829e80375ee9",
+      "git_blob_sha": "a65c72a33599afec662649c8ebf86808c99e320b",
+      "bytes": 6445,
+      "source_start_byte": 2115,
+      "source_end_byte_exclusive": 3466,
+      "first_line": 55,
+      "last_line": 98,
+      "excerpt_sha256": "0b4c3783474f8376f7f4280231814e2c69137dbc43ec282b9a801cb1d4aef9c8",
+      "excerpt_bytes": 1351,
+      "output_excerpt_start_byte": 127309,
+      "output_excerpt_end_byte_exclusive": 128660,
+      "common_excerpt_start_byte": 117567,
+      "common_excerpt_end_byte_exclusive": 118918
+    },
+    {
+      "id": "COMMON-K02-3",
+      "requests": [
+        "RE-BND-01"
+      ],
+      "registry_key": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/dependencies.json",
+      "local_path": "sources/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/dependencies.json",
+      "source_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/dependencies.json",
+      "commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+      "sha256": "83dfbbe0a1f585dc548643dc04f5f85eb2d4c1531d176a068582829e80375ee9",
+      "git_blob_sha": "a65c72a33599afec662649c8ebf86808c99e320b",
+      "bytes": 6445,
+      "source_start_byte": 4437,
+      "source_end_byte_exclusive": 6445,
+      "first_line": 160,
+      "last_line": 202,
+      "excerpt_sha256": "c207f5967d5b8f36290f031148d6486efa4a71f0b4856ea65915d5a298e74693",
+      "excerpt_bytes": 2008,
+      "output_excerpt_start_byte": 129177,
+      "output_excerpt_end_byte_exclusive": 131185,
+      "common_excerpt_start_byte": 119435,
+      "common_excerpt_end_byte_exclusive": 121443
+    },
+    {
+      "id": "BT01-1",
+      "requests": [
+        "RE-BND-01",
+        "RE-BND-06"
+      ],
+      "registry_key": "packages/core/test/move-session.test.ts",
+      "local_path": "sources/packages/core/test/move-session.test.ts",
+      "source_path": "packages/core/test/move-session.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "114b271ad80fb562ccc3965a06beb22476ab6d41fbeb9e430712cc1c9cbac2fa",
+      "git_blob_sha": "187f0dd72465af96e8bcebf8242756a88b99228b",
+      "bytes": 11019,
+      "source_start_byte": 3553,
+      "source_end_byte_exclusive": 4955,
+      "first_line": 83,
+      "last_line": 117,
+      "excerpt_sha256": "f51a156cbcc4f20eb160cee8afa3ab4b42a4f87b89408c710da280a640516e9f",
+      "excerpt_bytes": 1402,
+      "test_execution": "NOT_RUN",
+      "output_excerpt_start_byte": 132015,
+      "output_excerpt_end_byte_exclusive": 133417
+    },
+    {
+      "id": "BT01-2",
+      "requests": [
+        "RE-BND-01",
+        "RE-BND-06"
+      ],
+      "registry_key": "packages/core/test/move-session.test.ts",
+      "local_path": "sources/packages/core/test/move-session.test.ts",
+      "source_path": "packages/core/test/move-session.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "114b271ad80fb562ccc3965a06beb22476ab6d41fbeb9e430712cc1c9cbac2fa",
+      "git_blob_sha": "187f0dd72465af96e8bcebf8242756a88b99228b",
+      "bytes": 11019,
+      "source_start_byte": 6939,
+      "source_end_byte_exclusive": 11019,
+      "first_line": 167,
+      "last_line": 239,
+      "excerpt_sha256": "d5d080198664eb93d00e0a84758fd7f2afc8cb2133f8fd5a55ced0b63cde5eb5",
+      "excerpt_bytes": 4080,
+      "test_execution": "NOT_RUN",
+      "output_excerpt_start_byte": 133861,
+      "output_excerpt_end_byte_exclusive": 137941
+    },
+    {
+      "id": "BT02-1",
+      "requests": [
+        "RE-BND-01",
+        "RE-BND-02"
+      ],
+      "registry_key": "packages/core/test/relay-commands.test.ts",
+      "local_path": "sources/packages/core/test/relay-commands.test.ts",
+      "source_path": "packages/core/test/relay-commands.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "899dc3433d30d7e539dbb1b7b6aa38e94528ab30a8b68c508e8170a7bcbe82dd",
+      "git_blob_sha": "7d6e9bdf25955bd4a7451db57205638bcfdbff2b",
+      "bytes": 2119,
+      "source_start_byte": 0,
+      "source_end_byte_exclusive": 2119,
+      "first_line": 1,
+      "last_line": 42,
+      "excerpt_sha256": "899dc3433d30d7e539dbb1b7b6aa38e94528ab30a8b68c508e8170a7bcbe82dd",
+      "excerpt_bytes": 2119,
+      "test_execution": "NOT_RUN",
+      "output_excerpt_start_byte": 138379,
+      "output_excerpt_end_byte_exclusive": 140498
+    },
+    {
+      "id": "BT03-1",
+      "requests": [
+        "RE-BND-01",
+        "RE-BND-04"
+      ],
+      "registry_key": "packages/core/test/relay-hook-install.test.ts",
+      "local_path": "sources/packages/core/test/relay-hook-install.test.ts",
+      "source_path": "packages/core/test/relay-hook-install.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "b6cf2cd2727906d64ab13a9ddf308a0d9bab841b233fb355da7f7088b387661f",
+      "git_blob_sha": "fb903ba67d4dcfa55bdea704d27435d930a0e823",
+      "bytes": 30672,
+      "source_start_byte": 17042,
+      "source_end_byte_exclusive": 17833,
+      "first_line": 382,
+      "last_line": 395,
+      "excerpt_sha256": "6003db15f58cd02b8c617b753597d596201c1919effcc4f839256b7752e3e814",
+      "excerpt_bytes": 791,
+      "test_execution": "NOT_RUN",
+      "output_excerpt_start_byte": 140949,
+      "output_excerpt_end_byte_exclusive": 141740
+    },
+    {
+      "id": "BT03-2",
+      "requests": [
+        "RE-BND-01",
+        "RE-BND-04"
+      ],
+      "registry_key": "packages/core/test/relay-hook-install.test.ts",
+      "local_path": "sources/packages/core/test/relay-hook-install.test.ts",
+      "source_path": "packages/core/test/relay-hook-install.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "b6cf2cd2727906d64ab13a9ddf308a0d9bab841b233fb355da7f7088b387661f",
+      "git_blob_sha": "fb903ba67d4dcfa55bdea704d27435d930a0e823",
+      "bytes": 30672,
+      "source_start_byte": 17837,
+      "source_end_byte_exclusive": 20972,
+      "first_line": 398,
+      "last_line": 466,
+      "excerpt_sha256": "d6fd3f45f0559b4bfef7f60c89a1d40d666ab67476ad9cb5f942cd19c07989f2",
+      "excerpt_bytes": 3135,
+      "test_execution": "NOT_RUN",
+      "output_excerpt_start_byte": 142191,
+      "output_excerpt_end_byte_exclusive": 145326
+    },
+    {
+      "id": "BT03-3",
+      "requests": [
+        "RE-BND-01",
+        "RE-BND-04"
+      ],
+      "registry_key": "packages/core/test/relay-hook-install.test.ts",
+      "local_path": "sources/packages/core/test/relay-hook-install.test.ts",
+      "source_path": "packages/core/test/relay-hook-install.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "b6cf2cd2727906d64ab13a9ddf308a0d9bab841b233fb355da7f7088b387661f",
+      "git_blob_sha": "fb903ba67d4dcfa55bdea704d27435d930a0e823",
+      "bytes": 30672,
+      "source_start_byte": 27719,
+      "source_end_byte_exclusive": 28605,
+      "first_line": 612,
+      "last_line": 624,
+      "excerpt_sha256": "ed9340a21c747f097563e119f1c4be3a13dafb104efb034db035096ce227e96a",
+      "excerpt_bytes": 886,
+      "test_execution": "NOT_RUN",
+      "output_excerpt_start_byte": 145777,
+      "output_excerpt_end_byte_exclusive": 146663
+    },
+    {
+      "id": "BT04-1",
+      "requests": [
+        "RE-BND-01",
+        "RE-BND-04"
+      ],
+      "registry_key": "packages/core/test/relay-hook-recovery-startup.test.ts",
+      "local_path": "sources/packages/core/test/relay-hook-recovery-startup.test.ts",
+      "source_path": "packages/core/test/relay-hook-recovery-startup.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "37188aa1f6766eee436288c0c7351f0bac0c458eec3c6a16bfe26f60f2a627df",
+      "git_blob_sha": "d7f18c2688d8a35ac2e804777cf510242ce36168",
+      "bytes": 12611,
+      "source_start_byte": 6950,
+      "source_end_byte_exclusive": 9303,
+      "first_line": 159,
+      "last_line": 202,
+      "excerpt_sha256": "5874ef079ed59e9a5b768a62118fc57d54ea5fe74a72297058db0d70e53bc337",
+      "excerpt_bytes": 2353,
+      "test_execution": "NOT_RUN",
+      "output_excerpt_start_byte": 147121,
+      "output_excerpt_end_byte_exclusive": 149474
+    },
+    {
+      "id": "BT04-2",
+      "requests": [
+        "RE-BND-01",
+        "RE-BND-04"
+      ],
+      "registry_key": "packages/core/test/relay-hook-recovery-startup.test.ts",
+      "local_path": "sources/packages/core/test/relay-hook-recovery-startup.test.ts",
+      "source_path": "packages/core/test/relay-hook-recovery-startup.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "37188aa1f6766eee436288c0c7351f0bac0c458eec3c6a16bfe26f60f2a627df",
+      "git_blob_sha": "d7f18c2688d8a35ac2e804777cf510242ce36168",
+      "bytes": 12611,
+      "source_start_byte": 10318,
+      "source_end_byte_exclusive": 11402,
+      "first_line": 226,
+      "last_line": 248,
+      "excerpt_sha256": "9f2dcacd5295eb49ea600c5508f4f1be8623da6e6af155e13c7f0ca8504c7241",
+      "excerpt_bytes": 1084,
+      "test_execution": "NOT_RUN",
+      "output_excerpt_start_byte": 149934,
+      "output_excerpt_end_byte_exclusive": 151018
+    },
+    {
+      "id": "BT05-1",
+      "requests": [
+        "RE-BND-01",
+        "RE-BND-04"
+      ],
+      "registry_key": "packages/core/test/relay-hook-recovery.test.ts",
+      "local_path": "sources/packages/core/test/relay-hook-recovery.test.ts",
+      "source_path": "packages/core/test/relay-hook-recovery.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "28fb6359ae61921abd52eb9553690d5c357131edb7adfac22ba6d0e956c6d5de",
+      "git_blob_sha": "ec6537a5ab3a4c87acb5d18cfc008673a1a678e5",
+      "bytes": 13978,
+      "source_start_byte": 9303,
+      "source_end_byte_exclusive": 11661,
+      "first_line": 211,
+      "last_line": 261,
+      "excerpt_sha256": "bc1edd64a42dc7d8a2f4003a5598f525a76209e847c2302b256770a03e44ad05",
+      "excerpt_bytes": 2358,
+      "test_execution": "NOT_RUN",
+      "output_excerpt_start_byte": 151469,
+      "output_excerpt_end_byte_exclusive": 153827
+    },
+    {
+      "id": "BT06-1",
+      "requests": [
+        "RE-BND-01",
+        "RE-BND-04"
+      ],
+      "registry_key": "packages/core/test/relay-hook-session.test.ts",
+      "local_path": "sources/packages/core/test/relay-hook-session.test.ts",
+      "source_path": "packages/core/test/relay-hook-session.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "0b3d9c08be21fdb3a10dac2c9edc06fe0b03289bac0b18ce419607bb045abca7",
+      "git_blob_sha": "9bbd6f9e04e42d430d787551b0c817ae752cd4fa",
+      "bytes": 20657,
+      "source_start_byte": 9191,
+      "source_end_byte_exclusive": 11590,
+      "first_line": 235,
+      "last_line": 288,
+      "excerpt_sha256": "69305c060903f9e4ea97566256db9a86d231372898257b4216a3427501a54bce",
+      "excerpt_bytes": 2399,
+      "test_execution": "NOT_RUN",
+      "output_excerpt_start_byte": 154277,
+      "output_excerpt_end_byte_exclusive": 156676
+    },
+    {
+      "id": "BT06-2",
+      "requests": [
+        "RE-BND-01",
+        "RE-BND-04"
+      ],
+      "registry_key": "packages/core/test/relay-hook-session.test.ts",
+      "local_path": "sources/packages/core/test/relay-hook-session.test.ts",
+      "source_path": "packages/core/test/relay-hook-session.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "0b3d9c08be21fdb3a10dac2c9edc06fe0b03289bac0b18ce419607bb045abca7",
+      "git_blob_sha": "9bbd6f9e04e42d430d787551b0c817ae752cd4fa",
+      "bytes": 20657,
+      "source_start_byte": 11591,
+      "source_end_byte_exclusive": 14114,
+      "first_line": 290,
+      "last_line": 338,
+      "excerpt_sha256": "eaf22254fbb92f1d1cabb93176513165f66d8bec89676d4ae280312e7347c542",
+      "excerpt_bytes": 2523,
+      "test_execution": "NOT_RUN",
+      "output_excerpt_start_byte": 157127,
+      "output_excerpt_end_byte_exclusive": 159650
+    },
+    {
+      "id": "BT07-1",
+      "requests": [
+        "RE-BND-01",
+        "RE-BND-04"
+      ],
+      "registry_key": "packages/core/test/relay-hook-shipper.test.ts",
+      "local_path": "sources/packages/core/test/relay-hook-shipper.test.ts",
+      "source_path": "packages/core/test/relay-hook-shipper.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "37be7a11d5c201cfae2f241f66d11042332e1e6d9c572624e1090b76d1434d10",
+      "git_blob_sha": "4d80ef6db7a101281c5c34a26ff105ec099473b2",
+      "bytes": 16675,
+      "source_start_byte": 7630,
+      "source_end_byte_exclusive": 8642,
+      "first_line": 194,
+      "last_line": 215,
+      "excerpt_sha256": "89d0e027b006bd1de3ad2771fb123e4e27755e73e8764a3de955588d044f07af",
+      "excerpt_bytes": 1012,
+      "test_execution": "NOT_RUN",
+      "output_excerpt_start_byte": 160099,
+      "output_excerpt_end_byte_exclusive": 161111
+    },
+    {
+      "id": "BT07-2",
+      "requests": [
+        "RE-BND-01",
+        "RE-BND-04"
+      ],
+      "registry_key": "packages/core/test/relay-hook-shipper.test.ts",
+      "local_path": "sources/packages/core/test/relay-hook-shipper.test.ts",
+      "source_path": "packages/core/test/relay-hook-shipper.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "37be7a11d5c201cfae2f241f66d11042332e1e6d9c572624e1090b76d1434d10",
+      "git_blob_sha": "4d80ef6db7a101281c5c34a26ff105ec099473b2",
+      "bytes": 16675,
+      "source_start_byte": 12477,
+      "source_end_byte_exclusive": 14590,
+      "first_line": 307,
+      "last_line": 353,
+      "excerpt_sha256": "7eaa588b57beb7763cdb13d1e14ddae499d7f3aa4c14376f5e5772a5fb035343",
+      "excerpt_bytes": 2113,
+      "test_execution": "NOT_RUN",
+      "output_excerpt_start_byte": 161562,
+      "output_excerpt_end_byte_exclusive": 163675
+    },
+    {
+      "id": "BT08-1",
+      "requests": [
+        "RE-BND-01",
+        "RE-BND-05"
+      ],
+      "registry_key": "packages/core/test/relay-workflow-binding.test.ts",
+      "local_path": "sources/packages/core/test/relay-workflow-binding.test.ts",
+      "source_path": "packages/core/test/relay-workflow-binding.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "7205cb7c76733f23dcec5d98b3f9fcb7413d494272627d8b1007a38ae681fc8c",
+      "git_blob_sha": "6205649eb98d965768999475a475a4578b15f0e9",
+      "bytes": 35647,
+      "source_start_byte": 8638,
+      "source_end_byte_exclusive": 10279,
+      "first_line": 141,
+      "last_line": 164,
+      "excerpt_sha256": "cdd5616b1c17753a349ef617f0724eb316dd9589203b17fd86fef80752c60302",
+      "excerpt_bytes": 1641,
+      "test_execution": "NOT_RUN",
+      "output_excerpt_start_byte": 164129,
+      "output_excerpt_end_byte_exclusive": 165770
+    },
+    {
+      "id": "BT08-2",
+      "requests": [
+        "RE-BND-01",
+        "RE-BND-05"
+      ],
+      "registry_key": "packages/core/test/relay-workflow-binding.test.ts",
+      "local_path": "sources/packages/core/test/relay-workflow-binding.test.ts",
+      "source_path": "packages/core/test/relay-workflow-binding.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "7205cb7c76733f23dcec5d98b3f9fcb7413d494272627d8b1007a38ae681fc8c",
+      "git_blob_sha": "6205649eb98d965768999475a475a4578b15f0e9",
+      "bytes": 35647,
+      "source_start_byte": 31082,
+      "source_end_byte_exclusive": 34280,
+      "first_line": 468,
+      "last_line": 506,
+      "excerpt_sha256": "ba70867a011e1c4626d53a56f687c0c7aeb9055ac104f89bf2cc63c919df5dc7",
+      "excerpt_bytes": 3198,
+      "test_execution": "NOT_RUN",
+      "output_excerpt_start_byte": 166225,
+      "output_excerpt_end_byte_exclusive": 169423
+    },
+    {
+      "id": "BT09-1",
+      "requests": [
+        "RE-BND-01",
+        "RE-BND-05"
+      ],
+      "registry_key": "packages/core/test/relay-workflow-evaluator.test.ts",
+      "local_path": "sources/packages/core/test/relay-workflow-evaluator.test.ts",
+      "source_path": "packages/core/test/relay-workflow-evaluator.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "42c3b75989f047a24903de8aba524a56099fa228652cb48e364f517f69d299b3",
+      "git_blob_sha": "1bb5b9805043d297395a551d6e10a679cfb1c94e",
+      "bytes": 17132,
+      "source_start_byte": 3832,
+      "source_end_byte_exclusive": 4826,
+      "first_line": 63,
+      "last_line": 77,
+      "excerpt_sha256": "fe3338b4bbfa32d269b8f0539042770a26e9667dcdff635ec41c3dc02ceba088",
+      "excerpt_bytes": 994,
+      "test_execution": "NOT_RUN",
+      "output_excerpt_start_byte": 169876,
+      "output_excerpt_end_byte_exclusive": 170870
+    },
+    {
+      "id": "BT09-2",
+      "requests": [
+        "RE-BND-01",
+        "RE-BND-05"
+      ],
+      "registry_key": "packages/core/test/relay-workflow-evaluator.test.ts",
+      "local_path": "sources/packages/core/test/relay-workflow-evaluator.test.ts",
+      "source_path": "packages/core/test/relay-workflow-evaluator.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "42c3b75989f047a24903de8aba524a56099fa228652cb48e364f517f69d299b3",
+      "git_blob_sha": "1bb5b9805043d297395a551d6e10a679cfb1c94e",
+      "bytes": 17132,
+      "source_start_byte": 5644,
+      "source_end_byte_exclusive": 8213,
+      "first_line": 89,
+      "last_line": 128,
+      "excerpt_sha256": "1543b5e04f627d8cba4f62fac0abe3004da7183d023ae898d7f3adc55fe225a5",
+      "excerpt_bytes": 2569,
+      "test_execution": "NOT_RUN",
+      "output_excerpt_start_byte": 171324,
+      "output_excerpt_end_byte_exclusive": 173893
+    },
+    {
+      "id": "BT09-3",
+      "requests": [
+        "RE-BND-01",
+        "RE-BND-05"
+      ],
+      "registry_key": "packages/core/test/relay-workflow-evaluator.test.ts",
+      "local_path": "sources/packages/core/test/relay-workflow-evaluator.test.ts",
+      "source_path": "packages/core/test/relay-workflow-evaluator.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "42c3b75989f047a24903de8aba524a56099fa228652cb48e364f517f69d299b3",
+      "git_blob_sha": "1bb5b9805043d297395a551d6e10a679cfb1c94e",
+      "bytes": 17132,
+      "source_start_byte": 10095,
+      "source_end_byte_exclusive": 11965,
+      "first_line": 162,
+      "last_line": 190,
+      "excerpt_sha256": "02859a130af0a4a6ec2c9da157b1fa239607de94b9454766b570a9ac76ffd797",
+      "excerpt_bytes": 1870,
+      "test_execution": "NOT_RUN",
+      "output_excerpt_start_byte": 174350,
+      "output_excerpt_end_byte_exclusive": 176220
+    },
+    {
+      "id": "BT10-1",
+      "requests": [
+        "RE-BND-01",
+        "RE-BND-03"
+      ],
+      "registry_key": "packages/core/test/relay.test.ts",
+      "local_path": "sources/packages/core/test/relay.test.ts",
+      "source_path": "packages/core/test/relay.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "e54d1c70ad6dc2affe31ac1f8ea231acb5745664eb9e724f3d8df76d22e0118f",
+      "git_blob_sha": "3acdc0d11e60ed2119059ac59eab60184a341795",
+      "bytes": 28130,
+      "source_start_byte": 6929,
+      "source_end_byte_exclusive": 10846,
+      "first_line": 187,
+      "last_line": 274,
+      "excerpt_sha256": "b30ae0556bb6eccbf054e478ff8fe42775d5db663982141a0409e9e714e8e402",
+      "excerpt_bytes": 3917,
+      "test_execution": "NOT_RUN",
+      "output_excerpt_start_byte": 176657,
+      "output_excerpt_end_byte_exclusive": 180574
+    },
+    {
+      "id": "AT01-1",
+      "requests": [
+        "RE-BND-02"
+      ],
+      "registry_key": "packages/core/src/atlas.ts",
+      "local_path": "sources/packages/core/src/atlas.ts",
+      "source_path": "packages/core/src/atlas.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "4a80f71532a9766f0cfaa67e4a4474ae4d49dbe30a811033ce57a1fb9c58bec4",
+      "git_blob_sha": "f6718654785fb155e1bb1b2acb7e9985478b983b",
+      "bytes": 16892,
+      "source_start_byte": 4715,
+      "source_end_byte_exclusive": 5174,
+      "first_line": 103,
+      "last_line": 108,
+      "excerpt_sha256": "613ca14e14019fe508fd26fec52026c53f23bef07d8cc00e14aaee6c7a294c80",
+      "excerpt_bytes": 459,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 181151,
+      "output_excerpt_end_byte_exclusive": 181610
+    },
+    {
+      "id": "AT01-2",
+      "requests": [
+        "RE-BND-02"
+      ],
+      "registry_key": "packages/core/src/atlas.ts",
+      "local_path": "sources/packages/core/src/atlas.ts",
+      "source_path": "packages/core/src/atlas.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "4a80f71532a9766f0cfaa67e4a4474ae4d49dbe30a811033ce57a1fb9c58bec4",
+      "git_blob_sha": "f6718654785fb155e1bb1b2acb7e9985478b983b",
+      "bytes": 16892,
+      "source_start_byte": 6126,
+      "source_end_byte_exclusive": 6545,
+      "first_line": 126,
+      "last_line": 131,
+      "excerpt_sha256": "dea1d4d5f0a59431b56e3747f9443f5ec7f2c4001a9483c809d6097ec34d1ab2",
+      "excerpt_bytes": 419,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 182040,
+      "output_excerpt_end_byte_exclusive": 182459
+    },
+    {
+      "id": "AT01-3",
+      "requests": [
+        "RE-BND-02"
+      ],
+      "registry_key": "packages/core/src/atlas.ts",
+      "local_path": "sources/packages/core/src/atlas.ts",
+      "source_path": "packages/core/src/atlas.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "4a80f71532a9766f0cfaa67e4a4474ae4d49dbe30a811033ce57a1fb9c58bec4",
+      "git_blob_sha": "f6718654785fb155e1bb1b2acb7e9985478b983b",
+      "bytes": 16892,
+      "source_start_byte": 7490,
+      "source_end_byte_exclusive": 9853,
+      "first_line": 152,
+      "last_line": 195,
+      "excerpt_sha256": "4991dc6be840cc944e278d77e1af10c5190b2d74fa3006bad7833974bc88f540",
+      "excerpt_bytes": 2363,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 182982,
+      "output_excerpt_end_byte_exclusive": 185345
+    },
+    {
+      "id": "AT01-4",
+      "requests": [
+        "RE-BND-02"
+      ],
+      "registry_key": "packages/core/src/atlas.ts",
+      "local_path": "sources/packages/core/src/atlas.ts",
+      "source_path": "packages/core/src/atlas.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "4a80f71532a9766f0cfaa67e4a4474ae4d49dbe30a811033ce57a1fb9c58bec4",
+      "git_blob_sha": "f6718654785fb155e1bb1b2acb7e9985478b983b",
+      "bytes": 16892,
+      "source_start_byte": 10081,
+      "source_end_byte_exclusive": 13119,
+      "first_line": 208,
+      "last_line": 258,
+      "excerpt_sha256": "e0b0dfa9f6ee8099f0604bc1634f2afdc22950b6e8a8307a0cbe66854357f127",
+      "excerpt_bytes": 3038,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 185870,
+      "output_excerpt_end_byte_exclusive": 188908
+    },
+    {
+      "id": "AT01-5",
+      "requests": [
+        "RE-BND-02"
+      ],
+      "registry_key": "packages/core/src/atlas.ts",
+      "local_path": "sources/packages/core/src/atlas.ts",
+      "source_path": "packages/core/src/atlas.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "4a80f71532a9766f0cfaa67e4a4474ae4d49dbe30a811033ce57a1fb9c58bec4",
+      "git_blob_sha": "f6718654785fb155e1bb1b2acb7e9985478b983b",
+      "bytes": 16892,
+      "source_start_byte": 15454,
+      "source_end_byte_exclusive": 16892,
+      "first_line": 313,
+      "last_line": 347,
+      "excerpt_sha256": "cde77483309c4704ab9e416544ffebfce667fb3f9c68712cad393482a76cb8ff",
+      "excerpt_bytes": 1438,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 189431,
+      "output_excerpt_end_byte_exclusive": 190869
+    },
+    {
+      "id": "AT02-1",
+      "requests": [
+        "RE-BND-02",
+        "RE-BND-03"
+      ],
+      "registry_key": "packages/core/src/relay-commands.ts",
+      "local_path": "sources/packages/core/src/relay-commands.ts",
+      "source_path": "packages/core/src/relay-commands.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "d129efe12ceff333c6f6186a40cc679efcbbacb9b9164c40eea404a89de09b2c",
+      "git_blob_sha": "e2858f395f7c09e0a2cfb7c5b55a96c073d33926",
+      "bytes": 5046,
+      "source_start_byte": 443,
+      "source_end_byte_exclusive": 3678,
+      "first_line": 12,
+      "last_line": 83,
+      "excerpt_sha256": "78d35309eb842bb24272643392f588c479eadfd77aa286e50848ca1e73562f96",
+      "excerpt_bytes": 3235,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 191408,
+      "output_excerpt_end_byte_exclusive": 194643
+    },
+    {
+      "id": "AT02-2",
+      "requests": [
+        "RE-BND-02",
+        "RE-BND-03"
+      ],
+      "registry_key": "packages/core/src/relay-commands.ts",
+      "local_path": "sources/packages/core/src/relay-commands.ts",
+      "source_path": "packages/core/src/relay-commands.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "d129efe12ceff333c6f6186a40cc679efcbbacb9b9164c40eea404a89de09b2c",
+      "git_blob_sha": "e2858f395f7c09e0a2cfb7c5b55a96c073d33926",
+      "bytes": 5046,
+      "source_start_byte": 4343,
+      "source_end_byte_exclusive": 5046,
+      "first_line": 99,
+      "last_line": 114,
+      "excerpt_sha256": "83815471b58831d439bbce4b92685ea4eb408321364f1522f6859b9da907f2b6",
+      "excerpt_bytes": 703,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 195080,
+      "output_excerpt_end_byte_exclusive": 195783
+    },
+    {
+      "id": "RL01-1",
+      "requests": [
+        "RE-BND-03"
+      ],
+      "registry_key": "packages/core/src/relay.ts",
+      "local_path": "sources/packages/core/src/relay.ts",
+      "source_path": "packages/core/src/relay.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "446774386bf8020528bdc2138a066fd9dc4b214d3288dc069cb5da9d3cef2b2a",
+      "git_blob_sha": "25fb509203f933a2e8b0f311c3fc8f9476d53e16",
+      "bytes": 30225,
+      "source_start_byte": 2251,
+      "source_end_byte_exclusive": 2706,
+      "first_line": 42,
+      "last_line": 48,
+      "excerpt_sha256": "f8464d817b8c2f94b2f0111eba703abd3a832c357784aa854cc2ea77f45c0c25",
+      "excerpt_bytes": 455,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 196500,
+      "output_excerpt_end_byte_exclusive": 196955
+    },
+    {
+      "id": "RL01-2",
+      "requests": [
+        "RE-BND-03"
+      ],
+      "registry_key": "packages/core/src/relay.ts",
+      "local_path": "sources/packages/core/src/relay.ts",
+      "source_path": "packages/core/src/relay.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "446774386bf8020528bdc2138a066fd9dc4b214d3288dc069cb5da9d3cef2b2a",
+      "git_blob_sha": "25fb509203f933a2e8b0f311c3fc8f9476d53e16",
+      "bytes": 30225,
+      "source_start_byte": 8830,
+      "source_end_byte_exclusive": 10296,
+      "first_line": 184,
+      "last_line": 217,
+      "excerpt_sha256": "28a32af448c8895f67973af828ff748d5e493eb44427ccca90d344251827057e",
+      "excerpt_bytes": 1466,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 197479,
+      "output_excerpt_end_byte_exclusive": 198945
+    },
+    {
+      "id": "RL01-3",
+      "requests": [
+        "RE-BND-03"
+      ],
+      "registry_key": "packages/core/src/relay.ts",
+      "local_path": "sources/packages/core/src/relay.ts",
+      "source_path": "packages/core/src/relay.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "446774386bf8020528bdc2138a066fd9dc4b214d3288dc069cb5da9d3cef2b2a",
+      "git_blob_sha": "25fb509203f933a2e8b0f311c3fc8f9476d53e16",
+      "bytes": 30225,
+      "source_start_byte": 11632,
+      "source_end_byte_exclusive": 11930,
+      "first_line": 240,
+      "last_line": 246,
+      "excerpt_sha256": "29a3c831b12f7a1bc7d0d7c39aecc75b567a2f6dea603a924155eefb3cd8d807",
+      "excerpt_bytes": 298,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 199470,
+      "output_excerpt_end_byte_exclusive": 199768
+    },
+    {
+      "id": "RL01-4",
+      "requests": [
+        "RE-BND-03"
+      ],
+      "registry_key": "packages/core/src/relay.ts",
+      "local_path": "sources/packages/core/src/relay.ts",
+      "source_path": "packages/core/src/relay.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "446774386bf8020528bdc2138a066fd9dc4b214d3288dc069cb5da9d3cef2b2a",
+      "git_blob_sha": "25fb509203f933a2e8b0f311c3fc8f9476d53e16",
+      "bytes": 30225,
+      "source_start_byte": 13983,
+      "source_end_byte_exclusive": 14767,
+      "first_line": 284,
+      "last_line": 300,
+      "excerpt_sha256": "74a1a34f187b0004f9acc6f94d621bbded04e02ef4f33261a4ec73b60d43113b",
+      "excerpt_bytes": 784,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 200293,
+      "output_excerpt_end_byte_exclusive": 201077
+    },
+    {
+      "id": "RL01-5",
+      "requests": [
+        "RE-BND-03"
+      ],
+      "registry_key": "packages/core/src/relay.ts",
+      "local_path": "sources/packages/core/src/relay.ts",
+      "source_path": "packages/core/src/relay.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "446774386bf8020528bdc2138a066fd9dc4b214d3288dc069cb5da9d3cef2b2a",
+      "git_blob_sha": "25fb509203f933a2e8b0f311c3fc8f9476d53e16",
+      "bytes": 30225,
+      "source_start_byte": 15433,
+      "source_end_byte_exclusive": 16264,
+      "first_line": 319,
+      "last_line": 334,
+      "excerpt_sha256": "61af2ada1596b66cff6443675db44347890c9307c023f4c17f138cd41e7396fb",
+      "excerpt_bytes": 831,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 201602,
+      "output_excerpt_end_byte_exclusive": 202433
+    },
+    {
+      "id": "RL01-6",
+      "requests": [
+        "RE-BND-03"
+      ],
+      "registry_key": "packages/core/src/relay.ts",
+      "local_path": "sources/packages/core/src/relay.ts",
+      "source_path": "packages/core/src/relay.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "446774386bf8020528bdc2138a066fd9dc4b214d3288dc069cb5da9d3cef2b2a",
+      "git_blob_sha": "25fb509203f933a2e8b0f311c3fc8f9476d53e16",
+      "bytes": 30225,
+      "source_start_byte": 19401,
+      "source_end_byte_exclusive": 20528,
+      "first_line": 390,
+      "last_line": 418,
+      "excerpt_sha256": "30e6255e93c3e69346da8d063c17e65fff42b3b6136aeeaffab2494758cd396b",
+      "excerpt_bytes": 1127,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 202958,
+      "output_excerpt_end_byte_exclusive": 204085
+    },
+    {
+      "id": "RL01-7",
+      "requests": [
+        "RE-BND-03"
+      ],
+      "registry_key": "packages/core/src/relay.ts",
+      "local_path": "sources/packages/core/src/relay.ts",
+      "source_path": "packages/core/src/relay.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "446774386bf8020528bdc2138a066fd9dc4b214d3288dc069cb5da9d3cef2b2a",
+      "git_blob_sha": "25fb509203f933a2e8b0f311c3fc8f9476d53e16",
+      "bytes": 30225,
+      "source_start_byte": 21145,
+      "source_end_byte_exclusive": 23137,
+      "first_line": 434,
+      "last_line": 481,
+      "excerpt_sha256": "6f937c3e8a168ea0ba2f9f0291f178fd49ad059057774b655dd11d450f13f697",
+      "excerpt_bytes": 1992,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 204610,
+      "output_excerpt_end_byte_exclusive": 206602
+    },
+    {
+      "id": "RL01-8",
+      "requests": [
+        "RE-BND-03"
+      ],
+      "registry_key": "packages/core/src/relay.ts",
+      "local_path": "sources/packages/core/src/relay.ts",
+      "source_path": "packages/core/src/relay.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "446774386bf8020528bdc2138a066fd9dc4b214d3288dc069cb5da9d3cef2b2a",
+      "git_blob_sha": "25fb509203f933a2e8b0f311c3fc8f9476d53e16",
+      "bytes": 30225,
+      "source_start_byte": 27665,
+      "source_end_byte_exclusive": 30225,
+      "first_line": 568,
+      "last_line": 629,
+      "excerpt_sha256": "32c8f2cf865b669414e350c5effae5fcca8fb7897333636f8652f62f8c9742d0",
+      "excerpt_bytes": 2560,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 207127,
+      "output_excerpt_end_byte_exclusive": 209687
+    },
+    {
+      "id": "HK01-1",
+      "requests": [
+        "RE-BND-04"
+      ],
+      "registry_key": "packages/core/src/relay-hook-install.ts",
+      "local_path": "sources/packages/core/src/relay-hook-install.ts",
+      "source_path": "packages/core/src/relay-hook-install.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "3663a7a5f1eedca77f66ce09229839aeec433440e2bd23d38fa36957d5e46833",
+      "git_blob_sha": "df1a8ef2e1656d4f2a9a235447c3439fa25fa0f1",
+      "bytes": 22715,
+      "source_start_byte": 0,
+      "source_end_byte_exclusive": 8880,
+      "first_line": 1,
+      "last_line": 215,
+      "excerpt_sha256": "7bb1b352075235f5761611b8c5a165a30c88d652bb35c1be384dc028b000715e",
+      "excerpt_bytes": 8880,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 210302,
+      "output_excerpt_end_byte_exclusive": 219182
+    },
+    {
+      "id": "HK01-2",
+      "requests": [
+        "RE-BND-04"
+      ],
+      "registry_key": "packages/core/src/relay-hook-install.ts",
+      "local_path": "sources/packages/core/src/relay-hook-install.ts",
+      "source_path": "packages/core/src/relay-hook-install.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "3663a7a5f1eedca77f66ce09229839aeec433440e2bd23d38fa36957d5e46833",
+      "git_blob_sha": "df1a8ef2e1656d4f2a9a235447c3439fa25fa0f1",
+      "bytes": 22715,
+      "source_start_byte": 10632,
+      "source_end_byte_exclusive": 11109,
+      "first_line": 240,
+      "last_line": 252,
+      "excerpt_sha256": "4d01e9d1bd4cf5203eafe1c49a1090adafcb51b61db97dc62cf91c4587901999",
+      "excerpt_bytes": 477,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 219733,
+      "output_excerpt_end_byte_exclusive": 220210
+    },
+    {
+      "id": "HK01-3",
+      "requests": [
+        "RE-BND-04"
+      ],
+      "registry_key": "packages/core/src/relay-hook-install.ts",
+      "local_path": "sources/packages/core/src/relay-hook-install.ts",
+      "source_path": "packages/core/src/relay-hook-install.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "3663a7a5f1eedca77f66ce09229839aeec433440e2bd23d38fa36957d5e46833",
+      "git_blob_sha": "df1a8ef2e1656d4f2a9a235447c3439fa25fa0f1",
+      "bytes": 22715,
+      "source_start_byte": 12547,
+      "source_end_byte_exclusive": 13014,
+      "first_line": 274,
+      "last_line": 282,
+      "excerpt_sha256": "5003391ac398ce2fc93d82c0ccc76a9e20e0725a8ec30b0f5a8e6e190aef2689",
+      "excerpt_bytes": 467,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 220761,
+      "output_excerpt_end_byte_exclusive": 221228
+    },
+    {
+      "id": "HK01-4",
+      "requests": [
+        "RE-BND-04"
+      ],
+      "registry_key": "packages/core/src/relay-hook-install.ts",
+      "local_path": "sources/packages/core/src/relay-hook-install.ts",
+      "source_path": "packages/core/src/relay-hook-install.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "3663a7a5f1eedca77f66ce09229839aeec433440e2bd23d38fa36957d5e46833",
+      "git_blob_sha": "df1a8ef2e1656d4f2a9a235447c3439fa25fa0f1",
+      "bytes": 22715,
+      "source_start_byte": 15430,
+      "source_end_byte_exclusive": 20805,
+      "first_line": 337,
+      "last_line": 453,
+      "excerpt_sha256": "c82921bb554753a8e25f3abb7e3af6a9bb085ba09aa3ceeed53ae7292927712a",
+      "excerpt_bytes": 5375,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 221777,
+      "output_excerpt_end_byte_exclusive": 227152
+    },
+    {
+      "id": "HK01-5",
+      "requests": [
+        "RE-BND-04"
+      ],
+      "registry_key": "packages/core/src/relay-hook-install.ts",
+      "local_path": "sources/packages/core/src/relay-hook-install.ts",
+      "source_path": "packages/core/src/relay-hook-install.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "3663a7a5f1eedca77f66ce09229839aeec433440e2bd23d38fa36957d5e46833",
+      "git_blob_sha": "df1a8ef2e1656d4f2a9a235447c3439fa25fa0f1",
+      "bytes": 22715,
+      "source_start_byte": 22122,
+      "source_end_byte_exclusive": 22715,
+      "first_line": 475,
+      "last_line": 500,
+      "excerpt_sha256": "8a881aa2c4caa31ecd2c040409d69006e5498927ce64144b9c77966414eb7438",
+      "excerpt_bytes": 593,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 227597,
+      "output_excerpt_end_byte_exclusive": 228190
+    },
+    {
+      "id": "HK02-1",
+      "requests": [
+        "RE-BND-04"
+      ],
+      "registry_key": "packages/core/src/relay-hook-shipper.ts",
+      "local_path": "sources/packages/core/src/relay-hook-shipper.ts",
+      "source_path": "packages/core/src/relay-hook-shipper.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "6ce3c6f822f5fa17d8d5f2c1880e0e085365c913db24cd59a4ad2b51b0c6437c",
+      "git_blob_sha": "ab87545ec4552ec2fb5a4f2c1b586e98313ed92a",
+      "bytes": 5723,
+      "source_start_byte": 0,
+      "source_end_byte_exclusive": 1895,
+      "first_line": 1,
+      "last_line": 38,
+      "excerpt_sha256": "6f6314eca22eac8b13795df640e89f8f8c58f4b0873e4f3c4afcdb65c807dfdf",
+      "excerpt_bytes": 1895,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 228734,
+      "output_excerpt_end_byte_exclusive": 230629
+    },
+    {
+      "id": "HK02-2",
+      "requests": [
+        "RE-BND-04"
+      ],
+      "registry_key": "packages/core/src/relay-hook-shipper.ts",
+      "local_path": "sources/packages/core/src/relay-hook-shipper.ts",
+      "source_path": "packages/core/src/relay-hook-shipper.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "6ce3c6f822f5fa17d8d5f2c1880e0e085365c913db24cd59a4ad2b51b0c6437c",
+      "git_blob_sha": "ab87545ec4552ec2fb5a4f2c1b586e98313ed92a",
+      "bytes": 5723,
+      "source_start_byte": 2672,
+      "source_end_byte_exclusive": 4561,
+      "first_line": 55,
+      "last_line": 100,
+      "excerpt_sha256": "1ace177a9adf507b10602af4d50bc3f1ccc4c4edea0f4884c2f6e020ba8ef62d",
+      "excerpt_bytes": 1889,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 231070,
+      "output_excerpt_end_byte_exclusive": 232959
+    },
+    {
+      "id": "HK02-3",
+      "requests": [
+        "RE-BND-04"
+      ],
+      "registry_key": "packages/core/src/relay-hook-shipper.ts",
+      "local_path": "sources/packages/core/src/relay-hook-shipper.ts",
+      "source_path": "packages/core/src/relay-hook-shipper.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "6ce3c6f822f5fa17d8d5f2c1880e0e085365c913db24cd59a4ad2b51b0c6437c",
+      "git_blob_sha": "ab87545ec4552ec2fb5a4f2c1b586e98313ed92a",
+      "bytes": 5723,
+      "source_start_byte": 5375,
+      "source_end_byte_exclusive": 5723,
+      "first_line": 121,
+      "last_line": 130,
+      "excerpt_sha256": "3211e0f55e92513baeeaebc992a358e1ee3181f741a76a22d6bee2cda2c6ceb2",
+      "excerpt_bytes": 348,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 233401,
+      "output_excerpt_end_byte_exclusive": 233749
+    },
+    {
+      "id": "HK03-1",
+      "requests": [
+        "RE-BND-04"
+      ],
+      "registry_key": "packages/core/src/relay-hook-recovery.ts",
+      "local_path": "sources/packages/core/src/relay-hook-recovery.ts",
+      "source_path": "packages/core/src/relay-hook-recovery.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "370b5746163de1f543102b3872c76c28331d82084984b2178d2e03127a74cea9",
+      "git_blob_sha": "dac90dd02db4e0382932576d7041bee5142d4067",
+      "bytes": 3787,
+      "source_start_byte": 0,
+      "source_end_byte_exclusive": 1338,
+      "first_line": 1,
+      "last_line": 33,
+      "excerpt_sha256": "b31431fdef6f342bb662906b5aaf9f95ac78ec77e506c4e5d879f42e1f52b450",
+      "excerpt_bytes": 1338,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 234294,
+      "output_excerpt_end_byte_exclusive": 235632
+    },
+    {
+      "id": "HK03-2",
+      "requests": [
+        "RE-BND-04"
+      ],
+      "registry_key": "packages/core/src/relay-hook-recovery.ts",
+      "local_path": "sources/packages/core/src/relay-hook-recovery.ts",
+      "source_path": "packages/core/src/relay-hook-recovery.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "370b5746163de1f543102b3872c76c28331d82084984b2178d2e03127a74cea9",
+      "git_blob_sha": "dac90dd02db4e0382932576d7041bee5142d4067",
+      "bytes": 3787,
+      "source_start_byte": 2193,
+      "source_end_byte_exclusive": 2284,
+      "first_line": 48,
+      "last_line": 49,
+      "excerpt_sha256": "61d7d5bf27d36c8995ddcce785095ff01640d74a4ac957135ce32c80b93bf5a6",
+      "excerpt_bytes": 91,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 236073,
+      "output_excerpt_end_byte_exclusive": 236164
+    },
+    {
+      "id": "HK03-3",
+      "requests": [
+        "RE-BND-04"
+      ],
+      "registry_key": "packages/core/src/relay-hook-recovery.ts",
+      "local_path": "sources/packages/core/src/relay-hook-recovery.ts",
+      "source_path": "packages/core/src/relay-hook-recovery.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "370b5746163de1f543102b3872c76c28331d82084984b2178d2e03127a74cea9",
+      "git_blob_sha": "dac90dd02db4e0382932576d7041bee5142d4067",
+      "bytes": 3787,
+      "source_start_byte": 2968,
+      "source_end_byte_exclusive": 3787,
+      "first_line": 65,
+      "last_line": 88,
+      "excerpt_sha256": "8206262748992e7f7f2e9dd5c16e8fd7e74af15ec6839699e329bfa594ae8f75",
+      "excerpt_bytes": 819,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 236605,
+      "output_excerpt_end_byte_exclusive": 237424
+    },
+    {
+      "id": "WF01-1",
+      "requests": [
+        "RE-BND-05"
+      ],
+      "registry_key": "packages/core/src/relay-workflow-binding.ts",
+      "local_path": "sources/packages/core/src/relay-workflow-binding.ts",
+      "source_path": "packages/core/src/relay-workflow-binding.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "3174f65f835ea0c4ba64c6a597a2169902627b94673cbb1c54cc5e90a414e0e2",
+      "git_blob_sha": "7149e276e0c214d70c2dafad90dadff5d2c21059",
+      "bytes": 14859,
+      "source_start_byte": 0,
+      "source_end_byte_exclusive": 2581,
+      "first_line": 1,
+      "last_line": 49,
+      "excerpt_sha256": "66e6f4644bc5c7ffd37434350efea4353c4d7a6bb81d0ff6aa33a9030af0af55",
+      "excerpt_bytes": 2581,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 238057,
+      "output_excerpt_end_byte_exclusive": 240638
+    },
+    {
+      "id": "WF01-2",
+      "requests": [
+        "RE-BND-05"
+      ],
+      "registry_key": "packages/core/src/relay-workflow-binding.ts",
+      "local_path": "sources/packages/core/src/relay-workflow-binding.ts",
+      "source_path": "packages/core/src/relay-workflow-binding.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "3174f65f835ea0c4ba64c6a597a2169902627b94673cbb1c54cc5e90a414e0e2",
+      "git_blob_sha": "7149e276e0c214d70c2dafad90dadff5d2c21059",
+      "bytes": 14859,
+      "source_start_byte": 3413,
+      "source_end_byte_exclusive": 7632,
+      "first_line": 62,
+      "last_line": 128,
+      "excerpt_sha256": "7329c7e39445924c545b82c6b0c2238323279b711e300f37def75fdb52c6e3a6",
+      "excerpt_bytes": 4219,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 241084,
+      "output_excerpt_end_byte_exclusive": 245303
+    },
+    {
+      "id": "WF01-3",
+      "requests": [
+        "RE-BND-05"
+      ],
+      "registry_key": "packages/core/src/relay-workflow-binding.ts",
+      "local_path": "sources/packages/core/src/relay-workflow-binding.ts",
+      "source_path": "packages/core/src/relay-workflow-binding.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "3174f65f835ea0c4ba64c6a597a2169902627b94673cbb1c54cc5e90a414e0e2",
+      "git_blob_sha": "7149e276e0c214d70c2dafad90dadff5d2c21059",
+      "bytes": 14859,
+      "source_start_byte": 8855,
+      "source_end_byte_exclusive": 12629,
+      "first_line": 148,
+      "last_line": 222,
+      "excerpt_sha256": "dc1a5a5c86ea0b4e937a80021974ad992dea0380b46f89ee9313a4f65ac8bda5",
+      "excerpt_bytes": 3774,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 245751,
+      "output_excerpt_end_byte_exclusive": 249525
+    },
+    {
+      "id": "WF01-4",
+      "requests": [
+        "RE-BND-05"
+      ],
+      "registry_key": "packages/core/src/relay-workflow-binding.ts",
+      "local_path": "sources/packages/core/src/relay-workflow-binding.ts",
+      "source_path": "packages/core/src/relay-workflow-binding.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "3174f65f835ea0c4ba64c6a597a2169902627b94673cbb1c54cc5e90a414e0e2",
+      "git_blob_sha": "7149e276e0c214d70c2dafad90dadff5d2c21059",
+      "bytes": 14859,
+      "source_start_byte": 14752,
+      "source_end_byte_exclusive": 14859,
+      "first_line": 257,
+      "last_line": 261,
+      "excerpt_sha256": "0124afa57f58028b0ef91c4aa1714cef2485a7b6fec67aad6df7876a68569683",
+      "excerpt_bytes": 107,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 249974,
+      "output_excerpt_end_byte_exclusive": 250081
+    },
+    {
+      "id": "WF02-1",
+      "requests": [
+        "RE-BND-05"
+      ],
+      "registry_key": "packages/core/src/relay-workflow-currentstep.ts",
+      "local_path": "sources/packages/core/src/relay-workflow-currentstep.ts",
+      "source_path": "packages/core/src/relay-workflow-currentstep.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "00b948197cb77d072629820bc844f9ddae0527561e04b4cab9922dd2460e6a22",
+      "git_blob_sha": "c34249dde50c821e405128a148f015775095ac62",
+      "bytes": 8522,
+      "source_start_byte": 0,
+      "source_end_byte_exclusive": 1405,
+      "first_line": 1,
+      "last_line": 37,
+      "excerpt_sha256": "69e18c25466a909a97208ae7aa0bdf41910330decf06eee704e15826335b6f4b",
+      "excerpt_bytes": 1405,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 250641,
+      "output_excerpt_end_byte_exclusive": 252046
+    },
+    {
+      "id": "WF02-2",
+      "requests": [
+        "RE-BND-05"
+      ],
+      "registry_key": "packages/core/src/relay-workflow-currentstep.ts",
+      "local_path": "sources/packages/core/src/relay-workflow-currentstep.ts",
+      "source_path": "packages/core/src/relay-workflow-currentstep.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "00b948197cb77d072629820bc844f9ddae0527561e04b4cab9922dd2460e6a22",
+      "git_blob_sha": "c34249dde50c821e405128a148f015775095ac62",
+      "bytes": 8522,
+      "source_start_byte": 2041,
+      "source_end_byte_exclusive": 3837,
+      "first_line": 49,
+      "last_line": 68,
+      "excerpt_sha256": "32d401311ee0f3dd0e39926c95157af1f071d13b07a280830eebb1316205054f",
+      "excerpt_bytes": 1796,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 252494,
+      "output_excerpt_end_byte_exclusive": 254290
+    },
+    {
+      "id": "WF02-3",
+      "requests": [
+        "RE-BND-05"
+      ],
+      "registry_key": "packages/core/src/relay-workflow-currentstep.ts",
+      "local_path": "sources/packages/core/src/relay-workflow-currentstep.ts",
+      "source_path": "packages/core/src/relay-workflow-currentstep.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "00b948197cb77d072629820bc844f9ddae0527561e04b4cab9922dd2460e6a22",
+      "git_blob_sha": "c34249dde50c821e405128a148f015775095ac62",
+      "bytes": 8522,
+      "source_start_byte": 5478,
+      "source_end_byte_exclusive": 8522,
+      "first_line": 91,
+      "last_line": 139,
+      "excerpt_sha256": "2059ab744c2479a08a1854683ff4731ed2c6cc4d14998d311f716b6e0a7e460a",
+      "excerpt_bytes": 3044,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 254739,
+      "output_excerpt_end_byte_exclusive": 257783
+    },
+    {
+      "id": "WF03-1",
+      "requests": [
+        "RE-BND-05"
+      ],
+      "registry_key": "packages/core/src/relay-workflow-session.ts",
+      "local_path": "sources/packages/core/src/relay-workflow-session.ts",
+      "source_path": "packages/core/src/relay-workflow-session.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "c5aefaf53fcd61059a68ee2b0411e587f4d125a42fae8169f8846c4d37c70221",
+      "git_blob_sha": "fc006686eb25e96aa55cd8b93fc60994ebdd9dfd",
+      "bytes": 5399,
+      "source_start_byte": 0,
+      "source_end_byte_exclusive": 2473,
+      "first_line": 1,
+      "last_line": 50,
+      "excerpt_sha256": "98dd491cf842cb0b4ca703ae4281035e3e02347db2dcdc874c668e5c6bc45735",
+      "excerpt_bytes": 2473,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 258334,
+      "output_excerpt_end_byte_exclusive": 260807
+    },
+    {
+      "id": "WF03-2",
+      "requests": [
+        "RE-BND-05"
+      ],
+      "registry_key": "packages/core/src/relay-workflow-session.ts",
+      "local_path": "sources/packages/core/src/relay-workflow-session.ts",
+      "source_path": "packages/core/src/relay-workflow-session.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "c5aefaf53fcd61059a68ee2b0411e587f4d125a42fae8169f8846c4d37c70221",
+      "git_blob_sha": "fc006686eb25e96aa55cd8b93fc60994ebdd9dfd",
+      "bytes": 5399,
+      "source_start_byte": 3746,
+      "source_end_byte_exclusive": 4331,
+      "first_line": 69,
+      "last_line": 81,
+      "excerpt_sha256": "9b4b87fc1961efea4422fe02b85239004d39fc0fce6f5ec2cedbe26ccf92a7b2",
+      "excerpt_bytes": 585,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 261251,
+      "output_excerpt_end_byte_exclusive": 261836
+    },
+    {
+      "id": "WF04-1",
+      "requests": [
+        "RE-BND-05"
+      ],
+      "registry_key": "packages/core/src/relay-workflow-transition.ts",
+      "local_path": "sources/packages/core/src/relay-workflow-transition.ts",
+      "source_path": "packages/core/src/relay-workflow-transition.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "25e53b33dcccd86354775369126f63fcfee5fc89c324d3b7c1e00bd84b0ea28c",
+      "git_blob_sha": "a200d327a4e1f9f7c3b0e7c986f6a848608f6d6b",
+      "bytes": 7385,
+      "source_start_byte": 0,
+      "source_end_byte_exclusive": 3717,
+      "first_line": 1,
+      "last_line": 66,
+      "excerpt_sha256": "6580bbcf6f5cd7486352d14b36bc51f2e3ea61f88b4051c1cce4b9e6fa68102a",
+      "excerpt_bytes": 3717,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 262388,
+      "output_excerpt_end_byte_exclusive": 266105
+    },
+    {
+      "id": "WF04-2",
+      "requests": [
+        "RE-BND-05"
+      ],
+      "registry_key": "packages/core/src/relay-workflow-transition.ts",
+      "local_path": "sources/packages/core/src/relay-workflow-transition.ts",
+      "source_path": "packages/core/src/relay-workflow-transition.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "25e53b33dcccd86354775369126f63fcfee5fc89c324d3b7c1e00bd84b0ea28c",
+      "git_blob_sha": "a200d327a4e1f9f7c3b0e7c986f6a848608f6d6b",
+      "bytes": 7385,
+      "source_start_byte": 5564,
+      "source_end_byte_exclusive": 7385,
+      "first_line": 92,
+      "last_line": 125,
+      "excerpt_sha256": "cacfbc4ce64b736ae191abec71d3f024b7e4902ebf88eab1a017e7ebefae735f",
+      "excerpt_bytes": 1821,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 266553,
+      "output_excerpt_end_byte_exclusive": 268374
+    },
+    {
+      "id": "WF05-1",
+      "requests": [
+        "RE-BND-05"
+      ],
+      "registry_key": "packages/core/src/relay-workflow-evaluator.ts",
+      "local_path": "sources/packages/core/src/relay-workflow-evaluator.ts",
+      "source_path": "packages/core/src/relay-workflow-evaluator.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "eb9862b86f9aa64e34e8f52ae25ac079c6d464da9599433dd34625e620c5138c",
+      "git_blob_sha": "898d949b03a82453955e1100335c2150fa51a881",
+      "bytes": 13052,
+      "source_start_byte": 0,
+      "source_end_byte_exclusive": 2891,
+      "first_line": 1,
+      "last_line": 49,
+      "excerpt_sha256": "7939cddd115eb4605f37a5c23ba5002c21df86cb6e5335faf6018e68d5107f74",
+      "excerpt_bytes": 2891,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 268943,
+      "output_excerpt_end_byte_exclusive": 271834
+    },
+    {
+      "id": "WF05-2",
+      "requests": [
+        "RE-BND-05"
+      ],
+      "registry_key": "packages/core/src/relay-workflow-evaluator.ts",
+      "local_path": "sources/packages/core/src/relay-workflow-evaluator.ts",
+      "source_path": "packages/core/src/relay-workflow-evaluator.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "eb9862b86f9aa64e34e8f52ae25ac079c6d464da9599433dd34625e620c5138c",
+      "git_blob_sha": "898d949b03a82453955e1100335c2150fa51a881",
+      "bytes": 13052,
+      "source_start_byte": 4186,
+      "source_end_byte_exclusive": 6501,
+      "first_line": 71,
+      "last_line": 105,
+      "excerpt_sha256": "1e7928936d8173b495683d150762682256ed577a9ca45262159f193bf9e4a7c2",
+      "excerpt_bytes": 2315,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 272282,
+      "output_excerpt_end_byte_exclusive": 274597
+    },
+    {
+      "id": "WF05-3",
+      "requests": [
+        "RE-BND-05"
+      ],
+      "registry_key": "packages/core/src/relay-workflow-evaluator.ts",
+      "local_path": "sources/packages/core/src/relay-workflow-evaluator.ts",
+      "source_path": "packages/core/src/relay-workflow-evaluator.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "eb9862b86f9aa64e34e8f52ae25ac079c6d464da9599433dd34625e620c5138c",
+      "git_blob_sha": "898d949b03a82453955e1100335c2150fa51a881",
+      "bytes": 13052,
+      "source_start_byte": 7885,
+      "source_end_byte_exclusive": 8113,
+      "first_line": 126,
+      "last_line": 132,
+      "excerpt_sha256": "6903637a10c851525fe3573e8801e816710fca2e401da8728290891ed4ae4951",
+      "excerpt_bytes": 228,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 275046,
+      "output_excerpt_end_byte_exclusive": 275274
+    },
+    {
+      "id": "WF05-4",
+      "requests": [
+        "RE-BND-05"
+      ],
+      "registry_key": "packages/core/src/relay-workflow-evaluator.ts",
+      "local_path": "sources/packages/core/src/relay-workflow-evaluator.ts",
+      "source_path": "packages/core/src/relay-workflow-evaluator.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "eb9862b86f9aa64e34e8f52ae25ac079c6d464da9599433dd34625e620c5138c",
+      "git_blob_sha": "898d949b03a82453955e1100335c2150fa51a881",
+      "bytes": 13052,
+      "source_start_byte": 9341,
+      "source_end_byte_exclusive": 10819,
+      "first_line": 150,
+      "last_line": 169,
+      "excerpt_sha256": "c6f91395d3eae1a4f2fad010ba30545a73d6f4f1d1661e66848895734504d229",
+      "excerpt_bytes": 1478,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 275724,
+      "output_excerpt_end_byte_exclusive": 277202
+    },
+    {
+      "id": "WF05-5",
+      "requests": [
+        "RE-BND-05"
+      ],
+      "registry_key": "packages/core/src/relay-workflow-evaluator.ts",
+      "local_path": "sources/packages/core/src/relay-workflow-evaluator.ts",
+      "source_path": "packages/core/src/relay-workflow-evaluator.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "eb9862b86f9aa64e34e8f52ae25ac079c6d464da9599433dd34625e620c5138c",
+      "git_blob_sha": "898d949b03a82453955e1100335c2150fa51a881",
+      "bytes": 13052,
+      "source_start_byte": 12459,
+      "source_end_byte_exclusive": 13052,
+      "first_line": 194,
+      "last_line": 208,
+      "excerpt_sha256": "db91ed0e840a7abbe9e9721f70edb19ac6b06d5caf936411bf6ecfa9f256c19c",
+      "excerpt_bytes": 593,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 277653,
+      "output_excerpt_end_byte_exclusive": 278246
+    },
+    {
+      "id": "MV01-1",
+      "requests": [
+        "RE-BND-06"
+      ],
+      "registry_key": "packages/core/src/control-plane/move-session.ts",
+      "local_path": "sources/packages/core/src/control-plane/move-session.ts",
+      "source_path": "packages/core/src/control-plane/move-session.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "302fd923821d8f2d4124b8e4cca38485abe86c3f3c74e2f0b9bc420b56ec2518",
+      "git_blob_sha": "49fe728d6956ca1555a763548e9458ea5f3938dc",
+      "bytes": 5381,
+      "source_start_byte": 0,
+      "source_end_byte_exclusive": 3064,
+      "first_line": 1,
+      "last_line": 86,
+      "excerpt_sha256": "fbbfb7e495ecc8de7202de798ffe655d909a6e3d72ad618b6f5522d740da2fac",
+      "excerpt_bytes": 3064,
+      "intentional_repeat": false,
+      "output_excerpt_start_byte": 279128,
+      "output_excerpt_end_byte_exclusive": 282192
+    },
+    {
+      "id": "RG01-1",
+      "requests": [
+        "RE-BND-06"
+      ],
+      "registry_key": "packages/core/src/rag-studio/sql.ts",
+      "local_path": "sources/packages/core/src/rag-studio/sql.ts",
+      "source_path": "packages/core/src/rag-studio/sql.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "e6c3580d95d86b307624fe8c58b5790f3a07ce17ed20e5cbe851b44667c7add9",
+      "git_blob_sha": "214ab3375acc34072ee74c3123501c80615bf488",
+      "bytes": 2519,
+      "source_start_byte": 0,
+      "source_end_byte_exclusive": 2519,
+      "first_line": 1,
+      "last_line": 81,
+      "excerpt_sha256": "e6c3580d95d86b307624fe8c58b5790f3a07ce17ed20e5cbe851b44667c7add9",
+      "excerpt_bytes": 2519,
+      "intentional_repeat": true,
+      "output_excerpt_start_byte": 282727,
+      "output_excerpt_end_byte_exclusive": 285246
+    }
+  ],
+  "common_reconciliation": {
+    "identity": {
+      "path": "shared-reconciliation-1.md",
+      "sha256": "75aa4f74aba2ddcecd58c52fd329481dffabc60271a57bf0bfbe358d0b903992",
+      "git_blob_sha": "9ec7c98ea98fbf497d49313cb267c394db238039",
+      "bytes": 121449
+    },
+    "supplement_start_byte": 9742,
+    "supplement_end_byte_exclusive": 131191,
+    "reuse_without_retransmission": true
+  },
+  "test_source_count": 10,
+  "new_execution_results": 0,
+  "semantic_status": "PENDING_SAME_PAIR_REEVALUATION"
+}

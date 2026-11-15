@@ -1,0 +1,264 @@
+{
+  "source": {
+    "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/a-l1-evidence-v1/coverage-needs-projection.json",
+    "git_blob_sha": "2e91d0f916dfa95a2dd0ef7ae74ff8c1bb427045",
+    "byte_length": 726892,
+    "sha256": "05485c4bd0ac9c76814e44537788818bbcf1fbcbfb87dd8063ce30bf1a67e0cf"
+  },
+  "handling": "selection of exactly two inherited records; neither semantic acceptance nor replacement of whole-Core entry",
+  "artifacts": [
+    {
+      "original_artifact": {
+        "key": "s1.core.boundaries",
+        "scope": "orchestra.s1",
+        "title": "Core adapters to Atlas, Relay and workspace movement",
+        "layer": 1,
+        "need": "component",
+        "body": {
+          "path": "bodies/boundaries.md",
+          "encoding": "utf-8",
+          "byte_length": 3905,
+          "sha256": "7b20ed7cedf86c24fb1d9c3471250fcddf666f9c66e7de2dba9852df1fa17143"
+        },
+        "authority": {
+          "scope": "orchestra.s1",
+          "basis": "Pinned repository implementation and explicitly distinguished repository normative documentation; source inspection only. No product execution or test result is asserted.",
+          "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+        },
+        "validity": "supported",
+        "gaps": [
+          "Atlas and Relay engine guarantees require their boundary/module sources and separate runtime evidence.",
+          "Session movement is not atomic across file changes and durable location update; active-runner coordination belongs to the caller.",
+          "RAG tables alone do not implement or prove retrieval/embedding capability."
+        ],
+        "evidence": [
+          {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/review-evidence-compact.md",
+            "sha256": "1d28ad12ce7c525d230e42486b6bccd691104d5e6acd4a815728dda7b8ed8676"
+          },
+          {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/excerpt-map.json",
+            "sha256": "301173d05efb7a14a5fedfafbf6755d34e413100dadd7f21560a62e0f4cff471"
+          }
+        ],
+        "input_keys": [
+          "file:packages/core/src/atlas.ts",
+          "file:packages/core/src/relay.ts",
+          "file:packages/core/src/control-plane/move-session.ts",
+          "file:packages/core/src/rag-studio/sql.ts"
+        ],
+        "source_refs": [
+          {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "packages/core/src/atlas.ts",
+            "git_blob_sha": "f6718654785fb155e1bb1b2acb7e9985478b983b",
+            "sha256": "4a80f71532a9766f0cfaa67e4a4474ae4d49dbe30a811033ce57a1fb9c58bec4"
+          },
+          {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "packages/core/src/relay.ts",
+            "git_blob_sha": "25fb509203f933a2e8b0f311c3fc8f9476d53e16",
+            "sha256": "446774386bf8020528bdc2138a066fd9dc4b214d3288dc069cb5da9d3cef2b2a"
+          },
+          {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "packages/core/src/control-plane/move-session.ts",
+            "git_blob_sha": "49fe728d6956ca1555a763548e9458ea5f3938dc",
+            "sha256": "302fd923821d8f2d4124b8e4cca38485abe86c3f3c74e2f0b9bc420b56ec2518"
+          },
+          {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "packages/core/src/rag-studio/sql.ts",
+            "git_blob_sha": "214ab3375acc34072ee74c3123501c80615bf488",
+            "sha256": "e6c3580d95d86b307624fe8c58b5790f3a07ce17ed20e5cbe851b44667c7add9"
+          }
+        ],
+        "recipe_ref": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/recipe.json",
+          "sha256": "79c21a0eb94bf9eb6927984134592a688d3b028c2213e5552bb1017ae50bd8fb"
+        },
+        "build_dependencies": [],
+        "navigation": [],
+        "producer_request_ref": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/request.txt",
+          "sha256": "5ade453a557acd559e6796cab8f6ed42d5141ddf668d3c6f06169e7ce8840d7d"
+        },
+        "producer_response_ref": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/response.md",
+          "sha256": "79a01b28b5df5d99a60f8dfd5af2b223671aec009ec9e77ae755cf38096ff12d"
+        },
+        "semantic_review_refs": [],
+        "runtime_receipt_refs": []
+      },
+      "derived_population_routing": {
+        "count": 24,
+        "families": [
+          "atlas",
+          "control-plane",
+          "rag-studio",
+          "relay"
+        ],
+        "by_depth": {
+          "decisive_source_read": 4,
+          "grouped_validation_inventory": 10,
+          "representative_family_boundary": 10
+        },
+        "by_read_status": {
+          "not_read": 20,
+          "semantically_read_decisive_ranges": 4
+        },
+        "coverage_group_ids": [
+          "G012",
+          "G034",
+          "G035",
+          "G036",
+          "G102",
+          "G103",
+          "G104",
+          "G105"
+        ]
+      },
+      "source_reference_families": [
+        "atlas",
+        "control-plane",
+        "rag-studio",
+        "relay"
+      ],
+      "clarification_authored_in_this_revision": {
+        "need_boundary": "Adapters Core para engines externos, MoveSession e schema RAG.",
+        "mandatory_followup": "Ler boundary/módulo/caller e folhas de workflow; a coordenação ativa e rollback cruzado não estão provados pelo MoveSession.",
+        "blocked_dependent_claims": "Publicação Atlas, governança Relay, quiescência atômica ou retrieval real ficam bloqueados sem fontes/provas do dono correspondente.",
+        "registered_dependent_artifact_keys": null,
+        "note": "No L2–L4 dependent keys or new build edges are invented. These are use restrictions derived from existing bodies/gaps, not a retroactive validity change."
+      }
+    },
+    {
+      "original_artifact": {
+        "key": "s1.core.entry",
+        "scope": "orchestra.s1",
+        "title": "Core L1 entry, authority and complete source-family disposition",
+        "layer": 1,
+        "need": "entry",
+        "body": {
+          "path": "bodies/entry.md",
+          "encoding": "utf-8",
+          "byte_length": 7312,
+          "sha256": "6a488ca8f9717a497949b71ed41db84d995f23b90c31cc59c22c5bd86239ca6c"
+        },
+        "authority": {
+          "scope": "orchestra.s1",
+          "basis": "Pinned repository implementation and explicitly distinguished repository normative documentation; source inspection only. No product execution or test result is asserted.",
+          "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+        },
+        "validity": "supported",
+        "gaps": [
+          "L1 candidate only; independent review, later layers and runtime/import/publication remain principal/campaign obligations.",
+          "Broad family disposition is not exhaustive acceptance of unread leaf implementations.",
+          "No product runtime qualification or fresh test result is claimed."
+        ],
+        "evidence": [
+          {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/review-evidence-compact.md",
+            "sha256": "1d28ad12ce7c525d230e42486b6bccd691104d5e6acd4a815728dda7b8ed8676"
+          },
+          {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/excerpt-map.json",
+            "sha256": "301173d05efb7a14a5fedfafbf6755d34e413100dadd7f21560a62e0f4cff471"
+          }
+        ],
+        "input_keys": [
+          "file:packages/core/README.md",
+          "file:packages/core/package.json",
+          "file:AGENTS.md",
+          "members:packages/core/src",
+          "members:packages/core/test",
+          "members:docs/specs/v2",
+          "members:docs/specs/terminal",
+          "members:docs/specs/runtime-closure"
+        ],
+        "source_refs": [
+          {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "packages/core/README.md",
+            "git_blob_sha": "742921238462659e1a5a314f2e0238102c6e9f3a",
+            "sha256": "e74885e18e96297fd931989505937559ecbdce42c595cf8846411d4f0c4de324"
+          },
+          {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "packages/core/package.json",
+            "git_blob_sha": "8ee8ebb666051c9b5ee0fcd4a54bceb3a2cb3c43",
+            "sha256": "1c58faa263c2bb931b9789722342645e94cb30f0b91613b9093aa2ed422c8385"
+          },
+          {
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "path": "AGENTS.md",
+            "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+            "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f"
+          }
+        ],
+        "recipe_ref": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/recipe.json",
+          "sha256": "79c21a0eb94bf9eb6927984134592a688d3b028c2213e5552bb1017ae50bd8fb"
+        },
+        "build_dependencies": [],
+        "navigation": [],
+        "producer_request_ref": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/request.txt",
+          "sha256": "5ade453a557acd559e6796cab8f6ed42d5141ddf668d3c6f06169e7ce8840d7d"
+        },
+        "producer_response_ref": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/response.md",
+          "sha256": "79a01b28b5df5d99a60f8dfd5af2b223671aec009ec9e77ae755cf38096ff12d"
+        },
+        "semantic_review_refs": [],
+        "runtime_receipt_refs": []
+      },
+      "derived_population_routing": {
+        "count": 104,
+        "families": [
+          "architecture-history",
+          "documentation",
+          "package",
+          "validation-support"
+        ],
+        "by_depth": {
+          "decisive_source_read": 2,
+          "grouped_documentation_disposition": 12,
+          "grouped_generated_contract": 1,
+          "grouped_support_contract": 7,
+          "grouped_validation_inventory": 80,
+          "grouped_vendor_boundary": 2
+        },
+        "by_read_status": {
+          "not_read": 102,
+          "semantically_read_decisive_ranges": 2
+        },
+        "coverage_group_ids": [
+          "G011",
+          "G043",
+          "G064",
+          "G065",
+          "G066",
+          "G067",
+          "G068",
+          "G069",
+          "G162",
+          "G163",
+          "G164"
+        ]
+      },
+      "source_reference_families": [
+        "package",
+        "root-authority-outside-assigned-population"
+      ],
+      "clarification_authored_in_this_revision": {
+        "need_boundary": "Entrada comum, autoridade e disposição integral do inventário.",
+        "mandatory_followup": "Aceite semântico independente, L2–L4, consumo e runtime/publicação pertencem à fila real da principal; documentos e helpers não lidos não desaparecem.",
+        "blocked_dependent_claims": "Nenhum dependente de camada seguinte é liberado pela contagem/hash. Esta revisão não transforma o pacote em S1 completo nem altera validity congelada.",
+        "registered_dependent_artifact_keys": null,
+        "note": "No L2–L4 dependent keys or new build edges are invented. These are use restrictions derived from existing bodies/gaps, not a retroactive validity change."
+      }
+    }
+  ]
+}

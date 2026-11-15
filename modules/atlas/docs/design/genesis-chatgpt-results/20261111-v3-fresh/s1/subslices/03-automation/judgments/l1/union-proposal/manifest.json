@@ -1,0 +1,29 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "lot": "union-proposal",
+  "source": "review-packets/union-proposal.txt",
+  "source_bytes": 28290,
+  "source_sha256": "0afd95c68df0748078157e0016e65707b3058997d3edacdcbf87b6eace6105c0",
+  "frozen_manifest_entry": {
+    "lot": "union-proposal",
+    "path": "review-packets/union-proposal.txt",
+    "bytes": 28290,
+    "sha256": "0afd95c68df0748078157e0016e65707b3058997d3edacdcbf87b6eace6105c0",
+    "body": "producers/boundaries/union-navigation-proposal.md",
+    "body_sha256": "f4362077ed7eb2f0dff7bb76acd60debeaa41bd37886551977b92c02addfcb6e",
+    "body_fragment_sha256": "f4362077ed7eb2f0dff7bb76acd60debeaa41bd37886551977b92c02addfcb6e",
+    "part": "integral",
+    "scope": "proposta concreta de navegação: cinco donos/36 keys do kit; versões globais NOT_SELECTED; s1.core.entry preservada"
+  },
+  "split_rule": "Balanced nearest LF boundaries, <= approximately 32000 bytes.",
+  "parts": [
+    {
+      "part": 1,
+      "file": "part-01.txt",
+      "start": 0,
+      "end": 28290,
+      "bytes": 28290,
+      "sha256": "0afd95c68df0748078157e0016e65707b3058997d3edacdcbf87b6eace6105c0"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "schema": "git-connector-commit-materialization/v1",
+  "objects_verified": 1660,
+  "captured_unique_commits": 1660,
+  "failed": [],
+  "shallow_boundaries": [
+    {
+      "sha": "e900fcc41658d6423abfe3b4ade9e018794a57e0",
+      "missing_parent_objects": [
+        "839716462ea07488d58c7179e8486c93bb0d8d15"
+      ]
+    }
+  ],
+  "head": "63e99146961161b8596bbe8b51e293c92eba4182",
+  "origin_dev": "5e0807b5ff953508f792b8a965883985b05a7066",
+  "connector_observed_merge_base": "7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249",
+  "not_a_guard_result": true,
+  "method": "Only exact remote Git object hashes accepted; any missing ancestry will be explicitly shallow, never invented."
+}

@@ -1,0 +1,25 @@
+{
+  "recorded_at_utc": "2026-11-15T01:29:31.990373+00:00",
+  "responses": [
+    {
+      "judge": "/root/s1_03_j1",
+      "file": "j1-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 3166,
+      "sha256": "4556b17c441874cf389ce80d906246b29387e68212fd30e759eceacdfd0c9187",
+      "terminal_newline": false,
+      "literal": true
+    },
+    {
+      "judge": "/root/s1_03_j2",
+      "file": "j2-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 3071,
+      "sha256": "db8655c91d1e0ab1e2202cb0d91db8cdf95b394f01544f5af913c1998c8431ec",
+      "terminal_newline": false,
+      "literal": true
+    }
+  ],
+  "pending": [],
+  "sync_state": "Both original final judgments saved before next lot."
+}

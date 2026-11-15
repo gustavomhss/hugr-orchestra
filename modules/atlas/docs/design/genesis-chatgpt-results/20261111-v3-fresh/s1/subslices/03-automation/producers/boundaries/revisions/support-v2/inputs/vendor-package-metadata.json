@@ -1,0 +1,83 @@
+{
+  "name": "hugr-lean",
+  "version": "0.4.0",
+  "description": "OpenCode plugin that summarizes large tool outputs before they reach the model, keeps failures whole and stores every original for exact recall",
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "plugin",
+    "coding-agent",
+    "llm",
+    "context",
+    "tokens",
+    "tool-output",
+    "summarize",
+    "compression"
+  ],
+  "homepage": "https://github.com/gustavomhss/HuGR-Lean#readme",
+  "bugs": {
+    "url": "https://github.com/gustavomhss/HuGR-Lean/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gustavomhss/HuGR-Lean.git"
+  },
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "NOTICE",
+    "CHANGELOG.md",
+    "SECURITY.md",
+    "licenses",
+    "docs/BENCHMARK_REAL.md",
+    "fixtures/**/SOURCES.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./server": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./core": {
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core/index.js"
+    },
+    "./raw": {
+      "types": "./dist/raw/index.d.ts",
+      "import": "./dist/raw/index.js"
+    }
+  },
+  "bin": {
+    "hugr-lean": "dist/cli/index.js"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "structure": "node scripts/check-structure.mjs",
+    "smoke": "node scripts/package-smoke.mjs",
+    "benchmark": "node scripts/benchmark.mjs",
+    "benchmark:real": "node scripts/real-world/run.mjs",
+    "benchmark:real:host": "node scripts/real-world/host.mjs",
+    "check": "npm run structure && npm run typecheck && npm test && npm run build",
+    "prepack": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
+  }
+}

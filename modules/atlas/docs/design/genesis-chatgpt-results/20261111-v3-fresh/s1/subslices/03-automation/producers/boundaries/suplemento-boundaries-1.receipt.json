@@ -1,0 +1,74 @@
+{
+  "kind": "prepared_evidence_supplement_receipt",
+  "task": "RE-BND-01..06",
+  "producer": "/root/boundaries_l1",
+  "candidate": {
+    "path": "bodies/boundaries.md",
+    "bytes": 23665,
+    "sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+    "git_blob_sha": "6821d54aec4f8015dd00d634f632dc9960d1bd74"
+  },
+  "recipe": {
+    "path": "revisions/boundaries-v2/recipe.json",
+    "bytes": 3501,
+    "sha256": "13d95ddbf05625b6f270972422a3603669ff238cc7152a3e1c1789106af70bf4",
+    "git_blob_sha": "63e56fa6badaab561f04f48ef0033dd6d4d21d71"
+  },
+  "supplement": {
+    "path": "suplemento-boundaries-1.md",
+    "bytes": 285965,
+    "sha256": "665c05eff1fd9db5cc1a75636fc883adf8c43cac6f8069dfe3fc5010225ef0b1",
+    "git_blob_sha": "30ecf397cbb35da0a98b73cbf333ab8031d32c56"
+  },
+  "index": {
+    "path": "suplemento-boundaries-1.index.json",
+    "bytes": 136517,
+    "sha256": "dee45614a91d42cd8de571ccd2f5c1a18c81d762ca354f94caf256d40e077141",
+    "git_blob_sha": "bb71cb705224b0247c18766a0fcdd2109f578ecc"
+  },
+  "shared_reconciliation": {
+    "identity": {
+      "path": "shared-reconciliation-1.md",
+      "sha256": "75aa4f74aba2ddcecd58c52fd329481dffabc60271a57bf0bfbe358d0b903992",
+      "git_blob_sha": "9ec7c98ea98fbf497d49313cb267c394db238039",
+      "bytes": 121449
+    },
+    "supplement_start_byte": 9742,
+    "supplement_end_byte_exclusive": 131191,
+    "reuse_without_retransmission": true
+  },
+  "effective_inputs": {
+    "path": "effective-inputs.json",
+    "bytes": 22879,
+    "sha256": "6ecae50d90933e555a874b209c6553750d85192df44c36df2418b3ff696890fc",
+    "git_blob_sha": "2d099dcbef9b537a5e22a634642c1317bd0464f4"
+  },
+  "verification": {
+    "path": "revisions/boundaries-v2/supplement-verification.json",
+    "bytes": 1340,
+    "sha256": "cd120f821fc765afdbc46370c20472ac6b6b92c3ce19a14327be8373cce075dc",
+    "git_blob_sha": "fa76c29ef48dfaddd57486e1a8901e0e815ef4bf"
+  },
+  "original_public_requests": [
+    {
+      "path": "revisions/boundaries-v2/inputs/j1-response.md",
+      "bytes": 8320,
+      "sha256": "ccad14b91237930376d42ebb54d39bdd3f35e3b7587d5cb8935bc121202ae376",
+      "git_blob_sha": "0b120a7769854058fb6da37770f81ec7d2c55d77"
+    },
+    {
+      "path": "revisions/boundaries-v2/inputs/j2-response.md",
+      "bytes": 6656,
+      "sha256": "677ce359667553b2e3ab5cc3855897ca003db08ba1ded0e1004b96653c726b0a",
+      "git_blob_sha": "7acc3d649d4194ef350d25fbfc3fd35cbfc2d35a"
+    }
+  ],
+  "authorized_delta_count": 2,
+  "support_sha256_unchanged": "3a4ef5ee6925eb3c80404181f00a0e4e012750459f2dbb1ab11076b69449d684",
+  "proposal_sha256_unchanged": "f4362077ed7eb2f0dff7bb76acd60debeaa41bd37886551977b92c02addfcb6e",
+  "prepared_not_yet_delivered_by_this_producer_to_judges": true,
+  "judgments_or_acceptances_moved": false,
+  "product_tests": "NOT_RUN",
+  "semantic_status": "PENDING_SAME_PAIR_REEVALUATION",
+  "packaging_note": "Supplement combines common proof and new branches; evidence transport in batches is permitted, but no source input is split/reclassified to evade native limits."
+}

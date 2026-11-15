@@ -1,0 +1,23 @@
+{
+  "supplement": {
+    "path": "suplemento-support-1.md",
+    "bytes": 366600,
+    "sha256": "7069f8fb20eb0c08e0d7e5438d0c13c5a776e9982ca88cf14a02b7d397c075b5",
+    "git_blob_sha": "27721bc6e28b7d5288dbd876b9e3540df66279f1"
+  },
+  "index": {
+    "path": "suplemento-support-1.index.json",
+    "bytes": 242045,
+    "sha256": "af534ade10b8f7772640f16f9c0f22100ecf591a7a064009753ed60c377a9d57",
+    "git_blob_sha": "01b0e09cf784689cb939756e9134d9f8d97557e5"
+  },
+  "literal_entries": 149,
+  "reused_received_count": 36,
+  "new_source_path_count": 75,
+  "support_population_paths": 104,
+  "capability_fixture_paths_with_new_evidence": 13,
+  "all_excerpt_hashes_offsets_verified": true,
+  "mechanical_receipt_identity_verified": true,
+  "source_tests": "NOT_RUN",
+  "semantic_acceptance": "PENDING_JUDGES"
+}

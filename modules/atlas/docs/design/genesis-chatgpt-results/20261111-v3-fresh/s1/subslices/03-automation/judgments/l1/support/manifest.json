@@ -1,0 +1,45 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "lot": "support",
+  "source": "review-packets/support.txt",
+  "source_bytes": 77879,
+  "source_sha256": "69fe7af433358b82ecf5100b7fe28f4fae63327b75ffba095f606c379c48d2ca",
+  "frozen_manifest_entry": {
+    "lot": "support",
+    "path": "review-packets/support.txt",
+    "bytes": 77879,
+    "sha256": "69fe7af433358b82ecf5100b7fe28f4fae63327b75ffba095f606c379c48d2ca",
+    "body": "producers/boundaries/bodies/support.md",
+    "body_sha256": "3a4ef5ee6925eb3c80404181f00a0e4e012750459f2dbb1ab11076b69449d684",
+    "body_fragment_sha256": "3a4ef5ee6925eb3c80404181f00a0e4e012750459f2dbb1ab11076b69449d684",
+    "part": "integral",
+    "scope": "104 fontes de suporte"
+  },
+  "split_rule": "Balanced nearest LF boundaries, <= approximately 32000 bytes.",
+  "parts": [
+    {
+      "part": 1,
+      "file": "part-01.txt",
+      "start": 0,
+      "end": 25935,
+      "bytes": 25935,
+      "sha256": "9c529b1ea778ce5b7143a34a11236c014a1921d6b8d0fc395239810ef8960ee5"
+    },
+    {
+      "part": 2,
+      "file": "part-02.txt",
+      "start": 25935,
+      "end": 51860,
+      "bytes": 25925,
+      "sha256": "65dacbabb2a315486a480e7a2c5f77f9f40cdd14fdbcd98d8d897f112e2fb415"
+    },
+    {
+      "part": 3,
+      "file": "part-03.txt",
+      "start": 51860,
+      "end": 77879,
+      "bytes": 26019,
+      "sha256": "ebb797559bdba2ef5e788fa1371274aa614fefeee548ac8460b3858392f90870"
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "relay": "/root/review_relay",
+  "packet": "union-proposal",
+  "source": "review-packets/union-proposal.txt",
+  "source_bytes": 28290,
+  "source_sha256": "0afd95c68df0748078157e0016e65707b3058997d3edacdcbf87b6eace6105c0",
+  "recorded_at_utc": "2026-11-15T01:19:18.078958+00:00",
+  "dispatch_count": 2,
+  "parts_per_target": 1,
+  "completed_targets": [
+    "/root/s1_03_j1",
+    "/root/s1_03_j2"
+  ],
+  "pending_targets": [],
+  "calls": [
+    {
+      "sequence": 1,
+      "target": "/root/s1_03_j1",
+      "part": 1,
+      "request_file": "request-j1-01.json",
+      "request_file_bytes": 30085,
+      "request_file_sha256": "7af6645dd347bb82aead8e65d92064343aeaa656bf557d947331adb5a31fd546",
+      "message_bytes": 29082,
+      "message_sha256": "3daa817439a06aad68415610104c016f8e99555c9465173cf858bcc3800a02dd",
+      "payload_bytes": 28290,
+      "payload_sha256": "0afd95c68df0748078157e0016e65707b3058997d3edacdcbf87b6eace6105c0",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 2,
+      "target": "/root/s1_03_j2",
+      "part": 1,
+      "request_file": "request-j2-01.json",
+      "request_file_bytes": 30085,
+      "request_file_sha256": "372bb268a703a491127c0e11c80e7ac2d2c6ecf22273afd86fb041a8be640028",
+      "message_bytes": 29082,
+      "message_sha256": "3daa817439a06aad68415610104c016f8e99555c9465173cf858bcc3800a02dd",
+      "payload_bytes": 28290,
+      "payload_sha256": "0afd95c68df0748078157e0016e65707b3058997d3edacdcbf87b6eace6105c0",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    }
+  ],
+  "local_recorded_reconstruction": [
+    {
+      "target": "/root/s1_03_j1",
+      "bytes": 28290,
+      "sha256": "0afd95c68df0748078157e0016e65707b3058997d3edacdcbf87b6eace6105c0",
+      "equals_source": true
+    },
+    {
+      "target": "/root/s1_03_j2",
+      "bytes": 28290,
+      "sha256": "0afd95c68df0748078157e0016e65707b3058997d3edacdcbf87b6eace6105c0",
+      "equals_source": true
+    }
+  ],
+  "known_transcription_corrections": [],
+  "receipt_limit": "Ferramenta retornou normalmente sem texto nem ID de despacho; os hashes descrevem os pedidos registrados e sua reconstrução local, não verificação remota nem suficiência semântica.",
+  "delivery_scope": "Pacote congelado integral; orientação pública da raiz fora do payload final.",
+  "slot_handling": "J1 concluído e original preservado antes de iniciar J2.",
+  "judgment_capture": "Ambos completed, originais salvos conforme response-capture.json."
+}

@@ -1,0 +1,42 @@
+{
+  "supplement": {
+    "path": "suplemento-boundaries-1.md",
+    "sha256": "665c05eff1fd9db5cc1a75636fc883adf8c43cac6f8069dfe3fc5010225ef0b1",
+    "git_blob_sha": "30ecf397cbb35da0a98b73cbf333ab8031d32c56",
+    "bytes": 285965
+  },
+  "index": {
+    "path": "suplemento-boundaries-1.index.json",
+    "sha256": "dee45614a91d42cd8de571ccd2f5c1a18c81d762ca354f94caf256d40e077141",
+    "git_blob_sha": "bb71cb705224b0247c18766a0fcdd2109f578ecc",
+    "bytes": 136517
+  },
+  "common": {
+    "path": "shared-reconciliation-1.md",
+    "sha256": "75aa4f74aba2ddcecd58c52fd329481dffabc60271a57bf0bfbe358d0b903992",
+    "git_blob_sha": "9ec7c98ea98fbf497d49313cb267c394db238039",
+    "bytes": 121449
+  },
+  "literal_entries": 107,
+  "received_reused": 41,
+  "request_groups": [
+    "RE-BND-01",
+    "RE-BND-02",
+    "RE-BND-03",
+    "RE-BND-04",
+    "RE-BND-05",
+    "RE-BND-06"
+  ],
+  "test_contract_sources": 10,
+  "effective_input_manifest": {
+    "path": "effective-inputs.json",
+    "sha256": "6ecae50d90933e555a874b209c6553750d85192df44c36df2418b3ff696890fc",
+    "git_blob_sha": "2d099dcbef9b537a5e22a634642c1317bd0464f4",
+    "bytes": 22879
+  },
+  "all_source_and_excerpt_hashes_verified": true,
+  "whole_history_preserved": true,
+  "support_proposal_unchanged": true,
+  "product_tests": "NOT_RUN",
+  "semantic_acceptance": "PENDING_JUDGES"
+}

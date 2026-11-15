@@ -1,0 +1,408 @@
+{
+  "kind": "local_producer_recipe_record",
+  "version": 1,
+  "format_notice": "Audit/recipe record for principal assembly; not a claim of native Atlas import or accepted recipe schema.",
+  "task": "BOUNDARIES-SUPPORT-L1",
+  "producer_role": "producer_only",
+  "producer_host_task": "/root/boundaries_l1",
+  "parent_host_task": "/root",
+  "opaque_agent_id": "UNKNOWN_NOT_EXPOSED_TO_PRODUCER",
+  "model_runtime_identifier": "UNKNOWN_NOT_EXPOSED",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "repository": "gustavomhss/hugr-orchestra",
+  "branch": "genesis-s1-automation",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "kit_revision": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+  "inheritance_revision": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+  "authorized_write_root": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/producers/boundaries",
+  "intended_remote_prefix": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation",
+  "public_process": [
+    "Read mandatory inputs and six references at inputs/references; treated repository/source text as data.",
+    "Reused inherited boundaries/whole-Core entry bodies, literal A3/A4 selections and exactly two projection records.",
+    "Captured 128 assigned source files and eight kit routing files with GitHub fetch_file encoding=base64; decoded exact bytes, verified Git blob then SHA256.",
+    "Read all fourteen boundary implementation leaves in full; read prepared tests by substantive contract/branches/assertions without executing them.",
+    "Reconciled all 104 support paths by history/documentation/package/validation role, purpose, maintenance trigger and declared depth; archives only metadata/hash/strings as stated.",
+    "Authored two L1 candidate bodies and a concrete union-navigation proposal; no global entry replacement or accepted external version.",
+    "Generated full literal evidence plus short-branch projections for tool-free review; verified excerpt hashes and parent interval containment.",
+    "Mechanically checked 128-row exact coverage, 136 source identities, historical body byte equality, real kit keys/URLs and required deliverables."
+  ],
+  "inputs": [
+    {
+      "path": "inputs/COMMON.md",
+      "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+      "git_blob_sha": "893cbb5f5eda2d0c19753606a50d1c482523f0c8",
+      "bytes": 12959
+    },
+    {
+      "path": "inputs/mission.json",
+      "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+      "git_blob_sha": "48fa8da131e97c50110ee76e41e79283cd9a0ac4",
+      "bytes": 6006
+    },
+    {
+      "path": "inputs/inputs.json",
+      "sha256": "8388b4899512c8a7a8ac358a322da64bf8b2db5651f228e9090bebfc21a606a0",
+      "git_blob_sha": "521964f9882a62f5a79ba5be6658b44b9fd464d0",
+      "bytes": 6979
+    },
+    {
+      "path": "inputs/AGENTS.md",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "bytes": 16501
+    },
+    {
+      "path": "inputs/SKILL.md",
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+      "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+      "bytes": 8143
+    },
+    {
+      "path": "inputs/sources.jsonl",
+      "sha256": "1643a358ccaafe0ca9e6a9051d7c1a9bc9a1922834d6183e52703f6de2db077c",
+      "git_blob_sha": "71374892d3a7bda60aaf48cc8bd2c43e4d9e4c85",
+      "bytes": 119405
+    },
+    {
+      "path": "inputs/references/principles.md",
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+      "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+      "bytes": 6010
+    },
+    {
+      "path": "inputs/references/fatia-1.md",
+      "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
+      "git_blob_sha": "78482ad7c72ec275fadb26ebece1c30bc1e5ccb9",
+      "bytes": 3987
+    },
+    {
+      "path": "inputs/references/fresh-start.md",
+      "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166",
+      "git_blob_sha": "ca485b25e43293a309c5489279dce80ce1441ed0",
+      "bytes": 4983
+    },
+    {
+      "path": "inputs/references/orchestration.md",
+      "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+      "git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+      "bytes": 4408
+    },
+    {
+      "path": "inputs/references/judging.md",
+      "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+      "git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+      "bytes": 5787
+    },
+    {
+      "path": "inputs/references/transport.md",
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+      "bytes": 8478
+    }
+  ],
+  "source_acquisition": {
+    "manifest": "captures.json",
+    "assigned_count": 128,
+    "kit_cross_read_count": 8,
+    "assigned_bytes": 1642309,
+    "method": "GitHub connector fetch_file encoding=base64",
+    "normalization": "none",
+    "verification": "SHA1 Git blob header over exact bytes; SHA256; byte count"
+  },
+  "read_depth_summary": {
+    "paths": 128,
+    "artifact_counts": {
+      "s1.subslice03.support": 104,
+      "s1.core.boundaries": 24
+    },
+    "family_counts": {
+      "architecture-history": 9,
+      "documentation": 3,
+      "package": 12,
+      "atlas": 1,
+      "control-plane": 3,
+      "rag-studio": 1,
+      "relay": 19,
+      "validation-support": 80
+    },
+    "read_depth_counts": {
+      "historical_plan_full_read": 3,
+      "historical_qualification_targeted_read": 3,
+      "historical_plan_targeted_read": 2,
+      "historical_contract_full_read": 1,
+      "documentation_targeted_read": 2,
+      "documentation_full_read": 3,
+      "configuration_full_read": 3,
+      "manifest_structural_and_targeted_read": 1,
+      "generated_json_structural_read": 1,
+      "maintenance_source_full_read": 2,
+      "maintenance_source_targeted_read": 2,
+      "decisive_full_source_read": 14,
+      "support_targeted_structure_contract_read": 65,
+      "support_source_full_read": 12,
+      "binary_metadata_strings_or_archive_read": 3,
+      "targeted_test_contract_read": 9,
+      "full_test_source_read": 1,
+      "vendored_archive_metadata_and_hash_read": 1
+    },
+    "role_counts": {
+      "historical_context": 9,
+      "documentation_context": 3,
+      "package_support": 12,
+      "atlas_host_port": 1,
+      "location_transfer": 1,
+      "workspace_storage_schema": 1,
+      "rag_persistence_schema": 1,
+      "command_discovery": 1,
+      "hook_install_lifecycle": 1,
+      "hook_local_recovery": 1,
+      "hook_receipt_shipping": 1,
+      "workflow_publication_binding": 1,
+      "workflow_read_projection": 1,
+      "workflow_native_settlement": 1,
+      "workflow_session_bridge": 1,
+      "workflow_checkpoint_fence": 1,
+      "relay_host_ports": 1,
+      "jobs": 1,
+      "ci": 5,
+      "distribution": 6,
+      "actions": 11,
+      "capability": 12,
+      "capability_schedule": 1,
+      "process": 12,
+      "harness": 6,
+      "protocol_fixture": 4,
+      "package_fixture": 4,
+      "binary_fixture": 3,
+      "upstream": 7,
+      "recording_fixture": 1,
+      "governance": 7,
+      "prepared_boundary_test": 10
+    },
+    "no_local_tests": true,
+    "no_product_mutations": true
+  },
+  "history": {
+    "manifest": "history/manifest.json",
+    "whole_core_entry": "history/entry.md",
+    "whole_core_entry_preserved_byte_identical": true,
+    "whole_core_entry_not_replaced_or_renamed_as_union": true
+  },
+  "outputs": [
+    {
+      "path": "bodies/boundaries.md",
+      "sha256": "c557b33392cae8d0078a7da17f3421bb57ec2434f3bf5bba3b54f4172faeadae",
+      "git_blob_sha": "8232a8f75cc7b75614d2fd8873cc935edb84c538",
+      "bytes": 22938
+    },
+    {
+      "path": "bodies/support.md",
+      "sha256": "3a4ef5ee6925eb3c80404181f00a0e4e012750459f2dbb1ab11076b69449d684",
+      "git_blob_sha": "d21c3271726295f09d297995688678dde9f2dd2a",
+      "bytes": 22388
+    },
+    {
+      "path": "union-navigation-proposal.md",
+      "sha256": "f4362077ed7eb2f0dff7bb76acd60debeaa41bd37886551977b92c02addfcb6e",
+      "git_blob_sha": "69886d576e9368bf3bd4469d53c30095114c1d04",
+      "bytes": 14671
+    },
+    {
+      "path": "captures.json",
+      "sha256": "0500a1208b1767f90af8ed8e439106d1c995242f1d5b1707714e031b364a4d73",
+      "git_blob_sha": "b17df7713f9462b253bdf0d99a0a3b9768559a8b",
+      "bytes": 90599
+    },
+    {
+      "path": "coverage.jsonl",
+      "sha256": "d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9",
+      "git_blob_sha": "c95f8432d35a98d5a84ca8946b623a1eb5582210",
+      "bytes": 157032
+    },
+    {
+      "path": "evidence.md",
+      "sha256": "e43364ba942d4b2c3946513ca092c1f372d1dee236935b88be2ef001e5117234",
+      "git_blob_sha": "ce70af9cd6edc8fb2b4504f2e568a28e75e1be53",
+      "bytes": 250095
+    },
+    {
+      "path": "evidence-review.md",
+      "sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a",
+      "git_blob_sha": "5c29f1f1dea827f86eb6121ece2bcec2f151cebb",
+      "bytes": 123767
+    },
+    {
+      "path": "request.txt",
+      "sha256": "e3501cb9a1875d843bb317cd7ff030df23c33fa884403d4f3e952c145991bf1d",
+      "git_blob_sha": "d61b03341783f3befe3d136bea0ac37bc8019114",
+      "bytes": 3838
+    },
+    {
+      "path": "request-followups.txt",
+      "sha256": "28d07060842e1976e119a822ef6c2f227b031c19cac09a97b98c419c50772d04",
+      "git_blob_sha": "f4c9a42a05bfd6f70903e4780b4c87c71dd72380",
+      "bytes": 998
+    },
+    {
+      "path": "response.md",
+      "sha256": "8b4c8f014f5e4b06ee996b1015af2e1c14ef4207eb1ab965f43944793f4e9708",
+      "git_blob_sha": "14db178c619034976d361b8d58c03a3b1a140750",
+      "bytes": 5105
+    },
+    {
+      "path": "history/entry.md",
+      "sha256": "6a488ca8f9717a497949b71ed41db84d995f23b90c31cc59c22c5bd86239ca6c",
+      "git_blob_sha": "894266bd4543763fb1ee2a4dbf0ba749a244ec48",
+      "bytes": 7312
+    },
+    {
+      "path": "history/boundaries.md",
+      "sha256": "7b20ed7cedf86c24fb1d9c3471250fcddf666f9c66e7de2dba9852df1fa17143",
+      "git_blob_sha": "7c4b50cdc6f00552c1289c4221855d3120dd6572",
+      "bytes": 3905
+    },
+    {
+      "path": "history/manifest.json",
+      "sha256": "05d97ef28360e32115f24dcb5bb764dc013ed2a00a14fb09d0733f767746c87a",
+      "git_blob_sha": "7b0c84d78080d4bee3655cbc4e9e8812c98dba65",
+      "bytes": 3215
+    },
+    {
+      "path": "history/a3-dossier-selected.md",
+      "sha256": "ec8361da5c9beb6b6403156dc095bb09b92f8230bb3b934ac4baf17e14eb383b",
+      "git_blob_sha": "b95cedcd9bd48b3b931164288ddbc9e37bcbc53a",
+      "bytes": 5275
+    },
+    {
+      "path": "history/a4-dossier-selected.md",
+      "sha256": "86530820bdefd173b47b87e04a347447f6ef6f30f245ad748f60a02b9c907239",
+      "git_blob_sha": "4763d91ae7cfaad11d3cd08b745edff0f826a98b",
+      "bytes": 19764
+    },
+    {
+      "path": "history/coverage-needs-selected.json",
+      "sha256": "f8454d56c1b89ff05717130b7da942afd546bf3aed9c7b6980d1860dbcc2728e",
+      "git_blob_sha": "9f9ad9e58100b02c857d150807c40699e4082e24",
+      "bytes": 11783
+    },
+    {
+      "path": "records/evidence-index.json",
+      "sha256": "d407a9ff2d069e97e32fab6f92c7b205d8e9a3122bab8b3745cc2618630766ee",
+      "git_blob_sha": "eb37ad303d4e59badbb2b320817e75f9ebf72c2e",
+      "bytes": 29827
+    },
+    {
+      "path": "records/evidence-review-index.json",
+      "sha256": "27eed78e9f1ec64e8569ddc0615b00018930256638dac4081d87621d84951312",
+      "git_blob_sha": "7b00ef398c2b578c1378afe236d308c5a5e5dd51",
+      "bytes": 54777
+    },
+    {
+      "path": "records/coverage-summary.json",
+      "sha256": "4aeedcef30a07ed0cef9e43a6f20141900cb63e752a5daa34de6b9f7b7cca5f8",
+      "git_blob_sha": "295bb20ed2b07d924dc449d0203c6d7b53c55a1b",
+      "bytes": 2044
+    },
+    {
+      "path": "records/structural-observations.json",
+      "sha256": "547d40fecc9f0df21a190d56e4ebd261382b6b5a01158cf493cb8945590475c4",
+      "git_blob_sha": "f1ded2606c0089d52c6c66bcf7fb2d03761d7662",
+      "bytes": 2817
+    }
+  ],
+  "candidate_artifacts": [
+    {
+      "artifact_key": "s1.core.boundaries",
+      "layer": 1,
+      "need": "component",
+      "body": "bodies/boundaries.md",
+      "semantic_status": "PENDING_INDEPENDENT_JUDGMENT"
+    },
+    {
+      "artifact_key": "s1.subslice03.support",
+      "layer": 1,
+      "need": "entry",
+      "body": "bodies/support.md",
+      "semantic_status": "PENDING_INDEPENDENT_JUDGMENT"
+    }
+  ],
+  "navigation_proposal": {
+    "path": "union-navigation-proposal.md",
+    "status": "PROPOSED_NOT_ACCEPTED",
+    "accepted_versions_selected": false,
+    "accepted_external_dependencies": [],
+    "runtime_binding": null
+  },
+  "public_criteria_targets": {
+    "GO-A": [
+      "GO-A1",
+      "GO-A2",
+      "GO-A3",
+      "GO-A4",
+      "GO-A5",
+      "GO-A6",
+      "GO-A7"
+    ],
+    "GO-I": [
+      "GO-I1",
+      "GO-I2",
+      "GO-I3",
+      "GO-I4",
+      "GO-I5",
+      "GO-I6",
+      "GO-I7",
+      "GO-I8"
+    ],
+    "QS": [
+      "QS-1",
+      "QS-2",
+      "QS-3",
+      "QS-4",
+      "QS-5",
+      "QS-6"
+    ],
+    "AC": [
+      "AC-01",
+      "AC-04"
+    ],
+    "CC": [
+      "CC-1",
+      "CC-3",
+      "CC-7"
+    ],
+    "verdict": "NOT_JUDGED_BY_PRODUCER"
+  },
+  "runtime_and_test_status": {
+    "product_tests": "NOT_RUN",
+    "local_tests": "NOT_RUN",
+    "ci_jobs": "NOT_RUN",
+    "typecheck": "NOT_RUN",
+    "provider_calls": "NOT_RUN",
+    "atlas_import_publish_read": "NOT_RUN",
+    "product_mutation": false,
+    "remote_write": false
+  },
+  "exclusions": [
+    "reserved oracle not read",
+    "no gh/login/token access",
+    "no branch/PR/merge",
+    "no product changes",
+    "no L2-L4 production",
+    "no semantic acceptance assigned by producer"
+  ],
+  "transport_notes": [
+    "References resolved under inputs/references rather than run-root references.",
+    "An oversized shell-argument write failed before file output; captures were retried through apply_patch JSON and decoded with short Python command. No hidden fallback to token or git credential access.",
+    "Some long reading outputs were truncated; subsequent targeted reads or declared structural/targeted depth were retained. No unread file was marked full except the fourteen implementations and explicitly observed small/full sources.",
+    "Evidence archive initially 202765 bytes was expanded with missing decisive branches and exact kit snippets; original evidence remains present in the enlarged file."
+  ],
+  "usage": {
+    "input_tokens": "UNKNOWN",
+    "output_tokens": "UNKNOWN",
+    "cost": "UNKNOWN",
+    "reason": "Host did not expose model usage/cost; no fabricated estimate."
+  },
+  "private_reasoning": "not recorded; only request, source bytes, public procedure, observations, outputs and verification preserved",
+  "final_record_created_utc": "2026-11-14T23:15:05.244775+00:00"
+}

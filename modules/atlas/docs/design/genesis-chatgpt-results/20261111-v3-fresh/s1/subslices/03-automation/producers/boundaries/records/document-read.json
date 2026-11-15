@@ -1,0 +1,80 @@
+{
+  "docs/specs/runtime-closure/ARCHIE-QUALIFICATION.md": [
+    [
+      1,
+      55
+    ],
+    [
+      69,
+      76
+    ]
+  ],
+  "docs/specs/runtime-closure/CHECKPOINT.md": [
+    [
+      1,
+      56
+    ]
+  ],
+  "docs/specs/runtime-closure/PLAN.md": [
+    [
+      1,
+      59
+    ],
+    [
+      69,
+      73
+    ],
+    [
+      88,
+      92
+    ],
+    [
+      100,
+      114
+    ],
+    [
+      129,
+      133
+    ],
+    [
+      135,
+      147
+    ],
+    [
+      158,
+      162
+    ]
+  ],
+  "docs/specs/runtime-closure/SNAPSHOT-QUALIFICATION.md": [
+    [
+      1,
+      55
+    ],
+    [
+      58,
+      62
+    ],
+    [
+      78,
+      84
+    ],
+    [
+      86,
+      87
+    ]
+  ],
+  "docs/specs/runtime-closure/WAVE-2.md": [
+    [
+      1,
+      55
+    ],
+    [
+      58,
+      62
+    ],
+    [
+      68,
+      73
+    ]
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "kind": "local_producer_delta_recipe",
+  "version": 2,
+  "artifact_key": "s1.core.boundaries",
+  "layer": 1,
+  "need": "component",
+  "producer": "/root/boundaries_l1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "base_recipe": {
+    "path": "revisions/boundaries-v1/recipe.json",
+    "bytes": 15087,
+    "sha256": "b55bbbda05c426500409dfb49610dc2f83e520dd6dd37721ec1cb93507687a51",
+    "git_blob_sha": "338d6dfd78dbf80bb3f46d4685a12146d794f500"
+  },
+  "base_body": {
+    "path": "revisions/boundaries-v1/bodies/boundaries.md",
+    "bytes": 22938,
+    "sha256": "c557b33392cae8d0078a7da17f3421bb57ec2434f3bf5bba3b54f4172faeadae",
+    "git_blob_sha": "8232a8f75cc7b75614d2fd8873cc935edb84c538"
+  },
+  "body": {
+    "path": "bodies/boundaries.md",
+    "bytes": 23665,
+    "sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+    "git_blob_sha": "6821d54aec4f8015dd00d634f632dc9960d1bd74"
+  },
+  "authorized_operations": [
+    "BND-PRECISION-01",
+    "BND-PRECISION-02"
+  ],
+  "request": {
+    "path": "revisions/boundaries-v2/request.txt",
+    "bytes": 3063,
+    "sha256": "5902662ae03576f5b1c1d3d44286e6ec733a0c514c3b7d67359a975642d49924",
+    "git_blob_sha": "89f147501b7721de5135d71b8536a44696e60d2c"
+  },
+  "judge_public_requests": [
+    {
+      "path": "revisions/boundaries-v2/inputs/j1-response.md",
+      "bytes": 8320,
+      "sha256": "ccad14b91237930376d42ebb54d39bdd3f35e3b7587d5cb8935bc121202ae376",
+      "git_blob_sha": "0b120a7769854058fb6da37770f81ec7d2c55d77"
+    },
+    {
+      "path": "revisions/boundaries-v2/inputs/j2-response.md",
+      "bytes": 6656,
+      "sha256": "677ce359667553b2e3ab5cc3855897ca003db08ba1ded0e1004b96653c726b0a",
+      "git_blob_sha": "7acc3d649d4194ef350d25fbfc3fd35cbfc2d35a"
+    }
+  ],
+  "effective_inputs": {
+    "path": "effective-inputs.json",
+    "bytes": 22879,
+    "sha256": "6ecae50d90933e555a874b209c6553750d85192df44c36df2418b3ff696890fc",
+    "git_blob_sha": "2d099dcbef9b537a5e22a634642c1317bd0464f4"
+  },
+  "evidence": {
+    "path": "suplemento-boundaries-1.md",
+    "bytes": 285965,
+    "sha256": "665c05eff1fd9db5cc1a75636fc883adf8c43cac6f8069dfe3fc5010225ef0b1",
+    "git_blob_sha": "30ecf397cbb35da0a98b73cbf333ab8031d32c56"
+  },
+  "evidence_index": {
+    "path": "suplemento-boundaries-1.index.json",
+    "bytes": 136517,
+    "sha256": "dee45614a91d42cd8de571ccd2f5c1a18c81d762ca354f94caf256d40e077141",
+    "git_blob_sha": "bb71cb705224b0247c18766a0fcdd2109f578ecc"
+  },
+  "delta": {
+    "path": "revisions/boundaries-v2/delta.json",
+    "bytes": 4643,
+    "sha256": "cec49ee29edcb7637cfc36dcf4a8d3b0f98685c1e1a2739c279f4c6f6d890c9b",
+    "git_blob_sha": "9a78dde4211f6a3ccc01571e0e52856684d9a4b8"
+  },
+  "delta_patch": {
+    "path": "revisions/boundaries-v2/delta.patch",
+    "bytes": 4125,
+    "sha256": "a7483401cc444bf710e8d1427917a110cb4b9e9561a1975e5b08c027ef50ae70",
+    "git_blob_sha": "6de4de7de7873f8bbe4925d542ec8c86925571f3"
+  },
+  "response": {
+    "path": "revisions/boundaries-v2/response.md",
+    "bytes": 3271,
+    "sha256": "8ff2291b94024d4d5820ac123aa0a0ec6058ba313f20467f1ca42bc3d01c0867",
+    "git_blob_sha": "d6a33a643bfea704bd226236ef2d78ed3766f555"
+  },
+  "preservation_notice": "Original v1 records remain byte-identical; historical full files remain actual inputs; no acceptance transferred.",
+  "test_runtime": "NOT_RUN",
+  "semantic_status": "PENDING_SAME_PAIR_REEVALUATION",
+  "usage": "UNKNOWN"
+}

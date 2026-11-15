@@ -1,0 +1,32 @@
+{
+  "schema": "s1-03-root-support-union-verification/v1",
+  "items": [
+    {
+      "lot": "support-supplement-v2",
+      "new_literal_entries": 149,
+      "reused_intervals": 36,
+      "supplement_sha256": "7069f8fb20eb0c08e0d7e5438d0c13c5a776e9982ca88cf14a02b7d397c075b5",
+      "shared_reconciliation_sha256": "75aa4f74aba2ddcecd58c52fd329481dffabc60271a57bf0bfbe358d0b903992",
+      "status": "PASS_LITERAL_IDENTITY",
+      "semantic_acceptance": "PENDING_SAME_PAIR",
+      "body_before_sha256": "3a4ef5ee6925eb3c80404181f00a0e4e012750459f2dbb1ab11076b69449d684",
+      "body_after_sha256": "498a0454418a14977b9b2f4c4f515711d941b6d4bbece13f1baaa8feaa76d378",
+      "body_substitutions": 3,
+      "remaining_body_bytes_identical": true,
+      "coverage_substitutions": 2,
+      "coverage_after_sha256": "d1ed0705d256b1578a0debce284c3a2c4dd3bd2e00bf9f8f60e047b097d5bf74",
+      "support_mapping_rows": 104
+    },
+    {
+      "lot": "union-supplement-v1",
+      "new_literal_entries": 7,
+      "reused_intervals": 5,
+      "supplement_sha256": "c3b28e78d92ab53256bd926963167187ba9703d2ec719a95d18a5b768b41f02c",
+      "shared_reconciliation_sha256": "75aa4f74aba2ddcecd58c52fd329481dffabc60271a57bf0bfbe358d0b903992",
+      "status": "PASS_LITERAL_IDENTITY",
+      "semantic_acceptance": "PENDING_SAME_PAIR",
+      "body_unchanged_sha256": "f4362077ed7eb2f0dff7bb76acd60debeaa41bd37886551977b92c02addfcb6e"
+    }
+  ],
+  "product_tests": "NOT_RUN"
+}

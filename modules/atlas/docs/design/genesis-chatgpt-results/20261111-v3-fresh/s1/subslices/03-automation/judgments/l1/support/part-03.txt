@@ -1,0 +1,411 @@
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `f26aa7588fa30832c48b3cabcff88e0ccae625de`; SHA256 fonte `99dcc36b5b6c314442643ef7d2732156fb68000ab669daeab9dcdbab0011d475`. Pai S14 56–74; SHA256 trecho `aae64b83c19d85d938b0bfd00c1afdbbc90859dd2a0f3eb72dbb0e8eabd39097`.
+
+`````text
+### Deferred durable continuation recovery
+
+Do not infer that ambiguous provider work is safe to retry from an advisory wake.
+The first inbox-driven runner intentionally omits outer provider-attempt markers
+until they have a concrete consumer and a complete recovery policy.
+
+Design post-crash continuation recovery as one explicit slice. It should model:
+
+- promoted input and projected-history state
+- queued-input promotion and steering assignment
+- provider-attempt preparation versus provider-dispatch ambiguity
+- required post-tool continuation across process loss
+- explicit `retry` and `abandon` decisions for unknown outcomes
+- bounded automatic retry only where provider and tool idempotency make it safe
+- retry budget, backoff, visible recovery status, startup discovery, and future
+  clustered ownership fencing
+
+Do not introduce an enclosing durable execution identity solely to group these
+facts; a process-local Session drain has no durable transcript boundary.
+`````
+
+## R060 ← S15 — `packages/core/test/fixture/omni-expect.ts` 1–7
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `067fbf7a21e008caacfab46a2eaeb878ac7bcaac`; SHA256 fonte `33272d6488f070f4ca10fbaa5e9c113e4ed9eabd4c2d148dbd2321b6dc4d4ab9`. Pai S15 1–28; SHA256 trecho `b74576f4f2676cf6f3e92342cb80aded095a63df731fbdbde448f68a18035221`.
+
+`````text
+// Test-only expectations for the omni positive control (script/test-omni-control.ts, D-L1).
+//
+// A test that must spawn through omni calls expectSpawn(import.meta.path) inside its body, before it spawns. The
+// control's global afterEach then settles that test: the omni spawns counted since the call are this test's own, so a
+// spawn made by any other test or file cannot satisfy it. A test that never ran (a -t filter, skipIf, skip) never
+// called expectSpawn and expects nothing. The preload and the tests import this same file, so they share this
+// module's one list; it lives under test/ because nothing in the product needs it.
+`````
+
+## R061 ← S15 — `packages/core/test/fixture/omni-expect.ts` 13–27
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `067fbf7a21e008caacfab46a2eaeb878ac7bcaac`; SHA256 fonte `33272d6488f070f4ca10fbaa5e9c113e4ed9eabd4c2d148dbd2321b6dc4d4ab9`. Pai S15 1–28; SHA256 trecho `07c0e7573fde3edd8b0f03142f5cf065ba60f5bdc3adb0a5e2e9602b60e5fc0b`.
+
+`````text
+/** Called inside a test that must spawn through omni; a second call in the same test keeps the first start. */
+export function expectSpawn(file: string) {
+  open ??= { file, start: Omni.snapshot().spawns }
+}
+
+/** The control's afterEach: records the open expectation, if this test made one, with its own spawn count. */
+export function settle() {
+  if (!open) return
+  settled.push({ file: open.file, spawns: Omni.snapshot().spawns - open.start })
+  open = undefined
+}
+
+/** Every settled expectation of this process, in test order. */
+export function results() {
+  return [...settled]
+`````
+
+## R062 ← S16 — `packages/core/test/fixture/actions-transport.ts` 55–67
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `b8eb249ded98ce2d8fa3aa32922dd645bf724f8a`; SHA256 fonte `5b475ea84f3f0f8af22f5df1b747168b7338b2c40581dfa77d674bf2d935584f`. Pai S16 55–67; SHA256 trecho `ca8fd0d63f34a480badc8b39a7f33da1823a2d982f37e3b4cea4dc97cee1adef`.
+
+`````text
+  const proc = yield* AppProcess.Service
+  const handles: ChildProcessHandle[] = []
+  const commands: import("effect/unstable/process/ChildProcess").Command[] = []
+  const service = yield* ActionsTransport.make({ directory: root }).pipe(Effect.provideService(AppProcess.Service, {
+    ...proc,
+    spawn: (command) => proc.spawn(command).pipe(Effect.tap((handle) => Effect.sync(() => {
+      if (command._tag === "StandardCommand" && ["version", "config"].includes(command.args[0])) return
+      handles.push(handle)
+      commands.push(command)
+    }))),
+    run: () => Effect.die("Transport must use inherited raw spawner, never run collection"),
+    runStream: () => Stream.die("Transport must not use line-decoded runStream"),
+  }))
+`````
+
+## R063 ← S17 — `packages/core/test/fixture/board-queue.ts` 27–38
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `7aae79dd6d22b26fa281e52ced58c7dd529e1823`; SHA256 fonte `a40f86b4e3a4e55dbef08f1ce7e7c9319211746f2d590d04d92e38987987a449`. Pai S17 27–49; SHA256 trecho `16e67e208d307b0382d06b62515be67dcf872fa1dc67a61db8f397eb86d8d2e5`.
+
+`````text
+// GitHub is a fake keyed by repo name that reads PR heads from each test's bare origin; git itself is real.
+// `seeded` branches make a PR's full gate fail when every one of them is in its head; `baseRuns` is the base commit's check-runs.
+type Remote = {
+  origin: string
+  pulls: Map<number, string>
+  bodies: Map<number, string>
+  conclusion: string
+  seeded: ReadonlyArray<string>
+  /** Branches whose full gate comes back CANCELLED (infrastructure, not code) on its first `infraAttempts` attempts. */
+  cancelled: ReadonlyArray<string>
+  infraAttempts: number
+  /** Each PR's run attempt; a PR's gate is one Actions run numbered like the PR, and `gh run rerun` adds an attempt. */
+`````
+
+## R064 ← S17 — `packages/core/test/fixture/board-queue.ts` 132–147
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `7aae79dd6d22b26fa281e52ced58c7dd529e1823`; SHA256 fonte `a40f86b4e3a4e55dbef08f1ce7e7c9319211746f2d590d04d92e38987987a449`. Pai S17 124–151; SHA256 trecho `e16afd0b04ffa9d1aa18af13f38b9cb52590e30df08456f40e2c03b56381ba27`.
+
+`````text
+// Stands in for Atlas's renderer: the bodies are the records themselves, so the test reads what the host filled in.
+const RENDER: BoardRecord.Port = {
+  pr: (record) => JSON.stringify(record),
+  bundle: (record) => JSON.stringify(record),
+  trailer: (trailer) => `WP: ${trailer.WP}\nAttempt: ${trailer.Attempt}`,
+}
+
+const build = (env?: NodeJS.ProcessEnv) =>
+  testEffect(
+    AppNodeBuilder.build(LayerNode.group([Board.node, Database.node, EventV2.node, Credential.node]), [
+      [
+        Board.node,
+        makeGlobalNode({
+          service: Board.Service,
+          layer: Board.layerWith({ gh, record: RENDER, env }),
+          deps: [Database.node, EventV2.node, Credential.node, AppProcess.node, Global.node],
+`````
+
+## R065 ← S17 — `packages/core/test/fixture/board-queue.ts` 333–351
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `7aae79dd6d22b26fa281e52ced58c7dd529e1823`; SHA256 fonte `a40f86b4e3a4e55dbef08f1ce7e7c9319211746f2d590d04d92e38987987a449`. Pai S17 333–355; SHA256 trecho `0eabf0e1481d7703a3b65df865b537f9dab38a9fe0b45fb5b8be0e45d8c23531`.
+
+`````text
+// A scoped pass on the card's head tree, which `queue` requires when the contract has `scoped.tests`.
+export function passed(repo: Repo, number: number) {
+  return Effect.gen(function* () {
+    const tree = yield* Effect.promise(async () => (await Bun.$`git -C ${repo.directory} rev-parse card-${number}^{tree}`.quiet().text()).trim())
+    const found = yield* row(repo, number)
+    const database = yield* Database.Service
+    yield* database.db
+      .insert(BoardCheckTable)
+      .values({
+        id: CheckID.create(),
+        issue_id: found.issue.id,
+        attempt: 1,
+        kind: "scoped",
+        command: "bun test a",
+        tree_sha: tree,
+        outcome: "pass",
+        failing: [],
+        started_at: 0,
+        ended_at: 120_000,
+`````
+
+## R066 ← S18 — `packages/core/test/fixture/capability-schedule.ts` 37–52
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `bd376bd299100cca1f8ebda844518ec0190d8652`; SHA256 fonte `68302e3706d5ed9895422a5e620167b8d2e3ee1a8546320fb4449d12141a9855`. Pai S18 37–52; SHA256 trecho `5fb24b30119eb80629e0d98c9b731843b96209af31b78739500f7640d98220ce`.
+
+`````text
+export const tmp = await tmpdir()
+const placement = location(Location.Ref.make({ directory: AbsolutePath.make(tmp.path) }))
+const execution = Layer.succeed(SessionExecution.Service, SessionExecution.Service.of({
+  active: Effect.succeed(new Set()), resume: () => Effect.void, interrupt: () => Effect.void, wake: () => Effect.void,
+  exclusive: (_, effect) => Effect.asSome(effect), withRunner: () => Effect.die("No Session runner in this fixture") }))
+const projects = Layer.succeed(ProjectV2.Service, ProjectV2.Service.of({
+  resolve: (directory) => Effect.succeed({ id: ProjectV2.ID.global, directory }),
+  directories: () => Effect.succeed([]), list: () => Effect.succeed([]), commit: () => Effect.void }))
+export const layer = AppNodeBuilder.build(LayerNode.group([Database.node, EventV2.node, SessionProjector.node,
+  SessionStore.node, SessionV2.node, ScheduledTask.node, ScheduledTaskPort.node, PermissionV2.node, PermissionSaved.node, AgentV2.node,
+  Location.node, ToolRegistry.node]), [
+  [Database.node, Database.layerFromPath(join(tmp.path, "schedule.sqlite"))],
+  [Location.node, Layer.succeed(Location.Service, Location.Service.of(placement))],
+  [ProjectV2.node, projects],
+  [SessionExecution.node, execution],
+])
+`````
+
+## R067 ← S18 — `packages/core/test/fixture/capability-schedule.ts` 72–85
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `bd376bd299100cca1f8ebda844518ec0190d8652`; SHA256 fonte `68302e3706d5ed9895422a5e620167b8d2e3ee1a8546320fb4449d12141a9855`. Pai S18 65–89; SHA256 trecho `8e976db28ec43fe70fd733a7687388658232dde9f4751da039e4fcea9ea3276d`.
+
+`````text
+    // Through ToolRegistry, so permission ask/deny and settlement run exactly as for a model call.
+    // `callID` replays an earlier call ID, as a retried settlement of the same tool call would.
+    const call = (input: Schema.Json, callID?: string) => Effect.gen(function* () {
+      const toolCallID = callID ?? `call-${++counter.n}`
+      if (!callID) yield* events.publish(SessionEvent.Tool.Input.Started, { sessionID: context.sessionID,
+        assistantMessageID: context.assistantMessageID, callID: toolCallID, name: CapabilitySchedule.name,
+        timestamp: DateTime.makeUnsafe(1) })
+      const owner = { projectID: placement.project.id, location: { directory: placement.directory },
+        sessionID: context.sessionID, agentID: context.agent }
+      return yield* CapabilityInvocation.withContext({ issuer: "core", owner, invocation: { sessionID: context.sessionID,
+        agentID: context.agent, assistantMessageID: context.assistantMessageID, callID: toolCallID },
+      rootToolName: CapabilitySchedule.name, effectiveRules: allow, nativeDenyFloor: [] },
+      registry.materialize(allow).pipe(Effect.flatMap((materialized) => materialized.settle({ ...context,
+        call: { type: "tool-call", id: toolCallID, name: CapabilitySchedule.name, input } }))))
+`````
+
+## R068 ← S19 — `packages/core/test/fixture/capability-connection-management.ts` 34–41
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `5aaaf333f8c639ab10eaa9df57f5cecde6279687`; SHA256 fonte `0cd350dfa0921677665e1dadd81b907de0704305ca0174e5b9c5c419910caffa`. Pai S19 29–41; SHA256 trecho `1281e9e410eb39c570436ee31fb0a9b2f96476523a4309d1c5688b01e5de66ab`.
+
+`````text
+// Load the actual factory after Store integration. Missing implementation fails, never skips
+// or substitutes a fake Store. The frozen-contract checkpoint must still typecheck beforehand.
+const storeFactory = Effect.promise(async () => {
+  const { CapabilityConnectionStore }: { CapabilityConnectionStore: {
+    make: Effect.Effect<CapabilityConnectionStoreContract.Interface, CapabilityConnectionStoreContract.Error>
+  } } = await import(new URL("../../src/capability/connection/store.ts", import.meta.url).href)
+  return CapabilityConnectionStore.make
+})
+`````
+
+## R069 ← S20 — `packages/core/test/distribution-bundle-execution.test.ts` 13–26
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `185cc0e06fd075b1030f046f024c5d4c7390a1e9`; SHA256 fonte `c0e70fadb08efab5a37e88a1950657b3b2fd18a9575537c7fc111c5103023343`. Pai S20 13–34; SHA256 trecho `a3f4f2c76131279922f02cca875c11730dd7e2f72b21d319ed68f928ebc7e73d`.
+
+`````text
+// ORCHESTRATION-ONLY: fake Bun at the shell command boundary, never native omni qualification.
+// The host AppProcess/omni spawn is real; the existing preload judges that separately.
+const it = testEffect(LayerNode.compile(AppProcess.node))
+const nonce = "0123456789abcdef0123456789abcdef"
+const log = (verdict: string) => `omni positive control [${nonce}]: ${verdict}\nomni control nonce: ${nonce}\n`
+const declaration = 'printf \'omni control nonce: %s\\n\' "$nonce" >> ../../distribution-logs/run.log'
+
+for (const pkg of ["core", "cli"] as const) {
+  for (const exitCode of [0, 17]) {
+    it.live(`ORCHESTRATION-ONLY ${pkg}: actual producer, shell argv, child exit ${exitCode}, log and control`, () => Effect.gen(function* () {
+      expectSpawn(import.meta.path)
+      const box = yield* fixture(pkg)
+      yield* admit(box)
+      yield* observe(box, run, exitCode)
+`````
+
+## R070 ← S21 — `packages/core/test/distribution-bundle-boundaries.test.ts` 13–23
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `77584b66723a615e0ce9a81cdec431dcca647673`; SHA256 fonte `f09c87bcc0ea5d1561d508e98a284d088f8c643d8ab92752838537cc2b04e393`. Pai S21 12–23; SHA256 trecho `9b5992aeb4b74a766d3bb2c256533406908f4814b4a5b8bd90df849f46c495b7`.
+
+`````text
+const cargoOutput = `ORCHESTRATION-ONLY: synthetic cargo; never native qualification
+running 1 test
+test ${nativeJobTest} ... native Job lifetime control: stop passed
+native Job lifetime control: natural passed
+native Job lifetime control: descendant passed
+native Job lifetime control: unknown passed
+native Job mutation control: original owned handle stayed valid; OS oracle rejected it
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.10s
+`
+`````
+
+## R071 ← S22 — `packages/core/test/fixture/github-read.ts` 27–32
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `71c70d38d6ef2b3b0a1d9101cec0543c8c83a958`; SHA256 fonte `a9e2595868a0bf25d17fb6d2347274a45218c62f7ff1f6caad77ca0131a7cbdc`. Pai S22 19–32; SHA256 trecho `64d9962c1a649ca65d5e1ae2ac5e4ccde443c9b7bf87c67ad579fef6aa8d6069`.
+
+`````text
+// Native wire-shape recordings derived from official response examples, sanitized
+// for this fixture. They are not a live-provider compatibility claim.
+// https://docs.github.com/en/rest/actions/workflows#list-repository-workflows
+export const workflow = { id: 161335, node_id: "W_fixture", name: "CI", path: ".github/workflows/build.yml", state: "active",
+  created_at: "2020-01-08T23:48:37Z", updated_at: "2020-01-08T23:50:21Z",
+  url: "https://api.github.com/repos/acme/renamed/actions/workflows/161335",
+`````
+
+## R072 ← S23 — `packages/core/test/fixture/process-tree.ts` 1–9
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `5e4121f21d19e2eacf9441ca57288ad0fb9a125d`; SHA256 fonte `0faac770f6bea7ac1e47d43b2b900eaa4d4f5e0effa209f3d0237d34ba2ac5e8`. Pai S23 1–21; SHA256 trecho `cf8d286443d0466cc35041dea6b46696d89322844e95f3dc5820f06c29ab0b40`.
+
+`````text
+// The shared nonce tree (integration plan §4): a root that starts a chain of descendants, every one of them carrying
+// the tree's nonce in argv, plus the oracles that tell whether any of them is still alive. Tests identify processes
+// by the nonce and by a recorded start time, never by a bare pid: pids are reused on CI.
+//
+// Every fixture process runs `process.execPath -e <script>`, so the tree works under Bun and Node on every OS. Each
+// one writes {pid, nonce, startTime} to <tmpdir>/<nonce>/<pid>.json before it starts its child; the leaf then prints
+// `ready <nonce>`, which every ancestor forwards to its stdout. Seeing that line means every record is written.
+//
+// This file must also load under Node with --experimental-strip-types, so it uses node: builtins only.
+`````
+
+## R073 ← S24 — `packages/core/test/windows-process-query.hosted.ts` 9–23
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `76605fa025e9d7b388a6e6ebc99fff8ad7d20db3`; SHA256 fonte `5f27857477bcdf5cbd93d305dcfe488895f4249de5aac689300dfa2a859a2f17`. Pai S24 1–24; SHA256 trecho `a4fb28ac7cd5a25c9a8c5400c34f793dcce28f981a308c1341c7077f53f8e1ae`.
+
+`````text
+const decoder = new URL("../../../native/omni/campaign/windows-inventory.ts", import.meta.url).href
+beforeAll(() => { expect(process.env.CI).toBeTruthy() })
+
+test("real native Node receives request and config; files survive until close", async () => {
+  const result = JSON.parse(await WindowsProcessQuery.invoke(`
+import fs from 'node:fs';
+const config = JSON.parse(fs.readFileSync(import.meta.filename + '.config', 'utf8'));
+console.log(JSON.stringify({config, request: JSON.parse(process.argv[2]), file: import.meta.filename,
+  native: !process.versions.bun && process.release.name === 'node', executable: fs.realpathSync(process.execPath)}));
+`, decoder, [process.pid]))
+  expect(result.native).toBe(true)
+  expect(result.executable).toBe(WindowsProcessQuery.nodeExecutable())
+  expect(result.config).toEqual({ node: result.executable, decoder })
+  expect(result.request).toEqual([process.pid])
+  expect(existsSync(path.dirname(result.file))).toBe(false)
+`````
+
+## R074 ← S25 — `packages/core/test/lib/effect.ts` 41–60
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `4e9a5c195d29d621f96f326041fa1d8a52be7147`; SHA256 fonte `835060b44a2229edd851c34a7f648f062d54aea2babb4f1e3e63197a48402d6f`. Pai S25 41–60; SHA256 trecho `b4fb05ecf3b4ddb316c7c7f3e7eb65ceae8273045b4245d4fb43417273a3087e`.
+
+`````text
+  // Counted as skipped by the runner when the condition holds, instead of passing with an early return.
+  effect.skipIf = (condition: boolean) => <A, E2>(name: string, value: Body<A, E2, R | Scope.Scope>, opts?: number | TestOptions) =>
+    test.skipIf(condition)(name, () => run(value, testLayer), opts)
+
+  live.skipIf = (condition: boolean) => <A, E2>(name: string, value: Body<A, E2, R | Scope.Scope>, opts?: number | TestOptions) =>
+    test.skipIf(condition)(name, () => run(value, liveLayer), opts)
+
+  return { effect, live }
+}
+
+// Test environment with TestClock and TestConsole
+const testEnv = Layer.mergeAll(TestConsole.layer, TestClock.layer())
+
+// Live environment - uses real clock, but keeps TestConsole for output capture
+const liveEnv = TestConsole.layer
+
+export const it = make(testEnv, liveEnv)
+
+export const testEffect = <R, E>(layer: Layer.Layer<R, E>) =>
+  make(Layer.provideMerge(layer, testEnv), Layer.provideMerge(layer, liveEnv))
+`````
+
+## R075 ← S26 — `packages/core/test/lib/sandbox-host.ts` 5–17
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `6d9c7b9de5bbd336f8f7e2c07e5d0d5aebf544b5`; SHA256 fonte `5d18fdea9e71de604d225a3f5ed71dcba1fdcd416813d7970c019a566800e01d`. Pai S26 1–17; SHA256 trecho `706009731422d25b3a422649b0611340fe32aa14472a8b40a3412b7ad12eb077`.
+
+`````text
+/**
+ * The jail this host gives a sandbox-bound command: seatbelt, srt, or none and why. A Linux host with bubblewrap fetches
+ * its sandbox runtime first, so its srt jail is tested rather than reported as not acquired yet. Tests branch on this:
+ * the jailed behaviour where there is a jail, the named HOLD or documented fallback where there is none.
+ */
+export const sandboxHost = await Effect.runPromise(
+  ToolSafetySandboxRuntime.ready().pipe(Effect.andThen(ToolSafetySandbox.status())),
+)
+
+// Windows' AppContainer confines pwsh and cmd only (tool-safety-appcontainer.test.ts), so the node-based probes that branch
+// on `jail` treat it as no jail and take their named-HOLD path.
+export const jail = sandboxHost.shellWrites === "enforced" && sandboxHost.shellSandbox.kind !== "appcontainer"
+  ? sandboxHost.shellSandbox.kind : undefined
+`````
+
+## R076 ← S27 — `packages/core/test/upstream-settlement-preservation.test.ts` 29–40
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `12fee3da08fdac660d5952099920599509a25ffc`; SHA256 fonte `caaa5e5990d40c1964578ce79e5795d62bb87f20f177627c27aa24b10b505c41`. Pai S27 25–45; SHA256 trecho `771a340bd67f929022ccd306ffe56272d3e6b6ea03bdd982c29c356168071b35`.
+
+`````text
+// Prepared source cases, not executed. These exercise the actual receipt helpers and production updater.
+const it = testEffect(Layer.empty)
+const sessionID = SessionSchema.ID.make("ses_authority")
+const messageID = SessionMessage.ID.make("msg_authority")
+const input = { subagent_type: "archie", task_id: "ses_child", prompt: "Return the proposal" }
+const owner = { sessionID, messageID, callID: "task-call", tool: "task", input }
+const workResult = {
+  schema: "upstream-work-result-v1",
+  taskId: "tsk_proposal",
+  card: { parsed: true, messageID: "msg_returned" },
+  author: { memberId: "archie", executionSessionID: "ses_child", messageID: "msg_returned" },
+  outcome: "done",
+`````
+
+## R077 ← S28 — `packages/core/test/fixture/packaged-skills.ts` 9–18
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `e69c2361d0a4dec7e900e48ed8e5eeadb75aea1f`; SHA256 fonte `3ee1d07bc4a68bcf9c0591def412f90904c8c0fb25216c07c9610c2a7b3177a3`. Pai S28 9–27; SHA256 trecho `fc8119756b4ce970c44d0e984bc54558ad88b42079654a18c2d6dc2270fe8dce`.
+
+`````text
+export const trees = {
+  backend: {
+    "backend-implement/SKILL.md": "---\nname: backend-implement\n---\nRead references/deep/contract.md.\n",
+    "backend-implement/references/deep/contract.md": "Exact UTF-8: café, 日本語\n",
+    "backend-implement/references/empty.md": "",
+  },
+  archie: {
+    "archie-design/SKILL.md": "---\nname: archie-design\n---\nRead references/architecture.md.\n",
+    "archie-design/references/architecture.md": "Design contract\r\n",
+  },
+`````
+
+## I01 — confronto de autoridade documental
+
+Input obrigatório fornecido, não nova captura GitHub. AGENTS.md linhas 207–217; SHA256 fonte `07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f`; trecho `405cd0b08a53f053f88de7fd615712564267b65a3cfcdaafd0b86a7e177fb1c1`.
+
+`````text
+## V2 Session Core
+
+- Keep durable prompt admission separate from model execution. `SessionV2.prompt(...)` admits one durable `session_input` row before scheduling advisory `SessionExecution.wake(sessionID)` unless `resume: false` requests admit-only behavior. The serialized runner promotes admitted inputs into visible user messages at safe boundaries.
+- Reusing a Session ID adopts the existing Session. Reusing a prompt message ID reconciles an exact retry only when Session, prompt, and delivery mode match; conflicting reuse fails. Historical projected prompts lazily synthesize promoted inbox records during exact retry.
+- Keep `SessionExecution` process-global and Session-ID based. Its local implementation owns the process-local Session coordinator and discovers placement through `SessionStore` plus `LocationServiceMap.get(session.location)` only when a drain starts; no layer should take a Session ID. V2 interruption targets the active process-local ownership chain for that Session; idle or missing interruption is a no-op.
+- Keep `SessionRunner`, model resolution, tool registry, permissions, and filesystem Location-scoped. Omitted `Location.workspaceID` means implicit-local placement; explicit workspace identity remains reserved for future placement semantics.
+- Preserve one explicit `llm.stream(request)` call per provider turn and reload projected history before durable continuation. Do not bridge through legacy `SessionPrompt.loop(...)` or delegate orchestration to an in-memory tool loop. The one exception is an agent whose `engine` names a registered `ExecutionHost` (today only `claude-code`): its single `ExecutionHost.stream(turn)` call is that provider turn, its internal tool calls persist as provider-executed events, Orchestra tools it invokes settle through the runner's `turn.execute`, and its `query()` always keeps the `claude_code` system prompt preset.
+- Keep local Session drains process-local until clustering is implemented. `SessionRunCoordinator` joins explicit same-Session resumes, coalesces prompt wakeups, and allows different Sessions to run concurrently. Advisory wakes drain eligible durable inbox rows only; post-crash continuation recovery requires a separate explicit design before it may retry provider work. A drain has no durable identity or transcript boundary.
+- Keep delivery vocabulary explicit. Prompts steer by default and promote at the next safe provider-turn boundary while the current drain requires continuation. An explicit `queue` input remains pending until the Session would otherwise become idle; promote one queued input at that boundary, then reevaluate continuation before promoting another. Promoting any new user input resets the selected agent's provider-turn allowance; a batch of steers resets it once.
+- Keep EventV2 replay owner claims separate from clustered Session execution ownership.
+- Keep the System Context algebra, registry, and built-ins in `packages/core/src/system-context`; keep Context Source producers with their observed domains, and keep Session History selection plus Context Epoch persistence Session-owned.
+`````
+
+## S29 — identidade de observações estruturais
+
+Estes valores são resultados de parsing/hash determinísticos, **não excertos literais e não PASS**. Para conferir o manifesto completo, solicitar `packages/core/package.json`; a fonte está integral no arquivo capturado. Para arquivo vendorizado, pedir README e metadata do membro; o código interno não foi declarado integralmente entendido.
+
+- Exports contados: 437; bare: False; wildcard: False.
+- Snapshot SQLite: 63 entidades tables na lista ddl.
+- Tarball: 205370 bytes, SHA256 `5ff983c58aa056d82059d5edd5b428478dda50a7683a201b7d844949aa1712a3`.
+- Corpo histórico s1.core.entry: 7.312 bytes, SHA256 `6a488ca8f9717a497949b71ed41db84d995f23b90c31cc59c22c5bd86239ca6c`, preservado em `history/entry.md`.
+
+
+FIM_EVIDENCIA_LITERAL
+
+FIM_DO_LOTE

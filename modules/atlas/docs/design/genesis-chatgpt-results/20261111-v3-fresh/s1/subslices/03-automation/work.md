@@ -66,3 +66,13 @@ A preparação real do pacote de captura de automação, ainda explicitamente bl
 Boundary/support em revisão: ambos pediram provas dirigidas; J1support encontrou atribuição arquitetural Protocol→Core não sustentada pelo README. Autor recebeu correção limitada e complementação, sem alteração de produto. A entrada históricaCore continua preservada.
 
 A matriz única dos50IDs está IN_PROGRESS/HOLD, com obrigações locais e complementos globais separados. Revisão, binding, consumo, manutenção e gates não são inferidos de hashes ou captura.
+
+## Atualização — treze correções e reconstrução Git
+
+Automationv4 e researchv2 preservam oito correções; boundariesv2 acrescenta duas precisões de mining/MoveSession; supportv2 aplica os três findings de README, janela do contador omni-expect e configuração condicional de credenciais. São13substituições textuais das primeiras versões avaliadas, sem mudança de produto. A cobertura derivada corrige somente3rows/4campos e mantém todas as identidades das462fontes. Os corpos/receitas anteriores permanecem imutáveis.
+
+O par aceitou o reúso exato dos quatro controles históricos AC-04-local-native dentro do escopo original. A revisão dos suplementos e dos corpos atuais continua, sem liberação globalL1. O trecho residual da função de extração research foi transportado mecanicamente sem nova autoria; a seleção/touch já consta no suplementoB.
+
+Guard: o conector permitiu reconstruir1660commits e2378trees com os SHAs Git exatos, ancestry/merge-base e diff real de1551paths. Dos1635blobs necessários,1634foram recuperados. O ZIP histórico d83941a9d836a23e466ca09ecba1f21d423094cb/1339105bytes falhou nas rotas binárias disponíveis; checkout e numstat recusaram sua ausência. Não executar o gate sobre uma worktree que omitiria essa adição como ausente. O guard oficial final fica NOT_RUN, com recibos e desbloqueio exatos, sem bootstrap/exclusão.
+
+A ponte limitada de consumidores foi preparada como chamada ao CLI Atlas oficial; ainda não executou casos nem construiu leitor/store alternativo. A execução prossegue nas camadas e nas obrigações restantes.

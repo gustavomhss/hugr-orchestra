@@ -1,0 +1,41 @@
+{
+  "kind": "two_authorized_coverage_reason_corrections",
+  "base": {
+    "path": "coverage.jsonl",
+    "bytes": 157032,
+    "sha256": "d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9",
+    "git_blob_sha": "c95f8432d35a98d5a84ca8946b623a1eb5582210"
+  },
+  "updated": {
+    "path": "coverage-v2.jsonl",
+    "bytes": 157240,
+    "sha256": "d1ed0705d256b1578a0debce284c3a2c4dd3bd2e00bf9f8f60e047b097d5bf74",
+    "git_blob_sha": "c656572855761c737fdc2fcdc7bcd9501c6607e2"
+  },
+  "changes": [
+    {
+      "finding": "SUP-F01/D-SUP-01",
+      "path": "packages/core/README.md",
+      "line": 16,
+      "old_reason": "Entrada pública e direção Schema/Protocol→Core→Server, composição e geradores oficiais; intenção de arquitetura não prova todas as folhas.",
+      "new_reason": "Entrada pública: Schema→Core e Protocol→Server são relações separadas; Server expõe serviços Core por HTTP. Composição e geradores oficiais são declarados; intenção de arquitetura não prova todas as folhas.",
+      "old_line_sha256": "60bec29f8994fbfa5b8def81c75bbe31d1c37d692beec4c7c230674407ba6579",
+      "new_line_sha256": "9e68bdedf893a3bb659e225f1cba4f871d2b9a4d5d006aa2e14735f61d6fa167",
+      "old_line": "{\"path\":\"packages/core/README.md\",\"commit\":\"1cde2ff7a71bcf7aecb5d030917b577165135d38\",\"git_blob_sha\":\"742921238462659e1a5a314f2e0238102c6e9f3a\",\"sha256\":\"e74885e18e96297fd931989505937559ecbdce42c595cf8846411d4f0c4de324\",\"bytes\":7777,\"legacy_artifact_key\":\"s1.core.entry\",\"family\":\"package\",\"kind\":\"documentation\",\"owner\":\"S1-03\",\"read_depth\":\"documentation_full_read\",\"role\":\"package_support\",\"need\":\"entry\",\"artifact\":\"s1.subslice03.support\",\"serves_needs\":[\"entry\",\"maintenance\",\"evidence\"],\"disposition\":\"included_l1_candidate_with_stated_limits\",\"reason\":\"Entrada pública e direção Schema/Protocol→Core→Server, composição e geradores oficiais; intenção de arquitetura não prova todas as folhas.\",\"maintenance_trigger\":\"Manter a origem/gerador/pin real documentado; alterações produtivas cabem ao dono e foram excluídas desta produção.\",\"evidence\":[{\"id\":\"S01\",\"first_line\":1,\"last_line\":46},{\"id\":\"S01\",\"first_line\":48,\"last_line\":88}],\"capture_path\":\"sources/packages/core/README.md\",\"execution_status\":\"NOT_RUN\",\"semantic_acceptance\":\"PENDING_INDEPENDENT_JUDGMENT\",\"read_depth_limit\":\"Profundidade declarada do path; agrupamento ou leitura estrutural não significa revisão semântica integral nem PASS.\"}\n",
+      "new_line": "{\"path\":\"packages/core/README.md\",\"commit\":\"1cde2ff7a71bcf7aecb5d030917b577165135d38\",\"git_blob_sha\":\"742921238462659e1a5a314f2e0238102c6e9f3a\",\"sha256\":\"e74885e18e96297fd931989505937559ecbdce42c595cf8846411d4f0c4de324\",\"bytes\":7777,\"legacy_artifact_key\":\"s1.core.entry\",\"family\":\"package\",\"kind\":\"documentation\",\"owner\":\"S1-03\",\"read_depth\":\"documentation_full_read\",\"role\":\"package_support\",\"need\":\"entry\",\"artifact\":\"s1.subslice03.support\",\"serves_needs\":[\"entry\",\"maintenance\",\"evidence\"],\"disposition\":\"included_l1_candidate_with_stated_limits\",\"reason\":\"Entrada pública: Schema→Core e Protocol→Server são relações separadas; Server expõe serviços Core por HTTP. Composição e geradores oficiais são declarados; intenção de arquitetura não prova todas as folhas.\",\"maintenance_trigger\":\"Manter a origem/gerador/pin real documentado; alterações produtivas cabem ao dono e foram excluídas desta produção.\",\"evidence\":[{\"id\":\"S01\",\"first_line\":1,\"last_line\":46},{\"id\":\"S01\",\"first_line\":48,\"last_line\":88}],\"capture_path\":\"sources/packages/core/README.md\",\"execution_status\":\"NOT_RUN\",\"semantic_acceptance\":\"PENDING_INDEPENDENT_JUDGMENT\",\"read_depth_limit\":\"Profundidade declarada do path; agrupamento ou leitura estrutural não significa revisão semântica integral nem PASS.\"}\n"
+    },
+    {
+      "finding": "SUP-F02",
+      "path": "packages/core/test/fixture/omni-expect.ts",
+      "line": 77,
+      "old_reason": "Controle positivo abre expectativa no próprio teste e computa apenas seus spawns; outro teste não satisfaz a declaração.",
+      "new_reason": "Mantém uma expectativa open e mede diferença do contador de spawns na janela expectSpawn→settle. Exclusividade por teste é intenção do comentário e exige ausência de sobreposição/integração correta com runner, não demonstradas só por esta folha.",
+      "old_line_sha256": "04ce87f24436a300e75936ae56404b47c77eb2299950b7db068cc65d6e01fc30",
+      "new_line_sha256": "13dd2bc2e03bb8374d6778d8c7b26139b742de825e9208c985c2dd2718a28be0",
+      "old_line": "{\"path\":\"packages/core/test/fixture/omni-expect.ts\",\"commit\":\"1cde2ff7a71bcf7aecb5d030917b577165135d38\",\"git_blob_sha\":\"067fbf7a21e008caacfab46a2eaeb878ac7bcaac\",\"sha256\":\"33272d6488f070f4ca10fbaa5e9c113e4ed9eabd4c2d148dbd2321b6dc4d4ab9\",\"bytes\":1376,\"legacy_artifact_key\":\"s1.core.entry\",\"family\":\"validation-support\",\"kind\":\"test_fixture\",\"owner\":\"S1-03\",\"read_depth\":\"support_source_full_read\",\"role\":\"process\",\"need\":\"entry\",\"artifact\":\"s1.subslice03.support\",\"serves_needs\":[\"entry\",\"maintenance\",\"evidence\"],\"disposition\":\"included_l1_candidate_with_stated_limits\",\"reason\":\"Controle positivo abre expectativa no próprio teste e computa apenas seus spawns; outro teste não satisfaz a declaração.\",\"maintenance_trigger\":\"Rever contrato de processo/plataforma com S1-01/S1-02/S4 conforme o caminho; conservar nonce, lifetime, limites e controles positivos.\",\"evidence\":[{\"id\":\"S15\",\"first_line\":1,\"last_line\":28}],\"capture_path\":\"sources/packages/core/test/fixture/omni-expect.ts\",\"execution_status\":\"NOT_RUN\",\"semantic_acceptance\":\"PENDING_INDEPENDENT_JUDGMENT\",\"read_depth_limit\":\"Profundidade declarada do path; agrupamento ou leitura estrutural não significa revisão semântica integral nem PASS.\"}\n",
+      "new_line": "{\"path\":\"packages/core/test/fixture/omni-expect.ts\",\"commit\":\"1cde2ff7a71bcf7aecb5d030917b577165135d38\",\"git_blob_sha\":\"067fbf7a21e008caacfab46a2eaeb878ac7bcaac\",\"sha256\":\"33272d6488f070f4ca10fbaa5e9c113e4ed9eabd4c2d148dbd2321b6dc4d4ab9\",\"bytes\":1376,\"legacy_artifact_key\":\"s1.core.entry\",\"family\":\"validation-support\",\"kind\":\"test_fixture\",\"owner\":\"S1-03\",\"read_depth\":\"support_source_full_read\",\"role\":\"process\",\"need\":\"entry\",\"artifact\":\"s1.subslice03.support\",\"serves_needs\":[\"entry\",\"maintenance\",\"evidence\"],\"disposition\":\"included_l1_candidate_with_stated_limits\",\"reason\":\"Mantém uma expectativa open e mede diferença do contador de spawns na janela expectSpawn→settle. Exclusividade por teste é intenção do comentário e exige ausência de sobreposição/integração correta com runner, não demonstradas só por esta folha.\",\"maintenance_trigger\":\"Rever contrato de processo/plataforma com S1-01/S1-02/S4 conforme o caminho; conservar nonce, lifetime, limites e controles positivos.\",\"evidence\":[{\"id\":\"S15\",\"first_line\":1,\"last_line\":28}],\"capture_path\":\"sources/packages/core/test/fixture/omni-expect.ts\",\"execution_status\":\"NOT_RUN\",\"semantic_acceptance\":\"PENDING_INDEPENDENT_JUDGMENT\",\"read_depth_limit\":\"Profundidade declarada do path; agrupamento ou leitura estrutural não significa revisão semântica integral nem PASS.\"}\n"
+    }
+  ],
+  "all_other_lines_byte_identical": true,
+  "shared_reconciliation_1_preserved": true
+}

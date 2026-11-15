@@ -1,0 +1,66 @@
+{
+  "kind": "producer_supplement_preparation_receipt",
+  "proposal_unchanged": {
+    "path": "union-navigation-proposal.md",
+    "bytes": 14671,
+    "sha256": "f4362077ed7eb2f0dff7bb76acd60debeaa41bd37886551977b92c02addfcb6e",
+    "git_blob_sha": "69886d576e9368bf3bd4469d53c30095114c1d04"
+  },
+  "producer": "/root/boundaries_l1",
+  "prepared_for": [
+    "original J1",
+    "original J2"
+  ],
+  "delivery_status": "PREPARED_FOR_COORDINATOR_TRANSPORT",
+  "no_claim_of_judge_receipt": true,
+  "public_requests": [
+    {
+      "path": "revisions/union-supplement-1/inputs/j1-response.md",
+      "bytes": 4026,
+      "sha256": "2758c608c8032f712d80f297bf7e4854b3fd9b0600408fa0e83ca336ba24a1d2",
+      "git_blob_sha": "84a41718018509fb8a444278edb2eacdef1bd4e5"
+    },
+    {
+      "path": "revisions/union-supplement-1/inputs/j2-response.md",
+      "bytes": 2683,
+      "sha256": "36b6036287b2c4ba27e9f50b8bc129ac226f3cbd30726e316e416c679588c882",
+      "git_blob_sha": "fc1617e5ee6de0986fbc0c87cd266c2eb7727cad"
+    }
+  ],
+  "request": {
+    "path": "revisions/union-supplement-1/request.txt",
+    "bytes": 1490,
+    "sha256": "92fc703af84ee1bfc40502ba4c4a0b3a1b6a5d2910df92cf89d2d48e4db68b15",
+    "git_blob_sha": "54fae09a42e5ffeba37690e4066dadb364522edf"
+  },
+  "supplement": {
+    "path": "suplemento-union-1.md",
+    "bytes": 10993,
+    "sha256": "c3b28e78d92ab53256bd926963167187ba9703d2ec719a95d18a5b768b41f02c",
+    "git_blob_sha": "0adde6b8277388d52df8639e56f411462641c137"
+  },
+  "index": {
+    "path": "suplemento-union-1.index.json",
+    "bytes": 11357,
+    "sha256": "9c9c573d66f666214da94ae1c357b984e35ce4a69583205d1b6da90a06fb6d6f",
+    "git_blob_sha": "6fd94d1380aea6e08083e85d6a437b7419390977"
+  },
+  "recipe": {
+    "path": "revisions/union-supplement-1/recipe.json",
+    "bytes": 9155,
+    "sha256": "b7d5cd3fdb40da10694f17eb3299314a94ede98f580cb471082981eaef0811ff",
+    "git_blob_sha": "4daa80aac9145a2fbeac124aa1fc9021a7007c23"
+  },
+  "response": {
+    "path": "revisions/union-supplement-1/response.md",
+    "bytes": 1609,
+    "sha256": "5f2c8512a6cd918a1a663329f082f339e9d1cac4eb61a1ed0a0b785f365fe267",
+    "git_blob_sha": "cf42368874ffca3f744bd7ae1281db25005ade9b"
+  },
+  "literal_entries": 7,
+  "received_reused": 5,
+  "all_source_hashes_and_literal_offsets_verified": true,
+  "body_changes": false,
+  "semantic_status": "PENDING_SAME_PAIR_REEVALUATION",
+  "product_execution": "NOT_RUN"
+}

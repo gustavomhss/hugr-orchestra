@@ -340,9 +340,11 @@
         "receipts/source-verification.json",
         "receipts/root-supplement-literal-verification.json",
         "artifact-plan.json",
-        "judgments/l1"
+        "judgments/l1",
+        "judgments/l1/controls-reuse/j1-response.md",
+        "judgments/l1/controls-reuse/j2-response.md"
       ],
-      "disposition": "Final acceptance by the same two independent judges, correction closure and required L1–L4 artifacts remain open. Literal-source verification is custody evidence only.",
+      "disposition": "Both same judges PASS exact reuse of four historical native construction controls AC-04-local-native only. Current semantic content review, native package use and required operational proof remain open. No inherited fixture is misreported as a current Atlas/provider execution.",
       "global_status": "DEFERRED_TO_INTEGRATION",
       "global_owner": "S1_COORDINATION / ROOT",
       "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
@@ -814,9 +816,12 @@
       "category": "gates",
       "evidence": [
         "receipts/guard-preflight.json",
+        "receipts/guard-materialization/REPORT.md",
+        "receipts/guard-materialization/binary-transport-blocker.json",
+        "receipts/guard-materialization/materialization-verification.json",
         "receipts/branch-gate-discovery.json"
       ],
-      "disposition": "Actual guard preflight failed no-repository, zero inspected rules/files. Branch workflow runs absent. No PR/new branch/merge authorized; no unrun gate is green. Final required-gate reconciliation remains open.",
+      "disposition": "The initial no-repository probe is superseded for capability diagnosis by a faithful Git reconstruction:1660 commits,2378 trees,complete diff1551paths. One historical1,339,105-byteZIP cannot be retrieved through available connector binary routes. Checkout/index numstat fail on exact blobd83941. Official final guard remains NOT_RUN until exact bytes and finalHEAD are available. No partial green, no workflow/guard/policy modification.",
       "global_status": "DEFERRED_TO_INTEGRATION",
       "global_owner": "S1_COORDINATION / ROOT",
       "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."

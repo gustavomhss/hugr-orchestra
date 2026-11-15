@@ -1,0 +1,24 @@
+{
+  "schema": "s1-03-git-ancestry-materialization/v1",
+  "path": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/guard-checkout",
+  "head": "63e99146961161b8596bbe8b51e293c92eba4182",
+  "branch": "genesis-s1-automation",
+  "origin_dev": "5e0807b5ff953508f792b8a965883985b05a7066",
+  "merge_base": "7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249",
+  "exact_connector_identity_match": true,
+  "verified_commit_objects": 1660,
+  "shallow_boundaries": [
+    {
+      "sha": "e900fcc41658d6423abfe3b4ade9e018794a57e0",
+      "missing_parent_objects": [
+        "839716462ea07488d58c7179e8486c93bb0d8d15"
+      ]
+    }
+  ],
+  "tree_objects_materialized": false,
+  "checkout_complete": false,
+  "guard_executed": false,
+  "remote_mutations": false,
+  "other_local_head_branches_created": false,
+  "no_reset": true
+}

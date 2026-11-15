@@ -1,0 +1,52 @@
+{
+  "kind": "three_authorized_precision_corrections",
+  "artifact_key": "s1.subslice03.support",
+  "from": {
+    "bytes": 22388,
+    "sha256": "3a4ef5ee6925eb3c80404181f00a0e4e012750459f2dbb1ab11076b69449d684",
+    "git_blob_sha": "d21c3271726295f09d297995688678dde9f2dd2a"
+  },
+  "to": {
+    "bytes": 23025,
+    "sha256": "498a0454418a14977b9b2f4c4f515711d941b6d4bbece13f1baaa8feaa76d378",
+    "git_blob_sha": "facd86eb03aa44ba722a9dda77c4d820ad28479c"
+  },
+  "operations": [
+    {
+      "id": "SUP-F01/D-SUP-01",
+      "old": "A direção declarada vai de Schema/Protocol para Core e daí para Server; Core não deve importar Client/Server.",
+      "new": "A fonte declara separadamente `Schema → Core` e `Protocol → Server`; também informa que Server expõe os serviços Core por HTTP. Core não deve importar Client/Server.",
+      "old_sha256": "4dd4200cfe44c439e649804bff42dbb5c9384622f2655ba4542ff51f58890047",
+      "new_sha256": "01bfc18663c42fc9d21ee4c89a791a1af8e86a9dae31ee45e914f3a8347418cd",
+      "old_bytes": 113,
+      "new_bytes": 173,
+      "old_byte_offset": 3358,
+      "new_byte_offset": 3358
+    },
+    {
+      "id": "SUP-F03",
+      "old": "aponta a chave de testes para arquivo temporário",
+      "new": "fornece um caminho temporário para a chave de testes quando `ORCHESTRA_CREDENTIAL_KEY_FILE` ainda não está definida (`??=` preserva um valor previamente definido)",
+      "old_sha256": "7e0a895099508704ace42664c502d56fdfe11acc981ccfc9b3942cb6319eee65",
+      "new_sha256": "d54d34af7ce8b6198eac8966166d802ea367455bdcc2d5f927c28344e6678fe1",
+      "old_bytes": 49,
+      "new_bytes": 165,
+      "old_byte_offset": 4982,
+      "new_byte_offset": 5042
+    },
+    {
+      "id": "SUP-F02",
+      "old": "`omni-expect.ts` registra snapshot de contagem no próprio teste e compara apenas seus spawns quando o teste termina. Outro teste não pode satisfazer a expectativa aberta; caso filtrado/skipped que não abriu expectativa não declara controle.",
+      "new": "`omni-expect.ts` mantém uma única expectativa `open` e calcula a diferença do contador `Omni.snapshot().spawns` na janela entre `expectSpawn` e `settle`. O comentário declara a intenção de atribuir os spawns ao teste e descreve liquidação por `afterEach`; a folha isolada não demonstra atribuição individual de cada spawn nem exclusão de sobreposição. Interpretar a diferença como contagem exclusiva de um teste exige que essa janela não contenha spawns de outros testes ou trabalhos e que a integração ao runner delimite a janela corretamente. Caso filtrado/skipped que não chamou `expectSpawn` não abriu expectativa. Essa qualificação não afirma que tenha ocorrido uma falha real.",
+      "old_sha256": "4b501f937cce69890f05ab255ed953b1c896245be5d9f7115ad502c6adbce98b",
+      "new_sha256": "67f5897739105acba4d7ae26c7702aac6398da6ca36ef0d547631d7d6ee9ac7e",
+      "old_bytes": 244,
+      "new_bytes": 705,
+      "old_byte_offset": 17079,
+      "new_byte_offset": 17255
+    }
+  ],
+  "other_body_changes": false,
+  "semantic_status": "PENDING_SAME_PAIR_REEVALUATION",
+  "product_execution": "NOT_RUN"
+}

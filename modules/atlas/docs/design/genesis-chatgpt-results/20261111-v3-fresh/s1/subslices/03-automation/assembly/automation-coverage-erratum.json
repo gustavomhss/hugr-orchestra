@@ -1,0 +1,37 @@
+{
+  "schema": "s1-03-mechanical-coverage-erratum/v1",
+  "assembler": "/root",
+  "authoritative_sentence_producer": "/root/automation_l1",
+  "method": "Copy the exact already-authored v2 correction sentence into the Actions facade role and substitute that same role clause in reason. No new behavioral claim or body change. Original producer coverage and all historical dossiers remain immutable.",
+  "source_body_v4_sha256": "968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae",
+  "source_delta_path": "producers/automation/revisions/v2/delta.json",
+  "source_delta_sha256": "55ef2d173ced7e3ee8036d4d059dfacaf8391e8c95378d12d9279e379e378612",
+  "source_path": "packages/core/src/actions.ts",
+  "row_1_based": 1,
+  "before": {
+    "role": "Fachada da Location; construção lazy, congelamento de entrada e reconciliador efetivamente escolhido",
+    "reason": "Implementação comportamental lida, necessária à compreensão operacional da necessidade flow: Fachada da Location; construção lazy, congelamento de entrada e reconciliador efetivamente escolhido. Mantida no corpo pelas âncoras indicadas; não reduzida a um censo nem usada como prova de execução."
+  },
+  "after": {
+    "role": "A resolução do binding, a inicialização cached de operations e o carregamento de output são adiados; transport, readers e resources são compostos ao construir a fachada.",
+    "reason": "Implementação comportamental lida, necessária à compreensão operacional da necessidade flow: A resolução do binding, a inicialização cached de operations e o carregamento de output são adiados; transport, readers e resources são compostos ao construir a fachada. Mantida no corpo pelas âncoras indicadas; não reduzida a um censo nem usada como prova de execução."
+  },
+  "coverage_before_sha256": "580c1885a277f378d9f5c44f0dd335e58cb4dc02f23bc002179103dc90dcfd5f",
+  "coverage_after_sha256": "2aa8583096af86ec9db54c9a1e60db305f46aa4be5c9979bda577c5f8b50f13e",
+  "updated_coverage": "assembly/automation-coverage-v2.jsonl",
+  "changed_rows": 1,
+  "changed_fields": [
+    "role",
+    "reason"
+  ],
+  "population_unchanged": 204,
+  "supersedes_interpretation_in": [
+    "automation coverage.jsonl row1",
+    "native-input-disposition.json source_inputs entry for packages/core/src/actions.ts",
+    "current aggregate coverage row for packages/core/src/actions.ts",
+    "derived census/dossier role labels for that same path"
+  ],
+  "historical_records_rewritten": false,
+  "body_changed": false,
+  "semantic_status": "PENDING_SAME_PAIR"
+}

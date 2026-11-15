@@ -1,0 +1,449 @@
+{
+  "kind": "effective_input_disposition",
+  "version": 1,
+  "identity_rule": "The original full file is the source unit even when only relevant ranges/records were semantically read. Evidence excerpts do not replace native input identities.",
+  "capture_manifest": {
+    "path": "captures.json",
+    "sha256": "0500a1208b1767f90af8ed8e439106d1c995242f1d5b1707714e031b364a4d73",
+    "git_blob_sha": "b17df7713f9462b253bdf0d99a0a3b9768559a8b",
+    "bytes": 90599
+  },
+  "coverage": {
+    "path": "coverage.jsonl",
+    "sha256": "d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9",
+    "git_blob_sha": "c95f8432d35a98d5a84ca8946b623a1eb5582210",
+    "bytes": 157032
+  },
+  "source_groups": {
+    "boundaries_assigned": {
+      "paths": [
+        "packages/core/src/atlas.ts",
+        "packages/core/src/control-plane/move-session.ts",
+        "packages/core/src/control-plane/workspace.sql.ts",
+        "packages/core/src/rag-studio/sql.ts",
+        "packages/core/src/relay-commands.ts",
+        "packages/core/src/relay-hook-install.ts",
+        "packages/core/src/relay-hook-recovery.ts",
+        "packages/core/src/relay-hook-shipper.ts",
+        "packages/core/src/relay-workflow-binding.ts",
+        "packages/core/src/relay-workflow-currentstep.ts",
+        "packages/core/src/relay-workflow-evaluator.ts",
+        "packages/core/src/relay-workflow-session.ts",
+        "packages/core/src/relay-workflow-transition.ts",
+        "packages/core/src/relay.ts",
+        "packages/core/test/move-session.test.ts",
+        "packages/core/test/relay-commands.test.ts",
+        "packages/core/test/relay-hook-install.test.ts",
+        "packages/core/test/relay-hook-recovery-startup.test.ts",
+        "packages/core/test/relay-hook-recovery.test.ts",
+        "packages/core/test/relay-hook-session.test.ts",
+        "packages/core/test/relay-hook-shipper.test.ts",
+        "packages/core/test/relay-workflow-binding.test.ts",
+        "packages/core/test/relay-workflow-evaluator.test.ts",
+        "packages/core/test/relay.test.ts"
+      ],
+      "count": 24,
+      "identity_manifest": "captures.json",
+      "reason": "Fourteen full implementation leaves and ten prepared test contracts supply the local adapter claims."
+    },
+    "support_assigned": {
+      "paths": [
+        "docs/architecture/phase-plans/70-90-briefs/EXP-CORE.md",
+        "docs/architecture/phase-plans/70-90-briefs/RD-CTRLPLANE.md",
+        "docs/architecture/phase-plans/70-90-briefs/RD-SESSION.md",
+        "docs/specs/runtime-closure/ARCHIE-QUALIFICATION.md",
+        "docs/specs/runtime-closure/CHECKPOINT.md",
+        "docs/specs/runtime-closure/PLAN.md",
+        "docs/specs/runtime-closure/PRODUCER-BOUNDARY.md",
+        "docs/specs/runtime-closure/SNAPSHOT-QUALIFICATION.md",
+        "docs/specs/runtime-closure/WAVE-2.md",
+        "docs/specs/v2/api.html",
+        "docs/specs/v2/schema-changelog.md",
+        "docs/specs/v2/todo.md",
+        "packages/core/bunfig.toml",
+        "packages/core/drizzle.config.ts",
+        "packages/core/package.json",
+        "packages/core/README.md",
+        "packages/core/schema.json",
+        "packages/core/script/fix-node-pty.ts",
+        "packages/core/script/migration.ts",
+        "packages/core/script/toolkit-floors.ts",
+        "packages/core/script/toolkit-pack.ts",
+        "packages/core/test/background-job.test.ts",
+        "packages/core/test/bun-test-timeout.test.ts",
+        "packages/core/test/distribution-bundle-boundaries.test.ts",
+        "packages/core/test/distribution-bundle-deno.test.ts",
+        "packages/core/test/distribution-bundle-execution.test.ts",
+        "packages/core/test/distribution-bundle-gates.ts",
+        "packages/core/test/distribution-bundle-workflow.test.ts",
+        "packages/core/test/fixture/actions-cli.ts",
+        "packages/core/test/fixture/actions-http.ts",
+        "packages/core/test/fixture/actions-network.ts",
+        "packages/core/test/fixture/actions-resource-runtime.ts",
+        "packages/core/test/fixture/actions-transport.ts",
+        "packages/core/test/fixture/board-queue.ts",
+        "packages/core/test/fixture/capability-artifacts.ts",
+        "packages/core/test/fixture/capability-channel.ts",
+        "packages/core/test/fixture/capability-children.ts",
+        "packages/core/test/fixture/capability-connection-management.ts",
+        "packages/core/test/fixture/capability-connection-setup-sql.ts",
+        "packages/core/test/fixture/capability-connection-setup.ts",
+        "packages/core/test/fixture/capability-discovery.ts",
+        "packages/core/test/fixture/capability-mcp.ts",
+        "packages/core/test/fixture/capability-policy.ts",
+        "packages/core/test/fixture/capability-process-control.ts",
+        "packages/core/test/fixture/capability-schedule.ts",
+        "packages/core/test/fixture/capability-service-call.ts",
+        "packages/core/test/fixture/capability-services.ts",
+        "packages/core/test/fixture/distribution-bundle.ts",
+        "packages/core/test/fixture/effect-flock-worker.ts",
+        "packages/core/test/fixture/flock-worker.ts",
+        "packages/core/test/fixture/git.ts",
+        "packages/core/test/fixture/github-command-cli.ts",
+        "packages/core/test/fixture/github-command.ts",
+        "packages/core/test/fixture/github-read-cli.ts",
+        "packages/core/test/fixture/github-read.ts",
+        "packages/core/test/fixture/location.ts",
+        "packages/core/test/fixture/lsp-stdio-server.js",
+        "packages/core/test/fixture/lsp/fake-lsp-server.js",
+        "packages/core/test/fixture/mcp-omni-stdio.ts",
+        "packages/core/test/fixture/mcp-session-recovery.ts",
+        "packages/core/test/fixture/monolith-inventory.ts",
+        "packages/core/test/fixture/omni-effect.ts",
+        "packages/core/test/fixture/omni-expect.ts",
+        "packages/core/test/fixture/packaged-skills.ts",
+        "packages/core/test/fixture/pinned-artifact/tool.zip",
+        "packages/core/test/fixture/process-tree.ts",
+        "packages/core/test/fixture/ripgrep-release.ts",
+        "packages/core/test/fixture/scip-alias/core.scip",
+        "packages/core/test/fixture/scip-alias/orchestra.scip",
+        "packages/core/test/fixture/sdk-registry.ts",
+        "packages/core/test/fixture/tmpdir.ts",
+        "packages/core/test/fixture/upstream-arsenal-proof.ts",
+        "packages/core/test/fixture/upstream-arsenal-registry.ts",
+        "packages/core/test/fixture/upstream-arsenal-runtime.ts",
+        "packages/core/test/fixture/windows-process-query.ts",
+        "packages/core/test/fixtures/cassandra-dialer_test.go",
+        "packages/core/test/fixtures/cassandra-dialer-linux_test.go",
+        "packages/core/test/fixtures/recordings/session-runner/openai-chat-streams-text.json",
+        "packages/core/test/godfile.test.ts",
+        "packages/core/test/lib/effect.ts",
+        "packages/core/test/lib/rejection.ts",
+        "packages/core/test/lib/sandbox-host.ts",
+        "packages/core/test/lib/tool.ts",
+        "packages/core/test/maestro-arsenal-package.test.ts",
+        "packages/core/test/maestro-arsenal.test.ts",
+        "packages/core/test/monolith-inventory-source.test.ts",
+        "packages/core/test/monolith-inventory.test.ts",
+        "packages/core/test/omni.node-smoke.mjs",
+        "packages/core/test/output-quarantine.test.ts",
+        "packages/core/test/preload.ts",
+        "packages/core/test/process/process.test.ts",
+        "packages/core/test/rename-guard.test.ts",
+        "packages/core/test/setup-bun-cache.test.ts",
+        "packages/core/test/shared-schema.test.ts",
+        "packages/core/test/task-governance.test.ts",
+        "packages/core/test/test-ci-request.test.ts",
+        "packages/core/test/test-ci-upload.test.ts",
+        "packages/core/test/test-omni-control.test.ts",
+        "packages/core/test/upstream-arsenal.test.ts",
+        "packages/core/test/upstream-settlement-preservation.test.ts",
+        "packages/core/test/windows-process-query.hosted.ts",
+        "packages/core/tsconfig.json",
+        "packages/core/vendor/hugr-lean-0.4.0-0660c2b5dc92.tgz",
+        "packages/core/vendor/README.md"
+      ],
+      "count": 104,
+      "identity_manifest": "captures.json",
+      "reason": "Each historical/documentation/package/fixture disposition uses its actual full captured file identity; depth is coverage.jsonl."
+    },
+    "boundary_cross_support_readme": {
+      "paths": [
+        "packages/core/README.md"
+      ],
+      "count": 1,
+      "identity_manifest": "captures.json",
+      "reason": "Architecture, entry points and maintenance authority explicitly cited in boundaries."
+    },
+    "kit_navigation": {
+      "paths": [
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/01-sessions/mission.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/02-tools/mission.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/03-automation/mission.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/04-api/mission.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/05-libraries/mission.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/dependencies.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/partition.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/roster.json"
+      ],
+      "count": 8,
+      "identity_manifest": "captures.json",
+      "reason": "Actual partition, obligations, owners, keys and missions for navigation and source population; no accepted artifact version."
+    }
+  },
+  "historical_full_inputs": [
+    {
+      "local_path": "inputs-effective/history/a3-dossier.md",
+      "source_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/review-packets/l1-a3-v1-dossier.md",
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "sha256": "36416073165d59eec9c7d847a26f414d855cc2a40758d548f4dd49669dccc5d4",
+      "git_blob_sha": "285e56c1680153ce75c71fd99bcf9455bde70d4d",
+      "bytes": 177076,
+      "role": "effective_full_historical_input",
+      "read_mode": "selected relevant ranges/records from the original whole file",
+      "file_identity_unit": "whole original file, not the excerpt or projection",
+      "needed_for": [
+        "s1.core.boundaries",
+        "s1.subslice03.support"
+      ],
+      "rationale": "Explicit claims of historical reuse, predecessor scope and inherited coverage depend on this actual input."
+    },
+    {
+      "local_path": "inputs-effective/history/a4-dossier.md",
+      "source_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/review-packets/l1-a4-v1-dossier.md",
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "sha256": "83b544ac46f99b2bf3585ff4e607bcd403e49eb20dd128deb5b6a029a772ead0",
+      "git_blob_sha": "6f872ea0e22097d8084fd587f585751a436f607e",
+      "bytes": 155061,
+      "role": "effective_full_historical_input",
+      "read_mode": "selected relevant ranges/records from the original whole file",
+      "file_identity_unit": "whole original file, not the excerpt or projection",
+      "needed_for": [
+        "s1.core.boundaries",
+        "s1.subslice03.support"
+      ],
+      "rationale": "Explicit claims of historical reuse, predecessor scope and inherited coverage depend on this actual input."
+    },
+    {
+      "local_path": "inputs-effective/history/coverage-needs-projection.json",
+      "source_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/a-l1-evidence-v1/coverage-needs-projection.json",
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "sha256": "05485c4bd0ac9c76814e44537788818bbcf1fbcbfb87dd8063ce30bf1a67e0cf",
+      "git_blob_sha": "2e91d0f916dfa95a2dd0ef7ae74ff8c1bb427045",
+      "bytes": 726892,
+      "role": "effective_full_historical_input",
+      "read_mode": "selected relevant ranges/records from the original whole file",
+      "file_identity_unit": "whole original file, not the excerpt or projection",
+      "needed_for": [
+        "s1.core.boundaries",
+        "s1.subslice03.support"
+      ],
+      "rationale": "Explicit claims of historical reuse, predecessor scope and inherited coverage depend on this actual input."
+    }
+  ],
+  "historical_bodies": [
+    {
+      "local_path": "history/boundaries.md",
+      "source_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/bodies/boundaries.md",
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "sha256": "7b20ed7cedf86c24fb1d9c3471250fcddf666f9c66e7de2dba9852df1fa17143",
+      "git_blob_sha": "7c4b50cdc6f00552c1289c4221855d3120dd6572",
+      "bytes": 3905
+    },
+    {
+      "local_path": "history/entry.md",
+      "source_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/bodies/entry.md",
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "sha256": "6a488ca8f9717a497949b71ed41db84d995f23b90c31cc59c22c5bd86239ca6c",
+      "git_blob_sha": "894266bd4543763fb1ee2a4dbf0ba749a244ec48",
+      "bytes": 7312
+    }
+  ],
+  "guidance_and_authority_inputs": [
+    {
+      "local_path": "inputs-effective/COMMON.md",
+      "source_path": "provided-inputs/COMMON.md",
+      "commit": null,
+      "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+      "git_blob_sha": "893cbb5f5eda2d0c19753606a50d1c482523f0c8",
+      "bytes": 12959,
+      "role": "effective_recipe_or_authority_input",
+      "rationale": "Original task guidance/inventory/authority actually read; no source identity is fabricated for locally supplied wrappers."
+    },
+    {
+      "local_path": "inputs-effective/mission.json",
+      "source_path": "provided-inputs/mission.json",
+      "commit": null,
+      "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+      "git_blob_sha": "48fa8da131e97c50110ee76e41e79283cd9a0ac4",
+      "bytes": 6006,
+      "role": "effective_recipe_or_authority_input",
+      "rationale": "Original task guidance/inventory/authority actually read; no source identity is fabricated for locally supplied wrappers."
+    },
+    {
+      "local_path": "inputs-effective/inputs.json",
+      "source_path": "provided-inputs/inputs.json",
+      "commit": null,
+      "sha256": "8388b4899512c8a7a8ac358a322da64bf8b2db5651f228e9090bebfc21a606a0",
+      "git_blob_sha": "521964f9882a62f5a79ba5be6658b44b9fd464d0",
+      "bytes": 6979,
+      "role": "effective_recipe_or_authority_input",
+      "rationale": "Original task guidance/inventory/authority actually read; no source identity is fabricated for locally supplied wrappers."
+    },
+    {
+      "local_path": "inputs-effective/AGENTS.md",
+      "source_path": "provided-inputs/AGENTS.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "bytes": 16501,
+      "role": "effective_recipe_or_authority_input",
+      "rationale": "Original task guidance/inventory/authority actually read; no source identity is fabricated for locally supplied wrappers."
+    },
+    {
+      "local_path": "inputs-effective/SKILL.md",
+      "source_path": "provided-inputs/SKILL.md",
+      "commit": null,
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+      "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+      "bytes": 8143,
+      "role": "effective_recipe_or_authority_input",
+      "rationale": "Original task guidance/inventory/authority actually read; no source identity is fabricated for locally supplied wrappers."
+    },
+    {
+      "local_path": "inputs-effective/sources.jsonl",
+      "source_path": "provided-inputs/sources.jsonl",
+      "commit": null,
+      "sha256": "1643a358ccaafe0ca9e6a9051d7c1a9bc9a1922834d6183e52703f6de2db077c",
+      "git_blob_sha": "71374892d3a7bda60aaf48cc8bd2c43e4d9e4c85",
+      "bytes": 119405,
+      "role": "effective_recipe_or_authority_input",
+      "rationale": "Original task guidance/inventory/authority actually read; no source identity is fabricated for locally supplied wrappers."
+    },
+    {
+      "local_path": "inputs-effective/references/principles.md",
+      "source_path": "provided-inputs/references/principles.md",
+      "commit": null,
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+      "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+      "bytes": 6010,
+      "role": "effective_recipe_or_authority_input",
+      "rationale": "Original task guidance/inventory/authority actually read; no source identity is fabricated for locally supplied wrappers."
+    },
+    {
+      "local_path": "inputs-effective/references/fatia-1.md",
+      "source_path": "provided-inputs/references/fatia-1.md",
+      "commit": null,
+      "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
+      "git_blob_sha": "78482ad7c72ec275fadb26ebece1c30bc1e5ccb9",
+      "bytes": 3987,
+      "role": "effective_recipe_or_authority_input",
+      "rationale": "Original task guidance/inventory/authority actually read; no source identity is fabricated for locally supplied wrappers."
+    },
+    {
+      "local_path": "inputs-effective/references/fresh-start.md",
+      "source_path": "provided-inputs/references/fresh-start.md",
+      "commit": null,
+      "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166",
+      "git_blob_sha": "ca485b25e43293a309c5489279dce80ce1441ed0",
+      "bytes": 4983,
+      "role": "effective_recipe_or_authority_input",
+      "rationale": "Original task guidance/inventory/authority actually read; no source identity is fabricated for locally supplied wrappers."
+    },
+    {
+      "local_path": "inputs-effective/references/orchestration.md",
+      "source_path": "provided-inputs/references/orchestration.md",
+      "commit": null,
+      "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+      "git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+      "bytes": 4408,
+      "role": "effective_recipe_or_authority_input",
+      "rationale": "Original task guidance/inventory/authority actually read; no source identity is fabricated for locally supplied wrappers."
+    },
+    {
+      "local_path": "inputs-effective/references/judging.md",
+      "source_path": "provided-inputs/references/judging.md",
+      "commit": null,
+      "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+      "git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+      "bytes": 5787,
+      "role": "effective_recipe_or_authority_input",
+      "rationale": "Original task guidance/inventory/authority actually read; no source identity is fabricated for locally supplied wrappers."
+    },
+    {
+      "local_path": "inputs-effective/references/transport.md",
+      "source_path": "provided-inputs/references/transport.md",
+      "commit": null,
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+      "bytes": 8478,
+      "role": "effective_recipe_or_authority_input",
+      "rationale": "Original task guidance/inventory/authority actually read; no source identity is fabricated for locally supplied wrappers."
+    }
+  ],
+  "per_artifact": {
+    "s1.core.boundaries": {
+      "source_groups": [
+        "boundaries_assigned",
+        "boundary_cross_support_readme",
+        "kit_navigation"
+      ],
+      "historical_full_inputs": [
+        "inputs-effective/history/a3-dossier.md",
+        "inputs-effective/history/a4-dossier.md",
+        "inputs-effective/history/coverage-needs-projection.json"
+      ],
+      "historical_bodies": [
+        "history/boundaries.md",
+        "history/entry.md"
+      ],
+      "authority": "inputs-effective/AGENTS.md",
+      "recipe_inputs": [
+        "inputs-effective/COMMON.md",
+        "inputs-effective/mission.json",
+        "inputs-effective/inputs.json",
+        "inputs-effective/AGENTS.md",
+        "inputs-effective/SKILL.md",
+        "inputs-effective/sources.jsonl",
+        "inputs-effective/references/principles.md",
+        "inputs-effective/references/fatia-1.md",
+        "inputs-effective/references/fresh-start.md",
+        "inputs-effective/references/orchestration.md",
+        "inputs-effective/references/judging.md",
+        "inputs-effective/references/transport.md"
+      ],
+      "note": "History is needed for actual reuse/population/navigation claims; engine guarantees are not transferred."
+    },
+    "s1.subslice03.support": {
+      "source_groups": [
+        "support_assigned",
+        "kit_navigation"
+      ],
+      "historical_full_inputs": [
+        "inputs-effective/history/a3-dossier.md",
+        "inputs-effective/history/a4-dossier.md",
+        "inputs-effective/history/coverage-needs-projection.json"
+      ],
+      "historical_bodies": [
+        "history/entry.md",
+        "history/boundaries.md"
+      ],
+      "authority": "inputs-effective/AGENTS.md",
+      "recipe_inputs": [
+        "inputs-effective/COMMON.md",
+        "inputs-effective/mission.json",
+        "inputs-effective/inputs.json",
+        "inputs-effective/AGENTS.md",
+        "inputs-effective/SKILL.md",
+        "inputs-effective/sources.jsonl",
+        "inputs-effective/references/principles.md",
+        "inputs-effective/references/fatia-1.md",
+        "inputs-effective/references/fresh-start.md",
+        "inputs-effective/references/orchestration.md",
+        "inputs-effective/references/judging.md",
+        "inputs-effective/references/transport.md"
+      ],
+      "shared_population_reference": "coverage.jsonl original all 128 rows; uses boundaries counts/read-depth, not an accepted boundary body as build predecessor",
+      "note": "Actual full archives, generated schema, fixtures, history and guidance remain inputs with declared semantic read depth; no metadata-only relabel to fit native cap."
+    }
+  },
+  "large_input_notice": {
+    "path": "inputs-effective/history/coverage-needs-projection.json",
+    "bytes": 726892,
+    "sha256": "05485c4bd0ac9c76814e44537788818bbcf1fbcbfb87dd8063ce30bf1a67e0cf",
+    "exceeds_256KiB": true,
+    "disposition": "preserved as actual full input; no splitting or projection substitution to evade an input limit",
+    "native_binding_status": "NOT_RUN_NOT_SELECTED"
+  },
+  "judgments_status": "No acceptance is created, copied or promoted by this input list."
+}

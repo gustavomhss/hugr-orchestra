@@ -1,0 +1,42 @@
+{
+  "schema": "lossless-ordered-jsonl-archive/v1",
+  "role": "New post-execution guard capture receipt stream, not a semantic source/input replacement",
+  "original_name": "trees-receipts.jsonl",
+  "original_bytes": 4472911,
+  "original_sha256": "2792c0db7f6cac1c30a25de9494eb9eb3a8cdefe64e4bf2e8d213ca1c985114d",
+  "rows": 19599,
+  "reconstruction": "Concatenate part bytes in listed order without separators",
+  "parts": [
+    {
+      "path": "tree-receipt-parts/part-01.jsonl",
+      "bytes": 799854,
+      "sha256": "00e2d1c86da5867a64a40021023e2c685df62cfdeb799a988040ad770c6cd7a2"
+    },
+    {
+      "path": "tree-receipt-parts/part-02.jsonl",
+      "bytes": 799945,
+      "sha256": "77ce8696ef93a24431f9fd77f13df771a8f12a2103d3e4cb72be1a9274ca6826"
+    },
+    {
+      "path": "tree-receipt-parts/part-03.jsonl",
+      "bytes": 799915,
+      "sha256": "a4bd9d7eb62289659184591ed5ef18cfbcac166728b1c836ec1e58f6fcf63a24"
+    },
+    {
+      "path": "tree-receipt-parts/part-04.jsonl",
+      "bytes": 799803,
+      "sha256": "ae6681f8c2992fac265ec5e2f590670a2fe7959965f736f01427518e214882a5"
+    },
+    {
+      "path": "tree-receipt-parts/part-05.jsonl",
+      "bytes": 799780,
+      "sha256": "2b5e9da63ba21e0401bb898a2081d7090e02b38ca599379b5b36af97e5257df8"
+    },
+    {
+      "path": "tree-receipt-parts/part-06.jsonl",
+      "bytes": 473614,
+      "sha256": "bb047b5109f147371441af3c058b248e7ed99af9b9edb168c23ffd5afd36a512"
+    }
+  ],
+  "reason": "Keep newly authored evidence files retrievable via connector; original repository source identities and Atlas inputs are unchanged."
+}

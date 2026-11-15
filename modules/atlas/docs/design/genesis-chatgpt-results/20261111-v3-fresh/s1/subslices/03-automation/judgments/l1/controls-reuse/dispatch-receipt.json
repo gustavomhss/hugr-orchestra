@@ -1,0 +1,101 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "relay": "/root/review_relay",
+  "packet": "controls-reuse",
+  "source": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/controls-reuse.md",
+  "source_bytes": 44002,
+  "source_sha256": "b525c2d5fa78a7cca9b3852022c33f4158229b19e027c504c145cc765c157462",
+  "recorded_at_utc": "2026-11-15T01:28:24.221051+00:00",
+  "dispatch_count": 4,
+  "parts_per_target": 2,
+  "completed_targets": [
+    "/root/s1_03_j1",
+    "/root/s1_03_j2"
+  ],
+  "pending_targets": [],
+  "calls": [
+    {
+      "sequence": 1,
+      "target": "/root/s1_03_j1",
+      "part": 1,
+      "request_file": "request-j1-01.json",
+      "request_file_bytes": 23079,
+      "request_file_sha256": "83010b5992ac3b9dfe19d0ffe3d56c62754bcff71f3ccd1a50e3957703667a15",
+      "message_bytes": 22411,
+      "message_sha256": "947265fe7011b3c328ad04cd3f1dd6bda41bcc988ecdae2d1ca61b5f74577d22",
+      "payload_bytes": 21957,
+      "payload_sha256": "136074352c5fc09873872628a5e735d535009498d320652df96c7958f3e5de5b",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 2,
+      "target": "/root/s1_03_j1",
+      "part": 2,
+      "request_file": "request-j1-02.json",
+      "request_file_bytes": 22861,
+      "request_file_sha256": "0ed47181297cbd8819f790693d35179111f2124252eec052ec865be9d34bbc2f",
+      "message_bytes": 22637,
+      "message_sha256": "2e6a10366fe38d875953e455273dfa2af9e137dcd13a5dc9bc34328c93960ea6",
+      "payload_bytes": 22045,
+      "payload_sha256": "e139396d2deb31b9b75a09885f01752b57462d0549b92969408979b711287f5b",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 3,
+      "target": "/root/s1_03_j2",
+      "part": 1,
+      "request_file": "request-j2-01.json",
+      "request_file_bytes": 23079,
+      "request_file_sha256": "be2134250d84246202c6f4d83a07087719210e0aacf9360222b0a6959fb71e43",
+      "message_bytes": 22411,
+      "message_sha256": "947265fe7011b3c328ad04cd3f1dd6bda41bcc988ecdae2d1ca61b5f74577d22",
+      "payload_bytes": 21957,
+      "payload_sha256": "136074352c5fc09873872628a5e735d535009498d320652df96c7958f3e5de5b",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 4,
+      "target": "/root/s1_03_j2",
+      "part": 2,
+      "request_file": "request-j2-02.json",
+      "request_file_bytes": 22861,
+      "request_file_sha256": "0c76e0577bb97666669f9697fc9eb35c0432231517f708bb7a40d336690e7df4",
+      "message_bytes": 22637,
+      "message_sha256": "2e6a10366fe38d875953e455273dfa2af9e137dcd13a5dc9bc34328c93960ea6",
+      "payload_bytes": 22045,
+      "payload_sha256": "e139396d2deb31b9b75a09885f01752b57462d0549b92969408979b711287f5b",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    }
+  ],
+  "local_recorded_reconstruction": [
+    {
+      "target": "/root/s1_03_j1",
+      "bytes": 44002,
+      "sha256": "b525c2d5fa78a7cca9b3852022c33f4158229b19e027c504c145cc765c157462",
+      "equals_source": true
+    },
+    {
+      "target": "/root/s1_03_j2",
+      "bytes": 44002,
+      "sha256": "b525c2d5fa78a7cca9b3852022c33f4158229b19e027c504c145cc765c157462",
+      "equals_source": true
+    }
+  ],
+  "known_transcription_corrections": [],
+  "receipt_limit": "Ferramenta retornou normalmente sem texto nem ID de despacho; os hashes descrevem os pedidos registrados e sua reconstrução local, não verificação remota nem suficiência semântica.",
+  "delivery_scope": "Controle histórico público autorizado, distinto do oracle reservado atual; FIM_DO_LOTE no envelope externo final.",
+  "slot_handling": "J1 integral, captura do final antes de iniciar J2; juízes sequenciais.",
+  "judgment_capture": "Both originals saved; see response-capture.json."
+}

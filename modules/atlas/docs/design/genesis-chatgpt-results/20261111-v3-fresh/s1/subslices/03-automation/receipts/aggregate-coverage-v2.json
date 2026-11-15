@@ -1,0 +1,58 @@
+{
+  "schema": "s1-03-aggregate-coverage-correction/v1",
+  "source_count": 462,
+  "historical_snapshot": "history/coverage-v1.jsonl",
+  "before_sha256": "9311d15c6d6d361edf15de1bd98e52040b7430915e2418e50bc671212acc186e",
+  "after_sha256": "ac5032bd0f71fce700e8471ba2ef2d733d8f0cb906941f4a2310d5855793bc0f",
+  "changes": [
+    {
+      "path": "packages/core/README.md",
+      "fields": [
+        "reason"
+      ],
+      "before": {
+        "reason": "Entrada pública e direção Schema/Protocol→Core→Server, composição e geradores oficiais; intenção de arquitetura não prova todas as folhas."
+      },
+      "after": {
+        "reason": "Entrada pública: Schema→Core e Protocol→Server são relações separadas; Server expõe serviços Core por HTTP. Composição e geradores oficiais são declarados; intenção de arquitetura não prova todas as folhas."
+      },
+      "row_1_based": 13
+    },
+    {
+      "path": "packages/core/src/actions.ts",
+      "fields": [
+        "role",
+        "reason"
+      ],
+      "before": {
+        "role": "Fachada da Location; construção lazy, congelamento de entrada e reconciliador efetivamente escolhido",
+        "reason": "Implementação comportamental lida, necessária à compreensão operacional da necessidade flow: Fachada da Location; construção lazy, congelamento de entrada e reconciliador efetivamente escolhido. Mantida no corpo pelas âncoras indicadas; não reduzida a um censo nem usada como prova de execução."
+      },
+      "after": {
+        "role": "A resolução do binding, a inicialização cached de operations e o carregamento de output são adiados; transport, readers e resources são compostos ao construir a fachada.",
+        "reason": "Implementação comportamental lida, necessária à compreensão operacional da necessidade flow: A resolução do binding, a inicialização cached de operations e o carregamento de output são adiados; transport, readers e resources são compostos ao construir a fachada. Mantida no corpo pelas âncoras indicadas; não reduzida a um censo nem usada como prova de execução."
+      },
+      "row_1_based": 22
+    },
+    {
+      "path": "packages/core/test/fixture/omni-expect.ts",
+      "fields": [
+        "reason"
+      ],
+      "before": {
+        "reason": "Controle positivo abre expectativa no próprio teste e computa apenas seus spawns; outro teste não satisfaz a declaração."
+      },
+      "after": {
+        "reason": "Mantém uma expectativa open e mede diferença do contador de spawns na janela expectSpawn→settle. Exclusividade por teste é intenção do comentário e exige ausência de sobreposição/integração correta com runner, não demonstradas só por esta folha."
+      },
+      "row_1_based": 381
+    }
+  ],
+  "all_other_rows_bytes_unchanged": true,
+  "source_identity_and_read_depth_unchanged": true,
+  "origin": [
+    "assembly/automation-coverage-erratum.json",
+    "producers/boundaries/coverage-v2.delta.json"
+  ],
+  "semantic_status": "PENDING_SAME_PAIR"
+}

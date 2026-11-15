@@ -1,0 +1,101 @@
+{
+  "kind": "actual_effective_inputs_extension",
+  "artifact_key": "s1.subslice03.support",
+  "base_manifest": {
+    "path": "effective-inputs.json",
+    "bytes": 22879,
+    "sha256": "6ecae50d90933e555a874b209c6553750d85192df44c36df2418b3ff696890fc",
+    "git_blob_sha": "2d099dcbef9b537a5e22a634642c1317bd0464f4"
+  },
+  "base_disposition": {
+    "path": "effective-input-disposition.md",
+    "bytes": 11117,
+    "sha256": "2eaeac1e1bd4a613523f998349e85572394940d716a98cd2dd7996d2007ee5ca",
+    "git_blob_sha": "6593fdae4031259b56ed465b1d6fcf7f538a7698"
+  },
+  "full_input_unit_preserved": true,
+  "additional_inputs": [
+    {
+      "path": "revisions/support-v2/inputs/j1-response.md",
+      "bytes": 7566,
+      "sha256": "79ee9840a8f5d67dab73a00134cbf7be26af51792afbe62dbf679edbfe865246",
+      "git_blob_sha": "6c43e1d96ba1467e7264bcee63dc029dbd4f02c8",
+      "purpose": "Public FIX-FIRST and RE-SUP-01..05; read in full."
+    },
+    {
+      "path": "revisions/support-v2/inputs/j2-response.md",
+      "bytes": 6396,
+      "sha256": "46e7414c163b985953112a98ee5a6650a64b66b6d5c4572521c84d4f8c150251",
+      "git_blob_sha": "6b3fa80cd8416521e90101cc196ee7df5bc11156",
+      "purpose": "Public FIX-FIRST and RE-SUP-01..04; read in full."
+    },
+    {
+      "path": "revisions/support-v2/inputs/independent-support-structure.json",
+      "bytes": 58492,
+      "sha256": "d2938337ccfad084d4e4e6c9d6ecd08c9b26701e86d69ca760601a93e76ca3eb",
+      "git_blob_sha": "d96d7c7dd3efd4691a3c325518e9ee6c3845c348",
+      "purpose": "Independent structural receipt; complete bytes parsed, literal selected fields delivered."
+    },
+    {
+      "path": "revisions/support-v2/inputs/verify-support-structure.py",
+      "bytes": 3713,
+      "sha256": "ce242e9fe2d969baf176a4c1d101342e265d5c0857dd8d8fcbbc70a82cd2bb52",
+      "git_blob_sha": "7784f7f6038805961f963653f4015accae642d18",
+      "purpose": "Independent procedure read in full as source evidence; not executed by this producer."
+    }
+  ],
+  "derived_evidence_not_new_capture": [
+    {
+      "path": "revisions/support-v2/inputs/vendor-package-metadata.json",
+      "bytes": 2070,
+      "sha256": "eb1e4264a0ddc9a050fe30490415dc020f33d2bb7a3de73e768943ef499851fa",
+      "git_blob_sha": "475fe00141815b216de7381815f39a7444bd670d",
+      "derived_from": "independent-support-structure.json tar.package_json_exact_utf8; exact member bytes verified against receipt; original tar remains actual input."
+    },
+    {
+      "path": "shared-reconciliation-1.md",
+      "bytes": 121449,
+      "sha256": "75aa4f74aba2ddcecd58c52fd329481dffabc60271a57bf0bfbe358d0b903992",
+      "git_blob_sha": "9ec7c98ea98fbf497d49313cb267c394db238039",
+      "purpose": "Reuse complete actual-input identities and individual population dispositions; corrected reasons in separate erratum."
+    },
+    {
+      "path": "shared-reconciliation-2.delta.md",
+      "bytes": 1966,
+      "sha256": "d2a6755fbb6f1aa41ab93be1ac42478de9bed062330489eff68ca34fb4b0b48a",
+      "git_blob_sha": "2c72c406a9c44cbd32e2563f15cc3f08d589a4ce"
+    }
+  ],
+  "history_inputs": [
+    {
+      "path": "inputs-effective/history/a3-dossier.md",
+      "bytes": 177076,
+      "sha256": "36416073165d59eec9c7d847a26f414d855cc2a40758d548f4dd49669dccc5d4",
+      "git_blob_sha": "285e56c1680153ce75c71fd99bcf9455bde70d4d"
+    },
+    {
+      "path": "inputs-effective/history/a4-dossier.md",
+      "bytes": 155061,
+      "sha256": "83b544ac46f99b2bf3585ff4e607bcd403e49eb20dd128deb5b6a029a772ead0",
+      "git_blob_sha": "6f872ea0e22097d8084fd587f585751a436f607e"
+    },
+    {
+      "path": "inputs-effective/history/coverage-needs-projection.json",
+      "bytes": 726892,
+      "sha256": "05485c4bd0ac9c76814e44537788818bbcf1fbcbfb87dd8063ce30bf1a67e0cf",
+      "git_blob_sha": "2e91d0f916dfa95a2dd0ef7ae74ff8c1bb427045"
+    }
+  ],
+  "native_input_limit_notice": "726892-byte projection remains a real full input, not replaced or reclassified by excerpt to evade a 256K input limit. No native binding/import/acceptance asserted.",
+  "authority_capture_notice": "Original AGENTS capture is local evidence only; publication must bind to unchanged repository AGENTS, without a new AGENTS.md authority file in result namespace.",
+  "body_correction_scope": [
+    "SUP-F01/D-SUP-01",
+    "SUP-F03",
+    "SUP-F02"
+  ],
+  "coverage_scope": [
+    "packages/core/README.md",
+    "packages/core/test/fixture/omni-expect.ts"
+  ],
+  "semantic_status": "PENDING_SAME_PAIR_REEVALUATION"
+}

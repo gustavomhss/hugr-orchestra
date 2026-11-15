@@ -1,0 +1,38 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "lot": "controls-reuse",
+  "source": "review-packets/controls-reuse.md",
+  "source_bytes": 44002,
+  "source_sha256": "b525c2d5fa78a7cca9b3852022c33f4158229b19e027c504c145cc765c157462",
+  "frozen_manifest": {
+    "lot": "controls-reuse",
+    "path": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/controls-reuse.md",
+    "bytes": 44002,
+    "sha256": "b525c2d5fa78a7cca9b3852022c33f4158229b19e027c504c145cc765c157462",
+    "git_blob_sha": "8f181e1dbe3f28b59c611fc1d3972b5623dcf619",
+    "scope": "exact historical native negative controls reuse only"
+  },
+  "split_rule": "Balanced nearest LF boundaries, approximately 32000 bytes.",
+  "parts": [
+    {
+      "part": 1,
+      "file": "part-01.txt",
+      "start": 0,
+      "end": 21957,
+      "bytes": 21957,
+      "sha256": "136074352c5fc09873872628a5e735d535009498d320652df96c7958f3e5de5b"
+    },
+    {
+      "part": 2,
+      "file": "part-02.txt",
+      "start": 21957,
+      "end": 44002,
+      "bytes": 22045,
+      "sha256": "e139396d2deb31b9b75a09885f01752b57462d0549b92969408979b711287f5b"
+    }
+  ],
+  "end_marker_counts_per_part": [
+    0,
+    0
+  ]
+}

@@ -1,0 +1,2029 @@
+{
+  "schema": "s1-03-independent-support-structure/v1",
+  "method": "Python stdlib only: exact captured bytes and source hashes checked; JSON parse, Counter(entityType) over ddl list, tar member metadata/read package.json in memory, ZIP member bytes, ASCII printable SCIP strings with byte offsets. No archive extraction to filesystem, import, install, build, test, generator or binary execution.",
+  "sources": [
+    {
+      "path": "packages/core/package.json",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "8ee8ebb666051c9b5ee0fcd4a54bceb3a2cb3c43",
+      "sha256": "1c58faa263c2bb931b9789722342645e94cb30f0b91613b9093aa2ed422c8385",
+      "byte_length": 31912
+    },
+    {
+      "path": "packages/core/schema.json",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "31e3169da5ae7c3f15108cdbc773cc5ec9111bd5",
+      "sha256": "2655ceef23cb605ebb16630396831df540e104c362bbc168061b7ecfd9ef2fe5",
+      "byte_length": 202139
+    },
+    {
+      "path": "packages/core/vendor/hugr-lean-0.4.0-0660c2b5dc92.tgz",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "62cbd7c7df2ae07cdd3b623d4d3d6ee3fe3134ab",
+      "sha256": "5ff983c58aa056d82059d5edd5b428478dda50a7683a201b7d844949aa1712a3",
+      "byte_length": 205370
+    },
+    {
+      "path": "packages/core/test/fixture/pinned-artifact/tool.zip",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "41208db9a073ce776d126fcc6db9376533efb50a",
+      "sha256": "4b6fcf6a45c68b0620f6c5c3b25d66dbbe37d7e653d817aa1c098c26600c9f2b",
+      "byte_length": 136
+    },
+    {
+      "path": "packages/core/test/fixture/scip-alias/core.scip",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "3fc1467571db2fdd0320695f8fcfd4671cda8e31",
+      "sha256": "1204e841efb9f7ee9e609b4224f65fdd0067c02d7ee28bd12c571a3b32757d66",
+      "byte_length": 1447
+    },
+    {
+      "path": "packages/core/test/fixture/scip-alias/orchestra.scip",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "e004123513137fe7c73803dc3535606d84cccb7e",
+      "sha256": "a173da17ce68aee1f5026a4d70e6288ef0eae1d19cbc00dd1f856d02258e26bc",
+      "byte_length": 3850
+    }
+  ],
+  "package": {
+    "name": "@orchestra/core",
+    "version": "1.18.27",
+    "exports_count": 437,
+    "has_bare_export": false,
+    "has_wildcard": false,
+    "exports_keys": [
+      "./account",
+      "./account/sql",
+      "./actions",
+      "./actions/contract",
+      "./actions/error",
+      "./actions/operations",
+      "./actions/operations/sql",
+      "./actions/output/native",
+      "./agent",
+      "./agent/prompt",
+      "./aisdk",
+      "./artifact-native-windows",
+      "./atlas",
+      "./backend-toolkit",
+      "./backend-toolkit/manifest",
+      "./backend-toolkit/project-version",
+      "./backend-toolkit/target",
+      "./background-job",
+      "./behavior",
+      "./capability/artifact/index",
+      "./capability/artifact/management",
+      "./capability/artifact/selection",
+      "./capability/catalog/cursors",
+      "./capability/catalog/descriptors",
+      "./capability/catalog/discovery",
+      "./capability/catalog/schema",
+      "./capability/channel/http",
+      "./capability/channel/index",
+      "./capability/channel/schema",
+      "./capability/children",
+      "./capability/connection/bindings",
+      "./capability/connection/index",
+      "./capability/connection/management",
+      "./capability/connection/setup",
+      "./capability/connection/setup-contract",
+      "./capability/connection/store",
+      "./capability/connection/store-contract",
+      "./capability/connection/verifiers/cloudflare",
+      "./capability/connection/verifiers/contract",
+      "./capability/connection/verifiers/globalping",
+      "./capability/connection/verifiers/linear",
+      "./capability/connection/verifiers/neon",
+      "./capability/connection/verifiers/openai",
+      "./capability/connection/verifiers/runway",
+      "./capability/connection/verifiers/stripe",
+      "./capability/connection/verifiers/supabase",
+      "./capability/connection/verify",
+      "./capability/invocation",
+      "./capability/job/index",
+      "./capability/mcp/index",
+      "./capability/media/http",
+      "./capability/media/index",
+      "./capability/media/schema",
+      "./capability/operator/contract",
+      "./capability/operator/index",
+      "./capability/operator/request",
+      "./capability/operator/request-data",
+      "./capability/operator/scope",
+      "./capability/policy",
+      "./capability/process-control/contract",
+      "./capability/process-control/index",
+      "./capability/process-control/output",
+      "./capability/process-control/registry",
+      "./capability/process-control/sweep",
+      "./capability/schedule/contract",
+      "./capability/schedule/index",
+      "./capability/schedule/management",
+      "./capability/service/contract",
+      "./capability/service/execute",
+      "./capability/service/execution/projection",
+      "./capability/service/index",
+      "./capability/service/providers",
+      "./capability/service/schema",
+      "./capability/sql",
+      "./capability/tools",
+      "./catalog",
+      "./claude-code-account",
+      "./command",
+      "./config",
+      "./config/agent-file",
+      "./config/attachments",
+      "./config/compaction",
+      "./config/markdown",
+      "./config/plugin-file",
+      "./config/plugin/agent",
+      "./config/plugin/command",
+      "./config/plugin/external",
+      "./config/plugin/provider",
+      "./config/plugin/skill",
+      "./config/provider",
+      "./config/provider-options",
+      "./config/tool-output",
+      "./config/trust",
+      "./config/upgrade/agent",
+      "./config/upgrade/lsp",
+      "./config/upgrade/source",
+      "./config/upgrade/upgrade",
+      "./control-plane/move-session",
+      "./control-plane/workspace.sql",
+      "./board/board",
+      "./board/ci",
+      "./board/conflicts",
+      "./board/github",
+      "./board/queue",
+      "./board/queue-lanes",
+      "./board/record",
+      "./board/tree",
+      "./board/spend",
+      "./board/sql",
+      "./board/thread",
+      "./board/tools",
+      "./credential",
+      "./credential/cipher",
+      "./credential/sql",
+      "./cross-spawn-spawner",
+      "./database/database",
+      "./database/migration",
+      "./database/migration.gen",
+      "./database/migration/20260410174513_workspace-name",
+      "./database/migration/20260510033149_session_usage",
+      "./database/migration/20260511173437_session-metadata",
+      "./database/migration/20260601010001_normalize_storage_paths",
+      "./database/migration/20260603040000_session_message_projection_order",
+      "./database/migration/20260604172448_event_sourced_session_input",
+      "./database/migration/20260605042240_add_context_epoch_agent",
+      "./database/migration/20260611192811_lush_chimera",
+      "./database/migration/20260622202450_simplify_session_input",
+      "./database/migration/20261008025417_prompt_context",
+      "./database/migration/20261010135215_project_checkpoints",
+      "./database/migration/20261012134025_session_subagent_models",
+      "./database/migration/20261018031800_session_list_indexes",
+      "./database/migration/20261026003504_meeting_record",
+      "./database/sqlite",
+      "./database/sqlite.bun",
+      "./effect/app-node",
+      "./effect/app-node-builder",
+      "./effect/app-node-platform",
+      "./effect/keyed-mutex",
+      "./effect/layer-node",
+      "./effect/memo-map",
+      "./effect/runtime",
+      "./effect/service-use",
+      "./event",
+      "./event/seal",
+      "./event/sql",
+      "./file-mutation",
+      "./filesystem",
+      "./filesystem/fff.bun",
+      "./filesystem/ignore",
+      "./filesystem/search",
+      "./filesystem/watcher",
+      "./flag/flag",
+      "./format",
+      "./fs-util",
+      "./git",
+      "./git-cli",
+      "./github-copilot/chat/convert-to-openai-compatible-chat-messages",
+      "./github-copilot/chat/openai-compatible-chat-language-model",
+      "./github-copilot/copilot-provider",
+      "./github-copilot/responses/convert-to-openai-responses-input",
+      "./github-copilot/responses/openai-responses-language-model",
+      "./global",
+      "./host",
+      "./host/agent-execution",
+      "./host/catalog-availability",
+      "./host/pty-environment",
+      "./id/id",
+      "./image",
+      "./installation/headers",
+      "./installation/service",
+      "./installation/version",
+      "./instruction-context",
+      "./integration",
+      "./integration/connection",
+      "./location",
+      "./location-mutation",
+      "./location-service-map",
+      "./location-services",
+      "./lsp",
+      "./lsp/client",
+      "./lsp/diagnostic",
+      "./lsp/language",
+      "./lsp/launch",
+      "./lsp/ownership",
+      "./lsp/server",
+      "./mcp",
+      "./mcp/auth",
+      "./mcp/catalog",
+      "./mcp/client",
+      "./mcp/oauth-callback",
+      "./mcp/oauth-provider",
+      "./mcp/project-config",
+      "./mcp/provided",
+      "./mcp/stdio",
+      "./model",
+      "./models-dev",
+      "./npm",
+      "./npm-config",
+      "./oauth/page",
+      "./observability",
+      "./omni",
+      "./omni-adoption",
+      "./omni-background",
+      "./omni-spawner",
+      "./output-inspector",
+      "./packaged-skills",
+      "./patch",
+      "./permission",
+      "./permission/saved",
+      "./permission/sql",
+      "./plugin",
+      "./plugin/agent",
+      "./plugin/command",
+      "./plugin/host",
+      "./plugin/models-dev",
+      "./plugin/promise",
+      "./plugin/provider",
+      "./plugin/provider/alibaba",
+      "./plugin/provider/amazon-bedrock",
+      "./plugin/provider/anthropic",
+      "./plugin/provider/azure",
+      "./plugin/provider/cerebras",
+      "./plugin/provider/cloudflare-ai-gateway",
+      "./plugin/provider/cloudflare-workers-ai",
+      "./plugin/provider/cohere",
+      "./plugin/provider/deepinfra",
+      "./plugin/provider/dynamic",
+      "./plugin/provider/gateway",
+      "./plugin/provider/github-copilot",
+      "./plugin/provider/gitlab",
+      "./plugin/provider/google",
+      "./plugin/provider/google-vertex",
+      "./plugin/provider/groq",
+      "./plugin/provider/kilo",
+      "./plugin/provider/llmgateway",
+      "./plugin/provider/mistral",
+      "./plugin/provider/nvidia",
+      "./plugin/provider/openai",
+      "./plugin/provider/openai-compatible",
+      "./plugin/provider/opencode",
+      "./plugin/provider/openrouter",
+      "./plugin/provider/perplexity",
+      "./plugin/provider/sap-ai-core",
+      "./plugin/provider/snowflake-cortex",
+      "./plugin/provider/togetherai",
+      "./plugin/provider/venice",
+      "./plugin/provider/vercel",
+      "./plugin/provider/xai",
+      "./plugin/provider/zenmux",
+      "./plugin/sdk-limits",
+      "./plugin/sdk-package",
+      "./plugin/sdk-runtime",
+      "./plugin/variant",
+      "./policy",
+      "./process",
+      "./test/fixture/omni-expect",
+      "./test/lib/effect",
+      "./test/fixture/windows-process-query",
+      "./test/fixture/tmpdir",
+      "./test/fixture/process-tree",
+      "./test/fixture/omni-effect",
+      "./project",
+      "./project/checkpoint",
+      "./project/checkpoint.sql",
+      "./project/copy",
+      "./project/directories",
+      "./project/schema",
+      "./project/sql",
+      "./provider",
+      "./pty",
+      "./pty/omni",
+      "./pty/protocol",
+      "./pty/shell-integration",
+      "./pty/shell-cwd",
+      "./pty/shell-marks",
+      "./pty/schema",
+      "./pty/ticket",
+      "./guardrail",
+      "./pull-request",
+      "./question",
+      "./rag-studio/sql",
+      "./reference",
+      "./reference/guidance",
+      "./relay",
+      "./relay-commands",
+      "./relay-hook-install",
+      "./relay-hook-recovery",
+      "./relay-workflow-binding",
+      "./relay-workflow-currentstep",
+      "./relay-workflow-evaluator",
+      "./relay-workflow-session",
+      "./relay-workflow-transition",
+      "./repository",
+      "./repository-cache",
+      "./research-toolkit/code-index/build",
+      "./research-toolkit/code-index/extract",
+      "./research-toolkit/code-index/query",
+      "./research-toolkit/code-index/rank",
+      "./research-toolkit/code-index/shard",
+      "./research-toolkit/code-index/store",
+      "./research-toolkit/code-index/types",
+      "./research-toolkit/index",
+      "./research-toolkit/liveness",
+      "./research-toolkit/locate",
+      "./research-toolkit/manifest",
+      "./research-toolkit/probe/run",
+      "./research-toolkit/probe/types",
+      "./research-toolkit/search",
+      "./research/allowance",
+      "./research/artifacts",
+      "./research/binding",
+      "./research/ledger",
+      "./research/records",
+      "./research/seat-tools",
+      "./ripgrep",
+      "./ripgrep/binary",
+      "./ripgrep/bundle",
+      "./ripgrep/release",
+      "./scheduled-task",
+      "./scheduled-task/capability-model",
+      "./scheduled-task/model",
+      "./scheduled-task/port",
+      "./scheduled-task/sql",
+      "./schema",
+      "./session",
+      "./session-process",
+      "./session/activity",
+      "./session/compaction",
+      "./session/error",
+      "./session/event",
+      "./session/execution",
+      "./session/execution/local",
+      "./session/history",
+      "./session/info",
+      "./session/input",
+      "./session/message",
+      "./session/message-updater",
+      "./session/projector",
+      "./session/prompt",
+      "./session/run-coordinator",
+      "./session/runner",
+      "./session/runner/llm",
+      "./session/runner/max-steps",
+      "./session/runner/model",
+      "./session/runner/publish-llm-event",
+      "./session/runner/to-llm-message",
+      "./session/schema",
+      "./session/sql",
+      "./session/store",
+      "./session/subagent-models",
+      "./session/meeting",
+      "./session/meeting-briefing",
+      "./session/meeting-consolidation",
+      "./session/meeting-context",
+      "./session/meeting-handoff",
+      "./session/meeting-memory.sql",
+      "./session/meeting.sql",
+      "./session/todo",
+      "./share/sql",
+      "./shell",
+      "./skill",
+      "./skill/discovery",
+      "./skill/file",
+      "./skill/guidance",
+      "./slash-command",
+      "./snapshot",
+      "./state",
+      "./system-context",
+      "./system-context/builtins",
+      "./system-context/index",
+      "./system-context/registry",
+      "./tool-output-store",
+      "./tool-safety",
+      "./tool-safety-appcontainer",
+      "./tool-safety-git",
+      "./tool-safety-hooks",
+      "./tool-safety-profile",
+      "./tool-safety-sandbox",
+      "./tool-safety-sandbox-runtime",
+      "./tool/application-tools",
+      "./tool/apply-patch",
+      "./tool/agent-terminal",
+      "./tool/bash",
+      "./tool/edit",
+      "./tool/glob",
+      "./tool/grep",
+      "./tool/lean-output",
+      "./tool/lean-processor",
+      "./tool/lean-recall",
+      "./tool/lean-summary",
+      "./tool/lean-telemetry",
+      "./tool/maestro-arsenal",
+      "./tool/maestro-arsenal-omni",
+      "./tool/model-capture",
+      "./tool/model-projection",
+      "./tool/question",
+      "./tool/read",
+      "./tool/read-filesystem",
+      "./tool/registry",
+      "./tool/skill",
+      "./tool/task",
+      "./tool/task-background",
+      "./tool/task-governance",
+      "./tool/live-look",
+      "./tool/meeting-recall",
+      "./tool/team-message",
+      "./tool/text",
+      "./tool/todowrite",
+      "./tool/tool",
+      "./tool/tools",
+      "./tool/truncation-dir",
+      "./tool/upstream-arsenal",
+      "./tool/webfetch",
+      "./tool/websearch",
+      "./tool/write",
+      "./tui-config-files",
+      "./util/array",
+      "./util/binary",
+      "./util/effect-flock",
+      "./util/encode",
+      "./util/error",
+      "./util/flock",
+      "./util/glob",
+      "./util/hash",
+      "./util/module",
+      "./util/path",
+      "./util/physical-path",
+      "./util/retry",
+      "./util/slug",
+      "./util/task-tool",
+      "./util/timeout",
+      "./util/token",
+      "./util/which",
+      "./util/wildcard",
+      "./v2-schema",
+      "./vcs",
+      "./workspace"
+    ]
+  },
+  "schema_snapshot": {
+    "version": "7",
+    "dialect": "sqlite",
+    "id": "e6e8468f-7bbe-4c35-aef1-3303e28aaf44",
+    "prevIds": [
+      "71037a02-42ad-482f-b987-e20674ec0701"
+    ],
+    "ddl_total": 878,
+    "ddl_entities": {
+      "tables": 63,
+      "columns": 637,
+      "fks": 59,
+      "pks": 63,
+      "indexes": 52,
+      "uniques": 3,
+      "checks": 1
+    }
+  },
+  "tar": {
+    "member_count": 191,
+    "members": [
+      {
+        "name": "package/fixtures/profiles/bun-install/supplement/dep/LICENSE",
+        "size": 1079,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/pytest/LICENSE",
+        "size": 1066,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/utility/go/fixture-programs/diagnostic/LICENSE",
+        "size": 1089,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/utility/go/fixture-programs/failure/LICENSE",
+        "size": 1089,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/utility/go/fixture-programs/noise/LICENSE",
+        "size": 1089,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/utility/go/fixture-programs/opaque/LICENSE",
+        "size": 1089,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/utility/pytest/extra-r2b4ph/projects/noise/LICENSE",
+        "size": 1066,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/utility/pytest/prep-fHWQpI/projects/failure/LICENSE",
+        "size": 1066,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/utility/pytest/prep-fHWQpI/projects/noise/LICENSE",
+        "size": 1066,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/utility/pytest/prep-fHWQpI/projects/opaque/LICENSE",
+        "size": 1066,
+        "type": "0"
+      },
+      {
+        "name": "package/LICENSE",
+        "size": 1066,
+        "type": "0"
+      },
+      {
+        "name": "package/NOTICE",
+        "size": 2563,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/auto-cdp.js",
+        "size": 9839,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/auto-cli.js",
+        "size": 11655,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/auto-files.js",
+        "size": 7293,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/auto-json.js",
+        "size": 13639,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/auto-snapshot.js",
+        "size": 16372,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/automatic-command.js",
+        "size": 1850,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/opencode/automatic-mcp.js",
+        "size": 7732,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/automatic-registry.js",
+        "size": 771,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/automatic-types.js",
+        "size": 11,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/automatic.js",
+        "size": 3961,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/biome.js",
+        "size": 5868,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/cargo-build.js",
+        "size": 9152,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/cargo-clippy.js",
+        "size": 8719,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/cargo-test.js",
+        "size": 14390,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/cargo.js",
+        "size": 9421,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/command.js",
+        "size": 1756,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/opencode/config.js",
+        "size": 3867,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/engine.js",
+        "size": 6928,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/eslint.js",
+        "size": 5653,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/formats.js",
+        "size": 15951,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/go-mod.js",
+        "size": 5642,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/go-mode.js",
+        "size": 1428,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/go-test-json.js",
+        "size": 13223,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/go-test-text.js",
+        "size": 10915,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/go.js",
+        "size": 3016,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/cli/index.js",
+        "size": 8689,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/index.js",
+        "size": 384,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/index.js",
+        "size": 47,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/opencode/index.js",
+        "size": 9073,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/index.js",
+        "size": 1222,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/raw/index.js",
+        "size": 20942,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/json-layout.js",
+        "size": 1512,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/lines.js",
+        "size": 508,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/node-test.js",
+        "size": 6319,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/normalize.js",
+        "size": 1553,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/pnpm-install.js",
+        "size": 6035,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/profile-selection.js",
+        "size": 281,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/pylint.js",
+        "size": 8365,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/pyright.js",
+        "size": 4651,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/pytest.js",
+        "size": 9507,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/ruff.js",
+        "size": 4083,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/runner-utils.js",
+        "size": 948,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/runners.js",
+        "size": 276,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/structured-accessibility-properties.js",
+        "size": 4175,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/structured-accessibility-scope.js",
+        "size": 5586,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/structured-accessibility.js",
+        "size": 4580,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/structured-events.js",
+        "size": 2257,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/structured-files.js",
+        "size": 3210,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/structured-json.js",
+        "size": 38038,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/structured-json.js",
+        "size": 1378,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/structured-processes.js",
+        "size": 3521,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/structured-progress.js",
+        "size": 2686,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/structured-registry.js",
+        "size": 1178,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/structured-render.js",
+        "size": 7382,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/structured-table.js",
+        "size": 1417,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/structured-types.js",
+        "size": 190,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/structured-windows.js",
+        "size": 2321,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/structured.js",
+        "size": 3547,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/summarize.js",
+        "size": 11018,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/tsc.js",
+        "size": 7003,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/types.js",
+        "size": 11,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/types.js",
+        "size": 11,
+        "type": "0"
+      },
+      {
+        "name": "package/package.json",
+        "size": 2070,
+        "type": "0"
+      },
+      {
+        "name": "package/docs/BENCHMARK_REAL.md",
+        "size": 22014,
+        "type": "0"
+      },
+      {
+        "name": "package/CHANGELOG.md",
+        "size": 4799,
+        "type": "0"
+      },
+      {
+        "name": "package/README.md",
+        "size": 7280,
+        "type": "0"
+      },
+      {
+        "name": "package/SECURITY.md",
+        "size": 1079,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/automatic/browser/SOURCES.md",
+        "size": 10199,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/automatic/cli/SOURCES.md",
+        "size": 4666,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/automatic/files/SOURCES.md",
+        "size": 5560,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/automatic/host/SOURCES.md",
+        "size": 934,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/formats/SOURCES.md",
+        "size": 7666,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/biome/SOURCES.md",
+        "size": 5030,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/bun-install/SOURCES.md",
+        "size": 11786,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/bun-test/SOURCES.md",
+        "size": 2305,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/cargo-bench/SOURCES.md",
+        "size": 1276,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/cargo-build/SOURCES.md",
+        "size": 4905,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/cargo-clippy/SOURCES.md",
+        "size": 3202,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/cargo-doc/actions-20261009/SOURCES.md",
+        "size": 2261,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/cargo-doc/SOURCES.md",
+        "size": 7971,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/cargo-fetch/SOURCES.md",
+        "size": 5657,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/cargo-fmt/SOURCES.md",
+        "size": 6024,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/cargo-nextest/SOURCES.md",
+        "size": 3692,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/esbuild/SOURCES.md",
+        "size": 1896,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/eslint/SOURCES.md",
+        "size": 5262,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/go-bench/SOURCES.md",
+        "size": 2594,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/go-build/SOURCES.md",
+        "size": 4692,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/go-mod/SOURCES.md",
+        "size": 5603,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/go-test-text/SOURCES.md",
+        "size": 7422,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/golangci-lint/SOURCES.md",
+        "size": 2231,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/jest/SOURCES.md",
+        "size": 5241,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/markdownlint/SOURCES.md",
+        "size": 4859,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/mypy/SOURCES.md",
+        "size": 3554,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/next/SOURCES.md",
+        "size": 5271,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/pip-install/SOURCES.md",
+        "size": 3477,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/playwright/SOURCES.md",
+        "size": 10582,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/pnpm-install/SOURCES.md",
+        "size": 5094,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/prettier/SOURCES.md",
+        "size": 5639,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/pylint/SOURCES.md",
+        "size": 2623,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/pyright/SOURCES.md",
+        "size": 5396,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/pytest/SOURCES.md",
+        "size": 3982,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/rollup/SOURCES.md",
+        "size": 4363,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/ruff/SOURCES.md",
+        "size": 3067,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/shellcheck/SOURCES.md",
+        "size": 1589,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/stylelint/SOURCES.md",
+        "size": 2915,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/uv-install/SOURCES.md",
+        "size": 2146,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/vite/SOURCES.md",
+        "size": 5189,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/vitest/SOURCES.md",
+        "size": 4910,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/webpack/SOURCES.md",
+        "size": 2415,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/profiles/yarn-install/SOURCES.md",
+        "size": 3461,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/runners/SOURCES.md",
+        "size": 5879,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/utility/cargo/SOURCES.md",
+        "size": 6773,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/utility/go/SOURCES.md",
+        "size": 1832,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/utility/node/SOURCES.md",
+        "size": 2703,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/utility/pytest/SOURCES.md",
+        "size": 5379,
+        "type": "0"
+      },
+      {
+        "name": "package/fixtures/vitest-preservation/SOURCES.md",
+        "size": 901,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/auto-cdp.d.ts",
+        "size": 532,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/auto-cli.d.ts",
+        "size": 220,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/auto-files.d.ts",
+        "size": 212,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/auto-json.d.ts",
+        "size": 3259,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/auto-snapshot.d.ts",
+        "size": 228,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/automatic-command.d.ts",
+        "size": 192,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/opencode/automatic-mcp.d.ts",
+        "size": 548,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/automatic-registry.d.ts",
+        "size": 216,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/automatic-types.d.ts",
+        "size": 960,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/automatic.d.ts",
+        "size": 352,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/biome.d.ts",
+        "size": 106,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/cargo-build.d.ts",
+        "size": 106,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/cargo-clippy.d.ts",
+        "size": 101,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/cargo-test.d.ts",
+        "size": 106,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/cargo.d.ts",
+        "size": 894,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/command.d.ts",
+        "size": 173,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/opencode/config.d.ts",
+        "size": 812,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/engine.d.ts",
+        "size": 253,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/eslint.d.ts",
+        "size": 106,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/formats.d.ts",
+        "size": 106,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/go-mod.d.ts",
+        "size": 106,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/go-mode.d.ts",
+        "size": 199,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/go-test-json.d.ts",
+        "size": 106,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/go-test-text.d.ts",
+        "size": 106,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/go.d.ts",
+        "size": 68,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/cli/index.d.ts",
+        "size": 31,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/index.d.ts",
+        "size": 760,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/index.d.ts",
+        "size": 47,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/opencode/index.d.ts",
+        "size": 1384,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/index.d.ts",
+        "size": 100,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/raw/index.d.ts",
+        "size": 2031,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/json-layout.d.ts",
+        "size": 247,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/lines.d.ts",
+        "size": 177,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/node-test.d.ts",
+        "size": 96,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/normalize.d.ts",
+        "size": 242,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/pnpm-install.d.ts",
+        "size": 106,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/profile-selection.d.ts",
+        "size": 195,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/pylint.d.ts",
+        "size": 167,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/pyright.d.ts",
+        "size": 173,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/pytest.d.ts",
+        "size": 72,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/ruff.d.ts",
+        "size": 182,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/runner-utils.d.ts",
+        "size": 496,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/runners.d.ts",
+        "size": 106,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/structured-accessibility-properties.d.ts",
+        "size": 240,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/structured-accessibility-scope.d.ts",
+        "size": 230,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/structured-accessibility.d.ts",
+        "size": 222,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/structured-events.d.ts",
+        "size": 203,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/structured-files.d.ts",
+        "size": 207,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/structured-json.d.ts",
+        "size": 3988,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/structured-json.d.ts",
+        "size": 208,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/structured-processes.d.ts",
+        "size": 127,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/structured-progress.d.ts",
+        "size": 205,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/structured-registry.d.ts",
+        "size": 255,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/structured-render.d.ts",
+        "size": 864,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/structured-table.d.ts",
+        "size": 207,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/structured-types.d.ts",
+        "size": 923,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/structured-windows.d.ts",
+        "size": 200,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/structured.d.ts",
+        "size": 367,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/summarize.d.ts",
+        "size": 1859,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/profiles/tsc.d.ts",
+        "size": 106,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/core/types.d.ts",
+        "size": 1486,
+        "type": "0"
+      },
+      {
+        "name": "package/dist/types.d.ts",
+        "size": 38,
+        "type": "0"
+      },
+      {
+        "name": "package/licenses/TRS-MIT.txt",
+        "size": 1065,
+        "type": "0"
+      }
+    ],
+    "package_json_exact_utf8": "{\n  \"name\": \"hugr-lean\",\n  \"version\": \"0.4.0\",\n  \"description\": \"OpenCode plugin that summarizes large tool outputs before they reach the model, keeps failures whole and stores every original for exact recall\",\n  \"keywords\": [\n    \"opencode\",\n    \"opencode-plugin\",\n    \"plugin\",\n    \"coding-agent\",\n    \"llm\",\n    \"context\",\n    \"tokens\",\n    \"tool-output\",\n    \"summarize\",\n    \"compression\"\n  ],\n  \"homepage\": \"https://github.com/gustavomhss/HuGR-Lean#readme\",\n  \"bugs\": {\n    \"url\": \"https://github.com/gustavomhss/HuGR-Lean/issues\"\n  },\n  \"repository\": {\n    \"type\": \"git\",\n    \"url\": \"git+https://github.com/gustavomhss/HuGR-Lean.git\"\n  },\n  \"license\": \"MIT\",\n  \"type\": \"module\",\n  \"engines\": {\n    \"node\": \">=22\"\n  },\n  \"files\": [\n    \"dist\",\n    \"README.md\",\n    \"LICENSE\",\n    \"NOTICE\",\n    \"CHANGELOG.md\",\n    \"SECURITY.md\",\n    \"licenses\",\n    \"docs/BENCHMARK_REAL.md\",\n    \"fixtures/**/SOURCES.md\"\n  ],\n  \"exports\": {\n    \".\": {\n      \"types\": \"./dist/index.d.ts\",\n      \"import\": \"./dist/index.js\"\n    },\n    \"./server\": {\n      \"types\": \"./dist/index.d.ts\",\n      \"import\": \"./dist/index.js\"\n    },\n    \"./core\": {\n      \"types\": \"./dist/core/index.d.ts\",\n      \"import\": \"./dist/core/index.js\"\n    },\n    \"./raw\": {\n      \"types\": \"./dist/raw/index.d.ts\",\n      \"import\": \"./dist/raw/index.js\"\n    }\n  },\n  \"bin\": {\n    \"hugr-lean\": \"dist/cli/index.js\"\n  },\n  \"publishConfig\": {\n    \"access\": \"public\",\n    \"provenance\": true\n  },\n  \"scripts\": {\n    \"build\": \"node scripts/build.mjs\",\n    \"typecheck\": \"tsc --noEmit\",\n    \"test\": \"tsx --test tests/*.test.ts\",\n    \"structure\": \"node scripts/check-structure.mjs\",\n    \"smoke\": \"node scripts/package-smoke.mjs\",\n    \"benchmark\": \"node scripts/benchmark.mjs\",\n    \"benchmark:real\": \"node scripts/real-world/run.mjs\",\n    \"benchmark:real:host\": \"node scripts/real-world/host.mjs\",\n    \"check\": \"npm run structure && npm run typecheck && npm test && npm run build\",\n    \"prepack\": \"npm run build\"\n  },\n  \"devDependencies\": {\n    \"@types/node\": \"^22.0.0\",\n    \"tsx\": \"^4.20.0\",\n    \"typescript\": \"^5.9.0\"\n  }\n}\n",
+    "package_json_bytes": 2070,
+    "package_json_sha256": "eb1e4264a0ddc9a050fe30490415dc020f33d2bb7a3de73e768943ef499851fa",
+    "package_name": "hugr-lean",
+    "package_version": "0.4.0"
+  },
+  "zip_fixture": [
+    {
+      "member": "bin/tool",
+      "bytes": 22,
+      "sha256": "25eda55137747802ce9a30f1ce9a86b1c75e8a43797a2284eed853f1d4f7243e",
+      "hex": "23212f62696e2f73680a6563686f207a69707065640a"
+    }
+  ],
+  "scip_fixtures": [
+    {
+      "path": "packages/core/test/fixture/scip-alias/core.scip",
+      "ascii_printable_strings_min_length": 4,
+      "strings": [
+        {
+          "byte_start": 7,
+          "byte_end_exclusive": 22,
+          "text": "scip-typescript"
+        },
+        {
+          "byte_start": 24,
+          "byte_end_exclusive": 29,
+          "text": "0.4.0"
+        },
+        {
+          "byte_start": 32,
+          "byte_end_exclusive": 193,
+          "text": "file:///private/tmp/claude-501/-Users-gustavoschneiter-Documents-HuGR-orchestra-canonical/062ff320-ed60-4283-84cc-a20732a5380d/scratchpad/alias-fx/packages/core "
+        },
+        {
+          "byte_start": 199,
+          "byte_end_exclusive": 211,
+          "text": "src/greet.ts"
+        },
+        {
+          "byte_start": 219,
+          "byte_end_exclusive": 277,
+          "text": "9scip-typescript npm @orchestra/core 1.0.0 src/`greet.ts`/"
+        },
+        {
+          "byte_start": 293,
+          "byte_end_exclusive": 359,
+          "text": "Ascip-typescript npm @orchestra/core 1.0.0 src/`greet.ts`/Greeter#"
+        },
+        {
+          "byte_start": 375,
+          "byte_end_exclusive": 449,
+          "text": "Iscip-typescript npm @orchestra/core 1.0.0 src/`greet.ts`/Greeter#greet()."
+        },
+        {
+          "byte_start": 459,
+          "byte_end_exclusive": 539,
+          "text": "Oscip-typescript npm @orchestra/core 1.0.0 src/`greet.ts`/Greeter#greet().(name)"
+        },
+        {
+          "byte_start": 549,
+          "byte_end_exclusive": 615,
+          "text": "Ascip-typescript npm @orchestra/core 1.0.0 src/`greet.ts`/greet()."
+        },
+        {
+          "byte_start": 631,
+          "byte_end_exclusive": 703,
+          "text": "Gscip-typescript npm @orchestra/core 1.0.0 src/`greet.ts`/greet().(name)"
+        },
+        {
+          "byte_start": 713,
+          "byte_end_exclusive": 785,
+          "text": "Gscip-typescript npm @orchestra/core 1.0.0 src/`greet.ts`/greet().(name)"
+        },
+        {
+          "byte_start": 788,
+          "byte_end_exclusive": 846,
+          "text": "9scip-typescript npm @orchestra/core 1.0.0 src/`greet.ts`/"
+        },
+        {
+          "byte_start": 848,
+          "byte_end_exclusive": 853,
+          "text": "```ts"
+        },
+        {
+          "byte_start": 854,
+          "byte_end_exclusive": 871,
+          "text": "module \"greet.ts\""
+        },
+        {
+          "byte_start": 878,
+          "byte_end_exclusive": 944,
+          "text": "Ascip-typescript npm @orchestra/core 1.0.0 src/`greet.ts`/Greeter#"
+        },
+        {
+          "byte_start": 946,
+          "byte_end_exclusive": 951,
+          "text": "```ts"
+        },
+        {
+          "byte_start": 952,
+          "byte_end_exclusive": 969,
+          "text": "interface Greeter"
+        },
+        {
+          "byte_start": 976,
+          "byte_end_exclusive": 1050,
+          "text": "Iscip-typescript npm @orchestra/core 1.0.0 src/`greet.ts`/Greeter#greet()."
+        },
+        {
+          "byte_start": 1051,
+          "byte_end_exclusive": 1057,
+          "text": "0```ts"
+        },
+        {
+          "byte_start": 1058,
+          "byte_end_exclusive": 1096,
+          "text": "(method) greet(name: string) => string"
+        },
+        {
+          "byte_start": 1103,
+          "byte_end_exclusive": 1183,
+          "text": "Oscip-typescript npm @orchestra/core 1.0.0 src/`greet.ts`/Greeter#greet().(name)"
+        },
+        {
+          "byte_start": 1184,
+          "byte_end_exclusive": 1190,
+          "text": "\"```ts"
+        },
+        {
+          "byte_start": 1191,
+          "byte_end_exclusive": 1215,
+          "text": "(parameter) name: string"
+        },
+        {
+          "byte_start": 1222,
+          "byte_end_exclusive": 1288,
+          "text": "Ascip-typescript npm @orchestra/core 1.0.0 src/`greet.ts`/greet()."
+        },
+        {
+          "byte_start": 1289,
+          "byte_end_exclusive": 1295,
+          "text": ".```ts"
+        },
+        {
+          "byte_start": 1296,
+          "byte_end_exclusive": 1332,
+          "text": "function greet(name: string): string"
+        },
+        {
+          "byte_start": 1339,
+          "byte_end_exclusive": 1411,
+          "text": "Gscip-typescript npm @orchestra/core 1.0.0 src/`greet.ts`/greet().(name)"
+        },
+        {
+          "byte_start": 1412,
+          "byte_end_exclusive": 1418,
+          "text": "\"```ts"
+        },
+        {
+          "byte_start": 1419,
+          "byte_end_exclusive": 1443,
+          "text": "(parameter) name: string"
+        }
+      ],
+      "semantic_protocol_decode": false
+    },
+    {
+      "path": "packages/core/test/fixture/scip-alias/orchestra.scip",
+      "ascii_printable_strings_min_length": 4,
+      "strings": [
+        {
+          "byte_start": 7,
+          "byte_end_exclusive": 22,
+          "text": "scip-typescript"
+        },
+        {
+          "byte_start": 24,
+          "byte_end_exclusive": 29,
+          "text": "0.4.0"
+        },
+        {
+          "byte_start": 32,
+          "byte_end_exclusive": 198,
+          "text": "file:///private/tmp/claude-501/-Users-gustavoschneiter-Documents-HuGR-orchestra-canonical/062ff320-ed60-4283-84cc-a20732a5380d/scratchpad/alias-fx/packages/orchestra "
+        },
+        {
+          "byte_start": 204,
+          "byte_end_exclusive": 220,
+          "text": "src/util/tool.ts"
+        },
+        {
+          "byte_start": 228,
+          "byte_end_exclusive": 284,
+          "text": "7scip-typescript npm orchestra 1.0.0 src/util/`tool.ts`/"
+        },
+        {
+          "byte_start": 300,
+          "byte_end_exclusive": 365,
+          "text": "@scip-typescript npm orchestra 1.0.0 src/util/`tool.ts`/helper()."
+        },
+        {
+          "byte_start": 376,
+          "byte_end_exclusive": 432,
+          "text": "7scip-typescript npm orchestra 1.0.0 src/util/`tool.ts`/"
+        },
+        {
+          "byte_start": 434,
+          "byte_end_exclusive": 439,
+          "text": "```ts"
+        },
+        {
+          "byte_start": 440,
+          "byte_end_exclusive": 456,
+          "text": "module \"tool.ts\""
+        },
+        {
+          "byte_start": 463,
+          "byte_end_exclusive": 528,
+          "text": "@scip-typescript npm orchestra 1.0.0 src/util/`tool.ts`/helper()."
+        },
+        {
+          "byte_start": 529,
+          "byte_end_exclusive": 535,
+          "text": "#```ts"
+        },
+        {
+          "byte_start": 536,
+          "byte_end_exclusive": 561,
+          "text": "function helper(): number"
+        },
+        {
+          "byte_start": 570,
+          "byte_end_exclusive": 581,
+          "text": "src/main.ts"
+        },
+        {
+          "byte_start": 589,
+          "byte_end_exclusive": 640,
+          "text": "2scip-typescript npm orchestra 1.0.0 src/`main.ts`/"
+        },
+        {
+          "byte_start": 656,
+          "byte_end_exclusive": 721,
+          "text": "@scip-typescript npm orchestra 1.0.0 src/util/`tool.ts`/helper()."
+        },
+        {
+          "byte_start": 729,
+          "byte_end_exclusive": 785,
+          "text": "7scip-typescript npm orchestra 1.0.0 src/util/`tool.ts`/"
+        },
+        {
+          "byte_start": 793,
+          "byte_end_exclusive": 859,
+          "text": "Ascip-typescript npm @orchestra/core 1.0.0 src/`greet.ts`/greet()."
+        },
+        {
+          "byte_start": 867,
+          "byte_end_exclusive": 933,
+          "text": "Ascip-typescript npm @orchestra/core 1.0.0 src/`greet.ts`/Greeter#"
+        },
+        {
+          "byte_start": 941,
+          "byte_end_exclusive": 999,
+          "text": "9scip-typescript npm @orchestra/core 1.0.0 src/`greet.ts`/"
+        },
+        {
+          "byte_start": 1007,
+          "byte_end_exclusive": 1064,
+          "text": "8scip-typescript npm orchestra 1.0.0 src/`main.ts`/run()."
+        },
+        {
+          "byte_start": 1080,
+          "byte_end_exclusive": 1146,
+          "text": "Ascip-typescript npm @orchestra/core 1.0.0 src/`greet.ts`/greet()."
+        },
+        {
+          "byte_start": 1154,
+          "byte_end_exclusive": 1218,
+          "text": "?scip-typescript npm typescript 5.9.3 lib/`lib.es5.d.ts`/String#"
+        },
+        {
+          "byte_start": 1226,
+          "byte_end_exclusive": 1290,
+          "text": "?scip-typescript npm typescript 5.9.3 lib/`lib.es5.d.ts`/String."
+        },
+        {
+          "byte_start": 1298,
+          "byte_end_exclusive": 1362,
+          "text": "?scip-typescript npm typescript 5.9.3 lib/`lib.es5.d.ts`/String#"
+        },
+        {
+          "byte_start": 1370,
+          "byte_end_exclusive": 1442,
+          "text": "Gscip-typescript npm typescript 5.9.3 lib/`lib.es2015.core.d.ts`/String#"
+        },
+        {
+          "byte_start": 1450,
+          "byte_end_exclusive": 1526,
+          "text": "Kscip-typescript npm typescript 5.9.3 lib/`lib.es2015.iterable.d.ts`/String#"
+        },
+        {
+          "byte_start": 1534,
+          "byte_end_exclusive": 1618,
+          "text": "Sscip-typescript npm typescript 5.9.3 lib/`lib.es2015.symbol.wellknown.d.ts`/String#"
+        },
+        {
+          "byte_start": 1626,
+          "byte_end_exclusive": 1700,
+          "text": "Iscip-typescript npm typescript 5.9.3 lib/`lib.es2017.string.d.ts`/String#"
+        },
+        {
+          "byte_start": 1708,
+          "byte_end_exclusive": 1782,
+          "text": "Iscip-typescript npm typescript 5.9.3 lib/`lib.es2019.string.d.ts`/String#"
+        },
+        {
+          "byte_start": 1790,
+          "byte_end_exclusive": 1864,
+          "text": "Iscip-typescript npm typescript 5.9.3 lib/`lib.es2020.string.d.ts`/String#"
+        },
+        {
+          "byte_start": 1872,
+          "byte_end_exclusive": 1946,
+          "text": "Iscip-typescript npm typescript 5.9.3 lib/`lib.es2021.string.d.ts`/String#"
+        },
+        {
+          "byte_start": 1954,
+          "byte_end_exclusive": 2028,
+          "text": "Iscip-typescript npm typescript 5.9.3 lib/`lib.es2022.string.d.ts`/String#"
+        },
+        {
+          "byte_start": 2036,
+          "byte_end_exclusive": 2110,
+          "text": "Iscip-typescript npm typescript 5.9.3 lib/`lib.es2024.string.d.ts`/String#"
+        },
+        {
+          "byte_start": 2118,
+          "byte_end_exclusive": 2183,
+          "text": "@scip-typescript npm orchestra 1.0.0 src/util/`tool.ts`/helper()."
+        },
+        {
+          "byte_start": 2191,
+          "byte_end_exclusive": 2247,
+          "text": "7scip-typescript npm orchestra 1.0.0 src/`main.ts`/Loud#"
+        },
+        {
+          "byte_start": 2263,
+          "byte_end_exclusive": 2329,
+          "text": "Ascip-typescript npm @orchestra/core 1.0.0 src/`greet.ts`/Greeter#"
+        },
+        {
+          "byte_start": 2337,
+          "byte_end_exclusive": 2401,
+          "text": "?scip-typescript npm orchestra 1.0.0 src/`main.ts`/Loud#greet()."
+        },
+        {
+          "byte_start": 2417,
+          "byte_end_exclusive": 2487,
+          "text": "Escip-typescript npm orchestra 1.0.0 src/`main.ts`/Loud#greet().(name)"
+        },
+        {
+          "byte_start": 2498,
+          "byte_end_exclusive": 2505,
+          "text": "local 2"
+        },
+        {
+          "byte_start": 2516,
+          "byte_end_exclusive": 2523,
+          "text": "local 4"
+        },
+        {
+          "byte_start": 2534,
+          "byte_end_exclusive": 2541,
+          "text": "local 4"
+        },
+        {
+          "byte_start": 2549,
+          "byte_end_exclusive": 2627,
+          "text": "Mscip-typescript npm typescript 5.9.3 lib/`lib.es5.d.ts`/String#toUpperCase()."
+        },
+        {
+          "byte_start": 2636,
+          "byte_end_exclusive": 2643,
+          "text": "local 2"
+        },
+        {
+          "byte_start": 2651,
+          "byte_end_exclusive": 2717,
+          "text": "Ascip-typescript npm @orchestra/core 1.0.0 src/`greet.ts`/greet()."
+        },
+        {
+          "byte_start": 2725,
+          "byte_end_exclusive": 2795,
+          "text": "Escip-typescript npm orchestra 1.0.0 src/`main.ts`/Loud#greet().(name)"
+        },
+        {
+          "byte_start": 2803,
+          "byte_end_exclusive": 2860,
+          "text": "8scip-typescript npm orchestra 1.0.0 src/`main.ts`/twice."
+        },
+        {
+          "byte_start": 2875,
+          "byte_end_exclusive": 2941,
+          "text": "Ascip-typescript npm @orchestra/core 1.0.0 src/`greet.ts`/greet()."
+        },
+        {
+          "byte_start": 2949,
+          "byte_end_exclusive": 3015,
+          "text": "Ascip-typescript npm @orchestra/core 1.0.0 src/`greet.ts`/greet()."
+        },
+        {
+          "byte_start": 3018,
+          "byte_end_exclusive": 3069,
+          "text": "2scip-typescript npm orchestra 1.0.0 src/`main.ts`/"
+        },
+        {
+          "byte_start": 3071,
+          "byte_end_exclusive": 3076,
+          "text": "```ts"
+        },
+        {
+          "byte_start": 3077,
+          "byte_end_exclusive": 3093,
+          "text": "module \"main.ts\""
+        },
+        {
+          "byte_start": 3100,
+          "byte_end_exclusive": 3157,
+          "text": "8scip-typescript npm orchestra 1.0.0 src/`main.ts`/run()."
+        },
+        {
+          "byte_start": 3158,
+          "byte_end_exclusive": 3164,
+          "text": " ```ts"
+        },
+        {
+          "byte_start": 3165,
+          "byte_end_exclusive": 3187,
+          "text": "function run(): string"
+        },
+        {
+          "byte_start": 3195,
+          "byte_end_exclusive": 3251,
+          "text": "7scip-typescript npm orchestra 1.0.0 src/`main.ts`/Loud#"
+        },
+        {
+          "byte_start": 3253,
+          "byte_end_exclusive": 3258,
+          "text": "```ts"
+        },
+        {
+          "byte_start": 3259,
+          "byte_end_exclusive": 3269,
+          "text": "class Loud"
+        },
+        {
+          "byte_start": 3270,
+          "byte_end_exclusive": 3275,
+          "text": "```\"E"
+        },
+        {
+          "byte_start": 3276,
+          "byte_end_exclusive": 3342,
+          "text": "Ascip-typescript npm @orchestra/core 1.0.0 src/`greet.ts`/Greeter#"
+        },
+        {
+          "byte_start": 3348,
+          "byte_end_exclusive": 3412,
+          "text": "?scip-typescript npm orchestra 1.0.0 src/`main.ts`/Loud#greet()."
+        },
+        {
+          "byte_start": 3413,
+          "byte_end_exclusive": 3419,
+          "text": ".```ts"
+        },
+        {
+          "byte_start": 3420,
+          "byte_end_exclusive": 3456,
+          "text": "(method) greet(name: string): string"
+        },
+        {
+          "byte_start": 3457,
+          "byte_end_exclusive": 3462,
+          "text": "```\"O"
+        },
+        {
+          "byte_start": 3463,
+          "byte_end_exclusive": 3537,
+          "text": "Iscip-typescript npm @orchestra/core 1.0.0 src/`greet.ts`/Greeter#greet()."
+        },
+        {
+          "byte_start": 3544,
+          "byte_end_exclusive": 3614,
+          "text": "Escip-typescript npm orchestra 1.0.0 src/`main.ts`/Loud#greet().(name)"
+        },
+        {
+          "byte_start": 3615,
+          "byte_end_exclusive": 3621,
+          "text": "\"```ts"
+        },
+        {
+          "byte_start": 3622,
+          "byte_end_exclusive": 3646,
+          "text": "(parameter) name: string"
+        },
+        {
+          "byte_start": 3654,
+          "byte_end_exclusive": 3661,
+          "text": "local 2"
+        },
+        {
+          "byte_start": 3662,
+          "byte_end_exclusive": 3668,
+          "text": "-```ts"
+        },
+        {
+          "byte_start": 3669,
+          "byte_end_exclusive": 3704,
+          "text": "var shout: (text: string) => string"
+        },
+        {
+          "byte_start": 3712,
+          "byte_end_exclusive": 3719,
+          "text": "local 4"
+        },
+        {
+          "byte_start": 3720,
+          "byte_end_exclusive": 3726,
+          "text": "\"```ts"
+        },
+        {
+          "byte_start": 3727,
+          "byte_end_exclusive": 3751,
+          "text": "(parameter) text: string"
+        },
+        {
+          "byte_start": 3758,
+          "byte_end_exclusive": 3815,
+          "text": "8scip-typescript npm orchestra 1.0.0 src/`main.ts`/twice."
+        },
+        {
+          "byte_start": 3816,
+          "byte_end_exclusive": 3822,
+          "text": "!```ts"
+        },
+        {
+          "byte_start": 3823,
+          "byte_end_exclusive": 3846,
+          "text": "var twice: () => string"
+        }
+      ],
+      "semantic_protocol_decode": false
+    }
+  ],
+  "status": "PASS_STRUCTURAL_FACTS_ONLY",
+  "semantic_acceptance": "NOT_ASSIGNED",
+  "product_execution": "NOT_RUN"
+}

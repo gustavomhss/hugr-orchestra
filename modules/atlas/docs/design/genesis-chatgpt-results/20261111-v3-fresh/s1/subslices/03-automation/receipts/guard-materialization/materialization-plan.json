@@ -1,0 +1,20 @@
+{
+  "head_files": 15367,
+  "base_files": 13892,
+  "changed_paths": 1551,
+  "git_diff_tree_exact": true,
+  "needed_distinct_blobs": 1635,
+  "sparse_paths": 1666,
+  "head_only": 1475,
+  "base_only": 0,
+  "modified": 76,
+  "changed_top_domains": {
+    ".gitattributes": 1,
+    ".github": 2,
+    ".orchestra": 22,
+    "docs": 1,
+    "modules": 1423,
+    "packages": 11,
+    "script": 91
+  }
+}

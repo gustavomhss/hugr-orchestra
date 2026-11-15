@@ -1,0 +1,100 @@
+{
+  "scope": "actual faithful reconstruction at checkpoint HEAD63e991; not final gate",
+  "files": [
+    {
+      "path": "receipts/guard-materialization/REPORT.md",
+      "bytes": 4272,
+      "sha256": "4761845a1bc548f557ca207fb8ce17296c6b7af39e0418bb37f90ad3b7f81a3a"
+    },
+    {
+      "path": "receipts/guard-materialization/binary-transport-blocker.json",
+      "bytes": 10861,
+      "sha256": "13365af70732f780efa34bf8bb3852f1a9e1cb9fc4c83fb1cff81efd4093673a"
+    },
+    {
+      "path": "receipts/guard-materialization/checkout-attempt.json",
+      "bytes": 178038,
+      "sha256": "ab03f736917513b99225376251b7688727bba30ba417ad956197184ef831319e"
+    },
+    {
+      "path": "receipts/guard-materialization/checkout-index-attempt.json",
+      "bytes": 436,
+      "sha256": "6047449ec38988948e178547c383fb956d968db71003a7012779a418fbcf6921"
+    },
+    {
+      "path": "receipts/guard-materialization/committed-numstat.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "receipts/guard-materialization/materialization-verification.json",
+      "bytes": 2228,
+      "sha256": "b3a1b7599a284c0a2d2d1052c9e890cd25a8d5a47b8930159d636fda53dda35b"
+    },
+    {
+      "path": "receipts/guard-materialization/ancestry-receipt.json",
+      "bytes": 830,
+      "sha256": "c72f0fc8b0e774d1e6939f4691d8636893ef3868b46651bc6934b9d33850be05"
+    },
+    {
+      "path": "receipts/guard-materialization/commits-receipt.json",
+      "bytes": 679,
+      "sha256": "1778bf9cc16bcb3f735d6f5a36362da6f324a0eb190aebf46b60b93862ed391b"
+    },
+    {
+      "path": "receipts/guard-materialization/local-reuse-receipt.json",
+      "bytes": 145913,
+      "sha256": "92801ece0d42a390020728f963e5e9dfc6cc19f52ec45fb391fe12db69c16564"
+    },
+    {
+      "path": "receipts/guard-materialization/blobs-receipts.jsonl",
+      "bytes": 278013,
+      "sha256": "7c7df5d749300d9401826525d539caccc6e4c392b554ab947f43021bfffec462"
+    },
+    {
+      "path": "receipts/guard-materialization/materialization-plan.json",
+      "bytes": 389,
+      "sha256": "02a8b2f5ab4c2048caa65664053f2273fd12a18b031fe065ff47242bb4ee0d08"
+    },
+    {
+      "path": "receipts/guard-materialization/changed-paths.json",
+      "bytes": 164968,
+      "sha256": "b160efadf35dca8c29276373ea974107074f2aa73444aa77fa38c3b30d240741"
+    },
+    {
+      "path": "receipts/guard-materialization/trees-receipts-manifest.json",
+      "bytes": 1591,
+      "sha256": "dfb481b9f0971024832a82420773660998bce3b9d91a8498563350b30cc8d76d"
+    },
+    {
+      "path": "receipts/guard-materialization/tree-receipt-parts/part-01.jsonl",
+      "bytes": 799854,
+      "sha256": "00e2d1c86da5867a64a40021023e2c685df62cfdeb799a988040ad770c6cd7a2"
+    },
+    {
+      "path": "receipts/guard-materialization/tree-receipt-parts/part-02.jsonl",
+      "bytes": 799945,
+      "sha256": "77ce8696ef93a24431f9fd77f13df771a8f12a2103d3e4cb72be1a9274ca6826"
+    },
+    {
+      "path": "receipts/guard-materialization/tree-receipt-parts/part-03.jsonl",
+      "bytes": 799915,
+      "sha256": "a4bd9d7eb62289659184591ed5ef18cfbcac166728b1c836ec1e58f6fcf63a24"
+    },
+    {
+      "path": "receipts/guard-materialization/tree-receipt-parts/part-04.jsonl",
+      "bytes": 799803,
+      "sha256": "ae6681f8c2992fac265ec5e2f590670a2fe7959965f736f01427518e214882a5"
+    },
+    {
+      "path": "receipts/guard-materialization/tree-receipt-parts/part-05.jsonl",
+      "bytes": 799780,
+      "sha256": "2b5e9da63ba21e0401bb898a2081d7090e02b38ca599379b5b36af97e5257df8"
+    },
+    {
+      "path": "receipts/guard-materialization/tree-receipt-parts/part-06.jsonl",
+      "bytes": 473614,
+      "sha256": "bb047b5109f147371441af3c058b248e7ed99af9b9edb168c23ffd5afd36a512"
+    }
+  ]
+}

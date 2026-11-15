@@ -1,0 +1,26 @@
+{
+  "schema": "s1-03-corrections-readback/v1",
+  "B": "1423adaac613ffc361ca89aa70c77f9b7ed5b7f7",
+  "P": "84b267fbe863e4ef728b9d54855f137f3057b3df",
+  "H": "63e99146961161b8596bbe8b51e293c92eba4182",
+  "root_tree": "168045d3b1af2935aaa260c153a95f1e8d96f3f2",
+  "out_tree": "7d5af8ca91cf4e41c6d9af48f61a15bd190c6f2b",
+  "lease": {
+    "expected_sha": "1423adaac613ffc361ca89aa70c77f9b7ed5b7f7",
+    "force": false,
+    "success": true
+  },
+  "verified_payload_file_count": 290,
+  "verified_payload_bytes": 10612728,
+  "all_git_blobs_sizes_match": true,
+  "byte_exact_readback": [
+    "handoff.json",
+    "producers/automation/body.md",
+    "producers/research/body.md",
+    "historical central s1.core.entry"
+  ],
+  "historical_entry_sha256": "6a488ca8f9717a497949b71ed41db84d995f23b90c31cc59c22c5bd86239ca6c",
+  "branch_readback_handoff_blob": "537c9738b58122a825c052635bb6e9e1305c1f3c",
+  "state": "IN_PROGRESS",
+  "execution_continues": true
+}

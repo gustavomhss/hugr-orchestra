@@ -1,0 +1,14 @@
+{
+  "receipt_path": "receipts/independent-support-structure.json",
+  "receipt_sha256": "d2938337ccfad084d4e4e6c9d6ecd08c9b26701e86d69ca760601a93e76ca3eb",
+  "command": [
+    "python",
+    "scripts/verify-support-structure.py",
+    "producers/boundaries/sources",
+    "payload/receipts/source-captures.jsonl",
+    "payload/receipts/independent-support-structure.json"
+  ],
+  "exit_code": 0,
+  "procedure_path": "validation/verify-support-structure.py",
+  "procedure_sha256": "ce242e9fe2d969baf176a4c1d101342e265d5c0857dd8d8fcbbc70a82cd2bb52"
+}

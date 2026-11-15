@@ -1,0 +1,269 @@
+{
+  "supplement": {
+    "path": "suplemento-union-1.md",
+    "bytes": 10993,
+    "sha256": "c3b28e78d92ab53256bd926963167187ba9703d2ec719a95d18a5b768b41f02c",
+    "git_blob_sha": "0adde6b8277388d52df8639e56f411462641c137"
+  },
+  "unchanged_candidate": {
+    "path": "union-navigation-proposal.md",
+    "bytes": 14671,
+    "sha256": "f4362077ed7eb2f0dff7bb76acd60debeaa41bd37886551977b92c02addfcb6e",
+    "git_blob_sha": "69886d576e9368bf3bd4469d53c30095114c1d04"
+  },
+  "public_requests": [
+    {
+      "path": "revisions/union-supplement-1/inputs/j1-response.md",
+      "bytes": 4026,
+      "sha256": "2758c608c8032f712d80f297bf7e4854b3fd9b0600408fa0e83ca336ba24a1d2",
+      "git_blob_sha": "84a41718018509fb8a444278edb2eacdef1bd4e5"
+    },
+    {
+      "path": "revisions/union-supplement-1/inputs/j2-response.md",
+      "bytes": 2683,
+      "sha256": "36b6036287b2c4ba27e9f50b8bc129ac226f3cbd30726e316e416c679588c882",
+      "git_blob_sha": "fc1617e5ee6de0986fbc0c87cd266c2eb7727cad"
+    }
+  ],
+  "offsets": "zero-based UTF-8 byte offsets; end exclusive",
+  "literal_entries": [
+    {
+      "id": "UNI-OBLIGATIONS",
+      "requests": [
+        "J1/RE-UNI-01",
+        "J2/RE-NAV-01"
+      ],
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/dependencies.json",
+      "capture_path": "sources/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/dependencies.json",
+      "commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+      "git_blob_sha": "a65c72a33599afec662649c8ebf86808c99e320b",
+      "sha256": "83dfbbe0a1f585dc548643dc04f5f85eb2d4c1531d176a068582829e80375ee9",
+      "bytes": 6445,
+      "first_line": 10,
+      "last_line": 54,
+      "source_start_byte": 641,
+      "source_end_byte_exclusive": 2115,
+      "excerpt_bytes": 1474,
+      "excerpt_sha256": "662514ef9ce5d0ce746c8671594fb140115dacb7d566ec11420b98b413899b9b",
+      "output_excerpt_start_byte": 1355,
+      "output_excerpt_end_byte_exclusive": 2829
+    },
+    {
+      "id": "UNI-STATE-S1-01",
+      "requests": [
+        "J1/RE-UNI-02"
+      ],
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/01-sessions/mission.json",
+      "capture_path": "sources/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/01-sessions/mission.json",
+      "commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+      "git_blob_sha": "309dbf461fc201034fbd39c353c6973d3844e555",
+      "sha256": "2d9a28fd086955ada4753b6c42452cdaac9fb0cc31c4cf78e3de2b09d81c7808",
+      "bytes": 6329,
+      "first_line": 1,
+      "last_line": 12,
+      "source_start_byte": 0,
+      "source_end_byte_exclusive": 416,
+      "excerpt_bytes": 416,
+      "excerpt_sha256": "f0cc8b3c8d5fa64777a0da890623fbd0eac2be2da17e4ced7145e7fd6af15c07",
+      "output_excerpt_start_byte": 3766,
+      "output_excerpt_end_byte_exclusive": 4182
+    },
+    {
+      "id": "UNI-STATE-S1-02",
+      "requests": [
+        "J1/RE-UNI-02"
+      ],
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/02-tools/mission.json",
+      "capture_path": "sources/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/02-tools/mission.json",
+      "commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+      "git_blob_sha": "3e217269094ff32aa8954245acc5900652867664",
+      "sha256": "091053c7a0b57079e6c884bd7faeff0dcc1652271d17f8d44a455582090b6f35",
+      "bytes": 5784,
+      "first_line": 1,
+      "last_line": 12,
+      "source_start_byte": 0,
+      "source_end_byte_exclusive": 415,
+      "excerpt_bytes": 415,
+      "excerpt_sha256": "5c20b2fe9a4614792438729bb980023132210c97f7f3e8d33ef514aa5892a4af",
+      "output_excerpt_start_byte": 4682,
+      "output_excerpt_end_byte_exclusive": 5097
+    },
+    {
+      "id": "UNI-STATE-S1-03",
+      "requests": [
+        "J1/RE-UNI-02"
+      ],
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/03-automation/mission.json",
+      "capture_path": "sources/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/03-automation/mission.json",
+      "commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+      "git_blob_sha": "48fa8da131e97c50110ee76e41e79283cd9a0ac4",
+      "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+      "bytes": 6006,
+      "first_line": 1,
+      "last_line": 12,
+      "source_start_byte": 0,
+      "source_end_byte_exclusive": 413,
+      "excerpt_bytes": 413,
+      "excerpt_sha256": "e1d9834d07ddb16d6f3b33019e63f612141e07320d26797294682ec0a4664fc0",
+      "output_excerpt_start_byte": 5607,
+      "output_excerpt_end_byte_exclusive": 6020
+    },
+    {
+      "id": "UNI-STATE-S1-04",
+      "requests": [
+        "J1/RE-UNI-02"
+      ],
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/04-api/mission.json",
+      "capture_path": "sources/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/04-api/mission.json",
+      "commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+      "git_blob_sha": "dc0df0850a66adfe154c390403fb8e0a2ff4bdf6",
+      "sha256": "e845f02308a63119c8bb69a339de9515491d7a0d404a116f1806b880e90166c7",
+      "bytes": 6115,
+      "first_line": 1,
+      "last_line": 12,
+      "source_start_byte": 0,
+      "source_end_byte_exclusive": 414,
+      "excerpt_bytes": 414,
+      "excerpt_sha256": "2b9a827d3d8c3b0a40126a0f8f887bf788988a9375971fe4847957710180edf5",
+      "output_excerpt_start_byte": 6516,
+      "output_excerpt_end_byte_exclusive": 6930
+    },
+    {
+      "id": "UNI-STATE-S1-05",
+      "requests": [
+        "J1/RE-UNI-02"
+      ],
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/05-libraries/mission.json",
+      "capture_path": "sources/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/05-libraries/mission.json",
+      "commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+      "git_blob_sha": "2c8aac8db4960e164d9032bebf77db0f53fa9210",
+      "sha256": "eb81333020e43d2c9bbea5b07e20e5d20ca5e897e15737a18863ecbfd7dfeb64",
+      "bytes": 6361,
+      "first_line": 1,
+      "last_line": 12,
+      "source_start_byte": 0,
+      "source_end_byte_exclusive": 413,
+      "excerpt_bytes": 413,
+      "excerpt_sha256": "2d617f2547a8145c404d42da28868b2bc5d8e789e4a1b16407929accf2ad4e36",
+      "output_excerpt_start_byte": 7438,
+      "output_excerpt_end_byte_exclusive": 7851
+    },
+    {
+      "id": "UNI-STATE-ROSTER",
+      "requests": [
+        "J1/RE-UNI-02"
+      ],
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/roster.json",
+      "capture_path": "sources/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/roster.json",
+      "commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+      "git_blob_sha": "da798691e3188fe2a829ec63f16619b915e4409e",
+      "sha256": "ab510007f67999f77b6ccebfad549fee011d656f3c58853fbe7db41a7c7d473f",
+      "bytes": 7234,
+      "first_line": 1,
+      "last_line": 10,
+      "source_start_byte": 0,
+      "source_end_byte_exclusive": 461,
+      "excerpt_bytes": 461,
+      "excerpt_sha256": "9e4eaff637e8ab7a1c3c4131ab2400f0d152d498a7c6fa0288725d533837cf2c",
+      "output_excerpt_start_byte": 8332,
+      "output_excerpt_end_byte_exclusive": 8793
+    }
+  ],
+  "reused_received": [
+    {
+      "id": "R078",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/partition.json",
+      "first_line": 11,
+      "last_line": 51,
+      "source_start_byte": 480,
+      "source_end_byte_exclusive": 2044,
+      "excerpt_sha256": "cf3a1bb7cc656f9f124f923520212a7758f2983959251a0e7bf83a7a4eae6fff",
+      "review_start_byte": 112650,
+      "review_end_byte_exclusive": 114214,
+      "review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a"
+    },
+    {
+      "id": "R079",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/dependencies.json",
+      "first_line": 1,
+      "last_line": 9,
+      "source_start_byte": 0,
+      "source_end_byte_exclusive": 641,
+      "excerpt_sha256": "6026d8a3dbf6ae17e5e2d81b6b7d11d026a7864edb8f2b76606a941bc1c8e174",
+      "review_start_byte": 114650,
+      "review_end_byte_exclusive": 115291,
+      "review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a"
+    },
+    {
+      "id": "R080",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/dependencies.json",
+      "first_line": 55,
+      "last_line": 98,
+      "source_start_byte": 2115,
+      "source_end_byte_exclusive": 3466,
+      "excerpt_sha256": "0b4c3783474f8376f7f4280231814e2c69137dbc43ec282b9a801cb1d4aef9c8",
+      "review_start_byte": 115729,
+      "review_end_byte_exclusive": 117080,
+      "review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a"
+    },
+    {
+      "id": "R081",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/dependencies.json",
+      "first_line": 160,
+      "last_line": 202,
+      "source_start_byte": 4437,
+      "source_end_byte_exclusive": 6445,
+      "excerpt_sha256": "c207f5967d5b8f36290f031148d6486efa4a71f0b4856ea65915d5a298e74693",
+      "review_start_byte": 117522,
+      "review_end_byte_exclusive": 119530,
+      "review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a"
+    },
+    {
+      "id": "R082",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/roster.json",
+      "first_line": 69,
+      "last_line": 129,
+      "source_start_byte": 1423,
+      "source_end_byte_exclusive": 5220,
+      "excerpt_sha256": "2525420f903c88de98c93d070957c6e3bf3a863c257148dccc165bd0873d1de7",
+      "review_start_byte": 119964,
+      "review_end_byte_exclusive": 123761,
+      "review_sha256": "4ae27207ee80e2fbb338ac010171caae8587ff74fb4cae95ffaee07e7b01163a"
+    }
+  ],
+  "shared_reconciliation": {
+    "identity": {
+      "path": "shared-reconciliation-1.md",
+      "sha256": "75aa4f74aba2ddcecd58c52fd329481dffabc60271a57bf0bfbe358d0b903992",
+      "git_blob_sha": "9ec7c98ea98fbf497d49313cb267c394db238039",
+      "bytes": 121449
+    },
+    "supplement_start_byte": 9742,
+    "supplement_end_byte_exclusive": 131191,
+    "reuse_without_retransmission": true
+  },
+  "shared_erratum": {
+    "path": "shared-reconciliation-2.delta.md",
+    "bytes": 1966,
+    "sha256": "d2a6755fbb6f1aa41ab93be1ac42478de9bed062330489eff68ca34fb4b0b48a",
+    "git_blob_sha": "2c72c406a9c44cbd32e2563f15cc3f08d589a4ce"
+  },
+  "request_resolution": {
+    "J1/RE-UNI-01": [
+      "UNI-OBLIGATIONS"
+    ],
+    "J2/RE-NAV-01": [
+      "UNI-OBLIGATIONS"
+    ],
+    "J1/RE-UNI-02": [
+      "UNI-STATE-S1-01",
+      "UNI-STATE-S1-02",
+      "UNI-STATE-S1-03",
+      "UNI-STATE-S1-04",
+      "UNI-STATE-S1-05",
+      "UNI-STATE-ROSTER"
+    ]
+  },
+  "semantic_status": "PENDING_SAME_PAIR_REEVALUATION",
+  "product_execution": "NOT_RUN"
+}

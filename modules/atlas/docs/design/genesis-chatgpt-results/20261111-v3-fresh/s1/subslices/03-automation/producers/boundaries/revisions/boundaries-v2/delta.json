@@ -1,0 +1,83 @@
+{
+  "kind": "authorized_two_precision_deltas",
+  "artifact_key": "s1.core.boundaries",
+  "from": {
+    "sha256": "c557b33392cae8d0078a7da17f3421bb57ec2434f3bf5bba3b54f4172faeadae",
+    "git_blob_sha": "8232a8f75cc7b75614d2fd8873cc935edb84c538",
+    "bytes": 22938
+  },
+  "to": {
+    "sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+    "git_blob_sha": "6821d54aec4f8015dd00d634f632dc9960d1bd74",
+    "bytes": 23665
+  },
+  "operations": [
+    {
+      "id": "BND-PRECISION-01",
+      "authorization": "Principal authorized mineWith/comment attribution only; J1 RE-BND-02 clarification.",
+      "old": "O comentário de `mineWith` distingue o fluxo legado de tela da publicação Genesis.",
+      "new": "O comentário de `atlas.ts` 301–304 chama o fluxo de “Genesis mining from the screen” e descreve respostas passando pelo gate/admission do Atlas até o staging, sem promoção. Essa é a atribuição textual sustentada; “legado” era uma classificação interpretativa do corpo histórico, não uma distinção declarada por esse comentário.",
+      "old_sha256": "f3d1fb168545c93458ff8e022130197b4fa1cc3d4bd4cef270feae2935034efa",
+      "new_sha256": "c1a8bf26cffca753b5edeacda36e9afe3c0c46126019ed17dc383a6921558eb3",
+      "old_utf8_bytes": 85,
+      "new_utf8_bytes": 351,
+      "old_byte_offset": 5482,
+      "new_byte_offset": 5482
+    },
+    {
+      "id": "BND-PRECISION-02",
+      "authorization": "Principal authorized limitation of MoveSession preservation to path/index; J2 RE-BND-06 clarification.",
+      "old": "A sequência substantiva é capturar alterações de origem, aplicá-las no destino, publicar `Session.Moved` e depois descartar a parte correspondente da origem, preservando index e alterações não envolvidas conforme o caminho Git.",
+      "new": "A sequência substantiva é capturar alterações de origem, aplicá-las no destino, publicar `Session.Moved` e depois descartar alterações no diretório de origem da Session, com `index: \"preserve\"` e `untracked: \"remove\"`. O código do teste de sessão aninhada prepara alterações em `packages/` e contém asserções de preservação do arquivo staged nesse path e de arquivos alterados na raiz, fora de `packages/`. Esse caso preparado não exercita alterações concorrentes posteriores à captura dentro do mesmo diretório. A chamada `discard` recebe diretório e opções, sem receber o patch capturado. O trecho literal do teste está em `suplemento-boundaries-1.md`, RE-BND-06/BT01.",
+      "old_sha256": "c0a59a0adbd280ea0d7941f7a608f9f0d16a35425b60d83af828a02f2ca62318",
+      "new_sha256": "af84248cc9f7dd693b0fa7e3ad4b23a0ed61dd5f429c5027ee89d43d6a9489e2",
+      "old_utf8_bytes": 235,
+      "new_utf8_bytes": 696,
+      "old_byte_offset": 19435,
+      "new_byte_offset": 19701
+    }
+  ],
+  "other_body_changes": false,
+  "support_and_proposal_unchanged": true,
+  "v1_preserved": [
+    {
+      "original_path": "bodies/boundaries.md",
+      "preserved_path": "revisions/boundaries-v1/bodies/boundaries.md",
+      "sha256": "c557b33392cae8d0078a7da17f3421bb57ec2434f3bf5bba3b54f4172faeadae",
+      "git_blob_sha": "8232a8f75cc7b75614d2fd8873cc935edb84c538",
+      "bytes": 22938
+    },
+    {
+      "original_path": "recipe.json",
+      "preserved_path": "revisions/boundaries-v1/recipe.json",
+      "sha256": "b55bbbda05c426500409dfb49610dc2f83e520dd6dd37721ec1cb93507687a51",
+      "git_blob_sha": "338d6dfd78dbf80bb3f46d4685a12146d794f500",
+      "bytes": 15087
+    },
+    {
+      "original_path": "response.md",
+      "preserved_path": "revisions/boundaries-v1/response.md",
+      "sha256": "8b4c8f014f5e4b06ee996b1015af2e1c14ef4207eb1ab965f43944793f4e9708",
+      "git_blob_sha": "14db178c619034976d361b8d58c03a3b1a140750",
+      "bytes": 5105
+    },
+    {
+      "source_path": "relay/boundaries/j1-response.md",
+      "local_path": "revisions/boundaries-v2/inputs/j1-response.md",
+      "sha256": "ccad14b91237930376d42ebb54d39bdd3f35e3b7587d5cb8935bc121202ae376",
+      "git_blob_sha": "0b120a7769854058fb6da37770f81ec7d2c55d77",
+      "bytes": 8320,
+      "role": "public_evidence_request_original_not_new_acceptance"
+    },
+    {
+      "source_path": "relay/boundaries/j2-response.md",
+      "local_path": "revisions/boundaries-v2/inputs/j2-response.md",
+      "sha256": "677ce359667553b2e3ab5cc3855897ca003db08ba1ded0e1004b96653c726b0a",
+      "git_blob_sha": "7acc3d649d4194ef350d25fbfc3fd35cbfc2d35a",
+      "bytes": 6656,
+      "role": "public_evidence_request_original_not_new_acceptance"
+    }
+  ],
+  "semantic_acceptance": "PENDING_SAME_JUDGE_PAIR_REEVALUATION",
+  "runtime": "NOT_RUN"
+}

@@ -1,0 +1,162 @@
+{
+  "kind": "native_production_recipe_revision",
+  "version": 2,
+  "artifact_key": "s1.subslice03.support",
+  "layer": "L1",
+  "need": "entry/support",
+  "producer": "/root/boundaries_l1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "kit_revision": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+  "base_recipe": {
+    "path": "revisions/support-v1/recipe.json",
+    "bytes": 15087,
+    "sha256": "b55bbbda05c426500409dfb49610dc2f83e520dd6dd37721ec1cb93507687a51",
+    "git_blob_sha": "338d6dfd78dbf80bb3f46d4685a12146d794f500"
+  },
+  "base_body": {
+    "path": "revisions/support-v1/bodies/support.md",
+    "bytes": 22388,
+    "sha256": "3a4ef5ee6925eb3c80404181f00a0e4e012750459f2dbb1ab11076b69449d684",
+    "git_blob_sha": "d21c3271726295f09d297995688678dde9f2dd2a"
+  },
+  "body": {
+    "path": "bodies/support.md",
+    "bytes": 23025,
+    "sha256": "498a0454418a14977b9b2f4c4f515711d941b6d4bbece13f1baaa8feaa76d378",
+    "git_blob_sha": "facd86eb03aa44ba722a9dda77c4d820ad28479c"
+  },
+  "authorized_operations": [
+    "SUP-F01/D-SUP-01",
+    "SUP-F03",
+    "SUP-F02"
+  ],
+  "request": {
+    "path": "revisions/support-v2/request.txt",
+    "bytes": 3977,
+    "sha256": "100b2d2c073d882df7b0be6094a0b6892a4326b82479e3a4a42a5f1e4391618a",
+    "git_blob_sha": "a762d0de858f63572cd60979bfbed7eae9bba0c5"
+  },
+  "judge_public_requests": [
+    {
+      "path": "revisions/support-v2/inputs/j1-response.md",
+      "bytes": 7566,
+      "sha256": "79ee9840a8f5d67dab73a00134cbf7be26af51792afbe62dbf679edbfe865246",
+      "git_blob_sha": "6c43e1d96ba1467e7264bcee63dc029dbd4f02c8"
+    },
+    {
+      "path": "revisions/support-v2/inputs/j2-response.md",
+      "bytes": 6396,
+      "sha256": "46e7414c163b985953112a98ee5a6650a64b66b6d5c4572521c84d4f8c150251",
+      "git_blob_sha": "6b3fa80cd8416521e90101cc196ee7df5bc11156"
+    }
+  ],
+  "effective_inputs": {
+    "path": "effective-inputs.json",
+    "bytes": 22879,
+    "sha256": "6ecae50d90933e555a874b209c6553750d85192df44c36df2418b3ff696890fc",
+    "git_blob_sha": "2d099dcbef9b537a5e22a634642c1317bd0464f4"
+  },
+  "effective_inputs_extension": {
+    "path": "effective-inputs.support-v2.json",
+    "bytes": 4467,
+    "sha256": "4c1de7eb42f336a328efeb1d5b647eb5d0d9c1e0048e4d6a5551902c0775f605",
+    "git_blob_sha": "e3cc8efbd23956b78a3ab9426689d1f2adc4ee74"
+  },
+  "evidence": {
+    "path": "suplemento-support-1.md",
+    "bytes": 366600,
+    "sha256": "7069f8fb20eb0c08e0d7e5438d0c13c5a776e9982ca88cf14a02b7d397c075b5",
+    "git_blob_sha": "27721bc6e28b7d5288dbd876b9e3540df66279f1"
+  },
+  "evidence_index": {
+    "path": "suplemento-support-1.index.json",
+    "bytes": 242045,
+    "sha256": "af534ade10b8f7772640f16f9c0f22100ecf591a7a064009753ed60c377a9d57",
+    "git_blob_sha": "01b0e09cf784689cb939756e9134d9f8d97557e5"
+  },
+  "shared_reconciliation": {
+    "identity": {
+      "path": "shared-reconciliation-1.md",
+      "sha256": "75aa4f74aba2ddcecd58c52fd329481dffabc60271a57bf0bfbe358d0b903992",
+      "git_blob_sha": "9ec7c98ea98fbf497d49313cb267c394db238039",
+      "bytes": 121449
+    },
+    "supplement_start_byte": 9742,
+    "supplement_end_byte_exclusive": 131191,
+    "reuse_without_retransmission": true
+  },
+  "coverage_v1": {
+    "path": "coverage.jsonl",
+    "bytes": 157032,
+    "sha256": "d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9",
+    "git_blob_sha": "c95f8432d35a98d5a84ca8946b623a1eb5582210"
+  },
+  "coverage_v2": {
+    "path": "coverage-v2.jsonl",
+    "bytes": 157240,
+    "sha256": "d1ed0705d256b1578a0debce284c3a2c4dd3bd2e00bf9f8f60e047b097d5bf74",
+    "git_blob_sha": "c656572855761c737fdc2fcdc7bcd9501c6607e2"
+  },
+  "coverage_delta": {
+    "path": "coverage-v2.delta.json",
+    "bytes": 7632,
+    "sha256": "eb58392582094d7472c7c2f6ce932819acd2659207c9ad113644e32a90f37ba7",
+    "git_blob_sha": "63542ecafa744a5e994b88c575b14b844f017768"
+  },
+  "shared_erratum": {
+    "path": "shared-reconciliation-2.delta.md",
+    "bytes": 1966,
+    "sha256": "d2a6755fbb6f1aa41ab93be1ac42478de9bed062330489eff68ca34fb4b0b48a",
+    "git_blob_sha": "2c72c406a9c44cbd32e2563f15cc3f08d589a4ce"
+  },
+  "delta": {
+    "path": "revisions/support-v2/delta.json",
+    "bytes": 3126,
+    "sha256": "e3d091ed5cd447e4beb56390016b6b1d92f61feacb7399387f0e19ea1f6c1f35",
+    "git_blob_sha": "2cb3d2ff66d44eebb737a8cf1d5405a000607137"
+  },
+  "delta_patch": {
+    "path": "revisions/support-v2/delta.patch",
+    "bytes": 6257,
+    "sha256": "6fc67d97b89012db1de06fc051327cebc59e66684e668965361cd0d827e9c3c4",
+    "git_blob_sha": "7905149c109b956535956449761860d0f338f704"
+  },
+  "response": {
+    "path": "revisions/support-v2/response.md",
+    "bytes": 4824,
+    "sha256": "8f03cb90cb849914b23034d0ab4d64c5e15749151dfeb368fbc8e403aab5ffa4",
+    "git_blob_sha": "8693687a0febd35be386678e5228ac682361512c"
+  },
+  "verification": {
+    "path": "revisions/support-v2/supplement-verification.json",
+    "bytes": 804,
+    "sha256": "f4ccaba2abd2bc5f84754ea2e2476362d4f5c4ba802dd2f8a5eb81aa0f13916e",
+    "git_blob_sha": "75438d48711b11545a75eeb2ea681dbf341363ef"
+  },
+  "assembly_records": [
+    {
+      "path": "records/prepare_support_v2.py",
+      "bytes": 7467,
+      "sha256": "ad9b89bd54d0ed46eda6643d50844c230a645f21deb9fdc42af271352a73a193",
+      "git_blob_sha": "245d0ba5bd2391a281c8a44e7054c260124e7ab0"
+    },
+    {
+      "path": "records/assemble_support_supplement_1.py",
+      "bytes": 21988,
+      "sha256": "dacb8f60c1c2e2a2e1d3d579d46d437e3863037551f4673c3ec135a72370a19b",
+      "git_blob_sha": "dab26ff84a1daf16199bcbba08fa79098a300bb5"
+    },
+    {
+      "path": "records/finalize_support_v2.py",
+      "bytes": 16983,
+      "sha256": "f56326423fa4b2965b0792c54e355c9280102c8e18f329e5e30e59f8e4accdbf",
+      "git_blob_sha": "fed7bef4124d5791aac9b39dac0930876d2b23d5"
+    }
+  ],
+  "preservation_notice": "All original v1 records remain byte-identical. Only three body substitutions and two coverage reasons changed in separate v2 records. Original shared reconciliation remains frozen. No acceptance transferred.",
+  "test_runtime": "NOT_RUN",
+  "semantic_status": "PENDING_SAME_PAIR_REEVALUATION",
+  "usage": "UNKNOWN"
+}

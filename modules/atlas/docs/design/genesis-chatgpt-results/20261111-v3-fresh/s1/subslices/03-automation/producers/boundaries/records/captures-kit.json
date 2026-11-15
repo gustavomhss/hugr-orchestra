@@ -1,0 +1,98 @@
+[
+  {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/partition.json",
+    "commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+    "git_blob_sha": "b834eb19daea27f173afb1dd011a19f77b491f24",
+    "sha256": "959a3c024337c8082625082cba4fad6ceea3243690fb0850634546dc33f2684c",
+    "byte_length": 3929,
+    "capture_path": "sources/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/partition.json",
+    "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/70234d541a9a3539935ef16f19e33c8f2d5f30ec/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/partition.json",
+    "method": "GitHub connector fetch_file encoding=base64",
+    "git_blob_verified": true,
+    "role": "cross-kit navigation authority"
+  },
+  {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/dependencies.json",
+    "commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+    "git_blob_sha": "a65c72a33599afec662649c8ebf86808c99e320b",
+    "sha256": "83dfbbe0a1f585dc548643dc04f5f85eb2d4c1531d176a068582829e80375ee9",
+    "byte_length": 6445,
+    "capture_path": "sources/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/dependencies.json",
+    "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/70234d541a9a3539935ef16f19e33c8f2d5f30ec/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/dependencies.json",
+    "method": "GitHub connector fetch_file encoding=base64",
+    "git_blob_verified": true,
+    "role": "cross-kit navigation authority"
+  },
+  {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/roster.json",
+    "commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+    "git_blob_sha": "da798691e3188fe2a829ec63f16619b915e4409e",
+    "sha256": "ab510007f67999f77b6ccebfad549fee011d656f3c58853fbe7db41a7c7d473f",
+    "byte_length": 7234,
+    "capture_path": "sources/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/roster.json",
+    "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/70234d541a9a3539935ef16f19e33c8f2d5f30ec/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/roster.json",
+    "method": "GitHub connector fetch_file encoding=base64",
+    "git_blob_verified": true,
+    "role": "cross-kit navigation authority"
+  },
+  {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/01-sessions/mission.json",
+    "commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+    "git_blob_sha": "309dbf461fc201034fbd39c353c6973d3844e555",
+    "sha256": "2d9a28fd086955ada4753b6c42452cdaac9fb0cc31c4cf78e3de2b09d81c7808",
+    "byte_length": 6329,
+    "capture_path": "sources/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/01-sessions/mission.json",
+    "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/70234d541a9a3539935ef16f19e33c8f2d5f30ec/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/01-sessions/mission.json",
+    "method": "GitHub connector fetch_file encoding=base64",
+    "git_blob_verified": true,
+    "role": "cross-kit navigation authority"
+  },
+  {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/02-tools/mission.json",
+    "commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+    "git_blob_sha": "3e217269094ff32aa8954245acc5900652867664",
+    "sha256": "091053c7a0b57079e6c884bd7faeff0dcc1652271d17f8d44a455582090b6f35",
+    "byte_length": 5784,
+    "capture_path": "sources/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/02-tools/mission.json",
+    "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/70234d541a9a3539935ef16f19e33c8f2d5f30ec/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/02-tools/mission.json",
+    "method": "GitHub connector fetch_file encoding=base64",
+    "git_blob_verified": true,
+    "role": "cross-kit navigation authority"
+  },
+  {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/03-automation/mission.json",
+    "commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+    "git_blob_sha": "48fa8da131e97c50110ee76e41e79283cd9a0ac4",
+    "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+    "byte_length": 6006,
+    "capture_path": "sources/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/03-automation/mission.json",
+    "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/70234d541a9a3539935ef16f19e33c8f2d5f30ec/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/03-automation/mission.json",
+    "method": "GitHub connector fetch_file encoding=base64",
+    "git_blob_verified": true,
+    "role": "cross-kit navigation authority"
+  },
+  {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/04-api/mission.json",
+    "commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+    "git_blob_sha": "dc0df0850a66adfe154c390403fb8e0a2ff4bdf6",
+    "sha256": "e845f02308a63119c8bb69a339de9515491d7a0d404a116f1806b880e90166c7",
+    "byte_length": 6115,
+    "capture_path": "sources/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/04-api/mission.json",
+    "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/70234d541a9a3539935ef16f19e33c8f2d5f30ec/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/04-api/mission.json",
+    "method": "GitHub connector fetch_file encoding=base64",
+    "git_blob_verified": true,
+    "role": "cross-kit navigation authority"
+  },
+  {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/05-libraries/mission.json",
+    "commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+    "git_blob_sha": "2c8aac8db4960e164d9032bebf77db0f53fa9210",
+    "sha256": "eb81333020e43d2c9bbea5b07e20e5d20ca5e897e15737a18863ecbfd7dfeb64",
+    "byte_length": 6361,
+    "capture_path": "sources/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/05-libraries/mission.json",
+    "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/70234d541a9a3539935ef16f19e33c8f2d5f30ec/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/05-libraries/mission.json",
+    "method": "GitHub connector fetch_file encoding=base64",
+    "git_blob_verified": true,
+    "role": "cross-kit navigation authority"
+  }
+]

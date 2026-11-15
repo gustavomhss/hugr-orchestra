@@ -1,0 +1,17 @@
+{
+  "schema": "s1-03-root-boundaries-supplement-verification/v1",
+  "source_literal_entries": 107,
+  "reused_prior_intervals": 41,
+  "coverage_population": 128,
+  "support_projection_rows_verified": 104,
+  "boundary_test_source_count": 10,
+  "authorized_substitutions": 2,
+  "before_sha256": "c557b33392cae8d0078a7da17f3421bb57ec2434f3bf5bba3b54f4172faeadae",
+  "after_sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+  "all_remaining_body_bytes_identical": true,
+  "supplement_sha256": "665c05eff1fd9db5cc1a75636fc883adf8c43cac6f8069dfe3fc5010225ef0b1",
+  "shared_reconciliation_sha256": "75aa4f74aba2ddcecd58c52fd329481dffabc60271a57bf0bfbe358d0b903992",
+  "status": "PASS_LITERAL_IDENTITY_AND_DECLARED_DELTA",
+  "semantic_acceptance": "PENDING_SAME_PAIR",
+  "tests": "NOT_RUN"
+}
