@@ -1,0 +1,3 @@
+Não preservei strings integrais originais desses sete arquivos. As chaves `packageProjectionInitial` e `packageProjectionDetails` contêm apenas metadados, hashes e extrações parciais já parseadas.
+
+Nem `native-package.json` nem `final-config-native-inputs-v1.json` ficaram preservados integralmente em bytes/texto original, inclusive nos resultados públicos retornados. Não disponho de uma captura íntegra recuperável desses arquivos.

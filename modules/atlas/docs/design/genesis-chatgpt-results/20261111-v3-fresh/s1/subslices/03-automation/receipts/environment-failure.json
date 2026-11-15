@@ -1,0 +1,23 @@
+{
+  "reported_at_utc": "2026-11-15T11:39:01.194Z",
+  "environment_id": "ccarenv_b64_Y2NhcmVudl82YTlmMTA3MGY0MTg4MTkxYWQ3OTc4MjdiYTdmZTY3MA",
+  "host_reported_status": "unavailable",
+  "pending_exec_cell": "477",
+  "pending_actions": [
+    "apply_patch of scripts/finalize-work-v1.py",
+    "dependent python scripts/finalize-work-v1.py; not observed completed"
+  ],
+  "skill_read_error": "e6/skills/runtime: skill package is not available",
+  "alternate_device_route": "No online Desktop Commander device",
+  "last_remote_verified_head": "8873e22afcecddf58688a92e7ff9cb208dc4e2fd",
+  "status": "RECOVERY_CAPABILITY_CHECK_IN_PROGRESS",
+  "do_not_infer_pending_mutation_success": true,
+  "pending_exec_cell_state": "Terminated by functions.wait after no result; completion of local patch/write not observed",
+  "narrow_read": {
+    "actual_call": "tools.exec_command",
+    "operation": "read stat of exact known native-package.json",
+    "result": "No usable execution environment is available. Wait for an environment to become available before using this tool.",
+    "is_error": true,
+    "observed_at_utc": "2026-11-15T11:40:41.022Z"
+  }
+}

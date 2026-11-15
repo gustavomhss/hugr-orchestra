@@ -1,0 +1,230 @@
+Retransmissão reservada da principal ao mesmo juiz. Este é o oracle integral congelado antes da produção. Não use ferramentas, não compartilhe com autores, consumidores ou courier e não emita julgamento ainda. Confirme apenas a recepção integral e aguarde o pacote final. A identidade declarada abaixo é do arquivo original, não prova independente de wire.
+BEGIN FROZEN ORACLE — 10229 bytes; SHA256 f1cc16fcd73e17fa1aff015e30e7facacaabf0dc2b195c0603f9f30a1f875ccb
+{
+  "schema": "genesis-s1-03-oracle/v1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "frozen_before_production": true,
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "scope": "S1-03 only",
+  "classification": "reserved-evaluator-only",
+  "criteria": [
+    "GO-A1",
+    "GO-A2",
+    "GO-A3",
+    "GO-A4",
+    "GO-A5",
+    "GO-A6",
+    "GO-A7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I3",
+    "GO-I4",
+    "GO-I5",
+    "GO-I6",
+    "GO-I7",
+    "GO-I8",
+    "AC-01",
+    "AC-02",
+    "AC-03",
+    "AC-04",
+    "AC-05",
+    "AC-06",
+    "AC-07",
+    "AC-08",
+    "AC-09",
+    "AC-10",
+    "CC-1",
+    "CC-2",
+    "CC-3",
+    "CC-4",
+    "CC-5",
+    "CC-6",
+    "CC-7",
+    "SC-1",
+    "SC-2",
+    "SC-3",
+    "SC-4",
+    "SC-5",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-4",
+    "QS-5",
+    "QS-6",
+    "DOD-1",
+    "DOD-2",
+    "DOD-3",
+    "DOD-4",
+    "DOD-5",
+    "DOD-6",
+    "DOD-7"
+  ],
+  "fixed_cases": [
+    {
+      "id": "A-PERMITTED",
+      "kind": "permitted_change",
+      "question": "Um fluxo precisa despachar um workflow GitHub ativo em uma ref diferente da default branch com input environment. Quais precondições locais e provas de resultado a alteração deve preservar?",
+      "expected": [
+        "Separar elegibilidade na default branch da fonte executada na ref selecionada.",
+        "Confirmar binding, conta/projeto, workflow/path/ref, definitions/values dos inputs e identidade nativa do environment.",
+        "204 é acknowledgement unattributed; não inferir run por proximidade ou sucesso de execução. 200 exige native acknowledgement completo; confirmação é identidade observada, não conclusão do workflow."
+      ],
+      "critical_errors": [
+        "dispatch 204 prova execução concluída",
+        "dispensar fonte default ou selected ref",
+        "atribuir run pela proximidade temporal"
+      ],
+      "source_paths": [
+        "packages/core/src/actions/github/commands/workflow.ts",
+        "packages/core/src/actions/readback.ts"
+      ]
+    },
+    {
+      "id": "A-VIOLATION",
+      "kind": "contract_violation",
+      "question": "Após timeout de um write aceito na admissão, um operador quer usar polling para converter outcome_unknown em accepted e reenviar o write se não achar run. O procedimento é válido?",
+      "expected": [
+        "Recusar reenviar por desconhecimento; reconcile é observação sem perform.",
+        "Unattributed ou ausência de runID permanece pending e não adivinha run.",
+        "Readback não converte unknown em accepted; só resultado nativo atribuído compatível pode provar confirmed/rejected."
+      ],
+      "critical_errors": [
+        "reconcile reexecuta write",
+        "unknown equivale a rejeitado",
+        "run vizinho satisfaz identidade"
+      ],
+      "source_paths": [
+        "packages/core/src/actions/operations.ts",
+        "packages/core/src/actions/operations/readback.ts",
+        "packages/core/src/actions/readback.ts"
+      ]
+    },
+    {
+      "id": "A-IMPACT",
+      "kind": "impact",
+      "question": "Mudou a regra que prova o conteúdo escrito por Actions Authoring. Quais conhecimentos/consumidores precisam de reavaliação e quais podem permanecer independentes?",
+      "expected": [
+        "Revisar prova de path/ref/blob/text/new commit/account e semântica antes/depois do envio no artefato automation.",
+        "Propagar ao entendimento/impacto/manutenção que consome esse resultado e aos casos authoring/readback; não somente trocar hash.",
+        "Preservar research/boundaries quando seus inputs/receitas/resultados não mudaram; navegação não é build dependency.",
+        "Se bytes do resultado/autoridade/gaps mudarem, dependentes são afetados; receipt-only/unchanged-result é disposição distinta, conforme controles S4."
+      ],
+      "critical_errors": [
+        "todo grafo precisa ser reconstruído sempre",
+        "apenas navegar invalida artefatos",
+        "readback falho após envio prova não envio"
+      ],
+      "source_paths": [
+        "packages/core/src/actions/authoring/remote.ts"
+      ],
+      "maintenance": true
+    },
+    {
+      "id": "S-FAILURE",
+      "kind": "operational_failure",
+      "question": "Um task perdeu a autorização depois da última verificação de claim e retornou started; a UI quer marcá-lo como concluído e garantir que nunca excedeu repeat limit. Como diagnosticar e responder?",
+      "expected": [
+        "started é admissão do prompt, não conclusão da sessão.",
+        "Preservar race entre última verificação e admissão; pode haver um run além do repeat limit.",
+        "Examinar claim/token e SessionInput; stale lease 120s distingue unadmitted void/replan de admitted exact-retry/reconcile+wake.",
+        "Não presumir recuperação distribuída nem retentar trabalho de provider no escuro."
+      ],
+      "critical_errors": [
+        "started comprova conclusão",
+        "revogação é atomicamente protegida até prompt",
+        "lease de dispatch é lock do runner distribuído"
+      ],
+      "source_paths": [
+        "packages/core/src/scheduled-task.ts"
+      ]
+    },
+    {
+      "id": "R-FAILURE",
+      "kind": "operational_failure",
+      "question": "O warm de research terminou sem shards e um toolkit tem marker local. Isso basta para declarar indexação pronta e confiar em todo conteúdo do ledger?",
+      "expected": [
+        "Default adapter não planeja shards e build é unavailable; planning error também pode virar [] em warm.",
+        "Readiness exige arquivos/executáveis, dependências/runtime/shim e host/platform suportado; marker sozinho é insuficiente.",
+        "Ledger prova identidade/scope/input hash dos registros, não verdade da fonte; status best-effort pode falhar.",
+        "Não declarar instalação, índice, engine/plataforma qualificados sem execução real."
+      ],
+      "critical_errors": [
+        "zero shard prova cobertura",
+        "marker prova pronto",
+        "ledger torna fonte autoridade"
+      ],
+      "source_paths": [
+        "packages/core/src/research-toolkit/index.ts",
+        "packages/core/src/backend-toolkit/index.ts",
+        "packages/core/src/research/ledger.ts"
+      ]
+    },
+    {
+      "id": "B-ABSTAIN",
+      "kind": "abstention",
+      "question": "Só com esta seleção Core, é possível garantir recuperação distribuída de Relay, publicação Atlas da união ou retrieval vetorial em produção?",
+      "expected": [
+        "Abster-se dessas garantias; distinguir adaptador Core, engines S3/S4 e provas de runtime específicas.",
+        "MoveSession não é transação atômica de filesystem/evento e não coordena runner ativo na função observada.",
+        "RAG Core sql não possui embedding/vector table e schema não prova engine em execução.",
+        "Encaminhar donos/contratos externos exatos sem transformar navegação em aceite deles."
+      ],
+      "critical_errors": [
+        "atestar capacidades apenas pelo adaptador/schema",
+        "inferir runtime/CI externo como prova local"
+      ],
+      "source_paths": [
+        "packages/core/src/atlas.ts",
+        "packages/core/src/relay.ts",
+        "packages/core/src/control-plane/move-session.ts",
+        "packages/core/src/rag-studio/sql.ts"
+      ]
+    },
+    {
+      "id": "ENTRY-NAV",
+      "kind": "navigation_direct_intermediate",
+      "question": "Onde começar uma manutenção de automação, como aprofundar até o contrato de provider e como localizar os donos das outras partes do Core?",
+      "expected": [
+        "Entrada local usa chave própria e preserva s1.core.entry histórica.",
+        "Consulta rasa fornece triagem; aprofundamento alcança L1/L2/L3 necessários com identidades exatas.",
+        "A navegação global é proposta para coordenação e não representa união aprovada.",
+        "104 fontes de suporte/entrada não são descartadas nem vendidas como implementação exhaustivamente interpretada."
+      ],
+      "critical_errors": [
+        "substituir entrada global como se união estivesse aceita",
+        "invocar aceites externos sem referência",
+        "tratar censo como entendimento"
+      ]
+    }
+  ],
+  "maintenance_cases": [
+    {
+      "id": "M-ACTIONS",
+      "change": "Mutation isolated of Actions authoring/readback contract source bytes",
+      "expected_affected": "automation L1 and declared downstream build closure; independent research/boundaries preserved; index navigation alone does not make build edges",
+      "required": "actual observe/plan/rebuild/read path; source drift HOLD before new native interpretation and two-review rebinding; unchanged inputs/recipe reuse via compatible common evidence plus local case"
+    },
+    {
+      "id": "M-SCHEDULE-RECIPE",
+      "change": "Mutation isolated of scheduling contract or toolkit recipe bytes",
+      "expected_affected": "target L1/L2 and declared descendants; unrelated family identity remains unchanged; same prose with changed recipe/input binds a new receipt and cannot serve stale original",
+      "required": "exact changed source/recipe and observed sets, preserved independent artifacts, refusal then valid rebuild/rebinding/read; classify missing runtime execution as open, not passed"
+    }
+  ],
+  "consumer_limits": {
+    "access": "ownership.index/read only through actual Atlas or faithfully recorded bridge",
+    "max_index_calls_per_case": 2,
+    "max_read_calls_per_case": 5,
+    "max_returned_utf8_bytes_per_case": 60000,
+    "source_access": false,
+    "oracle_access": false,
+    "required_direct_use": "Every necessary L1/L2/L3 intermediate must be explicitly read in at least one case; no claim of product runtime qualification"
+  },
+  "known_unknowns": [
+    "No external provider workflow execution in this mission.",
+    "No assertion of engine install/platform coverage from source inspection.",
+    "Cross-scope/global composition belongs to S1_COORDINATION/ROOT; local Atlas use remains mandatory."
+  ],
+  "source_support_basis": "Pinned historical bodies plus literal decisive Actions leaf reads captured before first producer; all other source inspection by producers must report conflicts rather than fit these expectations."
+}
+END FROZEN ORACLE

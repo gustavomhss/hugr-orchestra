@@ -1,7 +1,7 @@
 {
-  "schema": "s1-03-criterion-disposition/v1",
+  "schema": "s1-03-criterion-disposition/v3",
   "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
-  "state": "IN_PROGRESS",
+  "state": "INCOMPLETE_BLOCKED",
   "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
   "normative_source": {
     "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
@@ -9,871 +9,839 @@
     "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
   },
   "criterion_count": 50,
-  "status_rule": "PASS requires criterion-specific evidence. Missing local capability is HOLD, never NOT_APPLICABLE. Suggestions do not enlarge the frozen bar.",
+  "decision_basis": "Principal local dispositions for final independent assessment by the same two native judges. Actual final original opinions are referenced by handoff; no future review is predeclared.",
+  "status_rule": "PASS is criterion-specific local content/process evidence, never overall mission acceptance. HOLD is a local unmet obligation. GLOBAL_ONLY applies only to global human acceptance/landing/production composition.",
+  "supersedes_published_matrix": {
+    "path": "history/criteria-matrix-before-environment-finalization.json",
+    "sha256": "5b51ea79bca38d76b69f6523491a4490f843f9ea91bdece9b7827cd96705875d"
+  },
+  "unpublished_prior_matrix": "The pre-loss v2 is unavailable and identified in environment-loss-custody.json; this is a new disposition, not a reconstruction of its bytes.",
   "rows": [
     {
       "id": "GO-A1",
       "normative_source_line": 52,
       "normative_text": "| GO-A1 | The product is transferable ownership: purpose, behavior, constraints, decisions, impact and safe maintenance; claim count is not delivery. |",
-      "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "semantics",
+      "local_status": "PASS",
       "evidence": [
-        "receipts/source-verification.json",
-        "receipts/root-supplement-literal-verification.json",
-        "artifact-plan.json",
-        "judgments/l1"
+        "semantic-acceptances.json",
+        "native-package.json",
+        "receipts/package-exact-recovery.json"
       ],
-      "disposition": "Final acceptance by the same two independent judges, correction closure and required L1–L4 artifacts remain open. Literal-source verification is custody evidence only.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Os doze corpos atuais sustentam propósito, comportamento, contratos, decisões, impacto e manutenção segundo os dois aceites integrais. PASS local de conteúdo; transferência por consumidor Atlas permanece aberta em AC-02.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "GO-A2",
       "normative_source_line": 53,
       "normative_text": "| GO-A2 | Construction is cumulative; intermediate knowledge is persistent and independently useful, not disposable model scratch. |",
-      "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "semantics",
+      "local_status": "PASS",
       "evidence": [
-        "receipts/source-verification.json",
-        "receipts/root-supplement-literal-verification.json",
-        "artifact-plan.json",
-        "judgments/l1"
+        "semantic-acceptances.json",
+        "native-package.json",
+        "receipts/package-exact-recovery.json"
       ],
-      "disposition": "Final acceptance by the same two independent judges, correction closure and required L1–L4 artifacts remain open. Literal-source verification is custody evidence only.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Quatro L1, três L2, dois L3 e três L4 persistem com inputs e receitas exatos. Autores derivados consumiram predecessores aceitos; não são scratch descartável. A disponibilidade por reader real continua aberta em CC-2.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "GO-A3",
       "normative_source_line": 54,
       "normative_text": "| GO-A3 | Consumption starts small: skills prescribe work and when/how to consult a scoped index; depth is pulled recursively as needed. Skills are not link inventories. |",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "semantics",
       "evidence": [
-        "receipts/source-verification.json",
-        "receipts/root-supplement-literal-verification.json",
-        "artifact-plan.json",
-        "judgments/l1"
+        "semantic-acceptances.json",
+        "native-package.json",
+        "receipts/package-exact-recovery.json",
+        "assembly/consumer-summary-run/REPORT.md",
+        "assembly/consumer-summary-run/response.md",
+        "receipts/environment-loss-custody.json"
       ],
-      "disposition": "Final acceptance by the same two independent judges, correction closure and required L1–L4 artifacts remain open. Literal-source verification is custody evidence only.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Entrada e procedimentos prescrevem consultas progressivas, mas os leitores reais não receberam conteúdo. As quotas foram respeitadas; o caminho raso/profundo não foi demonstrado.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "GO-A4",
       "normative_source_line": 55,
       "normative_text": "| GO-A4 | Code/product changes enter their affected knowledge surfaces; unchanged validated knowledge is reused. Initial construction and maintenance use the same dependency/validation semantics. |",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "semantics",
       "evidence": [
-        "receipts/source-verification.json",
-        "receipts/root-supplement-literal-verification.json",
-        "artifact-plan.json",
-        "judgments/l1"
+        "maintenance/mutation-plan.json",
+        "maintenance/final-disposition-after-environment.json",
+        "receipts/native-prepare-final.json",
+        "receipts/final-operational-disposition-after-environment.json"
       ],
-      "disposition": "Final acceptance by the same two independent judges, correction closure and required L1–L4 artifacts remain open. Literal-source verification is custody evidence only.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Dependências e procedimentos estão definidos, mas os dois casos próprios não executaram observe/plan/rebuild/read. Reúso histórico compatível não substitui manutenção local.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "GO-A5",
       "normative_source_line": 56,
       "normative_text": "| GO-A5 | Knowledge and source evolve together through Git, governed publication and CI consistency controls. Freshness, semantic validity and authority are different properties. |",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "semantics",
       "evidence": [
-        "receipts/source-verification.json",
-        "receipts/root-supplement-literal-verification.json",
-        "artifact-plan.json",
-        "judgments/l1"
+        "receipts/native-prepare-final.json",
+        "receipts/final-operational-disposition-after-environment.json",
+        "receipts/final-capability-refresh-20261115.json",
+        "receipts/guard-materialization/binary-transport-blocker.json"
       ],
-      "disposition": "Final acceptance by the same two independent judges, correction closure and required L1–L4 artifacts remain open. Literal-source verification is custody evidence only.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Inputs e conhecimento foram versionados com payload/selo e readback. Faltam ativação governada, leituras aceitas e gates próprios; Git, semântica, frescor e autoridade não foram confundidos.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "GO-A6",
       "normative_source_line": 57,
       "normative_text": "| GO-A6 | Mechanize what tools can determine; pay models for interpretation/composition that tools cannot supply. Bound execution before starting it and preserve useful completed work. |",
-      "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "semantics",
+      "local_status": "PASS",
       "evidence": [
-        "receipts/source-verification.json",
-        "receipts/root-supplement-literal-verification.json",
-        "artifact-plan.json",
-        "judgments/l1"
+        "semantic-acceptances.json",
+        "native-package.json",
+        "receipts/package-exact-recovery.json",
+        "economy/final-visible-accounting.json"
       ],
-      "disposition": "Final acceptance by the same two independent judges, correction closure and required L1–L4 artifacts remain open. Literal-source verification is custody evidence only.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Inventário, identidade, montagem e recuperação foram mecanizados; interpretação ficou com autores/juízes. Plano finito e quotas por consumidor precederam o uso. Este PASS de disciplina local não certifica teto financeiro ou total físico.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "GO-A7",
       "normative_source_line": 58,
       "normative_text": "| GO-A7 | Extend the existing Atlas with the minimum justified mechanisms; no parallel store, governance system or general-purpose orchestration framework by default. |",
-      "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "semantics",
+      "local_status": "PASS",
       "evidence": [
-        "receipts/source-verification.json",
-        "receipts/root-supplement-literal-verification.json",
-        "artifact-plan.json",
-        "judgments/l1"
+        "receipts/native-prepare-final.json",
+        "receipts/final-operational-disposition-after-environment.json"
       ],
-      "disposition": "Final acceptance by the same two independent judges, correction closure and required L1–L4 artifacts remain open. Literal-source verification is custody evidence only.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Usou-se Atlas e sua CLI publicada, com ponte fiel. Não foi criado store, motor, governança ou framework paralelo; a proposta de limite S4 não foi aplicada.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "GO-I1",
       "normative_source_line": 120,
       "normative_text": "| GO-I1 | Original campaign receipts, responses, claims and source identities remain immutable; retries have new linked identities. | AC-10 |",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "semantics",
       "evidence": [
-        "receipts/source-verification.json",
-        "receipts/root-supplement-literal-verification.json",
-        "artifact-plan.json",
-        "judgments/l1"
+        "receipts/environment-loss-custody.json",
+        "receipts/preservation-recovery-capability-check.json",
+        "assembly/consumer-summary-run/REPORT.md",
+        "assembly/consumer-summary-run/response.md"
       ],
-      "disposition": "Final acceptance by the same two independent judges, correction closure and required L1–L4 artifacts remain open. Literal-source verification is custody evidence only.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "O FINAL nativo research-flow L2 v2 não foi capturado separadamente antes de compactação. Além disso, a queda do ambiente tornou inacessíveis vários originais locais ainda não publicados, incluindo cinco FINALs de consumidores e registros brutos. Arquivos recuperados têm identidades verificadas; resumos e confirmações não substituem originais.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "GO-I2",
       "normative_source_line": 121,
       "normative_text": "| GO-I2 | Observed behavior, authorized intent, interpretation and gaps remain distinguishable; a structural freshness check cannot promote semantic certainty. | AC-02, AC-04 |",
-      "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "semantics",
+      "local_status": "PASS",
       "evidence": [
-        "receipts/source-verification.json",
-        "receipts/root-supplement-literal-verification.json",
-        "artifact-plan.json",
-        "judgments/l1"
+        "semantic-acceptances.json",
+        "native-package.json",
+        "receipts/package-exact-recovery.json",
+        "receipts/native-prepare-final.json",
+        "receipts/final-operational-disposition-after-environment.json",
+        "receipts/environment-loss-custody.json",
+        "receipts/preservation-recovery-capability-check.json"
       ],
-      "disposition": "Final acceptance by the same two independent judges, correction closure and required L1–L4 artifacts remain open. Literal-source verification is custody evidence only.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Corpos e relato distinguem comportamento observado, intenção autorizada, interpretação e lacuna. Censo/hashes/PASS documental não são binding, conclusão de produto ou confirmação de uma operação não executada.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "GO-I3",
       "normative_source_line": 122,
       "normative_text": "| GO-I3 | Current reads bind exact artifact versions to an accepted scope/dependency manifest valid for current inputs/contracts; prior acceptance or rollback cannot make stale knowledge current. Historical reads are labelled. | AC-06, AC-07, AC-09 |",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "publication",
       "evidence": [
-        "receipts/modelina-observation.json",
-        "receipts/s4-policy-provenance-reference.json",
-        "receipts/common-control-compatibility.json"
+        "maintenance/mutation-plan.json",
+        "maintenance/final-disposition-after-environment.json",
+        "receipts/native-prepare-final.json",
+        "receipts/final-operational-disposition-after-environment.json",
+        "assembly/consumer-summary-run/REPORT.md",
+        "assembly/consumer-summary-run/response.md",
+        "receipts/environment-loss-custody.json"
       ],
-      "disposition": "Actual package preparation, native binding, governed publication and verified reads remain open. Required large sources may be unavailable; no source deletion or authority creation is authorized.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Todos os quinze reads atuais retornaram ownership-store-unavailable. Vinculação corrente, stale refusal após mutação e recuperação não foram provadas nesta seleção.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "GO-I4",
       "normative_source_line": 123,
       "normative_text": "| GO-I4 | Unchanged valid inputs/recipe reuse output without another interpretation call; independent artifacts are not rebuilt merely because navigation links exist. | AC-05 |",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "publication",
       "evidence": [
-        "receipts/modelina-observation.json",
-        "receipts/s4-policy-provenance-reference.json",
-        "receipts/common-control-compatibility.json"
+        "maintenance/mutation-plan.json",
+        "maintenance/final-disposition-after-environment.json",
+        "receipts/native-prepare-final.json",
+        "receipts/final-operational-disposition-after-environment.json",
+        "assembly/consumer-summary-run/REPORT.md",
+        "assembly/consumer-summary-run/response.md",
+        "receipts/environment-loss-custody.json"
       ],
-      "disposition": "Actual package preparation, native binding, governed publication and verified reads remain open. Required large sources may be unavailable; no source deletion or authority creation is authorized.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "A regra de reúso e independência está documentada e há controles comuns delimitados. Falta o caso próprio comparando identidades e chamadas após uma mudança independente.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "GO-I5",
       "normative_source_line": 124,
       "normative_text": "| GO-I5 | Source additions, changes, removals and relevant non-code changes enter impact analysis; unavailable impact is HOLD, not an empty successful worklist. | AC-06 |",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "publication",
       "evidence": [
-        "receipts/modelina-observation.json",
-        "receipts/s4-policy-provenance-reference.json",
-        "receipts/common-control-compatibility.json"
+        "maintenance/mutation-plan.json",
+        "maintenance/final-disposition-after-environment.json",
+        "receipts/native-prepare-final.json",
+        "receipts/final-operational-disposition-after-environment.json",
+        "assembly/consumer-summary-run/REPORT.md",
+        "assembly/consumer-summary-run/response.md",
+        "receipts/environment-loss-custody.json"
       ],
-      "disposition": "Actual package preparation, native binding, governed publication and verified reads remain open. Required large sources may be unavailable; no source deletion or authority creation is authorized.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Impacto de mudanças/adições/remoções/inputs não código está descrito, mas não há conjunto afetado observado do planner próprio. Cinco afetados e sete independentes são expectativas estáticas.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "GO-I6",
       "normative_source_line": 125,
       "normative_text": "| GO-I6 | Every issued model request consumes the shared run budget, including validation/retry and unresolved in-flight work; no silent fallback provider/model. | AC-08 |",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "publication",
       "evidence": [
-        "receipts/modelina-observation.json",
-        "receipts/s4-policy-provenance-reference.json",
-        "receipts/common-control-compatibility.json"
+        "economy/final-visible-accounting.json",
+        "receipts/environment-loss-custody.json",
+        "receipts/preservation-recovery-capability-check.json"
       ],
-      "disposition": "Actual package preparation, native binding, governed publication and verified reads remain open. Required large sources may be unavailable; no source deletion or authority creation is authorized.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "O ledger publicado anterior é preservado e novos eventos observáveis recebem adendos. O estado local de 550 linhas ficou inacessível; total físico, reservas e cobrança não são certificados. Sem fallback silencioso, reset ou chamada externa paga; UNKNOWN não é zero nem bloqueio financeiro artificial.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "GO-I7",
       "normative_source_line": 126,
       "normative_text": "| GO-I7 | Governed doors, secret handling, project boundaries and Knowledge/Memory separation remain intact. Imported source/docs/tool text is data, not execution authority. | AC-04, AC-09, AC-10 |",
-      "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "semantics",
+      "local_status": "PASS",
       "evidence": [
-        "receipts/source-verification.json",
-        "receipts/root-supplement-literal-verification.json",
-        "artifact-plan.json",
-        "judgments/l1"
+        "receipts/native-prepare-final.json",
+        "receipts/final-operational-disposition-after-environment.json",
+        "receipts/environment-loss-custody.json",
+        "receipts/preservation-recovery-capability-check.json"
       ],
-      "disposition": "Final acceptance by the same two independent judges, correction closure and required L1–L4 artifacts remain open. Literal-source verification is custody evidence only.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Portas governadas e limites de propriedade foram preservados. Sem política/segredo/guard/workflow alterado, autoridade S4 copiada ou fonte promovida a instrução. Oracle não foi entregue a autores, consumidores ou courier.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "GO-I8",
       "normative_source_line": 127,
       "normative_text": "| GO-I8 | A scope, generation or artifact is not declared semantically complete just because its graph, source hashes, required sections or tests are complete. | AC-01, AC-02, AC-03 |",
-      "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "semantics",
+      "local_status": "PASS",
       "evidence": [
-        "receipts/source-verification.json",
-        "receipts/root-supplement-literal-verification.json",
-        "artifact-plan.json",
-        "judgments/l1"
+        "receipts/native-prepare-final.json",
+        "receipts/final-operational-disposition-after-environment.json",
+        "receipts/environment-loss-custody.json",
+        "receipts/preservation-recovery-capability-check.json"
       ],
-      "disposition": "Final acceptance by the same two independent judges, correction closure and required L1–L4 artifacts remain open. Literal-source verification is custody evidence only.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "A entrega permanece INCOMPLETE_BLOCKED apesar dos doze aceites integrais. Grafo, hashes, censo, controles comuns e recuperação parcial não viraram completude semântica ou operacional.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "AC-01",
       "normative_source_line": 138,
       "normative_text": "| AC-01 | **Coverage, judged + mechanical:** freeze the finite slice inventory: needs → required artifacts → sources → cases below. Every required need has accepted support; intentional unknowns are named in advance. Unknown critical required knowledge fails acceptance. Mechanical mapping completeness does not judge semantic sufficiency. |",
-      "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "semantics",
+      "local_status": "PASS",
       "evidence": [
-        "receipts/source-verification.json",
-        "receipts/root-supplement-literal-verification.json",
-        "artifact-plan.json",
-        "judgments/l1"
+        "semantic-acceptances.json",
+        "native-package.json",
+        "receipts/package-exact-recovery.json",
+        "coverage.jsonl",
+        "receipts/final-coverage-reconciliation.json",
+        "artifact-plan.json"
       ],
-      "disposition": "Final acceptance by the same two independent judges, correction closure and required L1–L4 artifacts remain open. Literal-source verification is custody evidence only.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "462 fontes reconciliadas: 204 automação, 130 research/toolkits, 24 fronteiras e 104 suporte. Os doze artefatos necessários têm apoio aceito pelo mesmo par, com profundidade/grupos e limites explícitos. PASS de cobertura local; não qualifica engines/plataformas/produção.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "AC-02",
       "normative_source_line": 139,
       "normative_text": "| AC-02 | **Ownership, judged:** an Atlas-only consumer correctly handles a permitted change, contract violation, cross-component impact, operational failure and deliberately out-of-scope question. Freeze expected reasoning/consequences, critical mistakes and evidence before production. All required answers must match; the unknown case must abstain. The author alone cannot certify this row. |",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "consumption",
       "evidence": [
-        "consumers/public-cases.json",
-        "oracles/consumer-maintenance-v1.json",
-        "artifact-plan.json"
+        "assembly/consumer-summary-run/REPORT.md",
+        "assembly/consumer-summary-run/response.md",
+        "receipts/environment-loss-custody.json",
+        "consumers/R-FAILURE/final-response.md",
+        "consumers/ENTRY-NAV/final-response.md"
       ],
-      "disposition": "Fresh Atlas-only consumers and actual index/read/direct intermediate use remain open; semantic body review cannot substitute for these operations.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Sete consumidores novos consultaram Atlas; nenhum recebeu corpo. A auditoria original registra 22 HOLDs e quatro erros de need em 26 chamadas. Dois FINALs integrais foram recuperados; cinco permanecem inacessíveis. Não há caso de domínio aprovado, inclusive B-ABSTAIN.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "AC-03",
       "normative_source_line": 140,
       "normative_text": "| AC-03 | **Consumption, mixed:** skill states working protocol and index usage; actual index reads reach purpose, behavior, constraints, decisions, impact, verification and evidence within fixed task-specific read/context bounds. A routine task stops shallow; a deeper task reaches supporting knowledge. Each intermediate artifact has a direct-use case. Validate real readers, not only Markdown links. |",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "consumption",
       "evidence": [
+        "assembly/consumer-summary-run/REPORT.md",
+        "assembly/consumer-summary-run/response.md",
+        "receipts/environment-loss-custody.json",
         "consumers/public-cases.json",
-        "oracles/consumer-maintenance-v1.json",
-        "artifact-plan.json"
+        "consumers/direct-read-supplement-v1.json"
       ],
-      "disposition": "Fresh Atlas-only consumers and actual index/read/direct intermediate use remain open; semantic body review cannot substitute for these operations.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "As doze chaves receberam tentativa direta e as quotas de 2 index/5 read/60000 bytes por caso foram cumpridas. Tentativa não é consumo: nenhum corpo foi entregue. A cadeia bruta completa também não está disponível após a queda.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "AC-04",
       "normative_source_line": 141,
       "normative_text": "| AC-04 | **Construction, mixed:** real paths ingest existing knowledge and construct missing understanding; labelled stale/conflicting/missing/malicious-source fixtures are handled without inventing intent, hiding conflict, granting authority or publishing unsupported required content. A canned final document cannot satisfy the producer test. |",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "semantics",
       "evidence": [
-        "receipts/source-verification.json",
-        "receipts/root-supplement-literal-verification.json",
-        "artifact-plan.json",
-        "judgments/l1",
-        "judgments/l1/controls-reuse/j1-response.md",
-        "judgments/l1/controls-reuse/j2-response.md"
+        "semantic-acceptances.json",
+        "native-package.json",
+        "receipts/package-exact-recovery.json",
+        "receipts/native-prepare-final.json",
+        "receipts/final-operational-disposition-after-environment.json",
+        "receipts/common-control-compatibility.json"
       ],
-      "disposition": "Both same judges PASS exact reuse of four historical native construction controls AC-04-local-native only. Current semantic content review, native package use and required operational proof remain open. No inherited fixture is misreported as a current Atlas/provider execution.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Produção nativa e correções foram reais; quatro controles históricos AC-04-local-native foram aceitos para reúso delimitado. O prepare da seleção completa falhou; construção/importação operacional própria continua aberta.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "AC-05",
       "normative_source_line": 142,
       "normative_text": "| AC-05 | **Reuse, mechanical:** identical inputs/recipe produce a cache hit with zero proposer calls; an independent edit preserves unrelated result identities and call counts. Equal prose with changed authority/validity/gaps MUST propagate; a receipt-only change refreshes bindings without new downstream interpretation. An unchanged validated consumer-visible result stops downstream rebuild. Build dependency edits invalidate dependents, unlike navigation-only links. |",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "maintenance",
       "evidence": [
-        "receipts/common-control-compatibility.json",
-        "oracles/consumer-maintenance-v1.json"
+        "maintenance/mutation-plan.json",
+        "maintenance/final-disposition-after-environment.json"
       ],
-      "disposition": "Own frozen maintenance operations remain open. Compatible S4 common controls may supplement them, not replace own affected-set/rebuild/read proofs.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Controles comuns mantêm seu alcance de cache/reúso. Não há caso próprio executado de independentes, receipt-only, authority/gap change ou parada downstream; zero proposer calls local não foi inferido.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "AC-06",
       "normative_source_line": 143,
       "normative_text": "| AC-06 | **Incremental correctness, mixed:** behavior edit, added/removed source, intent-doc change and recipe change produce the independently expected affected set. Rebuilds restore required knowledge; mutation controls omit an edge/input and must fail. Detecting staleness alone is insufficient. |",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "maintenance",
       "evidence": [
-        "receipts/common-control-compatibility.json",
-        "oracles/consumer-maintenance-v1.json"
+        "maintenance/mutation-plan.json",
+        "maintenance/final-disposition-after-environment.json"
       ],
-      "disposition": "Own frozen maintenance operations remain open. Compatible S4 common controls may supplement them, not replace own affected-set/rebuild/read proofs.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "M-ACTIONS e M-SCHEDULE-RECIPE têm patches/expectativas congelados. Mutação, planner, rebuild e comparação real não ocorreram por falta de baseline aceito. Conjuntos estáticos e staleness não passam incrementalidade.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "AC-07",
       "normative_source_line": 144,
       "normative_text": "| AC-07 | **Publication/recovery, mechanical:** inject failure between generation and activation, interrupt/resume, and concurrent reads. A separate reader observes only a complete accepted manifest valid for current inputs/contracts or HOLD. A failed rebuild after source drift cannot fall back to stale knowledge as current. Resume reuses durable completions; rollback rejects incompatible source bindings; historical reads are labelled. |",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "publication",
       "evidence": [
-        "receipts/modelina-observation.json",
-        "receipts/s4-policy-provenance-reference.json",
-        "receipts/common-control-compatibility.json"
+        "receipts/native-prepare-final.json",
+        "receipts/final-operational-disposition-after-environment.json",
+        "maintenance/mutation-plan.json",
+        "maintenance/final-disposition-after-environment.json"
       ],
-      "disposition": "Actual package preparation, native binding, governed publication and verified reads remain open. Required large sources may be unavailable; no source deletion or authority creation is authorized.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Não houve publicação governada própria, falha entre geração/ativação, leitores concorrentes, retomada ou rollback. HOLD de store indisponível antes de baseline não prova as recusas específicas exigidas.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "AC-08",
       "normative_source_line": 145,
       "normative_text": "| AC-08 | **Economy, mechanical + approval:** one run ledger/reservation governs production, evaluation, retries and concurrent calls. Synthetic checks precede real calls. If real adapter conformance requires a paid call, it needs a bounded explicit authorization first, charged to the same global envelope. Only a conforming route may run the real slice. Report limits, usage and unsettled calls; no bytes-to-token or call-count-to-dollar fiction. |",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "economy",
       "evidence": [
-        "execution-ledger.jsonl"
+        "economy/final-visible-accounting.json",
+        "receipts/environment-loss-custody.json",
+        "receipts/preservation-recovery-capability-check.json"
       ],
-      "disposition": "Visible native logical requests are recorded; host physical attempts, usage and cost are UNKNOWN, historical campaign GLOBAL_UNRECONCILED. No zero-cost or hard currency guarantee is inferred. Final local reconciliation remains open.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Há contabilidade visível e auditoria original de 33 requests/33 completions de consumidores, distinta das 26 CLI. Total de host, reservas, uso físico e custo não são certificados; o ledger local posterior ficou inacessível. Histórico GLOBAL_UNRECONCILED, sem cálculo financeiro fictício, fallback pago ou reset.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "AC-09",
       "normative_source_line": 146,
       "normative_text": "| AC-09 | **Git/CI/host, mechanical:** changed declared input, new input under registered scope, missing artifact, broken index reference, incompatible dependency version and invalid generation are rejected at intended gates/readers. A local invalid unit holds its required closure while an independent valid scope remains readable; shared manifest corruption holds its dependent reads. Known-good/bad controls use actual entry points. Report workflow scope and branch-protection enforcement separately. |",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "publication",
       "evidence": [
-        "receipts/modelina-observation.json",
-        "receipts/s4-policy-provenance-reference.json",
-        "receipts/common-control-compatibility.json"
+        "receipts/final-capability-refresh-20261115.json",
+        "receipts/guard-materialization/binary-transport-blocker.json",
+        "receipts/native-prepare-final.json",
+        "receipts/final-operational-disposition-after-environment.json",
+        "maintenance/mutation-plan.json",
+        "maintenance/final-disposition-after-environment.json"
       ],
-      "disposition": "Actual package preparation, native binding, governed publication and verified reads remain open. Required large sources may be unavailable; no source deletion or authority creation is authorized.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "O guard final não rodou: falta o ZIP histórico exato para checkout fiel; a queda posterior também impede execução local. Zero runs próprios observados. protected=false é campo API, não prova completa de rulesets. Controles S4 não passam os gates próprios.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "AC-10",
       "normative_source_line": 147,
       "normative_text": "| AC-10 | **Preservation/migration, mechanical + review:** baseline inventory of protected campaign objects remains exact; old producers cannot publish into the new accepted scope accidentally. Stage new outputs without consumer authority, activate explicitly, preserve old accepted state for rollback and keep unrelated scopes usable. Generated boundaries change only through their generators. |",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "publication",
       "evidence": [
-        "receipts/modelina-observation.json",
-        "receipts/s4-policy-provenance-reference.json",
-        "receipts/common-control-compatibility.json"
+        "receipts/environment-loss-custody.json",
+        "receipts/preservation-recovery-capability-check.json",
+        "receipts/native-prepare-final.json",
+        "receipts/final-operational-disposition-after-environment.json"
       ],
-      "disposition": "Actual package preparation, native binding, governed publication and verified reads remain open. Required large sources may be unavailable; no source deletion or authority creation is authorized.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "A publicação preserva Core histórico, outras subfatias e s1.core.entry. Não houve ativação própria ou prova de rollback/independentes; GO-I1 conserva lacunas. Novos arquivos ficam sem autoridade de consumidor; nenhum gerado foi editado.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "CC-1",
       "normative_source_line": 159,
       "normative_text": "| CC-1 | Scope, sources, gaps, existing/missing knowledge and the finite required-artifact inventory are frozen. | AC-01, AC-04 |",
-      "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "semantics",
+      "local_status": "PASS",
       "evidence": [
-        "receipts/source-verification.json",
-        "receipts/root-supplement-literal-verification.json",
+        "coverage.jsonl",
+        "receipts/final-coverage-reconciliation.json",
         "artifact-plan.json",
-        "judgments/l1"
+        "consumers/public-cases.json",
+        "maintenance/mutation-plan.json"
       ],
-      "disposition": "Final acceptance by the same two independent judges, correction closure and required L1–L4 artifacts remain open. Literal-source verification is custody evidence only.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Escopo, herança/gaps, fontes, doze artefatos, sete casos e dois cenários foram congelados antes das etapas correspondentes. O suplemento de read foi anterior a qualquer consumidor, sem mudar pergunta/oracle/quota/grafo.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "CC-2",
       "normative_source_line": 160,
       "normative_text": "| CC-2 | The slice is constructed cumulatively and every required level is persisted, directly usable and reachable through the real index/skill path. | AC-03, AC-04 |",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "consumption",
       "evidence": [
-        "consumers/public-cases.json",
-        "oracles/consumer-maintenance-v1.json",
-        "artifact-plan.json"
+        "semantic-acceptances.json",
+        "native-package.json",
+        "receipts/package-exact-recovery.json",
+        "assembly/consumer-summary-run/REPORT.md",
+        "assembly/consumer-summary-run/response.md",
+        "receipts/environment-loss-custody.json"
       ],
-      "disposition": "Fresh Atlas-only consumers and actual index/read/direct intermediate use remain open; semantic body review cannot substitute for these operations.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Todos os níveis estão produzidos e persistidos, mas a usabilidade direta pelo reader/índice não foi demonstrada. Dois aceites de corpo não aprovam essa parcela.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "CC-3",
       "normative_source_line": 161,
       "normative_text": "| CC-3 | Product purpose, behavior, contracts, decisions, impact and safe maintenance are supported, not merely titled. | AC-02 |",
-      "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "semantics",
+      "local_status": "PASS",
       "evidence": [
-        "receipts/source-verification.json",
-        "receipts/root-supplement-literal-verification.json",
-        "artifact-plan.json",
-        "judgments/l1"
+        "semantic-acceptances.json",
+        "native-package.json",
+        "receipts/package-exact-recovery.json"
       ],
-      "disposition": "Final acceptance by the same two independent judges, correction closure and required L1–L4 artifacts remain open. Literal-source verification is custody evidence only.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Os dois juízes aceitaram integralmente propósito, comportamento, contratos, decisões, impacto e manutenção dos corpos atuais. PASS documental local; a transferência pelos casos AC-02 continua aberta.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "CC-4",
       "normative_source_line": 162,
       "normative_text": "| CC-4 | Initial build, invalidation, rebuild, reuse and relevant additions/removals/non-code inputs work end to end. | AC-05, AC-06 |",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "maintenance",
       "evidence": [
-        "receipts/common-control-compatibility.json",
-        "oracles/consumer-maintenance-v1.json"
+        "maintenance/mutation-plan.json",
+        "maintenance/final-disposition-after-environment.json",
+        "receipts/native-prepare-final.json",
+        "receipts/final-operational-disposition-after-environment.json"
       ],
-      "disposition": "Own frozen maintenance operations remain open. Compatible S4 common controls may supplement them, not replace own affected-set/rebuild/read proofs.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Build/invalidação/rebuild/reúso e mudanças de inputs não fecharam ponta a ponta. Os dois cenários próprios ficaram antes da mutação por ausência de baseline utilizável.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "CC-5",
       "normative_source_line": 163,
       "normative_text": "| CC-5 | Coherent publication, reader verification, failure recovery and rollback work without weakening governance. | AC-07, AC-09, AC-10 |",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "publication",
       "evidence": [
-        "receipts/modelina-observation.json",
-        "receipts/s4-policy-provenance-reference.json",
-        "receipts/common-control-compatibility.json"
+        "receipts/native-prepare-final.json",
+        "receipts/final-operational-disposition-after-environment.json",
+        "maintenance/mutation-plan.json",
+        "maintenance/final-disposition-after-environment.json"
       ],
-      "disposition": "Actual package preparation, native binding, governed publication and verified reads remain open. Required large sources may be unavailable; no source deletion or authority creation is authorized.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Sem candidato preparado e autoridade S1 provisionada, não houve ativação ou recuperação/rollback. Branch Git acessível não é manifesto Atlas ativo.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "CC-6",
       "normative_source_line": 164,
       "normative_text": "| CC-6 | Execution economics are enforced/reported to the stated adapter guarantee and the approved run reconciles. | AC-08 |",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "economy",
       "evidence": [
-        "execution-ledger.jsonl"
+        "economy/final-visible-accounting.json",
+        "receipts/environment-loss-custody.json",
+        "receipts/preservation-recovery-capability-check.json"
       ],
-      "disposition": "Visible native logical requests are recorded; host physical attempts, usage and cost are UNKNOWN, historical campaign GLOBAL_UNRECONCILED. No zero-cost or hard currency guarantee is inferred. Final local reconciliation remains open.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "A economia visível é reportada por etapa e sem ficção financeira. Não se certificam envelope/reservas/total físico; dez linhas iniciais são agregadas e o ledger local de 550 linhas ficou inacessível.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "CC-7",
       "normative_source_line": 165,
       "normative_text": "| CC-7 | Compatibility, generated surfaces, applicable docs/skills/guides and old-campaign obligations have explicit dispositions; expansion is not silently claimed complete. | AC-09, AC-10 |",
-      "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "semantics",
+      "local_status": "PASS",
       "evidence": [
-        "receipts/source-verification.json",
-        "receipts/root-supplement-literal-verification.json",
-        "artifact-plan.json",
-        "judgments/l1"
+        "navigation-acceptance.json",
+        "producers/boundaries/union-navigation-proposal.md",
+        "receipts/native-prepare-final.json",
+        "receipts/final-operational-disposition-after-environment.json",
+        "receipts/environment-loss-custody.json",
+        "receipts/preservation-recovery-capability-check.json"
       ],
-      "disposition": "Final acceptance by the same two independent judges, correction closure and required L1–L4 artifacts remain open. Literal-source verification is custody evidence only.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Compatibilidade, gerados não alterados, docs/guias e obrigações históricas têm disposição explícita. A navegação local é proposta para coordenação, sem seleção de versões externas ou expansão silenciosamente completa.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "SC-1",
       "normative_source_line": 169,
       "normative_text": "- **SC-1 — ownership:** AC-02 passes all frozen required cases without a critical mistake or source discovery by the consumer.",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "consumption",
       "evidence": [
-        "consumers/public-cases.json",
-        "oracles/consumer-maintenance-v1.json",
-        "artifact-plan.json"
+        "assembly/consumer-summary-run/REPORT.md",
+        "assembly/consumer-summary-run/response.md",
+        "receipts/environment-loss-custody.json"
       ],
-      "disposition": "Fresh Atlas-only consumers and actual index/read/direct intermediate use remain open; semantic body review cannot substitute for these operations.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "AC-02 não passou. Abstinência por store indisponível não comprova domínio dos casos congelados; cinco originais finais ainda não podem ser publicados.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "SC-2",
       "normative_source_line": 170,
       "normative_text": "- **SC-2 — progressive use:** AC-03 meets the read/context limits frozen before evaluation; routine use does not require loading the full graph.",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "consumption",
       "evidence": [
-        "consumers/public-cases.json",
-        "oracles/consumer-maintenance-v1.json",
-        "artifact-plan.json"
+        "assembly/consumer-summary-run/REPORT.md",
+        "assembly/consumer-summary-run/response.md",
+        "receipts/environment-loss-custody.json"
       ],
-      "disposition": "Fresh Atlas-only consumers and actual index/read/direct intermediate use remain open; semantic body review cannot substitute for these operations.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Quotas foram respeitadas, mas nenhum conteúdo chegou ao leitor. Não se provou conclusão rasa ou aprofundamento útil.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "SC-3",
       "normative_source_line": 171,
       "normative_text": "- **SC-3 — incrementality:** AC-05/06 preserve independent knowledge and reconcile the expected affected set; unchanged work incurs no new interpretation calls.",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "maintenance",
       "evidence": [
-        "receipts/common-control-compatibility.json",
-        "oracles/consumer-maintenance-v1.json"
+        "maintenance/mutation-plan.json",
+        "maintenance/final-disposition-after-environment.json"
       ],
-      "disposition": "Own frozen maintenance operations remain open. Compatible S4 common controls may supplement them, not replace own affected-set/rebuild/read proofs.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Não se executaram rebuild próprio, preservação de independentes ou zero interpretação em reúso. As provas comuns não substituem essa execução.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "SC-4",
       "normative_source_line": 172,
       "normative_text": "- **SC-4 — economics:** separately report initial construction, validation, incremental update and daily reads; stay within the approved envelope and never call missing usage zero. No savings percentage without a comparable measured baseline, and no rerun of old mining merely to obtain one.",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "economy",
       "evidence": [
-        "execution-ledger.jsonl"
+        "economy/final-visible-accounting.json"
       ],
-      "disposition": "Visible native logical requests are recorded; host physical attempts, usage and cost are UNKNOWN, historical campaign GLOBAL_UNRECONCILED. No zero-cost or hard currency guarantee is inferred. Final local reconciliation remains open.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Construção, validação/correção, manutenção e consultas são separadas; nenhuma economia percentual, dólar ou zero uso foi inventado. Permanência em envelope integralmente reconciliado não está certificada.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "SC-5",
       "normative_source_line": 173,
       "normative_text": "- **SC-5 — consistency:** AC-07/09 demonstrate coherent accepted reads and refusal of the specified invalid states, without asserting CI proves semantic truth.",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "publication",
       "evidence": [
-        "receipts/modelina-observation.json",
-        "receipts/s4-policy-provenance-reference.json",
-        "receipts/common-control-compatibility.json"
+        "receipts/native-prepare-final.json",
+        "receipts/final-operational-disposition-after-environment.json",
+        "maintenance/mutation-plan.json",
+        "maintenance/final-disposition-after-environment.json",
+        "receipts/final-capability-refresh-20261115.json",
+        "receipts/guard-materialization/binary-transport-blocker.json"
       ],
-      "disposition": "Actual package preparation, native binding, governed publication and verified reads remain open. Required large sources may be unavailable; no source deletion or authority creation is authorized.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Não existe seleção própria aceita para provar coerência e as recusas específicas AC-07/09. HOLD inicial e controles comuns delimitados são insuficientes.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "QS-1",
       "normative_source_line": 180,
       "normative_text": "- **QS-1 Fidelity:** preserve evidence and disagreements; use correct epistemic labels; no unsupported product rationale.",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "semantics",
       "evidence": [
-        "receipts/source-verification.json",
-        "receipts/root-supplement-literal-verification.json",
-        "artifact-plan.json",
-        "judgments/l1"
+        "semantic-acceptances.json",
+        "native-package.json",
+        "receipts/package-exact-recovery.json",
+        "receipts/environment-loss-custody.json",
+        "receipts/preservation-recovery-capability-check.json"
       ],
-      "disposition": "Final acceptance by the same two independent judges, correction closure and required L1–L4 artifacts remain open. Literal-source verification is custody evidence only.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Fidelidade e rótulos dos corpos foram aceitos; conflitos/correções existentes persistem. Preservação integral falha pela captura nativa research L2 v2 ausente e pela indisponibilidade posterior dos registros locais não publicados.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "QS-2",
       "normative_source_line": 181,
       "normative_text": "- **QS-2 Operational utility:** concise skills prescribe actions; index entries state what a deeper artifact answers; explanations/procedures are readable, scoped and non-redundant.",
-      "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "semantics",
+      "local_status": "PASS",
       "evidence": [
-        "receipts/source-verification.json",
-        "receipts/root-supplement-literal-verification.json",
-        "artifact-plan.json",
-        "judgments/l1"
+        "semantic-acceptances.json",
+        "native-package.json",
+        "receipts/package-exact-recovery.json",
+        "navigation-acceptance.json",
+        "producers/boundaries/union-navigation-proposal.md"
       ],
-      "disposition": "Final acceptance by the same two independent judges, correction closure and required L1–L4 artifacts remain open. Literal-source verification is custody evidence only.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Entrada/procedimentos aceitos prescrevem ações e aprofundamento, com perguntas/destinos úteis e distinção de navegação/build. Utilidade documental não substitui a leitura real bloqueada.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "QS-3",
       "normative_source_line": 182,
       "normative_text": "- **QS-3 Simplicity:** every new mechanism names an acceptance need existing code cannot satisfy; no speculative framework, per-layer agent, vector store, bespoke database or mandatory deepening loop.",
-      "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "semantics",
+      "local_status": "PASS",
       "evidence": [
-        "receipts/source-verification.json",
-        "receipts/root-supplement-literal-verification.json",
-        "artifact-plan.json",
-        "judgments/l1"
+        "receipts/native-prepare-final.json",
+        "receipts/final-operational-disposition-after-environment.json"
       ],
-      "disposition": "Final acceptance by the same two independent judges, correction closure and required L1–L4 artifacts remain open. Literal-source verification is custody evidence only.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Nenhum mecanismo novo de produto, vector store, banco ou framework foi criado. Helpers determinísticos e ponte servem à evidência/CLI existente; não há loop obrigatório de aprofundamento.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "QS-4",
       "normative_source_line": 183,
       "normative_text": "- **QS-4 Engineering:** repository style/dependency boundaries, generated-code discipline, safe persistence, input validation and secret handling; no global test hacks or duplicated implementation in tests.",
-      "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "semantics",
+      "local_status": "PASS",
       "evidence": [
-        "receipts/source-verification.json",
-        "receipts/root-supplement-literal-verification.json",
-        "artifact-plan.json",
-        "judgments/l1"
+        "receipts/native-prepare-final.json",
+        "receipts/final-operational-disposition-after-environment.json",
+        "receipts/environment-loss-custody.json",
+        "receipts/preservation-recovery-capability-check.json"
       ],
-      "disposition": "Final acceptance by the same two independent judges, correction closure and required L1–L4 artifacts remain open. Literal-source verification is custody evidence only.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Intervenção restrita ao namespace autorizado, sem alterar produto, gerados, dependências, políticas, secrets, AGENTS, guards ou workflows. Git usa lease. Este PASS de disciplina local não atribui verde ao guard não executado.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "QS-5",
       "normative_source_line": 184,
       "normative_text": "- **QS-5 Evidence:** actual implementation/reader controls, anti-vacuity mutations where relevant, bounded semantic review and explicit scope of proof; review a fixed bar, not endless optional improvements.",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "semantics",
       "evidence": [
-        "receipts/source-verification.json",
-        "receipts/root-supplement-literal-verification.json",
-        "artifact-plan.json",
-        "judgments/l1"
+        "receipts/native-prepare-final.json",
+        "receipts/final-operational-disposition-after-environment.json",
+        "receipts/final-capability-refresh-20261115.json",
+        "receipts/guard-materialization/binary-transport-blocker.json",
+        "maintenance/mutation-plan.json",
+        "maintenance/final-disposition-after-environment.json"
       ],
-      "disposition": "Final acceptance by the same two independent judges, correction closure and required L1–L4 artifacts remain open. Literal-source verification is custody evidence only.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Há execução real e controles comuns com escopo explícito, porém faltam reader aceito, manutenção própria e guard; a cadeia bruta dos consumidores está parcialmente inacessível. A revisão segue a barra fixa sem terceiro voto.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "QS-6",
       "normative_source_line": 185,
       "normative_text": "- **QS-6 Economy:** scoped evidence packs, shared validated context, deterministic derivation first, reusable completions and honest accounting; no automatic retry/refinement campaign.",
-      "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "semantics",
+      "local_status": "PASS",
       "evidence": [
-        "receipts/source-verification.json",
-        "receipts/root-supplement-literal-verification.json",
-        "artifact-plan.json",
-        "judgments/l1"
+        "semantic-acceptances.json",
+        "native-package.json",
+        "receipts/package-exact-recovery.json",
+        "economy/final-visible-accounting.json",
+        "receipts/environment-loss-custody.json",
+        "receipts/preservation-recovery-capability-check.json"
       ],
-      "disposition": "Final acceptance by the same two independent judges, correction closure and required L1–L4 artifacts remain open. Literal-source verification is custody evidence only.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Packs delimitados, derivações mecânicas, reúso de aceites e correções por finding foram empregados. Limites/custódia/contabilidade são explícitos, sem campanha automática opcional ou percentual de economia fictício.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "DOD-1",
       "normative_source_line": 223,
       "normative_text": "- **DOD-1:** CC-1..7 and SC-1..5 have explicit evidence/verdicts; judged rows have named acceptance, not inferred approval from tests.",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "completion",
       "evidence": [
-        "work.md",
-        "artifact-plan.json",
-        "receipts/production-progress-readback.json"
+        "semantic-acceptances.json",
+        "native-package.json",
+        "receipts/package-exact-recovery.json",
+        "assembly/consumer-summary-run/REPORT.md",
+        "assembly/consumer-summary-run/response.md",
+        "receipts/environment-loss-custody.json",
+        "receipts/preservation-recovery-capability-check.json"
       ],
-      "disposition": "Subslice final disposition awaits all executable local obligations and the final payload/seal/readback. S1 union and governed integration remain assigned to coordination; no local missing proof is transferred.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Há matriz única dos 50 IDs e aceites nomeados dos corpos. Os pareceres finais devem avaliar estes bytes; a revisão direta completa dos cinco FINALs de consumidores e de suas cadeias está bloqueada, além das obrigações CC/SC não cumpridas.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "DOD-2",
       "normative_source_line": 224,
       "normative_text": "- **DOD-2:** all applicable invariants and QS-1..6 are reviewed; known-bad controls demonstrate relevant gates can reject defects.",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "completion",
       "evidence": [
-        "work.md",
-        "artifact-plan.json",
-        "receipts/production-progress-readback.json"
+        "maintenance/mutation-plan.json",
+        "maintenance/final-disposition-after-environment.json",
+        "receipts/final-capability-refresh-20261115.json",
+        "receipts/guard-materialization/binary-transport-blocker.json",
+        "receipts/environment-loss-custody.json",
+        "receipts/preservation-recovery-capability-check.json"
       ],
-      "disposition": "Subslice final disposition awaits all executable local obligations and the final payload/seal/readback. S1 union and governed integration remain assigned to coordination; no local missing proof is transferred.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Invariantes/QS têm disposições, mas controles próprios de mudança/leitura e guard não foram comprovados; os originais faltantes impedem certificação integral da revisão.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "DOD-3",
       "normative_source_line": 225,
       "normative_text": "- **DOD-3:** real consumers use accepted artifacts through the index/skill path; end-to-end update/publication/recovery, not only isolated modules, is verified.",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "completion",
       "evidence": [
-        "work.md",
-        "artifact-plan.json",
-        "receipts/production-progress-readback.json"
+        "receipts/native-prepare-final.json",
+        "receipts/final-operational-disposition-after-environment.json",
+        "assembly/consumer-summary-run/REPORT.md",
+        "assembly/consumer-summary-run/response.md",
+        "receipts/environment-loss-custody.json",
+        "maintenance/mutation-plan.json",
+        "maintenance/final-disposition-after-environment.json"
       ],
-      "disposition": "Subslice final disposition awaits all executable local obligations and the final payload/seal/readback. S1 union and governed integration remain assigned to coordination; no local missing proof is transferred.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Houve consultas Atlas reais, sem consumo de artefatos aceitos. Update/publication/recovery próprios não fecharam ponta a ponta e não são transferidos a ROOT.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "DOD-4",
       "normative_source_line": 226,
       "normative_text": "- **DOD-4:** scoped remote tests, package-local typechecks, generated checks where applicable and `bun run check:guards --base origin/dev` are reconciled; one final epic covers the integrated bundle. Never report unrun gates as green.",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "gates",
       "evidence": [
-        "receipts/guard-preflight.json",
-        "receipts/guard-materialization/REPORT.md",
+        "receipts/final-capability-refresh-20261115.json",
         "receipts/guard-materialization/binary-transport-blocker.json",
-        "receipts/guard-materialization/materialization-verification.json",
-        "receipts/branch-gate-discovery.json"
+        "receipts/runtime-preflight/preflight-summary.json"
       ],
-      "disposition": "The initial no-repository probe is superseded for capability diagnosis by a faithful Git reconstruction:1660 commits,2378 trees,complete diff1551paths. One historical1,339,105-byteZIP cannot be retrieved through available connector binary routes. Checkout/index numstat fail on exact blobd83941. Official final guard remains NOT_RUN until exact bytes and finalHEAD are available. No partial green, no workflow/guard/policy modification.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Preparação/build/typecheck e controles remotos S4 têm limites próprios. Não houve teste de produto local ou CI próprio inventado. Guard oficial final NOT_RUN por materialização binária e agora ambiente indisponível. Gate da união é global, separado.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "DOD-5",
       "normative_source_line": 227,
       "normative_text": "- **DOD-5:** real authorized usage/cost and unresolved requests reconcile; no unapproved calls, silent fallback or budget reset between stages.",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "economy",
       "evidence": [
-        "execution-ledger.jsonl"
+        "economy/final-visible-accounting.json",
+        "receipts/environment-loss-custody.json",
+        "receipts/preservation-recovery-capability-check.json"
       ],
-      "disposition": "Visible native logical requests are recorded; host physical attempts, usage and cost are UNKNOWN, historical campaign GLOBAL_UNRECONCILED. No zero-cost or hard currency guarantee is inferred. Final local reconciliation remains open.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Trabalho novo observado é contabilizado sem reset, com 33/33 consumidores relatados pela auditoria original. Não há total completo certificado; uso/custo físicos são UNKNOWN e os adendos locais pós-P0 não estão integralmente disponíveis.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "DOD-6",
       "normative_source_line": 228,
       "normative_text": "- **DOD-6:** docs/skills/operator guidance, migration/rollback and historical obligation dispositions are accurate; independent review is complete before landing and only verified owned resources are cleaned.",
       "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "completion",
       "evidence": [
-        "work.md",
-        "artifact-plan.json",
-        "receipts/production-progress-readback.json"
+        "semantic-acceptances.json",
+        "native-package.json",
+        "receipts/package-exact-recovery.json",
+        "receipts/environment-loss-custody.json",
+        "receipts/preservation-recovery-capability-check.json",
+        "receipts/native-prepare-final.json",
+        "receipts/final-operational-disposition-after-environment.json"
       ],
-      "disposition": "Subslice final disposition awaits all executable local obligations and the final payload/seal/readback. S1 union and governed integration remain assigned to coordination; no local missing proof is transferred.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Docs/procedimentos e obrigações históricas têm disposições, porém preservação integral e provas operacionais próprias permanecem abertas. A revisão final original deve ser consultada; migração/rollback não foram declarados concluídos. Landing global não é a causa deste HOLD.",
+      "local_owner": "S1-03",
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     },
     {
       "id": "DOD-7",
       "normative_source_line": 229,
       "normative_text": "- **DOD-7:** owner acceptance and governed integration are recorded. Code complete, tested, semantically accepted and landed are distinct states. No silent waiver; a failed criterion remains open or an explicit owner amendment changes this contract.",
-      "local_status": "HOLD",
-      "local_owner": "S1-03",
-      "category": "completion",
+      "local_status": "GLOBAL_ONLY",
       "evidence": [
-        "work.md",
-        "artifact-plan.json",
-        "receipts/production-progress-readback.json"
+        "receipts/native-prepare-final.json",
+        "receipts/final-operational-disposition-after-environment.json"
       ],
-      "disposition": "Subslice final disposition awaits all executable local obligations and the final payload/seal/readback. S1 union and governed integration remain assigned to coordination; no local missing proof is transferred.",
-      "global_status": "DEFERRED_TO_INTEGRATION",
-      "global_owner": "S1_COORDINATION / ROOT",
-      "scope_boundary": "Only the local S1-03 obligation is assessed here; union-level proof remains complementary."
+      "disposition": "Aceite humano, landing e produção pertencem a S1_COORDINATION/ROOT e ao dono autorizado. Não são pré-requisitos artificiais locais e nenhum aceite foi autoatribuído. INCOMPLETE_BLOCKED decorre das outras obrigações materiais locais.",
+      "local_owner": null,
+      "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
+      "global_owner": "S1_COORDINATION / ROOT"
     }
-  ]
+  ],
+  "local_status_counts": {
+    "PASS": 15,
+    "HOLD": 34,
+    "GLOBAL_ONLY": 1
+  }
 }

@@ -1,0 +1,117 @@
+{
+  "schema": "s1-03-maintenance-disposition-after-environment/v1",
+  "recorded_at_utc": "2026-11-15T11:54:16.872Z",
+  "state": "INCOMPLETE_BLOCKED",
+  "original_frozen_plan": {
+    "path": "maintenance/mutation-plan.json",
+    "sha256": "df10eeb783319fe42e597bd833bf109141a341e885c76e7e032826bcb5e52364"
+  },
+  "actual_prepare": {
+    "path": "receipts/native-prepare-final.json",
+    "sha256": "469f4cdf21af6e295378b975a75e6670c4a07f4452335b4dbc76e64ce4eedc81"
+  },
+  "current_read_evidence": {
+    "original_audit_report": "assembly/consumer-summary-run/REPORT.md",
+    "original_native_audit_final": "assembly/consumer-summary-run/response.md",
+    "observed_total_reads": 15,
+    "observed_holds": 15,
+    "bodies_delivered": 0,
+    "raw_record_custody": "Partial; environment-loss-custody.json identifies unavailable originals."
+  },
+  "cases": [
+    {
+      "case_id": "M-ACTIONS",
+      "state": "BLOCKED_BASELINE_PRECONDITION",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_path": "packages/core/src/actions/authoring/remote.ts",
+      "frozen_patch": {
+        "path": "maintenance/mutations/M-ACTIONS/mutation.patch",
+        "bytes": 941,
+        "sha256": "6b6922f91b912e34bfa28d804d3a7d061da27b09edca795b845cc2e677c54b65",
+        "git_blob_sha": "5a21b9ee33a557e9d3eff94cada0f5287c68710a"
+      },
+      "fixture_applied": false,
+      "product_changed": false,
+      "expected_affected_static_only": [
+        "s1.core.automation",
+        "s1.subslice03.automation-flow",
+        "s1.subslice03.automation-impact",
+        "s1.subslice03.automation-maintenance",
+        "s1.subslice03.entry"
+      ],
+      "expected_independent_static_only": [
+        "s1.core.boundaries",
+        "s1.core.research",
+        "s1.subslice03.boundary-flow",
+        "s1.subslice03.research-flow",
+        "s1.subslice03.research-impact",
+        "s1.subslice03.research-maintenance",
+        "s1.subslice03.support"
+      ],
+      "actual_planner_result": null,
+      "required_operations_not_run": [
+        "isolated fixture mutation",
+        "observe changed accepted baseline",
+        "plan affected set",
+        "current read stale refusal after mutation",
+        "native reinterpretation of affected closure",
+        "exact same-pair runtime rebinding",
+        "governed rebuild and activation",
+        "read rebuilt selection",
+        "compare independent identities and call counts",
+        "failure recovery and rollback"
+      ],
+      "reason": "The full selection did not prepare, no exact runtime binding/activation exists, and all observed current reads returned ownership-store-unavailable. Static sets and prepared patches are not runtime results.",
+      "local_obligation_owner": "S1-03",
+      "unblock": "Restore usable execution environment, obtain released support for every genuine whole input and actual S1 publication authority; prepare, exact-bind and activate the baseline; then execute this frozen isolated case through official observe/plan/rebuild/read. No common control discharges this own case."
+    },
+    {
+      "case_id": "M-SCHEDULE-RECIPE",
+      "state": "BLOCKED_BASELINE_PRECONDITION",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_path": "packages/core/src/scheduled-task/model.ts",
+      "frozen_patch": {
+        "path": "maintenance/mutations/M-SCHEDULE-RECIPE/mutation.patch",
+        "bytes": 726,
+        "sha256": "901cf8d3f994f8fdbe41ccf5f5bbe29c0038da91172009f6ab315cb2fda42688",
+        "git_blob_sha": "67620e4f543f4a3162c193870d00587e673381be"
+      },
+      "fixture_applied": false,
+      "product_changed": false,
+      "expected_affected_static_only": [
+        "s1.core.automation",
+        "s1.subslice03.automation-flow",
+        "s1.subslice03.automation-impact",
+        "s1.subslice03.automation-maintenance",
+        "s1.subslice03.entry"
+      ],
+      "expected_independent_static_only": [
+        "s1.core.boundaries",
+        "s1.core.research",
+        "s1.subslice03.boundary-flow",
+        "s1.subslice03.research-flow",
+        "s1.subslice03.research-impact",
+        "s1.subslice03.research-maintenance",
+        "s1.subslice03.support"
+      ],
+      "actual_planner_result": null,
+      "required_operations_not_run": [
+        "isolated fixture mutation",
+        "observe changed accepted baseline",
+        "plan affected set",
+        "current read stale refusal after mutation",
+        "native reinterpretation of affected closure",
+        "exact same-pair runtime rebinding",
+        "governed rebuild and activation",
+        "read rebuilt selection",
+        "compare independent identities and call counts",
+        "failure recovery and rollback"
+      ],
+      "reason": "The full selection did not prepare, no exact runtime binding/activation exists, and all observed current reads returned ownership-store-unavailable. Static sets and prepared patches are not runtime results.",
+      "local_obligation_owner": "S1-03",
+      "unblock": "Restore usable execution environment, obtain released support for every genuine whole input and actual S1 publication authority; prepare, exact-bind and activate the baseline; then execute this frozen isolated case through official observe/plan/rebuild/read. No common control discharges this own case."
+    }
+  ],
+  "original_pre_loss_final_disposition": "An 8212-byte local disposition was written before failure but is not available for upload. This new disposition reports current conditions and does not masquerade as those original bytes.",
+  "new_runtime_calls_performed_by_this_disposition": 0
+}

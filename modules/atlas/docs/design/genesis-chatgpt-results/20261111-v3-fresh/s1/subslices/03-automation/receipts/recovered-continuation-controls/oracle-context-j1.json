@@ -1,0 +1,18 @@
+{
+  "schema": "s1-03-visible-control-recovery/v1",
+  "method": "collaboration.followup_task",
+  "target": "/root/s1_03_j1",
+  "tool_returned_normally": true,
+  "message": "Retomada pela principal, que mantém exclusividade de transporte após derived-entry-v1. Você continua o mesmo juiz J1, sem ferramentas, independente, sem acesso ao parecer de J2. Os doze corpos já receberam os dois aceites integrais; não estou solicitando novo voto nesta mensagem. Seguirá a revisão final da entrega com pacote nativo, operações reais, sete consumidores, manutenção, matriz dos 50 critérios e economia. O estado proposto será INCOMPLETE_BLOCKED, sem converter indisponibilidade em PASS. Antes do pacote, confirmo que o oracle reservado consumer-maintenance-v1 é o mesmo congelado (10229 bytes; SHA256 f1cc16fcd73e17fa1aff015e30e7facacaabf0dc2b195c0603f9f30a1f875ccb). Nesta retomada não abra arquivos nem use ferramentas. Responda somente se ainda dispõe do conteúdo integral desse oracle em seu contexto e se pode receber o pacote final; se não dispuser, diga precisamente que precisa de retransmissão literal. Não infira expected/critical_errors a partir dos consumidores.",
+  "message_identity": {
+    "bytes": 1010,
+    "sha256": "a271dbec7fb4d0d1c794385daf766489ac49ec94a5c726f411ef91f037dbbb8d"
+  },
+  "original_response": "Continuo como J1 e posso receber o pacote final.\n\n**Não disponho do conteúdo integral do oracle no contexto atual; retenho sua identidade e um resumo. Preciso da retransmissão literal integral de `consumer-maintenance-v1`**, com **10.229 bytes** e SHA256 **`f1cc16fcd73e17fa1aff015e30e7facacaabf0dc2b195c0603f9f30a1f875ccb`**, antes da avaliação final. Não inferirei `expected` ou `critical_errors` a partir dos consumidores.",
+  "response_identity": {
+    "bytes": 431,
+    "sha256": "a6b80560313c20344f5018c77986f8adb0f195549f93fb4126b9aef8be521ab8"
+  },
+  "capture_basis": "Exact caller-visible request and original native FINAL retained in the current conversation; both had also been captured locally before handle reuse, before environment failure. This new receipt is not asserted byte-identical to the earlier inaccessible wrapper.",
+  "new_dispatch_performed": false
+}

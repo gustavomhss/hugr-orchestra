@@ -1,0 +1,96 @@
+{
+  "schema": "s1-03-environment-loss-custody/v1",
+  "observed_at_utc": "2026-11-15T11:50:58.163Z",
+  "status": "PARTIAL_EXACT_RECOVERY_NOT_COMPLETE_CUSTODY",
+  "environment": "No usable execution environment is available. Wait for an environment to become available before using this tool.",
+  "source_workspace": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390",
+  "last_published_input_payload": "191a3b3a12c60a2df70c1dbf36510303c025c5ea",
+  "last_published_seal": "8873e22afcecddf58688a92e7ff9cb208dc4e2fd",
+  "original_publication_and_body_gates_preserved": true,
+  "unavailable_previously_recorded_file_identities": [
+    {
+      "path": "receipts/consumer-dispatches.json",
+      "bytes": 65941,
+      "sha256": "22f2d14860df2df8bf975d0955b664d4dfecbf450d46e526e7e2222afcfe2ff9"
+    },
+    {
+      "path": "consumers/verified-summary-v1/consumer-summary.json",
+      "bytes": 134340,
+      "sha256": "37dc9ccfa9ceaae418fed41fc931b9ad12f9919de73b893c72d4279ef5775b73"
+    },
+    {
+      "path": "consumers/verified-summary-v1/consumer-summary.md",
+      "bytes": 32399,
+      "sha256": "5b306a9db2bfaa2bc9982dce20e0cf05ab28e7dc9439c555042f31f6dab0a90c"
+    },
+    {
+      "path": "assembly/consumer-summary-run/dispatch-audit.json",
+      "bytes": 138951,
+      "sha256": "96b92fc0b4dd5743355ddd33fd9b4889f62fa7a49642fb3d6ac3678a351acd5d"
+    },
+    {
+      "path": "receipts/native-package-assembly.json",
+      "bytes": 934916,
+      "sha256": "6d88c95e7cd0d18a9b7fec54dc34af2be6471af87a440fe89c6fc1c0a5b6319d"
+    },
+    {
+      "path": "assembly/final-config-native-inputs-v1.json",
+      "bytes": 158316,
+      "sha256": "abc2d739024a58f3911980ba0ef186f470fbcbdcf6241db95131542c0bbbd74b"
+    },
+    {
+      "path": "maintenance/final-disposition-v1.json",
+      "bytes": 8212,
+      "sha256": "9dd5a71b3e9232b1e5d26dd620591b1eb4537c1f4d5012e8369b569a0c8dc995"
+    },
+    {
+      "path": "receipts/final-operational-disposition-v1.json",
+      "bytes": 10824,
+      "sha256": "5d629625fc9d764b6b4e854541c350edb41bccd3fc2e3dd76145196cb29240e7"
+    },
+    {
+      "path": "criteria-matrix.json (unpublished pre-loss v2)",
+      "bytes": 65581,
+      "sha256": "baa3b08adbfe9060fe44d90ec8b9a3d5dd86bf4d0c0664c63478e41687e8ec5c"
+    },
+    {
+      "path": "execution-ledger.jsonl (unpublished 550-row local state)",
+      "bytes": null,
+      "sha256": "66abda692fd4bed1f0981feeaf27dcf36cd333c735ffd7025de537ebd6ffe828"
+    },
+    {
+      "path": "consumers/A-PERMITTED/final-response.md",
+      "bytes": 1619,
+      "sha256": "6ab418e7d0a8d16b8d0c60895bbd2f16252ea9422c9c3bcfb478b30455dcb5ac"
+    },
+    {
+      "path": "consumers/A-VIOLATION/final-response.md",
+      "bytes": 1492,
+      "sha256": "de290d206b855511144e48e676c67f4888b4b1140f546c33e446f43442e39696"
+    },
+    {
+      "path": "consumers/A-IMPACT/final-response.md",
+      "bytes": 1917,
+      "sha256": "3683f051a281fb750f0ae1fb27903dc521d79d1fe0946a0957a8723d4c5b1bc4"
+    },
+    {
+      "path": "consumers/S-FAILURE/final-response.md",
+      "bytes": 2016,
+      "sha256": "13f04cd6020f7f52d773b686f14a6c9134ae0f191d6df974b0baaf4050a75535"
+    },
+    {
+      "path": "consumers/B-ABSTAIN/final-response.md",
+      "bytes": 1899,
+      "sha256": "53fba3f5ea148761c6fcbd9ca210ac33deeb399336bced40eae16c32b4d94668"
+    }
+  ],
+  "additional_unavailable_scope": "Original consumer per-turn request/response/capture files and all 26 complete bridge query/call/stdout/stderr/forward records were verified locally before failure, but cannot now be read/uploaded. The exact consumer audit REPORT and native FINAL and two exact consumer FINALs were recovered; those are not replacements for every raw record.",
+  "native_originals_not_reconstructed_or_rerun": true,
+  "recovered_package_method": "Deterministic reassembly solely from immutable published configuration, inventory, input translations, plan, gates and 72 exact reference files; output matches the previously executed package byte length and SHA256.",
+  "unexecuted_due_to_environment": [
+    "Remaining local file read/upload and complete original consumer evidence delivery",
+    "Official runtime/maintenance/gate retries if dependencies were to become available"
+  ],
+  "pending_local_write": "functions.exec cell 477 was terminated after no result; completion of attempted finalize-work-v1.py write/run was not observed and is not claimed.",
+  "unblock": "Restore the same workspace or provide a legitimate export of its exact task files; verify listed hashes before upload. Do not recover private host logs or substitute reconstructed native replies."
+}

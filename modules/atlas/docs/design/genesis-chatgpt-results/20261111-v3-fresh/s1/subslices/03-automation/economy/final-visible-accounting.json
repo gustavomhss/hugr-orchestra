@@ -1,0 +1,48 @@
+{
+  "schema": "s1-03-visible-accounting-after-environment/v1",
+  "observed_at_utc": "2026-11-15T11:54:16.872Z",
+  "published_prior_ledger": {
+    "commit": "191a3b3a12c60a2df70c1dbf36510303c025c5ea",
+    "bytes": 389450,
+    "sha256": "c3ffa9c0331246c844c8a5ecd5272a8f8995f7ddcfefa655dcf743b6482c81a7",
+    "rows": 445,
+    "rows_without_event_id": 10
+  },
+  "current_cutoff_ledger": {
+    "bytes": 392161,
+    "sha256": "625dc9e2b4fcd93aac1e2d627efa2fa04dcd7c8084c7c8f3048f7803e2e64a84",
+    "rows": 453,
+    "added_rows": 8
+  },
+  "unpublished_pre_failure_ledger": {
+    "reported_rows": 550,
+    "sha256": "66abda692fd4bed1f0981feeaf27dcf36cd333c735ffd7025de537ebd6ffe828",
+    "state": "EXISTED_AND_VERIFIED_LOCALLY_NOW_UNAVAILABLE_NOT_RECONSTRUCTED"
+  },
+  "pre_failure_review_dispatch_snapshot": {
+    "reported_judge_dispatch_records": 249,
+    "canonical_request_identity_checks_matched": 249,
+    "state": "Original detailed snapshot unavailable; these are observed script-output counts, not complete host invocation total or wire checks"
+  },
+  "usage_by_stage": {
+    "construction": "Twelve real bodies accepted; original producer/gate records at P0. Physical usage UNKNOWN.",
+    "validation_and_correction": "Original gates preserved; final new review events are appended when actual. Physical usage UNKNOWN.",
+    "incremental_update": "Both own maintenance cases remain NOT_RUN_PRECONDITION; missing usage is not called zero.",
+    "daily_reads": "33 native requests and 33 completions, 26 actual CLI, 7713 UTF-8 forwarded bytes according to recovered original audit. Bytes are not tokens or money."
+  },
+  "physical_attempts": "UNKNOWN",
+  "tokens": "UNKNOWN",
+  "cost": "UNKNOWN",
+  "historical_campaign": "GLOBAL_UNRECONCILED",
+  "financial_guarantee": "NOT_EXPOSED_BY_NATIVE_HOST",
+  "complete_host_native_total_certified": false,
+  "external_paid_calls": false,
+  "silent_provider_or_model_fallback": false,
+  "budget_reset": false,
+  "limits": [
+    "Ten original ledger aggregate rows have no event_id.",
+    "Unpublished detailed consumer dispatch ledger is inaccessible; this current ledger records an explicitly aggregate recovery, not invented individual records.",
+    "Later review/closing events are appended after this cutoff; this snapshot does not predeclare them.",
+    "No original native response is reconstructed to fill a gap; no host private logs are accessed."
+  ]
+}

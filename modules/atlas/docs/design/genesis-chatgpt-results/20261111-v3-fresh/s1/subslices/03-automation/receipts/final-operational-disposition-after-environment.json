@@ -1,0 +1,125 @@
+{
+  "schema": "s1-03-operational-disposition-after-environment/v1",
+  "recorded_at_utc": "2026-11-15T11:54:16.872Z",
+  "completion_state": "INCOMPLETE_BLOCKED",
+  "scope": "S1-03 only",
+  "package": {
+    "path": "native-package.json",
+    "bytes": 485602,
+    "sha256": "ddada3d4b67cff13ef3a5817b95efc275b0d288061436546c8ec6b73290766a6"
+  },
+  "source_input_payload": "191a3b3a12c60a2df70c1dbf36510303c025c5ea",
+  "native_prepare": "ACTUALLY_EXECUTED_BLOCKED",
+  "runtime_binding": "NOT_RUN_PRECONDITION_NO_PREPARED_CANDIDATE",
+  "governed_publish": "NOT_RUN_PRECONDITION_NOT_OBSERVED_POLICY_DENIAL",
+  "consumers": {
+    "actual_native_requests": 33,
+    "actual_native_completions": 33,
+    "actual_CLI": 26,
+    "index": 11,
+    "read": 15,
+    "holds": 22,
+    "need_errors": 4,
+    "returned_envelope_utf8_bytes": 7713,
+    "direct_keys_attempted": 12,
+    "bodies_consumed": 0,
+    "domain_cases_passed": 0,
+    "proof": "Original audit REPORT and native FINAL recovered exactly. Two original case FINALs recovered exactly; five and all raw query chains unavailable. No reconstruction or replacement execution."
+  },
+  "maintenance": "maintenance/final-disposition-after-environment.json",
+  "blocks": [
+    {
+      "id": "B-NATIVE-INPUT-LIMIT",
+      "operation": "Official full-selection prepare",
+      "observed": "exit 1 / native-file-limit at historical coverage-needs-projection.json; no prepared candidate; all six oversized inputs retained.",
+      "evidence": [
+        "receipts/native-prepare-final.json",
+        "receipts/native-prepare-final.stderr",
+        "proposals/s4-source-limit.patch",
+        "proposals/s4-source-limit-validation-v2.json"
+      ],
+      "local_owner": "S1-03",
+      "dependency_owner": "S4 / Atlas runtime",
+      "unblock": "Released compatible support for all exact whole inputs; the existing 1 MiB two-file proposal is unapplied and untested outside S1 ownership. Repeat actual preparation and dependent proof with a valid new candidate."
+    },
+    {
+      "id": "B-PUBLICATION-AUTHORITY",
+      "operation": "Exact runtime binding and governed publication",
+      "observed": "NOT_RUN_PRECONDITION. No prepared candidate; S1 policy/actor/ratifier unprovisioned. No actual policy rejection was observed.",
+      "evidence": [
+        "receipts/native-prepare-final.json",
+        "receipts/s4-runtime-release-original.json"
+      ],
+      "local_owner": "S1-03",
+      "dependency_owner": "Authorized Atlas policy owner / coordination",
+      "unblock": "After successful preparation, actual authorized S1 isolated authority and two exact runtime binding decisions. Do not copy nominal S4 responsibility or modify policy excluded by COMMON."
+    },
+    {
+      "id": "B-OWN-CONSUMPTION-MAINTENANCE",
+      "operation": "Own accepted consumers and frozen maintenance cases",
+      "observed": "Seven real consumers issued 26 CLI calls; 22 store HOLDs and four need errors; fifteen reads delivered no body. Both maintenance scenarios are NOT_RUN_PRECONDITION.",
+      "evidence": [
+        "assembly/consumer-summary-run/REPORT.md",
+        "maintenance/final-disposition-after-environment.json"
+      ],
+      "local_owner": "S1-03",
+      "dependency_owner": "Prior prepare/authority/runtime preconditions",
+      "unblock": "Establish accepted readable baseline and execute the seven cases and both frozen own maintenance cases with actual results and same-pair review. Preserve current failed attempts; no domain PASS inferred."
+    },
+    {
+      "id": "B-FINAL-GUARD",
+      "operation": "Faithful checkout and bun run check:guards --base origin/dev --json",
+      "observed": "Official final guard NOT_RUN. Exact 1339105-byte historical ZIP, Git blob d83941a9d836a23e466ca09ecba1f21d423094cb, could not be retrieved; current H0 base64 fetch still returned empty content. Environment subsequently unavailable.",
+      "evidence": [
+        "receipts/guard-materialization/binary-transport-blocker.json",
+        "receipts/guard-materialization/materialization-verification.json",
+        "receipts/guard-materialization/additional-artifact-route-check.json",
+        "receipts/guard-materialization/exact-zip-library-route-check.json",
+        "receipts/final-capability-refresh-20261115.json"
+      ],
+      "local_owner": "S1-03",
+      "dependency_owner": "Authorized exact binary transport and usable execution environment",
+      "unblock": "Obtain exact blob bytes by authorized route, restore environment and materialize current HEAD with origin/dev ancestry; execute the official guard. No omitted file, fabricated Git/diff or previous green."
+    },
+    {
+      "id": "B-ORIGINAL-NATIVE-FINAL",
+      "operation": "Preserve original research-flow L2 correction v2 FINAL",
+      "observed": "Original native FINAL was not separately captured before compaction. Producer-written response and later explicitly nonverbatim confirmation remain preserved.",
+      "evidence": [
+        "receipts/preservation-recovery-capability-check.json",
+        "receipts/continuation-controls/research-l2-v2-later-confirmation.json"
+      ],
+      "local_owner": "S1-03",
+      "dependency_owner": "Legitimate original host response export if available",
+      "unblock": "Only the actual original visible response from a legitimate preserved source closes GO-I1. A new reply, reconstructed wording, later PASS or private host logs do not. If unrecoverable, obligation remains open absent explicit owner amendment."
+    },
+    {
+      "id": "B-ENVIRONMENT-AND-UNPUBLISHED-CUSTODY",
+      "operation": "Read/upload original task files and finish local operational verification",
+      "observed": "Host environment unavailable; narrow read returned No usable execution environment is available. No online alternate device or exposed restore capability. Local projection produced no output. Five consumer FINALs and complete per-call chains remain inaccessible.",
+      "evidence": [
+        "receipts/environment-failure.json",
+        "receipts/environment-loss-custody.json",
+        "receipts/package-exact-recovery.json",
+        "receipts/parent-visible-captures/final-package-projection-blocked.original.md"
+      ],
+      "local_owner": "S1-03",
+      "dependency_owner": "Host workspace recovery or legitimate exact task-file export",
+      "unblock": "Restore the same workspace or export exact task files and verify recorded hashes. The native package, prepare receipt/streams, audit REPORT/native FINAL, two consumer FINALs and Git readbacks have been recovered exactly; this partial recovery does not replace the missing originals."
+    }
+  ],
+  "accounting": {
+    "physical_attempts": "UNKNOWN",
+    "tokens": "UNKNOWN",
+    "cost": "UNKNOWN",
+    "historical_campaign": "GLOBAL_UNRECONCILED",
+    "financial_guarantee": "NOT_EXPOSED_BY_NATIVE_HOST",
+    "not_an_invented_funding_or_permission_blocker": true
+  },
+  "global_only": {
+    "S1_union": "S1_COORDINATION",
+    "global_union_human_acceptance_landing_production": "ROOT / authorized owner"
+  },
+  "no_transfer_of_missing_local_proof": true,
+  "final_review_scope": "Review the complete available report, matrix and exact package composition; consumer judgment and custody that require unavailable originals remain blocked. A final opinion accepting this truthful blocked disposition is not mission PASS or runtime binding."
+}

@@ -1,91 +1,118 @@
 # S1-03 — Automação, pesquisa e fronteiras do Core
 
-**Estado corrente: IN_PROGRESS.** Os doze corpos L1–L4 planejados têm aceite semântico integral do mesmo par J1/J2, sem findings obrigatórios atuais nesses corpos. A entrada local L4 v1 foi aceita com 15.409 bytes e SHA256 e167d2bc65603a3caffe094f5be269bb428f0636a03e00b66383769566657503. A missão segue para suas operações, consumidores, manutenção e revisão final; estes aceites não encerram a entrega.
+**Estado de entrega: INCOMPLETE_BLOCKED.** As 462 fontes atribuídas foram reconciliadas e os doze corpos necessários L1–L4 receberam aceite semântico integral dos mesmos dois juízes. O pacote nativo completo foi montado e seu prepare oficial foi executado, com recusa por limite de entrada. Os sete consumidores reais fizeram 26 consultas e não receberam corpos. Manutenção e guard conservam impedimentos demonstrados. A queda posterior do ambiente deixou parte dos originais locais sem publicação; a recuperação preserva somente bytes comprováveis.
 
-## Identidade, autoridade e publicação observada
+Este relatório deve ser lido com a matriz única dos 50 critérios, os pareceres finais originais referidos pelo handoff e seus limites. Dois aceites de corpo, Git publicado ou uma disposição documental correta de bloqueio não significam DELIVERY_COMPLETE, binding Atlas ou aprovação dos casos de consumidor.
 
-- Execução: `34269cf4-d631-41c5-a30b-85b0ec217390`, UUID local; não é ID de conversa do host.
-- Repositório: `gustavomhss/hugr-orchestra`; branch única: `genesis-s1-automation`.
-- HEAD inicial: `89c78249e63060acf7c41f45f14af88fd51aa0c4`. Última releitura: `d5a84e583f55b31b17cbb407553243bd0801c56c`, sem avanço externo observado. Payload anterior: `9cd485743dc9c6bde016581e0e6e2818762dab51`.
-- Fonte investigada: `1cde2ff7a71bcf7aecb5d030917b577165135d38`; kit: `70234d541a9a3539935ef16f19e33c8f2d5f30ec`; protocolo: `ee2521a5b966bd505cc95bd1c733e09e12f33531`.
-- A principal é a única escritora remota. Toda escrita de conhecimento fica neste namespace. Nenhum código de produto, política, guard, workflow ou gerado foi alterado.
-- Os arquivos centrais históricos da S1, as outras quatro subfatias e `s1.core.entry` permanecem preservados. A entrada nova será `s1.subslice03.entry`.
+## Identidade, escopo e preservação
 
-## População e produção
+- Repositório gustavomhss/hugr-orchestra; branch única genesis-s1-automation. A principal é a única escritora remota, pelo conector GitHub, com expected_sha e force:false.
+- Execução 34269cf4-d631-41c5-a30b-85b0ec217390, UUID local, não ID de conversa do host. HEAD inicial observado: 89c78249e63060acf7c41f45f14af88fd51aa0c4. Não houve nova branch, reset, PR ou merge.
+- Baseline investigado: 1cde2ff7a71bcf7aecb5d030917b577165135d38; kit: 70234d541a9a3539935ef16f19e33c8f2d5f30ec; protocolo: ee2521a5b966bd505cc95bd1c733e09e12f33531; herança: a8df22ae3a140c58c63f62ce2a634c84f415c943.
+- Escritas persistidas somente em s1/subslices/03-automation/. Nenhum produto, gerado, política, aprovação, segredo, AGENTS, guard ou workflow foi alterado.
+- Arquivos centrais históricos, outras quatro subfatias e s1.core.entry ficam preservados. A nova entrada é s1.subslice03.entry.
 
-O inventário atribuído contém **462 fontes**: 204 de automação, 130 de research/toolkits, 24 de fronteiras e 104 de entrada/suporte. As capturas inteiras somam 4.740.213 bytes e foram conferidas por SHA-256 e Git blob. Inventário e integridade não substituem o exame semântico. As profundidades de leitura e os testes não executados permanecem explícitos na cobertura. `receipts/final-coverage-reconciliation.json` confere os 462 paths/blobs e associa cada disposição ao corpo L1 corrente aceito, preservando o agregado anterior e os arquivos dos produtores.
+## Conteúdo produzido e julgamentos
 
-`artifact-plan.json` congelou necessidades, predecessores e consultas diretas antes da produção dependente. `semantic-acceptances.json` conserva os gates atuais e os aceites anteriores reabertos por fidelidade à fonte.
+As 462 fontes inteiras somam 4.740.213 bytes: 204 de automação (155 Actions, 38 Board, 11 agendamento), 130 research/toolkits, 24 fronteiras e 104 suporte/entrada. coverage.jsonl e receipts/final-coverage-reconciliation.json conferem paths, Git blobs, SHA-256 e vínculo com os quatro L1 atuais. Inventário e integridade não substituem entendimento; profundidades, grupos de fixtures/gerados/vendor/suporte e testes não executados são explícitos.
 
-| Artefato | Camada | Estado corrente |
-| --- | --- | --- |
-| `s1.core.automation` | L1 | PASS semântico completo — v4 |
-| `s1.core.research` | L1 | PASS semântico completo — 4 |
-| `s1.core.boundaries` | L1 | PASS semântico completo — 3 |
-| `s1.subslice03.support` | L1 | PASS semântico completo — 2 |
-| `s1.subslice03.automation-flow` | L2 | PASS semântico completo — v3 |
-| `s1.subslice03.research-flow` | L2 | PASS semântico completo — 3 |
-| `s1.subslice03.boundary-flow` | L2 | PASS semântico completo — 2 |
-| `s1.subslice03.automation-impact` | L3 | PASS semântico completo — v2 |
-| `s1.subslice03.research-impact` | L3 | PASS semântico completo — 1 |
-| `s1.subslice03.automation-maintenance` | L4 | PASS semântico completo — v1 |
-| `s1.subslice03.research-maintenance` | L4 | PASS semântico completo — v1 |
-| `s1.subslice03.entry` | L4 | PASS semântico completo — v1; autor /root/entry_l4, fork_turns=none |
+O trabalho priorizou as lacunas de Actions, Board/agendamento e research/toolkits. Há quatro L1, três L2, dois L3 e três L4, com inputs, receitas e predecessores exatos. Os intermediários foram realmente consumidos por autores derivados após os gates; disponibilidade ao leitor Atlas é uma prova separada.
 
-Os autores trabalham em áreas locais exclusivas e contextos novos sem oracle reservado. Um autor de família é mantido entre camadas, somente após o gate de seus predecessores. A principal exposta ao oracle não assume autoria dos corpos. A família derivada de automação foi criada com `fork_turns=none` após os dois aceites de L1; receitas e despacho estão registrados em `receipts/derived-dispatches.json`. Receitas anteriores, inputs efetivos, procedimentos de correção, corpos e respostas originais ficam vinculados; metadados posteriores não se tornam receitas retroativas.
+| Artefato | Camada | Versão atual | Bytes | Aceite do corpo |
+| --- | --- | --- | ---: | --- |
+| s1.core.automation | L1 | v4 | 60767 | PASS integral J1 + J2 |
+| s1.core.research | L1 | 4 | 64106 | PASS integral J1 + J2 |
+| s1.core.boundaries | L1 | 3 | 23769 | PASS integral J1 + J2 |
+| s1.subslice03.support | L1 | 2 | 23025 | PASS integral J1 + J2 |
+| s1.subslice03.automation-flow | L2 | v3 | 16570 | PASS integral J1 + J2 |
+| s1.subslice03.research-flow | L2 | 3 | 17124 | PASS integral J1 + J2 |
+| s1.subslice03.boundary-flow | L2 | 2 | 16484 | PASS integral J1 + J2 |
+| s1.subslice03.automation-impact | L3 | v2 | 13666 | PASS integral J1 + J2 |
+| s1.subslice03.research-impact | L3 | 1 | 13972 | PASS integral J1 + J2 |
+| s1.subslice03.automation-maintenance | L4 | v1 | 13840 | PASS integral J1 + J2 |
+| s1.subslice03.research-maintenance | L4 | v1 | 13958 | PASS integral J1 + J2 |
+| s1.subslice03.entry | L4 | v1 | 15409 | PASS integral J1 + J2 |
 
-## Juízes, correções e navegação
+semantic-acceptances.json vincula os corpos e dois pareceres originais por SHA. Os autores começaram em contextos novos sem oracle reservado; a principal exposta ao oracle não escreveu os corpos. A continuidade por família foi liberada somente após aceite dos predecessores. Receitas, pedidos, deltas, fontes, respostas e revisões anteriores permanecem preservados.
 
-O par nativo persistente é `/root/s1_03_j1` e `/root/s1_03_j2`, papéis `parallel-v3-fresh/S1-03/J1` e `J2`. Ambos são independentes da autoria, receberam os critérios pertinentes e não usam ferramentas. Não há terceiro voto nem substituição de veto. A exclusividade de transporte muda somente por handover explícito, com pedidos/ACKs/pareceres preservados antes da reutilização. Ambos os handles voltaram à principal depois do agregado de automação. O courier `/root/review_relay` não recebe o oracle, e nenhum parecer é transmitido ao outro juiz.
+O par persistente é /root/s1_03_j1 e /root/s1_03_j2, papéis parallel-v3-fresh/S1-03/J1 e J2. Não usa ferramentas, não recebe o parecer atual um do outro e não foi substituído. O courier é cego ao oracle. Helpers de auditoria/montagem não são terceiro voto.
 
-Os quatro lotes de automação receberam PASS e encerraram seus pedidos próprios de evidência. Depois, J1 e J2 examinaram o corpo v4 integral (60.767 bytes; SHA256 `968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae`) e emitiram aceites explícitos sem achados obrigatórios restantes. Os seis deltas autorados e a reconciliação individual das 204 fontes foram preservados. Pedidos já encerrados não foram reabertos por simetria. Incidentes de transcrição têm mensagem defeituosa, correção e ACK/decisão preservados; a dúvida sobre endOf permanece com causa de leitura/recepção não comprovada. Não há checksum independente de wire do host disponível.
+Os findings obrigatórios dos corpos foram corrigidos e reavaliados pelo mesmo par: entre eles, qualificações do scheduler, fonte da default branch versus ref selecionada, fidelidade de research/toolkits e cron YAML GitHub versus recurso pipeline schedule GitLab. Automation L1 v4, automation-flow v3 e automation-impact v2 têm aceites integrais atuais; FIX-FIRSTs e versões anteriores continuam históricos. Pedidos encerrados não foram reabertos por simetria.
 
-Automation-flow L2 v3 recebeu aceite do corpo inteiro pelos dois juízes (16.570 bytes; SHA256 `64d97f6da72c92a00ad8e3d91e20a42fd360dbedb502733c0548746462442287`). Foram corrigidas duas omissões de qualificação do scheduler na pré-revisão e AF-L2-J2-01, que distinguia prova de dispatch na branch padrão da fonte da ref selecionada. O PASS anterior de J1 e o FIX-FIRST de J2 sobre v2 permanecem históricos; a v3 tem ambos PASS, sem pendências. Os originais nativos, deltas, receita e inputs cumulativos foram preservados antes da liberação de L3.
+## Contribuição à navegação da união
 
-Research L1 v4 → flow L2 v3 → impact L3 v1 → maintenance L4 v1 tem gates completos. Boundaries L1 v3 → flow L2 v2 e support L1 v2 também estão aceitos. As correções dos predecessores foram feitas pelos autores e reavaliadas pelo mesmo par antes de liberar as camadas seguintes.
+producers/boundaries/union-navigation-proposal.md mapeia 36 chaves históricas e cinco donos por necessidade. navigation-acceptance.json registra PASS_LOCAL_PROPOSAL_NOT_SELECTED_FOR_UNION. A proposta não seleciona versões externas nem aprova a união; a coordenação consome e decide.
 
-A proposta concreta de navegação cobre as 36 chaves históricas e cinco donos. `navigation-acceptance.json` registra **PASS_LOCAL_PROPOSAL_NOT_SELECTED_FOR_UNION**. Isso não seleciona versões externas nem aprova a entrada global; a coordenação faz essa escolha após consumir as cinco entregas.
+A entrada local possui quatro predecessores de build e onze links de navegação separados. O pacote define cinco roots: entry, component, flow, operational e maintenance. A entrada histórica foi relida no GitHub: 7312 bytes, SHA-256 6a488ca8f9717a497949b71ed41db84d995f23b90c31cc59c22c5bd86239ca6c, Git blob 894266bd4543763fb1ee2a4dbf0ba749a244ec48.
 
-## Atlas e controles comuns
+## Pacote e execução Atlas
 
-O release S4 r3 foi relido na branch correta `genesis-fresh-s4`, commit `db9b4235022c4df32fe3bfd4faeea8adcd69abb7`. O candidato nativo é `e3a8ab8cf56dbff1ee91272df51ffa398d882aa1`; controles comuns pertencem a `7102f2e3a1a9a3822bcd0ae054b36ecffe9da553`. A materialização isolada de 399 arquivos foi conferida. Instalação/build/typecheck de preparação registrados não são CI próprio.
+O snapshot de inputs foi publicado no payload 191a3b3a12c60a2df70c1dbf36510303c025c5ea, selo 8873e22afcecddf58688a92e7ff9cb208dc4e2fd, sobre d5a84e583f55b31b17cbb407553243bd0801c56c, com lease. Paths, tamanhos, blobs e arquivos críticos foram relidos. As releituras originais estão preservadas em receipts/publication/native-inputs-v1/. Publicação Git é distinta de ativação Atlas.
 
-O artefato GitHub Actions 13883635728, run 43077975153, preserva 220 testes, 58 suites, guards sem achados e 22 mutantes rejeitados somente no candidato/casos dos controles comuns. Seis componentes tiveram paridade exata verificada. O mesmo par aceitou o reúso delimitado dos quatro controles históricos AC-04-local-native. Nenhuma dessas provas concede binding, consumo ou manutenção próprios automaticamente.
+native-package.json tem 485602 bytes, SHA-256 ddada3d4b67cff13ef3a5817b95efc275b0d288061436546c8ec6b73290766a6, doze artefatos, 694 inputs únicos inteiros e 979 usos. O manifesto de entry foi adaptado mecanicamente preservando o original e 21 inputs. Após a queda do ambiente, o pacote foi remontado deterministicamente dos inputs imutáveis publicados: tamanho e SHA voltaram a coincidir exatamente com os do pacote realmente executado. receipts/package-exact-recovery.json registra o processo e 72 referências relidas. Isso não é nova autoria nem nova execução Atlas.
 
-A tentativa anterior de prepare, limitada à captura pré-aceite de automação, retornou exit 1 / `native-file-limit` para a projeção histórica de 726.892 bytes. O observador real também recusou o lock Modelina de 266.885 bytes como unavailable. Os inputs necessários continuam inteiros; não foram removidos, divididos ou reclassificados para passar. A proposta concreta de aumento de limite para S4 permanece não aplicada e não testada.
+O candidato efetivamente executado foi e3a8ab8cf56dbff1ee91272df51ffa398d882aa1, release S4 r3 db9b4235022c4df32fe3bfd4faeea8adcd69abb7. Os 399 arquivos do runtime foram conferidos antes da operação. A source root isolada não é checkout Git: HEAD observado null, comando Git exit 128, sem HEAD fabricado. A releitura de S4 confirmou o mesmo release e bytes.
 
-A tentativa final ainda deve usar o pacote fechado com os doze artefatos, depois de publicar seus inputs imutáveis. O adapter calculará suas próprias identidades e versões. Hashes de transporte e PASS semântico não são binding. Política/ator/ratificador de S1 não foram provisionados; o COMMON exclui mudanças de políticas. A declaração nominal de S4 não será copiada como autoridade desta execução.
+Em 2026-11-15 11:08:53 UTC, o prepare oficial da seleção completa terminou com exit 1, sem timeout e sem arquivo preparado:
 
-## Consumidores e manutenção
+```text
+native-file-limit: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/a-l1-evidence-v1/coverage-needs-projection.json
+```
 
-Sete casos e dois cenários de manutenção foram congelados antes da produção, com oracle reservado. Os casos públicos estão em `consumers/public-cases.json`; a ponte v2 está congelada e ainda não executou consumidores. Cada contexto novo terá somente pergunta, protocolo e chaves públicas, até 2 index, 5 read e 60.000 bytes UTF-8 de retorno, incluindo envelopes. A separação é por contexto/instruções e ponte fiel; não se alega sandbox de filesystem. A conferência de AC-03 revelou que o mapa inicial citava diretamente onze dos doze artefatos. `consumers/direct-read-supplement-v1.json`, congelado antes de qualquer consumidor, acrescenta somente `s1.subslice03.research-maintenance` ao caso público R-FAILURE já existente. Perguntas, respostas reservadas, quotas, grafo e plano original ficam intactos; o despacho v2 inclui esse suplemento. Os doze artefatos terão tentativa de consulta direta, sem confundir recusa com consumo.
+receipts/native-prepare-final.json, stdout e stderr foram recuperados de resultados originais visíveis e conferidos com os hashes anteriores à falha. O limite do runtime é 256000 bytes por entrada; seis inputs genuínos excedem-no. O primeiro tem 726892 bytes; há evidência de automação de 953016 bytes e o lock Modelina de 266885 bytes. Nenhum input foi removido, dividido ou reclassificado. A proposta concreta de limite comum de 1 MiB em dois arquivos S4 permanece não aplicada e não testada, fora da propriedade desta subfatia.
 
-As operações reais de baseline de manutenção retornaram exit 2 / HOLD `ownership-store-unavailable`. Isso não prova um caso de domínio nem recusa de stale após mutação. Os dois patches de cenário estão preparados e não executados. Sem seleção aceita utilizável, observe/plan/rebuild, verificação dos independentes e recuperação permanecem pendentes. Um conjunto previsto pelo grafo estático não é resultado do planner.
+Binding exato e publicação governada estão NOT_RUN_PRECONDITION por ausência de candidato preparado. Separadamente, política/ator/ratificador S1 estão não provisionados; não houve recusa de política observada e não se copiou a declaração nominal S4. O COMMON exclui alterações de política por S1-03. O campo interno de operações pendentes do pacote preserva os bytes executados; resultados posteriores ficam em recibos.
 
-## Preservação, gates e economia
+## Consumidores reais e limite de custódia
 
-Há uma lacuna real de preservação: o FINAL nativo da correção research-flow L2 v2 não foi capturado separadamente antes da compactação. O response.md original, os outputs e a confirmação posterior não literal estão preservados. A confirmação não reconstrói o texto ausente; GO-I1 integral permanece sem certificação. Os pareceres atuais mantêm essa ressalva.
+Sete contextos novos, com fork_turns=none, receberam apenas caso/protocolo públicos. A ponte executou a CLI oficial e encaminhou envelopes integrais. A separação é por contexto/instrução, não sandbox técnico de filesystem. O suplemento público de read de research-maintenance foi congelado antes de qualquer consumidor, sem mudar pergunta, oracle, quotas ou grafo.
 
-O guard final não foi executado. A reconstrução Git verificável de um checkpoint anterior recuperou 1.660 commits e 2.378 trees, mas checkout/numstat recusaram a ausência do ZIP histórico Git blob `d83941a9d836a23e466ca09ecba1f21d423094cb`, 1.339.105 bytes. As rotas binárias disponíveis no conector falharam; não se omitiu o arquivo nem se fabricou Git/diff para obter verde. O comando de preflight anterior recusou no-repository e não vale como gate final. Desbloqueio: bytes exatos do blob por rota autorizada, checkout fiel do HEAD corrente e execução do guard oficial. Não foi observado workflow próprio; o conector expõe rerun, mas não dispatch novo. A releitura do conector em `receipts/branch-runtime-refresh-before-auto4-close.json` confirmou o mesmo HEAD e zero workflows próprios. `receipts/guard-materialization/current-head-binary-check.json` confirmou o mesmo SHA do ZIP no HEAD `d5a84e58`, novamente com conteúdo base64 vazio. A releitura final dos gates ainda é necessária. A busca adicional pelo título exato do ZIP não retornou candidato correspondente e não abriu nenhum resultado alheio; `receipts/guard-materialization/exact-zip-library-route-check.json` preserva o alcance dessa rota, sem alegar ausência global. O dossiê mecânico em `assembly/operational-blocker-dossier/` consolida os recibos e as condições de desbloqueio no seu recorte temporal; não é terceiro parecer nem dispensa as operações finais.
+| Caso | Index | Read | HOLD | Erros de need | Bytes de retorno UTF-8 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| A-PERMITTED | 1 | 2 | 3 | 0 | 921 |
+| A-VIOLATION | 2 | 2 | 3 | 1 | 1172 |
+| A-IMPACT | 2 | 2 | 3 | 1 | 1162 |
+| S-FAILURE | 1 | 2 | 3 | 0 | 915 |
+| R-FAILURE | 2 | 3 | 4 | 1 | 1480 |
+| B-ABSTAIN | 2 | 2 | 3 | 1 | 1155 |
+| ENTRY-NAV | 1 | 2 | 3 | 0 | 908 |
+| Total | 11 | 15 | 22 | 4 | 7713 |
 
-A auditoria mecânica em `assembly/ledger-audit/` examinou um snapshot em andamento, sem atuar como terceiro juiz. Seus três achados de arquivo/contabilidade receberam disposição em `receipts/ledger-audit-corrections.json`: despacho arquivado e lançado sem reenvio; falha de transporte e controle recebido classificados separadamente; vínculo do texto efetivo extraído do request original por adendo. Originais e linhas anteriores permanecem intactos. O snapshot não certifica a contagem final da execução ainda ativa.
+Foram 33 chamadas nativas, 33 retornos preservados localmente e sete FINALs. As 26 CLI são unidade distinta. Quatro needs iniciais inválidos receberam native-query-need, exit 1; os consumidores escolheram flow na consulta seguinte. As 22 consultas válidas deram ownership-store-unavailable, exit 2. As doze chaves foram tentadas diretamente, mas nenhum dos quinze reads entregou corpo. Não houve timeout, envelope parcial ou supressão por quota; 2 index, 5 read e 60000 bytes por caso foram respeitados.
 
-`execution-ledger.jsonl` registra trabalho nativo efetivo, correções, transportes e respostas. Correções de contabilidade preservam a linha anterior e não contam como nova chamada. Tokens, tentativas físicas internas e cobrança continuam UNKNOWN; histórico global GLOBAL_UNRECONCILED. Não há chamada paga externa ou troca silenciosa de modelo/provider. A reconciliação final deve incluir consumidores e juízo da entrega.
+**Nenhum caso de domínio passou**, inclusive B-ABSTAIN: abster-se por falta de acesso não comprova o raciocínio de domínio congelado. A auditoria mecânica original conferiu todos os vínculos/identidades antes da queda. Seu REPORT.md de 7877 bytes e seu FINAL de 3453 bytes foram recuperados exatamente, assim como os FINALs R-FAILURE e ENTRY-NAV. Cinco FINALs e as cadeias completas de pedidos/streams/forwards ainda estão no ambiente indisponível. Os JSONs de auditoria e dispatch também não puderam ser recuperados integralmente.
 
-O L3 automation-impact v1 (13.454 bytes, SHA256 `cc7ebd4319e301cf3100f83867a889c6295e52c7d0c39a769d2962bc251c9722`) recebeu PASS de J2 e FIX-FIRST de J1. O achado AI-L3-J1-01 exige separar o impacto de editar cron YAML GitHub do contrato do recurso pipeline schedule GitLab. A correção foi despachada ao mesmo autor com receita congelada, sem nova fonte, oracle ou parecer completo. Ambos os originais e o handover permanecem em `judgments/derived/derived-automation-impact-v1/`. A v2 corrigiu uma única cláusula; a inversão recompõe exatamente v1. Os dois juízes aceitaram o corpo v2 inteiro (13.666 bytes; SHA256 `05aeecb75fb2c4f8afb34fc44cf315490d800ac976eed82100f279ec2402044d`), encerraram AI-L3-J1-01 e não deixaram achado obrigatório. O L4 foi então liberado pela receita própria, sem antecipar seu aceite.
+receipts/environment-loss-custody.json lista os hashes conhecidos e o alcance. O relatório original conserva seus links locais como evidência histórica; esses links não significam que todos os arquivos foram publicados. Não se inventaram respostas, não se pediu reemissão aos consumidores e não se rodaram substitutos para preencher os originais ausentes. Avaliação direta completa desses originais permanece aberta.
 
-A auditoria mecânica de aliases em `assembly/response-alias-audit/` confirmou duas atribuições auxiliares de resposta feitas após sobrescrita do path corrente por revisão posterior. `receipts/response-alias-corrections-applied.json` aplicou dois aliases exatos e três adendos, preservando as 415 linhas anteriores. O reconciliador V2 confere o hash declarado de cada chamada antes de registrar completion; execução real está em `receipts/ledger-reconciler-v2-first-run.json`. Isso não cria chamadas nem recompõe o FINAL nativo ausente de research L2 v2. O adendo de LF de dois envelopes do lote impact-v1 recebeu disposição mecânica em `receipts/automation-impact-v1-envelope-accounting-correction.json`, sem mudança de corpo, voto ou novo despacho.
+## Manutenção, controles e gates
 
-A releitura `receipts/branch-runtime-refresh-before-entry-completion.json` confirmou o HEAD próprio `d5a84e583f55b31b17cbb407553243bd0801c56c`, o release S4 `db9b4235022c4df32fe3bfd4faeea8adcd69abb7` e zero runs próprios. O campo API protected=false não se transforma em prova de enforcement. Esta leitura não substitui o lease fresco da próxima publicação.
+M-ACTIONS e M-SCHEDULE-RECIPE mantêm os patches congelados, preparados e não aplicados. maintenance/final-disposition-after-environment.json registra a ausência de baseline aceito legível. Observe/plan, mutação isolada, recusa de stale após drift, reinterpretação, rebinding, rebuild, comparação dos independentes e recuperação são NOT_RUN_PRECONDITION. Cinco afetados e sete independentes são expectativas estáticas, não saída de planner.
 
-## Fila finita restante
+Controles comuns S4 foram reutilizados no alcance compatível: candidato 7102f2e3a1a9a3822bcd0ae054b36ecffe9da553, artefato Actions 13883635728, run 43077975153, 220 testes/58 suites, guards sem achados e 22 mutantes rejeitados somente naquele candidato/casos. Seis componentes tiveram paridade exata; diferenças de adapters e gerados estão explicitadas. O mesmo par aceitou quatro controles históricos AC-04-local-native. Isso não passa CI, binding, consumidor ou manutenção próprios.
 
-1. Publicar e reler o snapshot imutável de inputs. A montagem prévia verificou os doze gates, 694 inputs únicos integrais e todas as identidades; `assembly/final-input-inventory.json` é inventário, sem pacote nativo emitido nem pin inventado.
-2. Montar `native-package.json` a partir do commit real e executar prepare oficial do pacote completo; continuar binding/publicação se suas precondições efetivas forem satisfeitas.
-3. Executar os sete consumidores novos por index/read reais, com tentativa de consulta direta das doze chaves; preservar cada consulta/resposta e obter avaliação pelo mesmo par. HOLD de acesso não passa caso de domínio.
-4. Executar manutenção possível ou registrar sua precondição demonstrada; reconciliar gates, economia e os 50 IDs da matriz única.
-5. Submeter a entrega exata ao mesmo par, resolver findings obrigatórios, congelar payload final P, selo H com artifact_revision=P e lease, e reler o handoff e os bytes publicados.
+O guard final oficial não foi executado. A materialização verificável de checkpoint anterior recuperou 1660 commits e 2378 trees; checkout/numstat recusaram a falta do ZIP histórico de 1339105 bytes, blob d83941a9d836a23e466ca09ecba1f21d423094cb. Rotas expostas de blob/file binário, artefatos/workflows e busca do arquivo exato não entregaram os bytes. No selo de inputs atual, o fetch base64 voltou vazio com o mesmo SHA. Não se omitiu arquivo, simulou Git/diff, alterou guard ou importou verde anterior. Preflight antigo no-repository não é gate final.
 
-A seleção local tem 4 L1, 3 L2, 2 L3 e 3 L4. O grafo mantém quatro predecessores de build da entrada, com links de navegação separados. A proposta de união conserva PASS_LOCAL_PROPOSAL_NOT_SELECTED_FOR_UNION; a entrada histórica permanece fora da seleção nova. O adaptador mecânico do manifesto de entry preservou o original e seus 21 inputs; não houve receita retroativa nem terceiro voto.
+Zero runs próprios foram observados; protected=false é apenas o campo API, sem certificação de todos os rulesets. Não se executou teste de produto local nem se criou workflow. A queda posterior impede também novas operações locais; o conector GitHub permaneceu utilizável para preservação e fechamento.
 
-**DELIVERY_COMPLETE** exige todas as obrigações próprias. Se os impedimentos materiais persistirem após esgotar a fila executável, o estado final será **INCOMPLETE_BLOCKED**, com operação, evidência, responsável e condição de desbloqueio. O trabalho não termina neste snapshot de inputs. A composição posterior pertence a S1_COORDINATION em `genesis-fresh-s1`; a união global pertence a ROOT em `genesis-fresh-final`.
+## Preservação, economia e fechamento
+
+Há uma lacuna anterior e distinta: o FINAL nativo research-flow L2 correção v2 não foi capturado separadamente antes da compactação. O arquivo de resposta do autor e a confirmação posterior explicitamente não literal permanecem, sem substituir o original. GO-I1 integral continua HOLD. Aliases de respostas e o LF adicional relatado em dois envelopes foram tratados por adendos, sem reescrever os originais existentes. Hash de request canônico não é checksum independente de wire.
+
+O ledger publicado de P0, com 445 linhas, é preservado byte a byte. Antes da queda, o ledger local atingiu 550 linhas e SHA-256 66abda692fd4bed1f0981feeaf27dcf36cd333c735ffd7025de537ebd6ffe828, mas esse arquivo e seu snapshot detalhado ficaram inacessíveis. O fechamento atual acrescenta somente eventos realmente observados, com agregados explicitamente marcados e sem inventar as linhas individuais perdidas. Dez linhas iniciais são agregadas sem event_id; registros, replies, controles e CLI não equivalem a um total físico de modelo.
+
+economy/final-visible-accounting.json distingue construção, validação/correção, manutenção e leituras. Tokens, tentativas físicas e custo são UNKNOWN; histórico GLOBAL_UNRECONCILED; garantia financeira do host NOT_EXPOSED. Não houve chamada paga externa, fallback silencioso, orçamento reiniciado, conversão de bytes/chamadas em dinheiro ou economia percentual sem baseline. Essa incerteza não cria pedido de pagamento, quota curta ou bloqueio artificial para tarefas autorizadas.
+
+## Obrigações abertas e retomada
+
+| Obrigação local | Condição de desbloqueio |
+| --- | --- |
+| Prepare completo, binding, ativação | Release S4 compatível com todos os inputs inteiros; prepare real, dois bindings exatos e autoridade S1 efetiva por via autorizada. |
+| Consumidores e manutenção | Baseline aceito legível; executar os casos congelados e comparar resultados/independentes com o mesmo par. Preservar as tentativas atuais. |
+| Guard final | Bytes exatos do ZIP, ambiente utilizável, checkout fiel do HEAD corrente/base origin/dev e execução do guard oficial. |
+| Custódia dos originais locais | Restaurar o mesmo workspace ou exportar legitimamente os arquivos da tarefa e conferir seus hashes antes de publicar. |
+| Original research L2 v2 | Recuperar somente o FINAL real de fonte legítima; confirmação, reconstrução ou nova execução não servem. Se irrecuperável, permanece aberto salvo emenda explícita do dono. |
+| Economia integral | Reconciliar registros/uso físicos por fonte legítima se expostos; manter UNKNOWN e histórico não zerado enquanto não disponíveis. |
+
+receipts/final-operational-disposition-after-environment.json identifica operação, estado observado, evidência, dono da dependência e condição por bloqueio. O trabalho independente de conteúdo, correções, pacote e consultas foi executado. Revisão final do material disponível, reconciliação dos seus eventos e payload/selo/readback são comprovados pelos originais e pelo handoff; nenhum evento futuro é simulado. Não se promete execução em background após devolver controle.
+
+A composição das cinco subfatias pertence a S1_COORDINATION, em genesis-fresh-s1; a união global a ROOT, em genesis-fresh-final. Aceite humano, landing e ativação em produção são globais e não precondições artificiais desta entrega. Isso não transfere consumidores, manutenção, guard ou custódia locais faltantes à coordenação.

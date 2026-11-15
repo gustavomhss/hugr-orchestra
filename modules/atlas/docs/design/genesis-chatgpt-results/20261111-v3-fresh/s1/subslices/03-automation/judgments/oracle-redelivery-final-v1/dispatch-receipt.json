@@ -1,0 +1,32 @@
+{
+  "schema": "s1-03-recovered-direct-oracle-delivery/v1",
+  "actual_caller": "/root",
+  "classification": "reserved-evaluator-only",
+  "calls": [
+    {
+      "target": "/root/s1_03_j1",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "request": "request-j1.json",
+      "message_bytes": 10723,
+      "message_sha256": "c27d76a8d4eb508891c2bfb8bfce11b79d5ad2b58008193f6858989a66f47a06",
+      "original_ack": "ack-j1.md",
+      "ack_sha256": "f4bc1611d0997f55b9883a71edd06080cc3f9008cde755e649d88f562411f8ab",
+      "new_dispatch_performed_for_recovery": false
+    },
+    {
+      "target": "/root/s1_03_j2",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "request": "request-j2.json",
+      "message_bytes": 10723,
+      "message_sha256": "c27d76a8d4eb508891c2bfb8bfce11b79d5ad2b58008193f6858989a66f47a06",
+      "original_ack": "ack-j2.md",
+      "ack_sha256": "c21006d19621a6239d6997ac3596805e611844fb6735576bc23edf8cdc414bf7",
+      "new_dispatch_performed_for_recovery": false
+    }
+  ],
+  "oracle_sha256": "f1cc16fcd73e17fa1aff015e30e7facacaabf0dc2b195c0603f9f30a1f875ccb",
+  "source_commit": "191a3b3a12c60a2df70c1dbf36510303c025c5ea",
+  "receipt_scope": "Records two actual root direct followups before final review. Original message and ACK identities verified against pre-loss observations; canonical argument JSON is not independent wire evidence. Courier, authors and consumers did not receive oracle."
+}
