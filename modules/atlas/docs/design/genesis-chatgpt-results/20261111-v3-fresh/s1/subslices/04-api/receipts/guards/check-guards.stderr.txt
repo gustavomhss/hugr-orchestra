@@ -1,0 +1,2 @@
+$ bun run script/guards/run.ts --base origin/dev
+error: script "check:guards" exited with code 1

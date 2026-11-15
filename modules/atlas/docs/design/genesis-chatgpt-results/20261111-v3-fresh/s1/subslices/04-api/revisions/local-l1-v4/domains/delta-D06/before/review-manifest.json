@@ -1,0 +1,39 @@
+{
+  "schema": "genesis-s1-04-b3-v4-review-delivery/v1",
+  "status": "READY_FOR_SAME_PAIR_REVIEW",
+  "semantic_pass_asserted": false,
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "frozen_manifest": {
+    "path": "b3/v4/manifest.json",
+    "byte_length": 3672,
+    "sha256": "7258cdd82d613b9fc8e11a2e51032d33fd0778e64e26a4edacd21092843ef931"
+  },
+  "supplements": [
+    {
+      "path": "b3/v4/supplement-D09-mcp-catches.md",
+      "byte_length": 1971,
+      "sha256": "282a547c7ebcc18ec8fb1c0987f47813725bea695a9ddc010673bfa40feddfb6"
+    },
+    {
+      "path": "b3/v4/supplement-D09-identities.json",
+      "byte_length": 1426,
+      "sha256": "ac39851a8a6d21a91cd94504348e355b35275aa79e50faf1927b33957412ce43"
+    }
+  ],
+  "records": [
+    {
+      "path": "request.txt",
+      "byte_length": 12878,
+      "sha256": "da85d7a3701361575a1b9a0d08415b5ae133fbdeb7619e14aaf30cec3066a8d6"
+    },
+    {
+      "path": "b3/v4/response.md",
+      "byte_length": 4275,
+      "sha256": "aa3e872fb8a23ea2690131d260faa4ffad7e0eb3876734ad7e57f72d1fdbbf89"
+    }
+  ],
+  "body_unchanged_after_freeze": true,
+  "retired_extra_claims_not_resolved_by_source": true,
+  "prior_large_complement_dispatch": "NOT_SELECTED_FOR_CURRENT_REVIEW",
+  "new_higher_layers": "NOT_PRODUCED"
+}

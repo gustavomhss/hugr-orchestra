@@ -1,0 +1,64 @@
+{
+  "schema": "s1-04-guard-entry-materialization/v1",
+  "created_utc": "2026-11-14T23:07:21.746052+00:00",
+  "branch": "genesis-s1-api",
+  "source_revision": "8835faf6329cc3d5f5de1097872882d57472b793",
+  "identity": "materialized guard entrypoint and direct dependency closure, not git checkout or full candidate tree",
+  "snapshot_root": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/guard-snapshot",
+  "file_count": 8,
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "byte_length": 16501,
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f"
+    },
+    {
+      "path": "package.json",
+      "git_blob_sha": "59b01ce720d2fbc13ac27b0f93e444e4e7e42bd0",
+      "byte_length": 6423,
+      "sha256": "797b93c084aaf809f0bc02013e9e1eb0ae0d0addfa9ae8b9b783ceb83e6173ab"
+    },
+    {
+      "path": "script/guards/run.ts",
+      "git_blob_sha": "24c89b6fdbce07d778d2d1520ff4680d51c8c0f3",
+      "byte_length": 11882,
+      "sha256": "2dfe91f11b237588f8f07e6119ab7ed28d3b6f524060519734517ce5d2bf83c7"
+    },
+    {
+      "path": "script/guards/diff.ts",
+      "git_blob_sha": "e0336749f5b9f6dc471dedff2bfa0674ab18ebd7",
+      "byte_length": 7910,
+      "sha256": "a783cf3a5dbf7527bd240b4cc147dd7e2fe9acae73428a1e70d6493dde8c419e"
+    },
+    {
+      "path": "script/guards/engine.ts",
+      "git_blob_sha": "7ff689772ac0460e7aa9b3ad93ca3b003b992c0f",
+      "byte_length": 5573,
+      "sha256": "6f16d7b83c63f590569815e5bbb26488be3dd31063788af4488e0680fb720fe1"
+    },
+    {
+      "path": "script/guards/rule.ts",
+      "git_blob_sha": "e831bd89a05d4bbea86cbabf0a461b9b124cb185",
+      "byte_length": 10290,
+      "sha256": "707473799508f7f8959ac6c0b8804e49ccdc2f1b64b11d8354beb4d62c343949"
+    },
+    {
+      "path": "bunfig.toml",
+      "git_blob_sha": "c506ff57c4bf3fa3a6bd3501b8ce2fc29122accb",
+      "byte_length": 1024,
+      "sha256": "ed50f5745fbcb845251debe79cc464a2142c62cf17a013c2a29de38bf248f158"
+    },
+    {
+      "path": "tsconfig.json",
+      "git_blob_sha": "65fa6c7f31c11e2a1ff643ea263f97815c6bac5d",
+      "byte_length": 126,
+      "sha256": "3566d273bac7985b182fde3fc49e3d9a6b8d1451c122c31a4f87877faa9ae7aa"
+    }
+  ],
+  "git_metadata_created": false,
+  "source_route": "GitHub connector github_fetch_file at pinned commit; UTF-8 byte round trip verified against Git blob hashes",
+  "npm_dependencies_installed": false,
+  "runtime_external_imports": [],
+  "note": "Runner imports only direct local modules and Node built-ins; rule.ts uses Bun.Glob and Bun.TOML. Original root tsconfig references @tsconfig/bun but no package installation has been performed in this partial snapshot."
+}

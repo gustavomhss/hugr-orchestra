@@ -1,0 +1,13 @@
+{
+  "schema": "s1-04-diagnostic-root-copy/v1",
+  "recorded_at_utc": "2026-11-15T00:35:50.000177+00:00",
+  "source": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/verified-git-candidate",
+  "destination": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/diagnostic-source-root",
+  "method": "copytree of exact verified materialization including original Git objects/index/refs; .atlas excluded",
+  "head": "8835faf6329cc3d5f5de1097872882d57472b793",
+  "atlas_state_existed_after_copy": false,
+  "code_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "qualification": "UNPROMOTED_SOURCE_DIAGNOSTIC_ONLY",
+  "product_tests": false,
+  "policy_or_actor_created": false
+}

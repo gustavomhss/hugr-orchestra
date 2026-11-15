@@ -1,0 +1,59 @@
+{
+  "schema": "genesis-s1-04-local-artifact-manifest/v1",
+  "key": "s1.subslice04.integrated-impact",
+  "layer": 3,
+  "revision": 2,
+  "state": "FROZEN_FOR_SAME_PAIR_REVIEW",
+  "files": {
+    "body.md": {
+      "byte_length": 9301,
+      "sha256": "c140fb0bf9606079e91576b542ec82b3904583e7433a8fe297c886318649f478"
+    },
+    "metadata.json": {
+      "byte_length": 17852,
+      "sha256": "fee948a5fd4b43af90c341b1e4c3e5e71b1c37009f6426bc5145a092eecd34e0"
+    },
+    "recipe.json": {
+      "byte_length": 6905,
+      "sha256": "a8bb4994c0661cc899e8956b5d633aba3d3739c1160599dac02a679811e5ffab"
+    },
+    "request.txt": {
+      "byte_length": 1261,
+      "sha256": "14c7ac12b6c4443e90b2c71035599674d95c31978bc706f8575296857101853b"
+    },
+    "response.md": {
+      "byte_length": 13826,
+      "sha256": "95d61af45535c7577eaefc55ca117a54bc26b698681288d7e1b1b805a1502a5d"
+    },
+    "body.diff": {
+      "byte_length": 4523,
+      "sha256": "88ae44495b4c320e35908168c297f53989c648599095a6a897c4d8378bfb4d67"
+    },
+    "inserted-excerpts.md": {
+      "byte_length": 2302,
+      "sha256": "473551f4fa67d0fc488ea487f9b05869075e74a6d00efa13323ba1e44bb8af15"
+    },
+    "delta-insertions.json": {
+      "byte_length": 2647,
+      "sha256": "345134b8b15aae1194537e1df4b66de434e925e6cdfdcd220876900b4bcc50bd"
+    }
+  },
+  "predecessor_release_refs": [
+    {
+      "path": "output/receipts/l1-release.json",
+      "byte_length": 3522,
+      "sha256": "23674344f089dbc26e1cac7ee70e0de9809e663ed80a0967219ae53222d4b0fb"
+    },
+    {
+      "path": "output/receipts/l2-release.json",
+      "byte_length": 830,
+      "sha256": "35f6a60a7aca9937b957022fae7ef1868b84a5b4d4284f961882568675c3a2c9"
+    }
+  ],
+  "previous_manifest_ref": {
+    "path": "revision-1/manifest.json",
+    "byte_length": 1273,
+    "sha256": "2ae52dcb6024d70c0f89cb0e9af65beaa6f1139dc962b8f12e66f3a371b4b21b"
+  },
+  "mechanical_checks_only": true
+}

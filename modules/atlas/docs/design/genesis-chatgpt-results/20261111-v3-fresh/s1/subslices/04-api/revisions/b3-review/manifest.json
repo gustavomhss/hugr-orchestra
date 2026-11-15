@@ -1,0 +1,100 @@
+{
+  "schema": "genesis-s1-04-b3-dossier-manifest/v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "semantics": "Inherited exact bounded_claim/conditional_gap/member_paths; no new judgment or runtime assertion.",
+  "origin_semantic_disposition": {
+    "path": "input/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/semantic-disposition.json",
+    "sha256": "34e3b103d37a7259cb73cedb2b17f7e93f03bc18aa1f9a1118e65b1a157eefa7",
+    "byte_length": 680931
+  },
+  "origin_review_supplement_sha256": "316ad6cf3d8004a2c42298f7e9408ec5d31c5fbf4084c9301c863300ea994f3a",
+  "origin_source_excerpts_sha256": "576ea018bd0749a4197f766900e2942391c22355eda649ace5851a11deedf333",
+  "files": [
+    {
+      "path": "b3/dossier-D01-D06.md",
+      "byte_length": 20209,
+      "sha256": "1cb46330d1e609d3d4787a63222aa755cb34006e9d0c4a989b2c98df53d8784a",
+      "domain_ids": [
+        "D01",
+        "D02",
+        "D03",
+        "D04",
+        "D05",
+        "D06"
+      ],
+      "member_count": 80,
+      "excerpt_count": 52,
+      "excerpt_bytes": 13555
+    },
+    {
+      "path": "b3/dossier-D07-D12.md",
+      "byte_length": 27029,
+      "sha256": "6acdb00cc472af94bbc73dcfdc762b36d5665fae281728f5021235b13db3d606",
+      "domain_ids": [
+        "D07",
+        "D08",
+        "D09",
+        "D10",
+        "D11",
+        "D12"
+      ],
+      "member_count": 49,
+      "excerpt_count": 65,
+      "excerpt_bytes": 19297
+    },
+    {
+      "path": "b3/dossier-D13-D18.md",
+      "byte_length": 25540,
+      "sha256": "9c3e810e8156c4c64e2ac6c12caaec9596a27c0bd4e7eec6007c43af0e279135",
+      "domain_ids": [
+        "D13",
+        "D14",
+        "D15",
+        "D16",
+        "D17",
+        "D18"
+      ],
+      "member_count": 36,
+      "excerpt_count": 62,
+      "excerpt_bytes": 18369
+    },
+    {
+      "path": "b3/dossier-D19-D24.md",
+      "byte_length": 18988,
+      "sha256": "2bb7b4fc72607936825f9afd1b40d7d9c3c30a9f77951b4a996fcc5d66691954",
+      "domain_ids": [
+        "D19",
+        "D20",
+        "D21",
+        "D22",
+        "D23",
+        "D24"
+      ],
+      "member_count": 25,
+      "excerpt_count": 35,
+      "excerpt_bytes": 13400
+    },
+    {
+      "path": "b3/domains-exact.json",
+      "byte_length": 54390,
+      "sha256": "b8cb3d97074b0f1f206d8ec9cc425579a65e76dd61eed86711f2f64db3cb0a46"
+    },
+    {
+      "path": "b3/membership-exact.json",
+      "byte_length": 14533,
+      "sha256": "791154a9f043b43a2ab6a08a415c1af7d45a80746f34b2a67d4c55582af9f4ff"
+    },
+    {
+      "path": "b3/selected-evidence.json",
+      "byte_length": 203006,
+      "sha256": "9fa72ec5e4445fdb17663d080f7957b31dc0229dc407dd0341b672ee075ce598"
+    },
+    {
+      "path": "b3/verification.json",
+      "byte_length": 1824,
+      "sha256": "131120fb7ea77ac92a3aea3bd05cc073e5195b4d43a1de8936cce645af5e4d10"
+    }
+  ],
+  "transport_gaps": {}
+}

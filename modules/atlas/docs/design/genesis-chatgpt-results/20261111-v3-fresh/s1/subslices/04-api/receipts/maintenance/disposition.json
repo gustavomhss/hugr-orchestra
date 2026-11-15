@@ -1,0 +1,63 @@
+{
+  "schema": "s1-04-own-maintenance-disposition/v1",
+  "recorded_at_utc": "2026-11-15T00:53:32.580437+00:00",
+  "package": {
+    "path": "native-package.json",
+    "byte_length": 389819,
+    "sha256": "71bc1102fd5e2c6be166b2df790e8ee8fe4ecd053ab2d7fed5bbc46130349442"
+  },
+  "public_contract": {
+    "path": "contracts/public.json",
+    "byte_length": 10021,
+    "sha256": "7dcc9df0003b99722b18538fab1e45adb3ac60e6697397677200feddce40909e"
+  },
+  "status": "HOLD",
+  "execution_state": "NOT_RUN_PREREQUISITE_BLOCKED",
+  "prerequisite": "An accepted isolated current generation of this exact 16-artifact package and compatible Atlas implementation/bindings are required before own stale/rebuild/preservation comparisons.",
+  "observed_evidence": [
+    {
+      "path": "receipts/atlas/prepare-r3-final.receipt.json",
+      "byte_length": 2038,
+      "sha256": "51496bac72a13fccbe4f4e2ceec67219b42f3105661d1ac5b48b6108c13785a2"
+    },
+    {
+      "path": "receipts/atlas/index-maintenance-r3-final.receipt.json",
+      "byte_length": 1847,
+      "sha256": "e6195ccff6d305a654aba6a79d783f474c282208e7c9bcba474c83c682e825af"
+    },
+    {
+      "path": "receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+      "byte_length": 2223,
+      "sha256": "df6c1c9fbb2a1940898c7b750adeb2f658658ff3396a2b692d3eef71ad26adeb"
+    }
+  ],
+  "cases": [
+    {
+      "id": "S1-04-M1",
+      "change_class": "public Schema/Protocol/HttpApi contract change",
+      "state": "NOT_RUN",
+      "source_delta_applied": false,
+      "generation_executed": false,
+      "affected_set_observed": null,
+      "candidate_rebuilt": false,
+      "independent_results_preservation_measured": false,
+      "open_work": "Apply the bounded public-change scenario in an isolated published candidate; observe affected build closure, official Client generation and current-read refusal/revalidation, preserving independent results. Core identity consequences must follow the accepted selected contracts."
+    },
+    {
+      "id": "S1-04-M2",
+      "change_class": "generator source or recipe change",
+      "state": "NOT_RUN",
+      "source_delta_applied": false,
+      "generation_executed": false,
+      "affected_set_observed": null,
+      "candidate_rebuilt": false,
+      "independent_results_preservation_measured": false,
+      "open_work": "Change the bounded generator input/recipe, observe real impact and official freshness checks, distinguish unchanged canonical result from a new receipt/input version, and show accepted unrelated results remain available."
+    }
+  ],
+  "canonical_result_vs_receipt_rule": "Accepted normative L3/L4 distinguishes body, authority, validity, gaps and evidence from operation/input/review receipts. No cache hit, zero-call count or result-identity equality is claimed as measured here.",
+  "common_controls": "receipts/runtime-common-controls.json; compatibility and per-capability revision limits remain. Synthetic S4 controls do not execute these two own scenarios.",
+  "product_changes_applied": false,
+  "generated_files_edited_manually": false,
+  "deferral_owner": "S1-04 execution after S4 compatible release/authority prerequisites, not S1 composition"
+}

@@ -1,0 +1,60 @@
+{
+  "schema": "s1-04-execution-finalization/v1",
+  "recorded_at_utc": "2026-11-15T01:11:38.946202+00:00",
+  "execution_id": "94f1e157-8c44-4e6e-a4af-7690a8845ecf",
+  "completion_state": "INCOMPLETE_BLOCKED",
+  "content_state": "CONTENT_ACCEPTED_CANDIDATE_NOT_RUNTIME_PUBLISHED",
+  "logical_native_work_state": "ALL_DISPATCHED_JOBS_RETURNED",
+  "background_work_promised": false,
+  "finite_queue_authority": "work.md",
+  "final_native_review": {
+    "path": "receipts/final-review.json",
+    "byte_length": 2988,
+    "sha256": "d7bce545cdebd1eddfaeccd7913b919cc491883ac86c74cd92451e65cbec7ef1"
+  },
+  "mechanical_audit": {
+    "path": "receipts/mechanical-final-audit/report.json",
+    "byte_length": 136944,
+    "sha256": "1972f1a069ef827f8758cc6b52a4b066d4d6648f7ea7de9306d0ff12c9688108"
+  },
+  "own_operational_obligations_open": [
+    {
+      "id": "QUALIFIED_PREPARE_BIND_PUBLISH",
+      "state": "HOLD",
+      "evidence": "receipts/runtime-disposition.json",
+      "unlock": "Explicitly qualified S4 release covering complete required file inputs, then exact same-pair binding and authorized isolated publication."
+    },
+    {
+      "id": "FROZEN_CONSUMERS_22",
+      "state": "HOLD",
+      "evidence": "receipts/consumers/cases.json",
+      "unlock": "Own accepted generation available through actual index/read, followed by fresh bounded consumers and independent reserved-oracle evaluation."
+    },
+    {
+      "id": "MAINTENANCE_M1_M2",
+      "state": "HOLD",
+      "evidence": "receipts/maintenance/disposition.json",
+      "unlock": "Own accepted generation and qualified runtime, then actual public/generator changes, official generation where required, affected sets, rebuild/cache/consumer controls."
+    },
+    {
+      "id": "ORIGINAL_STATIC_GUARD",
+      "state": "HOLD",
+      "evidence": "receipts/guards/verified-check-guards-final-reconciled.receipt.json",
+      "unlock": "Authorized exact bytes for historical binary Git blob d83941a9d836a23e466ca09ecba1f21d423094cb or an authorized complete environment, then the unchanged guard."
+    }
+  ],
+  "git_delivery": {
+    "state_at_payload_freeze": "READY_FOR_PAYLOAD_THEN_SEAL_AND_LEASE",
+    "authority": "handoff.json in child seal; actual remote readback reported after publication, not fabricated in this payload"
+  },
+  "global_composition": {
+    "owner": "S1_COORDINATION",
+    "branch": "genesis-fresh-s1",
+    "absorbs_own_open_obligations": false
+  },
+  "usage": {
+    "tokens": "UNKNOWN",
+    "cost": "UNKNOWN",
+    "physical_attempts": "UNKNOWN"
+  }
+}

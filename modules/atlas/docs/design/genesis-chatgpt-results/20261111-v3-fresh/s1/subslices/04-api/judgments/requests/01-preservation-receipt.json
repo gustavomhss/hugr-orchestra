@@ -1,0 +1,10 @@
+{
+  "schema": "s1-04-original-request-preservation/v1",
+  "source": "Each original recipient returned its original visible first message verbatim in round3a; content bodies agree except recipient role. No private reasoning requested or recorded.",
+  "host_export_api": "NOT_EXPOSED",
+  "preservation_method": "Original visible message copies returned by both recipients, preserved in UTF-8 with terminal LF.",
+  "request_files": [
+    "01-j1-initial.txt",
+    "01-j2-initial.txt"
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "schema": "s1-04-visible-request-archive/v1",
+  "round": 11,
+  "archivist": "/root/archive_round11",
+  "role": "MECHANICAL_ARCHIVAL_NOT_JUDGE",
+  "source": "Two complete visible collaboration.followup_task message fields inherited from parent context, addressed to /root/api_j1 and /root/api_j2.",
+  "visible_message_comparison": {
+    "identical": true,
+    "differences": [],
+    "single_copy_for_both": true
+  },
+  "file": {
+    "path": "requests/11-l4-core.txt",
+    "encoding": "utf-8",
+    "byte_length": 10904,
+    "sha256": "ded0e6b26bcc334ddd2224a866edb34eba411e7faaa03df55c6ad6a999e254fb",
+    "terminal_newline": false
+  },
+  "readback": {
+    "matches_written_visible_text": true
+  },
+  "scope": "Preserves the visible message text. Does not attest internal wire transport, model context delivery, token usage, metering, semantic acceptance or an additional judge.",
+  "no_source_or_oracle_read": true,
+  "other_areas_modified": false
+}

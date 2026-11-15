@@ -1,0 +1,60 @@
+{
+  "schema": "s1-04-commit-normalization-proof/v1",
+  "started_utc": "2026-11-14T23:37:21.504956+00:00",
+  "finished_utc": "2026-11-14T23:37:21.507556+00:00",
+  "expected_sha": "8835faf6329cc3d5f5de1097872882d57472b793",
+  "source": "GitHub GitData commit JSON at exact SHA, all fields and ordered parents preserved",
+  "enumeration_domain": "Canonical offset pairs at 15-minute intervals from -1200 to +1400; same-offset pairs first with +0000 and -0300 preferred, then mixed offsets. Final LF count 0, 1 or 2. Stop at exact full object SHA equality. No extra headers or field values introduced.",
+  "trials_count": 4,
+  "match": {
+    "author_offset": "-0300",
+    "committer_offset": "-0300",
+    "message_added_final_lf": 0,
+    "byte_length": 262,
+    "git_sha1": "8835faf6329cc3d5f5de1097872882d57472b793",
+    "matches": true,
+    "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/commit-8835faf6329cc3d5f5de1097872882d57472b793.raw",
+    "raw_sha256": "5aeedb84b24995bb5e9b4cd3b6dfd6ea15dd236cf9c2a6acf9ab727c4978225c",
+    "git_hash_object_exit": 0,
+    "git_hash_object_stdout": "8835faf6329cc3d5f5de1097872882d57472b793\n",
+    "git_hash_object_stderr": ""
+  },
+  "trials": [
+    {
+      "author_offset": "+0000",
+      "committer_offset": "+0000",
+      "message_added_final_lf": 0,
+      "byte_length": 262,
+      "git_sha1": "98ac6e0c1c924069fc460201abc34026a4dbfc13",
+      "matches": false
+    },
+    {
+      "author_offset": "+0000",
+      "committer_offset": "+0000",
+      "message_added_final_lf": 1,
+      "byte_length": 263,
+      "git_sha1": "302b72f3a0dabc8a9003cd67fecfcdd4dc6da908",
+      "matches": false
+    },
+    {
+      "author_offset": "+0000",
+      "committer_offset": "+0000",
+      "message_added_final_lf": 2,
+      "byte_length": 264,
+      "git_sha1": "f842600d20ec87eeb8fe930d38ea65679dff274d",
+      "matches": false
+    },
+    {
+      "author_offset": "-0300",
+      "committer_offset": "-0300",
+      "message_added_final_lf": 0,
+      "byte_length": 262,
+      "git_sha1": "8835faf6329cc3d5f5de1097872882d57472b793",
+      "matches": true
+    }
+  ],
+  "git_database_created": false,
+  "refs_created": false,
+  "index_created": false,
+  "remote_mutations": false
+}

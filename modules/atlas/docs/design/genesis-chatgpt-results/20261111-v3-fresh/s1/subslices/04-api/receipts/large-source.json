@@ -1,0 +1,12 @@
+{
+  "path": "packages/client/src/generated/types.ts",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "bytes": 462732,
+  "sha256": "2763d389d2694a6737719865cbabbbdfee937d81a86497b783c246cdaf76ef0f",
+  "git_blob_sha": "fca4633666a639d550065312a13e48c6ce221d12",
+  "recomputed_git_blob_sha": "fca4633666a639d550065312a13e48c6ce221d12",
+  "read_method": "GitHub connector full UTF-8 capture; no semantic reread claimed",
+  "complete": true,
+  "s4_released_limit": 256000,
+  "s4_unreleased_candidate_limit": 2097152
+}

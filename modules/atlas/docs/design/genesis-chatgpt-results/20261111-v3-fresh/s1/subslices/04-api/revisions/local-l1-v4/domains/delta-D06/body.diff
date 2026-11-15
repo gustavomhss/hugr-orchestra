@@ -1,0 +1,11 @@
+--- before/domain-disposition.md
++++ after/domain-disposition.md
+@@ -196,7 +196,7 @@
+ 
+ **Propósito, contrato e delegação local — bounded_claim:**
+ 
+-The Schema modules represent file entries/diffs, reference sources, VCS answers and host-CLI pull requests. Protocol declares query/input/error shapes; Server delegates reference/Git/PR work to Location services and maps the PR host error. No file access or remote PR was performed by this production.
++The Schema modules represent file entries/diffs, reference sources, VCS answers and host-CLI pull requests. Protocol declares the VCS diff query and response shapes; Server delegates reference/Git/PR work to Location services and projects the PR host error. No file access or remote PR was performed by this production.
+ 
+ **Evidência decisiva:** Q025:L6–12, Q027:L15–18, Q028:L3–4, Q030:L28–30, Q031:L6–8, P44:L41–48, G57-E077:L20–24, G57-E078:L30–40, G57-E092:L6–8, G57-E127:L37–39. As identidades e os literais estão nos dossiês vinculantes desta revisão.
+ 

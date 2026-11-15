@@ -1,0 +1,33 @@
+{
+  "schema": "s1-04-exact-git-commit-wire-proof/v1",
+  "created_utc": "2026-11-14T23:36:19.159728+00:00",
+  "proofs": [
+    {
+      "label": "candidate",
+      "expected_sha": "8835faf6329cc3d5f5de1097872882d57472b793",
+      "calculated_git_sha1": "302b72f3a0dabc8a9003cd67fecfcdd4dc6da908",
+      "matches": false,
+      "raw_byte_length": 263,
+      "raw_sha256": "1286a4a62760898864bc5e7daa55fc9a484a78eb832eea6650737cd880502800",
+      "raw_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/unverified-candidate-wire-encoding.txt",
+      "serialization_method": "Original literal fields with the canonical final LF for a Git commit message; no timezone variants tried",
+      "git_metadata_created": false
+    },
+    {
+      "label": "dev",
+      "expected_sha": "5e0807b5ff953508f792b8a965883985b05a7066",
+      "calculated_git_sha1": "5e0807b5ff953508f792b8a965883985b05a7066",
+      "matches": true,
+      "raw_byte_length": 1245,
+      "raw_sha256": "99863f05e4d03b73b2f8b40e89ae6e3f0938fc9ce1e5f78440d821e9f0307b50",
+      "raw_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/commit-5e0807b5ff953508f792b8a965883985b05a7066.raw",
+      "serialization_method": "Exact verification.payload plus entire signature value including terminal LF as a final continuation line; no payload change",
+      "git_metadata_created": false
+    }
+  ],
+  "all_requested_commits_proven": false,
+  "git_database_created": false,
+  "refs_created": false,
+  "index_created": false,
+  "remote_mutations": false
+}

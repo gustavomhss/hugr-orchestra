@@ -1,0 +1,144 @@
+{
+  "schema": "s1-04-transport-identity-check/v1",
+  "checked_at_utc": "2026-11-15T00:13:39.836090+00:00",
+  "package_sha256": "a2e102dde18500962c8dc79bdbeeabd9afa7b21bc4bc0745baf3e16635ea3132",
+  "artifact_count": 13,
+  "bodies": [
+    {
+      "key": "s1.api.boundaries",
+      "path": "revisions/b-l1-v3/bodies/boundaries.md",
+      "encoding": "utf-8",
+      "byte_length": 4634,
+      "sha256": "f6b230ed8578b6bd9fdb1e4eaca26892df9355a58fc1f5e2e6a157bffabf7310"
+    },
+    {
+      "key": "s1.api.schema-contracts",
+      "path": "revisions/b-l1-v3/bodies/schema-contracts.md",
+      "encoding": "utf-8",
+      "byte_length": 5188,
+      "sha256": "c6ebd6124d89092e859aaa6a6a07c2a6fca5e2cdc82a62254b701b2de60266b2"
+    },
+    {
+      "key": "s1.api.session-contract",
+      "path": "revisions/b-l1-v3/bodies/session-contract.md",
+      "encoding": "utf-8",
+      "byte_length": 5155,
+      "sha256": "22b526a2423572f2bbc17f3bfccd2eb0ea8f7fb16f2215bb0904f1cc5c2125bc"
+    },
+    {
+      "key": "s1.api.server-edge",
+      "path": "revisions/b-l1-v3/bodies/server-edge.md",
+      "encoding": "utf-8",
+      "byte_length": 5596,
+      "sha256": "711c744e089e59a11ee0b56ba4ec495277993dc7a58e351c8e2af4dc557ce404"
+    },
+    {
+      "key": "s1.api.stream-contract",
+      "path": "revisions/local-l1-v4/bodies/stream-contract.md",
+      "encoding": "utf-8",
+      "byte_length": 3883,
+      "sha256": "8aac12750cd96c30f9bee287bdab2fdbb61ca67903b604aa8a0c1809e7c4bdfa"
+    },
+    {
+      "key": "s1.api.client-projection",
+      "path": "revisions/b-l1-v3/bodies/client-projection.md",
+      "encoding": "utf-8",
+      "byte_length": 5193,
+      "sha256": "089304921b004984de3b15b75af18fea3c7ebf15191f3874e9f668066569d478"
+    },
+    {
+      "key": "s1.api.codegen",
+      "path": "revisions/b-l1-v3/bodies/codegen.md",
+      "encoding": "utf-8",
+      "byte_length": 4752,
+      "sha256": "2ec55afad54a871de673a252b6b7c604a8ecdb648cc1df9c80128d83a3f8e270"
+    },
+    {
+      "key": "s1.api.sdk-composition",
+      "path": "revisions/b-l1-v3/bodies/sdk-composition.md",
+      "encoding": "utf-8",
+      "byte_length": 3478,
+      "sha256": "a2cb2fc21fc1a771d81cd83e75dfe8b07c82c1712b15396ff4e40774f861d4d3"
+    },
+    {
+      "key": "s1.api.surface-disposition",
+      "path": "revisions/b-l1-v3/bodies/surface-disposition.md",
+      "encoding": "utf-8",
+      "byte_length": 6726,
+      "sha256": "595e0d404064429a953b276141f5601a1bbecceb30242a9914132ebdd26ed5c0"
+    },
+    {
+      "key": "s1.subslice04.domains",
+      "path": "revisions/local-l1-v4/domains/domain-disposition.md",
+      "encoding": "utf-8",
+      "byte_length": 38080,
+      "sha256": "12248d1cc39a27b1655f1a683f02cd1af864f87945300a86b0ee4326227a4edd"
+    },
+    {
+      "key": "s1.subslice04.local-contracts",
+      "path": "producers/upper/l2/body.md",
+      "encoding": "utf-8",
+      "byte_length": 6218,
+      "sha256": "5f5ae9a915ec9a43940963ce69f4563a9a85d51e15d111237ff8b5e02a2d5170"
+    },
+    {
+      "key": "s1.subslice04.integrated-impact",
+      "path": "producers/upper/l3/body.md",
+      "encoding": "utf-8",
+      "byte_length": 9301,
+      "sha256": "c140fb0bf9606079e91576b542ec82b3904583e7433a8fe297c886318649f478"
+    },
+    {
+      "key": "s1.subslice04.maintenance",
+      "path": "producers/upper/l4/body.md",
+      "encoding": "utf-8",
+      "byte_length": 8942,
+      "sha256": "6836ed1abd690c45f999d32dbcbb6bb0451fda5ed77e6985ad601ae5a765705e"
+    }
+  ],
+  "unique_sources_verified": 293,
+  "unique_reference_paths_verified": 26,
+  "unique_file_inputs_present": 313,
+  "members": [
+    "members:docs/architecture/phase-plans/70-90-briefs",
+    "members:packages/client",
+    "members:packages/client/script",
+    "members:packages/client/src",
+    "members:packages/client/src/generated",
+    "members:packages/client/src/generated-effect",
+    "members:packages/client/test",
+    "members:packages/protocol",
+    "members:packages/protocol/src/groups",
+    "members:packages/protocol/src/middleware",
+    "members:packages/schema",
+    "members:packages/schema/src",
+    "members:packages/schema/test",
+    "members:packages/sdk-next",
+    "members:packages/sdk-next/src",
+    "members:packages/sdk-next/test",
+    "members:packages/server",
+    "members:packages/server/src/handlers",
+    "members:packages/server/src/middleware",
+    "members:tooling/httpapi-codegen",
+    "members:tooling/httpapi-codegen/src",
+    "members:tooling/httpapi-codegen/test"
+  ],
+  "artifact_keys_preserved": [
+    "s1.api.boundaries",
+    "s1.api.schema-contracts",
+    "s1.api.session-contract",
+    "s1.api.server-edge",
+    "s1.api.stream-contract",
+    "s1.api.client-projection",
+    "s1.api.codegen",
+    "s1.api.sdk-composition",
+    "s1.api.surface-disposition"
+  ],
+  "no_semantic_or_runtime_acceptance_inferred": true,
+  "serialized_provenance": "transport-provenance.json",
+  "large_source": {
+    "path": "packages/client/src/generated/types.ts",
+    "bytes": 462732,
+    "sha256": "2763d389d2694a6737719865cbabbbdfee937d81a86497b783c246cdaf76ef0f"
+  }
+}

@@ -1,0 +1,836 @@
+# S1-04 / B3 / D07–D12
+
+Revisão de transporte v2: tabelas locais dos 190 membros copiadas byte a byte de `review-domain-disposition.md`; os campos e alegações locais não foram reescritos. A leitura integral indicada na origem pertence à produção B-v3 herdada. Esta revisão transporta evidência, sem criar aceite.
+
+B3: propósito, contrato e delegação local; transporte sem novo julgamento/execução. Claims e gaps abaixo são exatos; Core/runtime amplos permanecem bloqueados.
+Fonte `1cde2ff7a71bcf7aecb5d030917b577165135d38`; protocolo `ee2521a5b966bd505cc95bd1c733e09e12f33531`.
+M<n> = `membership-exact.json#/domains/<n-1>`: 24 arrays/190 paths conferidos, nenhuma falta/duplicação/troca; hashes no manifesto. Não houve nova leitura integral dos190.
+Q/P/G57 = suplemento herdado; U = complemento autorizado do baseline. Intervalos literais separados, sem elipse inserida. Comentários não são recibos.
+Paths: S=`packages/schema/src/`; P=`packages/protocol/src/groups/`; H=`packages/server/src/handlers/`; R=`packages/server/src/`; T=`packages/sdk-next/src/`.
+
+## D07 — PTY records and tickets
+
+Membership: M07; 2 paths exatos.
+
+bounded_claim:
+
+PTY and PtyTicket supply process/event/create-update and ticket-expiry DTOs. The existing server-edge and stream-contract bodies supply the separately inspected ticket-consumption/raw-upgrade and queue boundaries; a ticket string DTO does not itself authorize access.
+
+conditional_gap:
+
+Actual subprocess behavior, ticket lifecycle, resize and backpressure guarantees require their relevant runtime evidence.
+
+Tabela local herdada (bytes exatos):
+
+| Exact member | Local L1 purpose | Additional evidence |
+| --- | --- | --- |
+| `packages/schema/src/pty-ticket.ts` | Connection ticket and expiry DTO; no authorization logic. | Q033 |
+| `packages/schema/src/pty.ts` | PTY process Info, lifecycle events and create/update inputs. | Q032 |
+
+`Q032 · S:pty.ts` L22–29
+```ts
+export const Info = Schema.Struct({
+  id: ID,
+  title: Schema.String,
+  command: Schema.String,
+  args: Schema.Array(Schema.String),
+  cwd: Schema.String,
+  status: Schema.Literals(["running", "exited"]),
+  pid: NonNegativeInt,
+```
+
+`Q032` L34–38
+```ts
+const Created = define({ type: "pty.created", schema: { info: Info } })
+const Updated = define({ type: "pty.updated", schema: { info: Info } })
+const Exited = define({ type: "pty.exited", schema: { id: ID, exitCode: NonNegativeInt } })
+const Deleted = define({ type: "pty.deleted", schema: { id: ID } })
+export const Event = { Created, Updated, Exited, Deleted, Definitions: inventory(Created, Updated, Exited, Deleted) }
+```
+
+`Q032` L40–44
+```ts
+export const CreateInput = Schema.Struct({
+  command: optional(Schema.String),
+  args: optional(Schema.Array(Schema.String)),
+  cwd: optional(Schema.String),
+  title: optional(Schema.String),
+```
+
+`Q032` L52–59
+```ts
+export const UpdateInput = Schema.Struct({
+  title: optional(Schema.String),
+  size: optional(
+    Schema.Struct({
+      rows: PositiveInt,
+      cols: PositiveInt,
+    }),
+  ),
+```
+
+`Q033 · S:pty-ticket.ts` L6–9
+```ts
+export const ConnectToken = Schema.Struct({
+  ticket: Schema.String,
+  expires_in: PositiveInt,
+}).annotate({ identifier: "PtyTicket.ConnectToken" })
+```
+
+Contexto literal do corpo herdado `server-edge.md`, SHA256 `711c744e089e59a11ee0b56ba4ec495277993dc7a58e351c8e2af4dc557ce404`:
+
+> Connection consumes a ticket bound to the PTY and location context, or fails; the raw upgrade handler owns that path.
+
+Contexto literal do corpo herdado `server-edge.md`, SHA256 `711c744e089e59a11ee0b56ba4ec495277993dc7a58e351c8e2af4dc557ce404`:
+
+> The PTY handler explicitly uses an unbounded outgoing queue and retains a shutdown-tracking TODO; slow-reader memory growth is a real source-level limit, not a measured failure in this run.
+
+## D08 — Providers, credentials and integration attempts
+
+Membership: M08; 11 paths exatos.
+
+bounded_claim:
+
+Provider/API kinds, secret-bearing Credential.Value and safe Connection references are distinct shapes. Integration describes methods/attempts, and Server delegates credentials/OAuth to Integration.Service. Integration-scoped attempt routes invoke an ownership comparison; generic attempt routes are separate delegation paths. No authentication success or secure-storage guarantee is inferred from a DTO.
+
+conditional_gap:
+
+Generic attempt policy, encryption/storage, OAuth resource cleanup and real external authentication remain Core/runtime claims.
+
+Tabela local herdada (bytes exatos):
+
+| Exact member | Local L1 purpose | Additional evidence |
+| --- | --- | --- |
+| `packages/protocol/src/groups/credential.ts` | PATCH altera somente label; DELETE remove por Credential.ID; os dois retornam NoContent e declaram ConflictError. | P19 |
+| `packages/protocol/src/groups/integration.ts` | Discovery de métodos, connect por key/OAuth e polling/completion/cancel; endpoints OAuth por integrationID preservam compatibilidade. | P24 |
+| `packages/schema/src/catalog.ts` | Catalog invalidation event. | Q039 |
+| `packages/schema/src/connection.ts` | Safe credential-reference/environment-name projection. | Q038 |
+| `packages/schema/src/credential.ts` | OAuth/API-key secret-bearing value representation. | Q035 |
+| `packages/schema/src/integration-id.ts` | Integration and method identity brands. | Q036 |
+| `packages/schema/src/integration.ts` | Authentication method/attempt lifecycle DTOs. | Q037 |
+| `packages/schema/src/models-dev.ts` | Models catalog refresh event. | Q040 |
+| `packages/schema/src/provider.ts` | AISDK/Native API distinction and request/info shape. | Q034 |
+| `packages/server/src/handlers/credential.ts` | Rename or remove a credential through Integration.connection. | G57-E043, G57-E044 |
+| `packages/server/src/handlers/integration.ts` | Manage integration discovery, key/OAuth connections, attempts and disconnect. | G57-E051, G57-E054, G57-E055 |
+
+`Q034 · S:provider.ts` L27–29
+```ts
+export const AISDK = Schema.Struct({
+  type: Schema.Literal("aisdk"),
+  package: Schema.String,
+```
+
+`Q034` L35–37
+```ts
+export const Native = Schema.Struct({
+  type: Schema.Literal("native"),
+  url: Schema.String.pipe(optional),
+```
+
+`Q034` L41–43
+```ts
+export const Api = Schema.Union([AISDK, Native])
+  .pipe(Schema.toTaggedUnion("type"))
+  .annotate({ identifier: "Provider.Api" })
+```
+
+`Q035 · S:credential.ts` L16–22
+```ts
+export const OAuth = Schema.Struct({
+  type: Schema.Literal("oauth"),
+  methodID: IntegrationMethodID,
+  refresh: Schema.String,
+  access: Schema.String,
+  expires: NonNegativeInt,
+  metadata: optional(Schema.Record(Schema.String, Schema.Unknown)),
+```
+
+`Q035` L26–35
+```ts
+export const Key = Schema.Struct({
+  type: Schema.Literal("key"),
+  key: Schema.String,
+  metadata: optional(Schema.Record(Schema.String, Schema.Unknown)),
+}).annotate({ identifier: "Credential.Key" })
+
+export const Value = Schema.Union([OAuth, Key])
+  .pipe(Schema.toTaggedUnion("type"))
+  .annotate({ identifier: "Credential.Value" })
+export type Value = Schema.Schema.Type<typeof Value>
+```
+
+`Q038 · S:connection.ts` L7–22
+```ts
+export const CredentialInfo = Schema.Struct({
+  type: Schema.Literal("credential"),
+  id: Credential.ID,
+  label: Schema.String,
+}).annotate({ identifier: "Connection.CredentialInfo" })
+
+export interface EnvInfo extends Schema.Schema.Type<typeof EnvInfo> {}
+export const EnvInfo = Schema.Struct({
+  type: Schema.Literal("env"),
+  name: Schema.String,
+}).annotate({ identifier: "Connection.EnvInfo" })
+
+export const Info = Schema.Union([CredentialInfo, EnvInfo])
+  .pipe(Schema.toTaggedUnion("type"))
+  .annotate({ identifier: "Connection.Info" })
+export type Info = typeof Info.Type
+```
+
+`Q037 · S:integration.ts` L73–76
+```ts
+export const Method = Schema.Union([OAuthMethod, KeyMethod, EnvMethod])
+  .pipe(Schema.toTaggedUnion("type"))
+  .annotate({ identifier: "Integration.Method" })
+export type Method = typeof Method.Type
+```
+
+`Q037` L123–128
+```ts
+export const AttemptStatus = Schema.Union([
+  Schema.Struct({ status: Schema.Literal("pending"), time: AttemptTime }),
+  Schema.Struct({ status: Schema.Literal("complete"), time: AttemptTime }),
+  Schema.Struct({ status: Schema.Literal("failed"), message: Schema.String, time: AttemptTime }),
+  Schema.Struct({ status: Schema.Literal("expired"), time: AttemptTime }),
+])
+```
+
+`P24 · P:integration.ts` L100–105
+```ts
+    HttpApiEndpoint.get("integration.oauth.status", "/api/integration/:integrationID/connect/oauth/:attemptID", {
+      params: { integrationID: Integration.ID, attemptID: Integration.AttemptID },
+      query: LocationQuery,
+      success: Location.response(Integration.AttemptStatus),
+      error: InvalidRequestError,
+    })
+```
+
+`P24` L169–175
+```ts
+    HttpApiEndpoint.post("integration.attempt.complete", "/api/integration/attempt/:attemptID/complete", {
+      params: { attemptID: Integration.AttemptID },
+      query: LocationQuery,
+      payload: Schema.Struct({ code: Schema.optional(Schema.String) }),
+      success: HttpApiSchema.NoContent,
+      error: InvalidRequestError,
+    })
+```
+
+`G57-E043 · H:credential.ts` L13–17
+```ts
+        const integrations = yield* Integration.Service
+        yield* integrations.connection
+          .update(ctx.params.credentialID, { label: ctx.payload.label })
+          .pipe(Effect.catchTag("Credential.InheritedError", inherited))
+        return HttpApiSchema.NoContent.make()
+```
+
+`G57-E051 · H:integration.ts` L42–51
+```ts
+const requireOwner = Effect.fn("IntegrationHandler.requireOwner")(function* (
+  service: Integration.Interface,
+  params: { attemptID: Integration.AttemptID; integrationID: Integration.ID },
+) {
+  const current = yield* status(service.attempt.status(params.attemptID))
+  if (yield* service.attempt.ownedBy(params.attemptID, params.integrationID)) return current
+  return yield* new InvalidRequestError({
+    message: "OAuth attempt does not belong to this integration",
+    kind: "integration_attempt_owner",
+  })
+```
+
+`G57-E054 · H:integration.ts` L114–120
+```ts
+      .handle(
+        "integration.oauth.status",
+        Effect.fn(function* (ctx) {
+          const service = yield* Integration.Service
+          return yield* response(requireOwner(service, ctx.params))
+        }),
+      )
+```
+
+`G57-E055 · H:integration.ts` L140–145
+```ts
+        "integration.attempt.status",
+        Effect.fn(function* (ctx) {
+          const service = yield* Integration.Service
+          return yield* response(status(service.attempt.status(ctx.params.attemptID)))
+        }),
+      )
+```
+
+`U04 · H:integration.ts` L122–128
+```ts
+        "integration.oauth.complete",
+        Effect.fn(function* (ctx) {
+          const service = yield* Integration.Service
+          yield* requireOwner(service, ctx.params)
+          yield* complete(service.attempt.complete({ attemptID: ctx.params.attemptID, code: ctx.payload.code }))
+          return HttpApiSchema.NoContent.make()
+        }),
+```
+
+`U04` L131–137
+```ts
+        "integration.oauth.cancel",
+        Effect.fn(function* (ctx) {
+          const service = yield* Integration.Service
+          yield* requireOwner(service, ctx.params)
+          yield* service.attempt.cancel(ctx.params.attemptID)
+          return HttpApiSchema.NoContent.make()
+        }),
+```
+
+`U04` L147–152
+```ts
+        "integration.attempt.complete",
+        Effect.fn(function* (ctx) {
+          const service = yield* Integration.Service
+          yield* complete(service.attempt.complete({ attemptID: ctx.params.attemptID, code: ctx.payload.code }))
+          return HttpApiSchema.NoContent.make()
+        }),
+```
+
+`U04` L155–160
+```ts
+        "integration.attempt.cancel",
+        Effect.fn(function* (ctx) {
+          const service = yield* Integration.Service
+          yield* service.attempt.cancel(ctx.params.attemptID)
+          return HttpApiSchema.NoContent.make()
+        }),
+```
+
+## D09 — MCP, LSP and formatting
+
+Membership: M09; 12 paths exatos.
+
+bounded_claim:
+
+MCP local/remote configuration, status/resource/auth projections and LSP/formatter status are public contracts. Server delegates these operations through Location services and maps MCP missing/config/auth failures. A masking comment or reduced Entry DTO is not proof that every debug payload was sanitized or a connection succeeded.
+
+conditional_gap:
+
+Trust enforcement, process/transport isolation, secret masking and OAuth/reconnect behavior need the service implementation or execution evidence.
+
+Tabela local herdada (bytes exatos):
+
+| Exact member | Local L1 purpose | Additional evidence |
+| --- | --- | --- |
+| `packages/protocol/src/groups/formatter.ts` | Status dos formatters configurados/disponíveis por Location, Array(Formatter.Status). | P20 |
+| `packages/protocol/src/groups/lsp.ts` | Status de language servers conectados na Location, Array(Lsp.Status). | P27 |
+| `packages/protocol/src/groups/mcp.ts` | Discovery/status/config/resources/tools, mutations de config/conexão e OAuth; descrições distinguem redaction e env refs não resolvidas. | P28 |
+| `packages/schema/src/config-mcp.ts` | Local versus remote MCP config with optional auth/timeouts. | Q041 |
+| `packages/schema/src/formatter.ts` | Formatter enabled/extensions status. | Q046 |
+| `packages/schema/src/lsp-event.ts` | LSP invalidation notification. | Q045 |
+| `packages/schema/src/lsp.ts` | Language server root/name and connected/error status. | Q044 |
+| `packages/schema/src/mcp-event.ts` | MCP tools/status/browser failure notifications. | Q043 |
+| `packages/schema/src/mcp.ts` | MCP connection-state union, debug intent and endpoint-only Entry. | Q042 |
+| `packages/server/src/handlers/formatter.ts` | Expose formatter status. | G57-E045 |
+| `packages/server/src/handlers/lsp.ts` | Expose LSP status. | G57-E060 |
+| `packages/server/src/handlers/mcp.ts` | Adapt MCP catalog/configuration/connections and OAuth actions. | G57-E061, G57-E064 |
+
+`Q041 · S:config-mcp.ts` L15–17
+```ts
+export class Local extends Schema.Class<Local>("ConfigV2.MCP.Local")({
+  type: Schema.Literal("local"),
+  command: Schema.String.pipe(Schema.Array),
+```
+
+`Q041` L34–41
+```ts
+export class Remote extends Schema.Class<Remote>("ConfigV2.MCP.Remote")({
+  type: Schema.Literal("remote"),
+  url: Schema.String,
+  headers: Schema.Record(Schema.String, Schema.String).pipe(Schema.optional),
+  oauth: Schema.Union([OAuth, Schema.Literal(false)]).pipe(Schema.optional),
+  disabled: Schema.Boolean.pipe(Schema.optional),
+  timeout: Timeout.pipe(Schema.optional),
+}) {}
+```
+
+`Q042 · S:mcp.ts` L6–8
+```ts
+// Connection state of one configured MCP server, as reported to clients.
+const StatusConnected = Schema.Struct({ status: Schema.Literal("connected") }).annotate({
+  identifier: "MCPStatusConnected",
+```
+
+`Q042` L15–17
+```ts
+})
+const StatusNeedsAuth = Schema.Struct({ status: Schema.Literal("needs_auth") }).annotate({
+  identifier: "MCPStatusNeedsAuth",
+```
+
+`Q042` L69–70
+```ts
+// What a remote server's debug probe saw: stored sign-in state, the answer to an unauthenticated initialize request,
+// and, when that answer was 401, how the OAuth discovery went. Secrets are masked.
+```
+
+`Q042` L100–106
+```ts
+// What the MCP page shows of one server's config: its transport and endpoint only, never headers, environment or OAuth.
+export interface Entry extends Schema.Schema.Type<typeof Entry> {}
+export const Entry = Schema.Struct({
+  type: optional(Schema.Literals(["local", "remote"])),
+  command: optional(Schema.Array(Schema.String)),
+  url: optional(Schema.String),
+}).annotate({ identifier: "McpEntry" })
+```
+
+`Q044 · S:lsp.ts` L5–10
+```ts
+export const Status = Schema.Struct({
+  id: Schema.String,
+  name: Schema.String,
+  root: Schema.String,
+  status: Schema.Literals(["connected", "error"]),
+}).annotate({ identifier: "LSPStatus" })
+```
+
+`Q046 · S:formatter.ts` L5–9
+```ts
+export const Status = Schema.Struct({
+  name: Schema.String,
+  extensions: Schema.Array(Schema.String),
+  enabled: Schema.Boolean,
+}).annotate({ identifier: "FormatterStatus" })
+```
+
+`P28 · P:mcp.ts` L41–45
+```ts
+    HttpApiEndpoint.get("mcp.config", "/api/mcp/config", {
+      query: LocationQuery,
+      success: Location.response(Schema.Record(Schema.String, Mcp.Entry)),
+    })
+      .annotateMerge(locationQueryOpenApi)
+```
+
+`G57-E045 · H:formatter.ts` L7–7
+```ts
+  handlers.handle("formatter.status", () => response(Format.Service.use((format) => format.status()))),
+```
+
+`G57-E060 · H:lsp.ts` L7–7
+```ts
+  handlers.handle("lsp.status", () => response(LSP.Service.use((lsp) => lsp.status()))),
+```
+
+`G57-E061 · H:mcp.ts` L10–12
+```ts
+    .handle("mcp.list", () => response(Mcp.Service.use((mcp) => mcp.list())))
+    .handle("mcp.resource.catalog", () => response(Mcp.Service.use((mcp) => mcp.resources())))
+    .handle("mcp.config", () => response(Mcp.Service.use((mcp) => mcp.config())))
+```
+
+`G57-E064 · H:mcp.ts` L89–95
+```ts
+function notFound(error: Mcp.NotFoundError) {
+  return Effect.fail(new McpServerNotFoundError({ server: error.name, message: `MCP server not found: ${error.name}` }))
+}
+
+function invalid(error: Mcp.ConfigError | Mcp.AuthError) {
+  return new InvalidRequestError({ message: error.message })
+}
+```
+
+## D10 — Global configuration and project trust
+
+Membership: M10; 4 paths exatos.
+
+bounded_claim:
+
+Config and Trust are process-global contracts rather than independent per-request Location documents. Server captures global services, writes/changes trust and visits open Locations to reload/apply it; the visible per-Location failure handling is ignored. A successful response therefore does not establish convergence of every open Location.
+
+conditional_gap:
+
+Complete reload/trust convergence and downstream MCP behavior remain blocked until independently supported.
+
+Tabela local herdada (bytes exatos):
+
+| Exact member | Local L1 purpose | Additional evidence |
+| --- | --- | --- |
+| `packages/protocol/src/groups/config.ts` | Patch global de modelo/shell/engines/providers/permissions; listas substituem as anteriores; update é NoContent. | P18 |
+| `packages/protocol/src/groups/trust.ts` | Lista/aprova/revoga trust global com directory String; não é Location-scoped; realpath e herança são descrições de behavior. | P43 |
+| `packages/server/src/handlers/config.ts` | Read/update global configuration and request reload of agents and catalog in open Locations. | G57-E041, G57-E042 |
+| `packages/server/src/handlers/trust.ts` | Read/approve/revoke global project trust and reapply it to MCP in open Locations. | G57-E123, G57-E124, G57-E125 |
+
+`P43 · P:trust.ts` L5–7
+```ts
+const DirectoryPayload = Schema.Struct({ directory: Schema.String })
+
+// Trust is a user decision stored in the global config, so these routes are not scoped to a Location.
+```
+
+`G57-E041 · H:config.ts` L14–17
+```ts
+    // Settings are global: the document is written with process-global services and every open location reloads.
+    const fs = yield* FSUtil.Service
+    const global = yield* Global.Service
+    const locations = yield* LocationServiceMap.Service
+```
+
+`G57-E041` L24–29
+```ts
+        "config.update",
+        Effect.fn(function* (ctx) {
+          yield* Config.updateGlobal(ctx.payload).pipe(
+            Effect.provideService(FSUtil.Service, fs),
+            Effect.provideService(Global.Service, global),
+          )
+```
+
+`G57-E042 · H:config.ts` L31–44
+```ts
+          const refs = yield* RcMap.keys(locations.rcMap)
+          yield* Effect.forEach(
+            refs,
+            (ref) =>
+              Effect.scoped(
+                Effect.gen(function* () {
+                  const context = yield* locations.contextEffect(ref)
+                  yield* Context.get(context, AgentV2.Service).reload()
+                  yield* Context.get(context, Catalog.Service).reload()
+                }),
+              ).pipe(Effect.ignore),
+            { discard: true },
+          )
+          return HttpApiSchema.NoContent.make()
+```
+
+`G57-E123 · H:trust.ts` L14–29
+```ts
+    const fs = yield* FSUtil.Service
+    const global = yield* Global.Service
+    const locations = yield* LocationServiceMap.Service
+    const applyTrust = Effect.fn(function* () {
+      const refs = yield* RcMap.keys(locations.rcMap)
+      yield* Effect.forEach(
+        refs,
+        (ref) =>
+          Effect.scoped(
+            Effect.gen(function* () {
+              const context = yield* locations.contextEffect(ref)
+              yield* Context.get(context, Mcp.Service).applyTrust()
+            }),
+          ).pipe(Effect.ignore),
+        { discard: true },
+      )
+```
+
+`G57-E124 · H:trust.ts` L41–49
+```ts
+          yield* ConfigTrust.approve(ctx.payload.directory).pipe(
+            Effect.catchTag("ConfigTrust.DirectoryError", (error) =>
+              Effect.fail(new InvalidRequestError({ message: error.message })),
+            ),
+            Effect.provideService(FSUtil.Service, fs),
+            Effect.provideService(Global.Service, global),
+          )
+          yield* applyTrust()
+          return HttpApiSchema.NoContent.make()
+```
+
+`G57-E125 · H:trust.ts` L55–60
+```ts
+          yield* ConfigTrust.revoke(ctx.payload.directory).pipe(
+            Effect.provideService(FSUtil.Service, fs),
+            Effect.provideService(Global.Service, global),
+          )
+          yield* applyTrust()
+          return HttpApiSchema.NoContent.make()
+```
+
+## D11 — Capability authority and management
+
+Membership: M11; 14 paths exatos.
+
+bounded_claim:
+
+Capability references identify data while trusted authority belongs to Core. Receipts/outcome statuses, bounded FailureDetail and operator projections are distinct. Protocol applies CapabilityAuthorization and management request contracts; Server builds host-owned operator/verifier facades and delegates request/placement-bound management. Content-ticket code carries stored authority, session and artifact revision through a process-local random-token map.
+
+conditional_gap:
+
+Revocation/placement correctness, provider identity, persistent idempotency and end-to-end artifact policy require the actual Core/runtime evidence. The stored token is not described as an HMAC construction.
+
+Tabela local herdada (bytes exatos):
+
+| Exact member | Local L1 purpose | Additional evidence |
+| --- | --- | --- |
+| `packages/protocol/src/groups/capability-connections.ts` | Páginas 1..32, mutations com idempotency-key, input de setup/binding/target e receipts diretos; aplica CapabilityAuthorization. | P14 |
+| `packages/protocol/src/groups/capability-operator.ts` | Inspeciona requestID/principal/origin/scopeHash; origin é configured-auth/desktop/cli/sdk; aplica CapabilityAuthorization. | P15 |
+| `packages/protocol/src/groups/capability-schedules.ts` | Ações list/pause/resume/run/remove de schedules de agente; create/edit ficam no tool do agente; mutations exigem key. | P16 |
+| `packages/schema/src/capability-artifact-management.ts` | Operator artifact metadata, cursor/page bounds and share/pin input. | Q055 |
+| `packages/schema/src/capability-management.ts` | Versioned management refs, live pages, bindings and reused receipts. | Q056 |
+| `packages/schema/src/capability-schedule-management.ts` | Richer schedule cadence plus operator/session projection and manual-run receipt. | Q057 |
+| `packages/schema/src/capability-setup.ts` | Key/bearer setup and explicit verified/credential-only outcome. | Q058 |
+| `packages/schema/src/capability.ts` | Core authority boundary, opaque outcome receipt, symmetric UTF-8 JSON detail limit. | Q054 |
+| `packages/server/src/capability-content-ticket.ts` | Issue and verify short-lived opaque content references bound to the minting authority, session, and artifact revision. | G57-E001, G57-E003 |
+| `packages/server/src/capability-verification.ts` | Supply the capability connection verifier as a host-constructed Effect service. | G57-E004 |
+| `packages/server/src/handlers/capability-connections.ts` | Construct connection setup/binding/management adapters and expose their operations. | G57-E034, G57-E035, G57-E036 |
+| `packages/server/src/handlers/capability-operator.ts` | Inspect the authenticated operator binding for the current placement. | G57-E037 |
+| `packages/server/src/handlers/capability-schedules.ts` | Operate agent capability schedules through CapabilityScheduleOperator. | G57-E038, G57-E039 |
+| `packages/server/src/operator.ts` | Expose the host operator facade and create its default Core authority scope. | G57-E130 |
+
+`Q054 · S:capability.ts` L41–47
+```ts
+// References identify data only; trusted authority bindings belong to Core.
+export interface ConnectionRef extends Schema.Schema.Type<typeof ConnectionRef> {}
+export const ConnectionRef = Schema.Struct({
+  id: ConnectionID,
+  provider: Schema.NonEmptyString,
+  generation: NonNegativeInt,
+}).annotate({ identifier: "Capability.ConnectionRef", parseOptions: { onExcessProperty: "error" } })
+```
+
+`Q054` L105–119
+```ts
+export const Verification = Schema.Literals(["acknowledged", "observed", "verified"]).annotate({
+  identifier: "Capability.Verification",
+})
+export type Verification = typeof Verification.Type
+
+// Receipt is a stable opaque reference, not a complete execution receipt.
+const Outcome = { receipt: Schema.NonEmptyString, summary: Schema.String }
+
+export interface Completed extends Schema.Schema.Type<typeof Completed> {}
+export const Completed = Schema.Struct({
+  ...Outcome,
+  status: Schema.Literal("completed"),
+  artifactRefs: Schema.Array(ArtifactRef),
+  verification: Verification,
+}).annotate({ identifier: "Capability.Result.Completed", parseOptions: { onExcessProperty: "error" } })
+```
+
+`Q054` L150–153
+```ts
+
+export const Result = Schema.Union([Completed, Submitted, Pending, Partial, Unknown]).annotate({
+  identifier: "Capability.Result",
+  parseOptions: { onExcessProperty: "error" },
+```
+
+`Q054` L175–186
+```ts
+// At most 4 KiB of serialized UTF-8 JSON. Producers must redact provider detail before projection.
+const detailBudget = SchemaGetter.checkEffect<Schema.Json>((value) =>
+  Effect.succeed(
+    new TextEncoder().encode(JSON.stringify(value)).byteLength <= 4096
+      ? undefined
+      : "Failure detail must not exceed 4096 UTF-8 JSON bytes",
+  ),
+)
+// A real transformation retains validation through authoritative imported clients.
+export const FailureDetail = Schema.Json.pipe(
+  Schema.decodeTo(Schema.Json, { decode: detailBudget, encode: detailBudget }),
+).annotate({ identifier: "Capability.FailureDetail" })
+```
+
+`Q055 · S:capability-artifact-management.ts` L7–7
+```ts
+// Operator projection only: owner, producer and user metadata stay host-private.
+```
+
+`P14 · P:capability-connections.ts` L26–32
+```ts
+const MutationHeaders = Schema.Struct({ "idempotency-key": Schema.NonEmptyString })
+
+export const CapabilityConnectionsGroup = HttpApiGroup.make("server.capability.connections")
+  .add(
+    HttpApiEndpoint.post("capability.connection.connect", "/api/capability/connections/connect", {
+      query: LocationQuery, headers: MutationHeaders, payload: CapabilitySetup.Input,
+      success: CapabilityManagement.Receipt,
+```
+
+`P14` L93–95
+```ts
+export const makeCapabilityConnectionsGroup = <Id extends HttpApiMiddleware.AnyId, Service>(
+  locationMiddleware: Context.Key<Id, Service>,
+) => CapabilityConnectionsGroup.middleware(locationMiddleware).middleware(CapabilityAuthorization)
+```
+
+`G57-E130 · R:operator.ts` L8–15
+```ts
+/** Host-injected facade; its scoped Core factory owns authority and the request frame. */
+export class Service extends Context.Service<Service, CapabilityOperatorContract.Interface>()(
+  "@orchestra/ServerOperator",
+) {}
+
+export const layer = Layer.effect(Service, Effect.suspend(() => CapabilityOperator.make({
+  principal: Principal.account(), scope: { placements: "instance", actions: ["*"] },
+})).pipe(Effect.orDie))
+```
+
+`G57-E004 · R:capability-verification.ts` L7–12
+```ts
+/** Trusted host construction only; request payloads cannot replace production origins or identity checks. */
+export class Service extends Context.Service<Service, CapabilityConnectionSetupContract.Verifier>()(
+  "@orchestra/ServerCapabilityVerification",
+) {}
+
+export const layer = Layer.effect(Service, CapabilityConnectionVerification.make().pipe(Effect.orDie))
+```
+
+`G57-E034 · H:capability-connections.ts` L20–25
+```ts
+    const operators = yield* ServerOperator.Service
+    const database = yield* Database.Service
+    const store = yield* CapabilityConnectionStore.make
+    const verifier = yield* ServerCapabilityVerification.Service
+    const ledger = yield* CapabilityRequest.make({ operators })
+    const setup = yield* CapabilityConnectionSetup.make({ operators, ledger, verifier })
+```
+
+`G57-E034` L32–36
+```ts
+      .handle("capability.connection.connect", ({ payload }) => Effect.gen(function* () {
+        const location = yield* Location.Service
+        return yield* setup.connect({ projectID: location.project.id,
+          location: Location.Ref.make({ directory: location.directory, workspaceID: location.workspaceID }) }, payload)
+      }).pipe(connectionResponse))
+```
+
+`G57-E001 · R:capability-content-ticket.ts` L9–13
+```ts
+export type Claim = Readonly<{
+  authority: CapabilityOperatorContract.Authority
+  sessionID: SessionID
+  ref: Readonly<{ id: Capability.ArtifactID; revision: number }>
+}>
+```
+
+`U05 · R:capability-content-ticket.ts` L27–31
+```ts
+function make(ttlMillis: number) {
+  // An opaque random token held in process memory: the router rejects path parameters over 100 characters, so the
+  // claim cannot travel in the URL. A restart invalidates every outstanding ticket. The read still runs under the
+  // minting authority, so Core rejects it once that authority is revoked or expired.
+  const issued = new Map<string, Claim & Readonly<{ expiresAt: number }>>()
+```
+
+`G57-E003 · R:capability-content-ticket.ts` L38–46
+```ts
+      const token = randomBytes(32).toString("base64url")
+      const expiresAt = now + ttlMillis
+      issued.set(token, { ...claim, expiresAt })
+      return { url: `/api/capability/content/${token}`, expiresAt }
+    },
+    verify: (ticket) => {
+      const entry = issued.get(ticket)
+      if (entry === undefined) return undefined
+      if (Date.now() < entry.expiresAt) return { authority: entry.authority, sessionID: entry.sessionID, ref: entry.ref }
+```
+
+## D12 — Atlas product surface
+
+Membership: M12; 6 paths exatos.
+
+bounded_claim:
+
+Atlas knowledge anchors and empty/present screen/review/setup results are transport contracts. Knowledge target identity is not Task execution authorization. Protocol exposes the Location surface; Server opens the Atlas application with project/Location context and maps its unavailable error. These product routes and result labels do not constitute Genesis review or runtime receipts.
+
+conditional_gap:
+
+Atlas CAS, semantic governance, source realization, mine/index/import and actual review results remain their own authority/runtime obligations.
+
+Tabela local herdada (bytes exatos):
+
+| Exact member | Local L1 purpose | Additional evidence |
+| --- | --- | --- |
+| `packages/protocol/src/groups/atlas.ts` | Fachada da tela/store Atlas: distingue draft, emit, review, decisões e setup/index/mine; todos os endpoints declaram ServiceUnavailable. | P11 |
+| `packages/schema/src/atlas-knowledge.ts` | Proposed knowledge target and host anchor with explicit canonical field order. | Q059 |
+| `packages/schema/src/atlas-review.ts` | Atlas review/decision wire forms; not review authority for this campaign. | Q060 |
+| `packages/schema/src/atlas-screen.ts` | Empty/present Atlas wire projection and verdict data. | Q061 |
+| `packages/schema/src/atlas-setup.ts` | Atlas indexing/mining transport results. | Q062 |
+| `packages/server/src/handlers/atlas.ts` | Expose the Location-owned Atlas surface and supply chosen-model callbacks for delegate/mine. | G57-E028 |
+
+`Q059 · S:atlas-knowledge.ts` L23–28
+```ts
+// A proposed work identity, not a durable Task or execution authorization.
+export const Target = Schema.Struct({
+  kind: Schema.Literals(["assignment", "work-package"]),
+  id: UnitID,
+}).annotate({ identifier: "AtlasKnowledge.Target", ...closed })
+export interface Target extends Schema.Schema.Type<typeof Target> {}
+```
+
+`Q059` L43–53
+```ts
+export const Anchor = Schema.Struct({
+  reference: Reference,
+  projectID: ProjectID,
+  authorSessionID: SessionID,
+  assistantMessageID: SessionMessage.ID,
+  callID: Schema.NonEmptyString,
+  memberID: Schema.Literal("archie"),
+  target: Target,
+  units: Schema.Array(Unit).check(Schema.isMinLength(1), Schema.isMaxLength(MAX_UNITS)),
+}).annotate({ identifier: "AtlasKnowledge.Anchor", ...closed })
+export interface Anchor extends Schema.Schema.Type<typeof Anchor> {}
+```
+
+`Q061 · S:atlas-screen.ts` L9–9
+```ts
+export const AtlasEmpty = Schema.Struct({ state: Schema.Literal("empty") }).annotate({ identifier: "AtlasEmpty" })
+```
+
+`Q061` L307–316
+```ts
+export const AtlasReviewResult = Schema.Union([AtlasEmpty, AtlasReview]).annotate({ identifier: "AtlasReviewResult" })
+
+/** Every review write (hold, release, propose, decide, answer, memory-decide, territory) answers this verdict. */
+export const AtlasReviewWriteResult = Schema.Union([
+  AtlasEmpty,
+  Schema.Struct({
+    ...VerdictFields,
+    data: Schema.optional(Schema.Struct({ id: Schema.String })),
+  }).annotate({ identifier: "AtlasReviewWrite" }),
+]).annotate({ identifier: "AtlasReviewWriteResult" })
+```
+
+`Q062 · S:atlas-setup.ts` L6–13
+```ts
+export const AtlasIndexOk = Schema.Struct({
+  state: Schema.Literal("ok"),
+  ran: Schema.Boolean,
+  tool: Schema.NullOr(Schema.String),
+  exitCode: Schema.NullOr(Schema.Finite),
+  documents: Schema.NullOr(Schema.Finite),
+  message: Schema.NullOr(Schema.String),
+}).annotate({ identifier: "AtlasIndex" })
+```
+
+`P11 · P:atlas.ts` L43–48
+```ts
+  .add(
+    HttpApiEndpoint.get("atlas.snapshot", "/api/atlas/snapshot", {
+      query: LocationQuery,
+      success: Location.response(AtlasSnapshotResult),
+      error: ServiceUnavailableError,
+    })
+```
+
+`G57-E028 · H:atlas.ts` L23–24
+```ts
+    const unavailable = (error: Atlas.Unavailable) =>
+      new ServiceUnavailableError({ service: "atlas", message: error.message })
+```
+
+`G57-E028` L28–36
+```ts
+          const location = yield* Location.Service
+          return yield* call(
+            Atlas.open(
+              dependencies,
+              Atlas.storeRoot(location.project.directory, location.directory),
+              location.project.id,
+            ),
+          )
+        }).pipe(Effect.mapError(unavailable)),
+```
+

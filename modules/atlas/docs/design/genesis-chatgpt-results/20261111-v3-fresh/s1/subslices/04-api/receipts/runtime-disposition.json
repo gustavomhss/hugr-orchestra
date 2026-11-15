@@ -1,0 +1,90 @@
+{
+  "schema": "s1-04-runtime-disposition/v1",
+  "recorded_at_utc": "2026-11-15T00:53:32.580437+00:00",
+  "final_package": {
+    "path": "native-package.json",
+    "byte_length": 389819,
+    "sha256": "71bc1102fd5e2c6be166b2df790e8ee8fe4ecd053ab2d7fed5bbc46130349442"
+  },
+  "promoted_release": {
+    "release_id": "20261111-v3-fresh-s4-r3",
+    "native_candidate": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+    "prepare": "FAILED_NATIVE_FILE_LIMIT",
+    "candidate_created": false,
+    "binding": "NOT_REACHED",
+    "publish": "NOT_REACHED",
+    "index_read": "HOLD_OWNERSHIP_STORE_UNAVAILABLE",
+    "receipts": [
+      {
+        "path": "receipts/atlas/prepare-r3-final.receipt.json",
+        "byte_length": 2038,
+        "sha256": "51496bac72a13fccbe4f4e2ceec67219b42f3105661d1ac5b48b6108c13785a2"
+      },
+      {
+        "path": "receipts/atlas/index-maintenance-r3-final.receipt.json",
+        "byte_length": 1847,
+        "sha256": "e6195ccff6d305a654aba6a79d783f474c282208e7c9bcba474c83c682e825af"
+      },
+      {
+        "path": "receipts/atlas/read-component-r3-final.receipt.json",
+        "byte_length": 1854,
+        "sha256": "2ba1f0b26b090fc72f01902baf9a9075c2bea4e829c57ff717d0632a7a51a6fb"
+      }
+    ]
+  },
+  "later_source_diagnostic": {
+    "revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+    "state": "PREPARED_DIAGNOSTIC_ONLY",
+    "release_promoted": false,
+    "exit_code": 0,
+    "candidate_created": true,
+    "stdout_ref": {
+      "path": "receipts/atlas-diagnostic/prepare-db9b423-final.stdout.txt",
+      "byte_length": 222201,
+      "sha256": "76e86d03a3e2fb256e2e117ef2e0cd45cf0e11b98ed2e2b5545247009e385df8"
+    },
+    "stderr": "",
+    "prepared_candidate_ref": {
+      "path": "receipts/atlas-diagnostic/prepared-candidate.json",
+      "byte_length": 292042,
+      "sha256": "be267a8e2db79343731eba856d84ff914f1d43f8849b0072f05b1d0bbff794a6"
+    },
+    "cas_snapshot_ref": {
+      "path": "receipts/atlas-diagnostic/cas-snapshot-index.json",
+      "byte_length": 21490,
+      "sha256": "7e408a0a75ee0be9706fea3a90854573f5a54837c81a2f95f034ada38f8c7b0a"
+    },
+    "receipt": {
+      "path": "receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+      "byte_length": 2223,
+      "sha256": "df6c1c9fbb2a1940898c7b750adeb2f658658ff3396a2b692d3eef71ad26adeb"
+    },
+    "index_read_after_prepare": {
+      "state": "HOLD_OWNERSHIP_STORE_UNAVAILABLE",
+      "index_receipt": {
+        "path": "receipts/atlas-diagnostic/index-maintenance-db9b423-final.receipt.json",
+        "byte_length": 1926,
+        "sha256": "c1f1b32d5d1d276a7313b23669b14ab310a10f362234c601d0473f823ddfda41"
+      },
+      "read_receipt": {
+        "path": "receipts/atlas-diagnostic/read-component-db9b423-final.receipt.json",
+        "byte_length": 1933,
+        "sha256": "59a4601e858c93042214ade66f5b9df329888f22f8ac4d283969299dfbb50185"
+      }
+    },
+    "authority": "Preparation observation only; no substituted release, runtime binding, publication or consumer acceptance"
+  },
+  "required_large_source": {
+    "path": "packages/client/src/generated/types.ts",
+    "byte_length": 462732,
+    "sha256": "2763d389d2694a6737719865cbabbbdfee937d81a86497b783c246cdaf76ef0f",
+    "omitted": false,
+    "truncated": false
+  },
+  "publication_authority": {
+    "state": "NOT_REACHED",
+    "policy_or_actor_created": false,
+    "claim": "No missing-policy failure is asserted as observed; preparation/release prerequisites stop the qualified path before that gate."
+  },
+  "unlock": "S4 must provide an explicitly qualified compatible release covering complete required files and the applicable strict format. Then prepare a new exact candidate, obtain separate binding decisions of the same pair, satisfy actual isolated authority, publish and execute the frozen consumer/maintenance cases."
+}

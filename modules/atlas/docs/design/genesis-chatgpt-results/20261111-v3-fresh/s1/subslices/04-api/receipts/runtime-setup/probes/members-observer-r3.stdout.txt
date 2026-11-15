@@ -1,0 +1,139 @@
+{
+  "source_root": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/source-snapshot",
+  "source_identity": "materialized, not git checkout",
+  "members_scope_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "observations": [
+    {
+      "key": "members:docs/architecture/phase-plans/70-90-briefs",
+      "observation": {
+        "kind": "unavailable"
+      }
+    },
+    {
+      "key": "members:packages/client",
+      "observation": {
+        "kind": "unavailable"
+      }
+    },
+    {
+      "key": "members:packages/client/script",
+      "observation": {
+        "kind": "unavailable"
+      }
+    },
+    {
+      "key": "members:packages/client/src",
+      "observation": {
+        "kind": "unavailable"
+      }
+    },
+    {
+      "key": "members:packages/client/src/generated",
+      "observation": {
+        "kind": "unavailable"
+      }
+    },
+    {
+      "key": "members:packages/client/src/generated-effect",
+      "observation": {
+        "kind": "unavailable"
+      }
+    },
+    {
+      "key": "members:packages/client/test",
+      "observation": {
+        "kind": "unavailable"
+      }
+    },
+    {
+      "key": "members:packages/protocol",
+      "observation": {
+        "kind": "unavailable"
+      }
+    },
+    {
+      "key": "members:packages/protocol/src/groups",
+      "observation": {
+        "kind": "unavailable"
+      }
+    },
+    {
+      "key": "members:packages/protocol/src/middleware",
+      "observation": {
+        "kind": "unavailable"
+      }
+    },
+    {
+      "key": "members:packages/schema",
+      "observation": {
+        "kind": "unavailable"
+      }
+    },
+    {
+      "key": "members:packages/schema/src",
+      "observation": {
+        "kind": "unavailable"
+      }
+    },
+    {
+      "key": "members:packages/schema/test",
+      "observation": {
+        "kind": "unavailable"
+      }
+    },
+    {
+      "key": "members:packages/sdk-next",
+      "observation": {
+        "kind": "unavailable"
+      }
+    },
+    {
+      "key": "members:packages/sdk-next/src",
+      "observation": {
+        "kind": "unavailable"
+      }
+    },
+    {
+      "key": "members:packages/sdk-next/test",
+      "observation": {
+        "kind": "unavailable"
+      }
+    },
+    {
+      "key": "members:packages/server",
+      "observation": {
+        "kind": "unavailable"
+      }
+    },
+    {
+      "key": "members:packages/server/src/handlers",
+      "observation": {
+        "kind": "unavailable"
+      }
+    },
+    {
+      "key": "members:packages/server/src/middleware",
+      "observation": {
+        "kind": "unavailable"
+      }
+    },
+    {
+      "key": "members:tooling/httpapi-codegen",
+      "observation": {
+        "kind": "unavailable"
+      }
+    },
+    {
+      "key": "members:tooling/httpapi-codegen/src",
+      "observation": {
+        "kind": "unavailable"
+      }
+    },
+    {
+      "key": "members:tooling/httpapi-codegen/test",
+      "observation": {
+        "kind": "absent"
+      }
+    }
+  ]
+}

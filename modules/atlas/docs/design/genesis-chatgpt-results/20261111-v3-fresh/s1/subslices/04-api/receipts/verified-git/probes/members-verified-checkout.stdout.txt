@@ -1,0 +1,161 @@
+{
+  "source_root": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/verified-git-candidate",
+  "source_identity": "verified sparse Git checkout with complete exact candidate index",
+  "runtime_candidate": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "observations": [
+    {
+      "key": "members:docs/architecture/phase-plans/70-90-briefs",
+      "observation": {
+        "kind": "present",
+        "version": "c45eeb56399a29ab503f37f8cf13b5757deaf8909a4d75a3e45af5d674381492"
+      }
+    },
+    {
+      "key": "members:packages/client",
+      "observation": {
+        "kind": "present",
+        "version": "1f031c78324020dc90b43552e50cdad16eeb81b223162011b569b48db111193f"
+      }
+    },
+    {
+      "key": "members:packages/client/script",
+      "observation": {
+        "kind": "present",
+        "version": "265dfdc819a6c890cdeeb915b4382c1ddbd9527e493d7defc0a077ae4675471e"
+      }
+    },
+    {
+      "key": "members:packages/client/src",
+      "observation": {
+        "kind": "present",
+        "version": "ec154fb4321bbfa11c13e6e7128d3c1739e9befbc7969f91068198c21bd74d72"
+      }
+    },
+    {
+      "key": "members:packages/client/src/generated",
+      "observation": {
+        "kind": "present",
+        "version": "d860432b04f5d05a16e457244ce484b28ee1456ede0fed1b0627f04581107f81"
+      }
+    },
+    {
+      "key": "members:packages/client/src/generated-effect",
+      "observation": {
+        "kind": "present",
+        "version": "00130940ed925a23d4ffc987b1e6e9a2adce76243838250f783fe17903117981"
+      }
+    },
+    {
+      "key": "members:packages/client/test",
+      "observation": {
+        "kind": "present",
+        "version": "a959e03f1f9a5c47bf1f41d4115de366a747e5130d9ee4516269b9cacf393798"
+      }
+    },
+    {
+      "key": "members:packages/protocol",
+      "observation": {
+        "kind": "present",
+        "version": "a015dd5a17c82148a592e37b2597cb1e041c9b473e9c5a82ccdbdc34a13d283e"
+      }
+    },
+    {
+      "key": "members:packages/protocol/src/groups",
+      "observation": {
+        "kind": "present",
+        "version": "8f9a2e90da4302b142fe18b3afce52ce255fc8dbfc2ce786cb627a78d9dbc5ff"
+      }
+    },
+    {
+      "key": "members:packages/protocol/src/middleware",
+      "observation": {
+        "kind": "present",
+        "version": "e19c94fc6494bb8757e664288aa69c61bdfa04027ef163dbb3b9265ec419ef69"
+      }
+    },
+    {
+      "key": "members:packages/schema",
+      "observation": {
+        "kind": "present",
+        "version": "9072d8582f7706ed26db989e4a907d29f45e901239d2c38279169e58df0957d9"
+      }
+    },
+    {
+      "key": "members:packages/schema/src",
+      "observation": {
+        "kind": "present",
+        "version": "4d13d5dff2060d4e78814d7ded54dc396fc23faafc4ca52213be49dc7eae44a4"
+      }
+    },
+    {
+      "key": "members:packages/schema/test",
+      "observation": {
+        "kind": "present",
+        "version": "56ef716f7eb13b977b842ab6d85688a16395c88273406756ba932be4377e8462"
+      }
+    },
+    {
+      "key": "members:packages/sdk-next",
+      "observation": {
+        "kind": "present",
+        "version": "fa025d7fff5fa0b325c5e155bd5890904a4f27baadcc5578ac3568b8033c57ec"
+      }
+    },
+    {
+      "key": "members:packages/sdk-next/src",
+      "observation": {
+        "kind": "present",
+        "version": "c4f4a1c552f1401c90f1587bb3065caeff68ba7970735137a35c7f5799a7033b"
+      }
+    },
+    {
+      "key": "members:packages/sdk-next/test",
+      "observation": {
+        "kind": "present",
+        "version": "5c8308374bc7f6dc92814b50a1523ff0b95788e3ce98bb86adcf9a548882510f"
+      }
+    },
+    {
+      "key": "members:packages/server",
+      "observation": {
+        "kind": "present",
+        "version": "e5ad726070f9dd7cf58f50bd341d8b6cdc4b4bdb120ebcd7da64dfa96cf60359"
+      }
+    },
+    {
+      "key": "members:packages/server/src/handlers",
+      "observation": {
+        "kind": "present",
+        "version": "91a650462873c5a0843bf2d2c4aeed4c7e17aa1e4f7b72c2ee2df2f404cb99c8"
+      }
+    },
+    {
+      "key": "members:packages/server/src/middleware",
+      "observation": {
+        "kind": "present",
+        "version": "fde0bb1fdccc4c917104aaa7e6c8cc06b01246ebc0a6806dcdec35ecc90c0afb"
+      }
+    },
+    {
+      "key": "members:tooling/httpapi-codegen",
+      "observation": {
+        "kind": "present",
+        "version": "9a76f5a62f2016956ab2dfe31065462d13fa230f307dd439ce88c0159bcc4071"
+      }
+    },
+    {
+      "key": "members:tooling/httpapi-codegen/src",
+      "observation": {
+        "kind": "present",
+        "version": "1b0f0ca695ea24fb7cbaa7bea13602333fc4b9ff0769f1aeda033dfc75f7e466"
+      }
+    },
+    {
+      "key": "members:tooling/httpapi-codegen/test",
+      "observation": {
+        "kind": "present",
+        "version": "0f47016ebdddcc49496d693fa12bf8d30b7f1b79caac8e9baa8df93e3a547435"
+      }
+    }
+  ]
+}

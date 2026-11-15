@@ -1,0 +1,44 @@
+{
+  "schema": "s1-04-original-native-cli-operation/v1",
+  "operation": "read",
+  "tag": "read-component-db9b423-final",
+  "started_at_utc": "2026-11-15T00:50:33.540982+00:00",
+  "ended_at_utc": "2026-11-15T00:50:34.139608+00:00",
+  "command_argv": [
+    "/workspace/scratch/8833f71e3e94/s1-04-94f1e157-8c44-4e6e-a4af-7690a8845ecf/runtime-tools/node_modules/.bin/bun",
+    "scripts/genesis-native.ts",
+    "read",
+    "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/diagnostic-source-root",
+    "/workspace/scratch/8833f71e3e94/s1-04-94f1e157-8c44-4e6e-a4af-7690a8845ecf/output/receipts/atlas-diagnostic/read-component-db9b423-final-query.json"
+  ],
+  "cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-db9b423-diagnostic/modules/atlas",
+  "isolated_root": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/diagnostic-source-root",
+  "observed_head": "8835faf6329cc3d5f5de1097872882d57472b793",
+  "runtime_release": "UNPROMOTED_SOURCE_DIAGNOSTIC_ONLY",
+  "runtime_code_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "exit_code": 2,
+  "original_cli": true,
+  "runtime_code_modified": false,
+  "seams_used": false,
+  "policy_or_actor_created": false,
+  "stdout": {
+    "path": "receipts/atlas-diagnostic/read-component-db9b423-final.stdout.txt",
+    "byte_length": 83,
+    "sha256": "2dd4491a6b54276f5ecac40debfd740cb87c68b5e7eaf55f0ab4a01efbf5cb60"
+  },
+  "stderr": {
+    "path": "receipts/atlas-diagnostic/read-component-db9b423-final.stderr.txt",
+    "byte_length": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "package": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/native-package.json",
+    "byte_length": 389819,
+    "sha256": "71bc1102fd5e2c6be166b2df790e8ee8fe4ecd053ab2d7fed5bbc46130349442"
+  },
+  "query": {
+    "scope": "orchestra.s1",
+    "need": "component",
+    "maxBytes": 30000
+  }
+}

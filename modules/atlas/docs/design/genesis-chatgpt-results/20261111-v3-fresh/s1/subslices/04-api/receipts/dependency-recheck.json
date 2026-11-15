@@ -1,0 +1,38 @@
+{
+  "schema": "s1-04-dependency-recheck/v1",
+  "observed_at_utc": "2026-11-15T00:41:41Z",
+  "branch_heads": {
+    "genesis-s1-api": "8835faf6329cc3d5f5de1097872882d57472b793",
+    "genesis-fresh-s4": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+    "genesis-s1-sessions": "9fd024a34e76d2e9328e1f793ef1f69fbf606e51"
+  },
+  "s4": {
+    "release_id": "20261111-v3-fresh-s4-r3",
+    "native_candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+    "release_git_blob": "7513fcca63664ca02094e9ed9b8fab090c20295d",
+    "release_sha256": "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016",
+    "identical_to_frozen_release": true,
+    "later_source_candidate": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+    "later_source_promoted": false
+  },
+  "core": {
+    "completion_state": "IN_PROGRESS",
+    "artifact_revision": "a2a5de03d7b1034373eb877d8f03c4cecc772dde",
+    "handoff_git_blob": "c736d95293bcb3411f1429cf3417f7b2e4317465",
+    "handoff_sha256": "01dcf77d1bb7ab5e0fdf0c249c95e93f981cb28d3b6236520e2f58ea71ec6ae2",
+    "selected_accepted_predecessors": [
+      "s1.core.session-admission",
+      "s1.core.session-execution",
+      "s1.core.persistence"
+    ],
+    "reuse_proof": "dependencies/core/reuse-proof.json",
+    "local_reuse_gate": "receipts/core-reuse-release.json",
+    "wide_core_accepted": false
+  },
+  "own_head_actions": {
+    "total_count": 0,
+    "workflow_runs": []
+  },
+  "actions_query_scope": "GET repository actions/runs with head_sha exact, per_page100; no pull-request-only wrapper",
+  "raw_capture": "receipts/dependency-recheck-capture.json"
+}

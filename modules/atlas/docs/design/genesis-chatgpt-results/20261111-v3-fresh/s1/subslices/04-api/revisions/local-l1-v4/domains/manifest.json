@@ -1,0 +1,195 @@
+{
+  "schema": "genesis-s1-04-b3-v4-manifest/v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "candidate_body": {
+    "path": "b3/v4/domain-disposition.md",
+    "byte_length": 38080,
+    "sha256": "12248d1cc39a27b1655f1a683f02cd1af864f87945300a86b0ee4326227a4edd"
+  },
+  "dossiers": [
+    {
+      "path": "b3/v4/dossier-D01-D06-v4.md",
+      "byte_length": 12472,
+      "sha256": "183649bb5e918a6b5f38b4c516e64bd5566e4b7f5ed64497d5928171dd3342b1",
+      "domain_ids": [
+        "D01",
+        "D02",
+        "D03",
+        "D04",
+        "D05",
+        "D06"
+      ],
+      "member_count": 80,
+      "mode": "review_delta_reusing_exact_v2_literals",
+      "reused_v2": {
+        "path": "b3/v2/dossier-D01-D06.md",
+        "byte_length": 31892,
+        "sha256": "b31b058452a3f0162589eb543f8163a31c3ad7646268d1fde832e81062b0ae5a"
+      }
+    },
+    {
+      "path": "b3/v4/dossier-D07-D12-v4.md",
+      "byte_length": 15736,
+      "sha256": "7f7406a6c749c237b7d28071f37a6229a1b06d98b913cec0b0f186736b6fe206",
+      "domain_ids": [
+        "D07",
+        "D08",
+        "D09",
+        "D10",
+        "D11",
+        "D12"
+      ],
+      "member_count": 49,
+      "mode": "review_delta_reusing_exact_v2_literals",
+      "reused_v2": {
+        "path": "b3/v2/dossier-D07-D12.md",
+        "byte_length": 34510,
+        "sha256": "68ce7d7715261164b4c112982e3b7ff9e7e9219634138840878371257c47ed40"
+      },
+      "reuse_scope_after_D06_delta": {
+        "domain_ids": [
+          "D07",
+          "D08",
+          "D09",
+          "D10",
+          "D11",
+          "D12"
+        ],
+        "sections_byte_unchanged": true,
+        "header_body_binding_is_preserved_pre_D06_revision": true,
+        "pre_D06_body": {
+          "path": "b3/v4/delta-D06/before/domain-disposition.md",
+          "byte_length": 38062,
+          "sha256": "36339a1329421f80d15e37b40ce26edd6e1c793a0ac1b5056471e4df2bfed57c"
+        }
+      }
+    },
+    {
+      "path": "b3/v4/dossier-D13-D18-v4.md",
+      "byte_length": 33794,
+      "sha256": "fb2dd55acba3dd59decadbc2e575e253bee6e95052d8f76ce79b2fe3b9743dac",
+      "domain_ids": [
+        "D13",
+        "D14",
+        "D15",
+        "D16",
+        "D17",
+        "D18"
+      ],
+      "member_count": 36,
+      "mode": "self_contained_domain_review",
+      "reused_v2": null,
+      "reuse_scope_after_D06_delta": {
+        "domain_ids": [
+          "D13",
+          "D14",
+          "D15",
+          "D16",
+          "D17",
+          "D18"
+        ],
+        "sections_byte_unchanged": true,
+        "header_body_binding_is_preserved_pre_D06_revision": true,
+        "pre_D06_body": {
+          "path": "b3/v4/delta-D06/before/domain-disposition.md",
+          "byte_length": 38062,
+          "sha256": "36339a1329421f80d15e37b40ce26edd6e1c793a0ac1b5056471e4df2bfed57c"
+        }
+      }
+    },
+    {
+      "path": "b3/v4/dossier-D19-D24-v4.md",
+      "byte_length": 25735,
+      "sha256": "3a8c595f42b86ff616dd4092803584edc4892d60a9c9dc8316073d5e03615045",
+      "domain_ids": [
+        "D19",
+        "D20",
+        "D21",
+        "D22",
+        "D23",
+        "D24"
+      ],
+      "member_count": 25,
+      "mode": "self_contained_domain_review",
+      "reused_v2": null,
+      "reuse_scope_after_D06_delta": {
+        "domain_ids": [
+          "D19",
+          "D20",
+          "D21",
+          "D22",
+          "D23",
+          "D24"
+        ],
+        "sections_byte_unchanged": true,
+        "header_body_binding_is_preserved_pre_D06_revision": true,
+        "pre_D06_body": {
+          "path": "b3/v4/delta-D06/before/domain-disposition.md",
+          "byte_length": 38062,
+          "sha256": "36339a1329421f80d15e37b40ce26edd6e1c793a0ac1b5056471e4df2bfed57c"
+        }
+      }
+    }
+  ],
+  "disposition": "24 bounded domains promoted for review; 190 detailed historical row claims explicitly not promoted; 190 exact paths preserved. No semantic PASS asserted.",
+  "files": [
+    {
+      "path": "b3/v4/domains-v4.json",
+      "byte_length": 53348,
+      "sha256": "d6a53a3e50e86614a67dfa6a43d4b70fc9d563a97881b884b1c91d829416ae62"
+    },
+    {
+      "path": "b3/v4/original-review-domain-disposition.md",
+      "byte_length": 65726,
+      "sha256": "95b17106dc5c26bb6d39c8d2d80b48fca8f75d35fe4f5f8ec3f232c7d71411c3"
+    },
+    {
+      "path": "b3/v4/retired-row-claims.json",
+      "byte_length": 222382,
+      "sha256": "65d5cb6d8668d7cd9b43041a867dbffcec4d07ee3e0543c91805bf0e696c7901"
+    },
+    {
+      "path": "b3/v4/domain-disposition.diff",
+      "byte_length": 97088,
+      "sha256": "9686eb1d6067b26f1cc411a34f835b092e7791e80c0128b74364e27e2dc1c783"
+    },
+    {
+      "path": "b3/v4/d12-union-evidence.json",
+      "byte_length": 6733,
+      "sha256": "1362566f4f166f5494f8d0a5d12e416ea5ebaaed03cb65eaacc270fe5c825253"
+    },
+    {
+      "path": "b3/v4/verification.json",
+      "byte_length": 1264,
+      "sha256": "c69f6d715754fe1bc49341fe90ff3d49132f81511fad86e062b038f72ccffa83"
+    }
+  ],
+  "reused_literal_selection": {
+    "path": "b3/selected-evidence.json",
+    "byte_length": 203006,
+    "sha256": "9fa72ec5e4445fdb17663d080f7957b31dc0229dc407dd0341b672ee075ce598"
+  },
+  "revision": "v4-D06-correction-1",
+  "inherited_bounded_claim_exception": {
+    "domain_id": "D06",
+    "original_sentence": "Protocol declares query/input/error shapes; Server delegates reference/Git/PR work to Location services and maps the PR host error.",
+    "corrected_sentence": "Protocol declares the VCS diff query and response shapes; Server delegates reference/Git/PR work to Location services and projects the PR host error.",
+    "prior_body": {
+      "path": "b3/v4/delta-D06/before/domain-disposition.md",
+      "byte_length": 38062,
+      "sha256": "36339a1329421f80d15e37b40ce26edd6e1c793a0ac1b5056471e4df2bfed57c"
+    },
+    "body_diff": {
+      "path": "b3/v4/delta-D06/body.diff",
+      "byte_length": 1043,
+      "sha256": "72f822096ca617b0b44f40b4e38de7fc3827096b71c8cd430ebf21f3409b5ca7"
+    },
+    "dossier_diff": {
+      "path": "b3/v4/delta-D06/dossier.diff",
+      "byte_length": 2405,
+      "sha256": "6cf2692d0a6bdd5407b847e77002e87c5b84fd742a792c218efef70af31adea9"
+    }
+  },
+  "historical_exactness_note": "The existing common header about inherited fields must be read with this explicit D06 correction exception; all other inherited bounded_claim and conditional_gap fields remain exact. No other body wording was changed."
+}

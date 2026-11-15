@@ -1,0 +1,128 @@
+{
+  "schema": "s1-04-visible-message-archive/v1",
+  "execution_id": "94f1e157-8c44-4e6e-a4af-7690a8845ecf",
+  "archivist": "/root/archive_l1_release",
+  "role": "Mechanical message preservation only; no judging, production or consumer evaluation",
+  "encoding": "utf-8",
+  "newline_policy": "Preserve visible text; append exactly one terminal LF",
+  "files": [
+    {
+      "file": "request-04d.txt",
+      "bytes": 6014,
+      "sha256": "f33d2147b3b739232c3f306a98da73f57f7378bc3ca5ab19bd68ab1a4beda70c",
+      "terminal_lf": true,
+      "from": "/root",
+      "to": [
+        "/root/api_j1",
+        "/root/api_j2"
+      ],
+      "source": "Exact transcription of visible inherited message text; UTF-8 with one terminal LF",
+      "round": "4d",
+      "tool_envelope_preserved": false
+    },
+    {
+      "file": "request-05.txt",
+      "bytes": 9954,
+      "sha256": "566c800d621341ea46096ecc482790a333b3d1ae4c0e49bafe076927fdd2ed89",
+      "terminal_lf": true,
+      "from": "/root",
+      "to": [
+        "/root/api_j1",
+        "/root/api_j2"
+      ],
+      "source": "Exact transcription of visible inherited message text; UTF-8 with one terminal LF",
+      "round": "5",
+      "tool_envelope_preserved": false
+    },
+    {
+      "file": "response-04d-j1.md",
+      "bytes": 1506,
+      "sha256": "55854c3b6efe635f6dfa83c2585f6c05f13001f047d83e98dce4f5696ee7e24a",
+      "terminal_lf": true,
+      "from": "/root/api_j1",
+      "to": [
+        "/root"
+      ],
+      "source": "Exact transcription of visible inherited message text; UTF-8 with one terminal LF",
+      "round": "4d",
+      "tool_envelope_preserved": false
+    },
+    {
+      "file": "response-04d-j2.md",
+      "bytes": 2215,
+      "sha256": "9daff7c28aa21b2ad8e471a2adf194bd146503d2ca52698b31f971a7e93102ca",
+      "terminal_lf": true,
+      "from": "/root/api_j2",
+      "to": [
+        "/root"
+      ],
+      "source": "Exact transcription of visible inherited message text; UTF-8 with one terminal LF",
+      "round": "4d",
+      "tool_envelope_preserved": false
+    },
+    {
+      "file": "response-05-j1.md",
+      "bytes": 3512,
+      "sha256": "286c3d6b49e62c9de7b3b3bf81930b5ed29afc9b05305075b8c49947b2f70892",
+      "terminal_lf": true,
+      "from": "/root/api_j1",
+      "to": [
+        "/root"
+      ],
+      "source": "Exact transcription of visible inherited message text; UTF-8 with one terminal LF",
+      "round": "5",
+      "tool_envelope_preserved": false
+    },
+    {
+      "file": "response-05-j2.md",
+      "bytes": 4196,
+      "sha256": "81e4b95ac933d8e7b4bf1766389173fc1e943c61da460f342c198c8725d6055b",
+      "terminal_lf": true,
+      "from": "/root/api_j2",
+      "to": [
+        "/root"
+      ],
+      "source": "Exact transcription of visible inherited message text; UTF-8 with one terminal LF",
+      "round": "5",
+      "tool_envelope_preserved": false
+    }
+  ],
+  "checks": {
+    "file_count": 6,
+    "expected_text_readback_equal": true,
+    "one_terminal_lf_each": true,
+    "request_text_identical_for_two_recipients_as_observed": true
+  },
+  "existing_producer_records": [
+    {
+      "path": "producer/b3/v4/delta-D06/request.txt",
+      "bytes": 720,
+      "sha256": "25789f6875986c02ebe97ede71da04318e15aadc91646fdcba33e57f9b0c6c58",
+      "copied": false
+    },
+    {
+      "path": "producer/b3/v4/delta-D06/response.md",
+      "bytes": 2019,
+      "sha256": "a21ff0e6d81429128a2e333d11f668b4cd39bc778831ac074519b6ceff540c1f",
+      "copied": false
+    },
+    {
+      "path": "producer/b3/v4/round-4b/request.txt",
+      "bytes": 783,
+      "sha256": "0891dce311c904926b10ea2e834908f3a3de056d75d152fa85c270edd4dea507",
+      "copied": false
+    },
+    {
+      "path": "producer/b3/v4/round-4b/response.md",
+      "bytes": 1764,
+      "sha256": "a541a0c5d8daa409b3fcd32b412dedc6e1b5b09d4941ea92ae28f32b2c1af2be",
+      "copied": false
+    }
+  ],
+  "limits": [
+    "This archive preserves visible message text, not a raw provider/tool envelope.",
+    "The two request texts were issued separately to J1 and J2; one byte-identical file is associated with both recipient deliveries.",
+    "Existing producer correction request/response records were verified by path, byte length and SHA256 and reused rather than duplicated.",
+    "No oracle, external source or private reasoning was read or recorded."
+  ]
+}

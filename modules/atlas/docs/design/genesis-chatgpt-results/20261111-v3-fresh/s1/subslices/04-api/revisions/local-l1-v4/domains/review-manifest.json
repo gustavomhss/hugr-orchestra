@@ -1,0 +1,63 @@
+{
+  "schema": "genesis-s1-04-b3-v4-review-delivery/v1",
+  "status": "READY_FOR_SAME_PAIR_D06_REEVALUATION",
+  "semantic_pass_asserted": false,
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "frozen_manifest": {
+    "path": "b3/v4/manifest.json",
+    "byte_length": 6473,
+    "sha256": "a5eefb81ada94fd6461392e613043d9bcab154f5cc4e2a3a8136f392268d4dd6"
+  },
+  "supplements": [
+    {
+      "path": "b3/v4/supplement-D09-mcp-catches.md",
+      "byte_length": 1971,
+      "sha256": "282a547c7ebcc18ec8fb1c0987f47813725bea695a9ddc010673bfa40feddfb6"
+    },
+    {
+      "path": "b3/v4/supplement-D09-identities.json",
+      "byte_length": 1426,
+      "sha256": "ac39851a8a6d21a91cd94504348e355b35275aa79e50faf1927b33957412ce43"
+    }
+  ],
+  "records": [
+    {
+      "path": "request.txt",
+      "byte_length": 13639,
+      "sha256": "8d149eae2c025ade5ed4c135d9aa87675a661eccff6f4842900c0da2c91ce58e"
+    },
+    {
+      "path": "b3/v4/delta-D06/request.txt",
+      "byte_length": 720,
+      "sha256": "25789f6875986c02ebe97ede71da04318e15aadc91646fdcba33e57f9b0c6c58"
+    },
+    {
+      "path": "b3/v4/delta-D06/response.md",
+      "byte_length": 2019,
+      "sha256": "a21ff0e6d81429128a2e333d11f668b4cd39bc778831ac074519b6ceff540c1f"
+    }
+  ],
+  "body_unchanged_after_freeze": false,
+  "retired_extra_claims_not_resolved_by_source": true,
+  "prior_large_complement_dispatch": "NOT_SELECTED_FOR_CURRENT_REVIEW",
+  "new_higher_layers": "NOT_PRODUCED",
+  "authorized_body_delta": {
+    "domain_id": "D06",
+    "body_diff": {
+      "path": "b3/v4/delta-D06/body.diff",
+      "byte_length": 1043,
+      "sha256": "72f822096ca617b0b44f40b4e38de7fc3827096b71c8cd430ebf21f3409b5ca7"
+    },
+    "before": {
+      "path": "b3/v4/delta-D06/before/domain-disposition.md",
+      "byte_length": 38062,
+      "sha256": "36339a1329421f80d15e37b40ce26edd6e1c793a0ac1b5056471e4df2bfed57c"
+    },
+    "after": {
+      "path": "b3/v4/domain-disposition.md",
+      "byte_length": 38080,
+      "sha256": "12248d1cc39a27b1655f1a683f02cd1af864f87945300a86b0ee4326227a4edd"
+    }
+  },
+  "unchanged_supplement_scope": "D09 is unchanged by the D06 delta; its prior-body binding remains preserved as evidence for that exact unchanged domain."
+}

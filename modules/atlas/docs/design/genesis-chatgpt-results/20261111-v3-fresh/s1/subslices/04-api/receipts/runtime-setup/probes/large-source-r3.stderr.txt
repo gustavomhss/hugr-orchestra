@@ -1,0 +1,12 @@
+28 |     const stat = lstatSync(path)
+29 |     if (stat.isSymbolicLink() || (index < parts.length - 1 ? !stat.isDirectory() : !stat.isFile())) throw new Error(`native-file-kind: ${relative}`)
+30 |     return { path, stat }
+31 |   })
+32 |   const last = observed.at(-1)!
+33 |   if (last.stat.size > maximum) throw new Error(`native-file-limit: ${relative}`)
+                                               ^
+error: native-file-limit: packages/client/src/generated/types.ts
+      at readNativeFile (/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-r3/modules/atlas/packages/adapter-io/src/genesis-native-io.ts:33:43)
+      at /workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-r3/modules/atlas/[eval]:1:82
+
+Bun v1.3.14 (Linux x64)

@@ -1,0 +1,190 @@
+## J2 — rodada 4c: **PASS de D19–D24; PASS de D06 mantido**
+
+Os seis bounded_claims apresentados atendem à disposição DOMAIN-LEVEL: identificam papel, contrato e fronteira local de owner/delegação, com limites explícitos para comportamentos dependentes de implementação ou execução.
+
+**D06 permanece aceito com a redação reduzida.** O aceite refere-se aos trechos apresentados do corpo atualizado, identificado pelo SHA256 `12248d1cc39a27b1655f1a683f02cd1af864f87945300a86b0ee4326227a4edd`; não constitui aceite automático do corpo completo ou do pacote L1.
+
+### Decisão por domínio
+
+| Domínio | Decisão | Evidência e alcance |
+|---|---|---|
+| **D06 — Files/reference/Git/PR** | **PASS mantido** | P44 demonstra especificamente query e resposta de `vcs.diff`. G57-E077/E078/E092/E127 sustentam delegação de PR/reference/Git e projeção do erro do host. A redução elimina a atribuição mais ampla de contratos Protocol não demonstrados. As antigas especificidades retiradas continuam sem resolução por fonte. |
+| **D19 — RAG/Research** | **PASS** | Pipeline declara lexical ligado/embedding desligado; os schemas Research associam binding, evidência, receipt e inquiry. O helper RAG lê SQL, estabelece memória contextual, executa o callback e chama save. O adapter Research obtém projeto pela Session, resolve binding, solicita leitura `"task"` e rejeita receipt cujo `executionSessionID` ou `taskId` diverge. Isso demonstra a fronteira local, sem provar atomicidade, integridade de armazenamento ou qualidade da resposta. |
+| **D20 — Guardrail** | **PASS** | Schemas e erro público distinguem relatório de execução de falha do engine. Os dois handlers aplicam `apiError` às chamadas `rules`/`run`; o helper projeta kind/message. Nenhum resultado de guard é convertido em evidência desta revisão. |
+| **D21 — Shared events/health/installation** | **PASS** | Exports e eventos mostram representação de dados. Health retorna diretamente healthy literal, PID e versão. Upgrade identifica método, delega a operação e retorna `ctx.payload.target` após sucesso, sem nova medição de versão instalada. A interpretação limitada de saúde e upgrade está sustentada. |
+| **D22 — CORS/Web UI** | **PASS** | Predicados de origem e tratamento de `Vary` estão explícitos. Web UI usa resolução lexical, teste de pertencimento, arquivo existente ou fallback e aplicação de policy para HTML. O claim não transforma essas operações em prova geral de confinamento contra symlinks/TOCTOU ou de autoridade credencial. |
+| **D23 — ELF** | **PASS** | O código efetivamente inspeciona bytes, valida identificadores de ELF64 little-endian, produz metadados e compara nomes de dependência libc. O escopo é inspeção de bytes; autenticidade, segurança do loader e compatibilidade em execução continuam fora do aceite. |
+| **D24 — SDK tool** | **PASS local** | O módulo completo de duas linhas reexporta valores e tipos de Core, sem implementação própria de registro/execução. A remissão a `sdk-composition` permanece para o fechamento de reúso desse corpo; este PASS não concede aprovação integral ao artefato SDK. |
+
+### Critérios e limites
+
+**QS-1/QS-2/QS-4/CC-3:** atendidos para os bounded_claims julgados nesta rodada. As evidências sustentam o papel e a fronteira local sem exigir auditoria operacional por membro.
+
+**QS-5/QS-6/CC-7:** preservadas a distinção entre fonte e execução, a leitura integral como registro histórico e a reutilização dos trechos suficientes. Nenhuma execução de produto, medição ou efeito externo é concedido.
+
+**GO-I1/GO-I2:** decisões anteriores e lacunas continuam preservadas; `RETIRED_EXTRA_CLAIM` não significa demonstrado por fonte. **GO-I7/GO-I8:** dados, resultados de produto, hashes e membership não conferem autoridade nem substituem julgamento semântico.
+
+### Pendências preservadas
+
+No parecer J2, continuam pendentes os dois findings localizados da rodada 4b:
+
+- **D15:** declaração/composição do inventário público para sustentar sua diferença em relação a `DurableOnlyDefinitions`.
+- **D18:** ligação explícita de `decode` ao helper `counts` e rejeição de retorno inválido.
+
+Também permanece pendente o fechamento dos corpos e de seu reúso, respeitando a união dos findings da dupla. **B1/B2 e os demais PASS anteriores são mantidos; L1 integral continua vetado.**
+
+## Cópia verbatim do pedido recebido — rodada 4c
+
+````text
+Rodada4c B3/v4 D19–D24. Tool-free; mesmas regras4a/b de disposição DOMAIN-LEVEL. Pedidos/respostas anteriores preservados; não reabrir especificidades RETIRED_EXTRA_CLAIM salvo se necessárias ao claim atual. Nenhuma licença ao L1 integral ainda. Dossiê original SHA3a8c595f42b86ff616dd4092803584edc4892d60a9c9dc8316073d5e03615045. Corpo atualizado38080bytes SHA12248d1cc39a27b1655f1a683f02cd1af864f87945300a86b0ee4326227a4edd; única mudança desde36339a... é D06: 'Protocol declares the VCS diff query and response shapes; Server delegates reference/Git/PR work to Location services and projects the PR host error.' Confirme manutenção do aceite D06 com essa redução, usando literais4a. D19–24 não mudaram. Necessidade identificar papel, contrato e fronteira local de owner/delegação; leitura integral190 histórica, não atual. Membership exato por domínio e bijeção inventário verificados principal. Gaps condicionais abaixo bloqueiam qualquer dependente que necessite o comportamento. Seguem os seis bounded_claims completos e literais decisivos (whitespace compactado) baseline1cde2ff7a71bcf7aecb5d030917b577165135d38.
+
+D19 membros8: packages/protocol/src/groups/{rag-studio,research-artifact}.ts;packages/schema/src/{rag-studio,research-event,research}.ts;packages/server/src/handlers/{rag-studio-session,rag-studio,research-artifact}.ts.
+CLAIM: RAG declares lexical-only pipeline diagnostics and Research declares bound evidence/receipt/inquiry shapes. Protocol separates RAG operations from task-bound artifact reads. Server bridges RAG memory state and SQL through the session helper, while the research adapter obtains Session/project binding and rejects a returned receipt with another executionSessionID or taskId. Shapes/results are not proof of grounded answer quality.
+GAP: RAG persistence atomicity/file policy/algorithms and Research storage integrity, budget/admission/publication truth require their implementations/runtime evidence.
+EVIDÊNCIA:
+schema/rag-studio.ts blobb553ee9dc72cbb7d87ff01eba7cb7608a5ab89df Q077L47–55: export const Pipeline = Schema.Struct({ parser: Schema.String, boundary: Schema.String, tokenizer: Schema.String, lexical: Schema.Literal(true), embedding: Schema.Literal(false), k: Schema.Int }).annotate({ identifier: "RagStudioPipeline" })
+schema/research.ts blobf865f7cd4cd76eb7e89f562c155d8593b69af369 Q078L52–60: export const Binding = struct("Research.Binding", { projectID: Project.ID, memberID: Schema.Literal("jimmy"), taskId: text(256), executionSessionID: SessionID, authoritySessionID: SessionID, directory: AbsolutePath, worktree: AbsolutePath })
+L87–94: export const SourceRef = struct("Research.SourceRef", { artifact: Capability.ArtifactRef, representation: Representation, digest: Digest }); export const EvidenceRef = struct("Research.EvidenceRef", { source: SourceRef, locator: Locator })
+L100–107: export const SourceReceipt = struct("Research.SourceReceipt", { binding: Binding, ref: SourceRef, origin: struct("Research.SourceOrigin", { kind: Schema.Literals(["file", "url", "tool-output", "atlas-own"]), uri: text(8192), revision: optional(text(256)),
+U07L405–408:
+/** Payloads of the ledger events I1 defines as research.inquiry.{opened,checked,closed} (J5.1). */
+export const InquiryOpened = struct("Research.InquiryOpened", { binding: Binding, question: RecordRef, subquestions: list(RecordRef, 6) })
+export const InquiryChecked = struct("Research.InquiryChecked", { binding: Binding, check: CheckResult })
+export const InquiryClosed = struct("Research.InquiryClosed", { binding: Binding, card: CardV2 })
+protocol/rag-studio.ts blobd0abf2ac581e1e560e6cc3769bdf6b5afd51ea36 P35L11–18:
+// Rag Studio over the requested Location. Embedding stays off. Project source is refused as Atlas.
+export const RagStudioGroup = HttpApiGroup.make("server.ragStudio").add(HttpApiEndpoint.get("ragStudio.sources", "/api/rag-studio/sources", { query: LocationQuery, success: Location.response(Schema.Array(RagStudio.Source)), error: ServiceUnavailableError }).annotateMerge(locationQueryOpenApi),
+protocol/research-artifact.ts blob517434f6b238a90ee46da5790343c4c0f58b4cd5 P40L13–19: export const makeResearchArtifactGroup = <I extends HttpApiMiddleware.AnyId, S>(middleware: Context.Key<I, S>) => HttpApiGroup.make("server.research").add(HttpApiEndpoint.get("research.artifact", "/api/session/:sessionID/research/:artifactID", { params: Schema.Struct({ sessionID: SessionID, artifactID: Capability.ArtifactID }), query: Schema.Struct({ revision: Schema.NumberFromString.pipe(Schema.decodeTo(PositiveInt)), cursor: optional(Schema.String) }), success: Research.ArtifactPage, error: [ResearchArtifactNotFoundError, ConflictError, InvalidRequestError, ServiceUnavailableError],
+server/rag-studio-session.ts blob42a0cb7a6250df1edc566fa0409dde0463f29639 G57-E082L18–23: export function session<A>(db: Database.Interface["db"], run: (store: Store, locationId: string) => Promise<A>) { return Effect.gen(function* () { const location = yield* Location.Service; const locationId = location.directory
+const sources = yield* db.select().from(RagSourceTable).where(eq(RagSourceTable.location_id, locationId)).all().pipe(Effect.orDie)
+const chunks = yield* db.select().from(RagChunkTable).where(eq(RagChunkTable.location_id, locationId)).all().pipe(Effect.orDie)
+G57-E084L61–65: const store = memoryStore({ projectRoot: location.project.directory, locationRoot: location.directory, files })
+G57-E085L132–135: yield* Effect.promise(() => withStore(store, () => Promise.all(sources.map((row) => noteBytes(row.id)))))
+const result = yield* Effect.promise(() => withStore(store, () => run(store, locationId)))
+yield* save(db, store, locationId, revisionIds, questionIds)
+return result
+server/research-artifact.ts blobfe08e43a395c59631633353043bbd724adf03451 G57-E113L16–25:
+return handlers.handle("research.artifact", (ctx) => Effect.gen(function* () {
+const session = yield* database.db.select({ projectID: SessionTable.project_id }).from(SessionTable).where(eq(SessionTable.id, ctx.params.sessionID)).get().pipe(Effect.orDie)
+if (!session) return yield* new ResearchArtifactNotFoundError({ message: "Research artifact not found" })
+const binding = yield* ResearchBinding.resolve(ctx.params.sessionID, session.projectID)
+const page = yield* artifacts.read(binding, { id: ctx.params.artifactID, revision: ctx.query.revision }, ctx.query.cursor, "task")
+if (page.receipt.binding.executionSessionID !== binding.executionSessionID || page.receipt.binding.taskId !== binding.taskId) return yield* new ResearchArtifactNotFoundError({ message: "Research artifact not found" })
+return page
+}).pipe(
+
+D20 membros3: packages/protocol/src/groups/guardrail.ts;packages/schema/src/guardrail.ts;packages/server/src/handlers/guardrail.ts.
+CLAIM: Guardrail schemas and Protocol endpoints distinguish rules, run reports and engine errors. Server delegates rules/run to Guardrail.Service and maps the engine error. This identifies the product boundary without asserting a guard ran or applying its result as a Genesis verdict.
+GAP: Rule selection, universal enforcement, engine correctness and observed outcomes remain their own implementation/runtime obligations.
+EVIDÊNCIA:
+schema/guardrail.ts blob1f9e89fb3ec9259b12d268e17103bd19a2658bee Q087L5–7:
+// Guardrail: declarative CI guard rules (script/guards) judged against a change. These shapes mirror the
+// engine's `--rules` and `--json` output, which is the contract the app screen is built on.
+export const Severity = Schema.Literals(["gate", "warn"]).annotate({ identifier: "Guardrail.Severity" })
+L77–86: export const Report = Schema.Struct({ base: Schema.NullOr(Schema.String), bootstrap: Schema.Boolean, rules: Schema.Int, files: Schema.Int, findings: Schema.Array(Finding), errors: Schema.Array(RunError), approved: Schema.Array(Schema.String), touchesGuards: Schema.Boolean,
+L96–100: // The engine could not be started at all, as opposed to running and reporting `errors`.
+export const EngineErrorKind = Schema.Literals(["no-engine", "no-bun", "failed", "unreadable"]).annotate({ identifier: "Guardrail.EngineErrorKind" })
+protocol/guardrail.ts bloba9c3d5c6643d271619f61f68444dca1fc5adcbc6 P21L8–17: export class GuardrailError extends Schema.ErrorClass<GuardrailError>("GuardrailError")({ name: Schema.Literal("GuardrailError"), data: Schema.Struct({ kind: Guardrail.EngineErrorKind, message: Schema.String }) }, { httpApiStatus: 400 }) {}
+L21–24: HttpApiEndpoint.get("guardrail.rules", "/api/guardrail/rules", { query: LocationQuery, success: Location.response(Guardrail.Rules), error: GuardrailError,
+server/guardrail.ts blobb3348283ee22836d8ff08f2237574fd5b82931bc G57-E046L11–24:
+.handle("guardrail.rules", () => response(Effect.gen(function* () { const guardrail = yield* Guardrail.Service; return yield* guardrail.rules().pipe(Effect.mapError(apiError)) })))
+.handle("guardrail.run", (ctx) => response(Effect.gen(function* () { const guardrail = yield* Guardrail.Service; return yield* guardrail.run(ctx.payload).pipe(Effect.mapError(apiError)) })))
+G57-E047L30–32: function apiError(error: Guardrail.EngineError) { return new GuardrailError({ name: "GuardrailError", data: { kind: error.kind, message: error.message } }) }
+
+D21 membros10: packages/protocol/src/groups/{health,installation}.ts;packages/schema/src/{ide-event,index,installation-event,plugin,server-event,tui-event}.ts;packages/server/src/handlers/{health,installation}.ts.
+CLAIM: Shared exports and IDE/plugin/server/TUI/installation events declare notification data, not side effects. Health returns a basic literal healthy/version process response; it is not a downstream readiness probe. Installation delegates upgrade and reports the requested target after success, which is not a separate installed-version measurement.
+GAP: Notification delivery, UI behavior, software installation integrity and runtime health/upgrade success require actual implementation/execution evidence.
+EVIDÊNCIA:
+schema/index.ts blobcfd60052ec047b947dd7c9cb9bc534cc02b9d1c5 Q089L1–3: export { Agent } from "./agent"
+export { Actions } from "./actions"
+export { AgentFile } from "./agent-file"
+schema/plugin.ts blobc23f79582e37f4d2924d5b6cf869fa0ad0f5f629 Q090L9–13: const Added = define({ type: "plugin.added", schema: { id: ID } }); export const Event = { Added, Definitions: inventory(Added) }
+schema/server-event.ts blob138d0cf5f699b775af573b32d99e924af4a54a4f Q091L5–7: export const Connected = Event.define({ type: "server.connected", schema: {} }); export const Definitions = Event.inventory(Connected)
+schema/ide-event.ts blobca4218602143882beaff4dc3f2990497a6f025e9 Q092L6–11: export const Installed = Event.define({ type: "ide.installed", schema: { ide: Schema.String } })
+schema/tui-event.ts blob28952dcfa3197d670e072f542ab758c45cc4be70 Q093L11: export const PromptAppend = Event.define({ type: "tui.prompt.append", schema: { text: Schema.String } })
+schema/installation-event.ts blob69ecf670846871ca50cbefe66de442fe0faea754 Q094L6–18: export const Updated = Event.define({ type: "installation.updated", schema: { version: Schema.String } }); export const UpdateAvailable = Event.define({ type: "installation.update-available", schema: { version: Schema.String } })
+protocol/health.ts blobbe777a5f8d482fcb5f3b06c1a21077e2fc452bb5 P22L5–11: HttpApiEndpoint.get("health.get", "/api/health", { success: Schema.Struct({ healthy: Schema.Literal(true), pid: Schema.optional(Schema.Int), version: Schema.String }) }).annotateMerge(
+protocol/installation.ts blobea13ec670bb99929cc76dcfdccc0c481870dcc0b P23L5–10: export const InstallationGroup = HttpApiGroup.make("server.installation").add(HttpApiEndpoint.post("installation.upgrade", "/api/installation/upgrade", { payload: Schema.Struct({ target: Schema.String }), success: Schema.Struct({ success: Schema.Literal(true), version: Schema.String }), error: [InvalidRequestError, UnknownError] }).annotateMerge(
+server/health.ts blob2de8e84ad6fe8833aaf3843ff0d292de49bd825a G57-E048L6–9: export const HealthHandler = HttpApiBuilder.group(Api, "server.health", (handlers) => handlers.handle("health.get", () => Effect.succeed({ healthy: true as const, pid: process.pid, version: InstallationVersion })))
+server/installation.ts blob5f877ca7ccfc706ed9ca1e1c8cc9ac6971c698c2 G57-E049L9–22:
+const installation = yield* Installation.Service
+return handlers.handle("installation.upgrade", Effect.fn(function* (ctx) {
+const method = yield* installation.method()
+if (method === "unknown") return yield* new InvalidRequestError({ message: "Unknown installation method", kind: "installation_unknown" })
+yield* installation.upgrade(method, ctx.payload.target).pipe(Effect.mapError((error) => new UnknownError({ message: error.stderr })))
+return { success: true as const, version: ctx.payload.target }
+
+D22 membros2: packages/server/src/{cors,web-ui}.ts.
+CLAIM: CORS helpers define origin predicates and Vary behavior separately from credential authority. Web UI serves static files/SPA fallback through lexical path resolution and HTML policy. The inspected helper does not supply a general symlink/TOCTOU confinement proof.
+GAP: Complete origin security, malicious-filesystem confinement and actual browser/runtime behavior remain blocked for claims that need them.
+EVIDÊNCIA:
+cors.ts blob767f94807b1c6437467f6f1e35bd784fbd004b16 G57-E005L10–31:
+export function isAllowedCorsOrigin(input: string | undefined, opts?: CorsOptions) {
+if (!input) return true
+if (input.startsWith("http://localhost:")) return true
+if (input.startsWith("http://127.0.0.1:")) return true
+if (input.startsWith("oc://renderer")) return true
+if (input === "tauri://localhost" || input === "http://tauri.localhost" || input === "https://tauri.localhost") return true
+return opts?.cors?.includes(input) ?? false
+}
+export function isAllowedRequestOrigin(input: string | undefined, host: string | undefined, opts?: CorsOptions) { if (!input) return true; if (host && sameHost(input, host)) return true; return isAllowedCorsOrigin(input, opts) }
+function sameHost(origin: string, host: string) { try { return new URL(origin).host === host } catch { return false } }
+G57-E007L55–66: Effect.gen(function* () {
+const response = yield* effect
+const allowOrigin = response.headers["access-control-allow-origin"]
+if (!allowOrigin || allowOrigin === "*") return response
+const vary = response.headers["vary"]
+if (!vary) return HttpServerResponse.setHeader(response, "vary", "Origin")
+const tokens = vary.split(",").map((s) => s.trim().toLowerCase())
+if (tokens.includes("origin") || tokens.includes("*")) return response
+return HttpServerResponse.setHeader(response, "vary", `${vary}, Origin`)
+web-ui.ts blob6bdd0f2213ecb53ca74ac935c0a16da1198fae77 G57-E139L30–46:
+export function layer(root: string) {
+const base = path.resolve(root)
+return HttpRouter.add("GET", "/*", Effect.gen(function* () {
+const request = yield* HttpServerRequest.HttpServerRequest
+const pathname = decodeURIComponent(new URL(request.url, "http://localhost").pathname)
+const requested = path.resolve(base, "." + pathname)
+// A path that climbs out of the root is answered like a missing file, never read.
+const inside = requested === base || requested.startsWith(base + path.sep)
+return yield* Effect.promise(async () => {
+const file = inside && (await exists(requested)) ? requested : path.join(base, "index.html")
+const body = new Uint8Array(await Bun.file(file).arrayBuffer())
+const headers = new Headers({ "content-type": Bun.file(file).type })
+if (file.endsWith(".html")) headers.set("content-security-policy", cspForHtml(new TextDecoder().decode(body)))
+return HttpServerResponse.raw(body, { headers })
+G57-E140L52–55: async function exists(file: string) { const stat = await Bun.file(file).stat().catch(() => undefined); return stat?.isFile() ?? false }
+
+D23 membro packages/schema/src/elf.ts.
+CLAIM: Elf is executable pure byte-inspection code, not a DTO-only module: it parses ELF64 little-endian program metadata and compares needed libc names. It performs no filesystem/process/module loading itself.
+GAP: Authenticity, arbitrary-loader safety and packaged-runtime compatibility require the relevant producer/loader and execution evidence.
+EVIDÊNCIA elf.ts blob18147b545a3acecee29244bfa5c7ca26e4c9c323 Q088L3–15:
+// Pure ELF64 byte admission shared by producers and packaged runtime loaders.
+// No filesystem, process, platform detection or module loading at this boundary.
+export function inspect(bytes: Uint8Array, label = "ELF bytes") {
+const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
+const span = (offset: number, size: number) => { if (!Number.isSafeInteger(offset) || !Number.isSafeInteger(size) || offset < 0 || size < 0 || offset + size > bytes.length) throw new Error(`ELF_TRUNCATED: ${label}`); return offset }
+span(0, 64)
+if (![127, 69, 76, 70, 2, 1, 1].every((value, i) => bytes[i] === value) || view.getUint16(54, true) !== 56 || ![2, 3].includes(view.getUint16(16, true)) || view.getUint32(20, true) !== 1) throw new Error(`ELF64_UNSUPPORTED: ${label}`)
+Q088L72–89:
+if ((tables.length || sizes.length || needed.length) && (tables.length !== 1 || sizes.length !== 1)) throw new Error(`ELF_STRING_TABLE_INVALID: ${label}`)
+const table = tables.length ? mapped(tables[0]!, sizes[0]!) : undefined
+const dependencies = needed.map((n) => { if (table === undefined || n >= sizes[0]!) throw new Error(`ELF_STRING_TABLE_INVALID: ${label}`); return strings(table + Number(n), Number(sizes[0]! - n)) })
+return { machine: view.getUint16(18, true), interpreter, needed: dependencies }
+}
+export function requireLibc(bytes: Uint8Array, expected: "musl" | "glibc", label = "ELF bytes") {
+const elf = inspect(bytes, label)
+const musl = elf.needed.some((name) => /^(?:libc\.musl-(?:x86_64|aarch64)\.so\.1|ld-musl-(?:x86_64|aarch64)\.so\.1|libc\.so)$/.test(name))
+const glibc = elf.needed.includes("libc.so.6")
+if (expected === "musl" ? !musl || glibc : !glibc || musl) throw new Error(`ELF_LIBC_MISMATCH: ${label}: expected ${expected}; needed ${JSON.stringify(elf.needed)}`)
+return elf
+}
+
+D24 único membro packages/sdk-next/src/tool.ts inteiro2linhas blob3250ee802f6aeb08799db7b124140ca1aa274292 Q095L1–2:
+export { Failure, RegistrationError, make } from "@orchestra/core/tool/tool"
+export type { AnyTool, Content, Context, Definition } from "@orchestra/core/tool/tool"
+CLAIM: The complete two-line SDK module reexports Core tool values and types, supplying no independent registration/execution implementation. It fits the existing sdk-composition body’s returned tool-registration interface.
+GAP: New claims about Core tool registration/execution must read that implementation; no runtime tool operation was performed.
+
+Retorne decisão por domínio+D06, critérios e limites. Preserve pedido retornando cópia verbatim desta mensagem após parecer.
+````

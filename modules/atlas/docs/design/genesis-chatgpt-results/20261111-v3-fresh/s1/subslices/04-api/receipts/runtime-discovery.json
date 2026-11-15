@@ -1,0 +1,772 @@
+{
+  "schema": "s1-04-runtime-discovery/v1",
+  "agent": "/root/runtime_scout",
+  "role": "Read-only operational reconnaissance, not content production or independent judging",
+  "repository": "gustavomhss/hugr-orchestra",
+  "remote_mutations": [],
+  "ci_triggered": false,
+  "atlas_operations_executed": false,
+  "local_activity": "Connector source capture; deterministic hash and ZIP inspection; executable availability probes only",
+  "source_under_requirement": {
+    "path": "packages/client/src/generated/types.ts",
+    "bytes": 462732,
+    "byte_length_provenance": "Parent task; this scout did not recapture that source",
+    "preservation_requirement": "Keep full bytes and source_refs/file input; do not truncate, omit, split to bypass the observer, or relabel as navigation"
+  },
+  "pins": {
+    "protocol": {
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "runtime": {
+        "key": "initial_1",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/runtime.md",
+        "byte_length": 10217,
+        "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237",
+        "git_blob_sha_observed": "0e0f1607003ff49946ed7a155c268b31239930e6",
+        "git_blob_sha_computed": "0e0f1607003ff49946ed7a155c268b31239930e6",
+        "blob_matches": true
+      },
+      "transport": {
+        "key": "initial_2",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/transport.md",
+        "byte_length": 8478,
+        "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+        "git_blob_sha_observed": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+        "git_blob_sha_computed": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+        "blob_matches": true
+      }
+    },
+    "release_branch": "genesis-fresh-s4",
+    "observed_release_commit": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+    "release_file": {
+      "key": "release_raw",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+      "byte_length": 28282,
+      "sha256": "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016",
+      "git_blob_sha_observed": "7513fcca63664ca02094e9ed9b8fab090c20295d",
+      "git_blob_sha_computed": "7513fcca63664ca02094e9ed9b8fab090c20295d",
+      "blob_matches": true
+    },
+    "release_id": "20261111-v3-fresh-s4-r3",
+    "released_native_candidate": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+    "released_common_controls_candidate": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+    "newer_large_source_implementation_commit": "9b1e129feed74236fb2ba473dac093aecacea515",
+    "newer_checkpoint_commit": "22815b6821dce26562624b4711c705c7cd786268",
+    "newer_head_candidate": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+    "newer_source_bytes": {
+      "observer": {
+        "key": "extra_0",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/blob/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/packages/adapter-io/src/ownership-input.ts",
+        "byte_length": 10304,
+        "sha256": "9cb3d220d5f2de83e34c0303e5e6744c83e08a22e5ffdf5f5151355d88056f36",
+        "git_blob_sha_observed": "ef317aab980f42601ce78269fcfba10649f06735",
+        "git_blob_sha_computed": "ef317aab980f42601ce78269fcfba10649f06735",
+        "blob_matches": true
+      },
+      "adapter": {
+        "key": "extra_1",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/blob/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/packages/adapter-io/src/genesis-native.ts",
+        "byte_length": 12432,
+        "sha256": "07c8103ef3809ff6d91e8678fa4193e397706a93f7705fc990aaa29d32d44a84",
+        "git_blob_sha_observed": "187610f59758e185a8889412b9058b75eb6e62ca",
+        "git_blob_sha_computed": "187610f59758e185a8889412b9058b75eb6e62ca",
+        "blob_matches": true
+      }
+    }
+  },
+  "candidate_capabilities": [
+    {
+      "candidate": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+      "publication": "Released R3 native sample",
+      "source_input_max_bytes": 256000,
+      "source_fits": false,
+      "capabilities": {
+        "native_import": {
+          "state": "PROVEN",
+          "receipts": [
+            {
+              "commit": "283b6e5efeadfef99f202f18eab72435ef7d9771",
+              "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/prepare-receipt-v1.json",
+              "sha256": "c2fc43a3051ed3999d63fa5fb6d95e4b7d8a3e150123f5ca090c5e7661cc09c3"
+            },
+            {
+              "commit": "283b6e5efeadfef99f202f18eab72435ef7d9771",
+              "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/l1a-prepared-v1.json",
+              "sha256": "5e20bd84f016f2a40560cdaaa1834cc00a0b4a98f25f0c139a04816975cddd22"
+            }
+          ],
+          "cases": [
+            "Exact real native L1A production body, ten captured source files and recipe observed; eleven kernel input versions; original two semantic decisions preserved."
+          ],
+          "limits": [
+            "Bounded one-artifact sample. Main S4 package remains incomplete."
+          ],
+          "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1"
+        },
+        "runtime_binding": {
+          "state": "PROVEN",
+          "candidate_id": "e4e5c8b0566bf1760707b45848d69b2f07aac61868c9bb0a496b473ac1d91284",
+          "receipts": [
+            {
+              "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+              "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-sample/binding-v1.json",
+              "sha256": "3eb4ba8b88a6d5af465e3c9497e59be6f2dc809d27af956ff1e8a3fb940120f8"
+            },
+            {
+              "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+              "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/j1-response.json",
+              "sha256": "e65e76d921f605f502dfb0a8d92957e133939763ddba2374bcf3d07c600ea3a7"
+            },
+            {
+              "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+              "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/j2-response.json",
+              "sha256": "436f7dc5a388cc1f096860e31c346bfd3a86e04bd65c51dd61b1bfcf85ed6076"
+            }
+          ],
+          "limits": [
+            "Two actual independent new decisions for this exact candidate only. Other roots, inputs, source directories or candidate revisions require their own bindings."
+          ],
+          "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1"
+        },
+        "governed_publication": {
+          "state": "PROVEN",
+          "receipts": [
+            {
+              "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+              "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-publish-v1.receipt.json",
+              "sha256": "f696c5774ea2d1d88a108cae5a4a1f8f3a04958530ea097f472e4741e7ca2d02"
+            },
+            {
+              "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+              "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-publish-v1.stdout.json",
+              "sha256": "f856953521dfd766accef8b4f909ff4326c201ed4d8666d9dd8aadd68f98a5e1"
+            },
+            {
+              "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+              "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/verification.json",
+              "sha256": "61e7497e3de01f63b211ec1e5641270621610ef1f35314731ae0b19b22d3ea4a"
+            }
+          ],
+          "manifest": "4d1a9e51f97fe7c78c9ae9fa56779705ea425eb193aaaed01ea2adc88d607a02",
+          "limits": [
+            "One actual native L1A artifact, in the isolated authorized state. This is not the complete S4 package or the independent ownership consumer."
+          ],
+          "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1"
+        },
+        "index": {
+          "state": "PROVEN",
+          "receipts": [
+            {
+              "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+              "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-index-v1.receipt.json",
+              "sha256": "d8fbfd4722f6dbdd78916cda600b295af45554046ead97a08ae315b72b9b024e"
+            },
+            {
+              "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+              "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-index-v1.stdout.json",
+              "sha256": "fa0ea100eadc0531ba1c5c5a7186be75d7086437319092a47161ac3080ad58c7"
+            },
+            {
+              "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+              "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/verification.json",
+              "sha256": "61e7497e3de01f63b211ec1e5641270621610ef1f35314731ae0b19b22d3ea4a"
+            }
+          ],
+          "manifest": "4d1a9e51f97fe7c78c9ae9fa56779705ea425eb193aaaed01ea2adc88d607a02",
+          "limits": [
+            "One actual native L1A artifact, in the isolated authorized state. This is not the complete S4 package or the independent ownership consumer."
+          ],
+          "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1"
+        },
+        "read": {
+          "state": "PROVEN",
+          "receipts": [
+            {
+              "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+              "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-read-v1.receipt.json",
+              "sha256": "90a9478a6965bea7bc4c4eb0246c0c50d14d2b0198d1c1a8815b9e09ccf2cd15"
+            },
+            {
+              "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+              "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-read-v1.stdout.json",
+              "sha256": "3f1abcadc080e358677a0e37308006adf99563c1cc8e8726c23220737f159d01"
+            },
+            {
+              "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+              "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/verification.json",
+              "sha256": "61e7497e3de01f63b211ec1e5641270621610ef1f35314731ae0b19b22d3ea4a"
+            }
+          ],
+          "manifest": "4d1a9e51f97fe7c78c9ae9fa56779705ea425eb193aaaed01ea2adc88d607a02",
+          "limits": [
+            "One actual native L1A artifact, in the isolated authorized state. This is not the complete S4 package or the independent ownership consumer."
+          ],
+          "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1"
+        }
+      },
+      "source_size_result": "Static code proves readNativeFile(...,256000) rejects this source with native-file-limit before observation; not a locally executed adapter result",
+      "gate": {
+        "run_id": 43065851373,
+        "conclusion": "failure",
+        "scope": "Historical aggregate failure; sample native publication independently proved by its receipt"
+      }
+    },
+    {
+      "candidate": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+      "publication": "Released R3 common controls",
+      "capabilities": {
+        "cache_reuse": {
+          "state": "PROVEN",
+          "candidate_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+          "receipts": [
+            {
+              "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+              "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+              "sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330"
+            }
+          ],
+          "cases": [
+            "Unchanged valid inputs/recipes reuse result with zero recipe callback; receipt-only update can stop downstream interpretation."
+          ],
+          "limits": [
+            "Named common remote controls use explicitly synthetic fixture producers/reviewers; they prove runtime behavior, not native campaign semantic decisions.",
+            "No arbitrary power-loss, distributed concurrency or universal chronological producer-version fence.",
+            "Own full-package maintenance and independent consumer remain separate unfinished obligations."
+          ]
+        },
+        "affected_rebuild": {
+          "state": "PROVEN",
+          "candidate_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+          "receipts": [
+            {
+              "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+              "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+              "sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330"
+            }
+          ],
+          "cases": [
+            "UP/RB/TC controls cover declared source/recipe/intention/membership impact, full-result propagation, independent preservation, capture consistency and required-edge validation; 22 named mutant controls rejected."
+          ],
+          "limits": [
+            "Named common remote controls use explicitly synthetic fixture producers/reviewers; they prove runtime behavior, not native campaign semantic decisions.",
+            "No arbitrary power-loss, distributed concurrency or universal chronological producer-version fence.",
+            "Own full-package maintenance and independent consumer remain separate unfinished obligations."
+          ]
+        },
+        "failure_resume": {
+          "state": "PROVEN",
+          "candidate_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+          "receipts": [
+            {
+              "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+              "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+              "sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330"
+            }
+          ],
+          "cases": [
+            "NR1-01 interruption after durable CAS and before activation keeps HOLD or valid old selection and resumes preserved candidate without repeated synthetic author callback.",
+            "NR1-02 source drift and failed activation yields current HOLD, with labelled historical inspection."
+          ],
+          "limits": [
+            "Named common remote controls use explicitly synthetic fixture producers/reviewers; they prove runtime behavior, not native campaign semantic decisions.",
+            "No arbitrary power-loss, distributed concurrency or universal chronological producer-version fence.",
+            "Own full-package maintenance and independent consumer remain separate unfinished obligations."
+          ]
+        },
+        "rollback": {
+          "state": "PROVEN",
+          "candidate_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+          "receipts": [
+            {
+              "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+              "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+              "sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330"
+            }
+          ],
+          "cases": [
+            "NR1-02 rejects incompatible source, approval and rollback; compatible historical candidates are not categorically forbidden by a nonexistent epoch fence."
+          ],
+          "limits": [
+            "Named common remote controls use explicitly synthetic fixture producers/reviewers; they prove runtime behavior, not native campaign semantic decisions.",
+            "No arbitrary power-loss, distributed concurrency or universal chronological producer-version fence.",
+            "Own full-package maintenance and independent consumer remain separate unfinished obligations."
+          ]
+        },
+        "migration": {
+          "state": "PROVEN",
+          "candidate_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+          "receipts": [
+            {
+              "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+              "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+              "sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330"
+            }
+          ],
+          "cases": [
+            "NR1-03 refuses obsolete format, scope inconsistency, incompatible old approvals, candidate ID substitution and relocation without replacing accepted scope; existing migrate-layout/G3 controls preserve history."
+          ],
+          "limits": [
+            "Named common remote controls use explicitly synthetic fixture producers/reviewers; they prove runtime behavior, not native campaign semantic decisions.",
+            "No arbitrary power-loss, distributed concurrency or universal chronological producer-version fence.",
+            "Own full-package maintenance and independent consumer remain separate unfinished obligations."
+          ]
+        },
+        "coherent_read_concurrency": {
+          "state": "PROVEN",
+          "candidate_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+          "receipts": [
+            {
+              "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+              "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+              "sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330"
+            }
+          ],
+          "cases": [
+            "Corrected NR1-04 uses a separate Worker and requires the main ownership.read interval itself to intersect post-barrier activation; ready responses match complete accepted old/new results, independent scope remains ready."
+          ],
+          "limits": [
+            "Named common remote controls use explicitly synthetic fixture producers/reviewers; they prove runtime behavior, not native campaign semantic decisions.",
+            "No arbitrary power-loss, distributed concurrency or universal chronological producer-version fence.",
+            "Own full-package maintenance and independent consumer remain separate unfinished obligations."
+          ]
+        }
+      },
+      "gate": {
+        "run_id": 43077975153,
+        "job_id": 130722742703,
+        "artifact_id": 13883635728,
+        "conclusion": "success",
+        "tests": 220,
+        "mutation_controls": 22,
+        "artifact_sha256": "cf4232dec016e07d63dc0b40497892e1f87dec7af812d6cd3fbc542f8816c7cd"
+      },
+      "limit": "Synthetic fixtures prove those runtime controls; do not supply native S1 semantics, binding, independent consumption, or maintenance operation"
+    },
+    {
+      "candidate": "22815b6821dce26562624b4711c705c7cd786268",
+      "publication": "Source checkpoint only; not R4 release",
+      "source_input_max_bytes": 2097152,
+      "source_fits": true,
+      "gate": {
+        "artifact_id": 13915012528,
+        "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/atlas-runtime-22815b6-gates.zip",
+        "bytes": 431898,
+        "sha256": "44a4b2b8fa833c1117f4498d1be71283f054200c63aacdb5ddb67ee4fdc91d9a",
+        "files": 44,
+        "bun_binary_candidates": [],
+        "node_modules_entries": [],
+        "tests": {
+          "numTotalTests": 224,
+          "numPassedTests": 224,
+          "numFailedTests": 0,
+          "numPendingTests": 0,
+          "success": true
+        },
+        "guards": {
+          "command": "bun run check:guards --base origin/dev",
+          "exitCode": 0,
+          "candidate": "22815b6821dce26562624b4711c705c7cd786268"
+        },
+        "mutation_controls": 22,
+        "large_source_related_tests": [
+          {
+            "name": "Genesis native adapter prepares and serves a complete source at the shared ceiling, then detects last-byte drift",
+            "status": "passed",
+            "duration_ms": 4300.905395
+          },
+          {
+            "name": "Genesis native adapter rejects final and ancestor symlinks, unavailable membership and oversized observed source files",
+            "status": "passed",
+            "duration_ms": 161.82112199999938
+          },
+          {
+            "name": "host-bound ownership input oracle RP-5 unavailable/empty/unknown/oversized/escaped inputs fail closed",
+            "status": "passed",
+            "duration_ms": 36.73675299999999
+          },
+          {
+            "name": "G2.2 host observer HO-02 file ceiling applies to bytes actually read",
+            "status": "passed",
+            "duration_ms": 1266.054894
+          }
+        ]
+      },
+      "scope": "Remote synthetic prepare/publish/index/read with complete 2MiB source and same_package dependency; last-byte drift is detected. Not S1 execution or binding"
+    },
+    {
+      "candidate": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "publication": "Current branch code, still R3 release file",
+      "source_input_max_bytes": 2097152,
+      "source_fits": true,
+      "gate": {
+        "artifact_id": 14001051122,
+        "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/atlas-runtime-db9b423-gates.zip",
+        "bytes": 447327,
+        "sha256": "c6df13373d71e091cf842a603e1d25b241ffca7652ea73775419ee3f01da0871",
+        "files": 44,
+        "bun_binary_candidates": [],
+        "node_modules_entries": [],
+        "tests": {
+          "numTotalTests": 278,
+          "numPassedTests": 278,
+          "numFailedTests": 0,
+          "numPendingTests": 0,
+          "success": true
+        },
+        "guards": {
+          "command": "bun run check:guards --base origin/dev",
+          "exitCode": 0,
+          "candidate": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7"
+        },
+        "mutation_controls": 22,
+        "large_source_related_tests": [
+          {
+            "name": "Genesis native adapter prepares and serves a complete source at the shared ceiling, then detects last-byte drift",
+            "status": "passed",
+            "duration_ms": 4789.354841
+          },
+          {
+            "name": "Genesis native adapter rejects final and ancestor symlinks, unavailable membership and oversized observed source files",
+            "status": "passed",
+            "duration_ms": 177.83270399999947
+          },
+          {
+            "name": "host-bound ownership input oracle RP-5 unavailable/empty/unknown/oversized/escaped inputs fail closed",
+            "status": "passed",
+            "duration_ms": 36.92410000000001
+          },
+          {
+            "name": "G2.2 host observer HO-02 file ceiling applies to bytes actually read",
+            "status": "passed",
+            "duration_ms": 1391.698475
+          }
+        ]
+      },
+      "scope": "Remote regression success at exact head; code evolved beyond published native candidate. No automatic binding transfer"
+    }
+  ],
+  "current_handoff": {
+    "capture": {
+      "key": "headextra_2",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/handoff.json",
+      "byte_length": 25579,
+      "sha256": "691bbc18679872288e41ec9f136f500e12d23033da5ca54a2eadc4752d50c84f",
+      "git_blob_sha_observed": "f3037c1755daa3f99c1188e3e51962ba1d3bd0bf",
+      "git_blob_sha_computed": "f3037c1755daa3f99c1188e3e51962ba1d3bd0bf",
+      "blob_matches": true
+    },
+    "candidate_status": "R4_SOURCE_CANDIDATE_PENDING_ACTIONS_AND_INDEPENDENT_REVIEW",
+    "candidate_revision": null,
+    "artifact_revision": "9b1e129feed74236fb2ba473dac093aecacea515",
+    "open": [
+      "Final J1 historical L4 decision and canonical transcript preservation",
+      "R4 exact candidate Actions typecheck, scoped tests, mutation controls, generated parity, guards",
+      "Independent runtime R4 judgment and impacted knowledge version reconciliation",
+      "Complete 15-artifact native package, prepare and exact two runtime bindings",
+      "Isolated governed publish/index/read, independent consumers, own maintenance and final seal"
+    ],
+    "limits": [
+      "R3 release retained with historical pins; this checkpoint does not release R4.",
+      "No new runtime test/operation success or billing telemetry is claimed.",
+      "Local generation/check-generated succeeded; raw command streams stay in the execution work area and structured hash receipts are in payload."
+    ],
+    "note": "Actions subsequently observed successful runs, but stored handoff and release have not advanced their published state"
+  },
+  "protocol_requirements": {
+    "session": "S1",
+    "scope": "orchestra.s1",
+    "schema": "genesis-native-package/v1",
+    "required": "Complete selected required keys, nonempty roots, all required keys reachable; supported accepted predecessors earlier in artifacts; exact UTF-8 bytes; source/recipe/protocol current input observations",
+    "same_package": "{key:<exact-key>,same_package:true}; no cycles, missing or unordered predecessors; source predecessor must be supported",
+    "cross_package": "Explicitly refused by released adapter",
+    "references": "Preserve source Git blob and SHA256; committed-reference association remains external-capture-evidence-required; observed_head must be real or null",
+    "binding": "Two actual independent current decisions after prepare for exact candidate_id, contract, every entry result/inputs_id and every runtime criterion; original visible requests/responses preserved",
+    "authority": "Policy must derive from actual isolated S1 authorization and actual responsible actor; ATLAS_ACTOR / ATLAS_RATIFY_TOKEN are named local declarations, not cryptographic credentials. Historical S4 policy grants no S1 authority",
+    "maintenance": "No generic rebuild/recovery native CLI entrypoint is published by R3. Common controls and S4-specific maintenance-operation.mjs are not completed S1 maintenance proof"
+  },
+  "entrypoints": [
+    {
+      "operation": "prepare",
+      "cwd": "modules/atlas",
+      "argv": [
+        "bun",
+        "scripts/genesis-native.ts",
+        "prepare",
+        "<isolated-source-root>",
+        "<native-package-path-relative-to-source-root>",
+        "<new-output-path>"
+      ]
+    },
+    {
+      "operation": "publish",
+      "cwd": "modules/atlas at candidate_revision",
+      "argv": [
+        "bun",
+        "scripts/genesis-native.ts",
+        "publish",
+        "<isolated-source-root>",
+        "<prepared-candidate-file>",
+        "<approval-path-relative-to-source-root>"
+      ]
+    },
+    {
+      "operation": "index",
+      "cwd": "modules/atlas at candidate_revision",
+      "argv": [
+        "bun",
+        "scripts/genesis-native.ts",
+        "index",
+        "<isolated-source-root>",
+        "<query-json-file>"
+      ]
+    },
+    {
+      "operation": "read",
+      "cwd": "modules/atlas at candidate_revision",
+      "argv": [
+        "bun",
+        "scripts/genesis-native.ts",
+        "read",
+        "<isolated-source-root>",
+        "<query-json-file>"
+      ]
+    }
+  ],
+  "future_resume": {
+    "preconditions": [
+      "Provision legitimate Bun 1.3.14 and declared Atlas dependency/build workspace through an authorized route",
+      "Pin an explicitly compatible released candidate or obtain explicit new candidate review/evidence; preserve R3 vs R4 distinction",
+      "Materialize exact S1 source/transport/reference bytes in an isolated stable real directory; do not fabricate Git identity",
+      "Prepare to a new external candidate path, then obtain two real exact binding decisions",
+      "Provide real isolated S1 policy and actor/ratifier declaration; preserve governed refusals",
+      "Run actual index/read by independent consumers within approved budgets; maintenance needs its own real operation and evidence"
+    ],
+    "cwd": "<pinned-code-root>/modules/atlas",
+    "commands": [
+      "bun scripts/genesis-native.ts prepare \"$S1_SOURCE_ROOT\" \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/native-package.json\" \"$S1_PREPARED_FILE\"",
+      "ATLAS_ACTOR=\"$S1_AUTHORIZED_ACTOR\" ATLAS_RATIFY_TOKEN=\"$S1_AUTHORIZED_RATIFIER\" bun scripts/genesis-native.ts publish \"$S1_SOURCE_ROOT\" \"$S1_PREPARED_FILE\" \"$S1_BINDING_RELATIVE_PATH\"",
+      "bun scripts/genesis-native.ts index \"$S1_SOURCE_ROOT\" \"$S1_INDEX_QUERY_FILE\"",
+      "bun scripts/genesis-native.ts read \"$S1_SOURCE_ROOT\" \"$S1_READ_QUERY_FILE\""
+    ],
+    "query_shapes": {
+      "index": {
+        "scope": "orchestra.s1",
+        "need": "entry"
+      },
+      "read_example": {
+        "scope": "orchestra.s1",
+        "need": "entry",
+        "maxBytes": 12000
+      },
+      "read_example_limit": "12000 is an example, not an approved consumer budget; choose exact key OR need and actual agreed maxBytes; historical only explicit true"
+    },
+    "exits": {
+      "0": "Ordinary result; prepare alone is not publish",
+      "1": "Invalid input or execution error",
+      "2": "Governed/read HOLD or publication refusal"
+    },
+    "not_executed": true
+  },
+  "execution_barrier": {
+    "probe_command": "bun --version",
+    "cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout",
+    "exit_code": 127,
+    "output": "/bin/bash: line 1: bun: command not found\n",
+    "bounded_search": "rg --files --hidden --no-ignore -g bun -g bun.exe /opt/codex /usr/local /usr/bin",
+    "bounded_search_exit": 1,
+    "bounded_search_output": "",
+    "no_adapter_invocation": true,
+    "limitation": "Observed in this executor only; not an assertion that all executors lack Bun. No dependencies downloaded outside connector; no credentials sought"
+  },
+  "connector": {
+    "repository_access": "Only GitHub connector used",
+    "workflow_dispatch_exposed": false,
+    "get_fetch_only": true,
+    "rerun_tools_available": [
+      "mcp__codex_apps__github_rerun_workflow_job",
+      "mcp__codex_apps__github_rerun_failed_workflow_run_jobs"
+    ],
+    "rerun_not_used": "Cannot create a new candidate run or transport a new package; no CI mutation authorized for this scout",
+    "actual_read_successes": [
+      "GET branch HEAD",
+      "GET exact source files and commits",
+      "GET Actions runs collection/specific run",
+      "fetch_workflow_run_artifacts",
+      "download_workflow_artifact"
+    ],
+    "actual_artifact_downloads": [
+      13883635728,
+      13915012528,
+      14001051122
+    ],
+    "downloaded_artifacts_have_bun_or_dependencies": false,
+    "workflow_trigger": {
+      "path": ".github/workflows/atlas-pilot.yml",
+      "ref": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "workflow_dispatch": true,
+      "push_branches": [
+        "pilot-check-*",
+        "genesis-fresh-s4"
+      ],
+      "s1_api_push_matches": false
+    },
+    "observed_error": {
+      "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/workflows",
+      "error": "HTTPError: 400: GitHub Fetch URL is not an allowed public GitHub repository or search endpoint. (Response: None)",
+      "error_code": "INVALID_ARGUMENT"
+    },
+    "other_read_errors": [
+      {
+        "path": "modules/atlas/AGENTS.md",
+        "ref": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+        "code": "404 NOT_FOUND"
+      },
+      {
+        "path": "modules/atlas/packages/adapter-io/src/gate-chain.ts",
+        "ref": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+        "code": "404 NOT_FOUND"
+      }
+    ]
+  },
+  "observed_actions_runs": [
+    {
+      "id": 43343953480,
+      "name": "atlas-pilot",
+      "event": "push",
+      "head_branch": "genesis-fresh-s4",
+      "head_sha": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-13T01:18:46Z",
+      "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43343953480"
+    },
+    {
+      "id": 43342889024,
+      "name": "atlas-pilot",
+      "event": "push",
+      "head_branch": "genesis-fresh-s4",
+      "head_sha": "10e23dd3619c6104f124764275e9d50282f7bc9a",
+      "status": "completed",
+      "conclusion": "failure",
+      "created_at": "2026-11-13T01:10:38Z",
+      "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43342889024"
+    },
+    {
+      "id": 43328823801,
+      "name": "atlas-pilot",
+      "event": "push",
+      "head_branch": "genesis-fresh-s4",
+      "head_sha": "658edba90e2b7b32df72664f312bb9a4a9550d81",
+      "status": "completed",
+      "conclusion": "failure",
+      "created_at": "2026-11-12T23:26:06Z",
+      "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43328823801"
+    },
+    {
+      "id": 43154719978,
+      "name": "atlas-pilot",
+      "event": "push",
+      "head_branch": "genesis-fresh-s4",
+      "head_sha": "22815b6821dce26562624b4711c705c7cd786268",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-12T04:25:36Z",
+      "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43154719978"
+    },
+    {
+      "id": 43094387837,
+      "name": "atlas-pilot",
+      "event": "push",
+      "head_branch": "genesis-fresh-s4",
+      "head_sha": "1b5a4801acfae03969f78ee766ca6f0b7d0f9013",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-11T20:12:57Z",
+      "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43094387837"
+    },
+    {
+      "id": 43077975153,
+      "name": "atlas-pilot",
+      "event": "push",
+      "head_branch": "genesis-fresh-s4",
+      "head_sha": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-11T18:27:38Z",
+      "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43077975153"
+    },
+    {
+      "id": 43077167418,
+      "name": "atlas-pilot",
+      "event": "push",
+      "head_branch": "genesis-fresh-s4",
+      "head_sha": "a3f224843321f2c18fb9532ef275411c6a0f617e",
+      "status": "completed",
+      "conclusion": "failure",
+      "created_at": "2026-11-11T18:22:36Z",
+      "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43077167418"
+    },
+    {
+      "id": 43070538154,
+      "name": "atlas-pilot",
+      "event": "push",
+      "head_branch": "genesis-fresh-s4",
+      "head_sha": "673b90d82b8b888d5d0184d2e17dec6d5d1b05f1",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-11T17:41:11Z",
+      "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43070538154"
+    },
+    {
+      "id": 43069951327,
+      "name": "atlas-pilot",
+      "event": "push",
+      "head_branch": "genesis-fresh-s4",
+      "head_sha": "9a2be7fa2d0d54b0000657a0060cb0a200e04bb0",
+      "status": "completed",
+      "conclusion": "success",
+      "created_at": "2026-11-11T17:37:26Z",
+      "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43069951327"
+    },
+    {
+      "id": 43066241607,
+      "name": "atlas-pilot",
+      "event": "push",
+      "head_branch": "genesis-fresh-s4",
+      "head_sha": "b42d14978c8b727310369920d4bfaf86145a2b80",
+      "status": "completed",
+      "conclusion": "failure",
+      "created_at": "2026-11-11T17:14:40Z",
+      "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43066241607"
+    },
+    {
+      "id": 43065851373,
+      "name": "atlas-pilot",
+      "event": "push",
+      "head_branch": "genesis-fresh-s4",
+      "head_sha": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+      "status": "completed",
+      "conclusion": "failure",
+      "created_at": "2026-11-11T17:12:17Z",
+      "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43065851373"
+    }
+  ],
+  "evidence_files": [
+    "task-request.txt",
+    "followup-request.txt",
+    "completion-request.txt",
+    "response.md",
+    "connector-captures.json",
+    "capture-integrity.json",
+    "artifact-inspection.json",
+    "latest-artifact-inspection.json",
+    "atlas-runtime-7102f2e3-gates.zip",
+    "atlas-runtime-22815b6-gates.zip",
+    "atlas-runtime-db9b423-gates.zip"
+  ],
+  "limits": [
+    "This report is operational reconnaissance, not semantic acceptance or a runtime-import-binding decision",
+    "No Atlas command or product test was run locally",
+    "No remote mutation, CI trigger, S4 state operation, policy provisioning, credential retrieval, or source truncation occurred",
+    "Native S1 import/publication/read/maintenance still require real execution and evidence"
+  ]
+}

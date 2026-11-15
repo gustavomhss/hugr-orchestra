@@ -1,0 +1,228 @@
+{
+  "schema": "s1-04-exact-core-git-blob-materialization/v1",
+  "recorded_at_utc": "2026-11-15T00:49:01.877189+00:00",
+  "cause": "Original guard --raw encountered newly materialized Core file blob e3574b87bc3b12c0eca603f96821a16ec89399fc absent from object database; the exact captured file bytes were already present and verified.",
+  "before": {
+    "head": "8835faf6329cc3d5f5de1097872882d57472b793",
+    "dev": "5e0807b5ff953508f792b8a965883985b05a7066",
+    "index_sha256": "8b4edc1c7726fbbab079aedf504e189e19152fd81d4194be1b14cbf4228dd0d0"
+  },
+  "after": {
+    "head": "8835faf6329cc3d5f5de1097872882d57472b793",
+    "dev": "5e0807b5ff953508f792b8a965883985b05a7066",
+    "index_sha256": "8b4edc1c7726fbbab079aedf504e189e19152fd81d4194be1b14cbf4228dd0d0"
+  },
+  "records": [
+    {
+      "path": "packages/core/src/session.ts",
+      "git_blob_sha": "402a192a69bcad6a4b08c695657e24ff5e335f93",
+      "bytes": 34126,
+      "sha256": "d8c38d46bc6b78ec23d7dae7525fa2ad4c4f07f3f6b5963248e0a0e96d1fbe58",
+      "object_preexisted": true,
+      "verified_content_stored": false
+    },
+    {
+      "path": "packages/core/src/session/input.ts",
+      "git_blob_sha": "d945b00cf43d03b923cc90d51970d47e2dd3a9c2",
+      "bytes": 13624,
+      "sha256": "c5c418685f90aac45034890e2f8a2e2ee9787505e0134b9331a7edbb6be6e7bc",
+      "object_preexisted": false,
+      "verified_content_stored": true
+    },
+    {
+      "path": "packages/core/src/session/sql.ts",
+      "git_blob_sha": "21b589483ae47f8d924cc58b8d2377525d381cc0",
+      "bytes": 7337,
+      "sha256": "b531c440629c4bb136e4468f50c12208911357448defe0514a2fd61840f09173",
+      "object_preexisted": false,
+      "verified_content_stored": true
+    },
+    {
+      "path": "packages/core/src/session/projector.ts",
+      "git_blob_sha": "e5d7ca7d65d1da035a136557b08e2a264c788da5",
+      "bytes": 19242,
+      "sha256": "41e2b996cc570b3db0cc844619454f61234fd499390d5cefa340a6ad2cb0a6ba",
+      "object_preexisted": false,
+      "verified_content_stored": true
+    },
+    {
+      "path": "docs/specs/v2/session.md",
+      "git_blob_sha": "e3574b87bc3b12c0eca603f96821a16ec89399fc",
+      "bytes": 29623,
+      "sha256": "7aa5aea4fba7bab44bd70b552812651e5d097b579c7bf5d797f8b8751c05c81e",
+      "object_preexisted": false,
+      "verified_content_stored": true
+    },
+    {
+      "path": "packages/core/src/session/message-updater.ts",
+      "git_blob_sha": "f0862e38b57053d318d7609d87ee2a7741ca0584",
+      "bytes": 29774,
+      "sha256": "c0e1e9ac9c6c01389a8f47fe1c169ad7f395a772d9d1ef959696ed597be7cbb1",
+      "object_preexisted": false,
+      "verified_content_stored": true
+    },
+    {
+      "path": "packages/core/src/event.ts",
+      "git_blob_sha": "fa7a39a0c039770d36523723e75c1f228e1142f0",
+      "bytes": 30184,
+      "sha256": "4da815f4da0f85c45b45b6af49fdfd94889fe0e167025b8b49a6a25805217b80",
+      "object_preexisted": true,
+      "verified_content_stored": false
+    },
+    {
+      "path": "packages/core/src/database/database.ts",
+      "git_blob_sha": "aa519134efff085e960affd9be376b0dc92456e1",
+      "bytes": 2584,
+      "sha256": "04091781f953b67209dae075a13ff3f118abaab7534e58c77fb065ccafa0dd1b",
+      "object_preexisted": false,
+      "verified_content_stored": true
+    },
+    {
+      "path": "packages/effect-drizzle-sqlite/src/effect-sqlite/session.ts",
+      "git_blob_sha": "e7b9d6b32cd835bdf54d70ba39e92a5839f26968",
+      "bytes": 10799,
+      "sha256": "4fa29583a6cbd148a5a8699dfd96d87944b2b04a559335c461a6e3635d7d9cf1",
+      "object_preexisted": false,
+      "verified_content_stored": true
+    },
+    {
+      "path": "packages/effect-drizzle-sqlite/src/effect-sqlite/driver.ts",
+      "git_blob_sha": "f2ffc207d355b4227c39dbc831d7701786330256",
+      "bytes": 3088,
+      "sha256": "3f58650cd257c28b80ce752684f0bd0b53c07a8b6990fd293f39c953d1dbded3",
+      "object_preexisted": false,
+      "verified_content_stored": true
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/recipe.json",
+      "git_blob_sha": "2291c105b2f9eda4354e995f0d31007ac7918155",
+      "bytes": 1657,
+      "sha256": "79c21a0eb94bf9eb6927984134592a688d3b028c2213e5552bb1017ae50bd8fb",
+      "object_preexisted": true,
+      "verified_content_stored": false
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/request.txt",
+      "git_blob_sha": "96d4d37847a65d98be4cffcec72e2f655c5aa48d",
+      "bytes": 2656,
+      "sha256": "5ade453a557acd559e6796cab8f6ed42d5141ddf668d3c6f06169e7ce8840d7d",
+      "object_preexisted": true,
+      "verified_content_stored": false
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/response.md",
+      "git_blob_sha": "2b0fb3ce38ea667804faa8ec0d00d484203329a1",
+      "bytes": 9902,
+      "sha256": "79a01b28b5df5d99a60f8dfd5af2b223671aec009ec9e77ae755cf38096ff12d",
+      "object_preexisted": true,
+      "verified_content_stored": false
+    },
+    {
+      "path": "packages/core/src/session/execution.ts",
+      "git_blob_sha": "a0af7f2c15cb10366d493b3d4eb971d3d28c1618",
+      "bytes": 2434,
+      "sha256": "11bf5af36d6949a39edfb4bc8ca16a999fe5fcee881fb50da05c289569209fee",
+      "object_preexisted": false,
+      "verified_content_stored": true
+    },
+    {
+      "path": "packages/core/src/session/execution/local.ts",
+      "git_blob_sha": "e7b758462abfd388f937fb18b79f82f2733dffad",
+      "bytes": 2471,
+      "sha256": "74621798a88cf5f9cb05306616d1896b752b4f4f001c3ae03bafc2e0b3910f97",
+      "object_preexisted": false,
+      "verified_content_stored": true
+    },
+    {
+      "path": "packages/core/src/session/run-coordinator.ts",
+      "git_blob_sha": "526a1e28f6027d744a95f145159be9cc59109ac2",
+      "bytes": 5893,
+      "sha256": "369d3e9a2f8769b363b50937c628a291dab3f874b6a2d5f31b9a307fbf349cfa",
+      "object_preexisted": false,
+      "verified_content_stored": true
+    },
+    {
+      "path": "packages/core/src/session/runner/llm.ts",
+      "git_blob_sha": "c3ad8d87a58923d40797d38a77ff65367bbe66b6",
+      "bytes": 39006,
+      "sha256": "03b1068354e6bc049f2f30125f413f2b2a966817ac59e69e98bce561c87305c7",
+      "object_preexisted": false,
+      "verified_content_stored": true
+    },
+    {
+      "path": "packages/core/src/database/migration.ts",
+      "git_blob_sha": "b3d38c72425f3bae7f5730140070b251a8a4c8e7",
+      "bytes": 7247,
+      "sha256": "3586274f5aa72a80d5645f5caea718d3c9234f69c15ca8ddbfbb8c0b5f37186d",
+      "object_preexisted": false,
+      "verified_content_stored": true
+    },
+    {
+      "path": "packages/core/src/session/store.ts",
+      "git_blob_sha": "1e44d051f1a51b816bfeb96ce46dbc0747d07aff",
+      "bytes": 4422,
+      "sha256": "2532e550ec0d74f7b07c33560651db176479d6b9d827fdc19d1d1198ba0628de",
+      "object_preexisted": true,
+      "verified_content_stored": false
+    },
+    {
+      "path": "packages/core/src/event/seal.ts",
+      "git_blob_sha": "92fb956062247720c457eb443e0f271a04261a44",
+      "bytes": 14927,
+      "sha256": "64fa8568bb118d3b838961e46a5b679381f4966db203629c517075e781e9a9f2",
+      "object_preexisted": false,
+      "verified_content_stored": true
+    },
+    {
+      "path": "packages/core/src/database/README.md",
+      "git_blob_sha": "272a4d3d363f4871b5288d8fb879b9d9b9710d65",
+      "bytes": 2209,
+      "sha256": "5bd3a917366391323a94bec85ace411f4d8ce1ee098a4ea062bd2f75b1fcaf83",
+      "object_preexisted": false,
+      "verified_content_stored": true
+    },
+    {
+      "path": "packages/schema/src/durable-event-manifest.ts",
+      "git_blob_sha": "e9c9f78dd4defc0bf2299ac2f9214d45fd67ead9",
+      "bytes": 635,
+      "sha256": "2a0b5b89a473f63224587645033ec95124e684d31669ffe54d7de719bfa0cf1f",
+      "object_preexisted": true,
+      "verified_content_stored": false
+    },
+    {
+      "path": "packages/schema/src/event.ts",
+      "git_blob_sha": "21d0aceeaeb06247f4b2f2ceaeee53f81e1b9cf6",
+      "bytes": 4331,
+      "sha256": "0542c9dedbd6f769cd95bb8624ff9449067b56b66c52d818bb7f11b78bcb75de",
+      "object_preexisted": true,
+      "verified_content_stored": false
+    },
+    {
+      "path": "packages/core/src/session/history.ts",
+      "git_blob_sha": "60f31114138a8920e8e81a031815897568dba211",
+      "bytes": 3749,
+      "sha256": "1989745f9737d404950f166faf43df5890ccb13df6561eeae106032dc79ae79a",
+      "object_preexisted": false,
+      "verified_content_stored": true
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/recovery-a1-20261112/request.txt",
+      "git_blob_sha": "f78f55b6e7ae2fb8fffc849630bd4379550f59d0",
+      "bytes": 1048,
+      "sha256": "90660fbd38668d66f622e066c87b27744582e7fb7c30d1b03f32c59273b07c06",
+      "object_preexisted": true,
+      "verified_content_stored": false
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/recovery-a1-20261112/response.md",
+      "git_blob_sha": "866be5ad70ee49c7f122288cf4999ea4d4b07061",
+      "bytes": 2024,
+      "sha256": "b94e1b42fc523f6094986343f10f2013f473008c741f4fe1995a6ca9b061544a",
+      "object_preexisted": true,
+      "verified_content_stored": false
+    }
+  ],
+  "added_objects": 16,
+  "no_reconstructed_commit_or_index": true,
+  "operation": "git hash-object -w --stdin on previously connector-captured exact bytes matching known original HEAD blobs; no repository remote I/O"
+}

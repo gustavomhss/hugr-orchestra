@@ -1,0 +1,2 @@
+ERROR /workspace/scratch/8833f71e3e94/s1-04-runtime-scout/guard-snapshot is not a git repository
+guards: 0 rules, 0 changed paths, 0 gate and 0 warn findings, 1 errors.

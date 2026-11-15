@@ -1,0 +1,97 @@
+{
+  "historical_package_sha256": "a2e102dde18500962c8dc79bdbeeabd9afa7b21bc4bc0745baf3e16635ea3132",
+  "not_a_relocated_executable_package": true,
+  "bodies": [
+    {
+      "key": "s1.api.boundaries",
+      "original_context_path": "revisions/b-l1-v3/bodies/boundaries.md",
+      "preserved_body_path": "revisions/b-l1-v3/bodies/boundaries.md",
+      "sha256": "f6b230ed8578b6bd9fdb1e4eaca26892df9355a58fc1f5e2e6a157bffabf7310",
+      "bytes": 4634
+    },
+    {
+      "key": "s1.api.schema-contracts",
+      "original_context_path": "revisions/b-l1-v3/bodies/schema-contracts.md",
+      "preserved_body_path": "revisions/b-l1-v3/bodies/schema-contracts.md",
+      "sha256": "c6ebd6124d89092e859aaa6a6a07c2a6fca5e2cdc82a62254b701b2de60266b2",
+      "bytes": 5188
+    },
+    {
+      "key": "s1.api.session-contract",
+      "original_context_path": "revisions/b-l1-v3/bodies/session-contract.md",
+      "preserved_body_path": "revisions/b-l1-v3/bodies/session-contract.md",
+      "sha256": "22b526a2423572f2bbc17f3bfccd2eb0ea8f7fb16f2215bb0904f1cc5c2125bc",
+      "bytes": 5155
+    },
+    {
+      "key": "s1.api.server-edge",
+      "original_context_path": "revisions/b-l1-v3/bodies/server-edge.md",
+      "preserved_body_path": "revisions/b-l1-v3/bodies/server-edge.md",
+      "sha256": "711c744e089e59a11ee0b56ba4ec495277993dc7a58e351c8e2af4dc557ce404",
+      "bytes": 5596
+    },
+    {
+      "key": "s1.api.stream-contract",
+      "original_context_path": "revisions/local-l1-v4/bodies/stream-contract.md",
+      "preserved_body_path": "revisions/local-l1-v4/bodies/stream-contract.md",
+      "sha256": "8aac12750cd96c30f9bee287bdab2fdbb61ca67903b604aa8a0c1809e7c4bdfa",
+      "bytes": 3883
+    },
+    {
+      "key": "s1.api.client-projection",
+      "original_context_path": "revisions/b-l1-v3/bodies/client-projection.md",
+      "preserved_body_path": "revisions/b-l1-v3/bodies/client-projection.md",
+      "sha256": "089304921b004984de3b15b75af18fea3c7ebf15191f3874e9f668066569d478",
+      "bytes": 5193
+    },
+    {
+      "key": "s1.api.codegen",
+      "original_context_path": "revisions/b-l1-v3/bodies/codegen.md",
+      "preserved_body_path": "revisions/b-l1-v3/bodies/codegen.md",
+      "sha256": "2ec55afad54a871de673a252b6b7c604a8ecdb648cc1df9c80128d83a3f8e270",
+      "bytes": 4752
+    },
+    {
+      "key": "s1.api.sdk-composition",
+      "original_context_path": "revisions/b-l1-v3/bodies/sdk-composition.md",
+      "preserved_body_path": "revisions/b-l1-v3/bodies/sdk-composition.md",
+      "sha256": "a2cb2fc21fc1a771d81cd83e75dfe8b07c82c1712b15396ff4e40774f861d4d3",
+      "bytes": 3478
+    },
+    {
+      "key": "s1.api.surface-disposition",
+      "original_context_path": "revisions/b-l1-v3/bodies/surface-disposition.md",
+      "preserved_body_path": "revisions/b-l1-v3/bodies/surface-disposition.md",
+      "sha256": "595e0d404064429a953b276141f5601a1bbecceb30242a9914132ebdd26ed5c0",
+      "bytes": 6726
+    },
+    {
+      "key": "s1.subslice04.domains",
+      "original_context_path": "revisions/local-l1-v4/domains/domain-disposition.md",
+      "preserved_body_path": "revisions/local-l1-v4/domains/domain-disposition.md",
+      "sha256": "12248d1cc39a27b1655f1a683f02cd1af864f87945300a86b0ee4326227a4edd",
+      "bytes": 38080
+    },
+    {
+      "key": "s1.subslice04.local-contracts",
+      "original_context_path": "producers/upper/l2/body.md",
+      "preserved_body_path": "producers/upper/l2/body.md",
+      "sha256": "5f5ae9a915ec9a43940963ce69f4563a9a85d51e15d111237ff8b5e02a2d5170",
+      "bytes": 6218
+    },
+    {
+      "key": "s1.subslice04.integrated-impact",
+      "original_context_path": "producers/upper/l3/body.md",
+      "preserved_body_path": "producers/upper/l3/revision-2/body.md",
+      "sha256": "c140fb0bf9606079e91576b542ec82b3904583e7433a8fe297c886318649f478",
+      "bytes": 9301
+    },
+    {
+      "key": "s1.subslice04.maintenance",
+      "original_context_path": "producers/upper/l4/body.md",
+      "preserved_body_path": "producers/upper/l4/revision-1/body.md",
+      "sha256": "6836ed1abd690c45f999d32dbcbb6bb0451fda5ed77e6985ad601ae5a765705e",
+      "bytes": 8942
+    }
+  ]
+}

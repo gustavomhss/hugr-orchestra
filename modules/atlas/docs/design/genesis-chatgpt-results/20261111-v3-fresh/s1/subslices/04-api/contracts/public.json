@@ -1,0 +1,303 @@
+{
+  "schema": "genesis-s1-04-production-contract/v1",
+  "execution_id": "94f1e157-8c44-4e6e-a4af-7690a8845ecf",
+  "frozen_at_utc": "2026-11-14 22:46:16 UTC",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "criteria": [
+    "GO-A1",
+    "GO-A2",
+    "GO-A3",
+    "GO-A4",
+    "GO-A5",
+    "GO-A6",
+    "GO-A7",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-4",
+    "QS-5",
+    "QS-6",
+    "CC-1",
+    "CC-2",
+    "CC-3",
+    "CC-7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "layer_release": "No upper production before required lower content has dual acceptance. Public questions only; answers restricted.",
+  "required_keys": [
+    "s1.subslice04.local-contracts",
+    "s1.subslice04.integrated-impact",
+    "s1.subslice04.maintenance"
+  ],
+  "needs": {
+    "L2": "Useful local declaration/implementation/projection map from accepted API evidence, including event/error/value seams.",
+    "L3": "Integrated public-change/recipe impact with exact accepted predecessors; source vs semantic/runtime dependency distinction; Core owner handoff boundaries.",
+    "L4": "Operational ownership/maintenance steps, generation authority, scoped verification, failure diagnosis, refusal/abstention and Atlas read protocol; no operation invented."
+  },
+  "public_cases": [
+    {
+      "id": "S1-O1",
+      "kind": "permitted-change",
+      "question": "Um cliente quer admitir um prompt sem executar e, depois, retentar com o mesmo message ID e mesmo prompt/delivery permitindo execução. Qual sequência preserva a admissão única e o que comprova que executou?",
+      "sources": [
+        "packages/core/src/session.ts",
+        "packages/core/src/session/input.ts",
+        "packages/protocol/src/groups/session.ts"
+      ],
+      "limits": {
+        "index_calls": 1,
+        "read_calls": 2,
+        "body_bytes": 24000
+      },
+      "case_status": "historical_regression",
+      "support_only": true
+    },
+    {
+      "id": "S1-O2",
+      "kind": "contract-violation",
+      "question": "Mesmo Session ID, message ID e texto; o retry troca delivery de steer para queue. É o mesmo pedido? Qual falha e efeito sobre os registros/execução?",
+      "sources": [
+        "packages/core/src/session/input.ts",
+        "packages/core/src/session.ts",
+        "packages/server/src/handlers/session.ts"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 4,
+        "body_bytes": 60000
+      },
+      "case_status": "historical_regression",
+      "support_only": true
+    },
+    {
+      "id": "S1-O3",
+      "kind": "cross-component-impact",
+      "question": "A manutenção acrescentará um campo opcional público em session.prompt. Onde alterar contrato, implementação e clientes, como verificar, e quais dependências são proibidas?",
+      "sources": [
+        "AGENTS.md",
+        "packages/client/package.json",
+        "packages/protocol/src/groups/session.ts",
+        "packages/server/src/handlers/session.ts"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 6,
+        "body_bytes": 80000
+      },
+      "case_status": "historical_regression",
+      "support_only": false
+    },
+    {
+      "id": "S1-04-P1",
+      "kind": "permitted-change",
+      "question": "Uma mudança pública em DTO de sessão acrescenta propriedade opcional. Como escolher a autoridade, tratar ausência/undefined e verificar projeções sem alterar gerados manualmente?",
+      "case_status": "new_frozen_before_upper_layers",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 6,
+        "body_bytes": 80000
+      }
+    },
+    {
+      "id": "S1-04-V1",
+      "kind": "contract-violation",
+      "question": "Para reutilizar a API do servidor, um patch importa Server ou Core no runtime do Client. A justificativa de reaproveitamento torna o patch válido? Qual correção de arquitetura?",
+      "case_status": "new_frozen_before_upper_layers",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 6,
+        "body_bytes": 80000
+      }
+    },
+    {
+      "id": "S1-04-F1",
+      "kind": "operational-failure",
+      "question": "A conexão global /api/event caiu depois de server.connected. Há dados para prometer retomada automática sem perdas pelo mesmo SSE? Como distinguir o diagnóstico da leitura durável de Session?",
+      "case_status": "new_frozen_before_upper_layers",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 6,
+        "body_bytes": 80000
+      }
+    },
+    {
+      "id": "S1-04-A1",
+      "kind": "out-of-scope-abstention",
+      "question": "A existência de APIs Session, SDK embedded e eventos duráveis certifica exclusão mútua entre hosts e efeitos externos exactly-once?",
+      "case_status": "new_frozen_before_upper_layers",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 6,
+        "body_bytes": 80000
+      }
+    },
+    {
+      "id": "S1-04-M1",
+      "kind": "maintenance-public-change",
+      "question": "No candidato isolado, a declaração pública de session.prompt muda. Quais conhecimentos e superfícies precisam revalidar e quais resultados não podem ser declarados atuais apenas porque os corpos não mudaram?",
+      "case_status": "new_frozen_before_upper_layers",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 6,
+        "body_bytes": 80000
+      }
+    },
+    {
+      "id": "S1-04-M2",
+      "kind": "maintenance-recipe-change",
+      "question": "A fonte/receita do gerador muda e os bytes públicos parecem iguais. Como revalidar os gerados e preservar contratos independentes?",
+      "case_status": "new_frozen_before_upper_layers",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 6,
+        "body_bytes": 80000
+      }
+    },
+    {
+      "id": "S1-04-D01",
+      "kind": "intermediate-direct-use",
+      "target": "s1.api.boundaries",
+      "question": "Quem possui contratos, implementação, composição e quais imports do Client são proibidos?",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      }
+    },
+    {
+      "id": "S1-04-D02",
+      "kind": "intermediate-direct-use",
+      "target": "s1.api.schema-contracts",
+      "question": "O que diferenciam DTO, código executável de Schema, identidade de evento e fato durável?",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      }
+    },
+    {
+      "id": "S1-04-D03",
+      "kind": "intermediate-direct-use",
+      "target": "s1.api.session-contract",
+      "question": "O que comprovam Admitted, active e history; o que acontece com mensagem de outra sessão?",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      }
+    },
+    {
+      "id": "S1-04-D04",
+      "kind": "intermediate-direct-use",
+      "target": "s1.api.server-edge",
+      "question": "Qual é o limite real do diagnóstico e o que uma URL de ticket prova?",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      }
+    },
+    {
+      "id": "S1-04-D05",
+      "kind": "intermediate-direct-use",
+      "target": "s1.api.stream-contract",
+      "question": "O que é reutilizado entre assinantes e como recuperar continuidade?",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      }
+    },
+    {
+      "id": "S1-04-D06",
+      "kind": "intermediate-direct-use",
+      "target": "s1.api.client-projection",
+      "question": "Por que Promise e Effect não são equivalentes, e o README prova ausência de leitura binária?",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      }
+    },
+    {
+      "id": "S1-04-D07",
+      "kind": "intermediate-direct-use",
+      "target": "s1.api.codegen",
+      "question": "Qual é a autoridade de geração, unwrapping e exclusão de stale outputs?",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      }
+    },
+    {
+      "id": "S1-04-D08",
+      "kind": "intermediate-direct-use",
+      "target": "s1.api.sdk-composition",
+      "question": "Embedded elimina I/O e autorização? Quais falhas renovam credencial?",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      }
+    },
+    {
+      "id": "S1-04-D09",
+      "kind": "intermediate-direct-use",
+      "target": "s1.api.surface-disposition",
+      "question": "O que está lido, classificado e não comprovado na população?",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      }
+    },
+    {
+      "id": "S1-04-D10",
+      "kind": "intermediate-direct-use",
+      "target": "s1.subslice04.domains",
+      "question": "No domínio Relay, o que declara o contrato e o que permanece sem prova?",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 100000
+      }
+    },
+    {
+      "id": "S1-04-D11",
+      "kind": "intermediate-direct-use",
+      "target": "s1.subslice04.local-contracts",
+      "question": "Onde buscar valores, transporte, implementação e projeção de um contrato?",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      }
+    },
+    {
+      "id": "S1-04-D12",
+      "kind": "intermediate-direct-use",
+      "target": "s1.subslice04.integrated-impact",
+      "question": "Como distinguir dependência de build e navegação ao mudar contrato ou receita?",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      }
+    },
+    {
+      "id": "S1-04-D13",
+      "kind": "intermediate-direct-use",
+      "target": "s1.subslice04.maintenance",
+      "question": "Qual sequência segura mantém conhecimento, geração e evidências coerentes?",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      }
+    }
+  ]
+}

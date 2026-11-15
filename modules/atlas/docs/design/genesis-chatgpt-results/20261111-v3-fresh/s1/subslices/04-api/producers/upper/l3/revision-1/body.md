@@ -1,0 +1,40 @@
+# L3 — impacto integrado de contratos e receitas
+
+`s1.subslice04.integrated-impact` · `orchestra.s1` · fonte API `1cde2ff7a71bcf7aecb5d030917b577165135d38`.
+
+Este candidato compõe L2 aceito e cinco L1. Integra fronteiras API locais; não certifica o ciclo interno de Core. As regras de manutenção vêm da norma pública, sem execução do Atlas.
+
+## Três relações diferentes
+
+- **Input de fonte/receita:** arquivo, membership relevante, intenção normativa, configuração de geração ou contrato de validação que sustenta a construção. Adição, remoção e alteração de receita também entram no impacto. O grafo de imports do produto ajuda a localizar consumidores, mas não é o grafo de conhecimento.
+- **Dependência de construção:** predecessor aceito cujo resultado foi usado para construir este artefato. Aqui são L2 e `s1.api.boundaries`, `s1.api.schema-contracts`, `s1.api.session-contract`, `s1.api.client-projection` e `s1.api.codegen`, com hashes exatos. L2 conserva sua própria cadeia; não se inventa uma dependência Core para preencher ausência de conhecimento aceito.
+- **Navegação:** referência que orienta uma consulta ou handoff. Um link, inclusive para Core, não invalida automaticamente o artefato. Se o conteúdo consultado passar a sustentar um claim, declarar sua dependência e satisfazer o gate pertinente.
+
+## Da mudança pública às fronteiras afetadas
+
+| Mudança | Impacto local a examinar | Consequência para conhecimento e verificação |
+| --- | --- | --- |
+| Campo opcional de DTO/pedido | Schema possui o tipo compartilhado; Protocol possui a declaração HTTP. Em `session.prompt`, seguir `packages/protocol/src/groups/session.ts` → `packages/server/src/handlers/session.ts` e o serviço delegado. Client reflete `ClientApi`; SDK pode expor a chamada. | Revalidar semântica de ausência/valor, encaminhamento e projeções. `optional` filtra `undefined`; isso não determina sozinho defaults, `null` ou compatibilidade de registros antigos. Atualizar os L1 de valores, Session e projeção atingidos, depois seus dependentes. |
+| Resposta, erro ou comportamento de handler | Conferir a declaração Protocol, o mapeamento específico Server e o tratamento Client. Para prompt, o conhecimento aceito demonstra `Admitted` e mapeamentos 409; não demonstra toda a execução. | Mudança observável pode exigir contrato e clientes novos; não deduzir status universal de erros Core. Revalidar apenas os adapters/contratos afetados e o conhecimento que depende deles. |
+| Evento ou forma de stream | Schema possui envelope, identidades e inventários; Protocol/Server expõem o transporte; Client projeta wire/Effect. O feed global vivo e a leitura durável de Session têm papéis distintos. | Reexaminar classificação público/durável, codecs e consumidores. Persistência/migração exigem o owner correspondente; envelope ou SSE não provam durabilidade, continuidade global ou replay compatível. |
+| Receita do Client ou gerador genérico | `packages/client/src/contract.ts` possui nomes/omissões; `packages/client/script/build.ts` compõe os produtos; `tooling/httpapi-codegen` possui compilação/emissão/escrita. | A receita é input mesmo com API e bytes gerados iguais. Revalidar geração, bindings e os L1 de geração/projeção afetados; preservar contratos independentes que continuem válidos. |
+
+A mudança deve preservar Schema/Protocol separados dos serviços concretos. Importar Core/Server no runtime Client viola a autoridade de fronteira; essa composição pertence a Server/SDK. Inspeção de fonte não prova bundle/browser.
+
+Promise entrega wire; Effect imported conserva codecs e valores decodificados. Conferir ambas as projeções: só `{data: A}` exato é desembrulhado. A norma exige regenerar mudanças públicas pertinentes de Protocol/Server HttpApi por `bun run generate` em `packages/client`, sem editar gerados manualmente. `check:generated` executa geração e diff; não foi executado aqui. Fonte de teste não é PASS; geração, freshness e compatibilidade executada continuam sem prova.
+
+## Quando a mudança deve propagar
+
+Pela norma pública (§3), fonte, receita/prompt/extrator e contrato de validação alterados tornam seus dependentes candidatos a revalidação/rebuild. A análise parte dos inputs e dependências declarados, não de todos os links ou de uma releitura geral. Uma checagem determinística pode resolver o delta sem nova interpretação; input e receita válidos e inalterados permitem reúso.
+
+A comparação decisiva é a identidade canônica do **resultado validado visível ao consumidor**: corpo, autoridade, validade, gaps e identidades de evidência de que ele depende. Prosa idêntica com autoridade, validade ou gaps diferentes não interrompe propagação. Se esse resultado canônico permanecer igual após validação, a propagação pode parar; mudança apenas de recibo/versão de input atualiza os bindings auditáveis sem exigir interpretação downstream. Igualdade de SHA-256 do Markdown, isoladamente, não decide isso.
+
+Hashes deste pacote identificam transporte. O runtime competente calcula versões/CAS e registra recibos reais; não converter esses hashes em `OwnershipInput.version` ou inventar result/receipt. PASS de conteúdo não aprova automaticamente uma transformação/binding. Inputs indisponíveis ou impacto incompleto mantêm o dependente em HOLD; lista vazia não prova ausência de afetados. Reutilizar independente válido é a regra normativa, não prova de que isolamento/publicação já funcionam. Uma versão antiga aceita só pode ser atual se ainda compatível com os inputs/contratos atuais; caso contrário, é histórica.
+
+## Handoff Core e consulta proporcional
+
+A principal informou S1-01 em `genesis-s1-sessions`, head `45cf4cd48f2038dca56b859f763da2c28d862c12`, handoff `IN_PROGRESS`, sem pacote aceito. Esta é uma referência de coordenação, não fonte Core inspecionada nem dependência de construção aceita.
+
+O owner Core precisa fornecer conhecimento aceito sobre identidade de retry (message ID, prompt, delivery), relação entre admissão/resume/promoção, persistência e recuperação, e consequências dos erros para registros/execução. Os casos históricos O1/O2 apoiam essas perguntas; não fecham as garantias. A evidência API já permite localizar declaração, encaminhamento e erro HTTP. Exclusão entre hosts, efeitos externos exactly-once e comportamento de runner continuam fora do que este mapa demonstra. A ausência do pacote Core bloqueia esses claims, sem bloquear o mapa integrado API delimitado.
+
+Para uma mudança local, começar pelo L2 `s1.subslice04.local-contracts` e abrir só o L1 do assunto; a tabela indica quando cruzar a fronteira. Para detalhes de stream/SDK/domínio, usar a navegação de L2 e os gaps do domínio. Um conhecimento obrigatório faltante vira complemento inferior delimitado e julgado antes do claim dependente; não vira descoberta bruta automática. Os claims B3 retirados permanecem `RETIRED_EXTRA_CLAIM`. Não há declaração de publicação ou consumo real.

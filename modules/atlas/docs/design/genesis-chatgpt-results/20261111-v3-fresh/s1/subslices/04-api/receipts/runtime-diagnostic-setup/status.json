@@ -1,0 +1,282 @@
+{
+  "schema": "s1-04-db9-diagnostic-setup-status/v1",
+  "status": "MATERIALIZED_AND_TYPECHECKED_DIAGNOSTIC_CANDIDATE_ONLY",
+  "candidate_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "published_release_id": "20261111-v3-fresh-s4-r3",
+  "published_native_release_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "code_root": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-db9b423-diagnostic",
+  "atlas_cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-db9b423-diagnostic/modules/atlas",
+  "identity": "materialized diagnostic candidate, not git checkout; not promoted release",
+  "materialization": {
+    "file_count": 1052,
+    "total_bytes": 9002568,
+    "reused_r3_files": 998,
+    "connector_delta_files": 54,
+    "connector_delta_bytes": 718076,
+    "delta_counts": {
+      "unchanged": 998,
+      "modified": 39,
+      "added": 15
+    },
+    "changed_source_files": 46,
+    "changed_test_files": 8
+  },
+  "materialization_manifest_sha256": "43a44d9e627902ac59f1688542e933468bfe5ad7c42bf25d8d6470bb2590072d",
+  "implementation_diff_sha256": "dc46165221f61c29b69cfd91d1012dd33a186a4a5bf1cfac5144185e6d3bfcee",
+  "readback_sha256": "2ba623e356d683a0926f578863a154cc9d0cd3bae2cef05448f20824717d5b9e",
+  "dependency_lock_unchanged_from_r3": true,
+  "setup_commands": [
+    {
+      "schema": "s1-04-db9-diagnostic-setup-command/v1",
+      "command_name": "npm-ci",
+      "command": [
+        "npm",
+        "ci",
+        "--no-audit",
+        "--no-fund"
+      ],
+      "cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-db9b423-diagnostic/modules/atlas",
+      "code_source_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "code_identity": "materialized diagnostic candidate, not git checkout; not promoted release",
+      "started_utc": "2026-11-15T00:32:13.774004+00:00",
+      "finished_utc": "2026-11-15T00:32:23.827079+00:00",
+      "duration_seconds": 10.053084775994648,
+      "exit_code": 0,
+      "error": null,
+      "stdout_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/commands/npm-ci.stdout.txt",
+      "stderr_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/commands/npm-ci.stderr.txt",
+      "stdout_sha256": "cb010cb04482d7217a8983f6e167baef219cfe1160721c1521e5029f93e06a03",
+      "stderr_sha256": "bfb348fb34e7272aa9cd0710f76693a9d040b01d5ed06ea6db152f0cdb5346b9",
+      "environment_overrides": {
+        "PATH_prepend": "/workspace/scratch/8833f71e3e94/s1-04-94f1e157-8c44-4e6e-a4af-7690a8845ecf/runtime-tools/node_modules/.bin",
+        "npm_config_cache": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/npm-cache",
+        "npm_config_devdir": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/node-gyp"
+      },
+      "product_tests_executed": false,
+      "atlas_operations_executed": false,
+      "source_checkout_accessed": false,
+      "source_cas_accessed": false,
+      "remote_mutations": false
+    },
+    {
+      "schema": "s1-04-db9-diagnostic-setup-command/v1",
+      "command_name": "typecheck",
+      "command": [
+        "/workspace/scratch/8833f71e3e94/s1-04-94f1e157-8c44-4e6e-a4af-7690a8845ecf/runtime-tools/node_modules/.bin/bun",
+        "typecheck",
+        "--force"
+      ],
+      "cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-db9b423-diagnostic/modules/atlas",
+      "code_source_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "code_identity": "materialized diagnostic candidate, not git checkout; not promoted release",
+      "started_utc": "2026-11-15T00:32:25.999963+00:00",
+      "finished_utc": "2026-11-15T00:32:41.330948+00:00",
+      "duration_seconds": 15.330992030001653,
+      "exit_code": 0,
+      "error": null,
+      "stdout_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/commands/typecheck.stdout.txt",
+      "stderr_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/commands/typecheck.stderr.txt",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "4fec200faf0180516bb7b68652c0c2c29e56573b8c74611b73fa9d49cf7f5e6c",
+      "environment_overrides": {
+        "PATH_prepend": "/workspace/scratch/8833f71e3e94/s1-04-94f1e157-8c44-4e6e-a4af-7690a8845ecf/runtime-tools/node_modules/.bin",
+        "npm_config_cache": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/npm-cache",
+        "npm_config_devdir": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/node-gyp"
+      },
+      "product_tests_executed": false,
+      "atlas_operations_executed": false,
+      "source_checkout_accessed": false,
+      "source_cas_accessed": false,
+      "remote_mutations": false
+    }
+  ],
+  "compiled_workspace_exports": 13,
+  "identity_files": [
+    {
+      "path": "modules/atlas/package.json",
+      "git_blob_sha": "49cf8584beca5e4c4a4a79e7f5e5468c506817d4",
+      "byte_length": 1670,
+      "sha256": "168380cb630bd0aba6a2504d6b207b449153e084c01785c6f76eb84fd667c605",
+      "mode": "100644",
+      "r3_status": "unchanged",
+      "r3_git_blob_sha": "49cf8584beca5e4c4a4a79e7f5e5468c506817d4",
+      "capture_route": "Verified identical R3 file reused; same Git blob in pinned db9 tree"
+    },
+    {
+      "path": "modules/atlas/package-lock.json",
+      "git_blob_sha": "52385ecfa7a9ee21c5ce3918790029687cddfcd0",
+      "byte_length": 93193,
+      "sha256": "b3c505a0227808e04acf49138a1acccfd3e1a0e9b5476a5f9748fccd84e1a06f",
+      "mode": "100644",
+      "r3_status": "unchanged",
+      "r3_git_blob_sha": "52385ecfa7a9ee21c5ce3918790029687cddfcd0",
+      "capture_route": "Verified identical R3 file reused; same Git blob in pinned db9 tree"
+    },
+    {
+      "path": "modules/atlas/scripts/genesis-native.ts",
+      "git_blob_sha": "70ae6794086c73e8178e574c61fbe95739d45a6c",
+      "byte_length": 3004,
+      "sha256": "18dc473b79c9bf986f07677bdba728d38490e0df36e6a39763f3765f422af3ce",
+      "mode": "100644",
+      "r3_status": "unchanged",
+      "r3_git_blob_sha": "70ae6794086c73e8178e574c61fbe95739d45a6c",
+      "capture_route": "Verified identical R3 file reused; same Git blob in pinned db9 tree"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/genesis-native.ts",
+      "git_blob_sha": "187610f59758e185a8889412b9058b75eb6e62ca",
+      "byte_length": 12432,
+      "sha256": "07c8103ef3809ff6d91e8678fa4193e397706a93f7705fc990aaa29d32d44a84",
+      "mode": "100644",
+      "r3_status": "modified",
+      "r3_git_blob_sha": "f89413ad102fba2d2d56fbf65da14c4d7e5b6c90",
+      "capture_route": "GitHub connector github_fetch_file base64 at exact db9 commit"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "git_blob_sha": "ef317aab980f42601ce78269fcfba10649f06735",
+      "byte_length": 10304,
+      "sha256": "9cb3d220d5f2de83e34c0303e5e6744c83e08a22e5ffdf5f5151355d88056f36",
+      "mode": "100644",
+      "r3_status": "modified",
+      "r3_git_blob_sha": "c6afd6a35071a2487a1168cea5ed1ad26379c376",
+      "capture_route": "GitHub connector github_fetch_file base64 at exact db9 commit"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/genesis-native-io.ts",
+      "git_blob_sha": "01a218ede3f71ef585fd280bc183e545f2a94321",
+      "byte_length": 4162,
+      "sha256": "04d04c1ad64d5f8f916d5416df650d23e13aba997ad19baf78e6ec32e9397983",
+      "mode": "100644",
+      "r3_status": "unchanged",
+      "r3_git_blob_sha": "01a218ede3f71ef585fd280bc183e545f2a94321",
+      "capture_route": "Verified identical R3 file reused; same Git blob in pinned db9 tree"
+    }
+  ],
+  "limits": {
+    "native_package_control_reference_body_default_bytes": 8388608,
+    "source_ref_and_file_input_max_bytes": 2097152,
+    "r3_source_ref_and_file_input_max_bytes": 256000,
+    "existing_required_source_bytes": 462732,
+    "required_source_fits_this_byte_ceiling": true,
+    "native_default_changed_from_r3": false,
+    "declared_dependency_contract_changed": false,
+    "same_package_dependencies": "Supported in original validator; cross-package dependency refused; runtime result not measured by this setup",
+    "membership": "Original Git membership observer retained; no fake tracking seam installed",
+    "oversized_source_ref_error": "native-file-limit: <path>",
+    "oversized_observed_file_result": "unavailable",
+    "caveat": "The byte comparison and successful typecheck do not assert prepare, import, publish, index, read, S1 binding, or release qualification success."
+  },
+  "implementation_change_summary": [
+    "Native prepare imports the original shared ownershipInputMaxBytes constant instead of two hard-coded 256000 read limits.",
+    "Original ownership observer checks actual read byte total before retaining each chunk and uses the shared 2 MiB ceiling.",
+    "Native query/package/binding validation changes only return casts in the compared files; the native CLI entrypoint is byte-identical to R3.",
+    "Broader original candidate includes evaluation binding, manifest identity, read budget, recovery/rebuild and store integration changes; the complete 54-file patch is preserved."
+  ],
+  "release_evidence": {
+    "published_release_capture": {
+      "key": "release_raw",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+      "byte_length": 28282,
+      "sha256": "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016",
+      "git_blob_sha_observed": "7513fcca63664ca02094e9ed9b8fab090c20295d",
+      "git_blob_sha_computed": "7513fcca63664ca02094e9ed9b8fab090c20295d",
+      "blob_matches": true
+    },
+    "published_release_native_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+    "handoff": {
+      "capture": {
+        "key": "headextra_2",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/blob/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/handoff.json",
+        "byte_length": 25579,
+        "sha256": "691bbc18679872288e41ec9f136f500e12d23033da5ca54a2eadc4752d50c84f",
+        "git_blob_sha_observed": "f3037c1755daa3f99c1188e3e51962ba1d3bd0bf",
+        "git_blob_sha_computed": "f3037c1755daa3f99c1188e3e51962ba1d3bd0bf",
+        "blob_matches": true
+      },
+      "candidate_status": "R4_SOURCE_CANDIDATE_PENDING_ACTIONS_AND_INDEPENDENT_REVIEW",
+      "candidate_revision": null,
+      "artifact_revision": "9b1e129feed74236fb2ba473dac093aecacea515",
+      "open": [
+        "Final J1 historical L4 decision and canonical transcript preservation",
+        "R4 exact candidate Actions typecheck, scoped tests, mutation controls, generated parity, guards",
+        "Independent runtime R4 judgment and impacted knowledge version reconciliation",
+        "Complete 15-artifact native package, prepare and exact two runtime bindings",
+        "Isolated governed publish/index/read, independent consumers, own maintenance and final seal"
+      ],
+      "limits": [
+        "R3 release retained with historical pins; this checkpoint does not release R4.",
+        "No new runtime test/operation success or billing telemetry is claimed.",
+        "Local generation/check-generated succeeded; raw command streams stay in the execution work area and structured hash receipts are in payload."
+      ],
+      "note": "Actions subsequently observed successful runs, but stored handoff and release have not advanced their published state"
+    },
+    "existing_actions_evidence": {
+      "artifact_id": 14001051122,
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/atlas-runtime-db9b423-gates.zip",
+      "bytes": 447327,
+      "sha256": "c6df13373d71e091cf842a603e1d25b241ffca7652ea73775419ee3f01da0871",
+      "files": 44,
+      "bun_binary_candidates": [],
+      "node_modules_entries": [],
+      "tests": {
+        "numTotalTests": 278,
+        "numPassedTests": 278,
+        "numFailedTests": 0,
+        "numPendingTests": 0,
+        "success": true
+      },
+      "guards": {
+        "command": "bun run check:guards --base origin/dev",
+        "exitCode": 0,
+        "candidate": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7"
+      },
+      "mutation_controls": 22,
+      "large_source_related_tests": [
+        {
+          "name": "Genesis native adapter prepares and serves a complete source at the shared ceiling, then detects last-byte drift",
+          "status": "passed",
+          "duration_ms": 4789.354841
+        },
+        {
+          "name": "Genesis native adapter rejects final and ancestor symlinks, unavailable membership and oversized observed source files",
+          "status": "passed",
+          "duration_ms": 177.83270399999947
+        },
+        {
+          "name": "host-bound ownership input oracle RP-5 unavailable/empty/unknown/oversized/escaped inputs fail closed",
+          "status": "passed",
+          "duration_ms": 36.92410000000001
+        },
+        {
+          "name": "G2.2 host observer HO-02 file ceiling applies to bytes actually read",
+          "status": "passed",
+          "duration_ms": 1391.698475
+        }
+      ]
+    },
+    "approval_condition": "The captured release still publishes R3 e3a8ab8cf56dbff1ee91272df51ffa398d882aa1. The stored handoff does not promote db9; existing Actions success and this setup supply no promotion or S1 binding. Use as an approved release requires an explicit release/promotion covering the exact code candidate and applicable reviewed authority; any S1 publication separately requires actual policy/actor and exact prepared-candidate bindings."
+  },
+  "next_action": {
+    "owner": "Parent only, after final package is complete and diagnostic inputs/CAS isolation is chosen",
+    "cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-db9b423-diagnostic/modules/atlas",
+    "command_template": [
+      "/workspace/scratch/8833f71e3e94/s1-04-94f1e157-8c44-4e6e-a4af-7690a8845ecf/runtime-tools/node_modules/.bin/bun",
+      "scripts/genesis-native.ts",
+      "prepare",
+      "<isolated-diagnostic-source-root>",
+      "<package-path-relative-to-root>",
+      "<new-candidate-output-file>"
+    ],
+    "prepare_writes": "prepare can write .atlas/cas beneath its supplied source root, so the parent must isolate it from the existing CAS for this comparison",
+    "performed_by_scout": false
+  },
+  "source_checkout_accessed": false,
+  "source_cas_accessed": false,
+  "native_operations_executed": false,
+  "product_tests_executed": false,
+  "ci_executed": false,
+  "release_promoted": false,
+  "policy_actor_or_bindings_created": false,
+  "remote_mutations": false
+}

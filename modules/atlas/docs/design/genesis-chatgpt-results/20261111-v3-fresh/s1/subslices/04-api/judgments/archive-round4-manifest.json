@@ -1,0 +1,98 @@
+{
+  "schema": "s1-04-round4-visible-message-archive/v1",
+  "execution_id": "94f1e157-8c44-4e6e-a4af-7690a8845ecf",
+  "archivist": "/root/archive_round4",
+  "archived_at_utc": "2026-11-14T23:31:45.954405+00:00",
+  "role": "mechanical preservation only; not judge/producer/consumer",
+  "encoding": "utf-8",
+  "terminal_lf": "one LF per record; text representation convention, not raw provider envelope",
+  "records": [
+    {
+      "path": "04a-D09-visibility-limit.json",
+      "kind": "metadata",
+      "byte_length": 829,
+      "sha256": "65e0709586b19fddcddaacc7f6325da51f9d34653ee5326faa0c38edc665c823",
+      "origin": "archive operator metadata; not original message content"
+    },
+    {
+      "path": "request-04b-j1.txt",
+      "kind": "request",
+      "byte_length": 25682,
+      "sha256": "017de4a51df22768b4ae1711530f68b165f90ad7fe88dfba9d78d4d739310523",
+      "origin": "inherited visible parent conversation"
+    },
+    {
+      "path": "request-04b-j2-errata.txt",
+      "kind": "request",
+      "byte_length": 558,
+      "sha256": "d26e5fe0dfea46d16951c6a15587b960ffdd1fb59b1496243cdb93ff0b34dc55",
+      "origin": "inherited visible parent conversation"
+    },
+    {
+      "path": "request-04b-j2.txt",
+      "kind": "request",
+      "byte_length": 25661,
+      "sha256": "bbb5f9859bacf1ff61d67c6728c8f37d00e1340fd2e445b7e640b8fbb7d0d974",
+      "origin": "inherited visible parent conversation"
+    },
+    {
+      "path": "request-04c-j1.txt",
+      "kind": "request",
+      "byte_length": 19347,
+      "sha256": "39e4d45edbc13b582fc261ad3774af0f6cc6f04ac6606fc806798d733b4306a0",
+      "origin": "inherited visible parent conversation"
+    },
+    {
+      "path": "request-04c-j2.txt",
+      "kind": "request",
+      "byte_length": 18894,
+      "sha256": "ee7461c56ab1f4bf2ea60f95679b413f129294bd93df6bfcc826ba2aa02ea0d3",
+      "origin": "inherited visible parent conversation"
+    },
+    {
+      "path": "response-04b-j1.md",
+      "kind": "response",
+      "byte_length": 30561,
+      "sha256": "1464e4facbb3463d0a1ede66e0d59635dad5b300936c129d9097a1923894dccb",
+      "origin": "inherited visible parent conversation"
+    },
+    {
+      "path": "response-04b-j2.md",
+      "kind": "response",
+      "byte_length": 30488,
+      "sha256": "3abb059626a745284de76a4f1c02befc4ec7339196e62c9ef9492bcbf44c091b",
+      "origin": "inherited visible parent conversation"
+    },
+    {
+      "path": "response-04c-j1.md",
+      "kind": "response",
+      "byte_length": 23907,
+      "sha256": "53b7ff7811f32c47c0fcc25bb8e7eeae2badf1c0021d1c69bbd29cca62d43976",
+      "origin": "inherited visible parent conversation"
+    },
+    {
+      "path": "response-04c-j2.md",
+      "kind": "response",
+      "byte_length": 23384,
+      "sha256": "54063ddab81df10ec0399f07678ae9f4f8ba702eecfca2edf6b9bd5ab5f81076",
+      "origin": "verbatim judgment text relayed by /root in follow-up message; original request from inherited parent conversation; assembly per explicit /root instruction"
+    },
+    {
+      "path": "verification.json",
+      "kind": "metadata",
+      "byte_length": 1001,
+      "sha256": "25643b4497620f0d4d78b50bf35ba604e2eec483121542a71192042550c303ed",
+      "origin": "archive operator metadata; not original message content"
+    }
+  ],
+  "messages_saved": 9,
+  "requests_and_errata": 5,
+  "responses_saved": 4,
+  "missing_messages": [],
+  "visibility_limits": [
+    "04a-D09 original message not visible; metadata records summary-only evidence.",
+    "J2-4c response arrived after the archivist fork and was supplied verbatim by /root; this relay origin is explicit.",
+    "No host-native raw message export was available; visible text transcription and embedded-copy comparison are not a claim of provider transport capture."
+  ],
+  "physical_attempts_usage_cost": "UNKNOWN"
+}

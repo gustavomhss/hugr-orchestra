@@ -1,0 +1,525 @@
+{
+  "schema": "s1-04-round12-visible-request-archive/v1",
+  "observed_at_utc": "2026-11-15T01:06:21.848311+00:00",
+  "archivist": "/root/archive_round12",
+  "purpose": "Mechanical archival of the two visible round-12 collaboration.followup_task message strings and comparison of their inline metadata to the current local package files.",
+  "source_scope": "Visible message text in inherited conversation history. This receipt does not attest internal tool wire payloads, hidden metering, semantic acceptance, runtime execution, or DELIVERY_COMPLETE.",
+  "preservation": {
+    "verbatim_visible_text": true,
+    "normalization_performed": false,
+    "added_trailing_newline": false,
+    "request_files_modified_after_initial_archive": false
+  },
+  "requests_byte_comparison": {
+    "identical": true,
+    "difference_count": 0,
+    "differences": []
+  },
+  "requests": [
+    {
+      "recipient": "/root/api_j1",
+      "archive_path": "requests/12-final-j1.txt",
+      "byte_length": 27781,
+      "sha256": "d5004ef0abf5251077e6917c27d46a778394fd388b22ccedc728239838cdca20",
+      "encoding": "UTF-8",
+      "trailing_newline": false,
+      "artifact_metadata_check": {
+        "parsed_count": 16,
+        "expected_count": 16,
+        "all_values_match": true,
+        "same_order": true,
+        "unique_count": 16,
+        "checked_fields": [
+          "key",
+          "layer",
+          "need",
+          "body.byte_length",
+          "body.sha256"
+        ]
+      },
+      "criteria_check": {
+        "parsed_count": 50,
+        "expected_count": 50,
+        "all_ids_and_statuses_match": true,
+        "same_order": true,
+        "unique_count": 50,
+        "status_counts": {
+          "HOLD": 29,
+          "PASS": 20,
+          "NOT_APPLICABLE": 1
+        }
+      },
+      "file_identity_checks": [
+        {
+          "path": "native-package.json",
+          "declared": {
+            "byte_length": 389819,
+            "sha256": "71bc1102fd5e2c6be166b2df790e8ee8fe4ecd053ab2d7fed5bbc46130349442"
+          },
+          "observed": {
+            "byte_length": 389819,
+            "sha256": "71bc1102fd5e2c6be166b2df790e8ee8fe4ecd053ab2d7fed5bbc46130349442"
+          },
+          "match": true
+        },
+        {
+          "path": "transport-provenance.json",
+          "declared": {
+            "byte_length": 353187,
+            "sha256": "c13e8603502d968d347bdf277a885e76cd01d48f7a51d78191a701bb0d9c42da"
+          },
+          "observed": {
+            "byte_length": 353187,
+            "sha256": "c13e8603502d968d347bdf277a885e76cd01d48f7a51d78191a701bb0d9c42da"
+          },
+          "match": true
+        },
+        {
+          "path": "criteria-matrix.json",
+          "declared": {
+            "byte_length": 86223,
+            "sha256": "d00a55d8a10a245b5cebe738ab652d2f817eb2cdb1ce6c5a3678e51e02e2b387"
+          },
+          "observed": {
+            "byte_length": 86223,
+            "sha256": "d00a55d8a10a245b5cebe738ab652d2f817eb2cdb1ce6c5a3678e51e02e2b387"
+          },
+          "match": true
+        },
+        {
+          "path": "work.md",
+          "declared": {
+            "byte_length": 8788,
+            "sha256": "adc735ee9e7fb04fdc90c2d55646abe1e5e86ad7d124cc0511b04d4a455f1daa"
+          },
+          "observed": {
+            "byte_length": 8788,
+            "sha256": "adc735ee9e7fb04fdc90c2d55646abe1e5e86ad7d124cc0511b04d4a455f1daa"
+          },
+          "match": true
+        }
+      ],
+      "mismatches": [],
+      "result": "PASS"
+    },
+    {
+      "recipient": "/root/api_j2",
+      "archive_path": "requests/12-final-j2.txt",
+      "byte_length": 27781,
+      "sha256": "d5004ef0abf5251077e6917c27d46a778394fd388b22ccedc728239838cdca20",
+      "encoding": "UTF-8",
+      "trailing_newline": false,
+      "artifact_metadata_check": {
+        "parsed_count": 16,
+        "expected_count": 16,
+        "all_values_match": true,
+        "same_order": true,
+        "unique_count": 16,
+        "checked_fields": [
+          "key",
+          "layer",
+          "need",
+          "body.byte_length",
+          "body.sha256"
+        ]
+      },
+      "criteria_check": {
+        "parsed_count": 50,
+        "expected_count": 50,
+        "all_ids_and_statuses_match": true,
+        "same_order": true,
+        "unique_count": 50,
+        "status_counts": {
+          "HOLD": 29,
+          "PASS": 20,
+          "NOT_APPLICABLE": 1
+        }
+      },
+      "file_identity_checks": [
+        {
+          "path": "native-package.json",
+          "declared": {
+            "byte_length": 389819,
+            "sha256": "71bc1102fd5e2c6be166b2df790e8ee8fe4ecd053ab2d7fed5bbc46130349442"
+          },
+          "observed": {
+            "byte_length": 389819,
+            "sha256": "71bc1102fd5e2c6be166b2df790e8ee8fe4ecd053ab2d7fed5bbc46130349442"
+          },
+          "match": true
+        },
+        {
+          "path": "transport-provenance.json",
+          "declared": {
+            "byte_length": 353187,
+            "sha256": "c13e8603502d968d347bdf277a885e76cd01d48f7a51d78191a701bb0d9c42da"
+          },
+          "observed": {
+            "byte_length": 353187,
+            "sha256": "c13e8603502d968d347bdf277a885e76cd01d48f7a51d78191a701bb0d9c42da"
+          },
+          "match": true
+        },
+        {
+          "path": "criteria-matrix.json",
+          "declared": {
+            "byte_length": 86223,
+            "sha256": "d00a55d8a10a245b5cebe738ab652d2f817eb2cdb1ce6c5a3678e51e02e2b387"
+          },
+          "observed": {
+            "byte_length": 86223,
+            "sha256": "d00a55d8a10a245b5cebe738ab652d2f817eb2cdb1ce6c5a3678e51e02e2b387"
+          },
+          "match": true
+        },
+        {
+          "path": "work.md",
+          "declared": {
+            "byte_length": 8788,
+            "sha256": "adc735ee9e7fb04fdc90c2d55646abe1e5e86ad7d124cc0511b04d4a455f1daa"
+          },
+          "observed": {
+            "byte_length": 8788,
+            "sha256": "adc735ee9e7fb04fdc90c2d55646abe1e5e86ad7d124cc0511b04d4a455f1daa"
+          },
+          "match": true
+        }
+      ],
+      "mismatches": [],
+      "result": "PASS"
+    }
+  ],
+  "reference_artifact_rows": [
+    {
+      "key": "s1.api.boundaries",
+      "layer": 1,
+      "need": "ownership",
+      "byte_length": 4634,
+      "sha256": "f6b230ed8578b6bd9fdb1e4eaca26892df9355a58fc1f5e2e6a157bffabf7310"
+    },
+    {
+      "key": "s1.api.schema-contracts",
+      "layer": 1,
+      "need": "component",
+      "byte_length": 5188,
+      "sha256": "c6ebd6124d89092e859aaa6a6a07c2a6fca5e2cdc82a62254b701b2de60266b2"
+    },
+    {
+      "key": "s1.api.session-contract",
+      "layer": 1,
+      "need": "flow",
+      "byte_length": 5155,
+      "sha256": "22b526a2423572f2bbc17f3bfccd2eb0ea8f7fb16f2215bb0904f1cc5c2125bc"
+    },
+    {
+      "key": "s1.api.server-edge",
+      "layer": 1,
+      "need": "operational",
+      "byte_length": 5596,
+      "sha256": "711c744e089e59a11ee0b56ba4ec495277993dc7a58e351c8e2af4dc557ce404"
+    },
+    {
+      "key": "s1.api.stream-contract",
+      "layer": 1,
+      "need": "flow",
+      "byte_length": 3883,
+      "sha256": "8aac12750cd96c30f9bee287bdab2fdbb61ca67903b604aa8a0c1809e7c4bdfa"
+    },
+    {
+      "key": "s1.api.client-projection",
+      "layer": 1,
+      "need": "component",
+      "byte_length": 5193,
+      "sha256": "089304921b004984de3b15b75af18fea3c7ebf15191f3874e9f668066569d478"
+    },
+    {
+      "key": "s1.api.codegen",
+      "layer": 1,
+      "need": "maintenance",
+      "byte_length": 4752,
+      "sha256": "2ec55afad54a871de673a252b6b7c604a8ecdb648cc1df9c80128d83a3f8e270"
+    },
+    {
+      "key": "s1.api.sdk-composition",
+      "layer": 1,
+      "need": "component",
+      "byte_length": 3478,
+      "sha256": "a2cb2fc21fc1a771d81cd83e75dfe8b07c82c1712b15396ff4e40774f861d4d3"
+    },
+    {
+      "key": "s1.api.surface-disposition",
+      "layer": 1,
+      "need": "entry",
+      "byte_length": 6726,
+      "sha256": "595e0d404064429a953b276141f5601a1bbecceb30242a9914132ebdd26ed5c0"
+    },
+    {
+      "key": "s1.subslice04.domains",
+      "layer": 1,
+      "need": "component",
+      "byte_length": 38080,
+      "sha256": "12248d1cc39a27b1655f1a683f02cd1af864f87945300a86b0ee4326227a4edd"
+    },
+    {
+      "key": "s1.core.session-admission",
+      "layer": 1,
+      "need": "component",
+      "byte_length": 4261,
+      "sha256": "2535bba77505ed74e7dc2759dce815c8e9684e68e2f0a10fa75f9813192e7ae1"
+    },
+    {
+      "key": "s1.core.session-execution",
+      "layer": 1,
+      "need": "flow",
+      "byte_length": 4574,
+      "sha256": "470ddb1eacfe7294071893968d7de999c90ea98cb0fd48c48e0730ded51d1663"
+    },
+    {
+      "key": "s1.core.persistence",
+      "layer": 1,
+      "need": "evidence",
+      "byte_length": 5290,
+      "sha256": "0b43f9bd316aca25361f934e63723f2aa6220a3deb97a4447266fbbc5d350762"
+    },
+    {
+      "key": "s1.subslice04.local-contracts",
+      "layer": 2,
+      "need": "component",
+      "byte_length": 6218,
+      "sha256": "5f5ae9a915ec9a43940963ce69f4563a9a85d51e15d111237ff8b5e02a2d5170"
+    },
+    {
+      "key": "s1.subslice04.integrated-impact",
+      "layer": 3,
+      "need": "flow",
+      "byte_length": 13657,
+      "sha256": "ba532f772f8f2f08be5938caf3ba9856c6f185e79d18fb0ed9d016b9d176f0bd"
+    },
+    {
+      "key": "s1.subslice04.maintenance",
+      "layer": 4,
+      "need": "maintenance",
+      "byte_length": 10033,
+      "sha256": "ce0f86d365df573cf89218da7fee86009d1a37c65c775735c02a68079d38160e"
+    }
+  ],
+  "reference_criteria_rows": [
+    {
+      "id": "GO-A1",
+      "local_status": "HOLD"
+    },
+    {
+      "id": "GO-A2",
+      "local_status": "PASS"
+    },
+    {
+      "id": "GO-A3",
+      "local_status": "HOLD"
+    },
+    {
+      "id": "GO-A4",
+      "local_status": "HOLD"
+    },
+    {
+      "id": "GO-A5",
+      "local_status": "HOLD"
+    },
+    {
+      "id": "GO-A6",
+      "local_status": "PASS"
+    },
+    {
+      "id": "GO-A7",
+      "local_status": "PASS"
+    },
+    {
+      "id": "GO-I1",
+      "local_status": "PASS"
+    },
+    {
+      "id": "GO-I2",
+      "local_status": "PASS"
+    },
+    {
+      "id": "GO-I3",
+      "local_status": "HOLD"
+    },
+    {
+      "id": "GO-I4",
+      "local_status": "HOLD"
+    },
+    {
+      "id": "GO-I5",
+      "local_status": "HOLD"
+    },
+    {
+      "id": "GO-I6",
+      "local_status": "PASS"
+    },
+    {
+      "id": "GO-I7",
+      "local_status": "PASS"
+    },
+    {
+      "id": "GO-I8",
+      "local_status": "PASS"
+    },
+    {
+      "id": "AC-01",
+      "local_status": "HOLD"
+    },
+    {
+      "id": "AC-02",
+      "local_status": "HOLD"
+    },
+    {
+      "id": "AC-03",
+      "local_status": "HOLD"
+    },
+    {
+      "id": "AC-04",
+      "local_status": "HOLD"
+    },
+    {
+      "id": "AC-05",
+      "local_status": "HOLD"
+    },
+    {
+      "id": "AC-06",
+      "local_status": "HOLD"
+    },
+    {
+      "id": "AC-07",
+      "local_status": "HOLD"
+    },
+    {
+      "id": "AC-08",
+      "local_status": "PASS"
+    },
+    {
+      "id": "AC-09",
+      "local_status": "HOLD"
+    },
+    {
+      "id": "AC-10",
+      "local_status": "HOLD"
+    },
+    {
+      "id": "CC-1",
+      "local_status": "PASS"
+    },
+    {
+      "id": "CC-2",
+      "local_status": "HOLD"
+    },
+    {
+      "id": "CC-3",
+      "local_status": "HOLD"
+    },
+    {
+      "id": "CC-4",
+      "local_status": "HOLD"
+    },
+    {
+      "id": "CC-5",
+      "local_status": "HOLD"
+    },
+    {
+      "id": "CC-6",
+      "local_status": "PASS"
+    },
+    {
+      "id": "CC-7",
+      "local_status": "PASS"
+    },
+    {
+      "id": "SC-1",
+      "local_status": "HOLD"
+    },
+    {
+      "id": "SC-2",
+      "local_status": "HOLD"
+    },
+    {
+      "id": "SC-3",
+      "local_status": "HOLD"
+    },
+    {
+      "id": "SC-4",
+      "local_status": "PASS"
+    },
+    {
+      "id": "SC-5",
+      "local_status": "HOLD"
+    },
+    {
+      "id": "QS-1",
+      "local_status": "PASS"
+    },
+    {
+      "id": "QS-2",
+      "local_status": "PASS"
+    },
+    {
+      "id": "QS-3",
+      "local_status": "PASS"
+    },
+    {
+      "id": "QS-4",
+      "local_status": "HOLD"
+    },
+    {
+      "id": "QS-5",
+      "local_status": "HOLD"
+    },
+    {
+      "id": "QS-6",
+      "local_status": "PASS"
+    },
+    {
+      "id": "DOD-1",
+      "local_status": "PASS"
+    },
+    {
+      "id": "DOD-2",
+      "local_status": "HOLD"
+    },
+    {
+      "id": "DOD-3",
+      "local_status": "HOLD"
+    },
+    {
+      "id": "DOD-4",
+      "local_status": "HOLD"
+    },
+    {
+      "id": "DOD-5",
+      "local_status": "PASS"
+    },
+    {
+      "id": "DOD-6",
+      "local_status": "PASS"
+    },
+    {
+      "id": "DOD-7",
+      "local_status": "NOT_APPLICABLE"
+    }
+  ],
+  "reference_status_counts": {
+    "HOLD": 29,
+    "PASS": 20,
+    "NOT_APPLICABLE": 1
+  },
+  "mismatches": [],
+  "result": "PASS",
+  "bounds": {
+    "semantic_judgment_performed": false,
+    "oracle_read": false,
+    "source_files_read": false,
+    "files_written": [
+      "requests/12-final-j1.txt",
+      "requests/12-final-j2.txt",
+      "requests/12-archive-receipt.json"
+    ]
+  }
+}

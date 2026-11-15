@@ -1,0 +1,26 @@
+{
+  "schema": "genesis-s1-04-b3-v4-verification/v1",
+  "domain_count": 24,
+  "member_count": 190,
+  "unique_member_count": 190,
+  "all_members_retained_with_same_domain_and_order": true,
+  "bounded_claim_fields_unchanged": false,
+  "conditional_gap_fields_unchanged": true,
+  "blocked_dependents_unchanged": true,
+  "why_depth_adequate_inherited_exact": true,
+  "historical_table_rows_preserved": 190,
+  "historical_table_row_claims_promoted": 0,
+  "retired_claim_count": 190,
+  "new_full_member_corpus_read": false,
+  "d12_new_complete_baseline_reads": 2,
+  "d12_material_bounded_claim_correction": "NONE; complete unions support empty/nonempty distinction. Added explicit wire-discriminant clarification, without treating present as a literal state or execution proof.",
+  "semantic_acceptance": "PENDING_SAME_PAIR_D06_REEVALUATION",
+  "bounded_claim_unchanged_domains": 23,
+  "bounded_claim_changed_domains": [
+    "D06"
+  ],
+  "bounded_claim_change": "Only the principal-authorized sentence substitution; current Protocol claim is limited to VCS diff query/response and the PR error projection remains attributed to Server.",
+  "new_source_reads_for_D06_delta": 0,
+  "dossier_binding_update_only_other_change": true,
+  "all_other_body_bytes_unchanged": true
+}

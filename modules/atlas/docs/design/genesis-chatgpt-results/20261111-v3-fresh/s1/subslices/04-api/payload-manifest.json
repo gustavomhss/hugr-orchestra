@@ -1,0 +1,2431 @@
+{
+  "schema": "s1-04-payload-byte-manifest/v1",
+  "recorded_at_utc": "2026-11-15T01:11:38.946202+00:00",
+  "scope": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api",
+  "files": [
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/contracts/public.json",
+      "byte_length": 10021,
+      "sha256": "7dcc9df0003b99722b18538fab1e45adb3ac60e6697397677200feddce40909e",
+      "git_blob_sha": "c4a2b3b359be69ffe54ae6a4ecf8c9b04a859b8d"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/criteria-matrix.json",
+      "byte_length": 86223,
+      "sha256": "d00a55d8a10a245b5cebe738ab652d2f817eb2cdb1ce6c5a3678e51e02e2b387",
+      "git_blob_sha": "16f8a8be0cd8a9d95834ca24b6d00ac91c79b21d"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/dependencies/core/bodies/persistence.md",
+      "byte_length": 5290,
+      "sha256": "0b43f9bd316aca25361f934e63723f2aa6220a3deb97a4447266fbbc5d350762",
+      "git_blob_sha": "d3aefcacef6bc0a93fcb92daf26cb82bb0e6650a"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/dependencies/core/bodies/session-admission.md",
+      "byte_length": 4261,
+      "sha256": "2535bba77505ed74e7dc2759dce815c8e9684e68e2f0a10fa75f9813192e7ae1",
+      "git_blob_sha": "4b793ae3087ef6003f081c56b8db1de3dc1acc80"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/dependencies/core/bodies/session-execution.md",
+      "byte_length": 4574,
+      "sha256": "470ddb1eacfe7294071893968d7de999c90ea98cb0fd48c48e0730ded51d1663",
+      "git_blob_sha": "c29cc10dae24821077c769d286c6e3ec6ce0fa9a"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/dependencies/core/handoff.original.json",
+      "byte_length": 3277,
+      "sha256": "01dcf77d1bb7ab5e0fdf0c249c95e93f981cb28d3b6236520e2f58ea71ec6ae2",
+      "git_blob_sha": "c736d95293bcb3411f1429cf3417f7b2e4317465"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/dependencies/core/judgments/a1-config-v1-j1.json",
+      "byte_length": 10690,
+      "sha256": "a32b7bec928315cdd77f7fdb32909f5ee5d316eb576816a1cce9985b632d8ff7",
+      "git_blob_sha": "b0958403d6d5546596e2c0257f870eba5fff5092"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/dependencies/core/judgments/a1-config-v1-j2.json",
+      "byte_length": 13808,
+      "sha256": "fd2dd0e2d76379e7d4e128b1fa1e77ce81cf95dd8bc5ef18051475f641187349",
+      "git_blob_sha": "ea66451f8ad2ad73c04e6c630056a91398de255a"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/dependencies/core/native-package.original.json",
+      "byte_length": 270747,
+      "sha256": "7541d67c8a4c3183429b9600ec6ea947a8b7035bbc6d0e83f7bb2d910b7fc030",
+      "git_blob_sha": "c1558e36f8a52fe484980fa6eabc572c7969ad06"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/dependencies/core/reuse-proof.json",
+      "byte_length": 9709,
+      "sha256": "94a82702b3dee239b237512c9fbbb19bf6a1e3f21b03da0836a7964abb5cd05a",
+      "git_blob_sha": "6107f276472ad2dfac63154d43900d9f184c3e84"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/execution-ledger.jsonl",
+      "byte_length": 26781,
+      "sha256": "fcfb6338533cebe7d1522123c3b9d690f36aca02e37ffd646e3850119627f591",
+      "git_blob_sha": "0c72c5fd6ec96d33c7d95fb76b37b47eaba73fb3"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/01-j1-original.md",
+      "byte_length": 4298,
+      "sha256": "23214ecf3d655eaeed7e85096a7c0b94cbf9df2833dc49621a889f98d32db022",
+      "git_blob_sha": "5cf1b556ab565e10cbb5a58d0b7a2747262c9709"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/01-j2-original.md",
+      "byte_length": 4404,
+      "sha256": "0b5cfe16c1dbb5243a2bc634f4cd87c0debc9ea86886220032de77e71f1d693a",
+      "git_blob_sha": "bb29a36869e883eeb6512660e2bca7202e73fcf7"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/02-j1-resolution.md",
+      "byte_length": 2765,
+      "sha256": "e4049734c495ad771445dd341a110c935b8f7f51a4a166776e3843e52721c986",
+      "git_blob_sha": "3806c7d7a8eea32454923aeae56c84c28fb1d160"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/02-j2-resolution.md",
+      "byte_length": 3561,
+      "sha256": "4d2a9327099a4a2c68c1290c15cea3b681917b8fffcb8bcd20e9248a7728d8e5",
+      "git_blob_sha": "27146594ea76fb3fa363cfa5707d68c97ca2f97f"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/03a-j1-original.md",
+      "byte_length": 19224,
+      "sha256": "2d93518a9105bf952de5fc77248cc70857cfba2b609feabb8b0d243541f97153",
+      "git_blob_sha": "1ecaa754e49378c267684599f23a31b11ba716fb"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/03a-j2-original.md",
+      "byte_length": 19323,
+      "sha256": "3cd95768c4864beb29a8b60e3d01703a1ecbd2932ac4da78ab0fade64ea99efa",
+      "git_blob_sha": "077d6441b098bd018c307b266d4f8a950a9e3fdf"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/03b-j1-original.md",
+      "byte_length": 8527,
+      "sha256": "3f1f671d651a075ac89a96828fdc9fc373ffad5bcb0091794ddf909354cf1b75",
+      "git_blob_sha": "a16ad36ef0063a1bf1922a5c4b6b7dd6895a7acb"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/03b-j2-original.md",
+      "byte_length": 6974,
+      "sha256": "3e5c405034f52d615e220c5d0e9abe76c4159dbe1ffca88e0b67525d3365f21f",
+      "git_blob_sha": "048feb48feed28fb7585fd92851253caa52e5aad"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/04a-j1-original.md",
+      "byte_length": 5495,
+      "sha256": "fb14a9ccd6b8b62fa6012a8db2f53868d7f46c76b265a3c33becaa3998b85297",
+      "git_blob_sha": "843bea5153bd06967c7dbd93222293703c17452c"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/04a-j2-original.md",
+      "byte_length": 6151,
+      "sha256": "93fb90fc9eac104969db9d9987521c03d6dd4a397a24707e950367e0320b41d8",
+      "git_blob_sha": "1e5057caf6c8e5f0354c63a82025fce2445faa6e"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/06-j1-original.md",
+      "byte_length": 2044,
+      "sha256": "0c61981f4d98ad6627b923d523e2f950088a4637e1be1df73882d09c167f4420",
+      "git_blob_sha": "26f5e474e5b6964e0c6b8dda029b62a5cb8d8a66"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/06-j2-resolution.md",
+      "byte_length": 3365,
+      "sha256": "2c500cdff1f6f7e34acc7d20d0a5307912865442c6f299e998bcb4e39789cfbe",
+      "git_blob_sha": "793332448933825bdee2e5a0e7adf899a0216a63"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/06a-j1-resolution.md",
+      "byte_length": 1683,
+      "sha256": "de4233140f5f484c18f00513c9155083bc48230762a7ec7cb742f6976911c2ab",
+      "git_blob_sha": "8a2a9b487fa5136cfe4a33398bd29c8d0eaee406"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/07-j1-original.md",
+      "byte_length": 2765,
+      "sha256": "0615b826726fa31bda2ee1c561e26121570193287e380ec53c86eef1794e24b1",
+      "git_blob_sha": "d3e4280c05e100e0a4de9660bb0a1587bf88c715"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/07-j1-resolution.md",
+      "byte_length": 1554,
+      "sha256": "4a732d885af8e401c55d1bf7959c0d0d3b616bb14f225a61ef4e0cc93518b263",
+      "git_blob_sha": "31ec5e1a2e34e7776ecec0673b3aa23043859225"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/07-j2-original.md",
+      "byte_length": 2391,
+      "sha256": "db59124e81322a450ba40eb8bde682ae5ad9c54a369ba5948ec81cbd1db687b4",
+      "git_blob_sha": "8e91a165f6149aaba6a8ef6aaff0df846f5e05bf"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/07-j2-resolution.md",
+      "byte_length": 1927,
+      "sha256": "3c6a4a3020ec7e0ec5e437c7d63ff7d3838eee7921f28ebf393d89c738e3f56a",
+      "git_blob_sha": "d8b7166bea38476df12c0ef25678ec451e8fcf02"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/08-j1-resolution.md",
+      "byte_length": 1925,
+      "sha256": "bc0acaab1337cd8e1d3a4245861eb2f7be159cdef26250eeb47243fe38b871fe",
+      "git_blob_sha": "88a18892ab441e99f202655da189d20d2603091c"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/08-j2-resolution.md",
+      "byte_length": 1883,
+      "sha256": "abdbf90d429eda331cb049f4628e8162e17c016ca37a45474a1164eee4db9d80",
+      "git_blob_sha": "2c0fb2b7e1eacd4a5e413add134b1440c8f4dad7"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/09-core-reuse-j1.md",
+      "byte_length": 2046,
+      "sha256": "9ab91a8048f56a79f8afd02d48f6334953bf6a3c725b7229e8eab516c959fc79",
+      "git_blob_sha": "45ed5be2a1bca873962d9a4526c6da34e93e03d7"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/09-core-reuse-j2.md",
+      "byte_length": 2132,
+      "sha256": "b31e375eb2f3f8e8eb56b665f717eba9c073c7d6a2cefca0b64c5ac8308b7878",
+      "git_blob_sha": "b4699ffd03e4cdb64bac9749b6b18d3feeb43702"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/10-j1-resolution.md",
+      "byte_length": 1988,
+      "sha256": "30a8227400efa0ce174b0f077b7d369b8e31d1abcd075f6450e704a7bdfa4d5a",
+      "git_blob_sha": "b1a294ef31306c6ccb2e3c589efd362787c1d45e"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/10-j2-resolution.md",
+      "byte_length": 2422,
+      "sha256": "a13430fd02614a76c01a3d5e558690c7dcd674c201d704651051b5dd08d80b35",
+      "git_blob_sha": "7313535fd058231caa5e42755c8c43242c74f443"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/11-j1-original.md",
+      "byte_length": 2286,
+      "sha256": "aff1819d708ece46ba74910e535b60b220bef324d0a623ded6310f1a0ba5c492",
+      "git_blob_sha": "acf0bc9da335c68cafa11edb099afba8a70922fd"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/11-j1-resolution.md",
+      "byte_length": 1729,
+      "sha256": "d1ae0cc3e67ac7db79d8e0274fb43f382c8f54986fd9a1745150a12f47b3a08a",
+      "git_blob_sha": "d44c8cf4202263c39a0e843d5a0a2f250f50a1bf"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/11-j2-original.md",
+      "byte_length": 2184,
+      "sha256": "cd7b81c0810536251cd02e784dae690c650f916e0a34425174da3397700283df",
+      "git_blob_sha": "71dec9ba35413f5b258c0584a7614def40b409af"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/11-j2-resolution.md",
+      "byte_length": 1971,
+      "sha256": "1ac5fe2ddcb45878e6a2a7d34b25ec9c2953862a1d4e109286c8269604d4c02e",
+      "git_blob_sha": "30381437ff9157d19dbdcf17e551f7c4347b93d7"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/12-j1-final.md",
+      "byte_length": 4360,
+      "sha256": "5d729fa2a7d5efbac7b293410be90ac3bc5e3adffd1312e8946beb014c751f22",
+      "git_blob_sha": "f9c8caaee215f394e51b7152f1adf25f7f86b3f0"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/12-j2-final.md",
+      "byte_length": 4879,
+      "sha256": "d6eb1e29e145bbc1ed331adb5cc083af6fa1a5a84c88ac2ba8fa702e537d0c59",
+      "git_blob_sha": "8927174c9b36817bccdabd4f565c22c829d97c21"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/archive-l1-release-manifest.json",
+      "byte_length": 4318,
+      "sha256": "900766c1c7e82f362095589af0d0d3ca4eeaa4075dcae438d9c75de7358ecb55",
+      "git_blob_sha": "c943f27bb15e3d8d0dfd13e6bacf3b6b47259688"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/archive-round4-04a-D09-visibility-limit.json",
+      "byte_length": 829,
+      "sha256": "65e0709586b19fddcddaacc7f6325da51f9d34653ee5326faa0c38edc665c823",
+      "git_blob_sha": "629e1a3f3c601628cad6c70337f640a45b43f575"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/archive-round4-manifest.json",
+      "byte_length": 3796,
+      "sha256": "00dc72da459e96a0cab0bb91eb14d4022c6e3b40ca7fb99c496bbe27cefe527f",
+      "git_blob_sha": "ad3af2d530ef23e98d8d918fcd8d91df0e72f230"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/01-j1-initial.txt",
+      "byte_length": 12761,
+      "sha256": "3a9f0b69f51a8f94dfe82ec22d3b249aa5fe9350c79d63f7608494d75a2dcd4f",
+      "git_blob_sha": "c895fb53f91f73f58063af8d4d25bc2cf555f185"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/01-j2-initial.txt",
+      "byte_length": 12761,
+      "sha256": "e9dd8c6427e35e428b0902b2e09b0eb844363cf1eeef41c9478b8a8784f0732c",
+      "git_blob_sha": "2ea03f3e18ca39638e3f375452552650d87ecc03"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/01-preservation-receipt.json",
+      "byte_length": 486,
+      "sha256": "7e9e3594d2de53519e35c53684819849d3969ad45f06d63f12d9e1d84c87eb20",
+      "git_blob_sha": "398d1a48cff3fa1b058935ae06e9f82193c19a2b"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/02-delta-followup.txt",
+      "byte_length": 6302,
+      "sha256": "f71686beaeb9c3623d981c1d9c392295bca9f882eaa5f548323ab61ac715b04b",
+      "git_blob_sha": "c6704ea4a6ac7eaab92fce1aba662b02e62d838e"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/03a-b3.txt",
+      "byte_length": 32620,
+      "sha256": "723d45feaf738b3e6617d7a09f75074a35abc3fb022ed2440d001014c5013f21",
+      "git_blob_sha": "6de27d1f2b3e9a9e0ed007d2e8907d43aa8d3cb9"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/03b-b3.txt",
+      "byte_length": 34784,
+      "sha256": "c6470f204290b9852d88fd228cbcfc0e139da90ab5a4236ea4cf619635b06ce8",
+      "git_blob_sha": "add1df18f4e66f643da82c0986651e10955bd670"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/04a-D09-supplement.txt",
+      "byte_length": 2167,
+      "sha256": "a09f7bcd74d0f971491ec1ecb224e944c239e37c5bf2375eac08214117c067a1",
+      "git_blob_sha": "6aa02a79375af025601e650cd5d3d86883077ab3"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/04a-v4-D01-D12.txt",
+      "byte_length": 28990,
+      "sha256": "2d49c1fa4335c225dd737020cdc06a1a0ec195acfcf45afe9e7ddf255a632974",
+      "git_blob_sha": "649382c8b4e35ba329fa423db332d14b81f856fd"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/06-j2-with-criteria.txt",
+      "byte_length": 9821,
+      "sha256": "ccfff162453e1baca9d47444068d9077ae0585a7a4fc6063d6bde1088ea72e74",
+      "git_blob_sha": "95493034f79ec7a7e8a0ffb4a9d2ca352b7d933e"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/06-l2.txt",
+      "byte_length": 7368,
+      "sha256": "d1cf25393c585951b536b70a77519d7f88f8adabf521054dc9f64fb18a5f73d3",
+      "git_blob_sha": "96787077134ca1c7eb6a16208e6799f26cff1e85"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/06a-criteria.txt",
+      "byte_length": 2453,
+      "sha256": "793df5cada47c4062879bc94ab58a30c83ceeb8c223012cce50d6378c2f94e0e",
+      "git_blob_sha": "ad92b7bd2eb62dd48e38fde0d8f557d4f10cd79e"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/request-04b-j1.txt",
+      "byte_length": 25682,
+      "sha256": "017de4a51df22768b4ae1711530f68b165f90ad7fe88dfba9d78d4d739310523",
+      "git_blob_sha": "8b61b43950298efcacdb025832e23d7b615ebc45"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/request-04b-j2-errata.txt",
+      "byte_length": 558,
+      "sha256": "d26e5fe0dfea46d16951c6a15587b960ffdd1fb59b1496243cdb93ff0b34dc55",
+      "git_blob_sha": "f84a427313befdf5f29929fd9c65aed06abc3f16"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/request-04b-j2.txt",
+      "byte_length": 25661,
+      "sha256": "bbb5f9859bacf1ff61d67c6728c8f37d00e1340fd2e445b7e640b8fbb7d0d974",
+      "git_blob_sha": "e377f0b21fb6bc8274a26789918f8fc741f52d3f"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/request-04c-j1.txt",
+      "byte_length": 19347,
+      "sha256": "39e4d45edbc13b582fc261ad3774af0f6cc6f04ac6606fc806798d733b4306a0",
+      "git_blob_sha": "39c2226a58dda8355a2382253e0a6ac004f78243"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/request-04c-j2.txt",
+      "byte_length": 18894,
+      "sha256": "ee7461c56ab1f4bf2ea60f95679b413f129294bd93df6bfcc826ba2aa02ea0d3",
+      "git_blob_sha": "cc5082cc819aa4f3a9db1f0f75d6300c677faa9d"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/request-04d.txt",
+      "byte_length": 6014,
+      "sha256": "f33d2147b3b739232c3f306a98da73f57f7378bc3ca5ab19bd68ab1a4beda70c",
+      "git_blob_sha": "d2e969447ea59f8f328ed5caa09f8661f588496f"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/request-05.txt",
+      "byte_length": 9954,
+      "sha256": "566c800d621341ea46096ecc482790a333b3d1ae4c0e49bafe076927fdd2ed89",
+      "git_blob_sha": "4e34b6c593d7bb5e89a661dae0e29642da948a42"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/response-04b-j1.md",
+      "byte_length": 30561,
+      "sha256": "1464e4facbb3463d0a1ede66e0d59635dad5b300936c129d9097a1923894dccb",
+      "git_blob_sha": "0339c9aa05c543b4d368d2bf92c93eb7e84092ab"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/response-04b-j2.md",
+      "byte_length": 30488,
+      "sha256": "3abb059626a745284de76a4f1c02befc4ec7339196e62c9ef9492bcbf44c091b",
+      "git_blob_sha": "09c361f0117dfd60309f68ca4313d0f1654a4609"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/response-04c-j1.md",
+      "byte_length": 23907,
+      "sha256": "53b7ff7811f32c47c0fcc25bb8e7eeae2badf1c0021d1c69bbd29cca62d43976",
+      "git_blob_sha": "9f58de7963498ac2e195e1792e352eed797fb751"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/response-04c-j2.md",
+      "byte_length": 23384,
+      "sha256": "54063ddab81df10ec0399f07678ae9f4f8ba702eecfca2edf6b9bd5ab5f81076",
+      "git_blob_sha": "bf028cb183b8567661a34411b0ca764e20e2a1d8"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/response-04d-j1.md",
+      "byte_length": 1506,
+      "sha256": "55854c3b6efe635f6dfa83c2585f6c05f13001f047d83e98dce4f5696ee7e24a",
+      "git_blob_sha": "13d16aad844325b279cf6af493badc9b11237921"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/response-04d-j2.md",
+      "byte_length": 2215,
+      "sha256": "9daff7c28aa21b2ad8e471a2adf194bd146503d2ca52698b31f971a7e93102ca",
+      "git_blob_sha": "dfece0a82930a5bf9243dee21fdd4dfce2cd1c86"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/response-05-j1.md",
+      "byte_length": 3512,
+      "sha256": "286c3d6b49e62c9de7b3b3bf81930b5ed29afc9b05305075b8c49947b2f70892",
+      "git_blob_sha": "a31a7e1dd2d26ab4338c221c08b638d86ee9cc2f"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/response-05-j2.md",
+      "byte_length": 4196,
+      "sha256": "81e4b95ac933d8e7b4bf1766389173fc1e943c61da460f342c198c8725d6055b",
+      "git_blob_sha": "b70a37857a96567bf4f0f9b7481290d703451a75"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/native-package.json",
+      "byte_length": 389819,
+      "sha256": "71bc1102fd5e2c6be166b2df790e8ee8fe4ecd053ab2d7fed5bbc46130349442",
+      "git_blob_sha": "c9c57b217cde99c6bd3d883df6cda8fbda992d96"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/oracles/reserved.json",
+      "byte_length": 17333,
+      "sha256": "d6966c3eb500b6c2061cef8ced0cb57de3ab253bc1744ee83cf1489f3ad63023",
+      "git_blob_sha": "caf67600b43a82881f9b7eb7c6db6d78a0a115b4"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l2/body.md",
+      "byte_length": 6218,
+      "sha256": "5f5ae9a915ec9a43940963ce69f4563a9a85d51e15d111237ff8b5e02a2d5170",
+      "git_blob_sha": "dfed0e8e0264b6331fcf5e8ffbb1a30a00126b0f"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l2/manifest.json",
+      "byte_length": 1081,
+      "sha256": "89fd32760f4110a87d2b8f4a3eed5e495f150aa3158e41217093d782202bd090",
+      "git_blob_sha": "9828a806ffa908e4bddd26159ecf239791e8fba3"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l2/metadata.json",
+      "byte_length": 12374,
+      "sha256": "ec352a777c10926da46a7668196cc7ed6e2e0f21349fb9b5d068ab16275ef7eb",
+      "git_blob_sha": "71b284f5e5075bdede8a9464d4232cbc64520e65"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l2/recipe.json",
+      "byte_length": 3917,
+      "sha256": "5d884a7fab14d6a0237a4d3b579f442410c94f05e8a9faa7e526f297dbf7d2f7",
+      "git_blob_sha": "a1835ae997612a5227b5e13eaf6617972fdef365"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l2/request.txt",
+      "byte_length": 2372,
+      "sha256": "cae28b1225705aab3ecde5ec0e907a5fc23f255df93c2115802dcf08ead1cc0b",
+      "git_blob_sha": "dd584b5e5258208d714c326f315318d29cda6dc8"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l2/response.md",
+      "byte_length": 2113,
+      "sha256": "e70c331b7112256fec295baf90b7efe7a4beb80b37273c68d3f36bc4b947ea2a",
+      "git_blob_sha": "6a1f290f4bd300cb4154381d8a0c74495e690f98"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/body.diff",
+      "byte_length": 13191,
+      "sha256": "155ee780bbbdcd1b0e3768583300c4265d57189a22ab56dc1cad69473879a13f",
+      "git_blob_sha": "06cd2deb6e87cd869020bc6757b7b82b1378b92c"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/body.md",
+      "byte_length": 13657,
+      "sha256": "ba532f772f8f2f08be5938caf3ba9856c6f185e79d18fb0ed9d016b9d176f0bd",
+      "git_blob_sha": "ec2bcac4c976a056c26cb93002f27b327cd1cfe1"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/delta-changes.json",
+      "byte_length": 12027,
+      "sha256": "9072b00472fdccc2fe2585180a0dc2bee7de466908c2feb6320f73513c3ac7ec",
+      "git_blob_sha": "89a9d15158c8cd26e83660d5a06f396591148505"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/delta-insertions.json",
+      "byte_length": 2647,
+      "sha256": "345134b8b15aae1194537e1df4b66de434e925e6cdfdcd220876900b4bcc50bd",
+      "git_blob_sha": "4a04ce4f9ac10215f7701780042aff6524c2f29f"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/delta-manifest.json",
+      "byte_length": 13369,
+      "sha256": "d19041b48006c8dfc1ed0c320208d062a0f5b5b98da765e1f36eb26bab59e8ba",
+      "git_blob_sha": "85fbb8f585abe3e17b4bbc2c426d5106fe6c1908"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/inserted-excerpts.md",
+      "byte_length": 2302,
+      "sha256": "473551f4fa67d0fc488ea487f9b05869075e74a6d00efa13323ba1e44bb8af15",
+      "git_blob_sha": "ce8fc4c356bcd3444aeec29266d6f71d1e833e63"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/literal-delta.md",
+      "byte_length": 13530,
+      "sha256": "1dad09637786c0f7cfaa5b189a2a10414b6f4e12f02f24f218917d33361f7acd",
+      "git_blob_sha": "18a52dc240decafa95584f68c79b6307a1640add"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/manifest.json",
+      "byte_length": 2425,
+      "sha256": "933df763daf149afc036dffc92177fab47b437abc833e2638c6c1e0900cdfd54",
+      "git_blob_sha": "64f7c4342b0efeab0ea4b0628f5921a49198d6df"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/metadata.json",
+      "byte_length": 28856,
+      "sha256": "6b50cf53a319ee88071f1901e318a192233346ca8a24e624b08cf8479491e84d",
+      "git_blob_sha": "618dd272b105f6c2452cc104b01a4546a17c37e4"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/recipe.json",
+      "byte_length": 7543,
+      "sha256": "3949c84a8606a260a8a50e9be6dfebfb1bc42109461cd43a1db0e066a325b41f",
+      "git_blob_sha": "fba7ada16d6f5a21cfd23ab04ec0fd0ba0057588"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/request.txt",
+      "byte_length": 2473,
+      "sha256": "9ac57546350080a32f789d6ba0b8247dbf045453985b278611b56016fee0ad7d",
+      "git_blob_sha": "6beb774a7df337bd17a867b81cd09febdce58f21"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/response.md",
+      "byte_length": 16143,
+      "sha256": "f24c9f250d0c88b4d498421c6b9eb6c8b32264c325e80c1ebd4af20e023ccd32",
+      "git_blob_sha": "57e6ced4b8a201d6e9fe3e3d435c9f3489145383"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/revision-1/body.md",
+      "byte_length": 7120,
+      "sha256": "b97dfa5c155e851d0360eb27c730996634d7b240797c373bc41a2122a2a4a101",
+      "git_blob_sha": "5783af256376405370dfa125171b333070727939"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/revision-1/manifest.json",
+      "byte_length": 1273,
+      "sha256": "2ae52dcb6024d70c0f89cb0e9af65beaa6f1139dc962b8f12e66f3a371b4b21b",
+      "git_blob_sha": "9e39b9516ec522e1e4f147cb70dc8806b852c963"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/revision-1/metadata.json",
+      "byte_length": 13671,
+      "sha256": "05661f5195daefdd18915fce9b7dc2a719c0636d357c546fc5916aaa942605fd",
+      "git_blob_sha": "178ce4e905731ae9a08c6a118b774020c869d7f7"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/revision-1/recipe.json",
+      "byte_length": 4322,
+      "sha256": "0412b582eed28e665fcd84e85e42575671ad4dea09941379a0e8b92e167c2a5a",
+      "git_blob_sha": "8f65290c835fa7ba3b0b6fe706a01c48f95f7658"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/revision-1/request.txt",
+      "byte_length": 1556,
+      "sha256": "8283cac77200261af23caab54e6168c0bc0121d483e7dce5a764d0d3c8c4788b",
+      "git_blob_sha": "384d204f53b7599dc054f7e55d4b45adac5d5f83"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/revision-1/response.md",
+      "byte_length": 2379,
+      "sha256": "b346e1ea4ba49c6a1b464719f94d27f18581f46bff1c7c9ef6db8d22f8593819",
+      "git_blob_sha": "c8a3981d424af2190a9d9cc7dc3ae7877189e126"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/revision-2/body.diff",
+      "byte_length": 4523,
+      "sha256": "88ae44495b4c320e35908168c297f53989c648599095a6a897c4d8378bfb4d67",
+      "git_blob_sha": "f6311611f43a29d810194cee34bed137c16275dd"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/revision-2/body.md",
+      "byte_length": 9301,
+      "sha256": "c140fb0bf9606079e91576b542ec82b3904583e7433a8fe297c886318649f478",
+      "git_blob_sha": "424fb0ef3215e931d631b2f7aafa214561f0d1e3"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/revision-2/delta-insertions.json",
+      "byte_length": 2647,
+      "sha256": "345134b8b15aae1194537e1df4b66de434e925e6cdfdcd220876900b4bcc50bd",
+      "git_blob_sha": "4a04ce4f9ac10215f7701780042aff6524c2f29f"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/revision-2/delta-manifest.json",
+      "byte_length": 3949,
+      "sha256": "aa0caa064b52326659d18caa4913933e731f8bd786d63c4accffa59744daad37",
+      "git_blob_sha": "fac404c187c48363744fd5b1c6d9a1596f71383d"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/revision-2/inserted-excerpts.md",
+      "byte_length": 2302,
+      "sha256": "473551f4fa67d0fc488ea487f9b05869075e74a6d00efa13323ba1e44bb8af15",
+      "git_blob_sha": "ce8fc4c356bcd3444aeec29266d6f71d1e833e63"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/revision-2/manifest.json",
+      "byte_length": 1907,
+      "sha256": "8cd8c7e4dcb91291f6446d9f9c908e485da46d1d645293c048b86c953ad1862d",
+      "git_blob_sha": "76bfc65cc02962ab867b31a2a627e938ac32665d"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/revision-2/metadata.json",
+      "byte_length": 17852,
+      "sha256": "fee948a5fd4b43af90c341b1e4c3e5e71b1c37009f6426bc5145a092eecd34e0",
+      "git_blob_sha": "2b1b5b1b1d74d42e448e919d97b2bc06cf711ff5"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/revision-2/recipe.json",
+      "byte_length": 6905,
+      "sha256": "a8bb4994c0661cc899e8956b5d633aba3d3739c1160599dac02a679811e5ffab",
+      "git_blob_sha": "67b2d8bef2bfdc40454385778ffeba0f3540035b"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/revision-2/request.txt",
+      "byte_length": 1261,
+      "sha256": "14c7ac12b6c4443e90b2c71035599674d95c31978bc706f8575296857101853b",
+      "git_blob_sha": "993dfebfed19bdec9a8d92d1f52d05654d76bd29"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/revision-2/response.md",
+      "byte_length": 13826,
+      "sha256": "95d61af45535c7577eaefc55ca117a54bc26b698681288d7e1b1b805a1502a5d",
+      "git_blob_sha": "1a3b86631e57aa9a0576ca573ae3e3aafb15d860"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/updated-excerpts.md",
+      "byte_length": 5607,
+      "sha256": "2dafbe39eec0bdfac9ee920db054b9da4bc614ef90c7b0c9f13d37a9724ed2f6",
+      "git_blob_sha": "37b2d931e4be1bb0530336306bf31320e3aad5d0"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l4/body.diff",
+      "byte_length": 8286,
+      "sha256": "34cdfe65f88476761f5f35453505b677cf55dada2ece278bee5ba7fd9c09e5f7",
+      "git_blob_sha": "e07db70566016055bf1f0fb944b4df345ddce32c"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l4/body.md",
+      "byte_length": 10033,
+      "sha256": "ce0f86d365df573cf89218da7fee86009d1a37c65c775735c02a68079d38160e",
+      "git_blob_sha": "420959643029c286030f2cef684f0bbc63795c3b"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l4/delta-changes.json",
+      "byte_length": 7189,
+      "sha256": "eae888029f72241ab90c9353ff98d4cacc3b3ec1fe310aa21621bdf33db8d69f",
+      "git_blob_sha": "d8463da4d0db9203143e62c6d3b63500d92976a5"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l4/delta-manifest.json",
+      "byte_length": 5381,
+      "sha256": "b798c04fde0aef0458d0f336dcaf70c8e13c1ccdf1454e01812ee964893a15c3",
+      "git_blob_sha": "45a087efbbda6de65973659e9de6dd47d0144b3e"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l4/literal-delta.md",
+      "byte_length": 8625,
+      "sha256": "2858f9229cbe538abcda5d95483abc4451707db767b198ab7bd2fbebf294289f",
+      "git_blob_sha": "9a9960daa7590e65320d815894a1c115cd13aefa"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l4/manifest.json",
+      "byte_length": 2251,
+      "sha256": "7b61cc7d6f815801edbd54cb06034e20b65b7588097c452e117dd3a643f87d9a",
+      "git_blob_sha": "4311cfdd438c2fc035046ca94ce618be28201985"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l4/metadata.json",
+      "byte_length": 26365,
+      "sha256": "18add6006acef55bfbe1427c75b6bb1ca612cf4c8720833c42d41e72a5595129",
+      "git_blob_sha": "78a1159f47582385647f9ed1d785426da5d2aa89"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l4/recipe.json",
+      "byte_length": 7123,
+      "sha256": "e1fce629014f0e95b2033ce40706bfe40bb10fc6b8ad4e540e6a658b8d927511",
+      "git_blob_sha": "a91dc99bad6ab561ece74300f6c062fa4c514318"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l4/request.txt",
+      "byte_length": 1514,
+      "sha256": "4f60c07275f2cc7d20e9dc95eae5a41be550a0747f64734116c1a999b109ef18",
+      "git_blob_sha": "e8a7d3bc93007ae67bc48aa2ca1333e556892de3"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l4/response.md",
+      "byte_length": 11039,
+      "sha256": "930fa9fd24177ea27c7959c486c57539520e2d870e696cb494e7b9aa9989571d",
+      "git_blob_sha": "1c539d6233daa1d84faadd185e975b68456ca96a"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l4/revision-1/body.md",
+      "byte_length": 8942,
+      "sha256": "6836ed1abd690c45f999d32dbcbb6bb0451fda5ed77e6985ad601ae5a765705e",
+      "git_blob_sha": "c60f9e475e784f529f2db33034041a3cf83de040"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l4/revision-1/manifest.json",
+      "byte_length": 1438,
+      "sha256": "9e0fdb8322f3308ded74984157d09822cfb2a7f63b1639dc251d04c26922b4d8",
+      "git_blob_sha": "e350254b990d8011ab8fb92a50fe991ae98d7269"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l4/revision-1/metadata.json",
+      "byte_length": 14730,
+      "sha256": "e6213b5007cd265a55a00178a4319ceec56f9c9f27770ced5e55bf84e45885b3",
+      "git_blob_sha": "90a8c510958303fcebc6bf76248d005944b68688"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l4/revision-1/recipe.json",
+      "byte_length": 4579,
+      "sha256": "d32ee8ebc7ea8e704c1d33f5414549c35c63f11a0a06a46fdd7de19ec8498b1f",
+      "git_blob_sha": "da37c81671450fa670eea63a83297bf7cc39dafd"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l4/revision-1/request.txt",
+      "byte_length": 1822,
+      "sha256": "f0d6f5e8f1f7c4fe3fe5fef442dfc084257200d83c4db2f7e7c72c283b4408ac",
+      "git_blob_sha": "a39a9a9bc971ab9f4da5a4ea2f1b58aa86ae6d8b"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l4/revision-1/response.md",
+      "byte_length": 2340,
+      "sha256": "3d7e9e73e86b73989e8d85e098222f68382eea74cb6b716119e309b43ec089b5",
+      "git_blob_sha": "81b36af03bd893601295068e091dcd505f35a986"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas/consumer-o3-index-1-query.json",
+      "byte_length": 55,
+      "sha256": "65dcb6b1fdff8925193af3b24d2f053be160ed1e82848d6a0526030291103bc5",
+      "git_blob_sha": "87cd4a901906f1a663c1d80629ea7a47cb101e19"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas/consumer-o3-index-1.receipt.json",
+      "byte_length": 1819,
+      "sha256": "d22ee7cc787c3f3ecf72f9de3aa426b5f60e0fe69c895a35dab85449eab08476",
+      "git_blob_sha": "b6da4fd9d8d3b447cb920468449e350afd9bd34f"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas/consumer-o3-index-1.stderr.txt",
+      "byte_length": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas/consumer-o3-index-1.stdout.txt",
+      "byte_length": 83,
+      "sha256": "2dd4491a6b54276f5ecac40debfd740cb87c68b5e7eaf55f0ab4a01efbf5cb60",
+      "git_blob_sha": "26ad326a68ce5607ac0a0b53cce5d982d69be7be"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas/index-maintenance-r3-final-query.json",
+      "byte_length": 55,
+      "sha256": "65dcb6b1fdff8925193af3b24d2f053be160ed1e82848d6a0526030291103bc5",
+      "git_blob_sha": "87cd4a901906f1a663c1d80629ea7a47cb101e19"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas/index-maintenance-r3-final.receipt.json",
+      "byte_length": 1847,
+      "sha256": "e6195ccff6d305a654aba6a79d783f474c282208e7c9bcba474c83c682e825af",
+      "git_blob_sha": "f3ee7b86bc238ec37fb9d20d4fab9671829574e7"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas/index-maintenance-r3-final.stderr.txt",
+      "byte_length": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas/index-maintenance-r3-final.stdout.txt",
+      "byte_length": 83,
+      "sha256": "2dd4491a6b54276f5ecac40debfd740cb87c68b5e7eaf55f0ab4a01efbf5cb60",
+      "git_blob_sha": "26ad326a68ce5607ac0a0b53cce5d982d69be7be"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas/prepare-r3-final.receipt.json",
+      "byte_length": 2038,
+      "sha256": "51496bac72a13fccbe4f4e2ceec67219b42f3105661d1ac5b48b6108c13785a2",
+      "git_blob_sha": "dfb7eb07427aba76891f1e2f48201bd4e78bf518"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas/prepare-r3-final.stderr.txt",
+      "byte_length": 85,
+      "sha256": "4e27b15fc54a46af22dc01e578414540f2fced47761467c69ff8c955031c59bf",
+      "git_blob_sha": "14505cf739b5a9afac338fde7fd710700676b252"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas/prepare-r3-final.stdout.txt",
+      "byte_length": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas/prepare-r3.receipt.json",
+      "byte_length": 2008,
+      "sha256": "7a44cd55202ac35c4dfa248b309138eac37c789eb5428742e802fe2f3fc1f488",
+      "git_blob_sha": "492d83d85ebfa9b1a8b92986bd1064ecd878808b"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas/prepare-r3.stderr.txt",
+      "byte_length": 85,
+      "sha256": "4e27b15fc54a46af22dc01e578414540f2fced47761467c69ff8c955031c59bf",
+      "git_blob_sha": "14505cf739b5a9afac338fde7fd710700676b252"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas/prepare-r3.stdout.txt",
+      "byte_length": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas/read-component-r3-final-query.json",
+      "byte_length": 74,
+      "sha256": "9bf4c1455199477a198035feafd7634695aeea0f59959863db3e57d23cac32a7",
+      "git_blob_sha": "6dcf3e1f6c7d3c27451e9e8eea0da7e2c7d8e75e"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas/read-component-r3-final.receipt.json",
+      "byte_length": 1854,
+      "sha256": "2ba1f0b26b090fc72f01902baf9a9075c2bea4e829c57ff717d0632a7a51a6fb",
+      "git_blob_sha": "22f79abbf4b699fd8792be9d8a00614dca11e902"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas/read-component-r3-final.stderr.txt",
+      "byte_length": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas/read-component-r3-final.stdout.txt",
+      "byte_length": 83,
+      "sha256": "2dd4491a6b54276f5ecac40debfd740cb87c68b5e7eaf55f0ab4a01efbf5cb60",
+      "git_blob_sha": "26ad326a68ce5607ac0a0b53cce5d982d69be7be"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas/read-component-r3-query.json",
+      "byte_length": 74,
+      "sha256": "9bf4c1455199477a198035feafd7634695aeea0f59959863db3e57d23cac32a7",
+      "git_blob_sha": "6dcf3e1f6c7d3c27451e9e8eea0da7e2c7d8e75e"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas/read-component-r3.receipt.json",
+      "byte_length": 1830,
+      "sha256": "4b646b222ca6ed07d5f9a2f528baed056858168183877709beb6196d36084778",
+      "git_blob_sha": "9f48f7a83ee0cb6e65a2e352af2bdee3f785b681"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas/read-component-r3.stderr.txt",
+      "byte_length": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas/read-component-r3.stdout.txt",
+      "byte_length": 83,
+      "sha256": "2dd4491a6b54276f5ecac40debfd740cb87c68b5e7eaf55f0ab4a01efbf5cb60",
+      "git_blob_sha": "26ad326a68ce5607ac0a0b53cce5d982d69be7be"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas-diagnostic/cas-snapshot-index.json",
+      "byte_length": 21490,
+      "sha256": "7e408a0a75ee0be9706fea3a90854573f5a54837c81a2f95f034ada38f8c7b0a",
+      "git_blob_sha": "d034840360acdcc26bc7f84df4feb9e3fc75d930"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas-diagnostic/cas-snapshot.tar.xz.base64",
+      "byte_length": 252342,
+      "sha256": "03df2cc748732b9a38b5854c7c9cd30ac3b5063091a3cfceab18e701690086fc",
+      "git_blob_sha": "4969d071f5a264e161360766604a9f5bc0296560"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas-diagnostic/index-maintenance-db9b423-final-query.json",
+      "byte_length": 55,
+      "sha256": "65dcb6b1fdff8925193af3b24d2f053be160ed1e82848d6a0526030291103bc5",
+      "git_blob_sha": "87cd4a901906f1a663c1d80629ea7a47cb101e19"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas-diagnostic/index-maintenance-db9b423-final.receipt.json",
+      "byte_length": 1926,
+      "sha256": "c1f1b32d5d1d276a7313b23669b14ab310a10f362234c601d0473f823ddfda41",
+      "git_blob_sha": "39f2637b449a8a5bbd2caec19904326bd9a9de3d"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas-diagnostic/index-maintenance-db9b423-final.stderr.txt",
+      "byte_length": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas-diagnostic/index-maintenance-db9b423-final.stdout.txt",
+      "byte_length": 83,
+      "sha256": "2dd4491a6b54276f5ecac40debfd740cb87c68b5e7eaf55f0ab4a01efbf5cb60",
+      "git_blob_sha": "26ad326a68ce5607ac0a0b53cce5d982d69be7be"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+      "byte_length": 2223,
+      "sha256": "df6c1c9fbb2a1940898c7b750adeb2f658658ff3396a2b692d3eef71ad26adeb",
+      "git_blob_sha": "861da18e3f1b9a7a2e40899d23db917f918619ea"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas-diagnostic/prepare-db9b423-final.stderr.txt",
+      "byte_length": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas-diagnostic/prepare-db9b423-final.stdout.txt",
+      "byte_length": 222201,
+      "sha256": "76e86d03a3e2fb256e2e117ef2e0cd45cf0e11b98ed2e2b5545247009e385df8",
+      "git_blob_sha": "86d57fe3e5cbad9b74f689f7006686f6199a37b3"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas-diagnostic/prepared-candidate.json",
+      "byte_length": 292042,
+      "sha256": "be267a8e2db79343731eba856d84ff914f1d43f8849b0072f05b1d0bbff794a6",
+      "git_blob_sha": "d9558d60c81cac4dfab1721ce051d91917283ed0"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas-diagnostic/read-component-db9b423-final-query.json",
+      "byte_length": 74,
+      "sha256": "9bf4c1455199477a198035feafd7634695aeea0f59959863db3e57d23cac32a7",
+      "git_blob_sha": "6dcf3e1f6c7d3c27451e9e8eea0da7e2c7d8e75e"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas-diagnostic/read-component-db9b423-final.receipt.json",
+      "byte_length": 1933,
+      "sha256": "59a4601e858c93042214ade66f5b9df329888f22f8ac4d283969299dfbb50185",
+      "git_blob_sha": "b1017502cfe15e9a92fc7b4fe6b3b1eeae798776"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas-diagnostic/read-component-db9b423-final.stderr.txt",
+      "byte_length": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas-diagnostic/read-component-db9b423-final.stdout.txt",
+      "byte_length": 83,
+      "sha256": "2dd4491a6b54276f5ecac40debfd740cb87c68b5e7eaf55f0ab4a01efbf5cb60",
+      "git_blob_sha": "26ad326a68ce5607ac0a0b53cce5d982d69be7be"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/base-body-reuse.json",
+      "byte_length": 18759,
+      "sha256": "c0be527e4952d855d7d12054b4050588c1e32a7bc3bb1f6cf54a6e3d42689231",
+      "git_blob_sha": "27e8d19ccc58df875de04c2e11d02f6c6c58d6f8"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/bun-setup.json",
+      "byte_length": 905,
+      "sha256": "519bbe7337741e46b6069418447c53282fea81799f07dd7139464b5507b81491",
+      "git_blob_sha": "91571b0a02a7d160efd64905d23ad594f0545770"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/consumers/cases.json",
+      "byte_length": 21786,
+      "sha256": "2af8dbeba0d3131077d60b26aebb6404c0e5376e013c4f975c17b7ccf9b218fb",
+      "git_blob_sha": "59e05de626fc3fa3c006759a17f0774bc802a66a"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/consumers/o3-bridge-response.txt",
+      "byte_length": 707,
+      "sha256": "97aecf94334de832d21c64057b73f649a7ce4126a8e7a6eeb937e6e5af3829b8",
+      "git_blob_sha": "617deaf847c56a626f2aeaa8e000f3171ae8c075"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/consumers/o3-initial-request.txt",
+      "byte_length": 1356,
+      "sha256": "f56306415e76fee0767121e46140ff0bb5aeb30d193b869db2982c6fb77d12e0",
+      "git_blob_sha": "a6ecfd84f7ea485b1cdf56533e9d43542f1c7073"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/consumers/o3-query-request.json",
+      "byte_length": 85,
+      "sha256": "6923a87a72f162b11add51119ab701ef04edbe00f2106e8b90e2d98f375daea1",
+      "git_blob_sha": "8fc5dd90b1ef3e84846ff1252344336f117e3abf"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/consumers/o3-response.md",
+      "byte_length": 938,
+      "sha256": "f0ce666cd3fdeec1ce3da5e96d15585e3aa835aae9b055e0323b4d648a9ee6db",
+      "git_blob_sha": "dc7e36d08e0d91ce8ef914923fe37a9d2e2401ad"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/core-dependency.json",
+      "byte_length": 2174,
+      "sha256": "3cbdb9acf79a78e2c295b7cc41a336ac8f405ee24b47cf4729f137cab9c3db1b",
+      "git_blob_sha": "304767f8c5d69492f4c6155edbbd91417ddfa9b0"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/core-materialization/before-state.json",
+      "byte_length": 172774,
+      "sha256": "e269cd0a213730210ef2f1a02a4ce6ab14e6fdc6901fec592c9680dab26ba48a",
+      "git_blob_sha": "ebab8f8463f516ebe71e7163ba117a34f8c3a4d7"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/core-materialization/materialization-plan.json",
+      "byte_length": 36252,
+      "sha256": "28bc07abec8f82a539b9ce77316487b5f14592018f7e36dd25d088342176d663",
+      "git_blob_sha": "cc0923d028c1443acc07d00d43df2a1d4e7d9cc0"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/core-materialization/receipt.json",
+      "byte_length": 40490,
+      "sha256": "237ae2eaea386cc3be611902ab3e4e9f07419379c00b495400bae453fd938586",
+      "git_blob_sha": "0dac91635e37d84cd7c37a143ee420e3ff165b15"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/core-materialization/request.txt",
+      "byte_length": 1543,
+      "sha256": "2add55b5fd46ccbab8949500c6affeedf3d2e5c32ab8dfe065c63f7c717b0b8d",
+      "git_blob_sha": "bf6b4dd597558762b121c0ae53f2df905ee06cde"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/core-materialization/response.md",
+      "byte_length": 2680,
+      "sha256": "895af946bef670928cc662c3fd169ed94c638c457755ac1a76ade60d30d451d5",
+      "git_blob_sha": "184dc66637f9f2275dfd9e71a7aa77bf51a6dc77"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/core-reuse-release.json",
+      "byte_length": 677,
+      "sha256": "540c2ea49100afe42247ee419f6ce0c7c6f92511d8cbf371c63969cb9bea8266",
+      "git_blob_sha": "600f8695d9b0dcf8bf8b3c65d0c10089e69d52d1"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/dependency-recheck-capture.json",
+      "byte_length": 36362,
+      "sha256": "1822589b05a09235a10b44952993cc74e829438edcc20ac8c3110dc417368c90",
+      "git_blob_sha": "30a261a06c1960c3e9f6696bf0c676840e740141"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/dependency-recheck.json",
+      "byte_length": 1597,
+      "sha256": "e3ccb00a162b134d2946cc47fe3e825796360d9b00d96e2ba40e099cdca77b39",
+      "git_blob_sha": "85d7e18abe4fa0aa6d3d260c2d6ee839ec2319ad"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/economy.json",
+      "byte_length": 2773,
+      "sha256": "0bbe7f025f51476484e2587fa908eb0b93a8400a79f2a2a6b59a4e3072101c47",
+      "git_blob_sha": "71e7b964806c0acd27d8c3fba91dad6b8ee57fd6"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/exact-prior-review-binding.json",
+      "byte_length": 4919,
+      "sha256": "1ddbe230fbb8d711fc1f81ab08803272901f2d19617318ee7a84b23d1a2576bb",
+      "git_blob_sha": "d272e32f90d49af15d10c5d84a0eacedb40ddfed"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/execution-finalization.json",
+      "byte_length": 2534,
+      "sha256": "dba4743dd72b01b94712d61dfb2657da7ff719f81a6332fa14052bc48a35de63",
+      "git_blob_sha": "66a3e27c4f361f6a836f461ac453c4d574aa01f8"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/final-review.json",
+      "byte_length": 2988,
+      "sha256": "d7bce545cdebd1eddfaeccd7913b919cc491883ac86c74cd92451e65cbec7ef1",
+      "git_blob_sha": "c5cd33e68437ce42879ae0021da70b1920279f1c"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/freeze.json",
+      "byte_length": 273,
+      "sha256": "9df6d5000e8312386cfef35bcc154c42d3db203677bda62c198d50b25449fc93",
+      "git_blob_sha": "cd94d6eb45bda3cd80e03b2b28bd23be3cbd62c3"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/gates.json",
+      "byte_length": 2583,
+      "sha256": "523fef2e9659d3f2ecdf923a8f7529cff416e1321521dcf10419af6bd3c41109",
+      "git_blob_sha": "0c027934abe088c832950bd8b54504af2ee2c10a"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/branch-capture.json",
+      "byte_length": 9071,
+      "sha256": "404d8d4de2a1644082cc0f7224d025d868ab0c6801000aef6086ff6aa1c754ed",
+      "git_blob_sha": "355999934891bb2e78b2ab752ac69a7d6f1012ab"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/check-guards.receipt.json",
+      "byte_length": 1610,
+      "sha256": "803d4bfe21b6e535e16b329545f6cc82e1efcfb2cc9690ac04cc19798bdf670e",
+      "git_blob_sha": "e33f83614f702d25ad40775ab6b4add00ec9c376"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/check-guards.stderr.txt",
+      "byte_length": 97,
+      "sha256": "1d94fca7cd039cb028502c2ed2c275f74238d3dc240f237a5c1fb958daaede4b",
+      "git_blob_sha": "213726f235cc015dc0a6c43204aa93383886dde4"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/check-guards.stdout.txt",
+      "byte_length": 169,
+      "sha256": "03e07767148f3539dd1590f90e88dbd9431a3c467f9c86c4c226df6b9c290576",
+      "git_blob_sha": "ae6420d7a60e2743e3a5de8f106cc2beb8000b1b"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/core-objects.json",
+      "byte_length": 9441,
+      "sha256": "a1eaedf52295e85391cd60b02b2b7b426178b0da4fcdcb9e58760ef0d28c5b6f",
+      "git_blob_sha": "1232208e1be9f8f5c094ab05461edae1985efe39"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/dependency-captures.json",
+      "byte_length": 29937,
+      "sha256": "79908efee410306cc79d52561d450afa1f206c84641b0ad76ec470e7011284d5",
+      "git_blob_sha": "93fda7170080a66a537644a8cdf550326674f5bc"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/discovery.json",
+      "byte_length": 6728,
+      "sha256": "74c75b9ec377a89bf46d3de4abc76f580cbcea8d75934517f5109dfc4fe27196",
+      "git_blob_sha": "b079085a986f2c0c5a63f7341fade2889566d621"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/initial-captures.json",
+      "byte_length": 25545,
+      "sha256": "b5554cdeefec020956e89834185590e6074f25dbcfd2839c7021356147accc72",
+      "git_blob_sha": "7b2122b42d41b05aa6dcff0641d7345ccacf772f"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/materialization-manifest.json",
+      "byte_length": 2700,
+      "sha256": "2c8f0274da0ea80cd312a2b5badc38aeecbe2f1da94cbae69582ba9d93c692f0",
+      "git_blob_sha": "de698acb9fc45385a97a16beafb6c6a04e13e458"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/request.txt",
+      "byte_length": 931,
+      "sha256": "4ae7af4527878b8dcfb9f24c2f1a7919a5b4cc2d2762b77bde9d372dacbed2b0",
+      "git_blob_sha": "3b752514adb6b6fe6c2cf731f78059fe1062dd44"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/response.md",
+      "byte_length": 4324,
+      "sha256": "87b26872b115cdf6f10a8c7f674b649d0423f7517d5626bfff3e0aacb1d79078",
+      "git_blob_sha": "ad011ebae652a8bb36961f043163a0271fe1ed78"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/script-captures.json",
+      "byte_length": 43550,
+      "sha256": "5c371b579c9db9b33a12510fbdd487bb50021848c5a915eed9c8cac84c2f80ce",
+      "git_blob_sha": "e09b2c6d94a37ac36ea00eb98fdcd2d4d3ddd19e"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/tool-routes.json",
+      "byte_length": 14633,
+      "sha256": "fc1afe4ef040bb1246d3e8ce5eb47e0325592410b4bb2d50f6676170db88ff8e",
+      "git_blob_sha": "c1222e5182ee67cae8ba2fc48c541be7d12dd18f"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/verified-check-guards-final-reconciled.receipt.json",
+      "byte_length": 99570,
+      "sha256": "faa5f7658bf4e35f2e2bd7fde6ce1716e27e709dacf47e05a19732852c9aa265",
+      "git_blob_sha": "87b940bbc035b0a386de01e259f300358d816c1d"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/verified-check-guards-final-reconciled.stderr.txt",
+      "byte_length": 1085,
+      "sha256": "4d5f1c3c695d5d6d2ca71f78b1ec572fad5fc91cceda59baf0fb1061e9c27154",
+      "git_blob_sha": "3a76bd184b6084f2d5c3e07c5a0a43ac7d8b90b5"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/verified-check-guards-final-reconciled.stdout.txt",
+      "byte_length": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/verified-check-guards-final.receipt.json",
+      "byte_length": 98461,
+      "sha256": "e1086740804ba32ab3a8fdc007a9d0cffacea4ef025d0ccc3189bcdf81a9ffc5",
+      "git_blob_sha": "d961ae5a366673e4792569a73c625ea99e3c33b0"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/verified-check-guards-final.stderr.txt",
+      "byte_length": 1093,
+      "sha256": "77b3384d44b765c37d46d309a38a8ad8774f9e3ec6ac357c5ca1acd1b7ea2c17",
+      "git_blob_sha": "0227d8d970591f4ba2e90f61c07a13817ebe1af6"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/verified-check-guards-final.stdout.txt",
+      "byte_length": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/verified-check-guards.receipt.json",
+      "byte_length": 70885,
+      "sha256": "8bedfd6a4c3080836bc8c89a4e2a0c3f3b575e40c604e67a6ea9ed1541316b40",
+      "git_blob_sha": "3f142b689dd62ef5efe06dfd75fff77a84c02e4b"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/verified-check-guards.stderr.txt",
+      "byte_length": 1085,
+      "sha256": "4d5f1c3c695d5d6d2ca71f78b1ec572fad5fc91cceda59baf0fb1061e9c27154",
+      "git_blob_sha": "3a76bd184b6084f2d5c3e07c5a0a43ac7d8b90b5"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/verified-check-guards.stdout.txt",
+      "byte_length": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/zip-artifact-route/query-capture.json",
+      "byte_length": 722,
+      "sha256": "a0cfc99fbe6f9297bbf284ee28b2c7b64bd93b1fd8b5c36c8f8ad4e2b85e87dd",
+      "git_blob_sha": "364d48cf278468a4f74fd0e31735ab6022e5679c"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/zip-artifact-route/receipt.json",
+      "byte_length": 1607,
+      "sha256": "4cfd507d5a8d06e206351e205fd3342a537e8d6a56f67eadfa003237b59d25fc",
+      "git_blob_sha": "03c9e5157cf9a616a8c3ecae31f203c8c66e9513"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/zip-artifact-route/request.txt",
+      "byte_length": 1130,
+      "sha256": "bdbf0750bbc77b921c2611c4f1a42bbba75fbbc83ee855f0197e3822d640e0ea",
+      "git_blob_sha": "5b79499c018009cca0e0a79cd152ed372f3dfc5d"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/zip-artifact-route/response.md",
+      "byte_length": 1491,
+      "sha256": "321268471570dba4b3bf45f589254e6db36141ee75e7aa05030e07967c12cd73",
+      "git_blob_sha": "502958d5272dd6e00017493e222ca190960bf8f8"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/historical-frame.json",
+      "byte_length": 931,
+      "sha256": "9603edf9ae95b650cc29a584bce7a5a85c7234c949d407e2f6c17d5b2941c9cb",
+      "git_blob_sha": "78ed5e3ba1341e27761ad430dfd9383c913c9b7c"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/input-materialization-plan.json",
+      "byte_length": 85091,
+      "sha256": "147cb96b6082f04993e94e22b54b8ac2323e2fe26e1ebc289e9e50a40ae43d43",
+      "git_blob_sha": "41368e0c2a2ce14e558a266f3e51ede875c8cd08"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/l1-release.json",
+      "byte_length": 3522,
+      "sha256": "23674344f089dbc26e1cac7ee70e0de9809e663ed80a0967219ae53222d4b0fb",
+      "git_blob_sha": "b752ecfe27d21037317274290e7c5c44cc278ab1"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/l2-release.json",
+      "byte_length": 830,
+      "sha256": "35f6a60a7aca9937b957022fae7ef1868b84a5b4d4284f961882568675c3a2c9",
+      "git_blob_sha": "af42eb935b4844223e26eba7624b5f2d8eec2979"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/l3-delta.json",
+      "byte_length": 290,
+      "sha256": "9c00b424dc59d52dfb7b2a84b6f2bae54df429a890b46b5d1765288f107b4737",
+      "git_blob_sha": "d3d68e0b134066d5c25d1b6b102db50266a05786"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/l3-final-release.json",
+      "byte_length": 866,
+      "sha256": "23460fd3c06d24b6e3e5f2ba483903ab907539d0b3d054a06cf0596c9e33358a",
+      "git_blob_sha": "101ac482932c32de37a3f2e1201321c7a537bdb8"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/l3-release.json",
+      "byte_length": 714,
+      "sha256": "fd44a6a91515bdaf200cf28e4c7ccf9b2e1c2e3d70008e2cf88747ad165f4c97",
+      "git_blob_sha": "a02d2b384c9d82458928234c37f2cc6065721dba"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/l4-final-release.json",
+      "byte_length": 1368,
+      "sha256": "2cff1e9b9386e4777a1f59f9680fd3f8c942280334f4acf73b401bc3a9ebfcf0",
+      "git_blob_sha": "68da51eb4160a43c36eca186442b8de4d3ab5546"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/l4-release.json",
+      "byte_length": 718,
+      "sha256": "dba9b013abda3805f3be7fdc1a4799d59b7806ec09d496cf4598ea9adee94354",
+      "git_blob_sha": "66f183bc0842c6e713db5ee7239ede75fb73c2f5"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/l4-submission-erratum.json",
+      "byte_length": 2300,
+      "sha256": "a1594a3de4eaebf040a07dc9112155c7ada69acb3b62f948ea6cd12d7f3de1a2",
+      "git_blob_sha": "e495d1435462fe4650fdde097b2404c7fb2057e7"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/large-source.json",
+      "byte_length": 533,
+      "sha256": "3eb5fa39fd63fc90e1e2547c14808018732fbc240c86713657a40dbe5555ee1e",
+      "git_blob_sha": "5028519fdaeb1801a71b47f562f4076fce9f1504"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/maintenance/disposition.json",
+      "byte_length": 3177,
+      "sha256": "3b190790da83e14b84bddb8e584f8755640f270c3e69db71bbe66177668503f1",
+      "git_blob_sha": "34d0860adb48d50b49f6bdf174e71e122511c3fc"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/mechanical-final-audit/report.json",
+      "byte_length": 136944,
+      "sha256": "1972f1a069ef827f8758cc6b52a4b066d4d6648f7ea7de9306d0ff12c9688108",
+      "git_blob_sha": "ee458cf15388d3270dc735fdb7fb612f2951f6f9"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/mechanical-final-audit/response.md",
+      "byte_length": 3323,
+      "sha256": "a3ec63aa829db1f876e34032f7ce5780896e78c3ffbea2d0c2a22a34c34fefa5",
+      "git_blob_sha": "29f256966d74d6827c098f785a82f6e4eb426f27"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/normalization-check.json",
+      "byte_length": 6844,
+      "sha256": "a435b3d2ddf548e8e6c805bd6e40e5f11e1d9b742a7c219edbbf42ba8326bf0b",
+      "git_blob_sha": "51e48ad19d0382ec2d11e509399a839ccac81e85"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/population-reconciliation.json",
+      "byte_length": 3679,
+      "sha256": "5a0e1dbb764a16449d46106408ae4102df712b74935c52c926739d37ad8b31bc",
+      "git_blob_sha": "5ceb36a1f45a6e838cbc71fc0b3da0260b4d6d4e"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-capture-integrity.json",
+      "byte_length": 20763,
+      "sha256": "0eef1e19f5017418034112370acce42a16f77365ee05dbadf29dd4df6bc272f6",
+      "git_blob_sha": "ab8a0de1437dc9d828dac58f2e596a1019c1a56e"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-common-controls.json",
+      "byte_length": 3059,
+      "sha256": "8992baa07dfcbb103b9f7de9711cefe5d873b669ca93f0ff0ecdb31dc263aff7",
+      "git_blob_sha": "61ca736812608a6ffacd76149c47916c2c32d3b4"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-diagnostic-setup/commands/npm-ci.receipt.json",
+      "byte_length": 1595,
+      "sha256": "20ee9bd37f868f67f566a5a45ba237d29b8da2d78f333cabd8f00df61abcc65e",
+      "git_blob_sha": "6737c88a51fc68eb421fdf1d551c91d63fb1058f"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-diagnostic-setup/commands/npm-ci.stderr.txt",
+      "byte_length": 402,
+      "sha256": "bfb348fb34e7272aa9cd0710f76693a9d040b01d5ed06ea6db152f0cdb5346b9",
+      "git_blob_sha": "e2e05afae172b016b2a7179d9e6dabccfc7df672"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-diagnostic-setup/commands/npm-ci.stdout.txt",
+      "byte_length": 167,
+      "sha256": "cb010cb04482d7217a8983f6e167baef219cfe1160721c1521e5029f93e06a03",
+      "git_blob_sha": "bdb9010516e3b1c7e0a657bc562e7fb410705f3d"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-diagnostic-setup/commands/typecheck.receipt.json",
+      "byte_length": 1698,
+      "sha256": "8b8b907c00aee7e9ee92fb4ceb28b143df0b07512d074acede8f0ab453f22fcc",
+      "git_blob_sha": "18a184fbc7a18dc8fc14e30c66675d2d732bdd06"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-diagnostic-setup/commands/typecheck.stderr.txt",
+      "byte_length": 17,
+      "sha256": "4fec200faf0180516bb7b68652c0c2c29e56573b8c74611b73fa9d49cf7f5e6c",
+      "git_blob_sha": "5bc089b2325b3daf4754314c17f2332563442b06"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-diagnostic-setup/commands/typecheck.stdout.txt",
+      "byte_length": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-diagnostic-setup/evidence-index.json",
+      "byte_length": 4240,
+      "sha256": "2249cb8278ba0d7ca45d92c078fae52285b55e193e9aaaddd9693bb497139155",
+      "git_blob_sha": "bd35c1d02f63c783c6a560d48d8745576587eb6d"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-diagnostic-setup/implementation-diff.patch",
+      "byte_length": 280774,
+      "sha256": "dc46165221f61c29b69cfd91d1012dd33a186a4a5bf1cfac5144185e6d3bfcee",
+      "git_blob_sha": "8ac08c39aa85487a90966a6f1ec0abf64120908c"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-diagnostic-setup/materialization-manifest.json",
+      "byte_length": 509334,
+      "sha256": "43a44d9e627902ac59f1688542e933468bfe5ad7c42bf25d8d6470bb2590072d",
+      "git_blob_sha": "6956e805a472d47d8393612fdd0f556cebd16b40"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-diagnostic-setup/readback.json",
+      "byte_length": 331102,
+      "sha256": "2ba623e356d683a0926f578863a154cc9d0cd3bae2cef05448f20824717d5b9e",
+      "git_blob_sha": "2d77d7011be52e41c6c851c71b40f7818e8574b0"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-diagnostic-setup/request.txt",
+      "byte_length": 1390,
+      "sha256": "5117297fec0f1e65ccb958e197f8d8e8c4c42c3ab1a2320826fc76c7433584e1",
+      "git_blob_sha": "769c13571b3a08d11f62236116624ddf13b9cc9c"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-diagnostic-setup/response.md",
+      "byte_length": 8180,
+      "sha256": "df8a570266cac2430ada01125fe6f3d51b4a91393574b2631d73d8eca54aa7b5",
+      "git_blob_sha": "676ddd73115a7b4d073182e5b7987bd34808787d"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-diagnostic-setup/source-root-copy.json",
+      "byte_length": 685,
+      "sha256": "2670dbd4b83caaebc23b41ee0dd16c9b48dcc065fe20953d307fcff1f7a2ec94",
+      "git_blob_sha": "85fbb0a4b8a2d75fc8cf8f3ffd75b7c6f182aba8"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-diagnostic-setup/status.json",
+      "byte_length": 14811,
+      "sha256": "fa6eb21a284db5bf5a0b79ad98f618bf7f0687ce15013f4cba4efdd133c4edca",
+      "git_blob_sha": "1115d238e6a7bf90e0d2582e714feb83baf5f70e"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-discovery.json",
+      "byte_length": 37066,
+      "sha256": "caf35249a9327407bab1da4f34bd0c118aaa30a4da98fa760275b6736002acbb",
+      "git_blob_sha": "e7eadac104ab0ea9db05565bc46c1cddbe287001"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-discovery.md",
+      "byte_length": 12720,
+      "sha256": "96cd7b5fe1639a8dc0e8535e9c7fcc68b14261611604bc14caa0fc3c7623c502",
+      "git_blob_sha": "782b38b8b0ba6ccc98771e43dce174404a337bd7"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-disposition.json",
+      "byte_length": 3817,
+      "sha256": "d6ee80b38906d9906cd3f9ed312ab3ac63d7ffed019414a4ee92eae21591f166",
+      "git_blob_sha": "d6e3c604eb362f499253a8187f6a0697670bf975"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-release-frozen.json",
+      "byte_length": 28282,
+      "sha256": "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016",
+      "git_blob_sha": "7513fcca63664ca02094e9ed9b8fab090c20295d"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/commands/bun-version.receipt.json",
+      "byte_length": 1451,
+      "sha256": "093b535a1b8d8e6f6d4f5e2883018930ce57d821258f9c532c7e0d969fe525ba",
+      "git_blob_sha": "df84e796a8e3745a6917d63fba9e9f88fa3fc806"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/commands/bun-version.stderr.txt",
+      "byte_length": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/commands/bun-version.stdout.txt",
+      "byte_length": 7,
+      "sha256": "56b0485099b6c5427d3b68c042fd05b632d5e52e924c5064473389812227164c",
+      "git_blob_sha": "085c0f2666ace5b88d67bf565bbe30fbe054e551"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/commands/git-head-observation.receipt.json",
+      "byte_length": 1479,
+      "sha256": "e67588fde2c5a92e40bc30c23c3f83d8f212e656d06224adc9a15a5fb27db206",
+      "git_blob_sha": "b3c6c3f09ad5be94cf92cd37e2d29a6b5369c90d"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/commands/git-head-observation.stderr.txt",
+      "byte_length": 139,
+      "sha256": "c4dfc721cc7f91d3ec67d99446d3c46f79c764fc96d6f9ba52e69cc669d686c1",
+      "git_blob_sha": "ee5bcf0cc9622b4b3bfd9045033ca14483fca770"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/commands/git-head-observation.stdout.txt",
+      "byte_length": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/commands/npm-ci.receipt.json",
+      "byte_length": 1354,
+      "sha256": "d2a9b0489b0b4fe3d6616e54aedfc2db37ba58c126a114e74b6fdfdc16fa1fbf",
+      "git_blob_sha": "8d8fe891ccfd271489863888f311c3e9b678bd71"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/commands/npm-ci.stderr.txt",
+      "byte_length": 402,
+      "sha256": "bfb348fb34e7272aa9cd0710f76693a9d040b01d5ed06ea6db152f0cdb5346b9",
+      "git_blob_sha": "e2e05afae172b016b2a7179d9e6dabccfc7df672"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/commands/npm-ci.stdout.txt",
+      "byte_length": 167,
+      "sha256": "cb010cb04482d7217a8983f6e167baef219cfe1160721c1521e5029f93e06a03",
+      "git_blob_sha": "bdb9010516e3b1c7e0a657bc562e7fb410705f3d"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/commands/typecheck.receipt.json",
+      "byte_length": 1459,
+      "sha256": "d345d6230d21e06db322bb0bf861ad8cfd5c95a59da72856e9a9e32e8b9be8d9",
+      "git_blob_sha": "e5c844c02fe70a661c9450aa5e12a4cc8783eb19"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/commands/typecheck.stderr.txt",
+      "byte_length": 17,
+      "sha256": "4fec200faf0180516bb7b68652c0c2c29e56573b8c74611b73fa9d49cf7f5e6c",
+      "git_blob_sha": "5bc089b2325b3daf4754314c17f2332563442b06"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/commands/typecheck.stdout.txt",
+      "byte_length": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/input-materialization-plan.json",
+      "byte_length": 85091,
+      "sha256": "147cb96b6082f04993e94e22b54b8ac2323e2fe26e1ebc289e9e50a40ae43d43",
+      "git_blob_sha": "41368e0c2a2ce14e558a266f3e51ede875c8cd08"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/input-materialization-receipt.json",
+      "byte_length": 172696,
+      "sha256": "bfb26a1b5eaeb1005fabd3a0bfa8ce9c10e54c5041a4bc5b5826f2fa697100b2",
+      "git_blob_sha": "07992fdb5161041367f0d7d9f2cd9f8eaffb8dd2"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/materialization-manifest.json",
+      "byte_length": 371890,
+      "sha256": "c822f4e0fc6eeb60cfbe276caa3131fa647d1820fcbea2cf1b5d5b3206dd79cc",
+      "git_blob_sha": "e5ad59091a837ec106c924613707dc758e3a3ab0"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/post-probe-readback.json",
+      "byte_length": 1201,
+      "sha256": "74be70b8b99638f3101cc6afb7ef7561695d9717ff1f629088bae4d35e77ad91",
+      "git_blob_sha": "3b15da7dd390b526439694e617dcfc636a9d91a7"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/probe-receipts.json",
+      "byte_length": 3643,
+      "sha256": "c134f4fc309346c80bcff5fba39f15d892236aad7ce3b72836c7a846daca255b",
+      "git_blob_sha": "39e3f9f3ed6fa3975e0ad8b2985e1dac44ad27f2"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/probes/large-source-r3.receipt.json",
+      "byte_length": 1552,
+      "sha256": "9988f0867f7330ac0f19f4f3ae9f178546219fcf1626d7c3aac1dd942113a539",
+      "git_blob_sha": "bc021d1320950cd8e807f40610f9cba90547f1e2"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/probes/large-source-r3.stderr.txt",
+      "byte_length": 742,
+      "sha256": "e766bb5e50010b41b35a6628d691ef819b07fc6041efdef1aae6ef3f9a0b2ee8",
+      "git_blob_sha": "5f203281c6d0556eb0dded99b7aeda0c0395f102"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/probes/large-source-r3.stdout.txt",
+      "byte_length": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/probes/members-observer-r3.receipt.json",
+      "byte_length": 1982,
+      "sha256": "203edf55f4794af9ccd5907d48647195ab5c1cd6795dce4290f898a77d10143a",
+      "git_blob_sha": "a2f4016def124d0f5f1f81a3d5418d77725054cc"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/probes/members-observer-r3.stderr.txt",
+      "byte_length": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/probes/members-observer-r3.stdout.txt",
+      "byte_length": 2940,
+      "sha256": "dc86029df950f2acd5d8b712797f42c59849f46b5d35c8934b51dcd8660171a5",
+      "git_blob_sha": "61daccfdbc3081c2f11a97f65e92ef53f861d3b7"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/readback.json",
+      "byte_length": 5191,
+      "sha256": "a019a890164f4aef6be997ef5266ea5c8da5d575c20ed3046f69a311d60eb26e",
+      "git_blob_sha": "8ccb5e607aa841d7bdd52c2376044856d247f6d8"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/response.md",
+      "byte_length": 5939,
+      "sha256": "b5e99b64f9f611b4ee47833ceaf8c31fa3efcc73deb5f657d06f47d6e339c6ee",
+      "git_blob_sha": "d309c838e445a5df34038d94976eec56ac3daa83"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/source-discovery.json",
+      "byte_length": 653137,
+      "sha256": "96028937101fb8b2caf261d60f8a90ad15c2584bf6032d361783fbfecf25c767",
+      "git_blob_sha": "91367d40e6fe9efdc4fe9108ca4d8194ec4b824d"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/status.json",
+      "byte_length": 7195,
+      "sha256": "0e359712df1bff7c5ab71ee367047207cd8f9cc16ee6cb7ef8c2940d64b9da83",
+      "git_blob_sha": "93a2b8ed3c0391febb5f7fa7221a1506569ff801"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/transport-check.json",
+      "byte_length": 90578,
+      "sha256": "6047069bc30520813be695d940a6290e58a669adc17b2790a05f257e307b4c26",
+      "git_blob_sha": "3282db482aaf7cb1b12e0bacff0ba5f4b77e4b68"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/archive-index.json",
+      "byte_length": 343840,
+      "sha256": "b7cc11f7d4f886851fa09d9f3eb3a50c9a2e8498b646769fcdc16d4e65a347f6",
+      "git_blob_sha": "2ece27a2e520c6924f0bb5c721900a3500575554"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/archive-readback.json",
+      "byte_length": 265,
+      "sha256": "5c98ab1418f9b091b4c77e1421cf22f8e7ba79fce2c0bba7e30c0b89ded5c478",
+      "git_blob_sha": "cda442652b0f9c870817a375507da304e3df0471"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/candidate-normalization-proof.json",
+      "byte_length": 2239,
+      "sha256": "329a5d44de79e1e7e450e754dcc093e37adc0d8f5a848fe43b478602ba1caad6",
+      "git_blob_sha": "50eb65dc1fd6de5cbf8307b9d5a1f68fddfeee05"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/candidate-trees.tar.xz.base64",
+      "byte_length": 969833,
+      "sha256": "eaba23a3d393384462a64c63fffd97437df4aa838af13667a2309cd3723bfabf",
+      "git_blob_sha": "85b50c982c9f2cf5c3f448dd08b0631abe38fb08"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/checkout-direction.txt",
+      "byte_length": 700,
+      "sha256": "082b6e7ff3ee7c5f79dc61202cd04949758174e54cab6f6b7b5207193c2b754d",
+      "git_blob_sha": "e9aec12ab30fcb544dd01584b625eb5e75f42a5e"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/commit-5e0807b5ff953508f792b8a965883985b05a7066.raw",
+      "byte_length": 1245,
+      "sha256": "99863f05e4d03b73b2f8b40e89ae6e3f0938fc9ce1e5f78440d821e9f0307b50",
+      "git_blob_sha": "0eae4ee83da8ca1d9e15b299eadac6ed2d3817eb"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/commit-8835faf6329cc3d5f5de1097872882d57472b793.raw",
+      "byte_length": 262,
+      "sha256": "5aeedb84b24995bb5e9b4cd3b6dfd6ea15dd236cf9c2a6acf9ab727c4978225c",
+      "git_blob_sha": "1f694559594e8acf87c3edfcde9b321d7c2d0dc9"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/commit-proof.json",
+      "byte_length": 1896,
+      "sha256": "c715ea6b70b08c66e7c66293a1b5219e62514bef31aadbdbd02f3940c8a55875",
+      "git_blob_sha": "feeafb8e9ec54e755fdbceccf7fc057bf8266f3f"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/commit-wire-proof.json",
+      "byte_length": 1561,
+      "sha256": "3e0392b0726ed12144350533e58c3677345f33e4ab3b04139c6b26c8bf5d4e1d",
+      "git_blob_sha": "a365c484e981ebf1bf7297299539a01a5f9f1bd2"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/git-command-receipts.json",
+      "byte_length": 15379,
+      "sha256": "9a162692b78ca8d700cd4bb69984b9dfdf9ba5652a534062f660946b9db0d7ce",
+      "git_blob_sha": "42fc66aa01cfe764bc9e6b18b35fb4bc71b23456"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/git-logs.tar.xz.base64",
+      "byte_length": 706457,
+      "sha256": "e0e2c98e2cf589698f01da9ebb0f7d571bf21fc76d689d860f00fba8690ee65d",
+      "git_blob_sha": "b880bdaf09a2a75840bf1d36d623b218ba879d37"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/guard-blob-captures/largest-zip-generic.json",
+      "byte_length": 520,
+      "sha256": "2d3b4ce096077dc2027b13143c905d74f5b4fe791bf9f20df88a6bca53bd0dd4",
+      "git_blob_sha": "b36ca890023444cb7291a3e03a77f5c091733014"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/guard-blobs.tar.xz.base64",
+      "byte_length": 143089,
+      "sha256": "41171012f9a6c898e4d045725fa9a9a50b494f66b07461d54e8a3fe965850708",
+      "git_blob_sha": "585d0390f2652ca4c2afca367981ee8563a90dce"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/guard-trees.tar.xz.base64",
+      "byte_length": 905761,
+      "sha256": "90108ad49deb01e4237b154f2e7b9dd41c0dc2d6c937c1757a9c2f7aa092ddd6",
+      "git_blob_sha": "0623413e13c89f95fac1ac13ea4988f56c05ab92"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/history-completion-update.txt",
+      "byte_length": 730,
+      "sha256": "a78c4b630117561cb01ff9ae97213e7c7b962f6973289a5f42cb5cbb5733597a",
+      "git_blob_sha": "ff4e394ba865d8d378c94a92bcd779270ba5eb83"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/history.tar.xz.base64",
+      "byte_length": 508089,
+      "sha256": "f61f89ea9ee04e800e3c5b28eb7d291e3395ea584b07a96df4c5ebff9661742c",
+      "git_blob_sha": "ad35b660b3b6b61efd23c25c8c7c26c19932f069"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/import-interruption.json",
+      "byte_length": 440,
+      "sha256": "f68e235f1e392366869ad3c48457b080511e9d303a9fdcaa213e51f18a0bb23f",
+      "git_blob_sha": "7ce2bbc1238570a300a69190457ed3989ba06c85"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/normalization-direction.txt",
+      "byte_length": 664,
+      "sha256": "c201704d162f7f28299355e78e251ab5817fcce139e03cad63391ad582b512fc",
+      "git_blob_sha": "c69512c988b433ebfd9dc153f5c4372f0e737ef7"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/probes/members-verified-checkout.receipt.json",
+      "byte_length": 1802,
+      "sha256": "e5f5d03fd4b7d030f7bd058cd0af0af49ac0721cc4e1596aa0197d800a821754",
+      "git_blob_sha": "636ba48456d0224825832ee68b61c26269978751"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/probes/members-verified-checkout.stderr.txt",
+      "byte_length": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/probes/members-verified-checkout.stdout.txt",
+      "byte_length": 4807,
+      "sha256": "13c80b0755f7a9c4896e089d82216950b0ac2e0d23b2568660464a7c1cf2742e",
+      "git_blob_sha": "7c34d70d92a47bd13680d5d3d83a8d9fada1b9ae"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/request.txt",
+      "byte_length": 1515,
+      "sha256": "7d521cf9b69f4c82885497cd5ca086148afa3247ff32d7e2fd3ec0d6323b4842",
+      "git_blob_sha": "a492fde6ec405000b7b54cb8dd56e0e02c93534e"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/response.md",
+      "byte_length": 6405,
+      "sha256": "62574040d5fa0ffd9f220a3047110b98b3bfd789d05460dac9e3a6c8e788b138",
+      "git_blob_sha": "f63d012d673dfd32a62d31da02d61c891c056c78"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/resume-request.txt",
+      "byte_length": 984,
+      "sha256": "412027b00d29e5077641a38f6260f818f275fca24c70aa1d5eaf00ee2f27ce86",
+      "git_blob_sha": "1748e13f5a6ce99230af4eae2dac86004c1c2c03"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/runtime-limit-direction.txt",
+      "byte_length": 387,
+      "sha256": "3614f37260bd3393241707b71a92d7f74de7488851b23bf1b0d5f5a98fb45782",
+      "git_blob_sha": "2f7d0340c396d0a1d42748bbdf72936ed7e97a2a"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/status.json",
+      "byte_length": 6075,
+      "sha256": "3ea9988248e9e38d90c715d4cd8e34d546f1a82ac39ec09d32a87ca5c1399aa6",
+      "git_blob_sha": "764f181019210c2dbebb6ef9067c2f35f37dc062"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/verified-checkout.json",
+      "byte_length": 144556,
+      "sha256": "6478924f0e226e72b732acc95f10e03a69cf0aa3ff73dc5c01821c65a0b86ecf",
+      "git_blob_sha": "036e79aab263de8217751fcb6d62a3f068122c21"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/zip-generic-fetch-direction.txt",
+      "byte_length": 489,
+      "sha256": "a9682572de6779a8638e928266216c00bdf9830788e31a5f6977f4a4c7fc0576",
+      "git_blob_sha": "5be4792ddc368485fb29a8e129b768bd1e74af19"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/recipes/l1-domains.json",
+      "byte_length": 9971,
+      "sha256": "ab341afdffdabdac1140fa557431d8f12f7896fb6ed42b4689703b6585a36c85",
+      "git_blob_sha": "7ce6481eefe9e13c5be0479cf5c9ddceff635493"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/recipes/l1-stream-correction.json",
+      "byte_length": 1006,
+      "sha256": "e3b24e24dd7e61e2d228fbea01f8ce32d57e3b829a4415872f5f66d96a5e4cd2",
+      "git_blob_sha": "83b9023ea71bd4ab9f5796f7cb011bf9134410bb"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/requests/07-l3-j2.txt",
+      "byte_length": 9667,
+      "sha256": "f312086e53318ee6b3b933b96e6db84c0bd45de031f43ffb0c52aeb191e0e8de",
+      "git_blob_sha": "16c5bc7f11bd92d23fd6e1aeae1cd68616e6cb5b"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/requests/07-l3.txt",
+      "byte_length": 10350,
+      "sha256": "6a3366fd2ae4091ffa22293b910d661b68ecfa27ed3b861cab7740437d488785",
+      "git_blob_sha": "463f2028f538f8c8423d6225747c7488ae7bb6eb"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/requests/07a-l3-delta.txt",
+      "byte_length": 3114,
+      "sha256": "da948be9d836670f150b0afbd6071de6480946908eefecb0ff59aff6c54fd4ed",
+      "git_blob_sha": "bce36b994b7896146f3f95ba367e98f4bfca8abc"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/requests/08-l4.txt",
+      "byte_length": 10480,
+      "sha256": "3b8d4b6990ad79d58842152c2ade163002df46d76d8804aea3ac7fea3bc76b06",
+      "git_blob_sha": "d44ee091613689944cf88c53b0cb2ae4a67c03e9"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/requests/10-archive-receipt.json",
+      "byte_length": 1993,
+      "sha256": "60f377f34017382b33ea483bae4951813210efda732c6e3987ebdf992b7eceab",
+      "git_blob_sha": "20faef788a69be5399b3238d5a01d85ed2ba8063"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/requests/10-l3-core-j1.txt",
+      "byte_length": 19632,
+      "sha256": "037e96b845d354b508f26c81b84e385960784d0a76017d611010d42bd82dabfd",
+      "git_blob_sha": "f84a7d23b2ad3efca3d8bb97a24d68d23fb01434"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/requests/10-l3-core-j2.txt",
+      "byte_length": 19632,
+      "sha256": "4ad513928590adb7c5b27c5e48c6b8d451e616dafa4bba37c049a7a9ba09e54e",
+      "git_blob_sha": "c1fa3827bb388cae2153d1e67f5e56ac1edd593e"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/requests/11-archive-receipt.json",
+      "byte_length": 953,
+      "sha256": "563ec0b71465b30d5660da4d7cebea698bcfdff4e0eb07b7295d75f025969dc0",
+      "git_blob_sha": "d83e027c02d0b3d00105857fb6c1c8ab6c275be0"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/requests/11-l4-core.txt",
+      "byte_length": 10904,
+      "sha256": "ded0e6b26bcc334ddd2224a866edb34eba411e7faaa03df55c6ad6a999e254fb",
+      "git_blob_sha": "4946b3ba16bfc03e82f35c6143eb32e549dabd0a"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/requests/11a-archive-receipt.json",
+      "byte_length": 2332,
+      "sha256": "ae0d6a576249173d0e7045e9c94efcb8fde197e8778d8d6c0a1adec46e77ebaa",
+      "git_blob_sha": "720e9759080d0c95ebaa8d0e48b643e0d6449a3e"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/requests/11a-l4-canonical-j1.txt",
+      "byte_length": 12380,
+      "sha256": "bb594978dbde73eb764df89d78c53ea4396e9e100dcc45530aeeaf9da02938a8",
+      "git_blob_sha": "b62d89711a46c512424d029fff90d7f8f03460bc"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/requests/11a-l4-canonical-j2.txt",
+      "byte_length": 12379,
+      "sha256": "047a5ec7d5cbc48f4196e8c5092193c0ec6a9944d1e8986dde6a5e03d6acdcc9",
+      "git_blob_sha": "9741125e249a34d0aacb4582eea29655f4b534fa"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/requests/11a-l4-j2-transcription-erratum.txt",
+      "byte_length": 724,
+      "sha256": "c4f409480840289472caa41d2e7642a4a3b31a54f726097e3150087ff67be3ba",
+      "git_blob_sha": "27e4f7b36196ce162a50daa72bd4ab8a8c593242"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/requests/12-archive-receipt.json",
+      "byte_length": 13025,
+      "sha256": "414be5ba82b42850c6c107242e24fe35564f140045de354eba8d89447b3a8d5b",
+      "git_blob_sha": "cfc6922e50b0a7feffcb4bb836a94a303e866f6e"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/requests/12-final-j1.txt",
+      "byte_length": 27781,
+      "sha256": "d5004ef0abf5251077e6917c27d46a778394fd388b22ccedc728239838cdca20",
+      "git_blob_sha": "8e47d80176daaf16a0b1451214879d47a17c5261"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/requests/12-final-j2.txt",
+      "byte_length": 27781,
+      "sha256": "d5004ef0abf5251077e6917c27d46a778394fd388b22ccedc728239838cdca20",
+      "git_blob_sha": "8e47d80176daaf16a0b1451214879d47a17c5261"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/requests/producer-l1.txt",
+      "byte_length": 14463,
+      "sha256": "57ed601ceb85b4a048abf005184e4a0b172203a87be12cf99d53b48b7289ce45",
+      "git_blob_sha": "85e0f9f3f802d9dcd80477b78d63794654a43e56"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/requests/runtime-scout-followup.txt",
+      "byte_length": 575,
+      "sha256": "93c076042c37b11d303b0193c7f1532353daee223372084349dbbdff484de8d1",
+      "git_blob_sha": "88df6cbb2d02d1d86c2b5bed92e194ed506e8fa1"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/requests/runtime-scout.txt",
+      "byte_length": 1672,
+      "sha256": "0242d1f0d11a5804bd5525646a537f24c29415137639732ce9c3000be8359209",
+      "git_blob_sha": "12b7fdfc6ffd06fd14733e4bedd16a61e6596a07"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b-l1-v3/bodies/boundaries.md",
+      "byte_length": 4634,
+      "sha256": "f6b230ed8578b6bd9fdb1e4eaca26892df9355a58fc1f5e2e6a157bffabf7310",
+      "git_blob_sha": "dee4164e1681aa5f6f1a185ecf6b2b7c4eaae030"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b-l1-v3/bodies/client-projection.md",
+      "byte_length": 5193,
+      "sha256": "089304921b004984de3b15b75af18fea3c7ebf15191f3874e9f668066569d478",
+      "git_blob_sha": "07576b1077c203d689684ad0e5b9927204b1e623"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b-l1-v3/bodies/codegen.md",
+      "byte_length": 4752,
+      "sha256": "2ec55afad54a871de673a252b6b7c604a8ecdb648cc1df9c80128d83a3f8e270",
+      "git_blob_sha": "b88989e670070ff151107ed9b9b3bf9d8e739240"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b-l1-v3/bodies/schema-contracts.md",
+      "byte_length": 5188,
+      "sha256": "c6ebd6124d89092e859aaa6a6a07c2a6fca5e2cdc82a62254b701b2de60266b2",
+      "git_blob_sha": "fed24979c1906c753754b22c3b528631849e3cab"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b-l1-v3/bodies/sdk-composition.md",
+      "byte_length": 3478,
+      "sha256": "a2cb2fc21fc1a771d81cd83e75dfe8b07c82c1712b15396ff4e40774f861d4d3",
+      "git_blob_sha": "85195fb178208da9141b789f66a955499163c91e"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b-l1-v3/bodies/server-edge.md",
+      "byte_length": 5596,
+      "sha256": "711c744e089e59a11ee0b56ba4ec495277993dc7a58e351c8e2af4dc557ce404",
+      "git_blob_sha": "9af2aa541e523dd1809b00907839dcf8b287df78"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b-l1-v3/bodies/session-contract.md",
+      "byte_length": 5155,
+      "sha256": "22b526a2423572f2bbc17f3bfccd2eb0ea8f7fb16f2215bb0904f1cc5c2125bc",
+      "git_blob_sha": "6b5bb4b3358f67d773e29be7c6f5e74ddb920f1d"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b-l1-v3/bodies/stream-contract.md",
+      "byte_length": 3824,
+      "sha256": "d1f68eb106131ba1efd61c4157b91826a25b176ab87ff74defc140ef9f4d67d8",
+      "git_blob_sha": "97c5b7e3b109d8a252c29650578a3829688651df"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b-l1-v3/bodies/surface-disposition.md",
+      "byte_length": 6726,
+      "sha256": "595e0d404064429a953b276141f5601a1bbecceb30242a9914132ebdd26ed5c0",
+      "git_blob_sha": "5e1c8add7724e525f4ae118beb905b3f96f5ec24"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b-l1-v3/body-diffs.md",
+      "byte_length": 14173,
+      "sha256": "b4a46c91af59e6ee51fc9bafcb8e8dc5a00117d7c7d8db09e6fe914313d84bbf",
+      "git_blob_sha": "90115619c450aa1d5433c6438f1fdf1ba72b1548"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b-l1-v3/body-identities.json",
+      "byte_length": 6680,
+      "sha256": "cc8093683c006779959ff4ac15c9d5decc4f219431b32ef0313b5ab27706220d",
+      "git_blob_sha": "0c55b52c07ff3a269b6626641c6d90d9994cb532"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b-l1-v3/conditional-needs.json",
+      "byte_length": 81780,
+      "sha256": "2cf85ff08aa787dd6567345901416e40e70633380de9c0c5dde633e0824bab90",
+      "git_blob_sha": "80907a2f69a174cbf4ee780e9a338b3d5d3c66c6"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b-l1-v3/findings-resolution.md",
+      "byte_length": 3341,
+      "sha256": "75ca2039e7bcdbf29c332bb012683fb79a805abb215da67879afcbedb00ebe74",
+      "git_blob_sha": "dbbabb9dcc91be0fb4afb6fdc5e7b2210d20b7a0"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b-l1-v3/review-domain-disposition.md",
+      "byte_length": 65726,
+      "sha256": "95b17106dc5c26bb6d39c8d2d80b48fca8f75d35fe4f5f8ec3f232c7d71411c3",
+      "git_blob_sha": "b25b8d836a3ccc00e7a2f0dbbc8067395fdf7753"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b-l1-v3/review-entry.md",
+      "byte_length": 1580,
+      "sha256": "59319cacccd4ba4fd646c5d3e66fac278475c53a5a65b9937344c04b45e63d82",
+      "git_blob_sha": "dbf93d1e537753c622aba5c84dd31818441dab53"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/domains-exact.json",
+      "byte_length": 54390,
+      "sha256": "b8cb3d97074b0f1f206d8ec9cc425579a65e76dd61eed86711f2f64db3cb0a46",
+      "git_blob_sha": "35f595e11d51f3070fd741525f235adb439bbb89"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/dossier-D01-D06.md",
+      "byte_length": 20209,
+      "sha256": "1cb46330d1e609d3d4787a63222aa755cb34006e9d0c4a989b2c98df53d8784a",
+      "git_blob_sha": "4f4d3c7fadce5d0708c75714464db811c3507d63"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/dossier-D07-D12.md",
+      "byte_length": 27029,
+      "sha256": "6acdb00cc472af94bbc73dcfdc762b36d5665fae281728f5021235b13db3d606",
+      "git_blob_sha": "2b5da4b1ec2705f3f71f64a4ff5a638ed0c710d9"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/dossier-D13-D18.md",
+      "byte_length": 25540,
+      "sha256": "9c3e810e8156c4c64e2ac6c12caaec9596a27c0bd4e7eec6007c43af0e279135",
+      "git_blob_sha": "ed363c66ffc5abceb3714d68db8512afc90d95b2"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/dossier-D19-D24.md",
+      "byte_length": 18988,
+      "sha256": "2bb7b4fc72607936825f9afd1b40d7d9c3c30a9f77951b4a996fcc5d66691954",
+      "git_blob_sha": "8a7ce7cff8cfae1f81a62bcf974908b0b93363cb"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/manifest.json",
+      "byte_length": 2958,
+      "sha256": "e07afdcc8805ffee319a30174345aa6f4d8698fa25901603c773fc702f8647f4",
+      "git_blob_sha": "b8c1f47e2a86fa2226006a96928a16670622f9e3"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/membership-exact.json",
+      "byte_length": 14533,
+      "sha256": "791154a9f043b43a2ab6a08a415c1af7d45a80746f34b2a67d4c55582af9f4ff",
+      "git_blob_sha": "19cfc9fa47d426a7bcab3a2a3497d9882cde71b1"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/selected-evidence.json",
+      "byte_length": 203006,
+      "sha256": "9fa72ec5e4445fdb17663d080f7957b31dc0229dc407dd0341b672ee075ce598",
+      "git_blob_sha": "b1f93477f79aa5c74352f9a0fea36442ddbbb0ed"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/v1/dossier-D01-D06.md",
+      "byte_length": 20209,
+      "sha256": "1cb46330d1e609d3d4787a63222aa755cb34006e9d0c4a989b2c98df53d8784a",
+      "git_blob_sha": "4f4d3c7fadce5d0708c75714464db811c3507d63"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/v1/dossier-D07-D12.md",
+      "byte_length": 27029,
+      "sha256": "6acdb00cc472af94bbc73dcfdc762b36d5665fae281728f5021235b13db3d606",
+      "git_blob_sha": "2b5da4b1ec2705f3f71f64a4ff5a638ed0c710d9"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/v1/dossier-D13-D18.md",
+      "byte_length": 25540,
+      "sha256": "9c3e810e8156c4c64e2ac6c12caaec9596a27c0bd4e7eec6007c43af0e279135",
+      "git_blob_sha": "ed363c66ffc5abceb3714d68db8512afc90d95b2"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/v1/dossier-D19-D24.md",
+      "byte_length": 18988,
+      "sha256": "2bb7b4fc72607936825f9afd1b40d7d9c3c30a9f77951b4a996fcc5d66691954",
+      "git_blob_sha": "8a7ce7cff8cfae1f81a62bcf974908b0b93363cb"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/v2/dossier-D01-D06.md",
+      "byte_length": 31892,
+      "sha256": "b31b058452a3f0162589eb543f8163a31c3ad7646268d1fde832e81062b0ae5a",
+      "git_blob_sha": "c66ece0a06208a437ddd21ecf2854a684ee17daf"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/v2/dossier-D07-D12.md",
+      "byte_length": 34510,
+      "sha256": "68ce7d7715261164b4c112982e3b7ff9e7e9219634138840878371257c47ed40",
+      "git_blob_sha": "45dcbb8a8b5ee6057d04382fe4a3143df2f89d29"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/v2/dossier-D13-D18.md",
+      "byte_length": 31716,
+      "sha256": "810cf8383f3370f11d6b03172184c19a30aaf459d2ad17de32910a3a59a8ac83",
+      "git_blob_sha": "8416a877cef2d017b4768e6074d2f8d580697a72"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/v2/dossier-D19-D24.md",
+      "byte_length": 23269,
+      "sha256": "92cca9bd11bc19a86b8fee963053cd927db86a170eb4a420d9bb52fdf213f209",
+      "git_blob_sha": "218092f30698a94ac626f3468b3074050a6c7884"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/v2/manifest.json",
+      "byte_length": 3830,
+      "sha256": "73a850078417fc3cc5e7f1217ce488feaea260bf35c37a08a2c31f7f13ec2acf",
+      "git_blob_sha": "353914850d0b5e3c58be2f8b74730f251a44a323"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/v2/verification.json",
+      "byte_length": 7986,
+      "sha256": "3fa766977c73030c9e28d1a7e16d557770ea10d4282b161c7f8a1eeff45ec372",
+      "git_blob_sha": "1e0d0c9a64896bad05df7a4bbabde42d4dec23ac"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/verification.json",
+      "byte_length": 1824,
+      "sha256": "131120fb7ea77ac92a3aea3bd05cc073e5195b4d43a1de8936cce645af5e4d10",
+      "git_blob_sha": "bc301cbbba5f55c1f8ae8e8e3c3b61369426c739"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/initial-registration/work.md",
+      "byte_length": 3841,
+      "sha256": "3d92833403bcdaa66c89359bb5992741c5933b309f53e5e18e3ed23f5d087e50",
+      "git_blob_sha": "18bec49781194e58b6852fb30de9a281666d02e6"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/bodies/stream-contract.md",
+      "byte_length": 3883,
+      "sha256": "8aac12750cd96c30f9bee287bdab2fdbb61ca67903b604aa8a0c1809e7c4bdfa",
+      "git_blob_sha": "1d168c90f79dfce626a341b8c0b089fbfd9659e6"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/d12-union-evidence.json",
+      "byte_length": 6733,
+      "sha256": "1362566f4f166f5494f8d0a5d12e416ea5ebaaed03cb65eaacc270fe5c825253",
+      "git_blob_sha": "27ac2724d8489bad44314d721c2d213fe8e56b5b"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/delta-D06/before/domain-disposition.diff",
+      "byte_length": 96763,
+      "sha256": "3b068ab551d589eaa16a8c81f7dc305bf9437e8eca514bd96db004c2a49a6055",
+      "git_blob_sha": "88b067de99bf7659e4dccd42fd3a3d9982b7627c"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/delta-D06/before/domain-disposition.md",
+      "byte_length": 38062,
+      "sha256": "36339a1329421f80d15e37b40ce26edd6e1c793a0ac1b5056471e4df2bfed57c",
+      "git_blob_sha": "5d15c4a3f0616b1a8fabce4f0c9cacf184591407"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/delta-D06/before/domains-v4.json",
+      "byte_length": 53330,
+      "sha256": "bb5b347d985ddac2a34c1210111eac15181f4269a87d86011cd9e1f1922086b4",
+      "git_blob_sha": "1d818b60ccdc8b920f7b2e25b63f2f9dda45bad7"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/delta-D06/before/dossier-D01-D06-v4.md",
+      "byte_length": 12454,
+      "sha256": "e98967118c9da0a74dc4fc8a89bd7a5462e68b22c3a6f4f34da2ae4c3729c746",
+      "git_blob_sha": "909325a5ce96927974dd09edff09c886d1f98abb"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/delta-D06/before/manifest.json",
+      "byte_length": 3672,
+      "sha256": "7258cdd82d613b9fc8e11a2e51032d33fd0778e64e26a4edacd21092843ef931",
+      "git_blob_sha": "26f4ed773164a323f46c37c5d0d534be164f76a0"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/delta-D06/before/review-manifest.json",
+      "byte_length": 1279,
+      "sha256": "cba9dcda7e2d475b1c5074b3669e7b74bbb28234574de3424e7164a739b7ea41",
+      "git_blob_sha": "db049108f6bea88d76dddcb6dfd0cf72ddb7c642"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/delta-D06/before/verification.json",
+      "byte_length": 826,
+      "sha256": "331fd930c59509c8afb2fa029b9a337457c72885bf322b4aea59235dc7a944cd",
+      "git_blob_sha": "0f34bbe8a9402ab857a3cca9435421972d01a0c8"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/delta-D06/body.diff",
+      "byte_length": 1043,
+      "sha256": "72f822096ca617b0b44f40b4e38de7fc3827096b71c8cd430ebf21f3409b5ca7",
+      "git_blob_sha": "cc5d5847dd2f6d5283bc1cbc17b66333bd644f29"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/delta-D06/dossier.diff",
+      "byte_length": 2405,
+      "sha256": "6cf2692d0a6bdd5407b847e77002e87c5b84fd742a792c218efef70af31adea9",
+      "git_blob_sha": "6f88f26b9163684a7b01aa1bda142e03c15ae08e"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/delta-D06/manifest.json",
+      "byte_length": 3763,
+      "sha256": "ec224ed5fde39d17defdefff83e1f192b3f17573b3c5650102e01c8b7153f6ef",
+      "git_blob_sha": "89efc200a37c2889f1999664b5c1156d2ec6a70d"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/delta-D06/request.txt",
+      "byte_length": 720,
+      "sha256": "25789f6875986c02ebe97ede71da04318e15aadc91646fdcba33e57f9b0c6c58",
+      "git_blob_sha": "8251312ef0d771b069f738c4e64eaa7d5704d80e"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/delta-D06/response.md",
+      "byte_length": 2019,
+      "sha256": "a21ff0e6d81429128a2e333d11f668b4cd39bc778831ac074519b6ceff540c1f",
+      "git_blob_sha": "4cd06d01309f5566871960fb52598ad641f4595f"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/domain-disposition.diff",
+      "byte_length": 97088,
+      "sha256": "9686eb1d6067b26f1cc411a34f835b092e7791e80c0128b74364e27e2dc1c783",
+      "git_blob_sha": "e899ebcfb54efaf87f495a09f4a323144391b976"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/domain-disposition.md",
+      "byte_length": 38080,
+      "sha256": "12248d1cc39a27b1655f1a683f02cd1af864f87945300a86b0ee4326227a4edd",
+      "git_blob_sha": "290144df01268d5cadd6e2d73fb5c2c28b359b01"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/domains-v4.json",
+      "byte_length": 53348,
+      "sha256": "d6a53a3e50e86614a67dfa6a43d4b70fc9d563a97881b884b1c91d829416ae62",
+      "git_blob_sha": "4fe7d151a4c4e796cb7eebdf4385811713b9b4e6"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/dossier-D01-D06-v4.md",
+      "byte_length": 12472,
+      "sha256": "183649bb5e918a6b5f38b4c516e64bd5566e4b7f5ed64497d5928171dd3342b1",
+      "git_blob_sha": "d3150e86cb9ef0b5c8a4ec790fe2a2e60177093b"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/dossier-D07-D12-v4.md",
+      "byte_length": 15736,
+      "sha256": "7f7406a6c749c237b7d28071f37a6229a1b06d98b913cec0b0f186736b6fe206",
+      "git_blob_sha": "6dfc5206878c85b7bab7cadb60d72c67128cea26"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/dossier-D13-D18-v4.md",
+      "byte_length": 33794,
+      "sha256": "fb2dd55acba3dd59decadbc2e575e253bee6e95052d8f76ce79b2fe3b9743dac",
+      "git_blob_sha": "4f2872a1bceb7f3e958f4f84d04b1778a482cda3"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/dossier-D19-D24-v4.md",
+      "byte_length": 25735,
+      "sha256": "3a8c595f42b86ff616dd4092803584edc4892d60a9c9dc8316073d5e03615045",
+      "git_blob_sha": "6759c12f67638a238d0b819601e033ce18b262bf"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/manifest.json",
+      "byte_length": 6473,
+      "sha256": "a5eefb81ada94fd6461392e613043d9bcab154f5cc4e2a3a8136f392268d4dd6",
+      "git_blob_sha": "705a23e8e74a410d2f1ce7c84782c22ddc199cfd"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/original-review-domain-disposition.md",
+      "byte_length": 65726,
+      "sha256": "95b17106dc5c26bb6d39c8d2d80b48fca8f75d35fe4f5f8ec3f232c7d71411c3",
+      "git_blob_sha": "b25b8d836a3ccc00e7a2f0dbbc8067395fdf7753"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/response.md",
+      "byte_length": 4275,
+      "sha256": "aa3e872fb8a23ea2690131d260faa4ffad7e0eb3876734ad7e57f72d1fdbbf89",
+      "git_blob_sha": "e958d3a686f12cdfe701558e2f682653e1514bca"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/retired-row-claims.json",
+      "byte_length": 222382,
+      "sha256": "65d5cb6d8668d7cd9b43041a867dbffcec4d07ee3e0543c91805bf0e696c7901",
+      "git_blob_sha": "ebfe9417d503814ccda68e0ca33b9cf164362d71"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/review-manifest.json",
+      "byte_length": 2233,
+      "sha256": "77ad31361a41141138d6eab6700a306527b01dcff9fdc5a4e42baf3e877a4bc0",
+      "git_blob_sha": "66ec3103d9bbd28a18e11e40e1598e5de4a556e2"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/round-4b/manifest.json",
+      "byte_length": 1945,
+      "sha256": "a545838f1de565430e00f977c7870170df617bedf1f3c66ed4c823a3a280030a",
+      "git_blob_sha": "7e94cde0797dbf4efd47a9902faa25c166509648"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/round-4b/request.txt",
+      "byte_length": 783,
+      "sha256": "0891dce311c904926b10ea2e834908f3a3de056d75d152fa85c270edd4dea507",
+      "git_blob_sha": "f453c8e10368d215ea4302bc753b3b36edbba5e1"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/round-4b/response.md",
+      "byte_length": 1764,
+      "sha256": "a541a0c5d8daa409b3fcd32b412dedc6e1b5b09d4941ea92ae28f32b2c1af2be",
+      "git_blob_sha": "758b46fe79ee289a2517493ffcd072ec7393cd9c"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/supplement-D09-identities.json",
+      "byte_length": 1426,
+      "sha256": "ac39851a8a6d21a91cd94504348e355b35275aa79e50faf1927b33957412ce43",
+      "git_blob_sha": "53f7da93b9fe224cbe80f8a40ee65f72dc9fb0e8"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/supplement-D09-mcp-catches.md",
+      "byte_length": 1971,
+      "sha256": "282a547c7ebcc18ec8fb1c0987f47813725bea695a9ddc010673bfa40feddfb6",
+      "git_blob_sha": "5a0c7333edb70d6b4886cecc7ec7ba07ca222776"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/supplement-D15-D18-identities.json",
+      "byte_length": 2630,
+      "sha256": "aba27a144a08a9fff82c3a6fd59e10c96b112f15f4cacd07696805422ebbab74",
+      "git_blob_sha": "a7a2c8c1021805e58fcfb25ad10fc7fd7912045b"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/supplement-D15-D18.md",
+      "byte_length": 7038,
+      "sha256": "73b95a7db8d2c61b2f62656eec02e6b19d6cf68b349840d46cced64cacdf61fd",
+      "git_blob_sha": "3c342a20ab077aa3b236491521a945f5293e7b6a"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/verification.json",
+      "byte_length": 1264,
+      "sha256": "c69f6d715754fe1bc49341fe90ff3d49132f81511fad86e062b038f72ccffa83",
+      "git_blob_sha": "838d5dfec861ed00750baa0f9f22b1f6c14e0bd1"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/producer-response-provenance.json",
+      "byte_length": 764,
+      "sha256": "85e6828f04933edad0424eacd183d06aa76381ea5b26b5310e458d06c4aada63",
+      "git_blob_sha": "8f9e2b6f4fded311a3dbd443c4f670e892030952"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/producer-response.md",
+      "byte_length": 12310,
+      "sha256": "e445866baf08d7ed7cabed6638b8cdb0001e9c5cb86ea26fff9e8e000685e5bb",
+      "git_blob_sha": "fc5381f4e4f9a04f0aa8246b1f815e04b1ff688f"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/stream-contract-identities.json",
+      "byte_length": 1593,
+      "sha256": "ece7161fbd422ed9c8467ed65f962ff914a8e1e99d016e586c53ac70e024737e",
+      "git_blob_sha": "a1806bbbfd75372154b410ce2352ddfe8271cc79"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/stream-contract.diff",
+      "byte_length": 1786,
+      "sha256": "fd8bd5a6f2fe60cf9204a0e80aea6b86bf98ba80a3697f9af72b089a8a306f8e",
+      "git_blob_sha": "3eb00870c21e2b6804bb0c6e0e7eac6ec2e08ada"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/pre-core-integration/README.md",
+      "byte_length": 502,
+      "sha256": "57614ee3dba71592d633f1ad38ea9f3361be566f4df3f0afd03897cf03ace9c5",
+      "git_blob_sha": "38aa0622dc7e8aa30ab9789a103fcb16233753a8"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/pre-core-integration/body-locators.json",
+      "byte_length": 4132,
+      "sha256": "16705b5cd9b533b3a714cb35e4450e90634e4e25aaed9ce7bbe25ffd56bc755f",
+      "git_blob_sha": "cd97a9f812904c9b50b0e6b269758c956eb04a8b"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/pre-core-integration/native-package.json",
+      "byte_length": 362544,
+      "sha256": "a2e102dde18500962c8dc79bdbeeabd9afa7b21bc4bc0745baf3e16635ea3132",
+      "git_blob_sha": "7de475e0e6f1270fe682dc0a5ba8bac7bc3ec578"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/pre-core-integration/transport-check.json",
+      "byte_length": 5045,
+      "sha256": "750321e2e97434dfd5f9885a62e650f78ecbe7fe0a37cd78ae0497e223a9c673",
+      "git_blob_sha": "9515156110b8616ac1fe90bbb1cafc6439ee9b78"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/pre-core-integration/transport-provenance.json",
+      "byte_length": 298954,
+      "sha256": "d6a04ec84fa228625bc6e770826717d0822dcc692997571d8e9496f8f2822672",
+      "git_blob_sha": "956d360766e0ec93cfca4c0748cce29af2a84bd7"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/reuse-originals/l1-b-v2-dossier.md",
+      "byte_length": 208309,
+      "sha256": "42c2595c2e243b3612a13b7ed615c5bfbeb731706f760119c1f7fd6719541def",
+      "git_blob_sha": "29713d4989f3ff717cb6529c62c7ab4b74d2fc6b"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/reuse-originals/l1-b-v2-j1.md",
+      "byte_length": 11163,
+      "sha256": "223f6b965dc8f1e5ed3600805275f0ca7d8c4cea0bb14aff10bdc857d3219f02",
+      "git_blob_sha": "92df7b2cc4d9aef82b097528b27a145589ba2b17"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/reuse-originals/l1-b-v2-j2.md",
+      "byte_length": 7143,
+      "sha256": "0ad7a34608713c5e40c9f7ecf023ecbc36d6e9e320925d4b67d448f23f034cf4",
+      "git_blob_sha": "d431940609ba87466acf6218e9bc51a72213ba08"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/source-disposition.jsonl",
+      "byte_length": 184561,
+      "sha256": "6b20973fadbacb9033a760d441af7502da8ec828484e11d9423136d8080a53d5",
+      "git_blob_sha": "490c0999e5768a89e071667ea9a3add93c83cb29"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/transport-provenance.json",
+      "byte_length": 353187,
+      "sha256": "c13e8603502d968d347bdf277a885e76cd01d48f7a51d78191a701bb0d9c42da",
+      "git_blob_sha": "4875ad8a7fdc1ce29ba833f4121c9995e1f63f4b"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/work.md",
+      "byte_length": 8788,
+      "sha256": "adc735ee9e7fb04fdc90c2d55646abe1e5e86ad7d124cc0511b04d4a455f1daa",
+      "git_blob_sha": "2ee8a5d461c411150527bce85e8b0b31a584fb46"
+    }
+  ],
+  "file_count": 403,
+  "byte_count": 13331345,
+  "excluded": [
+    "This manifest itself; no self-hash.",
+    "handoff.json; belongs to child seal H and points to this payload P."
+  ]
+}

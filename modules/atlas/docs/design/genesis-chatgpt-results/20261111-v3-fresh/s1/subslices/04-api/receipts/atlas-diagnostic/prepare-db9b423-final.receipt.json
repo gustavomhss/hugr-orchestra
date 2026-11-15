@@ -1,0 +1,46 @@
+{
+  "schema": "s1-04-original-native-cli-operation/v1",
+  "operation": "prepare",
+  "tag": "prepare-db9b423-final",
+  "started_at_utc": "2026-11-15T00:47:30.262318+00:00",
+  "ended_at_utc": "2026-11-15T00:47:33.422259+00:00",
+  "command_argv": [
+    "/workspace/scratch/8833f71e3e94/s1-04-94f1e157-8c44-4e6e-a4af-7690a8845ecf/runtime-tools/node_modules/.bin/bun",
+    "scripts/genesis-native.ts",
+    "prepare",
+    "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/diagnostic-source-root",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/native-package.json",
+    "/workspace/scratch/8833f71e3e94/s1-04-94f1e157-8c44-4e6e-a4af-7690a8845ecf/runtime-attempts/prepare-db9b423-final-candidate.json"
+  ],
+  "cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-db9b423-diagnostic/modules/atlas",
+  "isolated_root": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/diagnostic-source-root",
+  "observed_head": "8835faf6329cc3d5f5de1097872882d57472b793",
+  "runtime_release": "UNPROMOTED_SOURCE_DIAGNOSTIC_ONLY",
+  "runtime_code_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "exit_code": 0,
+  "original_cli": true,
+  "runtime_code_modified": false,
+  "seams_used": false,
+  "policy_or_actor_created": false,
+  "stdout": {
+    "path": "receipts/atlas-diagnostic/prepare-db9b423-final.stdout.txt",
+    "byte_length": 222201,
+    "sha256": "76e86d03a3e2fb256e2e117ef2e0cd45cf0e11b98ed2e2b5545247009e385df8"
+  },
+  "stderr": {
+    "path": "receipts/atlas-diagnostic/prepare-db9b423-final.stderr.txt",
+    "byte_length": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "package": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/native-package.json",
+    "byte_length": 389819,
+    "sha256": "71bc1102fd5e2c6be166b2df790e8ee8fe4ecd053ab2d7fed5bbc46130349442"
+  },
+  "candidate_file": {
+    "path": "/workspace/scratch/8833f71e3e94/s1-04-94f1e157-8c44-4e6e-a4af-7690a8845ecf/runtime-attempts/prepare-db9b423-final-candidate.json",
+    "exists": true,
+    "byte_length": 292042,
+    "sha256": "be267a8e2db79343731eba856d84ff914f1d43f8849b0072f05b1d0bbff794a6"
+  }
+}

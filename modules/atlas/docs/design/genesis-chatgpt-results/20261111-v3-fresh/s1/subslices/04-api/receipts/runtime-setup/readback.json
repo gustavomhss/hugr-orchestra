@@ -1,0 +1,161 @@
+{
+  "schema": "s1-04-r3-setup-readback/v1",
+  "measured_utc": "2026-11-14T22:58:45.161502+00:00",
+  "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "identity": "materialized, not git checkout",
+  "code_root": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-r3",
+  "atlas_cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-r3/modules/atlas",
+  "original_files_checked": 1037,
+  "original_files_changed": [],
+  "git_directory_present": false,
+  "observed_head": null,
+  "observed_head_receipt": "commands/git-head-observation.receipt.json",
+  "installed_versions": [
+    {
+      "package": "typescript",
+      "installed": "5.9.3",
+      "locked": "5.9.3",
+      "matches": true
+    },
+    {
+      "package": "@noble/hashes",
+      "installed": "1.8.0",
+      "locked": "1.8.0",
+      "matches": true
+    },
+    {
+      "package": "@bufbuild/protobuf",
+      "installed": "2.12.1",
+      "locked": "2.12.1",
+      "matches": true
+    },
+    {
+      "package": "@types/node",
+      "installed": "26.1.1",
+      "locked": "26.1.1",
+      "matches": true
+    },
+    {
+      "package": "vitest",
+      "installed": "4.1.12",
+      "locked": "4.1.12",
+      "matches": true
+    },
+    {
+      "package": "fast-check",
+      "installed": "3.23.2",
+      "locked": "3.23.2",
+      "matches": true
+    },
+    {
+      "package": "@c4312/scip",
+      "installed": "0.1.0",
+      "locked": "0.1.0",
+      "matches": true
+    },
+    {
+      "package": "tree-sitter-typescript",
+      "installed": "0.23.2",
+      "locked": "0.23.2",
+      "matches": true
+    },
+    {
+      "package": "web-tree-sitter",
+      "installed": "0.23.2",
+      "locked": "0.23.2",
+      "matches": true
+    },
+    {
+      "package": "@modelcontextprotocol/sdk",
+      "installed": "1.32.0",
+      "locked": "1.32.0",
+      "matches": true
+    }
+  ],
+  "workspace_exports": [
+    {
+      "package": "@atlas/adapter-io",
+      "main": "./dist/src/index.js",
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-r3/modules/atlas/packages/adapter-io/dist/src/index.js",
+      "exists": true
+    },
+    {
+      "package": "@atlas/cli",
+      "main": "./dist/src/index.js",
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-r3/modules/atlas/packages/cli/dist/src/index.js",
+      "exists": true
+    },
+    {
+      "package": "@atlas/contracts",
+      "main": "./dist/index.js",
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-r3/modules/atlas/packages/contracts/dist/index.js",
+      "exists": true
+    },
+    {
+      "package": "@atlas/genesis",
+      "main": "./dist/src/index.js",
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-r3/modules/atlas/packages/genesis/dist/src/index.js",
+      "exists": true
+    },
+    {
+      "package": "@atlas/grounding",
+      "main": "./dist/src/index.js",
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-r3/modules/atlas/packages/grounding/dist/src/index.js",
+      "exists": true
+    },
+    {
+      "package": "@atlas/index",
+      "main": "./dist/src/index.js",
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-r3/modules/atlas/packages/index/dist/src/index.js",
+      "exists": true
+    },
+    {
+      "package": "@atlas/kernel",
+      "main": "./dist/src/index.js",
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-r3/modules/atlas/packages/kernel/dist/src/index.js",
+      "exists": true
+    },
+    {
+      "package": "@atlas/knowledge",
+      "main": "./dist/src/index.js",
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-r3/modules/atlas/packages/knowledge/dist/src/index.js",
+      "exists": true
+    },
+    {
+      "package": "@atlas/mcp-server",
+      "main": "./dist/src/index.js",
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-r3/modules/atlas/packages/mcp-server/dist/src/index.js",
+      "exists": true
+    },
+    {
+      "package": "@atlas/memory",
+      "main": "./dist/src/index.js",
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-r3/modules/atlas/packages/memory/dist/src/index.js",
+      "exists": true
+    },
+    {
+      "package": "@atlas/persist",
+      "main": "./dist/src/index.js",
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-r3/modules/atlas/packages/persist/dist/src/index.js",
+      "exists": true
+    },
+    {
+      "package": "@atlas/retrieval",
+      "main": "./dist/src/index.js",
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-r3/modules/atlas/packages/retrieval/dist/src/index.js",
+      "exists": true
+    },
+    {
+      "package": "@atlas/tools",
+      "main": "./dist/src/index.js",
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-r3/modules/atlas/packages/tools/dist/src/index.js",
+      "exists": true
+    }
+  ],
+  "declared_exports_present": true,
+  "product_tests_executed": false,
+  "atlas_operations_executed": false,
+  "policy_created": false,
+  "bindings_created": false,
+  "note": "Build and filesystem readback only. No prepare/publish/index/read invocation; package S1 awaiting completion."
+}

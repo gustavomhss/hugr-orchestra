@@ -1,0 +1,39 @@
+{
+  "schema": "genesis-s1-04-stream-delta/v1",
+  "criteria": [
+    "QS-1",
+    "CC-3",
+    "GO-I1"
+  ],
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "basis": "Direct read of the complete packages/server/src/handlers/event.ts after the principal added that exact source path to the read whitelist; captured baseline SHA256 verified. No product or runtime execution.",
+  "source_ref": {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "packages/server/src/handlers/event.ts",
+    "git_blob_sha": "d644f36bdd6aa93cd538f560dab63337c2436022",
+    "sha256": "ca51a6d6bd47e97cda8d43b629e4a590cbe21e1a263b6146d3609d30bceae427",
+    "byte_length": 2924
+  },
+  "change_count": 1,
+  "old_sentence": "A repeated payload object is encoded once and the cached frame is shared across subscribers.",
+  "new_sentence": "The WeakMap caches the serialized JSON string for each payload object; each call returns a new `Sse.Event` frame object, and `Sse.encode` occurs later.",
+  "reversible_exact_substitution": true,
+  "bodies": [
+    {
+      "path": "original/stream-contract.md",
+      "byte_length": 3824,
+      "sha256": "d1f68eb106131ba1efd61c4157b91826a25b176ab87ff74defc140ef9f4d67d8"
+    },
+    {
+      "path": "corrected/stream-contract.md",
+      "byte_length": 3883,
+      "sha256": "8aac12750cd96c30f9bee287bdab2fdbb61ca67903b604aa8a0c1809e7c4bdfa"
+    },
+    {
+      "path": "stream-contract.diff",
+      "byte_length": 1786,
+      "sha256": "fd8bd5a6f2fe60cf9204a0e80aea6b86bf98ba80a3697f9af72b089a8a306f8e"
+    }
+  ],
+  "direct_source_verified": true
+}

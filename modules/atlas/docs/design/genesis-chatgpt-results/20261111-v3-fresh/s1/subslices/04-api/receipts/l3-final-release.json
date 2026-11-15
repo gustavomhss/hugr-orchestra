@@ -1,0 +1,24 @@
+{
+  "schema": "genesis-s1-04-local-layer-release/v1",
+  "layer": 3,
+  "key": "s1.subslice04.integrated-impact",
+  "revision": 3,
+  "body_sha256": "ba532f772f8f2f08be5938caf3ba9856c6f185e79d18fb0ed9d016b9d176f0bd",
+  "body_byte_length": 13657,
+  "judgments": [
+    {
+      "path": "judgments/10-j1-resolution.md",
+      "byte_length": 1988,
+      "sha256": "30a8227400efa0ce174b0f077b7d369b8e31d1abcd075f6450e704a7bdfa4d5a"
+    },
+    {
+      "path": "judgments/10-j2-resolution.md",
+      "byte_length": 2422,
+      "sha256": "a13430fd02614a76c01a3d5e558690c7dcd674c201d704651051b5dd08d80b35"
+    }
+  ],
+  "status": "LOCAL_CONTENT_ACCEPTED",
+  "allows": "Updated L4 local production; no runtime/consumer/maintenance execution/publication acceptance",
+  "supersedes_content_only": "receipts/l3-release.json",
+  "core_reuse_gate": "receipts/core-reuse-release.json"
+}

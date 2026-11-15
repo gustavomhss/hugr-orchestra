@@ -1,0 +1,97 @@
+[
+  {
+    "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/request.txt",
+    "bytes": 1390,
+    "sha256": "5117297fec0f1e65ccb958e197f8d8e8c4c42c3ab1a2320826fc76c7433584e1"
+  },
+  {
+    "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/initial-captures.json",
+    "bytes": 65873,
+    "sha256": "59ecfee30c25b38645d873a6bebe829c67782c2c4485e6b9f7a7a4f0e52b2baa"
+  },
+  {
+    "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/tree-captures.json",
+    "bytes": 614638,
+    "sha256": "e404d11dfcf41504bfc886566c5c1d05c4ea357917ff26b8bc9457306d4961f2"
+  },
+  {
+    "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/materialization-plan.json",
+    "bytes": 784141,
+    "sha256": "563ab639d79cf1536620ad0355fd9396aa39c30c1c64cb40a5219c3107dadf9a"
+  },
+  {
+    "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/delta-captures.json",
+    "bytes": 1064186,
+    "sha256": "8bd908ebdbdcbd76112b71bcfdd2f6e83ddfee8a2f1be564c8b018e30b671d66"
+  },
+  {
+    "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/materialization-manifest.json",
+    "bytes": 509334,
+    "sha256": "43a44d9e627902ac59f1688542e933468bfe5ad7c42bf25d8d6470bb2590072d"
+  },
+  {
+    "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/implementation-diff.patch",
+    "bytes": 280774,
+    "sha256": "dc46165221f61c29b69cfd91d1012dd33a186a4a5bf1cfac5144185e6d3bfcee"
+  },
+  {
+    "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/materialize.py",
+    "bytes": 4052,
+    "sha256": "e94679d9311ec87ecb48681dedd00e1c0a0d8ffbba7df9fc115e9c107f69cf4f"
+  },
+  {
+    "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/run-command.py",
+    "bytes": 3035,
+    "sha256": "9d383d2dcd460a3e57c4a3b3897b640d485dd0d03deee4d72442980744b98917"
+  },
+  {
+    "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/readback.json",
+    "bytes": 331102,
+    "sha256": "2ba623e356d683a0926f578863a154cc9d0cd3bae2cef05448f20824717d5b9e"
+  },
+  {
+    "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/status.json",
+    "bytes": 14811,
+    "sha256": "fa6eb21a284db5bf5a0b79ad98f618bf7f0687ce15013f4cba4efdd133c4edca"
+  },
+  {
+    "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/commands/npm-ci.receipt.json",
+    "bytes": 1595,
+    "sha256": "20ee9bd37f868f67f566a5a45ba237d29b8da2d78f333cabd8f00df61abcc65e"
+  },
+  {
+    "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/commands/npm-ci.stdout.txt",
+    "bytes": 167,
+    "sha256": "cb010cb04482d7217a8983f6e167baef219cfe1160721c1521e5029f93e06a03"
+  },
+  {
+    "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/commands/npm-ci.stderr.txt",
+    "bytes": 402,
+    "sha256": "bfb348fb34e7272aa9cd0710f76693a9d040b01d5ed06ea6db152f0cdb5346b9"
+  },
+  {
+    "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/commands/typecheck.receipt.json",
+    "bytes": 1698,
+    "sha256": "8b8b907c00aee7e9ee92fb4ceb28b143df0b07512d074acede8f0ab453f22fcc"
+  },
+  {
+    "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/commands/typecheck.stdout.txt",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/commands/typecheck.stderr.txt",
+    "bytes": 17,
+    "sha256": "4fec200faf0180516bb7b68652c0c2c29e56573b8c74611b73fa9d49cf7f5e6c"
+  },
+  {
+    "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/finalize.py",
+    "bytes": 9759,
+    "sha256": "3cd14ed0cdaf3d9a7d5b67b6883b9d7368bf1c62851c477c74faec8c2f9cb946"
+  },
+  {
+    "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/response.md",
+    "bytes": 8180,
+    "sha256": "df8a570266cac2430ada01125fe6f3d51b4a91393574b2631d73d8eca54aa7b5"
+  }
+]

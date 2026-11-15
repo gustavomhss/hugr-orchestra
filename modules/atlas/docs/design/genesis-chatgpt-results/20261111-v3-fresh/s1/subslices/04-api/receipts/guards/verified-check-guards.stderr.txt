@@ -1,0 +1,16 @@
+$ bun run script/guards/run.ts --base origin/dev
+33 | 
+34 | const MAX_UNTRACKED_BYTES = 1_000_000
+35 | 
+36 | export function git(cwd: string, args: string[]) {
+37 |   const result = Bun.spawnSync(["git", "-C", cwd, ...args])
+38 |   if (result.exitCode !== 0) throw new Error(`git ${args.join(" ")} failed: ${result.stderr.toString().trim()}`)
+                                            ^
+error: git diff --numstat -z -M -l0 7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249 failed: fatal: unable to read d83941a9d836a23e466ca09ecba1f21d423094cb
+      at git (/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/verified-git-candidate/script/guards/diff.ts:38:40)
+      at readDiff (/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/verified-git-candidate/script/guards/diff.ts:58:30)
+      at runGuards (/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/verified-git-candidate/script/guards/run.ts:80:16)
+      at /workspace/scratch/8833f71e3e94/s1-04-runtime-scout/verified-git-candidate/script/guards/run.ts:49:18
+
+Bun v1.3.14 (Linux x64)
+error: script "check:guards" exited with code 1

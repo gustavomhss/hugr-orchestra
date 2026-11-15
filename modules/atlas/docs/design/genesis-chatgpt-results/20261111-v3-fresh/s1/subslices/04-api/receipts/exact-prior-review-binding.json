@@ -1,0 +1,128 @@
+{
+  "schema": "s1-04-exact-prior-review-binding/v1",
+  "dossier_commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+  "dossier_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/review-packets/l1-b-v2-dossier.md",
+  "dossier_git_blob_sha": "29713d4989f3ff717cb6529c62c7ab4b74d2fc6b",
+  "dossier_sha256": "42c2595c2e243b3612a13b7ed615c5bfbeb731706f760119c1f7fd6719541def",
+  "prior_package_sha256": "d8db24cc3e63225fbee28a9a0fc0ea1d16d4894a87500d5c6e765c369370ba3e",
+  "bodies": [
+    {
+      "key": "s1.api.boundaries",
+      "dossier_body": {
+        "path": "producers/b/bodies/boundaries.md",
+        "encoding": "utf-8",
+        "byte_length": 4634,
+        "sha256": "f6b230ed8578b6bd9fdb1e4eaca26892df9355a58fc1f5e2e6a157bffabf7310"
+      },
+      "extracted_bytes": 4634,
+      "extracted_sha256": "f6b230ed8578b6bd9fdb1e4eaca26892df9355a58fc1f5e2e6a157bffabf7310",
+      "matches_metadata": true,
+      "matches_fetched_base": true
+    },
+    {
+      "key": "s1.api.schema-contracts",
+      "dossier_body": {
+        "path": "producers/b/bodies/schema-contracts.md",
+        "encoding": "utf-8",
+        "byte_length": 4868,
+        "sha256": "1a8dce30625d8d8641a48f8594736b1da4bbb6bd23c13562bd332fd5990cd8cb"
+      },
+      "extracted_bytes": 4868,
+      "extracted_sha256": "1a8dce30625d8d8641a48f8594736b1da4bbb6bd23c13562bd332fd5990cd8cb",
+      "matches_metadata": true,
+      "matches_fetched_base": true
+    },
+    {
+      "key": "s1.api.session-contract",
+      "dossier_body": {
+        "path": "revisions/b-l1-evidence-v1/corrected/session-contract.md",
+        "encoding": "utf-8",
+        "byte_length": 5155,
+        "sha256": "22b526a2423572f2bbc17f3bfccd2eb0ea8f7fb16f2215bb0904f1cc5c2125bc"
+      },
+      "extracted_bytes": 5155,
+      "extracted_sha256": "22b526a2423572f2bbc17f3bfccd2eb0ea8f7fb16f2215bb0904f1cc5c2125bc",
+      "matches_metadata": true,
+      "matches_fetched_base": true
+    },
+    {
+      "key": "s1.api.server-edge",
+      "dossier_body": {
+        "path": "producers/b/bodies/server-edge.md",
+        "encoding": "utf-8",
+        "byte_length": 5106,
+        "sha256": "f4b99d7a6bafb6a6aa672eeb5a63aa7621a14e65cfe863fe0f9d9eb36e0981de"
+      },
+      "extracted_bytes": 5106,
+      "extracted_sha256": "f4b99d7a6bafb6a6aa672eeb5a63aa7621a14e65cfe863fe0f9d9eb36e0981de",
+      "matches_metadata": true,
+      "matches_fetched_base": true
+    },
+    {
+      "key": "s1.api.stream-contract",
+      "dossier_body": {
+        "path": "producers/b/bodies/stream-contract.md",
+        "encoding": "utf-8",
+        "byte_length": 3824,
+        "sha256": "d1f68eb106131ba1efd61c4157b91826a25b176ab87ff74defc140ef9f4d67d8"
+      },
+      "extracted_bytes": 3824,
+      "extracted_sha256": "d1f68eb106131ba1efd61c4157b91826a25b176ab87ff74defc140ef9f4d67d8",
+      "matches_metadata": true,
+      "matches_fetched_base": true
+    },
+    {
+      "key": "s1.api.client-projection",
+      "dossier_body": {
+        "path": "producers/b/bodies/client-projection.md",
+        "encoding": "utf-8",
+        "byte_length": 5193,
+        "sha256": "089304921b004984de3b15b75af18fea3c7ebf15191f3874e9f668066569d478"
+      },
+      "extracted_bytes": 5193,
+      "extracted_sha256": "089304921b004984de3b15b75af18fea3c7ebf15191f3874e9f668066569d478",
+      "matches_metadata": true,
+      "matches_fetched_base": true
+    },
+    {
+      "key": "s1.api.codegen",
+      "dossier_body": {
+        "path": "producers/b/bodies/codegen.md",
+        "encoding": "utf-8",
+        "byte_length": 4752,
+        "sha256": "2ec55afad54a871de673a252b6b7c604a8ecdb648cc1df9c80128d83a3f8e270"
+      },
+      "extracted_bytes": 4752,
+      "extracted_sha256": "2ec55afad54a871de673a252b6b7c604a8ecdb648cc1df9c80128d83a3f8e270",
+      "matches_metadata": true,
+      "matches_fetched_base": true
+    },
+    {
+      "key": "s1.api.sdk-composition",
+      "dossier_body": {
+        "path": "producers/b/bodies/sdk-composition.md",
+        "encoding": "utf-8",
+        "byte_length": 3478,
+        "sha256": "a2cb2fc21fc1a771d81cd83e75dfe8b07c82c1712b15396ff4e40774f861d4d3"
+      },
+      "extracted_bytes": 3478,
+      "extracted_sha256": "a2cb2fc21fc1a771d81cd83e75dfe8b07c82c1712b15396ff4e40774f861d4d3",
+      "matches_metadata": true,
+      "matches_fetched_base": true
+    },
+    {
+      "key": "s1.api.surface-disposition",
+      "dossier_body": {
+        "path": "producers/b/bodies/surface-disposition.md",
+        "encoding": "utf-8",
+        "byte_length": 5168,
+        "sha256": "611b4ff21c0aa4bd1de072f0b16b6c2560a3446b2bad0b31271cd1f61807dbda"
+      },
+      "extracted_bytes": 5168,
+      "extracted_sha256": "611b4ff21c0aa4bd1de072f0b16b6c2560a3446b2bad0b31271cd1f61807dbda",
+      "matches_metadata": true,
+      "matches_fetched_base": true
+    }
+  ],
+  "semantic_acceptance": "Mechanics only; bounded prior decisions and current same-pair delta/reuse required."
+}

@@ -1,0 +1,283 @@
+{
+  "schema": "genesis-s1-04-local-artifact-candidate/v1",
+  "key": "s1.subslice04.local-contracts",
+  "scope": "orchestra.s1",
+  "title": "Mapa local de contratos públicos",
+  "layer": 2,
+  "need": "component",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "execution_id": "94f1e157-8c44-4e6e-a4af-7690a8845ecf",
+  "body": {
+    "path": "body.md",
+    "encoding": "utf-8",
+    "byte_length": 6218,
+    "sha256": "5f5ae9a915ec9a43940963ce69f4563a9a85d51e15d111237ff8b5e02a2d5170"
+  },
+  "status": "LOCAL_CANDIDATE_AWAITING_DUAL_L2_REVIEW",
+  "authority": {
+    "scope": "Mapa local API: declaração, implementação/delegação e projeção.",
+    "basis": "Dez L1 aceitos pela dupla na rodada 5. Intenção normativa é atribuída aos predecessores de autoridade; observações permanecem observações de fonte. Não amplia o aceite para Core integração, execução ou consumidores.",
+    "acceptance_ref": {
+      "path": "output/receipts/l1-release.json",
+      "byte_length": 3522,
+      "sha256": "23674344f089dbc26e1cac7ee70e0de9809e663ed80a0967219ae53222d4b0fb"
+    },
+    "historical_frame_ref": {
+      "path": "output/receipts/historical-frame.json",
+      "byte_length": 931,
+      "sha256": "9603edf9ae95b650cc29a584bce7a5a85c7234c949d407e2f6c17d5b2941c9cb"
+    }
+  },
+  "validity": "supported",
+  "validity_scope": "Suficiência de fonte proposta pelo produtor para o mapa local delimitado; ainda não é PASS da dupla para L2 nem validade operacional/runtime.",
+  "input_public_contract": {
+    "path": "output/contracts/public.json",
+    "byte_length": 10021,
+    "sha256": "7dcc9df0003b99722b18538fab1e45adb3ac60e6697397677200feddce40909e"
+  },
+  "criteria": [
+    "GO-A1",
+    "GO-A2",
+    "GO-A3",
+    "GO-A4",
+    "GO-A5",
+    "GO-A6",
+    "GO-A7",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-4",
+    "QS-5",
+    "QS-6",
+    "CC-3",
+    "CC-7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "build_dependencies": [
+    {
+      "key": "s1.api.codegen",
+      "body_sha256": "2ec55afad54a871de673a252b6b7c604a8ecdb648cc1df9c80128d83a3f8e270",
+      "byte_length": 4752,
+      "accepted_transport_path": "revisions/b-l1-v3/bodies/codegen.md",
+      "local_verified_path": "input/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/bodies/codegen.md",
+      "used_for": "Autoridade e divisão da geração; unwrapping exato e limites do compilador."
+    },
+    {
+      "key": "s1.api.boundaries",
+      "body_sha256": "f6b230ed8578b6bd9fdb1e4eaca26892df9355a58fc1f5e2e6a157bffabf7310",
+      "byte_length": 4634,
+      "accepted_transport_path": "revisions/b-l1-v3/bodies/boundaries.md",
+      "local_verified_path": "input/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/bodies/boundaries.md",
+      "used_for": "Responsabilidades Schema/Protocol/Server/Client/SDK e proibição normativa de imports runtime."
+    },
+    {
+      "key": "s1.api.client-projection",
+      "body_sha256": "089304921b004984de3b15b75af18fea3c7ebf15191f3874e9f668066569d478",
+      "byte_length": 5193,
+      "accepted_transport_path": "revisions/b-l1-v3/bodies/client-projection.md",
+      "local_verified_path": "input/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/bodies/client-projection.md",
+      "used_for": "Promise/Effect, valores wire/decodificados, erros, binário e transferências."
+    },
+    {
+      "key": "s1.api.server-edge",
+      "body_sha256": "711c744e089e59a11ee0b56ba4ec495277993dc7a58e351c8e2af4dc557ce404",
+      "byte_length": 5596,
+      "accepted_transport_path": "revisions/b-l1-v3/bodies/server-edge.md",
+      "local_verified_path": "input/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/bodies/server-edge.md",
+      "used_for": "Adaptação e projeção local de erros; recusa de status universal para defeitos."
+    },
+    {
+      "key": "s1.api.stream-contract",
+      "body_sha256": "8aac12750cd96c30f9bee287bdab2fdbb61ca67903b604aa8a0c1809e7c4bdfa",
+      "byte_length": 3883,
+      "accepted_transport_path": "revisions/local-l1-v4/bodies/stream-contract.md",
+      "local_verified_path": "producer/corrected/stream-contract.md",
+      "used_for": "Feed global e feed durável, cache JSON, frames, ausência de retomada automática e tratamento do reader."
+    },
+    {
+      "key": "s1.api.schema-contracts",
+      "body_sha256": "c6ebd6124d89092e859aaa6a6a07c2a6fca5e2cdc82a62254b701b2de60266b2",
+      "byte_length": 5188,
+      "accepted_transport_path": "revisions/b-l1-v3/bodies/schema-contracts.md",
+      "local_verified_path": "input/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/bodies/schema-contracts.md",
+      "used_for": "Valores, optional/undefined, brands, Prompt e inventários de eventos."
+    },
+    {
+      "key": "s1.api.session-contract",
+      "body_sha256": "22b526a2423572f2bbc17f3bfccd2eb0ea8f7fb16f2215bb0904f1cc5c2125bc",
+      "byte_length": 5155,
+      "accepted_transport_path": "revisions/b-l1-v3/bodies/session-contract.md",
+      "local_verified_path": "input/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/bodies/session-contract.md",
+      "used_for": "Admitted, parâmetros encaminhados, localização, mensagem estrangeira, active e history."
+    },
+    {
+      "key": "s1.api.sdk-composition",
+      "body_sha256": "a2cb2fc21fc1a771d81cd83e75dfe8b07c82c1712b15396ff4e40774f861d4d3",
+      "byte_length": 3478,
+      "accepted_transport_path": "revisions/b-l1-v3/bodies/sdk-composition.md",
+      "local_verified_path": "input/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/bodies/sdk-composition.md",
+      "used_for": "Composição embedded, I/O/autorização e renovação delimitada de credencial."
+    },
+    {
+      "key": "s1.api.surface-disposition",
+      "body_sha256": "595e0d404064429a953b276141f5601a1bbecceb30242a9914132ebdd26ed5c0",
+      "byte_length": 6726,
+      "accepted_transport_path": "revisions/b-l1-v3/bodies/surface-disposition.md",
+      "local_verified_path": "input/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/bodies/surface-disposition.md",
+      "used_for": "Tratamento de gerados e limite histórico do observador; limites de prova."
+    },
+    {
+      "key": "s1.subslice04.domains",
+      "body_sha256": "12248d1cc39a27b1655f1a683f02cd1af864f87945300a86b0ee4326227a4edd",
+      "byte_length": 38080,
+      "accepted_transport_path": "revisions/local-l1-v4/domains/domain-disposition.md",
+      "local_verified_path": "producer/b3/v4/domain-disposition.md",
+      "used_for": "Código local de Schema, cobertura de 24 domínios/190 membros e gaps condicionais."
+    }
+  ],
+  "navigation": [
+    {
+      "key": "s1.api.codegen",
+      "purpose": "Autoridade e divisão da geração; unwrapping exato e limites do compilador."
+    },
+    {
+      "key": "s1.api.boundaries",
+      "purpose": "Responsabilidades Schema/Protocol/Server/Client/SDK e proibição normativa de imports runtime."
+    },
+    {
+      "key": "s1.api.client-projection",
+      "purpose": "Promise/Effect, valores wire/decodificados, erros, binário e transferências."
+    },
+    {
+      "key": "s1.api.server-edge",
+      "purpose": "Adaptação e projeção local de erros; recusa de status universal para defeitos."
+    },
+    {
+      "key": "s1.api.stream-contract",
+      "purpose": "Feed global e feed durável, cache JSON, frames, ausência de retomada automática e tratamento do reader."
+    },
+    {
+      "key": "s1.api.schema-contracts",
+      "purpose": "Valores, optional/undefined, brands, Prompt e inventários de eventos."
+    },
+    {
+      "key": "s1.api.session-contract",
+      "purpose": "Admitted, parâmetros encaminhados, localização, mensagem estrangeira, active e history."
+    },
+    {
+      "key": "s1.api.sdk-composition",
+      "purpose": "Composição embedded, I/O/autorização e renovação delimitada de credencial."
+    },
+    {
+      "key": "s1.api.surface-disposition",
+      "purpose": "Tratamento de gerados e limite histórico do observador; limites de prova."
+    },
+    {
+      "key": "s1.subslice04.domains",
+      "purpose": "Código local de Schema, cobertura de 24 domínios/190 membros e gaps condicionais."
+    }
+  ],
+  "navigation_semantics": "Referências para aprofundamento. As dependências reais de construção estão listadas separadamente, com hashes e vínculo de aceite; a coincidência de uma chave entre as duas listas não conflui seus papéis.",
+  "gaps": [
+    {
+      "scope": "Claims dependentes de Core/serviços e efeitos externos",
+      "status": "INHERITED_CONDITIONAL_GAP",
+      "blocks": "Garantias de autorização de provedor, persistência/recuperação, exclusão entre hosts, efeitos externos exactly-once e convergência.",
+      "next": "Obter complemento inferior do owner pertinente e julgamento antes de promover claim."
+    },
+    {
+      "scope": "Execução e projeções",
+      "status": "NOT_ESTABLISHED",
+      "blocks": "Comportamento real de browser, bundle transitivo, geração/freshness e interoperabilidade executada.",
+      "next": "Evidência operacional própria; fonte local não a substitui."
+    },
+    {
+      "scope": "Fronteiras de transporte já registradas em L1",
+      "status": "INHERITED_LIMIT",
+      "blocks": "Declaração do upload no grupo/handler inspecionado; confiança no README para negar leitura binária; observação do gerado de 462.732 bytes pelo observador antigo de 256.000 bytes.",
+      "next": "Conservar divergências e limitação histórica; não inferir remoção ou incompatibilidade de todo release futuro."
+    },
+    {
+      "scope": "Especificidades históricas retiradas de B3",
+      "status": "RETIRED_EXTRA_CLAIM",
+      "blocks": "Uso dessas especificidades como conhecimento aceito.",
+      "next": "Não reintroduzir por síntese. A retirada não equivale a resolução por fonte."
+    }
+  ],
+  "evidence": [
+    {
+      "section": "Responsabilidade por fronteira",
+      "predecessor_keys": [
+        "s1.api.boundaries",
+        "s1.api.codegen",
+        "s1.api.sdk-composition",
+        "s1.subslice04.domains"
+      ]
+    },
+    {
+      "section": "Valores e ausência",
+      "predecessor_keys": [
+        "s1.api.schema-contracts",
+        "s1.api.client-projection",
+        "s1.api.codegen"
+      ]
+    },
+    {
+      "section": "Session, eventos e erros",
+      "predecessor_keys": [
+        "s1.api.session-contract",
+        "s1.api.schema-contracts",
+        "s1.api.stream-contract",
+        "s1.api.server-edge",
+        "s1.api.client-projection"
+      ]
+    },
+    {
+      "section": "Projeção, composição e geração",
+      "predecessor_keys": [
+        "s1.api.client-projection",
+        "s1.api.stream-contract",
+        "s1.api.sdk-composition",
+        "s1.api.codegen",
+        "s1.api.surface-disposition"
+      ]
+    },
+    {
+      "section": "Navegação e limites",
+      "predecessor_keys": [
+        "s1.api.boundaries",
+        "s1.api.surface-disposition",
+        "s1.subslice04.domains"
+      ],
+      "frame_ref": {
+        "path": "output/receipts/historical-frame.json",
+        "byte_length": 931,
+        "sha256": "9603edf9ae95b650cc29a584bce7a5a85c7234c949d407e2f6c17d5b2941c9cb"
+      }
+    }
+  ],
+  "recipe_ref": {
+    "path": "recipe.json",
+    "byte_length": 3917,
+    "sha256": "5d884a7fab14d6a0237a4d3b579f442410c94f05e8a9faa7e526f297dbf7d2f7"
+  },
+  "producer_request_ref": {
+    "path": "request.txt",
+    "byte_length": 2372,
+    "sha256": "cae28b1225705aab3ecde5ec0e907a5fc23f255df93c2115802dcf08ead1cc0b"
+  },
+  "producer_response_path": "response.md",
+  "semantic_review_refs": [],
+  "runtime_receipt_refs": [],
+  "native_transport_note": "Metadados locais de candidato, com bindings de conteúdo exatos. package_ref/same_package e payload_path finais cabem ao transporte da principal; nenhum ID/result/receipt do runtime foi inventado.",
+  "mechanical_checks": {
+    "accepted_predecessor_bytes_and_hashes_match": 10,
+    "need_in_public_transport_enum": true,
+    "criteria_subset_of_public_contract": true,
+    "only_layer_2_produced": true
+  }
+}

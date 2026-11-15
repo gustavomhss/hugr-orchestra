@@ -1,0 +1,3651 @@
+{
+  "created_utc": "2026-11-15T00:22:29.705737+00:00",
+  "refs": [
+    "8835faf6329cc3d5f5de1097872882d57472b793",
+    "5e0807b5ff953508f792b8a965883985b05a7066"
+  ],
+  "protected_git_files": {
+    ".git/HEAD": {
+      "bytes": 31,
+      "sha256": "02e4533a4683e2d1b676f09ef2d36c902478ddd26132c4efe8349fffd24d26d1"
+    },
+    ".git/refs/heads/genesis-s1-api": {
+      "bytes": 41,
+      "sha256": "6bbea6d45aabdf27fb84770c1add0d6acbec762956429334225bf58512bb5753"
+    },
+    ".git/refs/remotes/origin/dev": {
+      "bytes": 41,
+      "sha256": "d14647ce39bf3da61fb924805a1e11474da27c880c89885da760d1cb5ca75440"
+    },
+    ".git/index": {
+      "bytes": 1987261,
+      "sha256": "8b4edc1c7726fbbab079aedf504e189e19152fd81d4194be1b14cbf4228dd0d0"
+    },
+    ".git/shallow": {
+      "bytes": 328,
+      "sha256": "8d3c55b9071803fcd8b4191aee6bfee84448c9cb7a48ee8372dd81701c1a21e6"
+    },
+    ".git/info/sparse-checkout": {
+      "bytes": 27999,
+      "sha256": "38eba47ab1e024df4c9e3e9094c9d9c2c54b443f075168bc40824a46535f9533"
+    },
+    ".git/config": {
+      "bytes": 185,
+      "sha256": "c60deb7247796532362655e259dbe5f7ae0a1775b68ad98f7db0a5b419d58111"
+    }
+  },
+  "existing_worktree_files": {
+    "package.json": {
+      "bytes": 6423,
+      "sha256": "797b93c084aaf809f0bc02013e9e1eb0ae0d0addfa9ae8b9b783ceb83e6173ab"
+    },
+    "bunfig.toml": {
+      "bytes": 1024,
+      "sha256": "ed50f5745fbcb845251debe79cc464a2142c62cf17a013c2a29de38bf248f158"
+    },
+    ".gitignore": {
+      "bytes": 1037,
+      "sha256": "dd0aa40ba5e0fb4ec231c24b60b1c20beaf872910abbb8bc00be485af3ffa99b"
+    },
+    "tsconfig.json": {
+      "bytes": 126,
+      "sha256": "3566d273bac7985b182fde3fc49e3d9a6b8d1451c122c31a4f87877faa9ae7aa"
+    },
+    "AGENTS.md": {
+      "bytes": 16501,
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f"
+    },
+    ".gitattributes": {
+      "bytes": 3680,
+      "sha256": "093bdb56bf7251861f44460f5e0debf2456b7bdc4cdf7a2780921838abdec589"
+    },
+    ".orchestra/skills/execute-genesis/SKILL.md": {
+      "bytes": 8143,
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029"
+    },
+    ".orchestra/skills/execute-genesis/references/principles.md": {
+      "bytes": 6010,
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230"
+    },
+    ".orchestra/skills/execute-genesis/references/transport.md": {
+      "bytes": 8478,
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/RN-STORYBOOK.md": {
+      "bytes": 4798,
+      "sha256": "2ccfd0b757c508fbdb7357e71ed13553be1bdbbefba5141c58928ed5f541668b"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/RD-PLUGIN.md": {
+      "bytes": 4773,
+      "sha256": "054f104949dd4dc7089c8e6d7283795bb4a6fb031fb4d47ec439b5e927798e85"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/FAC-SESSIONUI.md": {
+      "bytes": 4586,
+      "sha256": "1c78ba5a4b6ea6f4acb4e35a69e2208b3880eef45947cdd7efb9e8f7a1aaa542"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/FAC-PLUGIN.md": {
+      "bytes": 4303,
+      "sha256": "432c412302afee982a151d55955602f24bbf2c9b008031deedd822f1a72a1239"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/RN-TUI.md": {
+      "bytes": 4729,
+      "sha256": "8849d5a6fd26764dd9c4cfb86fd601f1b106d99a6630f3e995fc281ab7b712ce"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/FAC-APP-COMP.md": {
+      "bytes": 5354,
+      "sha256": "6496c8f06727ddf659d55aa5c345a48ef96a955a81b437637c84b4713d5c0e41"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/RB-BLOCKS.md": {
+      "bytes": 5190,
+      "sha256": "3e4ce679dce115b9a181e4683d111f25a4bb62b9e4141bf6a5a7383ed1651160"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/RD-SESSION.md": {
+      "bytes": 4871,
+      "sha256": "38c0f501d80c5ab015ff3f902ed003951f9a70872f98d09d2fdffa5f6a641a21"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/EXP-ORCH.md": {
+      "bytes": 4177,
+      "sha256": "622c5a2a42e434c601740afa8dbc8ca9d298a944388c3ec82615ae20c49908e6"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/EXP-UI.md": {
+      "bytes": 4183,
+      "sha256": "dd5f215472d3e05fcfc07fb84a8feef3e3f057801b34f3c8747ff2b58f85b4bd"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/RD-CLAUDE.md": {
+      "bytes": 4547,
+      "sha256": "ef2c2651c0e1916ddbe8cd9d07d2ca25a6f7e620d09293ed050fdeb5ed92aae5"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/RD-DESKTOP.md": {
+      "bytes": 5295,
+      "sha256": "ce7b199946c97df0d26a4718de3a1c5007a60b94fa8c4fa7b24e92c3491cc607"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/EXP-SCHEMA.md": {
+      "bytes": 4217,
+      "sha256": "be6cc13b66cf15b792850aef0a3c073f452d29a92b5404a37b196c556575a30f"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/RD-JANITOR.md": {
+      "bytes": 4357,
+      "sha256": "984d7c6d2e865af8591bb8d86b7db504b2cf7c87000ddfa6c0423c453d40b600"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/EXP-RELAY.md": {
+      "bytes": 4188,
+      "sha256": "01895f0d764136bce7dbf8bea0647f8b8f73a1e79f53e1312e1aab1c8f2ce9fc"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/FAC-APP-CTX.md": {
+      "bytes": 5225,
+      "sha256": "023884bddd0ae8cf918d58052ea7181881c092bf5ade1d19b43f46735d007135"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/RN-SQLITE.md": {
+      "bytes": 4857,
+      "sha256": "5b25297c274ffe95287951f209af51b7c97fc1866b743415de4a04ecfae844ba"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/REN-TEETH.md": {
+      "bytes": 4924,
+      "sha256": "811259c8158d0b8eb37bd13219ee8df98cd6edd5f5e5a4a4970018dd14ffc03a"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/RN-SESSIONUI.md": {
+      "bytes": 5007,
+      "sha256": "bb7d5e4c09333119c6bad2b68edbfd5e7bf576d543fe89c3f3066e12523050b7"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/FAC-APP-PAGES.md": {
+      "bytes": 5849,
+      "sha256": "3c043b3a241a6386c2a747071051ce507de46893232df5f49aa82034c5a876ab"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/RN-SDK.md": {
+      "bytes": 4933,
+      "sha256": "87c154f22a75842a8ef39db898485e329ca0256b042810479e82bfdcf0700278"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/EXP-PROTOCOL.md": {
+      "bytes": 4259,
+      "sha256": "a8b24da0ea4c35e85a72da05899d2f73b788ee0557a570f2754de8704db0d52e"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/RD-TOOLKIT.md": {
+      "bytes": 4805,
+      "sha256": "e080170bb35be49525bbdf8fd92e4c9cea1708c36bd266403c994648d4b0ef6b"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/RN-SCRIPT.md": {
+      "bytes": 4995,
+      "sha256": "1a8eb3549b47093be64cd0db527f553c971a63f31a021e3d4d6176ef462b4d04"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/FAC-APP-REST.md": {
+      "bytes": 5274,
+      "sha256": "9545448352031876d8c0c9f2d4aa62f1c03afd3c947a9ee855eed9bfe531c93a"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/RD-CONTINUITY.md": {
+      "bytes": 4954,
+      "sha256": "cbf9335d504f5352a6cbe5fabb1a193ad6e56b4192ae51bc8d39c7bbae0d2960"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/RN-UI.md": {
+      "bytes": 4761,
+      "sha256": "8994f1c43cd6e3119fdf0131874c3752cfc100e781f12b5c508efc9e4c173ad3"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/EXP-SESSIONUI.md": {
+      "bytes": 4305,
+      "sha256": "f26f5d96414f7818e3bde5aa124916c7d9bca41f8c2c069246edd3d85e0ec804"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/RD-CTRLPLANE.md": {
+      "bytes": 4696,
+      "sha256": "77f9eb4b14e96df443482f44c197cd5ddd384be54833426f81d22a28a87491dd"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/RD-DATABASE.md": {
+      "bytes": 4705,
+      "sha256": "5bd51acfbf9f71efb3ffe74030b8ae3eaec135a1eb89640a7635aff451caebc5"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/EXP-CORE.md": {
+      "bytes": 4180,
+      "sha256": "7411448199a18fc3bcc62ca857abaf67bc785cdf4d438f731bc34862a3745e3a"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/RN-ATLAS.md": {
+      "bytes": 5175,
+      "sha256": "f60d5b8c7f51b626b10715505714a3a7b7ea5c07155822d1ca65b931b513c2e4"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/FAC-TUI.md": {
+      "bytes": 4989,
+      "sha256": "bed3d66f14b30a888fa561e6c31ab6874003d38ebcc2227550d776a5cf3aed04"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/RD-ACP.md": {
+      "bytes": 4331,
+      "sha256": "31d438a32a690ed1a30bd1c4bb63c6c809d60ad45368fc2f8a447499882ba822"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/FAC-CORE-CLI.md": {
+      "bytes": 4317,
+      "sha256": "d8caa2d82a84669f417585850e15eddaebddb6b3458bd2a691df069765e5bd90"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/README.md": {
+      "bytes": 1650,
+      "sha256": "2b1a911b6de3d0e3f8b22b60395d143e12f6ca3c26640e531866b437a0468f86"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/RD-MAESTRO.md": {
+      "bytes": 4887,
+      "sha256": "39c96771f8285eeb9acbd4f357bc7846d2f95fc6b37fffae9b92a0dc64ec179a"
+    },
+    "docs/architecture/phase-plans/70-90-briefs/EXP-SERVER.md": {
+      "bytes": 4217,
+      "sha256": "c71baa9e20d0e0c137206f7c7f76fd9dca0e1b0c0b92a782c0bd29d7b50b7195"
+    },
+    ".atlas/cas/22/22f8605239cf2c7348b73ce99d0ef39e5adcaf99e1aba8993d5390946f244b41": {
+      "bytes": 4765,
+      "sha256": "7dca59c8b833e1884edc2d0b7f95dd397d64a2599ff6dbee5417b470070d6217"
+    },
+    ".atlas/cas/50/5053cc06f64b042df092a01ed120779f745b0e3c4924158fc7b03f2c63634426": {
+      "bytes": 3496,
+      "sha256": "5149d2910ed69ca668c97bc67f90cd8bada30532e7acde5aa365324e15f8bba2"
+    },
+    ".atlas/cas/23/232d812d2cd9bf9c5e985c41a8133af162324169425156fd8cdea9c5c9d4bdeb": {
+      "bytes": 43901,
+      "sha256": "74ee6e761f5f7e38ea6bdc69dfee5d2fdca3f53ec17a8f3fe2a6b8da4a2bd94e"
+    },
+    ".atlas/cas/aa/aa8107d99be5dff858be59663003883bc92f56683336a3c1e26846cd8e7c9384": {
+      "bytes": 18970,
+      "sha256": "d7314148f94b0f5295212dd38b53df279b506a98e36319db95f89b1deeb6f5a6"
+    },
+    ".atlas/cas/03/03cc168a773288ea88518a3ef710fe4385d9b37b766b3c88f11723bf6abc26ac": {
+      "bytes": 28903,
+      "sha256": "cc58fa27df11ec26cc2153da7f24b548c5f27eea0a8e09cdc1fd57b84bb41b7d"
+    },
+    ".atlas/cas/c6/c62e033802bc00afaad7a3079f548ecf091d84eaf5e8ccf3c19936699c7fcd85": {
+      "bytes": 4661,
+      "sha256": "d6483b344984501ce8c924c9fca0bff141682e00d997f016e71a38796c2e5376"
+    },
+    ".atlas/cas/99/99c80a1e32753c9eac0dd760d2939898fb0276ef3e0fe57c35cb52d52c1f0507": {
+      "bytes": 12835,
+      "sha256": "81da4ce8e9398514987f9a6d9e4de5a6c3942619c5f31b437d1216cf0a37327a"
+    },
+    ".atlas/cas/b5/b5521107209f035fee13c859a304eed0c68e6519f4426c5822e30795b6a72ef9": {
+      "bytes": 29789,
+      "sha256": "d6e2f95ad1997b611cbcff703ef294b385b428528176f9af6a524e7236492735"
+    },
+    ".atlas/cas/61/61886d434b7c90a91fe645693f326ab4524bb6969e414b004f563e441b62214d": {
+      "bytes": 14902,
+      "sha256": "08d5fa513202660913c6a45d687a8699bb2edc7f7179cfe87d9bdb486919b257"
+    },
+    ".atlas/cas/35/3503d5acc84be88be7ec60ed768745bb7d75c9121c62597d9c51788df0af6bc3": {
+      "bytes": 461,
+      "sha256": "a3d1d79440a55a752b89625dd1862c435271a3c5358bf44ba47e766a52451a88"
+    },
+    ".atlas/cas/a0/a0f99a837c74e924437510099a0f20f1a203884c1c635b4c19068efd3d39f903": {
+      "bytes": 4622,
+      "sha256": "d3e8f5770f028bf732ead0e52b65204083edade749562cbeda0a61cb4243e586"
+    },
+    ".atlas/cas/9a/9aace74eb6d7cc4f16866c28ed75a207abda923e69f91a50054c804c67cb9078": {
+      "bytes": 5358,
+      "sha256": "dcab197f09fe36f5bb77d9f13aafa1d718507fd1e13e0cbe8536bc3c94f8342d"
+    },
+    ".atlas/cas/36/368914cfe75cee62f19432b9400987656abe5f49e9af11a2e6ce94daff8d1629": {
+      "bytes": 36825,
+      "sha256": "812e604e51058220999128f1a9827110f2961f9a74feb06a444d4ce3a508e08e"
+    },
+    ".atlas/cas/07/07c3cdea18c603cca7b3e5c52249baa9d32ee3d31d306c807b84143999fca446": {
+      "bytes": 52379,
+      "sha256": "06a2f64e43731e05458f96c3d1b1850e10164b5fab4159f06e0786f5b457b317"
+    },
+    ".atlas/cas/3c/3c6a6f3dfba8fd3a64aa62233d6330871a574a6bd7e472b57e51ba21ded4acd1": {
+      "bytes": 19098,
+      "sha256": "c747a613a19b7786fc30b186f27f46423ed3a49427f71a406633227c463d29b2"
+    },
+    ".atlas/cas/3c/3cb30b12b70084e0bb31447cd386602a70685048c370767b0ff7e0f3ab2ca1ea": {
+      "bytes": 4227,
+      "sha256": "c70dfb2060a926907869ff2a221b89198e5d1c1b90ee912bc2c72e54ca4b2bff"
+    },
+    ".atlas/cas/bf/bf594cb5c6a83e07e68eb62f756540742c55d6474b9e3c853400e15f45a5c2d0": {
+      "bytes": 60620,
+      "sha256": "a87960a0d4ca193462b08c964e1d102799d340a08114475aa118ad4f99e66b1f"
+    },
+    ".atlas/cas/a1/a165d6823eae49fdf860f37c726787c78ddf7b156b6191faab1ba114eef536d5": {
+      "bytes": 12069,
+      "sha256": "740378e6cb17953e477ed3bc8da16cd1fa15c4f2caf63318c355f1a1e73984d7"
+    },
+    ".atlas/cas/f7/f7e978d638675d386ab303b80dae68845e5b6d83be6f89dd2747fd5056b4756e": {
+      "bytes": 16995,
+      "sha256": "b7f5204536f4acdfcd344b8faa21ac7bf8386e1db04a8d57c58ced6581ff05db"
+    },
+    ".atlas/cas/8a/8acfe76b974b4d86c18c6f23a58a26286c673899183480b458b0a39c2cefd3b4": {
+      "bytes": 14236,
+      "sha256": "ab691a6a414bc279b004e87d00da0ef2f2ca144f4b0523070e6d70fd03e30f13"
+    },
+    ".atlas/cas/24/24562b81015aa558ebdd252b9cb774884491d65143b927e0a30ca53b7e4b325c": {
+      "bytes": 20589,
+      "sha256": "5fb89225b557e3271ff8a685e727172debdbe4ddb711f1e54a484e4024ac0fb4"
+    },
+    "script/guards/diff.ts": {
+      "bytes": 7910,
+      "sha256": "a783cf3a5dbf7527bd240b4cc147dd7e2fe9acae73428a1e70d6493dde8c419e"
+    },
+    "script/guards/baseline.ts": {
+      "bytes": 3413,
+      "sha256": "bc0ebe688a111174d1ed5a3fc174bdb15886cd617d7c109d3d16026a901e401f"
+    },
+    "script/guards/catalog.ts": {
+      "bytes": 2247,
+      "sha256": "f0358cbbc3f0835c098aa9951fbe6f09abfdc2f177bfe78f5c37324eeabc25af"
+    },
+    "script/guards/run.ts": {
+      "bytes": 11882,
+      "sha256": "2dfe91f11b237588f8f07e6119ab7ed28d3b6f524060519734517ce5d2bf83c7"
+    },
+    "script/guards/history.ts": {
+      "bytes": 2630,
+      "sha256": "591d246d2bb207c051975ff21e727c15a35bcb0e784ec49e496b564944443666"
+    },
+    "script/guards/engine.ts": {
+      "bytes": 5573,
+      "sha256": "6f16d7b83c63f590569815e5bbb26488be3dd31063788af4488e0680fb720fe1"
+    },
+    "script/guards/guards.test.ts": {
+      "bytes": 38921,
+      "sha256": "46fe09a66e87d423dff3ab3d6ae26772f058c84cc3edace6ff5e420900fd19f5"
+    },
+    "script/guards/rule.ts": {
+      "bytes": 10290,
+      "sha256": "707473799508f7f8959ac6c0b8804e49ccdc2f1b64b11d8354beb4d62c343949"
+    },
+    "script/guards/README.md": {
+      "bytes": 5871,
+      "sha256": "8e7f18ddfd6eab7d15acaca36aeadddb984ca44c15f1814d49c249145fe9dfe4"
+    },
+    "script/guards/rule.template.toml": {
+      "bytes": 1884,
+      "sha256": "ab9e4433f15bb47ec17acf7fba1709dc3872d06f517075ba0a6e4869667d3bb1"
+    },
+    "script/guards/config.toml": {
+      "bytes": 884,
+      "sha256": "25d8c63c635ac2233746523ba8e7a05dc3ba2e2f7ac43907cbc6cbb4028ca5ef"
+    },
+    "script/guards/rules/rs-test-ignored.toml": {
+      "bytes": 719,
+      "sha256": "93e7d1e0ab24bab1a50439161adffc5c79c4ad345a2663dded135db1c048d559"
+    },
+    "script/guards/rules/py-breakpoint.toml": {
+      "bytes": 603,
+      "sha256": "1f7625e19f57dc9df1eaa55d4c1493060324f237104d9107b8931a61386fe686"
+    },
+    "script/guards/rules/test-file-deleted.toml": {
+      "bytes": 1008,
+      "sha256": "2a037d0c192f2f727c04f9f1dc362ceb56a4324084f7ee6505bf0396d7333fd0"
+    },
+    "script/guards/rules/rs-should-panic-bare.toml": {
+      "bytes": 606,
+      "sha256": "3b6da6fd57f8c3d2ea9a95fc273f5dae9e7cc5542845861a5223bde1e0f4ecce"
+    },
+    "script/guards/rules/lockfile-stale.toml": {
+      "bytes": 1107,
+      "sha256": "822554296e7d886bf24261e4e7075a66d5cb14c59a20a59a86cef643ec3d9f26"
+    },
+    "script/guards/rules/gha-continue-on-error.toml": {
+      "bytes": 743,
+      "sha256": "2e90abfde712064bc2f9adbca9494e5db7400134ee0c551c59aae93a26177494"
+    },
+    "script/guards/rules/js-console-log.toml": {
+      "bytes": 903,
+      "sha256": "74ca17f272860b68910dc2f146572fea34fd4edc18a618d9d0e33a6a5ba941c8"
+    },
+    "script/guards/rules/binary-added.toml": {
+      "bytes": 761,
+      "sha256": "2250fceb5971c05756c69aa5964e5039587cd37e070702427be90f337ed91046"
+    },
+    "script/guards/rules/rs-todo-macros.toml": {
+      "bytes": 637,
+      "sha256": "86b7512ec6bfa9fd01dbc2091e9a4fe199b23cde03fd5e757c0ba9bbb4ab3042"
+    },
+    "script/guards/rules/test-globalthis.toml": {
+      "bytes": 897,
+      "sha256": "f97ce87d54d1f9abfa00c4b9c4499de0045fd867e091e3551a2a2f743cebdac9"
+    },
+    "script/guards/rules/ts-any-added.toml": {
+      "bytes": 946,
+      "sha256": "d2a06668a2ad4aff2dca2a6bf04453fdc9f5f5fe5a856dfd1024f583297bfe43"
+    },
+    "script/guards/rules/secret-token.toml": {
+      "bytes": 1554,
+      "sha256": "7ef1bbe71bbf4490998082395cb74f799a056587c75a7734bef8f7fef9e70444"
+    },
+    "script/guards/rules/rs-dbg-macro.toml": {
+      "bytes": 537,
+      "sha256": "b4ea631c0407f8c31d0d436cd3a3969f5f12d39638da808f84736a5e9f1fe4db"
+    },
+    "script/guards/rules/gha-permissions-broad.toml": {
+      "bytes": 1054,
+      "sha256": "a1c837111a0ba08532480643165f8fb64f7f6707640c8bccb9b4cb720eaf086c"
+    },
+    "script/guards/rules/tls-verify-off.toml": {
+      "bytes": 1255,
+      "sha256": "469e42c64396eb1de245edd9a535751cc3b201d5fc56151fcb273208348e2c99"
+    },
+    "script/guards/rules/build-output.toml": {
+      "bytes": 786,
+      "sha256": "bec2d2858e3d07894265da944aee77ee348e63fc560f0eaa4fc658725c1eab64"
+    },
+    "script/guards/rules/lint-disable.toml": {
+      "bytes": 1009,
+      "sha256": "ea3e05b22c5d71cdb5cd046c571c8b67dbad829351f6dc88662f7bcf89eef1b1"
+    },
+    "script/guards/rules/cargo-lockfile-stale.toml": {
+      "bytes": 978,
+      "sha256": "1005b6e9807f371f64289c8774fbf93618842e59733602822f858f3bf851524d"
+    },
+    "script/guards/rules/guardrail-ignore-added.toml": {
+      "bytes": 876,
+      "sha256": "ffbf082a90ea663c78464f4a3538fb99262731df10a508e7455c468a5aa1e0ad"
+    },
+    "script/guards/rules/gha-curl-pipe-sh.toml": {
+      "bytes": 1075,
+      "sha256": "c2b61e94ef212265dfafd1be7e2130d9c046deb49c3c1827499fb7b9b3d71559"
+    },
+    "script/guards/rules/local-abs-path.toml": {
+      "bytes": 1338,
+      "sha256": "2825ac99dc0b541447c0882cb7ebb654f85ec9bbc98be3787ea78f814fc04751"
+    },
+    "script/guards/rules/hook-bypass.toml": {
+      "bytes": 702,
+      "sha256": "eacf229b1df233e2739e6a4c7dfc669597a445a72506b8d45b708daa4a9fa801"
+    },
+    "script/guards/rules/test-retry-added.toml": {
+      "bytes": 786,
+      "sha256": "82c960705192d92ff3a5311048bba9a0bba7d4832c19195e5c0d62bdd71f3fb1"
+    },
+    "script/guards/rules/heredoc-residue.toml": {
+      "bytes": 710,
+      "sha256": "57f11a31c6e991f309d914d7f109baf9ff19e6c2401a4e37332586de5a48a621"
+    },
+    "script/guards/rules/js-loose-assertion.toml": {
+      "bytes": 994,
+      "sha256": "cf79e1960e4987783cf6711e0687f14aae4d90f7604db3fa5481565afdb8771d"
+    },
+    "script/guards/rules/migration-destructive.toml": {
+      "bytes": 1118,
+      "sha256": "36041496113b7321d55e6350dfc590b1a55875219a98d395a435a71a6057dc28"
+    },
+    "script/guards/rules/ts-strict-relaxed.toml": {
+      "bytes": 876,
+      "sha256": "6b888f6790df537d5576b4e6864aeea045a88f82d2df9f4e44829a24baa9db7f"
+    },
+    "script/guards/rules/dep-lifecycle-script.toml": {
+      "bytes": 916,
+      "sha256": "f28e16e870d3707214607c4c36d80fc1e6cc9368c0113e086e23b530b70cbf5b"
+    },
+    "script/guards/rules/migration-edited.toml": {
+      "bytes": 807,
+      "sha256": "a01dea8cd98fd87d7d956ed846b916ee8753d42ece394d30830e96e04bc9a6df"
+    },
+    "script/guards/rules/migration-add-required-column.toml": {
+      "bytes": 1168,
+      "sha256": "2be925687f29231150f3987828df123c0924a7693de25dd6a7a1f82bd2927541"
+    },
+    "script/guards/rules/gha-secrets-tojson.toml": {
+      "bytes": 665,
+      "sha256": "5d3e488a4b72d4cdf9646935555053ccac74b056d56efcec4024148b745a8a89"
+    },
+    "script/guards/rules/large-file.toml": {
+      "bytes": 746,
+      "sha256": "13014b3d1844b55321fd8ee70fb098f1dd7504c46f513d5b6b73ffacc53ea671"
+    },
+    "script/guards/rules/ts-double-cast.toml": {
+      "bytes": 888,
+      "sha256": "912715be8c45f6caa92002b1f1e90e80bdf4babaf53b7a6d390c17ba4f8024b2"
+    },
+    "script/guards/rules/gha-insecure-commands.toml": {
+      "bytes": 779,
+      "sha256": "86565a2f2518549f7fdc2dbab4da1eafb9f9887a59a82f3e753394f45d550c1b"
+    },
+    "script/guards/rules/plugin-legacy-sdk.toml": {
+      "bytes": 1005,
+      "sha256": "2150249881c6770f9b743eea62814e8cc4c8761f9c568ce7b8620b49da4dd54b"
+    },
+    "script/guards/rules/gha-pull-request-target.toml": {
+      "bytes": 858,
+      "sha256": "00b708e1e630696c26701305dccc0a27a484eb981705c9570ee4aaa0420ac88d"
+    },
+    "script/guards/rules/private-key.toml": {
+      "bytes": 1096,
+      "sha256": "007dcaf73f0538ac32ca9df5e23f41786765d1d399739b3632bd15bcc84b8748"
+    },
+    "script/guards/rules/arsenal-evaluator-file.toml": {
+      "bytes": 658,
+      "sha256": "d833db4542c9fae0b584750ddcb466adb9f4a3932296827942a6a6163cb29d43"
+    },
+    "script/guards/rules/py-no-cover.toml": {
+      "bytes": 540,
+      "sha256": "56c14f3efaaf45fc26a0c85a02afcc20382dd58314848929cfc2cdde9a02b925"
+    },
+    "script/guards/rules/local-tests-escape.toml": {
+      "bytes": 868,
+      "sha256": "3056a564c4fe81083bcf1198a19a4eae6619882bf07121bbce6f7449ce641968"
+    },
+    "script/guards/rules/js-test-focused.toml": {
+      "bytes": 1079,
+      "sha256": "1d5f9dfa2318f11fe367671ff45898fecf0668f6ffb94dd5099cd691d3f04f76"
+    },
+    "script/guards/rules/test-declaration-removed.toml": {
+      "bytes": 814,
+      "sha256": "f7c046d9bf887750dcebe13625b7ce762c23d3bb42d469c11f8691788d1b35d8"
+    },
+    "script/guards/rules/schema-any-mutable.toml": {
+      "bytes": 1065,
+      "sha256": "b1e6f70f82ae6afda2baefe2fa0276f2e649c9da9e520984785dc0713d6a7dbb"
+    },
+    "script/guards/rules/env-file.toml": {
+      "bytes": 699,
+      "sha256": "7de7dfb925f3521bbb28e2b2dfe34554717bbf227a574d1207cb90e8855e34d7"
+    },
+    "script/guards/rules/client-env-secret.toml": {
+      "bytes": 1110,
+      "sha256": "e674b61679181a2bba05f8cb9be131bdfdb3f72abf7811d54123a2c32c69e844"
+    },
+    "script/guards/rules/gha-template-injection.toml": {
+      "bytes": 1476,
+      "sha256": "8d640c299e352a303d3f7ed6b33d1411b36d3eae469a437eb906a165c3c814ac"
+    },
+    "script/guards/rules/llm-elision.toml": {
+      "bytes": 1176,
+      "sha256": "f6b52256130be040013ac222bf6c1746ce6434bd437225411c3a2b313cff45f4"
+    },
+    "script/guards/rules/conflict-markers.toml": {
+      "bytes": 904,
+      "sha256": "c46334fa1e21fa0093e84985501bf570fba91acb4fe69d50f613051089fae409"
+    },
+    "script/guards/rules/merge-artifacts.toml": {
+      "bytes": 533,
+      "sha256": "a876a9e58f0abb4af42c17903741ceb9ca81893d0a2682b6adddcc98f4f2ee54"
+    },
+    "script/guards/rules/test-timeout-raised.toml": {
+      "bytes": 895,
+      "sha256": "bc535c87d2e77ffe8978de3b05c6280aa0d675f5a9717d5cf94c36320e848351"
+    },
+    "script/guards/rules/symlink-added.toml": {
+      "bytes": 504,
+      "sha256": "7bda1f9cff6b92c67622bbc3f5e976b51dbc8f43dfc1a14e77fb037ea9b82078"
+    },
+    "script/guards/rules/py-assert-trivial.toml": {
+      "bytes": 564,
+      "sha256": "6b700dc9e6c6f9a6d9f917dbcd25c47c21a6481c407547e705ad02e61ecf9982"
+    },
+    "script/guards/rules/dep-git-source.toml": {
+      "bytes": 1410,
+      "sha256": "39b9a4ce1fbf3dadf9ef35300f576be58fd529b90ca9b8d79a052cba12652f78"
+    },
+    "script/guards/rules/gha-unpinned-uses.toml": {
+      "bytes": 1086,
+      "sha256": "5af64403c6a85a559a22595ebe249aeac04ec77a011b7ef41f4d356465ef8c12"
+    },
+    "script/guards/rules/destructive-shell.toml": {
+      "bytes": 1306,
+      "sha256": "0424dd5423e1c10089e94de482f7af81edd66d390ebab7f795ff0a9e54e50955"
+    },
+    "script/guards/rules/dep-registry-override.toml": {
+      "bytes": 1280,
+      "sha256": "2e90139de54330a478b5be1ef0f4009d86ced27a48434ba4144cab41fd8e11b0"
+    },
+    "script/guards/rules/agent-scratch.toml": {
+      "bytes": 866,
+      "sha256": "48577cb08b39c11874b3833cdfb095d9f9c1975fb325c5b3d6195f40b8728485"
+    },
+    "script/guards/rules/os-junk.toml": {
+      "bytes": 531,
+      "sha256": "a05ad4e3bbde2f046b9d7c6748cd2a85a29a20a05ac86ce886f4c5334849eb5e"
+    },
+    "script/guards/rules/py-test-skipped.toml": {
+      "bytes": 1225,
+      "sha256": "602d842d2bd040a76f2f7897b7c7f3c2dc8c36870f6585b54406e36efa5aeb68"
+    },
+    "script/guards/rules/wip-marker.toml": {
+      "bytes": 925,
+      "sha256": "19c1393afa5d38bf9b413197cb0321cfbf21326ae33245962d4d58834de6968e"
+    },
+    "script/guards/rules/dep-new-added.toml": {
+      "bytes": 1154,
+      "sha256": "26ae7c88e9b3fdc93c6219aee9ca668047a5dd4a4b23ecf81a7bb6f28a658bd9"
+    },
+    "script/guards/rules/gha-job-disabled.toml": {
+      "bytes": 697,
+      "sha256": "94748c71446715626db27803ff24604521270e65520cbc5d528643ae2f4e92fd"
+    },
+    "script/guards/rules/py-bare-except.toml": {
+      "bytes": 663,
+      "sha256": "0b30ec68c4b257bb9d4bf8885d8eac6b1eb31572b27a0ae417eab07bb60ee607"
+    },
+    "script/guards/rules/exec-bit.toml": {
+      "bytes": 732,
+      "sha256": "a85ba3e3c96b0ec204c9b5580bd31c3b4d74380c2a2e93721c27f0cd75876540"
+    },
+    "script/guards/rules/submodule-added.toml": {
+      "bytes": 515,
+      "sha256": "74d9329c27d028705b5c53636c58f1a8becaf0c0096a6be89694038104d24ac1"
+    },
+    "script/guards/rules/test-assertions-removed.toml": {
+      "bytes": 1009,
+      "sha256": "42aa515ad6180cbc7e65732df4207cc714aa5189edd17f9129365379e38c02bb"
+    },
+    "script/guards/rules/gha-secrets-inherit.toml": {
+      "bytes": 557,
+      "sha256": "cf27f8305f5084cd1ca0a17f67f93a9d2ba1228c38de92da044117e1cad47373"
+    },
+    "script/guards/rules/js-empty-catch.toml": {
+      "bytes": 751,
+      "sha256": "1109d909ae0fdff57a4115338f84415bb0a42b559ebbc1267435263b3fd89928"
+    },
+    "script/guards/rules/protected-paths.toml": {
+      "bytes": 1169,
+      "sha256": "bcbcfc0e480f91a55bca51ca13c69816b35c105227f253a3a5375d44977817d1"
+    },
+    "script/guards/rules/gha-env-write.toml": {
+      "bytes": 966,
+      "sha256": "8f0ce047faa5dfb7b75f52c62f9a6ec89e4646f24823c57bd6b80ad89b29e319"
+    },
+    "script/guards/rules/js-test-skipped.toml": {
+      "bytes": 859,
+      "sha256": "74c7da8dcab9ec9a70ae8c59038b73978d30e81448fc910a7e27126303ff60d6"
+    },
+    "script/guards/rules/ts-ignore.toml": {
+      "bytes": 888,
+      "sha256": "c34ff6b7ed0218e33c6e8496f38952f5b4b694f3ed09bddaf60957131e8da84a"
+    },
+    "script/guards/rules/py-type-ignore.toml": {
+      "bytes": 773,
+      "sha256": "65cf3b54b0d7399e9c6684de807ec6c2f73f676e3c807ae3f73ca15994998c87"
+    },
+    "script/guards/rules/js-debugger.toml": {
+      "bytes": 502,
+      "sha256": "5e6299b652346fc09adfe473a7132e73b4fea41eeb27845413131ce5b6896328"
+    },
+    "script/guards/rules/removed-evaluator.toml": {
+      "bytes": 1361,
+      "sha256": "3916a0a2f5181f0910b07d484258b86c8542ada43b26be2f0adfb10dae14a76c"
+    },
+    "script/guards/rules/merge-outside-conveyor.toml": {
+      "bytes": 1338,
+      "sha256": "ba014bd78bebb9c135c992ae20ecef7dd7b7e7460233c5a239c44257bc8f4c89"
+    },
+    "script/guards/rules/gha-deprecated-commands.toml": {
+      "bytes": 729,
+      "sha256": "bd62919029782b95ba40f8a84c40d31b135aa9bc8791dd3bdad4826f6bfba72e"
+    },
+    "script/guards/rules/py-noqa-blanket.toml": {
+      "bytes": 517,
+      "sha256": "f3dcad77b23677c47065c17f5aecb877a89256a65a430ba0b7930ee3ed8f442d"
+    },
+    "tooling/httpapi-codegen/package.json": {
+      "bytes": 505,
+      "sha256": "6f3d32f8c7c677ff31416438c83bb4df5c55a484fae0e8d463bde0d32565706d"
+    },
+    "tooling/httpapi-codegen/bunfig.toml": {
+      "bytes": 104,
+      "sha256": "66e5b6f3d37e68aa8c3264290854bbce0fea2c819f734902fb10d4774318655b"
+    },
+    "tooling/httpapi-codegen/tsconfig.json": {
+      "bytes": 213,
+      "sha256": "8f18af40d4bf7be291dbc80b7156dac8d0567ac78fddb45284f5485780b84b20"
+    },
+    "tooling/httpapi-codegen/README.md": {
+      "bytes": 4627,
+      "sha256": "1b15da82964d72844db7450b53239499f8905e638e377c95a9a8c0fc6f2005a7"
+    },
+    "tooling/httpapi-codegen/test/generated-consumer.ts": {
+      "bytes": 1297,
+      "sha256": "3a5bf6af432232e8f7497cb059ae4df718ceb2cfd9cbb3069ea09974dbfc2067"
+    },
+    "tooling/httpapi-codegen/test/generate.test.ts": {
+      "bytes": 38829,
+      "sha256": "bba573339f28cb313cdaac0e8c8061324bb75ae8dd94b9187c1d2dd91fc7bbe7"
+    },
+    "tooling/httpapi-codegen/test/layout.test.ts": {
+      "bytes": 7447,
+      "sha256": "9d610e64bae76c53f120adbb3f48c331e617dc8f3aa2a6e9bfe3e3d831251ce7"
+    },
+    "tooling/httpapi-codegen/test/effect.ts": {
+      "bytes": 937,
+      "sha256": "bc5dcf577aa748a49f55d176aa6bbdb1bebd1fa61a6bb20ebc53dcecd37e5842"
+    },
+    "tooling/httpapi-codegen/test/fixture.ts": {
+      "bytes": 1482,
+      "sha256": "113ecc44d1bc5d7c5c23b6d055ef2c9aba998230ed30e6580a282b1cf59e19ef"
+    },
+    "tooling/httpapi-codegen/test/default-headers.test.ts": {
+      "bytes": 15208,
+      "sha256": "78921e95f5727b638d8e768465a5b5f56a88eb70847960435cb3cf33a8f741ca"
+    },
+    "tooling/httpapi-codegen/test/optional-query.fixture.ts": {
+      "bytes": 1833,
+      "sha256": "3f8ed2a7a436ca679a8a699766f6e85d513cd781e3adfcae0267377eac484203"
+    },
+    "tooling/httpapi-codegen/test/bounded-layout.test.ts": {
+      "bytes": 7130,
+      "sha256": "ff1ddbdb66d051b5da0d92ec849eaedd4b668ac2db6fb62f04afd4fc85dce2ff"
+    },
+    "tooling/httpapi-codegen/test/optional-query.test.ts": {
+      "bytes": 6926,
+      "sha256": "57a9e7445eca3da76d33d0870f3d17219c1fd3946690e9023fe2c3b35e4d72c0"
+    },
+    "tooling/httpapi-codegen/test/capability-contract.test.ts": {
+      "bytes": 21471,
+      "sha256": "ec47db65333ed746aa69301cf70184a8a2571241bb5e9d5f4577f7498c0d3d4b"
+    },
+    "tooling/httpapi-codegen/test/write.test.ts": {
+      "bytes": 5038,
+      "sha256": "e5fbd0659da32e1bf44c2ef0f55b92ef277a34abd4422a197858d89c72467859"
+    },
+    "tooling/httpapi-codegen/src/effect-headers.ts": {
+      "bytes": 2509,
+      "sha256": "e58ebe2a406be4641bffe3d1db7debcecd042fb115d1d93f36804d0c054ac2d8"
+    },
+    "tooling/httpapi-codegen/src/error-symbol.ts": {
+      "bytes": 3806,
+      "sha256": "069b7ba204ea55ab57772bd2036284a84f392a629f8c43b2eabc141e2d4c605d"
+    },
+    "tooling/httpapi-codegen/src/index.ts": {
+      "bytes": 59915,
+      "sha256": "8a0e0c82edbddb08097d285ce523a80f70e9d98b764073941fecdefd0390b069"
+    },
+    "tooling/httpapi-codegen/src/imported-effect.ts": {
+      "bytes": 7573,
+      "sha256": "b8a62663b4a9fe080393ec167b3e842d3b8d4887afed7fe6f3f9b279d6a42854"
+    },
+    "tooling/httpapi-codegen/src/layout.ts": {
+      "bytes": 11580,
+      "sha256": "5776ea12d48453e3858c455e01a927e2a55f60bf44637ee6309137ac48ba24dd"
+    },
+    "tooling/httpapi-codegen/test/default-headers-imported/index.ts": {
+      "bytes": 83,
+      "sha256": "3611805287e43bfc7d5c8e14e6b0ca54e74f15f41fd61de3a9422541d13049a8"
+    },
+    "tooling/httpapi-codegen/test/default-headers-imported/client.ts": {
+      "bytes": 4800,
+      "sha256": "0a11cf065337fb0f9047c6aafe879be4700232db2fe0a02d553e34032ce167af"
+    },
+    "tooling/httpapi-codegen/test/default-headers-imported/client-error.ts": {
+      "bytes": 154,
+      "sha256": "aba3c7acc65d55713aaa166c8130894f0cdd9890ae0ef0716d849ed888f750ee"
+    },
+    "tooling/httpapi-codegen/test/generated/event.ts": {
+      "bytes": 1535,
+      "sha256": "64180056a6188fffccdd8c2151da7011fc7d6d4f2e8acad7efbdbcc739532fdc"
+    },
+    "tooling/httpapi-codegen/test/generated/index.ts": {
+      "bytes": 83,
+      "sha256": "3611805287e43bfc7d5c8e14e6b0ca54e74f15f41fd61de3a9422541d13049a8"
+    },
+    "tooling/httpapi-codegen/test/generated/system.ts": {
+      "bytes": 1094,
+      "sha256": "7ac93b6b2c77af81f53089a183835a07bcd25366b5952b86f51d34fe6ed012d8"
+    },
+    "tooling/httpapi-codegen/test/generated/session.ts": {
+      "bytes": 4217,
+      "sha256": "67e03d76a44234d9c3eef790cdbf913166064a1b4eacc343265c9f9a6ea99fe8"
+    },
+    "tooling/httpapi-codegen/test/generated/client.ts": {
+      "bytes": 2631,
+      "sha256": "779bc7db797bf2156dedf1883a980af1d978869ccaa5bd53d9c3ccb786c177cd"
+    },
+    "tooling/httpapi-codegen/test/generated/client-error.ts": {
+      "bytes": 154,
+      "sha256": "aba3c7acc65d55713aaa166c8130894f0cdd9890ae0ef0716d849ed888f750ee"
+    },
+    "tooling/httpapi-codegen/test/default-headers-portable/probe.ts": {
+      "bytes": 5490,
+      "sha256": "04087b6171b91649a764869c9403bbc4309af807bf19c104068da4a825185f1c"
+    },
+    "tooling/httpapi-codegen/test/default-headers-portable/index.ts": {
+      "bytes": 83,
+      "sha256": "3611805287e43bfc7d5c8e14e6b0ca54e74f15f41fd61de3a9422541d13049a8"
+    },
+    "tooling/httpapi-codegen/test/default-headers-portable/client.ts": {
+      "bytes": 2424,
+      "sha256": "9cdbd9c6aa0e17541647d9770776ed66abb7c705dc3327bea00fee5abc3fb291"
+    },
+    "tooling/httpapi-codegen/test/default-headers-portable/client-error.ts": {
+      "bytes": 154,
+      "sha256": "aba3c7acc65d55713aaa166c8130894f0cdd9890ae0ef0716d849ed888f750ee"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/requests/l1-b-v3.txt": {
+      "bytes": 3270,
+      "sha256": "38eef4fb425fa820f80315e79f459107ecce999a0532fa7f9cd9108198815631"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-b-v2-j1.md": {
+      "bytes": 11163,
+      "sha256": "223f6b965dc8f1e5ed3600805275f0ca7d8c4cea0bb14aff10bdc857d3219f02"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-b-v2-j2.md": {
+      "bytes": 7143,
+      "sha256": "0ad7a34608713c5e40c9f7ecf023ecbc36d6e9e320925d4b67d448f23f034cf4"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/recipes/b-l1-v3.json": {
+      "bytes": 10752,
+      "sha256": "29bc32770f0462165481c50463eb123e3494a59c0d631769b12cbcb12e4e9f5f"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/work.md": {
+      "bytes": 3841,
+      "sha256": "3d92833403bcdaa66c89359bb5992741c5933b309f53e5e18e3ed23f5d087e50"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/transport-provenance.json": {
+      "bytes": 298954,
+      "sha256": "d6a04ec84fa228625bc6e770826717d0822dcc692997571d8e9496f8f2822672"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/native-package.json": {
+      "bytes": 362544,
+      "sha256": "a2e102dde18500962c8dc79bdbeeabd9afa7b21bc4bc0745baf3e16635ea3132"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/execution-ledger.jsonl": {
+      "bytes": 15907,
+      "sha256": "d788e746af4cc771975ad325ea9981e82aa5a8114a1d87b492c95cef9f167646"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/source-disposition.jsonl": {
+      "bytes": 184561,
+      "sha256": "6b20973fadbacb9033a760d441af7502da8ec828484e11d9423136d8080a53d5"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/requests/07-l3-j2.txt": {
+      "bytes": 9667,
+      "sha256": "f312086e53318ee6b3b933b96e6db84c0bd45de031f43ffb0c52aeb191e0e8de"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/requests/07-l3.txt": {
+      "bytes": 10350,
+      "sha256": "6a3366fd2ae4091ffa22293b910d661b68ecfa27ed3b861cab7740437d488785"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/requests/runtime-scout-followup.txt": {
+      "bytes": 575,
+      "sha256": "93c076042c37b11d303b0193c7f1532353daee223372084349dbbdff484de8d1"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/requests/producer-l1.txt": {
+      "bytes": 14463,
+      "sha256": "57ed601ceb85b4a048abf005184e4a0b172203a87be12cf99d53b48b7289ce45"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/requests/08-l4.txt": {
+      "bytes": 10480,
+      "sha256": "3b8d4b6990ad79d58842152c2ade163002df46d76d8804aea3ac7fea3bc76b06"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/requests/07a-l3-delta.txt": {
+      "bytes": 3114,
+      "sha256": "da948be9d836670f150b0afbd6071de6480946908eefecb0ff59aff6c54fd4ed"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/requests/runtime-scout.txt": {
+      "bytes": 1672,
+      "sha256": "0242d1f0d11a5804bd5525646a537f24c29415137639732ce9c3000be8359209"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/transport-check.json": {
+      "bytes": 5045,
+      "sha256": "750321e2e97434dfd5f9885a62e650f78ecbe7fe0a37cd78ae0497e223a9c673"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/large-source.json": {
+      "bytes": 533,
+      "sha256": "3eb5fa39fd63fc90e1e2547c14808018732fbc240c86713657a40dbe5555ee1e"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/l4-release.json": {
+      "bytes": 718,
+      "sha256": "dba9b013abda3805f3be7fdc1a4799d59b7806ec09d496cf4598ea9adee94354"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/l3-release.json": {
+      "bytes": 714,
+      "sha256": "fd44a6a91515bdaf200cf28e4c7ccf9b2e1c2e3d70008e2cf88747ad165f4c97"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/historical-frame.json": {
+      "bytes": 931,
+      "sha256": "9603edf9ae95b650cc29a584bce7a5a85c7234c949d407e2f6c17d5b2941c9cb"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/l2-release.json": {
+      "bytes": 830,
+      "sha256": "35f6a60a7aca9937b957022fae7ef1868b84a5b4d4284f961882568675c3a2c9"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/exact-prior-review-binding.json": {
+      "bytes": 4919,
+      "sha256": "1ddbe230fbb8d711fc1f81ab08803272901f2d19617318ee7a84b23d1a2576bb"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-common-controls.json": {
+      "bytes": 3059,
+      "sha256": "8992baa07dfcbb103b9f7de9711cefe5d873b669ca93f0ff0ecdb31dc263aff7"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-capture-integrity.json": {
+      "bytes": 20763,
+      "sha256": "0eef1e19f5017418034112370acce42a16f77365ee05dbadf29dd4df6bc272f6"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/bun-setup.json": {
+      "bytes": 905,
+      "sha256": "519bbe7337741e46b6069418447c53282fea81799f07dd7139464b5507b81491"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/core-dependency.json": {
+      "bytes": 2174,
+      "sha256": "3cbdb9acf79a78e2c295b7cc41a336ac8f405ee24b47cf4729f137cab9c3db1b"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/input-materialization-plan.json": {
+      "bytes": 85091,
+      "sha256": "147cb96b6082f04993e94e22b54b8ac2323e2fe26e1ebc289e9e50a40ae43d43"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/l3-delta.json": {
+      "bytes": 290,
+      "sha256": "9c00b424dc59d52dfb7b2a84b6f2bae54df429a890b46b5d1765288f107b4737"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/base-body-reuse.json": {
+      "bytes": 18759,
+      "sha256": "c0be527e4952d855d7d12054b4050588c1e32a7bc3bb1f6cf54a6e3d42689231"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/l1-release.json": {
+      "bytes": 3522,
+      "sha256": "23674344f089dbc26e1cac7ee70e0de9809e663ed80a0967219ae53222d4b0fb"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-discovery.json": {
+      "bytes": 37066,
+      "sha256": "caf35249a9327407bab1da4f34bd0c118aaa30a4da98fa760275b6736002acbb"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/freeze.json": {
+      "bytes": 273,
+      "sha256": "9df6d5000e8312386cfef35bcc154c42d3db203677bda62c198d50b25449fc93"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-release-frozen.json": {
+      "bytes": 28282,
+      "sha256": "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/population-reconciliation.json": {
+      "bytes": 3679,
+      "sha256": "5a0e1dbb764a16449d46106408ae4102df712b74935c52c926739d37ad8b31bc"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-discovery.md": {
+      "bytes": 12720,
+      "sha256": "96cd7b5fe1639a8dc0e8535e9c7fcc68b14261611604bc14caa0fc3c7623c502"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/oracles/reserved.json": {
+      "bytes": 17333,
+      "sha256": "d6966c3eb500b6c2061cef8ced0cb57de3ab253bc1744ee83cf1489f3ad63023"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/02-j1-resolution.md": {
+      "bytes": 2765,
+      "sha256": "e4049734c495ad771445dd341a110c935b8f7f51a4a166776e3843e52721c986"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/08-j2-resolution.md": {
+      "bytes": 1883,
+      "sha256": "abdbf90d429eda331cb049f4628e8162e17c016ca37a45474a1164eee4db9d80"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/response-04c-j2.md": {
+      "bytes": 23384,
+      "sha256": "54063ddab81df10ec0399f07678ae9f4f8ba702eecfca2edf6b9bd5ab5f81076"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/01-j1-original.md": {
+      "bytes": 4298,
+      "sha256": "23214ecf3d655eaeed7e85096a7c0b94cbf9df2833dc49621a889f98d32db022"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/07-j2-original.md": {
+      "bytes": 2391,
+      "sha256": "db59124e81322a450ba40eb8bde682ae5ad9c54a369ba5948ec81cbd1db687b4"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/03a-j1-original.md": {
+      "bytes": 19224,
+      "sha256": "2d93518a9105bf952de5fc77248cc70857cfba2b609feabb8b0d243541f97153"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/archive-round4-manifest.json": {
+      "bytes": 3796,
+      "sha256": "00dc72da459e96a0cab0bb91eb14d4022c6e3b40ca7fb99c496bbe27cefe527f"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/03b-j2-original.md": {
+      "bytes": 6974,
+      "sha256": "3e5c405034f52d615e220c5d0e9abe76c4159dbe1ffca88e0b67525d3365f21f"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/06a-j1-resolution.md": {
+      "bytes": 1683,
+      "sha256": "de4233140f5f484c18f00513c9155083bc48230762a7ec7cb742f6976911c2ab"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/response-04b-j2.md": {
+      "bytes": 30488,
+      "sha256": "3abb059626a745284de76a4f1c02befc4ec7339196e62c9ef9492bcbf44c091b"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/08-j1-resolution.md": {
+      "bytes": 1925,
+      "sha256": "bc0acaab1337cd8e1d3a4245861eb2f7be159cdef26250eeb47243fe38b871fe"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/response-04c-j1.md": {
+      "bytes": 23907,
+      "sha256": "53b7ff7811f32c47c0fcc25bb8e7eeae2badf1c0021d1c69bbd29cca62d43976"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/response-04d-j1.md": {
+      "bytes": 1506,
+      "sha256": "55854c3b6efe635f6dfa83c2585f6c05f13001f047d83e98dce4f5696ee7e24a"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/04a-j1-original.md": {
+      "bytes": 5495,
+      "sha256": "fb14a9ccd6b8b62fa6012a8db2f53868d7f46c76b265a3c33becaa3998b85297"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/01-j2-original.md": {
+      "bytes": 4404,
+      "sha256": "0b5cfe16c1dbb5243a2bc634f4cd87c0debc9ea86886220032de77e71f1d693a"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/06-j1-original.md": {
+      "bytes": 2044,
+      "sha256": "0c61981f4d98ad6627b923d523e2f950088a4637e1be1df73882d09c167f4420"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/06-j2-resolution.md": {
+      "bytes": 3365,
+      "sha256": "2c500cdff1f6f7e34acc7d20d0a5307912865442c6f299e998bcb4e39789cfbe"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/03a-j2-original.md": {
+      "bytes": 19323,
+      "sha256": "3cd95768c4864beb29a8b60e3d01703a1ecbd2932ac4da78ab0fade64ea99efa"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/04a-j2-original.md": {
+      "bytes": 6151,
+      "sha256": "93fb90fc9eac104969db9d9987521c03d6dd4a397a24707e950367e0320b41d8"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/response-04b-j1.md": {
+      "bytes": 30561,
+      "sha256": "1464e4facbb3463d0a1ede66e0d59635dad5b300936c129d9097a1923894dccb"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/response-04d-j2.md": {
+      "bytes": 2215,
+      "sha256": "9daff7c28aa21b2ad8e471a2adf194bd146503d2ca52698b31f971a7e93102ca"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/02-j2-resolution.md": {
+      "bytes": 3561,
+      "sha256": "4d2a9327099a4a2c68c1290c15cea3b681917b8fffcb8bcd20e9248a7728d8e5"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/07-j1-original.md": {
+      "bytes": 2765,
+      "sha256": "0615b826726fa31bda2ee1c561e26121570193287e380ec53c86eef1794e24b1"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/07-j2-resolution.md": {
+      "bytes": 1927,
+      "sha256": "3c6a4a3020ec7e0ec5e437c7d63ff7d3838eee7921f28ebf393d89c738e3f56a"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/response-05-j1.md": {
+      "bytes": 3512,
+      "sha256": "286c3d6b49e62c9de7b3b3bf81930b5ed29afc9b05305075b8c49947b2f70892"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/07-j1-resolution.md": {
+      "bytes": 1554,
+      "sha256": "4a732d885af8e401c55d1bf7959c0d0d3b616bb14f225a61ef4e0cc93518b263"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/archive-l1-release-manifest.json": {
+      "bytes": 4318,
+      "sha256": "900766c1c7e82f362095589af0d0d3ca4eeaa4075dcae438d9c75de7358ecb55"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/archive-round4-04a-D09-visibility-limit.json": {
+      "bytes": 829,
+      "sha256": "65e0709586b19fddcddaacc7f6325da51f9d34653ee5326faa0c38edc665c823"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/03b-j1-original.md": {
+      "bytes": 8527,
+      "sha256": "3f1f671d651a075ac89a96828fdc9fc373ffad5bcb0091794ddf909354cf1b75"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/response-05-j2.md": {
+      "bytes": 4196,
+      "sha256": "81e4b95ac933d8e7b4bf1766389173fc1e943c61da460f342c198c8725d6055b"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/contracts/public.json": {
+      "bytes": 10021,
+      "sha256": "7dcc9df0003b99722b18538fab1e45adb3ac60e6697397677200feddce40909e"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/recipes/l1-stream-correction.json": {
+      "bytes": 1006,
+      "sha256": "e3b24e24dd7e61e2d228fbea01f8ce32d57e3b829a4415872f5f66d96a5e4cd2"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/recipes/l1-domains.json": {
+      "bytes": 9971,
+      "sha256": "ab341afdffdabdac1140fa557431d8f12f7896fb6ed42b4689703b6585a36c85"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/dossier-D19-D24.md": {
+      "bytes": 18988,
+      "sha256": "2bb7b4fc72607936825f9afd1b40d7d9c3c30a9f77951b4a996fcc5d66691954"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/dossier-D13-D18.md": {
+      "bytes": 25540,
+      "sha256": "9c3e810e8156c4c64e2ac6c12caaec9596a27c0bd4e7eec6007c43af0e279135"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/dossier-D07-D12.md": {
+      "bytes": 27029,
+      "sha256": "6acdb00cc472af94bbc73dcfdc762b36d5665fae281728f5021235b13db3d606"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/membership-exact.json": {
+      "bytes": 14533,
+      "sha256": "791154a9f043b43a2ab6a08a415c1af7d45a80746f34b2a67d4c55582af9f4ff"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/verification.json": {
+      "bytes": 1824,
+      "sha256": "131120fb7ea77ac92a3aea3bd05cc073e5195b4d43a1de8936cce645af5e4d10"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/selected-evidence.json": {
+      "bytes": 203006,
+      "sha256": "9fa72ec5e4445fdb17663d080f7957b31dc0229dc407dd0341b672ee075ce598"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/manifest.json": {
+      "bytes": 2958,
+      "sha256": "e07afdcc8805ffee319a30174345aa6f4d8698fa25901603c773fc702f8647f4"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/dossier-D01-D06.md": {
+      "bytes": 20209,
+      "sha256": "1cb46330d1e609d3d4787a63222aa755cb34006e9d0c4a989b2c98df53d8784a"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/domains-exact.json": {
+      "bytes": 54390,
+      "sha256": "b8cb3d97074b0f1f206d8ec9cc425579a65e76dd61eed86711f2f64db3cb0a46"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/stream-contract-identities.json": {
+      "bytes": 1593,
+      "sha256": "ece7161fbd422ed9c8467ed65f962ff914a8e1e99d016e586c53ac70e024737e"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/producer-response-provenance.json": {
+      "bytes": 764,
+      "sha256": "85e6828f04933edad0424eacd183d06aa76381ea5b26b5310e458d06c4aada63"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/stream-contract.diff": {
+      "bytes": 1786,
+      "sha256": "fd8bd5a6f2fe60cf9204a0e80aea6b86bf98ba80a3697f9af72b089a8a306f8e"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/producer-response.md": {
+      "bytes": 12310,
+      "sha256": "e445866baf08d7ed7cabed6638b8cdb0001e9c5cb86ea26fff9e8e000685e5bb"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/reuse-originals/l1-b-v2-dossier.md": {
+      "bytes": 208309,
+      "sha256": "42c2595c2e243b3612a13b7ed615c5bfbeb731706f760119c1f7fd6719541def"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/reuse-originals/l1-b-v2-j1.md": {
+      "bytes": 11163,
+      "sha256": "223f6b965dc8f1e5ed3600805275f0ca7d8c4cea0bb14aff10bdc857d3219f02"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/reuse-originals/l1-b-v2-j2.md": {
+      "bytes": 7143,
+      "sha256": "0ad7a34608713c5e40c9f7ecf023ecbc36d6e9e320925d4b67d448f23f034cf4"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b-l1-v3/review-domain-disposition.md": {
+      "bytes": 65726,
+      "sha256": "95b17106dc5c26bb6d39c8d2d80b48fca8f75d35fe4f5f8ec3f232c7d71411c3"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b-l1-v3/review-entry.md": {
+      "bytes": 1580,
+      "sha256": "59319cacccd4ba4fd646c5d3e66fac278475c53a5a65b9937344c04b45e63d82"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b-l1-v3/body-diffs.md": {
+      "bytes": 14173,
+      "sha256": "b4a46c91af59e6ee51fc9bafcb8e8dc5a00117d7c7d8db09e6fe914313d84bbf"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b-l1-v3/conditional-needs.json": {
+      "bytes": 81780,
+      "sha256": "2cf85ff08aa787dd6567345901416e40e70633380de9c0c5dde633e0824bab90"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b-l1-v3/findings-resolution.md": {
+      "bytes": 3341,
+      "sha256": "75ca2039e7bcdbf29c332bb012683fb79a805abb215da67879afcbedb00ebe74"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b-l1-v3/body-identities.json": {
+      "bytes": 6680,
+      "sha256": "cc8093683c006779959ff4ac15c9d5decc4f219431b32ef0313b5ab27706220d"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/v1/dossier-D19-D24.md": {
+      "bytes": 18988,
+      "sha256": "2bb7b4fc72607936825f9afd1b40d7d9c3c30a9f77951b4a996fcc5d66691954"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/v1/dossier-D13-D18.md": {
+      "bytes": 25540,
+      "sha256": "9c3e810e8156c4c64e2ac6c12caaec9596a27c0bd4e7eec6007c43af0e279135"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/v1/dossier-D07-D12.md": {
+      "bytes": 27029,
+      "sha256": "6acdb00cc472af94bbc73dcfdc762b36d5665fae281728f5021235b13db3d606"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/v1/dossier-D01-D06.md": {
+      "bytes": 20209,
+      "sha256": "1cb46330d1e609d3d4787a63222aa755cb34006e9d0c4a989b2c98df53d8784a"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/v2/dossier-D19-D24.md": {
+      "bytes": 23269,
+      "sha256": "92cca9bd11bc19a86b8fee963053cd927db86a170eb4a420d9bb52fdf213f209"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/v2/dossier-D13-D18.md": {
+      "bytes": 31716,
+      "sha256": "810cf8383f3370f11d6b03172184c19a30aaf459d2ad17de32910a3a59a8ac83"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/v2/dossier-D07-D12.md": {
+      "bytes": 34510,
+      "sha256": "68ce7d7715261164b4c112982e3b7ff9e7e9219634138840878371257c47ed40"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/v2/verification.json": {
+      "bytes": 7986,
+      "sha256": "3fa766977c73030c9e28d1a7e16d557770ea10d4282b161c7f8a1eeff45ec372"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/v2/manifest.json": {
+      "bytes": 3830,
+      "sha256": "73a850078417fc3cc5e7f1217ce488feaea260bf35c37a08a2c31f7f13ec2acf"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b3-review/v2/dossier-D01-D06.md": {
+      "bytes": 31892,
+      "sha256": "b31b058452a3f0162589eb543f8163a31c3ad7646268d1fde832e81062b0ae5a"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/bodies/stream-contract.md": {
+      "bytes": 3883,
+      "sha256": "8aac12750cd96c30f9bee287bdab2fdbb61ca67903b604aa8a0c1809e7c4bdfa"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/d12-union-evidence.json": {
+      "bytes": 6733,
+      "sha256": "1362566f4f166f5494f8d0a5d12e416ea5ebaaed03cb65eaacc270fe5c825253"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/response.md": {
+      "bytes": 4275,
+      "sha256": "aa3e872fb8a23ea2690131d260faa4ffad7e0eb3876734ad7e57f72d1fdbbf89"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/supplement-D15-D18.md": {
+      "bytes": 7038,
+      "sha256": "73b95a7db8d2c61b2f62656eec02e6b19d6cf68b349840d46cced64cacdf61fd"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/supplement-D15-D18-identities.json": {
+      "bytes": 2630,
+      "sha256": "aba27a144a08a9fff82c3a6fd59e10c96b112f15f4cacd07696805422ebbab74"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/supplement-D09-mcp-catches.md": {
+      "bytes": 1971,
+      "sha256": "282a547c7ebcc18ec8fb1c0987f47813725bea695a9ddc010673bfa40feddfb6"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/review-manifest.json": {
+      "bytes": 2233,
+      "sha256": "77ad31361a41141138d6eab6700a306527b01dcff9fdc5a4e42baf3e877a4bc0"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/domains-v4.json": {
+      "bytes": 53348,
+      "sha256": "d6a53a3e50e86614a67dfa6a43d4b70fc9d563a97881b884b1c91d829416ae62"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/original-review-domain-disposition.md": {
+      "bytes": 65726,
+      "sha256": "95b17106dc5c26bb6d39c8d2d80b48fca8f75d35fe4f5f8ec3f232c7d71411c3"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/domain-disposition.md": {
+      "bytes": 38080,
+      "sha256": "12248d1cc39a27b1655f1a683f02cd1af864f87945300a86b0ee4326227a4edd"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/verification.json": {
+      "bytes": 1264,
+      "sha256": "c69f6d715754fe1bc49341fe90ff3d49132f81511fad86e062b038f72ccffa83"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/manifest.json": {
+      "bytes": 6473,
+      "sha256": "a5eefb81ada94fd6461392e613043d9bcab154f5cc4e2a3a8136f392268d4dd6"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/dossier-D13-D18-v4.md": {
+      "bytes": 33794,
+      "sha256": "fb2dd55acba3dd59decadbc2e575e253bee6e95052d8f76ce79b2fe3b9743dac"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/domain-disposition.diff": {
+      "bytes": 97088,
+      "sha256": "9686eb1d6067b26f1cc411a34f835b092e7791e80c0128b74364e27e2dc1c783"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/dossier-D07-D12-v4.md": {
+      "bytes": 15736,
+      "sha256": "7f7406a6c749c237b7d28071f37a6229a1b06d98b913cec0b0f186736b6fe206"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/dossier-D01-D06-v4.md": {
+      "bytes": 12472,
+      "sha256": "183649bb5e918a6b5f38b4c516e64bd5566e4b7f5ed64497d5928171dd3342b1"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/supplement-D09-identities.json": {
+      "bytes": 1426,
+      "sha256": "ac39851a8a6d21a91cd94504348e355b35275aa79e50faf1927b33957412ce43"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/dossier-D19-D24-v4.md": {
+      "bytes": 25735,
+      "sha256": "3a8c595f42b86ff616dd4092803584edc4892d60a9c9dc8316073d5e03615045"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/retired-row-claims.json": {
+      "bytes": 222382,
+      "sha256": "65d5cb6d8668d7cd9b43041a867dbffcec4d07ee3e0543c91805bf0e696c7901"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/round-4b/response.md": {
+      "bytes": 1764,
+      "sha256": "a541a0c5d8daa409b3fcd32b412dedc6e1b5b09d4941ea92ae28f32b2c1af2be"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/round-4b/manifest.json": {
+      "bytes": 1945,
+      "sha256": "a545838f1de565430e00f977c7870170df617bedf1f3c66ed4c823a3a280030a"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/round-4b/request.txt": {
+      "bytes": 783,
+      "sha256": "0891dce311c904926b10ea2e834908f3a3de056d75d152fa85c270edd4dea507"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/delta-D06/response.md": {
+      "bytes": 2019,
+      "sha256": "a21ff0e6d81429128a2e333d11f668b4cd39bc778831ac074519b6ceff540c1f"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/delta-D06/dossier.diff": {
+      "bytes": 2405,
+      "sha256": "6cf2692d0a6bdd5407b847e77002e87c5b84fd742a792c218efef70af31adea9"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/delta-D06/manifest.json": {
+      "bytes": 3763,
+      "sha256": "ec224ed5fde39d17defdefff83e1f192b3f17573b3c5650102e01c8b7153f6ef"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/delta-D06/body.diff": {
+      "bytes": 1043,
+      "sha256": "72f822096ca617b0b44f40b4e38de7fc3827096b71c8cd430ebf21f3409b5ca7"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/delta-D06/request.txt": {
+      "bytes": 720,
+      "sha256": "25789f6875986c02ebe97ede71da04318e15aadc91646fdcba33e57f9b0c6c58"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/delta-D06/before/review-manifest.json": {
+      "bytes": 1279,
+      "sha256": "cba9dcda7e2d475b1c5074b3669e7b74bbb28234574de3424e7164a739b7ea41"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/delta-D06/before/domains-v4.json": {
+      "bytes": 53330,
+      "sha256": "bb5b347d985ddac2a34c1210111eac15181f4269a87d86011cd9e1f1922086b4"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/delta-D06/before/domain-disposition.md": {
+      "bytes": 38062,
+      "sha256": "36339a1329421f80d15e37b40ce26edd6e1c793a0ac1b5056471e4df2bfed57c"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/delta-D06/before/verification.json": {
+      "bytes": 826,
+      "sha256": "331fd930c59509c8afb2fa029b9a337457c72885bf322b4aea59235dc7a944cd"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/delta-D06/before/manifest.json": {
+      "bytes": 3672,
+      "sha256": "7258cdd82d613b9fc8e11a2e51032d33fd0778e64e26a4edacd21092843ef931"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/delta-D06/before/domain-disposition.diff": {
+      "bytes": 96763,
+      "sha256": "3b068ab551d589eaa16a8c81f7dc305bf9437e8eca514bd96db004c2a49a6055"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/local-l1-v4/domains/delta-D06/before/dossier-D01-D06-v4.md": {
+      "bytes": 12454,
+      "sha256": "e98967118c9da0a74dc4fc8a89bd7a5462e68b22c3a6f4f34da2ae4c3729c746"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b-l1-v3/bodies/codegen.md": {
+      "bytes": 4752,
+      "sha256": "2ec55afad54a871de673a252b6b7c604a8ecdb648cc1df9c80128d83a3f8e270"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b-l1-v3/bodies/boundaries.md": {
+      "bytes": 4634,
+      "sha256": "f6b230ed8578b6bd9fdb1e4eaca26892df9355a58fc1f5e2e6a157bffabf7310"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b-l1-v3/bodies/client-projection.md": {
+      "bytes": 5193,
+      "sha256": "089304921b004984de3b15b75af18fea3c7ebf15191f3874e9f668066569d478"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b-l1-v3/bodies/server-edge.md": {
+      "bytes": 5596,
+      "sha256": "711c744e089e59a11ee0b56ba4ec495277993dc7a58e351c8e2af4dc557ce404"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b-l1-v3/bodies/stream-contract.md": {
+      "bytes": 3824,
+      "sha256": "d1f68eb106131ba1efd61c4157b91826a25b176ab87ff74defc140ef9f4d67d8"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b-l1-v3/bodies/schema-contracts.md": {
+      "bytes": 5188,
+      "sha256": "c6ebd6124d89092e859aaa6a6a07c2a6fca5e2cdc82a62254b701b2de60266b2"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b-l1-v3/bodies/session-contract.md": {
+      "bytes": 5155,
+      "sha256": "22b526a2423572f2bbc17f3bfccd2eb0ea8f7fb16f2215bb0904f1cc5c2125bc"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b-l1-v3/bodies/sdk-composition.md": {
+      "bytes": 3478,
+      "sha256": "a2cb2fc21fc1a771d81cd83e75dfe8b07c82c1712b15396ff4e40774f861d4d3"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/revisions/b-l1-v3/bodies/surface-disposition.md": {
+      "bytes": 6726,
+      "sha256": "595e0d404064429a953b276141f5601a1bbecceb30242a9914132ebdd26ed5c0"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/check-guards.stdout.txt": {
+      "bytes": 169,
+      "sha256": "03e07767148f3539dd1590f90e88dbd9431a3c467f9c86c4c226df6b9c290576"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/response.md": {
+      "bytes": 4324,
+      "sha256": "87b26872b115cdf6f10a8c7f674b649d0423f7517d5626bfff3e0aacb1d79078"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/dependency-captures.json": {
+      "bytes": 29937,
+      "sha256": "79908efee410306cc79d52561d450afa1f206c84641b0ad76ec470e7011284d5"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/initial-captures.json": {
+      "bytes": 25545,
+      "sha256": "b5554cdeefec020956e89834185590e6074f25dbcfd2839c7021356147accc72"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/branch-capture.json": {
+      "bytes": 9071,
+      "sha256": "404d8d4de2a1644082cc0f7224d025d868ab0c6801000aef6086ff6aa1c754ed"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/check-guards.receipt.json": {
+      "bytes": 1610,
+      "sha256": "803d4bfe21b6e535e16b329545f6cc82e1efcfb2cc9690ac04cc19798bdf670e"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/tool-routes.json": {
+      "bytes": 14633,
+      "sha256": "fc1afe4ef040bb1246d3e8ce5eb47e0325592410b4bb2d50f6676170db88ff8e"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/check-guards.stderr.txt": {
+      "bytes": 97,
+      "sha256": "1d94fca7cd039cb028502c2ed2c275f74238d3dc240f237a5c1fb958daaede4b"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/materialization-manifest.json": {
+      "bytes": 2700,
+      "sha256": "2c8f0274da0ea80cd312a2b5badc38aeecbe2f1da94cbae69582ba9d93c692f0"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/script-captures.json": {
+      "bytes": 43550,
+      "sha256": "5c371b579c9db9b33a12510fbdd487bb50021848c5a915eed9c8cac84c2f80ce"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/discovery.json": {
+      "bytes": 6728,
+      "sha256": "74c75b9ec377a89bf46d3de4abc76f580cbcea8d75934517f5109dfc4fe27196"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/request.txt": {
+      "bytes": 931,
+      "sha256": "4ae7af4527878b8dcfb9f24c2f1a7919a5b4cc2d2762b77bde9d372dacbed2b0"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/runtime-limit-direction.txt": {
+      "bytes": 387,
+      "sha256": "3614f37260bd3393241707b71a92d7f74de7488851b23bf1b0d5f5a98fb45782"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/response.md": {
+      "bytes": 6405,
+      "sha256": "62574040d5fa0ffd9f220a3047110b98b3bfd789d05460dac9e3a6c8e788b138"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/commit-5e0807b5ff953508f792b8a965883985b05a7066.raw": {
+      "bytes": 1245,
+      "sha256": "99863f05e4d03b73b2f8b40e89ae6e3f0938fc9ce1e5f78440d821e9f0307b50"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/checkout-direction.txt": {
+      "bytes": 700,
+      "sha256": "082b6e7ff3ee7c5f79dc61202cd04949758174e54cab6f6b7b5207193c2b754d"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/resume-request.txt": {
+      "bytes": 984,
+      "sha256": "412027b00d29e5077641a38f6260f818f275fca24c70aa1d5eaf00ee2f27ce86"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/candidate-trees.tar.xz.base64": {
+      "bytes": 969833,
+      "sha256": "eaba23a3d393384462a64c63fffd97437df4aa838af13667a2309cd3723bfabf"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/archive-readback.json": {
+      "bytes": 265,
+      "sha256": "5c98ab1418f9b091b4c77e1421cf22f8e7ba79fce2c0bba7e30c0b89ded5c478"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/guard-blobs.tar.xz.base64": {
+      "bytes": 143089,
+      "sha256": "41171012f9a6c898e4d045725fa9a9a50b494f66b07461d54e8a3fe965850708"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/archive-index.json": {
+      "bytes": 343840,
+      "sha256": "b7cc11f7d4f886851fa09d9f3eb3a50c9a2e8498b646769fcdc16d4e65a347f6"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/import-interruption.json": {
+      "bytes": 440,
+      "sha256": "f68e235f1e392366869ad3c48457b080511e9d303a9fdcaa213e51f18a0bb23f"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/commit-8835faf6329cc3d5f5de1097872882d57472b793.raw": {
+      "bytes": 262,
+      "sha256": "5aeedb84b24995bb5e9b4cd3b6dfd6ea15dd236cf9c2a6acf9ab727c4978225c"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/guard-trees.tar.xz.base64": {
+      "bytes": 905761,
+      "sha256": "90108ad49deb01e4237b154f2e7b9dd41c0dc2d6c937c1757a9c2f7aa092ddd6"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/normalization-direction.txt": {
+      "bytes": 664,
+      "sha256": "c201704d162f7f28299355e78e251ab5817fcce139e03cad63391ad582b512fc"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/commit-proof.json": {
+      "bytes": 1896,
+      "sha256": "c715ea6b70b08c66e7c66293a1b5219e62514bef31aadbdbd02f3940c8a55875"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/status.json": {
+      "bytes": 6075,
+      "sha256": "3ea9988248e9e38d90c715d4cd8e34d546f1a82ac39ec09d32a87ca5c1399aa6"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/git-logs.tar.xz.base64": {
+      "bytes": 706457,
+      "sha256": "e0e2c98e2cf589698f01da9ebb0f7d571bf21fc76d689d860f00fba8690ee65d"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/candidate-normalization-proof.json": {
+      "bytes": 2239,
+      "sha256": "329a5d44de79e1e7e450e754dcc093e37adc0d8f5a848fe43b478602ba1caad6"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/history-completion-update.txt": {
+      "bytes": 730,
+      "sha256": "a78c4b630117561cb01ff9ae97213e7c7b962f6973289a5f42cb5cbb5733597a"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/history.tar.xz.base64": {
+      "bytes": 508089,
+      "sha256": "f61f89ea9ee04e800e3c5b28eb7d291e3395ea584b07a96df4c5ebff9661742c"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/git-command-receipts.json": {
+      "bytes": 15379,
+      "sha256": "9a162692b78ca8d700cd4bb69984b9dfdf9ba5652a534062f660946b9db0d7ce"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/verified-checkout.json": {
+      "bytes": 144556,
+      "sha256": "6478924f0e226e72b732acc95f10e03a69cf0aa3ff73dc5c01821c65a0b86ecf"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/request.txt": {
+      "bytes": 1515,
+      "sha256": "7d521cf9b69f4c82885497cd5ca086148afa3247ff32d7e2fd3ec0d6323b4842"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/commit-wire-proof.json": {
+      "bytes": 1561,
+      "sha256": "3e0392b0726ed12144350533e58c3677345f33e4ab3b04139c6b26c8bf5d4e1d"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/zip-generic-fetch-direction.txt": {
+      "bytes": 489,
+      "sha256": "a9682572de6779a8638e928266216c00bdf9830788e31a5f6977f4a4c7fc0576"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas/prepare-r3.stdout.txt": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas/prepare-r3.stderr.txt": {
+      "bytes": 85,
+      "sha256": "4e27b15fc54a46af22dc01e578414540f2fced47761467c69ff8c955031c59bf"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas/consumer-o3-index-1-query.json": {
+      "bytes": 55,
+      "sha256": "65dcb6b1fdff8925193af3b24d2f053be160ed1e82848d6a0526030291103bc5"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas/read-component-r3.receipt.json": {
+      "bytes": 1830,
+      "sha256": "4b646b222ca6ed07d5f9a2f528baed056858168183877709beb6196d36084778"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas/consumer-o3-index-1.stderr.txt": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas/prepare-r3.receipt.json": {
+      "bytes": 2008,
+      "sha256": "7a44cd55202ac35c4dfa248b309138eac37c789eb5428742e802fe2f3fc1f488"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas/consumer-o3-index-1.stdout.txt": {
+      "bytes": 83,
+      "sha256": "2dd4491a6b54276f5ecac40debfd740cb87c68b5e7eaf55f0ab4a01efbf5cb60"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas/read-component-r3.stdout.txt": {
+      "bytes": 83,
+      "sha256": "2dd4491a6b54276f5ecac40debfd740cb87c68b5e7eaf55f0ab4a01efbf5cb60"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas/read-component-r3-query.json": {
+      "bytes": 74,
+      "sha256": "9bf4c1455199477a198035feafd7634695aeea0f59959863db3e57d23cac32a7"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas/read-component-r3.stderr.txt": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas/consumer-o3-index-1.receipt.json": {
+      "bytes": 1819,
+      "sha256": "d22ee7cc787c3f3ecf72f9de3aa426b5f60e0fe69c895a35dab85449eab08476"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/response.md": {
+      "bytes": 5939,
+      "sha256": "b5e99b64f9f611b4ee47833ceaf8c31fa3efcc73deb5f657d06f47d6e339c6ee"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/source-discovery.json": {
+      "bytes": 653137,
+      "sha256": "96028937101fb8b2caf261d60f8a90ad15c2584bf6032d361783fbfecf25c767"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/readback.json": {
+      "bytes": 5191,
+      "sha256": "a019a890164f4aef6be997ef5266ea5c8da5d575c20ed3046f69a311d60eb26e"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/input-materialization-plan.json": {
+      "bytes": 85091,
+      "sha256": "147cb96b6082f04993e94e22b54b8ac2323e2fe26e1ebc289e9e50a40ae43d43"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/probe-receipts.json": {
+      "bytes": 3643,
+      "sha256": "c134f4fc309346c80bcff5fba39f15d892236aad7ce3b72836c7a846daca255b"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/materialization-manifest.json": {
+      "bytes": 371890,
+      "sha256": "c822f4e0fc6eeb60cfbe276caa3131fa647d1820fcbea2cf1b5d5b3206dd79cc"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/status.json": {
+      "bytes": 7195,
+      "sha256": "0e359712df1bff7c5ab71ee367047207cd8f9cc16ee6cb7ef8c2940d64b9da83"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/input-materialization-receipt.json": {
+      "bytes": 172696,
+      "sha256": "bfb26a1b5eaeb1005fabd3a0bfa8ce9c10e54c5041a4bc5b5826f2fa697100b2"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/post-probe-readback.json": {
+      "bytes": 1201,
+      "sha256": "74be70b8b99638f3101cc6afb7ef7561695d9717ff1f629088bae4d35e77ad91"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/probes/members-verified-checkout.stderr.txt": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/probes/members-verified-checkout.receipt.json": {
+      "bytes": 1802,
+      "sha256": "e5f5d03fd4b7d030f7bd058cd0af0af49ac0721cc4e1596aa0197d800a821754"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/probes/members-verified-checkout.stdout.txt": {
+      "bytes": 4807,
+      "sha256": "13c80b0755f7a9c4896e089d82216950b0ac2e0d23b2568660464a7c1cf2742e"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/verified-git/guard-blob-captures/largest-zip-generic.json": {
+      "bytes": 520,
+      "sha256": "2d3b4ce096077dc2027b13143c905d74f5b4fe791bf9f20df88a6bca53bd0dd4"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/commands/bun-version.stdout.txt": {
+      "bytes": 7,
+      "sha256": "56b0485099b6c5427d3b68c042fd05b632d5e52e924c5064473389812227164c"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/commands/npm-ci.receipt.json": {
+      "bytes": 1354,
+      "sha256": "d2a9b0489b0b4fe3d6616e54aedfc2db37ba58c126a114e74b6fdfdc16fa1fbf"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/commands/npm-ci.stdout.txt": {
+      "bytes": 167,
+      "sha256": "cb010cb04482d7217a8983f6e167baef219cfe1160721c1521e5029f93e06a03"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/commands/git-head-observation.receipt.json": {
+      "bytes": 1479,
+      "sha256": "e67588fde2c5a92e40bc30c23c3f83d8f212e656d06224adc9a15a5fb27db206"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/commands/typecheck.receipt.json": {
+      "bytes": 1459,
+      "sha256": "d345d6230d21e06db322bb0bf861ad8cfd5c95a59da72856e9a9e32e8b9be8d9"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/commands/typecheck.stderr.txt": {
+      "bytes": 17,
+      "sha256": "4fec200faf0180516bb7b68652c0c2c29e56573b8c74611b73fa9d49cf7f5e6c"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/commands/bun-version.receipt.json": {
+      "bytes": 1451,
+      "sha256": "093b535a1b8d8e6f6d4f5e2883018930ce57d821258f9c532c7e0d969fe525ba"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/commands/git-head-observation.stderr.txt": {
+      "bytes": 139,
+      "sha256": "c4dfc721cc7f91d3ec67d99446d3c46f79c764fc96d6f9ba52e69cc669d686c1"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/commands/bun-version.stderr.txt": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/commands/typecheck.stdout.txt": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/commands/npm-ci.stderr.txt": {
+      "bytes": 402,
+      "sha256": "bfb348fb34e7272aa9cd0710f76693a9d040b01d5ed06ea6db152f0cdb5346b9"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/commands/git-head-observation.stdout.txt": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/probes/members-observer-r3.stderr.txt": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/probes/large-source-r3.receipt.json": {
+      "bytes": 1552,
+      "sha256": "9988f0867f7330ac0f19f4f3ae9f178546219fcf1626d7c3aac1dd942113a539"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/probes/members-observer-r3.stdout.txt": {
+      "bytes": 2940,
+      "sha256": "dc86029df950f2acd5d8b712797f42c59849f46b5d35c8934b51dcd8660171a5"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/probes/members-observer-r3.receipt.json": {
+      "bytes": 1982,
+      "sha256": "203edf55f4794af9ccd5907d48647195ab5c1cd6795dce4290f898a77d10143a"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/probes/large-source-r3.stdout.txt": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-setup/probes/large-source-r3.stderr.txt": {
+      "bytes": 742,
+      "sha256": "e766bb5e50010b41b35a6628d691ef819b07fc6041efdef1aae6ef3f9a0b2ee8"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/response.md": {
+      "bytes": 13826,
+      "sha256": "95d61af45535c7577eaefc55ca117a54bc26b698681288d7e1b1b805a1502a5d"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/body.md": {
+      "bytes": 9301,
+      "sha256": "c140fb0bf9606079e91576b542ec82b3904583e7433a8fe297c886318649f478"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/delta-manifest.json": {
+      "bytes": 3949,
+      "sha256": "aa0caa064b52326659d18caa4913933e731f8bd786d63c4accffa59744daad37"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/inserted-excerpts.md": {
+      "bytes": 2302,
+      "sha256": "473551f4fa67d0fc488ea487f9b05869075e74a6d00efa13323ba1e44bb8af15"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/manifest.json": {
+      "bytes": 1907,
+      "sha256": "8cd8c7e4dcb91291f6446d9f9c908e485da46d1d645293c048b86c953ad1862d"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/delta-insertions.json": {
+      "bytes": 2647,
+      "sha256": "345134b8b15aae1194537e1df4b66de434e925e6cdfdcd220876900b4bcc50bd"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/recipe.json": {
+      "bytes": 6905,
+      "sha256": "a8bb4994c0661cc899e8956b5d633aba3d3739c1160599dac02a679811e5ffab"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/body.diff": {
+      "bytes": 4523,
+      "sha256": "88ae44495b4c320e35908168c297f53989c648599095a6a897c4d8378bfb4d67"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/request.txt": {
+      "bytes": 1261,
+      "sha256": "14c7ac12b6c4443e90b2c71035599674d95c31978bc706f8575296857101853b"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/metadata.json": {
+      "bytes": 17852,
+      "sha256": "fee948a5fd4b43af90c341b1e4c3e5e71b1c37009f6426bc5145a092eecd34e0"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l4/response.md": {
+      "bytes": 2340,
+      "sha256": "3d7e9e73e86b73989e8d85e098222f68382eea74cb6b716119e309b43ec089b5"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l4/body.md": {
+      "bytes": 8942,
+      "sha256": "6836ed1abd690c45f999d32dbcbb6bb0451fda5ed77e6985ad601ae5a765705e"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l4/manifest.json": {
+      "bytes": 1438,
+      "sha256": "9e0fdb8322f3308ded74984157d09822cfb2a7f63b1639dc251d04c26922b4d8"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l4/recipe.json": {
+      "bytes": 4579,
+      "sha256": "d32ee8ebc7ea8e704c1d33f5414549c35c63f11a0a06a46fdd7de19ec8498b1f"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l4/request.txt": {
+      "bytes": 1822,
+      "sha256": "f0d6f5e8f1f7c4fe3fe5fef442dfc084257200d83c4db2f7e7c72c283b4408ac"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l4/metadata.json": {
+      "bytes": 14730,
+      "sha256": "e6213b5007cd265a55a00178a4319ceec56f9c9f27770ced5e55bf84e45885b3"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l2/response.md": {
+      "bytes": 2113,
+      "sha256": "e70c331b7112256fec295baf90b7efe7a4beb80b37273c68d3f36bc4b947ea2a"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l2/body.md": {
+      "bytes": 6218,
+      "sha256": "5f5ae9a915ec9a43940963ce69f4563a9a85d51e15d111237ff8b5e02a2d5170"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l2/manifest.json": {
+      "bytes": 1081,
+      "sha256": "89fd32760f4110a87d2b8f4a3eed5e495f150aa3158e41217093d782202bd090"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l2/recipe.json": {
+      "bytes": 3917,
+      "sha256": "5d884a7fab14d6a0237a4d3b579f442410c94f05e8a9faa7e526f297dbf7d2f7"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l2/request.txt": {
+      "bytes": 2372,
+      "sha256": "cae28b1225705aab3ecde5ec0e907a5fc23f255df93c2115802dcf08ead1cc0b"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l2/metadata.json": {
+      "bytes": 12374,
+      "sha256": "ec352a777c10926da46a7668196cc7ed6e2e0f21349fb9b5d068ab16275ef7eb"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/revision-1/response.md": {
+      "bytes": 2379,
+      "sha256": "b346e1ea4ba49c6a1b464719f94d27f18581f46bff1c7c9ef6db8d22f8593819"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/revision-1/body.md": {
+      "bytes": 7120,
+      "sha256": "b97dfa5c155e851d0360eb27c730996634d7b240797c373bc41a2122a2a4a101"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/revision-1/manifest.json": {
+      "bytes": 1273,
+      "sha256": "2ae52dcb6024d70c0f89cb0e9af65beaa6f1139dc962b8f12e66f3a371b4b21b"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/revision-1/recipe.json": {
+      "bytes": 4322,
+      "sha256": "0412b582eed28e665fcd84e85e42575671ad4dea09941379a0e8b92e167c2a5a"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/revision-1/request.txt": {
+      "bytes": 1556,
+      "sha256": "8283cac77200261af23caab54e6168c0bc0121d483e7dce5a764d0d3c8c4788b"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l3/revision-1/metadata.json": {
+      "bytes": 13671,
+      "sha256": "05661f5195daefdd18915fce9b7dc2a719c0636d357c546fc5916aaa942605fd"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/request-05.txt": {
+      "bytes": 9954,
+      "sha256": "566c800d621341ea46096ecc482790a333b3d1ae4c0e49bafe076927fdd2ed89"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/04a-v4-D01-D12.txt": {
+      "bytes": 28990,
+      "sha256": "2d49c1fa4335c225dd737020cdc06a1a0ec195acfcf45afe9e7ddf255a632974"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/01-preservation-receipt.json": {
+      "bytes": 486,
+      "sha256": "7e9e3594d2de53519e35c53684819849d3969ad45f06d63f12d9e1d84c87eb20"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/06a-criteria.txt": {
+      "bytes": 2453,
+      "sha256": "793df5cada47c4062879bc94ab58a30c83ceeb8c223012cce50d6378c2f94e0e"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/request-04c-j1.txt": {
+      "bytes": 19347,
+      "sha256": "39e4d45edbc13b582fc261ad3774af0f6cc6f04ac6606fc806798d733b4306a0"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/02-delta-followup.txt": {
+      "bytes": 6302,
+      "sha256": "f71686beaeb9c3623d981c1d9c392295bca9f882eaa5f548323ab61ac715b04b"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/01-j1-initial.txt": {
+      "bytes": 12761,
+      "sha256": "3a9f0b69f51a8f94dfe82ec22d3b249aa5fe9350c79d63f7608494d75a2dcd4f"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/request-04b-j2.txt": {
+      "bytes": 25661,
+      "sha256": "bbb5f9859bacf1ff61d67c6728c8f37d00e1340fd2e445b7e640b8fbb7d0d974"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/request-04c-j2.txt": {
+      "bytes": 18894,
+      "sha256": "ee7461c56ab1f4bf2ea60f95679b413f129294bd93df6bfcc826ba2aa02ea0d3"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/03a-b3.txt": {
+      "bytes": 32620,
+      "sha256": "723d45feaf738b3e6617d7a09f75074a35abc3fb022ed2440d001014c5013f21"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/03b-b3.txt": {
+      "bytes": 34784,
+      "sha256": "c6470f204290b9852d88fd228cbcfc0e139da90ab5a4236ea4cf619635b06ce8"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/06-j2-with-criteria.txt": {
+      "bytes": 9821,
+      "sha256": "ccfff162453e1baca9d47444068d9077ae0585a7a4fc6063d6bde1088ea72e74"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/01-j2-initial.txt": {
+      "bytes": 12761,
+      "sha256": "e9dd8c6427e35e428b0902b2e09b0eb844363cf1eeef41c9478b8a8784f0732c"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/request-04b-j1.txt": {
+      "bytes": 25682,
+      "sha256": "017de4a51df22768b4ae1711530f68b165f90ad7fe88dfba9d78d4d739310523"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/request-04d.txt": {
+      "bytes": 6014,
+      "sha256": "f33d2147b3b739232c3f306a98da73f57f7378bc3ca5ab19bd68ab1a4beda70c"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/04a-D09-supplement.txt": {
+      "bytes": 2167,
+      "sha256": "a09f7bcd74d0f971491ec1ecb224e944c239e37c5bf2375eac08214117c067a1"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/06-l2.txt": {
+      "bytes": 7368,
+      "sha256": "d1cf25393c585951b536b70a77519d7f88f8adabf521054dc9f64fb18a5f73d3"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/requests/request-04b-j2-errata.txt": {
+      "bytes": 558,
+      "sha256": "d26e5fe0dfea46d16951c6a15587b960ffdd1fb59b1496243cdb93ff0b34dc55"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/response.md": {
+      "bytes": 8049,
+      "sha256": "c90ba70bac47d085186cde72f6302f55c15aace7ed335e423ce9fadcf8c14fa6"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/request-steering.txt": {
+      "bytes": 1912,
+      "sha256": "b5d9bad92cfd66bb004abc6d857faee40f0c0daa19dfe0a9a401c1efa542837f"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/request.txt": {
+      "bytes": 3337,
+      "sha256": "6fb9faff2ba2ffb978c1fa32996367fffec9bb8b22c39c2172708987e1a5ba19"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/b/request-steering.txt": {
+      "bytes": 722,
+      "sha256": "ab6bfd3292c07d90a66bbd156331d20958dfd2ee315dc61e6f698acae4d9754a"
+    },
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/b/request.txt": {
+      "bytes": 1902,
+      "sha256": "09f7b2ad2a7807e069b6719305adfeb24cc5a313b6baa09c39a5c9e597964c86"
+    },
+    "packages/protocol/package.json": {
+      "bytes": 3739,
+      "sha256": "5a4ebf20d2a3b35324cb757d4cf5e7c4dc007d468c27a983bb76d992b2bafb7d"
+    },
+    "packages/protocol/bunfig.toml": {
+      "bytes": 48,
+      "sha256": "78a787dd4ae3dc250d3cfb1db5adf9943156ecfd7401cc5005047bbf159907e4"
+    },
+    "packages/protocol/tsconfig.json": {
+      "bytes": 213,
+      "sha256": "8f18af40d4bf7be291dbc80b7156dac8d0567ac78fddb45284f5485780b84b20"
+    },
+    "packages/protocol/README.md": {
+      "bytes": 2430,
+      "sha256": "acb378650a6f11a953b97074b492ff009e985bd00996aba114e36426b57389d8"
+    },
+    "packages/schema/package.json": {
+      "bytes": 5502,
+      "sha256": "63f02646858a7b22f4f7928d0fd3552db7b6b100f63ed5337bb18096a9ecd74d"
+    },
+    "packages/schema/bunfig.toml": {
+      "bytes": 48,
+      "sha256": "78a787dd4ae3dc250d3cfb1db5adf9943156ecfd7401cc5005047bbf159907e4"
+    },
+    "packages/schema/tsconfig.json": {
+      "bytes": 213,
+      "sha256": "8f18af40d4bf7be291dbc80b7156dac8d0567ac78fddb45284f5485780b84b20"
+    },
+    "packages/schema/AGENTS.md": {
+      "bytes": 5640,
+      "sha256": "ca79ab26b6eb07d1ed35a76851852d69475ec554dad7624714d3e47c15dce057"
+    },
+    "packages/schema/README.md": {
+      "bytes": 2345,
+      "sha256": "3adc5164022ee96195e94dc6238daf572ed1f2bf9694e9b0f2a362a127408c70"
+    },
+    "packages/server/package.json": {
+      "bytes": 2394,
+      "sha256": "4661bb16ff40856fa0320ed8cd54ba9b8b75ea84fdd93741360e94e279f6f860"
+    },
+    "packages/server/bunfig.toml": {
+      "bytes": 112,
+      "sha256": "560e5badf0cf96cf15bde3ab62cff30398e464776a2aef62f523e1ace8d5eb85"
+    },
+    "packages/server/tsconfig.json": {
+      "bytes": 213,
+      "sha256": "8f18af40d4bf7be291dbc80b7156dac8d0567ac78fddb45284f5485780b84b20"
+    },
+    "packages/server/README.md": {
+      "bytes": 2626,
+      "sha256": "f42c2611f1a2b7df884b2be804110b5fe76a8d33712c8ae50442f70386fe9450"
+    },
+    "packages/sdk-next/package.json": {
+      "bytes": 677,
+      "sha256": "abcd041f5e0e271cde8f11debbd7bbe214a627474423e0c65fe2d3bce5196931"
+    },
+    "packages/sdk-next/bunfig.toml": {
+      "bytes": 104,
+      "sha256": "66e5b6f3d37e68aa8c3264290854bbce0fea2c819f734902fb10d4774318655b"
+    },
+    "packages/sdk-next/tsconfig.json": {
+      "bytes": 213,
+      "sha256": "8f18af40d4bf7be291dbc80b7156dac8d0567ac78fddb45284f5485780b84b20"
+    },
+    "packages/sdk-next/README.md": {
+      "bytes": 2946,
+      "sha256": "704b604c4fbf33d6c2696120d0a854d2a904334fe9a757cc7e5c0834cb2a083e"
+    },
+    "packages/client/package.json": {
+      "bytes": 1006,
+      "sha256": "ef573a29ebca082018b27e72dcaf96771daa9286d5ce8537b56d4f12126ab881"
+    },
+    "packages/client/bunfig.toml": {
+      "bytes": 104,
+      "sha256": "66e5b6f3d37e68aa8c3264290854bbce0fea2c819f734902fb10d4774318655b"
+    },
+    "packages/client/tsconfig.json": {
+      "bytes": 235,
+      "sha256": "fe07e323cf20d21012df6b7d67b31158ea42e6f984ea3e114c559700a2ad5f09"
+    },
+    "packages/client/README.md": {
+      "bytes": 2780,
+      "sha256": "009a53b5d4a32543b3a6574a9bf6229081474d07555b062cd3089e5eacba855e"
+    },
+    "packages/protocol/test/capability-connections.test.ts": {
+      "bytes": 15623,
+      "sha256": "fd89520ef30ad4187b038794a694c29c368feb71670386fc0175313f1bb1941e"
+    },
+    "packages/protocol/test/session-cursor.test.ts": {
+      "bytes": 920,
+      "sha256": "f29f1fc05549e466300fc72f9fe50998fa816814fc892a85ca5b3f79118d53df"
+    },
+    "packages/protocol/test/capability-artifacts.test.ts": {
+      "bytes": 4995,
+      "sha256": "38d740f24bb36f7b60e3f726f3d87623b45c4d9a5ce3a307d9935028b7c9b49c"
+    },
+    "packages/protocol/src/errors.ts": {
+      "bytes": 3003,
+      "sha256": "a720613efbc90a62f91101e65199fab2570686ee5711cec235ec4fec2b1879d3"
+    },
+    "packages/protocol/src/api.ts": {
+      "bytes": 7889,
+      "sha256": "9c15c2fa2c9fed1a636eca8f1a23ed00330a409b80514f548bef742fb38aa752"
+    },
+    "packages/protocol/src/groups/trust.ts": {
+      "bytes": 1986,
+      "sha256": "5c605bf5836bc45630538c2b037e173b4062bc2d0991b6f0434d68b746bc4589"
+    },
+    "packages/protocol/src/groups/command.ts": {
+      "bytes": 907,
+      "sha256": "bbd3ed5066f29c4d150539240d44350acd8f4c63035e15c0a57539e3bd31ee56"
+    },
+    "packages/protocol/src/groups/relay-run.ts": {
+      "bytes": 4378,
+      "sha256": "7237bae800ad36fc21c77f3df21d5480fc11760e4f9b432e0c0f60dc06294834"
+    },
+    "packages/protocol/src/groups/skill.ts": {
+      "bytes": 2259,
+      "sha256": "290c280836fb40fbd5d963492088a4ff60c7b1d1d6315125e1317d6f58ce756f"
+    },
+    "packages/protocol/src/groups/provider.ts": {
+      "bytes": 3551,
+      "sha256": "0c33aa94c1f97e66f30a3dfcf67e63e62ce63b27a3c2f8c67124187e2c706d9c"
+    },
+    "packages/protocol/src/groups/actions-operation.ts": {
+      "bytes": 1441,
+      "sha256": "41181bc92b6c8e8a66cafc591e3cd096ad2819841fbeed165717039b58c629af"
+    },
+    "packages/protocol/src/groups/actions-workflow.ts": {
+      "bytes": 2172,
+      "sha256": "5337f5dd0f397fe53807f54897ca49a59e37f5b2bb6d936323dbc7e4cb025c93"
+    },
+    "packages/protocol/src/groups/guardrail.ts": {
+      "bytes": 1960,
+      "sha256": "58b6a155fb294fc1f8ec6b592023e3df0461c154e32f0e0fbc368815eaa89ad4"
+    },
+    "packages/protocol/src/groups/capability-schedules.ts": {
+      "bytes": 2701,
+      "sha256": "75201f38d78719bbd9649437ce55fa7ef18760fb0fb15c102a80739c98bc0b55"
+    },
+    "packages/protocol/src/groups/pty.ts": {
+      "bytes": 5087,
+      "sha256": "d56fbd02c7f9ffd4508fc42dd29042e2f2abc59b5ae9845c2cd3bf174fbfc157"
+    },
+    "packages/protocol/src/groups/actions-source.ts": {
+      "bytes": 2143,
+      "sha256": "7a76272f1ec26e5ccb90705420c9ebca86f255fee55b88a3def300a538cbb0ed"
+    },
+    "packages/protocol/src/groups/lean.ts": {
+      "bytes": 2253,
+      "sha256": "204a60d3ebec15a9da53f9f18d6e2612334b35dad29b90022ba1adc11614b32e"
+    },
+    "packages/protocol/src/groups/permission.ts": {
+      "bytes": 5828,
+      "sha256": "9cef92dd60326651b2ee4b6d5946e4381ea6791076c017da532122b9be0fa1ab"
+    },
+    "packages/protocol/src/groups/message.ts": {
+      "bytes": 2213,
+      "sha256": "c62fa47f9fc136ecf8692c81af59704a29e3f9635ab679d1a441afc092cbb660"
+    },
+    "packages/protocol/src/groups/schedule.ts": {
+      "bytes": 3793,
+      "sha256": "d901c49c299f7005f864dc21c0b7e1a99d4479888d10454a653dc7483c3f63c8"
+    },
+    "packages/protocol/src/groups/installation.ts": {
+      "bytes": 776,
+      "sha256": "710926457a0a8785e2a08032ff0a1b344e3a2b885e0eef89a4b54363ab189610"
+    },
+    "packages/protocol/src/groups/event.ts": {
+      "bytes": 2257,
+      "sha256": "2c9dced0b41d0ea55d97361273dd1f4bb6fc4d295c3927a2905c6a7deefe7e22"
+    },
+    "packages/protocol/src/groups/meeting.ts": {
+      "bytes": 6192,
+      "sha256": "2aeb305bf54748eb641ce1b691bab954d95fb2fbf1571ce0f937e58f54a6a9e1"
+    },
+    "packages/protocol/src/groups/agent.ts": {
+      "bytes": 3599,
+      "sha256": "29757d8e109a561bff05d195979a69048c7a02c6ee20227dde48606da91d3948"
+    },
+    "packages/protocol/src/groups/reference.ts": {
+      "bytes": 946,
+      "sha256": "10cda63b26f6a8c899e61cd1da3bae24b0698efb7050af7d01abf1a9beb9b977"
+    },
+    "packages/protocol/src/groups/capability-operator.ts": {
+      "bytes": 888,
+      "sha256": "86cb90696da816a6d4c39c08582be0c5aafd287ad40d38e8c8f1e9c008ed2126"
+    },
+    "packages/protocol/src/groups/actions-resource.ts": {
+      "bytes": 1315,
+      "sha256": "5f2536f77880ab6ed56d0391392131dec166a4876d0793efd414917fcce10cf8"
+    },
+    "packages/protocol/src/groups/behavior.ts": {
+      "bytes": 1255,
+      "sha256": "fb98fbb62ede3de878e903ef0c9a7a5c5ba1418ef1c4cc9fdf589682f5848753"
+    },
+    "packages/protocol/src/groups/capability-connections.ts": {
+      "bytes": 4481,
+      "sha256": "9587fa37465609a08572e0e213014f59b5fceace360e792d64a2398081f7e993"
+    },
+    "packages/protocol/src/groups/actions-binding.ts": {
+      "bytes": 2530,
+      "sha256": "0d24cd6645aae01e92a368d82bf69bf2b1d4dcf833b6e5da526dfb3138554f20"
+    },
+    "packages/protocol/src/groups/project.ts": {
+      "bytes": 2606,
+      "sha256": "da3a028185367a5d87bb1ef19b0a9a387e38dc491713326c569b97d10cc37445"
+    },
+    "packages/protocol/src/groups/actions-run.ts": {
+      "bytes": 3262,
+      "sha256": "76d65f1b75a0c5273b918c399b68af7ac00f880f0bfbbcec864c0424a89774ef"
+    },
+    "packages/protocol/src/groups/board.ts": {
+      "bytes": 10513,
+      "sha256": "f8d139d54bacba1df58ea757058c5cf6ed2773cbec0f75bf6db2e7a2d8ef8bb6"
+    },
+    "packages/protocol/src/groups/relay-hook.ts": {
+      "bytes": 7034,
+      "sha256": "889c86dde2a4af1076f93147d98591d6682ef2eba09b8144861892f3298afb5d"
+    },
+    "packages/protocol/src/groups/actions-transfer.ts": {
+      "bytes": 1116,
+      "sha256": "d9873761a107279948f3527b82d807bb1e3ba6580aa4cef1505c43df5bcb1a9f"
+    },
+    "packages/protocol/src/groups/config.ts": {
+      "bytes": 3736,
+      "sha256": "f86c534fc957edb9bc4a19d38e89a09c9482d06a63a6e79935c297d070ed01b6"
+    },
+    "packages/protocol/src/groups/relay-document.ts": {
+      "bytes": 17770,
+      "sha256": "4ee493b253f003a5cee6225b6acef9c9ab6b68af4d6c3775fcda126b555a5539"
+    },
+    "packages/protocol/src/groups/actions-common.ts": {
+      "bytes": 712,
+      "sha256": "431d715398a557a4df1ec6a00abcd786fd6633a9f96136d4237348ec106aa102"
+    },
+    "packages/protocol/src/groups/pull-request.ts": {
+      "bytes": 2260,
+      "sha256": "2d6ffaa70170cc87e6950f8050bcd80113dfcc9fe588d8142e451afa6671de45"
+    },
+    "packages/protocol/src/groups/location.ts": {
+      "bytes": 1760,
+      "sha256": "b99aa362106a3dff080f713552d9db82059fb42e2379ba825b9edb55e7e86442"
+    },
+    "packages/protocol/src/groups/lsp.ts": {
+      "bytes": 877,
+      "sha256": "2f8262ae4f8259bf778ad2a97aef3a83dfa507b58aa3e2d55fecc1e71d9bca7c"
+    },
+    "packages/protocol/src/groups/research-artifact.ts": {
+      "bytes": 1650,
+      "sha256": "d890554a5de05935339e01dcb74076a0cabd96d080d07b07bdd8151cf5978402"
+    },
+    "packages/protocol/src/groups/rag-studio.ts": {
+      "bytes": 6080,
+      "sha256": "765710e476d9aad6c06abcd7b9b610e34e57a57b0e1ede116a33b64b7151da10"
+    },
+    "packages/protocol/src/groups/mcp.ts": {
+      "bytes": 7750,
+      "sha256": "40d05cb2bff6ec512c5952ffc719a68744649a6d1c89be05be9dd1e76f0904ca"
+    },
+    "packages/protocol/src/groups/actions-pipeline.ts": {
+      "bytes": 1190,
+      "sha256": "9a0403bf24c224895b323679c5b2518c03719e4f2d0242d40b0f04b6c81237be"
+    },
+    "packages/protocol/src/groups/health.ts": {
+      "bytes": 592,
+      "sha256": "a7d0a532d850330d45e04d672088dffc9df36a504bf09c95b2e78ac8b9a7f701"
+    },
+    "packages/protocol/src/groups/capability-artifacts.ts": {
+      "bytes": 5857,
+      "sha256": "3a448301a18e8632afcec2310c5a1d48e84e98733b5505d2328bc36f0a72c942"
+    },
+    "packages/protocol/src/groups/session.ts": {
+      "bytes": 29273,
+      "sha256": "2dad331fa3b169d4eff2f870b70a4524f24497cb4a08dda3ee4a09cf3783af1f"
+    },
+    "packages/protocol/src/groups/actions-job.ts": {
+      "bytes": 1671,
+      "sha256": "60c097d3b0f689bb0b7ae78c3e52085ac699e417283542355b2101853096650a"
+    },
+    "packages/protocol/src/groups/project-copy.ts": {
+      "bytes": 2589,
+      "sha256": "b7be27f97fe517482a62e18e222aade4965880d7e4f5c60d3bb2b7f43c39c3fa"
+    },
+    "packages/protocol/src/groups/integration.ts": {
+      "bytes": 7681,
+      "sha256": "07d62144b0b00aa08f1c43fb3a52388b6fd1dee07881d3d0d22a701b9fc0f57f"
+    },
+    "packages/protocol/src/groups/atlas.ts": {
+      "bytes": 13026,
+      "sha256": "561bc5cfa8116287a20513d4f31c3294aaf92a12deb78ac1248e9835d26b072d"
+    },
+    "packages/protocol/src/groups/vcs.ts": {
+      "bytes": 3386,
+      "sha256": "ed0bc013c50e318eaba1e8dc8417ff97aad0f4508dc16b67c2c58edac280b6e3"
+    },
+    "packages/protocol/src/groups/fs.ts": {
+      "bytes": 2769,
+      "sha256": "bc14f8a8815ed668842142cca2424bce72f4e7774352eb20ba4b7427e605ddba"
+    },
+    "packages/protocol/src/groups/question.ts": {
+      "bytes": 3616,
+      "sha256": "e128a5558fb90cd1492b3d4621be4359e66af7f9b6ca662373975d64b6b8e31b"
+    },
+    "packages/protocol/src/groups/credential.ts": {
+      "bytes": 1439,
+      "sha256": "9c1a5962a9ea3e8fce8f5c7aeb85cefde7bc30891d00230d7fc6c3c649fb67b0"
+    },
+    "packages/protocol/src/groups/formatter.ts": {
+      "bytes": 949,
+      "sha256": "563e0c55f2624483d03cc0cfdc61897d07e9f69de7a33a6b4eddf8495c4d3caa"
+    },
+    "packages/protocol/src/groups/model.ts": {
+      "bytes": 1508,
+      "sha256": "418a14730e5ad11937fce405375944e3eafec2b8ab94f782de7a1434ccdebbff"
+    },
+    "packages/protocol/src/middleware/schema-error.ts": {
+      "bytes": 278,
+      "sha256": "01b62906b40f3312f712b3342afd22bf0122482bee171149a0f4f7f84d08e117"
+    },
+    "packages/protocol/src/middleware/capability-authorization.ts": {
+      "bytes": 317,
+      "sha256": "2940ed4879608dde52dedcecca9ddf77f61ccab48d0e573e091c5cdfc67174bc"
+    },
+    "packages/protocol/src/middleware/authorization.ts": {
+      "bytes": 256,
+      "sha256": "3bd7fc6e0253b83707bb7b4c3e63dc8b37d5a9c9d08a9e19ef8d90236106ec02"
+    },
+    "packages/schema/test/elf.test.ts": {
+      "bytes": 1693,
+      "sha256": "da839df2a16da44cccc8b909d483e9feccd4484013511e0d137ad0bc23fdbfcc"
+    },
+    "packages/schema/test/compatibility.test.ts": {
+      "bytes": 358,
+      "sha256": "bef3f4aa093b08bdf184d2e1f1ecf840af44cb5f6649313b021078dc313788ec"
+    },
+    "packages/schema/test/lean-metrics.test.ts": {
+      "bytes": 6927,
+      "sha256": "f5f3f2521f507f42887c37423a5e99e72b51ce776db961b4f0b55f08efe74ab0"
+    },
+    "packages/schema/test/capability.test.ts": {
+      "bytes": 20609,
+      "sha256": "ab73cfa6001e0381161365b567dc4646fb5ad20b3262778466c4c46f09d27a55"
+    },
+    "packages/schema/test/event-manifest.test.ts": {
+      "bytes": 13973,
+      "sha256": "3a4b12f9e7b14a06e401c352a55b4821aa252effc9676c9a91d49358f9f8b829"
+    },
+    "packages/schema/test/lean-items.test.ts": {
+      "bytes": 3650,
+      "sha256": "769b87264b5ab2587361d34ad5609d98508898c73d1704c758fd7dc4f72e2acb"
+    },
+    "packages/schema/test/event.test.ts": {
+      "bytes": 1249,
+      "sha256": "cf8e19e8feaa5da2310ecf766f7b413f687ac1b4b310dcc2d890f7cdd296ca48"
+    },
+    "packages/schema/test/contract-hygiene.test.ts": {
+      "bytes": 2964,
+      "sha256": "02e5e3302c00d66488abbea4595f6c036030c70c602c8e8ab9898b8558141611"
+    },
+    "packages/schema/test/upstream-attribution.test.ts": {
+      "bytes": 22442,
+      "sha256": "a89c85a8a65dc4188e60f307c4227d321937b4727d25f305cee051aadaec174b"
+    },
+    "packages/schema/test/atlas-knowledge.test.ts": {
+      "bytes": 6346,
+      "sha256": "e4b97b6b2ec51bed7966f55cb5c247a3a24ab1576680db695079b51272fdd46c"
+    },
+    "packages/schema/src/config-maestro.ts": {
+      "bytes": 455,
+      "sha256": "abf7bd561adfa3e070e396ad360dc11b5ea779b9d23f16e92b8e4ddacfc65caf"
+    },
+    "packages/schema/src/prompt.ts": {
+      "bytes": 1865,
+      "sha256": "d1fc8764053e3c6b07791cd7f1f319e9c8b9a5942af04432c53a622af0f486a6"
+    },
+    "packages/schema/src/command.ts": {
+      "bytes": 497,
+      "sha256": "b12f94549d912d81a91c6209a285ef37ec1897fe204d162d0372724d857c32aa"
+    },
+    "packages/schema/src/vcs-event.ts": {
+      "bytes": 332,
+      "sha256": "8473a92a20bd47063c4335f2c13e6c0be8273b2777ca99d6c3b887d2588651af"
+    },
+    "packages/schema/src/workspace-id.ts": {
+      "bytes": 594,
+      "sha256": "8756530476173c3888135b3ac76bb14069d61c3d4074464f2a307a0d078d19c9"
+    },
+    "packages/schema/src/relay-run.ts": {
+      "bytes": 3879,
+      "sha256": "b3d1ba52e5615e08d8472f9958b44b22f6c322310cc6bbb739a71e41d1aef3b0"
+    },
+    "packages/schema/src/skill.ts": {
+      "bytes": 2822,
+      "sha256": "0e808d17b84e5435dcdf6e89ef41a6f9830f158772212d2dcf154b5e63de46b5"
+    },
+    "packages/schema/src/provider.ts": {
+      "bytes": 2352,
+      "sha256": "f72afc446470bd4ac6fadce7f880539590604052c3cb003f39a415f2adcc1834"
+    },
+    "packages/schema/src/maestro-context.ts": {
+      "bytes": 2189,
+      "sha256": "96129481a9ccc3a338aa9c212c581d0e1cdcee24436c81e19c2dd57d07a1b418"
+    },
+    "packages/schema/src/guardrail.ts": {
+      "bytes": 3766,
+      "sha256": "ccb59e972d3536ebcc8f498604f5b97f66b50402ef23e493c1087b57766e0455"
+    },
+    "packages/schema/src/atlas-knowledge.ts": {
+      "bytes": 2901,
+      "sha256": "daffd3f2967e2dea8c68da404c9bbf9ed9d95ef4e3df0f274b4f7580ae9344fe"
+    },
+    "packages/schema/src/durable-event-manifest.ts": {
+      "bytes": 635,
+      "sha256": "2a0b5b89a473f63224587645033ec95124e684d31669ffe54d7de719bfa0cf1f"
+    },
+    "packages/schema/src/capability-setup.ts": {
+      "bytes": 1596,
+      "sha256": "32d8305b65970de0eaf5f99786ba4a3aeec3a2cc6ae731e6ce9be55aad2e3e3b"
+    },
+    "packages/schema/src/pty.ts": {
+      "bytes": 2161,
+      "sha256": "bd5898f125d058bfa934f14bb255022099b9654e6b10e5efaa767fcd34d94b7e"
+    },
+    "packages/schema/src/session-message.ts": {
+      "bytes": 8356,
+      "sha256": "abcc5bf88ad6763156d9bea5499a9d552567cfc84a6d7005722c0d7d692aaec8"
+    },
+    "packages/schema/src/prompt-input.ts": {
+      "bytes": 900,
+      "sha256": "f8c6363251babacd5dfc0c5e5e7413e0efd44bd6f56612a380286f61df23ba46"
+    },
+    "packages/schema/src/upstream-attribution.ts": {
+      "bytes": 3522,
+      "sha256": "47871f9b7e274c96129b216c7cf4ff92b5b4b24f56e1e866bc0c6bc687f3b3d4"
+    },
+    "packages/schema/src/session-input.ts": {
+      "bytes": 931,
+      "sha256": "aeae0e88eb8aaa03992876b58df863621527f77e2460ca0bf0f95139de936d6c"
+    },
+    "packages/schema/src/permission.ts": {
+      "bytes": 2906,
+      "sha256": "21d4bd4fae0f63d6c254b85160a5dbe2e9f5d136a7460ed715f57adc9fcffb43"
+    },
+    "packages/schema/src/filesystem-watcher.ts": {
+      "bytes": 361,
+      "sha256": "60e6e5d4836f867ba0514bf13843a7d3ba17ef243826f151deb48a74034183d8"
+    },
+    "packages/schema/src/project-directories.ts": {
+      "bytes": 312,
+      "sha256": "c89b1c2017873d66d2c744ef6234ac4a2d89e49308e99576652bdf96b27df496"
+    },
+    "packages/schema/src/event.ts": {
+      "bytes": 4331,
+      "sha256": "0542c9dedbd6f769cd95bb8624ff9449067b56b66c52d818bb7f11b78bcb75de"
+    },
+    "packages/schema/src/scheduled-task.ts": {
+      "bytes": 4193,
+      "sha256": "78b2151252415cd1f1e4e9c98f85b6143fd33c46b4cb50464e936ec43f887a6e"
+    },
+    "packages/schema/src/session-activity.ts": {
+      "bytes": 1932,
+      "sha256": "e9048f045b803a4a9f1fcd8de2e87a39ecc5287b7265be64dc0b7ba8dfb7de76"
+    },
+    "packages/schema/src/meeting.ts": {
+      "bytes": 9350,
+      "sha256": "6216a267111c79ea0fe4737a4cf8883fb534686e4879a93ed82bbed213b0a791"
+    },
+    "packages/schema/src/identifier.ts": {
+      "bytes": 838,
+      "sha256": "3eeb8c682210921b6dac49f0d785d9088a48503c4539d590f5c3b0e848d78b27"
+    },
+    "packages/schema/src/workspace.ts": {
+      "bytes": 235,
+      "sha256": "a21abd037393a1a7b6f5d7c24629eef97e720582f79ac9b36b2ed80e18ef02c3"
+    },
+    "packages/schema/src/agent.ts": {
+      "bytes": 2654,
+      "sha256": "af5eb18c92b031ccac8b44c48d260e2f5edb4913c0e789763ecbda21922266eb"
+    },
+    "packages/schema/src/reference.ts": {
+      "bytes": 1407,
+      "sha256": "74ce167e60cbd14c318640a2bba84d9a2dbeb3c75991745b228880f19a890bd7"
+    },
+    "packages/schema/src/relay-arm.ts": {
+      "bytes": 14265,
+      "sha256": "60622efd23c1ac59af2e93d6087369118876b74c3efa1ce693f03f7669b0421b"
+    },
+    "packages/schema/src/ide-event.ts": {
+      "bytes": 270,
+      "sha256": "d3d3562379982a87a1a68c8a847901318607139d6a7dca81c1512212502653c8"
+    },
+    "packages/schema/src/catalog.ts": {
+      "bytes": 213,
+      "sha256": "4dd398e781bd2bc9df86c02e7fcca429d16906c30cdea3d08a54842c220213eb"
+    },
+    "packages/schema/src/index.ts": {
+      "bytes": 1554,
+      "sha256": "75954b80578c1daf1edd4736ae6447b08d928dc8a076ac85ac09997202b068dc"
+    },
+    "packages/schema/src/permission-saved.ts": {
+      "bytes": 633,
+      "sha256": "58cd2074b989e82b8060e71614abdd83f2e7db3779c68709b05a8780deebbd6b"
+    },
+    "packages/schema/src/session-id.ts": {
+      "bytes": 473,
+      "sha256": "e9bf2bb2382af14577371b17b22b36f07ef6cf97923e655935fde0460ec3bdc6"
+    },
+    "packages/schema/src/prompt-context.ts": {
+      "bytes": 374,
+      "sha256": "69688305977b38a3e717bbbbb602a60f544da7a9ead0fa70843cb2b4f3fed5fd"
+    },
+    "packages/schema/src/lean-engine.ts": {
+      "bytes": 584,
+      "sha256": "9aa2cb9bcb69da5d6e6ea6a3e16a4c3d19d776e5c89a14f177baa202a044c5da"
+    },
+    "packages/schema/src/models-dev.ts": {
+      "bytes": 234,
+      "sha256": "fc63c12f2ae068ffb32a233cf554af7e942725e0dfa77236fe497b8dde76adbd"
+    },
+    "packages/schema/src/behavior.ts": {
+      "bytes": 935,
+      "sha256": "bf9bdbd85d7365262fd1781f114a74d5add66685907cd297a28168503eb98890"
+    },
+    "packages/schema/src/installation-event.ts": {
+      "bytes": 448,
+      "sha256": "f9b2331c830a0aa2aabeb753174e69898db02dd405996114e9c25654b7b748ec"
+    },
+    "packages/schema/src/lean-metrics.ts": {
+      "bytes": 6213,
+      "sha256": "4e8243211ee2df7b02689db54c57c61134d43f347a9154c7d31fb06e0744568b"
+    },
+    "packages/schema/src/atlas-review.ts": {
+      "bytes": 3495,
+      "sha256": "7f0c69058477f6860f34dc88ef183bc273e337f92ae8dc43aa31e8caaeef0ca8"
+    },
+    "packages/schema/src/filesystem.ts": {
+      "bytes": 1323,
+      "sha256": "c6972ac22f347c2ac25e56250e77a8d17d44d2a353d6a1680cca2c1bbca364d3"
+    },
+    "packages/schema/src/capability.ts": {
+      "bytes": 8631,
+      "sha256": "c21600d2409460dc49b35ba3177154422c45fd0a21018fd81dcd2f64ea58111b"
+    },
+    "packages/schema/src/project.ts": {
+      "bytes": 1619,
+      "sha256": "d12577c05384e8415203a81ff3041246497cdb158427e06158dc134d271dfb97"
+    },
+    "packages/schema/src/worktree-event.ts": {
+      "bytes": 468,
+      "sha256": "c225902e262ec6e9a7dbf10d1191d134d9163153a6eea85d3b1c95e38e3c544b"
+    },
+    "packages/schema/src/tui-event.ts": {
+      "bytes": 1625,
+      "sha256": "69c3aaa24eb98f069364fe34250b1a37e38d075345a848ec4945c4827e90e74f"
+    },
+    "packages/schema/src/llm.ts": {
+      "bytes": 1091,
+      "sha256": "2fe451dc9d1c854d6aeaa64a61a25df3d1c4886de36ac3217a04f99a8d14a527"
+    },
+    "packages/schema/src/maestro-event.ts": {
+      "bytes": 28276,
+      "sha256": "d1d4ff601b422f55e6579f06b79805af24bdccda295fdcaa70b038afef0cdb8c"
+    },
+    "packages/schema/src/relay-authoring.ts": {
+      "bytes": 8044,
+      "sha256": "dfd159dc2c26332084691ca95d6cd085d494209c3fa5cfc1032e30cd250c2458"
+    },
+    "packages/schema/src/config-mcp.ts": {
+      "bytes": 2067,
+      "sha256": "b9b3ad22fb2f1bd41c5aa6de956e97178b2e5adb0e6b130bf1a188096ca1c6af"
+    },
+    "packages/schema/src/integration-id.ts": {
+      "bytes": 326,
+      "sha256": "7f905d10763d397041dc8112e1761a27b8ebd976b0dc0a38ecfeb3dec84b5294"
+    },
+    "packages/schema/src/hook-glob.ts": {
+      "bytes": 13356,
+      "sha256": "e9fff629f93c2570126b5484be65c0a966a22f010d0424352d4da4ff3c3cc33e"
+    },
+    "packages/schema/src/board.ts": {
+      "bytes": 31577,
+      "sha256": "2bc0209c7133f1210ee4dc380742b297c280a1a1b18244eb2c0f5f2de0b0df43"
+    },
+    "packages/schema/src/relay-hook.ts": {
+      "bytes": 8249,
+      "sha256": "cab62a5613add88d07db99b340c5112c1942594d081687fd2b851dd890022388"
+    },
+    "packages/schema/src/relay-ledger.ts": {
+      "bytes": 14458,
+      "sha256": "e3aa70aef1e489b4957f2aa48b3da06fc5ce9edd0ae01f444ce16a19638d2291"
+    },
+    "packages/schema/src/project-id.ts": {
+      "bytes": 251,
+      "sha256": "47aad330577133240b3c33938363fa980d32cd00de9564b8fccdcad05c110e7d"
+    },
+    "packages/schema/src/pull-request.ts": {
+      "bytes": 3172,
+      "sha256": "77dfc18af22bcd70c8f5fc15add1a209f37b205bf7440270013ffb8657c403a9"
+    },
+    "packages/schema/src/lsp-event.ts": {
+      "bytes": 200,
+      "sha256": "ae7b29bb4d79ad13f5be53d43bdfcca87b32156caefab05bdb66e4fb9fd57fea"
+    },
+    "packages/schema/src/workspace-event.ts": {
+      "bytes": 866,
+      "sha256": "f9ef09253b0c964ccfa1e0c767a051a40236a120c9418056b58dfe7645cbba30"
+    },
+    "packages/schema/src/location.ts": {
+      "bytes": 743,
+      "sha256": "69198bd4bcbec4dc406d5e8d35977ccb3174828fee859814462e3278caf2a603"
+    },
+    "packages/schema/src/capability-schedule-management.ts": {
+      "bytes": 3073,
+      "sha256": "5193b6097e0a8827df04a6444c5f32fcf45ca7cb454f729ae5ee6157e54c658c"
+    },
+    "packages/schema/src/pty-ticket.ts": {
+      "bytes": 346,
+      "sha256": "189a6e91a7bc12ba4ccb1355b2aba8673f0fbf4fca1da62264fe799c0bca97ee"
+    },
+    "packages/schema/src/file-diff.ts": {
+      "bytes": 453,
+      "sha256": "a55485c32b27c93c1dba5a523c33748394207759dbe1460e98066b639b0c842b"
+    },
+    "packages/schema/src/lsp.ts": {
+      "bytes": 301,
+      "sha256": "4916e2ca1bce6b4b4ad78aca908fdd18d39dd6f2e19cba6f4a986cac01c1cbfa"
+    },
+    "packages/schema/src/research.ts": {
+      "bytes": 20129,
+      "sha256": "f00d57a9f6d3bb1888518816fa277be35884469d9a16050f90d5edad8f768236"
+    },
+    "packages/schema/src/rag-studio.ts": {
+      "bytes": 6596,
+      "sha256": "948d52ca2c846da8059bb297a8e564aa82e5cec5dc1edf97906eb010f71b9918"
+    },
+    "packages/schema/src/mcp.ts": {
+      "bytes": 4396,
+      "sha256": "4570efac1d90606a3d3df17348041e13faecf78396d2fbfb942b7e6fe393a3fa"
+    },
+    "packages/schema/src/capability-management.ts": {
+      "bytes": 3551,
+      "sha256": "41245590c777afab845b7eeda90b03ba3c2d15505c2b225e39dd8ec0ae0123ac"
+    },
+    "packages/schema/src/session-event.ts": {
+      "bytes": 15257,
+      "sha256": "790f1b779fda44be41138208c7b855fcf2e5ab3ff84070307155d7025b6b855d"
+    },
+    "packages/schema/src/session-subagent-models.ts": {
+      "bytes": 624,
+      "sha256": "60f09a057cae28c883bf0f32f65cec0809c92d8305f59fe78c07cb5dfecfd9ae"
+    },
+    "packages/schema/src/hook-match.ts": {
+      "bytes": 2866,
+      "sha256": "a2352eb5488b1267dd22481416ad50cc714417a31892b64464a4d1611d012cf2"
+    },
+    "packages/schema/src/mcp-event.ts": {
+      "bytes": 595,
+      "sha256": "17c983ad6c701bad096db8123e8e309c3a488bd58b8667a0454cf6a07a463ba2"
+    },
+    "packages/schema/src/session-todo.ts": {
+      "bytes": 821,
+      "sha256": "7b6e41ea6760ce94f5e817a574bf071608ad7e38639dcb520974d3e4de9aa1e0"
+    },
+    "packages/schema/src/session-status-event.ts": {
+      "bytes": 1197,
+      "sha256": "cd830c1b76da63431dd59eee7965fa5b9f14cb5d3cea6823f542c4717b3a16ff"
+    },
+    "packages/schema/src/event-manifest.ts": {
+      "bytes": 2774,
+      "sha256": "ab974f317880b2e6fdec70607a58da6c492dfd205fe9b275bfbe6ddd44d6430c"
+    },
+    "packages/schema/src/plugin.ts": {
+      "bytes": 344,
+      "sha256": "ad81fb523930347085140255dcc3e4ca9fab954e97e25118677909bfec7b5739"
+    },
+    "packages/schema/src/session-compaction-event.ts": {
+      "bytes": 314,
+      "sha256": "068bfba573c403c25442eec7ba816883f62e313099717943f2c1992822659d78"
+    },
+    "packages/schema/src/lean-dashboard.ts": {
+      "bytes": 2592,
+      "sha256": "8bb3f0b04d3c0c74fe94774e6c62a2f56c302843d37a7404be5de7a947717f45"
+    },
+    "packages/schema/src/session.ts": {
+      "bytes": 1672,
+      "sha256": "79fb348dc00ce9e06fc01fb595df8c05730bb3cbdd604b55c7b57e6d8321cdfa"
+    },
+    "packages/schema/src/actions.ts": {
+      "bytes": 1071,
+      "sha256": "ff0507ebbb63a8a1ab74bc11187cb70bd19d51ed2ec8cb741eaf0155d03f6b07"
+    },
+    "packages/schema/src/agent-file.ts": {
+      "bytes": 1931,
+      "sha256": "2a50259000db39a4e081479ef7ff288a5dd2c7045dec0abcc851eaf169160a31"
+    },
+    "packages/schema/src/research-event.ts": {
+      "bytes": 2844,
+      "sha256": "1e50a53af6b60e2c7839aecda7984fe29ad7c416940b8bc104b98d60d6af3b03"
+    },
+    "packages/schema/src/board-queue.ts": {
+      "bytes": 5391,
+      "sha256": "393a085abeddbbcdba2cbdfff023a114f525d402cc531a3b75e94036893693d6"
+    },
+    "packages/schema/src/project-copy.ts": {
+      "bytes": 1113,
+      "sha256": "d77bbd07f3974a5b2e77a3fff7bd2613b4613e0ca7ab3ed91c5f2073d1156856"
+    },
+    "packages/schema/src/lean-coverage.ts": {
+      "bytes": 5011,
+      "sha256": "6d9bb1a24099f847fe15184e8fdb1d071158a911947dd0d493a4e834d807c310"
+    },
+    "packages/schema/src/integration.ts": {
+      "bytes": 4597,
+      "sha256": "e11e093e3b692f2bcbcfd6cbdbe10e5cc99e4f7f1a5a1a828bfc76a54a476dad"
+    },
+    "packages/schema/src/vcs.ts": {
+      "bytes": 3279,
+      "sha256": "16ab2066e433f2b36f2931fcf4be859e50f8c6e1ca9d6960f2ca42b81c81bc58"
+    },
+    "packages/schema/src/atlas-screen.ts": {
+      "bytes": 12468,
+      "sha256": "98bcb28c924bf204251cbbb0d4f47d0210d10e07f138fd2186dcc9350daa3fea"
+    },
+    "packages/schema/src/relay-external.ts": {
+      "bytes": 7028,
+      "sha256": "2196fe995cbc77faa580352b798c3d5d33286af9b9b83af9b3b790705dc89b58"
+    },
+    "packages/schema/src/atlas-setup.ts": {
+      "bytes": 951,
+      "sha256": "e16cfab589094bedb8d609d16bb63914de5daf3e74b5d152e137c45bf620c876"
+    },
+    "packages/schema/src/question.ts": {
+      "bytes": 3142,
+      "sha256": "7eb21fc310e3325445eb988b95f21e0b14f8715ba6426cb94c484a5e70eb5913"
+    },
+    "packages/schema/src/relay-sprint.ts": {
+      "bytes": 5527,
+      "sha256": "27a4d8fd186535ba617e23d3f41430de0ae90b48b54a79b843fc1a7546b599f6"
+    },
+    "packages/schema/src/credential.ts": {
+      "bytes": 1263,
+      "sha256": "141f051d45fbb49d08b72154d5ddc4d398b87f18b106b948e67fa05a72e4bef6"
+    },
+    "packages/schema/src/connection.ts": {
+      "bytes": 787,
+      "sha256": "37d3914dab08b851c9c5a0c0dd7e1a3c77ab6224a8802a0a00fbb178565ecaab"
+    },
+    "packages/schema/src/formatter.ts": {
+      "bytes": 294,
+      "sha256": "164190a5fcad45f47b010690e46ab672243b653c6f5e03f755db2f9c130e0e84"
+    },
+    "packages/schema/src/server-event.ts": {
+      "bytes": 215,
+      "sha256": "65c69eab6d48f601b4a97d07d89ef3ce19c096d745719b34c0abc23d6f75b047"
+    },
+    "packages/schema/src/schema.ts": {
+      "bytes": 1234,
+      "sha256": "a7cdac1ae9d21d9d71a3783a730ca29bc8fbe769d01479a19101a81eec2bb447"
+    },
+    "packages/schema/src/session-delivery.ts": {
+      "bytes": 192,
+      "sha256": "6c711801312cf2512c46695e44dfcba86f0e9cf9b8485aed4b435adcdba23528"
+    },
+    "packages/schema/src/model.ts": {
+      "bytes": 3005,
+      "sha256": "cd7717a4699cb24ce617f66352e77981281d0ff1af2b0f52dac8bbfd6d150e84"
+    },
+    "packages/schema/src/revert.ts": {
+      "bytes": 880,
+      "sha256": "145a30ba642db86d826e6309d0b0d66c3ec7ba04e891170d228b6cd1b340a47a"
+    },
+    "packages/schema/src/capability-artifact-management.ts": {
+      "bytes": 1822,
+      "sha256": "e2437a4de28ef022fb509a8d5f4da9b6a16b9311707f6a68823b82aff4812fe4"
+    },
+    "packages/schema/src/elf.ts": {
+      "bytes": 5321,
+      "sha256": "8a9e55857aaabcc07c109dbf34fdfa9cfa80004ba7a8af0feee1eb5fe1578e5e"
+    },
+    "packages/schema/src/actions/command.ts": {
+      "bytes": 5060,
+      "sha256": "46722d7902f6005986f3e2c372675e3f9e047e2dbe639e404146f151e1de3d85"
+    },
+    "packages/schema/src/actions/run.ts": {
+      "bytes": 3593,
+      "sha256": "c91ac0507e4f4f304cea12b4681aea4f658aec6aa7fca9af478e0f38613267f8"
+    },
+    "packages/schema/src/actions/identity.ts": {
+      "bytes": 4175,
+      "sha256": "1d3361dd26b49e366b7c59d14a589f6684a16b36bfec0b761e62481fc15f6f14"
+    },
+    "packages/schema/src/actions/operation.ts": {
+      "bytes": 3857,
+      "sha256": "6ad34b7a3cbc4eb4c1ce500f6f665894c0a7792d4d12177cdd1e055592812f0f"
+    },
+    "packages/schema/src/actions/workflow.ts": {
+      "bytes": 3925,
+      "sha256": "435abb6cb694c30d00c01bb0c00c8dd9cd821df163fe8c73cb30a4f09ad18321"
+    },
+    "packages/schema/src/actions/resource.ts": {
+      "bytes": 2429,
+      "sha256": "5579f778bc5055f362058bf0e9386e6098af2f2cba3700ef68de1381aab6f576"
+    },
+    "packages/server/script/httpapi-exercise.ts": {
+      "bytes": 431,
+      "sha256": "7c4ce7bfb9d8ae532258c60471277cfe68a307ec2ac3b10a9d57f112462d7006"
+    },
+    "packages/server/test/capability-artifacts-http.test.ts": {
+      "bytes": 9826,
+      "sha256": "3199bbb66b918e3229506948dd8e57cc3f6fdd5b4f9c32cea5bb11c6cd595d64"
+    },
+    "packages/server/test/capability-setup-http-bindings.test.ts": {
+      "bytes": 10373,
+      "sha256": "9a658e1d7d47d2bfb78d1712710ff3106771d17730c8191c4feec473f88e2d7e"
+    },
+    "packages/server/test/board-http.test.ts": {
+      "bytes": 4863,
+      "sha256": "427a16b76adbee860eff3cd2ad9ec7b6b4be74a06a57cab27da73f9ae34fcd2f"
+    },
+    "packages/server/test/trust-http.test.ts": {
+      "bytes": 7176,
+      "sha256": "cd4621ce782ecf3d7e27d5e5f195913447afc1668e6a6911374c495e97403177"
+    },
+    "packages/server/test/session-background-http.test.ts": {
+      "bytes": 5203,
+      "sha256": "7c51e44c12540a6ef734cf788b1e1982925c98bad1b7a973c955b8664326a0ed"
+    },
+    "packages/server/test/capability-setup-http-fixture.ts": {
+      "bytes": 10180,
+      "sha256": "f59ee7262dc1dff341bd056c28cbffaf20c65975f40880a320e21671e1c54dd2"
+    },
+    "packages/server/test/account-mcp-http.test.ts": {
+      "bytes": 10541,
+      "sha256": "12339adea53977d1e0e8ea77e9ba0675bb67ce216526947c72dc30458858a025"
+    },
+    "packages/server/test/config-project-http.test.ts": {
+      "bytes": 8634,
+      "sha256": "4768875c4d24570d40c4af3f1b64cbc7a86c4e5034db1162b35f134c4bccb13a"
+    },
+    "packages/server/test/capability-artifacts-http-mutations.test.ts": {
+      "bytes": 6394,
+      "sha256": "b5f2052237a81b3562a694b39f716f18e59f78e40e86d8eab96dcb90c1d85493"
+    },
+    "packages/server/test/capability-schedules-http.test.ts": {
+      "bytes": 7249,
+      "sha256": "90f09ad17a46f8ac07bc5f82db76d34d8cea63474d822b7429910333bb1b049b"
+    },
+    "packages/server/test/client-contract-identity.test.ts": {
+      "bytes": 3077,
+      "sha256": "122799d92aee38fdf9a64316bcf31861df53fcf9d484cdda1566f0c559a151b9"
+    },
+    "packages/server/test/cors.test.ts": {
+      "bytes": 1634,
+      "sha256": "40d59448f8569473446dbf02b33dcc9f90538f3eb38475a825e0b06794f8da75"
+    },
+    "packages/server/test/actions-http.test.ts": {
+      "bytes": 23015,
+      "sha256": "25e1f9e347b65ad5ab653bab20d790a57e4f37c7c883740ffbbaae55e6c68336"
+    },
+    "packages/server/test/capability-artifacts-http-fixture.ts": {
+      "bytes": 10008,
+      "sha256": "4a6135f7aafb8a4c22e9e8707ba56a4ed5765d4695d3334a9ac5f74dbe1d2136"
+    },
+    "packages/server/test/capability-authorization-fixture.ts": {
+      "bytes": 5642,
+      "sha256": "ec2bc6e381e54f4b45eb08875b9ff2461480fd159128b6d03674ad4e05a0bc32"
+    },
+    "packages/server/test/capability-connections-errors.test.ts": {
+      "bytes": 3412,
+      "sha256": "5b1245ce1b90eeaa929699398b71e5e90c836b8f01544351b91123d33964c2f9"
+    },
+    "packages/server/test/fs-read-http.test.ts": {
+      "bytes": 3866,
+      "sha256": "0265fa22a07cc584327a79319e423af121c83bf27261f0b8746f0a3aa36c8f9b"
+    },
+    "packages/server/test/capability-authorization.test.ts": {
+      "bytes": 21071,
+      "sha256": "318c70780d352e9e748d3d864c7655725f57ff6cd0ff7d5cf36af723b65196f0"
+    },
+    "packages/server/test/actions-resource-query.test.ts": {
+      "bytes": 8624,
+      "sha256": "e7b5b4f9b6678c710300fe4240f95dd0b51d54f9f29d46cab21f311e3543bd12"
+    },
+    "packages/server/test/capability-setup-http-local.test.ts": {
+      "bytes": 4188,
+      "sha256": "079d8d3efeeed31aa66d06fd0166c333b58450dc0ed6f52357122c429182cd5d"
+    },
+    "packages/server/test/capability-setup-http-providers.test.ts": {
+      "bytes": 3387,
+      "sha256": "28513543f4a13a001dbfb9a49fee508dea9d2d95d1424c067f756471e0144dfa"
+    },
+    "packages/server/test/capability-setup-http.test.ts": {
+      "bytes": 11528,
+      "sha256": "d90740d73d459b6d5352f87d78d183737a909374c97765b17824e957a6c7a15f"
+    },
+    "packages/server/test/installation-http.test.ts": {
+      "bytes": 2972,
+      "sha256": "71405555b922cda1e50716dd594dfcf00e9a1c7d5d806b7146d68d02e12ae1c3"
+    },
+    "packages/server/test/capability-connections.test.ts": {
+      "bytes": 11779,
+      "sha256": "a6a9138098ea225cdcae54aa4eecaef5d33824686ace88ec4815d62de4538ead"
+    },
+    "packages/server/test/actions-http-fixture.ts": {
+      "bytes": 10301,
+      "sha256": "265668d5768d2ff89e110c7afb0ffc5093f4da4369e65e75d66b4fadd1e472ae"
+    },
+    "packages/server/test/capability-schedules-http-fixture.ts": {
+      "bytes": 9220,
+      "sha256": "b20dbd36c6906ada902ce1caf4fbf4d9c8f8d983446e9d45ace3ddd568495d4f"
+    },
+    "packages/server/test/capability-artifacts-routes.test.ts": {
+      "bytes": 1856,
+      "sha256": "6284099057ac0c5d05ebf6b4bc0462c309a56bf87781a4d30deafab8b6c30153"
+    },
+    "packages/server/test/operator-ordering.test.ts": {
+      "bytes": 3470,
+      "sha256": "8b691edee2c106201d8d6d6ce2e601204d128dbe87bfd7cecfb0e15b17267b59"
+    },
+    "packages/server/test/capability-artifacts-http-ticket.test.ts": {
+      "bytes": 3901,
+      "sha256": "b2f24677342d49d1c325e8b459fca6f60f7eddace079a18e6c08070ba17a36d0"
+    },
+    "packages/server/test/session-diff-http.test.ts": {
+      "bytes": 7505,
+      "sha256": "2bd48edd61c4d77b089d09874a7c0f5dd9681d34df245bea2058e9e93e2a2f52"
+    },
+    "packages/server/test/session-move-http.test.ts": {
+      "bytes": 5781,
+      "sha256": "6722720e6b9aac31b4ff6ec4d407e6b1279eecaa1b9ba95190d6521143feab1d"
+    },
+    "packages/server/test/capability-connections-fixture.ts": {
+      "bytes": 10096,
+      "sha256": "0049c190e137424b68ae1ff4537ef5238dfb290390e3f173c6e86a7cb8a783ae"
+    },
+    "packages/server/test/web-ui.test.ts": {
+      "bytes": 2514,
+      "sha256": "2a5d183ee6338a28c3fea49a104d42528c4fac8cef37c7b1108c0af0db261871"
+    },
+    "packages/server/test/event-stream.test.ts": {
+      "bytes": 3896,
+      "sha256": "fb7b290eab795201302829f1e2b78a7a836b0eec42af50a03c96e3dd68681be6"
+    },
+    "packages/server/src/capability-verification.ts": {
+      "bytes": 695,
+      "sha256": "0fe9c21339044189df48ee9d6e300f9131e6b89ddc7f46921fb35bf46cbe9876"
+    },
+    "packages/server/src/auth.ts": {
+      "bytes": 1858,
+      "sha256": "9ab61897ea8a5d01e581d944d149a4bb6636030cbc47523b0de1bc372f16265d"
+    },
+    "packages/server/src/operator.ts": {
+      "bytes": 731,
+      "sha256": "061a54b7023425c5b0f9d78a9b41fcd84995a6553e2826725ff64245bcbc1199"
+    },
+    "packages/server/src/api.ts": {
+      "bytes": 317,
+      "sha256": "d2cf465c876d1ac3f97be5ef4b48c3334a2cf0e9088106c2d3d43e06b155fc8c"
+    },
+    "packages/server/src/relay-documents.ts": {
+      "bytes": 11105,
+      "sha256": "96141f654abd839de54f9668ded3efb2982c58b78929fe857c9247f257cafc0a"
+    },
+    "packages/server/src/cors.ts": {
+      "bytes": 2765,
+      "sha256": "d4f02ba7c886b1a0cc3f53863398b4e78eed59c9a94915bad38fa5ee24461dbb"
+    },
+    "packages/server/src/routes.ts": {
+      "bytes": 6568,
+      "sha256": "60dee30b7277f501a2713f223db365e290119dcfd03b9d0ec634c9c599686155"
+    },
+    "packages/server/src/handlers.ts": {
+      "bytes": 4217,
+      "sha256": "1c586024a6245cdfc9a66369079a5cb7558aea04e21d1eb984fb942cf97b87d1"
+    },
+    "packages/server/src/location.ts": {
+      "bytes": 3966,
+      "sha256": "57032232ea6a37a046399f147479eef2ccdd21376a59c62de3fcfbfaae78953e"
+    },
+    "packages/server/src/capability-content-ticket.ts": {
+      "bytes": 2187,
+      "sha256": "e054ec3a19e8dedf9bbf380636f9f0592c17e6a770e7b0eb53be0404ef661444"
+    },
+    "packages/server/src/web-ui.ts": {
+      "bytes": 2660,
+      "sha256": "2b473ed1ba3f6de98f602a6f47af37715dc827f989b7b7233df1355568bd83dc"
+    },
+    "packages/server/src/principal.ts": {
+      "bytes": 829,
+      "sha256": "e0932d6e27e750a1664b3a9c20818610126c810d8b41ad8e3900a1c43dd3f260"
+    },
+    "packages/server/test/httpapi-exercise/actions-subagent-models.ts": {
+      "bytes": 2644,
+      "sha256": "06cded53e67ed8ced367b25bf6994baec8d31390b72f653ad35def238a3d8f4f"
+    },
+    "packages/server/test/httpapi-exercise/skill.ts": {
+      "bytes": 1957,
+      "sha256": "45780e447a409d3e5838e5bebd935582d2f0995a13bbb4fc8730b72b982f4bfc"
+    },
+    "packages/server/test/httpapi-exercise/provider.ts": {
+      "bytes": 171,
+      "sha256": "8271cee7be8806539820cb7ea155db9e38f08f002b17a91c01116599f5a294cd"
+    },
+    "packages/server/test/httpapi-exercise/actions-operation.ts": {
+      "bytes": 4845,
+      "sha256": "9b0ce7560c530c0f7e7f0a72508efc1a6b4d3b3066dc0cc45bb49f55338bfffa"
+    },
+    "packages/server/test/httpapi-exercise/guardrail.ts": {
+      "bytes": 1004,
+      "sha256": "1c532ac62452901c9fe1aa4c7499f1124a84941a06a9a10d10fae367ba74b1df"
+    },
+    "packages/server/test/httpapi-exercise/global-config.ts": {
+      "bytes": 1201,
+      "sha256": "b591255d6f34ad042b6b995d24e42ce359da77247c66d0d9f77c800107768519"
+    },
+    "packages/server/test/httpapi-exercise/dsl.ts": {
+      "bytes": 6712,
+      "sha256": "e81be1a3a949ffb345b7d7bccd73b80edb2cfb56a4f5c795c973590890212f37"
+    },
+    "packages/server/test/httpapi-exercise/actions-source.ts": {
+      "bytes": 4676,
+      "sha256": "5f32d1678a75d6ee08074c2787cbe94b15e5481343df56628386dc31991578ff"
+    },
+    "packages/server/test/httpapi-exercise/lean.ts": {
+      "bytes": 2318,
+      "sha256": "cb768fbbc6a8f6e44dd85cd4a61270f68f783e139dd689192b0e11b66c44e42b"
+    },
+    "packages/server/test/httpapi-exercise/actions-read.ts": {
+      "bytes": 5745,
+      "sha256": "e5a29f35e723fa3f9a0c45b741f0a0aaa8ffaaba0a198fa4a00e0752c44e5dca"
+    },
+    "packages/server/test/httpapi-exercise/schedule.ts": {
+      "bytes": 2127,
+      "sha256": "68095387e497595c07a9ca01c082d934ca1ed6c77b3dff1c195959507bed58d4"
+    },
+    "packages/server/test/httpapi-exercise/actions-native-cli.ts": {
+      "bytes": 3750,
+      "sha256": "6745cc7e9ab15f276b0e5fdc306b0afc313e324fff577da8bfa87cb560c3a0b4"
+    },
+    "packages/server/test/httpapi-exercise/session-activity.ts": {
+      "bytes": 2672,
+      "sha256": "238a27f91f08d37e6155756951d0737764be1d04ac2752f4d8978bb7c5bff451"
+    },
+    "packages/server/test/httpapi-exercise/meeting.ts": {
+      "bytes": 3920,
+      "sha256": "6445f75123025052f7a49f392b5ce0d67f8ba72fc5efea7279ae7a83dad49d2d"
+    },
+    "packages/server/test/httpapi-exercise/catalog.ts": {
+      "bytes": 7693,
+      "sha256": "480942dcda16ab07028c845fd7a974f0d1e799e5b3ea9a2b0d4871afe1aa9a9e"
+    },
+    "packages/server/test/httpapi-exercise/index.ts": {
+      "bytes": 24680,
+      "sha256": "d21d3618114f035f015a10880b10da9a30a0e555bab3726e15894af759071b5e"
+    },
+    "packages/server/test/httpapi-exercise/actions-resource.ts": {
+      "bytes": 2967,
+      "sha256": "0f1a3df7fd9c57dab2e9abf966bf128877a69ea021d623b83edf1c3eb5a7489d"
+    },
+    "packages/server/test/httpapi-exercise/actions-binding.ts": {
+      "bytes": 6693,
+      "sha256": "2c5b10c1683453ce2b0052aefab2b78ab52dfb2dbaecadbf6416cec1f5184022"
+    },
+    "packages/server/test/httpapi-exercise/capability.ts": {
+      "bytes": 6961,
+      "sha256": "a50e04f46fa041b0e3cfaac4630fab6566be2abf59dabc8aaff26584f5c9ce0d"
+    },
+    "packages/server/test/httpapi-exercise/project.ts": {
+      "bytes": 1362,
+      "sha256": "43c8f2b2d6509abebb859b496767afbf9354607eeff23cd36475843c83d18986"
+    },
+    "packages/server/test/httpapi-exercise/types.ts": {
+      "bytes": 3928,
+      "sha256": "d7013d3105c39fe01973c2940e9cec9615dbe73930b77d1396493a9769aefd26"
+    },
+    "packages/server/test/httpapi-exercise/actions-command.ts": {
+      "bytes": 4879,
+      "sha256": "649367513c060bcd82b28c070f626a8260d1e25d431ef44d109f75cc884a9250"
+    },
+    "packages/server/test/httpapi-exercise/environment.ts": {
+      "bytes": 2147,
+      "sha256": "2823660d3322219e18f49a88b31fde1c878f7e1bef3f342d1924774b4c6faed7"
+    },
+    "packages/server/test/httpapi-exercise/session-settings.ts": {
+      "bytes": 9398,
+      "sha256": "65542d2bdf72b21dfb2e56155453321a11dc44fc3626458752de152a85099d78"
+    },
+    "packages/server/test/httpapi-exercise/actions-checks.ts": {
+      "bytes": 4595,
+      "sha256": "e19daa6ae645c2bed67e53e5ff92bd8c88ae9ef895bc31c2496b36a0ce03449d"
+    },
+    "packages/server/test/httpapi-exercise/board.ts": {
+      "bytes": 3935,
+      "sha256": "2a8d15af6e9e01a60eea44a7d63c9116745ae57c561a8528fec47ede57fcb20b"
+    },
+    "packages/server/test/httpapi-exercise/runner.ts": {
+      "bytes": 7551,
+      "sha256": "3fb7e51ee04e93a4289114bdd8826e770dd44d119e44c83be7abcdd16cd414e5"
+    },
+    "packages/server/test/httpapi-exercise/actions-transfer.ts": {
+      "bytes": 2405,
+      "sha256": "f9a05efb52753007fdf23cf06f6114d037040494e7c7815bf9c95067707049c2"
+    },
+    "packages/server/test/httpapi-exercise/relay.ts": {
+      "bytes": 9458,
+      "sha256": "f93465d12f1acb4fca24bf9c5a94ab865c7bc12953f7dae44aba7c314c924ae0"
+    },
+    "packages/server/test/httpapi-exercise/actions-provider-boundary.ts": {
+      "bytes": 3775,
+      "sha256": "c2b08dc828a3c06b07ced8c7fb9b24111e50a9a3f8798fe83a68b5518a0b822c"
+    },
+    "packages/server/test/httpapi-exercise/routing.ts": {
+      "bytes": 3219,
+      "sha256": "7014eb431c0d1d8ab3d102454edd0e3675028cfe1af58e25828dc1c34bb5ae53"
+    },
+    "packages/server/test/httpapi-exercise/backend.ts": {
+      "bytes": 5908,
+      "sha256": "b2126d1a80f3bc4df34ee327982b997c0628f0462d016581c890466ad48959a7"
+    },
+    "packages/server/test/httpapi-exercise/research-artifact.ts": {
+      "bytes": 2551,
+      "sha256": "461cc465bfc1e66f6a34c8c5fe0be33a707ba49a6f666ab69f7543fe250e277d"
+    },
+    "packages/server/test/httpapi-exercise/rag-studio.ts": {
+      "bytes": 6164,
+      "sha256": "022bb02e9a56037602998aabe0ea75d9cf70eef0d104d8434fefe2f5a8dc566d"
+    },
+    "packages/server/test/httpapi-exercise/mcp.ts": {
+      "bytes": 3334,
+      "sha256": "e57d5dcdfbc7de9af254ff3da18646c2a95744986f6f63f8007f2e71db0db3d1"
+    },
+    "packages/server/test/httpapi-exercise/session-operations.ts": {
+      "bytes": 2340,
+      "sha256": "85e58cde2b92acba79b20b200674e1b1a31b9536c4a3ed42f309b1bca7ddee0d"
+    },
+    "packages/server/test/httpapi-exercise/actions-fixture.ts": {
+      "bytes": 8658,
+      "sha256": "3a6d5c89d19d01bd81b2ea2b0f98728fcc4446a0ee976741e7680bec2eb1559f"
+    },
+    "packages/server/test/httpapi-exercise/integration.ts": {
+      "bytes": 12476,
+      "sha256": "d6e35f59ba9a136465fd5202f8586796883b3e52f2b9ea083cd4c98c9bcd7d44"
+    },
+    "packages/server/test/httpapi-exercise/atlas.ts": {
+      "bytes": 5570,
+      "sha256": "4b98e541e7c34c1fd9e5aea31cbaefa47e08d9c1dee11f2abdb1e656ec3bea0b"
+    },
+    "packages/server/test/httpapi-exercise/vcs.ts": {
+      "bytes": 1006,
+      "sha256": "3877ecaa7c7512de5bd454542bbcde86a3ecc58a9ce4db2b44e5757610b26f01"
+    },
+    "packages/server/test/httpapi-exercise/assertions.ts": {
+      "bytes": 2194,
+      "sha256": "c8a1dcc8cf4227e359dadc337b59b562f3dad6d7bceb2205bef0d2e51878cfb0"
+    },
+    "packages/server/test/httpapi-exercise/actions-native-data.ts": {
+      "bytes": 5587,
+      "sha256": "06461dc7cd107ae0f051189b10402b2d237c45ffd9da8eb5a091a7295c718ca5"
+    },
+    "packages/server/test/httpapi-exercise/report.ts": {
+      "bytes": 2534,
+      "sha256": "d41ca0f03119eb1ffd1898bb49d7649c0b95dcf4dc7b268ec9ae3859720c2ad0"
+    },
+    "packages/server/test/httpapi-exercise/credential.ts": {
+      "bytes": 803,
+      "sha256": "3ed50ee097c1065646884919981cc9d28e3840f2476ff35fc89c65e5c3219162"
+    },
+    "packages/server/test/httpapi-exercise/actions-native-scope.ts": {
+      "bytes": 757,
+      "sha256": "e596bf7ad402fdb6f8005d0229ed67c4016b3fcae9d3bf490a3bfe9f8925904a"
+    },
+    "packages/server/test/httpapi-exercise/actions-failures.ts": {
+      "bytes": 8407,
+      "sha256": "372fb93f787be1ac1b17374e7cd15823cb8ddea80505370e24de6d2ea2d2d588"
+    },
+    "packages/server/test/httpapi-exercise/fixtures/oauth-compat.ts": {
+      "bytes": 1147,
+      "sha256": "8665185978340c00aff615acc7ba3ca0e23cff9c2dd09d5cdeede4178e9a6e25"
+    },
+    "packages/server/test/httpapi-exercise/fixtures/oauth-project.ts": {
+      "bytes": 590,
+      "sha256": "360e6a797968a7bb03de3e64944df521da9d11808bcf31db9310522bffcd41cb"
+    },
+    "packages/server/src/handlers/trust.ts": {
+      "bytes": 2409,
+      "sha256": "8ad52039bad0345cbe1926be946a4d1642230f07abb536c5d5324df7741116f2"
+    },
+    "packages/server/src/handlers/command.ts": {
+      "bytes": 349,
+      "sha256": "14ecfafbebb9e6bc79db2be87e5f9d64fd753d64f1166c8d1b41506ed60fcd33"
+    },
+    "packages/server/src/handlers/relay-run.ts": {
+      "bytes": 5917,
+      "sha256": "a31caef959e54e26071c0d7d325f685fef6b12c176ab90fa3e7aee4c3f15cbb8"
+    },
+    "packages/server/src/handlers/skill.ts": {
+      "bytes": 1871,
+      "sha256": "e03ed59e0234bb6fd002db5a6e1ace5627ba1b0a70b1949ca934b2efd9d14a9c"
+    },
+    "packages/server/src/handlers/provider.ts": {
+      "bytes": 2475,
+      "sha256": "9d0167b85aaebb4db6c802ea918c1ff38f47978c6877aadd788863201593714d"
+    },
+    "packages/server/src/handlers/actions-operation.ts": {
+      "bytes": 993,
+      "sha256": "9109722eed624929e576c90f906b1ad9ba3fa7becbcfba04d6b8071f62ae6408"
+    },
+    "packages/server/src/handlers/actions-workflow.ts": {
+      "bytes": 1705,
+      "sha256": "5242b8c6457eec826e492f2cfa421058478822e83be41110cf50e8647da7cd28"
+    },
+    "packages/server/src/handlers/guardrail.ts": {
+      "bytes": 1098,
+      "sha256": "d9669d237611181456858a8d0880392578f3b2432c1d5e0932fb70e6ecbbe9a5"
+    },
+    "packages/server/src/handlers/capability-schedules.ts": {
+      "bytes": 2833,
+      "sha256": "45b4fdc1b7c9d35d5d995523414dad446f968e667b73680ee2ca47ed883ab8f3"
+    },
+    "packages/server/src/handlers/pty.ts": {
+      "bytes": 8563,
+      "sha256": "7f01e2f1e3c36979200fa6f3395ce8a6e448e153d5b7f027df03ee24f09e117d"
+    },
+    "packages/server/src/handlers/actions-source.ts": {
+      "bytes": 1390,
+      "sha256": "9194ce2bd2796955ba7d51c8c42af63c6b6f151679786067468bb736172a7dfa"
+    },
+    "packages/server/src/handlers/lean.ts": {
+      "bytes": 2301,
+      "sha256": "9b731bdeefe1059a653dbe03f2279f1a0f4e77de0eb162943ab32dd14bf2ed4f"
+    },
+    "packages/server/src/handlers/permission.ts": {
+      "bytes": 3702,
+      "sha256": "eccfedcd75825cfc8f02ec07e9f30af8c573a23f60ae9b41e58d777e21cf5438"
+    },
+    "packages/server/src/handlers/message.ts": {
+      "bytes": 3210,
+      "sha256": "d94cf0944d4fe32aa66cda511d0d49da8ca2aa0135a19791433e334e0415e5cc"
+    },
+    "packages/server/src/handlers/schedule.ts": {
+      "bytes": 3217,
+      "sha256": "a767e41d0ad27f996ec89aed4829c3afec89cc3a9bc4fc7544cc0c19ee683ee9"
+    },
+    "packages/server/src/handlers/installation.ts": {
+      "bytes": 1039,
+      "sha256": "3d5b63f50f030e884075152534e35400ae6ad91bf0f187a45bf1d13fce699842"
+    },
+    "packages/server/src/handlers/event.ts": {
+      "bytes": 2924,
+      "sha256": "ca51a6d6bd47e97cda8d43b629e4a590cbe21e1a263b6146d3609d30bceae427"
+    },
+    "packages/server/src/handlers/meeting.ts": {
+      "bytes": 3570,
+      "sha256": "c4100cefe2683ebbb91a21b6658f9eb26069eb4e53e1fd9ba31f330499c00566"
+    },
+    "packages/server/src/handlers/agent.ts": {
+      "bytes": 5780,
+      "sha256": "5ea8a0c52977d04e833edd5e6f8198062b494c1f5f0df50d06fbddc5b7650950"
+    },
+    "packages/server/src/handlers/reference.ts": {
+      "bytes": 383,
+      "sha256": "521ea525989df9cb283c92f78fefef28aec0dd4873a0dc223b83297dd42b411b"
+    },
+    "packages/server/src/handlers/capability-operator.ts": {
+      "bytes": 1561,
+      "sha256": "c5e69c65cb5066136993dc01ddac5e9b3fd929b2903a0fb4c99976addfea53ee"
+    },
+    "packages/server/src/handlers/actions-resource.ts": {
+      "bytes": 1957,
+      "sha256": "a3da138d4f5f6321c18bc790da67debf1df622c9fd86563bfc80b683fe054797"
+    },
+    "packages/server/src/handlers/behavior.ts": {
+      "bytes": 772,
+      "sha256": "285b610ffb742ebc0e1f19a24b6eb0c0303552d1fe351cef6c6152bd8cc5d8a2"
+    },
+    "packages/server/src/handlers/capability-connections.ts": {
+      "bytes": 4883,
+      "sha256": "fb21aa9975ceb975bedb3fe16cc85b367cd9a3f27691ea7eb9541f93574cbb91"
+    },
+    "packages/server/src/handlers/actions-binding.ts": {
+      "bytes": 2229,
+      "sha256": "e7fc29a45370ba8c4456e5c27ee0aaea2c4460b386be04ad5fcf3b91531f73d8"
+    },
+    "packages/server/src/handlers/project.ts": {
+      "bytes": 2178,
+      "sha256": "2729612650a620155d83aa017ce98b15dfe1d36c5fff8a9da72bff14ad030b95"
+    },
+    "packages/server/src/handlers/actions-run.ts": {
+      "bytes": 2973,
+      "sha256": "6177fd44ef1e567f825c12a96e95bb304ee6183a0643267bc43f7d48be37881f"
+    },
+    "packages/server/src/handlers/board.ts": {
+      "bytes": 3794,
+      "sha256": "dfeb5365d7c500527e66e3c455a70e1e5fa1bf09c1b55f9ceceb739d65aa0ee5"
+    },
+    "packages/server/src/handlers/relay-hook.ts": {
+      "bytes": 9689,
+      "sha256": "a20b4bc4297264795c70ee669ec613d5704cc0f86c6e3929425ef80c64974ad0"
+    },
+    "packages/server/src/handlers/actions-transfer.ts": {
+      "bytes": 2203,
+      "sha256": "c385e884606f956b76aea7b2e4c9f6d892ab87976342dafce06428c84449bba3"
+    },
+    "packages/server/src/handlers/config.ts": {
+      "bytes": 2094,
+      "sha256": "8f0a504c3e526069e47d3a750a3b284da708a7383f25cc6a854e540b032808f9"
+    },
+    "packages/server/src/handlers/relay-document.ts": {
+      "bytes": 15511,
+      "sha256": "d0e7a217e76134cdd4699cf28fc1c5d4c792546326bc3450ad0602317643c889"
+    },
+    "packages/server/src/handlers/actions-common.ts": {
+      "bytes": 900,
+      "sha256": "fb84f207b325f69b222a5b45ba819f93c517acb3d1ad1b6c4c3e6a56198f8c5f"
+    },
+    "packages/server/src/handlers/pull-request.ts": {
+      "bytes": 1248,
+      "sha256": "40f69e4bd3fdb357a0241bca3525cba3a3c677dd1dc277d2335204fb4fedc162"
+    },
+    "packages/server/src/handlers/location.ts": {
+      "bytes": 1318,
+      "sha256": "9c6224360c8bcfcfb3973f2b200c4bb8b9c57d2b32ef55c912a4784ed7a09a4e"
+    },
+    "packages/server/src/handlers/lsp.ts": {
+      "bytes": 339,
+      "sha256": "f8fc0e69a5aa0c7b35238aa3b1a901784be77bfc7f22008a7768cfab239cac18"
+    },
+    "packages/server/src/handlers/research-artifact.ts": {
+      "bytes": 2411,
+      "sha256": "8a95ff6157c4b15afe8fbd69c37b1d250b635f5ac2819ba4170de070f1c45b38"
+    },
+    "packages/server/src/handlers/rag-studio.ts": {
+      "bytes": 4883,
+      "sha256": "3a3143d5b3243ac78bc87bd5f9dbb56ae9ab080730dd9ac7060700809de4ef0e"
+    },
+    "packages/server/src/handlers/mcp.ts": {
+      "bytes": 3425,
+      "sha256": "8b141ac204fe14e72a5576277a0c4c493a43b7921dfc4309b26d0b9fb08d5ad8"
+    },
+    "packages/server/src/handlers/actions-pipeline.ts": {
+      "bytes": 887,
+      "sha256": "f31f6d4929009eb9d6d72d4d882dfa100fab8185d707f970e8fc738d35e18ea6"
+    },
+    "packages/server/src/handlers/health.ts": {
+      "bytes": 421,
+      "sha256": "a45c1f389238590e7545fc35f83d5b48baa6f74062e028e95b11e6766c44ab3d"
+    },
+    "packages/server/src/handlers/capability-artifacts.ts": {
+      "bytes": 7969,
+      "sha256": "a26977fdec84799439e8a1af111d6e49b53294d21eea5279c53618fff934a90c"
+    },
+    "packages/server/src/handlers/session.ts": {
+      "bytes": 27133,
+      "sha256": "8acca2bd207b45968d1540300fe7395a755249bd08ad1168d80a63863ded5b9e"
+    },
+    "packages/server/src/handlers/actions-job.ts": {
+      "bytes": 1296,
+      "sha256": "85f341e3e2cf019a10e584f4ed56c4ca8e450586d3a86ac38d14b527097e2774"
+    },
+    "packages/server/src/handlers/project-copy.ts": {
+      "bytes": 4761,
+      "sha256": "4dda2be957852dec674c9b87ab10d95d13f86eba9bd053c915739defb755ad90"
+    },
+    "packages/server/src/handlers/integration.ts": {
+      "bytes": 5677,
+      "sha256": "f557b26f8f989ed47826c7ce4f26fd1ab2924b2fed7f7b73cd2e3e5e8e473751"
+    },
+    "packages/server/src/handlers/atlas.ts": {
+      "bytes": 5875,
+      "sha256": "5eacbbeeea4ae154b77523f0f3bb14bd6921816ad4ebbb7ee5145050ab874267"
+    },
+    "packages/server/src/handlers/vcs.ts": {
+      "bytes": 3540,
+      "sha256": "11eea74dd0da6ececd8e46f2a55d63f7ee318f5098ed4a931b4879e565e5efed"
+    },
+    "packages/server/src/handlers/fs.ts": {
+      "bytes": 2705,
+      "sha256": "87efe3716e06892e12b7f86d2248ee496d37d7822bbe6eab22889d8b3e864fe0"
+    },
+    "packages/server/src/handlers/question.ts": {
+      "bytes": 2443,
+      "sha256": "856f65aac9d6a9f2d96a7eba706922832eda1e4d7c671210ad0efca92f8ca555"
+    },
+    "packages/server/src/handlers/credential.ts": {
+      "bytes": 1289,
+      "sha256": "ed4d52333c3fdb307c1419728b290231ad91581223c05b652b75251d16b4ab4e"
+    },
+    "packages/server/src/handlers/rag-studio-session.ts": {
+      "bytes": 9807,
+      "sha256": "bd3250e5604650f6f80133d3f4e5c86653eaf1f42eddb40799f40afe22aab94b"
+    },
+    "packages/server/src/handlers/formatter.ts": {
+      "bytes": 372,
+      "sha256": "463e3f34b673e5e7ffcf645245508750699e457df8ef5d5c3d9f6720241ce1dc"
+    },
+    "packages/server/src/handlers/model.ts": {
+      "bytes": 1731,
+      "sha256": "5bb4dd3dceaf99373c595b30753ea69322999bcd38bc55db36ce165325f5ee9b"
+    },
+    "packages/server/src/middleware/schema-error.ts": {
+      "bytes": 918,
+      "sha256": "cec3dac0a0706af6daa39233b37c453e99b57a234a40ddcd27ef01cb0777ec08"
+    },
+    "packages/server/src/middleware/capability-authorization.ts": {
+      "bytes": 4035,
+      "sha256": "437afc6342984a2cabf7cd72c01ea77c4422fb61761d1a24b2a8bf867f798c88"
+    },
+    "packages/server/src/middleware/authorization.ts": {
+      "bytes": 3206,
+      "sha256": "07734b4c881ba2bb586f7a6561dfd6b77be70bf56d6d5f152dfdf1c4dba1e93f"
+    },
+    "packages/server/src/middleware/session-location.ts": {
+      "bytes": 2427,
+      "sha256": "107d98617bdfee6dc3aaad704d3e3066c1485a47fe8037a5965047f88e64d004"
+    },
+    "packages/core/src/event.ts": {
+      "bytes": 30184,
+      "sha256": "4da815f4da0f85c45b45b6af49fdfd94889fe0e167025b8b49a6a25805217b80"
+    },
+    "packages/core/src/host.ts": {
+      "bytes": 3802,
+      "sha256": "9c20433f123ac8ea41773434faaceaecfe87787143689f6862ef28e05a87cb0f"
+    },
+    "packages/core/src/session.ts": {
+      "bytes": 34126,
+      "sha256": "d8c38d46bc6b78ec23d7dae7525fa2ad4c4f07f3f6b5963248e0a0e96d1fbe58"
+    },
+    "packages/core/src/session/store.ts": {
+      "bytes": 4422,
+      "sha256": "2532e550ec0d74f7b07c33560651db176479d6b9d827fdc19d1d1198ba0628de"
+    },
+    "packages/sdk-next/test/capability-setup.test.ts": {
+      "bytes": 13140,
+      "sha256": "7dea173ca63545ad1c3b5e29841cbdfd3aecf14c78f0bc47e6282d6001e1eaf1"
+    },
+    "packages/sdk-next/test/embedded.test.ts": {
+      "bytes": 10581,
+      "sha256": "a32e565a4bdaa2154208128e035c805577684b7d233f9f58b2ffe3c2f93932da"
+    },
+    "packages/sdk-next/test/operator-transport.test.ts": {
+      "bytes": 2415,
+      "sha256": "f9254b31e28208387887a930f903ca7019637cd8a52ed5d7ec96aa2a9010f92e"
+    },
+    "packages/sdk-next/test/capability-connections.test.ts": {
+      "bytes": 12714,
+      "sha256": "c74a8958d5467a47643e6320392fe40f77af95f8d97f4672a877514e04740466"
+    },
+    "packages/sdk-next/test/import-boundaries.test.ts": {
+      "bytes": 1906,
+      "sha256": "63a01bae854c4bf01c5a88e5230179268c59e3adad4d66bda0b56c51eb6804a4"
+    },
+    "packages/sdk-next/src/tool.ts": {
+      "bytes": 164,
+      "sha256": "230c88017a69b9dee4e9cdbdcde6f2d5cfc9b62bebc4a5a3d347762a74688b1c"
+    },
+    "packages/sdk-next/src/index.ts": {
+      "bytes": 363,
+      "sha256": "ce9b0151b202e31afa3aea23e5fdb2a1d6efae07a5409e8aa97f3a204484633b"
+    },
+    "packages/sdk-next/src/orchestra.ts": {
+      "bytes": 2642,
+      "sha256": "9d85372836e38cf77d1b0ff9093a0bfa5ebfaed1dc0059c5a385ff917606e320"
+    },
+    "packages/sdk-next/src/operator-transport.ts": {
+      "bytes": 1926,
+      "sha256": "66c8859b258c61ee0aa245c3758707eccc73ef3478b1b222f4865e6bfa30e768"
+    },
+    "packages/client/script/build.ts": {
+      "bytes": 1532,
+      "sha256": "fd65a385446d9e691d2c07a1bed20a1cd828d4c13ae3531d2a6a48db941e2158"
+    },
+    "packages/client/test/type-conformance.test.ts": {
+      "bytes": 4458,
+      "sha256": "f7d3cc35173b82d2e906a5c494fb2716ebdc0f67d3defbfb8cc9e04154a09e12"
+    },
+    "packages/client/test/actions-transfer-download.test.ts": {
+      "bytes": 7118,
+      "sha256": "a4de0e87657b34a4335909ea0f5b52a133a8b55ed85ea673a3ca3f68f6f18058"
+    },
+    "packages/client/test/session-settings-promise.test.ts": {
+      "bytes": 4120,
+      "sha256": "a8b16cba6aec349e924f0cdc4a902b6dd44ce497b7f910301daab6ba429a867c"
+    },
+    "packages/client/test/actions-transfer-fixture.ts": {
+      "bytes": 3477,
+      "sha256": "00a9a25324f43572a460eac3861da99f8dc9710172650731d42c450510d182fa"
+    },
+    "packages/client/test/session-settings-effect.test.ts": {
+      "bytes": 5487,
+      "sha256": "a85e8f283f322da8f955d1a695dd92b8225a8cfdeac33b84eea70d51a960e8d4"
+    },
+    "packages/client/test/effect.test.ts": {
+      "bytes": 9925,
+      "sha256": "5c92d1972ecc58f1b6c918341af29a0f6240ffa61b14f1f6b9dd74c9a2c943ac"
+    },
+    "packages/client/test/promise.test.ts": {
+      "bytes": 14627,
+      "sha256": "6327e27a858011cb7d10c752c589ff49fa6e5a3ee8e4a14ba7569fdc85b1b21f"
+    },
+    "packages/client/test/actions-transfer-upload.test.ts": {
+      "bytes": 10518,
+      "sha256": "f82b762d048be58061dc234df830f88e292d738903ebb8a3457f191f5e8a2958"
+    },
+    "packages/client/test/actions-transfer-errors.test.ts": {
+      "bytes": 12155,
+      "sha256": "8f4fa5c335388103c162a54cc9e5d4934830748741616df4b4cb98bcfbc11795"
+    },
+    "packages/client/src/index.ts": {
+      "bytes": 194,
+      "sha256": "87dad8fe684c1238d025e75d3181a5da802ddd77e99b4e89b8964996d0196321"
+    },
+    "packages/client/src/effect.ts": {
+      "bytes": 1527,
+      "sha256": "f6ed241fc9935c76389d65738bba5cbd348000cf8e58cdc4b5c08936b62da318"
+    },
+    "packages/client/src/actions-transfer.ts": {
+      "bytes": 9473,
+      "sha256": "3403fb575546d15a203a063ae9e8135dac6593276bf056e63a918129fb9bd47d"
+    },
+    "packages/client/src/contract.ts": {
+      "bytes": 4659,
+      "sha256": "8820de1b93f260f2bf28e1db464b0ec378925e9baad4dd2e106db106c1b6e3f3"
+    },
+    "packages/client/src/wire.ts": {
+      "bytes": 190,
+      "sha256": "0f4373c1e09abbaa92b6769a80c2a9e9de8a1193ed99b9c9e404263c61388fdf"
+    },
+    "packages/client/src/actions-transfer-error.ts": {
+      "bytes": 5266,
+      "sha256": "bef765b9b85ec33b12317a84d6266d5713793768d3f4a63deba06d47c2a66477"
+    },
+    "packages/client/src/generated-effect/actionsTransfers.ts": {
+      "bytes": 1638,
+      "sha256": "53ce6a48b098b06815bacf3a4f0cafaccface6d052e7ce3c70d72123e45231d9"
+    },
+    "packages/client/src/generated-effect/actionsRuns.ts": {
+      "bytes": 10321,
+      "sha256": "45a2151028cda3bc03a74e6b49b51214c865d14934d8308470734ff4b1b8c8ae"
+    },
+    "packages/client/src/generated-effect/actionsSource.ts": {
+      "bytes": 3983,
+      "sha256": "874d6fab7ebd07adca74372d815bf1850e734b6e2c542d846c85f992f6f33ca5"
+    },
+    "packages/client/src/generated-effect/actionsResources.ts": {
+      "bytes": 3166,
+      "sha256": "f4012e9b771e187db3d23dd333ce8da74861ac8665a666d76ed45b00fc720869"
+    },
+    "packages/client/src/generated-effect/actionsOperations.ts": {
+      "bytes": 3186,
+      "sha256": "86d6be654713d9c34a6ae4e66c67a22463e1216892d988001d31b7326c927c8b"
+    },
+    "packages/client/src/generated-effect/index.ts": {
+      "bytes": 83,
+      "sha256": "3611805287e43bfc7d5c8e14e6b0ca54e74f15f41fd61de3a9422541d13049a8"
+    },
+    "packages/client/src/generated-effect/actionsJobs.ts": {
+      "bytes": 4060,
+      "sha256": "12746c4556bcd6859667768a0541989449b425e2995f1a1c1e04b0477c1488f6"
+    },
+    "packages/client/src/generated-effect/actionsBindings.ts": {
+      "bytes": 6681,
+      "sha256": "b611118d5fd289181019682420658e2a3bad1ab342f16fbadbad6984d7b519f7"
+    },
+    "packages/client/src/generated-effect/schedules.ts": {
+      "bytes": 4437,
+      "sha256": "5048bc74630cf7bb627462b698676c5ebd86c3529a6721063d44f42e61aaaf55"
+    },
+    "packages/client/src/generated-effect/actionsWorkflows.ts": {
+      "bytes": 5290,
+      "sha256": "745474b0b03d05a2bbb0a2ef5f7e1d245949d3ee105d75b3af72abd2210ee126"
+    },
+    "packages/client/src/generated-effect/research.ts": {
+      "bytes": 1124,
+      "sha256": "2bf96a59fae6ca1ec6c27d770c88a0bbea8d02b60d803a4bdd2683234f6c5c89"
+    },
+    "packages/client/src/generated-effect/actionsPipelines.ts": {
+      "bytes": 2246,
+      "sha256": "545095e2daffdf951dbc1fb7b94035b8bc51877ecde574ea45a871520b9d1b75"
+    },
+    "packages/client/src/generated-effect/.httpapi-codegen.json": {
+      "bytes": 300,
+      "sha256": "4e839ccacb669ba2392da1a5173c08c6636c0b64f86f8faa79b0051969bd7285"
+    },
+    "packages/client/src/generated-effect/client.ts": {
+      "bytes": 171208,
+      "sha256": "24114bfba58645693c8db03ffca4f04b3c6ecbb0d6a9d18f82de15addd1556f6"
+    },
+    "packages/client/src/generated-effect/client-error.ts": {
+      "bytes": 453,
+      "sha256": "0c1c3247f7e0661251a5b2ea1bbf3492cf78fa4a0728b486eba2781e6ce85969"
+    },
+    "packages/client/src/generated/actionsSource-types.ts": {
+      "bytes": 10688,
+      "sha256": "065a6c05ef4ebf1600a4be794b2f7948867ea69496a962228a230921c67df25f"
+    },
+    "packages/client/src/generated/actionsRuns-types.ts": {
+      "bytes": 678,
+      "sha256": "5efab1bdfa458cd5a41c9addbf5051d6902f70b2684f71a9a7f893eb295cdeef"
+    },
+    "packages/client/src/generated/actionsTransfers.ts": {
+      "bytes": 1084,
+      "sha256": "bccd76823dbd86410d974dce23bc6dde3e34013bc7f296fbce009fa0aa2a4386"
+    },
+    "packages/client/src/generated/actionsRuns.ts": {
+      "bytes": 6243,
+      "sha256": "e4760d1d17d5da2d802441d1297f0c62ac2ef5dc7a8223a2cfd7f754e6b2f541"
+    },
+    "packages/client/src/generated/errors.ts": {
+      "bytes": 10448,
+      "sha256": "171aca5d39af814b9bb62d1acef03a97d7816a7fe755ccb06abd2ded89ddc8a6"
+    },
+    "packages/client/src/generated/actionsSource.ts": {
+      "bytes": 2746,
+      "sha256": "5a56961dc51b645395a47d72750e0d5be5646d8a10bcc9e98e12d7eb4b9eb372"
+    },
+    "packages/client/src/generated/actionsResources.ts": {
+      "bytes": 1870,
+      "sha256": "d6874c37a1268af76a2238db0697009d562152f3986f51017b49bc7baaf6ee71"
+    },
+    "packages/client/src/generated/actionsOperations.ts": {
+      "bytes": 2277,
+      "sha256": "9a05a244e9c3f3bda6ebf2160aa0559869b250fa5969661decf8ec74f1f05fce"
+    },
+    "packages/client/src/generated/index.ts": {
+      "bytes": 131,
+      "sha256": "b15118bc04aeca6ea1c8b40ee5e4074d69ce3805073073daa1b250f40b9f1b88"
+    },
+    "packages/client/src/generated/actionsWorkflows-types.ts": {
+      "bytes": 421,
+      "sha256": "3bdf87a035b025f8e824da87fff07b89ee6c8da5cda455b2ec4c288db4ff0bc3"
+    },
+    "packages/client/src/generated/actionsBindings-types.ts": {
+      "bytes": 10187,
+      "sha256": "8ab9f920be75176aa5c3c3cf5f45fbb805f7f7b37122e51e56bcf2fa3d45aa16"
+    },
+    "packages/client/src/generated/actionsJobs.ts": {
+      "bytes": 2748,
+      "sha256": "e2435113e7808e67099a9f72a1da9114608ddafc2d357cf518b32982652c981f"
+    },
+    "packages/client/src/generated/actionsBindings.ts": {
+      "bytes": 4975,
+      "sha256": "ea8edb79c9e961dc0e5c6868f70b54bb180e7507b939b9e20c6c0932bd6e5409"
+    },
+    "packages/client/src/generated/actionsJobs-types-part-1.ts": {
+      "bytes": 8864,
+      "sha256": "5b1cdda59961fd39b05f7d40f9dcec0e70d7b83de08a6861afb7bfe176f0d94e"
+    },
+    "packages/client/src/generated/actionsJobs-types-part-2.ts": {
+      "bytes": 6732,
+      "sha256": "a9b6ff65d55cbdb4a979dbdeda13871cdd465a0e197b34503ab7c91e78a7fdb9"
+    },
+    "packages/client/src/generated/schedules.ts": {
+      "bytes": 3207,
+      "sha256": "2543a203dd3a4cf928eae72e189336e7fc3dafc4da6d7926c68d87d2ce1e6786"
+    },
+    "packages/client/src/generated/actionsTransfers-types.ts": {
+      "bytes": 3281,
+      "sha256": "82b04be1f9fe032b384a22ce176f6e04aec563d3097ecf0662b8c441e48ba15f"
+    },
+    "packages/client/src/generated/research-types.ts": {
+      "bytes": 3830,
+      "sha256": "99074fb1e8854d7aca41a96606bdf96c001fed845e8e06e7fe713ec55ed5f85a"
+    },
+    "packages/client/src/generated/actionsOperations-types-part-1.ts": {
+      "bytes": 9387,
+      "sha256": "62dc3e78818508d63f100f3cab6543c97afed51b18e2bd88929b8857d5991d0a"
+    },
+    "packages/client/src/generated/types.ts": {
+      "bytes": 462732,
+      "sha256": "2763d389d2694a6737719865cbabbbdfee937d81a86497b783c246cdaf76ef0f"
+    },
+    "packages/client/src/generated/actionsResources-types-part-2.ts": {
+      "bytes": 4985,
+      "sha256": "5baf7fd4573bdb1ee46f9fc2b76e1b78b2399a4af549bf75f282525167c21ed7"
+    },
+    "packages/client/src/generated/actionsRuns-types-part-4.ts": {
+      "bytes": 2972,
+      "sha256": "00aa00ff23f2aea92e36cfa6e1851216415775c7efa4d66e260da5dfb270a2da"
+    },
+    "packages/client/src/generated/actionsOperations-types-part-2.ts": {
+      "bytes": 8228,
+      "sha256": "8287e38e01381c106f36b3aed8e043663cbd00bc3ba0c94e1fa32acb9ac3608b"
+    },
+    "packages/client/src/generated/actionsResources-types-part-1.ts": {
+      "bytes": 8777,
+      "sha256": "989430fa1bef056cd28b6997acad86427ae43e62f521cffe772b4ab7500774da"
+    },
+    "packages/client/src/generated/request.ts": {
+      "bytes": 341,
+      "sha256": "cdc383a3c83224f8949f1401a30f9139361868551d1bcf84ee0a1e72f39da941"
+    },
+    "packages/client/src/generated/actionsWorkflows-types-part-1.ts": {
+      "bytes": 9667,
+      "sha256": "60f0176a54d6705a1a63cdd623eb7b31dae58fee614d61cb5dbbbb0fe396d04b"
+    },
+    "packages/client/src/generated/actionsWorkflows.ts": {
+      "bytes": 3466,
+      "sha256": "e6a5816c53eabb6b58896bde50589ef5a69103848a6f475cd408f19f664d3e0a"
+    },
+    "packages/client/src/generated/actionsWorkflows-types-part-2.ts": {
+      "bytes": 6832,
+      "sha256": "e20241eab451c6c7644fe3d4119a55d39130a4c9b65a60bd2bb24943334c29e8"
+    },
+    "packages/client/src/generated/research.ts": {
+      "bytes": 906,
+      "sha256": "92a3e3189f27f472bcba0df0187983d73bc3344c785d5c2de01a8650bcce8804"
+    },
+    "packages/client/src/generated/actionsJobs-types.ts": {
+      "bytes": 297,
+      "sha256": "8359acb6710ffa922f9dc148e037d4d3ec93b813a1a3694698b18abd538394d3"
+    },
+    "packages/client/src/generated/actionsPipelines.ts": {
+      "bytes": 1638,
+      "sha256": "27a9db18d54875dfbc94b736f26724c515195c3fde747d872fc324561c012dd6"
+    },
+    "packages/client/src/generated/schedules-types.ts": {
+      "bytes": 9431,
+      "sha256": "61bb70a4e201367b669b11ee67865def1303103fff52be10e6106bab771571e3"
+    },
+    "packages/client/src/generated/actionsPipelines-types.ts": {
+      "bytes": 7919,
+      "sha256": "41e1635479059529e171ede4fb00f821e7b2d75491e18061a68bf403e2fb4823"
+    },
+    "packages/client/src/generated/.httpapi-codegen.json": {
+      "bytes": 1086,
+      "sha256": "8c3b0fc3a95aed8ba5a2efe2033addb2e753444a15bc4b308f5deb618096b243"
+    },
+    "packages/client/src/generated/actionsRuns-types-part-2.ts": {
+      "bytes": 11416,
+      "sha256": "86f90db3010b81523cef371015048bc3344caddae4d4bdf29b5113388b8a417d"
+    },
+    "packages/client/src/generated/actionsRuns-types-part-1.ts": {
+      "bytes": 14076,
+      "sha256": "01be8e6e80654c1b785b4a824399e2fbfb29fdbe62a197ad21e046e9fdc2fb04"
+    },
+    "packages/client/src/generated/actionsRuns-types-part-3.ts": {
+      "bytes": 11377,
+      "sha256": "ac4f4e4d928ba031828784c41acf94239cca59b62ea27dc987005a0b1511ab98"
+    },
+    "packages/client/src/generated/actionsOperations-types.ts": {
+      "bytes": 306,
+      "sha256": "640447b8efa9e672f6318ad9d9f6944b536542117e61b2d7e4d1a264704e7487"
+    },
+    "packages/client/src/generated/client.ts": {
+      "bytes": 146714,
+      "sha256": "f032a64d8223ac1b584ba17cf39e7f8da9e0be05f88682425692304a3a8ba20b"
+    },
+    "packages/client/src/generated/client-error.ts": {
+      "bytes": 319,
+      "sha256": "d331e1f34f073b6c6b701a1085f90f4a880970efd53e53f21849df78f2d11211"
+    },
+    "packages/client/src/generated/actionsResources-types.ts": {
+      "bytes": 224,
+      "sha256": "5d935135d074ffbf8fefde88c9565b3eb7093597354d7d3ee2a663034be86c0f"
+    }
+  }
+}

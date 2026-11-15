@@ -1,0 +1,541 @@
+{
+  "schema": "s1-04-consumer-case-disposition/v1",
+  "recorded_at_utc": "2026-11-15T00:53:32.580437+00:00",
+  "final_package": {
+    "path": "native-package.json",
+    "byte_length": 389819,
+    "sha256": "71bc1102fd5e2c6be166b2df790e8ee8fe4ecd053ab2d7fed5bbc46130349442"
+  },
+  "public_contract": {
+    "path": "contracts/public.json",
+    "byte_length": 10021,
+    "sha256": "7dcc9df0003b99722b18538fab1e45adb3ac60e6697397677200feddce40909e"
+  },
+  "case_count": 22,
+  "status_counts": {
+    "HOLD": 22
+  },
+  "semantic_pass_count": 0,
+  "independent_consumer_agents": [
+    "/root/api_consumer_o3"
+  ],
+  "isolation": {
+    "fork_turns": "none",
+    "producer_context": false,
+    "raw_source_access": false,
+    "reserved_oracle_access": false,
+    "only_actual_bridge_responses": true
+  },
+  "observed_consumer_attempt": {
+    "case": "S1-O3",
+    "phase": "pre-Core 13-artifact package",
+    "package_sha256": "a2e102dde18500962c8dc79bdbeeabd9afa7b21bc4bc0745baf3e16635ea3132",
+    "index_calls": 1,
+    "read_calls": 0,
+    "body_bytes": 0,
+    "returned": {
+      "kind": "hold",
+      "reason": "ownership-store-unavailable",
+      "evidence": [
+        "orchestra.s1"
+      ]
+    },
+    "meaning": "Correctly reported inability to answer; not semantic success of O3 or the abstention case."
+  },
+  "final_prerequisite_recheck": {
+    "index_receipt": {
+      "path": "receipts/atlas/index-maintenance-r3-final.receipt.json",
+      "byte_length": 1847,
+      "sha256": "e6195ccff6d305a654aba6a79d783f474c282208e7c9bcba474c83c682e825af"
+    },
+    "read_receipt": {
+      "path": "receipts/atlas/read-component-r3-final.receipt.json",
+      "byte_length": 1854,
+      "sha256": "2ba1f0b26b090fc72f01902baf9a9075c2bea4e829c57ff717d0632a7a51a6fb"
+    },
+    "diagnostic_index_receipt": {
+      "path": "receipts/atlas-diagnostic/index-maintenance-db9b423-final.receipt.json",
+      "byte_length": 1926,
+      "sha256": "c1f1b32d5d1d276a7313b23669b14ab310a10f362234c601d0473f823ddfda41"
+    },
+    "diagnostic_read_receipt": {
+      "path": "receipts/atlas-diagnostic/read-component-db9b423-final.receipt.json",
+      "byte_length": 1933,
+      "sha256": "59a4601e858c93042214ade66f5b9df329888f22f8ac4d283969299dfbb50185"
+    },
+    "consumer_replayed": false,
+    "reason": "The final package still has no published generation. Repeating a model against the same unavailable-store response would not exercise the 21 remaining cases or prove new content."
+  },
+  "core_reuse": "Three exact selected Core predecessors are available in the final package. O1/O2/A1 remain the original frozen cases; copying these predecessors does not add competing owned intermediates or change expected answers.",
+  "cases": [
+    {
+      "id": "S1-O1",
+      "kind": "permitted-change",
+      "target": null,
+      "support_only": true,
+      "frozen_limits": {
+        "index_calls": 1,
+        "read_calls": 2,
+        "body_bytes": 24000
+      },
+      "status": "HOLD",
+      "execution_state": "NOT_RUN_PREREQUISITE_BLOCKED",
+      "consumer_agent": null,
+      "observed_calls": null,
+      "semantic_pass": false,
+      "evidence": [
+        "receipts/atlas/index-maintenance-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json"
+      ],
+      "open_obligation": "Run this frozen case through actual accepted ownership.index/read after compatible preparation, candidate binding and isolated publication. Judge against the unchanged reserved oracle; record exact result/manifest and the frozen query/body budget."
+    },
+    {
+      "id": "S1-O2",
+      "kind": "contract-violation",
+      "target": null,
+      "support_only": true,
+      "frozen_limits": {
+        "index_calls": 2,
+        "read_calls": 4,
+        "body_bytes": 60000
+      },
+      "status": "HOLD",
+      "execution_state": "NOT_RUN_PREREQUISITE_BLOCKED",
+      "consumer_agent": null,
+      "observed_calls": null,
+      "semantic_pass": false,
+      "evidence": [
+        "receipts/atlas/index-maintenance-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json"
+      ],
+      "open_obligation": "Run this frozen case through actual accepted ownership.index/read after compatible preparation, candidate binding and isolated publication. Judge against the unchanged reserved oracle; record exact result/manifest and the frozen query/body budget."
+    },
+    {
+      "id": "S1-O3",
+      "kind": "cross-component-impact",
+      "target": null,
+      "support_only": false,
+      "frozen_limits": {
+        "index_calls": 2,
+        "read_calls": 6,
+        "body_bytes": 80000
+      },
+      "status": "HOLD",
+      "execution_state": "ATTEMPTED_BLOCKED_ON_PRE_CORE_PACKAGE",
+      "consumer_agent": "/root/api_consumer_o3",
+      "observed_calls": {
+        "index": 1,
+        "read": 0,
+        "body_bytes": 0
+      },
+      "semantic_pass": false,
+      "evidence": [
+        "receipts/consumers/o3-initial-request.txt",
+        "receipts/consumers/o3-query-request.json",
+        "receipts/consumers/o3-bridge-response.txt",
+        "receipts/consumers/o3-response.md",
+        "receipts/atlas/consumer-o3-index-1.receipt.json"
+      ],
+      "open_obligation": "Run this frozen case through actual accepted ownership.index/read after compatible preparation, candidate binding and isolated publication. Judge against the unchanged reserved oracle; record exact result/manifest and the frozen query/body budget."
+    },
+    {
+      "id": "S1-04-P1",
+      "kind": "permitted-change",
+      "target": null,
+      "support_only": false,
+      "frozen_limits": {
+        "index_calls": 2,
+        "read_calls": 6,
+        "body_bytes": 80000
+      },
+      "status": "HOLD",
+      "execution_state": "NOT_RUN_PREREQUISITE_BLOCKED",
+      "consumer_agent": null,
+      "observed_calls": null,
+      "semantic_pass": false,
+      "evidence": [
+        "receipts/atlas/index-maintenance-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json"
+      ],
+      "open_obligation": "Run this frozen case through actual accepted ownership.index/read after compatible preparation, candidate binding and isolated publication. Judge against the unchanged reserved oracle; record exact result/manifest and the frozen query/body budget."
+    },
+    {
+      "id": "S1-04-V1",
+      "kind": "contract-violation",
+      "target": null,
+      "support_only": false,
+      "frozen_limits": {
+        "index_calls": 2,
+        "read_calls": 6,
+        "body_bytes": 80000
+      },
+      "status": "HOLD",
+      "execution_state": "NOT_RUN_PREREQUISITE_BLOCKED",
+      "consumer_agent": null,
+      "observed_calls": null,
+      "semantic_pass": false,
+      "evidence": [
+        "receipts/atlas/index-maintenance-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json"
+      ],
+      "open_obligation": "Run this frozen case through actual accepted ownership.index/read after compatible preparation, candidate binding and isolated publication. Judge against the unchanged reserved oracle; record exact result/manifest and the frozen query/body budget."
+    },
+    {
+      "id": "S1-04-F1",
+      "kind": "operational-failure",
+      "target": null,
+      "support_only": false,
+      "frozen_limits": {
+        "index_calls": 2,
+        "read_calls": 6,
+        "body_bytes": 80000
+      },
+      "status": "HOLD",
+      "execution_state": "NOT_RUN_PREREQUISITE_BLOCKED",
+      "consumer_agent": null,
+      "observed_calls": null,
+      "semantic_pass": false,
+      "evidence": [
+        "receipts/atlas/index-maintenance-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json"
+      ],
+      "open_obligation": "Run this frozen case through actual accepted ownership.index/read after compatible preparation, candidate binding and isolated publication. Judge against the unchanged reserved oracle; record exact result/manifest and the frozen query/body budget."
+    },
+    {
+      "id": "S1-04-A1",
+      "kind": "out-of-scope-abstention",
+      "target": null,
+      "support_only": false,
+      "frozen_limits": {
+        "index_calls": 2,
+        "read_calls": 6,
+        "body_bytes": 80000
+      },
+      "status": "HOLD",
+      "execution_state": "NOT_RUN_PREREQUISITE_BLOCKED",
+      "consumer_agent": null,
+      "observed_calls": null,
+      "semantic_pass": false,
+      "evidence": [
+        "receipts/atlas/index-maintenance-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json"
+      ],
+      "open_obligation": "Run this frozen case through actual accepted ownership.index/read after compatible preparation, candidate binding and isolated publication. Judge against the unchanged reserved oracle; record exact result/manifest and the frozen query/body budget."
+    },
+    {
+      "id": "S1-04-M1",
+      "kind": "maintenance-public-change",
+      "target": null,
+      "support_only": false,
+      "frozen_limits": {
+        "index_calls": 2,
+        "read_calls": 6,
+        "body_bytes": 80000
+      },
+      "status": "HOLD",
+      "execution_state": "NOT_RUN_PREREQUISITE_BLOCKED",
+      "consumer_agent": null,
+      "observed_calls": null,
+      "semantic_pass": false,
+      "evidence": [
+        "receipts/atlas/index-maintenance-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json"
+      ],
+      "open_obligation": "Run this frozen case through actual accepted ownership.index/read after compatible preparation, candidate binding and isolated publication. Judge against the unchanged reserved oracle; record exact result/manifest and the frozen query/body budget."
+    },
+    {
+      "id": "S1-04-M2",
+      "kind": "maintenance-recipe-change",
+      "target": null,
+      "support_only": false,
+      "frozen_limits": {
+        "index_calls": 2,
+        "read_calls": 6,
+        "body_bytes": 80000
+      },
+      "status": "HOLD",
+      "execution_state": "NOT_RUN_PREREQUISITE_BLOCKED",
+      "consumer_agent": null,
+      "observed_calls": null,
+      "semantic_pass": false,
+      "evidence": [
+        "receipts/atlas/index-maintenance-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json"
+      ],
+      "open_obligation": "Run this frozen case through actual accepted ownership.index/read after compatible preparation, candidate binding and isolated publication. Judge against the unchanged reserved oracle; record exact result/manifest and the frozen query/body budget."
+    },
+    {
+      "id": "S1-04-D01",
+      "kind": "intermediate-direct-use",
+      "target": "s1.api.boundaries",
+      "support_only": false,
+      "frozen_limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      },
+      "status": "HOLD",
+      "execution_state": "NOT_RUN_PREREQUISITE_BLOCKED",
+      "consumer_agent": null,
+      "observed_calls": null,
+      "semantic_pass": false,
+      "evidence": [
+        "receipts/atlas/index-maintenance-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json"
+      ],
+      "open_obligation": "Run this frozen case through actual accepted ownership.index/read after compatible preparation, candidate binding and isolated publication. Judge against the unchanged reserved oracle; record exact result/manifest and the frozen query/body budget."
+    },
+    {
+      "id": "S1-04-D02",
+      "kind": "intermediate-direct-use",
+      "target": "s1.api.schema-contracts",
+      "support_only": false,
+      "frozen_limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      },
+      "status": "HOLD",
+      "execution_state": "NOT_RUN_PREREQUISITE_BLOCKED",
+      "consumer_agent": null,
+      "observed_calls": null,
+      "semantic_pass": false,
+      "evidence": [
+        "receipts/atlas/index-maintenance-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json"
+      ],
+      "open_obligation": "Run this frozen case through actual accepted ownership.index/read after compatible preparation, candidate binding and isolated publication. Judge against the unchanged reserved oracle; record exact result/manifest and the frozen query/body budget."
+    },
+    {
+      "id": "S1-04-D03",
+      "kind": "intermediate-direct-use",
+      "target": "s1.api.session-contract",
+      "support_only": false,
+      "frozen_limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      },
+      "status": "HOLD",
+      "execution_state": "NOT_RUN_PREREQUISITE_BLOCKED",
+      "consumer_agent": null,
+      "observed_calls": null,
+      "semantic_pass": false,
+      "evidence": [
+        "receipts/atlas/index-maintenance-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json"
+      ],
+      "open_obligation": "Run this frozen case through actual accepted ownership.index/read after compatible preparation, candidate binding and isolated publication. Judge against the unchanged reserved oracle; record exact result/manifest and the frozen query/body budget."
+    },
+    {
+      "id": "S1-04-D04",
+      "kind": "intermediate-direct-use",
+      "target": "s1.api.server-edge",
+      "support_only": false,
+      "frozen_limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      },
+      "status": "HOLD",
+      "execution_state": "NOT_RUN_PREREQUISITE_BLOCKED",
+      "consumer_agent": null,
+      "observed_calls": null,
+      "semantic_pass": false,
+      "evidence": [
+        "receipts/atlas/index-maintenance-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json"
+      ],
+      "open_obligation": "Run this frozen case through actual accepted ownership.index/read after compatible preparation, candidate binding and isolated publication. Judge against the unchanged reserved oracle; record exact result/manifest and the frozen query/body budget."
+    },
+    {
+      "id": "S1-04-D05",
+      "kind": "intermediate-direct-use",
+      "target": "s1.api.stream-contract",
+      "support_only": false,
+      "frozen_limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      },
+      "status": "HOLD",
+      "execution_state": "NOT_RUN_PREREQUISITE_BLOCKED",
+      "consumer_agent": null,
+      "observed_calls": null,
+      "semantic_pass": false,
+      "evidence": [
+        "receipts/atlas/index-maintenance-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json"
+      ],
+      "open_obligation": "Run this frozen case through actual accepted ownership.index/read after compatible preparation, candidate binding and isolated publication. Judge against the unchanged reserved oracle; record exact result/manifest and the frozen query/body budget."
+    },
+    {
+      "id": "S1-04-D06",
+      "kind": "intermediate-direct-use",
+      "target": "s1.api.client-projection",
+      "support_only": false,
+      "frozen_limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      },
+      "status": "HOLD",
+      "execution_state": "NOT_RUN_PREREQUISITE_BLOCKED",
+      "consumer_agent": null,
+      "observed_calls": null,
+      "semantic_pass": false,
+      "evidence": [
+        "receipts/atlas/index-maintenance-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json"
+      ],
+      "open_obligation": "Run this frozen case through actual accepted ownership.index/read after compatible preparation, candidate binding and isolated publication. Judge against the unchanged reserved oracle; record exact result/manifest and the frozen query/body budget."
+    },
+    {
+      "id": "S1-04-D07",
+      "kind": "intermediate-direct-use",
+      "target": "s1.api.codegen",
+      "support_only": false,
+      "frozen_limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      },
+      "status": "HOLD",
+      "execution_state": "NOT_RUN_PREREQUISITE_BLOCKED",
+      "consumer_agent": null,
+      "observed_calls": null,
+      "semantic_pass": false,
+      "evidence": [
+        "receipts/atlas/index-maintenance-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json"
+      ],
+      "open_obligation": "Run this frozen case through actual accepted ownership.index/read after compatible preparation, candidate binding and isolated publication. Judge against the unchanged reserved oracle; record exact result/manifest and the frozen query/body budget."
+    },
+    {
+      "id": "S1-04-D08",
+      "kind": "intermediate-direct-use",
+      "target": "s1.api.sdk-composition",
+      "support_only": false,
+      "frozen_limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      },
+      "status": "HOLD",
+      "execution_state": "NOT_RUN_PREREQUISITE_BLOCKED",
+      "consumer_agent": null,
+      "observed_calls": null,
+      "semantic_pass": false,
+      "evidence": [
+        "receipts/atlas/index-maintenance-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json"
+      ],
+      "open_obligation": "Run this frozen case through actual accepted ownership.index/read after compatible preparation, candidate binding and isolated publication. Judge against the unchanged reserved oracle; record exact result/manifest and the frozen query/body budget."
+    },
+    {
+      "id": "S1-04-D09",
+      "kind": "intermediate-direct-use",
+      "target": "s1.api.surface-disposition",
+      "support_only": false,
+      "frozen_limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      },
+      "status": "HOLD",
+      "execution_state": "NOT_RUN_PREREQUISITE_BLOCKED",
+      "consumer_agent": null,
+      "observed_calls": null,
+      "semantic_pass": false,
+      "evidence": [
+        "receipts/atlas/index-maintenance-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json"
+      ],
+      "open_obligation": "Run this frozen case through actual accepted ownership.index/read after compatible preparation, candidate binding and isolated publication. Judge against the unchanged reserved oracle; record exact result/manifest and the frozen query/body budget."
+    },
+    {
+      "id": "S1-04-D10",
+      "kind": "intermediate-direct-use",
+      "target": "s1.subslice04.domains",
+      "support_only": false,
+      "frozen_limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 100000
+      },
+      "status": "HOLD",
+      "execution_state": "NOT_RUN_PREREQUISITE_BLOCKED",
+      "consumer_agent": null,
+      "observed_calls": null,
+      "semantic_pass": false,
+      "evidence": [
+        "receipts/atlas/index-maintenance-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json"
+      ],
+      "open_obligation": "Run this frozen case through actual accepted ownership.index/read after compatible preparation, candidate binding and isolated publication. Judge against the unchanged reserved oracle; record exact result/manifest and the frozen query/body budget."
+    },
+    {
+      "id": "S1-04-D11",
+      "kind": "intermediate-direct-use",
+      "target": "s1.subslice04.local-contracts",
+      "support_only": false,
+      "frozen_limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      },
+      "status": "HOLD",
+      "execution_state": "NOT_RUN_PREREQUISITE_BLOCKED",
+      "consumer_agent": null,
+      "observed_calls": null,
+      "semantic_pass": false,
+      "evidence": [
+        "receipts/atlas/index-maintenance-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json"
+      ],
+      "open_obligation": "Run this frozen case through actual accepted ownership.index/read after compatible preparation, candidate binding and isolated publication. Judge against the unchanged reserved oracle; record exact result/manifest and the frozen query/body budget."
+    },
+    {
+      "id": "S1-04-D12",
+      "kind": "intermediate-direct-use",
+      "target": "s1.subslice04.integrated-impact",
+      "support_only": false,
+      "frozen_limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      },
+      "status": "HOLD",
+      "execution_state": "NOT_RUN_PREREQUISITE_BLOCKED",
+      "consumer_agent": null,
+      "observed_calls": null,
+      "semantic_pass": false,
+      "evidence": [
+        "receipts/atlas/index-maintenance-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json"
+      ],
+      "open_obligation": "Run this frozen case through actual accepted ownership.index/read after compatible preparation, candidate binding and isolated publication. Judge against the unchanged reserved oracle; record exact result/manifest and the frozen query/body budget."
+    },
+    {
+      "id": "S1-04-D13",
+      "kind": "intermediate-direct-use",
+      "target": "s1.subslice04.maintenance",
+      "support_only": false,
+      "frozen_limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      },
+      "status": "HOLD",
+      "execution_state": "NOT_RUN_PREREQUISITE_BLOCKED",
+      "consumer_agent": null,
+      "observed_calls": null,
+      "semantic_pass": false,
+      "evidence": [
+        "receipts/atlas/index-maintenance-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json"
+      ],
+      "open_obligation": "Run this frozen case through actual accepted ownership.index/read after compatible preparation, candidate binding and isolated publication. Judge against the unchanged reserved oracle; record exact result/manifest and the frozen query/body budget."
+    }
+  ]
+}

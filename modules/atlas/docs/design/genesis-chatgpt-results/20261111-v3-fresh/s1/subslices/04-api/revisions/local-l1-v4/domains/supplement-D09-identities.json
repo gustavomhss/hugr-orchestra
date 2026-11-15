@@ -1,0 +1,38 @@
+{
+  "schema": "genesis-s1-04-b3-v4-d09-supplement/v1",
+  "source_ref": {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "packages/server/src/handlers/mcp.ts",
+    "git_blob_sha": "70a6b0ba7d3b8a8ee71fb9ba42b55710d1b43a18",
+    "sha256": "8b141ac204fe14e72a5576277a0c4c493a43b7921dfc4309b26d0b9fb08d5ad8",
+    "byte_length": 3425
+  },
+  "source_capture_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/source-snapshot/packages/server/src/handlers/mcp.ts",
+  "body_v4_sha256": "36339a1329421f80d15e37b40ce26edd6e1c793a0ac1b5056471e4df2bfed57c",
+  "ranges": [
+    {
+      "start_line": 24,
+      "end_line": 33,
+      "byte_length": 327,
+      "sha256": "1a068bf8d4aae7a01923c1993eeac97d7a9ede5e21e521be1ed3b20c2651d012"
+    },
+    {
+      "start_line": 60,
+      "end_line": 69,
+      "byte_length": 339,
+      "sha256": "d74a0ef2527d4396f4ae81505d95c194a1931538bdb97a873e47529d2b7ac142"
+    },
+    {
+      "start_line": 89,
+      "end_line": 95,
+      "byte_length": 292,
+      "sha256": "dba614cca85d50fe2416cdd516304b77b4adcab1ea237bddd64e396b007d98c2"
+    }
+  ],
+  "supplement": {
+    "path": "b3/v4/supplement-D09-mcp-catches.md",
+    "byte_length": 1971,
+    "sha256": "282a547c7ebcc18ec8fb1c0987f47813725bea695a9ddc010673bfa40feddfb6"
+  },
+  "scope": "Literal call sites for missing/config/auth error mapping only; no per-member table claim revived; no execution or semantic verdict."
+}

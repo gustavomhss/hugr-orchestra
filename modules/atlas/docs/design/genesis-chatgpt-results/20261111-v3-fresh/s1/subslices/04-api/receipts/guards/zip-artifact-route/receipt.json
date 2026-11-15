@@ -1,0 +1,32 @@
+{
+  "schema": "s1-04-guard-historical-zip-artifact-route/v1",
+  "finished_utc": "2026-11-15T00:38:11.190321+00:00",
+  "status": "BLOCKED_AT_CONNECTOR_ENDPOINT_ALLOWLIST_NO_ARTIFACT_IDENTIFIED",
+  "repository": "gustavomhss/hugr-orchestra",
+  "target_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/evidence/source-captures.zip",
+  "expected_git_blob_sha": "d83941a9d836a23e466ca09ecba1f21d423094cb",
+  "expected_bytes": 1339105,
+  "query": {
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/artifacts?name=source-captures"
+  },
+  "query_capture_sha256": "a0cfc99fbe6f9297bbf284ee28b2c7b64bd93b1fd8b5c36c8f8ad4e2b85e87dd",
+  "observed_error": {
+    "error": "HTTPError: 400: GitHub Fetch URL is not an allowed public GitHub repository or search endpoint. (Response: None)",
+    "error_code": "INVALID_ARGUMENT"
+  },
+  "query_succeeded": false,
+  "artifact_existence_determined": false,
+  "identified_artifact_id": null,
+  "download_tool_available": "mcp__codex_apps__github_download_workflow_artifact",
+  "download_tool_requires": [
+    "repo_full_name",
+    "artifact_id"
+  ],
+  "artifact_download_attempted": false,
+  "target_bytes_obtained": false,
+  "git_blob_verified": false,
+  "stop_reason": "The single authorized name-filtered repository artifact query was rejected by the connector. No artifact ID or alternate observed provenance was returned, so no broader crawl or other repository I/O route was attempted.",
+  "verified_git_checkout_accessed": false,
+  "tests_guard_ci_dispatch_or_policy_executed": false,
+  "remote_mutations": false
+}

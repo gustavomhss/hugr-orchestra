@@ -1,0 +1,121 @@
+[
+  {
+    "domain_id": "D12",
+    "evidence_id": "D12-U08",
+    "source_ref": {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/schema/src/atlas-screen.ts",
+      "git_blob_sha": "e1709c1d7f25b68a8c7e2e0a86388994703112c6",
+      "sha256": "98bcb28c924bf204251cbbb0d4f47d0210d10e07f138fd2186dcc9350daa3fea",
+      "byte_length": 12468
+    },
+    "start_line": 9,
+    "end_line": 9,
+    "text": "export const AtlasEmpty = Schema.Struct({ state: Schema.Literal(\"empty\") }).annotate({ identifier: \"AtlasEmpty\" })\n",
+    "byte_length": 115,
+    "sha256": "93ee548a2d065583a9fa6876e696f9ca7a0637a5563311060387c3ce7fbb88bf",
+    "origin": "Complete authorized baseline read after J1 D12 union question"
+  },
+  {
+    "domain_id": "D12",
+    "evidence_id": "D12-U08",
+    "source_ref": {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/schema/src/atlas-screen.ts",
+      "git_blob_sha": "e1709c1d7f25b68a8c7e2e0a86388994703112c6",
+      "sha256": "98bcb28c924bf204251cbbb0d4f47d0210d10e07f138fd2186dcc9350daa3fea",
+      "byte_length": 12468
+    },
+    "start_line": 88,
+    "end_line": 90,
+    "text": "export const AtlasSnapshot = Schema.Struct({\n  state: Schema.Literal(\"ok\"),\n  project: Schema.String,\n",
+    "byte_length": 102,
+    "sha256": "50ebbbb33807ed364974ce0bfb2a271c12f03b4462260b140dd7f9d5ceb43101",
+    "origin": "Complete authorized baseline read after J1 D12 union question"
+  },
+  {
+    "domain_id": "D12",
+    "evidence_id": "D12-U08",
+    "source_ref": {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/schema/src/atlas-screen.ts",
+      "git_blob_sha": "e1709c1d7f25b68a8c7e2e0a86388994703112c6",
+      "sha256": "98bcb28c924bf204251cbbb0d4f47d0210d10e07f138fd2186dcc9350daa3fea",
+      "byte_length": 12468
+    },
+    "start_line": 128,
+    "end_line": 136,
+    "text": "export const AtlasSnapshotResult = Schema.Union([AtlasEmpty, AtlasSnapshot]).annotate({\n  identifier: \"AtlasSnapshotResult\",\n})\n\nexport const AtlasReasoningResult = Schema.Union([\n  AtlasEmpty,\n  Schema.Struct({ state: Schema.Literal(\"ok\"), id: Schema.String, text: Schema.String }),\n  Schema.Struct({ state: Schema.Literal(\"missing\"), id: Schema.String }),\n]).annotate({ identifier: \"AtlasReasoningResult\" })\n",
+    "byte_length": 410,
+    "sha256": "f919897cb61c42775c3815d1cd73eb870970ccc6bb1e9866733dabae7eede247",
+    "origin": "Complete authorized baseline read after J1 D12 union question"
+  },
+  {
+    "domain_id": "D12",
+    "evidence_id": "D12-U08",
+    "source_ref": {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/schema/src/atlas-screen.ts",
+      "git_blob_sha": "e1709c1d7f25b68a8c7e2e0a86388994703112c6",
+      "sha256": "98bcb28c924bf204251cbbb0d4f47d0210d10e07f138fd2186dcc9350daa3fea",
+      "byte_length": 12468
+    },
+    "start_line": 307,
+    "end_line": 320,
+    "text": "export const AtlasReviewResult = Schema.Union([AtlasEmpty, AtlasReview]).annotate({ identifier: \"AtlasReviewResult\" })\n\n/** Every review write (hold, release, propose, decide, answer, memory-decide, territory) answers this verdict. */\nexport const AtlasReviewWriteResult = Schema.Union([\n  AtlasEmpty,\n  Schema.Struct({\n    ...VerdictFields,\n    data: Schema.optional(Schema.Struct({ id: Schema.String })),\n  }).annotate({ identifier: \"AtlasReviewWrite\" }),\n]).annotate({ identifier: \"AtlasReviewWriteResult\" })\n\nexport const AtlasDelegateResult = Schema.Union([AtlasEmpty, AtlasDelegateOk]).annotate({\n  identifier: \"AtlasDelegateResult\",\n})\n",
+    "byte_length": 643,
+    "sha256": "fb4bec0fb3ce7b44f7b3e67c3035c67ea63ef1796d1407c6e269ad97a993a7fc",
+    "origin": "Complete authorized baseline read after J1 D12 union question"
+  },
+  {
+    "domain_id": "D12",
+    "evidence_id": "D12-U08",
+    "source_ref": {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/schema/src/atlas-screen.ts",
+      "git_blob_sha": "e1709c1d7f25b68a8c7e2e0a86388994703112c6",
+      "sha256": "98bcb28c924bf204251cbbb0d4f47d0210d10e07f138fd2186dcc9350daa3fea",
+      "byte_length": 12468
+    },
+    "start_line": 332,
+    "end_line": 334,
+    "text": "export const AtlasIndexResult = Schema.Union([AtlasEmpty, AtlasIndexOk]).annotate({ identifier: \"AtlasIndexResult\" })\n\nexport const AtlasMineResult = Schema.Union([AtlasEmpty, AtlasMineOk]).annotate({ identifier: \"AtlasMineResult\" })\n",
+    "byte_length": 234,
+    "sha256": "140b23b6b75240e7b28add66980f239fd9e4c80a57527cf8d2a3d57ab9896909",
+    "origin": "Complete authorized baseline read after J1 D12 union question"
+  },
+  {
+    "domain_id": "D12",
+    "evidence_id": "D12-U09",
+    "source_ref": {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/schema/src/atlas-setup.ts",
+      "git_blob_sha": "73f8ceecf7a353f7b7952c146cf8885dde18c144",
+      "sha256": "e16cfab589094bedb8d609d16bb63914de5daf3e74b5d152e137c45bf620c876",
+      "byte_length": 951
+    },
+    "start_line": 3,
+    "end_line": 13,
+    "text": "// D38 and D40 wire shapes (an absent value is `null`, never omitted). This file imports nothing from atlas-screen.ts; the\n// unions that need `AtlasEmpty` live there.\n\nexport const AtlasIndexOk = Schema.Struct({\n  state: Schema.Literal(\"ok\"),\n  ran: Schema.Boolean,\n  tool: Schema.NullOr(Schema.String),\n  exitCode: Schema.NullOr(Schema.Finite),\n  documents: Schema.NullOr(Schema.Finite),\n  message: Schema.NullOr(Schema.String),\n}).annotate({ identifier: \"AtlasIndex\" })\n",
+    "byte_length": 473,
+    "sha256": "c320944c704065a9591ea02fbc44daaffb9c57cab1182cbfa0e1a881f76102bf",
+    "origin": "Complete authorized baseline read after J1 D12 union question"
+  },
+  {
+    "domain_id": "D12",
+    "evidence_id": "D12-U09",
+    "source_ref": {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/schema/src/atlas-setup.ts",
+      "git_blob_sha": "73f8ceecf7a353f7b7952c146cf8885dde18c144",
+      "sha256": "e16cfab589094bedb8d609d16bb63914de5daf3e74b5d152e137c45bf620c876",
+      "byte_length": 951
+    },
+    "start_line": 21,
+    "end_line": 28,
+    "text": "export const AtlasMineOk = Schema.Struct({\n  state: Schema.Literal(\"ok\"),\n  sites: Schema.Finite,\n  facts: Schema.Finite,\n  complete: Schema.Boolean,\n  why: Schema.NullOr(Schema.String),\n  refusal: Schema.NullOr(Schema.Literals([\"contended\", \"unreadable\", \"untrusted\"])),\n}).annotate({ identifier: \"AtlasMine\" })\n",
+    "byte_length": 313,
+    "sha256": "efc76903d29480b2914b40745ce311f232b512eb4e8d3348a3a12ede3b768775",
+    "origin": "Complete authorized baseline read after J1 D12 union question"
+  }
+]

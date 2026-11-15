@@ -1,0 +1,46 @@
+{
+  "schema": "genesis-s1-04-visible-message-archive/v1",
+  "round": 10,
+  "archivist": "/root/archive_round10",
+  "recorded_at_utc": "2026-11-15T00:35:46.842831+00:00",
+  "role": "Mechanical archival only; no content authorship, review or third-judge decision.",
+  "source": "The complete visible message strings of the two parent collaboration.followup_task calls for round 10, inherited in this agent context.",
+  "preservation": "Verbatim visible message text, UTF-8 bytes, no added trailing newline. This does not attest internal wire transport, metering, physical attempts or billing.",
+  "records": [
+    {
+      "path": "requests/10-l3-core-j1.txt",
+      "recipient": "/root/api_j1",
+      "byte_length": 19632,
+      "sha256": "037e96b845d354b508f26c81b84e385960784d0a76017d611010d42bd82dabfd",
+      "encoding": "utf-8",
+      "trailing_newline": false
+    },
+    {
+      "path": "requests/10-l3-core-j2.txt",
+      "recipient": "/root/api_j2",
+      "byte_length": 19632,
+      "sha256": "4ad513928590adb7c5b27c5e48c6b8d451e616dafa4bba37c049a7a9ba09e54e",
+      "encoding": "utf-8",
+      "trailing_newline": false
+    }
+  ],
+  "comparison": {
+    "otherwise_identical": true,
+    "differences": [
+      {
+        "j1": "Rodada 10 — mesmo J1 independente",
+        "j2": "Rodada 10 — mesmo J2 independente"
+      },
+      {
+        "j1": "Não recebeu o parecer do J2.",
+        "j2": "Não recebeu o parecer do J1."
+      }
+    ]
+  },
+  "round9": {
+    "original_message_visibility": "NOT_VISIBLE_IN_INHERITED_CONTEXT",
+    "limit": "The inherited context contains a compacted summary and later replies concerning round 9, but not the original complete round-9 followup_task message strings. No round-9 prompt was reconstructed or presented as original.",
+    "action": "No round-9 message file written."
+  },
+  "files_read": "None; only the three task-owned output files were written/read back. No oracles, source files, artifact bodies or judgments were read or changed."
+}

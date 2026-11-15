@@ -1,0 +1,108 @@
+{
+  "schema": "s1-04-base-body-reuse/v1",
+  "observed_from": "GitHub connector fetch_file(base64) at inheritance pin",
+  "bodies": [
+    {
+      "key": "s1.api.boundaries",
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/b/bodies/boundaries.md",
+      "git_blob_sha": "dee4164e1681aa5f6f1a185ecf6b2b7c4eaae030",
+      "byte_length": 4634,
+      "sha256": "f6b230ed8578b6bd9fdb1e4eaca26892df9355a58fc1f5e2e6a157bffabf7310",
+      "candidate_sha256": "f6b230ed8578b6bd9fdb1e4eaca26892df9355a58fc1f5e2e6a157bffabf7310",
+      "identical": true,
+      "diff": ""
+    },
+    {
+      "key": "s1.api.schema-contracts",
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/b/bodies/schema-contracts.md",
+      "git_blob_sha": "cd7361ff9bbf0456720549ab59654db626cbf9cc",
+      "byte_length": 4868,
+      "sha256": "1a8dce30625d8d8641a48f8594736b1da4bbb6bd23c13562bd332fd5990cd8cb",
+      "candidate_sha256": "c6ebd6124d89092e859aaa6a6a07c2a6fca5e2cdc82a62254b701b2de60266b2",
+      "identical": false,
+      "diff": "--- modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/b/bodies/schema-contracts.md\n+++ revisions/b-l1-v3/bodies/schema-contracts.md\n@@ -28,6 +28,6 @@\n \n ## Evidence and limits\n \n-Full reads: `schema.ts`, `session-id.ts`, `session.ts`, `prompt.ts`, `prompt-input.ts`, `session-input.ts`, `session-delivery.ts`, `session-message.ts`, `event.ts`, `session-event.ts`, `session-status-event.ts`, `event-manifest.ts`, `durable-event-manifest.ts`, `location.ts`, and `model.ts`. Exact representative excerpts appear in `review-evidence.md`. The remaining Schema production modules are captured and literally indexed, with their internal semantics left unclaimed in `coverage.json`.\n+Full reads: `schema.ts`, `session-id.ts`, `session.ts`, `prompt.ts`, `prompt-input.ts`, `session-input.ts`, `session-delivery.ts`, `session-message.ts`, `event.ts`, `session-event.ts`, `session-status-event.ts`, `event-manifest.ts`, `durable-event-manifest.ts`, `location.ts`, and `model.ts`. Exact representative excerpts appear in `review-evidence.md`. The frozen `coverage.json` recorded the remaining 94 Schema production modules as captured and literally indexed. B-v3 preserves that historical record and adds full literal reads with bounded domain purpose, contract and ownership triage in `revisions/b-l1-v3/review-domain-disposition.md`. That supplement distinguishes DTO declarations, executable helpers and attributed service intent; it does not establish unobserved service execution or a semantic PASS.\n \n The compatibility, contract-hygiene, and event-manifest tests were read as source only. This packet does not assert that every current schema meets every guide rule, that all historical rows decode, or that schema generation/tests passed. Legacy persistence migration and domain-service behavior require the relevant Core sources and later accepted work.\n"
+    },
+    {
+      "key": "s1.api.session-contract",
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-evidence-v1/corrected/session-contract.md",
+      "git_blob_sha": "6b5bb4b3358f67d773e29be7c6f5e74ddb920f1d",
+      "byte_length": 5155,
+      "sha256": "22b526a2423572f2bbc17f3bfccd2eb0ea8f7fb16f2215bb0904f1cc5c2125bc",
+      "candidate_sha256": "22b526a2423572f2bbc17f3bfccd2eb0ea8f7fb16f2215bb0904f1cc5c2125bc",
+      "identical": true,
+      "diff": ""
+    },
+    {
+      "key": "s1.api.server-edge",
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/b/bodies/server-edge.md",
+      "git_blob_sha": "ea32b60544ab4742b646c0c5cc0c6b0c62377b95",
+      "byte_length": 5106,
+      "sha256": "f4b99d7a6bafb6a6aa672eeb5a63aa7621a14e65cfe863fe0f9d9eb36e0981de",
+      "candidate_sha256": "711c744e089e59a11ee0b56ba4ec495277993dc7a58e351c8e2af4dc557ce404",
+      "identical": false,
+      "diff": "--- modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/b/bodies/server-edge.md\n+++ revisions/b-l1-v3/bodies/server-edge.md\n@@ -8,7 +8,7 @@\n \n Protocol's `makeDefaultApi` assembles groups and accepts middleware keys supplied by its caller. Server installs real location services. General authorization and schema-error middleware are applied at API composition; the source comments and placement explicitly put authentication before caller-selected location. Capability groups add capability authorization before location work. The API does not apply identical location selection to every group: global/project/config/trust/board and session-scoped routes have deliberately different composition.\n \n-The schema-error adapter logs a reason truncated to 1,024 characters and returns an `InvalidRequestError` with kind. It does not expose an unbounded raw parser diagnostic. A defect outside the typed error mapping is not proven to receive this treatment.\n+The schema-error adapter defines `REASON_LIMIT = 1024`. For an oversized reason it retains `reason.slice(0, REASON_LIMIT)` and appends `... (N more chars)`, where N is `reason.length - REASON_LIMIT`; the limit therefore applies to the prefix as measured by JavaScript string length/slice. It logs and returns that prefix plus the omitted-character count in an `InvalidRequestError` with kind, so the complete summary may exceed 1,024 characters. A defect outside the typed error mapping is not proven to receive this treatment.\n \n ## Authentication paths\n \n@@ -30,4 +30,4 @@\n \n Full reads cover Protocol `api.ts`, `errors.ts`, the three middleware tag modules, relevant PTY/capability declarations, Server `auth.ts`, `principal.ts`, `location.ts`, `routes.ts`, the four middleware implementations, and PTY/capability/model/provider handlers. Exact excerpts are in `review-evidence.md` and the source manifest binds the entire bytes.\n \n-No authentication request, origin check, provider operation, file read, socket upgrade, or runtime test was performed. The PTY handler explicitly uses an unbounded outgoing queue and retains a shutdown-tracking TODO; slow-reader memory growth is a real source-level limit, not a measured failure in this run. Other domain handlers are indexed rather than silently granted full semantic acceptance.\n+No authentication request, origin check, provider operation, file read, socket upgrade, or runtime test was performed. The PTY handler explicitly uses an unbounded outgoing queue and retains a shutdown-tracking TODO; slow-reader memory growth is a real source-level limit, not a measured failure in this run. The original reading register recorded the other domain handlers as indexed only. B-v3 separately supplies full literal reads and a bounded domain purpose/contract/ownership disposition in `revisions/b-l1-v3/review-domain-disposition.md`; those source observations remain subject to independent judgment.\n"
+    },
+    {
+      "key": "s1.api.stream-contract",
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/b/bodies/stream-contract.md",
+      "git_blob_sha": "97c5b7e3b109d8a252c29650578a3829688651df",
+      "byte_length": 3824,
+      "sha256": "d1f68eb106131ba1efd61c4157b91826a25b176ab87ff74defc140ef9f4d67d8",
+      "candidate_sha256": "d1f68eb106131ba1efd61c4157b91826a25b176ab87ff74defc140ef9f4d67d8",
+      "identical": true,
+      "diff": ""
+    },
+    {
+      "key": "s1.api.client-projection",
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/b/bodies/client-projection.md",
+      "git_blob_sha": "07576b1077c203d689684ad0e5b9927204b1e623",
+      "byte_length": 5193,
+      "sha256": "089304921b004984de3b15b75af18fea3c7ebf15191f3874e9f668066569d478",
+      "candidate_sha256": "089304921b004984de3b15b75af18fea3c7ebf15191f3874e9f668066569d478",
+      "identical": true,
+      "diff": ""
+    },
+    {
+      "key": "s1.api.codegen",
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/b/bodies/codegen.md",
+      "git_blob_sha": "b88989e670070ff151107ed9b9b3bf9d8e739240",
+      "byte_length": 4752,
+      "sha256": "2ec55afad54a871de673a252b6b7c604a8ecdb648cc1df9c80128d83a3f8e270",
+      "candidate_sha256": "2ec55afad54a871de673a252b6b7c604a8ecdb648cc1df9c80128d83a3f8e270",
+      "identical": true,
+      "diff": ""
+    },
+    {
+      "key": "s1.api.sdk-composition",
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/b/bodies/sdk-composition.md",
+      "git_blob_sha": "85195fb178208da9141b789f66a955499163c91e",
+      "byte_length": 3478,
+      "sha256": "a2cb2fc21fc1a771d81cd83e75dfe8b07c82c1712b15396ff4e40774f861d4d3",
+      "candidate_sha256": "a2cb2fc21fc1a771d81cd83e75dfe8b07c82c1712b15396ff4e40774f861d4d3",
+      "identical": true,
+      "diff": ""
+    },
+    {
+      "key": "s1.api.surface-disposition",
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/b/bodies/surface-disposition.md",
+      "git_blob_sha": "3068ff2f39630e24b6e7ee7bd7c96904272540dd",
+      "byte_length": 5168,
+      "sha256": "611b4ff21c0aa4bd1de072f0b16b6c2560a3446b2bad0b31271cd1f61807dbda",
+      "candidate_sha256": "595e0d404064429a953b276141f5601a1bbecceb30242a9914132ebdd26ed5c0",
+      "identical": false,
+      "diff": "--- modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/b/bodies/surface-disposition.md\n+++ revisions/b-l1-v3/bodies/surface-disposition.md\n@@ -6,16 +6,16 @@\n \n `population.json` supplies 472 assigned Git blobs: four architecture briefs; 76 Client entries; 65 Protocol entries; 124 Schema entries; 13 SDK Next entries; 157 Server entries; and 33 HTTP API codegen entries. `coverage.json` gives every assigned path exactly one primary family, kind, depth, justification, source-read status, need, and artifact key. Secondary artifact references retain useful overlaps without duplicating ownership.\n \n-The capture contains 291 exact sources: 289 assigned paths and two explicit boundary authorities, root `AGENTS.md` and `packages/core/src/host.ts`. All 252 handwritten production TypeScript modules under assigned `src/` trees are captured. The reading register distinguishes 97 full source reads, two generated-client representative reads, 190 literal surface-indexed sources, and two captured generated sources without semantic reading. These totals include the two boundary authorities. Capturing bytes or extracting imports does not imply full implementation review.\n+The frozen original capture contains 291 exact sources: 289 assigned paths and two explicit boundary authorities, root `AGENTS.md` and `packages/core/src/host.ts`. All 252 handwritten production TypeScript modules under assigned `src/` trees are captured. The frozen original reading register distinguishes 97 full source reads, two generated-client representative reads, 190 literal surface-indexed sources, and two captured generated sources without semantic reading. These totals include the two boundary authorities. Capturing bytes or extracting imports does not imply full implementation review.\n \n-`surface-index.json` preserves literal import/export/endpoint/handler lines and source identity for 253 production modules: the 252 assigned modules plus Core's host boundary. It is a navigation and inspection aid. The associated family mapping identifies domain surfaces such as Actions, Atlas, Board, capability management, Relay, RAG Studio, scheduling, MCP, integration, meeting, permissions/questions, project, skills, and VCS. For modules outside the decisive session/transport/composition reads, this packet claims their declared names/import seams only. Their domain rules, database effects, and failure semantics remain unproved.\n+`surface-index.json` preserves literal import/export/endpoint/handler lines and source identity for 253 production modules: the 252 assigned modules plus Core's host boundary. It is a navigation and inspection aid. The associated family mapping identifies domain surfaces such as Actions, Atlas, Board, capability management, Relay, RAG Studio, scheduling, MCP, integration, meeting, permissions/questions, project, skills, and VCS. That original index claimed only declared names/import seams outside the decisive session/transport/composition reads. B-v3 adds the required domain-level triage now: all exact G30/G39/G52/G57 members (94 Schema, 44 Protocol, 51 Server and SDK tool.ts) received full literal source reads. `revisions/b-l1-v3/review-domain-disposition.md` groups them into 24 coherent domains, maps every member to its local L1 purpose and decisive evidence, and identifies external claims that remain blocked. `semantic-disposition.json` preserves the historical records and appends reader, pin, blob, SHA-256 and complete read spans. This source production is unjudged; neither the old index nor the new read count grants semantic acceptance.\n \n ## Rational grouping\n \n | Family | Treatment |\n | --- | --- |\n | Decisive Schema, Protocol, Server, Client, SDK and generator sources | Full reads feed the bounded factual bodies, with exact evidence excerpts. |\n-| Other handwritten production modules | Exact byte capture and literal surface index; implementation semantics not accepted by inventory. |\n+| Historical 190 surface-indexed handwritten modules | Original disposition preserved; B-v3 full literal reads support bounded purpose/contract/ownership triage by domain. External enforcement and runtime claims remain explicitly conditional; no semantic acceptance by count. |\n | Generated Client output | Build script, generic generator, and both output ownership manifests identify regeneration authority; selected output is representative, remaining entries are inventory-only. |\n | Tests and exercise harnesses | Ten test files read as intended assertions; the remainder grouped by package and test/fixture/harness role. None executed. |\n | Generator test fixture output | Test material, not the public Client generation product; grouped with generator verification support. |\n@@ -23,16 +23,18 @@\n \n ## Provenance and verification boundary\n \n-All remote source reads used the GitHub connector at the immutable source revision. Base64 contents were decoded unchanged into `sources/<repo path>`. Every manifest entry records commit, observed Git blob SHA, SHA-256, byte length, and capture path. The Git blob identity was recomputed from the preserved bytes, then source/body/coverage transport checks were performed locally. These checks validate artifact mechanics, not the product.\n+All remote source reads used the GitHub connector at the immutable source revision. Base64 contents were decoded unchanged into `sources/<repo path>`. Every manifest entry records commit, observed Git blob SHA, SHA-256, byte length, and capture path. B-v3 reuses those unchanged captures and copies two explicitly authorized Core source files unchanged from the pinned producer A captures to establish the actual Session/message ownership check. It reads literal bytes and independently verifies their identities; it accepts no A synthesis or unjudged Core artifact as a predecessor. The Git blob identity was recomputed from the preserved bytes, then source/body/coverage transport checks were performed locally. These checks validate artifact mechanics, not the product.\n \n No local product test, package install, code generation, network server, provider call, remote mutation, or runtime importer was run. No reserved answer/oracle was read. No L2 predecessor is invented and no judge or runtime receipt is asserted. The fragment remains in progress until the parent performs the required two-judge review and subsequent exact binding.\n \n ## Gaps that remain visible\n \n 1. The 183 assigned paths without captured source content are classified from their complete pinned inventory metadata, not semantic reading. Grouped test/generated/support claims are deliberately limited.\n-2. Most domain production modules received surface indexing only. Their presence is accounted for, while deeper ownership questions require targeted reads or the relevant domain artifact.\n+2. The historical 190 surface-only entries now have a separate full-read, bounded L1 domain disposition. The current local purpose/contract/ownership reading need is addressed for review; F02 remains for broader domain claims and the specific conditional implementation/runtime needs in `revisions/b-l1-v3/conditional-needs.json`. No current mandatory local reading is merely deferred to L2.\n 3. Generated `types.ts` is 462,732 bytes, beyond the protocol's current runtime observer limit. Its required input is retained; the later binding must explicitly handle or remain blocked on that boundary.\n 4. Generated freshness, runtime import boundaries, HTTP interoperability, lifecycle behavior, and observed test outcomes remain unverified in execution.\n 5. The pinned client README disagrees with actual generation of binary `fs.read`; the handwritten Actions upload path lacks a matching declaration in the inspected Actions transfer group/handler; and public V2 annotations remain despite normalization intent. These are source mismatches, not silently repaired conclusions.\n \n-This body is supported for the bounded population/provenance statements above. It is not a substitute for acceptance of every assigned file, a complete end-to-end architecture, or a successful Atlas runtime binding.\n+The compact review projection states only the bounded domain claims necessary for B3; the extensive native helper notes remain preserved as support and are not all promoted to batch claims. The existing F03–F08 obligations, generated/test/fixture boundaries and source discrepancies remain visible.\n+\n+This body is supported for the bounded population/provenance and local domain-disposition statements above. It is not a substitute for acceptance of every assigned file, a complete end-to-end architecture, or a successful Atlas runtime binding.\n"
+    }
+  ],
+  "unchanged": 6,
+  "changed": 3,
+  "semantic_acceptance": "Not conferred by this mechanical comparison"
+}

@@ -1,0 +1,86 @@
+{
+  "schema": "s1-04-final-documentary-review/v1",
+  "recorded_at_utc": "2026-11-15T01:11:38.946202+00:00",
+  "execution_id": "94f1e157-8c44-4e6e-a4af-7690a8845ecf",
+  "round": 12,
+  "same_pair": [
+    "/root/api_j1",
+    "/root/api_j2"
+  ],
+  "mode": "NATIVE_INDEPENDENT_TOOL_FREE_INLINE_REVIEW",
+  "frozen_objects": [
+    {
+      "path": "native-package.json",
+      "byte_length": 389819,
+      "sha256": "71bc1102fd5e2c6be166b2df790e8ee8fe4ecd053ab2d7fed5bbc46130349442"
+    },
+    {
+      "path": "transport-provenance.json",
+      "byte_length": 353187,
+      "sha256": "c13e8603502d968d347bdf277a885e76cd01d48f7a51d78191a701bb0d9c42da"
+    },
+    {
+      "path": "criteria-matrix.json",
+      "byte_length": 86223,
+      "sha256": "d00a55d8a10a245b5cebe738ab652d2f817eb2cdb1ce6c5a3678e51e02e2b387"
+    },
+    {
+      "path": "work.md",
+      "byte_length": 8788,
+      "sha256": "adc735ee9e7fb04fdc90c2d55646abe1e5e86ad7d124cc0511b04d4a455f1daa"
+    }
+  ],
+  "requests": [
+    {
+      "path": "requests/12-final-j1.txt",
+      "byte_length": 27781,
+      "sha256": "d5004ef0abf5251077e6917c27d46a778394fd388b22ccedc728239838cdca20"
+    },
+    {
+      "path": "requests/12-final-j2.txt",
+      "byte_length": 27781,
+      "sha256": "d5004ef0abf5251077e6917c27d46a778394fd388b22ccedc728239838cdca20"
+    }
+  ],
+  "request_archive_verification": {
+    "path": "requests/12-archive-receipt.json",
+    "byte_length": 13025,
+    "sha256": "414be5ba82b42850c6c107242e24fe35564f140045de354eba8d89447b3a8d5b"
+  },
+  "decisions": [
+    {
+      "judge_id": "parallel-v3-fresh/S1-04/J1",
+      "agent_id": "/root/api_j1",
+      "decision": "PASS_DELIMITED",
+      "original_response": {
+        "path": "judgments/12-j1-final.md",
+        "byte_length": 4360,
+        "sha256": "5d729fa2a7d5efbac7b293410be90ac3bc5e3adffd1312e8946beb014c751f22"
+      }
+    },
+    {
+      "judge_id": "parallel-v3-fresh/S1-04/J2",
+      "agent_id": "/root/api_j2",
+      "decision": "PASS_DELIMITED",
+      "original_response": {
+        "path": "judgments/12-j2-final.md",
+        "byte_length": 4879,
+        "sha256": "d6eb1e29e145bbc1ed331adb5cc083af6fa1a5a84c88ac2ba8fa702e537d0c59"
+      }
+    }
+  ],
+  "accepted_scope": "Transport fidelity, bounded exact reuse, current content identities and truthful INCOMPLETE_BLOCKED documentary handoff; not runtime binding or DELIVERY_COMPLETE.",
+  "criteria_disposition": {
+    "PASS_LOCAL": 20,
+    "HOLD": 29,
+    "NOT_APPLICABLE_LOCAL": 1
+  },
+  "mandatory_findings_open": [],
+  "runtime_approval": false,
+  "future_git_sealing_attested_by_judges": false,
+  "history_preserved": [
+    "Original FIX-FIRST decisions and same-pair corrections remain in judgments/.",
+    "receipts/l4-submission-erratum.json preserves the withdrawn historical verbatim claim and corrected canonical current acceptance.",
+    "Round 9 missing original request is not reconstructed; round 12 reconfirms the bounded Core identities using preserved original origin decisions."
+  ]
+}

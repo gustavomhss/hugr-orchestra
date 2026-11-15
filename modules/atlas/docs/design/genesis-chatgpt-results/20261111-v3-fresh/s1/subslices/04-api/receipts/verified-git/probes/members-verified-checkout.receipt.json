@@ -1,0 +1,27 @@
+{
+  "schema": "s1-04-r3-members-verified-git-probe/v1",
+  "command": [
+    "/workspace/scratch/8833f71e3e94/s1-04-94f1e157-8c44-4e6e-a4af-7690a8845ecf/runtime-tools/node_modules/.bin/bun",
+    "-e",
+    "import { observeOwnershipInput } from \"./packages/adapter-io/src/ownership-input.ts\"; import { readFileSync } from \"node:fs\"; const plan=JSON.parse(readFileSync(\"/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/input-materialization-plan.json\", \"utf8\")); const root=\"/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/verified-git-candidate\"; console.log(JSON.stringify({source_root:root,source_identity:\"verified sparse Git checkout with complete exact candidate index\",runtime_candidate:\"e3a8ab8cf56dbff1ee91272df51ffa398d882aa1\",observations:plan.members_keys.map(path=>({key:\"members:\"+path,observation:observeOwnershipInput(root,\"members:\"+path)}))},null,2));"
+  ],
+  "cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-r3/modules/atlas",
+  "source_root": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/verified-git-candidate",
+  "started_utc": "2026-11-14T23:55:55.305984+00:00",
+  "finished_utc": "2026-11-14T23:55:55.832646+00:00",
+  "duration_seconds": 0.5266387169976952,
+  "exit_code": 0,
+  "runtime_candidate": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "source_candidate": "8835faf6329cc3d5f5de1097872882d57472b793",
+  "observation_counts": {
+    "present": 22
+  },
+  "stdout_sha256": "13c80b0755f7a9c4896e089d82216950b0ac2e0d23b2568660464a7c1cf2742e",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "seams_or_fake_membership": false,
+  "policy_created": false,
+  "atlas_prepare_executed": false,
+  "publication_executed": false,
+  "guard_executed": false,
+  "product_tests_executed": false
+}

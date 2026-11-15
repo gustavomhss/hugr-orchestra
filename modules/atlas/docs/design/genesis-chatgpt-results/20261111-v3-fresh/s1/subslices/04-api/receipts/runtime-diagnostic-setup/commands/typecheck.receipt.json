@@ -1,0 +1,31 @@
+{
+  "schema": "s1-04-db9-diagnostic-setup-command/v1",
+  "command_name": "typecheck",
+  "command": [
+    "/workspace/scratch/8833f71e3e94/s1-04-94f1e157-8c44-4e6e-a4af-7690a8845ecf/runtime-tools/node_modules/.bin/bun",
+    "typecheck",
+    "--force"
+  ],
+  "cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-db9b423-diagnostic/modules/atlas",
+  "code_source_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "code_identity": "materialized diagnostic candidate, not git checkout; not promoted release",
+  "started_utc": "2026-11-15T00:32:25.999963+00:00",
+  "finished_utc": "2026-11-15T00:32:41.330948+00:00",
+  "duration_seconds": 15.330992030001653,
+  "exit_code": 0,
+  "error": null,
+  "stdout_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/commands/typecheck.stdout.txt",
+  "stderr_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/commands/typecheck.stderr.txt",
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "4fec200faf0180516bb7b68652c0c2c29e56573b8c74611b73fa9d49cf7f5e6c",
+  "environment_overrides": {
+    "PATH_prepend": "/workspace/scratch/8833f71e3e94/s1-04-94f1e157-8c44-4e6e-a4af-7690a8845ecf/runtime-tools/node_modules/.bin",
+    "npm_config_cache": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/npm-cache",
+    "npm_config_devdir": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/node-gyp"
+  },
+  "product_tests_executed": false,
+  "atlas_operations_executed": false,
+  "source_checkout_accessed": false,
+  "source_cas_accessed": false,
+  "remote_mutations": false
+}

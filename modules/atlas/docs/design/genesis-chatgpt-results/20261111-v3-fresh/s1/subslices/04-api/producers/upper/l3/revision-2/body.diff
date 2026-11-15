@@ -1,0 +1,29 @@
+--- revision-1/body.md
++++ body.md
+@@ -9,6 +9,8 @@
+ - **Input de fonte/receita:** arquivo, membership relevante, intenção normativa, configuração de geração ou contrato de validação que sustenta a construção. Adição, remoção e alteração de receita também entram no impacto. O grafo de imports do produto ajuda a localizar consumidores, mas não é o grafo de conhecimento.
+ - **Dependência de construção:** predecessor aceito cujo resultado foi usado para construir este artefato. Aqui são L2 e `s1.api.boundaries`, `s1.api.schema-contracts`, `s1.api.session-contract`, `s1.api.client-projection` e `s1.api.codegen`, com hashes exatos. L2 conserva sua própria cadeia; não se inventa uma dependência Core para preencher ausência de conhecimento aceito.
+ - **Navegação:** referência que orienta uma consulta ou handoff. Um link, inclusive para Core, não invalida automaticamente o artefato. Se o conteúdo consultado passar a sustentar um claim, declarar sua dependência e satisfazer o gate pertinente.
++
++Dependências de construção devem ser acíclicas: rejeitar ciclos. A navegação pode conter ciclos, mas cada consulta deve ter limite definido de leituras/contexto e evitar revisitar artefatos já percorridos.
+ 
+ ## Da mudança pública às fronteiras afetadas
+ 
+@@ -29,7 +31,17 @@
+ 
+ A comparação decisiva é a identidade canônica do **resultado validado visível ao consumidor**: corpo, autoridade, validade, gaps e identidades de evidência de que ele depende. Prosa idêntica com autoridade, validade ou gaps diferentes não interrompe propagação. Se esse resultado canônico permanecer igual após validação, a propagação pode parar; mudança apenas de recibo/versão de input atualiza os bindings auditáveis sem exigir interpretação downstream. Igualdade de SHA-256 do Markdown, isoladamente, não decide isso.
+ 
++### Exemplos locais congelados de comparação
++
++Os cenários abaixo fixam a aplicação da regra; não relatam alterações ou verificações executadas.
++
++**EX-L3-01 — propagar (S1-04-M1).** Num candidato que acrescenta um campo público a `session.prompt`, falta a evidência obrigatória de encaminhamento pelo handler. A comparação fica congelada assim: corpo igual; autoridade API igual; validade `supported` → `blocked`; novo gap de encaminhamento; evidência pertinente antes vinculada e agora indisponível para sustentar o candidato. O resultado visível mudou apesar do Markdown igual. Propagar a revalidação aos dependentes de construção e manter os claims afetados em HOLD; links de navegação não ampliam esse conjunto.
++
++**EX-L3-02 — parar (S1-04-M2).** Uma alteração de comentário na receita muda sua versão de input e o recibo da geração. Neste cenário, a revalidação sob o contrato atual confirma o contrato de `session.prompt` e compara todos os componentes do resultado: corpo igual; autoridade igual; validade `supported` preservada; gaps iguais; identidades de evidência pertinentes usadas pelo consumidor iguais. A versão da receita alterada pertence somente ao input/recibo deste caso, não à evidência visível do contrato. Confirmada a identidade canônica validada igual, atualizar recibos e bindings auditáveis e parar a interpretação downstream. Bytes gerados iguais, sozinhos, não autorizam essa decisão; se a receita integrar a evidência visível ou qualquer componente mudar, esta condição de parada deixa de valer.
++
+ Hashes deste pacote identificam transporte. O runtime competente calcula versões/CAS e registra recibos reais; não converter esses hashes em `OwnershipInput.version` ou inventar result/receipt. PASS de conteúdo não aprova automaticamente uma transformação/binding. Inputs indisponíveis ou impacto incompleto mantêm o dependente em HOLD; lista vazia não prova ausência de afetados. Reutilizar independente válido é a regra normativa, não prova de que isolamento/publicação já funcionam. Uma versão antiga aceita só pode ser atual se ainda compatível com os inputs/contratos atuais; caso contrário, é histórica.
++
++Cada leitura apresentada como atual deve vincular as versões exatas dos artefatos a um manifesto aceito de escopo e de fechamento das dependências, válido para os inputs e contratos atuais. Sem esse vínculo, a leitura atual fica em HOLD. Uma consulta histórica deve ser identificada como histórica e não pode ser apresentada como atual apenas por ter sido aceita anteriormente.
+ 
+ ## Handoff Core e consulta proporcional
+ 

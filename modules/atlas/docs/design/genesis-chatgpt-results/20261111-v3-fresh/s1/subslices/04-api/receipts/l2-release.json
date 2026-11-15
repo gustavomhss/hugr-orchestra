@@ -1,0 +1,25 @@
+{
+  "schema": "s1-04-layer-release/v1",
+  "execution_id": "94f1e157-8c44-4e6e-a4af-7690a8845ecf",
+  "recorded_at_utc": "2026-11-14T23:47:36.930760+00:00",
+  "layer": 2,
+  "gate": "CONTENT_PASS_LOCAL_API",
+  "key": "s1.subslice04.local-contracts",
+  "body": {
+    "path": "producers/upper/l2/body.md",
+    "encoding": "utf-8",
+    "byte_length": 6218,
+    "sha256": "5f5ae9a915ec9a43940963ce69f4563a9a85d51e15d111237ff8b5e02a2d5170"
+  },
+  "metadata_sha256": "ec352a777c10926da46a7668196cc7ed6e2e0f21349fb9b5d068ab16275ef7eb",
+  "judges": [
+    "parallel-v3-fresh/S1-04/J1",
+    "parallel-v3-fresh/S1-04/J2"
+  ],
+  "decisions": [
+    "judgments/06a-j1-resolution.md",
+    "judgments/06-j2-resolution.md"
+  ],
+  "open_content_findings": [],
+  "permits": "L3 local production only; no runtime/consumer/CI or broad Core acceptance"
+}

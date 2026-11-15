@@ -1,0 +1,55 @@
+# L4 — procedimento local de ownership e manutenção
+
+`s1.subslice04.maintenance` · `orchestra.s1` · fonte API `1cde2ff7a71bcf7aecb5d030917b577165135d38`.
+
+Use para decidir e verificar manutenção das fronteiras Schema/Protocol/Server/Client/SDK/gerador. A base é L3 e conhecimento local aceito; regras de consulta/manutenção são normativas. Resultados de execução pertencem a recibos vinculados ao candidato e à operação.
+
+## 1. Consultar pouco, pela porta real
+
+Delimite a mudança/pergunta, o candidato, o conhecimento necessário e o limite do caso público. Consulte `ownership.index` real no `scope` `orchestra.s1` e selecione pelo `need`: `maintenance` para este procedimento, `component` para contratos locais, `flow` para impacto integrado. Confira a entrada retornada; não suponha que o pacote já esteja disponível no leitor.
+
+Use `ownership.read` real com o mesmo `scope`, **`key` ou `need` como seletor**, e `maxBytes` finito dentro do saldo do caso. Com a chave exata já conhecida, pode ler diretamente, sem percorrer todas as camadas. `s1.subslice04.local-contracts` oferece o mapa local; `s1.subslice04.integrated-impact` decide impacto e comparação de resultados; abra um L1 específico somente se faltar a profundidade necessária. Pare quando o conhecimento exigido estiver sustentado.
+
+Nos casos congelados O3/P1/V1/F1/A1/M1/M2, o teto é 2 index, 6 reads e 80.000 bytes de corpos. D01–D09 e D11–D13 têm 2/3/30.000; D10 tem 2/3/100.000. O1/O2 são apoio histórico: 1/2/24.000 e 2/4/60.000, respectivamente. São limites totais por caso, não metas de consumo nem novos limites universais do runtime. Registre consultas, respostas, versões e bytes; evite revisitas mesmo se a navegação contiver ciclos.
+
+**Miss:** registre scope/seletor e a necessidade sem suporte; ausência de resultado não prova ausência de fonte. **Truncamento:** não trate o fragmento como completo; use consulta mais específica ou corpo menor disponível no índice, respeitando o saldo. Se o necessário continuar ausente/truncado, aplique HOLD. Porta, política, store ou projeção indisponíveis são precondições ausentes: não invente CLI/ator/política e não substitua `ownership.read` por fonte ou Markdown para reconstruir entendimento.
+
+Cada leitura atual deve vincular versões exatas a um manifesto aceito do escopo e fechamento das dependências, válido para inputs/contratos atuais. Sem esse vínculo, HOLD; histórico deve ser rotulado como histórico. Hash de transporte não é CAS nem `OwnershipInput.version`. A edição posterior de fonte não substitui essa obtenção prévia do conhecimento.
+
+## 2. Localizar a autoridade da mudança
+
+| Necessidade | Consulta e decisão |
+| --- | --- |
+| Tipo compartilhado/campo opcional | L2 → `s1.api.schema-contracts`: alterar a autoridade canônica Schema quando ela possui o DTO; distinguir ausência, `undefined`, `null` e valor. `optional` filtra `undefined`; isso não define sozinho defaults ou compatibilidade histórica. |
+| Pedido, resposta ou erro HTTP | L2 → `s1.api.session-contract`/`s1.api.server-edge`: localizar Protocol e o adapter Server. Para `session.prompt`, conferir declaração e encaminhamento pelo handler, resposta `Admitted` e mapeamentos específicos; significado interno novo exige o owner Core. |
+| Cliente e fronteiras | `s1.api.boundaries`/`s1.api.client-projection`: manter Schema/Protocol compartilhados; rejeitar imports runtime Core/Server no Client. A composição desses serviços pertence a Server/SDK. Conferir Promise wire e Effect decodificado, incluindo envelopes: só `{data: A}` exato é desembrulhado. |
+| Receita/nome/omissão/gerador | `s1.api.codegen`: Client possui `src/contract.ts` e `script/build.ts`; `tooling/httpapi-codegen` possui compilação/emissão/escrita. Receita alterada exige análise mesmo quando API ou bytes públicos parecem iguais. |
+
+Recorra ao índice quando faltar a entrada do assunto e conserve seus gaps. Com a chave vinculada, consulte diretamente a profundidade necessária. Um gap obrigatório vira complemento inferior delimitado e julgado antes do claim dependente; não inicia releitura geral. Claims históricos `RETIRED_EXTRA_CLAIM` continuam retirados, sem resolução por fonte.
+
+## 3. Alterar e verificar o candidato autorizado
+
+1. Fixe os inputs/contratos e o delta, incluindo adições, remoções e intenção/documentação ou receita alteradas. Identifique consumidores e conhecimento afetados; não confunda imports de produto com dependências de construção.
+2. Ajuste a autoridade identificada e a implementação/delegação pertinente. Mantenha tipos compartilhados canônicos e erros locais explícitos. Não preencha semântica Core ausente por inferência do handler.
+3. Para mudança pública pertinente de Protocol/Server HttpApi, use a geração oficial: em `packages/client`, `bun run generate`. Mudança da receita deve revalidar seus produtos. Não edite manualmente `src/generated`/`src/generated-effect`; confira os outputs e manifestos pertencentes ao gerador. Falha por schema não suportado requer corrigir a entrada/receita autorizada, sem fabricar codec ou substituir gerados à mão.
+4. Em `packages/client`, `bun run check:generated` executa geração e diff dos dois diretórios. Registre revisão, comando e resultado; existência do script ou igualdade aparente dos arquivos não é freshness comprovada.
+5. Selecione os gates reais conforme `AGENTS.md` aplicável e o delta: testes de produto **somente em GitHub Actions**, typechecks dos pacotes afetados e guards. O contrato fixado cita `bun run check:guards --base origin/dev`; use o candidato/base pertinentes e não invente variantes ou nomes de workflows. Registre o que rodou, falhou ou falta. Testes lidos, build local e PASS de conteúdo não substituem CI, prova de browser ou binding runtime.
+
+## 4. Atualizar conhecimento sem reconstruir independentes
+
+Revalide os inputs e dependências de construção atingidos, mantendo identidades exatas dos predecessores aceitos. Rejeite ciclos de build; links de navegação não ampliam automaticamente a invalidação. Conhecimento independente que continua válido é reutilizado; uma checagem determinística pode resolver o delta sem outra interpretação.
+
+Compare o resultado validado visível: **corpo, autoridade, validade, gaps e identidades de evidência pertinentes ao consumidor**. Mesmo corpo com mudança nesses componentes propaga. Pare downstream somente quando a identidade canônica validada permanece igual; mudanças só de recibo/versão de input atualizam bindings auditáveis. Use EX-L3-01/02 de L3 para os casos locais congelados; bytes gerados ou prosa iguais não decidem sozinhos. Impacto indisponível/incompleto é HOLD, não worklist vazia.
+
+Preserve a versão anterior, pedido, resposta, deltas, revisão e recibos. Separe julgamento de conteúdo, binding e autorização de publicação; nenhum deles é inferido dos outros. A seleção requerida deve ficar coerente em um manifesto aceito de versões exatas. Uma revisão antiga só é atual se ainda válida aos inputs/contratos atuais; rollback de conhecimento não desfaz drift da fonte. Execute operações de publicação apenas pelas portas/políticas existentes quando seus requisitos reais estiverem satisfeitos.
+
+## 5. Diagnosticar e encaminhar o que falta
+
+| Situação | Ação e limite |
+| --- | --- |
+| `/api/event` caiu | Consultar `s1.api.stream-contract`. O global vivo não oferece aqui retomada automática sem perdas; leitura durável de Session usa sequência exclusiva e outro conjunto de eventos. Não prometer recomposição do feed global por esse caminho. |
+| Prompt admitido, retry ou estado de execução duvidoso | Consultar o contrato Session. `Admitted` não comprova execução; `active` é local ao processo; history não certifica snapshot entre páginas. Para identidade de retry, delivery/resume/promoção, persistência e recuperação, solicitar conhecimento Core aceito e compatível. O1/O2 orientam o handoff, sem certificar as respostas. |
+| Garantia de exclusão entre hosts ou efeitos externos exactly-once | Abster-se dessa certificação com a base API/SDK/eventos. Nomear o claim, owner Core/serviço pertinente e evidência faltante; HOLD apenas dos dependentes cuja decisão exige esse conhecimento. |
+| Input/gerado indisponível, evidência conflitante ou gate ausente | Preservar o motivo e a versão; indisponível não significa removido. Encaminhar o complemento ou operação ao owner competente. Não ampliar o aceite por contagem, hash, teste isolado ou mudança só do texto. |
+
+Encerre a manutenção com disposição explícita do delta, contratos/conhecimento afetados, provas executadas e pendências. Este procedimento não certifica execução, compatibilidade browser, completude Core, publicação ou consumo real; essas conclusões exigem seus recibos e gates próprios.

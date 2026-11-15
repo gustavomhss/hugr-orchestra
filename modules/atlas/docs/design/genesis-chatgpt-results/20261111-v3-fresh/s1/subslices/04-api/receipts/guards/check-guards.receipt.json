@@ -1,0 +1,34 @@
+{
+  "schema": "s1-04-root-check-guards-receipt/v1",
+  "source_revision": "8835faf6329cc3d5f5de1097872882d57472b793",
+  "branch": "genesis-s1-api",
+  "command": [
+    "/workspace/scratch/8833f71e3e94/s1-04-94f1e157-8c44-4e6e-a4af-7690a8845ecf/runtime-tools/node_modules/.bin/bun",
+    "run",
+    "check:guards",
+    "--base",
+    "origin/dev"
+  ],
+  "cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/guard-snapshot",
+  "source_identity": "materialized guard entrypoint and direct dependency closure, not git checkout or full candidate tree",
+  "started_utc": "2026-11-14T23:07:21.746414+00:00",
+  "finished_utc": "2026-11-14T23:07:22.036292+00:00",
+  "duration_seconds": 0.2904179170000134,
+  "exit_code": 1,
+  "stdout_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/guards/check-guards.stdout.txt",
+  "stderr_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/guards/check-guards.stderr.txt",
+  "stdout_sha256": "03e07767148f3539dd1590f90e88dbd9431a3c467f9c86c4c226df6b9c290576",
+  "stderr_sha256": "1d94fca7cd039cb028502c2ed2c275f74238d3dc240f237a5c1fb958daaede4b",
+  "guard_and_git_override_flags_present": false,
+  "environment_changes": {
+    "PATH": "Prepend directory of actual Bun 1.3.14 binary only"
+  },
+  "git_metadata_present_after": false,
+  "original_files_changed": [],
+  "repository_or_base_fabricated": false,
+  "ci_or_workflow_invoked": false,
+  "tests_invoked": false,
+  "policy_or_binding_created": false,
+  "atlas_prepare_invoked": false,
+  "result_classification": "Await literal output interpretation; no green inferred from partial snapshot"
+}

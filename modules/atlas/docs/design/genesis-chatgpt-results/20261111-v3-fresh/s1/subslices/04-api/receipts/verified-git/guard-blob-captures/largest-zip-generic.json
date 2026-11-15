@@ -1,0 +1,19 @@
+{
+  "tool": "github_fetch",
+  "args": {
+    "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/blobs/d83941a9d836a23e466ca09ecba1f21d423094cb"
+  },
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "HTTPError: 400: GitHub Fetch only accepts UTF-8 text. (Response: None)"
+      }
+    ],
+    "structuredContent": {
+      "error": "HTTPError: 400: GitHub Fetch only accepts UTF-8 text. (Response: None)",
+      "error_code": "INVALID_ARGUMENT"
+    },
+    "isError": true
+  }
+}

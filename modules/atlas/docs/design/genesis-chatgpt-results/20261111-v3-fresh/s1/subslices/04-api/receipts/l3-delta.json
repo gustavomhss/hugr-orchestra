@@ -1,0 +1,8 @@
+{
+  "kind": "mechanical exact delta check",
+  "before_sha256": "b97dfa5c155e851d0360eb27c730996634d7b240797c373bc41a2122a2a4a101",
+  "after_sha256": "c140fb0bf9606079e91576b542ec82b3904583e7433a8fe297c886318649f478",
+  "old_recovered": true,
+  "insertions": 3,
+  "semantic_verdict": null
+}

@@ -1,0 +1,69 @@
+{
+  "schema": "genesis-s1-04-local-artifact-manifest/v1",
+  "key": "s1.subslice04.maintenance",
+  "layer": 4,
+  "revision": 2,
+  "state": "FROZEN_FOR_SAME_PAIR_REVIEW",
+  "files": {
+    "body.md": {
+      "byte_length": 10033,
+      "sha256": "ce0f86d365df573cf89218da7fee86009d1a37c65c775735c02a68079d38160e"
+    },
+    "metadata.json": {
+      "byte_length": 26365,
+      "sha256": "18add6006acef55bfbe1427c75b6bb1ca612cf4c8720833c42d41e72a5595129"
+    },
+    "recipe.json": {
+      "byte_length": 7123,
+      "sha256": "e1fce629014f0e95b2033ce40706bfe40bb10fc6b8ad4e540e6a658b8d927511"
+    },
+    "request.txt": {
+      "byte_length": 1514,
+      "sha256": "4f60c07275f2cc7d20e9dc95eae5a41be550a0747f64734116c1a999b109ef18"
+    },
+    "response.md": {
+      "byte_length": 11039,
+      "sha256": "930fa9fd24177ea27c7959c486c57539520e2d870e696cb494e7b9aa9989571d"
+    },
+    "body.diff": {
+      "byte_length": 8286,
+      "sha256": "34cdfe65f88476761f5f35453505b677cf55dada2ece278bee5ba7fd9c09e5f7"
+    },
+    "delta-changes.json": {
+      "byte_length": 7189,
+      "sha256": "eae888029f72241ab90c9353ff98d4cacc3b3ec1fe310aa21621bdf33db8d69f"
+    },
+    "literal-delta.md": {
+      "byte_length": 8625,
+      "sha256": "2858f9229cbe538abcda5d95483abc4451707db767b198ab7bd2fbebf294289f"
+    }
+  },
+  "predecessor_release_refs": [
+    {
+      "path": "output/receipts/l1-release.json",
+      "byte_length": 3522,
+      "sha256": "23674344f089dbc26e1cac7ee70e0de9809e663ed80a0967219ae53222d4b0fb"
+    },
+    {
+      "path": "output/receipts/l2-release.json",
+      "byte_length": 830,
+      "sha256": "35f6a60a7aca9937b957022fae7ef1868b84a5b4d4284f961882568675c3a2c9"
+    },
+    {
+      "path": "output/receipts/l3-final-release.json",
+      "byte_length": 866,
+      "sha256": "23460fd3c06d24b6e3e5f2ba483903ab907539d0b3d054a06cf0596c9e33358a"
+    },
+    {
+      "path": "output/receipts/core-reuse-release.json",
+      "byte_length": 677,
+      "sha256": "540c2ea49100afe42247ee419f6ce0c7c6f92511d8cbf371c63969cb9bea8266"
+    }
+  ],
+  "previous_manifest_ref": {
+    "path": "revision-1/manifest.json",
+    "byte_length": 1438,
+    "sha256": "9e0fdb8322f3308ded74984157d09822cfb2a7f63b1639dc251d04c26922b4d8"
+  },
+  "mechanical_checks_only": true
+}

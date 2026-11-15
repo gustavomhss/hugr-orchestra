@@ -1,0 +1,1 @@
+Recebi o checkout/membership: bom fechamento do impedimento antigo. Original readNativeFile tem 8 MiB default para pacote, mas prepareNativePackage usa 256000 explícito nas source_refs; manter essa distinção no resumo para não atribuir 256 KB ao pacote inteiro. Vou rodar prepare final quando L4 for aceito. Não é necessário alterar runtime nem preparar release R4 nesta missão.

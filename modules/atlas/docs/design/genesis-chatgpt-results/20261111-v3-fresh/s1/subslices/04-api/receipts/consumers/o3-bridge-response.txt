@@ -1,0 +1,4 @@
+Resposta real à sua solicitação {"tool":"ownership.index","arguments":{"scope":"orchestra.s1","need":"maintenance"}}. A ponte executou a CLI original do release fixado e devolveu exit_code 2. stdout integral:
+{"kind":"hold","reason":"ownership-store-unavailable","evidence":["orchestra.s1"]}
+stderr integral: vazio.
+Nenhum corpo ou entrada de conhecimento foi retornado (0 bytes de corpos). Esta resposta conta como 1 index; 0 reads. Preserve a pergunta e os limites originais. Decida agora a resposta final sustentada pelo que recebeu, ou peça apenas outra consulta que seja necessária e justificada; não use fonte, arquivos locais, oracle ou conhecimento genérico para completar contratos ausentes.

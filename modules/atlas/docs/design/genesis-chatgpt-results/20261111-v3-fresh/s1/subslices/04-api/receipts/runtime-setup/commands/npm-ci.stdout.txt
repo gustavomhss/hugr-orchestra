@@ -1,0 +1,7 @@
+
+> atlas@0.0.0 postinstall
+> node scripts/fix-scip-types.mjs
+
+[fix-scip-types] added types/exports to @c4312/scip (upstream packaging shim)
+
+added 167 packages in 10s

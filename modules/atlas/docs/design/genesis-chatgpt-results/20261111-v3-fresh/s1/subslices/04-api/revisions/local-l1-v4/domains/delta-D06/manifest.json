@@ -1,0 +1,106 @@
+{
+  "schema": "genesis-s1-04-b3-d06-correction/v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "semantic_delta_count": 1,
+  "old_sentence": "Protocol declares query/input/error shapes; Server delegates reference/Git/PR work to Location services and maps the PR host error.",
+  "new_sentence": "Protocol declares the VCS diff query and response shapes; Server delegates reference/Git/PR work to Location services and projects the PR host error.",
+  "source_reads": 0,
+  "membership_count": 190,
+  "unchanged_bounded_claim_count": 23,
+  "conditional_gaps_unchanged": true,
+  "body_reversal_exact": true,
+  "dossier_reversal_exact_with_binding_reversal": true,
+  "body": {
+    "path": "b3/v4/domain-disposition.md",
+    "byte_length": 38080,
+    "sha256": "12248d1cc39a27b1655f1a683f02cd1af864f87945300a86b0ee4326227a4edd"
+  },
+  "dossier": {
+    "path": "b3/v4/dossier-D01-D06-v4.md",
+    "byte_length": 12472,
+    "sha256": "183649bb5e918a6b5f38b4c516e64bd5566e4b7f5ed64497d5928171dd3342b1"
+  },
+  "updated_metadata": [
+    {
+      "path": "b3/v4/domains-v4.json",
+      "byte_length": 53348,
+      "sha256": "d6a53a3e50e86614a67dfa6a43d4b70fc9d563a97881b884b1c91d829416ae62"
+    },
+    {
+      "path": "b3/v4/verification.json",
+      "byte_length": 1264,
+      "sha256": "c69f6d715754fe1bc49341fe90ff3d49132f81511fad86e062b038f72ccffa83"
+    },
+    {
+      "path": "b3/v4/manifest.json",
+      "byte_length": 6473,
+      "sha256": "a5eefb81ada94fd6461392e613043d9bcab154f5cc4e2a3a8136f392268d4dd6"
+    },
+    {
+      "path": "b3/v4/review-manifest.json",
+      "byte_length": 2233,
+      "sha256": "77ad31361a41141138d6eab6700a306527b01dcff9fdc5a4e42baf3e877a4bc0"
+    }
+  ],
+  "originals": [
+    {
+      "path": "b3/v4/delta-D06/before/domain-disposition.md",
+      "byte_length": 38062,
+      "sha256": "36339a1329421f80d15e37b40ce26edd6e1c793a0ac1b5056471e4df2bfed57c"
+    },
+    {
+      "path": "b3/v4/delta-D06/before/dossier-D01-D06-v4.md",
+      "byte_length": 12454,
+      "sha256": "e98967118c9da0a74dc4fc8a89bd7a5462e68b22c3a6f4f34da2ae4c3729c746"
+    },
+    {
+      "path": "b3/v4/delta-D06/before/domains-v4.json",
+      "byte_length": 53330,
+      "sha256": "bb5b347d985ddac2a34c1210111eac15181f4269a87d86011cd9e1f1922086b4"
+    },
+    {
+      "path": "b3/v4/delta-D06/before/domain-disposition.diff",
+      "byte_length": 96763,
+      "sha256": "3b068ab551d589eaa16a8c81f7dc305bf9437e8eca514bd96db004c2a49a6055"
+    },
+    {
+      "path": "b3/v4/delta-D06/before/verification.json",
+      "byte_length": 826,
+      "sha256": "331fd930c59509c8afb2fa029b9a337457c72885bf322b4aea59235dc7a944cd"
+    },
+    {
+      "path": "b3/v4/delta-D06/before/manifest.json",
+      "byte_length": 3672,
+      "sha256": "7258cdd82d613b9fc8e11a2e51032d33fd0778e64e26a4edacd21092843ef931"
+    },
+    {
+      "path": "b3/v4/delta-D06/before/review-manifest.json",
+      "byte_length": 1279,
+      "sha256": "cba9dcda7e2d475b1c5074b3669e7b74bbb28234574de3424e7164a739b7ea41"
+    }
+  ],
+  "records": [
+    {
+      "path": "b3/v4/delta-D06/request.txt",
+      "byte_length": 720,
+      "sha256": "25789f6875986c02ebe97ede71da04318e15aadc91646fdcba33e57f9b0c6c58"
+    },
+    {
+      "path": "b3/v4/delta-D06/response.md",
+      "byte_length": 2019,
+      "sha256": "a21ff0e6d81429128a2e333d11f668b4cd39bc778831ac074519b6ceff540c1f"
+    },
+    {
+      "path": "b3/v4/delta-D06/body.diff",
+      "byte_length": 1043,
+      "sha256": "72f822096ca617b0b44f40b4e38de7fc3827096b71c8cd430ebf21f3409b5ca7"
+    },
+    {
+      "path": "b3/v4/delta-D06/dossier.diff",
+      "byte_length": 2405,
+      "sha256": "6cf2692d0a6bdd5407b847e77002e87c5b84fd742a792c218efef70af31adea9"
+    }
+  ],
+  "semantic_pass_asserted": false,
+  "higher_layers_produced": false
+}

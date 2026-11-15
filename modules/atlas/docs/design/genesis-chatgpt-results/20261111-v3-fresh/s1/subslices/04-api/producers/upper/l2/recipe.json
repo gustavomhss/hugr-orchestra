@@ -1,0 +1,107 @@
+{
+  "schema": "genesis-s1-04-local-recipe/v1",
+  "key": "s1.subslice04.local-contracts",
+  "layer": 2,
+  "input_public_contract": {
+    "path": "output/contracts/public.json",
+    "byte_length": 10021,
+    "sha256": "7dcc9df0003b99722b18538fab1e45adb3ac60e6697397677200feddce40909e"
+  },
+  "producer_request_ref": {
+    "path": "request.txt",
+    "byte_length": 2372,
+    "sha256": "cae28b1225705aab3ecde5ec0e907a5fc23f255df93c2115802dcf08ead1cc0b"
+  },
+  "predecessor_acceptance_ref": {
+    "path": "output/receipts/l1-release.json",
+    "byte_length": 3522,
+    "sha256": "23674344f089dbc26e1cac7ee70e0de9809e663ed80a0967219ae53222d4b0fb"
+  },
+  "historical_frame_ref": {
+    "path": "output/receipts/historical-frame.json",
+    "byte_length": 931,
+    "sha256": "9603edf9ae95b650cc29a584bce7a5a85c7234c949d407e2f6c17d5b2941c9cb"
+  },
+  "input_predecessors": [
+    {
+      "key": "s1.api.codegen",
+      "body_sha256": "2ec55afad54a871de673a252b6b7c604a8ecdb648cc1df9c80128d83a3f8e270"
+    },
+    {
+      "key": "s1.api.boundaries",
+      "body_sha256": "f6b230ed8578b6bd9fdb1e4eaca26892df9355a58fc1f5e2e6a157bffabf7310"
+    },
+    {
+      "key": "s1.api.client-projection",
+      "body_sha256": "089304921b004984de3b15b75af18fea3c7ebf15191f3874e9f668066569d478"
+    },
+    {
+      "key": "s1.api.server-edge",
+      "body_sha256": "711c744e089e59a11ee0b56ba4ec495277993dc7a58e351c8e2af4dc557ce404"
+    },
+    {
+      "key": "s1.api.stream-contract",
+      "body_sha256": "8aac12750cd96c30f9bee287bdab2fdbb61ca67903b604aa8a0c1809e7c4bdfa"
+    },
+    {
+      "key": "s1.api.schema-contracts",
+      "body_sha256": "c6ebd6124d89092e859aaa6a6a07c2a6fca5e2cdc82a62254b701b2de60266b2"
+    },
+    {
+      "key": "s1.api.session-contract",
+      "body_sha256": "22b526a2423572f2bbc17f3bfccd2eb0ea8f7fb16f2215bb0904f1cc5c2125bc"
+    },
+    {
+      "key": "s1.api.sdk-composition",
+      "body_sha256": "a2cb2fc21fc1a771d81cd83e75dfe8b07c82c1712b15396ff4e40774f861d4d3"
+    },
+    {
+      "key": "s1.api.surface-disposition",
+      "body_sha256": "595e0d404064429a953b276141f5601a1bbecceb30242a9914132ebdd26ed5c0"
+    },
+    {
+      "key": "s1.subslice04.domains",
+      "body_sha256": "12248d1cc39a27b1655f1a683f02cd1af864f87945300a86b0ee4326227a4edd"
+    }
+  ],
+  "criteria": [
+    "GO-A1",
+    "GO-A2",
+    "GO-A3",
+    "GO-A4",
+    "GO-A5",
+    "GO-A6",
+    "GO-A7",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-4",
+    "QS-5",
+    "QS-6",
+    "CC-3",
+    "CC-7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "method": "Sintetizar o mapa local de declaração, implementação/delegação e projeção a partir dos dez corpos L1 aceitos, preservando limites, diferenças de valor/ausência, eventos/erros e fronteiras Session, stream, browser, SDK e gerador. Separar intenção normativa de observação de fonte; não promover especificidades RETIRED_EXTRA_CLAIM. Navegação não cria novas dependências.",
+  "need_selection": {
+    "value": "component",
+    "basis": {
+      "path": "input/ref_transport.txt",
+      "byte_length": 8478,
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c"
+    },
+    "principal_instruction": "Segunda mensagem preservada em request.txt; seleção de metadata, sem alterar a necessidade pública."
+  },
+  "source_policy": "Nenhuma nova fonte de produto foi procurada ou relida para L2. Os dez corpos são os inputs de conteúdo; fontes e observações estreitas de Core permanecem na proveniência desses predecessores.",
+  "mechanical_work": "Conferência local de bytes/SHA-256 dos dez predecessores contra l1-release; codificação UTF-8 e hashes externos dos artefatos locais.",
+  "not_claimed": [
+    "Execução de produto, testes ou CI",
+    "Geração de clientes ou freshness",
+    "Importação, binding runtime, publicação ou consumo real",
+    "Aceite semântico deste L2 antes da dupla revisão",
+    "Produção L3/L4"
+  ]
+}

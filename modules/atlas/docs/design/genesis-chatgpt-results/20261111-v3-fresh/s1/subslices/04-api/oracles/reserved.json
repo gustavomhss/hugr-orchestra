@@ -1,0 +1,440 @@
+{
+  "schema": "genesis-s1-04-reserved-oracle/v1",
+  "execution_id": "94f1e157-8c44-4e6e-a4af-7690a8845ecf",
+  "frozen_at_utc": "2026-11-14 22:46:16 UTC",
+  "reserved": true,
+  "producer_context": "MUST_NOT_RECEIVE_EXPECTED_OR_CRITICAL_ERRORS",
+  "status": "FROZEN_BEFORE_NEW_UPPER_LAYER_PRODUCTION_AND_CONSUMERS",
+  "cases": [
+    {
+      "id": "S1-O1",
+      "kind": "permitted-change",
+      "question": "Um cliente quer admitir um prompt sem executar e, depois, retentar com o mesmo message ID e mesmo prompt/delivery permitindo execução. Qual sequência preserva a admissão única e o que comprova que executou?",
+      "expected": [
+        "Usar resume:false na primeira admissão; ausência de wake não significa falta de persistência.",
+        "Retentar com mesmo ID, session, prompt canônico e delivery preserva registro; resume não participa da equivalência e pode habilitar wake.",
+        "Admitted não é prova de conclusão do modelo; consultar histórico/estado e observar execução. Não criar novo ID para esconder retry."
+      ],
+      "critical_errors": [
+        "Dizer que resume faz parte da identidade de retry",
+        "Dizer que admitir executa necessariamente",
+        "Dizer que retorno Admitted prova conclusão"
+      ],
+      "sources": [
+        "packages/core/src/session.ts",
+        "packages/core/src/session/input.ts",
+        "packages/protocol/src/groups/session.ts"
+      ],
+      "limits": {
+        "index_calls": 1,
+        "read_calls": 2,
+        "body_bytes": 24000
+      },
+      "case_status": "historical_regression",
+      "support_only": true
+    },
+    {
+      "id": "S1-O2",
+      "kind": "contract-violation",
+      "question": "Mesmo Session ID, message ID e texto; o retry troca delivery de steer para queue. É o mesmo pedido? Qual falha e efeito sobre os registros/execução?",
+      "expected": [
+        "Delivery faz parte da equivalência, portanto é conflito.",
+        "Core PromptConflictError; handler mapeia para ConflictError no contrato HTTP.",
+        "Não inserir segunda admissão nem acordar a execução pelo caminho que falhou; preservar original."
+      ],
+      "critical_errors": [
+        "Aceitar por igualdade apenas do texto",
+        "Sobrescrever delivery existente",
+        "Propor novo registro silencioso"
+      ],
+      "sources": [
+        "packages/core/src/session/input.ts",
+        "packages/core/src/session.ts",
+        "packages/server/src/handlers/session.ts"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 4,
+        "body_bytes": 60000
+      },
+      "case_status": "historical_regression",
+      "support_only": true
+    },
+    {
+      "id": "S1-O3",
+      "kind": "cross-component-impact",
+      "question": "A manutenção acrescentará um campo opcional público em session.prompt. Onde alterar contrato, implementação e clientes, como verificar, e quais dependências são proibidas?",
+      "expected": [
+        "Partir da autoridade Schema/Protocol e HttpApi público; manter handler/Core coerentes; revisar admissão/deduplicação se o campo afeta identidade.",
+        "Gerar a partir de packages/client com bun run generate; não editar src/generated ou src/generated-effect à mão.",
+        "Client runtime pode usar Schema/Protocol, nunca Core/Server. SDK compõe os serviços.",
+        "Executar gates remotos direcionados e package typecheck conforme AGENTS, sem alegar execução de comando apenas listado."
+      ],
+      "critical_errors": [
+        "Editar gerados manualmente",
+        "Introduzir Core/Server no runtime Client",
+        "Supor campo de identidade sem decisão explícita"
+      ],
+      "sources": [
+        "AGENTS.md",
+        "packages/client/package.json",
+        "packages/protocol/src/groups/session.ts",
+        "packages/server/src/handlers/session.ts"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 6,
+        "body_bytes": 80000
+      },
+      "case_status": "historical_regression",
+      "support_only": false
+    },
+    {
+      "id": "S1-04-P1",
+      "kind": "permitted-change",
+      "question": "Uma mudança pública em DTO de sessão acrescenta propriedade opcional. Como escolher a autoridade, tratar ausência/undefined e verificar projeções sem alterar gerados manualmente?",
+      "expected": [
+        "Use shared Schema only for browser-safe wire contract; Protocol/public HttpApi reflects it; runtime behavior remains owner Core/Server.",
+        "Use package optional helper to omit undefined; decode-only default differs from constructor normalization.",
+        "Client official generator and check:generated; encoded Promise differs from decoded Effect; no assertion of gate completion without receipts."
+      ],
+      "critical_errors": [
+        "Manual generated edits",
+        "Move runtime effects into Schema",
+        "Treat both projections as same decoded value"
+      ],
+      "case_status": "new_frozen_before_upper_layers",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 6,
+        "body_bytes": 80000
+      }
+    },
+    {
+      "id": "S1-04-V1",
+      "kind": "contract-violation",
+      "question": "Para reutilizar a API do servidor, um patch importa Server ou Core no runtime do Client. A justificativa de reaproveitamento torna o patch válido? Qual correção de arquitetura?",
+      "expected": [
+        "Reject prohibited Client runtime import.",
+        "Use Protocol makeDefaultApi with client-local middleware identities and Schema.",
+        "SDK Next may compose Client/Core/Server; build-time generator dependency is distinct."
+      ],
+      "critical_errors": [
+        "Permit Server or Core runtime in Client",
+        "Claim bundler proof from manifest alone"
+      ],
+      "case_status": "new_frozen_before_upper_layers",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 6,
+        "body_bytes": 80000
+      }
+    },
+    {
+      "id": "S1-04-F1",
+      "kind": "operational-failure",
+      "question": "A conexão global /api/event caiu depois de server.connected. Há dados para prometer retomada automática sem perdas pelo mesmo SSE? Como distinguir o diagnóstico da leitura durável de Session?",
+      "expected": [
+        "No global replay cursor/event id or automatic reconnect proven.",
+        "Connected means live subscription acquired before readiness, not durable replay.",
+        "Use session durable aggregate sequence contracts for durable session/history; do not infer external effects or exactly-once.",
+        "Separate post-establishment stream defect from JSON errors; global bounded subscriber may overflow, runtime observation still required."
+      ],
+      "critical_errors": [
+        "Automatic global replay",
+        "No-loss guarantee from 4096 bound",
+        "Treat server.connected as durable completion"
+      ],
+      "case_status": "new_frozen_before_upper_layers",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 6,
+        "body_bytes": 80000
+      }
+    },
+    {
+      "id": "S1-04-A1",
+      "kind": "out-of-scope-abstention",
+      "question": "A existência de APIs Session, SDK embedded e eventos duráveis certifica exclusão mútua entre hosts e efeitos externos exactly-once?",
+      "expected": [
+        "Abstain; API contract/embedded service composition and durable replay do not prove multi-host execution.",
+        "Need accepted Core owner and actual runtime evidence; coordinator process-local by root AGENTS."
+      ],
+      "critical_errors": [
+        "Guarantee multi-host/exactly-once",
+        "Invent durable lock"
+      ],
+      "case_status": "new_frozen_before_upper_layers",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 6,
+        "body_bytes": 80000
+      }
+    },
+    {
+      "id": "S1-04-M1",
+      "kind": "maintenance-public-change",
+      "question": "No candidato isolado, a declaração pública de session.prompt muda. Quais conhecimentos e superfícies precisam revalidar e quais resultados não podem ser declarados atuais apenas porque os corpos não mudaram?",
+      "expected": [
+        "Affected schema/protocol/session contract/handler/client projection/codegen/sdk interpretation where dependent; dependency closure and declared input keys decide exact set.",
+        "Regenerate officially and validate generated freshness; stable body cannot replace current source/version authority.",
+        "Keep independent unrelated contracts usable when manifest/authority not shared-corrupt; navigation alone not invalidation.",
+        "Use S1-01 exact Core evidence for admission identity, cannot silently decide new field affects retry."
+      ],
+      "critical_errors": [
+        "Omit generator input edge",
+        "Use stale knowledge as current",
+        "Rebuild all by navigation"
+      ],
+      "case_status": "new_frozen_before_upper_layers",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 6,
+        "body_bytes": 80000
+      }
+    },
+    {
+      "id": "S1-04-M2",
+      "kind": "maintenance-recipe-change",
+      "question": "A fonte/receita do gerador muda e os bytes públicos parecem iguais. Como revalidar os gerados e preservar contratos independentes?",
+      "expected": [
+        "Recipe is input; invalidate actual dependent codegen/projection results, verify regenerated output through official generator and gate.",
+        "Equal prose is insufficient when authority/validity/gaps/evidence change; receipt-only refresh may reuse accepted result after real validation.",
+        "Do not edit generated manually or remove oversized required source; unavailable is HOLD not absent.",
+        "Preserve independent semantic artifacts with unchanged inputs and no build dependency."
+      ],
+      "critical_errors": [
+        "Ignore recipe",
+        "Fabricate cache hit/no-call count",
+        "Split/drop oversized source to pass"
+      ],
+      "case_status": "new_frozen_before_upper_layers",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 6,
+        "body_bytes": 80000
+      }
+    },
+    {
+      "id": "S1-04-D01",
+      "kind": "intermediate-direct-use",
+      "target": "s1.api.boundaries",
+      "question": "Quem possui contratos, implementação, composição e quais imports do Client são proibidos?",
+      "expected": [
+        "Schema/Core/Protocol/Server/Client/SDK separation; no full transitive-bundle proof"
+      ],
+      "critical_errors": [
+        "Claim real Atlas operation when only Markdown available"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      }
+    },
+    {
+      "id": "S1-04-D02",
+      "kind": "intermediate-direct-use",
+      "target": "s1.api.schema-contracts",
+      "question": "O que diferenciam DTO, código executável de Schema, identidade de evento e fato durável?",
+      "expected": [
+        "definitions/helpers are source-level; events public vs durable; DTO not service guarantee"
+      ],
+      "critical_errors": [
+        "Claim real Atlas operation when only Markdown available"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      }
+    },
+    {
+      "id": "S1-04-D03",
+      "kind": "intermediate-direct-use",
+      "target": "s1.api.session-contract",
+      "question": "O que comprovam Admitted, active e history; o que acontece com mensagem de outra sessão?",
+      "expected": [
+        "admission not completion; process-local active; exclusive durable pagination; cross-session notfound source"
+      ],
+      "critical_errors": [
+        "Claim real Atlas operation when only Markdown available"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      }
+    },
+    {
+      "id": "S1-04-D04",
+      "kind": "intermediate-direct-use",
+      "target": "s1.api.server-edge",
+      "question": "Qual é o limite real do diagnóstico e o que uma URL de ticket prova?",
+      "expected": [
+        "prefix 1024 JS string plus suffix; URL alone not auth; separate content/PTy validation"
+      ],
+      "critical_errors": [
+        "Claim real Atlas operation when only Markdown available"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      }
+    },
+    {
+      "id": "S1-04-D05",
+      "kind": "intermediate-direct-use",
+      "target": "s1.api.stream-contract",
+      "question": "O que é reutilizado entre assinantes e como recuperar continuidade?",
+      "expected": [
+        "JSON string cache, new frame each call; no global replay; durable session sequence"
+      ],
+      "critical_errors": [
+        "Claim real Atlas operation when only Markdown available"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      }
+    },
+    {
+      "id": "S1-04-D06",
+      "kind": "intermediate-direct-use",
+      "target": "s1.api.client-projection",
+      "question": "Por que Promise e Effect não são equivalentes, e o README prova ausência de leitura binária?",
+      "expected": [
+        "encoded vs decoded; actual fs.read binary contradicts README"
+      ],
+      "critical_errors": [
+        "Claim real Atlas operation when only Markdown available"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      }
+    },
+    {
+      "id": "S1-04-D07",
+      "kind": "intermediate-direct-use",
+      "target": "s1.api.codegen",
+      "question": "Qual é a autoridade de geração, unwrapping e exclusão de stale outputs?",
+      "expected": [
+        "official build policy; exact single data envelope; writer owned-manifest deletion not atomicity"
+      ],
+      "critical_errors": [
+        "Claim real Atlas operation when only Markdown available"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      }
+    },
+    {
+      "id": "S1-04-D08",
+      "kind": "intermediate-direct-use",
+      "target": "s1.api.sdk-composition",
+      "question": "Embedded elimina I/O e autorização? Quais falhas renovam credencial?",
+      "expected": [
+        "no TCP listener but services IO; capability auth; authentication_required only default credential"
+      ],
+      "critical_errors": [
+        "Claim real Atlas operation when only Markdown available"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      }
+    },
+    {
+      "id": "S1-04-D09",
+      "kind": "intermediate-direct-use",
+      "target": "s1.api.surface-disposition",
+      "question": "O que está lido, classificado e não comprovado na população?",
+      "expected": [
+        "472; 190 inherited full triage; 183 grouped inventory not full reads; no execution claims"
+      ],
+      "critical_errors": [
+        "Claim real Atlas operation when only Markdown available"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      }
+    },
+    {
+      "id": "S1-04-D10",
+      "kind": "intermediate-direct-use",
+      "target": "s1.subslice04.domains",
+      "question": "No domínio Relay, o que declara o contrato e o que permanece sem prova?",
+      "expected": [
+        "public executable check refused; integrity external ledger pending; owner/runtime needed"
+      ],
+      "critical_errors": [
+        "Claim real Atlas operation when only Markdown available"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 100000
+      }
+    },
+    {
+      "id": "S1-04-D11",
+      "kind": "intermediate-direct-use",
+      "target": "s1.subslice04.local-contracts",
+      "question": "Onde buscar valores, transporte, implementação e projeção de um contrato?",
+      "expected": [
+        "use accepted local mapping and scoped predecessors; no undecided Core guarantees"
+      ],
+      "critical_errors": [
+        "Claim real Atlas operation when only Markdown available"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      }
+    },
+    {
+      "id": "S1-04-D12",
+      "kind": "intermediate-direct-use",
+      "target": "s1.subslice04.integrated-impact",
+      "question": "Como distinguir dependência de build e navegação ao mudar contrato ou receita?",
+      "expected": [
+        "actual dependency input closure vs bounded navigation, preserve independent"
+      ],
+      "critical_errors": [
+        "Claim real Atlas operation when only Markdown available"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      }
+    },
+    {
+      "id": "S1-04-D13",
+      "kind": "intermediate-direct-use",
+      "target": "s1.subslice04.maintenance",
+      "question": "Qual sequência segura mantém conhecimento, geração e evidências coerentes?",
+      "expected": [
+        "inspect/freeze/modify owned source/generate/scoped gates/review/runtime publication; hold if missing"
+      ],
+      "critical_errors": [
+        "Claim real Atlas operation when only Markdown available"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 3,
+        "body_bytes": 30000
+      }
+    }
+  ]
+}

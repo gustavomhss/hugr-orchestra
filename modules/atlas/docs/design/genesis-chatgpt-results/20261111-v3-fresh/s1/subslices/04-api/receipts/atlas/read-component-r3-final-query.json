@@ -1,0 +1,5 @@
+{
+  "scope": "orchestra.s1",
+  "need": "component",
+  "maxBytes": 30000
+}

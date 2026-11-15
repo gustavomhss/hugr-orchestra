@@ -1,0 +1,21 @@
+{
+  "schema": "genesis-s1-04-local-layer-release/v1",
+  "layer": 3,
+  "key": "s1.subslice04.integrated-impact",
+  "body_sha256": "c140fb0bf9606079e91576b542ec82b3904583e7433a8fe297c886318649f478",
+  "body_byte_length": 9301,
+  "judgments": [
+    {
+      "path": "judgments/07-j1-resolution.md",
+      "byte_length": 1554,
+      "sha256": "4a732d885af8e401c55d1bf7959c0d0d3b616bb14f225a61ef4e0cc93518b263"
+    },
+    {
+      "path": "judgments/07-j2-resolution.md",
+      "byte_length": 1927,
+      "sha256": "3c6a4a3020ec7e0ec5e437c7d63ff7d3838eee7921f28ebf393d89c738e3f56a"
+    }
+  ],
+  "status": "LOCAL_CONTENT_ACCEPTED",
+  "allows": "L4 local production only; no runtime/Core/consumer/publication acceptance"
+}

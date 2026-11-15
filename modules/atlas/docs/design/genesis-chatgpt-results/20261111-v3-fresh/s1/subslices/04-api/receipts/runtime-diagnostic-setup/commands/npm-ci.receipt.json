@@ -1,0 +1,32 @@
+{
+  "schema": "s1-04-db9-diagnostic-setup-command/v1",
+  "command_name": "npm-ci",
+  "command": [
+    "npm",
+    "ci",
+    "--no-audit",
+    "--no-fund"
+  ],
+  "cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-db9b423-diagnostic/modules/atlas",
+  "code_source_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "code_identity": "materialized diagnostic candidate, not git checkout; not promoted release",
+  "started_utc": "2026-11-15T00:32:13.774004+00:00",
+  "finished_utc": "2026-11-15T00:32:23.827079+00:00",
+  "duration_seconds": 10.053084775994648,
+  "exit_code": 0,
+  "error": null,
+  "stdout_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/commands/npm-ci.stdout.txt",
+  "stderr_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/commands/npm-ci.stderr.txt",
+  "stdout_sha256": "cb010cb04482d7217a8983f6e167baef219cfe1160721c1521e5029f93e06a03",
+  "stderr_sha256": "bfb348fb34e7272aa9cd0710f76693a9d040b01d5ed06ea6db152f0cdb5346b9",
+  "environment_overrides": {
+    "PATH_prepend": "/workspace/scratch/8833f71e3e94/s1-04-94f1e157-8c44-4e6e-a4af-7690a8845ecf/runtime-tools/node_modules/.bin",
+    "npm_config_cache": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/npm-cache",
+    "npm_config_devdir": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/db9b423-diagnostic/node-gyp"
+  },
+  "product_tests_executed": false,
+  "atlas_operations_executed": false,
+  "source_checkout_accessed": false,
+  "source_cas_accessed": false,
+  "remote_mutations": false
+}

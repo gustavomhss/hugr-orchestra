@@ -1,0 +1,29 @@
+{
+  "schema": "s1-04-atlas-r3-setup-command/v1",
+  "command_name": "npm-ci",
+  "command": [
+    "npm",
+    "ci",
+    "--no-audit",
+    "--no-fund"
+  ],
+  "cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-r3/modules/atlas",
+  "code_source_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "code_identity": "materialized, not git checkout",
+  "started_utc": "2026-11-14T22:57:41.897796+00:00",
+  "finished_utc": "2026-11-14T22:57:52.262615+00:00",
+  "duration_seconds": 10.3648268859979,
+  "exit_code": 0,
+  "error": null,
+  "stdout_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/commands/npm-ci.stdout.txt",
+  "stderr_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/commands/npm-ci.stderr.txt",
+  "stdout_sha256": "cb010cb04482d7217a8983f6e167baef219cfe1160721c1521e5029f93e06a03",
+  "stderr_sha256": "bfb348fb34e7272aa9cd0710f76693a9d040b01d5ed06ea6db152f0cdb5346b9",
+  "environment_overrides": {
+    "PATH_prepend": "/workspace/scratch/8833f71e3e94/s1-04-94f1e157-8c44-4e6e-a4af-7690a8845ecf/runtime-tools/node_modules/.bin",
+    "npm_config_cache": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/npm-cache",
+    "npm_config_devdir": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/node-gyp"
+  },
+  "product_tests_executed": false,
+  "atlas_operations_executed": false
+}

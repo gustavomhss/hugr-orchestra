@@ -1,0 +1,16 @@
+Rodada 7a — delta exato para seus três findings de L3, tool-free, mesmo gate e critérios. Versão anterior preservada: 7120 bytes, b97dfa5c155e851d0360eb27c730996634d7b240797c373bc41a2122a2a4a101. Versão corrigida: 9301 bytes, c140fb0bf9606079e91576b542ec82b3904583e7433a8fe297c886318649f478. A principal verificou mecanicamente que remover SOMENTE os três blocos abaixo, cada um com duas quebras finais, recupera os bytes anteriores integralmente. Zero deleções/substituições; 2181 bytes inseridos. Todos os seis predecessores, critérios, contrato público e gaps permanecem. Parecer sobre fechamento de L3-01/02/03 e liberação restrita de L4 local; nenhuma execução é reivindicada. Responda PASS/FIX-FIRST, sem pedir refinamento opcional.
+
+INSERÇÃO L3-02 — após as três relações, antes da tabela:
+Dependências de construção devem ser acíclicas: rejeitar ciclos. A navegação pode conter ciclos, mas cada consulta deve ter limite definido de leituras/contexto e evitar revisitar artefatos já percorridos.
+
+INSERÇÃO L3-01 — após a explicação da identidade canônica:
+### Exemplos locais congelados de comparação
+
+Os cenários abaixo fixam a aplicação da regra; não relatam alterações ou verificações executadas.
+
+**EX-L3-01 — propagar (S1-04-M1).** Num candidato que acrescenta um campo público a `session.prompt`, falta a evidência obrigatória de encaminhamento pelo handler. A comparação fica congelada assim: corpo igual; autoridade API igual; validade `supported` → `blocked`; novo gap de encaminhamento; evidência pertinente antes vinculada e agora indisponível para sustentar o candidato. O resultado visível mudou apesar do Markdown igual. Propagar a revalidação aos dependentes de construção e manter os claims afetados em HOLD; links de navegação não ampliam esse conjunto.
+
+**EX-L3-02 — parar (S1-04-M2).** Uma alteração de comentário na receita muda sua versão de input e o recibo da geração. Neste cenário, a revalidação sob o contrato atual confirma o contrato de `session.prompt` e compara todos os componentes do resultado: corpo igual; autoridade igual; validade `supported` preservada; gaps iguais; identidades de evidência pertinentes usadas pelo consumidor iguais. A versão da receita alterada pertence somente ao input/recibo deste caso, não à evidência visível do contrato. Confirmada a identidade canônica validada igual, atualizar recibos e bindings auditáveis e parar a interpretação downstream. Bytes gerados iguais, sozinhos, não autorizam essa decisão; se a receita integrar a evidência visível ou qualquer componente mudar, esta condição de parada deixa de valer.
+
+INSERÇÃO L3-03 — antes do handoff Core:
+Cada leitura apresentada como atual deve vincular as versões exatas dos artefatos a um manifesto aceito de escopo e de fechamento das dependências, válido para os inputs e contratos atuais. Sem esse vínculo, a leitura atual fica em HOLD. Uma consulta histórica deve ser identificada como histórica e não pode ser apresentada como atual apenas por ter sido aceita anteriormente.

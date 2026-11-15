@@ -1,0 +1,73 @@
+{
+  "schema": "s1-04-layer-release/v1",
+  "execution_id": "94f1e157-8c44-4e6e-a4af-7690a8845ecf",
+  "recorded_at_utc": "2026-11-14T23:32:35.275415+00:00",
+  "layer": 1,
+  "gate": "CONTENT_PASS_LOCAL_API",
+  "judges": [
+    "parallel-v3-fresh/S1-04/J1",
+    "parallel-v3-fresh/S1-04/J2"
+  ],
+  "decision_round": 5,
+  "findings_union": {
+    "B1": "RESOLVED",
+    "B2": "RESOLVED",
+    "B3": "RESOLVED_DOMAIN_LEVEL",
+    "retired_specificities": "RETIRED_EXTRA_CLAIM_NOT_SOURCE_RESOLVED"
+  },
+  "bodies": {
+    "s1.api.codegen": {
+      "path": "revisions/b-l1-v3/bodies/codegen.md",
+      "sha256": "2ec55afad54a871de673a252b6b7c604a8ecdb648cc1df9c80128d83a3f8e270",
+      "bytes": 4752
+    },
+    "s1.api.boundaries": {
+      "path": "revisions/b-l1-v3/bodies/boundaries.md",
+      "sha256": "f6b230ed8578b6bd9fdb1e4eaca26892df9355a58fc1f5e2e6a157bffabf7310",
+      "bytes": 4634
+    },
+    "s1.api.client-projection": {
+      "path": "revisions/b-l1-v3/bodies/client-projection.md",
+      "sha256": "089304921b004984de3b15b75af18fea3c7ebf15191f3874e9f668066569d478",
+      "bytes": 5193
+    },
+    "s1.api.server-edge": {
+      "path": "revisions/b-l1-v3/bodies/server-edge.md",
+      "sha256": "711c744e089e59a11ee0b56ba4ec495277993dc7a58e351c8e2af4dc557ce404",
+      "bytes": 5596
+    },
+    "s1.api.stream-contract": {
+      "path": "revisions/local-l1-v4/bodies/stream-contract.md",
+      "sha256": "8aac12750cd96c30f9bee287bdab2fdbb61ca67903b604aa8a0c1809e7c4bdfa",
+      "bytes": 3883
+    },
+    "s1.api.schema-contracts": {
+      "path": "revisions/b-l1-v3/bodies/schema-contracts.md",
+      "sha256": "c6ebd6124d89092e859aaa6a6a07c2a6fca5e2cdc82a62254b701b2de60266b2",
+      "bytes": 5188
+    },
+    "s1.api.session-contract": {
+      "path": "revisions/b-l1-v3/bodies/session-contract.md",
+      "sha256": "22b526a2423572f2bbc17f3bfccd2eb0ea8f7fb16f2215bb0904f1cc5c2125bc",
+      "bytes": 5155
+    },
+    "s1.api.sdk-composition": {
+      "path": "revisions/b-l1-v3/bodies/sdk-composition.md",
+      "sha256": "a2cb2fc21fc1a771d81cd83e75dfe8b07c82c1712b15396ff4e40774f861d4d3",
+      "bytes": 3478
+    },
+    "s1.api.surface-disposition": {
+      "path": "revisions/b-l1-v3/bodies/surface-disposition.md",
+      "sha256": "595e0d404064429a953b276141f5601a1bbecceb30242a9914132ebdd26ed5c0",
+      "bytes": 6726
+    },
+    "s1.subslice04.domains": {
+      "path": "revisions/local-l1-v4/domains/domain-disposition.md",
+      "sha256": "12248d1cc39a27b1655f1a683f02cd1af864f87945300a86b0ee4326227a4edd",
+      "bytes": 38080
+    }
+  },
+  "permits": "L2 local production from these accepted predecessors",
+  "does_not_permit": "Core integration, publication, consumers, CI or operational acceptance",
+  "frame": "Os corpos B-v3 preservados são observações históricas datadas: now, unjudged e ausência de instalação/runtime descrevem sua produção original, não os atos desta execução. As leituras completas dos 190 módulos são herdadas; não foram refeitas por rotina. A disposição atual de domínios substitui apenas os claims promovidos B3; notas detalhadas retiradas permanecem históricas e RETIRED_EXTRA_CLAIM, sem resolução por fonte. O aceite atual combina os pareceres B-v2 delimitados, preservados como FIX-FIRST, e a resolução dos deltas pela dupla nativa atual. Nenhum predecessor Core não julgado é aceito; gaps condicionais F02 e obrigações F03–F08 continuam para seus dependentes. Sem promoção de fonte a execução, freshness, autoridade de publicação ou consumo real."
+}

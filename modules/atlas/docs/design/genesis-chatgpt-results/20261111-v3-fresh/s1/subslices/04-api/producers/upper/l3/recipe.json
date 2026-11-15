@@ -1,0 +1,191 @@
+{
+  "schema": "genesis-s1-04-local-recipe/v1",
+  "key": "s1.subslice04.integrated-impact",
+  "layer": 3,
+  "need": "flow",
+  "input_public_contract": {
+    "path": "output/contracts/public.json",
+    "byte_length": 10021,
+    "sha256": "7dcc9df0003b99722b18538fab1e45adb3ac60e6697397677200feddce40909e"
+  },
+  "producer_request_ref": {
+    "path": "request.txt",
+    "byte_length": 2473,
+    "sha256": "9ac57546350080a32f789d6ba0b8247dbf045453985b278611b56016fee0ad7d"
+  },
+  "predecessor_acceptance_refs": [
+    {
+      "path": "output/receipts/l1-release.json",
+      "byte_length": 3522,
+      "sha256": "23674344f089dbc26e1cac7ee70e0de9809e663ed80a0967219ae53222d4b0fb"
+    },
+    {
+      "path": "output/receipts/l2-release.json",
+      "byte_length": 830,
+      "sha256": "35f6a60a7aca9937b957022fae7ef1868b84a5b4d4284f961882568675c3a2c9"
+    },
+    {
+      "path": "output/receipts/core-reuse-release.json",
+      "byte_length": 677,
+      "sha256": "540c2ea49100afe42247ee419f6ce0c7c6f92511d8cbf371c63969cb9bea8266"
+    }
+  ],
+  "input_predecessors": [
+    {
+      "key": "s1.subslice04.local-contracts",
+      "body_sha256": "5f5ae9a915ec9a43940963ce69f4563a9a85d51e15d111237ff8b5e02a2d5170"
+    },
+    {
+      "key": "s1.api.boundaries",
+      "body_sha256": "f6b230ed8578b6bd9fdb1e4eaca26892df9355a58fc1f5e2e6a157bffabf7310"
+    },
+    {
+      "key": "s1.api.schema-contracts",
+      "body_sha256": "c6ebd6124d89092e859aaa6a6a07c2a6fca5e2cdc82a62254b701b2de60266b2"
+    },
+    {
+      "key": "s1.api.session-contract",
+      "body_sha256": "22b526a2423572f2bbc17f3bfccd2eb0ea8f7fb16f2215bb0904f1cc5c2125bc"
+    },
+    {
+      "key": "s1.api.client-projection",
+      "body_sha256": "089304921b004984de3b15b75af18fea3c7ebf15191f3874e9f668066569d478"
+    },
+    {
+      "key": "s1.api.codegen",
+      "body_sha256": "2ec55afad54a871de673a252b6b7c604a8ecdb648cc1df9c80128d83a3f8e270"
+    },
+    {
+      "key": "s1.core.session-admission",
+      "body_sha256": "2535bba77505ed74e7dc2759dce815c8e9684e68e2f0a10fa75f9813192e7ae1"
+    },
+    {
+      "key": "s1.core.session-execution",
+      "body_sha256": "470ddb1eacfe7294071893968d7de999c90ea98cb0fd48c48e0730ded51d1663"
+    },
+    {
+      "key": "s1.core.persistence",
+      "body_sha256": "0b43f9bd316aca25361f934e63723f2aa6220a3deb97a4447266fbbc5d350762"
+    }
+  ],
+  "public_normative_inputs": [
+    {
+      "path": "input/normative.txt",
+      "byte_length": 28267,
+      "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+      "role": "Intenção normativa: construção e manutenção cumulativas; comparação resultado/recibos e limites de propagação, sobretudo §3."
+    },
+    {
+      "path": "input/ref_principles.txt",
+      "byte_length": 6010,
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+      "role": "Orientação pública dos critérios; não altera a seleção congelada."
+    },
+    {
+      "path": "input/ref_transport.txt",
+      "byte_length": 8478,
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "role": "Enum need, dependências versus navegação, identidades exatas de transporte versus runtime."
+    },
+    {
+      "path": "input/ref_runtime.txt",
+      "byte_length": 10217,
+      "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237",
+      "role": "Binding e evidência de execução distintos de parecer de conteúdo; indisponibilidade e limites de consumo."
+    }
+  ],
+  "criteria": [
+    "GO-A1",
+    "GO-A2",
+    "GO-A3",
+    "GO-A4",
+    "GO-A5",
+    "GO-A6",
+    "GO-A7",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-4",
+    "QS-5",
+    "QS-6",
+    "CC-3",
+    "CC-7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "method": "Integrar os contratos locais API/Core disponibilizados pelos três L1 aceitos, preservando os seis predecessores anteriores e os limites de fonte. Compor admissão/retry, wake/execução local e EventV2/persistência com a API e consequências de mudança pública. Substituir somente a descrição obsoleta de ausência de predecessor e suas lacunas correspondentes; manter normas/exemplos de comparação aceitos. Preservar revisão 2 completa sem copiar diretórios de backups; não alterar L4.",
+  "input_policy": "Novas leituras restritas aos três corpos Core aceitos, reuse-proof e gates/pareceres nomeados. Nenhuma fonte bruta nova, resto do pacote Core, oracle ou resposta reservada. Reúso dos L1/L2 API aceitos e norma pública já fixada.",
+  "mechanical_work": "Conferir nove corpos predecessores em bytes/SHA-256; conferir três identidades Core e decisões originais pela prova de reúso e reconhecimento local; conferir preservação dos dez arquivos da revisão 2, seção normativa/exemplos idênticos e seis arquivos L4 inalterados. Calcular hashes e diff do delta.",
+  "not_claimed": [
+    "PASS da integração L3 revisão 3 antes do mesmo par",
+    "Aceite de Core inteiro ou dos outros artefatos não selecionados",
+    "Execução de produto/geração/testes/Atlas por este produtor",
+    "Recuperação automática pós-crash, ownership distribuído ou efeitos externos exactly-once",
+    "CAS/versão de input/runtime binding/publicação/consumo inventados",
+    "Alteração de L4 nesta revisão"
+  ],
+  "revision": 3,
+  "supersedes": {
+    "path": "revision-2/recipe.json",
+    "byte_length": 6905,
+    "sha256": "a8bb4994c0661cc899e8956b5d633aba3d3739c1160599dac02a679811e5ffab"
+  },
+  "original_producer_request_ref": {
+    "path": "revision-1/request.txt",
+    "byte_length": 1556,
+    "sha256": "8283cac77200261af23caab54e6168c0bc0121d483e7dce5a764d0d3c8c4788b"
+  },
+  "bounded_delta": {
+    "kind": "THREE_ACCEPTED_CORE_L1_INTEGRATION",
+    "body_diff_ref": {
+      "path": "body.diff",
+      "byte_length": 13191,
+      "sha256": "155ee780bbbdcd1b0e3768583300c4265d57189a22ab56dc1cad69473879a13f"
+    },
+    "exact_replacements_ref": {
+      "path": "delta-changes.json",
+      "byte_length": 12027,
+      "sha256": "9072b00472fdccc2fe2585180a0dc2bee7de466908c2feb6320f73513c3ac7ec"
+    },
+    "accepted_comparison_examples_unchanged": true,
+    "public_questions_and_criteria_unchanged": true,
+    "l4_unchanged": true
+  },
+  "previous_accepted_body_ref": {
+    "path": "revision-2/body.md",
+    "byte_length": 9301,
+    "sha256": "c140fb0bf9606079e91576b542ec82b3904583e7433a8fe297c886318649f478"
+  },
+  "previous_content_release_ref": {
+    "path": "output/receipts/l3-release.json",
+    "byte_length": 714,
+    "sha256": "fd44a6a91515bdaf200cf28e4c7ccf9b2e1c2e3d70008e2cf88747ad165f4c97"
+  },
+  "core_reuse_basis": {
+    "proof_ref": {
+      "path": "output/dependencies/core/reuse-proof.json",
+      "byte_length": 9709,
+      "sha256": "94a82702b3dee239b237512c9fbbb19bf6a1e3f21b03da0836a7964abb5cd05a"
+    },
+    "release_ref": {
+      "path": "output/receipts/core-reuse-release.json",
+      "byte_length": 677,
+      "sha256": "540c2ea49100afe42247ee419f6ce0c7c6f92511d8cbf371c63969cb9bea8266"
+    },
+    "judgment_refs": [
+      {
+        "path": "output/judgments/09-core-reuse-j1.md",
+        "byte_length": 2046,
+        "sha256": "9ab91a8048f56a79f8afd02d48f6334953bf6a3c725b7229e8eab516c959fc79"
+      },
+      {
+        "path": "output/judgments/09-core-reuse-j2.md",
+        "byte_length": 2132,
+        "sha256": "b31e375eb2f3f8e8eb56b665f717eba9c073c7d6a2cefca0b64c5ac8308b7878"
+      }
+    ],
+    "scope": "Três L1 de origem aceitos e reconhecidos por reúso exato; integração L3 revisão 3 ainda não julgada."
+  }
+}

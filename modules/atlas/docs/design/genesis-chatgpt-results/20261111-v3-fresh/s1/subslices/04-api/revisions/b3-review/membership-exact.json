@@ -1,0 +1,372 @@
+{
+  "schema": "genesis-s1-04-b3-membership-transport/v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "origin": {
+    "path": "input/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/semantic-disposition.json",
+    "sha256": "34e3b103d37a7259cb73cedb2b17f7e93f03bc18aa1f9a1118e65b1a157eefa7",
+    "byte_length": 680931
+  },
+  "encoding_for_array_hash": "UTF-8 JSON ensure_ascii=false separators=(comma,colon), followed by LF",
+  "domain_count": 24,
+  "member_count": 190,
+  "domains": [
+    {
+      "id": "D01",
+      "member_count": 25,
+      "member_paths_sha256": "fd9ab813c83999b3bce910353cf854885173ab8050e2b378ecd4be60324990ed",
+      "member_paths": [
+        "packages/protocol/src/groups/actions-binding.ts",
+        "packages/protocol/src/groups/actions-common.ts",
+        "packages/protocol/src/groups/actions-job.ts",
+        "packages/protocol/src/groups/actions-operation.ts",
+        "packages/protocol/src/groups/actions-pipeline.ts",
+        "packages/protocol/src/groups/actions-resource.ts",
+        "packages/protocol/src/groups/actions-run.ts",
+        "packages/protocol/src/groups/actions-source.ts",
+        "packages/protocol/src/groups/actions-workflow.ts",
+        "packages/schema/src/actions.ts",
+        "packages/schema/src/actions/command.ts",
+        "packages/schema/src/actions/identity.ts",
+        "packages/schema/src/actions/operation.ts",
+        "packages/schema/src/actions/resource.ts",
+        "packages/schema/src/actions/run.ts",
+        "packages/schema/src/actions/workflow.ts",
+        "packages/server/src/handlers/actions-binding.ts",
+        "packages/server/src/handlers/actions-common.ts",
+        "packages/server/src/handlers/actions-job.ts",
+        "packages/server/src/handlers/actions-operation.ts",
+        "packages/server/src/handlers/actions-pipeline.ts",
+        "packages/server/src/handlers/actions-resource.ts",
+        "packages/server/src/handlers/actions-run.ts",
+        "packages/server/src/handlers/actions-source.ts",
+        "packages/server/src/handlers/actions-workflow.ts"
+      ]
+    },
+    {
+      "id": "D02",
+      "member_count": 16,
+      "member_paths_sha256": "6baad8b06a9dba8b61ba76731650fc37b0ffad177ced813aa3560a450ba457d4",
+      "member_paths": [
+        "packages/protocol/src/groups/agent.ts",
+        "packages/protocol/src/groups/behavior.ts",
+        "packages/protocol/src/groups/command.ts",
+        "packages/protocol/src/groups/skill.ts",
+        "packages/schema/src/agent-file.ts",
+        "packages/schema/src/agent.ts",
+        "packages/schema/src/behavior.ts",
+        "packages/schema/src/command.ts",
+        "packages/schema/src/llm.ts",
+        "packages/schema/src/prompt-context.ts",
+        "packages/schema/src/session-subagent-models.ts",
+        "packages/schema/src/skill.ts",
+        "packages/server/src/handlers/agent.ts",
+        "packages/server/src/handlers/behavior.ts",
+        "packages/server/src/handlers/command.ts",
+        "packages/server/src/handlers/skill.ts"
+      ]
+    },
+    {
+      "id": "D03",
+      "member_count": 7,
+      "member_paths_sha256": "99c61a59b6889a1b1ab1ff7730c567c7b1325c88d738c253fad27138b15831e2",
+      "member_paths": [
+        "packages/protocol/src/groups/permission.ts",
+        "packages/protocol/src/groups/question.ts",
+        "packages/schema/src/permission-saved.ts",
+        "packages/schema/src/permission.ts",
+        "packages/schema/src/question.ts",
+        "packages/server/src/handlers/permission.ts",
+        "packages/server/src/handlers/question.ts"
+      ]
+    },
+    {
+      "id": "D04",
+      "member_count": 4,
+      "member_paths_sha256": "a782012206cc726896a6881862fa109276bd8fb509b14d782a2d359c29107fa9",
+      "member_paths": [
+        "packages/schema/src/revert.ts",
+        "packages/schema/src/session-activity.ts",
+        "packages/schema/src/session-compaction-event.ts",
+        "packages/schema/src/session-todo.ts"
+      ]
+    },
+    {
+      "id": "D05",
+      "member_count": 15,
+      "member_paths_sha256": "8e887a284d6aa4836ee2b04a030d8d06c5cbaeb56eabeb3eb216baf6181f9952",
+      "member_paths": [
+        "packages/protocol/src/groups/location.ts",
+        "packages/protocol/src/groups/project-copy.ts",
+        "packages/protocol/src/groups/project.ts",
+        "packages/schema/src/identifier.ts",
+        "packages/schema/src/project-copy.ts",
+        "packages/schema/src/project-directories.ts",
+        "packages/schema/src/project-id.ts",
+        "packages/schema/src/project.ts",
+        "packages/schema/src/workspace-event.ts",
+        "packages/schema/src/workspace-id.ts",
+        "packages/schema/src/workspace.ts",
+        "packages/schema/src/worktree-event.ts",
+        "packages/server/src/handlers/location.ts",
+        "packages/server/src/handlers/project-copy.ts",
+        "packages/server/src/handlers/project.ts"
+      ]
+    },
+    {
+      "id": "D06",
+      "member_count": 13,
+      "member_paths_sha256": "4fae792349617fa93af86851a197e087150f4d45428d1bb6c01352313955f905",
+      "member_paths": [
+        "packages/protocol/src/groups/pull-request.ts",
+        "packages/protocol/src/groups/reference.ts",
+        "packages/protocol/src/groups/vcs.ts",
+        "packages/schema/src/file-diff.ts",
+        "packages/schema/src/filesystem-watcher.ts",
+        "packages/schema/src/filesystem.ts",
+        "packages/schema/src/pull-request.ts",
+        "packages/schema/src/reference.ts",
+        "packages/schema/src/vcs-event.ts",
+        "packages/schema/src/vcs.ts",
+        "packages/server/src/handlers/pull-request.ts",
+        "packages/server/src/handlers/reference.ts",
+        "packages/server/src/handlers/vcs.ts"
+      ]
+    },
+    {
+      "id": "D07",
+      "member_count": 2,
+      "member_paths_sha256": "95addb92f303e32a8325de8a8a80e7b8b8fe5f12c1b4a93acd30c6d34c5b353c",
+      "member_paths": [
+        "packages/schema/src/pty-ticket.ts",
+        "packages/schema/src/pty.ts"
+      ]
+    },
+    {
+      "id": "D08",
+      "member_count": 11,
+      "member_paths_sha256": "9d25c9bc66263d0349620490c236fe47780e2232bb491f1211301bb546f69054",
+      "member_paths": [
+        "packages/protocol/src/groups/credential.ts",
+        "packages/protocol/src/groups/integration.ts",
+        "packages/schema/src/catalog.ts",
+        "packages/schema/src/connection.ts",
+        "packages/schema/src/credential.ts",
+        "packages/schema/src/integration-id.ts",
+        "packages/schema/src/integration.ts",
+        "packages/schema/src/models-dev.ts",
+        "packages/schema/src/provider.ts",
+        "packages/server/src/handlers/credential.ts",
+        "packages/server/src/handlers/integration.ts"
+      ]
+    },
+    {
+      "id": "D09",
+      "member_count": 12,
+      "member_paths_sha256": "9d6aec36884b6db810122f56e752baeb07735a0059414c4a80b699a5aa5a21d4",
+      "member_paths": [
+        "packages/protocol/src/groups/formatter.ts",
+        "packages/protocol/src/groups/lsp.ts",
+        "packages/protocol/src/groups/mcp.ts",
+        "packages/schema/src/config-mcp.ts",
+        "packages/schema/src/formatter.ts",
+        "packages/schema/src/lsp-event.ts",
+        "packages/schema/src/lsp.ts",
+        "packages/schema/src/mcp-event.ts",
+        "packages/schema/src/mcp.ts",
+        "packages/server/src/handlers/formatter.ts",
+        "packages/server/src/handlers/lsp.ts",
+        "packages/server/src/handlers/mcp.ts"
+      ]
+    },
+    {
+      "id": "D10",
+      "member_count": 4,
+      "member_paths_sha256": "bd30c368e5418cccfb7568da9024120c7ac1cefaffa9b3ac79444e904048987a",
+      "member_paths": [
+        "packages/protocol/src/groups/config.ts",
+        "packages/protocol/src/groups/trust.ts",
+        "packages/server/src/handlers/config.ts",
+        "packages/server/src/handlers/trust.ts"
+      ]
+    },
+    {
+      "id": "D11",
+      "member_count": 14,
+      "member_paths_sha256": "fc09dc6398c2c0d8fce3b8f5cf04938814671060a4a292e750fe9098cd2b675d",
+      "member_paths": [
+        "packages/protocol/src/groups/capability-connections.ts",
+        "packages/protocol/src/groups/capability-operator.ts",
+        "packages/protocol/src/groups/capability-schedules.ts",
+        "packages/schema/src/capability-artifact-management.ts",
+        "packages/schema/src/capability-management.ts",
+        "packages/schema/src/capability-schedule-management.ts",
+        "packages/schema/src/capability-setup.ts",
+        "packages/schema/src/capability.ts",
+        "packages/server/src/capability-content-ticket.ts",
+        "packages/server/src/capability-verification.ts",
+        "packages/server/src/handlers/capability-connections.ts",
+        "packages/server/src/handlers/capability-operator.ts",
+        "packages/server/src/handlers/capability-schedules.ts",
+        "packages/server/src/operator.ts"
+      ]
+    },
+    {
+      "id": "D12",
+      "member_count": 6,
+      "member_paths_sha256": "ab369af6fe88498ab7f4add6d6f8ccc764726f582a03d942f08baec8d968391e",
+      "member_paths": [
+        "packages/protocol/src/groups/atlas.ts",
+        "packages/schema/src/atlas-knowledge.ts",
+        "packages/schema/src/atlas-review.ts",
+        "packages/schema/src/atlas-screen.ts",
+        "packages/schema/src/atlas-setup.ts",
+        "packages/server/src/handlers/atlas.ts"
+      ]
+    },
+    {
+      "id": "D13",
+      "member_count": 4,
+      "member_paths_sha256": "abbe65594ddb1580c6ae9f9ff91e955001fea901e7bfe686c0973cf2664fbd24",
+      "member_paths": [
+        "packages/protocol/src/groups/board.ts",
+        "packages/schema/src/board-queue.ts",
+        "packages/schema/src/board.ts",
+        "packages/server/src/handlers/board.ts"
+      ]
+    },
+    {
+      "id": "D14",
+      "member_count": 16,
+      "member_paths_sha256": "244647f26dc08de2d4613fede17e2edbbf3bb4c87d59254e277bd98fb6e1b493",
+      "member_paths": [
+        "packages/protocol/src/groups/relay-document.ts",
+        "packages/protocol/src/groups/relay-hook.ts",
+        "packages/protocol/src/groups/relay-run.ts",
+        "packages/schema/src/hook-glob.ts",
+        "packages/schema/src/hook-match.ts",
+        "packages/schema/src/relay-arm.ts",
+        "packages/schema/src/relay-authoring.ts",
+        "packages/schema/src/relay-external.ts",
+        "packages/schema/src/relay-hook.ts",
+        "packages/schema/src/relay-ledger.ts",
+        "packages/schema/src/relay-run.ts",
+        "packages/schema/src/relay-sprint.ts",
+        "packages/server/src/handlers/relay-document.ts",
+        "packages/server/src/handlers/relay-hook.ts",
+        "packages/server/src/handlers/relay-run.ts",
+        "packages/server/src/relay-documents.ts"
+      ]
+    },
+    {
+      "id": "D15",
+      "member_count": 4,
+      "member_paths_sha256": "59d9875187ecfe8443d499648af191838309f1da84ae7ad38922e7f9c0183f5c",
+      "member_paths": [
+        "packages/schema/src/config-maestro.ts",
+        "packages/schema/src/maestro-context.ts",
+        "packages/schema/src/maestro-event.ts",
+        "packages/schema/src/upstream-attribution.ts"
+      ]
+    },
+    {
+      "id": "D16",
+      "member_count": 3,
+      "member_paths_sha256": "4c82c7a769edcd2ff4fa1331bebc5863bff16568c858f5580820ddc666088475",
+      "member_paths": [
+        "packages/protocol/src/groups/meeting.ts",
+        "packages/schema/src/meeting.ts",
+        "packages/server/src/handlers/meeting.ts"
+      ]
+    },
+    {
+      "id": "D17",
+      "member_count": 3,
+      "member_paths_sha256": "a3a3c2ff8bfc0b0cad09643fef1d57b0fece40ab64aa85c179e513a3e2cbdb68",
+      "member_paths": [
+        "packages/protocol/src/groups/schedule.ts",
+        "packages/schema/src/scheduled-task.ts",
+        "packages/server/src/handlers/schedule.ts"
+      ]
+    },
+    {
+      "id": "D18",
+      "member_count": 6,
+      "member_paths_sha256": "74cb5eecbfec5727215a46edc0b4c89281d57453d284c590a43e446ad11ef344",
+      "member_paths": [
+        "packages/protocol/src/groups/lean.ts",
+        "packages/schema/src/lean-coverage.ts",
+        "packages/schema/src/lean-dashboard.ts",
+        "packages/schema/src/lean-engine.ts",
+        "packages/schema/src/lean-metrics.ts",
+        "packages/server/src/handlers/lean.ts"
+      ]
+    },
+    {
+      "id": "D19",
+      "member_count": 8,
+      "member_paths_sha256": "3161b993658844fe9d9a9d20bc811992ad0f3a624af3eb3db7bab7a289086ec0",
+      "member_paths": [
+        "packages/protocol/src/groups/rag-studio.ts",
+        "packages/protocol/src/groups/research-artifact.ts",
+        "packages/schema/src/rag-studio.ts",
+        "packages/schema/src/research-event.ts",
+        "packages/schema/src/research.ts",
+        "packages/server/src/handlers/rag-studio-session.ts",
+        "packages/server/src/handlers/rag-studio.ts",
+        "packages/server/src/handlers/research-artifact.ts"
+      ]
+    },
+    {
+      "id": "D20",
+      "member_count": 3,
+      "member_paths_sha256": "f090893b9fbde8d2063aad3657e3b33592dda100284ad7f293c2c9cf2af46138",
+      "member_paths": [
+        "packages/protocol/src/groups/guardrail.ts",
+        "packages/schema/src/guardrail.ts",
+        "packages/server/src/handlers/guardrail.ts"
+      ]
+    },
+    {
+      "id": "D21",
+      "member_count": 10,
+      "member_paths_sha256": "af17b9c91b519277a4b151a5be84014b1f8e43acd704d792038460269a19836d",
+      "member_paths": [
+        "packages/protocol/src/groups/health.ts",
+        "packages/protocol/src/groups/installation.ts",
+        "packages/schema/src/ide-event.ts",
+        "packages/schema/src/index.ts",
+        "packages/schema/src/installation-event.ts",
+        "packages/schema/src/plugin.ts",
+        "packages/schema/src/server-event.ts",
+        "packages/schema/src/tui-event.ts",
+        "packages/server/src/handlers/health.ts",
+        "packages/server/src/handlers/installation.ts"
+      ]
+    },
+    {
+      "id": "D22",
+      "member_count": 2,
+      "member_paths_sha256": "33992f0eee44392b274e2770f56ec7b5ff59bcf3812e0734239c3d4326eded64",
+      "member_paths": [
+        "packages/server/src/cors.ts",
+        "packages/server/src/web-ui.ts"
+      ]
+    },
+    {
+      "id": "D23",
+      "member_count": 1,
+      "member_paths_sha256": "9fce7374131d2220504b833d9eb28b51e234289914d4e650fee0aa9e32061c7a",
+      "member_paths": [
+        "packages/schema/src/elf.ts"
+      ]
+    },
+    {
+      "id": "D24",
+      "member_count": 1,
+      "member_paths_sha256": "29d8ac15a744965f75c407b380b2ca006b3934aedee2095e56e23effc5ba444b",
+      "member_paths": [
+        "packages/sdk-next/src/tool.ts"
+      ]
+    }
+  ]
+}

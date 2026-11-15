@@ -1,0 +1,328 @@
+{
+  "schema": "genesis-s1-04-local-delta-manifest/v1",
+  "key": "s1.subslice04.integrated-impact",
+  "from_revision": 2,
+  "to_revision": 3,
+  "previous_content_release_ref": {
+    "path": "output/receipts/l3-release.json",
+    "byte_length": 714,
+    "sha256": "fd44a6a91515bdaf200cf28e4c7ccf9b2e1c2e3d70008e2cf88747ad165f4c97"
+  },
+  "new_core_reuse_release_ref": {
+    "path": "output/receipts/core-reuse-release.json",
+    "byte_length": 677,
+    "sha256": "540c2ea49100afe42247ee419f6ce0c7c6f92511d8cbf371c63969cb9bea8266"
+  },
+  "new_core_original_proof_ref": {
+    "path": "output/dependencies/core/reuse-proof.json",
+    "byte_length": 9709,
+    "sha256": "94a82702b3dee239b237512c9fbbb19bf6a1e3f21b03da0836a7964abb5cd05a"
+  },
+  "before": {
+    "body.diff": {
+      "path": "revision-2/body.diff",
+      "byte_length": 4523,
+      "sha256": "88ae44495b4c320e35908168c297f53989c648599095a6a897c4d8378bfb4d67"
+    },
+    "body.md": {
+      "path": "revision-2/body.md",
+      "byte_length": 9301,
+      "sha256": "c140fb0bf9606079e91576b542ec82b3904583e7433a8fe297c886318649f478"
+    },
+    "delta-insertions.json": {
+      "path": "revision-2/delta-insertions.json",
+      "byte_length": 2647,
+      "sha256": "345134b8b15aae1194537e1df4b66de434e925e6cdfdcd220876900b4bcc50bd"
+    },
+    "delta-manifest.json": {
+      "path": "revision-2/delta-manifest.json",
+      "byte_length": 3949,
+      "sha256": "aa0caa064b52326659d18caa4913933e731f8bd786d63c4accffa59744daad37"
+    },
+    "inserted-excerpts.md": {
+      "path": "revision-2/inserted-excerpts.md",
+      "byte_length": 2302,
+      "sha256": "473551f4fa67d0fc488ea487f9b05869075e74a6d00efa13323ba1e44bb8af15"
+    },
+    "manifest.json": {
+      "path": "revision-2/manifest.json",
+      "byte_length": 1907,
+      "sha256": "8cd8c7e4dcb91291f6446d9f9c908e485da46d1d645293c048b86c953ad1862d"
+    },
+    "metadata.json": {
+      "path": "revision-2/metadata.json",
+      "byte_length": 17852,
+      "sha256": "fee948a5fd4b43af90c341b1e4c3e5e71b1c37009f6426bc5145a092eecd34e0"
+    },
+    "recipe.json": {
+      "path": "revision-2/recipe.json",
+      "byte_length": 6905,
+      "sha256": "a8bb4994c0661cc899e8956b5d633aba3d3739c1160599dac02a679811e5ffab"
+    },
+    "request.txt": {
+      "path": "revision-2/request.txt",
+      "byte_length": 1261,
+      "sha256": "14c7ac12b6c4443e90b2c71035599674d95c31978bc706f8575296857101853b"
+    },
+    "response.md": {
+      "path": "revision-2/response.md",
+      "byte_length": 13826,
+      "sha256": "95d61af45535c7577eaefc55ca117a54bc26b698681288d7e1b1b805a1502a5d"
+    }
+  },
+  "after": {
+    "body.md": {
+      "path": "body.md",
+      "byte_length": 13657,
+      "sha256": "ba532f772f8f2f08be5938caf3ba9856c6f185e79d18fb0ed9d016b9d176f0bd"
+    },
+    "metadata.json": {
+      "path": "metadata.json",
+      "byte_length": 28856,
+      "sha256": "6b50cf53a319ee88071f1901e318a192233346ca8a24e624b08cf8479491e84d"
+    },
+    "recipe.json": {
+      "path": "recipe.json",
+      "byte_length": 7543,
+      "sha256": "3949c84a8606a260a8a50e9be6dfebfb1bc42109461cd43a1db0e066a325b41f"
+    },
+    "request.txt": {
+      "path": "request.txt",
+      "byte_length": 2473,
+      "sha256": "9ac57546350080a32f789d6ba0b8247dbf045453985b278611b56016fee0ad7d"
+    },
+    "response.md": {
+      "path": "response.md",
+      "byte_length": 16143,
+      "sha256": "f24c9f250d0c88b4d498421c6b9eb6c8b32264c325e80c1ebd4af20e023ccd32"
+    },
+    "body.diff": {
+      "path": "body.diff",
+      "byte_length": 13191,
+      "sha256": "155ee780bbbdcd1b0e3768583300c4265d57189a22ab56dc1cad69473879a13f"
+    },
+    "delta-changes.json": {
+      "path": "delta-changes.json",
+      "byte_length": 12027,
+      "sha256": "9072b00472fdccc2fe2585180a0dc2bee7de466908c2feb6320f73513c3ac7ec"
+    },
+    "updated-excerpts.md": {
+      "path": "updated-excerpts.md",
+      "byte_length": 5607,
+      "sha256": "2dafbe39eec0bdfac9ee920db054b9da4bc614ef90c7b0c9f13d37a9724ed2f6"
+    },
+    "literal-delta.md": {
+      "path": "literal-delta.md",
+      "byte_length": 13530,
+      "sha256": "1dad09637786c0f7cfaa5b189a2a10414b6f4e12f02f24f218917d33361f7acd"
+    },
+    "manifest.json": {
+      "path": "manifest.json",
+      "byte_length": 2425,
+      "sha256": "933df763daf149afc036dffc92177fab47b437abc833e2638c6c1e0900cdfd54"
+    }
+  },
+  "body_change": {
+    "replacement_blocks": 6,
+    "exact_changes_ref": {
+      "path": "delta-changes.json",
+      "byte_length": 12027,
+      "sha256": "9072b00472fdccc2fe2585180a0dc2bee7de466908c2feb6320f73513c3ac7ec"
+    },
+    "diff_ref": {
+      "path": "body.diff",
+      "byte_length": 13191,
+      "sha256": "155ee780bbbdcd1b0e3768583300c4265d57189a22ab56dc1cad69473879a13f"
+    },
+    "accepted_comparison_examples_unchanged": true,
+    "entire_normative_propagation_section_unchanged": true
+  },
+  "dependency_change": {
+    "retained": 6,
+    "added": [
+      {
+        "key": "s1.core.session-admission",
+        "body_sha256": "2535bba77505ed74e7dc2759dce815c8e9684e68e2f0a10fa75f9813192e7ae1",
+        "byte_length": 4261,
+        "accepted_transport_path": "dependencies/core/bodies/session-admission.md",
+        "local_verified_path": "output/dependencies/core/bodies/session-admission.md",
+        "acceptance_ref": {
+          "path": "output/receipts/core-reuse-release.json",
+          "byte_length": 677,
+          "sha256": "540c2ea49100afe42247ee419f6ce0c7c6f92511d8cbf371c63969cb9bea8266"
+        },
+        "original_acceptance_proof_ref": {
+          "path": "output/dependencies/core/reuse-proof.json",
+          "byte_length": 9709,
+          "sha256": "94a82702b3dee239b237512c9fbbb19bf6a1e3f21b03da0836a7964abb5cd05a"
+        },
+        "local_reuse_judgment_refs": [
+          {
+            "path": "output/judgments/09-core-reuse-j1.md",
+            "byte_length": 2046,
+            "sha256": "9ab91a8048f56a79f8afd02d48f6334953bf6a3c725b7229e8eab516c959fc79"
+          },
+          {
+            "path": "output/judgments/09-core-reuse-j2.md",
+            "byte_length": 2132,
+            "sha256": "b31e375eb2f3f8e8eb56b665f717eba9c073c7d6a2cefca0b64c5ac8308b7878"
+          }
+        ],
+        "origin": {
+          "source_owner": "S1-01",
+          "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "observed_branch_head": "9fd024a34e76d2e9328e1f793ef1f69fbf606e51",
+          "payload_revision": "a2a5de03d7b1034373eb877d8f03c4cecc772dde",
+          "original_body_path": "bodies/session-admission.md",
+          "original_review_refs": [
+            {
+              "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j1.json",
+              "sha256": "a32b7bec928315cdd77f7fdb32909f5ee5d316eb576816a1cce9985b632d8ff7"
+            },
+            {
+              "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j2.json",
+              "sha256": "fd2dd0e2d76379e7d4e128b1fa1e77ce81cf95dd8bc5ef18051475f641187349"
+            }
+          ]
+        },
+        "used_for": "Identidade de criação, admissão antes de wake, resume:false, equivalência/conflito de retry, contexto/projeção e promoção do inbox."
+      },
+      {
+        "key": "s1.core.session-execution",
+        "body_sha256": "470ddb1eacfe7294071893968d7de999c90ea98cb0fd48c48e0730ded51d1663",
+        "byte_length": 4574,
+        "accepted_transport_path": "dependencies/core/bodies/session-execution.md",
+        "local_verified_path": "output/dependencies/core/bodies/session-execution.md",
+        "acceptance_ref": {
+          "path": "output/receipts/core-reuse-release.json",
+          "byte_length": 677,
+          "sha256": "540c2ea49100afe42247ee419f6ce0c7c6f92511d8cbf371c63969cb9bea8266"
+        },
+        "original_acceptance_proof_ref": {
+          "path": "output/dependencies/core/reuse-proof.json",
+          "byte_length": 9709,
+          "sha256": "94a82702b3dee239b237512c9fbbb19bf6a1e3f21b03da0836a7964abb5cd05a"
+        },
+        "local_reuse_judgment_refs": [
+          {
+            "path": "output/judgments/09-core-reuse-j1.md",
+            "byte_length": 2046,
+            "sha256": "9ab91a8048f56a79f8afd02d48f6334953bf6a3c725b7229e8eab516c959fc79"
+          },
+          {
+            "path": "output/judgments/09-core-reuse-j2.md",
+            "byte_length": 2132,
+            "sha256": "b31e375eb2f3f8e8eb56b665f717eba9c073c7d6a2cefca0b64c5ac8308b7878"
+          }
+        ],
+        "origin": {
+          "source_owner": "S1-01",
+          "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "observed_branch_head": "9fd024a34e76d2e9328e1f793ef1f69fbf606e51",
+          "payload_revision": "a2a5de03d7b1034373eb877d8f03c4cecc772dde",
+          "original_body_path": "bodies/session-execution.md",
+          "original_review_refs": [
+            {
+              "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j1.json",
+              "sha256": "a32b7bec928315cdd77f7fdb32909f5ee5d316eb576816a1cce9985b632d8ff7"
+            },
+            {
+              "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j2.json",
+              "sha256": "fd2dd0e2d76379e7d4e128b1fa1e77ce81cf95dd8bc5ef18051475f641187349"
+            }
+          ]
+        },
+        "used_for": "Coordenação por Session em memória, run/wake, Location, promoção e provider/host stream, interrupção e limites de ownership/retry."
+      },
+      {
+        "key": "s1.core.persistence",
+        "body_sha256": "0b43f9bd316aca25361f934e63723f2aa6220a3deb97a4447266fbbc5d350762",
+        "byte_length": 5290,
+        "accepted_transport_path": "dependencies/core/bodies/persistence.md",
+        "local_verified_path": "output/dependencies/core/bodies/persistence.md",
+        "acceptance_ref": {
+          "path": "output/receipts/core-reuse-release.json",
+          "byte_length": 677,
+          "sha256": "540c2ea49100afe42247ee419f6ce0c7c6f92511d8cbf371c63969cb9bea8266"
+        },
+        "original_acceptance_proof_ref": {
+          "path": "output/dependencies/core/reuse-proof.json",
+          "byte_length": 9709,
+          "sha256": "94a82702b3dee239b237512c9fbbb19bf6a1e3f21b03da0836a7964abb5cd05a"
+        },
+        "local_reuse_judgment_refs": [
+          {
+            "path": "output/judgments/09-core-reuse-j1.md",
+            "byte_length": 2046,
+            "sha256": "9ab91a8048f56a79f8afd02d48f6334953bf6a3c725b7229e8eab516c959fc79"
+          },
+          {
+            "path": "output/judgments/09-core-reuse-j2.md",
+            "byte_length": 2132,
+            "sha256": "b31e375eb2f3f8e8eb56b665f717eba9c073c7d6a2cefca0b64c5ac8308b7878"
+          }
+        ],
+        "origin": {
+          "source_owner": "S1-01",
+          "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "observed_branch_head": "9fd024a34e76d2e9328e1f793ef1f69fbf606e51",
+          "payload_revision": "a2a5de03d7b1034373eb877d8f03c4cecc772dde",
+          "original_body_path": "bodies/persistence.md",
+          "original_review_refs": [
+            {
+              "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j1.json",
+              "sha256": "a32b7bec928315cdd77f7fdb32909f5ee5d316eb576816a1cce9985b632d8ff7"
+            },
+            {
+              "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j2.json",
+              "sha256": "fd2dd0e2d76379e7d4e128b1fa1e77ce81cf95dd8bc5ef18051475f641187349"
+            }
+          ]
+        },
+        "used_for": "Transação durável/projectors, persist:false, subscrição com releitura de eventos, replay owner e limites de evolução de dados/seals/migração."
+      }
+    ],
+    "total": 9
+  },
+  "invariants": {
+    "criteria_unchanged": true,
+    "public_contract_and_questions_unchanged": true,
+    "prior_six_predecessors_unchanged": true,
+    "other_inherited_gaps_unchanged": true,
+    "retired_claims_not_promoted": true,
+    "new_raw_product_source_reads": 0,
+    "product_execution_by_producer": false,
+    "l4_unchanged": true
+  },
+  "l4_unchanged_files": {
+    "body.md": {
+      "byte_length": 8942,
+      "sha256": "6836ed1abd690c45f999d32dbcbb6bb0451fda5ed77e6985ad601ae5a765705e"
+    },
+    "metadata.json": {
+      "byte_length": 14730,
+      "sha256": "e6213b5007cd265a55a00178a4319ceec56f9c9f27770ced5e55bf84e45885b3"
+    },
+    "recipe.json": {
+      "byte_length": 4579,
+      "sha256": "d32ee8ebc7ea8e704c1d33f5414549c35c63f11a0a06a46fdd7de19ec8498b1f"
+    },
+    "request.txt": {
+      "byte_length": 1822,
+      "sha256": "f0d6f5e8f1f7c4fe3fe5fef442dfc084257200d83c4db2f7e7c72c283b4408ac"
+    },
+    "response.md": {
+      "byte_length": 2340,
+      "sha256": "3d7e9e73e86b73989e8d85e098222f68382eea74cb6b716119e309b43ec089b5"
+    },
+    "manifest.json": {
+      "byte_length": 1438,
+      "sha256": "9e0fdb8322f3308ded74984157d09822cfb2a7f63b1639dc251d04c26922b4d8"
+    }
+  },
+  "backup": {
+    "preserved_regular_files": 10,
+    "directories_copied": 0
+  },
+  "status": "UNJUDGED_REVISION_3"
+}

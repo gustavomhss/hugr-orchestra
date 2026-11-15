@@ -1,0 +1,138 @@
+{
+  "schema": "s1-04-verified-git-handoff/v1",
+  "created_utc": "2026-11-15T00:02:44.397460+00:00",
+  "status": "CHECKOUT_AND_22_MEMBERS_READY_GUARD_CAPTURE_HAS_ONE_UNAVAILABLE_BINARY",
+  "checkout": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/verified-git-candidate",
+  "checkout_identity": "Verified exact Git objects, complete candidate index, explicit shallow history and sparse working tree; not a full clone",
+  "candidate": "8835faf6329cc3d5f5de1097872882d57472b793",
+  "origin_dev": "5e0807b5ff953508f792b8a965883985b05a7066",
+  "merge_base": "7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249",
+  "complete_index_paths": 15079,
+  "sparse_materialized_paths": 617,
+  "skip_worktree_paths": 14462,
+  "all_materialized_bytes_match": true,
+  "clean_sparse_status": true,
+  "shallow_boundaries": [
+    "00e439cbb68fb9a6129b9192f51899ef6083fa92",
+    "33de5a93298e6dc6bfcd02d268c4d7117a1296b2",
+    "3e76da709795c00ebc5a92acfc2475728cb20324",
+    "45e3f41c395b675f5864fb1515ccb8b4f7fe6aff",
+    "7597712a686da4d9c93f984a40dc6018843efa94",
+    "8ec5813034909a3efaf53ca083b95beb45bef076",
+    "e592affe9e900ee181b292d0c93817863d715d58",
+    "f927028fe5817394a08e5511af2273fcc626da48"
+  ],
+  "shallow_file_sha256": "8d3c55b9071803fcd8b4191aee6bfee84448c9cb7a48ee8372dd81701c1a21e6",
+  "sparse_patterns_sha256": "38eba47ab1e024df4c9e3e9094c9d9c2c54b443f075168bc40824a46535f9533",
+  "git_objects_imported": {
+    "commit": 1509,
+    "tree": 2333,
+    "blob": 1842
+  },
+  "original_input_plan_files_matching_candidate": 306,
+  "original_members_observer": {
+    "runtime_candidate": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+    "exit_code": 0,
+    "counts": {
+      "present": 22
+    },
+    "seams_used": false
+  },
+  "large_source": {
+    "git_blob_sha": "fca4633666a639d550065312a13e48c6ce221d12",
+    "bytes": 462732,
+    "sha256": "2763d389d2694a6737719865cbabbbdfee937d81a86497b783c246cdaf76ef0f"
+  },
+  "runtime_limits": {
+    "readNativeFile_default_bytes": 8388608,
+    "prepare_source_refs_explicit_bound_bytes": 256000,
+    "note": "The 256000-byte refusal is a source_refs bound, not the limit on the whole native package JSON."
+  },
+  "guard_preparation": {
+    "incremental_blobs_verified": 1152,
+    "incremental_verified_bytes": 33762749,
+    "incremental_connector_attempts": 1155,
+    "required_blob_union": 1332,
+    "available": 1331,
+    "missing": [
+      {
+        "sha": "d83941a9d836a23e466ca09ecba1f21d423094cb",
+        "size": 1339105,
+        "occurrences": [
+          {
+            "side": "head",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/evidence/source-captures.zip",
+            "mode": "100644"
+          }
+        ]
+      }
+    ],
+    "missing_tool_results": [
+      "github_fetch_file encoding=base64: correct metadata SHA but empty content for 1,339,105-byte ZIP; not accepted",
+      "github_fetch_blob: UnicodeDecodeError for binary ZIP; not accepted",
+      "github_fetch GET /git/blobs/{sha}: HTTP 400, GitHub Fetch only accepts UTF-8 text; not accepted"
+    ],
+    "original_guard_executed_on_verified_checkout": false,
+    "awaits": "Final payload overlay from parent. One exact historical binary object remains unavailable through exposed connector routes; no replacement accepted."
+  },
+  "native_prepare_executed": false,
+  "native_publish_executed": false,
+  "policy_created": false,
+  "binding_created": false,
+  "product_tests_executed": false,
+  "remote_mutations": false,
+  "remote_git_transport": false,
+  "historical_receipts_preserved": true,
+  "retained_runtime_cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-r3/modules/atlas",
+  "bun": "/workspace/scratch/8833f71e3e94/s1-04-94f1e157-8c44-4e6e-a4af-7690a8845ecf/runtime-tools/node_modules/.bin/bun",
+  "next_prepare_argv": [
+    "/workspace/scratch/8833f71e3e94/s1-04-94f1e157-8c44-4e6e-a4af-7690a8845ecf/runtime-tools/node_modules/.bin/bun",
+    "scripts/genesis-native.ts",
+    "prepare",
+    "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/verified-git-candidate",
+    "<final-package-relative-path>",
+    "<new-candidate-file>"
+  ],
+  "evidence": [
+    {
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/verified-checkout.json",
+      "bytes": 144556,
+      "sha256": "6478924f0e226e72b732acc95f10e03a69cf0aa3ff73dc5c01821c65a0b86ecf"
+    },
+    {
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/minimum-blob-proof.json",
+      "bytes": 1134303,
+      "sha256": "e205716165494e0cc333e19f33ae86c885e429b53a1c8e4f976c5a49b76bea16"
+    },
+    {
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/guard-blob-proof.json",
+      "bytes": 953033,
+      "sha256": "76d525c0810ee7a057fb43703f24b13b970ad61df62998b30d9d0cdc2c10515c"
+    },
+    {
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/probes/members-verified-checkout.receipt.json",
+      "bytes": 1802,
+      "sha256": "e5f5d03fd4b7d030f7bd058cd0af0af49ac0721cc4e1596aa0197d800a821754"
+    },
+    {
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/probes/members-verified-checkout.stdout.txt",
+      "bytes": 4807,
+      "sha256": "13c80b0755f7a9c4896e089d82216950b0ac2e0d23b2568660464a7c1cf2742e"
+    },
+    {
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/merge-base.receipt.json",
+      "bytes": 811,
+      "sha256": "3f4c0ab4a3311c73bbd50cfe130305caa62d2d63a25547a2dc0afba4530ee3cd"
+    },
+    {
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/guard-objects-readback.receipt.json",
+      "bytes": 435,
+      "sha256": "67832998fc65b6a01effae84e11a782ae22069481f4ec185007bec048a4267ba"
+    },
+    {
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/guard-objects-readback.stdout.txt",
+      "bytes": 68226,
+      "sha256": "47e8a71bdd9ad613cb2e346cd56d42912579a383ef2e6e930966111b648041b3"
+    }
+  ]
+}

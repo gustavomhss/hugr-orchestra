@@ -1,0 +1,122 @@
+{
+  "schema": "genesis-s1-04-b3-dossier-manifest/v2",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "scope": "B3 L1 purpose, observable contract and local ownership/delegation",
+  "files": [
+    {
+      "path": "b3/v2/dossier-D01-D06.md",
+      "byte_length": 31892,
+      "sha256": "b31b058452a3f0162589eb543f8163a31c3ad7646268d1fde832e81062b0ae5a",
+      "domain_ids": [
+        "D01",
+        "D02",
+        "D03",
+        "D04",
+        "D05",
+        "D06"
+      ],
+      "member_count": 80,
+      "exact_local_claim_table_count": 6
+    },
+    {
+      "path": "b3/v2/dossier-D07-D12.md",
+      "byte_length": 34510,
+      "sha256": "68ce7d7715261164b4c112982e3b7ff9e7e9219634138840878371257c47ed40",
+      "domain_ids": [
+        "D07",
+        "D08",
+        "D09",
+        "D10",
+        "D11",
+        "D12"
+      ],
+      "member_count": 49,
+      "exact_local_claim_table_count": 6
+    },
+    {
+      "path": "b3/v2/dossier-D13-D18.md",
+      "byte_length": 31716,
+      "sha256": "810cf8383f3370f11d6b03172184c19a30aaf459d2ad17de32910a3a59a8ac83",
+      "domain_ids": [
+        "D13",
+        "D14",
+        "D15",
+        "D16",
+        "D17",
+        "D18"
+      ],
+      "member_count": 36,
+      "exact_local_claim_table_count": 6
+    },
+    {
+      "path": "b3/v2/dossier-D19-D24.md",
+      "byte_length": 23269,
+      "sha256": "92cca9bd11bc19a86b8fee963053cd927db86a170eb4a420d9bb52fdf213f209",
+      "domain_ids": [
+        "D19",
+        "D20",
+        "D21",
+        "D22",
+        "D23",
+        "D24"
+      ],
+      "member_count": 25,
+      "exact_local_claim_table_count": 6
+    }
+  ],
+  "preserved_v1_files": [
+    {
+      "path": "b3/v1/dossier-D01-D06.md",
+      "byte_length": 20209,
+      "sha256": "1cb46330d1e609d3d4787a63222aa755cb34006e9d0c4a989b2c98df53d8784a"
+    },
+    {
+      "path": "b3/v1/dossier-D07-D12.md",
+      "byte_length": 27029,
+      "sha256": "6acdb00cc472af94bbc73dcfdc762b36d5665fae281728f5021235b13db3d606"
+    },
+    {
+      "path": "b3/v1/dossier-D13-D18.md",
+      "byte_length": 25540,
+      "sha256": "9c3e810e8156c4c64e2ac6c12caaec9596a27c0bd4e7eec6007c43af0e279135"
+    },
+    {
+      "path": "b3/v1/dossier-D19-D24.md",
+      "byte_length": 18988,
+      "sha256": "2bb7b4fc72607936825f9afd1b40d7d9c3c30a9f77951b4a996fcc5d66691954"
+    }
+  ],
+  "local_claim_tables_origin": {
+    "path": "input/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/review-domain-disposition.md",
+    "byte_length": 65726,
+    "sha256": "95b17106dc5c26bb6d39c8d2d80b48fca8f75d35fe4f5f8ec3f232c7d71411c3"
+  },
+  "domain_count": 24,
+  "member_count": 190,
+  "semantic_acceptance": "UNJUDGED_BY_THIS_PRODUCER",
+  "transport_gap_status": "Seven material excerpt gaps closed only with principal-authorized baseline source captures; no claim rewritten. Further semantic sufficiency belongs to the same J1/J2 pair.",
+  "size_disposition": "The principal explicitly made 18000 bytes advisory and requested all 190 local claims verbatim; no truncation is used to meet a size quota.",
+  "support_files": [
+    {
+      "path": "b3/domains-exact.json",
+      "byte_length": 54390,
+      "sha256": "b8cb3d97074b0f1f206d8ec9cc425579a65e76dd61eed86711f2f64db3cb0a46"
+    },
+    {
+      "path": "b3/membership-exact.json",
+      "byte_length": 14533,
+      "sha256": "791154a9f043b43a2ab6a08a415c1af7d45a80746f34b2a67d4c55582af9f4ff"
+    },
+    {
+      "path": "b3/selected-evidence.json",
+      "byte_length": 203006,
+      "sha256": "9fa72ec5e4445fdb17663d080f7957b31dc0229dc407dd0341b672ee075ce598"
+    },
+    {
+      "path": "b3/v2/verification.json",
+      "byte_length": 7986,
+      "sha256": "3fa766977c73030c9e28d1a7e16d557770ea10d4282b161c7f8a1eeff45ec372"
+    }
+  ]
+}

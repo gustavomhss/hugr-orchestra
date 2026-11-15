@@ -1,0 +1,9 @@
+{
+  "schema": "s1-04-import-interruption/v1",
+  "step": "write sparse-checkout patterns",
+  "error": "FileNotFoundError: .git/info/sparse-checkout parent directory absent after git init with empty template",
+  "objects_already_imported": true,
+  "refs_updated": false,
+  "index_created": false,
+  "repair": "Create standard .git/info directory, resume at sparse-checkout pattern write without reinitializing or changing imported objects"
+}

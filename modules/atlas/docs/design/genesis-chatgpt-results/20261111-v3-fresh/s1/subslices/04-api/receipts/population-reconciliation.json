@@ -1,0 +1,96 @@
+{
+  "schema": "genesis-s1-04-population-reconciliation/v1",
+  "mechanical_only": true,
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "assigned": 472,
+  "unique": 472,
+  "families": 52,
+  "historical_status_counts": {
+    "captured_full_source_read": 95,
+    "inventory_only_not_read": 183,
+    "captured_representative_sections_read": 2,
+    "captured_not_semantically_read": 2,
+    "captured_literal_surface_indexed": 190
+  },
+  "inherited_bv3_full_read_overlay": 190,
+  "overlay_source_blob_mismatches": [],
+  "domains": 24,
+  "new_source_semantic_reread_claim": false,
+  "retained_inventory_only": 183,
+  "bodies": [
+    {
+      "key": "s1.api.boundaries",
+      "sha256": "f6b230ed8578b6bd9fdb1e4eaca26892df9355a58fc1f5e2e6a157bffabf7310",
+      "byte_length": 4634,
+      "git_blob_sha": "dee4164e1681aa5f6f1a185ecf6b2b7c4eaae030",
+      "origin_commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943"
+    },
+    {
+      "key": "s1.api.schema-contracts",
+      "sha256": "c6ebd6124d89092e859aaa6a6a07c2a6fca5e2cdc82a62254b701b2de60266b2",
+      "byte_length": 5188,
+      "git_blob_sha": "fed24979c1906c753754b22c3b528631849e3cab",
+      "origin_commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943"
+    },
+    {
+      "key": "s1.api.session-contract",
+      "sha256": "22b526a2423572f2bbc17f3bfccd2eb0ea8f7fb16f2215bb0904f1cc5c2125bc",
+      "byte_length": 5155,
+      "git_blob_sha": "6b5bb4b3358f67d773e29be7c6f5e74ddb920f1d",
+      "origin_commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943"
+    },
+    {
+      "key": "s1.api.server-edge",
+      "sha256": "711c744e089e59a11ee0b56ba4ec495277993dc7a58e351c8e2af4dc557ce404",
+      "byte_length": 5596,
+      "git_blob_sha": "9af2aa541e523dd1809b00907839dcf8b287df78",
+      "origin_commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943"
+    },
+    {
+      "key": "s1.api.stream-contract",
+      "sha256": "d1f68eb106131ba1efd61c4157b91826a25b176ab87ff74defc140ef9f4d67d8",
+      "byte_length": 3824,
+      "git_blob_sha": "97c5b7e3b109d8a252c29650578a3829688651df",
+      "origin_commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943"
+    },
+    {
+      "key": "s1.api.client-projection",
+      "sha256": "089304921b004984de3b15b75af18fea3c7ebf15191f3874e9f668066569d478",
+      "byte_length": 5193,
+      "git_blob_sha": "07576b1077c203d689684ad0e5b9927204b1e623",
+      "origin_commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943"
+    },
+    {
+      "key": "s1.api.codegen",
+      "sha256": "2ec55afad54a871de673a252b6b7c604a8ecdb648cc1df9c80128d83a3f8e270",
+      "byte_length": 4752,
+      "git_blob_sha": "b88989e670070ff151107ed9b9b3bf9d8e739240",
+      "origin_commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943"
+    },
+    {
+      "key": "s1.api.sdk-composition",
+      "sha256": "a2cb2fc21fc1a771d81cd83e75dfe8b07c82c1712b15396ff4e40774f861d4d3",
+      "byte_length": 3478,
+      "git_blob_sha": "85195fb178208da9141b789f66a955499163c91e",
+      "origin_commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943"
+    },
+    {
+      "key": "s1.api.surface-disposition",
+      "sha256": "595e0d404064429a953b276141f5601a1bbecceb30242a9914132ebdd26ed5c0",
+      "byte_length": 6726,
+      "git_blob_sha": "5e1c8add7724e525f4ae118beb905b3f96f5ec24",
+      "origin_commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943"
+    }
+  ],
+  "large_source_retained": [
+    {
+      "path": "packages/client/src/generated/types.ts",
+      "git_blob_sha": "fca4633666a639d550065312a13e48c6ce221d12",
+      "legacy_group": "b",
+      "legacy_artifact_key": "s1.api.client-projection",
+      "family": "client.generated-promise",
+      "kind": "generated",
+      "inherited_read_status": "captured_not_semantically_read"
+    }
+  ]
+}

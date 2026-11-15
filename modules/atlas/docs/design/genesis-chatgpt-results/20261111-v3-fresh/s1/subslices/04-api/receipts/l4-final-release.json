@@ -1,0 +1,38 @@
+{
+  "schema": "genesis-s1-04-local-layer-release/v1",
+  "layer": 4,
+  "key": "s1.subslice04.maintenance",
+  "revision": 2,
+  "body_sha256": "ce0f86d365df573cf89218da7fee86009d1a37c65c775735c02a68079d38160e",
+  "body_byte_length": 10033,
+  "judgments": [
+    {
+      "path": "judgments/11-j1-resolution.md",
+      "byte_length": 1729,
+      "sha256": "d1ae0cc3e67ac7db79d8e0274fb43f382c8f54986fd9a1745150a12f47b3a08a"
+    },
+    {
+      "path": "judgments/11-j2-resolution.md",
+      "byte_length": 1971,
+      "sha256": "1ac5fe2ddcb45878e6a2a7d34b25ec9c2953862a1d4e109286c8269604d4c02e"
+    }
+  ],
+  "status": "LOCAL_CONTENT_ACCEPTED",
+  "allows": "Content transport only; no runtime/consumer/maintenance execution/publication acceptance",
+  "supersedes_content_only": "receipts/l4-release.json",
+  "l3_predecessor_gate": {
+    "path": "receipts/l3-final-release.json",
+    "byte_length": 866,
+    "sha256": "23460fd3c06d24b6e3e5f2ba483903ab907539d0b3d054a06cf0596c9e33358a"
+  },
+  "submission_erratum": {
+    "path": "receipts/l4-submission-erratum.json",
+    "byte_length": 2300,
+    "sha256": "a1594a3de4eaebf040a07dc9112155c7ada69acb3b62f948ea6cd12d7f3de1a2"
+  },
+  "canonical_submission_byte_check": {
+    "path": "requests/11a-archive-receipt.json",
+    "byte_length": 2332,
+    "sha256": "ae0d6a576249173d0e7045e9c94efcb8fde197e8778d8d6c0a1adec46e77ebaa"
+  }
+}

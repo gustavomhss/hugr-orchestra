@@ -1,0 +1,35 @@
+{
+  "schema": "s1-04-visible-submission-erratum/v1",
+  "recorded_at_utc": "2026-11-15T00:44:03.856485+00:00",
+  "findings": [
+    "J1 L4-R2-01",
+    "J2 round11 unaccounted-delta finding"
+  ],
+  "historical_candidate_file": {
+    "path": "producers/upper/l4/revision-1/body.md",
+    "byte_length": 8942,
+    "sha256": "6836ed1abd690c45f999d32dbcbb6bb0451fda5ed77e6985ad601ae5a765705e"
+  },
+  "archived_submission": {
+    "path": "requests/08-l4.txt",
+    "byte_length": 10480,
+    "sha256": "3b8d4b6990ad79d58842152c2ade163002df46d76d8804aea3ac7fea3bc76b06",
+    "embedded_body_matches_local_candidate": true,
+    "wire_verbatim_claim": "WITHDRAWN_FOR_THE_REPORTED_FRAGMENT; this archive is the locally assembled submission and is not proof of identical text in the prior tool call"
+  },
+  "both_judges_reported_received_fragment": "Use o índice para localizar o L1 do assunto e conserve seus gaps. A consulta pode ir diretamente à profundidade necessária.",
+  "local_file_and_current_fragment": "Recorra ao índice quando faltar a entrada do assunto e conserve seus gaps. Com a chave vinculada, consulte diretamente a profundidade necessária.",
+  "explicit_additional_semantic_delta": {
+    "from": "Use o índice para localizar o L1 do assunto e conserve seus gaps. A consulta pode ir diretamente à profundidade necessária.",
+    "to": "Recorra ao índice quando faltar a entrada do assunto e conserve seus gaps. Com a chave vinculada, consulte diretamente a profundidade necessária.",
+    "meaning": "Use the index when the topic entry is missing, then consult the required depth directly using a bound key."
+  },
+  "original_diff_scope": "Complete diff between local revision-1 and revision-2 files, not a complete verbatim delta from the prior visible message after this transcribed-fragment finding. Original files and requests are preserved unchanged.",
+  "current_candidate": {
+    "path": "producers/upper/l4/body.md",
+    "byte_length": 10033,
+    "sha256": "ce0f86d365df573cf89218da7fee86009d1a37c65c775735c02a68079d38160e",
+    "body_changed_in_this_erratum": false
+  },
+  "resolution_requested": "Same pair recognizes the explicit extra fragment transition and the new exact canonical full-body submission; no history rewritten, no source re-reading or operational acceptance."
+}

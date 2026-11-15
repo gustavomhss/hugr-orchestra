@@ -1,0 +1,47 @@
+{
+  "schema": "genesis-s1-04-b3-mechanical-verification/v1",
+  "semantic_disposition_sha256": "34e3b103d37a7259cb73cedb2b17f7e93f03bc18aa1f9a1118e65b1a157eefa7",
+  "review_supplement_sha256": "316ad6cf3d8004a2c42298f7e9408ec5d31c5fbf4084c9301c863300ea994f3a",
+  "source_excerpts_sha256": "576ea018bd0749a4197f766900e2942391c22355eda649ace5851a11deedf333",
+  "domain_count": 24,
+  "member_count": 190,
+  "unique_members": 190,
+  "unassigned_members": [],
+  "multiply_assigned_members": [],
+  "member_review_domain_matches": true,
+  "bounded_claims_exact": true,
+  "conditional_gaps_exact": true,
+  "evidence_sections_parsed": 237,
+  "evidence_blocks_verified": 326,
+  "verification_scope": "Transport identity, membership and literal excerpt bytes only; no semantic PASS, no runtime or product execution.",
+  "dossier_count": 4,
+  "dossier_domains_exact": 24,
+  "selected_literal_spans": 214,
+  "selected_literal_bytes": 64621,
+  "selected_spans_all_within_verified_inherited_or_authorized_baseline_ranges": true,
+  "all_claim_and_gap_strings_present_exactly": true,
+  "transport_gaps": {},
+  "batch_budget_preference_bytes": 18000,
+  "batch_budget_exceptions": [
+    {
+      "path": "b3/dossier-D01-D06.md",
+      "byte_length": 20209,
+      "reason": "Keep decisive literal branches complete; desired cap is advisory."
+    },
+    {
+      "path": "b3/dossier-D07-D12.md",
+      "byte_length": 27029,
+      "reason": "Keep decisive literal branches complete; desired cap is advisory."
+    },
+    {
+      "path": "b3/dossier-D13-D18.md",
+      "byte_length": 25540,
+      "reason": "Keep decisive literal branches complete; desired cap is advisory."
+    },
+    {
+      "path": "b3/dossier-D19-D24.md",
+      "byte_length": 18988,
+      "reason": "Keep decisive literal branches complete; desired cap is advisory."
+    }
+  ]
+}

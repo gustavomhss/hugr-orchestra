@@ -1,0 +1,7 @@
+{
+  "archives": 5,
+  "exact_members_verified": 1576,
+  "path_traversal_extraction_performed": false,
+  "verification": "Decoded standard base64/xz/tar in memory; every original member bytes/SHA256 matched the index.",
+  "historical_source_or_code_changed": false
+}

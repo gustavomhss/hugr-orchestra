@@ -1,0 +1,46 @@
+{
+  "schema": "genesis-s1-04-local-artifact-manifest/v1",
+  "key": "s1.subslice04.maintenance",
+  "layer": 4,
+  "state": "FROZEN_FOR_DUAL_REVIEW",
+  "files": {
+    "body.md": {
+      "byte_length": 8942,
+      "sha256": "6836ed1abd690c45f999d32dbcbb6bb0451fda5ed77e6985ad601ae5a765705e"
+    },
+    "metadata.json": {
+      "byte_length": 14730,
+      "sha256": "e6213b5007cd265a55a00178a4319ceec56f9c9f27770ced5e55bf84e45885b3"
+    },
+    "recipe.json": {
+      "byte_length": 4579,
+      "sha256": "d32ee8ebc7ea8e704c1d33f5414549c35c63f11a0a06a46fdd7de19ec8498b1f"
+    },
+    "request.txt": {
+      "byte_length": 1822,
+      "sha256": "f0d6f5e8f1f7c4fe3fe5fef442dfc084257200d83c4db2f7e7c72c283b4408ac"
+    },
+    "response.md": {
+      "byte_length": 2340,
+      "sha256": "3d7e9e73e86b73989e8d85e098222f68382eea74cb6b716119e309b43ec089b5"
+    }
+  },
+  "predecessor_release_refs": [
+    {
+      "path": "output/receipts/l1-release.json",
+      "byte_length": 3522,
+      "sha256": "23674344f089dbc26e1cac7ee70e0de9809e663ed80a0967219ae53222d4b0fb"
+    },
+    {
+      "path": "output/receipts/l2-release.json",
+      "byte_length": 830,
+      "sha256": "35f6a60a7aca9937b957022fae7ef1868b84a5b4d4284f961882568675c3a2c9"
+    },
+    {
+      "path": "output/receipts/l3-release.json",
+      "byte_length": 714,
+      "sha256": "fd44a6a91515bdaf200cf28e4c7ccf9b2e1c2e3d70008e2cf88747ad165f4c97"
+    }
+  ],
+  "mechanical_checks_only": true
+}

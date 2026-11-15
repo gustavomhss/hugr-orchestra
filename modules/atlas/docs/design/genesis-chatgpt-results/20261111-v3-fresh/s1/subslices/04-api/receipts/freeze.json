@@ -1,0 +1,10 @@
+{
+  "contracts/public.json": {
+    "sha256": "7dcc9df0003b99722b18538fab1e45adb3ac60e6697397677200feddce40909e",
+    "bytes": 10021
+  },
+  "oracles/reserved.json": {
+    "sha256": "d6966c3eb500b6c2061cef8ced0cb57de3ab253bc1744ee83cf1489f3ad63023",
+    "bytes": 17333
+  }
+}

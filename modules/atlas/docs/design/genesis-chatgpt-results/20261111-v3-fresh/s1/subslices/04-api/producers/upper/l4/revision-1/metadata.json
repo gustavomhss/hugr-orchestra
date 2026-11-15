@@ -1,0 +1,427 @@
+{
+  "schema": "genesis-s1-04-local-artifact-candidate/v1",
+  "key": "s1.subslice04.maintenance",
+  "scope": "orchestra.s1",
+  "title": "Procedimento local de ownership e manutenção",
+  "layer": 4,
+  "need": "maintenance",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "execution_id": "94f1e157-8c44-4e6e-a4af-7690a8845ecf",
+  "body": {
+    "path": "body.md",
+    "encoding": "utf-8",
+    "byte_length": 8942,
+    "sha256": "6836ed1abd690c45f999d32dbcbb6bb0451fda5ed77e6985ad601ae5a765705e"
+  },
+  "status": "LOCAL_CANDIDATE_AWAITING_DUAL_L4_REVIEW",
+  "authority": {
+    "scope": "Procedimento de consulta, mudança, verificação e diagnóstico das fronteiras API locais.",
+    "basis": "Conhecimento aceito L3/L2/L1 e orientação pública de manutenção/consumo. A prescrição não demonstra execução das operações ou sua disponibilidade neste ambiente.",
+    "predecessor_acceptance_refs": [
+      {
+        "path": "output/receipts/l1-release.json",
+        "byte_length": 3522,
+        "sha256": "23674344f089dbc26e1cac7ee70e0de9809e663ed80a0967219ae53222d4b0fb"
+      },
+      {
+        "path": "output/receipts/l2-release.json",
+        "byte_length": 830,
+        "sha256": "35f6a60a7aca9937b957022fae7ef1868b84a5b4d4284f961882568675c3a2c9"
+      },
+      {
+        "path": "output/receipts/l3-release.json",
+        "byte_length": 714,
+        "sha256": "fd44a6a91515bdaf200cf28e4c7ccf9b2e1c2e3d70008e2cf88747ad165f4c97"
+      }
+    ],
+    "l3_judgment_refs": [
+      {
+        "path": "output/judgments/07-j1-resolution.md",
+        "byte_length": 1554,
+        "sha256": "4a732d885af8e401c55d1bf7959c0d0d3b616bb14f225a61ef4e0cc93518b263"
+      },
+      {
+        "path": "output/judgments/07-j2-resolution.md",
+        "byte_length": 1927,
+        "sha256": "3c6a4a3020ec7e0ec5e437c7d63ff7d3838eee7921f28ebf393d89c738e3f56a"
+      }
+    ]
+  },
+  "validity": "supported",
+  "validity_scope": "Suficiência proposta para a orientação local delimitada; ainda não PASS da dupla para L4 nem aceite de operação, Core amplo ou consumidores.",
+  "input_public_contract": {
+    "path": "output/contracts/public.json",
+    "byte_length": 10021,
+    "sha256": "7dcc9df0003b99722b18538fab1e45adb3ac60e6697397677200feddce40909e"
+  },
+  "criteria": [
+    "GO-A1",
+    "GO-A2",
+    "GO-A3",
+    "GO-A4",
+    "GO-A5",
+    "GO-A6",
+    "GO-A7",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-4",
+    "QS-5",
+    "QS-6",
+    "CC-3",
+    "CC-7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "build_dependencies": [
+    {
+      "key": "s1.subslice04.integrated-impact",
+      "body_sha256": "c140fb0bf9606079e91576b542ec82b3904583e7433a8fe297c886318649f478",
+      "byte_length": 9301,
+      "local_verified_path": "producer/upper/l3/body.md",
+      "acceptance_ref": {
+        "path": "output/receipts/l3-release.json",
+        "byte_length": 714,
+        "sha256": "fd44a6a91515bdaf200cf28e4c7ccf9b2e1c2e3d70008e2cf88747ad165f4c97"
+      },
+      "used_for": "Procedimento de impacto, atualização, comparação canônica/recibos, vínculos de leitura atual, ciclos, consulta limitada e handoff Core."
+    },
+    {
+      "key": "s1.subslice04.local-contracts",
+      "body_sha256": "5f5ae9a915ec9a43940963ce69f4563a9a85d51e15d111237ff8b5e02a2d5170",
+      "byte_length": 6218,
+      "accepted_transport_path": "producers/upper/l2/body.md",
+      "local_verified_path": "producer/upper/l2/body.md",
+      "acceptance_ref": {
+        "path": "output/receipts/l2-release.json",
+        "byte_length": 830,
+        "sha256": "35f6a60a7aca9937b957022fae7ef1868b84a5b4d4284f961882568675c3a2c9"
+      },
+      "used_for": "Mapa de autoridade e valores/projeções, navegação por assunto, diagnósticos Session/stream/SDK e limites locais aceitos."
+    },
+    {
+      "key": "s1.api.boundaries",
+      "body_sha256": "f6b230ed8578b6bd9fdb1e4eaca26892df9355a58fc1f5e2e6a157bffabf7310",
+      "byte_length": 4634,
+      "accepted_transport_path": "revisions/b-l1-v3/bodies/boundaries.md",
+      "local_verified_path": "input/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/bodies/boundaries.md",
+      "acceptance_ref": {
+        "path": "output/receipts/l1-release.json",
+        "byte_length": 3522,
+        "sha256": "23674344f089dbc26e1cac7ee70e0de9809e663ed80a0967219ae53222d4b0fb"
+      },
+      "used_for": "Autoridade de dependências, proibição de Client runtime Core/Server e composição Server/SDK; limites de prova por imports."
+    },
+    {
+      "key": "s1.api.codegen",
+      "body_sha256": "2ec55afad54a871de673a252b6b7c604a8ecdb648cc1df9c80128d83a3f8e270",
+      "byte_length": 4752,
+      "accepted_transport_path": "revisions/b-l1-v3/bodies/codegen.md",
+      "local_verified_path": "input/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/bodies/codegen.md",
+      "acceptance_ref": {
+        "path": "output/receipts/l1-release.json",
+        "byte_length": 3522,
+        "sha256": "23674344f089dbc26e1cac7ee70e0de9809e663ed80a0967219ae53222d4b0fb"
+      },
+      "used_for": "Geração oficial, comandos generate/check:generated, divisão da receita e outputs gerados; nenhum PASS de execução inferido."
+    }
+  ],
+  "public_normative_inputs": [
+    {
+      "path": "input/normative.txt",
+      "byte_length": 28267,
+      "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+      "role": "Intenção normativa: construção e manutenção cumulativas; comparação resultado/recibos e limites de propagação, sobretudo §3."
+    },
+    {
+      "path": "input/ref_principles.txt",
+      "byte_length": 6010,
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+      "role": "Orientação pública dos critérios; não altera a seleção congelada."
+    },
+    {
+      "path": "input/ref_transport.txt",
+      "byte_length": 8478,
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "role": "Enum need, dependências versus navegação, identidades exatas de transporte versus runtime."
+    },
+    {
+      "path": "input/ref_runtime.txt",
+      "byte_length": 10217,
+      "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237",
+      "role": "Binding e evidência de execução distintos de parecer de conteúdo; indisponibilidade e limites de consumo."
+    }
+  ],
+  "navigation": [
+    {
+      "key": "s1.subslice04.local-contracts",
+      "need": "component",
+      "purpose": "Entrada pequena de responsabilidades, valores e projeções; rotas para aprofundamento."
+    },
+    {
+      "key": "s1.subslice04.integrated-impact",
+      "need": "flow",
+      "purpose": "Impacto e exemplos canônicos de parada/propagação."
+    },
+    {
+      "key": "s1.api.boundaries",
+      "purpose": "Autoridade e fronteiras runtime."
+    },
+    {
+      "key": "s1.api.codegen",
+      "purpose": "Receita, geração e outputs pertencentes ao gerador."
+    },
+    {
+      "key": "s1.api.schema-contracts",
+      "purpose": "Contrato de valores e ausência."
+    },
+    {
+      "key": "s1.api.session-contract",
+      "purpose": "Admissão HTTP, encaminhamento, estado process-local e handoff Core."
+    },
+    {
+      "key": "s1.api.server-edge",
+      "purpose": "Adapters, middleware e projeção específica de erros."
+    },
+    {
+      "key": "s1.api.client-projection",
+      "purpose": "Promise/Effect, envelopes e limitações de compatibilidade executada."
+    },
+    {
+      "key": "s1.api.stream-contract",
+      "purpose": "Diagnóstico de feed global versus eventos duráveis de Session."
+    },
+    {
+      "key": "s1.subslice04.domains",
+      "purpose": "Gap e proprietário do domínio pertinente, sem reintroduzir claims retirados."
+    }
+  ],
+  "reader_protocol": {
+    "scope": "orchestra.s1",
+    "entry_needs": [
+      "maintenance",
+      "component",
+      "flow"
+    ],
+    "read_selector": "key OU need",
+    "maxBytes": "Finito, limitado pelo saldo do caso público; nenhum valor universal novo.",
+    "on_miss_or_truncation": "Consulta específica dentro do orçamento quando houver entrada adequada; HOLD se suporte obrigatório continuar ausente.",
+    "current_read_binding": "Versões exatas + manifesto aceito de escopo/fechamento das dependências válido aos inputs/contratos atuais.",
+    "fallback_to_source_or_markdown": false,
+    "visited_keys": "Evitar revisitas; não usar ciclos de navegação para exceder limites.",
+    "executed_by_this_production": false
+  },
+  "frozen_case_limits": {
+    "S1-O1": {
+      "index_calls": 1,
+      "read_calls": 2,
+      "body_bytes": 24000
+    },
+    "S1-O2": {
+      "index_calls": 2,
+      "read_calls": 4,
+      "body_bytes": 60000
+    },
+    "S1-O3": {
+      "index_calls": 2,
+      "read_calls": 6,
+      "body_bytes": 80000
+    },
+    "S1-04-P1": {
+      "index_calls": 2,
+      "read_calls": 6,
+      "body_bytes": 80000
+    },
+    "S1-04-V1": {
+      "index_calls": 2,
+      "read_calls": 6,
+      "body_bytes": 80000
+    },
+    "S1-04-F1": {
+      "index_calls": 2,
+      "read_calls": 6,
+      "body_bytes": 80000
+    },
+    "S1-04-A1": {
+      "index_calls": 2,
+      "read_calls": 6,
+      "body_bytes": 80000
+    },
+    "S1-04-M1": {
+      "index_calls": 2,
+      "read_calls": 6,
+      "body_bytes": 80000
+    },
+    "S1-04-M2": {
+      "index_calls": 2,
+      "read_calls": 6,
+      "body_bytes": 80000
+    },
+    "S1-04-D01": {
+      "index_calls": 2,
+      "read_calls": 3,
+      "body_bytes": 30000
+    },
+    "S1-04-D02": {
+      "index_calls": 2,
+      "read_calls": 3,
+      "body_bytes": 30000
+    },
+    "S1-04-D03": {
+      "index_calls": 2,
+      "read_calls": 3,
+      "body_bytes": 30000
+    },
+    "S1-04-D04": {
+      "index_calls": 2,
+      "read_calls": 3,
+      "body_bytes": 30000
+    },
+    "S1-04-D05": {
+      "index_calls": 2,
+      "read_calls": 3,
+      "body_bytes": 30000
+    },
+    "S1-04-D06": {
+      "index_calls": 2,
+      "read_calls": 3,
+      "body_bytes": 30000
+    },
+    "S1-04-D07": {
+      "index_calls": 2,
+      "read_calls": 3,
+      "body_bytes": 30000
+    },
+    "S1-04-D08": {
+      "index_calls": 2,
+      "read_calls": 3,
+      "body_bytes": 30000
+    },
+    "S1-04-D09": {
+      "index_calls": 2,
+      "read_calls": 3,
+      "body_bytes": 30000
+    },
+    "S1-04-D10": {
+      "index_calls": 2,
+      "read_calls": 3,
+      "body_bytes": 100000
+    },
+    "S1-04-D11": {
+      "index_calls": 2,
+      "read_calls": 3,
+      "body_bytes": 30000
+    },
+    "S1-04-D12": {
+      "index_calls": 2,
+      "read_calls": 3,
+      "body_bytes": 30000
+    },
+    "S1-04-D13": {
+      "index_calls": 2,
+      "read_calls": 3,
+      "body_bytes": 30000
+    }
+  },
+  "gaps": [
+    {
+      "scope": "Core/serviços",
+      "status": "INHERITED_CONDITIONAL_GAP",
+      "blocks": "Garantias de retry/promoção, persistência/recuperação, runner, exclusão entre hosts e efeitos externos exactly-once além das observações locais aceitas.",
+      "next": "Conhecimento inferior do owner, aceito e compatível, antes dos claims dependentes."
+    },
+    {
+      "scope": "Runtime/consumo/atualização",
+      "status": "NOT_OBSERVED_BY_THIS_PRODUCTION",
+      "blocks": "Afirmação de chamadas index/read, disponibilidade de política/store/projeção, binding, CAS, manutenção/isolamento/publicação ou consumo reais.",
+      "next": "Operações reais e seus recibos; autorização e políticas existentes não são inventadas pelo procedimento."
+    },
+    {
+      "scope": "Geração/CI/browser",
+      "status": "NOT_EXECUTED_BY_THIS_PRODUCTION",
+      "blocks": "Freshness dos gerados, resultados de gates e compatibilidade browser.",
+      "next": "Aplicar a geração oficial e os gates pertinentes no candidato autorizado; testes de produto somente Actions."
+    },
+    {
+      "scope": "Limites herdados e claims retirados",
+      "status": "PRESERVED",
+      "blocks": "Uso de conhecimento não aceito como se estivesse demonstrado.",
+      "next": "Conservar gaps dos predecessores e RETIRED_EXTRA_CLAIM; completar somente o necessário ao novo claim."
+    }
+  ],
+  "evidence": [
+    {
+      "section": "1. Consultar pouco, pela porta real",
+      "basis": [
+        "Pedido exato: parâmetros e precondições de consumo",
+        "Contrato público: limites por caso",
+        "ref_runtime.txt: Binding, atualização e consumo",
+        "ref_transport.txt: need, identidade e navegação",
+        "L3 aceito: versões exatas/manifesto e consulta limitada"
+      ]
+    },
+    {
+      "section": "2. Localizar a autoridade da mudança",
+      "predecessor_keys": [
+        "s1.subslice04.local-contracts",
+        "s1.api.boundaries",
+        "s1.api.codegen"
+      ]
+    },
+    {
+      "section": "3. Alterar e verificar o candidato autorizado",
+      "predecessor_keys": [
+        "s1.subslice04.integrated-impact",
+        "s1.api.codegen",
+        "s1.api.boundaries"
+      ],
+      "basis": [
+        "ref_runtime.txt: testes de produto em Actions",
+        "normative.txt DOD-4: guards/typechecks e gates reais"
+      ]
+    },
+    {
+      "section": "4. Atualizar conhecimento sem reconstruir independentes",
+      "predecessor_keys": [
+        "s1.subslice04.integrated-impact"
+      ],
+      "basis": [
+        "normative.txt §3: propagação, resultados/recibos, fonte compatível e publicação governada"
+      ]
+    },
+    {
+      "section": "5. Diagnosticar e encaminhar o que falta",
+      "predecessor_keys": [
+        "s1.subslice04.local-contracts",
+        "s1.subslice04.integrated-impact"
+      ]
+    }
+  ],
+  "recipe_ref": {
+    "path": "recipe.json",
+    "byte_length": 4579,
+    "sha256": "d32ee8ebc7ea8e704c1d33f5414549c35c63f11a0a06a46fdd7de19ec8498b1f"
+  },
+  "producer_request_ref": {
+    "path": "request.txt",
+    "byte_length": 1822,
+    "sha256": "f0d6f5e8f1f7c4fe3fe5fef442dfc084257200d83c4db2f7e7c72c283b4408ac"
+  },
+  "producer_response_path": "response.md",
+  "semantic_review_refs": [],
+  "runtime_receipt_refs": [],
+  "native_transport_note": "Candidato local com identidades de transporte; package_ref/same_package e bindings runtime finais dependem do transporte real pela principal. Nenhum ID de runtime foi preenchido por suposição.",
+  "mechanical_checks": {
+    "accepted_predecessor_bytes_and_hashes_match": 4,
+    "l3_metadata_and_recipe_match_local_manifest": true,
+    "l3_judgments_match_release": true,
+    "normative_input_hashes_match": true,
+    "need_in_public_transport_enum": true,
+    "criteria_unchanged_from_l3": true,
+    "case_limits_match_public_contract": true,
+    "only_layer_4_produced": true
+  }
+}

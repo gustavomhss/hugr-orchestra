@@ -1,0 +1,54 @@
+{
+  "schema": "s1-04-visible-native-request-archive/v1",
+  "recorded_at_utc": "2026-11-15T00:46:20.169331+00:00",
+  "round": "11a",
+  "archivist": "/root/archive_round11a",
+  "role": "Mechanical preservation and byte comparison only; not a third judge.",
+  "source": "Visible message fields of the two collaboration.followup_task calls and the subsequent collaboration.send_message correction inherited in this context.",
+  "encoding": "utf-8",
+  "trailing_newline_added": false,
+  "requests": [
+    {
+      "path": "requests/11a-l4-canonical-j1.txt",
+      "byte_length": 12380,
+      "sha256": "bb594978dbde73eb764df89d78c53ea4396e9e100dcc45530aeeaf9da02938a8"
+    },
+    {
+      "path": "requests/11a-l4-canonical-j2.txt",
+      "byte_length": 12379,
+      "sha256": "047a5ec7d5cbc48f4196e8c5092193c0ec6a9944d1e8986dde6a5e03d6acdcc9"
+    },
+    {
+      "path": "requests/11a-l4-j2-transcription-erratum.txt",
+      "byte_length": 724,
+      "sha256": "c4f409480840289472caa41d2e7642a4a3b31a54f726097e3150087ff67be3ba"
+    }
+  ],
+  "canonical_body_file": {
+    "path": "producer/upper/l4/body.md",
+    "byte_length": 10033,
+    "sha256": "ce0f86d365df573cf89218da7fee86009d1a37c65c775735c02a68079d38160e"
+  },
+  "j1_extracted_body": {
+    "byte_length": 10033,
+    "sha256": "ce0f86d365df573cf89218da7fee86009d1a37c65c775735c02a68079d38160e"
+  },
+  "j2_original_extracted_body": {
+    "byte_length": 10032,
+    "sha256": "ec9aad0ca9bb577ad2a2a5f2a4469c507de0b657479633972908100a68d7a596"
+  },
+  "j2_corrected_extracted_body": {
+    "byte_length": 10033,
+    "sha256": "ce0f86d365df573cf89218da7fee86009d1a37c65c775735c02a68079d38160e"
+  },
+  "j1_body_equals_file": true,
+  "j2_original_body_equals_file": false,
+  "j2_corrected_body_equals_j1_and_file": true,
+  "visible_difference": {
+    "before_in_j2": "Resultados de execução pertencem ao recibo vinculado ao candidato e à operação.",
+    "after_in_j1_and_explicit_erratum": "Resultados de execução pertencem a recibos vinculados ao candidato e à operação.",
+    "occurrences_replaced": 1,
+    "other_message_differences": null
+  },
+  "scope_limit": "Preserves visible submitted text and verifies its explicit correction against the local candidate. No claim about internal wire transport, metering, historical requests, semantic acceptance or runtime execution."
+}

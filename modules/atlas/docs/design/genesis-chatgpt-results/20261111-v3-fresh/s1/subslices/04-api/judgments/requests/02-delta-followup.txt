@@ -1,0 +1,161 @@
+S1-04 — reavaliação do delta B1/B2 pelo mesmo juiz. Não use ferramentas. Critérios e pins permanecem os do primeiro pedido. O veto original foi preservado. Este pacote fecha somente os findings do delta; B3 e o reúso dos corpos continuam pendentes.
+
+Correção nativa de /root/api_producer: um único replacement no stream-contract. Original 3824 bytes/d1f68eb106131ba1efd61c4157b91826a25b176ab87ff74defc140ef9f4d67d8 preservado. Atual 3883 bytes/8aac12750cd96c30f9bee287bdab2fdbb61ca67903b604aa8a0c1809e7c4bdfa. Novo parágrafo exato:
+`packages/server/src/handlers/event.ts` creates a per-handler WeakMap frame cache keyed by event payload object. The WeakMap caches the serialized JSON string for each payload object; each call returns a new `Sse.Event` frame object, and `Sse.encode` occurs later. Frames use event `message` and no SSE event ID. The function is an observed implementation mechanism; no performance measurement was taken.
+O restante do corpo é idêntico, verificado por substituição reversível; fonte eventFrames/handler/codecs é a mesma já fornecida. "frame cache" nomeia a função, imediatamente especificada como string JSON. Não se afirma compartilhamento de identidade do objeto Sse.Event.
+
+Evidência adicional literal, baseline 1cde2ff7a71bcf7aecb5d030917b577165135d38, capturas completas com Git blob recalculado igual ao conector:
+
+packages/protocol/src/groups/session.ts; Git blob 5830f50001c8dc01227a920f04276054c0e29570
+Linhas 174–185:
+```ts
+    .add(
+      HttpApiEndpoint.get("session.active", "/api/session/active", {
+        success: Schema.Struct({ data: Schema.Record(Session.ID, SessionActive) }),
+      }).annotateMerge(
+        OpenApi.annotations({
+          identifier: "v2.session.active",
+          summary: "List active sessions",
+          description:
+            "Retrieve foreground Session drains currently owned by this Orchestra process. Sessions absent from the result are inactive.",
+        }),
+      ),
+    )
+```
+Linhas 616–634:
+```ts
+    .add(
+      HttpApiEndpoint.get("session.history", "/api/session/:sessionID/history", {
+        params: { sessionID: Session.ID },
+        query: SessionHistoryQuery,
+        success: Schema.Struct({
+          data: Schema.Array(SessionEvent.Durable),
+          hasMore: Schema.Boolean,
+        }).annotate({ identifier: "SessionHistory" }),
+        error: SessionNotFoundError,
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.history",
+            summary: "Get session history",
+            description:
+              "Read one finite page of public durable Session events after an exclusive aggregate sequence. Newly committed events may appear on later pages.",
+          }),
+        ),
+```
+
+packages/server/src/handlers/session.ts; Git blob 1ce1cd359f5c9bbfc12122fad3d4439655a1e5bb
+Linhas 25–25:
+```ts
+const DefaultSessionHistoryLimit = 50
+```
+Linhas 164–173:
+```ts
+      .handle(
+        "session.active",
+        Effect.fn(function* () {
+          return {
+            data: Object.fromEntries(
+              Array.from(yield* session.active, (sessionID) => [sessionID, { type: "running" as const }]),
+            ),
+          }
+        }),
+      )
+```
+Linhas 614–635:
+```ts
+      .handle(
+        "session.history",
+        Effect.fn(function* (ctx) {
+          return yield* session
+            .history({
+              sessionID: ctx.params.sessionID,
+              after: ctx.query.after,
+              limit: ctx.query.limit ?? DefaultSessionHistoryLimit,
+            })
+            .pipe(
+              Effect.map((page) => ({
+                data: page.events,
+                hasMore: page.hasMore,
+              })),
+              Effect.catchTag(
+                "Session.NotFoundError",
+                (error) =>
+                  new SessionNotFoundError({
+                    sessionID: error.sessionID,
+                    message: `Session not found: ${error.sessionID}`,
+                  }),
+              ),
+```
+
+packages/core/src/session.ts; Git blob 402a192a69bcad6a4b08c695657e24ff5e335f93
+Linhas 38–38:
+```ts
+import { SessionDurable } from "@orchestra/schema/durable-event-manifest"
+```
+Linhas 483–490:
+```ts
+      history: Effect.fn("V2Session.history")(function* (input) {
+        yield* result.get(input.sessionID)
+        return yield* EventV2.readAggregate(db, {
+          ...input,
+          aggregateID: input.sessionID,
+          manifest: SessionDurable,
+        })
+      }),
+```
+
+packages/core/src/event.ts; Git blob fa7a39a0c039770d36523723e75c1f228e1142f0
+Linhas 69–115:
+```ts
+export const readAggregate = Effect.fn("EventV2.readAggregate")(function* <A>(
+  db: Database.Interface["db"],
+  input: {
+    readonly aggregateID: string
+    readonly after?: number
+    readonly limit: number
+    readonly manifest: {
+      readonly definitions: ReadonlyMap<string, Definition>
+      readonly schema: Schema.Decoder<A, never>
+    }
+  },
+) {
+  const after = input.after ?? -1
+  const rows = yield* db
+    .select()
+    .from(EventTable)
+    .where(
+      and(
+        eq(EventTable.aggregate_id, input.aggregateID),
+        gt(EventTable.seq, after),
+        inArray(EventTable.type, Array.from(input.manifest.definitions.keys())),
+      ),
+    )
+    .orderBy(asc(EventTable.seq))
+    .limit(input.limit + 1)
+    .all()
+    .pipe(Effect.orDie)
+  const page = rows.slice(0, input.limit)
+  const decode = Schema.decodeUnknownSync(input.manifest.schema)
+  const events = page.map((event) =>
+    decode({
+      id: event.id,
+      type: input.manifest.definitions.get(event.type)?.type ?? event.type,
+      durable: {
+        aggregateID: event.aggregate_id,
+        seq: event.seq,
+        version: input.manifest.definitions.get(event.type)?.durable?.version,
+      },
+      data: event.data,
+    }),
+  )
+  return {
+    events,
+    hasMore: rows.length > input.limit,
+  }
+})
+
+```
+
+Os claims permanecem observações de contrato/adapter; os novos trechos de Core sustentam somente a seleção durável exclusiva e hasMore, sem ampliar para recuperação ou exactly-once. Não houve execução de produto. Reavalie os dois pontos retidos, preserve os PASS inalterados, e informe se B1/B2 fica fechado como fonte. B3 não é objeto deste pedido.

@@ -1,0 +1,11 @@
+--- original/stream-contract.md
++++ corrected/stream-contract.md
+@@ -10,7 +10,7 @@
+ | Session `GET /api/session/:sessionID/event` | Durable session event schema after an exclusive sequence | Live-only deltas are absent from the durable inventory. Core implements the actual replay/live bridge. |
+ | Session history | Finite durable page plus `hasMore` | It is not the global live feed and does not promise a cross-page snapshot. |
+ 
+-`packages/server/src/handlers/event.ts` creates a per-handler WeakMap frame cache keyed by event payload object. A repeated payload object is encoded once and the cached frame is shared across subscribers. Frames use event `message` and no SSE event ID. The function is an observed implementation mechanism; no performance measurement was taken.
++`packages/server/src/handlers/event.ts` creates a per-handler WeakMap frame cache keyed by event payload object. The WeakMap caches the serialized JSON string for each payload object; each call returns a new `Sse.Event` frame object, and `Sse.encode` occurs later. Frames use event `message` and no SSE event ID. The function is an observed implementation mechanism; no performance measurement was taken.
+ 
+ `eventStream` obtains `EventV2.allBounded(events, 4096)` before producing `server.connected`, so a consumer observing readiness has already acquired its live subscription. The stream concatenates the connected frame and live events, merges 15-second heartbeat comments, and halts the merge when the primary side ends. The response sets `text/event-stream`, `no-cache, no-transform`, `X-Accel-Buffering: no`, and `X-Content-Type-Options: nosniff`. Capacity 4,096 is a declared subscription bound, not a proof that slow subscribers can never lose data or that a remote proxy honors these headers.
+ 

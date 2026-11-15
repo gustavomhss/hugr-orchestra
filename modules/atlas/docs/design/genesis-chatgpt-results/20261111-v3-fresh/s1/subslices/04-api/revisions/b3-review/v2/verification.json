@@ -1,0 +1,239 @@
+{
+  "schema": "genesis-s1-04-b3-v2-verification/v1",
+  "source_review_domain_disposition": {
+    "path": "input/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/review-domain-disposition.md",
+    "byte_length": 65726,
+    "sha256": "95b17106dc5c26bb6d39c8d2d80b48fca8f75d35fe4f5f8ec3f232c7d71411c3"
+  },
+  "domain_count": 24,
+  "member_count": 190,
+  "domain_bounded_claim_values_exact": true,
+  "domain_conditional_gap_values_exact": true,
+  "local_claim_tables_byte_identical": true,
+  "local_claim_table_member_paths_order_exact": true,
+  "final_files_read_back": true,
+  "v1_frozen_first_preserved": {
+    "path": "b3/v1/dossier-D01-D06.md",
+    "byte_length": 20209,
+    "sha256": "1cb46330d1e609d3d4787a63222aa755cb34006e9d0c4a989b2c98df53d8784a"
+  },
+  "table_bindings": [
+    {
+      "domain_id": "D01",
+      "source_byte_start": 5735,
+      "source_byte_end_exclusive": 9610,
+      "byte_length": 3875,
+      "sha256": "5a9c45d6789792b9b9ffceb0e3868e4044945989d9b706bdd89588c8fac40649",
+      "member_count": 25,
+      "member_paths_order_exact": true
+    },
+    {
+      "domain_id": "D02",
+      "source_byte_start": 11027,
+      "source_byte_end_exclusive": 13222,
+      "byte_length": 2195,
+      "sha256": "9cd43b1e899e08fbff0d48e2494b0ed27714a8d56fe86d341b700cfdef2e9290",
+      "member_count": 16,
+      "member_paths_order_exact": true
+    },
+    {
+      "domain_id": "D03",
+      "source_byte_start": 14677,
+      "source_byte_end_exclusive": 15736,
+      "byte_length": 1059,
+      "sha256": "76f58d95afb760a4fddfc3b3d258b3bcac23d7367e78579faf117d25049e7c84",
+      "member_count": 7,
+      "member_paths_order_exact": true
+    },
+    {
+      "domain_id": "D04",
+      "source_byte_start": 17104,
+      "source_byte_end_exclusive": 17621,
+      "byte_length": 517,
+      "sha256": "ec2adab149f735c25a7a33abd34e87d486eb36bfa6caca931dffc23154ab2e2c",
+      "member_count": 4,
+      "member_paths_order_exact": true
+    },
+    {
+      "domain_id": "D05",
+      "source_byte_start": 19088,
+      "source_byte_end_exclusive": 21003,
+      "byte_length": 1915,
+      "sha256": "8938d69ffdb4f4ab45970a6e35cc400ff38da304afa3ee1cd80c4d2a5767009a",
+      "member_count": 15,
+      "member_paths_order_exact": true
+    },
+    {
+      "domain_id": "D06",
+      "source_byte_start": 22342,
+      "source_byte_end_exclusive": 23931,
+      "byte_length": 1589,
+      "sha256": "469ffbaa811c8a5771e8f6190dfc64799cea1f9a5b74bee60779b616addba226",
+      "member_count": 13,
+      "member_paths_order_exact": true
+    },
+    {
+      "domain_id": "D07",
+      "source_byte_start": 25276,
+      "source_byte_end_exclusive": 25564,
+      "byte_length": 288,
+      "sha256": "bc40517b4b7aa3ea4dc00b601d304d45ba508c0bf8e778de61f5e3ff75f711af",
+      "member_count": 2,
+      "member_paths_order_exact": true
+    },
+    {
+      "domain_id": "D08",
+      "source_byte_start": 27023,
+      "source_byte_end_exclusive": 28406,
+      "byte_length": 1383,
+      "sha256": "6ec88c0afd4d7ded92127b85ee3832bfa9a1ea24149926b47f6c859e6fbe9617",
+      "member_count": 11,
+      "member_paths_order_exact": true
+    },
+    {
+      "domain_id": "D09",
+      "source_byte_start": 29788,
+      "source_byte_end_exclusive": 31181,
+      "byte_length": 1393,
+      "sha256": "4be1d36cabe0f88a18ad2e794431250dcffc556a68a8687ea55f11a92baeeac1",
+      "member_count": 12,
+      "member_paths_order_exact": true
+    },
+    {
+      "domain_id": "D10",
+      "source_byte_start": 32549,
+      "source_byte_end_exclusive": 33297,
+      "byte_length": 748,
+      "sha256": "5a24fd814e3f13ccfe19f0ed5cc4ce5314c4f6229405fc23df4b169ed8921f1c",
+      "member_count": 4,
+      "member_paths_order_exact": true
+    },
+    {
+      "domain_id": "D11",
+      "source_byte_start": 34878,
+      "source_byte_end_exclusive": 37142,
+      "byte_length": 2264,
+      "sha256": "fc53ea9f70b47093a1082e52926bfd5affa1b62dece28eda8dbcc19a97d4247a",
+      "member_count": 14,
+      "member_paths_order_exact": true
+    },
+    {
+      "domain_id": "D12",
+      "source_byte_start": 38573,
+      "source_byte_end_exclusive": 39445,
+      "byte_length": 872,
+      "sha256": "3e2524f22449b147837abdb98b13de9aed4f1478514bff5bd180a9c97096c46c",
+      "member_count": 6,
+      "member_paths_order_exact": true
+    },
+    {
+      "domain_id": "D13",
+      "source_byte_start": 40834,
+      "source_byte_end_exclusive": 41467,
+      "byte_length": 633,
+      "sha256": "3708460f1c3326b2e392bdd89a0ca4587afc613e497f9f028506c54021aa2c41",
+      "member_count": 4,
+      "member_paths_order_exact": true
+    },
+    {
+      "domain_id": "D14",
+      "source_byte_start": 43163,
+      "source_byte_end_exclusive": 45696,
+      "byte_length": 2533,
+      "sha256": "fe97e1c8fcb8085025192b3483f5cd94ae2d6f944743fec437fec98bead8d6a2",
+      "member_count": 16,
+      "member_paths_order_exact": true
+    },
+    {
+      "domain_id": "D15",
+      "source_byte_start": 47176,
+      "source_byte_end_exclusive": 47762,
+      "byte_length": 586,
+      "sha256": "6f630b4e04980ce6a443ccc2e10d54ef59e9139566176dc281fc1839bdaec6e9",
+      "member_count": 4,
+      "member_paths_order_exact": true
+    },
+    {
+      "domain_id": "D16",
+      "source_byte_start": 49193,
+      "source_byte_end_exclusive": 49720,
+      "byte_length": 527,
+      "sha256": "8d130c289a0c6870962a551eae5fec26cce7610497e4c4b14e8ea7371e27078f",
+      "member_count": 3,
+      "member_paths_order_exact": true
+    },
+    {
+      "domain_id": "D17",
+      "source_byte_start": 51124,
+      "source_byte_end_exclusive": 51641,
+      "byte_length": 517,
+      "sha256": "a01c61d853df360ed360da7e7f6918117f0b02b7ef7c58ad04220b02474a7688",
+      "member_count": 3,
+      "member_paths_order_exact": true
+    },
+    {
+      "domain_id": "D18",
+      "source_byte_start": 53060,
+      "source_byte_end_exclusive": 53907,
+      "byte_length": 847,
+      "sha256": "3dd738dfd148e40c4912360b0622e3f45e91d45269b1737f1336572bc02149a7",
+      "member_count": 6,
+      "member_paths_order_exact": true
+    },
+    {
+      "domain_id": "D19",
+      "source_byte_start": 55472,
+      "source_byte_end_exclusive": 56798,
+      "byte_length": 1326,
+      "sha256": "31756e48e9f77b782131709244129020c3319b3a49b74ed1b3a2dc6255d48726",
+      "member_count": 8,
+      "member_paths_order_exact": true
+    },
+    {
+      "domain_id": "D20",
+      "source_byte_start": 58125,
+      "source_byte_end_exclusive": 58583,
+      "byte_length": 458,
+      "sha256": "8ca26722275d34b57a7a6f55dbcabf99d678857fa2f2ad55cb2b1cfb338d08b5",
+      "member_count": 3,
+      "member_paths_order_exact": true
+    },
+    {
+      "domain_id": "D21",
+      "source_byte_start": 60010,
+      "source_byte_end_exclusive": 61240,
+      "byte_length": 1230,
+      "sha256": "591f43de05ea01be66f0de12366761da42bebc36d53dfb3fa4e16550538a6d5b",
+      "member_count": 10,
+      "member_paths_order_exact": true
+    },
+    {
+      "domain_id": "D22",
+      "source_byte_start": 62554,
+      "source_byte_end_exclusive": 62942,
+      "byte_length": 388,
+      "sha256": "ceee70d3fe0420f0a3877ad53d078ed65211011ac00ebc84e89131cadff180f7",
+      "member_count": 2,
+      "member_paths_order_exact": true
+    },
+    {
+      "domain_id": "D23",
+      "source_byte_start": 64184,
+      "source_byte_end_exclusive": 64360,
+      "byte_length": 176,
+      "sha256": "9022ed5fe1e2f6b85f8152e7c8b1115564fff65dfa374fdf960322723d87b01d",
+      "member_count": 1,
+      "member_paths_order_exact": true
+    },
+    {
+      "domain_id": "D24",
+      "source_byte_start": 65556,
+      "source_byte_end_exclusive": 65726,
+      "byte_length": 170,
+      "sha256": "98dab918c16f3debf7e24c390bb47cbf6cf9ba22f5f3a810fb13c6c574f3f02e",
+      "member_count": 1,
+      "member_paths_order_exact": true
+    }
+  ],
+  "semantics": "No semantic judgment; no new full corpus read; no product/tests/CI/generation/Atlas execution. Broad Core/runtime dependencies remain blocked by the exact inherited conditional_gap fields."
+}

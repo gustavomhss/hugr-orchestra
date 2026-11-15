@@ -1,0 +1,152 @@
+{
+  "schema": "s1-04-r3-setup-status/v1",
+  "created_utc": "2026-11-14T23:03:46.988363+00:00",
+  "status": "SETUP_COMPLETE_PREPARE_AWAITING_FINAL_PACKAGE",
+  "repository": "gustavomhss/hugr-orchestra",
+  "release_id": "20261111-v3-fresh-s4-r3",
+  "release_branch_observed_head": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "runtime_candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "runtime_identity": "materialized, not git checkout",
+  "code_root": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-r3",
+  "atlas_cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-r3/modules/atlas",
+  "source_root": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/source-snapshot",
+  "source_identity": "306 exact input files from requested pinned commits; materialized, not git checkout",
+  "source_plan_sha256": "147cb96b6082f04993e94e22b54b8ac2323e2fe26e1ebc289e9e50a40ae43d43",
+  "bun": {
+    "path": "/workspace/scratch/8833f71e3e94/s1-04-94f1e157-8c44-4e6e-a4af-7690a8845ecf/runtime-tools/node_modules/.bin/bun",
+    "version": "1.3.14",
+    "initial_missing_runtime_resolved": true
+  },
+  "setup": {
+    "runtime_files": 1037,
+    "runtime_bytes": 8792867,
+    "input_files": 306,
+    "input_bytes": 2037868,
+    "npm_ci_exit": 0,
+    "original_bun_typecheck_exit": 0,
+    "workspace_main_exports_available": 13,
+    "all_original_files_unchanged_after_probes": true,
+    "test_execution": false
+  },
+  "materialization_route": {
+    "inventory": "GitHub connector github_fetch GET contents and git trees at exact release candidate; both recursive trees untruncated",
+    "bytes": "GitHub connector github_fetch_file, pinned ref, base64 (34 same-pin verified cache files reused)",
+    "verification": "Length, Git blob SHA-1, SHA-256 and disk readback for every original file",
+    "direct_github_download": false,
+    "git_transport": false,
+    "git_metadata_created": false
+  },
+  "runtime_probes": {
+    "large_source": {
+      "function": "original R3 readNativeFile",
+      "file": "packages/client/src/generated/types.ts",
+      "bytes": 462732,
+      "sha256": "2763d389d2694a6737719865cbabbbdfee937d81a86497b783c246cdaf76ef0f",
+      "bound": 256000,
+      "exit_code": 1,
+      "observed_error": "native-file-limit: packages/client/src/generated/types.ts",
+      "meaning": "Real function capacity refusal, not prepare/import attempt"
+    },
+    "members": {
+      "function": "original R3 observeOwnershipInput",
+      "exit_code": 0,
+      "counts": {
+        "unavailable": 21,
+        "absent": 1
+      },
+      "absent_key": "members:tooling/httpapi-codegen/test",
+      "interpretation": "21 unavailable because materialization has no original Git tracking; one literal absent because none of the 306 requested files materialized this directory. No absence or complete membership claim about original source.",
+      "seams_or_injected_members": false
+    }
+  },
+  "operation_gate": {
+    "prepare_executed": false,
+    "prepare_policy_requirement": false,
+    "prepare_waiting_for": "Final package and completed judgments from parent",
+    "publish_executed": false,
+    "policy_baseline_observation": "404, not authorization to create policy",
+    "policies_created": false,
+    "binding_decisions_created": false,
+    "publication_authorized_by_this_setup": false
+  },
+  "later_2mib_candidate": {
+    "materialized": false,
+    "executed": false,
+    "release_status": "CI evidence exists; historical R3 release remains pinned. No new release or S1 binding inferred."
+  },
+  "next_prepare_template": {
+    "cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-r3/modules/atlas",
+    "argv": [
+      "/workspace/scratch/8833f71e3e94/s1-04-94f1e157-8c44-4e6e-a4af-7690a8845ecf/runtime-tools/node_modules/.bin/bun",
+      "scripts/genesis-native.ts",
+      "prepare",
+      "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/source-snapshot",
+      "<final-package-relative-path-under-source-root>",
+      "<new-candidate-output-file>"
+    ],
+    "preconditions": "Parent provides final package relative path and output file; output parent directory exists and candidate file is new. Preserve literal failure even if members prevents source size check."
+  },
+  "evidence": [
+    {
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/materialization-manifest.json",
+      "byte_length": 371890,
+      "sha256": "c822f4e0fc6eeb60cfbe276caa3131fa647d1820fcbea2cf1b5d5b3206dd79cc"
+    },
+    {
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/readback.json",
+      "byte_length": 5191,
+      "sha256": "a019a890164f4aef6be997ef5266ea5c8da5d575c20ed3046f69a311d60eb26e"
+    },
+    {
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/input-materialization-plan.json",
+      "byte_length": 85091,
+      "sha256": "147cb96b6082f04993e94e22b54b8ac2323e2fe26e1ebc289e9e50a40ae43d43"
+    },
+    {
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/input-materialization-receipt.json",
+      "byte_length": 172696,
+      "sha256": "bfb26a1b5eaeb1005fabd3a0bfa8ce9c10e54c5041a4bc5b5826f2fa697100b2"
+    },
+    {
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/post-probe-readback.json",
+      "byte_length": 1201,
+      "sha256": "74be70b8b99638f3101cc6afb7ef7561695d9717ff1f629088bae4d35e77ad91"
+    },
+    {
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/commands/bun-version.receipt.json",
+      "byte_length": 1451,
+      "sha256": "093b535a1b8d8e6f6d4f5e2883018930ce57d821258f9c532c7e0d969fe525ba"
+    },
+    {
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/commands/npm-ci.receipt.json",
+      "byte_length": 1354,
+      "sha256": "d2a9b0489b0b4fe3d6616e54aedfc2db37ba58c126a114e74b6fdfdc16fa1fbf"
+    },
+    {
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/commands/typecheck.receipt.json",
+      "byte_length": 1459,
+      "sha256": "d345d6230d21e06db322bb0bf861ad8cfd5c95a59da72856e9a9e32e8b9be8d9"
+    },
+    {
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/probes/large-source-r3.receipt.json",
+      "byte_length": 1552,
+      "sha256": "9988f0867f7330ac0f19f4f3ae9f178546219fcf1626d7c3aac1dd942113a539"
+    },
+    {
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/probes/large-source-r3.stderr.txt",
+      "byte_length": 742,
+      "sha256": "e766bb5e50010b41b35a6628d691ef819b07fc6041efdef1aae6ef3f9a0b2ee8"
+    },
+    {
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/probes/members-observer-r3.receipt.json",
+      "byte_length": 1982,
+      "sha256": "203edf55f4794af9ccd5907d48647195ab5c1cd6795dce4290f898a77d10143a"
+    },
+    {
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/probes/members-observer-r3.stdout.txt",
+      "byte_length": 2940,
+      "sha256": "dc86029df950f2acd5d8b712797f42c59849f46b5d35c8934b51dcd8660171a5"
+    }
+  ],
+  "historical_receipt_note": "input-materialization-receipt.json captured pre-probe state; PENDING_READ_ONLY_PROBE fields are superseded by probe receipts and this status, not rewritten."
+}

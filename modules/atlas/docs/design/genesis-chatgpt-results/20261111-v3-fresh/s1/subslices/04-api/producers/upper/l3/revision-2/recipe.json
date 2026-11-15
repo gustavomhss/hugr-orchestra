@@ -1,0 +1,170 @@
+{
+  "schema": "genesis-s1-04-local-recipe/v1",
+  "key": "s1.subslice04.integrated-impact",
+  "layer": 3,
+  "need": "flow",
+  "input_public_contract": {
+    "path": "output/contracts/public.json",
+    "byte_length": 10021,
+    "sha256": "7dcc9df0003b99722b18538fab1e45adb3ac60e6697397677200feddce40909e"
+  },
+  "producer_request_ref": {
+    "path": "request.txt",
+    "byte_length": 1261,
+    "sha256": "14c7ac12b6c4443e90b2c71035599674d95c31978bc706f8575296857101853b"
+  },
+  "predecessor_acceptance_refs": [
+    {
+      "path": "output/receipts/l1-release.json",
+      "byte_length": 3522,
+      "sha256": "23674344f089dbc26e1cac7ee70e0de9809e663ed80a0967219ae53222d4b0fb"
+    },
+    {
+      "path": "output/receipts/l2-release.json",
+      "byte_length": 830,
+      "sha256": "35f6a60a7aca9937b957022fae7ef1868b84a5b4d4284f961882568675c3a2c9"
+    }
+  ],
+  "input_predecessors": [
+    {
+      "key": "s1.subslice04.local-contracts",
+      "body_sha256": "5f5ae9a915ec9a43940963ce69f4563a9a85d51e15d111237ff8b5e02a2d5170"
+    },
+    {
+      "key": "s1.api.boundaries",
+      "body_sha256": "f6b230ed8578b6bd9fdb1e4eaca26892df9355a58fc1f5e2e6a157bffabf7310"
+    },
+    {
+      "key": "s1.api.schema-contracts",
+      "body_sha256": "c6ebd6124d89092e859aaa6a6a07c2a6fca5e2cdc82a62254b701b2de60266b2"
+    },
+    {
+      "key": "s1.api.session-contract",
+      "body_sha256": "22b526a2423572f2bbc17f3bfccd2eb0ea8f7fb16f2215bb0904f1cc5c2125bc"
+    },
+    {
+      "key": "s1.api.client-projection",
+      "body_sha256": "089304921b004984de3b15b75af18fea3c7ebf15191f3874e9f668066569d478"
+    },
+    {
+      "key": "s1.api.codegen",
+      "body_sha256": "2ec55afad54a871de673a252b6b7c604a8ecdb648cc1df9c80128d83a3f8e270"
+    }
+  ],
+  "public_normative_inputs": [
+    {
+      "path": "input/normative.txt",
+      "byte_length": 28267,
+      "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+      "role": "Intenção normativa: construção e manutenção cumulativas; comparação resultado/recibos e limites de propagação, sobretudo §3."
+    },
+    {
+      "path": "input/ref_principles.txt",
+      "byte_length": 6010,
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+      "role": "Orientação pública dos critérios; não altera a seleção congelada."
+    },
+    {
+      "path": "input/ref_transport.txt",
+      "byte_length": 8478,
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "role": "Enum need, dependências versus navegação, identidades exatas de transporte versus runtime."
+    },
+    {
+      "path": "input/ref_runtime.txt",
+      "byte_length": 10217,
+      "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237",
+      "role": "Binding e evidência de execução distintos de parecer de conteúdo; indisponibilidade e limites de consumo."
+    }
+  ],
+  "criteria": [
+    "GO-A1",
+    "GO-A2",
+    "GO-A3",
+    "GO-A4",
+    "GO-A5",
+    "GO-A6",
+    "GO-A7",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-4",
+    "QS-5",
+    "QS-6",
+    "CC-3",
+    "CC-7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "method": "Compor o L2 e cinco L1 aceitos em um mapa de impacto API. Distinguir inputs de fonte/receita, dependências de construção e navegação; relacionar mudanças públicas e de geração a fronteiras e conhecimento afetados; aplicar a norma de resultado visível versus recibos sem afirmar implementação. Registrar o handoff Core apenas como coordenação atribuída à principal e manter O1/O2 como apoio.",
+  "input_policy": "Sem descoberta bruta nova de produto, sem oracle/respostas reservadas. Releitura somente dos cinco corpos L1 pertinentes e dos documentos públicos autorizados; reúso da cadeia L2 exata.",
+  "mechanical_work": "Conferir seis corpos predecessores em bytes/SHA-256, L2 metadata/recipe contra seus bindings e critérios contra contrato público; calcular hashes dos entregáveis UTF-8. Na revisão 2, conferir cópia byte-identical dos seis arquivos anteriores, diff somente aditivo em três blocos e preservação de critérios/predecessores.",
+  "not_claimed": [
+    "PASS deste L3 antes da dupla revisão",
+    "Execução de produto, geração, testes ou Atlas",
+    "Freshness, importação, publicação ou consumo real",
+    "Aceite de Core S1-01 ou garantias de runner/persistência/recuperação",
+    "Identidades CAS ou versões de inputs do runtime",
+    "Produção L4"
+  ],
+  "revision": 2,
+  "supersedes": {
+    "path": "revision-1/recipe.json",
+    "byte_length": 4322,
+    "sha256": "0412b582eed28e665fcd84e85e42575671ad4dea09941379a0e8b92e167c2a5a"
+  },
+  "original_producer_request_ref": {
+    "path": "revision-1/request.txt",
+    "byte_length": 1556,
+    "sha256": "8283cac77200261af23caab54e6168c0bc0121d483e7dce5a764d0d3c8c4788b"
+  },
+  "correction_request_basis": [
+    {
+      "path": "output/judgments/07-j1-original.md",
+      "byte_length": 2765,
+      "sha256": "0615b826726fa31bda2ee1c561e26121570193287e380ec53c86eef1794e24b1",
+      "verdict": "FIX-FIRST",
+      "reviewed_body_sha256": "b97dfa5c155e851d0360eb27c730996634d7b240797c373bc41a2122a2a4a101"
+    },
+    {
+      "path": "output/judgments/07-j2-original.md",
+      "byte_length": 2391,
+      "sha256": "db59124e81322a450ba40eb8bde682ae5ad9c54a369ba5948ec81cbd1db687b4",
+      "verdict": "FIX-FIRST",
+      "reviewed_body_sha256": "b97dfa5c155e851d0360eb27c730996634d7b240797c373bc41a2122a2a4a101"
+    }
+  ],
+  "bounded_delta": {
+    "findings": [
+      {
+        "id": "L3-01",
+        "resolution": "Dois exemplos normativos locais congelados aplicam todos os componentes do resultado visível e distinguem propagação de alterações só de recibo/binding.",
+        "public_cases": [
+          "S1-04-M1",
+          "S1-04-M2"
+        ]
+      },
+      {
+        "id": "L3-02",
+        "resolution": "Rejeitar ciclos de construção; navegação cíclica com limite de leituras/contexto e sem revisitas."
+      },
+      {
+        "id": "L3-03",
+        "resolution": "Leitura atual exige versões exatas vinculadas a manifesto aceito de escopo/deps válido aos inputs/contratos atuais; senão HOLD ou histórico explicitamente rotulado."
+      }
+    ],
+    "method": "Inserir somente os três complementos da união J1/J2. Usar a norma pública já autorizada e casos públicos M1/M2, sem novas observações de produto. Os exemplos são cenários normativos condicionais, não resultados executados. Preservar os seis arquivos da revisão 1 antes de editar.",
+    "body_diff_ref": {
+      "path": "body.diff",
+      "byte_length": 4523,
+      "sha256": "88ae44495b4c320e35908168c297f53989c648599095a6a897c4d8378bfb4d67"
+    },
+    "exact_insertions_ref": {
+      "path": "delta-insertions.json",
+      "byte_length": 2647,
+      "sha256": "345134b8b15aae1194537e1df4b66de434e925e6cdfdcd220876900b4bcc50bd"
+    }
+  }
+}

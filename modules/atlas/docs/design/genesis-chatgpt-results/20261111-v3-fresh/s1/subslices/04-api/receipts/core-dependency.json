@@ -1,0 +1,44 @@
+{
+  "subslice": "S1-01",
+  "observed_head": "45cf4cd48f2038dca56b859f763da2c28d862c12",
+  "handoff_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/handoff.json",
+  "handoff": {
+    "schema": "genesis-s1-subdivision-handoff/v1",
+    "campaign": "20261111-v1",
+    "protocol_epoch": "parallel-v3-fresh",
+    "results_epoch": "20261111-v3-fresh",
+    "session": "S1",
+    "subslice_id": "S1-01",
+    "execution_id": "6e9b2070-17eb-4e92-bba6-64ce616d6116",
+    "branch": "genesis-s1-sessions",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "observed_branch_head": "9daa0e1203cc7c772ae04398ec326faba6874c99",
+    "candidate_revision": null,
+    "artifact_revision": "e6ef63616aa4f9662e218ff7cc3cfddd3bdfaa21",
+    "completion_state": "IN_PROGRESS",
+    "work": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/work.md",
+    "ledger": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/execution-ledger.jsonl",
+    "package": null,
+    "judgments": [],
+    "supersedes": {
+      "commit": "9daa0e1203cc7c772ae04398ec326faba6874c99",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/handoff.json"
+    },
+    "local_obligations_open": [
+      "A1 exact evidence and dual review",
+      "B15 and remaining L1 dual review and coverage",
+      "Necessary L2–L4",
+      "Local Atlas package/import/binding/publication/read",
+      "Independent consumers and local maintenance",
+      "Applicable gates and final 50-criterion matrix"
+    ],
+    "global_integration": {
+      "owner": "S1_COORDINATION",
+      "branch": "genesis-fresh-s1",
+      "status": "NOT_REVIEWED"
+    },
+    "progress_only": true
+  },
+  "disposition": "Active execution; no accepted API-consumable Core artifact in observed handoff. Do not duplicate A1 or call absence of commit abandonment. Local API evidence continues from narrow baseline reads; broader retry/recovery claims require exact accepted predecessor."
+}

@@ -1,0 +1,11 @@
+{
+  "schema": "s1-04-request-visibility-limit/v1",
+  "message": "04a-D09-supplement",
+  "classification": "SUMMARY_ONLY_NOT_ORIGINAL_TRANSCRIPT",
+  "visible_summary": "Complemento 4a D09, conteúdo exato1971bytes SHA256282a... Inclua na decisão4a se ainda em curso; se já fechada, reavalie sóesseponto.",
+  "reported_payload_file": "producer/b3/v4/supplement-D09-mcp-catches.md",
+  "reported_payload_bytes": 1971,
+  "reported_payload_sha256": "282a547c7ebcc18ec8fb1c0987f47813725bea695a9ddc010673bfa40feddfb6",
+  "limit": "The inherited compaction summary reports a send_message header and the full file inclusion but does not expose the original wire-message text. No original 04a-D09 request is reconstructed or asserted by this archive.",
+  "principal_existing_record": "output/judgments/requests/04a-D09-supplement.txt"
+}

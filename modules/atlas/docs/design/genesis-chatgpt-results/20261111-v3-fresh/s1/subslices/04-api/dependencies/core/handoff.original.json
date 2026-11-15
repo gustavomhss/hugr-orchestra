@@ -1,0 +1,55 @@
+{
+  "schema": "genesis-s1-subdivision-handoff/v1",
+  "campaign": "20261111-v1",
+  "protocol_epoch": "parallel-v3-fresh",
+  "results_epoch": "20261111-v3-fresh",
+  "subslice_id": "S1-01",
+  "session": "S1",
+  "execution_id": "6e9b2070-17eb-4e92-bba6-64ce616d6116",
+  "branch": "genesis-s1-sessions",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "observed_branch_head": "45cf4cd48f2038dca56b859f763da2c28d862c12",
+  "artifact_revision": "a2a5de03d7b1034373eb877d8f03c4cecc772dde",
+  "completion_state": "IN_PROGRESS",
+  "checkpoint_only": true,
+  "recorded_at": "2026-11-14T23:58:08.858Z",
+  "package": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/native-package.json",
+  "package_state": "7 accepted L1, 5 pending L1, required cumulative layers not yet produced",
+  "work": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/work.md",
+  "ledger": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/execution-ledger.jsonl",
+  "coverage": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/coverage.json",
+  "judgments": [
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j1.json",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j2.json",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/config-v2-j1.json",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/config-v2-j2.json"
+  ],
+  "native_judges": [
+    "/root/judge1",
+    "/root/judge2"
+  ],
+  "local_obligations_open": [
+    "Complete five L1 judgments and mandatory corrections.",
+    "Produce and independently judge necessary L2–L4 after accepted predecessors.",
+    "Prepare complete package; separate runtime binding; governed publication and real index/read.",
+    "Own independent consumers/direct-use cases and maintenance.",
+    "Reconcile gates, fifty-criterion matrix, economics and final payload/seal read-back."
+  ],
+  "runtime_selection": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/control/runtime-selection-final.json",
+  "supersedes_checkpoint": "45cf4cd48f2038dca56b859f763da2c28d862c12",
+  "global_integration": {
+    "owner": "S1_COORDINATION",
+    "branch": "genesis-fresh-s1",
+    "scope": "Only later composition; no local obligation transferred."
+  },
+  "limitations": [
+    "Checkpoint does not close the mission.",
+    "Current source materialization is not a Git checkout; observed_head is null.",
+    "No policy, approval, product behavior, PR or merge changed.",
+    "Tokens, physical attempts and billing are UNKNOWN."
+  ],
+  "work_git_blob_sha": "b7bdd6751a9c959b793afa70f35c208cf1e2cc37",
+  "ledger_git_blob_sha": "0915e5c011127c8ea0e67ee1db4d91af6771ac59",
+  "seal_protocol": "Payload commit followed by a child seal commit; no self-referential commit SHA. Branch update uses expected_sha and force:false."
+}

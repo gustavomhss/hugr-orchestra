@@ -1,0 +1,21 @@
+{
+  "schema": "genesis-s1-04-local-layer-release/v1",
+  "layer": 4,
+  "key": "s1.subslice04.maintenance",
+  "body_sha256": "6836ed1abd690c45f999d32dbcbb6bb0451fda5ed77e6985ad601ae5a765705e",
+  "body_byte_length": 8942,
+  "judgments": [
+    {
+      "path": "judgments/08-j1-resolution.md",
+      "byte_length": 1925,
+      "sha256": "bc0acaab1337cd8e1d3a4245861eb2f7be159cdef26250eeb47243fe38b871fe"
+    },
+    {
+      "path": "judgments/08-j2-resolution.md",
+      "byte_length": 1883,
+      "sha256": "abdbf90d429eda331cb049f4628e8162e17c016ca37a45474a1164eee4db9d80"
+    }
+  ],
+  "status": "LOCAL_CONTENT_ACCEPTED",
+  "allows": "Inclusion in local content package; no runtime/Core/consumer/publication acceptance"
+}

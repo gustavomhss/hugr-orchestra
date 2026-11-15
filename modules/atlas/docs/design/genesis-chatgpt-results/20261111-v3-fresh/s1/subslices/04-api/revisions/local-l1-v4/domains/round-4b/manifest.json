@@ -1,0 +1,56 @@
+{
+  "schema": "genesis-s1-04-b3-round4b-supplement-receipt/v1",
+  "state": "READY_FOR_SAME_PAIR_REEVALUATION",
+  "semantic_pass_asserted": false,
+  "changed_claims": [],
+  "body_and_dossier_unchanged": true,
+  "files": [
+    {
+      "path": "b3/v4/supplement-D15-D18.md",
+      "byte_length": 7038,
+      "sha256": "73b95a7db8d2c61b2f62656eec02e6b19d6cf68b349840d46cced64cacdf61fd"
+    },
+    {
+      "path": "b3/v4/supplement-D15-D18-identities.json",
+      "byte_length": 2630,
+      "sha256": "aba27a144a08a9fff82c3a6fd59e10c96b112f15f4cacd07696805422ebbab74"
+    },
+    {
+      "path": "b3/v4/round-4b/request.txt",
+      "byte_length": 783,
+      "sha256": "0891dce311c904926b10ea2e834908f3a3de056d75d152fa85c270edd4dea507"
+    },
+    {
+      "path": "b3/v4/round-4b/response.md",
+      "byte_length": 1764,
+      "sha256": "a541a0c5d8daa409b3fcd32b412dedc6e1b5b09d4941ea92ae28f32b2c1af2be"
+    }
+  ],
+  "base_current_manifest": {
+    "path": "b3/v4/manifest.json",
+    "byte_length": 6473,
+    "sha256": "a5eefb81ada94fd6461392e613043d9bcab154f5cc4e2a3a8136f392268d4dd6"
+  },
+  "base_current_review_manifest": {
+    "path": "b3/v4/review-manifest.json",
+    "byte_length": 2233,
+    "sha256": "77ad31361a41141138d6eab6700a306527b01dcff9fdc5a4e42baf3e877a4bc0"
+  },
+  "new_raw_sources": [
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/schema/src/maestro-event.ts",
+      "git_blob_sha": "e4792cc8bbbdf6d11b8caf503fbd09b0b2688fb2",
+      "sha256": "d1d4ff601b422f55e6579f06b79805af24bdccda295fdcaa70b038afef0cdb8c",
+      "byte_length": 28276
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/schema/src/lean-metrics.ts",
+      "git_blob_sha": "ece2b32793cf3de837103ef42e34814b64287837",
+      "sha256": "4e8243211ee2df7b02689db54c57c61134d43f347a9154c7d31fb06e0744568b",
+      "byte_length": 6213
+    }
+  ],
+  "higher_layer_production": "NOT_RUN"
+}

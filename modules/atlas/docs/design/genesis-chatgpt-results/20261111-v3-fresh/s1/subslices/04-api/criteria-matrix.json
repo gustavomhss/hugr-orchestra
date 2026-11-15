@@ -1,0 +1,1597 @@
+{
+  "schema": "genesis-s1-04-criteria-disposition/v1",
+  "subslice_id": "S1-04",
+  "completion_state": "INCOMPLETE_BLOCKED",
+  "criterion_count": 50,
+  "normative_register": {
+    "schema": "genesis-parallel-criteria/v3",
+    "campaign": "20261111-v1",
+    "protocol_epoch": "parallel-v3-fresh",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "normative_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+    "normative_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+    "criterion_count": 50,
+    "domain_owners": [
+      "S1",
+      "S2",
+      "S3",
+      "S4",
+      "S5"
+    ],
+    "global_evidence_owner": "root",
+    "common_atlas_runtime_owner": "S4",
+    "principles_are_guidance_not_per_item_document_requirements": true,
+    "per_task": "Inherit principles; specialize applicable IDs and evidence without copying all laws.",
+    "completion": "One evidence-backed disposition matrix covers all 50 IDs; separate local obligation from global complement.",
+    "local_status": [
+      "PASS",
+      "FIX-FIRST",
+      "HOLD",
+      "NOT_APPLICABLE"
+    ],
+    "global_status": [
+      "DEFERRED_TO_INTEGRATION",
+      "PASS",
+      "HOLD"
+    ],
+    "not_applicable_rule": "Scope reason with review; never missing time, tool or evidence.",
+    "criteria": [
+      {
+        "id": "GO-A1",
+        "source_line": 52
+      },
+      {
+        "id": "GO-A2",
+        "source_line": 53
+      },
+      {
+        "id": "GO-A3",
+        "source_line": 54
+      },
+      {
+        "id": "GO-A4",
+        "source_line": 55
+      },
+      {
+        "id": "GO-A5",
+        "source_line": 56
+      },
+      {
+        "id": "GO-A6",
+        "source_line": 57
+      },
+      {
+        "id": "GO-A7",
+        "source_line": 58
+      },
+      {
+        "id": "GO-I1",
+        "source_line": 120
+      },
+      {
+        "id": "GO-I2",
+        "source_line": 121
+      },
+      {
+        "id": "GO-I3",
+        "source_line": 122
+      },
+      {
+        "id": "GO-I4",
+        "source_line": 123
+      },
+      {
+        "id": "GO-I5",
+        "source_line": 124
+      },
+      {
+        "id": "GO-I6",
+        "source_line": 125
+      },
+      {
+        "id": "GO-I7",
+        "source_line": 126
+      },
+      {
+        "id": "GO-I8",
+        "source_line": 127
+      },
+      {
+        "id": "AC-01",
+        "source_line": 138
+      },
+      {
+        "id": "AC-02",
+        "source_line": 139
+      },
+      {
+        "id": "AC-03",
+        "source_line": 140
+      },
+      {
+        "id": "AC-04",
+        "source_line": 141
+      },
+      {
+        "id": "AC-05",
+        "source_line": 142
+      },
+      {
+        "id": "AC-06",
+        "source_line": 143
+      },
+      {
+        "id": "AC-07",
+        "source_line": 144
+      },
+      {
+        "id": "AC-08",
+        "source_line": 145
+      },
+      {
+        "id": "AC-09",
+        "source_line": 146
+      },
+      {
+        "id": "AC-10",
+        "source_line": 147
+      },
+      {
+        "id": "CC-1",
+        "source_line": 159
+      },
+      {
+        "id": "CC-2",
+        "source_line": 160
+      },
+      {
+        "id": "CC-3",
+        "source_line": 161
+      },
+      {
+        "id": "CC-4",
+        "source_line": 162
+      },
+      {
+        "id": "CC-5",
+        "source_line": 163
+      },
+      {
+        "id": "CC-6",
+        "source_line": 164
+      },
+      {
+        "id": "CC-7",
+        "source_line": 165
+      },
+      {
+        "id": "SC-1",
+        "source_line": 169
+      },
+      {
+        "id": "SC-2",
+        "source_line": 170
+      },
+      {
+        "id": "SC-3",
+        "source_line": 171
+      },
+      {
+        "id": "SC-4",
+        "source_line": 172
+      },
+      {
+        "id": "SC-5",
+        "source_line": 173
+      },
+      {
+        "id": "QS-1",
+        "source_line": 180
+      },
+      {
+        "id": "QS-2",
+        "source_line": 181
+      },
+      {
+        "id": "QS-3",
+        "source_line": 182
+      },
+      {
+        "id": "QS-4",
+        "source_line": 183
+      },
+      {
+        "id": "QS-5",
+        "source_line": 184
+      },
+      {
+        "id": "QS-6",
+        "source_line": 185
+      },
+      {
+        "id": "DOD-1",
+        "source_line": 223
+      },
+      {
+        "id": "DOD-2",
+        "source_line": 224
+      },
+      {
+        "id": "DOD-3",
+        "source_line": 225
+      },
+      {
+        "id": "DOD-4",
+        "source_line": 226
+      },
+      {
+        "id": "DOD-5",
+        "source_line": 227
+      },
+      {
+        "id": "DOD-6",
+        "source_line": 228
+      },
+      {
+        "id": "DOD-7",
+        "source_line": 229
+      }
+    ]
+  },
+  "source_document_sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+  "status_counts": {
+    "HOLD": 29,
+    "PASS": 20,
+    "NOT_APPLICABLE": 1
+  },
+  "interpretation": "PASS is bounded local evidence; no local HOLD is hidden as global integration, and NOT_APPLICABLE is solely a reviewed scope specialization.",
+  "rows": [
+    {
+      "id": "GO-A1",
+      "original_source_line": 52,
+      "original_obligation": "The product is transferable ownership: purpose, behavior, constraints, decisions, impact and safe maintenance; claim count is not delivery.",
+      "local_status": "HOLD",
+      "local_specialization_and_decision": "Conteúdo API L1–L4 e três contratos Core exatos estão aceitos; transferência demonstrada de ownership ainda depende de consumo real.",
+      "evidence": [
+        "receipts/l1-release.json",
+        "receipts/l2-release.json",
+        "receipts/l3-final-release.json",
+        "receipts/l4-final-release.json",
+        "native-package.json",
+        "contracts/public.json",
+        "receipts/consumers/cases.json",
+        "receipts/consumers/o3-response.md",
+        "receipts/core-dependency.json",
+        "receipts/dependency-recheck.json",
+        "dependencies/core/reuse-proof.json",
+        "receipts/core-reuse-release.json"
+      ],
+      "local_open_work": "Conteúdo API L1–L4 e três contratos Core exatos estão aceitos; transferência demonstrada de ownership ainda depende de consumo real.",
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "GO-A2",
+      "original_source_line": 53,
+      "original_obligation": "Construction is cumulative; intermediate knowledge is persistent and independently useful, not disposable model scratch.",
+      "local_status": "PASS",
+      "local_specialization_and_decision": "Construção cumulativa: L1 foi liberado antes de L2, L2 antes de L3 e L3 antes de L4; todos os intermediários e predecessores exatos persistem.",
+      "evidence": [
+        "receipts/l1-release.json",
+        "receipts/l2-release.json",
+        "receipts/l3-final-release.json",
+        "receipts/l4-final-release.json",
+        "native-package.json",
+        "receipts/exact-prior-review-binding.json",
+        "transport-provenance.json",
+        "receipts/transport-check.json",
+        "receipts/historical-frame.json",
+        "receipts/l4-submission-erratum.json",
+        "requests/11a-archive-receipt.json",
+        "receipts/normalization-check.json"
+      ],
+      "local_open_work": null,
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "GO-A3",
+      "original_source_line": 54,
+      "original_obligation": "Consumption starts small: skills prescribe work and when/how to consult a scoped index; depth is pulled recursively as needed. Skills are not link inventories.",
+      "local_status": "HOLD",
+      "local_specialization_and_decision": "L4 prescreve consulta pequena e limites congelados; o caminho real não forneceu o conhecimento requerido ao consumidor.",
+      "evidence": [
+        "receipts/l1-release.json",
+        "receipts/l2-release.json",
+        "receipts/l3-final-release.json",
+        "receipts/l4-final-release.json",
+        "native-package.json",
+        "contracts/public.json",
+        "receipts/consumers/cases.json",
+        "receipts/consumers/o3-response.md",
+        "receipts/atlas/prepare-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json",
+        "receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+        "receipts/runtime-disposition.json",
+        "receipts/runtime-release-frozen.json",
+        "receipts/runtime-common-controls.json"
+      ],
+      "local_open_work": "L4 prescreve consulta pequena e limites congelados; o caminho real não forneceu o conhecimento requerido ao consumidor.",
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "GO-A4",
+      "original_source_line": 55,
+      "original_obligation": "Code/product changes enter their affected knowledge surfaces; unchanged validated knowledge is reused. Initial construction and maintenance use the same dependency/validation semantics.",
+      "local_status": "HOLD",
+      "local_specialization_and_decision": "Impacto e comparação foram definidos e julgados; manutenção executada do pacote local ainda não demonstrou rebuild e preservação de independentes.",
+      "evidence": [
+        "receipts/maintenance/disposition.json",
+        "producers/upper/l3/body.md",
+        "producers/upper/l4/body.md",
+        "receipts/atlas/prepare-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json",
+        "receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+        "receipts/runtime-disposition.json",
+        "receipts/runtime-release-frozen.json",
+        "receipts/runtime-common-controls.json"
+      ],
+      "local_open_work": "Impacto e comparação foram definidos e julgados; manutenção executada do pacote local ainda não demonstrou rebuild e preservação de independentes.",
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "GO-A5",
+      "original_source_line": 56,
+      "original_obligation": "Knowledge and source evolve together through Git, governed publication and CI consistency controls. Freshness, semantic validity and authority are different properties.",
+      "local_status": "HOLD",
+      "local_specialization_and_decision": "Git preserva a evolução do conteúdo; publicação governada e consistência operacional deste pacote continuam abertas.",
+      "evidence": [
+        "receipts/exact-prior-review-binding.json",
+        "transport-provenance.json",
+        "receipts/transport-check.json",
+        "receipts/historical-frame.json",
+        "receipts/l4-submission-erratum.json",
+        "requests/11a-archive-receipt.json",
+        "receipts/normalization-check.json",
+        "receipts/atlas/prepare-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json",
+        "receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+        "receipts/runtime-disposition.json",
+        "receipts/runtime-release-frozen.json",
+        "receipts/runtime-common-controls.json",
+        "receipts/guards/verified-check-guards-final-reconciled.receipt.json",
+        "receipts/verified-git/status.json",
+        "receipts/runtime-setup/commands/typecheck.receipt.json",
+        "receipts/gates.json"
+      ],
+      "local_open_work": "Git preserva a evolução do conteúdo; publicação governada e consistência operacional deste pacote continuam abertas.",
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "GO-A6",
+      "original_source_line": 57,
+      "original_obligation": "Mechanize what tools can determine; pay models for interpretation/composition that tools cannot supply. Bound execution before starting it and preserve useful completed work.",
+      "local_status": "PASS",
+      "local_specialization_and_decision": "190 leituras herdadas foram reutilizadas, deltas de fonte delimitados e identidades derivadas mecanicamente; nenhuma chamada externa paga ou economia fictícia foi declarada.",
+      "evidence": [
+        "source-disposition.jsonl",
+        "receipts/population-reconciliation.json",
+        "receipts/historical-frame.json",
+        "revisions/local-l1-v4/domains/domain-disposition.md",
+        "execution-ledger.jsonl",
+        "receipts/economy.json",
+        "receipts/exact-prior-review-binding.json",
+        "transport-provenance.json",
+        "receipts/transport-check.json",
+        "receipts/l4-submission-erratum.json",
+        "requests/11a-archive-receipt.json",
+        "receipts/normalization-check.json"
+      ],
+      "local_open_work": null,
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "GO-A7",
+      "original_source_line": 58,
+      "original_obligation": "Extend the existing Atlas with the minimum justified mechanisms; no parallel store, governance system or general-purpose orchestration framework by default.",
+      "local_status": "PASS",
+      "local_specialization_and_decision": "Usado o Atlas original fixado, sem novo store, importer ou governança. Serialização de dados, captura Git e registro de comandos não substituem o runtime.",
+      "evidence": [
+        "receipts/atlas/prepare-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json",
+        "receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+        "receipts/runtime-disposition.json",
+        "receipts/runtime-release-frozen.json",
+        "receipts/runtime-common-controls.json",
+        "receipts/exact-prior-review-binding.json",
+        "transport-provenance.json",
+        "receipts/transport-check.json",
+        "receipts/historical-frame.json",
+        "receipts/l4-submission-erratum.json",
+        "requests/11a-archive-receipt.json",
+        "receipts/normalization-check.json"
+      ],
+      "local_open_work": null,
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "GO-I1",
+      "original_source_line": 120,
+      "original_obligation": "Original campaign receipts, responses, claims and source identities remain immutable; retries have new linked identities.",
+      "local_status": "PASS",
+      "local_specialization_and_decision": "Originais, recusas e versões anteriores permanecem; correções têm identidades e deltas próprios. Limites de visibilidade históricos e erratas de transcrição são explícitos; a submissão canônica atual foi conferida, sem reconstrução apresentada como original.",
+      "evidence": [
+        "receipts/exact-prior-review-binding.json",
+        "transport-provenance.json",
+        "receipts/transport-check.json",
+        "receipts/historical-frame.json",
+        "receipts/l4-submission-erratum.json",
+        "requests/11a-archive-receipt.json",
+        "receipts/normalization-check.json",
+        "receipts/l1-release.json",
+        "receipts/l2-release.json",
+        "receipts/l3-final-release.json",
+        "receipts/l4-final-release.json",
+        "native-package.json",
+        "execution-ledger.jsonl",
+        "receipts/economy.json"
+      ],
+      "local_open_work": null,
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "GO-I2",
+      "original_source_line": 121,
+      "original_obligation": "Observed behavior, authorized intent, interpretation and gaps remain distinguishable; a structural freshness check cannot promote semantic certainty.",
+      "local_status": "PASS",
+      "local_specialization_and_decision": "Fonte observada, norma, interpretação, hipótese de manutenção e gap estão separados. PASS de conteúdo não foi promovido a freshness ou operação.",
+      "evidence": [
+        "receipts/l1-release.json",
+        "receipts/l2-release.json",
+        "receipts/l3-final-release.json",
+        "receipts/l4-final-release.json",
+        "native-package.json",
+        "receipts/exact-prior-review-binding.json",
+        "transport-provenance.json",
+        "receipts/transport-check.json",
+        "receipts/historical-frame.json",
+        "receipts/l4-submission-erratum.json",
+        "requests/11a-archive-receipt.json",
+        "receipts/normalization-check.json",
+        "receipts/atlas/prepare-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json",
+        "receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+        "receipts/runtime-disposition.json",
+        "receipts/runtime-release-frozen.json",
+        "receipts/runtime-common-controls.json"
+      ],
+      "local_open_work": null,
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "GO-I3",
+      "original_source_line": 122,
+      "original_obligation": "Current reads bind exact artifact versions to an accepted scope/dependency manifest valid for current inputs/contracts; prior acceptance or rollback cannot make stale knowledge current. Historical reads are labelled.",
+      "local_status": "HOLD",
+      "local_specialization_and_decision": "A regra de manifesto exato e compatível foi aceita; não há manifesto atual aceito deste pacote servido pelo Atlas.",
+      "evidence": [
+        "receipts/l1-release.json",
+        "receipts/l2-release.json",
+        "receipts/l3-final-release.json",
+        "receipts/l4-final-release.json",
+        "native-package.json",
+        "receipts/atlas/prepare-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json",
+        "receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+        "receipts/runtime-disposition.json",
+        "receipts/runtime-release-frozen.json",
+        "receipts/runtime-common-controls.json",
+        "contracts/public.json",
+        "receipts/consumers/cases.json",
+        "receipts/consumers/o3-response.md"
+      ],
+      "local_open_work": "A regra de manifesto exato e compatível foi aceita; não há manifesto atual aceito deste pacote servido pelo Atlas.",
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "GO-I4",
+      "original_source_line": 123,
+      "original_obligation": "Unchanged valid inputs/recipe reuse output without another interpretation call; independent artifacts are not rebuilt merely because navigation links exist.",
+      "local_status": "HOLD",
+      "local_specialization_and_decision": "Reúso editorial comprovado não equivale a cache/rebuild Atlas. Os controles comuns são versionados; a aplicação ao pacote próprio permanece aberta.",
+      "evidence": [
+        "receipts/exact-prior-review-binding.json",
+        "transport-provenance.json",
+        "receipts/transport-check.json",
+        "receipts/historical-frame.json",
+        "receipts/l4-submission-erratum.json",
+        "requests/11a-archive-receipt.json",
+        "receipts/normalization-check.json",
+        "receipts/maintenance/disposition.json",
+        "producers/upper/l3/body.md",
+        "producers/upper/l4/body.md",
+        "receipts/atlas/prepare-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json",
+        "receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+        "receipts/runtime-disposition.json",
+        "receipts/runtime-release-frozen.json",
+        "receipts/runtime-common-controls.json"
+      ],
+      "local_open_work": "Reúso editorial comprovado não equivale a cache/rebuild Atlas. Os controles comuns são versionados; a aplicação ao pacote próprio permanece aberta.",
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "GO-I5",
+      "original_source_line": 124,
+      "original_obligation": "Source additions, changes, removals and relevant non-code changes enter impact analysis; unavailable impact is HOLD, not an empty successful worklist.",
+      "local_status": "HOLD",
+      "local_specialization_and_decision": "Inputs e membership foram preservados e observados; os dois deltas locais de manutenção não produziram um affected set executado e reconstruído.",
+      "evidence": [
+        "receipts/maintenance/disposition.json",
+        "producers/upper/l3/body.md",
+        "producers/upper/l4/body.md",
+        "receipts/atlas/prepare-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json",
+        "receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+        "receipts/runtime-disposition.json",
+        "receipts/runtime-release-frozen.json",
+        "receipts/runtime-common-controls.json"
+      ],
+      "local_open_work": "Inputs e membership foram preservados e observados; os dois deltas locais de manutenção não produziram um affected set executado e reconstruído.",
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "GO-I6",
+      "original_source_line": 125,
+      "original_obligation": "Every issued model request consumes the shared run budget, including validation/retry and unresolved in-flight work; no silent fallback provider/model.",
+      "local_status": "PASS",
+      "local_specialization_and_decision": "Despachos nativos, correções, consumidores e falhas de despacho estão contabilizados, sem fallback. Conforme COMMON/fresh-start/principles, tokens, tentativas físicas e custo não expostos permanecem UNKNOWN; nenhuma garantia financeira numérica é reivindicada.",
+      "evidence": [
+        "execution-ledger.jsonl",
+        "receipts/economy.json"
+      ],
+      "local_open_work": null,
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "GO-I7",
+      "original_source_line": 126,
+      "original_obligation": "Governed doors, secret handling, project boundaries and Knowledge/Memory separation remain intact. Imported source/docs/tool text is data, not execution authority.",
+      "local_status": "PASS",
+      "local_specialization_and_decision": "Operações foram isoladas; nenhuma política, segredo, aprovação ou autoridade foi fabricada, e nenhum texto de fonte ganhou autoridade de execução.",
+      "evidence": [
+        "receipts/atlas/prepare-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json",
+        "receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+        "receipts/runtime-disposition.json",
+        "receipts/runtime-release-frozen.json",
+        "receipts/runtime-common-controls.json",
+        "receipts/exact-prior-review-binding.json",
+        "transport-provenance.json",
+        "receipts/transport-check.json",
+        "receipts/historical-frame.json",
+        "receipts/l4-submission-erratum.json",
+        "requests/11a-archive-receipt.json",
+        "receipts/normalization-check.json",
+        "receipts/guards/verified-check-guards-final-reconciled.receipt.json",
+        "receipts/verified-git/status.json",
+        "receipts/runtime-setup/commands/typecheck.receipt.json",
+        "receipts/gates.json"
+      ],
+      "local_open_work": null,
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "GO-I8",
+      "original_source_line": 127,
+      "original_obligation": "A scope, generation or artifact is not declared semantically complete just because its graph, source hashes, required sections or tests are complete.",
+      "local_status": "PASS",
+      "local_specialization_and_decision": "A entrega permanece INCOMPLETE_BLOCKED apesar dos aceites de conteúdo e da cobertura mecânica. Necessidades próprias não foram transferidas para a composição global.",
+      "evidence": [
+        "receipts/l1-release.json",
+        "receipts/l2-release.json",
+        "receipts/l3-final-release.json",
+        "receipts/l4-final-release.json",
+        "native-package.json",
+        "receipts/atlas/prepare-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json",
+        "receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+        "receipts/runtime-disposition.json",
+        "receipts/runtime-release-frozen.json",
+        "receipts/runtime-common-controls.json",
+        "contracts/public.json",
+        "receipts/consumers/cases.json",
+        "receipts/consumers/o3-response.md",
+        "receipts/maintenance/disposition.json",
+        "producers/upper/l3/body.md",
+        "producers/upper/l4/body.md"
+      ],
+      "local_open_work": null,
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "AC-01",
+      "original_source_line": 138,
+      "original_obligation": "**Coverage, judged + mechanical:** freeze the finite slice inventory: needs → required artifacts → sources → cases below. Every required need has accepted support; intentional unknowns are named in advance. Unknown critical required knowledge fails acceptance. Mechanical mapping completeness does not judge semantic sufficiency.",
+      "local_status": "HOLD",
+      "local_specialization_and_decision": "472 fontes e necessidades estão classificadas, com conteúdo local e três predecessores Core aceitos; necessidades operacionais e suficiência demonstrada nos casos próprios continuam abertas.",
+      "evidence": [
+        "source-disposition.jsonl",
+        "receipts/population-reconciliation.json",
+        "receipts/historical-frame.json",
+        "revisions/local-l1-v4/domains/domain-disposition.md",
+        "receipts/l1-release.json",
+        "receipts/l2-release.json",
+        "receipts/l3-final-release.json",
+        "receipts/l4-final-release.json",
+        "native-package.json",
+        "receipts/core-dependency.json",
+        "receipts/dependency-recheck.json",
+        "dependencies/core/reuse-proof.json",
+        "receipts/core-reuse-release.json",
+        "contracts/public.json",
+        "receipts/consumers/cases.json",
+        "receipts/consumers/o3-response.md"
+      ],
+      "local_open_work": "472 fontes e necessidades estão classificadas, com conteúdo local e três predecessores Core aceitos; necessidades operacionais e suficiência demonstrada nos casos próprios continuam abertas.",
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "AC-02",
+      "original_source_line": 139,
+      "original_obligation": "**Ownership, judged:** an Atlas-only consumer correctly handles a permitted change, contract violation, cross-component impact, operational failure and deliberately out-of-scope question. Freeze expected reasoning/consequences, critical mistakes and evidence before production. All required answers must match; the unknown case must abstain. The author alone cannot certify this row.",
+      "local_status": "HOLD",
+      "local_specialization_and_decision": "O consumidor novo não recebeu conhecimento aceito pela porta real. Sua recusa não é uma resposta correta ao caso nem PASS das cinco classes.",
+      "evidence": [
+        "contracts/public.json",
+        "receipts/consumers/cases.json",
+        "receipts/consumers/o3-response.md",
+        "receipts/atlas/prepare-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json",
+        "receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+        "receipts/runtime-disposition.json",
+        "receipts/runtime-release-frozen.json",
+        "receipts/runtime-common-controls.json"
+      ],
+      "local_open_work": "O consumidor novo não recebeu conhecimento aceito pela porta real. Sua recusa não é uma resposta correta ao caso nem PASS das cinco classes.",
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "AC-03",
+      "original_source_line": 140,
+      "original_obligation": "**Consumption, mixed:** skill states working protocol and index usage; actual index reads reach purpose, behavior, constraints, decisions, impact, verification and evidence within fixed task-specific read/context bounds. A routine task stops shallow; a deeper task reaches supporting knowledge. Each intermediate artifact has a direct-use case. Validate real readers, not only Markdown links.",
+      "local_status": "HOLD",
+      "local_specialization_and_decision": "Limites e 13 usos diretos foram congelados; o caminho index/read e todos os casos diretos ainda precisam alcançar o conteúdo aceito.",
+      "evidence": [
+        "contracts/public.json",
+        "receipts/consumers/cases.json",
+        "receipts/consumers/o3-response.md",
+        "receipts/atlas/prepare-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json",
+        "receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+        "receipts/runtime-disposition.json",
+        "receipts/runtime-release-frozen.json",
+        "receipts/runtime-common-controls.json",
+        "receipts/l1-release.json",
+        "receipts/l2-release.json",
+        "receipts/l3-final-release.json",
+        "receipts/l4-final-release.json",
+        "native-package.json"
+      ],
+      "local_open_work": "Limites e 13 usos diretos foram congelados; o caminho index/read e todos os casos diretos ainda precisam alcançar o conteúdo aceito.",
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "AC-04",
+      "original_source_line": 141,
+      "original_obligation": "**Construction, mixed:** real paths ingest existing knowledge and construct missing understanding; labelled stale/conflicting/missing/malicious-source fixtures are handled without inventing intent, hiding conflict, granting authority or publishing unsupported required content. A canned final document cannot satisfy the producer test.",
+      "local_status": "HOLD",
+      "local_specialization_and_decision": "Produção nativa e prepare diagnóstico completo ocorreram; qualificação do código posterior, binding e controles próprios continuam abertos. O diagnóstico não é publicação nem aceite operacional.",
+      "evidence": [
+        "receipts/l1-release.json",
+        "receipts/l2-release.json",
+        "receipts/l3-final-release.json",
+        "receipts/l4-final-release.json",
+        "native-package.json",
+        "receipts/atlas/prepare-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json",
+        "receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+        "receipts/runtime-disposition.json",
+        "receipts/runtime-release-frozen.json",
+        "receipts/runtime-common-controls.json",
+        "receipts/exact-prior-review-binding.json",
+        "transport-provenance.json",
+        "receipts/transport-check.json",
+        "receipts/historical-frame.json",
+        "receipts/l4-submission-erratum.json",
+        "requests/11a-archive-receipt.json",
+        "receipts/normalization-check.json"
+      ],
+      "local_open_work": "Produção nativa e prepare diagnóstico completo ocorreram; qualificação do código posterior, binding e controles próprios continuam abertos. O diagnóstico não é publicação nem aceite operacional.",
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "AC-05",
+      "original_source_line": 142,
+      "original_obligation": "**Reuse, mechanical:** identical inputs/recipe produce a cache hit with zero proposer calls; an independent edit preserves unrelated result identities and call counts. Equal prose with changed authority/validity/gaps MUST propagate; a receipt-only change refreshes bindings without new downstream interpretation. An unchanged validated consumer-visible result stops downstream rebuild. Build dependency edits invalidate dependents, unlike navigation-only links.",
+      "local_status": "HOLD",
+      "local_specialization_and_decision": "Comparação resultado/recibo e controles comuns preservados; cache, zero chamada e preservação de resultados independentes não foram executados neste pacote.",
+      "evidence": [
+        "receipts/maintenance/disposition.json",
+        "producers/upper/l3/body.md",
+        "producers/upper/l4/body.md",
+        "receipts/atlas/prepare-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json",
+        "receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+        "receipts/runtime-disposition.json",
+        "receipts/runtime-release-frozen.json",
+        "receipts/runtime-common-controls.json"
+      ],
+      "local_open_work": "Comparação resultado/recibo e controles comuns preservados; cache, zero chamada e preservação de resultados independentes não foram executados neste pacote.",
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "AC-06",
+      "original_source_line": 143,
+      "original_obligation": "**Incremental correctness, mixed:** behavior edit, added/removed source, intent-doc change and recipe change produce the independently expected affected set. Rebuilds restore required knowledge; mutation controls omit an edge/input and must fail. Detecting staleness alone is insufficient.",
+      "local_status": "HOLD",
+      "local_specialization_and_decision": "M1/M2 permanecem obrigatórios; nenhum expected affected set reservado foi tratado como execução de impacto/rebuild.",
+      "evidence": [
+        "receipts/maintenance/disposition.json",
+        "producers/upper/l3/body.md",
+        "producers/upper/l4/body.md",
+        "contracts/public.json",
+        "receipts/consumers/cases.json",
+        "receipts/consumers/o3-response.md",
+        "receipts/atlas/prepare-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json",
+        "receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+        "receipts/runtime-disposition.json",
+        "receipts/runtime-release-frozen.json",
+        "receipts/runtime-common-controls.json"
+      ],
+      "local_open_work": "M1/M2 permanecem obrigatórios; nenhum expected affected set reservado foi tratado como execução de impacto/rebuild.",
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "AC-07",
+      "original_source_line": 144,
+      "original_obligation": "**Publication/recovery, mechanical:** inject failure between generation and activation, interrupt/resume, and concurrent reads. A separate reader observes only a complete accepted manifest valid for current inputs/contracts or HOLD. A failed rebuild after source drift cannot fall back to stale knowledge as current. Resume reuses durable completions; rollback rejects incompatible source bindings; historical reads are labelled.",
+      "local_status": "HOLD",
+      "local_specialization_and_decision": "Sem candidato preparado no release qualificado e binding próprio não houve publicação, recuperação ou rollback local aceito. Controles comuns sintéticos não substituem esse vínculo.",
+      "evidence": [
+        "receipts/atlas/prepare-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json",
+        "receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+        "receipts/runtime-disposition.json",
+        "receipts/runtime-release-frozen.json",
+        "receipts/runtime-common-controls.json",
+        "receipts/maintenance/disposition.json",
+        "producers/upper/l3/body.md",
+        "producers/upper/l4/body.md"
+      ],
+      "local_open_work": "Sem candidato preparado no release qualificado e binding próprio não houve publicação, recuperação ou rollback local aceito. Controles comuns sintéticos não substituem esse vínculo.",
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "AC-08",
+      "original_source_line": 145,
+      "original_obligation": "**Economy, mechanical + approval:** one run ledger/reservation governs production, evaluation, retries and concurrent calls. Synthetic checks precede real calls. If real adapter conformance requires a paid call, it needs a bounded explicit authorization first, charged to the same global envelope. Only a conforming route may run the real slice. Report limits, usage and unsettled calls; no bytes-to-token or call-count-to-dollar fiction.",
+      "local_status": "PASS",
+      "local_specialization_and_decision": "Especialização nativa autorizada: ledger único de trabalho observável e pendências, nenhuma chamada paga externa ou fallback. Metering indisponível é UNKNOWN conforme o contrato, sem afirmar teto monetário ou custo físico integral.",
+      "evidence": [
+        "execution-ledger.jsonl",
+        "receipts/economy.json"
+      ],
+      "local_open_work": null,
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "AC-09",
+      "original_source_line": 146,
+      "original_obligation": "**Git/CI/host, mechanical:** changed declared input, new input under registered scope, missing artifact, broken index reference, incompatible dependency version and invalid generation are rejected at intended gates/readers. A local invalid unit holds its required closure while an independent valid scope remains readable; shared manifest corruption holds its dependent reads. Known-good/bad controls use actual entry points. Report workflow scope and branch-protection enforcement separately.",
+      "local_status": "HOLD",
+      "local_specialization_and_decision": "O guard original encontrou impedimento de objetos Git e os gates/reader locais não demonstraram todos os controles exigidos para este pacote.",
+      "evidence": [
+        "receipts/guards/verified-check-guards-final-reconciled.receipt.json",
+        "receipts/verified-git/status.json",
+        "receipts/runtime-setup/commands/typecheck.receipt.json",
+        "receipts/gates.json",
+        "receipts/atlas/prepare-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json",
+        "receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+        "receipts/runtime-disposition.json",
+        "receipts/runtime-release-frozen.json",
+        "receipts/runtime-common-controls.json"
+      ],
+      "local_open_work": "O guard original encontrou impedimento de objetos Git e os gates/reader locais não demonstraram todos os controles exigidos para este pacote.",
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "AC-10",
+      "original_source_line": 147,
+      "original_obligation": "**Preservation/migration, mechanical + review:** baseline inventory of protected campaign objects remains exact; old producers cannot publish into the new accepted scope accidentally. Stage new outputs without consumer authority, activate explicitly, preserve old accepted state for rollback and keep unrelated scopes usable. Generated boundaries change only through their generators.",
+      "local_status": "HOLD",
+      "local_specialization_and_decision": "Preservação documental e chaves exatas estão comprovadas; ativação/rollback e isolamento de leitores do pacote próprio permanecem sem prova operacional.",
+      "evidence": [
+        "receipts/exact-prior-review-binding.json",
+        "transport-provenance.json",
+        "receipts/transport-check.json",
+        "receipts/historical-frame.json",
+        "receipts/l4-submission-erratum.json",
+        "requests/11a-archive-receipt.json",
+        "receipts/normalization-check.json",
+        "receipts/atlas/prepare-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json",
+        "receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+        "receipts/runtime-disposition.json",
+        "receipts/runtime-release-frozen.json",
+        "receipts/runtime-common-controls.json"
+      ],
+      "local_open_work": "Preservação documental e chaves exatas estão comprovadas; ativação/rollback e isolamento de leitores do pacote próprio permanecem sem prova operacional.",
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "CC-1",
+      "original_source_line": 159,
+      "original_obligation": "Scope, sources, gaps, existing/missing knowledge and the finite required-artifact inventory are frozen.",
+      "local_status": "PASS",
+      "local_specialization_and_decision": "Inventário finito, necessidades, fontes, desconhecidos e 22 casos foram congelados; 472 paths permanecem classificados sem exclusão silenciosa.",
+      "evidence": [
+        "source-disposition.jsonl",
+        "receipts/population-reconciliation.json",
+        "receipts/historical-frame.json",
+        "revisions/local-l1-v4/domains/domain-disposition.md",
+        "contracts/public.json",
+        "receipts/consumers/cases.json",
+        "receipts/consumers/o3-response.md"
+      ],
+      "local_open_work": null,
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "CC-2",
+      "original_source_line": 160,
+      "original_obligation": "The slice is constructed cumulatively and every required level is persisted, directly usable and reachable through the real index/skill path.",
+      "local_status": "HOLD",
+      "local_specialization_and_decision": "Todos os níveis necessários persistem e têm aceite de conteúdo; disponibilidade e uso pelo índice real permanecem abertos.",
+      "evidence": [
+        "receipts/l1-release.json",
+        "receipts/l2-release.json",
+        "receipts/l3-final-release.json",
+        "receipts/l4-final-release.json",
+        "native-package.json",
+        "receipts/atlas/prepare-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json",
+        "receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+        "receipts/runtime-disposition.json",
+        "receipts/runtime-release-frozen.json",
+        "receipts/runtime-common-controls.json",
+        "contracts/public.json",
+        "receipts/consumers/cases.json",
+        "receipts/consumers/o3-response.md"
+      ],
+      "local_open_work": "Todos os níveis necessários persistem e têm aceite de conteúdo; disponibilidade e uso pelo índice real permanecem abertos.",
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "CC-3",
+      "original_source_line": 161,
+      "original_obligation": "Product purpose, behavior, contracts, decisions, impact and safe maintenance are supported, not merely titled.",
+      "local_status": "HOLD",
+      "local_specialization_and_decision": "Propósito, contratos, impacto e manutenção API/Core selecionados têm suporte; transferência de ownership por consumidores ainda não foi demonstrada.",
+      "evidence": [
+        "receipts/l1-release.json",
+        "receipts/l2-release.json",
+        "receipts/l3-final-release.json",
+        "receipts/l4-final-release.json",
+        "native-package.json",
+        "receipts/core-dependency.json",
+        "receipts/dependency-recheck.json",
+        "dependencies/core/reuse-proof.json",
+        "receipts/core-reuse-release.json",
+        "contracts/public.json",
+        "receipts/consumers/cases.json",
+        "receipts/consumers/o3-response.md"
+      ],
+      "local_open_work": "Propósito, contratos, impacto e manutenção API/Core selecionados têm suporte; transferência de ownership por consumidores ainda não foi demonstrada.",
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "CC-4",
+      "original_source_line": 162,
+      "original_obligation": "Initial build, invalidation, rebuild, reuse and relevant additions/removals/non-code inputs work end to end.",
+      "local_status": "HOLD",
+      "local_specialization_and_decision": "Construção, invalidação, rebuild e reúso locais ainda não funcionaram ponta a ponta no pacote selecionado.",
+      "evidence": [
+        "receipts/maintenance/disposition.json",
+        "producers/upper/l3/body.md",
+        "producers/upper/l4/body.md",
+        "receipts/atlas/prepare-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json",
+        "receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+        "receipts/runtime-disposition.json",
+        "receipts/runtime-release-frozen.json",
+        "receipts/runtime-common-controls.json"
+      ],
+      "local_open_work": "Construção, invalidação, rebuild e reúso locais ainda não funcionaram ponta a ponta no pacote selecionado.",
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "CC-5",
+      "original_source_line": 163,
+      "original_obligation": "Coherent publication, reader verification, failure recovery and rollback work without weakening governance.",
+      "local_status": "HOLD",
+      "local_specialization_and_decision": "Publicação coerente, verificação de leitor e recuperação próprias permanecem abertas sem relaxar governança.",
+      "evidence": [
+        "receipts/atlas/prepare-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json",
+        "receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+        "receipts/runtime-disposition.json",
+        "receipts/runtime-release-frozen.json",
+        "receipts/runtime-common-controls.json",
+        "receipts/maintenance/disposition.json",
+        "producers/upper/l3/body.md",
+        "producers/upper/l4/body.md"
+      ],
+      "local_open_work": "Publicação coerente, verificação de leitor e recuperação próprias permanecem abertas sem relaxar governança.",
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "CC-6",
+      "original_source_line": 164,
+      "original_obligation": "Execution economics are enforced/reported to the stated adapter guarantee and the approved run reconciles.",
+      "local_status": "PASS",
+      "local_specialization_and_decision": "Execução e limitações são reportadas à garantia realmente exposta pela rota nativa. Usage/custo e tentativas físicas são UNKNOWN, não valores reconciliados fictícios; agregado histórico permanece atribuído a ROOT.",
+      "evidence": [
+        "execution-ledger.jsonl",
+        "receipts/economy.json"
+      ],
+      "local_open_work": null,
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "CC-7",
+      "original_source_line": 165,
+      "original_obligation": "Compatibility, generated surfaces, applicable docs/skills/guides and old-campaign obligations have explicit dispositions; expansion is not silently claimed complete.",
+      "local_status": "PASS",
+      "local_specialization_and_decision": "Gerados, compatibilidade, guias, gaps, contratos históricos e responsabilidades de outras fatias têm disposição explícita; não se reivindica expansão ou composição da S1.",
+      "evidence": [
+        "receipts/l1-release.json",
+        "receipts/l2-release.json",
+        "receipts/l3-final-release.json",
+        "receipts/l4-final-release.json",
+        "native-package.json",
+        "source-disposition.jsonl",
+        "receipts/population-reconciliation.json",
+        "receipts/historical-frame.json",
+        "revisions/local-l1-v4/domains/domain-disposition.md",
+        "receipts/exact-prior-review-binding.json",
+        "transport-provenance.json",
+        "receipts/transport-check.json",
+        "receipts/l4-submission-erratum.json",
+        "requests/11a-archive-receipt.json",
+        "receipts/normalization-check.json"
+      ],
+      "local_open_work": null,
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "SC-1",
+      "original_source_line": 169,
+      "original_obligation": "AC-02 passes all frozen required cases without a critical mistake or source discovery by the consumer.",
+      "local_status": "HOLD",
+      "local_specialization_and_decision": "Os casos congelados não receberam respostas completas por consumidor Atlas-only; nenhuma conclusão de ownership foi concedida.",
+      "evidence": [
+        "contracts/public.json",
+        "receipts/consumers/cases.json",
+        "receipts/consumers/o3-response.md"
+      ],
+      "local_open_work": "Os casos congelados não receberam respostas completas por consumidor Atlas-only; nenhuma conclusão de ownership foi concedida.",
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "SC-2",
+      "original_source_line": 170,
+      "original_obligation": "AC-03 meets the read/context limits frozen before evaluation; routine use does not require loading the full graph.",
+      "local_status": "HOLD",
+      "local_specialization_and_decision": "Limites foram respeitados na tentativa bloqueada, mas isso não demonstra uso progressivo útil nem os usos diretos dos intermediários.",
+      "evidence": [
+        "contracts/public.json",
+        "receipts/consumers/cases.json",
+        "receipts/consumers/o3-response.md",
+        "receipts/atlas/prepare-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json",
+        "receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+        "receipts/runtime-disposition.json",
+        "receipts/runtime-release-frozen.json",
+        "receipts/runtime-common-controls.json"
+      ],
+      "local_open_work": "Limites foram respeitados na tentativa bloqueada, mas isso não demonstra uso progressivo útil nem os usos diretos dos intermediários.",
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "SC-3",
+      "original_source_line": 171,
+      "original_obligation": "AC-05/06 preserve independent knowledge and reconcile the expected affected set; unchanged work incurs no new interpretation calls.",
+      "local_status": "HOLD",
+      "local_specialization_and_decision": "Incrementalidade local e affected sets continuam sem execução; regras aceitas e controles comuns não são a aplicação própria.",
+      "evidence": [
+        "receipts/maintenance/disposition.json",
+        "producers/upper/l3/body.md",
+        "producers/upper/l4/body.md",
+        "receipts/atlas/prepare-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json",
+        "receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+        "receipts/runtime-disposition.json",
+        "receipts/runtime-release-frozen.json",
+        "receipts/runtime-common-controls.json"
+      ],
+      "local_open_work": "Incrementalidade local e affected sets continuam sem execução; regras aceitas e controles comuns não são a aplicação própria.",
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "SC-4",
+      "original_source_line": 172,
+      "original_obligation": "separately report initial construction, validation, incremental update and daily reads; stay within the approved envelope and never call missing usage zero. No savings percentage without a comparable measured baseline, and no rerun of old mining merely to obtain one.",
+      "local_status": "PASS",
+      "local_specialization_and_decision": "Construção, avaliação, setup e leituras são distinguidos no ledger; valores não expostos são UNKNOWN e não há baseline comparável nem percentual de economia inventado. Especialização de relato honesto, sem alegar economia medida.",
+      "evidence": [
+        "execution-ledger.jsonl",
+        "receipts/economy.json"
+      ],
+      "local_open_work": null,
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "SC-5",
+      "original_source_line": 173,
+      "original_obligation": "AC-07/09 demonstrate coherent accepted reads and refusal of the specified invalid states, without asserting CI proves semantic truth.",
+      "local_status": "HOLD",
+      "local_specialization_and_decision": "Recusas reais estão preservadas; consistência de uma geração aceita própria não foi demonstrada.",
+      "evidence": [
+        "receipts/atlas/prepare-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json",
+        "receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+        "receipts/runtime-disposition.json",
+        "receipts/runtime-release-frozen.json",
+        "receipts/runtime-common-controls.json",
+        "receipts/guards/verified-check-guards-final-reconciled.receipt.json",
+        "receipts/verified-git/status.json",
+        "receipts/runtime-setup/commands/typecheck.receipt.json",
+        "receipts/gates.json"
+      ],
+      "local_open_work": "Recusas reais estão preservadas; consistência de uma geração aceita própria não foi demonstrada.",
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "QS-1",
+      "original_source_line": 180,
+      "original_obligation": "preserve evidence and disagreements; use correct epistemic labels; no unsupported product rationale.",
+      "local_status": "PASS",
+      "local_specialization_and_decision": "Desacordos, FIX-FIRST, narrowing B3, fontes literais e enquadramento histórico permanecem explícitos; não há rationale de produto inventado.",
+      "evidence": [
+        "receipts/l1-release.json",
+        "receipts/l2-release.json",
+        "receipts/l3-final-release.json",
+        "receipts/l4-final-release.json",
+        "native-package.json",
+        "receipts/exact-prior-review-binding.json",
+        "transport-provenance.json",
+        "receipts/transport-check.json",
+        "receipts/historical-frame.json",
+        "receipts/l4-submission-erratum.json",
+        "requests/11a-archive-receipt.json",
+        "receipts/normalization-check.json"
+      ],
+      "local_open_work": null,
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "QS-2",
+      "original_source_line": 181,
+      "original_obligation": "concise skills prescribe actions; index entries state what a deeper artifact answers; explanations/procedures are readable, scoped and non-redundant.",
+      "local_status": "PASS",
+      "local_specialization_and_decision": "O procedimento L4 orienta ação, consulta proporcional, limites, verificação e handoff; a utilidade de conteúdo foi julgada separadamente da utilização operacional ainda aberta.",
+      "evidence": [
+        "receipts/l1-release.json",
+        "receipts/l2-release.json",
+        "receipts/l3-final-release.json",
+        "receipts/l4-final-release.json",
+        "native-package.json"
+      ],
+      "local_open_work": null,
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "QS-3",
+      "original_source_line": 182,
+      "original_obligation": "every new mechanism names an acceptance need existing code cannot satisfy; no speculative framework, per-layer agent, vector store, bespoke database or mandatory deepening loop.",
+      "local_status": "PASS",
+      "local_specialization_and_decision": "Nenhuma infraestrutura paralela foi introduzida. Necessidades são atendidas por artefatos locais e portas Atlas existentes, com bloqueios explícitos quando a capacidade não basta.",
+      "evidence": [
+        "receipts/l1-release.json",
+        "receipts/l2-release.json",
+        "receipts/l3-final-release.json",
+        "receipts/l4-final-release.json",
+        "native-package.json",
+        "receipts/atlas/prepare-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json",
+        "receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+        "receipts/runtime-disposition.json",
+        "receipts/runtime-release-frozen.json",
+        "receipts/runtime-common-controls.json"
+      ],
+      "local_open_work": null,
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "QS-4",
+      "original_source_line": 183,
+      "original_obligation": "repository style/dependency boundaries, generated-code discipline, safe persistence, input validation and secret handling; no global test hacks or duplicated implementation in tests.",
+      "local_status": "HOLD",
+      "local_specialization_and_decision": "Não houve mudança de produto, política ou gerados manuais; o guard obrigatório não completou, portanto o gate de engenharia não é declarado verde.",
+      "evidence": [
+        "receipts/guards/verified-check-guards-final-reconciled.receipt.json",
+        "receipts/verified-git/status.json",
+        "receipts/runtime-setup/commands/typecheck.receipt.json",
+        "receipts/gates.json",
+        "receipts/exact-prior-review-binding.json",
+        "transport-provenance.json",
+        "receipts/transport-check.json",
+        "receipts/historical-frame.json",
+        "receipts/l4-submission-erratum.json",
+        "requests/11a-archive-receipt.json",
+        "receipts/normalization-check.json"
+      ],
+      "local_open_work": "Não houve mudança de produto, política ou gerados manuais; o guard obrigatório não completou, portanto o gate de engenharia não é declarado verde.",
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "QS-5",
+      "original_source_line": 184,
+      "original_obligation": "actual implementation/reader controls, anti-vacuity mutations where relevant, bounded semantic review and explicit scope of proof; review a fixed bar, not endless optional improvements.",
+      "local_status": "HOLD",
+      "local_specialization_and_decision": "Revisão semântica e controles comuns têm escopo explícito; faltam binding, publicação, consumidores e manutenção nos gates próprios, apesar do prepare diagnóstico real.",
+      "evidence": [
+        "receipts/l1-release.json",
+        "receipts/l2-release.json",
+        "receipts/l3-final-release.json",
+        "receipts/l4-final-release.json",
+        "native-package.json",
+        "receipts/atlas/prepare-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json",
+        "receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+        "receipts/runtime-disposition.json",
+        "receipts/runtime-release-frozen.json",
+        "receipts/runtime-common-controls.json",
+        "contracts/public.json",
+        "receipts/consumers/cases.json",
+        "receipts/consumers/o3-response.md",
+        "receipts/maintenance/disposition.json",
+        "producers/upper/l3/body.md",
+        "producers/upper/l4/body.md"
+      ],
+      "local_open_work": "Revisão semântica e controles comuns têm escopo explícito; faltam binding, publicação, consumidores e manutenção nos gates próprios, apesar do prepare diagnóstico real.",
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "QS-6",
+      "original_source_line": 185,
+      "original_obligation": "scoped evidence packs, shared validated context, deterministic derivation first, reusable completions and honest accounting; no automatic retry/refinement campaign.",
+      "local_status": "PASS",
+      "local_specialization_and_decision": "Reúso exato e deltas delimitados evitaram repetir mineração; a contabilidade mantém UNKNOWN e recusas, sem alegar economia medida.",
+      "evidence": [
+        "execution-ledger.jsonl",
+        "receipts/economy.json",
+        "source-disposition.jsonl",
+        "receipts/population-reconciliation.json",
+        "receipts/historical-frame.json",
+        "revisions/local-l1-v4/domains/domain-disposition.md",
+        "receipts/exact-prior-review-binding.json",
+        "transport-provenance.json",
+        "receipts/transport-check.json",
+        "receipts/l4-submission-erratum.json",
+        "requests/11a-archive-receipt.json",
+        "receipts/normalization-check.json"
+      ],
+      "local_open_work": null,
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "DOD-1",
+      "original_source_line": 223,
+      "original_obligation": "CC-1..7 and SC-1..5 have explicit evidence/verdicts; judged rows have named acceptance, not inferred approval from tests.",
+      "local_status": "PASS",
+      "local_specialization_and_decision": "Esta matriz mantém os 50 IDs e dá evidência/disposição explícita para CC e SC. Aceites de conteúdo são nomeados; linhas operacionais abertas continuam HOLD.",
+      "evidence": [
+        "receipts/l1-release.json",
+        "receipts/l2-release.json",
+        "receipts/l3-final-release.json",
+        "receipts/l4-final-release.json",
+        "native-package.json",
+        "contracts/public.json",
+        "receipts/consumers/cases.json",
+        "receipts/consumers/o3-response.md",
+        "receipts/maintenance/disposition.json",
+        "producers/upper/l3/body.md",
+        "producers/upper/l4/body.md",
+        "receipts/guards/verified-check-guards-final-reconciled.receipt.json",
+        "receipts/verified-git/status.json",
+        "receipts/runtime-setup/commands/typecheck.receipt.json",
+        "receipts/gates.json",
+        "execution-ledger.jsonl",
+        "receipts/economy.json"
+      ],
+      "local_open_work": null,
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "DOD-2",
+      "original_source_line": 224,
+      "original_obligation": "all applicable invariants and QS-1..6 are reviewed; known-bad controls demonstrate relevant gates can reject defects.",
+      "local_status": "HOLD",
+      "local_specialization_and_decision": "A revisão dos invariantes não equivale a controles próprios executados; rejeições de implementação/consumo continuam incompletas.",
+      "evidence": [
+        "receipts/atlas/prepare-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json",
+        "receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+        "receipts/runtime-disposition.json",
+        "receipts/runtime-release-frozen.json",
+        "receipts/runtime-common-controls.json",
+        "receipts/guards/verified-check-guards-final-reconciled.receipt.json",
+        "receipts/verified-git/status.json",
+        "receipts/runtime-setup/commands/typecheck.receipt.json",
+        "receipts/gates.json"
+      ],
+      "local_open_work": "A revisão dos invariantes não equivale a controles próprios executados; rejeições de implementação/consumo continuam incompletas.",
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "DOD-3",
+      "original_source_line": 225,
+      "original_obligation": "real consumers use accepted artifacts through the index/skill path; end-to-end update/publication/recovery, not only isolated modules, is verified.",
+      "local_status": "HOLD",
+      "local_specialization_and_decision": "Consumidores, atualização, publicação e recuperação locais não foram demonstrados ponta a ponta.",
+      "evidence": [
+        "contracts/public.json",
+        "receipts/consumers/cases.json",
+        "receipts/consumers/o3-response.md",
+        "receipts/maintenance/disposition.json",
+        "producers/upper/l3/body.md",
+        "producers/upper/l4/body.md",
+        "receipts/atlas/prepare-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json",
+        "receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+        "receipts/runtime-disposition.json",
+        "receipts/runtime-release-frozen.json",
+        "receipts/runtime-common-controls.json"
+      ],
+      "local_open_work": "Consumidores, atualização, publicação e recuperação locais não foram demonstrados ponta a ponta.",
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "DOD-4",
+      "original_source_line": 226,
+      "original_obligation": "scoped remote tests, package-local typechecks, generated checks where applicable and `bun run check:guards --base origin/dev` are reconciled; one final epic covers the integrated bundle. Never report unrun gates as green.",
+      "local_status": "HOLD",
+      "local_specialization_and_decision": "Typecheck do runtime instalado foi executado, mas não é teste do produto API. Guard obrigatório não completou; CI/geração não executados não aparecem verdes.",
+      "evidence": [
+        "receipts/guards/verified-check-guards-final-reconciled.receipt.json",
+        "receipts/verified-git/status.json",
+        "receipts/runtime-setup/commands/typecheck.receipt.json",
+        "receipts/gates.json"
+      ],
+      "local_open_work": "Typecheck do runtime instalado foi executado, mas não é teste do produto API. Guard obrigatório não completou; CI/geração não executados não aparecem verdes.",
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "DOD-5",
+      "original_source_line": 227,
+      "original_obligation": "real authorized usage/cost and unresolved requests reconcile; no unapproved calls, silent fallback or budget reset between stages.",
+      "local_status": "PASS",
+      "local_specialization_and_decision": "Pedidos observáveis e resoluções locais estão registrados, sem apagar reservas/história ou tratar UNKNOWN como zero. O metering não exposto e o agregado histórico permanecem explicitamente não reconciliados numericamente, conforme COMMON/fresh-start.",
+      "evidence": [
+        "execution-ledger.jsonl",
+        "receipts/economy.json"
+      ],
+      "local_open_work": null,
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "DOD-6",
+      "original_source_line": 228,
+      "original_obligation": "docs/skills/operator guidance, migration/rollback and historical obligation dispositions are accurate; independent review is complete before landing and only verified owned resources are cleaned.",
+      "local_status": "PASS",
+      "local_specialization_and_decision": "Guias, migração/rollback como obrigação, limites históricos e preservação receberam revisão local. Não houve limpeza de recursos alheios ou landing.",
+      "evidence": [
+        "receipts/l1-release.json",
+        "receipts/l2-release.json",
+        "receipts/l3-final-release.json",
+        "receipts/l4-final-release.json",
+        "native-package.json",
+        "receipts/exact-prior-review-binding.json",
+        "transport-provenance.json",
+        "receipts/transport-check.json",
+        "receipts/historical-frame.json",
+        "receipts/l4-submission-erratum.json",
+        "requests/11a-archive-receipt.json",
+        "receipts/normalization-check.json"
+      ],
+      "local_open_work": null,
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    },
+    {
+      "id": "DOD-7",
+      "original_source_line": 229,
+      "original_obligation": "owner acceptance and governed integration are recorded. Code complete, tested, semantically accepted and landed are distinct states. No silent waiver; a failed criterion remains open or an explicit owner amendment changes this contract.",
+      "local_status": "NOT_APPLICABLE",
+      "local_specialization_and_decision": "Aceite humano, landing e ativação em produção pertencem à coordenação/ROOT por COMMON e completion. A publicação Atlas isolada própria não está dispensada: permanece HOLD em AC-07/09/10.",
+      "evidence": [
+        "receipts/atlas/prepare-r3-final.receipt.json",
+        "receipts/atlas/read-component-r3-final.receipt.json",
+        "receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+        "receipts/runtime-disposition.json",
+        "receipts/runtime-release-frozen.json",
+        "receipts/runtime-common-controls.json",
+        "receipts/exact-prior-review-binding.json",
+        "transport-provenance.json",
+        "receipts/transport-check.json",
+        "receipts/historical-frame.json",
+        "receipts/l4-submission-erratum.json",
+        "requests/11a-archive-receipt.json",
+        "receipts/normalization-check.json"
+      ],
+      "local_open_work": null,
+      "global_complement": {
+        "status": "DEFERRED_TO_INTEGRATION",
+        "owner": "S1_COORDINATION then ROOT",
+        "obligation": "Compor as cinco subfatias com versões exatas, contratos cruzados, índice geral e vínculos S4; depois integrar S1–S5. Não absorve a pendência local desta linha."
+      },
+      "review": "Same persistent native J1/J2 final disposition review; semantic layer releases cited separately."
+    }
+  ]
+}

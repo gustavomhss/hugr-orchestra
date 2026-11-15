@@ -1,0 +1,109 @@
+{
+  "schema": "genesis-s1-04-local-recipe/v1",
+  "key": "s1.subslice04.maintenance",
+  "layer": 4,
+  "need": "maintenance",
+  "input_public_contract": {
+    "path": "output/contracts/public.json",
+    "byte_length": 10021,
+    "sha256": "7dcc9df0003b99722b18538fab1e45adb3ac60e6697397677200feddce40909e"
+  },
+  "producer_request_ref": {
+    "path": "request.txt",
+    "byte_length": 1822,
+    "sha256": "f0d6f5e8f1f7c4fe3fe5fef442dfc084257200d83c4db2f7e7c72c283b4408ac"
+  },
+  "predecessor_acceptance_refs": [
+    {
+      "path": "output/receipts/l1-release.json",
+      "byte_length": 3522,
+      "sha256": "23674344f089dbc26e1cac7ee70e0de9809e663ed80a0967219ae53222d4b0fb"
+    },
+    {
+      "path": "output/receipts/l2-release.json",
+      "byte_length": 830,
+      "sha256": "35f6a60a7aca9937b957022fae7ef1868b84a5b4d4284f961882568675c3a2c9"
+    },
+    {
+      "path": "output/receipts/l3-release.json",
+      "byte_length": 714,
+      "sha256": "fd44a6a91515bdaf200cf28e4c7ccf9b2e1c2e3d70008e2cf88747ad165f4c97"
+    }
+  ],
+  "input_predecessors": [
+    {
+      "key": "s1.subslice04.integrated-impact",
+      "body_sha256": "c140fb0bf9606079e91576b542ec82b3904583e7433a8fe297c886318649f478"
+    },
+    {
+      "key": "s1.subslice04.local-contracts",
+      "body_sha256": "5f5ae9a915ec9a43940963ce69f4563a9a85d51e15d111237ff8b5e02a2d5170"
+    },
+    {
+      "key": "s1.api.boundaries",
+      "body_sha256": "f6b230ed8578b6bd9fdb1e4eaca26892df9355a58fc1f5e2e6a157bffabf7310"
+    },
+    {
+      "key": "s1.api.codegen",
+      "body_sha256": "2ec55afad54a871de673a252b6b7c604a8ecdb648cc1df9c80128d83a3f8e270"
+    }
+  ],
+  "public_normative_inputs": [
+    {
+      "path": "input/normative.txt",
+      "byte_length": 28267,
+      "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+      "role": "Intenção normativa: construção e manutenção cumulativas; comparação resultado/recibos e limites de propagação, sobretudo §3."
+    },
+    {
+      "path": "input/ref_principles.txt",
+      "byte_length": 6010,
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+      "role": "Orientação pública dos critérios; não altera a seleção congelada."
+    },
+    {
+      "path": "input/ref_transport.txt",
+      "byte_length": 8478,
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "role": "Enum need, dependências versus navegação, identidades exatas de transporte versus runtime."
+    },
+    {
+      "path": "input/ref_runtime.txt",
+      "byte_length": 10217,
+      "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237",
+      "role": "Binding e evidência de execução distintos de parecer de conteúdo; indisponibilidade e limites de consumo."
+    }
+  ],
+  "criteria": [
+    "GO-A1",
+    "GO-A2",
+    "GO-A3",
+    "GO-A4",
+    "GO-A5",
+    "GO-A6",
+    "GO-A7",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-4",
+    "QS-5",
+    "QS-6",
+    "CC-3",
+    "CC-7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "method": "Compor um procedimento local de ownership/manutenção a partir de L3 corrigido aceito, L2 e dois L1 pertinentes. Prescrever consumo real por scope/need e key OU need com maxBytes, limites do contrato público, miss/truncamento/HOLD e profundidade sob demanda. Relacionar autoridade e mudanças públicas/de receita à geração oficial, gates de produto em Actions, conhecimento afetado, comparação canônica, diagnóstico e handoff Core. Orientação estável; nenhum recibo operacional é convertido em claim de sucesso.",
+  "reader_argument_basis": "O pedido exato fornece scope/need, seleção por key OU need e maxBytes. O texto descreve essas escolhas sem inventar CLI, schema adicional de invocação ou política/ator.",
+  "input_policy": "Reúso de conhecimento aceito e norma pública autorizada. Nenhuma fonte bruta nova de produto, oracle ou resposta reservada.",
+  "mechanical_work": "Conferir os quatro corpos contra releases; conferir L3 metadata/recipe contra manifesto local preservado; conferir identidades das normas, critérios e limites públicos. Calcular hashes UTF-8 dos seis entregáveis.",
+  "not_claimed": [
+    "Aceite de conteúdo L4 antes dos juízes",
+    "Execução de ownership.index/read, Atlas, produto, geração, testes ou CI",
+    "Freshness, compatibilidade browser, binding, publicação ou consumo real",
+    "Pacote Core aceito, exclusão entre hosts ou efeitos externos exactly-once",
+    "CLI/política/ator/approval/identidade CAS ou versão runtime inventados"
+  ]
+}

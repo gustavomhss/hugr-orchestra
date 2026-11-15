@@ -1,0 +1,73 @@
+{
+  "schema": "genesis-s1-04-local-artifact-manifest/v1",
+  "key": "s1.subslice04.integrated-impact",
+  "layer": 3,
+  "revision": 3,
+  "state": "FROZEN_FOR_SAME_PAIR_REVIEW",
+  "files": {
+    "body.md": {
+      "byte_length": 13657,
+      "sha256": "ba532f772f8f2f08be5938caf3ba9856c6f185e79d18fb0ed9d016b9d176f0bd"
+    },
+    "metadata.json": {
+      "byte_length": 28856,
+      "sha256": "6b50cf53a319ee88071f1901e318a192233346ca8a24e624b08cf8479491e84d"
+    },
+    "recipe.json": {
+      "byte_length": 7543,
+      "sha256": "3949c84a8606a260a8a50e9be6dfebfb1bc42109461cd43a1db0e066a325b41f"
+    },
+    "request.txt": {
+      "byte_length": 2473,
+      "sha256": "9ac57546350080a32f789d6ba0b8247dbf045453985b278611b56016fee0ad7d"
+    },
+    "response.md": {
+      "byte_length": 16143,
+      "sha256": "f24c9f250d0c88b4d498421c6b9eb6c8b32264c325e80c1ebd4af20e023ccd32"
+    },
+    "body.diff": {
+      "byte_length": 13191,
+      "sha256": "155ee780bbbdcd1b0e3768583300c4265d57189a22ab56dc1cad69473879a13f"
+    },
+    "delta-changes.json": {
+      "byte_length": 12027,
+      "sha256": "9072b00472fdccc2fe2585180a0dc2bee7de466908c2feb6320f73513c3ac7ec"
+    },
+    "updated-excerpts.md": {
+      "byte_length": 5607,
+      "sha256": "2dafbe39eec0bdfac9ee920db054b9da4bc614ef90c7b0c9f13d37a9724ed2f6"
+    },
+    "literal-delta.md": {
+      "byte_length": 13530,
+      "sha256": "1dad09637786c0f7cfaa5b189a2a10414b6f4e12f02f24f218917d33361f7acd"
+    }
+  },
+  "predecessor_release_refs": [
+    {
+      "path": "output/receipts/l1-release.json",
+      "byte_length": 3522,
+      "sha256": "23674344f089dbc26e1cac7ee70e0de9809e663ed80a0967219ae53222d4b0fb"
+    },
+    {
+      "path": "output/receipts/l2-release.json",
+      "byte_length": 830,
+      "sha256": "35f6a60a7aca9937b957022fae7ef1868b84a5b4d4284f961882568675c3a2c9"
+    },
+    {
+      "path": "output/receipts/core-reuse-release.json",
+      "byte_length": 677,
+      "sha256": "540c2ea49100afe42247ee419f6ce0c7c6f92511d8cbf371c63969cb9bea8266"
+    }
+  ],
+  "core_reuse_proof_ref": {
+    "path": "output/dependencies/core/reuse-proof.json",
+    "byte_length": 9709,
+    "sha256": "94a82702b3dee239b237512c9fbbb19bf6a1e3f21b03da0836a7964abb5cd05a"
+  },
+  "previous_manifest_ref": {
+    "path": "revision-2/manifest.json",
+    "byte_length": 1907,
+    "sha256": "8cd8c7e4dcb91291f6446d9f9c908e485da46d1d645293c048b86c953ad1862d"
+  },
+  "mechanical_checks_only": true
+}

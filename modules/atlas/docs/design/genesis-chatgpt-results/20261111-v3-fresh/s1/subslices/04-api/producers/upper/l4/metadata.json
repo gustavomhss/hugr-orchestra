@@ -1,0 +1,689 @@
+{
+  "schema": "genesis-s1-04-local-artifact-candidate/v1",
+  "key": "s1.subslice04.maintenance",
+  "scope": "orchestra.s1",
+  "title": "Procedimento local de ownership e manutenção",
+  "layer": 4,
+  "need": "maintenance",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "execution_id": "94f1e157-8c44-4e6e-a4af-7690a8845ecf",
+  "body": {
+    "path": "body.md",
+    "encoding": "utf-8",
+    "byte_length": 10033,
+    "sha256": "ce0f86d365df573cf89218da7fee86009d1a37c65c775735c02a68079d38160e"
+  },
+  "status": "LOCAL_REVISION_2_AWAITING_SAME_PAIR_L4_REVIEW",
+  "authority": {
+    "scope": "Procedimento de consulta, mudança, verificação e diagnóstico API/Core nos contratos locais aceitos.",
+    "basis": "L3 revisão 3 aceito pela dupla na rodada 10 e três L1 Core aceitos/reconhecidos por reúso exato, além dos predecessores API anteriores. Regras normativas permanecem; conteúdo não é prova de operação.",
+    "predecessor_acceptance_refs": [
+      {
+        "path": "output/receipts/l1-release.json",
+        "byte_length": 3522,
+        "sha256": "23674344f089dbc26e1cac7ee70e0de9809e663ed80a0967219ae53222d4b0fb"
+      },
+      {
+        "path": "output/receipts/l2-release.json",
+        "byte_length": 830,
+        "sha256": "35f6a60a7aca9937b957022fae7ef1868b84a5b4d4284f961882568675c3a2c9"
+      },
+      {
+        "path": "output/receipts/l3-final-release.json",
+        "byte_length": 866,
+        "sha256": "23460fd3c06d24b6e3e5f2ba483903ab907539d0b3d054a06cf0596c9e33358a"
+      },
+      {
+        "path": "output/receipts/core-reuse-release.json",
+        "byte_length": 677,
+        "sha256": "540c2ea49100afe42247ee419f6ce0c7c6f92511d8cbf371c63969cb9bea8266"
+      }
+    ],
+    "l3_judgment_refs": [
+      {
+        "path": "output/judgments/10-j1-resolution.md",
+        "byte_length": 1988,
+        "sha256": "30a8227400efa0ce174b0f077b7d369b8e31d1abcd075f6450e704a7bdfa4d5a"
+      },
+      {
+        "path": "output/judgments/10-j2-resolution.md",
+        "byte_length": 2422,
+        "sha256": "a13430fd02614a76c01a3d5e558690c7dcd674c201d704651051b5dd08d80b35"
+      }
+    ],
+    "core_reuse_proof_ref": {
+      "path": "output/dependencies/core/reuse-proof.json",
+      "byte_length": 9709,
+      "sha256": "94a82702b3dee239b237512c9fbbb19bf6a1e3f21b03da0836a7964abb5cd05a"
+    }
+  },
+  "validity": "supported",
+  "validity_scope": "Suficiência proposta do procedimento delimitado atualizado. L4 revisão 2 aguarda julgamento próprio; três contratos Core disponíveis não certificam o restante Core ou execução real.",
+  "input_public_contract": {
+    "path": "output/contracts/public.json",
+    "byte_length": 10021,
+    "sha256": "7dcc9df0003b99722b18538fab1e45adb3ac60e6697397677200feddce40909e"
+  },
+  "criteria": [
+    "GO-A1",
+    "GO-A2",
+    "GO-A3",
+    "GO-A4",
+    "GO-A5",
+    "GO-A6",
+    "GO-A7",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-4",
+    "QS-5",
+    "QS-6",
+    "CC-3",
+    "CC-7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "build_dependencies": [
+    {
+      "key": "s1.subslice04.integrated-impact",
+      "body_sha256": "ba532f772f8f2f08be5938caf3ba9856c6f185e79d18fb0ed9d016b9d176f0bd",
+      "byte_length": 13657,
+      "revision": 3,
+      "local_verified_path": "producer/upper/l3/body.md",
+      "acceptance_ref": {
+        "path": "output/receipts/l3-final-release.json",
+        "byte_length": 866,
+        "sha256": "23460fd3c06d24b6e3e5f2ba483903ab907539d0b3d054a06cf0596c9e33358a"
+      },
+      "used_for": "Procedimento API/Core aceito: identidade/admissão/retry, promoção/execução local, EventV2/persistência, manutenção normativa e limites remanescentes."
+    },
+    {
+      "key": "s1.subslice04.local-contracts",
+      "body_sha256": "5f5ae9a915ec9a43940963ce69f4563a9a85d51e15d111237ff8b5e02a2d5170",
+      "byte_length": 6218,
+      "accepted_transport_path": "producers/upper/l2/body.md",
+      "local_verified_path": "producer/upper/l2/body.md",
+      "acceptance_ref": {
+        "path": "output/receipts/l2-release.json",
+        "byte_length": 830,
+        "sha256": "35f6a60a7aca9937b957022fae7ef1868b84a5b4d4284f961882568675c3a2c9"
+      },
+      "used_for": "Mapa de autoridade e valores/projeções, navegação por assunto, diagnósticos Session/stream/SDK e limites locais aceitos."
+    },
+    {
+      "key": "s1.api.boundaries",
+      "body_sha256": "f6b230ed8578b6bd9fdb1e4eaca26892df9355a58fc1f5e2e6a157bffabf7310",
+      "byte_length": 4634,
+      "accepted_transport_path": "revisions/b-l1-v3/bodies/boundaries.md",
+      "local_verified_path": "input/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/bodies/boundaries.md",
+      "acceptance_ref": {
+        "path": "output/receipts/l1-release.json",
+        "byte_length": 3522,
+        "sha256": "23674344f089dbc26e1cac7ee70e0de9809e663ed80a0967219ae53222d4b0fb"
+      },
+      "used_for": "Autoridade de dependências, proibição de Client runtime Core/Server e composição Server/SDK; limites de prova por imports."
+    },
+    {
+      "key": "s1.api.codegen",
+      "body_sha256": "2ec55afad54a871de673a252b6b7c604a8ecdb648cc1df9c80128d83a3f8e270",
+      "byte_length": 4752,
+      "accepted_transport_path": "revisions/b-l1-v3/bodies/codegen.md",
+      "local_verified_path": "input/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/b-l1-v3/bodies/codegen.md",
+      "acceptance_ref": {
+        "path": "output/receipts/l1-release.json",
+        "byte_length": 3522,
+        "sha256": "23674344f089dbc26e1cac7ee70e0de9809e663ed80a0967219ae53222d4b0fb"
+      },
+      "used_for": "Geração oficial, comandos generate/check:generated, divisão da receita e outputs gerados; nenhum PASS de execução inferido."
+    },
+    {
+      "key": "s1.core.session-admission",
+      "body_sha256": "2535bba77505ed74e7dc2759dce815c8e9684e68e2f0a10fa75f9813192e7ae1",
+      "byte_length": 4261,
+      "accepted_transport_path": "dependencies/core/bodies/session-admission.md",
+      "local_verified_path": "output/dependencies/core/bodies/session-admission.md",
+      "acceptance_ref": {
+        "path": "output/receipts/core-reuse-release.json",
+        "byte_length": 677,
+        "sha256": "540c2ea49100afe42247ee419f6ce0c7c6f92511d8cbf371c63969cb9bea8266"
+      },
+      "original_acceptance_proof_ref": {
+        "path": "output/dependencies/core/reuse-proof.json",
+        "byte_length": 9709,
+        "sha256": "94a82702b3dee239b237512c9fbbb19bf6a1e3f21b03da0836a7964abb5cd05a"
+      },
+      "local_reuse_judgment_refs": [
+        {
+          "path": "output/judgments/09-core-reuse-j1.md",
+          "byte_length": 2046,
+          "sha256": "9ab91a8048f56a79f8afd02d48f6334953bf6a3c725b7229e8eab516c959fc79"
+        },
+        {
+          "path": "output/judgments/09-core-reuse-j2.md",
+          "byte_length": 2132,
+          "sha256": "b31e375eb2f3f8e8eb56b665f717eba9c073c7d6a2cefca0b64c5ac8308b7878"
+        }
+      ],
+      "origin": {
+        "source_owner": "S1-01",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "observed_branch_head": "9fd024a34e76d2e9328e1f793ef1f69fbf606e51",
+        "payload_revision": "a2a5de03d7b1034373eb877d8f03c4cecc772dde",
+        "original_body_path": "bodies/session-admission.md",
+        "original_review_refs": [
+          {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j1.json",
+            "sha256": "a32b7bec928315cdd77f7fdb32909f5ee5d316eb576816a1cce9985b632d8ff7"
+          },
+          {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j2.json",
+            "sha256": "fd2dd0e2d76379e7d4e128b1fa1e77ce81cf95dd8bc5ef18051475f641187349"
+          }
+        ]
+      },
+      "used_for": "Identidade de criação, admissão antes de wake, resume:false, equivalência/conflito de retry, contexto/projeção e promoção do inbox."
+    },
+    {
+      "key": "s1.core.session-execution",
+      "body_sha256": "470ddb1eacfe7294071893968d7de999c90ea98cb0fd48c48e0730ded51d1663",
+      "byte_length": 4574,
+      "accepted_transport_path": "dependencies/core/bodies/session-execution.md",
+      "local_verified_path": "output/dependencies/core/bodies/session-execution.md",
+      "acceptance_ref": {
+        "path": "output/receipts/core-reuse-release.json",
+        "byte_length": 677,
+        "sha256": "540c2ea49100afe42247ee419f6ce0c7c6f92511d8cbf371c63969cb9bea8266"
+      },
+      "original_acceptance_proof_ref": {
+        "path": "output/dependencies/core/reuse-proof.json",
+        "byte_length": 9709,
+        "sha256": "94a82702b3dee239b237512c9fbbb19bf6a1e3f21b03da0836a7964abb5cd05a"
+      },
+      "local_reuse_judgment_refs": [
+        {
+          "path": "output/judgments/09-core-reuse-j1.md",
+          "byte_length": 2046,
+          "sha256": "9ab91a8048f56a79f8afd02d48f6334953bf6a3c725b7229e8eab516c959fc79"
+        },
+        {
+          "path": "output/judgments/09-core-reuse-j2.md",
+          "byte_length": 2132,
+          "sha256": "b31e375eb2f3f8e8eb56b665f717eba9c073c7d6a2cefca0b64c5ac8308b7878"
+        }
+      ],
+      "origin": {
+        "source_owner": "S1-01",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "observed_branch_head": "9fd024a34e76d2e9328e1f793ef1f69fbf606e51",
+        "payload_revision": "a2a5de03d7b1034373eb877d8f03c4cecc772dde",
+        "original_body_path": "bodies/session-execution.md",
+        "original_review_refs": [
+          {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j1.json",
+            "sha256": "a32b7bec928315cdd77f7fdb32909f5ee5d316eb576816a1cce9985b632d8ff7"
+          },
+          {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j2.json",
+            "sha256": "fd2dd0e2d76379e7d4e128b1fa1e77ce81cf95dd8bc5ef18051475f641187349"
+          }
+        ]
+      },
+      "used_for": "Coordenação por Session em memória, run/wake, Location, promoção e provider/host stream, interrupção e limites de ownership/retry."
+    },
+    {
+      "key": "s1.core.persistence",
+      "body_sha256": "0b43f9bd316aca25361f934e63723f2aa6220a3deb97a4447266fbbc5d350762",
+      "byte_length": 5290,
+      "accepted_transport_path": "dependencies/core/bodies/persistence.md",
+      "local_verified_path": "output/dependencies/core/bodies/persistence.md",
+      "acceptance_ref": {
+        "path": "output/receipts/core-reuse-release.json",
+        "byte_length": 677,
+        "sha256": "540c2ea49100afe42247ee419f6ce0c7c6f92511d8cbf371c63969cb9bea8266"
+      },
+      "original_acceptance_proof_ref": {
+        "path": "output/dependencies/core/reuse-proof.json",
+        "byte_length": 9709,
+        "sha256": "94a82702b3dee239b237512c9fbbb19bf6a1e3f21b03da0836a7964abb5cd05a"
+      },
+      "local_reuse_judgment_refs": [
+        {
+          "path": "output/judgments/09-core-reuse-j1.md",
+          "byte_length": 2046,
+          "sha256": "9ab91a8048f56a79f8afd02d48f6334953bf6a3c725b7229e8eab516c959fc79"
+        },
+        {
+          "path": "output/judgments/09-core-reuse-j2.md",
+          "byte_length": 2132,
+          "sha256": "b31e375eb2f3f8e8eb56b665f717eba9c073c7d6a2cefca0b64c5ac8308b7878"
+        }
+      ],
+      "origin": {
+        "source_owner": "S1-01",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "observed_branch_head": "9fd024a34e76d2e9328e1f793ef1f69fbf606e51",
+        "payload_revision": "a2a5de03d7b1034373eb877d8f03c4cecc772dde",
+        "original_body_path": "bodies/persistence.md",
+        "original_review_refs": [
+          {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j1.json",
+            "sha256": "a32b7bec928315cdd77f7fdb32909f5ee5d316eb576816a1cce9985b632d8ff7"
+          },
+          {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j2.json",
+            "sha256": "fd2dd0e2d76379e7d4e128b1fa1e77ce81cf95dd8bc5ef18051475f641187349"
+          }
+        ]
+      },
+      "used_for": "Transação durável/projectors, persist:false, subscrição com releitura de eventos, replay owner e limites de evolução de dados/seals/migração."
+    }
+  ],
+  "public_normative_inputs": [
+    {
+      "path": "input/normative.txt",
+      "byte_length": 28267,
+      "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+      "role": "Intenção normativa: construção e manutenção cumulativas; comparação resultado/recibos e limites de propagação, sobretudo §3."
+    },
+    {
+      "path": "input/ref_principles.txt",
+      "byte_length": 6010,
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+      "role": "Orientação pública dos critérios; não altera a seleção congelada."
+    },
+    {
+      "path": "input/ref_transport.txt",
+      "byte_length": 8478,
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "role": "Enum need, dependências versus navegação, identidades exatas de transporte versus runtime."
+    },
+    {
+      "path": "input/ref_runtime.txt",
+      "byte_length": 10217,
+      "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237",
+      "role": "Binding e evidência de execução distintos de parecer de conteúdo; indisponibilidade e limites de consumo."
+    }
+  ],
+  "navigation": [
+    {
+      "key": "s1.subslice04.local-contracts",
+      "need": "component",
+      "purpose": "Entrada pequena de responsabilidades, valores e projeções; rotas para aprofundamento."
+    },
+    {
+      "key": "s1.subslice04.integrated-impact",
+      "need": "flow",
+      "purpose": "Impacto e exemplos canônicos de parada/propagação."
+    },
+    {
+      "key": "s1.api.boundaries",
+      "purpose": "Autoridade e fronteiras runtime."
+    },
+    {
+      "key": "s1.api.codegen",
+      "purpose": "Receita, geração e outputs pertencentes ao gerador."
+    },
+    {
+      "key": "s1.api.schema-contracts",
+      "purpose": "Contrato de valores e ausência."
+    },
+    {
+      "key": "s1.api.session-contract",
+      "purpose": "Admissão HTTP, encaminhamento, estado process-local e handoff Core."
+    },
+    {
+      "key": "s1.api.server-edge",
+      "purpose": "Adapters, middleware e projeção específica de erros."
+    },
+    {
+      "key": "s1.api.client-projection",
+      "purpose": "Promise/Effect, envelopes e limitações de compatibilidade executada."
+    },
+    {
+      "key": "s1.api.stream-contract",
+      "purpose": "Diagnóstico de feed global versus eventos duráveis de Session."
+    },
+    {
+      "key": "s1.subslice04.domains",
+      "purpose": "Gap e proprietário do domínio pertinente, sem reintroduzir claims retirados."
+    },
+    {
+      "key": "s1.core.session-admission",
+      "need": "component",
+      "purpose": "Identidade de criação/retry, admissão, wake, histórico e promoção."
+    },
+    {
+      "key": "s1.core.session-execution",
+      "need": "flow",
+      "purpose": "Coordenação e interrupção locais, promoção/runner e limites de ownership."
+    },
+    {
+      "key": "s1.core.persistence",
+      "need": "evidence",
+      "purpose": "Persistência/projeção/subscrição EventV2, persist:false e limites de replay/migração."
+    }
+  ],
+  "reader_protocol": {
+    "scope": "orchestra.s1",
+    "entry_needs": [
+      "maintenance",
+      "component",
+      "flow"
+    ],
+    "read_selector": "key OU need",
+    "maxBytes": "Finito, limitado pelo saldo do caso público; nenhum valor universal novo.",
+    "on_miss_or_truncation": "Consulta específica dentro do orçamento quando houver entrada adequada; HOLD se suporte obrigatório continuar ausente.",
+    "current_read_binding": "Versões exatas + manifesto aceito de escopo/fechamento das dependências válido aos inputs/contratos atuais.",
+    "fallback_to_source_or_markdown": false,
+    "visited_keys": "Evitar revisitas; não usar ciclos de navegação para exceder limites.",
+    "executed_by_this_production": false
+  },
+  "frozen_case_limits": {
+    "S1-O1": {
+      "index_calls": 1,
+      "read_calls": 2,
+      "body_bytes": 24000
+    },
+    "S1-O2": {
+      "index_calls": 2,
+      "read_calls": 4,
+      "body_bytes": 60000
+    },
+    "S1-O3": {
+      "index_calls": 2,
+      "read_calls": 6,
+      "body_bytes": 80000
+    },
+    "S1-04-P1": {
+      "index_calls": 2,
+      "read_calls": 6,
+      "body_bytes": 80000
+    },
+    "S1-04-V1": {
+      "index_calls": 2,
+      "read_calls": 6,
+      "body_bytes": 80000
+    },
+    "S1-04-F1": {
+      "index_calls": 2,
+      "read_calls": 6,
+      "body_bytes": 80000
+    },
+    "S1-04-A1": {
+      "index_calls": 2,
+      "read_calls": 6,
+      "body_bytes": 80000
+    },
+    "S1-04-M1": {
+      "index_calls": 2,
+      "read_calls": 6,
+      "body_bytes": 80000
+    },
+    "S1-04-M2": {
+      "index_calls": 2,
+      "read_calls": 6,
+      "body_bytes": 80000
+    },
+    "S1-04-D01": {
+      "index_calls": 2,
+      "read_calls": 3,
+      "body_bytes": 30000
+    },
+    "S1-04-D02": {
+      "index_calls": 2,
+      "read_calls": 3,
+      "body_bytes": 30000
+    },
+    "S1-04-D03": {
+      "index_calls": 2,
+      "read_calls": 3,
+      "body_bytes": 30000
+    },
+    "S1-04-D04": {
+      "index_calls": 2,
+      "read_calls": 3,
+      "body_bytes": 30000
+    },
+    "S1-04-D05": {
+      "index_calls": 2,
+      "read_calls": 3,
+      "body_bytes": 30000
+    },
+    "S1-04-D06": {
+      "index_calls": 2,
+      "read_calls": 3,
+      "body_bytes": 30000
+    },
+    "S1-04-D07": {
+      "index_calls": 2,
+      "read_calls": 3,
+      "body_bytes": 30000
+    },
+    "S1-04-D08": {
+      "index_calls": 2,
+      "read_calls": 3,
+      "body_bytes": 30000
+    },
+    "S1-04-D09": {
+      "index_calls": 2,
+      "read_calls": 3,
+      "body_bytes": 30000
+    },
+    "S1-04-D10": {
+      "index_calls": 2,
+      "read_calls": 3,
+      "body_bytes": 100000
+    },
+    "S1-04-D11": {
+      "index_calls": 2,
+      "read_calls": 3,
+      "body_bytes": 30000
+    },
+    "S1-04-D12": {
+      "index_calls": 2,
+      "read_calls": 3,
+      "body_bytes": 30000
+    },
+    "S1-04-D13": {
+      "index_calls": 2,
+      "read_calls": 3,
+      "body_bytes": 30000
+    }
+  },
+  "gaps": [
+    {
+      "scope": "Além dos três contratos Core locais aceitos",
+      "status": "BOUNDED_REMAINING_GAP",
+      "now_available": "Identidade/admissão/retry e promoção; coordenação/interrupção local; EventV2 durável e persist:false/subscrição.",
+      "blocks": "Garantias adicionais não cobertas: ownership distribuído, continuação/recuperação automática pós-crash, efeitos externos exactly-once, internos de engines e prova operacional/histórica além dos corpos.",
+      "next": "Consultar os três L1 disponíveis; complementar apenas o requisito restante com seu owner, aceite e compatibilidade."
+    },
+    {
+      "scope": "Runtime/consumo/atualização",
+      "status": "NOT_OBSERVED_BY_THIS_PRODUCTION",
+      "blocks": "Afirmação de chamadas index/read, disponibilidade de política/store/projeção, binding, CAS, manutenção/isolamento/publicação ou consumo reais.",
+      "next": "Operações reais e seus recibos; autorização e políticas existentes não são inventadas pelo procedimento."
+    },
+    {
+      "scope": "Geração/CI/browser",
+      "status": "NOT_EXECUTED_BY_THIS_PRODUCTION",
+      "blocks": "Freshness dos gerados, resultados de gates e compatibilidade browser.",
+      "next": "Aplicar a geração oficial e os gates pertinentes no candidato autorizado; testes de produto somente Actions."
+    },
+    {
+      "scope": "Limites herdados e claims retirados",
+      "status": "PRESERVED",
+      "blocks": "Uso de conhecimento não aceito como se estivesse demonstrado.",
+      "next": "Conservar gaps dos predecessores e RETIRED_EXTRA_CLAIM; completar somente o necessário ao novo claim."
+    }
+  ],
+  "evidence": [
+    {
+      "section": "1. Consultar pouco, pela porta real",
+      "basis": [
+        "Pedido exato: parâmetros e precondições de consumo",
+        "Contrato público: limites por caso",
+        "ref_runtime.txt: Binding, atualização e consumo",
+        "ref_transport.txt: need, identidade e navegação",
+        "L3 aceito: versões exatas/manifesto e consulta limitada"
+      ]
+    },
+    {
+      "section": "2. Localizar a autoridade da mudança",
+      "predecessor_keys": [
+        "s1.subslice04.local-contracts",
+        "s1.api.boundaries",
+        "s1.api.codegen",
+        "s1.core.session-admission",
+        "s1.core.session-execution",
+        "s1.core.persistence"
+      ]
+    },
+    {
+      "section": "3. Alterar e verificar o candidato autorizado",
+      "predecessor_keys": [
+        "s1.subslice04.integrated-impact",
+        "s1.api.codegen",
+        "s1.api.boundaries",
+        "s1.core.session-admission",
+        "s1.core.session-execution",
+        "s1.core.persistence"
+      ],
+      "basis": [
+        "ref_runtime.txt: testes de produto em Actions",
+        "normative.txt DOD-4: guards/typechecks e gates reais"
+      ]
+    },
+    {
+      "section": "4. Atualizar conhecimento sem reconstruir independentes",
+      "predecessor_keys": [
+        "s1.subslice04.integrated-impact"
+      ],
+      "basis": [
+        "normative.txt §3: propagação, resultados/recibos, fonte compatível e publicação governada"
+      ]
+    },
+    {
+      "section": "5. Diagnosticar e encaminhar o que falta",
+      "predecessor_keys": [
+        "s1.subslice04.local-contracts",
+        "s1.subslice04.integrated-impact",
+        "s1.core.session-admission",
+        "s1.core.session-execution",
+        "s1.core.persistence"
+      ]
+    },
+    {
+      "section": "Delta L4 revisão 2",
+      "basis": [
+        "L3 revisão 3 aceito pela dupla",
+        "Três L1 Core aceitos e prova de reúso",
+        "Pedido delimitado da principal"
+      ],
+      "l3_release_ref": {
+        "path": "output/receipts/l3-final-release.json",
+        "byte_length": 866,
+        "sha256": "23460fd3c06d24b6e3e5f2ba483903ab907539d0b3d054a06cf0596c9e33358a"
+      },
+      "core_reuse_proof_ref": {
+        "path": "output/dependencies/core/reuse-proof.json",
+        "byte_length": 9709,
+        "sha256": "94a82702b3dee239b237512c9fbbb19bf6a1e3f21b03da0836a7964abb5cd05a"
+      },
+      "body_diff_ref": {
+        "path": "body.diff",
+        "byte_length": 8286,
+        "sha256": "34cdfe65f88476761f5f35453505b677cf55dada2ece278bee5ba7fd9c09e5f7"
+      }
+    }
+  ],
+  "recipe_ref": {
+    "path": "recipe.json",
+    "byte_length": 7123,
+    "sha256": "e1fce629014f0e95b2033ce40706bfe40bb10fc6b8ad4e540e6a658b8d927511"
+  },
+  "producer_request_ref": {
+    "path": "request.txt",
+    "byte_length": 1514,
+    "sha256": "4f60c07275f2cc7d20e9dc95eae5a41be550a0747f64734116c1a999b109ef18"
+  },
+  "producer_response_path": "response.md",
+  "semantic_review_refs": [],
+  "runtime_receipt_refs": [],
+  "native_transport_note": "Candidato local com identidades de transporte; package_ref/same_package e bindings runtime finais dependem do transporte real pela principal. Nenhum ID de runtime foi preenchido por suposição.",
+  "mechanical_checks": {
+    "accepted_predecessor_bytes_and_hashes_match": 7,
+    "l3_revision_3_judgments_match_release": true,
+    "new_core_bodies_match_original_dual_pass_identities": 3,
+    "unchanged_existing_direct_api_dependencies": 3,
+    "previous_l4_files_preserved": 6,
+    "normative_query_and_propagation_sections_unchanged": true,
+    "generation_and_actions_guards_typecheck_steps_unchanged": true,
+    "criteria_public_questions_and_limits_unchanged": true,
+    "reader_protocol_metadata_unchanged": true,
+    "l3_unchanged": true,
+    "only_l4_updated": true
+  },
+  "revision": 2,
+  "gap_disposition": {
+    "core_knowledge_formerly_requested": "Agora servido pelos três L1 aceitos e L3 revisão 3, dentro de seus limites.",
+    "no_total_core_absence_requirement": true,
+    "other_gaps_unchanged": true
+  },
+  "operational_evidence_policy": {
+    "basis": {
+      "path": "request.txt",
+      "byte_length": 1514,
+      "sha256": "4f60c07275f2cc7d20e9dc95eae5a41be550a0747f64734116c1a999b109ef18"
+    },
+    "latest_announced_release_per_principal": "R3",
+    "new_completed_operational_proof_claimed": false,
+    "diagnostic_speculation_promoted": false,
+    "runtime_receipt_refs_added": false
+  },
+  "original_producer_request_ref": {
+    "path": "revision-1/request.txt",
+    "byte_length": 1822,
+    "sha256": "f0d6f5e8f1f7c4fe3fe5fef442dfc084257200d83c4db2f7e7c72c283b4408ac"
+  },
+  "previous_revision": {
+    "directory": "revision-1",
+    "body_ref": {
+      "path": "revision-1/body.md",
+      "byte_length": 8942,
+      "sha256": "6836ed1abd690c45f999d32dbcbb6bb0451fda5ed77e6985ad601ae5a765705e"
+    },
+    "metadata_ref": {
+      "path": "revision-1/metadata.json",
+      "byte_length": 14730,
+      "sha256": "e6213b5007cd265a55a00178a4319ceec56f9c9f27770ced5e55bf84e45885b3"
+    },
+    "manifest_ref": {
+      "path": "revision-1/manifest.json",
+      "byte_length": 1438,
+      "sha256": "9e0fdb8322f3308ded74984157d09822cfb2a7f63b1639dc251d04c26922b4d8"
+    },
+    "preserved_regular_files": 6,
+    "directories_recursively_copied": 0,
+    "prior_records_unchanged": true
+  },
+  "bounded_delta": {
+    "body_diff_ref": {
+      "path": "body.diff",
+      "byte_length": 8286,
+      "sha256": "34cdfe65f88476761f5f35453505b677cf55dada2ece278bee5ba7fd9c09e5f7"
+    },
+    "exact_replacements_ref": {
+      "path": "delta-changes.json",
+      "byte_length": 7189,
+      "sha256": "eae888029f72241ab90c9353ff98d4cacc3b3ec1fe310aa21621bdf33db8d69f"
+    },
+    "replacement_blocks": 8,
+    "normative_query_and_propagation_sections_unchanged": true,
+    "generation_and_verification_steps_unchanged": true,
+    "public_questions_limits_and_criteria_unchanged": true
+  }
+}

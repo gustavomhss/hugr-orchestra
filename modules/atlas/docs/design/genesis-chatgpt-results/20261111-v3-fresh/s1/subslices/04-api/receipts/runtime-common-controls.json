@@ -1,0 +1,90 @@
+[
+  {
+    "artifact_id": 13915012528,
+    "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/atlas-runtime-22815b6-gates.zip",
+    "bytes": 431898,
+    "sha256": "44a4b2b8fa833c1117f4498d1be71283f054200c63aacdb5ddb67ee4fdc91d9a",
+    "files": 44,
+    "bun_binary_candidates": [],
+    "node_modules_entries": [],
+    "tests": {
+      "numTotalTests": 224,
+      "numPassedTests": 224,
+      "numFailedTests": 0,
+      "numPendingTests": 0,
+      "success": true
+    },
+    "guards": {
+      "command": "bun run check:guards --base origin/dev",
+      "exitCode": 0,
+      "candidate": "22815b6821dce26562624b4711c705c7cd786268"
+    },
+    "mutation_controls": 22,
+    "large_source_related_tests": [
+      {
+        "name": "Genesis native adapter prepares and serves a complete source at the shared ceiling, then detects last-byte drift",
+        "status": "passed",
+        "duration_ms": 4300.905395
+      },
+      {
+        "name": "Genesis native adapter rejects final and ancestor symlinks, unavailable membership and oversized observed source files",
+        "status": "passed",
+        "duration_ms": 161.82112199999938
+      },
+      {
+        "name": "host-bound ownership input oracle RP-5 unavailable/empty/unknown/oversized/escaped inputs fail closed",
+        "status": "passed",
+        "duration_ms": 36.73675299999999
+      },
+      {
+        "name": "G2.2 host observer HO-02 file ceiling applies to bytes actually read",
+        "status": "passed",
+        "duration_ms": 1266.054894
+      }
+    ]
+  },
+  {
+    "artifact_id": 14001051122,
+    "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/atlas-runtime-db9b423-gates.zip",
+    "bytes": 447327,
+    "sha256": "c6df13373d71e091cf842a603e1d25b241ffca7652ea73775419ee3f01da0871",
+    "files": 44,
+    "bun_binary_candidates": [],
+    "node_modules_entries": [],
+    "tests": {
+      "numTotalTests": 278,
+      "numPassedTests": 278,
+      "numFailedTests": 0,
+      "numPendingTests": 0,
+      "success": true
+    },
+    "guards": {
+      "command": "bun run check:guards --base origin/dev",
+      "exitCode": 0,
+      "candidate": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7"
+    },
+    "mutation_controls": 22,
+    "large_source_related_tests": [
+      {
+        "name": "Genesis native adapter prepares and serves a complete source at the shared ceiling, then detects last-byte drift",
+        "status": "passed",
+        "duration_ms": 4789.354841
+      },
+      {
+        "name": "Genesis native adapter rejects final and ancestor symlinks, unavailable membership and oversized observed source files",
+        "status": "passed",
+        "duration_ms": 177.83270399999947
+      },
+      {
+        "name": "host-bound ownership input oracle RP-5 unavailable/empty/unknown/oversized/escaped inputs fail closed",
+        "status": "passed",
+        "duration_ms": 36.92410000000001
+      },
+      {
+        "name": "G2.2 host observer HO-02 file ceiling applies to bytes actually read",
+        "status": "passed",
+        "duration_ms": 1391.698475
+      }
+    ]
+  }
+]

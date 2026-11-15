@@ -1,0 +1,151 @@
+{
+  "schema": "s1-04-root-guards-and-connector-routes/v1",
+  "created_utc": "2026-11-14T23:07:52.116782+00:00",
+  "observed_branch": "genesis-s1-api",
+  "observed_branch_commit": "8835faf6329cc3d5f5de1097872882d57472b793",
+  "scope": "Materialized original guard entrypoint and direct dependency closure, not complete candidate checkout",
+  "guard": {
+    "original_command": [
+      "/workspace/scratch/8833f71e3e94/s1-04-94f1e157-8c44-4e6e-a4af-7690a8845ecf/runtime-tools/node_modules/.bin/bun",
+      "run",
+      "check:guards",
+      "--base",
+      "origin/dev"
+    ],
+    "cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/guard-snapshot",
+    "exit_code": 1,
+    "failure_classification": "no-repository",
+    "literal_stdout": "ERROR /workspace/scratch/8833f71e3e94/s1-04-runtime-scout/guard-snapshot is not a git repository\nguards: 0 rules, 0 changed paths, 0 gate and 0 warn findings, 1 errors.\n",
+    "rules_loaded": 0,
+    "paths_evaluated": 0,
+    "gate_satisfied": false,
+    "base_ref": "origin/dev",
+    "base_resolution_reached": false,
+    "original_files_changed": [],
+    "dependencies": "Four original guard modules plus root package/config; only Bun and Node built-ins at runtime, no extra npm packages needed",
+    "rules_or_config_loaded": false,
+    "explanation": "Original loadGuards returns no-repository before merge-base, Git diff, rules or config reads. The zero findings are not a clean result."
+  },
+  "source_files": [
+    {
+      "path": "AGENTS.md",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "byte_length": 16501,
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f"
+    },
+    {
+      "path": "package.json",
+      "git_blob_sha": "59b01ce720d2fbc13ac27b0f93e444e4e7e42bd0",
+      "byte_length": 6423,
+      "sha256": "797b93c084aaf809f0bc02013e9e1eb0ae0d0addfa9ae8b9b783ceb83e6173ab"
+    },
+    {
+      "path": "script/guards/run.ts",
+      "git_blob_sha": "24c89b6fdbce07d778d2d1520ff4680d51c8c0f3",
+      "byte_length": 11882,
+      "sha256": "2dfe91f11b237588f8f07e6119ab7ed28d3b6f524060519734517ce5d2bf83c7"
+    },
+    {
+      "path": "script/guards/diff.ts",
+      "git_blob_sha": "e0336749f5b9f6dc471dedff2bfa0674ab18ebd7",
+      "byte_length": 7910,
+      "sha256": "a783cf3a5dbf7527bd240b4cc147dd7e2fe9acae73428a1e70d6493dde8c419e"
+    },
+    {
+      "path": "script/guards/engine.ts",
+      "git_blob_sha": "7ff689772ac0460e7aa9b3ad93ca3b003b992c0f",
+      "byte_length": 5573,
+      "sha256": "6f16d7b83c63f590569815e5bbb26488be3dd31063788af4488e0680fb720fe1"
+    },
+    {
+      "path": "script/guards/rule.ts",
+      "git_blob_sha": "e831bd89a05d4bbea86cbabf0a461b9b124cb185",
+      "byte_length": 10290,
+      "sha256": "707473799508f7f8959ac6c0b8804e49ccdc2f1b64b11d8354beb4d62c343949"
+    },
+    {
+      "path": "bunfig.toml",
+      "git_blob_sha": "c506ff57c4bf3fa3a6bd3501b8ce2fc29122accb",
+      "byte_length": 1024,
+      "sha256": "ed50f5745fbcb845251debe79cc464a2142c62cf17a013c2a29de38bf248f158"
+    },
+    {
+      "path": "tsconfig.json",
+      "git_blob_sha": "65fa6c7f31c11e2a1ff643ea263f97815c6bac5d",
+      "byte_length": 126,
+      "sha256": "3566d273bac7985b182fde3fc49e3d9a6b8d1451c122c31a4f87877faa9ae7aa"
+    }
+  ],
+  "github_routes": {
+    "exposed_github_tool_count": 89,
+    "workflow_dispatch_tool_exposed": false,
+    "archive_or_checkout_tool_exposed": false,
+    "tracking_download_tool_exposed": false,
+    "generic_fetch": {
+      "method": "GET only",
+      "binary_downloads": "Unsupported according to exposed tool metadata",
+      "zipball_probe_url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/zipball/8835faf6329cc3d5f5de1097872882d57472b793",
+      "zipball_probe_result": {
+        "error": "HTTPError: 400: GitHub Fetch URL is not an allowed public GitHub repository or search endpoint. (Response: None)",
+        "error_code": "INVALID_ARGUMENT"
+      },
+      "retry_or_alternate_download_after_rejection": false
+    },
+    "workflow_writes_exposed_not_called": [
+      "github_rerun_workflow_job",
+      "github_rerun_failed_workflow_run_jobs"
+    ],
+    "workflow_artifact_read": "github_download_workflow_artifact can download an already existing artifact ZIP; it does not create a checkout or dispatch a new run. Previously inspected Atlas artifacts contain CI receipts rather than original Git tracking.",
+    "git_object_reads": "Connector supports GET refs/commits/trees/blobs; these supplied verified source materialization only. No working checkout, HEAD or index was created."
+  },
+  "unperformed_actions": [
+    "branch creation",
+    "HEAD/index creation",
+    "git transport",
+    "credential access",
+    "guard bypass or approved flag",
+    "bun test",
+    "test:ci",
+    "workflow mutation",
+    "policy or binding",
+    "Atlas prepare/publication"
+  ],
+  "next_action": "Use an authorized actual checkout with a resolvable origin/dev and the candidate change, then run the same original command. No exposed connector route satisfying that checkout requirement was found. Final S1 prepare still awaits parent package.",
+  "evidence": [
+    {
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/guards/branch-capture.json",
+      "sha256": "404d8d4de2a1644082cc0f7224d025d868ab0c6801000aef6086ff6aa1c754ed",
+      "byte_length": 9071
+    },
+    {
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/guards/materialization-manifest.json",
+      "sha256": "2c8f0274da0ea80cd312a2b5badc38aeecbe2f1da94cbae69582ba9d93c692f0",
+      "byte_length": 2700
+    },
+    {
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/guards/check-guards.receipt.json",
+      "sha256": "803d4bfe21b6e535e16b329545f6cc82e1efcfb2cc9690ac04cc19798bdf670e",
+      "byte_length": 1610
+    },
+    {
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/guards/check-guards.stdout.txt",
+      "sha256": "03e07767148f3539dd1590f90e88dbd9431a3c467f9c86c4c226df6b9c290576",
+      "byte_length": 169
+    },
+    {
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/guards/check-guards.stderr.txt",
+      "sha256": "1d94fca7cd039cb028502c2ed2c275f74238d3dc240f237a5c1fb958daaede4b",
+      "byte_length": 97
+    },
+    {
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/guards/tool-routes.json",
+      "sha256": "fc1afe4ef040bb1246d3e8ce5eb47e0325592410b4bb2d50f6676170db88ff8e",
+      "byte_length": 14633
+    },
+    {
+      "path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/guards/script-captures.json",
+      "sha256": "5c371b579c9db9b33a12510fbdd487bb50021848c5a915eed9c8cac84c2f80ce",
+      "byte_length": 43550
+    }
+  ]
+}

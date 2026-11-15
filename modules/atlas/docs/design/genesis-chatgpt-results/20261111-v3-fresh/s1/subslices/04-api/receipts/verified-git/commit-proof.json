@@ -1,0 +1,38 @@
+{
+  "schema": "s1-04-exact-git-commit-proof/v1",
+  "created_utc": "2026-11-14T23:35:34.001239+00:00",
+  "proofs": [
+    {
+      "label": "candidate",
+      "expected_sha": "8835faf6329cc3d5f5de1097872882d57472b793",
+      "calculated_git_sha1": "98ac6e0c1c924069fc460201abc34026a4dbfc13",
+      "matches": false,
+      "raw_byte_length": 262,
+      "raw_sha256": "65ffc65ce1b48e8eef4f2a4f0dac8171791b73ba000fe567ab6a36ba91758cef",
+      "raw_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/unverified-candidate-serialization.txt",
+      "serialization_method": "Single literal serialization of returned tree/ordered parents/identities/message; returned ISO Z represented as +0000; no timezone, newline or header variant search",
+      "verification_payload_available": false,
+      "verification_signature_available": false,
+      "git_metadata_created": false
+    },
+    {
+      "label": "dev",
+      "expected_sha": "5e0807b5ff953508f792b8a965883985b05a7066",
+      "calculated_git_sha1": "c1bd465b77ebff1da268ad1f88d29427ea09eed7",
+      "matches": false,
+      "raw_byte_length": 1243,
+      "raw_sha256": "565724aa193fa9d4cdf0fddab4228078e5abc6d1e1caae5c4258812542079c01",
+      "raw_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/unverified-dev-serialization.txt",
+      "serialization_method": "Exact verification.payload plus verification.signature encoded as standard multiline gpgsig header; timezone and message bytes come from payload",
+      "verification_payload_available": true,
+      "verification_signature_available": true,
+      "git_metadata_created": false
+    }
+  ],
+  "all_requested_commits_proven": false,
+  "hash_domain": "SHA1(b\"commit \" + decimal byte length + NUL + raw object content)",
+  "git_database_created": false,
+  "refs_created": false,
+  "index_created": false,
+  "remote_mutations": false
+}

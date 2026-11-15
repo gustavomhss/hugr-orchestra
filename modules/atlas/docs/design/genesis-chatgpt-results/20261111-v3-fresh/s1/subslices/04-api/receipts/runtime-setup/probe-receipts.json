@@ -1,0 +1,54 @@
+[
+  {
+    "schema": "s1-04-r3-runtime-read-only-probe/v1",
+    "name": "large-source-r3",
+    "purpose": "Original R3 readNativeFile with the source_refs bound used by prepare; expected failure is not package prepare/import.",
+    "command": [
+      "/workspace/scratch/8833f71e3e94/s1-04-94f1e157-8c44-4e6e-a4af-7690a8845ecf/runtime-tools/node_modules/.bin/bun",
+      "-e",
+      "import { readNativeFile } from \"./packages/adapter-io/src/genesis-native-io.ts\"; readNativeFile(\"/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/source-snapshot\", \"packages/client/src/generated/types.ts\", 256000);"
+    ],
+    "cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-r3/modules/atlas",
+    "source_root": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/source-snapshot",
+    "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+    "started_utc": "2026-11-14T23:01:36.530537+00:00",
+    "finished_utc": "2026-11-14T23:01:36.795588+00:00",
+    "duration_seconds": 0.26506866900308523,
+    "exit_code": 1,
+    "stdout_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/probes/large-source-r3.stdout.txt",
+    "stderr_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/probes/large-source-r3.stderr.txt",
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr_sha256": "e766bb5e50010b41b35a6628d691ef819b07fc6041efdef1aae6ef3f9a0b2ee8",
+    "prepare_executed": false,
+    "publish_executed": false,
+    "policy_created": false,
+    "binding_created": false,
+    "product_tests_executed": false
+  },
+  {
+    "schema": "s1-04-r3-runtime-read-only-probe/v1",
+    "name": "members-observer-r3",
+    "purpose": "Original R3 observer, no seams or injected membership. Snapshot absence is not a claim about original source absence.",
+    "command": [
+      "/workspace/scratch/8833f71e3e94/s1-04-94f1e157-8c44-4e6e-a4af-7690a8845ecf/runtime-tools/node_modules/.bin/bun",
+      "-e",
+      "import { observeOwnershipInput } from \"./packages/adapter-io/src/ownership-input.ts\"; import { readFileSync } from \"node:fs\"; const plan=JSON.parse(readFileSync(\"/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/input-materialization-plan.json\", \"utf8\")); const root=\"/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/source-snapshot\"; console.log(JSON.stringify({source_root:root, source_identity:\"materialized, not git checkout\", members_scope_revision:plan.members_scope_revision, observations:plan.members_keys.map(path=>({key:\"members:\"+path,observation:observeOwnershipInput(root,\"members:\"+path)}))},null,2));"
+    ],
+    "cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-r3/modules/atlas",
+    "source_root": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/source-snapshot",
+    "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+    "started_utc": "2026-11-14T23:01:36.796189+00:00",
+    "finished_utc": "2026-11-14T23:01:36.911526+00:00",
+    "duration_seconds": 0.11535151000134647,
+    "exit_code": 0,
+    "stdout_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/probes/members-observer-r3.stdout.txt",
+    "stderr_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/probes/members-observer-r3.stderr.txt",
+    "stdout_sha256": "dc86029df950f2acd5d8b712797f42c59849f46b5d35c8934b51dcd8660171a5",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "prepare_executed": false,
+    "publish_executed": false,
+    "policy_created": false,
+    "binding_created": false,
+    "product_tests_executed": false
+  }
+]

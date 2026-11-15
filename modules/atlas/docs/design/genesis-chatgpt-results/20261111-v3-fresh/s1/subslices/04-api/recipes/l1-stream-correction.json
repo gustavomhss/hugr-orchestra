@@ -1,0 +1,20 @@
+{
+  "schema": "s1-04-source-correction-recipe/v1",
+  "key": "s1.api.stream-contract",
+  "base_recipe": {
+    "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/recipes/b-l1-v3.json",
+    "sha256": "29bc32770f0462165481c50463eb123e3494a59c0d631769b12cbcb12e4e9f5f"
+  },
+  "operation": "Preserve original and replace only the accepted string-cache/frame sentence; bind original and corrected bodies, source excerpts, same-pair review and historical frame.",
+  "accepted_body": {
+    "path": "revisions/local-l1-v4/bodies/stream-contract.md",
+    "encoding": "utf-8",
+    "byte_length": 3883,
+    "sha256": "8aac12750cd96c30f9bee287bdab2fdbb61ca67903b604aa8a0c1809e7c4bdfa"
+  },
+  "public_contract": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/contracts/public.json",
+    "sha256": "7dcc9df0003b99722b18538fab1e45adb3ac60e6697397677200feddce40909e"
+  }
+}

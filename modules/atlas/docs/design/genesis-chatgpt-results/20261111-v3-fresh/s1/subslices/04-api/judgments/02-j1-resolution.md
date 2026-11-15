@@ -1,0 +1,13 @@
+**J1 — B1/B2 fechado como análise de fonte, com PASS limitado ao delta apresentado.** As evidências adicionais e a correção textual resolvem os dois pontos que eu havia retido.
+
+| Item | Decisão atual | Evidência determinante |
+|---|---|---|
+| **B1 — limite de diagnóstico** | **PASS preservado** | O limite aplica-se ao prefixo obtido por operações de string JavaScript; o sufixo pode elevar o tamanho total acima de 1.024. |
+| **B2.active-history** | **PASS; finding resolvido** | O schema de `active` declara o mapa por `Session.ID`, e o handler materializa valores `{type: "running"}`. A anotação delimita o contrato ao processo. Para `history`, o handler aplica default 50; os schemas anteriormente apresentados estabelecem os limites dos parâmetros; Core encaminha ao leitor com `SessionDurable`; a consulta em `EventTable` usa `gt(seq, after)`, ordenação crescente e `limit + 1`, com `hasMore: rows.length > input.limit`. Isso sustenta seleção durável, exclusividade e paginação descritas. |
+| **B2.cross-session** | **PASS preservado** | A comparação de sessão em Core e o mapeamento do handler sustentam `MessageNotFoundError` para mensagem ausente ou pertencente a outra sessão. |
+| **B2.production-sse** | **PASS; finding resolvido** | O novo parágrafo identifica precisamente o valor memorizado como string JSON, distingue o novo objeto `Sse.Event` retornado a cada chamada e situa `Sse.encode` depois. A expressão inicial “frame cache” fica suficientemente delimitada pela explicação imediata. A alocação do memo compartilhado no handler já estava sustentada. |
+| **B2.generated-runtime** | **PASS preservado, restrito aos ramos apresentados** | Mantidas as conclusões sobre leitura binária e cancelamento/liberação do reader no `finally`; sem extensão automática a todo o transporte gerado. |
+
+**Critérios aplicáveis:** as pendências de precisão e sustentação em **QS-1, QS-2, QS-4 e CC-3** estão resolvidas para este delta. **QS-5** permanece respeitado: fonte não foi convertida em resultado de teste, execução ou medição. O tratamento de reúso e proveniência em **QS-6 e CC-7** permanece limitado ao material apresentado. Para **GO-I1 e GO-I2**, o FIX-FIRST anterior e seus fundamentos devem continuar registrados, agora com resolução explícita destes findings. Para **GO-I7 e GO-I8**, hashes e identificação do produtor não concedem autoridade nem substituem a evidência semântica; minha decisão se apoia nos trechos fornecidos.
+
+**Não há finding B1/B2 aberto neste delta.** O pacote de reúso e B3 continuam pendentes, sem decisão adicional neste pedido. Este fechamento não concede PASS ao L1 completo, aos nove corpos integrais, a binding Atlas, consumidor, CI ou entrega.

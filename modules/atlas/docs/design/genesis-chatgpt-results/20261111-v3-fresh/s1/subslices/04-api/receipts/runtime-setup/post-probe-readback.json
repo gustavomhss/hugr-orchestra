@@ -1,0 +1,37 @@
+{
+  "schema": "s1-04-runtime-post-probe-readback/v1",
+  "measured_utc": "2026-11-14T23:03:46.985583+00:00",
+  "checks": [
+    {
+      "kind": "runtime",
+      "root": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-r3",
+      "original_files_checked": 1037,
+      "original_files_changed": [],
+      "all_original_bytes_match": true,
+      "git_metadata_present": false,
+      "atlas_policy_present": false
+    },
+    {
+      "kind": "inputs",
+      "root": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/source-snapshot",
+      "original_files_checked": 306,
+      "original_files_changed": [],
+      "all_original_bytes_match": true,
+      "git_metadata_present": false,
+      "atlas_policy_present": false
+    }
+  ],
+  "members_literal_counts": {
+    "unavailable": 21,
+    "absent": 1
+  },
+  "members_absent_literal": [
+    "members:tooling/httpapi-codegen/test"
+  ],
+  "members_absent_interpretation": "Literal observer result on a partial materialization; not a claim that the directory is absent from the original repository.",
+  "metadata_created": false,
+  "policy_created": false,
+  "prepare_executed": false,
+  "publish_executed": false,
+  "product_tests_executed": false
+}

@@ -1,0 +1,227 @@
+{
+  "schema": "s1-04-core-predecessor-exact-reuse/v1",
+  "source_owner": "S1-01",
+  "observed_branch_head": "9fd024a34e76d2e9328e1f793ef1f69fbf606e51",
+  "artifact_revision": "a2a5de03d7b1034373eb877d8f03c4cecc772dde",
+  "selected": [
+    {
+      "key": "s1.core.session-admission",
+      "body": {
+        "path": "bodies/session-admission.md",
+        "encoding": "utf-8",
+        "byte_length": 4261,
+        "sha256": "2535bba77505ed74e7dc2759dce815c8e9684e68e2f0a10fa75f9813192e7ae1"
+      },
+      "reviews": [
+        {
+          "judge": "parallel-v3-fresh/S1-01/J1",
+          "decision": {
+            "artifact": "s1.core.session-admission",
+            "body_sha256": "2535bba77505ed74e7dc2759dce815c8e9684e68e2f0a10fa75f9813192e7ae1",
+            "verdict": "PASS",
+            "criteria": {
+              "QS-1": "PASS",
+              "QS-2": "PASS",
+              "QS-4": "PASS",
+              "QS-5": "PASS",
+              "QS-6": "PASS",
+              "CC-1": "PASS",
+              "CC-3": "PASS",
+              "CC-7": "PASS",
+              "GO-I1": "PASS",
+              "GO-I2": "PASS",
+              "GO-I7": "PASS",
+              "GO-I8": "PASS"
+            },
+            "evidence": "Reconfirmo meu aceite do mesmo corpo. Os ramos demonstram admissão antes de wake, resume:false, equivalência e consistência, esquema e escrita visível. O delta EventV2/Database/adapter demonstrou o contexto transacional compartilhado.",
+            "closed_findings": [
+              "J1-R1"
+            ],
+            "open_findings": []
+          },
+          "ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j1.json",
+            "sha256": "a32b7bec928315cdd77f7fdb32909f5ee5d316eb576816a1cce9985b632d8ff7"
+          }
+        },
+        {
+          "judge": "parallel-v3-fresh/S1-01/J2",
+          "decision": {
+            "artifact": "s1.core.session-admission",
+            "body_sha256": "2535bba77505ed74e7dc2759dce815c8e9684e68e2f0a10fa75f9813192e7ae1",
+            "verdict": "PASS",
+            "criteria": {
+              "QS-1": "PASS",
+              "QS-2": "PASS",
+              "QS-4": "PASS",
+              "QS-5": "PASS",
+              "QS-6": "PASS",
+              "CC-1": "PASS",
+              "CC-3": "PASS",
+              "CC-7": "PASS",
+              "GO-I1": "PASS",
+              "GO-I2": "PASS",
+              "GO-I7": "PASS",
+              "GO-I8": "PASS"
+            },
+            "basis": "Reconfirmo explicitamente meu próprio PASS anterior para o mesmo corpo. Reutilizo suas verificações sobre identidade, admissão antes de wake, resume:false, equivalência de retry, schema e projeção. O delta de EventV2 e do adapter demonstrou a transação ambiente que cobre promoção e escrita visível. Corpo, evidência sem execução e limites permanecem inalterados.",
+            "findings_closed": [
+              "admission-R1-transaction-boundary"
+            ],
+            "findings_open": []
+          },
+          "ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j2.json",
+            "sha256": "fd2dd0e2d76379e7d4e128b1fa1e77ce81cf95dd8bc5ef18051475f641187349"
+          }
+        }
+      ]
+    },
+    {
+      "key": "s1.core.session-execution",
+      "body": {
+        "path": "bodies/session-execution.md",
+        "encoding": "utf-8",
+        "byte_length": 4574,
+        "sha256": "470ddb1eacfe7294071893968d7de999c90ea98cb0fd48c48e0730ded51d1663"
+      },
+      "reviews": [
+        {
+          "judge": "parallel-v3-fresh/S1-01/J1",
+          "decision": {
+            "artifact": "s1.core.session-execution",
+            "body_sha256": "470ddb1eacfe7294071893968d7de999c90ea98cb0fd48c48e0730ded51d1663",
+            "verdict": "PASS",
+            "criteria": {
+              "QS-1": "PASS",
+              "QS-2": "PASS",
+              "QS-4": "PASS",
+              "QS-5": "PASS",
+              "QS-6": "PASS",
+              "CC-1": "PASS",
+              "CC-3": "PASS",
+              "CC-7": "PASS",
+              "GO-I1": "PASS",
+              "GO-I2": "PASS",
+              "GO-I7": "PASS",
+              "GO-I8": "PASS"
+            },
+            "evidence": "Reconfirmo meu aceite do mesmo corpo: coordenação local, loops steer/queue, seleção de stream, host ausente, portas controladas, publicação antes de settlement, espera dos filhos, noopLayer e registro best-effort de falha estão sustentados.",
+            "closed_evidence_gaps": [
+              "A1-R2"
+            ],
+            "open_findings": []
+          },
+          "ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j1.json",
+            "sha256": "a32b7bec928315cdd77f7fdb32909f5ee5d316eb576816a1cce9985b632d8ff7"
+          }
+        },
+        {
+          "judge": "parallel-v3-fresh/S1-01/J2",
+          "decision": {
+            "artifact": "s1.core.session-execution",
+            "body_sha256": "470ddb1eacfe7294071893968d7de999c90ea98cb0fd48c48e0730ded51d1663",
+            "verdict": "PASS",
+            "criteria": {
+              "QS-1": "PASS",
+              "QS-2": "PASS",
+              "QS-4": "PASS",
+              "QS-5": "PASS",
+              "QS-6": "PASS",
+              "CC-1": "PASS",
+              "CC-3": "PASS",
+              "CC-7": "PASS",
+              "GO-I1": "PASS",
+              "GO-I2": "PASS",
+              "GO-I7": "PASS",
+              "GO-I8": "PASS"
+            },
+            "basis": "Reconfirmo explicitamente meu próprio PASS anterior para o mesmo corpo. Reutilizo as verificações de coordenação local, noopLayer, host ausente, portas execute/authorize, publicação anterior ao settlement, espera das fibers, loops steer/queue, falha e cancelamento. O texto mantém separadas execução local, ownership durável e internos dos hosts.",
+            "findings_closed": [],
+            "findings_open": []
+          },
+          "ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j2.json",
+            "sha256": "fd2dd0e2d76379e7d4e128b1fa1e77ce81cf95dd8bc5ef18051475f641187349"
+          }
+        }
+      ]
+    },
+    {
+      "key": "s1.core.persistence",
+      "body": {
+        "path": "bodies/persistence.md",
+        "encoding": "utf-8",
+        "byte_length": 5290,
+        "sha256": "0b43f9bd316aca25361f934e63723f2aa6220a3deb97a4447266fbbc5d350762"
+      },
+      "reviews": [
+        {
+          "judge": "parallel-v3-fresh/S1-01/J1",
+          "decision": {
+            "artifact": "s1.core.persistence",
+            "body_sha256": "0b43f9bd316aca25361f934e63723f2aa6220a3deb97a4447266fbbc5d350762",
+            "verdict": "PASS",
+            "criteria": {
+              "QS-1": "PASS",
+              "QS-2": "PASS",
+              "QS-4": "PASS",
+              "QS-5": "PASS",
+              "QS-6": "PASS",
+              "CC-1": "PASS",
+              "CC-3": "PASS",
+              "CC-7": "PASS",
+              "GO-I1": "PASS",
+              "GO-I2": "PASS",
+              "GO-I7": "PASS",
+              "GO-I8": "PASS"
+            },
+            "evidence": "Reconfirmo meu aceite da ordem corrigida de replay e dos contratos demonstrados de persistência, migração, seals e decode. O complemento allBounded confirma Queue.dropping e falha por overflow no adapter separado; não altera os buses genéricos unbounded.",
+            "closed_evidence_gaps": [
+              "A1-R3"
+            ],
+            "open_findings": []
+          },
+          "ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j1.json",
+            "sha256": "a32b7bec928315cdd77f7fdb32909f5ee5d316eb576816a1cce9985b632d8ff7"
+          }
+        },
+        {
+          "judge": "parallel-v3-fresh/S1-01/J2",
+          "decision": {
+            "artifact": "s1.core.persistence",
+            "body_sha256": "0b43f9bd316aca25361f934e63723f2aa6220a3deb97a4447266fbbc5d350762",
+            "verdict": "PASS",
+            "criteria": {
+              "QS-1": "PASS",
+              "QS-2": "PASS",
+              "QS-4": "PASS",
+              "QS-5": "PASS",
+              "QS-6": "PASS",
+              "CC-1": "PASS",
+              "CC-3": "PASS",
+              "CC-7": "PASS",
+              "GO-I1": "PASS",
+              "GO-I2": "PASS",
+              "GO-I7": "PASS",
+              "GO-I8": "PASS"
+            },
+            "basis": "Reconfirmo explicitamente meu próprio PASS anterior para o mesmo corpo. A ordem corrigida do replay permanece demonstrada. allBounded usa Queue.dropping(capacity) e tratamento de overflow, fechando a existência do adapter separado sem mudar a evidência dos buses genéricos unbounded. Reutilizo as demais verificações estáticas de migração, persist:false, subscriptions, seals e decode.",
+            "findings_closed": [
+              "historical-F1-replay-order",
+              "J2-PERSIST-E1"
+            ],
+            "findings_open": []
+          },
+          "ref": {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j2.json",
+            "sha256": "fd2dd0e2d76379e7d4e128b1fa1e77ce81cf95dd8bc5ef18051475f641187349"
+          }
+        }
+      ]
+    }
+  ],
+  "scope": "Three accepted L1 only. Rest of Core package remains incomplete; no runtime or whole-Core acceptance."
+}

@@ -1,0 +1,55 @@
+{
+  "schema": "s1-04-executed-gates/v1",
+  "recorded_at_utc": "2026-11-15T00:53:32.580437+00:00",
+  "overall": "HOLD",
+  "product_code_changed": false,
+  "native_content": "Dual source-level releases L1/L2/L3/L4 and exact Core reuse; see release receipts, distinct from binding/gates.",
+  "original_static_guard": {
+    "state": "FAILED_TO_COMPLETE",
+    "receipt": {
+      "path": "receipts/guards/verified-check-guards-final-reconciled.receipt.json",
+      "byte_length": 99570,
+      "sha256": "faa5f7658bf4e35f2e2bd7fde6ce1716e27e709dacf47e05a19732852c9aa265"
+    },
+    "exit_code": 1,
+    "reason": "Original git diff --numstat requires historical binary blob d83941a9d836a23e466ca09ecba1f21d423094cb, whose exact bytes could not be retrieved via available connector routes. No gate verdict or zero-findings PASS is inferred.",
+    "binary_route_receipts": [
+      "receipts/verified-git/status.json",
+      "receipts/verified-git/guard-blob-captures/largest-zip-generic.json",
+      "receipts/guards/zip-artifact-route/receipt.json"
+    ]
+  },
+  "runtime_setup_typecheck": {
+    "state": "PASS_SETUP_ONLY",
+    "receipt": {
+      "path": "receipts/runtime-setup/commands/typecheck.receipt.json",
+      "byte_length": 1459,
+      "sha256": "d345d6230d21e06db322bb0bf861ad8cfd5c95a59da72856e9a9e32e8b9be8d9"
+    },
+    "candidate": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+    "scope": "Original installed Atlas closure, not API product test or own package binding"
+  },
+  "diagnostic_typecheck": {
+    "state": "PASS_SETUP_ONLY",
+    "receipt": {
+      "path": "receipts/runtime-diagnostic-setup/commands/typecheck.receipt.json",
+      "byte_length": 1698,
+      "sha256": "8b8b907c00aee7e9ee92fb4ceb28b143df0b07512d074acede8f0ab453f22fcc"
+    },
+    "candidate": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+    "scope": "Unpromoted exact original source closure; not R4 release"
+  },
+  "product_tests": {
+    "state": "NOT_RUN",
+    "permitted_environment": "GitHub Actions only",
+    "locally_run": false,
+    "reason": "No product delta was applied. No own workflow run at the observed branch revision was available; shared S4 runs are separately scoped. Own maintenance gates remain unfulfilled."
+  },
+  "official_client_generation": {
+    "state": "NOT_RUN",
+    "reason": "No public API or generator product delta was applied; M1/M2 execution remains blocked. No generated output was edited by hand."
+  },
+  "workflow_observation": "receipts/dependency-recheck.json",
+  "shared_controls": "receipts/runtime-common-controls.json",
+  "guard_or_policy_modified": false
+}

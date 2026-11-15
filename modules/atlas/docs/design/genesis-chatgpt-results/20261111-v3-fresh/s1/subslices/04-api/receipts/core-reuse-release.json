@@ -1,0 +1,19 @@
+{
+  "schema": "s1-04-external-content-release/v1",
+  "status": "THREE_EXACT_CORE_L1_REUSE_RECOGNIZED",
+  "payload_revision": "a2a5de03d7b1034373eb877d8f03c4cecc772dde",
+  "local_judgments": [
+    {
+      "path": "judgments/09-core-reuse-j1.md",
+      "sha256": "9ab91a8048f56a79f8afd02d48f6334953bf6a3c725b7229e8eab516c959fc79",
+      "bytes": 2046
+    },
+    {
+      "path": "judgments/09-core-reuse-j2.md",
+      "sha256": "b31e375eb2f3f8e8eb56b665f717eba9c073c7d6a2cefca0b64c5ac8308b7878",
+      "bytes": 2132
+    }
+  ],
+  "original_proof": "dependencies/core/reuse-proof.json",
+  "allows": "Bounded L3 update; L4 only after the new L3 is accepted; no runtime authority."
+}

@@ -1,0 +1,336 @@
+[
+  {
+    "name": "init",
+    "command": [
+      "git",
+      "init",
+      "--template=/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/empty-git-template",
+      "--initial-branch=genesis-s1-api",
+      "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/verified-git-candidate"
+    ],
+    "cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/verified-git-candidate",
+    "started_utc": "2026-11-14T23:54:58.886058+00:00",
+    "finished_utc": "2026-11-14T23:54:58.890343+00:00",
+    "duration_seconds": 0.004276621999451891,
+    "exit_code": 0,
+    "stdin_sha256": null,
+    "stdout_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/init.stdout.txt",
+    "stderr_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/init.stderr.txt",
+    "stdout_sha256": "84bf1ca22d18058d56ebd0a7e4a0cd3d9cc8fc6ce89b2d75611bf8fd2fdbe191",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "import-commit",
+    "command": [
+      "git",
+      "hash-object",
+      "-w",
+      "-t",
+      "commit",
+      "--stdin-paths"
+    ],
+    "cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/verified-git-candidate",
+    "started_utc": "2026-11-14T23:54:58.891888+00:00",
+    "finished_utc": "2026-11-14T23:54:59.079898+00:00",
+    "duration_seconds": 0.1880213590047788,
+    "exit_code": 0,
+    "stdin_sha256": "e110244d2fea91f6dd594e912d29c8553fc9533af5a61cdbf893868c78a19849",
+    "stdout_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/import-commit.stdout.txt",
+    "stderr_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/import-commit.stderr.txt",
+    "stdout_sha256": "2a7b5c934cfb067af4951936ded98c3c6dc0eaae9642ace53bdea14d644ebe9e",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "import-tree",
+    "command": [
+      "git",
+      "hash-object",
+      "-w",
+      "-t",
+      "tree",
+      "--stdin-paths"
+    ],
+    "cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/verified-git-candidate",
+    "started_utc": "2026-11-14T23:54:59.082233+00:00",
+    "finished_utc": "2026-11-14T23:54:59.311286+00:00",
+    "duration_seconds": 0.22906261399475625,
+    "exit_code": 0,
+    "stdin_sha256": "6d3831100548e78ff3e96826efe6d8abd7063f3641595a225bd9a722ca7d0284",
+    "stdout_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/import-tree.stdout.txt",
+    "stderr_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/import-tree.stderr.txt",
+    "stdout_sha256": "51a66ce209f7685df95047cd2eb3e1e5cb3e536aca6fd47c35aa27c9eed0880d",
+    "stderr_sha256": "32b34c31d25d7021706b3c12cb268e72190ccb1a329907451034e8dbe1acf3eb"
+  },
+  {
+    "name": "import-blob",
+    "command": [
+      "git",
+      "hash-object",
+      "-w",
+      "-t",
+      "blob",
+      "--stdin-paths"
+    ],
+    "cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/verified-git-candidate",
+    "started_utc": "2026-11-14T23:54:59.312368+00:00",
+    "finished_utc": "2026-11-14T23:54:59.464751+00:00",
+    "duration_seconds": 0.15239464800106362,
+    "exit_code": 0,
+    "stdin_sha256": "3569e98c8a283befea969b84da086cc4f1d3e87c35ec8cb464eb8301a9c1aa90",
+    "stdout_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/import-blob.stdout.txt",
+    "stderr_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/import-blob.stderr.txt",
+    "stdout_sha256": "d936b86f653ee149a5757f4225340c183d3fae76971ad300fdbbbcd9007a3aa8",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "set-local-sparse",
+    "command": [
+      "git",
+      "config",
+      "--local",
+      "core.sparseCheckout",
+      "true"
+    ],
+    "cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/verified-git-candidate",
+    "started_utc": "2026-11-14T23:54:59.465370+00:00",
+    "finished_utc": "2026-11-14T23:54:59.468516+00:00",
+    "duration_seconds": 0.003147162002278492,
+    "exit_code": 0,
+    "stdin_sha256": null,
+    "stdout_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/set-local-sparse.stdout.txt",
+    "stderr_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/set-local-sparse.stderr.txt",
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "set-local-noncone",
+    "command": [
+      "git",
+      "config",
+      "--local",
+      "core.sparseCheckoutCone",
+      "false"
+    ],
+    "cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/verified-git-candidate",
+    "started_utc": "2026-11-14T23:54:59.468915+00:00",
+    "finished_utc": "2026-11-14T23:54:59.472153+00:00",
+    "duration_seconds": 0.0032373249996453524,
+    "exit_code": 0,
+    "stdin_sha256": null,
+    "stdout_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/set-local-noncone.stdout.txt",
+    "stderr_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/set-local-noncone.stderr.txt",
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "set-full-index",
+    "command": [
+      "git",
+      "config",
+      "--local",
+      "index.sparse",
+      "false"
+    ],
+    "cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/verified-git-candidate",
+    "started_utc": "2026-11-14T23:54:59.472395+00:00",
+    "finished_utc": "2026-11-14T23:54:59.474670+00:00",
+    "duration_seconds": 0.002276391001942102,
+    "exit_code": 0,
+    "stdin_sha256": null,
+    "stdout_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/set-full-index.stdout.txt",
+    "stderr_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/set-full-index.stderr.txt",
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "set-byte-preserving-eol",
+    "command": [
+      "git",
+      "config",
+      "--local",
+      "core.autocrlf",
+      "false"
+    ],
+    "cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/verified-git-candidate",
+    "started_utc": "2026-11-14T23:54:59.474905+00:00",
+    "finished_utc": "2026-11-14T23:54:59.476962+00:00",
+    "duration_seconds": 0.0020578820040100254,
+    "exit_code": 0,
+    "stdin_sha256": null,
+    "stdout_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/set-byte-preserving-eol.stdout.txt",
+    "stderr_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/set-byte-preserving-eol.stderr.txt",
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "set-local-candidate-ref",
+    "command": [
+      "git",
+      "update-ref",
+      "refs/heads/genesis-s1-api",
+      "8835faf6329cc3d5f5de1097872882d57472b793"
+    ],
+    "cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/verified-git-candidate",
+    "started_utc": "2026-11-14T23:55:36.707234+00:00",
+    "finished_utc": "2026-11-14T23:55:36.710419+00:00",
+    "duration_seconds": 0.0031743319996166974,
+    "exit_code": 0,
+    "stdin_sha256": null,
+    "stdout_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/set-local-candidate-ref.stdout.txt",
+    "stderr_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/set-local-candidate-ref.stderr.txt",
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "set-observed-dev-tracking-ref",
+    "command": [
+      "git",
+      "update-ref",
+      "refs/remotes/origin/dev",
+      "5e0807b5ff953508f792b8a965883985b05a7066"
+    ],
+    "cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/verified-git-candidate",
+    "started_utc": "2026-11-14T23:55:36.710728+00:00",
+    "finished_utc": "2026-11-14T23:55:36.713364+00:00",
+    "duration_seconds": 0.00263713800086407,
+    "exit_code": 0,
+    "stdin_sha256": null,
+    "stdout_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/set-observed-dev-tracking-ref.stdout.txt",
+    "stderr_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/set-observed-dev-tracking-ref.stderr.txt",
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "read-exact-tree",
+    "command": [
+      "git",
+      "read-tree",
+      "-m",
+      "-u",
+      "HEAD"
+    ],
+    "cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/verified-git-candidate",
+    "started_utc": "2026-11-14T23:55:36.713700+00:00",
+    "finished_utc": "2026-11-14T23:55:36.990064+00:00",
+    "duration_seconds": 0.2763731579980231,
+    "exit_code": 0,
+    "stdin_sha256": null,
+    "stdout_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/read-exact-tree.stdout.txt",
+    "stderr_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/read-exact-tree.stderr.txt",
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "readback-refs",
+    "command": [
+      "git",
+      "rev-parse",
+      "HEAD",
+      "origin/dev"
+    ],
+    "cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/verified-git-candidate",
+    "started_utc": "2026-11-14T23:55:36.990430+00:00",
+    "finished_utc": "2026-11-14T23:55:36.992983+00:00",
+    "duration_seconds": 0.0025538740010233596,
+    "exit_code": 0,
+    "stdin_sha256": null,
+    "stdout_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/readback-refs.stdout.txt",
+    "stderr_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/readback-refs.stderr.txt",
+    "stdout_sha256": "05350d7ca8da61e12e20f4887b6404a3183e1b4596d447af4f95a616b8060319",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "merge-base",
+    "command": [
+      "git",
+      "merge-base",
+      "HEAD",
+      "origin/dev"
+    ],
+    "cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/verified-git-candidate",
+    "started_utc": "2026-11-14T23:55:36.993294+00:00",
+    "finished_utc": "2026-11-14T23:55:37.021331+00:00",
+    "duration_seconds": 0.028044872000464238,
+    "exit_code": 0,
+    "stdin_sha256": null,
+    "stdout_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/merge-base.stdout.txt",
+    "stderr_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/merge-base.stderr.txt",
+    "stdout_sha256": "4fb505e940b8a83155c3e8c9dcbead73f0be585b2ee44a28c98cfd7e7f1d9d74",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "readback-shallow",
+    "command": [
+      "git",
+      "rev-parse",
+      "--is-shallow-repository"
+    ],
+    "cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/verified-git-candidate",
+    "started_utc": "2026-11-14T23:55:37.021877+00:00",
+    "finished_utc": "2026-11-14T23:55:37.023842+00:00",
+    "duration_seconds": 0.0019659410027088597,
+    "exit_code": 0,
+    "stdin_sha256": null,
+    "stdout_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/readback-shallow.stdout.txt",
+    "stderr_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/readback-shallow.stderr.txt",
+    "stdout_sha256": "a17fcf0a2f50e2d495e4f90ce263410edc183add6c62699a2facbccf60410f74",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "index-stages",
+    "command": [
+      "git",
+      "ls-files",
+      "--stage",
+      "-z"
+    ],
+    "cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/verified-git-candidate",
+    "started_utc": "2026-11-14T23:55:37.024114+00:00",
+    "finished_utc": "2026-11-14T23:55:37.039576+00:00",
+    "duration_seconds": 0.015467370998521801,
+    "exit_code": 0,
+    "stdin_sha256": null,
+    "stdout_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/index-stages.stdout.txt",
+    "stderr_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/index-stages.stderr.txt",
+    "stdout_sha256": "7adcccb93bda7b8b7f9364748859e78d71e5071e573d464e4ec92e7f4bde85b7",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "index-sparse-flags",
+    "command": [
+      "git",
+      "ls-files",
+      "-v",
+      "-z"
+    ],
+    "cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/verified-git-candidate",
+    "started_utc": "2026-11-14T23:55:37.073461+00:00",
+    "finished_utc": "2026-11-14T23:55:37.082817+00:00",
+    "duration_seconds": 0.009344200996565633,
+    "exit_code": 0,
+    "stdin_sha256": null,
+    "stdout_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/index-sparse-flags.stdout.txt",
+    "stderr_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/index-sparse-flags.stderr.txt",
+    "stdout_sha256": "797fc97fb64a0f79dd23110afc64fc17ff6628db3635e39fe5e226fc57862781",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "clean-sparse-status",
+    "command": [
+      "git",
+      "status",
+      "--porcelain=v1",
+      "--untracked-files=all"
+    ],
+    "cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/verified-git-candidate",
+    "started_utc": "2026-11-14T23:55:37.105252+00:00",
+    "finished_utc": "2026-11-14T23:55:37.155273+00:00",
+    "duration_seconds": 0.05001834900031099,
+    "exit_code": 0,
+    "stdin_sha256": null,
+    "stdout_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/clean-sparse-status.stdout.txt",
+    "stderr_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/setup/verified-git/git-commands/clean-sparse-status.stderr.txt",
+    "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+]

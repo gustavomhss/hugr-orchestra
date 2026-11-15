@@ -1,0 +1,8 @@
+{
+  "schema": "s1-04-historical-frame/v1",
+  "authority_basis_frame": "Os corpos B-v3 preservados são observações históricas datadas: now, unjudged e ausência de instalação/runtime descrevem sua produção original, não os atos desta execução. As leituras completas dos 190 módulos são herdadas; não foram refeitas por rotina. A disposição atual de domínios substitui apenas os claims promovidos B3; notas detalhadas retiradas permanecem históricas e RETIRED_EXTRA_CLAIM, sem resolução por fonte. O aceite atual combina os pareceres B-v2 delimitados, preservados como FIX-FIRST, e a resolução dos deltas pela dupla nativa atual. Nenhum predecessor Core não julgado é aceito; gaps condicionais F02 e obrigações F03–F08 continuam para seus dependentes. Sem promoção de fonte a execução, freshness, autoridade de publicação ou consumo real.",
+  "required_by": [
+    "J1-round5",
+    "J2-round5"
+  ]
+}

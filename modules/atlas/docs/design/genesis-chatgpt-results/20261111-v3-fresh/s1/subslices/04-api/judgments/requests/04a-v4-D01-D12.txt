@@ -1,0 +1,466 @@
+Rodada 4a — correção B3 v4, D01–D12. SEM FERRAMENTAS. Julgue a redução explícita à disposição DOMAIN-LEVEL prevista no B3 original, preservando os findings das tabelas retiradas como histórico, sem chamá-los resolvidos por fonte. Necessidade,24domínios e190paths permanecem. Reutilize os trechos exatos já recebidos em3a/3b; nenhuma inferência de runtime. D13–24 ainda serão enviados com literais. D09 terá complemento de call sites dos helpers, pois o bounded_claim retém esse mapeamento. Decida os demais pontos executáveis, sem liberar L1 integral antes do fechamento. Dossiês exatos a seguir: D01–06 12454bytes SHAe98967118c9da0a74dc4fc8a89bd7a5462e68b22c3a6f4f34da2ae4c3729c746; D07–12 15736bytes SHA7f7406a6c749c237b7d28071f37a6229a1b06d98b913cec0b0f186736b6fe206.
+
+# B3/v4 — revisão da redução explícita — D01–D06
+
+Critério: disposição de domínio com membership exato, propósito/contrato/owner, evidência ou gap obrigatório e razão da profundidade. A revisão retira os claims locais detalhados da tabela antiga do corpo promovido, sem retirar paths, domínios ou necessidades. Os dois juízes decidem se a forma reduzida cumpre a necessidade congelada; o produtor não concede PASS. B1/B2 permanecem fora desta mudança; D07 preserva seus campos e membros.
+
+Disposição das especificidades retiradas: `RETIRED_EXTRA_CLAIM`; suas lacunas não são declaradas resolvidas por fonte. Lacunas de bounded_claims retidos continuam obrigatórias.
+
+Corpo único: `domain-disposition.md`, 38062 bytes, SHA256 `36339a1329421f80d15e37b40ce26edd6e1c793a0ac1b5056471e4df2bfed57c`. Histórico original preservado: 65726 bytes, SHA256 `95b17106dc5c26bb6d39c8d2d80b48fca8f75d35fe4f5f8ec3f232c7d71411c3`. As linhas antigas não são evidência nova nem claims atuais; disposição individual em `retired-row-claims.json`.
+
+Base literal já enviada à mesma dupla: `b3/v2/dossier-D01-D06.md`, 31892 bytes, SHA256 `b31b058452a3f0162589eb543f8163a31c3ad7646268d1fde832e81062b0ae5a`. Reutilizam-se somente os intervalos de fonte abaixo nomeados; as tabelas locais daquele v2 não são promovidas nesta revisão. Nenhum literal necessário do corpus v2 foi alterado. O mapa por domínio conserva ID e linha para reaproveitamento do contexto existente.
+
+## Regras comuns aos 24 domínios
+
+Os três campos a seguir são idênticos nos 24 registros herdados e aplicam-se integralmente a cada domínio; aparecem uma vez para evitar repetição.
+
+**Necessidade L1 (herdada):** Mandatory now: identify this domain’s role, public contract and local owner/delegation boundary from literal source, without projecting an unseen runtime guarantee.
+
+**Dependentes bloqueados (herdado):** Any current or later claim relying on the named broader behavior requires that additional implementation/runtime evidence. Current local L1 reading was performed now.
+
+**Profundidade e razão de adequação (herdadas):** Every listed handwritten member was read in full; the projection supplies decisive declaration/delegation/ownership branches and identifies external enforcement limits. It does not infer semantics from inventory or require an unrequested leaf-by-leaf operational audit.
+
+As expressões de leitura “now” e “was read in full” pertencem ao registro histórico B-v3, não declaram uma releitura nesta revisão. O contrato/owner específico e o limite de aplicação desta profundidade são o bounded_claim e o conditional_gap de cada domínio abaixo.
+
+## D01 — Actions provider automation
+
+**Membros exatos (25):**
+
+- `packages/protocol/src/groups/actions-binding.ts`
+- `packages/protocol/src/groups/actions-common.ts`
+- `packages/protocol/src/groups/actions-job.ts`
+- `packages/protocol/src/groups/actions-operation.ts`
+- `packages/protocol/src/groups/actions-pipeline.ts`
+- `packages/protocol/src/groups/actions-resource.ts`
+- `packages/protocol/src/groups/actions-run.ts`
+- `packages/protocol/src/groups/actions-source.ts`
+- `packages/protocol/src/groups/actions-workflow.ts`
+- `packages/schema/src/actions.ts`
+- `packages/schema/src/actions/command.ts`
+- `packages/schema/src/actions/identity.ts`
+- `packages/schema/src/actions/operation.ts`
+- `packages/schema/src/actions/resource.ts`
+- `packages/schema/src/actions/run.ts`
+- `packages/schema/src/actions/workflow.ts`
+- `packages/server/src/handlers/actions-binding.ts`
+- `packages/server/src/handlers/actions-common.ts`
+- `packages/server/src/handlers/actions-job.ts`
+- `packages/server/src/handlers/actions-operation.ts`
+- `packages/server/src/handlers/actions-pipeline.ts`
+- `packages/server/src/handlers/actions-resource.ts`
+- `packages/server/src/handlers/actions-run.ts`
+- `packages/server/src/handlers/actions-source.ts`
+- `packages/server/src/handlers/actions-workflow.ts`
+
+**Propósito, contrato e delegação local — bounded_claim:**
+
+Schema separates binding/revision, prepared operation identity and execution input; Protocol declares the provider-command API and shared Actions errors; Server delegates to Actions.Service through a binding reference and common error projection. A binding reference does not itself prove provider authorization or an executed remote effect.
+
+**Evidência decisiva:** Q048:L49–50, Q049:L17–17, Q049:L38–44, Q049:L77–78, P02:L6–8, P03:L11–14, G57-E013:L9–12, G57-E011:L7–20. As identidades e os literais estão nos dossiês vinculantes desta revisão.
+
+**Contexto existente:** `s1.api.boundaries`, `s1.api.schema-contracts`, `s1.api.server-edge`, `s1.api.surface-disposition`.
+
+**Lacuna condicional — conditional_gap:**
+
+Provider authorization, atomic operation/reconcile semantics and remote results require Actions/Core and relevant runtime evidence.
+
+## D02 — Agent, behavior, skill and prompt instructions
+
+**Membros exatos (16):**
+
+- `packages/protocol/src/groups/agent.ts`
+- `packages/protocol/src/groups/behavior.ts`
+- `packages/protocol/src/groups/command.ts`
+- `packages/protocol/src/groups/skill.ts`
+- `packages/schema/src/agent-file.ts`
+- `packages/schema/src/agent.ts`
+- `packages/schema/src/behavior.ts`
+- `packages/schema/src/command.ts`
+- `packages/schema/src/llm.ts`
+- `packages/schema/src/prompt-context.ts`
+- `packages/schema/src/session-subagent-models.ts`
+- `packages/schema/src/skill.ts`
+- `packages/server/src/handlers/agent.ts`
+- `packages/server/src/handlers/behavior.ts`
+- `packages/server/src/handlers/command.ts`
+- `packages/server/src/handlers/skill.ts`
+
+**Propósito, contrato e delegação local — bounded_claim:**
+
+These contracts separate agent/skill/command configuration and host-rendered reminders from executing turns. Agent-file revisions and behavior replacement are public inputs; Server resolves the Location-owned catalog/services and delegates writes, with local name/conflict/error handling. SDK or HTTP exposure is not evidence that a tool/model ran.
+
+**Evidência decisiva:** Q001:L29–34, Q003:L19–22, Q006:L5–9, P10:L77–83, G57-E026:L75–85, G57-E027:L129–138, G57-E031:L11–18, G57-E040:L6–8, G57-E120:L16–27. As identidades e os literais estão nos dossiês vinculantes desta revisão.
+
+**Contexto existente:** `s1.api.boundaries`, `s1.api.schema-contracts`, `s1.api.server-edge`, `s1.api.surface-disposition`.
+
+**Lacuna condicional — conditional_gap:**
+
+File containment, effective permission policy, reload convergence and provider/tool execution need their implementation or execution evidence.
+
+## D03 — Permission and question requests
+
+**Membros exatos (7):**
+
+- `packages/protocol/src/groups/permission.ts`
+- `packages/protocol/src/groups/question.ts`
+- `packages/schema/src/permission-saved.ts`
+- `packages/schema/src/permission.ts`
+- `packages/schema/src/question.ts`
+- `packages/server/src/handlers/permission.ts`
+- `packages/server/src/handlers/question.ts`
+
+**Propósito, contrato e delegação local — bounded_claim:**
+
+Schema defines request/reply/saved-rule forms and Protocol distinguishes Location and Session endpoints. Server permission get/reply and question reply/reject inspect the requested record and compare its sessionID before delegation; absent/foreign records map to the corresponding not-found error. These local checks do not establish every Core lifecycle invariant.
+
+**Evidência decisiva:** Q009:L34–40, Q010:L14–19, Q011:L52–58, P30:L60–64, G57-E067:L10–12, G57-E069:L62–64, G57-E069:L69–75, G57-E079:L19–23, G57-E081:L40–46, U01:L8–10, U01:L51–57. As identidades e os literais estão nos dossiês vinculantes desta revisão.
+
+**Contexto existente:** `s1.api.boundaries`, `s1.api.schema-contracts`, `s1.api.server-edge`, `s1.api.surface-disposition`, `s1.api.session-contract`, `s1.api.stream-contract`.
+
+**Lacuna condicional — conditional_gap:**
+
+Decision policy, saved-entry authorization, persistence and concurrent lifecycle behavior remain Core/runtime prerequisites.
+
+## D04 — Session projections and invalidations
+
+**Membros exatos (4):**
+
+- `packages/schema/src/revert.ts`
+- `packages/schema/src/session-activity.ts`
+- `packages/schema/src/session-compaction-event.ts`
+- `packages/schema/src/session-todo.ts`
+
+**Propósito, contrato e delegação local — bounded_claim:**
+
+Revert, activity, todo and compaction modules describe session-bound records/notifications. They do not perform revert or activity computation; todo status/priority remain String fields. Existing session/stream bodies cover admission and delivery boundaries separately.
+
+**Evidência decisiva:** Q012:L17–24, Q013:L33–34, Q013:L40–45, Q014:L6–11, Q015:L7–15, Q015:L18–25. As identidades e os literais estão nos dossiês vinculantes desta revisão.
+
+**Contexto existente:** `s1.api.boundaries`, `s1.api.schema-contracts`, `s1.api.server-edge`, `s1.api.surface-disposition`, `s1.api.session-contract`, `s1.api.stream-contract`.
+
+**Lacuna condicional — conditional_gap:**
+
+Revert effects, activity calculation, compaction and todo persistence require the owning service before an implementation claim.
+
+## D05 — Project, workspace and copy context
+
+**Membros exatos (15):**
+
+- `packages/protocol/src/groups/location.ts`
+- `packages/protocol/src/groups/project-copy.ts`
+- `packages/protocol/src/groups/project.ts`
+- `packages/schema/src/identifier.ts`
+- `packages/schema/src/project-copy.ts`
+- `packages/schema/src/project-directories.ts`
+- `packages/schema/src/project-id.ts`
+- `packages/schema/src/project.ts`
+- `packages/schema/src/workspace-event.ts`
+- `packages/schema/src/workspace-id.ts`
+- `packages/schema/src/workspace.ts`
+- `packages/schema/src/worktree-event.ts`
+- `packages/server/src/handlers/location.ts`
+- `packages/server/src/handlers/project-copy.ts`
+- `packages/server/src/handlers/project.ts`
+
+**Propósito, contrato e delegação local — bounded_claim:**
+
+Schema supplies identity and project/workspace/copy shapes; Protocol separates global project/catalog calls from Location query context. Server location registration, project initialization and copy creation delegate to the corresponding services; copy creation supplies project/source context from the route and Location. ID/path representations are not complete filesystem authority.
+
+**Evidência decisiva:** Q018:L5–7, Q020:L31–34, Q022:L11–17, P26:L5–12, P32:L11–14, G57-E058:L19–24, G57-E072:L52–60, G57-E076:L35–37. As identidades e os literais estão nos dossiês vinculantes desta revisão.
+
+**Contexto existente:** `s1.api.boundaries`, `s1.api.schema-contracts`, `s1.api.server-edge`, `s1.api.surface-disposition`.
+
+**Lacuna condicional — conditional_gap:**
+
+Isolation, copy destruction/force behavior, Git effects, uniqueness under every execution and workspace lifecycle require their owners and pertinent runtime evidence.
+
+## D06 — Files, references, Git and pull requests
+
+**Membros exatos (13):**
+
+- `packages/protocol/src/groups/pull-request.ts`
+- `packages/protocol/src/groups/reference.ts`
+- `packages/protocol/src/groups/vcs.ts`
+- `packages/schema/src/file-diff.ts`
+- `packages/schema/src/filesystem-watcher.ts`
+- `packages/schema/src/filesystem.ts`
+- `packages/schema/src/pull-request.ts`
+- `packages/schema/src/reference.ts`
+- `packages/schema/src/vcs-event.ts`
+- `packages/schema/src/vcs.ts`
+- `packages/server/src/handlers/pull-request.ts`
+- `packages/server/src/handlers/reference.ts`
+- `packages/server/src/handlers/vcs.ts`
+
+**Propósito, contrato e delegação local — bounded_claim:**
+
+The Schema modules represent file entries/diffs, reference sources, VCS answers and host-CLI pull requests. Protocol declares query/input/error shapes; Server delegates reference/Git/PR work to Location services and maps the PR host error. No file access or remote PR was performed by this production.
+
+**Evidência decisiva:** Q025:L6–12, Q027:L15–18, Q028:L3–4, Q030:L28–30, Q031:L6–8, P44:L41–48, G57-E077:L20–24, G57-E078:L30–40, G57-E092:L6–8, G57-E127:L37–39. As identidades e os literais estão nos dossiês vinculantes desta revisão.
+
+**Contexto existente:** `s1.api.boundaries`, `s1.api.schema-contracts`, `s1.api.server-edge`, `s1.api.surface-disposition`.
+
+**Lacuna condicional — conditional_gap:**
+
+Path confinement, host credentials, Git correctness and remote writes remain dependent implementation/runtime claims.
+
+# B3/v4 — revisão da redução explícita — D07–D12
+
+Critério: disposição de domínio com membership exato, propósito/contrato/owner, evidência ou gap obrigatório e razão da profundidade. A revisão retira os claims locais detalhados da tabela antiga do corpo promovido, sem retirar paths, domínios ou necessidades. Os dois juízes decidem se a forma reduzida cumpre a necessidade congelada; o produtor não concede PASS. B1/B2 permanecem fora desta mudança; D07 preserva seus campos e membros.
+
+Disposição das especificidades retiradas: `RETIRED_EXTRA_CLAIM`; suas lacunas não são declaradas resolvidas por fonte. Lacunas de bounded_claims retidos continuam obrigatórias.
+
+Corpo único: `domain-disposition.md`, 38062 bytes, SHA256 `36339a1329421f80d15e37b40ce26edd6e1c793a0ac1b5056471e4df2bfed57c`. Histórico original preservado: 65726 bytes, SHA256 `95b17106dc5c26bb6d39c8d2d80b48fca8f75d35fe4f5f8ec3f232c7d71411c3`. As linhas antigas não são evidência nova nem claims atuais; disposição individual em `retired-row-claims.json`.
+
+Base literal já enviada à mesma dupla: `b3/v2/dossier-D07-D12.md`, 34510 bytes, SHA256 `68ce7d7715261164b4c112982e3b7ff9e7e9219634138840878371257c47ed40`. Reutilizam-se somente os intervalos de fonte abaixo nomeados; as tabelas locais daquele v2 não são promovidas nesta revisão. Nenhum literal necessário do corpus v2 foi alterado. O mapa por domínio conserva ID e linha para reaproveitamento do contexto existente.
+
+## Regras comuns aos 24 domínios
+
+Os três campos a seguir são idênticos nos 24 registros herdados e aplicam-se integralmente a cada domínio; aparecem uma vez para evitar repetição.
+
+**Necessidade L1 (herdada):** Mandatory now: identify this domain’s role, public contract and local owner/delegation boundary from literal source, without projecting an unseen runtime guarantee.
+
+**Dependentes bloqueados (herdado):** Any current or later claim relying on the named broader behavior requires that additional implementation/runtime evidence. Current local L1 reading was performed now.
+
+**Profundidade e razão de adequação (herdadas):** Every listed handwritten member was read in full; the projection supplies decisive declaration/delegation/ownership branches and identifies external enforcement limits. It does not infer semantics from inventory or require an unrequested leaf-by-leaf operational audit.
+
+As expressões de leitura “now” e “was read in full” pertencem ao registro histórico B-v3, não declaram uma releitura nesta revisão. O contrato/owner específico e o limite de aplicação desta profundidade são o bounded_claim e o conditional_gap de cada domínio abaixo.
+
+## D07 — PTY records and tickets
+
+**Membros exatos (2):**
+
+- `packages/schema/src/pty-ticket.ts`
+- `packages/schema/src/pty.ts`
+
+**Propósito, contrato e delegação local — bounded_claim:**
+
+PTY and PtyTicket supply process/event/create-update and ticket-expiry DTOs. The existing server-edge and stream-contract bodies supply the separately inspected ticket-consumption/raw-upgrade and queue boundaries; a ticket string DTO does not itself authorize access.
+
+**Evidência decisiva:** Q032:L22–29, Q032:L34–38, Q032:L40–44, Q032:L52–59, Q033:L6–9. As identidades e os literais estão nos dossiês vinculantes desta revisão.
+
+**Contexto existente:** `s1.api.boundaries`, `s1.api.schema-contracts`, `s1.api.server-edge`, `s1.api.surface-disposition`, `s1.api.session-contract`, `s1.api.stream-contract`.
+
+**Lacuna condicional — conditional_gap:**
+
+Actual subprocess behavior, ticket lifecycle, resize and backpressure guarantees require their relevant runtime evidence.
+
+## D08 — Providers, credentials and integration attempts
+
+**Membros exatos (11):**
+
+- `packages/protocol/src/groups/credential.ts`
+- `packages/protocol/src/groups/integration.ts`
+- `packages/schema/src/catalog.ts`
+- `packages/schema/src/connection.ts`
+- `packages/schema/src/credential.ts`
+- `packages/schema/src/integration-id.ts`
+- `packages/schema/src/integration.ts`
+- `packages/schema/src/models-dev.ts`
+- `packages/schema/src/provider.ts`
+- `packages/server/src/handlers/credential.ts`
+- `packages/server/src/handlers/integration.ts`
+
+**Propósito, contrato e delegação local — bounded_claim:**
+
+Provider/API kinds, secret-bearing Credential.Value and safe Connection references are distinct shapes. Integration describes methods/attempts, and Server delegates credentials/OAuth to Integration.Service. Integration-scoped attempt routes invoke an ownership comparison; generic attempt routes are separate delegation paths. No authentication success or secure-storage guarantee is inferred from a DTO.
+
+**Evidência decisiva:** Q034:L27–29, Q034:L35–37, Q034:L41–43, Q035:L16–22, Q035:L26–35, Q038:L7–22, Q037:L73–76, Q037:L123–128, P24:L100–105, P24:L169–175, G57-E043:L13–17, G57-E051:L42–51, G57-E054:L114–120, G57-E055:L140–145, U04:L122–128, U04:L131–137, U04:L147–152, U04:L155–160. As identidades e os literais estão nos dossiês vinculantes desta revisão.
+
+**Contexto existente:** `s1.api.boundaries`, `s1.api.schema-contracts`, `s1.api.server-edge`, `s1.api.surface-disposition`.
+
+**Lacuna condicional — conditional_gap:**
+
+Generic attempt policy, encryption/storage, OAuth resource cleanup and real external authentication remain Core/runtime claims.
+
+## D09 — MCP, LSP and formatting
+
+**Membros exatos (12):**
+
+- `packages/protocol/src/groups/formatter.ts`
+- `packages/protocol/src/groups/lsp.ts`
+- `packages/protocol/src/groups/mcp.ts`
+- `packages/schema/src/config-mcp.ts`
+- `packages/schema/src/formatter.ts`
+- `packages/schema/src/lsp-event.ts`
+- `packages/schema/src/lsp.ts`
+- `packages/schema/src/mcp-event.ts`
+- `packages/schema/src/mcp.ts`
+- `packages/server/src/handlers/formatter.ts`
+- `packages/server/src/handlers/lsp.ts`
+- `packages/server/src/handlers/mcp.ts`
+
+**Propósito, contrato e delegação local — bounded_claim:**
+
+MCP local/remote configuration, status/resource/auth projections and LSP/formatter status are public contracts. Server delegates these operations through Location services and maps MCP missing/config/auth failures. A masking comment or reduced Entry DTO is not proof that every debug payload was sanitized or a connection succeeded.
+
+**Evidência decisiva:** Q041:L15–17, Q041:L34–41, Q042:L6–8, Q042:L15–17, Q042:L69–70, Q042:L100–106, Q044:L5–10, Q046:L5–9, P28:L41–45, G57-E045:L7–7, G57-E060:L7–7, G57-E061:L10–12, G57-E064:L89–95. As identidades e os literais estão nos dossiês vinculantes desta revisão.
+
+**Contexto existente:** `s1.api.boundaries`, `s1.api.schema-contracts`, `s1.api.server-edge`, `s1.api.surface-disposition`.
+
+**Lacuna condicional — conditional_gap:**
+
+Trust enforcement, process/transport isolation, secret masking and OAuth/reconnect behavior need the service implementation or execution evidence.
+
+## D10 — Global configuration and project trust
+
+**Membros exatos (4):**
+
+- `packages/protocol/src/groups/config.ts`
+- `packages/protocol/src/groups/trust.ts`
+- `packages/server/src/handlers/config.ts`
+- `packages/server/src/handlers/trust.ts`
+
+**Propósito, contrato e delegação local — bounded_claim:**
+
+Config and Trust are process-global contracts rather than independent per-request Location documents. Server captures global services, writes/changes trust and visits open Locations to reload/apply it; the visible per-Location failure handling is ignored. A successful response therefore does not establish convergence of every open Location.
+
+**Evidência decisiva:** P43:L5–7, G57-E041:L14–17, G57-E041:L24–29, G57-E042:L31–44, G57-E123:L14–29, G57-E124:L41–49, G57-E125:L55–60. As identidades e os literais estão nos dossiês vinculantes desta revisão.
+
+**Contexto existente:** `s1.api.boundaries`, `s1.api.schema-contracts`, `s1.api.server-edge`, `s1.api.surface-disposition`.
+
+**Lacuna condicional — conditional_gap:**
+
+Complete reload/trust convergence and downstream MCP behavior remain blocked until independently supported.
+
+## D11 — Capability authority and management
+
+**Membros exatos (14):**
+
+- `packages/protocol/src/groups/capability-connections.ts`
+- `packages/protocol/src/groups/capability-operator.ts`
+- `packages/protocol/src/groups/capability-schedules.ts`
+- `packages/schema/src/capability-artifact-management.ts`
+- `packages/schema/src/capability-management.ts`
+- `packages/schema/src/capability-schedule-management.ts`
+- `packages/schema/src/capability-setup.ts`
+- `packages/schema/src/capability.ts`
+- `packages/server/src/capability-content-ticket.ts`
+- `packages/server/src/capability-verification.ts`
+- `packages/server/src/handlers/capability-connections.ts`
+- `packages/server/src/handlers/capability-operator.ts`
+- `packages/server/src/handlers/capability-schedules.ts`
+- `packages/server/src/operator.ts`
+
+**Propósito, contrato e delegação local — bounded_claim:**
+
+Capability references identify data while trusted authority belongs to Core. Receipts/outcome statuses, bounded FailureDetail and operator projections are distinct. Protocol applies CapabilityAuthorization and management request contracts; Server builds host-owned operator/verifier facades and delegates request/placement-bound management. Content-ticket code carries stored authority, session and artifact revision through a process-local random-token map.
+
+**Evidência decisiva:** Q054:L41–47, Q054:L105–119, Q054:L150–153, Q054:L175–186, Q055:L7–7, P14:L26–32, P14:L93–95, G57-E130:L8–15, G57-E004:L7–12, G57-E034:L20–25, G57-E034:L32–36, G57-E001:L9–13, U05:L27–31, G57-E003:L38–46. As identidades e os literais estão nos dossiês vinculantes desta revisão.
+
+**Contexto existente:** `s1.api.boundaries`, `s1.api.schema-contracts`, `s1.api.server-edge`, `s1.api.surface-disposition`.
+
+**Lacuna condicional — conditional_gap:**
+
+Revocation/placement correctness, provider identity, persistent idempotency and end-to-end artifact policy require the actual Core/runtime evidence. The stored token is not described as an HMAC construction.
+
+## D12 — Atlas product surface
+
+**Membros exatos (6):**
+
+- `packages/protocol/src/groups/atlas.ts`
+- `packages/schema/src/atlas-knowledge.ts`
+- `packages/schema/src/atlas-review.ts`
+- `packages/schema/src/atlas-screen.ts`
+- `packages/schema/src/atlas-setup.ts`
+- `packages/server/src/handlers/atlas.ts`
+
+**Propósito, contrato e delegação local — bounded_claim:**
+
+Atlas knowledge anchors and empty/present screen/review/setup results are transport contracts. Knowledge target identity is not Task execution authorization. Protocol exposes the Location surface; Server opens the Atlas application with project/Location context and maps its unavailable error. These product routes and result labels do not constitute Genesis review or runtime receipts.
+
+**Evidência decisiva:** Q059:L23–28, Q059:L43–53, Q061:L9–9, Q061:L307–316, Q062:L6–13, P11:L43–48, G57-E028:L23–24, G57-E028:L28–36, D12-U08:L9–9, D12-U08:L88–90, D12-U08:L128–136, D12-U08:L307–320, D12-U08:L332–334, D12-U09:L3–13, D12-U09:L21–28. As identidades e os literais estão nos dossiês vinculantes desta revisão.
+
+**Contexto existente:** `s1.api.boundaries`, `s1.api.schema-contracts`, `s1.api.server-edge`, `s1.api.surface-disposition`.
+
+**Lacuna condicional — conditional_gap:**
+
+Atlas CAS, semantic governance, source realization, mine/index/import and actual review results remain their own authority/runtime obligations.
+
+**Precisão das uniões D12:** “Present” no bounded_claim herdado é uma descrição de resultado não vazio, não um discriminante literal prometido. As fontes mostram AtlasSnapshotResult = Union([AtlasEmpty, AtlasSnapshot]), AtlasReviewResult = Union([AtlasEmpty, AtlasReview]), AtlasIndexResult = Union([AtlasEmpty, AtlasIndexOk]) e AtlasMineResult = Union([AtlasEmpty, AtlasMineOk]); AtlasEmpty usa state: "empty", e os ramos snapshot/index/mine inspecionados usam state: "ok". AtlasReasoningResult também inclui state: "missing". Esta precisão não promove um resultado de transporte a recibo de execução nem altera o bounded_claim.
+
+## D12 — uniões completas pertinentes, complemento novo
+
+“Present” no bounded_claim herdado é uma descrição de resultado não vazio, não um discriminante literal prometido. As fontes mostram AtlasSnapshotResult = Union([AtlasEmpty, AtlasSnapshot]), AtlasReviewResult = Union([AtlasEmpty, AtlasReview]), AtlasIndexResult = Union([AtlasEmpty, AtlasIndexOk]) e AtlasMineResult = Union([AtlasEmpty, AtlasMineOk]); AtlasEmpty usa state: "empty", e os ramos snapshot/index/mine inspecionados usam state: "ok". AtlasReasoningResult também inclui state: "missing". Esta precisão não promove um resultado de transporte a recibo de execução nem altera o bounded_claim.
+
+`packages/schema/src/atlas-screen.ts` — blob `e1709c1d7f25b68a8c7e2e0a86388994703112c6`, SHA256 `98bcb28c924bf204251cbbb0d4f47d0210d10e07f138fd2186dcc9350daa3fea`.
+
+`D12-U08` L9–9
+```ts
+export const AtlasEmpty = Schema.Struct({ state: Schema.Literal("empty") }).annotate({ identifier: "AtlasEmpty" })
+```
+
+`D12-U08` L88–90
+```ts
+export const AtlasSnapshot = Schema.Struct({
+  state: Schema.Literal("ok"),
+  project: Schema.String,
+```
+
+`D12-U08` L128–136
+```ts
+export const AtlasSnapshotResult = Schema.Union([AtlasEmpty, AtlasSnapshot]).annotate({
+  identifier: "AtlasSnapshotResult",
+})
+
+export const AtlasReasoningResult = Schema.Union([
+  AtlasEmpty,
+  Schema.Struct({ state: Schema.Literal("ok"), id: Schema.String, text: Schema.String }),
+  Schema.Struct({ state: Schema.Literal("missing"), id: Schema.String }),
+]).annotate({ identifier: "AtlasReasoningResult" })
+```
+
+`D12-U08` L307–320
+```ts
+export const AtlasReviewResult = Schema.Union([AtlasEmpty, AtlasReview]).annotate({ identifier: "AtlasReviewResult" })
+
+/** Every review write (hold, release, propose, decide, answer, memory-decide, territory) answers this verdict. */
+export const AtlasReviewWriteResult = Schema.Union([
+  AtlasEmpty,
+  Schema.Struct({
+    ...VerdictFields,
+    data: Schema.optional(Schema.Struct({ id: Schema.String })),
+  }).annotate({ identifier: "AtlasReviewWrite" }),
+]).annotate({ identifier: "AtlasReviewWriteResult" })
+
+export const AtlasDelegateResult = Schema.Union([AtlasEmpty, AtlasDelegateOk]).annotate({
+  identifier: "AtlasDelegateResult",
+})
+```
+
+`D12-U08` L332–334
+```ts
+export const AtlasIndexResult = Schema.Union([AtlasEmpty, AtlasIndexOk]).annotate({ identifier: "AtlasIndexResult" })
+
+export const AtlasMineResult = Schema.Union([AtlasEmpty, AtlasMineOk]).annotate({ identifier: "AtlasMineResult" })
+```
+
+`packages/schema/src/atlas-setup.ts` — blob `73f8ceecf7a353f7b7952c146cf8885dde18c144`, SHA256 `e16cfab589094bedb8d609d16bb63914de5daf3e74b5d152e137c45bf620c876`.
+
+`D12-U09` L3–13
+```ts
+// D38 and D40 wire shapes (an absent value is `null`, never omitted). This file imports nothing from atlas-screen.ts; the
+// unions that need `AtlasEmpty` live there.
+
+export const AtlasIndexOk = Schema.Struct({
+  state: Schema.Literal("ok"),
+  ran: Schema.Boolean,
+  tool: Schema.NullOr(Schema.String),
+  exitCode: Schema.NullOr(Schema.Finite),
+  documents: Schema.NullOr(Schema.Finite),
+  message: Schema.NullOr(Schema.String),
+}).annotate({ identifier: "AtlasIndex" })
+```
+
+`D12-U09` L21–28
+```ts
+export const AtlasMineOk = Schema.Struct({
+  state: Schema.Literal("ok"),
+  sites: Schema.Finite,
+  facts: Schema.Finite,
+  complete: Schema.Boolean,
+  why: Schema.NullOr(Schema.String),
+  refusal: Schema.NullOr(Schema.Literals(["contended", "unreadable", "untrusted"])),
+}).annotate({ identifier: "AtlasMine" })
+```
+

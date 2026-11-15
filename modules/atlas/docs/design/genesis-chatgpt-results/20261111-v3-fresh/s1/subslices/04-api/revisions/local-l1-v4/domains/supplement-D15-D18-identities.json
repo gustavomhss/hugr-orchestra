@@ -1,0 +1,74 @@
+{
+  "schema": "genesis-s1-04-b3-d15-d18-supplement/v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "claims_changed": false,
+  "body": {
+    "path": "b3/v4/domain-disposition.md",
+    "byte_length": 38080,
+    "sha256": "12248d1cc39a27b1655f1a683f02cd1af864f87945300a86b0ee4326227a4edd"
+  },
+  "base_dossier": {
+    "path": "b3/v4/dossier-D13-D18-v4.md",
+    "byte_length": 33794,
+    "sha256": "fb2dd55acba3dd59decadbc2e575e253bee6e95052d8f76ce79b2fe3b9743dac"
+  },
+  "supplement": {
+    "path": "b3/v4/supplement-D15-D18.md",
+    "byte_length": 7038,
+    "sha256": "73b95a7db8d2c61b2f62656eec02e6b19d6cf68b349840d46cced64cacdf61fd"
+  },
+  "sources": [
+    {
+      "domain_id": "D15",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/schema/src/maestro-event.ts",
+        "git_blob_sha": "e4792cc8bbbdf6d11b8caf503fbd09b0b2688fb2",
+        "sha256": "d1d4ff601b422f55e6579f06b79805af24bdccda295fdcaa70b038afef0cdb8c",
+        "byte_length": 28276
+      },
+      "authorized_capture_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/source-snapshot/packages/schema/src/maestro-event.ts",
+      "ranges": [
+        {
+          "start_line": 737,
+          "end_line": 768,
+          "byte_start": 27408,
+          "byte_end_exclusive": 28276,
+          "byte_length": 868,
+          "sha256": "685d0020cea2c7df5a6dd1e1217f0c0724af4cf287501aaee3072c4b65651adf"
+        }
+      ]
+    },
+    {
+      "domain_id": "D18",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/schema/src/lean-metrics.ts",
+        "git_blob_sha": "ece2b32793cf3de837103ef42e34814b64287837",
+        "sha256": "4e8243211ee2df7b02689db54c57c61134d43f347a9154c7d31fb06e0744568b",
+        "byte_length": 6213
+      },
+      "authorized_capture_path": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/source-snapshot/packages/schema/src/lean-metrics.ts",
+      "ranges": [
+        {
+          "start_line": 27,
+          "end_line": 70,
+          "byte_start": 1191,
+          "byte_end_exclusive": 4559,
+          "byte_length": 3368,
+          "sha256": "3193d0a2a05e91f9b3ee8d7610758f3b93231bdf2384bfa293e8ecc9633e765a"
+        },
+        {
+          "start_line": 87,
+          "end_line": 98,
+          "byte_start": 5388,
+          "byte_end_exclusive": 6213,
+          "byte_length": 825,
+          "sha256": "11ab4fa47fda2de128b6a0341722eec32135e9abd47aab6444d6ab823f5e54d0"
+        }
+      ]
+    }
+  ],
+  "original_source_and_excerpt_bytes_verified": true,
+  "semantic_verdict": "NOT_ASSERTED"
+}

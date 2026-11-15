@@ -1,0 +1,31 @@
+tree 8a5553507ceb2610761ad890ccbfa9274466ad70
+parent 34a2ad3752ed4a638c006e20680d47f017cb557a
+author gustavomhss <gmhelmold@gmail.com> 1794599982 -0300
+committer GitHub <noreply@github.com> 1794599982 -0300
+gpgsig -----BEGIN PGP SIGNATURE-----
+ 
+ wsFcBAABCAAQBQJq92wuCRC1aQ7uu5UhlAAAOjwQABzdnMbeLqkE/gBOV5NnmOvC
+ sKAawpeEN7i5zrhYCTYVWZQGYF5aNpvYY4/zcqQ5jv9rVCODWbj8b24ZvOIqjCYf
+ L9Tjo8K6C7R8wFnLwyuvgZKpeisbmmhff1LayT4rCrXuxIWQpBvRaMJ+oqguxRB2
+ /OPAtYg64byIUBcAdUtEe9bJ0g4i7vp2lHfA4WEG+gqcrh+A8ztlFjQdsYrJDBnc
+ bTenJHoiFJHhnNyxm+Hch9L8tsJBDEt0TpKPA3luXtFzZeArBChFT5+Kim8iCklh
+ 1zFwfDtgPEGu7MC8hDLbGhh2yWKPch9nHDiw4v4qImKgLZ2MqG9PmV796dEy14sR
+ Ytfty1K7+x9bi58DX0/CmkSP4gsq1lG4QvJx6SItIozVgmb7OMAlQg41NA8fCAx3
+ dLs7IcXomahva7JOYKyMNGiMJ7jnmjzc3wZdru+CdpX31ExlVblAXn8uf1pvrZj+
+ RJVu0zNqY+B4lEALQ1QdKQvLO8qwk2inNnhpUUNvYvFVxIfIJQD6khdTK3zWiSh2
+ YLpnGqykfhqqpiJPSFQqOdihdovm4FSQpWFj6wgW0O2me75phoLJHaf/2NB5Utei
+ 6wqFxM2tO5P/6finnneZgPHn2/8DZQHlsE2Xy75LsN6GrdjfZrUT2jWgFJwZb7oX
+ brAs2GaiTQVz7Iv1qfw+
+ =7K7r
+ -----END PGP SIGNATURE-----
+ 
+
+fix(lucy): retain captured code sources for reviews (#1596)
+
+* chore(lucy): scaffold code source binding
+
+* feat(lucy): bind captured code sources
+
+---------
+
+Co-authored-by: Gustavo Schneiter <gmhschn@gmail.com>

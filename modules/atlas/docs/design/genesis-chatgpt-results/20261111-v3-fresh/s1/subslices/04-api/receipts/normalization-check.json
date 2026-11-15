@@ -1,0 +1,156 @@
+{
+  "schema": "s1-04-mechanical-normalization-check/v1",
+  "recorded_at_utc": "2026-11-15T00:56:59.539625+00:00",
+  "package_sha256": "71bc1102fd5e2c6be166b2df790e8ee8fe4ecd053ab2d7fed5bbc46130349442",
+  "provenance_sha256": "c13e8603502d968d347bdf277a885e76cd01d48f7a51d78191a701bb0d9c42da",
+  "checks": [
+    {
+      "key": "s1.api.boundaries",
+      "source_refs_and_input_keys_preserved": true,
+      "original_authority_and_validity_basis_roundtrip_exact": true,
+      "original_evidence_roundtrip_exact": true,
+      "body_change": "Byte-identical original B-v3 body",
+      "navigation": "Local target keys; exact original objects/intents preserved in provenance"
+    },
+    {
+      "key": "s1.api.schema-contracts",
+      "source_refs_and_input_keys_preserved": true,
+      "original_authority_and_validity_basis_roundtrip_exact": true,
+      "original_evidence_roundtrip_exact": true,
+      "body_change": "Byte-identical original B-v3 body",
+      "navigation": "Local target keys; exact original objects/intents preserved in provenance"
+    },
+    {
+      "key": "s1.api.session-contract",
+      "source_refs_and_input_keys_preserved": true,
+      "original_authority_and_validity_basis_roundtrip_exact": true,
+      "original_evidence_roundtrip_exact": true,
+      "body_change": "Byte-identical original B-v3 body",
+      "navigation": "Local target keys; exact original objects/intents preserved in provenance"
+    },
+    {
+      "key": "s1.api.server-edge",
+      "source_refs_and_input_keys_preserved": true,
+      "original_authority_and_validity_basis_roundtrip_exact": true,
+      "original_evidence_roundtrip_exact": true,
+      "body_change": "Byte-identical original B-v3 body",
+      "navigation": "Local target keys; exact original objects/intents preserved in provenance"
+    },
+    {
+      "key": "s1.api.stream-contract",
+      "source_refs_and_input_keys_preserved": true,
+      "original_authority_and_validity_basis_roundtrip_exact": true,
+      "original_evidence_roundtrip_exact": true,
+      "body_change": "Accepted stream correction only",
+      "navigation": "Local target keys; exact original objects/intents preserved in provenance"
+    },
+    {
+      "key": "s1.api.client-projection",
+      "source_refs_and_input_keys_preserved": true,
+      "original_authority_and_validity_basis_roundtrip_exact": true,
+      "original_evidence_roundtrip_exact": true,
+      "body_change": "Byte-identical original B-v3 body",
+      "navigation": "Local target keys; exact original objects/intents preserved in provenance"
+    },
+    {
+      "key": "s1.api.codegen",
+      "source_refs_and_input_keys_preserved": true,
+      "original_authority_and_validity_basis_roundtrip_exact": true,
+      "original_evidence_roundtrip_exact": true,
+      "body_change": "Byte-identical original B-v3 body",
+      "navigation": "Local target keys; exact original objects/intents preserved in provenance"
+    },
+    {
+      "key": "s1.api.sdk-composition",
+      "source_refs_and_input_keys_preserved": true,
+      "original_authority_and_validity_basis_roundtrip_exact": true,
+      "original_evidence_roundtrip_exact": true,
+      "body_change": "Byte-identical original B-v3 body",
+      "navigation": "Local target keys; exact original objects/intents preserved in provenance"
+    },
+    {
+      "key": "s1.api.surface-disposition",
+      "source_refs_and_input_keys_preserved": true,
+      "original_authority_and_validity_basis_roundtrip_exact": true,
+      "original_evidence_roundtrip_exact": true,
+      "body_change": "Byte-identical original B-v3 body",
+      "navigation": "Local target keys; exact original objects/intents preserved in provenance"
+    },
+    {
+      "key": "s1.core.session-admission",
+      "copied_fields": "All fields exact except relocated body.path and byte-identical semantic review reference paths",
+      "byte_identical_original_body": true,
+      "original_authority_validity_gaps_source_recipe_inputs_preserved": true
+    },
+    {
+      "key": "s1.core.session-execution",
+      "copied_fields": "All fields exact except relocated body.path and byte-identical semantic review reference paths",
+      "byte_identical_original_body": true,
+      "original_authority_validity_gaps_source_recipe_inputs_preserved": true
+    },
+    {
+      "key": "s1.core.persistence",
+      "copied_fields": "All fields exact except relocated body.path and byte-identical semantic review reference paths",
+      "byte_identical_original_body": true,
+      "original_authority_validity_gaps_source_recipe_inputs_preserved": true
+    },
+    {
+      "key": "s1.subslice04.local-contracts",
+      "producer_authority_roundtrip_exact": true,
+      "accepted_predecessor_body_hashes_match": true,
+      "build_dependencies": [
+        "s1.api.codegen",
+        "s1.api.boundaries",
+        "s1.api.client-projection",
+        "s1.api.server-edge",
+        "s1.api.stream-contract",
+        "s1.api.schema-contracts",
+        "s1.api.session-contract",
+        "s1.api.sdk-composition",
+        "s1.api.surface-disposition",
+        "s1.subslice04.domains"
+      ]
+    },
+    {
+      "key": "s1.subslice04.integrated-impact",
+      "producer_authority_roundtrip_exact": true,
+      "accepted_predecessor_body_hashes_match": true,
+      "build_dependencies": [
+        "s1.subslice04.local-contracts",
+        "s1.api.boundaries",
+        "s1.api.schema-contracts",
+        "s1.api.session-contract",
+        "s1.api.client-projection",
+        "s1.api.codegen",
+        "s1.core.session-admission",
+        "s1.core.session-execution",
+        "s1.core.persistence"
+      ]
+    },
+    {
+      "key": "s1.subslice04.maintenance",
+      "producer_authority_roundtrip_exact": true,
+      "accepted_predecessor_body_hashes_match": true,
+      "build_dependencies": [
+        "s1.subslice04.integrated-impact",
+        "s1.subslice04.local-contracts",
+        "s1.api.boundaries",
+        "s1.api.codegen",
+        "s1.core.session-admission",
+        "s1.core.session-execution",
+        "s1.core.persistence"
+      ]
+    }
+  ],
+  "scope": "Deterministic identity/serialization only; not semantic judge, importer, runtime binding, tests or publication.",
+  "evidence_relative_context_check": {
+    "artifact": "s1.subslice04.maintenance",
+    "native_field": "evidence[5] as preserved JSON string, body_diff_ref",
+    "original_path": "body.diff",
+    "original_resolution_context": "producers/upper/l4/metadata.json parent directory",
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/producers/upper/l4/body.diff",
+    "byte_length": 8286,
+    "sha256": "34cdfe65f88476761f5f35453505b677cf55dada2ece278bee5ba7fd9c09e5f7",
+    "scope": "Explicit locator for the original metadata-relative path; native evidence bytes and prepared candidate are unchanged."
+  }
+}
