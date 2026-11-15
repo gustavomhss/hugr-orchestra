@@ -10,13 +10,13 @@
   "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
   "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
   "kit_revision": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
-  "observed_branch_head": "d5a84e583f55b31b17cbb407553243bd0801c56c",
-  "artifact_revision": "191a3b3a12c60a2df70c1dbf36510303c025c5ea",
+  "observed_branch_head": "8873e22afcecddf58688a92e7ff9cb208dc4e2fd",
+  "artifact_revision": "8a71bdd665bca54956d237cd2ef9ce29482ee564",
   "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
-  "completion_state": "IN_PROGRESS",
-  "phase": "IMMUTABLE_COMPLETE_SEMANTIC_INPUTS_BEFORE_FULL_NATIVE_PREPARE",
-  "execution_continues": true,
-  "checkpoint_only": true,
+  "completion_state": "INCOMPLETE_BLOCKED",
+  "phase": "FINAL_EXECUTABLE_WORK_WITH_MATERIAL_BLOCKERS",
+  "execution_continues": false,
+  "checkpoint_only": false,
   "work": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/work.md",
   "ledger": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/execution-ledger.jsonl",
   "coverage": {
@@ -122,12 +122,15 @@
       }
     ],
     "gate_record": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/semantic-acceptances.json",
-    "current_body_findings": "No mandatory findings remain in the twelve accepted current bodies. Final operational and delivery review still required.",
+    "current_body_findings": "No mandatory findings remain in the twelve accepted current bodies. Whole-delivery final opinions are recorded separately and do not grant runtime binding.",
     "historical_entry_preserved": true,
     "union_proposal": {
       "status": "PASS_LOCAL_PROPOSAL_NOT_SELECTED_FOR_UNION",
       "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/boundaries/union-navigation-proposal.md",
-      "decision": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/navigation-acceptance.json"
+      "decision": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/navigation-acceptance.json",
+      "actual_local_entry_key": "s1.subslice03.entry",
+      "local_entry_build_predecessors": 4,
+      "local_entry_navigation_links": 11
     }
   },
   "judges": {
@@ -143,7 +146,52 @@
     "tools_permitted": false,
     "pair_continuity": "Same two independent native judges throughout this execution; no third vote.",
     "original_reviews": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/judgments",
-    "full_delivery_review": "NOT_YET_RUN"
+    "full_delivery_review": {
+      "state": "AVAILABLE_MATERIAL_REVIEW_COMPLETED_WITH_MATERIAL_HOLDS",
+      "outcome": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/judgments/delivery/final-review-outcome.json",
+        "bytes": 4217,
+        "sha256": "d2c514ce3a7d41c653ea7dd7a3d064aa4f1c4c35934eb9006e10280d10818268"
+      },
+      "original_v1": [
+        {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/judgments/delivery/delivery-final-v1/j1-response.md",
+          "bytes": 12438,
+          "sha256": "d546371fe444326a9cc417caea41009b36827269ddd444fbebf9741bbe1e669c"
+        },
+        {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/judgments/delivery/delivery-final-v1/j2-response.md",
+          "bytes": 10904,
+          "sha256": "b4586e2005cac86b244436496fd4796a8491dddc50c31692f80fc422cd71ef8b"
+        }
+      ],
+      "original_v2": [
+        {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/judgments/delivery/delivery-final-v2/j1-response.md",
+          "bytes": 2973,
+          "sha256": "ca389de368016ef56251f43d4d56f30133882020f5b6d7ea7c75e060fad86fb3"
+        },
+        {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/judgments/delivery/delivery-final-v2/j2-response.md",
+          "bytes": 2799,
+          "sha256": "57210e6dd5ff706b7af0aa9bc09ea21a0a1b31ecbd3a64251b83f36f599748a7"
+        }
+      ],
+      "correction": "DF-REPORT-01",
+      "closed_documentary_findings": [
+        "DF-J1-01",
+        "DF-J2-01"
+      ],
+      "mandatory_correctable_report_findings_remaining": 0,
+      "full_consumer_original_review": "BLOCKED_FIVE_UNAVAILABLE_FINALS_AND_RAW_CHAINS",
+      "not_runtime_binding": true,
+      "not_mission_PASS": true
+    },
+    "body_gate_identity": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/semantic-acceptances.json",
+      "bytes": 31087,
+      "sha256": "5957f83b3268fba9bf6e0f70b60ebb6ab1eaf898d5d0e80924c49749b361900c"
+    }
   },
   "source_input_snapshot": {
     "payload_commit": "191a3b3a12c60a2df70c1dbf36510303c025c5ea",
@@ -165,30 +213,88 @@
       "s1.subslice03.entry": 21
     },
     "inventory_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/assembly/final-input-inventory.json",
-    "native_package_emitted": false,
-    "reason": "The complete native package is assembled after this real immutable input pin is sealed and reread."
+    "native_package_emitted": true,
+    "reason": "The immutable published and reread P0 inputs were used to assemble and execute the full native package; the same bytes were recovered exactly after host environment loss."
   },
   "local_obligations_open": [
-    "Assemble and execute the released native prepare against all twelve exact selected artifacts.",
-    "Perform runtime binding/publication where prerequisites and authority permit; report observed failures and precondition blocks separately.",
-    "Run all seven fresh Atlas-only consumers with frozen questions, quota and direct-read supplement; preserve all native turns and CLI envelopes.",
-    "Execute maintenance where a usable accepted baseline permits, otherwise document the precise demonstrated precondition block.",
-    "Reconcile applicable gates, all fifty criterion dispositions and visible accounting; obtain both final delivery reviews.",
-    "Publish final payload/seal through a fresh lease and reread the handoff and delivered bytes."
+    {
+      "id": "full-native-prepare",
+      "owner": "S1-03",
+      "dependency_owner": "S4",
+      "state": "EXECUTED_FAILED",
+      "condition": "Released, authorized runtime accepts all six genuinely consumed whole inputs exceeding 256000 bytes; run exact full selection again with new linked receipt. Concrete 1 MiB proposal remains unapplied and untested outside S1-03 authority."
+    },
+    {
+      "id": "binding-and-governed-publication",
+      "owner": "S1-03",
+      "dependency_owner": "Authorized S1 policy/authority owner",
+      "state": "NOT_RUN_PRECONDITION",
+      "condition": "Successful prepared candidate, two exact native bindings, and valid S1 actor/ratifier/policy through authorized doors."
+    },
+    {
+      "id": "domain-consumers-and-direct-use",
+      "owner": "S1-03",
+      "state": "HOLD",
+      "condition": "Readable accepted local baseline; execute frozen cases and direct-use obligations with original attempts preserved; same pair evaluates actual native answers."
+    },
+    {
+      "id": "maintenance-and-recovery",
+      "owner": "S1-03",
+      "state": "NOT_RUN_PRECONDITION",
+      "condition": "Readable accepted baseline and usable execution environment; execute the two frozen changes and compare independently expected affected/independent sets, stale refusal, rebuild/reuse and recovery."
+    },
+    {
+      "id": "final-official-guard",
+      "owner": "S1-03",
+      "state": "NOT_RUN",
+      "condition": "Exact historical binary bytes and usable host environment permit faithful current/base checkout; run official bun run check:guards --base origin/dev. Own CI green is not inferred."
+    },
+    {
+      "id": "original-record-custody",
+      "owner": "S1-03",
+      "state": "HOLD",
+      "condition": "Restore the same workspace or obtain legitimate exact export of task records; match known hashes before publication. Do not invent original responses or rerun merely to fill custody gaps."
+    },
+    {
+      "id": "research-L2-v2-original-final",
+      "owner": "S1-03",
+      "state": "HOLD",
+      "condition": "Recover real native FINAL from legitimate source; existing producer file and later explicitly non-verbatim confirmation do not repair original capture. No silent waiver."
+    },
+    {
+      "id": "integral-economy",
+      "owner": "S1-03",
+      "state": "HOLD",
+      "condition": "Recover/reconcile physical host usage and missing local ledger via legitimate exposed evidence if available; maintain UNKNOWN and GLOBAL_UNRECONCILED otherwise."
+    }
   ],
   "known_limits": {
     "source_ref_limit_bytes": 256000,
     "oversized_whole_inputs": 6,
     "policy": "No S1 publication actor/ratifier provisioned; COMMON excludes policy changes. No current package publication attempted.",
-    "guard": "Exact historical ZIP blob d83941a9d836a23e466ca09ecba1f21d423094cb remains unavailable through tried authorized routes; final guard NOT_RUN.",
-    "original_native_response": "Research L2 correction v2 native FINAL not separately captured before compaction; preserved producer response and later non-verbatim confirmation do not repair GO-I1 fully."
+    "guard": "NOT_RUN: exact historical ZIP d83941a9d836a23e466ca09ecba1f21d423094cb (1339105 bytes) unavailable through exposed authorized routes; current execution environment also unavailable. No omitted-file workaround, fabricated diff or unrun green.",
+    "original_native_response": "Research L2 correction v2 native FINAL not separately captured before compaction; preserved producer response and later non-verbatim confirmation do not repair GO-I1 fully.",
+    "environment": "No usable execution environment is available. GitHub connector and in-memory code mode remain usable; local files are inaccessible, not asserted deleted.",
+    "custody": "Five original consumer FINALs and full per-turn raw chains plus unpublished ledger/audit snapshots remain inaccessible. Two FINALs, native prepare streams/receipt, audit originals and full package are exactly recovered; do not substitute summaries for missing originals."
   },
   "runtime_release": {
     "release_commit": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
     "native_candidate": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
     "common_control_candidate": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
     "common_reuse": "Four exact AC-04-local-native controls accepted by same pair; no own runtime/consumer success inferred.",
-    "whole_selection_prepare": "STILL_REQUIRED"
+    "whole_selection_prepare": {
+      "state": "EXECUTED_FAILED",
+      "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+      "exit_code": 1,
+      "timeout": false,
+      "prepared_output": false,
+      "error": "native-file-limit: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/a-l1-evidence-v1/coverage-needs-projection.json",
+      "receipt": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/receipts/native-prepare-final.json",
+        "bytes": 2576,
+        "sha256": "469f4cdf21af6e295378b975a75e6670c4a07f4452335b4dbc76e64ce4eedc81"
+      }
+    }
   },
   "global_integration": {
     "owner": "S1_COORDINATION",
@@ -197,21 +303,222 @@
     "not_a_local_completion_waiver": true
   },
   "supersedes": {
-    "payload": "9cd485743dc9c6bde016581e0e6e2818762dab51",
-    "seal": "d5a84e583f55b31b17cbb407553243bd0801c56c"
+    "payload": "191a3b3a12c60a2df70c1dbf36510303c025c5ea",
+    "seal": "8873e22afcecddf58688a92e7ff9cb208dc4e2fd"
   },
   "publication_scope": {
     "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/",
     "protocol": "Payload P descends from observed B; seal H references P; expected_sha=B, force=false.",
-    "preserves_central_historical_s1_and_other_subslices": true
+    "preserves_central_historical_s1_and_other_subslices": true,
+    "expected_sha": "8873e22afcecddf58688a92e7ff9cb208dc4e2fd",
+    "force": false,
+    "only_owned_namespace_written": true,
+    "review_and_preservation_ancestors": [
+      "982076cfbbbbd34f70f02b6ebe150a276f97d3cf",
+      "f90adca37fe572d29e87ae2fbf2ff10a64d3406f",
+      "8f26ca5106b6d799a3f2d6ae5a204584d0f49cee"
+    ],
+    "seal_expected_change": "handoff.json only",
+    "post_seal_readback": "Required after actual ref update; not predeclared here. Principal reports the observed result in the execution response.",
+    "payload": {
+      "commit": "8a71bdd665bca54956d237cd2ef9ce29482ee564",
+      "parent": "8f26ca5106b6d799a3f2d6ae5a204584d0f49cee",
+      "root_tree": "acf5c4347f428c3fda73ecfd4eaed74e168a5933",
+      "output_tree": "6cc2a552435c2d9567132f1283813d386c6b7775",
+      "created_at_utc": "2026-11-15T13:39:34.301Z"
+    },
+    "payload_plan": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/receipts/publication/final-payload-plan.json",
+      "bytes": 25560,
+      "sha256": "89ad37630ee535424bd5ba6ee100bf2f3923d6c3daa0e7dbd219b3d03363532f"
+    },
+    "payload_tree_readback": {
+      "observed": true,
+      "at_utc": "2026-11-15T13:39:49.363Z",
+      "recursive_output_entries": 1825,
+      "truncated": false,
+      "verified_materialized_files": 101,
+      "all_handoff_paths_found": true,
+      "scope": "Actual immutable P tree before seal creation; not a ref update or post-seal readback."
+    }
   },
   "economy": {
-    "ledger_rows_at_snapshot": 445,
     "physical_attempts": "UNKNOWN",
     "tokens": "UNKNOWN",
     "cost": "UNKNOWN",
     "historical": "GLOBAL_UNRECONCILED",
+    "financial_guarantee": "NOT_EXPOSED",
     "no_paid_external_calls": true,
-    "scope": "Caller-visible records only; final consumer/delivery work has not yet occurred."
-  }
+    "visible_snapshot": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/economy/final-visible-accounting.json",
+      "bytes": 2407,
+      "sha256": "a79a6cbaa941ecb68a5d4b82d1996429a57a34a9b03f0ccd55b2c56a9d0f9dd7"
+    },
+    "closing_snapshot": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/economy/closing-visible-accounting.json",
+      "bytes": 6463,
+      "sha256": "c771b564b9674bf17f3111712a47554dbf39a9d288188891f344ca47654eb59b"
+    },
+    "published_P0_ledger_exact_prefix_preserved": true,
+    "unavailable_local_ledger": {
+      "rows": 550,
+      "sha256": "66abda692fd4bed1f0981feeaf27dcf36cd333c735ffd7025de537ebd6ffe828"
+    },
+    "scope": "Observable caller records and explicitly marked aggregates only; no certified complete host invocation count, no reset or dollar/token fiction.",
+    "ledger_rows_at_closing_cutoff": 485,
+    "current_visible_final_judge_calls_unsettled": 0,
+    "courier_v1_calls_unsettled": 0,
+    "cutoff_scope": "After all visible final native reviews and corrections; before final payload/seal/readback Git operations. Not a certified complete physical host usage total."
+  },
+  "final_status_explanation": "S1-03 only. Required content and available delivery work completed; runtime preparation, accepted consumer use, maintenance, final guard and full original-record custody remain materially blocked. This state is not DELIVERY_COMPLETE or completion of S1.",
+  "native_package": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/native-package.json",
+    "bytes": 485602,
+    "sha256": "ddada3d4b67cff13ef3a5817b95efc275b0d288061436546c8ec6b73290766a6",
+    "schema": "genesis-native-package/v1",
+    "selected_artifacts": 12,
+    "unique_whole_inputs": 694,
+    "input_uses": 979,
+    "exact_tested_package_preserved": true,
+    "recovery": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/receipts/package-exact-recovery.json",
+      "bytes": 19114,
+      "sha256": "e844ca084a6ad18426929b43ceb7017bcb51d8324f54774d1e8d25dacbcdec6f"
+    }
+  },
+  "criteria": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/criteria-matrix.json",
+    "bytes": 65434,
+    "sha256": "9d015dfb8fc9967a5fb3716a9bac231afd76d922705ce2ce74c72e449eea84bf",
+    "criterion_count": 50,
+    "local_status_counts": {
+      "PASS": 15,
+      "HOLD": 34,
+      "GLOBAL_ONLY": 1
+    },
+    "decision_basis": "Actual original same-pair v1 opinions plus accepted v2 temporal correction; all fifty normative texts preserved. PASS is local and delimited, not a whole-mission or operational acceptance."
+  },
+  "runtime_operations": {
+    "binding": "NOT_RUN_PRECONDITION",
+    "governed_publication": "NOT_RUN_PRECONDITION",
+    "authority": "S1 policy, actor and ratifier not provisioned; no policy rejection observed, no S4 authority copied.",
+    "receipt": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/receipts/final-operational-disposition-after-environment.json",
+      "bytes": 7349,
+      "sha256": "7350099624b57584aaad7ea2cbd76f9d73763dfb8b1e2eaab0371d8b1c962c46"
+    }
+  },
+  "consumers": {
+    "cases": 7,
+    "native_logical_requests": 33,
+    "native_completions_observed_before_environment_loss": 33,
+    "finals_observed_before_environment_loss": 7,
+    "cli_calls": 26,
+    "index_calls": 11,
+    "read_calls": 15,
+    "ownership_store_unavailable": 22,
+    "native_query_need_errors": 4,
+    "distinct_keys_attempted": 12,
+    "bodies_delivered": 0,
+    "passed_domain_cases": 0,
+    "quotas_per_case": {
+      "index": 2,
+      "read": 5,
+      "utf8_bytes": 60000
+    },
+    "forwarded_utf8_bytes": 7713,
+    "audit_original": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/assembly/consumer-summary-run/REPORT.md",
+      "bytes": 7877,
+      "sha256": "38e27c0f3087ae77c7412e08c61618a6930c3e3ec67c441f11fc4b74a4d07d20"
+    },
+    "audit_native_final": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/assembly/consumer-summary-run/response.md",
+      "bytes": 3453,
+      "sha256": "900d042f79685e17917be398993894d3d17ed711f7655b7593756be9042662a4"
+    },
+    "exact_case_finals_recovered": [
+      "R-FAILURE",
+      "ENTRY-NAV"
+    ],
+    "case_finals_inaccessible": [
+      "A-PERMITTED",
+      "A-VIOLATION",
+      "A-IMPACT",
+      "S-FAILURE",
+      "B-ABSTAIN"
+    ],
+    "custody": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/receipts/environment-loss-custody.json",
+      "bytes": 4618,
+      "sha256": "46ec7d0a6b319c83b7536b76cdbd81426228dda62b90076e2f2225b1f19a2a50"
+    },
+    "full_direct_review": "TWO_AVAILABLE_ORIGINAL_FINALS_REVIEWED_BY_BOTH_JUDGES; FIVE_AND_RAW_CHAINS_REMAIN_BLOCKED",
+    "no_replacement_consumers_or_reemitted_originals": true,
+    "current_native_case_originals": [
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/consumers/R-FAILURE/final-response.md",
+        "bytes": 1697,
+        "sha256": "fb08a2d9c954157179012bd7abb0d458dc4d5a20e4ee8da6803e6d341e4b225b"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/consumers/ENTRY-NAV/final-response.md",
+        "bytes": 1821,
+        "sha256": "8f933247a2d3367df901ef0708800d45129dc523814697d773bc42488f412557"
+      }
+    ]
+  },
+  "maintenance": {
+    "scenario_ids": [
+      "M-ACTIONS",
+      "M-SCHEDULE-RECIPE"
+    ],
+    "patches": "FROZEN_NOT_APPLIED",
+    "state": "NOT_RUN_PRECONDITION",
+    "precondition": "No prepared, governed, accepted and readable baseline",
+    "expected_affected_artifacts": 5,
+    "expected_independent_artifacts": 7,
+    "expected_sets_are_static_not_observed_planner_output": true,
+    "disposition": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/maintenance/final-disposition-after-environment.json",
+      "bytes": 5620,
+      "sha256": "e2bb7119ecb6f84e2ed80d345567b90bf9b15cb2eadc838e2c204c49808ee149"
+    }
+  },
+  "preservation_commits": {
+    "review_packet": "982076cfbbbbd34f70f02b6ebe150a276f97d3cf",
+    "recovered_exact_records": "f90adca37fe572d29e87ae2fbf2ff10a64d3406f",
+    "branch_update_before_final_seal": false,
+    "transport_records": "8f26ca5106b6d799a3f2d6ae5a204584d0f49cee"
+  },
+  "capability_refresh": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/receipts/pre-seal-capability-snapshot.json",
+    "bytes": 19350,
+    "sha256": "25d7bf0139e4c315b13b3752be0a2631e127dabb181f727b6dcf9dfec39afdb9"
+  },
+  "initial_observed_branch_head": "89c78249e63060acf7c41f45f14af88fd51aa0c4",
+  "work_identity": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/work.md",
+    "bytes": 16495,
+    "sha256": "7931d84630b6733831f15d1e99cec54c50b9889ea28ac72c35b68a5228c15152"
+  },
+  "ledger_identity": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/execution-ledger.jsonl",
+    "bytes": 407992,
+    "sha256": "f9c4f685e0da7c86d1c0b1ffa29cdbf39cc3d2fd7a9b467fcad2d57d5d2a605e"
+  },
+  "final_queue": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/receipts/final-queue-reconciliation.json",
+    "bytes": 8097,
+    "sha256": "9d25f60bf6cd1d1f59cd2da37b739be13ebee43ccbdb8d00e4f638f7fe8408a7"
+  },
+  "runtime_limit_proposal": {
+    "patch_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/proposals/s4-source-limit.patch",
+    "validation_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/proposals/s4-source-limit-validation-v2.json",
+    "owner": "S4 / Atlas runtime",
+    "status": "UNAPPLIED_UNTESTED_OUTSIDE_S1_03_AUTHORITY",
+    "proposed_limit_bytes": 1048576,
+    "current_released_limit_bytes": 256000
+  },
+  "updated_at_utc": "2026-11-15T13:40:05.492Z"
 }
