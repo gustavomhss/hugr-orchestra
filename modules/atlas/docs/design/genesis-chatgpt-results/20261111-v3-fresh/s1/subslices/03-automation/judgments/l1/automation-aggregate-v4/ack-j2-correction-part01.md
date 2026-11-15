@@ -1,0 +1,1 @@
+ACK — correção de transporte incorporada exclusivamente em `before_body.git_blob_sha` da transição **v2 → v3**, para `b8fec4854b4c1384d3c4a2a4f0d51d220c874618`. Envio defeituoso e correção preservados no registro do exame. Aguardo a **parte 2/2** e o `FIM_DO_LOTE` externo.

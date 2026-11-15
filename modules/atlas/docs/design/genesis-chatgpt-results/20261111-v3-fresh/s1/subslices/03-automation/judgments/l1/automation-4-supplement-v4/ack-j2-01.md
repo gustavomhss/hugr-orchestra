@@ -1,0 +1,1 @@
+ACK — **automation-4-supplement-v4, parte 1/3**. Última âncora recebida: **AUT4-C02**, referência **S04**, `scheduled-task/capability.ts`, linhas **137–145**; o fragmento termina na abertura do próximo item de `prior_literal_ranges`. Aguardo as demais partes e o `FIM_DO_LOTE` externo.

@@ -1,0 +1,429 @@
+Transporte literal pela principal ao mesmo juiz J1, execução 34269cf4-d631-41c5-a30b-85b0ec217390. Não use ferramentas, delegue, edite ou receba parecer do outro juiz. Lote automation-1-supplement-v2-coverage-erratum; parte 5/6. Pacote canônico 344323 bytes SHA256 1599aa38f34decbc6bff88c972ed778d5f49e179dca7ac2915d37ecacf245a4b. Esta parte tem 57347 bytes SHA256 53328661c411fd057281b2c1f8bb3963e7fae6bb646d0b8695f2597461a56ad9. Envio em dois fragmentos contíguos: este é 2/2, offsets UTF-8 [28619,57347), 28728 bytes SHA256 41b9518d4831d3fa42ca510d28a822e157e1979d94054849ab35dfd78c78d593. Junte os fragmentos sem os envelopes. Conserve o exame anterior e os deltas já recebidos. Julgue apenas após FIM_DO_LOTE; até lá responda somente ACK da parte e da última âncora.
+
+BEGIN_PART
+    row.provider_kind === binding.provider.kind && row.provider_hostname === binding.provider.hostname &&
+    row.provider_api_origin === binding.provider.apiOrigin && row.provider_project_id === binding.projectID
+}
+
+export function access(row: Row | undefined, location: string, binding: Actions.Binding, id: Actions.OperationID) {
+  if (!row || row.location_key !== location || row.binding_id !== binding.id)
+    return error("operation_missing", "Actions operation does not exist in this binding and Location", id)
+  if (row.actor !== binding.account) return error("not_authenticated", "Actions operation belongs to another account", id)
+  if (row.binding_revision !== binding.revision) return error("binding_stale", "Actions operation binding revision changed", id)
+  if (!matches(row, binding)) return error("host_mismatch", "Actions operation provider identity changed", id)
+}
+
+export function unavailable(row: Row, now: number) {
+  if (row.state === "expired" && row.reason === RECEIPT_EXPIRED)
+    return error("operation_missing", RECEIPT_EXPIRED, row.id)
+  if (row.state === "expired" || (row.state === "prepared" && row.time_expires <= now))
+    return error("operation_expired", "Actions operation lease expired", row.id)
+  if (["accepted", "confirmed", "rejected"].includes(row.state) && row.time_updated <= now - RETENTION)
+    return error("operation_missing", "Actions operation receipt retention elapsed", row.id)
+}
+
+export const find = (db: Pick<DB, "select">, id: Actions.OperationID) =>
+  safe(db.select().from(ActionsOperationTable).where(eq(ActionsOperationTable.id, id)).get())
+
+export const sweep = (db: Pick<DB, "update">, now: number) =>
+  Effect.gen(function* () {
+    yield* db.update(ActionsOperationTable).set({ state: "expired", time_updated: now, result: null, reason: LEASE_EXPIRED }).where(
+      and(eq(ActionsOperationTable.state, "prepared"), lte(ActionsOperationTable.time_expires, now)),
+    ).run()
+    // Keep the admission key and intent forever. Deleting a receipt would allow
+    // a delayed prepare with the same logical intent to issue another command.
+    yield* db.update(ActionsOperationTable).set({ state: "expired", result: null, reason: RECEIPT_EXPIRED }).where(and(
+      inArray(ActionsOperationTable.state, ["accepted", "confirmed", "rejected"]),
+      lte(ActionsOperationTable.time_updated, now - RETENTION),
+    )).run()
+  })
+
+// Database identity outlives Location services. Rebuilding a Location must never
+// recover another live request's sending row as though the process restarted.
+const recovery = new WeakMap<DB, { readonly lock: Semaphore.Semaphore; done: boolean }>()
+
+export const recover = (db: DB) => Effect.suspend(() => {
+  const shared = recovery.get(db) ?? { lock: Semaphore.makeUnsafe(1), done: false }
+  recovery.set(db, shared)
+  return shared.lock.withPermit(Effect.gen(function* () {
+    if (shared.done) return
+    yield* safe(db.update(ActionsOperationTable).set({
+      state: "outcome_unknown",
+      time_updated: yield* Clock.currentTimeMillis,
+      reason: "Provider outcome was not established before database restart",
+    }).where(eq(ActionsOperationTable.state, "sending")).run())
+    shared.done = true
+  })).pipe(Effect.uninterruptible)
+})
+
+export const finalize = (db: DB, id: Actions.OperationID, exit: Exit.Exit<Actions.OperationAcknowledgement, ActionsError>) => Effect.gen(function* () {
+  const rejected = Exit.isFailure(exit) ? definitive(exit.cause) : undefined
+  const row = yield* safe(db.update(ActionsOperationTable).set({
+    state: Exit.isSuccess(exit) ? "accepted" : rejected ? "rejected" : "outcome_unknown",
+    result: Exit.isSuccess(exit) ? exit.value : null,
+    time_updated: yield* Clock.currentTimeMillis,
+    reason: Exit.isSuccess(exit) ? null : rejected?.disposition === "definitely_unsent"
+      ? "Provider command was definitely not sent"
+      : rejected ? "Provider command was definitively rejected" : "Provider outcome was not established",
+  }).where(and(eq(ActionsOperationTable.id, id), eq(ActionsOperationTable.state, "sending"))).returning().get())
+  if (!row) return yield* Effect.fail(error("maintenance_required", "Actions operation receipt could not be finalized", id))
+})
+
+export function identity(row: Row) {
+  return and(
+    eq(ActionsOperationTable.id, row.id), eq(ActionsOperationTable.location_key, row.location_key),
+    eq(ActionsOperationTable.project_id, row.project_id), eq(ActionsOperationTable.directory, row.directory),
+    row.workspace_id === null ? isNull(ActionsOperationTable.workspace_id) : eq(ActionsOperationTable.workspace_id, row.workspace_id),
+    eq(ActionsOperationTable.binding_id, row.binding_id), eq(ActionsOperationTable.binding_revision, row.binding_revision),
+    eq(ActionsOperationTable.provider_kind, row.provider_kind), eq(ActionsOperationTable.provider_hostname, row.provider_hostname),
+    eq(ActionsOperationTable.provider_api_origin, row.provider_api_origin), eq(ActionsOperationTable.provider_project_id, row.provider_project_id),
+    eq(ActionsOperationTable.actor, row.actor), eq(ActionsOperationTable.client_id, row.client_id),
+    eq(ActionsOperationTable.kind, row.kind), eq(ActionsOperationTable.target, row.target),
+    row.expected === null ? isNull(ActionsOperationTable.expected) : eq(ActionsOperationTable.expected, row.expected),
+  )
+}
+~~~~
+
+## AUT1-C34
+
+```json
+{"block_id":"AUT1-C34","type":"literal_source_excerpt","requests":["RE-AUT1-06"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/operations/outcome.ts","repository_path":"packages/core/src/actions/operations/outcome.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"6ad54f11c415134b4eb590194e2079f09ef01aed","source_sha256":"3d89a3a86b0d51b2c153088397c952599dc8b75b5469a5a27a8efc7395ece20c","source_bytes":2037,"body_anchors":["A16","A17"],"requested_subject":"Decode estrito, definitive, combine, attributed e checked ack/observation"}
+```
+
+```json
+{"first_line":1,"last_line":40,"bytes":2037,"sha256":"3d89a3a86b0d51b2c153088397c952599dc8b75b5469a5a27a8efc7395ece20c"}
+```
+
+~~~~typescript
+import { Actions } from "@orchestra/schema/actions"
+import { Cause, Effect, Option, Schema } from "effect"
+import { ActionsError } from "../error"
+
+export const decodeAcknowledgement = Schema.decodeUnknownEffect(Schema.toType(Actions.OperationAcknowledgement), {
+  onExcessProperty: "error",
+})
+
+export const decodeObservation = Schema.decodeUnknownEffect(Schema.toType(Actions.OperationObservation), {
+  onExcessProperty: "error",
+})
+
+export function definitive(cause: Cause.Cause<unknown>) {
+  if (Cause.hasInterrupts(cause)) return
+  const failure = Cause.findErrorOption(cause)
+  if (Option.isNone(failure) || !(failure.value instanceof ActionsError)) return
+  if (failure.value.disposition === "definitely_unsent" || failure.value.disposition === "definitely_rejected")
+    return failure.value
+}
+
+export function combine(original?: Actions.OperationAcknowledgement, observed?: Actions.OperationAcknowledgement) {
+  if ((["runID", "jobID", "resourceID", "attempt"] as const).some((field) => {
+    return original?.[field] !== undefined && observed?.[field] !== undefined && original[field] !== observed[field]
+  })) return new ActionsError({ kind: "intent_conflict", message: "Actions observation changed acknowledged native identity" })
+  if (!original && !observed) return
+  return { ...original, ...Schema.encodeSync(Actions.OperationAcknowledgement)(observed ?? {}) }
+}
+
+export function attributed(acknowledgement?: Actions.OperationAcknowledgement) {
+  return acknowledgement?.unattributed !== true &&
+    !!(acknowledgement?.runID || acknowledgement?.jobID || acknowledgement?.resourceID)
+}
+
+export const checkedAcknowledgement = (input: unknown) => decodeAcknowledgement(input).pipe(
+  Effect.mapError(() => new ActionsError({ kind: "outcome_unknown", message: "Actions provider acknowledgement is invalid" })),
+)
+
+export const checkedObservation = (input: unknown) => decodeObservation(input).pipe(
+  Effect.mapError(() => new ActionsError({ kind: "invalid_input", message: "Actions operation observation is invalid" })),
+)
+~~~~
+
+## AUT1-C35
+
+```json
+{"block_id":"AUT1-C35","type":"literal_source_excerpt","requests":["RE-AUT1-06"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/operations/readback.ts","repository_path":"packages/core/src/actions/operations/readback.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"16146919f0a4fb7101a72bee160cdcdc642ad90f","source_sha256":"80de0b27f0b95536f35fd87186241ef51bd9a66a9e47a19cca1df104010f86a8","source_bytes":1667,"body_anchors":["A17"],"requested_subject":"Reconcile update/CAS completo"}
+```
+
+```json
+{"first_line":1,"last_line":27,"bytes":1667,"sha256":"80de0b27f0b95536f35fd87186241ef51bd9a66a9e47a19cca1df104010f86a8"}
+```
+
+~~~~typescript
+import { Actions } from "@orchestra/schema/actions"
+import { and, eq, isNull } from "drizzle-orm"
+import { Clock, Effect } from "effect"
+import { ActionsError } from "../error"
+import { attributed, combine } from "./outcome"
+import { ActionsOperationTable } from "./sql"
+import { identity, safe, unavailable, type DB, type Row } from "./storage"
+
+export const update = (db: DB, row: Row, observation: Actions.OperationObservation) => db.transaction((tx) => Effect.gen(function* () {
+  const now = yield* Clock.currentTimeMillis
+  const expired = unavailable(row, now)
+  if (expired) return yield* Effect.fail(expired)
+  const acknowledgement = combine(row.result ?? undefined, observation.acknowledgement)
+  if (acknowledgement instanceof ActionsError) return yield* Effect.fail(acknowledgement)
+  // The adapter proves the exact native identity. Empty/unattributed replies
+  // cannot confirm anything, and polling never changes unknown into accepted.
+  const state = observation.state === "pending" || !attributed(acknowledgement) ? row.state : observation.state
+  return yield* tx.update(ActionsOperationTable).set({
+    state,
+    result: acknowledgement ?? null,
+    time_updated: state === row.state ? row.time_updated : now,
+    reason: state === "rejected" ? "Provider command rejection was confirmed" : state === "confirmed" ? null : row.reason,
+  }).where(and(
+    identity(row), eq(ActionsOperationTable.state, row.state), eq(ActionsOperationTable.time_updated, row.time_updated),
+    row.result == null ? isNull(ActionsOperationTable.result) : eq(ActionsOperationTable.result, row.result),
+  )).returning().get()
+}), { behavior: "immediate" }).pipe(safe)
+~~~~
+
+## AUT1-C36
+
+```json
+{"block_id":"AUT1-C36","type":"literal_source_excerpt","requests":["RE-AUT1-06"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/readback.ts","repository_path":"packages/core/src/actions/readback.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"26e01af0e8dad921d4f7a408e2642a851da3903d","source_sha256":"891d45078014fc821bba1a9ea69e68b4a822545e79cf1e5ee5f9f0bcc86acac2","source_bytes":2118,"body_anchors":["A17"],"requested_subject":"Observador completo, incluindo assinatura/imports anteriores à linha14"}
+```
+
+```json
+{"first_line":1,"last_line":35,"bytes":2118,"sha256":"891d45078014fc821bba1a9ea69e68b4a822545e79cf1e5ee5f9f0bcc86acac2"}
+```
+
+~~~~typescript
+export * as ActionsReadback from "./readback"
+
+import { Actions } from "@orchestra/schema/actions"
+import { Effect } from "effect"
+import { ActionsContract } from "./contract"
+import type { ActionsError } from "./error"
+
+export const observe = Effect.fn("ActionsReadback.observe")(function* (
+  reader: ActionsContract.ReadAdapter,
+  binding: Actions.Binding,
+  intent: Actions.OperationIntent,
+  acknowledged?: Actions.OperationAcknowledgement,
+): Effect.fn.Return<Actions.OperationObservation, ActionsError> {
+  // Unattributed dispatch cannot be recovered by guessing a nearby run.
+  if (acknowledged?.unattributed || !acknowledged?.runID) return { state: "pending" }
+  const run = yield* reader.run(binding, acknowledged.runID)
+  if (intent.expected?.commit && run.commit !== intent.expected.commit) return { state: "pending" }
+  if (intent.target.runID && run.id !== intent.target.runID) return { state: "pending" }
+  if (intent.kind === "workflow.dispatch") {
+    if (intent.target.workflowID && run.workflowID !== intent.target.workflowID) return { state: "pending" }
+    if (intent.target.ref && !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/i.test(intent.target.ref) &&
+      run.ref !== intent.target.ref.replace(/^refs\/heads\//, "")) return { state: "pending" }
+    if (intent.target.ref && /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/i.test(intent.target.ref) &&
+      run.commit.toLowerCase() !== intent.target.ref.toLowerCase()) return { state: "pending" }
+    if (run.event !== "workflow_dispatch" && binding.provider.kind === "github") return { state: "pending" }
+    return { state: "confirmed", acknowledgement: acknowledged }
+  }
+  if ((intent.kind === "run.retry" || intent.kind === "run.retryFailed") && acknowledged.attempt !== undefined &&
+    run.attempt !== undefined && run.attempt >= acknowledged.attempt)
+    return { state: "confirmed", acknowledgement: acknowledged }
+  if ((intent.kind === "run.cancel" || intent.kind === "run.forceCancel") &&
+    (run.conclusion === "cancelled" || run.status === "canceled"))
+    return { state: "confirmed", acknowledgement: acknowledged }
+  return { state: "pending" }
+})
+~~~~
+
+## AUT1-C37
+
+```json
+{"block_id":"AUT1-C37","type":"literal_source_excerpt","requests":["RE-AUT1-06"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/error.ts","repository_path":"packages/core/src/actions/error.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"5557a68cf67417c2c3149f6f130952297114ecbd","source_sha256":"9ce2b3a2943588b3bf4676773f9966a75f347aa84522b9ae96131ba9839017e7","source_bytes":246,"body_anchors":["A16"],"requested_subject":"Tipo de erro Actions usado por definitive"}
+```
+
+```json
+{"first_line":1,"last_line":6,"bytes":246,"sha256":"9ce2b3a2943588b3bf4676773f9966a75f347aa84522b9ae96131ba9839017e7"}
+```
+
+~~~~typescript
+export * as ActionsErrors from "./error"
+
+import { Actions } from "@orchestra/schema/actions"
+import { Schema } from "effect"
+
+export class ActionsError extends Schema.TaggedErrorClass<ActionsError>()("ActionsError", Actions.ErrorData.fields) {}
+~~~~
+
+## AUT1-C38
+
+```json
+{"block_id":"AUT1-C38","type":"literal_source_excerpt","requests":["RE-AUT1-06"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/github/commands/workflow.ts","repository_path":"packages/core/src/actions/github/commands/workflow.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"bc9677ced86d82f08db5a38ae948bcca3b1406eb","source_sha256":"7330ca26082e22e8a81c89285afc18002903188555c96d1d60565fae993f7b2f","source_bytes":6811,"body_anchors":["A18"],"requested_subject":"Ack concreto dispatch 204 versus identidade nativa 200"}
+```
+
+```json
+{"first_line":12,"last_line":47,"bytes":3488,"sha256":"3a3b5ad735321e2ccd9fd17dd5c744a46604132747fe785bb19576e150c216be"}
+```
+
+~~~~typescript
+export const dispatch = Effect.fn("ActionsGitHubCommands.dispatch")(function* (services: GitHubCommandCommon.Services, binding: Actions.Binding, intent: Actions.OperationIntent, input: typeof Actions.GitHubDispatch.Type) {
+  if (intent.target.ref === undefined || input.ref !== intent.target.ref)
+    return yield* GitHubCommandCommon.fail(binding, "invalid_input", "Dispatch ref does not match the admitted native target")
+  const { GitHubDispatchInputs } = yield* Effect.promise(() => import("./inputs"))
+  const repository = yield* GitHubCommandCommon.authority(services, binding)
+  const workflow = yield* read(services, binding, intent, repository.root)
+  if (workflow.state !== "active") return yield* GitHubCommandCommon.fail(binding, "capability_unavailable", "Native workflow is not active for dispatch")
+  const branch = repository.native.default_branch
+  if (!branch) return yield* GitHubCommandCommon.fail(binding, "capability_unavailable", "Native default branch was not observed")
+  const admission = yield* GitHubCommandCommon.before(binding, services.reader.source(binding, { path: workflow.path, ref: branch }))
+  yield* GitHubCommandCommon.guard(binding, () => {
+    GitHubCommandCommon.source(binding, { ...intent, expected: undefined }, admission, workflow.path, branch)
+    GitHubDispatchInputs.definitions(binding, admission)
+  }, "source_unresolved")
+  // Default-branch eligibility and selected-ref execution source are separate proofs.
+  const selected = yield* GitHubCommandCommon.before(binding, services.reader.source(binding, { path: workflow.path, ref: input.ref }))
+  const definitions = yield* GitHubCommandCommon.guard(binding, () => {
+    GitHubCommandCommon.source(binding, intent, selected, workflow.path, input.ref)
+    return GitHubDispatchInputs.definitions(binding, selected)
+  }, "source_unresolved")
+  const inputs = yield* GitHubCommandCommon.guard(binding, () => GitHubDispatchInputs.values(binding, definitions, input.inputs))
+  yield* Effect.forEach(Object.entries(definitions).filter(([name, definition]) => definition.type === "environment" && Object.hasOwn(inputs, name)), ([name]) => Effect.gen(function* () {
+    const target = yield* GitHubCommandCommon.guard(binding, () => {
+      const value = inputs[name]
+      if (typeof value !== "string" || !value || value.length > 255 || value !== value.trim() || /[\\%{}:\x00-\x1f\x7f]/.test(value) || value.split("/").some((part) => !part || part === "." || part === ".."))
+        throw GitHubCommandCommon.fail(binding, "invalid_input", "Environment input requires an exact native environment name")
+      return { value, segment: encodeURIComponent(value) }
+    })
+    const response = yield* GitHubCommandCommon.get(services, binding, `${repository.root}/environments/${target.segment}`)
+    yield* GitHubCommandCommon.guard(binding, () => {
+      const environment = GitHubNative.decode(binding, Schema.Struct({ id: GitHubNative.ID, name: Schema.NonEmptyString }), response.data, "environment")
+      if (environment.name.toLowerCase() !== target.value.toLowerCase()) throw GitHubCommandCommon.fail(binding, "source_conflict", "Native environment identity changed during preflight")
+    })
+  }))
+  const response = yield* GitHubCommandCommon.send(services, binding, { method: "POST", path: `${repository.root}/actions/workflows/${workflow.id}/dispatches`, body: { ref: input.ref, inputs } }, [200, 204])
+  if (response.status === 204) return { acknowledgement: { unattributed: true } }
+~~~~
+
+## AUT1-C39
+
+```json
+{"block_id":"AUT1-C39","type":"literal_source_excerpt","requests":["RE-AUT1-06"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/github/commands/run.ts","repository_path":"packages/core/src/actions/github/commands/run.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"20a65fe64b3559988856c829670ebb82296f9113","source_sha256":"a54d15a5e3870a09fc98708de4ee41aa09acaf2175b6d9c9e0e4249e6646fe78","source_bytes":4900,"body_anchors":["A19"],"requested_subject":"Retry/cancel/delete/fork e acknowledgments concretos"}
+```
+
+```json
+{"first_line":10,"last_line":59,"bytes":4476,"sha256":"401ec763bac5df99cb1c4266a4fcac6408be01d8c04573250c9f2580d86a0b94"}
+```
+
+~~~~typescript
+  event: Schema.String, status: Schema.NullOr(Schema.String), conclusion: Schema.optionalKey(Schema.NullOr(Schema.String)),
+  repository: Schema.Struct({ id: GitHubNative.ID, private: Schema.Boolean }),
+  head_repository: Schema.NullOr(Schema.Struct({ id: GitHubNative.ID, fork: Schema.Boolean })) })
+
+// https://docs.github.com/en/rest/actions/workflow-runs
+export const perform = Effect.fn("ActionsGitHubCommands.run")(function* (services: GitHubCommandCommon.Services, binding: Actions.Binding, intent: Actions.OperationIntent, debug?: boolean) {
+  const id = yield* GitHubCommandCommon.guard(binding, () => GitHubNative.id(binding, intent.target.runID ?? ""))
+  const repository = yield* GitHubCommandCommon.authority(services, binding)
+  const run = yield* GitHubCommandCommon.run(services, binding, intent, id)
+  yield* GitHubCommandCommon.historical(services, binding, intent, run)
+  const target = `${repository.root}/actions/runs/${id}`
+  if (intent.kind === "run.retry" || intent.kind === "run.retryFailed") {
+    if (run.status !== "completed" || (intent.kind === "run.retryFailed" && !["failure", "cancelled", "timed_out"].includes(run.conclusion ?? "")))
+      return yield* GitHubCommandCommon.fail(binding, "capability_unavailable", "Native run is not eligible for the admitted retry mode")
+    yield* GitHubCommandCommon.send(services, binding, { method: "POST", path: `${target}/${intent.kind === "run.retry" ? "rerun" : "rerun-failed-jobs"}`,
+      body: debug === undefined ? {} : { enable_debug_logging: debug } }, [201, 204])
+    // The admitted run is known; the newly-created attempt is not returned here.
+    return { acknowledgement: { runID: id } }
+  }
+  if (intent.kind === "run.cancel" || intent.kind === "run.forceCancel") {
+    if (run.status === null || !active.has(run.status))
+      return yield* GitHubCommandCommon.fail(binding, "capability_unavailable", "Native run is not in a cancelable execution state")
+    if (intent.kind === "run.forceCancel" && (binding.provider.hostname !== "github.com" || binding.provider.apiOrigin !== "https://api.github.com" || repository.headers["x-github-api-version-selected"] !== "2026-03-10"))
+      return yield* GitHubCommandCommon.fail(binding, "capability_unavailable", "Native force-cancel route has no observed supported host/API-version evidence")
+    yield* GitHubCommandCommon.send(services, binding, { method: "POST", path: `${target}/${intent.kind === "run.cancel" ? "cancel" : "force-cancel"}` }, [202])
+    return { acknowledgement: { runID: id } }
+  }
+  if (intent.kind === "run.delete") {
+    if (run.status !== "completed") return yield* GitHubCommandCommon.fail(binding, "capability_unavailable", "Only a terminal native run may be deleted")
+    yield* GitHubCommandCommon.send(services, binding, { method: "DELETE", path: target }, [204])
+    return { acknowledgement: { runID: id } }
+  }
+  if (intent.kind === "run.approveFork") {
+    if (run.event !== "pull_request" || (run.status !== "action_required" && run.conclusion !== "action_required"))
+      return yield* GitHubCommandCommon.fail(binding, "capability_unavailable", "Native run does not require fork pull-request approval")
+    const response = yield* GitHubCommandCommon.get(services, binding, target)
+    yield* GitHubCommandCommon.guard(binding, () => {
+      const native = GitHubNative.decode(binding, Fork, response.data, "fork approval")
+      if (String(native.id) !== id || String(native.repository.id) !== binding.projectID || native.run_attempt !== run.attempt || native.head_sha.toLowerCase() !== run.commit.toLowerCase())
+        throw GitHubCommandCommon.fail(binding, "source_conflict", "Native fork run changed during preflight")
+      if (native.event !== run.event || native.status !== run.status || native.conclusion !== run.conclusion)
+        throw GitHubCommandCommon.fail(binding, "source_conflict", "Native fork approval conditions changed during preflight")
+      if (native.repository.private || !native.head_repository?.fork || String(native.head_repository.id) === binding.projectID)
+        throw GitHubCommandCommon.fail(binding, "capability_unavailable", "Native public-fork ownership was not proved")
+    })
+    yield* GitHubCommandCommon.send(services, binding, { method: "POST", path: `${target}/approve` }, [201])
+    return { acknowledgement: { runID: id } }
+  }
+  return yield* GitHubCommandCommon.fail(binding, "invalid_input", "Command does not belong to the GitHub run dispatcher")
+})
+~~~~
+
+## AUT1-C40
+
+```json
+{"block_id":"AUT1-C40","type":"literal_source_excerpt","requests":["RE-AUT1-06"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/github/commands/job.ts","repository_path":"packages/core/src/actions/github/commands/job.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"01828a587ca7443e08fc0ecdcff55bf1ebeca863","source_sha256":"b753ad05386cd13df639a4000b7fd35db4db8431e66f1ab27633acdbeb314591","source_bytes":2482,"body_anchors":["A19"],"requested_subject":"Retry de job e acknowledgment sem nova tentativa fabricada"}
+```
+
+```json
+{"first_line":9,"last_line":33,"bytes":2155,"sha256":"9494a8db1e30da775bbbde5b91a05e6e4a721a3fa247809f442cdf27d5c05286"}
+```
+
+~~~~typescript
+  run_attempt: Schema.optionalKey(GitHubNative.Positive), status: Schema.NullOr(Schema.String) })
+
+// https://docs.github.com/en/rest/actions/workflow-runs#re-run-a-job-from-a-workflow-run
+export const retry = Effect.fn("ActionsGitHubCommands.jobRetry")(function* (services: GitHubCommandCommon.Services, binding: Actions.Binding, intent: Actions.OperationIntent, debug?: boolean) {
+  const id = yield* GitHubCommandCommon.guard(binding, () => GitHubNative.id(binding, intent.target.jobID ?? ""))
+  const repository = yield* GitHubCommandCommon.authority(services, binding)
+  const response = yield* GitHubCommandCommon.get(services, binding, `${repository.root}/actions/jobs/${id}`)
+  const job = yield* GitHubCommandCommon.guard(binding, () => {
+    const native = GitHubNative.decode(binding, Job, response.data, "job retry")
+    if (String(native.id) !== id || (intent.target.runID !== undefined && String(native.run_id) !== intent.target.runID))
+      throw GitHubCommandCommon.fail(binding, "source_conflict", "Native job does not match its admitted run ownership")
+    GitHubCommandCommon.version(binding, intent.expected, response)
+    return native
+  })
+  const run = yield* GitHubCommandCommon.run(services, binding, intent, String(job.run_id))
+  if (job.run_attempt === undefined) return yield* GitHubCommandCommon.fail(binding, "capability_unavailable", "Native job attempt was not observed")
+  if (job.run_attempt !== run.attempt || job.head_sha.toLowerCase() !== run.commit.toLowerCase())
+    return yield* GitHubCommandCommon.fail(binding, "source_conflict", "Native job source or attempt is stale")
+  if (job.status !== "completed" || run.status !== "completed")
+    return yield* GitHubCommandCommon.fail(binding, "capability_unavailable", "Native job/run is not terminal for retry")
+  yield* GitHubCommandCommon.historical(services, binding, intent, run)
+  yield* GitHubCommandCommon.send(services, binding, { method: "POST", path: `${repository.root}/actions/jobs/${id}/rerun`,
+    body: debug === undefined ? {} : { enable_debug_logging: debug } }, [201, 204])
+  return { acknowledgement: { jobID: id, runID: String(job.run_id) } }
+})
+~~~~
+
+## AUT1-C41
+
+```json
+{"block_id":"AUT1-C41","type":"literal_source_excerpt","requests":["RE-AUT1-06"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/gitlab/commands.ts","repository_path":"packages/core/src/actions/gitlab/commands.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"d3f432fc7b0c434bfcb9a88adeabfcfae5829033","source_sha256":"2be56b6ff21b0f9a63d929b0b38f75fad2d29705476dbd5d13f63634f803c00e","source_bytes":2258,"body_anchors":["A22"],"requested_subject":"Preflight plan, send único e qualificação de acknowledgment GitLab"}
+```
+
+```json
+{"first_line":1,"last_line":33,"bytes":2258,"sha256":"2be56b6ff21b0f9a63d929b0b38f75fad2d29705476dbd5d13f63634f803c00e"}
+```
+
+~~~~typescript
+export * as ActionsGitLabCommands from "./commands"
+
+import { Actions } from "@orchestra/schema/actions"
+import { Effect } from "effect"
+import { ActionsContract } from "../contract"
+import { ActionsError } from "../error"
+import { ActionsGitLabNative } from "./native"
+import { GitLabCommandShared } from "./commands/shared"
+import { GitLabCommandLaunch } from "./commands/launch"
+import { GitLabCommandRuns } from "./commands/runs"
+import { GitLabCommandJobs } from "./commands/jobs"
+import { GitLabCommandMergeRequest } from "./commands/merge-request"
+
+export function make(input: { readonly transport: ActionsContract.Transport; readonly reader: ActionsContract.ReadAdapter }): ActionsContract.Commands {
+  const launch = GitLabCommandLaunch.make(input)
+  const run = GitLabCommandRuns.make(input)
+  const job = GitLabCommandJobs.make(input)
+  const mergeRequest = GitLabCommandMergeRequest.make(input)
+  return { perform: Effect.fn("ActionsGitLabCommands.perform")(function* (binding: Actions.Binding, intent: Actions.OperationIntent, payload: ActionsContract.Json) {
+    const plan = yield* Effect.gen(function* () {
+
+END_PART

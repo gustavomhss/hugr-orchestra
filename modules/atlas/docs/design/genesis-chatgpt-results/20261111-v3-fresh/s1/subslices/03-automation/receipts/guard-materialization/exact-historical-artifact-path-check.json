@@ -1,0 +1,10 @@
+{
+  "schema": "s1-03-exact-historical-artifact-path-check/v1",
+  "observed_at_utc": "2026-11-15T07:09:40.970765+00:00",
+  "path": "/workspace/scratch/2b46fb541868/genesis-s1/gate-checkout/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/evidence/source-captures.zip",
+  "basis": "Exact prior repository gate-checkout path explicitly recorded in the inherited guards-dd8-receipt.json plus exact protected repository artifact path. No unrelated directory or host log discovery.",
+  "is_file": false,
+  "expected_git_blob_sha": "d83941a9d836a23e466ca09ecba1f21d423094cb",
+  "expected_bytes": 1339105,
+  "worktree_modified": false
+}

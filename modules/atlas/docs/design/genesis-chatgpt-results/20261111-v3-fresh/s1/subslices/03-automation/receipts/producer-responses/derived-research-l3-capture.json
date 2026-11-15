@@ -1,0 +1,11 @@
+{
+  "target": "/root/derived_research",
+  "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/payload/receipts/producer-responses/derived-research-l3-original.md",
+  "origin": "collaboration.list_agents agent_status.completed",
+  "bytes": 4166,
+  "sha256": "a982f51fb800bf44badba6ce1551cb187ded68c479403bbfea6771f245a446ad",
+  "terminal_newline": false,
+  "literal": true,
+  "captured_at_utc": "2026-11-15T05:30:28.012205+00:00",
+  "limit": "Original native FINAL_ANSWER text captured before producer reuse; no producer output files opened or reconstructed."
+}

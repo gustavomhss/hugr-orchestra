@@ -1,0 +1,1 @@
+ACK parte 3/6, fragmento 1/2 — última âncora recebida: **AUT1-C17**, `packages/core/src/actions/source/document.ts`, função `preflight`, condição `if (mapping && (item.key || item.sep) && (!item.key || !CST.isScalar(item.key))) {`.

@@ -1,0 +1,12 @@
+{
+  "schema": "s1-03-parent-visible-native-final-capture/v1",
+  "agent_id": "/root/review_relay",
+  "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-automation-flow-v3-delta/relay-final-original.md",
+  "bytes": 2570,
+  "sha256": "d28f23641530354e6a50181941df47f33df6b4a26ce45c013707f3a57d386518",
+  "literal": true,
+  "terminal_newline": false,
+  "matches_preemission_file": true,
+  "at_utc": "2026-11-15T09:41:41.887561+00:00",
+  "basis": "Original native FINAL observed by root and encoded literally after emission, then byte-compared to the courier file."
+}

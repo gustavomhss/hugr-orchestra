@@ -1,0 +1,1 @@
+ACK parte 1/7 — última âncora recebida: **AUT2-C03**, `packages/core/src/actions/github/commands/workflow.ts`, metadados do bloco, encerrados por `"source_bytes":6811`.

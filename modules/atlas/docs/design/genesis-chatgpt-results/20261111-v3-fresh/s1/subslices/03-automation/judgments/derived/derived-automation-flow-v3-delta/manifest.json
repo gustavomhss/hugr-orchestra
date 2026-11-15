@@ -1,0 +1,28 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "packet": "derived-automation-flow-v3-delta",
+  "source": "review-packets/derived-automation-flow-v3-delta.md",
+  "source_bytes": 37266,
+  "source_sha256": "584f286ddbdd3cd29fa8a8e66acab8f5e975e855d127b18d17e95a614a7f0451",
+  "source_manifest": "review-packets/derived-automation-flow-v3-delta.manifest.json",
+  "source_manifest_bytes": 987,
+  "source_manifest_sha256": "cc9bf03bafaca1899b68b1a31e40168aec6e9a048686682c419ff09385cc80ca",
+  "parts": [
+    {
+      "part": 1,
+      "file": "part-01.txt",
+      "start_byte": 0,
+      "end_byte_exclusive": 37266,
+      "bytes": 37266,
+      "sha256": "584f286ddbdd3cd29fa8a8e66acab8f5e975e855d127b18d17e95a614a7f0451"
+    }
+  ],
+  "preparation_state": "PREPARED_NOT_DISPATCHED",
+  "prepared_at_utc": "2026-11-15T09:35:44.214145+00:00",
+  "dispatch_count_at_preparation": 0,
+  "maximum_payload_part_bytes": 38000,
+  "transport_ownership": {
+    "/root/s1_03_j1": "/root/review_relay",
+    "/root/s1_03_j2": "/root/review_relay"
+  }
+}

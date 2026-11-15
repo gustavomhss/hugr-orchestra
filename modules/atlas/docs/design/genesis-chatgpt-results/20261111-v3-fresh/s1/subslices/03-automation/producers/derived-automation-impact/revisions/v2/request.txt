@@ -1,0 +1,4 @@
+Corrija somente AI-L3-J1-01 em s1.subslice03.automation-impact L3 v2. O L2 v3 permanece aceito; L3 precisa de reavaliação do mesmo par e L4 não está liberado.
+Raiz: /workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390
+Receita: payload/recipes/derived/automation-impact-schedule-fidelity-v2.json
+Leia a receita e seus inputs exatos, preserve todos os históricos e contexto cumulativo, corrija somente a distinção GitHub cron YAML/GitLab pipeline schedule e sua evidência. Sem fonte nova, oracle, parecer completo ou testes. Preserve este pedido; registre o dispatch literal separado. FINAL exatamente igual ao response.md corrente, sem LF terminal.

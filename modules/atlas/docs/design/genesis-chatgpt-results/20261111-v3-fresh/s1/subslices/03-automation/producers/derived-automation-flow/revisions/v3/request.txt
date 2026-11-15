@@ -1,0 +1,5 @@
+Corrija somente AF-L2-J2-01 do L2 s1.subslice03.automation-flow, no mesmo contexto de família.
+Raiz: /workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390
+Receita adicional efetiva: payload/recipes/derived/automation-flow-dispatch-fidelity-v3.json
+SHA256 da receita: a0f24c622d77e89d6a7020334075691efb8f3153f99087eb7bc2afc3337cb9ea
+Leia a receita integral e cumpra seus limites. Preserve a v2 já arquivada, as duas correções anteriores e todos os demais bytes do corpo. Não leia pareceres, oracle ou novas fontes. Registre dispatch/delta e entregue os seis outputs definidos. FINAL igual a response.md sem LF terminal; nenhuma camada posterior liberada.

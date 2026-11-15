@@ -1,0 +1,1 @@
+ACK parte 3/7 — última âncora recebida: **AUT2-C21**, `packages/core/src/actions/resources/config-environment-github.ts`, plano `C.stages`, fase `protection`, linha `prevent_self_review: input.preventSelfReview, reviewers: required,`.

@@ -1,0 +1,1 @@
+O helper /root/native_descriptor encerrou e está ocioso; ambos os juízes podem trabalhar simultaneamente dentro dos slots. Seu lote continua exclusivo e sem mudança de conteúdo ou escopo.

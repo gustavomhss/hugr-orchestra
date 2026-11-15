@@ -1,0 +1,216 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "relay": "/root/review_relay",
+  "packet": "automation-4-supplement-v4",
+  "source": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/automation-4-supplement-v4.md",
+  "source_bytes": 120308,
+  "source_sha256": "90bf1fd0fd13fe877baf22755d2d39fd55cbb24ae7a74017e0fb1dd7a1e26a0f",
+  "parts_per_target": 3,
+  "calls": [
+    {
+      "sequence": 1,
+      "target": "/root/s1_03_j1",
+      "part": 1,
+      "request_file": "request-j1-01.json",
+      "request_file_bytes": 42781,
+      "request_file_sha256": "c0f5a22f7fa312b641db84404b9adb3bfa18f787a7a4a30b3fe38e13e6a04da4",
+      "message_bytes": 40552,
+      "message_sha256": "efc989358427df1569769b398c21dee52bfbd8507791d6ba303d7caf8d4ed671",
+      "payload_bytes": 40086,
+      "payload_sha256": "506a021a1a6bf9d544875296798d1f5fd8c18d774907089f2244ca554c0997ad",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 2,
+      "target": "/root/s1_03_j1",
+      "part": 2,
+      "request_file": "request-j1-02.json",
+      "request_file_bytes": 42378,
+      "request_file_sha256": "c2b4163f5e244213642596459cd92a70e6f4003b1c2b1eb98a058b7f7782b07a",
+      "message_bytes": 40275,
+      "message_sha256": "9dadc4170b26db043f514760f132a96bd2afcd6aa6410d27f0f309a9530636d4",
+      "payload_bytes": 40130,
+      "payload_sha256": "05a97160e500260c5338637bc75887be59bbd5247d3827dbbbf28c3f376be8a6",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 3,
+      "target": "/root/s1_03_j1",
+      "part": 3,
+      "request_file": "request-j1-03.json",
+      "request_file_bytes": 42359,
+      "request_file_sha256": "3894b145bb2ef19bf3925ae3a13c58d5282b12a5174d5f5a9f5f13bacd42cb92",
+      "message_bytes": 40696,
+      "message_sha256": "fbf3d072c0982326b7aa879ee11587fde6af3d0ed6d6542b8c5aeee1819a5502",
+      "payload_bytes": 40092,
+      "payload_sha256": "4407b5d69ddb78bf0ae9d15335f7566eeb29c5bcaeea85637a4249eb1787a4da",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 4,
+      "target": "/root/s1_03_j2",
+      "part": 1,
+      "request_file": "request-j2-01.json",
+      "request_file_bytes": 42781,
+      "request_file_sha256": "8563c69df17357a408c2aa580f2681f183f2cc31c728a8508d9eae2e2e139c8c",
+      "message_bytes": 40552,
+      "message_sha256": "efc989358427df1569769b398c21dee52bfbd8507791d6ba303d7caf8d4ed671",
+      "payload_bytes": 40086,
+      "payload_sha256": "506a021a1a6bf9d544875296798d1f5fd8c18d774907089f2244ca554c0997ad",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 5,
+      "target": "/root/s1_03_j2",
+      "part": 2,
+      "request_file": "request-j2-02.json",
+      "request_file_bytes": 42378,
+      "request_file_sha256": "abf75e111872da2348774d9497d6d3bce3090817e8dc182ddb49ddd9fb20293d",
+      "message_bytes": 40275,
+      "message_sha256": "9dadc4170b26db043f514760f132a96bd2afcd6aa6410d27f0f309a9530636d4",
+      "payload_bytes": 40130,
+      "payload_sha256": "05a97160e500260c5338637bc75887be59bbd5247d3827dbbbf28c3f376be8a6",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 6,
+      "target": "/root/s1_03_j2",
+      "part": 3,
+      "request_file": "request-j2-03.json",
+      "request_file_bytes": 42359,
+      "request_file_sha256": "1284cd4deaf26399a24c5f801a46081ae80cbc1f00fce519571f6b2eba40b75c",
+      "message_bytes": 40696,
+      "message_sha256": "fbf3d072c0982326b7aa879ee11587fde6af3d0ed6d6542b8c5aeee1819a5502",
+      "payload_bytes": 40092,
+      "payload_sha256": "4407b5d69ddb78bf0ae9d15335f7566eeb29c5bcaeea85637a4249eb1787a4da",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": null,
+      "tool_result_text": "Output exceeded the available model context and was truncated",
+      "provider_dispatch_id": null,
+      "tool_result_display_truncated": true,
+      "dispatch_observation": "Actual collaboration.followup_task invocation sent part 3 and the external FIM_DO_LOTE. Result display truncated; normal completion and provider dispatch ID unavailable. Await native response; do not resend.",
+      "native_response_observation": "Original final subsequently observed in collaboration.list_agents and preserved; this is not a remote wire checksum or recovery of the truncated tool result."
+    }
+  ],
+  "known_transcription_corrections": [],
+  "receipt_limit": "Hashes describe locally recorded requests and reconstruction, not a remote wire checksum or semantic sufficiency. J2 part 3 was actually invoked but the tool result display was truncated; its normal-completion status is unknown. Other calls returned normally without text or dispatch IDs.",
+  "delivery_scope": "Literal UTF-8 packet only; final signal is outside payload.",
+  "slot_handling": "Root and relay transport independently to their exclusive handles; no crossed judgments.",
+  "judgment_capture": "Original final judgments preserved for both targets; see response-capture.json.",
+  "dispatch_count": 6,
+  "recorded_at_utc": "2026-11-15T08:44:06.487409+00:00",
+  "completed_targets": [
+    "/root/s1_03_j1",
+    "/root/s1_03_j2"
+  ],
+  "pending_targets": [],
+  "local_recorded_reconstruction": [
+    {
+      "target": "/root/s1_03_j1",
+      "bytes": 120308,
+      "sha256": "90bf1fd0fd13fe877baf22755d2d39fd55cbb24ae7a74017e0fb1dd7a1e26a0f",
+      "equals_source": true,
+      "raw_bytes": 120308,
+      "raw_sha256": "90bf1fd0fd13fe877baf22755d2d39fd55cbb24ae7a74017e0fb1dd7a1e26a0f",
+      "corrections_applied": false
+    },
+    {
+      "target": "/root/s1_03_j2",
+      "bytes": 120308,
+      "sha256": "90bf1fd0fd13fe877baf22755d2d39fd55cbb24ae7a74017e0fb1dd7a1e26a0f",
+      "equals_source": true,
+      "raw_bytes": 120308,
+      "raw_sha256": "90bf1fd0fd13fe877baf22755d2d39fd55cbb24ae7a74017e0fb1dd7a1e26a0f",
+      "corrections_applied": false
+    }
+  ],
+  "acknowledgments": [
+    {
+      "target": "/root/s1_03_j1",
+      "part": 1,
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/automation-4-supplement-v4/ack-j1-01.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j1",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 237,
+      "sha256": "f775639fd6f611cb7a17f16d8b465476462af6ed0648edfec59a063b18520d76",
+      "captured_at_utc": "2026-11-15T08:18:42.115621+00:00"
+    },
+    {
+      "target": "/root/s1_03_j1",
+      "part": 2,
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/automation-4-supplement-v4/ack-j1-02.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j1",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 171,
+      "sha256": "1966acf009e2614dd47486dcf909b36882b91367cb64d07bbd18aa88f741c832",
+      "captured_at_utc": "2026-11-15T08:21:04.108575+00:00"
+    },
+    {
+      "target": "/root/s1_03_j2",
+      "part": 1,
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/automation-4-supplement-v4/ack-j2-01.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j2",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 293,
+      "sha256": "48f094dd004575a2f0e86b236386621c30fb14764b43a3e612c97a66523a372c",
+      "captured_at_utc": "2026-11-15T08:36:30.662974+00:00"
+    },
+    {
+      "target": "/root/s1_03_j2",
+      "part": 2,
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/automation-4-supplement-v4/ack-j2-02.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j2",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 239,
+      "sha256": "2aa56cd47c46d492f79732a696d87627d7fa5b3f4e085908d3ee1431a2ca0a32",
+      "captured_at_utc": "2026-11-15T08:38:46.079071+00:00"
+    }
+  ],
+  "transport_ownership": {
+    "/root/s1_03_j1": "/root",
+    "/root/s1_03_j2": "/root"
+  },
+  "judgment_captures": {
+    "j1": {
+      "target": "/root/s1_03_j1",
+      "judge_id": "parallel-v3-fresh/S1-03/J1",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/automation-4-supplement-v4/j1-response.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j1",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 3183,
+      "sha256": "7daf1cbffe70e02237f442826b38c09561aeb42bc78cc7c41c9ac12f40e3a667",
+      "captured_at_utc": "2026-11-15T08:25:48.822856+00:00"
+    },
+    "j2": {
+      "target": "/root/s1_03_j2",
+      "judge_id": "parallel-v3-fresh/S1-03/J2",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/automation-4-supplement-v4/j2-response.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j2",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 3499,
+      "sha256": "b10626d840636490737260197dc401abf6a399879344e84321fb4ac27210d77a",
+      "captured_at_utc": "2026-11-15T08:44:37.789461+00:00"
+    }
+  }
+}

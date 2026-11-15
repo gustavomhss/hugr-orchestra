@@ -1,0 +1,1 @@
+ACK parte 3/8 — última âncora recebida: **AUT3-C08**, `packages/core/src/board/github.ts`, função `advance`, linha `const pull = Option.getOrUndefined(Option.flatMap(read, (result) => decodePull(result.body)))`. Aguardo as partes restantes e o **FIM_DO_LOTE** externo.

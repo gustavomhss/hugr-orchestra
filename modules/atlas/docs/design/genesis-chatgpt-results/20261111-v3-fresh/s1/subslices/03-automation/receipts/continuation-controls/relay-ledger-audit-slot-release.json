@@ -1,0 +1,11 @@
+{
+  "id": "relay-ledger-audit-slot-release",
+  "target": "/root/review_relay",
+  "kind": "transport_concurrency_control",
+  "method": "collaboration.send_message",
+  "message": "Auditoria mecânica concluída; /root/native_descriptor está livre e seu FINAL será preservado. Pode voltar a usar J1 e J2 em paralelo dentro dos quatro slots. Vou corrigir apenas os vínculos/contabilidade apontados, sem novo envio a juiz ou mudança de conteúdo. Continue automation2→3→4 e eventual agregado conforme a barra já fixada.",
+  "message_bytes": 345,
+  "message_sha256": "34a38bde7dc267c4c392319259570c2bb47ccca8c6eb146614b53bbeb5a6e89f",
+  "tool_returned_normally": true,
+  "captured_at_utc": "2026-11-15T07:14:49.557290+00:00"
+}

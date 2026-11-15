@@ -1,0 +1,53 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "lot": "derived-research-impact-v1",
+  "source": "review-packets/derived-research-impact-v1.md",
+  "source_bytes": 51555,
+  "source_sha256": "622f54077a680559d4ce608f9bb0694276e9d490a492d3c1f66920931fb82b86",
+  "frozen_manifest": {
+    "schema": "s1-03-derived-review-packet/v1",
+    "lot": "derived-research-impact-v1",
+    "artifact": "s1.subslice03.research-impact",
+    "layer": 3,
+    "bytes": 51555,
+    "sha256": "622f54077a680559d4ce608f9bb0694276e9d490a492d3c1f66920931fb82b86",
+    "git_blob_sha": "c6e24b41e0451106f0dfc787198f5c01026f0f9b",
+    "body_bytes": 13972,
+    "body_sha256": "4fe6c73bc209b2461f8ef3a342832dd79b5541cf8b2d43afd958bab0327a3d3f",
+    "literal_files": [
+      {
+        "label": "body",
+        "bytes": 13972,
+        "sha256": "4fe6c73bc209b2461f8ef3a342832dd79b5541cf8b2d43afd958bab0327a3d3f"
+      },
+      {
+        "label": "evidence",
+        "bytes": 9729,
+        "sha256": "eb973250a7835300987fb08ab7ff0e4eede31cd1b5b51da39b634c10225aa9cd"
+      },
+      {
+        "label": "task_recipe",
+        "bytes": 9448,
+        "sha256": "68778f6144af73ee575678096eee818fb2a6ec2992572af4594dcf37af15fe7e"
+      },
+      {
+        "label": "common_recipe",
+        "bytes": 4017,
+        "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588"
+      }
+    ],
+    "input_table": "Explicit mechanical projection of actual manifest; original remains preserved.",
+    "dispatch_state": "NOT_YET_DISPATCHED"
+  },
+  "split_rule": "Single exact UTF-8 packet; actual dispatch pending.",
+  "parts": [
+    {
+      "part": 1,
+      "file": "part-01.txt",
+      "start": 0,
+      "end": 51555,
+      "bytes": 51555,
+      "sha256": "622f54077a680559d4ce608f9bb0694276e9d490a492d3c1f66920931fb82b86"
+    }
+  ]
+}

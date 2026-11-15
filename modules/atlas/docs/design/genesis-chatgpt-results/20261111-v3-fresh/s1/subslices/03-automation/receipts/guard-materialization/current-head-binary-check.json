@@ -1,0 +1,27 @@
+{
+  "schema": "s1-03-current-head-guard-binary-check/v1",
+  "observed_at_utc": "2026-11-15T08:34:40.808Z",
+  "request": {
+    "repository_full_name": "gustavomhss/hugr-orchestra",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/evidence/source-captures.zip",
+    "ref": "d5a84e583f55b31b17cbb407553243bd0801c56c",
+    "encoding": "base64"
+  },
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "",
+      "encoding": "base64",
+      "sha": "d83941a9d836a23e466ca09ecba1f21d423094cb",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d5a84e583f55b31b17cbb407553243bd0801c56c/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/evidence/source-captures.zip",
+      "display_title": "source-captures.zip"
+    },
+    "isError": false
+  },
+  "purpose": "Verify the historical blocking blob identity at current branch HEAD; no fabricated materialization or guard PASS."
+}

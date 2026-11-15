@@ -1,0 +1,14 @@
+{
+  "target": "/root/native_descriptor",
+  "file": "receipts/ledger-audit-final-original.md",
+  "bytes": 3713,
+  "sha256": "6d8f9ffee7ef7c6ea95d7797373e94a913fe0644abed1686a901ac663f28faff",
+  "literal": true,
+  "terminal_newline": false,
+  "source": "Principal compared original native FINAL visible in the thread with both producer files. Exact content matched except the files have one terminal LF absent from the visible FINAL; both original files remain preserved.",
+  "producer_files_bytes": 3714,
+  "producer_files_sha256": "4b4dc049b4049674bd59f20bf5582d86716cadf4c12f6745a96f30041d626463",
+  "producer_files_terminal_lf": true,
+  "initial_exact_match_assertion_failed_before_any_archive_write": true,
+  "captured_at_utc": "2026-11-15T07:14:25.233297+00:00"
+}

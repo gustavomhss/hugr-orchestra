@@ -1,0 +1,1 @@
+ACK parte 6/7 — última âncora recebida: **AUT2-C36**, `packages/core/src/actions/transport/identity.ts`, declaração de `gitlabAccount` com o decoder do schema de `username`.

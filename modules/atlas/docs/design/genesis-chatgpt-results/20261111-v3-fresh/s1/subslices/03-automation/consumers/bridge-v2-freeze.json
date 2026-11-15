@@ -1,0 +1,28 @@
+{
+  "schema": "s1-03-consumer-bridge-procedure-freeze/v2",
+  "captured_utc": "2026-11-15T06:34:31.117702+00:00",
+  "procedure": {
+    "path": "payload/consumers/atlas-consumer-bridge-v2.py",
+    "bytes": 7710,
+    "sha256": "461762d20372f8beec3bbfc1b0f5e7ff464872f4095a43f2987ff7e36724269b"
+  },
+  "v1_preserved": {
+    "path": "payload/consumers/atlas-consumer-bridge.py",
+    "bytes": 5453,
+    "sha256": "5d64a69d986178ae62ad653fdd8f6f022b52d63bdc0a3f37eda9252daf98788f"
+  },
+  "public_cases": {
+    "path": "payload/consumers/public-cases.json",
+    "bytes": 2568,
+    "sha256": "6f555dc22ea571bc2d6a683587cb320b7681b6bd22367a2f33e6fc8eb3741ab2"
+  },
+  "public_protocol": {
+    "path": "payload/consumers/public-bridge-protocol.md",
+    "bytes": 3285,
+    "sha256": "83ee13b6ee7a92ceb87be728640f028769e88be69eb72eebde2a33b7a2ad1839"
+  },
+  "prior_actual_bridge_calls": 0,
+  "questions_or_quotas_changed": false,
+  "product_or_runtime_tests": false,
+  "reason": "Before first consumer, retain actual timeout and partial-byte evidence; actual runtime calls remain pending."
+}

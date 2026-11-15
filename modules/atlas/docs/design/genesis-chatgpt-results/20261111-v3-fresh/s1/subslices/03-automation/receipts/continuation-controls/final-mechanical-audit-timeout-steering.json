@@ -1,0 +1,14 @@
+{
+  "id": "final-mechanical-audit-timeout-steering",
+  "target": "/root/native_descriptor",
+  "method": "collaboration.send_message",
+  "kind": "mechanical_assembly_audit_steering",
+  "tool_returned_normally": true,
+  "capture_basis": "Actual visible native collaboration call; captured verbatim before handle reuse",
+  "captured_utc": "2026-11-15T06:20:41.811399+00:00",
+  "request_ref": "receipts/continuation-controls/final-mechanical-audit-timeout-steering.message.txt",
+  "request_bytes": 548,
+  "request_sha256": "2c9451c36ccadb58e3347343a55d88b42e7dbf2e2fde222d6e860201dcde052f",
+  "native_model_physical_attempts": "UNKNOWN",
+  "role": "coordination or mechanical audit only; not semantic acceptance"
+}

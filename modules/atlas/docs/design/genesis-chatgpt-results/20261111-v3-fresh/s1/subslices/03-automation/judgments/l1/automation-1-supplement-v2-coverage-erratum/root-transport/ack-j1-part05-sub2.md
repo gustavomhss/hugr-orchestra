@@ -1,0 +1,1 @@
+ACK parte 5/6, fragmento 2/2 — última âncora recebida: **AUT1-C41**, `packages/core/src/actions/gitlab/commands.ts`, função `perform`, abertura de `const plan = yield* Effect.gen(function* () {`.

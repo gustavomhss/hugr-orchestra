@@ -1,0 +1,13 @@
+{
+  "at_utc": "2026-11-15T10:20:50.061735+00:00",
+  "command": "python scripts/reconcile-ledger-v2.py",
+  "observed_exit_code": 0,
+  "script_sha256": "42c5396c39bfd623ddf9f89a04d661b66b411f8d382d173ec396f5649107b0c3",
+  "ledger_rows": 423,
+  "ledger_sha256": "ec7d61541dd5b2434ffdf87ff37c345311b4a0650f0bee831ce3eefa1a5b7ec1",
+  "original_415_row_bytes_preserved": true,
+  "all_completed_response_files_checked_against_declared_per_call_sha256": true,
+  "two_historical_aliases_verified": true,
+  "corrected_completion_rows_not_added_as_new_native_requests": true,
+  "no_product_test": true
+}

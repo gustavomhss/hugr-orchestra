@@ -1,0 +1,1 @@
+ACK parte 4/8 — última âncora recebida: **AUT3-C13**, referência ao intervalo anterior de `packages/core/src/board/proof.ts`, linhas 31–48, até o campo `prior_document_sha256`. Aguardo as partes restantes e o **FIM_DO_LOTE** externo.

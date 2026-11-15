@@ -1,0 +1,153 @@
+{
+  "schema": "s1-03-mechanical-blocker-dossier-recipe/v1",
+  "frozen_at_utc": "2026-11-15T09:14:53.676221+00:00",
+  "role": "Mechanical documentary extraction only; no semantic judgment and not a third vote.",
+  "allowed_reads": [
+    {
+      "path": "inputs/COMMON.md",
+      "bytes": 12959,
+      "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7"
+    },
+    {
+      "path": "inputs/mission.json",
+      "bytes": 6006,
+      "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75"
+    },
+    {
+      "path": "inputs/AGENTS.md",
+      "bytes": 16501,
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f"
+    },
+    {
+      "path": "inputs/references/runtime.md",
+      "bytes": 10217,
+      "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237"
+    },
+    {
+      "path": "inputs/references/completion.md",
+      "bytes": 4497,
+      "sha256": "087428f9cd8e4acfe26ee71e9b97a5db291b1d361fe763d92245b978cada4ffd"
+    },
+    {
+      "path": "inputs/references/handoffs.md",
+      "bytes": 6282,
+      "sha256": "1ba5b2fe687bf7677675f00b23515e28f9fcb575f7ab6894ebb89267b8d69513"
+    },
+    {
+      "path": "payload/receipts/s4-runtime-release-original.json",
+      "bytes": 28282,
+      "sha256": "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016"
+    },
+    {
+      "path": "payload/receipts/branch-runtime-refresh-before-auto4-close.json",
+      "bytes": 20777,
+      "sha256": "c76cf1725d69be7aff76acd2f1fb106ad7ece8e1670c59faa2159acff3a7e14d"
+    },
+    {
+      "path": "payload/receipts/automation-native-prepare-probe.json",
+      "bytes": 4976,
+      "sha256": "e08f1f0682a716403a24431c1c552d1c2f64c1d5d5f31eeebb12f8794132b081"
+    },
+    {
+      "path": "payload/receipts/runtime-rediscovery-maintenance.json",
+      "bytes": 30775,
+      "sha256": "2c14c388fbfeee77ea814e79ac443db307c24810fd7c348f534e5821498bbdcf"
+    },
+    {
+      "path": "payload/receipts/s4-policy-provenance-reference.json",
+      "bytes": 889,
+      "sha256": "23cf38e354a28fd06a1aef386dbd4b86955d2b5c8222ee6f6d57dbc964da3543"
+    },
+    {
+      "path": "payload/receipts/runtime-preflight/preflight-summary.json",
+      "bytes": 739,
+      "sha256": "a3292651865f137a2da3f097c08531343d34a72b49bed8753beef5ce8e92c4a7"
+    },
+    {
+      "path": "payload/receipts/runtime-preflight/REPORT.md",
+      "bytes": 5467,
+      "sha256": "a3950ac9c0b2324a08624ad180bfc2d942bf485eccecc93a85826f70bbf978a5"
+    },
+    {
+      "path": "payload/receipts/runtime-preflight/schema-notes.json",
+      "bytes": 2288,
+      "sha256": "2750685166e4b068f7fd623ed55ecf041bf4384f0e8938dc3590f3c217b98ca4"
+    },
+    {
+      "path": "payload/proposals/s4-source-limit.json",
+      "bytes": 2791,
+      "sha256": "036a3d8f2ee3e2bfe17aa748348b5860e9d721007b07c6a50aa848224197335f"
+    },
+    {
+      "path": "payload/proposals/s4-source-limit-validation-v2.json",
+      "bytes": 4919,
+      "sha256": "e24234bf995bf3229c14c971c9b239ff0c6871c33bc947cfe69841715c1e682b"
+    },
+    {
+      "path": "payload/proposals/s4-source-limit.patch",
+      "bytes": 3508,
+      "sha256": "5cadc6c0892bfbff286a742a309570452b50566382cb0404ed85350fa2ac7e28"
+    },
+    {
+      "path": "payload/receipts/guard-preflight.json",
+      "bytes": 985,
+      "sha256": "d15ff1599529c849e3b527fb5dfc5256cb301671e84120fff61604be8ac4eeef"
+    },
+    {
+      "path": "payload/receipts/guard-materialization/REPORT.md",
+      "bytes": 4272,
+      "sha256": "4761845a1bc548f557ca207fb8ce17296c6b7af39e0418bb37f90ad3b7f81a3a"
+    },
+    {
+      "path": "payload/receipts/guard-materialization/current-head-binary-check.json",
+      "bytes": 1052,
+      "sha256": "8c745ffec565879e747d8a2cc98376a9c2d31ff54f187aa45f6a6422b58bc6e3"
+    },
+    {
+      "path": "payload/receipts/guard-materialization/binary-transport-blocker.json",
+      "bytes": 10861,
+      "sha256": "13365af70732f780efa34bf8bb3852f1a9e1cb9fc4c83fb1cff81efd4093673a"
+    },
+    {
+      "path": "payload/receipts/guard-materialization/additional-artifact-route-check.json",
+      "bytes": 1267,
+      "sha256": "c184f6319bc548469c150fd16477eea0147a97601ad22fa22dfe8f42699fcb9e"
+    },
+    {
+      "path": "payload/receipts/guard-materialization/exact-historical-artifact-path-check.json",
+      "bytes": 651,
+      "sha256": "161b2741a736ad28e2b3fd197246315bef1ec016060b9ebf4a3c85013a160c93"
+    },
+    {
+      "path": "payload/receipts/guard-materialization/materialization-verification.json",
+      "bytes": 2228,
+      "sha256": "b3a1b7599a284c0a2d2d1052c9e890cd25a8d5a47b8930159d636fda53dda35b"
+    },
+    {
+      "path": "payload/receipts/guard-materialization/checkout-index-attempt.json",
+      "bytes": 436,
+      "sha256": "6047449ec38988948e178547c383fb956d968db71003a7012779a418fbcf6921"
+    },
+    {
+      "path": "payload/receipts/guard-materialization/ancestry-receipt.json",
+      "bytes": 830,
+      "sha256": "c72f0fc8b0e774d1e6939f4691d8636893ef3868b46651bc6934b9d33850be05"
+    }
+  ],
+  "allowed_output_directory": "assembly-native-descriptors/operational-blocker-dossier",
+  "instructions": [
+    "Read all listed bytes without truncation. No recursive inventory or unlisted file reads, oracle, producer bodies or judge responses. This recipe and literal visible dispatch are also actual inputs.",
+    "Produce REPORT.md, evidence.json, dispatch-message.txt and response.md only in the exclusive output directory. Preserve exact byte/hash origin for every extracted fact.",
+    "Distinguish actual observed errors from unexecuted preconditions, old source-only prepare from still pending full12 prepare, prior guard checkout from final HEAD, common controls from own branch CI. Identify exact unblock owner/action with supporting authority, not speculation.",
+    "Do not upgrade a preparation, earlier audit or status label to actual run/success. Full12 prepare, seven actual consumers and final same-pair delivery review remain pending, not waived by this dossier.",
+    "Consolidate current evidence for runtime source-file cap, authority/policy, binary transport/guard and own CI visibility. Do not fetch, run commands except allowed file reads/hashing, patch product, propose alternate stores/readers, send agents or use network.",
+    "Every normative recommendation is grounded in supplied public authority. No new acceptance criterion, artificial blocker or final mission verdict. Mark any missing fact UNKNOWN and request exact extra file from root if necessary.",
+    "Final response exactly equals response.md without terminal LF. Input identities and output identities remain in evidence.json without self-reference."
+  ],
+  "prior_prepared_recipe": {
+    "path": "payload/recipes/operational-blocker-dossier.json",
+    "sha256": "c5a5cf17e8cc4a9fed433e28d60bd234577291bb4f9db3318956e9d9e90d5744",
+    "dispatch_state": "NOT_DISPATCHED"
+  },
+  "revision_reason": "Omit redundant178038-byte checkout log; direct checkout-index failure and verified materialization records already carry the required observed blocker. No prior recipe was dispatched."
+}

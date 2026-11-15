@@ -1,0 +1,94 @@
+{
+  "schema": "s1-03-derived-review-packet/v1",
+  "lot": "derived-research-maintenance-v1",
+  "artifact": "s1.subslice03.research-maintenance",
+  "layer": 4,
+  "bytes": 69043,
+  "sha256": "e675c3f31a8582ceadddbc296d9f12bd1811c08564de22c6aec91cf83eb2690b",
+  "git_blob_sha": "fb44a644f3f45f5ca808b3b4b5169f2f336331d8",
+  "body_bytes": 13958,
+  "body_sha256": "b57970febca6ecd87e6df64586e8a1bf557e112a0761ddc3afc58a92f4fc8025",
+  "literal_files": [
+    {
+      "label": "body",
+      "bytes": 13958,
+      "sha256": "b57970febca6ecd87e6df64586e8a1bf557e112a0761ddc3afc58a92f4fc8025"
+    },
+    {
+      "label": "evidence",
+      "bytes": 10527,
+      "sha256": "89985d77e2f0764246895d57e673a8846a1334a8695b8245b9003e17c6d8dc55"
+    },
+    {
+      "label": "task_recipe",
+      "bytes": 9481,
+      "sha256": "01cdad4971a1098115e9533d034b2d9af45836bfa37fbbb15d85144be389aa09"
+    },
+    {
+      "label": "common_recipe",
+      "bytes": 4017,
+      "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588"
+    },
+    {
+      "label": "public_plan",
+      "bytes": 5017,
+      "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad"
+    }
+  ],
+  "input_table": "Explicit mechanical projection of actual manifest; original remains preserved.",
+  "dispatch_state": "NOT_YET_DISPATCHED",
+  "pre_dispatch_public_authority_addition": {
+    "prior_prepared_packet_bytes": 59877,
+    "prior_prepared_packet_sha256": "64e5f496e8926596d5250068835510da19a5db34dec027f0132c24267bdd4da3",
+    "addition_bytes": 9166,
+    "literal_blocks": [
+      {
+        "path": "inputs/AGENTS.md",
+        "first_line": 1,
+        "last_line": 1,
+        "source_bytes": 16501,
+        "source_sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+        "bytes": 169,
+        "sha256": "5d4629babd7a5f60103e1ccedc0583a63b1804203cd0d735d71f5b648aae14f8"
+      },
+      {
+        "path": "inputs/AGENTS.md",
+        "first_line": 158,
+        "last_line": 178,
+        "source_bytes": 16501,
+        "source_sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+        "bytes": 3402,
+        "sha256": "3f932e5e2e0bbed1e970b5e835b9db650f467fdb6a82785c51fdc9e4d09a1b40"
+      },
+      {
+        "path": "inputs/AGENTS.md",
+        "first_line": 194,
+        "last_line": 205,
+        "source_bytes": 16501,
+        "source_sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+        "bytes": 674,
+        "sha256": "c297e5d83bc49bbb8b9b2ebfe0092931750c5fc716168d10f636d47e8ff2446d"
+      },
+      {
+        "path": "inputs/COMMON.md",
+        "first_line": 34,
+        "last_line": 41,
+        "source_bytes": 12959,
+        "source_sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+        "bytes": 1357,
+        "sha256": "b2fc6248c9227243e9887796c3d2c5f77558feb9c49564130106525918d3d2bc"
+      },
+      {
+        "path": "inputs/COMMON.md",
+        "first_line": 93,
+        "last_line": 103,
+        "source_bytes": 12959,
+        "source_sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+        "bytes": 1749,
+        "sha256": "bef8ade677e8942e95475d027441de79091460a91d0bb0d2d99fbdbfac12c05c"
+      }
+    ],
+    "prior_packet_never_dispatched": true,
+    "candidate_body_unchanged": true
+  }
+}

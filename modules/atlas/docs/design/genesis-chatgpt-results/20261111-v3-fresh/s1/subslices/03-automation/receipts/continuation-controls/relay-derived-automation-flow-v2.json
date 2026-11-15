@@ -1,0 +1,14 @@
+{
+  "id": "relay-derived-automation-flow-v2",
+  "kind": "LITERAL_REVIEW_TRANSPORT_ONLY",
+  "method": "collaboration.followup_task",
+  "target": "/root/review_relay",
+  "message": "Retome somente o transporte literal, sem autoria nem juízo semântico. A principal entrega agora exclusivamente a você os mesmos J1 e J2 para o lote derived-automation-flow-v2; ambos estão ociosos. J1 confirmou ACK_CONTINUIDADE_J1. Não há outro remetente concorrente.\n\nRaiz /workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390. Leia somente review-packets/derived-automation-flow-v2.md e seu .manifest.json, além dos próprios registros de transporte necessários. Pacote exato53852 bytes, SHA256 617afeacbade05f07406461052aea9e9dbb3ceeaecdc107a5eeda3db4c43a9e6. Corpo L2 v2 inteiro16541 bytes, SHA256 5b24037431881e96ddb5a872fd6541c94880d189d8b0c873bac9d8bd874d85c1. É a primeira revisão L2 pelos juízes; duas correções de fidelidade anteriores a esse juízo estão descritas, sem voto prévio L2. L1 pai v4 tem gate integral corrente do mesmo par. A principal leu integralmente corpo/evidência, conferiu24 inputs e capturou o FINAL original.\n\nCrie relay/derived-automation-flow-v2 com partes contíguas UTF-8 de no máximo28000 bytes, sem cortes de linha quando possível, e manifest com identidade integral e offsets. Envie a ambos /root/s1_03_j1 e /root/s1_03_j2 por collaboration.followup_task, chamadas sequenciais para respeitar slots. Juízes não usam ferramentas, não delegam e só decidem após FIM_DO_LOTE. Conserve a independência: nunca entregue resposta de um ao outro nem oracle; não consulte oracle.\n\nPreserve cada argumento REAL e retorno nativo visível, ACKs e FINALs antes de reutilizar os handles. Não atribua checksum local ao wire do host. Se errar o transporte, preserve o erro, corrija a ocorrência exata em chamada separada e conte ambas. Retorno truncado fica UNKNOWN até evidência nativa, sem reenviar só por truncamento. Não substitua texto por resumo. Capture j1-response.md e j2-response.md literalmente sem LF terminal, com metadados file absoluto/bytes/sha256/literal=true em dispatch-receipt.json.judgment_captures. Nenhum pedido de evidência autoriza buscar fontes sozinho: relate à principal. Ao terminar, informe todas as chamadas efetivas, os resultados e hashes, e devolva ambos os juízes à principal.",
+  "message_bytes": 2188,
+  "message_sha256": "a39e7825cd548d0adf12ad050b91d2e6976b1d4ad83627709bf7d6c6eb9f1039",
+  "tool_returned_normally": true,
+  "observed_at_utc": "2026-11-15T09:16:09.614335+00:00",
+  "tokens": "UNKNOWN",
+  "physical_attempts": "UNKNOWN",
+  "cost": "UNKNOWN"
+}

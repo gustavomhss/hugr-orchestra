@@ -1,0 +1,80 @@
+{
+  "schema": "s1-03-mechanical-review-supplement/v1",
+  "packet": {
+    "path": "review-packets/automation-population-current-v1.md",
+    "bytes": 120775,
+    "sha256": "4b9860993c5fd9b7492369e1b93946e241a9b2e9095ae2e763f7c0d8788b7511",
+    "git_blob_sha": "2fccf3c80fe75d243dbfb35d60be5a935c5d06fa"
+  },
+  "projection": {
+    "type": "complete_mechanical_current_population_projection",
+    "request": "RE-AUT1-01 current 204 individual rows",
+    "assembler": "/root",
+    "source_index": {
+      "path": "producers/automation/review-supplement-1-index.json",
+      "bytes": 246723,
+      "sha256": "b3a190b8f1bc17ea7f35fc0c53c5bb0f0f134570ac78f62a020452c3818d8902",
+      "git_blob_sha": "c42a17c0071f3c864f3e6eb11b5a7ae3fa0d37be"
+    },
+    "source_pointer": "#/shared_population_reconciliation",
+    "original_coverage": {
+      "path": "producers/automation/coverage.jsonl",
+      "bytes": 223656,
+      "sha256": "580c1885a277f378d9f5c44f0dd335e58cb4dc02f23bc002179103dc90dcfd5f",
+      "git_blob_sha": "055916a29be2005f94a202949080f7d6139bff28"
+    },
+    "current_coverage": {
+      "path": "payload/assembly/automation-coverage-v2.jsonl",
+      "bytes": 223801,
+      "sha256": "2aa8583096af86ec9db54c9a1e60db305f46aa4be5c9979bda577c5f8b50f13e",
+      "git_blob_sha": "b4df49ca578aff611edb26413a8135060ae80da2"
+    },
+    "erratum": {
+      "path": "payload/assembly/automation-coverage-erratum.json",
+      "bytes": 2555,
+      "sha256": "a65e0d4e74b6ce0805e5343152b8512426610baee468416e5e47a55641121876",
+      "git_blob_sha": "c1faea4cf50fdbc70afea171d37dd5f63b6f7b98"
+    },
+    "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "source_count": 204,
+    "unique_path_count": 204,
+    "family_counts": {
+      "actions": 155,
+      "board": 38,
+      "scheduled-task": 11
+    },
+    "read_depth_counts": {
+      "semantically_read_substantive_implementation": 115,
+      "orientation_inventory": 82,
+      "semantically_read_decisive_assertion_ranges": 7
+    },
+    "exact_original_fields": [
+      "path",
+      "git_blob_sha",
+      "sha256",
+      "bytes",
+      "role",
+      "read_depth",
+      "need",
+      "artifact",
+      "disposition",
+      "execution_status"
+    ],
+    "mechanical_fields": [
+      "body_anchors renamed from evidence_ids",
+      "body_sections joined from prior PLAN body_section; empty evidence_ids maps only to validation §13"
+    ],
+    "method": "All original projection rows in original order; only row 1 role uses the already supplied literal erratum. No row omitted, no read depth or test execution promoted. Body sections and anchors copied from the original projection. Legacy artifact labels remain literal producer data.",
+    "body_changes": false,
+    "product_tests_executed": false,
+    "scope": "Population evidence reusable for both same judges and all four automation review lots. Does not grant aggregate body acceptance."
+  },
+  "rows_sha256": "e048ae23d1fcf6ec6e18c8c894da687a97bf460bc5a6e42a6406b72ce08e1330",
+  "actual_procedure": {
+    "path": "scripts/assemble-automation-population-review.py",
+    "bytes": 4895,
+    "sha256": "3e3a1a60ac526d2618b8da61f57e87feb057c2f48e20bdafdcf8ff5e4ab9f8db",
+    "git_blob_sha": "3b68b0d1af262d7f2b7a0026e60af27dd7d744cf"
+  },
+  "dispatch_status": "PREPARED_NOT_DISPATCHED"
+}

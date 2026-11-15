@@ -1,0 +1,168 @@
+{
+  "schema": "s1-03-derived-public-finding-delta/v1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "artifact": {
+    "key": "s1.subslice03.automation-impact",
+    "layer": 3,
+    "need": "operational",
+    "version": "v2",
+    "scope": "orchestra.s1"
+  },
+  "public_finding": {
+    "id": "AI-L3-J1-01",
+    "location": "body.md §2, paragraph immediately after product relationship table",
+    "old_clause": "Alterar cron de CI exige examinar autoria/fonte; não invalida automaticamente DST ou claims locais.",
+    "problem": "This generalizes the authorship/source relation to both remote CI mechanisms. Accepted L2 v3 §4 Schedule remoto de CI distinguishes GitHub cron YAML on default branch edited through source.write, and GitLab pipeline schedule resource with its own identity, owner, timezone, ref and active.",
+    "required_correction": "Qualify impact by mechanism: authorship/source for editing GitHub cron YAML; resource contract and its identities/preconditions for GitLab pipeline schedule. Preserve no automatic invalidation of DST or claims of ScheduledTask. Use the unchanged accepted L2 only, no new source or tests.",
+    "scope": "One mandatory source-fidelity correction; the rest of the prior L3 was examined without other mandatory findings. Do not modify unrelated bytes."
+  },
+  "actual_correction_recipe": {
+    "local_path": "payload/recipes/derived/automation-impact-schedule-fidelity-v2.json",
+    "bytes": 5638,
+    "sha256": "b57d14c54df694d54256ff30b7c743050045affe6066fee68cc5e1aa27f16b4f",
+    "git_blob_sha": "fa0aa39d37a7908b250e165187ef654c523fb587"
+  },
+  "current_request": {
+    "local_path": "producers/derived-automation-impact/revisions/v2/request.txt",
+    "bytes": 678,
+    "sha256": "d296751f870708aa225c70a3a5262f7ecb0bfffc2bcb488b53d30cea73ef18ff",
+    "git_blob_sha": "259ed5422386136bbdfd3d621f441a7db2278d43"
+  },
+  "visible_dispatch": {
+    "local_path": "producers/derived-automation-impact/revisions/v2/dispatch-message.txt",
+    "bytes": 1497,
+    "sha256": "87adb6d9a36b17e43ec7d23965d35f56a6add3811c8aa2b5598934c8c7fd57aa",
+    "git_blob_sha": "6445672a1374aecc0a66f633f52660f96af9f44a"
+  },
+  "unchanged_accepted_semantic_predecessor": {
+    "key": "s1.subslice03.automation-flow",
+    "version": "v3",
+    "local_path": "producers/derived-automation-flow/body.md",
+    "bytes": 16570,
+    "sha256": "64d97f6da72c92a00ad8e3d91e20a42fd360dbedb502733c0548746462442287",
+    "git_blob_sha": "5af7e410ddfb4d1da1473a990fc25d27a7580303",
+    "section": "4. Actions: preservar a semântica do provider e do transporte",
+    "supporting_literals": [
+      "| Schedule remoto de CI | Cron no YAML da branch padrão; edição é `source.write`, sem play/pause independente | Recurso com ID/owner/timezone/ref/active; play retorna resourceID `unattributed`, sem pipelineID |",
+      "Autorização, scope e precondições devem corresponder à operação efetiva."
+    ]
+  },
+  "before": {
+    "local_path": "producers/derived-automation-impact/revisions/v2/history/body.md",
+    "bytes": 13454,
+    "sha256": "cc7ebd4319e301cf3100f83867a889c6295e52c7d0c39a769d2962bc251c9722",
+    "git_blob_sha": "5e345882926432b1049d4ef9ae781c2fb6a1e5f2",
+    "original_read_paths": [
+      "producers/derived-automation-impact/body.md"
+    ]
+  },
+  "after": {
+    "local_path": "producers/derived-automation-impact/body.md",
+    "bytes": 13666,
+    "sha256": "05aeecb75fb2c4f8afb34fc44cf315490d800ac976eed82100f279ec2402044d",
+    "git_blob_sha": "b803b5e7b626bcf746d5c15d7a0071a9f23de592"
+  },
+  "replacement": {
+    "finding_id": "AI-L3-J1-01",
+    "old_literal": "Alterar cron de CI exige examinar autoria/fonte; não invalida automaticamente DST ou claims locais.",
+    "new_literal": "Alterar o cron YAML da branch padrão no GitHub exige examinar autoria/fonte via `source.write`; alterar pipeline schedule no GitLab exige examinar o contrato do recurso, sua identidade, owner, timezone, ref, active e precondições. Essas mudanças não invalidam automaticamente DST ou claims de ScheduledTask.",
+    "occurrences_replaced": 1,
+    "before_byte_start": 2258,
+    "before_byte_end_exclusive": 2358,
+    "after_byte_start": 2258,
+    "after_byte_end_exclusive": 2570,
+    "old_utf8_bytes": 100,
+    "new_utf8_bytes": 312
+  },
+  "replacement_count": 1,
+  "inverse_equality": {
+    "operation": "Substituir new_literal por old_literal uma vez.",
+    "equals_preserved_l3_v1_bytes": true,
+    "restored_bytes": 13454,
+    "restored_sha256": "cc7ebd4319e301cf3100f83867a889c6295e52c7d0c39a769d2962bc251c9722",
+    "restored_git_blob_sha": "5e345882926432b1049d4ef9ae781c2fb6a1e5f2"
+  },
+  "unchanged_segments": [
+    {
+      "segment": 1,
+      "before_byte_start": 0,
+      "before_byte_end_exclusive": 2258,
+      "after_byte_start": 0,
+      "after_byte_end_exclusive": 2258,
+      "bytes": 2258,
+      "sha256": "6d0e85721e4a5dd8e24c072ffd86462d00620846867f1b70769b543841158757",
+      "equal": true
+    },
+    {
+      "segment": 2,
+      "before_byte_start": 2358,
+      "before_byte_end_exclusive": 13454,
+      "after_byte_start": 2570,
+      "after_byte_end_exclusive": 13666,
+      "bytes": 11096,
+      "sha256": "3639bc0eafa8f81cbcf091e00eb797a9b5b66850a7e3f1430b7aa8ce2f110fb9",
+      "equal": true
+    }
+  ],
+  "unchanged_body_bytes": 13354,
+  "all_other_body_bytes_preserved": true,
+  "history_preservation": [
+    {
+      "local_path": "producers/derived-automation-impact/revisions/v2/history/body.md",
+      "bytes": 13454,
+      "sha256": "cc7ebd4319e301cf3100f83867a889c6295e52c7d0c39a769d2962bc251c9722",
+      "git_blob_sha": "5e345882926432b1049d4ef9ae781c2fb6a1e5f2",
+      "original_read_paths": [
+        "producers/derived-automation-impact/body.md"
+      ]
+    },
+    {
+      "local_path": "producers/derived-automation-impact/revisions/v2/history/evidence.md",
+      "bytes": 12105,
+      "sha256": "2814a7361d26e4d99e4c77e16189baa53755ab8e8873c53a3fcddb96a67a8a5d",
+      "git_blob_sha": "87061f8933a3907565d04d346d9c2a7a0b60454d",
+      "original_read_paths": [
+        "producers/derived-automation-impact/evidence.md"
+      ]
+    },
+    {
+      "local_path": "producers/derived-automation-impact/revisions/v2/history/production-manifest.json",
+      "bytes": 41752,
+      "sha256": "fa3cb6ba4888e6449e2cb39d424e4e0dab2bc4e05f85c190fa1cfd7591e71c9c",
+      "git_blob_sha": "82ad7bdbf68ad3c8db46478e71e31f650f60bf98",
+      "original_read_paths": [
+        "producers/derived-automation-impact/production-manifest.json"
+      ]
+    },
+    {
+      "local_path": "producers/derived-automation-impact/revisions/v2/history/response.md",
+      "bytes": 2703,
+      "sha256": "85831ceada2e319c68ec37bc7e521de4d66c2aa1828e2df18a25886fe0a181f7",
+      "git_blob_sha": "377fdc2968753ba8d881097a808323b09237ad34",
+      "original_read_paths": [
+        "producers/derived-automation-impact/response.md"
+      ]
+    }
+  ],
+  "history_preservation_actions": [
+    {
+      "local_path": "producers/derived-automation-impact/revisions/v2/history/body.md",
+      "action": "CREATED_BYTE_IDENTICAL_COPY"
+    },
+    {
+      "local_path": "producers/derived-automation-impact/revisions/v2/history/evidence.md",
+      "action": "CREATED_BYTE_IDENTICAL_COPY"
+    },
+    {
+      "local_path": "producers/derived-automation-impact/revisions/v2/history/production-manifest.json",
+      "action": "CREATED_BYTE_IDENTICAL_COPY"
+    },
+    {
+      "local_path": "producers/derived-automation-impact/revisions/v2/history/response.md",
+      "action": "CREATED_BYTE_IDENTICAL_COPY"
+    }
+  ],
+  "verification_scope": "Somente identidade e comparação determinística de arquivos; nenhum teste ou operação de produto.",
+  "semantic_review_status": "SAME_PAIR_L3_CORRECTION_REVIEW_PENDING",
+  "l4_release": false
+}

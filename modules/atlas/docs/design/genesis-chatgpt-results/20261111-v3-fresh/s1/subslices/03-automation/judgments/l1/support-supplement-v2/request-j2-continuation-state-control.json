@@ -1,0 +1,4 @@
+{
+  "target": "/root/s1_03_j2",
+  "message": "CONTROLE_VISIVEL_DE_CONTINUACAO — execução 34269cf4-d631-41c5-a30b-85b0ec217390. Mesmo juiz e mesmo lote support-supplement-v2, sem novo conteúdo de julgamento. Não use ferramentas. O relay registrou os despachos das partes 1–5/7 e a correção literal da parte 2; a exibição do retorno da chamada da parte 5 foi truncada e seu ACK não está disponível na listagem atual. Confirme somente o último fragmento efetivamente recebido no seu próprio contexto e se a correção literal da parte 2 está registrada. Se faltar algum fragmento ou contexto, declare exatamente a falta. Esta mensagem não repete fragmentos, não contém FIM_DO_LOTE e não pede julgamento antecipado. Aguarde as partes 6–7 e o FIM externo."
+}

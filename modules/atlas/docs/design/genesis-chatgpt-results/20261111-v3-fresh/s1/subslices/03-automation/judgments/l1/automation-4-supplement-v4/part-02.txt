@@ -1,0 +1,1005 @@
+      "type": "prior_literal_range_reference",
+      "anchor_id": "S04",
+      "role": "previously_transported_implementation",
+      "source_path": "packages/core/src/scheduled-task/capability.ts",
+      "source_archive": "sources/packages/core/src/scheduled-task/capability.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "ab0410651446d3d1d98d9d8028a3ad79bb46aecb",
+      "source_sha256": "d024c2e05f0afc70fe49b801ee77b892a8097f5d499cd097d60f230cae67044e",
+      "source_bytes": 21721,
+      "first_line": 187,
+      "last_line": 198,
+      "source_byte_start": 8090,
+      "source_byte_end_exclusive": 8568,
+      "excerpt_bytes": 478,
+      "excerpt_sha256": "fb78aed49fc2f26818e0445282063659adc717e7cf339f9548adbf91358f66a0",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 173052,
+      "literal_content_byte_end_exclusive": 173530
+    },
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "S05",
+      "role": "previously_transported_implementation",
+      "source_path": "packages/core/src/scheduled-task/capability.ts",
+      "source_archive": "sources/packages/core/src/scheduled-task/capability.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "ab0410651446d3d1d98d9d8028a3ad79bb46aecb",
+      "source_sha256": "d024c2e05f0afc70fe49b801ee77b892a8097f5d499cd097d60f230cae67044e",
+      "source_bytes": 21721,
+      "first_line": 335,
+      "last_line": 364,
+      "source_byte_start": 14313,
+      "source_byte_end_exclusive": 16030,
+      "excerpt_bytes": 1717,
+      "excerpt_sha256": "80b4fd0d5c92c88f745bca334b92821e854805d700df9c7294210feffa0cd0ea",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 174069,
+      "literal_content_byte_end_exclusive": 175786
+    },
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "S05",
+      "role": "previously_transported_implementation",
+      "source_path": "packages/core/src/scheduled-task/capability.ts",
+      "source_archive": "sources/packages/core/src/scheduled-task/capability.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "ab0410651446d3d1d98d9d8028a3ad79bb46aecb",
+      "source_sha256": "d024c2e05f0afc70fe49b801ee77b892a8097f5d499cd097d60f230cae67044e",
+      "source_bytes": 21721,
+      "first_line": 455,
+      "last_line": 466,
+      "source_byte_start": 20046,
+      "source_byte_end_exclusive": 20852,
+      "excerpt_bytes": 806,
+      "excerpt_sha256": "293f0c3d7328a3a34be4fbb7553c3c3f23c667397a2ed78565946651ec9d734f",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 175919,
+      "literal_content_byte_end_exclusive": 176725
+    },
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "S06",
+      "role": "previously_transported_implementation",
+      "source_path": "packages/core/src/scheduled-task/capability.ts",
+      "source_archive": "sources/packages/core/src/scheduled-task/capability.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "ab0410651446d3d1d98d9d8028a3ad79bb46aecb",
+      "source_sha256": "d024c2e05f0afc70fe49b801ee77b892a8097f5d499cd097d60f230cae67044e",
+      "source_bytes": 21721,
+      "first_line": 207,
+      "last_line": 237,
+      "source_byte_start": 8822,
+      "source_byte_end_exclusive": 9929,
+      "excerpt_bytes": 1107,
+      "excerpt_sha256": "2f2fc041e6f5b956bb4dff5ef36d08a7ca0583c75eea95b04a8bf58040e5cee5",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 179107,
+      "literal_content_byte_end_exclusive": 180214
+    }
+  ]
+}
+```
+
+```json
+{"first_line":26,"last_line":136,"source_byte_start":1154,"source_byte_end_exclusive":6167,"bytes":5013,"sha256":"1c7027887df0566ac130ac9c4ffb86651ea003d44a20b65d088c2623b624ffd8"}
+```
+
+~~~~typescript
+/**
+ * Capability schedules (schedule_manage). Every call is scoped to `owner`: a schedule owned by anyone else
+ * is NotFound, exactly like an unknown ID. The legacy methods never see these rows.
+ */
+export interface Interface {
+  readonly create: (
+    owner: Capability.Owner,
+    input: CapabilityCreate,
+  ) => Effect.Effect<Schedule, ScheduledTaskShared.InvalidError>
+  readonly list: (owner: Capability.Owner) => Effect.Effect<Schedule[]>
+  /** Every capability schedule of the placement with its owner, for the operator surface; never a caller-scoped read. */
+  readonly placed: (
+    placement: Pick<Capability.Owner, "projectID" | "location">,
+  ) => Effect.Effect<{ owner: Capability.Owner; schedule: Schedule }[]>
+  readonly get: (owner: Capability.Owner, id: ID) => Effect.Effect<Schedule, ScheduledTaskShared.NotFoundError>
+  /** Bumps the revision, recomputes `next`, and revokes claims of older revisions not yet admitted. */
+  readonly update: (
+    owner: Capability.Owner,
+    id: ID,
+    input: CapabilityUpdate,
+  ) => Effect.Effect<Schedule, ScheduledTaskShared.NotFoundError | ScheduledTaskShared.InvalidError>
+  readonly pause: (owner: Capability.Owner, id: ID) => Effect.Effect<Schedule, ScheduledTaskShared.NotFoundError>
+  /** Rolls to the next future slot; a past once or an exhausted repeat cannot resume. */
+  readonly resume: (
+    owner: Capability.Owner,
+    id: ID,
+  ) => Effect.Effect<Schedule, ScheduledTaskShared.NotFoundError | ScheduledTaskShared.InvalidError>
+  readonly remove: (owner: Capability.Owner, id: ID) => Effect.Effect<void, ScheduledTaskShared.NotFoundError>
+  /** Manual run deduped on `manualKey`: a retry returns the same Session. Never moves `next` or counts. */
+  readonly run: (
+    owner: Capability.Owner,
+    id: ID,
+    manualKey: string,
+  ) => Effect.Effect<
+    { sessionID: SessionV2.ID; reused: boolean },
+    ScheduledTaskShared.NotFoundError | ScheduledTaskShared.RunError
+  >
+}
+
+// Capability halves of the Service layer. `plan`, `holds` and `present` serve the shared claim, dispatch and
+// settle path; `api` builds the public methods once that path exists.
+export function make(store: ScheduledTaskShared.Store, sessions: SessionV2.Interface) {
+  const { db, lease, immediate, find, lastRuns, advance, claim } = store
+
+  const owned = (owner: Capability.Owner, id: ID) =>
+    find(id).pipe(Effect.map((task) => (task && sameOwner(task, owner) ? task : undefined)))
+
+  const schedules = Effect.fn("ScheduledTask.schedules")(function* (tasks: Task[]) {
+    const runs = yield* lastRuns(tasks)
+    return tasks.map((task) =>
+      toSchedule(
+        task,
+        runs.find((run) => run.task_id === task.id),
+      ),
+    )
+  })
+
+  const getOwned = Effect.fn("ScheduledTask.getOwned")(function* (owner: Capability.Owner, id: ID) {
+    const task = yield* owned(owner, id).pipe(Effect.orDie)
+    if (!task) return yield* new ScheduledTaskShared.NotFoundError({ id })
+    return (yield* schedules([task]))[0]!
+  })
+
+  // Capability planning under the write lock. A run moves `next` to the claimed slot, so the overtaken slots are
+  // counted once even when a stopped claim is voided and the slot planned again.
+  const beginCapability = Effect.fn("ScheduledTask.beginCapability")(function* (task: Task, now: number) {
+    const timing = capabilityTiming(task)
+    const due = ScheduledTaskCapabilityModel.plan(timing, now)
+    if (due.type === "wait") return { type: "idle" } as const
+    const skipped = task.skipped + due.skipped
+    if (due.type === "skip") {
+      yield* advance(task, { skipped, ...following(timing, now) }, now)
+      return { type: "idle" } as const
+    }
+    const held = yield* db
+      .select({ state: ScheduledTaskRunTable.state })
+      .from(ScheduledTaskRunTable)
+      .where(
+        and(
+          eq(ScheduledTaskRunTable.task_id, task.id),
+          eq(ScheduledTaskRunTable.revision, task.revision),
+          eq(ScheduledTaskRunTable.slot, due.slot),
+        ),
+      )
+      .get()
+    if (held?.state === "running") return { type: "idle" } as const
+    // Served before (the schedule was set back to it): move past it without serving it again.
+    if (held) {
+      yield* advance(task, { skipped, ...following(timing, due.slot) }, now)
+      return { type: "idle" } as const
+    }
+    yield* advance(task, { skipped, next: due.slot }, now)
+    return { type: "claimed", claim: yield* claim(task, due.slot, now) } as const
+  })
+
+  const holds = (claimed: Claim) =>
+    db
+      .select({
+        state: ScheduledTaskRunTable.state,
+        lease: ScheduledTaskRunTable.owner,
+        slot: ScheduledTaskRunTable.slot,
+        claimed: ScheduledTaskRunTable.revision,
+        revision: ScheduledTaskTable.revision,
+        enabled: ScheduledTaskTable.enabled,
+      })
+      .from(ScheduledTaskRunTable)
+      .innerJoin(ScheduledTaskTable, eq(ScheduledTaskTable.id, ScheduledTaskRunTable.task_id))
+      .where(eq(ScheduledTaskRunTable.id, claimed.id))
+      .get()
+      .pipe(
+        Effect.orDie,
+~~~~
+
+```json
+{"first_line":146,"last_line":186,"source_byte_start":6460,"source_byte_end_exclusive":8090,"bytes":1630,"sha256":"64320d4caa83cc36f8a38360975c890789fbdee73a6f4e2e6e233d93ed722e2e"}
+```
+
+~~~~typescript
+
+  const present = (owner: Capability.Owner) =>
+    sessions.get(owner.sessionID).pipe(
+      Effect.map(
+        (session) =>
+          session.projectID === owner.projectID &&
+          session.location.directory === owner.location.directory &&
+          session.location.workspaceID === owner.location.workspaceID &&
+          session.agent === owner.agentID,
+      ),
+      Effect.catchTag("Session.NotFoundError", () => Effect.succeed(false)),
+    )
+
+  // Runs `edit` on the owner's schedule under the write lock, then reads it back. Errors come back as values so
+  // the transaction commits only what the edit wrote.
+  const change = <E extends ScheduledTaskShared.InvalidError>(
+    owner: Capability.Owner,
+    id: ID,
+    edit: (task: Task, now: number) => Effect.Effect<E | undefined, unknown>,
+  ) =>
+    Effect.gen(function* () {
+      const now = yield* Clock.currentTimeMillis
+      const failed = yield* immediate(
+        Effect.gen(function* () {
+          const task = yield* owned(owner, id)
+          if (!task) return new ScheduledTaskShared.NotFoundError({ id })
+          return yield* edit(task, now)
+        }),
+      )
+      if (failed) return yield* failed
+      return yield* getOwned(owner, id)
+    })
+
+  // Marks the task's running claims in `scope` whose prompt was never admitted as revoked.
+  const revoke = (task: Task, now: number, scope: SQL) =>
+    Effect.gen(function* () {
+      const pending = yield* db
+        .select()
+        .from(ScheduledTaskRunTable)
+        .where(and(eq(ScheduledTaskRunTable.task_id, task.id), eq(ScheduledTaskRunTable.state, "running"), scope))
+        .all()
+~~~~
+
+```json
+{"first_line":199,"last_line":206,"source_byte_start":8568,"source_byte_end_exclusive":8822,"bytes":254,"sha256":"1842c7bf1d7d2345a0c57e442e7de986d733a9a73c8e668c44d613822197fbc8"}
+```
+
+~~~~typescript
+      )
+    })
+
+  // The public methods, over the shared dispatch and settle path.
+  const api = (ops: {
+    dispatch: (claimed: Claim) => Effect.Effect<Outcome>
+    settle: (claimed: Claim, outcome: Outcome) => Effect.Effect<void>
+  }): Interface => ({
+~~~~
+
+```json
+{"first_line":238,"last_line":334,"source_byte_start":9929,"source_byte_end_exclusive":14313,"bytes":4384,"sha256":"6c43575547ff43f80cdda409a4ef7257ad63911f70b9d6dc52c56387b3de46e8"}
+```
+
+~~~~typescript
+    list: Effect.fn("ScheduledTask.capability.list")(function* (owner) {
+      const tasks = yield* db
+        .select()
+        .from(ScheduledTaskTable)
+        .where(
+          and(eq(ScheduledTaskTable.directory, owner.location.directory), eq(ScheduledTaskTable.policy, "capability")),
+        )
+        .orderBy(asc(ScheduledTaskTable.time_created), asc(ScheduledTaskTable.id))
+        .all()
+        .pipe(Effect.orDie)
+      return yield* schedules(tasks.filter((task) => sameOwner(task, owner)))
+    }),
+    placed: Effect.fn("ScheduledTask.capability.placed")(function* (placement) {
+      const tasks = yield* db
+        .select()
+        .from(ScheduledTaskTable)
+        .where(
+          and(eq(ScheduledTaskTable.directory, placement.location.directory), eq(ScheduledTaskTable.policy, "capability")),
+        )
+        .orderBy(asc(ScheduledTaskTable.time_created), asc(ScheduledTaskTable.id))
+        .all()
+        .pipe(Effect.orDie)
+      const found = tasks.flatMap((task) => {
+        const owner = task.policy === "capability" ? task.owner : null
+        if (!owner || owner.projectID !== placement.projectID || owner.location.directory !== placement.location.directory ||
+          owner.location.workspaceID !== placement.location.workspaceID) return []
+        return [{ task, owner }]
+      })
+      const listed = yield* schedules(found.map((item) => item.task))
+      return found.map((item, index) => ({ owner: item.owner, schedule: listed[index]! }))
+    }),
+    get: getOwned,
+    update: (owner, id, input) =>
+      change(owner, id, (task, now) =>
+        Effect.gen(function* () {
+          const current = capabilityTiming(task)
+          const cadence = input.cadence ?? current.cadence
+          const timezone = input.timezone ?? task.timezone
+          const catchUp = input.catchUp ?? current.catchUp
+          const next = firstSlot({ cadence, timezone, catchUp, enabled: task.enabled }, now)
+          if (typeof next !== "number") return next
+          const revision = task.revision + 1
+          const repeat = input.repeat === undefined ? task.repeat_limit : input.repeat
+          // A limit at or below the runs already admitted exhausts the schedule now.
+          const exhausted = repeat !== null && task.runs >= repeat
+          yield* advance(
+            task,
+            {
+              ...(exhausted ? { enabled: false, disabled_reason: "exhausted" as const } : {}),
+              name: input.name ?? task.name,
+              prompt: input.prompt ?? task.prompt,
+              ...encode(cadence),
+              timezone,
+              catch_up: catchUp,
+              repeat_limit: repeat,
+              next,
+              revision,
+            },
+            now,
+          )
+          // Unstarted claims of older revisions never admit their prompt; an admitted one keeps its receipt.
+          yield* revoke(task, now, lt(ScheduledTaskRunTable.revision, revision))
+        }),
+      ),
+    // Pausing revokes unstarted slot claims; a manual run may still start while paused.
+    pause: (owner, id) =>
+      change<never>(owner, id, (task, now) =>
+        Effect.gen(function* () {
+          yield* advance(task, { enabled: false }, now)
+          yield* revoke(task, now, isNotNull(ScheduledTaskRunTable.slot))
+          return undefined
+        }),
+      ),
+    resume: (owner, id) =>
+      change(owner, id, (task, now) =>
+        Effect.gen(function* () {
+          if (task.enabled) return
+          if (task.repeat_limit !== null && task.runs >= task.repeat_limit)
+            return new ScheduledTaskShared.InvalidError({
+              field: "repeat",
+              message: "The schedule used all its runs; raise repeat first.",
+            })
+          const next = firstSlot({ ...capabilityTiming(task), enabled: true }, now)
+          if (typeof next !== "number") return next
+          yield* advance(task, { enabled: true, disabled_reason: null, next }, now)
+        }),
+      ),
+    remove: Effect.fn("ScheduledTask.capability.remove")(function* (owner, id) {
+      const removed = yield* immediate(
+        Effect.gen(function* () {
+          if (!(yield* owned(owner, id))) return false
+          yield* db.delete(ScheduledTaskTable).where(eq(ScheduledTaskTable.id, id)).run()
+          return true
+        }),
+      )
+      if (!removed) return yield* new ScheduledTaskShared.NotFoundError({ id })
+    }),
+~~~~
+
+```json
+{"first_line":365,"last_line":383,"source_byte_start":16030,"source_byte_end_exclusive":16692,"bytes":662,"sha256":"09161e9144038bff39c188ff458f7d3ed370468d4ad800ecce624baa0f6a0e00"}
+```
+
+~~~~typescript
+        yield* ops.settle(begun.claim, outcome)
+        return { sessionID: outcome.sessionID, reused: false }
+      }
+      // Nothing was admitted, so the same call may retry; a missing owner disables the schedule.
+      yield* ops.settle(begun.claim, outcome.type === "revoked" ? outcome : { type: "void" })
+      return yield* new ScheduledTaskShared.RunError({
+        reason:
+          outcome.type === "failed"
+            ? outcome.error
+            : outcome.type === "void"
+              ? "The schedule changed before the run started."
+              : "owner-missing",
+      })
+    }),
+  })
+
+  return { plan: beginCapability, holds, present, api }
+}
+
+~~~~
+
+```json
+{"first_line":395,"last_line":454,"source_byte_start":17109,"source_byte_end_exclusive":20046,"bytes":2937,"sha256":"f8756018e309db2da3257614bf3ffc3a98567199556837c6eb067b384a9e9f9e"}
+```
+
+~~~~typescript
+
+// Storage of a capability cadence: once keeps its time in `next`; weekly packs `day * 1440 + minute of day`.
+function encode(cadence: CapabilityScheduleContract.Cadence) {
+  const columns = { minute: 0, interval_minutes: null, cron: null }
+  if (cadence.kind === "interval")
+    return { ...columns, cadence: "interval" as const, interval_minutes: cadence.minutes }
+  if (cadence.kind === "daily") return { ...columns, cadence: "daily" as const, minute: clockMinute(cadence.time) }
+  if (cadence.kind === "weekly")
+    return { ...columns, cadence: "weekly" as const, minute: cadence.day * 1440 + clockMinute(cadence.time) }
+  if (cadence.kind === "cron") return { ...columns, cadence: "cron" as const, cron: cadence.expression }
+  return { ...columns, cadence: "once" as const }
+}
+
+function decode(task: Task): CapabilityScheduleContract.Cadence {
+  const time = clock(task.minute % 1440)
+  if (task.cadence === "interval") return { kind: "interval", minutes: task.interval_minutes ?? 0 }
+  if (task.cadence === "daily") return { kind: "daily", time }
+  if (task.cadence === "weekly") return { kind: "weekly", day: Math.floor(task.minute / 1440), time }
+  if (task.cadence === "cron") return { kind: "cron", expression: task.cron ?? "" }
+  return { kind: "once", at: task.next }
+}
+
+function capabilityTiming(task: Task): ScheduledTaskCapabilityModel.Timing {
+  return {
+    cadence: decode(task),
+    timezone: task.timezone,
+    next: task.next,
+    enabled: task.enabled,
+    catchUp: task.catch_up ?? "latest",
+  }
+}
+
+// The first slot of a new or edited definition; an enabled once must lie ahead. Errors come back as values.
+function firstSlot(
+  input: Omit<ScheduledTaskCapabilityModel.Timing, "next">,
+  now: number,
+): number | ScheduledTaskShared.InvalidError {
+  if (!ScheduledTaskModel.validZone(input.timezone))
+    return new ScheduledTaskShared.InvalidError({ field: "timezone", message: `Unknown time zone: ${input.timezone}` })
+  if (input.cadence.kind === "cron" && !ScheduledTaskCapabilityModel.parseCron(input.cadence.expression))
+    return new ScheduledTaskShared.InvalidError({
+      field: "cadence",
+      message: `Invalid cron expression: ${input.cadence.expression}`,
+    })
+  if (input.cadence.kind === "once")
+    return input.enabled && input.cadence.at <= now
+      ? new ScheduledTaskShared.InvalidError({ field: "cadence", message: "A one-off schedule needs a future time." })
+      : input.cadence.at
+  return (
+    ScheduledTaskCapabilityModel.nextAfter({ ...input, next: now }, now) ??
+    new ScheduledTaskShared.InvalidError({ field: "cadence", message: "The cadence never fires." })
+  )
+}
+
+// The slot after `after`, or disabled once none is left (a once that ran or was skipped).
+function following(timing: ScheduledTaskCapabilityModel.Timing, after: number) {
+  const next = ScheduledTaskCapabilityModel.nextAfter(timing, after)
+  return next === undefined ? { enabled: false } : { next }
+}
+
+~~~~
+
+```json
+{"first_line":467,"last_line":493,"source_byte_start":20852,"source_byte_end_exclusive":21721,"bytes":869,"sha256":"9bbd057398bf713606117e37efea9ed410c6385c32eedb91fec7659d92153eeb"}
+```
+
+~~~~typescript
+
+function toSchedule(task: Task, run: RunRow | undefined): Schedule {
+  return {
+    id: task.id,
+    revision: task.revision,
+    name: task.name,
+    prompt: task.prompt,
+    cadence: decode(task),
+    timezone: task.timezone,
+    catchUp: task.catch_up ?? "latest",
+    ...(task.repeat_limit === null ? {} : { repeat: task.repeat_limit }),
+    enabled: task.enabled,
+    ...(task.disabled_reason === null ? {} : { disabledReason: task.disabled_reason }),
+    ...(task.enabled ? { next: task.next } : {}),
+    runs: task.runs,
+    skipped: task.skipped,
+    ...(run ? { last: ScheduledTaskShared.toRun(run) } : {}),
+  }
+}
+
+function clockMinute(time: string) {
+  return Number(time.slice(0, 2)) * 60 + Number(time.slice(3, 5))
+}
+
+function clock(minute: number) {
+  return `${String(Math.floor(minute / 60)).padStart(2, "0")}:${String(minute % 60).padStart(2, "0")}`
+}
+~~~~
+
+## AUT4-C03
+
+```json
+{
+  "block_id": "AUT4-C03",
+  "type": "literal_source_chain",
+  "requests": [
+    "RE-AUT4-01",
+    "RE-AUT4-03"
+  ],
+  "body_anchors": [
+    "S01",
+    "S04",
+    "S05"
+  ],
+  "requested_subject": "Errors, claim/outcome, immediate transaction, legacy filtering, deterministic IDs and persisted claim snapshot",
+  "path": "packages/core/src/scheduled-task/shared.ts",
+  "archive": "sources/packages/core/src/scheduled-task/shared.ts",
+  "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_git_blob_sha": "b997b9d2bb4246d3101c243fe0217ce9fcc30885",
+  "source_sha256": "b7ca14671135a068909b9163fa8c21d1ce2487f5d54d08e09adcd7585acf5540",
+  "source_bytes": 4949,
+  "required_source_line_ranges": [
+    [
+      13,
+      144
+    ]
+  ],
+  "prior_literal_ranges": []
+}
+```
+
+```json
+{"first_line":13,"last_line":144,"source_byte_start":514,"source_byte_end_exclusive":4949,"bytes":4435,"sha256":"e94fc61db55616c640f9715ddf5fa66e4598c383b789b2602d14dbf4d8683305"}
+```
+
+~~~~typescript
+export class NotFoundError extends Schema.TaggedErrorClass<NotFoundError>()("ScheduledTask.NotFoundError", {
+  id: Schema.String,
+}) {}
+
+export class InvalidError extends Schema.TaggedErrorClass<InvalidError>()("ScheduledTask.InvalidError", {
+  field: Schema.String,
+  message: Schema.String,
+}) {}
+
+export class ConflictError extends Schema.TaggedErrorClass<ConflictError>()("ScheduledTask.ConflictError", {
+  id: Schema.String,
+}) {}
+
+export class RunError extends Schema.TaggedErrorClass<RunError>()("ScheduledTask.RunError", {
+  reason: Schema.String,
+}) {}
+
+export type Task = typeof ScheduledTaskTable.$inferSelect
+export type LegacyTask = Task & { cadence: ScheduledTask.Cadence }
+export type RunRow = typeof ScheduledTaskRunTable.$inferSelect
+export type Claim = {
+  readonly id: string
+  readonly task: Task
+  readonly sessionID: SessionV2.ID
+  readonly messageID: SessionMessage.ID
+  readonly prompt: string
+}
+export type Outcome =
+  | { type: "started"; sessionID: SessionV2.ID }
+  | { type: "failed"; error: string }
+  | { type: "revoked" }
+  | { type: "void" }
+
+export const LEGACY = eq(ScheduledTaskTable.policy, "legacy-browser")
+
+export type Store = ReturnType<typeof store>
+
+// The rows both policies share. `lease` marks this process's claims: a restarted process takes its old claims
+// over once their lease ends.
+export function store(db: Database.Interface["db"], lease: string) {
+  const immediate = <A, E>(effect: Effect.Effect<A, E>) =>
+    db.transaction(() => effect, { behavior: "immediate" }).pipe(Effect.orDie)
+
+  // A directory-scoped lookup serves the legacy routes, which never see capability rows.
+  const find = (id: ScheduledTask.ID, directory?: AbsolutePath) =>
+    db
+      .select()
+      .from(ScheduledTaskTable)
+      .where(
+        directory
+          ? and(eq(ScheduledTaskTable.id, id), eq(ScheduledTaskTable.directory, directory), LEGACY)
+          : eq(ScheduledTaskTable.id, id),
+      )
+      .get()
+
+  const lastRuns = (tasks: Task[]) =>
+    tasks.length === 0
+      ? Effect.succeed([])
+      : db
+          .select()
+          .from(ScheduledTaskRunTable)
+          .where(
+            and(
+              inArray(
+                ScheduledTaskRunTable.task_id,
+                tasks.map((task) => task.id),
+              ),
+              inArray(ScheduledTaskRunTable.state, ["started", "failed"]),
+            ),
+          )
+          .orderBy(desc(ScheduledTaskRunTable.time_settled))
+          .all()
+          .pipe(Effect.orDie)
+
+  const advance = (task: Task, set: Partial<Task>, now: number) =>
+    db
+      .update(ScheduledTaskTable)
+      .set({ ...set, time_updated: now })
+      .where(eq(ScheduledTaskTable.id, task.id))
+      .run()
+
+  const claim = Effect.fn("ScheduledTask.claim")(function* (
+    task: Task,
+    slot: number | undefined,
+    now: number,
+    manualKey?: string,
+  ) {
+    // Capability IDs derive from (task, revision, slot) or the manual key, so an edit never reuses a Session.
+    const ids =
+      task.policy === "capability"
+        ? ScheduledTaskModel.slotIDs(
+            slot === undefined ? `${task.id}:manual:${manualKey}` : `${task.id}:${task.revision}`,
+            slot ?? task.time_created,
+          )
+        : slot === undefined
+          ? undefined
+          : ScheduledTaskModel.slotIDs(task.id, slot)
+    const claimed = {
+      id: crypto.randomUUID(),
+      task,
+      sessionID: ids ? SessionV2.ID.make(ids.session) : SessionV2.ID.create(),
+      messageID: ids ? SessionMessage.ID.make(ids.message) : SessionMessage.ID.create(),
+      prompt: task.prompt,
+    }
+    yield* db
+      .insert(ScheduledTaskRunTable)
+      .values({
+        id: claimed.id,
+        task_id: task.id,
+        slot: slot ?? null,
+        revision: task.revision,
+        manual_key: manualKey ?? null,
+        state: "running",
+        session_id: claimed.sessionID,
+        message_id: claimed.messageID,
+        prompt: claimed.prompt,
+        owner: lease,
+        time_claimed: now,
+      })
+      .run()
+    return claimed
+  })
+
+  return { db, lease, immediate, find, lastRuns, advance, claim }
+}
+
+export function toRun(run: RunRow): ScheduledTask.Run {
+  const time = run.time_settled ?? run.time_claimed
+  const slot = run.slot === null ? {} : { slot: run.slot }
+  if (run.state === "failed") return { outcome: "failed", time, ...slot, error: run.error ?? "" }
+  return { outcome: "started", time, ...slot, sessionID: run.session_id }
+}
+~~~~
+
+## AUT4-C04
+
+```json
+{
+  "block_id": "AUT4-C04",
+  "type": "literal_source_chain",
+  "requests": [
+    "RE-AUT4-01",
+    "RE-AUT4-03"
+  ],
+  "body_anchors": [
+    "S01"
+  ],
+  "requested_subject": "Both task policies and complete claim schema, cascade and unique dedupe indexes",
+  "path": "packages/core/src/scheduled-task/sql.ts",
+  "archive": "sources/packages/core/src/scheduled-task/sql.ts",
+  "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_git_blob_sha": "f7b58d09202d0eb4026623b587363798a0908874",
+  "source_sha256": "822bcafeaf764d56be959c3c5184e2e3e76bbca52ae6c678477728e0df3899a7",
+  "source_bytes": 3559,
+  "required_source_line_ranges": [
+    [
+      1,
+      76
+    ]
+  ],
+  "prior_literal_ranges": [
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "S01",
+      "role": "previously_transported_implementation",
+      "source_path": "packages/core/src/scheduled-task/sql.ts",
+      "source_archive": "sources/packages/core/src/scheduled-task/sql.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "f7b58d09202d0eb4026623b587363798a0908874",
+      "source_sha256": "822bcafeaf764d56be959c3c5184e2e3e76bbca52ae6c678477728e0df3899a7",
+      "source_bytes": 3559,
+      "first_line": 70,
+      "last_line": 75,
+      "source_byte_start": 3273,
+      "source_byte_end_exclusive": 3557,
+      "excerpt_bytes": 284,
+      "excerpt_sha256": "7cec1d85454e0ca448210594cb2a56a6b45ae4ab9a81c02406db33b000f428fc",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 160550,
+      "literal_content_byte_end_exclusive": 160834
+    }
+  ]
+}
+```
+
+```json
+{"first_line":1,"last_line":69,"source_byte_start":0,"source_byte_end_exclusive":3273,"bytes":3273,"sha256":"d2577cae4e803dacec3727f13e77a1207e67fdbeb7ea78e5ede26f1ea1f7fcb8"}
+```
+
+~~~~typescript
+import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
+import type { Capability } from "@orchestra/schema/capability"
+import type { ScheduledTask } from "@orchestra/schema/scheduled-task"
+import { absoluteColumn } from "../database/path"
+import { Timestamps } from "../database/schema.sql"
+import type { SessionMessage } from "../session/message"
+import type { SessionSchema } from "../session/schema"
+
+export const ScheduledTaskTable = sqliteTable(
+  "scheduled_task",
+  {
+    id: text().$type<ScheduledTask.ID>().primaryKey(),
+    directory: absoluteColumn().notNull(),
+    name: text().notNull(),
+    prompt: text().notNull(),
+    // Capability rows add interval and cron. Weekly capability rows encode `day * 1440 + minute of day` in `minute`.
+    cadence: text().$type<ScheduledTask.Cadence | "interval" | "cron">().notNull(),
+    timezone: text().notNull(),
+    minute: integer().notNull(),
+    next: integer().notNull(),
+    enabled: integer({ mode: "boolean" }).notNull(),
+    runs: integer().notNull(),
+    missed: integer(),
+    // Capability schedules (schedule_manage) carry an owner and a revision; legacy-browser tasks keep the
+    // imported device semantics and stay invisible to the capability leaf.
+    policy: text().$type<"legacy-browser" | "capability">().notNull().default("legacy-browser"),
+    revision: integer().notNull().default(0),
+    owner: text({ mode: "json" }).$type<Capability.Owner>(),
+    interval_minutes: integer(),
+    cron: text(),
+    catch_up: text().$type<"latest" | "skip">(),
+    repeat_limit: integer(),
+    // Slots never run because a later slot overtook them or the catch-up policy skipped them.
+    skipped: integer().notNull().default(0),
+    disabled_reason: text().$type<"exhausted" | "owner-missing">(),
+    ...Timestamps,
+  },
+  (table) => [
+    index("scheduled_task_directory_idx").on(table.directory),
+    index("scheduled_task_due_idx").on(table.enabled, table.next),
+  ],
+)
+
+// One row per run. A slot run is unique per task and slot, which is what keeps a slot to one run across
+// ticks, Run now, processes sharing the database and restarts. Extra runs (Run now) have no slot.
+export const ScheduledTaskRunTable = sqliteTable(
+  "scheduled_task_run",
+  {
+    id: text().primaryKey(),
+    task_id: text()
+      .$type<ScheduledTask.ID>()
+      .notNull()
+      .references(() => ScheduledTaskTable.id, { onDelete: "cascade" }),
+    slot: integer(),
+    // Slot runs are unique per task, revision and slot; an edit starts a new revision.
+    revision: integer().notNull().default(0),
+    // Manual runs of capability schedules dedupe on the caller's key; they never consume a slot.
+    manual_key: text(),
+    state: text().$type<"running" | "started" | "failed" | "revoked">().notNull(),
+    session_id: text().$type<SessionSchema.ID>().notNull(),
+    // What a running claim dispatches, so a claim taken over after a crash retries the exact prompt.
+    // Runs imported from device storage do not know them.
+    message_id: text().$type<SessionMessage.ID>(),
+    prompt: text(),
+    error: text(),
+    // Process that holds a running claim; a claim older than its lease may be taken over.
+    owner: text(),
+    time_claimed: integer().notNull(),
+    time_settled: integer(),
+~~~~
+
+```json
+{"first_line":76,"last_line":76,"source_byte_start":3557,"source_byte_end_exclusive":3559,"bytes":2,"sha256":"fafba0527c3953c4b6e0e5b5739ba83612f8053bcdc9466730193cd1d590b408"}
+```
+
+~~~~typescript
+)
+~~~~
+
+## AUT4-C05
+
+```json
+{
+  "block_id": "AUT4-C05",
+  "type": "literal_source_chain",
+  "requests": [
+    "RE-AUT4-01"
+  ],
+  "body_anchors": [
+    "S01"
+  ],
+  "requested_subject": "Scope acquire/release, previous binding restoration, missing binding failure and forwarding",
+  "path": "packages/core/src/scheduled-task/port.ts",
+  "archive": "sources/packages/core/src/scheduled-task/port.ts",
+  "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_git_blob_sha": "8ea347436e18a93f8dc43926c7fb84108fc0a20c",
+  "source_sha256": "5fb969a9e8a030b02e31ff1678e1e0c2887c4e30c3078a5016642131de95ead7",
+  "source_bytes": 2092,
+  "required_source_line_ranges": [
+    [
+      7,
+      41
+    ]
+  ],
+  "prior_literal_ranges": []
+}
+```
+
+```json
+{"first_line":7,"last_line":41,"source_byte_start":206,"source_byte_end_exclusive":2092,"bytes":1886,"sha256":"2a470da5a8694148251c1f3fb021e8cb6fbf862cdf98763e9b2d6d266a38cdf5"}
+```
+
+~~~~typescript
+// Capability tools reach the scheduler through this port so the Location graph never imports the
+// Session graph (Session -> LocationServiceMap -> capability tools would close a type cycle). Location
+// graphs hoist their own global nodes, so the running scheduler binds itself here for the process.
+export class Service extends Context.Service<Service, ScheduledTaskCapability.Interface>()("@orchestra/v2/ScheduledTaskPort") {}
+
+const state: { bound?: ScheduledTaskCapability.Interface } = {}
+
+/** Called by the scheduler layer; the previous binding is restored when that layer's Scope closes. */
+export const bind = (api: ScheduledTaskCapability.Interface) => Effect.acquireRelease(
+  Effect.sync(() => {
+    const previous = state.bound
+    state.bound = api
+    return previous
+  }),
+  (previous) => Effect.sync(() => {
+    state.bound = previous
+  }),
+)
+
+const current = Effect.suspend(() => state.bound ? Effect.succeed(state.bound) : Effect.die("schedule_manage requires the host scheduler"))
+export const node = makeGlobalNode({
+  service: Service,
+  layer: Layer.succeed(Service, Service.of({
+    create: (owner, input) => Effect.flatMap(current, (api) => api.create(owner, input)),
+    list: (owner) => Effect.flatMap(current, (api) => api.list(owner)),
+    placed: (placement) => Effect.flatMap(current, (api) => api.placed(placement)),
+    get: (owner, id) => Effect.flatMap(current, (api) => api.get(owner, id)),
+    update: (owner, id, input) => Effect.flatMap(current, (api) => api.update(owner, id, input)),
+    pause: (owner, id) => Effect.flatMap(current, (api) => api.pause(owner, id)),
+    resume: (owner, id) => Effect.flatMap(current, (api) => api.resume(owner, id)),
+    remove: (owner, id) => Effect.flatMap(current, (api) => api.remove(owner, id)),
+    run: (owner, id, key) => Effect.flatMap(current, (api) => api.run(owner, id, key)),
+  })),
+  deps: [],
+})
+~~~~
+
+## AUT4-C06
+
+```json
+{
+  "block_id": "AUT4-C06",
+  "type": "literal_source_chain",
+  "requests": [
+    "RE-AUT4-01",
+    "RE-AUT4-02",
+    "RE-AUT4-03"
+  ],
+  "body_anchors": [
+    "S01",
+    "S02"
+  ],
+  "requested_subject": "Complete legacy model: plan/record/skip/resume, local DST conversion and deterministic noncryptographic IDs",
+  "path": "packages/core/src/scheduled-task/model.ts",
+  "archive": "sources/packages/core/src/scheduled-task/model.ts",
+  "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_git_blob_sha": "a5560b15853e2941c31bf9e803560bbea0c24c4e",
+  "source_sha256": "f29962a40bd89bca23cff892d3ff01fcfa8e660b390c4831c88ca7cc695f0b5d",
+  "source_bytes": 6670,
+  "required_source_line_ranges": [
+    [
+      1,
+      140
+    ]
+  ],
+  "prior_literal_ranges": [
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "S02",
+      "role": "previously_transported_implementation",
+      "source_path": "packages/core/src/scheduled-task/model.ts",
+      "source_archive": "sources/packages/core/src/scheduled-task/model.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "a5560b15853e2941c31bf9e803560bbea0c24c4e",
+      "source_sha256": "f29962a40bd89bca23cff892d3ff01fcfa8e660b390c4831c88ca7cc695f0b5d",
+      "source_bytes": 6670,
+      "first_line": 25,
+      "last_line": 36,
+      "source_byte_start": 818,
+      "source_byte_end_exclusive": 1659,
+      "excerpt_bytes": 841,
+      "excerpt_sha256": "396f8792f9d53d1756f739a8758740254ba64242ac227d906eec867c9d95187c",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 162170,
+      "literal_content_byte_end_exclusive": 163011
+    },
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "S02",
+      "role": "previously_transported_implementation",
+      "source_path": "packages/core/src/scheduled-task/model.ts",
+      "source_archive": "sources/packages/core/src/scheduled-task/model.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "a5560b15853e2941c31bf9e803560bbea0c24c4e",
+      "source_sha256": "f29962a40bd89bca23cff892d3ff01fcfa8e660b390c4831c88ca7cc695f0b5d",
+      "source_bytes": 6670,
+      "first_line": 66,
+      "last_line": 82,
+      "source_byte_start": 2970,
+      "source_byte_end_exclusive": 4055,
+      "excerpt_bytes": 1085,
+      "excerpt_sha256": "c9d3d54dd1b8bb114196dabd09175f3ee2f81e21e406ed9c29d623adf0ba7e93",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 163142,
+      "literal_content_byte_end_exclusive": 164227
+    }
+  ]
+}
+```
+
+```json
+{"first_line":1,"last_line":24,"source_byte_start":0,"source_byte_end_exclusive":818,"bytes":818,"sha256":"572b7ca99e6cbf93c8136828cf9bbc897e221f9d7e203f502130e984e3810224"}
+```
+
+~~~~typescript
+export * as ScheduledTaskModel from "./model"
+
+import { DateTime, Option } from "effect"
+import type { ScheduledTask } from "@orchestra/schema/scheduled-task"
+
+type Recurring = Exclude<ScheduledTask.Cadence, "once">
+
+// The part of a task that decides when it runs. `minute` is the intended local time of day in `timezone`;
+// daily and weekly slots are rebuilt from it, so a slot moved by a DST gap does not drag later slots with it.
+export type Timing = {
+  readonly cadence: ScheduledTask.Cadence
+  readonly minute: number
+  readonly timezone: string
+  readonly next: number
+  readonly enabled: boolean
+  readonly missed?: number
+}
+
+export type Plan = { type: "wait" } | { type: "run"; slot: number; missed?: number } | { type: "skip"; slot: number }
+
+const HOUR = 3_600_000
+const DAY = 24 * HOUR
+const LATE = DAY
+
+~~~~
+
+```json
+{"first_line":37,"last_line":65,"source_byte_start":1659,"source_byte_end_exclusive":2970,"bytes":1311,"sha256":"3f9f7b3d9172712c657b57444280c24105bd201526d3fb52698b08da58c195f6"}
+```
+
+~~~~typescript
+
+// A run whose prompt was admitted. A run that served `slot` moves the task past it; an extra run (Run now
+// with no due slot, or a slot rescheduled while it ran) only rolls a slot that is already behind `time`.
+// One-off tasks pause.
+export function recordRun<T extends Timing>(task: T, run: { time: number; slot?: number; missed?: number }): T {
+  const from = run.slot ?? task.next
+  return {
+    ...task,
+    missed: run.slot === undefined ? task.missed : run.missed,
+    enabled: task.cadence === "once" ? false : task.enabled,
+    next: task.cadence === "once" ? task.next : following(task, task.cadence, from, run.time),
+  }
+}
+
+export function skipRun<T extends Timing>(task: T, slot: number, now: number): T {
+  if (task.cadence === "once") return { ...task, missed: slot, enabled: false }
+  return { ...task, missed: slot, next: following(task, task.cadence, slot, now) }

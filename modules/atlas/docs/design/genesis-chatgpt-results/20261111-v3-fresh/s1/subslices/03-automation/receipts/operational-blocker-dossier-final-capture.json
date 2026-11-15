@@ -1,0 +1,12 @@
+{
+  "schema": "s1-03-native-mechanical-helper-final-capture/v1",
+  "agent_id": "/root/native_descriptor",
+  "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/payload/receipts/operational-blocker-dossier-final-original.md",
+  "bytes": 5221,
+  "sha256": "ba65b8f25aab794aaae3d60ae01827814c1f90d14bd7cb94e14b1f4e28e9d901",
+  "literal": true,
+  "terminal_newline": false,
+  "response_file_equal": true,
+  "at_utc": "2026-11-15T09:31:47.385038+00:00",
+  "capture_basis": "Exact original native FINAL observed by root and encoded literally; byte-compared with helper response.md."
+}

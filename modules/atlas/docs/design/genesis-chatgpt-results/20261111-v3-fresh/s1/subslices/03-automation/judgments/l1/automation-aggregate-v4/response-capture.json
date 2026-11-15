@@ -1,0 +1,28 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "lot": "automation-aggregate-v4",
+  "responses": {
+    "j1": {
+      "target": "/root/s1_03_j1",
+      "judge_id": "parallel-v3-fresh/S1-03/J1",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/automation-aggregate-v4/j1-response.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j1",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 2901,
+      "sha256": "088347f5e9261d52413852804acf42cc741f0233d8f34cd809577439a07e6522",
+      "captured_at_utc": "2026-11-15T08:31:50.351047+00:00"
+    },
+    "j2": {
+      "target": "/root/s1_03_j2",
+      "judge_id": "parallel-v3-fresh/S1-03/J2",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/automation-aggregate-v4/j2-response.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j2",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 3337,
+      "sha256": "b6cb3f1edc2af3a09e34fb377e03c96d768a64dbb44b6859f391d2bd206cf316",
+      "captured_at_utc": "2026-11-15T08:52:27.045341+00:00"
+    }
+  }
+}

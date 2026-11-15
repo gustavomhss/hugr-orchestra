@@ -1,0 +1,17 @@
+{
+  "id": "j1-continuation-before-derived-automation-l2",
+  "target": "/root/s1_03_j1",
+  "kind": "CONTROL_ONLY_NO_JUDGMENT",
+  "method": "collaboration.followup_task",
+  "message": "Controle de continuidade da principal, execução34269cf4-d631-41c5-a30b-85b0ec217390, papel permanente parallel-v3-fresh/S1-03/J1. Seu último PASS integral foi do L1 s1.core.automation v4, SHA256 968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae. Ainda não há novo candidato neste controle. Permaneça sem ferramentas e sem novo julgamento; responda apenas ACK_CONTINUIDADE_J1. O próximo pacote conterá a íntegra do L2 de automação corrigido e não incluirá voto de J2.",
+  "message_bytes": 494,
+  "message_sha256": "dfbd4267140449fab5149221ca2c9a931c482753f71a63f23e87ff0945151271",
+  "tool_returned_normally": true,
+  "observed_at_utc": "2026-11-15T09:12:53.431959+00:00",
+  "tokens": "UNKNOWN",
+  "physical_attempts": "UNKNOWN",
+  "cost": "UNKNOWN",
+  "original_response": "ACK_CONTINUIDADE_J1",
+  "original_response_sha256": "e89a65d773667d9cddcb8745a51fd7a5b022161dbb7191fa7b68b30e182de092",
+  "state": "COMPLETED_CONTROL_ACK"
+}

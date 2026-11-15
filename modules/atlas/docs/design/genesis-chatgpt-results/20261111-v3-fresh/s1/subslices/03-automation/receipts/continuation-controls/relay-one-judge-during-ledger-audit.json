@@ -1,0 +1,12 @@
+{
+  "id": "relay-one-judge-during-ledger-audit",
+  "target": "/root/review_relay",
+  "kind": "mechanical_audit_coordination",
+  "method": "collaboration.send_message",
+  "message": "Vou usar /root/native_descriptor para uma auditoria mecânica curta do ledger em área exclusiva. Enquanto ele estiver ativo, mantenha no máximo UM juiz ativo por vez (root + relay + auditor + juiz = 4); pode alternar J1/J2 após cada ACK. Não altera evidência, critérios ou revisões. Avisarei quando liberar o slot; prossiga com o transporte.",
+  "message_bytes": 348,
+  "message_sha256": "704938aeebb8149a4d21ab793bdb2ddfeb73afcbc28f36bbe04f9c34e8df361a",
+  "tool_returned_normally": true,
+  "capture_basis": "Exact caller-visible argument; no independent host wire checksum",
+  "captured_at_utc": "2026-11-15T07:11:42.251922+00:00"
+}

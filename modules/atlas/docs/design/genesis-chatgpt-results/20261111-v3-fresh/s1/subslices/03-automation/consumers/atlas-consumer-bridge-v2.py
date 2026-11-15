@@ -1,0 +1,146 @@
+"""Version 2 of the quota wrapper; preserve v1 unchanged.
+
+A CLI timeout is recorded as an incomplete invocation with observed partial bytes,
+never as a completed Atlas answer. Questions, quotas and oracle rules are unchanged.
+"""
+from pathlib import Path
+from datetime import datetime, timezone
+import base64
+import hashlib
+import json
+import subprocess
+import sys
+
+if len(sys.argv) != 5:
+    raise SystemExit('usage: atlas-consumer-bridge.py EXECUTION_ROOT CASE index|read QUERY_JSON')
+W = Path(sys.argv[1]).resolve(strict=True)
+P = W / 'payload'
+BRIDGE_VERSION = 2
+BRIDGE_PROCEDURE = Path(__file__).resolve()
+BRIDGE_PROCEDURE_BYTES = BRIDGE_PROCEDURE.read_bytes()
+PUBLIC = json.loads((P / 'consumers/public-cases.json').read_text())
+LIMITS = PUBLIC['limits']
+CASES = {row['id'] for row in PUBLIC['cases']}
+case_id, mode, encoded = sys.argv[2:]
+if case_id not in CASES or mode not in {'index', 'read'}:
+    raise SystemExit('unknown frozen case or forbidden operation')
+query = json.loads(encoded)
+if not isinstance(query, dict) or query.get('scope') != 'orchestra.s1':
+    raise SystemExit('query must address orchestra.s1')
+allowed = {'scope', 'need'} if mode == 'index' else {'scope', 'need', 'key', 'maxBytes', 'section', 'historical'}
+if set(query) - allowed:
+    raise SystemExit('unexpected query fields; official CLI validates all remaining semantics')
+
+# A final whole-selection attempt precedes consumption, even when it is blocked.
+preparation_path = P / 'receipts/native-prepare-final.json'
+preparation = json.loads(preparation_path.read_text())
+if preparation.get('source_root') != str(W / 'native-source'):
+    raise SystemExit('preparation source root differs; a moved root requires its own preparation and bindings')
+directory = P / 'consumers' / case_id / 'bridge'
+directory.mkdir(parents=True, exist_ok=True)
+prior = [json.loads(path.read_text()) for path in sorted(directory.glob('call-*.json'))]
+calls = sum(row['mode'] == mode for row in prior)
+limit = LIMITS['max_index_calls_per_case' if mode == 'index' else 'max_read_calls_per_case']
+if calls >= limit:
+    raise SystemExit(f'quota exhausted: {mode}')
+remaining = LIMITS['max_returned_utf8_bytes_per_case'] - sum(row['returned_utf8_bytes'] for row in prior)
+if remaining < 1024:
+    raise SystemExit('returned-byte quota exhausted')
+if mode == 'read':
+    bound = query.get('maxBytes')
+    if not isinstance(bound, int) or isinstance(bound, bool) or not 1 <= bound <= remaining:
+        raise SystemExit('read maxBytes must be positive and fit the remaining case budget')
+number = len(prior) + 1
+query_path = directory / f'query-{number:02}.json'
+query_bytes = (json.dumps(query, ensure_ascii=False, indent=2) + '\n').encode()
+query_path.write_bytes(query_bytes)
+command = [str(W / 'runtime-preflight/bun-runtime/node_modules/.bin/bun'),
+           'scripts/genesis-native.ts', mode, str(W / 'native-source'), str(query_path)]
+cwd = W / 'runtime-preflight/candidate/modules/atlas'
+started = datetime.now(timezone.utc).isoformat()
+timed_out = False
+exit_code = None
+try:
+    completed = subprocess.run(command, cwd=cwd, capture_output=True, timeout=60)
+    exit_code = completed.returncode
+    stdout_bytes, stderr_bytes = completed.stdout, completed.stderr
+except subprocess.TimeoutExpired as error:
+    timed_out = True
+    stdout_bytes, stderr_bytes = error.stdout or b'', error.stderr or b''
+ended = datetime.now(timezone.utc).isoformat()
+# Persist actual streams before decoding: a timeout can cut a UTF-8 code point.
+(directory / f'call-{number:02}.stdout').write_bytes(stdout_bytes)
+(directory / f'call-{number:02}.stderr').write_bytes(stderr_bytes)
+
+def captured_text(raw):
+    try:
+        return raw.decode('utf-8', errors='strict'), None
+    except UnicodeDecodeError:
+        return None, base64.b64encode(raw).decode('ascii')
+
+stdout, stdout_base64 = captured_text(stdout_bytes)
+stderr, stderr_base64 = captured_text(stderr_bytes)
+forward = {
+    'case_id': case_id, 'call': number, 'operation': mode,
+    'query': query, 'exit_code': exit_code,
+    'stdout': stdout, 'stderr': stderr,
+}
+if timed_out:
+    forward.update({
+        'bridge_state': 'CLI_TIMEOUT_NO_COMPLETION',
+        'timeout_seconds': 60,
+        'runtime_response_complete': False,
+        'notice': 'This is an observed timeout. Any returned stream is partial; no completed Atlas answer or domain result is asserted.',
+    })
+if stdout_base64 is not None or stderr_base64 is not None:
+    forward.update({'stdout_base64': stdout_base64, 'stderr_base64': stderr_base64,
+                    'non_utf8_stream_notice': 'A non-UTF-8 stream is represented by exact base64; original bytes are also preserved in the receipt files.'})
+forward_bytes = (json.dumps(forward, ensure_ascii=False, indent=2) + '\n').encode()
+within_budget = len(forward_bytes) <= remaining
+if not within_budget:
+    forward = {
+        'case_id': case_id, 'call': number, 'operation': mode,
+        'bridge_state': 'RESPONSE_NOT_FORWARDED_CASE_BYTE_LIMIT',
+        'actual_response_utf8_bytes': len(forward_bytes),
+        'remaining_utf8_bytes': remaining,
+        'notice': 'Actual CLI streams are preserved verbatim in the receipt files; no content was truncated or substituted as a completed Atlas answer.',
+    }
+    forward_bytes = (json.dumps(forward, ensure_ascii=False, indent=2) + '\n').encode()
+    if len(forward_bytes) > remaining:
+        raise RuntimeError('bridge metadata exceeds reserved budget; no response forwarded')
+forward_path = directory / f'forward-{number:02}.json'
+forward_path.write_bytes(forward_bytes)
+receipt = {
+    'schema': 's1-03-real-atlas-consumer-bridge/v2',
+    'bridge_version': BRIDGE_VERSION,
+    'bridge_procedure_path': str(BRIDGE_PROCEDURE),
+    'bridge_procedure_sha256': hashlib.sha256(BRIDGE_PROCEDURE_BYTES).hexdigest(),
+    'bridge_procedure_bytes': len(BRIDGE_PROCEDURE_BYTES),
+    'case_id': case_id, 'call': number, 'mode': mode, 'query': query,
+    'command': command, 'cwd': str(cwd), 'started_utc': started, 'ended_utc': ended,
+    'timeout': timed_out, 'timeout_seconds': 60,
+    'state': 'CLI_TIMEOUT_NO_COMPLETION' if timed_out else 'CLI_COMPLETED',
+    'runtime_response_complete': not timed_out,
+    'candidate_revision': 'e3a8ab8cf56dbff1ee91272df51ffa398d882aa1',
+    'source_root': str(W / 'native-source'),
+    'source_access_granted_to_consumer': False,
+    'oracle_access_granted_to_consumer': False,
+    'isolation': 'fresh context plus faithful principal bridge; not a filesystem sandbox',
+    'preparation_receipt_sha256': hashlib.sha256(preparation_path.read_bytes()).hexdigest(),
+    'prepared_file_exists': preparation['prepared_file_exists'],
+    'exit_code': exit_code, 'stdout': stdout, 'stderr': stderr,
+    'query_sha256': hashlib.sha256(query_bytes).hexdigest(),
+    'runtime_stdout_bytes': len(stdout_bytes), 'runtime_stderr_bytes': len(stderr_bytes),
+    'runtime_stdout_sha256': hashlib.sha256(stdout_bytes).hexdigest(),
+    'runtime_stderr_sha256': hashlib.sha256(stderr_bytes).hexdigest(),
+    'stdout_file': f'call-{number:02}.stdout', 'stderr_file': f'call-{number:02}.stderr',
+    'stdout_base64': stdout_base64, 'stderr_base64': stderr_base64,
+    'forwarded_runtime_response': within_budget and not timed_out,
+    'forwarded_partial_runtime_output': within_budget and timed_out,
+    'returned_utf8_bytes': len(forward_bytes),
+    'forward_sha256': hashlib.sha256(forward_bytes).hexdigest(),
+    'case_returned_utf8_bytes_total': LIMITS['max_returned_utf8_bytes_per_case'] - remaining + len(forward_bytes),
+    'not_a_domain_case_pass': True,
+}
+(directory / f'call-{number:02}.json').write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n')
+sys.stdout.write(forward_bytes.decode())

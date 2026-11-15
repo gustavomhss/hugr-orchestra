@@ -1,0 +1,1 @@
+ACK — **derived-automation-flow-v2, parte 1/2**. Última âncora recebida: **evidência de derivação, §3**, parágrafo **“Inferência estática identificada”**, encerrando em “Não foi reproduzida corrida, medida liveness nem corrigido produto.” Aguardo a parte final e o `FIM_DO_LOTE` externo.

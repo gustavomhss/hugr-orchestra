@@ -1,0 +1,206 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "relay": "/root/review_relay",
+  "packet": "automation-aggregate-v4",
+  "source": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/automation-aggregate-v4.md",
+  "source_bytes": 70241,
+  "source_sha256": "3198bf664dfe607f09c96b3da12ab75f73e10cae977b9d113a0b1ab358330952",
+  "parts_per_target": 2,
+  "calls": [
+    {
+      "sequence": 1,
+      "target": "/root/s1_03_j1",
+      "part": 1,
+      "request_file": "request-j1-01.json",
+      "request_file_bytes": 36733,
+      "request_file_sha256": "c1ee80797061da83ef43c127f592d5f5866621b79b2a920425aa6509c2fbbc25",
+      "message_bytes": 35953,
+      "message_sha256": "bc44a4f72797bc59e5e27112801c9efc738216e8398f76693c8a356e1d0047bc",
+      "payload_bytes": 35490,
+      "payload_sha256": "fa277f07afebe2a5e79f83eb170da372e7f368b582b2fd1202badbf8c0aeccb0",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 2,
+      "target": "/root/s1_03_j1",
+      "part": 2,
+      "request_file": "request-j1-02.json",
+      "request_file_bytes": 35603,
+      "request_file_sha256": "fc40d838f7f50dc637400cc3aec21499713ead31a6f96782c76fd609e69b5e99",
+      "message_bytes": 35352,
+      "message_sha256": "b47c6eeebbe5aec2764845cebff5ce52d4017b6b403a8b3b598f86f5ed434a9d",
+      "payload_bytes": 34751,
+      "payload_sha256": "efb5b1603355fcbc136b38c381530214ad59482ec5411c014335141d0e6cb515",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 3,
+      "target": "/root/s1_03_j2",
+      "part": 1,
+      "request_file": "request-j2-01.json",
+      "request_file_bytes": 36735,
+      "request_file_sha256": "d7ad185240a8cf41fe79c3882df3bacdacdfbefb93f633d542cc2058289314fb",
+      "message_bytes": 35955,
+      "message_sha256": "45a351d7a753848b3309414e55cb1c6c87e51c8644f060cffde0bb7e39828417",
+      "payload_bytes": 35492,
+      "payload_sha256": "80cf769a780f5f931891fed5c7aed138cbec4614e76e54896cc5ec335e5f5306",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null,
+      "observed_literal_defect": "In the second transition (from 2 to 3), before_body.git_blob_sha was transmitted as b8fec4854b4c1384d3c4a2a4a4f0d51d220c874618 instead of b8fec4854b4c1384d3c4a2a4f0d51d220c874618. Actual defective request retained; correction not yet dispatched."
+    },
+    {
+      "sequence": 4,
+      "target": "/root/s1_03_j2",
+      "part": 1,
+      "kind": "literal_transport_correction",
+      "request_file": "request-j2-correction-part01.json",
+      "request_file_bytes": 889,
+      "request_file_sha256": "8c8153b01b7df17d58012ee7a22515745380206542a0da0dfe9e398b13708cfe",
+      "message_bytes": 831,
+      "message_sha256": "75d2fc82e79a18cee825ae7ce3ecd0ef046f6280088432dd4f8e19fd7f784d3e",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 5,
+      "target": "/root/s1_03_j2",
+      "part": 2,
+      "request_file": "request-j2-02.json",
+      "request_file_bytes": 35603,
+      "request_file_sha256": "93487812747dc33ffbfa8c781dfc15e05bef7f008b0559eaed84392dbc801e29",
+      "message_bytes": 35352,
+      "message_sha256": "b47c6eeebbe5aec2764845cebff5ce52d4017b6b403a8b3b598f86f5ed434a9d",
+      "payload_bytes": 34751,
+      "payload_sha256": "efb5b1603355fcbc136b38c381530214ad59482ec5411c014335141d0e6cb515",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    }
+  ],
+  "known_transcription_corrections": [
+    {
+      "target": "/root/s1_03_j2",
+      "part": 1,
+      "location": "transition from 2 to 3, before_body.git_blob_sha",
+      "payload_before": "b8fec4854b4c1384d3c4a2a4a4f0d51d220c874618",
+      "payload_after": "b8fec4854b4c1384d3c4a2a4f0d51d220c874618",
+      "request_file": "request-j2-correction-part01.json",
+      "actual_dispatch_sequence": 4,
+      "origin": "Observed defect in actual collaboration.followup_task argument",
+      "observed_before_final_signal": true
+    }
+  ],
+  "receipt_limit": "Ferramenta retornou normalmente sem texto nem ID de despacho; os hashes descrevem os pedidos registrados e sua reconstrução local, não verificação remota nem suficiência semântica.",
+  "delivery_scope": "Literal UTF-8 packet only; final signal is outside payload.",
+  "slot_handling": "Root and relay transport independently to their exclusive handles; no crossed judgments.",
+  "judgment_capture": "Original final judgments preserved for both targets; see response-capture.json. No further relay dispatch authorized after handover.",
+  "dispatch_count": 5,
+  "recorded_at_utc": "2026-11-15T08:49:27.822606+00:00",
+  "completed_targets": [
+    "/root/s1_03_j1",
+    "/root/s1_03_j2"
+  ],
+  "pending_targets": [],
+  "local_recorded_reconstruction": [
+    {
+      "target": "/root/s1_03_j1",
+      "bytes": 70241,
+      "sha256": "3198bf664dfe607f09c96b3da12ab75f73e10cae977b9d113a0b1ab358330952",
+      "equals_source": true,
+      "raw_bytes": 70241,
+      "raw_sha256": "3198bf664dfe607f09c96b3da12ab75f73e10cae977b9d113a0b1ab358330952",
+      "corrections_applied": false
+    },
+    {
+      "target": "/root/s1_03_j2",
+      "bytes": 70241,
+      "sha256": "3198bf664dfe607f09c96b3da12ab75f73e10cae977b9d113a0b1ab358330952",
+      "equals_source": true,
+      "raw_bytes": 70243,
+      "raw_sha256": "293040e2755b4de86a71710d7d77e6c3f403d011506f6099399aabf058d606b0",
+      "corrections_applied": true
+    }
+  ],
+  "acknowledgments": [
+    {
+      "target": "/root/s1_03_j1",
+      "part": 1,
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/automation-aggregate-v4/ack-j1-01.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j1",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 234,
+      "sha256": "9c5fea451edaa931f077097c4291d464827ffc9bb36e76f741a14e1ab0cbc05b",
+      "captured_at_utc": "2026-11-15T08:27:52.078897+00:00"
+    },
+    {
+      "target": "/root/s1_03_j2",
+      "part": 1,
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/automation-aggregate-v4/ack-j2-01.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j2",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 238,
+      "sha256": "2f6a0ce856968278539357405e26b9877bcc8fbb589add0e09a7a1b1bf8a3c96",
+      "captured_at_utc": "2026-11-15T08:47:22.098648+00:00"
+    },
+    {
+      "target": "/root/s1_03_j2",
+      "part": 1,
+      "kind": "literal_transport_correction_ack",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/automation-aggregate-v4/ack-j2-correction-part01.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j2",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 283,
+      "sha256": "db70703352f437c040701ca1233240faf56a667ee42b64f0ddda99ba93d651eb",
+      "captured_at_utc": "2026-11-15T08:47:50.631664+00:00"
+    }
+  ],
+  "transport_ownership": {
+    "/root/s1_03_j1": "/root",
+    "/root/s1_03_j2": "/root"
+  },
+  "conditional_dispatch_basis": "conditional-dispatch-basis-j1.json",
+  "judgment_captures": {
+    "j1": {
+      "target": "/root/s1_03_j1",
+      "judge_id": "parallel-v3-fresh/S1-03/J1",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/automation-aggregate-v4/j1-response.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j1",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 2901,
+      "sha256": "088347f5e9261d52413852804acf42cc741f0233d8f34cd809577439a07e6522",
+      "captured_at_utc": "2026-11-15T08:31:50.351047+00:00"
+    },
+    "j2": {
+      "target": "/root/s1_03_j2",
+      "judge_id": "parallel-v3-fresh/S1-03/J2",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/automation-aggregate-v4/j2-response.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j2",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 3337,
+      "sha256": "b6cb3f1edc2af3a09e34fb377e03c96d768a64dbb44b6859f391d2bd206cf316",
+      "captured_at_utc": "2026-11-15T08:52:27.045341+00:00"
+    }
+  },
+  "handover_j1": {
+    "to": "/root",
+    "recorded_at_utc": "2026-11-15T08:31:50.351047+00:00",
+    "after_original_final_saved": true,
+    "no_call_in_flight": true
+  }
+}

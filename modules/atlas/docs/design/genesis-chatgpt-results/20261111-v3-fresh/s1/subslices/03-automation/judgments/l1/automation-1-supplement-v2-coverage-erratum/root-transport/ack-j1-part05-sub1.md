@@ -1,0 +1,1 @@
+ACK parte 5/6, fragmento 1/2 — última âncora recebida: **AUT1-C33**, `packages/core/src/actions/operations/storage.ts`, função `matches`, linha `return row.binding_revision === binding.revision && row.actor === binding.account &&`.

@@ -1,0 +1,1579 @@
+{
+  "schema": "s1-03-mechanical-operational-blocker-dossier/v1",
+  "role": "Documentary extraction only; no semantic judgment, no third vote, no mission completion decision",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "read_window": {
+    "started_utc": "2026-11-15T09:15:48.296445+00:00",
+    "ended_utc": "2026-11-15T09:15:48.297463+00:00",
+    "additional_authorized_input_read_at_utc": "2026-11-15T09:27:43.316945+00:00",
+    "scope_note": "The original 26-file snapshot was captured in the initial window; R27 was read separately after explicit authorization. These are documentary snapshots, not a refreshed global execution state."
+  },
+  "recipe": {
+    "path": "payload/recipes/operational-blocker-dossier-v2.json",
+    "bytes": 7092,
+    "sha256": "088c406eba2735b9039250f08b3002950feb6a01cabd40e85809c6ff465bd6fb",
+    "frozen_at_utc": "2026-11-15T09:14:53.676221+00:00"
+  },
+  "allowed_input_count": 27,
+  "allowed_input_bytes": 185464,
+  "input_identities": [
+    {
+      "id": "R01",
+      "path": "inputs/COMMON.md",
+      "bytes": 12959,
+      "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+      "read_in_full": true,
+      "hash_and_size_match_recipe": true
+    },
+    {
+      "id": "R02",
+      "path": "inputs/mission.json",
+      "bytes": 6006,
+      "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+      "read_in_full": true,
+      "hash_and_size_match_recipe": true
+    },
+    {
+      "id": "R03",
+      "path": "inputs/AGENTS.md",
+      "bytes": 16501,
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "read_in_full": true,
+      "hash_and_size_match_recipe": true
+    },
+    {
+      "id": "R04",
+      "path": "inputs/references/runtime.md",
+      "bytes": 10217,
+      "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237",
+      "read_in_full": true,
+      "hash_and_size_match_recipe": true
+    },
+    {
+      "id": "R05",
+      "path": "inputs/references/completion.md",
+      "bytes": 4497,
+      "sha256": "087428f9cd8e4acfe26ee71e9b97a5db291b1d361fe763d92245b978cada4ffd",
+      "read_in_full": true,
+      "hash_and_size_match_recipe": true
+    },
+    {
+      "id": "R06",
+      "path": "inputs/references/handoffs.md",
+      "bytes": 6282,
+      "sha256": "1ba5b2fe687bf7677675f00b23515e28f9fcb575f7ab6894ebb89267b8d69513",
+      "read_in_full": true,
+      "hash_and_size_match_recipe": true
+    },
+    {
+      "id": "R07",
+      "path": "payload/receipts/s4-runtime-release-original.json",
+      "bytes": 28282,
+      "sha256": "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016",
+      "read_in_full": true,
+      "hash_and_size_match_recipe": true
+    },
+    {
+      "id": "R08",
+      "path": "payload/receipts/branch-runtime-refresh-before-auto4-close.json",
+      "bytes": 20777,
+      "sha256": "c76cf1725d69be7aff76acd2f1fb106ad7ece8e1670c59faa2159acff3a7e14d",
+      "read_in_full": true,
+      "hash_and_size_match_recipe": true
+    },
+    {
+      "id": "R09",
+      "path": "payload/receipts/automation-native-prepare-probe.json",
+      "bytes": 4976,
+      "sha256": "e08f1f0682a716403a24431c1c552d1c2f64c1d5d5f31eeebb12f8794132b081",
+      "read_in_full": true,
+      "hash_and_size_match_recipe": true
+    },
+    {
+      "id": "R10",
+      "path": "payload/receipts/runtime-rediscovery-maintenance.json",
+      "bytes": 30775,
+      "sha256": "2c14c388fbfeee77ea814e79ac443db307c24810fd7c348f534e5821498bbdcf",
+      "read_in_full": true,
+      "hash_and_size_match_recipe": true
+    },
+    {
+      "id": "R11",
+      "path": "payload/receipts/s4-policy-provenance-reference.json",
+      "bytes": 889,
+      "sha256": "23cf38e354a28fd06a1aef386dbd4b86955d2b5c8222ee6f6d57dbc964da3543",
+      "read_in_full": true,
+      "hash_and_size_match_recipe": true
+    },
+    {
+      "id": "R12",
+      "path": "payload/receipts/runtime-preflight/preflight-summary.json",
+      "bytes": 739,
+      "sha256": "a3292651865f137a2da3f097c08531343d34a72b49bed8753beef5ce8e92c4a7",
+      "read_in_full": true,
+      "hash_and_size_match_recipe": true
+    },
+    {
+      "id": "R13",
+      "path": "payload/receipts/runtime-preflight/REPORT.md",
+      "bytes": 5467,
+      "sha256": "a3950ac9c0b2324a08624ad180bfc2d942bf485eccecc93a85826f70bbf978a5",
+      "read_in_full": true,
+      "hash_and_size_match_recipe": true
+    },
+    {
+      "id": "R14",
+      "path": "payload/receipts/runtime-preflight/schema-notes.json",
+      "bytes": 2288,
+      "sha256": "2750685166e4b068f7fd623ed55ecf041bf4384f0e8938dc3590f3c217b98ca4",
+      "read_in_full": true,
+      "hash_and_size_match_recipe": true
+    },
+    {
+      "id": "R15",
+      "path": "payload/proposals/s4-source-limit.json",
+      "bytes": 2791,
+      "sha256": "036a3d8f2ee3e2bfe17aa748348b5860e9d721007b07c6a50aa848224197335f",
+      "read_in_full": true,
+      "hash_and_size_match_recipe": true
+    },
+    {
+      "id": "R16",
+      "path": "payload/proposals/s4-source-limit-validation-v2.json",
+      "bytes": 4919,
+      "sha256": "e24234bf995bf3229c14c971c9b239ff0c6871c33bc947cfe69841715c1e682b",
+      "read_in_full": true,
+      "hash_and_size_match_recipe": true
+    },
+    {
+      "id": "R17",
+      "path": "payload/proposals/s4-source-limit.patch",
+      "bytes": 3508,
+      "sha256": "5cadc6c0892bfbff286a742a309570452b50566382cb0404ed85350fa2ac7e28",
+      "read_in_full": true,
+      "hash_and_size_match_recipe": true
+    },
+    {
+      "id": "R18",
+      "path": "payload/receipts/guard-preflight.json",
+      "bytes": 985,
+      "sha256": "d15ff1599529c849e3b527fb5dfc5256cb301671e84120fff61604be8ac4eeef",
+      "read_in_full": true,
+      "hash_and_size_match_recipe": true
+    },
+    {
+      "id": "R19",
+      "path": "payload/receipts/guard-materialization/REPORT.md",
+      "bytes": 4272,
+      "sha256": "4761845a1bc548f557ca207fb8ce17296c6b7af39e0418bb37f90ad3b7f81a3a",
+      "read_in_full": true,
+      "hash_and_size_match_recipe": true
+    },
+    {
+      "id": "R20",
+      "path": "payload/receipts/guard-materialization/current-head-binary-check.json",
+      "bytes": 1052,
+      "sha256": "8c745ffec565879e747d8a2cc98376a9c2d31ff54f187aa45f6a6422b58bc6e3",
+      "read_in_full": true,
+      "hash_and_size_match_recipe": true
+    },
+    {
+      "id": "R21",
+      "path": "payload/receipts/guard-materialization/binary-transport-blocker.json",
+      "bytes": 10861,
+      "sha256": "13365af70732f780efa34bf8bb3852f1a9e1cb9fc4c83fb1cff81efd4093673a",
+      "read_in_full": true,
+      "hash_and_size_match_recipe": true
+    },
+    {
+      "id": "R22",
+      "path": "payload/receipts/guard-materialization/additional-artifact-route-check.json",
+      "bytes": 1267,
+      "sha256": "c184f6319bc548469c150fd16477eea0147a97601ad22fa22dfe8f42699fcb9e",
+      "read_in_full": true,
+      "hash_and_size_match_recipe": true
+    },
+    {
+      "id": "R23",
+      "path": "payload/receipts/guard-materialization/exact-historical-artifact-path-check.json",
+      "bytes": 651,
+      "sha256": "161b2741a736ad28e2b3fd197246315bef1ec016060b9ebf4a3c85013a160c93",
+      "read_in_full": true,
+      "hash_and_size_match_recipe": true
+    },
+    {
+      "id": "R24",
+      "path": "payload/receipts/guard-materialization/materialization-verification.json",
+      "bytes": 2228,
+      "sha256": "b3a1b7599a284c0a2d2d1052c9e890cd25a8d5a47b8930159d636fda53dda35b",
+      "read_in_full": true,
+      "hash_and_size_match_recipe": true
+    },
+    {
+      "id": "R25",
+      "path": "payload/receipts/guard-materialization/checkout-index-attempt.json",
+      "bytes": 436,
+      "sha256": "6047449ec38988948e178547c383fb956d968db71003a7012779a418fbcf6921",
+      "read_in_full": true,
+      "hash_and_size_match_recipe": true
+    },
+    {
+      "id": "R26",
+      "path": "payload/receipts/guard-materialization/ancestry-receipt.json",
+      "bytes": 830,
+      "sha256": "c72f0fc8b0e774d1e6939f4691d8636893ef3868b46651bc6934b9d33850be05",
+      "read_in_full": true,
+      "hash_and_size_match_recipe": true
+    },
+    {
+      "id": "R27",
+      "path": "payload/receipts/guard-materialization/exact-zip-library-route-check.json",
+      "bytes": 1009,
+      "sha256": "ca50fa3ad1cfb197426024fe403d1f603ec8e95f4f8fb727b5bce57b82f01598",
+      "read_in_full": true,
+      "hash_and_size_match_recipe": "NOT_IN_ORIGINAL_RECIPE_ADDITION_EXPLICITLY_AUTHORIZED",
+      "read_at_utc": "2026-11-15T09:27:43.316945+00:00"
+    }
+  ],
+  "display_segments": [
+    {
+      "path": "inputs/COMMON.md",
+      "start": 0,
+      "end": 12579,
+      "total": 12579
+    },
+    {
+      "path": "inputs/mission.json",
+      "start": 0,
+      "end": 3407,
+      "total": 5937
+    },
+    {
+      "path": "inputs/mission.json",
+      "start": 3407,
+      "end": 5937,
+      "total": 5937
+    },
+    {
+      "path": "inputs/AGENTS.md",
+      "start": 0,
+      "end": 13429,
+      "total": 16500
+    },
+    {
+      "path": "inputs/AGENTS.md",
+      "start": 13429,
+      "end": 16500,
+      "total": 16500
+    },
+    {
+      "path": "inputs/references/runtime.md",
+      "start": 0,
+      "end": 9955,
+      "total": 9955
+    },
+    {
+      "path": "inputs/references/completion.md",
+      "start": 0,
+      "end": 2942,
+      "total": 4344
+    },
+    {
+      "path": "inputs/references/completion.md",
+      "start": 2942,
+      "end": 4344,
+      "total": 4344
+    },
+    {
+      "path": "inputs/references/handoffs.md",
+      "start": 0,
+      "end": 6145,
+      "total": 6145
+    },
+    {
+      "path": "payload/receipts/s4-runtime-release-original.json",
+      "start": 0,
+      "end": 8389,
+      "total": 28282
+    },
+    {
+      "path": "payload/receipts/s4-runtime-release-original.json",
+      "start": 8389,
+      "end": 24387,
+      "total": 28282
+    },
+    {
+      "path": "payload/receipts/s4-runtime-release-original.json",
+      "start": 24387,
+      "end": 28282,
+      "total": 28282
+    },
+    {
+      "path": "payload/receipts/branch-runtime-refresh-before-auto4-close.json",
+      "start": 0,
+      "end": 9849,
+      "total": 20777
+    },
+    {
+      "path": "payload/receipts/branch-runtime-refresh-before-auto4-close.json",
+      "start": 9849,
+      "end": 20777,
+      "total": 20777
+    },
+    {
+      "path": "payload/receipts/automation-native-prepare-probe.json",
+      "start": 0,
+      "end": 4976,
+      "total": 4976
+    },
+    {
+      "path": "payload/receipts/runtime-rediscovery-maintenance.json",
+      "start": 0,
+      "end": 46,
+      "total": 30775
+    },
+    {
+      "path": "payload/receipts/runtime-rediscovery-maintenance.json",
+      "start": 46,
+      "end": 342,
+      "total": 30775
+    },
+    {
+      "path": "payload/receipts/runtime-rediscovery-maintenance.json",
+      "start": 342,
+      "end": 16342,
+      "total": 30775
+    },
+    {
+      "path": "payload/receipts/runtime-rediscovery-maintenance.json",
+      "start": 16342,
+      "end": 30775,
+      "total": 30775
+    },
+    {
+      "path": "payload/receipts/s4-policy-provenance-reference.json",
+      "start": 0,
+      "end": 889,
+      "total": 889
+    },
+    {
+      "path": "payload/receipts/runtime-preflight/preflight-summary.json",
+      "start": 0,
+      "end": 678,
+      "total": 739
+    },
+    {
+      "path": "payload/receipts/runtime-preflight/preflight-summary.json",
+      "start": 678,
+      "end": 739,
+      "total": 739
+    },
+    {
+      "path": "payload/receipts/runtime-preflight/REPORT.md",
+      "start": 0,
+      "end": 5467,
+      "total": 5467
+    },
+    {
+      "path": "payload/receipts/runtime-preflight/schema-notes.json",
+      "start": 0,
+      "end": 2288,
+      "total": 2288
+    },
+    {
+      "path": "payload/proposals/s4-source-limit.json",
+      "start": 0,
+      "end": 2791,
+      "total": 2791
+    },
+    {
+      "path": "payload/proposals/s4-source-limit-validation-v2.json",
+      "start": 0,
+      "end": 4919,
+      "total": 4919
+    },
+    {
+      "path": "payload/proposals/s4-source-limit.patch",
+      "start": 0,
+      "end": 447,
+      "total": 3508
+    },
+    {
+      "path": "payload/proposals/s4-source-limit.patch",
+      "start": 447,
+      "end": 3508,
+      "total": 3508
+    },
+    {
+      "path": "payload/receipts/guard-preflight.json",
+      "start": 0,
+      "end": 985,
+      "total": 985
+    },
+    {
+      "path": "payload/receipts/guard-materialization/REPORT.md",
+      "start": 0,
+      "end": 4187,
+      "total": 4187
+    },
+    {
+      "path": "payload/receipts/guard-materialization/current-head-binary-check.json",
+      "start": 0,
+      "end": 1052,
+      "total": 1052
+    },
+    {
+      "path": "payload/receipts/guard-materialization/binary-transport-blocker.json",
+      "start": 0,
+      "end": 6715,
+      "total": 10861
+    },
+    {
+      "path": "payload/receipts/guard-materialization/binary-transport-blocker.json",
+      "start": 6715,
+      "end": 10861,
+      "total": 10861
+    },
+    {
+      "path": "payload/receipts/guard-materialization/additional-artifact-route-check.json",
+      "start": 0,
+      "end": 1267,
+      "total": 1267
+    },
+    {
+      "path": "payload/receipts/guard-materialization/exact-historical-artifact-path-check.json",
+      "start": 0,
+      "end": 651,
+      "total": 651
+    },
+    {
+      "path": "payload/receipts/guard-materialization/materialization-verification.json",
+      "start": 0,
+      "end": 2228,
+      "total": 2228
+    },
+    {
+      "path": "payload/receipts/guard-materialization/checkout-index-attempt.json",
+      "start": 0,
+      "end": 436,
+      "total": 436
+    },
+    {
+      "path": "payload/receipts/guard-materialization/ancestry-receipt.json",
+      "start": 0,
+      "end": 830,
+      "total": 830
+    },
+    {
+      "path": "payload/receipts/guard-materialization/exact-zip-library-route-check.json",
+      "start": 0,
+      "end": 1009,
+      "total": 1009,
+      "complete_in_one_output": true
+    }
+  ],
+  "deterministic_documentary_checks": {
+    "all26DisplayedContiguously": true,
+    "totalDeclaredBytes": 184455,
+    "rediscoveredReleaseExactlyEqualsOriginal": true,
+    "sixCataloguedOversizedInputs": 6,
+    "eachAboveCurrentCap": true,
+    "eachWithinProposedBound": true,
+    "guardBlobsMissing": 1,
+    "guardPathsMissing": 1,
+    "latestSuppliedBranchObservation": "2026-11-15T08:27:31.803Z",
+    "branchSummary": [
+      {
+        "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/branches/genesis-s1-automation",
+        "head": "d5a84e583f55b31b17cbb407553243bd0801c56c",
+        "root_tree": "15d4d4ebf48042b53db763e3498d42a886eaf6ae",
+        "protected": false,
+        "isError": false
+      },
+      {
+        "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/branches/genesis-fresh-s4",
+        "head": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+        "root_tree": "3c93c4636c1e4c4b704f8be9314e22b2149e5609",
+        "protected": false,
+        "isError": false
+      },
+      {
+        "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/runs?branch=genesis-s1-automation&per_page=100",
+        "total_count": 0,
+        "isError": false
+      }
+    ],
+    "additional_authorized_receipt_read_in_full": true
+  },
+  "facts": [
+    {
+      "documentary_id": "OBS-01",
+      "classification": "PRESERVED_PREPARATION_RECORD_NOT_A_FULL_GATE",
+      "statement": "O preflight informa materialização de 399 arquivos do candidato nativo e build de preparação local; não atribui checkout Git, autoridade, testes de produto ou operações Atlas a esse preflight.",
+      "observed": {
+        "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+        "captured_source_count": 399,
+        "observed_git_head": null,
+        "bun": "1.3.14",
+        "node": "v24.22.1",
+        "npm": "11.9.0",
+        "source_capture_identity_claim": "399 files match SHA256 and Git blob according to supplied preflight",
+        "source_files_rehashed_by_dossier": false,
+        "scope_of_local_typecheck": "src-only preparation build; not a full package/repository gate or CI"
+      },
+      "sources": [
+        {
+          "input_id": "R12",
+          "path": "payload/receipts/runtime-preflight/preflight-summary.json",
+          "bytes": 739,
+          "sha256": "a3292651865f137a2da3f097c08531343d34a72b49bed8753beef5ce8e92c4a7",
+          "locator": "/"
+        },
+        {
+          "input_id": "R13",
+          "path": "payload/receipts/runtime-preflight/REPORT.md",
+          "bytes": 5467,
+          "sha256": "a3950ac9c0b2324a08624ad180bfc2d942bf485eccecc93a85826f70bbf978a5",
+          "locator": "Result; Receipts"
+        },
+        {
+          "input_id": "R14",
+          "path": "payload/receipts/runtime-preflight/schema-notes.json",
+          "bytes": 2288,
+          "sha256": "2750685166e4b068f7fd623ed55ecf041bf4384f0e8938dc3590f3c217b98ca4",
+          "locator": "/requirements"
+        }
+      ]
+    },
+    {
+      "documentary_id": "OBS-02",
+      "classification": "PRESERVED_ACTUAL_ERROR",
+      "statement": "O prepare anterior selecionou apenas s1.core.automation; exit1 native-file-limit na projeção histórica, sem candidato e sem publicação.",
+      "observed": {
+        "started_utc": "2026-11-15T01:05:26.170986+00:00",
+        "command": [
+          "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/runtime-preflight/bun-runtime/node_modules/.bin/bun",
+          "scripts/genesis-native.ts",
+          "prepare",
+          "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/native-source",
+          "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/runtime-probe-automation.json",
+          "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/runtime-results/automation-preacceptance-prepared.json"
+        ],
+        "cwd": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/runtime-preflight/candidate/modules/atlas",
+        "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+        "source_root": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/native-source",
+        "observed_git_head": null,
+        "package_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/runtime-probe-automation.json",
+        "package_sha256": "f2c71d3ef302b87345c224d56d2439816e41f87aea702aadfc7bbe40d5ef19ac",
+        "selection": [
+          "s1.core.automation"
+        ],
+        "effective_inputs": 231,
+        "source_refs": 226,
+        "semantic_status_at_that_attempt": "PENDING_REQUEST_EVIDENCE",
+        "exit_code": 1,
+        "stdout": "",
+        "stderr": "{\"kind\":\"error\",\"error\":\"native-file-limit: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/a-l1-evidence-v1/coverage-needs-projection.json\"}\n",
+        "prepared_file_exists": false,
+        "publication_attempted": false,
+        "final_mission_prepare_still_required": true
+      },
+      "sources": [
+        {
+          "input_id": "R09",
+          "path": "payload/receipts/automation-native-prepare-probe.json",
+          "bytes": 4976,
+          "sha256": "e08f1f0682a716403a24431c1c552d1c2f64c1d5d5f31eeebb12f8794132b081",
+          "locator": "/command; /selection; /exit_code; /stderr; /prepared_file_exists; /final_mission_prepare_still_required"
+        }
+      ]
+    },
+    {
+      "documentary_id": "OBS-03",
+      "classification": "PRESERVED_LIMIT_AND_PROPOSAL",
+      "statement": "O cap documentado é256000 bytes. O catálogo enumera seis inputs inteiros acima dele; a proposta 1MiB continua PROPOSED_NOT_APPLIED_NOT_TESTED.",
+      "observed": {
+        "cap": 256000,
+        "proposed_bound": 1048576,
+        "status": "PROPOSED_NOT_APPLIED_NOT_TESTED",
+        "owner": "S4 runtime owner",
+        "required_oversized_whole_inputs": [
+          {
+            "canonical_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/a-l1-evidence-v1/coverage-needs-projection.json",
+            "bytes": 726892,
+            "sha256": "05485c4bd0ac9c76814e44537788818bbcf1fbcbfb87dd8063ce30bf1a67e0cf",
+            "git_blob_sha": "2e91d0f916dfa95a2dd0ef7ae74ff8c1bb427045",
+            "input_for": [
+              "s1.core.automation",
+              "s1.core.research",
+              "s1.core.boundaries",
+              "s1.subslice03.support"
+            ]
+          },
+          {
+            "canonical_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/evidence.md",
+            "bytes": 953016,
+            "sha256": "de46e809f97346c81701ee8af0144abbe8458386787a2598b2bc88b81ec2b400",
+            "git_blob_sha": "a00e38106ddfe903960659b3bfa4cb3fc73e69d3",
+            "input_for": [
+              "s1.core.automation"
+            ]
+          },
+          {
+            "canonical_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/review-supplement-1.md",
+            "bytes": 338932,
+            "sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+            "git_blob_sha": "dab732abd7f47eb3f26473b5614fa92d2b747a46",
+            "input_for": [
+              "s1.core.automation"
+            ]
+          },
+          {
+            "canonical_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/review-supplement-2.md",
+            "bytes": 375497,
+            "sha256": "208b0ba87350a91970d28f298d802512b72b6834360815b95ca17ab22ebc54b1",
+            "git_blob_sha": "bf43391979916e85f44ac4841926954d2c13362f",
+            "input_for": [
+              "s1.core.automation"
+            ]
+          },
+          {
+            "canonical_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/review-supplement-3.md",
+            "bytes": 404469,
+            "sha256": "e8158270e77a88cde1ec5db114c51e79004264ff80be667aebde8e365ede1d8c",
+            "git_blob_sha": "22a025bbc012ed09130f0d778e34e188f5533c89",
+            "input_for": [
+              "s1.core.automation"
+            ]
+          },
+          {
+            "canonical_path": "packages/core/src/backend-toolkit/packs/modelina.package-lock.json",
+            "bytes": 266885,
+            "sha256": "0fc1a48c86b45b4749fda6d5e811a1f9b3f55a246fa5e8dd035435e84d2149d2",
+            "git_blob_sha": "9fc9ef1bc7124fcead2d83cea20f2bff4340949c",
+            "input_for": [
+              "s1.core.research"
+            ]
+          }
+        ],
+        "proposed_bound_contains_all_six_mechanically_recomputed": true,
+        "underlying_six_source_files_opened_by_dossier": false,
+        "patch_path": "proposals/s4-source-limit.patch",
+        "patch_sha256": "5cadc6c0892bfbff286a742a309570452b50566382cb0404ed85350fa2ac7e28",
+        "proposal_is_a_new_capability": false
+      },
+      "sources": [
+        {
+          "input_id": "R07",
+          "path": "payload/receipts/s4-runtime-release-original.json",
+          "bytes": 28282,
+          "sha256": "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016",
+          "locator": "/known_limits/1"
+        },
+        {
+          "input_id": "R14",
+          "path": "payload/receipts/runtime-preflight/schema-notes.json",
+          "bytes": 2288,
+          "sha256": "2750685166e4b068f7fd623ed55ecf041bf4384f0e8938dc3590f3c217b98ca4",
+          "locator": "/requirements/5"
+        },
+        {
+          "input_id": "R15",
+          "path": "payload/proposals/s4-source-limit.json",
+          "bytes": 2791,
+          "sha256": "036a3d8f2ee3e2bfe17aa748348b5860e9d721007b07c6a50aa848224197335f",
+          "locator": "/status; /reason; /proposal; /required_verification; /retained_limits"
+        },
+        {
+          "input_id": "R16",
+          "path": "payload/proposals/s4-source-limit-validation-v2.json",
+          "bytes": 4919,
+          "sha256": "e24234bf995bf3229c14c971c9b239ff0c6871c33bc947cfe69841715c1e682b",
+          "locator": "/required_oversized_whole_inputs; /required_owner_validation; /not_authorized_by_this_proposal"
+        },
+        {
+          "input_id": "R17",
+          "path": "payload/proposals/s4-source-limit.patch",
+          "bytes": 3508,
+          "sha256": "5cadc6c0892bfbff286a742a309570452b50566382cb0404ed85350fa2ac7e28",
+          "locator": "whole patch; no application performed"
+        }
+      ]
+    },
+    {
+      "documentary_id": "OBS-04",
+      "classification": "PREREQUISITE_NOT_A_PUBLISH_REJECTION",
+      "statement": "A evidência de política é de outro root isolado S4. Nenhuma criação de autoridade foi feita pelo preflight S1-03; a coleção não comprova política atual própria nem tentativa de publish rejeitada por política.",
+      "observed": {
+        "s4_policy_root": "/workspace/scratch/aff930d22ec7/s4/candidate",
+        "s4_policy_path": ".atlas/policy.json",
+        "s4_policy_sha256": "686be455d8e63ecd904ecde9a33a8f92ad45f2eaddad38dc7b4e6b238db51099",
+        "s4_actor": "/root",
+        "s4_ratifier": "/root",
+        "preflight_authority_created": false,
+        "baseline_policy_404_basis": "preflight REPORT only; original fetch receipt not in allowed26",
+        "current_s1_policy_authorization": "UNKNOWN_FROM_ALLOWED_INPUTS",
+        "s1_governed_publish_policy_error": "NOT_OBSERVED_IN_ALLOWED_INPUTS",
+        "source_only_probe_publication_attempted": false
+      },
+      "sources": [
+        {
+          "input_id": "R11",
+          "path": "payload/receipts/s4-policy-provenance-reference.json",
+          "bytes": 889,
+          "sha256": "23cf38e354a28fd06a1aef386dbd4b86955d2b5c8222ee6f6d57dbc964da3543",
+          "locator": "/repo_root; /authorization; /binding_status"
+        },
+        {
+          "input_id": "R12",
+          "path": "payload/receipts/runtime-preflight/preflight-summary.json",
+          "bytes": 739,
+          "sha256": "a3292651865f137a2da3f097c08531343d34a72b49bed8753beef5ce8e92c4a7",
+          "locator": "/authority_created"
+        },
+        {
+          "input_id": "R13",
+          "path": "payload/receipts/runtime-preflight/REPORT.md",
+          "bytes": 5467,
+          "sha256": "a3950ac9c0b2324a08624ad180bfc2d942bf485eccecc93a85826f70bbf978a5",
+          "locator": "Principal inputs still required, item5"
+        },
+        {
+          "input_id": "R07",
+          "path": "payload/receipts/s4-runtime-release-original.json",
+          "bytes": 28282,
+          "sha256": "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016",
+          "locator": "/authority_prerequisites"
+        },
+        {
+          "input_id": "R01",
+          "path": "inputs/COMMON.md",
+          "bytes": 12959,
+          "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+          "locator": "Escritas e isolamento; Transporte e runtime Atlas"
+        },
+        {
+          "input_id": "R02",
+          "path": "inputs/mission.json",
+          "bytes": 6006,
+          "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+          "locator": "/authority/excluded"
+        }
+      ]
+    },
+    {
+      "documentary_id": "OBS-05",
+      "classification": "PRESERVED_FAILED_CAPABILITY_PROBE",
+      "statement": "Um preflight do comando oficial de guard executou e terminou exit1 por no-repository; zero regras e arquivos não significam gate aprovado.",
+      "observed": {
+        "kind": "guard-capability-probe",
+        "command": [
+          "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/runtime-preflight/bun-runtime/node_modules/.bin/bun",
+          "run",
+          "check:guards",
+          "--base",
+          "origin/dev",
+          "--json"
+        ],
+        "cwd": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/guard-source",
+        "status": "FAILED",
+        "exit_code": 1,
+        "stdout": "{\"base\":null,\"bootstrap\":false,\"rules\":0,\"files\":0,\"findings\":[],\"errors\":[{\"kind\":\"no-repository\",\"message\":\"/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/guard-source is not a git repository\"}],\"approved\":[],\"touchesGuards\":false}\n",
+        "stderr": "$ bun run script/guards/run.ts --base origin/dev --json\nerror: script \"check:guards\" exited with code 1\n",
+        "scope": "preflight of official gate, not final payload gate",
+        "policy": "No git history/ref fabricated; no warning mode/approval/ignore used."
+      },
+      "sources": [
+        {
+          "input_id": "R18",
+          "path": "payload/receipts/guard-preflight.json",
+          "bytes": 985,
+          "sha256": "d15ff1599529c849e3b527fb5dfc5256cb301671e84120fff61604be8ac4eeef",
+          "locator": "/command; /exit_code; /stdout; /scope"
+        }
+      ]
+    },
+    {
+      "documentary_id": "OBS-06",
+      "classification": "PRESERVED_MATERIALIZATION_ERROR_AND_UNEXECUTED_GATE",
+      "statement": "O checkpoint Git real foi reconstruído com história limitada explícita; um blob selecionado faltou. checkout-index e diff numstat falharam; o guard pós-materialização foi NOT_RUN.",
+      "observed": {
+        "head": "63e99146961161b8596bbe8b51e293c92eba4182",
+        "origin_dev": "5e0807b5ff953508f792b8a965883985b05a7066",
+        "merge_base": "7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249",
+        "verified_commits": 1660,
+        "unique_tree_objects": 2378,
+        "head_population": 15367,
+        "base_population": 13892,
+        "changed_paths": 1551,
+        "needed_blobs": 1635,
+        "verified_available_blobs": 1634,
+        "selected_worktree_paths": 1666,
+        "verified_materialized_paths": 1665,
+        "missing_selected_paths": [
+          "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/evidence/source-captures.zip"
+        ],
+        "worktree_byte_drift": [],
+        "checkout_attempt": {
+          "argv": [
+            "git",
+            "checkout-index",
+            "--all"
+          ],
+          "cwd": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/guard-checkout",
+          "exit": 1,
+          "stdout": "",
+          "stderr": "error: unable to read sha1 file of modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/evidence/source-captures.zip (d83941a9d836a23e466ca09ecba1f21d423094cb)\n",
+          "utc": "2026-11-15T01:44:34.874616+00:00"
+        },
+        "numstat_attempt": {
+          "argv": [
+            "git",
+            "diff",
+            "--numstat",
+            "-z",
+            "-M",
+            "-l0",
+            "7e3c21c0d0aaffc5afc7a5f466fa2b61880e3249",
+            "HEAD"
+          ],
+          "exit": 128,
+          "stdout_bytes": 0,
+          "stdout": null,
+          "stderr": "fatal: unable to read d83941a9d836a23e466ca09ecba1f21d423094cb\n"
+        },
+        "official_guard": "NOT_RUN",
+        "shallow_boundaries": [
+          {
+            "sha": "e900fcc41658d6423abfe3b4ade9e018794a57e0",
+            "missing_parent_objects": [
+              "839716462ea07488d58c7179e8486c93bb0d8d15"
+            ]
+          }
+        ],
+        "ancestry_receipt_is_earlier_stage": "Its tree_objects_materialized=false does not overwrite the later materialization-verification receipt."
+      },
+      "sources": [
+        {
+          "input_id": "R26",
+          "path": "payload/receipts/guard-materialization/ancestry-receipt.json",
+          "bytes": 830,
+          "sha256": "c72f0fc8b0e774d1e6939f4691d8636893ef3868b46651bc6934b9d33850be05",
+          "locator": "/"
+        },
+        {
+          "input_id": "R24",
+          "path": "payload/receipts/guard-materialization/materialization-verification.json",
+          "bytes": 2228,
+          "sha256": "b3a1b7599a284c0a2d2d1052c9e890cd25a8d5a47b8930159d636fda53dda35b",
+          "locator": "/"
+        },
+        {
+          "input_id": "R25",
+          "path": "payload/receipts/guard-materialization/checkout-index-attempt.json",
+          "bytes": 436,
+          "sha256": "6047449ec38988948e178547c383fb956d968db71003a7012779a418fbcf6921",
+          "locator": "/"
+        },
+        {
+          "input_id": "R19",
+          "path": "payload/receipts/guard-materialization/REPORT.md",
+          "bytes": 4272,
+          "sha256": "4761845a1bc548f557ca207fb8ce17296c6b7af39e0418bb37f90ad3b7f81a3a",
+          "locator": "Trabalho concluído; Bloqueio preciso; Gate"
+        }
+      ]
+    },
+    {
+      "documentary_id": "OBS-07",
+      "classification": "PRESERVED_BINARY_TRANSPORT_FAILURES",
+      "statement": "As rotas registradas não forneceram o ZIP obrigatório. Resposta base64 vazia acompanhada do SHA Git não prova os bytes.",
+      "observed": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/evidence/source-captures.zip",
+        "bytes": 1339105,
+        "git_blob_sha": "d83941a9d836a23e466ca09ecba1f21d423094cb",
+        "zip_sha256": "UNKNOWN_BYTES_NOT_CAPTURED",
+        "fetch_blob_error": {
+          "error": "UnicodeDecodeError: 'utf-8' codec can't decode byte 0xf4 in position 14: invalid continuation byte",
+          "error_code": "UNKNOWN"
+        },
+        "fetch_file_base64_observed_content": "",
+        "fetch_file_base64_sha": "d83941a9d836a23e466ca09ecba1f21d423094cb",
+        "raw_git_blob_get_disposition": "Raw Git blob GET was rejected with HTTPError 400 GitHub Fetch only accepts UTF-8 text.",
+        "repository_artifact_listing_error": {
+          "error": "HTTPError: 400: GitHub Fetch URL is not an allowed public GitHub repository or search endpoint. (Response: None)",
+          "error_code": "INVALID_ARGUMENT"
+        },
+        "origin_commit": "dd8d3effd86476f8ffde4c45f1843ca448144280",
+        "origin_runs": {
+          "total_count": 0,
+          "workflow_runs": []
+        },
+        "known_artifact_check": {
+          "artifact_id": 13883635728,
+          "run_id": 43077975153,
+          "archive_sha256": "cf4232dec016e07d63dc0b40497892e1f87dec7af812d6cd3fbc542f8816c7cd",
+          "member_count": 44,
+          "contains_required_binary": false
+        },
+        "exact_historical_path_check": {
+          "schema": "s1-03-exact-historical-artifact-path-check/v1",
+          "observed_at_utc": "2026-11-15T07:09:40.970765+00:00",
+          "path": "/workspace/scratch/2b46fb541868/genesis-s1/gate-checkout/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/evidence/source-captures.zip",
+          "basis": "Exact prior repository gate-checkout path explicitly recorded in the inherited guards-dd8-receipt.json plus exact protected repository artifact path. No unrelated directory or host log discovery.",
+          "is_file": false,
+          "expected_git_blob_sha": "d83941a9d836a23e466ca09ecba1f21d423094cb",
+          "expected_bytes": 1339105,
+          "worktree_modified": false
+        },
+        "latest_supplied_binary_observation": {
+          "schema": "s1-03-current-head-guard-binary-check/v1",
+          "observed_at_utc": "2026-11-15T08:34:40.808Z",
+          "request": {
+            "repository_full_name": "gustavomhss/hugr-orchestra",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/evidence/source-captures.zip",
+            "ref": "d5a84e583f55b31b17cbb407553243bd0801c56c",
+            "encoding": "base64"
+          },
+          "result": {
+            "content": [
+              {
+                "type": "text",
+                "text": "Action completed."
+              }
+            ],
+            "structuredContent": {
+              "content": "",
+              "encoding": "base64",
+              "sha": "d83941a9d836a23e466ca09ecba1f21d423094cb",
+              "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d5a84e583f55b31b17cbb407553243bd0801c56c/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/evidence/source-captures.zip",
+              "display_title": "source-captures.zip"
+            },
+            "isError": false
+          },
+          "purpose": "Verify the historical blocking blob identity at current branch HEAD; no fabricated materialization or guard PASS."
+        }
+      },
+      "sources": [
+        {
+          "input_id": "R21",
+          "path": "payload/receipts/guard-materialization/binary-transport-blocker.json",
+          "bytes": 10861,
+          "sha256": "13365af70732f780efa34bf8bb3852f1a9e1cb9fc4c83fb1cff81efd4093673a",
+          "locator": "/fetch_blob_error; /fetch_file_base64_result; /origin_history; /origin_runs; /collection_artifacts_route; /limits"
+        },
+        {
+          "input_id": "R22",
+          "path": "payload/receipts/guard-materialization/additional-artifact-route-check.json",
+          "bytes": 1267,
+          "sha256": "c184f6319bc548469c150fd16477eea0147a97601ad22fa22dfe8f42699fcb9e",
+          "locator": "/"
+        },
+        {
+          "input_id": "R23",
+          "path": "payload/receipts/guard-materialization/exact-historical-artifact-path-check.json",
+          "bytes": 651,
+          "sha256": "161b2741a736ad28e2b3fd197246315bef1ec016060b9ebf4a3c85013a160c93",
+          "locator": "/"
+        },
+        {
+          "input_id": "R20",
+          "path": "payload/receipts/guard-materialization/current-head-binary-check.json",
+          "bytes": 1052,
+          "sha256": "8c745ffec565879e747d8a2cc98376a9c2d31ff54f187aa45f6a6422b58bc6e3",
+          "locator": "/"
+        }
+      ]
+    },
+    {
+      "documentary_id": "OBS-08",
+      "classification": "SCOPED_CAPABILITY_PROVENANCE",
+      "statement": "A redescoberta embutida coincide byte a byte com o release r3 original. Seu candidato nativo e candidato dos controles comuns são distintos; o release não transfere bindings.",
+      "observed": {
+        "release_id": "20261111-v3-fresh-s4-r3",
+        "release_bytes_sha256": "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016",
+        "rediscovery_embedded_content_equal": true,
+        "release_observed_head": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+        "native_candidate": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+        "common_controls_candidate": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+        "capabilities": {
+          "native_import": {
+            "state": "PROVEN",
+            "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+            "limits": [
+              "Bounded one-artifact sample. Main S4 package remains incomplete."
+            ]
+          },
+          "runtime_binding": {
+            "state": "PROVEN",
+            "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+            "limits": [
+              "Two actual independent new decisions for this exact candidate only. Other roots, inputs, source directories or candidate revisions require their own bindings."
+            ]
+          },
+          "governed_publication": {
+            "state": "PROVEN",
+            "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+            "limits": [
+              "One actual native L1A artifact, in the isolated authorized state. This is not the complete S4 package or the independent ownership consumer."
+            ]
+          },
+          "index": {
+            "state": "PROVEN",
+            "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+            "limits": [
+              "One actual native L1A artifact, in the isolated authorized state. This is not the complete S4 package or the independent ownership consumer."
+            ]
+          },
+          "read": {
+            "state": "PROVEN",
+            "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+            "limits": [
+              "One actual native L1A artifact, in the isolated authorized state. This is not the complete S4 package or the independent ownership consumer."
+            ]
+          },
+          "cache_reuse": {
+            "state": "PROVEN",
+            "candidate_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+            "limits": [
+              "Named common remote controls use explicitly synthetic fixture producers/reviewers; they prove runtime behavior, not native campaign semantic decisions.",
+              "No arbitrary power-loss, distributed concurrency or universal chronological producer-version fence.",
+              "Own full-package maintenance and independent consumer remain separate unfinished obligations."
+            ]
+          },
+          "affected_rebuild": {
+            "state": "PROVEN",
+            "candidate_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+            "limits": [
+              "Named common remote controls use explicitly synthetic fixture producers/reviewers; they prove runtime behavior, not native campaign semantic decisions.",
+              "No arbitrary power-loss, distributed concurrency or universal chronological producer-version fence.",
+              "Own full-package maintenance and independent consumer remain separate unfinished obligations."
+            ]
+          },
+          "failure_resume": {
+            "state": "PROVEN",
+            "candidate_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+            "limits": [
+              "Named common remote controls use explicitly synthetic fixture producers/reviewers; they prove runtime behavior, not native campaign semantic decisions.",
+              "No arbitrary power-loss, distributed concurrency or universal chronological producer-version fence.",
+              "Own full-package maintenance and independent consumer remain separate unfinished obligations."
+            ]
+          },
+          "rollback": {
+            "state": "PROVEN",
+            "candidate_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+            "limits": [
+              "Named common remote controls use explicitly synthetic fixture producers/reviewers; they prove runtime behavior, not native campaign semantic decisions.",
+              "No arbitrary power-loss, distributed concurrency or universal chronological producer-version fence.",
+              "Own full-package maintenance and independent consumer remain separate unfinished obligations."
+            ]
+          },
+          "migration": {
+            "state": "PROVEN",
+            "candidate_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+            "limits": [
+              "Named common remote controls use explicitly synthetic fixture producers/reviewers; they prove runtime behavior, not native campaign semantic decisions.",
+              "No arbitrary power-loss, distributed concurrency or universal chronological producer-version fence.",
+              "Own full-package maintenance and independent consumer remain separate unfinished obligations."
+            ]
+          },
+          "coherent_read_concurrency": {
+            "state": "PROVEN",
+            "candidate_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+            "limits": [
+              "Named common remote controls use explicitly synthetic fixture producers/reviewers; they prove runtime behavior, not native campaign semantic decisions.",
+              "No arbitrary power-loss, distributed concurrency or universal chronological producer-version fence.",
+              "Own full-package maintenance and independent consumer remain separate unfinished obligations."
+            ]
+          }
+        },
+        "common_control_run_id": 43077975153,
+        "common_control_job_id": 130722742703,
+        "gate_records": [
+          {
+            "gate": "typecheck",
+            "state": "PROVEN",
+            "receipt": {
+              "commit": "283b6e5efeadfef99f202f18eab72435ef7d9771",
+              "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/typecheck-v1.json",
+              "sha256": "c2ba11961d870bc2be74d8a584ab15866ce36952b5f553925e4e88b570b39833"
+            }
+          },
+          {
+            "gate": "atlas-pilot",
+            "state": "FAILED",
+            "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+            "run_id": 43065851373,
+            "receipt": {
+              "commit": "2f8092ffeedc165b03640a474ef2e48b26eb01e9",
+              "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-v1/receipt.json",
+              "sha256": "ad3cd8613f88833c58061ae65399451d8763f5d085309ef85627ce6c55d3042c"
+            }
+          },
+          {
+            "gate": "atlas-pilot-related-corrected-candidate",
+            "state": "PROVEN",
+            "candidate_revision": "673b90d82b8b888d5d0184d2e17dec6d5d1b05f1",
+            "run_id": 43070538154,
+            "receipt": {
+              "commit": "2f8092ffeedc165b03640a474ef2e48b26eb01e9",
+              "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r1b/receipt.json",
+              "sha256": "32c72a14a9ad5753dac4b49ba9d847aef8ffd2c05224f15b0be3d09fea39ae20"
+            },
+            "limit": "Historical passing assertions; superseded for concurrency because the combined two-read interval did not prove overlap of the main read. It does not support the new coherent_read_concurrency capability."
+          },
+          {
+            "gate": "atlas-pilot-corrected-main-read-control",
+            "state": "PROVEN",
+            "candidate_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+            "run_id": 43077975153,
+            "job_id": 130722742703,
+            "receipt": {
+              "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+              "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+              "sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330"
+            },
+            "summary": "220 tests passed;22 named mutant controls rejected;18 generated outputs match;guards exit0,0 gate,2 acknowledged large-file warnings,0 errors"
+          }
+        ],
+        "gate_receipts_or_judge_files_followed_by_dossier": false
+      },
+      "sources": [
+        {
+          "input_id": "R10",
+          "path": "payload/receipts/runtime-rediscovery-maintenance.json",
+          "bytes": 30775,
+          "sha256": "2c14c388fbfeee77ea814e79ac443db307c24810fd7c348f534e5821498bbdcf",
+          "locator": "/file_response/structuredContent/content; /ref_observed_head; /release_bytes_sha256; /same_bytes_as_initial_capture"
+        },
+        {
+          "input_id": "R07",
+          "path": "payload/receipts/s4-runtime-release-original.json",
+          "bytes": 28282,
+          "sha256": "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016",
+          "locator": "/capabilities; /known_limits; /gate_refs; /published_scope; /common_controls_entrypoint"
+        }
+      ]
+    },
+    {
+      "documentary_id": "OBS-09",
+      "classification": "TIME_BOUNDED_CI_VISIBILITY",
+      "statement": "Na consulta preservada de 08:27:31 UTC, a branch própria tinha HEAD d5a84... e total_count 0 workflow runs. Isso não prova impossibilidade de dispatch nem estado posterior.",
+      "observed": {
+        "observed_at_utc": "2026-11-15T08:27:31.803Z",
+        "branch_summary": [
+          {
+            "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/branches/genesis-s1-automation",
+            "head": "d5a84e583f55b31b17cbb407553243bd0801c56c",
+            "root_tree": "15d4d4ebf48042b53db763e3498d42a886eaf6ae",
+            "protected": false,
+            "isError": false
+          },
+          {
+            "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/branches/genesis-fresh-s4",
+            "head": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+            "root_tree": "3c93c4636c1e4c4b704f8be9314e22b2149e5609",
+            "protected": false,
+            "isError": false
+          },
+          {
+            "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/runs?branch=genesis-s1-automation&per_page=100",
+            "total_count": 0,
+            "isError": false
+          }
+        ],
+        "query": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/runs?branch=genesis-s1-automation&per_page=100",
+        "result": {
+          "total_count": 0,
+          "workflow_runs": []
+        },
+        "remote_write": false,
+        "dispatch_capability": "UNKNOWN_NOT_DEMONSTRATED_BY_READ_ONLY_QUERY",
+        "final_payload_head": "UNKNOWN_NOT_IN_ALLOWED_INPUTS",
+        "own_final_head_guard_or_ci": "NOT_PROVEN_BY_ALLOWED_INPUTS"
+      },
+      "sources": [
+        {
+          "input_id": "R08",
+          "path": "payload/receipts/branch-runtime-refresh-before-auto4-close.json",
+          "bytes": 20777,
+          "sha256": "c76cf1725d69be7aff76acd2f1fb106ad7ece8e1670c59faa2159acff3a7e14d",
+          "locator": "/observed_at_utc; /records/2; /summary; /remote_write"
+        },
+        {
+          "input_id": "R03",
+          "path": "inputs/AGENTS.md",
+          "bytes": 16501,
+          "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+          "locator": "Testing; CI Cadence; Guardrail; Type Checking"
+        },
+        {
+          "input_id": "R04",
+          "path": "inputs/references/runtime.md",
+          "bytes": 10217,
+          "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237",
+          "locator": "Economia, CI e encerramento"
+        }
+      ]
+    },
+    {
+      "documentary_id": "OBS-10",
+      "classification": "EXPLICIT_PENDING_WORK_NOT_WAIVED",
+      "statement": "O dispatch e a receita mantêm a preparação completa de 12 artefatos, sete consumidores reais e revisão final do mesmo par como trabalho posterior da principal. O dossiê não é resultado dessas operações.",
+      "observed": {
+        "full12_prepare": "PENDING_AT_DISPATCH_NOT_EXECUTED_BY_DOSSIER",
+        "seven_consumers": "PENDING_AT_DISPATCH_NOT_EXECUTED_BY_DOSSIER",
+        "final_same_pair_review": "PENDING_AT_DISPATCH_NOT_PERFORMED_BY_DOSSIER",
+        "maintenance_results_in_allowed_inputs": "UNKNOWN_NO_ACTUAL_DOMAIN_MAINTENANCE_RESULT_INCLUDED",
+        "rediscovery_is_not_a_read_receipt": true,
+        "mission_semantic_acceptance": "NOT_ASSESSED",
+        "mission_completion": "NOT_DETERMINED_BY_DOSSIER",
+        "tokens": "UNKNOWN",
+        "physical_attempts": "UNKNOWN",
+        "cost": "UNKNOWN"
+      },
+      "sources": [
+        {
+          "input_id": "RECIPE",
+          "path": "payload/recipes/operational-blocker-dossier-v2.json",
+          "bytes": 7092,
+          "sha256": "088c406eba2735b9039250f08b3002950feb6a01cabd40e85809c6ff465bd6fb",
+          "locator": "/instructions/2; /instructions/3"
+        },
+        {
+          "input_id": "DISPATCH",
+          "path": "assembly-native-descriptors/operational-blocker-dossier/dispatch-message.txt",
+          "locator": "literal visible dispatch; final paragraph",
+          "bytes": 1409,
+          "sha256": "0026b08c0b2062fd3d8d5c97b47de6e36d0fa5eed21cc64eacd454569e967e0d"
+        },
+        {
+          "input_id": "R05",
+          "path": "inputs/references/completion.md",
+          "bytes": 4497,
+          "sha256": "087428f9cd8e4acfe26ee71e9b97a5db291b1d361fe763d92245b978cada4ffd",
+          "locator": "Critério de entrega local; Impedimento material"
+        },
+        {
+          "input_id": "R06",
+          "path": "inputs/references/handoffs.md",
+          "bytes": 6282,
+          "sha256": "1ba5b2fe687bf7677675f00b23515e28f9fcb575f7ab6894ebb89267b8d69513",
+          "locator": "Conclusão local e integração global"
+        },
+        {
+          "input_id": "R10",
+          "path": "payload/receipts/runtime-rediscovery-maintenance.json",
+          "bytes": 30775,
+          "sha256": "2c14c388fbfeee77ea814e79ac443db307c24810fd7c348f534e5821498bbdcf",
+          "locator": "/reason; only release rediscovery, no query result"
+        }
+      ]
+    },
+    {
+      "documentary_id": "OBS-11",
+      "classification": "PRESERVED_EXACT_TITLE_ROUTE_WITH_NO_EXACT_MATCH",
+      "statement": "O recibo adicional registra uma busca pelo título exato source-captures.zip sem candidato com esse nome. Não houve leitura ou materialização de candidato; isso não prova ausência global do ZIP.",
+      "observed": {
+        "schema": "s1-03-exact-binary-copy-route-check/v1",
+        "query": {
+          "search_query": [
+            {
+              "q": "\"source-captures.zip\"",
+              "search_title_only": true
+            }
+          ],
+          "top_k": 20
+        },
+        "operation": "Library exact-title search through exposed connector",
+        "needed_git_blob_sha": "d83941a9d836a23e466ca09ecba1f21d423094cb",
+        "needed_bytes": 1339105,
+        "results_count": 0,
+        "fuzzy_title_candidates_count": 1,
+        "exact_name_candidates_count": 0,
+        "read_or_materialization_performed": false,
+        "disposition": "This exact-title query returned no matching ZIP. No unrelated candidate was opened or imported. This is not a claim of exhaustive global absence.",
+        "privacy": "Full tool response retained only in local scratch because it contains an unrelated fuzzy match; published receipt omits unrelated names, identifiers and snippets.",
+        "at_utc": "2026-11-15T09:24:54.089439+00:00",
+        "original_response_sha256": "46e974d7404911e024607d6a253bc67c7bf01675c8a93ea6f2bdb8399d4e72c1"
+      },
+      "limits": {
+        "unrelated_fuzzy_candidate_opened_by_dossier": false,
+        "raw_search_response_read_by_dossier": false,
+        "original_response_sha256_status": "REFERENCE_RECORDED_IN_R27_NOT_INDEPENDENTLY_VERIFIED",
+        "global_absence": "NOT_ESTABLISHED"
+      },
+      "sources": [
+        {
+          "input_id": "R27",
+          "path": "payload/receipts/guard-materialization/exact-zip-library-route-check.json",
+          "bytes": 1009,
+          "sha256": "ca50fa3ad1cfb197426024fe403d1f603ec8e95f4f8fb727b5bce57b82f01598",
+          "locator": "/query; /at_utc; /exact_name_candidates_count; /read_or_materialization_performed; /disposition; /original_response_sha256"
+        }
+      ]
+    }
+  ],
+  "unblock_conditions": [
+    {
+      "documentary_id": "COND-CAP",
+      "affected_operation": "successful prepare of required whole inputs",
+      "owner": "S4 runtime owner; S1-03 principal consumes a published compatible release",
+      "condition": "Owner decides and validates a bounded source-observation/capture capability preserving whole inputs and existing refusal controls, publishes an immutable capability-scoped release; S1-03 pins it, executes new preparation and obtains the required exact same-pair binding before governed publication.",
+      "proposal_specific": "1MiB is the supplied proposal, not a new active limit or the only universally permitted envelope. The six listed files fit it by arithmetic; final closure remains to be proven.",
+      "not_a_reason_to_skip": "The authorized full12 attempt still needs its own actual receipt even if the previously observed cap predicts a refusal.",
+      "sources": [
+        {
+          "input_id": "R16",
+          "path": "payload/proposals/s4-source-limit-validation-v2.json",
+          "bytes": 4919,
+          "sha256": "e24234bf995bf3229c14c971c9b239ff0c6871c33bc947cfe69841715c1e682b",
+          "locator": "/owner; /required_owner_validation; /not_authorized_by_this_proposal"
+        },
+        {
+          "input_id": "R01",
+          "path": "inputs/COMMON.md",
+          "bytes": 12959,
+          "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+          "locator": "Escritas e isolamento; Transporte e runtime Atlas"
+        },
+        {
+          "input_id": "R04",
+          "path": "inputs/references/runtime.md",
+          "bytes": 10217,
+          "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237",
+          "locator": "S4: liberar a capacidade compartilhada cedo; Binding, atualização e consumo"
+        }
+      ]
+    },
+    {
+      "documentary_id": "COND-AUTHORITY",
+      "affected_operation": "governed publication and valid own-scope binding",
+      "owner": "S1-03 principal determines actual applicable task authority; competent policy/approval authority remains required where outside the mission",
+      "condition": "Document the real authority for the isolated S1-03 root, actor and scope, actual policy and named ratifier where required, plus the same pair's exact runtime binding. S4's /root declaration is not an authorization transfer. No policy/approval change is authorized by this dossier.",
+      "sources": [
+        {
+          "input_id": "R07",
+          "path": "payload/receipts/s4-runtime-release-original.json",
+          "bytes": 28282,
+          "sha256": "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016",
+          "locator": "/authority_prerequisites"
+        },
+        {
+          "input_id": "R11",
+          "path": "payload/receipts/s4-policy-provenance-reference.json",
+          "bytes": 889,
+          "sha256": "23cf38e354a28fd06a1aef386dbd4b86955d2b5c8222ee6f6d57dbc964da3543",
+          "locator": "/repo_root; /authorization; /binding_status"
+        },
+        {
+          "input_id": "R13",
+          "path": "payload/receipts/runtime-preflight/REPORT.md",
+          "bytes": 5467,
+          "sha256": "a3950ac9c0b2324a08624ad180bfc2d942bf485eccecc93a85826f70bbf978a5",
+          "locator": "Principal inputs still required, items4-5"
+        },
+        {
+          "input_id": "R02",
+          "path": "inputs/mission.json",
+          "bytes": 6006,
+          "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+          "locator": "/authority/excluded"
+        },
+        {
+          "input_id": "R04",
+          "path": "inputs/references/runtime.md",
+          "bytes": 10217,
+          "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237",
+          "locator": "Binding, atualização e consumo"
+        }
+      ]
+    },
+    {
+      "documentary_id": "COND-GUARD",
+      "affected_operation": "faithful worktree and official own guard",
+      "owner": "S1-03 principal for the owned checkout/gate; an authorized byte transport must supply the exact historical blob",
+      "condition": "Obtain the exact 1339105-byte ZIP through an actually authorized available route, verify Git blob d83941a9d836a23e466ca09ecba1f21d423094cb, complete and reverify the worktree, reconcile the actual delivery HEAD and origin/dev, then run the official guard. The checkpoint 63e991 is not the final-head gate.",
+      "sources": [
+        {
+          "input_id": "R19",
+          "path": "payload/receipts/guard-materialization/REPORT.md",
+          "bytes": 4272,
+          "sha256": "4761845a1bc548f557ca207fb8ce17296c6b7af39e0418bb37f90ad3b7f81a3a",
+          "locator": "Gate"
+        },
+        {
+          "input_id": "R20",
+          "path": "payload/receipts/guard-materialization/current-head-binary-check.json",
+          "bytes": 1052,
+          "sha256": "8c745ffec565879e747d8a2cc98376a9c2d31ff54f187aa45f6a6422b58bc6e3",
+          "locator": "/request/ref; /result/structuredContent"
+        },
+        {
+          "input_id": "R03",
+          "path": "inputs/AGENTS.md",
+          "bytes": 16501,
+          "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+          "locator": "Guardrail"
+        },
+        {
+          "input_id": "R04",
+          "path": "inputs/references/runtime.md",
+          "bytes": 10217,
+          "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237",
+          "locator": "Ambiente mínimo, sem inventar capacidades"
+        },
+        {
+          "input_id": "R06",
+          "path": "inputs/references/handoffs.md",
+          "bytes": 6282,
+          "sha256": "1ba5b2fe687bf7677675f00b23515e28f9fcb575f7ab6894ebb89267b8d69513",
+          "locator": "Identidades que não se confundem; Publicar sem autorreferência ou corrida"
+        }
+      ]
+    },
+    {
+      "documentary_id": "COND-CI",
+      "affected_operation": "own applicable remote gates",
+      "owner": "S1-03 principal through the actually available authorized GitHub Actions route",
+      "condition": "Record actual run, candidate/head, scope and result of the applicable own gates. Reuse S4 common controls only with explicit candidate/capability compatibility; do not infer own CI success from local preflight build or the common run. The supplied zero-run query does not establish dispatch impossibility.",
+      "sources": [
+        {
+          "input_id": "R03",
+          "path": "inputs/AGENTS.md",
+          "bytes": 16501,
+          "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+          "locator": "Testing; CI Cadence; Type Checking"
+        },
+        {
+          "input_id": "R04",
+          "path": "inputs/references/runtime.md",
+          "bytes": 10217,
+          "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237",
+          "locator": "Economia, CI e encerramento"
+        },
+        {
+          "input_id": "R05",
+          "path": "inputs/references/completion.md",
+          "bytes": 4497,
+          "sha256": "087428f9cd8e4acfe26ee71e9b97a5db291b1d361fe763d92245b978cada4ffd",
+          "locator": "Critério de entrega local, items5-6"
+        },
+        {
+          "input_id": "R07",
+          "path": "payload/receipts/s4-runtime-release-original.json",
+          "bytes": 28282,
+          "sha256": "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016",
+          "locator": "/published_scope; /gate_refs"
+        },
+        {
+          "input_id": "R08",
+          "path": "payload/receipts/branch-runtime-refresh-before-auto4-close.json",
+          "bytes": 20777,
+          "sha256": "c76cf1725d69be7aff76acd2f1fb106ad7ece8e1670c59faa2159acff3a7e14d",
+          "locator": "/records/2; /summary/2"
+        }
+      ]
+    },
+    {
+      "documentary_id": "COND-OWN-OPERATIONS",
+      "affected_operation": "complete own preparation, consumption, maintenance and final review",
+      "owner": "S1-03 principal and the already assigned persistent pair in their existing roles",
+      "condition": "Execute and preserve the required actual full12 attempt and seven consumer operations; retain any genuine HOLD/error without converting it into consumed body or a domain verdict. Subsequent successful publication/consumption and complete maintenance require their real preconditions and own receipts. Final same-pair review remains separate. This dossier issues no third judgment or completion state.",
+      "sources": [
+        {
+          "input_id": "R01",
+          "path": "inputs/COMMON.md",
+          "bytes": 12959,
+          "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+          "locator": "Juízes e consumidores; Entrega, provas e economia"
+        },
+        {
+          "input_id": "R04",
+          "path": "inputs/references/runtime.md",
+          "bytes": 10217,
+          "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237",
+          "locator": "O que cada evidência permite afirmar; Binding, atualização e consumo"
+        },
+        {
+          "input_id": "R05",
+          "path": "inputs/references/completion.md",
+          "bytes": 4497,
+          "sha256": "087428f9cd8e4acfe26ee71e9b97a5db291b1d361fe763d92245b978cada4ffd",
+          "locator": "Critério de entrega local"
+        },
+        {
+          "input_id": "R16",
+          "path": "payload/proposals/s4-source-limit-validation-v2.json",
+          "bytes": 4919,
+          "sha256": "e24234bf995bf3229c14c971c9b239ff0c6871c33bc947cfe69841715c1e682b",
+          "locator": "/required_owner_validation/5"
+        }
+      ]
+    }
+  ],
+  "limits": {
+    "unlisted_files_read": false,
+    "reserved_contents_read": false,
+    "knowledge_bodies_read": false,
+    "judge_responses_read": false,
+    "network_used": false,
+    "runtime_operations_performed": 0,
+    "product_tests_performed": 0,
+    "agents_called": 0,
+    "product_or_gate_files_modified": false,
+    "semantic_acceptance": "NOT_ASSESSED",
+    "mission_completion": "NOT_DETERMINED_BY_DOSSIER",
+    "physical_model_attempts": "UNKNOWN",
+    "tokens": "UNKNOWN",
+    "cost": "UNKNOWN"
+  },
+  "output_identity_rule": "Contains REPORT.md, dispatch-message.txt and response.md identities only. Its own SHA256 is intentionally emitted out-of-band; no direct or indirect self-reference.",
+  "initial_recipe_input_count": 26,
+  "initial_recipe_input_bytes": 184455,
+  "additional_scope_authorization": {
+    "literal_message": "Complemento factual autorizado ao seu dossiê: a principal executou agora uma busca exata pelo título source-captures.zip na Library; não retornou candidato com esse nome, e nenhum candidato não relacionado foi aberto. Você pode ler adicionalmente payload/receipts/guard-materialization/exact-zip-library-route-check.json. Inclua a identidade integral desse único arquivo adicional em evidence.json e trate a busca como rota observada sem correspondência exata, nunca como prova de ausência global. O resultado bruto contém candidato fuzzy alheio à missão e fica fora dos seus inputs e do payload; não o abra. Demais limites e saídas permanecem os mesmos.",
+    "source": "visible parent message /root",
+    "original_wire_bytes": "UNKNOWN",
+    "capture_note": "Literal visible text recorded here; original connector/wire bytes are not claimed."
+  },
+  "display_segment_coordinate_system": "JavaScript UTF-16 string offsets for display coverage only; bytes/SHA-256 identify the full original UTF-8 files.",
+  "output_identities": [
+    {
+      "path": "assembly-native-descriptors/operational-blocker-dossier/REPORT.md",
+      "bytes": 46010,
+      "sha256": "c2a1cdc250309990f991e5e1d553143433b9604462b6b0dcd4b2a7ff11cd996a",
+      "terminal_lf": true
+    },
+    {
+      "path": "assembly-native-descriptors/operational-blocker-dossier/dispatch-message.txt",
+      "bytes": 1409,
+      "sha256": "0026b08c0b2062fd3d8d5c97b47de6e36d0fa5eed21cc64eacd454569e967e0d",
+      "terminal_lf": false
+    },
+    {
+      "path": "assembly-native-descriptors/operational-blocker-dossier/response.md",
+      "bytes": 5221,
+      "sha256": "ba65b8f25aab794aaae3d60ae01827814c1f90d14bd7cb94e14b1f4e28e9d901",
+      "terminal_lf": false
+    }
+  ],
+  "initial_dispatch": {
+    "path": "assembly-native-descriptors/operational-blocker-dossier/dispatch-message.txt",
+    "bytes": 1409,
+    "sha256": "0026b08c0b2062fd3d8d5c97b47de6e36d0fa5eed21cc64eacd454569e967e0d",
+    "literal_visible_text": true,
+    "terminal_lf": false,
+    "original_wire_bytes": "UNKNOWN",
+    "source": "visible parent dispatch /root"
+  },
+  "native_final_contract": {
+    "file": "assembly-native-descriptors/operational-blocker-dossier/response.md",
+    "bytes": 5221,
+    "sha256": "ba65b8f25aab794aaae3d60ae01827814c1f90d14bd7cb94e14b1f4e28e9d901",
+    "literal_visible_text": true,
+    "terminal_lf": false,
+    "agent_task": "/root/native_descriptor",
+    "note": "Prepared return text; parent may preserve the actual native FINAL separately. This dossier does not invent a wire or callback identity."
+  }
+}

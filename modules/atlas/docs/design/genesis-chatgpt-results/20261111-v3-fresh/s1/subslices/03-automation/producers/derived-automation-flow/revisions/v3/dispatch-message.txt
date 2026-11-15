@@ -1,0 +1,7 @@
+Continuação da mesma família: corrija somente o achado público obrigatório AF-L2-J2-01 do L2 de automação. O gate duplo L2 ainda não existe; não avance para L3.
+
+Raiz /workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390. Leia integralmente payload/recipes/derived/automation-flow-dispatch-fidelity-v3.json (6224 bytes; SHA256 a0f24c622d77e89d6a7020334075691efb8f3153f99087eb7bc2afc3337cb9ea) e producers/derived-automation-flow/revisions/v3/request.txt (680 bytes; SHA256 4ed7cc034c532a6b414fa03bfcd4f2034ccfca3f593ebad1652653d814e64538). Cumpra os limites da receita; as quatro saídas v2 estão preservadas em revisions/v3/history.
+
+A única cláusula editável é Dispatch/GitHub na tabela da §4. Preserve a distinção entre prova de workflow_dispatch na branch padrão e fonte da ref selecionada, conforme a linha literal do L1 e o exemplo público do achado fornecidos na receita. Conserve integralmente as duas correções de scheduler e todos os demais bytes do corpo. Atualize somente a evidência pertinente, identidades, manifesto cumulativo, resposta e delta.
+
+Preserve pedidos e dispatches anteriores. Grave este dispatch literal em revisions/v3/dispatch-message.txt sem LF terminal; registre todas as identidades integrais, aliases e original_read_paths. Sem oracle, pareceres completos, novas fontes, rede, ferramentas de produto, testes ou delegação. FINAL exatamente igual a response.md sem LF terminal. O mesmo par examinará a correção antes de liberar dependentes.

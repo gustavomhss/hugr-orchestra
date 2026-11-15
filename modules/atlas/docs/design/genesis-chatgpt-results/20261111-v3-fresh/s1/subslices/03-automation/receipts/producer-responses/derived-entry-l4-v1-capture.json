@@ -1,0 +1,11 @@
+{
+  "agent_id": "/root/entry_l4",
+  "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/payload/receipts/producer-responses/derived-entry-l4-v1-original.md",
+  "bytes": 1839,
+  "sha256": "6d5db8e3dc0dfb03c6f6972deba1e4612bb8fe168083e8ddaf21e00d8c06b560",
+  "literal": true,
+  "producer_response_byte_equal": true,
+  "captured_before_handle_reuse": true,
+  "origin": "Native FINAL_ANSWER delivered to root",
+  "at_utc": "2026-11-15T10:34:07.271625+00:00"
+}

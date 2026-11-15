@@ -1,0 +1,1 @@
+ACK — `derived-automation-impact-v1`, parte **1/2** recebida. Última âncora: evidência, **§6 — Inputs cumulativos e procedimento real**, parágrafo sobre os **36 inputs** e os segmentos contíguos do manifesto anterior. Aguardo a parte final e o `FIM_DO_LOTE` externo.

@@ -1,0 +1,13 @@
+{
+  "id": "root-relay-entry-root-ack02-forward",
+  "target": "/root/review_relay",
+  "kind": "root_witnessed_native_ack_literal_forward",
+  "method": "collaboration.send_message",
+  "tool_returned_normally": true,
+  "message_path": "payload/receipts/continuation-controls/relay-entry-root-ack02-forward.message.txt",
+  "message_bytes": 716,
+  "message_sha256": "58218296361e7edc158124fa1c6a73cf768a8c407f022c91668a36b0a2445060",
+  "physical_attempts": "UNKNOWN",
+  "tokens": "UNKNOWN",
+  "cost": "UNKNOWN"
+}

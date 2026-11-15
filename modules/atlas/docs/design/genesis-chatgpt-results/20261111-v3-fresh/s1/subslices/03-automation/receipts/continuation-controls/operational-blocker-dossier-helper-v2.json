@@ -1,0 +1,16 @@
+{
+  "id": "operational-blocker-dossier-helper-v2",
+  "kind": "MECHANICAL_DOCUMENTARY_EXTRACTION_NOT_JUDGE",
+  "method": "collaboration.followup_task",
+  "target": "/root/native_descriptor",
+  "message": "Novo trabalho mecânico delimitado, sem papel de juiz: consolide o dossiê documental dos impedimentos operacionais já observados para S1-03. Não determine aceite semântico ou conclusão da missão.\n\nRaiz: /workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390\nLeia integralmente a receita payload/recipes/operational-blocker-dossier-v2.json, 7092 bytes, SHA256 088c406eba2735b9039250f08b3002950feb6a01cabd40e85809c6ff465bd6fb, e somente os26 arquivos nela enumerados (184455 bytes). A receita anterior não foi despachada e não precisa ser lida. Evite saída truncada; os arquivos grandes podem ser mostrados em segmentos contíguos, sem mudar sua identidade integral.\n\nEscreva somente em assembly-native-descriptors/operational-blocker-dossier: REPORT.md, evidence.json, dispatch-message.txt e response.md. Registre este dispatch literal sem LF terminal e preserve todas as identidades reais. Não leia oracle, corpos, pareceres, arquivos não enumerados ou inventário recursivo. Não execute runtime, produto, testes, rede, GitHub ou outros agentes. A preparação completa de12 artefatos, sete consumidores e revisão final ainda serão executadas pela principal; este dossiê não as substitui. Diferencie o que ocorreu, o que não rodou por precondição e a condição concreta de desbloqueio, conforme as autoridades fornecidas. Retorne exatamente response.md sem LF terminal.",
+  "message_bytes": 1409,
+  "message_sha256": "0026b08c0b2062fd3d8d5c97b47de6e36d0fa5eed21cc64eacd454569e967e0d",
+  "tool_returned_normally": true,
+  "observed_at_utc": "2026-11-15T09:15:15.022790+00:00",
+  "tokens": "UNKNOWN",
+  "physical_attempts": "UNKNOWN",
+  "cost": "UNKNOWN",
+  "state": "COMPLETED_MECHANICAL_DOSSIER",
+  "original_final_capture": "payload/receipts/operational-blocker-dossier-final-capture.json"
+}

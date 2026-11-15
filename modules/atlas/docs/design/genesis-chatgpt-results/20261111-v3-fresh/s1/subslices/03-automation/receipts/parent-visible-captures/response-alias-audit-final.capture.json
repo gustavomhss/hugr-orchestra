@@ -1,0 +1,11 @@
+{
+  "agent_id": "/root/native_descriptor",
+  "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/assembly-native-descriptors/response-alias-audit/response.md",
+  "bytes": 2828,
+  "sha256": "a54923ae1d72f91e948b1ade43bf9e9c58770bcbffe1ddb324ac5ee232dba123",
+  "literal": true,
+  "equal_to_preemission_capture": true,
+  "captured_before_handle_reuse": true,
+  "origin": "Native FINAL_ANSWER delivered to root",
+  "at_utc": "2026-11-15T10:19:17.736406+00:00"
+}

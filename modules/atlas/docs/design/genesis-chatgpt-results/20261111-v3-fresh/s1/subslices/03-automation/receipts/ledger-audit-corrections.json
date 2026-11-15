@@ -1,0 +1,20 @@
+{
+  "schema": "s1-03-ledger-audit-corrections/v1",
+  "at_utc": "2026-11-15T07:14:25.658021+00:00",
+  "audit_report_sha256": "39b6f22e6f10eee59fdef071a9ee40830605d35de07f28ec7a096467dbb36f21",
+  "events_added": [
+    "transport-failure:j1-idle-handle-contact",
+    "received-control:root-reclaims-j2",
+    "judge-message-pointer-correction:judge-dispatch:relay-root/research-b-supplement-v2:/root/s1_03_j2:2:9d9020e5534705dacf5d0627052ea09f2c4186cd7afbdbe577125547616b495c",
+    "ledger-audit-final-original"
+  ],
+  "F01": "CLOSED for the audited request: original archived byte-identically and its actual event reconciled exactly once; no redispatch.",
+  "F02": "Exact failure and received-control records archived and separately classified; no invented method/execution",
+  "F03": "Actual message extracted from original request, pointer corrected by explicit receipt and ledger addendum; prior records preserved",
+  "native_calls_performed_by_this_operation": 0,
+  "F01_verification": {
+    "event_id": "judge-dispatch:automation-2-supplement-v2:/root/s1_03_j2:3:9d89e56e43f7f607292c10fdf63503d9c9c32880b6479fac3b421539de31ccc2",
+    "request_sha256": "1f7fa443f39b6063eaf0e462d858209e7f8644dbbc1066dbe9a3830948450a30",
+    "verified_at_utc": "2026-11-15T07:14:50.913694+00:00"
+  }
+}

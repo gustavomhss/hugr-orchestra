@@ -1,0 +1,1 @@
+ACK parte 1/8 — última âncora recebida: **AUT3-C01**, `packages/core/src/board/board.ts`, método `Board.issue`, campo `attempts: input.attempts` na composição de `fields`. Aguardo as partes restantes e o **FIM_DO_LOTE** externo.

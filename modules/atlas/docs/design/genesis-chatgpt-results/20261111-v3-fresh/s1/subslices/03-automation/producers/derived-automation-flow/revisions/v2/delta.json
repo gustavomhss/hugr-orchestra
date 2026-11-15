@@ -1,0 +1,136 @@
+{
+  "schema": "s1-03-derived-source-fidelity-delta/v1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "artifact": {
+    "key": "s1.subslice03.automation-flow",
+    "layer": 2,
+    "need": "flow",
+    "version": "v2"
+  },
+  "finding_origin": "Principal source-fidelity pre-review; no J1/J2 judgment of L2 has yet occurred. The current L1 predecessor remains accepted by the same pair, unchanged. This is not a third semantic vote.",
+  "correction_recipe": {
+    "local_path": "payload/recipes/derived/automation-flow-source-fidelity-v2.json",
+    "bytes": 7391,
+    "sha256": "16c2b4e2efc5a6e2ea6a111540e7a662ce154af3c58c366306e254f23d9b3364",
+    "git_blob_sha": "d41472b948b6c1a5d2d5990c3de0a906c9d5cf47"
+  },
+  "current_request": {
+    "local_path": "producers/derived-automation-flow/revisions/v2/request.txt",
+    "bytes": 841,
+    "sha256": "34caa0867a7d0c02dd94c37f789c0af7262132bf4f2359563021b8df3977e769",
+    "git_blob_sha": "52271ca649386b9acd36c4dc8e31153cba7f3dfb"
+  },
+  "visible_dispatch": {
+    "local_path": "producers/derived-automation-flow/revisions/v2/dispatch-message.txt",
+    "bytes": 1370,
+    "sha256": "b5cf544c85c7f3fae4739c200210f829a8b72a7bbb65eab809799fa198621e93",
+    "git_blob_sha": "151ff85a32fe59b63db141eaad368d8b6a7fa55c"
+  },
+  "accepted_predecessor": {
+    "local_path": "producers/automation/body.md",
+    "bytes": 60767,
+    "sha256": "968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae",
+    "git_blob_sha": "e26213eb2fc76dc843dca17d1111334c76f88890",
+    "key": "s1.core.automation",
+    "version": "v4",
+    "section": "12. Claim, admissão, revogação e retomada"
+  },
+  "before": {
+    "local_path": "producers/derived-automation-flow/revisions/v2/history/body.md",
+    "bytes": 16441,
+    "sha256": "5985441b360d0efc6693d0d385980f4a93cab2c044387a7375608dd5a9adf517",
+    "git_blob_sha": "b4874e39655e7aef9c9f6e08aeecc37718658b2f",
+    "original_read_paths": [
+      "producers/derived-automation-flow/body.md"
+    ]
+  },
+  "after": {
+    "local_path": "producers/derived-automation-flow/body.md",
+    "bytes": 16541,
+    "sha256": "5b24037431881e96ddb5a872fd6541c94880d189d8b0c873bac9d8bd874d85c1",
+    "git_blob_sha": "378dbb4cd9f978ed9ab848136a2f4b9fdd72ca6b"
+  },
+  "replacements": [
+    {
+      "finding_id": "AF-L2-PREVIEW-01",
+      "body_section": "8. Scheduler: separar claim, admissão e trabalho concluído",
+      "old_literal": "Capability verifica owner antes da Session e `holds` antes da Session e antes do prompt; não relê o owner nessa segunda passagem.",
+      "new_literal": "Em capability, verifica a presença/identidade do owner antes da Session; para claim ainda não admitida, verifica `holds` antes da Session e outra vez antes de prompt, sem reler a Session do owner.",
+      "occurrences_replaced": 1,
+      "before_byte_start": 14676,
+      "before_byte_end_exclusive": 14807,
+      "old_utf8_bytes": 131,
+      "new_utf8_bytes": 198,
+      "semantic_basis": {
+        "key": "s1.core.automation",
+        "sha256": "968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae",
+        "section": "12. Claim, admissão, revogação e retomada"
+      },
+      "after_byte_start": 14676,
+      "after_byte_end_exclusive": 14874
+    },
+    {
+      "finding_id": "AF-L2-PREVIEW-02",
+      "body_section": "8. Scheduler: separar claim, admissão e trabalho concluído",
+      "old_literal": "Em replay de manualKey, running sem admissão pede retry shortly e revoked falha; demais rows assentadas podem devolver SessionID retido com `reused:true`, sem exigir nova prova de admissão nesse ramo.",
+      "new_literal": "No replay de capability manualKey, `running` sem SessionInput retorna “retry shortly” e `revoked` retorna erro; nos demais casos, o ramo devolve o SessionID retido com `reused:true`, sem exigir admissão para uma row já assentada.",
+      "occurrences_replaced": 1,
+      "before_byte_start": 15296,
+      "before_byte_end_exclusive": 15498,
+      "old_utf8_bytes": 202,
+      "new_utf8_bytes": 235,
+      "semantic_basis": {
+        "key": "s1.core.automation",
+        "sha256": "968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae",
+        "section": "12. Claim, admissão, revogação e retomada"
+      },
+      "after_byte_start": 15363,
+      "after_byte_end_exclusive": 15598
+    }
+  ],
+  "replacement_count": 2,
+  "inverse_equality": {
+    "operation": "Substituir cada new_literal por old_literal uma vez, na ordem inversa.",
+    "equals_retained_v1_bytes": true,
+    "restored_bytes": 16441,
+    "restored_sha256": "5985441b360d0efc6693d0d385980f4a93cab2c044387a7375608dd5a9adf517",
+    "restored_git_blob_sha": "b4874e39655e7aef9c9f6e08aeecc37718658b2f"
+  },
+  "unchanged_segments": [
+    {
+      "segment": 1,
+      "before_byte_start": 0,
+      "before_byte_end_exclusive": 14676,
+      "after_byte_start": 0,
+      "after_byte_end_exclusive": 14676,
+      "bytes": 14676,
+      "sha256": "3903e9729efb2acd3211047475f931e69c444e4b1477b95b20786c3c594f4459",
+      "equal": true
+    },
+    {
+      "segment": 2,
+      "before_byte_start": 14807,
+      "before_byte_end_exclusive": 15296,
+      "after_byte_start": 14874,
+      "after_byte_end_exclusive": 15363,
+      "bytes": 489,
+      "sha256": "9b192076bf9634296a9d3ced6071b187b2d16b5e40356de17fd988cad62cb825",
+      "equal": true
+    },
+    {
+      "segment": 3,
+      "before_byte_start": 15498,
+      "before_byte_end_exclusive": 16441,
+      "after_byte_start": 15598,
+      "after_byte_end_exclusive": 16541,
+      "bytes": 943,
+      "sha256": "b942f8cf574407c889a27ec5669191fc121319fb364c702f520965acbe03fe80",
+      "equal": true
+    }
+  ],
+  "unchanged_body_bytes": 16108,
+  "all_other_body_bytes_preserved": true,
+  "verification_scope": "Substituição e comparação determinística de arquivos; sem teste de produto, parecer semântico ou operação Atlas.",
+  "semantic_review_status": "FIRST_WHOLE_BODY_L2_REVIEW_PENDING_SAME_PAIR",
+  "dependent_release": false
+}

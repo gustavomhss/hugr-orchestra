@@ -1,0 +1,3604 @@
+{
+  "schema": "s1-03-final-assembly-configuration/v1",
+  "created_at_utc": "2026-11-15T10:51:29.497932+00:00",
+  "source_payload_commit": null,
+  "status": "ALL_SEMANTIC_GATES_VERIFIED_PREPUBLICATION_INPUT_INVENTORY",
+  "artifacts": {
+    "s1.core.automation": {
+      "additional_actual_inputs": [],
+      "audited_path_aliases": {},
+      "actual_recipe_local_path": "producers/automation/revisions/v4/apply.py",
+      "request_local_path": "producers/automation/revisions/v4/request.txt",
+      "response_local_path": "producers/automation/revisions/v4/response.md",
+      "audited_base_version": "v4",
+      "review_payload_paths": {
+        "parallel-v3-fresh/S1-03/J1": "judgments/l1/automation-aggregate-v4/j1-response.md",
+        "parallel-v3-fresh/S1-03/J2": "judgments/l1/automation-aggregate-v4/j2-response.md"
+      },
+      "gaps": [
+        "Own Atlas preparation, exact runtime binding, governed publication, consumers and maintenance are assessed separately; semantic PASS does not certify those operations."
+      ],
+      "evidence": [
+        "semantic-acceptances.json#s1.core.automation",
+        "judgments/l1/automation-aggregate-v4/j1-response.md",
+        "judgments/l1/automation-aggregate-v4/j2-response.md"
+      ],
+      "navigation": []
+    },
+    "s1.core.research": {
+      "additional_actual_inputs": [
+        {
+          "local_path": "producers/research/revisions/v3/request.txt",
+          "bytes": 2899,
+          "sha256": "34c7f006385a7921ca3ebb3aaf7ff31a866c16192c49f8211cf27fab95964224",
+          "git_blob_sha": "b09b0a85f6a41fa1e5269903c0d0538ef0b54105"
+        },
+        {
+          "local_path": "producers/research/revisions/v3/j2-finding.md",
+          "bytes": 974,
+          "sha256": "a7504bff3418ff3778e5d56b2c403858eb08f6c97fb3dfbefd7d66dae1b4316a",
+          "git_blob_sha": "accb3f921308f1c3c665d20b1aa7f6e40104b976"
+        },
+        {
+          "local_path": "producers/research/body.md",
+          "bytes": 63501,
+          "sha256": "d2def4b82495605b491e0d5494b1511e1b68c47dcffa84af87c8d35705468661",
+          "git_blob_sha": "bb0eaa73b4fe9120fb46d9304778649b5c7205dd",
+          "retained_alias": "producers/research/history/body-v2.md"
+        },
+        {
+          "local_path": "producers/research/recipe-v2.json",
+          "bytes": 138195,
+          "sha256": "09505ca6228267ab6ad9c0397c7a45690009b1738ae3aa53c8b8df722db5598b",
+          "git_blob_sha": "cd3e47810afc47fec314bab149c7ce0653f4fc9b",
+          "retained_alias": "producers/research/history/recipe-v2.json"
+        },
+        {
+          "local_path": "producers/research/sources/packages/core/src/research-toolkit/locate.ts",
+          "bytes": 16148,
+          "sha256": "0ebac9d228ca1764020e0f7ccf260228dc02c1169c0143c07f258e7c7ac650f2",
+          "git_blob_sha": "d1343801f7b336d5e5b46eac860f6a07a0ae19fa"
+        },
+        {
+          "local_path": "producers/research/sources/packages/core/test/research-locate.test.ts",
+          "bytes": 8418,
+          "sha256": "ef4ff4e93af664f8810da34386b235ef33071fcbba9868bf9904aa40f72f801a",
+          "git_blob_sha": "53aed544518715b880e3415295e94da7756cc9ad"
+        },
+        {
+          "local_path": "producers/research/revisions/v3/apply.py",
+          "bytes": 17112,
+          "sha256": "1a06fb787058915ac20e696c5c8ea855dcda7813d9b208d15fa3770336de2f2e",
+          "git_blob_sha": "224ac97db71f108e4e8a945a6a3327afad725af7"
+        },
+        {
+          "local_path": "producers/research/revisions/v3/apply-freeze.json",
+          "bytes": 4550,
+          "sha256": "65ceaf32de80a5b134d63e28fadc9271c822470d768d9d852d1ce8ce5287bacd",
+          "git_blob_sha": "f4cce3bb20fe952594a39e886d58d2ecb9dd4b64"
+        },
+        {
+          "local_path": "producers/research/body.md",
+          "bytes": 63841,
+          "sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+          "git_blob_sha": "72bdc55fdf2dbda97e84c87111be73fa49aceeb4",
+          "retained_alias": "producers/research/revisions/v4/history/body.md"
+        },
+        {
+          "local_path": "producers/research/sources/packages/core/src/research-toolkit/code-index/query.ts",
+          "bytes": 32872,
+          "sha256": "ec1dd4a297e6e798c497d67ac5ed21cd4c6484e2aba3c2bed60dbd8f174f05e8",
+          "git_blob_sha": "25d652ee0ce78d327427837466b5d7fe5886013f"
+        },
+        {
+          "local_path": "producers/research/revisions/v3/input-manifest-extension.json",
+          "bytes": 7585,
+          "sha256": "95e1d759bace7baa2f8e5bed6f65ee9f5fba1f4a4c24b7f93a4b8d2318bc1101",
+          "git_blob_sha": "6910dfb1a66c7140c3d06c0eb19b182c56ba4e30"
+        },
+        {
+          "local_path": "producers/research/recipe-v3.json",
+          "bytes": 2901,
+          "sha256": "cd8813f5a1d2157546b762c60b0ff08812281a4138006fdc282a3fdab809abe0",
+          "git_blob_sha": "70600277e27b5f50ff5bec43a08eee08451ae922"
+        },
+        {
+          "local_path": "producers/research/revisions/v4/public-findings.md",
+          "bytes": 1370,
+          "sha256": "274bc65c13abadb0c847c71b7acaf135759d89282b2509cc970f67d4d13e5d42",
+          "git_blob_sha": "e4c19a874355af85e5852cdf648af954527b13ab"
+        },
+        {
+          "local_path": "producers/research/revisions/v4/request.txt",
+          "bytes": 548,
+          "sha256": "53d5398d52c804a75572f369ab9a08049872041080f16fdf167ae38f56a94531",
+          "git_blob_sha": "ca74b4ecd789bb7894860912677d138762e33a98"
+        },
+        {
+          "local_path": "producers/research/revisions/v4/recipe.json",
+          "bytes": 4029,
+          "sha256": "5eb8b298dd8ca73b66d0869424782f73dbf539c0a6c37aaa837686976da2fc57",
+          "git_blob_sha": "e217a08a971ff0e42a2af40f22bc12d060834fff"
+        },
+        {
+          "local_path": "producers/research/revisions/v4/dispatch-message.txt",
+          "bytes": 1059,
+          "sha256": "c800eb38cedaf8523662529d676cf30e4b67a8491afd943dc081c6c44381d5cc",
+          "git_blob_sha": "5d49d538ecc87957d4e3f27815dd74b14b65adc3"
+        },
+        {
+          "local_path": "producers/research/revisions/v4/apply.py",
+          "bytes": 17467,
+          "sha256": "5bfdf994e961bdac05212b2a981aa8f50fcdf60bd5d440988fca5247e4bab89b",
+          "git_blob_sha": "235ce74826e8c995b5ed8e75bed02f8d8af9b07c"
+        },
+        {
+          "local_path": "producers/research/revisions/v4/procedure-freeze.json",
+          "bytes": 5148,
+          "sha256": "6cd8fcb3642f22bf1f6831047db7e4ecc7b4e782c1681ccec4e400f798858a48",
+          "git_blob_sha": "16d17b90d6ca6a9eecbddf447fb70d51decc60ed"
+        }
+      ],
+      "audited_path_aliases": {},
+      "actual_recipe_local_path": "producers/research/revisions/v4/apply.py",
+      "request_local_path": "producers/research/revisions/v4/request.txt",
+      "response_local_path": "producers/research/revisions/v4/response.md",
+      "audited_base_version": "v2",
+      "review_payload_paths": {
+        "parallel-v3-fresh/S1-03/J1": "judgments/l1/l1-consistency-research-v4/j1-response.md",
+        "parallel-v3-fresh/S1-03/J2": "judgments/l1/l1-consistency-research-v4/j2-response.md"
+      },
+      "gaps": [
+        "Own Atlas preparation, exact runtime binding, governed publication, consumers and maintenance are assessed separately; semantic PASS does not certify those operations."
+      ],
+      "evidence": [
+        "semantic-acceptances.json#s1.core.research",
+        "judgments/l1/l1-consistency-research-v4/j1-response.md",
+        "judgments/l1/l1-consistency-research-v4/j2-response.md"
+      ],
+      "navigation": []
+    },
+    "s1.core.boundaries": {
+      "additional_actual_inputs": [
+        {
+          "local_path": "producers/boundaries/bodies/boundaries.md",
+          "bytes": 23665,
+          "sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+          "git_blob_sha": "6821d54aec4f8015dd00d634f632dc9960d1bd74",
+          "retained_alias": "producers/boundaries/revisions/boundaries-v3/history/body.md"
+        },
+        {
+          "local_path": "producers/boundaries/sources/packages/core/src/relay.ts",
+          "bytes": 30225,
+          "sha256": "446774386bf8020528bdc2138a066fd9dc4b214d3288dc069cb5da9d3cef2b2a",
+          "git_blob_sha": "25fb509203f933a2e8b0f311c3fc8f9476d53e16"
+        },
+        {
+          "local_path": "producers/boundaries/sources/packages/core/src/rag-studio/sql.ts",
+          "bytes": 2519,
+          "sha256": "e6c3580d95d86b307624fe8c58b5790f3a07ce17ed20e5cbe851b44667c7add9",
+          "git_blob_sha": "214ab3375acc34072ee74c3123501c80615bf488"
+        },
+        {
+          "local_path": "producers/boundaries/revisions/boundaries-v2/recipe.json",
+          "bytes": 3501,
+          "sha256": "13d95ddbf05625b6f270972422a3603669ff238cc7152a3e1c1789106af70bf4",
+          "git_blob_sha": "63e56fa6badaab561f04f48ef0033dd6d4d21d71"
+        },
+        {
+          "local_path": "producers/boundaries/effective-inputs.json",
+          "bytes": 22879,
+          "sha256": "6ecae50d90933e555a874b209c6553750d85192df44c36df2418b3ff696890fc",
+          "git_blob_sha": "2d099dcbef9b537a5e22a634642c1317bd0464f4"
+        },
+        {
+          "local_path": "producers/boundaries/revisions/boundaries-v3/public-findings.md",
+          "bytes": 1532,
+          "sha256": "6fd63340ed96690dcad680ded43d4815666ac042397cff5587c1413b1183deae",
+          "git_blob_sha": "0a9093ae89e653c458432402f7098286ebefb375"
+        },
+        {
+          "local_path": "producers/boundaries/revisions/boundaries-v3/recipe.json",
+          "bytes": 4346,
+          "sha256": "8e51dad268ee1fc9ade4b91c4d4ff1c08a76aa3f0ec9636786d778026085f385",
+          "git_blob_sha": "0d233b8ff8d4ce26cb6bbd31c9a7698723d35152"
+        },
+        {
+          "local_path": "producers/boundaries/revisions/boundaries-v3/request.txt",
+          "bytes": 576,
+          "sha256": "4cb6d8bd17c1ee1879f75734724997b3e6793eadfce37bafb0b2501a6bd19afb",
+          "git_blob_sha": "6c0341c591547d0a968d058fbc4edef5e304067a"
+        },
+        {
+          "local_path": "producers/boundaries/revisions/boundaries-v3/dispatch-message.txt",
+          "bytes": 1096,
+          "sha256": "9b60555882d38a25f64edc8120f524ea839a52fdb1cb309a70d2e737864dbe9b",
+          "git_blob_sha": "1063c479080912bf7f8c4c81376e200b5cdb7d68"
+        },
+        {
+          "local_path": "producers/boundaries/revisions/boundaries-v3/history/body.md",
+          "bytes": 23665,
+          "sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+          "git_blob_sha": "6821d54aec4f8015dd00d634f632dc9960d1bd74"
+        },
+        {
+          "local_path": "producers/boundaries/revisions/boundaries-v3/apply.py",
+          "bytes": 16667,
+          "sha256": "8ca6ab3b26860f1d5f4c2c4eb0f329c45aa66a6fed9976f2707570418866e6fe",
+          "git_blob_sha": "d74b4d117a673586e9a5e7cfbba573b1f2c35a31"
+        },
+        {
+          "local_path": "producers/boundaries/revisions/boundaries-v3/procedure-freeze.json",
+          "bytes": 10260,
+          "sha256": "671995910e5e85b1a4dcdbaea8ecec19fa3f762e800fa7fed8467806b0907d03",
+          "git_blob_sha": "ffd7cb0acba77a1d9f8d6d354ff95c560b94804d"
+        }
+      ],
+      "audited_path_aliases": {},
+      "actual_recipe_local_path": "producers/boundaries/revisions/boundaries-v3/apply.py",
+      "request_local_path": "producers/boundaries/revisions/boundaries-v3/request.txt",
+      "response_local_path": "producers/boundaries/revisions/boundaries-v3/response.md",
+      "audited_base_version": "v2",
+      "review_payload_paths": {
+        "parallel-v3-fresh/S1-03/J1": "judgments/l1/l1-consistency-boundaries-v3/j1-response.md",
+        "parallel-v3-fresh/S1-03/J2": "judgments/l1/l1-consistency-boundaries-v3/j2-response.md"
+      },
+      "gaps": [
+        "Own Atlas preparation, exact runtime binding, governed publication, consumers and maintenance are assessed separately; semantic PASS does not certify those operations."
+      ],
+      "evidence": [
+        "semantic-acceptances.json#s1.core.boundaries",
+        "judgments/l1/l1-consistency-boundaries-v3/j1-response.md",
+        "judgments/l1/l1-consistency-boundaries-v3/j2-response.md"
+      ],
+      "navigation": []
+    },
+    "s1.subslice03.support": {
+      "additional_actual_inputs": [],
+      "audited_path_aliases": {
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/boundaries/bodies/boundaries.md": {
+          "original_local_path": "producers/boundaries/bodies/boundaries.md",
+          "retained_local_path": "producers/boundaries/revisions/boundaries-v3/history/body.md",
+          "original_origin_commit": "f6ffb725704cc01682847d7e175f22b6ead3894c",
+          "reason": "Exact earlier boundaries v2 consumed as a mechanical preservation sentinel by support v2; not the new boundaries v3 semantic predecessor."
+        }
+      },
+      "actual_recipe_local_path": "producers/boundaries/records/prepare_support_v2.py",
+      "request_local_path": "producers/boundaries/revisions/support-v2/request.txt",
+      "response_local_path": "producers/boundaries/revisions/support-v2/response.md",
+      "audited_base_version": "v2",
+      "review_payload_paths": {
+        "parallel-v3-fresh/S1-03/J1": "judgments/l1/support-supplement-v2/j1-response.md",
+        "parallel-v3-fresh/S1-03/J2": "judgments/l1/support-supplement-v2/j2-response.md"
+      },
+      "gaps": [
+        "Own Atlas preparation, exact runtime binding, governed publication, consumers and maintenance are assessed separately; semantic PASS does not certify those operations."
+      ],
+      "evidence": [
+        "semantic-acceptances.json#s1.subslice03.support",
+        "judgments/l1/support-supplement-v2/j1-response.md",
+        "judgments/l1/support-supplement-v2/j2-response.md"
+      ],
+      "navigation": []
+    },
+    "s1.subslice03.automation-flow": {
+      "additional_actual_inputs": [
+        {
+          "local_path": "inputs/AGENTS.md",
+          "bytes": 16501,
+          "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+          "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+          "original_read_paths": [
+            "inputs/AGENTS.md"
+          ]
+        },
+        {
+          "local_path": "inputs/COMMON.md",
+          "bytes": 12959,
+          "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+          "git_blob_sha": "893cbb5f5eda2d0c19753606a50d1c482523f0c8",
+          "original_read_paths": [
+            "inputs/COMMON.md"
+          ]
+        },
+        {
+          "local_path": "inputs/mission.json",
+          "bytes": 6006,
+          "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+          "git_blob_sha": "48fa8da131e97c50110ee76e41e79283cd9a0ac4",
+          "original_read_paths": [
+            "inputs/mission.json"
+          ]
+        },
+        {
+          "local_path": "inputs/SKILL.md",
+          "bytes": 8143,
+          "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+          "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+          "original_read_paths": [
+            "inputs/SKILL.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/principles.md",
+          "bytes": 6010,
+          "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+          "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+          "original_read_paths": [
+            "inputs/references/principles.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/fatia-1.md",
+          "bytes": 3987,
+          "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
+          "git_blob_sha": "78482ad7c72ec275fadb26ebece1c30bc1e5ccb9",
+          "original_read_paths": [
+            "inputs/references/fatia-1.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/fresh-start.md",
+          "bytes": 4983,
+          "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166",
+          "git_blob_sha": "ca485b25e43293a309c5489279dce80ce1441ed0",
+          "original_read_paths": [
+            "inputs/references/fresh-start.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/orchestration.md",
+          "bytes": 4408,
+          "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+          "git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+          "original_read_paths": [
+            "inputs/references/orchestration.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/judging.md",
+          "bytes": 5787,
+          "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+          "git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+          "original_read_paths": [
+            "inputs/references/judging.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/transport.md",
+          "bytes": 8478,
+          "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+          "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+          "original_read_paths": [
+            "inputs/references/transport.md"
+          ]
+        },
+        {
+          "local_path": "payload/artifact-plan.json",
+          "bytes": 5017,
+          "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad",
+          "git_blob_sha": "8dba81b59cd093d28ea07cf4369d5842b6bdee68",
+          "original_read_paths": [
+            "payload/artifact-plan.json"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived-contract.json",
+          "bytes": 4017,
+          "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
+          "git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd",
+          "original_read_paths": [
+            "payload/recipes/derived-contract.json"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived-public-criteria.json",
+          "bytes": 16244,
+          "sha256": "1e7686491c5b68cb4f3d287377723edcd8932ae803c267ddbabf44a360dfc36e",
+          "git_blob_sha": "d4f6b765e6d78341ba2b77186c77b9177cf3156c",
+          "original_read_paths": [
+            "payload/recipes/derived-public-criteria.json"
+          ]
+        },
+        {
+          "local_path": "producers/automation/body.md",
+          "bytes": 60767,
+          "sha256": "968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae",
+          "git_blob_sha": "e26213eb2fc76dc843dca17d1111334c76f88890",
+          "original_read_paths": [
+            "producers/automation/body.md"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived/automation-flow.json",
+          "bytes": 8479,
+          "sha256": "ec4550336620b1d7abed85e78460c6d4c5ede73f31c8ddcf8a77be5272af3179",
+          "git_blob_sha": "a039bc6e88406694ed967c5f6c1e2b14a9428506",
+          "original_read_paths": [
+            "payload/recipes/derived/automation-flow.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/request.txt",
+          "bytes": 856,
+          "sha256": "da3d46f1369fc5ec17d4ec73b3b95ebeecf2c83c796f06e88d4409c1c64a331e",
+          "git_blob_sha": "d44c3d910995f299f76a1f8e1e62af093653ed81",
+          "original_read_paths": [
+            "producers/derived-automation-flow/request.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/dispatch-message.txt",
+          "bytes": 2056,
+          "sha256": "808b4733f5306981efcdf337732dc6d53d1dce7b6569b5c7b32af0611e761fd9",
+          "git_blob_sha": "dfe89eddbc185ad996a1fd25e18bab3786161486",
+          "original_read_paths": [
+            "producers/derived-automation-flow/dispatch-message.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v2/history/body.md",
+          "bytes": 16441,
+          "sha256": "5985441b360d0efc6693d0d385980f4a93cab2c044387a7375608dd5a9adf517",
+          "git_blob_sha": "b4874e39655e7aef9c9f6e08aeecc37718658b2f",
+          "original_read_paths": [
+            "producers/derived-automation-flow/body.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v2/history/evidence.md",
+          "bytes": 11997,
+          "sha256": "d2b8068c9167c0813719479d4d2b10046cc718921dad3db52d1f44957e3f1360",
+          "git_blob_sha": "6697c34caf08d7d8d4bacd4793f3e36c1d035aa4",
+          "original_read_paths": [
+            "producers/derived-automation-flow/evidence.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v2/history/production-manifest.json",
+          "bytes": 16158,
+          "sha256": "9c7d3130d4265bccba5e94fa0448b1d0bbbf3c02bf421a09d4e8d053cae4df06",
+          "git_blob_sha": "ee7c2879510553e13c9c61faefdda6b9e09d8e17",
+          "original_read_paths": [
+            "producers/derived-automation-flow/production-manifest.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v2/history/response.md",
+          "bytes": 2470,
+          "sha256": "c8bf48be1b48cc17d8c376978e37c401079ba6e5ad72c51ac12443b8e433c7fd",
+          "git_blob_sha": "e26287f9867203f71804eecce18b6a706997539a",
+          "original_read_paths": [
+            "producers/derived-automation-flow/response.md"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived/automation-flow-source-fidelity-v2.json",
+          "bytes": 7391,
+          "sha256": "16c2b4e2efc5a6e2ea6a111540e7a662ce154af3c58c366306e254f23d9b3364",
+          "git_blob_sha": "d41472b948b6c1a5d2d5990c3de0a906c9d5cf47",
+          "original_read_paths": [
+            "payload/recipes/derived/automation-flow-source-fidelity-v2.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v2/request.txt",
+          "bytes": 841,
+          "sha256": "34caa0867a7d0c02dd94c37f789c0af7262132bf4f2359563021b8df3977e769",
+          "git_blob_sha": "52271ca649386b9acd36c4dc8e31153cba7f3dfb",
+          "original_read_paths": [
+            "producers/derived-automation-flow/revisions/v2/request.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v2/dispatch-message.txt",
+          "bytes": 1370,
+          "sha256": "b5cf544c85c7f3fae4739c200210f829a8b72a7bbb65eab809799fa198621e93",
+          "git_blob_sha": "151ff85a32fe59b63db141eaad368d8b6a7fa55c",
+          "original_read_paths": [
+            "producers/derived-automation-flow/revisions/v2/dispatch-message.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v3/history/body.md",
+          "bytes": 16541,
+          "sha256": "5b24037431881e96ddb5a872fd6541c94880d189d8b0c873bac9d8bd874d85c1",
+          "git_blob_sha": "378dbb4cd9f978ed9ab848136a2f4b9fdd72ca6b",
+          "original_read_paths": [
+            "producers/derived-automation-flow/body.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v3/history/evidence.md",
+          "bytes": 14569,
+          "sha256": "0c4bff02eec8c4dbca2886127f1546bd51707060df8306ba4e630dba73f990d8",
+          "git_blob_sha": "ec9f7f1351681788c7c58cb345e4ee6860c4c3af",
+          "original_read_paths": [
+            "producers/derived-automation-flow/evidence.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v3/history/production-manifest.json",
+          "bytes": 27416,
+          "sha256": "1802600a673c0521064bc636bd9be5e9e9aad9dd644f26efd5d14c02bee52cff",
+          "git_blob_sha": "009ace4ecb5cda6ec2c3f58aec5573d1b986c205",
+          "original_read_paths": [
+            "producers/derived-automation-flow/production-manifest.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v3/history/response.md",
+          "bytes": 3043,
+          "sha256": "59ffb319da5b27d830b9eeabe7ac592c104a64496864235da4331cd5adc05c23",
+          "git_blob_sha": "f07fae15e22fabc2fd4cad461fd721eab5e031d3",
+          "original_read_paths": [
+            "producers/derived-automation-flow/response.md"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived/automation-flow-dispatch-fidelity-v3.json",
+          "bytes": 6224,
+          "sha256": "a0f24c622d77e89d6a7020334075691efb8f3153f99087eb7bc2afc3337cb9ea",
+          "git_blob_sha": "e7531d1cba701855e10fc46602a4ca584dffe69b",
+          "original_read_paths": [
+            "payload/recipes/derived/automation-flow-dispatch-fidelity-v3.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v3/request.txt",
+          "bytes": 680,
+          "sha256": "4ed7cc034c532a6b414fa03bfcd4f2034ccfca3f593ebad1652653d814e64538",
+          "git_blob_sha": "a07913c67f6b5343dca9386f3d0d4174892c5aab",
+          "original_read_paths": [
+            "producers/derived-automation-flow/revisions/v3/request.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v3/dispatch-message.txt",
+          "bytes": 1520,
+          "sha256": "4fff1b29411f19321d656897a2ab13cb5c65589e4652e1f8a790fb49642ffbb0",
+          "git_blob_sha": "bafca800486d37ef7bef21e11d7b9b42f1c2099a",
+          "original_read_paths": [
+            "producers/derived-automation-flow/revisions/v3/dispatch-message.txt"
+          ]
+        }
+      ],
+      "audited_path_aliases": {},
+      "actual_recipe_local_path": "payload/recipes/derived/automation-flow-dispatch-fidelity-v3.json",
+      "request_local_path": "producers/derived-automation-flow/revisions/v3/request.txt",
+      "response_local_path": "producers/derived-automation-flow/response.md",
+      "manifest_local_path": "producers/derived-automation-flow/production-manifest.json",
+      "review_payload_paths": {
+        "parallel-v3-fresh/S1-03/J1": "judgments/derived/derived-automation-flow-v3-delta/j1-response.md",
+        "parallel-v3-fresh/S1-03/J2": "judgments/derived/derived-automation-flow-v3-delta/j2-response.md"
+      },
+      "gaps": [
+        "Own Atlas preparation, exact runtime binding, governed publication, consumers and maintenance are assessed separately; semantic PASS does not certify those operations."
+      ],
+      "evidence": [
+        "semantic-acceptances.json#s1.subslice03.automation-flow",
+        "judgments/derived/derived-automation-flow-v3-delta/j1-response.md",
+        "judgments/derived/derived-automation-flow-v3-delta/j2-response.md",
+        "producers/derived-automation-flow/evidence.md"
+      ],
+      "navigation": []
+    },
+    "s1.subslice03.research-flow": {
+      "additional_actual_inputs": [
+        {
+          "local_path": "inputs/AGENTS.md",
+          "bytes": 16501,
+          "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+          "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+          "original_read_paths": [
+            "inputs/AGENTS.md"
+          ]
+        },
+        {
+          "local_path": "inputs/COMMON.md",
+          "bytes": 12959,
+          "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+          "git_blob_sha": "893cbb5f5eda2d0c19753606a50d1c482523f0c8",
+          "original_read_paths": [
+            "inputs/COMMON.md"
+          ]
+        },
+        {
+          "local_path": "inputs/mission.json",
+          "bytes": 6006,
+          "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+          "git_blob_sha": "48fa8da131e97c50110ee76e41e79283cd9a0ac4",
+          "original_read_paths": [
+            "inputs/mission.json"
+          ]
+        },
+        {
+          "local_path": "inputs/SKILL.md",
+          "bytes": 8143,
+          "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+          "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+          "original_read_paths": [
+            "inputs/SKILL.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/principles.md",
+          "bytes": 6010,
+          "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+          "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+          "original_read_paths": [
+            "inputs/references/principles.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/fatia-1.md",
+          "bytes": 3987,
+          "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
+          "git_blob_sha": "78482ad7c72ec275fadb26ebece1c30bc1e5ccb9",
+          "original_read_paths": [
+            "inputs/references/fatia-1.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/fresh-start.md",
+          "bytes": 4983,
+          "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166",
+          "git_blob_sha": "ca485b25e43293a309c5489279dce80ce1441ed0",
+          "original_read_paths": [
+            "inputs/references/fresh-start.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/orchestration.md",
+          "bytes": 4408,
+          "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+          "git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+          "original_read_paths": [
+            "inputs/references/orchestration.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/judging.md",
+          "bytes": 5787,
+          "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+          "git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+          "original_read_paths": [
+            "inputs/references/judging.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/transport.md",
+          "bytes": 8478,
+          "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+          "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+          "original_read_paths": [
+            "inputs/references/transport.md"
+          ]
+        },
+        {
+          "local_path": "payload/artifact-plan.json",
+          "bytes": 5017,
+          "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad",
+          "git_blob_sha": "8dba81b59cd093d28ea07cf4369d5842b6bdee68",
+          "original_read_paths": [
+            "payload/artifact-plan.json"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived-contract.json",
+          "bytes": 4017,
+          "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
+          "git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd",
+          "original_read_paths": [
+            "payload/recipes/derived-contract.json"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived-public-criteria.json",
+          "bytes": 16244,
+          "sha256": "1e7686491c5b68cb4f3d287377723edcd8932ae803c267ddbabf44a360dfc36e",
+          "git_blob_sha": "d4f6b765e6d78341ba2b77186c77b9177cf3156c",
+          "original_read_paths": [
+            "payload/recipes/derived-public-criteria.json"
+          ]
+        },
+        {
+          "local_path": "producers/research/revisions/v4/history/body.md",
+          "bytes": 63841,
+          "sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+          "git_blob_sha": "72bdc55fdf2dbda97e84c87111be73fa49aceeb4",
+          "original_read_paths": [
+            "producers/research/body.md"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived/research-flow.json",
+          "bytes": 8423,
+          "sha256": "543c6045bfb145c0db4b2779b12c96c140ff20198c408357c7d84bcf0a7f71e1",
+          "git_blob_sha": "db976816322808b79ec62b9451e89b9beb084521",
+          "original_read_paths": [
+            "payload/recipes/derived/research-flow.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/request.txt",
+          "bytes": 850,
+          "sha256": "351e7104bfdbc75075906493ef2db4d3f689d4181f7e621f64e75e6caf31f6ee",
+          "git_blob_sha": "d8607ddacf8da2198ba41fe912675f5127204bff",
+          "original_read_paths": [
+            "producers/derived-research-flow/request.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/dispatch-message.txt",
+          "bytes": 1511,
+          "sha256": "2252f97394d8dbc61fd0e629ce1a16700f8a81bc78673add06985842fc75efcf",
+          "git_blob_sha": "0c546d156615e7cd044ec432ec27342941f20bce",
+          "original_read_paths": [
+            "producers/derived-research-flow/dispatch-message.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/history/v1/body.md",
+          "bytes": 16980,
+          "sha256": "a4b50fa9ae0b781dbea831aefcb98cb099f93167d4a7a584dc88878fc93bc044",
+          "git_blob_sha": "8b7c702e3d5d6e0d9a8f303136a9d97ac280d82c",
+          "original_read_paths": [
+            "producers/derived-research-flow/body.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/history/v1/evidence.md",
+          "bytes": 11305,
+          "sha256": "8e2b11c446ef73d166c98f7d852d5ca674a0a056779351e393a2d8b832cbf365",
+          "git_blob_sha": "83aff55b8282a7aa0e4ea0c99ecdbb31f4b7ba4f",
+          "original_read_paths": [
+            "producers/derived-research-flow/evidence.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/history/v1/production-manifest.json",
+          "bytes": 19363,
+          "sha256": "363c7e06f9ec4f0ea2165c81204c238f2972d702875b2d2d445607c0d2e66fcf",
+          "git_blob_sha": "b4cc419dda2ef5cb89667c9cf9d28236964ae7f1",
+          "original_read_paths": [
+            "producers/derived-research-flow/production-manifest.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/history/v1/response.md",
+          "bytes": 2472,
+          "sha256": "4d10e4cbaacffd86da6c9c32091576608e3a0937a6f5ef5489c7f142778540ac",
+          "git_blob_sha": "75520523f4f50e0ab3ee7eaa597936fc1c23bc18",
+          "original_read_paths": [
+            "producers/derived-research-flow/response.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/request.txt",
+          "bytes": 503,
+          "sha256": "4c2c7a3e6262ab721b25b5aef283d6dfbbb9edacb6cd20da73e5212f55a9840a",
+          "git_blob_sha": "6c6411040020aca556afa20bef466541746cb713",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/request.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/recipe.json",
+          "bytes": 3279,
+          "sha256": "007fa924ee039cce045c481143b71fff2dc3b6f6776b9cc77edfff1b386ca8b9",
+          "git_blob_sha": "5bba5c3eef5d7f20318a37d82c3ba929e93957b4",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/recipe.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/public-finding.md",
+          "bytes": 1080,
+          "sha256": "8230c3ca27cd3416c801ff0080dc102a41b0fb16ee6ecdf94aae0c8612f33bf7",
+          "git_blob_sha": "02c3ea691918f6bc541b644b664d3c5f057d9916",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/public-finding.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/dispatch-message.txt",
+          "bytes": 1669,
+          "sha256": "9de6643262b0eef5014515544cc97d0d3ed334a70598c3d86b6f5a89bacfe15d",
+          "git_blob_sha": "c3312b633045dc7633131c8a71cc918e97d51610",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/dispatch-message.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/prior-output-preservation.json",
+          "bytes": 2036,
+          "sha256": "af0552a04cae4c5e2c1eb6f32b00e0a372ed9028542298808debeae4b8d5b00d",
+          "git_blob_sha": "d4d44dff034ca16d383628b2109c2fbdcf451cc7",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/prior-output-preservation.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/apply.py",
+          "bytes": 19851,
+          "sha256": "3404af9b477c4d07b170d03f7068d4152b2bd4cb76c607cf1a0f24320bd67bf8",
+          "git_blob_sha": "f4de05371a97cd74ff333030a8949770888bd1b1",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/apply.py"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/procedure-freeze.json",
+          "bytes": 15402,
+          "sha256": "b2b63dbbe1ac9cfdeb619ba074d2e8b8abc809b00bf13a72aea7f6235e746356",
+          "git_blob_sha": "0edb4f1d7effd4b3cf125eda56d05a345294bfb2",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/procedure-freeze.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/delta.json",
+          "bytes": 4551,
+          "sha256": "ae2265221d845124e5632ab460e4278c0d49c987a16d38739ddd5fa07f5de268",
+          "git_blob_sha": "bf56199cb38b472741264b5b179946a380a3bec1",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/delta.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/review-supplement.md",
+          "bytes": 3793,
+          "sha256": "c2a7d80a4e5bfb7c03a569c7106630d5f6d7cb14225e0450826f9eaa1b1dd727",
+          "git_blob_sha": "432d6899b2dfdcbce8fabb7ec80680119d1e887a",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/review-supplement.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/input-manifest-extension.json",
+          "bytes": 17986,
+          "sha256": "2cc6415416ae6f5a59ffbc908bae284d477671ab54ad1aca55033c7067eff463",
+          "git_blob_sha": "2fca473d46b981aa1ea22b4bd4e4845dd0e3c721",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/input-manifest-extension.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/producer-verification.json",
+          "bytes": 2298,
+          "sha256": "d8d249ca6064da8f00ac4cd10e5d655498e94120d4d142ddf09bed9a7a6eb709",
+          "git_blob_sha": "7022ef79dcfd962cd6514e991a06cdeca5d9e668",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/producer-verification.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/response.md",
+          "bytes": 2016,
+          "sha256": "553422eb616a5e72a38d82810ba0cfbd4221baa8828333e5600f488c4e8fea90",
+          "git_blob_sha": "e3e6ca3002c8d235f59537e5c5175461fda03c0b",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/response.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/history/body.md",
+          "bytes": 17113,
+          "sha256": "f6dce8d080ff5bdd3a5409bd16b846c176c8270135eb51a6cd0329413e3d0994",
+          "git_blob_sha": "2bd9021ea932e9afb5fdd8619b5b6b16e4bfc440",
+          "original_read_paths": [
+            "producers/derived-research-flow/body.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/history/evidence.md",
+          "bytes": 11457,
+          "sha256": "b7d51d3bab6f9d8538d6b6362953647eedfbc5fad905c69b5d3fd38b0ea75022",
+          "git_blob_sha": "18797d0844d84082dc39e99acbc10f9de03c46ea",
+          "original_read_paths": [
+            "producers/derived-research-flow/evidence.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/history/production-manifest.json",
+          "bytes": 34692,
+          "sha256": "32c07a3198dfd1bcada8d932e2a61d6dc09c129f6a53fd0c42467611cc7a9831",
+          "git_blob_sha": "6a8563a63ff00393e2497f95313df53caf80bd00",
+          "original_read_paths": [
+            "producers/derived-research-flow/production-manifest.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/history/response.md",
+          "bytes": 2016,
+          "sha256": "553422eb616a5e72a38d82810ba0cfbd4221baa8828333e5600f488c4e8fea90",
+          "git_blob_sha": "e3e6ca3002c8d235f59537e5c5175461fda03c0b",
+          "original_read_paths": [
+            "producers/derived-research-flow/response.md"
+          ]
+        },
+        {
+          "local_path": "producers/research/body.md",
+          "bytes": 64106,
+          "sha256": "c3925ca6e27465598796ef21815e79980277d4c3194a8b2fda7cf433700675d1",
+          "git_blob_sha": "69fda8b4a63d5480b7d78e8f915e1d90fb8a2b8b",
+          "original_read_paths": [
+            "producers/research/body.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/public-findings.md",
+          "bytes": 1210,
+          "sha256": "e1f6536c5f2ca30f7ddb215fe5f0c888d1b7da01c29c437ee2cdb099077be1a7",
+          "git_blob_sha": "7b9778189193884b684f309cada1851b03f8abb0",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v3/public-findings.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/recipe.json",
+          "bytes": 5536,
+          "sha256": "6b77e699b909ae075954e1d0fb00cd205a4ada0f4cd5ed23eff6fdd350630eae",
+          "git_blob_sha": "80b6e35297886298166c74e3decddd499f75bfb7",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v3/recipe.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/request.txt",
+          "bytes": 395,
+          "sha256": "8640ec3a0ce573741ca1ee42c582960f2d776b28af950757329ee199d090c993",
+          "git_blob_sha": "4b528bf3d9e7ca449c70854e77d7448b3cbdd089",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v3/request.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/dispatch-message.txt",
+          "bytes": 1273,
+          "sha256": "2319e6ae0efd79115f68d417dba4e6297bde4546d33f540840a1995fc6eaddaa",
+          "git_blob_sha": "ae06fd91c907ce12fbc02ffbaf1fdd9052918d3e",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v3/dispatch-message.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/prior-output-preservation.json",
+          "bytes": 2545,
+          "sha256": "ec68bad4886debb07d01a4b70695d7a1e3c3cde0b98ff524919a02e517ee37d5",
+          "git_blob_sha": "c32e6779810c3b3dbd06bfcb90cd1f0f2b2ae8ef",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v3/prior-output-preservation.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/apply.py",
+          "bytes": 20110,
+          "sha256": "fa8fb1920a259dda654fb75321d41bcd4416c8c03b69facbe7dcdd5088d48435",
+          "git_blob_sha": "5b52474a88d0bc9a64fedd9598a506d9e75bea6f",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v3/apply.py"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/procedure-freeze.json",
+          "bytes": 38389,
+          "sha256": "ab1c664955412b66e61c88a6213974944ec50ff4d9cadda593c5a3004db8ad4e",
+          "git_blob_sha": "7cc165d1c048f4e15a8e3c8a319ee1c68f0c26b6",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v3/procedure-freeze.json"
+          ]
+        }
+      ],
+      "audited_path_aliases": {},
+      "actual_recipe_local_path": "producers/derived-research-flow/revisions/v3/apply.py",
+      "request_local_path": "producers/derived-research-flow/revisions/v3/request.txt",
+      "response_local_path": "producers/derived-research-flow/response.md",
+      "manifest_local_path": "producers/derived-research-flow/production-manifest.json",
+      "review_payload_paths": {
+        "parallel-v3-fresh/S1-03/J1": "judgments/derived/derived-research-flow-v3/j1-response.md",
+        "parallel-v3-fresh/S1-03/J2": "judgments/derived/derived-research-flow-v3/j2-response.md"
+      },
+      "gaps": [
+        "Own Atlas preparation, exact runtime binding, governed publication, consumers and maintenance are assessed separately; semantic PASS does not certify those operations."
+      ],
+      "evidence": [
+        "semantic-acceptances.json#s1.subslice03.research-flow",
+        "judgments/derived/derived-research-flow-v3/j1-response.md",
+        "judgments/derived/derived-research-flow-v3/j2-response.md",
+        "producers/derived-research-flow/evidence.md"
+      ],
+      "navigation": []
+    },
+    "s1.subslice03.boundary-flow": {
+      "additional_actual_inputs": [
+        {
+          "local_path": "inputs/AGENTS.md",
+          "bytes": 16501,
+          "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+          "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+          "original_read_paths": [
+            "inputs/AGENTS.md"
+          ]
+        },
+        {
+          "local_path": "inputs/COMMON.md",
+          "bytes": 12959,
+          "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+          "git_blob_sha": "893cbb5f5eda2d0c19753606a50d1c482523f0c8",
+          "original_read_paths": [
+            "inputs/COMMON.md"
+          ]
+        },
+        {
+          "local_path": "inputs/mission.json",
+          "bytes": 6006,
+          "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+          "git_blob_sha": "48fa8da131e97c50110ee76e41e79283cd9a0ac4",
+          "original_read_paths": [
+            "inputs/mission.json"
+          ]
+        },
+        {
+          "local_path": "inputs/SKILL.md",
+          "bytes": 8143,
+          "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+          "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+          "original_read_paths": [
+            "inputs/SKILL.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/principles.md",
+          "bytes": 6010,
+          "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+          "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+          "original_read_paths": [
+            "inputs/references/principles.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/fatia-1.md",
+          "bytes": 3987,
+          "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
+          "git_blob_sha": "78482ad7c72ec275fadb26ebece1c30bc1e5ccb9",
+          "original_read_paths": [
+            "inputs/references/fatia-1.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/fresh-start.md",
+          "bytes": 4983,
+          "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166",
+          "git_blob_sha": "ca485b25e43293a309c5489279dce80ce1441ed0",
+          "original_read_paths": [
+            "inputs/references/fresh-start.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/orchestration.md",
+          "bytes": 4408,
+          "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+          "git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+          "original_read_paths": [
+            "inputs/references/orchestration.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/judging.md",
+          "bytes": 5787,
+          "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+          "git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+          "original_read_paths": [
+            "inputs/references/judging.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/transport.md",
+          "bytes": 8478,
+          "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+          "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+          "original_read_paths": [
+            "inputs/references/transport.md"
+          ]
+        },
+        {
+          "local_path": "payload/artifact-plan.json",
+          "bytes": 5017,
+          "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad",
+          "git_blob_sha": "8dba81b59cd093d28ea07cf4369d5842b6bdee68",
+          "original_read_paths": [
+            "payload/artifact-plan.json"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived-contract.json",
+          "bytes": 4017,
+          "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
+          "git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd",
+          "original_read_paths": [
+            "payload/recipes/derived-contract.json"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived-public-criteria.json",
+          "bytes": 16244,
+          "sha256": "1e7686491c5b68cb4f3d287377723edcd8932ae803c267ddbabf44a360dfc36e",
+          "git_blob_sha": "d4f6b765e6d78341ba2b77186c77b9177cf3156c",
+          "original_read_paths": [
+            "payload/recipes/derived-public-criteria.json"
+          ]
+        },
+        {
+          "local_path": "producers/boundaries/revisions/boundaries-v3/history/body.md",
+          "bytes": 23665,
+          "sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+          "git_blob_sha": "6821d54aec4f8015dd00d634f632dc9960d1bd74",
+          "original_read_paths": [
+            "producers/boundaries/bodies/boundaries.md",
+            "producers/boundaries/revisions/boundaries-v3/history/body.md"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived/boundary-flow.json",
+          "bytes": 8459,
+          "sha256": "3e4c7ebbb94d3fb6d7c4de5238aaea74e817cbfb1e80ea2c15bb259bc20eb544",
+          "git_blob_sha": "5d9e75ef89341aad6010d398cd6125a7c8dcf05c",
+          "original_read_paths": [
+            "payload/recipes/derived/boundary-flow.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-boundary-flow/request.txt",
+          "bytes": 850,
+          "sha256": "46437f5558525bd36b082915531c5ee70f8ab53a0b40c11270b7f313581c2d89",
+          "git_blob_sha": "3018a711f06aaecf12bc80fa5512b22126ab558b",
+          "original_read_paths": [
+            "producers/derived-boundary-flow/request.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-boundary-flow/dispatch-message.txt",
+          "bytes": 1421,
+          "sha256": "0790d3883cf33e37a3f4fd338c3d9cfc36f3b2625c0b0072fd9155e2f526b2d2",
+          "git_blob_sha": "0b5d88ff0888d4f5b175e1a433b46970efd389ad",
+          "original_read_paths": [
+            "producers/derived-boundary-flow/dispatch-message.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-boundary-flow/revisions/v2/history/body.md",
+          "bytes": 16112,
+          "sha256": "83c961e473f666034b6db197ead28594580f4a953fc9f6f4bb63f006ab65ddbd",
+          "git_blob_sha": "6420523de8f6d8e5fa5aac4b8f76bab2c5c6fceb",
+          "original_read_paths": [
+            "producers/derived-boundary-flow/body.md",
+            "producers/derived-boundary-flow/revisions/v2/history/body.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-boundary-flow/revisions/v2/history/evidence.md",
+          "bytes": 8327,
+          "sha256": "4e42f26758255ed63978d5e027a165a4eaaecfe645c78571365c4f5a2e81a780",
+          "git_blob_sha": "927e668b759b50bbeb28f92eca596cfc03d79b60",
+          "original_read_paths": [
+            "producers/derived-boundary-flow/evidence.md",
+            "producers/derived-boundary-flow/revisions/v2/history/evidence.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
+          "bytes": 20090,
+          "sha256": "93baa2def94d8fe3d05984211d05f68c0c18c8b021953bf67153f7b9eb56c2f0",
+          "git_blob_sha": "1b542614c236efe8f534e44c8982d49cade7002f",
+          "original_read_paths": [
+            "producers/derived-boundary-flow/production-manifest.json",
+            "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-boundary-flow/revisions/v2/history/response.md",
+          "bytes": 2097,
+          "sha256": "ab0d39f8f925f504f7505e1fc04192e27f9f3d0e2a79cec3bf637953b36e61ac",
+          "git_blob_sha": "881e93d76f4f2b51d8efbbf803f72fa4d83bd7ac",
+          "original_read_paths": [
+            "producers/derived-boundary-flow/response.md",
+            "producers/derived-boundary-flow/revisions/v2/history/response.md"
+          ]
+        },
+        {
+          "local_path": "producers/boundaries/bodies/boundaries.md",
+          "bytes": 23769,
+          "sha256": "937208953bb286da7bcefad8fd145d935a0ed00ee7d8f87d87c840973033d070",
+          "git_blob_sha": "d3b070015882d10f778f563438eb3f9d67cab061",
+          "original_read_paths": [
+            "producers/boundaries/bodies/boundaries.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-boundary-flow/revisions/v2/public-findings.md",
+          "bytes": 1561,
+          "sha256": "bdf2775890fc18bb642fc4e341b5984b8c2fb3fc0ef15217ded1650d44e196ca",
+          "git_blob_sha": "179c431b87984d73c9e8633fe0aed6213dabbf98",
+          "original_read_paths": [
+            "producers/derived-boundary-flow/revisions/v2/public-findings.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-boundary-flow/revisions/v2/recipe.json",
+          "bytes": 5580,
+          "sha256": "19923925cfbf39dcbbb33cb8fb00615dd2b37c5678a250f41dbd09ad4a398d30",
+          "git_blob_sha": "91ffc90bccaf9fd4a50e994c5fb3288b4f99bcb0",
+          "original_read_paths": [
+            "producers/derived-boundary-flow/revisions/v2/recipe.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-boundary-flow/revisions/v2/request.txt",
+          "bytes": 397,
+          "sha256": "9e5163515be025e4f73fd410beda312a415890832e3aa16917c1b4aca54e39fc",
+          "git_blob_sha": "ca5b0415dba1cba57da4431e292b7c5765429ca4",
+          "original_read_paths": [
+            "producers/derived-boundary-flow/revisions/v2/request.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-boundary-flow/revisions/v2/dispatch-message.txt",
+          "bytes": 1273,
+          "sha256": "74633d78ff34d49f5d7db8fbe1fd6f6c22cf6f63ee95151bba5d58c8e8381e3f",
+          "git_blob_sha": "3821692669a52627613e830c4633958bbe2c36ea",
+          "original_read_paths": [
+            "producers/derived-boundary-flow/revisions/v2/dispatch-message.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-boundary-flow/revisions/v2/apply.py",
+          "bytes": 36148,
+          "sha256": "fbf7ef729de0f11bc3df2ccbe77da99d9e69171f21c36bbea62421d93c984a6e",
+          "git_blob_sha": "102c9f6aa526b77add7dc3b09044003dd5448b6d",
+          "original_read_paths": [
+            "producers/derived-boundary-flow/revisions/v2/apply.py"
+          ]
+        },
+        {
+          "local_path": "producers/derived-boundary-flow/revisions/v2/procedure-freeze.json",
+          "bytes": 8086,
+          "sha256": "adb5dbdd94d5786d8a1211be748c3e0a4459d5a5ba8234e73fb4957c991c3f4b",
+          "git_blob_sha": "157a73b5e5b94fc19b5060c20ef9f35f16c4c0ca",
+          "original_read_paths": [
+            "producers/derived-boundary-flow/revisions/v2/procedure-freeze.json"
+          ]
+        }
+      ],
+      "audited_path_aliases": {},
+      "actual_recipe_local_path": "producers/derived-boundary-flow/revisions/v2/apply.py",
+      "request_local_path": "producers/derived-boundary-flow/revisions/v2/request.txt",
+      "response_local_path": "producers/derived-boundary-flow/response.md",
+      "manifest_local_path": "producers/derived-boundary-flow/production-manifest.json",
+      "review_payload_paths": {
+        "parallel-v3-fresh/S1-03/J1": "judgments/derived/derived-boundary-flow-v2/j1-response.md",
+        "parallel-v3-fresh/S1-03/J2": "judgments/derived/derived-boundary-flow-v2/j2-response.md"
+      },
+      "gaps": [
+        "Own Atlas preparation, exact runtime binding, governed publication, consumers and maintenance are assessed separately; semantic PASS does not certify those operations."
+      ],
+      "evidence": [
+        "semantic-acceptances.json#s1.subslice03.boundary-flow",
+        "judgments/derived/derived-boundary-flow-v2/j1-response.md",
+        "judgments/derived/derived-boundary-flow-v2/j2-response.md",
+        "producers/derived-boundary-flow/evidence.md"
+      ],
+      "navigation": []
+    },
+    "s1.subslice03.automation-impact": {
+      "additional_actual_inputs": [
+        {
+          "local_path": "inputs/AGENTS.md",
+          "bytes": 16501,
+          "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+          "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+          "original_read_paths": [
+            "inputs/AGENTS.md"
+          ]
+        },
+        {
+          "local_path": "inputs/COMMON.md",
+          "bytes": 12959,
+          "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+          "git_blob_sha": "893cbb5f5eda2d0c19753606a50d1c482523f0c8",
+          "original_read_paths": [
+            "inputs/COMMON.md"
+          ]
+        },
+        {
+          "local_path": "inputs/mission.json",
+          "bytes": 6006,
+          "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+          "git_blob_sha": "48fa8da131e97c50110ee76e41e79283cd9a0ac4",
+          "original_read_paths": [
+            "inputs/mission.json"
+          ]
+        },
+        {
+          "local_path": "inputs/SKILL.md",
+          "bytes": 8143,
+          "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+          "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+          "original_read_paths": [
+            "inputs/SKILL.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/principles.md",
+          "bytes": 6010,
+          "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+          "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+          "original_read_paths": [
+            "inputs/references/principles.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/fatia-1.md",
+          "bytes": 3987,
+          "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
+          "git_blob_sha": "78482ad7c72ec275fadb26ebece1c30bc1e5ccb9",
+          "original_read_paths": [
+            "inputs/references/fatia-1.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/fresh-start.md",
+          "bytes": 4983,
+          "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166",
+          "git_blob_sha": "ca485b25e43293a309c5489279dce80ce1441ed0",
+          "original_read_paths": [
+            "inputs/references/fresh-start.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/orchestration.md",
+          "bytes": 4408,
+          "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+          "git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+          "original_read_paths": [
+            "inputs/references/orchestration.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/judging.md",
+          "bytes": 5787,
+          "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+          "git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+          "original_read_paths": [
+            "inputs/references/judging.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/transport.md",
+          "bytes": 8478,
+          "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+          "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+          "original_read_paths": [
+            "inputs/references/transport.md"
+          ]
+        },
+        {
+          "local_path": "payload/artifact-plan.json",
+          "bytes": 5017,
+          "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad",
+          "git_blob_sha": "8dba81b59cd093d28ea07cf4369d5842b6bdee68",
+          "original_read_paths": [
+            "payload/artifact-plan.json"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived-contract.json",
+          "bytes": 4017,
+          "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
+          "git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd",
+          "original_read_paths": [
+            "payload/recipes/derived-contract.json"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived-public-criteria.json",
+          "bytes": 16244,
+          "sha256": "1e7686491c5b68cb4f3d287377723edcd8932ae803c267ddbabf44a360dfc36e",
+          "git_blob_sha": "d4f6b765e6d78341ba2b77186c77b9177cf3156c",
+          "original_read_paths": [
+            "payload/recipes/derived-public-criteria.json"
+          ]
+        },
+        {
+          "local_path": "producers/automation/body.md",
+          "bytes": 60767,
+          "sha256": "968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae",
+          "git_blob_sha": "e26213eb2fc76dc843dca17d1111334c76f88890",
+          "original_read_paths": [
+            "producers/automation/body.md"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived/automation-flow.json",
+          "bytes": 8479,
+          "sha256": "ec4550336620b1d7abed85e78460c6d4c5ede73f31c8ddcf8a77be5272af3179",
+          "git_blob_sha": "a039bc6e88406694ed967c5f6c1e2b14a9428506",
+          "original_read_paths": [
+            "payload/recipes/derived/automation-flow.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/request.txt",
+          "bytes": 856,
+          "sha256": "da3d46f1369fc5ec17d4ec73b3b95ebeecf2c83c796f06e88d4409c1c64a331e",
+          "git_blob_sha": "d44c3d910995f299f76a1f8e1e62af093653ed81",
+          "original_read_paths": [
+            "producers/derived-automation-flow/request.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/dispatch-message.txt",
+          "bytes": 2056,
+          "sha256": "808b4733f5306981efcdf337732dc6d53d1dce7b6569b5c7b32af0611e761fd9",
+          "git_blob_sha": "dfe89eddbc185ad996a1fd25e18bab3786161486",
+          "original_read_paths": [
+            "producers/derived-automation-flow/dispatch-message.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v2/history/body.md",
+          "bytes": 16441,
+          "sha256": "5985441b360d0efc6693d0d385980f4a93cab2c044387a7375608dd5a9adf517",
+          "git_blob_sha": "b4874e39655e7aef9c9f6e08aeecc37718658b2f",
+          "original_read_paths": [
+            "producers/derived-automation-flow/body.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v2/history/evidence.md",
+          "bytes": 11997,
+          "sha256": "d2b8068c9167c0813719479d4d2b10046cc718921dad3db52d1f44957e3f1360",
+          "git_blob_sha": "6697c34caf08d7d8d4bacd4793f3e36c1d035aa4",
+          "original_read_paths": [
+            "producers/derived-automation-flow/evidence.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v2/history/production-manifest.json",
+          "bytes": 16158,
+          "sha256": "9c7d3130d4265bccba5e94fa0448b1d0bbbf3c02bf421a09d4e8d053cae4df06",
+          "git_blob_sha": "ee7c2879510553e13c9c61faefdda6b9e09d8e17",
+          "original_read_paths": [
+            "producers/derived-automation-flow/production-manifest.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v2/history/response.md",
+          "bytes": 2470,
+          "sha256": "c8bf48be1b48cc17d8c376978e37c401079ba6e5ad72c51ac12443b8e433c7fd",
+          "git_blob_sha": "e26287f9867203f71804eecce18b6a706997539a",
+          "original_read_paths": [
+            "producers/derived-automation-flow/response.md"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived/automation-flow-source-fidelity-v2.json",
+          "bytes": 7391,
+          "sha256": "16c2b4e2efc5a6e2ea6a111540e7a662ce154af3c58c366306e254f23d9b3364",
+          "git_blob_sha": "d41472b948b6c1a5d2d5990c3de0a906c9d5cf47",
+          "original_read_paths": [
+            "payload/recipes/derived/automation-flow-source-fidelity-v2.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v2/request.txt",
+          "bytes": 841,
+          "sha256": "34caa0867a7d0c02dd94c37f789c0af7262132bf4f2359563021b8df3977e769",
+          "git_blob_sha": "52271ca649386b9acd36c4dc8e31153cba7f3dfb",
+          "original_read_paths": [
+            "producers/derived-automation-flow/revisions/v2/request.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v2/dispatch-message.txt",
+          "bytes": 1370,
+          "sha256": "b5cf544c85c7f3fae4739c200210f829a8b72a7bbb65eab809799fa198621e93",
+          "git_blob_sha": "151ff85a32fe59b63db141eaad368d8b6a7fa55c",
+          "original_read_paths": [
+            "producers/derived-automation-flow/revisions/v2/dispatch-message.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v3/history/body.md",
+          "bytes": 16541,
+          "sha256": "5b24037431881e96ddb5a872fd6541c94880d189d8b0c873bac9d8bd874d85c1",
+          "git_blob_sha": "378dbb4cd9f978ed9ab848136a2f4b9fdd72ca6b",
+          "original_read_paths": [
+            "producers/derived-automation-flow/body.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v3/history/evidence.md",
+          "bytes": 14569,
+          "sha256": "0c4bff02eec8c4dbca2886127f1546bd51707060df8306ba4e630dba73f990d8",
+          "git_blob_sha": "ec9f7f1351681788c7c58cb345e4ee6860c4c3af",
+          "original_read_paths": [
+            "producers/derived-automation-flow/evidence.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v3/history/production-manifest.json",
+          "bytes": 27416,
+          "sha256": "1802600a673c0521064bc636bd9be5e9e9aad9dd644f26efd5d14c02bee52cff",
+          "git_blob_sha": "009ace4ecb5cda6ec2c3f58aec5573d1b986c205",
+          "original_read_paths": [
+            "producers/derived-automation-flow/production-manifest.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v3/history/response.md",
+          "bytes": 3043,
+          "sha256": "59ffb319da5b27d830b9eeabe7ac592c104a64496864235da4331cd5adc05c23",
+          "git_blob_sha": "f07fae15e22fabc2fd4cad461fd721eab5e031d3",
+          "original_read_paths": [
+            "producers/derived-automation-flow/response.md"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived/automation-flow-dispatch-fidelity-v3.json",
+          "bytes": 6224,
+          "sha256": "a0f24c622d77e89d6a7020334075691efb8f3153f99087eb7bc2afc3337cb9ea",
+          "git_blob_sha": "e7531d1cba701855e10fc46602a4ca584dffe69b",
+          "original_read_paths": [
+            "payload/recipes/derived/automation-flow-dispatch-fidelity-v3.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v3/request.txt",
+          "bytes": 680,
+          "sha256": "4ed7cc034c532a6b414fa03bfcd4f2034ccfca3f593ebad1652653d814e64538",
+          "git_blob_sha": "a07913c67f6b5343dca9386f3d0d4174892c5aab",
+          "original_read_paths": [
+            "producers/derived-automation-flow/revisions/v3/request.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v3/dispatch-message.txt",
+          "bytes": 1520,
+          "sha256": "4fff1b29411f19321d656897a2ab13cb5c65589e4652e1f8a790fb49642ffbb0",
+          "git_blob_sha": "bafca800486d37ef7bef21e11d7b9b42f1c2099a",
+          "original_read_paths": [
+            "producers/derived-automation-flow/revisions/v3/dispatch-message.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/body.md",
+          "bytes": 16570,
+          "sha256": "64d97f6da72c92a00ad8e3d91e20a42fd360dbedb502733c0548746462442287",
+          "git_blob_sha": "5af7e410ddfb4d1da1473a990fc25d27a7580303",
+          "original_read_paths": [
+            "producers/derived-automation-flow/body.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/production-manifest.json",
+          "bytes": 37704,
+          "sha256": "959840fc57d7d42e2d78abca1438f4ad18fbe8b20cb479fab6fc8127355ab1c3",
+          "git_blob_sha": "e37f374bb7b4e39c385b4e9def7848a47bee862a",
+          "original_read_paths": [
+            "producers/derived-automation-flow/production-manifest.json"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived/automation-impact.json",
+          "bytes": 9478,
+          "sha256": "dc1cb8d1b096c7cded692b4b5cd010d67e5a01165b28622a5caef5be4c0c0767",
+          "git_blob_sha": "8cbef08ae15a11ae9421504a7144b97382ef9009",
+          "original_read_paths": [
+            "payload/recipes/derived/automation-impact.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-impact/request.txt",
+          "bytes": 869,
+          "sha256": "493eb3912f434e83bafb9448d44e7b36961c37400bf53fec677e4edf69c938e6",
+          "git_blob_sha": "a7a9f8ced448c14b4f2b46e4d173028da5bc4a3b",
+          "original_read_paths": [
+            "producers/derived-automation-impact/request.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-impact/dispatch-message.txt",
+          "bytes": 1902,
+          "sha256": "3129949a5d075b93e1922b5e3bf12b16f8f59f6fecb8d196ac460beef39d095c",
+          "git_blob_sha": "9f63a46c7b658ec33ae76bcbdc3605407b593148",
+          "original_read_paths": [
+            "producers/derived-automation-impact/dispatch-message.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-impact/revisions/v2/history/body.md",
+          "bytes": 13454,
+          "sha256": "cc7ebd4319e301cf3100f83867a889c6295e52c7d0c39a769d2962bc251c9722",
+          "git_blob_sha": "5e345882926432b1049d4ef9ae781c2fb6a1e5f2",
+          "original_read_paths": [
+            "producers/derived-automation-impact/body.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-impact/revisions/v2/history/evidence.md",
+          "bytes": 12105,
+          "sha256": "2814a7361d26e4d99e4c77e16189baa53755ab8e8873c53a3fcddb96a67a8a5d",
+          "git_blob_sha": "87061f8933a3907565d04d346d9c2a7a0b60454d",
+          "original_read_paths": [
+            "producers/derived-automation-impact/evidence.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-impact/revisions/v2/history/production-manifest.json",
+          "bytes": 41752,
+          "sha256": "fa3cb6ba4888e6449e2cb39d424e4e0dab2bc4e05f85c190fa1cfd7591e71c9c",
+          "git_blob_sha": "82ad7bdbf68ad3c8db46478e71e31f650f60bf98",
+          "original_read_paths": [
+            "producers/derived-automation-impact/production-manifest.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-impact/revisions/v2/history/response.md",
+          "bytes": 2703,
+          "sha256": "85831ceada2e319c68ec37bc7e521de4d66c2aa1828e2df18a25886fe0a181f7",
+          "git_blob_sha": "377fdc2968753ba8d881097a808323b09237ad34",
+          "original_read_paths": [
+            "producers/derived-automation-impact/response.md"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived/automation-impact-schedule-fidelity-v2.json",
+          "bytes": 5638,
+          "sha256": "b57d14c54df694d54256ff30b7c743050045affe6066fee68cc5e1aa27f16b4f",
+          "git_blob_sha": "fa0aa39d37a7908b250e165187ef654c523fb587",
+          "original_read_paths": [
+            "payload/recipes/derived/automation-impact-schedule-fidelity-v2.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-impact/revisions/v2/request.txt",
+          "bytes": 678,
+          "sha256": "d296751f870708aa225c70a3a5262f7ecb0bfffc2bcb488b53d30cea73ef18ff",
+          "git_blob_sha": "259ed5422386136bbdfd3d621f441a7db2278d43",
+          "original_read_paths": [
+            "producers/derived-automation-impact/revisions/v2/request.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-impact/revisions/v2/dispatch-message.txt",
+          "bytes": 1497,
+          "sha256": "87adb6d9a36b17e43ec7d23965d35f56a6add3811c8aa2b5598934c8c7fd57aa",
+          "git_blob_sha": "6445672a1374aecc0a66f633f52660f96af9f44a",
+          "original_read_paths": [
+            "producers/derived-automation-impact/revisions/v2/dispatch-message.txt"
+          ]
+        }
+      ],
+      "audited_path_aliases": {},
+      "actual_recipe_local_path": "payload/recipes/derived/automation-impact-schedule-fidelity-v2.json",
+      "request_local_path": "producers/derived-automation-impact/revisions/v2/request.txt",
+      "response_local_path": "producers/derived-automation-impact/response.md",
+      "manifest_local_path": "producers/derived-automation-impact/production-manifest.json",
+      "review_payload_paths": {
+        "parallel-v3-fresh/S1-03/J1": "judgments/derived/derived-automation-impact-v2-delta/j1-response.md",
+        "parallel-v3-fresh/S1-03/J2": "judgments/derived/derived-automation-impact-v2-delta/j2-response.md"
+      },
+      "gaps": [
+        "Own Atlas preparation, exact runtime binding, governed publication, consumers and maintenance are assessed separately; semantic PASS does not certify those operations."
+      ],
+      "evidence": [
+        "semantic-acceptances.json#s1.subslice03.automation-impact",
+        "judgments/derived/derived-automation-impact-v2-delta/j1-response.md",
+        "judgments/derived/derived-automation-impact-v2-delta/j2-response.md",
+        "producers/derived-automation-impact/evidence.md"
+      ],
+      "navigation": []
+    },
+    "s1.subslice03.research-impact": {
+      "additional_actual_inputs": [
+        {
+          "local_path": "inputs/AGENTS.md",
+          "bytes": 16501,
+          "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+          "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+          "original_read_paths": [
+            "inputs/AGENTS.md"
+          ]
+        },
+        {
+          "local_path": "inputs/COMMON.md",
+          "bytes": 12959,
+          "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+          "git_blob_sha": "893cbb5f5eda2d0c19753606a50d1c482523f0c8",
+          "original_read_paths": [
+            "inputs/COMMON.md"
+          ]
+        },
+        {
+          "local_path": "inputs/mission.json",
+          "bytes": 6006,
+          "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+          "git_blob_sha": "48fa8da131e97c50110ee76e41e79283cd9a0ac4",
+          "original_read_paths": [
+            "inputs/mission.json"
+          ]
+        },
+        {
+          "local_path": "inputs/SKILL.md",
+          "bytes": 8143,
+          "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+          "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+          "original_read_paths": [
+            "inputs/SKILL.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/principles.md",
+          "bytes": 6010,
+          "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+          "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+          "original_read_paths": [
+            "inputs/references/principles.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/fatia-1.md",
+          "bytes": 3987,
+          "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
+          "git_blob_sha": "78482ad7c72ec275fadb26ebece1c30bc1e5ccb9",
+          "original_read_paths": [
+            "inputs/references/fatia-1.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/fresh-start.md",
+          "bytes": 4983,
+          "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166",
+          "git_blob_sha": "ca485b25e43293a309c5489279dce80ce1441ed0",
+          "original_read_paths": [
+            "inputs/references/fresh-start.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/orchestration.md",
+          "bytes": 4408,
+          "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+          "git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+          "original_read_paths": [
+            "inputs/references/orchestration.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/judging.md",
+          "bytes": 5787,
+          "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+          "git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+          "original_read_paths": [
+            "inputs/references/judging.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/transport.md",
+          "bytes": 8478,
+          "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+          "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+          "original_read_paths": [
+            "inputs/references/transport.md"
+          ]
+        },
+        {
+          "local_path": "payload/artifact-plan.json",
+          "bytes": 5017,
+          "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad",
+          "git_blob_sha": "8dba81b59cd093d28ea07cf4369d5842b6bdee68",
+          "original_read_paths": [
+            "payload/artifact-plan.json"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived-contract.json",
+          "bytes": 4017,
+          "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
+          "git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd",
+          "original_read_paths": [
+            "payload/recipes/derived-contract.json"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived-public-criteria.json",
+          "bytes": 16244,
+          "sha256": "1e7686491c5b68cb4f3d287377723edcd8932ae803c267ddbabf44a360dfc36e",
+          "git_blob_sha": "d4f6b765e6d78341ba2b77186c77b9177cf3156c",
+          "original_read_paths": [
+            "payload/recipes/derived-public-criteria.json"
+          ]
+        },
+        {
+          "local_path": "producers/research/revisions/v4/history/body.md",
+          "bytes": 63841,
+          "sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+          "git_blob_sha": "72bdc55fdf2dbda97e84c87111be73fa49aceeb4",
+          "original_read_paths": [
+            "producers/research/body.md"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived/research-flow.json",
+          "bytes": 8423,
+          "sha256": "543c6045bfb145c0db4b2779b12c96c140ff20198c408357c7d84bcf0a7f71e1",
+          "git_blob_sha": "db976816322808b79ec62b9451e89b9beb084521",
+          "original_read_paths": [
+            "payload/recipes/derived/research-flow.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/request.txt",
+          "bytes": 850,
+          "sha256": "351e7104bfdbc75075906493ef2db4d3f689d4181f7e621f64e75e6caf31f6ee",
+          "git_blob_sha": "d8607ddacf8da2198ba41fe912675f5127204bff",
+          "original_read_paths": [
+            "producers/derived-research-flow/request.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/dispatch-message.txt",
+          "bytes": 1511,
+          "sha256": "2252f97394d8dbc61fd0e629ce1a16700f8a81bc78673add06985842fc75efcf",
+          "git_blob_sha": "0c546d156615e7cd044ec432ec27342941f20bce",
+          "original_read_paths": [
+            "producers/derived-research-flow/dispatch-message.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/history/v1/body.md",
+          "bytes": 16980,
+          "sha256": "a4b50fa9ae0b781dbea831aefcb98cb099f93167d4a7a584dc88878fc93bc044",
+          "git_blob_sha": "8b7c702e3d5d6e0d9a8f303136a9d97ac280d82c",
+          "original_read_paths": [
+            "producers/derived-research-flow/body.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/history/v1/evidence.md",
+          "bytes": 11305,
+          "sha256": "8e2b11c446ef73d166c98f7d852d5ca674a0a056779351e393a2d8b832cbf365",
+          "git_blob_sha": "83aff55b8282a7aa0e4ea0c99ecdbb31f4b7ba4f",
+          "original_read_paths": [
+            "producers/derived-research-flow/evidence.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/history/v1/production-manifest.json",
+          "bytes": 19363,
+          "sha256": "363c7e06f9ec4f0ea2165c81204c238f2972d702875b2d2d445607c0d2e66fcf",
+          "git_blob_sha": "b4cc419dda2ef5cb89667c9cf9d28236964ae7f1",
+          "original_read_paths": [
+            "producers/derived-research-flow/production-manifest.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/history/v1/response.md",
+          "bytes": 2472,
+          "sha256": "4d10e4cbaacffd86da6c9c32091576608e3a0937a6f5ef5489c7f142778540ac",
+          "git_blob_sha": "75520523f4f50e0ab3ee7eaa597936fc1c23bc18",
+          "original_read_paths": [
+            "producers/derived-research-flow/response.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/request.txt",
+          "bytes": 503,
+          "sha256": "4c2c7a3e6262ab721b25b5aef283d6dfbbb9edacb6cd20da73e5212f55a9840a",
+          "git_blob_sha": "6c6411040020aca556afa20bef466541746cb713",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/request.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/recipe.json",
+          "bytes": 3279,
+          "sha256": "007fa924ee039cce045c481143b71fff2dc3b6f6776b9cc77edfff1b386ca8b9",
+          "git_blob_sha": "5bba5c3eef5d7f20318a37d82c3ba929e93957b4",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/recipe.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/public-finding.md",
+          "bytes": 1080,
+          "sha256": "8230c3ca27cd3416c801ff0080dc102a41b0fb16ee6ecdf94aae0c8612f33bf7",
+          "git_blob_sha": "02c3ea691918f6bc541b644b664d3c5f057d9916",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/public-finding.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/dispatch-message.txt",
+          "bytes": 1669,
+          "sha256": "9de6643262b0eef5014515544cc97d0d3ed334a70598c3d86b6f5a89bacfe15d",
+          "git_blob_sha": "c3312b633045dc7633131c8a71cc918e97d51610",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/dispatch-message.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/prior-output-preservation.json",
+          "bytes": 2036,
+          "sha256": "af0552a04cae4c5e2c1eb6f32b00e0a372ed9028542298808debeae4b8d5b00d",
+          "git_blob_sha": "d4d44dff034ca16d383628b2109c2fbdcf451cc7",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/prior-output-preservation.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/apply.py",
+          "bytes": 19851,
+          "sha256": "3404af9b477c4d07b170d03f7068d4152b2bd4cb76c607cf1a0f24320bd67bf8",
+          "git_blob_sha": "f4de05371a97cd74ff333030a8949770888bd1b1",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/apply.py"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/procedure-freeze.json",
+          "bytes": 15402,
+          "sha256": "b2b63dbbe1ac9cfdeb619ba074d2e8b8abc809b00bf13a72aea7f6235e746356",
+          "git_blob_sha": "0edb4f1d7effd4b3cf125eda56d05a345294bfb2",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/procedure-freeze.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/delta.json",
+          "bytes": 4551,
+          "sha256": "ae2265221d845124e5632ab460e4278c0d49c987a16d38739ddd5fa07f5de268",
+          "git_blob_sha": "bf56199cb38b472741264b5b179946a380a3bec1",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/delta.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/review-supplement.md",
+          "bytes": 3793,
+          "sha256": "c2a7d80a4e5bfb7c03a569c7106630d5f6d7cb14225e0450826f9eaa1b1dd727",
+          "git_blob_sha": "432d6899b2dfdcbce8fabb7ec80680119d1e887a",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/review-supplement.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/input-manifest-extension.json",
+          "bytes": 17986,
+          "sha256": "2cc6415416ae6f5a59ffbc908bae284d477671ab54ad1aca55033c7067eff463",
+          "git_blob_sha": "2fca473d46b981aa1ea22b4bd4e4845dd0e3c721",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/input-manifest-extension.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/producer-verification.json",
+          "bytes": 2298,
+          "sha256": "d8d249ca6064da8f00ac4cd10e5d655498e94120d4d142ddf09bed9a7a6eb709",
+          "git_blob_sha": "7022ef79dcfd962cd6514e991a06cdeca5d9e668",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/producer-verification.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/response.md",
+          "bytes": 2016,
+          "sha256": "553422eb616a5e72a38d82810ba0cfbd4221baa8828333e5600f488c4e8fea90",
+          "git_blob_sha": "e3e6ca3002c8d235f59537e5c5175461fda03c0b",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/response.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/history/body.md",
+          "bytes": 17113,
+          "sha256": "f6dce8d080ff5bdd3a5409bd16b846c176c8270135eb51a6cd0329413e3d0994",
+          "git_blob_sha": "2bd9021ea932e9afb5fdd8619b5b6b16e4bfc440",
+          "original_read_paths": [
+            "producers/derived-research-flow/body.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/history/evidence.md",
+          "bytes": 11457,
+          "sha256": "b7d51d3bab6f9d8538d6b6362953647eedfbc5fad905c69b5d3fd38b0ea75022",
+          "git_blob_sha": "18797d0844d84082dc39e99acbc10f9de03c46ea",
+          "original_read_paths": [
+            "producers/derived-research-flow/evidence.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/history/production-manifest.json",
+          "bytes": 34692,
+          "sha256": "32c07a3198dfd1bcada8d932e2a61d6dc09c129f6a53fd0c42467611cc7a9831",
+          "git_blob_sha": "6a8563a63ff00393e2497f95313df53caf80bd00",
+          "original_read_paths": [
+            "producers/derived-research-flow/production-manifest.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/history/response.md",
+          "bytes": 2016,
+          "sha256": "553422eb616a5e72a38d82810ba0cfbd4221baa8828333e5600f488c4e8fea90",
+          "git_blob_sha": "e3e6ca3002c8d235f59537e5c5175461fda03c0b",
+          "original_read_paths": [
+            "producers/derived-research-flow/response.md"
+          ]
+        },
+        {
+          "local_path": "producers/research/body.md",
+          "bytes": 64106,
+          "sha256": "c3925ca6e27465598796ef21815e79980277d4c3194a8b2fda7cf433700675d1",
+          "git_blob_sha": "69fda8b4a63d5480b7d78e8f915e1d90fb8a2b8b",
+          "original_read_paths": [
+            "producers/research/body.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/public-findings.md",
+          "bytes": 1210,
+          "sha256": "e1f6536c5f2ca30f7ddb215fe5f0c888d1b7da01c29c437ee2cdb099077be1a7",
+          "git_blob_sha": "7b9778189193884b684f309cada1851b03f8abb0",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v3/public-findings.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/recipe.json",
+          "bytes": 5536,
+          "sha256": "6b77e699b909ae075954e1d0fb00cd205a4ada0f4cd5ed23eff6fdd350630eae",
+          "git_blob_sha": "80b6e35297886298166c74e3decddd499f75bfb7",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v3/recipe.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/request.txt",
+          "bytes": 395,
+          "sha256": "8640ec3a0ce573741ca1ee42c582960f2d776b28af950757329ee199d090c993",
+          "git_blob_sha": "4b528bf3d9e7ca449c70854e77d7448b3cbdd089",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v3/request.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/dispatch-message.txt",
+          "bytes": 1273,
+          "sha256": "2319e6ae0efd79115f68d417dba4e6297bde4546d33f540840a1995fc6eaddaa",
+          "git_blob_sha": "ae06fd91c907ce12fbc02ffbaf1fdd9052918d3e",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v3/dispatch-message.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/prior-output-preservation.json",
+          "bytes": 2545,
+          "sha256": "ec68bad4886debb07d01a4b70695d7a1e3c3cde0b98ff524919a02e517ee37d5",
+          "git_blob_sha": "c32e6779810c3b3dbd06bfcb90cd1f0f2b2ae8ef",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v3/prior-output-preservation.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/apply.py",
+          "bytes": 20110,
+          "sha256": "fa8fb1920a259dda654fb75321d41bcd4416c8c03b69facbe7dcdd5088d48435",
+          "git_blob_sha": "5b52474a88d0bc9a64fedd9598a506d9e75bea6f",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v3/apply.py"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/procedure-freeze.json",
+          "bytes": 38389,
+          "sha256": "ab1c664955412b66e61c88a6213974944ec50ff4d9cadda593c5a3004db8ad4e",
+          "git_blob_sha": "7cc165d1c048f4e15a8e3c8a319ee1c68f0c26b6",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v3/procedure-freeze.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/body.md",
+          "bytes": 17124,
+          "sha256": "f2c19caaa501ea0e135cbbfb4768b4bd68c4e729e5545cb5f80e45c655f52ab7",
+          "git_blob_sha": "1ceb2496a2185042e3eb564e80828bd85ac08f7f",
+          "original_read_paths": [
+            "producers/derived-research-flow/body.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/evidence.md",
+          "bytes": 12878,
+          "sha256": "6c6d9c59bf75c0636598315fad3d850426f9d473cc7cbd0ba2f385165992a614",
+          "git_blob_sha": "d1e80930db1d09f6deb84a188dd6093aa50445b7",
+          "original_read_paths": [
+            "producers/derived-research-flow/evidence.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/response.md",
+          "bytes": 2144,
+          "sha256": "1adbff35cf2884d6dc2a3fff4ae2703227cea6f045503a20f58c78b030f77696",
+          "git_blob_sha": "872b8983468990176c39d39dbd73707bf115c021",
+          "original_read_paths": [
+            "producers/derived-research-flow/response.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/delta.json",
+          "bytes": 15355,
+          "sha256": "ed857fc8035e8995ff52247170eae49e416a47ae1812760328aea6587065560f",
+          "git_blob_sha": "7a10971ccd4eb4b47b7d8bece88f0dd7116ccc52",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v3/delta.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/delta.patch",
+          "bytes": 11130,
+          "sha256": "33abda8cf8387856ebe28a818cf1f17b20434cd705f10322f0b997d92e782e3b",
+          "git_blob_sha": "e232c059f4484b7ffd556c296dc7146346dd4735",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v3/delta.patch"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/review-supplement.md",
+          "bytes": 11742,
+          "sha256": "2ab915b6becb96e0523fa59bad64ebd4ac1f73d3bc27c256cd371984a06bcd47",
+          "git_blob_sha": "1be0a107f95cfcf91d610c52f3256eb2cd8ca467",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v3/review-supplement.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/input-manifest-extension.json",
+          "bytes": 34417,
+          "sha256": "4db94d8d4a5a028d742b4cd6f82d81c175ca3ae2194f42d3922f368e85acd26f",
+          "git_blob_sha": "66a992d77bf889766bdde2ffbe2f7f9b53145137",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v3/input-manifest-extension.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/producer-verification.json",
+          "bytes": 2909,
+          "sha256": "751047a4ae095416c488ba28c83ca85cbfed37b82b47e460fde62d2e73909b39",
+          "git_blob_sha": "20f630685105a38090c9cbafc6584a714dd21ef4",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v3/producer-verification.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/response.md",
+          "bytes": 2144,
+          "sha256": "1adbff35cf2884d6dc2a3fff4ae2703227cea6f045503a20f58c78b030f77696",
+          "git_blob_sha": "872b8983468990176c39d39dbd73707bf115c021",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v3/response.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/production-manifest.json",
+          "bytes": 54847,
+          "sha256": "a6fa0d012f2d43eceaf033b570ed1cfe4a09f6089c1df1a720e663c2753efeb8",
+          "git_blob_sha": "1d08a666508f8a94c41708b19e9d4ecd74547df0",
+          "original_read_paths": [
+            "producers/derived-research-flow/production-manifest.json"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived/research-impact.json",
+          "bytes": 9448,
+          "sha256": "68778f6144af73ee575678096eee818fb2a6ec2992572af4594dcf37af15fe7e",
+          "git_blob_sha": "b23a6614276f591ec7239542cc3ab8def90e277c",
+          "original_read_paths": [
+            "payload/recipes/derived/research-impact.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-impact/request.txt",
+          "bytes": 863,
+          "sha256": "fe6b14e0f21ae1f13b15255b79ae1601cce467df536d58464d74ab18046e287b",
+          "git_blob_sha": "7a4a46e18c0a577c46d09dc3dcf613922c5142e6",
+          "original_read_paths": [
+            "producers/derived-research-impact/request.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-impact/dispatch-message.txt",
+          "bytes": 1546,
+          "sha256": "28dcc55a79e9d1372cee574c7bdb7b5f7d7154f3e29c98af1f8b52ca9b24565e",
+          "git_blob_sha": "8b5076757032a2c1c4be204e3317fcaca2204962",
+          "original_read_paths": [
+            "producers/derived-research-impact/dispatch-message.txt"
+          ]
+        }
+      ],
+      "audited_path_aliases": {},
+      "actual_recipe_local_path": "payload/recipes/derived/research-impact.json",
+      "request_local_path": "producers/derived-research-impact/request.txt",
+      "response_local_path": "producers/derived-research-impact/response.md",
+      "manifest_local_path": "producers/derived-research-impact/production-manifest.json",
+      "review_payload_paths": {
+        "parallel-v3-fresh/S1-03/J1": "judgments/derived/derived-research-impact-plan-v1/j1-response.md",
+        "parallel-v3-fresh/S1-03/J2": "judgments/derived/derived-research-impact-v1/j2-response.md"
+      },
+      "gaps": [
+        "Own Atlas preparation, exact runtime binding, governed publication, consumers and maintenance are assessed separately; semantic PASS does not certify those operations."
+      ],
+      "evidence": [
+        "semantic-acceptances.json#s1.subslice03.research-impact",
+        "judgments/derived/derived-research-impact-plan-v1/j1-response.md",
+        "judgments/derived/derived-research-impact-v1/j2-response.md",
+        "producers/derived-research-impact/evidence.md"
+      ],
+      "navigation": []
+    },
+    "s1.subslice03.automation-maintenance": {
+      "additional_actual_inputs": [
+        {
+          "local_path": "inputs/AGENTS.md",
+          "bytes": 16501,
+          "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+          "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+          "original_read_paths": [
+            "inputs/AGENTS.md"
+          ]
+        },
+        {
+          "local_path": "inputs/COMMON.md",
+          "bytes": 12959,
+          "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+          "git_blob_sha": "893cbb5f5eda2d0c19753606a50d1c482523f0c8",
+          "original_read_paths": [
+            "inputs/COMMON.md"
+          ]
+        },
+        {
+          "local_path": "inputs/mission.json",
+          "bytes": 6006,
+          "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+          "git_blob_sha": "48fa8da131e97c50110ee76e41e79283cd9a0ac4",
+          "original_read_paths": [
+            "inputs/mission.json"
+          ]
+        },
+        {
+          "local_path": "inputs/SKILL.md",
+          "bytes": 8143,
+          "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+          "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+          "original_read_paths": [
+            "inputs/SKILL.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/principles.md",
+          "bytes": 6010,
+          "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+          "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+          "original_read_paths": [
+            "inputs/references/principles.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/fatia-1.md",
+          "bytes": 3987,
+          "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
+          "git_blob_sha": "78482ad7c72ec275fadb26ebece1c30bc1e5ccb9",
+          "original_read_paths": [
+            "inputs/references/fatia-1.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/fresh-start.md",
+          "bytes": 4983,
+          "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166",
+          "git_blob_sha": "ca485b25e43293a309c5489279dce80ce1441ed0",
+          "original_read_paths": [
+            "inputs/references/fresh-start.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/orchestration.md",
+          "bytes": 4408,
+          "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+          "git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+          "original_read_paths": [
+            "inputs/references/orchestration.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/judging.md",
+          "bytes": 5787,
+          "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+          "git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+          "original_read_paths": [
+            "inputs/references/judging.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/transport.md",
+          "bytes": 8478,
+          "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+          "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+          "original_read_paths": [
+            "inputs/references/transport.md"
+          ]
+        },
+        {
+          "local_path": "payload/artifact-plan.json",
+          "bytes": 5017,
+          "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad",
+          "git_blob_sha": "8dba81b59cd093d28ea07cf4369d5842b6bdee68",
+          "original_read_paths": [
+            "payload/artifact-plan.json"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived-contract.json",
+          "bytes": 4017,
+          "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
+          "git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd",
+          "original_read_paths": [
+            "payload/recipes/derived-contract.json"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived-public-criteria.json",
+          "bytes": 16244,
+          "sha256": "1e7686491c5b68cb4f3d287377723edcd8932ae803c267ddbabf44a360dfc36e",
+          "git_blob_sha": "d4f6b765e6d78341ba2b77186c77b9177cf3156c",
+          "original_read_paths": [
+            "payload/recipes/derived-public-criteria.json"
+          ]
+        },
+        {
+          "local_path": "producers/automation/body.md",
+          "bytes": 60767,
+          "sha256": "968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae",
+          "git_blob_sha": "e26213eb2fc76dc843dca17d1111334c76f88890",
+          "original_read_paths": [
+            "producers/automation/body.md"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived/automation-flow.json",
+          "bytes": 8479,
+          "sha256": "ec4550336620b1d7abed85e78460c6d4c5ede73f31c8ddcf8a77be5272af3179",
+          "git_blob_sha": "a039bc6e88406694ed967c5f6c1e2b14a9428506",
+          "original_read_paths": [
+            "payload/recipes/derived/automation-flow.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/request.txt",
+          "bytes": 856,
+          "sha256": "da3d46f1369fc5ec17d4ec73b3b95ebeecf2c83c796f06e88d4409c1c64a331e",
+          "git_blob_sha": "d44c3d910995f299f76a1f8e1e62af093653ed81",
+          "original_read_paths": [
+            "producers/derived-automation-flow/request.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/dispatch-message.txt",
+          "bytes": 2056,
+          "sha256": "808b4733f5306981efcdf337732dc6d53d1dce7b6569b5c7b32af0611e761fd9",
+          "git_blob_sha": "dfe89eddbc185ad996a1fd25e18bab3786161486",
+          "original_read_paths": [
+            "producers/derived-automation-flow/dispatch-message.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v2/history/body.md",
+          "bytes": 16441,
+          "sha256": "5985441b360d0efc6693d0d385980f4a93cab2c044387a7375608dd5a9adf517",
+          "git_blob_sha": "b4874e39655e7aef9c9f6e08aeecc37718658b2f",
+          "original_read_paths": [
+            "producers/derived-automation-flow/body.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v2/history/evidence.md",
+          "bytes": 11997,
+          "sha256": "d2b8068c9167c0813719479d4d2b10046cc718921dad3db52d1f44957e3f1360",
+          "git_blob_sha": "6697c34caf08d7d8d4bacd4793f3e36c1d035aa4",
+          "original_read_paths": [
+            "producers/derived-automation-flow/evidence.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v2/history/production-manifest.json",
+          "bytes": 16158,
+          "sha256": "9c7d3130d4265bccba5e94fa0448b1d0bbbf3c02bf421a09d4e8d053cae4df06",
+          "git_blob_sha": "ee7c2879510553e13c9c61faefdda6b9e09d8e17",
+          "original_read_paths": [
+            "producers/derived-automation-flow/production-manifest.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v2/history/response.md",
+          "bytes": 2470,
+          "sha256": "c8bf48be1b48cc17d8c376978e37c401079ba6e5ad72c51ac12443b8e433c7fd",
+          "git_blob_sha": "e26287f9867203f71804eecce18b6a706997539a",
+          "original_read_paths": [
+            "producers/derived-automation-flow/response.md"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived/automation-flow-source-fidelity-v2.json",
+          "bytes": 7391,
+          "sha256": "16c2b4e2efc5a6e2ea6a111540e7a662ce154af3c58c366306e254f23d9b3364",
+          "git_blob_sha": "d41472b948b6c1a5d2d5990c3de0a906c9d5cf47",
+          "original_read_paths": [
+            "payload/recipes/derived/automation-flow-source-fidelity-v2.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v2/request.txt",
+          "bytes": 841,
+          "sha256": "34caa0867a7d0c02dd94c37f789c0af7262132bf4f2359563021b8df3977e769",
+          "git_blob_sha": "52271ca649386b9acd36c4dc8e31153cba7f3dfb",
+          "original_read_paths": [
+            "producers/derived-automation-flow/revisions/v2/request.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v2/dispatch-message.txt",
+          "bytes": 1370,
+          "sha256": "b5cf544c85c7f3fae4739c200210f829a8b72a7bbb65eab809799fa198621e93",
+          "git_blob_sha": "151ff85a32fe59b63db141eaad368d8b6a7fa55c",
+          "original_read_paths": [
+            "producers/derived-automation-flow/revisions/v2/dispatch-message.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v3/history/body.md",
+          "bytes": 16541,
+          "sha256": "5b24037431881e96ddb5a872fd6541c94880d189d8b0c873bac9d8bd874d85c1",
+          "git_blob_sha": "378dbb4cd9f978ed9ab848136a2f4b9fdd72ca6b",
+          "original_read_paths": [
+            "producers/derived-automation-flow/body.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v3/history/evidence.md",
+          "bytes": 14569,
+          "sha256": "0c4bff02eec8c4dbca2886127f1546bd51707060df8306ba4e630dba73f990d8",
+          "git_blob_sha": "ec9f7f1351681788c7c58cb345e4ee6860c4c3af",
+          "original_read_paths": [
+            "producers/derived-automation-flow/evidence.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v3/history/production-manifest.json",
+          "bytes": 27416,
+          "sha256": "1802600a673c0521064bc636bd9be5e9e9aad9dd644f26efd5d14c02bee52cff",
+          "git_blob_sha": "009ace4ecb5cda6ec2c3f58aec5573d1b986c205",
+          "original_read_paths": [
+            "producers/derived-automation-flow/production-manifest.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v3/history/response.md",
+          "bytes": 3043,
+          "sha256": "59ffb319da5b27d830b9eeabe7ac592c104a64496864235da4331cd5adc05c23",
+          "git_blob_sha": "f07fae15e22fabc2fd4cad461fd721eab5e031d3",
+          "original_read_paths": [
+            "producers/derived-automation-flow/response.md"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived/automation-flow-dispatch-fidelity-v3.json",
+          "bytes": 6224,
+          "sha256": "a0f24c622d77e89d6a7020334075691efb8f3153f99087eb7bc2afc3337cb9ea",
+          "git_blob_sha": "e7531d1cba701855e10fc46602a4ca584dffe69b",
+          "original_read_paths": [
+            "payload/recipes/derived/automation-flow-dispatch-fidelity-v3.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v3/request.txt",
+          "bytes": 680,
+          "sha256": "4ed7cc034c532a6b414fa03bfcd4f2034ccfca3f593ebad1652653d814e64538",
+          "git_blob_sha": "a07913c67f6b5343dca9386f3d0d4174892c5aab",
+          "original_read_paths": [
+            "producers/derived-automation-flow/revisions/v3/request.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/revisions/v3/dispatch-message.txt",
+          "bytes": 1520,
+          "sha256": "4fff1b29411f19321d656897a2ab13cb5c65589e4652e1f8a790fb49642ffbb0",
+          "git_blob_sha": "bafca800486d37ef7bef21e11d7b9b42f1c2099a",
+          "original_read_paths": [
+            "producers/derived-automation-flow/revisions/v3/dispatch-message.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/body.md",
+          "bytes": 16570,
+          "sha256": "64d97f6da72c92a00ad8e3d91e20a42fd360dbedb502733c0548746462442287",
+          "git_blob_sha": "5af7e410ddfb4d1da1473a990fc25d27a7580303",
+          "original_read_paths": [
+            "producers/derived-automation-flow/body.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-flow/production-manifest.json",
+          "bytes": 37704,
+          "sha256": "959840fc57d7d42e2d78abca1438f4ad18fbe8b20cb479fab6fc8127355ab1c3",
+          "git_blob_sha": "e37f374bb7b4e39c385b4e9def7848a47bee862a",
+          "original_read_paths": [
+            "producers/derived-automation-flow/production-manifest.json"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived/automation-impact.json",
+          "bytes": 9478,
+          "sha256": "dc1cb8d1b096c7cded692b4b5cd010d67e5a01165b28622a5caef5be4c0c0767",
+          "git_blob_sha": "8cbef08ae15a11ae9421504a7144b97382ef9009",
+          "original_read_paths": [
+            "payload/recipes/derived/automation-impact.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-impact/request.txt",
+          "bytes": 869,
+          "sha256": "493eb3912f434e83bafb9448d44e7b36961c37400bf53fec677e4edf69c938e6",
+          "git_blob_sha": "a7a9f8ced448c14b4f2b46e4d173028da5bc4a3b",
+          "original_read_paths": [
+            "producers/derived-automation-impact/request.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-impact/dispatch-message.txt",
+          "bytes": 1902,
+          "sha256": "3129949a5d075b93e1922b5e3bf12b16f8f59f6fecb8d196ac460beef39d095c",
+          "git_blob_sha": "9f63a46c7b658ec33ae76bcbdc3605407b593148",
+          "original_read_paths": [
+            "producers/derived-automation-impact/dispatch-message.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-impact/revisions/v2/history/body.md",
+          "bytes": 13454,
+          "sha256": "cc7ebd4319e301cf3100f83867a889c6295e52c7d0c39a769d2962bc251c9722",
+          "git_blob_sha": "5e345882926432b1049d4ef9ae781c2fb6a1e5f2",
+          "original_read_paths": [
+            "producers/derived-automation-impact/body.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-impact/revisions/v2/history/evidence.md",
+          "bytes": 12105,
+          "sha256": "2814a7361d26e4d99e4c77e16189baa53755ab8e8873c53a3fcddb96a67a8a5d",
+          "git_blob_sha": "87061f8933a3907565d04d346d9c2a7a0b60454d",
+          "original_read_paths": [
+            "producers/derived-automation-impact/evidence.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-impact/revisions/v2/history/production-manifest.json",
+          "bytes": 41752,
+          "sha256": "fa3cb6ba4888e6449e2cb39d424e4e0dab2bc4e05f85c190fa1cfd7591e71c9c",
+          "git_blob_sha": "82ad7bdbf68ad3c8db46478e71e31f650f60bf98",
+          "original_read_paths": [
+            "producers/derived-automation-impact/production-manifest.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-impact/revisions/v2/history/response.md",
+          "bytes": 2703,
+          "sha256": "85831ceada2e319c68ec37bc7e521de4d66c2aa1828e2df18a25886fe0a181f7",
+          "git_blob_sha": "377fdc2968753ba8d881097a808323b09237ad34",
+          "original_read_paths": [
+            "producers/derived-automation-impact/response.md"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived/automation-impact-schedule-fidelity-v2.json",
+          "bytes": 5638,
+          "sha256": "b57d14c54df694d54256ff30b7c743050045affe6066fee68cc5e1aa27f16b4f",
+          "git_blob_sha": "fa0aa39d37a7908b250e165187ef654c523fb587",
+          "original_read_paths": [
+            "payload/recipes/derived/automation-impact-schedule-fidelity-v2.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-impact/revisions/v2/request.txt",
+          "bytes": 678,
+          "sha256": "d296751f870708aa225c70a3a5262f7ecb0bfffc2bcb488b53d30cea73ef18ff",
+          "git_blob_sha": "259ed5422386136bbdfd3d621f441a7db2278d43",
+          "original_read_paths": [
+            "producers/derived-automation-impact/revisions/v2/request.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-impact/revisions/v2/dispatch-message.txt",
+          "bytes": 1497,
+          "sha256": "87adb6d9a36b17e43ec7d23965d35f56a6add3811c8aa2b5598934c8c7fd57aa",
+          "git_blob_sha": "6445672a1374aecc0a66f633f52660f96af9f44a",
+          "original_read_paths": [
+            "producers/derived-automation-impact/revisions/v2/dispatch-message.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-impact/body.md",
+          "bytes": 13666,
+          "sha256": "05aeecb75fb2c4f8afb34fc44cf315490d800ac976eed82100f279ec2402044d",
+          "git_blob_sha": "b803b5e7b626bcf746d5c15d7a0071a9f23de592",
+          "original_read_paths": [
+            "producers/derived-automation-impact/body.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-impact/production-manifest.json",
+          "bytes": 59561,
+          "sha256": "71c87a55b4b64cf1dceeddbf466ecee7d7571edf15d125b24d91d968c792d4f5",
+          "git_blob_sha": "5b219e435b23d758b614f9212c8048fbfd55d373",
+          "original_read_paths": [
+            "producers/derived-automation-impact/production-manifest.json"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived/automation-maintenance.json",
+          "bytes": 9509,
+          "sha256": "234852b82b4d24a10cda4840c6262abab446e3520f1a706eb0a1c555200cca5c",
+          "git_blob_sha": "b8744008f4484b0f59cb0561b25ba49a5ed33e83",
+          "original_read_paths": [
+            "payload/recipes/derived/automation-maintenance.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-maintenance/request.txt",
+          "bytes": 884,
+          "sha256": "1fca3760dc1cc0749d5e44c216a7de6db0dc92916683c11e2435b05b199f25d8",
+          "git_blob_sha": "d2ffa4c66332fa2ca8193d0b737d85bc239c138a",
+          "original_read_paths": [
+            "producers/derived-automation-maintenance/request.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-maintenance/dispatch-message.txt",
+          "bytes": 1704,
+          "sha256": "47c9e0fe0a731c14c5930ec3d6b58a8322dae2381efd71852df7f1e67640d35f",
+          "git_blob_sha": "d28173802019763b71a72320fdbb7de5c14d1c12",
+          "original_read_paths": [
+            "producers/derived-automation-maintenance/dispatch-message.txt"
+          ]
+        }
+      ],
+      "audited_path_aliases": {},
+      "actual_recipe_local_path": "payload/recipes/derived/automation-maintenance.json",
+      "request_local_path": "producers/derived-automation-maintenance/request.txt",
+      "response_local_path": "producers/derived-automation-maintenance/response.md",
+      "manifest_local_path": "producers/derived-automation-maintenance/production-manifest.json",
+      "review_payload_paths": {
+        "parallel-v3-fresh/S1-03/J1": "judgments/derived/derived-automation-maintenance-v1-compact/j1-response.md",
+        "parallel-v3-fresh/S1-03/J2": "judgments/derived/derived-automation-maintenance-v1-compact/j2-response.md"
+      },
+      "gaps": [
+        "Own Atlas preparation, exact runtime binding, governed publication, consumers and maintenance are assessed separately; semantic PASS does not certify those operations."
+      ],
+      "evidence": [
+        "semantic-acceptances.json#s1.subslice03.automation-maintenance",
+        "judgments/derived/derived-automation-maintenance-v1-compact/j1-response.md",
+        "judgments/derived/derived-automation-maintenance-v1-compact/j2-response.md",
+        "producers/derived-automation-maintenance/evidence.md"
+      ],
+      "navigation": []
+    },
+    "s1.subslice03.research-maintenance": {
+      "additional_actual_inputs": [
+        {
+          "local_path": "inputs/AGENTS.md",
+          "bytes": 16501,
+          "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+          "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+          "original_read_paths": [
+            "inputs/AGENTS.md"
+          ]
+        },
+        {
+          "local_path": "inputs/COMMON.md",
+          "bytes": 12959,
+          "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+          "git_blob_sha": "893cbb5f5eda2d0c19753606a50d1c482523f0c8",
+          "original_read_paths": [
+            "inputs/COMMON.md"
+          ]
+        },
+        {
+          "local_path": "inputs/mission.json",
+          "bytes": 6006,
+          "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+          "git_blob_sha": "48fa8da131e97c50110ee76e41e79283cd9a0ac4",
+          "original_read_paths": [
+            "inputs/mission.json"
+          ]
+        },
+        {
+          "local_path": "inputs/SKILL.md",
+          "bytes": 8143,
+          "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+          "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+          "original_read_paths": [
+            "inputs/SKILL.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/principles.md",
+          "bytes": 6010,
+          "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+          "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+          "original_read_paths": [
+            "inputs/references/principles.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/fatia-1.md",
+          "bytes": 3987,
+          "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
+          "git_blob_sha": "78482ad7c72ec275fadb26ebece1c30bc1e5ccb9",
+          "original_read_paths": [
+            "inputs/references/fatia-1.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/fresh-start.md",
+          "bytes": 4983,
+          "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166",
+          "git_blob_sha": "ca485b25e43293a309c5489279dce80ce1441ed0",
+          "original_read_paths": [
+            "inputs/references/fresh-start.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/orchestration.md",
+          "bytes": 4408,
+          "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+          "git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+          "original_read_paths": [
+            "inputs/references/orchestration.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/judging.md",
+          "bytes": 5787,
+          "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+          "git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+          "original_read_paths": [
+            "inputs/references/judging.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/transport.md",
+          "bytes": 8478,
+          "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+          "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+          "original_read_paths": [
+            "inputs/references/transport.md"
+          ]
+        },
+        {
+          "local_path": "payload/artifact-plan.json",
+          "bytes": 5017,
+          "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad",
+          "git_blob_sha": "8dba81b59cd093d28ea07cf4369d5842b6bdee68",
+          "original_read_paths": [
+            "payload/artifact-plan.json"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived-contract.json",
+          "bytes": 4017,
+          "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
+          "git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd",
+          "original_read_paths": [
+            "payload/recipes/derived-contract.json"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived-public-criteria.json",
+          "bytes": 16244,
+          "sha256": "1e7686491c5b68cb4f3d287377723edcd8932ae803c267ddbabf44a360dfc36e",
+          "git_blob_sha": "d4f6b765e6d78341ba2b77186c77b9177cf3156c",
+          "original_read_paths": [
+            "payload/recipes/derived-public-criteria.json"
+          ]
+        },
+        {
+          "local_path": "producers/research/revisions/v4/history/body.md",
+          "bytes": 63841,
+          "sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+          "git_blob_sha": "72bdc55fdf2dbda97e84c87111be73fa49aceeb4",
+          "original_read_paths": [
+            "producers/research/body.md"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived/research-flow.json",
+          "bytes": 8423,
+          "sha256": "543c6045bfb145c0db4b2779b12c96c140ff20198c408357c7d84bcf0a7f71e1",
+          "git_blob_sha": "db976816322808b79ec62b9451e89b9beb084521",
+          "original_read_paths": [
+            "payload/recipes/derived/research-flow.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/request.txt",
+          "bytes": 850,
+          "sha256": "351e7104bfdbc75075906493ef2db4d3f689d4181f7e621f64e75e6caf31f6ee",
+          "git_blob_sha": "d8607ddacf8da2198ba41fe912675f5127204bff",
+          "original_read_paths": [
+            "producers/derived-research-flow/request.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/dispatch-message.txt",
+          "bytes": 1511,
+          "sha256": "2252f97394d8dbc61fd0e629ce1a16700f8a81bc78673add06985842fc75efcf",
+          "git_blob_sha": "0c546d156615e7cd044ec432ec27342941f20bce",
+          "original_read_paths": [
+            "producers/derived-research-flow/dispatch-message.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/history/v1/body.md",
+          "bytes": 16980,
+          "sha256": "a4b50fa9ae0b781dbea831aefcb98cb099f93167d4a7a584dc88878fc93bc044",
+          "git_blob_sha": "8b7c702e3d5d6e0d9a8f303136a9d97ac280d82c",
+          "original_read_paths": [
+            "producers/derived-research-flow/body.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/history/v1/evidence.md",
+          "bytes": 11305,
+          "sha256": "8e2b11c446ef73d166c98f7d852d5ca674a0a056779351e393a2d8b832cbf365",
+          "git_blob_sha": "83aff55b8282a7aa0e4ea0c99ecdbb31f4b7ba4f",
+          "original_read_paths": [
+            "producers/derived-research-flow/evidence.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/history/v1/production-manifest.json",
+          "bytes": 19363,
+          "sha256": "363c7e06f9ec4f0ea2165c81204c238f2972d702875b2d2d445607c0d2e66fcf",
+          "git_blob_sha": "b4cc419dda2ef5cb89667c9cf9d28236964ae7f1",
+          "original_read_paths": [
+            "producers/derived-research-flow/production-manifest.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/history/v1/response.md",
+          "bytes": 2472,
+          "sha256": "4d10e4cbaacffd86da6c9c32091576608e3a0937a6f5ef5489c7f142778540ac",
+          "git_blob_sha": "75520523f4f50e0ab3ee7eaa597936fc1c23bc18",
+          "original_read_paths": [
+            "producers/derived-research-flow/response.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/request.txt",
+          "bytes": 503,
+          "sha256": "4c2c7a3e6262ab721b25b5aef283d6dfbbb9edacb6cd20da73e5212f55a9840a",
+          "git_blob_sha": "6c6411040020aca556afa20bef466541746cb713",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/request.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/recipe.json",
+          "bytes": 3279,
+          "sha256": "007fa924ee039cce045c481143b71fff2dc3b6f6776b9cc77edfff1b386ca8b9",
+          "git_blob_sha": "5bba5c3eef5d7f20318a37d82c3ba929e93957b4",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/recipe.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/public-finding.md",
+          "bytes": 1080,
+          "sha256": "8230c3ca27cd3416c801ff0080dc102a41b0fb16ee6ecdf94aae0c8612f33bf7",
+          "git_blob_sha": "02c3ea691918f6bc541b644b664d3c5f057d9916",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/public-finding.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/dispatch-message.txt",
+          "bytes": 1669,
+          "sha256": "9de6643262b0eef5014515544cc97d0d3ed334a70598c3d86b6f5a89bacfe15d",
+          "git_blob_sha": "c3312b633045dc7633131c8a71cc918e97d51610",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/dispatch-message.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/prior-output-preservation.json",
+          "bytes": 2036,
+          "sha256": "af0552a04cae4c5e2c1eb6f32b00e0a372ed9028542298808debeae4b8d5b00d",
+          "git_blob_sha": "d4d44dff034ca16d383628b2109c2fbdcf451cc7",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/prior-output-preservation.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/apply.py",
+          "bytes": 19851,
+          "sha256": "3404af9b477c4d07b170d03f7068d4152b2bd4cb76c607cf1a0f24320bd67bf8",
+          "git_blob_sha": "f4de05371a97cd74ff333030a8949770888bd1b1",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/apply.py"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/procedure-freeze.json",
+          "bytes": 15402,
+          "sha256": "b2b63dbbe1ac9cfdeb619ba074d2e8b8abc809b00bf13a72aea7f6235e746356",
+          "git_blob_sha": "0edb4f1d7effd4b3cf125eda56d05a345294bfb2",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/procedure-freeze.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/delta.json",
+          "bytes": 4551,
+          "sha256": "ae2265221d845124e5632ab460e4278c0d49c987a16d38739ddd5fa07f5de268",
+          "git_blob_sha": "bf56199cb38b472741264b5b179946a380a3bec1",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/delta.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/review-supplement.md",
+          "bytes": 3793,
+          "sha256": "c2a7d80a4e5bfb7c03a569c7106630d5f6d7cb14225e0450826f9eaa1b1dd727",
+          "git_blob_sha": "432d6899b2dfdcbce8fabb7ec80680119d1e887a",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/review-supplement.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/input-manifest-extension.json",
+          "bytes": 17986,
+          "sha256": "2cc6415416ae6f5a59ffbc908bae284d477671ab54ad1aca55033c7067eff463",
+          "git_blob_sha": "2fca473d46b981aa1ea22b4bd4e4845dd0e3c721",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/input-manifest-extension.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/producer-verification.json",
+          "bytes": 2298,
+          "sha256": "d8d249ca6064da8f00ac4cd10e5d655498e94120d4d142ddf09bed9a7a6eb709",
+          "git_blob_sha": "7022ef79dcfd962cd6514e991a06cdeca5d9e668",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/producer-verification.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v2/response.md",
+          "bytes": 2016,
+          "sha256": "553422eb616a5e72a38d82810ba0cfbd4221baa8828333e5600f488c4e8fea90",
+          "git_blob_sha": "e3e6ca3002c8d235f59537e5c5175461fda03c0b",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v2/response.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/history/body.md",
+          "bytes": 17113,
+          "sha256": "f6dce8d080ff5bdd3a5409bd16b846c176c8270135eb51a6cd0329413e3d0994",
+          "git_blob_sha": "2bd9021ea932e9afb5fdd8619b5b6b16e4bfc440",
+          "original_read_paths": [
+            "producers/derived-research-flow/body.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/history/evidence.md",
+          "bytes": 11457,
+          "sha256": "b7d51d3bab6f9d8538d6b6362953647eedfbc5fad905c69b5d3fd38b0ea75022",
+          "git_blob_sha": "18797d0844d84082dc39e99acbc10f9de03c46ea",
+          "original_read_paths": [
+            "producers/derived-research-flow/evidence.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/history/production-manifest.json",
+          "bytes": 34692,
+          "sha256": "32c07a3198dfd1bcada8d932e2a61d6dc09c129f6a53fd0c42467611cc7a9831",
+          "git_blob_sha": "6a8563a63ff00393e2497f95313df53caf80bd00",
+          "original_read_paths": [
+            "producers/derived-research-flow/production-manifest.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/history/response.md",
+          "bytes": 2016,
+          "sha256": "553422eb616a5e72a38d82810ba0cfbd4221baa8828333e5600f488c4e8fea90",
+          "git_blob_sha": "e3e6ca3002c8d235f59537e5c5175461fda03c0b",
+          "original_read_paths": [
+            "producers/derived-research-flow/response.md"
+          ]
+        },
+        {
+          "local_path": "producers/research/body.md",
+          "bytes": 64106,
+          "sha256": "c3925ca6e27465598796ef21815e79980277d4c3194a8b2fda7cf433700675d1",
+          "git_blob_sha": "69fda8b4a63d5480b7d78e8f915e1d90fb8a2b8b",
+          "original_read_paths": [
+            "producers/research/body.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/public-findings.md",
+          "bytes": 1210,
+          "sha256": "e1f6536c5f2ca30f7ddb215fe5f0c888d1b7da01c29c437ee2cdb099077be1a7",
+          "git_blob_sha": "7b9778189193884b684f309cada1851b03f8abb0",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v3/public-findings.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/recipe.json",
+          "bytes": 5536,
+          "sha256": "6b77e699b909ae075954e1d0fb00cd205a4ada0f4cd5ed23eff6fdd350630eae",
+          "git_blob_sha": "80b6e35297886298166c74e3decddd499f75bfb7",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v3/recipe.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/request.txt",
+          "bytes": 395,
+          "sha256": "8640ec3a0ce573741ca1ee42c582960f2d776b28af950757329ee199d090c993",
+          "git_blob_sha": "4b528bf3d9e7ca449c70854e77d7448b3cbdd089",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v3/request.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/dispatch-message.txt",
+          "bytes": 1273,
+          "sha256": "2319e6ae0efd79115f68d417dba4e6297bde4546d33f540840a1995fc6eaddaa",
+          "git_blob_sha": "ae06fd91c907ce12fbc02ffbaf1fdd9052918d3e",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v3/dispatch-message.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/prior-output-preservation.json",
+          "bytes": 2545,
+          "sha256": "ec68bad4886debb07d01a4b70695d7a1e3c3cde0b98ff524919a02e517ee37d5",
+          "git_blob_sha": "c32e6779810c3b3dbd06bfcb90cd1f0f2b2ae8ef",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v3/prior-output-preservation.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/apply.py",
+          "bytes": 20110,
+          "sha256": "fa8fb1920a259dda654fb75321d41bcd4416c8c03b69facbe7dcdd5088d48435",
+          "git_blob_sha": "5b52474a88d0bc9a64fedd9598a506d9e75bea6f",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v3/apply.py"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/procedure-freeze.json",
+          "bytes": 38389,
+          "sha256": "ab1c664955412b66e61c88a6213974944ec50ff4d9cadda593c5a3004db8ad4e",
+          "git_blob_sha": "7cc165d1c048f4e15a8e3c8a319ee1c68f0c26b6",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v3/procedure-freeze.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/body.md",
+          "bytes": 17124,
+          "sha256": "f2c19caaa501ea0e135cbbfb4768b4bd68c4e729e5545cb5f80e45c655f52ab7",
+          "git_blob_sha": "1ceb2496a2185042e3eb564e80828bd85ac08f7f",
+          "original_read_paths": [
+            "producers/derived-research-flow/body.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/evidence.md",
+          "bytes": 12878,
+          "sha256": "6c6d9c59bf75c0636598315fad3d850426f9d473cc7cbd0ba2f385165992a614",
+          "git_blob_sha": "d1e80930db1d09f6deb84a188dd6093aa50445b7",
+          "original_read_paths": [
+            "producers/derived-research-flow/evidence.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/response.md",
+          "bytes": 2144,
+          "sha256": "1adbff35cf2884d6dc2a3fff4ae2703227cea6f045503a20f58c78b030f77696",
+          "git_blob_sha": "872b8983468990176c39d39dbd73707bf115c021",
+          "original_read_paths": [
+            "producers/derived-research-flow/response.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/delta.json",
+          "bytes": 15355,
+          "sha256": "ed857fc8035e8995ff52247170eae49e416a47ae1812760328aea6587065560f",
+          "git_blob_sha": "7a10971ccd4eb4b47b7d8bece88f0dd7116ccc52",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v3/delta.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/delta.patch",
+          "bytes": 11130,
+          "sha256": "33abda8cf8387856ebe28a818cf1f17b20434cd705f10322f0b997d92e782e3b",
+          "git_blob_sha": "e232c059f4484b7ffd556c296dc7146346dd4735",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v3/delta.patch"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/review-supplement.md",
+          "bytes": 11742,
+          "sha256": "2ab915b6becb96e0523fa59bad64ebd4ac1f73d3bc27c256cd371984a06bcd47",
+          "git_blob_sha": "1be0a107f95cfcf91d610c52f3256eb2cd8ca467",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v3/review-supplement.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/input-manifest-extension.json",
+          "bytes": 34417,
+          "sha256": "4db94d8d4a5a028d742b4cd6f82d81c175ca3ae2194f42d3922f368e85acd26f",
+          "git_blob_sha": "66a992d77bf889766bdde2ffbe2f7f9b53145137",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v3/input-manifest-extension.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/producer-verification.json",
+          "bytes": 2909,
+          "sha256": "751047a4ae095416c488ba28c83ca85cbfed37b82b47e460fde62d2e73909b39",
+          "git_blob_sha": "20f630685105a38090c9cbafc6584a714dd21ef4",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v3/producer-verification.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/revisions/v3/response.md",
+          "bytes": 2144,
+          "sha256": "1adbff35cf2884d6dc2a3fff4ae2703227cea6f045503a20f58c78b030f77696",
+          "git_blob_sha": "872b8983468990176c39d39dbd73707bf115c021",
+          "original_read_paths": [
+            "producers/derived-research-flow/revisions/v3/response.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-flow/production-manifest.json",
+          "bytes": 54847,
+          "sha256": "a6fa0d012f2d43eceaf033b570ed1cfe4a09f6089c1df1a720e663c2753efeb8",
+          "git_blob_sha": "1d08a666508f8a94c41708b19e9d4ecd74547df0",
+          "original_read_paths": [
+            "producers/derived-research-flow/production-manifest.json"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived/research-impact.json",
+          "bytes": 9448,
+          "sha256": "68778f6144af73ee575678096eee818fb2a6ec2992572af4594dcf37af15fe7e",
+          "git_blob_sha": "b23a6614276f591ec7239542cc3ab8def90e277c",
+          "original_read_paths": [
+            "payload/recipes/derived/research-impact.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-impact/request.txt",
+          "bytes": 863,
+          "sha256": "fe6b14e0f21ae1f13b15255b79ae1601cce467df536d58464d74ab18046e287b",
+          "git_blob_sha": "7a4a46e18c0a577c46d09dc3dcf613922c5142e6",
+          "original_read_paths": [
+            "producers/derived-research-impact/request.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-impact/dispatch-message.txt",
+          "bytes": 1546,
+          "sha256": "28dcc55a79e9d1372cee574c7bdb7b5f7d7154f3e29c98af1f8b52ca9b24565e",
+          "git_blob_sha": "8b5076757032a2c1c4be204e3317fcaca2204962",
+          "original_read_paths": [
+            "producers/derived-research-impact/dispatch-message.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-impact/body.md",
+          "bytes": 13972,
+          "sha256": "4fe6c73bc209b2461f8ef3a342832dd79b5541cf8b2d43afd958bab0327a3d3f",
+          "git_blob_sha": "f85d2a546afb51d148c4f748d5f49c7a9c6727f8",
+          "original_read_paths": [
+            "producers/derived-research-impact/body.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-impact/evidence.md",
+          "bytes": 9729,
+          "sha256": "eb973250a7835300987fb08ab7ff0e4eede31cd1b5b51da39b634c10225aa9cd",
+          "git_blob_sha": "fb82bff226bd2f92d7a62d7d24ab244e4a0805d9",
+          "original_read_paths": [
+            "producers/derived-research-impact/evidence.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-impact/response.md",
+          "bytes": 2299,
+          "sha256": "1819661c4bd6ad930702c616cd8da1ea1e3ca6b786c5d02a2a0f389d90ba3a8b",
+          "git_blob_sha": "4f1d78aeaf15157623af8d844e9ac8fb5ca169c7",
+          "original_read_paths": [
+            "producers/derived-research-impact/response.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-impact/production-manifest.json",
+          "bytes": 82077,
+          "sha256": "abdedb32a0c69cb170c3484d1e24cc5f7ac71fb9c89630b3229b6dee8a428b95",
+          "git_blob_sha": "febb337142fcc477f4fa14744bcbec5c94d74984",
+          "original_read_paths": [
+            "producers/derived-research-impact/production-manifest.json"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived/research-maintenance.json",
+          "bytes": 9481,
+          "sha256": "01cdad4971a1098115e9533d034b2d9af45836bfa37fbbb15d85144be389aa09",
+          "git_blob_sha": "1e65e64e3d98f53fc97de5d00bcd0ebc2876ada1",
+          "original_read_paths": [
+            "payload/recipes/derived/research-maintenance.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-maintenance/request.txt",
+          "bytes": 878,
+          "sha256": "aaa18954282dd9b9b7b3bac4e3db9ed8076e0311dd07f231219e205db0598471",
+          "git_blob_sha": "7a02cae66d0a834c1d6f852ab2acdfecdef49634",
+          "original_read_paths": [
+            "producers/derived-research-maintenance/request.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-maintenance/dispatch-message.txt",
+          "bytes": 1720,
+          "sha256": "c7691d761d2e0221b4cd609a69b3ba14ec9747e03220b0e87eac45d9d4d4b2a2",
+          "git_blob_sha": "42efa4d5d06bd471e69879b5d315be3037747d16",
+          "original_read_paths": [
+            "producers/derived-research-maintenance/dispatch-message.txt"
+          ]
+        }
+      ],
+      "audited_path_aliases": {},
+      "actual_recipe_local_path": "payload/recipes/derived/research-maintenance.json",
+      "request_local_path": "producers/derived-research-maintenance/request.txt",
+      "response_local_path": "producers/derived-research-maintenance/response.md",
+      "manifest_local_path": "producers/derived-research-maintenance/production-manifest.json",
+      "review_payload_paths": {
+        "parallel-v3-fresh/S1-03/J1": "judgments/derived/derived-research-maintenance-v1/j1-response.md",
+        "parallel-v3-fresh/S1-03/J2": "judgments/derived/derived-research-maintenance-v1/root-transport/j2-response.md"
+      },
+      "gaps": [
+        "Own Atlas preparation, exact runtime binding, governed publication, consumers and maintenance are assessed separately; semantic PASS does not certify those operations."
+      ],
+      "evidence": [
+        "semantic-acceptances.json#s1.subslice03.research-maintenance",
+        "judgments/derived/derived-research-maintenance-v1/j1-response.md",
+        "judgments/derived/derived-research-maintenance-v1/root-transport/j2-response.md",
+        "producers/derived-research-maintenance/evidence.md"
+      ],
+      "navigation": []
+    },
+    "s1.subslice03.entry": {
+      "additional_actual_inputs": [
+        {
+          "local_path": "inputs/AGENTS.md",
+          "bytes": 16501,
+          "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+          "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+          "original_read_paths": [
+            "inputs/AGENTS.md"
+          ]
+        },
+        {
+          "local_path": "inputs/COMMON.md",
+          "bytes": 12959,
+          "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+          "git_blob_sha": "893cbb5f5eda2d0c19753606a50d1c482523f0c8",
+          "original_read_paths": [
+            "inputs/COMMON.md"
+          ]
+        },
+        {
+          "local_path": "inputs/mission.json",
+          "bytes": 6006,
+          "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+          "git_blob_sha": "48fa8da131e97c50110ee76e41e79283cd9a0ac4",
+          "original_read_paths": [
+            "inputs/mission.json"
+          ]
+        },
+        {
+          "local_path": "inputs/SKILL.md",
+          "bytes": 8143,
+          "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+          "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+          "original_read_paths": [
+            "inputs/SKILL.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/principles.md",
+          "bytes": 6010,
+          "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+          "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+          "original_read_paths": [
+            "inputs/references/principles.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/fatia-1.md",
+          "bytes": 3987,
+          "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
+          "git_blob_sha": "78482ad7c72ec275fadb26ebece1c30bc1e5ccb9",
+          "original_read_paths": [
+            "inputs/references/fatia-1.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/fresh-start.md",
+          "bytes": 4983,
+          "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166",
+          "git_blob_sha": "ca485b25e43293a309c5489279dce80ce1441ed0",
+          "original_read_paths": [
+            "inputs/references/fresh-start.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/orchestration.md",
+          "bytes": 4408,
+          "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+          "git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+          "original_read_paths": [
+            "inputs/references/orchestration.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/judging.md",
+          "bytes": 5787,
+          "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+          "git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+          "original_read_paths": [
+            "inputs/references/judging.md"
+          ]
+        },
+        {
+          "local_path": "inputs/references/transport.md",
+          "bytes": 8478,
+          "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+          "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+          "original_read_paths": [
+            "inputs/references/transport.md"
+          ]
+        },
+        {
+          "local_path": "payload/artifact-plan.json",
+          "bytes": 5017,
+          "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad",
+          "git_blob_sha": "8dba81b59cd093d28ea07cf4369d5842b6bdee68",
+          "original_read_paths": [
+            "payload/artifact-plan.json"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived-contract.json",
+          "bytes": 4017,
+          "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
+          "git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd",
+          "original_read_paths": [
+            "payload/recipes/derived-contract.json"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived-public-criteria.json",
+          "bytes": 16244,
+          "sha256": "1e7686491c5b68cb4f3d287377723edcd8932ae803c267ddbabf44a360dfc36e",
+          "git_blob_sha": "d4f6b765e6d78341ba2b77186c77b9177cf3156c",
+          "original_read_paths": [
+            "payload/recipes/derived-public-criteria.json"
+          ]
+        },
+        {
+          "local_path": "producers/boundaries/bodies/support.md",
+          "bytes": 23025,
+          "sha256": "498a0454418a14977b9b2f4c4f515711d941b6d4bbece13f1baaa8feaa76d378",
+          "git_blob_sha": "facd86eb03aa44ba722a9dda77c4d820ad28479c",
+          "original_read_paths": [
+            "producers/boundaries/bodies/support.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-boundary-flow/body.md",
+          "bytes": 16484,
+          "sha256": "e18fe141b88a3aba6ede8e8a0dd138876161984db36d4b8e5540f9ab329c0771",
+          "git_blob_sha": "4e4b5590f59c67e4fd101e9fcc3d840c9f3da355",
+          "original_read_paths": [
+            "producers/derived-boundary-flow/body.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-automation-maintenance/body.md",
+          "bytes": 13840,
+          "sha256": "8cb4befb0cef6a35002679580d60f1746fdeac26acf45ff08e04942cff83abc7",
+          "git_blob_sha": "2685cecdd7df56046cc82f70ac8104c639249e33",
+          "original_read_paths": [
+            "producers/derived-automation-maintenance/body.md"
+          ]
+        },
+        {
+          "local_path": "producers/derived-research-maintenance/body.md",
+          "bytes": 13958,
+          "sha256": "b57970febca6ecd87e6df64586e8a1bf557e112a0761ddc3afc58a92f4fc8025",
+          "git_blob_sha": "9fd888ebd44a07eba2724423d8cfb5e8e89a9dd1",
+          "original_read_paths": [
+            "producers/derived-research-maintenance/body.md"
+          ]
+        },
+        {
+          "local_path": "producers/boundaries/union-navigation-proposal.md",
+          "bytes": 14671,
+          "sha256": "f4362077ed7eb2f0dff7bb76acd60debeaa41bd37886551977b92c02addfcb6e",
+          "git_blob_sha": "69886d576e9368bf3bd4469d53c30095114c1d04",
+          "original_read_paths": [
+            "producers/boundaries/union-navigation-proposal.md"
+          ]
+        },
+        {
+          "local_path": "payload/recipes/derived/entry.json",
+          "bytes": 14571,
+          "sha256": "6b8a14e9f0f0c131cc0b06bab60771de0d811b6f4b6f79617f0ffabf7c2a4c5a",
+          "git_blob_sha": "bcec0b7307345135b8fb0bbc91e5559b0f80335e",
+          "original_read_paths": [
+            "payload/recipes/derived/entry.json"
+          ]
+        },
+        {
+          "local_path": "producers/derived-entry/request.txt",
+          "bytes": 827,
+          "sha256": "adb85bb9f171bb36aa888314412354f60e0a751775ebf846cbaecb777b27f91c",
+          "git_blob_sha": "80239a12efd3f1eb25906b49a452e63ee2eaaea2",
+          "original_read_paths": [
+            "producers/derived-entry/request.txt"
+          ]
+        },
+        {
+          "local_path": "producers/derived-entry/dispatch-message.txt",
+          "bytes": 2174,
+          "sha256": "81af7408b96374d92ecb6f038f1ba35dfca078ec938306cf8c8d336dda1c1bff",
+          "git_blob_sha": "50864baba302464715425b0122ace26be29f47c8",
+          "original_read_paths": [
+            "producers/derived-entry/dispatch-message.txt"
+          ]
+        }
+      ],
+      "audited_path_aliases": {},
+      "actual_recipe_local_path": "payload/recipes/derived/entry.json",
+      "request_local_path": "producers/derived-entry/request.txt",
+      "response_local_path": "producers/derived-entry/response.md",
+      "manifest_local_path": "producers/derived-entry/production-manifest.json",
+      "review_payload_paths": {
+        "parallel-v3-fresh/S1-03/J1": "judgments/derived/derived-entry-v1/j1-response.md",
+        "parallel-v3-fresh/S1-03/J2": "judgments/derived/derived-entry-v1/j2-response.md"
+      },
+      "gaps": [
+        "Own Atlas preparation, exact runtime binding, governed publication, consumers and maintenance are assessed separately; semantic PASS does not certify those operations."
+      ],
+      "evidence": [
+        "semantic-acceptances.json#s1.subslice03.entry",
+        "judgments/derived/derived-entry-v1/j1-response.md",
+        "judgments/derived/derived-entry-v1/j2-response.md",
+        "producers/derived-entry/evidence.md"
+      ],
+      "navigation": [
+        "s1.core.automation",
+        "s1.core.research",
+        "s1.core.boundaries",
+        "s1.subslice03.support",
+        "s1.subslice03.automation-flow",
+        "s1.subslice03.research-flow",
+        "s1.subslice03.boundary-flow",
+        "s1.subslice03.automation-impact",
+        "s1.subslice03.research-impact",
+        "s1.subslice03.automation-maintenance",
+        "s1.subslice03.research-maintenance"
+      ]
+    }
+  },
+  "roots": {
+    "entry": "s1.subslice03.entry",
+    "component": "s1.core.research",
+    "flow": "s1.subslice03.automation-flow",
+    "operational": "s1.subslice03.automation-impact",
+    "maintenance": "s1.subslice03.automation-maintenance"
+  },
+  "native_contract_criteria": [
+    "GO-A1",
+    "GO-A2",
+    "GO-A3",
+    "GO-A4",
+    "GO-A5",
+    "GO-A6",
+    "GO-A7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I3",
+    "GO-I4",
+    "GO-I5",
+    "GO-I6",
+    "GO-I7",
+    "GO-I8",
+    "AC-01",
+    "AC-02",
+    "AC-03",
+    "AC-04",
+    "AC-05",
+    "AC-06",
+    "AC-07",
+    "AC-08",
+    "AC-09",
+    "AC-10",
+    "CC-1",
+    "CC-2",
+    "CC-3",
+    "CC-4",
+    "CC-5",
+    "CC-6",
+    "CC-7",
+    "SC-1",
+    "SC-2",
+    "SC-3",
+    "SC-4",
+    "SC-5",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-4",
+    "QS-5",
+    "QS-6",
+    "DOD-1",
+    "DOD-2",
+    "DOD-3",
+    "DOD-4",
+    "DOD-5",
+    "DOD-6",
+    "DOD-7"
+  ],
+  "known_limits": [
+    "S1-03 only: 462 assigned sources and twelve planned artifacts. The historical s1.core.entry remains unchanged and outside this package.",
+    "Semantic current-body PASS is separate from native binding, governed activation, live reads, consumers and maintenance. No operational success is inferred here.",
+    "Every genuinely consumed whole input remains present. Current Atlas file limits are tested by the official prepare operation; oversized inputs are not removed or split.",
+    "The original native FINAL of research L2 correction v2 was not separately captured before compaction. The original author response file, exact outputs and later non-verbatim confirmation are preserved. Full GO-I1 is not certified by this transport assembly.",
+    "The union-navigation proposal remains local and NOT_SELECTED for union. Selection and composition belong to S1_COORDINATION.",
+    "Host physical attempts, token usage and billing are UNKNOWN; historical campaign accounting is GLOBAL_UNRECONCILED."
+  ]
+}

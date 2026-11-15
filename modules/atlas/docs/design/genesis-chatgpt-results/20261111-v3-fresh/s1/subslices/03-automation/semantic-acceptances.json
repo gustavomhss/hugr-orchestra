@@ -72,6 +72,356 @@
       ],
       "verified_at_utc": "2026-11-15T04:19:15.897592+00:00",
       "recording_basis": "Principal read both original full-body PASS decisions and closed mandatory findings; this command only checks their identity strings and archives the gate, not semantic sufficiency."
+    },
+    {
+      "key": "s1.subslice03.boundary-flow",
+      "layer": 2,
+      "version": "2",
+      "status": "PASS_SEMANTIC_CURRENT_BODY",
+      "local_body_path": "producers/derived-boundary-flow/body.md",
+      "payload_body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/derived-boundary-flow/body.md",
+      "body_bytes": 16484,
+      "body_sha256": "e18fe141b88a3aba6ede8e8a0dd138876161984db36d4b8e5540f9ab329c0771",
+      "body_git_blob_sha": "4e4b5590f59c67e4fd101e9fcc3d840c9f3da355",
+      "judgments": [
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J1",
+          "status": "PASS",
+          "body_sha256": "e18fe141b88a3aba6ede8e8a0dd138876161984db36d4b8e5540f9ab329c0771",
+          "original_response_path": "relay/derived-boundary-flow-v2/j1-response.md",
+          "original_response_sha256": "bf39bc1e8eff30c4b0c80e710b5d89895dec9fb5c372ce15a092f9fd4bb12e05",
+          "complete_body_explicit": true,
+          "judge_identity_basis": "Judge role explicitly present in original verdict.",
+          "transport_receipt": null
+        },
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J2",
+          "status": "PASS",
+          "body_sha256": "e18fe141b88a3aba6ede8e8a0dd138876161984db36d4b8e5540f9ab329c0771",
+          "original_response_path": "relay/derived-boundary-flow-v2/j2-response.md",
+          "original_response_sha256": "74fc5fd95de927e18837c7051daaf3bfa1c6a326c9a229e76020441d63a18638",
+          "complete_body_explicit": true,
+          "judge_identity_basis": "Role assigned to the persistent native handle at initial creation; exact original FINAL captured from that handle and linked by dispatch/capture receipt. Missing display heading was not added to the verdict.",
+          "transport_receipt": "relay/derived-boundary-flow-v2/dispatch-receipt.json"
+        }
+      ],
+      "verified_at_utc": "2026-11-15T05:03:10.660105+00:00",
+      "recording_basis": "Principal read both original full-body PASS decisions and closed mandatory findings; this command only checks their identity strings and archives the gate, not semantic sufficiency."
+    },
+    {
+      "key": "s1.subslice03.research-flow",
+      "layer": 2,
+      "version": "3",
+      "status": "PASS_SEMANTIC_CURRENT_BODY",
+      "local_body_path": "producers/derived-research-flow/body.md",
+      "payload_body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/derived-research-flow/body.md",
+      "body_bytes": 17124,
+      "body_sha256": "f2c19caaa501ea0e135cbbfb4768b4bd68c4e729e5545cb5f80e45c655f52ab7",
+      "body_git_blob_sha": "1ceb2496a2185042e3eb564e80828bd85ac08f7f",
+      "judgments": [
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J1",
+          "status": "PASS",
+          "body_sha256": "f2c19caaa501ea0e135cbbfb4768b4bd68c4e729e5545cb5f80e45c655f52ab7",
+          "original_response_path": "relay/derived-research-flow-v3/j1-response.md",
+          "original_response_sha256": "488cc1430936a338edb5075ce43e24a059f0667804fcecbd61ef3bd0a55eb7d7",
+          "complete_body_explicit": true,
+          "judge_identity_basis": "Judge role explicitly present in original verdict.",
+          "transport_receipt": null
+        },
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J2",
+          "status": "PASS",
+          "body_sha256": "f2c19caaa501ea0e135cbbfb4768b4bd68c4e729e5545cb5f80e45c655f52ab7",
+          "original_response_path": "relay/derived-research-flow-v3/j2-response.md",
+          "original_response_sha256": "3a8274022dc6bf53c8e95e00b9bd4e327885848a87dc9622ea73805cc2815f47",
+          "complete_body_explicit": true,
+          "judge_identity_basis": "Role assigned to the persistent native handle at initial creation; exact original FINAL captured from that handle and linked by dispatch/capture receipt. Missing display heading was not added to the verdict.",
+          "transport_receipt": "relay/derived-research-flow-v3/dispatch-receipt.json"
+        }
+      ],
+      "verified_at_utc": "2026-11-15T05:07:53.702436+00:00",
+      "recording_basis": "Principal read both original full-body PASS decisions and closed mandatory findings; this command only checks their identity strings and archives the gate, not semantic sufficiency."
+    },
+    {
+      "key": "s1.subslice03.support",
+      "layer": 1,
+      "version": "2",
+      "status": "PASS_SEMANTIC_CURRENT_BODY",
+      "local_body_path": "producers/boundaries/bodies/support.md",
+      "payload_body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/boundaries/bodies/support.md",
+      "body_bytes": 23025,
+      "body_sha256": "498a0454418a14977b9b2f4c4f515711d941b6d4bbece13f1baaa8feaa76d378",
+      "body_git_blob_sha": "facd86eb03aa44ba722a9dda77c4d820ad28479c",
+      "judgments": [
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J1",
+          "status": "PASS",
+          "body_sha256": "498a0454418a14977b9b2f4c4f515711d941b6d4bbece13f1baaa8feaa76d378",
+          "original_response_path": "relay/support-supplement-v2/j1-response.md",
+          "original_response_sha256": "4d9ae1b8953e8e4c1cb1d6d270387644bb5c4ac9c6201f371c32a7a9acc3abe0",
+          "complete_body_explicit": true,
+          "judge_identity_basis": "Judge role explicitly present in original verdict.",
+          "transport_receipt": null
+        },
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J2",
+          "status": "PASS",
+          "body_sha256": "498a0454418a14977b9b2f4c4f515711d941b6d4bbece13f1baaa8feaa76d378",
+          "original_response_path": "relay/support-supplement-v2/j2-response.md",
+          "original_response_sha256": "e27cb74a5d7f43e41fa79ca52fdc54cc6b76e8761f447e0c6927ed02e869960b",
+          "complete_body_explicit": true,
+          "judge_identity_basis": "Role assigned to the persistent native handle at initial creation; exact original FINAL captured from that handle and linked by dispatch/capture receipt. Missing display heading was not added to the verdict.",
+          "transport_receipt": "relay/support-supplement-v2/dispatch-receipt.json"
+        }
+      ],
+      "verified_at_utc": "2026-11-15T05:35:02.357369+00:00",
+      "recording_basis": "Principal read both original full-body PASS decisions and closed mandatory findings; this command only checks their identity strings and archives the gate, not semantic sufficiency."
+    },
+    {
+      "key": "s1.subslice03.research-impact",
+      "layer": 3,
+      "version": "1",
+      "status": "PASS_SEMANTIC_CURRENT_BODY",
+      "local_body_path": "producers/derived-research-impact/body.md",
+      "payload_body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/derived-research-impact/body.md",
+      "body_bytes": 13972,
+      "body_sha256": "4fe6c73bc209b2461f8ef3a342832dd79b5541cf8b2d43afd958bab0327a3d3f",
+      "body_git_blob_sha": "f85d2a546afb51d148c4f748d5f49c7a9c6727f8",
+      "judgments": [
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J1",
+          "status": "PASS",
+          "body_sha256": "4fe6c73bc209b2461f8ef3a342832dd79b5541cf8b2d43afd958bab0327a3d3f",
+          "original_response_path": "relay/derived-research-impact-plan-v1/j1-response.md",
+          "original_response_sha256": "d6a6cd73c1e6beb595f152d1ee3699b4980f7805910e7988f4bb5c225402fbb5",
+          "complete_body_explicit": true,
+          "judge_identity_basis": "Judge role explicitly present in original verdict.",
+          "transport_receipt": null
+        },
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J2",
+          "status": "PASS",
+          "body_sha256": "4fe6c73bc209b2461f8ef3a342832dd79b5541cf8b2d43afd958bab0327a3d3f",
+          "original_response_path": "relay/derived-research-impact-v1/j2-response.md",
+          "original_response_sha256": "6845fb21de1489d7be922e1e8aacec043bbba1e3a2f00d1682a65fa896f56857",
+          "complete_body_explicit": true,
+          "judge_identity_basis": "Judge role explicitly present in original verdict.",
+          "transport_receipt": null
+        }
+      ],
+      "verified_at_utc": "2026-11-15T05:50:05.436203+00:00",
+      "recording_basis": "Principal read both original full-body PASS decisions and closed mandatory findings; this command only checks their identity strings and archives the gate, not semantic sufficiency."
+    },
+    {
+      "key": "s1.subslice03.research-maintenance",
+      "layer": 4,
+      "version": "v1",
+      "status": "PASS_SEMANTIC_CURRENT_BODY",
+      "local_body_path": "producers/derived-research-maintenance/body.md",
+      "payload_body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/derived-research-maintenance/body.md",
+      "body_bytes": 13958,
+      "body_sha256": "b57970febca6ecd87e6df64586e8a1bf557e112a0761ddc3afc58a92f4fc8025",
+      "body_git_blob_sha": "9fd888ebd44a07eba2724423d8cfb5e8e89a9dd1",
+      "judgments": [
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J1",
+          "status": "PASS",
+          "body_sha256": "b57970febca6ecd87e6df64586e8a1bf557e112a0761ddc3afc58a92f4fc8025",
+          "original_response_path": "relay/derived-research-maintenance-v1/j1-response.md",
+          "original_response_sha256": "3631f846544e74c09a11caf52c6d29e557e29c9cb88f21aa4dfa094522b91258",
+          "complete_body_explicit": true,
+          "judge_identity_basis": "Role assigned to the persistent native handle at initial creation; exact original FINAL captured from that handle and linked by dispatch/capture receipt. Missing display heading was not added to the verdict.",
+          "transport_receipt": "relay/derived-research-maintenance-v1/dispatch-receipt.json"
+        },
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J2",
+          "status": "PASS",
+          "body_sha256": "b57970febca6ecd87e6df64586e8a1bf557e112a0761ddc3afc58a92f4fc8025",
+          "original_response_path": "relay-root/derived-research-maintenance-v1/j2-response.md",
+          "original_response_sha256": "f20d3d04c4caeb254371f63438a671da9339939fabd8b60911bcc046fbabc253",
+          "complete_body_explicit": true,
+          "judge_identity_basis": "Role assigned to the persistent native handle at initial creation; exact original FINAL captured from that handle and linked by dispatch/capture receipt. Missing display heading was not added to the verdict.",
+          "transport_receipt": "relay-root/derived-research-maintenance-v1/dispatch-receipt.json"
+        }
+      ],
+      "verified_at_utc": "2026-11-15T06:57:22.528018+00:00",
+      "recording_basis": "Principal read both original full-body PASS decisions and closed mandatory findings; this command only checks their identity strings and archives the gate, not semantic sufficiency."
+    },
+    {
+      "key": "s1.core.automation",
+      "layer": 1,
+      "version": "v4",
+      "status": "PASS_SEMANTIC_CURRENT_BODY",
+      "local_body_path": "producers/automation/body.md",
+      "payload_body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/body.md",
+      "body_bytes": 60767,
+      "body_sha256": "968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae",
+      "body_git_blob_sha": "e26213eb2fc76dc843dca17d1111334c76f88890",
+      "judgments": [
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J1",
+          "status": "PASS",
+          "body_sha256": "968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae",
+          "original_response_path": "relay/automation-aggregate-v4/j1-response.md",
+          "original_response_sha256": "088347f5e9261d52413852804acf42cc741f0233d8f34cd809577439a07e6522",
+          "complete_body_explicit": true,
+          "judge_identity_basis": "Role assigned to the persistent native handle at initial creation; exact original FINAL captured from that handle and linked by dispatch/capture receipt. Missing display heading was not added to the verdict.",
+          "transport_receipt": "relay/automation-aggregate-v4/dispatch-receipt.json"
+        },
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J2",
+          "status": "PASS",
+          "body_sha256": "968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae",
+          "original_response_path": "relay/automation-aggregate-v4/j2-response.md",
+          "original_response_sha256": "b6cb3f1edc2af3a09e34fb377e03c96d768a64dbb44b6859f391d2bd206cf316",
+          "complete_body_explicit": true,
+          "judge_identity_basis": "Role assigned to the persistent native handle at initial creation; exact original FINAL captured from that handle and linked by dispatch/capture receipt. Missing display heading was not added to the verdict.",
+          "transport_receipt": "relay/automation-aggregate-v4/dispatch-receipt.json"
+        }
+      ],
+      "verified_at_utc": "2026-11-15T08:52:55.194793+00:00",
+      "recording_basis": "Principal read both original full-body PASS decisions and closed mandatory findings; this command only checks their identity strings and archives the gate, not semantic sufficiency."
+    },
+    {
+      "key": "s1.subslice03.automation-flow",
+      "layer": 2,
+      "version": "v3",
+      "status": "PASS_SEMANTIC_CURRENT_BODY",
+      "local_body_path": "producers/derived-automation-flow/body.md",
+      "payload_body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/derived-automation-flow/body.md",
+      "body_bytes": 16570,
+      "body_sha256": "64d97f6da72c92a00ad8e3d91e20a42fd360dbedb502733c0548746462442287",
+      "body_git_blob_sha": "5af7e410ddfb4d1da1473a990fc25d27a7580303",
+      "judgments": [
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J1",
+          "status": "PASS",
+          "body_sha256": "64d97f6da72c92a00ad8e3d91e20a42fd360dbedb502733c0548746462442287",
+          "original_response_path": "relay/derived-automation-flow-v3-delta/j1-response.md",
+          "original_response_sha256": "e690c904584be5efe3021e5ae3d8a8683c9de1d85e3851714cb321f7339f61ba",
+          "complete_body_explicit": true,
+          "judge_identity_basis": "Role assigned to the persistent native handle at initial creation; exact original FINAL captured from that handle and linked by dispatch/capture receipt. Missing display heading was not added to the verdict.",
+          "transport_receipt": "relay/derived-automation-flow-v3-delta/dispatch-receipt.json"
+        },
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J2",
+          "status": "PASS",
+          "body_sha256": "64d97f6da72c92a00ad8e3d91e20a42fd360dbedb502733c0548746462442287",
+          "original_response_path": "relay/derived-automation-flow-v3-delta/j2-response.md",
+          "original_response_sha256": "793452cf4731dc118de5e9b7cc0c5359c9278daedd76b18e86ae9377abade175",
+          "complete_body_explicit": true,
+          "judge_identity_basis": "Role assigned to the persistent native handle at initial creation; exact original FINAL captured from that handle and linked by dispatch/capture receipt. Missing display heading was not added to the verdict.",
+          "transport_receipt": "relay/derived-automation-flow-v3-delta/dispatch-receipt.json"
+        }
+      ],
+      "verified_at_utc": "2026-11-15T09:40:18.494423+00:00",
+      "recording_basis": "Principal read both original full-body PASS decisions and closed mandatory findings; this command only checks their identity strings and archives the gate, not semantic sufficiency."
+    },
+    {
+      "key": "s1.subslice03.automation-impact",
+      "layer": 3,
+      "version": "v2",
+      "status": "PASS_SEMANTIC_CURRENT_BODY",
+      "local_body_path": "producers/derived-automation-impact/body.md",
+      "payload_body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/derived-automation-impact/body.md",
+      "body_bytes": 13666,
+      "body_sha256": "05aeecb75fb2c4f8afb34fc44cf315490d800ac976eed82100f279ec2402044d",
+      "body_git_blob_sha": "b803b5e7b626bcf746d5c15d7a0071a9f23de592",
+      "judgments": [
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J1",
+          "status": "PASS",
+          "body_sha256": "05aeecb75fb2c4f8afb34fc44cf315490d800ac976eed82100f279ec2402044d",
+          "original_response_path": "relay/derived-automation-impact-v2-delta/j1-response.md",
+          "original_response_sha256": "cebf51a08751a4ce81ffa6c2a472535e6ed3f6dde0f846f1bef8e10355310f29",
+          "complete_body_explicit": true,
+          "judge_identity_basis": "Role assigned to the persistent native handle at initial creation; exact original FINAL captured from that handle and linked by dispatch/capture receipt. Missing display heading was not added to the verdict.",
+          "transport_receipt": "relay/derived-automation-impact-v2-delta/dispatch-receipt.json"
+        },
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J2",
+          "status": "PASS",
+          "body_sha256": "05aeecb75fb2c4f8afb34fc44cf315490d800ac976eed82100f279ec2402044d",
+          "original_response_path": "relay/derived-automation-impact-v2-delta/j2-response.md",
+          "original_response_sha256": "00410b524cea90a9a4626a55fc83a2ec0c13ab648aca6b3590f198a9723063dd",
+          "complete_body_explicit": true,
+          "judge_identity_basis": "Role assigned to the persistent native handle at initial creation; exact original FINAL captured from that handle and linked by dispatch/capture receipt. Missing display heading was not added to the verdict.",
+          "transport_receipt": "relay/derived-automation-impact-v2-delta/dispatch-receipt.json"
+        }
+      ],
+      "verified_at_utc": "2026-11-15T10:10:09.999850+00:00",
+      "recording_basis": "Principal read both original full-body PASS decisions and closed mandatory findings; this command only checks their identity strings and archives the gate, not semantic sufficiency."
+    },
+    {
+      "key": "s1.subslice03.automation-maintenance",
+      "layer": 4,
+      "version": "v1",
+      "status": "PASS_SEMANTIC_CURRENT_BODY",
+      "local_body_path": "producers/derived-automation-maintenance/body.md",
+      "payload_body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/derived-automation-maintenance/body.md",
+      "body_bytes": 13840,
+      "body_sha256": "8cb4befb0cef6a35002679580d60f1746fdeac26acf45ff08e04942cff83abc7",
+      "body_git_blob_sha": "2685cecdd7df56046cc82f70ac8104c639249e33",
+      "judgments": [
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J1",
+          "status": "PASS",
+          "body_sha256": "8cb4befb0cef6a35002679580d60f1746fdeac26acf45ff08e04942cff83abc7",
+          "original_response_path": "relay/derived-automation-maintenance-v1-compact/j1-response.md",
+          "original_response_sha256": "9aedfc9092b3b5b019751612e4094ed1ab71420aa3b360a90493f8765c3bdccd",
+          "complete_body_explicit": true,
+          "judge_identity_basis": "Role assigned to the persistent native handle at initial creation; exact original FINAL captured from that handle and linked by dispatch/capture receipt. Missing display heading was not added to the verdict.",
+          "transport_receipt": "relay/derived-automation-maintenance-v1-compact/dispatch-receipt.json"
+        },
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J2",
+          "status": "PASS",
+          "body_sha256": "8cb4befb0cef6a35002679580d60f1746fdeac26acf45ff08e04942cff83abc7",
+          "original_response_path": "relay/derived-automation-maintenance-v1-compact/j2-response.md",
+          "original_response_sha256": "28c55b37fb3adf5caac48352617c17624f600ed69b209941e49fc3f5ef05fec2",
+          "complete_body_explicit": true,
+          "judge_identity_basis": "Judge role explicitly present in original verdict.",
+          "transport_receipt": null
+        }
+      ],
+      "verified_at_utc": "2026-11-15T10:25:47.741751+00:00",
+      "recording_basis": "Principal read both original full-body PASS decisions and closed mandatory findings; this command only checks their identity strings and archives the gate, not semantic sufficiency."
+    },
+    {
+      "key": "s1.subslice03.entry",
+      "layer": 4,
+      "version": "v1",
+      "status": "PASS_SEMANTIC_CURRENT_BODY",
+      "local_body_path": "producers/derived-entry/body.md",
+      "payload_body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/derived-entry/body.md",
+      "body_bytes": 15409,
+      "body_sha256": "e167d2bc65603a3caffe094f5be269bb428f0636a03e00b66383769566657503",
+      "body_git_blob_sha": "0373025bb38aa53c08a23bccf3f36f09b840498c",
+      "judgments": [
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J1",
+          "status": "PASS",
+          "body_sha256": "e167d2bc65603a3caffe094f5be269bb428f0636a03e00b66383769566657503",
+          "original_response_path": "relay/derived-entry-v1/j1-response.md",
+          "original_response_sha256": "877d8bc5850817e09838acba169d63fcb74c2c2cf78efdb4f54eee960662353a",
+          "complete_body_explicit": true,
+          "judge_identity_basis": "Role assigned to the persistent native handle at initial creation; exact original FINAL captured from that handle and linked by dispatch/capture receipt. Missing display heading was not added to the verdict.",
+          "transport_receipt": "relay/derived-entry-v1/dispatch-receipt.json"
+        },
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J2",
+          "status": "PASS",
+          "body_sha256": "e167d2bc65603a3caffe094f5be269bb428f0636a03e00b66383769566657503",
+          "original_response_path": "relay/derived-entry-v1/j2-response.md",
+          "original_response_sha256": "8eebf7d53891e40679cb0642deb83c978e34cccf0c65d6a7649e24ede1059ca4",
+          "complete_body_explicit": true,
+          "judge_identity_basis": "Judge role explicitly present in original verdict.",
+          "transport_receipt": null
+        }
+      ],
+      "verified_at_utc": "2026-11-15T10:51:28.659886+00:00",
+      "recording_basis": "Principal read both original full-body PASS decisions and closed mandatory findings; this command only checks their identity strings and archives the gate, not semantic sufficiency."
     }
   ],
   "prior_acceptances": [

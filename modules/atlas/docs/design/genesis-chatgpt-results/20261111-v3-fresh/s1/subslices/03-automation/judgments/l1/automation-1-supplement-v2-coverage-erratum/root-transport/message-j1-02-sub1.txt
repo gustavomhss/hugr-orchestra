@@ -1,0 +1,445 @@
+Transporte literal pela principal ao mesmo juiz J1, execução 34269cf4-d631-41c5-a30b-85b0ec217390. Não use ferramentas, delegue, edite ou receba parecer do outro juiz. Lote automation-1-supplement-v2-coverage-erratum; parte 2/6. Pacote canônico 344323 bytes SHA256 1599aa38f34decbc6bff88c972ed778d5f49e179dca7ac2915d37ecacf245a4b. Esta parte tem 57488 bytes SHA256 26b8e22b68f5633ea1cd75882e1233514d950ca7ff7fec4d54f6c262c7d41cb2. Envio em dois fragmentos contíguos: este é 1/2, offsets UTF-8 [0,28715), 28715 bytes SHA256 6412bae194f1f538265d27ae2a97fd3191d84a687d49d0fb8c6424fe53f563db. Junte os fragmentos sem os envelopes. Conserve o exame anterior e os deltas já recebidos. Julgue apenas após FIM_DO_LOTE; até lá responda somente ACK da parte e da última âncora.
+
+BEGIN_PART
+  readonly method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
+  readonly path: string
+  readonly query?: Readonly<Record<string, string | number | boolean>>
+  readonly body?: Json
+}
+export type Response = { readonly status: number; readonly headers: Readonly<Record<string, string>>; readonly data: Json }
+export type BindingIdentity = { readonly projectID: string; readonly projectPath: string; readonly account: string }
+export type BindingResolver = (provider: Actions.Provider, projectPath: string) => Effect.Effect<BindingIdentity, ActionsError>
+export type CommandResult = { readonly acknowledgement: Actions.OperationAcknowledgement; readonly output?: Actions.CommandOutput }
+export type RawResponse = {
+  readonly status: number
+  readonly headers: Readonly<Record<string, string>>
+  readonly body: Stream.Stream<Uint8Array, ActionsError>
+  readonly close: Effect.Effect<void>
+}
+export type BoundRequest = Request & { readonly method: "GET"; readonly body?: never }
+
+export interface Transport {
+  readonly resolve: BindingResolver
+  readonly request: (binding: Actions.Binding, input: Request) => Effect.Effect<Response, ActionsError>
+  readonly bytes: (binding: Actions.Binding, input: Request) => Stream.Stream<Uint8Array, ActionsError>
+  readonly open?: (binding: Actions.Binding, input: BoundRequest) => Effect.Effect<RawResponse, ActionsError, Scope.Scope>
+  readonly upload: (
+    binding: Actions.Binding,
+    input: Request,
+    file: { readonly filename: string; readonly bytes: Stream.Stream<Uint8Array, ActionsError> },
+  ) => Effect.Effect<Response, ActionsError>
+}
+
+export interface Bindings {
+  readonly list: () => Effect.Effect<Actions.Binding[], ActionsError>
+  readonly create: (input: Actions.BindingInput) => Effect.Effect<Actions.Binding, ActionsError>
+  readonly update: (id: Actions.BindingID, input: Actions.BindingInput) => Effect.Effect<Actions.Binding, ActionsError>
+  readonly remove: (input: Actions.BindingRef) => Effect.Effect<void, ActionsError>
+  readonly get: (input: Actions.BindingRef) => Effect.Effect<Actions.Binding, ActionsError>
+  readonly policy: (input: Actions.BindingRef) => Effect.Effect<Actions.PolicyState, ActionsError>
+  readonly updatePolicy: (input: Actions.BindingRef, policy: Actions.Policy) => Effect.Effect<Actions.PolicyState, ActionsError>
+}
+
+export interface Adapter {
+  readonly capabilities: (binding: Actions.Binding) => Effect.Effect<Actions.Capability[], ActionsError>
+  readonly workflows: (binding: Actions.Binding, input: Actions.ListInput) => Effect.Effect<Actions.WorkflowPage, ActionsError>
+  readonly source: (binding: Actions.Binding, input: { readonly path: string; readonly ref: string }) => Effect.Effect<Actions.Source, ActionsError>
+  readonly runs: (binding: Actions.Binding, input: Actions.RunListInput) => Effect.Effect<Actions.RunPage, ActionsError>
+  readonly run: (binding: Actions.Binding, id: string) => Effect.Effect<Actions.Run, ActionsError>
+  readonly jobs: (binding: Actions.Binding, input: { readonly runID: string; readonly attempt?: number; readonly cursor?: string }) => Effect.Effect<Actions.JobPage, ActionsError>
+  readonly resources: (binding: Actions.Binding, input: Actions.ResourceListInput) => Effect.Effect<Actions.ResourcePage, ActionsError>
+  readonly perform: (binding: Actions.Binding, intent: Actions.OperationIntent, input: Json) => Effect.Effect<Actions.OperationAcknowledgement, ActionsError>
+  readonly reconcile: (
+    binding: Actions.Binding,
+    intent: Actions.OperationIntent,
+    acknowledgement?: Actions.OperationAcknowledgement,
+  ) => Effect.Effect<Actions.OperationObservation, ActionsError>
+  readonly transfer: (binding: Actions.Binding, input: Actions.TransferInput) => Stream.Stream<Uint8Array, ActionsError>
+}
+
+export interface Operations {
+  readonly prepare: (binding: Actions.Binding, input: Actions.OperationIntent) => Effect.Effect<Actions.Operation, ActionsError>
+  readonly execute: (
+    binding: Actions.Binding,
+    input: Actions.ExecuteInput,
+    perform: (intent: Actions.OperationIntent, payload: Json) => Effect.Effect<Actions.OperationAcknowledgement, ActionsError>,
+  ) => Effect.Effect<Actions.Operation, ActionsError>
+  readonly get: (binding: Actions.Binding, id: Actions.OperationID) => Effect.Effect<Actions.Operation, ActionsError>
+  readonly reconcile: (
+    binding: Actions.Binding,
+    id: Actions.OperationID,
+    observe: (intent: Actions.OperationIntent, acknowledgement?: Actions.OperationAcknowledgement) => Effect.Effect<Actions.OperationObservation, ActionsError>,
+  ) => Effect.Effect<Actions.Operation, ActionsError>
+}
+
+export type ReadAdapter = Pick<Adapter, "capabilities" | "workflows" | "source" | "runs" | "run" | "jobs">
+export interface Commands {
+  readonly perform: (binding: Actions.Binding, intent: Actions.OperationIntent, payload: Json) => Effect.Effect<CommandResult, ActionsError>
+}
+
+export interface ResourceDomain {
+  readonly list: (binding: Actions.Binding, input: Actions.ResourceListInput) => Effect.Effect<Actions.ResourcePage, ActionsError>
+  readonly perform: (binding: Actions.Binding, intent: Actions.OperationIntent, payload: Json) => Effect.Effect<CommandResult, ActionsError>
+}
+~~~~
+
+## AUT1-C06
+
+```json
+{"block_id":"AUT1-C06","type":"literal_source_excerpt","requests":["RE-AUT1-03"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/cursor.ts","repository_path":"packages/core/src/actions/cursor.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"3c61a40570a65ef162d6ab908f70b09b1a22aa93","source_sha256":"42629421f0bb3f1c6c48c37c256899929890a718f6072228669d58340ad56373","source_bytes":3689,"body_anchors":["A03"],"requested_subject":"Schema/identidade de cursor, filtros, next/total/limit/fingerprint"}
+```
+
+```json
+{"first_line":1,"last_line":82,"bytes":3689,"sha256":"42629421f0bb3f1c6c48c37c256899929890a718f6072228669d58340ad56373"}
+```
+
+~~~~typescript
+export * as ActionsCursor from "./cursor"
+
+import { createHash } from "node:crypto"
+import { Actions } from "@orchestra/schema/actions"
+import { Option, Schema } from "effect"
+import { ActionsError } from "./error"
+
+const PositivePage = Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 100_000 }))
+const Cursor = Schema.Struct({
+  binding: Actions.BindingID,
+  revision: Schema.Int,
+  provider: Actions.ProviderKind,
+  host: Schema.String,
+  project: Schema.String,
+  scope: Schema.String,
+  filters: Schema.String,
+  page: PositivePage,
+})
+const decode = Schema.decodeUnknownOption(Schema.fromJsonString(Cursor))
+
+export function page(binding: Actions.Binding, scope: string, filters: Readonly<Record<string, unknown>>, cursor?: string) {
+  if (cursor === undefined) return 1
+  const value = cursor.length <= 2048 ? decode(Buffer.from(cursor, "base64url").toString("utf8")) : Option.none()
+  if (Option.isNone(value) || value.value.binding !== binding.id || value.value.revision !== binding.revision ||
+    value.value.provider !== binding.provider.kind || value.value.host !== binding.provider.hostname ||
+    value.value.project !== binding.projectID || value.value.scope !== scope || value.value.filters !== fingerprint(filters))
+    throw new ActionsError({ kind: "invalid_input", message: "Actions cursor does not belong to this binding and selection", disposition: "definitely_unsent" })
+  return value.value.page
+}
+
+export function encode(binding: Actions.Binding, scope: string, filters: Readonly<Record<string, unknown>>, page: number) {
+  return Buffer.from(JSON.stringify(Cursor.make({
+    binding: binding.id, revision: binding.revision, provider: binding.provider.kind,
+    host: binding.provider.hostname, project: binding.projectID, scope, filters: fingerprint(filters), page,
+  }))).toString("base64url")
+}
+
+export function next(headers: Readonly<Record<string, string>>) {
+  const explicit = headers["x-next-page"]
+  if (explicit !== undefined) {
+    if (explicit === "") return
+    const page = positive(explicit)
+    if (page === undefined) throw paginationError()
+    return page
+  }
+  const link = headers.link?.split(",").find((part) => /;\s*rel="?next"?(?:\s*;|\s*$)/.test(part))
+  const address = link && /^\s*<([^>]+)>/.exec(link)?.[1]
+  const parsed = address ? URL.parse(address, "https://pagination.invalid") : undefined
+  if (!link) return
+  const page = parsed && positive(parsed.searchParams.get("page") ?? "")
+  if (page === undefined || page === null) throw paginationError()
+  return page
+}
+
+export function total(headers: Readonly<Record<string, string>>) {
+  const raw = headers["x-total"]
+  if (raw === undefined) return
+  if (!/^\d+$/.test(raw) || !Number.isSafeInteger(Number(raw))) throw paginationError()
+  return Number(raw)
+}
+
+export function limit(input?: number) {
+  if (input === undefined) return 50
+  if (!Number.isSafeInteger(input) || input < 1 || input > 100)
+    throw new ActionsError({ kind: "invalid_input", message: "Actions page size must be between 1 and 100", disposition: "definitely_unsent" })
+  return input
+}
+
+function positive(text: string) {
+  if (!/^[1-9]\d*$/.test(text) || !Number.isSafeInteger(Number(text)) || Number(text) > 100_000) return
+  return Number(text)
+}
+
+function fingerprint(filters: Readonly<Record<string, unknown>>) {
+  return createHash("sha256").update(JSON.stringify(Object.entries(filters)
+    .filter(([key, value]) => key !== "cursor" && value !== undefined)
+    .sort(([left], [right]) => left.localeCompare(right)))).digest("hex")
+}
+
+function paginationError() {
+  return new ActionsError({ kind: "transport_failed", message: "Provider returned invalid Actions pagination metadata" })
+}
+~~~~
+
+## AUT1-C07
+
+```json
+{"block_id":"AUT1-C07","type":"literal_source_excerpt","requests":["RE-AUT1-03"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/github/native.ts","repository_path":"packages/core/src/actions/github/native.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"9de483d99f461e35c200b1fdcc2a0ce3f6224dac","source_sha256":"8624a7b9db3ea727bd4142c0233b37259f0a92ba457c31c658a8ce52f096a712","source_bytes":7552,"body_anchors":["A04"],"requested_subject":"IDs/SHAs/ref/path, repository ID e paginação completa"}
+```
+
+```json
+{"first_line":9,"last_line":121,"bytes":7281,"sha256":"c8a3d925d93e2487d3080fab3d86e503f17b418050ec7e1a61fae7131221cd74"}
+```
+
+~~~~typescript
+export const ID = Schema.Union([
+  Schema.String.check(Schema.isPattern(/^[1-9]\d{0,127}$/)),
+  Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: Number.MAX_SAFE_INTEGER })),
+])
+export const Positive = Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: Number.MAX_SAFE_INTEGER }))
+export const Count = Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: Number.MAX_SAFE_INTEGER }))
+export const SHA = Schema.String.check(Schema.isPattern(/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/i))
+export const Time = Schema.String.check(Schema.isPattern(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)$/))
+export const Repository = Schema.Struct({
+  id: ID, full_name: Schema.NonEmptyString,
+  default_branch: Schema.optionalKey(Schema.NullOr(Schema.String)),
+  permissions: Schema.optionalKey(Schema.Struct({
+    pull: Schema.optionalKey(Schema.Boolean), push: Schema.optionalKey(Schema.Boolean),
+    admin: Schema.optionalKey(Schema.Boolean), maintain: Schema.optionalKey(Schema.Boolean),
+  })),
+})
+
+export function error(binding: Actions.Binding, kind: Actions.ErrorKind, message: string) {
+  return new ActionsError({ kind, message, bindingID: binding.id, provider: "github", disposition: "definitely_unsent" })
+}
+
+export function decode<A>(binding: Actions.Binding, schema: Schema.Decoder<A>, data: unknown, label: string): A {
+  const value = Schema.decodeUnknownOption(schema)(data)
+  if (Option.isNone(value)) throw error(binding, "transport_failed", `GitHub returned invalid ${label} metadata`)
+  return value.value
+}
+
+export function id(binding: Actions.Binding, value: string) {
+  if (typeof value !== "string" || !/^[1-9]\d{0,127}$/.test(value)) throw error(binding, "invalid_input", "GitHub target ID must be a canonical positive decimal")
+  return value
+}
+
+export function ref(binding: Actions.Binding, value: string) {
+  if (typeof value !== "string" || !value || value.length > 1024 || /[\s\\%?#{}:\x00-\x1f\x7f~^*\[]/.test(value) || value.includes("..") ||
+      value.includes("@{") || value === "@" || value.startsWith("-") || value.endsWith(".") ||
+      value.split("/").some((part) => !part || part.startsWith(".") || part.endsWith(".lock")))
+    throw error(binding, "invalid_input", "GitHub ref must be an exact safe branch, tag or commit")
+  return value
+}
+
+export function path(binding: Actions.Binding, value: string) {
+  if (typeof value !== "string" || !value || value.length > 4096 || /[\\%{}:\x00-\x1f\x7f]/.test(value) ||
+      value.split("/").some((part) => !part || part === "." || part === ".."))
+    throw error(binding, "invalid_input", "GitHub source path must be an exact repository-relative path")
+  return value.split("/").map(encodeURIComponent).join("/")
+}
+
+// Every read stays ID-addressed after this lookup; full_name is display metadata.
+// Lead qualified these immutable routes with live gh on github.com. An unsupported
+// host must return its native error, never fall back to a reused owner/repo path.
+// https://docs.github.com/en/rest/repos/repos#get-a-repository
+export const repository = Effect.fn("ActionsGitHubRead.repository")(function* (transport: ActionsContract.Transport, binding: Actions.Binding) {
+  if (binding.provider.kind !== "github") return yield* error(binding, "host_mismatch", "GitHub read adapter requires a GitHub binding")
+  const target = yield* checked(binding, () => id(binding, binding.projectID))
+  const response = yield* get(transport, binding, { method: "GET", path: `repositories/${target}` })
+  return yield* checked(binding, () => {
+    const native = decode(binding, Repository, response.data, "repository")
+    if (String(native.id) !== binding.projectID) throw error(binding, "binding_stale", "GitHub repository ID does not match the binding")
+    return { native, path: `repositories/${target}`, headers: response.headers }
+  })
+})
+
+export const get = Effect.fn("ActionsGitHubRead.get")(function* (transport: ActionsContract.Transport, binding: Actions.Binding, input: ActionsContract.Request) {
+  const response = yield* transport.request(binding, input)
+  if (response.status !== 200) return yield* error(binding, "transport_failed", "GitHub read transport returned a non-success response")
+  return response
+})
+
+export function checked<A>(binding: Actions.Binding, fn: () => A) {
+  return Effect.try({ try: fn, catch: (cause) => cause instanceof ActionsError ? cause : error(binding, "transport_failed", "GitHub metadata could not be decoded") })
+}
+
+export function selection(binding: Actions.Binding, scope: string, filters: Readonly<Record<string, unknown>>, cursor?: string, limit?: number) {
+  const per_page = ActionsCursor.limit(limit)
+  const effective = { ...filters, per_page }
+  return { filters: effective, scope, per_page, page: ActionsCursor.page(binding, scope, effective, cursor) }
+}
+
+export function pagination(binding: Actions.Binding, response: ActionsContract.Response, request: ActionsContract.Request,
+  selected: ReturnType<typeof selection>, count: number, nativeTotal?: number) {
+  const headers = response.headers
+  const next = ActionsCursor.next(headers)
+  const headerTotal = ActionsCursor.total(headers)
+  const total = nativeTotal ?? headerTotal
+  const fail = () => error(binding, "transport_failed", "GitHub returned invalid or incomplete pagination metadata")
+  if (nativeTotal !== undefined && headerTotal !== undefined && nativeTotal !== headerTotal) throw fail()
+  if (count > selected.per_page || (next !== undefined && next !== selected.page + 1)) throw fail()
+  if (headers.link !== undefined) {
+    if (ActionsCursor.next({ link: headers.link }) !== next) throw fail()
+    const origin = binding.provider.apiOrigin.replace(/\/$/, "")
+    const expected = new URL(`${origin}/${request.path}`)
+    headers.link.split(",").forEach((part) => {
+      const match = /^\s*<([^>]+)>;\s*rel="?(next|prev|first|last)"?\s*$/.exec(part)
+      const url = match && URL.parse(match[1])
+      if (!match || !url || url.origin !== expected.origin || url.pathname !== expected.pathname || url.username || url.password || url.hash) throw fail()
+      const page = url.searchParams.get("page")
+      if (!page || !/^[1-9]\d*$/.test(page) || Number(page) > 100_000) throw fail()
+      const query = Object.fromEntries(url.searchParams)
+      if (Array.from(url.searchParams.keys()).length !== Object.keys(query).length) throw fail()
+      const wanted = { ...request.query, page: Number(page) }
+      if (Object.keys(query).length !== Object.keys(wanted).length ||
+          Object.entries(wanted).some(([key, value]) => query[key] !== String(value))) throw fail()
+    })
+  }
+  if (total !== undefined && ((count > 0 && total < (selected.page - 1) * selected.per_page + count) ||
+      (next === undefined && total > selected.page * selected.per_page) || (next !== undefined && total <= selected.page * selected.per_page))) throw fail()
+  if (next !== undefined && count === 0) throw fail()
+  if (next === undefined && total === undefined && count === selected.per_page && headers.link === undefined && headers["x-next-page"] === undefined) throw fail()
+  return {
+    ...(next === undefined ? {} : { next: ActionsCursor.encode(binding, selected.scope, selected.filters, next) }),
+    ...(total === undefined ? {} : { total }), capturedAt: Date.now(),
+  }
+}
+~~~~
+
+## AUT1-C08
+
+```json
+{"block_id":"AUT1-C08","type":"literal_source_excerpt","requests":["RE-AUT1-03"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/github/catalog.ts","repository_path":"packages/core/src/actions/github/catalog.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"6fba4351d5bb942754a6609c3ddb82c55ae3dc36","source_sha256":"d6dfdfe937306ddec89ca7c43589d3c812f445797f5365c839af6ba303da2c04","source_bytes":7466,"body_anchors":["A03","A04"],"requested_subject":"Workflow, commit/path/bytes/sourceVersion e capabilities"}
+```
+
+```json
+{"first_line":1,"last_line":89,"bytes":7466,"sha256":"d6dfdfe937306ddec89ca7c43589d3c812f445797f5365c839af6ba303da2c04"}
+```
+
+~~~~typescript
+export * as GitHubCatalog from "./catalog"
+
+import { Actions } from "@orchestra/schema/actions"
+import { createHash } from "node:crypto"
+import { Effect, Schema } from "effect"
+import { ActionsContract } from "../contract"
+import { GitHubNative } from "./native"
+
+const Workflow = Schema.Struct({ id: GitHubNative.ID, name: Schema.NullOr(Schema.String), path: Schema.NonEmptyString,
+  state: Schema.NonEmptyString, updated_at: Schema.optionalKey(GitHubNative.Time) })
+const Workflows = Schema.Struct({ total_count: Schema.optionalKey(GitHubNative.Count), workflows: Schema.Array(Workflow) })
+const Commit = Schema.Struct({ sha: GitHubNative.SHA })
+const Content = Schema.Struct({ type: Schema.String, path: Schema.String, sha: GitHubNative.SHA,
+  size: GitHubNative.Count, encoding: Schema.optionalKey(Schema.String), content: Schema.optionalKey(Schema.String),
+  target: Schema.optionalKey(Schema.String), submodule_git_url: Schema.optionalKey(Schema.String) })
+
+// https://docs.github.com/en/rest/actions/workflows#list-repository-workflows
+export const workflows = Effect.fn("ActionsGitHubRead.workflows")(function* (transport: ActionsContract.Transport, binding: Actions.Binding, input: Actions.ListInput) {
+  const selected = yield* GitHubNative.checked(binding, () => {
+    if (input.query !== undefined || input.state !== undefined)
+      throw GitHubNative.error(binding, "invalid_input", "GitHub workflow listing does not support server-side query or state filters")
+    return GitHubNative.selection(binding, "github.workflows", {}, input.cursor, input.limit)
+  })
+  const repo = yield* GitHubNative.repository(transport, binding)
+  const request = { method: "GET", path: `${repo.path}/actions/workflows`, query: { page: selected.page, per_page: selected.per_page } } as const
+  const response = yield* GitHubNative.get(transport, binding, request)
+  return yield* GitHubNative.checked(binding, () => {
+    const data = GitHubNative.decode(binding, Workflows, response.data, "workflow list")
+    return { items: data.workflows.map((item): Actions.Workflow => ({
+      id: String(item.id), bindingID: binding.id, name: item.name, path: item.path, state: item.state,
+      ...(repo.native.default_branch ? { defaultRef: repo.native.default_branch } : {}),
+      dispatchable: false, dispatchState: "unknown", ...(item.updated_at === undefined ? {} : { updatedAt: item.updated_at }),
+    })), ...GitHubNative.pagination(binding, response, request, selected, data.workflows.length, data.total_count) }
+  })
+})
+
+// Resolve mutable ref once; contents always uses the resulting immutable commit.
+// https://docs.github.com/en/rest/commits/commits#get-a-commit
+// https://docs.github.com/en/rest/repos/contents#get-repository-content
+export const source = Effect.fn("ActionsGitHubRead.source")(function* (transport: ActionsContract.Transport, binding: Actions.Binding, input: { path: string; ref: string }) {
+  const target = yield* GitHubNative.checked(binding, () => ({ path: GitHubNative.path(binding, input.path), ref: GitHubNative.ref(binding, input.ref) }))
+  const repo = yield* GitHubNative.repository(transport, binding)
+  const commitResponse = yield* GitHubNative.get(transport, binding, { method: "GET", path: `${repo.path}/commits/${encodeURIComponent(target.ref)}` })
+  const commit = yield* GitHubNative.checked(binding, () => {
+    const native = GitHubNative.decode(binding, Commit, commitResponse.data, "commit")
+    if (/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/i.test(target.ref) && target.ref.toLowerCase() !== native.sha.toLowerCase())
+      throw GitHubNative.error(binding, "source_conflict", "GitHub resolved commit does not match the requested immutable ref")
+    return native
+  })
+  const response = yield* GitHubNative.get(transport, binding, { method: "GET", path: `${repo.path}/contents/${target.path}`, query: { ref: commit.sha } })
+  const content = yield* GitHubNative.checked(binding, () => {
+    const content = GitHubNative.decode(binding, Content, response.data, "source content")
+    if (content.path !== input.path) throw GitHubNative.error(binding, "source_unresolved", "GitHub source path does not match the requested file")
+    if (content.type !== "file" || content.target !== undefined || content.submodule_git_url !== undefined || content.encoding !== "base64" || content.content === undefined)
+      throw GitHubNative.error(binding, "source_unresolved", "GitHub did not return authoritative full file content")
+    if (content.size > 1024 * 1024 || content.content.length > 1500 * 1024)
+      throw GitHubNative.error(binding, "metadata_truncated", "GitHub source exceeds the bounded content limit")
+    const encoded = content.content.replace(/[\r\n]/g, "")
+    if (!/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(encoded))
+      throw GitHubNative.error(binding, "source_unresolved", "GitHub source is not canonical Base64")
+    const bytes = Buffer.from(encoded, "base64")
+    if (bytes.toString("base64") !== encoded || bytes.length !== content.size)
+      throw GitHubNative.error(binding, "source_unresolved", "GitHub source content is incomplete")
+    // GitHub supports both repository object algorithms; preserve either full ID.
+    // https://docs.github.com/en/rest/repos/repos#get-the-hash-algorithm-for-a-repository
+    if (createHash(content.sha.length === 40 ? "sha1" : "sha256").update(`blob ${bytes.length}\0`).update(bytes).digest("hex") !== content.sha.toLowerCase())
+      throw GitHubNative.error(binding, "source_unresolved", "GitHub source bytes do not match the authoritative blob ID")
+    return { native: content, bytes }
+  })
+  const text = yield* Effect.try({ try: () => new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(content.bytes),
+    catch: () => GitHubNative.error(binding, "source_unresolved", "GitHub source is not valid UTF-8") })
+  return { bindingID: binding.id, path: content.native.path, ref: input.ref, commit: commit.sha, version: content.native.sha, text, editable: false }
+})
+
+export const capabilities = Effect.fn("ActionsGitHubRead.capabilities")(function* (transport: ActionsContract.Transport, binding: Actions.Binding) {
+  const repo = yield* GitHubNative.repository(transport, binding)
+  // Prove this Actions endpoint, not only repository visibility or a repo role.
+  yield* workflows(transport, binding, { limit: 1 })
+  const observedAt = Date.now()
+  const scopes = repo.headers["x-oauth-scopes"]?.split(",").map((scope) => scope.trim()).filter(Boolean)
+  const evidence = [scopes === undefined ? undefined : `Observed classic OAuth scopes: ${scopes.join(", ") || "none"}`,
+    repo.native.permissions === undefined ? undefined : `Observed repository permissions: ${Object.entries(repo.native.permissions).map(([key, value]) => `${key}=${value}`).join(", ")}`]
+    .filter((value) => value !== undefined).join("; ")
+  return [Actions.Capability.make({ operation: "workflows.list", state: "available", scope: `repository:${binding.projectID}`,
+    reason: "Native workflows GET succeeded", observedAt }),
+    ...["source.read", "runs.list", "runs.read", "jobs.list", "workflow.dispatch", "workflow.enable", "workflow.disable", "source.write", "run.retry", "run.cancel", "run.delete"].map((operation) =>
+      Actions.Capability.make({ operation, state: "unknown", scope: `repository:${binding.projectID}`,
+        reason: `Endpoint or target eligibility has not been proved${evidence ? `; ${evidence}` : ""}`, observedAt }))]
+})
+~~~~
+
+## AUT1-C09
+
+```json
+{"block_id":"AUT1-C09","type":"literal_source_excerpt","requests":["RE-AUT1-03"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/github/runs.ts","repository_path":"packages/core/src/actions/github/runs.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"ab56898ee021b474d882ecb6ef84282fe618ed30","source_sha256":"03a7cb4acf1a709fb8c289cede6f44045b70735107117d890e6c61f3fc1594c4","source_bytes":9329,"body_anchors":["A05"],"requested_subject":"Schemas, filtros/list/get, projeção e created-range"}
+```
+
+```json
+{"first_line":1,"last_line":120,"bytes":9329,"sha256":"03a7cb4acf1a709fb8c289cede6f44045b70735107117d890e6c61f3fc1594c4"}
+```
+
+~~~~typescript
+export * as GitHubRuns from "./runs"
+
+import { Actions } from "@orchestra/schema/actions"
+import { Effect, Schema } from "effect"
+import { ActionsContract } from "../contract"
+import { GitHubNative } from "./native"
+
+const Run = Schema.Struct({
+  id: GitHubNative.ID, workflow_id: GitHubNative.ID, repository: GitHubNative.Repository,
+  name: Schema.NullOr(Schema.String), display_title: Schema.optionalKey(Schema.String), run_number: Schema.optionalKey(GitHubNative.Positive), head_branch: Schema.NullOr(Schema.String), head_sha: GitHubNative.SHA,
+  event: Schema.NonEmptyString, status: Schema.NullOr(Schema.String), conclusion: Schema.optionalKey(Schema.NullOr(Schema.String)),
+  run_attempt: Schema.optionalKey(GitHubNative.Positive), actor: Schema.optionalKey(Schema.NullOr(Schema.Struct({ login: Schema.NonEmptyString }))),
+  triggering_actor: Schema.optionalKey(Schema.NullOr(Schema.Struct({ login: Schema.NonEmptyString }))),
+  created_at: GitHubNative.Time, updated_at: Schema.optionalKey(GitHubNative.Time), run_started_at: Schema.optionalKey(GitHubNative.Time), html_url: Schema.String,
+})
+const Runs = Schema.Struct({ total_count: Schema.optionalKey(GitHubNative.Count), workflow_runs: Schema.Array(Run) })
+const statuses = new Set(["completed", "action_required", "cancelled", "failure", "neutral", "skipped", "stale", "success", "timed_out", "in_progress", "queued", "requested", "waiting", "pending"])
+
+// https://docs.github.com/en/rest/actions/workflow-runs#list-workflow-runs-for-a-repository
+export const list = Effect.fn("ActionsGitHubRead.runs")(function* (transport: ActionsContract.Transport, binding: Actions.Binding, input: Actions.RunListInput) {
+  const query = yield* GitHubNative.checked(binding, () => {
+    if (input.workflowID !== undefined) GitHubNative.id(binding, input.workflowID)
+    if (input.ref !== undefined) GitHubNative.ref(binding, input.ref)
+    if (input.commit !== undefined && !/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/.test(input.commit)) throw GitHubNative.error(binding, "invalid_input", "GitHub run commit filter requires a full SHA")
+
+END_PART

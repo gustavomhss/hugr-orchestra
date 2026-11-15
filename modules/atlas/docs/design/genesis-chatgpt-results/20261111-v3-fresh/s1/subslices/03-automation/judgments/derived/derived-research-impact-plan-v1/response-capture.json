@@ -1,0 +1,23 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "lot": "derived-research-impact-plan-v1",
+  "responses": {
+    "j1": {
+      "target": "/root/s1_03_j1",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-research-impact-plan-v1/j1-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 3796,
+      "sha256": "d6a6cd73c1e6beb595f152d1ee3699b4980f7805910e7988f4bb5c225402fbb5",
+      "terminal_newline": false,
+      "literal": true,
+      "captured_at_utc": "2026-11-15T05:44:56.394816+00:00"
+    }
+  },
+  "pending_targets": [],
+  "not_dispatched_targets": [
+    {
+      "target": "/root/s1_03_j2",
+      "reason": "Root explicitly directed no optional plan-supplement review for J2 after its unconditional whole-body PASS; packet remains preserved but was never dispatched to J2."
+    }
+  ]
+}

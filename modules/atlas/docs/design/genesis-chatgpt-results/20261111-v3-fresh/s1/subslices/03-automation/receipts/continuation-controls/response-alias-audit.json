@@ -1,0 +1,16 @@
+{
+  "id": "response-alias-audit-01",
+  "target": "/root/native_descriptor",
+  "kind": "mechanical_response_alias_audit_not_judge",
+  "method": "collaboration.followup_task",
+  "message_file": "payload/receipts/continuation-controls/response-alias-audit.message.txt",
+  "message_bytes": 2056,
+  "message_sha256": "e509e1033989acc68cc555eac0eef0c6dc6b44305dd1bdfddf1709ef428638a5",
+  "state": "COMPLETED",
+  "at_utc": "2026-11-15T10:11:41.679440+00:00",
+  "tool_returned_normally": true,
+  "tool_result_text": "",
+  "dispatch_observed_at_utc": "2026-11-15T10:11:50.970869+00:00",
+  "final_capture": "payload/receipts/parent-visible-captures/response-alias-audit-final.capture.json",
+  "final_sha256": "a54923ae1d72f91e948b1ade43bf9e9c58770bcbffe1ddb324ac5ee232dba123"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "relay-derived-automation-flow-v3-j2-final-ready",
+  "kind": "NATIVE_FINAL_AVAILABLE_CONTROL_NOT_VOTE",
+  "method": "collaboration.send_message",
+  "target": "/root/review_relay",
+  "message": "J2 acabou de concluir: o FINAL original ficou visível à principal com PASS integral da v3, SHA64d97f6da72c92a00ad8e3d91e20a42fd360dbedb502733c0548746462442287, sem pendências. Capture o original por list_agents e finalize o handover; não reenvie o pacote. Não transmita essa informação a J1.",
+  "message_bytes": 298,
+  "message_sha256": "13e8e59bc37559f09396aeef7342e462dcb3c3a8e9b48699e683b1e9f63e0c3f",
+  "tool_returned_normally": true,
+  "observed_at_utc": "2026-11-15T09:40:06.925774+00:00",
+  "tokens": "UNKNOWN",
+  "physical_attempts": "UNKNOWN",
+  "cost": "UNKNOWN"
+}

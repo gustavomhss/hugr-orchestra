@@ -1,0 +1,1 @@
+ACK parte 7/8 — última âncora recebida: **AUT3-C21**, `packages/core/src/board/snapshot.ts`, função `follow`, até o `yield* tx` após a verificação dos campos `seat`, `branch` e `pr_number`. Aguardo a parte 8/8 e o **FIM_DO_LOTE** externo.

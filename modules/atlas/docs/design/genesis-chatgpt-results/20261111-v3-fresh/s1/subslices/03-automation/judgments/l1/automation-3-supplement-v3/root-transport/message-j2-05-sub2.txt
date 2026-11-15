@@ -1,0 +1,562 @@
+Transporte literal pela principal ao mesmo juiz J2, execução 34269cf4-d631-41c5-a30b-85b0ec217390. Não use ferramentas, delegue, edite ou receba parecer do outro juiz. Lote automation-3-supplement-v3; parte 5/8. Pacote canônico 408213 bytes SHA256 f2c8d12e8e0b22964fadfaba9c40632f0ba5489d795d76dc3efde70fd30bd276. Esta parte tem 51024 bytes SHA256 d655d6c6dd758acf90d936c9ed36dc7b8f357f71bb3dc59ae9f3d02069e65fae. Envio em dois fragmentos contíguos: este é 2/2, offsets UTF-8 [25463,51024), 25561 bytes SHA256 a7700a0e5fd0523245c5c1d6b78b961457742784dad5359493a5b9ffd106d750. Junte os fragmentos sem os envelopes. Conserve o exame anterior e os deltas já recebidos. Julgue apenas após FIM_DO_LOTE; até lá responda somente ACK da parte e da última âncora.
+
+BEGIN_PART
+    return Effect.fail(new RefusedError({ message: `The contract's scoped.tests needs \`package\` for ${ref}.` }))
+  return Effect.succeed(
+    template
+      .split(/\s+/)
+      .filter(Boolean)
+      .flatMap((token) => (token === "{files}" ? [...(input.files ?? [])] : [token.replaceAll("{package}", input.package ?? "")])),
+  )
+}
+
+// Bun prints each test file as a header line and `(fail)` under it; vitest prints `FAIL |project| <file> > <test>`; tsc and
+// tsgo print each type error with its file path; test:ci prints a failed job as `=== name: failure ===`. Colors are stripped.
+export function failing(colored: string) {
+  const output = colored.replace(/\x1b\[[0-9;]*m/g, "")
+  const bun = output
+    .split("\n")
+    .reduce(
+      (acc, line) => {
+        const header = line.trim().match(/^(\S+\.test\.[cm]?[jt]sx?):$/)
+        if (header) return { file: header[1], found: acc.found }
+        if (line.includes("(fail)") && acc.file) return { file: acc.file, found: acc.found.add(acc.file) }
+        return acc
+      },
+      { file: undefined as string | undefined, found: new Set<string>() },
+    ).found
+  const types = output.split("\n").flatMap((line) => line.trim().match(/^(\S+\.[cm]?tsx?)(?:\(\d+,\d+\)|:\d+:\d+)(?::| -) error TS\d+/)?.[1] ?? [])
+  const vitest = output.split("\n").flatMap((line) => line.trim().match(/^FAIL\s+(?:\|[^|]+\|\s+)?(\S+\.[cm]?[jt]sx?)\b/)?.[1] ?? [])
+  const files = [...new Set([...bun, ...vitest, ...types])]
+  if (files.length > 0) return files
+  return [...output.matchAll(/^=== (.+): failure ===$/gm)].map((match) => match[1] ?? "").filter(Boolean)
+}
+
+// A turbo run prints each package's output between `##[group]<package>:test` and `##[endgroup]`; the bun test files
+// that failed inside a group belong to that package. Windows paths come back with forward slashes.
+export function packaged(colored: string) {
+  return colored
+    .replace(/\x1b\[[0-9;]*m/g, "")
+    .split(/^##\[group\]/m)
+    .slice(1)
+    .flatMap((section) => {
+      const name = section.match(/^(\S+):test\r?$/m)?.[1]
+      const files = failing(section.split(/^##\[endgroup\]/m)[0] ?? "")
+        .filter((file) => /\.test\.[cm]?[jt]sx?$/.test(file))
+        .map((file) => file.replaceAll("\\", "/"))
+      return name && files.length > 0 ? [{ package: name, files }] : []
+    })
+}
+
+function toCheck(row: typeof BoardCheckTable.$inferSelect): Board.Check {
+  return {
+    id: row.id,
+    attempt: row.attempt,
+    kind: row.kind,
+    command: row.command,
+    treeSha: row.tree_sha,
+    commitSha: row.commit_sha,
+    outcome: row.outcome,
+    url: row.url,
+    failing: row.failing,
+    startedAt: row.started_at,
+    endedAt: row.ended_at,
+  }
+}
+~~~~
+
+## AUT3-C15
+
+```json
+{
+  "block_id": "AUT3-C15",
+  "type": "literal_source_chain",
+  "canonical_request_namespace": "J1",
+  "requests": [
+    "RE-AUT3-04",
+    "RE-AUT3-05"
+  ],
+  "body_anchors": [
+    "B07",
+    "B08",
+    "B09",
+    "B10"
+  ],
+  "requested_subject": "Admissão/head/tree/record/followups/dequeue, owner bundle actions, tick/cut/lanes/globs/capacity/full safety/PR/adaptive size",
+  "path": "packages/core/src/board/queue.ts",
+  "archive": "sources/packages/core/src/board/queue.ts",
+  "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_git_blob_sha": "5194680fdf6bd598ececadf5f63c3339a945357d",
+  "source_sha256": "dd50c583530d4b6dd5de417fcd8b0e0abd0774e792ba7806c507b58e8386188f",
+  "source_bytes": 38106,
+  "required_source_line_ranges": [
+    [
+      1,
+      733
+    ]
+  ],
+  "prior_literal_ranges": [
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "B07",
+      "source_path": "packages/core/src/board/queue.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "5194680fdf6bd598ececadf5f63c3339a945357d",
+      "source_sha256": "dd50c583530d4b6dd5de417fcd8b0e0abd0774e792ba7806c507b58e8386188f",
+      "first_line": 98,
+      "last_line": 117,
+      "excerpt_bytes": 1419,
+      "excerpt_sha256": "98ca2205c183960b350f8f3edbf32a0dc8be7b5aefea7f03f0ac2082e789fec6",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 135334,
+      "literal_content_byte_end_exclusive": 136753
+    },
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "B07",
+      "source_path": "packages/core/src/board/queue.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "5194680fdf6bd598ececadf5f63c3339a945357d",
+      "source_sha256": "dd50c583530d4b6dd5de417fcd8b0e0abd0774e792ba7806c507b58e8386188f",
+      "first_line": 134,
+      "last_line": 150,
+      "excerpt_bytes": 1105,
+      "excerpt_sha256": "ba17230008c1b32f67c5bfd7448cd75a84cacac56fb913cddad2847db639d676",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 136886,
+      "literal_content_byte_end_exclusive": 137991
+    },
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "B08",
+      "source_path": "packages/core/src/board/queue.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "5194680fdf6bd598ececadf5f63c3339a945357d",
+      "source_sha256": "dd50c583530d4b6dd5de417fcd8b0e0abd0774e792ba7806c507b58e8386188f",
+      "first_line": 271,
+      "last_line": 287,
+      "excerpt_bytes": 777,
+      "excerpt_sha256": "712e28361338a54ac39d707fddaf568bb898f828efb974df170e8c69db9b8ee3",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 138486,
+      "literal_content_byte_end_exclusive": 139263
+    },
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "B10",
+      "source_path": "packages/core/src/board/queue.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "5194680fdf6bd598ececadf5f63c3339a945357d",
+      "source_sha256": "dd50c583530d4b6dd5de417fcd8b0e0abd0774e792ba7806c507b58e8386188f",
+      "first_line": 315,
+      "last_line": 335,
+      "excerpt_bytes": 967,
+      "excerpt_sha256": "1b383069ce69ad137d7ad5575063ac2f88bc4d691a4833f07be768adf410d8ab",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 149852,
+      "literal_content_byte_end_exclusive": 150819
+    },
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "B10",
+      "source_path": "packages/core/src/board/queue.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "5194680fdf6bd598ececadf5f63c3339a945357d",
+      "source_sha256": "dd50c583530d4b6dd5de417fcd8b0e0abd0774e792ba7806c507b58e8386188f",
+      "first_line": 584,
+      "last_line": 595,
+      "excerpt_bytes": 763,
+      "excerpt_sha256": "3265802a77bd8427365ed7b1af1c899e757e0e9dcba0db3d9b981dba063df32a",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 150952,
+      "literal_content_byte_end_exclusive": 151715
+    }
+  ]
+}
+```
+
+```json
+{"first_line":1,"last_line":97,"bytes":4210,"sha256":"d723ad4140d64dc060d3076272b24d5bab858bd6d374776891ce3921a3ca55aa"}
+```
+
+~~~~typescript
+export * as BoardQueue from "./queue"
+
+import fs from "fs/promises"
+import os from "os"
+import path from "path"
+import { and, asc, desc, eq, inArray, isNotNull, isNull, ne, notInArray } from "drizzle-orm"
+import { Clock, Effect } from "effect"
+import { Board } from "@orchestra/schema/board"
+import { BoardCi } from "./ci"
+import { BoardLedger } from "./ledger"
+import {
+  BoardAttemptTable,
+  BoardBundleMemberTable,
+  BoardBundleTable,
+  BoardCheckTable,
+  BoardDependencyTable,
+  BoardIssueTable,
+  BoardProjectTable,
+  BoardQueueTable,
+} from "./sql"
+import { changed, gitRunner, loadIssue, loadProject, log, RefusedError, worktree } from "./shared"
+import type { IssueRow, ProjectRow } from "./shared"
+import { affected, AUTHOR, dispatched, isMember, nextBundle, openBundles, place, release } from "./queue-shared"
+import type { Deps } from "./queue-shared"
+import { drift } from "./queue-drift"
+import { capacity, global, lanes } from "./queue-lanes"
+import type { Lane } from "./queue-lanes"
+import { makeRecord } from "./queue-record"
+import { makeRed } from "./queue-red"
+import { makeSettle } from "./queue-settle"
+
+export type { Deps } from "./queue-shared"
+
+// The merge queue (docs/specs/maestro-lead/merge-queue.md sections 6.1 to 6.6, phase 1). Only the host moves a card
+// into or out of the `queue` stage: `board_queue` enqueues a verified Review card, and the tick cuts one bundle per
+// project, waits for its full gate, and pushes base to the tested head. A red bundle is halved until one card fails
+// alone and is ejected into a new attempt; infrastructure failures rerun once and then pause the queue; the size follows
+// the red rate; the failed jobs' logs give the failing files; a red whose failing files are bun tests in package groups runs them scoped on base and on the bundle head (base
+// red, code red, or flaky); Maestro merges or retries a flaky bundle, and retries a paused one, with `board_bundle`.
+// Projects settle concurrently, and a project still settling is skipped, never run twice. With `lanes` in the contract
+// (section 7, phase 2) a project cuts one bundle per lane of disjoint affected packages and runs them side by side.
+
+export function make(deps: Deps) {
+  const git = gitRunner(deps.proc, deps.env)
+  const record = makeRecord({ deps, git })
+  const red = makeRed({ deps, git, note: record.note })
+  const settlement = makeSettle({
+    deps,
+    git,
+    head: record.head,
+    moved: record.moved,
+    note: record.note,
+    describe: record.describe,
+    failures: red.failures,
+    baseState: red.baseState,
+    scope: red.scope,
+    tryOn: red.tryOn,
+    isolate: red.isolate,
+    bisect: red.bisect,
+    fixCard: red.fixCard,
+    probe: red.probe,
+    flaky: red.flaky,
+  })
+  const head = record.head
+  const moved = record.moved
+  const note = record.note
+  const describe = record.describe
+  const recordBundle = record.recordBundle
+  const recordOf = record.recordOf
+  const settle = settlement.settle
+  const dissolve = settlement.dissolve
+  const close = settlement.close
+  const probe = red.probe
+
+  const enqueue = Effect.fnUntraced(function* (input: Board.QueueInput) {
+    const ref = `${input.project}-${input.number}`
+    const found = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        const project = yield* loadProject(tx, input.project)
+        const issue = yield* loadIssue(tx, project, input.number)
+        const attempt = yield* tx
+          .select()
+          .from(BoardAttemptTable)
+          .where(and(eq(BoardAttemptTable.issue_id, issue.id), isNull(BoardAttemptTable.outcome)))
+          .orderBy(desc(BoardAttemptTable.n))
+          .get()
+        const waits = yield* tx
+          .select({ number: BoardIssueTable.number, stage: BoardIssueTable.stage })
+          .from(BoardDependencyTable)
+          .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardDependencyTable.depends_on_id))
+          .where(eq(BoardDependencyTable.issue_id, issue.id))
+          .all()
+        return { project, issue, attempt, waits, directory: yield* worktree(tx, project) }
+      }).pipe(Effect.result),
+    )
+    if (found._tag === "Failure") return yield* found.failure
+    const { project, issue } = found.success
+~~~~
+
+```json
+{"first_line":118,"last_line":133,"bytes":905,"sha256":"1f8878c72640c0d6db02b8498a85f82862444614cbadb54d33f1fa858ec595f5"}
+```
+
+~~~~typescript
+        tx.select({ number: BoardIssueTable.number }).from(BoardIssueTable).where(eq(BoardIssueTable.project_id, project.id)).all(),
+      )
+      const unknown = follow.filter((key) => !known.some((row) => key === `${input.project}-${row.number}`))
+      if (unknown.length > 0)
+        return yield* new RefusedError({ message: `${ref}'s follow-ups ${unknown.join(", ")} are not cards on ${input.project}.` })
+    }
+    const directory = found.success.directory
+    const contract = yield* deps.contract(directory, project).pipe(Effect.mapError((error) => new RefusedError({ message: error.message })))
+    const pr = yield* head(directory, project.github_repo, issue.pr_number)
+    const checks = yield* deps.quiet((tx) =>
+      tx
+        .select()
+        .from(BoardCheckTable)
+        .where(and(eq(BoardCheckTable.issue_id, issue.id), eq(BoardCheckTable.tree_sha, pr.tree)))
+        .all(),
+    )
+~~~~
+
+```json
+{"first_line":151,"last_line":270,"bytes":6306,"sha256":"793e9f3a251b111f40ae63e1be6e93c9b38197223ccac12a285962385f450767"}
+```
+
+~~~~typescript
+        const moved = yield* place(tx, project, current, "queue")
+        const activity = yield* log(tx, {
+          project: project.id,
+          issue: issue.id,
+          actor: "maestro",
+          action: "queue.add",
+          reason: input.reason,
+          before: moved.before,
+          after: { ...moved.after, head: pr.sha, urgent: input.urgent ?? false },
+        })
+        return changed(project.id, activity, issue.id)
+      }).pipe(Effect.result),
+    )
+    if (done._tag === "Failure") return yield* done.failure
+    yield* deps.publish(done.success)
+    yield* drift(deps, project, issue, directory, contract.base, pr.sha)
+    yield* describe(project, issue.id, contract.base)
+    return { head: pr.sha, tree: pr.tree, state }
+  })
+
+  const dequeue = Effect.fnUntraced(function* (input: Board.DequeueInput) {
+    const ref = `${input.project}-${input.number}`
+    const done = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        const project = yield* loadProject(tx, input.project)
+        const issue = yield* loadIssue(tx, project, input.number)
+        if (issue.stage !== "queue") return yield* new RefusedError({ message: `${ref} is not queued.` })
+        const open = yield* openBundles(tx, project.id)
+        const members = yield* Effect.forEach(open, (bundle) => isMember(tx, bundle.id, issue.id))
+        const back = yield* release(tx, project, issue, "maestro", "queue.remove", input.reason)
+        return { project, back, bundle: open.find((_, index) => members[index]) }
+      }).pipe(Effect.result),
+    )
+    if (done._tag === "Failure") return yield* done.failure
+    yield* deps.publish(done.success.back)
+    if (done.success.bundle) yield* dissolve(done.success.project, done.success.bundle, `${ref} left the queue.`)
+    return { dissolved: done.success.bundle?.n ?? null }
+  })
+
+  /** Section 6.4: Maestro's verdict on a flaky or paused bundle. */
+  const decide = Effect.fnUntraced(function* (input: Board.BundleInput) {
+    const ref = `${input.project}-B${input.bundle}`
+    const done = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        const project = yield* loadProject(tx, input.project)
+        const bundle = yield* tx
+          .select()
+          .from(BoardBundleTable)
+          .where(and(eq(BoardBundleTable.project_id, project.id), eq(BoardBundleTable.n, input.bundle)))
+          .get()
+        if (!bundle) return yield* new RefusedError({ message: `${ref} is not a bundle.` })
+        const members = yield* tx
+          .select({ issue: BoardIssueTable })
+          .from(BoardBundleMemberTable)
+          .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardBundleMemberTable.issue_id))
+          .where(eq(BoardBundleMemberTable.bundle_id, bundle.id))
+          .orderBy(asc(BoardBundleMemberTable.position))
+          .all()
+        return { project, bundle, issues: members.map((member) => member.issue) }
+      }).pipe(Effect.result),
+    )
+    if (done._tag === "Failure") return yield* done.failure
+    const bundle = done.success.bundle
+    const issues = done.success.issues
+    if (input.verdict === "merge") {
+      if (bundle.status !== "flaky") return yield* new RefusedError({ message: `${ref} is ${bundle.status}; only a flaky bundle merges.` })
+      yield* deps.quiet((tx) => tx.update(BoardBundleTable).set({ status: "accepted" }).where(eq(BoardBundleTable.id, bundle.id)).run())
+      yield* Effect.forEach(
+        issues,
+        (issue) => note(done.success.project, issue, `Maestro accepted flaky bundle ${ref}: ${input.reason}. It merges as tested on the next tick.`),
+        { discard: true },
+      )
+      yield* Effect.logInfo(`integration: ${ref} ${input.verdict} by Maestro: ${input.reason}`)
+      return { status: "accepted" as const }
+    }
+    if (input.verdict === "release") {
+      if (bundle.status !== "dissolved" || input.card === undefined)
+        return yield* new RefusedError({ message: `${ref} is ${bundle.status}; release names a held card of a dissolved bundle.` })
+      const issue = issues.find((item) => item.number === input.card)
+      const held = issue
+        ? yield* deps.quiet((tx) =>
+            tx
+              .select()
+              .from(BoardQueueTable)
+              .where(and(eq(BoardQueueTable.issue_id, issue.id), eq(BoardQueueTable.hold, "held")))
+              .get(),
+          )
+        : undefined
+      if (!issue || !held) return yield* new RefusedError({ message: `${input.project}-${input.card} is not held in ${ref}.` })
+      yield* deps.quiet((tx) => tx.update(BoardQueueTable).set({ hold: "alone", flush: true }).where(eq(BoardQueueTable.issue_id, issue.id)).run())
+      yield* note(done.success.project, issue, `Maestro released this card from ${ref}: ${input.reason}. It rides a bundle alone next.`)
+      yield* Effect.logInfo(`integration: ${ref} ${input.verdict} by Maestro: ${input.reason}`)
+      return { status: "released" as const }
+    }
+    if (bundle.status !== "flaky" && bundle.status !== "paused")
+      return yield* new RefusedError({ message: `${ref} is ${bundle.status}; only a flaky or paused bundle retries.` })
+    yield* deps.quiet((tx) =>
+      tx
+        .update(BoardQueueTable)
+        .set({ flush: true })
+        .where(inArray(BoardQueueTable.issue_id, issues.map((issue) => issue.id)))
+        .run(),
+    )
+    yield* Effect.forEach(
+      issues,
+      (issue) => note(done.success.project, issue, `Maestro retried bundle ${ref}: ${input.reason}. The queue cuts its cards into a new bundle.`),
+      { discard: true },
+    )
+    if (bundle.status === "paused") {
+      yield* deps.quiet((tx) => tx.update(BoardBundleTable).set({ status: "infra" }).where(eq(BoardBundleTable.id, bundle.id)).run())
+      yield* Effect.logInfo(`integration: ${ref} ${input.verdict} by Maestro: ${input.reason}`)
+      return { status: "infra" as const }
+    }
+    const repo = done.success.project.github_repo
+    if (repo) yield* close(done.success.project, repo, bundle, `retried by Maestro: ${input.reason}`)
+    if (!repo) yield* deps.quiet((tx) => tx.update(BoardBundleTable).set({ status: "dissolved" }).where(eq(BoardBundleTable.id, bundle.id)).run())
+    yield* Effect.logInfo(`integration: ${ref} ${input.verdict} by Maestro: ${input.reason}`)
+    return { status: "dissolved" as const }
+  })
+
+~~~~
+
+```json
+{"first_line":288,"last_line":314,"bytes":1492,"sha256":"85231454643923706058118ea96de27012207c654b7aa2cd11838499f50a774f"}
+```
+
+~~~~typescript
+
+  const project = Effect.fnUntraced(function* (row: ProjectRow) {
+    const directory = yield* deps.quiet((tx) => worktree(tx, row))
+    if (!directory || !row.github_repo) return
+    const repo = row.github_repo
+    const contract = yield* deps.contract(directory, row)
+    const open = yield* deps.quiet((tx) => openBundles(tx, row.id))
+    yield* Effect.forEach(open, (bundle) => settle(row, repo, directory, contract, bundle), { discard: true })
+    if (contract.lanes) return yield* spread(row, repo, directory, contract, contract.lanes)
+    if (open.length > 0) return
+    yield* cut(row, repo, directory, contract)
+  })
+
+  /**
+   * Section 7.2: the queued cards that may go, grouped into lanes, each cut into its own bundle beside the bundles in
+   * flight. Affected sets are recomputed against the current tip at every cut. A repository with no workspace graph,
+   * a paused or flaky bundle, and a red base with no failing tests keep the whole project on phase 1's single conveyor.
+   * Section 7.3: a closed epic is cut as one global lane, so the epic bundle runs the whole suite; every `fullEvery`
+   * lane landings a safety run tests the whole suite on base; and a base red with failing tests F pauses only the lanes
+   * that touch F's packages while its fix card rides alone.
+   */
+  const spread = Effect.fnUntraced(function* (
+    row: ProjectRow,
+    repo: string,
+    directory: string,
+    contract: BoardCi.Contract,
+    config: NonNullable<BoardCi.Contract["lanes"]>,
+~~~~
+
+```json
+{"first_line":336,"last_line":583,"bytes":13706,"sha256":"810c2f247788e5d993b88327091ec3af78bba6677aad1f7f79e683b37a88cc11"}
+```
+
+~~~~typescript
+          .from(BoardBundleTable)
+          .where(and(eq(BoardBundleTable.project_id, row.id), notInArray(BoardBundleTable.status, ["open", "accepted", "probe-green"])))
+          .orderBy(desc(BoardBundleTable.n))
+          .get()
+        const cards = yield* tx
+          .select({ queue: BoardQueueTable, issue: BoardIssueTable })
+          .from(BoardQueueTable)
+          .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardQueueTable.issue_id))
+          .where(eq(BoardQueueTable.project_id, row.id))
+          .all()
+        const ids = cards.map((card) => card.issue.id)
+        const waits = ids.length
+          ? yield* tx
+              .select({ issue: BoardDependencyTable.issue_id, stage: BoardIssueTable.stage })
+              .from(BoardDependencyTable)
+              .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardDependencyTable.depends_on_id))
+              .where(inArray(BoardDependencyTable.issue_id, ids))
+              .all()
+          : []
+        const attempts = ids.length
+          ? yield* tx
+              .select()
+              .from(BoardAttemptTable)
+              .where(and(inArray(BoardAttemptTable.issue_id, ids), isNull(BoardAttemptTable.outcome)))
+              .all()
+          : []
+        const epics = [...new Set(cards.map((card) => card.issue.epic_id).filter((id) => id !== null))]
+        const epicOpen = epics.length
+          ? yield* tx
+              .select({ epic: BoardIssueTable.epic_id, stage: BoardIssueTable.stage })
+              .from(BoardIssueTable)
+              .where(and(inArray(BoardIssueTable.epic_id, epics), notInArray(BoardIssueTable.stage, ["shipped", "cut"])))
+              .all()
+          : []
+        // The base red still open: the latest bundle whose fix card has neither shipped nor been cut.
+        const active = yield* tx
+          .select({ failing: BoardBundleTable.failing, fix_issue_id: BoardBundleTable.fix_issue_id })
+          .from(BoardBundleTable)
+          .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardBundleTable.fix_issue_id))
+          .where(and(eq(BoardBundleTable.project_id, row.id), isNotNull(BoardBundleTable.failing), notInArray(BoardIssueTable.stage, ["shipped", "cut"])))
+          .orderBy(desc(BoardBundleTable.n))
+          .get()
+        // Landings are counted from the bundle rows: a bundle with no first member is a base probe or a safety run.
+        const history =
+          config.fullEvery > 0
+            ? yield* tx
+                .select({ status: BoardBundleTable.status, packages: BoardBundleTable.packages, member: BoardBundleMemberTable.issue_id })
+                .from(BoardBundleTable)
+                .leftJoin(
+                  BoardBundleMemberTable,
+                  and(eq(BoardBundleMemberTable.bundle_id, BoardBundleTable.id), eq(BoardBundleMemberTable.position, 0)),
+                )
+                .where(eq(BoardBundleTable.project_id, row.id))
+                .orderBy(desc(BoardBundleTable.n))
+                .all()
+            : []
+        return {
+          open,
+          stopped: stopped !== undefined,
+          baseRed: closed?.status === "base-red" && closed.base_sha === tip && !closed.failing,
+          cards: cards.filter((card) => !members.some((member) => member.issue === card.issue.id)),
+          waits,
+          attempts,
+          epicOpen,
+          red: active?.failing && active.fix_issue_id ? { failing: active.failing, fix_issue_id: active.fix_issue_id } : undefined,
+          history,
+        }
+      }),
+    )
+    if (found.stopped) return
+    const graph = (yield* git(directory, ["cat-file", "-e", `${tip}:turbo.json`])).code === 0
+    if (!graph || found.baseRed) {
+      if (found.open.length > 0) return
+      return yield* cut(row, repo, directory, contract)
+    }
+    const cards = yield* Effect.forEach(found.cards, (card) =>
+      Effect.gen(function* () {
+        const bundleable =
+          card.queue.hold !== "held" &&
+          !card.issue.hold_before_merge &&
+          !card.issue.paused &&
+          !found.attempts.some((item) => item.issue_id === card.issue.id && item.conflict_base) &&
+          found.waits.filter((dep) => dep.issue === card.issue.id).every((dep) => dep.stage === "shipped")
+        const shape = { id: card.issue.id, bundleable, urgent: card.queue.urgent, order: card.issue.order, queuedAt: card.queue.queued_at }
+        if (!bundleable) return { ...shape, affected: [] }
+
+END_PART

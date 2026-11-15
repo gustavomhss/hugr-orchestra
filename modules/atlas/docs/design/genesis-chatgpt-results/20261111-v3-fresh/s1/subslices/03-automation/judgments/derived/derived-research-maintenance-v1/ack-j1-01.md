@@ -1,0 +1,1 @@
+ACK parte 1/2 — última âncora recebida: **receita de tarefa**, campo `instructions`, item sobre referência em português, preferência de 6.000–14.000 bytes UTF-8 e cabeçalhos depth2, encerrado por “not permission to omit necessary meaning.”

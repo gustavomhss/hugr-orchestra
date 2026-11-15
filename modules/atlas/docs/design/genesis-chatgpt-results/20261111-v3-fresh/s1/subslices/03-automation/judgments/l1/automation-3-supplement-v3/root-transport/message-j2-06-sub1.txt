@@ -1,0 +1,556 @@
+Transporte literal pela principal ao mesmo juiz J2, execução 34269cf4-d631-41c5-a30b-85b0ec217390. Não use ferramentas, delegue, edite ou receba parecer do outro juiz. Lote automation-3-supplement-v3; parte 6/8. Pacote canônico 408213 bytes SHA256 f2c8d12e8e0b22964fadfaba9c40632f0ba5489d795d76dc3efde70fd30bd276. Esta parte tem 50994 bytes SHA256 9bf4e3abf2c7d7d7cd65f2325eca75ce0248e7ef230c1baeb2913a6e9d1c34dd. Envio em dois fragmentos contíguos: este é 1/2, offsets UTF-8 [0,25489), 25489 bytes SHA256 052b276ff89023e450880a06c4f435616ab05ab178602abddc68a722334547b5. Junte os fragmentos sem os envelopes. Conserve o exame anterior e os deltas já recebidos. Julgue apenas após FIM_DO_LOTE; até lá responda somente ACK da parte e da última âncora.
+
+BEGIN_PART
+        // Section 6.1 rule c: the bundle that closes an epic runs the whole suite, whatever its cards touch.
+        const closing = card.issue.epic_id !== null && found.epicOpen.filter((item) => item.epic === card.issue.epic_id).every((item) => item.stage === "queue")
+        if (closing) return { ...shape, affected: null }
+        // The queued head is fetched only when this clone lacks it; a head that moved goes back to Review, as in `cut`.
+        const present = (yield* git(directory, ["cat-file", "-e", `${card.queue.head_sha}^{commit}`])).code === 0
+        const current = present ? undefined : yield* head(directory, repo, card.issue.pr_number ?? 0).pipe(Effect.orElseSucceed(() => undefined))
+        if (!present && current?.sha !== card.queue.head_sha) {
+          yield* moved(row, card.issue, current?.sha)
+          return undefined
+        }
+        const files = (yield* git(directory, ["diff", "--name-only", `${tip}...${card.queue.head_sha}`])).out.split("\n").filter(Boolean)
+        if (global(files, config.global)) return { ...shape, affected: null }
+        return { ...shape, affected: (yield* affected(deps, directory, tip, card.queue.head_sha)) ?? null }
+      }),
+    )
+    // Section 7.3: the whole suite runs on base after every `fullEvery` lane landings since it last ran (0 is off).
+    const since = found.history.findIndex((bundle) =>
+      bundle.member === null ? bundle.status !== "open" && bundle.status !== "dissolved" : bundle.status === "merged" && bundle.packages === null,
+    )
+    const landings = found.history
+      .slice(0, since === -1 ? undefined : since)
+      .filter((bundle) => bundle.member !== null && bundle.status === "merged" && bundle.packages !== null).length
+    const safety = config.fullEvery > 0 && landings >= config.fullEvery && !found.history.some((bundle) => bundle.member === null && bundle.status === "open")
+    if (safety)
+      yield* probe(
+        row,
+        repo,
+        directory,
+        contract,
+        tip,
+        `Safety run: ${landings} lane bundles landed since ${contract.base} last ran the whole suite; this runs it on ${contract.base} at ${tip.slice(0, 10)}.`,
+        [],
+      )
+    const shaped = cards.filter((card) => card !== undefined)
+    const broken = found.red
+    // The fix card rides alone in its own lane; F's packages count as in flight, so overlapping lanes wait behind it.
+    const fix = broken ? shaped.find((card) => card.id === broken.fix_issue_id && card.bundleable) : undefined
+    const room = capacity(contract.budget.jobs, config.jobs) - found.open.length - (safety ? 1 : 0) - (fix ? 1 : 0)
+    if (fix) yield* cut(row, repo, directory, contract, { ids: [fix.id], packages: fix.affected }, broken)
+    const going = lanes(
+      shaped.filter((card) => card.id !== broken?.fix_issue_id),
+      [...found.open.map((bundle) => bundle.packages), ...(broken ? [broken.failing.map((group) => group.package)] : [])],
+      room,
+    )
+    yield* Effect.forEach(going, (lane) => cut(row, repo, directory, contract, lane), { discard: true })
+  })
+
+  /**
+   * Phase 1's cut (section 6.1); with a lane, only that lane's cards, in the lane's order, and its own last bundle. With
+   * `broken`, the lane is the fix card of that base red, cut now and judged only on its failing tests.
+   */
+  const cut = Effect.fnUntraced(function* (
+    row: ProjectRow,
+    repo: string,
+    directory: string,
+    contract: BoardCi.Contract,
+    lane?: Lane<Board.IssueID>,
+    broken?: Pick<typeof BoardBundleTable.$inferSelect, "failing" | "fix_issue_id">,
+  ) {
+    const now = yield* Clock.currentTimeMillis
+    const queued = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        const all = yield* tx
+          .select({ queue: BoardQueueTable, issue: BoardIssueTable })
+          .from(BoardQueueTable)
+          .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardQueueTable.issue_id))
+          .where(eq(BoardQueueTable.project_id, row.id))
+          .orderBy(desc(BoardQueueTable.urgent), asc(BoardQueueTable.queued_at))
+          .all()
+        const cards = lane
+          ? lane.ids.flatMap((id) => all.filter((card) => card.issue.id === id))
+          : all
+        const ids = cards.map((card) => card.issue.id)
+        const waits = ids.length
+          ? yield* tx
+              .select({ issue: BoardDependencyTable.issue_id, on: BoardDependencyTable.depends_on_id, stage: BoardIssueTable.stage })
+              .from(BoardDependencyTable)
+              .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardDependencyTable.depends_on_id))
+              .where(inArray(BoardDependencyTable.issue_id, ids))
+              .all()
+          : []
+        const attempts = ids.length
+          ? yield* tx
+              .select()
+              .from(BoardAttemptTable)
+              .where(and(inArray(BoardAttemptTable.issue_id, ids), isNull(BoardAttemptTable.outcome)))
+              .all()
+          : []
+        const epics = [...new Set(cards.map((card) => card.issue.epic_id).filter((id) => id !== null))]
+        const open = epics.length
+          ? yield* tx
+              .select({ epic: BoardIssueTable.epic_id, stage: BoardIssueTable.stage })
+              .from(BoardIssueTable)
+              .where(and(inArray(BoardIssueTable.epic_id, epics), ne(BoardIssueTable.stage, "shipped"), ne(BoardIssueTable.stage, "cut")))
+              .all()
+          : []
+        // A green base probe only clears base: the red bundle it was probing for still decides the next cut. A lane's last
+        // bundles are the closed ones that share a card with it, so a red in one lane splits only that lane.
+        const closed = lane
+          ? (yield* tx
+              .select({ bundle: BoardBundleTable })
+              .from(BoardBundleTable)
+              .innerJoin(BoardBundleMemberTable, eq(BoardBundleMemberTable.bundle_id, BoardBundleTable.id))
+              .where(
+                and(
+                  eq(BoardBundleTable.project_id, row.id),
+                  notInArray(BoardBundleTable.status, ["open", "accepted"]),
+                  inArray(BoardBundleMemberTable.issue_id, lane.ids),
+                ),
+              )
+              .orderBy(desc(BoardBundleTable.n))
+              .all())
+              .map((item) => item.bundle)
+              .filter((bundle, index, list) => list.findIndex((other) => other.id === bundle.id) === index)
+              .slice(0, 2)
+          : yield* tx
+              .select()
+              .from(BoardBundleTable)
+              .where(and(eq(BoardBundleTable.project_id, row.id), ne(BoardBundleTable.status, "open")))
+              .orderBy(desc(BoardBundleTable.n))
+              .limit(2)
+              .all()
+        const last = closed[0]?.status === "probe-green" ? closed[1] : closed[0]
+        const lastMembers = last
+          ? yield* tx.select().from(BoardBundleMemberTable).where(eq(BoardBundleMemberTable.bundle_id, last.id)).all()
+          : []
+        return { cards, waits, attempts, open, settled: yield* BoardLedger.settled(tx, row.id), last: last && { status: last.status, base_sha: last.base_sha, members: lastMembers.length, rebuilds: last.rebuilds, fix: last.fix_issue_id, failing: last.failing } }
+      }),
+    )
+    if (queued.cards.length === 0) return
+    if (queued.last?.status === "paused" || queued.last?.status === "flaky") return
+    const full = size(queued.settled, contract.bundle)
+    const alone = queued.cards.find((card) => card.queue.hold === "alone")
+    const split = (queued.last?.status === "red" && queued.last.members > 1) || queued.last?.status === "probing"
+    const cap = alone ? 1 : split && queued.last ? Math.max(1, Math.floor(queued.last.members / 2)) : full
+    const due =
+      alone !== undefined ||
+      broken !== undefined ||
+      queued.last?.status === "base-red" ||
+      split ||
+      queued.cards.length >= full ||
+      queued.cards.some((card) => card.queue.flush) ||
+      now - Math.min(...queued.cards.map((card) => card.queue.queued_at)) >= contract.bundle.waitMinutes * 60_000 ||
+      queued.cards.some(
+        (card) => card.issue.epic_id !== null && queued.open.filter((item) => item.epic === card.issue.epic_id).every((item) => item.stage === "queue"),
+      )
+    if (!due) return
+    const base = contract.base
+    yield* git(directory, ["fetch", "--quiet", "--no-tags", "origin", base])
+    const tip = (yield* git(directory, ["rev-parse", "--verify", "--quiet", `refs/remotes/origin/${base}`])).out
+    if (!tip) return
+    // Section 6.8 phase 1: while base stays red, only its fix card is cut, alone. With lanes, `spread` hands the fix card in.
+    const fixing = lane
+      ? broken
+      : queued.last?.status === "base-red" && tip === queued.last.base_sha
+        ? { failing: queued.last.failing, fix_issue_id: queued.last.fix }
+        : undefined
+    const fix = fixing ? queued.cards.find((card) => card.issue.id === fixing.fix_issue_id) : undefined
+    if (fixing && !fix) return
+    const scratch = yield* Effect.promise(() => fs.mkdtemp(path.join(os.tmpdir(), `orchestra-bundle-${row.key}-`)))
+    const added = yield* git(directory, ["worktree", "add", "--quiet", "--detach", scratch, tip])
+    if (added.code !== 0) return
+    const ejections: Array<{ readonly card: string; readonly cause: string }> = []
+~~~~
+
+```json
+{"first_line":596,"last_line":733,"bytes":6456,"sha256":"09a421bc0f63aabc886bb80890d6e98c19965aac252c8899843198d54229d32a"}
+```
+
+~~~~typescript
+        const current = yield* head(directory, repo, card.issue.pr_number ?? 0).pipe(Effect.orElseSucceed(() => undefined))
+        const key = `${row.key}-${card.issue.number}`
+        if (current?.sha !== card.queue.head_sha) {
+          yield* moved(row, card.issue, current?.sha)
+          ejections.push({ card: key, cause: "head moved after it queued" })
+          continue
+        }
+        const message = [
+          `Merge ${key}: ${card.issue.title}`,
+          ...(deps.record ? ["", deps.record.trailer({ WP: key, Attempt: `a${attempt?.n ?? 0}` })] : []),
+        ].join("\n")
+        const merged = yield* git(scratch, [...AUTHOR, "merge", "--no-ff", "--quiet", "-m", message, card.queue.head_sha])
+        if (merged.code === 0) {
+          taken.push({ issue: card.issue, head: card.queue.head_sha, labels: current.labels })
+          continue
+        }
+        const files = (yield* git(scratch, ["diff", "--name-only", "--diff-filter=U"])).out.split("\n").filter(Boolean)
+        yield* git(scratch, ["merge", "--abort"])
+        ejections.push({ card: key, cause: "conflicts with the bundle" })
+        yield* note(row, card.issue, `conflicts-with-queue: merging onto the bundle so far conflicts in ${files.join(", ") || "its changes"}; it stays queued.`)
+      }
+      return taken
+    })
+    const n = yield* deps.quiet((tx) => nextBundle(tx, row.id))
+    if (members.length > 0) yield* recordBundle(row, scratch, members.map((member) => member.issue), `${row.key}-B${n}`)
+    const bundleHead = (yield* git(scratch, ["rev-parse", "HEAD"])).out
+    const tree = (yield* git(scratch, ["rev-parse", "HEAD^{tree}"])).out
+    yield* git(directory, ["worktree", "remove", "--force", scratch])
+    if (members.length === 0) return
+    const branch = `bundle-${row.key}-${n}`
+    const lanePackages = lane?.packages && dispatched({ packages: lane.packages }, contract) ? lane.packages : null
+    const pushed = yield* git(directory, ["push", "--quiet", "--force", "origin", `${bundleHead}:refs/heads/${branch}`])
+    if (pushed.code !== 0) return
+    const records = deps.record
+      ? (yield* Effect.forEach(members, (member) => recordOf(row, member.issue.id, base))).filter((item) => item !== undefined)
+      : []
+    const body = deps.record
+      ? deps.record.bundle({ members: records, testedOn: tip, skew: 0, ciRuns: 0, ciMinutes: 0, ejections })
+      : `Bundle ${row.key}-B${n}, assembled by Orchestra's merge queue: ${members.map((member) => `${row.key}-${member.issue.number}`).join(", ")}.`
+    const opened = yield* deps.gh(
+      [
+        "pr",
+        "create",
+        "--repo",
+        repo,
+        "--base",
+        base,
+        "--head",
+        branch,
+        "--title",
+        `chore(queue): bundle ${row.key}-B${n}`,
+        "--body-file",
+        "-",
+        ...(contract.full.label && !lanePackages ? ["--label", contract.full.label] : []),
+        // A guard approval a member carries covers its change in the bundle too; the bundle PR is what the guard reads.
+        ...[...new Set(members.flatMap((member) => member.labels))]
+          .filter((label) => label === "guardrail-approved" || label.startsWith("guardrail-approved:"))
+          .flatMap((label) => ["--label", label]),
+      ],
+      body,
+    )
+    const number = Number(opened.stdout.match(/\/pull\/(\d+)/)?.[1] ?? 0) || null
+    // Section 7.2: a lane's full gate runs only its packages, dispatched by hand: a label would start the whole suite.
+    if (lanePackages)
+      yield* Effect.forEach(
+        contract.lanes?.workflows ?? [],
+        (workflow) => deps.gh(["workflow", "run", workflow, "--repo", repo, "--ref", branch, "-f", `packages=${lanePackages.join(",")}`]),
+        { discard: true },
+      )
+    const published = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        const id = Board.BundleID.create()
+        yield* tx
+          .insert(BoardBundleTable)
+          .values({
+            id,
+            project_id: row.id,
+            n,
+            branch,
+            pr_number: number,
+            base_sha: tip,
+            head_sha: bundleHead,
+            tree_sha: tree,
+            status: "open",
+            rebuilds: queued.last?.status === "isolated" ? queued.last.rebuilds + 1 : 0,
+            failing: fix ? fixing?.failing ?? null : null,
+            fix_issue_id: fix ? fix.issue.id : null,
+            packages: lane?.packages ?? null,
+          })
+          .run()
+        yield* tx
+          .insert(BoardBundleMemberTable)
+          .values(members.map((member, position) => ({ bundle_id: id, issue_id: member.issue.id, head_sha: member.head, position })))
+          .run()
+        yield* tx
+          .update(BoardQueueTable)
+          .set({ flush: false, hold: null })
+          .where(inArray(BoardQueueTable.issue_id, members.map((member) => member.issue.id)))
+          .run()
+        return yield* Effect.forEach(members, (member) =>
+          log(tx, {
+            project: row.id,
+            issue: member.issue.id,
+            actor: "github",
+            action: "bundle.cut",
+            after: { bundle: n, pr: number, base: tip, head: bundleHead },
+          }).pipe(Effect.map((activity) => changed(row.id, activity, member.issue.id))),
+        )
+      }),
+    )
+    yield* Effect.forEach(published, deps.publish, { discard: true })
+    yield* Effect.forEach(members, (member) => describe(row, member.issue.id, base), { discard: true })
+  })
+
+  return { enqueue, dequeue, decide, tick }
+}
+
+export type Interface = ReturnType<typeof make>
+
+/** The record fields section 4.5 requires before a card queues. */
+export function incomplete(record: Board.PrRecord | null) {
+  const blank = (text: string | undefined) => !text?.trim()
+  return [
+    ...(blank(record?.intent) ? ["Intent"] : []),
+    ...(blank(record?.decisions) ? ["Decisions"] : []),
+    ...(blank(record?.not_covered) ? ["Not covered"] : []),
+    ...(record?.risk?.level ? [] : ["Risk level"]),
+  ]
+}
+
+/** Section 6.3: once 50 bundled cards have settled, the size is the largest n with (1 - p)^n >= 0.75, p the share ejected. */
+export function size(outcomes: ReadonlyArray<string | null>, bundle: BoardCi.Contract["bundle"]) {
+  if (outcomes.length < 50) return bundle.size
+  const p = outcomes.filter((outcome) => outcome === "ejected").length / outcomes.length
+  if (p === 0) return bundle.max
+  if (p >= 1) return 1
+  return Math.min(bundle.max, Math.max(1, Math.floor(Math.log(0.75) / Math.log(1 - p))))
+}
+~~~~
+
+## AUT3-C16
+
+```json
+{
+  "block_id": "AUT3-C16",
+  "type": "literal_source_chain",
+  "canonical_request_namespace": "J1",
+  "requests": [
+    "RE-AUT3-04"
+  ],
+  "body_anchors": [
+    "B08"
+  ],
+  "requested_subject": "Overlap/unknown-global/predecessors/order/capacity",
+  "path": "packages/core/src/board/queue-lanes.ts",
+  "archive": "sources/packages/core/src/board/queue-lanes.ts",
+  "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_git_blob_sha": "f9d68042af8b19bf79e155818f940dbf5c828d08",
+  "source_sha256": "62429a1b7a77a627622ce5a9e7dd4d74c9b04b51cb1856058f6a124cb5c2cdb1",
+  "source_bytes": 4203,
+  "required_source_line_ranges": [
+    [
+      1,
+      85
+    ]
+  ],
+  "prior_literal_ranges": [
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "B08",
+      "source_path": "packages/core/src/board/queue-lanes.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "f9d68042af8b19bf79e155818f940dbf5c828d08",
+      "source_sha256": "62429a1b7a77a627622ce5a9e7dd4d74c9b04b51cb1856058f6a124cb5c2cdb1",
+      "first_line": 25,
+      "last_line": 44,
+      "excerpt_bytes": 1100,
+      "excerpt_sha256": "106031dd7943d1c74f1f7676c704380673a9cdedd378d8f251b443c89a1e2164",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 139650,
+      "literal_content_byte_end_exclusive": 140750
+    }
+  ]
+}
+```
+
+```json
+{"first_line":1,"last_line":24,"bytes":1272,"sha256":"373d9baf6e6f7a03ff87f025610862cd74f26f7bf8ea789941e59a480ee774f3"}
+```
+
+~~~~typescript
+// Section 7.2 of docs/specs/maestro-lead/merge-queue.md: which queued cards may be cut, and into which lanes. Lanes
+// are not stored; they are recomputed at every cut from each card's affected set. Pure: no database, git or turbo.
+
+/** A card's affected set: package names, or null for a card with a global path, which overlaps everything. */
+export type Affected = ReadonlyArray<string> | null
+
+export type Card<Id> = {
+  readonly id: Id
+  readonly affected: Affected
+  /** False for a card on hold, `held`, conflicting or waiting on an unshipped dependency: it neither goes nor blocks. */
+  readonly bundleable: boolean
+  readonly urgent: boolean
+  readonly order: number | null
+  readonly queuedAt: number
+}
+
+export type Lane<Id> = { readonly ids: ReadonlyArray<Id>; readonly packages: Affected }
+
+/**
+ * The lanes to cut now, earliest first. Rule 1: a card goes only when it overlaps no bundle in flight. Rule 2: it never
+ * goes ahead of an earlier bundleable card that overlaps it and waits. A global card goes only alone or with other
+ * global cards, so once the bundles in flight land it runs the whole suite; every card behind it waits. The cards that
+ * go are grouped into connected components of overlapping sets, and at most `room` lanes are returned.
+ */
+~~~~
+
+```json
+{"first_line":45,"last_line":85,"bytes":1831,"sha256":"5ad0ffcac1885ae9e40f22aec0f39d20841f4beb545ea0c0c85d981f38b223de"}
+```
+
+~~~~typescript
+      (groups, card) => {
+        const joined = groups.filter((group) => group.some((member) => linked(member.affected, card.affected)))
+        return [...groups.filter((group) => !joined.includes(group)), [...joined.flat(), card]]
+      },
+      [] as Array<Array<Card<Id>>>,
+    )
+    .toSorted((a, b) => first(a) - first(b))
+    .slice(0, Math.max(0, room))
+    .map(
+      (group): Lane<Id> => ({
+        ids: group.toSorted((a, b) => sorted.indexOf(a) - sorted.indexOf(b)).map((card) => card.id),
+        packages: group.some((card) => card.affected === null)
+          ? null
+          : [...new Set(group.flatMap((card) => card.affected ?? []))].toSorted(),
+      }),
+    )
+}
+
+/** Earlier means urgent first, then `order` when both cards have one, then time queued (spec section 4.4). */
+export function earlier<Id>(a: Card<Id>, b: Card<Id>) {
+  if (a.urgent !== b.urgent) return a.urgent ? -1 : 1
+  if (a.order !== null && b.order !== null && a.order !== b.order) return a.order - b.order
+  return a.queuedAt - b.queuedAt
+}
+
+export function overlaps(a: Affected, b: Affected) {
+  if (a === null || b === null) return true
+  return a.some((name) => b.includes(name))
+}
+
+/** Whether a diff touches a global path: a changed file that matches one of the contract's `lanes.global` globs. */
+export function global(files: ReadonlyArray<string>, globs: ReadonlyArray<string>) {
+  const patterns = globs.map((glob) => new Bun.Glob(glob))
+  return files.some((file) => patterns.some((pattern) => pattern.match(file)))
+}
+
+/** Section 7.5: at most floor(budget.jobs / J) lanes in flight, J the jobs one lane gate uses; uncapped when either is unknown. */
+export function capacity(budget: number | null, jobs: number | null) {
+  if (budget === null || jobs === null) return Infinity
+  return Math.max(1, Math.floor(budget / jobs))
+}
+~~~~
+
+## AUT3-C17
+
+```json
+{
+  "block_id": "AUT3-C17",
+  "type": "literal_source_chain",
+  "canonical_request_namespace": "J1",
+  "requests": [
+    "RE-AUT3-04",
+    "RE-AUT3-05"
+  ],
+  "body_anchors": [
+    "B08",
+    "B09"
+  ],
+  "requested_subject": "Judge/rollup, affected integrated tree/turbo, open bundles, dispatch newest-run correlation e holds",
+  "path": "packages/core/src/board/queue-shared.ts",
+  "archive": "sources/packages/core/src/board/queue-shared.ts",
+  "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_git_blob_sha": "108a40f374649e7498dad8f1d0033d3c8a984d41",
+  "source_sha256": "8382123484f1557dbff529a7c291d1aadf4b6ee435357a8a9e27db91e7d04cea",
+  "source_bytes": 11579,
+  "required_source_line_ranges": [
+    [
+      1,
+      216
+    ]
+  ],
+  "prior_literal_ranges": [
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "B08",
+      "source_path": "packages/core/src/board/queue-shared.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "108a40f374649e7498dad8f1d0033d3c8a984d41",
+      "source_sha256": "8382123484f1557dbff529a7c291d1aadf4b6ee435357a8a9e27db91e7d04cea",
+      "first_line": 54,
+      "last_line": 74,
+      "excerpt_bytes": 1293,
+      "excerpt_sha256": "30c1633439fa3aba20fb03a1b87f4e80890eb8eaca8984974a25dbac7d5eb354",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 141140,
+      "literal_content_byte_end_exclusive": 142433
+    }
+  ]
+}
+```
+
+```json
+{"first_line":1,"last_line":53,"bytes":2736,"sha256":"5ca10a9dd00daa866a5bdb78b6493ea8b3c85e6aacd638df4b6ed21e492efb03"}
+```
+
+~~~~typescript
+import fs from "fs/promises"
+import os from "os"
+import path from "path"
+import { and, asc, desc, eq, inArray } from "drizzle-orm"
+import { Clock, Effect, Option, Schema } from "effect"
+import { ChildProcess } from "effect/unstable/process"
+import { Board } from "@orchestra/schema/board"
+import type { AppProcess } from "../process"
+import { which } from "../util/which"
+import type { BoardCi } from "./ci"
+import type { BoardGithub } from "./github"
+import type { BoardRecord } from "./record"
+import { BoardBundleMemberTable, BoardBundleTable, BoardIssueTable, BoardNoteTable, BoardQueueTable } from "./sql"
+import { changed, endOf, gitRunner, log } from "./shared"
+import type { Changed, IssueRow, ProjectRow, Tx } from "./shared"
+
+export interface Deps {
+  readonly quiet: <A>(work: (tx: Tx) => Effect.Effect<A, unknown>) => Effect.Effect<A>
+  readonly proc: AppProcess.Interface
+  readonly env?: NodeJS.ProcessEnv
+  readonly gh: BoardGithub.Gh
+  readonly contract: (directory: string, project: ProjectRow) => Effect.Effect<BoardCi.Contract, { readonly message: string }>
+  readonly publish: (changed: Changed) => Effect.Effect<void>
+  /** Atlas's record renderer and trailer writer; `Board.layer` binds it, tests may leave it unbound. */
+  readonly record?: BoardRecord.Port
+  /** Replaces `turbo`'s affected set; tests bind it so they need no installed workspace. */
+  readonly affected?: (directory: string, from: string, to: string) => Effect.Effect<ReadonlyArray<string> | undefined>
+}
+
+/** What every queue module shares: the injected dependencies and the git runner built from them. */
+export type Context = { readonly deps: Deps; readonly git: ReturnType<typeof gitRunner> }
+
+export const Rollup = Schema.Struct({
+  headRefOid: Schema.String,
+  statusCheckRollup: Schema.Array(
+    Schema.Struct({
+      name: Schema.optional(Schema.String),
+      context: Schema.optional(Schema.String),
+      status: Schema.optional(Schema.String),
+      conclusion: Schema.optional(Schema.NullOr(Schema.String)),
+      state: Schema.optional(Schema.String),
+      workflowName: Schema.optional(Schema.String),
+      detailsUrl: Schema.optional(Schema.String),
+    }),
+  ),
+})
+export const decodeRollup = Schema.decodeUnknownOption(Schema.fromJsonString(Rollup))
+export const decodeRuns = Schema.decodeUnknownOption(Schema.fromJsonString(Rollup.fields.statusCheckRollup))
+export const FAILED = new Set(["FAILURE", "TIMED_OUT", "CANCELLED", "STARTUP_FAILURE", "ACTION_REQUIRED", "ERROR"])
+export const PASSED = new Set(["SUCCESS", "SKIPPED", "NEUTRAL"])
+export const INFRA = new Set(["CANCELLED", "TIMED_OUT", "STARTUP_FAILURE"])
+export const AUTHOR = ["-c", "user.name=Orchestra", "-c", "user.email=orchestra@users.noreply.github.com"]
+
+~~~~
+
+```json
+{"first_line":75,"last_line":216,"bytes":7550,"sha256":"a54ba88e18a8f7d0090ff996a016d6906f393ac60c6e2f969d1097927b19e10b"}
+```
+
+~~~~typescript
+
+
+END_PART

@@ -1,0 +1,236 @@
+{
+  "schema": "s1-03-derived-mechanical-verification/v1",
+  "at_utc": "2026-11-15T10:38:22.361623+00:00",
+  "artifact": {
+    "key": "s1.subslice03.entry",
+    "scope": "orchestra.s1",
+    "subslice_scope": "S1-03 only",
+    "layer": 4,
+    "need": "entry",
+    "production_status": "AUTHORING_COMPLETE_REVIEW_PENDING",
+    "semantic_verdict": null,
+    "runtime_binding": null,
+    "body": {
+      "local_path": "producers/derived-entry/body.md",
+      "bytes": 15409,
+      "sha256": "e167d2bc65603a3caffe094f5be269bb428f0636a03e00b66383769566657503",
+      "git_blob_sha": "0373025bb38aa53c08a23bccf3f36f09b840498c",
+      "encoding": "utf-8"
+    }
+  },
+  "version": "v1",
+  "checks": "Exact whole-file sizes/SHA256/Git blobs for every declared actual input and output; UTF-8, JSON and unique depth2 headings. No semantic, runtime or product-test result.",
+  "input_units": [
+    {
+      "local_path": "inputs/AGENTS.md",
+      "byte_length": 16501,
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "calculated_git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "role": "enumerated_public_authority_plan_contract_or_criteria"
+    },
+    {
+      "local_path": "inputs/COMMON.md",
+      "byte_length": 12959,
+      "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+      "calculated_git_blob_sha": "893cbb5f5eda2d0c19753606a50d1c482523f0c8",
+      "role": "enumerated_public_authority_plan_contract_or_criteria"
+    },
+    {
+      "local_path": "inputs/mission.json",
+      "byte_length": 6006,
+      "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+      "calculated_git_blob_sha": "48fa8da131e97c50110ee76e41e79283cd9a0ac4",
+      "role": "enumerated_public_authority_plan_contract_or_criteria"
+    },
+    {
+      "local_path": "inputs/SKILL.md",
+      "byte_length": 8143,
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+      "calculated_git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+      "role": "enumerated_public_authority_plan_contract_or_criteria"
+    },
+    {
+      "local_path": "inputs/references/principles.md",
+      "byte_length": 6010,
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+      "calculated_git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+      "role": "enumerated_public_authority_plan_contract_or_criteria"
+    },
+    {
+      "local_path": "inputs/references/fatia-1.md",
+      "byte_length": 3987,
+      "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
+      "calculated_git_blob_sha": "78482ad7c72ec275fadb26ebece1c30bc1e5ccb9",
+      "role": "enumerated_public_authority_plan_contract_or_criteria"
+    },
+    {
+      "local_path": "inputs/references/fresh-start.md",
+      "byte_length": 4983,
+      "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166",
+      "calculated_git_blob_sha": "ca485b25e43293a309c5489279dce80ce1441ed0",
+      "role": "enumerated_public_authority_plan_contract_or_criteria"
+    },
+    {
+      "local_path": "inputs/references/orchestration.md",
+      "byte_length": 4408,
+      "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+      "calculated_git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+      "role": "enumerated_public_authority_plan_contract_or_criteria"
+    },
+    {
+      "local_path": "inputs/references/judging.md",
+      "byte_length": 5787,
+      "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+      "calculated_git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+      "role": "enumerated_public_authority_plan_contract_or_criteria"
+    },
+    {
+      "local_path": "inputs/references/transport.md",
+      "byte_length": 8478,
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "calculated_git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+      "role": "enumerated_public_authority_plan_contract_or_criteria"
+    },
+    {
+      "local_path": "payload/artifact-plan.json",
+      "byte_length": 5017,
+      "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad",
+      "calculated_git_blob_sha": "8dba81b59cd093d28ea07cf4369d5842b6bdee68",
+      "role": "enumerated_public_authority_plan_contract_or_criteria"
+    },
+    {
+      "local_path": "payload/recipes/derived-contract.json",
+      "byte_length": 4017,
+      "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
+      "calculated_git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd",
+      "role": "enumerated_public_authority_plan_contract_or_criteria"
+    },
+    {
+      "local_path": "payload/recipes/derived-public-criteria.json",
+      "byte_length": 16244,
+      "sha256": "1e7686491c5b68cb4f3d287377723edcd8932ae803c267ddbabf44a360dfc36e",
+      "calculated_git_blob_sha": "d4f6b765e6d78341ba2b77186c77b9177cf3156c",
+      "role": "enumerated_public_authority_plan_contract_or_criteria"
+    },
+    {
+      "local_path": "producers/boundaries/bodies/support.md",
+      "byte_length": 23025,
+      "sha256": "498a0454418a14977b9b2f4c4f515711d941b6d4bbece13f1baaa8feaa76d378",
+      "calculated_git_blob_sha": "facd86eb03aa44ba722a9dda77c4d820ad28479c",
+      "role": "accepted_semantic_build_predecessor"
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/body.md",
+      "byte_length": 16484,
+      "sha256": "e18fe141b88a3aba6ede8e8a0dd138876161984db36d4b8e5540f9ab329c0771",
+      "calculated_git_blob_sha": "4e4b5590f59c67e4fd101e9fcc3d840c9f3da355",
+      "role": "accepted_semantic_build_predecessor"
+    },
+    {
+      "local_path": "producers/derived-automation-maintenance/body.md",
+      "byte_length": 13840,
+      "sha256": "8cb4befb0cef6a35002679580d60f1746fdeac26acf45ff08e04942cff83abc7",
+      "calculated_git_blob_sha": "2685cecdd7df56046cc82f70ac8104c639249e33",
+      "role": "accepted_semantic_build_predecessor"
+    },
+    {
+      "local_path": "producers/derived-research-maintenance/body.md",
+      "byte_length": 13958,
+      "sha256": "b57970febca6ecd87e6df64586e8a1bf557e112a0761ddc3afc58a92f4fc8025",
+      "calculated_git_blob_sha": "9fd888ebd44a07eba2724423d8cfb5e8e89a9dd1",
+      "role": "accepted_semantic_build_predecessor"
+    },
+    {
+      "local_path": "producers/boundaries/union-navigation-proposal.md",
+      "byte_length": 14671,
+      "sha256": "f4362077ed7eb2f0dff7bb76acd60debeaa41bd37886551977b92c02addfcb6e",
+      "calculated_git_blob_sha": "69886d576e9368bf3bd4469d53c30095114c1d04",
+      "role": "accepted_local_navigation_proposal_authoring_input_not_external_build_dependency"
+    },
+    {
+      "local_path": "payload/recipes/derived/entry.json",
+      "byte_length": 14571,
+      "sha256": "6b8a14e9f0f0c131cc0b06bab60771de0d811b6f4b6f79617f0ffabf7c2a4c5a",
+      "calculated_git_blob_sha": "bcec0b7307345135b8fb0bbc91e5559b0f80335e",
+      "role": "frozen_per_task_recipe"
+    },
+    {
+      "local_path": "producers/derived-entry/request.txt",
+      "byte_length": 827,
+      "sha256": "adb85bb9f171bb36aa888314412354f60e0a751775ebf846cbaecb777b27f91c",
+      "calculated_git_blob_sha": "80239a12efd3f1eb25906b49a452e63ee2eaaea2",
+      "role": "preserved_request"
+    },
+    {
+      "local_path": "producers/derived-entry/dispatch-message.txt",
+      "byte_length": 2174,
+      "sha256": "81af7408b96374d92ecb6f038f1ba35dfca078ec938306cf8c8d336dda1c1bff",
+      "calculated_git_blob_sha": "50864baba302464715425b0122ace26be29f47c8",
+      "role": "exact_visible_dispatch_serialized"
+    }
+  ],
+  "input_count": 21,
+  "body_bytes": 15409,
+  "body_sha256": "e167d2bc65603a3caffe094f5be269bb428f0636a03e00b66383769566657503",
+  "body_git_blob_sha": "0373025bb38aa53c08a23bccf3f36f09b840498c",
+  "depth2_headings": [
+    "1. Escopo e primeira decisão",
+    "2. Rotas locais: o que ler para a pergunta",
+    "3. Distinções que permitem parar na leitura rasa",
+    "4. Protocolo de consulta e aprofundamento",
+    "5. Fronteiras externas e proposta para a união",
+    "6. Manter a entrada e encaminhar uma mudança",
+    "7. Lacunas e estado desta entrega"
+  ],
+  "output_files": [
+    {
+      "path": "producers/derived-entry/body.md",
+      "bytes": 15409,
+      "sha256": "e167d2bc65603a3caffe094f5be269bb428f0636a03e00b66383769566657503",
+      "git_blob_sha": "0373025bb38aa53c08a23bccf3f36f09b840498c"
+    },
+    {
+      "path": "producers/derived-entry/dispatch-message.txt",
+      "bytes": 2174,
+      "sha256": "81af7408b96374d92ecb6f038f1ba35dfca078ec938306cf8c8d336dda1c1bff",
+      "git_blob_sha": "50864baba302464715425b0122ace26be29f47c8"
+    },
+    {
+      "path": "producers/derived-entry/evidence.md",
+      "bytes": 13130,
+      "sha256": "e746f76dc2120c36157b8cd60ae961b2462d8f4b2dae9551358b96b7ca0bb4d7",
+      "git_blob_sha": "d94715ef1b68100bf8809bbedcb6ab953e5ace3f"
+    },
+    {
+      "path": "producers/derived-entry/production-manifest.json",
+      "bytes": 29258,
+      "sha256": "32d73b791e1b34bbec004d4f9e269f368d4e4c5b5077dbbcaa4161212a6cef9e",
+      "git_blob_sha": "a88b9c709d27356991b12725883a04961a4b8536"
+    },
+    {
+      "path": "producers/derived-entry/request.txt",
+      "bytes": 827,
+      "sha256": "adb85bb9f171bb36aa888314412354f60e0a751775ebf846cbaecb777b27f91c",
+      "git_blob_sha": "80239a12efd3f1eb25906b49a452e63ee2eaaea2"
+    },
+    {
+      "path": "producers/derived-entry/response.md",
+      "bytes": 1839,
+      "sha256": "6d5db8e3dc0dfb03c6f6972deba1e4612bb8fe168083e8ddaf21e00d8c06b560",
+      "git_blob_sha": "0298991a8b61b2c788bd234f0cfd2be05e760951"
+    }
+  ],
+  "recipe_sha256": "6b8a14e9f0f0c131cc0b06bab60771de0d811b6f4b6f79617f0ffabf7c2a4c5a",
+  "production_manifest_sha256": "32d73b791e1b34bbec004d4f9e269f368d4e4c5b5077dbbcaa4161212a6cef9e",
+  "producer_reporting_limit": "The author reports complete reads and exact allowed file access; this does not assert an operating-system sandbox or expose private reasoning.",
+  "author_file_read_declaration": {
+    "enumerated_whole_files": 18,
+    "per_task_recipe": 1,
+    "request": 1,
+    "visible_dispatch": 1,
+    "unique_actual_input_units": 21,
+    "semantic_build_predecessors": 4,
+    "navigation_proposal_authoring_inputs": 1
+  },
+  "semantic_status": "PENDING_SAME_PAIR"
+}

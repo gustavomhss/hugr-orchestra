@@ -1,0 +1,76 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "relay": "/root",
+  "packet": "research-b-supplement-v2",
+  "target": "/root/s1_03_j2",
+  "canonical_part1_receipt": "../../relay/research-b-supplement-v2/dispatch-receipt.json",
+  "calls": [
+    {
+      "part": 2,
+      "subpart": 1,
+      "message_file": "wire/j2-part02-sub1.txt",
+      "request_file": "wire/j2-part02-sub1.json",
+      "piece_bytes": 26318,
+      "piece_sha256": "b125a4ff93b2496e793187375f9b4e835d354aeaf317b66c7268931f5cb8343f",
+      "start": 52689,
+      "end": 79007,
+      "message_bytes": 26971,
+      "message_sha256": "6b89c77c80abd02392826db1b3a12623d782eeac5ef34edae3d7d9e150bb2a15",
+      "target": "/root/s1_03_j2",
+      "caller": "/root",
+      "sequence": 1,
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null,
+      "argument_archive": "Prepared exact text copied into the visible native tool argument; no separate host argument hash is exposed"
+    },
+    {
+      "part": 2,
+      "subpart": 2,
+      "message_file": "wire/j2-part02-sub2.txt",
+      "request_file": "actual-j2-part02-sub2.json",
+      "piece_bytes": 26344,
+      "piece_sha256": "efa9eede5092f5e102947f6d956f60a17d1826ed6174b9a06c68ec77e1dbc097",
+      "start": 79007,
+      "end": 105351,
+      "message_bytes": 27001,
+      "message_sha256": "9d9020e5534705dacf5d0627052ea09f2c4186cd7afbdbe577125547616b495c",
+      "sequence": 2,
+      "target": "/root/s1_03_j2",
+      "caller": "/root",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null,
+      "incident": "Added arrow after function generator; corrected explicitly before end of lot"
+    },
+    {
+      "sequence": 3,
+      "target": "/root/s1_03_j2",
+      "caller": "/root",
+      "method": "collaboration.followup_task",
+      "part": 2,
+      "subpart": 2,
+      "type": "literal_transport_correction",
+      "request_file": "request-j2-correction-root01.json",
+      "message_bytes": 1043,
+      "message_sha256": "c270b732f9b3e69a419d0513c983a00ce10d9180acaeb49eae3899ca4ea8d8f5",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    }
+  ],
+  "corrections": [
+    {
+      "part": 2,
+      "subpart": 2,
+      "source": "RB-S008 probe/run.ts146",
+      "before_actual": "146:   const take = (semaphore: Semaphore.Semaphore) => Effect.gen(function* () => {",
+      "after_canonical": "146:   const take = (semaphore: Semaphore.Semaphore) => Effect.gen(function* () {",
+      "exact_one_replacement_restores_prepared_message": true,
+      "before_end_marker": true,
+      "judge_ack_received": true
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+ACK parte 4/6, fragmento 2/2 — última âncora recebida: **AUT1-C30**, `packages/core/src/actions/github/commands/common.ts`, função `input`, linha `const decoded = Schema.decodeUnknownOption(schema)(value, { onExcessProperty: "error" })`.

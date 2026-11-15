@@ -1,0 +1,13 @@
+{
+  "id": "root-relay-entry-helper-idle",
+  "target": "/root/review_relay",
+  "kind": "slot_availability_control",
+  "method": "collaboration.send_message",
+  "tool_returned_normally": true,
+  "message_path": "payload/receipts/continuation-controls/relay-entry-helper-idle.message.txt",
+  "message_bytes": 191,
+  "message_sha256": "9c5015c3890c5817920c7ce8c4c4a5cfccf8e516e06a21470caac84fb1a09c86",
+  "physical_attempts": "UNKNOWN",
+  "tokens": "UNKNOWN",
+  "cost": "UNKNOWN"
+}

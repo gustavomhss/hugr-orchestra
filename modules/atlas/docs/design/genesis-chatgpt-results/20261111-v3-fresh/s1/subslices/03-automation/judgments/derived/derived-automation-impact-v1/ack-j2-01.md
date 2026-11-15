@@ -1,0 +1,1 @@
+ACK — **derived-automation-impact-v1, parte 1/2**. Última âncora recebida: **evidência de derivação, §6**, parágrafo dos **36 inputs integrais**, encerrando com os segmentos **[0,18000)** e **[18000,37617)** do manifesto anterior, “sem truncamento”. Aguardo a parte final e o `FIM_DO_LOTE` externo.

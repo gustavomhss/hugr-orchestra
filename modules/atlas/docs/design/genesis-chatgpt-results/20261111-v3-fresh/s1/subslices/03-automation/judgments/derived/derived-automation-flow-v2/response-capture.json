@@ -1,0 +1,28 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "packet": "derived-automation-flow-v2",
+  "responses": {
+    "j1": {
+      "target": "/root/s1_03_j1",
+      "judge_id": "parallel-v3-fresh/S1-03/J1",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-automation-flow-v2/j1-response.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j1",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 2639,
+      "sha256": "638ade93b15f4405ec0cbb5d10698e534993ea89733d018acb6c0148e43309bb",
+      "captured_at_utc": "2026-11-15T09:23:31.040712+00:00"
+    },
+    "j2": {
+      "target": "/root/s1_03_j2",
+      "judge_id": "parallel-v3-fresh/S1-03/J2",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-automation-flow-v2/j2-response.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j2",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 2724,
+      "sha256": "250b6136a1ce4076da0c162977ede3aeef03f53fe071c16fc3881f874f52fc48",
+      "captured_at_utc": "2026-11-15T09:29:28.225138+00:00"
+    }
+  }
+}

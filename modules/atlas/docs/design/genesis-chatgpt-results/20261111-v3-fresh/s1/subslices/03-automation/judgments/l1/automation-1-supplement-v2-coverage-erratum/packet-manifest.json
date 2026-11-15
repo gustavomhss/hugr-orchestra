@@ -1,0 +1,15 @@
+{
+  "lot": "automation-1-supplement-v2-coverage-erratum",
+  "path": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/automation-1-supplement-v2-coverage-erratum.md",
+  "packet": {
+    "bytes": 344323,
+    "sha256": "1599aa38f34decbc6bff88c972ed778d5f49e179dca7ac2915d37ecacf245a4b"
+  },
+  "superseded_unsent_packet": {
+    "path": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/automation-1-supplement-v2.md",
+    "sha256": "f0f56ddcadf602c0f5a3e15479fca4a98e12a07bb0aa22f52d89783f8d7d3106"
+  },
+  "body_version": "v2",
+  "body_unchanged": true,
+  "oracle_access_by_relay": false
+}

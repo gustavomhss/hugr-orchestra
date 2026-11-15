@@ -1,0 +1,1524 @@
+{
+  "schema": "s1-03-derived-production-manifest/v1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "created_at_utc": "2026-11-15T10:16:43.500695+00:00",
+  "record_kind": "POST_AUTHORING_MANIFEST_NOT_PREEXISTING_RECIPE",
+  "artifact": {
+    "key": "s1.subslice03.automation-maintenance",
+    "layer": 4,
+    "need": "maintenance",
+    "version": "v1",
+    "scope": "orchestra.s1",
+    "subslice": "S1-03",
+    "state": "AUTHORED_AWAITING_SAME_PAIR_SEMANTIC_REVIEW",
+    "body": {
+      "local_path": "producers/derived-automation-maintenance/body.md",
+      "bytes": 13840,
+      "sha256": "8cb4befb0cef6a35002679580d60f1746fdeac26acf45ff08e04942cff83abc7",
+      "git_blob_sha": "2685cecdd7df56046cc82f70ac8104c639249e33"
+    }
+  },
+  "author": {
+    "native_task": "/root/derived_automation",
+    "host_agent_id": "UNKNOWN",
+    "role": "produtor nativo da mesma família derivada de automação",
+    "context_boundary": "Mesmo autor oracle-blind; contexto anterior retido e somente inputs enumerados adicionais. Gate L3 recebido como metadados, sem parecer completo.",
+    "delegation_performed": false
+  },
+  "source_provenance": {
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "kit_revision": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+    "basis": "Contrato público e predecessor aceito; baseline documental, não qualificação de ambiente atual."
+  },
+  "actual_authoring_recipe": {
+    "common_contract": {
+      "local_path": "payload/recipes/derived-contract.json",
+      "bytes": 4017,
+      "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
+      "git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd"
+    },
+    "task_recipe": {
+      "local_path": "payload/recipes/derived/automation-maintenance.json",
+      "bytes": 9509,
+      "sha256": "234852b82b4d24a10cda4840c6262abab446e3520f1a706eb0a1c555200cca5c",
+      "git_blob_sha": "b8744008f4484b0f59cb0561b25ba49a5ed33e83"
+    },
+    "current_request": {
+      "local_path": "producers/derived-automation-maintenance/request.txt",
+      "bytes": 884,
+      "sha256": "1fca3760dc1cc0749d5e44c216a7de6db0dc92916683c11e2435b05b199f25d8",
+      "git_blob_sha": "d2ffa4c66332fa2ca8193d0b737d85bc239c138a"
+    },
+    "visible_dispatch": {
+      "local_path": "producers/derived-automation-maintenance/dispatch-message.txt",
+      "bytes": 1704,
+      "sha256": "47c9e0fe0a731c14c5930ec3d6b58a8322dae2381efd71852df7f1e67640d35f",
+      "git_blob_sha": "d28173802019763b71a72320fdbb7de5c14d1c12"
+    },
+    "retained_prior_authoring_provenance": {
+      "common_contract": {
+        "local_path": "payload/recipes/derived-contract.json",
+        "bytes": 4017,
+        "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
+        "git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd"
+      },
+      "original_l3_task_recipe": {
+        "local_path": "payload/recipes/derived/automation-impact.json",
+        "bytes": 9478,
+        "sha256": "dc1cb8d1b096c7cded692b4b5cd010d67e5a01165b28622a5caef5be4c0c0767",
+        "git_blob_sha": "8cbef08ae15a11ae9421504a7144b97382ef9009"
+      },
+      "original_l3_request": {
+        "local_path": "producers/derived-automation-impact/request.txt",
+        "bytes": 869,
+        "sha256": "493eb3912f434e83bafb9448d44e7b36961c37400bf53fec677e4edf69c938e6",
+        "git_blob_sha": "a7a9f8ced448c14b4f2b46e4d173028da5bc4a3b"
+      },
+      "original_l3_dispatch": {
+        "local_path": "producers/derived-automation-impact/dispatch-message.txt",
+        "bytes": 1902,
+        "sha256": "3129949a5d075b93e1922b5e3bf12b16f8f59f6fecb8d196ac460beef39d095c",
+        "git_blob_sha": "9f63a46c7b658ec33ae76bcbdc3605407b593148"
+      },
+      "retained_prior_authoring_provenance": {
+        "common_contract": {
+          "local_path": "payload/recipes/derived-contract.json",
+          "bytes": 4017,
+          "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
+          "git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd"
+        },
+        "original_task_recipe": {
+          "local_path": "payload/recipes/derived/automation-flow.json",
+          "bytes": 8479,
+          "sha256": "ec4550336620b1d7abed85e78460c6d4c5ede73f31c8ddcf8a77be5272af3179",
+          "git_blob_sha": "a039bc6e88406694ed967c5f6c1e2b14a9428506"
+        },
+        "original_request": {
+          "local_path": "producers/derived-automation-flow/request.txt",
+          "bytes": 856,
+          "sha256": "da3d46f1369fc5ec17d4ec73b3b95ebeecf2c83c796f06e88d4409c1c64a331e",
+          "git_blob_sha": "d44c3d910995f299f76a1f8e1e62af093653ed81"
+        },
+        "original_visible_dispatch": {
+          "local_path": "producers/derived-automation-flow/dispatch-message.txt",
+          "bytes": 2056,
+          "sha256": "808b4733f5306981efcdf337732dc6d53d1dce7b6569b5c7b32af0611e761fd9",
+          "git_blob_sha": "dfe89eddbc185ad996a1fd25e18bab3786161486"
+        },
+        "prior_correction_recipe": {
+          "local_path": "payload/recipes/derived/automation-flow-source-fidelity-v2.json",
+          "bytes": 7391,
+          "sha256": "16c2b4e2efc5a6e2ea6a111540e7a662ce154af3c58c366306e254f23d9b3364",
+          "git_blob_sha": "d41472b948b6c1a5d2d5990c3de0a906c9d5cf47"
+        },
+        "prior_correction_request": {
+          "local_path": "producers/derived-automation-flow/revisions/v2/request.txt",
+          "bytes": 841,
+          "sha256": "34caa0867a7d0c02dd94c37f789c0af7262132bf4f2359563021b8df3977e769",
+          "git_blob_sha": "52271ca649386b9acd36c4dc8e31153cba7f3dfb"
+        },
+        "prior_correction_dispatch": {
+          "local_path": "producers/derived-automation-flow/revisions/v2/dispatch-message.txt",
+          "bytes": 1370,
+          "sha256": "b5cf544c85c7f3fae4739c200210f829a8b72a7bbb65eab809799fa198621e93",
+          "git_blob_sha": "151ff85a32fe59b63db141eaad368d8b6a7fa55c"
+        },
+        "task_recipe": {
+          "local_path": "payload/recipes/derived/automation-flow-dispatch-fidelity-v3.json",
+          "bytes": 6224,
+          "sha256": "a0f24c622d77e89d6a7020334075691efb8f3153f99087eb7bc2afc3337cb9ea",
+          "git_blob_sha": "e7531d1cba701855e10fc46602a4ca584dffe69b"
+        },
+        "current_request": {
+          "local_path": "producers/derived-automation-flow/revisions/v3/request.txt",
+          "bytes": 680,
+          "sha256": "4ed7cc034c532a6b414fa03bfcd4f2034ccfca3f593ebad1652653d814e64538",
+          "git_blob_sha": "a07913c67f6b5343dca9386f3d0d4174892c5aab"
+        },
+        "visible_dispatch": {
+          "local_path": "producers/derived-automation-flow/revisions/v3/dispatch-message.txt",
+          "bytes": 1520,
+          "sha256": "4fff1b29411f19321d656897a2ab13cb5c65589e4652e1f8a790fb49642ffbb0",
+          "git_blob_sha": "bafca800486d37ef7bef21e11d7b9b42f1c2099a"
+        },
+        "authority_note": "Contrato/receita originais e correção v2 retidos; esta correção usa efetivamente a receita v3 congelada, seu pedido e dispatch. Manifesto é output posterior, não receita preexistente."
+      },
+      "task_recipe": {
+        "local_path": "payload/recipes/derived/automation-impact-schedule-fidelity-v2.json",
+        "bytes": 5638,
+        "sha256": "b57d14c54df694d54256ff30b7c743050045affe6066fee68cc5e1aa27f16b4f",
+        "git_blob_sha": "fa0aa39d37a7908b250e165187ef654c523fb587"
+      },
+      "current_request": {
+        "local_path": "producers/derived-automation-impact/revisions/v2/request.txt",
+        "bytes": 678,
+        "sha256": "d296751f870708aa225c70a3a5262f7ecb0bfffc2bcb488b53d30cea73ef18ff",
+        "git_blob_sha": "259ed5422386136bbdfd3d621f441a7db2278d43"
+      },
+      "visible_dispatch": {
+        "local_path": "producers/derived-automation-impact/revisions/v2/dispatch-message.txt",
+        "bytes": 1497,
+        "sha256": "87adb6d9a36b17e43ec7d23965d35f56a6add3811c8aa2b5598934c8c7fd57aa",
+        "git_blob_sha": "6445672a1374aecc0a66f633f52660f96af9f44a"
+      },
+      "authority_note": "Contrato e procedimentos anteriores retidos; correção executada segundo receita/pedido/dispatch v2. Manifesto e delta são outputs posteriores, não receitas retroativas."
+    },
+    "authority_note": "O contrato comum e a receita/pedido/dispatch L4 são efetivos nesta autoria; procedimentos anteriores são contexto retido. Manifestos posteriores não são receitas retroativas."
+  },
+  "prior_family_manifest": {
+    "local_path": "producers/derived-automation-impact/production-manifest.json",
+    "bytes": 59561,
+    "sha256": "71c87a55b4b64cf1dceeddbf466ecee7d7571edf15d125b24d91d968c792d4f5",
+    "git_blob_sha": "5b219e435b23d758b614f9212c8048fbfd55d373",
+    "role": "provenance_input_only_not_semantic_predecessor_or_original_recipe",
+    "state_note": "O estado de revisão do manifesto L3 é histórico; o gate L3 atual foi fornecido na receita L4 sem modificar o arquivo anterior."
+  },
+  "retained_history": [
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/history/body.md",
+      "bytes": 16441,
+      "sha256": "5985441b360d0efc6693d0d385980f4a93cab2c044387a7375608dd5a9adf517",
+      "git_blob_sha": "b4874e39655e7aef9c9f6e08aeecc37718658b2f",
+      "original_read_paths": [
+        "producers/derived-automation-flow/body.md"
+      ]
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/history/evidence.md",
+      "bytes": 11997,
+      "sha256": "d2b8068c9167c0813719479d4d2b10046cc718921dad3db52d1f44957e3f1360",
+      "git_blob_sha": "6697c34caf08d7d8d4bacd4793f3e36c1d035aa4",
+      "original_read_paths": [
+        "producers/derived-automation-flow/evidence.md"
+      ]
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/history/production-manifest.json",
+      "bytes": 16158,
+      "sha256": "9c7d3130d4265bccba5e94fa0448b1d0bbbf3c02bf421a09d4e8d053cae4df06",
+      "git_blob_sha": "ee7c2879510553e13c9c61faefdda6b9e09d8e17",
+      "original_read_paths": [
+        "producers/derived-automation-flow/production-manifest.json"
+      ]
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/history/response.md",
+      "bytes": 2470,
+      "sha256": "c8bf48be1b48cc17d8c376978e37c401079ba6e5ad72c51ac12443b8e433c7fd",
+      "git_blob_sha": "e26287f9867203f71804eecce18b6a706997539a",
+      "original_read_paths": [
+        "producers/derived-automation-flow/response.md"
+      ]
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v3/history/body.md",
+      "bytes": 16541,
+      "sha256": "5b24037431881e96ddb5a872fd6541c94880d189d8b0c873bac9d8bd874d85c1",
+      "git_blob_sha": "378dbb4cd9f978ed9ab848136a2f4b9fdd72ca6b",
+      "original_read_paths": [
+        "producers/derived-automation-flow/body.md"
+      ]
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v3/history/evidence.md",
+      "bytes": 14569,
+      "sha256": "0c4bff02eec8c4dbca2886127f1546bd51707060df8306ba4e630dba73f990d8",
+      "git_blob_sha": "ec9f7f1351681788c7c58cb345e4ee6860c4c3af",
+      "original_read_paths": [
+        "producers/derived-automation-flow/evidence.md"
+      ]
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v3/history/production-manifest.json",
+      "bytes": 27416,
+      "sha256": "1802600a673c0521064bc636bd9be5e9e9aad9dd644f26efd5d14c02bee52cff",
+      "git_blob_sha": "009ace4ecb5cda6ec2c3f58aec5573d1b986c205",
+      "original_read_paths": [
+        "producers/derived-automation-flow/production-manifest.json"
+      ]
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v3/history/response.md",
+      "bytes": 3043,
+      "sha256": "59ffb319da5b27d830b9eeabe7ac592c104a64496864235da4331cd5adc05c23",
+      "git_blob_sha": "f07fae15e22fabc2fd4cad461fd721eab5e031d3",
+      "original_read_paths": [
+        "producers/derived-automation-flow/response.md"
+      ]
+    },
+    {
+      "local_path": "producers/derived-automation-impact/revisions/v2/history/body.md",
+      "bytes": 13454,
+      "sha256": "cc7ebd4319e301cf3100f83867a889c6295e52c7d0c39a769d2962bc251c9722",
+      "git_blob_sha": "5e345882926432b1049d4ef9ae781c2fb6a1e5f2",
+      "original_read_paths": [
+        "producers/derived-automation-impact/body.md"
+      ]
+    },
+    {
+      "local_path": "producers/derived-automation-impact/revisions/v2/history/evidence.md",
+      "bytes": 12105,
+      "sha256": "2814a7361d26e4d99e4c77e16189baa53755ab8e8873c53a3fcddb96a67a8a5d",
+      "git_blob_sha": "87061f8933a3907565d04d346d9c2a7a0b60454d",
+      "original_read_paths": [
+        "producers/derived-automation-impact/evidence.md"
+      ]
+    },
+    {
+      "local_path": "producers/derived-automation-impact/revisions/v2/history/production-manifest.json",
+      "bytes": 41752,
+      "sha256": "fa3cb6ba4888e6449e2cb39d424e4e0dab2bc4e05f85c190fa1cfd7591e71c9c",
+      "git_blob_sha": "82ad7bdbf68ad3c8db46478e71e31f650f60bf98",
+      "original_read_paths": [
+        "producers/derived-automation-impact/production-manifest.json"
+      ]
+    },
+    {
+      "local_path": "producers/derived-automation-impact/revisions/v2/history/response.md",
+      "bytes": 2703,
+      "sha256": "85831ceada2e319c68ec37bc7e521de4d66c2aa1828e2df18a25886fe0a181f7",
+      "git_blob_sha": "377fdc2968753ba8d881097a808323b09237ad34",
+      "original_read_paths": [
+        "producers/derived-automation-impact/response.md"
+      ]
+    }
+  ],
+  "inputs": [
+    {
+      "local_path": "inputs/AGENTS.md",
+      "bytes": 16501,
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "role": "public_authority_or_procedure",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "retained_from_family_version": "v1",
+      "retained_through_family_version": "v3",
+      "retained_through_artifact": "s1.subslice03.automation-impact",
+      "role_in_current_authoring": "public_authority_plan_contract_or_criteria",
+      "also_in_current_read_exactly": true,
+      "retained_through_l3_version": "v2",
+      "role_in_prior_authoring": "retained_public_authority_plan_or_contract",
+      "l4_reading_status": "RETAINED_PRIOR_WHOLE_FILE_READING_AS_PERMITTED",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "inputs/COMMON.md",
+      "bytes": 12959,
+      "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+      "git_blob_sha": "893cbb5f5eda2d0c19753606a50d1c482523f0c8",
+      "role": "public_authority_or_procedure",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "retained_from_family_version": "v1",
+      "retained_through_family_version": "v3",
+      "retained_through_artifact": "s1.subslice03.automation-impact",
+      "role_in_current_authoring": "public_authority_plan_contract_or_criteria",
+      "also_in_current_read_exactly": true,
+      "retained_through_l3_version": "v2",
+      "role_in_prior_authoring": "retained_public_authority_plan_or_contract",
+      "l4_reading_status": "RETAINED_PRIOR_WHOLE_FILE_READING_AS_PERMITTED",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "inputs/mission.json",
+      "bytes": 6006,
+      "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+      "git_blob_sha": "48fa8da131e97c50110ee76e41e79283cd9a0ac4",
+      "role": "public_authority_or_procedure",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "retained_from_family_version": "v1",
+      "retained_through_family_version": "v3",
+      "retained_through_artifact": "s1.subslice03.automation-impact",
+      "role_in_current_authoring": "public_authority_plan_contract_or_criteria",
+      "also_in_current_read_exactly": true,
+      "retained_through_l3_version": "v2",
+      "role_in_prior_authoring": "retained_public_authority_plan_or_contract",
+      "l4_reading_status": "RETAINED_PRIOR_WHOLE_FILE_READING_AS_PERMITTED",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "inputs/SKILL.md",
+      "bytes": 8143,
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+      "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+      "role": "public_authority_or_procedure",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "retained_from_family_version": "v1",
+      "retained_through_family_version": "v3",
+      "retained_through_artifact": "s1.subslice03.automation-impact",
+      "role_in_current_authoring": "public_authority_plan_contract_or_criteria",
+      "also_in_current_read_exactly": true,
+      "retained_through_l3_version": "v2",
+      "role_in_prior_authoring": "retained_public_authority_plan_or_contract",
+      "l4_reading_status": "RETAINED_PRIOR_WHOLE_FILE_READING_AS_PERMITTED",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "inputs/references/principles.md",
+      "bytes": 6010,
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+      "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+      "role": "public_authority_or_procedure",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "retained_from_family_version": "v1",
+      "retained_through_family_version": "v3",
+      "retained_through_artifact": "s1.subslice03.automation-impact",
+      "role_in_current_authoring": "public_authority_plan_contract_or_criteria",
+      "also_in_current_read_exactly": true,
+      "retained_through_l3_version": "v2",
+      "role_in_prior_authoring": "retained_public_authority_plan_or_contract",
+      "l4_reading_status": "RETAINED_PRIOR_WHOLE_FILE_READING_AS_PERMITTED",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "inputs/references/fatia-1.md",
+      "bytes": 3987,
+      "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
+      "git_blob_sha": "78482ad7c72ec275fadb26ebece1c30bc1e5ccb9",
+      "role": "public_authority_or_procedure",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "retained_from_family_version": "v1",
+      "retained_through_family_version": "v3",
+      "retained_through_artifact": "s1.subslice03.automation-impact",
+      "role_in_current_authoring": "public_authority_plan_contract_or_criteria",
+      "also_in_current_read_exactly": true,
+      "retained_through_l3_version": "v2",
+      "role_in_prior_authoring": "retained_public_authority_plan_or_contract",
+      "l4_reading_status": "RETAINED_PRIOR_WHOLE_FILE_READING_AS_PERMITTED",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "inputs/references/fresh-start.md",
+      "bytes": 4983,
+      "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166",
+      "git_blob_sha": "ca485b25e43293a309c5489279dce80ce1441ed0",
+      "role": "public_authority_or_procedure",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "retained_from_family_version": "v1",
+      "retained_through_family_version": "v3",
+      "retained_through_artifact": "s1.subslice03.automation-impact",
+      "role_in_current_authoring": "public_authority_plan_contract_or_criteria",
+      "also_in_current_read_exactly": true,
+      "retained_through_l3_version": "v2",
+      "role_in_prior_authoring": "retained_public_authority_plan_or_contract",
+      "l4_reading_status": "RETAINED_PRIOR_WHOLE_FILE_READING_AS_PERMITTED",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "inputs/references/orchestration.md",
+      "bytes": 4408,
+      "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+      "git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+      "role": "public_authority_or_procedure",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "retained_from_family_version": "v1",
+      "retained_through_family_version": "v3",
+      "retained_through_artifact": "s1.subslice03.automation-impact",
+      "role_in_current_authoring": "public_authority_plan_contract_or_criteria",
+      "also_in_current_read_exactly": true,
+      "retained_through_l3_version": "v2",
+      "role_in_prior_authoring": "retained_public_authority_plan_or_contract",
+      "l4_reading_status": "RETAINED_PRIOR_WHOLE_FILE_READING_AS_PERMITTED",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "inputs/references/judging.md",
+      "bytes": 5787,
+      "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+      "git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+      "role": "public_authority_or_procedure",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "retained_from_family_version": "v1",
+      "retained_through_family_version": "v3",
+      "retained_through_artifact": "s1.subslice03.automation-impact",
+      "role_in_current_authoring": "public_authority_plan_contract_or_criteria",
+      "also_in_current_read_exactly": true,
+      "retained_through_l3_version": "v2",
+      "role_in_prior_authoring": "retained_public_authority_plan_or_contract",
+      "l4_reading_status": "RETAINED_PRIOR_WHOLE_FILE_READING_AS_PERMITTED",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "inputs/references/transport.md",
+      "bytes": 8478,
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+      "role": "public_authority_or_procedure",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "retained_from_family_version": "v1",
+      "retained_through_family_version": "v3",
+      "retained_through_artifact": "s1.subslice03.automation-impact",
+      "role_in_current_authoring": "public_authority_plan_contract_or_criteria",
+      "also_in_current_read_exactly": true,
+      "retained_through_l3_version": "v2",
+      "role_in_prior_authoring": "retained_public_authority_plan_or_contract",
+      "l4_reading_status": "RETAINED_PRIOR_WHOLE_FILE_READING_AS_PERMITTED",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "payload/artifact-plan.json",
+      "bytes": 5017,
+      "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad",
+      "git_blob_sha": "8dba81b59cd093d28ea07cf4369d5842b6bdee68",
+      "role": "frozen_artifact_plan",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "retained_from_family_version": "v1",
+      "retained_through_family_version": "v3",
+      "retained_through_artifact": "s1.subslice03.automation-impact",
+      "role_in_current_authoring": "public_authority_plan_contract_or_criteria",
+      "also_in_current_read_exactly": true,
+      "retained_through_l3_version": "v2",
+      "role_in_prior_authoring": "retained_public_authority_plan_or_contract",
+      "l4_reading_status": "REREAD_WHOLE_FILE_FOR_L4",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "payload/recipes/derived-contract.json",
+      "bytes": 4017,
+      "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
+      "git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd",
+      "role": "actual_common_authoring_contract",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "retained_from_family_version": "v1",
+      "retained_through_family_version": "v3",
+      "retained_through_artifact": "s1.subslice03.automation-impact",
+      "role_in_current_authoring": "public_authority_plan_contract_or_criteria",
+      "also_in_current_read_exactly": true,
+      "retained_through_l3_version": "v2",
+      "role_in_prior_authoring": "retained_public_authority_plan_or_contract",
+      "l4_reading_status": "REREAD_WHOLE_FILE_FOR_L4",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "payload/recipes/derived-public-criteria.json",
+      "bytes": 16244,
+      "sha256": "1e7686491c5b68cb4f3d287377723edcd8932ae803c267ddbabf44a360dfc36e",
+      "git_blob_sha": "d4f6b765e6d78341ba2b77186c77b9177cf3156c",
+      "role": "public_normative_criteria",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "retained_from_family_version": "v1",
+      "retained_through_family_version": "v3",
+      "retained_through_artifact": "s1.subslice03.automation-impact",
+      "role_in_current_authoring": "public_authority_plan_contract_or_criteria",
+      "also_in_current_read_exactly": true,
+      "retained_through_l3_version": "v2",
+      "role_in_prior_authoring": "retained_public_authority_plan_or_contract",
+      "l4_reading_status": "REREAD_WHOLE_FILE_FOR_L4",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "producers/automation/body.md",
+      "bytes": 60767,
+      "sha256": "968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae",
+      "git_blob_sha": "e26213eb2fc76dc843dca17d1111334c76f88890",
+      "role": "accepted_semantic_predecessor",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "retained_from_family_version": "v1",
+      "retained_through_family_version": "v3",
+      "retained_through_artifact": "s1.subslice03.automation-impact",
+      "role_in_current_authoring": "retained_accepted_ancestor_context_not_direct_l4_build_predecessor",
+      "retained_through_l3_version": "v2",
+      "role_in_prior_authoring": "retained_accepted_ancestor_context_not_direct_l3_build_predecessor",
+      "l4_reading_status": "RETAINED_CONTEXT_AND_DETERMINISTIC_IDENTITY_RECHECK",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "payload/recipes/derived/automation-flow.json",
+      "bytes": 8479,
+      "sha256": "ec4550336620b1d7abed85e78460c6d4c5ede73f31c8ddcf8a77be5272af3179",
+      "git_blob_sha": "a039bc6e88406694ed967c5f6c1e2b14a9428506",
+      "role": "original_task_recipe_retained",
+      "whole_file_consumed": true,
+      "retained_from_family_version": "v1",
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "role_in_v1": "actual_frozen_task_recipe",
+      "retained_through_family_version": "v3",
+      "retained_through_artifact": "s1.subslice03.automation-impact",
+      "role_in_current_authoring": "retained_family_procedure_context",
+      "retained_through_l3_version": "v2",
+      "role_in_prior_authoring": "retained_family_procedure_context",
+      "l4_reading_status": "RETAINED_CONTEXT_AND_DETERMINISTIC_IDENTITY_RECHECK",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/request.txt",
+      "bytes": 856,
+      "sha256": "da3d46f1369fc5ec17d4ec73b3b95ebeecf2c83c796f06e88d4409c1c64a331e",
+      "git_blob_sha": "d44c3d910995f299f76a1f8e1e62af093653ed81",
+      "role": "original_request_retained",
+      "whole_file_consumed": true,
+      "retained_from_family_version": "v1",
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "role_in_v1": "actual_preserved_current_request",
+      "retained_through_family_version": "v3",
+      "retained_through_artifact": "s1.subslice03.automation-impact",
+      "role_in_current_authoring": "retained_family_procedure_context",
+      "retained_through_l3_version": "v2",
+      "role_in_prior_authoring": "retained_family_procedure_context",
+      "l4_reading_status": "RETAINED_CONTEXT_AND_DETERMINISTIC_IDENTITY_RECHECK",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/dispatch-message.txt",
+      "bytes": 2056,
+      "sha256": "808b4733f5306981efcdf337732dc6d53d1dce7b6569b5c7b32af0611e761fd9",
+      "git_blob_sha": "dfe89eddbc185ad996a1fd25e18bab3786161486",
+      "role": "original_visible_dispatch_retained",
+      "whole_file_consumed": true,
+      "retained_from_family_version": "v1",
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "role_in_v1": "actual_visible_dispatch",
+      "retained_through_family_version": "v3",
+      "retained_through_artifact": "s1.subslice03.automation-impact",
+      "role_in_current_authoring": "retained_family_procedure_context",
+      "retained_through_l3_version": "v2",
+      "role_in_prior_authoring": "retained_family_procedure_context",
+      "l4_reading_status": "RETAINED_CONTEXT_AND_DETERMINISTIC_IDENTITY_RECHECK",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/history/body.md",
+      "bytes": 16441,
+      "sha256": "5985441b360d0efc6693d0d385980f4a93cab2c044387a7375608dd5a9adf517",
+      "git_blob_sha": "b4874e39655e7aef9c9f6e08aeecc37718658b2f",
+      "original_read_paths": [
+        "producers/derived-automation-flow/body.md"
+      ],
+      "role": "exact_retained_v1_output_consumed_for_correction",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "retained_through_family_version": "v3",
+      "retained_through_artifact": "s1.subslice03.automation-impact",
+      "role_in_current_authoring": "retained_history_provenance_not_current_semantic_authority",
+      "retained_through_l3_version": "v2",
+      "role_in_prior_authoring": "retained_history_provenance_not_current_semantic_authority",
+      "l4_reading_status": "RETAINED_CONTEXT_AND_DETERMINISTIC_IDENTITY_RECHECK",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/history/evidence.md",
+      "bytes": 11997,
+      "sha256": "d2b8068c9167c0813719479d4d2b10046cc718921dad3db52d1f44957e3f1360",
+      "git_blob_sha": "6697c34caf08d7d8d4bacd4793f3e36c1d035aa4",
+      "original_read_paths": [
+        "producers/derived-automation-flow/evidence.md"
+      ],
+      "role": "exact_retained_v1_output_consumed_for_correction",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "retained_through_family_version": "v3",
+      "retained_through_artifact": "s1.subslice03.automation-impact",
+      "role_in_current_authoring": "retained_history_provenance_not_current_semantic_authority",
+      "retained_through_l3_version": "v2",
+      "role_in_prior_authoring": "retained_history_provenance_not_current_semantic_authority",
+      "l4_reading_status": "RETAINED_CONTEXT_AND_DETERMINISTIC_IDENTITY_RECHECK",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/history/production-manifest.json",
+      "bytes": 16158,
+      "sha256": "9c7d3130d4265bccba5e94fa0448b1d0bbbf3c02bf421a09d4e8d053cae4df06",
+      "git_blob_sha": "ee7c2879510553e13c9c61faefdda6b9e09d8e17",
+      "original_read_paths": [
+        "producers/derived-automation-flow/production-manifest.json"
+      ],
+      "role": "exact_retained_v1_output_consumed_for_correction",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "retained_through_family_version": "v3",
+      "retained_through_artifact": "s1.subslice03.automation-impact",
+      "role_in_current_authoring": "retained_history_provenance_not_current_semantic_authority",
+      "retained_through_l3_version": "v2",
+      "role_in_prior_authoring": "retained_history_provenance_not_current_semantic_authority",
+      "l4_reading_status": "RETAINED_CONTEXT_AND_DETERMINISTIC_IDENTITY_RECHECK",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/history/response.md",
+      "bytes": 2470,
+      "sha256": "c8bf48be1b48cc17d8c376978e37c401079ba6e5ad72c51ac12443b8e433c7fd",
+      "git_blob_sha": "e26287f9867203f71804eecce18b6a706997539a",
+      "original_read_paths": [
+        "producers/derived-automation-flow/response.md"
+      ],
+      "role": "exact_retained_v1_output_consumed_for_correction",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "retained_through_family_version": "v3",
+      "retained_through_artifact": "s1.subslice03.automation-impact",
+      "role_in_current_authoring": "retained_history_provenance_not_current_semantic_authority",
+      "retained_through_l3_version": "v2",
+      "role_in_prior_authoring": "retained_history_provenance_not_current_semantic_authority",
+      "l4_reading_status": "RETAINED_CONTEXT_AND_DETERMINISTIC_IDENTITY_RECHECK",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "payload/recipes/derived/automation-flow-source-fidelity-v2.json",
+      "bytes": 7391,
+      "sha256": "16c2b4e2efc5a6e2ea6a111540e7a662ce154af3c58c366306e254f23d9b3364",
+      "git_blob_sha": "d41472b948b6c1a5d2d5990c3de0a906c9d5cf47",
+      "role": "prior_correction_recipe_retained",
+      "whole_file_consumed": true,
+      "retained_through_family_version": "v3",
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "role_in_v2": "actual_frozen_correction_recipe",
+      "retained_through_artifact": "s1.subslice03.automation-impact",
+      "role_in_current_authoring": "retained_family_procedure_context",
+      "retained_through_l3_version": "v2",
+      "role_in_prior_authoring": "retained_family_procedure_context",
+      "l4_reading_status": "RETAINED_CONTEXT_AND_DETERMINISTIC_IDENTITY_RECHECK",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/request.txt",
+      "bytes": 841,
+      "sha256": "34caa0867a7d0c02dd94c37f789c0af7262132bf4f2359563021b8df3977e769",
+      "git_blob_sha": "52271ca649386b9acd36c4dc8e31153cba7f3dfb",
+      "role": "prior_correction_request_retained",
+      "whole_file_consumed": true,
+      "retained_through_family_version": "v3",
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "role_in_v2": "actual_current_correction_request",
+      "retained_through_artifact": "s1.subslice03.automation-impact",
+      "role_in_current_authoring": "retained_family_procedure_context",
+      "retained_through_l3_version": "v2",
+      "role_in_prior_authoring": "retained_family_procedure_context",
+      "l4_reading_status": "RETAINED_CONTEXT_AND_DETERMINISTIC_IDENTITY_RECHECK",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/dispatch-message.txt",
+      "bytes": 1370,
+      "sha256": "b5cf544c85c7f3fae4739c200210f829a8b72a7bbb65eab809799fa198621e93",
+      "git_blob_sha": "151ff85a32fe59b63db141eaad368d8b6a7fa55c",
+      "role": "prior_correction_dispatch_retained",
+      "whole_file_consumed": true,
+      "retained_through_family_version": "v3",
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "role_in_v2": "actual_visible_correction_dispatch",
+      "retained_through_artifact": "s1.subslice03.automation-impact",
+      "role_in_current_authoring": "retained_family_procedure_context",
+      "retained_through_l3_version": "v2",
+      "role_in_prior_authoring": "retained_family_procedure_context",
+      "l4_reading_status": "RETAINED_CONTEXT_AND_DETERMINISTIC_IDENTITY_RECHECK",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v3/history/body.md",
+      "bytes": 16541,
+      "sha256": "5b24037431881e96ddb5a872fd6541c94880d189d8b0c873bac9d8bd874d85c1",
+      "git_blob_sha": "378dbb4cd9f978ed9ab848136a2f4b9fdd72ca6b",
+      "original_read_paths": [
+        "producers/derived-automation-flow/body.md"
+      ],
+      "role": "exact_retained_v2_output_consumed_for_v3_correction",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "retained_through_artifact": "s1.subslice03.automation-impact",
+      "role_in_current_authoring": "retained_history_provenance_not_current_semantic_authority",
+      "retained_through_l3_version": "v2",
+      "role_in_prior_authoring": "retained_history_provenance_not_current_semantic_authority",
+      "l4_reading_status": "RETAINED_CONTEXT_AND_DETERMINISTIC_IDENTITY_RECHECK",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v3/history/evidence.md",
+      "bytes": 14569,
+      "sha256": "0c4bff02eec8c4dbca2886127f1546bd51707060df8306ba4e630dba73f990d8",
+      "git_blob_sha": "ec9f7f1351681788c7c58cb345e4ee6860c4c3af",
+      "original_read_paths": [
+        "producers/derived-automation-flow/evidence.md"
+      ],
+      "role": "exact_retained_v2_output_consumed_for_v3_correction",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "retained_through_artifact": "s1.subslice03.automation-impact",
+      "role_in_current_authoring": "retained_history_provenance_not_current_semantic_authority",
+      "retained_through_l3_version": "v2",
+      "role_in_prior_authoring": "retained_history_provenance_not_current_semantic_authority",
+      "l4_reading_status": "RETAINED_CONTEXT_AND_DETERMINISTIC_IDENTITY_RECHECK",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v3/history/production-manifest.json",
+      "bytes": 27416,
+      "sha256": "1802600a673c0521064bc636bd9be5e9e9aad9dd644f26efd5d14c02bee52cff",
+      "git_blob_sha": "009ace4ecb5cda6ec2c3f58aec5573d1b986c205",
+      "original_read_paths": [
+        "producers/derived-automation-flow/production-manifest.json"
+      ],
+      "role": "exact_retained_v2_output_consumed_for_v3_correction",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "retained_through_artifact": "s1.subslice03.automation-impact",
+      "role_in_current_authoring": "retained_history_provenance_not_current_semantic_authority",
+      "retained_through_l3_version": "v2",
+      "role_in_prior_authoring": "retained_history_provenance_not_current_semantic_authority",
+      "l4_reading_status": "RETAINED_CONTEXT_AND_DETERMINISTIC_IDENTITY_RECHECK",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v3/history/response.md",
+      "bytes": 3043,
+      "sha256": "59ffb319da5b27d830b9eeabe7ac592c104a64496864235da4331cd5adc05c23",
+      "git_blob_sha": "f07fae15e22fabc2fd4cad461fd721eab5e031d3",
+      "original_read_paths": [
+        "producers/derived-automation-flow/response.md"
+      ],
+      "role": "exact_retained_v2_output_consumed_for_v3_correction",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "retained_through_artifact": "s1.subslice03.automation-impact",
+      "role_in_current_authoring": "retained_history_provenance_not_current_semantic_authority",
+      "retained_through_l3_version": "v2",
+      "role_in_prior_authoring": "retained_history_provenance_not_current_semantic_authority",
+      "l4_reading_status": "RETAINED_CONTEXT_AND_DETERMINISTIC_IDENTITY_RECHECK",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "payload/recipes/derived/automation-flow-dispatch-fidelity-v3.json",
+      "bytes": 6224,
+      "sha256": "a0f24c622d77e89d6a7020334075691efb8f3153f99087eb7bc2afc3337cb9ea",
+      "git_blob_sha": "e7531d1cba701855e10fc46602a4ca584dffe69b",
+      "role": "actual_frozen_v3_correction_recipe",
+      "whole_file_consumed": true,
+      "retained_through_artifact": "s1.subslice03.automation-impact",
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "role_in_current_authoring": "retained_family_procedure_context",
+      "retained_through_l3_version": "v2",
+      "role_in_prior_authoring": "retained_family_procedure_context",
+      "l4_reading_status": "RETAINED_CONTEXT_AND_DETERMINISTIC_IDENTITY_RECHECK",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v3/request.txt",
+      "bytes": 680,
+      "sha256": "4ed7cc034c532a6b414fa03bfcd4f2034ccfca3f593ebad1652653d814e64538",
+      "git_blob_sha": "a07913c67f6b5343dca9386f3d0d4174892c5aab",
+      "role": "actual_current_v3_request",
+      "whole_file_consumed": true,
+      "retained_through_artifact": "s1.subslice03.automation-impact",
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "role_in_current_authoring": "retained_family_procedure_context",
+      "retained_through_l3_version": "v2",
+      "role_in_prior_authoring": "retained_family_procedure_context",
+      "l4_reading_status": "RETAINED_CONTEXT_AND_DETERMINISTIC_IDENTITY_RECHECK",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v3/dispatch-message.txt",
+      "bytes": 1520,
+      "sha256": "4fff1b29411f19321d656897a2ab13cb5c65589e4652e1f8a790fb49642ffbb0",
+      "git_blob_sha": "bafca800486d37ef7bef21e11d7b9b42f1c2099a",
+      "role": "actual_visible_v3_dispatch",
+      "whole_file_consumed": true,
+      "retained_through_artifact": "s1.subslice03.automation-impact",
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "role_in_current_authoring": "retained_family_procedure_context",
+      "retained_through_l3_version": "v2",
+      "role_in_prior_authoring": "retained_family_procedure_context",
+      "l4_reading_status": "RETAINED_CONTEXT_AND_DETERMINISTIC_IDENTITY_RECHECK",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/body.md",
+      "bytes": 16570,
+      "sha256": "64d97f6da72c92a00ad8e3d91e20a42fd360dbedb502733c0548746462442287",
+      "git_blob_sha": "5af7e410ddfb4d1da1473a990fc25d27a7580303",
+      "role": "accepted_l2_semantic_build_predecessor",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "retained_through_l3_version": "v2",
+      "role_in_current_authoring": "retained_accepted_ancestor_context_not_direct_l4_build_predecessor",
+      "l4_reading_status": "RETAINED_CONTEXT_AND_DETERMINISTIC_IDENTITY_RECHECK",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/production-manifest.json",
+      "bytes": 37704,
+      "sha256": "959840fc57d7d42e2d78abca1438f4ad18fbe8b20cb479fab6fc8127355ab1c3",
+      "git_blob_sha": "e37f374bb7b4e39c385b4e9def7848a47bee862a",
+      "role": "prior_family_manifest_provenance_not_semantic_predecessor",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "retained_through_l3_version": "v2",
+      "role_in_current_authoring": "retained_provenance_not_semantic_predecessor_or_recipe",
+      "l4_reading_status": "RETAINED_CONTEXT_AND_DETERMINISTIC_IDENTITY_RECHECK",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "payload/recipes/derived/automation-impact.json",
+      "bytes": 9478,
+      "sha256": "dc1cb8d1b096c7cded692b4b5cd010d67e5a01165b28622a5caef5be4c0c0767",
+      "git_blob_sha": "8cbef08ae15a11ae9421504a7144b97382ef9009",
+      "role": "original_l3_task_recipe_retained",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "retained_through_l3_version": "v2",
+      "role_in_l3_v1": "actual_frozen_l3_task_recipe",
+      "role_in_current_authoring": "retained_family_procedure_context",
+      "l4_reading_status": "RETAINED_CONTEXT_AND_DETERMINISTIC_IDENTITY_RECHECK",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "producers/derived-automation-impact/request.txt",
+      "bytes": 869,
+      "sha256": "493eb3912f434e83bafb9448d44e7b36961c37400bf53fec677e4edf69c938e6",
+      "git_blob_sha": "a7a9f8ced448c14b4f2b46e4d173028da5bc4a3b",
+      "role": "original_l3_request_retained",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "retained_through_l3_version": "v2",
+      "role_in_l3_v1": "actual_preserved_l3_request",
+      "role_in_current_authoring": "retained_family_procedure_context",
+      "l4_reading_status": "RETAINED_CONTEXT_AND_DETERMINISTIC_IDENTITY_RECHECK",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "producers/derived-automation-impact/dispatch-message.txt",
+      "bytes": 1902,
+      "sha256": "3129949a5d075b93e1922b5e3bf12b16f8f59f6fecb8d196ac460beef39d095c",
+      "git_blob_sha": "9f63a46c7b658ec33ae76bcbdc3605407b593148",
+      "role": "original_l3_dispatch_retained",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+      "retained_through_l3_version": "v2",
+      "role_in_l3_v1": "actual_visible_l3_dispatch",
+      "role_in_current_authoring": "retained_family_procedure_context",
+      "l4_reading_status": "RETAINED_CONTEXT_AND_DETERMINISTIC_IDENTITY_RECHECK",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "producers/derived-automation-impact/revisions/v2/history/body.md",
+      "bytes": 13454,
+      "sha256": "cc7ebd4319e301cf3100f83867a889c6295e52c7d0c39a769d2962bc251c9722",
+      "git_blob_sha": "5e345882926432b1049d4ef9ae781c2fb6a1e5f2",
+      "original_read_paths": [
+        "producers/derived-automation-impact/body.md"
+      ],
+      "role": "exact_l3_v1_output_consumed_and_retained_for_correction",
+      "whole_file_consumed": true,
+      "identity_check": "MATCHES_FROZEN_CORRECTION_RECIPE_AT_ORIGINAL_READ_PATH",
+      "role_in_current_authoring": "retained_history_provenance_not_current_semantic_authority",
+      "l4_reading_status": "RETAINED_CONTEXT_AND_DETERMINISTIC_IDENTITY_RECHECK",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "producers/derived-automation-impact/revisions/v2/history/evidence.md",
+      "bytes": 12105,
+      "sha256": "2814a7361d26e4d99e4c77e16189baa53755ab8e8873c53a3fcddb96a67a8a5d",
+      "git_blob_sha": "87061f8933a3907565d04d346d9c2a7a0b60454d",
+      "original_read_paths": [
+        "producers/derived-automation-impact/evidence.md"
+      ],
+      "role": "exact_l3_v1_output_consumed_and_retained_for_correction",
+      "whole_file_consumed": true,
+      "identity_check": "MATCHES_FROZEN_CORRECTION_RECIPE_AT_ORIGINAL_READ_PATH",
+      "role_in_current_authoring": "retained_history_provenance_not_current_semantic_authority",
+      "l4_reading_status": "RETAINED_CONTEXT_AND_DETERMINISTIC_IDENTITY_RECHECK",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "producers/derived-automation-impact/revisions/v2/history/production-manifest.json",
+      "bytes": 41752,
+      "sha256": "fa3cb6ba4888e6449e2cb39d424e4e0dab2bc4e05f85c190fa1cfd7591e71c9c",
+      "git_blob_sha": "82ad7bdbf68ad3c8db46478e71e31f650f60bf98",
+      "original_read_paths": [
+        "producers/derived-automation-impact/production-manifest.json"
+      ],
+      "role": "exact_l3_v1_output_consumed_and_retained_for_correction",
+      "whole_file_consumed": true,
+      "identity_check": "MATCHES_FROZEN_CORRECTION_RECIPE_AT_ORIGINAL_READ_PATH",
+      "role_in_current_authoring": "retained_history_provenance_not_current_semantic_authority",
+      "l4_reading_status": "RETAINED_CONTEXT_AND_DETERMINISTIC_IDENTITY_RECHECK",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "producers/derived-automation-impact/revisions/v2/history/response.md",
+      "bytes": 2703,
+      "sha256": "85831ceada2e319c68ec37bc7e521de4d66c2aa1828e2df18a25886fe0a181f7",
+      "git_blob_sha": "377fdc2968753ba8d881097a808323b09237ad34",
+      "original_read_paths": [
+        "producers/derived-automation-impact/response.md"
+      ],
+      "role": "exact_l3_v1_output_consumed_and_retained_for_correction",
+      "whole_file_consumed": true,
+      "identity_check": "MATCHES_FROZEN_CORRECTION_RECIPE_AT_ORIGINAL_READ_PATH",
+      "role_in_current_authoring": "retained_history_provenance_not_current_semantic_authority",
+      "l4_reading_status": "RETAINED_CONTEXT_AND_DETERMINISTIC_IDENTITY_RECHECK",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "payload/recipes/derived/automation-impact-schedule-fidelity-v2.json",
+      "bytes": 5638,
+      "sha256": "b57d14c54df694d54256ff30b7c743050045affe6066fee68cc5e1aa27f16b4f",
+      "git_blob_sha": "fa0aa39d37a7908b250e165187ef654c523fb587",
+      "role": "actual_frozen_l3_v2_correction_recipe",
+      "whole_file_consumed": true,
+      "role_in_current_authoring": "retained_family_procedure_context",
+      "l4_reading_status": "RETAINED_CONTEXT_AND_DETERMINISTIC_IDENTITY_RECHECK",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "producers/derived-automation-impact/revisions/v2/request.txt",
+      "bytes": 678,
+      "sha256": "d296751f870708aa225c70a3a5262f7ecb0bfffc2bcb488b53d30cea73ef18ff",
+      "git_blob_sha": "259ed5422386136bbdfd3d621f441a7db2278d43",
+      "role": "actual_current_l3_v2_request",
+      "whole_file_consumed": true,
+      "role_in_current_authoring": "retained_family_procedure_context",
+      "l4_reading_status": "RETAINED_CONTEXT_AND_DETERMINISTIC_IDENTITY_RECHECK",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "producers/derived-automation-impact/revisions/v2/dispatch-message.txt",
+      "bytes": 1497,
+      "sha256": "87adb6d9a36b17e43ec7d23965d35f56a6add3811c8aa2b5598934c8c7fd57aa",
+      "git_blob_sha": "6445672a1374aecc0a66f633f52660f96af9f44a",
+      "role": "actual_visible_l3_v2_dispatch",
+      "whole_file_consumed": true,
+      "role_in_current_authoring": "retained_family_procedure_context",
+      "l4_reading_status": "RETAINED_CONTEXT_AND_DETERMINISTIC_IDENTITY_RECHECK",
+      "l4_identity_check": "RECHECKED_UNCHANGED_FOR_L4_V1",
+      "retained_from_manifest": "producers/derived-automation-impact/production-manifest.json",
+      "retained_through_l4_artifact": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "producers/derived-automation-impact/body.md",
+      "bytes": 13666,
+      "sha256": "05aeecb75fb2c4f8afb34fc44cf315490d800ac976eed82100f279ec2402044d",
+      "git_blob_sha": "b803b5e7b626bcf746d5c15d7a0071a9f23de592",
+      "role": "accepted_l3_semantic_build_predecessor",
+      "whole_file_consumed": true,
+      "l4_reading_status": "READ_WHOLE_FILE_FOR_L4",
+      "identity_check": "MATCHES_FROZEN_RECIPE_OR_EXACT_VISIBLE_INPUT"
+    },
+    {
+      "local_path": "producers/derived-automation-impact/production-manifest.json",
+      "bytes": 59561,
+      "sha256": "71c87a55b4b64cf1dceeddbf466ecee7d7571edf15d125b24d91d968c792d4f5",
+      "git_blob_sha": "5b219e435b23d758b614f9212c8048fbfd55d373",
+      "role": "prior_family_manifest_provenance_not_semantic_predecessor_or_recipe",
+      "whole_file_consumed": true,
+      "l4_reading_status": "READ_WHOLE_FILE_FOR_L4",
+      "identity_check": "MATCHES_FROZEN_RECIPE_OR_EXACT_VISIBLE_INPUT"
+    },
+    {
+      "local_path": "payload/recipes/derived/automation-maintenance.json",
+      "bytes": 9509,
+      "sha256": "234852b82b4d24a10cda4840c6262abab446e3520f1a706eb0a1c555200cca5c",
+      "git_blob_sha": "b8744008f4484b0f59cb0561b25ba49a5ed33e83",
+      "role": "actual_frozen_l4_task_recipe",
+      "whole_file_consumed": true,
+      "l4_reading_status": "READ_WHOLE_FILE_FOR_L4",
+      "identity_check": "MATCHES_FROZEN_RECIPE_OR_EXACT_VISIBLE_INPUT"
+    },
+    {
+      "local_path": "producers/derived-automation-maintenance/request.txt",
+      "bytes": 884,
+      "sha256": "1fca3760dc1cc0749d5e44c216a7de6db0dc92916683c11e2435b05b199f25d8",
+      "git_blob_sha": "d2ffa4c66332fa2ca8193d0b737d85bc239c138a",
+      "role": "actual_preserved_l4_request",
+      "whole_file_consumed": true,
+      "l4_reading_status": "READ_WHOLE_FILE_FOR_L4",
+      "identity_check": "MATCHES_FROZEN_RECIPE_OR_EXACT_VISIBLE_INPUT"
+    },
+    {
+      "local_path": "producers/derived-automation-maintenance/dispatch-message.txt",
+      "bytes": 1704,
+      "sha256": "47c9e0fe0a731c14c5930ec3d6b58a8322dae2381efd71852df7f1e67640d35f",
+      "git_blob_sha": "d28173802019763b71a72320fdbb7de5c14d1c12",
+      "role": "actual_visible_l4_dispatch",
+      "whole_file_consumed": true,
+      "l4_reading_status": "READ_WHOLE_FILE_FOR_L4",
+      "identity_check": "MATCHES_FROZEN_RECIPE_OR_EXACT_VISIBLE_INPUT"
+    }
+  ],
+  "input_count": 48,
+  "input_total_bytes": 531033,
+  "input_count_breakdown": {
+    "retained_prior_context": 43,
+    "accepted_l3_body_newly_authorized_for_l4": 1,
+    "current_l3_manifest_newly_authorized_for_provenance": 1,
+    "new_l4_recipe_request_dispatch": 3,
+    "total": 48,
+    "current_recipe_read_exactly": 15,
+    "public_units_already_in_retained_context": 13,
+    "historical_aliases_retained": 12
+  },
+  "read_exactly_bindings": [
+    {
+      "local_path": "inputs/AGENTS.md",
+      "bytes": 16501,
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "whole_file_identity": true,
+      "requested_local_path": "inputs/AGENTS.md",
+      "reading_status": "RETAINED_PRIOR_WHOLE_FILE_READING_AS_PERMITTED"
+    },
+    {
+      "local_path": "inputs/COMMON.md",
+      "bytes": 12959,
+      "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+      "git_blob_sha": "893cbb5f5eda2d0c19753606a50d1c482523f0c8",
+      "whole_file_identity": true,
+      "requested_local_path": "inputs/COMMON.md",
+      "reading_status": "RETAINED_PRIOR_WHOLE_FILE_READING_AS_PERMITTED"
+    },
+    {
+      "local_path": "inputs/mission.json",
+      "bytes": 6006,
+      "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+      "git_blob_sha": "48fa8da131e97c50110ee76e41e79283cd9a0ac4",
+      "whole_file_identity": true,
+      "requested_local_path": "inputs/mission.json",
+      "reading_status": "RETAINED_PRIOR_WHOLE_FILE_READING_AS_PERMITTED"
+    },
+    {
+      "local_path": "inputs/SKILL.md",
+      "bytes": 8143,
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+      "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+      "whole_file_identity": true,
+      "requested_local_path": "inputs/SKILL.md",
+      "reading_status": "RETAINED_PRIOR_WHOLE_FILE_READING_AS_PERMITTED"
+    },
+    {
+      "local_path": "inputs/references/principles.md",
+      "bytes": 6010,
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+      "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+      "whole_file_identity": true,
+      "requested_local_path": "inputs/references/principles.md",
+      "reading_status": "RETAINED_PRIOR_WHOLE_FILE_READING_AS_PERMITTED"
+    },
+    {
+      "local_path": "inputs/references/fatia-1.md",
+      "bytes": 3987,
+      "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
+      "git_blob_sha": "78482ad7c72ec275fadb26ebece1c30bc1e5ccb9",
+      "whole_file_identity": true,
+      "requested_local_path": "inputs/references/fatia-1.md",
+      "reading_status": "RETAINED_PRIOR_WHOLE_FILE_READING_AS_PERMITTED"
+    },
+    {
+      "local_path": "inputs/references/fresh-start.md",
+      "bytes": 4983,
+      "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166",
+      "git_blob_sha": "ca485b25e43293a309c5489279dce80ce1441ed0",
+      "whole_file_identity": true,
+      "requested_local_path": "inputs/references/fresh-start.md",
+      "reading_status": "RETAINED_PRIOR_WHOLE_FILE_READING_AS_PERMITTED"
+    },
+    {
+      "local_path": "inputs/references/orchestration.md",
+      "bytes": 4408,
+      "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+      "git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+      "whole_file_identity": true,
+      "requested_local_path": "inputs/references/orchestration.md",
+      "reading_status": "RETAINED_PRIOR_WHOLE_FILE_READING_AS_PERMITTED"
+    },
+    {
+      "local_path": "inputs/references/judging.md",
+      "bytes": 5787,
+      "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+      "git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+      "whole_file_identity": true,
+      "requested_local_path": "inputs/references/judging.md",
+      "reading_status": "RETAINED_PRIOR_WHOLE_FILE_READING_AS_PERMITTED"
+    },
+    {
+      "local_path": "inputs/references/transport.md",
+      "bytes": 8478,
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+      "whole_file_identity": true,
+      "requested_local_path": "inputs/references/transport.md",
+      "reading_status": "RETAINED_PRIOR_WHOLE_FILE_READING_AS_PERMITTED"
+    },
+    {
+      "local_path": "payload/artifact-plan.json",
+      "bytes": 5017,
+      "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad",
+      "git_blob_sha": "8dba81b59cd093d28ea07cf4369d5842b6bdee68",
+      "whole_file_identity": true,
+      "requested_local_path": "payload/artifact-plan.json",
+      "reading_status": "READ_WHOLE_FILE_FOR_L4"
+    },
+    {
+      "local_path": "payload/recipes/derived-contract.json",
+      "bytes": 4017,
+      "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
+      "git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd",
+      "whole_file_identity": true,
+      "requested_local_path": "payload/recipes/derived-contract.json",
+      "reading_status": "READ_WHOLE_FILE_FOR_L4"
+    },
+    {
+      "local_path": "payload/recipes/derived-public-criteria.json",
+      "bytes": 16244,
+      "sha256": "1e7686491c5b68cb4f3d287377723edcd8932ae803c267ddbabf44a360dfc36e",
+      "git_blob_sha": "d4f6b765e6d78341ba2b77186c77b9177cf3156c",
+      "whole_file_identity": true,
+      "requested_local_path": "payload/recipes/derived-public-criteria.json",
+      "reading_status": "READ_WHOLE_FILE_FOR_L4"
+    },
+    {
+      "local_path": "producers/derived-automation-impact/body.md",
+      "bytes": 13666,
+      "sha256": "05aeecb75fb2c4f8afb34fc44cf315490d800ac976eed82100f279ec2402044d",
+      "git_blob_sha": "b803b5e7b626bcf746d5c15d7a0071a9f23de592",
+      "whole_file_identity": true,
+      "accepted_predecessor_key": "s1.subslice03.automation-impact",
+      "requested_local_path": "producers/derived-automation-impact/body.md",
+      "reading_status": "READ_WHOLE_FILE_FOR_L4"
+    },
+    {
+      "local_path": "producers/derived-automation-impact/production-manifest.json",
+      "bytes": 59561,
+      "sha256": "71c87a55b4b64cf1dceeddbf466ecee7d7571edf15d125b24d91d968c792d4f5",
+      "git_blob_sha": "5b219e435b23d758b614f9212c8048fbfd55d373",
+      "whole_file_identity": true,
+      "role": "Prior family output manifest now explicitly authorized as a provenance input for this next layer; not an original recipe or a new semantic predecessor.",
+      "requested_local_path": "producers/derived-automation-impact/production-manifest.json",
+      "reading_status": "READ_WHOLE_FILE_FOR_L4"
+    }
+  ],
+  "semantic_authority": {
+    "key": "s1.subslice03.automation-impact",
+    "version": "v2",
+    "local_path": "producers/derived-automation-impact/body.md",
+    "bytes": 13666,
+    "sha256": "05aeecb75fb2c4f8afb34fc44cf315490d800ac976eed82100f279ec2402044d",
+    "git_blob_sha": "b803b5e7b626bcf746d5c15d7a0071a9f23de592",
+    "role": "sole_required_l4_semantic_build_predecessor"
+  },
+  "build_dependencies": [
+    {
+      "key": "s1.subslice03.automation-impact",
+      "version": "v2",
+      "local_path": "producers/derived-automation-impact/body.md",
+      "bytes": 13666,
+      "sha256": "05aeecb75fb2c4f8afb34fc44cf315490d800ac976eed82100f279ec2402044d",
+      "git_blob_sha": "b803b5e7b626bcf746d5c15d7a0071a9f23de592",
+      "acceptance_gate_source": {
+        "local_path": "payload/recipes/derived/automation-maintenance.json",
+        "bytes": 9509,
+        "sha256": "234852b82b4d24a10cda4840c6262abab446e3520f1a706eb0a1c555200cca5c",
+        "git_blob_sha": "b8744008f4484b0f59cb0561b25ba49a5ed33e83"
+      },
+      "semantic_gate_as_supplied": [
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J1",
+          "status": "PASS",
+          "body_sha256": "05aeecb75fb2c4f8afb34fc44cf315490d800ac976eed82100f279ec2402044d",
+          "original_response_sha256": "cebf51a08751a4ce81ffa6c2a472535e6ed3f6dde0f846f1bef8e10355310f29"
+        },
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J2",
+          "status": "PASS",
+          "body_sha256": "05aeecb75fb2c4f8afb34fc44cf315490d800ac976eed82100f279ec2402044d",
+          "original_response_sha256": "00410b524cea90a9a4626a55fc83a2ec0c13ab648aca6b3590f198a9723063dd"
+        }
+      ],
+      "gate_scope": "Semantic acceptance only; runtime and consumers are separate. Full judge prose is not an author input."
+    }
+  ],
+  "navigation": {
+    "rule": "Navegação e consulta conjunta não criam build edges; tabelas de orientação não demonstram leitura Atlas.",
+    "plan_ref": {
+      "local_path": "payload/artifact-plan.json",
+      "bytes": 5017,
+      "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad",
+      "git_blob_sha": "8dba81b59cd093d28ea07cf4369d5842b6bdee68"
+    },
+    "planned_dependent_not_produced": "s1.subslice03.entry",
+    "other_entry_predecessors_not_consumed": [
+      "s1.subslice03.support",
+      "s1.subslice03.boundary-flow",
+      "s1.subslice03.research-maintenance"
+    ],
+    "independent_families": "Research, boundaries e support são referências do plano; não foram consumidos seus corpos nem adicionados edges."
+  },
+  "consumer_mapping": {
+    "basis": "Somente artifact-plan.json/direct_use_case_plan e predecessor L3; consumers/public-cases.json não foi lido.",
+    "direct_l4_need": "A-VIOLATION",
+    "other_public_ids_discussed": [
+      "A-PERMITTED",
+      "S-FAILURE",
+      "A-IMPACT",
+      "ENTRY-NAV",
+      "R-FAILURE",
+      "B-ABSTAIN"
+    ],
+    "status": "PROPOSED_CONDITIONAL_REEVALUATION_NOT_EXECUTED",
+    "reserved_answers_consumed": false
+  },
+  "public_criteria_considered": [
+    "GO-A1",
+    "GO-A2",
+    "GO-A3",
+    "GO-A4",
+    "GO-A5",
+    "GO-A6",
+    "GO-I1",
+    "GO-I2",
+    "GO-I3",
+    "GO-I4",
+    "GO-I5",
+    "GO-I7",
+    "GO-I8",
+    "AC-01",
+    "AC-02",
+    "AC-03",
+    "AC-04",
+    "AC-05",
+    "AC-06",
+    "AC-07",
+    "AC-09",
+    "AC-10",
+    "CC-3",
+    "CC-4",
+    "CC-7",
+    "QS-1",
+    "QS-2",
+    "QS-4",
+    "QS-5",
+    "QS-6"
+  ],
+  "outputs": [
+    {
+      "local_path": "producers/derived-automation-maintenance/body.md",
+      "bytes": 13840,
+      "sha256": "8cb4befb0cef6a35002679580d60f1746fdeac26acf45ff08e04942cff83abc7",
+      "git_blob_sha": "2685cecdd7df56046cc82f70ac8104c639249e33"
+    },
+    {
+      "local_path": "producers/derived-automation-maintenance/evidence.md",
+      "bytes": 13383,
+      "sha256": "006d65f15434530aa807a34dac97f9f717f77278a2aebc6dd320e1d420874e8c",
+      "git_blob_sha": "de142c87b019971434cf2769ad2efa31dbaa2f87"
+    },
+    {
+      "local_path": "producers/derived-automation-maintenance/response.md",
+      "bytes": 3022,
+      "sha256": "4f107717606764543073b75b27c566eabe4e2562f368fa3c1a547e332eb1c521",
+      "git_blob_sha": "c6d2944532c7c4af08b9b38ce0368fc1dc2a947e"
+    },
+    {
+      "local_path": "producers/derived-automation-maintenance/dispatch-message.txt",
+      "bytes": 1704,
+      "sha256": "47c9e0fe0a731c14c5930ec3d6b58a8322dae2381efd71852df7f1e67640d35f",
+      "git_blob_sha": "d28173802019763b71a72320fdbb7de5c14d1c12"
+    },
+    {
+      "local_path": "producers/derived-automation-maintenance/production-manifest.json",
+      "role": "post_authoring_cumulative_manifest",
+      "bytes": null,
+      "sha256": null,
+      "git_blob_sha": null,
+      "identity_status": "COMPUTED_EXTERNALLY_AFTER_FINAL_SERIALIZATION",
+      "reason": "Identidade integral fornecida externamente após gravação; não há self-hash circular."
+    }
+  ],
+  "output_count": 5,
+  "files_written_this_delivery": 5,
+  "preserved_request": {
+    "local_path": "producers/derived-automation-maintenance/request.txt",
+    "bytes": 884,
+    "sha256": "1fca3760dc1cc0749d5e44c216a7de6db0dc92916683c11e2435b05b199f25d8",
+    "git_blob_sha": "d2ffa4c66332fa2ca8193d0b737d85bc239c138a"
+  },
+  "response_preservation": {
+    "local_path": "producers/derived-automation-maintenance/response.md",
+    "encoding": "utf-8",
+    "terminal_lf": false,
+    "visible_final_requirement": "FINAL exatamente igual aos bytes deste arquivo.",
+    "identity": {
+      "local_path": "producers/derived-automation-maintenance/response.md",
+      "bytes": 3022,
+      "sha256": "4f107717606764543073b75b27c566eabe4e2562f368fa3c1a547e332eb1c521",
+      "git_blob_sha": "c6d2944532c7c4af08b9b38ce0368fc1dc2a947e"
+    }
+  },
+  "prior_final_capture_as_reported": {
+    "status": "L3_V2_FINAL_CAPTURED_BEFORE_REUSE_AS_REPORTED_IN_DISPATCH",
+    "basis": {
+      "local_path": "producers/derived-automation-maintenance/dispatch-message.txt",
+      "bytes": 1704,
+      "sha256": "47c9e0fe0a731c14c5930ec3d6b58a8322dae2381efd71852df7f1e67640d35f",
+      "git_blob_sha": "d28173802019763b71a72320fdbb7de5c14d1c12"
+    },
+    "author_access": "Nenhum arquivo adicional de captura ou parecer foi aberto."
+  },
+  "procedure_provenance": {
+    "native_composition": "Orientação L4 de manutenção, diagnóstico, verificação e encaminhamento derivada do L3 v2 aceito e das normas públicas.",
+    "deterministic_procedure": "Python 3 por exec_command: leitura/escrita UTF-8, JSON, regex e hashlib; SHA256 integral e Git blob SHA1 de blob+espaço+tamanho+NUL+bytes.",
+    "procedure_files_created": [],
+    "additional_external_procedures_read": [],
+    "reading_strategy": "Receita/pedido e predecessor L3 completos; plano/contrato/critérios relidos integralmente; dez normas públicas inteiras já consumidas na família retidas como permitido. Manifesto L3 completo após recuperação de truncamento central. Todos os 43 inputs anteriores e 15 enumerados reconferidos por identidade.",
+    "manifest_display_recovery": {
+      "initial_output": "CENTRAL_TRUNCATION",
+      "repair": "Literal decoded character range [18000,38000) reread; overlaps the already returned leading and trailing ranges.",
+      "total_decoded_characters": 59436,
+      "whole_file_bytes": 59561,
+      "status": "ALL_CONTENT_RECOVERED"
+    },
+    "retained_procedure_history_ref": {
+      "local_path": "producers/derived-automation-impact/production-manifest.json",
+      "bytes": 59561,
+      "sha256": "71c87a55b4b64cf1dceeddbf466ecee7d7571edf15d125b24d91d968c792d4f5",
+      "git_blob_sha": "5b219e435b23d758b614f9212c8048fbfd55d373"
+    },
+    "draft_size_check": "Rascunho de 15044 bytes permaneceu somente em memória; rejeitado pela preferência de tamanho antes de escrita; corpo condensado para 13840 bytes. Não é teste de produto.",
+    "own_outputs_read": "Leitura dos outputs desta entrega somente para conferência posterior à escrita, não nova fonte semântica."
+  },
+  "deterministic_verification": {
+    "task_recipe_identity": "MATCH",
+    "request_identity_and_preservation": "MATCH",
+    "recipe_read_exactly_identities": "15_OF_15_MATCH",
+    "retained_context_identities": "43_OF_43_MATCH",
+    "current_input_identities": "48_OF_48_MATCH",
+    "all_original_read_paths_preserved": true,
+    "historical_aliases_preserved": 12,
+    "accepted_l3_predecessor_unchanged": true,
+    "prior_l3_manifest_unchanged": true,
+    "required_build_predecessor_count": 1,
+    "depth2_headings": 8,
+    "claim_evidence_groups": 8,
+    "dispatch_utf8_without_terminal_lf": true,
+    "response_utf8_without_terminal_lf": true,
+    "scope": "Somente integridade, preservação e estrutura; não é teste de produto, julgamento semântico ou operação Atlas."
+  },
+  "body_size": {
+    "actual_utf8_bytes": 13840,
+    "recipe_preference_utf8_bytes": [
+      6000,
+      14000
+    ],
+    "preference_status": "WITHIN_PREFERENCE"
+  },
+  "limits": [
+    "L3 v2 aceito conforme gate recebido; este L4 aguarda julgamento do mesmo par.",
+    "Procedimentos de triagem, diagnóstico, verificação, reparo e encaminhamento são propostos, não execução.",
+    "Atribuição de responsáveis é funcional e proposta; inputs não identificam pessoas ou plantões de produto.",
+    "Ambiguidade de Board, revogação de bundle e wake capability mantêm qualificações do predecessor.",
+    "Nenhuma leitura de oracle, parecer completo, fonte nova, caso reservado ou corpo irmão não listado.",
+    "Nenhuma rede/GitHub, delegação, teste ou alteração de produto/policy/guards.",
+    "Nenhum provider, CI, Atlas import/binding/publicação/index/read, consumidor, manutenção executada ou produção da entrada.",
+    "Reúso, impacto, validade e leitura corrente são critérios a demonstrar, sem cache hit ou economia alegados.",
+    "Manifesto anterior é proveniência; não receita original ou predecessor semântico extra.",
+    "Hashes de arquivos não são versões de runtime nem juízo semântico.",
+    "Nenhum aceite global S1-03/S1 ou liberação da entrada é declarado."
+  ],
+  "usage": {
+    "visible_authoring_dispatches_this_delivery": 1,
+    "visible_family_authoring_dispatches": 6,
+    "visible_correction_dispatches_this_delivery": 0,
+    "retained_family_correction_dispatches": 3,
+    "physical_attempts": "UNKNOWN",
+    "tokens": "UNKNOWN",
+    "billing": "UNKNOWN",
+    "usage_note": "Telemetria não exposta. Contagem visível não equivale a tentativas físicas, tokens ou custo."
+  },
+  "next_gate_owner": "Principal: julgamento do mesmo J1/J2 dos bytes deste L4 antes de liberar qualquer dependente."
+}

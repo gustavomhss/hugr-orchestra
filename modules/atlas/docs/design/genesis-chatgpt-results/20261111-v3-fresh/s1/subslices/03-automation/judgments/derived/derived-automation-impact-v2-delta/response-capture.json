@@ -1,0 +1,27 @@
+{
+  "lot": "derived-automation-impact-v2-delta",
+  "responses": {
+    "j1": {
+      "target": "/root/s1_03_j1",
+      "judge_id": "parallel-v3-fresh/S1-03/J1",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-automation-impact-v2-delta/j1-response.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j1",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 2432,
+      "sha256": "cebf51a08751a4ce81ffa6c2a472535e6ed3f6dde0f846f1bef8e10355310f29",
+      "captured_at_utc": "2026-11-15T10:09:47.968925+00:00"
+    },
+    "j2": {
+      "target": "/root/s1_03_j2",
+      "judge_id": "parallel-v3-fresh/S1-03/J2",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-automation-impact-v2-delta/j2-response.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j2",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 1860,
+      "sha256": "00410b524cea90a9a4626a55fc83a2ec0c13ab648aca6b3590f198a9723063dd",
+      "captured_at_utc": "2026-11-15T10:09:58.214346+00:00"
+    }
+  }
+}

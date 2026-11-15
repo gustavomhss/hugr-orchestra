@@ -1,0 +1,1 @@
+ACK parte 4/6, fragmento 1/2 — última âncora recebida: **AUT1-C25**, `packages/core/src/actions/authoring/gitlab.ts`, ramo `"mode" in command`, abertura de `return {` após a definição de `fileVersion`.

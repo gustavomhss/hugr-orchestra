@@ -1,0 +1,4 @@
+{
+  "target": "/root/s1_03_j2",
+  "message": "CORRECAO_LITERAL_DE_TRANSPORTE automation-aggregate-v4 — J2, parte 1/2. No argumento efetivamente enviado, o relay introduziu dois caracteres extras no campo `before_body.git_blob_sha` da transição `from: 2` → `to: 3`. Preserve o pedido defeituoso e esta correção; não é mudança de candidato, evidência autorada ou critério.\n\nValor efetivamente enviado nesse campo:\n`b8fec4854b4c1384d3c4a2a4a4f0d51d220c874618`\n\nValor literal correto do pacote congelado:\n`b8fec4854b4c1384d3c4a2a4f0d51d220c874618`\n\nAplique somente essa substituição nessa ocorrência. A ocorrência anterior do mesmo hash em `after_body` da transição `from: 1` → `to: 2` já estava correta. Todo o restante da parte 1 permanece igual. Confirme o recebimento desta correção e aguarde a parte 2/2 com o sinal externo final. Não use ferramentas."
+}

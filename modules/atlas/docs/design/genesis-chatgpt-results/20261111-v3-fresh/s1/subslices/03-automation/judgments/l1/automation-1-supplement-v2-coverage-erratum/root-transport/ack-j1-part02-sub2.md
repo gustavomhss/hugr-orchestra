@@ -1,0 +1,1 @@
+ACK parte 2/6, fragmento 2/2 — última âncora recebida: **AUT1-C13**, `packages/core/src/actions/gitlab/catalog.ts`, função `source`, linha `const commitResponse = yield* native.get(...)` para `/repository/commits/${encodeURIComponent(input.ref)}`.

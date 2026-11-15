@@ -1,0 +1,22 @@
+{
+  "schema": "s1-03-derived-delta-review-packet/v1",
+  "lot": "derived-automation-flow-v3-delta",
+  "artifact": "s1.subslice03.automation-flow",
+  "layer": 2,
+  "version": "v3",
+  "bytes": 37266,
+  "sha256": "584f286ddbdd3cd29fa8a8e66acab8f5e975e855d127b18d17e95a614a7f0451",
+  "git_blob_sha": "65231ff7b0eb7d9de460df8c63a7bf786720c1e2",
+  "body_bytes": 16570,
+  "body_sha256": "64d97f6da72c92a00ad8e3d91e20a42fd360dbedb502733c0548746462442287",
+  "body_sent_complete": true,
+  "unchanged_context_reuse": "Prior exact v2 review packet and own decision only; no other-judge vote",
+  "evidence_changed_segments_complete": true,
+  "evidence_reconstruction_matches": true,
+  "changed_evidence_segment_count": 10,
+  "added_inputs": 7,
+  "retained_inputs": 24,
+  "full_verification_receipt": "payload/receipts/derived-automation-flow-v3-verification.json",
+  "full_alternative_packet_not_dispatched": "review-packets/derived-automation-flow-v3.md",
+  "dispatch_state": "NOT_YET_DISPATCHED"
+}

@@ -1,0 +1,1095 @@
+          return yield* close(row, repo, bundle, `is red; ${keys} ejected, the queue rebuilds it`, "isolated")
+        }
+      }
+      if (members.length > 1) {
+        yield* Effect.forEach(
+          members,
+          (item) => note(row, item.issue, `Bundle ${row.key}-B${bundle.n} went red on its full gate; the queue splits it to find the cause and this card stays queued.${cause}`),
+          { discard: true },
+        )
+        // Flush keeps the surviving half due next tick, even after its first half merges and the rest is below full size.
+        yield* deps.quiet((tx) =>
+          tx.update(BoardQueueTable).set({ flush: true }).where(inArray(BoardQueueTable.issue_id, members.map((item) => item.issue.id))).run(),
+        )
+        return yield* close(row, repo, bundle, "is red; the queue splits it to find the cause", "red")
+      }
+      yield* eject(row, bundle, members.map((item) => item.issue), `Bundle ${row.key}-B${bundle.n} went red with only this card on ${contract.base} at ${sha10}; it is back in Review.${cause}`, "red alone on the full gate")
+      return yield* close(row, repo, bundle, "is red", "red")
+    }
+~~~~
+
+```json
+{"first_line":272,"last_line":450,"bytes":9354,"sha256":"37858b911eb62896a02509a64bfc5e8f29968fc43812533525f845caa7be2995"}
+```
+
+~~~~typescript
+    const shipped = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        yield* tx
+          .update(BoardBundleTable)
+          .set({ status: "merged", merged_on: landed.on })
+          .where(eq(BoardBundleTable.id, bundle.id))
+          .run()
+        return yield* Effect.forEach(members, (item) =>
+          Effect.gen(function* () {
+            yield* tx
+              .update(BoardAttemptTable)
+              .set({ outcome: "merged" })
+              .where(and(eq(BoardAttemptTable.issue_id, item.issue.id), isNull(BoardAttemptTable.outcome)))
+              .run()
+            yield* tx.delete(BoardQueueTable).where(eq(BoardQueueTable.issue_id, item.issue.id)).run()
+            const moving = yield* place(tx, row, item.issue, "shipped")
+            const activity = yield* log(tx, {
+              project: row.id,
+              issue: item.issue.id,
+              actor: "github",
+              action: "bundle.merge",
+              before: moving.before,
+              after: { ...moving.after, bundle: bundle.n, merged: landed.target, ...(landed.on ? { on: landed.on } : {}) },
+            })
+            return changed(row.id, activity, item.issue.id)
+          }),
+        )
+      }),
+    )
+    yield* Effect.forEach(shipped, deps.publish, { discard: true })
+    yield* git(directory, ["push", "--quiet", "origin", "--delete", bundle.branch])
+    // Snapshot refs go only once the merge is on the remote, and only for shipped cards.
+    yield* Effect.forEach(
+      members,
+      (item) =>
+        Effect.gen(function* () {
+          const remote = contract.snapshots.remote
+          const refs = (yield* git(directory, ["ls-remote", remote, `refs/orchestra/wip/${row.key}-${item.issue.number}/*`])).out
+            .split("\n")
+            .map((line) => line.split("\t")[1])
+            .filter((name): name is string => Boolean(name))
+          if (refs.length > 0) yield* git(directory, ["push", "--quiet", remote, "--delete", ...refs])
+          yield* describe(row, item.issue.id, contract.base)
+        }),
+      { discard: true },
+    )
+  })
+
+  /**
+   * Section 6.5 `merge-if-disjoint`: the merge commit of the tested head onto the new tip, when the two merge clean and
+   * what moved base does not overlap what the bundle changed. Undefined means retest. A lane bundle always takes this
+   * path (section 7.3): lanes in flight are disjoint by construction, so retesting every lane behind the first to land
+   * would serialize them again.
+   */
+  const skew = Effect.fnUntraced(function* (
+    directory: string,
+    contract: BoardCi.Contract,
+    bundle: typeof BoardBundleTable.$inferSelect,
+    tip: string,
+    row: ProjectRow,
+  ) {
+    if (contract.bundle.onBaseMoved !== "merge-if-disjoint" && bundle.packages === null) return undefined
+    const merged = yield* git(directory, ["merge-tree", "--write-tree", tip, bundle.head_sha])
+    if (merged.code !== 0) return undefined
+    // Every bundle's record commit appends to the union-merged logs under `.atlas/`, so two lanes always share those
+    // paths; a clean merge-tree already proves they combine, and they hold no code.
+    const paths = (range: string) =>
+      git(directory, ["diff", "--name-only", range]).pipe(
+        Effect.map((diffed) => diffed.out.split("\n").filter((file) => file && !file.startsWith(".atlas/"))),
+      )
+    const theirs = yield* paths(`${bundle.base_sha}..${tip}`)
+    const ours = yield* paths(`${bundle.base_sha}..${bundle.head_sha}`)
+    if (theirs.some((file) => ours.includes(file))) return undefined
+    const graph = (yield* git(directory, ["cat-file", "-e", `${tip}:turbo.json`])).code === 0
+    if (graph) {
+      const left = yield* affected(deps, directory, bundle.base_sha, tip)
+      const right = yield* affected(deps, directory, bundle.base_sha, bundle.head_sha)
+      if (!left || !right || left.some((name) => right.includes(name))) return undefined
+    }
+    const commit = yield* git(directory, [
+      ...AUTHOR,
+      "commit-tree",
+      merged.out.split("\n")[0] ?? "",
+      "-p",
+      tip,
+      "-p",
+      bundle.head_sha,
+      "-m",
+      `Merge bundle ${row.key}-B${bundle.n} onto ${contract.base}\n\nTested on ${bundle.base_sha}, merged on ${tip}.`,
+    ])
+    if (commit.code !== 0 || !commit.out) return undefined
+    return { target: commit.out, on: tip }
+  })
+
+  /** Closes the bundle PR and branch; its members stay queued and the next tick cuts again. */
+  const dissolve = Effect.fnUntraced(function* (row: ProjectRow, bundle: typeof BoardBundleTable.$inferSelect, reason: string) {
+    const published = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        const members = yield* tx
+          .select({ issue: BoardBundleMemberTable.issue_id })
+          .from(BoardBundleMemberTable)
+          .where(eq(BoardBundleMemberTable.bundle_id, bundle.id))
+          .all()
+        return yield* Effect.forEach(members, (member) =>
+          log(tx, { project: row.id, issue: member.issue, actor: "github", action: "bundle.dissolve", reason, after: { bundle: bundle.n } }).pipe(
+            Effect.map((activity) => changed(row.id, activity, member.issue)),
+          ),
+        )
+      }),
+    )
+    yield* Effect.forEach(published, deps.publish, { discard: true })
+    if (row.github_repo) yield* close(row, row.github_repo, bundle, "dissolved")
+  })
+
+  /**
+   * Section 7.3: a red base probe or safety run. Infrastructure closes it as `infra`; F that passes on base when rerun
+   * closes it green; F that fails on base is bisected and gets a fix card, and only the lanes touching F's packages pause.
+   * A red whose failures are not scoped tests pauses the whole project until Maestro retries it.
+   */
+  const safety = Effect.fnUntraced(function* (
+    row: ProjectRow,
+    repo: string,
+    directory: string,
+    contract: BoardCi.Contract,
+    bundle: typeof BoardBundleTable.$inferSelect,
+    rollup: Parameters<typeof failures>[1],
+  ) {
+    const found = yield* failures(repo, rollup, contract)
+    const sha10 = bundle.base_sha.slice(0, 10)
+    if (found.infra) return yield* close(row, repo, bundle, `failed on infrastructure on ${contract.base} at ${sha10}`, "infra")
+    const template = contract.scoped.tests
+    const scoped = runnable(contract, found) && template !== null ? yield* scope(directory, template, bundle, found.groups) : undefined
+    if (scoped === "flaky" || scoped === "code")
+      return yield* close(row, repo, bundle, `found ${found.files.join(", ")} passing on ${contract.base} at ${sha10} when rerun`, "probe-green")
+    // A red with no scoped failing tests has no fix card to cut, and a `base-red` without one waits for a base that only
+    // the queue moves, so it pauses for Maestro instead.
+    if (scoped === undefined || template === null) {
+      yield* Effect.logWarning(`integration: ${row.key} probe found ${contract.base} red at ${sha10}, and its failures are not scoped tests; the queue is paused until Maestro retries it`)
+      return yield* close(row, repo, bundle, `found ${contract.base} red at ${sha10}; the queue is paused`, "paused")
+    }
+    const culprit = yield* bisect(row, directory, template, bundle, found.groups)
+    const fix = yield* fixCard(row, contract.base, culprit, found.groups)
+    yield* deps.quiet((tx) => tx.update(BoardBundleTable).set({ culprit: culprit ?? null, failing: found.groups, fix_issue_id: fix }).where(eq(BoardBundleTable.id, bundle.id)).run())
+    yield* Effect.logWarning(`integration: ${row.key} safety run found ${contract.base} red at ${sha10}${culprit ? `, first failing at ${culprit.slice(0, 10)}` : ""}; ${pausing(contract, found.groups)}`)
+    return yield* close(row, repo, bundle, `found ${contract.base} red at ${sha10}`, "base-red")
+  })
+
+  const close = Effect.fnUntraced(function* (
+    row: ProjectRow,
+    repo: string,
+    bundle: typeof BoardBundleTable.$inferSelect,
+    why: string,
+    status: typeof BoardBundleTable.$inferSelect.status = "dissolved",
+  ) {
+    yield* deps.quiet((tx) => tx.update(BoardBundleTable).set({ status }).where(eq(BoardBundleTable.id, bundle.id)).run())
+    if (bundle.pr_number)
+      yield* deps.gh(["pr", "close", String(bundle.pr_number), "--repo", repo, "--delete-branch", "--comment", `Bundle ${row.key}-B${bundle.n} ${why}.`])
+  })
+
+  /** Gives each issue back to Review with `text` and releases its queue row; the caller decides the bundle's fate. */
+  const eject = Effect.fnUntraced(function* (row: ProjectRow, bundle: typeof BoardBundleTable.$inferSelect, issues: ReadonlyArray<IssueRow>, text: string, reason: string) {
+    const back = yield* deps.quiet((tx) =>
+      Effect.forEach(issues, (issue) =>
+        Effect.gen(function* () {
+          yield* insertNote(tx, row, issue, text)
+          yield* tx
+            .update(BoardAttemptTable)
+            .set({ outcome: "ejected" })
+            .where(and(eq(BoardAttemptTable.issue_id, issue.id), isNull(BoardAttemptTable.outcome)))
+            .run()
+          yield* BoardSnapshot.dispatch(tx, issue, { cause: `ejected:${row.key}-B${bundle.n}` })
+          return yield* release(tx, row, issue, "github", "bundle.dissolve", reason)
+        }),
+      ),
+    )
+    yield* Effect.forEach(back, deps.publish, { discard: true })
+  })
+
+  /** Section 6.3: a dissolved bundle's cards stay held until Maestro releases them one at a time with `board_bundle`. */
+~~~~
+
+```json
+{"first_line":464,"last_line":493,"bytes":1463,"sha256":"919b24722e32009eafe7dcf7b55de419e1eb0104c7cf518f43fefb0bd1e82b97"}
+```
+
+~~~~typescript
+    )
+    yield* Effect.forEach(
+      members,
+      (item) => note(row, item.issue, `Bundle ${row.key}-B${bundle.n} ${why}; it dissolved and this card is held until Maestro releases it with board_bundle.`),
+      { discard: true },
+    )
+    yield* Effect.logWarning(`integration: ${row.key}-B${bundle.n} ${why}; its cards are held. Release them one at a time with board_bundle, dequeue a suspect, or send F to jimmy.`)
+    return yield* close(row, repo, bundle, why)
+  })
+
+  return { settle, dissolve, close }
+}
+
+// F runs scoped only when every failing file is a bun test file under a package group; otherwise base is judged by its checks or a probe.
+function runnable(
+  contract: BoardCi.Contract,
+  found: { readonly files: ReadonlyArray<string>; readonly groups: ReadonlyArray<{ readonly files: ReadonlyArray<string> }> },
+) {
+  return (
+    contract.scoped.tests !== null &&
+    found.groups.length > 0 &&
+    found.files.every((file) => found.groups.some((group) => group.files.includes(file.replaceAll("\\", "/"))))
+  )
+}
+
+// Section 7.3: with lanes a base red pauses only the lanes whose packages overlap the failing ones.
+function pausing(contract: BoardCi.Contract, groups: ReadonlyArray<{ readonly package: string }>) {
+  if (!contract.lanes) return "only its fix card is cut until it is green"
+  return `lanes touching ${[...new Set(groups.map((group) => group.package))].join(", ")} pause until its fix card lands; disjoint lanes keep landing`
+}
+~~~~
+
+## AUT3-C20
+
+```json
+{
+  "block_id": "AUT3-C20",
+  "type": "literal_source_chain",
+  "canonical_request_namespace": "J1",
+  "requests": [
+    "RE-AUT3-05"
+  ],
+  "body_anchors": [
+    "B09"
+  ],
+  "requested_subject": "Classificação logs/base, 2 falhas base/3 passes head, prefix/isolation/bisect/fix/probes/flaky",
+  "path": "packages/core/src/board/queue-red.ts",
+  "archive": "sources/packages/core/src/board/queue-red.ts",
+  "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_git_blob_sha": "57bcf02fe9c1eea69282f53a0c97799a89aacb5f",
+  "source_sha256": "c9a29e07575731d8becdcfea5e2571c018b294c4c4e88b1de078a17c1d61e5c8",
+  "source_bytes": 23316,
+  "required_source_line_ranges": [
+    [
+      1,
+      472
+    ]
+  ],
+  "prior_literal_ranges": [
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "B09",
+      "source_path": "packages/core/src/board/queue-red.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "57bcf02fe9c1eea69282f53a0c97799a89aacb5f",
+      "source_sha256": "c9a29e07575731d8becdcfea5e2571c018b294c4c4e88b1de078a17c1d61e5c8",
+      "first_line": 48,
+      "last_line": 82,
+      "excerpt_bytes": 2179,
+      "excerpt_sha256": "1f852f823862a62a06c724d64e758869d4d65d02e994101c520ea8da4f7f2fe5",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 144774,
+      "literal_content_byte_end_exclusive": 146953
+    }
+  ]
+}
+```
+
+```json
+{"first_line":1,"last_line":47,"bytes":2529,"sha256":"5fe8bce02b9b8dfb76eb244b0a2e06951a741a423b595d6e8e57d3a9d61de6c2"}
+```
+
+~~~~typescript
+import fs from "fs/promises"
+import os from "os"
+import path from "path"
+import { and, desc, eq, inArray, isNull, ne, notExists, or, sql } from "drizzle-orm"
+import { Clock, Effect, Option } from "effect"
+import { ChildProcess } from "effect/unstable/process"
+import { Board } from "@orchestra/schema/board"
+import { which } from "../util/which"
+import { BoardCi } from "./ci"
+import {
+  BoardBundleMemberTable,
+  BoardBundleTable,
+  BoardDependencyTable,
+  BoardFlakeTable,
+  BoardIssueTable,
+  BoardProjectTable,
+} from "./sql"
+import { changed, endOf, log } from "./shared"
+import type { IssueRow, ProjectRow } from "./shared"
+import { AUTHOR, decodeRuns, dispatched, FAILED, gating, INFRA, judge, nextBundle } from "./queue-shared"
+import type { Context, Rollup } from "./queue-shared"
+import type { makeRecord } from "./queue-record"
+
+/** The red path of a bundle: what failed, whether base is red, the scoped reruns, the culprit search, the fix card and the base probe. `note` comes from the record module. */
+export function makeRed(ctx: Context & Pick<ReturnType<typeof makeRecord>, "note">) {
+  const deps = ctx.deps
+  const git = ctx.git
+  const note = ctx.note
+
+  /**
+   * Section 6.3: the failing set F from the failed jobs' logs and the failing bun files of each turbo package group, and
+   * whether the red is infrastructure. A job counts as
+   * infrastructure when it was cancelled, timed out or never started, when its log names no failing file and shows a step
+   * that timed out or was cancelled (GitHub reports a step's `timeout-minutes` as a plain failure), or when its log has no
+   * failing file and lacks the contract's control line, which only the jobs it names print; a job whose log cannot be
+   * read counts as code.
+   */
+  const failures = Effect.fnUntraced(function* (repo: string, rollup: typeof Rollup.Type["statusCheckRollup"], contract: BoardCi.Contract) {
+    const failed = gating(rollup, contract).filter((check) => check.done && FAILED.has(check.result))
+    const read = yield* Effect.forEach(failed, (check) =>
+      Effect.gen(function* () {
+        if (INFRA.has(check.result)) return { files: [] as string[], groups: [], infra: true }
+        const job = check.url.match(/\/job\/(\d+)/)?.[1]
+        const log = job ? yield* deps.gh(["api", `repos/${repo}/actions/jobs/${job}/logs`]) : undefined
+        const text = log?.exitCode === 0 ? log.stdout.replace(/^\S+Z /gm, "") : ""
+        const files = text ? BoardCi.failing(text) : []
+        const control = contract.full.control
+~~~~
+
+```json
+{"first_line":83,"last_line":472,"bytes":18608,"sha256":"5fe8b542c0eda402f8793e807873173ae6800ac78965120c6e36f4d0591a17eb"}
+```
+
+~~~~typescript
+
+  /**
+   * Whether `sha`'s tree is one the whole suite already passed on: the head of a merged bundle that ran the whole suite,
+   * or a green base probe or safety run. A fast-forward lands the bundle head itself, so base then carries the tree its
+   * gate tested and needs no probe. A fix card's bundle was judged only on F, and an accepted flaky bundle shipped red, so
+   * neither counts. The newest twenty runs are enough: an older tree is rarely base again.
+   */
+  const greenTree = Effect.fnUntraced(function* (row: ProjectRow, directory: string, sha: string) {
+    const runs = yield* deps.quiet((tx) =>
+      tx
+        .select({ status: BoardBundleTable.status, base_sha: BoardBundleTable.base_sha, tree_sha: BoardBundleTable.tree_sha })
+        .from(BoardBundleTable)
+        .where(
+          and(
+            eq(BoardBundleTable.project_id, row.id),
+            or(
+              and(
+                eq(BoardBundleTable.status, "merged"),
+                isNull(BoardBundleTable.packages),
+                isNull(BoardBundleTable.fix_issue_id),
+                notExists(tx.select({ id: BoardFlakeTable.bundle_id }).from(BoardFlakeTable).where(eq(BoardFlakeTable.bundle_id, BoardBundleTable.id))),
+              ),
+              eq(BoardBundleTable.status, "probe-green"),
+            ),
+          ),
+        )
+        .orderBy(desc(BoardBundleTable.n))
+        .limit(20)
+        .all(),
+    )
+    if (runs.length === 0) return false
+    const probes = runs.filter((run) => run.status === "probe-green").map((run) => `${run.base_sha}^{tree}`)
+    const read = yield* git(directory, ["rev-parse", `${sha}^{tree}`, ...probes])
+    if (read.code !== 0) return false
+    const trees = read.out.split("\n")
+    const tree = trees[0]
+    return trees.slice(1).includes(tree) || runs.some((run) => run.status === "merged" && run.tree_sha === tree)
+  })
+
+  /** Runs F's groups with the scoped command in `cwd`; true when every group passes. */
+  const runGroups = (cwd: string, template: string, branch: string, groups: ReadonlyArray<{ readonly package: string; readonly files: ReadonlyArray<string> }>) =>
+    Effect.forEach(groups, (group) =>
+      Effect.gen(function* () {
+        const argv = yield* BoardCi.command(template, group, branch).pipe(Effect.orElseSucceed(() => [] as string[]))
+        if (argv.length === 0) return false
+        const result = yield* deps.proc
+          .run(ChildProcess.make(which(argv[0] ?? "", deps.env ?? process.env) ?? argv[0] ?? "", argv.slice(1), { cwd, env: deps.env, extendEnv: true, stdin: "ignore" }), {
+            combineOutput: true,
+            maxOutputBytes: 16 * 1024 * 1024,
+            timeout: "90 minutes",
+          })
+          .pipe(Effect.result)
+        return result._tag === "Success" && result.success.exitCode === 0
+      }),
+    ).pipe(Effect.map((passes) => passes.every(Boolean)))
+
+  /**
+   * Section 6.3 step 2: runs F on base and on the bundle head in parallel. F belongs to base when it fails there twice;
+   * three passes on the head make the bundle flaky; a head failure is code. Undefined when a checkout fails.
+   */
+  const scope = Effect.fnUntraced(function* (
+    directory: string,
+    template: string,
+    bundle: typeof BoardBundleTable.$inferSelect,
+    groups: ReadonlyArray<{ readonly package: string; readonly files: ReadonlyArray<string> }>,
+  ) {
+    // Checkouts are added one at a time: concurrent `git worktree add` on one repository can race on its lock files.
+    const checkouts = yield* Effect.forEach([bundle.base_sha, bundle.head_sha], (sha) =>
+      Effect.gen(function* () {
+        const scratch = yield* Effect.promise(() => fs.mkdtemp(path.join(os.tmpdir(), `orchestra-scope-${bundle.n}-`)))
+        const added = yield* git(directory, ["worktree", "add", "--quiet", "--detach", scratch, sha])
+        if (added.code === 0) return scratch
+        yield* Effect.promise(() => fs.rm(scratch, { recursive: true, force: true }))
+        return undefined
+      }),
+    )
+    const base = checkouts[0]
+    const head = checkouts[1]
+    const outcome =
+      base && head
+        ? yield* Effect.all(
+            [
+              runGroups(base, template, bundle.branch, groups).pipe(Effect.flatMap((pass) => (pass ? Effect.succeed(true) : runGroups(base, template, bundle.branch, groups)))),
+              runGroups(head, template, bundle.branch, groups).pipe(
+                Effect.flatMap((pass) => (pass ? runGroups(head, template, bundle.branch, groups) : Effect.succeed(false))),
+                Effect.flatMap((pass) => (pass ? runGroups(head, template, bundle.branch, groups) : Effect.succeed(false))),
+              ),
+            ],
+            { concurrency: 2 },
+          )
+        : undefined
+    yield* Effect.forEach(checkouts, (scratch) => (scratch ? git(directory, ["worktree", "remove", "--force", scratch]) : Effect.void), { discard: true })
+    if (!outcome) return undefined
+    return !outcome[0] ? ("base" as const) : outcome[1] ? ("flaky" as const) : ("code" as const)
+  })
+
+  /** Runs F on base plus `heads` merged in order; false when a merge conflicts or a group fails, undefined when the checkout fails. */
+  const tryOn = Effect.fnUntraced(function* (
+    directory: string,
+    template: string,
+    bundle: typeof BoardBundleTable.$inferSelect,
+    groups: ReadonlyArray<{ readonly package: string; readonly files: ReadonlyArray<string> }>,
+    heads: ReadonlyArray<string>,
+  ) {
+    const scratch = yield* Effect.promise(() => fs.mkdtemp(path.join(os.tmpdir(), `orchestra-isolate-${bundle.n}-`)))
+    const added = yield* git(directory, ["worktree", "add", "--quiet", "--detach", scratch, bundle.base_sha])
+    if (added.code !== 0) {
+      yield* Effect.promise(() => fs.rm(scratch, { recursive: true, force: true }))
+      return undefined
+    }
+    return yield* Effect.gen(function* () {
+      for (const head of heads) {
+        const merged = yield* git(scratch, [...AUTHOR, "merge", "--no-ff", "--quiet", "-m", "isolate", head])
+        if (merged.code !== 0) return false
+      }
+      return yield* runGroups(scratch, template, bundle.branch, groups)
+    }).pipe(Effect.ensuring(git(directory, ["worktree", "remove", "--force", scratch])))
+  })
+
+  /**
+   * Section 6.3 steps 3-6: the culprits of a code red whose failing tests F ran scoped. Each candidate runs alone on base
+   * with its in-bundle dependencies; when none fails alone, a binary search over the member prefixes finds the member
+   * whose addition turns red, with the members merged before it in `after`. Undefined when a checkout fails; an empty
+   * `culprits` means no culprit.
+   */
+  const isolate = Effect.fnUntraced(function* (
+    directory: string,
+    template: string,
+    bundle: typeof BoardBundleTable.$inferSelect,
+    groups: ReadonlyArray<{ readonly package: string; readonly files: ReadonlyArray<string> }>,
+    members: ReadonlyArray<{ issue: IssueRow; member: typeof BoardBundleMemberTable.$inferSelect }>,
+  ) {
+    const failing = groups.flatMap((group) => group.files)
+    const ids = members.map((item) => item.issue.id)
+    const links = yield* deps.quiet((tx) =>
+      tx
+        .select()
+        .from(BoardDependencyTable)
+        .where(and(inArray(BoardDependencyTable.issue_id, ids), inArray(BoardDependencyTable.depends_on_id, ids)))
+        .all(),
+    )
+    const diffs = yield* Effect.forEach(members, (item) =>
+      git(directory, ["diff", "--name-only", bundle.base_sha, item.member.head_sha]).pipe(
+        Effect.map((diff) => ({ item, touches: diff.out.split("\n").some((file) => failing.includes(file)) })),
+      ),
+    )
+    const touching = diffs.flatMap((entry) => (entry.touches ? [entry.item] : []))
+    const candidates = touching.length > 0 ? touching : members
+    // One at a time: concurrent `git worktree add` on one repository races on its lock files.
+    const singles = yield* Effect.forEach(
+      candidates,
+      (item) => {
+        const after = members.filter((dep) => links.some((link) => link.issue_id === item.issue.id && link.depends_on_id === dep.issue.id))
+        return tryOn(directory, template, bundle, groups, [...after.map((dep) => dep.member.head_sha), item.member.head_sha])
+      },
+      { concurrency: 1 },
+    )
+    if (singles.includes(undefined)) return undefined
+    const culprits = candidates.filter((_, index) => singles[index] === false)
+    if (culprits.length > 0) return { culprits: culprits.map((item) => item.issue), after: [] }
+    let lo = 1
+    let hi = members.length
+    while (lo < hi) {
+      const mid = Math.floor((lo + hi) / 2)
+      const prefix = yield* tryOn(directory, template, bundle, groups, members.slice(0, mid).map((item) => item.member.head_sha))
+      if (prefix === undefined) return undefined
+      if (prefix === false) hi = mid
+      if (prefix === true) lo = mid + 1
+    }
+    // The full prefix was never run by the search: when the search reaches it, it decides whether there is a culprit at all.
+    if (lo === members.length) {
+      const whole = yield* tryOn(directory, template, bundle, groups, members.map((item) => item.member.head_sha))
+      if (whole === undefined) return undefined
+      if (whole) return { culprits: [], after: [] }
+    }
+    return { culprits: members.slice(lo - 1, lo).map((item) => item.issue), after: members.slice(0, lo - 1).map((item) => item.issue) }
+  })
+
+  /**
+   * Section 6.8: the first-parent commit between the last green whole-suite run and the red base where F starts failing:
+   * a merged bundle that ran the whole suite, or a green base probe or safety run. A lane bundle ran only its packages,
+   * so it is never the good point. Undefined when there is no such run to start from or a checkout fails.
+   */
+  const bisect = Effect.fnUntraced(function* (
+    row: ProjectRow,
+    directory: string,
+    template: string,
+    bundle: typeof BoardBundleTable.$inferSelect,
+    groups: ReadonlyArray<{ readonly package: string; readonly files: ReadonlyArray<string> }>,
+  ) {
+    const found = yield* deps.quiet((tx) =>
+      tx
+        .select({ status: BoardBundleTable.status, base_sha: BoardBundleTable.base_sha, head_sha: BoardBundleTable.head_sha })
+        .from(BoardBundleTable)
+        .where(
+          and(
+            eq(BoardBundleTable.project_id, row.id),
+            or(and(eq(BoardBundleTable.status, "merged"), isNull(BoardBundleTable.packages)), eq(BoardBundleTable.status, "probe-green")),
+          ),
+        )
+        .orderBy(desc(BoardBundleTable.n))
+        .get(),
+    )
+    if (!found) return undefined
+    const good = found.status === "merged" ? found.head_sha : found.base_sha
+    if ((yield* git(directory, ["merge-base", "--is-ancestor", good, bundle.base_sha])).code !== 0) return undefined
+    const commits = (yield* git(directory, ["rev-list", "--first-parent", "--reverse", `${good}..${bundle.base_sha}`])).out.split("\n").filter(Boolean)
+    if (commits.length === 0) return undefined
+    const scratch = yield* Effect.promise(() => fs.mkdtemp(path.join(os.tmpdir(), `orchestra-bisect-${bundle.n}-`)))
+    const added = yield* git(directory, ["worktree", "add", "--quiet", "--detach", scratch, bundle.base_sha])
+    if (added.code !== 0) {
+      yield* Effect.promise(() => fs.rm(scratch, { recursive: true, force: true }))
+      return undefined
+    }
+    return yield* Effect.gen(function* () {
+      // The last commit is known to fail, so the search only narrows within the list.
+      let lo = 0
+      let hi = commits.length - 1
+      while (lo < hi) {
+        const mid = Math.floor((lo + hi) / 2)
+        if ((yield* git(scratch, ["checkout", "--quiet", "--detach", commits[mid] ?? ""])).code !== 0) return undefined
+        const passes = yield* runGroups(scratch, template, bundle.branch, groups)
+        if (passes) lo = mid + 1
+        if (!passes) hi = mid
+      }
+      return commits[lo]
+    }).pipe(Effect.ensuring(git(directory, ["worktree", "remove", "--force", scratch])))
+  })
+
+  /** Section 6.8: the open fix card for a red base, reused while an earlier one has not shipped. */
+  const fixCard = Effect.fnUntraced(function* (
+    row: ProjectRow,
+    base: string,
+    culprit: string | undefined,
+    groups: ReadonlyArray<{ readonly package: string; readonly files: ReadonlyArray<string> }>,
+  ) {
+    const open = yield* deps.quiet((tx) =>
+      tx
+        .select({ id: BoardIssueTable.id })
+        .from(BoardBundleTable)
+        .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardBundleTable.fix_issue_id))
+        .where(and(eq(BoardBundleTable.project_id, row.id), ne(BoardIssueTable.stage, "shipped"), ne(BoardIssueTable.stage, "cut")))
+        .orderBy(desc(BoardBundleTable.n))
+        .get(),
+    )
+    if (open) return open.id
+    const files = groups.flatMap((group) => group.files).join(", ")
+    const title = `Fix ${base}: ${files} fail${culprit ? ` since ${culprit.slice(0, 10)}` : ""}`
+    const body = `${base} fails ${files}.${culprit ? ` Bisect found ${culprit} as the first failing commit.` : " The queue has no green point to bisect from."} The queue cuts only this card until ${base} is green; it rides alone and merges when these tests pass.`
+    const created = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        // `row` may be stale: the next issue number comes from a fresh read.
+        const project = yield* tx.select().from(BoardProjectTable).where(eq(BoardProjectTable.id, row.id)).get()
+        if (!project) return yield* Effect.die(`${row.key} has no project row to file its fix card in.`)
+        const id = Board.IssueID.create()
+        const position = yield* endOf(tx, row.id, "backlog")
+        const entered = yield* Clock.currentTimeMillis
+        yield* tx
+          .insert(BoardIssueTable)
+          .values({
+            id,
+            project_id: row.id,
+            number: project.next_issue_number,
+            title,
+            body,
+            type: "bug",
+            epic_id: null,
+            stage: "backlog",
+            position,
+            estimate: null,
+            seat: null,
+            session_id: null,
+            branch: null,
+            pr_number: null,
+            attempts: 0,
+            crash_reason: null,
+            guardrail_rule: null,
+            record: null,
+            stage_entered_at: entered,
+            github_dirty: project.github_repo !== null,
+          })
+          .run()
+        yield* tx
+          .update(BoardProjectTable)
+          .set({ next_issue_number: project.next_issue_number + 1 })
+          .where(eq(BoardProjectTable.id, row.id))
+          .run()
+        const activity = yield* log(tx, {
+          project: row.id,
+          issue: id,
+          actor: "github",
+          action: "issue.create",
+          reason: "base is red",
+          after: {
+            number: project.next_issue_number,
+            title,
+            body,
+            type: "bug",
+            stage: "backlog",
+            position,
+            stage_entered_at: entered,
+          },
+        })
+        return { id, changed: changed(row.id, activity, id) }
+      }),
+    )
+    yield* deps.publish(created.changed)
+    return created.id
+  })
+
+  /**
+   * Runs the whole suite on base itself: an empty commit on `sha`, opened as a bundle with no members. A phase 1 probe
+   * (packages null) gates on the full label; a safety run (section 7.3, packages []) dispatches the lane workflows with
+   * no package filter, which run every package, and overlaps no lane while it runs.
+   */
+  const probe = Effect.fnUntraced(function* (
+    row: ProjectRow,
+    repo: string,
+    directory: string,
+    contract: BoardCi.Contract,
+    sha: string,
+    body: string,
+    packages: ReadonlyArray<string> | null,
+  ) {
+    const head = (yield* git(directory, [...AUTHOR, "commit-tree", `${sha}^{tree}`, "-p", sha, "-m", "chore(queue): base probe"])).out
+    if (!head) return
+    const n = yield* deps.quiet((tx) => nextBundle(tx, row.id))
+    const branch = `bundle-${row.key}-${n}`
+    const pushed = yield* git(directory, ["push", "--quiet", "--force", "origin", `${head}:refs/heads/${branch}`])
+    if (pushed.code !== 0) return
+    const dispatch = dispatched({ packages }, contract)
+    const opened = yield* deps.gh(
+      [
+        "pr",
+        "create",
+        "--repo",
+        repo,
+        "--base",
+        contract.base,
+        "--head",
+        branch,
+        "--title",
+        `chore(queue): base probe ${row.key}-B${n}`,
+        "--body-file",
+        "-",
+        ...(contract.full.label && !dispatch ? ["--label", contract.full.label] : []),
+      ],
+      body,
+    )
+    const number = Number(opened.stdout.match(/\/pull\/(\d+)/)?.[1] ?? 0) || null
+    if (dispatch)
+      yield* Effect.forEach(contract.lanes?.workflows ?? [], (workflow) => deps.gh(["workflow", "run", workflow, "--repo", repo, "--ref", branch]), {
+        discard: true,
+      })
+    yield* deps.quiet((tx) =>
+      tx
+        .insert(BoardBundleTable)
+        .values({ id: Board.BundleID.create(), project_id: row.id, n, branch, pr_number: number, base_sha: sha, head_sha: head, tree_sha: "", status: "open", packages })
+        .run(),
+    )
+  })
+
+  /** Section 6.4: a flaky bundle keeps its PR open and its members queued until Maestro merges or retries it. */
+  const flaky = Effect.fnUntraced(function* (row: ProjectRow, bundle: typeof BoardBundleTable.$inferSelect, issues: ReadonlyArray<IssueRow>, tests: ReadonlyArray<string>) {
+    const now = yield* Clock.currentTimeMillis
+    yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        yield* tx.update(BoardBundleTable).set({ status: "flaky" }).where(eq(BoardBundleTable.id, bundle.id)).run()
+        yield* Effect.forEach(
+          tests,
+          (test) =>
+            tx
+              .insert(BoardFlakeTable)
+              .values({ project_id: row.id, test, bundle_id: bundle.id, first_seen: now, count: 1 })
+              .onConflictDoUpdate({ target: [BoardFlakeTable.project_id, BoardFlakeTable.test], set: { bundle_id: bundle.id, count: sql`${BoardFlakeTable.count} + 1` } })
+              .run(),
+          { discard: true },
+        )
+      }),
+    )
+    yield* Effect.forEach(
+      issues,
+      (issue) => note(row, issue, `Bundle ${row.key}-B${bundle.n} went red, and ${tests.join(", ")} then passed three scoped reruns of its head: it is flaky. Maestro merges it or retries it; this card stays queued.`),
+      { discard: true },
+    )
+    yield* Effect.logWarning(`integration: ${row.key}-B${bundle.n} flaky: ${tests.join(", ")} failed, then passed on rerun. Merge or retry.`)
+  })
+
+  return { failures, baseState, scope, tryOn, isolate, bisect, fixCard, probe, flaky }
+}
+~~~~
+
+## AUT3-C21
+
+```json
+{
+  "block_id": "AUT3-C21",
+  "type": "literal_source_chain",
+  "canonical_request_namespace": "J1",
+  "requests": [
+    "RE-AUT3-06"
+  ],
+  "body_anchors": [
+    "B11"
+  ],
+  "requested_subject": "Índice/scanner/remote/ref/push/registro/restoreworktree e lifecycle de attempts",
+  "path": "packages/core/src/board/snapshot.ts",
+  "archive": "sources/packages/core/src/board/snapshot.ts",
+  "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_git_blob_sha": "cc39cdec652c05bf969da8543335da1703a663fc",
+  "source_sha256": "8939a3de7e1123e7e650144adb79dfe5828706c73e6b34ab942bcc2edb626012",
+  "source_bytes": 15010,
+  "required_source_line_ranges": [
+    [
+      1,
+      309
+    ]
+  ],
+  "prior_literal_ranges": [
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "B11",
+      "source_path": "packages/core/src/board/snapshot.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "cc39cdec652c05bf969da8543335da1703a663fc",
+      "source_sha256": "8939a3de7e1123e7e650144adb79dfe5828706c73e6b34ab942bcc2edb626012",
+      "first_line": 75,
+      "last_line": 93,
+      "excerpt_bytes": 949,
+      "excerpt_sha256": "3e59c45a4ca740ced13176f39a76d87a9adab7d8553784101cd6a0a2b1621795",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 152210,
+      "literal_content_byte_end_exclusive": 153159
+    },
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "B11",
+      "source_path": "packages/core/src/board/snapshot.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "cc39cdec652c05bf969da8543335da1703a663fc",
+      "source_sha256": "8939a3de7e1123e7e650144adb79dfe5828706c73e6b34ab942bcc2edb626012",
+      "first_line": 208,
+      "last_line": 220,
+      "excerpt_bytes": 860,
+      "excerpt_sha256": "e29646c08bdeb2e59e665f7aa8ad4a6c2be83c1ab315923a4402b334128884db",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 153292,
+      "literal_content_byte_end_exclusive": 154152
+    }
+  ]
+}
+```
+
+```json
+{"first_line":1,"last_line":74,"bytes":3728,"sha256":"0595617a6025ff64a17462aa90b820e0900bd1ec1246a35deadf8df40e61061a"}
+```
+
+~~~~typescript
+export * as BoardSnapshot from "./snapshot"
+
+import { existsSync } from "fs"
+import fs from "fs/promises"
+import os from "os"
+import path from "path"
+import { and, desc, eq, isNull } from "drizzle-orm"
+import { Clock, Effect } from "effect"
+import { ChildProcess } from "effect/unstable/process"
+import type { Board } from "@orchestra/schema/board"
+import type { AppProcess } from "../process"
+import { BoardAttemptTable, BoardIssueTable, BoardProjectTable } from "./sql"
+import { gitRunner, worktree } from "./shared"
+import type { Fields, IssueRow, ProjectRow, Tx } from "./shared"
+import { BoardThread } from "./thread"
+
+// Push early (docs/specs/maestro-lead/merge-queue.md section 8.1): the host writes a card's worktree to a snapshot
+// commit through a temporary index and pushes it to refs/orchestra/wip/<KEY>/a<n>. The worktree, its index and its
+// HEAD stay untouched, so seats still never commit.
+
+export interface Deps {
+  readonly quiet: <A>(work: (tx: Tx) => Effect.Effect<A, unknown>) => Effect.Effect<A>
+  readonly proc: AppProcess.Interface
+  /** The gitleaks command (executable and leading arguments), or undefined when none can be had; then no snapshot is pushed. */
+  readonly scanner: Effect.Effect<ReadonlyArray<string> | undefined>
+  /** The project's snapshot remote from its CI contract; a failure blocks the push rather than guess a remote. */
+  readonly remote: (directory: string, project: ProjectRow) => Effect.Effect<string, { readonly message: string }>
+  readonly env?: NodeJS.ProcessEnv
+}
+
+export type Attempt = typeof BoardAttemptTable.$inferSelect
+
+/**
+ * What one snapshot did. `blocked` says why nothing was pushed. `missing` means the worktree is gone with no snapshot
+ * to restore it from; `restored` means a gone worktree was re-created at its snapshot commit (spec 8.5).
+ */
+export type Result =
+  | { readonly status: "pushed" | "unchanged"; readonly ref: string; readonly sha: string }
+  | { readonly status: "blocked"; readonly ref: string; readonly reason: string }
+  | { readonly status: "missing"; readonly ref: string; readonly worktree: string | null }
+  | { readonly status: "restored"; readonly ref: string; readonly worktree: string; readonly sha: string }
+  | { readonly status: "none" }
+
+const IDENTITY = {
+  GIT_AUTHOR_NAME: "Orchestra",
+  GIT_AUTHOR_EMAIL: "orchestra@localhost",
+  GIT_COMMITTER_NAME: "Orchestra",
+  GIT_COMMITTER_EMAIL: "orchestra@localhost",
+}
+
+export function make(deps: Deps) {
+  const git = gitRunner(deps.proc, deps.env)
+  /** The cards already warned about a gone worktree, so the 10 minute sweep says it once, not on every pass. */
+  const warned = new Set<Board.IssueID>()
+
+  /** The worktree's tree as it stands, written from a copy of its index so the real index stays untouched. */
+  const tree = Effect.fnUntraced(function* (cwd: string) {
+    const index = yield* git(cwd, ["rev-parse", "--path-format=absolute", "--git-path", "index"])
+    return yield* Effect.acquireUseRelease(
+      Effect.promise(() => fs.mkdtemp(path.join(os.tmpdir(), "orchestra-snapshot-"))),
+      (temporary) =>
+        Effect.gen(function* () {
+          const env = { GIT_INDEX_FILE: path.join(temporary, "index") }
+          yield* Effect.promise(() => fs.copyFile(index.out, env.GIT_INDEX_FILE).catch(() => undefined))
+          const added = yield* git(cwd, ["add", "-A"], env)
+          const written = yield* git(cwd, ["write-tree"], env)
+          if (added.code !== 0 || written.code !== 0) return undefined
+          return written.out
+        }),
+      (temporary) => Effect.promise(() => fs.rm(temporary, { recursive: true, force: true })),
+    )
+  })
+
+  /** Scans the commits `from..to` with gitleaks; anything but a clean exit blocks the push. */
+~~~~
+
+```json
+{"first_line":94,"last_line":207,"bytes":5980,"sha256":"861feb2349b087a4fd1c7dc52ed2be2718ba4924897dcb44500e91492fd65807"}
+```
+
+~~~~typescript
+
+  const update = (attempt: Attempt, set: Partial<typeof BoardAttemptTable.$inferInsert>) =>
+    deps.quiet((tx) =>
+      tx
+        .update(BoardAttemptTable)
+        .set(set)
+        .where(and(eq(BoardAttemptTable.issue_id, attempt.issue_id), eq(BoardAttemptTable.n, attempt.n)))
+        .run(),
+    )
+
+  const find = (issue: Board.IssueID) =>
+    deps.quiet((tx) =>
+      Effect.gen(function* () {
+        const row = yield* tx
+          .select({ issue: BoardIssueTable, project: BoardProjectTable })
+          .from(BoardIssueTable)
+          .innerJoin(BoardProjectTable, eq(BoardIssueTable.project_id, BoardProjectTable.id))
+          .where(eq(BoardIssueTable.id, issue))
+          .get()
+        if (!row) return undefined
+        const attempt = yield* open(tx, issue)
+        return { ...row, attempt, directory: yield* worktree(tx, row.project) }
+      }),
+    )
+
+  /** The card's worktree: the one recorded on the attempt, else the worktree that has the card's branch checked out. */
+  const locate = Effect.fnUntraced(function* (directory: string | null, issue: IssueRow, attempt: Attempt) {
+    if (attempt.worktree) return attempt.worktree
+    if (!directory || !issue.branch) return null
+    const listed = yield* git(directory, ["worktree", "list", "--porcelain"])
+    // git lists Windows paths with forward slashes; resolve keeps the recorded path in the platform's form.
+    const listedPath = listed.out
+      .split("\n\n")
+      .map((block) => block.split("\n"))
+      .find((lines) => lines.includes(`branch refs/heads/${issue.branch}`))
+      ?.find((line) => line.startsWith("worktree "))
+      ?.slice("worktree ".length)
+    const found = listedPath && path.resolve(listedPath)
+    if (found) yield* update(attempt, { worktree: found })
+    return found ?? null
+  })
+
+  /**
+   * Re-creates a gone worktree on the card's branch, then writes the snapshot's tree over its files only, so HEAD and
+   * index are the branch's again and the work in progress shows as uncommitted, as before the loss (section 8.1).
+   * The branch is checked out detached when another worktree holds it.
+   */
+  const restore = Effect.fnUntraced(function* (directory: string, project: ProjectRow, branch: string, cwd: string, sha: string, ref: string) {
+    const remote = yield* deps.remote(directory, project).pipe(Effect.orElseSucceed(() => undefined))
+    if (!remote) return false
+    yield* git(directory, ["worktree", "prune"])
+    const fetched = yield* git(directory, ["fetch", "--quiet", "--no-tags", remote, ref])
+    if (fetched.code !== 0) return false
+    const added =
+      (yield* git(directory, ["worktree", "add", cwd, branch])).code === 0 ||
+      (yield* git(directory, ["worktree", "add", "--detach", cwd, branch])).code === 0
+    if (!added) return false
+    // No-overlay restore also deletes the files the snapshot lacks.
+    return (yield* git(cwd, ["restore", `--source=${sha}`, "--worktree", "--", "."])).code === 0
+  })
+
+  const push = Effect.fnUntraced(function* (issue: Board.IssueID) {
+    const found = yield* find(issue)
+    const attempt = found?.attempt
+    if (!found || !attempt) return { status: "none" } satisfies Result
+    const ref = `refs/orchestra/wip/${found.project.key}-${found.issue.number}/a${attempt.n}`
+    const cwd = yield* locate(found.directory, found.issue, attempt)
+    if (!cwd || !existsSync(cwd)) {
+      const sha = attempt.snapshot_sha
+      const branch = found.issue.branch
+      if (cwd && sha && branch && found.directory && (yield* restore(found.directory, found.project, branch, cwd, sha, ref)))
+        return { status: "restored", ref, worktree: cwd, sha } satisfies Result
+      // A card with no worktree on record never had one to lose (not started, or works outside one): nothing drifted.
+      if (!cwd) return { status: "missing", ref, worktree: cwd } satisfies Result
+      if (!warned.has(issue)) {
+        warned.add(issue)
+        yield* Effect.logWarning(`drift: ${found.project.key}-${found.issue.number} worktree ${cwd} is gone and has no snapshot to restore`)
+      }
+      return { status: "missing", ref, worktree: cwd } satisfies Result
+    }
+    warned.delete(issue)
+    const current = yield* tree(cwd)
+    if (!current) return { status: "blocked", ref, reason: `could not read the tree of ${cwd}` } satisfies Result
+    if (current === attempt.snapshot_tree && attempt.snapshot_sha)
+      return { status: "unchanged", ref, sha: attempt.snapshot_sha } satisfies Result
+    // The first snapshot's parent is the worktree's HEAD, so the scan and the push carry only the seat's change.
+    const parent = attempt.snapshot_sha ?? (yield* git(cwd, ["rev-parse", "HEAD"])).out
+    const commit = yield* git(
+      cwd,
+      ["commit-tree", current, ...(parent ? ["-p", parent] : []), "-m", `orchestra snapshot ${found.project.key}-${found.issue.number} a${attempt.n}`],
+      IDENTITY,
+    )
+    const blocked = (reason: string) =>
+      update(attempt, { snapshot_blocked: reason }).pipe(Effect.as({ status: "blocked", ref, reason } satisfies Result))
+    if (commit.code !== 0) return yield* blocked(`could not write the snapshot commit: ${commit.err}`)
+    const hit = yield* scan(cwd, parent ? `${parent}..${commit.out}` : commit.out)
+    if (hit) return yield* blocked(hit)
+    const remote = yield* deps.remote(found.directory ?? cwd, found.project).pipe(Effect.result)
+    if (remote._tag === "Failure") return yield* blocked(remote.failure.message)
+    const pushed = yield* git(cwd, ["push", "--no-verify", "--force", remote.success, `${commit.out}:${ref}`])
+    if (pushed.code !== 0) return yield* blocked(`the push to ${remote.success} failed: ${pushed.err.split("\n").at(-1)}`)
+    yield* update(attempt, {
+      snapshot_sha: commit.out,
+      snapshot_tree: current,
+      snapshot_at: yield* Clock.currentTimeMillis,
+      snapshot_blocked: null,
+    })
+    return { status: "pushed", ref, sha: commit.out } satisfies Result
+  })
+
+  return {
+    tree,
+    push,
+    /**
+~~~~
+
+```json
+{"first_line":221,"last_line":309,"bytes":3493,"sha256":"dfec2e197515d6f61bffc82e9158723742c86228bd7da9e48f14c907d1f39b33"}
+```
+
+~~~~typescript
+      const issues = yield* deps.quiet((tx) =>
+        tx
+          .selectDistinct({ id: BoardIssueTable.id })
+          .from(BoardIssueTable)
+          .innerJoin(BoardAttemptTable, eq(BoardAttemptTable.issue_id, BoardIssueTable.id))
+          .where(and(eq(BoardIssueTable.stage, "building"), isNull(BoardAttemptTable.outcome)))
+          .all(),
+      )
+      return yield* Effect.forEach(issues, (row) => push(row.id))
+    }),
+  }
+}
+
+export type Interface = ReturnType<typeof make>
+
+/** The card's open attempt: the latest one with no outcome. */
+export const open = Effect.fnUntraced(function* (tx: Tx, issue: Board.IssueID) {
+  const latest = yield* tx
+    .select()
+    .from(BoardAttemptTable)
+    .where(eq(BoardAttemptTable.issue_id, issue))
+    .orderBy(desc(BoardAttemptTable.n))
+    .limit(1)
+    .get()
+  return latest && latest.outcome === null ? latest : undefined
+})
+
+/**
+ * Records a dispatch of `issue`: the open attempt ends (`failed` when the card has a crash reason, else `superseded`)
+ * and attempt n+1 opens with what it runs on. `board_issue.attempts` becomes the new n.
+ */
+export const dispatch = Effect.fnUntraced(function* (
+  tx: Tx,
+  issue: IssueRow,
+  input: { readonly worktree?: string; readonly writePaths?: ReadonlyArray<string>; readonly cause?: string },
+) {
+  const latest = yield* tx
+    .select()
+    .from(BoardAttemptTable)
+    .where(eq(BoardAttemptTable.issue_id, issue.id))
+    .orderBy(desc(BoardAttemptTable.n))
+    .limit(1)
+    .get()
+  if (latest && latest.outcome === null)
+    yield* tx
+      .update(BoardAttemptTable)
+      .set({ outcome: issue.crash_reason ? "failed" : "superseded" })
+      .where(and(eq(BoardAttemptTable.issue_id, issue.id), eq(BoardAttemptTable.n, latest.n)))
+      .run()
+  const n = (latest?.n ?? 0) + 1
+  const cause = input.cause ?? (n === 1 ? null : `failed:${issue.crash_reason ?? "redispatched"}`)
+  yield* tx
+    .insert(BoardAttemptTable)
+    .values({
+      issue_id: issue.id,
+      n,
+      seat: issue.seat,
+      session_id: issue.session_id,
+      worktree: input.worktree ?? null,
+      branch: issue.branch,
+      pr_number: issue.pr_number,
+      write_paths: [...(input.writePaths ?? [])],
+      cause,
+    })
+    .run()
+  yield* tx.update(BoardIssueTable).set({ attempts: n }).where(eq(BoardIssueTable.id, issue.id)).run()
+  if (n > 1)
+    yield* BoardThread.write(tx, { id: `bno_rework_${issue.id}_${n}`, issue: issue.id, kind: "rework", author: "orchestra", body: cause ?? "redispatched" })
+  return n
+})
+
+/**
+ * Keeps attempts in step with an issue update: a new Session opens the next attempt, and a changed seat, branch or PR
+ * is written to the open one. The crash reason the card had before the update decides how the old attempt ended.
+ */
+export const follow = Effect.fnUntraced(function* (tx: Tx, before: IssueRow, after: Fields) {
+  const updated = yield* tx.select().from(BoardIssueTable).where(eq(BoardIssueTable.id, before.id)).get()
+  if (!updated) return
+  if (typeof after.session_id === "string" && after.session_id !== before.session_id) {
+    yield* dispatch(tx, { ...updated, crash_reason: before.crash_reason ?? updated.crash_reason }, {})
+    return
+  }
+  if (!["seat", "branch", "pr_number"].some((key) => key in after)) return
+  yield* tx

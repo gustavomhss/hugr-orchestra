@@ -1,0 +1,32 @@
+{
+  "schema": "s1-03-revision-staging/v1",
+  "at_utc": "2026-11-15T09:33:43.913043+00:00",
+  "single_body_replacement_and_inverse_verified": true,
+  "immutable_previous_outputs_retained": true,
+  "changes": [
+    {
+      "path": "producers/derived-automation-flow/body.md",
+      "preserved_before_path": "producers/derived-automation-flow/revisions/v3/history/body.md",
+      "before_sha256": "5b24037431881e96ddb5a872fd6541c94880d189d8b0c873bac9d8bd874d85c1",
+      "after_sha256": "64d97f6da72c92a00ad8e3d91e20a42fd360dbedb502733c0548746462442287"
+    },
+    {
+      "path": "producers/derived-automation-flow/evidence.md",
+      "preserved_before_path": "producers/derived-automation-flow/revisions/v3/history/evidence.md",
+      "before_sha256": "0c4bff02eec8c4dbca2886127f1546bd51707060df8306ba4e630dba73f990d8",
+      "after_sha256": "c5d3a9803fb90ba58dbf2d37bcf94dd43adf166bc68e2d88fc06b0c93a067067"
+    },
+    {
+      "path": "producers/derived-automation-flow/production-manifest.json",
+      "preserved_before_path": "producers/derived-automation-flow/revisions/v3/history/production-manifest.json",
+      "before_sha256": "1802600a673c0521064bc636bd9be5e9e9aad9dd644f26efd5d14c02bee52cff",
+      "after_sha256": "959840fc57d7d42e2d78abca1438f4ad18fbe8b20cb479fab6fc8127355ab1c3"
+    },
+    {
+      "path": "producers/derived-automation-flow/response.md",
+      "preserved_before_path": "producers/derived-automation-flow/revisions/v3/history/response.md",
+      "before_sha256": "59ffb319da5b27d830b9eeabe7ac592c104a64496864235da4331cd5adc05c23",
+      "after_sha256": "faabd24854381ddedbb9407426212bc485abe6a564874fac70d9d00355ad30f3"
+    }
+  ]
+}

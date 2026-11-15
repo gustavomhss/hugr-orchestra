@@ -1,0 +1,340 @@
+    "production-manifest.json",
+    "response.md",
+    "dispatch-message.txt"
+  ],
+  "reserved_answers_included": false,
+  "usage_fields": "Physical attempts, tokens and billing UNKNOWN when not exposed."
+}
+
+## END_RECEITA_DE_TAREFA_EXATA
+
+## BEGIN_RECEITA_COMUM_EXATA
+
+{
+  "schema": "s1-03-derived-public-authoring-contract/v1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "purpose": "Actual common recipe for future L2-L4 derivation; frozen before those author dispatches. Not semantic output or acceptance.",
+  "scope": "S1-03 only",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "kit_revision": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+  "artifact_plan": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/artifact-plan.json",
+    "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad"
+  },
+  "author_context": "fresh fork none; no reserved answers; read exactly listed accepted predecessor bodies plus public task/recipe/authority inputs; new raw-source needs return to principal before use",
+  "gate": "Only dispatch a derived artifact after the same two current native judges accept every declared required predecessor at exact bytes. Recipe preparation does not release the gate.",
+  "layer_roles": {
+    "2": "Explain local working flow and decision boundaries from accepted L1, giving useful direct entry points into the detailed contracts.",
+    "3": "Explain relationships, change impact and which knowledge/consumers need re-evaluation; distinguish build dependencies from navigation and independent families.",
+    "4": "Ownership, maintenance/diagnosis, verification and escalation; entry gives shallow orientation and concrete deeper navigation while preserving the historical Core entry."
+  },
+  "quality_rules": [
+    "Write a usable Portuguese reference with clear depth2 section headings so a consumer can request a bounded section through ownership.read.",
+    "Make distinct the source-supported mechanism, authorized intent, inference and remaining gap. Do not upgrade tests listed to executions.",
+    "Cite exact accepted predecessor keys, bytes/hashes and relevant sections. Do not invent line evidence, raw source details or external engine guarantees.",
+    "Avoid reprinting the full predecessor or adding a file per source; satisfy the defined need with a compact coherent explanation.",
+    "Describe known failures and authority boundaries explicitly. A proposed operational action does not prove it was executed.",
+    "Do not include reserved oracle answers or infer a consumer PASS; public questions are needs, not outcomes.",
+    "No product edits, local tests, network/provider calls, GitHub writes, policy/guard changes or external messages.",
+    "Preserve exact visible request/response and body bytes; retain every revision and actual input identity, including genuine procedures used. No private reasoning.",
+    "Use only authorized exclusive producer directory. No sibling payload/producer mutation or recursive filesystem discovery. If an extra input is necessary, identify it before reading.",
+    "The actual authoring recipe is this contract plus the per-task frozen recipe and visible dispatch. A descriptive output manifest created afterwards is not a preexisting executable recipe."
+  ],
+  "public_criteria": [
+    "GO-A1",
+    "GO-A2",
+    "GO-A3",
+    "GO-A4",
+    "GO-A5",
+    "GO-A6",
+    "GO-A7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I7",
+    "GO-I8",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-4",
+    "QS-5",
+    "QS-6",
+    "CC-1",
+    "CC-3",
+    "CC-4",
+    "CC-7",
+    "AC-01"
+  ],
+  "outputs": [
+    "body.md",
+    "evidence.md mapping claims/sections to exact accepted predecessor sections",
+    "production-manifest.json listing actual consumed whole-file units and the scope of each, output hashes, gaps and procedure provenance",
+    "request.txt exact visible dispatch",
+    "response.md original visible result and limitations"
+  ],
+  "not_outputs": [
+    "No oracle copy",
+    "No new AGENTS or authority file",
+    "No claimed runtime receipts or semantic verdicts",
+    "No replacement of historical s1.core.entry"
+  ]
+}
+
+## END_RECEITA_COMUM_EXATA
+
+## BEGIN_PLANO_PUBLICO_EXATO
+
+{
+  "schema": "s1-03-required-artifact-plan/v1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "scope": "S1-03 only",
+  "assigned_source_population": 462,
+  "status": "FROZEN_BEFORE_DEPENDENT_L2_L4_PRODUCTION",
+  "authoring_gate": "Only release each dependent after both same native judges accept every required predecessor; input body pins and acceptance refs are supplied at dispatch. This plan is not acceptance.",
+  "artifacts": [
+    {
+      "key": "s1.core.automation",
+      "layer": 1,
+      "need": "flow",
+      "required_build_predecessors": [],
+      "purpose": "Actions, Board e agendamento: contratos da implementação"
+    },
+    {
+      "key": "s1.core.research",
+      "layer": 1,
+      "need": "component",
+      "required_build_predecessors": [],
+      "purpose": "Research e toolkits: contratos, prontidão e autoridade da evidência"
+    },
+    {
+      "key": "s1.core.boundaries",
+      "layer": 1,
+      "need": "component",
+      "required_build_predecessors": [],
+      "purpose": "Fronteiras Core para Atlas, Relay, control plane e RAG"
+    },
+    {
+      "key": "s1.subslice03.support",
+      "layer": 1,
+      "need": "entry",
+      "required_build_predecessors": [],
+      "purpose": "Suporte de entrada, ferramentas, história e fixtures dos104 paths"
+    },
+    {
+      "key": "s1.subslice03.automation-flow",
+      "layer": 2,
+      "need": "flow",
+      "required_build_predecessors": [
+        "s1.core.automation"
+      ],
+      "purpose": "Entendimento local do ciclo de comando, Board e admissão agendada"
+    },
+    {
+      "key": "s1.subslice03.research-flow",
+      "layer": 2,
+      "need": "flow",
+      "required_build_predecessors": [
+        "s1.core.research"
+      ],
+      "purpose": "Entendimento local da aquisição, índice, custódia e investigação"
+    },
+    {
+      "key": "s1.subslice03.boundary-flow",
+      "layer": 2,
+      "need": "flow",
+      "required_build_predecessors": [
+        "s1.core.boundaries"
+      ],
+      "purpose": "Encadeamento e limites do lado Core das portas externas"
+    },
+    {
+      "key": "s1.subslice03.automation-impact",
+      "layer": 3,
+      "need": "operational",
+      "required_build_predecessors": [
+        "s1.subslice03.automation-flow"
+      ],
+      "purpose": "Impacto de mudanças de contrato e separação de famílias independentes"
+    },
+    {
+      "key": "s1.subslice03.research-impact",
+      "layer": 3,
+      "need": "operational",
+      "required_build_predecessors": [
+        "s1.subslice03.research-flow"
+      ],
+      "purpose": "Impacto de mudanças em receitas, índice, custódia e autoridade"
+    },
+    {
+      "key": "s1.subslice03.automation-maintenance",
+      "layer": 4,
+      "need": "maintenance",
+      "required_build_predecessors": [
+        "s1.subslice03.automation-impact"
+      ],
+      "purpose": "Manutenção, diagnóstico, verificação e encaminhamento da automação"
+    },
+    {
+      "key": "s1.subslice03.research-maintenance",
+      "layer": 4,
+      "need": "maintenance",
+      "required_build_predecessors": [
+        "s1.subslice03.research-impact"
+      ],
+      "purpose": "Manutenção e diagnóstico de research/toolkits e suas evidências"
+    },
+    {
+      "key": "s1.subslice03.entry",
+      "layer": 4,
+      "need": "entry",
+      "required_build_predecessors": [
+        "s1.subslice03.support",
+        "s1.subslice03.boundary-flow",
+        "s1.subslice03.automation-maintenance",
+        "s1.subslice03.research-maintenance"
+      ],
+      "purpose": "Entrada local rasa e aprofundamento com proposta de navegação para a união"
+    }
+  ],
+  "direct_use_case_plan": {
+    "A-PERMITTED": [
+      "s1.core.automation",
+      "s1.subslice03.automation-flow"
+    ],
+    "A-VIOLATION": [
+      "s1.core.automation",
+      "s1.subslice03.automation-maintenance"
+    ],
+    "A-IMPACT": [
+      "s1.subslice03.automation-impact",
+      "s1.subslice03.research-impact"
+    ],
+    "S-FAILURE": [
+      "s1.core.automation",
+      "s1.subslice03.automation-flow"
+    ],
+    "R-FAILURE": [
+      "s1.core.research",
+      "s1.subslice03.research-flow"
+    ],
+    "B-ABSTAIN": [
+      "s1.core.boundaries",
+      "s1.subslice03.boundary-flow"
+    ],
+    "ENTRY-NAV": [
+      "s1.subslice03.entry",
+      "s1.subslice03.support"
+    ]
+  },
+  "case_limits_ref": "consumers/public-cases.json",
+  "reserved_answers_included": false,
+  "historical_entry": "s1.core.entry preserved byte-identically; never replaced or included as a rival new local definition",
+  "union_navigation": "Existing concrete36-key/5-owner proposal remains NOT_SELECTED; S1_COORDINATION chooses union after five handoffs.",
+  "navigation_rule": "Navigation links are not build edges. Declared entry dependencies concern the accepted explanations it summarizes; peer links alone never add dependency.",
+  "allowed_adjustment": "Only a concrete new need/finding can change this finite graph; preserve previous plan and explain the delta before new dependent production."
+}
+
+## END_PLANO_PUBLICO_EXATO
+
+## Inputs reais — projeção mecânica do manifesto
+
+| Path local | Bytes | SHA256 | Papel declarado |
+| --- | ---: | --- | --- |
+| inputs/AGENTS.md | 16501 | 07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f | enumerated_public_authority_plan_contract_or_criteria |
+| inputs/COMMON.md | 12959 | ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7 | enumerated_public_authority_plan_contract_or_criteria |
+| inputs/mission.json | 6006 | 32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75 | enumerated_public_authority_plan_contract_or_criteria |
+| inputs/SKILL.md | 8143 | f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029 | enumerated_public_authority_plan_contract_or_criteria |
+| inputs/references/principles.md | 6010 | f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230 | enumerated_public_authority_plan_contract_or_criteria |
+| inputs/references/fatia-1.md | 3987 | 152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae | enumerated_public_authority_plan_contract_or_criteria |
+| inputs/references/fresh-start.md | 4983 | c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166 | enumerated_public_authority_plan_contract_or_criteria |
+| inputs/references/orchestration.md | 4408 | b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb | enumerated_public_authority_plan_contract_or_criteria |
+| inputs/references/judging.md | 5787 | c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb | enumerated_public_authority_plan_contract_or_criteria |
+| inputs/references/transport.md | 8478 | 02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c | enumerated_public_authority_plan_contract_or_criteria |
+| payload/artifact-plan.json | 5017 | 6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad | enumerated_public_authority_plan_contract_or_criteria |
+| payload/recipes/derived-contract.json | 4017 | bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588 | enumerated_public_authority_plan_contract_or_criteria |
+| payload/recipes/derived-public-criteria.json | 16244 | 1e7686491c5b68cb4f3d287377723edcd8932ae803c267ddbabf44a360dfc36e | enumerated_public_authority_plan_contract_or_criteria |
+| producers/boundaries/bodies/support.md | 23025 | 498a0454418a14977b9b2f4c4f515711d941b6d4bbece13f1baaa8feaa76d378 | accepted_semantic_build_predecessor |
+| producers/derived-boundary-flow/body.md | 16484 | e18fe141b88a3aba6ede8e8a0dd138876161984db36d4b8e5540f9ab329c0771 | accepted_semantic_build_predecessor |
+| producers/derived-automation-maintenance/body.md | 13840 | 8cb4befb0cef6a35002679580d60f1746fdeac26acf45ff08e04942cff83abc7 | accepted_semantic_build_predecessor |
+| producers/derived-research-maintenance/body.md | 13958 | b57970febca6ecd87e6df64586e8a1bf557e112a0761ddc3afc58a92f4fc8025 | accepted_semantic_build_predecessor |
+| producers/boundaries/union-navigation-proposal.md | 14671 | f4362077ed7eb2f0dff7bb76acd60debeaa41bd37886551977b92c02addfcb6e | accepted_local_navigation_proposal_authoring_input_not_external_build_dependency |
+| payload/recipes/derived/entry.json | 14571 | 6b8a14e9f0f0c131cc0b06bab60771de0d811b6f4b6f79617f0ffabf7c2a4c5a | frozen_per_task_recipe |
+| producers/derived-entry/request.txt | 827 | adb85bb9f171bb36aa888314412354f60e0a751775ebf846cbaecb777b27f91c | preserved_request |
+| producers/derived-entry/dispatch-message.txt | 2174 | 81af7408b96374d92ecb6f038f1ba35dfca078ec938306cf8c8d336dda1c1bff | exact_visible_dispatch_serialized |
+
+Manifesto original posterior: producers/derived-entry/production-manifest.json; 29258 bytes; SHA256 32d73b791e1b34bbec004d4f9e269f368d4e4c5b5077dbbcaa4161212a6cef9e. Ele permanece integral no payload, mas sua totalidade não é retransmitida aqui. Conteúdo declarativo de uso não substitui seu juízo.
+
+Decida somente após FIM_DO_LOTE externo.
+
+## Autoridade publica decisiva para procedimentos e limites
+
+Recortes de inputs públicos já consumidos pelo autor, transportados literalmente antes do primeiro despacho. Não são execução de comandos nem concessão de autoridade.
+
+BEGIN_LITERAL_AUTHORITY {"path": "inputs/AGENTS.md", "first_line": 1, "last_line": 1, "source_bytes": 16501, "source_sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f", "bytes": 169, "sha256": "5d4629babd7a5f60103e1ccedc0583a63b1804203cd0d735d71f5b648aae14f8"}
+- After changing the public Protocol or Server `HttpApi`, run `bun run generate` from `packages/client`. Do not edit `src/generated` or `src/generated-effect` directly.
+END_LITERAL_AUTHORITY
+
+BEGIN_LITERAL_AUTHORITY {"path": "inputs/AGENTS.md", "first_line": 158, "last_line": 178, "source_bytes": 16501, "source_sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f", "bytes": 3402, "sha256": "3f932e5e2e0bbed1e970b5e835b9db650f467fdb6a82785c51fdc9e4d09a1b40"}
+- Avoid mocks as much as possible, you shouldn't be using globalThis.\* at all unless it's the only option.
+- Test actual implementation, do not duplicate logic into tests
+- Tests run on GitHub Actions, never on this machine. From the repository root: `bun run test:ci <package> [test files...] [-t pattern] [--os linux|windows|both]`, for example `bun run test:ci maestro test/roster.test.ts`.
+  - Named test files run exactly and in the order given. Any other argument, such as a directory, is a Bun substring filter that may match several files, which Bun runs in its own order.
+  - It uploads a snapshot of your working tree to a temporary `ci-run-*` branch, waits for the `test-ci` workflow, prints the result and exits non-zero when tests fail. No commit is needed; untracked files that are not gitignored are included, so keep secrets out of the tree.
+  - A run takes a few minutes: give the shell call a long timeout or run it in the background.
+  - A Python package (a `requirements-dev.txt` and no `package.json`) runs pytest instead. In a package with both, such as `modules/relay`, naming only `.py` files runs pytest, for example `bun run test:ci relay tests/test_authoring.py`, and anything else runs `bun test`; `-t` becomes pytest's `-k`.
+  - The omni positive control (`script/test-omni-control.ts`) prints one `omni positive control:` line per run, and `test:ci` fails a job without it or whose verdict is neither `pass` nor `not applicable`. Full lanes and whole-package `test:ci` runs expect every run to spawn through omni; a narrower `test:ci` run (`ORCHESTRA_OMNI_CONTROL=declared`, derived from the request) expects it only from tests that declared it. A test that must spawn through omni calls `expectSpawn(import.meta.path)` from `packages/core/test/fixture/omni-expect.ts` in its body, before it spawns; it then fails unless it made an omni spawn of its own. `packages/core/test/omni-expect-guard.test.ts` requires the call in test files that import omni's spawn surface. `test:ci` accepts only `1` or `strict` for `--env ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER`: `0` or a typo would run the tests on legacy with the control off. Legacy rollback runs only in test.yml's named lanes.
+  - A local `bun test` stops with a pointer to `test:ci` (`script/test-guard.ts`). Only the owner may allow a local run, with `ORCHESTRA_LOCAL_TESTS=1`.
+
+## Spawning Processes
+
+- Orchestra code starts child processes only through `ChildProcessSpawner`, `Process`, or `Process.interactive`.
+- Only `packages/core/src/omni.ts` imports `hugr-omni` (`native/omni`); everything else goes through it.
+- The sites that stay outside omni are the entries in `script/spawn-allowlist.json`, which is the source of truth; `native/omni/docs/orchestra-integration.md` §3 explains only the main groups.
+- `bun run check:spawn-imports` fails on any other import of `cross-spawn`, `bun-pty`, `@lydell/node-pty`, `child_process` or `hugr-omni`, or use of `StdioClientTransport`. Today's sites are in `script/spawn-allowlist.json`; entries are only removed, never added without the lead.
+
+## CI Cadence
+
+- The full suite runs once per epic, not per unit of work. Gate each unit with change-scoped tests through `bun run test:ci` and a local package typecheck.
+- To run CI, add the `epic` label to the epic PR (remove and re-add it to rerun) or dispatch the workflow manually. Pushes and unlabeled PRs run nothing.
+END_LITERAL_AUTHORITY
+
+BEGIN_LITERAL_AUTHORITY {"path": "inputs/AGENTS.md", "first_line": 194, "last_line": 205, "source_bytes": 16501, "source_sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f", "bytes": 674, "sha256": "c297e5d83bc49bbb8b9b2ebfe0092931750c5fc716168d10f636d47e8ff2446d"}
+## Guardrail
+
+- Before calling a change done, run `bun run check:guards --base origin/dev`; CI runs the same rules on every PR. Load the `guardrail-usage` skill to read a finding.
+- Fix the finding. Use `guardrail-ignore: <rule id> <reason>` only where the rule's `clearedBy` allows it, and apply a `guardrail-approved` label only if you are Maestro: any other agent asks Maestro, who decides.
+
+## Local Runtime
+
+- You may be running inside the Orchestra desktop app or its local server. Do not stop or restart either; ask the owner when a restart is needed.
+
+## Type Checking
+
+- Always run `bun typecheck` from package directories (e.g., `apps/cli`), never `tsc` directly.
+END_LITERAL_AUTHORITY
+
+BEGIN_LITERAL_AUTHORITY {"path": "inputs/COMMON.md", "first_line": 34, "last_line": 41, "source_bytes": 12959, "source_sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7", "bytes": 1357, "sha256": "b2fc6248c9227243e9887796c3d2c5f77558feb9c49564130106525918d3d2bc"}
+Preservar s1/native-package.json, coverage.json, handoff.json, work.md, ledger, snapshots, corpos e decisões históricos. Não editar genesis-fresh-s1 ou genesis-fresh-final a partir destas missões.
+
+Código de produto só pode mudar quando uma correção/adaptação for estritamente necessária para executar ou comprovar uma obrigação atribuída do Genesis, em um path exato da sua partição.
+Não implementar features nem corrigir incidentalmente todo defeito encontrado. Não alterar comportamento para tornar verdadeira uma afirmação: explicar o comportamento observado e seus limites.
+Preservar a fonte investigada; qualquer candidato alterado recebe revisão, novos inputs, impacto e provas próprias. Não apresentar execução do candidato como execução do baseline inalterado.
+Testes novos estritamente necessários ficam nos diretórios governados dos pacotes atribuídos, com prefixo s1-XX da sua identidade e helpers exclusivos.
+Gerados só pelo gerador oficial e pelo dono correspondente. Mudança que gerar output fora da sua autoridade exige encaminhar o patch/proposta completa ao dono.
+Esta autorização não inclui mudar AGENTS, contratos/skills da campanha, guards, workflows, aprovações, segredos ou políticas de acesso. Fora da propriedade, preparar a correção concreta para o dono e continuar o trabalho independente.
+END_LITERAL_AUTHORITY
+
+BEGIN_LITERAL_AUTHORITY {"path": "inputs/COMMON.md", "first_line": 93, "last_line": 103, "source_bytes": 12959, "source_sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7", "bytes": 1749, "sha256": "bef8ade677e8942e95475d027441de79091460a91d0bb0d2d99fbdbfac12c05c"}
+Manter poucos arquivos úteis: work.md, execution-ledger.jsonl, native-package.json, corpos/evidências, judgments, matriz única e handoff.json.
+Usar todos os 50 IDs do registro original na matriz final, com decisão local, evidência e complemento exclusivamente de composição. Não criar 50 documentos.
+Registrar um plano finito de produção/juízes/correções/consumidores e revisá-lo conforme o trabalho. Não inventar uma quota curta que encerre a missão.
+Tokens, tentativas físicas e cobrança não expostos ficam UNKNOWN; histórico não reconciliado não é zero. Não fazer chamadas pagas externas como efeito colateral.
+Seguir AGENTS: testes de produto em GitHub Actions; typecheck e guard estático conforme as instruções. Não contornar guardas nem chamar teste local de outro nome.
+Prova reutilizada deve identificar candidato e caso; testar somente os deltas e riscos reais. CI verde não é aceite semântico e um comando não executado fica NOT_RUN.
+
+DELIVERY_COMPLETE vale somente para a subfatia quando população/necessidades, camadas necessárias, dois juízos, correções, operações, consumidores, manutenção, gates, economia e selo estão completos.
+Não marcar a S1 inteira ou a campanha global como concluída. Falta exclusivamente da composição não impede entrega local; falta própria de consumo/revisão/gate não pode ser escondida como global.
+Continuar todo trabalho executável até cumprir a missão. Plano, checkpoint, delegação ou PASS de lote isolado não encerram o trabalho.
+Se houver impedimento material, descobrir capacidades/rotas realmente disponíveis, registrar erro/operação/evidência/condição de desbloqueio e terminar os itens independentes. O estado fica INCOMPLETE_BLOCKED.
+END_LITERAL_AUTHORITY
+

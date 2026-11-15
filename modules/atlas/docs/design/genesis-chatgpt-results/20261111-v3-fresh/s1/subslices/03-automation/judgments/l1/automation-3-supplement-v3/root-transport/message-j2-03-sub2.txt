@@ -1,0 +1,659 @@
+Transporte literal pela principal ao mesmo juiz J2, execução 34269cf4-d631-41c5-a30b-85b0ec217390. Não use ferramentas, delegue, edite ou receba parecer do outro juiz. Lote automation-3-supplement-v3; parte 3/8. Pacote canônico 408213 bytes SHA256 f2c8d12e8e0b22964fadfaba9c40632f0ba5489d795d76dc3efde70fd30bd276. Esta parte tem 51026 bytes SHA256 8525347278c053ae871254776d445db22f80680bb9abc7769446205baaf6663d. Envio em dois fragmentos contíguos: este é 2/2, offsets UTF-8 [25505,51026), 25521 bytes SHA256 fc74b7b34479ba7442999b14ee0ffea5f498776610ba996fa57b5e9fbeebd377. Junte os fragmentos sem os envelopes. Conserve o exame anterior e os deltas já recebidos. Julgue apenas após FIM_DO_LOTE; até lá responda somente ACK da parte e da última âncora.
+
+BEGIN_PART
+    ...Timestamps,
+  },
+  (table) => [uniqueIndex("board_bundle_number_idx").on(table.project_id, table.n)],
+)
+
+export const BoardBundleMemberTable = sqliteTable(
+  "board_bundle_member",
+  {
+    bundle_id: text()
+      .$type<Board.BundleID>()
+      .notNull()
+      .references(() => BoardBundleTable.id, { onDelete: "cascade" }),
+    issue_id: text()
+      .$type<Board.IssueID>()
+      .notNull()
+      .references(() => BoardIssueTable.id, { onDelete: "cascade" }),
+    head_sha: text().notNull(),
+    position: integer().notNull(),
+    ...Timestamps,
+  },
+  (table) => [primaryKey({ columns: [table.bundle_id, table.issue_id] })],
+)
+
+// Section 6.4: a test that failed in a bundle and then passed three scoped reruns of its head. `count` grows each time
+// another bundle sees the same test go flaky; `bundle_id` is the latest one.
+export const BoardFlakeTable = sqliteTable(
+  "board_flake",
+  {
+    project_id: text()
+      .$type<Board.ProjectID>()
+      .notNull()
+      .references(() => BoardProjectTable.id, { onDelete: "cascade" }),
+    test: text().notNull(),
+    bundle_id: text()
+      .$type<Board.BundleID>()
+      .notNull()
+      .references(() => BoardBundleTable.id, { onDelete: "cascade" }),
+    first_seen: integer().notNull(),
+    count: integer().notNull(),
+    ...Timestamps,
+  },
+  (table) => [primaryKey({ columns: [table.project_id, table.test] })],
+)
+~~~~
+
+## AUT3-C06
+
+```json
+{
+  "block_id": "AUT3-C06",
+  "type": "literal_source_chain",
+  "canonical_request_namespace": "J1",
+  "requests": [
+    "RE-AUT3-01"
+  ],
+  "body_anchors": [
+    "B03"
+  ],
+  "requested_subject": "Criação, supersession e outcome narrado completos",
+  "path": "packages/core/src/board/decision.ts",
+  "archive": "sources/packages/core/src/board/decision.ts",
+  "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_git_blob_sha": "4b219f5b62517b2c4f9749a1a99e6257cfeff167",
+  "source_sha256": "7fdd5f2d2d0dfa0414b70b870e4ff75ca62fe7af36c62c90e583663af8833b43",
+  "source_bytes": 5365,
+  "required_source_line_ranges": [
+    [
+      1,
+      129
+    ]
+  ],
+  "prior_literal_ranges": [
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "B03",
+      "source_path": "packages/core/src/board/decision.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "4b219f5b62517b2c4f9749a1a99e6257cfeff167",
+      "source_sha256": "7fdd5f2d2d0dfa0414b70b870e4ff75ca62fe7af36c62c90e583663af8833b43",
+      "first_line": 54,
+      "last_line": 75,
+      "excerpt_bytes": 988,
+      "excerpt_sha256": "4624cb63c8ab9da5a9954a17bcabd126e7b140384e6c9c1d860f1df66bb94ce6",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 121932,
+      "literal_content_byte_end_exclusive": 122920
+    },
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "B03",
+      "source_path": "packages/core/src/board/decision.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "4b219f5b62517b2c4f9749a1a99e6257cfeff167",
+      "source_sha256": "7fdd5f2d2d0dfa0414b70b870e4ff75ca62fe7af36c62c90e583663af8833b43",
+      "first_line": 101,
+      "last_line": 118,
+      "excerpt_bytes": 974,
+      "excerpt_sha256": "3ecd85c8a12fd38074c1d56a26e3f7633234ff84ff1176570ed585a0d6a59ee7",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 123053,
+      "literal_content_byte_end_exclusive": 124027
+    }
+  ]
+}
+```
+
+```json
+{"first_line":1,"last_line":53,"bytes":2025,"sha256":"8a40a9c8b54b4b00f14797ee6c40aeb8a0f10161d834993b608cda50c6757073"}
+```
+
+~~~~typescript
+export * as BoardDecision from "./decision"
+
+import { and, desc, eq, isNull, or } from "drizzle-orm"
+import { Clock, Effect } from "effect"
+import { Board } from "@orchestra/schema/board"
+import { BoardDecisionTable, BoardQuestionTable } from "./sql"
+import { toDecision } from "./rows"
+import { NotFoundError, RefusedError, changed, loadProject, log, numbers } from "./shared"
+import type { ProjectRow, QuestionRow, Tx } from "./shared"
+
+// Every answered question is kept as a decision; overturning one links the old to the new instead of editing it.
+
+export const list = Effect.fnUntraced(function* (tx: Tx, key: string) {
+  const project = yield* loadProject(tx, key)
+  const known = yield* numbers(tx, project)
+  const rows = yield* tx
+    .select()
+    .from(BoardDecisionTable)
+    .where(eq(BoardDecisionTable.project_id, project.id))
+    .orderBy(desc(BoardDecisionTable.answered_at), desc(BoardDecisionTable.id))
+    .all()
+  return rows.map((row) => toDecision(row, known))
+})
+
+/** The decision row an answer leaves behind. */
+export const record = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow, question: QuestionRow, input: Board.AnswerInput, now: number) {
+  const id = Board.DecisionID.create()
+  yield* tx
+    .insert(BoardDecisionTable)
+    .values({
+      id,
+      project_id: project.id,
+      issue_id: question.issue_id,
+      epic_id: question.epic_id,
+      question_id: question.id,
+      question: question.text,
+      options: question.options,
+      recommended: question.recommended,
+      chosen: input.option,
+      chosen_text: input.text ?? null,
+      answered_by: "owner",
+      answered_at: now,
+    })
+    .run()
+  return id
+})
+
+export const change = Effect.fnUntraced(function* (tx: Tx, key: string, id: string, input: Board.DecisionChangeInput) {
+  const project = yield* loadProject(tx, key)
+  const old = yield* tx
+    .select()
+    .from(BoardDecisionTable)
+    .where(and(eq(BoardDecisionTable.id, id as Board.DecisionID), eq(BoardDecisionTable.project_id, project.id)))
+~~~~
+
+```json
+{"first_line":76,"last_line":100,"bytes":980,"sha256":"dd2cca3accc506fb812d4d87a47bdf5b42085957f64a989def084a52027ff97a"}
+```
+
+~~~~typescript
+      chosen: input.option,
+      chosen_text: text,
+      answered_by: "owner",
+      answered_at: now,
+      supersedes_id: old.id,
+    })
+    .run()
+  yield* tx.update(BoardDecisionTable).set({ overturned_by_id: next }).where(eq(BoardDecisionTable.id, old.id)).run()
+  // Maestro reads the question's answer, so it carries the current one.
+  yield* tx
+    .update(BoardQuestionTable)
+    .set({ answer_option: input.option, answer_text: text, answered_at: now })
+    .where(eq(BoardQuestionTable.id, old.question_id))
+    .run()
+  const activity = yield* log(tx, {
+    project: project.id,
+    issue: old.issue_id,
+    actor: "owner",
+    action: "question.answer",
+    before: { id: old.question_id, answer_option: old.chosen, answer_text: old.chosen_text },
+    after: { id: old.question_id, status: "answered", answer_option: input.option, answer_text: text, decision: next },
+  })
+  return { result: { activity }, changed: changed(project.id, activity, old.issue_id) }
+})
+
+~~~~
+
+```json
+{"first_line":119,"last_line":129,"bytes":398,"sha256":"a1855c8c5e157e439215536af46b72dd4deb522e2b1b0a2a05e73596040152df"}
+```
+
+~~~~typescript
+  const activity = yield* log(tx, {
+    project: project.id,
+    issue: row.issue_id,
+    actor: "maestro",
+    action: "question.answer",
+    reason: input.reason,
+    before: { id: row.question_id, outcome: row.outcome },
+    after: { id: row.question_id, decision: row.id, outcome: input.outcome },
+  })
+  return { result: { activity }, changed: changed(project.id, activity, row.issue_id) }
+})
+~~~~
+
+## AUT3-C07
+
+```json
+{
+  "block_id": "AUT3-C07",
+  "type": "literal_source_chain",
+  "canonical_request_namespace": "J1",
+  "requests": [
+    "RE-AUT3-01",
+    "RE-AUT3-06"
+  ],
+  "body_anchors": [
+    "B03"
+  ],
+  "requested_subject": "Thread de host readonly, identidade determinística e insert idempotente",
+  "path": "packages/core/src/board/thread.ts",
+  "archive": "sources/packages/core/src/board/thread.ts",
+  "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_git_blob_sha": "8c6fd3f62aeabca7d652f38cdc8740fbbd1abeba",
+  "source_sha256": "e3cb87f165438aba44cf9cde3ab49be59975fed42d45d4d71317016dfec60ad9",
+  "source_bytes": 2142,
+  "required_source_line_ranges": [
+    [
+      1,
+      57
+    ]
+  ],
+  "prior_literal_ranges": []
+}
+```
+
+```json
+{"first_line":1,"last_line":57,"bytes":2142,"sha256":"e3cb87f165438aba44cf9cde3ab49be59975fed42d45d4d71317016dfec60ad9"}
+```
+
+~~~~typescript
+export * as BoardThread from "./thread"
+
+import { and, desc, eq, isNotNull } from "drizzle-orm"
+import { Effect } from "effect"
+import { Board } from "@orchestra/schema/board"
+import { BoardIssueTable, BoardNoteTable, BoardProjectTable } from "./sql"
+import type { Database } from "../database/database"
+
+// Callers pass either the database or an open transaction.
+type Tx = Pick<Database.Interface["db"], "select" | "insert">
+
+// Thread notes are written by the host only; they are read-only to people. Their ids are deterministic, so an exact
+// retry of the same work hits the primary key and writes nothing twice.
+
+export const card = Effect.fnUntraced(function* (tx: Tx, key: string) {
+  if (!/^[A-Z][A-Z0-9]*-\d+$/.test(key)) return undefined
+  const dash = key.lastIndexOf("-")
+  const project = yield* tx.select().from(BoardProjectTable).where(eq(BoardProjectTable.key, key.slice(0, dash))).get()
+  if (!project) return undefined
+  return yield* tx
+    .select()
+    .from(BoardIssueTable)
+    .where(and(eq(BoardIssueTable.project_id, project.id), eq(BoardIssueTable.number, Number(key.slice(dash + 1)))))
+    .get()
+})
+
+export const bySession = Effect.fnUntraced(function* (tx: Tx, sessionID: string) {
+  return yield* tx.select().from(BoardIssueTable).where(eq(BoardIssueTable.session_id, sessionID)).get()
+})
+
+export const last = Effect.fnUntraced(function* (tx: Tx, issue: Board.IssueID) {
+  const note = yield* tx
+    .select()
+    .from(BoardNoteTable)
+    .where(and(eq(BoardNoteTable.issue_id, issue), isNotNull(BoardNoteTable.kind)))
+    .orderBy(desc(BoardNoteTable.time_created), desc(BoardNoteTable.id))
+    .limit(1)
+    .get()
+  return note?.kind ?? undefined
+})
+
+export const write = Effect.fnUntraced(function* (
+  tx: Tx,
+  input: { readonly id: string; readonly issue: Board.IssueID; readonly kind: Board.NoteKind; readonly author: string; readonly body: string },
+) {
+  yield* tx
+    .insert(BoardNoteTable)
+    .values({
+      id: Board.NoteID.make(input.id),
+      issue_id: input.issue,
+      author: input.author,
+      body: input.body,
+      kind: input.kind,
+    })
+    .onConflictDoNothing()
+    .run()
+})
+~~~~
+
+## AUT3-C08
+
+```json
+{
+  "block_id": "AUT3-C08",
+  "type": "literal_source_chain",
+  "canonical_request_namespace": "J1",
+  "requests": [
+    "RE-AUT3-02"
+  ],
+  "body_anchors": [
+    "B04"
+  ],
+  "requested_subject": "Mirror/CI semaphore, imports/ETag/pagination/comments/overwrite/state questions/PR progression/labels/dirty/cache/minutes",
+  "path": "packages/core/src/board/github.ts",
+  "archive": "sources/packages/core/src/board/github.ts",
+  "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_git_blob_sha": "7a29abd5907dfb6f0443756ad8b2a6f7e7cf133e",
+  "source_sha256": "15775b713425cb60f68003099198918a4b567431e426bd351c50ba4971d36702",
+  "source_bytes": 32508,
+  "required_source_line_ranges": [
+    [
+      1,
+      688
+    ]
+  ],
+  "prior_literal_ranges": [
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "B04",
+      "source_path": "packages/core/src/board/github.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "7a29abd5907dfb6f0443756ad8b2a6f7e7cf133e",
+      "source_sha256": "15775b713425cb60f68003099198918a4b567431e426bd351c50ba4971d36702",
+      "first_line": 126,
+      "last_line": 135,
+      "excerpt_bytes": 524,
+      "excerpt_sha256": "8aadddffaa7d99d54cb9522a9dfa7b2372e165d5b9ad6994cae158d08a12bc78",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 126171,
+      "literal_content_byte_end_exclusive": 126695
+    },
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "B04",
+      "source_path": "packages/core/src/board/github.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "7a29abd5907dfb6f0443756ad8b2a6f7e7cf133e",
+      "source_sha256": "15775b713425cb60f68003099198918a4b567431e426bd351c50ba4971d36702",
+      "first_line": 323,
+      "last_line": 341,
+      "excerpt_bytes": 856,
+      "excerpt_sha256": "d89f100bd92d5071d2c6fb1c0369bf4a4da025b2d93af1ba600e32501b8272b7",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 126828,
+      "literal_content_byte_end_exclusive": 127684
+    },
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "B04",
+      "source_path": "packages/core/src/board/github.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "7a29abd5907dfb6f0443756ad8b2a6f7e7cf133e",
+      "source_sha256": "15775b713425cb60f68003099198918a4b567431e426bd351c50ba4971d36702",
+      "first_line": 595,
+      "last_line": 611,
+      "excerpt_bytes": 751,
+      "excerpt_sha256": "890502dbffb1f7e01a44f0160c2626604db773bb3e8b6515381be5ad3cc60ea4",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 127817,
+      "literal_content_byte_end_exclusive": 128568
+    }
+  ]
+}
+```
+
+```json
+{"first_line":1,"last_line":125,"bytes":5388,"sha256":"5d5a1e60401c7f01af14cd24abdad0d406e8a7f185c3b0f6c473011b61e87a0a"}
+```
+
+~~~~typescript
+export * as BoardGithub from "./github"
+
+import { and, asc, eq, isNull, or, sql } from "drizzle-orm"
+import { Clock, Effect, Option, Schema, Semaphore } from "effect"
+import { ChildProcess } from "effect/unstable/process"
+import { Board } from "@orchestra/schema/board"
+import type { Database } from "../database/database"
+import { AppProcess } from "../process"
+import { which } from "../util/which"
+import {
+  BoardCiRunTable,
+  BoardEpicTable,
+  BoardIssueTable,
+  BoardNoteTable,
+  BoardProjectTable,
+  BoardQuestionTable,
+  BoardStepTable,
+} from "./sql"
+import { endOf } from "./shared"
+
+// The GitHub Issues mirror (docs/specs/projects-board/CONTRACT.md section 6). Transport is the signed-in `gh` CLI, so
+// there is no token here to store or log. Every call goes through an injected `Gh` runner, which tests replace with
+// recorded responses.
+
+export type GhResult = { readonly exitCode: number; readonly stdout: string; readonly stderr: string }
+/** Runs `gh <args>`. It never fails: a missing or crashing CLI is a nonzero exit code with the reason on stderr. */
+export type Gh = (args: ReadonlyArray<string>, stdin?: string) => Effect.Effect<GhResult>
+
+type Tx = Parameters<Parameters<Database.Interface["db"]["transaction"]>[0]>[0]
+type ProjectRow = typeof BoardProjectTable.$inferSelect
+type IssueRow = typeof BoardIssueTable.$inferSelect
+type Changed = { readonly project: string; readonly issue?: string; readonly activity: string }
+
+export type Outcome =
+  | { readonly status: "missing" }
+  | { readonly status: "off" }
+  | { readonly status: "done"; readonly state: Board.GithubState; readonly error: string | null }
+
+export interface Deps {
+  /** One immediate transaction; storage failures are defects. */
+  readonly quiet: <A>(work: (tx: Tx) => Effect.Effect<A, unknown>) => Effect.Effect<A>
+  /** Publishes `board.changed` after a committed write. */
+  readonly publish: (changed: Changed) => Effect.Effect<void>
+  readonly log: (
+    tx: Tx,
+    input: {
+      readonly project: Board.ProjectID
+      readonly issue?: Board.IssueID | null
+      readonly actor: Board.Actor
+      readonly action: Board.Action
+      readonly reason?: string | null
+      readonly before?: Record<string, unknown> | null
+      readonly after?: Record<string, unknown> | null
+    },
+  ) => Effect.Effect<Board.ActivityID, unknown>
+  readonly gh: Gh
+}
+
+/** The real runner: the user's `gh`, with its own sign-in, never prompting. */
+export function runner(proc: AppProcess.Interface, env?: NodeJS.ProcessEnv): Gh {
+  return (args, stdin) =>
+    Effect.suspend(() => {
+      const executable = which("gh", env ?? process.env)
+      if (!executable) return Effect.succeed({ exitCode: 127, stdout: "", stderr: "gh is not installed on this server" })
+      return proc
+        .run(
+          ChildProcess.make(executable, [...args], {
+            env: { GH_PROMPT_DISABLED: "1", GH_NO_UPDATE_NOTIFIER: "1", NO_COLOR: "1" },
+            extendEnv: true,
+            stdin: "ignore",
+          }),
+          { maxOutputBytes: 4 * 1024 * 1024, maxErrorBytes: 16 * 1024, timeout: "30 seconds", stdin },
+        )
+        .pipe(
+          Effect.map((result) => ({
+            exitCode: result.exitCode,
+            stdout: result.stdout.toString("utf8"),
+            stderr: result.stderr.toString("utf8"),
+          })),
+          Effect.catch((error) => Effect.succeed({ exitCode: 1, stdout: "", stderr: error.message })),
+        )
+    })
+}
+
+class Failure extends Schema.TaggedErrorClass<Failure>()("Board.GithubFailure", {
+  kind: Schema.Literals(["signed_out", "rate_limited", "error"]),
+  message: Schema.String,
+  status: Schema.optional(Schema.Int),
+}) {}
+
+const Label = Schema.Struct({ name: Schema.String })
+const Login = Schema.NullOr(Schema.Struct({ login: Schema.String }))
+const Issue = Schema.Struct({
+  number: Schema.Int,
+  node_id: Schema.String,
+  title: Schema.String,
+  body: Schema.NullOr(Schema.String),
+  state: Schema.String,
+  updated_at: Schema.String,
+  user: Login,
+  labels: Schema.Array(Label),
+  pull_request: Schema.optional(Schema.Unknown),
+})
+const Comment = Schema.Struct({ id: Schema.Int, issue_url: Schema.String, body: Schema.String, updated_at: Schema.String, user: Login })
+const Created = Schema.Struct({ number: Schema.Int, node_id: Schema.optional(Schema.String) })
+const decodeIssues = Schema.decodeUnknownOption(Schema.fromJsonString(Schema.Array(Issue)))
+const decodeIssue = Schema.decodeUnknownOption(Schema.fromJsonString(Issue))
+const decodeComments = Schema.decodeUnknownOption(Schema.fromJsonString(Schema.Array(Comment)))
+const decodeCreated = Schema.decodeUnknownOption(Schema.fromJsonString(Created))
+
+const Pull = Schema.Struct({
+  head: Schema.Struct({ sha: Schema.String }),
+  state: Schema.optional(Schema.String),
+  merged: Schema.optional(Schema.Boolean),
+})
+const Runs = Schema.Struct({
+  workflow_runs: Schema.Array(
+    Schema.Struct({ id: Schema.Int, name: Schema.NullOr(Schema.String), status: Schema.String, run_attempt: Schema.optional(Schema.Int) }),
+  ),
+})
+const Timing = Schema.Struct({ billable: Schema.optional(Schema.Record(Schema.String, Schema.Struct({ total_ms: Schema.Finite }))) })
+const decodePull = Schema.decodeUnknownOption(Schema.fromJsonString(Pull))
+const decodeRuns = Schema.decodeUnknownOption(Schema.fromJsonString(Runs))
+const decodeTiming = Schema.decodeUnknownOption(Schema.fromJsonString(Timing))
+
+~~~~
+
+```json
+{"first_line":136,"last_line":322,"bytes":9074,"sha256":"a99cff1a0421a01bfce692f6fedd4795f02a8b3917ee8a13f9cdf22a0c6333f5"}
+```
+
+~~~~typescript
+
+export function make(deps: Deps) {
+  const gate = Semaphore.makeUnsafe(1)
+
+  /** Pulls from GitHub, then pushes dirty cards. Manual retry and the 60 second poll both come here. */
+  const sync = (key: string): Effect.Effect<Outcome> =>
+    gate.withPermits(1)(
+      Effect.gen(function* () {
+        const project = yield* deps.quiet((tx) => tx.select().from(BoardProjectTable).where(eq(BoardProjectTable.key, key)).get())
+        if (!project) return { status: "missing" } as const
+        if (!project.github_repo) return { status: "off" } as const
+        const failed = yield* pull(project, project.github_repo).pipe(
+          Effect.andThen(follow(project, project.github_repo)),
+          Effect.andThen(push(project, project.github_repo)),
+          Effect.as(undefined),
+          Effect.catch((failure: Failure) => Effect.succeed(failure)),
+        )
+        const state = failed ? failed.kind : "ok"
+        const error = failed ? failed.message : null
+        yield* settle(project, state, error)
+        return { status: "done", state, error } as const
+      }),
+    )
+
+  /**
+   * Fetches the Actions runs of every card's PR and caches their billable minutes in `board_ci_run`. Spend reads that
+   * cache, never GitHub, so a render never waits on the network. Runs are fetched once they complete and never again.
+   */
+  const ci = (key: string, force = false): Effect.Effect<Outcome> =>
+    gate.withPermits(1)(
+      Effect.gen(function* () {
+        const project = yield* deps.quiet((tx) => tx.select().from(BoardProjectTable).where(eq(BoardProjectTable.key, key)).get())
+        if (!project) return { status: "missing" } as const
+        if (!project.github_repo) return { status: "off" } as const
+        const repo = project.github_repo
+        const now = yield* Clock.currentTimeMillis
+        if (!force && project.ci_synced_at !== null && now - project.ci_synced_at < CI_TTL)
+          return { status: "done", state: project.github_state, error: project.github_error } as const
+        const issues = yield* deps.quiet((tx) =>
+          tx
+            .select()
+            .from(BoardIssueTable)
+            .where(and(eq(BoardIssueTable.project_id, project.id), sql`${BoardIssueTable.pr_number} is not null`, sql`${BoardIssueTable.stage} != 'cut'`))
+            .all(),
+        )
+        const failed = yield* Effect.forEach(issues, (issue) => runs(project, repo, issue), { discard: true }).pipe(
+          Effect.as(undefined),
+          Effect.catch((failure: Failure) => Effect.succeed(failure)),
+        )
+        if (!failed)
+          yield* deps.quiet((tx) => tx.update(BoardProjectTable).set({ ci_synced_at: now }).where(eq(BoardProjectTable.id, project.id)).run())
+        const state = failed ? failed.kind : "ok"
+        const error = failed ? failed.message : null
+        yield* settle(project, state, error)
+        return { status: "done", state, error } as const
+      }),
+    )
+
+  const runs = Effect.fnUntraced(function* (project: ProjectRow, repo: string, issue: IssueRow) {
+    const pull = Option.getOrUndefined(decodePull((yield* get(`repos/${repo}/pulls/${issue.pr_number}`, null)).body))
+    if (!pull) return
+    const found = Option.getOrUndefined(
+      decodeRuns((yield* get(`repos/${repo}/actions/runs?head_sha=${encodeURIComponent(pull.head.sha)}&per_page=${PAGE}`, null)).body),
+    )
+    const known = new Set(
+      (yield* deps.quiet((tx) =>
+        tx.select({ id: BoardCiRunTable.run_id }).from(BoardCiRunTable).where(eq(BoardCiRunTable.issue_id, issue.id)).all(),
+      )).map((row) => row.id),
+    )
+    const fresh = (found?.workflow_runs ?? []).filter((run) => run.status === "completed" && !known.has(run.id))
+    yield* Effect.forEach(
+      fresh,
+      (run) =>
+        Effect.gen(function* () {
+          const timing = Option.getOrUndefined(decodeTiming((yield* get(`repos/${repo}/actions/runs/${run.id}/timing`, null)).body))
+          const billable = Object.entries(timing?.billable ?? {})
+          const ms = billable.reduce((all, [, value]) => all + value.total_ms, 0)
+          const cost = billable.reduce((all, [runner, value]) => all + (value.total_ms / 60_000) * (RATES[runner.toUpperCase()] ?? RATES.UBUNTU), 0)
+          yield* deps.quiet((tx) =>
+            tx
+              .insert(BoardCiRunTable)
+              .values({
+                run_id: run.id,
+                project_id: project.id,
+                issue_id: issue.id,
+                name: run.name ?? "workflow",
+                attempt: run.run_attempt ?? 1,
+                billable_ms: Math.round(ms),
+                cost_usd: cost,
+              })
+              .onConflictDoNothing()
+              .run(),
+          )
+        }),
+      { discard: true },
+    )
+  })
+
+  /**
+   * The PR is the fact a card follows on every sync: an open PR moves a Building card to Review, a merged one moves it
+   * from Building or Review to Shipped and clears its crash reason. Maestro still moves every other stage; a paused
+   * project or card, and an owner hold before merge, keep the card where it is.
+   */
+  const follow = Effect.fnUntraced(function* (project: ProjectRow, repo: string) {
+    if (project.status !== "active") return
+    const issues = yield* deps.quiet((tx) =>
+      tx
+        .select()
+        .from(BoardIssueTable)
+        .where(
+          and(
+            eq(BoardIssueTable.project_id, project.id),
+            sql`${BoardIssueTable.pr_number} is not null`,
+            sql`${BoardIssueTable.stage} in ('building', 'review')`,
+          ),
+        )
+        .all(),
+    )
+    yield* Effect.forEach(issues, (issue) => advance(project, repo, issue), { discard: true })
+  })
+
+  const advance = Effect.fnUntraced(function* (project: ProjectRow, repo: string, issue: IssueRow) {
+    // One unreadable PR (deleted, renamed repo, a blip) leaves its card alone; it must not stop the rest of the sync.
+    const read = yield* get(`repos/${repo}/pulls/${issue.pr_number}`, null).pipe(Effect.option)
+    const pull = Option.getOrUndefined(Option.flatMap(read, (result) => decodePull(result.body)))
+
+END_PART

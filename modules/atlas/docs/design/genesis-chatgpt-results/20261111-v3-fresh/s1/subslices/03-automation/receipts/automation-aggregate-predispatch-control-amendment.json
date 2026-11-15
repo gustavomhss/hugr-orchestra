@@ -1,0 +1,13 @@
+{
+  "old_packet_sha256": "2da6adbf7cbbeeed52cd0ece41de9f499465646d345c198b685a735c5c86efb5",
+  "scope": "Control envelope only; no body, delta, criterion, or authored content change. Conditional evidence follows each judge own pending request.",
+  "recorded_at_utc": "2026-11-15T06:56:56.464512+00:00",
+  "preserved_previous_packet": "review-packets/prepared-history/automation-aggregate-v4-before-conditional-population.md",
+  "new_packet": {
+    "path": "review-packets/automation-aggregate-v4.md",
+    "bytes": 70241,
+    "sha256": "3198bf664dfe607f09c96b3da12ab75f73e10cae977b9d113a0b1ab358330952",
+    "git_blob_sha": "d1495e1293c574f0806ceb4c1ef7beb96a8d1a3a"
+  },
+  "actual_operation": "Python exact control-block substitution before any dispatch; body/delta suffix byte-equal."
+}

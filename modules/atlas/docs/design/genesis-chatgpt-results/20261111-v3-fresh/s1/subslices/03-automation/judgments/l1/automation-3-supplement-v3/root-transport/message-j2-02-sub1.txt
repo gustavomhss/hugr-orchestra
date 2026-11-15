@@ -1,0 +1,530 @@
+Transporte literal pela principal ao mesmo juiz J2, execução 34269cf4-d631-41c5-a30b-85b0ec217390. Não use ferramentas, delegue, edite ou receba parecer do outro juiz. Lote automation-3-supplement-v3; parte 2/8. Pacote canônico 408213 bytes SHA256 f2c8d12e8e0b22964fadfaba9c40632f0ba5489d795d76dc3efde70fd30bd276. Esta parte tem 51021 bytes SHA256 a3d0ba55a682d38093861fd866deb67fda59c735d5a09ba330fb4bfd7f99162e. Envio em dois fragmentos contíguos: este é 1/2, offsets UTF-8 [0,25458), 25458 bytes SHA256 407c8b59e90c038456b6a87e4567072826aff21eb077c221e413921915f08d2a. Junte os fragmentos sem os envelopes. Conserve o exame anterior e os deltas já recebidos. Julgue apenas após FIM_DO_LOTE; até lá responda somente ACK da parte e da última âncora.
+
+BEGIN_PART
+                crash_reason: input.crash_reason,
+                guardrail_rule: input.guardrail_rule,
+                area: input.area,
+                order: input.order,
+              }
+              if (input.number === undefined) {
+                if (!input.title) return yield* new RefusedError({ message: "A new issue needs a title." })
+                const id = Board.IssueID.create()
+                const row = {
+                  id,
+                  project_id: project.id,
+                  number: project.next_issue_number,
+                  title: input.title,
+                  body: input.body ?? "",
+                  type: input.type ?? ("feature" as const),
+                  epic_id: epic ?? null,
+                  stage: "backlog" as const,
+                  position: yield* endOf(tx, project.id, "backlog"),
+                  estimate: input.estimate ?? null,
+                  seat: input.seat ?? null,
+                  session_id: input.session ?? null,
+                  branch: input.branch ?? null,
+                  pr_number: input.pr ?? null,
+                  attempts: input.attempts ?? 0,
+                  crash_reason: input.crash_reason ?? null,
+                  guardrail_rule: input.guardrail_rule ?? null,
+                  area: input.area ?? null,
+                  order: input.order ?? null,
+                  record: input.record ?? null,
+                  stage_entered_at: now,
+                  github_dirty: project.github_repo !== null,
+                }
+                yield* tx.insert(BoardIssueTable).values(row).run()
+                yield* tx
+                  .update(BoardProjectTable)
+                  .set({ next_issue_number: project.next_issue_number + 1 })
+                  .where(eq(BoardProjectTable.id, project.id))
+                  .run()
+                const created = yield* tx.select().from(BoardIssueTable).where(eq(BoardIssueTable.id, id)).get()
+                if (created && input.depends_on) yield* setDependencies(tx, project, created, input.depends_on)
+                if (created?.session_id) yield* BoardSnapshot.dispatch(tx, created, {})
+                const activity = yield* log(tx, {
+                  project: project.id,
+                  issue: id,
+                  actor: "maestro",
+                  action: "issue.create",
+                  reason: input.reason,
+                  after: {
+                    ...pick(row, [
+                      "number",
+                      "title",
+                      "body",
+                      "type",
+                      "epic_id",
+                      "stage",
+                      "position",
+                      "estimate",
+                      "seat",
+                      "session_id",
+                      "branch",
+                      "pr_number",
+                      "stage_entered_at",
+                      "crash_reason",
+                      "guardrail_rule",
+                      "area",
+                      "order",
+                      "record",
+                    ]),
+                    ...(input.depends_on ? { depends_on: input.depends_on } : {}),
+                  },
+                })
+                return yield* issueResult(tx, project, id, activity)
+              }
+              const issue = yield* loadIssue(tx, project, input.number)
+              yield* requireActive(project, issue)
+              if (issue.stage === "review" && input.pr === null)
+                return yield* new RefusedError({
+                  message: `${project.key}-${issue.number} is in Review, which needs its PR; move it out of Review before unlinking the PR.`,
+                })
+              if (issue.stage === "queue" && ((input.pr !== undefined && input.pr !== issue.pr_number) || input.branch !== undefined))
+                return yield* new RefusedError({
+                  message: `${project.key}-${issue.number} is queued at its PR head; take it out with board_dequeue before changing its PR or branch.`,
+                })
+              // The record merges field by field so Maestro can fill it in over several calls; risk merges one level down.
+              const record = input.record
+                ? {
+                    ...issue.record,
+                    ...input.record,
+                    ...(input.record.risk ? { risk: { ...issue.record?.risk, ...input.record.risk } } : {}),
+                  }
+                : undefined
+              const change = diff(issue, { ...fields, record })
+              const before = input.depends_on ? (yield* refs(tx, "depends", [issue.id])).map((item) => item.ref) : undefined
+              // Compare as full refs so "12" and "LCH-12" are the same dependency.
+              const wanted = input.depends_on
+                ?.map((ref) => (/^\d+$/.test(ref.trim()) ? `${project.key}-${ref.trim()}` : ref.trim()))
+                .toSorted()
+              const dependencies =
+                wanted && before && JSON.stringify(before.toSorted()) !== JSON.stringify(wanted)
+                  ? { before: { depends_on: before }, after: { depends_on: wanted } }
+                  : undefined
+              if (!change && !dependencies)
+                return yield* new RefusedError({ message: `Nothing to change on ${project.key}-${issue.number}.` })
+              if (dependencies) yield* setDependencies(tx, project, issue, dependencies.after.depends_on)
+              const dirty = Object.keys(change?.after ?? {}).some((key) => MIRRORED.includes(key)) && project.github_repo !== null
+              if (change || dirty)
+                yield* tx
+                  .update(BoardIssueTable)
+                  .set({ ...change?.after, ...(dirty ? { github_dirty: true } : {}) })
+                  .where(eq(BoardIssueTable.id, issue.id))
+                  .run()
+              yield* BoardSnapshot.follow(tx, issue, change?.after ?? {})
+              const activity = yield* log(tx, {
+                project: project.id,
+                issue: issue.id,
+                actor: "maestro",
+                action: "issue.update",
+                reason: input.reason,
+                before: { ...change?.before, ...dependencies?.before },
+                after: { ...change?.after, ...dependencies?.after },
+              })
+              return yield* issueResult(tx, project, issue.id, activity)
+            }),
+          )
+          return done.result
+        }),
+
+        move: Effect.fn("Board.move")(function* (input) {
+          if (input.stage === "intake")
+            return yield* new RefusedError({ message: "Intake holds only GitHub-born issues; Maestro cannot move an issue into it." })
+          if (input.stage === "queue")
+            return yield* new RefusedError({ message: "Only the host moves a card into Queue; verify it and call board_queue." })
+          const ref = `${input.project}-${input.number}`
+          // A Shipped move with a PR needs a live, uncached proof that the PR is merged, read before the write lock.
+          const checked = yield* reading((tx) =>
+            Effect.gen(function* () {
+              const project = yield* loadProject(tx, input.project)
+              const issue = yield* loadIssue(tx, project, input.number)
+              return { issue, directory: yield* worktree(tx, project) }
+            }),
+          )
+          const proof =
+            input.stage === "shipped" && checked.issue.pr_number && !checked.issue.hold_before_merge
+              ? yield* trail(checked.issue, checked.directory, true)
+              : undefined
+          const done = yield* write((tx) =>
+            Effect.gen(function* () {
+              const project = yield* loadProject(tx, input.project)
+              const issue = yield* loadIssue(tx, project, input.number)
+~~~~
+
+```json
+{"first_line":1090,"last_line":1420,"bytes":16065,"sha256":"a4ade48dbd87c1be554c189c943afe13ed8cd79b6be4d25250d11489a49d2338"}
+```
+
+~~~~typescript
+              const now = yield* Clock.currentTimeMillis
+              const moved = issue.stage !== input.stage
+              const next = {
+                stage: input.stage,
+                position:
+                  input.position ?? (moved ? yield* endOf(tx, project.id, input.stage) : issue.position),
+                stage_entered_at: moved ? now : issue.stage_entered_at,
+              }
+              const change = diff(issue, next)
+              if (!change) return yield* new RefusedError({ message: `${ref} is already there.` })
+              yield* tx
+                .update(BoardIssueTable)
+                .set({ ...change.after, ...(moved && project.github_repo !== null ? { github_dirty: true } : {}) })
+                .where(eq(BoardIssueTable.id, issue.id))
+                .run()
+              const activity = yield* log(tx, {
+                project: project.id,
+                issue: issue.id,
+                actor: "maestro",
+                action: "issue.move",
+                reason: input.reason,
+                ...change,
+              })
+              return yield* issueResult(tx, project, issue.id, activity)
+            }),
+          )
+          return done.result
+        }),
+
+        steps: Effect.fn("Board.steps")(function* (input) {
+          if (input.steps.filter((step) => step.status === "active").length > 1)
+            return yield* new RefusedError({ message: "Only one step can be active at a time." })
+          const done = yield* write((tx) =>
+            Effect.gen(function* () {
+              const project = yield* loadProject(tx, input.project)
+              const issue = yield* loadIssue(tx, project, input.number)
+              yield* requireActive(project, issue)
+              const before = yield* stepsOf(tx, issue.id)
+              const after = input.steps.map((step): Board.Step => ({ title: step.title, status: step.status, now: step.now ?? null }))
+              if (JSON.stringify(before) === JSON.stringify(after))
+                return yield* new RefusedError({ message: `${project.key}-${issue.number} already has these steps.` })
+              yield* replaceSteps(tx, issue.id, after)
+              if (project.github_repo !== null)
+                yield* tx.update(BoardIssueTable).set({ github_dirty: true }).where(eq(BoardIssueTable.id, issue.id)).run()
+              const activity = yield* log(tx, {
+                project: project.id,
+                issue: issue.id,
+                actor: "maestro",
+                action: "steps.set",
+                reason: input.reason,
+                before: { steps: before },
+                after: { steps: after },
+              })
+              return yield* issueResult(tx, project, issue.id, activity)
+            }),
+          )
+          return done.result
+        }),
+
+        // Questions stay open to Maestro while paused: asking is how it reaches the owner.
+        question: Effect.fn("Board.question")(function* (input) {
+          const done = yield* write((tx) =>
+            Effect.gen(function* () {
+              const project = yield* loadProject(tx, input.project)
+              if (project.status === "archived") return yield* archived(project)
+              if (input.action === "withdraw") {
+                const question = yield* tx
+                  .select()
+                  .from(BoardQuestionTable)
+                  .where(and(eq(BoardQuestionTable.id, input.id), eq(BoardQuestionTable.project_id, project.id)))
+                  .get()
+                if (!question) return yield* new NotFoundError({ message: `Question ${input.id} is not on ${project.key}.` })
+                if (question.status !== "open")
+                  return yield* new RefusedError({ message: `Question ${input.id} is already ${question.status}.` })
+                yield* tx.update(BoardQuestionTable).set({ status: "withdrawn" }).where(eq(BoardQuestionTable.id, question.id)).run()
+                const activity = yield* log(tx, {
+                  project: project.id,
+                  issue: question.issue_id,
+                  actor: "maestro",
+                  action: "question.withdraw",
+                  reason: input.reason,
+                  before: { id: question.id, status: "open" },
+                  after: { id: question.id, status: "withdrawn" },
+                })
+                return { result: { activity }, changed: changed(project.id, activity, question.issue_id) }
+              }
+              const ids = input.options.map((option) => option.id)
+              if (new Set(ids).size !== ids.length) return yield* new RefusedError({ message: "Option ids must be unique." })
+              if (!ids.includes(input.recommended))
+                return yield* new RefusedError({ message: `The recommended option must be one of: ${ids.join(", ")}.` })
+              const issue = input.issue === undefined ? null : (yield* loadIssue(tx, project, input.issue)).id
+              const epic = input.epic === undefined ? null : (yield* loadEpic(tx, project, input.epic)).id
+              const id = Board.QuestionID.create()
+              yield* tx
+                .insert(BoardQuestionTable)
+                .values({
+                  id,
+                  project_id: project.id,
+                  issue_id: issue,
+                  epic_id: epic,
+                  text: input.text,
+                  options: input.options,
+                  recommended: input.recommended,
+                  cost_of_waiting: input.cost_of_waiting ?? null,
+                  blocking: input.blocking ?? false,
+                  status: "open",
+                })
+                .run()
+              const activity = yield* log(tx, {
+                project: project.id,
+                issue,
+                actor: "maestro",
+                action: "question.ask",
+                reason: input.reason,
+                after: {
+                  id,
+                  epic_id: epic,
+                  text: input.text,
+                  options: input.options,
+                  recommended: input.recommended,
+                  cost_of_waiting: input.cost_of_waiting ?? null,
+                  blocking: input.blocking ?? false,
+                  kind: null,
+                },
+              })
+              return { result: { activity }, changed: changed(project.id, activity, issue) }
+            }),
+          )
+          return done.result
+        }),
+
+        answer: Effect.fn("Board.answer")(function* (key, id, input) {
+          const done = yield* write((tx) =>
+            Effect.gen(function* () {
+              const project = yield* loadProject(tx, key)
+              const question = yield* tx
+                .select()
+                .from(BoardQuestionTable)
+                .where(and(eq(BoardQuestionTable.id, id as Board.QuestionID), eq(BoardQuestionTable.project_id, project.id)))
+                .get()
+              if (!question) return yield* new NotFoundError({ message: `Question ${id} is not on ${key}.` })
+              if (question.status !== "open") return yield* new RefusedError({ message: `That question is already ${question.status}.` })
+              if (!question.options.some((option) => option.id === input.option))
+                return yield* new RefusedError({
+                  message: `Pick one of: ${question.options.map((option) => option.id).join(", ")}.`,
+                })
+              const now = yield* Clock.currentTimeMillis
+              yield* tx
+                .update(BoardQuestionTable)
+                .set({ status: "answered", answer_option: input.option, answer_text: input.text ?? null, answered_at: now })
+                .where(eq(BoardQuestionTable.id, question.id))
+                .run()
+              const decision = yield* BoardDecision.record(tx, project, question, input, now)
+              const activity = yield* log(tx, {
+                project: project.id,
+                issue: question.issue_id,
+                actor: "owner",
+                action: "question.answer",
+                before: { id: question.id, status: "open" },
+                after: {
+                  id: question.id,
+                  status: "answered",
+                  answer_option: input.option,
+                  answer_text: input.text ?? null,
+                  decision,
+                },
+              })
+              return { result: { activity }, changed: changed(project.id, activity, question.issue_id) }
+            }),
+          )
+          return done.result
+        }),
+
+        changeDecision: Effect.fn("Board.changeDecision")(function* (key, id, input) {
+          return (yield* write((tx) => BoardDecision.change(tx, key, id, input))).result
+        }),
+
+        decisionOutcome: Effect.fn("Board.decisionOutcome")(function* (input) {
+          return (yield* write((tx) => BoardDecision.outcome(tx, input))).result
+        }),
+
+        settings: Effect.fn("Board.settings")(function* (key, input, actor) {
+          return (yield* write((tx) => BoardMoney.settings(tx, key, input, actor))).result
+        }),
+
+        note: Effect.fn("Board.note")(function* (key, number, input) {
+          const done = yield* write((tx) =>
+            Effect.gen(function* () {
+              const project = yield* loadProject(tx, key)
+              const issue = yield* loadIssue(tx, project, number)
+              const id = Board.NoteID.create()
+              yield* tx.insert(BoardNoteTable).values({ id, issue_id: issue.id, author: "owner", body: input.body }).run()
+              const activity = yield* log(tx, {
+                project: project.id,
+                issue: issue.id,
+                actor: "owner",
+                action: "note.add",
+                after: { id, author: "owner", body: input.body },
+              })
+              return { result: { activity }, changed: changed(project.id, activity, issue.id) }
+            }),
+          )
+          return done.result
+        }),
+
+        // A secret's value goes only to the credential store, inside the same transaction; the board keeps its label.
+        attach: Effect.fn("Board.attach")(function* (key, number, input) {
+          const id = Board.AttachmentID.create()
+          const content = input.kind === "secret" ? input.value : input.data
+          if (!content)
+            return yield* new RefusedError({
+              message: input.kind === "secret" ? "A secret needs a `value`." : "A file needs base64 `data`.",
+            })
+          const file =
+            input.kind === "secret"
+              ? undefined
+              : { bytes: Buffer.from(content, "base64"), path: path.join(global.data, "board", id, path.basename(input.name)) }
+          const done = yield* write((tx) =>
+            Effect.gen(function* () {
+              const project = yield* loadProject(tx, key)
+              const issue = yield* loadIssue(tx, project, number)
+              if (input.kind === "secret") {
+                const credential = yield* credentials.create({
+                  integrationID: Integration.ID.make("board"),
+                  label: input.name,
+                  value: { type: "key", key: content },
+                })
+                yield* tx
+                  .insert(BoardAttachmentTable)
+                  .values({ id, issue_id: issue.id, kind: "secret", name: input.name, credential_id: credential.id })
+                  .run()
+              }
+              if (input.kind !== "secret" && file) {
+                yield* Effect.promise(() => Bun.write(file.path, file.bytes))
+                yield* tx
+                  .insert(BoardAttachmentTable)
+                  .values({
+                    id,
+                    issue_id: issue.id,
+                    kind: input.kind,
+                    name: input.name,
+                    mime: input.mime ?? null,
+                    size: file.bytes.length,
+                    path: file.path,
+                  })
+                  .run()
+              }
+              const activity = yield* log(tx, {
+                project: project.id,
+                issue: issue.id,
+                actor: "owner",
+                action: "attachment.add",
+                after: { id, kind: input.kind, name: input.name },
+              })
+              return { result: { activity }, changed: changed(project.id, activity, issue.id) }
+            }),
+          )
+          return done.result
+        }),
+
+        editNote: Effect.fn("Board.editNote")(function* (key, number, id, input) {
+          const done = yield* write((tx) =>
+            Effect.gen(function* () {
+              const found = yield* ownerNote(tx, key, number, id, "edited")
+              if (found.note.body === input.body) return yield* new RefusedError({ message: "That note already says this." })
+              yield* tx.update(BoardNoteTable).set({ body: input.body }).where(eq(BoardNoteTable.id, found.note.id)).run()
+              const activity = yield* log(tx, {
+                project: found.project.id,
+                issue: found.issue.id,
+                actor: "owner",
+                action: "note.edit",
+                before: { id: found.note.id, body: found.note.body },
+                after: { id: found.note.id, body: input.body },
+              })
+              return { result: { activity }, changed: changed(found.project.id, activity, found.issue.id) }
+            }),
+          )
+          return done.result
+        }),
+
+        deleteNote: Effect.fn("Board.deleteNote")(function* (key, number, id) {
+          const done = yield* write((tx) =>
+            Effect.gen(function* () {
+              const found = yield* ownerNote(tx, key, number, id, "deleted")
+              yield* tx.delete(BoardNoteTable).where(eq(BoardNoteTable.id, found.note.id)).run()
+              const activity = yield* log(tx, {
+                project: found.project.id,
+                issue: found.issue.id,
+                actor: "owner",
+                action: "note.delete",
+                before: { id: found.note.id, body: found.note.body },
+              })
+              return { result: { activity }, changed: changed(found.project.id, activity, found.issue.id) }
+            }),
+          )
+          return done.result
+        }),
+
+        // The activity row keeps the label only; a secret's value never leaves the credential store, which loses it here.
+        removeAttachment: Effect.fn("Board.removeAttachment")(function* (key, number, id) {
+          const done = yield* write((tx) =>
+            Effect.gen(function* () {
+              const project = yield* loadProject(tx, key)
+              const issue = yield* loadIssue(tx, project, number)
+              const attachment = yield* tx
+                .select()
+                .from(BoardAttachmentTable)
+                .where(and(eq(BoardAttachmentTable.id, id as Board.AttachmentID), eq(BoardAttachmentTable.issue_id, issue.id)))
+                .get()
+              if (!attachment) return yield* new NotFoundError({ message: `Attachment ${id} is not on ${key}-${number}.` })
+              yield* tx.delete(BoardAttachmentTable).where(eq(BoardAttachmentTable.id, attachment.id)).run()
+              if (attachment.credential_id)
+                yield* tx.delete(CredentialTable).where(eq(CredentialTable.id, attachment.credential_id)).run()
+              const activity = yield* log(tx, {
+                project: project.id,
+                issue: issue.id,
+                actor: "owner",
+                action: "attachment.remove",
+                before: { id: attachment.id, kind: attachment.kind, name: attachment.name },
+              })
+              return { result: { activity }, changed: changed(project.id, activity, issue.id), file: attachment.path }
+            }),
+          )
+          const file = done.file
+          if (file) yield* Effect.promise(() => fs.rm(path.dirname(file), { recursive: true, force: true }))
+          return done.result
+        }),
+
+        undo: Effect.fn("Board.undo")(function* (key, id) {
+          const done = yield* write((tx) =>
+            Effect.gen(function* () {
+~~~~
+
+```json
+{"first_line":1442,"last_line":1720,"bytes":11945,"sha256":"a99caf4d9a2707bdc26ba84853acfd007c576c4747e8646fe6b865224bc26101"}
+```
+
+~~~~typescript
+                (row) =>
+                  !row.undone_by &&
+                  !(row.undoes && row.undoes > target.id) &&
+                  entity(row) === entity(target) &&
+                  touched(row).some((item) => keys.includes(item)),
+              )
+              if (conflict)
+                return yield* new RefusedError({
+                  message: `Changed since: a later ${conflict.action} touched the same fields, so this undo would clobber newer work.`,
+                })
+              yield* apply(tx, project, target, target.before)
+              const activity = yield* log(tx, {
+                project: project.id,
+                issue: target.issue_id,
+                actor: "owner",
+                action: "undo",
+                before: target.after,
+                after: target.before,
+                undoes: target.id,
+              })
+              yield* tx.update(BoardActivityTable).set({ undone_by: activity }).where(eq(BoardActivityTable.id, target.id)).run()
+              return { result: { activity }, changed: changed(project.id, activity, target.issue_id) }
+            }),
+          )
+          return done.result
+        }),
+
+        pause: Effect.fn("Board.pause")(function* (key, input) {
+          return yield* setProjectPause(key, true, input.reason)
+        }),
+
+
+END_PART

@@ -1,0 +1,30 @@
+{
+  "schema": "s1-03-producer-response-alias-overlays/v1",
+  "aliases": [
+    {
+      "call_id": "derived-automation-l2-source-fidelity-v2",
+      "original_pointer": "producers/derived-automation-flow/response.md",
+      "expected_response_sha256": "59ffb319da5b27d830b9eeabe7ac592c104a64496864235da4331cd5adc05c23",
+      "historical_response_identity": {
+        "path": "producers/derived-automation-flow/revisions/v3/history/response.md",
+        "bytes": 3043,
+        "sha256": "59ffb319da5b27d830b9eeabe7ac592c104a64496864235da4331cd5adc05c23",
+        "git_blob_sha": "f07fae15e22fabc2fd4cad461fd721eab5e031d3"
+      }
+    },
+    {
+      "call_id": "derived-automation-l3-author-01",
+      "original_pointer": "producers/derived-automation-impact/response.md",
+      "expected_response_sha256": "85831ceada2e319c68ec37bc7e521de4d66c2aa1828e2df18a25886fe0a181f7",
+      "historical_response_identity": {
+        "path": "producers/derived-automation-impact/revisions/v2/history/response.md",
+        "bytes": 2703,
+        "sha256": "85831ceada2e319c68ec37bc7e521de4d66c2aa1828e2df18a25886fe0a181f7",
+        "git_blob_sha": "377fdc2968753ba8d881097a808323b09237ad34"
+      }
+    }
+  ],
+  "original_dispatch_metadata_preserved": true,
+  "proposal_sha256": "575ff023783621b86638ebf3481c8a97f432f7fc969dec9df60cae94cede084f",
+  "new_native_requests": 0
+}

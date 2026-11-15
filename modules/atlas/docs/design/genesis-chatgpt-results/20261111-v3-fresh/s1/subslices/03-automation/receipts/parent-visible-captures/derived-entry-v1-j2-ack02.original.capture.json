@@ -1,0 +1,9 @@
+{
+  "agent_id": "/root/s1_03_j2",
+  "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/payload/receipts/parent-visible-captures/derived-entry-v1-j2-ack02.original.md",
+  "bytes": 225,
+  "sha256": "2ef306ae55bc38c06dce4ba1d4a9dbbc7ff1fe98b40894703ebfc8bcbc4d1aca",
+  "literal": true,
+  "origin": "Native FINAL_ANSWER with ACK observed by root, copied to courier with explicit provenance",
+  "at_utc": "2026-11-15T10:47:42.880977+00:00"
+}

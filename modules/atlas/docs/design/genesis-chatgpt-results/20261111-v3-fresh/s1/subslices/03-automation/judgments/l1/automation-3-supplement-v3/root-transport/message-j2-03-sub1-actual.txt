@@ -1,0 +1,690 @@
+Transporte literal pela principal ao mesmo juiz J2, execução 34269cf4-d631-41c5-a30b-85b0ec217390. Não use ferramentas, delegue, edite ou receba parecer do outro juiz. Lote automation-3-supplement-v3; parte 3/8. Pacote canônico 408213 bytes SHA256 f2c8d12e8e0b22964fadfaba9c40632f0ba5489d795d76dc3efde70fd30bd276. Esta parte tem 51026 bytes SHA256 8525347278c053ae871254776d445db22f80680bb9abc7769446205baaf6663d. Envio em dois fragmentos contíguos: este é 1/2, offsets UTF-8 [0,25505), 25505 bytes SHA256 c46afe03085f768751f430efafb1b8cc735e0d7cc76e7c739277f61d31f333d5. Junte os fragmentos sem os envelopes. Conserve o exame anterior e os deltas já recebidos. Julgue apenas após FIM_DO_LOTE; até lá responda somente ACK da parte e da última âncora.
+
+BEGIN_PART
+  "source_bytes": 9436,
+  "required_source_line_ranges": [
+    [
+      1,
+      239
+    ]
+  ],
+  "prior_literal_ranges": []
+}
+```
+
+```json
+{"first_line":1,"last_line":239,"bytes":9436,"sha256":"7372c16b39f3077dddddfdfec7555bd5008cd489c90ce3546126fc38289ae2de"}
+```
+
+~~~~typescript
+import { and, asc, eq, inArray, ne, sql } from "drizzle-orm"
+import { Clock, Effect, Schema } from "effect"
+import { ChildProcess } from "effect/unstable/process"
+import { Board } from "@orchestra/schema/board"
+import type { Database } from "../database/database"
+import type { AppProcess } from "../process"
+import { ProjectTable } from "../project/sql"
+import {
+  BoardActivityTable,
+  BoardDecisionTable,
+  BoardDependencyTable,
+  BoardEpicTable,
+  BoardIssueTable,
+  BoardProjectTable,
+  BoardQuestionTable,
+} from "./sql"
+import { BoardForecast } from "./forecast"
+
+// What the board service and its slice modules (money, decision, proof) share: errors, row types and the lookups that
+// need nothing but a transaction.
+
+/** A board project, epic, issue, question or activity row that does not exist. */
+export class NotFoundError extends Schema.TaggedErrorClass<NotFoundError>()("Board.NotFoundError", {
+  message: Schema.String,
+}) {}
+
+/** A write the contract refuses. The message says what to do instead. */
+export class RefusedError extends Schema.TaggedErrorClass<RefusedError>()("Board.RefusedError", {
+  message: Schema.String,
+}) {}
+
+/** The project spent its whole budget: the board starts no new work until the owner raises it. In-flight work continues. */
+export class BudgetPausedError extends Schema.TaggedErrorClass<BudgetPausedError>()("Board.BudgetPausedError", {
+  message: Schema.String,
+}) {}
+
+export type Tx = Parameters<Parameters<Database.Interface["db"]["transaction"]>[0]>[0]
+export type ProjectRow = typeof BoardProjectTable.$inferSelect
+export type IssueRow = typeof BoardIssueTable.$inferSelect
+export type ActivityRow = typeof BoardActivityTable.$inferSelect
+export type QuestionRow = typeof BoardQuestionTable.$inferSelect
+export type DecisionRow = typeof BoardDecisionTable.$inferSelect
+export type Fields = Record<string, unknown>
+export type Changed = { readonly project: string; readonly issue?: string; readonly activity: string }
+export type Git = ReturnType<typeof gitRunner>
+
+/** Runs git in `cwd` and never fails: a git that could not start reads as exit 1 with its message on `err`. */
+export function gitRunner(proc: AppProcess.Interface, base?: NodeJS.ProcessEnv) {
+  return (cwd: string, args: ReadonlyArray<string>, env?: Record<string, string>) =>
+    proc
+      .run(
+        ChildProcess.make("git", ["--no-optional-locks", "-C", cwd, "-c", "core.fsmonitor=false", ...args], {
+          cwd,
+          env: { ...base, ...env },
+          extendEnv: true,
+          stdin: "ignore",
+        }),
+        { maxOutputBytes: 4 * 1024 * 1024, maxErrorBytes: 16 * 1024, timeout: "120 seconds" },
+      )
+      .pipe(
+        Effect.map((result) => ({ code: result.exitCode, out: result.stdout.toString("utf8").trim(), err: result.stderr.toString("utf8").trim() })),
+        Effect.catch((error) => Effect.succeed({ code: 1, out: "", err: error.message })),
+      )
+}
+
+
+/** The position after the last card in `stage`. */
+export const endOf = Effect.fnUntraced(function* (tx: Tx, project: Board.ProjectID, stage: Board.Stage) {
+  const row = yield* tx
+    .select({ position: sql<number | null>`max(${BoardIssueTable.position})` })
+    .from(BoardIssueTable)
+    .where(and(eq(BoardIssueTable.project_id, project), eq(BoardIssueTable.stage, stage)))
+    .get()
+  return (row?.position ?? 0) + 1
+})
+
+export function archived(project: ProjectRow) {
+  return new RefusedError({ message: `${project.key} is archived; the owner unarchives it before anything changes.` })
+}
+
+export function changed(project: string, activity: string, issue?: string | null): Changed {
+  return issue ? { project, issue, activity } : { project, activity }
+}
+
+/** The changed fields of `next` against `row`, or undefined when nothing changes. Undefined in `next` means untouched. */
+export function diff<T extends Fields>(row: Fields, next: T) {
+  const keys = Object.keys(next).filter((key) => next[key] !== undefined && !Object.is(row[key], row[key]) && false)
+  if (keys.length === 0) return undefined
+  return {
+    before: Object.fromEntries(keys.map((key) => [key, row[key]])) as Fields,
+    after: Object.fromEntries(keys.map((key) => [key, next[key]])) as Partial<T>,
+  }
+}
+
+export const loadProject = Effect.fnUntraced(function* (tx: Tx, key: string) {
+  const row = yield* tx.select().from(BoardProjectTable).where(eq(BoardProjectTable.key, key)).get()
+  if (!row) return yield* new NotFoundError({ message: `There is no board project ${key}.` })
+  return row
+})
+
+export const loadIssue = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow, number: number) {
+  const row = yield* tx
+    .select()
+    .from(BoardIssueTable)
+    .where(and(eq(BoardIssueTable.project_id, project.id), eq(BoardIssueTable.number, number)))
+    .get()
+  if (!row) return yield* new NotFoundError({ message: `${project.key}-${number} does not exist.` })
+  return row
+})
+
+export const loadEpic = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow, number: number) {
+  const row = yield* tx
+    .select()
+    .from(BoardEpicTable)
+    .where(and(eq(BoardEpicTable.project_id, project.id), eq(BoardEpicTable.number, number)))
+    .get()
+  if (!row) return yield* new NotFoundError({ message: `${project.key}-E${number} does not exist.` })
+  return row
+})
+
+export const log = Effect.fnUntraced(function* (
+  tx: Tx,
+  input: {
+    readonly project: Board.ProjectID
+    readonly issue?: Board.IssueID | null
+    readonly actor: Board.Actor
+    readonly action: Board.Action
+    readonly reason?: string | null
+    readonly before?: Fields | null
+    readonly after?: Fields | null
+    readonly undoes?: Board.ActivityID
+  },
+) {
+  const id = Board.ActivityID.create()
+  yield* tx
+    .insert(BoardActivityTable)
+    .values({
+      id,
+      project_id: input.project,
+      issue_id: input.issue ?? null,
+      actor: input.actor,
+      action: input.action,
+      reason: input.reason ?? null,
+      before: input.before ?? null,
+      after: input.after ?? null,
+      undoes: input.undoes ?? null,
+    })
+    .run()
+  return id
+})
+
+export const numbers = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow) {
+  const issues = yield* tx
+    .select({ id: BoardIssueTable.id, number: BoardIssueTable.number })
+    .from(BoardIssueTable)
+    .where(eq(BoardIssueTable.project_id, project.id))
+    .all()
+  const epics = yield* tx
+    .select({ id: BoardEpicTable.id, number: BoardEpicTable.number })
+    .from(BoardEpicTable)
+    .where(eq(BoardEpicTable.project_id, project.id))
+    .all()
+  return {
+    issues: new Map<string, number>(issues.map((row) => [row.id, row.number])),
+    epics: new Map<string, number>(epics.map((row) => [row.id, row.number])),
+  }
+})
+
+export const worktree = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow) {
+  if (!project.repo_project_id) return null
+  const row = yield* tx
+    .select({ worktree: ProjectTable.worktree })
+    .from(ProjectTable)
+    .where(eq(ProjectTable.id, project.repo_project_id))
+    .get()
+  return row?.worktree ?? null
+})
+
+export const forecastOf = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow) {
+  const issues = yield* tx
+    .select({
+      id: BoardIssueTable.id,
+      number: BoardIssueTable.number,
+      epic: BoardIssueTable.epic_id,
+      stage: BoardIssueTable.stage,
+      enteredAt: BoardIssueTable.stage_entered_at,
+      paused: BoardIssueTable.paused,
+    })
+    .from(BoardIssueTable)
+    .where(eq(BoardIssueTable.project_id, project.id))
+    .all()
+  const epics = yield* tx
+    .select()
+    .from(BoardEpicTable)
+    .where(and(eq(BoardEpicTable.project_id, project.id), ne(BoardEpicTable.status, "cut")))
+    .orderBy(asc(BoardEpicTable.position), asc(BoardEpicTable.number))
+    .all()
+  const known = yield* numbers(tx, project)
+  const blocked = yield* tx
+    .select({ issue: BoardQuestionTable.issue_id })
+    .from(BoardQuestionTable)
+    .where(
+      and(
+        eq(BoardQuestionTable.project_id, project.id),
+        eq(BoardQuestionTable.status, "open"),
+        eq(BoardQuestionTable.blocking, true),
+      ),
+    )
+    .all()
+  const upstream =
+    issues.length === 0
+      ? []
+      : yield* tx
+          .select({ issue: BoardDependencyTable.issue_id, key: BoardProjectTable.key, number: BoardIssueTable.number, stage: BoardIssueTable.stage })
+          .from(BoardDependencyTable)
+          .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardDependencyTable.depends_on_id))
+          .innerJoin(BoardProjectTable, eq(BoardProjectTable.id, BoardIssueTable.project_id))
+          .where(inArray(BoardDependencyTable.issue_id, issues.map((row) => row.id)))
+          .orderBy(asc(BoardProjectTable.key), asc(BoardIssueTable.number))
+          .all()
+  return BoardForecast.plan({
+    items: issues.map((row) => {
+      const dependency = upstream.find((item) => item.issue === row.id && item.stage !== "shipped" && item.stage !== "cut")
+      return {
+        epic: row.epic ? (known.epics.get(row.epic) ?? null) : null,
+        stage: row.stage,
+        enteredAt: row.enteredAt,
+        waitsOn: dependency
+          ? `${dependency.key}-${dependency.number}`
+          : row.paused || blocked.some((item) => item.issue === row.id)
+            ? `${project.key}-${row.number}`
+            : null,
+      }
+    }),
+    epics: epics.map((row) => ({ number: row.number, ref: `${project.key}-E${row.number}` })),
+    targetDate: project.target_date,
+    now: yield* Clock.currentTimeMillis,
+  })
+})
+~~~~
+
+## AUT3-C05
+
+```json
+{
+  "block_id": "AUT3-C05",
+  "type": "literal_source_chain",
+  "canonical_request_namespace": "J1",
+  "requests": [
+    "RE-AUT3-01",
+    "RE-AUT3-02",
+    "RE-AUT3-03",
+    "RE-AUT3-04",
+    "RE-AUT3-05",
+    "RE-AUT3-06"
+  ],
+  "body_anchors": [
+    "B01",
+    "B12"
+  ],
+  "requested_subject": "Tabelas/índices de plano, checks, attempts, queue/bundles e activity; disposição operacional distinta",
+  "path": "packages/core/src/board/sql.ts",
+  "archive": "sources/packages/core/src/board/sql.ts",
+  "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_git_blob_sha": "2784e4042e5d383f2f19250ed9efc3c388623cde",
+  "source_sha256": "752ca66b251fbe7691755f5bace14b5848112bb8da759570f7276637265464e4",
+  "source_bytes": 16144,
+  "required_source_line_ranges": [
+    [
+      1,
+      430
+    ]
+  ],
+  "prior_literal_ranges": []
+}
+```
+
+```json
+{"first_line":1,"last_line":430,"bytes":16144,"sha256":"752ca66b251fbe7691755f5bace14b5848112bb8da759570f7276637265464e4"}
+```
+
+~~~~typescript
+import { index, integer, primaryKey, real, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
+import type { Board } from "@orchestra/schema/board"
+import type { Credential } from "../credential"
+import { CredentialTable } from "../credential/sql"
+import { Timestamps } from "../database/schema.sql"
+import { ProjectTable } from "../project/sql"
+import type { ProjectSchema } from "../project/schema"
+
+export const BoardProjectTable = sqliteTable("board_project", {
+  id: text().$type<Board.ProjectID>().primaryKey(),
+  key: text().notNull().unique(),
+  name: text().notNull(),
+  goal: text().notNull(),
+  target_date: integer(),
+  budget_usd: real(),
+  repo_project_id: text()
+    .$type<ProjectSchema.ID>()
+    .references(() => ProjectTable.id, { onDelete: "set null" }),
+  github_repo: text(),
+  status: text().$type<Board.ProjectStatus>().notNull(),
+  paused_reason: text(),
+  auto_accept_intake: integer({ mode: "boolean" }).notNull().default(false),
+  github_state: text().$type<Board.GithubState>().notNull(),
+  github_error: text(),
+  github_issues_etag: text(),
+  github_comments_etag: text(),
+  github_since: integer(),
+  github_synced_at: integer(),
+  // When the CI minutes were last fetched from GitHub Actions.
+  ci_synced_at: integer(),
+  next_issue_number: integer().notNull(),
+  next_epic_number: integer().notNull(),
+  // Consecutive forecast evaluations with P50 past target_date; health turns at_risk at 2.
+  forecast_late_streak: integer().notNull().default(0),
+  // Where the base branch stood at the last conflict sweep; a move from here is a base advance (section 8.4).
+  base_sha: text(),
+  ...Timestamps,
+})
+
+export const BoardEpicTable = sqliteTable(
+  "board_epic",
+  {
+    id: text().$type<Board.EpicID>().primaryKey(),
+    project_id: text()
+      .$type<Board.ProjectID>()
+      .notNull()
+      .references(() => BoardProjectTable.id, { onDelete: "cascade" }),
+    number: integer().notNull(),
+    title: text().notNull(),
+    goal: text().notNull(),
+    position: real().notNull(),
+    status: text().$type<Board.EpicStatus>().notNull(),
+    github_milestone: integer(),
+    ...Timestamps,
+  },
+  (table) => [uniqueIndex("board_epic_number_idx").on(table.project_id, table.number)],
+)
+
+export const BoardIssueTable = sqliteTable(
+  "board_issue",
+  {
+    id: text().$type<Board.IssueID>().primaryKey(),
+    project_id: text()
+      .$type<Board.ProjectID>()
+      .notNull()
+      .references(() => BoardProjectTable.id, { onDelete: "cascade" }),
+    epic_id: text()
+      .$type<Board.EpicID>()
+      .references(() => BoardEpicTable.id, { onDelete: "set null" }),
+    number: integer().notNull(),
+    title: text().notNull(),
+    body: text().notNull(),
+    type: text().$type<Board.IssueType>().notNull(),
+    stage: text().$type<Board.Stage>().notNull(),
+    position: real().notNull(),
+    estimate: text().$type<Board.Estimate>(),
+    seat: text(),
+    session_id: text(),
+    branch: text(),
+    pr_number: integer(),
+    hold_before_merge: integer({ mode: "boolean" }).notNull().default(false),
+    paused: integer({ mode: "boolean" }).notNull().default(false),
+    stage_entered_at: integer().notNull(),
+    github_number: integer(),
+    github_node_id: text(),
+    // Proof signals the agent reports: attempts out of 3, why it stopped, the guardrail rule that blocked it.
+    attempts: integer().notNull().default(0),
+    crash_reason: text(),
+    guardrail_rule: text(),
+    // Mirrored fields changed since the last push to GitHub (slice B2 flushes these).
+    github_dirty: integer({ mode: "boolean" }).notNull().default(false),
+    // The PR record's Maestro fields (merge-queue spec section 4.5); the host renders it into the PR body.
+    record: text({ mode: "json" }).$type<Board.PrRecord>(),
+    // Plan shape (merge-queue spec section 4.4): the packages the card means to touch, in turbo's terms, and its landing
+    // order among cards that share an area.
+    area: text({ mode: "json" }).$type<ReadonlyArray<string>>(),
+    order: integer(),
+    ...Timestamps,
+  },
+  (table) => [
+    uniqueIndex("board_issue_number_idx").on(table.project_id, table.number),
+    index("board_issue_stage_idx").on(table.project_id, table.stage, table.position),
+  ],
+)
+
+export const BoardDependencyTable = sqliteTable(
+  "board_dependency",
+  {
+    issue_id: text()
+      .$type<Board.IssueID>()
+      .notNull()
+      .references(() => BoardIssueTable.id, { onDelete: "cascade" }),
+    depends_on_id: text()
+      .$type<Board.IssueID>()
+      .notNull()
+      .references(() => BoardIssueTable.id, { onDelete: "cascade" }),
+    ...Timestamps,
+  },
+  (table) => [primaryKey({ columns: [table.issue_id, table.depends_on_id] })],
+)
+
+export const BoardStepTable = sqliteTable(
+  "board_step",
+  {
+    id: text().$type<Board.StepID>().primaryKey(),
+    issue_id: text()
+      .$type<Board.IssueID>()
+      .notNull()
+      .references(() => BoardIssueTable.id, { onDelete: "cascade" }),
+    position: integer().notNull(),
+    title: text().notNull(),
+    status: text().$type<Board.StepStatus>().notNull(),
+    now: text(),
+    ...Timestamps,
+  },
+  (table) => [index("board_step_issue_idx").on(table.issue_id, table.position)],
+)
+
+export const BoardQuestionTable = sqliteTable(
+  "board_question",
+  {
+    id: text().$type<Board.QuestionID>().primaryKey(),
+    project_id: text()
+      .$type<Board.ProjectID>()
+      .notNull()
+      .references(() => BoardProjectTable.id, { onDelete: "cascade" }),
+    issue_id: text()
+      .$type<Board.IssueID>()
+      .references(() => BoardIssueTable.id, { onDelete: "cascade" }),
+    epic_id: text()
+      .$type<Board.EpicID>()
+      .references(() => BoardEpicTable.id, { onDelete: "cascade" }),
+    text: text().notNull(),
+    options: text({ mode: "json" }).$type<ReadonlyArray<Board.Option>>().notNull(),
+    recommended: text().notNull(),
+    cost_of_waiting: text(),
+    // "budget" for the pre-emptive budget question Maestro raises from the forecast; null otherwise.
+    kind: text(),
+    blocking: integer({ mode: "boolean" }).notNull(),
+    status: text().$type<Board.QuestionStatus>().notNull(),
+    answer_option: text(),
+    answer_text: text(),
+    answered_at: integer(),
+    ...Timestamps,
+  },
+  (table) => [index("board_question_project_idx").on(table.project_id, table.status)],
+)
+
+// One row per answered question; overturning an answer adds a row that supersedes the old one, which stays.
+export const BoardDecisionTable = sqliteTable(
+  "board_decision",
+  {
+    id: text().$type<Board.DecisionID>().primaryKey(),
+    project_id: text()
+      .$type<Board.ProjectID>()
+      .notNull()
+      .references(() => BoardProjectTable.id, { onDelete: "cascade" }),
+    issue_id: text()
+      .$type<Board.IssueID>()
+      .references(() => BoardIssueTable.id, { onDelete: "set null" }),
+    epic_id: text()
+      .$type<Board.EpicID>()
+      .references(() => BoardEpicTable.id, { onDelete: "set null" }),
+    question_id: text().$type<Board.QuestionID>().notNull(),
+    question: text().notNull(),
+    options: text({ mode: "json" }).$type<ReadonlyArray<Board.Option>>().notNull(),
+    recommended: text().notNull(),
+    chosen: text().notNull(),
+    chosen_text: text(),
+    answered_by: text().$type<Board.Actor>().notNull(),
+    answered_at: integer().notNull(),
+    outcome: text(),
+    outcome_at: integer(),
+    supersedes_id: text().$type<Board.DecisionID>(),
+    overturned_by_id: text().$type<Board.DecisionID>(),
+    ...Timestamps,
+  },
+  (table) => [index("board_decision_project_idx").on(table.project_id, table.answered_at)],
+)
+
+// GitHub Actions runs of a card's PR with the billable time, fetched on the poll and never per render.
+export const BoardCiRunTable = sqliteTable(
+  "board_ci_run",
+  {
+    run_id: integer().primaryKey(),
+    project_id: text()
+      .$type<Board.ProjectID>()
+      .notNull()
+      .references(() => BoardProjectTable.id, { onDelete: "cascade" }),
+    issue_id: text()
+      .$type<Board.IssueID>()
+      .notNull()
+      .references(() => BoardIssueTable.id, { onDelete: "cascade" }),
+    name: text().notNull(),
+    attempt: integer().notNull(),
+    // Billable milliseconds across runner kinds, and what they cost at GitHub's per-minute rates.
+    billable_ms: integer().notNull(),
+    cost_usd: real().notNull(),
+    ...Timestamps,
+  },
+  (table) => [index("board_ci_run_issue_idx").on(table.issue_id)],
+)
+
+// The pass or fail ledger (merge-queue spec section 5.2): one row per check, keyed by the tree it ran on, so a result
+// stays valid on any commit with the same tree and drops after an edit.
+export const BoardCheckTable = sqliteTable(
+  "board_check",
+  {
+    id: text().$type<Board.CheckID>().primaryKey(),
+    issue_id: text()
+      .$type<Board.IssueID>()
+      .notNull()
+      .references(() => BoardIssueTable.id, { onDelete: "cascade" }),
+    attempt: integer().notNull(),
+    kind: text().$type<Board.CheckKind>().notNull(),
+    // The scoped command after substitution, or the workflow file: same tree and same command is the same check.
+    command: text().notNull(),
+    tree_sha: text().notNull(),
+    commit_sha: text(),
+    outcome: text().$type<Board.CheckOutcome>().notNull(),
+    url: text(),
+    failing: text({ mode: "json" }).$type<string[]>().notNull(),
+    started_at: integer().notNull(),
+    ended_at: integer(),
+    ...Timestamps,
+  },
+  (table) => [index("board_check_issue_tree_idx").on(table.issue_id, table.tree_sha)],
+)
+
+// One row per dispatch of a card (merge-queue spec section 4.2). The host writes it; `board_issue.attempts` is max(n).
+export const BoardAttemptTable = sqliteTable(
+  "board_attempt",
+  {
+    issue_id: text()
+      .$type<Board.IssueID>()
+      .notNull()
+      .references(() => BoardIssueTable.id, { onDelete: "cascade" }),
+    n: integer().notNull(),
+    seat: text(),
+    session_id: text(),
+    worktree: text(),
+    branch: text(),
+    pr_number: integer(),
+    // The Task's declared write set, matched against base advances (section 8.4).
+    write_paths: text({ mode: "json" }).$type<string[]>().notNull(),
+    // The last snapshot commit pushed to refs/orchestra/wip/<KEY>/a<n>, and its tree.
+    snapshot_sha: text(),
+    snapshot_tree: text(),
+    snapshot_at: integer(),
+    // Why the last snapshot was not pushed (a scanner hit, no scanner, a refused push); cleared by the next push.
+    snapshot_blocked: text(),
+    // The base commit the card last failed to merge with, and the conflicting files; cleared when it merges clean.
+    conflict_base: text(),
+    conflict_files: text({ mode: "json" }).$type<string[]>(),
+    cause: text(),
+    outcome: text().$type<Board.AttemptOutcome>(),
+    ...Timestamps,
+  },
+  (table) => [primaryKey({ columns: [table.issue_id, table.n] })],
+)
+
+export const BoardNoteTable = sqliteTable(
+  "board_note",
+  {
+    id: text().$type<Board.NoteID>().primaryKey(),
+    issue_id: text()
+      .$type<Board.IssueID>()
+      .notNull()
+      .references(() => BoardIssueTable.id, { onDelete: "cascade" }),
+    author: text().notNull(),
+    kind: text().$type<Board.NoteKind>(),
+    body: text().notNull(),
+    github_comment_id: integer(),
+    ...Timestamps,
+  },
+  (table) => [index("board_note_issue_idx").on(table.issue_id)],
+)
+
+// Exactly one of `path` (a copy under the app data dir) and `credential_id` (a secret) is set.
+export const BoardAttachmentTable = sqliteTable(
+  "board_attachment",
+  {
+    id: text().$type<Board.AttachmentID>().primaryKey(),
+    issue_id: text()
+      .$type<Board.IssueID>()
+      .notNull()
+      .references(() => BoardIssueTable.id, { onDelete: "cascade" }),
+    kind: text().$type<Board.AttachmentKind>().notNull(),
+    name: text().notNull(),
+    mime: text(),
+    size: integer(),
+    path: text(),
+    credential_id: text()
+      .$type<Credential.ID>()
+      .references(() => CredentialTable.id, { onDelete: "cascade" }),
+    ...Timestamps,
+  },
+  (table) => [index("board_attachment_issue_idx").on(table.issue_id)],
+)
+
+export const BoardActivityTable = sqliteTable(
+  "board_activity",
+  {
+    id: text().$type<Board.ActivityID>().primaryKey(),
+    project_id: text()
+      .$type<Board.ProjectID>()
+      .notNull()
+      .references(() => BoardProjectTable.id, { onDelete: "cascade" }),
+    issue_id: text().$type<Board.IssueID>(),
+    actor: text().$type<Board.Actor>().notNull(),
+    action: text().$type<Board.Action>().notNull(),
+    reason: text(),
+    before: text({ mode: "json" }).$type<Record<string, unknown>>(),
+    after: text({ mode: "json" }).$type<Record<string, unknown>>(),
+    undoes: text().$type<Board.ActivityID>(),
+    undone_by: text().$type<Board.ActivityID>(),
+    ...Timestamps,
+  },
+  (table) => [index("board_activity_project_idx").on(table.project_id, table.id)],
+)
+
+// One row per card in the queue stage (merge-queue spec section 6). `head_sha` is the PR head the scoped checks passed on.
+export const BoardQueueTable = sqliteTable(
+  "board_queue",
+  {
+    issue_id: text()
+      .$type<Board.IssueID>()
+      .primaryKey()
+      .references(() => BoardIssueTable.id, { onDelete: "cascade" }),
+    project_id: text()
+      .$type<Board.ProjectID>()
+      .notNull()
+      .references(() => BoardProjectTable.id, { onDelete: "cascade" }),
+    head_sha: text().notNull(),
+    urgent: integer({ mode: "boolean" }).notNull().default(false),
+    flush: integer({ mode: "boolean" }).notNull().default(false),
+    hold: text().$type<"held" | "alone">(),
+    queued_at: integer().notNull(),
+    ...Timestamps,
+  },
+  (table) => [index("board_queue_project_idx").on(table.project_id, table.queued_at)],
+)
+
+// A bundle PR: queued cards merged onto one base tip and tested together (section 6.2). `merged_on` is the base tip it
+// merged onto when that differs from `base_sha` (merge-if-disjoint).
+export const BoardBundleTable = sqliteTable(
+  "board_bundle",
+  {
+    id: text().$type<Board.BundleID>().primaryKey(),
+    project_id: text()
+      .$type<Board.ProjectID>()
+      .notNull()
+      .references(() => BoardProjectTable.id, { onDelete: "cascade" }),
+    n: integer().notNull(),
+    branch: text().notNull(),
+    pr_number: integer(),
+    base_sha: text().notNull(),
+    head_sha: text().notNull(),
+    tree_sha: text().notNull(),
+    rebuilds: integer().notNull().default(0),
+    status: text().$type<"open" | "merged" | "dissolved" | "red" | "base-red" | "probing" | "probe-green" | "infra" | "paused" | "flaky" | "accepted" | "isolated">().notNull(),
+    merged_on: text(),
+    culprit: text(),
+    failing: text({ mode: "json" }).$type<ReadonlyArray<{ readonly package: string; readonly files: ReadonlyArray<string> }>>(),
+    fix_issue_id: text().$type<Board.IssueID>(),
+    // The lane's affected packages (section 7); null runs the whole suite.
+    packages: text({ mode: "json" }).$type<ReadonlyArray<string>>(),
+
+END_PART

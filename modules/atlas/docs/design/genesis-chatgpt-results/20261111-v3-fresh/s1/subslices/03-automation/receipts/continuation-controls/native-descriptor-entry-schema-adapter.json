@@ -1,0 +1,14 @@
+{
+  "id": "root-native-descriptor-entry-schema-adapter",
+  "target": "/root/native_descriptor",
+  "kind": "mechanical_schema_adapter_no_semantic_vote",
+  "method": "collaboration.followup_task",
+  "tool_returned_normally": true,
+  "message_path": "payload/receipts/continuation-controls/native-descriptor-entry-schema-adapter.message.txt",
+  "message_bytes": 1287,
+  "message_sha256": "8125a32d806aad02d2649846466ccf29ee6767969e81fe5dfee3d23cb361cc11",
+  "recorded_utc": "2026-11-15T10:40:43.335943+00:00",
+  "physical_attempts": "UNKNOWN",
+  "tokens": "UNKNOWN",
+  "cost": "UNKNOWN"
+}

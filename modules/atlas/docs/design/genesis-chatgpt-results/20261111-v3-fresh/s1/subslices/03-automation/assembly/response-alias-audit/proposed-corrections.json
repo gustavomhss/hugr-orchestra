@@ -1,0 +1,218 @@
+{
+  "schema": "s1-03-response-alias-corrections-proposal/v1",
+  "status": "PROPOSED_NOT_APPLIED",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "ledger_snapshot": {
+    "path": "payload/execution-ledger.jsonl",
+    "bytes": 364649,
+    "sha256": "9b937dc8411c02b4ec866aa7433f2fd5a59217c8dce4a96757bb53b6b303b18f",
+    "row_count": 415,
+    "read_at_utc": "2026-11-15T10:13:28.119144+00:00"
+  },
+  "alias_overlays": [
+    {
+      "proposal_id": "alias:derived-automation-l2-source-fidelity-v2",
+      "call_id": "derived-automation-l2-source-fidelity-v2",
+      "source_receipt": {
+        "path": "payload/receipts/derived-dispatches.json",
+        "bytes": 19633,
+        "sha256": "3f086dedef2403e61bb5a7b8938629d537eed89ad4397120422fce40a63a482e",
+        "json_pointer": "/calls/8/producer_response_file"
+      },
+      "field": "producer_response_file",
+      "original_pointer": "producers/derived-automation-flow/response.md",
+      "expected_response_sha256": "59ffb319da5b27d830b9eeabe7ac592c104a64496864235da4331cd5adc05c23",
+      "currently_resolves_to": {
+        "path": "producers/derived-automation-flow/response.md",
+        "bytes": 2906,
+        "sha256": "faabd24854381ddedbb9407426212bc485abe6a564874fac70d9d00355ad30f3"
+      },
+      "historical_response_identity": {
+        "path": "producers/derived-automation-flow/revisions/v3/history/response.md",
+        "bytes": 3043,
+        "sha256": "59ffb319da5b27d830b9eeabe7ac592c104a64496864235da4331cd5adc05c23",
+        "git_blob_sha": "f07fae15e22fabc2fd4cad461fd721eab5e031d3"
+      },
+      "apply_strategy": "Append a versioned alias overlay keyed by call_id; preserve the original dispatch receipt and producer files. Resolve this override only when its expected response SHA-256 matches the call's declared SHA-256.",
+      "new_native_request": false
+    },
+    {
+      "proposal_id": "alias:derived-automation-l3-author-01",
+      "call_id": "derived-automation-l3-author-01",
+      "source_receipt": {
+        "path": "payload/receipts/derived-dispatches.json",
+        "bytes": 19633,
+        "sha256": "3f086dedef2403e61bb5a7b8938629d537eed89ad4397120422fce40a63a482e",
+        "json_pointer": "/calls/10/producer_response_file"
+      },
+      "field": "producer_response_file",
+      "original_pointer": "producers/derived-automation-impact/response.md",
+      "expected_response_sha256": "85831ceada2e319c68ec37bc7e521de4d66c2aa1828e2df18a25886fe0a181f7",
+      "currently_resolves_to": {
+        "path": "producers/derived-automation-impact/response.md",
+        "bytes": 3053,
+        "sha256": "3413d80c95e4d52440560c1833123d35ee1969254a68968e6a6c4317741a9055"
+      },
+      "historical_response_identity": {
+        "path": "producers/derived-automation-impact/revisions/v2/history/response.md",
+        "bytes": 2703,
+        "sha256": "85831ceada2e319c68ec37bc7e521de4d66c2aa1828e2df18a25886fe0a181f7",
+        "git_blob_sha": "377fdc2968753ba8d881097a808323b09237ad34"
+      },
+      "apply_strategy": "Append a versioned alias overlay keyed by call_id; preserve the original dispatch receipt and producer files. Resolve this override only when its expected response SHA-256 matches the call's declared SHA-256.",
+      "new_native_request": false
+    }
+  ],
+  "ledger_addenda": [
+    {
+      "proposal_id": "request-pointer-addendum:derived-automation-l2-source-fidelity-v2",
+      "target": {
+        "ledger_snapshot": {
+          "path": "payload/execution-ledger.jsonl",
+          "bytes": 364649,
+          "sha256": "9b937dc8411c02b4ec866aa7433f2fd5a59217c8dce4a96757bb53b6b303b18f",
+          "row_count": 415,
+          "read_at_utc": "2026-11-15T10:13:28.119144+00:00"
+        },
+        "line": 384,
+        "line_sha256_including_lf": "2dbfb47f42ed933b65bff85de660fc0599bcc6891c57a91f95665bd1dfe9533c",
+        "event_id": "derived-dispatch:derived-automation-l2-source-fidelity-v2"
+      },
+      "proposed_append_record": {
+        "event": "derived_accounting_correction",
+        "event_id": "derived-producer-response-alias-correction:derived-automation-l2-source-fidelity-v2:59ffb319da5b27d830b9eeabe7ac592c104a64496864235da4331cd5adc05c23",
+        "corrects_event_id": "derived-dispatch:derived-automation-l2-source-fidelity-v2",
+        "call_id": "derived-automation-l2-source-fidelity-v2",
+        "field": "call.producer_response_file",
+        "before": "producers/derived-automation-flow/response.md",
+        "after": "producers/derived-automation-flow/revisions/v3/history/response.md",
+        "unchanged_producer_response_sha256": "59ffb319da5b27d830b9eeabe7ac592c104a64496864235da4331cd5adc05c23",
+        "reason": "Historical response path resolution only. The original request metadata's expected response hash remains correct; its mutable path now contains a later response.",
+        "record_scope": "Metadata correction only; preserve the original row and native request identity.",
+        "new_native_request": false,
+        "new_native_model_request": false,
+        "tokens": "UNKNOWN",
+        "physical_attempts": "UNKNOWN",
+        "cost": "UNKNOWN"
+      }
+    },
+    {
+      "proposal_id": "completion-addendum:derived-automation-l2-source-fidelity-v2",
+      "target": {
+        "ledger_snapshot": {
+          "path": "payload/execution-ledger.jsonl",
+          "bytes": 364649,
+          "sha256": "9b937dc8411c02b4ec866aa7433f2fd5a59217c8dce4a96757bb53b6b303b18f",
+          "row_count": 415,
+          "read_at_utc": "2026-11-15T10:13:28.119144+00:00"
+        },
+        "line": 396,
+        "line_sha256_including_lf": "8726ab980f97f3f5884c16c0ef3ee53689704299e4865884595178f8511fa0fb",
+        "event_id": "derived-producer-file-completion:derived-automation-l2-source-fidelity-v2:faabd24854381ddedbb9407426212bc485abe6a564874fac70d9d00355ad30f3"
+      },
+      "proposed_append_record": {
+        "event": "derived_accounting_correction",
+        "event_id": "derived-producer-completion-identity-correction:derived-automation-l2-source-fidelity-v2:59ffb319da5b27d830b9eeabe7ac592c104a64496864235da4331cd5adc05c23",
+        "corrects_event_id": "derived-producer-file-completion:derived-automation-l2-source-fidelity-v2:faabd24854381ddedbb9407426212bc485abe6a564874fac70d9d00355ad30f3",
+        "call_id": "derived-automation-l2-source-fidelity-v2",
+        "field": "producer_response_identity",
+        "before": {
+          "response_ref": "producers/derived-automation-flow/response.md",
+          "response_bytes": 2906,
+          "response_sha256": "faabd24854381ddedbb9407426212bc485abe6a564874fac70d9d00355ad30f3"
+        },
+        "after": {
+          "response_ref": "producers/derived-automation-flow/revisions/v3/history/response.md",
+          "response_bytes": 3043,
+          "response_sha256": "59ffb319da5b27d830b9eeabe7ac592c104a64496864235da4331cd5adc05c23"
+        },
+        "reason": "The old call's mutable producer_response_file was read after a later revision overwrote it. The verified historical alias matches the old call's declared response hash.",
+        "record_scope": "Metadata correction only; preserve the original row; not another native request, native FINAL or execution.",
+        "new_native_request": false,
+        "new_native_model_request": false,
+        "tokens": "UNKNOWN",
+        "physical_attempts": "UNKNOWN",
+        "cost": "UNKNOWN"
+      }
+    },
+    {
+      "proposal_id": "completion-addendum:derived-automation-l3-author-01",
+      "target": {
+        "ledger_snapshot": {
+          "path": "payload/execution-ledger.jsonl",
+          "bytes": 364649,
+          "sha256": "9b937dc8411c02b4ec866aa7433f2fd5a59217c8dce4a96757bb53b6b303b18f",
+          "row_count": 415,
+          "read_at_utc": "2026-11-15T10:13:28.119144+00:00"
+        },
+        "line": 414,
+        "line_sha256_including_lf": "05cc577c1036470472377083ab4fb08feeda4492d37f1f9a90bef90ff725d104",
+        "event_id": "derived-producer-file-completion:derived-automation-l3-author-01:3413d80c95e4d52440560c1833123d35ee1969254a68968e6a6c4317741a9055"
+      },
+      "proposed_append_record": {
+        "event": "derived_accounting_correction",
+        "event_id": "derived-producer-completion-identity-correction:derived-automation-l3-author-01:85831ceada2e319c68ec37bc7e521de4d66c2aa1828e2df18a25886fe0a181f7",
+        "corrects_event_id": "derived-producer-file-completion:derived-automation-l3-author-01:3413d80c95e4d52440560c1833123d35ee1969254a68968e6a6c4317741a9055",
+        "call_id": "derived-automation-l3-author-01",
+        "field": "producer_response_identity",
+        "before": {
+          "response_ref": "producers/derived-automation-impact/response.md",
+          "response_bytes": 3053,
+          "response_sha256": "3413d80c95e4d52440560c1833123d35ee1969254a68968e6a6c4317741a9055"
+        },
+        "after": {
+          "response_ref": "producers/derived-automation-impact/revisions/v2/history/response.md",
+          "response_bytes": 2703,
+          "response_sha256": "85831ceada2e319c68ec37bc7e521de4d66c2aa1828e2df18a25886fe0a181f7"
+        },
+        "reason": "The old call's mutable producer_response_file was read after a later revision overwrote it. The verified historical alias matches the old call's declared response hash.",
+        "record_scope": "Metadata correction only; preserve the original row; not another native request, native FINAL or execution.",
+        "new_native_request": false,
+        "new_native_model_request": false,
+        "tokens": "UNKNOWN",
+        "physical_attempts": "UNKNOWN",
+        "cost": "UNKNOWN"
+      }
+    }
+  ],
+  "script_change_proposal": {
+    "path": "scripts/reconcile-ledger.py",
+    "bytes": 7522,
+    "sha256": "133a462aab31727f7fe971d88020f51b179a12b55b278e7bb6f903e58b590eff",
+    "source_lines": [
+      70,
+      71,
+      72,
+      73,
+      74,
+      75,
+      76
+    ],
+    "observed_defect": "The completion block reads the current producer_response_file, hashes it, and uses that hash in the event ID without comparing producer_response_sha256. A later version can therefore be attributed to an older call; deduplication by event ID does not detect this.",
+    "required_changes": [
+      "Resolve only explicitly pinned historical aliases for the two calls above; do not rewrite or silently reinterpret original dispatch receipts.",
+      "Before add() or final ledger write, require a declared expected producer_response_sha256 and compare it to the full response bytes; also validate any pinned alias size. Abort clearly on missing or mismatching identity.",
+      "For each existing incorrect completion or mutable historical pointer, append the explicit idempotent accounting addendum proposed here; retain every original row and event ID.",
+      "Do not generate a second unlabelled completion as an alias repair or count any completion/addendum as another native/model request. Preserve the relationship to the same call_id.",
+      "On future rows, use verified per-call response identities; do not search by filename or replace a missing native FINAL with a producer response."
+    ],
+    "identity_guard_fragment": "response = pinned_alias_path_for_call_or_original(call)\nexpected = call.get('producer_response_sha256')\nb = (r / response).read_bytes()\nh = hashlib.sha256(b).hexdigest()\nif not expected or h != expected:\n    raise ValueError(f\"producer-response-identity-mismatch: {call['id']}: {response}\")\n# Validate any pinned size, then preserve existing rows and append explicitly marked accounting corrections.\n# This fragment is a proposal, not an executed or complete replacement script.",
+    "execution_status": "NOT_EXECUTED_NOT_APPLIED"
+  },
+  "pre_application_checks": [
+    "Revalidate the historical alias bytes and the targeted rows' exact event IDs and row hashes; the ledger may have acquired later append-only entries.",
+    "Use idempotent addendum IDs; if a corresponding correction already exists in a later snapshot, do not append it again.",
+    "Preserve native response archive references and every original file/ledger row; no semantic judgment, caller or call-count change is proposed."
+  ],
+  "native_final_gap": {
+    "call_id": "derived-research-l2-correction-v2",
+    "declared_gap": "NOT_PRESERVED_BEFORE_COMPACTION; do not reconstruct as verbatim",
+    "preserved_producer_response": {
+      "path": "producers/derived-research-flow/revisions/v2/response.md",
+      "bytes": 2016,
+      "sha256": "553422eb616a5e72a38d82810ba0cfbd4221baa8828333e5600f488c4e8fea90"
+    },
+    "disposition": "No alias correction needed. Keep the missing native FINAL explicitly missing; producer file and later confirmation are not verbatim replacements."
+  },
+  "actions_applied": []
+}

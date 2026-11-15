@@ -1,0 +1,775 @@
+        cron: schedules.map((item) => item.cron).join(" · "), schedules, zone: "UTC", ref: repo.native.default_branch ?? "",
+        enabled: workflow.state === "active", origin: "Workflow YAML", editMode: "source", bestEffort: true } }
+  }).pipe(Effect.catchIf((error) => unreadable.includes(error.kind), (error) => Effect.succeed({ id: workflow.id, bindingID: binding.id, kind: "schedules" as const,
+    name: workflow.name ?? workflow.path, scope: ActionsResourceNative.scope(binding),
+    data: { nativeID: workflow.id, workflowID: workflow.id, path: workflow.path, commit, ref: repo.native.default_branch ?? "", zone: "UTC",
+      origin: "Workflow YAML", editMode: "source", bestEffort: true, unreadable: true, problem: error.message, problemKind: error.kind } }))),
+  { concurrency: 4 })
+  // Cursor advances native workflows, including workflows with no schedules;
+  // native workflow totals are not misrepresented as schedule totals.
+  return { items: items.filter((item) => item !== undefined), capturedAt: Date.now(), ...(page.next === undefined ? {} : { next: page.next }) }
+})
+
+// Failures that describe one workflow source, not the provider connection.
+const unreadable: readonly Actions.ErrorKind[] = ["source_unresolved", "source_conflict", "metadata_truncated", "invalid_input", "not_found"]
+
+// The native list keeps workflows whose file left the default branch (deleted
+// or branch-only) and GitHub-managed `dynamic/...` workflows. Neither has a
+// default-branch YAML schedule and reading their source fails, so only files
+// present in `.github/workflows` at the default-branch commit are read.
+// https://docs.github.com/en/rest/repos/contents#get-repository-content
+const workflowFiles = Effect.fn("ActionsSchedules.workflowFiles")(function* (services: Services, binding: Actions.Binding, repo: string, commit: string) {
+  // Keep the transport's rejection evidence: only a definite 404 proves the directory is absent.
+  const response = yield* ActionsResourceNative.before(binding, services.transport.request(binding, { method: "GET", path: `${repo}/contents/.github/workflows`, query: { ref: commit } }).pipe(
+    Effect.catchIf((cause) => cause.kind === "not_found" && cause.disposition === "definitely_rejected", () => Effect.succeed(undefined)),
+  ))
+  if (!response || response.status === 404) return new Set<string>()
+  if (response.status !== 200) {
+    const failure = ActionsResponse.failure(binding.provider, 1, Buffer.alloc(0), response.status, { ...response.headers }, true)
+    return yield* ActionsResourceNative.error(binding, failure.kind, "Workflow directory listing was rejected")
+  }
+  return yield* ActionsResourceNative.checked(binding, () => {
+    const entries = ActionsResourceNative.decode(binding, Schema.Array(Schema.Struct({ type: Schema.String, path: Schema.String })), response.data)
+    // The contents API stops at 1,000 directory entries without saying so.
+    if (entries.length >= 1000) throw ActionsResourceNative.error(binding, "metadata_truncated", "Workflow directory listing reached the native contents limit")
+    return new Set(entries.filter((entry) => entry.type === "file").map((entry) => entry.path))
+  })
+})
+
+const githubEdit = Effect.fn("ActionsSchedules.githubEdit")(function* (services: Services, binding: Actions.Binding, intent: Actions.OperationIntent, payload: ActionsContract.Json) {
+  if (!["resource.create", "resource.update", "resource.delete"].includes(intent.kind))
+    return yield* ActionsResourceNative.error(binding, "capability_unavailable", "GitHub schedules are workflow YAML; play/ownership controls have no native schedule API")
+  const input = yield* ActionsResourceNative.checked(binding, () => intent.kind === "resource.delete"
+    ? ActionsResourceNative.input(binding, ActionsResourceNative.ProviderOnly, payload) : ActionsResourceNative.input(binding, Form, payload))
+  if (input.provider !== "github") return yield* ActionsResourceNative.error(binding, "invalid_input", "Schedule payload belongs to another provider")
+  if (!services.publish) return yield* ActionsResourceNative.error(binding, "capability_unavailable", "GitHub schedule changes require the owning SourcePublisher callback; open Edit YAML")
+  const workflowID = yield* ActionsResourceNative.checked(binding, () => ActionsResourceNative.id(binding, intent.target.workflowID ?? intent.target.resourceID ?? ""))
+  if (intent.target.resourceID !== undefined && intent.target.resourceID !== workflowID)
+    return yield* ActionsResourceNative.error(binding, "invalid_input", "Schedule workflow and resource target identities differ")
+  const authority = yield* ActionsResourceNative.authority(services, binding)
+  const scopes = authority.headers["x-oauth-scopes"]?.split(",").map((scope) => scope.trim()).filter(Boolean)
+  if (scopes?.length && !scopes.includes("workflow"))
+    return yield* ActionsResourceNative.error(binding, "permission_denied", "Observed classic OAuth scopes deny publishing workflow-source changes")
+  const repo = yield* GitHubNative.repository(services.transport, binding)
+  if (!repo.native.default_branch || intent.target.ref !== repo.native.default_branch || !intent.expected?.sourceVersion || !intent.expected.commit)
+    return yield* ActionsResourceNative.error(binding, "invalid_input", "GitHub schedule authoring requires captured default-branch ref, sourceVersion and commit")
+  const response = yield* ActionsResourceNative.get(services, binding, `${repo.path}/actions/workflows/${workflowID}`)
+  const workflow = yield* ActionsResourceNative.checked(binding, () => ActionsResourceNative.decode(binding, Workflow, response.data))
+  if (String(workflow.id) !== workflowID || workflow.path !== intent.target.path || !/^\.github\/workflows\/[^/]+\.ya?ml$/.test(workflow.path))
+    return yield* ActionsResourceNative.error(binding, "source_conflict", "Captured schedule source path differs from the exact native workflow")
+  const source = yield* ActionsResourceNative.before(binding, services.reader.source(binding, { path: workflow.path, ref: intent.target.ref }))
+  if (source.bindingID !== binding.id || source.path !== workflow.path || source.ref !== intent.target.ref || source.version !== intent.expected.sourceVersion || source.commit !== intent.expected.commit)
+    return yield* ActionsResourceNative.error(binding, "source_conflict", "Workflow schedule source moved after admission")
+  const text = yield* ActionsResourceNative.checked(binding, () => {
+    ActionsResourceNative.requireVersion(binding, intent, ActionsResourceNative.version({ workflowID, sourceVersion: source.version, state: workflow.state }))
+    const existing = ActionsScheduleYaml.inspect(binding, source.text)
+    if (intent.kind === "resource.delete") return ActionsScheduleYaml.edit(binding, source.text, [])
+    if (!Schema.is(Form)(input)) throw ActionsResourceNative.error(binding, "invalid_input", "Schedule command requires its exact native form")
+    if (input.name !== workflow.name || input.zone !== "UTC" || input.ref !== intent.target.ref || input.input || input.inputs !== undefined || input.variables !== undefined || input.inputMode !== undefined || input.enabled !== undefined)
+      throw ActionsResourceNative.error(binding, "capability_unavailable", "GitHub cron triggers have no separate name, execution inputs, timezone or pause state; edit workflow YAML explicitly")
+    if (intent.kind === "resource.update" && existing.length !== 1)
+      throw ActionsResourceNative.error(binding, "invalid_input", "Multiple workflow cron entries require an explicit source-editor edit")
+    if (intent.kind === "resource.create" && existing.length)
+      throw ActionsResourceNative.error(binding, "source_conflict", "Workflow already contains schedules; edit its existing YAML")
+    return ActionsScheduleYaml.edit(binding, source.text, [{ cron: input.cron }])
+  })
+  return yield* services.publish(binding, intent, source, text)
+})
+~~~~
+
+## AUT2-C29
+
+```json
+{"block_id":"AUT2-C29","type":"literal_source_excerpt","request_namespace":"J1 canonical groups; J2 mapping in index","requests":["RE-AUT2-04","RE-AUT2-06"],"body_anchors":["A35"],"requested_subject":"Inventory GH/GL, ownership, versões e estados de artifact","source_category":"owned_population_source","path":"packages/core/src/actions/output/artifacts.ts","archive":"sources/packages/core/src/actions/output/artifacts.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"56d6c846172b96e1130b2bf8737712af9e0c5be0","source_sha256":"be26b08a227078ed6c0363be1f47ebdceda0b27a46749ad208d2642ea3ef46a7","source_bytes":5515}
+```
+
+```json
+{"first_line":1,"last_line":73,"bytes":5515,"sha256":"be26b08a227078ed6c0363be1f47ebdceda0b27a46749ad208d2642ea3ef46a7"}
+```
+
+~~~~typescript
+export * as OutputArtifacts from "./artifacts"
+
+import { Actions } from "@orchestra/schema/actions"
+import { Effect, Schema } from "effect"
+import { ActionsContract } from "../contract"
+import { ActionsCursor } from "../cursor"
+import { ActionsError } from "../error"
+import { OutputNative } from "./native"
+import { OutputVersion } from "./version"
+
+export const list = Effect.fn("ActionsOutput.artifacts")(function* (
+  transport: ActionsContract.Transport, reader: ActionsContract.ReadAdapter, binding: Actions.Binding, input: Actions.ResourceListInput,
+): Effect.fn.Return<Actions.ResourcePage, ActionsError> {
+  const selected = yield* OutputNative.checked(binding, () => {
+    OutputNative.selection(binding, input, Actions.ResourceListInput, ["kind", "runID", "cursor", "limit", "query"])
+    if (input.kind !== "artifacts") throw OutputNative.error(binding, "capability_unavailable", "CI output only lists native artifacts")
+    if (input.runID !== undefined) OutputNative.id(binding, input.runID)
+    if (input.query !== undefined && (binding.provider.kind !== "github" || input.query.length > 1024 || /[\x00-\x1f\x7f]/.test(input.query)))
+      throw OutputNative.error(binding, "invalid_input", "Artifact name filtering requires a bounded native GitHub name")
+    const limit = ActionsCursor.limit(input.limit)
+    const scope = `output:artifacts:${input.runID ?? "project"}`
+    const filters = { runID: input.runID, name: input.query, per_page: limit }
+    return { limit, scope, filters, page: ActionsCursor.page(binding, scope, filters, input.cursor) }
+  })
+  const root = yield* OutputNative.project(transport, binding)
+  if (input.runID !== undefined) yield* OutputNative.run(reader, binding, input.runID)
+  const request: ActionsContract.Request = {
+    method: "GET",
+    path: binding.provider.kind === "github"
+      ? `${root}/actions/${input.runID ? `runs/${input.runID}/` : ""}artifacts`
+      : `${root}/${input.runID ? `pipelines/${input.runID}/jobs` : "jobs"}`,
+    query: { page: selected.page, per_page: selected.limit,
+      ...(input.query === undefined ? {} : { name: input.query }),
+      ...(binding.provider.kind === "gitlab" && input.runID ? { include_retried: true } : {}) },
+  }
+  const response = yield* OutputNative.get(transport, binding, request.path, request.query)
+  return yield* OutputNative.checked(binding, () => {
+    if (binding.provider.kind === "github") {
+      const value = OutputNative.decode(binding, Schema.Struct({ total_count: OutputNative.Count,
+        artifacts: Schema.Array(OutputNative.Artifact).check(Schema.isMaxLength(100)) }), response.data)
+      const items = value.artifacts.map((artifact) => {
+        OutputNative.artifactOwner(binding, artifact, undefined, input.runID)
+        // Explicit native allowlist: no archive_download_url, actor tokens or unbounded provider JSON.
+        return Actions.Resource.make({ id: String(artifact.id), bindingID: binding.id, kind: "artifacts",
+          name: artifact.name, scope: String(artifact.workflow_run.id), status: artifact.expired ? "expired" : "available",
+           data: { id: artifact.id, name: artifact.name, resourceVersion: OutputVersion.github(artifact), size_in_bytes: artifact.size_in_bytes, expired: artifact.expired,
+            workflow_run: { id: artifact.workflow_run.id, repository_id: artifact.workflow_run.repository_id,
+              ...(artifact.workflow_run.head_repository_id === undefined ? {} : { head_repository_id: artifact.workflow_run.head_repository_id }) },
+            ...(artifact.digest === undefined ? {} : { digest: artifact.digest }),
+            ...(artifact.created_at === undefined ? {} : { created_at: artifact.created_at }),
+            ...(artifact.updated_at === undefined ? {} : { updated_at: artifact.updated_at }),
+            ...(artifact.expires_at === undefined ? {} : { expires_at: artifact.expires_at }) } })
+      })
+      return { items, ...OutputNative.pagination(binding, request, selected.scope, selected.filters, response,
+        selected.page, items.length, selected.limit, value.total_count) }
+    }
+    const jobs = OutputNative.decode(binding, Schema.Array(OutputNative.GitLabJob).check(Schema.isMaxLength(100)), response.data)
+    const items = jobs.map((job) => {
+      OutputNative.gitlabOwner(binding, job, undefined, input.runID)
+      // GitLab archive identity IS job ID. Inventory includes erased/expired/no-artifact jobs.
+      return Actions.Resource.make({ id: String(job.id), bindingID: binding.id, kind: "artifacts", name: OutputNative.gitlabArchive(job)?.filename ?? job.name,
+        scope: String(job.pipeline.id), owner: String(job.id), status: OutputNative.gitlabState(job),
+         data: { id: job.id, name: job.name, resourceVersion: OutputVersion.gitlab(job), status: job.status, pipeline: job.pipeline,
+          artifacts: job.artifacts.map((artifact) => ({ file_type: artifact.file_type, size: artifact.size, filename: artifact.filename,
+            ...(artifact.file_format === undefined ? {} : { file_format: artifact.file_format }) })),
+          ...(job.artifacts_file === undefined ? {} : { artifacts_file: job.artifacts_file }),
+          ...(job.artifacts_expire_at === undefined ? {} : { artifacts_expire_at: job.artifacts_expire_at }),
+          ...(job.erased_at === undefined ? {} : { erased_at: job.erased_at }) } })
+    })
+    return { items, ...OutputNative.pagination(binding, request, selected.scope, selected.filters, response,
+      selected.page, jobs.length, selected.limit) }
+  })
+})
+~~~~
+
+## AUT2-C30
+
+```json
+{"block_id":"AUT2-C30","type":"literal_source_excerpt","request_namespace":"J1 canonical groups; J2 mapping in index","requests":["RE-AUT2-04","RE-AUT2-06"],"body_anchors":["A37"],"requested_subject":"Delete/keep completos com target/version/ownership e pós-condição","source_category":"owned_population_source","path":"packages/core/src/actions/output/mutations.ts","archive":"sources/packages/core/src/actions/output/mutations.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"2d165747ebfc35f05a4c0244fd06134780482b88","source_sha256":"b9151642332518eec3151825cb55bd2b0f65ba275d77e1d107ac29feb3a323e0","source_bytes":4523}
+```
+
+```json
+{"first_line":1,"last_line":58,"bytes":4523,"sha256":"b9151642332518eec3151825cb55bd2b0f65ba275d77e1d107ac29feb3a323e0"}
+```
+
+~~~~typescript
+export * as ActionsArtifactCommands from "./mutations"
+
+import { Actions } from "@orchestra/schema/actions"
+import { Effect, Schema } from "effect"
+import { ActionsContract } from "../contract"
+import { ActionsResourceNative } from "../resources/native"
+import { OutputNative } from "./native"
+import { OutputVersion } from "./version"
+
+const Input = Schema.Struct({ provider: Actions.ProviderKind })
+
+export function make(input: { transport: ActionsContract.Transport; reader: (binding: Actions.Binding) => ActionsContract.ReadAdapter }) {
+  return Effect.fn("ActionsArtifacts.perform")(function* (binding: Actions.Binding, intent: Actions.OperationIntent, payload: ActionsContract.Json) {
+    const services = { transport: input.transport, reader: input.reader(binding) }
+    const id = yield* ActionsResourceNative.checked(binding, () => {
+      const decoded = ActionsResourceNative.input(binding, Input, payload)
+      if (decoded.provider !== binding.provider.kind || intent.target.resourceKind !== "artifacts" ||
+        intent.binding.id !== binding.id || intent.binding.revision !== binding.revision || !intent.target.resourceID ||
+        !["resource.delete", "artifact.keep"].includes(intent.kind) || intent.expected?.attempt !== undefined || intent.expected?.commit !== undefined || intent.expected?.sourceVersion !== undefined ||
+        Object.keys(intent.target).some((key) => !["resourceKind", "resourceID", "scope", "runID"].includes(key)))
+        throw ActionsResourceNative.error(binding, "invalid_input", "Artifact command does not match its native admission")
+      return ActionsResourceNative.id(binding, intent.target.resourceID)
+    })
+    if (binding.provider.kind === "github" && intent.kind === "artifact.keep")
+      return yield* ActionsResourceNative.error(binding, "capability_unavailable", "GitHub Actions has no native artifact keep operation")
+    const authority = yield* ActionsResourceNative.authority(services, binding, intent.kind === "artifact.keep" ? 30 : 40)
+    if (binding.provider.kind === "github") {
+      const path = `${authority.root}/actions/artifacts/${id}`
+      const response = yield* ActionsResourceNative.get(services, binding, path)
+      yield* ActionsResourceNative.before(binding, ActionsResourceNative.checked(binding, () => {
+        const native = ActionsResourceNative.decode(binding, OutputNative.Artifact, response.data)
+        OutputNative.artifactOwner(binding, native, id, intent.target.runID)
+        if (intent.target.scope !== undefined && intent.target.scope !== String(native.workflow_run.id))
+          throw ActionsResourceNative.error(binding, "binding_stale", "Artifact scope differs from its admitted native run")
+        ActionsResourceNative.requireVersion(binding, intent, OutputVersion.github(native))
+      }))
+      yield* ActionsResourceNative.send(services, binding, { method: "DELETE", path }, [204])
+      return { acknowledgement: { resourceID: id } }
+    }
+    const job = yield* ActionsResourceNative.get(services, binding, `${authority.root}/jobs/${id}`)
+    const native = yield* ActionsResourceNative.before(binding, ActionsResourceNative.checked(binding, () => {
+      const native = ActionsResourceNative.decode(binding, OutputNative.GitLabJob, job.data)
+      OutputNative.gitlabOwner(binding, native, id, intent.target.runID)
+      if (intent.target.scope !== undefined && intent.target.scope !== String(native.pipeline.id))
+        throw ActionsResourceNative.error(binding, "binding_stale", "Artifact scope differs from its admitted native pipeline")
+      ActionsResourceNative.requireVersion(binding, intent, OutputVersion.gitlab(native))
+      return native
+    }))
+    const response = yield* ActionsResourceNative.send(services, binding, { method: intent.kind === "artifact.keep" ? "POST" : "DELETE",
+      path: `${authority.root}/jobs/${id}/artifacts${intent.kind === "artifact.keep" ? "/keep" : ""}` }, intent.kind === "artifact.keep" ? [200] : [204])
+    if (intent.kind === "artifact.keep") yield* ActionsResourceNative.after(binding, ActionsResourceNative.checked(binding, () => {
+      const kept = ActionsResourceNative.decode(binding, OutputNative.GitLabJob, response.data, true)
+      OutputNative.gitlabOwner(binding, kept, id, String(native.pipeline.id))
+      if (kept.artifacts_expire_at !== null) throw ActionsResourceNative.error(binding, "outcome_unknown", "Native artifact keep response did not prove removed expiry", "unknown")
+    }))
+    return { acknowledgement: { resourceID: id } }
+  })
+}
+~~~~
+
+## AUT2-C31
+
+```json
+{"block_id":"AUT2-C31","type":"literal_source_excerpt","request_namespace":"J1 canonical groups; J2 mapping in index","requests":["RE-AUT2-04","RE-AUT2-06"],"body_anchors":["A37"],"requested_subject":"Campos selecionados de versão e expiry observada","source_category":"owned_population_source","path":"packages/core/src/actions/output/version.ts","archive":"sources/packages/core/src/actions/output/version.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"a42fd54db9202bf822a439bb47ce4f216101a8e1","source_sha256":"935301ed0b3e64a03122d40ef4fcf58ef119c5c8b04c04b1f113bcb29163c6b9","source_bytes":1050}
+```
+
+```json
+{"first_line":1,"last_line":16,"bytes":1050,"sha256":"935301ed0b3e64a03122d40ef4fcf58ef119c5c8b04c04b1f113bcb29163c6b9"}
+```
+
+~~~~typescript
+export * as OutputVersion from "./version"
+
+import { ActionsResourceNative } from "../resources/native"
+import { OutputNative } from "./native"
+
+export function github(value: typeof OutputNative.Artifact.Type) {
+  return ActionsResourceNative.version({ id: String(value.id), runID: String(value.workflow_run.id), repositoryID: String(value.workflow_run.repository_id),
+    size: value.size_in_bytes, expired: value.expired, digest: value.digest ?? null, createdAt: value.created_at ?? null,
+    updatedAt: value.updated_at ?? null, expiryObserved: value.expires_at !== undefined, expiresAt: value.expires_at ?? null })
+}
+
+export function gitlab(value: typeof OutputNative.GitLabJob.Type) {
+  return ActionsResourceNative.version({ id: String(value.id), runID: String(value.pipeline.id), projectID: String(value.pipeline.project_id),
+    archive: value.artifacts_file ?? null, artifacts: value.artifacts, erasedAt: value.erased_at ?? null,
+    expiryObserved: value.artifacts_expire_at !== undefined, expiresAt: value.artifacts_expire_at ?? null })
+}
+~~~~
+
+## AUT2-C32
+
+```json
+{"block_id":"AUT2-C32","type":"literal_source_excerpt","request_namespace":"J1 canonical groups; J2 mapping in index","requests":["RE-AUT2-05"],"body_anchors":["A32"],"requested_subject":"CLI target/argv/stdin/ambiente, host/origin/path e ausência de shell no command builder","source_category":"owned_population_source","path":"packages/core/src/actions/transport/cli.ts","archive":"sources/packages/core/src/actions/transport/cli.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"695d1c8b2cc0872ad8e2a3d554a4b010674f834c","source_sha256":"94d766a8ffb45ec126698e2cf571f7a328261579edc1969147f2043c500df819","source_bytes":5166}
+```
+
+```json
+{"first_line":1,"last_line":90,"bytes":5166,"sha256":"94d766a8ffb45ec126698e2cf571f7a328261579edc1969147f2043c500df819"}
+```
+
+~~~~typescript
+export * as ActionsCli from "./cli"
+
+import { Actions } from "@orchestra/schema/actions"
+import { Effect } from "effect"
+import { ChildProcess } from "effect/unstable/process"
+import { which } from "../../util/which"
+import { ActionsContract } from "../contract"
+import { ActionsError } from "../error"
+
+export const names = { github: "gh", gitlab: "glab" } as const
+
+export function error(provider: Actions.Provider, kind: Actions.ErrorKind, message: string, disposition: Actions.SendDisposition = "unknown") {
+  return new ActionsError({ kind, message, provider: provider.kind, disposition })
+}
+
+export const target = Effect.fn("ActionsTransport.target")(function* (provider: Actions.Provider) {
+  const host = URL.parse(`https://${provider.hostname}`)
+  if (!host || host.host !== provider.hostname || host.pathname !== "/" || host.username || host.password || host.search || host.hash)
+    return yield* error(provider, "host_mismatch", "Provider hostname must be an explicit canonical HTTPS host", "definitely_unsent")
+  const origin = provider.kind === "github" && provider.hostname === "github.com"
+    ? "https://api.github.com"
+    : host.origin
+  const base = provider.kind === "gitlab" ? `${origin}/api/v4` : `${origin}/api/v3`
+  if (provider.apiOrigin !== origin && (provider.hostname === "github.com" || provider.apiOrigin !== base))
+    return yield* error(provider, "host_mismatch", "Provider API origin does not match the CLI hostname", "definitely_unsent")
+  if ((provider.kind === "gitlab" && provider.hostname === "github.com") ||
+      (provider.kind === "github" && provider.hostname === "gitlab.com"))
+    return yield* error(provider, "host_mismatch", "Provider kind does not match the hostname", "definitely_unsent")
+  const executable = which(names[provider.kind])
+  if (!executable) return yield* error(provider, "cli_missing", `${names[provider.kind]} is not installed on this server`, "definitely_unsent")
+  return executable
+})
+
+export const endpoint = Effect.fn("ActionsTransport.endpoint")(function* (provider: Actions.Provider, input: ActionsContract.Request) {
+  // Raw CLI/URL syntax is separate from encoded segment data. An encoded slash
+  // belongs to one native GitLab project/file argument, never a new URL authority.
+  const segments = yield* Effect.try({
+    try: () => input.path.replace(/^\//, "").split("/").map(decodeURIComponent),
+    catch: () => error(provider, "invalid_input", "Request path has invalid URL encoding", "definitely_unsent"),
+  })
+  if (!/^(GET|POST|PUT|PATCH|DELETE)$/.test(input.method) ||
+      !/^\/?[A-Za-z0-9_]/.test(input.path) || /[\s\\?#{}:]/.test(input.path) ||
+      segments.some((segment) => /\\|%[0-9a-f]{2}|[\x00-\x1f\x7f]/i.test(segment) ||
+        segment.split("/").some((part) => !part || part === "." || part === "..")))
+    return yield* error(provider, "invalid_input", "Request path must be a literal relative API endpoint", "definitely_unsent")
+  const entries = Object.entries(input.query ?? {})
+  if (entries.some(([key, value]) => !/^[\w[\].-]+$/.test(key) ||
+      /token|secret|password|authorization|private.?key|^value$/i.test(key) ||
+      (typeof value === "number" && !Number.isFinite(value))))
+    return yield* error(provider, "invalid_input", "Sensitive values belong in JSON stdin, not query arguments", "definitely_unsent")
+  const query = new URLSearchParams(entries.map(([key, value]) => [key, String(value)])).toString()
+  return `${input.path.replace(/^\//, "")}${query ? `?${query}` : ""}`
+})
+
+export function command(directory: string, provider: Actions.Provider, executable: string, args: readonly string[], stdin: "pipe" | "ignore") {
+  const env = {
+    GH_PROMPT_DISABLED: "1", GH_NO_UPDATE_NOTIFIER: "1", GH_DEBUG: "", GH_FORCE_TTY: "",
+    GLAB_NO_PROMPT: "1", GLAB_CHECK_UPDATE: "false", GLAB_SHOW_WHATS_NEW: "false",
+    GLAB_NOTIFY_SKILL_UPDATES: "false", GLAB_DEBUG: "false", GLAB_DEBUG_HTTP: "false",
+    GLAB_SEND_TELEMETRY: "false", CI: "false", GITLAB_CI: "false",
+    NO_COLOR: "1", CLICOLOR: "0", CLICOLOR_FORCE: "0", FORCE_COLOR: "0", TERM: "dumb",
+    GH_PAGER: "", GLAB_PAGER: "", PAGER: "",
+    // A nonempty slash overrides glab's configured subfolder and trims to root.
+    GITLAB_API_HOST: provider.hostname, GLAB_API_PROTOCOL: "https", GITLAB_SUBFOLDER: "/",
+  }
+  return ChildProcess.make(executable, args, {
+    cwd: directory,
+    shell: false,
+    extendEnv: false,
+    env: {
+      ...Object.fromEntries(Object.entries(process.env).filter(([key]) => !Object.keys(env).some((name) => name === key.toUpperCase()))),
+      ...env,
+    },
+    stdin,
+    stdout: "pipe",
+    stderr: "pipe",
+    forceKillAfter: "1 second",
+  })
+}
+
+export function args(provider: Actions.Provider, input: ActionsContract.Request, path: string, metadata: boolean) {
+  return [
+    "api", "--hostname", provider.hostname, "--method", input.method,
+    ...(metadata ? ["--include"] : []),
+    ...(provider.kind === "github" && provider.hostname === "github.com"
+      ? ["--header", "X-GitHub-Api-Version: 2026-03-10"] : []),
+    ...(input.body === undefined ? [] : ["--header", "Content-Type: application/json", "--input", "-"]),
+    "--", path,
+  ]
+}
+~~~~
+
+## AUT2-C33
+
+```json
+{"block_id":"AUT2-C33","type":"literal_source_excerpt","request_namespace":"J1 canonical groups; J2 mapping in index","requests":["RE-AUT2-05"],"body_anchors":["A33"],"requested_subject":"Qualificação glab, token/config, CA/mTLS, arquivos regulares e limites","source_category":"owned_population_source","path":"packages/core/src/actions/transport/credentials.ts","archive":"sources/packages/core/src/actions/transport/credentials.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"e9fb72f248bb8500d5fc14d053ddb95396be3819","source_sha256":"36b0b3a3ed180de68ed8c8497c7231728ec4aabfd79fd67de34e33654b109010","source_bytes":5469}
+```
+
+```json
+{"first_line":1,"last_line":85,"bytes":5469,"sha256":"36b0b3a3ed180de68ed8c8497c7231728ec4aabfd79fd67de34e33654b109010"}
+```
+
+~~~~typescript
+export * as ActionsCredentials from "./credentials"
+
+import { open } from "node:fs/promises"
+import { constants } from "node:fs"
+import path from "node:path"
+import { rootCertificates } from "node:tls"
+import { Actions } from "@orchestra/schema/actions"
+import { Effect, Stream } from "effect"
+import { ChildProcess } from "effect/unstable/process"
+import { AppProcess } from "../../process"
+import { ActionsCli } from "./cli"
+
+const commit = "570955d4252f860d6b0cbf3fd2ec44f86a7e6957"
+const keys = ["token", "job_token", "is_oauth2", "ca_cert", "client_cert", "client_key"] as const
+
+// Request-memory only. This module neither reads/copies a CLI config file nor
+// exports credential values through the public Transport response/identity seam.
+export const read = Effect.fn("ActionsTransport.credentials")(function* (proc: AppProcess.Interface, directory: string, provider: Actions.Provider) {
+  const executable = yield* ActionsCli.target(provider)
+  const command = ActionsCli.command(directory, provider, executable, [], "ignore")
+  const get = (args: string[]) => Effect.scoped(Effect.gen(function* () {
+    const handle = yield* proc.spawn(ChildProcess.make(executable, args, command.options))
+    const result = yield* Effect.all({
+      stdout: capture(handle.stdout), stderr: capture(handle.stderr), code: handle.exitCode,
+    }, { concurrency: "unbounded" })
+    if (result.code !== 0) return yield* ActionsCli.error(provider, "not_authenticated", "GitLab local sign-in configuration could not be read", "definitely_unsent")
+    return yield* Effect.try({
+      try: () => new TextDecoder("utf-8", { fatal: true }).decode(result.stdout).replace(/\r?\n$/, ""),
+      catch: () => ActionsCli.error(provider, "not_authenticated", "GitLab local sign-in configuration is not valid UTF-8", "definitely_unsent"),
+    })
+  })).pipe(
+    Effect.mapError(() => ActionsCli.error(provider, "not_authenticated", "GitLab local sign-in configuration could not be read safely", "definitely_unsent")),
+    Effect.timeoutOrElse({ duration: "10 seconds", orElse: () => Effect.fail(ActionsCli.error(provider, "not_authenticated", "GitLab local configuration deadline exceeded", "definitely_unsent")) }),
+  )
+  const version = /^glab (\S+) \(([a-f0-9]+)\)$/.exec(yield* get(["version"]))
+  if (version?.[1] !== "1.118.0" || !version[2] || version[2].length < 8 || !commit.startsWith(version[2]))
+    return yield* ActionsCli.error(provider, "capability_unavailable", "GitLab local configuration reads require qualified glab 1.118.0", "definitely_unsent")
+  const values = Object.fromEntries(yield* Effect.forEach(keys, (key) => get(["config", "get", key, "--host", provider.hostname]).pipe(Effect.map((value) => [key, value] as const))))
+  const env = command.options.env ?? {}
+  // Match v1.118.0's environment-PAT precedence over a stored OAuth flag.
+  const oauth = values.is_oauth2 === "true" && (!(env.GITLAB_TOKEN || env.GITLAB_ACCESS_TOKEN) || !!env.GLAB_IS_OAUTH2)
+  const token = values.token || (!oauth ? values.job_token : "")
+  if (!token || !/^[\x21-\x7e]+$/.test(token))
+    return yield* ActionsCli.error(provider, "not_authenticated", "GitLab sign-in is missing or unusable; sign in with the CLI", "definitely_unsent")
+  if (!!values.client_cert !== !!values.client_key)
+    return yield* ActionsCli.error(provider, "invalid_input", "GitLab mTLS requires both client certificate and key", "definitely_unsent")
+  const material = (reference: string) => reference ? file(directory, reference).pipe(
+    Effect.mapError(() => ActionsCli.error(provider, "invalid_input", "Configured GitLab TLS material could not be read safely", "definitely_unsent")),
+  ) : Effect.succeed(undefined)
+  const tls = yield* Effect.all({ ca: material(values.ca_cert), cert: material(values.client_cert), key: material(values.client_key) })
+  return {
+    headers: { [oauth ? "Authorization" : values.token ? "PRIVATE-TOKEN" : "JOB-TOKEN"]: oauth ? `Bearer ${token}` : token },
+    ca: tls.ca ? [...rootCertificates, tls.ca] : undefined,
+    cert: tls.cert, key: tls.key,
+  }
+})
+export type Snapshot = Effect.Success<ReturnType<typeof read>>
+
+function capture<E>(stream: Stream.Stream<Uint8Array, E>) {
+  return stream.pipe(Stream.runFoldEffect(() => ({ bytes: 0, chunks: [] as Uint8Array[] }), (state, chunk) => {
+    if (state.bytes + chunk.length > 16 * 1024) return Effect.fail(new Error("Local configuration capture limit"))
+    state.bytes += chunk.length
+    state.chunks.push(chunk)
+    return Effect.succeed(state)
+  }), Effect.map((state) => Buffer.concat(state.chunks)))
+}
+
+function file(directory: string, reference: string) {
+  return Effect.acquireUseRelease(
+    Effect.tryPromise(() => open(path.resolve(directory, reference), constants.O_RDONLY | constants.O_NONBLOCK)),
+    (handle) => Effect.tryPromise(async () => {
+      if (!(await handle.stat()).isFile()) throw new Error("TLS reference is not a regular file")
+      const buffer = Buffer.alloc(256 * 1024 + 1)
+      const state = { bytes: 0 }
+      while (state.bytes < buffer.length) {
+        const read = await handle.read(buffer, state.bytes, buffer.length - state.bytes, null)
+        if (!read.bytesRead) break
+        state.bytes += read.bytesRead
+      }
+      if (state.bytes === buffer.length) throw new Error("TLS material capture limit")
+      return new TextDecoder("utf-8", { fatal: true }).decode(buffer.subarray(0, state.bytes))
+    }),
+    (handle) => Effect.promise(() => handle.close()),
+  )
+}
+~~~~
+
+## AUT2-C34
+
+```json
+{"block_id":"AUT2-C34","type":"literal_source_excerpt","request_namespace":"J1 canonical groups; J2 mapping in index","requests":["RE-AUT2-05","RE-AUT2-06"],"body_anchors":["A33"],"requested_subject":"Snapshot por pedido, ator e write, rotas raw e framing de upload multipart","source_category":"owned_population_source","path":"packages/core/src/actions/transport/gitlab.ts","archive":"sources/packages/core/src/actions/transport/gitlab.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"a21535f1c3014d492d7f07e98250bfb9e6cc3b3a","source_sha256":"94a67ca1521b8ce37b40b34a93d36d9986bdbf3727e2152399dd69b14214aef0","source_bytes":5999}
+```
+
+```json
+{"first_line":1,"last_line":73,"bytes":5999,"sha256":"94a67ca1521b8ce37b40b34a93d36d9986bdbf3727e2152399dd69b14214aef0"}
+```
+
+~~~~typescript
+export * as ActionsGitlab from "./gitlab"
+
+import { randomUUID } from "node:crypto"
+import { Actions } from "@orchestra/schema/actions"
+import { Effect, Option, Schema, Stream } from "effect"
+import { AppProcess } from "../../process"
+import { ActionsContract } from "../contract"
+import { ActionsError } from "../error"
+import { ActionsCli } from "./cli"
+import { ActionsCredentials } from "./credentials"
+import { ActionsHttp } from "./http"
+import { ActionsIdentity } from "./identity"
+
+export function make(directory: string, proc: AppProcess.Interface) {
+  const validate = Effect.fn("ActionsTransport.gitlabActor")(function* (binding: Actions.Binding, snapshot: ActionsCredentials.Snapshot) {
+    if (!binding.account) return yield* ActionsCli.error(binding.provider, "binding_stale", "GitLab binding has no verified sign-in identity", "definitely_unsent")
+    const user = yield* ActionsHttp.metadata(binding.provider, snapshot, { method: "GET", path: "user" })
+      .pipe(Effect.mapError((error) => new ActionsError({ ...error, message: error.message, disposition: "definitely_unsent" })))
+    const account = ActionsIdentity.account(binding.provider, user.data)
+    if (Option.isNone(account) || account.value !== binding.account)
+      return yield* ActionsCli.error(binding.provider, "binding_stale", "GitLab sign-in identity changed; rebind before mutation", "definitely_unsent")
+  })
+  return {
+    resolve: Effect.fn("ActionsTransport.gitlabResolve")(function* (provider: Actions.Provider, projectPath: string) {
+      const snapshot = yield* ActionsCredentials.read(proc, directory, provider)
+      const project = yield* ActionsHttp.metadata(provider, snapshot, { method: "GET", path: `projects/${encodeURIComponent(projectPath)}` })
+      const identity = ActionsIdentity.project(provider, project.data)
+      if (Option.isNone(identity)) return yield* ActionsCli.error(provider, "transport_failed", "Provider did not return native project identity")
+      const user = yield* ActionsHttp.metadata(provider, snapshot, { method: "GET", path: "user" })
+      const account = ActionsIdentity.account(provider, user.data)
+      if (Option.isNone(account)) return yield* ActionsCli.error(provider, "not_authenticated", "Provider did not return the current signed-in account")
+      return { ...identity.value, account: account.value }
+    }),
+    request: Effect.fn("ActionsTransport.gitlabRequest")(function* (binding: Actions.Binding, input: ActionsContract.Request) {
+      yield* ActionsCli.endpoint(binding.provider, input)
+      if (input.body !== undefined && Option.isNone(Schema.decodeUnknownOption(Schema.Json)(input.body)))
+        return yield* ActionsCli.error(binding.provider, "invalid_input", "Request body must be JSON metadata", "definitely_unsent")
+      const snapshot = yield* ActionsCredentials.read(proc, directory, binding.provider)
+      if (input.method !== "GET") yield* validate(binding, snapshot)
+      return yield* ActionsHttp.metadata(binding.provider, snapshot, input)
+    }),
+    open: Effect.fn("ActionsTransport.gitlabOpen")(function* (binding: Actions.Binding, input: ActionsContract.BoundRequest) {
+      yield* ActionsCli.endpoint(binding.provider, input)
+      if (input.method !== "GET" || input.body !== undefined || input.query !== undefined ||
+        !/^[1-9]\d{0,127}$/.test(binding.projectID) ||
+        !new RegExp(`^projects/${binding.projectID}/jobs/[1-9]\\d{0,127}/(?:trace|artifacts(?:/.*)?)$`).test(input.path))
+        return yield* ActionsCli.error(binding.provider, "invalid_input", "Raw opening requires an exact bound GitLab job trace or artifact GET", "definitely_unsent")
+      const snapshot = yield* ActionsCredentials.read(proc, directory, binding.provider)
+      yield* validate(binding, snapshot)
+      return yield* ActionsHttp.openRaw(binding.provider, snapshot, input)
+    }),
+    bytes: (binding: Actions.Binding, input: ActionsContract.Request) => Stream.unwrap(Effect.gen(function* () {
+      yield* ActionsCli.endpoint(binding.provider, input)
+      if (input.method !== "GET" || input.body !== undefined)
+        return yield* ActionsCli.error(binding.provider, "invalid_input", "Raw byte downloads require GET without a body", "definitely_unsent")
+      return ActionsHttp.bytes(binding.provider, yield* ActionsCredentials.read(proc, directory, binding.provider), input)
+    })),
+    upload: Effect.fn("ActionsTransport.gitlabUpload")(function* (binding: Actions.Binding, input: ActionsContract.Request, file: { filename: string; bytes: Stream.Stream<Uint8Array, ActionsError> }) {
+      if (!file.filename || file.filename === "." || file.filename === ".." || file.filename !== file.filename.trim() ||
+          /[\\/:\x00-\x1f\x7f]/.test(file.filename) || file.filename.length > 255 || input.method !== "POST" ||
+          input.path.replace(/^\//, "") !== `projects/${encodeURIComponent(binding.projectID)}/secure_files` ||
+          input.body !== undefined || input.query?.name !== file.filename)
+        return yield* ActionsCli.error(binding.provider, "invalid_input", "Secure File upload requires an exact safe filename and matching native name query", "definitely_unsent")
+      yield* ActionsCli.endpoint(binding.provider, input)
+      const snapshot = yield* ActionsCredentials.read(proc, directory, binding.provider)
+      yield* validate(binding, snapshot)
+      const boundary = `orchestra-${randomUUID()}`
+      const prefix = new TextEncoder().encode(`--${boundary}\r\nContent-Disposition: form-data; name="name"\r\n\r\n${file.filename}\r\n--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${file.filename.replace(/["\\]/g, "\\$&")}"\r\nContent-Type: application/octet-stream\r\n\r\n`)
+      const body = Stream.concat(Stream.make(prefix), Stream.concat(file.bytes, Stream.make(new TextEncoder().encode(`\r\n--${boundary}--\r\n`))))
+      return yield* ActionsHttp.metadata(binding.provider, snapshot, input, body, `multipart/form-data; boundary=${boundary}`)
+    }),
+  }
+}
+~~~~
+
+## AUT2-C35
+
+```json
+{"block_id":"AUT2-C35","type":"literal_source_excerpt","request_namespace":"J1 canonical groups; J2 mapping in index","requests":["RE-AUT2-05","RE-AUT2-06"],"body_anchors":["A33","A34"],"requested_subject":"HTTPS verificado, phase sticky, request/body/backpressure/erro/abort e streams","source_category":"owned_population_source","path":"packages/core/src/actions/transport/http.ts","archive":"sources/packages/core/src/actions/transport/http.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"cb71e6424c0f4b9c7e714667f1298e46fe3a502d","source_sha256":"b3e60d9d087592f8847f53d94e60d3ece75cf827014407f9b4a66dfc78cc0ae7","source_bytes":10713}
+```
+
+```json
+{"first_line":1,"last_line":186,"bytes":10713,"sha256":"b3e60d9d087592f8847f53d94e60d3ece75cf827014407f9b4a66dfc78cc0ae7"}
+```
+
+~~~~typescript
+export * as ActionsHttp from "./http"
+
+import { request } from "node:https"
+import type { IncomingMessage } from "node:http"
+import type { Socket } from "node:net"
+import { checkServerIdentity } from "node:tls"
+import { NodeStream } from "@effect/platform-node"
+import { Actions } from "@orchestra/schema/actions"
+import { Cause, Deferred, Effect, Exit, Fiber, Scope, Stream } from "effect"
+import { ActionsContract } from "../contract"
+import { ActionsError } from "../error"
+import { ActionsCli } from "./cli"
+import { ActionsCredentials } from "./credentials"
+import { ActionsResponse } from "./response"
+
+const certificateFailures = new Set([
+  "CERT_HAS_EXPIRED", "CERT_NOT_YET_VALID", "CERT_REVOKED", "CERT_UNTRUSTED",
+  "DEPTH_ZERO_SELF_SIGNED_CERT", "SELF_SIGNED_CERT_IN_CHAIN",
+  "UNABLE_TO_GET_ISSUER_CERT", "UNABLE_TO_GET_ISSUER_CERT_LOCALLY",
+  "UNABLE_TO_VERIFY_LEAF_SIGNATURE", "ERR_TLS_CERT_ALTNAME_INVALID",
+])
+
+export function requestError(provider: Actions.Provider, cause: unknown, phase: "handshake" | "http_possible") {
+  const verification = cause instanceof Error && "code" in cause && typeof cause.code === "string" && certificateFailures.has(cause.code)
+  return ActionsCli.error(provider, "transport_failed", verification ? "GitLab TLS verification failed" : "GitLab HTTPS request failed",
+    verification && phase === "handshake" ? "definitely_unsent" : "unknown")
+}
+
+export const metadata = Effect.fn("ActionsTransport.httpsMetadata")(function* (
+  provider: Actions.Provider, snapshot: ActionsCredentials.Snapshot, input: ActionsContract.Request,
+  body: Stream.Stream<Uint8Array, ActionsError> = input.body === undefined ? Stream.empty : Stream.make(new TextEncoder().encode(JSON.stringify(input.body))),
+  contentType = "application/json",
+) {
+  return yield* Effect.scoped(Effect.gen(function* () {
+    const handle = yield* open(provider, snapshot, input, body, contentType, "30 seconds")
+    const response = yield* handle.response
+    const result = yield* responseBytes(provider, response, handle).pipe(Stream.runFoldEffect(() => ({ size: 0, chunks: [] as Uint8Array[] }), (state, chunk) => {
+      if (state.size + chunk.length > 2 * 1024 * 1024)
+        return Effect.fail(ActionsCli.error(provider, "metadata_truncated", "GitLab metadata capture limit exceeded"))
+      state.size += chunk.length
+      state.chunks.push(chunk)
+      return Effect.succeed(state)
+    }))
+    yield* Fiber.join(handle.input)
+    return yield* ActionsResponse.http(provider, response.statusCode ?? 0, headers(response), Buffer.concat(result.chunks))
+  }))
+})
+
+export function bytes(provider: Actions.Provider, snapshot: ActionsCredentials.Snapshot, input: ActionsContract.Request) {
+  return Stream.unwrap(Effect.gen(function* () {
+    const handle = yield* open(provider, snapshot, input, Stream.empty, "application/octet-stream", "5 minutes")
+    const response = yield* handle.response
+    if ((response.statusCode ?? 0) < 200 || (response.statusCode ?? 0) > 299) {
+      if (response.statusCode && response.statusCode >= 300 && response.statusCode < 400)
+        return yield* ActionsCli.error(provider, "host_mismatch", "Authenticated GitLab redirects require explicit credential-free transfer")
+      return yield* ActionsResponse.failure(provider, 1, Buffer.alloc(0), response.statusCode, headers(response), true)
+    }
+    return responseBytes(provider, response, handle)
+  }))
+}
+
+export const openRaw = Effect.fn("ActionsTransport.httpsOpenRaw")(function* (
+  provider: Actions.Provider, snapshot: ActionsCredentials.Snapshot, input: ActionsContract.BoundRequest,
+): Effect.fn.Return<ActionsContract.RawResponse, ActionsError, Scope.Scope> {
+  if (provider.kind !== "gitlab" || input.method !== "GET" || input.body !== undefined)
+    return yield* ActionsCli.error(provider, "invalid_input", "Native raw opening requires a GitLab GET without a body", "definitely_unsent")
+  const scope = yield* Scope.make()
+  yield* Effect.addFinalizer((exit) => Scope.close(scope, exit))
+  const handle = yield* open(provider, snapshot, input, Stream.empty, "application/octet-stream", "5 minutes").pipe(Scope.provide(scope))
+  const response = yield* handle.response
+  return {
+    status: response.statusCode ?? 0, headers: headers(response), body: responseBytes(provider, response, handle),
+    close: Scope.close(scope, Exit.void),
+  }
+})
+
+const open = Effect.fn("ActionsTransport.httpsOpen")(function* (
+  provider: Actions.Provider, snapshot: ActionsCredentials.Snapshot, input: ActionsContract.Request,
+  body: Stream.Stream<Uint8Array, ActionsError>, contentType: string, deadline: "30 seconds" | "5 minutes",
+) {
+  const endpoint = yield* ActionsCli.endpoint(provider, input)
+  const origin = URL.parse(provider.apiOrigin)
+  const url = origin && URL.parse(`${origin.origin}/api/v4/${endpoint}`)
+  if (!origin || !url || url.protocol !== "https:" || url.origin !== origin.origin || url.host !== provider.hostname)
+    return yield* ActionsCli.error(provider, "host_mismatch", "GitLab HTTPS destination differs from the binding origin", "definitely_unsent")
+  const response = yield* Deferred.make<IncomingMessage, ActionsError>()
+  const failure = yield* Deferred.make<never, ActionsError>()
+  const abort = new AbortController()
+  const state = { error: undefined as ActionsError | undefined, response: undefined as IncomingMessage | undefined, socket: undefined as Socket | undefined,
+    phase: "handshake" as "handshake" | "http_possible" }
+  const req = yield* Effect.acquireRelease(Effect.try({
+    try: () => request(url, {
+      method: input.method, agent: false, rejectUnauthorized: true, minVersion: "TLSv1.2", signal: abort.signal,
+      ca: snapshot.ca, cert: snapshot.cert, key: snapshot.key,
+      // Verification success precedes authenticated HTTP. Keep this transition
+      // sticky: later renegotiation/certificate/TLS failures cannot prove unsent.
+      checkServerIdentity: (hostname, certificate) => {
+        const error = checkServerIdentity(hostname, certificate)
+        if (!error) state.phase = "http_possible"
+        return error
+      },
+      headers: { ...snapshot.headers, "Content-Type": contentType, Connection: "close" },
+    }),
+    catch: () => ActionsCli.error(provider, "invalid_input", "GitLab HTTPS request could not be constructed safely", "definitely_unsent"),
+  }), (req) => Effect.sync(() => { abort.abort(); state.response?.destroy(); state.socket?.destroy(); req.destroy() }))
+  const fail = (error: ActionsError) => {
+    state.error ??= error
+    Deferred.doneUnsafe(response, Exit.fail(state.error))
+    Deferred.doneUnsafe(failure, Exit.fail(state.error))
+  }
+  req.on("error", (cause) => {
+    fail(requestError(provider, cause, state.phase))
+  })
+  req.on("socket", (socket) => {
+    state.socket = socket
+    socket.once("secureConnect", () => { state.phase = "http_possible" })
+  })
+  req.once("response", (incoming) => {
+    state.phase = "http_possible"
+    state.response = incoming
+    incoming.on("error", () => fail(ActionsCli.error(provider, "transfer_failed", "GitLab HTTPS response failed")))
+    incoming.on("aborted", () => fail(ActionsCli.error(provider, "transfer_failed", "GitLab HTTPS response ended prematurely")))
+    Deferred.doneUnsafe(response, Exit.succeed(incoming))
+  })
+  yield* Effect.forkScoped(Effect.sleep(deadline).pipe(Effect.andThen(Effect.sync(() => {
+    fail(ActionsCli.error(provider, "transfer_failed", "GitLab HTTPS deadline exceeded"))
+    abort.abort()
+    state.response?.destroy()
+    state.socket?.destroy()
+    req.destroy()
+  }))))
+  const sent = yield* Effect.forkScoped(Stream.runForEach(body, (chunk) => Effect.callback<void, ActionsError>((resume) => {
+    const progress = { written: false, returned: false, drained: false, blocked: false }
+    const done = () => {
+      if (!progress.returned || !progress.written || (progress.blocked && !progress.drained)) return
+      req.off("drain", drain)
+      resume(Effect.void)
+    }
+    const drain = () => { progress.drained = true; done() }
+    // Bun can signal drain synchronously during write. Install before writing;
+    // wait on callback plus backpressure instead of accumulating the whole body.
+    req.once("drain", drain)
+    progress.blocked = !req.write(chunk, (error) => {
+      if (error) { req.off("drain", drain); resume(Effect.fail(ActionsCli.error(provider, "transfer_failed", "GitLab HTTPS upload failed"))); return }
+      progress.written = true; done()
+    })
+    progress.returned = true
+    done()
+    return Effect.sync(() => req.off("drain", drain))
+  }).pipe(Effect.andThen(Effect.callback<void>((resume) => {
+    // Let the Node/Bun I/O pump consume a chunk before the next producer pull.
+    const turn = setImmediate(() => resume(Effect.void))
+    return Effect.sync(() => clearImmediate(turn))
+  })))).pipe(
+    Effect.andThen(Effect.callback<void>((resume) => {
+      const finished = () => resume(Effect.void)
+      req.once("finish", finished)
+      req.end()
+      return Effect.sync(() => req.off("finish", finished))
+    })),
+    Effect.raceFirst(Deferred.await(failure)),
+    Effect.mapError((error) => new ActionsError({ ...error, message: error.message, disposition: "unknown" })),
+    Effect.catchCause((cause) => {
+      const error = Cause.squash(cause)
+      return Effect.fail(error instanceof ActionsError ? error : ActionsCli.error(provider, "transfer_failed", "GitLab HTTPS upload producer failed"))
+    }),
+    Effect.tapError((error) => Effect.sync(() => { fail(error); abort.abort(); state.socket?.destroy(); req.destroy() })),
+  ))
+  return { response: Deferred.await(response).pipe(Effect.raceFirst(Deferred.await(failure))), failure: Deferred.await(failure), input: sent, state }
+})
+
+function responseBytes(provider: Actions.Provider, response: IncomingMessage, handle: Effect.Success<ReturnType<typeof open>>) {
+  return NodeStream.fromReadable<Uint8Array, ActionsError>({ evaluate: () => response,
+    onError: () => handle.state.error ?? ActionsCli.error(provider, "transfer_failed", "GitLab HTTPS response failed"),
+  }).pipe(
+    Stream.concat(Stream.fromEffect(Effect.suspend(() => response.complete && !response.aborted ? Effect.void
+      : Effect.fail(handle.state.error ?? ActionsCli.error(provider, "transfer_failed", "GitLab HTTPS response ended prematurely")))).pipe(Stream.drain)),
+    Stream.interruptWhen(handle.failure),
+    Stream.mapError((error) => handle.state.error ?? error),
+  )
+}
+
+function headers(response: IncomingMessage) {
+  return Object.fromEntries(Object.entries(response.headers).filter((entry): entry is [string, string | string[]] => entry[1] !== undefined)
+    .map(([key, value]) => [key, Array.isArray(value) ? value.join(", ") : value]))
+}
+~~~~
+
+## AUT2-C36
+
+```json
+{"block_id":"AUT2-C36","type":"literal_source_excerpt","request_namespace":"J1 canonical groups; J2 mapping in index","requests":["RE-AUT2-05"],"body_anchors":["A32","A33"],"requested_subject":"Parsers nativos de projeto/conta chamados pelo transporte","source_category":"owned_population_source","path":"packages/core/src/actions/transport/identity.ts","archive":"sources/packages/core/src/actions/transport/identity.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"4d9b3812a6078439d5a654bc198e5426e55b1cb2","source_sha256":"0760871fde3a3eb2f8b3a5895cae66a50266a2b731208af0a533b31570536a4a","source_bytes":1531}
+```
+
+```json
+{"first_line":1,"last_line":24,"bytes":1531,"sha256":"0760871fde3a3eb2f8b3a5895cae66a50266a2b731208af0a533b31570536a4a"}
+```
+
+~~~~typescript
+export * as ActionsIdentity from "./identity"
+
+import { Option, Schema } from "effect"
+import { Actions } from "@orchestra/schema/actions"
+
+const nativeID = Schema.Union([
+  Schema.String.check(Schema.isPattern(/^0*[1-9]\d*$/)),
+  Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: Number.MAX_SAFE_INTEGER })),
+])
+const githubProject = Schema.decodeUnknownOption(Schema.Struct({ id: nativeID, full_name: Schema.NonEmptyString }))
+const gitlabProject = Schema.decodeUnknownOption(Schema.Struct({ id: nativeID, path_with_namespace: Schema.NonEmptyString }))
+const githubAccount = Schema.decodeUnknownOption(Schema.Struct({ login: Schema.String.check(Schema.isPattern(/^(?=.{1,39}$)[a-zA-Z0-9]+(?:-[a-zA-Z0-9]+)*(?:\[bot\])?$/)) }))
+const gitlabAccount = Schema.decodeUnknownOption(Schema.Struct({ username: Schema.String.check(Schema.isPattern(/^(?=.{2,255}$)(?!.*\.\.)(?!.*\.(?:git|atom)$)[a-zA-Z0-9_][a-zA-Z0-9_.-]*[a-zA-Z0-9_-]$/i)) }))

@@ -1,0 +1,1 @@
+ACK parte 6/6, fragmento 1/2 — última âncora recebida: **AUT1-X02**, `packages/schema/src/actions/identity.ts`, metadados do bloco e abertura do JSON do intervalo.

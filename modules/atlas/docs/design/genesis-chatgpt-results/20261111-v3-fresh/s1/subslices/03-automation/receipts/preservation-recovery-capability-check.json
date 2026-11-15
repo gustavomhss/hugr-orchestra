@@ -1,0 +1,27 @@
+{
+  "schema": "s1-03-native-final-recovery-capability-check/v1",
+  "recorded_utc": "2026-11-15T05:25:46.222430+00:00",
+  "target": "Original native FINAL of /root/derived_research for research-flow L2 v2, missing separate capture before compaction",
+  "observations": [
+    {
+      "source": "Enabled tool metadata inspected through ALL_TOOLS; no personal data query executed",
+      "tool": "personal_context_search",
+      "advertised_limit": "ZERO access to the current conversation",
+      "disposition": "Cannot recover an earlier native FINAL from this ongoing current conversation; no unrelated personal-history search performed."
+    },
+    {
+      "source": "Enabled tool metadata inspected through ALL_TOOLS; no device history query executed",
+      "tool": "remote_desktop_commander_get_recent_tool_calls",
+      "advertised_scope": "Recent local Desktop Commander tool history on its authorized device, up to last 1000 calls; stored outputs over 4 KiB omitted",
+      "disposition": "Does not advertise native collaboration transcript retrieval. No unrelated device session or history was probed."
+    },
+    {
+      "source": "Actual preserved same-author continuation",
+      "reference": "receipts/producer-responses/derived-research-l2-v2-later-confirmation.md",
+      "disposition": "Later confirmation remains labelled as later confirmation, not a verbatim reconstruction of the earlier FINAL."
+    }
+  ],
+  "original_capture_recovered": false,
+  "status": "KNOWN_PRESERVATION_GAP_REMAINS",
+  "semantic_effect": "Same two judges explicitly judged the complete v3 body without certifying global GO-I1 preservation. This discovery record does not waive the missing original."
+}

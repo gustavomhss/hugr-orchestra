@@ -1,0 +1,13 @@
+{
+  "schema": "s1-03-root-courier-read-record/v1",
+  "at_utc": "2026-11-15T05:52:56.394463+00:00",
+  "lot": "automation-1-supplement-v2-coverage-erratum",
+  "part": 1,
+  "prepared_message_path": "message-j1-01.txt",
+  "prepared_message_bytes": 57965,
+  "prepared_message_sha256": "81c95f707d5c9baecf7dd2889898637ad3342c2d7a3dffe730db90f22d094c21",
+  "observation": "Two large local display reads were truncated. Before the actual native dispatch, the missing AUT1-C01 and AUT1-C02 span was reread in full through a bounded local extraction. The native call supplied the complete visible literal message; no truncation marker was forwarded.",
+  "native_call_returned_normally": true,
+  "host_wire_checksum_available": false,
+  "new_logical_judge_requests_due_to_local_display_truncation": 0
+}

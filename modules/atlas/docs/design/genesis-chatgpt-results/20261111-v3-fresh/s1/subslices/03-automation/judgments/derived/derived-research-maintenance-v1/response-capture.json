@@ -1,0 +1,14 @@
+{
+  "responses": {
+    "j1": {
+      "target": "/root/s1_03_j1",
+      "file": "j1-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 3257,
+      "sha256": "3631f846544e74c09a11caf52c6d29e557e29c9cb88f21aa4dfa094522b91258",
+      "terminal_newline": false,
+      "literal": true,
+      "captured_at_utc": "2026-11-15T06:52:54.612080+00:00"
+    }
+  }
+}

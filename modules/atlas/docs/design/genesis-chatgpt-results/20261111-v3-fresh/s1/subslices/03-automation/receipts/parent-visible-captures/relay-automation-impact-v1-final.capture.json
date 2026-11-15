@@ -1,0 +1,11 @@
+{
+  "kind": "parent_visible_native_final_literal_comparison",
+  "agent_id": "/root/review_relay",
+  "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-automation-impact-v1/relay-final-original.md",
+  "bytes": 2596,
+  "sha256": "5eee3443809bf8b8d8ed7cbf61bdd501eefa17ffbc0a4de7042318c832fa07fe",
+  "literal": true,
+  "equal_to_preemission_capture": true,
+  "source": "Native FINAL_ANSWER delivered to root before handle reuse",
+  "at_utc": "2026-11-15T10:01:49.418622+00:00"
+}

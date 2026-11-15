@@ -1,0 +1,97 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "relay": "/root/review_relay",
+  "packet": "union-supplement-v1",
+  "source": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/union-supplement-v1.md",
+  "source_bytes": 12050,
+  "source_sha256": "270c6d57e808d88adeb0197adef132658e82071dd713d09041ff497af351ebfb",
+  "parts_per_target": 1,
+  "calls": [
+    {
+      "sequence": 1,
+      "target": "/root/s1_03_j1",
+      "part": 1,
+      "request_file": "request-j1-01.json",
+      "request_file_bytes": 13263,
+      "request_file_sha256": "cd0097ef82948fcc19d0df3fa3c572bc2e59144e3220dd39ff5636a3b113ad46",
+      "message_bytes": 12647,
+      "message_sha256": "1a6ff026d49046d8ddf56fbe4af994430ceb112f68877e3a66e9a8fdd68d2b91",
+      "payload_bytes": 12050,
+      "payload_sha256": "270c6d57e808d88adeb0197adef132658e82071dd713d09041ff497af351ebfb",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 2,
+      "target": "/root/s1_03_j2",
+      "part": 1,
+      "request_file": "request-j2-01.json",
+      "request_file_bytes": 13263,
+      "request_file_sha256": "b6a4bbd862ebecb31e51adee8fdd561ff442e327e4b5b02e137d8800f5575eca",
+      "message_bytes": 12647,
+      "message_sha256": "1a6ff026d49046d8ddf56fbe4af994430ceb112f68877e3a66e9a8fdd68d2b91",
+      "payload_bytes": 12050,
+      "payload_sha256": "270c6d57e808d88adeb0197adef132658e82071dd713d09041ff497af351ebfb",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    }
+  ],
+  "known_transcription_corrections": [],
+  "receipt_limit": "Ferramenta retornou normalmente sem texto nem ID de despacho; os hashes descrevem os pedidos registrados e sua reconstrução local, não verificação remota nem suficiência semântica.",
+  "delivery_scope": "Literal UTF-8 packet only; final signal is outside payload.",
+  "slot_handling": "Sequential judges; preserve each original final before reactivation.",
+  "judgment_capture": "Both original finals preserved.",
+  "dispatch_count": 2,
+  "recorded_at_utc": "2026-11-15T05:51:09.761851+00:00",
+  "completed_targets": [
+    "/root/s1_03_j1",
+    "/root/s1_03_j2"
+  ],
+  "pending_targets": [],
+  "local_recorded_reconstruction": [
+    {
+      "target": "/root/s1_03_j1",
+      "bytes": 12050,
+      "sha256": "270c6d57e808d88adeb0197adef132658e82071dd713d09041ff497af351ebfb",
+      "equals_source": true,
+      "raw_bytes": 12050,
+      "raw_sha256": "270c6d57e808d88adeb0197adef132658e82071dd713d09041ff497af351ebfb",
+      "corrections_applied": false
+    },
+    {
+      "target": "/root/s1_03_j2",
+      "bytes": 12050,
+      "sha256": "270c6d57e808d88adeb0197adef132658e82071dd713d09041ff497af351ebfb",
+      "equals_source": true,
+      "raw_bytes": 12050,
+      "raw_sha256": "270c6d57e808d88adeb0197adef132658e82071dd713d09041ff497af351ebfb",
+      "corrections_applied": false
+    }
+  ],
+  "judgment_captures": {
+    "j1": {
+      "target": "/root/s1_03_j1",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/union-supplement-v1/j1-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 3629,
+      "sha256": "c590acf642d5db68279bc55eb0e7930015606eb8ac8df889b4da394554a10979",
+      "terminal_newline": false,
+      "literal": true,
+      "captured_at_utc": "2026-11-15T05:34:26.383487+00:00"
+    },
+    "j2": {
+      "target": "/root/s1_03_j2",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/union-supplement-v1/j2-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 2605,
+      "sha256": "82237b06839082d4b9bbce93c9d348ab40d08027f1566aad950b058cf5afe5fc",
+      "terminal_newline": false,
+      "literal": true,
+      "captured_at_utc": "2026-11-15T05:53:29.594917+00:00"
+    }
+  }
+}

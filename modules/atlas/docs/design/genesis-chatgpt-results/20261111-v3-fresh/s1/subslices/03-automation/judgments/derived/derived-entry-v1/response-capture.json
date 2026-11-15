@@ -1,0 +1,27 @@
+{
+  "packet": "derived-entry-v1",
+  "responses": {
+    "j1": {
+      "target": "/root/s1_03_j1",
+      "judge_id": "parallel-v3-fresh/S1-03/J1",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-entry-v1/j1-response.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j1",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 2943,
+      "sha256": "877d8bc5850817e09838acba169d63fcb74c2c2cf78efdb4f54eee960662353a",
+      "captured_at_utc": "2026-11-15T10:50:15.258168+00:00"
+    },
+    "j2": {
+      "target": "/root/s1_03_j2",
+      "judge_id": "parallel-v3-fresh/S1-03/J2",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-entry-v1/j2-response.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j2",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 3429,
+      "sha256": "8eebf7d53891e40679cb0642deb83c978e34cccf0c65d6a7649e24ede1059ca4",
+      "captured_at_utc": "2026-11-15T10:50:44.840708+00:00"
+    }
+  }
+}

@@ -1,0 +1,914 @@
+Transporte literal pela principal ao mesmo juiz J1, execução 34269cf4-d631-41c5-a30b-85b0ec217390. Não use ferramentas, delegue, edite ou receba parecer do outro juiz. Lote automation-1-supplement-v2-coverage-erratum; parte 1/6. Pacote canônico 344323 bytes SHA256 1599aa38f34decbc6bff88c972ed778d5f49e179dca7ac2915d37ecacf245a4b. Esta parte tem 57361 bytes SHA256 f21b643937f7c7c9a31f9073de6581834ae31a0cc8e738fa7919443072c413f5. Conserve o exame anterior e os deltas já recebidos. Julgue apenas após FIM_DO_LOTE; até lá responda somente ACK da parte e da última âncora.
+
+BEGIN_PART
+# Complemento literal e revisão v2 — automation
+
+Execução 34269cf4-d631-41c5-a30b-85b0ec217390, S1-03, fonte 1cde2ff7a71bcf7aecb5d030917b577165135d38. Mesmo par /root/s1_03_j1 e /root/s1_03_j2, sem ferramentas. A autoria não recebeu oracle. Este complemento atende aos pedidos públicos de evidência já emitidos; o corpo v1 recebido continua disponível no histórico, e os únicos deltas textuais da versão agora submetida estão abaixo. Os intervalos/offsets dos lotes originais continuam vinculados à v1, não devem ser silenciosamente reinterpretados como offsets v2. A principal verificou a aplicação exata e a igualdade de todos os outros bytes. Pareceres originais permanecem preservados, ainda sem PASS global.
+
+Corpo v1: {'bytes': 59832, 'sha256': '2ed7670affc680005840d0918489cb1ac36e1c5a4021defcc57ae44186ae7459', 'git_blob_sha': '1867e5763e724fb2c3641f28297da24b311bdcda'}
+
+Corpo v2: {'bytes': 59953, 'sha256': 'e9c89bea68d594bc61356ff461642ea23cd905d4584f2b52d32e10a5af984e55', 'git_blob_sha': 'b8fec4854b4c1384d3c4a2a4f0d51d220c874618'}
+
+## Delta literal 1
+
+ANTES
+```text
+Binding e serviços são construídos por necessidade.
+```
+
+DEPOIS
+```text
+A resolução do binding, a inicialização cached de operations e o carregamento de output são adiados; transport, readers e resources são compostos ao construir a fachada.
+```
+
+As propostas nos suplementos foram redigidas antes desta correção; suas frases de status “não aplicada” descrevem aquele momento e são supersedidas SOMENTE pelos deltas v2 acima. O conteúdo literal de fontes permanece intacto. Nenhum teste de produto/provider foi executado; assertions são evidência de contrato, não execução. Critérios: todos os pertinentes já recebidos, com suficiência restrita ao lote e sem promoção de semântica a binding/runtime. Avalie após FIM_DO_LOTE; parte intermediária é apenas recebimento.
+
+Sete fontes semânticas de Schema foram lidas no baseline como evidência bruta dos call sites Core: actions.ts, actions/{identity,operation,command,workflow,run}.ts e schema.ts. São inputs extras de S1-04, não alteram as populações 204/462 nem aceitam o artefato externo Schema. As identidades literais aparecem nos blocos e no manifesto de capturas.
+
+## INICIO_DO_SUPLEMENTO_LITERAL
+
+# Suplemento literal de revisão 1 — AUTOMATION-L1
+
+```json
+{
+  "type": "documentary_transport_header",
+  "task": "AUTOMATION-L1",
+  "review_batch": "automation-1",
+  "body_sha256": "2ed7670affc680005840d0918489cb1ac36e1c5a4021defcc57ae44186ae7459",
+  "body_sections": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "requests": [
+    "RE-AUT1-01",
+    "RE-AUT1-02",
+    "RE-AUT1-03",
+    "RE-AUT1-04",
+    "RE-AUT1-05",
+    "RE-AUT1-06"
+  ],
+  "coverage_projection": "review-supplement-1-index.json#/shared_population_reconciliation",
+  "coverage_projection_reuse": "One 204-row projection, shared by both judges and later review batches",
+  "source_text": "literal_unmodified",
+  "metadata": "typed_mechanical_projection",
+  "tests": "NOT_RUN",
+  "provider_execution": "NOT_RUN",
+  "oracle_access": false,
+  "body_v1_changed": false,
+  "cross_scope_sources": "raw_source_only; S1-04 ownership retained; outside population 204",
+  "proposition_authority": "producer evidence submission; no judgment or acceptance"
+}
+```
+
+## AUT1-H01
+
+```json
+{"block_id":"AUT1-H01","type":"literal_source_excerpt","requests":["RE-AUT1-01"],"source_category":"historical_body","archive":"../../inputs/history/bodies/automation.md","repository_path":"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/bodies/automation.md","commit":"a8df22ae3a140c58c63f62ce2a634c84f415c943","source_git_blob_sha":"83679961541fcbd73e5a79d8fea1ff14fc1aa4cb","source_sha256":"83d483f7f56a0e3dfa7a29e89fea01b29d1b5529e36693b20a06fe9cc0db8b88","source_bytes":4377,"body_anchors":[],"requested_subject":"Corpo histórico integral de 4.377 bytes"}
+```
+
+```json
+{"first_line":1,"last_line":28,"bytes":4377,"sha256":"83d483f7f56a0e3dfa7a29e89fea01b29d1b5529e36693b20a06fe9cc0db8b88"}
+```
+
+~~~~markdown
+# Actions admission, scheduled dispatch and Board decision records
+
+Layer: **L1 — pinned factual basis**. Need: `flow`. Scope: `orchestra.s1`.
+Source revision: `1cde2ff7a71bcf7aecb5d030917b577165135d38`.
+
+## Observed implementation
+
+Actions is Location-scoped and resolves repository bindings only on first operation, allowing non-Git Locations to boot. GitHub and GitLab readers are selected from the binding; authoring, resources and commands have separate dispatch paths. Execution clones caller data and compares the admitted intent kind and any expected endpoint target fields before performing. One-time command output is validated separately from its durable operation acknowledgement. [1,2]
+
+`ActionsOperations.prepare` requires a real absolute Location and signed-in account, strictly decodes intent, binds provider/account/revision/Location/client identity, reconciles exact retries and refuses conflicting reuse. It sweeps expiry independently, checks ledger/unknown-outcome capacity, and stores a prepared row inside an immediate transaction. Execution can claim only a still-prepared, unexpired matching row as `sending`; other states return their receipt. The provider action runs outside the SQL transaction with a deadline and disposal signal. Failure without definitive evidence becomes `outcome_unknown`; finalization records the outcome. `reconcile` observes only accepted or unknown rows and never calls the perform callback. This separates command admission from confirmed external outcome. [3]
+
+The scheduler claims due slots transactionally and dispatches through normal `SessionV2.create` then durable `prompt`. Legacy runs select Maestro in the task directory. Capability runs check owner agent/placement and current claim before Session creation and again before admission. A documented race remains between the last check and prompt admission: a revoked claim may still receive an honest `started` receipt, including one run beyond a repeat limit. Started proves admission, not completion of the Session's model/tool work. [4]
+
+Stale dispatch claims are selected after the 120-second lease. Takeover compares exact owner/claim time, checks whether the prompt reached `SessionInput`, voids unadmitted claims for replanning, and retries already admitted identity only to reconcile and wake. A failed legacy due slot is consumed rather than silently retried. The separately composed daemon ticks at boot and waits for due times or writes; failures are logged and later passes continue. This SQL dispatch lease is distinct from the process-local Session execution coordinator. [4]
+
+Board answers produce decision records. Changing a standing answer rejects an already-overturned record, invalid option or unchanged answer, inserts a new record with `supersedes_id`, links the old record with `overturned_by_id`, updates the current question answer and appends activity. Recording an outcome addresses the current standing decision and logs Maestro's reason. It preserves answer lineage without claiming that a recorded outcome independently verifies the underlying work. [5]
+
+## Normative intent and gaps
+
+These services expose different meanings for preparation, sending, admission, acknowledgement, observation and recorded decisions. They are not interchangeable “done” statuses. Provider-specific Actions transport/reconciliation, scheduler cadence calculations and Board issue/epic automation are deeper family members not exhaustively interpreted here. No external workflow, schedule, Board write or product test ran.
+
+## Source anchors
+
+- **1.** `packages/core/src/actions.ts:4f81df84763bd63e7680de8fd40c60b583ef68ca` — Location binding, reader routing and execute, lines 49–85,171–216.
+- **2.** `packages/core/src/actions/contract.ts:62521cbd3f4860049c3480a2bf9f2ed650c6c9f8` — transport, adapter and operation boundaries, lines 8–88.
+- **3.** `packages/core/src/actions/operations.ts:83c0b9e03b063bd59bc2d30317f7de85cbb99ee4` — prepare, execution CAS and observation-only reconcile, lines 16–203.
+- **4.** `packages/core/src/scheduled-task.ts:0a89bbdc576091ca01445e45e1500ed4008898a9` — claims, admission race, takeover and daemon, lines 23–32,121–244,272–320,481–504.
+- **5.** `packages/core/src/board/decision.ts:4b219f5b62517b2c4f9749a1a99e6257cfeff167` — decision history, change and outcome, lines 11–128.
+~~~~
+
+## AUT1-H02
+
+```json
+{"block_id":"AUT1-H02","type":"literal_source_excerpt","requests":["RE-AUT1-01"],"source_category":"historical_gap_record","archive":"../../inputs/history/a3-dossier.md","repository_path":"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/review-packets/l1-a3-v1-dossier.md","commit":"a8df22ae3a140c58c63f62ce2a634c84f415c943","source_git_blob_sha":"285e56c1680153ce75c71fd99bcf9455bde70d4d","source_sha256":"36416073165d59eec9c7d847a26f414d855cc2a40758d548f4dd49669dccc5d4","source_bytes":177076,"body_anchors":[],"requested_subject":"Gaps originais e continuidade registrada"}
+```
+
+```json
+{"first_line":414,"last_line":428,"bytes":1174,"sha256":"759f3cc9ca870b74857b1e22f50912e64c697487895e849084da32acd3d9a1f2"}
+```
+
+~~~~markdown
+### `s1.core.automation` — `flow`
+
+Corpo congelado: `bodies/automation.md`, SHA256 `83d483f7f56a0e3dfa7a29e89fea01b29d1b5529e36693b20a06fe9cc0db8b88`. Validade original: `supported`.
+
+**Gaps originais, verbatim:**
+
+- Provider-specific Actions commands/reconciliation, cadence policy and remaining Board workflows need their leaf sources when changed.
+- Scheduled dispatch has an explicit revocation-to-admission race; admission is not Session completion.
+- No external actions or product runtime checks executed.
+
+**Inputs originais:** `file:packages/core/src/actions.ts`, `file:packages/core/src/actions/contract.ts`, `file:packages/core/src/actions/operations.ts`, `file:packages/core/src/scheduled-task.ts`, `file:packages/core/src/board/decision.ts`.
+
+**Explicitação nova nesta revisão:** Estados distintos de Actions, dispatch admitido e linhagem de Board. Provider commands/readback, cadence/SQL e workflows Board restantes exigem seus leaves; a race de revogação não está resolvida.
+
+**Uso dependente bloqueado:** Conclusão de workflow/Session, remoção de ambiguidade externa e limite repeat estrito não podem ser derivados de prepared/started/recorded.
+~~~~
+
+## AUT1-H03
+
+```json
+{"block_id":"AUT1-H03","type":"literal_source_excerpt","requests":["RE-AUT1-01"],"source_category":"historical_authority_record","archive":"../../inputs/history/a4-dossier.md","repository_path":"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/review-packets/l1-a4-v1-dossier.md","commit":"a8df22ae3a140c58c63f62ce2a634c84f415c943","source_git_blob_sha":"6f872ea0e22097d8084fd587f585751a436f607e","source_sha256":"83b544ac46f99b2bf3585ff4e607bcd403e49eb20dd128deb5b6a029a772ead0","source_bytes":155061,"body_anchors":[],"requested_subject":"Regras históricas de leitura de folhas e preservação de estado"}
+```
+
+```json
+{"first_line":299,"last_line":301,"bytes":1182,"sha256":"9bdfe088bc6a5d141fa62840650ac10bf2860f72274f37ab42a45f1c995c9549"}
+```
+
+~~~~markdown
+Decisive implementation/control-flow and normative reads back the claims actually made in the other bodies. An unread substantive implementation is explicitly classified `representative_family_boundary`, never silently converted to support or semantic acceptance. Exact operation-specific leaf behavior remains a deeper-read obligation. This bounded L1 grouping covers the entry, authority and lifecycle questions; it does not certify every line of every member.
+
+Historical migrations retain compatibility authority under the inspected migration engine. Generated schema/export/support files remain tied to their generators and owning contracts. The vendored Copilot family remains an upstream compatibility boundary. Tests, fixture trees, assets and harnesses have grouped validation disposition; their existence proves no executed result. Runtime pins and bundled text are change-sensitive inputs even when their leaf content is not interpreted here. Historical phase plans, runtime-closure qualification documents and old V2 sketches are retained as historical/normative inputs to compare with current code, never promoted by filename to current behavior or a fresh PASS. [1,3]
+~~~~
+
+```json
+{"first_line":347,"last_line":349,"bytes":796,"sha256":"4567232af813afc727012a2d9d5600ca5804e3888b601261625e6c4172ceaf89"}
+```
+
+~~~~markdown
+As sete orientações capturadas permanecem orientações no congelado: `docs/guides/agents.md`, `docs/guides/session-requests.md`, `docs/specs/v2/tools.md`, `packages/core/src/board/tools.ts`, `packages/core/src/session/README.md`, `packages/core/src/session/runner/execution-host.ts` e `packages/core/src/session/runner/index.ts`. Um trecho complementar eventualmente lido agora não apaga esse estado histórico.
+
+**Lacuna obrigatória:** se uma pergunta L1 exigida depende de um leaf não lido, a lacuna permanece aberta nesse ponto. Não se presume que o requisito possa ser adiado por conveniência. O mesmo vale para a família util, sem fonte própria lida, e para documentos históricos ainda não confrontados. A suficiência do conjunto continua sujeita aos dois juízes da principal.
+~~~~
+
+## AUT1-H04
+
+```json
+{
+  "type": "mechanical_json_projection",
+  "requests": [
+    "RE-AUT1-01"
+  ],
+  "source": {
+    "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/a-l1-evidence-v1/coverage-needs-projection.json",
+    "git_blob_sha": "2e91d0f916dfa95a2dd0ef7ae74ff8c1bb427045",
+    "byte_length": 726892,
+    "sha256": "05485c4bd0ac9c76814e44537788818bbcf1fbcbfb87dd8063ce30bf1a67e0cf",
+    "archive": "../../inputs/history/coverage-needs-projection.json"
+  },
+  "selector": "artifacts[original_artifact.key == \"s1.core.automation\"]",
+  "record": {
+    "original_artifact": {
+      "key": "s1.core.automation",
+      "scope": "orchestra.s1",
+      "title": "Actions admission, scheduled dispatch and Board decision records",
+      "layer": 1,
+      "need": "flow",
+      "body": {
+        "path": "bodies/automation.md",
+        "encoding": "utf-8",
+        "byte_length": 4377,
+        "sha256": "83d483f7f56a0e3dfa7a29e89fea01b29d1b5529e36693b20a06fe9cc0db8b88"
+      },
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "Pinned repository implementation and explicitly distinguished repository normative documentation; source inspection only. No product execution or test result is asserted.",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+      },
+      "validity": "supported",
+      "gaps": [
+        "Provider-specific Actions commands/reconciliation, cadence policy and remaining Board workflows need their leaf sources when changed.",
+        "Scheduled dispatch has an explicit revocation-to-admission race; admission is not Session completion.",
+        "No external actions or product runtime checks executed."
+      ],
+      "evidence": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/review-evidence-compact.md",
+          "sha256": "1d28ad12ce7c525d230e42486b6bccd691104d5e6acd4a815728dda7b8ed8676"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/excerpt-map.json",
+          "sha256": "301173d05efb7a14a5fedfafbf6755d34e413100dadd7f21560a62e0f4cff471"
+        }
+      ],
+      "input_keys": [
+        "file:packages/core/src/actions.ts",
+        "file:packages/core/src/actions/contract.ts",
+        "file:packages/core/src/actions/operations.ts",
+        "file:packages/core/src/scheduled-task.ts",
+        "file:packages/core/src/board/decision.ts"
+      ],
+      "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/actions.ts",
+          "git_blob_sha": "4f81df84763bd63e7680de8fd40c60b583ef68ca",
+          "sha256": "08c5f306bc1c53b978a4254eba0fc708d9a4bfbb30fb63ead23c237f359fceef"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/actions/contract.ts",
+          "git_blob_sha": "62521cbd3f4860049c3480a2bf9f2ed650c6c9f8",
+          "sha256": "c69997923b14da057a5cab4b3e9077884263d43c02f98dee1da44fedf65ae9bc"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/actions/operations.ts",
+          "git_blob_sha": "83c0b9e03b063bd59bc2d30317f7de85cbb99ee4",
+          "sha256": "f4180bfeabef99c0eaddace3f1da7242fb8dacd7d63fb948b84cc014f59a89d4"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/scheduled-task.ts",
+          "git_blob_sha": "0a89bbdc576091ca01445e45e1500ed4008898a9",
+          "sha256": "8c204bd55a8cf8fd1dbddc232f5dfa84b9190822d074ccc72e85594e457af12b"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/board/decision.ts",
+          "git_blob_sha": "4b219f5b62517b2c4f9749a1a99e6257cfeff167",
+          "sha256": "7fdd5f2d2d0dfa0414b70b870e4ff75ca62fe7af36c62c90e583663af8833b43"
+        }
+      ],
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/recipe.json",
+        "sha256": "79c21a0eb94bf9eb6927984134592a688d3b028c2213e5552bb1017ae50bd8fb"
+      },
+      "build_dependencies": [],
+      "navigation": [],
+      "producer_request_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/request.txt",
+        "sha256": "5ade453a557acd559e6796cab8f6ed42d5141ddf668d3c6f06169e7ce8840d7d"
+      },
+      "producer_response_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/response.md",
+        "sha256": "79a01b28b5df5d99a60f8dfd5af2b223671aec009ec9e77ae755cf38096ff12d"
+      },
+      "semantic_review_refs": [],
+      "runtime_receipt_refs": []
+    },
+    "derived_population_routing": {
+      "count": 204,
+      "families": [
+        "actions",
+        "board",
+        "scheduled-task"
+      ],
+      "by_depth": {
+        "decisive_source_read": 6,
+        "grouped_validation_inventory": 89,
+        "orientation_read": 1,
+        "representative_family_boundary": 108
+      },
+      "by_read_status": {
+        "captured_targeted_orientation_only": 1,
+        "not_read": 197,
+        "semantically_read_decisive_ranges": 6
+      },
+      "coverage_group_ids": [
+        "G001",
+        "G002",
+        "G003",
+        "G004",
+        "G005",
+        "G019",
+        "G020",
+        "G021",
+        "G022",
+        "G115",
+        "G116",
+        "G117",
+        "G118"
+      ]
+    },
+    "source_reference_families": [
+      "actions",
+      "board",
+      "scheduled-task"
+    ],
+    "clarification_authored_in_this_revision": {
+      "need_boundary": "Estados distintos de Actions, dispatch admitido e linhagem de Board.",
+      "mandatory_followup": "Provider commands/readback, cadence/SQL e workflows Board restantes exigem seus leaves; a race de revogação não está resolvida.",
+      "blocked_dependent_claims": "Conclusão de workflow/Session, remoção de ambiguidade externa e limite repeat estrito não podem ser derivados de prepared/started/recorded.",
+      "registered_dependent_artifact_keys": null,
+      "note": "No L2–L4 dependent keys or new build edges are invented. These are use restrictions derived from existing bodies/gaps, not a retroactive validity change."
+    }
+  }
+}
+```
+
+## AUT1-C01
+
+```json
+{"block_id":"AUT1-C01","type":"literal_source_excerpt","requests":["RE-AUT1-02","RE-AUT1-05","RE-AUT1-06"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions.ts","repository_path":"packages/core/src/actions.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"4f81df84763bd63e7680de8fd40c60b583ef68ca","source_sha256":"08c5f306bc1c53b978a4254eba0fc708d9a4bfbb30fb63ead23c237f359fceef","source_bytes":12779,"body_anchors":["A01","A15","A17"],"requested_subject":"Composição da fachada, lazy store/operations/output, snapshot e roteamento de execute/reconcile"}
+```
+
+```json
+{"first_line":49,"last_line":216,"bytes":9361,"sha256":"b43f04580fd9a915fffef53070fcfdc249b2b066ff0ee8ece8f2f96859ebfc72"}
+```
+
+~~~~typescript
+export const make = Effect.fn("Actions.make")(function* (input: {
+  directory: string
+  workspaceID?: string
+  projectID: string
+  stateDirectory: string
+  transport?: ActionsContract.Transport
+}) {
+  const config = { ...input }
+  const fs = yield* FSUtil.Service
+  const proc = yield* AppProcess.Service
+  const transport = config.transport ?? (yield* ActionsTransport.make({ directory: config.directory }))
+  const lifetime = yield* Scope.Scope
+  const database = yield* Database.Service
+  const operations = yield* Effect.cached(ActionsOperations.make(config).pipe(
+    Effect.provideService(Database.Service, database), Scope.provide(lifetime),
+  ))
+  const github = ActionsGitHubRead.make({ transport })
+  const gitlab = ActionsGitLabRead.make({ transport })
+  const reader = (binding: Actions.Binding) => binding.provider.kind === "github" ? github : gitlab
+  const resources = ActionsResources.make({ transport, reader, directory: config.directory, proc })
+  const output = (binding: Actions.Binding) => Effect.promise(() => import("./actions/output/index")).pipe(
+    Effect.map(({ ActionsOutput }) => ActionsOutput.make({ transport, reader: reader(binding) })),
+  )
+
+  // Actions is Location-scoped, but a non-Git Location must still boot other services.
+  // Resolve repository state only when an Actions method is requested.
+  const store = () => ActionsBinding.make({ ...config, resolve: transport.resolve }).pipe(
+    Effect.provideService(FSUtil.Service, fs), Effect.provideService(AppProcess.Service, proc),
+  )
+  const bindings: ActionsContract.Bindings = {
+    list: () => store().pipe(Effect.flatMap((bindings) => bindings.list())),
+    create: (input) => store().pipe(Effect.flatMap((bindings) => bindings.create(input))),
+    update: (id, input) => store().pipe(Effect.flatMap((bindings) => bindings.update(id, input))),
+    remove: (ref) => store().pipe(Effect.flatMap((bindings) => bindings.remove(ref))),
+    get: (ref) => store().pipe(Effect.flatMap((bindings) => bindings.get(ref))),
+    policy: (ref) => store().pipe(Effect.flatMap((bindings) => bindings.policy(ref))),
+    updatePolicy: (ref, policy) => store().pipe(Effect.flatMap((bindings) => bindings.updatePolicy(ref, policy))),
+  }
+  return {
+    bindings,
+    capabilities: Effect.fn("Actions.capabilities")(function* (ref) {
+      const binding = yield* bindings.get(ref)
+      return yield* reader(binding).capabilities(binding)
+    }),
+    workflows: Effect.fn("Actions.workflows")(function* (ref, input) {
+      const binding = yield* bindings.get(ref)
+      return yield* reader(binding).workflows(binding, input)
+    }),
+    source: Effect.fn("Actions.source")(function* (ref, input) {
+      const binding = yield* bindings.get(ref)
+      return yield* reader(binding).source(binding, input)
+    }),
+    graph: Effect.fn("Actions.graph")(function* (ref, input) {
+      const binding = yield* bindings.get(ref)
+      const source = yield* reader(binding).source(binding, input)
+      const { ActionsGraph } = yield* Effect.promise(() => import("./actions/source/graph"))
+      return ActionsGraph.parse(binding.provider.kind, source)
+    }),
+    runs: Effect.fn("Actions.runs")(function* (ref, input) {
+      const binding = yield* bindings.get(ref)
+      return yield* reader(binding).runs(binding, input)
+    }),
+    run: Effect.fn("Actions.run")(function* (ref, id) {
+      const binding = yield* bindings.get(ref)
+      return yield* reader(binding).run(binding, id)
+    }),
+    jobs: Effect.fn("Actions.jobs")(function* (ref, input) {
+      const binding = yield* bindings.get(ref)
+      return yield* reader(binding).jobs(binding, input)
+    }),
+    prepare: Effect.fn("Actions.prepare")(function* (ref, input) {
+      const binding = yield* bindings.get(ref)
+      const service = yield* operations
+      return yield* service.prepare(binding, input)
+    }),
+    operation: Effect.fn("Actions.operation")(function* (ref, id) {
+      const binding = yield* bindings.get(ref)
+      const service = yield* operations
+      return yield* service.get(binding, id)
+    }),
+    reconcile: Effect.fn("Actions.reconcile")(function* (ref, id) {
+      const binding = yield* bindings.get(ref)
+      const service = yield* operations
+      return yield* service.reconcile(binding, id, (intent, acknowledged) =>
+        ActionsReadback.observe(reader(binding), binding, intent, acknowledged))
+    }),
+    resources: Effect.fn("Actions.resources")(function* (ref, input) {
+      const binding = yield* bindings.get(ref)
+      if (input.kind === "artifacts") {
+        const service = yield* output(binding)
+        return yield* service.artifacts(binding, input)
+      }
+      return yield* resources.list(binding, input)
+    }),
+    transferInfo: Effect.fn("Actions.transferInfo")(function* (ref, input) {
+      const binding = yield* bindings.get(ref)
+      const service = yield* output(binding)
+      return yield* service.info(binding, input)
+    }),
+    transfer: (ref, input) => Stream.unwrap(Effect.gen(function* () {
+      const binding = yield* bindings.get(ref)
+      const service = yield* output(binding)
+      return service.read(binding, input)
+    })),
+    validateSource: Effect.fn("Actions.validateSource")(function* (ref, source, draft) {
+      const binding = yield* bindings.get(ref)
+      if (source.bindingID !== binding.id)
+        return yield* new ActionsError({ kind: "binding_stale", message: "Source belongs to another binding", disposition: "definitely_unsent" })
+      const { ActionsAuthoring } = yield* Effect.promise(() => import("./actions/authoring/index"))
+      return yield* ActionsAuthoring.make({ transport, reader: reader(binding) }).validate(binding, { ...source, text: draft })
+    }),
+    sourceBase: Effect.fn("Actions.sourceBase")(function* (ref, branch) {
+      const binding = yield* bindings.get(ref)
+      const { ActionsSourceBase } = yield* Effect.promise(() => import("./actions/authoring/base"))
+      return yield* ActionsSourceBase.read({ transport, reader: reader(binding) }, binding, branch)
+    }),
+    validateDraft: Effect.fn("Actions.validateDraft")(function* (ref, base, path, draft) {
+      const snapshot = { ...base }
+      const binding = yield* bindings.get(ref)
+      const { ActionsSourceBase } = yield* Effect.promise(() => import("./actions/authoring/base"))
+      return yield* ActionsSourceBase.validate({ transport, reader: reader(binding) }, binding, snapshot, path, draft)
+    }),
+    execute: Effect.fn("Actions.execute")(function* (ref, kind, input, target) {
+      const selected = { ...ref }
+      const submission = structuredClone(input)
+      const expected = { ...target }
+      const binding = yield* bindings.get(selected)
+      const transient = { output: undefined as Actions.CommandOutput | undefined }
+      const service = yield* operations
+      const operation = yield* service.execute(binding, submission, (intent, payload) => Effect.gen(function* () {
+        if (intent.kind !== kind || (["workflowID", "runID", "jobID", "resourceID", "resourceKind", "scope", "path", "ref"] as const)
+          .some((key) => expected[key] !== undefined && intent.target[key] !== expected[key]))
+          return yield* new ActionsError({ kind: "intent_conflict", message: "Command endpoint differs from the admitted native target", disposition: "definitely_unsent" })
+        const result: ActionsContract.CommandResult = yield* Effect.gen(function* () {
+          if (intent.kind.startsWith("source.")) {
+            const { ActionsAuthoring } = yield* Effect.promise(() => import("./actions/authoring/index"))
+            return yield* ActionsAuthoring.make({ transport, reader: reader(binding) }).perform(binding, intent, payload)
+          }
+          if (intent.target.resourceKind) return yield* resources.perform(binding, intent, payload)
+          if (binding.provider.kind === "github") {
+            const { ActionsGitHubCommands } = yield* Effect.promise(() => import("./actions/github/commands"))
+            return yield* ActionsGitHubCommands.make({ transport, reader: github }).perform(binding, intent, payload)
+          }
+          const { ActionsGitLabCommands } = yield* Effect.promise(() => import("./actions/gitlab/commands"))
+          return yield* ActionsGitLabCommands.make({ transport, reader: gitlab }).perform(binding, intent, payload)
+        })
+        transient.output = result.output === undefined ? undefined : yield* Schema.decodeUnknownEffect(Schema.toType(Actions.CommandOutput), {
+          onExcessProperty: "error",
+        })(result.output).pipe(Effect.mapError(() => new ActionsError({
+          kind: "outcome_unknown", message: "Native command returned an invalid one-time output",
+        })))
+        return result.acknowledgement
+      }))
+      return { operation, ...(transient.output === undefined ? {} : { output: transient.output }) }
+    }),
+  } satisfies Interface
+})
+
+const layer = Layer.effect(Service, Effect.gen(function* () {
+  const location = yield* Location.Service
+  const global = yield* Global.Service
+  return yield* make({ directory: location.directory, workspaceID: location.workspaceID,
+    projectID: location.project.id, stateDirectory: global.data })
+}).pipe(Effect.orDie))
+
+export const node = makeLocationNode({
+  service: Service, layer, deps: [Location.node, Global.node, FSUtil.node, AppProcess.node, Database.node],
+})
+~~~~
+
+## AUT1-C02
+
+```json
+{"block_id":"AUT1-C02","type":"literal_source_excerpt","requests":["RE-AUT1-02"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/transport.ts","repository_path":"packages/core/src/actions/transport.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"a028169bb585fb81c24889148ea61aa631c521af","source_sha256":"0bee331d9b87db900ad4310366fb4b3a7abdc7f2c6e915e926754c6eced6d2ae","source_bytes":5201,"body_anchors":["A01","A32"],"requested_subject":"Composição do transporte e momento de request/resolve"}
+```
+
+```json
+{"first_line":14,"last_line":67,"bytes":4660,"sha256":"e1bac8451bb2eb9b895b9a38e4d5812732f607aa0e59eaae265aeca1879e4e60"}
+```
+
+~~~~typescript
+export const make = Effect.fn("ActionsTransport.make")(function* (input: { directory: string }): Effect.fn.Return<ActionsContract.Transport, never, AppProcess.Service> {
+  const proc = yield* AppProcess.Service
+  const gitlab = ActionsGitlab.make(input.directory, proc)
+
+  const request = Effect.fn("ActionsTransport.request")(function* (provider: Actions.Provider, request: ActionsContract.Request) {
+    const executable = yield* ActionsCli.target(provider)
+    const path = yield* ActionsCli.endpoint(provider, request)
+    if (request.body !== undefined && Option.isNone(Schema.decodeUnknownOption(Schema.Json)(request.body)))
+      return yield* ActionsCli.error(provider, "invalid_input", "Request body must be JSON metadata", "definitely_unsent")
+    const body = request.body === undefined ? Stream.empty : Stream.make(new TextEncoder().encode(JSON.stringify(request.body)))
+    return yield* ActionsProcess.capture(proc, provider, ActionsCli.command(
+      input.directory, provider, executable, ActionsCli.args(provider, request, path, true),
+      request.body === undefined ? "ignore" : "pipe",
+    ), body).pipe(Effect.flatMap((result) => ActionsResponse.parse(provider, result)))
+  })
+
+  const resolve = Effect.fn("ActionsTransport.resolve")(function* (provider: Actions.Provider, projectPath: string) {
+    if (!projectPath || projectPath.startsWith("/") || projectPath.endsWith("/") ||
+        projectPath.split("/").some((part) => !part || part === "." || part === "..") ||
+        /[\s\\%?#{}:\x00-\x1f\x7f]/.test(projectPath) || (provider.kind === "github" && projectPath.split("/").length !== 2))
+      return yield* ActionsCli.error(provider, "invalid_input", "Project path must be an exact native repository path", "definitely_unsent")
+    if (provider.kind === "gitlab") return yield* gitlab.resolve(provider, projectPath)
+    const project = yield* request(provider, { method: "GET", path: provider.kind === "github"
+      ? `repos/${projectPath.split("/").map(encodeURIComponent).join("/")}` : `projects/${encodeURIComponent(projectPath)}` })
+    const identity = ActionsIdentity.project(provider, project.data)
+    if (Option.isNone(identity)) return yield* ActionsCli.error(provider, "transport_failed", "Provider did not return native project identity")
+    const user = yield* request(provider, { method: "GET", path: "user" })
+    const account = ActionsIdentity.account(provider, user.data)
+    if (Option.isNone(account)) return yield* ActionsCli.error(provider, "not_authenticated", "Provider did not return the current signed-in account")
+    return { ...identity.value, account: account.value }
+  })
+
+  const bound = <A, R>(binding: Actions.Binding, effect: Effect.Effect<A, ActionsError, R>) => effect.pipe(
+    Effect.mapError((error) => new ActionsError({ ...error, message: error.message, disposition: error.disposition, bindingID: binding.id })),
+  )
+  return {
+    resolve,
+    request: (binding, value) => bound(binding, binding.provider.kind === "gitlab" ? gitlab.request(binding, value) : request(binding.provider, value)),
+    open: (binding, value) => bound(binding, binding.provider.kind === "gitlab" ? gitlab.open(binding, value)
+      : Effect.fail(ActionsCli.error(binding.provider, "capability_unavailable", "GitHub raw output uses the qualified CLI byte transport", "definitely_unsent"))),
+    bytes: (binding, value) => Stream.unwrap(bound(binding, Effect.gen(function* () {
+      if (binding.provider.kind === "gitlab") return gitlab.bytes(binding, value)
+        .pipe(Stream.mapError((error) => new ActionsError({ ...error, message: error.message, disposition: error.disposition, bindingID: binding.id })))
+      const executable = yield* ActionsCli.target(binding.provider)
+      const path = yield* ActionsCli.endpoint(binding.provider, value)
+      if (value.method !== "GET" || value.body !== undefined)
+        return yield* ActionsCli.error(binding.provider, "invalid_input", "Raw byte downloads require GET without a body", "definitely_unsent")
+      return ActionsProcess.bytes(proc, binding.provider, ActionsCli.command(input.directory, binding.provider, executable, ActionsCli.args(binding.provider, value, path, false), "ignore"))
+        .pipe(Stream.mapError((error) => new ActionsError({ ...error, message: error.message, disposition: error.disposition, bindingID: binding.id })))
+    }))),
+    upload: (binding, value, file) => bound(binding, binding.provider.kind === "gitlab" ? gitlab.upload(binding, value, file)
+      : Effect.fail(ActionsCli.error(binding.provider, "capability_unavailable", "GitHub Actions does not provide native Secure File upload", "definitely_unsent"))),
+  }
+})
+~~~~
+
+## AUT1-C03
+
+```json
+{"block_id":"AUT1-C03","type":"literal_source_excerpt","requests":["RE-AUT1-02"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/binding.ts","repository_path":"packages/core/src/actions/binding.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"0012bd2c459c7c9899ce63aa6d4bb69760e9647a","source_sha256":"fa7b2380b5ea1c3b10195b17e2015fed34f0501df2e16cfa7fe497969dba83bc","source_bytes":11296,"body_anchors":["A02"],"requested_subject":"Resolução física e Git; target, create/update/policy; matching remoto completo"}
+```
+
+```json
+{"first_line":12,"last_line":161,"bytes":10896,"sha256":"7e0ae2f4f2229bf5c8e1a7dd95dff0712bd339f9bf85d464e773cdb08544aacf"}
+```
+
+~~~~typescript
+const STRICT = { onExcessProperty: "error" } as const
+const SSH_HOSTS: Readonly<Record<string, string>> = { "ssh.github.com": "github.com", "altssh.gitlab.com": "gitlab.com" }
+const parseURL = Option.liftThrowable((text: string) => new URL(text))
+const invalid = () => new ActionsError({ kind: "invalid_input", message: "Invalid Actions binding input." })
+const checked = <A>(read: () => A) => Effect.try({ try: read, catch: (error) => error instanceof ActionsError ? error : invalid() })
+
+export const make = Effect.fn("ActionsBinding.make")(function* (input: {
+  directory: string
+  workspaceID?: string
+  projectID: string
+  stateDirectory: string
+  resolve: ActionsContract.BindingResolver
+}) {
+  const fs = yield* FSUtil.Service
+  const proc = yield* AppProcess.Service
+  const directory = yield* ActionsState.canonical(input.directory)
+  yield* fs.realPath(directory).pipe(Effect.mapError(invalid))
+  const git = Effect.fnUntraced(function* (args: string[]) {
+    const result = yield* proc.run(ChildProcess.make("git", ["--no-optional-locks", "-c", "core.fsmonitor=false", ...args], {
+      cwd: directory,
+      // Git placement/config environment must not redirect this trusted Location, including Windows key casing.
+      env: Object.fromEntries(Object.entries(process.env).filter((entry) => !/^GIT_/i.test(entry[0]))),
+      extendEnv: false,
+      stdin: "ignore",
+    }), { maxOutputBytes: 64 * 1024, maxErrorBytes: 4 * 1024, timeout: "10 seconds" }).pipe(
+      Effect.mapError(() => new ActionsError({ kind: "transport_failed", message: "Unable to inspect the repository's git configuration." })),
+    )
+    if (result.stdoutTruncated)
+      return yield* new ActionsError({ kind: "metadata_truncated", message: "Git configuration exceeds the Actions read limit." })
+    if (result.exitCode !== 0) return yield* invalid()
+    // POSIX filenames may end in CR: only LF terminates git output there. NUL-delimited config stays intact.
+    return result.stdout.toString("utf8").replace(process.platform === "win32" ? /\r?\n$/ : /\n$/, "")
+  })
+  const repository = yield* git(["rev-parse", "--show-toplevel"]).pipe(Effect.mapError((error) => error.kind === "invalid_input"
+    ? new ActionsError({ kind: "not_found", message: "This folder is not a Git repository." })
+    : error))
+  const state = yield* ActionsState.make({ ...input, directory, repository })
+  const target = Effect.fnUntraced(function* (request: Actions.BindingInput) {
+    const decoded = yield* Schema.decodeUnknownEffect(Actions.BindingInput, STRICT)(request).pipe(Effect.mapError(invalid))
+    const provider = yield* checked(() => ActionsState.provider(decoded.provider))
+    const projectPath = yield* checked(() => ActionsState.projectPath(provider.kind, decoded.projectPath))
+    if (!ActionsState.validRemote(decoded.remote)) return yield* invalid()
+    // Validate every fetch URL, including git's insteadOf expansion, before touching provider authentication.
+    const raw = yield* git(["config", "--null", "--get-all", `remote.${decoded.remote}.url`])
+    const effective = yield* git(["remote", "get-url", "--all", decoded.remote])
+    yield* checked(() => [...raw.split("\0").filter(Boolean), ...effective.split(/\r?\n/)].forEach((remote) =>
+      matchRemote(remote, provider, projectPath)))
+    const identity = yield* input.resolve(provider, projectPath)
+    if (!identity.projectID.trim() || /[\x00-\x20\x7f]/.test(identity.projectID) ||
+      !identity.account || /[\x00-\x20\x7f]/.test(identity.account))
+      return yield* new ActionsError({ kind: "transport_failed", message: "Provider returned invalid project or account identity." })
+    yield* checked(() => ActionsState.projectPath(provider.kind, identity.projectPath))
+    if (!samePath(provider.kind, projectPath, identity.projectPath))
+      return yield* new ActionsError({ kind: "host_mismatch", message: "Provider returned a different project path." })
+    return { ...decoded, provider, projectID: identity.projectID, projectPath: identity.projectPath, account: identity.account }
+  })
+  const record = Effect.fnUntraced(function* (document: ActionsState.Document, ref: Actions.BindingRef) {
+    // A Binding is also a BindingRef; project away caller metadata and use only the trusted store's Location.
+    const decoded = yield* Schema.decodeUnknownEffect(Actions.BindingRef)(ref).pipe(Effect.mapError(invalid))
+    const current = document.records.find((item) => item.binding.id === decoded.id)
+    if (!current) return yield* new ActionsError({ kind: "binding_missing", message: "Actions binding does not exist at this Location." })
+    if (current.binding.revision !== decoded.revision)
+      return yield* new ActionsError({ kind: "binding_stale", message: "Actions binding revision has changed.", bindingID: decoded.id })
+    return current
+  })
+  const list = Effect.fn("ActionsBinding.list")(function* () {
+    return (yield* state.read()).records.map((item) => item.binding)
+  })
+  const create = Effect.fn("ActionsBinding.create")(function* (request: Actions.BindingInput) {
+    return yield* state.change((document) => Effect.gen(function* () {
+      const resolved = yield* target(request)
+      if (resolved.expectedRevision !== undefined) return yield* invalid()
+      if (document.records.some((item) => item.binding.remote === resolved.remote || ActionsState.identityKey(item.binding) === ActionsState.identityKey(resolved)))
+        return yield* new ActionsError({ kind: "binding_stale", message: "Actions project or remote is already bound at this Location." })
+      const binding: Actions.Binding = {
+        id: Actions.BindingID.create(), revision: 1, remote: resolved.remote, provider: resolved.provider,
+        projectID: resolved.projectID, projectPath: resolved.projectPath, account: resolved.account,
+        directory, ...(input.workspaceID === undefined ? {} : { workspaceID: input.workspaceID }),
+      }
+      return { document: { ...document, records: [...document.records, { binding, policy: {} }] }, value: binding }
+    }))
+  })
+  const update = Effect.fn("ActionsBinding.update")(function* (id: Actions.BindingID, request: Actions.BindingInput) {
+    const decoded = yield* Schema.decodeUnknownEffect(Actions.BindingInput, STRICT)(request).pipe(Effect.mapError(invalid))
+    if (decoded.expectedRevision === undefined)
+      return yield* new ActionsError({ kind: "binding_stale", message: "Actions binding update requires an expected revision." })
+    const expectedRevision = decoded.expectedRevision
+    return yield* state.change((document) => Effect.gen(function* () {
+      const current = yield* record(document, { id, revision: expectedRevision })
+      const resolved = yield* target(decoded)
+      if (ActionsState.identityKey(current.binding) !== ActionsState.identityKey(resolved))
+        return yield* new ActionsError({ kind: "binding_stale", message: "Actions binding cannot retarget its provider project.", bindingID: id })
+      if (document.records.some((item) => item !== current && item.binding.remote === resolved.remote))
+        return yield* new ActionsError({ kind: "binding_stale", message: "Actions remote is already bound at this Location.", bindingID: id })
+      const binding = { ...current.binding, revision: current.binding.revision + 1, remote: resolved.remote,
+        provider: resolved.provider, projectPath: resolved.projectPath, account: resolved.account }
+      return { document: { ...document, records: document.records.map((item) => item === current ? { ...item, binding } : item) }, value: binding }
+    }))
+  })
+  const get = Effect.fn("ActionsBinding.get")(function* (ref: Actions.BindingRef) {
+    return (yield* record(yield* state.read(), ref)).binding
+  })
+  const remove = Effect.fn("ActionsBinding.remove")(function* (ref: Actions.BindingRef) {
+    yield* state.change((document) => Effect.gen(function* () {
+      const current = yield* record(document, ref)
+      return { document: { ...document, records: document.records.filter((item) => item !== current) }, value: undefined }
+    }))
+  })
+  const policy = Effect.fn("ActionsBinding.policy")(function* (ref: Actions.BindingRef) {
+    const current = yield* record(yield* state.read(), ref)
+    return { binding: { id: current.binding.id, revision: current.binding.revision }, policy: current.policy }
+  })
+  const updatePolicy = Effect.fn("ActionsBinding.updatePolicy")(function* (ref: Actions.BindingRef, policy: Actions.Policy) {
+    const decoded = yield* Schema.decodeUnknownEffect(Actions.Policy, STRICT)(policy).pipe(Effect.mapError(invalid))
+    return yield* state.change((document) => Effect.gen(function* () {
+      const current = yield* record(document, ref)
+      const binding = { ...current.binding, revision: current.binding.revision + 1 }
+      return {
+        document: { ...document, records: document.records.map((item) => item === current ? { binding, policy: decoded } : item) },
+        value: { binding: { id: binding.id, revision: binding.revision }, policy: decoded },
+      }
+    }))
+  })
+  return { list, create, update, get, remove, policy, updatePolicy } satisfies ActionsContract.Bindings
+})
+
+function samePath(kind: Actions.ProviderKind, left: string, right: string) {
+  return kind === "github" ? left.toLowerCase() === right.toLowerCase() : left === right
+}
+
+function matchRemote(text: string, provider: Actions.Provider, projectPath: string) {
+  if (/[\x00-\x20\x7f]/.test(text)) throw invalid()
+  const scp = /^(?:git@)?([A-Za-z0-9.-]+):([^/].*)$/.exec(text)
+  const remote = scp ? { protocol: "ssh:", hostname: scp[1].toLowerCase(), host: scp[1].toLowerCase(), path: scp[2] }
+    : Option.getOrUndefined(parseURL(text).pipe(Option.map((url) => {
+      if (url.password || (url.protocol === "https:" ? url.username : url.username && url.username !== "git") ||
+        !["https:", "ssh:"].includes(url.protocol) || url.search || url.hash) throw invalid()
+      // URL parsing normalizes dot segments; reject them before that normalization can hide a different repository.
+      if (/\/(?:\.|\.\.)(?:\/|$)|%|\\/.test(text)) throw invalid()
+      return { protocol: url.protocol, hostname: url.hostname, host: url.host, path: url.pathname.slice(1) }
+    })))
+  if (!remote) throw invalid()
+  const alias = remote.protocol === "ssh:" ? SSH_HOSTS[remote.hostname] : undefined
+  const expected = new URL(`https://${provider.hostname}`)
+  if ((remote.protocol === "https:" ? remote.host !== expected.host : (alias ?? remote.hostname) !== expected.hostname))
+    throw new ActionsError({ kind: "host_mismatch", message: "Named git remote does not match the explicit Actions host." })
+  const actual = ActionsState.projectPath(provider.kind, remote.path.replace(/\.git$/, ""))
+  if (!samePath(provider.kind, actual, projectPath))
+    throw new ActionsError({ kind: "host_mismatch", message: "Named git remote does not match the Actions project path." })
+}
+~~~~
+
+## AUT1-C04
+
+```json
+{"block_id":"AUT1-C04","type":"literal_source_excerpt","requests":["RE-AUT1-02"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/state.ts","repository_path":"packages/core/src/actions/state.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"c24ab01417fdea32688d26007e04d8fdac1d43ca","source_sha256":"a47ce41b196dd2c95e9724824d554472f93466be0220a02f1b019e855c3b9faf","source_bytes":8827,"body_anchors":["A02"],"requested_subject":"Canonical/locationKey, estado externo, read/decode/parents/physical/write, identidade/provider/path"}
+```
+
+```json
+{"first_line":8,"last_line":166,"bytes":8571,"sha256":"61e4574a525d0bb060a6495dd0749c99ee3cd7e06c1abdb35029414f62fda36c"}
+```
+
+~~~~typescript
+import { KeyedMutex } from "../effect/keyed-mutex"
+import { FSUtil } from "../fs-util"
+import { PhysicalPath } from "../util/physical-path"
+import { ActionsError } from "./error"
+
+const STRICT = { onExcessProperty: "error" } as const
+const MAX_BYTES = 1024 * 1024
+const locks = KeyedMutex.makeUnsafe<string>()
+const Document = Schema.Struct({
+  version: Schema.Literal(1),
+  records: Schema.Array(Schema.Struct({ binding: Actions.Binding, policy: Actions.Policy })),
+})
+export type Document = typeof Document.Type
+const url = Option.liftThrowable((text: string) => new URL(text))
+const utf8 = Option.liftThrowable((bytes: Uint8Array) => new TextDecoder("utf-8", { fatal: true }).decode(bytes))
+
+export const canonical = Effect.fn("ActionsState.canonical")(function* (directory: string) {
+  if (!directory || directory.includes("\0"))
+    return yield* new ActionsError({ kind: "invalid_input", message: "Invalid Actions directory." })
+  return yield* Effect.tryPromise({
+    try: () => PhysicalPath.physicalPath(path.resolve(FSUtil.windowsPath(directory))),
+    catch: () => new ActionsError({ kind: "invalid_input", message: "Actions directory is unavailable." }),
+  })
+})
+
+export function locationKey(directory: string, workspaceID?: string) {
+  return createHash("sha256").update(JSON.stringify([directory, workspaceID ?? null])).digest("hex")
+}
+
+export const make = Effect.fn("ActionsState.make")(function* (input: {
+  directory: string
+  workspaceID?: string
+  projectID: string
+  stateDirectory: string
+  repository: string
+}) {
+  const fs = yield* FSUtil.Service
+  if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,95}$/.test(input.projectID) ||
+    /^(con|prn|aux|nul|com[0-9]|lpt[0-9])$/i.test(input.projectID) ||
+    (input.workspaceID !== undefined && (!input.workspaceID || /[\x00-\x1f\x7f]/.test(input.workspaceID))))
+    return yield* new ActionsError({ kind: "invalid_input", message: "Invalid Actions project or workspace identity." })
+  const root = yield* canonical(input.stateDirectory)
+  const repository = yield* canonical(input.repository)
+  if (FSUtil.contains(repository, root))
+    return yield* new ActionsError({ kind: "invalid_input", message: "Actions state must be outside the repository." })
+  const target = path.join(root, "actions", input.projectID, locationKey(input.directory, input.workspaceID), "bindings.json")
+  const failed = () => new ActionsError({ kind: "maintenance_required", message: "Actions binding state is unavailable or corrupt." })
+  const physical = Effect.fnUntraced(function* () {
+    if ((yield* canonical(target).pipe(Effect.mapError(failed))) !== target)
+      return yield* failed()
+  })
+  function parents(directory: string): Effect.Effect<void, ActionsError> {
+    return Effect.gen(function* () {
+      const info = yield* fs.stat(directory).pipe(
+        Effect.catchReason("PlatformError", "NotFound", () => Effect.succeed(undefined)), Effect.mapError(failed),
+      )
+      if (info) {
+        if (info.type !== "Directory") return yield* failed()
+        return
+      }
+      if (path.dirname(directory) === directory) return yield* failed()
+      yield* parents(path.dirname(directory))
+    })
+  }
+  const decode = Effect.fnUntraced(function* (text: string) {
+    const document = yield* Schema.decodeUnknownEffect(Schema.fromJsonString(Document), STRICT)(text).pipe(Effect.mapError(failed))
+    if (new Set(document.records.map((record) => record.binding.id)).size !== document.records.length ||
+      new Set(document.records.map((record) => record.binding.remote)).size !== document.records.length ||
+      new Set(document.records.map((record) => identityKey(record.binding))).size !== document.records.length)
+      return yield* failed()
+    yield* Effect.try({
+      try: () => document.records.forEach((record) => {
+        const binding = record.binding
+        if (binding.directory !== input.directory || binding.workspaceID !== input.workspaceID ||
+          !validRemote(binding.remote) || !binding.projectID.trim() || /[\x00-\x20\x7f]/.test(binding.projectID) ||
+          !binding.account || /[\x00-\x20\x7f]/.test(binding.account) ||
+          projectPath(binding.provider.kind, binding.projectPath) !== binding.projectPath ||
+          JSON.stringify(provider(binding.provider)) !== JSON.stringify(binding.provider)) throw failed()
+      }),
+      catch: failed,
+    })
+    return document
+  })
+  const read = Effect.fnUntraced(function* () {
+    yield* physical()
+    // ENOTDIR can look like NotFound on a platform; a blocked parent is corruption, not an empty store.
+    yield* parents(path.dirname(target))
+    const info = yield* fs.stat(target).pipe(
+      Effect.catchReason("PlatformError", "NotFound", () => Effect.succeed(undefined)),
+      Effect.mapError(failed),
+    )
+    if (!info) return { version: 1, records: [] } satisfies Document
+    if (info.type !== "File" || info.size > MAX_BYTES) return yield* failed()
+    const bytes = yield* fs.readFile(target).pipe(Effect.mapError(failed))
+    const text = utf8(bytes)
+    if (bytes.length > MAX_BYTES || Option.isNone(text)) return yield* failed()
+    return yield* decode(text.value)
+  })
+  const write = Effect.fnUntraced(function* (document: Document) {
+    const text = JSON.stringify(document)
+    if (Buffer.byteLength(text) > MAX_BYTES) return yield* failed()
+    yield* decode(text)
+    yield* physical()
+    yield* fs.makeDirectory(path.dirname(target), { recursive: true, mode: 0o700 }).pipe(Effect.mapError(failed))
+    yield* physical()
+    const temp = path.join(path.dirname(target), `.bindings.${randomUUID()}.tmp`)
+    yield* fs.writePhysical(temp, text, { exclusive: true }).pipe(
+      Effect.andThen(fs.chmod(temp, 0o600)),
+      Effect.andThen(physical()),
+      Effect.andThen(fs.rename(temp, target)),
+      Effect.mapError(failed),
+      Effect.ensuring(Effect.try({ try: () => rmSync(temp, { force: true }), catch: failed }).pipe(Effect.ignore)),
+      Effect.uninterruptible,
+    )
+  })
+  return {
+    read: () => locks.withLock(target)(read()),
+    change: <A>(edit: (document: Document) => Effect.Effect<{ document: Document; value: A }, ActionsError>) =>
+      locks.withLock(target)(Effect.gen(function* () {
+        const next = yield* edit(yield* read())
+        yield* write(next.document)
+        return next.value
+      })),
+  }
+})
+
+export function validRemote(remote: string) {
+  return /^[A-Za-z0-9][A-Za-z0-9._/-]*$/.test(remote) && remote.split("/").every((part) => part && part !== "." && part !== "..")
+}
+
+export function projectPath(kind: Actions.ProviderKind, text: string) {
+  const parts = text.split("/")
+  if ((kind === "github" ? parts.length !== 2 : parts.length < 2) ||
+    parts.some((part) => !/^[A-Za-z0-9_.-]+$/.test(part) || part === "." || part === ".." || part.endsWith(".git")))
+    throw new ActionsError({ kind: "invalid_input", message: "Invalid provider project path." })
+  return text
+}
+
+export function provider(input: Actions.Provider): Actions.Provider {
+  const host = Option.getOrUndefined(url(`https://${input.hostname}`))
+  const api = Option.getOrUndefined(url(input.apiOrigin))
+  if (!host || !api || !/^[A-Za-z0-9.-]+(?::[0-9]+)?$/.test(input.hostname) ||
+    host.username || host.password || host.pathname !== "/" || host.search || host.hash ||
+    host.hostname.endsWith(".") || host.hostname.split(".").some((part) => !part || part.startsWith("-") || part.endsWith("-")) ||
+    api.protocol !== "https:" || api.username || api.password || api.pathname !== "/" || api.search || api.hash ||
+    /[\x00-\x20\x7f]/.test(input.apiOrigin))
+    throw new ActionsError({ kind: "invalid_input", message: "Invalid Actions provider host or API origin." })
+  const hostname = host.host
+  if (["ssh.github.com", "altssh.gitlab.com", "api.github.com"].includes(host.hostname) ||
+    (host.hostname === "github.com" && (input.kind !== "github" || api.origin !== "https://api.github.com" || host.port)) ||
+    (host.hostname === "gitlab.com" && (input.kind !== "gitlab" || api.origin !== "https://gitlab.com" || host.port)) ||
+    (!["github.com", "gitlab.com"].includes(host.hostname) && api.host !== hostname))
+    throw new ActionsError({ kind: "host_mismatch", message: "Actions provider host and API origin do not match." })
+  return { kind: input.kind, hostname, apiOrigin: api.origin, ...(input.version === undefined ? {} : { version: input.version }) }
+}
+
+export function identityKey(binding: Pick<Actions.Binding, "provider" | "projectID">) {
+  return JSON.stringify([binding.provider.kind, binding.provider.hostname, binding.provider.apiOrigin, binding.projectID])
+}
+~~~~
+
+## AUT1-C05
+
+```json
+{"block_id":"AUT1-C05","type":"literal_source_excerpt","requests":["RE-AUT1-02","RE-AUT1-06"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/contract.ts","repository_path":"packages/core/src/actions/contract.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"62521cbd3f4860049c3480a2bf9f2ed650c6c9f8","source_sha256":"c69997923b14da057a5cab4b3e9077884263d43c02f98dee1da44fedf65ae9bc","source_bytes":5462,"body_anchors":["A01","A15","A17"],"requested_subject":"Interfaces que separam transporte, operação, acknowledgment e output"}
+```
+
+```json
+{"first_line":8,"last_line":88,"bytes":5206,"sha256":"240786bac74bd0fbeb4ca3b9c32441171dda2c81970fab39e5a986597e302fb2"}
+```
+
+~~~~typescript
+export type Request = {
+
+END_PART

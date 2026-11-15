@@ -1,0 +1,16 @@
+{
+  "id": "relay-derived-automation-impact-v2-delta",
+  "target": "/root/review_relay",
+  "kind": "literal_review_courier",
+  "method": "collaboration.followup_task",
+  "message_file": "payload/receipts/continuation-controls/relay-automation-impact-v2-delta.message.txt",
+  "message_bytes": 1358,
+  "message_sha256": "3f8dfc39021fb0cd875a3c89fa78a369f72c8aa9ee6cee5bb25403c41798976f",
+  "status": "COMPLETED_BOTH_HANDLES_RETURNED",
+  "at_utc": "2026-11-15T10:05:45.930602+00:00",
+  "tool_returned_normally": true,
+  "tool_result_text": "",
+  "dispatch_observed_at_utc": "2026-11-15T10:05:52.783759+00:00",
+  "final_capture": "payload/receipts/parent-visible-captures/relay-automation-impact-v2-delta-final.capture.json",
+  "final_sha256": "b2860674939e362c2e3d2d303ba191bc430c6549fb121616e023e11c86b72981"
+}

@@ -1,0 +1,114 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "relay": "/root/review_relay",
+  "packet": "derived-automation-flow-v3-delta",
+  "source": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/derived-automation-flow-v3-delta.md",
+  "source_bytes": 37266,
+  "source_sha256": "584f286ddbdd3cd29fa8a8e66acab8f5e975e855d127b18d17e95a614a7f0451",
+  "parts_per_target": 1,
+  "calls": [
+    {
+      "sequence": 1,
+      "target": "/root/s1_03_j1",
+      "part": 1,
+      "request_file": "request-j1-01.json",
+      "request_file_bytes": 38915,
+      "request_file_sha256": "ea519aa9777f58dfd29d2e43957d981271deae2a880bc2136e36430307a80bdc",
+      "message_bytes": 37876,
+      "message_sha256": "4a67ee4ee8cfe9a7670f39ae919b326cc8bad31dc14c42850b74474b9126e7a9",
+      "payload_bytes": 37266,
+      "payload_sha256": "584f286ddbdd3cd29fa8a8e66acab8f5e975e855d127b18d17e95a614a7f0451",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 2,
+      "target": "/root/s1_03_j2",
+      "part": 1,
+      "request_file": "request-j2-01.json",
+      "request_file_bytes": 38915,
+      "request_file_sha256": "08ee1caaa339b8d53868482169762aef9cdb2f78b6c653f3d2ed7c898c5a633a",
+      "message_bytes": 37876,
+      "message_sha256": "4a67ee4ee8cfe9a7670f39ae919b326cc8bad31dc14c42850b74474b9126e7a9",
+      "payload_bytes": 37266,
+      "payload_sha256": "584f286ddbdd3cd29fa8a8e66acab8f5e975e855d127b18d17e95a614a7f0451",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    }
+  ],
+  "known_transcription_corrections": [],
+  "receipt_limit": "Ferramenta retornou normalmente sem texto nem ID de despacho; os hashes descrevem os pedidos registrados e sua reconstrução local, não verificação remota nem suficiência semântica.",
+  "delivery_scope": "Literal UTF-8 packet only; final signal is outside payload.",
+  "slot_handling": "Direct calls sequential; both judges may remain active concurrently, explicitly authorized by root. No concurrent sender. Preserve each original final before handle reuse.",
+  "judgment_capture": "Both original finals captured literally without terminal LF; handles returned to root.",
+  "dispatch_count": 2,
+  "recorded_at_utc": "2026-11-15T09:39:03.375070+00:00",
+  "completed_targets": [
+    "/root/s1_03_j1",
+    "/root/s1_03_j2"
+  ],
+  "pending_targets": [],
+  "local_recorded_reconstruction": [
+    {
+      "target": "/root/s1_03_j1",
+      "bytes": 37266,
+      "sha256": "584f286ddbdd3cd29fa8a8e66acab8f5e975e855d127b18d17e95a614a7f0451",
+      "equals_source": true,
+      "raw_bytes": 37266,
+      "raw_sha256": "584f286ddbdd3cd29fa8a8e66acab8f5e975e855d127b18d17e95a614a7f0451",
+      "corrections_applied": false
+    },
+    {
+      "target": "/root/s1_03_j2",
+      "bytes": 37266,
+      "sha256": "584f286ddbdd3cd29fa8a8e66acab8f5e975e855d127b18d17e95a614a7f0451",
+      "equals_source": true,
+      "raw_bytes": 37266,
+      "raw_sha256": "584f286ddbdd3cd29fa8a8e66acab8f5e975e855d127b18d17e95a614a7f0451",
+      "corrections_applied": false
+    }
+  ],
+  "transport_ownership": {
+    "/root/s1_03_j1": "/root",
+    "/root/s1_03_j2": "/root"
+  },
+  "judgment_captures": {
+    "j1": {
+      "target": "/root/s1_03_j1",
+      "judge_id": "parallel-v3-fresh/S1-03/J1",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-automation-flow-v3-delta/j1-response.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j1",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 2501,
+      "sha256": "e690c904584be5efe3021e5ae3d8a8683c9de1d85e3851714cb321f7339f61ba",
+      "captured_at_utc": "2026-11-15T09:39:28.915009+00:00"
+    },
+    "j2": {
+      "target": "/root/s1_03_j2",
+      "judge_id": "parallel-v3-fresh/S1-03/J2",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-automation-flow-v3-delta/j2-response.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j2",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 2097,
+      "sha256": "793452cf4731dc118de5e9b7cc0c5359c9278daedd76b18e86ae9377abade175",
+      "captured_at_utc": "2026-11-15T09:40:11.103273+00:00"
+    }
+  },
+  "status": "COMPLETED_TRANSPORT_BOTH_ORIGINAL_FINALS_PRESERVED",
+  "relay_final_capture": {
+    "agent": "/root/review_relay",
+    "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-automation-flow-v3-delta/relay-final-original.md",
+    "bytes": 2570,
+    "sha256": "d28f23641530354e6a50181941df47f33df6b4a26ce45c013707f3a57d386518",
+    "literal": true,
+    "terminal_newline": false,
+    "origin": "Exact final return frozen before emission; next FINAL must equal these UTF-8 bytes.",
+    "frozen_at_utc": "2026-11-15T09:40:43.518826+00:00"
+  }
+}

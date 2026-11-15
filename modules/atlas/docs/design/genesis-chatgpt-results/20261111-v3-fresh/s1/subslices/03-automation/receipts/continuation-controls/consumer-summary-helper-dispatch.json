@@ -1,0 +1,14 @@
+{
+  "id": "consumer-summary-helper-dispatch",
+  "target": "/root/native_descriptor",
+  "kind": "mechanical_evidence_helper_preparation",
+  "method": "collaboration.followup_task",
+  "message": "Tarefa mecânica delimitada em paralelo, sem papel de juiz: prepare um helper determinístico para consolidar os sete consumidores depois de suas consultas reais. Raiz /workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390. Leia apenas scripts/atlas-consumer-bridge-v2.py, scripts/prepare-consumer-dispatch.py, scripts/run-native-final-prepare.py, payload/consumers/public-cases.json, payload/consumers/public-bridge-protocol.md e payload/artifact-plan.json. Não leia oracle, pareceres, corpos de conhecimento, fontes de produto ou outros arquivos. Escreva somente assembly-native-descriptors/consumer-summary-helper/ com script summarize_consumers.py, README.md, response.md e dispatch-message.txt. O helper futuro receberá a raiz e um destino novo; exigirá receipts/native-prepare-final.json real com 12 artefatos e os sete consumidores, todos com final-response.md e final-capture.json preservados pela principal. Para cada CASE, leia bridge/call-*.json, query-*.json, call-*.stdout/.stderr e forward-*.json; confira tamanho/hash/ordem, protocolo/quotas efetivas, chaves diretamente tentadas e quais realmente retornaram conteúdo, timeout e base64 sem trocar bytes por tokens. Use o campo capture de final-capture.json com file, bytes, sha256, literal=true, agent_id para conferir a resposta nativa final; a principal adotará esse formato. Produza um JSON e um Markdown mecânicos com identidade da preparação, por-caso operações, bytes, respostas/HOLD/erros, acesso direto e provas. Nenhum PASS de domínio/critério, nenhum juízo contra oracle, nenhuma operação Atlas ou colaboração executada pelo helper. Preserve Unknowns. Distingua tentativa de read de consumo de corpo; apenas forward completo com resposta Atlas adequada pode conter conteúdo. O helper não deve inventar dados, executar consultas, alterar originais ou sobrescrever saída existente; aborte discrepâncias/missing com erro claro. Faça somente análise sintática determinística, sem fixtures/testes simulados ou execução antes de existirem os recibos. No FINAL retorne exatamente o conteúdo completo de response.md sem LF terminal, com hashes dos arquivos, utilidade e limites; mantenha o dispatch visível literal. Não toque em scripts existentes, payload, GitHub ou em outros agentes. Isto é preparação de relatório de evidência, não nova autoria semântica nem validação independente.",
+  "message_bytes": 2412,
+  "message_sha256": "6bc5fa8c0faaaf29de15e7311a4929be2e653cd655e6802396db2b69bb9a7091",
+  "tool_returned_normally": true,
+  "captured_at_utc": "2026-11-15T08:41:55.833544+00:00",
+  "capture_basis": "Exact caller-visible argument, no independent host wire checksum",
+  "oracle_access_authorized": false,
+  "semantic_evaluation_role": false
+}

@@ -1,0 +1,1227 @@
+    const stage = pull?.merged ? ("shipped" as const) : pull?.state === "open" ? ("review" as const) : undefined
+    if (!stage || issue.paused) return
+    const from: ReadonlyArray<Board.Stage> = stage === "shipped" ? ["building", "review"] : ["building"]
+    if (!from.includes(issue.stage) || (stage === "shipped" && issue.hold_before_merge)) return
+    const changed = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        const now = yield* Clock.currentTimeMillis
+        const next = {
+          stage,
+          position: yield* endOf(tx, project.id, stage),
+          stage_entered_at: now,
+          ...(stage === "shipped" ? { crash_reason: null } : {}),
+        }
+        yield* tx.update(BoardIssueTable).set({ ...next, github_dirty: true }).where(eq(BoardIssueTable.id, issue.id)).run()
+        const activity = yield* deps.log(tx, {
+          project: project.id,
+          issue: issue.id,
+          actor: "github",
+          action: "issue.move",
+          reason: stage === "shipped" ? `PR #${issue.pr_number} merged on GitHub.` : `PR #${issue.pr_number} is open on GitHub.`,
+          before: {
+            stage: issue.stage,
+            position: issue.position,
+            stage_entered_at: issue.stage_entered_at,
+            ...(stage === "shipped" ? { crash_reason: issue.crash_reason } : {}),
+          },
+          after: next,
+        })
+        return { project: project.id, issue: issue.id, activity }
+      }),
+    )
+    yield* deps.publish(changed)
+  })
+
+  const settle = Effect.fnUntraced(function* (project: ProjectRow, state: Board.GithubState, error: string | null) {
+    const now = yield* Clock.currentTimeMillis
+    const set = { github_state: state, github_error: error, ...(state === "ok" ? { github_synced_at: now } : {}) }
+    const changed = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        yield* tx.update(BoardProjectTable).set(set).where(eq(BoardProjectTable.id, project.id)).run()
+        if (project.github_state === state && project.github_error === error) return undefined
+        const activity = yield* deps.log(tx, {
+          project: project.id,
+          actor: "github",
+          action: "github.state",
+          before: { github_state: project.github_state, github_error: project.github_error },
+          after: { github_state: state, github_error: error },
+        })
+        return { project: project.id, activity }
+      }),
+    )
+    if (changed) yield* deps.publish(changed)
+  })
+
+  // ---- GitHub to board ----
+
+  const pull = Effect.fnUntraced(function* (project: ProjectRow, repo: string) {
+    const now = yield* Clock.currentTimeMillis
+    // The mirror starts now: issues that were already on GitHub are not imported into Intake.
+    const start = project.github_since ?? now
+    const issues = yield* pages(repo, "issues", "state=all&sort=updated&direction=asc", start, project.github_issues_etag, decodeIssues)
+    for (const item of issues.items) if (!item.pull_request) yield* ingest(project, item)
+~~~~
+
+```json
+{"first_line":342,"last_line":594,"bytes":11477,"sha256":"d4510459353412ca1ee44b395ab44b9b536a1e94edf77f073a6459f0cba4b488"}
+```
+
+~~~~typescript
+    path: string,
+    query: string,
+    since: number,
+    etag: string | null,
+    decode: (text: string) => Option.Option<ReadonlyArray<T>>,
+  ) =>
+    Effect.gen(function* () {
+      const items: T[] = []
+      let cursor = since
+      let seen = etag
+      let latest: string | null = null
+      for (let page = 0; page < MAX_PAGES; page++) {
+        const res = yield* get(`repos/${repo}/${path}?${query}&per_page=${PAGE}&since=${new Date(cursor).toISOString()}`, seen)
+        if (res.status === 304) break
+        const batch = decode(res.body)
+        if (Option.isNone(batch)) return yield* new Failure({ kind: "error", message: `GitHub returned ${path} in a shape the board does not read.` })
+        items.push(...batch.value)
+        latest = res.etag ?? latest
+        seen = null
+        const last = batch.value.at(-1)?.updated_at
+        const next = last ? Date.parse(last) : cursor
+        if (batch.value.length < PAGE || !(next > cursor)) break
+        cursor = next
+      }
+      return { items, etag: latest }
+    })
+
+  const ingest = Effect.fnUntraced(function* (project: ProjectRow, item: typeof Issue.Type) {
+    const changed = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        const marker = MARKER.exec(item.body ?? "")
+        const rows = yield* tx.select().from(BoardIssueTable).where(eq(BoardIssueTable.project_id, project.id)).all()
+        const known =
+          rows.find((row) => row.github_number === item.number) ??
+          (marker?.[1] === project.key ? rows.find((row) => row.number === Number(marker[2]) && row.github_number === null) : undefined)
+        if (!known) {
+          // Closed issues are history; a marker with no matching card is another board's.
+          if (item.state !== "open" || marker) return undefined
+          return yield* intake(tx, project, item)
+        }
+        if (known.github_number === null)
+          yield* tx.update(BoardIssueTable).set({ github_number: item.number, github_node_id: item.node_id }).where(eq(BoardIssueTable.id, known.id)).run()
+        // A pending push or an issue the owner has not accepted yet is not compared.
+        if (known.github_dirty || known.stage === "intake") return undefined
+        return yield* compare(tx, project, known, item)
+      }),
+    )
+    if (changed) yield* deps.publish(changed)
+  })
+
+  const intake = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow, item: typeof Issue.Type) {
+    const fresh = yield* tx.select().from(BoardProjectTable).where(eq(BoardProjectTable.id, project.id)).get()
+    const stage = project.auto_accept_intake ? ("backlog" as const) : ("intake" as const)
+    const id = Board.IssueID.create()
+    const number = fresh?.next_issue_number ?? project.next_issue_number
+    const names = item.labels.map((label) => label.name.toLowerCase())
+    const row = {
+      id,
+      project_id: project.id,
+      number,
+      title: item.title,
+      body: item.body ?? "",
+      type: names.includes("bug") ? ("bug" as const) : names.includes("chore") ? ("chore" as const) : ("feature" as const),
+      stage,
+      position: yield* endOf(tx, project.id, stage),
+      stage_entered_at: yield* Clock.currentTimeMillis,
+      github_number: item.number,
+      github_node_id: item.node_id,
+      // An accepted card still needs its stage label and footer on GitHub.
+      github_dirty: stage !== "intake",
+    }
+    yield* tx.insert(BoardIssueTable).values(row).run()
+    yield* tx.update(BoardProjectTable).set({ next_issue_number: number + 1 }).where(eq(BoardProjectTable.id, project.id)).run()
+    const activity = yield* deps.log(tx, {
+      project: project.id,
+      issue: id,
+      actor: "github",
+      action: "issue.create",
+      reason: `Opened on GitHub as #${item.number} by ${item.user?.login ?? "someone"}.`,
+      after: {
+        number,
+        title: row.title,
+        body: row.body,
+        type: row.type,
+        stage,
+        position: row.position,
+        stage_entered_at: row.stage_entered_at,
+        github_number: row.github_number,
+      },
+    })
+    return { project: project.id, issue: id, activity } as Changed
+  })
+
+  // Board wins for stage and steps; GitHub's edits to title or body are overwritten, but the owner can undo that.
+  const compare = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow, issue: IssueRow, item: typeof Issue.Type) {
+    const ref = `${project.key}-${issue.number}`
+    const text = item.body ?? ""
+    let last: Board.ActivityID | undefined
+    if (MARKER.test(text)) {
+      const theirs: Record<string, string> = {}
+      const ours: Record<string, string> = {}
+      const body = unmirrored(text)
+      if (item.title !== issue.title) {
+        theirs.title = item.title
+        ours.title = issue.title
+      }
+      if (body !== issue.body.trim()) {
+        theirs.body = body
+        ours.body = issue.body
+      }
+      if (Object.keys(theirs).length > 0) {
+        last = yield* deps.log(tx, {
+          project: project.id,
+          issue: issue.id,
+          actor: "github",
+          action: "github.overwrite",
+          reason: `GitHub had a different ${Object.keys(theirs).join(" and ")} for ${ref}; the next push restores the board's.`,
+          before: theirs,
+          after: ours,
+        })
+        yield* tx.update(BoardIssueTable).set({ github_dirty: true }).where(eq(BoardIssueTable.id, issue.id)).run()
+      }
+    }
+    const shut = issue.stage === "shipped" || issue.stage === "cut"
+    if ((item.state === "closed") !== shut) {
+      const said = item.state === "closed" ? "closed" : "reopened"
+      const asked = `GitHub #${item.number} (${ref}) was ${said} on GitHub, but the board has it in ${issue.stage}.`
+      const open = yield* tx
+        .select({ id: BoardQuestionTable.id })
+        .from(BoardQuestionTable)
+        .where(and(eq(BoardQuestionTable.issue_id, issue.id), eq(BoardQuestionTable.status, "open"), eq(BoardQuestionTable.text, asked)))
+        .get()
+      if (!open) {
+        const id = Board.QuestionID.create()
+        const options = [
+          { id: "keep", label: "Keep the board's stage", consequence: "The next push puts the GitHub issue back the way the board has it." },
+          { id: "follow", label: "Follow GitHub", consequence: "Move the card to match GitHub, then the two agree." },
+        ]
+        yield* tx
+          .insert(BoardQuestionTable)
+          .values({
+            id,
+            project_id: project.id,
+            issue_id: issue.id,
+            text: asked,
+            options,
+            recommended: "keep",
+            cost_of_waiting: null,
+            blocking: false,
+            status: "open",
+          })
+          .run()
+        last = yield* deps.log(tx, {
+          project: project.id,
+          issue: issue.id,
+          actor: "github",
+          action: "question.ask",
+          reason: `GitHub #${item.number} was ${said}; the board does not apply that on its own.`,
+          after: {
+            id,
+            epic_id: null,
+            text: asked,
+            options,
+            recommended: "keep",
+            cost_of_waiting: null,
+            blocking: false,
+            kind: null,
+          },
+        })
+      }
+      // The next push restores the board's state unless the plan changes first.
+      yield* tx.update(BoardIssueTable).set({ github_dirty: true }).where(eq(BoardIssueTable.id, issue.id)).run()
+    }
+    return last ? ({ project: project.id, issue: issue.id, activity: last } as Changed) : undefined
+  })
+
+  const comment = Effect.fnUntraced(function* (project: ProjectRow, item: typeof Comment.Type) {
+    const number = Number(item.issue_url.split("/").at(-1))
+    const changed = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        const issue = yield* tx
+          .select()
+          .from(BoardIssueTable)
+          .where(and(eq(BoardIssueTable.project_id, project.id), eq(BoardIssueTable.github_number, number)))
+          .get()
+        if (!issue) return undefined
+        const have = yield* tx.select({ id: BoardNoteTable.id }).from(BoardNoteTable).where(eq(BoardNoteTable.github_comment_id, item.id)).get()
+        if (have) return undefined
+        const id = Board.NoteID.create()
+        const author = `github:${item.user?.login ?? "unknown"}`
+        yield* tx.insert(BoardNoteTable).values({ id, issue_id: issue.id, author, body: item.body, github_comment_id: item.id }).run()
+        const activity = yield* deps.log(tx, { project: project.id, issue: issue.id, actor: "github", action: "note.add", after: { id, author, body: item.body } })
+        return { project: project.id, issue: issue.id, activity } as Changed
+      }),
+    )
+    if (changed) yield* deps.publish(changed)
+  })
+
+  // ---- board to GitHub ----
+
+  const push = Effect.fnUntraced(function* (project: ProjectRow, repo: string) {
+    const due = yield* deps.quiet((tx) =>
+      tx
+        .select()
+        .from(BoardIssueTable)
+        .where(
+          and(
+            eq(BoardIssueTable.project_id, project.id),
+            sql`${BoardIssueTable.stage} != 'intake'`,
+            or(eq(BoardIssueTable.github_dirty, true), isNull(BoardIssueTable.github_number)),
+          ),
+        )
+        .orderBy(asc(BoardIssueTable.time_updated))
+        .all(),
+    )
+    const labels = new Set<string>()
+    for (const issue of due) yield* pushOne(project, repo, issue, labels)
+  })
+
+  const pushOne = Effect.fnUntraced(function* (project: ProjectRow, repo: string, issue: IssueRow, labels: Set<string>) {
+    const ref = `${project.key}-${issue.number}`
+    const { steps, epic } = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        const steps = yield* tx.select().from(BoardStepTable).where(eq(BoardStepTable.issue_id, issue.id)).orderBy(asc(BoardStepTable.position)).all()
+        const epic = issue.epic_id ? yield* tx.select().from(BoardEpicTable).where(eq(BoardEpicTable.id, issue.epic_id)).get() : undefined
+        return { steps, epic }
+      }),
+    )
+    const milestone = epic ? yield* milestoneOf(project, repo, epic) : null
+    const ours = [`stage:${issue.stage}`, `type:${issue.type}`]
+    for (const name of ours) {
+      if (labels.has(name)) continue
+      yield* send("POST", `repos/${repo}/labels`, { name, color: COLORS[name.startsWith("stage") ? "stage" : "type"] }, [422])
+      labels.add(name)
+    }
+    const shut = issue.stage === "shipped" || issue.stage === "cut"
+    const state = shut ? { state: "closed", state_reason: issue.stage === "cut" ? "not_planned" : "completed" } : { state: "open" }
+    const content = { title: issue.title, body: render(project.key, issue, steps) }
+
+    const existing = issue.github_number
+    const created =
+      existing === null
+        ? Option.getOrUndefined(decodeCreated((yield* send("POST", `repos/${repo}/issues`, { ...content, labels: ours, ...(milestone ? { milestone } : {}) })).body))
+        : undefined
+    if (existing === null && !created) return yield* new Failure({ kind: "error", message: `GitHub did not return the new issue for ${ref}.` })
+    const number = (created?.number ?? existing) as number
+    // Keep labels people added; only the board's stage and type labels are replaced.
+    const theirs =
+      existing === null
+        ? []
+        : Option.match(decodeIssue((yield* get(`repos/${repo}/issues/${number}`, null)).body), {
+            onNone: () => [],
+            onSome: (found) => found.labels.map((label) => label.name).filter((name) => !/^(stage|type):/.test(name)),
+~~~~
+
+```json
+{"first_line":612,"last_line":688,"bytes":4438,"sha256":"22604cd1ae08629706d239a8d99219d2ef117117c66610ae60450a70de1359c8"}
+```
+
+~~~~typescript
+
+  const milestoneOf = Effect.fnUntraced(function* (project: ProjectRow, repo: string, epic: typeof BoardEpicTable.$inferSelect) {
+    if (epic.github_milestone !== null) return epic.github_milestone
+    const made = Option.getOrUndefined(
+      decodeCreated((yield* send("POST", `repos/${repo}/milestones`, { title: `${project.key}-E${epic.number}: ${epic.title}`, description: epic.goal })).body),
+    )
+    if (!made) return yield* new Failure({ kind: "error", message: `GitHub did not return the milestone for ${project.key}-E${epic.number}.` })
+    yield* deps.quiet((tx) => tx.update(BoardEpicTable).set({ github_milestone: made.number }).where(eq(BoardEpicTable.id, epic.id)).run())
+    return made.number
+  })
+
+  // ---- gh ----
+
+  /** GET with headers, so the ETag and a 304 are visible. */
+  const get = Effect.fnUntraced(function* (endpoint: string, etag: string | null) {
+    const result = yield* deps.gh(["api", "-i", endpoint, ...(etag ? ["-H", `If-None-Match: ${etag}`] : [])])
+    const head = /^HTTP\/\S+\s+(\d{3})/.exec(result.stdout)
+    const status = head ? Number(head[1]) : undefined
+    if (status === 304) return { status, body: "", etag }
+    if (status !== undefined && status >= 200 && status < 300 && result.exitCode === 0) {
+      const split = /\r?\n\r?\n/.exec(result.stdout)
+      const headers = result.stdout.slice(0, split?.index ?? 0)
+      return { status, body: result.stdout.slice((split?.index ?? 0) + (split?.[0].length ?? 0)), etag: /^etag:\s*(.+)$/im.exec(headers)?.[1]?.trim() ?? null }
+    }
+    return yield* fail(result, status)
+  })
+
+  const send = Effect.fnUntraced(function* (method: "POST" | "PATCH", endpoint: string, payload: unknown, tolerate: ReadonlyArray<number> = []) {
+    const result = yield* deps.gh(["api", "-X", method, endpoint, "--input", "-"], JSON.stringify(payload))
+    if (result.exitCode === 0) return { body: result.stdout }
+    const status = Number(/HTTP (\d{3})/.exec(result.stderr)?.[1] ?? NaN)
+    if (tolerate.includes(status)) return { body: result.stdout }
+    return yield* fail(result, Number.isNaN(status) ? undefined : status)
+  })
+
+  const fail = (result: GhResult, status: number | undefined) => {
+    const line = result.stderr.split(/\r?\n/).find((text) => text.trim()) ?? `gh exited with ${result.exitCode}`
+    const code = status ?? (Number(/HTTP (\d{3})/.exec(result.stderr)?.[1]) || undefined)
+    const signedOut =
+      result.exitCode === 4 || /auth login|not logged in|not authenticated|HTTP 401|401 Unauthorized|Bad credentials/i.test(result.stderr) || code === 401
+    const limited = code === 429 || /rate limit/i.test(result.stderr) || (code === 403 && /x-ratelimit-remaining:\s*0/i.test(result.stdout))
+    return new Failure({
+      kind: signedOut ? "signed_out" : limited ? "rate_limited" : "error",
+      message: redact(signedOut ? `GitHub is not signed in on this server: ${line}` : line).slice(0, 300),
+      status: code,
+    })
+  }
+
+  return { sync, ci }
+}
+
+/** The issue body GitHub shows: the card body, the steps as a task list, and the footer with the hidden marker. */
+export function render(key: string, issue: Pick<IssueRow, "number" | "body">, steps: ReadonlyArray<{ readonly title: string; readonly status: Board.StepStatus }>) {
+  const list = steps.map((step) => `- [${step.status === "done" || step.status === "skipped" ? "x" : " "}] ${step.status === "skipped" ? `~~${step.title}~~` : step.title}`)
+  return [
+    issue.body.trim(),
+    list.length > 0 ? `### Steps\n${list.join("\n")}` : "",
+    `---\nTracked on the Orchestra board as ${key}-${issue.number}. <!-- orchestra-board:${key}-${issue.number} -->`,
+  ]
+    .filter(Boolean)
+    .join("\n\n")
+}
+
+/** The card's own text inside a mirrored body: without the steps list and the footer the mirror appends. */
+export function unmirrored(text: string) {
+  const plain = text.replace(/\r\n/g, "\n")
+  const cut = plain.lastIndexOf(FOOTER)
+  const head = cut >= 0 ? plain.slice(0, cut) : plain.replace(/^---\nTracked on the Orchestra board as .*$/m, "")
+  const steps = head.lastIndexOf("### Steps\n")
+  const tail = steps >= 0 ? head.slice(steps + "### Steps\n".length) : ""
+  const listed = steps >= 0 && tail.split("\n").every((line) => /^- \[[ x]\] /.test(line))
+  return (listed ? head.slice(0, steps) : head).trim()
+}
+
+function redact(text: string) {
+  return text.replace(/\b(gh[pousr]_[A-Za-z0-9_]{10,}|github_pat_[A-Za-z0-9_]{10,})/g, "[token]")
+}
+~~~~
+
+## AUT3-C09
+
+```json
+{
+  "block_id": "AUT3-C09",
+  "type": "literal_source_chain",
+  "canonical_request_namespace": "J1",
+  "requests": [
+    "RE-AUT3-02"
+  ],
+  "body_anchors": [
+    "B05"
+  ],
+  "requested_subject": "Sessions/filhos/tokens/custos CI, thresholds, evaluate/settings e entrada building",
+  "path": "packages/core/src/board/money.ts",
+  "archive": "sources/packages/core/src/board/money.ts",
+  "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_git_blob_sha": "2e898a1aaf5d8740ced0bcd0a8afe0baa3996bc9",
+  "source_sha256": "30254e118087b0f8ac51e48b0c1f4a5f2e7bfd7a4bf2907267fe37c13a8a582b",
+  "source_bytes": 9068,
+  "required_source_line_ranges": [
+    [
+      1,
+      191
+    ]
+  ],
+  "prior_literal_ranges": [
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "B05",
+      "source_path": "packages/core/src/board/money.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "2e898a1aaf5d8740ced0bcd0a8afe0baa3996bc9",
+      "source_sha256": "30254e118087b0f8ac51e48b0c1f4a5f2e7bfd7a4bf2907267fe37c13a8a582b",
+      "first_line": 163,
+      "last_line": 169,
+      "excerpt_bytes": 611,
+      "excerpt_sha256": "2ef7090c698e3ef827e2a8c3cdc12c38b04a191a44688881ab5ce51eea5392d3",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 129081,
+      "literal_content_byte_end_exclusive": 129692
+    }
+  ]
+}
+```
+
+```json
+{"first_line":1,"last_line":162,"bytes":7584,"sha256":"cf1c065df23a26b7974cffe89a4fed9c9a78a842ab612da9c5ea6cfc0e60d57f"}
+```
+
+~~~~typescript
+export * as BoardMoney from "./money"
+
+import { and, asc, eq, inArray, ne, or, sql } from "drizzle-orm"
+import { Clock, Effect } from "effect"
+import { Board } from "@orchestra/schema/board"
+import { SessionTable } from "../session/sql"
+import { BoardCiRunTable, BoardIssueTable, BoardProjectTable, BoardQuestionTable } from "./sql"
+import { BoardForecast } from "./forecast"
+import { BoardSpend } from "./spend"
+import { BudgetPausedError, RefusedError, archived, changed, diff, forecastOf, loadProject, log, numbers } from "./shared"
+import type { IssueRow, ProjectRow, Tx } from "./shared"
+
+// Money on the board: spend, the 90% budget question, the budget pause and the project settings.
+
+export const report = Effect.fnUntraced(function* (tx: Tx, key: string) {
+  const project = yield* loadProject(tx, key)
+  const forecast = yield* forecastOf(tx, project)
+  return yield* spendOf(tx, project, forecast.project.forecast)
+})
+
+// Spend reads rows only: session cost and the CI minutes the poll cached. `forecast` null leaves the finish unknown.
+export const spendOf = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow, forecast: Board.Forecast | null) {
+  const issues = yield* tx
+    .select()
+    .from(BoardIssueTable)
+    .where(and(eq(BoardIssueTable.project_id, project.id), ne(BoardIssueTable.stage, "cut")))
+    .orderBy(asc(BoardIssueTable.number))
+    .all()
+  const known = yield* numbers(tx, project)
+  const linked = issues.flatMap((row) => (row.session_id ? [row.session_id] : []))
+  const ids = linked as (typeof SessionTable.$inferSelect)["id"][]
+  const sessions =
+    linked.length === 0
+      ? []
+      : yield* tx
+          .select({
+            id: SessionTable.id,
+            parent: SessionTable.parent_id,
+            cost: SessionTable.cost,
+            model: SessionTable.model,
+            tokens:
+              sql<number>`${SessionTable.tokens_input} + ${SessionTable.tokens_output} + ${SessionTable.tokens_reasoning} + ${SessionTable.tokens_cache_read} + ${SessionTable.tokens_cache_write}`,
+          })
+          .from(SessionTable)
+          .where(or(inArray(SessionTable.id, ids), inArray(SessionTable.parent_id, ids)))
+          .all()
+  const runs = yield* tx
+    .select({ issue: BoardCiRunTable.issue_id, usd: sql<number>`sum(${BoardCiRunTable.cost_usd})` })
+    .from(BoardCiRunTable)
+    .where(eq(BoardCiRunTable.project_id, project.id))
+    .groupBy(BoardCiRunTable.issue_id)
+    .all()
+  const spends = issues.map((row) => {
+    const own = sessions.filter((item) => row.session_id !== null && (item.id === row.session_id || item.parent === row.session_id))
+    const ci: BoardSpend.Ci =
+      !row.pr_number || !project.github_repo
+        ? { kind: "none" }
+        : project.ci_synced_at === null
+          ? { kind: "pending" }
+          : { kind: "ok", usd: runs.find((item) => item.issue === row.id)?.usd ?? 0 }
+    return BoardSpend.card({
+      sessions: own.map((item) => ({ model: item.model?.id ?? null, provider: item.model?.providerID ?? null, cost: item.cost, tokens: item.tokens })),
+      ci,
+    })
+  })
+  const epicOf = (row: IssueRow) => (row.epic_id ? (known.epics.get(row.epic_id) ?? null) : null)
+  const flagged = BoardSpend.flags(issues.map((row, index) => ({ epic: epicOf(row), spend: spends[index]! })))
+  const cards = issues.map(
+    (row, index): Board.CardSpend => ({
+      ...spends[index]!,
+      issue: row.number,
+      ref: `${project.key}-${row.number}`,
+      epic: epicOf(row),
+      seat: row.seat,
+      flagged: flagged[index]!.flagged,
+      epicMedianUsd: flagged[index]!.median,
+    }),
+  )
+  const epics = Array.from(new Set(cards.flatMap((card) => (card.epic === null ? [] : [card.epic]))))
+    .toSorted((a, b) => a - b)
+    .map((number): Board.EpicSpend => ({ ...BoardSpend.total(cards.filter((card) => card.epic === number)), epic: number, ref: `${project.key}-E${number}` }))
+  const seats = Array.from(new Set(cards.flatMap((card) => (card.seat === null ? [] : [card.seat]))))
+    .toSorted()
+    .map((seat): Board.SeatSpend => ({ ...BoardSpend.total(cards.filter((card) => card.seat === seat)), seat }))
+  const total = BoardSpend.total(spends)
+  const now = yield* Clock.currentTimeMillis
+  return {
+    project: total,
+    budget: BoardSpend.budget({
+      budgetUsd: project.budget_usd,
+      spentUsd: total.usd,
+      forecastUsd: forecast ? BoardSpend.finish({ spentUsd: total.usd, since: project.time_created, now, forecast }) : null,
+    }),
+    cards,
+    epics,
+    seats,
+    infraSyncedAt: project.ci_synced_at,
+  } satisfies Board.SpendReport
+})
+
+// Persists how many evaluations in a row put P50 past the target date, and raises the one pre-emptive budget
+// question when the forecast finish crosses 90% of the budget. Returns the activity of a question it raised.
+export const evaluate = Effect.fnUntraced(function* (tx: Tx, id: string) {
+  const project = yield* tx.select().from(BoardProjectTable).where(eq(BoardProjectTable.id, id as Board.ProjectID)).get()
+  if (!project) return undefined
+  const forecast = yield* forecastOf(tx, project)
+  const streak = BoardForecast.late(forecast.project) ? project.forecast_late_streak + 1 : 0
+  if (streak !== project.forecast_late_streak)
+    yield* tx.update(BoardProjectTable).set({ forecast_late_streak: streak }).where(eq(BoardProjectTable.id, project.id)).run()
+  if (project.budget_usd === null || project.status === "archived" || forecast.project.forecast.kind === "done") return undefined
+  const budget = (yield* spendOf(tx, project, forecast.project.forecast)).budget
+  if (budget.forecastUsd === null || budget.forecastPercent === null || budget.forecastPercent < BoardSpend.QUESTION * 100) return undefined
+  // One question per budget figure: raising the budget makes a new one possible, answering never re-asks.
+  const kind = `budget:${project.budget_usd}`
+  const asked = yield* tx
+    .select({ id: BoardQuestionTable.id })
+    .from(BoardQuestionTable)
+    .where(and(eq(BoardQuestionTable.project_id, project.id), eq(BoardQuestionTable.kind, kind)))
+    .get()
+  if (asked) return undefined
+  const question = Board.QuestionID.create()
+  const text = `${project.key} is forecast to spend about $${budget.forecastUsd.toFixed(2)} by its finish, ${Math.round(budget.forecastPercent)}% of its $${project.budget_usd.toFixed(2)} budget. What should happen?`
+  const options = [
+    { id: "raise", label: "Raise the budget", consequence: "Work continues; set the new amount in the project settings." },
+    { id: "cut", label: "Cut scope to fit", consequence: "Maestro proposes which cards to cut; the budget stays." },
+    { id: "continue", label: "Keep going as is", consequence: "Work continues until 100%, then new work stops." },
+  ]
+  yield* tx
+    .insert(BoardQuestionTable)
+    .values({
+      id: question,
+      project_id: project.id,
+      issue_id: null,
+      epic_id: null,
+      text,
+      options,
+      recommended: "cut",
+      cost_of_waiting: "At 100% of the budget the board stops starting new work.",
+      kind,
+      blocking: false,
+      status: "open",
+    })
+    .run()
+  return yield* log(tx, {
+    project: project.id,
+    actor: "maestro",
+    action: "question.ask",
+    reason: "The forecast finish crossed 90% of the budget.",
+    after: {
+      id: question,
+      epic_id: null,
+      text,
+      options,
+      recommended: "cut",
+      cost_of_waiting: "At 100% of the budget the board stops starting new work.",
+      kind,
+      blocking: false,
+    },
+  })
+})
+
+/** A project at its whole budget starts no new work; a card already building keeps going. */
+~~~~
+
+```json
+{"first_line":170,"last_line":191,"bytes":873,"sha256":"99ea21162f22ccd394a1f73d219b5b3d0c4d4df346dfe4ccb7e0d73b68fc3266"}
+```
+
+~~~~typescript
+})
+
+export const settings = Effect.fnUntraced(function* (
+  tx: Tx,
+  key: string,
+  input: { readonly target_date?: number | null; readonly budget_usd?: number | null; readonly reason?: string },
+  actor: "owner" | "maestro",
+) {
+  const project = yield* loadProject(tx, key)
+  if (project.status === "archived") return yield* archived(project)
+  const change = diff(project, { target_date: input.target_date, budget_usd: input.budget_usd })
+  if (!change) return yield* new RefusedError({ message: `Nothing to change on ${key}.` })
+  yield* tx.update(BoardProjectTable).set(change.after).where(eq(BoardProjectTable.id, project.id)).run()
+  const activity = yield* log(tx, {
+    project: project.id,
+    actor,
+    action: "project.upsert",
+    reason: input.reason ?? null,
+    ...change,
+  })
+  return { result: { activity }, changed: changed(project.id, activity) }
+})
+~~~~
+
+## AUT3-C10
+
+```json
+{
+  "block_id": "AUT3-C10",
+  "type": "literal_source_chain",
+  "canonical_request_namespace": "J1",
+  "requests": [
+    "RE-AUT3-02"
+  ],
+  "body_anchors": [
+    "B05"
+  ],
+  "requested_subject": "Metered/unmetered/card/total, thresholds, peers e budget/forecast arithmetic",
+  "path": "packages/core/src/board/spend.ts",
+  "archive": "sources/packages/core/src/board/spend.ts",
+  "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_git_blob_sha": "c5c82e700282b4ba2fad710a5a87daae0328b6f9",
+  "source_sha256": "11d1284e196ac2f72708d88a47d7f839f5e380d0f4cc87e0a196d4b4c32d45ce",
+  "source_bytes": 6301,
+  "required_source_line_ranges": [
+    [
+      1,
+      143
+    ]
+  ],
+  "prior_literal_ranges": [
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "B05",
+      "source_path": "packages/core/src/board/spend.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "c5c82e700282b4ba2fad710a5a87daae0328b6f9",
+      "source_sha256": "11d1284e196ac2f72708d88a47d7f839f5e380d0f4cc87e0a196d4b4c32d45ce",
+      "first_line": 30,
+      "last_line": 49,
+      "excerpt_bytes": 1223,
+      "excerpt_sha256": "26ef2f8eaebf6d6335d3e53da76a6aa6fa31c44016f0856bd38fccbff16bb214",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 130067,
+      "literal_content_byte_end_exclusive": 131290
+    }
+  ]
+}
+```
+
+```json
+{"first_line":1,"last_line":29,"bytes":1109,"sha256":"e0356f6b58ff26f3b962f14ff153467ca4b74864a21074d37fa9b30ea6735e9c"}
+```
+
+~~~~typescript
+export * as BoardSpend from "./spend"
+
+import type { Board } from "@orchestra/schema/board"
+
+// What a card, epic, seat and project cost (docs/specs/projects-board/CONTRACT.md). Pure arithmetic over rows the board
+// service reads: a figure comes from a real meter or says it has none. A missing meter is never counted as zero.
+
+const DAY = 86_400_000
+/** Providers whose engine runs on a subscription: they report no per-token price. */
+const SUBSCRIPTION = ["claude-code"]
+
+export const WARN = 0.8
+export const PAUSE = 1
+export const QUESTION = 0.9
+export const FLAG = 3
+/** Peers an epic needs before its median means anything. */
+const PEERS = 2
+
+export type Session = {
+  readonly model: string | null
+  readonly provider: string | null
+  readonly cost: number
+  readonly tokens: number
+}
+
+/** `none`: no PR, nothing to attribute. `pending`: a PR whose runs have not been fetched yet. */
+export type Ci = { readonly kind: "none" } | { readonly kind: "pending" } | { readonly kind: "ok"; readonly usd: number }
+
+/** One card's spend. Subagent sessions of the card's session are included by the caller. */
+~~~~
+
+```json
+{"first_line":50,"last_line":143,"bytes":3969,"sha256":"c81f03dfbd33e2a8357a6a551ac2b4a37fd6e4dec75c16b1257b941fe52f1daf"}
+```
+
+~~~~typescript
+    infra,
+    byModel,
+    usd: usd(models) + usd(infra),
+    partial: (metered.length > 0 && unmetered.length > 0) || input.ci.kind === "pending",
+  }
+}
+
+/** Adds spends together: a part is metered when any member of it is. */
+export function total(items: readonly Board.Spend[]): Board.Spend {
+  const part = (pick: (item: Board.Spend) => Board.Meter): Board.Meter => {
+    const meters = items.map(pick)
+    const first = meters.find((meter) => meter.kind === "not-metered")
+    return meters.some((meter) => meter.kind === "usd") || !first ? { kind: "usd", usd: sum(meters.map(usd)) } : first
+  }
+  const models = part((item) => item.models)
+  const infra = part((item) => item.infra)
+  const merged = items
+    .flatMap((item) => item.byModel)
+    .reduce<Record<string, number>>((all, item) => ({ ...all, [item.model]: (all[item.model] ?? 0) + item.usd }), {})
+  return {
+    models,
+    infra,
+    byModel: Object.entries(merged)
+      .map(([model, value]) => ({ model, usd: value }))
+      .toSorted((a, b) => b.usd - a.usd || a.model.localeCompare(b.model)),
+    usd: usd(models) + usd(infra),
+    partial:
+      items.some((item) => item.partial) ||
+      items.some((item) => item.models.kind === "not-metered") && items.some((item) => item.models.kind === "usd" && item.models.usd > 0),
+  }
+}
+
+/** Flags a card at 3 times the median of its epic peers; cards outside an epic are never flagged. */
+export function flags(cards: readonly { readonly epic: number | null; readonly spend: Board.Spend }[]) {
+  return cards.map((item) => {
+    if (item.epic === null || item.spend.models.kind !== "usd" || item.spend.usd <= 0) return { flagged: false, median: null }
+    const peers = cards
+      .filter((other) => other !== item && other.epic === item.epic && other.spend.models.kind === "usd" && other.spend.usd > 0)
+      .map((other) => other.spend.usd)
+    if (peers.length < PEERS) return { flagged: false, median: null }
+    const middle = median(peers)
+    return { flagged: item.spend.usd >= FLAG * middle, median: middle }
+  })
+}
+
+export function budget(input: {
+  readonly budgetUsd: number | null
+  readonly spentUsd: number
+  readonly forecastUsd: number | null
+}): Board.Budget {
+  if (input.budgetUsd === null)
+    return { budgetUsd: null, spentUsd: input.spentUsd, percent: null, state: "none", forecastUsd: input.forecastUsd, forecastPercent: null }
+  const share = (value: number) => (input.budgetUsd! > 0 ? (value / input.budgetUsd!) * 100 : 100)
+  return {
+    budgetUsd: input.budgetUsd,
+    spentUsd: input.spentUsd,
+    percent: share(input.spentUsd),
+    state: input.spentUsd >= input.budgetUsd * PAUSE ? "paused" : input.spentUsd >= input.budgetUsd * WARN ? "warn" : "ok",
+    forecastUsd: input.forecastUsd,
+    forecastPercent: input.forecastUsd === null ? null : share(input.forecastUsd),
+  }
+}
+
+/** Spend at the forecast finish: what is spent plus the burn rate over the time left to the forecast P50. */
+export function finish(input: {
+  readonly spentUsd: number
+  /** When the project started spending. */
+  readonly since: number
+  readonly now: number
+  readonly forecast: Board.Forecast
+}) {
+  if (input.forecast.kind === "done") return input.spentUsd
+  if (input.forecast.kind !== "dates") return null
+  const burn = input.spentUsd / Math.max(1, (input.now - input.since) / DAY)
+  return input.spentUsd + burn * Math.max(0, (input.forecast.p50 - input.now) / DAY)
+}
+
+function subscription(item: Session) {
+  return item.provider !== null && SUBSCRIPTION.includes(item.provider)
+}
+
+function usd(meter: Board.Meter) {
+  return meter.kind === "usd" ? meter.usd : 0
+}
+
+function sum(values: readonly number[]) {
+  return values.reduce((all, value) => all + value, 0)
+}
+
+function median(values: readonly number[]) {
+  const sorted = values.toSorted((a, b) => a - b)
+  const middle = Math.floor(sorted.length / 2)
+  return sorted.length % 2 === 1 ? (sorted[middle] ?? 0) : ((sorted[middle - 1] ?? 0) + (sorted[middle] ?? 0)) / 2
+}
+~~~~
+
+## AUT3-C11
+
+```json
+{
+  "block_id": "AUT3-C11",
+  "type": "literal_source_chain",
+  "canonical_request_namespace": "J1",
+  "requests": [
+    "RE-AUT3-02"
+  ],
+  "body_anchors": [
+    "B05"
+  ],
+  "requested_subject": "Throughput com zeros, seed, simulação, percentis, horizon/waits/late",
+  "path": "packages/core/src/board/forecast.ts",
+  "archive": "sources/packages/core/src/board/forecast.ts",
+  "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_git_blob_sha": "8c5aa204de45ec477861b3c5ea3c37aa1fe78eab",
+  "source_sha256": "4c30459dd7de865d5536d9a24a842b19a14bbeffd5ae4597a8df5f0b76fa06fd",
+  "source_bytes": 6656,
+  "required_source_line_ranges": [
+    [
+      1,
+      162
+    ]
+  ],
+  "prior_literal_ranges": [
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "B05",
+      "source_path": "packages/core/src/board/forecast.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "8c5aa204de45ec477861b3c5ea3c37aa1fe78eab",
+      "source_sha256": "4c30459dd7de865d5536d9a24a842b19a14bbeffd5ae4597a8df5f0b76fa06fd",
+      "first_line": 8,
+      "last_line": 14,
+      "excerpt_bytes": 195,
+      "excerpt_sha256": "6c95730368bd0e73b52b90435eec1b52f9534a3393fd6f62742e5ff853ac7d7c",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 131670,
+      "literal_content_byte_end_exclusive": 131865
+    }
+  ]
+}
+```
+
+```json
+{"first_line":1,"last_line":7,"bytes":323,"sha256":"40569294765aa6d6bc92c08fc5e7cc39ba406a28ab84b1e60bfe9d0c39fedcf5"}
+```
+
+~~~~typescript
+export * as BoardForecast from "./forecast"
+
+import type { Board } from "@orchestra/schema/board"
+
+// Forecasts from the board's own history (CONTRACT.md section 3): the daily shipped throughput since the first ship
+// day, resampled in a seeded Monte Carlo, so the same board on the same day always gives the same dates.
+
+~~~~
+
+```json
+{"first_line":15,"last_line":162,"bytes":6138,"sha256":"0211225471f65ff50901a24b01ed3652e428ab547a11f8395e06c49fd409d962"}
+```
+
+~~~~typescript
+export type Item = {
+  readonly epic: number | null
+  readonly stage: Board.Stage
+  /** For a shipped issue, the moment it shipped. */
+  readonly enteredAt: number
+  /** The issue ref this one is blocked on: an unshipped dependency, or itself when paused or asked a blocking question. */
+  readonly waitsOn: string | null
+}
+
+/** The project forecast and, in position order, one per epic; an epic's dates include the open epics before it. */
+export function plan(input: {
+  readonly items: readonly Item[]
+  readonly epics: readonly { readonly number: number; readonly ref: string }[]
+  readonly targetDate: number | null
+  readonly now: number
+}) {
+  const shipped = input.items.filter((item) => item.stage === "shipped")
+  const open = input.items.filter((item) => OPEN.includes(item.stage))
+  const openOf = (epic: number) => open.filter((item) => item.epic === epic)
+  const cumulative = input.epics.map((_, index) =>
+    input.epics.slice(0, index + 1).reduce((sum, epic) => sum + openOf(epic.number).length, 0),
+  )
+  const today = Math.floor(input.now / DAY)
+  const runs =
+    shipped.length >= NEEDED
+      ? simulate(
+          throughput(
+            shipped.map((item) => item.enteredAt),
+            today,
+          ),
+          [...cumulative, open.length],
+          today,
+        )
+      : []
+  const forecast = (items: readonly Item[], shippedHere: number, run?: { readonly p50: number; readonly p85: number }): Board.Forecast => {
+    if (items.length === 0 && (shippedHere > 0 || shipped.length >= NEEDED)) return { kind: "done" }
+    const waits = items.every((item) => item.waitsOn !== null) ? items[0]?.waitsOn : undefined
+    if (waits) return { kind: "waits", on: waits }
+    if (!run) return { kind: "insufficient", shipped: shipped.length, needed: NEEDED }
+    return {
+      kind: "dates",
+      p50: run.p50,
+      p85: run.p85,
+      vsTarget:
+        input.targetDate === null
+          ? null
+          : { p50: Math.round((run.p50 - input.targetDate) / DAY), p85: Math.round((run.p85 - input.targetDate) / DAY) },
+    }
+  }
+  const epics = input.epics.map((epic, index) => ({
+    epic: epic.number,
+    ref: epic.ref,
+    shipped: shipped.filter((item) => item.epic === epic.number).length,
+    remaining: openOf(epic.number).length,
+    forecast: forecast(
+      openOf(epic.number),
+      shipped.filter((item) => item.epic === epic.number).length,
+      runs[index],
+    ),
+  }))
+  const pole = epics.reduce<number | undefined>((best, epic) => {
+    if (epic.forecast.kind !== "dates") return best
+    const current = best === undefined ? undefined : epics[best]?.forecast
+    if (current?.kind === "dates" && current.p85 >= epic.forecast.p85) return best
+    return epics.indexOf(epic)
+  }, undefined)
+  return {
+    project: {
+      shipped: shipped.length,
+      remaining: open.length,
+      targetDate: input.targetDate,
+      forecast: forecast(open, shipped.length, runs.at(-1)),
+    } satisfies Board.ProjectForecast,
+    epics: epics.map((epic, index): Board.EpicForecast => ({ ...epic, setsDate: index === pole })),
+  }
+}
+
+/** P50 past the target date; two consecutive evaluations like this turn the project's health to at_risk. */
+export function late(forecast: Board.ProjectForecast) {
+  return forecast.forecast.kind === "dates" && forecast.forecast.vsTarget !== null && forecast.forecast.vsTarget.p50 > 0
+}
+
+/** Replays the stage of every issue through the activity log; a point each time the scope or shipped count changes. */
+export function scope(
+  rows: readonly {
+    readonly issue: string | null
+    readonly reason: string | null
+    readonly after: Record<string, unknown> | null
+    readonly at: number
+  }[],
+) {
+  const stages = new Map<string, unknown>()
+  return rows.reduce<Board.ScopePoint[]>((points, row) => {
+    if (!row.issue || typeof row.after?.stage !== "string") return points
+    stages.set(row.issue, row.after.stage)
+    const values = [...stages.values()]
+    const total = values.filter((stage) => stage !== "intake" && stage !== "cut").length
+    const done = values.filter((stage) => stage === "shipped").length
+    const last = points.at(-1)
+    if (last && last.scope === total && last.shipped === done) return points
+    return [...points, { at: row.at, scope: total, shipped: done, reason: !last || last.scope !== total ? row.reason : null }]
+  }, [])
+}
+
+/** Issues shipped per UTC day, from the first ship day through today, zero days included. */
+function throughput(shippedAt: readonly number[], today: number) {
+  const first = Math.min(today, ...shippedAt.map((at) => Math.floor(at / DAY)))
+  const counts = Array.from({ length: today - first + 1 }, () => 0)
+  shippedAt.forEach((at) => {
+    counts[Math.min(Math.floor(at / DAY), today) - first]++
+  })
+  return counts
+}
+
+/** For each target count, the P50 and P85 day (UTC midnight epoch ms) by which that many more issues ship. */
+function simulate(samples: readonly number[], targets: readonly number[], today: number) {
+  const random = mulberry32(SEED)
+  const goal = Math.max(...targets)
+  const trials = Array.from({ length: TRIALS }, () => {
+    const progress: number[] = []
+    // Cumulative issues shipped after each simulated day.
+    while ((progress.at(-1) ?? 0) < goal && progress.length < HORIZON)
+      progress.push((progress.at(-1) ?? 0) + (samples[Math.floor(random() * samples.length)] ?? 0))
+    return progress
+  })
+  return targets.map((target) => {
+    const days = trials
+      .map((progress) => {
+        const index = progress.findIndex((count) => count >= target)
+        return index === -1 ? HORIZON : index + 1
+      })
+      .toSorted((a, b) => a - b)
+    return {
+      p50: (today + (days[Math.ceil(TRIALS * 0.5) - 1] ?? HORIZON)) * DAY,
+      p85: (today + (days[Math.ceil(TRIALS * 0.85) - 1] ?? HORIZON)) * DAY,
+    }
+  })
+}
+
+function mulberry32(seed: number) {
+  const state = { value: seed >>> 0 }
+  return () => {
+    state.value = (state.value + 0x6d2b79f5) >>> 0
+    const a = Math.imul(state.value ^ (state.value >>> 15), state.value | 1)
+    const b = a ^ (a + Math.imul(a ^ (a >>> 7), a | 61))
+    return ((b ^ (b >>> 14)) >>> 0) / 4294967296
+  }
+}
+~~~~
+
+## AUT3-C12
+
+```json
+{
+  "block_id": "AUT3-C12",
+  "type": "literal_source_chain",
+  "canonical_request_namespace": "J1",
+  "requests": [
+    "RE-AUT3-02",
+    "RE-AUT3-05",
+    "RE-AUT3-06"
+  ],
+  "body_anchors": [
+    "B13"
+  ],
+  "requested_subject": "Origem das métricas derivadas de rows e ausência como null",
+  "path": "packages/core/src/board/ledger.ts",
+  "archive": "sources/packages/core/src/board/ledger.ts",
+  "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_git_blob_sha": "282e862105def593673fa404ca9ce87991b31fe2",
+  "source_sha256": "07f029330ac42176b6bac035d8fdbc2d81d72decd6b83004b6a9627e02351b2c",
+  "source_bytes": 3914,
+  "required_source_line_ranges": [
+    [
+      1,
+      94
+    ]
+  ],
+  "prior_literal_ranges": []
+}
+```
+
+```json
+{"first_line":1,"last_line":94,"bytes":3914,"sha256":"07f029330ac42176b6bac035d8fdbc2d81d72decd6b83004b6a9627e02351b2c"}
+```
+
+~~~~typescript
+export * as BoardLedger from "./ledger"
+
+import { and, asc, desc, eq, inArray, isNotNull } from "drizzle-orm"
+import { Effect } from "effect"
+import type { Board } from "@orchestra/schema/board"
+import { BoardActivityTable, BoardAttemptTable, BoardCheckTable, BoardIssueTable } from "./sql"
+import type { ProjectRow, Tx } from "./shared"
+
+// The conveyor's numbers for one project's pool (merge-queue spec section 12). Each is null until its rows exist.
+export const of = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow) {
+  const merges = yield* tx
+    .select({ issue: BoardActivityTable.issue_id, at: BoardActivityTable.time_created })
+    .from(BoardActivityTable)
+    .where(
+      and(eq(BoardActivityTable.project_id, project.id), eq(BoardActivityTable.action, "bundle.merge"), isNotNull(BoardActivityTable.issue_id)),
+    )
+    .all()
+  const adds = yield* tx
+    .select({ issue: BoardActivityTable.issue_id, at: BoardActivityTable.time_created })
+    .from(BoardActivityTable)
+    .where(and(eq(BoardActivityTable.project_id, project.id), eq(BoardActivityTable.action, "queue.add"), isNotNull(BoardActivityTable.issue_id)))
+    .orderBy(asc(BoardActivityTable.time_created))
+    .all()
+  const checks = yield* tx
+    .select({ issue: BoardCheckTable.issue_id, ended: BoardCheckTable.ended_at })
+    .from(BoardCheckTable)
+    .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardCheckTable.issue_id))
+    .where(
+      and(
+        eq(BoardIssueTable.project_id, project.id),
+        eq(BoardCheckTable.kind, "scoped"),
+        eq(BoardCheckTable.outcome, "pass"),
+        isNotNull(BoardCheckTable.ended_at),
+      ),
+    )
+    .all()
+  const outcomes = yield* settled(tx, project.id)
+  const shipped = yield* tx
+    .select({ id: BoardIssueTable.id })
+    .from(BoardIssueTable)
+    .where(and(eq(BoardIssueTable.project_id, project.id), eq(BoardIssueTable.stage, "shipped")))
+    .all()
+  const attempts =
+    shipped.length === 0
+      ? []
+      : yield* tx
+          .select({ issue: BoardAttemptTable.issue_id })
+          .from(BoardAttemptTable)
+          .where(inArray(BoardAttemptTable.issue_id, shipped.map((row) => row.id)))
+          .all()
+
+  const queueWait = median(
+    merges.flatMap((merge) => {
+      const added = adds.filter((add) => add.issue === merge.issue && add.at <= merge.at).at(-1)
+      return added ? [merge.at - added.at] : []
+    }),
+  )
+  const leadTime = median(
+    merges.flatMap((merge) => {
+      const passed = checks.flatMap((check) =>
+        check.issue === merge.issue && check.ended !== null && check.ended <= merge.at ? [check.ended] : [],
+      )
+      return passed.length === 0 ? [] : [merge.at - Math.min(...passed)]
+    }),
+  )
+  const ejected = outcomes.filter((outcome) => outcome === "ejected").length
+  return {
+    queueWait,
+    redRate: outcomes.length === 0 ? null : ejected / outcomes.length,
+    reworkRate: attempts.length === 0 ? null : attempts.length / shipped.length,
+    leadTime,
+  } satisfies Board.Ledger
+})
+
+/** The outcomes of the project's last 50 settled attempts: the red rate and the bundle size both read them. */
+export const settled = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow["id"]) {
+  const rows = yield* tx
+    .select({ outcome: BoardAttemptTable.outcome })
+    .from(BoardAttemptTable)
+    .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardAttemptTable.issue_id))
+    .where(and(eq(BoardIssueTable.project_id, project), inArray(BoardAttemptTable.outcome, ["merged", "ejected"])))
+    .orderBy(desc(BoardAttemptTable.time_updated))
+    .limit(50)
+    .all()
+  return rows.map((row) => row.outcome)
+})
+
+function median(values: number[]) {
+  if (values.length === 0) return null
+  const sorted = [...values].sort((a, b) => a - b)
+  const middle = Math.floor(sorted.length / 2)
+  if (sorted.length % 2 === 1) return sorted[middle]!
+  return (sorted[middle - 1]! + sorted[middle]!) / 2
+}
+~~~~
+
+## AUT3-C13
+
+```json
+{
+  "block_id": "AUT3-C13",
+  "type": "literal_source_chain",
+  "canonical_request_namespace": "J1",
+  "requests": [
+    "RE-AUT3-02",
+    "RE-AUT3-06"
+  ],
+  "body_anchors": [
+    "B13"
+  ],
+  "requested_subject": "Leitura viva e composição de proof com attempts/recorded facts",
+  "path": "packages/core/src/board/proof.ts",
+  "archive": "sources/packages/core/src/board/proof.ts",
+  "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_git_blob_sha": "6bd1374e707dd7f80975f37e2c03e02a9ee97a95",
+  "source_sha256": "6451c593372c579f0a2e116adc25fc824b1240519ad9110b6637d63935ba2608",
+  "source_bytes": 2553,
+  "required_source_line_ranges": [
+    [
+      1,
+      65
+    ]
+  ],
+  "prior_literal_ranges": [
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "B13",
+      "source_path": "packages/core/src/board/proof.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "6bd1374e707dd7f80975f37e2c03e02a9ee97a95",
+      "source_sha256": "6451c593372c579f0a2e116adc25fc824b1240519ad9110b6637d63935ba2608",
+      "first_line": 31,
+      "last_line": 48,
+      "excerpt_bytes": 687,
+      "excerpt_sha256": "359d8a4cbf38030ea04bf0aaab741690d8c97ae9dcf2aeeb6abda6ac527f382e",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",

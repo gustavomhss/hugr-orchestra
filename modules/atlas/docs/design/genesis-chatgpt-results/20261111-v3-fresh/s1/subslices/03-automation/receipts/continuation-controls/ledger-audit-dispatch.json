@@ -1,0 +1,12 @@
+{
+  "id": "ledger-audit-dispatch",
+  "target": "/root/native_descriptor",
+  "kind": "mechanical_audit_dispatch",
+  "method": "collaboration.followup_task",
+  "message": "Continue como auditor MECÂNICO, sem atuar como juiz, produtor ou escritor remoto. CWD /workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390. Nova tarefa curta: audite preservação/contabilidade das chamadas nativas efetivas em payload/execution-ledger.jsonl contra recibos locais já existentes (relay/, relay-root/, payload/receipts/derived-dispatches.json, l1-consistency-correction-dispatches.json, continuation-controls/, relay/continuation-controls/ e demais recibos de dispatcher explicitamente ligados). Scripts relevantes scripts/reconcile-ledger.py e archive-review-records.py. Não leia oracle reservado nem fontes semânticas. Não use modelos externos/delegação/ferramentas GitHub. Root continua só transportando/registrando eventos enquanto há revisão em curso; fotografe hashes/instante e qualifique snapshot, sem afirmar captura futura. Objetivos: localizar chamadas efetivas omitidas, duplicação entre uma mesma correção/evento e seus índices, campos incorretos de caller, requests preparados indevidamente contados, originais perdidos e limites da contagem. Não deduza chamada de arquivo preparado; não invente IDs/tokens/custos; não recupere logs internos do host. Controles de metadados não são nova execução; callback/partes já registradas não devem duplicar count. Não altere ledger, scripts ou arquivos dos juízes. Escreva relatório e eventual patch proposto somente em assembly-native-descriptors/ledger-audit/. Informe identidades, achados concretos com paths e correção mínima sugerida, e se total completo pode ou não ser certificado. Não tente completar economia enquanto há in-flight. Preserve resposta final escrita e retorno nativo original consistente; termine ao fechar a auditoria, sem aguardar novas etapas.",
+  "message_bytes": 1792,
+  "message_sha256": "b247fc93bd9f45641b75dcabc23670592e37f773b08b8b29948592fecf9b9f96",
+  "tool_returned_normally": true,
+  "capture_basis": "Exact caller-visible argument; no independent host wire checksum",
+  "captured_at_utc": "2026-11-15T07:11:42.252467+00:00"
+}

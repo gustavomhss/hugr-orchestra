@@ -1,0 +1,19 @@
+{
+  "id": "relay-derived-automation-impact-v1",
+  "target": "/root/review_relay",
+  "kind": "literal_review_courier",
+  "method": "collaboration.followup_task",
+  "message_file": "payload/receipts/continuation-controls/relay-automation-impact-v1-message.txt",
+  "message_bytes": 1679,
+  "message_sha256": "3bee9f12d35f233bba96e500add1974b14df4adbcae282f06249913cd81aa2f7",
+  "status": "COMPLETED_BOTH_HANDLES_RETURNED",
+  "at": "2026-11-15T09:52:08.097407+00:00",
+  "preparation_incidents": [
+    "First metadata lookup used nonexistent dispatches key: no mutation. Corrected calls key and marked actual completed author. First relay-control archive path omitted payload/receipts: FileNotFoundError before control write or native dispatch. Corrected to existing namespace."
+  ],
+  "tool_returned_normally": true,
+  "tool_result_text": "",
+  "dispatch_observed_at_utc": "2026-11-15T09:52:17.049548+00:00",
+  "final_capture": "payload/receipts/parent-visible-captures/relay-automation-impact-v1-final.capture.json",
+  "final_sha256": "5eee3443809bf8b8d8ed7cbf61bdd501eefa17ffbc0a4de7042318c832fa07fe"
+}

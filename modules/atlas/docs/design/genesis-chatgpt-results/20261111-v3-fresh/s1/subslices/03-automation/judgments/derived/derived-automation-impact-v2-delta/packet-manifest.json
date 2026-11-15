@@ -1,0 +1,31 @@
+{
+  "schema": "s1-03-derived-delta-review-packet/v2",
+  "lot": "derived-automation-impact-v2-delta",
+  "artifact": "s1.subslice03.automation-impact",
+  "layer": 3,
+  "version": "v2",
+  "bytes": 34067,
+  "sha256": "851b536c34eb942e564595eacef0921aff211ec3c7e6d0eda5dca23207e524ba",
+  "git_blob_sha": "f8ad970e11bb2b476018bcc03c358c992b97b08d",
+  "body_bytes": 13666,
+  "body_sha256": "05aeecb75fb2c4f8afb34fc44cf315490d800ac976eed82100f279ec2402044d",
+  "body_sent_complete": true,
+  "prior_packet": {
+    "path": "review-packets/derived-automation-impact-v1.md",
+    "bytes": 52560,
+    "sha256": "a823a599b7ca343e2ba8338f9da89ce5c629cb82a2d664ac15c86a9228631114",
+    "git_blob_sha": "541f15784beb367ed6cde434fa337fce2d8d7f52"
+  },
+  "retained_inputs": 36,
+  "added_inputs": 7,
+  "changed_evidence_segments": 7,
+  "evidence_reconstruction_matches": true,
+  "full_alternative_packet_not_dispatched": "review-packets/derived-automation-impact-v2.md",
+  "procedure": {
+    "path": "scripts/assemble-derived-correction-delta.py",
+    "bytes": 8329,
+    "sha256": "e260045aa38d205b69d1111dcd12347d59a3422f84ee5ceed36ab98de2b4a0d3",
+    "git_blob_sha": "01e75ae76b85821d942b45071db5093df0d1f415"
+  },
+  "dispatch_state": "NOT_YET_DISPATCHED"
+}

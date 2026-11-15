@@ -1,0 +1,102 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "relay": "/root/review_relay",
+  "packet": "derived-research-maintenance-v1",
+  "source": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/derived-research-maintenance-v1.md",
+  "source_bytes": 69043,
+  "source_sha256": "e675c3f31a8582ceadddbc296d9f12bd1811c08564de22c6aec91cf83eb2690b",
+  "parts_per_target": 2,
+  "calls": [
+    {
+      "sequence": 1,
+      "target": "/root/s1_03_j1",
+      "part": 1,
+      "request_file": "request-j1-01.json",
+      "request_file_bytes": 35760,
+      "request_file_sha256": "efe1aa9878930f89228f1c5ab21fe32785e77d14c643ed41d4b87a6da9dac493",
+      "message_bytes": 34961,
+      "message_sha256": "5bc5162e39ad9072ccd506ffa4acac13c660fe65152794cb3a45ea16bb6d8ac7",
+      "payload_bytes": 34490,
+      "payload_sha256": "72c6836fa220e46659708d047a580f7529b91e293bb10f6d47808fa96d269b3d",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 2,
+      "target": "/root/s1_03_j1",
+      "part": 2,
+      "request_file": "request-j1-02.json",
+      "request_file_bytes": 36192,
+      "request_file_sha256": "c4af58b2b6242e504ec3b23ce60438fdc93e66e900363e44ad97001545e8f1f0",
+      "message_bytes": 35162,
+      "message_sha256": "4aec77676d9588f06cf625a89c2551787a14c6b5f75b68c4f09bd5b2a0907c29",
+      "payload_bytes": 34553,
+      "payload_sha256": "797752b541b66ea3f4c994bf1aabca0feaef60d5ad57c494bb9c41851c5f310a",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": null,
+      "tool_result_text": "Output exceeded the available model context and was truncated",
+      "provider_dispatch_id": null,
+      "tool_result_display_truncated": true,
+      "dispatch_observation": "Actual followup_task invoked with part 2/2 and FIM; tool-result display truncated. No resend; original FINAL pending."
+    }
+  ],
+  "known_transcription_corrections": [],
+  "receipt_limit": "Pedidos efetivamente invocados preservados. A chamada J1 parte 2 teve exibição do retorno truncada; não foi repetida. Hashes e reconstrução são locais, não verificação remota nem suficiência semântica.",
+  "delivery_scope": "Literal UTF-8 packet only; final signal is outside payload.",
+  "slot_handling": "Sequential judges; preserve each original final before reactivation.",
+  "judgment_capture": "J1 original captured before handle reuse; J2 owned and captured by root.",
+  "dispatch_count": 2,
+  "recorded_at_utc": "2026-11-15T06:52:23.793076+00:00",
+  "completed_targets": [
+    "/root/s1_03_j1"
+  ],
+  "pending_targets": [],
+  "local_recorded_reconstruction": [
+    {
+      "target": "/root/s1_03_j1",
+      "bytes": 69043,
+      "sha256": "e675c3f31a8582ceadddbc296d9f12bd1811c08564de22c6aec91cf83eb2690b",
+      "equals_source": true,
+      "raw_bytes": 69043,
+      "raw_sha256": "e675c3f31a8582ceadddbc296d9f12bd1811c08564de22c6aec91cf83eb2690b",
+      "corrections_applied": false
+    }
+  ],
+  "acknowledgments": [
+    {
+      "target": "/root/s1_03_j1",
+      "part": 1,
+      "file": "ack-j1-01.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 253,
+      "sha256": "fc9268162933af8499984abc6b25cfb23273ba3adba6c459d353beead1e2f3ea",
+      "captured_at_utc": "2026-11-15T06:47:16.537142+00:00"
+    }
+  ],
+  "transport_ownership": {
+    "/root/s1_03_j1": "/root/review_relay",
+    "/root/s1_03_j2": "/root"
+  },
+  "external_transport_targets": {
+    "/root/s1_03_j2": "Transported and original captured by /root in relay-root; no relay dispatch."
+  },
+  "judgment_captures": {
+    "j1": {
+      "target": "/root/s1_03_j1",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-research-maintenance-v1/j1-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 3257,
+      "sha256": "3631f846544e74c09a11caf52c6d29e557e29c9cb88f21aa4dfa094522b91258",
+      "terminal_newline": false,
+      "literal": true,
+      "captured_at_utc": "2026-11-15T06:52:54.612080+00:00",
+      "original_file_field": "j1-response.md",
+      "original_file_field_base": "directory containing dispatch-receipt.json",
+      "path_normalization_only": true
+    }
+  }
+}

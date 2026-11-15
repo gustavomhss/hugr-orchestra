@@ -1,0 +1,162 @@
+{
+  "schema": "s1-03-automation-whole-body-review/v1",
+  "lot": "automation-aggregate-v4",
+  "packet": {
+    "path": "review-packets/automation-aggregate-v4.md",
+    "bytes": 70241,
+    "sha256": "3198bf664dfe607f09c96b3da12ab75f73e10cae977b9d113a0b1ab358330952",
+    "git_blob_sha": "d1495e1293c574f0806ceb4c1ef7beb96a8d1a3a"
+  },
+  "body": {
+    "path": "producers/automation/body.md",
+    "bytes": 60767,
+    "sha256": "968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae",
+    "git_blob_sha": "e26213eb2fc76dc843dca17d1111334c76f88890"
+  },
+  "revision_chain": [
+    {
+      "from": 1,
+      "to": 2,
+      "original_delta": {
+        "path": "producers/automation/revisions/v2/delta.json",
+        "bytes": 11454,
+        "sha256": "55ef2d173ced7e3ee8036d4d059dfacaf8391e8c95378d12d9279e379e378612",
+        "git_blob_sha": "df2760ac8891256641eb535eb9d8e33cbb1aa32e"
+      },
+      "before_body": {
+        "path": "producers/automation/history/body-v1.md",
+        "bytes": 59832,
+        "sha256": "2ed7670affc680005840d0918489cb1ac36e1c5a4021defcc57ae44186ae7459",
+        "git_blob_sha": "1867e5763e724fb2c3641f28297da24b311bdcda"
+      },
+      "after_body": {
+        "path": "producers/automation/history/body-v2.md",
+        "bytes": 59953,
+        "sha256": "e9c89bea68d594bc61356ff461642ea23cd905d4584f2b52d32e10a5af984e55",
+        "git_blob_sha": "b8fec4854b4c1384d3c4a2a4f0d51d220c874618"
+      },
+      "literal_substitutions": [
+        {
+          "section": "1.1",
+          "old_text": "Binding e serviços são construídos por necessidade.",
+          "new_text": "A resolução do binding, a inicialização cached de operations e o carregamento de output são adiados; transport, readers e resources são compostos ao construir a fachada."
+        }
+      ],
+      "actual_procedure": {
+        "path": "producers/automation/revisions/v2/apply.py",
+        "bytes": 11193,
+        "sha256": "d35c6441425e229f51ad7a33c4d204769c6df40439bcb1f8af7df0f68872163e",
+        "git_blob_sha": "1b08942ca11a2d2076eceb149b9e9068f9425f67"
+      },
+      "exact_reconstruction": true
+    },
+    {
+      "from": 2,
+      "to": 3,
+      "original_delta": {
+        "path": "producers/automation/revisions/v3/delta.json",
+        "bytes": 13658,
+        "sha256": "f10e98f4211547e710c099aaa2827c79f44ee1b1cef583435c85b6298b1aeb0a",
+        "git_blob_sha": "3f4f98e9e15b2a473e989b3a3e955f0025158ee0"
+      },
+      "before_body": {
+        "path": "producers/automation/history/body-v2.md",
+        "bytes": 59953,
+        "sha256": "e9c89bea68d594bc61356ff461642ea23cd905d4584f2b52d32e10a5af984e55",
+        "git_blob_sha": "b8fec4854b4c1384d3c4a2a4f0d51d220c874618"
+      },
+      "after_body": {
+        "path": "producers/automation/history/body-v3.md",
+        "bytes": 60588,
+        "sha256": "b31d52e5bf25f6eca3807e9c1f418b70d865c9d63c5690125c530c54f8247d84",
+        "git_blob_sha": "04c87b44543b6bde9713228c7b6fda0fc444a00a"
+      },
+      "literal_substitutions": [
+        {
+          "id": "AUT3-DELTA-01",
+          "section": "7.2",
+          "old_text": "Estado scoped-red resulta de fail mais recente; scoped-green precisa de requisitos existentes e pass dos caminhos requeridos; sem requisito, retorna null. Um check error/pending não vira pass.",
+          "new_text": "O estado usa o resultado mais recente por `(kind, command)` no tree: qualquer `fail` produz scoped-red e, sem requisito configurado, retorna null. Para scoped-green, basta algum check `scoped` com `pass` quando há scoped.tests, além de um `pass` por workflow exigido. Isso pode coexistir com outros checks scoped `pending`/`error`; não prova que todos os comandos scoped passaram."
+        },
+        {
+          "id": "AUT3-DELTA-02",
+          "section": "7.2",
+          "old_text": "Workflows são enviados uma vez por tree/arquivo no ledger observado.",
+          "new_text": "Para o card, o ledger evita novo dispatch do mesmo workflow no mesmo tree quando já existe row com outcome diferente de `error`; se houver apenas rows em `error`, permite outra tentativa."
+        },
+        {
+          "id": "AUT3-DELTA-03",
+          "section": "7.3",
+          "old_text": "Subscription engine ou preço ausente é `not-metered`, e mistura de medido/não medido pode ser parcial.",
+          "new_text": "`spend.card` considera medida a Session com custo positivo cujo provider não é `claude-code`; não medidas entram na outra classe apenas se têm tokens. O meter de modelos é `not-metered` sem Sessions vinculadas, ou se não houver Session medida e houver não medidas com tokens; nos demais casos retorna `usd`, inclusive `usd:0` com ambas as classes vazias. A coexistência de medidas e não medidas com tokens marca `partial`."
+        }
+      ],
+      "actual_procedure": {
+        "path": "producers/automation/revisions/v3/apply.py",
+        "bytes": 15116,
+        "sha256": "0868d35024004d41be8d9e161612b7619a1f68f9b6c33f4fa89468976596d8cb",
+        "git_blob_sha": "72d166dd21bd60687a136e7856b458290571f619"
+      },
+      "exact_reconstruction": true
+    },
+    {
+      "from": 3,
+      "to": 4,
+      "original_delta": {
+        "path": "producers/automation/revisions/v4/delta.json",
+        "bytes": 16136,
+        "sha256": "8132046e50a17ec68c9620022bc49147ffc8dfb13cbab46da1c725161723fc33",
+        "git_blob_sha": "c79d28f89e04f9fb87720f2dc55659ce908cfe3d"
+      },
+      "before_body": {
+        "path": "producers/automation/history/body-v3.md",
+        "bytes": 60588,
+        "sha256": "b31d52e5bf25f6eca3807e9c1f418b70d865c9d63c5690125c530c54f8247d84",
+        "git_blob_sha": "04c87b44543b6bde9713228c7b6fda0fc444a00a"
+      },
+      "after_body": {
+        "path": "producers/automation/body.md",
+        "bytes": 60767,
+        "sha256": "968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae",
+        "git_blob_sha": "e26213eb2fc76dc843dca17d1111334c76f88890"
+      },
+      "literal_substitutions": [
+        {
+          "id": "AUT4-DELTA-01",
+          "section": "12",
+          "old_text": "Em capability, verifica owner e `holds` antes da Session e outra vez antes de prompt.",
+          "new_text": "Em capability, verifica a presença/identidade do owner antes da Session; para claim ainda não admitida, verifica `holds` antes da Session e outra vez antes de prompt, sem reler a Session do owner."
+        },
+        {
+          "id": "AUT4-DELTA-02",
+          "section": "12",
+          "old_text": "Capability manualKey reutiliza Session somente depois de admissão; claim ainda starting retorna “retry shortly”; revoked não executa novamente com a mesma chamada.",
+          "new_text": "No replay de capability manualKey, `running` sem SessionInput retorna “retry shortly” e `revoked` retorna erro; nos demais casos, o ramo devolve o SessionID retido com `reused:true`, sem exigir admissão para uma row já assentada."
+        }
+      ],
+      "actual_procedure": {
+        "path": "producers/automation/revisions/v4/apply.py",
+        "bytes": 13081,
+        "sha256": "765cfd0879a63d7549eb402dabf21661a90d5d5f378fe3c3b7cb8b7564f75cfa",
+        "git_blob_sha": "33d062f24a3858d11b9fd046a03b140fe3782de5"
+      },
+      "exact_reconstruction": true
+    }
+  ],
+  "original_revision_count": 4,
+  "substitution_count": 6,
+  "no_new_body_authorship": true,
+  "dispatch_status": "PREPARED_NOT_DISPATCHED",
+  "actual_procedure": {
+    "path": "scripts/assemble-automation-aggregate-review.py",
+    "bytes": 5286,
+    "sha256": "c9ccf9a133d3a3a2b0b4ef75707461ee246c4590c6e133ece1103818116f0ccf",
+    "git_blob_sha": "d5d7bcf772079ac7720af577649b3953d8738995"
+  },
+  "pre_dispatch_control_amendment": {
+    "old_packet_sha256": "2da6adbf7cbbeeed52cd0ece41de9f499465646d345c198b685a735c5c86efb5",
+    "scope": "Control envelope only; no body, delta, criterion, or authored content change. Conditional evidence follows each judge own pending request.",
+    "recorded_at_utc": "2026-11-15T06:56:56.464512+00:00",
+    "preserved_previous_packet": "review-packets/prepared-history/automation-aggregate-v4-before-conditional-population.md"
+  }
+}

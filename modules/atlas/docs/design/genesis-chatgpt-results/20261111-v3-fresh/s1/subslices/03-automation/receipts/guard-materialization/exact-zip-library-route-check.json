@@ -1,0 +1,23 @@
+{
+  "schema": "s1-03-exact-binary-copy-route-check/v1",
+  "query": {
+    "search_query": [
+      {
+        "q": "\"source-captures.zip\"",
+        "search_title_only": true
+      }
+    ],
+    "top_k": 20
+  },
+  "operation": "Library exact-title search through exposed connector",
+  "needed_git_blob_sha": "d83941a9d836a23e466ca09ecba1f21d423094cb",
+  "needed_bytes": 1339105,
+  "results_count": 0,
+  "fuzzy_title_candidates_count": 1,
+  "exact_name_candidates_count": 0,
+  "read_or_materialization_performed": false,
+  "disposition": "This exact-title query returned no matching ZIP. No unrelated candidate was opened or imported. This is not a claim of exhaustive global absence.",
+  "privacy": "Full tool response retained only in local scratch because it contains an unrelated fuzzy match; published receipt omits unrelated names, identifiers and snippets.",
+  "at_utc": "2026-11-15T09:24:54.089439+00:00",
+  "original_response_sha256": "46e974d7404911e024607d6a253bc67c7bf01675c8a93ea6f2bdb8399d4e72c1"
+}

@@ -1,0 +1,691 @@
+  return `${binding.provider.kind === "github" ? "repositories" : "projects"}/${binding.projectID}`
+}
+
+function httpKind(status: number): Actions.ErrorKind {
+  return status === 401 ? "not_authenticated" : status === 403 ? "permission_denied" : status === 404 ? "not_found"
+    : status === 409 || status === 412 ? "source_conflict" : status === 422 || status === 400 ? "invalid_input"
+    : status === 429 ? "rate_limited" : "transport_failed"
+}
+
+export const get = Effect.fn("ActionsConfig.get")(function* (services: Services, binding: Actions.Binding, request: ActionsContract.Request, missing = false): Effect.fn.Return<ActionsContract.Response, ActionsError> {
+  const response = yield* services.transport.request(binding, request).pipe(Effect.catch((error) =>
+    missing && error.kind === "not_found" && error.disposition === "definitely_rejected"
+      ? Effect.succeed({ status: 404, headers: {}, data: null })
+      : Effect.fail(fail(binding, error.kind, `Configuration preflight failed (${error.kind})`, "definitely_unsent", error.retryAfter))))
+  if (response.status !== 200 && !(missing && response.status === 404))
+    return yield* fail(binding, httpKind(response.status), `Configuration read returned HTTP ${response.status}`)
+  return response
+})
+
+export const actor = Effect.fn("ActionsConfig.actor")(function* (services: Services, binding: Actions.Binding) {
+  if (!binding.account) return yield* fail(binding, "binding_stale", "Configuration requires a verified bound account")
+  const response = yield* get(services, binding, { method: "GET", path: "user" })
+  const native = yield* guard(binding, () => binding.provider.kind === "github"
+    ? decode(binding, Schema.Struct({ id: ID, login: Text }), response.data, true)
+    : decode(binding, Schema.Struct({ id: ID, username: Text }), response.data, true))
+  const account = "login" in native ? native.login : native.username
+  if (typeof account !== "string" || (binding.provider.kind === "github" ? account.toLowerCase() !== binding.account.toLowerCase() : account !== binding.account))
+    return yield* fail(binding, "binding_stale", "Signed-in configuration account changed after admission")
+  return String(native.id)
+})
+
+export const project = Effect.fn("ActionsConfig.project")(function* (services: Services, binding: Actions.Binding, write = false, admin = false) {
+  const path = yield* guard(binding, () => root(binding))
+  const response = yield* get(services, binding, { method: "GET", path })
+  const native = yield* guard(binding, () => decode(binding, Project, response.data, true))
+  if (String(native.id) !== binding.projectID) return yield* fail(binding, "binding_stale", "Native configuration project differs from binding")
+  if (write) {
+    yield* actor(services, binding)
+    const levels = [native.permissions?.project_access, native.permissions?.group_access]
+      .filter((access) => access !== undefined).map((access) => access?.access_level ?? 0)
+    if (native.archived || (binding.provider.kind === "github"
+      ? native.permissions?.[admin ? "admin" : "push"] === false
+      : levels.length === 2 && Math.max(...levels) < 40))
+      return yield* fail(binding, "permission_denied", "Observed project role denies this configuration write")
+    const scopes = response.headers["x-oauth-scopes"]?.split(",").map((scope) => scope.trim()).filter(Boolean)
+    if (binding.provider.kind === "github" && scopes?.length && !scopes.includes("repo") && !(native.private === false && scopes.includes("public_repo")))
+      return yield* fail(binding, "permission_denied", "Observed OAuth scopes deny repository configuration writes")
+  }
+  return { path, native, response }
+})
+
+export function version(binding: Actions.Binding, expected: Actions.OperationExpected | undefined, response: ActionsContract.Response, metadata: ActionsContract.Json) {
+  const current = JSON.stringify(metadata)
+  if (expected?.resourceVersion !== undefined && expected.resourceVersion !== current && expected.resourceVersion !== response.headers.etag)
+    throw fail(binding, "source_conflict", "Native configuration identity, scope or version changed after admission")
+  return response.headers.etag ?? current
+}
+
+export function identity(binding: Actions.Binding, name: string, scope: string, nativeID?: string) {
+  return { provider: binding.provider.kind, projectID: binding.projectID, bindingID: binding.id,
+    bindingRevision: binding.revision, name, scope, ...(nativeID === undefined ? {} : { id: nativeID }) }
+}
+
+export function page(binding: Actions.Binding, input: Actions.ResourceListInput, phase = "") {
+  const limit = ActionsCursor.limit(input.limit)
+  const scope = `config:${input.kind}:${phase}`
+  const filters = { scope: input.scope, resourceID: input.resourceID, query: input.query, per_page: limit }
+  return { limit, scope, filters, number: ActionsCursor.page(binding, scope, filters, input.cursor) }
+}
+
+export function pagination(binding: Actions.Binding, selected: ReturnType<typeof page>, response: ActionsContract.Response, count: number, total?: number) {
+  const next = ActionsCursor.next(response.headers)
+  const headerTotal = ActionsCursor.total(response.headers)
+  if (count > selected.limit || (next !== undefined && (next !== selected.number + 1 || count === 0)) ||
+      (total !== undefined && (!Number.isSafeInteger(total) || total < 0 || (headerTotal !== undefined && total !== headerTotal) ||
+        (count > 0 && total < (selected.number - 1) * selected.limit + count) ||
+        (count === 0 && total > (selected.number - 1) * selected.limit) ||
+        (next === undefined && total > selected.number * selected.limit) || (next !== undefined && total <= selected.number * selected.limit))) ||
+      (next === undefined && total === undefined && count === selected.limit && response.headers.link === undefined && response.headers["x-next-page"] === undefined))
+    throw fail(binding, "metadata_truncated", "Provider configuration pagination is incomplete")
+  return { ...(next === undefined ? {} : { next: ActionsCursor.encode(binding, selected.scope, selected.filters, next) }), capturedAt: Date.now() }
+}
+
+export const send = Effect.fn("ActionsConfig.send")(function* (services: Services, binding: Actions.Binding, request: ActionsContract.Request, statuses: readonly number[]) {
+  yield* actor(services, binding)
+  const response = yield* services.transport.request(binding, request).pipe(Effect.mapError((error) =>
+    fail(binding, error.disposition === "definitely_unsent" || error.disposition === "definitely_rejected" ? error.kind : "outcome_unknown",
+      "Provider configuration write failed", error.disposition ?? "unknown", error.retryAfter)))
+  if (statuses.includes(response.status)) return response
+  const rejected = [400, 401, 403, 404, 409, 412, 422, 429].includes(response.status)
+  return yield* fail(binding, rejected ? httpKind(response.status) : "outcome_unknown", `Provider configuration write returned HTTP ${response.status}`,
+    rejected ? "definitely_rejected" : "unknown")
+})
+
+export const stages = Effect.fn("ActionsConfig.stages")(function* (services: Services, binding: Actions.Binding,
+  requests: readonly { request: ActionsContract.Request; statuses: readonly number[]; phase: string }[]) {
+  yield* Effect.forEach(requests, (stage, index) => send(services, binding, stage.request, stage.statuses).pipe(
+    Effect.mapError((error) => index === 0 ? fail(binding, error.kind, `Environment phase '${stage.phase}' failed (${error.kind})`, error.disposition ?? "unknown", error.retryAfter)
+      : fail(binding, "outcome_unknown", `Environment configuration partially applied; phase '${stage.phase}' failed (${error.kind}); read back before another operation`, "unknown", error.retryAfter)),
+  ), { concurrency: 1, discard: true })
+})
+~~~~
+
+## AUT2-C15
+
+```json
+{"block_id":"AUT2-C15","type":"literal_source_excerpt","request_namespace":"J1 canonical groups; J2 mapping in index","requests":["RE-AUT2-03"],"body_anchors":["A24"],"requested_subject":"Leitura/redaction, key/scope, rename/move, sealed box e zeroização local","source_category":"owned_population_source","path":"packages/core/src/actions/resources/variables.ts","archive":"sources/packages/core/src/actions/resources/variables.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"2b8bf42f1867f93bd05188893c5a1d49fa6b0c93","source_sha256":"4483cec419b1ac22628dd01c1386b9470fcd5511b2d0cd9a956b9736cfc2ca4e","source_bytes":17420}
+```
+
+```json
+{"first_line":1,"last_line":207,"bytes":17420,"sha256":"4483cec419b1ac22628dd01c1386b9470fcd5511b2d0cd9a956b9736cfc2ca4e"}
+```
+
+~~~~typescript
+/// <reference path="./config-sodium.d.ts" />
+export * as ActionsVariables from "./variables"
+
+import { Actions } from "@orchestra/schema/actions"
+import { Effect, Schema } from "effect"
+import { ActionsContract } from "../contract"
+import { ActionsCursor } from "../cursor"
+import { ActionsError } from "../error"
+import { ActionsConfigCommon } from "./config-common"
+import { ActionsVariableGitHubPage } from "./config-variable-github-page"
+
+const C = ActionsConfigCommon
+const Type = Schema.Literals(["Secret", "Variable"])
+const Identity = { provider: C.Provider, name: C.Text, type: Type, scope: C.Text }
+const Delete = Schema.Struct(Identity)
+const Form = Schema.Struct({ ...Identity, value: C.Value,
+  protected: Schema.optionalKey(Schema.Boolean), masked: Schema.optionalKey(Schema.Boolean), hidden: Schema.optionalKey(Schema.Boolean) })
+// https://docs.gitlab.com/api/project_level_variables/ returns sensitive values.
+// Project them away before metadata reaches Resource or any version fingerprint.
+const GitLabVariable = Schema.Struct({ key: C.Text, environment_scope: C.Text, protected: Schema.Boolean, masked: Schema.Boolean,
+  hidden: Schema.optionalKey(Schema.Boolean), variable_type: Schema.Literals(["env_var", "file"]), raw: Schema.optionalKey(Schema.Boolean) })
+const PublicKey = Schema.Struct({ key_id: C.Text, key: Schema.String })
+
+export function make(services: ActionsConfigCommon.Services): ActionsContract.ResourceDomain {
+  return {
+    list: Effect.fn("ActionsVariables.list")(function* (binding: Actions.Binding, input: Actions.ResourceListInput) {
+      const frozen = yield* C.guard(binding, () => C.selection(binding, input, "variables", ["scope", "resourceID", "query"]))
+      const project = yield* C.project(services, binding)
+      if (binding.provider.kind === "gitlab") {
+        const selected = yield* C.guard(binding, () => C.page(binding, frozen))
+        const response = yield* C.get(services, binding, { method: "GET", path: `${project.path}/variables`, query: { page: selected.number, per_page: selected.limit } })
+        return yield* C.guard(binding, () => {
+          const native = C.decode(binding, Schema.Array(GitLabVariable), response.data, true)
+          const raw = C.decode(binding, Schema.Array(Schema.Json), response.data, true)
+          const items = native.map((item, index) => gitlabResource(binding, item, raw[index]))
+            .filter((item) => (frozen.scope === undefined || item.scope === frozen.scope) && (frozen.resourceID === undefined || item.name === frozen.resourceID) &&
+              (frozen.query === undefined || item.name.includes(frozen.query)))
+          return { items, ...C.pagination(binding, selected, response, native.length, ActionsCursor.total(response.headers)) }
+        })
+      }
+      const scope = frozen.scope ?? "Repository"
+      const path = yield* githubScope(services, binding, project.path, scope)
+      const page = yield* ActionsVariableGitHubPage.list(services, binding, { ...frozen, scope }, path)
+      return yield* C.guard(binding, () => {
+        return { items: page.rows.map((item) => githubResource(binding, item, scope)).filter((item) =>
+          (frozen.resourceID === undefined || item.name === frozen.resourceID) && (frozen.query === undefined || item.name.includes(frozen.query))),
+          ...(page.next === undefined ? {} : { next: page.next }), capturedAt: page.capturedAt }
+      })
+    }),
+    perform: Effect.fn("ActionsVariables.perform")(function* (binding: Actions.Binding, intent: Actions.OperationIntent, payload: ActionsContract.Json) {
+      const frozen = yield* C.guard(binding, () => {
+        const capture = C.capture(binding, intent, "variables")
+        const input = C.decode(binding, intent.kind === "resource.delete" ? Delete : Form, structuredClone(payload))
+        if (input.provider !== binding.provider.kind) throw C.fail(binding, "intent_conflict", "Variable provider changed after operation admission")
+        const renamed = input.name !== intent.target.resourceID
+        const moved = input.scope !== intent.target.scope
+        if ((renamed || moved) && intent.kind !== "resource.update")
+          throw C.fail(binding, "intent_conflict", "Variable create/delete identity differs from admission")
+        if (renamed && (input.provider !== "github" || input.type !== "Variable"))
+          throw C.fail(binding, "capability_unavailable", "Field 'name' cannot rename this native variable or secret in one operation")
+        if (moved && input.provider !== "gitlab")
+          throw C.fail(binding, "capability_unavailable", "Field 'scope' requires separate GitHub create/delete operations")
+        if ((renamed || moved) && intent.expected?.resourceVersion === undefined)
+          throw C.fail(binding, "source_conflict", "Changing variable key or scope requires an admitted native resource version")
+        if (!/^[A-Za-z0-9_]{1,255}$/.test(input.name) || (input.provider === "github" && (!/^[A-Za-z_]/.test(input.name) || /^GITHUB_/i.test(input.name))))
+          throw C.fail(binding, "invalid_input", "Variable name is not a native configuration key")
+        if (input.provider === "github" && ["protected", "masked", "hidden"].some((key) => key in input))
+          throw C.fail(binding, "invalid_input", "GitHub has no GitLab variable flag fields")
+        return { ...capture, input }
+      })
+      const project = yield* C.project(services, frozen.binding, true)
+      if (frozen.binding.provider.kind === "github") return yield* githubWrite(services, frozen.binding, frozen.intent, frozen.input, project.path)
+      return yield* gitlabWrite(services, frozen.binding, frozen.intent, frozen.input, project.path)
+    }),
+  }
+}
+
+function githubResource(binding: Actions.Binding, item: typeof ActionsVariableGitHubPage.Secret.Type | typeof ActionsVariableGitHubPage.Variable.Type, scope: string): Actions.Resource {
+  const type = "value" in item ? "Variable" : "Secret"
+  const metadata = { name: item.name, scope, type, created_at: item.created_at, updated_at: item.updated_at }
+  return { id: JSON.stringify([item.name, scope, type]), bindingID: binding.id, kind: "variables", name: item.name, scope,
+    sensitive: type === "Secret", owner: "Project", data: { ...metadata, nativeIdentity: C.identity(binding, item.name, scope),
+      resourceVersion: JSON.stringify(metadata), ...(type === "Secret" ? { redacted: true } : "value" in item ? { value: item.value } : {}) } }
+}
+
+function gitlabResource(binding: Actions.Binding, item: typeof GitLabVariable.Type, raw: ActionsContract.Json): Actions.Resource {
+  const sensitive = item.masked || item.hidden !== false
+  const type = sensitive ? "Secret" : "Variable"
+  const value = sensitive ? undefined : C.decode(binding, Schema.Struct({ value: Schema.String }), raw, true).value
+  const metadata = { name: item.key, scope: item.environment_scope, type, protected: item.protected, masked: item.masked,
+    ...(item.hidden === undefined ? {} : { hidden: item.hidden }), variable_type: item.variable_type, ...(item.raw === undefined ? {} : { raw: item.raw }) }
+  return { id: JSON.stringify([item.key, item.environment_scope, type]), bindingID: binding.id, kind: "variables", name: item.key,
+    scope: item.environment_scope, owner: "Project", sensitive, data: { ...metadata,
+      nativeIdentity: C.identity(binding, item.key, item.environment_scope), resourceVersion: JSON.stringify(metadata), redacted: sensitive,
+      flags: [item.protected ? "Protected" : "", item.masked ? "Masked" : "", item.hidden ? "Hidden" : ""].filter(Boolean),
+      ...(item.hidden === undefined ? { sourceUnresolved: "Native hidden flag was not observed; value stays redacted" } : {}),
+      ...(value === undefined ? {} : { value }) } }
+}
+
+const githubScope = Effect.fn("ActionsVariables.githubScope")(function* (services: ActionsConfigCommon.Services, binding: Actions.Binding, root: string, scope: string) {
+  if (scope === "Repository") return `${root}/actions`
+  yield* C.guard(binding, () => C.decode(binding, C.Text, scope))
+  const response = yield* C.get(services, binding, { method: "GET", path: `${root}/environments/${encodeURIComponent(scope)}` })
+  const native = yield* C.guard(binding, () => C.decode(binding, Schema.Struct({ id: C.ID, name: C.Text }), response.data, true))
+  if (native.name !== scope) return yield* C.fail(binding, "source_conflict", "Native environment scope changed")
+  return `${root}/environments/${encodeURIComponent(scope)}`
+})
+
+const githubWrite = Effect.fn("ActionsVariables.githubWrite")(function* (services: ActionsConfigCommon.Services, binding: Actions.Binding, intent: Actions.OperationIntent,
+  input: typeof Delete.Type | typeof Form.Type, root: string) {
+  const name = yield* C.guard(binding, () => C.decode(binding, C.Text, intent.target.resourceID))
+  const scope = yield* C.guard(binding, () => C.decode(binding, C.Text, intent.target.scope))
+  const path = yield* githubScope(services, binding, root, scope)
+  const collection = `${path}/${input.type === "Secret" ? "secrets" : "variables"}`
+  const response = yield* C.get(services, binding, { method: "GET", path: `${collection}/${encodeURIComponent(name)}` }, true)
+  if (intent.kind === "resource.create" && response.status !== 404) return yield* C.fail(binding, "source_conflict", "Variable already exists at the admitted key and scope")
+  if (intent.kind !== "resource.create" && response.status === 404) return yield* C.fail(binding, "source_conflict", "Variable disappeared from the admitted key and scope")
+  if (response.status === 200) yield* C.guard(binding, () => {
+    const native = input.type === "Secret" ? C.decode(binding, ActionsVariableGitHubPage.Secret, response.data, true)
+      : C.decode(binding, ActionsVariableGitHubPage.Variable, response.data, true)
+    if (native.name !== name) throw C.fail(binding, "source_conflict", "Native variable key changed")
+    C.version(binding, intent.expected, response, { name: native.name, scope, type: input.type,
+      created_at: native.created_at, updated_at: native.updated_at })
+  })
+  if (name !== input.name) {
+    const destination = yield* C.get(services, binding, { method: "GET", path: `${collection}/${encodeURIComponent(input.name)}` }, true)
+    if (destination.status !== 404) return yield* C.fail(binding, "source_conflict", "Variable rename destination already exists")
+  }
+  if (intent.kind === "resource.create" && intent.expected?.resourceVersion) return yield* C.fail(binding, "invalid_input", "A new variable has no existing resource version")
+  if (intent.kind === "resource.delete") {
+    yield* C.send(services, binding, { method: "DELETE", path: `${collection}/${encodeURIComponent(input.name)}` }, [204])
+    return { acknowledgement: { resourceID: input.name } }
+  }
+  if (!("value" in input)) return yield* C.fail(binding, "invalid_input", "Variable mutation requires a replacement value")
+  if (input.type === "Secret") {
+    const response = yield* C.get(services, binding, { method: "GET", path: `${collection}/public-key` })
+    const key = yield* C.guard(binding, () => C.decode(binding, PublicKey, response.data, true))
+    const { default: sodium } = yield* Effect.tryPromise({ try: () => import("libsodium-wrappers"),
+      catch: () => C.fail(binding, "capability_unavailable", "Secret encryption requires libsodium-wrappers@0.7.15") })
+    yield* Effect.tryPromise({ try: () => sodium.ready,
+      catch: () => C.fail(binding, "capability_unavailable", "Native libsodium secret encryption could not initialize") })
+    const encrypted = yield* Effect.try({ try: () => {
+      const publicKey = sodium.from_base64(key.key, sodium.base64_variants.ORIGINAL)
+      if (publicKey.length !== sodium.crypto_box_PUBLICKEYBYTES) throw C.fail(binding, "transport_failed", "Provider public key has invalid length")
+      const bytes = new TextEncoder().encode(input.value)
+      // Standard libsodium sealed box, not a hand-built crypto approximation.
+      try { return sodium.to_base64(sodium.crypto_box_seal(bytes, publicKey), sodium.base64_variants.ORIGINAL) }
+      finally { sodium.memzero(bytes) }
+    }, catch: (cause) => C.fail(binding, cause instanceof ActionsError ? cause.kind : "transport_failed", "Native secret public key could not be encrypted") })
+    yield* C.send(services, binding, { method: "PUT", path: `${collection}/${encodeURIComponent(input.name)}`, body: { encrypted_value: encrypted, key_id: key.key_id } }, [201, 204])
+    return { acknowledgement: { resourceID: input.name } }
+  }
+  yield* C.send(services, binding, { method: intent.kind === "resource.create" ? "POST" : "PATCH",
+    path: intent.kind === "resource.create" ? collection : `${collection}/${encodeURIComponent(name)}`, body: { name: input.name, value: input.value } }, [201, 204])
+  return { acknowledgement: { resourceID: input.name } }
+})
+
+const gitlabWrite = Effect.fn("ActionsVariables.gitlabWrite")(function* (services: ActionsConfigCommon.Services, binding: Actions.Binding, intent: Actions.OperationIntent,
+  input: typeof Delete.Type | typeof Form.Type, root: string) {
+  // Environment scopes are exact native strings, including a literal 'Repository'.
+  const scope = yield* C.guard(binding, () => C.decode(binding, C.Text, intent.target.scope))
+  const collection = `${root}/variables`
+  const query = { "filter[environment_scope]": scope }
+  const response = yield* C.get(services, binding, { method: "GET", path: `${collection}/${encodeURIComponent(input.name)}`, query }, true)
+  if ((intent.kind === "resource.create") !== (response.status === 404)) return yield* C.fail(binding, "source_conflict", "Variable existence changed at the admitted key and scope")
+  const existing = response.status === 200 ? yield* C.guard(binding, () => {
+    const native = C.decode(binding, GitLabVariable, response.data, true)
+    if (native.key !== input.name || native.environment_scope !== scope) throw C.fail(binding, "source_conflict", "Native variable key or scope changed")
+    const resource = gitlabResource(binding, native, response.data)
+    if (intent.kind === "resource.delete" && resource.sensitive !== (input.type === "Secret"))
+      throw C.fail(binding, "source_conflict", "Native variable sensitivity changed after admission")
+    const metadata = C.decode(binding, Schema.Struct({ resourceVersion: Schema.String }), resource.data, true)
+    if (intent.expected?.resourceVersion !== undefined && intent.expected.resourceVersion !== metadata.resourceVersion)
+      throw C.fail(binding, "source_conflict", "Native variable controls or scope changed after admission")
+    return native
+  }) : undefined
+  if (scope !== input.scope) {
+    const destination = yield* C.get(services, binding, { method: "GET", path: `${collection}/${encodeURIComponent(input.name)}`,
+      query: { "filter[environment_scope]": input.scope } }, true)
+    if (destination.status !== 404) return yield* C.fail(binding, "source_conflict", "Variable destination scope already contains this native key")
+  }
+  if (intent.kind === "resource.create" && intent.expected?.resourceVersion) return yield* C.fail(binding, "invalid_input", "A new variable has no existing resource version")
+  if (intent.kind === "resource.delete") {
+    yield* C.send(services, binding, { method: "DELETE", path: `${collection}/${encodeURIComponent(input.name)}`, query }, [204])
+    return { acknowledgement: { resourceID: input.name } }
+  }
+  if (!("value" in input)) return yield* C.fail(binding, "invalid_input", "Variable mutation requires a replacement value")
+  if (existing && input.hidden !== undefined && input.hidden !== existing.hidden)
+    return yield* C.fail(binding, "capability_unavailable", "GitLab hidden is create-only; existing hiding state must be retained")
+  const masked = input.masked ?? (input.type === "Secret")
+  if (input.type === "Secret" && !masked && !input.hidden) return yield* C.fail(binding, "invalid_input", "GitLab has no independent Secret type; Secret requires masked or hidden controls")
+  if (input.hidden && !masked) return yield* C.fail(binding, "invalid_input", "GitLab hidden creation requires masked_and_hidden")
+  if (!existing && input.hidden) {
+    const response = yield* C.get(services, binding, { method: "GET", path: "metadata" })
+    const native = yield* C.guard(binding, () => C.decode(binding, Schema.Struct({ version: C.Text }), response.data, true))
+    const version = /^(\d+)\.(\d+)\.(\d+)(?:-(?:ee|ce))?$/.exec(native.version)
+    if (!version || Number(version[1]) < 17 || (Number(version[1]) === 17 && Number(version[2]) < 4))
+      return yield* C.fail(binding, "capability_unavailable", "Hidden variable creation requires observed GitLab 17.4 or newer")
+  }
+  yield* C.send(services, binding, { method: existing ? "PUT" : "POST", path: existing ? `${collection}/${encodeURIComponent(input.name)}` : collection,
+    ...(existing ? { query } : {}), body: { ...(existing ? {} : { key: input.name }), value: input.value, environment_scope: input.scope,
+      protected: input.protected ?? existing?.protected ?? false, masked,
+      ...(input.hidden && !existing ? { masked_and_hidden: true } : {}),
+      variable_type: existing?.variable_type ?? "env_var", ...(existing?.raw === undefined ? {} : { raw: existing.raw }) } }, [200, 201])
+  // GitLab echoes values after writes. Only admitted native identity may leave this callback.
+  return { acknowledgement: { resourceID: input.name } }
+})
+~~~~
+
+## AUT2-C16
+
+```json
+{"block_id":"AUT2-C16","type":"literal_source_excerpt","request_namespace":"J1 canonical groups; J2 mapping in index","requests":["RE-AUT2-03"],"body_anchors":["A24"],"requested_subject":"Pagination conjunta de variables e secrets, sem fundir identidades","source_category":"owned_population_source","path":"packages/core/src/actions/resources/config-variable-github-page.ts","archive":"sources/packages/core/src/actions/resources/config-variable-github-page.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"0ac96117ca2d882142c04ba700efac2b42e60073","source_sha256":"840684c984c0c57f586008b8d3e357be5bb1d8f298dc1bb64e4fe1c8a452ae20","source_bytes":4453}
+```
+
+```json
+{"first_line":1,"last_line":59,"bytes":4453,"sha256":"840684c984c0c57f586008b8d3e357be5bb1d8f298dc1bb64e4fe1c8a452ae20"}
+```
+
+~~~~typescript
+export * as ActionsVariableGitHubPage from "./config-variable-github-page"
+
+import { Actions } from "@orchestra/schema/actions"
+import { Effect, Schema } from "effect"
+import { ActionsContract } from "../contract"
+import { ActionsCursor } from "../cursor"
+import { ActionsConfigCommon } from "./config-common"
+
+const C = ActionsConfigCommon
+export const Variable = Schema.Struct({ name: C.Text, value: Schema.String, created_at: Schema.String, updated_at: Schema.String })
+export const Secret = Schema.Struct({ name: C.Text, created_at: Schema.String, updated_at: Schema.String })
+const Count = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0))
+const Cursor = Schema.Struct({ variable: Schema.optionalKey(Schema.String), secret: Schema.optionalKey(Schema.String) })
+
+export const list = Effect.fn("ActionsVariables.githubPage")(function* (services: ActionsConfigCommon.Services, binding: Actions.Binding,
+  input: Actions.ResourceListInput, path: string) {
+  const budget = yield* C.guard(binding, () => ActionsCursor.limit(input.limit))
+  if (budget === 1) return yield* one(services, binding, input, path)
+  const cursor = yield* C.guard(binding, () => {
+    if (input.cursor === undefined) return undefined
+    if (!input.cursor.startsWith("combined:") || input.cursor.length > 8192) throw C.fail(binding, "invalid_input", "Invalid combined variable cursor")
+    const value = C.decode(binding, Schema.fromJsonString(Cursor), Buffer.from(input.cursor.slice(9), "base64url").toString("utf8"))
+    if (!value.variable && !value.secret) throw C.fail(binding, "invalid_input", "Combined variable cursor has no native continuation")
+    return value
+  })
+  const pages = yield* Effect.forEach((["variable", "secret"] as const).filter((kind) => cursor === undefined || cursor[kind] !== undefined),
+    (kind) => read(services, binding, { ...input, limit: Math.floor(budget / 2), cursor: cursor?.[kind] }, path, kind, budget), { concurrency: 1 })
+  const next = Object.fromEntries(pages.flatMap((page) => page.next === undefined ? [] : [[page.kind, page.next]]))
+  return { rows: pages.flatMap((page) => page.rows), capturedAt: Date.now(),
+    ...(Object.keys(next).length ? { next: `combined:${Buffer.from(JSON.stringify(next)).toString("base64url")}` } : {}) }
+})
+
+const read = Effect.fn("ActionsVariables.githubNativePage")(function* (services: ActionsConfigCommon.Services, binding: Actions.Binding,
+  input: Actions.ResourceListInput, path: string, kind: "variable" | "secret", budget: number) {
+  const selected = yield* C.guard(binding, () => C.page(binding, input, `${kind}:budget${budget}`))
+  const response = yield* C.get(services, binding, { method: "GET", path: `${path}/${kind === "secret" ? "secrets" : "variables"}`,
+    query: { page: selected.number, per_page: selected.limit } })
+  return yield* C.guard(binding, () => {
+    const native = kind === "secret"
+      ? C.decode(binding, Schema.Struct({ total_count: Count, secrets: Schema.Array(Secret) }), response.data, true)
+      : C.decode(binding, Schema.Struct({ total_count: Count, variables: Schema.Array(Variable) }), response.data, true)
+    const rows = "secrets" in native ? native.secrets : native.variables
+    return { rows, kind, ...C.pagination(binding, selected, response, rows.length, native.total_count) }
+  })
+})
+
+const one = Effect.fn("ActionsVariables.githubSinglePage")(function* (services: ActionsConfigCommon.Services, binding: Actions.Binding,
+  input: Actions.ResourceListInput, path: string) {
+  const kind = input.cursor?.startsWith("secret:") ? "secret" : "variable"
+  const page = yield* read(services, binding, { ...input, cursor: input.cursor?.replace(/^(?:secret|variable):/, "") }, path, kind, 1)
+  if (kind === "secret") return { rows: page.rows, capturedAt: page.capturedAt, ...(page.next ? { next: `secret:${page.next}` } : {}) }
+  const secretSelection = yield* C.guard(binding, () => C.page(binding, { ...input, cursor: undefined }, "secret:budget1"))
+  if (page.rows.length === 0 && page.next === undefined) {
+    const secrets = yield* read(services, binding, { ...input, cursor: undefined }, path, "secret", 1)
+    return { rows: secrets.rows, capturedAt: secrets.capturedAt, ...(secrets.next ? { next: `secret:${secrets.next}` } : {}) }
+  }
+  return { rows: page.rows, capturedAt: page.capturedAt, next: page.next ? `variable:${page.next}`
+    : `secret:${ActionsCursor.encode(binding, secretSelection.scope, secretSelection.filters, 1)}` }
+})
+~~~~
+
+## AUT2-C17
+
+```json
+{"block_id":"AUT2-C17","type":"literal_source_excerpt","request_namespace":"J1 canonical groups; J2 mapping in index","requests":["RE-AUT2-03"],"body_anchors":["A24"],"requested_subject":"Contrato local do módulo crypto usado pelo wrapper, não implementação criptográfica","source_category":"owned_population_source","path":"packages/core/src/actions/resources/config-sodium.d.ts","archive":"sources/packages/core/src/actions/resources/config-sodium.d.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"8580645c5635998ff84dd397e88eb3bd131826ef","source_sha256":"88816907c0381d3ba2094c97a9572036f6ce757e10d2498b29d14150f4f5ebba","source_bytes":812}
+```
+
+```json
+{"first_line":1,"last_line":15,"bytes":812,"sha256":"88816907c0381d3ba2094c97a9572036f6ce757e10d2498b29d14150f4f5ebba"}
+```
+
+~~~~typescript
+// Narrow declaration for the pinned lazy runtime dependency; no crypto implementation lives here.
+declare module "libsodium-wrappers" {
+  const sodium: {
+    readonly ready: Promise<void>
+    readonly crypto_box_PUBLICKEYBYTES: number
+    readonly base64_variants: { readonly ORIGINAL: number }
+    readonly from_base64: (value: string, variant: number) => Uint8Array
+    readonly to_base64: (value: Uint8Array, variant: number) => string
+    readonly crypto_box_seal: (value: Uint8Array, publicKey: Uint8Array) => Uint8Array
+    readonly memzero: (value: Uint8Array) => void
+    readonly crypto_box_keypair: () => { publicKey: Uint8Array; privateKey: Uint8Array }
+    readonly crypto_box_seal_open: (value: Uint8Array, publicKey: Uint8Array, privateKey: Uint8Array) => Uint8Array
+  }
+  export default sodium
+}
+~~~~
+
+## AUT2-C18
+
+```json
+{"block_id":"AUT2-C18","type":"literal_source_excerpt","request_namespace":"J1 canonical groups; J2 mapping in index","requests":["RE-AUT2-03"],"body_anchors":["A25"],"requested_subject":"Schemas de environments/reviewers/refs GH e GL","source_category":"owned_population_source","path":"packages/core/src/actions/resources/config-environment-schema.ts","archive":"sources/packages/core/src/actions/resources/config-environment-schema.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"68c018139273310ac5cfd10d220b965b09ea62da","source_sha256":"86af948872e70184a9ed866b6c5cda97809f680ca887cc177934fa9ace399b2a","source_bytes":2818}
+```
+
+```json
+{"first_line":1,"last_line":37,"bytes":2818,"sha256":"86af948872e70184a9ed866b6c5cda97809f680ca887cc177934fa9ace399b2a"}
+```
+
+~~~~typescript
+export * as ActionsEnvironmentSchema from "./config-environment-schema"
+
+import { Schema } from "effect"
+import { ActionsConfigCommon } from "./config-common"
+
+const C = ActionsConfigCommon
+// Native contracts: https://docs.github.com/en/rest/deployments/environments
+// https://docs.gitlab.com/api/environments/ and /api/protected_environments/.
+const Reviewer = Schema.Struct({ type: Schema.Literals(["User", "Team"]), reviewer: Schema.Struct({
+  id: C.ID, login: Schema.optionalKey(C.Text), slug: Schema.optionalKey(C.Text),
+}) })
+export const GitHub = Schema.Struct({ id: C.ID, name: C.Text, created_at: Schema.String, updated_at: Schema.String,
+  protection_rules: Schema.Array(Schema.Struct({ type: C.Text, id: Schema.optionalKey(C.ID),
+    wait_timer: Schema.optionalKey(Schema.Int), prevent_self_review: Schema.optionalKey(Schema.Boolean),
+    reviewers: Schema.optionalKey(Schema.Array(Reviewer)) })),
+  deployment_branch_policy: Schema.NullOr(Schema.Struct({ protected_branches: Schema.Boolean, custom_branch_policies: Schema.Boolean })),
+})
+export const BranchPolicy = Schema.Struct({ id: C.ID, name: C.Text, type: Schema.Literals(["branch", "tag"]) })
+export const BranchPolicies = Schema.Struct({ total_count: Schema.Int, branch_policies: Schema.Array(BranchPolicy) })
+export const GitLab = Schema.Struct({ id: C.ID, name: C.Text, state: C.Text,
+  description: Schema.optionalKey(Schema.NullOr(Schema.String)), tier: Schema.optionalKey(Schema.NullOr(Schema.String)),
+  updated_at: Schema.optionalKey(Schema.String),
+})
+export const Access = Schema.Struct({ id: C.ID, user_id: Schema.optionalKey(Schema.NullOr(C.ID)),
+  group_id: Schema.optionalKey(Schema.NullOr(C.ID)), access_level: Schema.optionalKey(Schema.NullOr(Schema.Int)),
+  access_level_description: Schema.optionalKey(Schema.String), required_approvals: Schema.optionalKey(Schema.Int) })
+export const Protected = Schema.Struct({ name: C.Text, deploy_access_levels: Schema.Array(Access),
+  required_approval_count: Schema.optionalKey(Schema.Int), approval_rules: Schema.optionalKey(Schema.Array(Access)) })
+export const Delete = Schema.Struct({ provider: C.Provider, name: C.Text })
+export const Form = Schema.Struct({ provider: C.Provider, name: C.Text, reviewers: Schema.String, refs: C.Text,
+  timer: Schema.optionalKey(Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 43_200 }))), preventSelfReview: Schema.Boolean,
+  description: Schema.optionalKey(Schema.String), tier: Schema.optionalKey(Schema.Literals(["production", "staging", "testing", "development", "other"])) })
+export const Review = Schema.Struct({ provider: C.Provider, decision: Schema.Literals(["Approve", "Reject"]), comment: C.Value })
+
+export function patterns(refs: string) {
+  return Array.from(new Set(refs.split(",").map((ref) => ref.trim()).filter(Boolean)))
+}
+~~~~
+
+## AUT2-C19
+
+```json
+{"block_id":"AUT2-C19","type":"literal_source_excerpt","request_namespace":"J1 canonical groups; J2 mapping in index","requests":["RE-AUT2-03"],"body_anchors":["A25"],"requested_subject":"Reviews representáveis, read-only e lookup de identidade","source_category":"owned_population_source","path":"packages/core/src/actions/resources/config-environment-reviewers.ts","archive":"sources/packages/core/src/actions/resources/config-environment-reviewers.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"9110df8c9a839c9db3476ecdfbfe6e9d9955bc6e","source_sha256":"64222df345434d4400ec50653b25f03b94252d2bf0ecee5a8090ffa24f34c65e","source_bytes":2604}
+```
+
+```json
+{"first_line":1,"last_line":32,"bytes":2604,"sha256":"64222df345434d4400ec50653b25f03b94252d2bf0ecee5a8090ffa24f34c65e"}
+```
+
+~~~~typescript
+export * as ActionsEnvironmentReviewers from "./config-environment-reviewers"
+
+import { Actions } from "@orchestra/schema/actions"
+import { Effect, Schema } from "effect"
+import { ActionsConfigCommon } from "./config-common"
+import { ActionsEnvironmentGitLab } from "./config-environment-gitlab"
+import { ActionsEnvironmentSchema } from "./config-environment-schema"
+
+export const read = Effect.fn("ActionsEnvironmentReviewers.read")(function* (services: ActionsConfigCommon.Services,
+  binding: Actions.Binding, policies: readonly (typeof ActionsEnvironmentSchema.Protected.Type)[], name: string) {
+  const matching = policies.filter((policy) => ActionsEnvironmentGitLab.matches(policy.name, name))
+  if (matching.some((policy) => policy.name.includes("*"))) return { reviewersReadOnly: true }
+  const exact = matching.filter((policy) => policy.name === name)
+  if (exact.length !== 1) return { reviewersReadOnly: true }
+  const policy = exact[0]
+  if (policy.required_approval_count !== undefined && policy.approval_rules === undefined && policy.required_approval_count !== 0)
+    return { reviewersReadOnly: true }
+  const rules = policy.approval_rules ?? []
+  if (rules.length > 6 || rules.some((rule) => rule.user_id == null || rule.group_id != null || rule.access_level != null || rule.required_approvals !== 1))
+    return { reviewersReadOnly: true }
+  const ids = yield* ActionsConfigCommon.guard(binding, () => rules.map((rule) => ActionsConfigCommon.decode(binding, ActionsConfigCommon.ID, rule.user_id, true)))
+  const usernames = yield* Effect.forEach(ids, (id) => Effect.gen(function* () {
+    const response = yield* ActionsConfigCommon.get(services, binding, { method: "GET", path: `users/${encodeURIComponent(String(id))}` })
+    const user = yield* ActionsConfigCommon.guard(binding, () => ActionsConfigCommon.decode(binding,
+      Schema.Struct({ id: ActionsConfigCommon.ID, username: ActionsConfigCommon.Text }), response.data, true))
+    if (String(user.id) !== String(id)) return yield* ActionsConfigCommon.fail(binding, "source_conflict", "GitLab reviewer lookup returned a different native ID")
+    if (!/^[A-Za-z0-9_.-]+$/.test(user.username)) return yield* ActionsConfigCommon.fail(binding, "source_unresolved", "GitLab reviewer username cannot be represented by the configuration form")
+    return user.username
+  }), { concurrency: 1 })
+  if (new Set(usernames).size !== usernames.length) return yield* ActionsConfigCommon.fail(binding, "source_unresolved", "GitLab reviewer usernames are not distinct")
+  return { reviewers: usernames.join(","), reviewersReadOnly: false }
+})
+~~~~
+
+## AUT2-C20
+
+```json
+{"block_id":"AUT2-C20","type":"literal_source_excerpt","request_namespace":"J1 canonical groups; J2 mapping in index","requests":["RE-AUT2-03"],"body_anchors":["A26"],"requested_subject":"Entrada list/execute e caminho runID para pending review","source_category":"owned_population_source","path":"packages/core/src/actions/resources/environments.ts","archive":"sources/packages/core/src/actions/resources/environments.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"bf40e7c0a1e0eb17c0ac15f64b27ccaee1203292","source_sha256":"fc92638ae218671edd85d17f5c52b3de8b899d209dda930afd3fffdab5cee9fa","source_bytes":5333}
+```
+
+```json
+{"first_line":1,"last_line":72,"bytes":5333,"sha256":"fc92638ae218671edd85d17f5c52b3de8b899d209dda930afd3fffdab5cee9fa"}
+```
+
+~~~~typescript
+export * as ActionsEnvironments from "./environments"
+
+import { Actions } from "@orchestra/schema/actions"
+import { Effect, Schema } from "effect"
+import { ActionsContract } from "../contract"
+import { ActionsCursor } from "../cursor"
+import { ActionsConfigCommon } from "./config-common"
+import { ActionsEnvironmentSchema } from "./config-environment-schema"
+import { ActionsEnvironmentGitHub } from "./config-environment-github"
+import { ActionsEnvironmentGitLab } from "./config-environment-gitlab"
+import { ActionsDeploymentReview } from "./config-deployment-review"
+import { ActionsEnvironmentReviewers } from "./config-environment-reviewers"
+
+const C = ActionsConfigCommon
+const S = ActionsEnvironmentSchema
+
+export function make(services: ActionsConfigCommon.Services): ActionsContract.ResourceDomain {
+  return {
+    list: Effect.fn("ActionsEnvironments.list")(function* (binding: Actions.Binding, input: Actions.ResourceListInput) {
+      const frozen = yield* C.guard(binding, () => {
+        const selected = C.selection(binding, input, "environments", ["resourceID", "runID", "scope"])
+        if (selected.scope !== undefined && selected.scope !== (binding.provider.kind === "github" ? "Repository" : "Project"))
+          throw C.fail(binding, "invalid_input", "Environment list scope must match the native project scope")
+        return selected
+      })
+      const project = yield* C.project(services, binding)
+      if (frozen.runID !== undefined) {
+        if (frozen.cursor !== undefined || frozen.limit !== undefined) return yield* C.fail(binding, "invalid_input", "Pending deployment review uses a bounded native snapshot, not list pagination")
+        return yield* ActionsDeploymentReview.list(services, binding, frozen.runID, frozen.resourceID)
+      }
+      const selected = yield* C.guard(binding, () => C.page(binding, frozen))
+      const response = yield* C.get(services, binding, { method: "GET", path: `${project.path}/environments`,
+        query: { page: selected.number, per_page: selected.limit,
+          ...(binding.provider.kind === "gitlab" && frozen.resourceID !== undefined ? { name: frozen.resourceID } : {}) } })
+      if (binding.provider.kind === "github") {
+        const native = yield* C.guard(binding, () => C.decode(binding, Schema.Struct({ total_count: Schema.Int,
+          environments: Schema.Array(S.GitHub) }), response.data, true))
+        const items = yield* Effect.forEach(native.environments.filter((item) => frozen.resourceID === undefined || item.name === frozen.resourceID),
+          (environment) => Effect.gen(function* () {
+            const refs = yield* ActionsEnvironmentGitHub.policies(services, binding, project.path, environment)
+            return ActionsEnvironmentGitHub.resource(binding, environment, refs)
+          }), { concurrency: 1 })
+        return yield* C.guard(binding, () => ({ items, ...C.pagination(binding, selected, response, native.environments.length, native.total_count) }))
+      }
+      const native = yield* C.guard(binding, () => C.decode(binding, Schema.Array(S.GitLab), response.data, true))
+      const protectedEnvironments = yield* ActionsEnvironmentGitLab.protections(services, binding, project.path)
+      const items = yield* Effect.forEach(native.filter((environment) => frozen.resourceID === undefined || environment.name === frozen.resourceID), (environment) => Effect.gen(function* () {
+        const item = ActionsEnvironmentGitLab.resource(binding, environment, protectedEnvironments, project.native)
+        if (frozen.resourceID === undefined) return item
+        const reviewers = yield* ActionsEnvironmentReviewers.read(services, binding, protectedEnvironments, environment.name)
+        return { ...item, data: { ...C.decode(binding, Schema.Record(Schema.String, Schema.Json), item.data), reviewersReadOnly: reviewers.reviewersReadOnly,
+          ...(typeof reviewers.reviewers === "string" ? { reviewers: reviewers.reviewers } : {}) } }
+      }), { concurrency: 1 })
+      return yield* C.guard(binding, () => ({ items,
+        ...C.pagination(binding, selected, response, native.length, ActionsCursor.total(response.headers)) }))
+    }),
+    perform: Effect.fn("ActionsEnvironments.perform")(function* (binding: Actions.Binding, intent: Actions.OperationIntent, payload: ActionsContract.Json) {
+      if (intent.kind === "deployment.review") return yield* ActionsDeploymentReview.perform(services, binding, intent, payload)
+      const frozen = yield* C.guard(binding, () => {
+        const capture = C.capture(binding, intent, "environments")
+        const input = C.decode(binding, intent.kind === "resource.delete" ? S.Delete : S.Form, structuredClone(payload))
+        if (input.provider !== binding.provider.kind || input.name !== intent.target.resourceID)
+          throw C.fail(binding, "intent_conflict", "Environment provider or name changed after admission")
+        return { ...capture, input }
+      })
+      const project = yield* C.project(services, frozen.binding, true, true)
+      return frozen.binding.provider.kind === "github"
+        ? yield* ActionsEnvironmentGitHub.write(services, frozen.binding, frozen.intent, frozen.input, project.path)
+        : yield* ActionsEnvironmentGitLab.write(services, frozen.binding, frozen.intent, frozen.input, project.path, project.native)
+    }),
+  }
+}
+~~~~
+
+## AUT2-C21
+
+```json
+{"block_id":"AUT2-C21","type":"literal_source_excerpt","request_namespace":"J1 canonical groups; J2 mapping in index","requests":["RE-AUT2-03"],"body_anchors":["A25"],"requested_subject":"Reviewers/branch-tag policies/timer e plano multifase GH","source_category":"owned_population_source","path":"packages/core/src/actions/resources/config-environment-github.ts","archive":"sources/packages/core/src/actions/resources/config-environment-github.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"258f9fcb61eeb90c457b2f116ebdbd406bbb340e","source_sha256":"fc9f6dab5045d664abe9fa5b5c665c190a70039b2bc4484a6829d274de5c2dbc","source_bytes":10164}
+```
+
+```json
+{"first_line":1,"last_line":114,"bytes":10164,"sha256":"fc9f6dab5045d664abe9fa5b5c665c190a70039b2bc4484a6829d274de5c2dbc"}
+```
+
+~~~~typescript
+export * as ActionsEnvironmentGitHub from "./config-environment-github"
+
+import { Actions } from "@orchestra/schema/actions"
+import { Effect, Schema } from "effect"
+import { ActionsContract } from "../contract"
+import { ActionsConfigCommon } from "./config-common"
+import { ActionsEnvironmentSchema } from "./config-environment-schema"
+
+const C = ActionsConfigCommon
+const S = ActionsEnvironmentSchema
+
+export const policies = Effect.fn("ActionsEnvironments.githubPolicies")(function* (services: ActionsConfigCommon.Services, binding: Actions.Binding, root: string,
+  environment: typeof S.GitHub.Type) {
+  if (!environment.deployment_branch_policy?.custom_branch_policies) return []
+  const response = yield* C.get(services, binding, { method: "GET", path: `${root}/environments/${encodeURIComponent(environment.name)}/deployment-branch-policies`,
+    query: { per_page: 100, page: 1 } })
+  return yield* C.guard(binding, () => {
+    const value = C.decode(binding, S.BranchPolicies, response.data, true)
+    if (value.branch_policies.length !== value.total_count || response.headers.link?.includes('rel="next"') || response.headers["x-next-page"])
+      throw C.fail(binding, "metadata_truncated", "Environment ref policies exceed the bounded configuration read")
+    return value.branch_policies
+  })
+})
+
+export function resource(binding: Actions.Binding, environment: typeof S.GitHub.Type, refs: readonly (typeof S.BranchPolicy.Type)[]): Actions.Resource {
+  const reviewers = environment.protection_rules.find((rule) => rule.type === "required_reviewers")
+  const names = (reviewers?.reviewers ?? []).map((reviewer) => reviewer.type === "User" ? reviewer.reviewer.login
+    : reviewer.reviewer.slug === undefined ? undefined : `team:${reviewer.reviewer.slug}`)
+  const metadata = { ...environment, refPolicies: refs }
+  return { id: environment.name, bindingID: binding.id, kind: "environments", name: environment.name, scope: "Repository", owner: "Project",
+    data: { ...metadata, nativeIdentity: C.identity(binding, environment.name, "Repository", String(environment.id)),
+      resourceVersion: JSON.stringify(metadata), reviewers: names.filter((name) => name !== undefined).join(", "),
+      reviewerIdentities: (reviewers?.reviewers ?? []).map((reviewer) => ({ type: reviewer.type, id: String(reviewer.reviewer.id),
+        ...(reviewer.reviewer.login ? { login: reviewer.reviewer.login } : {}), ...(reviewer.reviewer.slug ? { slug: reviewer.reviewer.slug } : {}) })),
+      ...(names.some((name) => name === undefined) ? { sourceUnresolved: "Native reviewer name was not returned; use reviewerIdentities" } : {}),
+      refs: environment.deployment_branch_policy === null ? "*" : environment.deployment_branch_policy.protected_branches ? "Protected branches"
+        : Array.from(new Set(refs.map((policy) => policy.name))).join(", "),
+      timer: environment.protection_rules.find((rule) => rule.type === "wait_timer")?.wait_timer ?? 0,
+      ...(reviewers?.prevent_self_review === undefined ? {} : { preventSelfReview: reviewers.prevent_self_review }),
+      description: "Repository deployment environment" } }
+}
+
+export const write = Effect.fn("ActionsEnvironments.githubWrite")(function* (services: ActionsConfigCommon.Services, binding: Actions.Binding, intent: Actions.OperationIntent,
+  input: typeof S.Form.Type | typeof S.Delete.Type, root: string) {
+  if (intent.target.scope !== "Repository") return yield* C.fail(binding, "invalid_input", "GitHub environment scope must be Repository")
+  const path = `${root}/environments/${encodeURIComponent(input.name)}`
+  const response = yield* C.get(services, binding, { method: "GET", path }, true)
+  if ((intent.kind === "resource.create") !== (response.status === 404)) return yield* C.fail(binding, "source_conflict", "Environment existence changed after admission")
+  const native = response.status === 200 ? yield* C.guard(binding, () => C.decode(binding, S.GitHub, response.data, true)) : undefined
+  if (native && native.name !== input.name) return yield* C.fail(binding, "source_conflict", "Native environment name changed after admission")
+  const current = native ? yield* policies(services, binding, root, native) : []
+  if (native) yield* C.guard(binding, () => C.version(binding, intent.expected, response, { ...native, refPolicies: current }))
+  if (!native && intent.expected?.resourceVersion) return yield* C.fail(binding, "invalid_input", "A new environment has no existing resource version")
+  if (intent.kind === "resource.delete") {
+    yield* C.send(services, binding, { method: "DELETE", path }, [204])
+    return { acknowledgement: { resourceID: input.name } }
+  }
+  if (!("reviewers" in input)) return yield* C.fail(binding, "invalid_input", "Environment update requires its mock form")
+  if (input.description !== undefined || input.tier !== undefined) return yield* C.fail(binding, "capability_unavailable", "GitHub environments do not expose description or tier fields")
+  const protectedOnly = input.refs === "Protected branches" && native?.deployment_branch_policy?.protected_branches === true
+  const wanted = protectedOnly ? ["*"] : S.patterns(input.refs)
+  if (!wanted.length || wanted.length > 8 || wanted.some((ref) => /[\s\x00-\x1f\x7f]/.test(ref)) || (wanted.includes("*") && wanted.length !== 1))
+    return yield* C.fail(binding, "invalid_input", "Environment requires at most eight exact branch/tag patterns, or '*' alone")
+  const required = yield* resolveReviewers(services, binding, root, input.reviewers)
+  const desired = wanted[0] === "*" ? [] : wanted.flatMap((name) => [{ name, type: "branch" }, { name, type: "tag" }])
+  const changes = desired.filter((policy) => !current.some((item) => item.name === policy.name && item.type === policy.type))
+  const deleted = current.filter((policy) => !desired.some((item) => item.name === policy.name && item.type === policy.type))
+  const currentTimer = native?.protection_rules.find((rule) => rule.type === "wait_timer")?.wait_timer
+  const timer = input.timer ?? currentTimer
+  if (current.length > 32) return yield* C.fail(binding, "metadata_truncated", "Environment policy mutation exceeds its bounded native phases")
+  // Ref patterns require separate native endpoints. Validate the entire plan before
+  // the first write; a later rejection explicitly reports partial application.
+  yield* C.stages(services, binding, [
+    { phase: "protection", statuses: [200], request: { method: "PUT", path, body: {
+      // Do not request a paid timer feature merely to send its absent zero default.
+      ...(timer !== undefined && (timer > 0 || currentTimer !== undefined) ? { wait_timer: timer } : {}),
+      prevent_self_review: input.preventSelfReview, reviewers: required,

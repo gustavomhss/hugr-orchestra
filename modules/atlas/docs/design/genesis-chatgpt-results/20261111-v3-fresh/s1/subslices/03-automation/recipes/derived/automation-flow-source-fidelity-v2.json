@@ -1,0 +1,119 @@
+{
+  "schema": "s1-03-derived-source-fidelity-correction/v1",
+  "artifact": {
+    "key": "s1.subslice03.automation-flow",
+    "layer": 2,
+    "need": "flow",
+    "version": "v2"
+  },
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "frozen_at_utc": "2026-11-15T09:07:04.980055+00:00",
+  "state": "FROZEN_BEFORE_CORRECTION_DISPATCH",
+  "author": "/root/derived_automation",
+  "finding_origin": "Principal source-fidelity pre-review; no J1/J2 judgment of L2 has yet occurred. The current L1 predecessor remains accepted by the same pair, unchanged. This is not a third semantic vote.",
+  "prior_recipe": {
+    "local_path": "payload/recipes/derived/automation-flow.json",
+    "sha256": "ec4550336620b1d7abed85e78460c6d4c5ede73f31c8ddcf8a77be5272af3179"
+  },
+  "prior_manifest": {
+    "local_path": "producers/derived-automation-flow/revisions/v2/history/production-manifest.json",
+    "original_read_paths": [
+      "producers/derived-automation-flow/production-manifest.json"
+    ],
+    "bytes": 16158,
+    "sha256": "9c7d3130d4265bccba5e94fa0448b1d0bbbf3c02bf421a09d4e8d053cae4df06",
+    "git_blob_sha": "ee7c2879510553e13c9c61faefdda6b9e09d8e17",
+    "role": "Exact v1 output retained before the first semantic review and before source-fidelity correction."
+  },
+  "parent_body": {
+    "local_path": "producers/automation/body.md",
+    "key": "s1.core.automation",
+    "version": "v4",
+    "bytes": 60767,
+    "sha256": "968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae",
+    "git_blob_sha": "e26213eb2fc76dc843dca17d1111334c76f88890",
+    "section": "12. Claim, admissão, revogação e retomada"
+  },
+  "exact_retained_outputs": [
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/history/body.md",
+      "original_read_paths": [
+        "producers/derived-automation-flow/body.md"
+      ],
+      "bytes": 16441,
+      "sha256": "5985441b360d0efc6693d0d385980f4a93cab2c044387a7375608dd5a9adf517",
+      "git_blob_sha": "b4874e39655e7aef9c9f6e08aeecc37718658b2f",
+      "role": "Exact v1 output retained before the first semantic review and before source-fidelity correction."
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/history/evidence.md",
+      "original_read_paths": [
+        "producers/derived-automation-flow/evidence.md"
+      ],
+      "bytes": 11997,
+      "sha256": "d2b8068c9167c0813719479d4d2b10046cc718921dad3db52d1f44957e3f1360",
+      "git_blob_sha": "6697c34caf08d7d8d4bacd4793f3e36c1d035aa4",
+      "role": "Exact v1 output retained before the first semantic review and before source-fidelity correction."
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/history/production-manifest.json",
+      "original_read_paths": [
+        "producers/derived-automation-flow/production-manifest.json"
+      ],
+      "bytes": 16158,
+      "sha256": "9c7d3130d4265bccba5e94fa0448b1d0bbbf3c02bf421a09d4e8d053cae4df06",
+      "git_blob_sha": "ee7c2879510553e13c9c61faefdda6b9e09d8e17",
+      "role": "Exact v1 output retained before the first semantic review and before source-fidelity correction."
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/history/response.md",
+      "original_read_paths": [
+        "producers/derived-automation-flow/response.md"
+      ],
+      "bytes": 2470,
+      "sha256": "c8bf48be1b48cc17d8c376978e37c401079ba6e5ad72c51ac12443b8e433c7fd",
+      "git_blob_sha": "e26287f9867203f71804eecce18b6a706997539a",
+      "role": "Exact v1 output retained before the first semantic review and before source-fidelity correction."
+    }
+  ],
+  "findings": [
+    {
+      "id": "AF-L2-PREVIEW-01",
+      "body_section": "8. Scheduler: separar claim, admissão e trabalho concluído",
+      "current_literal": "Capability verifica owner antes da Session e `holds` antes da Session e antes do prompt; não relê o owner nessa segunda passagem.",
+      "accepted_predecessor_literal": "Em capability, verifica a presença/identidade do owner antes da Session; para claim ainda não admitida, verifica `holds` antes da Session e outra vez antes de prompt, sem reler a Session do owner.",
+      "required_correction": "Restore the qualification that the two holds checks apply to a claim not yet admitted, while retaining the distinct owner identity check. Do not reintroduce the broad v3 wording corrected in L1 v4."
+    },
+    {
+      "id": "AF-L2-PREVIEW-02",
+      "body_section": "8. Scheduler: separar claim, admissão e trabalho concluído",
+      "current_literal": "Em replay de manualKey, running sem admissão pede retry shortly e revoked falha; demais rows assentadas podem devolver SessionID retido com `reused:true`, sem exigir nova prova de admissão nesse ramo.",
+      "accepted_predecessor_literal": "No replay de capability manualKey, `running` sem SessionInput retorna “retry shortly” e `revoked` retorna erro; nos demais casos, o ramo devolve o SessionID retido com `reused:true`, sem exigir admissão para uma row já assentada.",
+      "required_correction": "State the complete remaining replay branch as the accepted parent does. The phrase demais rows assentadas omits the running-with-SessionInput case; retain the parent distinction without narrowing the remaining branch to settled rows."
+    }
+  ],
+  "allowed_reads": "The existing17 whole-file inputs remain in the same family context. Read this recipe, the new frozen request, this visible correction dispatch, the four exact retained v1 outputs and the accepted parent section as necessary. No other file, oracle, judge prose or raw source is authorized. Preserve cumulative whole-file input identities; history aliases must point to retained bytes and preserve original_read_paths.",
+  "allowed_writes": [
+    "producers/derived-automation-flow/body.md",
+    "producers/derived-automation-flow/evidence.md",
+    "producers/derived-automation-flow/production-manifest.json",
+    "producers/derived-automation-flow/response.md",
+    "producers/derived-automation-flow/revisions/v2/dispatch-message.txt",
+    "producers/derived-automation-flow/revisions/v2/delta.json"
+  ],
+  "preserve_unchanged": [
+    "producers/derived-automation-flow/request.txt",
+    "producers/derived-automation-flow/dispatch-message.txt",
+    "producers/derived-automation-flow/revisions/v2/history",
+    "payload/artifact-plan.json",
+    "producers/automation/body.md"
+  ],
+  "instructions": [
+    "Only the two quoted body clauses may change; preserve all other body bytes. Update body identity and relevant evidence qualifications, manifest and response consistently.",
+    "The actual authoring recipe is the original public contract/task plus this predispatch correction recipe, request and visible dispatch. The new manifest is an output, not a retrospective preexisting recipe.",
+    "Use actual_authoring_recipe.task_recipe.local_path for this correction recipe and current_request.local_path for the new correction request; retain the original recipe/request/dispatch as actual context inputs.",
+    "Record before/after full identities, the two exact replacements and inverse equality in revisions/v2/delta.json. Do not execute product tests or any runtime operation.",
+    "Return exactly response.md without terminal LF; no dependent is released until same-pair whole-body acceptance of the corrected L2."
+  ],
+  "reserved_answers_included": false
+}

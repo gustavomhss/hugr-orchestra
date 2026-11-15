@@ -1,0 +1,5 @@
+CORRECAO_LITERAL_DE_TRANSPORTE — automation-1-supplement-v2-coverage-erratum, parte 3/6, fragmento 2/2. O relay inseriu indevidamente `jobs.` na string de diagnóstico de AUT1-C20 (`packages/core/src/actions/source/gitlab.ts`). Preserve o envio defeituoso no histórico e, para a composição literal do pacote, substitua somente esta linha recebida:
+    if (needs && new Set(needs).size !== needs.length) report.add("unresolved", `needs_duplicate:jobs.${id}`)
+pela linha canônica:
+    if (needs && new Set(needs).size !== needs.length) report.add("unresolved", `needs_duplicate:${id}`)
+A substituição aplica-se somente a AUT1-C20; a string com `jobs.` em AUT1-C19 permanece intacta. Nenhum outro byte ou orientação de mérito muda. Não use ferramentas; confirme apenas a correção e aguarde as partes restantes e o FIM_DO_LOTE externo.

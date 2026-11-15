@@ -1,0 +1,12 @@
+{
+  "id": "relay-both-handles-handover-after-population",
+  "target": "/root/review_relay",
+  "kind": "transport_ownership_control",
+  "method": "collaboration.send_message",
+  "message": "HANDOVER explícito: J2 população204 terminou, original inteiro preservado em relay-root/automation-population-current-v1/j2-response.md (3098 B SHA e54ef3dd87223bd9f4ead6cf923f341250af37f35a10452db1788251a899f170). Fecha RE-AUT1-01 corrente e PASS §§0–3, sem demais lotes. Agora você é courier exclusivo de J1 E J2 para automation2,3,4 e decisão agregada quando necessária. Root não enviará mais a esses handles até novo handover. Não envie parecer de um ao outro. Ambos os handles livres para revisão, slots root+relay+J1+J2. R L4 gate7 já registrado. Agregado pré-dispatch atualizado: review-packets/automation-aggregate-v4.md 70241 B SHA3198bf664dfe607f09c96b3da12ab75f73e10cae977b9d113a0b1ab358330952; manifesto atualizado, histórico preparado preservado. Só controla população condicional ao próprio pedido, corpo60767/deltas byte-idênticos. Use somente após quatro lotes quando faltar whole-body current v4 PASS explícito. Preserve cada FINAL original antes de reusar handle; arquivos de capture['file'] preferencialmente ABS para helper de gate. Prossiga autonomamente; root trabalha controles de publicação/runtime enquanto isso.",
+  "message_bytes": 1165,
+  "message_sha256": "584e7bf706004cf0b930bf88dc25060f6a78376924c6b92d3e1f3e53585e00de",
+  "tool_returned_normally": true,
+  "capture_basis": "Exact caller-visible argument, no independent host wire checksum",
+  "captured_at_utc": "2026-11-15T07:00:00.146715+00:00"
+}

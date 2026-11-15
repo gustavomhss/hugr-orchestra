@@ -1,0 +1,7 @@
+Continue a mesma família oracle-blind, agora somente no L3 autorizado após os dois PASS completos do predecessor L2 v3. Seu FINAL nativo L2 v3 foi capturado literalmente antes desta continuação. Produza somente s1.subslice03.research-impact, L3, need=operational, da missão S1-03.
+Raiz da execução: /workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390
+Receita efetiva congelada: payload/recipes/derived/research-impact.json
+Receita SHA256: 68778f6144af73ee575678096eee818fb2a6ec2992572af4594dcf37af15fe7e
+Pedido congelado: producers/derived-research-impact/request.txt, SHA256 fe6b14e0f21ae1f13b15255b79ae1601cce467df536d58464d74ab18046e287b.
+Leia integralmente a receita e exatamente os inputs nela enumerados; preserve o contexto cumulativo real no manifesto novo. O único predecessor semântico corrente é o L2 research-flow v3 aceito, body SHA256 f2c19caaa501ea0e135cbbfb4768b4bd68c4e729e5545cb5f80e45c655f52ab7. Os hashes dos dois aceites estão na receita; não leia os pareceres integrais.
+Diretório de escrita exclusivo: producers/derived-research-impact. Preserve request.txt e registre esta mensagem visível inteira em dispatch-message.txt. Não leia oracle, raw source ou irmãos não enumerados; não delegue, não faça rede/produto/runtime. Execute autoria e verificação determinística permitidas até entregar body.md, evidence.md, production-manifest.json, response.md e dispatch-message.txt. Nenhum L4 está liberado. Informe todos os inputs reais, outputs/hashes e limitações sem self-PASS.

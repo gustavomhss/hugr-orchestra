@@ -1,0 +1,16 @@
+{
+  "schema": "s1-03-native-helper-original-capture/v1",
+  "agent_id": "/root/native_descriptor",
+  "at_utc": "2026-11-15T08:58:10.856513+00:00",
+  "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/payload/receipts/consumer-summary-helper-final-original.md",
+  "bytes": 3427,
+  "sha256": "efaf47af711812f8bea5457bd90a8326023a058b618495e045c7d2ede265d0d3",
+  "literal": true,
+  "terminal_newline": false,
+  "source_response_equal": true,
+  "actual_dispatch_equal": true,
+  "role": "mechanical_evidence_summary_helper_only",
+  "all_helper_source_and_README_read_by_principal": true,
+  "helper_executed": false,
+  "capture_basis": "Exact original FINAL_ANSWER received by root, compared byte-for-byte with producer response.md before any reuse."
+}

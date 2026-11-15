@@ -1,0 +1,93 @@
+{
+  "schema": "s1-03-derived-review-packet/v1",
+  "lot": "derived-entry-v1",
+  "artifact": "s1.subslice03.entry",
+  "layer": 4,
+  "bytes": 67235,
+  "sha256": "25cca039c075cee284189ecba42702e51ffe12fe76c85f35145f228b641c4388",
+  "git_blob_sha": "090a613d7534339ce778c87ac02ba91950ae1f6f",
+  "body_bytes": 15409,
+  "body_sha256": "e167d2bc65603a3caffe094f5be269bb428f0636a03e00b66383769566657503",
+  "literal_files": [
+    {
+      "label": "body",
+      "bytes": 15409,
+      "sha256": "e167d2bc65603a3caffe094f5be269bb428f0636a03e00b66383769566657503"
+    },
+    {
+      "label": "evidence",
+      "bytes": 13130,
+      "sha256": "e746f76dc2120c36157b8cd60ae961b2462d8f4b2dae9551358b96b7ca0bb4d7"
+    },
+    {
+      "label": "task_recipe",
+      "bytes": 14571,
+      "sha256": "6b8a14e9f0f0c131cc0b06bab60771de0d811b6f4b6f79617f0ffabf7c2a4c5a"
+    },
+    {
+      "label": "common_recipe",
+      "bytes": 4017,
+      "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588"
+    },
+    {
+      "label": "public_plan",
+      "bytes": 5017,
+      "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad"
+    }
+  ],
+  "input_table": "Explicit mechanical projection of actual manifest; original remains preserved.",
+  "dispatch_state": "NOT_YET_DISPATCHED",
+  "public_authority_excerpts": [
+    {
+      "path": "inputs/AGENTS.md",
+      "first_line": 1,
+      "last_line": 1,
+      "source_bytes": 16501,
+      "source_sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "bytes": 169,
+      "sha256": "5d4629babd7a5f60103e1ccedc0583a63b1804203cd0d735d71f5b648aae14f8"
+    },
+    {
+      "path": "inputs/AGENTS.md",
+      "first_line": 158,
+      "last_line": 178,
+      "source_bytes": 16501,
+      "source_sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "bytes": 3402,
+      "sha256": "3f932e5e2e0bbed1e970b5e835b9db650f467fdb6a82785c51fdc9e4d09a1b40"
+    },
+    {
+      "path": "inputs/AGENTS.md",
+      "first_line": 194,
+      "last_line": 205,
+      "source_bytes": 16501,
+      "source_sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "bytes": 674,
+      "sha256": "c297e5d83bc49bbb8b9b2ebfe0092931750c5fc716168d10f636d47e8ff2446d"
+    },
+    {
+      "path": "inputs/COMMON.md",
+      "first_line": 34,
+      "last_line": 41,
+      "source_bytes": 12959,
+      "source_sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+      "bytes": 1357,
+      "sha256": "b2fc6248c9227243e9887796c3d2c5f77558feb9c49564130106525918d3d2bc"
+    },
+    {
+      "path": "inputs/COMMON.md",
+      "first_line": 93,
+      "last_line": 103,
+      "source_bytes": 12959,
+      "source_sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+      "bytes": 1749,
+      "sha256": "bef8ade677e8942e95475d027441de79091460a91d0bb0d2d99fbdbfac12c05c"
+    }
+  ],
+  "predispatch_amendment": {
+    "at_utc": "2026-11-15T10:38:22.409928+00:00",
+    "previous_sha256": "47f0785aad1adf34d453925c518ad0319299d9d46b0a68d0808332025ad8953b",
+    "procedure_sha256": "078ea312162248ef01ecb006238b48a086ee9a8d0201cb77341425119254402c",
+    "body_or_recipe_changed": false
+  }
+}

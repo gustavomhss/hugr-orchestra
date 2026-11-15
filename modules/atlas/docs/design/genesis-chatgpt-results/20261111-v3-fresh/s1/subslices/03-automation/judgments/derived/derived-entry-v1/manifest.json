@@ -1,0 +1,43 @@
+{
+  "lot": "derived-entry-v1",
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "source": "review-packets/derived-entry-v1.md",
+  "source_bytes": 67235,
+  "source_sha256": "25cca039c075cee284189ecba42702e51ffe12fe76c85f35145f228b641c4388",
+  "source_manifest": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/derived-entry-v1.manifest.json",
+  "source_manifest_bytes": 3224,
+  "source_manifest_sha256": "c90d71008914032ab1724163166b6810c37edc1c0a3139635ca882661ded5ded",
+  "parts": [
+    {
+      "number": 1,
+      "file": "part-01.txt",
+      "start": 0,
+      "end": 21985,
+      "bytes": 21985,
+      "sha256": "23e191dc5d26d329730424bf513ec425f752431fe982fbb7653ae4493b411e69",
+      "terminal_bytes_repr": "b'\\n\\n## E03 \\xe2\\x80\\x94 Research: rota, evid\\xc3\\xaancia e lacuna de transporte\\n\\nDestino: body.md \\xc2\\xa7\\xc2\\xa72\\xe2\\x80\\x933, 6\\xe2\\x80\\x937.\\n\\n'"
+    },
+    {
+      "number": 2,
+      "file": "part-02.txt",
+      "start": 21985,
+      "end": 44814,
+      "bytes": 22829,
+      "sha256": "abb46ea29ebbcfe98682b0c5a251ab46ae7d02faa04f4be4c39fe70b6bf49a59",
+      "terminal_bytes_repr": "b' native judges before releasing a dependent.\"\\n  ],\\n  \"outputs\": [\\n    \"body.md\",\\n    \"evidence.md\",\\n'"
+    },
+    {
+      "number": 3,
+      "file": "part-03.txt",
+      "start": 44814,
+      "end": 67235,
+      "bytes": 22421,
+      "sha256": "82010bb34eb63252f44ab4e5a13b8b7ae63ba5f255fbecad3ccf4c180146a020",
+      "terminal_bytes_repr": "b'loqueio e terminar os itens independentes. O estado fica INCOMPLETE_BLOCKED.\\nEND_LITERAL_AUTHORITY\\n\\n'"
+    }
+  ],
+  "encoding": "UTF-8",
+  "preparation_state": "PREPARED_NOT_DISPATCHED",
+  "dispatch_count_at_preparation": 0,
+  "prepared_at_utc": "2026-11-15T10:39:17.933530+00:00"
+}

@@ -1,0 +1,12 @@
+{
+  "schema": "s1-03-original-native-producer-final-capture/v1",
+  "agent_id": "/root/derived_automation",
+  "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/payload/receipts/producer-responses/derived-automation-l2-v1-original.md",
+  "bytes": 2470,
+  "sha256": "c8bf48be1b48cc17d8c376978e37c401079ba6e5ad72c51ac12443b8e433c7fd",
+  "literal": true,
+  "terminal_newline": false,
+  "producer_response_equal": true,
+  "at_utc": "2026-11-15T09:07:04.974254+00:00",
+  "capture_basis": "Exact FINAL_ANSWER observed by root and matched byte-for-byte to response.md before any correction dispatch."
+}

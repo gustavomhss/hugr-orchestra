@@ -1,0 +1,19 @@
+{
+  "schema": "s1-03-review-supplement/v1",
+  "lot": "derived-research-impact-plan-v1",
+  "artifact": "s1.subslice03.research-impact",
+  "body_bytes": 13972,
+  "body_sha256": "4fe6c73bc209b2461f8ef3a342832dd79b5541cf8b2d43afd958bab0327a3d3f",
+  "bytes": 6417,
+  "sha256": "06b1915debaa1aa066def2a66e7ed428baf164bcebf7b7798c0c14d97c01febe",
+  "git_blob_sha": "a3550060610028e74e14f929d3bb218fd7c24f2d",
+  "literal_files": [
+    {
+      "path": "payload/artifact-plan.json",
+      "bytes": 5017,
+      "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad"
+    }
+  ],
+  "state": "PREPARED_NOT_DISPATCHED",
+  "not_new_author_input": true
+}

@@ -1,0 +1,1 @@
+ACK parte 2/6, fragmento 1/2 — última âncora recebida: **AUT1-C09**, `packages/core/src/actions/github/runs.ts`, função `list`, validação de `input.commit` com a mensagem `GitHub run commit filter requires a full SHA`.

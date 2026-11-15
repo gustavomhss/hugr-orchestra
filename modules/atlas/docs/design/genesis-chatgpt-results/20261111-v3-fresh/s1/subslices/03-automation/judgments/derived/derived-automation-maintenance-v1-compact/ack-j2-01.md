@@ -1,0 +1,1 @@
+ACK — **derived-automation-maintenance-v1-compact, parte 1/2**. Última âncora recebida: **evidência, §4**, tabela de normas públicas, encerrando na linha da receita **`automation-maintenance.json`**, com “15 inputs enumerados; cinco outputs exclusivos”. Aguardo a parte final e o `FIM_DO_LOTE` externo.

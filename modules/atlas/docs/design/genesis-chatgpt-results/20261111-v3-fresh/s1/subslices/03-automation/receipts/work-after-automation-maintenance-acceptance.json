@@ -1,0 +1,8 @@
+{
+  "at_utc": "2026-11-15T10:27:51.360296+00:00",
+  "history": "history/work-before-automation-maintenance-acceptance.md",
+  "previous_sha256": "9cdc116fe563b4b2fdb829ce59ad40f32709d959845d83d82eb154c6d960e693",
+  "current_sha256": "38cea6d7886bdbe82227a5c138c60666e55f846bd25c6d9f4b2cb13831da3bcf",
+  "current_semantic_gate_count": 11,
+  "only_active_authoring": "s1.subslice03.entry"
+}

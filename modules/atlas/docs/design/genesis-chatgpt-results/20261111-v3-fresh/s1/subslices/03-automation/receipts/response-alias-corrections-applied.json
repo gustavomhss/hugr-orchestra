@@ -1,0 +1,28 @@
+{
+  "schema": "s1-03-response-alias-corrections-applied/v1",
+  "at_utc": "2026-11-15T10:20:14.906160+00:00",
+  "status": "APPLIED_MECHANICAL_CORRECTIONS_ONLY",
+  "alias_count": 2,
+  "addendum_count": 3,
+  "appended_event_ids": [
+    "derived-producer-response-alias-correction:derived-automation-l2-source-fidelity-v2:59ffb319da5b27d830b9eeabe7ac592c104a64496864235da4331cd5adc05c23",
+    "derived-producer-completion-identity-correction:derived-automation-l2-source-fidelity-v2:59ffb319da5b27d830b9eeabe7ac592c104a64496864235da4331cd5adc05c23",
+    "derived-producer-completion-identity-correction:derived-automation-l3-author-01:85831ceada2e319c68ec37bc7e521de4d66c2aa1828e2df18a25886fe0a181f7"
+  ],
+  "original_ledger_sha256": "9b937dc8411c02b4ec866aa7433f2fd5a59217c8dce4a96757bb53b6b303b18f",
+  "updated_ledger_sha256": "1fc58cf25d34ae6d6a8a0497cd2121e933b9872b13ceb3391d810076356462bc",
+  "original_rows": 415,
+  "original_row_bytes_preserved": true,
+  "original_script_unchanged": true,
+  "new_script": "scripts/reconcile-ledger-v2.py",
+  "new_script_sha256": "42c5396c39bfd623ddf9f89a04d661b66b411f8d382d173ec396f5649107b0c3",
+  "new_script_syntax": "PASS",
+  "new_script_execution": "NOT_RUN_YET",
+  "overlay": "receipts/producer-response-alias-overlays-v1.json",
+  "history": "history/execution-ledger-before-response-alias-corrections.jsonl",
+  "proposal": "assembly/response-alias-audit/proposed-corrections.json",
+  "proposal_sha256": "575ff023783621b86638ebf3481c8a97f432f7fc969dec9df60cae94cede084f",
+  "new_native_requests": 0,
+  "native_final_gap_repaired": false,
+  "scope": "Correct historical response-file identity and prevent recurrence; no producer, judgment or domain result changes."
+}

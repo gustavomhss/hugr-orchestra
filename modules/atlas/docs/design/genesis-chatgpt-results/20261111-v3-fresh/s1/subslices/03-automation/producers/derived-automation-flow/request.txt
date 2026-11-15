@@ -1,0 +1,7 @@
+Produza somente s1.subslice03.automation-flow, L2, need=flow, da missão S1-03.
+Raiz da execução: /workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390
+Receita efetiva congelada: payload/recipes/derived/automation-flow.json
+Receita SHA256: ec4550336620b1d7abed85e78460c6d4c5ede73f31c8ddcf8a77be5272af3179
+Leia integralmente a receita e exatamente os inputs nela enumerados. O gate dos predecessores foi conferido nos dois pareceres originais antes deste pedido.
+Diretório de escrita exclusivo: producers/derived-automation-flow
+Preserve este request.txt; registre o dispatch visível separadamente. Não leia os pareceres completos, oracle ou fontes brutas. Não delegue. Execute a autoria e verificação determinística permitidas até entregar os cinco outputs da receita. Nenhum nível posterior está liberado por este pedido.

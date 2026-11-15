@@ -1,0 +1,160 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "relay": "/root/review_relay",
+  "packet": "derived-automation-flow-v2",
+  "source": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/derived-automation-flow-v2.md",
+  "source_bytes": 53852,
+  "source_sha256": "617afeacbade05f07406461052aea9e9dbb3ceeaecdc107a5eeda3db4c43a9e6",
+  "parts_per_target": 2,
+  "calls": [
+    {
+      "sequence": 1,
+      "target": "/root/s1_03_j1",
+      "part": 1,
+      "request_file": "request-j1-01.json",
+      "request_file_bytes": 27565,
+      "request_file_sha256": "35e35bf8cd2129f14ef1257e014e5e7c46664ccbfb8126c1e1d8863567ef5a38",
+      "message_bytes": 27346,
+      "message_sha256": "4eb72798b09dda78268ca445efa844176aa935209d79de511370b7ef2da3febd",
+      "payload_bytes": 26868,
+      "payload_sha256": "ad0d3d3252774ef05443e2a42d1c686dcc77e0bd4fc32b958c36a6459763e4e0",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 2,
+      "target": "/root/s1_03_j1",
+      "part": 2,
+      "request_file": "request-j1-02.json",
+      "request_file_bytes": 28799,
+      "request_file_sha256": "ea6a87c9004137e2a1067b3dbd8d2329eb6555263f23ad8936b359b360b5cc95",
+      "message_bytes": 27588,
+      "message_sha256": "83036ebedbdb0b10a32d324138bbc7bb62ae40d88ae53c31ff6905996b72df4e",
+      "payload_bytes": 26984,
+      "payload_sha256": "aba70d98b27018f52465995319e0c9a0501364df8f77f1c75dcf1807463d3777",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 3,
+      "target": "/root/s1_03_j2",
+      "part": 1,
+      "request_file": "request-j2-01.json",
+      "request_file_bytes": 27565,
+      "request_file_sha256": "7692900512fc8f04eee3b9ca94fa1a918d9d880e53666e4c1cbdd67368d04247",
+      "message_bytes": 27346,
+      "message_sha256": "4eb72798b09dda78268ca445efa844176aa935209d79de511370b7ef2da3febd",
+      "payload_bytes": 26868,
+      "payload_sha256": "ad0d3d3252774ef05443e2a42d1c686dcc77e0bd4fc32b958c36a6459763e4e0",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 4,
+      "target": "/root/s1_03_j2",
+      "part": 2,
+      "request_file": "request-j2-02.json",
+      "request_file_bytes": 28799,
+      "request_file_sha256": "38e80fac14027ffa0feb0f3d61cd484fed45b679757a7a3deb1aeff35288c37a",
+      "message_bytes": 27588,
+      "message_sha256": "83036ebedbdb0b10a32d324138bbc7bb62ae40d88ae53c31ff6905996b72df4e",
+      "payload_bytes": 26984,
+      "payload_sha256": "aba70d98b27018f52465995319e0c9a0501364df8f77f1c75dcf1807463d3777",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    }
+  ],
+  "known_transcription_corrections": [],
+  "receipt_limit": "Ferramenta retornou normalmente sem texto nem ID de despacho; os hashes descrevem os pedidos registrados e sua reconstrução local, não verificação remota nem suficiência semântica.",
+  "delivery_scope": "Literal UTF-8 packet only; final signal is outside payload.",
+  "slot_handling": "Sequential judges and parts; preserve every ACK and final before follow-up; no concurrent sender.",
+  "judgment_capture": "Both original finals captured literally, no terminal LF; handles returned to root. No further relay dispatch pending.",
+  "dispatch_count": 4,
+  "recorded_at_utc": "2026-11-15T09:26:40.444708+00:00",
+  "completed_targets": [
+    "/root/s1_03_j1",
+    "/root/s1_03_j2"
+  ],
+  "pending_targets": [],
+  "local_recorded_reconstruction": [
+    {
+      "target": "/root/s1_03_j1",
+      "bytes": 53852,
+      "sha256": "617afeacbade05f07406461052aea9e9dbb3ceeaecdc107a5eeda3db4c43a9e6",
+      "equals_source": true,
+      "raw_bytes": 53852,
+      "raw_sha256": "617afeacbade05f07406461052aea9e9dbb3ceeaecdc107a5eeda3db4c43a9e6",
+      "corrections_applied": false
+    },
+    {
+      "target": "/root/s1_03_j2",
+      "bytes": 53852,
+      "sha256": "617afeacbade05f07406461052aea9e9dbb3ceeaecdc107a5eeda3db4c43a9e6",
+      "equals_source": true,
+      "raw_bytes": 53852,
+      "raw_sha256": "617afeacbade05f07406461052aea9e9dbb3ceeaecdc107a5eeda3db4c43a9e6",
+      "corrections_applied": false
+    }
+  ],
+  "transport_ownership": {
+    "/root/s1_03_j1": "/root",
+    "/root/s1_03_j2": "/root"
+  },
+  "acknowledgments": [
+    {
+      "target": "/root/s1_03_j1",
+      "part": 1,
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-automation-flow-v2/ack-j1-01.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j1",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 255,
+      "sha256": "87a3e80b09608a62b541fb84b9a86d41404982aa149b00977346f75324448c09",
+      "captured_at_utc": "2026-11-15T09:18:10.576216+00:00"
+    },
+    {
+      "target": "/root/s1_03_j2",
+      "part": 1,
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-automation-flow-v2/ack-j2-01.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j2",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 307,
+      "sha256": "f6c8f3dbaecb62a06c7a025bdf423c1b0edbba3516fa81d3efb297fc44929db6",
+      "captured_at_utc": "2026-11-15T09:25:26.279283+00:00"
+    }
+  ],
+  "judgment_captures": {
+    "j1": {
+      "target": "/root/s1_03_j1",
+      "judge_id": "parallel-v3-fresh/S1-03/J1",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-automation-flow-v2/j1-response.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j1",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 2639,
+      "sha256": "638ade93b15f4405ec0cbb5d10698e534993ea89733d018acb6c0148e43309bb",
+      "captured_at_utc": "2026-11-15T09:23:31.040712+00:00"
+    },
+    "j2": {
+      "target": "/root/s1_03_j2",
+      "judge_id": "parallel-v3-fresh/S1-03/J2",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-automation-flow-v2/j2-response.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j2",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 2724,
+      "sha256": "250b6136a1ce4076da0c162977ede3aeef03f53fe071c16fc3881f874f52fc48",
+      "captured_at_utc": "2026-11-15T09:29:28.225138+00:00"
+    }
+  },
+  "status": "COMPLETED_TRANSPORT_BOTH_ORIGINAL_FINALS_PRESERVED"
+}

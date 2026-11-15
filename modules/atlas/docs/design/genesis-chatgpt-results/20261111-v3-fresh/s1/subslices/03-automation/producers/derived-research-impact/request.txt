@@ -1,0 +1,7 @@
+Produza somente s1.subslice03.research-impact, L3, need=operational, da missão S1-03.
+Raiz da execução: /workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390
+Receita efetiva congelada: payload/recipes/derived/research-impact.json
+Receita SHA256: 68778f6144af73ee575678096eee818fb2a6ec2992572af4594dcf37af15fe7e
+Leia integralmente a receita e exatamente os inputs nela enumerados. O gate dos predecessores foi conferido nos dois pareceres originais antes deste pedido.
+Diretório de escrita exclusivo: producers/derived-research-impact
+Preserve este request.txt; registre o dispatch visível separadamente. Não leia os pareceres completos, oracle ou fontes brutas. Não delegue. Execute a autoria e verificação determinística permitidas até entregar os cinco outputs da receita. Nenhum nível posterior está liberado por este pedido.

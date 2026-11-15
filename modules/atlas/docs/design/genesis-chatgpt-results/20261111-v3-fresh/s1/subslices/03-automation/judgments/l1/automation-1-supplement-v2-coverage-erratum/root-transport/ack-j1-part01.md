@@ -1,0 +1,1 @@
+ACK parte 1/6 — última âncora recebida: **AUT1-C05**, `packages/core/src/actions/contract.ts`, intervalo 8–88, início do bloco: `export type Request = {`.

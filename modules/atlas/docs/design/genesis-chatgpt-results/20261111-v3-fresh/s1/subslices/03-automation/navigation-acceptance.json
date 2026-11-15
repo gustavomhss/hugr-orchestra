@@ -1,0 +1,34 @@
+{
+  "schema": "s1-03-union-navigation-proposal-acceptance/v1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "status": "PASS_LOCAL_PROPOSAL_NOT_SELECTED_FOR_UNION",
+  "local_path": "producers/boundaries/union-navigation-proposal.md",
+  "bytes": 14671,
+  "sha256": "f4362077ed7eb2f0dff7bb76acd60debeaa41bd37886551977b92c02addfcb6e",
+  "git_blob_sha": "69886d576e9368bf3bd4469d53c30095114c1d04",
+  "judgments": [
+    {
+      "judge_id": "parallel-v3-fresh/S1-03/J1",
+      "status": "PASS",
+      "proposal_sha256": "f4362077ed7eb2f0dff7bb76acd60debeaa41bd37886551977b92c02addfcb6e",
+      "original_response_path": "relay/union-supplement-v1/j1-response.md",
+      "original_response_sha256": "c590acf642d5db68279bc55eb0e7930015606eb8ac8df889b4da394554a10979",
+      "original_response_bytes": 3629,
+      "complete_proposal_explicit": true
+    },
+    {
+      "judge_id": "parallel-v3-fresh/S1-03/J2",
+      "status": "PASS",
+      "proposal_sha256": "f4362077ed7eb2f0dff7bb76acd60debeaa41bd37886551977b92c02addfcb6e",
+      "original_response_path": "relay/union-supplement-v1/j2-response.md",
+      "original_response_sha256": "82237b06839082d4b9bbce93c9d348ab40d08027f1566aad950b058cf5afe5fc",
+      "original_response_bytes": 2605,
+      "complete_proposal_explicit": true
+    }
+  ],
+  "at_utc": "2026-11-15T05:54:03.049784+00:00",
+  "scope": "Both original full-proposal decisions read by principal. The concrete contribution is accepted as local preparatory navigation only. No handoff/version/root has been selected for union.",
+  "global_owner": "S1_COORDINATION",
+  "historical_entry_preserved": "s1.core.entry",
+  "remaining_local_mandatory_findings": []
+}

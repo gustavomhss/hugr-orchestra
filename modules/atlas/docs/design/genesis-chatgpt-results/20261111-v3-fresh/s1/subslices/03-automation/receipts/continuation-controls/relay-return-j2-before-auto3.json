@@ -1,0 +1,10 @@
+{
+  "id": "relay-return-j2-before-auto3",
+  "kind": "judge-transport-handover-request",
+  "method": "collaboration.send_message",
+  "target": "/root/review_relay",
+  "message": "As preparações mecânicas independentes estão concluídas. Para acelerar o transporte paralelo, devolva J2 à principal APÓS capturar o FINAL original de auto2 e ANTES de enviar qualquer parte de auto3 a J2. Você continua exclusivamente J1 auto3/4 e agregado condicional. Não interrompa o juízo J2 atual; confirme a transferência quando o FINAL estiver salvo, indicando se alguma chamada J2 nova foi enviada. A principal então fará auto3/4 de J2; os mesmos dois juízes e seus escopos permanecem.",
+  "tool_returned_normally": true,
+  "recorded_at_utc": "2026-11-15T07:40:26.570206+00:00",
+  "actual_handover_requires_relay_confirmation": true
+}

@@ -1,0 +1,24 @@
+{
+  "lot": "derived-automation-impact-v2-delta",
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "source": "review-packets/derived-automation-impact-v2-delta.md",
+  "source_bytes": 34067,
+  "source_sha256": "851b536c34eb942e564595eacef0921aff211ec3c7e6d0eda5dca23207e524ba",
+  "source_manifest": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/derived-automation-impact-v2-delta.manifest.json",
+  "source_manifest_bytes": 1239,
+  "source_manifest_sha256": "3aefb4dc8edb6f8de7797e2823fa57d98f147d50e7578877e47e64aa14b96b2b",
+  "parts": [
+    {
+      "number": 1,
+      "file": "part-01.txt",
+      "start": 0,
+      "end": 34067,
+      "bytes": 34067,
+      "sha256": "851b536c34eb942e564595eacef0921aff211ec3c7e6d0eda5dca23207e524ba"
+    }
+  ],
+  "encoding": "UTF-8",
+  "preparation_state": "PREPARED_NOT_DISPATCHED",
+  "dispatch_count_at_preparation": 0,
+  "prepared_at_utc": "2026-11-15T10:06:25.587459+00:00"
+}

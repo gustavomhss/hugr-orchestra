@@ -1,0 +1,11 @@
+{
+  "agent_id": "/root/derived_automation",
+  "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/payload/receipts/producer-responses/derived-automation-l4-v1-original.md",
+  "bytes": 3022,
+  "sha256": "4f107717606764543073b75b27c566eabe4e2562f368fa3c1a547e332eb1c521",
+  "literal": true,
+  "producer_response_byte_equal": true,
+  "captured_before_handle_reuse": true,
+  "origin": "Native FINAL_ANSWER delivered to root",
+  "at_utc": "2026-11-15T10:17:25.451303+00:00"
+}

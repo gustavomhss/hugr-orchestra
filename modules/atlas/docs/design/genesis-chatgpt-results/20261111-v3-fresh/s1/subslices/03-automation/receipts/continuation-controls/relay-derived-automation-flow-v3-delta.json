@@ -1,0 +1,20 @@
+{
+  "id": "relay-derived-automation-flow-v3-delta",
+  "kind": "LITERAL_REVIEW_TRANSPORT_ONLY",
+  "method": "collaboration.followup_task",
+  "target": "/root/review_relay",
+  "message": "A principal devolve exclusivamente a você os mesmos J1/J2 para revisar a correção L2 v3 de automação. Ambos estão ociosos; o autor terminou e o helper mecânico também terminou. Pode manter J1 e J2 ativos simultaneamente (root + courier +2 juízes =4 slots); faça as chamadas diretas sequencialmente, sem aguardar o FINAL de J1 para entregar o mesmo pacote a J2. Não há outro remetente concorrente.\n\nRaiz /workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390. Leia somente review-packets/derived-automation-flow-v3-delta.md e seu .manifest.json, além dos próprios registros necessários. Pacote37266 bytes, SHA256 584f286ddbdd3cd29fa8a8e66acab8f5e975e855d127b18d17e95a614a7f0451. Corpo v3 inteiro16570 bytes, SHA256 64d97f6da72c92a00ad8e3d91e20a42fd360dbedb502733c0548746462442287. Só mudou AF-L2-J2-01; inversão integral para v2 e §8 inteira preservada foram conferidas. Há31 inputs, sendo24 anteriores byte-idênticos e7 novos. A principal capturou o FINAL do autor antes deste despacho.\n\nEste pacote contém o corpo corrente INTEIRO, receita v3 inteira, todos os segmentos modificados da evidência com ranges/identidades/reconstrução verificada e projeções mecânicas explicitamente rotuladas. O restante do contexto literal já foi recebido no lote v2. O pacote alternativo completo555? não deve ser lido nem despachado: use somente o arquivo e SHA acima. Não há voto sobre v3 nem oracle no pacote.\n\nCrie relay/derived-automation-flow-v3-delta. Cabe em UMA parte de até38000 bytes por juiz; preserve-a inteira e seu manifest. Use orçamento de saída suficiente ao ler, evitando truncamento. Envie o conteúdo UTF-8 literalmente por collaboration.followup_task a /root/s1_03_j1 e /root/s1_03_j2, com FIM_DO_LOTE externo. Juízes sem ferramentas; avaliar a correção com o próprio exame anterior e explicitar aceite do corpo inteiro corrente se suficiente. Não transmitir parecer de um ao outro.\n\nPreserve argumentos REAIS, retornos, FINALs e qualquer erro/correção antes de reutilizar os handles. Hash local não é checksum do wire. Capture j1-response.md e j2-response.md literais sem LF terminal, com file absoluto/bytes/sha256/literal=true em dispatch-receipt.json.judgment_captures. Se houver REQUEST_EVIDENCE, relate sem abrir fontes por conta própria. Ao concluir, devolva ambos explicitamente à principal e grave também seu próprio retorno final literal em relay-final-original.md, sem LF terminal, antes de retornar esse mesmo texto no FINAL. Não altere candidatos e não use oracle.",
+  "message_bytes": 2552,
+  "message_sha256": "ede8e81f1fc1e5765d2b73cf2970ce0af09e5b407428fb76263c26c99fae7b51",
+  "tool_returned_normally": true,
+  "observed_at_utc": "2026-11-15T09:35:48.250182+00:00",
+  "actual_authorized_packet": {
+    "path": "review-packets/derived-automation-flow-v3-delta.md",
+    "bytes": 37266,
+    "sha256": "584f286ddbdd3cd29fa8a8e66acab8f5e975e855d127b18d17e95a614a7f0451"
+  },
+  "note": "The incidental text completo555? is retained as actually sent and is not an identity claim. Only the explicit path,37266-byte size and SHA above authorize transport; alternative full packet remains NOT_DISPATCHED.",
+  "tokens": "UNKNOWN",
+  "physical_attempts": "UNKNOWN",
+  "cost": "UNKNOWN"
+}

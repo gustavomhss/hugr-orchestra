@@ -1,0 +1,1 @@
+ACK — **automation-4-supplement-v4, parte 2/3**. Última âncora recebida: **AUT4-C06**, `scheduled-task/model.ts`, bloco anunciado como linhas **37–65**, até o fechamento de `skipRun`. Aguardo a parte final e o `FIM_DO_LOTE` externo.

@@ -1,0 +1,16 @@
+{
+  "id": "relay-derived-automation-maintenance-v1",
+  "target": "/root/review_relay",
+  "kind": "literal_review_courier",
+  "method": "collaboration.followup_task",
+  "message_file": "payload/receipts/continuation-controls/relay-automation-maintenance-v1.message.txt",
+  "message_bytes": 1700,
+  "message_sha256": "861bc54f662e1351387005d72ca0316446bc4a80b9a65890d0bf8cd09c00c3aa",
+  "state": "COMPLETED_BOTH_HANDLES_RETURNED",
+  "at_utc": "2026-11-15T10:18:13.993547+00:00",
+  "tool_returned_normally": true,
+  "tool_result_text": "",
+  "dispatch_observed_at_utc": "2026-11-15T10:18:23.747396+00:00",
+  "final_capture": "payload/receipts/parent-visible-captures/relay-automation-maintenance-v1-final.capture.json",
+  "final_sha256": "4dc8be8619cad81c3a14e67f84cfc31405f748b6b987766775cceaee033e39bf"
+}

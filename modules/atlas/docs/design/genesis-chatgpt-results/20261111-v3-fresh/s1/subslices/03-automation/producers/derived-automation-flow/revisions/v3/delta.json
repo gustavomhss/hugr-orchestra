@@ -1,0 +1,120 @@
+{
+  "schema": "s1-03-derived-judge-finding-delta/v1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "artifact": {
+    "key": "s1.subslice03.automation-flow",
+    "layer": 2,
+    "need": "flow",
+    "version": "v3"
+  },
+  "finding_origin": "Mandatory public source-fidelity finding AF-L2-J2-01 from the same persistent J2. No reserved answer, other-judge vote or full judgment prose is an author input. L2 has no dual gate yet; L1 v4 remains accepted unchanged.",
+  "correction_recipe": {
+    "local_path": "payload/recipes/derived/automation-flow-dispatch-fidelity-v3.json",
+    "bytes": 6224,
+    "sha256": "a0f24c622d77e89d6a7020334075691efb8f3153f99087eb7bc2afc3337cb9ea",
+    "git_blob_sha": "e7531d1cba701855e10fc46602a4ca584dffe69b"
+  },
+  "current_request": {
+    "local_path": "producers/derived-automation-flow/revisions/v3/request.txt",
+    "bytes": 680,
+    "sha256": "4ed7cc034c532a6b414fa03bfcd4f2034ccfca3f593ebad1652653d814e64538",
+    "git_blob_sha": "a07913c67f6b5343dca9386f3d0d4174892c5aab"
+  },
+  "visible_dispatch": {
+    "local_path": "producers/derived-automation-flow/revisions/v3/dispatch-message.txt",
+    "bytes": 1520,
+    "sha256": "4fff1b29411f19321d656897a2ab13cb5c65589e4652e1f8a790fb49642ffbb0",
+    "git_blob_sha": "bafca800486d37ef7bef21e11d7b9b42f1c2099a"
+  },
+  "accepted_predecessor": {
+    "local_path": "producers/automation/body.md",
+    "bytes": 60767,
+    "sha256": "968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae",
+    "git_blob_sha": "e26213eb2fc76dc843dca17d1111334c76f88890",
+    "key": "s1.core.automation",
+    "version": "v4",
+    "section": "4.1 Comandos GitHub"
+  },
+  "before": {
+    "local_path": "producers/derived-automation-flow/revisions/v3/history/body.md",
+    "bytes": 16541,
+    "sha256": "5b24037431881e96ddb5a872fd6541c94880d189d8b0c873bac9d8bd874d85c1",
+    "git_blob_sha": "378dbb4cd9f978ed9ab848136a2f4b9fdd72ca6b",
+    "original_read_paths": [
+      "producers/derived-automation-flow/body.md"
+    ]
+  },
+  "after": {
+    "local_path": "producers/derived-automation-flow/body.md",
+    "bytes": 16570,
+    "sha256": "64d97f6da72c92a00ad8e3d91e20a42fd360dbedb502733c0548746462442287",
+    "git_blob_sha": "5af7e410ddfb4d1da1473a990fc25d27a7580303"
+  },
+  "replacement": {
+    "finding_id": "AF-L2-J2-01",
+    "body_section": "4. Actions: preservar a semântica do provider e do transporte",
+    "location": "table / Dispatch / GitHub",
+    "old_literal": "Workflow ativo e `workflow_dispatch` na branch padrão e ref selecionada; 204 fica sem atribuição",
+    "new_literal": "Workflow ativo; prova de `workflow_dispatch` na branch padrão e leitura da fonte da ref selecionada; 204 fica sem atribuição.",
+    "accepted_predecessor_line": "| `workflow.dispatch` | Workflow ativo; prova de `workflow_dispatch` na branch padrão **e** fonte da ref selecionada; inputs literais tipados/defaults/required/choices e environment por identidade nativa. POST dispatch: 200 com identidade completa pode atribuir run; 204 fica `unattributed` |",
+    "occurrences_replaced": 1,
+    "before_byte_start": 6000,
+    "before_byte_end_exclusive": 6099,
+    "after_byte_start": 6000,
+    "after_byte_end_exclusive": 6128,
+    "old_utf8_bytes": 99,
+    "new_utf8_bytes": 128
+  },
+  "replacement_count": 1,
+  "inverse_equality": {
+    "operation": "Substituir new_literal por old_literal uma vez.",
+    "equals_retained_v2_bytes": true,
+    "restored_bytes": 16541,
+    "restored_sha256": "5b24037431881e96ddb5a872fd6541c94880d189d8b0c873bac9d8bd874d85c1",
+    "restored_git_blob_sha": "378dbb4cd9f978ed9ab848136a2f4b9fdd72ca6b"
+  },
+  "unchanged_segments": [
+    {
+      "segment": 1,
+      "before_byte_start": 0,
+      "before_byte_end_exclusive": 6000,
+      "after_byte_start": 0,
+      "after_byte_end_exclusive": 6000,
+      "bytes": 6000,
+      "sha256": "cfe988f33c66c5b7f640314ac459c1d0bd41f3c595f8f079089befdb986dbee3",
+      "equal": true
+    },
+    {
+      "segment": 2,
+      "before_byte_start": 6099,
+      "before_byte_end_exclusive": 16541,
+      "after_byte_start": 6128,
+      "after_byte_end_exclusive": 16570,
+      "bytes": 10442,
+      "sha256": "9c7baf5d13ee3fbe75fab4e3b547a8bd78a1b8f96e55cdf98afa4d8afb9b8223",
+      "equal": true
+    }
+  ],
+  "unchanged_body_bytes": 16442,
+  "all_other_body_bytes_preserved": true,
+  "scheduler_v2_fixes": [
+    {
+      "finding_id": "AF-L2-PREVIEW-01",
+      "literal": "Em capability, verifica a presença/identidade do owner antes da Session; para claim ainda não admitida, verifica `holds` antes da Session e outra vez antes de prompt, sem reler a Session do owner.",
+      "before_occurrences": 1,
+      "after_occurrences": 1,
+      "preserved": true
+    },
+    {
+      "finding_id": "AF-L2-PREVIEW-02",
+      "literal": "No replay de capability manualKey, `running` sem SessionInput retorna “retry shortly” e `revoked` retorna erro; nos demais casos, o ramo devolve o SessionID retido com `reused:true`, sem exigir admissão para uma row já assentada.",
+      "before_occurrences": 1,
+      "after_occurrences": 1,
+      "preserved": true
+    }
+  ],
+  "entire_scheduler_section_8_byte_identical": true,
+  "verification_scope": "Identidade e comparação determinística de arquivos; sem teste de produto, parecer completo ou operação Atlas.",
+  "semantic_review_status": "SAME_PAIR_REEVALUATION_PENDING_NO_DUAL_L2_GATE",
+  "dependent_release": false
+}

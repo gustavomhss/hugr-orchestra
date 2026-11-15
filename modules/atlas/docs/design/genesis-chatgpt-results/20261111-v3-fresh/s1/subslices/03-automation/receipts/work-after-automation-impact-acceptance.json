@@ -1,0 +1,8 @@
+{
+  "at_utc": "2026-11-15T10:12:04.369734+00:00",
+  "history": "payload/history/work-before-automation-impact-acceptance.md",
+  "previous_sha256": "8cff8b014c6070aaa997ae30048ee3787e388c4c36b5bb7803d0d7ac259c75f2",
+  "current_sha256": "9cdc116fe563b4b2fdb829ce59ad40f32709d959845d83d82eb154c6d960e693",
+  "current_gate_count": 10,
+  "only_active_authoring": "s1.subslice03.automation-maintenance L4"
+}

@@ -1,0 +1,1 @@
+ACK — `automation-4-supplement-v4`, parte **2/3** recebida. Última âncora: **AUT4-C06**, `model.ts`, fim de `skipRun`. Aguardo a parte final e o `FIM_DO_LOTE` externo.

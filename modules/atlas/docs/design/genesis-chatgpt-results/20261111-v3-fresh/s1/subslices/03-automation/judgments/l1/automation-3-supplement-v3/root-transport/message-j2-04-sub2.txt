@@ -1,0 +1,672 @@
+Transporte literal pela principal ao mesmo juiz J2, execução 34269cf4-d631-41c5-a30b-85b0ec217390. Não use ferramentas, delegue, edite ou receba parecer do outro juiz. Lote automation-3-supplement-v3; parte 4/8. Pacote canônico 408213 bytes SHA256 f2c8d12e8e0b22964fadfaba9c40632f0ba5489d795d76dc3efde70fd30bd276. Esta parte tem 51023 bytes SHA256 a4837bc1d043308f649ea420706eab580ae881ce39373e6709abd13cbe16b7cf. Envio em dois fragmentos contíguos: este é 2/2, offsets UTF-8 [25503,51023), 25520 bytes SHA256 94dd1d37e74ab8374185d09a3acf0872acd34aad2ecf9c4b43fab44d27dda8b4. Junte os fragmentos sem os envelopes. Conserve o exame anterior e os deltas já recebidos. Julgue apenas após FIM_DO_LOTE; até lá responda somente ACK da parte e da última âncora.
+
+BEGIN_PART
+// Persists how many evaluations in a row put P50 past the target date, and raises the one pre-emptive budget
+// question when the forecast finish crosses 90% of the budget. Returns the activity of a question it raised.
+export const evaluate = Effect.fnUntraced(function* (tx: Tx, id: string) {
+  const project = yield* tx.select().from(BoardProjectTable).where(eq(BoardProjectTable.id, id as Board.ProjectID)).get()
+  if (!project) return undefined
+  const forecast = yield* forecastOf(tx, project)
+  const streak = BoardForecast.late(forecast.project) ? project.forecast_late_streak + 1 : 0
+  if (streak !== project.forecast_late_streak)
+    yield* tx.update(BoardProjectTable).set({ forecast_late_streak: streak }).where(eq(BoardProjectTable.id, project.id)).run()
+  if (project.budget_usd === null || project.status === "archived" || forecast.project.forecast.kind === "done") return undefined
+  const budget = (yield* spendOf(tx, project, forecast.project.forecast)).budget
+  if (budget.forecastUsd === null || budget.forecastPercent === null || budget.forecastPercent < BoardSpend.QUESTION * 100) return undefined
+  // One question per budget figure: raising the budget makes a new one possible, answering never re-asks.
+  const kind = `budget:${project.budget_usd}`
+  const asked = yield* tx
+    .select({ id: BoardQuestionTable.id })
+    .from(BoardQuestionTable)
+    .where(and(eq(BoardQuestionTable.project_id, project.id), eq(BoardQuestionTable.kind, kind)))
+    .get()
+  if (asked) return undefined
+  const question = Board.QuestionID.create()
+  const text = `${project.key} is forecast to spend about $${budget.forecastUsd.toFixed(2)} by its finish, ${Math.round(budget.forecastPercent)}% of its $${project.budget_usd.toFixed(2)} budget. What should happen?`
+  const options = [
+    { id: "raise", label: "Raise the budget", consequence: "Work continues; set the new amount in the project settings." },
+    { id: "cut", label: "Cut scope to fit", consequence: "Maestro proposes which cards to cut; the budget stays." },
+    { id: "continue", label: "Keep going as is", consequence: "Work continues until 100%, then new work stops." },
+  ]
+  yield* tx
+    .insert(BoardQuestionTable)
+    .values({
+      id: question,
+      project_id: project.id,
+      issue_id: null,
+      epic_id: null,
+      text,
+      options,
+      recommended: "cut",
+      cost_of_waiting: "At 100% of the budget the board stops starting new work.",
+      kind,
+      blocking: false,
+      status: "open",
+    })
+    .run()
+  return yield* log(tx, {
+    project: project.id,
+    actor: "maestro",
+    action: "question.ask",
+    reason: "The forecast finish crossed 90% of the budget.",
+    after: {
+      id: question,
+      epic_id: null,
+      text,
+      options,
+      recommended: "cut",
+      cost_of_waiting: "At 100% of the budget the board stops starting new work.",
+      kind,
+      blocking: false,
+    },
+  })
+})
+
+/** A project at its whole budget starts no new work; a card already building keeps going. */
+~~~~
+
+```json
+{"first_line":170,"last_line":191,"bytes":873,"sha256":"99ea21162f22ccd394a1f73d219b5b3d0c4d4df346dfe4ccb7e0d73b68fc3266"}
+```
+
+~~~~typescript
+})
+
+export const settings = Effect.fnUntraced(function* (
+  tx: Tx,
+  key: string,
+  input: { readonly target_date?: number | null; readonly budget_usd?: number | null; readonly reason?: string },
+  actor: "owner" | "maestro",
+) {
+  const project = yield* loadProject(tx, key)
+  if (project.status === "archived") return yield* archived(project)
+  const change = diff(project, { target_date: input.target_date, budget_usd: input.budget_usd })
+  if (!change) return yield* new RefusedError({ message: `Nothing to change on ${key}.` })
+  yield* tx.update(BoardProjectTable).set(change.after).where(eq(BoardProjectTable.id, project.id)).run()
+  const activity = yield* log(tx, {
+    project: project.id,
+    actor,
+    action: "project.upsert",
+    reason: input.reason ?? null,
+    ...change,
+  })
+  return { result: { activity }, changed: changed(project.id, activity) }
+})
+~~~~
+
+## AUT3-C10
+
+```json
+{
+  "block_id": "AUT3-C10",
+  "type": "literal_source_chain",
+  "canonical_request_namespace": "J1",
+  "requests": [
+    "RE-AUT3-02"
+  ],
+  "body_anchors": [
+    "B05"
+  ],
+  "requested_subject": "Metered/unmetered/card/total, thresholds, peers e budget/forecast arithmetic",
+  "path": "packages/core/src/board/spend.ts",
+  "archive": "sources/packages/core/src/board/spend.ts",
+  "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_git_blob_sha": "c5c82e700282b4ba2fad710a5a87daae0328b6f9",
+  "source_sha256": "11d1284e196ac2f72708d88a47d7f839f5e380d0f4cc87e0a196d4b4c32d45ce",
+  "source_bytes": 6301,
+  "required_source_line_ranges": [
+    [
+      1,
+      143
+    ]
+  ],
+  "prior_literal_ranges": [
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "B05",
+      "source_path": "packages/core/src/board/spend.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "c5c82e700282b4ba2fad710a5a87daae0328b6f9",
+      "source_sha256": "11d1284e196ac2f72708d88a47d7f839f5e380d0f4cc87e0a196d4b4c32d45ce",
+      "first_line": 30,
+      "last_line": 49,
+      "excerpt_bytes": 1223,
+      "excerpt_sha256": "26ef2f8eaebf6d6335d3e53da76a6aa6fa31c44016f0856bd38fccbff16bb214",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 130067,
+      "literal_content_byte_end_exclusive": 131290
+    }
+  ]
+}
+```
+
+```json
+{"first_line":1,"last_line":29,"bytes":1109,"sha256":"e0356f6b58ff26f3b962f14ff153467ca4b74864a21074d37fa9b30ea6735e9c"}
+```
+
+~~~~typescript
+export * as BoardSpend from "./spend"
+
+import type { Board } from "@orchestra/schema/board"
+
+// What a card, epic, seat and project cost (docs/specs/projects-board/CONTRACT.md). Pure arithmetic over rows the board
+// service reads: a figure comes from a real meter or says it has none. A missing meter is never counted as zero.
+
+const DAY = 86_400_000
+/** Providers whose engine runs on a subscription: they report no per-token price. */
+const SUBSCRIPTION = ["claude-code"]
+
+export const WARN = 0.8
+export const PAUSE = 1
+export const QUESTION = 0.9
+export const FLAG = 3
+/** Peers an epic needs before its median means anything. */
+const PEERS = 2
+
+export type Session = {
+  readonly model: string | null
+  readonly provider: string | null
+  readonly cost: number
+  readonly tokens: number
+}
+
+/** `none`: no PR, nothing to attribute. `pending`: a PR whose runs have not been fetched yet. */
+export type Ci = { readonly kind: "none" } | { readonly kind: "pending" } | { readonly kind: "ok"; readonly usd: number }
+
+/** One card's spend. Subagent sessions of the card's session are included by the caller. */
+~~~~
+
+```json
+{"first_line":50,"last_line":143,"bytes":3969,"sha256":"c81f03dfbd33e2a8357a6a551ac2b4a37fd6e4dec75c16b1257b941fe52f1daf"}
+```
+
+~~~~typescript
+    infra,
+    byModel,
+    usd: usd(models) + usd(infra),
+    partial: (metered.length > 0 && unmetered.length > 0) || input.ci.kind === "pending",
+  }
+}
+
+/** Adds spends together: a part is metered when any member of it is. */
+export function total(items: readonly Board.Spend[]): Board.Spend {
+  const part = (pick: (item: Board.Spend) => Board.Meter): Board.Meter => {
+    const meters = items.map(pick)
+    const first = meters.find((meter) => meter.kind === "not-metered")
+    return meters.some((meter) => meter.kind === "usd") || !first ? { kind: "usd", usd: sum(meters.map(usd)) } : first
+  }
+  const models = part((item) => item.models)
+  const infra = part((item) => item.infra)
+  const merged = items
+    .flatMap((item) => item.byModel)
+    .reduce<Record<string, number>>((all, item) => ({ ...all, [item.model]: (all[item.model] ?? 0) + item.usd }), {})
+  return {
+    models,
+    infra,
+    byModel: Object.entries(merged)
+      .map(([model, value]) => ({ model, usd: value }))
+      .toSorted((a, b) => b.usd - a.usd || a.model.localeCompare(b.model)),
+    usd: usd(models) + usd(infra),
+    partial:
+      items.some((item) => item.partial) ||
+      items.some((item) => item.models.kind === "not-metered") && items.some((item) => item.models.kind === "usd" && item.models.usd > 0),
+  }
+}
+
+/** Flags a card at 3 times the median of its epic peers; cards outside an epic are never flagged. */
+export function flags(cards: readonly { readonly epic: number | null; readonly spend: Board.Spend }[]) {
+  return cards.map((item) => {
+    if (item.epic === null || item.spend.models.kind !== "usd" || item.spend.usd <= 0) return { flagged: false, median: null }
+    const peers = cards
+      .filter((other) => other !== item && other.epic === item.epic && other.spend.models.kind === "usd" && other.spend.usd > 0)
+      .map((other) => other.spend.usd)
+    if (peers.length < PEERS) return { flagged: false, median: null }
+    const middle = median(peers)
+    return { flagged: item.spend.usd >= FLAG * middle, median: middle }
+  })
+}
+
+export function budget(input: {
+  readonly budgetUsd: number | null
+  readonly spentUsd: number
+  readonly forecastUsd: number | null
+}): Board.Budget {
+  if (input.budgetUsd === null)
+    return { budgetUsd: null, spentUsd: input.spentUsd, percent: null, state: "none", forecastUsd: input.forecastUsd, forecastPercent: null }
+  const share = (value: number) => (input.budgetUsd! > 0 ? (value / input.budgetUsd!) * 100 : 100)
+  return {
+    budgetUsd: input.budgetUsd,
+    spentUsd: input.spentUsd,
+    percent: share(input.spentUsd),
+    state: input.spentUsd >= input.budgetUsd * PAUSE ? "paused" : input.spentUsd >= input.budgetUsd * WARN ? "warn" : "ok",
+    forecastUsd: input.forecastUsd,
+    forecastPercent: input.forecastUsd === null ? null : share(input.forecastUsd),
+  }
+}
+
+/** Spend at the forecast finish: what is spent plus the burn rate over the time left to the forecast P50. */
+export function finish(input: {
+  readonly spentUsd: number
+  /** When the project started spending. */
+  readonly since: number
+  readonly now: number
+  readonly forecast: Board.Forecast
+}) {
+  if (input.forecast.kind === "done") return input.spentUsd
+  if (input.forecast.kind !== "dates") return null
+  const burn = input.spentUsd / Math.max(1, (input.now - input.since) / DAY)
+  return input.spentUsd + burn * Math.max(0, (input.forecast.p50 - input.now) / DAY)
+}
+
+function subscription(item: Session) {
+  return item.provider !== null && SUBSCRIPTION.includes(item.provider)
+}
+
+function usd(meter: Board.Meter) {
+  return meter.kind === "usd" ? meter.usd : 0
+}
+
+function sum(values: readonly number[]) {
+  return values.reduce((all, value) => all + value, 0)
+}
+
+function median(values: readonly number[]) {
+  const sorted = values.toSorted((a, b) => a - b)
+  const middle = Math.floor(sorted.length / 2)
+  return sorted.length % 2 === 1 ? (sorted[middle] ?? 0) : ((sorted[middle - 1] ?? 0) + (sorted[middle] ?? 0)) / 2
+}
+~~~~
+
+## AUT3-C11
+
+```json
+{
+  "block_id": "AUT3-C11",
+  "type": "literal_source_chain",
+  "canonical_request_namespace": "J1",
+  "requests": [
+    "RE-AUT3-02"
+  ],
+  "body_anchors": [
+    "B05"
+  ],
+  "requested_subject": "Throughput com zeros, seed, simulação, percentis, horizon/waits/late",
+  "path": "packages/core/src/board/forecast.ts",
+  "archive": "sources/packages/core/src/board/forecast.ts",
+  "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_git_blob_sha": "8c5aa204de45ec477861b3c5ea3c37aa1fe78eab",
+  "source_sha256": "4c30459dd7de865d5536d9a24a842b19a14bbeffd5ae4597a8df5f0b76fa06fd",
+  "source_bytes": 6656,
+  "required_source_line_ranges": [
+    [
+      1,
+      162
+    ]
+  ],
+  "prior_literal_ranges": [
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "B05",
+      "source_path": "packages/core/src/board/forecast.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "8c5aa204de45ec477861b3c5ea3c37aa1fe78eab",
+      "source_sha256": "4c30459dd7de865d5536d9a24a842b19a14bbeffd5ae4597a8df5f0b76fa06fd",
+      "first_line": 8,
+      "last_line": 14,
+      "excerpt_bytes": 195,
+      "excerpt_sha256": "6c95730368bd0e73b52b90435eec1b52f9534a3393fd6f62742e5ff853ac7d7c",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 131670,
+      "literal_content_byte_end_exclusive": 131865
+    }
+  ]
+}
+```
+
+```json
+{"first_line":1,"last_line":7,"bytes":323,"sha256":"40569294765aa6d6bc92c08fc5e7cc39ba406a28ab84b1e60bfe9d0c39fedcf5"}
+```
+
+~~~~typescript
+export * as BoardForecast from "./forecast"
+
+import type { Board } from "@orchestra/schema/board"
+
+// Forecasts from the board's own history (CONTRACT.md section 3): the daily shipped throughput since the first ship
+// day, resampled in a seeded Monte Carlo, so the same board on the same day always gives the same dates.
+
+~~~~
+
+```json
+{"first_line":15,"last_line":162,"bytes":6138,"sha256":"0211225471f65ff50901a24b01ed3652e428ab547a11f8395e06c49fd409d962"}
+```
+
+~~~~typescript
+export type Item = {
+  readonly epic: number | null
+  readonly stage: Board.Stage
+  /** For a shipped issue, the moment it shipped. */
+  readonly enteredAt: number
+  /** The issue ref this one is blocked on: an unshipped dependency, or itself when paused or asked a blocking question. */
+  readonly waitsOn: string | null
+}
+
+/** The project forecast and, in position order, one per epic; an epic's dates include the open epics before it. */
+export function plan(input: {
+  readonly items: readonly Item[]
+  readonly epics: readonly { readonly number: number; readonly ref: string }[]
+  readonly targetDate: number | null
+  readonly now: number
+}) {
+  const shipped = input.items.filter((item) => item.stage === "shipped")
+  const open = input.items.filter((item) => OPEN.includes(item.stage))
+  const openOf = (epic: number) => open.filter((item) => item.epic === epic)
+  const cumulative = input.epics.map((_, index) =>
+    input.epics.slice(0, index + 1).reduce((sum, epic) => sum + openOf(epic.number).length, 0),
+  )
+  const today = Math.floor(input.now / DAY)
+  const runs =
+    shipped.length >= NEEDED
+      ? simulate(
+          throughput(
+            shipped.map((item) => item.enteredAt),
+            today,
+          ),
+          [...cumulative, open.length],
+          today,
+        )
+      : []
+  const forecast = (items: readonly Item[], shippedHere: number, run?: { readonly p50: number; readonly p85: number }): Board.Forecast => {
+    if (items.length === 0 && (shippedHere > 0 || shipped.length >= NEEDED)) return { kind: "done" }
+    const waits = items.every((item) => item.waitsOn !== null) ? items[0]?.waitsOn : undefined
+    if (waits) return { kind: "waits", on: waits }
+    if (!run) return { kind: "insufficient", shipped: shipped.length, needed: NEEDED }
+    return {
+      kind: "dates",
+      p50: run.p50,
+      p85: run.p85,
+      vsTarget:
+        input.targetDate === null
+          ? null
+          : { p50: Math.round((run.p50 - input.targetDate) / DAY), p85: Math.round((run.p85 - input.targetDate) / DAY) },
+    }
+  }
+  const epics = input.epics.map((epic, index) => ({
+    epic: epic.number,
+    ref: epic.ref,
+    shipped: shipped.filter((item) => item.epic === epic.number).length,
+    remaining: openOf(epic.number).length,
+    forecast: forecast(
+      openOf(epic.number),
+      shipped.filter((item) => item.epic === epic.number).length,
+      runs[index],
+    ),
+  }))
+  const pole = epics.reduce<number | undefined>((best, epic) => {
+    if (epic.forecast.kind !== "dates") return best
+    const current = best === undefined ? undefined : epics[best]?.forecast
+    if (current?.kind === "dates" && current.p85 >= epic.forecast.p85) return best
+    return epics.indexOf(epic)
+  }, undefined)
+  return {
+    project: {
+      shipped: shipped.length,
+      remaining: open.length,
+      targetDate: input.targetDate,
+      forecast: forecast(open, shipped.length, runs.at(-1)),
+    } satisfies Board.ProjectForecast,
+    epics: epics.map((epic, index): Board.EpicForecast => ({ ...epic, setsDate: index === pole })),
+  }
+}
+
+/** P50 past the target date; two consecutive evaluations like this turn the project's health to at_risk. */
+export function late(forecast: Board.ProjectForecast) {
+  return forecast.forecast.kind === "dates" && forecast.forecast.vsTarget !== null && forecast.forecast.vsTarget.p50 > 0
+}
+
+/** Replays the stage of every issue through the activity log; a point each time the scope or shipped count changes. */
+export function scope(
+  rows: readonly {
+    readonly issue: string | null
+    readonly reason: string | null
+    readonly after: Record<string, unknown> | null
+    readonly at: number
+  }[],
+) {
+  const stages = new Map<string, unknown>()
+  return rows.reduce<Board.ScopePoint[]>((points, row) => {
+    if (!row.issue || typeof row.after?.stage !== "string") return points
+    stages.set(row.issue, row.after.stage)
+    const values = [...stages.values()]
+    const total = values.filter((stage) => stage !== "intake" && stage !== "cut").length
+    const done = values.filter((stage) => stage === "shipped").length
+    const last = points.at(-1)
+    if (last && last.scope === total && last.shipped === done) return points
+    return [...points, { at: row.at, scope: total, shipped: done, reason: !last || last.scope !== total ? row.reason : null }]
+  }, [])
+}
+
+/** Issues shipped per UTC day, from the first ship day through today, zero days included. */
+function throughput(shippedAt: readonly number[], today: number) {
+  const first = Math.min(today, ...shippedAt.map((at) => Math.floor(at / DAY)))
+  const counts = Array.from({ length: today - first + 1 }, () => 0)
+  shippedAt.forEach((at) => {
+    counts[Math.min(Math.floor(at / DAY), today) - first]++
+  })
+  return counts
+}
+
+/** For each target count, the P50 and P85 day (UTC midnight epoch ms) by which that many more issues ship. */
+function simulate(samples: readonly number[], targets: readonly number[], today: number) {
+  const random = mulberry32(SEED)
+  const goal = Math.max(...targets)
+  const trials = Array.from({ length: TRIALS }, () => {
+    const progress: number[] = []
+    // Cumulative issues shipped after each simulated day.
+    while ((progress.at(-1) ?? 0) < goal && progress.length < HORIZON)
+      progress.push((progress.at(-1) ?? 0) + (samples[Math.floor(random() * samples.length)] ?? 0))
+    return progress
+  })
+  return targets.map((target) => {
+    const days = trials
+      .map((progress) => {
+        const index = progress.findIndex((count) => count >= target)
+        return index === -1 ? HORIZON : index + 1
+      })
+      .toSorted((a, b) => a - b)
+    return {
+      p50: (today + (days[Math.ceil(TRIALS * 0.5) - 1] ?? HORIZON)) * DAY,
+      p85: (today + (days[Math.ceil(TRIALS * 0.85) - 1] ?? HORIZON)) * DAY,
+    }
+  })
+}
+
+function mulberry32(seed: number) {
+  const state = { value: seed >>> 0 }
+  return () => {
+    state.value = (state.value + 0x6d2b79f5) >>> 0
+    const a = Math.imul(state.value ^ (state.value >>> 15), state.value | 1)
+    const b = a ^ (a + Math.imul(a ^ (a >>> 7), a | 61))
+    return ((b ^ (b >>> 14)) >>> 0) / 4294967296
+  }
+}
+~~~~
+
+## AUT3-C12
+
+```json
+{
+  "block_id": "AUT3-C12",
+  "type": "literal_source_chain",
+  "canonical_request_namespace": "J1",
+  "requests": [
+    "RE-AUT3-02",
+    "RE-AUT3-05",
+    "RE-AUT3-06"
+  ],
+  "body_anchors": [
+    "B13"
+  ],
+  "requested_subject": "Origem das métricas derivadas de rows e ausência como null",
+  "path": "packages/core/src/board/ledger.ts",
+  "archive": "sources/packages/core/src/board/ledger.ts",
+  "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_git_blob_sha": "282e862105def593673fa404ca9ce87991b31fe2",
+  "source_sha256": "07f029330ac42176b6bac035d8fdbc2d81d72decd6b83004b6a9627e02351b2c",
+  "source_bytes": 3914,
+  "required_source_line_ranges": [
+    [
+      1,
+      94
+    ]
+  ],
+  "prior_literal_ranges": []
+}
+```
+
+```json
+{"first_line":1,"last_line":94,"bytes":3914,"sha256":"07f029330ac42176b6bac035d8fdbc2d81d72decd6b83004b6a9627e02351b2c"}
+```
+
+~~~~typescript
+export * as BoardLedger from "./ledger"
+
+import { and, asc, desc, eq, inArray, isNotNull } from "drizzle-orm"
+import { Effect } from "effect"
+import type { Board } from "@orchestra/schema/board"
+import { BoardActivityTable, BoardAttemptTable, BoardCheckTable, BoardIssueTable } from "./sql"
+import type { ProjectRow, Tx } from "./shared"
+
+// The conveyor's numbers for one project's pool (merge-queue spec section 12). Each is null until its rows exist.
+export const of = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow) {
+  const merges = yield* tx
+    .select({ issue: BoardActivityTable.issue_id, at: BoardActivityTable.time_created })
+    .from(BoardActivityTable)
+    .where(
+      and(eq(BoardActivityTable.project_id, project.id), eq(BoardActivityTable.action, "bundle.merge"), isNotNull(BoardActivityTable.issue_id)),
+    )
+    .all()
+  const adds = yield* tx
+    .select({ issue: BoardActivityTable.issue_id, at: BoardActivityTable.time_created })
+    .from(BoardActivityTable)
+    .where(and(eq(BoardActivityTable.project_id, project.id), eq(BoardActivityTable.action, "queue.add"), isNotNull(BoardActivityTable.issue_id)))
+    .orderBy(asc(BoardActivityTable.time_created))
+    .all()
+  const checks = yield* tx
+    .select({ issue: BoardCheckTable.issue_id, ended: BoardCheckTable.ended_at })
+    .from(BoardCheckTable)
+    .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardCheckTable.issue_id))
+    .where(
+      and(
+        eq(BoardIssueTable.project_id, project.id),
+        eq(BoardCheckTable.kind, "scoped"),
+        eq(BoardCheckTable.outcome, "pass"),
+        isNotNull(BoardCheckTable.ended_at),
+      ),
+    )
+    .all()
+  const outcomes = yield* settled(tx, project.id)
+  const shipped = yield* tx
+    .select({ id: BoardIssueTable.id })
+    .from(BoardIssueTable)
+    .where(and(eq(BoardIssueTable.project_id, project.id), eq(BoardIssueTable.stage, "shipped")))
+    .all()
+  const attempts =
+    shipped.length === 0
+      ? []
+      : yield* tx
+          .select({ issue: BoardAttemptTable.issue_id })
+          .from(BoardAttemptTable)
+          .where(inArray(BoardAttemptTable.issue_id, shipped.map((row) => row.id)))
+          .all()
+
+  const queueWait = median(
+    merges.flatMap((merge) => {
+      const added = adds.filter((add) => add.issue === merge.issue && add.at <= merge.at).at(-1)
+      return added ? [merge.at - added.at] : []
+    }),
+  )
+  const leadTime = median(
+    merges.flatMap((merge) => {
+      const passed = checks.flatMap((check) =>
+        check.issue === merge.issue && check.ended !== null && check.ended <= merge.at ? [check.ended] : [],
+      )
+      return passed.length === 0 ? [] : [merge.at - Math.min(...passed)]
+    }),
+  )
+  const ejected = outcomes.filter((outcome) => outcome === "ejected").length
+  return {
+    queueWait,
+    redRate: outcomes.length === 0 ? null : ejected / outcomes.length,
+    reworkRate: attempts.length === 0 ? null : attempts.length / shipped.length,
+    leadTime,
+  } satisfies Board.Ledger
+})
+
+/** The outcomes of the project's last 50 settled attempts: the red rate and the bundle size both read them. */
+export const settled = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow["id"]) {
+  const rows = yield* tx
+    .select({ outcome: BoardAttemptTable.outcome })
+    .from(BoardAttemptTable)
+    .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardAttemptTable.issue_id))
+    .where(and(eq(BoardIssueTable.project_id, project), inArray(BoardAttemptTable.outcome, ["merged", "ejected"])))
+    .orderBy(desc(BoardAttemptTable.time_updated))
+    .limit(50)
+    .all()
+  return rows.map((row) => row.outcome)
+})
+
+function median(values: number[]) {
+  if (values.length === 0) return null
+  const sorted = [...values].sort((a, b) => a - b)
+  const middle = Math.floor(sorted.length / 2)
+  if (sorted.length % 2 === 1) return sorted[middle]!
+  return (sorted[middle - 1]! + sorted[middle]!) / 2
+}
+~~~~
+
+## AUT3-C13
+
+```json
+{
+  "block_id": "AUT3-C13",
+  "type": "literal_source_chain",
+  "canonical_request_namespace": "J1",
+  "requests": [
+    "RE-AUT3-02",
+    "RE-AUT3-06"
+  ],
+  "body_anchors": [
+    "B13"
+  ],
+  "requested_subject": "Leitura viva e composição de proof com attempts/recorded facts",
+  "path": "packages/core/src/board/proof.ts",
+  "archive": "sources/packages/core/src/board/proof.ts",
+  "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_git_blob_sha": "6bd1374e707dd7f80975f37e2c03e02a9ee97a95",
+  "source_sha256": "6451c593372c579f0a2e116adc25fc824b1240519ad9110b6637d63935ba2608",
+  "source_bytes": 2553,
+  "required_source_line_ranges": [
+    [
+      1,
+      65
+    ]
+  ],
+  "prior_literal_ranges": [
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "B13",
+      "source_path": "packages/core/src/board/proof.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "6bd1374e707dd7f80975f37e2c03e02a9ee97a95",
+      "source_sha256": "6451c593372c579f0a2e116adc25fc824b1240519ad9110b6637d63935ba2608",
+      "first_line": 31,
+      "last_line": 48,
+      "excerpt_bytes": 687,
+      "excerpt_sha256": "359d8a4cbf38030ea04bf0aaab741690d8c97ae9dcf2aeeb6abda6ac527f382e",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+
+END_PART

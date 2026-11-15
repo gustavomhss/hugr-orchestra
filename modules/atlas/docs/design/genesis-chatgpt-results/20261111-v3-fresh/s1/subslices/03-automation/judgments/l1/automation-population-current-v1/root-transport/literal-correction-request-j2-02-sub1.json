@@ -1,0 +1,4 @@
+{
+  "target": "/root/s1_03_j2",
+  "message": "Correção literal de transporte, sem alteração do pacote canônico: no fragmento 2/3, 1/2 de automation-population-current-v1 que acabei de enviar, a row packages/core/src/actions/transport/gitlab.ts recebeu por erro de transcrição git_blob_sha `a21535f1c3014d492d7f07e98250bfb9e6cc3b3a3a`. O valor canônico exato de 40 caracteres é `a21535f1c3014d492d7f07e98250bfb9e6cc3b3a`. Substitua somente esse valor ao reunir o lote. A mensagem defeituosa e esta correção serão preservadas; não se alega checksum de wire do host. Responda somente ACK da correção e aguarde os demais fragmentos e FIM_DO_LOTE."
+}

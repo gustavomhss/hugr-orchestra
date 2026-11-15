@@ -1,0 +1,419 @@
+Transporte literal pela principal ao mesmo juiz J1, execução 34269cf4-d631-41c5-a30b-85b0ec217390. Não use ferramentas, delegue, edite ou receba parecer do outro juiz. Lote automation-1-supplement-v2-coverage-erratum; parte 4/6. Pacote canônico 344323 bytes SHA256 1599aa38f34decbc6bff88c972ed778d5f49e179dca7ac2915d37ecacf245a4b. Esta parte tem 57598 bytes SHA256 b59753f9ee4a3bdd427d21b224fad9bb04870335c58663a6db2824b44c9d3705. Envio em dois fragmentos contíguos: este é 1/2, offsets UTF-8 [0,28756), 28756 bytes SHA256 aa2305a52ec921e3f8f081969b240323bbce41888a79eada8a2b6896538eb0c4. Junte os fragmentos sem os envelopes. Conserve o exame anterior e os deltas já recebidos. Julgue apenas após FIM_DO_LOTE; até lá responda somente ACK da parte e da última âncora.
+
+BEGIN_PART
+{"block_id":"AUT1-C21","type":"literal_source_excerpt","requests":["RE-AUT1-05"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/authoring/input.ts","repository_path":"packages/core/src/actions/authoring/input.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"92f38a96b425e8cbb9f6e1946c6c40fa78218e81","source_sha256":"93d7315954e83b280a4c1ae64b6882bb1d341b80e448cf1fd36330c30ed58fd2","source_bytes":8268,"body_anchors":["A11"],"requested_subject":"Payloads strict, bytes/path/ref, captura/fields por kind e versões/precondições"}
+```
+
+```json
+{"first_line":9,"last_line":124,"bytes":7942,"sha256":"639d6aecd5c4b40bd50d37c1be0037fd7c0cca96d0e4150b6449874a534e0540"}
+```
+
+~~~~typescript
+export type Services = { readonly transport: ActionsContract.Transport; readonly reader: ActionsContract.ReadAdapter }
+const strict = { onExcessProperty: "error" } as const
+const provider = Schema.Literals(["github", "gitlab"])
+export const Branch = Schema.Struct({ provider, branch: Schema.NonEmptyString }).annotate({ parseOptions: strict })
+export const Write = Schema.Struct({
+  provider, mode: Schema.Literals(["create", "update"]), message: Schema.NonEmptyString, text: Schema.String,
+  name: Schema.optionalKey(Schema.NonEmptyString),
+  template: Schema.optionalKey(Schema.Literals(["Build and test", "Release", "Blank configuration"])),
+}).annotate({ parseOptions: strict })
+export const Review = Schema.Struct({ provider, title: Schema.NonEmptyString, text: Schema.String }).annotate({ parseOptions: strict })
+export const Version = Schema.Struct({ blob_id: GitHubNative.SHA, last_commit_id: GitHubNative.SHA })
+const Capture = Schema.Struct({ binding: Actions.Binding, intent: Actions.OperationIntent, payload: Schema.Json })
+
+export function error(binding: Actions.Binding, kind: Actions.ErrorKind, message: string, disposition: Actions.SendDisposition = "definitely_unsent") {
+  return new ActionsError({ kind, message, bindingID: binding.id, provider: binding.provider.kind, disposition })
+}
+
+export function decode<A>(binding: Actions.Binding, schema: Schema.Decoder<A>, value: unknown, sent = false): A {
+  const decoded = Schema.decodeUnknownOption(schema, sent ? undefined : strict)(value)
+  if (Option.isNone(decoded)) throw error(binding, sent ? "outcome_unknown" : "invalid_input",
+    sent ? "Source mutation response did not prove native identity" : "Source command does not match its strict schema",
+    sent ? "unknown" : "definitely_unsent")
+  return decoded.value
+}
+
+export function native<A>(binding: Actions.Binding, schema: Schema.Decoder<A>, value: unknown): A {
+  const decoded = Schema.decodeUnknownOption(schema)(value)
+  if (Option.isNone(decoded)) throw error(binding, "transport_failed", "Provider did not prove source preflight identity")
+  return decoded.value
+}
+
+export function branch(binding: Actions.Binding, value: string) {
+  if (!value || value.length > 1024 || !value.isWellFormed() || /[\s\\%?#{}:\x00-\x1f\x7f~^*\[]/.test(value) || value.includes("..") ||
+    value.includes("@{") || value === "@" || value.startsWith("-") || value.endsWith(".") ||
+    value.split("/").some((part) => !part || part.startsWith(".") || part.endsWith(".lock")))
+    throw error(binding, "invalid_input", "Source branch must be an exact safe native branch name")
+  if (value.startsWith("refs/") || Option.isSome(Schema.decodeUnknownOption(GitHubNative.SHA)(value)))
+    throw error(binding, "invalid_input", "Source mutations require a short branch name, not an immutable object or qualified ref")
+  return value
+}
+
+export function sourcePath(binding: Actions.Binding, value: string | undefined) {
+  if (!value || value.length > 4096 || !value.isWellFormed())
+    throw error(binding, "invalid_input", "Source commands require an exact admitted repository path")
+  if (binding.provider.kind === "gitlab") {
+    if (!ActionsGitLabNative.localPath(value))
+      throw error(binding, "source_unresolved", "GitLab source proposals require an exact local repository path")
+    return value
+  }
+  GitHubNative.path(binding, value)
+  if (!value.startsWith(".github/workflows/") || !/^[^/]+\.ya?ml$/i.test(value.slice(".github/workflows/".length)))
+    throw error(binding, "source_unresolved", "GitHub source proposals require a native workflow YAML path")
+  return value
+}
+
+export function bytes(text: string) {
+  if (text.length > limits.sourceBytes || !text.isWellFormed())
+    throw new ActionsError({ kind: "invalid_input", message: "Source must be well-formed Unicode within 1048576 UTF-8 bytes", disposition: "definitely_unsent" })
+  const value = new TextEncoder().encode(text)
+  if (value.length > limits.sourceBytes)
+    throw new ActionsError({ kind: "invalid_input", message: "Source exceeds 1048576 UTF-8 bytes", disposition: "definitely_unsent" })
+  return value
+}
+
+export function capture(binding: Actions.Binding, intent: Actions.OperationIntent, payload: ActionsContract.Json) {
+  decode(binding, Schema.toType(Capture), { binding, intent, payload })
+  // Snapshot before the first await. Mutation values never become durable intent fields.
+  const value = decode(binding, Schema.fromJsonString(Capture), JSON.stringify({ binding, intent, payload }))
+  if (value.intent.binding.id !== value.binding.id || value.intent.binding.revision !== value.binding.revision)
+    throw error(binding, "binding_stale", "Source command binding differs from admission")
+  if (!["source.branch", "source.write", "source.review"].includes(value.intent.kind))
+    throw error(binding, "invalid_input", "Source command kind belongs to another dispatcher")
+  if (Object.keys(value.intent.target).some((key) => !["ref", "path", "resourceID"].includes(key)))
+    throw error(binding, "invalid_input", "Historical runs and execution targets cannot authorize source mutations")
+  if (value.intent.expected?.attempt !== undefined || value.intent.expected?.resourceVersion !== undefined)
+    throw error(binding, "invalid_input", "Source commands require source versions and commits, not execution or resource versions")
+  if (!value.intent.target.ref || !value.intent.expected?.commit)
+    throw error(binding, "invalid_input", "Source commands require an admitted branch and immutable expected commit")
+  branch(binding, value.intent.target.ref)
+  decode(binding, GitHubNative.SHA, value.intent.expected.commit)
+  sourcePath(binding, value.intent.target.path)
+  if (value.intent.expected.sourceVersion !== undefined) {
+    if (!value.intent.target.path) throw error(binding, "invalid_input", "Source version requires an admitted path")
+    version(binding, value.intent.expected.sourceVersion)
+  }
+  if (value.intent.kind === "source.branch") {
+    if (!value.intent.target.resourceID) throw error(binding, "invalid_input", "Branch creation requires its admitted new branch")
+    branch(binding, value.intent.target.resourceID)
+    if (value.intent.target.resourceID === value.intent.target.ref)
+      throw error(binding, "invalid_input", "Source branch must differ from its captured base")
+  }
+  if (value.intent.kind === "source.write" && (!value.intent.target.path || value.intent.target.resourceID !== undefined))
+    throw error(binding, "invalid_input", "Source writes require only their admitted path and branch")
+  if (value.intent.kind === "source.review" && value.intent.target.resourceID !== undefined)
+    branch(binding, value.intent.target.resourceID)
+  return value
+}
+
+export function version(binding: Actions.Binding, value: string) {
+  return binding.provider.kind === "github" ? { blob_id: decode(binding, GitHubNative.SHA, value), last_commit_id: undefined }
+    : decode(binding, Schema.fromJsonString(Version).annotate({ parseOptions: strict }), value)
+}
+
+export function source(binding: Actions.Binding, intent: Actions.OperationIntent, value: Actions.Source) {
+  if (value.bindingID !== binding.id || value.path !== intent.target.path || value.ref !== intent.target.ref || !value.commit)
+    throw error(binding, "source_unresolved", "Reader did not prove the admitted source identity")
+  decode(binding, GitHubNative.SHA, value.commit)
+  const selected = version(binding, value.version)
+  bytes(value.text)
+  const expected = intent.expected?.sourceVersion === undefined ? undefined : version(binding, intent.expected.sourceVersion)
+  if (value.commit.toLowerCase() !== intent.expected?.commit?.toLowerCase() || expected !== undefined &&
+    (selected.blob_id.toLowerCase() !== expected.blob_id.toLowerCase() ||
+      selected.last_commit_id?.toLowerCase() !== expected.last_commit_id?.toLowerCase()))
+    throw error(binding, "source_conflict", "Native source changed after admission")
+  return value
+}
+~~~~
+
+## AUT1-C22
+
+```json
+{"block_id":"AUT1-C22","type":"literal_source_excerpt","requests":["RE-AUT1-05"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/authoring/base.ts","repository_path":"packages/core/src/actions/authoring/base.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"3c18b87555faf8d09b789ac5dc7316c6721f0f58","source_sha256":"401a807ef4861a182c4ad70985f5d13d9b43a714693ec78ad2d9ec0dc1b83d7d","source_bytes":4981,"body_anchors":["A11"],"requested_subject":"Default branch observada, commit-base e revalidação de draft"}
+```
+
+```json
+{"first_line":14,"last_line":72,"bytes":4470,"sha256":"584a54990fe9134f6ca5be3bb0cf1b660d42577d33a17ab35250fcd2d322433a"}
+```
+
+~~~~typescript
+const GitHubRef = Schema.Struct({ ref: Schema.NonEmptyString,
+  object: Schema.Struct({ type: Schema.Literal("commit"), sha: GitHubNative.SHA }) })
+const GitLabRef = Schema.Struct({ name: Schema.NonEmptyString, commit: Schema.Struct({ id: ActionsGitLabNative.SHA }) })
+
+export const read = Effect.fn("ActionsSourceBase.read")(function* (
+  services: Services, binding: Actions.Binding, ref?: string,
+): Effect.fn.Return<Actions.SourceBase, ActionsError> {
+  const frozen = yield* guard(binding, () => {
+    decode(binding, Schema.toType(Actions.Binding), binding)
+    if (ref !== undefined) branch(binding, ref)
+    return { binding: { ...binding, provider: { ...binding.provider } }, ref }
+  })
+  if (frozen.binding.provider.kind === "github") {
+    const repository = yield* GitHubNative.repository(services.transport, frozen.binding)
+    const selected = frozen.ref ?? repository.native.default_branch
+    if (!selected) return yield* error(frozen.binding, "source_unresolved", "GitHub repository has no observed default branch")
+    const name = yield* guard(frozen.binding, () => branch(frozen.binding, selected))
+    const response = yield* GitHubNative.get(services.transport, frozen.binding,
+      { method: "GET", path: `${repository.path}/git/ref/heads/${name.split("/").map(encodeURIComponent).join("/")}` })
+    const value = yield* guard(frozen.binding, () => native(frozen.binding, GitHubRef, response.data))
+    if (value.ref !== `refs/heads/${name}`) return yield* error(frozen.binding, "source_conflict", "GitHub branch identity differs from the requested branch")
+    return { bindingID: frozen.binding.id, ref: name, commit: value.object.sha }
+  }
+  const project = yield* ActionsGitLabNative.make(services.transport).project(frozen.binding)
+  const selected = frozen.ref ?? project.default_branch
+  if (!selected) return yield* error(frozen.binding, "source_unresolved", "GitLab project has no observed default branch")
+  const name = yield* guard(frozen.binding, () => branch(frozen.binding, selected))
+  const root = yield* guard(frozen.binding, () => ActionsGitLabNative.projectPath(frozen.binding))
+  const response = yield* get(services, frozen.binding, `${root}/repository/branches/${encodeURIComponent(name)}`)
+  const value = yield* guard(frozen.binding, () => native(frozen.binding, GitLabRef, response.data))
+  if (value.name !== name) return yield* error(frozen.binding, "source_conflict", "GitLab branch identity differs from the requested branch")
+  return { bindingID: frozen.binding.id, ref: name, commit: value.commit.id }
+})
+
+export const validate = Effect.fn("ActionsSourceBase.validate")(function* (
+  services: Services, binding: Actions.Binding, base: Actions.SourceBase, path: string, draft: string,
+): Effect.fn.Return<Actions.Graph, ActionsError> {
+  const frozen = yield* guard(binding, () => {
+    decode(binding, Schema.toType(Actions.Binding), binding)
+    const admitted = decode(binding, Schema.toType(Actions.SourceBase), base)
+    if (admitted.bindingID !== binding.id) throw error(binding, "source_unresolved", "Source base belongs to another binding")
+    branch(binding, admitted.ref)
+    const draftBytes = bytes(draft)
+    GitHubNative.path(binding, path)
+    if (binding.provider.kind === "github" && (!path.startsWith(".github/workflows/") || path.split("/").length !== 3 || !/\.ya?ml$/i.test(path)))
+      throw error(binding, "invalid_input", "GitHub draft path must be a workflow YAML file")
+    if (binding.provider.kind === "gitlab" && !ActionsGitLabNative.localPath(path))
+      throw error(binding, "invalid_input", "GitLab draft path must be a local repository path")
+    // A draft digest identifies local text, never a native optimistic mutation version.
+    const source: Actions.Source = { bindingID: admitted.bindingID, path, ref: admitted.ref, commit: admitted.commit,
+      version: `draft:sha256:${createHash("sha256").update(draftBytes).digest("hex")}`, text: draft, editable: false }
+    decode(binding, Schema.toType(Actions.Source), source)
+    return { binding: { ...binding, provider: { ...binding.provider } }, base: { ...admitted }, source }
+  })
+  const current = yield* read(services, frozen.binding, frozen.base.ref)
+  if (current.commit.toLowerCase() !== frozen.base.commit.toLowerCase())
+    return yield* error(frozen.binding, "source_conflict", "Source branch moved after base admission")
+  return yield* ActionsAuthoring.make(services).validate(frozen.binding, frozen.source)
+})
+~~~~
+
+## AUT1-C23
+
+```json
+{"block_id":"AUT1-C23","type":"literal_source_excerpt","requests":["RE-AUT1-05"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/authoring/index.ts","repository_path":"packages/core/src/actions/authoring/index.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"7a555bdb35cedd26ab5ddc151c1d068b40eb0144","source_sha256":"219a11d44b682e37a729f0ef4060ad2eda6eae05737dbac5de2325b6b3b10075","source_bytes":2854,"body_anchors":["A11","A14"],"requested_subject":"Snapshot, validação/lint, seleção do plano e uma execução"}
+```
+
+```json
+{"first_line":16,"last_line":52,"bytes":2232,"sha256":"3caeb03c64b46954ee0f70b3390c13367228eb73dcf1401ea9262a90e2fecd37"}
+```
+
+~~~~typescript
+export function validate(binding: Actions.Binding, source: Actions.Source): Actions.Graph {
+  if (source.bindingID !== binding.id)
+    return { source, state: "unresolved", jobs: [], diagnostics: ["source_unresolved:binding_mismatch"] }
+  if (source.text.length <= limits.sourceBytes && !source.text.isWellFormed())
+    return { source, state: "unresolved", jobs: [], diagnostics: ["source_unresolved:unicode_invalid:source must be well-formed Unicode"] }
+  return ActionsGraph.parse(binding.provider.kind, source)
+}
+
+export function make(services: Services) {
+  return {
+    validate: Effect.fn("ActionsAuthoring.validate")(function* (binding: Actions.Binding, source: Actions.Source): Effect.fn.Return<Actions.Graph, ActionsError> {
+      const frozen = yield* guard(binding, () => {
+        decode(binding, Schema.toType(Actions.Binding), binding)
+        decode(binding, Schema.toType(Actions.Source), source)
+        return { binding: { ...binding, provider: { ...binding.provider } }, source: { ...source } }
+      })
+      const graph = validate(frozen.binding, frozen.source)
+      if (frozen.binding.provider.kind === "github" || graph.state === "unresolved") return graph
+      const { lint } = yield* Effect.promise(() => import("./lint"))
+      return yield* lint(services, frozen.binding, frozen.source, graph)
+    }),
+    perform: Effect.fn("ActionsAuthoring.perform")(function* (
+      binding: Actions.Binding, intent: Actions.OperationIntent, payloadJson: ActionsContract.Json,
+    ): Effect.fn.Return<ActionsContract.CommandResult, ActionsError> {
+      const frozen = yield* guard(binding, () => capture(binding, intent, payloadJson))
+      const prepared = yield* before(frozen.binding, Effect.gen(function* () {
+        if (frozen.binding.provider.kind === "gitlab") {
+          const { plan } = yield* Effect.promise(() => import("./gitlab"))
+          return yield* plan(services, frozen.binding, frozen.intent, frozen.payload)
+        }
+        return yield* plan(services, frozen.binding, frozen.intent, frozen.payload)
+      }))
+      // The durable parent owns admission, receipt reads and phase sequencing. This call sends once.
+      return yield* send(services, frozen.binding, prepared)
+    }),
+  }
+}
+~~~~
+
+## AUT1-C24
+
+```json
+{"block_id":"AUT1-C24","type":"literal_source_excerpt","requests":["RE-AUT1-05"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/authoring/github.ts","repository_path":"packages/core/src/actions/authoring/github.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"fefe6fd6df55ea6fee6f898b9b5e37b13c650307","source_sha256":"bdcb41b748e4a4ac148867cfbcffe6638ed5dc2b07f3e6bfc25746f7f9134790","source_bytes":6777,"body_anchors":["A12"],"requested_subject":"Schemas de retorno e ramos branch/create/update/review/head completos"}
+```
+
+```json
+{"first_line":11,"last_line":99,"bytes":6270,"sha256":"6caba49e8faf80a94cd4da34770a78de6dd76c29d6e3e0df6ae759b183f67a39"}
+```
+
+~~~~typescript
+const Ref = Schema.Struct({ ref: Schema.NonEmptyString, object: Schema.Struct({ type: Schema.Literal("commit"), sha: GitHubNative.SHA }) })
+const Content = Schema.Struct({
+  content: Schema.Struct({ path: Schema.NonEmptyString, type: Schema.Literal("file"), sha: GitHubNative.SHA }),
+  commit: Schema.Struct({ sha: GitHubNative.SHA }),
+})
+const Pull = Schema.Struct({
+  id: GitHubNative.ID, number: GitHubNative.ID, html_url: Schema.NonEmptyString, title: Schema.NonEmptyString,
+  body: Schema.NullOr(Schema.String), state: Schema.Literal("open"),
+  head: Schema.Struct({ ref: Schema.NonEmptyString, sha: GitHubNative.SHA, repo: Schema.Struct({ id: GitHubNative.ID }) }),
+  base: Schema.Struct({ ref: Schema.NonEmptyString, repo: Schema.Struct({ id: GitHubNative.ID }) }),
+})
+
+export const plan = Effect.fn("ActionsAuthoring.github")(function* (
+  services: Services, binding: Actions.Binding, intent: Actions.OperationIntent, payload: ActionsContract.Json,
+): Effect.fn.Return<Plan, import("../error").ActionsError> {
+  const command = yield* guard(binding, () => {
+    const value = intent.kind === "source.branch" ? decode(binding, Branch, payload)
+      : intent.kind === "source.write" ? decode(binding, Write, payload) : decode(binding, Review, payload)
+    if (value.provider !== "github") throw error(binding, "invalid_input", "Source command provider differs from the bound repository")
+    if ("text" in value) bytes(value.text)
+    return value
+  })
+  const path = yield* guard(binding, () => sourcePath(binding, intent.target.path))
+  const repo = yield* GitHubCommandCommon.authority(services, binding)
+  const ref = yield* head(services, binding, repo.root, intent.target.ref ?? "")
+  if (ref.toLowerCase() !== intent.expected?.commit?.toLowerCase())
+    return yield* error(binding, "source_conflict", "Source branch moved after admission")
+  if (intent.kind !== "source.write" && intent.expected?.sourceVersion !== undefined) yield* current(services, binding, intent)
+
+  if ("branch" in command) {
+    if (command.branch !== intent.target.resourceID)
+      return yield* error(binding, "invalid_input", "New source branch differs from admission")
+    if (intent.expected?.sourceVersion === undefined)
+      yield* absent(services, binding, `${repo.root}/contents/${GitHubNative.path(binding, path)}`, ref)
+    return {
+      request: { method: "POST", path: `${repo.root}/git/refs`, body: { ref: `refs/heads/${command.branch}`, sha: ref } }, status: 201,
+      acknowledge: (response) => guard(binding, () => {
+        const value = decode(binding, Ref, response.data, true)
+        if (value.ref !== `refs/heads/${command.branch}` || value.object.sha.toLowerCase() !== ref.toLowerCase())
+          throw error(binding, "outcome_unknown", "GitHub did not prove the exact new branch and base commit", "unknown")
+        return { acknowledgement: { resourceID: command.branch } }
+      }),
+    }
+  }
+  if ("mode" in command) {
+    if (command.mode === "update" && !intent.expected?.sourceVersion || command.mode === "create" && intent.expected?.sourceVersion !== undefined)
+      return yield* error(binding, "invalid_input", "Source create/update mode conflicts with its blob precondition")
+    const previous = command.mode === "update" ? yield* current(services, binding, intent) : undefined
+    if (previous?.text === command.text)
+      return yield* error(binding, "invalid_input", "Source content is unchanged; no write was sent")
+    // Contents create has native absence semantics; update supplies the authoritative blob SHA.
+    return {
+      request: { method: "PUT", path: `${repo.root}/contents/${GitHubNative.path(binding, path)}`, body: {
+        message: command.message, content: Buffer.from(bytes(command.text)).toString("base64"), branch: intent.target.ref ?? "",
+        ...(previous ? { sha: previous.version } : {}),
+      } }, status: command.mode === "create" ? 201 : 200,
+      acknowledge: (response) => Effect.gen(function* () {
+        const value = yield* guard(binding, () => decode(binding, Content, response.data, true))
+        if (value.content.path !== path || value.content.sha.toLowerCase() !== blob(command.text, value.content.sha))
+          return yield* error(binding, "outcome_unknown", "GitHub did not prove the written path and blob", "unknown")
+        return yield* written(services, binding, intent, command.text, value.commit.sha, value.content.sha)
+      }),
+    }
+  }
+  const base = yield* guard(binding, () => branch(binding, intent.target.resourceID ?? repo.native.default_branch ?? ""))
+  if (base === intent.target.ref) return yield* error(binding, "invalid_input", "Review head and base must differ")
+  yield* head(services, binding, repo.root, base)
+  return {
+    request: { method: "POST", path: `${repo.root}/pulls`, body: { head: intent.target.ref ?? "", base, title: command.title, body: command.text } }, status: 201,
+    acknowledge: (response) => guard(binding, () => {
+      const value = decode(binding, Pull, response.data, true)
+      if (String(value.head.repo.id) !== binding.projectID || String(value.base.repo.id) !== binding.projectID ||
+        value.head.ref !== intent.target.ref || value.head.sha.toLowerCase() !== ref.toLowerCase() || value.base.ref !== base ||
+        value.title !== command.title || (value.body ?? "") !== command.text)
+        throw error(binding, "outcome_unknown", "GitHub did not prove the exact same-repository review request", "unknown")
+      const id = String(value.number)
+      return { acknowledgement: { resourceID: id }, output: { kind: "sourceReview" as const, id,
+        url: reviewURL(binding, value.html_url, `/${repo.native.full_name}/pull/${id}`) } }
+    }),
+  }
+})
+
+const head = Effect.fn("ActionsAuthoring.githubHead")(function* (services: Services, binding: Actions.Binding, root: string, name: string) {
+  yield* guard(binding, () => branch(binding, name))
+  const response = yield* get(services, binding, `${root}/git/ref/heads/${name.split("/").map(encodeURIComponent).join("/")}`)
+  const value = yield* guard(binding, () => native(binding, Ref, response.data))
+  if (value.ref !== `refs/heads/${name}`) return yield* error(binding, "source_conflict", "GitHub branch identity differs from admission")
+  return value.object.sha
+})
+~~~~
+
+## AUT1-C25
+
+```json
+{"block_id":"AUT1-C25","type":"literal_source_excerpt","requests":["RE-AUT1-05"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/authoring/gitlab.ts","repository_path":"packages/core/src/actions/authoring/gitlab.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"2e17c642d355cdb595332f3069a0928ef192ae08","source_sha256":"aba55ae13260350fc70490bbf9930e19cb648babb5f555b23c3c350161e479a9","source_bytes":7205,"body_anchors":["A13"],"requested_subject":"Schemas de retorno e ramos branch/create/update/MR/head completos"}
+```
+
+```json
+{"first_line":10,"last_line":101,"bytes":6737,"sha256":"956854139e87cb31220d709dca2a392df586e3f66093940560f9a9866334e0ad"}
+```
+
+~~~~typescript
+const Ref = Schema.Struct({ name: Schema.NonEmptyString, commit: Schema.Struct({ id: ActionsGitLabNative.SHA }) })
+const File = Schema.Struct({ file_path: Schema.NonEmptyString, branch: Schema.NonEmptyString })
+const Merge = Schema.Struct({
+  id: ActionsGitLabNative.ID, iid: ActionsGitLabNative.ID, project_id: ActionsGitLabNative.ID,
+  source_project_id: ActionsGitLabNative.ID, target_project_id: ActionsGitLabNative.ID,
+  source_branch: Schema.NonEmptyString, target_branch: Schema.NonEmptyString, sha: ActionsGitLabNative.SHA,
+  title: Schema.NonEmptyString, description: Schema.NullOr(Schema.String), state: Schema.Literal("opened"), web_url: Schema.NonEmptyString,
+})
+
+export const plan = Effect.fn("ActionsAuthoring.gitlab")(function* (
+  services: Services, binding: Actions.Binding, intent: Actions.OperationIntent, payload: ActionsContract.Json,
+): Effect.fn.Return<Plan, import("../error").ActionsError> {
+  const command = yield* guard(binding, () => {
+    const value = intent.kind === "source.branch" ? decode(binding, Branch, payload)
+      : intent.kind === "source.write" ? decode(binding, Write, payload) : decode(binding, Review, payload)
+    if (value.provider !== "gitlab") throw error(binding, "invalid_input", "Source command provider differs from the bound project")
+    if ("text" in value) bytes(value.text)
+    return value
+  })
+  const path = yield* guard(binding, () => sourcePath(binding, intent.target.path))
+  const root = yield* guard(binding, () => ActionsGitLabNative.projectPath(binding))
+  const project = yield* before(binding, ActionsGitLabNative.make(services.transport).project(binding))
+  yield* actor(services, binding)
+  if (project.archived === true || project.repository_access_level === "disabled")
+    return yield* error(binding, "permission_denied", "GitLab project metadata denies source writes")
+  // Missing role/scope evidence remains unknown; native authorization decides this explicit write.
+  // This is an explicit repository-file proposal, not a change to the project's CI config slot.
+  const ref = yield* head(services, binding, root, intent.target.ref ?? "")
+  if (ref.toLowerCase() !== intent.expected?.commit?.toLowerCase())
+    return yield* error(binding, "source_conflict", "GitLab source branch moved after admission")
+  if (intent.kind !== "source.write" && intent.expected?.sourceVersion !== undefined) yield* current(services, binding, intent)
+  if ("branch" in command) {
+    if (command.branch !== intent.target.resourceID)
+      return yield* error(binding, "invalid_input", "New source branch differs from admission")
+    if (intent.expected?.sourceVersion === undefined)
+      yield* absent(services, binding, `${root}/repository/files/${encodeURIComponent(path)}`, ref)
+    return {
+      request: { method: "POST", path: `${root}/repository/branches`, body: { branch: command.branch, ref } }, status: 201,
+      acknowledge: (response) => guard(binding, () => {
+        const value = decode(binding, Ref, response.data, true)
+        if (value.name !== command.branch || value.commit.id.toLowerCase() !== ref.toLowerCase())
+          throw error(binding, "outcome_unknown", "GitLab did not prove the exact new branch and base commit", "unknown")
+        return { acknowledgement: { resourceID: command.branch } }
+      }),
+    }
+  }
+  if ("mode" in command) {
+    if (command.mode === "update" && !intent.expected?.sourceVersion || command.mode === "create" && intent.expected?.sourceVersion !== undefined)
+      return yield* error(binding, "invalid_input", "Source create/update mode conflicts with its file precondition")
+    const previous = command.mode === "update" ? yield* current(services, binding, intent) : undefined
+    if (previous?.text === command.text) return yield* error(binding, "invalid_input", "Source content is unchanged; no write was sent")
+    const fileVersion = previous ? yield* guard(binding, () => decode(binding, Schema.fromJsonString(Version), previous.version)) : undefined
+    return {
+
+END_PART

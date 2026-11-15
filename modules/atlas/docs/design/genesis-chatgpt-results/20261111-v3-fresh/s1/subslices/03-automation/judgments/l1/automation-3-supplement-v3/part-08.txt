@@ -1,0 +1,1211 @@
+    .update(BoardAttemptTable)
+    .set({ seat: updated.seat, branch: updated.branch, pr_number: updated.pr_number })
+    .where(and(eq(BoardAttemptTable.issue_id, before.id), isNull(BoardAttemptTable.outcome)))
+    .run()
+})
+~~~~
+
+## AUT3-C22
+
+```json
+{
+  "block_id": "AUT3-C22",
+  "type": "literal_source_chain",
+  "canonical_request_namespace": "J1",
+  "requests": [
+    "RE-AUT3-06"
+  ],
+  "body_anchors": [
+    "B11"
+  ],
+  "requested_subject": "Base fetch/write sets/merge-tree/conflict notices, sem rebase no caminho",
+  "path": "packages/core/src/board/conflicts.ts",
+  "archive": "sources/packages/core/src/board/conflicts.ts",
+  "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_git_blob_sha": "06e450683e7c3428b8d466cd91696806c9ef5419",
+  "source_sha256": "c27c266af8e4461d76d253f6d13f8cc8ac4d1edeb7780e9726bb445fbab8a7ba",
+  "source_bytes": 8573,
+  "required_source_line_ranges": [
+    [
+      1,
+      165
+    ]
+  ],
+  "prior_literal_ranges": [
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "B11",
+      "source_path": "packages/core/src/board/conflicts.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "06e450683e7c3428b8d466cd91696806c9ef5419",
+      "source_sha256": "c27c266af8e4461d76d253f6d13f8cc8ac4d1edeb7780e9726bb445fbab8a7ba",
+      "first_line": 35,
+      "last_line": 43,
+      "excerpt_bytes": 578,
+      "excerpt_sha256": "72b4c99b953a0ee38fbf4cc3d533aa8bae1433c8f98e82f452e02a26c8d0d66b",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 154535,
+      "literal_content_byte_end_exclusive": 155113
+    }
+  ]
+}
+```
+
+```json
+{"first_line":1,"last_line":34,"bytes":1449,"sha256":"0436d61afd9f89d710f2979ac36857a3ed1dee20da6e269ff085286de35b901b"}
+```
+
+~~~~typescript
+export * as BoardConflicts from "./conflicts"
+
+import { and, eq, inArray, isNull, ne } from "drizzle-orm"
+import { Clock, Effect } from "effect"
+import { Board } from "@orchestra/schema/board"
+import { BoardAttemptTable, BoardIssueTable, BoardNoteTable, BoardProjectTable } from "./sql"
+import { changed, log, worktree } from "./shared"
+import type { Changed, Git, ProjectRow, Tx } from "./shared"
+
+// Targeted rebase notices (docs/specs/maestro-lead/merge-queue.md section 8.4): when base advances, only cards whose
+// write set the merge touched are checked with `git merge-tree`, and only they get a note. The host never rebases or
+// merges into a seat's worktree.
+
+export interface Deps {
+  readonly quiet: <A>(work: (tx: Tx) => Effect.Effect<A, unknown>) => Effect.Effect<A>
+  readonly git: Git
+  /** The project's base branch from its CI contract. */
+  readonly base: (directory: string, project: ProjectRow) => Effect.Effect<string, { readonly message: string }>
+  readonly publish: (changed: Changed) => Effect.Effect<void>
+}
+
+/**
+ * What one base advance meant for one card: `clean` merges, `conflict` names the files that do not. `cleared` marks a
+ * card that conflicted before and merges clean now.
+ */
+export type Notice = {
+  readonly issue: Board.IssueID
+  readonly base: string
+  readonly touched: ReadonlyArray<string>
+  readonly verdict: "clean" | "conflict"
+  readonly files: ReadonlyArray<string>
+  readonly cleared: boolean
+}
+
+~~~~
+
+```json
+{"first_line":44,"last_line":165,"bytes":6546,"sha256":"df72ba7f26f38bdbf4e4cbbb1cc4474744ec3158bd11940ef22b24795f272312"}
+```
+
+~~~~typescript
+
+export function make(deps: Deps) {
+  // When each project's remote base was last fetched, in process memory: a restart fetches once on the first sweep.
+  const fetched = new Map<string, number>()
+
+  const project = Effect.fnUntraced(function* (row: ProjectRow) {
+    const directory = yield* deps.quiet((tx) => worktree(tx, row))
+    if (!directory) return []
+    const base = yield* deps.base(directory, row).pipe(Effect.orElseSucceed(() => undefined))
+    if (!base) return []
+    // The ref read below is local and cheap, so every sweep sees a base that any other fetch already moved.
+    const now = yield* Clock.currentTimeMillis
+    const last = fetched.get(row.id)
+    if (last === undefined || now - last >= IDLE_FETCH || (yield* watching(row))) {
+      fetched.set(row.id, now)
+      yield* deps.git(directory, ["fetch", "--quiet", "--no-tags", "origin", base])
+    }
+    const head = (yield* deps.git(directory, ["rev-parse", "--verify", "--quiet", `refs/remotes/origin/${base}`])).out
+    if (!head || head === row.base_sha) return []
+    // The first sighting only records where base stands: there is no earlier merge to compare with.
+    if (!row.base_sha) {
+      yield* deps.quiet((tx) => tx.update(BoardProjectTable).set({ base_sha: head }).where(eq(BoardProjectTable.id, row.id)).run())
+      return []
+    }
+    const touched = (yield* deps.git(directory, ["diff", "--name-only", `${row.base_sha}..${head}`])).out.split("\n").filter(Boolean)
+    const cards = yield* deps.quiet((tx) =>
+      tx
+        .select({ issue: BoardIssueTable, attempt: BoardAttemptTable })
+        .from(BoardIssueTable)
+        .innerJoin(BoardAttemptTable, eq(BoardAttemptTable.issue_id, BoardIssueTable.id))
+        .where(and(eq(BoardIssueTable.project_id, row.id), inArray(BoardIssueTable.stage, [...WATCHED]), isNull(BoardAttemptTable.outcome)))
+        .all(),
+    )
+    const notices = yield* Effect.forEach(cards, (card) =>
+      Effect.gen(function* () {
+        const tip = card.issue.branch
+          ? (yield* deps.git(directory, ["rev-parse", "--verify", "--quiet", `refs/heads/${card.issue.branch}`])).out
+          : ""
+        const target = tip || card.attempt.snapshot_sha
+        if (!target) return undefined
+        // The declared write set plus what the card really changed, so a card with no declared set is still covered.
+        const writes = [
+          ...card.attempt.write_paths,
+          ...(yield* deps.git(directory, ["diff", "--name-only", `${head}...${target}`])).out.split("\n").filter(Boolean),
+        ]
+        const overlap = touched.filter((file) => writes.some((site) => covers(site, file)))
+        // A card that conflicted before is checked again on every advance, so a fix on base clears it.
+        if (overlap.length === 0 && !card.attempt.conflict_base) return undefined
+        const merged = yield* deps.git(directory, ["merge-tree", "--write-tree", "--name-only", "--no-messages", head, target])
+        if (merged.code > 1) return undefined
+        const files = merged.code === 1 ? merged.out.split("\n").slice(1).filter(Boolean) : []
+        return {
+          issue: card.issue.id,
+          base: head,
+          touched: overlap,
+          verdict: files.length > 0 ? "conflict" : "clean",
+          files: [...new Set(files)],
+          cleared: files.length === 0 && card.attempt.conflict_base !== null,
+        } satisfies Notice
+      }),
+    ).pipe(Effect.map((all) => all.filter((notice) => notice !== undefined)))
+    const published = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        yield* tx.update(BoardProjectTable).set({ base_sha: head }).where(eq(BoardProjectTable.id, row.id)).run()
+        return yield* Effect.forEach(notices, (notice) => record(tx, row, base, notice))
+      }),
+    )
+    yield* Effect.forEach(published, (item) => (item ? deps.publish(item) : Effect.void))
+    return notices
+  })
+
+  /** Whether a card in Review or Queue has an open attempt: the only reason to fetch on every sweep. */
+  const watching = Effect.fnUntraced(function* (row: ProjectRow) {
+    const found = yield* deps.quiet((tx) =>
+      tx
+        .select({ id: BoardIssueTable.id })
+        .from(BoardIssueTable)
+        .innerJoin(BoardAttemptTable, eq(BoardAttemptTable.issue_id, BoardIssueTable.id))
+        .where(and(eq(BoardIssueTable.project_id, row.id), inArray(BoardIssueTable.stage, [...WATCHED]), isNull(BoardAttemptTable.outcome)))
+        .limit(1)
+        .get(),
+    )
+    return found !== undefined
+  })
+
+  /** Writes the card's conflict state and one note. */
+  const record = Effect.fnUntraced(function* (tx: Tx, row: ProjectRow, base: string, notice: Notice) {
+    const conflict = notice.verdict === "conflict"
+    yield* tx
+      .update(BoardAttemptTable)
+      .set({ conflict_base: conflict ? notice.base : null, conflict_files: conflict ? [...notice.files] : null })
+      .where(and(eq(BoardAttemptTable.issue_id, notice.issue), isNull(BoardAttemptTable.outcome)))
+      .run()
+    const at = `${base} at ${notice.base.slice(0, 10)}`
+    const body = conflict
+      ? `${at} conflicts with this card in ${notice.files.join(", ")}. Merge ${base} in the card's worktree on its next dispatch.`
+      : notice.cleared
+        ? `${at} merges clean with this card again.`
+        : `${at} touched ${notice.touched.join(", ")}; merges clean.`
+    const id = Board.NoteID.create()
+    yield* tx.insert(BoardNoteTable).values({ id, issue_id: notice.issue, author: "orchestra", body }).run()
+    const activity = yield* log(tx, { project: row.id, issue: notice.issue, actor: "github", action: "note.add", after: { id, author: "orchestra", body } })
+    return changed(row.id, activity, notice.issue)
+  })
+
+  return {
+    /** Checks every active project's base; the poll runs it every minute. A project with no watched card fetches at most every 5 minutes. */
+    sweep: Effect.fnUntraced(function* () {
+      const rows = yield* deps.quiet((tx) => tx.select().from(BoardProjectTable).where(ne(BoardProjectTable.status, "archived")).all())
+      return (yield* Effect.forEach(rows, project, { concurrency: CONCURRENCY })).flat()
+    }),
+  }
+}
+
+export type Interface = ReturnType<typeof make>
+
+/** The arsenal's `conflictVerdict` site semantics against a changed file: line ranges drop, patterns are globs. */
+function covers(site: string, file: string) {
+  const bare = site.replace(/:L\d+(?:-\d+)?$/, "").replace(/^\.\//, "")
+  if (/(?<!\\)[*?]/.test(bare)) return new Bun.Glob(bare).match(file)
+  return bare.replace(/\\([\\*?])/g, "$1") === file
+}
+~~~~
+
+## AUT3-C23
+
+```json
+{
+  "block_id": "AUT3-C23",
+  "type": "literal_source_chain",
+  "canonical_request_namespace": "J1",
+  "requests": [
+    "RE-AUT3-04",
+    "RE-AUT3-05",
+    "RE-AUT3-06"
+  ],
+  "body_anchors": [
+    "B07",
+    "B12"
+  ],
+  "requested_subject": "Fetch head, record completo, Atlas writer/visibilidade/redaction/fatos host e campos ausentes",
+  "path": "packages/core/src/board/queue-record.ts",
+  "archive": "sources/packages/core/src/board/queue-record.ts",
+  "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_git_blob_sha": "7ade81c640d6524360161d2c018ba1038c471f2e",
+  "source_sha256": "1414c1df2d7b08fc0027fe108275d4b07e343a56a56ded5f2119f196101f92d4",
+  "source_bytes": 15266,
+  "required_source_line_ranges": [
+    [
+      1,
+      307
+    ]
+  ],
+  "prior_literal_ranges": [
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "B12",
+      "source_path": "packages/core/src/board/queue-record.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "7ade81c640d6524360161d2c018ba1038c471f2e",
+      "source_sha256": "1414c1df2d7b08fc0027fe108275d4b07e343a56a56ded5f2119f196101f92d4",
+      "first_line": 271,
+      "last_line": 296,
+      "excerpt_bytes": 1090,
+      "excerpt_sha256": "09447f1bc62d22d68e69c07e77ee0e85c7f2a7cee0abbcbb1aea1d3e30822d23",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 155628,
+      "literal_content_byte_end_exclusive": 156718
+    }
+  ]
+}
+```
+
+```json
+{"first_line":1,"last_line":270,"bytes":13886,"sha256":"1fbb443a759bc05f72d923518b57b44e523cf2a0e2a44c1193d190090af0c1c7"}
+```
+
+~~~~typescript
+import { createHash } from "crypto"
+import { asc, desc, eq, inArray } from "drizzle-orm"
+import { Clock, Effect, Option, Schema } from "effect"
+import {
+  appendAttempt,
+  appendBoardEvent,
+  appendCardEvent,
+  appendLogbookEntry,
+  appendMilestone,
+  attemptNumbers,
+  readBoard,
+  readCard,
+} from "@orchestra/atlas-boundary/record-log"
+import { Board } from "@orchestra/schema/board"
+import { PartTable, SessionTable } from "../session/sql"
+import type { BoardRecord } from "./record"
+import {
+  BoardActivityTable,
+  BoardAttemptTable,
+  BoardBundleMemberTable,
+  BoardBundleTable,
+  BoardCheckTable,
+  BoardDependencyTable,
+  BoardEpicTable,
+  BoardIssueTable,
+  BoardNoteTable,
+  BoardQueueTable,
+} from "./sql"
+import { BoardTree } from "./tree"
+import { RefusedError, worktree } from "./shared"
+import type { IssueRow, ProjectRow } from "./shared"
+import { AUTHOR, insertNote, release } from "./queue-shared"
+import type { Context } from "./queue-shared"
+
+const Pull = Schema.Struct({
+  head: Schema.Struct({ sha: Schema.String, ref: Schema.String }),
+  labels: Schema.optional(Schema.Array(Schema.Struct({ name: Schema.String }))),
+})
+const decodePull = Schema.decodeUnknownOption(Schema.fromJsonString(Pull))
+
+/** The PR reads and the notes and records written about a card: head, note, moved, describe, recordBundle, recordOf. */
+export function makeRecord(ctx: Context) {
+  const deps = ctx.deps
+  const git = ctx.git
+
+  /** Reads a PR's head through the API, fetches it, and checks the fetched commit is that head. */
+  const head = Effect.fnUntraced(function* (directory: string, repo: string, pr: number) {
+    const pulled = yield* deps.gh(["api", `repos/${repo}/pulls/${pr}`])
+    const pull = pulled.exitCode === 0 ? Option.getOrUndefined(decodePull(pulled.stdout)) : undefined
+    if (!pull) return yield* new RefusedError({ message: `PR #${pr} could not be read: ${pulled.stderr.trim() || "no head"}.` })
+    yield* git(directory, ["fetch", "--quiet", "--no-tags", "origin", pull.head.ref])
+    const fetched = (yield* git(directory, ["rev-parse", "--verify", "--quiet", `${pull.head.sha}^{commit}`])).out
+    if (fetched !== pull.head.sha)
+      return yield* new RefusedError({ message: `PR #${pr}'s head ${pull.head.sha.slice(0, 10)} is not on origin/${pull.head.ref}.` })
+    return {
+      sha: pull.head.sha,
+      tree: (yield* git(directory, ["rev-parse", `${pull.head.sha}^{tree}`])).out,
+      labels: (pull.labels ?? []).map((label) => label.name),
+    }
+  })
+
+  /** A queued card whose PR head moved since it queued goes back to Review: its new head is not verified. */
+  const moved = Effect.fnUntraced(function* (row: ProjectRow, issue: IssueRow, sha: string | undefined) {
+    const back = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        const why = `The PR head moved${sha ? ` to ${sha.slice(0, 10)}` : ""} after it queued; verify it and queue it again.`
+        yield* insertNote(tx, row, issue, why)
+        return yield* release(tx, row, issue, "github", "queue.remove", why)
+      }),
+    )
+    yield* deps.publish(back)
+  })
+
+  const note = Effect.fnUntraced(function* (row: ProjectRow, issue: IssueRow, body: string) {
+    const done = yield* deps.quiet((tx) => insertNote(tx, row, issue, body))
+    yield* deps.publish(done)
+  })
+
+  /** Rewrites the card's PR body through the record port; unbound, the body stays as the seat wrote it. */
+  const describe = Effect.fnUntraced(function* (row: ProjectRow, issue: Board.IssueID, base: string) {
+    if (!deps.record || !row.github_repo) return
+    const found = yield* recordOf(row, issue, base)
+    if (!found?.pr) return
+    yield* deps.gh(["pr", "edit", String(found.pr), "--repo", row.github_repo, "--body-file", "-"], deps.record.pr(found.record))
+  })
+
+  /**
+   * Section 4.7: the commit on top of a bundle that carries the board log since the tree's last record, and each
+   * member's thread, attempts, logbook entry and Orientation milestone, all through Atlas's writers. The bundle is
+   * assembled from base's tip on every rebuild, so an ejected card leaves nothing behind.
+   */
+  const recordBundle = Effect.fnUntraced(function* (row: ProjectRow, scratch: string, issues: ReadonlyArray<IssueRow>, label: string) {
+    const now = yield* Clock.currentTimeMillis
+    // An unknown visibility is treated as public, so free text never reaches a tree that might be.
+    const visibility = yield* deps.gh(["api", `repos/${row.github_repo}`, "--jq", ".private"])
+    const redact = visibility.exitCode !== 0 || visibility.stdout.trim() !== "true"
+    const ids = issues.map((issue) => issue.id)
+    const found = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        const attempts = yield* tx.select().from(BoardAttemptTable).where(inArray(BoardAttemptTable.issue_id, ids)).all()
+        const sessions = attempts.flatMap((attempt) => (attempt.session_id ? [attempt.session_id as (typeof SessionTable.$inferSelect)["id"]] : []))
+        return {
+          attempts,
+          activity: yield* tx
+            .select()
+            .from(BoardActivityTable)
+            .where(eq(BoardActivityTable.project_id, row.id))
+            .orderBy(asc(BoardActivityTable.time_created), asc(BoardActivityTable.id))
+            .all(),
+          numbers: yield* tx.select({ id: BoardIssueTable.id, number: BoardIssueTable.number }).from(BoardIssueTable).where(eq(BoardIssueTable.project_id, row.id)).all(),
+          notes: yield* tx
+            .select()
+            .from(BoardNoteTable)
+            .where(inArray(BoardNoteTable.issue_id, ids))
+            .orderBy(asc(BoardNoteTable.time_created), asc(BoardNoteTable.id))
+            .all(),
+          checks: yield* tx.select().from(BoardCheckTable).where(inArray(BoardCheckTable.issue_id, ids)).all(),
+          sessions: sessions.length ? yield* tx.select().from(SessionTable).where(inArray(SessionTable.id, sessions)).all() : [],
+          parts: sessions.length
+            ? yield* tx
+                .select({ session: PartTable.session_id, id: PartTable.id, data: PartTable.data })
+                .from(PartTable)
+                .where(inArray(PartTable.session_id, sessions))
+                .orderBy(asc(PartTable.id))
+                .all()
+            : [],
+        }
+      }),
+    )
+    const iso = (ms: number) => new Date(ms).toISOString()
+    const keyOf = (issue: Board.IssueID) => found.numbers.find((item) => item.id === issue)?.number
+    yield* Effect.sync(() => {
+      const written = new Set(readBoard(scratch).events.map((event) => event.activity))
+      found.activity
+        .filter((item) => !written.has(item.id))
+        .forEach((item) => {
+          const number = item.issue_id ? keyOf(item.issue_id) : undefined
+          appendBoardEvent(scratch, BoardTree.event(row.key, number ? `${row.key}-${number}` : undefined, item), { redact })
+        })
+      issues.forEach((issue) => {
+        const key = `${row.key}-${issue.number}`
+        // readCard's events omit text, which collapses the union; narrow on the fields themselves.
+        const seen = new Set(
+          readCard(scratch, key).events.flatMap((event) =>
+            "thread" in event && "from" in event ? [`${event.at} ${event.thread} ${event.from}`] : [],
+          ),
+        )
+        found.notes
+          .filter((note) => note.issue_id === issue.id)
+          .forEach((note) => {
+            const at = iso(note.time_created)
+            if (!note.kind || seen.has(`${at} ${note.kind} ${note.author}`)) return
+            appendCardEvent(scratch, key, { kind: "message", thread: note.kind, from: note.author, text: note.body, at }, { redact })
+          })
+        const own = found.attempts.filter((attempt) => attempt.issue_id === issue.id)
+        const recorded = new Set(attemptNumbers(scratch, key))
+        const last = Math.max(0, ...own.map((attempt) => attempt.n))
+        own
+          .filter((attempt) => !recorded.has(attempt.n))
+          .forEach((attempt) => {
+            const session = found.sessions.find((item) => item.id === attempt.session_id)
+            if (!session) return
+            const parts = found.parts.filter((part) => part.session === session.id)
+            appendAttempt(
+              scratch,
+              key,
+              attempt.n,
+              {
+                seat: attempt.seat ?? "",
+                session: session.id,
+                engine: session.model?.providerID ?? "",
+                model: session.model?.id ?? "",
+                tokensIn: session.tokens_input,
+                tokensOut: session.tokens_output + session.tokens_reasoning,
+                tokensCache: session.tokens_cache_read + session.tokens_cache_write,
+                toolUses: parts.filter((part) => part.data.type === "tool").length,
+                wallTime: session.time_updated - session.time_created,
+                retries: 0,
+                reworks: attempt.n - 1,
+                gates: found.checks.filter((check) => check.issue_id === issue.id).map((check) => `${check.kind} ${check.command}`),
+                verdict: attempt.n === last ? "landed" : "reworked",
+                // The digest of the stored transcript parts; the transcript itself travels with the session archive.
+                transcriptSha: createHash("sha256").update(JSON.stringify(parts)).digest("hex") as Parameters<typeof appendAttempt>[3]["transcriptSha"],
+                costMicroUsd: Math.round(session.cost * 1_000_000),
+              },
+              { redact, at: iso(session.time_updated) },
+            )
+          })
+        const record = issue.record
+        if (!issue.pr_number || !record) return
+        appendLogbookEntry(
+          scratch,
+          {
+            prId: String(issue.pr_number),
+            at: iso(now),
+            territories: [],
+            shipped: record.change?.trim() || record.intent?.trim() || issue.title,
+            decisions: record.decisions ?? "",
+            tradeoffs: record.not_covered ?? "",
+            risks: [record.risk?.level, record.risk?.breaks, record.risk?.undo && `Undo: ${record.risk.undo}`].filter(Boolean).join(". "),
+            openThreads: record.follow_ups?.length ? record.follow_ups.join(", ") : "None.",
+            links: [key],
+          },
+          { redact },
+        )
+        appendMilestone(scratch, { card: key, pr: issue.pr_number })
+      })
+    })
+    yield* git(scratch, ["add", "--", ".atlas"])
+    if ((yield* git(scratch, ["diff", "--cached", "--quiet"])).code === 0) return
+    yield* git(scratch, [...AUTHOR, "commit", "--quiet", "-m", `chore(queue): record ${label}`])
+  })
+
+  /** The card's record as Atlas reads it: Maestro's fields plus the host's facts, checks, cost, lineage and integration. */
+  const recordOf = Effect.fnUntraced(function* (row: ProjectRow, issue: Board.IssueID, base: string) {
+    const now = yield* Clock.currentTimeMillis
+    const found = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        const card = yield* tx.select().from(BoardIssueTable).where(eq(BoardIssueTable.id, issue)).get()
+        const checks = yield* tx.select().from(BoardCheckTable).where(eq(BoardCheckTable.issue_id, issue)).all()
+        const attempts = yield* tx.select().from(BoardAttemptTable).where(eq(BoardAttemptTable.issue_id, issue)).orderBy(asc(BoardAttemptTable.n)).all()
+        const queued = yield* tx.select().from(BoardQueueTable).where(eq(BoardQueueTable.issue_id, issue)).get()
+        const bundle = yield* tx
+          .select({ n: BoardBundleTable.n, status: BoardBundleTable.status, base: BoardBundleTable.base_sha, head: BoardBundleMemberTable.head_sha })
+          .from(BoardBundleMemberTable)
+          .innerJoin(BoardBundleTable, eq(BoardBundleTable.id, BoardBundleMemberTable.bundle_id))
+          .where(eq(BoardBundleMemberTable.issue_id, issue))
+          .orderBy(desc(BoardBundleTable.n))
+          .get()
+        const epic = card?.epic_id
+          ? yield* tx.select({ number: BoardEpicTable.number }).from(BoardEpicTable).where(eq(BoardEpicTable.id, card.epic_id)).get()
+          : undefined
+        const depends = yield* tx
+          .select({ number: BoardIssueTable.number })
+          .from(BoardDependencyTable)
+          .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardDependencyTable.depends_on_id))
+          .where(eq(BoardDependencyTable.issue_id, issue))
+          .all()
+        return { card, checks, attempts, queued, bundle, epic, depends, directory: yield* worktree(tx, row) }
+      }),
+    )
+    const card = found.card
+    const record = card?.record
+    if (!card || !record?.risk?.level) return undefined
+    const head = found.bundle?.head ?? found.queued?.head_sha
+    // Against the bundle's base once bundled: after it ships, base already contains the card.
+    const numstat =
+      head && found.directory
+        ? (yield* git(found.directory, ["diff", "--numstat", `${found.bundle?.base ?? `refs/remotes/origin/${base}`}...${head}`])).out
+            .split("\n")
+            .filter(Boolean)
+            .map((line) => line.split("\t"))
+        : []
+    const state =
+      card.stage === "shipped" ? "merged" : found.bundle?.status === "open" ? "bundled" : found.queued ? "queued" : "not queued"
+    return {
+      pr: card.pr_number,
+      title: card.title,
+      head: head ?? "",
+      record: {
+        intent: record.intent ?? "",
+        change: { text: record.change ?? "", start: [] },
+        decisions: record.decisions?.trim() ? [record.decisions] : [],
+        notCovered: record.not_covered ?? "",
+        risk: { level: record.risk.level, breaks: record.risk.breaks ?? "", notice: "", undo: record.risk.undo ?? "" },
+        followUps: record.follow_ups ?? [],
+        facts: {
+          files: numstat.length,
+          added: numstat.reduce((sum, item) => sum + (Number(item[0]) || 0), 0),
+          removed: numstat.reduce((sum, item) => sum + (Number(item[1]) || 0), 0),
+~~~~
+
+```json
+{"first_line":297,"last_line":307,"bytes":290,"sha256":"771b4938647448bbc48f3a156297cd5242d91cab0ce37ecc5b6ada21160c2bda"}
+```
+
+~~~~typescript
+        },
+        integration: {
+          state,
+          ...(found.bundle ? { bundle: `${row.key}-B${found.bundle.n}`, testedOn: found.bundle.base } : {}),
+        },
+      } satisfies BoardRecord.PrRecord,
+    }
+  })
+
+  return { head, moved, note, describe, recordBundle, recordOf }
+}
+~~~~
+
+## AUT3-C24
+
+```json
+{
+  "block_id": "AUT3-C24",
+  "type": "literal_source_chain",
+  "canonical_request_namespace": "J1",
+  "requests": [
+    "RE-AUT3-06"
+  ],
+  "body_anchors": [
+    "B12"
+  ],
+  "requested_subject": "Port e fallback sem implementação Atlas",
+  "path": "packages/core/src/board/record.ts",
+  "archive": "sources/packages/core/src/board/record.ts",
+  "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_git_blob_sha": "754a3d0e90e3fc92349d3080f37ff1d9c4f1a96a",
+  "source_sha256": "919161b5e11cf65f1fc0a2f857a63d45b54d56d1bd5b211d13b10794db87faed",
+  "source_bytes": 2988,
+  "required_source_line_ranges": [
+    [
+      1,
+      67
+    ]
+  ],
+  "prior_literal_ranges": []
+}
+```
+
+```json
+{"first_line":1,"last_line":67,"bytes":2988,"sha256":"919161b5e11cf65f1fc0a2f857a63d45b54d56d1bd5b211d13b10794db87faed"}
+```
+
+~~~~typescript
+export * as BoardRecord from "./record"
+
+// The PR record port (docs/specs/maestro-lead/merge-queue.md sections 4.5 and 6.2). Atlas renders records and writes
+// commit trailers; core only gathers the facts and calls the port. The shapes and keys below are Atlas's
+// (`@orchestra/atlas-boundary/record`), so its adapter binds `renderPrRecord`, `renderBundleRecord` and the trailer
+// helpers without mapping. Unbound, the queue still runs: card bodies stay as they are, bundle PRs get one fixed line
+// and merge commits carry no trailer.
+
+export interface Port {
+  readonly pr: (record: PrRecord) => string
+  readonly bundle: (record: BundleRecord) => string
+  readonly trailer: (trailer: Trailer) => string
+}
+
+/** The trailer on a card's merge commit inside a bundle; Atlas's `Trailer` keys the host knows. */
+export type Trailer = { readonly WP: string; readonly Attempt: string }
+
+export type RiskLevel = "low" | "medium" | "high"
+
+/** Strings are Markdown written by Maestro; every other field is a host fact. Facts core has no source for stay empty. */
+export type PrRecord = {
+  readonly intent: string
+  readonly change: { readonly text: string; readonly start: ReadonlyArray<string> }
+  readonly decisions: ReadonlyArray<string>
+  readonly notCovered: string
+  readonly risk: { readonly level: RiskLevel; readonly breaks: string; readonly notice: string; readonly undo: string }
+  readonly followUps: ReadonlyArray<string>
+  readonly facts: {
+    readonly files: number
+    readonly added: number
+    readonly removed: number
+    readonly packages: ReadonlyArray<string>
+    readonly ownUnits: ReadonlyArray<{ readonly unit: string; readonly skill: string }>
+  }
+  readonly evidence: {
+    readonly doneWhen: ReadonlyArray<{ readonly line: string; readonly command: string; readonly result: string }>
+    readonly reviews: ReadonlyArray<{
+      readonly kind: string
+      readonly verdict: string
+      readonly findings: ReadonlyArray<{ readonly at: string; readonly text: string; readonly closed?: string }>
+    }>
+    readonly checks: ReadonlyArray<{ readonly name: string; readonly state: string; readonly url?: string }>
+    readonly used: "as-user" | "unseen"
+  }
+  readonly cost: {
+    readonly attempts: ReadonlyArray<{ readonly n: number; readonly cause: string }>
+    readonly ciRuns: number
+    readonly ciMinutes: number
+    readonly wallMs: number
+  }
+  readonly lineage: {
+    readonly card: string
+    readonly epic?: string
+    readonly dependsOn: ReadonlyArray<string>
+    readonly seats: ReadonlyArray<string>
+  }
+  readonly integration: { readonly state: string; readonly bundle?: string; readonly testedOn?: string }
+}
+
+export type BundleRecord = {
+  readonly members: ReadonlyArray<{ readonly title: string; readonly head: string; readonly record: PrRecord }>
+  readonly testedOn: string
+  readonly skew: number
+  readonly ciRuns: number
+  readonly ciMinutes: number
+  readonly ejections: ReadonlyArray<{ readonly card: string; readonly cause: string }>
+}
+~~~~
+
+## AUT3-C25
+
+```json
+{
+  "block_id": "AUT3-C25",
+  "type": "literal_source_chain",
+  "canonical_request_namespace": "J1",
+  "requests": [
+    "RE-AUT3-06"
+  ],
+  "body_anchors": [
+    "B12"
+  ],
+  "requested_subject": "Import vazio, catálogo/aplicação de eventos, exclusões, dependências e lacuna de prosa redigida",
+  "path": "packages/core/src/board/tree.ts",
+  "archive": "sources/packages/core/src/board/tree.ts",
+  "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_git_blob_sha": "9a14e96aa37e6135380b730025756b0e80bfe661",
+  "source_sha256": "68edc94c79b05a0225c269efd0a8550ba05def07d4b8f9492766676eef99a8ed",
+  "source_bytes": 19770,
+  "required_source_line_ranges": [
+    [
+      1,
+      472
+    ]
+  ],
+  "prior_literal_ranges": [
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "B12",
+      "source_path": "packages/core/src/board/tree.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "9a14e96aa37e6135380b730025756b0e80bfe661",
+      "source_sha256": "68edc94c79b05a0225c269efd0a8550ba05def07d4b8f9492766676eef99a8ed",
+      "first_line": 21,
+      "last_line": 24,
+      "excerpt_bytes": 453,
+      "excerpt_sha256": "a313be9cf9e4f495d77f1cb8673a2816e021be21a5f753c4b6426479eb734668",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 157092,
+      "literal_content_byte_end_exclusive": 157545
+    },
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "B12",
+      "source_path": "packages/core/src/board/tree.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "9a14e96aa37e6135380b730025756b0e80bfe661",
+      "source_sha256": "68edc94c79b05a0225c269efd0a8550ba05def07d4b8f9492766676eef99a8ed",
+      "first_line": 59,
+      "last_line": 73,
+      "excerpt_bytes": 1149,
+      "excerpt_sha256": "c1110e37a157591e8856078fe88ea4c9f1af96ad139e58f9e11ee02903685761",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 157676,
+      "literal_content_byte_end_exclusive": 158825
+    }
+  ]
+}
+```
+
+```json
+{"first_line":1,"last_line":20,"bytes":623,"sha256":"29c4babdd9643f3cb23c6696ec7c87b6bf51bba5a105ef9ef4c5e67cc547642e"}
+```
+
+~~~~typescript
+export * as BoardTree from "./tree"
+
+import { and, eq, isNull, max } from "drizzle-orm"
+import type { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors"
+import { Effect, Schema } from "effect"
+import { Board } from "@orchestra/schema/board"
+import { readBoard, type BoardEvent, type BoardEventInput } from "@orchestra/atlas-boundary/record-log"
+import {
+  BoardActivityTable,
+  BoardDecisionTable,
+  BoardDependencyTable,
+  BoardEpicTable,
+  BoardIssueTable,
+  BoardNoteTable,
+  BoardProjectTable,
+  BoardQuestionTable,
+  BoardStepTable,
+} from "./sql"
+import type { ActivityRow, Fields, Tx } from "./shared"
+
+~~~~
+
+```json
+{"first_line":25,"last_line":58,"bytes":1476,"sha256":"0d3396c1233010c2200b7b7bc73a529f6cf32e9995e21d19620e7ea6dc41880a"}
+```
+
+~~~~typescript
+
+export class UnknownActionError extends Schema.TaggedErrorClass<UnknownActionError>()("BoardTree.UnknownActionError", {
+  activity: Schema.String,
+  action: Schema.String,
+}) {}
+
+export class ReplayError extends Schema.TaggedErrorClass<ReplayError>()("BoardTree.ReplayError", {
+  activity: Schema.String,
+  message: Schema.String,
+}) {}
+
+// Free text a board write may hold; the log keeps it out of `before` and `after` so a public tree can drop it.
+const PROSE = ["description", "body", "reason", "text", "question", "answer", "answer_text", "record", "cause", "options", "cost_of_waiting", "paused_reason", "crash_reason"]
+// A prose value that is not a string travels as JSON under this suffix, so import can parse it back.
+const JSON_SUFFIX = ".json"
+
+/** The board event for one activity row; `issue` is the card key when the row names an issue. */
+export function event(project: string, issue: string | undefined, row: ActivityRow): BoardEventInput {
+  const text = prose(row)
+  return {
+    activity: row.id,
+    project,
+    ...(issue ? { issue } : {}),
+    actor: row.actor,
+    action: row.action,
+    at: new Date(row.time_created).toISOString(),
+    ...(row.before ? { before: structure(row.before) } : {}),
+    ...(row.after ? { after: structure(row.after) } : {}),
+    ...(row.undoes ? { undoes: row.undoes } : {}),
+    ...(Object.keys(text).length > 0 ? { text } : {}),
+  }
+}
+
+/** Rebuilds the board of an empty database from the record tree at `repoPath`. */
+~~~~
+
+```json
+{"first_line":74,"last_line":472,"bytes":16069,"sha256":"4c44241aef6cff7e055746eb577dd0027f79f5a22ea9b43375ac8e6e58b1e001"}
+```
+
+~~~~typescript
+    if (!project) return yield* new ReplayError({ activity: item.activity, message: `Project ${item.project} does not exist.` })
+    yield* tx
+      .insert(BoardActivityTable)
+      .values({
+        id: item.activity as Board.ActivityID,
+        project_id: project.id,
+        issue_id: item.issue ? (cards.get(item.issue) ?? null) : null,
+        actor: item.actor as Board.Actor,
+        action: item.action as Board.Action,
+        // A public tree carries only the prose's hash; the gap stays visible in the log.
+        reason: redacted ? `[redacted ${item.textHash}]` : (item.text?.reason ?? null),
+        before,
+        after,
+        undoes: (item.undoes as Board.ActivityID | undefined) ?? null,
+        time_created: ctx.at,
+      })
+      .run()
+    if (item.undoes)
+      yield* tx
+        .update(BoardActivityTable)
+        .set({ undone_by: item.activity as Board.ActivityID })
+        .where(eq(BoardActivityTable.id, item.undoes as Board.ActivityID))
+        .run()
+  }
+  return events.length
+})
+
+type Context = {
+  readonly tx: Tx
+  readonly item: BoardEvent
+  readonly before: Fields | null
+  readonly after: Fields | null
+  readonly at: number
+  readonly cards: Map<string, Board.IssueID>
+  project: typeof BoardProjectTable.$inferSelect | undefined
+}
+
+const PROJECT_COLUMNS = ["name", "goal", "target_date", "github_repo", "budget_usd", "status", "paused_reason"]
+const EPIC_COLUMNS = ["title", "goal", "position", "status"]
+const ISSUE_COLUMNS = [
+  "title",
+  "body",
+  "type",
+  "epic_id",
+  "estimate",
+  "seat",
+  "session_id",
+  "branch",
+  "pr_number",
+  "stage",
+  "position",
+  "stage_entered_at",
+  "attempts",
+  "crash_reason",
+  "guardrail_rule",
+  "area",
+  "order",
+  "record",
+  "hold_before_merge",
+  "paused",
+  "github_number",
+]
+
+const nothing = (_: Context) => Effect.void
+
+// One applier per action. An action missing here fails the import by name; none is skipped.
+const APPLIERS: Record<Board.Action, (ctx: Context) => Effect.Effect<void, ReplayError | EffectDrizzleQueryError>> = {
+  "project.upsert": Effect.fnUntraced(function* (ctx) {
+    if (ctx.project) return yield* updateProject(ctx)
+    yield* ctx.tx
+      .insert(BoardProjectTable)
+      .values({
+        id: Board.ProjectID.create(),
+        key: ctx.item.project,
+        name: String(ctx.after?.name ?? ctx.item.project),
+        goal: String(ctx.after?.goal ?? ""),
+        target_date: (ctx.after?.target_date as number | null | undefined) ?? null,
+        github_repo: (ctx.after?.github_repo as string | null | undefined) ?? null,
+        status: "active",
+        github_state: "off",
+        next_issue_number: 1,
+        next_epic_number: 1,
+      })
+      .run()
+  }),
+  "epic.upsert": Effect.fnUntraced(function* (ctx) {
+    const project = yield* requireProject(ctx)
+    const id = String(ctx.after?.id ?? ctx.before?.id) as Board.EpicID
+    if (ctx.before) {
+      yield* ctx.tx.update(BoardEpicTable).set(pick(ctx.after, EPIC_COLUMNS)).where(eq(BoardEpicTable.id, id)).run()
+      return
+    }
+    const number = Number(ctx.after?.number)
+    yield* ctx.tx
+      .insert(BoardEpicTable)
+      .values({
+        id,
+        project_id: project.id,
+        number,
+        title: String(ctx.after?.title ?? ""),
+        goal: String(ctx.after?.goal ?? ""),
+        position: Number(ctx.after?.position ?? number),
+        status: (ctx.after?.status as Board.Epic["status"] | undefined) ?? "open",
+      })
+      .run()
+    yield* ctx.tx
+      .update(BoardProjectTable)
+      .set({ next_epic_number: Math.max(project.next_epic_number, number + 1) })
+      .where(eq(BoardProjectTable.id, project.id))
+      .run()
+  }),
+  "issue.create": Effect.fnUntraced(function* (ctx) {
+    const project = yield* requireProject(ctx)
+    const number = Number(ctx.after?.number)
+    const id = Board.IssueID.create()
+    const stage = (ctx.after?.stage as Board.Stage | undefined) ?? "backlog"
+    const last = yield* ctx.tx
+      .select({ position: max(BoardIssueTable.position) })
+      .from(BoardIssueTable)
+      .where(and(eq(BoardIssueTable.project_id, project.id), eq(BoardIssueTable.stage, stage)))
+      .get()
+    yield* ctx.tx
+      .insert(BoardIssueTable)
+      .values({
+        title: "",
+        body: "",
+        type: "feature",
+        position: (last?.position ?? 0) + 1,
+        stage_entered_at: ctx.at,
+        ...pick(ctx.after, ISSUE_COLUMNS),
+        id,
+        project_id: project.id,
+        number,
+        stage,
+      } as typeof BoardIssueTable.$inferInsert)
+      .run()
+    yield* ctx.tx
+      .update(BoardProjectTable)
+      .set({ next_issue_number: Math.max(project.next_issue_number, number + 1) })
+      .where(eq(BoardProjectTable.id, project.id))
+      .run()
+    ctx.cards.set(`${project.key}-${number}`, id)
+    if (Array.isArray(ctx.after?.depends_on)) yield* dependencies(ctx, id, ctx.after.depends_on)
+  }),
+  "issue.update": (ctx) => issueFields(ctx),
+  "issue.move": (ctx) => issueFields(ctx),
+  "intake.accept": (ctx) => issueFields(ctx),
+  "intake.decline": (ctx) => issueFields(ctx),
+  "hold.set": (ctx) => issueFields(ctx),
+  "queue.add": (ctx) => issueFields(ctx),
+  "queue.remove": (ctx) => issueFields(ctx),
+  "bundle.merge": (ctx) => issueFields(ctx),
+  // A dissolve by eject sends the card back to review; a plain dissolve names only the bundle.
+  "bundle.dissolve": (ctx) => issueFields(ctx),
+  "bundle.cut": nothing,
+  "pause.set": (ctx) => (ctx.item.issue ? issueFields(ctx) : updateProject(ctx)),
+  "archive.set": (ctx) => updateProject(ctx),
+  "steps.set": Effect.fnUntraced(function* (ctx) {
+    yield* steps(ctx, yield* requireIssue(ctx), ctx.after?.steps)
+  }),
+  "question.ask": Effect.fnUntraced(function* (ctx) {
+    const project = yield* requireProject(ctx)
+    yield* ctx.tx
+      .insert(BoardQuestionTable)
+      .values({
+        id: String(ctx.after?.id) as Board.QuestionID,
+        project_id: project.id,
+        issue_id: ctx.item.issue ? yield* requireIssue(ctx) : null,
+        epic_id: (ctx.after?.epic_id as Board.EpicID | null | undefined) ?? null,
+        text: String(ctx.after?.text ?? ""),
+        options: (ctx.after?.options as Board.Question["options"] | undefined) ?? [],
+        recommended: String(ctx.after?.recommended ?? ""),
+        cost_of_waiting: (ctx.after?.cost_of_waiting as string | null | undefined) ?? null,
+        kind: (ctx.after?.kind as string | null | undefined) ?? null,
+        blocking: Boolean(ctx.after?.blocking),
+        status: "open",
+      })
+      .run()
+  }),
+  "question.withdraw": Effect.fnUntraced(function* (ctx) {
+    yield* ctx.tx
+      .update(BoardQuestionTable)
+      .set({ status: ctx.after?.status === "withdrawn" ? "withdrawn" : "open" })
+      .where(eq(BoardQuestionTable.id, String(ctx.after?.id ?? ctx.before?.id) as Board.QuestionID))
+      .run()
+  }),
+  // One action, three writes: a first answer, a changed answer that supersedes the standing decision, and Maestro
+  // recording a decision's outcome.
+  "question.answer": Effect.fnUntraced(function* (ctx) {
+    const question = String(ctx.after?.id) as Board.QuestionID
+    const decision = String(ctx.after?.decision) as Board.DecisionID
+    if (ctx.after && "outcome" in ctx.after) {
+      yield* ctx.tx
+        .update(BoardDecisionTable)
+        .set({ outcome: (ctx.after.outcome as string | null) ?? null, outcome_at: ctx.at })
+        .where(eq(BoardDecisionTable.id, decision))
+        .run()
+      return
+    }
+    const row = yield* ctx.tx.select().from(BoardQuestionTable).where(eq(BoardQuestionTable.id, question)).get()
+    if (!row) return yield* new ReplayError({ activity: ctx.item.activity, message: `Question ${question} does not exist.` })
+    const chosen = String(ctx.after?.answer_option ?? "")
+    const chosenText = (ctx.after?.answer_text as string | null | undefined) ?? null
+    const standing = yield* ctx.tx
+      .select({ id: BoardDecisionTable.id })
+      .from(BoardDecisionTable)
+      .where(and(eq(BoardDecisionTable.question_id, question), isNull(BoardDecisionTable.overturned_by_id)))
+      .get()
+    yield* ctx.tx
+      .update(BoardQuestionTable)
+      .set({ status: "answered", answer_option: chosen, answer_text: chosenText, answered_at: ctx.at })
+      .where(eq(BoardQuestionTable.id, question))
+      .run()
+    yield* ctx.tx
+      .insert(BoardDecisionTable)
+      .values({
+        id: decision,
+        project_id: row.project_id,
+        issue_id: row.issue_id,
+        epic_id: row.epic_id,
+        question_id: question,
+        question: row.text,
+        options: row.options,
+        recommended: row.recommended,
+        chosen,
+        chosen_text: chosenText,
+        answered_by: "owner",
+        answered_at: ctx.at,
+        supersedes_id: standing?.id ?? null,
+      })
+      .run()
+    if (standing)
+      yield* ctx.tx.update(BoardDecisionTable).set({ overturned_by_id: decision }).where(eq(BoardDecisionTable.id, standing.id)).run()
+  }),
+  "note.add": Effect.fnUntraced(function* (ctx) {
+    yield* ctx.tx
+      .insert(BoardNoteTable)
+      .values({
+        id: String(ctx.after?.id) as Board.NoteID,
+        issue_id: yield* requireIssue(ctx),
+        author: String(ctx.after?.author ?? "owner"),
+        body: String(ctx.after?.body ?? ""),
+      })
+      .run()
+  }),
+  "note.edit": Effect.fnUntraced(function* (ctx) {
+    yield* ctx.tx
+      .update(BoardNoteTable)
+      .set({ body: String(ctx.after?.body ?? "") })
+      .where(eq(BoardNoteTable.id, String(ctx.after?.id) as Board.NoteID))
+      .run()
+  }),
+  "note.delete": Effect.fnUntraced(function* (ctx) {
+    yield* ctx.tx
+      .delete(BoardNoteTable)
+      .where(eq(BoardNoteTable.id, String(ctx.before?.id) as Board.NoteID))
+      .run()
+  }),
+  // Attachment bytes and secrets stay out of the log on purpose, so there is nothing to restore.
+  "attachment.add": nothing,
+  "attachment.remove": nothing,
+  // An overwrite only marks the issue for the next push; the board's own fields did not change.
+  "github.overwrite": nothing,
+  // Sync state is re-derived by the next GitHub sync.
+  "github.state": nothing,
+  // An undo carries the target's earlier fields in `after`; it restores them the way the board's own undo does.
+  undo: Effect.fnUntraced(function* (ctx) {
+    const target = yield* ctx.tx
+      .select({ action: BoardActivityTable.action, before: BoardActivityTable.before, after: BoardActivityTable.after })
+      .from(BoardActivityTable)
+      .where(eq(BoardActivityTable.id, String(ctx.item.undoes) as Board.ActivityID))
+      .get()
+    if (!target) return yield* new ReplayError({ activity: ctx.item.activity, message: `Undo target ${ctx.item.undoes} is not in the log.` })
+    if (target.action === "question.withdraw") {
+      yield* ctx.tx
+        .update(BoardQuestionTable)
+        .set({ status: ctx.after?.status === "withdrawn" ? "withdrawn" : "open" })
+        .where(eq(BoardQuestionTable.id, String(target.after?.id ?? target.before?.id) as Board.QuestionID))
+        .run()
+      return
+    }
+    if (target.action === "epic.upsert") {
+      const id = String(target.after?.id ?? target.before?.id) as Board.EpicID
+      if (!ctx.after) return yield* Effect.asVoid(ctx.tx.delete(BoardEpicTable).where(eq(BoardEpicTable.id, id)).run())
+      yield* ctx.tx.update(BoardEpicTable).set(pick(ctx.after, EPIC_COLUMNS)).where(eq(BoardEpicTable.id, id)).run()
+      return
+    }
+    if (!ctx.item.issue || !ctx.after) return
+    const issue = yield* requireIssue(ctx)
+    if (Array.isArray(ctx.after.steps)) yield* steps(ctx, issue, ctx.after.steps)
+    if (Array.isArray(ctx.after.depends_on)) yield* dependencies(ctx, issue, ctx.after.depends_on)
+    yield* issueFields(ctx)
+  }),
+}
+
+const issueFields = Effect.fnUntraced(function* (ctx: Context) {
+  if (!ctx.item.issue) return
+  const issue = yield* requireIssue(ctx)
+  if (Array.isArray(ctx.after?.depends_on) && ctx.item.action === "issue.update") yield* dependencies(ctx, issue, ctx.after.depends_on)
+  const columns = pick(ctx.after, ISSUE_COLUMNS)
+  if (Object.keys(columns).length === 0) return
+  yield* ctx.tx.update(BoardIssueTable).set(columns).where(eq(BoardIssueTable.id, issue)).run()
+})
+
+const updateProject = Effect.fnUntraced(function* (ctx: Context) {
+  const project = yield* requireProject(ctx)
+  const columns = pick(ctx.after, PROJECT_COLUMNS)
+  if (Object.keys(columns).length === 0) return
+  yield* ctx.tx.update(BoardProjectTable).set(columns).where(eq(BoardProjectTable.id, project.id)).run()
+})
+
+const steps = Effect.fnUntraced(function* (ctx: Context, issue: Board.IssueID, value: unknown) {
+  yield* ctx.tx.delete(BoardStepTable).where(eq(BoardStepTable.issue_id, issue)).run()
+  const list = Array.isArray(value) ? (value as Board.Step[]) : []
+  if (list.length === 0) return
+  yield* ctx.tx
+    .insert(BoardStepTable)
+    .values(
+      list.map((step, position) => ({
+        id: Board.StepID.create(),
+        issue_id: issue,
+        position,
+        title: step.title,
+        status: step.status,
+        now: step.now ?? null,
+      })),
+    )
+    .run()
+})
+
+const dependencies = Effect.fnUntraced(function* (ctx: Context, issue: Board.IssueID, refs: ReadonlyArray<unknown>) {
+  const project = yield* requireProject(ctx)
+  yield* ctx.tx.delete(BoardDependencyTable).where(eq(BoardDependencyTable.issue_id, issue)).run()
+  // Older rows logged a bare number; the board resolved it inside the card's own project.
+  const targets = refs.flatMap((ref) => {
+    const key = /^\d+$/.test(String(ref)) ? `${project.key}-${ref}` : String(ref)
+    const id = ctx.cards.get(key)
+    return id && id !== issue ? [{ issue_id: issue, depends_on_id: id }] : []
+  })
+  if (targets.length > 0) yield* ctx.tx.insert(BoardDependencyTable).values(targets).run()
+})
+
+const projectOf = Effect.fnUntraced(function* (tx: Tx, item: BoardEvent) {
+  return yield* tx.select().from(BoardProjectTable).where(eq(BoardProjectTable.key, item.project)).get()
+})
+
+const requireProject = Effect.fnUntraced(function* (ctx: Context) {
+  const project = yield* projectOf(ctx.tx, ctx.item)
+  if (!project) return yield* new ReplayError({ activity: ctx.item.activity, message: `Project ${ctx.item.project} does not exist.` })
+  return project
+})
+
+const requireIssue = Effect.fnUntraced(function* (ctx: Context) {
+  const issue = ctx.item.issue ? ctx.cards.get(ctx.item.issue) : undefined
+  if (!issue) return yield* new ReplayError({ activity: ctx.item.activity, message: `Card ${ctx.item.issue} does not exist.` })
+  return issue
+})
+
+function pick(fields: Fields | null, columns: ReadonlyArray<string>) {
+  return Object.fromEntries(Object.entries(fields ?? {}).filter((entry) => columns.includes(entry[0])))
+}
+
+function structure(value: Fields) {
+  return Object.fromEntries(Object.entries(value).filter((entry) => !PROSE.includes(entry[0])))
+}
+
+function prose(row: Pick<ActivityRow, "reason" | "before" | "after">) {
+  const sides = [
+    ["before", row.before],
+    ["after", row.after],
+  ] as const
+  return Object.fromEntries([
+    ...(row.reason ? [["reason", row.reason]] : []),
+    ...sides.flatMap((side) =>
+      Object.entries(side[1] ?? {})
+        .filter((entry) => PROSE.includes(entry[0]) && entry[1] !== undefined)
+        .map((entry) =>
+          typeof entry[1] === "string" ? [`${side[0]}.${entry[0]}`, entry[1]] : [`${side[0]}.${entry[0]}${JSON_SUFFIX}`, JSON.stringify(entry[1])],
+        ),
+    ),
+  ])
+}
+
+// Puts a side's prose back into its structure. Without text (a public tree) the prose keys stay absent.
+function merge(side: BoardEvent["before"], text: BoardEvent["text"], name: "before" | "after"): Fields | null {
+  if (!side && !Object.keys(text ?? {}).some((key) => key.startsWith(`${name}.`))) return null
+  const prefix = `${name}.`
+  return {
+    ...side,
+    ...Object.fromEntries(
+      Object.entries(text ?? {})
+        .filter((entry) => entry[0].startsWith(prefix))
+        .map((entry) => {
+          const key = entry[0].slice(prefix.length)
+          return key.endsWith(JSON_SUFFIX) ? [key.slice(0, -JSON_SUFFIX.length), JSON.parse(entry[1])] : [key, entry[1]]
+        }),
+    ),
+  }
+}
+~~~~
+
+## FIM_DO_SUPLEMENTO_LITERAL

@@ -1,0 +1,97 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "relay": "/root/review_relay",
+  "packet": "derived-research-impact-v1",
+  "source": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/derived-research-impact-v1.md",
+  "source_bytes": 51555,
+  "source_sha256": "622f54077a680559d4ce608f9bb0694276e9d490a492d3c1f66920931fb82b86",
+  "parts_per_target": 1,
+  "calls": [
+    {
+      "sequence": 1,
+      "target": "/root/s1_03_j1",
+      "part": 1,
+      "request_file": "request-j1-01.json",
+      "request_file_bytes": 53289,
+      "request_file_sha256": "45f239626c2743195d0280310058226755ea1b9146755d0c836040d8621b572c",
+      "message_bytes": 52159,
+      "message_sha256": "20c4c3b69c0b50a67677e17b3c53ec1e50175e8a58feffa94d7de4cf2300cae6",
+      "payload_bytes": 51555,
+      "payload_sha256": "622f54077a680559d4ce608f9bb0694276e9d490a492d3c1f66920931fb82b86",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 2,
+      "target": "/root/s1_03_j2",
+      "part": 1,
+      "request_file": "request-j2-01.json",
+      "request_file_bytes": 53289,
+      "request_file_sha256": "c2b0078a453fa69ed4731bc8833ca7c61187edc33957e93e50f6a1ef0f9fe89f",
+      "message_bytes": 52159,
+      "message_sha256": "20c4c3b69c0b50a67677e17b3c53ec1e50175e8a58feffa94d7de4cf2300cae6",
+      "payload_bytes": 51555,
+      "payload_sha256": "622f54077a680559d4ce608f9bb0694276e9d490a492d3c1f66920931fb82b86",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    }
+  ],
+  "known_transcription_corrections": [],
+  "receipt_limit": "Ferramenta retornou normalmente sem texto nem ID de despacho; os hashes descrevem os pedidos registrados e sua reconstrução local, não verificação remota nem suficiência semântica.",
+  "delivery_scope": "Literal UTF-8 packet only; final signal is outside payload.",
+  "slot_handling": "Sequential judges; preserve each original final before reactivation.",
+  "judgment_capture": "Both original finals preserved. J1 initial REQUEST_EVIDENCE is superseded only through its later own response in derived-research-impact-plan-v1; J2 initial whole-body PASS preserved here.",
+  "dispatch_count": 2,
+  "recorded_at_utc": "2026-11-15T05:42:08.597863+00:00",
+  "completed_targets": [
+    "/root/s1_03_j1",
+    "/root/s1_03_j2"
+  ],
+  "pending_targets": [],
+  "local_recorded_reconstruction": [
+    {
+      "target": "/root/s1_03_j1",
+      "bytes": 51555,
+      "sha256": "622f54077a680559d4ce608f9bb0694276e9d490a492d3c1f66920931fb82b86",
+      "equals_source": true,
+      "raw_bytes": 51555,
+      "raw_sha256": "622f54077a680559d4ce608f9bb0694276e9d490a492d3c1f66920931fb82b86",
+      "corrections_applied": false
+    },
+    {
+      "target": "/root/s1_03_j2",
+      "bytes": 51555,
+      "sha256": "622f54077a680559d4ce608f9bb0694276e9d490a492d3c1f66920931fb82b86",
+      "equals_source": true,
+      "raw_bytes": 51555,
+      "raw_sha256": "622f54077a680559d4ce608f9bb0694276e9d490a492d3c1f66920931fb82b86",
+      "corrections_applied": false
+    }
+  ],
+  "judgment_captures": {
+    "j1": {
+      "target": "/root/s1_03_j1",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-research-impact-v1/j1-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 3240,
+      "sha256": "28c772d6cf728122a7673940618eb16bfffcbd725aca3bfe0b4a09b7c2348c90",
+      "terminal_newline": false,
+      "literal": true,
+      "captured_at_utc": "2026-11-15T05:42:29.053299+00:00"
+    },
+    "j2": {
+      "target": "/root/s1_03_j2",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-research-impact-v1/j2-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 3448,
+      "sha256": "6845fb21de1489d7be922e1e8aacec043bbba1e3a2f00d1682a65fa896f56857",
+      "terminal_newline": false,
+      "literal": true,
+      "captured_at_utc": "2026-11-15T05:49:45.393537+00:00"
+    }
+  }
+}

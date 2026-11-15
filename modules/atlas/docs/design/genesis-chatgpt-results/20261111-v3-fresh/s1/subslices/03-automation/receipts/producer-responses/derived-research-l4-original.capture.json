@@ -1,0 +1,10 @@
+{
+  "schema": "s1-03-native-visible-final-capture/v1",
+  "agent": "/root/derived_research",
+  "capture": "Original visible FINAL delivered to principal; preserved before any reuse; no terminal LF added.",
+  "at_utc": "2026-11-15T06:05:24.905890+00:00",
+  "path": "payload/receipts/producer-responses/derived-research-l4-original.md",
+  "bytes": 4273,
+  "sha256": "e5c1a7f5be312a6cfb8cffc691244b17574c85745184605ba942f0b4f5418a95",
+  "host_wire_message_checksum_available": false
+}

@@ -1,0 +1,94 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "lot": "automation-2-supplement-v2",
+  "source": "review-packets/automation-2-supplement-v2.md",
+  "source_bytes": 377235,
+  "source_sha256": "a96d724a7a54563b1c2f86d56d19c1d6a9d6b73fd611cbd73d2d15892033763a",
+  "frozen_manifest": {
+    "lot": "automation-2-supplement-v2",
+    "path": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/automation-2-supplement-v2.md",
+    "body_version": "v2",
+    "packet": {
+      "bytes": 377235,
+      "sha256": "a96d724a7a54563b1c2f86d56d19c1d6a9d6b73fd611cbd73d2d15892033763a",
+      "git_blob_sha": "bc7cca3a36ba7177ee4ce239d847e92e785d22df"
+    },
+    "source_supplement": {
+      "bytes": 375497,
+      "sha256": "208b0ba87350a91970d28f298d802512b72b6834360815b95ca17ab22ebc54b1",
+      "git_blob_sha": "bf43391979916e85f44ac4841926954d2c13362f"
+    },
+    "additional_test_literals": [],
+    "oracle_access_by_relay": false
+  },
+  "split_rule": "Autorização posterior da raiz: partes até aproximadamente 55–60KB; cortes balanceados em LF, alvo 58000 bytes.",
+  "parts": [
+    {
+      "part": 1,
+      "file": "part-01.txt",
+      "start": 0,
+      "end": 54028,
+      "bytes": 54028,
+      "sha256": "7e981be8391ebd3cb74c2e736fa216c07eb98214c2fdb60034e6d786c27ac799"
+    },
+    {
+      "part": 2,
+      "file": "part-02.txt",
+      "start": 54028,
+      "end": 107758,
+      "bytes": 53730,
+      "sha256": "33bf35a67dcfc8575e16216bed1f63ef86ffbf7d4c51d1d10877e5527ea7440a"
+    },
+    {
+      "part": 3,
+      "file": "part-03.txt",
+      "start": 107758,
+      "end": 161659,
+      "bytes": 53901,
+      "sha256": "81143bf0dd40ee23a1d913a197723fb1d0b015837e7648ddb11d6e8cca3a1a5b"
+    },
+    {
+      "part": 4,
+      "file": "part-04.txt",
+      "start": 161659,
+      "end": 215558,
+      "bytes": 53899,
+      "sha256": "8d048331488b0a66fd096833208e4338fa875cb157c66e12cf522aef3674f05f"
+    },
+    {
+      "part": 5,
+      "file": "part-05.txt",
+      "start": 215558,
+      "end": 269407,
+      "bytes": 53849,
+      "sha256": "bbea0faf56ca829668fa695ae8d1fe94b57eae28761a5ac013f704811fc25727"
+    },
+    {
+      "part": 6,
+      "file": "part-06.txt",
+      "start": 269407,
+      "end": 323392,
+      "bytes": 53985,
+      "sha256": "a9fa17692efda5d523c39b50cab54cd692f380479db32e4d60f14f716b0d9945"
+    },
+    {
+      "part": 7,
+      "file": "part-07.txt",
+      "start": 323392,
+      "end": 377235,
+      "bytes": 53843,
+      "sha256": "2c92263c5eb52ac42b36a6779f858d329a9217c1ea601ea922e2d2e8c0da7748"
+    }
+  ],
+  "end_marker_counts_per_part": [
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "previous_preparation": "prepared-32k/manifest.json (nunca despachada)",
+  "framing_rule": "Ocorrência interna de FIM_DO_LOTE é menção de dados; sinal externo acrescentado somente após FIM_PARTE_LITERAL da última mensagem, conforme confirmação da raiz."
+}

@@ -1,0 +1,27 @@
+{
+  "lot": "derived-automation-maintenance-v1-compact",
+  "responses": {
+    "j1": {
+      "target": "/root/s1_03_j1",
+      "judge_id": "parallel-v3-fresh/S1-03/J1",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-automation-maintenance-v1-compact/j1-response.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j1",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 2605,
+      "sha256": "9aedfc9092b3b5b019751612e4094ed1ab71420aa3b360a90493f8765c3bdccd",
+      "captured_at_utc": "2026-11-15T10:23:54.285843+00:00"
+    },
+    "j2": {
+      "target": "/root/s1_03_j2",
+      "judge_id": "parallel-v3-fresh/S1-03/J2",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-automation-maintenance-v1-compact/j2-response.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j2",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 3434,
+      "sha256": "28c55b37fb3adf5caac48352617c17624f600ed69b209941e49fc3f5ef05fec2",
+      "captured_at_utc": "2026-11-15T10:25:26.632327+00:00"
+    }
+  }
+}

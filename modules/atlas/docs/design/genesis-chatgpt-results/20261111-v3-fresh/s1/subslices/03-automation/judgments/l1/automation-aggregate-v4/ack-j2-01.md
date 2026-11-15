@@ -1,0 +1,1 @@
+ACK — **automation-aggregate-v4, parte 1/2**. Última âncora recebida: **corpo v4, §4.3**, parágrafo final sobre valores secretos e saída sensível, referências **[A24–A31, A37]**. Aguardo a parte final e o `FIM_DO_LOTE` externo.

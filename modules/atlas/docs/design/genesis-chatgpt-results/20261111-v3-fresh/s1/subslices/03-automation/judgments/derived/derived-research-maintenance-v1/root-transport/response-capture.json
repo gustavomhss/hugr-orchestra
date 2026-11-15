@@ -1,0 +1,18 @@
+{
+  "schema": "s1-03-original-native-review-capture/v1",
+  "responses": [
+    {
+      "judge_id": "parallel-v3-fresh/S1-03/J2",
+      "agent": "/root/s1_03_j2",
+      "path": "j2-response.md",
+      "bytes": 4086,
+      "sha256": "f20d3d04c4caeb254371f63438a671da9339939fabd8b60911bcc046fbabc253",
+      "captured_utc": "2026-11-15T06:42:24.563032+00:00",
+      "source": "Original native FINAL visible to root; preserved verbatim before next dispatch",
+      "literal": true,
+      "terminal_newline": false,
+      "status": "PASS",
+      "body_sha256": "b57970febca6ecd87e6df64586e8a1bf557e112a0761ddc3afc58a92f4fc8025"
+    }
+  ]
+}

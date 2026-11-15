@@ -1,0 +1,1180 @@
+{
+  "schema": "s1-03-response-alias-audit/v1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "scope": "Mechanical identity and alias audit only; no semantic or third-judge role.",
+  "snapshot": {
+    "first_identified_input_read_at_utc": "2026-11-15T10:12:33.544743+00:00",
+    "last_identified_response_read_at_utc": "2026-11-15T10:14:27.830750+00:00",
+    "ledger": {
+      "path": "payload/execution-ledger.jsonl",
+      "bytes": 364649,
+      "sha256": "9b937dc8411c02b4ec866aa7433f2fd5a59217c8dce4a96757bb53b6b303b18f",
+      "row_count": 415,
+      "read_at_utc": "2026-11-15T10:13:28.119144+00:00"
+    },
+    "scope_note": "This is the preserved 415-row snapshot. No claim covers future producer responses, later ledger appends or in-flight completion."
+  },
+  "input_file_count": 17,
+  "input_file_bytes": 614030,
+  "input_identities": [
+    {
+      "path": "payload/receipts/derived-dispatches.json",
+      "bytes": 19633,
+      "sha256": "3f086dedef2403e61bb5a7b8938629d537eed89ad4397120422fce40a63a482e",
+      "read_at_utc": "2026-11-15T10:12:33.544743+00:00",
+      "role": "dispatch metadata"
+    },
+    {
+      "path": "scripts/reconcile-ledger.py",
+      "bytes": 7522,
+      "sha256": "133a462aab31727f7fe971d88020f51b179a12b55b278e7bb6f903e58b590eff",
+      "read_at_utc": "2026-11-15T10:12:33.545054+00:00",
+      "role": "source inspected; never executed"
+    },
+    {
+      "path": "payload/execution-ledger.jsonl",
+      "bytes": 364649,
+      "sha256": "9b937dc8411c02b4ec866aa7433f2fd5a59217c8dce4a96757bb53b6b303b18f",
+      "read_at_utc": "2026-11-15T10:12:33.548679+00:00",
+      "row_count": 415,
+      "role": "ledger snapshot; only derived-response metadata extracted"
+    },
+    {
+      "path": "producers/derived-research-flow/revisions/v2/response.md",
+      "bytes": 2016,
+      "sha256": "553422eb616a5e72a38d82810ba0cfbd4221baa8828333e5600f488c4e8fea90",
+      "read_at_utc": "2026-11-15T10:13:28.111629+00:00",
+      "terminal_lf": true,
+      "role": "whole-file hashing only; no semantic judgment"
+    },
+    {
+      "path": "producers/derived-boundary-flow/response.md",
+      "bytes": 1859,
+      "sha256": "c78d324a4e88c3e9b70bee14d89a0e46fcc20f678959c9dbc88ca10e39388cbd",
+      "read_at_utc": "2026-11-15T10:13:28.111677+00:00",
+      "terminal_lf": true,
+      "role": "whole-file hashing only; no semantic judgment"
+    },
+    {
+      "path": "producers/derived-research-flow/response.md",
+      "bytes": 2144,
+      "sha256": "1adbff35cf2884d6dc2a3fff4ae2703227cea6f045503a20f58c78b030f77696",
+      "read_at_utc": "2026-11-15T10:13:28.111706+00:00",
+      "terminal_lf": true,
+      "role": "whole-file hashing only; no semantic judgment"
+    },
+    {
+      "path": "producers/derived-research-impact/response.md",
+      "bytes": 2299,
+      "sha256": "1819661c4bd6ad930702c616cd8da1ea1e3ca6b786c5d02a2a0f389d90ba3a8b",
+      "read_at_utc": "2026-11-15T10:13:28.111847+00:00",
+      "terminal_lf": true,
+      "role": "whole-file hashing only; no semantic judgment"
+    },
+    {
+      "path": "producers/derived-research-maintenance/response.md",
+      "bytes": 2284,
+      "sha256": "e3b49ac28e16c456d37259c1895111564356058b4e930c2b3e3bbf2bf7f26eeb",
+      "read_at_utc": "2026-11-15T10:13:28.111871+00:00",
+      "terminal_lf": true,
+      "role": "whole-file hashing only; no semantic judgment"
+    },
+    {
+      "path": "producers/derived-automation-flow/revisions/v2/history/response.md",
+      "bytes": 2470,
+      "sha256": "c8bf48be1b48cc17d8c376978e37c401079ba6e5ad72c51ac12443b8e433c7fd",
+      "read_at_utc": "2026-11-15T10:13:28.111920+00:00",
+      "terminal_lf": false,
+      "role": "whole-file hashing only; no semantic judgment"
+    },
+    {
+      "path": "producers/derived-automation-flow/response.md",
+      "bytes": 2906,
+      "sha256": "faabd24854381ddedbb9407426212bc485abe6a564874fac70d9d00355ad30f3",
+      "read_at_utc": "2026-11-15T10:13:28.111942+00:00",
+      "terminal_lf": false,
+      "role": "whole-file hashing only; no semantic judgment"
+    },
+    {
+      "path": "producers/derived-automation-impact/response.md",
+      "bytes": 3053,
+      "sha256": "3413d80c95e4d52440560c1833123d35ee1969254a68968e6a6c4317741a9055",
+      "read_at_utc": "2026-11-15T10:13:28.111962+00:00",
+      "terminal_lf": false,
+      "role": "whole-file hashing only; no semantic judgment"
+    },
+    {
+      "path": "producers/derived-automation-flow/production-manifest.json",
+      "bytes": 37704,
+      "sha256": "959840fc57d7d42e2d78abca1438f4ad18fbe8b20cb479fab6fc8127355ab1c3",
+      "read_at_utc": "2026-11-15T10:13:28.112102+00:00",
+      "terminal_lf": true,
+      "role": "only response.md paths and identities extracted"
+    },
+    {
+      "path": "producers/derived-automation-impact/production-manifest.json",
+      "bytes": 59561,
+      "sha256": "71c87a55b4b64cf1dceeddbf466ecee7d7571edf15d125b24d91d968c792d4f5",
+      "read_at_utc": "2026-11-15T10:13:28.112940+00:00",
+      "terminal_lf": true,
+      "role": "only response.md paths and identities extracted"
+    },
+    {
+      "path": "producers/derived-research-flow/production-manifest.json",
+      "bytes": 54847,
+      "sha256": "a6fa0d012f2d43eceaf033b570ed1cfe4a09f6089c1df1a720e663c2753efeb8",
+      "read_at_utc": "2026-11-15T10:13:28.113930+00:00",
+      "terminal_lf": true,
+      "role": "only response.md paths and identities extracted"
+    },
+    {
+      "path": "producers/derived-boundary-flow/production-manifest.json",
+      "bytes": 45337,
+      "sha256": "3f5fa039c209bdecbe7df56534526fc3956d42f0ebdef84c053dd8dbe174951d",
+      "read_at_utc": "2026-11-15T10:13:28.114577+00:00",
+      "terminal_lf": true,
+      "role": "only response.md paths and identities extracted"
+    },
+    {
+      "path": "producers/derived-automation-flow/revisions/v3/history/response.md",
+      "bytes": 3043,
+      "sha256": "59ffb319da5b27d830b9eeabe7ac592c104a64496864235da4331cd5adc05c23",
+      "git_blob_sha": "f07fae15e22fabc2fd4cad461fd721eab5e031d3",
+      "terminal_lf": false,
+      "read_at_utc": "2026-11-15T10:14:27.830081+00:00",
+      "read_mode": "whole bytes for identity only; no semantic analysis"
+    },
+    {
+      "path": "producers/derived-automation-impact/revisions/v2/history/response.md",
+      "bytes": 2703,
+      "sha256": "85831ceada2e319c68ec37bc7e521de4d66c2aa1828e2df18a25886fe0a181f7",
+      "git_blob_sha": "377fdc2968753ba8d881097a808323b09237ad34",
+      "terminal_lf": false,
+      "read_at_utc": "2026-11-15T10:14:27.830750+00:00",
+      "read_mode": "whole bytes for identity only; no semantic analysis"
+    }
+  ],
+  "derived_call_count_in_receipt": 13,
+  "producer_file_pointers_evaluated": 10,
+  "completion_records_evaluated": 10,
+  "matching_completion_records": 8,
+  "incorrect_completion_records": 2,
+  "per_call_checks": [
+    {
+      "call_index": 0,
+      "call_id": "derived-research-l2-author-01",
+      "state": "COMPLETED_FOR_REVIEW",
+      "producer_response_file": null,
+      "expected_sha256": null,
+      "observed_sha256": null,
+      "observed_bytes": null,
+      "current_pointer_matches": null,
+      "completion_rows": [],
+      "native_final_capture_declaration": null
+    },
+    {
+      "call_index": 1,
+      "call_id": "derived-boundaries-l2-author-01",
+      "state": "COMPLETED_FOR_REVIEW",
+      "producer_response_file": null,
+      "expected_sha256": null,
+      "observed_sha256": null,
+      "observed_bytes": null,
+      "current_pointer_matches": null,
+      "completion_rows": [],
+      "native_final_capture_declaration": null
+    },
+    {
+      "call_index": 2,
+      "call_id": "derived-research-l2-correction-v2",
+      "state": "COMPLETED_FOR_REVIEW",
+      "producer_response_file": "producers/derived-research-flow/revisions/v2/response.md",
+      "expected_sha256": "553422eb616a5e72a38d82810ba0cfbd4221baa8828333e5600f488c4e8fea90",
+      "observed_sha256": "553422eb616a5e72a38d82810ba0cfbd4221baa8828333e5600f488c4e8fea90",
+      "observed_bytes": 2016,
+      "current_pointer_matches": true,
+      "completion_rows": [
+        {
+          "line": 192,
+          "event_id": "derived-producer-file-completion:derived-research-l2-correction-v2:553422eb616a5e72a38d82810ba0cfbd4221baa8828333e5600f488c4e8fea90",
+          "sha256": "553422eb616a5e72a38d82810ba0cfbd4221baa8828333e5600f488c4e8fea90",
+          "bytes": 2016,
+          "hash_matches_expected": true,
+          "line_sha256_including_lf": "d65c736cee28df2fecbf71596d6e5545db9ddc6d2722ef95fdd5ee7f27ad9616"
+        }
+      ],
+      "native_final_capture_declaration": "NOT_PRESERVED_BEFORE_COMPACTION; do not reconstruct as verbatim"
+    },
+    {
+      "call_index": 3,
+      "call_id": "derived-boundaries-l2-correction-v2",
+      "state": "COMPLETED_FOR_REVIEW",
+      "producer_response_file": "producers/derived-boundary-flow/response.md",
+      "expected_sha256": "c78d324a4e88c3e9b70bee14d89a0e46fcc20f678959c9dbc88ca10e39388cbd",
+      "observed_sha256": "c78d324a4e88c3e9b70bee14d89a0e46fcc20f678959c9dbc88ca10e39388cbd",
+      "observed_bytes": 1859,
+      "current_pointer_matches": true,
+      "completion_rows": [
+        {
+          "line": 197,
+          "event_id": "derived-producer-file-completion:derived-boundaries-l2-correction-v2:c78d324a4e88c3e9b70bee14d89a0e46fcc20f678959c9dbc88ca10e39388cbd",
+          "sha256": "c78d324a4e88c3e9b70bee14d89a0e46fcc20f678959c9dbc88ca10e39388cbd",
+          "bytes": 1859,
+          "hash_matches_expected": true,
+          "line_sha256_including_lf": "2110a994ddfde1d0bc46246c90f5c8af978aedc191e5c900c644e9d40b047ba1"
+        }
+      ],
+      "native_final_capture_declaration": null
+    },
+    {
+      "call_index": 4,
+      "call_id": "derived-research-l2-parent-rebind-v3",
+      "state": "COMPLETED_FOR_REVIEW",
+      "producer_response_file": "producers/derived-research-flow/response.md",
+      "expected_sha256": "1adbff35cf2884d6dc2a3fff4ae2703227cea6f045503a20f58c78b030f77696",
+      "observed_sha256": "1adbff35cf2884d6dc2a3fff4ae2703227cea6f045503a20f58c78b030f77696",
+      "observed_bytes": 2144,
+      "current_pointer_matches": true,
+      "completion_rows": [
+        {
+          "line": 207,
+          "event_id": "derived-producer-file-completion:derived-research-l2-parent-rebind-v3:1adbff35cf2884d6dc2a3fff4ae2703227cea6f045503a20f58c78b030f77696",
+          "sha256": "1adbff35cf2884d6dc2a3fff4ae2703227cea6f045503a20f58c78b030f77696",
+          "bytes": 2144,
+          "hash_matches_expected": true,
+          "line_sha256_including_lf": "ab7d300941963d04df0ce4977f97d569469bf7f342e64a05772437786112c00e"
+        }
+      ],
+      "native_final_capture_declaration": null
+    },
+    {
+      "call_index": 5,
+      "call_id": "derived-research-l3-author-01",
+      "state": "COMPLETED_FOR_REVIEW",
+      "producer_response_file": "producers/derived-research-impact/response.md",
+      "expected_sha256": "1819661c4bd6ad930702c616cd8da1ea1e3ca6b786c5d02a2a0f389d90ba3a8b",
+      "observed_sha256": "1819661c4bd6ad930702c616cd8da1ea1e3ca6b786c5d02a2a0f389d90ba3a8b",
+      "observed_bytes": 2299,
+      "current_pointer_matches": true,
+      "completion_rows": [
+        {
+          "line": 231,
+          "event_id": "derived-producer-file-completion:derived-research-l3-author-01:1819661c4bd6ad930702c616cd8da1ea1e3ca6b786c5d02a2a0f389d90ba3a8b",
+          "sha256": "1819661c4bd6ad930702c616cd8da1ea1e3ca6b786c5d02a2a0f389d90ba3a8b",
+          "bytes": 2299,
+          "hash_matches_expected": true,
+          "line_sha256_including_lf": "0dcb922963029a220d242935dc47fd4c90dca9879bd7f458331b7ce72776f58c"
+        }
+      ],
+      "native_final_capture_declaration": null
+    },
+    {
+      "call_index": 6,
+      "call_id": "derived-research-l4-author-01",
+      "state": "COMPLETED_FOR_REVIEW",
+      "producer_response_file": "producers/derived-research-maintenance/response.md",
+      "expected_sha256": "e3b49ac28e16c456d37259c1895111564356058b4e930c2b3e3bbf2bf7f26eeb",
+      "observed_sha256": "e3b49ac28e16c456d37259c1895111564356058b4e930c2b3e3bbf2bf7f26eeb",
+      "observed_bytes": 2284,
+      "current_pointer_matches": true,
+      "completion_rows": [
+        {
+          "line": 250,
+          "event_id": "derived-producer-file-completion:derived-research-l4-author-01:e3b49ac28e16c456d37259c1895111564356058b4e930c2b3e3bbf2bf7f26eeb",
+          "sha256": "e3b49ac28e16c456d37259c1895111564356058b4e930c2b3e3bbf2bf7f26eeb",
+          "bytes": 2284,
+          "hash_matches_expected": true,
+          "line_sha256_including_lf": "145e34ea93cbc4085dead75856cf80fce7a680274e23f8f4a26121316cc8fefc"
+        }
+      ],
+      "native_final_capture_declaration": null
+    },
+    {
+      "call_index": 7,
+      "call_id": "derived-automation-l2-author-01",
+      "state": "COMPLETED_BEFORE_PRINCIPAL_SOURCE_FIDELITY_CORRECTION",
+      "producer_response_file": "producers/derived-automation-flow/revisions/v2/history/response.md",
+      "expected_sha256": "c8bf48be1b48cc17d8c376978e37c401079ba6e5ad72c51ac12443b8e433c7fd",
+      "observed_sha256": "c8bf48be1b48cc17d8c376978e37c401079ba6e5ad72c51ac12443b8e433c7fd",
+      "observed_bytes": 2470,
+      "current_pointer_matches": true,
+      "completion_rows": [
+        {
+          "line": 395,
+          "event_id": "derived-producer-file-completion:derived-automation-l2-author-01:c8bf48be1b48cc17d8c376978e37c401079ba6e5ad72c51ac12443b8e433c7fd",
+          "sha256": "c8bf48be1b48cc17d8c376978e37c401079ba6e5ad72c51ac12443b8e433c7fd",
+          "bytes": 2470,
+          "hash_matches_expected": true,
+          "line_sha256_including_lf": "be2c3322ebcdad4de886f5dceacea2a24b791187d93ded3fca01516121924d42"
+        }
+      ],
+      "native_final_capture_declaration": null
+    },
+    {
+      "call_index": 8,
+      "call_id": "derived-automation-l2-source-fidelity-v2",
+      "state": "COMPLETED_FOR_REVIEW",
+      "producer_response_file": "producers/derived-automation-flow/response.md",
+      "expected_sha256": "59ffb319da5b27d830b9eeabe7ac592c104a64496864235da4331cd5adc05c23",
+      "observed_sha256": "faabd24854381ddedbb9407426212bc485abe6a564874fac70d9d00355ad30f3",
+      "observed_bytes": 2906,
+      "current_pointer_matches": false,
+      "completion_rows": [
+        {
+          "line": 396,
+          "event_id": "derived-producer-file-completion:derived-automation-l2-source-fidelity-v2:faabd24854381ddedbb9407426212bc485abe6a564874fac70d9d00355ad30f3",
+          "sha256": "faabd24854381ddedbb9407426212bc485abe6a564874fac70d9d00355ad30f3",
+          "bytes": 2906,
+          "hash_matches_expected": false,
+          "line_sha256_including_lf": "8726ab980f97f3f5884c16c0ef3ee53689704299e4865884595178f8511fa0fb"
+        }
+      ],
+      "native_final_capture_declaration": null
+    },
+    {
+      "call_index": 9,
+      "call_id": "derived-automation-l2-judge-finding-v3",
+      "state": "COMPLETED_FOR_REVIEW",
+      "producer_response_file": "producers/derived-automation-flow/response.md",
+      "expected_sha256": "faabd24854381ddedbb9407426212bc485abe6a564874fac70d9d00355ad30f3",
+      "observed_sha256": "faabd24854381ddedbb9407426212bc485abe6a564874fac70d9d00355ad30f3",
+      "observed_bytes": 2906,
+      "current_pointer_matches": true,
+      "completion_rows": [
+        {
+          "line": 397,
+          "event_id": "derived-producer-file-completion:derived-automation-l2-judge-finding-v3:faabd24854381ddedbb9407426212bc485abe6a564874fac70d9d00355ad30f3",
+          "sha256": "faabd24854381ddedbb9407426212bc485abe6a564874fac70d9d00355ad30f3",
+          "bytes": 2906,
+          "hash_matches_expected": true,
+          "line_sha256_including_lf": "896bfd5f482d24aa6f4750f60a130f0c41ee36e933a33ff3ada56a43e95b8bd4"
+        }
+      ],
+      "native_final_capture_declaration": null
+    },
+    {
+      "call_index": 10,
+      "call_id": "derived-automation-l3-author-01",
+      "state": "COMPLETED_FOR_REVIEW",
+      "producer_response_file": "producers/derived-automation-impact/response.md",
+      "expected_sha256": "85831ceada2e319c68ec37bc7e521de4d66c2aa1828e2df18a25886fe0a181f7",
+      "observed_sha256": "3413d80c95e4d52440560c1833123d35ee1969254a68968e6a6c4317741a9055",
+      "observed_bytes": 3053,
+      "current_pointer_matches": false,
+      "completion_rows": [
+        {
+          "line": 414,
+          "event_id": "derived-producer-file-completion:derived-automation-l3-author-01:3413d80c95e4d52440560c1833123d35ee1969254a68968e6a6c4317741a9055",
+          "sha256": "3413d80c95e4d52440560c1833123d35ee1969254a68968e6a6c4317741a9055",
+          "bytes": 3053,
+          "hash_matches_expected": false,
+          "line_sha256_including_lf": "05cc577c1036470472377083ab4fb08feeda4492d37f1f9a90bef90ff725d104"
+        }
+      ],
+      "native_final_capture_declaration": null
+    },
+    {
+      "call_index": 11,
+      "call_id": "derived-automation-l3-judge-finding-v2",
+      "state": "COMPLETED_FOR_REVIEW",
+      "producer_response_file": "producers/derived-automation-impact/response.md",
+      "expected_sha256": "3413d80c95e4d52440560c1833123d35ee1969254a68968e6a6c4317741a9055",
+      "observed_sha256": "3413d80c95e4d52440560c1833123d35ee1969254a68968e6a6c4317741a9055",
+      "observed_bytes": 3053,
+      "current_pointer_matches": true,
+      "completion_rows": [
+        {
+          "line": 415,
+          "event_id": "derived-producer-file-completion:derived-automation-l3-judge-finding-v2:3413d80c95e4d52440560c1833123d35ee1969254a68968e6a6c4317741a9055",
+          "sha256": "3413d80c95e4d52440560c1833123d35ee1969254a68968e6a6c4317741a9055",
+          "bytes": 3053,
+          "hash_matches_expected": true,
+          "line_sha256_including_lf": "5ef1892c3e9736caf59e8767eee3741809b8eac53dc9d3a9ae0bbcdc6d60c2a8"
+        }
+      ],
+      "native_final_capture_declaration": null
+    },
+    {
+      "call_index": 12,
+      "call_id": "derived-automation-l4-author-01",
+      "state": "IN_FLIGHT",
+      "producer_response_file": null,
+      "expected_sha256": null,
+      "observed_sha256": null,
+      "observed_bytes": null,
+      "current_pointer_matches": null,
+      "completion_rows": [],
+      "native_final_capture_declaration": null
+    }
+  ],
+  "affected_rows": [
+    {
+      "line": 384,
+      "line_bytes_including_lf": 1717,
+      "line_sha256_including_lf": "2dbfb47f42ed933b65bff85de660fc0599bcc6891c57a91f95665bd1dfe9533c",
+      "record": {
+        "event": "native_derived_author_request",
+        "agent_id": "/root/derived_automation",
+        "artifact": "s1.subslice03.automation-flow",
+        "dispatch_record_ref": "receipts/derived-dispatches.json",
+        "event_id": "derived-dispatch:derived-automation-l2-source-fidelity-v2",
+        "tokens": "UNKNOWN",
+        "physical_attempts": "UNKNOWN",
+        "cost": "UNKNOWN",
+        "call": {
+          "id": "derived-automation-l2-source-fidelity-v2",
+          "method": "collaboration.followup_task",
+          "target": "/root/derived_automation",
+          "artifact": "s1.subslice03.automation-flow",
+          "version": 2,
+          "state": "COMPLETED_FOR_REVIEW",
+          "original_response_archive": "payload/receipts/producer-responses/derived-automation-l2-v2-original.md",
+          "original_response_sha256": "59ffb319da5b27d830b9eeabe7ac592c104a64496864235da4331cd5adc05c23",
+          "producer_response_file": "producers/derived-automation-flow/response.md",
+          "producer_response_sha256": "59ffb319da5b27d830b9eeabe7ac592c104a64496864235da4331cd5adc05c23"
+        }
+      }
+    },
+    {
+      "line": 396,
+      "line_bytes_including_lf": 689,
+      "line_sha256_including_lf": "8726ab980f97f3f5884c16c0ef3ee53689704299e4865884595178f8511fa0fb",
+      "record": {
+        "event": "native_derived_author_completion_record",
+        "agent_id": "/root/derived_automation",
+        "artifact": "s1.subslice03.automation-flow",
+        "response_ref": "producers/derived-automation-flow/response.md",
+        "response_sha256": "faabd24854381ddedbb9407426212bc485abe6a564874fac70d9d00355ad30f3",
+        "response_bytes": 2906,
+        "response_kind": "Original producer-written response file; do not assume same bytes as native FINAL.",
+        "missing_native_final_capture": null,
+        "state": "COMPLETED_FOR_REVIEW",
+        "event_id": "derived-producer-file-completion:derived-automation-l2-source-fidelity-v2:faabd24854381ddedbb9407426212bc485abe6a564874fac70d9d00355ad30f3",
+        "tokens": "UNKNOWN",
+        "physical_attempts": "UNKNOWN",
+        "cost": "UNKNOWN"
+      }
+    },
+    {
+      "line": 414,
+      "line_bytes_including_lf": 684,
+      "line_sha256_including_lf": "05cc577c1036470472377083ab4fb08feeda4492d37f1f9a90bef90ff725d104",
+      "record": {
+        "event": "native_derived_author_completion_record",
+        "agent_id": "/root/derived_automation",
+        "artifact": "s1.subslice03.automation-impact",
+        "response_ref": "producers/derived-automation-impact/response.md",
+        "response_sha256": "3413d80c95e4d52440560c1833123d35ee1969254a68968e6a6c4317741a9055",
+        "response_bytes": 3053,
+        "response_kind": "Original producer-written response file; do not assume same bytes as native FINAL.",
+        "missing_native_final_capture": null,
+        "state": "COMPLETED_FOR_REVIEW",
+        "event_id": "derived-producer-file-completion:derived-automation-l3-author-01:3413d80c95e4d52440560c1833123d35ee1969254a68968e6a6c4317741a9055",
+        "tokens": "UNKNOWN",
+        "physical_attempts": "UNKNOWN",
+        "cost": "UNKNOWN"
+      }
+    }
+  ],
+  "correct_comparison_rows": [
+    {
+      "line": 192,
+      "line_bytes_including_lf": 750,
+      "line_sha256_including_lf": "d65c736cee28df2fecbf71596d6e5545db9ddc6d2722ef95fdd5ee7f27ad9616",
+      "record": {
+        "event": "native_derived_author_completion_record",
+        "agent_id": "/root/derived_research",
+        "artifact": "s1.subslice03.research-flow",
+        "response_ref": "producers/derived-research-flow/revisions/v2/response.md",
+        "response_sha256": "553422eb616a5e72a38d82810ba0cfbd4221baa8828333e5600f488c4e8fea90",
+        "response_bytes": 2016,
+        "response_kind": "Original producer-written response file; do not assume same bytes as native FINAL.",
+        "missing_native_final_capture": "NOT_PRESERVED_BEFORE_COMPACTION; do not reconstruct as verbatim",
+        "state": "COMPLETED_FOR_REVIEW",
+        "event_id": "derived-producer-file-completion:derived-research-l2-correction-v2:553422eb616a5e72a38d82810ba0cfbd4221baa8828333e5600f488c4e8fea90",
+        "tokens": "UNKNOWN",
+        "physical_attempts": "UNKNOWN",
+        "cost": "UNKNOWN"
+      }
+    },
+    {
+      "line": 395,
+      "line_bytes_including_lf": 734,
+      "line_sha256_including_lf": "be2c3322ebcdad4de886f5dceacea2a24b791187d93ded3fca01516121924d42",
+      "record": {
+        "event": "native_derived_author_completion_record",
+        "agent_id": "/root/derived_automation",
+        "artifact": "s1.subslice03.automation-flow",
+        "response_ref": "producers/derived-automation-flow/revisions/v2/history/response.md",
+        "response_sha256": "c8bf48be1b48cc17d8c376978e37c401079ba6e5ad72c51ac12443b8e433c7fd",
+        "response_bytes": 2470,
+        "response_kind": "Original producer-written response file; do not assume same bytes as native FINAL.",
+        "missing_native_final_capture": null,
+        "state": "COMPLETED_BEFORE_PRINCIPAL_SOURCE_FIDELITY_CORRECTION",
+        "event_id": "derived-producer-file-completion:derived-automation-l2-author-01:c8bf48be1b48cc17d8c376978e37c401079ba6e5ad72c51ac12443b8e433c7fd",
+        "tokens": "UNKNOWN",
+        "physical_attempts": "UNKNOWN",
+        "cost": "UNKNOWN"
+      }
+    },
+    {
+      "line": 397,
+      "line_bytes_including_lf": 687,
+      "line_sha256_including_lf": "896bfd5f482d24aa6f4750f60a130f0c41ee36e933a33ff3ada56a43e95b8bd4",
+      "record": {
+        "event": "native_derived_author_completion_record",
+        "agent_id": "/root/derived_automation",
+        "artifact": "s1.subslice03.automation-flow",
+        "response_ref": "producers/derived-automation-flow/response.md",
+        "response_sha256": "faabd24854381ddedbb9407426212bc485abe6a564874fac70d9d00355ad30f3",
+        "response_bytes": 2906,
+        "response_kind": "Original producer-written response file; do not assume same bytes as native FINAL.",
+        "missing_native_final_capture": null,
+        "state": "COMPLETED_FOR_REVIEW",
+        "event_id": "derived-producer-file-completion:derived-automation-l2-judge-finding-v3:faabd24854381ddedbb9407426212bc485abe6a564874fac70d9d00355ad30f3",
+        "tokens": "UNKNOWN",
+        "physical_attempts": "UNKNOWN",
+        "cost": "UNKNOWN"
+      }
+    },
+    {
+      "line": 415,
+      "line_bytes_including_lf": 691,
+      "line_sha256_including_lf": "5ef1892c3e9736caf59e8767eee3741809b8eac53dc9d3a9ae0bbcdc6d60c2a8",
+      "record": {
+        "event": "native_derived_author_completion_record",
+        "agent_id": "/root/derived_automation",
+        "artifact": "s1.subslice03.automation-impact",
+        "response_ref": "producers/derived-automation-impact/response.md",
+        "response_sha256": "3413d80c95e4d52440560c1833123d35ee1969254a68968e6a6c4317741a9055",
+        "response_bytes": 3053,
+        "response_kind": "Original producer-written response file; do not assume same bytes as native FINAL.",
+        "missing_native_final_capture": null,
+        "state": "COMPLETED_FOR_REVIEW",
+        "event_id": "derived-producer-file-completion:derived-automation-l3-judge-finding-v2:3413d80c95e4d52440560c1833123d35ee1969254a68968e6a6c4317741a9055",
+        "tokens": "UNKNOWN",
+        "physical_attempts": "UNKNOWN",
+        "cost": "UNKNOWN"
+      }
+    }
+  ],
+  "history_resolution": [
+    {
+      "proposal_id": "alias:derived-automation-l2-source-fidelity-v2",
+      "call_id": "derived-automation-l2-source-fidelity-v2",
+      "source_receipt": {
+        "path": "payload/receipts/derived-dispatches.json",
+        "bytes": 19633,
+        "sha256": "3f086dedef2403e61bb5a7b8938629d537eed89ad4397120422fce40a63a482e",
+        "json_pointer": "/calls/8/producer_response_file"
+      },
+      "field": "producer_response_file",
+      "original_pointer": "producers/derived-automation-flow/response.md",
+      "expected_response_sha256": "59ffb319da5b27d830b9eeabe7ac592c104a64496864235da4331cd5adc05c23",
+      "currently_resolves_to": {
+        "path": "producers/derived-automation-flow/response.md",
+        "bytes": 2906,
+        "sha256": "faabd24854381ddedbb9407426212bc485abe6a564874fac70d9d00355ad30f3"
+      },
+      "historical_response_identity": {
+        "path": "producers/derived-automation-flow/revisions/v3/history/response.md",
+        "bytes": 3043,
+        "sha256": "59ffb319da5b27d830b9eeabe7ac592c104a64496864235da4331cd5adc05c23",
+        "git_blob_sha": "f07fae15e22fabc2fd4cad461fd721eab5e031d3"
+      },
+      "apply_strategy": "Append a versioned alias overlay keyed by call_id; preserve the original dispatch receipt and producer files. Resolve this override only when its expected response SHA-256 matches the call's declared SHA-256.",
+      "new_native_request": false
+    },
+    {
+      "proposal_id": "alias:derived-automation-l3-author-01",
+      "call_id": "derived-automation-l3-author-01",
+      "source_receipt": {
+        "path": "payload/receipts/derived-dispatches.json",
+        "bytes": 19633,
+        "sha256": "3f086dedef2403e61bb5a7b8938629d537eed89ad4397120422fce40a63a482e",
+        "json_pointer": "/calls/10/producer_response_file"
+      },
+      "field": "producer_response_file",
+      "original_pointer": "producers/derived-automation-impact/response.md",
+      "expected_response_sha256": "85831ceada2e319c68ec37bc7e521de4d66c2aa1828e2df18a25886fe0a181f7",
+      "currently_resolves_to": {
+        "path": "producers/derived-automation-impact/response.md",
+        "bytes": 3053,
+        "sha256": "3413d80c95e4d52440560c1833123d35ee1969254a68968e6a6c4317741a9055"
+      },
+      "historical_response_identity": {
+        "path": "producers/derived-automation-impact/revisions/v2/history/response.md",
+        "bytes": 2703,
+        "sha256": "85831ceada2e319c68ec37bc7e521de4d66c2aa1828e2df18a25886fe0a181f7",
+        "git_blob_sha": "377fdc2968753ba8d881097a808323b09237ad34"
+      },
+      "apply_strategy": "Append a versioned alias overlay keyed by call_id; preserve the original dispatch receipt and producer files. Resolve this override only when its expected response SHA-256 matches the call's declared SHA-256.",
+      "new_native_request": false
+    }
+  ],
+  "manifest_response_identity_evidence": [
+    {
+      "path": "producers/derived-automation-flow/production-manifest.json",
+      "bytes": 37704,
+      "sha256": "959840fc57d7d42e2d78abca1438f4ad18fbe8b20cb479fab6fc8127355ab1c3",
+      "response_refs": [
+        {
+          "pointer": "/inputs/20",
+          "node": {
+            "local_path": "producers/derived-automation-flow/revisions/v2/history/response.md",
+            "bytes": 2470,
+            "sha256": "c8bf48be1b48cc17d8c376978e37c401079ba6e5ad72c51ac12443b8e433c7fd",
+            "git_blob_sha": "e26287f9867203f71804eecce18b6a706997539a",
+            "original_read_paths": [
+              "producers/derived-automation-flow/response.md"
+            ],
+            "role": "exact_retained_v1_output_consumed_for_correction",
+            "whole_file_consumed": true,
+            "identity_check": "RECHECKED_UNCHANGED_IN_V3",
+            "retained_through_family_version": "v3"
+          }
+        },
+        {
+          "pointer": "/inputs/27",
+          "node": {
+            "local_path": "producers/derived-automation-flow/revisions/v3/history/response.md",
+            "bytes": 3043,
+            "sha256": "59ffb319da5b27d830b9eeabe7ac592c104a64496864235da4331cd5adc05c23",
+            "git_blob_sha": "f07fae15e22fabc2fd4cad461fd721eab5e031d3",
+            "original_read_paths": [
+              "producers/derived-automation-flow/response.md"
+            ],
+            "role": "exact_retained_v2_output_consumed_for_v3_correction",
+            "whole_file_consumed": true,
+            "identity_check": "MATCHES_FROZEN_V3_RECIPE"
+          }
+        },
+        {
+          "pointer": "/outputs/2",
+          "node": {
+            "local_path": "producers/derived-automation-flow/response.md",
+            "bytes": 2906,
+            "sha256": "faabd24854381ddedbb9407426212bc485abe6a564874fac70d9d00355ad30f3",
+            "git_blob_sha": "ca112abddf9ac522d93df91495debf9f846aa04b"
+          }
+        },
+        {
+          "pointer": "/response_preservation",
+          "node": {
+            "local_path": "producers/derived-automation-flow/response.md",
+            "encoding": "utf-8",
+            "terminal_lf": false,
+            "visible_final_requirement": "FINAL exatamente igual aos bytes deste arquivo.",
+            "identity": {
+              "local_path": "producers/derived-automation-flow/response.md",
+              "bytes": 2906,
+              "sha256": "faabd24854381ddedbb9407426212bc485abe6a564874fac70d9d00355ad30f3",
+              "git_blob_sha": "ca112abddf9ac522d93df91495debf9f846aa04b"
+            }
+          }
+        },
+        {
+          "pointer": "/retained_history/3",
+          "node": {
+            "local_path": "producers/derived-automation-flow/revisions/v2/history/response.md",
+            "bytes": 2470,
+            "sha256": "c8bf48be1b48cc17d8c376978e37c401079ba6e5ad72c51ac12443b8e433c7fd",
+            "git_blob_sha": "e26287f9867203f71804eecce18b6a706997539a",
+            "original_read_paths": [
+              "producers/derived-automation-flow/response.md"
+            ]
+          }
+        },
+        {
+          "pointer": "/retained_history/7",
+          "node": {
+            "local_path": "producers/derived-automation-flow/revisions/v3/history/response.md",
+            "bytes": 3043,
+            "sha256": "59ffb319da5b27d830b9eeabe7ac592c104a64496864235da4331cd5adc05c23",
+            "git_blob_sha": "f07fae15e22fabc2fd4cad461fd721eab5e031d3",
+            "original_read_paths": [
+              "producers/derived-automation-flow/response.md"
+            ]
+          }
+        }
+      ],
+      "identity_status": "DECLARED_BY_MANIFEST; independently verified only for paths also listed in input_identities"
+    },
+    {
+      "path": "producers/derived-automation-impact/production-manifest.json",
+      "bytes": 59561,
+      "sha256": "71c87a55b4b64cf1dceeddbf466ecee7d7571edf15d125b24d91d968c792d4f5",
+      "response_refs": [
+        {
+          "pointer": "/retained_history/3",
+          "node": {
+            "local_path": "producers/derived-automation-flow/revisions/v2/history/response.md",
+            "bytes": 2470,
+            "sha256": "c8bf48be1b48cc17d8c376978e37c401079ba6e5ad72c51ac12443b8e433c7fd",
+            "git_blob_sha": "e26287f9867203f71804eecce18b6a706997539a",
+            "original_read_paths": [
+              "producers/derived-automation-flow/response.md"
+            ]
+          }
+        },
+        {
+          "pointer": "/retained_history/7",
+          "node": {
+            "local_path": "producers/derived-automation-flow/revisions/v3/history/response.md",
+            "bytes": 3043,
+            "sha256": "59ffb319da5b27d830b9eeabe7ac592c104a64496864235da4331cd5adc05c23",
+            "git_blob_sha": "f07fae15e22fabc2fd4cad461fd721eab5e031d3",
+            "original_read_paths": [
+              "producers/derived-automation-flow/response.md"
+            ]
+          }
+        },
+        {
+          "pointer": "/retained_history/11",
+          "node": {
+            "local_path": "producers/derived-automation-impact/revisions/v2/history/response.md",
+            "bytes": 2703,
+            "sha256": "85831ceada2e319c68ec37bc7e521de4d66c2aa1828e2df18a25886fe0a181f7",
+            "git_blob_sha": "377fdc2968753ba8d881097a808323b09237ad34",
+            "original_read_paths": [
+              "producers/derived-automation-impact/response.md"
+            ]
+          }
+        },
+        {
+          "pointer": "/inputs/20",
+          "node": {
+            "local_path": "producers/derived-automation-flow/revisions/v2/history/response.md",
+            "bytes": 2470,
+            "sha256": "c8bf48be1b48cc17d8c376978e37c401079ba6e5ad72c51ac12443b8e433c7fd",
+            "git_blob_sha": "e26287f9867203f71804eecce18b6a706997539a",
+            "original_read_paths": [
+              "producers/derived-automation-flow/response.md"
+            ],
+            "role": "exact_retained_v1_output_consumed_for_correction",
+            "whole_file_consumed": true,
+            "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+            "retained_through_family_version": "v3",
+            "retained_through_artifact": "s1.subslice03.automation-impact",
+            "role_in_current_authoring": "retained_history_provenance_not_current_semantic_authority",
+            "retained_through_l3_version": "v2"
+          }
+        },
+        {
+          "pointer": "/inputs/27",
+          "node": {
+            "local_path": "producers/derived-automation-flow/revisions/v3/history/response.md",
+            "bytes": 3043,
+            "sha256": "59ffb319da5b27d830b9eeabe7ac592c104a64496864235da4331cd5adc05c23",
+            "git_blob_sha": "f07fae15e22fabc2fd4cad461fd721eab5e031d3",
+            "original_read_paths": [
+              "producers/derived-automation-flow/response.md"
+            ],
+            "role": "exact_retained_v2_output_consumed_for_v3_correction",
+            "whole_file_consumed": true,
+            "identity_check": "RECHECKED_UNCHANGED_FOR_L3_V2",
+            "retained_through_artifact": "s1.subslice03.automation-impact",
+            "role_in_current_authoring": "retained_history_provenance_not_current_semantic_authority",
+            "retained_through_l3_version": "v2"
+          }
+        },
+        {
+          "pointer": "/inputs/39",
+          "node": {
+            "local_path": "producers/derived-automation-impact/revisions/v2/history/response.md",
+            "bytes": 2703,
+            "sha256": "85831ceada2e319c68ec37bc7e521de4d66c2aa1828e2df18a25886fe0a181f7",
+            "git_blob_sha": "377fdc2968753ba8d881097a808323b09237ad34",
+            "original_read_paths": [
+              "producers/derived-automation-impact/response.md"
+            ],
+            "role": "exact_l3_v1_output_consumed_and_retained_for_correction",
+            "whole_file_consumed": true,
+            "identity_check": "MATCHES_FROZEN_CORRECTION_RECIPE_AT_ORIGINAL_READ_PATH"
+          }
+        },
+        {
+          "pointer": "/outputs/2",
+          "node": {
+            "local_path": "producers/derived-automation-impact/response.md",
+            "bytes": 3053,
+            "sha256": "3413d80c95e4d52440560c1833123d35ee1969254a68968e6a6c4317741a9055",
+            "git_blob_sha": "70aab728a989db11a11612eeed091c8fbd008628"
+          }
+        },
+        {
+          "pointer": "/response_preservation",
+          "node": {
+            "local_path": "producers/derived-automation-impact/response.md",
+            "encoding": "utf-8",
+            "terminal_lf": false,
+            "visible_final_requirement": "FINAL exatamente igual aos bytes deste arquivo.",
+            "identity": {
+              "local_path": "producers/derived-automation-impact/response.md",
+              "bytes": 3053,
+              "sha256": "3413d80c95e4d52440560c1833123d35ee1969254a68968e6a6c4317741a9055",
+              "git_blob_sha": "70aab728a989db11a11612eeed091c8fbd008628"
+            }
+          }
+        },
+        {
+          "pointer": "/read_exactly_bindings/3",
+          "node": {
+            "requested_local_path": "producers/derived-automation-impact/response.md",
+            "local_path": "producers/derived-automation-impact/revisions/v2/history/response.md",
+            "bytes": 2703,
+            "sha256": "85831ceada2e319c68ec37bc7e521de4d66c2aa1828e2df18a25886fe0a181f7",
+            "git_blob_sha": "377fdc2968753ba8d881097a808323b09237ad34",
+            "retained_local_path": "producers/derived-automation-impact/revisions/v2/history/response.md",
+            "original_read_paths": [
+              "producers/derived-automation-impact/response.md"
+            ]
+          }
+        },
+        {
+          "pointer": "/preservation_outputs/3",
+          "node": {
+            "local_path": "producers/derived-automation-impact/revisions/v2/history/response.md",
+            "bytes": 2703,
+            "sha256": "85831ceada2e319c68ec37bc7e521de4d66c2aa1828e2df18a25886fe0a181f7",
+            "git_blob_sha": "377fdc2968753ba8d881097a808323b09237ad34",
+            "original_read_paths": [
+              "producers/derived-automation-impact/response.md"
+            ]
+          }
+        },
+        {
+          "pointer": "/preservation_actions/3",
+          "node": {
+            "local_path": "producers/derived-automation-impact/revisions/v2/history/response.md",
+            "action": "CREATED_BYTE_IDENTICAL_COPY"
+          }
+        }
+      ],
+      "identity_status": "DECLARED_BY_MANIFEST; independently verified only for paths also listed in input_identities"
+    },
+    {
+      "path": "producers/derived-research-flow/production-manifest.json",
+      "bytes": 54847,
+      "sha256": "a6fa0d012f2d43eceaf033b570ed1cfe4a09f6089c1df1a720e663c2753efeb8",
+      "response_refs": [
+        {
+          "pointer": "/inputs/20",
+          "node": {
+            "local_path": "producers/derived-research-flow/history/v1/response.md",
+            "byte_length": 2472,
+            "sha256": "4d10e4cbaacffd86da6c9c32091576608e3a0937a6f5ef5489c7f142778540ac",
+            "git_blob_sha": "75520523f4f50e0ab3ee7eaa597936fc1c23bc18",
+            "input_group": "inherited_v2_manifest",
+            "role": "Prior v1 output consumed for minimal correction and/or preservation",
+            "whole_file_consumed": true,
+            "original_read_paths": [
+              "producers/derived-research-flow/response.md"
+            ],
+            "provenance": "Actual earlier family input retained without byte change",
+            "retained_alias": "producers/derived-research-flow/history/v1/response.md",
+            "expected_identity_match": true
+          }
+        },
+        {
+          "pointer": "/inputs/32",
+          "node": {
+            "local_path": "producers/derived-research-flow/revisions/v2/response.md",
+            "byte_length": 2016,
+            "sha256": "553422eb616a5e72a38d82810ba0cfbd4221baa8828333e5600f488c4e8fea90",
+            "git_blob_sha": "e3e6ca3002c8d235f59537e5c5175461fda03c0b",
+            "input_group": "earlier_output_verification",
+            "role": "Previously consumed v2 output during actual hash/read verification; now historical input",
+            "original_read_paths": [
+              "producers/derived-research-flow/revisions/v2/response.md"
+            ],
+            "whole_file_consumed": true,
+            "expected_identity_match": true
+          }
+        },
+        {
+          "pointer": "/inputs/36",
+          "node": {
+            "local_path": "producers/derived-research-flow/revisions/v3/history/response.md",
+            "byte_length": 2016,
+            "sha256": "553422eb616a5e72a38d82810ba0cfbd4221baa8828333e5600f488c4e8fea90",
+            "git_blob_sha": "e3e6ca3002c8d235f59537e5c5175461fda03c0b",
+            "input_group": "revision_v3_new",
+            "role": "Prior v2 output read in full and preserved before v3 mutation",
+            "original_read_paths": [
+              "producers/derived-research-flow/response.md"
+            ],
+            "retained_alias": "producers/derived-research-flow/revisions/v3/history/response.md",
+            "whole_file_consumed": true,
+            "expected_identity_match": true
+          }
+        },
+        {
+          "pointer": "/retained_aliases/4",
+          "node": {
+            "local_path": "producers/derived-research-flow/history/v1/response.md",
+            "retained_alias": "producers/derived-research-flow/history/v1/response.md",
+            "original_read_paths": [
+              "producers/derived-research-flow/response.md"
+            ],
+            "byte_length": 2472,
+            "sha256": "4d10e4cbaacffd86da6c9c32091576608e3a0937a6f5ef5489c7f142778540ac",
+            "git_blob_sha": "75520523f4f50e0ab3ee7eaa597936fc1c23bc18"
+          }
+        },
+        {
+          "pointer": "/retained_aliases/8",
+          "node": {
+            "local_path": "producers/derived-research-flow/revisions/v3/history/response.md",
+            "retained_alias": "producers/derived-research-flow/revisions/v3/history/response.md",
+            "original_read_paths": [
+              "producers/derived-research-flow/response.md"
+            ],
+            "byte_length": 2016,
+            "sha256": "553422eb616a5e72a38d82810ba0cfbd4221baa8828333e5600f488c4e8fea90",
+            "git_blob_sha": "e3e6ca3002c8d235f59537e5c5175461fda03c0b"
+          }
+        },
+        {
+          "pointer": "/outputs/2",
+          "node": {
+            "local_path": "producers/derived-research-flow/response.md",
+            "byte_length": 2144,
+            "sha256": "1adbff35cf2884d6dc2a3fff4ae2703227cea6f045503a20f58c78b030f77696",
+            "git_blob_sha": "872b8983468990176c39d39dbd73707bf115c021"
+          }
+        },
+        {
+          "pointer": "/outputs/6",
+          "node": {
+            "local_path": "producers/derived-research-flow/revisions/v3/history/response.md",
+            "byte_length": 2016,
+            "sha256": "553422eb616a5e72a38d82810ba0cfbd4221baa8828333e5600f488c4e8fea90",
+            "git_blob_sha": "e3e6ca3002c8d235f59537e5c5175461fda03c0b"
+          }
+        },
+        {
+          "pointer": "/outputs/16",
+          "node": {
+            "local_path": "producers/derived-research-flow/revisions/v3/response.md",
+            "byte_length": 2144,
+            "sha256": "1adbff35cf2884d6dc2a3fff4ae2703227cea6f045503a20f58c78b030f77696",
+            "git_blob_sha": "872b8983468990176c39d39dbd73707bf115c021"
+          }
+        }
+      ],
+      "identity_status": "DECLARED_BY_MANIFEST; independently verified only for paths also listed in input_identities"
+    },
+    {
+      "path": "producers/derived-boundary-flow/production-manifest.json",
+      "bytes": 45337,
+      "sha256": "3f5fa039c209bdecbe7df56534526fc3956d42f0ebdef84c053dd8dbe174951d",
+      "response_refs": [
+        {
+          "pointer": "/inputs/20",
+          "node": {
+            "local_path": "producers/derived-boundary-flow/revisions/v2/history/response.md",
+            "bytes": 2097,
+            "sha256": "ab0d39f8f925f504f7505e1fc04192e27f9f3d0e2a79cec3bf637953b36e61ac",
+            "git_blob_sha": "881e93d76f4f2b51d8efbbf803f72fa4d83bd7ac",
+            "whole_file_identity": true,
+            "original_read_paths": [
+              "producers/derived-boundary-flow/response.md",
+              "producers/derived-boundary-flow/revisions/v2/history/response.md"
+            ],
+            "context_origin_revision": 2,
+            "consumption_in_this_revision": "FULL_UTF8_TEXT",
+            "provenance": "Enumerated in frozen correction recipe read_exactly; whole-file identity matched before execution.",
+            "current_semantic_build_predecessor": false,
+            "retained_alias": "producers/derived-boundary-flow/revisions/v2/history/response.md",
+            "role": "L2 v1 output consumed as correction/preservation input, now retained byte-identically."
+          }
+        },
+        {
+          "pointer": "/outputs/3",
+          "node": {
+            "local_path": "producers/derived-boundary-flow/response.md",
+            "bytes": 1859,
+            "sha256": "c78d324a4e88c3e9b70bee14d89a0e46fcc20f678959c9dbc88ca10e39388cbd",
+            "git_blob_sha": "03140e9b619cee3c55130315b1f36dec72a2517b",
+            "whole_file_identity": true
+          }
+        },
+        {
+          "pointer": "/outputs/15",
+          "node": {
+            "local_path": "producers/derived-boundary-flow/revisions/v2/history/response.md",
+            "bytes": 2097,
+            "sha256": "ab0d39f8f925f504f7505e1fc04192e27f9f3d0e2a79cec3bf637953b36e61ac",
+            "git_blob_sha": "881e93d76f4f2b51d8efbbf803f72fa4d83bd7ac",
+            "whole_file_identity": true
+          }
+        },
+        {
+          "pointer": "/preserved_prior_outputs/3",
+          "node": {
+            "local_path": "producers/derived-boundary-flow/revisions/v2/history/response.md",
+            "bytes": 2097,
+            "sha256": "ab0d39f8f925f504f7505e1fc04192e27f9f3d0e2a79cec3bf637953b36e61ac",
+            "git_blob_sha": "881e93d76f4f2b51d8efbbf803f72fa4d83bd7ac",
+            "whole_file_identity": true
+          }
+        }
+      ],
+      "identity_status": "DECLARED_BY_MANIFEST; independently verified only for paths also listed in input_identities"
+    }
+  ],
+  "native_response_metadata": {
+    "archive_files_opened": false,
+    "metadata_rows": [
+      {
+        "line": 163,
+        "event_id": "derived-response:derived-research-l2-author-01:4fead68debfc9f2afd3f030a734d1be203edecd258f4b9bfeafdedf2450fcbf3",
+        "response_ref": "receipts/producer-responses/derived-research-l2-original.md",
+        "response_sha256": "4fead68debfc9f2afd3f030a734d1be203edecd258f4b9bfeafdedf2450fcbf3",
+        "response_bytes": 3350
+      },
+      {
+        "line": 171,
+        "event_id": "derived-response:derived-boundaries-l2-author-01:fe155b16154a7c2e2c57928138d81244605789e53db219ad6ec2392fabd75776",
+        "response_ref": "receipts/producer-responses/derived-boundaries-l2-original.md",
+        "response_sha256": "fe155b16154a7c2e2c57928138d81244605789e53db219ad6ec2392fabd75776",
+        "response_bytes": 2096
+      },
+      {
+        "line": 195,
+        "event_id": "derived-response:derived-boundaries-l2-correction-v2:cc80f155489e2cc8b1e5bff9284e4519db52d09e186ca256829519ec10dfec29",
+        "response_ref": "receipts/producer-responses/derived-boundaries-l2-v2-original.md",
+        "response_sha256": "cc80f155489e2cc8b1e5bff9284e4519db52d09e186ca256829519ec10dfec29",
+        "response_bytes": 1858
+      },
+      {
+        "line": 206,
+        "event_id": "derived-response:derived-research-l2-parent-rebind-v3:ce765d5c0f8f763f8f37962ea84112ddacc1a57a6224581381e9c4f21f2d7ae8",
+        "response_ref": "receipts/producer-responses/derived-research-l2-v3-original.md",
+        "response_sha256": "ce765d5c0f8f763f8f37962ea84112ddacc1a57a6224581381e9c4f21f2d7ae8",
+        "response_bytes": 5556
+      },
+      {
+        "line": 230,
+        "event_id": "derived-response:derived-research-l3-author-01:a982f51fb800bf44badba6ce1551cb187ded68c479403bbfea6771f245a446ad",
+        "response_ref": "receipts/producer-responses/derived-research-l3-original.md",
+        "response_sha256": "a982f51fb800bf44badba6ce1551cb187ded68c479403bbfea6771f245a446ad",
+        "response_bytes": 4166
+      },
+      {
+        "line": 249,
+        "event_id": "derived-response:derived-research-l4-author-01:e5c1a7f5be312a6cfb8cffc691244b17574c85745184605ba942f0b4f5418a95",
+        "response_ref": "receipts/producer-responses/derived-research-l4-original.md",
+        "response_sha256": "e5c1a7f5be312a6cfb8cffc691244b17574c85745184605ba942f0b4f5418a95",
+        "response_bytes": 4273
+      },
+      {
+        "line": 383,
+        "event_id": "derived-response:derived-automation-l2-author-01:c8bf48be1b48cc17d8c376978e37c401079ba6e5ad72c51ac12443b8e433c7fd",
+        "response_ref": "receipts/producer-responses/derived-automation-l2-v1-original.md",
+        "response_sha256": "c8bf48be1b48cc17d8c376978e37c401079ba6e5ad72c51ac12443b8e433c7fd",
+        "response_bytes": 2470
+      },
+      {
+        "line": 385,
+        "event_id": "derived-response:derived-automation-l2-source-fidelity-v2:59ffb319da5b27d830b9eeabe7ac592c104a64496864235da4331cd5adc05c23",
+        "response_ref": "receipts/producer-responses/derived-automation-l2-v2-original.md",
+        "response_sha256": "59ffb319da5b27d830b9eeabe7ac592c104a64496864235da4331cd5adc05c23",
+        "response_bytes": 3043
+      },
+      {
+        "line": 387,
+        "event_id": "derived-response:derived-automation-l2-judge-finding-v3:faabd24854381ddedbb9407426212bc485abe6a564874fac70d9d00355ad30f3",
+        "response_ref": "receipts/producer-responses/derived-automation-l2-v3-original.md",
+        "response_sha256": "faabd24854381ddedbb9407426212bc485abe6a564874fac70d9d00355ad30f3",
+        "response_bytes": 2906
+      },
+      {
+        "line": 408,
+        "event_id": "derived-response:derived-automation-l3-author-01:85831ceada2e319c68ec37bc7e521de4d66c2aa1828e2df18a25886fe0a181f7",
+        "response_ref": "receipts/producer-responses/derived-automation-l3-v1-original.md",
+        "response_sha256": "85831ceada2e319c68ec37bc7e521de4d66c2aa1828e2df18a25886fe0a181f7",
+        "response_bytes": 2703
+      },
+      {
+        "line": 410,
+        "event_id": "derived-response:derived-automation-l3-judge-finding-v2:3413d80c95e4d52440560c1833123d35ee1969254a68968e6a6c4317741a9055",
+        "response_ref": "receipts/producer-responses/derived-automation-l3-v2-original.md",
+        "response_sha256": "3413d80c95e4d52440560c1833123d35ee1969254a68968e6a6c4317741a9055",
+        "response_bytes": 3053
+      }
+    ],
+    "known_missing_native_final": {
+      "call_id": "derived-research-l2-correction-v2",
+      "declared_gap": "NOT_PRESERVED_BEFORE_COMPACTION; do not reconstruct as verbatim",
+      "preserved_producer_response": {
+        "path": "producers/derived-research-flow/revisions/v2/response.md",
+        "bytes": 2016,
+        "sha256": "553422eb616a5e72a38d82810ba0cfbd4221baa8828333e5600f488c4e8fea90"
+      },
+      "disposition": "No alias correction needed. Keep the missing native FINAL explicitly missing; producer file and later confirmation are not verbatim replacements."
+    },
+    "limit": "Native FINAL archive existence/bytes were not independently checked: those differently named archives were not opened. Declared metadata is not a new native capture."
+  },
+  "other_cases": {
+    "research_l2_v1_and_boundary_l2_v1": "No producer_response_file field in the dispatch entries; native archive metadata is present. No incorrect producer-file completion is asserted and none is proposed merely to fill the field.",
+    "automation_l2_v1": "Already points to the preserved v1 alias; 2470 bytes and SHA-256 match.",
+    "automation_l4": "IN_FLIGHT at this snapshot, with no producer response pointer or completion record; no lost capture inferred."
+  },
+  "limits": {
+    "original_inputs_modified": false,
+    "ledger_modified": false,
+    "product_tests_run": false,
+    "atlas_or_models_executed": false,
+    "network_used": false,
+    "agents_delegated": false,
+    "oracle_or_judge_references_followed": false,
+    "knowledge_bodies_opened": false,
+    "semantic_acceptance": "NOT_ASSESSED",
+    "global_call_total": "NOT_CERTIFIED_BY_THIS_SCOPED_AUDIT",
+    "tokens": "UNKNOWN",
+    "cost": "UNKNOWN",
+    "audited_reconcile_script_executed": false,
+    "local_hashing_and_metadata_extraction_only": true
+  },
+  "output_identity_rule": "REPORT.md, proposed-corrections.json, dispatch-message.txt and response.md identities will be recorded here; evidence.json's own identity is reported externally, avoiding self-reference.",
+  "output_identities": [
+    {
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/assembly-native-descriptors/response-alias-audit/REPORT.md",
+      "bytes": 7633,
+      "sha256": "a95b521f874846551c853bce56a78b573b30ba94514a35fbde6b7ecea90d2520",
+      "terminal_lf": true
+    },
+    {
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/assembly-native-descriptors/response-alias-audit/proposed-corrections.json",
+      "bytes": 12704,
+      "sha256": "575ff023783621b86638ebf3481c8a97f432f7fc969dec9df60cae94cede084f",
+      "terminal_lf": true
+    },
+    {
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/assembly-native-descriptors/response-alias-audit/dispatch-message.txt",
+      "bytes": 2056,
+      "sha256": "e509e1033989acc68cc555eac0eef0c6dc6b44305dd1bdfddf1709ef428638a5",
+      "terminal_lf": false
+    },
+    {
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/assembly-native-descriptors/response-alias-audit/response.md",
+      "bytes": 2828,
+      "sha256": "a54923ae1d72f91e948b1ade43bf9e9c58770bcbffe1ddb324ac5ee232dba123",
+      "terminal_lf": false
+    }
+  ],
+  "dispatch_capture": {
+    "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/assembly-native-descriptors/response-alias-audit/dispatch-message.txt",
+    "literal_visible_text": true,
+    "terminal_lf": false,
+    "original_wire_bytes": "UNKNOWN"
+  },
+  "response_contract": {
+    "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/assembly-native-descriptors/response-alias-audit/response.md",
+    "literal_visible_text": true,
+    "terminal_lf": false,
+    "native_final_return": "exact saved response.md; no reconstruction of any producer FINAL"
+  }
+}

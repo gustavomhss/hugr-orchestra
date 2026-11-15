@@ -1,0 +1,837 @@
+{
+  "schema": "s1-03-derived-production-manifest/v1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "created_at_utc": "2026-11-15T09:32:17.219630+00:00",
+  "record_kind": "POST_AUTHORING_MANIFEST_NOT_PREEXISTING_RECIPE",
+  "artifact": {
+    "key": "s1.subslice03.automation-flow",
+    "layer": 2,
+    "need": "flow",
+    "scope": "orchestra.s1",
+    "subslice": "S1-03",
+    "state": "CORRECTED_AWAITING_SAME_PAIR_REEVALUATION_NO_DUAL_L2_GATE",
+    "body": {
+      "local_path": "producers/derived-automation-flow/body.md",
+      "bytes": 16570,
+      "sha256": "64d97f6da72c92a00ad8e3d91e20a42fd360dbedb502733c0548746462442287",
+      "git_blob_sha": "5af7e410ddfb4d1da1473a990fc25d27a7580303"
+    },
+    "version": "v3"
+  },
+  "author": {
+    "native_task": "/root/derived_automation",
+    "host_agent_id": "UNKNOWN",
+    "role": "produtor nativo da família derivada de automação",
+    "context_boundary": "Mesmo produtor e contexto retido; um achado público obrigatório do J2 fornecido na receita. Sem oracle, fonte bruta, parecer completo ou voto do outro juiz.",
+    "delegation_performed": false
+  },
+  "source_provenance": {
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "kit_revision": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+    "basis": "Metadados dos inputs públicos e do predecessor; nenhum checkout bruto foi consumido ou qualificado pelo autor L2."
+  },
+  "actual_authoring_recipe": {
+    "common_contract": {
+      "local_path": "payload/recipes/derived-contract.json",
+      "bytes": 4017,
+      "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
+      "git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd"
+    },
+    "original_task_recipe": {
+      "local_path": "payload/recipes/derived/automation-flow.json",
+      "bytes": 8479,
+      "sha256": "ec4550336620b1d7abed85e78460c6d4c5ede73f31c8ddcf8a77be5272af3179",
+      "git_blob_sha": "a039bc6e88406694ed967c5f6c1e2b14a9428506"
+    },
+    "original_request": {
+      "local_path": "producers/derived-automation-flow/request.txt",
+      "bytes": 856,
+      "sha256": "da3d46f1369fc5ec17d4ec73b3b95ebeecf2c83c796f06e88d4409c1c64a331e",
+      "git_blob_sha": "d44c3d910995f299f76a1f8e1e62af093653ed81"
+    },
+    "original_visible_dispatch": {
+      "local_path": "producers/derived-automation-flow/dispatch-message.txt",
+      "bytes": 2056,
+      "sha256": "808b4733f5306981efcdf337732dc6d53d1dce7b6569b5c7b32af0611e761fd9",
+      "git_blob_sha": "dfe89eddbc185ad996a1fd25e18bab3786161486"
+    },
+    "prior_correction_recipe": {
+      "local_path": "payload/recipes/derived/automation-flow-source-fidelity-v2.json",
+      "bytes": 7391,
+      "sha256": "16c2b4e2efc5a6e2ea6a111540e7a662ce154af3c58c366306e254f23d9b3364",
+      "git_blob_sha": "d41472b948b6c1a5d2d5990c3de0a906c9d5cf47"
+    },
+    "prior_correction_request": {
+      "local_path": "producers/derived-automation-flow/revisions/v2/request.txt",
+      "bytes": 841,
+      "sha256": "34caa0867a7d0c02dd94c37f789c0af7262132bf4f2359563021b8df3977e769",
+      "git_blob_sha": "52271ca649386b9acd36c4dc8e31153cba7f3dfb"
+    },
+    "prior_correction_dispatch": {
+      "local_path": "producers/derived-automation-flow/revisions/v2/dispatch-message.txt",
+      "bytes": 1370,
+      "sha256": "b5cf544c85c7f3fae4739c200210f829a8b72a7bbb65eab809799fa198621e93",
+      "git_blob_sha": "151ff85a32fe59b63db141eaad368d8b6a7fa55c"
+    },
+    "task_recipe": {
+      "local_path": "payload/recipes/derived/automation-flow-dispatch-fidelity-v3.json",
+      "bytes": 6224,
+      "sha256": "a0f24c622d77e89d6a7020334075691efb8f3153f99087eb7bc2afc3337cb9ea",
+      "git_blob_sha": "e7531d1cba701855e10fc46602a4ca584dffe69b"
+    },
+    "current_request": {
+      "local_path": "producers/derived-automation-flow/revisions/v3/request.txt",
+      "bytes": 680,
+      "sha256": "4ed7cc034c532a6b414fa03bfcd4f2034ccfca3f593ebad1652653d814e64538",
+      "git_blob_sha": "a07913c67f6b5343dca9386f3d0d4174892c5aab"
+    },
+    "visible_dispatch": {
+      "local_path": "producers/derived-automation-flow/revisions/v3/dispatch-message.txt",
+      "bytes": 1520,
+      "sha256": "4fff1b29411f19321d656897a2ab13cb5c65589e4652e1f8a790fb49642ffbb0",
+      "git_blob_sha": "bafca800486d37ef7bef21e11d7b9b42f1c2099a"
+    },
+    "authority_note": "Contrato/receita originais e correção v2 retidos; esta correção usa efetivamente a receita v3 congelada, seu pedido e dispatch. Manifesto é output posterior, não receita preexistente."
+  },
+  "inputs": [
+    {
+      "local_path": "inputs/AGENTS.md",
+      "bytes": 16501,
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "role": "public_authority_or_procedure",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_IN_V3",
+      "retained_from_family_version": "v1",
+      "retained_through_family_version": "v3"
+    },
+    {
+      "local_path": "inputs/COMMON.md",
+      "bytes": 12959,
+      "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+      "git_blob_sha": "893cbb5f5eda2d0c19753606a50d1c482523f0c8",
+      "role": "public_authority_or_procedure",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_IN_V3",
+      "retained_from_family_version": "v1",
+      "retained_through_family_version": "v3"
+    },
+    {
+      "local_path": "inputs/mission.json",
+      "bytes": 6006,
+      "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+      "git_blob_sha": "48fa8da131e97c50110ee76e41e79283cd9a0ac4",
+      "role": "public_authority_or_procedure",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_IN_V3",
+      "retained_from_family_version": "v1",
+      "retained_through_family_version": "v3"
+    },
+    {
+      "local_path": "inputs/SKILL.md",
+      "bytes": 8143,
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+      "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+      "role": "public_authority_or_procedure",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_IN_V3",
+      "retained_from_family_version": "v1",
+      "retained_through_family_version": "v3"
+    },
+    {
+      "local_path": "inputs/references/principles.md",
+      "bytes": 6010,
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+      "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+      "role": "public_authority_or_procedure",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_IN_V3",
+      "retained_from_family_version": "v1",
+      "retained_through_family_version": "v3"
+    },
+    {
+      "local_path": "inputs/references/fatia-1.md",
+      "bytes": 3987,
+      "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
+      "git_blob_sha": "78482ad7c72ec275fadb26ebece1c30bc1e5ccb9",
+      "role": "public_authority_or_procedure",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_IN_V3",
+      "retained_from_family_version": "v1",
+      "retained_through_family_version": "v3"
+    },
+    {
+      "local_path": "inputs/references/fresh-start.md",
+      "bytes": 4983,
+      "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166",
+      "git_blob_sha": "ca485b25e43293a309c5489279dce80ce1441ed0",
+      "role": "public_authority_or_procedure",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_IN_V3",
+      "retained_from_family_version": "v1",
+      "retained_through_family_version": "v3"
+    },
+    {
+      "local_path": "inputs/references/orchestration.md",
+      "bytes": 4408,
+      "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+      "git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+      "role": "public_authority_or_procedure",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_IN_V3",
+      "retained_from_family_version": "v1",
+      "retained_through_family_version": "v3"
+    },
+    {
+      "local_path": "inputs/references/judging.md",
+      "bytes": 5787,
+      "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+      "git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+      "role": "public_authority_or_procedure",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_IN_V3",
+      "retained_from_family_version": "v1",
+      "retained_through_family_version": "v3"
+    },
+    {
+      "local_path": "inputs/references/transport.md",
+      "bytes": 8478,
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+      "role": "public_authority_or_procedure",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_IN_V3",
+      "retained_from_family_version": "v1",
+      "retained_through_family_version": "v3"
+    },
+    {
+      "local_path": "payload/artifact-plan.json",
+      "bytes": 5017,
+      "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad",
+      "git_blob_sha": "8dba81b59cd093d28ea07cf4369d5842b6bdee68",
+      "role": "frozen_artifact_plan",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_IN_V3",
+      "retained_from_family_version": "v1",
+      "retained_through_family_version": "v3"
+    },
+    {
+      "local_path": "payload/recipes/derived-contract.json",
+      "bytes": 4017,
+      "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
+      "git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd",
+      "role": "actual_common_authoring_contract",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_IN_V3",
+      "retained_from_family_version": "v1",
+      "retained_through_family_version": "v3"
+    },
+    {
+      "local_path": "payload/recipes/derived-public-criteria.json",
+      "bytes": 16244,
+      "sha256": "1e7686491c5b68cb4f3d287377723edcd8932ae803c267ddbabf44a360dfc36e",
+      "git_blob_sha": "d4f6b765e6d78341ba2b77186c77b9177cf3156c",
+      "role": "public_normative_criteria",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_IN_V3",
+      "retained_from_family_version": "v1",
+      "retained_through_family_version": "v3"
+    },
+    {
+      "local_path": "producers/automation/body.md",
+      "bytes": 60767,
+      "sha256": "968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae",
+      "git_blob_sha": "e26213eb2fc76dc843dca17d1111334c76f88890",
+      "role": "accepted_semantic_predecessor",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_IN_V3",
+      "retained_from_family_version": "v1",
+      "retained_through_family_version": "v3"
+    },
+    {
+      "local_path": "payload/recipes/derived/automation-flow.json",
+      "bytes": 8479,
+      "sha256": "ec4550336620b1d7abed85e78460c6d4c5ede73f31c8ddcf8a77be5272af3179",
+      "git_blob_sha": "a039bc6e88406694ed967c5f6c1e2b14a9428506",
+      "role": "original_task_recipe_retained",
+      "whole_file_consumed": true,
+      "retained_from_family_version": "v1",
+      "identity_check": "RECHECKED_UNCHANGED_IN_V3",
+      "role_in_v1": "actual_frozen_task_recipe",
+      "retained_through_family_version": "v3"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/request.txt",
+      "bytes": 856,
+      "sha256": "da3d46f1369fc5ec17d4ec73b3b95ebeecf2c83c796f06e88d4409c1c64a331e",
+      "git_blob_sha": "d44c3d910995f299f76a1f8e1e62af093653ed81",
+      "role": "original_request_retained",
+      "whole_file_consumed": true,
+      "retained_from_family_version": "v1",
+      "identity_check": "RECHECKED_UNCHANGED_IN_V3",
+      "role_in_v1": "actual_preserved_current_request",
+      "retained_through_family_version": "v3"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/dispatch-message.txt",
+      "bytes": 2056,
+      "sha256": "808b4733f5306981efcdf337732dc6d53d1dce7b6569b5c7b32af0611e761fd9",
+      "git_blob_sha": "dfe89eddbc185ad996a1fd25e18bab3786161486",
+      "role": "original_visible_dispatch_retained",
+      "whole_file_consumed": true,
+      "retained_from_family_version": "v1",
+      "identity_check": "RECHECKED_UNCHANGED_IN_V3",
+      "role_in_v1": "actual_visible_dispatch",
+      "retained_through_family_version": "v3"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/history/body.md",
+      "bytes": 16441,
+      "sha256": "5985441b360d0efc6693d0d385980f4a93cab2c044387a7375608dd5a9adf517",
+      "git_blob_sha": "b4874e39655e7aef9c9f6e08aeecc37718658b2f",
+      "original_read_paths": [
+        "producers/derived-automation-flow/body.md"
+      ],
+      "role": "exact_retained_v1_output_consumed_for_correction",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_IN_V3",
+      "retained_through_family_version": "v3"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/history/evidence.md",
+      "bytes": 11997,
+      "sha256": "d2b8068c9167c0813719479d4d2b10046cc718921dad3db52d1f44957e3f1360",
+      "git_blob_sha": "6697c34caf08d7d8d4bacd4793f3e36c1d035aa4",
+      "original_read_paths": [
+        "producers/derived-automation-flow/evidence.md"
+      ],
+      "role": "exact_retained_v1_output_consumed_for_correction",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_IN_V3",
+      "retained_through_family_version": "v3"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/history/production-manifest.json",
+      "bytes": 16158,
+      "sha256": "9c7d3130d4265bccba5e94fa0448b1d0bbbf3c02bf421a09d4e8d053cae4df06",
+      "git_blob_sha": "ee7c2879510553e13c9c61faefdda6b9e09d8e17",
+      "original_read_paths": [
+        "producers/derived-automation-flow/production-manifest.json"
+      ],
+      "role": "exact_retained_v1_output_consumed_for_correction",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_IN_V3",
+      "retained_through_family_version": "v3"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/history/response.md",
+      "bytes": 2470,
+      "sha256": "c8bf48be1b48cc17d8c376978e37c401079ba6e5ad72c51ac12443b8e433c7fd",
+      "git_blob_sha": "e26287f9867203f71804eecce18b6a706997539a",
+      "original_read_paths": [
+        "producers/derived-automation-flow/response.md"
+      ],
+      "role": "exact_retained_v1_output_consumed_for_correction",
+      "whole_file_consumed": true,
+      "identity_check": "RECHECKED_UNCHANGED_IN_V3",
+      "retained_through_family_version": "v3"
+    },
+    {
+      "local_path": "payload/recipes/derived/automation-flow-source-fidelity-v2.json",
+      "bytes": 7391,
+      "sha256": "16c2b4e2efc5a6e2ea6a111540e7a662ce154af3c58c366306e254f23d9b3364",
+      "git_blob_sha": "d41472b948b6c1a5d2d5990c3de0a906c9d5cf47",
+      "role": "prior_correction_recipe_retained",
+      "whole_file_consumed": true,
+      "retained_through_family_version": "v3",
+      "identity_check": "RECHECKED_UNCHANGED_IN_V3",
+      "role_in_v2": "actual_frozen_correction_recipe"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/request.txt",
+      "bytes": 841,
+      "sha256": "34caa0867a7d0c02dd94c37f789c0af7262132bf4f2359563021b8df3977e769",
+      "git_blob_sha": "52271ca649386b9acd36c4dc8e31153cba7f3dfb",
+      "role": "prior_correction_request_retained",
+      "whole_file_consumed": true,
+      "retained_through_family_version": "v3",
+      "identity_check": "RECHECKED_UNCHANGED_IN_V3",
+      "role_in_v2": "actual_current_correction_request"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/dispatch-message.txt",
+      "bytes": 1370,
+      "sha256": "b5cf544c85c7f3fae4739c200210f829a8b72a7bbb65eab809799fa198621e93",
+      "git_blob_sha": "151ff85a32fe59b63db141eaad368d8b6a7fa55c",
+      "role": "prior_correction_dispatch_retained",
+      "whole_file_consumed": true,
+      "retained_through_family_version": "v3",
+      "identity_check": "RECHECKED_UNCHANGED_IN_V3",
+      "role_in_v2": "actual_visible_correction_dispatch"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v3/history/body.md",
+      "bytes": 16541,
+      "sha256": "5b24037431881e96ddb5a872fd6541c94880d189d8b0c873bac9d8bd874d85c1",
+      "git_blob_sha": "378dbb4cd9f978ed9ab848136a2f4b9fdd72ca6b",
+      "original_read_paths": [
+        "producers/derived-automation-flow/body.md"
+      ],
+      "role": "exact_retained_v2_output_consumed_for_v3_correction",
+      "whole_file_consumed": true,
+      "identity_check": "MATCHES_FROZEN_V3_RECIPE"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v3/history/evidence.md",
+      "bytes": 14569,
+      "sha256": "0c4bff02eec8c4dbca2886127f1546bd51707060df8306ba4e630dba73f990d8",
+      "git_blob_sha": "ec9f7f1351681788c7c58cb345e4ee6860c4c3af",
+      "original_read_paths": [
+        "producers/derived-automation-flow/evidence.md"
+      ],
+      "role": "exact_retained_v2_output_consumed_for_v3_correction",
+      "whole_file_consumed": true,
+      "identity_check": "MATCHES_FROZEN_V3_RECIPE"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v3/history/production-manifest.json",
+      "bytes": 27416,
+      "sha256": "1802600a673c0521064bc636bd9be5e9e9aad9dd644f26efd5d14c02bee52cff",
+      "git_blob_sha": "009ace4ecb5cda6ec2c3f58aec5573d1b986c205",
+      "original_read_paths": [
+        "producers/derived-automation-flow/production-manifest.json"
+      ],
+      "role": "exact_retained_v2_output_consumed_for_v3_correction",
+      "whole_file_consumed": true,
+      "identity_check": "MATCHES_FROZEN_V3_RECIPE"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v3/history/response.md",
+      "bytes": 3043,
+      "sha256": "59ffb319da5b27d830b9eeabe7ac592c104a64496864235da4331cd5adc05c23",
+      "git_blob_sha": "f07fae15e22fabc2fd4cad461fd721eab5e031d3",
+      "original_read_paths": [
+        "producers/derived-automation-flow/response.md"
+      ],
+      "role": "exact_retained_v2_output_consumed_for_v3_correction",
+      "whole_file_consumed": true,
+      "identity_check": "MATCHES_FROZEN_V3_RECIPE"
+    },
+    {
+      "local_path": "payload/recipes/derived/automation-flow-dispatch-fidelity-v3.json",
+      "bytes": 6224,
+      "sha256": "a0f24c622d77e89d6a7020334075691efb8f3153f99087eb7bc2afc3337cb9ea",
+      "git_blob_sha": "e7531d1cba701855e10fc46602a4ca584dffe69b",
+      "role": "actual_frozen_v3_correction_recipe",
+      "whole_file_consumed": true
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v3/request.txt",
+      "bytes": 680,
+      "sha256": "4ed7cc034c532a6b414fa03bfcd4f2034ccfca3f593ebad1652653d814e64538",
+      "git_blob_sha": "a07913c67f6b5343dca9386f3d0d4174892c5aab",
+      "role": "actual_current_v3_request",
+      "whole_file_consumed": true
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v3/dispatch-message.txt",
+      "bytes": 1520,
+      "sha256": "4fff1b29411f19321d656897a2ab13cb5c65589e4652e1f8a790fb49642ffbb0",
+      "git_blob_sha": "bafca800486d37ef7bef21e11d7b9b42f1c2099a",
+      "role": "actual_visible_v3_dispatch",
+      "whole_file_consumed": true
+    }
+  ],
+  "input_count": 31,
+  "input_total_bytes": 301359,
+  "build_dependencies": [
+    {
+      "key": "s1.core.automation",
+      "local_path": "producers/automation/body.md",
+      "bytes": 60767,
+      "sha256": "968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae",
+      "git_blob_sha": "e26213eb2fc76dc843dca17d1111334c76f88890",
+      "reported_version": "v4",
+      "acceptance_gate_source": {
+        "local_path": "payload/recipes/derived/automation-flow.json",
+        "bytes": 8479,
+        "sha256": "ec4550336620b1d7abed85e78460c6d4c5ede73f31c8ddcf8a77be5272af3179",
+        "git_blob_sha": "a039bc6e88406694ed967c5f6c1e2b14a9428506"
+      },
+      "semantic_gate_as_supplied": [
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J1",
+          "status": "PASS",
+          "body_sha256": "968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae",
+          "original_response_sha256": "088347f5e9261d52413852804acf42cc741f0233d8f34cd809577439a07e6522"
+        },
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J2",
+          "status": "PASS",
+          "body_sha256": "968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae",
+          "original_response_sha256": "b6cb3f1edc2af3a09e34fb377e03c96d768a64dbb44b6859f391d2bd206cf316"
+        }
+      ],
+      "gate_scope": "Aceite semântico do predecessor informado pela receita/dispatch. Pareceres não consumidos; não é aceite L2 nem binding/runtime."
+    }
+  ],
+  "navigation": {
+    "internal_section_links_only": true,
+    "rule": "Referência de navegação não cria dependência de build. Nomes de interfaces/fontes relatados pelo predecessor não são novos inputs consumidos."
+  },
+  "public_criteria": [
+    "GO-A1",
+    "GO-A2",
+    "GO-A3",
+    "GO-A4",
+    "GO-A5",
+    "GO-A6",
+    "GO-A7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I7",
+    "GO-I8",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-4",
+    "QS-5",
+    "QS-6",
+    "CC-1",
+    "CC-3",
+    "CC-4",
+    "CC-7",
+    "AC-01"
+  ],
+  "outputs": [
+    {
+      "local_path": "producers/derived-automation-flow/body.md",
+      "bytes": 16570,
+      "sha256": "64d97f6da72c92a00ad8e3d91e20a42fd360dbedb502733c0548746462442287",
+      "git_blob_sha": "5af7e410ddfb4d1da1473a990fc25d27a7580303"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/evidence.md",
+      "bytes": 16141,
+      "sha256": "c5d3a9803fb90ba58dbf2d37bcf94dd43adf166bc68e2d88fc06b0c93a067067",
+      "git_blob_sha": "49383199bded47ec95f1ed11765944b12c92f143"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/response.md",
+      "bytes": 2906,
+      "sha256": "faabd24854381ddedbb9407426212bc485abe6a564874fac70d9d00355ad30f3",
+      "git_blob_sha": "ca112abddf9ac522d93df91495debf9f846aa04b"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v3/dispatch-message.txt",
+      "bytes": 1520,
+      "sha256": "4fff1b29411f19321d656897a2ab13cb5c65589e4652e1f8a790fb49642ffbb0",
+      "git_blob_sha": "bafca800486d37ef7bef21e11d7b9b42f1c2099a"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v3/delta.json",
+      "bytes": 5411,
+      "sha256": "4bf714451cb85c7c614f57faec1be7effe02a5bbf0271b8cfe3ef2b2d240b20a",
+      "git_blob_sha": "a0ba8ea191aafe750ebcc45bde9f31fd29a69cd6"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/production-manifest.json",
+      "role": "post_authoring_cumulative_manifest",
+      "bytes": null,
+      "sha256": null,
+      "git_blob_sha": null,
+      "identity_status": "COMPUTED_EXTERNALLY_AFTER_FINAL_SERIALIZATION",
+      "reason": "Identidade externa após gravação, sem hash autorreferente."
+    }
+  ],
+  "output_count": 6,
+  "preserved_request": {
+    "local_path": "producers/derived-automation-flow/revisions/v3/request.txt",
+    "bytes": 680,
+    "sha256": "4ed7cc034c532a6b414fa03bfcd4f2034ccfca3f593ebad1652653d814e64538",
+    "git_blob_sha": "a07913c67f6b5343dca9386f3d0d4174892c5aab"
+  },
+  "response_preservation": {
+    "local_path": "producers/derived-automation-flow/response.md",
+    "encoding": "utf-8",
+    "terminal_lf": false,
+    "visible_final_requirement": "FINAL exatamente igual aos bytes deste arquivo.",
+    "identity": {
+      "local_path": "producers/derived-automation-flow/response.md",
+      "bytes": 2906,
+      "sha256": "faabd24854381ddedbb9407426212bc485abe6a564874fac70d9d00355ad30f3",
+      "git_blob_sha": "ca112abddf9ac522d93df91495debf9f846aa04b"
+    }
+  },
+  "procedure_provenance": {
+    "native_composition": "Mesmo autor nativo: uma cláusula de Dispatch/GitHub corrigida segundo o achado público e o predecessor aceito; demais bytes imutáveis.",
+    "deterministic_procedure": "Python 3 por exec_command: read_bytes/decode UTF-8, write_bytes, json, re e hashlib; SHA256 dos bytes integrais e SHA1 de b\"blob \"+ASCII(len)+NUL+bytes para git_blob_sha.",
+    "procedure_files_created": [],
+    "additional_external_procedures_read": [],
+    "reading_resolution": "Leitura integral da receita/pedido/dispatch v3 e quatro outputs v2 retidos; manifesto v2 em dois segmentos contíguos [0,15000) e [15000,27326). Reconsulta da §4.1 do predecessor; identidades integrais reconferidas. Sem truncamento nas leituras v3.",
+    "own_outputs_read": "Verificação dos outputs v3 após escrita. Outputs v2 consumidos estão nos inputs sob aliases históricos exatos com original_read_paths.",
+    "prior_reading_resolution": "Uma saída inicial truncou COMMON/mission; ambos foram relidos integralmente. O predecessor foi lido em quatro segmentos contíguos [0,18000), [18000,36000), [36000,54000), [54000,59078), com identidade integral verificada.",
+    "deterministic_correction": "Uma ocorrência de current_literal substituída pelo public_judge_correction_example; linha literal do L1 conferida; inversão igual a v2 e dois segmentos restantes comparados byte a byte. §8 e os dois literais de scheduler comparados e preservados.",
+    "v2_reading_resolution": "Leitura integral da receita v2, pedido v2, dispatch e quatro outputs v1 retidos; reconsulta da §12 do predecessor e reconferência da identidade integral. Os 17 inputs originais permanecem no contexto e foram reconferidos. Sem saída truncada nas leituras v2."
+  },
+  "deterministic_verification": {
+    "v3_recipe_identity": "MATCH",
+    "v3_request_identity_and_preservation": "MATCH",
+    "retained_cumulative_v2_input_identities": "24_OF_24_RECHECKED_UNCHANGED",
+    "retained_v2_output_identities": "4_OF_4_MATCH_FROZEN_V3_HISTORY",
+    "actual_cumulative_input_units": 31,
+    "accepted_predecessor_identity": "UNCHANGED",
+    "body_replacements": 1,
+    "public_replacement_exactly_used": true,
+    "accepted_parent_line_confirmed": true,
+    "inverse_equality_to_retained_v2": true,
+    "unchanged_segments": 2,
+    "all_other_body_bytes_preserved": true,
+    "scheduler_section_8_byte_identical": true,
+    "scheduler_v2_fixes_preserved": true,
+    "depth2_headings": 8,
+    "claim_evidence_groups": 10,
+    "new_dispatch_utf8_without_terminal_lf": true,
+    "response_utf8_without_terminal_lf": true,
+    "nonself_output_identities": "CALCULATED_FROM_WRITTEN_BYTES",
+    "scope": "Comparação determinística de arquivos, sem teste de produto ou aceite semântico."
+  },
+  "body_size": {
+    "actual_utf8_bytes": 16570,
+    "recipe_preference_utf8_bytes": [
+      6000,
+      14000
+    ],
+    "preference_status": "ABOVE_NONBINDING_PREFERENCE",
+    "reason": "A receita v3 permite somente a cláusula Dispatch/GitHub; toda a extensão restante do corpo v2 foi preservada."
+  },
+  "limits": [
+    "Aceite semântico L2 pendente do mesmo par nativo; nenhum parecer foi fabricado.",
+    "Achados de implementação são herdados do L1 aceito, com inferências e limites expressos.",
+    "Expectativas de testes do predecessor permanecem NOT_RUN; nenhum teste de produto foi executado.",
+    "Nenhuma qualificação de provider/CLI/conta, CI ou comportamento concorrente real.",
+    "Nenhum Atlas import, binding, publicação, index/read, consumidor, manutenção ou gate global.",
+    "Nenhuma camada L3/L4 produzida; dependent release exige aceite do mesmo par.",
+    "Nenhum acesso a oracle, fontes brutas, pareceres completos ou irmão não enumerado; sem rede/GitHub, delegação ou mutações fora da área exclusiva.",
+    "Hashes de transporte não são versões de inputs/artefatos do runtime Atlas.",
+    "O único achado público obrigatório AF-L2-J2-01 foi recebido pela receita, sem consumir parecer completo, outro voto ou oracle. Gate duplo L2 permanece ausente."
+  ],
+  "usage": {
+    "visible_native_authoring_dispatches": 3,
+    "physical_attempts": "UNKNOWN",
+    "tokens": "UNKNOWN",
+    "billing": "UNKNOWN",
+    "usage_note": "Telemetria não exposta; nenhuma conversão de bytes em tokens ou custo.",
+    "visible_correction_dispatches": 2
+  },
+  "next_gate_owner": "Principal: reavaliação pelo mesmo par dos bytes v3, sem liberação de dependentes antes de gate duplo L2.",
+  "prior_manifest": {
+    "local_path": "producers/derived-automation-flow/revisions/v3/history/production-manifest.json",
+    "bytes": 27416,
+    "sha256": "1802600a673c0521064bc636bd9be5e9e9aad9dd644f26efd5d14c02bee52cff",
+    "git_blob_sha": "009ace4ecb5cda6ec2c3f58aec5573d1b986c205",
+    "original_read_paths": [
+      "producers/derived-automation-flow/production-manifest.json"
+    ]
+  },
+  "retained_history": [
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/history/body.md",
+      "bytes": 16441,
+      "sha256": "5985441b360d0efc6693d0d385980f4a93cab2c044387a7375608dd5a9adf517",
+      "git_blob_sha": "b4874e39655e7aef9c9f6e08aeecc37718658b2f",
+      "original_read_paths": [
+        "producers/derived-automation-flow/body.md"
+      ]
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/history/evidence.md",
+      "bytes": 11997,
+      "sha256": "d2b8068c9167c0813719479d4d2b10046cc718921dad3db52d1f44957e3f1360",
+      "git_blob_sha": "6697c34caf08d7d8d4bacd4793f3e36c1d035aa4",
+      "original_read_paths": [
+        "producers/derived-automation-flow/evidence.md"
+      ]
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/history/production-manifest.json",
+      "bytes": 16158,
+      "sha256": "9c7d3130d4265bccba5e94fa0448b1d0bbbf3c02bf421a09d4e8d053cae4df06",
+      "git_blob_sha": "ee7c2879510553e13c9c61faefdda6b9e09d8e17",
+      "original_read_paths": [
+        "producers/derived-automation-flow/production-manifest.json"
+      ]
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/history/response.md",
+      "bytes": 2470,
+      "sha256": "c8bf48be1b48cc17d8c376978e37c401079ba6e5ad72c51ac12443b8e433c7fd",
+      "git_blob_sha": "e26287f9867203f71804eecce18b6a706997539a",
+      "original_read_paths": [
+        "producers/derived-automation-flow/response.md"
+      ]
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v3/history/body.md",
+      "bytes": 16541,
+      "sha256": "5b24037431881e96ddb5a872fd6541c94880d189d8b0c873bac9d8bd874d85c1",
+      "git_blob_sha": "378dbb4cd9f978ed9ab848136a2f4b9fdd72ca6b",
+      "original_read_paths": [
+        "producers/derived-automation-flow/body.md"
+      ]
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v3/history/evidence.md",
+      "bytes": 14569,
+      "sha256": "0c4bff02eec8c4dbca2886127f1546bd51707060df8306ba4e630dba73f990d8",
+      "git_blob_sha": "ec9f7f1351681788c7c58cb345e4ee6860c4c3af",
+      "original_read_paths": [
+        "producers/derived-automation-flow/evidence.md"
+      ]
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v3/history/production-manifest.json",
+      "bytes": 27416,
+      "sha256": "1802600a673c0521064bc636bd9be5e9e9aad9dd644f26efd5d14c02bee52cff",
+      "git_blob_sha": "009ace4ecb5cda6ec2c3f58aec5573d1b986c205",
+      "original_read_paths": [
+        "producers/derived-automation-flow/production-manifest.json"
+      ]
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v3/history/response.md",
+      "bytes": 3043,
+      "sha256": "59ffb319da5b27d830b9eeabe7ac592c104a64496864235da4331cd5adc05c23",
+      "git_blob_sha": "f07fae15e22fabc2fd4cad461fd721eab5e031d3",
+      "original_read_paths": [
+        "producers/derived-automation-flow/response.md"
+      ]
+    }
+  ],
+  "original_final_capture": {
+    "status": "CAPTURED_AND_CHECKED_BY_PRINCIPAL_BEFORE_V2_DISPATCH_AS_REPORTED",
+    "basis": {
+      "local_path": "producers/derived-automation-flow/revisions/v2/dispatch-message.txt",
+      "bytes": 1370,
+      "sha256": "b5cf544c85c7f3fae4739c200210f829a8b72a7bbb65eab809799fa198621e93",
+      "git_blob_sha": "151ff85a32fe59b63db141eaad368d8b6a7fa55c"
+    },
+    "author_read": "Somente a cópia exata v1 de response.md autorizada; nenhum arquivo adicional de captura foi lido."
+  },
+  "input_count_breakdown": {
+    "retained_cumulative_v2_inputs": 24,
+    "retained_v2_outputs_now_consumed": 4,
+    "new_v3_recipe_request_dispatch": 3,
+    "total": 31
+  },
+  "preserved_original_request": {
+    "local_path": "producers/derived-automation-flow/request.txt",
+    "bytes": 856,
+    "sha256": "da3d46f1369fc5ec17d4ec73b3b95ebeecf2c83c796f06e88d4409c1c64a331e",
+    "git_blob_sha": "d44c3d910995f299f76a1f8e1e62af093653ed81"
+  },
+  "preserved_original_dispatch": {
+    "local_path": "producers/derived-automation-flow/dispatch-message.txt",
+    "bytes": 2056,
+    "sha256": "808b4733f5306981efcdf337732dc6d53d1dce7b6569b5c7b32af0611e761fd9",
+    "git_blob_sha": "dfe89eddbc185ad996a1fd25e18bab3786161486"
+  },
+  "correction": {
+    "version": "v3",
+    "finding_origin": "Mandatory public source-fidelity finding AF-L2-J2-01 from the same persistent J2. No reserved answer, other-judge vote or full judgment prose is an author input. L2 has no dual gate yet; L1 v4 remains accepted unchanged.",
+    "finding_ids": [
+      "AF-L2-J2-01"
+    ],
+    "body_before": {
+      "local_path": "producers/derived-automation-flow/revisions/v3/history/body.md",
+      "bytes": 16541,
+      "sha256": "5b24037431881e96ddb5a872fd6541c94880d189d8b0c873bac9d8bd874d85c1",
+      "git_blob_sha": "378dbb4cd9f978ed9ab848136a2f4b9fdd72ca6b",
+      "original_read_paths": [
+        "producers/derived-automation-flow/body.md"
+      ]
+    },
+    "body_after": {
+      "local_path": "producers/derived-automation-flow/body.md",
+      "bytes": 16570,
+      "sha256": "64d97f6da72c92a00ad8e3d91e20a42fd360dbedb502733c0548746462442287",
+      "git_blob_sha": "5af7e410ddfb4d1da1473a990fc25d27a7580303"
+    },
+    "delta": {
+      "local_path": "producers/derived-automation-flow/revisions/v3/delta.json",
+      "bytes": 5411,
+      "sha256": "4bf714451cb85c7c614f57faec1be7effe02a5bbf0271b8cfe3ef2b2d240b20a",
+      "git_blob_sha": "a0ba8ea191aafe750ebcc45bde9f31fd29a69cd6"
+    },
+    "body_replacement_count": 1,
+    "inverse_equality_to_retained_v2": true,
+    "all_other_body_bytes_preserved": true,
+    "scheduler_v2_fixes_preserved": true,
+    "same_pair_reevaluation": "PENDING_NO_DUAL_L2_GATE",
+    "dependent_release": false
+  },
+  "earlier_manifest_refs": [
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/history/production-manifest.json",
+      "bytes": 16158,
+      "sha256": "9c7d3130d4265bccba5e94fa0448b1d0bbbf3c02bf421a09d4e8d053cae4df06",
+      "git_blob_sha": "ee7c2879510553e13c9c61faefdda6b9e09d8e17",
+      "original_read_paths": [
+        "producers/derived-automation-flow/production-manifest.json"
+      ]
+    }
+  ],
+  "preserved_prior_correction_request": {
+    "local_path": "producers/derived-automation-flow/revisions/v2/request.txt",
+    "bytes": 841,
+    "sha256": "34caa0867a7d0c02dd94c37f789c0af7262132bf4f2359563021b8df3977e769",
+    "git_blob_sha": "52271ca649386b9acd36c4dc8e31153cba7f3dfb"
+  },
+  "preserved_prior_correction_dispatch": {
+    "local_path": "producers/derived-automation-flow/revisions/v2/dispatch-message.txt",
+    "bytes": 1370,
+    "sha256": "b5cf544c85c7f3fae4739c200210f829a8b72a7bbb65eab809799fa198621e93",
+    "git_blob_sha": "151ff85a32fe59b63db141eaad368d8b6a7fa55c"
+  },
+  "prior_corrections": [
+    {
+      "version": "v2",
+      "finding_origin": "Principal source-fidelity pre-review; no J1/J2 judgment of L2 has yet occurred. The current L1 predecessor remains accepted by the same pair, unchanged. This is not a third semantic vote.",
+      "finding_ids": [
+        "AF-L2-PREVIEW-01",
+        "AF-L2-PREVIEW-02"
+      ],
+      "body_before": {
+        "local_path": "producers/derived-automation-flow/revisions/v2/history/body.md",
+        "bytes": 16441,
+        "sha256": "5985441b360d0efc6693d0d385980f4a93cab2c044387a7375608dd5a9adf517",
+        "git_blob_sha": "b4874e39655e7aef9c9f6e08aeecc37718658b2f",
+        "original_read_paths": [
+          "producers/derived-automation-flow/body.md"
+        ]
+      },
+      "body_after": {
+        "local_path": "producers/derived-automation-flow/revisions/v3/history/body.md",
+        "bytes": 16541,
+        "sha256": "5b24037431881e96ddb5a872fd6541c94880d189d8b0c873bac9d8bd874d85c1",
+        "git_blob_sha": "378dbb4cd9f978ed9ab848136a2f4b9fdd72ca6b",
+        "original_read_paths": [
+          "producers/derived-automation-flow/body.md"
+        ]
+      },
+      "delta": {
+        "local_path": "producers/derived-automation-flow/revisions/v2/delta.json",
+        "bytes": 5990,
+        "sha256": "09184ba9f3d0e84625e8a240bc148e65c29fc16777c449f011d8e115db8c6617",
+        "git_blob_sha": "9523d4897f31fa10aeb925249a8425d19d5a1712"
+      },
+      "body_replacement_count": 2,
+      "all_other_body_bytes_preserved": true,
+      "inverse_equality_to_retained_v1": true,
+      "first_whole_body_semantic_review": "PENDING_SAME_PAIR",
+      "dependent_release": false,
+      "historical_record_note": "Registro da correção v2 retido; body_after usa agora o alias preservado em revisions/v3/history, com original_read_paths. O estado de revisão descrito é histórico."
+    }
+  ]
+}

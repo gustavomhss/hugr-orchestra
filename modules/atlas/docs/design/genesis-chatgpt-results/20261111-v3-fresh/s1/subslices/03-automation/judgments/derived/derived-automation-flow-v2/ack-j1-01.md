@@ -1,0 +1,1 @@
+ACK — `derived-automation-flow-v2`, parte **1/2** recebida. Última âncora: evidência, **§3 — Classes de evidência e fronteiras de afirmação**, parágrafo “Inferência estática identificada”. Aguardo a parte final e o `FIM_DO_LOTE` externo.

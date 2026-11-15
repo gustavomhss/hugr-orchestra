@@ -1,0 +1,14 @@
+{
+  "id": "consumer-summary-helper-direct-read-steering",
+  "target": "/root/native_descriptor",
+  "kind": "public_direct_read_scope_supplement",
+  "method": "collaboration.send_message",
+  "message": "Complemento concreto de escopo público para o helper, sem novo caso nem oracle: a conferência AC-03 identificou que o mapa original nomeava diretamente 11 dos 12 artefatos; research-maintenance é predecessor da entry e deve ter consulta direta explícita. Preservei artifact-plan.json e public-cases.json intactos e congelei payload/consumers/direct-read-supplement-v1.json (1409 bytes SHA256 cbcf7cdce494e2b07affb8cd95a0f80c0f23a64f49dcc98e292c78e4268bc85a), antes de qualquer consumidor. Ele acrescenta somente s1.subslice03.research-maintenance ao caso público já existente R-FAILURE, dentro das mesmas quotas e pergunta/oracle. Pode ler exatamente esse novo arquivo e scripts/prepare-consumer-dispatch-v2.py (4138 bytes SHA256 47c30adf8cd8308549d338b560d6b9edd8f7d0f5e397b4aeec0e8032a286512c), preservando seu pedido inicial. No relatório, use mapa original mais esse suplemento como conjunto exigido; valide os pins do original e das perguntas. Não suponha três operações exatas por caso: há 1 index e cada chave direta, podendo haver aprofundamentos dentro da quota. Não houve criação de consumidor ou chamada Atlas. A mudança é só a obrigação de read faltante para um artefato já requerido; não altera grafo, produção ou conteúdo semântico.",
+  "message_bytes": 1272,
+  "message_sha256": "ca863919eb7573383edfc4abe0b35f5c24d6b642007fc620de323176f3e08f95",
+  "tool_returned_normally": true,
+  "captured_at_utc": "2026-11-15T08:48:28.880822+00:00",
+  "capture_basis": "Exact caller-visible argument, no independent host wire checksum",
+  "oracle_access_authorized": false,
+  "semantic_evaluation_role": false
+}

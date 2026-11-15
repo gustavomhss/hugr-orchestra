@@ -1,0 +1,237 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "relay": "/root/review_relay",
+  "packet": "derived-entry-v1",
+  "source": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/derived-entry-v1.md",
+  "source_bytes": 67235,
+  "source_sha256": "25cca039c075cee284189ecba42702e51ffe12fe76c85f35145f228b641c4388",
+  "parts_per_target": 3,
+  "calls": [
+    {
+      "sequence": 1,
+      "target": "/root/s1_03_j1",
+      "part": 1,
+      "request_file": "request-j1-01.json",
+      "request_file_bytes": 22649,
+      "request_file_sha256": "d6a636f5aeacd94f49f2f964e3d2f17651e8832596ac4c2b3e1cd34c11d6dedc",
+      "message_bytes": 22441,
+      "message_sha256": "df7f11c229e98e3d4ff153a3d56842c907fba38acc05867b16c38aced77c7e3e",
+      "payload_bytes": 21985,
+      "payload_sha256": "23e191dc5d26d329730424bf513ec425f752431fe982fbb7653ae4493b411e69",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 2,
+      "target": "/root/s1_03_j2",
+      "part": 1,
+      "request_file": "request-j2-01.json",
+      "request_file_bytes": 22649,
+      "request_file_sha256": "d97f6836590d378cb266f3ed688f5635c7596933d8bd0126677824047fde6033",
+      "message_bytes": 22441,
+      "message_sha256": "df7f11c229e98e3d4ff153a3d56842c907fba38acc05867b16c38aced77c7e3e",
+      "payload_bytes": 21985,
+      "payload_sha256": "23e191dc5d26d329730424bf513ec425f752431fe982fbb7653ae4493b411e69",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 3,
+      "target": "/root/s1_03_j2",
+      "part": 2,
+      "request_file": "request-j2-02.json",
+      "request_file_bytes": 24037,
+      "request_file_sha256": "d81ded91d8203e232ca053d99e9273d9bb4e8d2c5e300890d7b38efae8e025c5",
+      "message_bytes": 22964,
+      "message_sha256": "a46fae7b1793aca49f4b986a41e6dbadea282cd09813090379bfd64441dc2089",
+      "payload_bytes": 22829,
+      "payload_sha256": "abb46ea29ebbcfe98682b0c5a251ab46ae7d02faa04f4be4c39fe70b6bf49a59",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 4,
+      "target": "/root/s1_03_j1",
+      "part": 2,
+      "request_file": "request-j1-02.json",
+      "request_file_bytes": 24037,
+      "request_file_sha256": "040bf2228e8ee1743b9d01cd13daeeb49cf077110556b24ba532043ab8f2b2bb",
+      "message_bytes": 22964,
+      "message_sha256": "a46fae7b1793aca49f4b986a41e6dbadea282cd09813090379bfd64441dc2089",
+      "payload_bytes": 22829,
+      "payload_sha256": "abb46ea29ebbcfe98682b0c5a251ab46ae7d02faa04f4be4c39fe70b6bf49a59",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 5,
+      "target": "/root/s1_03_j1",
+      "part": 3,
+      "request_file": "request-j1-03.json",
+      "request_file_bytes": 23977,
+      "request_file_sha256": "bf5e4e970184642d9f3e27bd4b8ae686ec48805d602d512b0544e6ae77b0f77d",
+      "message_bytes": 23015,
+      "message_sha256": "94fdd4c0299ad7ee9198546f1a3e6715fb3943c7c158a1e6aa0244c7ba9e3bea",
+      "payload_bytes": 22421,
+      "payload_sha256": "82010bb34eb63252f44ab4e5a13b8b7ae63ba5f255fbecad3ccf4c180146a020",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 6,
+      "target": "/root/s1_03_j2",
+      "part": 3,
+      "request_file": "request-j2-03.json",
+      "request_file_bytes": 23977,
+      "request_file_sha256": "d440fa453bd1b862e5bc7cc6ea24bc324bf31f06753bb487267ce7bf30065d40",
+      "message_bytes": 23015,
+      "message_sha256": "94fdd4c0299ad7ee9198546f1a3e6715fb3943c7c158a1e6aa0244c7ba9e3bea",
+      "payload_bytes": 22421,
+      "payload_sha256": "82010bb34eb63252f44ab4e5a13b8b7ae63ba5f255fbecad3ccf4c180146a020",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    }
+  ],
+  "known_transcription_corrections": [],
+  "receipt_limit": "Ferramenta retornou normalmente sem texto nem ID de despacho; os hashes descrevem os pedidos registrados e sua reconstrução local, não verificação remota nem suficiência semântica.",
+  "delivery_scope": "Literal UTF-8 packet only; final signal is outside payload.",
+  "slot_handling": "Direct calls sequential, judges may remain active concurrently after principal confirmed helper idle. Preserve each native ACK/final before same-handle follow-up.",
+  "judgment_capture": "Both original native FINALs captured literally before handle reuse.",
+  "dispatch_count": 6,
+  "recorded_at_utc": "2026-11-15T10:48:38.663874+00:00",
+  "completed_targets": [
+    "/root/s1_03_j1",
+    "/root/s1_03_j2"
+  ],
+  "pending_targets": [],
+  "local_recorded_reconstruction": [
+    {
+      "target": "/root/s1_03_j1",
+      "bytes": 67235,
+      "sha256": "25cca039c075cee284189ecba42702e51ffe12fe76c85f35145f228b641c4388",
+      "equals_source": true,
+      "raw_bytes": 67235,
+      "raw_sha256": "25cca039c075cee284189ecba42702e51ffe12fe76c85f35145f228b641c4388",
+      "corrections_applied": false
+    },
+    {
+      "target": "/root/s1_03_j2",
+      "bytes": 67235,
+      "sha256": "25cca039c075cee284189ecba42702e51ffe12fe76c85f35145f228b641c4388",
+      "equals_source": true,
+      "raw_bytes": 67235,
+      "raw_sha256": "25cca039c075cee284189ecba42702e51ffe12fe76c85f35145f228b641c4388",
+      "corrections_applied": false
+    }
+  ],
+  "acknowledgments": [
+    {
+      "target": "/root/s1_03_j2",
+      "part": 1,
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-entry-v1/ack-j2-01.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j2",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 298,
+      "sha256": "bc4e7029441937e0945b440fbae9ea7f81d59894cc267b7d50507f244f6352ed",
+      "captured_at_utc": "2026-11-15T10:43:14.126828+00:00"
+    },
+    {
+      "target": "/root/s1_03_j1",
+      "part": 1,
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-entry-v1/ack-j1-01.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j1",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 265,
+      "sha256": "a0f1fe1d517929b6c73542ea061127d83c9b71a88a483f0038b7833c293f99e4",
+      "captured_at_utc": "2026-11-15T10:44:11.050899+00:00"
+    },
+    {
+      "target": "/root/s1_03_j1",
+      "part": 2,
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-entry-v1/ack-j1-02.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j1",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 205,
+      "sha256": "88e7cec67c7a390ffc7a76133bffafd8b681dde813f802e8100be37f8c183ad1",
+      "captured_at_utc": "2026-11-15T10:46:50.884246+00:00"
+    },
+    {
+      "target": "/root/s1_03_j2",
+      "part": 2,
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-entry-v1/ack-j2-02.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j2",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 225,
+      "sha256": "2ef306ae55bc38c06dce4ba1d4a9dbbc7ff1fe98b40894703ebfc8bcbc4d1aca",
+      "captured_at_utc": "2026-11-15T10:46:50.884246+00:00"
+    }
+  ],
+  "local_read_events": [
+    {
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-entry-v1/part-03.txt",
+      "event": "Output exceeded the available model context and was truncated",
+      "origin": "functions.exec local read before context compaction; no collaboration dispatch",
+      "effect": "Local read repeated in bounded byte ranges; no packet retransmission and no host dispatch uncertainty."
+    }
+  ],
+  "judgment_captures": {
+    "j1": {
+      "target": "/root/s1_03_j1",
+      "judge_id": "parallel-v3-fresh/S1-03/J1",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-entry-v1/j1-response.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j1",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 2943,
+      "sha256": "877d8bc5850817e09838acba169d63fcb74c2c2cf78efdb4f54eee960662353a",
+      "captured_at_utc": "2026-11-15T10:50:15.258168+00:00"
+    },
+    "j2": {
+      "target": "/root/s1_03_j2",
+      "judge_id": "parallel-v3-fresh/S1-03/J2",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-entry-v1/j2-response.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j2",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 3429,
+      "sha256": "8eebf7d53891e40679cb0642deb83c978e34cccf0c65d6a7649e24ede1059ca4",
+      "captured_at_utc": "2026-11-15T10:50:44.840708+00:00"
+    }
+  },
+  "relay_final_capture": {
+    "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-entry-v1/relay-final-original.md",
+    "bytes": 2558,
+    "sha256": "c0478d28b98520cb6d34b0bc976039fc740903e8707c8dc0867678cdb8991364",
+    "literal": true,
+    "terminal_newline": false,
+    "origin": "Relay-authored final frozen before emission; not a reconstruction of an earlier native event.",
+    "frozen_at_utc": "2026-11-15T10:51:11.545217+00:00"
+  },
+  "handover": {
+    "to": "/root",
+    "targets": [
+      "/root/s1_03_j1",
+      "/root/s1_03_j2"
+    ],
+    "both_native_finals_captured": true,
+    "no_calls_in_flight": true,
+    "judge_handles_idle": true,
+    "at_utc": "2026-11-15T10:51:11.545217+00:00"
+  }
+}

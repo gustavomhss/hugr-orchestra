@@ -1,0 +1,1 @@
+ACK — parte 2/7 de `support-supplement-v2` recebida. Aguardo a continuação e o sinal externo `FIM_DO_LOTE`.

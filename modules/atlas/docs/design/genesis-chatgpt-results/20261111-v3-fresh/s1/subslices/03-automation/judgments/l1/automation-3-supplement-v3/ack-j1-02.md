@@ -1,0 +1,1 @@
+ACK parte 2/8 — última âncora recebida: **AUT3-C04**, metadados de `packages/core/src/board/shared.ts`, até o campo `source_sha256`. Aguardo as partes restantes e o **FIM_DO_LOTE** externo.

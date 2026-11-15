@@ -1,0 +1,1 @@
+ACK parte 2/7 — última âncora recebida: **AUT2-C14**, `packages/core/src/actions/resources/config-common.ts`, função `root`, validação de `binding.projectID` com a mensagem “Configuration requires an immutable native project ID”.

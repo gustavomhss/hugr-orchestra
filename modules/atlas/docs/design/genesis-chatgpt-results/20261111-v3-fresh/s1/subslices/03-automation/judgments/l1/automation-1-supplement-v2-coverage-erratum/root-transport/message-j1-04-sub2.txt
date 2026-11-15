@@ -1,0 +1,439 @@
+Transporte literal pela principal ao mesmo juiz J1, execução 34269cf4-d631-41c5-a30b-85b0ec217390. Não use ferramentas, delegue, edite ou receba parecer do outro juiz. Lote automation-1-supplement-v2-coverage-erratum; parte 4/6. Pacote canônico 344323 bytes SHA256 1599aa38f34decbc6bff88c972ed778d5f49e179dca7ac2915d37ecacf245a4b. Esta parte tem 57598 bytes SHA256 b59753f9ee4a3bdd427d21b224fad9bb04870335c58663a6db2824b44c9d3705. Envio em dois fragmentos contíguos: este é 2/2, offsets UTF-8 [28756,57598), 28842 bytes SHA256 193eb2084281324b9a61c7188f85244d6f10ad4df814f61db7cb2b90f3c652f8. Junte os fragmentos sem os envelopes. Conserve o exame anterior e os deltas já recebidos. Julgue apenas após FIM_DO_LOTE; até lá responda somente ACK da parte e da última âncora.
+
+BEGIN_PART
+      request: { method: command.mode === "create" ? "POST" : "PUT", path: `${root}/repository/files/${encodeURIComponent(path)}`, body: {
+        branch: intent.target.ref ?? "", commit_message: command.message, content: command.text,
+        ...(fileVersion ? { last_commit_id: fileVersion.last_commit_id } : {}),
+      } }, status: command.mode === "create" ? 201 : 200,
+      acknowledge: (response) => Effect.gen(function* () {
+        const value = yield* guard(binding, () => decode(binding, File, response.data, true))
+        if (value.file_path !== path || value.branch !== intent.target.ref)
+          return yield* error(binding, "outcome_unknown", "GitLab did not prove the written file and branch", "unknown")
+        return yield* written(services, binding, intent, command.text)
+      }),
+    }
+  }
+  const base = yield* guard(binding, () => branch(binding, intent.target.resourceID ?? project.default_branch ?? ""))
+  if (base === intent.target.ref) return yield* error(binding, "invalid_input", "Review head and base must differ")
+  yield* head(services, binding, root, base)
+  return {
+    request: { method: "POST", path: `${root}/merge_requests`, body: {
+      source_branch: intent.target.ref ?? "", target_branch: base, title: command.title, description: command.text,
+    } }, status: 201,
+    acknowledge: (response) => guard(binding, () => {
+      const value = decode(binding, Merge, response.data, true)
+      if (String(value.project_id) !== binding.projectID || String(value.source_project_id) !== binding.projectID || String(value.target_project_id) !== binding.projectID ||
+        value.source_branch !== intent.target.ref || value.target_branch !== base || value.sha.toLowerCase() !== ref.toLowerCase() ||
+        value.title !== command.title || (value.description ?? "") !== command.text)
+        throw error(binding, "outcome_unknown", "GitLab did not prove the exact same-project review request", "unknown")
+      const id = String(value.iid)
+      return { acknowledgement: { resourceID: id }, output: { kind: "sourceReview" as const, id,
+        url: reviewURL(binding, value.web_url, `/${project.path_with_namespace}/-/merge_requests/${id}`) } }
+    }),
+  }
+})
+
+const head = Effect.fn("ActionsAuthoring.gitlabHead")(function* (services: Services, binding: Actions.Binding, root: string, name: string) {
+  yield* guard(binding, () => branch(binding, name))
+  const response = yield* get(services, binding, `${root}/repository/branches/${encodeURIComponent(name)}`)
+  const value = yield* guard(binding, () => native(binding, Ref, response.data))
+  if (value.name !== name) return yield* error(binding, "source_conflict", "GitLab branch identity differs from admission")
+  return value.commit.id
+})
+~~~~
+
+## AUT1-C26
+
+```json
+{"block_id":"AUT1-C26","type":"literal_source_excerpt","requests":["RE-AUT1-05"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/authoring/remote.ts","repository_path":"packages/core/src/actions/authoring/remote.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"0ef1c6bbc54e8e4a73bc9e82a7f1b6653161d3d7","source_sha256":"458a706a6415cb1e3d554169149215269f49bcbd5a5fc77f51162840cfcb13d8","source_bytes":8787,"body_anchors":["A14"],"requested_subject":"before/after, actor/absent/current/written/readSource/reviewURL/send completos"}
+```
+
+```json
+{"first_line":12,"last_line":129,"bytes":8288,"sha256":"3c5e1b51587793cd2ede3992406134f3a16af311522d120f5c4043a2898aaa1a"}
+```
+
+~~~~typescript
+export type Plan = {
+  readonly request: ActionsContract.Request
+  readonly status: number
+  readonly acknowledge: (response: ActionsContract.Response) => Effect.Effect<ActionsContract.CommandResult, ActionsError>
+}
+
+export function guard<A>(binding: Actions.Binding, fn: () => A) {
+  return Effect.try({ try: fn, catch: (cause) => cause instanceof ActionsError
+    ? error(binding, cause.kind, cause.message, cause.disposition) : error(binding, "invalid_input", "Source metadata could not be validated") })
+}
+
+export function before<A>(binding: Actions.Binding, effect: Effect.Effect<A, ActionsError>) {
+  return effect.pipe(Effect.mapError((cause) => error(binding, cause.kind, "Source mutation preflight failed")))
+}
+
+export function after<A>(binding: Actions.Binding, effect: Effect.Effect<A, ActionsError>) {
+  // Once a write was sent, a failed proof is never a definitive rejection or a retry instruction.
+  return effect.pipe(Effect.mapError(() => error(binding, "outcome_unknown", "Source mutation outcome was not proved", "unknown")))
+}
+
+export const get = Effect.fn("ActionsAuthoring.get")(function* (services: Services, binding: Actions.Binding, path: string, query?: ActionsContract.Request["query"]) {
+  const response = yield* before(binding, services.transport.request(binding, { method: "GET", path, ...(query ? { query } : {}) }))
+  if (response.status !== 200) {
+    const failure = ActionsResponse.failure(binding.provider, 1, Buffer.alloc(0), response.status, { ...response.headers }, true)
+    return yield* error(binding, failure.kind, "Source preflight read was rejected")
+  }
+  return response
+})
+
+export const actor = Effect.fn("ActionsAuthoring.actor")(function* (services: Services, binding: Actions.Binding) {
+  if (!binding.account) return yield* error(binding, "not_authenticated", "Source authoring requires the captured signed-in account")
+  const response = yield* get(services, binding, "user")
+  const account = yield* guard(binding, () => binding.provider.kind === "github"
+    ? native(binding, Schema.Struct({ login: Schema.NonEmptyString }), response.data).login
+    : native(binding, Schema.Struct({ username: Schema.NonEmptyString }), response.data).username)
+  if (account.toLowerCase() !== binding.account.toLowerCase())
+    return yield* error(binding, "binding_stale", "Source authoring account changed after admission")
+})
+
+/** Call only after the exact project, actor and base branch/commit have been proved. */
+export const absent = Effect.fn("ActionsAuthoring.absent")(function* (services: Services, binding: Actions.Binding, path: string, commit: string) {
+  // Keep the transport's rejection evidence until classification. A generic/partial not_found is not absence.
+  const response = yield* before(binding, services.transport.request(binding, { method: "GET", path, query: { ref: commit } }).pipe(
+    Effect.catchIf((cause) => cause.kind === "not_found" && cause.disposition === "definitely_rejected", () => Effect.succeed(undefined)),
+  ))
+  if (!response || response.status === 404) return
+  if (response.status === 200) return yield* error(binding, "source_conflict", "New source file already exists at the admitted base commit")
+  const failure = ActionsResponse.failure(binding.provider, 1, Buffer.alloc(0), response.status, { ...response.headers }, true)
+  return yield* error(binding, failure.kind, "Source file absence was not proved")
+})
+
+export const current = Effect.fn("ActionsAuthoring.current")(function* (services: Services, binding: Actions.Binding, intent: Actions.OperationIntent) {
+  if (!intent.target.path || !intent.target.ref) return yield* error(binding, "invalid_input", "Source precondition requires a path and branch")
+  const value = yield* before(binding, readSource(services, binding, intent.target.path, intent.target.ref))
+  return yield* guard(binding, () => source(binding, intent, value))
+})
+
+export function blob(text: string, algorithm: string) {
+  const value = bytes(text)
+  return createHash(algorithm.length === 40 ? "sha1" : "sha256").update(`blob ${value.length}\0`).update(value).digest("hex")
+}
+
+export const written = Effect.fn("ActionsAuthoring.written")(function* (
+  services: Services, binding: Actions.Binding, intent: Actions.OperationIntent, text: string, commit?: string, blobID?: string,
+) {
+  if (!intent.target.path || !intent.target.ref) return yield* error(binding, "outcome_unknown", "Written source target is missing", "unknown")
+  const value = yield* readSource(services, binding, intent.target.path, intent.target.ref)
+  return yield* guard(binding, () => {
+    const native = version(binding, value.version)
+    if (value.bindingID !== binding.id || value.path !== intent.target.path || value.ref !== intent.target.ref || !value.commit ||
+      value.commit.toLowerCase() === intent.expected?.commit?.toLowerCase() ||
+      commit !== undefined && value.commit.toLowerCase() !== commit.toLowerCase() || value.text !== text ||
+      native.blob_id.toLowerCase() !== blob(text, native.blob_id) || blobID !== undefined && native.blob_id.toLowerCase() !== blobID.toLowerCase() ||
+      native.last_commit_id !== undefined && native.last_commit_id.toLowerCase() !== value.commit.toLowerCase())
+      throw error(binding, "outcome_unknown", "Provider did not prove the exact written file, branch, blob and new commit", "unknown")
+    decode(binding, GitHubNative.SHA, value.commit)
+    return { acknowledgement: { resourceID: value.commit } }
+  })
+})
+
+const readSource = Effect.fn("ActionsAuthoring.readSource")(function* (services: Services, binding: Actions.Binding, path: string, ref: string) {
+  if (binding.provider.kind === "github") return yield* services.reader.source(binding, { path, ref })
+  // Read the exact local file at the proved branch head. Project CI settings do not select a proposal's path.
+  const root = yield* guard(binding, () => ActionsGitLabNative.projectPath(binding))
+  yield* guard(binding, () => branch(binding, ref))
+  const response = yield* get(services, binding, `${root}/repository/branches/${encodeURIComponent(ref)}`)
+  const head = yield* guard(binding, () => native(binding, Schema.Struct({ name: Schema.NonEmptyString,
+    commit: Schema.Struct({ id: ActionsGitLabNative.SHA }) }), response.data))
+  if (head.name !== ref) return yield* error(binding, "source_conflict", "GitLab branch identity differs from the admitted source")
+  const value = yield* services.reader.source(binding, { path, ref: head.commit.id })
+  if (value.bindingID !== binding.id || value.path !== path || value.ref !== head.commit.id || value.commit !== head.commit.id)
+    return yield* error(binding, "source_unresolved", "Reader did not prove the exact local file at the observed branch head")
+  return { ...value, ref }
+})
+
+export function reviewURL(binding: Actions.Binding, url: string, path: string) {
+  const parsed = URL.parse(url)
+  if (!parsed || parsed.protocol !== "https:" || parsed.host !== binding.provider.hostname || parsed.username || parsed.password ||
+    parsed.search || parsed.hash || parsed.pathname !== path)
+    throw error(binding, "outcome_unknown", "Review response did not prove its native request URL", "unknown")
+  return url
+}
+
+export const send = Effect.fn("ActionsAuthoring.send")(function* (services: Services, binding: Actions.Binding, plan: Plan) {
+  yield* actor(services, binding)
+  const response = yield* services.transport.request(binding, plan.request).pipe(Effect.mapError((cause) => {
+    const disposition = cause.disposition === "definitely_unsent" || cause.disposition === "definitely_rejected" ? cause.disposition : "unknown"
+    return error(binding, disposition === "unknown" ? "outcome_unknown" : cause.kind, "Source provider write failed", disposition)
+  }))
+  if (response.status !== plan.status) {
+    if ([400, 401, 403, 404, 409, 422, 429].includes(response.status)) {
+      const failure = ActionsResponse.failure(binding.provider, 1, Buffer.alloc(0), response.status, { ...response.headers }, true)
+      return yield* error(binding, failure.kind, "Source provider write was rejected", "definitely_rejected")
+    }
+    return yield* error(binding, "outcome_unknown", "Source write returned an unqualified native status", "unknown")
+  }
+  return yield* after(binding, plan.acknowledge(response))
+})
+~~~~
+
+## AUT1-C27
+
+```json
+{"block_id":"AUT1-C27","type":"literal_source_excerpt","requests":["RE-AUT1-05"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/authoring/lint.ts","repository_path":"packages/core/src/actions/authoring/lint.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"dca58f1b7cf7eaa4b4afdb25f18bb4ec9234d868","source_sha256":"35372e153a34ae76a23bc8d631ca762c169994db3a1d452c4e4ceb8f2920d5cc","source_bytes":2071,"body_anchors":["A14"],"requested_subject":"Opções CI lint e propagação de resultado/erro para resolução local"}
+```
+
+```json
+{"first_line":1,"last_line":30,"bytes":2071,"sha256":"35372e153a34ae76a23bc8d631ca762c169994db3a1d452c4e4ceb8f2920d5cc"}
+```
+
+~~~~typescript
+import { Actions } from "@orchestra/schema/actions"
+import { Effect, Option, Schema } from "effect"
+import { ActionsGitLabNative } from "../gitlab/native"
+import type { ActionsError } from "../error"
+import { diagnostics } from "../source/document"
+import type { Services } from "./input"
+import { guard } from "./remote"
+
+const Lint = Schema.Struct({ valid: Schema.Boolean, errors: Schema.Array(Schema.String), warnings: Schema.Array(Schema.String) })
+
+export const lint = Effect.fn("ActionsAuthoring.gitlabLint")(function* (
+  services: Services, binding: Actions.Binding, source: Actions.Source, graph: Actions.Graph,
+): Effect.fn.Return<Actions.Graph, ActionsError> {
+  // CI lint is an explicit user-requested computation, not a durable mutation or a dry-run pipeline.
+  const root = yield* guard(binding, () => ActionsGitLabNative.projectPath(binding))
+  const result = yield* services.transport.request(binding, {
+    method: "POST", path: `${root}/ci/lint`,
+    body: { content: source.text, include_jobs: false, dry_run: false },
+  }).pipe(Effect.map((response) => response.status === 200 ? Schema.decodeUnknownOption(Lint)(response.data) : Option.none()),
+    Effect.catch(() => Effect.succeed(Option.none())))
+  const report = diagnostics()
+  report.items.push(...graph.diagnostics)
+  if (Option.isNone(result)) report.add("partial", "gitlab_lint_unavailable:provider validation was not established", true)
+  if (Option.isSome(result) && (!result.value.valid || result.value.errors.length > 0))
+    report.add("unresolved", "gitlab_lint_invalid:provider rejected this source", true)
+  if (Option.isSome(result) && result.value.warnings.length > 0) report.add("partial", "gitlab_lint_warning:provider returned validation warnings", true)
+  // Native lint never upgrades local includes/rules/matrices into claimed execution topology.
+  return { ...graph, state: graph.state === "unresolved" || report.state() === "unresolved" ? "unresolved"
+    : graph.state === "partial" || report.state() === "partial" ? "partial" : "complete", diagnostics: report.items }
+})
+~~~~
+
+## AUT1-C28
+
+```json
+{"block_id":"AUT1-C28","type":"literal_source_excerpt","requests":["RE-AUT1-05"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/authoring/schedule.ts","repository_path":"packages/core/src/actions/authoring/schedule.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"189f4f3903314afb6b6d8c86b50dbbccb0309869","source_sha256":"2151bb5ece4c4d2a635ede984a8668620e8f619000e720af35370b0f87bc561b","source_bytes":4994,"body_anchors":["A14"],"requested_subject":"Editor de autoria de on.schedule completo"}
+```
+
+```json
+{"first_line":1,"last_line":77,"bytes":4994,"sha256":"2151bb5ece4c4d2a635ede984a8668620e8f619000e720af35370b0f87bc561b"}
+```
+
+~~~~typescript
+import { isAlias, isMap, isScalar, isSeq, Pair, parseDocument } from "yaml"
+import { ActionsError } from "../error"
+import { diagnostics, read } from "../source/document"
+import { bytes } from "./input"
+
+// Reused by the GitHub schedules domain and the source editor. This edits YAML, not a schedule resource.
+export function editSchedule(sourceText: string, cronEntries: readonly string[]): string {
+  bytes(sourceText)
+  const report = diagnostics()
+  const checked = read(sourceText, "github", report)
+  if (!checked || report.state() === "unresolved") throw invalid("Schedule source failed bounded YAML preflight")
+  if (cronEntries.length > 1000 || cronEntries.some((cron) => typeof cron !== "string" || !cron || cron.length > 256 ||
+    !cron.isWellFormed() || /[\r\n\x00]/.test(cron))) throw invalid("Schedule entries require bounded, nonempty native cron strings")
+  const document = parseDocument(sourceText, {
+    version: "1.2", schema: "core", uniqueKeys: false, stringKeys: true, prettyErrors: false,
+    resolveKnownTags: false, merge: false, logLevel: "error",
+  })
+  if (document.errors.length || !isMap(document.contents)) throw invalid("Schedule source requires one YAML mapping")
+  const original = document.get("on", true)
+  if (isAlias(original)) throw invalid("Aliased workflow triggers require an explicit source edit")
+  if ((isMap(original) || isSeq(original) || isScalar(original)) && original.anchor)
+    throw invalid("Anchored workflow triggers require an explicit source edit")
+  const events = isMap(original) ? original : document.createNode({})
+  if (!isMap(events)) throw invalid("Workflow triggers could not be represented as a native mapping")
+  if (!isMap(original) && original !== undefined) {
+    const names = isScalar(original) && typeof original.value === "string" ? [original.value]
+      : isSeq(original) && original.items.every((item) => isScalar(item) && typeof item.value === "string")
+        ? original.items.map((item) => isScalar(item) ? String(item.value) : "") : undefined
+    if (!names || new Set(names).size !== names.length || names.some((name) => !name || name === "schedule"))
+      throw invalid("Workflow triggers require literal unique native events")
+    // Build once rather than repeatedly calling YAMLMap.set's linear key lookup.
+    events.items = names.map((name) => new Pair(document.createNode(name), document.createNode(null)))
+    if (isScalar(original) || isSeq(original)) {
+      events.commentBefore = original.commentBefore
+      events.comment = original.comment
+    }
+  }
+  if (events.has("<<")) throw invalid("Merged workflow triggers require an explicit source edit")
+  const existing = events.get("schedule", true)
+  if (existing !== undefined && (!isSeq(existing) || existing.anchor || existing.items.some((item) => !isMap(item) || item.anchor ||
+    !isScalar(item.get("cron", true)) || typeof item.get("cron") !== "string" || item.has("<<"))))
+    throw invalid("Schedule entries require literal cron mappings; aliases and merges stay source-owned")
+  if (isSeq(existing) && existing.items.length === cronEntries.length &&
+    existing.items.every((item, index) => isMap(item) && item.get("cron") === cronEntries[index])) return sourceText
+  if (existing === undefined && cronEntries.length === 0) return sourceText
+  if (cronEntries.length === 0) {
+    // Keep comments attached to the removed schedule field as event-map trailing comments.
+    if (isSeq(existing)) events.comment = [events.comment, existing.commentBefore, existing.comment].filter(Boolean).join("\n") || undefined
+    events.delete("schedule")
+  }
+  if (cronEntries.length > 0) {
+    const schedule = isSeq(existing) ? existing : document.createNode([])
+    if (!isSeq(schedule)) throw invalid("Schedule entries could not be represented as a native sequence")
+    schedule.items = cronEntries.map((cron, index) => {
+      const previous = schedule.items[index]
+      if (!isMap(previous)) return document.createNode({ cron })
+      const scalar = previous.get("cron", true)
+      if (!isScalar(scalar) || scalar.anchor) throw invalid("Schedule cron must remain an unanchored scalar")
+      // Mutate only the scalar value: entry comments, quote style and unknown keys remain owned by YAML.
+      scalar.value = cron
+      return previous
+    })
+    events.set("schedule", schedule)
+  }
+  if (!isMap(original)) document.set("on", events)
+  const encoded = document.toString({ lineWidth: 0 })
+  const result = (sourceText.startsWith("\uFEFF") && !encoded.startsWith("\uFEFF") ? "\uFEFF" : "") +
+    (sourceText.includes("\r\n") ? encoded.replace(/\r?\n/g, "\r\n") : encoded)
+  bytes(result)
+  const output = diagnostics()
+  if (!read(result, "github", output) || output.state() === "unresolved") throw invalid("Schedule edit failed bounded YAML output validation")
+  return result
+}
+
+function invalid(message: string) {
+  return new ActionsError({ kind: "source_unresolved", message, provider: "github", disposition: "definitely_unsent" })
+}
+~~~~
+
+## AUT1-C29
+
+```json
+{"block_id":"AUT1-C29","type":"literal_source_excerpt","requests":["RE-AUT1-05"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/resources/schedule-yaml.ts","repository_path":"packages/core/src/actions/resources/schedule-yaml.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"cd3a52f384a522b74910f01ea0278efc1fa5a12f","source_sha256":"57ef9c02ab37eb8cebeb87cd3a307673211f989e1bb8036cf3d4799a2b783abd","source_bytes":5345,"body_anchors":["A31"],"requested_subject":"Segundo editor de on.schedule e suas restrições, já transportado neste lote"}
+```
+
+```json
+{"first_line":1,"last_line":81,"bytes":5345,"sha256":"57ef9c02ab37eb8cebeb87cd3a307673211f989e1bb8036cf3d4799a2b783abd"}
+```
+
+~~~~typescript
+export * as ActionsScheduleYaml from "./schedule-yaml"
+
+import { Actions } from "@orchestra/schema/actions"
+import { Schema } from "effect"
+import { isAlias, isMap, isScalar, isSeq, parseDocument } from "yaml"
+import { diagnostics, object, read } from "../source/document"
+import { ActionsResourceNative } from "./native"
+
+const Schedules = Schema.Array(Schema.Struct({ cron: Schema.NonEmptyString }))
+
+export function inspect(binding: Actions.Binding, text: string) {
+  const report = diagnostics()
+  const document = read(text, "github", report)
+  if (!document || report.state() !== "complete")
+    throw ActionsResourceNative.error(binding, "source_unresolved", "Schedule YAML failed the shared bounded CI document guard")
+  if (!object(document.value.on)) return []
+  const schedules = document.value.on.schedule
+  if (schedules === undefined) return []
+  const entries = ActionsResourceNative.input(binding, Schedules, schedules)
+  if (entries.length > 100) throw ActionsResourceNative.error(binding, "metadata_truncated", "Workflow schedule count exceeds the bounded resource limit")
+  entries.forEach((entry) => cron(binding, entry.cron))
+  return entries
+}
+
+// Called by SourcePublisher's injected resource callback. It changes on.schedule
+// only; the publisher retains branch/blob/commit admission and actual writes.
+export function edit(binding: Actions.Binding, text: string, schedules: readonly { readonly cron: string }[]) {
+  inspect(binding, text)
+  if (schedules.length > 100) throw ActionsResourceNative.error(binding, "invalid_input", "At most 100 workflow schedules can be authored in one bounded edit")
+  schedules.forEach((entry) => cron(binding, entry.cron))
+  const document = parseDocument(text, { version: "1.2", schema: "core", uniqueKeys: false, stringKeys: true, prettyErrors: false, resolveKnownTags: false, logLevel: "error" })
+  const trigger = document.get("on", true)
+  if (isAlias(trigger)) throw ActionsResourceNative.error(binding, "source_unresolved", "Aliased workflow triggers require an explicit source-editor change")
+  if (trigger === undefined) document.set("on", document.createNode({}))
+  if (isScalar(trigger) && typeof trigger.value === "string") document.set("on", document.createNode({ [trigger.value]: null }))
+  if (isSeq(trigger)) {
+    if (trigger.items.some((node) => !isScalar(node) || typeof node.value !== "string"))
+      throw ActionsResourceNative.error(binding, "source_unresolved", "Workflow event sequence could not be edited without changing other triggers")
+    document.set("on", document.createNode(Object.fromEntries(trigger.items.filter(isScalar).map((node) => [String(node.value), null]))))
+  }
+  const events = document.get("on", true)
+  if (!isMap(events)) throw ActionsResourceNative.error(binding, "source_unresolved", "Workflow triggers must be an explicit editable mapping")
+  const existing = events.get("schedule", true)
+  if (isAlias(existing)) throw ActionsResourceNative.error(binding, "source_unresolved", "Aliased schedules require an explicit source-editor change")
+  if (!schedules.length) events.delete("schedule")
+  if (schedules.length) {
+    if (isSeq(existing)) existing.items = schedules.map((entry, index) => {
+      const node = existing.items[index]
+      if (node === undefined) return document.createNode({ cron: entry.cron })
+      if (!isMap(node) || isAlias(node.get("cron", true)))
+        throw ActionsResourceNative.error(binding, "source_unresolved", "Schedule aliases require an explicit source-editor change")
+      node.set("cron", entry.cron)
+      return node
+    })
+    if (!isSeq(existing)) events.set("schedule", document.createNode(schedules.map((entry) => ({ cron: entry.cron }))))
+  }
+  const result = document.toString()
+  inspect(binding, result)
+  return result
+}
+
+export function cron(binding: Actions.Binding, value: string) {
+  // Native provider remains the cron parser/validator. Reject unsafe framing and
+  // wrong field count here, rather than claiming a local cron dialect is native.
+  if (value.length > 256 || /[\r\n\x00-\x1f\x7f]/.test(value) || value.trim().split(/ +/).length !== 5)
+    throw ActionsResourceNative.error(binding, "invalid_input", "Schedule cron requires five bounded native fields")
+  if (binding.provider.kind === "github") {
+    const names = [[], [], [], ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"], ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"]]
+    const ranges = [[0, 59], [0, 23], [1, 31], [1, 12], [0, 6]]
+    const valid = value.trim().split(/ +/).every((field, index) => field.split(",").every((item) => {
+      const parts = item.split("/")
+      if (parts.length > 2 || parts[1] !== undefined && (!/^[1-9]\d*$/.test(parts[1]) || Number(parts[1]) > 1000)) return false
+      if (parts[0] === "*") return true
+      const bounds = parts[0].split("-").map((part) => /^\d+$/.test(part) ? Number(part) : names[index].indexOf(part.toUpperCase()) + (index === 3 ? 1 : 0))
+      return bounds.length <= 2 && bounds.every((part) => Number.isInteger(part) && part >= ranges[index][0] && part <= ranges[index][1]) &&
+        (bounds.length === 1 || bounds[0] <= bounds[1])
+    }))
+    if (!valid) throw ActionsResourceNative.error(binding, "invalid_input", "GitHub schedule cron must use its supported five-field POSIX syntax")
+  }
+  return value
+}
+~~~~
+
+## AUT1-C30
+
+```json
+{"block_id":"AUT1-C30","type":"literal_source_excerpt","requests":["RE-AUT1-05","RE-AUT1-06"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/github/commands/common.ts","repository_path":"packages/core/src/actions/github/commands/common.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"e9ee98a334dd701d076a29900dc47ccdba7a3f01","source_sha256":"b1a6b5b2081d754e5b57f93fadaf56153ca38d133450a05e3c7145bcbf21cfa7","source_bytes":13052,"body_anchors":["A18"],"requested_subject":"Preflight/autoridade GitHub usada por autoria; source/run e send"}
+```
+
+```json
+{"first_line":1,"last_line":166,"bytes":13052,"sha256":"b1a6b5b2081d754e5b57f93fadaf56153ca38d133450a05e3c7145bcbf21cfa7"}
+```
+
+~~~~typescript
+export * as GitHubCommandCommon from "./common"
+
+import { Actions } from "@orchestra/schema/actions"
+import { Effect, Option, Schema } from "effect"
+import { ActionsContract } from "../../contract"
+import { ActionsError } from "../../error"
+import { ActionsResponse } from "../../transport/response"
+import { GitHubNative } from "../native"
+
+export type Services = { transport: ActionsContract.Transport; reader: ActionsContract.ReadAdapter }
+const Capture = Schema.Struct({ binding: Actions.Binding, intent: Actions.OperationIntent, payload: Schema.Json })
+const Repository = Schema.Struct({ ...GitHubNative.Repository.fields,
+  private: Schema.optionalKey(Schema.Boolean), archived: Schema.optionalKey(Schema.Boolean) })
+const Account = Schema.Struct({ id: GitHubNative.ID,
+  login: Schema.String.check(Schema.isPattern(/^[A-Za-z0-9-]+(?:\[bot\])?$/)) })
+const supported = new Set(["workflow.dispatch", "workflow.enable", "workflow.disable", "run.retry", "run.retryFailed",
+  "run.cancel", "run.forceCancel", "run.delete", "run.approveFork", "job.retry"])
+
+export function fail(binding: Actions.Binding, kind: Actions.ErrorKind, message: string, disposition: Actions.SendDisposition = "definitely_unsent") {
+  return new ActionsError({ kind, message, bindingID: binding.id, provider: "github", disposition })
+}
+
+export function input<A>(binding: Actions.Binding, schema: Schema.Decoder<A>, value: unknown): A {
+  const decoded = Schema.decodeUnknownOption(schema)(value, { onExcessProperty: "error" })
+
+END_PART

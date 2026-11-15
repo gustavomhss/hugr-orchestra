@@ -1,0 +1,12 @@
+{
+  "id": "relay-auto3-endof-exact-evidence",
+  "target": "/root/review_relay",
+  "kind": "preserve_and_resolve_own_judge_literal_evidence",
+  "method": "collaboration.send_message",
+  "message": "Recebi o FINAL J1 auto3 REQUEST_EVIDENCE limitado a endOf (AUT3-C04). Preserve-o integral antes da continuação. No canônico que li e enviei a J2, endOf recebe project: Board.ProjectID e o where usa eq(BoardIssueTable.project_id, project), sem .id. Confira seu argumento real da parte3 contra o preparado e contra a fonte imutável; se houve erro de transporte, preserve a diferença real e envie só a assinatura + where/função exata com correção e nova disposição do próprio J1. Se não houver prova do erro no argumento real, registre a discrepância como dúvida de leitura, sem inventar um incidente. Não mexa no corpo/produto. Eu continuo exclusivo J2 desde parte4.",
+  "message_bytes": 681,
+  "message_sha256": "bd3df1aeeff5ffbfcf2584b0e4da966346f1a1dc4fc8cb0a43cabe1f11aef1d7",
+  "tool_returned_normally": true,
+  "captured_at_utc": "2026-11-15T08:10:19.462531+00:00",
+  "capture_basis": "Exact caller-visible argument; no independent host wire checksum"
+}

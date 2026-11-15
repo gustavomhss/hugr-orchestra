@@ -1,0 +1,1 @@
+ACK parte 5/8 — última âncora recebida: **AUT3-C15**, `packages/core/src/board/queue.ts`, função `spread`, até `if (!bundleable) return { ...shape, affected: [] }`. Aguardo as partes restantes e o **FIM_DO_LOTE** externo.

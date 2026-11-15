@@ -1,0 +1,1 @@
+ACK parte 4/7 — última âncora recebida: **AUT2-C26**, `packages/core/src/actions/resources/gitlab-graphql.ts`, callback `req.once("response", (incoming) => {`, seguido de `state.phase = "http_possible"`.

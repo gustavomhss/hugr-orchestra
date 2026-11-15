@@ -1,0 +1,1 @@
+ACK — correção incorporada somente ao SHA256 integral de `DOC-SESSION-1`; o envio anterior fica preservado como incidente de transporte. Aguardo as demais partes e `FIM_DO_LOTE`.

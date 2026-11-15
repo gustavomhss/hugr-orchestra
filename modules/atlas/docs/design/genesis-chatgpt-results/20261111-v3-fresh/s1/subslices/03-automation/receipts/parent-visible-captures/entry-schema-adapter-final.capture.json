@@ -1,0 +1,13 @@
+{
+  "agent_id": "/root/native_descriptor",
+  "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/payload/receipts/parent-visible-captures/entry-schema-adapter-final.original.md",
+  "bytes": 1780,
+  "sha256": "b5e6c91e86961114f04222698e7b25f97f9c51582667885fbbf26f21121b702a",
+  "literal": true,
+  "agent_response_byte_equal": true,
+  "captured_before_handle_reuse": true,
+  "at_utc": "2026-11-15T10:41:07.717410+00:00",
+  "input_count": 2,
+  "output_count": 3,
+  "kind": "mechanical_schema_adapter_not_semantic_vote"
+}

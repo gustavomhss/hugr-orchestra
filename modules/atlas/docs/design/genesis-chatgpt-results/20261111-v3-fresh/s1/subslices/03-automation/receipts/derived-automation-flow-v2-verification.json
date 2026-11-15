@@ -1,0 +1,290 @@
+{
+  "schema": "s1-03-derived-mechanical-verification/v1",
+  "at_utc": "2026-11-15T09:15:34.609752+00:00",
+  "artifact": {
+    "key": "s1.subslice03.automation-flow",
+    "layer": 2,
+    "need": "flow",
+    "scope": "orchestra.s1",
+    "subslice": "S1-03",
+    "state": "CORRECTED_AWAITING_FIRST_WHOLE_BODY_SAME_PAIR_SEMANTIC_REVIEW",
+    "body": {
+      "local_path": "producers/derived-automation-flow/body.md",
+      "bytes": 16541,
+      "sha256": "5b24037431881e96ddb5a872fd6541c94880d189d8b0c873bac9d8bd874d85c1",
+      "git_blob_sha": "378dbb4cd9f978ed9ab848136a2f4b9fdd72ca6b"
+    },
+    "version": "v2"
+  },
+  "version": "v2",
+  "checks": "Exact whole-file sizes/SHA256/Git blobs for every declared actual input and output; UTF-8, JSON and unique depth2 headings. No semantic, runtime or product-test result.",
+  "input_units": [
+    {
+      "local_path": "inputs/AGENTS.md",
+      "byte_length": 16501,
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "calculated_git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "role": "public_authority_or_procedure"
+    },
+    {
+      "local_path": "inputs/COMMON.md",
+      "byte_length": 12959,
+      "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+      "calculated_git_blob_sha": "893cbb5f5eda2d0c19753606a50d1c482523f0c8",
+      "role": "public_authority_or_procedure"
+    },
+    {
+      "local_path": "inputs/mission.json",
+      "byte_length": 6006,
+      "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+      "calculated_git_blob_sha": "48fa8da131e97c50110ee76e41e79283cd9a0ac4",
+      "role": "public_authority_or_procedure"
+    },
+    {
+      "local_path": "inputs/SKILL.md",
+      "byte_length": 8143,
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+      "calculated_git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+      "role": "public_authority_or_procedure"
+    },
+    {
+      "local_path": "inputs/references/principles.md",
+      "byte_length": 6010,
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+      "calculated_git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+      "role": "public_authority_or_procedure"
+    },
+    {
+      "local_path": "inputs/references/fatia-1.md",
+      "byte_length": 3987,
+      "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
+      "calculated_git_blob_sha": "78482ad7c72ec275fadb26ebece1c30bc1e5ccb9",
+      "role": "public_authority_or_procedure"
+    },
+    {
+      "local_path": "inputs/references/fresh-start.md",
+      "byte_length": 4983,
+      "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166",
+      "calculated_git_blob_sha": "ca485b25e43293a309c5489279dce80ce1441ed0",
+      "role": "public_authority_or_procedure"
+    },
+    {
+      "local_path": "inputs/references/orchestration.md",
+      "byte_length": 4408,
+      "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+      "calculated_git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+      "role": "public_authority_or_procedure"
+    },
+    {
+      "local_path": "inputs/references/judging.md",
+      "byte_length": 5787,
+      "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+      "calculated_git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+      "role": "public_authority_or_procedure"
+    },
+    {
+      "local_path": "inputs/references/transport.md",
+      "byte_length": 8478,
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "calculated_git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+      "role": "public_authority_or_procedure"
+    },
+    {
+      "local_path": "payload/artifact-plan.json",
+      "byte_length": 5017,
+      "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad",
+      "calculated_git_blob_sha": "8dba81b59cd093d28ea07cf4369d5842b6bdee68",
+      "role": "frozen_artifact_plan"
+    },
+    {
+      "local_path": "payload/recipes/derived-contract.json",
+      "byte_length": 4017,
+      "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
+      "calculated_git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd",
+      "role": "actual_common_authoring_contract"
+    },
+    {
+      "local_path": "payload/recipes/derived-public-criteria.json",
+      "byte_length": 16244,
+      "sha256": "1e7686491c5b68cb4f3d287377723edcd8932ae803c267ddbabf44a360dfc36e",
+      "calculated_git_blob_sha": "d4f6b765e6d78341ba2b77186c77b9177cf3156c",
+      "role": "public_normative_criteria"
+    },
+    {
+      "local_path": "producers/automation/body.md",
+      "byte_length": 60767,
+      "sha256": "968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae",
+      "calculated_git_blob_sha": "e26213eb2fc76dc843dca17d1111334c76f88890",
+      "role": "accepted_semantic_predecessor"
+    },
+    {
+      "local_path": "payload/recipes/derived/automation-flow.json",
+      "byte_length": 8479,
+      "sha256": "ec4550336620b1d7abed85e78460c6d4c5ede73f31c8ddcf8a77be5272af3179",
+      "calculated_git_blob_sha": "a039bc6e88406694ed967c5f6c1e2b14a9428506",
+      "role": "original_task_recipe_retained"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/request.txt",
+      "byte_length": 856,
+      "sha256": "da3d46f1369fc5ec17d4ec73b3b95ebeecf2c83c796f06e88d4409c1c64a331e",
+      "calculated_git_blob_sha": "d44c3d910995f299f76a1f8e1e62af093653ed81",
+      "role": "original_request_retained"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/dispatch-message.txt",
+      "byte_length": 2056,
+      "sha256": "808b4733f5306981efcdf337732dc6d53d1dce7b6569b5c7b32af0611e761fd9",
+      "calculated_git_blob_sha": "dfe89eddbc185ad996a1fd25e18bab3786161486",
+      "role": "original_visible_dispatch_retained"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/history/body.md",
+      "byte_length": 16441,
+      "sha256": "5985441b360d0efc6693d0d385980f4a93cab2c044387a7375608dd5a9adf517",
+      "calculated_git_blob_sha": "b4874e39655e7aef9c9f6e08aeecc37718658b2f",
+      "role": "exact_retained_v1_output_consumed_for_correction"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/history/evidence.md",
+      "byte_length": 11997,
+      "sha256": "d2b8068c9167c0813719479d4d2b10046cc718921dad3db52d1f44957e3f1360",
+      "calculated_git_blob_sha": "6697c34caf08d7d8d4bacd4793f3e36c1d035aa4",
+      "role": "exact_retained_v1_output_consumed_for_correction"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/history/production-manifest.json",
+      "byte_length": 16158,
+      "sha256": "9c7d3130d4265bccba5e94fa0448b1d0bbbf3c02bf421a09d4e8d053cae4df06",
+      "calculated_git_blob_sha": "ee7c2879510553e13c9c61faefdda6b9e09d8e17",
+      "role": "exact_retained_v1_output_consumed_for_correction"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/history/response.md",
+      "byte_length": 2470,
+      "sha256": "c8bf48be1b48cc17d8c376978e37c401079ba6e5ad72c51ac12443b8e433c7fd",
+      "calculated_git_blob_sha": "e26287f9867203f71804eecce18b6a706997539a",
+      "role": "exact_retained_v1_output_consumed_for_correction"
+    },
+    {
+      "local_path": "payload/recipes/derived/automation-flow-source-fidelity-v2.json",
+      "byte_length": 7391,
+      "sha256": "16c2b4e2efc5a6e2ea6a111540e7a662ce154af3c58c366306e254f23d9b3364",
+      "calculated_git_blob_sha": "d41472b948b6c1a5d2d5990c3de0a906c9d5cf47",
+      "role": "actual_frozen_correction_recipe"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/request.txt",
+      "byte_length": 841,
+      "sha256": "34caa0867a7d0c02dd94c37f789c0af7262132bf4f2359563021b8df3977e769",
+      "calculated_git_blob_sha": "52271ca649386b9acd36c4dc8e31153cba7f3dfb",
+      "role": "actual_current_correction_request"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/dispatch-message.txt",
+      "byte_length": 1370,
+      "sha256": "b5cf544c85c7f3fae4739c200210f829a8b72a7bbb65eab809799fa198621e93",
+      "calculated_git_blob_sha": "151ff85a32fe59b63db141eaad368d8b6a7fa55c",
+      "role": "actual_visible_correction_dispatch"
+    }
+  ],
+  "input_count": 24,
+  "body_bytes": 16541,
+  "body_sha256": "5b24037431881e96ddb5a872fd6541c94880d189d8b0c873bac9d8bd874d85c1",
+  "body_git_blob_sha": "378dbb4cd9f978ed9ab848136a2f4b9fdd72ca6b",
+  "depth2_headings": [
+    "1. Escopo e escolha do ponto de entrada",
+    "2. Actions: fixar vínculo e intenção antes do envio",
+    "3. Actions: admitir, enviar uma vez localmente e observar",
+    "4. Actions: preservar a semântica do provider e do transporte",
+    "5. Board: transformar plano em trabalho elegível",
+    "6. Board: cortar, julgar e integrar o bundle",
+    "7. Scheduler: identificar política e slot devido",
+    "8. Scheduler: separar claim, admissão e trabalho concluído"
+  ],
+  "output_files": [
+    {
+      "path": "producers/derived-automation-flow/body.md",
+      "bytes": 16541,
+      "sha256": "5b24037431881e96ddb5a872fd6541c94880d189d8b0c873bac9d8bd874d85c1",
+      "git_blob_sha": "378dbb4cd9f978ed9ab848136a2f4b9fdd72ca6b"
+    },
+    {
+      "path": "producers/derived-automation-flow/dispatch-message.txt",
+      "bytes": 2056,
+      "sha256": "808b4733f5306981efcdf337732dc6d53d1dce7b6569b5c7b32af0611e761fd9",
+      "git_blob_sha": "dfe89eddbc185ad996a1fd25e18bab3786161486"
+    },
+    {
+      "path": "producers/derived-automation-flow/evidence.md",
+      "bytes": 14569,
+      "sha256": "0c4bff02eec8c4dbca2886127f1546bd51707060df8306ba4e630dba73f990d8",
+      "git_blob_sha": "ec9f7f1351681788c7c58cb345e4ee6860c4c3af"
+    },
+    {
+      "path": "producers/derived-automation-flow/production-manifest.json",
+      "bytes": 27416,
+      "sha256": "1802600a673c0521064bc636bd9be5e9e9aad9dd644f26efd5d14c02bee52cff",
+      "git_blob_sha": "009ace4ecb5cda6ec2c3f58aec5573d1b986c205"
+    },
+    {
+      "path": "producers/derived-automation-flow/request.txt",
+      "bytes": 856,
+      "sha256": "da3d46f1369fc5ec17d4ec73b3b95ebeecf2c83c796f06e88d4409c1c64a331e",
+      "git_blob_sha": "d44c3d910995f299f76a1f8e1e62af093653ed81"
+    },
+    {
+      "path": "producers/derived-automation-flow/response.md",
+      "bytes": 3043,
+      "sha256": "59ffb319da5b27d830b9eeabe7ac592c104a64496864235da4331cd5adc05c23",
+      "git_blob_sha": "f07fae15e22fabc2fd4cad461fd721eab5e031d3"
+    },
+    {
+      "path": "producers/derived-automation-flow/revisions/v2/delta.json",
+      "bytes": 5990,
+      "sha256": "09184ba9f3d0e84625e8a240bc148e65c29fc16777c449f011d8e115db8c6617",
+      "git_blob_sha": "9523d4897f31fa10aeb925249a8425d19d5a1712"
+    },
+    {
+      "path": "producers/derived-automation-flow/revisions/v2/dispatch-message.txt",
+      "bytes": 1370,
+      "sha256": "b5cf544c85c7f3fae4739c200210f829a8b72a7bbb65eab809799fa198621e93",
+      "git_blob_sha": "151ff85a32fe59b63db141eaad368d8b6a7fa55c"
+    },
+    {
+      "path": "producers/derived-automation-flow/revisions/v2/history/body.md",
+      "bytes": 16441,
+      "sha256": "5985441b360d0efc6693d0d385980f4a93cab2c044387a7375608dd5a9adf517",
+      "git_blob_sha": "b4874e39655e7aef9c9f6e08aeecc37718658b2f"
+    },
+    {
+      "path": "producers/derived-automation-flow/revisions/v2/history/evidence.md",
+      "bytes": 11997,
+      "sha256": "d2b8068c9167c0813719479d4d2b10046cc718921dad3db52d1f44957e3f1360",
+      "git_blob_sha": "6697c34caf08d7d8d4bacd4793f3e36c1d035aa4"
+    },
+    {
+      "path": "producers/derived-automation-flow/revisions/v2/history/production-manifest.json",
+      "bytes": 16158,
+      "sha256": "9c7d3130d4265bccba5e94fa0448b1d0bbbf3c02bf421a09d4e8d053cae4df06",
+      "git_blob_sha": "ee7c2879510553e13c9c61faefdda6b9e09d8e17"
+    },
+    {
+      "path": "producers/derived-automation-flow/revisions/v2/history/response.md",
+      "bytes": 2470,
+      "sha256": "c8bf48be1b48cc17d8c376978e37c401079ba6e5ad72c51ac12443b8e433c7fd",
+      "git_blob_sha": "e26287f9867203f71804eecce18b6a706997539a"
+    },
+    {
+      "path": "producers/derived-automation-flow/revisions/v2/request.txt",
+      "bytes": 841,
+      "sha256": "34caa0867a7d0c02dd94c37f789c0af7262132bf4f2359563021b8df3977e769",
+      "git_blob_sha": "52271ca649386b9acd36c4dc8e31153cba7f3dfb"
+    }
+  ],
+  "recipe_sha256": "16c2b4e2efc5a6e2ea6a111540e7a662ce154af3c58c366306e254f23d9b3364",
+  "production_manifest_sha256": "1802600a673c0521064bc636bd9be5e9e9aad9dd644f26efd5d14c02bee52cff",
+  "producer_reporting_limit": "The author reports complete reads and exact allowed file access; this does not assert an operating-system sandbox or expose private reasoning.",
+  "author_file_read_declaration": null,
+  "semantic_status": "PENDING_SAME_PAIR"
+}

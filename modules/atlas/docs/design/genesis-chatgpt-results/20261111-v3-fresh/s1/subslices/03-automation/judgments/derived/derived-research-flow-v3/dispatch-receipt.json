@@ -22,22 +22,46 @@
       "tool_returned_normally": true,
       "tool_result_text": "",
       "provider_dispatch_id": null
+    },
+    {
+      "sequence": 2,
+      "target": "/root/s1_03_j1",
+      "part": 1,
+      "request_file": "request-j1-01.json",
+      "request_file_bytes": 39953,
+      "request_file_sha256": "a54130a46c292848fc411b92a8778ddb7bde009a1d0c8d5d7018b63c4afbf4b9",
+      "message_bytes": 39384,
+      "message_sha256": "1c8eee69dee7940064d86825eeb66e7e89eb10c2f76885cdac21fb274ed7ff77",
+      "payload_bytes": 38782,
+      "payload_sha256": "a0670c2aabad63a8ab0106591b8023739bc39a3eb6f30e02cc6648e99278b64c",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
     }
   ],
   "known_transcription_corrections": [],
   "receipt_limit": "Ferramenta retornou normalmente sem texto nem ID de despacho; os hashes descrevem os pedidos registrados e sua reconstrução local, não verificação remota nem suficiência semântica.",
   "delivery_scope": "Literal UTF-8 packet only; final signal is outside payload.",
   "slot_handling": "Root liberou dois juízes com autores ociosos. J2 recebeu R L2 v3 após original BND v2 salvo; J1 ainda em support, este lote pendente para J1.",
-  "judgment_capture": "J2 original preserved; J1 not yet dispatched.",
-  "dispatch_count": 1,
-  "recorded_at_utc": "2026-11-15T04:44:39.250636+00:00",
+  "judgment_capture": "Both original finals preserved; see response-capture.json. Historical v2 FINAL capture gap remains explicitly disclosed in both judgments.",
+  "dispatch_count": 2,
+  "recorded_at_utc": "2026-11-15T05:04:25.856787+00:00",
   "completed_targets": [
+    "/root/s1_03_j1",
     "/root/s1_03_j2"
   ],
-  "pending_targets": [
-    "/root/s1_03_j1"
-  ],
+  "pending_targets": [],
   "local_recorded_reconstruction": [
+    {
+      "target": "/root/s1_03_j1",
+      "bytes": 38782,
+      "sha256": "a0670c2aabad63a8ab0106591b8023739bc39a3eb6f30e02cc6648e99278b64c",
+      "equals_source": true,
+      "raw_bytes": 38782,
+      "raw_sha256": "a0670c2aabad63a8ab0106591b8023739bc39a3eb6f30e02cc6648e99278b64c",
+      "corrections_applied": false
+    },
     {
       "target": "/root/s1_03_j2",
       "bytes": 38782,
@@ -58,6 +82,16 @@
       "terminal_newline": false,
       "literal": true,
       "identity_note": "Judge handle and dispatch identify origin; original text not edited to add judge_id."
+    },
+    "j1": {
+      "target": "/root/s1_03_j1",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-research-flow-v3/j1-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 4155,
+      "sha256": "488cc1430936a338edb5075ce43e24a059f0667804fcecbd61ef3bd0a55eb7d7",
+      "terminal_newline": false,
+      "literal": true,
+      "captured_at_utc": "2026-11-15T05:07:29.017903+00:00"
     }
   }
 }

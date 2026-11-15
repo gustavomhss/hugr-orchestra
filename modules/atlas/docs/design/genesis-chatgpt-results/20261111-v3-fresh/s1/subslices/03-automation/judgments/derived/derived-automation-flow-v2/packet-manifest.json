@@ -1,0 +1,40 @@
+{
+  "schema": "s1-03-derived-review-packet/v1",
+  "lot": "derived-automation-flow-v2",
+  "artifact": "s1.subslice03.automation-flow",
+  "layer": 2,
+  "bytes": 53852,
+  "sha256": "617afeacbade05f07406461052aea9e9dbb3ceeaecdc107a5eeda3db4c43a9e6",
+  "git_blob_sha": "4bb8025f0191a9d38bc9683cce28c174a9baab41",
+  "body_bytes": 16541,
+  "body_sha256": "5b24037431881e96ddb5a872fd6541c94880d189d8b0c873bac9d8bd874d85c1",
+  "literal_files": [
+    {
+      "label": "body",
+      "bytes": 16541,
+      "sha256": "5b24037431881e96ddb5a872fd6541c94880d189d8b0c873bac9d8bd874d85c1"
+    },
+    {
+      "label": "evidence",
+      "bytes": 14569,
+      "sha256": "0c4bff02eec8c4dbca2886127f1546bd51707060df8306ba4e630dba73f990d8"
+    },
+    {
+      "label": "task_recipe",
+      "bytes": 7391,
+      "sha256": "16c2b4e2efc5a6e2ea6a111540e7a662ce154af3c58c366306e254f23d9b3364"
+    },
+    {
+      "label": "common_recipe",
+      "bytes": 4017,
+      "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588"
+    },
+    {
+      "label": "public_plan",
+      "bytes": 5017,
+      "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad"
+    }
+  ],
+  "input_table": "Explicit mechanical projection of actual manifest; original remains preserved.",
+  "dispatch_state": "NOT_YET_DISPATCHED"
+}

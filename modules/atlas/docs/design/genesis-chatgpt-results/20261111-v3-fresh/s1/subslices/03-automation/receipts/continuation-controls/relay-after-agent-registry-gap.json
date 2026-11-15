@@ -1,0 +1,17 @@
+{
+  "id": "relay-after-agent-registry-gap",
+  "target": "/root/review_relay",
+  "kind": "COURIER_RESUME_SAME_HANDLES",
+  "method": "collaboration.followup_task",
+  "message": "Controle de continuação: list_agents acaba de mostrar somente /root, e não chegaram novas respostas após J2 support parte 5. Não recrie juízes e não repita despachos já registrados. Confirme o estado real dos handles /root/s1_03_j1 e /root/s1_03_j2 e retome somente a fila remanescente conforme recibos: support J2 partes 6–7/FIM, union-navigation-v1 e suplementos de automation ainda pendentes. O autor /root/derived_research recebeu research L3 e não há outputs finalizados no diretório; reserve o slot e mantenha só um juiz ativo enquanto ele trabalha. Se algum handle não puder ser retomado, informe o erro exato, sem simular continuação ou criar terceiro juiz. Preserve este pedido como controle visível.",
+  "message_sha256": "adc84e5a96cc8020d1db4df40455e32757ec6d727c5ea1d664093b25b00e43a6",
+  "message_utf8_bytes": 727,
+  "tool_returned_normally": true,
+  "observed_registry": "collaboration.list_agents returned only /root; no definitive unavailable-handle error returned",
+  "outcome": "AWAITING_ACTUAL_RESPONSE",
+  "recorded_utc": "2026-11-15T05:19:18.613038+00:00",
+  "not_a_new_judge_or_duplicate_authorization": true,
+  "tokens": "UNKNOWN",
+  "physical_attempts": "UNKNOWN",
+  "cost": "UNKNOWN"
+}

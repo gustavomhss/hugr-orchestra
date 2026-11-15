@@ -1,0 +1,1 @@
+ACK parte 5/7 — última âncora recebida: **AUT2-C28**, `packages/core/src/actions/resources/schedules.ts`, função `githubList`, campo `resourceVersion: ActionsResourceNative.version({ workflowID: workflow.id, sourceVersion: source.version, state: workflow.state }),`.

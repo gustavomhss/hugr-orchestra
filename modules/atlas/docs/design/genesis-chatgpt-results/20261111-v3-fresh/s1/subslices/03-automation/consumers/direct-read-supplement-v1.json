@@ -1,0 +1,30 @@
+{
+  "schema": "s1-03-public-direct-read-supplement/v1",
+  "frozen_at_utc": "2026-11-15T08:48:04.196004+00:00",
+  "state": "FROZEN_BEFORE_ANY_CONSUMER_DISPATCH_OR_EVALUATION",
+  "reason": "AC-03 requires a direct-use case for every intermediate artifact. research-maintenance is itself a predecessor of the local entry. The original public mapping named eleven of the twelve required artifacts; add its explicit read to the already frozen research operational-failure case. This is a navigation/consultation addition, not a new question, expected answer or retrospective production acceptance.",
+  "original_artifact_plan": {
+    "path": "artifact-plan.json",
+    "bytes": 5017,
+    "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad",
+    "preserved_unchanged": true
+  },
+  "public_cases": {
+    "path": "consumers/public-cases.json",
+    "sha256": "6f555dc22ea571bc2d6a683587cb320b7681b6bd22367a2f33e6fc8eb3741ab2",
+    "questions_and_quotas_unchanged": true
+  },
+  "additional_required_direct_keys": {
+    "R-FAILURE": [
+      "s1.subslice03.research-maintenance"
+    ]
+  },
+  "artifact_count_unchanged": 12,
+  "build_graph_unchanged": true,
+  "case_count_unchanged": 7,
+  "source_population_unchanged": 462,
+  "reserved_answers_included": false,
+  "native_calls_created_by_this_control": 0,
+  "operational_read_is_still_required": true,
+  "refused_read_is_not_consumption": true
+}

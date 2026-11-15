@@ -1,0 +1,11 @@
+{
+  "id": "relay-request-return-j2-after-ledger-audit",
+  "target": "/root/review_relay",
+  "kind": "transport_ownership_request",
+  "method": "collaboration.send_message",
+  "message": "Os ajustes mecânicos independentes já terminaram. Para acelerar o transporte restante, solicito devolver J2 à principal após a parte que você estiver enviando agora: preserve o ACK/FINAL dessa parte e informe o último part/sequence real e o próximo ainda não despachado. Não interrompa um envio em curso nem repita parte. Você seguirá exclusivamente J1; aguardo seu handover explícito antes de tocar J2. Mantenha os originais de ambos preservados.",
+  "message_bytes": 459,
+  "message_sha256": "2688e957926ee1b6592d007901eb33d51095a4c89347db6163d51509ebd39bce",
+  "tool_returned_normally": true,
+  "captured_at_utc": "2026-11-15T07:17:15.205910+00:00"
+}

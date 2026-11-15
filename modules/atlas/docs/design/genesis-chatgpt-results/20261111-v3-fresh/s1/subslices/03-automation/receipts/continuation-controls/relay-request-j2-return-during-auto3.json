@@ -1,0 +1,12 @@
+{
+  "id": "relay-request-j2-return-during-auto3",
+  "target": "/root/review_relay",
+  "kind": "request_exclusive_judge_transport_handover",
+  "method": "collaboration.send_message",
+  "message": "A preparação mecânica está pronta; posso voltar a transportar J2 em paralelo se isso acelerar o lote. Termine qualquer fragmento/parte J2 já em voo e me informe a próxima parte/fronteira ainda não enviada, com ACK e receipt persistidos. Até sua confirmação explícita de handover, você continua dona dos dois handles; eu não envio nada a J2. Você pode então seguir J1 auto4 enquanto eu concluo J2 auto3/4. Não interrompa julgamento em andamento nem reenvie partes já recebidas.",
+  "message_bytes": 493,
+  "message_sha256": "fc8c25722d7bf6729528737ee0c155d6b0a7da9f6842efb307f7cb26d5704e95",
+  "tool_returned_normally": true,
+  "captured_at_utc": "2026-11-15T08:07:01.640624+00:00",
+  "capture_basis": "Exact caller-visible argument, no independent host wire checksum"
+}

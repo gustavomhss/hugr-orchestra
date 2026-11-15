@@ -1,0 +1,10 @@
+{
+  "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/payload/receipts/parent-visible-captures/relay-derived-entry-v1-final.original.md",
+  "bytes": 2558,
+  "sha256": "c0478d28b98520cb6d34b0bc976039fc740903e8707c8dc0867678cdb8991364",
+  "literal": true,
+  "agent_id": "/root/review_relay",
+  "relay_original_byte_equal": true,
+  "captured_before_handle_reuse": true,
+  "at_utc": "2026-11-15T10:51:54.110023+00:00"
+}

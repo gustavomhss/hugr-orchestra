@@ -1,0 +1,21 @@
+{
+  "schema": "s1-03-consumer-request-procedure-v2-freeze/v1",
+  "frozen_at_utc": "2026-11-15T08:48:04.200599+00:00",
+  "reason_ref": "consumers/direct-read-supplement-v1.json",
+  "procedure": {
+    "local_path": "scripts/prepare-consumer-dispatch-v2.py",
+    "payload_path": "assembly/procedures/prepare-consumer-dispatch-v2.py",
+    "bytes": 4138,
+    "sha256": "47c30adf8cd8308549d338b560d6b9edd8f7d0f5e397b4aeec0e8032a286512c"
+  },
+  "prior_procedure": {
+    "local_path": "scripts/prepare-consumer-dispatch.py",
+    "bytes": 3418,
+    "sha256": "c1bcddbe233a4e0ae53a38d2e5ebdfa53d82aab583d5d3d5f094d2f8002576d3",
+    "preserved_unchanged": true
+  },
+  "syntax_parse": "PASS",
+  "consumer_dispatched": false,
+  "queries_executed": false,
+  "questions_quotas_or_oracle_modified": false
+}

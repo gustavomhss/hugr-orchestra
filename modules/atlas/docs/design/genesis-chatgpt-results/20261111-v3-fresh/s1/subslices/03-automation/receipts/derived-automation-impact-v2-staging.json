@@ -1,0 +1,36 @@
+{
+  "at_utc": "2026-11-15T10:05:32.912850+00:00",
+  "scope": "Mechanical staging only; originals retained before replacing current fields",
+  "files": [
+    {
+      "path": "payload/producers/derived-automation-impact/body.md",
+      "old_sha256": "cc7ebd4319e301cf3100f83867a889c6295e52c7d0c39a769d2962bc251c9722",
+      "new_sha256": "05aeecb75fb2c4f8afb34fc44cf315490d800ac976eed82100f279ec2402044d",
+      "retained": "payload/producers/derived-automation-impact/revisions/v2/history/body.md",
+      "historical_match": true
+    },
+    {
+      "path": "payload/producers/derived-automation-impact/evidence.md",
+      "old_sha256": "2814a7361d26e4d99e4c77e16189baa53755ab8e8873c53a3fcddb96a67a8a5d",
+      "new_sha256": "4230ba6db7eaae922cdfc819571be2905bc63824ae467b42708da75de0f4578d",
+      "retained": "payload/producers/derived-automation-impact/revisions/v2/history/evidence.md",
+      "historical_match": true
+    },
+    {
+      "path": "payload/producers/derived-automation-impact/production-manifest.json",
+      "old_sha256": "fa3cb6ba4888e6449e2cb39d424e4e0dab2bc4e05f85c190fa1cfd7591e71c9c",
+      "new_sha256": "71c87a55b4b64cf1dceeddbf466ecee7d7571edf15d125b24d91d968c792d4f5",
+      "retained": "payload/producers/derived-automation-impact/revisions/v2/history/production-manifest.json",
+      "historical_match": true
+    },
+    {
+      "path": "payload/producers/derived-automation-impact/response.md",
+      "old_sha256": "85831ceada2e319c68ec37bc7e521de4d66c2aa1828e2df18a25886fe0a181f7",
+      "new_sha256": "3413d80c95e4d52440560c1833123d35ee1969254a68968e6a6c4317741a9055",
+      "retained": "payload/producers/derived-automation-impact/revisions/v2/history/response.md",
+      "historical_match": true
+    }
+  ],
+  "root_complete_body_read_sha256": "05aeecb75fb2c4f8afb34fc44cf315490d800ac976eed82100f279ec2402044d",
+  "root_complete_evidence_read_sha256": "4230ba6db7eaae922cdfc819571be2905bc63824ae467b42708da75de0f4578d"
+}

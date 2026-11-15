@@ -1,0 +1,463 @@
+Transporte literal pela principal ao mesmo juiz J1, execução 34269cf4-d631-41c5-a30b-85b0ec217390. Não use ferramentas, delegue, edite ou receba parecer do outro juiz. Lote automation-1-supplement-v2-coverage-erratum; parte 5/6. Pacote canônico 344323 bytes SHA256 1599aa38f34decbc6bff88c972ed778d5f49e179dca7ac2915d37ecacf245a4b. Esta parte tem 57347 bytes SHA256 53328661c411fd057281b2c1f8bb3963e7fae6bb646d0b8695f2597461a56ad9. Envio em dois fragmentos contíguos: este é 1/2, offsets UTF-8 [0,28619), 28619 bytes SHA256 0a9da161a42d940e5b0cfc4ccb42cdab3a289546f2b066e69b9fb46444aef1e0. Junte os fragmentos sem os envelopes. Conserve o exame anterior e os deltas já recebidos. Julgue apenas após FIM_DO_LOTE; até lá responda somente ACK da parte e da última âncora.
+
+BEGIN_PART
+  if (Option.isNone(decoded)) throw fail(binding, "invalid_input", "GitHub command payload does not match its frozen native schema")
+  return decoded.value
+}
+
+export function guard<A>(binding: Actions.Binding, fn: () => A, kind: Actions.ErrorKind = "invalid_input") {
+  return Effect.try({ try: fn, catch: (error) => error instanceof ActionsError ? error : fail(binding, kind, "GitHub command metadata could not be validated") })
+}
+
+export const capture = Effect.fn("ActionsGitHubCommands.capture")(function* (binding: Actions.Binding, intent: Actions.OperationIntent, payload: ActionsContract.Json) {
+  return yield* guard(binding, () => {
+    input(binding, Capture, { binding, intent, payload })
+    // Clone all admission and execute data before the first remote await. No payload hash or log.
+    const frozen = input(binding, Schema.fromJsonString(Capture), JSON.stringify({ binding, intent, payload }))
+    if (frozen.binding.provider.kind !== "github" || !supported.has(frozen.intent.kind))
+      throw fail(binding, "invalid_input", "Command does not belong to the GitHub execution dispatcher")
+    if (frozen.intent.binding.id !== frozen.binding.id || frozen.intent.binding.revision !== frozen.binding.revision)
+      throw fail(binding, "binding_stale", "Command admission does not match the current binding revision")
+    const target = frozen.intent.target
+    const workflow = frozen.intent.kind.startsWith("workflow.")
+    const job = frozen.intent.kind === "job.retry"
+    const allowed = new Set(workflow ? ["workflowID", "path", "ref"] : job ? ["jobID", "runID", "workflowID", "path", "ref"] : ["runID", "workflowID", "path", "ref"])
+    if (Object.keys(target).some((key) => !allowed.has(key)))
+      throw fail(binding, "invalid_input", "Command target contains fields belonging to another native operation")
+    const id = workflow ? target.workflowID : job ? target.jobID : target.runID
+    if (id === undefined) throw fail(binding, "invalid_input", "Command requires its admitted native target ID")
+    GitHubNative.id(binding, id)
+    if (target.runID !== undefined) GitHubNative.id(binding, target.runID)
+    if (target.workflowID !== undefined) GitHubNative.id(binding, target.workflowID)
+    if (target.ref !== undefined) GitHubNative.ref(binding, target.ref)
+    if (target.path !== undefined) GitHubNative.path(binding, target.path)
+    if (workflow && frozen.intent.expected?.attempt !== undefined)
+      throw fail(binding, "invalid_input", "Workflow commands do not have a native run-attempt precondition")
+    if (frozen.intent.expected?.commit !== undefined) input(binding, GitHubNative.SHA, frozen.intent.expected.commit)
+    if (frozen.intent.expected?.sourceVersion !== undefined) input(binding, GitHubNative.SHA, frozen.intent.expected.sourceVersion)
+    return frozen
+  })
+})
+
+export function before<A>(binding: Actions.Binding, effect: Effect.Effect<A, ActionsError>) {
+  return effect.pipe(Effect.mapError((error) => fail(binding, error.kind, `GitHub command preflight failed (${error.kind})`)))
+}
+
+export const get = Effect.fn("ActionsGitHubCommands.get")(function* (services: Services, binding: Actions.Binding, path: string) {
+  const response = yield* before(binding, services.transport.request(binding, { method: "GET", path }))
+  if (response.status !== 200) {
+    const error = ActionsResponse.failure(binding.provider, 1, Buffer.alloc(0), response.status, { ...response.headers }, true)
+    return yield* fail(binding, error.kind, "GitHub command preflight request was rejected")
+  }
+  return response
+})
+
+export const authority = Effect.fn("ActionsGitHubCommands.authority")(function* (services: Services, binding: Actions.Binding) {
+  const root = yield* guard(binding, () => `repositories/${GitHubNative.id(binding, binding.projectID)}`)
+  const response = yield* get(services, binding, root)
+  const native = yield* guard(binding, () => GitHubNative.decode(binding, Repository, response.data, "repository"), "transport_failed")
+  if (String(native.id) !== binding.projectID) return yield* fail(binding, "binding_stale", "Native repository does not match command admission")
+  yield* actor(services, binding)
+  if (native.permissions?.push === false || native.archived === true)
+    return yield* fail(binding, "permission_denied", "Native repository metadata denies command writes")
+  const scopes = response.headers["x-oauth-scopes"]?.split(",").map((scope) => scope.trim()).filter(Boolean)
+  if (scopes?.length && !scopes.includes("repo") && !(native.private === false && scopes.includes("public_repo")))
+    return yield* fail(binding, "permission_denied", "Observed classic OAuth scopes deny repository writes")
+  // Missing scope/role evidence stays unknown. Native authorization decides this
+  // explicit command; no available write capability or fine-grained role is invented.
+  return { root, native, headers: response.headers }
+})
+
+const actor = Effect.fn("ActionsGitHubCommands.actor")(function* (services: Services, binding: Actions.Binding) {
+  if (!binding.account) return yield* fail(binding, "binding_stale", "GitHub binding has no verified actor account")
+  const user = yield* get(services, binding, "user")
+  const account = yield* guard(binding, () => GitHubNative.decode(binding, Account, user.data, "signed-in account"), "not_authenticated")
+  if (account.login.toLowerCase() !== binding.account.toLowerCase())
+    return yield* fail(binding, "binding_stale", "GitHub signed-in account changed after command admission")
+})
+
+export function version(binding: Actions.Binding, expected: Actions.OperationExpected | undefined, response: ActionsContract.Response) {
+  if (expected?.resourceVersion === undefined) return
+  if (!response.headers.etag) throw fail(binding, "capability_unavailable", "Native resource version was not observed")
+  if (response.headers.etag !== expected.resourceVersion) throw fail(binding, "source_conflict", "Native resource version changed after admission")
+}
+
+export function source(binding: Actions.Binding, intent: Actions.OperationIntent, value: Actions.Source, path: string, ref: string, commit?: string) {
+  if (value.bindingID !== binding.id || value.path !== path || value.ref !== ref || value.commit === undefined)
+    throw fail(binding, "source_unresolved", "Reader did not prove the admitted native source identity")
+  input(binding, GitHubNative.SHA, value.commit)
+  input(binding, GitHubNative.SHA, value.version)
+  if ((commit !== undefined && value.commit.toLowerCase() !== commit.toLowerCase()) ||
+      (intent.expected?.commit !== undefined && value.commit.toLowerCase() !== intent.expected.commit.toLowerCase()) ||
+      (intent.expected?.sourceVersion !== undefined && value.version.toLowerCase() !== intent.expected.sourceVersion.toLowerCase()))
+    throw fail(binding, "source_conflict", "Native source changed after command admission")
+}
+
+export const run = Effect.fn("ActionsGitHubCommands.runPreflight")(function* (services: Services, binding: Actions.Binding, intent: Actions.OperationIntent, id: string) {
+  const value = yield* before(binding, services.reader.run(binding, id))
+  if (value.id !== id || value.bindingID !== binding.id || value.repositoryID !== binding.projectID)
+    return yield* fail(binding, "binding_stale", "Reader did not prove the admitted native run ownership")
+  yield* guard(binding, () => input(binding, GitHubNative.SHA, value.commit))
+  if (value.attempt === undefined || !Number.isSafeInteger(value.attempt) || value.attempt < 1)
+    return yield* fail(binding, "capability_unavailable", "Native run attempt was not proved")
+  if ((intent.expected?.commit !== undefined && value.commit.toLowerCase() !== intent.expected.commit.toLowerCase()) ||
+      (intent.expected?.attempt !== undefined && value.attempt !== intent.expected.attempt) ||
+      (intent.target.ref !== undefined && value.ref !== intent.target.ref) ||
+      (intent.target.workflowID !== undefined && value.workflowID !== intent.target.workflowID))
+    return yield* fail(binding, "source_conflict", "Native run source or attempt changed after admission")
+  return value
+})
+
+export const historical = Effect.fn("ActionsGitHubCommands.historicalSource")(function* (services: Services, binding: Actions.Binding, intent: Actions.OperationIntent, value: Actions.Run, response?: ActionsContract.Response) {
+  if (intent.expected?.sourceVersion === undefined && intent.target.path === undefined && (intent.kind === "job.retry" || intent.expected?.resourceVersion === undefined)) return
+  const metadata = response ?? (yield* get(services, binding, `repositories/${binding.projectID}/actions/runs/${value.id}`))
+  yield* guard(binding, () => {
+    const native = GitHubNative.decode(binding, Schema.Struct({ id: GitHubNative.ID, head_sha: GitHubNative.SHA,
+      run_attempt: GitHubNative.Positive, path: Schema.NonEmptyString, repository: Schema.Struct({ id: GitHubNative.ID }),
+      status: Schema.NullOr(Schema.String), conclusion: Schema.optionalKey(Schema.NullOr(Schema.String)), event: Schema.String }), metadata.data, "run source")
+    if (String(native.id) !== value.id || String(native.repository.id) !== binding.projectID || native.head_sha.toLowerCase() !== value.commit.toLowerCase() || native.run_attempt !== value.attempt)
+      throw fail(binding, "source_conflict", "Native run metadata changed during preflight")
+    if (native.status !== value.status || native.conclusion !== value.conclusion || native.event !== value.event)
+      throw fail(binding, "source_conflict", "Native run conditions changed during preflight")
+    if (intent.target.path !== undefined && native.path !== intent.target.path) throw fail(binding, "source_conflict", "Admitted source path does not match native run provenance")
+    if (intent.kind !== "job.retry") version(binding, intent.expected, metadata)
+  })
+  if (intent.expected?.sourceVersion === undefined) return
+  const native = yield* guard(binding, () => GitHubNative.decode(binding, Schema.Struct({ path: Schema.NonEmptyString }), metadata.data, "run path"))
+  const selected = yield* before(binding, services.reader.source(binding, { path: native.path, ref: value.commit }))
+  yield* guard(binding, () => source(binding, intent, selected, native.path, value.commit, value.commit))
+})
+
+export const send = Effect.fn("ActionsGitHubCommands.send")(function* (services: Services, binding: Actions.Binding, request: ActionsContract.Request, statuses: readonly number[]) {
+  // gh reloads CLI credentials per invocation; recheck actor immediately before send.
+  yield* actor(services, binding)
+  const response = yield* services.transport.request(binding, request).pipe(Effect.mapError((error) => {
+    const disposition = error.disposition === "definitely_unsent" || error.disposition === "definitely_rejected" ? error.disposition : "unknown"
+    return new ActionsError({ kind: disposition === "unknown" ? "outcome_unknown" : error.kind, provider: "github", bindingID: binding.id,
+      message: "GitHub command request failed", disposition, retryAfter: error.retryAfter })
+  }))
+  if (statuses.includes(response.status)) return response
+  if ([400, 401, 403, 404, 409, 422, 429].includes(response.status)) {
+    const error = ActionsResponse.failure(binding.provider, 1, Buffer.alloc(0), response.status, { ...response.headers }, true)
+    return yield* fail(binding, error.kind, "GitHub command was rejected by the provider", "definitely_rejected")
+  }
+  return yield* fail(binding, "outcome_unknown", "GitHub command returned an unrecognized acknowledgement", "unknown")
+})
+~~~~
+
+## AUT1-C31
+
+```json
+{"block_id":"AUT1-C31","type":"literal_source_excerpt","requests":["RE-AUT1-06"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/operations.ts","repository_path":"packages/core/src/actions/operations.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"83c0b9e03b063bd59bc2d30317f7de85cbb99ee4","source_sha256":"f4180bfeabef99c0eaddace3f1da7242fb8dacd7d63fb948b84cc014f59a89d4","source_bytes":12124,"body_anchors":["A15","A16","A17"],"requested_subject":"Location/Scope, get/prepare/execute/reconcile completos"}
+```
+
+```json
+{"first_line":16,"last_line":204,"bytes":11296,"sha256":"7134b496a05abd568e7e72d9523c572013c1f2e0690be4f477d93c418e593fb8"}
+```
+
+~~~~typescript
+export const make = Effect.fn("ActionsOperations.make")(function* (locationInput: {
+  readonly directory: string
+  readonly workspaceID?: string
+  readonly projectID: string
+}) {
+  const input = { ...locationInput }
+  const database = yield* Database.Service
+  if (!path.isAbsolute(input.directory) || !input.projectID)
+    return yield* Effect.fail(error("invalid_input", "Actions operations require a trusted absolute Location and project"))
+  const directory = yield* Effect.tryPromise({
+    try: () => realpath(input.directory),
+    catch: () => error("invalid_input", "Actions operation Location is unavailable"),
+  })
+  const location = JSON.stringify([input.projectID, directory, input.workspaceID ?? null])
+  yield* recover(database.db)
+  const disposed = yield* Deferred.make<void>()
+  const lifetime = { closed: false, requests: new Set<Fiber.Fiber<unknown, unknown>>() }
+  yield* Effect.addFinalizer(() => Effect.gen(function* () {
+    lifetime.closed = true
+    const requests = Array.from(lifetime.requests)
+    yield* Deferred.succeed(disposed, undefined)
+    yield* Fiber.awaitAll(requests)
+  }).pipe(Effect.uninterruptible))
+
+  const validate = (binding: Actions.Binding) => {
+    if (lifetime.closed) return error("binding_missing", "Actions operation Location was disposed")
+    if (binding.directory !== directory || binding.workspaceID !== input.workspaceID)
+      return error("host_mismatch", "Actions binding does not belong to this Location")
+    if (!binding.account?.trim()) return error("not_authenticated", "Actions operations require a signed-in provider account")
+  }
+
+  const get: ActionsContract.Operations["get"] = Effect.fn("ActionsOperations.get")(function* (bindingInput, id) {
+    const binding = { ...bindingInput, provider: { ...bindingInput.provider } }
+    const invalid = validate(binding)
+    if (invalid) return yield* Effect.fail(invalid)
+    const row = yield* find(database.db, id)
+    const denied = access(row, location, binding, id)
+    if (denied) return yield* Effect.fail(denied)
+    if (!row) return yield* Effect.fail(error("operation_missing", "Actions operation does not exist", id))
+    const expired = unavailable(row, yield* Clock.currentTimeMillis)
+    if (expired) return yield* Effect.fail(expired)
+    return receipt(row)
+  })
+
+  const prepare: ActionsContract.Operations["prepare"] = Effect.fn("ActionsOperations.prepare")(function* (bindingInput, raw) {
+    const binding = { ...bindingInput, provider: { ...bindingInput.provider } }
+    const invalid = validate(binding)
+    if (invalid) return yield* Effect.fail(invalid)
+    // Strict decoding rejects extras before encoding elides optional undefined
+    // keys. Decode the encoded DTO again to preserve branded identity types.
+    const decoded = yield* Schema.decodeUnknownEffect(Schema.toType(Actions.OperationIntent), { onExcessProperty: "error" })(raw).pipe(
+      Effect.map((value) => Schema.decodeUnknownSync(Actions.OperationIntent)(Schema.encodeSync(Actions.OperationIntent)(value))),
+      Effect.mapError(() => error("invalid_input", "Actions operation intent is invalid")),
+    )
+    if (decoded.binding.id !== binding.id || decoded.binding.revision !== binding.revision)
+      return yield* Effect.fail(error("binding_stale", "Actions operation intent binding changed"))
+    // Maintenance commits independently so a refused expired retry still leaves
+    // a compact, non-executable tombstone rather than rolling cleanup back.
+    yield* safe(database.db.transaction((tx) => Clock.currentTimeMillis.pipe(
+      Effect.flatMap((now) => sweep(tx, now)),
+    ), { behavior: "immediate" }))
+    return yield* safe(database.db.transaction((tx) => Effect.gen(function* () {
+      const now = yield* Clock.currentTimeMillis
+      const existing = yield* tx.select().from(ActionsOperationTable).where(and(
+        eq(ActionsOperationTable.location_key, location), eq(ActionsOperationTable.binding_id, binding.id),
+        eq(ActionsOperationTable.client_id, decoded.clientID),
+      )).get()
+      if (existing) {
+        if (!matches(existing, binding) || !equivalent(intent(existing), decoded))
+          return yield* Effect.fail(error("intent_conflict", "Actions logical intent was already bound to another command", existing.id))
+        const expired = unavailable(existing, now)
+        if (expired) return yield* Effect.fail(expired)
+        return receipt(existing)
+      }
+      const ledger = yield* tx.select({ total: count() }).from(ActionsOperationTable).get()
+      if (!ledger || ledger.total >= LEDGER_LIMIT)
+        return yield* Effect.fail(error("maintenance_required", "Actions admission ledger requires maintenance"))
+      const unknown = yield* tx.select({ total: count() }).from(ActionsOperationTable)
+        .where(eq(ActionsOperationTable.state, "outcome_unknown")).get()
+      if (!unknown || unknown.total >= UNKNOWN_LIMIT)
+        return yield* Effect.fail(error("maintenance_required", "Actions unknown outcome storage requires maintenance"))
+      const inserted = yield* tx.insert(ActionsOperationTable).values({
+        id: Actions.OperationID.create(),
+        location_key: location,
+        project_id: input.projectID,
+        directory,
+        workspace_id: input.workspaceID,
+        binding_id: binding.id,
+        binding_revision: binding.revision,
+        provider_kind: binding.provider.kind,
+        provider_hostname: binding.provider.hostname,
+        provider_api_origin: binding.provider.apiOrigin,
+        provider_project_id: binding.projectID,
+        actor: binding.account ?? "",
+        client_id: decoded.clientID,
+        kind: decoded.kind,
+        target: decoded.target,
+        expected: decoded.expected,
+        state: "prepared",
+        time_created: now,
+        time_expires: now + LEASE,
+        time_updated: now,
+      }).returning().get()
+      if (!inserted) return yield* Effect.fail(error("maintenance_required", "Actions operation admission could not be stored"))
+      return receipt(inserted)
+    }), { behavior: "immediate" }))
+  })
+
+  const execute: ActionsContract.Operations["execute"] = Effect.fn("ActionsOperations.execute")((bindingInput, submission, perform) =>
+    Effect.uninterruptibleMask((restore) => Effect.withFiber((fiber) => Effect.gen(function* () {
+      const binding = { ...bindingInput, provider: { ...bindingInput.provider } }
+      const invalid = validate(binding)
+      if (invalid) return yield* Effect.fail(invalid)
+      const row = yield* find(database.db, submission.id)
+      const denied = access(row, location, binding, submission.id)
+      if (denied) return yield* Effect.fail(denied)
+      if (!row) return yield* Effect.fail(error("operation_missing", "Actions operation does not exist", submission.id))
+      const now = yield* Clock.currentTimeMillis
+      const expired = unavailable(row, now)
+      if (expired) return yield* Effect.fail(expired)
+      if (row.state !== "prepared") return receipt(row)
+
+      // Register before the durable claim so disposal cannot race the CAS/cleanup
+      // handoff. This fiber remains the caller's request, never a shared worker.
+      lifetime.requests.add(fiber)
+      return yield* Effect.gen(function* () {
+        if (lifetime.closed) return yield* Effect.fail(error("binding_missing", "Actions operation Location was disposed"))
+        const claimed = yield* safe(database.db.transaction((tx) => Effect.gen(function* () {
+          if (lifetime.closed) return yield* Effect.fail(error("binding_missing", "Actions operation Location was disposed"))
+          // Sample time after acquiring SQLite's write reservation, not before
+          // waiting for it. A lease may expire while the request waits to claim.
+          const claimTime = yield* Clock.currentTimeMillis
+          return yield* tx.update(ActionsOperationTable).set({ state: "sending", time_updated: claimTime })
+            .where(and(
+              eq(ActionsOperationTable.id, row.id), eq(ActionsOperationTable.location_key, location),
+              eq(ActionsOperationTable.binding_id, binding.id), eq(ActionsOperationTable.binding_revision, binding.revision),
+              eq(ActionsOperationTable.actor, row.actor), eq(ActionsOperationTable.state, "prepared"),
+              gt(ActionsOperationTable.time_expires, claimTime),
+            )).returning().get()
+        }), { behavior: "immediate" }))
+        if (!claimed) return yield* get(binding, row.id)
+        yield* restore(Effect.suspend(() => lifetime.closed ? Effect.interrupt : perform(intent(claimed), submission.input)).pipe(
+          Effect.flatMap(checkedAcknowledgement),
+          Effect.scoped,
+          Effect.timeout(DEADLINE),
+          Effect.raceFirst(Deferred.await(disposed).pipe(Effect.andThen(Effect.interrupt))),
+          Effect.catchCause((cause) => Cause.hasInterrupts(cause)
+            ? Effect.interrupt
+            : Effect.fail(definitive(cause) ?? error("outcome_unknown", "Actions provider outcome was not established", row.id))),
+        )).pipe(Effect.onExit((exit) => finalize(database.db, row.id, exit)))
+        return yield* get(binding, row.id)
+      }).pipe(Effect.ensuring(Effect.sync(() => lifetime.requests.delete(fiber))))
+    }))),
+  )
+
+  const reconcile: ActionsContract.Operations["reconcile"] = Effect.fn("ActionsOperations.reconcile")((bindingInput, id, observe) =>
+    Effect.uninterruptibleMask((restore) => Effect.withFiber((fiber) => Effect.gen(function* () {
+      const binding = { ...bindingInput, provider: { ...bindingInput.provider } }
+      const invalid = validate(binding)
+      if (invalid) return yield* Effect.fail(invalid)
+      const row = yield* find(database.db, id)
+      const denied = access(row, location, binding, id)
+      if (denied) return yield* Effect.fail(denied)
+      if (!row) return yield* Effect.fail(error("operation_missing", "Actions operation does not exist", id))
+      const expired = unavailable(row, yield* Clock.currentTimeMillis)
+      if (expired) return yield* Effect.fail(expired)
+      if (row.state !== "accepted" && row.state !== "outcome_unknown") return receipt(row)
+      lifetime.requests.add(fiber)
+      return yield* Effect.gen(function* () {
+        const observation = yield* restore(Effect.suspend(() => lifetime.closed ? Effect.interrupt : observe(
+          structuredClone(intent(row)), row.result == null ? undefined : structuredClone(row.result),
+        )).pipe(
+          Effect.flatMap(checkedObservation), Effect.scoped, Effect.timeout(DEADLINE),
+          Effect.raceFirst(Deferred.await(disposed).pipe(Effect.andThen(Effect.interrupt))),
+          Effect.catchCause((cause) => {
+            if (Cause.hasInterrupts(cause)) return Effect.interrupt
+            const failure = Cause.findErrorOption(cause)
+            return Effect.fail(Option.isSome(failure) && failure.value instanceof ActionsError
+              ? failure.value : error("transport_failed", "Actions operation observation failed", id))
+          }),
+        ))
+        const observed = yield* update(database.db, row, observation)
+        return observed ? receipt(observed) : yield* get(binding, id)
+      }).pipe(Effect.ensuring(Effect.sync(() => lifetime.requests.delete(fiber))))
+    }))),
+  )
+
+  return { prepare, execute, get, reconcile } satisfies ActionsContract.Operations
+})
+~~~~
+
+## AUT1-C32
+
+```json
+{"block_id":"AUT1-C32","type":"literal_source_excerpt","requests":["RE-AUT1-06"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/operations/sql.ts","repository_path":"packages/core/src/actions/operations/sql.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"63cad8cb4926acd4adc6c285bd6b1f1f64a238cc","source_sha256":"07f2de775a5e5352859f1bf041e32865b3681ec2db85fd4e367823fe2a00da75","source_bytes":1580,"body_anchors":["A15"],"requested_subject":"Todos os campos persistidos e unicidade"}
+```
+
+```json
+{"first_line":1,"last_line":35,"bytes":1580,"sha256":"07f2de775a5e5352859f1bf041e32865b3681ec2db85fd4e367823fe2a00da75"}
+```
+
+~~~~typescript
+import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
+import type { Actions } from "@orchestra/schema/actions"
+
+export const ActionsOperationTable = sqliteTable(
+  "actions_operation",
+  {
+    id: text().$type<Actions.OperationID>().primaryKey(),
+    location_key: text().notNull(),
+    project_id: text().notNull(),
+    directory: text().notNull(),
+    workspace_id: text(),
+    binding_id: text().$type<Actions.BindingID>().notNull(),
+    binding_revision: integer().notNull(),
+    provider_kind: text().$type<Actions.ProviderKind>().notNull(),
+    provider_hostname: text().notNull(),
+    provider_api_origin: text().notNull(),
+    provider_project_id: text().notNull(),
+    actor: text().notNull(),
+    client_id: text().notNull(),
+    kind: text().$type<Actions.OperationKind>().notNull(),
+    target: text({ mode: "json" }).$type<Actions.OperationTarget>().notNull(),
+    expected: text({ mode: "json" }).$type<Actions.OperationExpected>(),
+    state: text().$type<Actions.Operation["state"]>().notNull(),
+    time_created: integer().notNull(),
+    time_expires: integer().notNull(),
+    time_updated: integer().notNull(),
+    result: text({ mode: "json" }).$type<Actions.Operation["result"]>(),
+    reason: text(),
+  },
+  (table) => [
+    uniqueIndex("actions_operation_location_binding_client_idx").on(table.location_key, table.binding_id, table.client_id),
+    index("actions_operation_state_expires_idx").on(table.state, table.time_expires),
+    index("actions_operation_state_updated_idx").on(table.state, table.time_updated),
+  ],
+)
+~~~~
+
+## AUT1-C33
+
+```json
+{"block_id":"AUT1-C33","type":"literal_source_excerpt","requests":["RE-AUT1-06"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/operations/storage.ts","repository_path":"packages/core/src/actions/operations/storage.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"d7633da87c8fe5b41319e23c6ca9e9092d152e4e","source_sha256":"433462cdc96bbeda49a85f46e9c96954cee753822165329caac5c26c748ff2b4","source_bytes":7588,"body_anchors":["A16"],"requested_subject":"Constants, access/matches/unavailable/sweep/recover/finalize/identity completos"}
+```
+
+```json
+{"first_line":9,"last_line":142,"bytes":7230,"sha256":"e36babb96201c8d75736b794995d75428b1b42127406728b683340bf71137c6d"}
+```
+
+~~~~typescript
+export type DB = Database.Interface["db"]
+export type Row = typeof ActionsOperationTable.$inferSelect
+export const LEASE = 24 * 60 * 60 * 1000
+export const RETENTION = 30 * LEASE
+export const UNKNOWN_LIMIT = 10_000
+export const LEDGER_LIMIT = 100_000
+export const DEADLINE = "30 seconds"
+export const RECEIPT_EXPIRED = "Actions operation receipt retention elapsed"
+export const LEASE_EXPIRED = "Actions operation lease expired"
+
+export function error(kind: Actions.ErrorKind, message: string, operationID?: Actions.OperationID) {
+  return new ActionsError({ kind, message, operationID })
+}
+
+export function safe<A, E, R>(effect: Effect.Effect<A, E, R>) {
+  return effect.pipe(
+    Effect.mapError((cause) =>
+      cause instanceof ActionsError ? cause : error("maintenance_required", "Actions operation storage is unavailable"),
+    ),
+    Effect.catchDefect(() => Effect.fail(error("maintenance_required", "Actions operation storage is unavailable"))),
+  )
+}
+
+export function receipt(row: Row): Actions.Operation {
+  return {
+    id: row.id,
+    bindingID: row.binding_id,
+    clientID: row.client_id,
+    kind: row.kind,
+    state: row.state,
+    target: row.target,
+    createdAt: row.time_created,
+    expiresAt: row.time_expires,
+    updatedAt: row.time_updated,
+    ...(row.result == null ? {} : { result: row.result }),
+    ...(row.reason === null ? {} : { reason: row.reason }),
+  }
+}
+
+export function intent(row: Row): Actions.OperationIntent {
+  return {
+    clientID: row.client_id,
+    binding: { id: row.binding_id, revision: row.binding_revision },
+    kind: row.kind,
+    target: row.target,
+    ...(row.expected === null ? {} : { expected: row.expected }),
+  }
+}
+
+export const equivalent = Schema.toEquivalence(Actions.OperationIntent)
+
+export function matches(row: Row, binding: Actions.Binding) {
+  return row.binding_revision === binding.revision && row.actor === binding.account &&
+
+END_PART

@@ -1,0 +1,199 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "relay": "/root/review_relay",
+  "packet": "automation-1-supplement-v2-coverage-erratum",
+  "source": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/automation-1-supplement-v2-coverage-erratum.md",
+  "source_bytes": 344323,
+  "source_sha256": "1599aa38f34decbc6bff88c972ed778d5f49e179dca7ac2915d37ecacf245a4b",
+  "parts_per_target": 6,
+  "calls": [
+    {
+      "sequence": 1,
+      "target": "/root/s1_03_j2",
+      "part": 1,
+      "request_file": "request-j2-01.json",
+      "request_file_bytes": 60171,
+      "request_file_sha256": "5d89165a70e29130fa487236c1eb3033db36053d2cff5cd58383dd616901d119",
+      "message_bytes": 57844,
+      "message_sha256": "d7434d8f7425dab9e89081ee14976ad5725456b84d20c7be9eb2f69eeb5d819d",
+      "payload_bytes": 57361,
+      "payload_sha256": "f21b643937f7c7c9a31f9073de6581834ae31a0cc8e738fa7919443072c413f5",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": null,
+      "tool_result_text": "Output exceeded the available model context and was truncated",
+      "provider_dispatch_id": null,
+      "tool_result_display_truncated": true,
+      "dispatch_observation": "Actual followup_task invoked; truncated tool-result display. No resend. Native completed ACK confirms part 1/6 through AUT1-C05 opening."
+    },
+    {
+      "sequence": 2,
+      "target": "/root/s1_03_j2",
+      "part": 2,
+      "request_file": "request-j2-02.json",
+      "request_file_bytes": 59714,
+      "request_file_sha256": "3af276e0ece9b62a01d30798bf22c66bf74157cf8ad9d437bfb18b720aeaf495",
+      "message_bytes": 57650,
+      "message_sha256": "084666d2895679ba682efabfb851f6c360e2991be4ba121419aa0ab6cfb95c48",
+      "payload_bytes": 57488,
+      "payload_sha256": "26b8e22b68f5633ea1cd75882e1233514d950ca7ff7fec4d54f6c262c7d41cb2",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 3,
+      "target": "/root/s1_03_j2",
+      "part": 3,
+      "request_file": "request-j2-03.json",
+      "request_file_bytes": 59621,
+      "request_file_sha256": "b1e493455beba34fbc1829fdd3c27005ed7906e081c7464d026e09d9cf0a5813",
+      "message_bytes": 57309,
+      "message_sha256": "eb1a7ca53eb015600a2041890619839c53c4fbde7f1304418f88fbece3f127fc",
+      "payload_bytes": 57147,
+      "payload_sha256": "b1bcf03269a79058661b8a3a91db2b122dc8d481a23d22db8973fa281aadefe6",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 4,
+      "target": "/root/s1_03_j2",
+      "part": 4,
+      "request_file": "request-j2-04.json",
+      "request_file_bytes": 60134,
+      "request_file_sha256": "7939deecaf0deea8d2b7c8f38b079a1103c3ad01261d0abc84f48e29fb5396f5",
+      "message_bytes": 57760,
+      "message_sha256": "b11c7c12b2e41f525d69242cb6a6c51d58794faabc4a93a84b1265897678349d",
+      "payload_bytes": 57598,
+      "payload_sha256": "b59753f9ee4a3bdd427d21b224fad9bb04870335c58663a6db2824b44c9d3705",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 5,
+      "target": "/root/s1_03_j2",
+      "part": 5,
+      "request_file": "request-j2-05.json",
+      "request_file_bytes": 59810,
+      "request_file_sha256": "1cab369e2b40daa76844dec465f8c07246ce146237f238a96aaf8c9b0aba0a6c",
+      "message_bytes": 57509,
+      "message_sha256": "b430e79848bcd03f01a876d74be85b73fcda5523f9374b087eb8e7da9f7006e5",
+      "payload_bytes": 57347,
+      "payload_sha256": "53328661c411fd057281b2c1f8bb3963e7fae6bb646d0b8695f2597461a56ad9",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 6,
+      "target": "/root/s1_03_j2",
+      "part": 6,
+      "request_file": "request-j2-06.json",
+      "request_file_bytes": 60517,
+      "request_file_sha256": "39cefb19df3c3d6912088c9611826789790f20f7b6d72582551d667925d213b4",
+      "message_bytes": 58003,
+      "message_sha256": "059a555c04ecc5c5d2c05a32578ad51caf7fb0c6e0f21a252855ea2e4298efd3",
+      "payload_bytes": 57382,
+      "payload_sha256": "f0395ecce15204ef18f57aeb166d97c5adf9703f7e30cae0cfc96e58c694e3e6",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    }
+  ],
+  "known_transcription_corrections": [],
+  "receipt_limit": "Hashes describe recorded requests and local reconstruction, not remote verification or semantic sufficiency. The first actual call returned a truncated tool-result display; no provider dispatch ID was available.",
+  "delivery_scope": "Literal UTF-8 packet only; final signal is outside payload.",
+  "slot_handling": "Root owns J1; relay owns J2. Research L4 author completed and root authorized both judges concurrently. Next J2 lot is derived-research-maintenance-v1 only after current final preserved.",
+  "judgment_capture": "J2 original final preserved verbatim; J1 transport and capture owned by root separately.",
+  "dispatch_count": 6,
+  "recorded_at_utc": "2026-11-15T06:13:30.144451+00:00",
+  "completed_targets": [
+    "/root/s1_03_j2"
+  ],
+  "pending_targets": [],
+  "local_recorded_reconstruction": [
+    {
+      "target": "/root/s1_03_j2",
+      "bytes": 344323,
+      "sha256": "1599aa38f34decbc6bff88c972ed778d5f49e179dca7ac2915d37ecacf245a4b",
+      "equals_source": true,
+      "raw_bytes": 344323,
+      "raw_sha256": "1599aa38f34decbc6bff88c972ed778d5f49e179dca7ac2915d37ecacf245a4b",
+      "corrections_applied": false
+    }
+  ],
+  "transport_ownership": {
+    "/root/s1_03_j1": "/root; separate relay-root receipts; part 1 ACK preserved by root, paused during research L4 authorship",
+    "/root/s1_03_j2": "/root/review_relay; actual calls in this receipt only"
+  },
+  "acknowledgments": [
+    {
+      "target": "/root/s1_03_j2",
+      "file": "ack-j2-01.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 282,
+      "sha256": "22cc2d589b395d9a059d1b47aec6b007c95fee60be0a13af38f90ad10b781904",
+      "terminal_newline": false,
+      "literal": true,
+      "captured_at_utc": "2026-11-15T05:59:28.692357+00:00"
+    },
+    {
+      "target": "/root/s1_03_j2",
+      "file": "ack-j2-02.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 275,
+      "sha256": "e78985e0908e4d4d0a959fbbf02ce1f0425375f339126b521aa296beb51a9ed2",
+      "terminal_newline": false,
+      "literal": true,
+      "captured_at_utc": "2026-11-15T06:02:20.983282+00:00"
+    },
+    {
+      "target": "/root/s1_03_j2",
+      "file": "ack-j2-03.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 276,
+      "sha256": "e8b3c80b3ee03e6e5062c4f102b648fe0e2497a42280b0dd742fc2cfe7bee25a",
+      "terminal_newline": false,
+      "literal": true,
+      "captured_at_utc": "2026-11-15T06:05:08.574163+00:00"
+    },
+    {
+      "target": "/root/s1_03_j2",
+      "file": "ack-j2-04.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 261,
+      "sha256": "a6bf31e4a5ffa066b4586ead031120b4b17a848fc01622e0c08ecbb0e41a075f",
+      "terminal_newline": false,
+      "literal": true,
+      "captured_at_utc": "2026-11-15T06:08:16.838727+00:00"
+    },
+    {
+      "target": "/root/s1_03_j2",
+      "file": "ack-j2-05.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 278,
+      "sha256": "ce491d4ddccb503cded54d6f86f143c82998798a9c46dde8f1db5d71dbcf9766",
+      "terminal_newline": false,
+      "literal": true,
+      "captured_at_utc": "2026-11-15T06:11:02.221759+00:00"
+    }
+  ],
+  "judgment_captures": {
+    "j2": {
+      "target": "/root/s1_03_j2",
+      "file": "j2-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 3581,
+      "sha256": "b7aed9190435dd3d829758cc6d3ed9b9a40d2b29236d6c23ebea4942e9b8cbd8",
+      "terminal_newline": false,
+      "literal": true,
+      "captured_at_utc": "2026-11-15T06:16:10.589397+00:00"
+    }
+  }
+}

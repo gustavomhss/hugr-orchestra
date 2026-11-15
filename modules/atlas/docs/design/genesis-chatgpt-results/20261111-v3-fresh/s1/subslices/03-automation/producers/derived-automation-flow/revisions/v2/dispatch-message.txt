@@ -1,0 +1,8 @@
+Continuação da sua família de automação, somente correção L2 v2, antes da primeira revisão semântica desse corpo.
+
+Raiz: /workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390
+Leia integralmente payload/recipes/derived/automation-flow-source-fidelity-v2.json (7391 bytes, SHA256 16c2b4e2efc5a6e2ea6a111540e7a662ce154af3c58c366306e254f23d9b3364) e producers/derived-automation-flow/revisions/v2/request.txt (841 bytes, SHA256 34caa0867a7d0c02dd94c37f789c0af7262132bf4f2359563021b8df3977e769). Cumpra os limites de leitura e escrita da receita.
+
+Os dois achados públicos AF-L2-PREVIEW-01/02 comparam sua síntese ao predecessor aceito, sem parecer de juiz nem oracle. Somente as duas cláusulas identificadas podem mudar no corpo; preserve os demais bytes. A receita aponta as cópias exatas v1 já preservadas em revisions/v2/history. Sua resposta FINAL original foi capturada e conferida antes deste dispatch.
+
+Registre este dispatch literal em producers/derived-automation-flow/revisions/v2/dispatch-message.txt, sem LF terminal. Atualize evidência, manifesto cumulativo, response e delta conforme receita, com os aliases de histórico e original_read_paths corretos. Nenhuma rede, nova fonte, parecer, oracle, teste de produto, operação Atlas ou delegação. Não avance para L3. FINAL exatamente igual ao response.md, sem LF terminal.

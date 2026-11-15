@@ -1,0 +1,845 @@
+
+export function project(provider: Actions.Provider, data: unknown) {
+  return provider.kind === "github"
+    ? githubProject(data).pipe(Option.map((data) => ({ projectID: String(data.id), projectPath: data.full_name })))
+    : gitlabProject(data).pipe(Option.map((data) => ({ projectID: String(data.id), projectPath: data.path_with_namespace })))
+}
+
+export function account(provider: Actions.Provider, data: unknown) {
+  return provider.kind === "github" ? githubAccount(data).pipe(Option.map((data) => data.login))
+    : gitlabAccount(data).pipe(Option.map((data) => data.username))
+}
+~~~~
+
+## AUT2-C37
+
+```json
+{"block_id":"AUT2-C37","type":"literal_source_excerpt","request_namespace":"J1 canonical groups; J2 mapping in index","requests":["RE-AUT2-05"],"body_anchors":["A34"],"requested_subject":"Parsers headers/JSON/saída completa; failure56–76 reutilizado de AUT1-C45","source_category":"owned_population_source","path":"packages/core/src/actions/transport/response.ts","archive":"sources/packages/core/src/actions/transport/response.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"09aed710878c0e33f33b7e1a8d566074a44ad30a","source_sha256":"dbe2d9284661b36cee41b379cba34f29cd6910df7757b10b94136eb12e6d8192","source_bytes":4934}
+```
+
+```json
+{"first_line":1,"last_line":55,"bytes":3183,"sha256":"c0414db9df802aa5d2a9a30f69717e369b9c191bcb93fba263a6f42d2b44c37b"}
+```
+
+~~~~typescript
+export * as ActionsResponse from "./response"
+
+import { Actions } from "@orchestra/schema/actions"
+import { Effect, Option, Schema } from "effect"
+import { ActionsContract } from "../contract"
+import { ActionsError } from "../error"
+import { ActionsCli } from "./cli"
+
+const json = Schema.decodeUnknownOption(Schema.UnknownFromJsonString.pipe(Schema.decodeTo(Schema.Json)))
+
+export const http = Effect.fn("ActionsTransport.httpResponse")(function* (provider: Actions.Provider, status: number, headers: Record<string, string>, body: Buffer) {
+  if (status >= 300 && status < 400)
+    return yield* ActionsCli.error(provider, "host_mismatch", "Authenticated GitLab redirects require explicit credential-free transfer")
+  const text = yield* Effect.try({
+    try: () => new TextDecoder("utf-8", { fatal: true }).decode(body),
+    catch: () => ActionsCli.error(provider, "transport_failed", "GitLab metadata is not valid UTF-8"),
+  })
+  const data = json(text)
+  if (status < 200 || status > 299) return yield* failure(provider, 1, Buffer.alloc(0), status, headers, Option.isSome(data))
+  if ([201, 202, 204].includes(status) && !text.trim()) return { status, headers, data: null }
+  if (Option.isNone(data)) return yield* ActionsCli.error(provider, "transport_failed", "GitLab response is not valid JSON metadata")
+  return { status, headers, data: data.value }
+})
+
+export const parse = Effect.fn("ActionsTransport.response")(function* (
+  provider: Actions.Provider,
+  result: { stdout: Buffer; stderr: Buffer; exitCode: number },
+): Effect.fn.Return<ActionsContract.Response, ActionsError> {
+  const text = result.stdout.toString("utf8")
+  const boundary = /\r?\n\r?\n/.exec(text)
+  const status = /^HTTP\/\d+(?:\.\d+)? (\d{3})(?: [^\r\n]*)?\r?\n/.exec(text)
+  if (!boundary || !status) {
+    if (result.exitCode !== 0) return yield* failure(provider, result.exitCode, result.stderr)
+    return yield* ActionsCli.error(provider, "transport_failed", "CLI response is missing HTTP status or headers")
+  }
+  const lines = text.slice(status[0].length, boundary.index).split(/\r?\n/).filter(Boolean)
+  if (lines.some((line) => !/^[!#$%&'*+.^_`|~\w-]+:[^\r\n]*$/.test(line)))
+    return yield* ActionsCli.error(provider, "transport_failed", "CLI response has invalid HTTP headers")
+  const headers = Object.fromEntries(lines.reduce((headers, line) => {
+    const index = line.indexOf(":")
+    const key = line.slice(0, index).toLowerCase()
+    const value = line.slice(index + 1).trim()
+    headers.set(key, headers.has(key) ? `${headers.get(key)}, ${value}` : value)
+    return headers
+  }, new Map<string, string>()))
+  const code = Number(status[1])
+  const body = text.slice(boundary.index + boundary[0].length)
+  const data = json(body)
+  if (code < 200 || code > 299 || result.exitCode !== 0)
+    return yield* failure(provider, result.exitCode, result.stderr, code, headers, Option.isSome(data))
+  if ([201, 202, 204].includes(code) && !body.trim()) return { status: code, headers, data: null }
+  if (Option.isNone(data)) return yield* ActionsCli.error(provider, "transport_failed", "CLI response is not valid JSON metadata")
+  return { status: code, headers, data: data.value }
+})
+
+~~~~
+
+## AUT2-C38
+
+```json
+{"block_id":"AUT2-C38","type":"literal_source_excerpt","request_namespace":"J1 canonical groups; J2 mapping in index","requests":["RE-AUT2-05","RE-AUT2-06"],"body_anchors":["A32"],"requested_subject":"Process capture/bytes: buffers/timeout, stdin, watchdog, scope, backpressure e exit após EOF","source_category":"owned_population_source","path":"packages/core/src/actions/transport/process.ts","archive":"sources/packages/core/src/actions/transport/process.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"5da8d9899becf4814f9a3011adfafc50d20c5239","source_sha256":"03b52b82e18a5a9a0ec515895218574eefbc433597eeb64b0fb13f452575ce9b","source_bytes":5454}
+```
+
+```json
+{"first_line":1,"last_line":91,"bytes":5454,"sha256":"03b52b82e18a5a9a0ec515895218574eefbc433597eeb64b0fb13f452575ce9b"}
+```
+
+~~~~typescript
+export * as ActionsProcess from "./process"
+
+import { Actions } from "@orchestra/schema/actions"
+import { Deferred, Effect, Exit, Fiber, Scope, Stream } from "effect"
+import { ChildProcess } from "effect/unstable/process"
+import { AppProcess } from "../../process"
+import { ActionsError } from "../error"
+import { ActionsCli } from "./cli"
+import { ActionsResponse } from "./response"
+
+const METADATA_LIMIT = 2 * 1024 * 1024
+const STDERR_LIMIT = 16 * 1024
+
+export const capture = Effect.fn("ActionsTransport.capture")(function* (
+  proc: AppProcess.Interface,
+  provider: Actions.Provider,
+  command: ChildProcess.Command,
+  stdin: Stream.Stream<Uint8Array, ActionsError> = Stream.empty,
+) {
+  return yield* Effect.scoped(Effect.gen(function* () {
+    if (provider.kind !== "github") return yield* ActionsCli.error(provider, "capability_unavailable", "GitLab API calls require the HTTPS transport", "definitely_unsent")
+    // A producer's unsent error cannot describe the CLI call after stdin starts.
+    return yield* collect(proc, provider, command, stdin).pipe(
+      Effect.mapError((cause) => cause instanceof ActionsError
+        ? new ActionsError({ ...cause, message: cause.message, disposition: "unknown" })
+        : ActionsCli.error(provider, "transport_failed", "Provider CLI process failed")),
+    )
+  })).pipe(
+    Effect.timeoutOrElse({ duration: "30 seconds", orElse: () => Effect.fail(ActionsCli.error(provider, "transport_failed", "Provider CLI metadata deadline exceeded")) }),
+  )
+})
+
+export function bytes(proc: AppProcess.Interface, provider: Actions.Provider, command: ChildProcess.Command) {
+  return Stream.unwrap(Effect.gen(function* () {
+    if (provider.kind !== "github") return yield* ActionsCli.error(provider, "capability_unavailable", "GitLab API calls require the HTTPS transport", "definitely_unsent")
+    const scope = yield* Scope.make()
+    // Successful early stream disposal cannot adopt a live transfer child.
+    yield* Effect.addFinalizer((exit) => Scope.close(scope, Exit.isFailure(exit) ? exit : Exit.interrupt()))
+    const stopped = yield* Deferred.make<never, ActionsError>()
+    yield* Effect.forkScoped(Effect.sleep("5 minutes").pipe(Effect.andThen(Effect.gen(function* () {
+      const error = ActionsCli.error(provider, "transfer_failed", "Provider CLI byte transfer deadline exceeded")
+      yield* Deferred.fail(stopped, error)
+      yield* Scope.close(scope, Exit.fail(error)).pipe(Effect.uninterruptible)
+    }))))
+    const handle = yield* proc.spawn(command).pipe(Scope.provide(scope), Effect.raceFirst(Deferred.await(stopped)))
+    // Expected signal termination is data, not an unobserved failed monitor fiber.
+    const exited = yield* handle.exitCode.pipe(Effect.exit, Effect.forkIn(scope))
+    const stderr = yield* AppProcess.collectStream(handle.stderr, STDERR_LIMIT).pipe(Effect.exit, Effect.forkIn(scope))
+    const tail = Stream.fromEffect(Effect.gen(function* () {
+      const code = yield* Fiber.join(exited).pipe(Effect.flatMap((exit) => exit))
+      const diagnostic = yield* Fiber.join(stderr).pipe(Effect.flatMap((exit) => exit))
+      if (code !== 0) {
+        const error = ActionsResponse.failure(provider, code, diagnostic.buffer)
+        return yield* new ActionsError({ ...error, message: error.message, disposition: error.disposition, kind: error.kind === "transport_failed" ? "transfer_failed" : error.kind })
+      }
+    })).pipe(Stream.drain)
+    const pull = yield* Stream.toPull(Stream.concat(handle.stdout, tail)).pipe(Scope.provide(scope), Effect.raceFirst(Deferred.await(stopped)))
+    const stderrFailure = Fiber.join(stderr).pipe(Effect.flatMap((exit) => Exit.isFailure(exit) ? Effect.failCause(exit.cause) : Effect.never))
+    return Stream.fromPull(Effect.succeed(Effect.gen(function* () {
+      if (yield* Deferred.isDone(stopped)) return yield* Deferred.await(stopped)
+      const exit = yield* pull.pipe(Effect.raceFirst(stderrFailure), Effect.raceFirst(Deferred.await(stopped)), Effect.exit)
+      if (yield* Deferred.isDone(stopped)) return yield* Deferred.await(stopped)
+      return yield* exit
+    })))
+  })).pipe(
+    Stream.mapError((cause) => cause instanceof ActionsError ? cause : ActionsCli.error(provider, "transfer_failed", "Provider CLI byte transfer failed")),
+  )
+}
+
+const collect = Effect.fn("ActionsTransport.collect")(function* (
+  proc: AppProcess.Interface, provider: Actions.Provider, command: ChildProcess.Command,
+  stdin: Stream.Stream<Uint8Array, ActionsError> = Stream.empty,
+) {
+  const handle = yield* proc.spawn(command)
+  const result = yield* Effect.all({
+    stdout: bounded(handle.stdout, provider, METADATA_LIMIT),
+    stderr: bounded(handle.stderr, provider, STDERR_LIMIT),
+    exitCode: handle.exitCode, input: Stream.run(stdin, handle.stdin),
+  }, { concurrency: "unbounded" })
+  return { stdout: result.stdout, stderr: result.stderr, exitCode: result.exitCode }
+})
+
+function bounded<E>(stream: Stream.Stream<Uint8Array, E>, provider: Actions.Provider, limit: number) {
+  return Stream.runFoldEffect(stream, () => ({ chunks: [] as Uint8Array[], size: 0 }), (state, chunk) => {
+    if (state.size + chunk.byteLength > limit)
+      return Effect.fail(ActionsCli.error(provider, "metadata_truncated", "Provider CLI output exceeded the metadata capture limit"))
+    state.chunks.push(chunk)
+    state.size += chunk.byteLength
+    return Effect.succeed(state)
+  }).pipe(Effect.map((state) => Buffer.concat(state.chunks)))
+}
+~~~~
+
+## AUT2-C39
+
+```json
+{"block_id":"AUT2-C39","type":"literal_source_excerpt","request_namespace":"J1 canonical groups; J2 mapping in index","requests":["RE-AUT2-06"],"body_anchors":["A35","A36"],"requested_subject":"Chamador de open(renew=true), recusa 206/content-range antes de body, watchdog e Scope/Pull","source_category":"owned_population_source","path":"packages/core/src/actions/output/index.ts","archive":"sources/packages/core/src/actions/output/index.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"97a1115aea631b1a1b8b7dc6ad438e3fb5bb1ace","source_sha256":"acf076da8a2806947561dc865a4eeb1db09d34494a3fb977c81166e04acbbc00","source_bytes":4816}
+```
+
+```json
+{"first_line":1,"last_line":66,"bytes":4816,"sha256":"acf076da8a2806947561dc865a4eeb1db09d34494a3fb977c81166e04acbbc00"}
+```
+
+~~~~typescript
+export * as ActionsOutput from "./index"
+
+import { Actions } from "@orchestra/schema/actions"
+import { Deferred, Effect, Exit, Scope, Stream } from "effect"
+import { ActionsContract } from "../contract"
+import { ActionsError } from "../error"
+import { OutputArtifacts } from "./artifacts"
+import { OutputDownload } from "./download"
+import { OutputHeaders } from "./headers"
+import { OutputNative } from "./native"
+import { OutputTarget } from "./target"
+
+export function make(input: { transport: ActionsContract.Transport; reader: ActionsContract.ReadAdapter }) {
+  const bound = <A, R>(binding: Actions.Binding, effect: Effect.Effect<A, ActionsError, R>) => effect.pipe(
+    Effect.mapError((error) => new ActionsError({ ...error, message: error.message, disposition: error.disposition,
+      bindingID: binding.id, provider: binding.provider.kind })))
+  return {
+    artifacts: (binding: Actions.Binding, value: Actions.ResourceListInput) => bound(binding,
+      OutputArtifacts.list(input.transport, input.reader, binding, value).pipe(Effect.timeoutOrElse({ duration: "30 seconds",
+        orElse: () => Effect.fail(OutputNative.error(binding, "transport_failed", "CI artifact inventory deadline exceeded")) }))),
+    info: (binding: Actions.Binding, value: Actions.TransferInput): Effect.Effect<OutputHeaders.Info, ActionsError> => bound(binding,
+      Effect.scoped(Effect.gen(function* () {
+        const target = yield* OutputTarget.resolve(input.transport, input.reader, binding, value)
+        if (binding.provider.kind === "github") return target.info
+        const opened = yield* OutputDownload.open(input.transport, input.reader, binding, value, target)
+        const info = yield* OutputNative.checked(binding, () => OutputHeaders.info(binding, opened.info, opened.response.headers))
+        yield* opened.response.close
+        return info
+      })).pipe(Effect.timeoutOrElse({ duration: "30 seconds", orElse: () => Effect.fail(OutputNative.error(binding, "transfer_failed", "CI output metadata deadline exceeded")) }))),
+    read: (binding: Actions.Binding, value: Actions.TransferInput): Stream.Stream<Uint8Array, ActionsError> => Stream.unwrap(bound(binding,
+      Effect.gen(function* () {
+        const scope = yield* Scope.make()
+        yield* Effect.addFinalizer((exit) => Scope.close(scope, exit))
+        const failure = yield* Deferred.make<never, ActionsError>()
+        // Closing child scope tears down socket/process directly; pull-based stream
+        // timeouts alone cannot release resources under a blocked consumer.
+        yield* Effect.forkScoped(Effect.sleep("5 minutes").pipe(Effect.andThen(Effect.gen(function* () {
+          const error = OutputNative.error(binding, "transfer_failed", "CI output transfer deadline exceeded")
+          yield* Deferred.fail(failure, error)
+          // Finish resource finalizers even if downstream disposes this watchdog.
+          yield* Scope.close(scope, Exit.fail(error)).pipe(Effect.uninterruptible)
+        }))))
+        const stream = yield* Effect.gen(function* () {
+          const target = yield* OutputTarget.resolve(input.transport, input.reader, binding, value)
+          if (binding.provider.kind === "github") return input.transport.bytes(binding, target.request)
+          const opened = yield* OutputDownload.open(input.transport, input.reader, binding, value, target, true)
+          if (opened.response.status === 206 || opened.response.headers["content-range"] !== undefined)
+            return yield* OutputNative.error(binding, "transfer_failed", "CI output endpoint returned an unrequested partial transfer")
+          yield* OutputNative.checked(binding, () => OutputHeaders.info(binding, opened.info, opened.response.headers))
+          return opened.response.body
+        }).pipe(Scope.provide(scope), Effect.raceFirst(Deferred.await(failure)))
+        // Bind the channel's actual resource scope, not merely its service context.
+        // Nested Stream.unwrap (GH spawn) acquires in this watchdog-owned scope.
+        const pull = yield* Stream.toPull(stream).pipe(Scope.provide(scope), Effect.raceFirst(Deferred.await(failure)))
+        // Preserve deadline failure across downstream-held chunks and cached EOF.
+        return Stream.fromPull(Effect.succeed(Effect.gen(function* () {
+          if (yield* Deferred.isDone(failure)) return yield* Deferred.await(failure)
+          const exit = yield* pull.pipe(Effect.raceFirst(Deferred.await(failure)), Effect.exit)
+          if (yield* Deferred.isDone(failure)) return yield* Deferred.await(failure)
+          return yield* exit
+        }))).pipe(
+          Stream.mapError((error) => new ActionsError({ ...error, message: error.message, disposition: error.disposition,
+            bindingID: binding.id, provider: binding.provider.kind })))
+      }))),
+  }
+}
+~~~~
+
+## AUT2-C40
+
+```json
+{"block_id":"AUT2-C40","type":"literal_source_excerpt","request_namespace":"J1 canonical groups; J2 mapping in index","requests":["RE-AUT2-06"],"body_anchors":["A35"],"requested_subject":"Targets/IDs/attempts/single-file path, ownership e endpoint exato","source_category":"owned_population_source","path":"packages/core/src/actions/output/target.ts","archive":"sources/packages/core/src/actions/output/target.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"9195013d45d2b5deec234398d8a4fde834bf8edd","source_sha256":"162391bc77848f4dc03cb6b340375cfc732bc7f3137a810998196ef17f03bf2d","source_bytes":7464}
+```
+
+```json
+{"first_line":1,"last_line":103,"bytes":7464,"sha256":"162391bc77848f4dc03cb6b340375cfc732bc7f3137a810998196ef17f03bf2d"}
+```
+
+~~~~typescript
+export * as OutputTarget from "./target"
+
+import { Actions } from "@orchestra/schema/actions"
+import { Effect } from "effect"
+import { ActionsContract } from "../contract"
+import { ActionsError } from "../error"
+import { OutputNative } from "./native"
+import { OutputHeaders } from "./headers"
+
+export type Target = { readonly request: ActionsContract.BoundRequest; readonly info: Actions.TransferInfo }
+
+export const resolve = Effect.fn("ActionsOutput.target")(function* (
+  transport: ActionsContract.Transport, reader: ActionsContract.ReadAdapter, binding: Actions.Binding, input: Actions.TransferInput,
+): Effect.fn.Return<Target, ActionsError> {
+  yield* OutputNative.checked(binding, () => {
+    OutputNative.selection(binding, input, Actions.TransferInput, ["kind", "id", "runID", "attempt", "path"])
+    OutputNative.id(binding, input.id)
+    if (input.runID !== undefined) OutputNative.id(binding, input.runID)
+    if (input.attempt !== undefined && (!Number.isSafeInteger(input.attempt) || input.attempt < 1))
+      throw OutputNative.error(binding, "invalid_input", "CI output attempt must be a safe positive native integer")
+    if (input.kind === "secureFile") throw OutputNative.error(binding, "capability_unavailable", "Secure Files are outside CI output")
+    if (input.path !== undefined) {
+      OutputNative.filePath(binding, input.path)
+      if (binding.provider.kind !== "gitlab" || input.kind !== "artifact")
+        throw OutputNative.error(binding, "capability_unavailable", "Direct artifact file reads require the native GitLab job API")
+    }
+    if (binding.provider.kind === "gitlab" && (input.kind === "runLog" || input.attempt !== undefined))
+      throw OutputNative.error(binding, "capability_unavailable", "GitLab exposes job traces and immutable job IDs, not pipeline logs or numeric run attempts")
+    if (binding.provider.kind === "github" && input.kind === "artifact" && input.attempt !== undefined)
+      throw OutputNative.error(binding, "capability_unavailable", "GitHub artifact metadata does not attribute an artifact to a numeric run attempt")
+    if (input.kind === "runLog" && input.runID !== undefined && input.id !== input.runID)
+      throw OutputNative.error(binding, "invalid_input", "Run log ID must equal the selected run ID")
+  })
+  const root = yield* OutputNative.project(transport, binding)
+  if (binding.provider.kind === "gitlab") {
+    const response = yield* OutputNative.get(transport, binding, `${root}/jobs/${input.id}`)
+    const job = yield* OutputNative.checked(binding, () => {
+      const job = OutputNative.decode(binding, OutputNative.GitLabJob, response.data)
+      OutputNative.gitlabOwner(binding, job, input.id, input.runID)
+      if (job.erased_at) throw OutputNative.error(binding, "not_found", "GitLab job output was erased")
+      if (input.kind === "artifact" && OutputNative.gitlabState(job) === "expired")
+        throw OutputNative.error(binding, "not_found", "GitLab job artifacts are expired or unavailable")
+      if (input.kind === "artifact" && !OutputNative.gitlabArchive(job))
+        throw OutputNative.error(binding, "capability_unavailable", "GitLab job has no native downloadable artifact archive")
+      return job
+    })
+    yield* OutputNative.run(reader, binding, String(job.pipeline.id))
+    const archive = OutputNative.gitlabArchive(job)
+    const path = input.path === undefined ? undefined : yield* OutputNative.checked(binding, () => OutputNative.filePath(binding, input.path ?? ""))
+    return { request: { method: "GET", path: `${root}/jobs/${input.id}/${input.kind === "jobLog" ? "trace" : `artifacts${path === undefined ? "" : `/${path}`}`}` },
+      info: { filename: OutputHeaders.filename(input.kind === "jobLog" ? `job-${input.id}.log`
+        : input.path ?? archive?.filename ?? `job-${input.id}-artifacts.zip`, `job-${input.id}.bin`),
+        contentType: input.kind === "jobLog" || path !== undefined ? "text/plain" : "application/zip",
+        ...(input.kind === "artifact" && path === undefined && archive ? { size: archive.size } : {}) } }
+  }
+  if (input.kind === "artifact") {
+    const response = yield* OutputNative.get(transport, binding, `${root}/actions/artifacts/${input.id}`)
+    const artifact = yield* OutputNative.checked(binding, () => {
+      const value = OutputNative.decode(binding, OutputNative.Artifact, response.data)
+      OutputNative.artifactOwner(binding, value, input.id, input.runID)
+      if (value.expired) throw OutputNative.error(binding, "not_found", "GitHub artifact has expired")
+      return value
+    })
+    yield* OutputNative.run(reader, binding, String(artifact.workflow_run.id))
+    return { request: { method: "GET", path: `${root}/actions/artifacts/${input.id}/zip` },
+      info: { filename: OutputHeaders.filename(`${artifact.name}.zip`, `artifact-${input.id}.zip`), contentType: "application/zip",
+        size: artifact.size_in_bytes, ...(artifact.digest ? { digest: artifact.digest } : {}) } }
+  }
+  if (input.kind === "jobLog") {
+    const response = yield* OutputNative.get(transport, binding, `${root}/actions/jobs/${input.id}`)
+    const job = yield* OutputNative.checked(binding, () => {
+      const value = OutputNative.decode(binding, OutputNative.GitHubJob, response.data)
+      if (String(value.id) !== input.id || (input.runID !== undefined && String(value.run_id) !== input.runID) ||
+        (input.attempt !== undefined && value.run_attempt !== input.attempt))
+        throw OutputNative.error(binding, "binding_stale", "GitHub log job differs from the selected job, run or attempt")
+      return value
+    })
+    yield* requireAttempt(transport, reader, binding, root, String(job.run_id), job.run_attempt)
+    return { request: { method: "GET", path: `${root}/actions/jobs/${input.id}/logs` },
+      info: { filename: `job-${input.id}-attempt-${job.run_attempt}.log`, contentType: "text/plain" } }
+  }
+  const run = yield* OutputNative.run(reader, binding, input.id)
+  const attempt = input.attempt ?? run.attempt
+  if (attempt === undefined) return yield* OutputNative.error(binding, "capability_unavailable", "GitHub run metadata did not identify the log attempt")
+  yield* requireAttempt(transport, reader, binding, root, input.id, attempt, run)
+  return { request: { method: "GET", path: `${root}/actions/runs/${input.id}/attempts/${attempt}/logs` },
+    info: { filename: `run-${input.id}-attempt-${attempt}-logs.zip`, contentType: "application/zip" } }
+})
+
+const requireAttempt = Effect.fn("ActionsOutput.attempt")(function* (
+  transport: ActionsContract.Transport, reader: ActionsContract.ReadAdapter, binding: Actions.Binding, root: string,
+  runID: string, attempt: number, observed?: Actions.Run,
+) {
+  const run = observed ?? (yield* OutputNative.run(reader, binding, runID))
+  if (run.attempt === undefined || attempt > run.attempt)
+    return yield* OutputNative.error(binding, "binding_stale", "Selected GitHub log attempt does not exist on this run")
+  const response = yield* OutputNative.get(transport, binding, `${root}/actions/runs/${runID}/attempts/${attempt}`)
+  yield* OutputNative.checked(binding, () => {
+    const value = OutputNative.decode(binding, OutputNative.GitHubAttempt, response.data)
+    if (String(value.id) !== runID || String(value.repository.id) !== binding.projectID || value.run_attempt !== attempt)
+      throw OutputNative.error(binding, "binding_stale", "GitHub native log attempt belongs to a different repository, run or attempt")
+  })
+})
+~~~~
+
+## AUT2-C41
+
+```json
+{"block_id":"AUT2-C41","type":"literal_source_excerpt","request_namespace":"J1 canonical groups; J2 mapping in index","requests":["RE-AUT2-04","RE-AUT2-06"],"body_anchors":["A35"],"requested_subject":"Schemas/ownership/erased/expired e parsers de outputs nativos","source_category":"owned_population_source","path":"packages/core/src/actions/output/native.ts","archive":"sources/packages/core/src/actions/output/native.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"93f8202c25955c4105c25f2ccdfada2df3352ad3","source_sha256":"200f3167fa58f45c0d9470ae9d50145392a05bb23f193c22e750214ca73a775b","source_bytes":10694}
+```
+
+```json
+{"first_line":1,"last_line":167,"bytes":10694,"sha256":"200f3167fa58f45c0d9470ae9d50145392a05bb23f193c22e750214ca73a775b"}
+```
+
+~~~~typescript
+export * as OutputNative from "./native"
+
+import { Actions } from "@orchestra/schema/actions"
+import { Effect, Option, Schema } from "effect"
+import { ActionsContract } from "../contract"
+import { ActionsError } from "../error"
+import { ActionsCursor } from "../cursor"
+import { ActionsResponse } from "../transport/response"
+
+export const ID = Schema.Union([
+  Schema.String.check(Schema.isPattern(/^[1-9]\d{0,127}$/)),
+  Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: Number.MAX_SAFE_INTEGER })),
+])
+export const Count = Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: Number.MAX_SAFE_INTEGER }))
+export const Positive = Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: Number.MAX_SAFE_INTEGER }))
+export const Text = Schema.String.check(Schema.isMaxLength(4096))
+export const Time = Schema.String.check(Schema.isMaxLength(64),
+  Schema.isPattern(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)$/),
+  Schema.makeFilter((value: string) => Number.isFinite(Date.parse(value)) ? undefined : "Invalid native timestamp"))
+export const Artifact = Schema.Struct({
+  id: ID, name: Text, size_in_bytes: Count, expired: Schema.Boolean,
+  created_at: Schema.optionalKey(Time), updated_at: Schema.optionalKey(Time), expires_at: Schema.optionalKey(Schema.NullOr(Time)),
+  digest: Schema.optionalKey(Schema.NullOr(Schema.String.check(Schema.isPattern(/^sha256:[a-f0-9]{64}$/i)))),
+  workflow_run: Schema.Struct({ id: ID, repository_id: ID, head_repository_id: Schema.optionalKey(ID),
+    head_branch: Schema.optionalKey(Schema.NullOr(Text)), head_sha: Schema.optionalKey(Text) }),
+})
+export const GitHubJob = Schema.Struct({ id: ID, run_id: ID, run_attempt: Positive, name: Text })
+export const GitHubAttempt = Schema.Struct({ id: ID, run_attempt: Positive, repository: Schema.Struct({ id: ID }) })
+export const GitLabFile = Schema.Struct({ file_type: Text, size: Count, filename: Text, file_format: Schema.optionalKey(Schema.NullOr(Text)) })
+const EmptyArtifactFile = Schema.Struct({}).annotate({ parseOptions: { onExcessProperty: "error" } })
+export const GitLabJob = Schema.Struct({
+  id: ID, name: Text, status: Schema.NullOr(Text), pipeline: Schema.Struct({ id: ID, project_id: ID }),
+  artifacts: Schema.Array(GitLabFile).check(Schema.isMaxLength(1000)),
+  artifacts_file: Schema.optionalKey(Schema.NullOr(Schema.Union([Schema.Struct({ filename: Text, size: Count }), EmptyArtifactFile]))),
+  artifacts_expire_at: Schema.optionalKey(Schema.NullOr(Time)), erased_at: Schema.optionalKey(Schema.NullOr(Time)),
+})
+
+export function error(binding: Actions.Binding, kind: Actions.ErrorKind, message: string) {
+  return new ActionsError({ kind, message, bindingID: binding.id, provider: binding.provider.kind,
+    disposition: kind === "invalid_input" || kind === "capability_unavailable" ? "definitely_unsent" : "unknown" })
+}
+
+export function checked<A>(binding: Actions.Binding, body: () => A) {
+  return Effect.try({ try: body, catch: (cause) => cause instanceof ActionsError ? cause
+    : error(binding, "transport_failed", "CI output metadata could not be interpreted safely") })
+}
+
+export function decode<A>(binding: Actions.Binding, schema: Schema.Decoder<A>, data: unknown): A {
+  const decoded = Schema.decodeUnknownOption(schema)(data)
+  if (Option.isNone(decoded)) throw error(binding, "transport_failed", "Provider returned invalid native CI output metadata")
+  return decoded.value
+}
+
+export function id(binding: Actions.Binding, value: string) {
+  if (typeof value !== "string" || !/^[1-9]\d{0,127}$/.test(value))
+    throw error(binding, "invalid_input", "CI output target ID must be a canonical positive decimal")
+  return value
+}
+
+export function root(binding: Actions.Binding) {
+  return `${binding.provider.kind === "github" ? "repositories" : "projects"}/${id(binding, binding.projectID)}`
+}
+
+export function selection(binding: Actions.Binding, input: object, schema: Schema.Top, fields: readonly string[]) {
+  if (Option.isNone(Schema.decodeUnknownOption(Schema.toType(schema))(input)) || Object.keys(input).some((key) => !fields.includes(key)))
+    throw error(binding, "invalid_input", "CI output selection contains invalid or unsupported fields")
+}
+
+export function filePath(binding: Actions.Binding, value: string) {
+  if (!value || value.length > 4096 || /[\\%?#{}:\x00-\x1f\x7f]/.test(value) ||
+    value.split("/").some((part) => !part || part === "." || part === ".."))
+    throw error(binding, "invalid_input", "Artifact file path must be an exact archive-relative native path")
+  return value.split("/").map(encodeURIComponent).join("/")
+}
+
+export const get = Effect.fn("ActionsOutput.get")(function* (transport: ActionsContract.Transport, binding: Actions.Binding, path: string, query?: ActionsContract.Request["query"]) {
+  const response = yield* transport.request(binding, { method: "GET", path, ...(query ? { query } : {}) })
+  if (response.status !== 200) return yield* ActionsResponse.failure(binding.provider, 1, Buffer.alloc(0), response.status, { ...response.headers })
+  yield* checked(binding, () => {
+    if (Buffer.byteLength(JSON.stringify(response.data)) > 2 * 1024 * 1024)
+      throw error(binding, "metadata_truncated", "CI output metadata capture limit exceeded")
+  })
+  return response
+})
+
+export const project = Effect.fn("ActionsOutput.project")(function* (transport: ActionsContract.Transport, binding: Actions.Binding) {
+  const path = yield* checked(binding, () => root(binding))
+  const response = yield* get(transport, binding, path)
+  yield* checked(binding, () => {
+    if (String(decode(binding, Schema.Struct({ id: ID }), response.data).id) !== binding.projectID)
+      throw error(binding, "binding_stale", "CI output project identity differs from the immutable binding")
+  })
+  return path
+})
+
+export const run = Effect.fn("ActionsOutput.run")(function* (reader: ActionsContract.ReadAdapter, binding: Actions.Binding, runID: string) {
+  yield* checked(binding, () => id(binding, runID))
+  const value = yield* reader.run(binding, runID)
+  return yield* checked(binding, () => {
+    if (Buffer.byteLength(JSON.stringify(value)) > 2 * 1024 * 1024)
+      throw error(binding, "metadata_truncated", "CI output run metadata capture limit exceeded")
+    const run = decode(binding, Actions.Run, value)
+    if (run.attempt !== undefined && (!Number.isSafeInteger(run.attempt) || run.attempt < 1))
+      throw error(binding, "transport_failed", "CI output run metadata returned an invalid attempt")
+    if (run.id !== runID || run.bindingID !== binding.id || (run.repositoryID !== undefined && run.repositoryID !== binding.projectID))
+      throw error(binding, "binding_stale", "CI output run does not belong to this binding and run selection")
+    return run
+  })
+})
+
+export function pagination(binding: Actions.Binding, request: ActionsContract.Request, scope: string,
+  filters: Readonly<Record<string, unknown>>, response: ActionsContract.Response, page: number, count: number, limit: number, nativeTotal?: number) {
+  const next = ActionsCursor.next(response.headers)
+  const headerTotal = ActionsCursor.total(response.headers)
+  const total = nativeTotal ?? headerTotal
+  const fail = () => error(binding, "transport_failed", "Provider returned invalid CI output pagination metadata")
+  if (count > limit || (next !== undefined && (next !== page + 1 || count === 0)) ||
+    (nativeTotal !== undefined && headerTotal !== undefined && nativeTotal !== headerTotal)) throw fail()
+  if (response.headers.link !== undefined) {
+    const origin = binding.provider.apiOrigin.replace(/\/api\/v4\/?$/, "")
+    const base = binding.provider.kind === "gitlab" ? `${origin}/api/v4` : origin
+    const expected = new URL(`${base}/${request.path}`)
+    response.headers.link.split(",").forEach((part) => {
+      const match = /^\s*<([^>]+)>;\s*rel="?(next|prev|first|last)"?\s*$/.exec(part)
+      const url = match && URL.parse(match[1])
+      if (!url || url.origin !== expected.origin || url.pathname !== expected.pathname || url.username || url.password || url.hash) throw fail()
+      const value = url.searchParams.get("page")
+      if (!value || !/^[1-9]\d*$/.test(value) || Number(value) > 100_000) throw fail()
+      const wanted = { ...request.query, page: Number(value) }
+      if (Array.from(url.searchParams).length !== Object.keys(wanted).length ||
+        Object.entries(wanted).some(([key, value]) => url.searchParams.get(key) !== String(value))) throw fail()
+    })
+    if (ActionsCursor.next({ link: response.headers.link }) !== next) throw fail()
+  }
+  if (total !== undefined && (total < (page - 1) * limit + count ||
+    (next === undefined && total > page * limit) || (next !== undefined && total <= page * limit))) throw fail()
+  if (next === undefined && total === undefined && count === limit && response.headers.link === undefined && response.headers["x-next-page"] === undefined) throw fail()
+  return { ...(next === undefined ? {} : { next: ActionsCursor.encode(binding, scope, filters, next) }),
+    ...(total === undefined ? {} : { total }), capturedAt: Date.now() }
+}
+
+export function gitlabOwner(binding: Actions.Binding, job: typeof GitLabJob.Type, jobID?: string, runID?: string) {
+  if (String(job.pipeline.project_id) !== binding.projectID || (jobID !== undefined && String(job.id) !== jobID) ||
+    (runID !== undefined && String(job.pipeline.id) !== runID))
+    throw error(binding, "binding_stale", "GitLab artifact job does not belong to the selected project, pipeline and job")
+}
+
+export function artifactOwner(binding: Actions.Binding, artifact: typeof Artifact.Type, artifactID?: string, runID?: string) {
+  if (String(artifact.workflow_run.repository_id) !== binding.projectID || (artifactID !== undefined && String(artifact.id) !== artifactID) ||
+    (runID !== undefined && String(artifact.workflow_run.id) !== runID))
+    throw error(binding, "binding_stale", "GitHub artifact does not belong to the selected repository, run and artifact")
+}
+
+export function gitlabState(job: typeof GitLabJob.Type) {
+  if (job.erased_at) return "erased"
+  if (job.artifacts_expire_at && Date.parse(job.artifacts_expire_at) <= Date.now()) return "expired"
+  if (gitlabArchive(job)) return "available"
+  return "unavailable"
+}
+
+export function gitlabArchive(job: typeof GitLabJob.Type) {
+  const file = job.artifacts_file
+  if (file && "filename" in file && typeof file.filename === "string" && "size" in file && typeof file.size === "number" && file.filename)
+    return { filename: file.filename, size: file.size }
+  const artifact = job.artifacts.find((file) => file.file_type === "archive" && !!file.filename)
+  return artifact && { filename: artifact.filename, size: artifact.size }
+}
+~~~~
+
+## AUT2-C42
+
+```json
+{"block_id":"AUT2-C42","type":"literal_source_excerpt","request_namespace":"J1 canonical groups; J2 mapping in index","requests":["RE-AUT2-06"],"body_anchors":["A36"],"requested_subject":"Open/redirect/renew antes de bytes, revalidação e renew=false","source_category":"owned_population_source","path":"packages/core/src/actions/output/download.ts","archive":"sources/packages/core/src/actions/output/download.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"b3e1e73f3a0f7f3604bae702cb749983f4178f29","source_sha256":"4dcb6f81b4fd186dbcd19da13ff1a0c0a47df7ba9e4ea7eb8ee5734959d4b8f7","source_bytes":2496}
+```
+
+```json
+{"first_line":1,"last_line":39,"bytes":2496,"sha256":"4dcb6f81b4fd186dbcd19da13ff1a0c0a47df7ba9e4ea7eb8ee5734959d4b8f7"}
+```
+
+~~~~typescript
+export * as OutputDownload from "./download"
+
+import { Actions } from "@orchestra/schema/actions"
+import { Effect, Scope } from "effect"
+import { ActionsContract } from "../contract"
+import { ActionsError } from "../error"
+import { ActionsResponse } from "../transport/response"
+import { OutputNative } from "./native"
+import { OutputSigned } from "./signed"
+import { OutputTarget } from "./target"
+
+export const open = Effect.fn("ActionsOutput.downloadOpen")(function* (
+  transport: ActionsContract.Transport, reader: ActionsContract.ReadAdapter, binding: Actions.Binding,
+  input: Actions.TransferInput, target: OutputTarget.Target, renew = false,
+): Effect.fn.Return<{ response: ActionsContract.RawResponse; info: Actions.TransferInfo }, ActionsError, Scope.Scope> {
+  if (!transport.open) return yield* OutputNative.error(binding, "capability_unavailable", "GitLab CI output requires the scoped native raw-opening transport")
+  const native = yield* transport.open(binding, target.request)
+  if (native.status >= 200 && native.status < 300) return { response: native, info: target.info }
+  if (![301, 302, 303, 307, 308].includes(native.status)) {
+    yield* native.close
+    return yield* ActionsResponse.failure(binding.provider, 1, Buffer.alloc(0), native.status, { ...native.headers })
+  }
+  const location = native.headers.location
+  yield* native.close
+  if (!location) return yield* OutputNative.error(binding, "transfer_failed", "Native CI output redirect has no Location")
+  const base = yield* OutputNative.checked(binding, () => new URL(`${new URL(binding.provider.apiOrigin).origin}/api/v4/${target.request.path}`))
+  const signed = yield* OutputSigned.follow(binding, location, base)
+  if (signed.status >= 200 && signed.status < 300) return { response: signed, info: target.info }
+  yield* signed.close
+  // One read-only renewal, before any byte reaches caller. Revalidate identities
+  // and GET original native endpoint; never replay an expired signed URL.
+  if (renew && [401, 403, 404].includes(signed.status)) {
+    const fresh = yield* OutputTarget.resolve(transport, reader, binding, input)
+    if (fresh.request.path !== target.request.path)
+      return yield* OutputNative.error(binding, "binding_stale", "Signed URL renewal changed the selected native output endpoint")
+    return yield* open(transport, reader, binding, input, fresh, false)
+  }
+  return yield* ActionsResponse.failure(binding.provider, 1, Buffer.alloc(0), signed.status, { ...signed.headers })
+})
+~~~~
+
+## AUT2-C43
+
+```json
+{"block_id":"AUT2-C43","type":"literal_source_excerpt","request_namespace":"J1 canonical groups; J2 mapping in index","requests":["RE-AUT2-06"],"body_anchors":["A36"],"requested_subject":"HTTPS sem credenciais nativas, validação de cada hop, bounds e EOF completo","source_category":"owned_population_source","path":"packages/core/src/actions/output/signed.ts","archive":"sources/packages/core/src/actions/output/signed.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"e3f97544c559f1cc5b67623a047a431a37219117","source_sha256":"0432ae5abfc0aa4d7cefb225433a0da3e3cff8539e110dab54dafedf9e833bc8","source_bytes":5817}
+```
+
+```json
+{"first_line":1,"last_line":90,"bytes":5817,"sha256":"0432ae5abfc0aa4d7cefb225433a0da3e3cff8539e110dab54dafedf9e833bc8"}
+```
+
+~~~~typescript
+export * as OutputSigned from "./signed"
+
+import { request } from "node:https"
+import type { IncomingMessage } from "node:http"
+import type { Socket } from "node:net"
+import { checkServerIdentity } from "node:tls"
+import { NodeStream } from "@effect/platform-node"
+import { Actions } from "@orchestra/schema/actions"
+import { Deferred, Effect, Exit, Scope, Stream } from "effect"
+import { ActionsContract } from "../contract"
+import { ActionsError } from "../error"
+import { OutputNative } from "./native"
+
+export function destination(binding: Actions.Binding, location: string | undefined, base?: URL) {
+  const url = location !== undefined && URL.parse(location, base)
+  if (!location || location.length > 8192 || /[\s\\\x00-\x1f\x7f]/.test(location) ||
+    /%(?:0[0-9a-f]|1[0-9a-f]|7f)/i.test(location) || !url || url.protocol !== "https:" || !url.hostname ||
+    url.username || url.password || url.hash || location.includes("#"))
+    throw OutputNative.error(binding, "host_mismatch", "Signed CI output destination must be credential-free HTTPS without fragments or controls")
+  return url
+}
+
+// Bare Node HTTPS. Deliberately accepts neither native credentials, client TLS
+// material, cookies nor caller headers. Every redirect is separately validated.
+export const open = Effect.fn("ActionsOutput.signedOpen")(function* (
+  binding: Actions.Binding, url: URL,
+): Effect.fn.Return<ActionsContract.RawResponse, ActionsError, Scope.Scope> {
+  yield* OutputNative.checked(binding, () => destination(binding, url.href))
+  const scope = yield* Scope.make()
+  yield* Effect.addFinalizer((exit) => Scope.close(scope, exit))
+  return yield* Effect.gen(function* () {
+    const response = yield* Deferred.make<IncomingMessage, ActionsError>()
+    const failure = yield* Deferred.make<never, ActionsError>()
+    const state = { response: undefined as IncomingMessage | undefined, socket: undefined as Socket | undefined,
+      error: undefined as ActionsError | undefined }
+    const abort = new AbortController()
+    const req = yield* Effect.acquireRelease(Effect.try({
+      try: () => request(url, {
+        method: "GET", agent: false, signal: abort.signal, rejectUnauthorized: true, minVersion: "TLSv1.2",
+        checkServerIdentity, maxHeaderSize: 16 * 1024,
+        headers: { Accept: "application/octet-stream", Connection: "close" },
+      }),
+      catch: () => OutputNative.error(binding, "transfer_failed", "Signed CI output request could not be opened"),
+    }), (req) => Effect.sync(() => { abort.abort(); state.response?.destroy(); state.socket?.destroy(); req.destroy() }))
+    const fail = (error: ActionsError) => {
+      state.error ??= error
+      Deferred.doneUnsafe(response, Exit.fail(state.error))
+      Deferred.doneUnsafe(failure, Exit.fail(state.error))
+    }
+    req.on("error", () => fail(OutputNative.error(binding, "transfer_failed", "Signed CI output HTTPS or TLS request failed")))
+    req.on("socket", (socket) => { state.socket = socket })
+    req.once("response", (incoming) => {
+      state.response = incoming
+      incoming.on("error", () => fail(OutputNative.error(binding, "transfer_failed", "Signed CI output response failed")))
+      incoming.on("aborted", () => fail(OutputNative.error(binding, "transfer_failed", "Signed CI output response ended prematurely")))
+      Deferred.doneUnsafe(response, Exit.succeed(incoming))
+    })
+    // Own watchdog closes socket even when downstream holds a chunk forever.
+    yield* Effect.forkScoped(Effect.sleep("5 minutes").pipe(Effect.andThen(Effect.sync(() => {
+      fail(OutputNative.error(binding, "transfer_failed", "Signed CI output deadline exceeded"))
+      abort.abort(); state.response?.destroy(); state.socket?.destroy(); req.destroy()
+    }))))
+    req.end()
+    const incoming = yield* Deferred.await(response).pipe(Effect.timeoutOrElse({ duration: "30 seconds",
+      orElse: () => Effect.fail(OutputNative.error(binding, "transfer_failed", "Signed CI output response header deadline exceeded")) }))
+    return { status: incoming.statusCode ?? 0,
+      headers: Object.fromEntries(Object.entries(incoming.headers)
+        .filter((entry): entry is [string, string | string[]] => entry[1] !== undefined)
+        .map(([key, value]) => [key, Array.isArray(value) ? value.join(", ") : value])),
+      body: NodeStream.fromReadable<Uint8Array, ActionsError>({ evaluate: () => incoming,
+        onError: () => state.error ?? OutputNative.error(binding, "transfer_failed", "Signed CI output response failed") }).pipe(
+        Stream.concat(Stream.fromEffect(Effect.suspend(() => incoming.complete && !incoming.aborted ? Effect.void
+          : Effect.fail(state.error ?? OutputNative.error(binding, "transfer_failed", "Signed CI output response ended prematurely")))).pipe(Stream.drain)),
+        Stream.interruptWhen(Deferred.await(failure)), Stream.mapError((error) => state.error ?? error)),
+      close: Scope.close(scope, Exit.void) }
+  }).pipe(Scope.provide(scope), Effect.tapError(() => Scope.close(scope, Exit.void)))
+})
+
+export const follow = Effect.fn("ActionsOutput.signedFollow")(function* (
+  binding: Actions.Binding, location: string, base: URL, hops = 0,
+): Effect.fn.Return<ActionsContract.RawResponse, ActionsError, Scope.Scope> {
+  if (hops >= 3) return yield* OutputNative.error(binding, "transfer_failed", "Signed CI output redirect limit exceeded")
+  const url = yield* OutputNative.checked(binding, () => destination(binding, location, base))
+  const response = yield* open(binding, url)
+  if (![301, 302, 303, 307, 308].includes(response.status)) return response
+  const next = response.headers.location
+  yield* response.close
+  if (!next) return yield* OutputNative.error(binding, "transfer_failed", "Signed CI output redirect has no Location")
+  return yield* follow(binding, next, url, hops + 1)
+})
+~~~~
+
+## AUT2-C44
+
+```json
+{"block_id":"AUT2-C44","type":"literal_source_excerpt","request_namespace":"J1 canonical groups; J2 mapping in index","requests":["RE-AUT2-06"],"body_anchors":["A36"],"requested_subject":"Parsing e sanitização de filename/headers, digest como metadado","source_category":"owned_population_source","path":"packages/core/src/actions/output/headers.ts","archive":"sources/packages/core/src/actions/output/headers.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"f7d5a6f28a5e7752f07ec01008136dc470c6fe61","source_sha256":"80cb68c5a02e39fd450630d1e8817d7435ada999c212c3b1e8e568a0d1a35549","source_bytes":3345}
+```
+
+```json
+{"first_line":1,"last_line":46,"bytes":3345,"sha256":"80cb68c5a02e39fd450630d1e8817d7435ada999c212c3b1e8e568a0d1a35549"}
+```
+
+~~~~typescript
+export * as OutputHeaders from "./headers"
+
+import { Actions } from "@orchestra/schema/actions"
+import { OutputNative } from "./native"
+
+// Additive metadata proposal for parent Schema/Protocol assembly. No Range request
+// is invented when the public input has no range field.
+export type Info = Actions.TransferInfo & { readonly contentRange?: string; readonly acceptRanges?: string }
+
+export function filename(value: string, fallback: string) {
+  const name = value.split(/[\\/]/).at(-1)?.replace(/[\x00-\x1f\x7f\u202a-\u202e\u2066-\u2069<>:"|?*]/g, "_").trim().slice(0, 200).replace(/[. ]+$/, "")
+  if (!name || name === "." || name === "..") return fallback
+  return /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(name) ? `_${name}` : name
+}
+
+export function info(binding: Actions.Binding, native: Actions.TransferInfo, headers: Readonly<Record<string, string>>): Info {
+  const disposition = headers["content-disposition"]
+  if (disposition !== undefined && (disposition.length > 8192 || /[\x00-\x1f\x7f]/.test(disposition)))
+    throw OutputNative.error(binding, "transport_failed", "Provider returned invalid CI output Content-Disposition")
+  const extended = disposition && /(?:^|;)\s*filename\*=UTF-8''([^;]+)/i.exec(disposition)?.[1]
+  const plain = disposition && /(?:^|;)\s*filename=(?:"([^"\r\n]*)"|([^;]*))/i.exec(disposition)
+  const name = extended ? decodeURIComponent(extended.trim()) : plain?.[1] ?? plain?.[2]?.trim()
+  const type = safeHeader(binding, headers["content-type"], 512)
+  if (type !== undefined && !/^[\w!#$&^.+-]+\/[\w!#$&^.+-]+(?:\s*;[^\r\n]*)?$/.test(type))
+    throw OutputNative.error(binding, "transport_failed", "Provider returned invalid CI output Content-Type")
+  const length = headers["content-length"]
+  if (length !== undefined && (!/^\d+$/.test(length) || !Number.isSafeInteger(Number(length))))
+    throw OutputNative.error(binding, "transport_failed", "Provider returned invalid CI output Content-Length")
+  const digest = safeHeader(binding, headers["content-digest"] ?? headers.digest ?? headers["x-amz-checksum-sha256"] ?? native.digest, 1024)
+  const contentRange = safeHeader(binding, headers["content-range"], 128)
+  if (contentRange !== undefined && !/^bytes (?:\d+-\d+|\*)\/(?:\d+|\*)$/.test(contentRange))
+    throw OutputNative.error(binding, "transport_failed", "Provider returned invalid CI output Content-Range")
+  const acceptRanges = headers["accept-ranges"]
+  if (acceptRanges !== undefined && acceptRanges !== "bytes" && acceptRanges !== "none")
+    throw OutputNative.error(binding, "transport_failed", "Provider returned invalid CI output Accept-Ranges")
+  return { filename: filename(name ?? native.filename, native.filename), contentType: type ?? native.contentType,
+    ...(length === undefined ? (native.size === undefined ? {} : { size: native.size }) : { size: Number(length) }),
+    ...(digest === undefined ? {} : { digest }), ...(contentRange === undefined ? {} : { contentRange }),
+    ...(acceptRanges === undefined ? {} : { acceptRanges }) }
+}
+
+function safeHeader(binding: Actions.Binding, value: string | undefined, maximum: number) {
+  if (value !== undefined && (value.length > maximum || /[\x00-\x1f\x7f]/.test(value)))
+    throw OutputNative.error(binding, "transport_failed", "Provider returned invalid CI output transfer headers")
+  return value
+}
+~~~~
+
+## AUT2-X01
+
+```json
+{"block_id":"AUT2-X01","type":"literal_source_excerpt","request_namespace":"J1 canonical groups; J2 mapping in index","requests":["RE-AUT2-03","RE-AUT2-04","RE-AUT2-06"],"body_anchors":["A23","A35"],"requested_subject":"ResourceKind/ResourceListInput/TransferInput/TransferInfo consumidos pelo Core","source_category":"external_S1_04_raw_source","path":"packages/schema/src/actions/resource.ts","archive":"external-sources/packages/schema/src/actions/resource.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"1346f69568a3796c88a55ed9d06ed4cc762aa93b","source_sha256":"5579f778bc5055f362058bf0e9386e6098af2f2cba3700ef68de1381aab6f576","source_bytes":2429}
+```
+
+```json
+{"first_line":1,"last_line":57,"bytes":2429,"sha256":"5579f778bc5055f362058bf0e9386e6098af2f2cba3700ef68de1381aab6f576"}
+```
+
+~~~~typescript
+import { Schema } from "effect"
+import { BindingID } from "./identity"
+import { optional, PositiveInt } from "../schema"
+
+export const ResourceKind = Schema.Literals([
+  "artifacts", "environments", "deployments", "variables", "runners", "caches", "schedules",
+  "triggers", "secureFiles", "resourceGroups", "pipelineVariables", "testReports", "policy",
+]).annotate({ identifier: "Actions.ResourceKind" })
+export type ResourceKind = typeof ResourceKind.Type
+
+export const Resource = Schema.Struct({
+  id: Schema.NonEmptyString,
+  bindingID: BindingID,
+  kind: ResourceKind,
+  name: Schema.String,
+  scope: optional(Schema.String),
+  owner: optional(Schema.String),
+  status: optional(Schema.String),
+  sensitive: optional(Schema.Boolean),
+  // Provider details are JSON, not unrestricted runtime values. Adapters redact sensitive fields.
+  data: Schema.Json,
+}).annotate({ identifier: "Actions.Resource" })
+export interface Resource extends Schema.Schema.Type<typeof Resource> {}
+
+export const ResourceListInput = Schema.Struct({
+  kind: ResourceKind,
+  runID: optional(Schema.String),
+  resourceID: optional(Schema.String),
+  scope: optional(Schema.String),
+  ref: optional(Schema.String),
+  query: optional(Schema.String),
+  cursor: optional(Schema.String),
+  limit: optional(PositiveInt),
+}).annotate({ identifier: "Actions.ResourceListInput" })
+export interface ResourceListInput extends Schema.Schema.Type<typeof ResourceListInput> {}
+
+export const ResourcePage = Schema.Struct({
+  items: Schema.Array(Resource), next: optional(Schema.String), total: optional(Schema.Number), capturedAt: Schema.Number,
+}).annotate({ identifier: "Actions.ResourcePage" })
+export interface ResourcePage extends Schema.Schema.Type<typeof ResourcePage> {}
+
+export const TransferInput = Schema.Struct({
+  kind: Schema.Literals(["jobLog", "runLog", "artifact", "secureFile"]),
+  id: Schema.NonEmptyString,
+  runID: optional(Schema.String),
+  attempt: optional(PositiveInt),
+  path: optional(Schema.String),
+}).annotate({ identifier: "Actions.TransferInput" })
+export interface TransferInput extends Schema.Schema.Type<typeof TransferInput> {}
+
+export const TransferInfo = Schema.Struct({
+  filename: Schema.String,
+  contentType: Schema.String,
+  size: optional(Schema.Number),
+  digest: optional(Schema.String),
+}).annotate({ identifier: "Actions.TransferInfo" })
+export interface TransferInfo extends Schema.Schema.Type<typeof TransferInfo> {}
+~~~~
+
+## FIM_DO_SUPLEMENTO_LITERAL

@@ -1,0 +1,132 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "relay": "/root/review_relay",
+  "packet": "derived-automation-impact-v2-delta",
+  "source": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/derived-automation-impact-v2-delta.md",
+  "source_bytes": 34067,
+  "source_sha256": "851b536c34eb942e564595eacef0921aff211ec3c7e6d0eda5dca23207e524ba",
+  "parts_per_target": 1,
+  "calls": [
+    {
+      "sequence": 1,
+      "target": "/root/s1_03_j1",
+      "part": 1,
+      "request_file": "request-j1-01.json",
+      "request_file_bytes": 35682,
+      "request_file_sha256": "f992ccc1a062423129e5e6e4fc408f86a3bc95ed1fd85e152159251d066ef88f",
+      "message_bytes": 34679,
+      "message_sha256": "050f4af42b70e43b6a552fe4129d739a7fb704246426bd81d788720b7b617874",
+      "payload_bytes": 34067,
+      "payload_sha256": "851b536c34eb942e564595eacef0921aff211ec3c7e6d0eda5dca23207e524ba",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 2,
+      "target": "/root/s1_03_j2",
+      "part": 1,
+      "request_file": "request-j2-01.json",
+      "request_file_bytes": 35682,
+      "request_file_sha256": "62c3f5631e794d46450ff6b467d6f253ad806152e56d4a22ac865637eed276a4",
+      "message_bytes": 34679,
+      "message_sha256": "050f4af42b70e43b6a552fe4129d739a7fb704246426bd81d788720b7b617874",
+      "payload_bytes": 34067,
+      "payload_sha256": "851b536c34eb942e564595eacef0921aff211ec3c7e6d0eda5dca23207e524ba",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    }
+  ],
+  "known_transcription_corrections": [],
+  "receipt_limit": "Ferramenta retornou normalmente sem texto nem ID de despacho; os hashes descrevem os pedidos registrados e sua reconstrução local, não verificação remota nem suficiência semântica.",
+  "delivery_scope": "Literal UTF-8 packet only; final signal is outside payload.",
+  "slot_handling": "Direct calls sequential; both judges permitted active concurrently. J2 was started without awaiting J1 FINAL.",
+  "judgment_capture": "Pending; see response-capture.json when available.",
+  "dispatch_count": 2,
+  "recorded_at_utc": "2026-11-15T10:09:14.871923+00:00",
+  "completed_targets": [
+    "/root/s1_03_j1",
+    "/root/s1_03_j2"
+  ],
+  "pending_targets": [],
+  "local_recorded_reconstruction": [
+    {
+      "target": "/root/s1_03_j1",
+      "bytes": 34067,
+      "sha256": "851b536c34eb942e564595eacef0921aff211ec3c7e6d0eda5dca23207e524ba",
+      "equals_source": true,
+      "raw_bytes": 34067,
+      "raw_sha256": "851b536c34eb942e564595eacef0921aff211ec3c7e6d0eda5dca23207e524ba",
+      "corrections_applied": false
+    },
+    {
+      "target": "/root/s1_03_j2",
+      "bytes": 34067,
+      "sha256": "851b536c34eb942e564595eacef0921aff211ec3c7e6d0eda5dca23207e524ba",
+      "equals_source": true,
+      "raw_bytes": 34067,
+      "raw_sha256": "851b536c34eb942e564595eacef0921aff211ec3c7e6d0eda5dca23207e524ba",
+      "corrections_applied": false
+    }
+  ],
+  "ownership": {
+    "handles": [
+      "/root/s1_03_j1",
+      "/root/s1_03_j2"
+    ],
+    "exclusive_courier": "/root/review_relay",
+    "scope": "derived-automation-impact-v2-delta only"
+  },
+  "prior_transport_accounting_addendum": {
+    "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-automation-impact-v2-delta/prior-transport-accounting-addendum.json",
+    "bytes": 1351,
+    "sha256": "2e7ea5ad3b3062e66b2be45eb12b1917b33b9a8bc5ccfb4f295f75c4c115158f",
+    "not_a_current_lot_dispatch": true
+  },
+  "judgment_captures": {
+    "j1": {
+      "target": "/root/s1_03_j1",
+      "judge_id": "parallel-v3-fresh/S1-03/J1",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-automation-impact-v2-delta/j1-response.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j1",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 2432,
+      "sha256": "cebf51a08751a4ce81ffa6c2a472535e6ed3f6dde0f846f1bef8e10355310f29",
+      "captured_at_utc": "2026-11-15T10:09:47.968925+00:00"
+    },
+    "j2": {
+      "target": "/root/s1_03_j2",
+      "judge_id": "parallel-v3-fresh/S1-03/J2",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-automation-impact-v2-delta/j2-response.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j2",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 1860,
+      "sha256": "00410b524cea90a9a4626a55fc83a2ec0c13ab648aca6b3590f198a9723063dd",
+      "captured_at_utc": "2026-11-15T10:09:58.214346+00:00"
+    }
+  },
+  "handover": {
+    "handles": [
+      "/root/s1_03_j1",
+      "/root/s1_03_j2"
+    ],
+    "from": "/root/review_relay",
+    "to": "/root",
+    "state": "both completed; native originals captured; no call in flight",
+    "recorded_at_utc": "2026-11-15T10:09:58.214730+00:00"
+  },
+  "relay_final_capture": {
+    "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-automation-impact-v2-delta/relay-final-original.md",
+    "bytes": 2784,
+    "sha256": "b2860674939e362c2e3d2d303ba191bc430c6549fb121616e023e11c86b72981",
+    "literal": true,
+    "terminal_newline": false,
+    "origin": "Relay-authored final frozen locally before emitting identical final text; not a previously received native FINAL",
+    "frozen_at_utc": "2026-11-15T10:10:23.081108+00:00"
+  }
+}

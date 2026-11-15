@@ -1,0 +1,416 @@
+{
+  "schema": "s1-03-derived-mechanical-verification/v1",
+  "at_utc": "2026-11-15T10:17:25.854998+00:00",
+  "artifact": {
+    "key": "s1.subslice03.automation-maintenance",
+    "layer": 4,
+    "need": "maintenance",
+    "version": "v1",
+    "scope": "orchestra.s1",
+    "subslice": "S1-03",
+    "state": "AUTHORED_AWAITING_SAME_PAIR_SEMANTIC_REVIEW",
+    "body": {
+      "local_path": "producers/derived-automation-maintenance/body.md",
+      "bytes": 13840,
+      "sha256": "8cb4befb0cef6a35002679580d60f1746fdeac26acf45ff08e04942cff83abc7",
+      "git_blob_sha": "2685cecdd7df56046cc82f70ac8104c639249e33"
+    }
+  },
+  "version": "v1",
+  "checks": "Exact whole-file sizes/SHA256/Git blobs for every declared actual input and output; UTF-8, JSON and unique depth2 headings. No semantic, runtime or product-test result.",
+  "input_units": [
+    {
+      "local_path": "inputs/AGENTS.md",
+      "byte_length": 16501,
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "calculated_git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "role": "public_authority_or_procedure"
+    },
+    {
+      "local_path": "inputs/COMMON.md",
+      "byte_length": 12959,
+      "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+      "calculated_git_blob_sha": "893cbb5f5eda2d0c19753606a50d1c482523f0c8",
+      "role": "public_authority_or_procedure"
+    },
+    {
+      "local_path": "inputs/mission.json",
+      "byte_length": 6006,
+      "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+      "calculated_git_blob_sha": "48fa8da131e97c50110ee76e41e79283cd9a0ac4",
+      "role": "public_authority_or_procedure"
+    },
+    {
+      "local_path": "inputs/SKILL.md",
+      "byte_length": 8143,
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+      "calculated_git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+      "role": "public_authority_or_procedure"
+    },
+    {
+      "local_path": "inputs/references/principles.md",
+      "byte_length": 6010,
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+      "calculated_git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+      "role": "public_authority_or_procedure"
+    },
+    {
+      "local_path": "inputs/references/fatia-1.md",
+      "byte_length": 3987,
+      "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
+      "calculated_git_blob_sha": "78482ad7c72ec275fadb26ebece1c30bc1e5ccb9",
+      "role": "public_authority_or_procedure"
+    },
+    {
+      "local_path": "inputs/references/fresh-start.md",
+      "byte_length": 4983,
+      "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166",
+      "calculated_git_blob_sha": "ca485b25e43293a309c5489279dce80ce1441ed0",
+      "role": "public_authority_or_procedure"
+    },
+    {
+      "local_path": "inputs/references/orchestration.md",
+      "byte_length": 4408,
+      "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+      "calculated_git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+      "role": "public_authority_or_procedure"
+    },
+    {
+      "local_path": "inputs/references/judging.md",
+      "byte_length": 5787,
+      "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+      "calculated_git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+      "role": "public_authority_or_procedure"
+    },
+    {
+      "local_path": "inputs/references/transport.md",
+      "byte_length": 8478,
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "calculated_git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+      "role": "public_authority_or_procedure"
+    },
+    {
+      "local_path": "payload/artifact-plan.json",
+      "byte_length": 5017,
+      "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad",
+      "calculated_git_blob_sha": "8dba81b59cd093d28ea07cf4369d5842b6bdee68",
+      "role": "frozen_artifact_plan"
+    },
+    {
+      "local_path": "payload/recipes/derived-contract.json",
+      "byte_length": 4017,
+      "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
+      "calculated_git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd",
+      "role": "actual_common_authoring_contract"
+    },
+    {
+      "local_path": "payload/recipes/derived-public-criteria.json",
+      "byte_length": 16244,
+      "sha256": "1e7686491c5b68cb4f3d287377723edcd8932ae803c267ddbabf44a360dfc36e",
+      "calculated_git_blob_sha": "d4f6b765e6d78341ba2b77186c77b9177cf3156c",
+      "role": "public_normative_criteria"
+    },
+    {
+      "local_path": "producers/automation/body.md",
+      "byte_length": 60767,
+      "sha256": "968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae",
+      "calculated_git_blob_sha": "e26213eb2fc76dc843dca17d1111334c76f88890",
+      "role": "accepted_semantic_predecessor"
+    },
+    {
+      "local_path": "payload/recipes/derived/automation-flow.json",
+      "byte_length": 8479,
+      "sha256": "ec4550336620b1d7abed85e78460c6d4c5ede73f31c8ddcf8a77be5272af3179",
+      "calculated_git_blob_sha": "a039bc6e88406694ed967c5f6c1e2b14a9428506",
+      "role": "original_task_recipe_retained"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/request.txt",
+      "byte_length": 856,
+      "sha256": "da3d46f1369fc5ec17d4ec73b3b95ebeecf2c83c796f06e88d4409c1c64a331e",
+      "calculated_git_blob_sha": "d44c3d910995f299f76a1f8e1e62af093653ed81",
+      "role": "original_request_retained"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/dispatch-message.txt",
+      "byte_length": 2056,
+      "sha256": "808b4733f5306981efcdf337732dc6d53d1dce7b6569b5c7b32af0611e761fd9",
+      "calculated_git_blob_sha": "dfe89eddbc185ad996a1fd25e18bab3786161486",
+      "role": "original_visible_dispatch_retained"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/history/body.md",
+      "byte_length": 16441,
+      "sha256": "5985441b360d0efc6693d0d385980f4a93cab2c044387a7375608dd5a9adf517",
+      "calculated_git_blob_sha": "b4874e39655e7aef9c9f6e08aeecc37718658b2f",
+      "role": "exact_retained_v1_output_consumed_for_correction"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/history/evidence.md",
+      "byte_length": 11997,
+      "sha256": "d2b8068c9167c0813719479d4d2b10046cc718921dad3db52d1f44957e3f1360",
+      "calculated_git_blob_sha": "6697c34caf08d7d8d4bacd4793f3e36c1d035aa4",
+      "role": "exact_retained_v1_output_consumed_for_correction"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/history/production-manifest.json",
+      "byte_length": 16158,
+      "sha256": "9c7d3130d4265bccba5e94fa0448b1d0bbbf3c02bf421a09d4e8d053cae4df06",
+      "calculated_git_blob_sha": "ee7c2879510553e13c9c61faefdda6b9e09d8e17",
+      "role": "exact_retained_v1_output_consumed_for_correction"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/history/response.md",
+      "byte_length": 2470,
+      "sha256": "c8bf48be1b48cc17d8c376978e37c401079ba6e5ad72c51ac12443b8e433c7fd",
+      "calculated_git_blob_sha": "e26287f9867203f71804eecce18b6a706997539a",
+      "role": "exact_retained_v1_output_consumed_for_correction"
+    },
+    {
+      "local_path": "payload/recipes/derived/automation-flow-source-fidelity-v2.json",
+      "byte_length": 7391,
+      "sha256": "16c2b4e2efc5a6e2ea6a111540e7a662ce154af3c58c366306e254f23d9b3364",
+      "calculated_git_blob_sha": "d41472b948b6c1a5d2d5990c3de0a906c9d5cf47",
+      "role": "prior_correction_recipe_retained"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/request.txt",
+      "byte_length": 841,
+      "sha256": "34caa0867a7d0c02dd94c37f789c0af7262132bf4f2359563021b8df3977e769",
+      "calculated_git_blob_sha": "52271ca649386b9acd36c4dc8e31153cba7f3dfb",
+      "role": "prior_correction_request_retained"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v2/dispatch-message.txt",
+      "byte_length": 1370,
+      "sha256": "b5cf544c85c7f3fae4739c200210f829a8b72a7bbb65eab809799fa198621e93",
+      "calculated_git_blob_sha": "151ff85a32fe59b63db141eaad368d8b6a7fa55c",
+      "role": "prior_correction_dispatch_retained"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v3/history/body.md",
+      "byte_length": 16541,
+      "sha256": "5b24037431881e96ddb5a872fd6541c94880d189d8b0c873bac9d8bd874d85c1",
+      "calculated_git_blob_sha": "378dbb4cd9f978ed9ab848136a2f4b9fdd72ca6b",
+      "role": "exact_retained_v2_output_consumed_for_v3_correction"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v3/history/evidence.md",
+      "byte_length": 14569,
+      "sha256": "0c4bff02eec8c4dbca2886127f1546bd51707060df8306ba4e630dba73f990d8",
+      "calculated_git_blob_sha": "ec9f7f1351681788c7c58cb345e4ee6860c4c3af",
+      "role": "exact_retained_v2_output_consumed_for_v3_correction"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v3/history/production-manifest.json",
+      "byte_length": 27416,
+      "sha256": "1802600a673c0521064bc636bd9be5e9e9aad9dd644f26efd5d14c02bee52cff",
+      "calculated_git_blob_sha": "009ace4ecb5cda6ec2c3f58aec5573d1b986c205",
+      "role": "exact_retained_v2_output_consumed_for_v3_correction"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v3/history/response.md",
+      "byte_length": 3043,
+      "sha256": "59ffb319da5b27d830b9eeabe7ac592c104a64496864235da4331cd5adc05c23",
+      "calculated_git_blob_sha": "f07fae15e22fabc2fd4cad461fd721eab5e031d3",
+      "role": "exact_retained_v2_output_consumed_for_v3_correction"
+    },
+    {
+      "local_path": "payload/recipes/derived/automation-flow-dispatch-fidelity-v3.json",
+      "byte_length": 6224,
+      "sha256": "a0f24c622d77e89d6a7020334075691efb8f3153f99087eb7bc2afc3337cb9ea",
+      "calculated_git_blob_sha": "e7531d1cba701855e10fc46602a4ca584dffe69b",
+      "role": "actual_frozen_v3_correction_recipe"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v3/request.txt",
+      "byte_length": 680,
+      "sha256": "4ed7cc034c532a6b414fa03bfcd4f2034ccfca3f593ebad1652653d814e64538",
+      "calculated_git_blob_sha": "a07913c67f6b5343dca9386f3d0d4174892c5aab",
+      "role": "actual_current_v3_request"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v3/dispatch-message.txt",
+      "byte_length": 1520,
+      "sha256": "4fff1b29411f19321d656897a2ab13cb5c65589e4652e1f8a790fb49642ffbb0",
+      "calculated_git_blob_sha": "bafca800486d37ef7bef21e11d7b9b42f1c2099a",
+      "role": "actual_visible_v3_dispatch"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/body.md",
+      "byte_length": 16570,
+      "sha256": "64d97f6da72c92a00ad8e3d91e20a42fd360dbedb502733c0548746462442287",
+      "calculated_git_blob_sha": "5af7e410ddfb4d1da1473a990fc25d27a7580303",
+      "role": "accepted_l2_semantic_build_predecessor"
+    },
+    {
+      "local_path": "producers/derived-automation-flow/production-manifest.json",
+      "byte_length": 37704,
+      "sha256": "959840fc57d7d42e2d78abca1438f4ad18fbe8b20cb479fab6fc8127355ab1c3",
+      "calculated_git_blob_sha": "e37f374bb7b4e39c385b4e9def7848a47bee862a",
+      "role": "prior_family_manifest_provenance_not_semantic_predecessor"
+    },
+    {
+      "local_path": "payload/recipes/derived/automation-impact.json",
+      "byte_length": 9478,
+      "sha256": "dc1cb8d1b096c7cded692b4b5cd010d67e5a01165b28622a5caef5be4c0c0767",
+      "calculated_git_blob_sha": "8cbef08ae15a11ae9421504a7144b97382ef9009",
+      "role": "original_l3_task_recipe_retained"
+    },
+    {
+      "local_path": "producers/derived-automation-impact/request.txt",
+      "byte_length": 869,
+      "sha256": "493eb3912f434e83bafb9448d44e7b36961c37400bf53fec677e4edf69c938e6",
+      "calculated_git_blob_sha": "a7a9f8ced448c14b4f2b46e4d173028da5bc4a3b",
+      "role": "original_l3_request_retained"
+    },
+    {
+      "local_path": "producers/derived-automation-impact/dispatch-message.txt",
+      "byte_length": 1902,
+      "sha256": "3129949a5d075b93e1922b5e3bf12b16f8f59f6fecb8d196ac460beef39d095c",
+      "calculated_git_blob_sha": "9f63a46c7b658ec33ae76bcbdc3605407b593148",
+      "role": "original_l3_dispatch_retained"
+    },
+    {
+      "local_path": "producers/derived-automation-impact/revisions/v2/history/body.md",
+      "byte_length": 13454,
+      "sha256": "cc7ebd4319e301cf3100f83867a889c6295e52c7d0c39a769d2962bc251c9722",
+      "calculated_git_blob_sha": "5e345882926432b1049d4ef9ae781c2fb6a1e5f2",
+      "role": "exact_l3_v1_output_consumed_and_retained_for_correction"
+    },
+    {
+      "local_path": "producers/derived-automation-impact/revisions/v2/history/evidence.md",
+      "byte_length": 12105,
+      "sha256": "2814a7361d26e4d99e4c77e16189baa53755ab8e8873c53a3fcddb96a67a8a5d",
+      "calculated_git_blob_sha": "87061f8933a3907565d04d346d9c2a7a0b60454d",
+      "role": "exact_l3_v1_output_consumed_and_retained_for_correction"
+    },
+    {
+      "local_path": "producers/derived-automation-impact/revisions/v2/history/production-manifest.json",
+      "byte_length": 41752,
+      "sha256": "fa3cb6ba4888e6449e2cb39d424e4e0dab2bc4e05f85c190fa1cfd7591e71c9c",
+      "calculated_git_blob_sha": "82ad7bdbf68ad3c8db46478e71e31f650f60bf98",
+      "role": "exact_l3_v1_output_consumed_and_retained_for_correction"
+    },
+    {
+      "local_path": "producers/derived-automation-impact/revisions/v2/history/response.md",
+      "byte_length": 2703,
+      "sha256": "85831ceada2e319c68ec37bc7e521de4d66c2aa1828e2df18a25886fe0a181f7",
+      "calculated_git_blob_sha": "377fdc2968753ba8d881097a808323b09237ad34",
+      "role": "exact_l3_v1_output_consumed_and_retained_for_correction"
+    },
+    {
+      "local_path": "payload/recipes/derived/automation-impact-schedule-fidelity-v2.json",
+      "byte_length": 5638,
+      "sha256": "b57d14c54df694d54256ff30b7c743050045affe6066fee68cc5e1aa27f16b4f",
+      "calculated_git_blob_sha": "fa0aa39d37a7908b250e165187ef654c523fb587",
+      "role": "actual_frozen_l3_v2_correction_recipe"
+    },
+    {
+      "local_path": "producers/derived-automation-impact/revisions/v2/request.txt",
+      "byte_length": 678,
+      "sha256": "d296751f870708aa225c70a3a5262f7ecb0bfffc2bcb488b53d30cea73ef18ff",
+      "calculated_git_blob_sha": "259ed5422386136bbdfd3d621f441a7db2278d43",
+      "role": "actual_current_l3_v2_request"
+    },
+    {
+      "local_path": "producers/derived-automation-impact/revisions/v2/dispatch-message.txt",
+      "byte_length": 1497,
+      "sha256": "87adb6d9a36b17e43ec7d23965d35f56a6add3811c8aa2b5598934c8c7fd57aa",
+      "calculated_git_blob_sha": "6445672a1374aecc0a66f633f52660f96af9f44a",
+      "role": "actual_visible_l3_v2_dispatch"
+    },
+    {
+      "local_path": "producers/derived-automation-impact/body.md",
+      "byte_length": 13666,
+      "sha256": "05aeecb75fb2c4f8afb34fc44cf315490d800ac976eed82100f279ec2402044d",
+      "calculated_git_blob_sha": "b803b5e7b626bcf746d5c15d7a0071a9f23de592",
+      "role": "accepted_l3_semantic_build_predecessor"
+    },
+    {
+      "local_path": "producers/derived-automation-impact/production-manifest.json",
+      "byte_length": 59561,
+      "sha256": "71c87a55b4b64cf1dceeddbf466ecee7d7571edf15d125b24d91d968c792d4f5",
+      "calculated_git_blob_sha": "5b219e435b23d758b614f9212c8048fbfd55d373",
+      "role": "prior_family_manifest_provenance_not_semantic_predecessor_or_recipe"
+    },
+    {
+      "local_path": "payload/recipes/derived/automation-maintenance.json",
+      "byte_length": 9509,
+      "sha256": "234852b82b4d24a10cda4840c6262abab446e3520f1a706eb0a1c555200cca5c",
+      "calculated_git_blob_sha": "b8744008f4484b0f59cb0561b25ba49a5ed33e83",
+      "role": "actual_frozen_l4_task_recipe"
+    },
+    {
+      "local_path": "producers/derived-automation-maintenance/request.txt",
+      "byte_length": 884,
+      "sha256": "1fca3760dc1cc0749d5e44c216a7de6db0dc92916683c11e2435b05b199f25d8",
+      "calculated_git_blob_sha": "d2ffa4c66332fa2ca8193d0b737d85bc239c138a",
+      "role": "actual_preserved_l4_request"
+    },
+    {
+      "local_path": "producers/derived-automation-maintenance/dispatch-message.txt",
+      "byte_length": 1704,
+      "sha256": "47c9e0fe0a731c14c5930ec3d6b58a8322dae2381efd71852df7f1e67640d35f",
+      "calculated_git_blob_sha": "d28173802019763b71a72320fdbb7de5c14d1c12",
+      "role": "actual_visible_l4_dispatch"
+    }
+  ],
+  "input_count": 48,
+  "body_bytes": 13840,
+  "body_sha256": "8cb4befb0cef6a35002679580d60f1746fdeac26acf45ff08e04942cff83abc7",
+  "body_git_blob_sha": "2685cecdd7df56046cc82f70ac8104c639249e33",
+  "depth2_headings": [
+    "1. Uso e autoridade desta orientação",
+    "2. Triagem e responsabilidade pelo contrato",
+    "3. Actions: localizar a perda de prova antes de repetir",
+    "4. Board: separar verde, elegibilidade e integração",
+    "5. Scheduler: decidir pela fronteira de admissão",
+    "6. Verificação: que evidência permite concluir",
+    "7. Manter conhecimentos e consumidores coerentes",
+    "8. Handoff e critério de encerramento"
+  ],
+  "output_files": [
+    {
+      "path": "producers/derived-automation-maintenance/body.md",
+      "bytes": 13840,
+      "sha256": "8cb4befb0cef6a35002679580d60f1746fdeac26acf45ff08e04942cff83abc7",
+      "git_blob_sha": "2685cecdd7df56046cc82f70ac8104c639249e33"
+    },
+    {
+      "path": "producers/derived-automation-maintenance/dispatch-message.txt",
+      "bytes": 1704,
+      "sha256": "47c9e0fe0a731c14c5930ec3d6b58a8322dae2381efd71852df7f1e67640d35f",
+      "git_blob_sha": "d28173802019763b71a72320fdbb7de5c14d1c12"
+    },
+    {
+      "path": "producers/derived-automation-maintenance/evidence.md",
+      "bytes": 13383,
+      "sha256": "006d65f15434530aa807a34dac97f9f717f77278a2aebc6dd320e1d420874e8c",
+      "git_blob_sha": "de142c87b019971434cf2769ad2efa31dbaa2f87"
+    },
+    {
+      "path": "producers/derived-automation-maintenance/production-manifest.json",
+      "bytes": 78038,
+      "sha256": "0823cff6ce4916334118fbcb0df923dfa09d60350d1e2b0fc80b8d9e90de1e56",
+      "git_blob_sha": "eee90d88c7bca66a04cb115306b43590055f9c8a"
+    },
+    {
+      "path": "producers/derived-automation-maintenance/request.txt",
+      "bytes": 884,
+      "sha256": "1fca3760dc1cc0749d5e44c216a7de6db0dc92916683c11e2435b05b199f25d8",
+      "git_blob_sha": "d2ffa4c66332fa2ca8193d0b737d85bc239c138a"
+    },
+    {
+      "path": "producers/derived-automation-maintenance/response.md",
+      "bytes": 3022,
+      "sha256": "4f107717606764543073b75b27c566eabe4e2562f368fa3c1a547e332eb1c521",
+      "git_blob_sha": "c6d2944532c7c4af08b9b38ce0368fc1dc2a947e"
+    }
+  ],
+  "recipe_sha256": "234852b82b4d24a10cda4840c6262abab446e3520f1a706eb0a1c555200cca5c",
+  "production_manifest_sha256": "0823cff6ce4916334118fbcb0df923dfa09d60350d1e2b0fc80b8d9e90de1e56",
+  "producer_reporting_limit": "The author reports complete reads and exact allowed file access; this does not assert an operating-system sandbox or expose private reasoning.",
+  "author_file_read_declaration": null,
+  "semantic_status": "PENDING_SAME_PAIR"
+}

@@ -1,0 +1,9 @@
+{
+  "at_utc": "2026-11-15T10:13:38.039882+00:00",
+  "previous": "payload/assembly/procedures/history/compact-derived-new-layer-review-preexecution-v1.py",
+  "previous_sha256": "79bc9d2b1f9dbbefb8df1ee499479b5b994834fb63d3b0aa1929c444baf6f054",
+  "current_sha256": "ba18b07965b4dbcb86dac3bfbac09bc3c50f5c493e362f5f8f3441c620003116",
+  "reason": "Before first execution, distinguish retransmitted literal files from exact prior context reuse in compact-packet metadata. No packet, native call or model input changed.",
+  "syntax": "PASS",
+  "runtime": "NOT_RUN"
+}

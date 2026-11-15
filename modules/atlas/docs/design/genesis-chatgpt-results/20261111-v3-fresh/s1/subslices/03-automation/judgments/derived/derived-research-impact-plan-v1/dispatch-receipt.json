@@ -1,0 +1,67 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "relay": "/root/review_relay",
+  "packet": "derived-research-impact-plan-v1",
+  "source": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/derived-research-impact-plan-v1.md",
+  "source_bytes": 6417,
+  "source_sha256": "06b1915debaa1aa066def2a66e7ed428baf164bcebf7b7798c0c14d97c01febe",
+  "parts_per_target": 1,
+  "calls": [
+    {
+      "sequence": 1,
+      "target": "/root/s1_03_j1",
+      "part": 1,
+      "request_file": "request-j1-01.json",
+      "request_file_bytes": 7547,
+      "request_file_sha256": "49d18584316fc3445bf7cc7f958ab52a7dcc7c4540794d5d1cedae72c6a61729",
+      "message_bytes": 7026,
+      "message_sha256": "f5a72d4df58be9af0e4336e5b167aa27b1893ecb4ba691f66feca1af2c118f0d",
+      "payload_bytes": 6417,
+      "payload_sha256": "06b1915debaa1aa066def2a66e7ed428baf164bcebf7b7798c0c14d97c01febe",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    }
+  ],
+  "known_transcription_corrections": [],
+  "receipt_limit": "Ferramenta retornou normalmente sem texto nem ID de despacho; os hashes descrevem os pedidos registrados e sua reconstrução local, não verificação remota nem suficiência semântica.",
+  "delivery_scope": "Literal UTF-8 packet only; final signal is outside payload.",
+  "slot_handling": "Sequential judges; preserve each original final before reactivation.",
+  "judgment_capture": "J1 original preserved; J2 pending.",
+  "dispatch_count": 1,
+  "recorded_at_utc": "2026-11-15T05:43:13.576333+00:00",
+  "completed_targets": [
+    "/root/s1_03_j1"
+  ],
+  "pending_targets": [],
+  "local_recorded_reconstruction": [
+    {
+      "target": "/root/s1_03_j1",
+      "bytes": 6417,
+      "sha256": "06b1915debaa1aa066def2a66e7ed428baf164bcebf7b7798c0c14d97c01febe",
+      "equals_source": true,
+      "raw_bytes": 6417,
+      "raw_sha256": "06b1915debaa1aa066def2a66e7ed428baf164bcebf7b7798c0c14d97c01febe",
+      "corrections_applied": false
+    }
+  ],
+  "judgment_captures": {
+    "j1": {
+      "target": "/root/s1_03_j1",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-research-impact-plan-v1/j1-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 3796,
+      "sha256": "d6a6cd73c1e6beb595f152d1ee3699b4980f7805910e7988f4bb5c225402fbb5",
+      "terminal_newline": false,
+      "literal": true,
+      "captured_at_utc": "2026-11-15T05:44:56.394816+00:00"
+    }
+  },
+  "not_dispatched_targets": [
+    {
+      "target": "/root/s1_03_j2",
+      "reason": "Root explicitly directed no optional plan-supplement review for J2 after its unconditional whole-body PASS; packet remains preserved but was never dispatched to J2."
+    }
+  ]
+}

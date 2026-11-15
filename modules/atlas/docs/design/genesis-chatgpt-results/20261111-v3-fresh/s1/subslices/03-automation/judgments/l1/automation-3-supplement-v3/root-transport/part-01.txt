@@ -1,0 +1,1141 @@
+# Complemento de automação 3 — versão v3
+
+Execução 34269cf4-d631-41c5-a30b-85b0ec217390; mesmo par nativo /root/s1_03_j1 e /root/s1_03_j2, sem ferramentas. Julgar somente após FIM_DO_LOTE. Autoria e relay não receberam oracle. Este complemento responde aos pedidos públicos do lote automation-3. Preservar o parecer original, sem promover suficiência semântica a binding ou operação.
+
+O corpo v1 foi recebido integralmente através dos quatro lotes originais. A alteração v1→v2 foi fornecida no suplemento 1. Os deltas v2→v3 e v3→v4 são apresentados sequencialmente nos suplementos 3 e 4. Os demais bytes permanecem idênticos, verificados pela principal. Os offsets originais continuam referindo a v1.
+
+Identidade do corpo v3: {'bytes': 60588, 'sha256': 'b31d52e5bf25f6eca3807e9c1f418b70d865c9d63c5690125c530c54f8247d84', 'git_blob_sha': '04c87b44543b6bde9713228c7b6fda0fc444a00a'}
+
+A projeção compartilhada das 204 fontes, o corpo histórico, as lacunas e A3/A4 foram fornecidos no suplemento 1. Reutilizar os intervalos já recebidos conforme as referências exatas; os índices não substituem trechos que não foram recebidos. As oito fontes adicionais de Schema (a oitava resource.ts apresentada no suplemento 2) são evidência bruta dos call sites Core no baseline; não alteram 204/462 nem aceitam o artefato do dono Schema.
+
+Critérios: todos os pertinentes já recebidos. Produto, providers e assertions não foram executados; a leitura dos testes prova somente o contrato declarado. As versões dos suplementos preservam os status de sua data; qualquer “não aplicada” é supersedida exclusivamente pelos deltas exatos apresentados.
+
+## Correção literal v2 → v3
+
+Antes: {'path': 'history/body-v2.md', 'bytes': 59953, 'sha256': 'e9c89bea68d594bc61356ff461642ea23cd905d4584f2b52d32e10a5af984e55', 'git_blob_sha': 'b8fec4854b4c1384d3c4a2a4f0d51d220c874618'}
+
+Depois: {'path': 'body.md', 'bytes': 60588, 'sha256': 'b31d52e5bf25f6eca3807e9c1f418b70d865c9d63c5690125c530c54f8247d84', 'git_blob_sha': '04c87b44543b6bde9713228c7b6fda0fc444a00a'}
+
+### AUT3-DELTA-01 — seção 7.2
+
+ANTES
+```text
+Estado scoped-red resulta de fail mais recente; scoped-green precisa de requisitos existentes e pass dos caminhos requeridos; sem requisito, retorna null. Um check error/pending não vira pass.
+```
+
+DEPOIS
+```text
+O estado usa o resultado mais recente por `(kind, command)` no tree: qualquer `fail` produz scoped-red e, sem requisito configurado, retorna null. Para scoped-green, basta algum check `scoped` com `pass` quando há scoped.tests, além de um `pass` por workflow exigido. Isso pode coexistir com outros checks scoped `pending`/`error`; não prova que todos os comandos scoped passaram.
+```
+
+### AUT3-DELTA-02 — seção 7.2
+
+ANTES
+```text
+Workflows são enviados uma vez por tree/arquivo no ledger observado.
+```
+
+DEPOIS
+```text
+Para o card, o ledger evita novo dispatch do mesmo workflow no mesmo tree quando já existe row com outcome diferente de `error`; se houver apenas rows em `error`, permite outra tentativa.
+```
+
+### AUT3-DELTA-03 — seção 7.3
+
+ANTES
+```text
+Subscription engine ou preço ausente é `not-metered`, e mistura de medido/não medido pode ser parcial.
+```
+
+DEPOIS
+```text
+`spend.card` considera medida a Session com custo positivo cujo provider não é `claude-code`; não medidas entram na outra classe apenas se têm tokens. O meter de modelos é `not-metered` sem Sessions vinculadas, ou se não houver Session medida e houver não medidas com tokens; nos demais casos retorna `usd`, inclusive `usd:0` com ambas as classes vazias. A coexistência de medidas e não medidas com tokens marca `partial`.
+```
+
+## INICIO_DO_SUPLEMENTO_LITERAL
+
+# Suplemento literal de revisão 3 — AUTOMATION-L1
+
+```json
+{
+  "type": "documentary_transport_header",
+  "review_batch": "automation-3",
+  "body_ref": {
+    "path": "body.md",
+    "bytes": 60588,
+    "sha256": "b31d52e5bf25f6eca3807e9c1f418b70d865c9d63c5690125c530c54f8247d84",
+    "git_blob_sha": "04c87b44543b6bde9713228c7b6fda0fc444a00a"
+  },
+  "recipe_ref": {
+    "path": "recipe.json",
+    "bytes": 32520,
+    "sha256": "d42e72daa68af5354ddc50e8f7d03c3bb82b451b2732612fc4a4dbb87ed89a3a",
+    "git_blob_sha": "a2bc0ec47c421abc4fa18ee6f0212213999606ad"
+  },
+  "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "body_sections": [
+    6,
+    7,
+    8,
+    9
+  ],
+  "body_utf8_byte_interval": [
+    30198,
+    48200
+  ],
+  "public_requests": [
+    {
+      "path": "../../relay/automation-3/j1-response.md",
+      "bytes": 8441,
+      "sha256": "906a155f0521df31c8b2be459aaae09df9e656663947257cd8e609e00fd3a790",
+      "git_blob_sha": "cbe146adf53230ac56b7eb438fb5d6cbdcc315c2",
+      "judge_id": "J1",
+      "origin": "public_request_relay",
+      "repository_commit": null
+    },
+    {
+      "path": "../../relay/automation-3/j2-response.md",
+      "bytes": 6448,
+      "sha256": "a23c54ec037b21caebbba4a12a7ea5e21023d6cc53511ac57680afb0709c3626",
+      "git_blob_sha": "c6d7f7e8138706929a7bdbd1977a52a187abcca8",
+      "judge_id": "J2",
+      "origin": "public_request_relay",
+      "repository_commit": null
+    }
+  ],
+  "canonical_request_namespace": "J1; J2 correspondence in index",
+  "j2_mapping": {
+    "RE-AUT3-01": [
+      "RE-AUT3-01"
+    ],
+    "RE-AUT3-02": [
+      "RE-AUT3-02",
+      "RE-AUT3-03"
+    ],
+    "RE-AUT3-03": [
+      "RE-AUT3-04",
+      "RE-AUT3-05"
+    ],
+    "RE-AUT3-04": [
+      "RE-AUT3-04",
+      "RE-AUT3-05"
+    ],
+    "RE-AUT3-05": [
+      "RE-AUT3-06"
+    ]
+  },
+  "authorized_body_revision": {
+    "receipt": {
+      "path": "revisions/v3/delta.json",
+      "bytes": 13658,
+      "sha256": "f10e98f4211547e710c099aaa2827c79f44ee1b1cef583435c85b6298b1aeb0a",
+      "git_blob_sha": "3f4f98e9e15b2a473e989b3a3e955f0025158ee0"
+    },
+    "substitutions": [
+      {
+        "id": "AUT3-DELTA-01",
+        "section": "7.2",
+        "old_text": "Estado scoped-red resulta de fail mais recente; scoped-green precisa de requisitos existentes e pass dos caminhos requeridos; sem requisito, retorna null. Um check error/pending não vira pass.",
+        "new_text": "O estado usa o resultado mais recente por `(kind, command)` no tree: qualquer `fail` produz scoped-red e, sem requisito configurado, retorna null. Para scoped-green, basta algum check `scoped` com `pass` quando há scoped.tests, além de um `pass` por workflow exigido. Isso pode coexistir com outros checks scoped `pending`/`error`; não prova que todos os comandos scoped passaram.",
+        "v2_byte_interval": [
+          37127,
+          37320
+        ],
+        "v3_byte_interval": [
+          37127,
+          37510
+        ],
+        "line_1_based": 218,
+        "old_bytes": 193,
+        "new_bytes": 383,
+        "sources": [
+          {
+            "path": "packages/core/src/board/ci.ts",
+            "archive": "sources/packages/core/src/board/ci.ts",
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "git_blob_sha": "77bc3370fc8a34249a2baf19ee10c7e8151cdc6b",
+            "sha256": "7a67b182097690e957ec40cf04f753e2695047f7b2fa5f19b792d8db9e38c7dd",
+            "bytes": 25362,
+            "intervals": [
+              {
+                "first_line": 426,
+                "last_line": 454,
+                "bytes": 1376,
+                "sha256": "58ae1526d9c8d4ac7d3f88a2ab84e7800b3cff54383d61bfc08b6a466f53ca61"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "AUT3-DELTA-02",
+        "section": "7.2",
+        "old_text": "Workflows são enviados uma vez por tree/arquivo no ledger observado.",
+        "new_text": "Para o card, o ledger evita novo dispatch do mesmo workflow no mesmo tree quando já existe row com outcome diferente de `error`; se houver apenas rows em `error`, permite outra tentativa.",
+        "v2_byte_interval": [
+          37328,
+          37397
+        ],
+        "v3_byte_interval": [
+          37518,
+          37706
+        ],
+        "line_1_based": 220,
+        "old_bytes": 69,
+        "new_bytes": 188,
+        "sources": [
+          {
+            "path": "packages/core/src/board/ci.ts",
+            "archive": "sources/packages/core/src/board/ci.ts",
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "git_blob_sha": "77bc3370fc8a34249a2baf19ee10c7e8151cdc6b",
+            "sha256": "7a67b182097690e957ec40cf04f753e2695047f7b2fa5f19b792d8db9e38c7dd",
+            "bytes": 25362,
+            "intervals": [
+              {
+                "first_line": 284,
+                "last_line": 334,
+                "bytes": 2226,
+                "sha256": "5d3e7d96176dbfdc57e2228ab8ca3b916e3e1176fd40ae1dd2703db200b3f74c"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "AUT3-DELTA-03",
+        "section": "7.3",
+        "old_text": "Subscription engine ou preço ausente é `not-metered`, e mistura de medido/não medido pode ser parcial.",
+        "new_text": "`spend.card` considera medida a Session com custo positivo cujo provider não é `claude-code`; não medidas entram na outra classe apenas se têm tokens. O meter de modelos é `not-metered` sem Sessions vinculadas, ou se não houver Session medida e houver não medidas com tokens; nos demais casos retorna `usd`, inclusive `usd:0` com ambas as classes vazias. A coexistência de medidas e não medidas com tokens marca `partial`.",
+        "v2_byte_interval": [
+          38086,
+          38191
+        ],
+        "v3_byte_interval": [
+          38395,
+          38826
+        ],
+        "line_1_based": 224,
+        "old_bytes": 105,
+        "new_bytes": 431,
+        "sources": [
+          {
+            "path": "packages/core/src/board/spend.ts",
+            "archive": "sources/packages/core/src/board/spend.ts",
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "git_blob_sha": "c5c82e700282b4ba2fad710a5a87daae0328b6f9",
+            "sha256": "11d1284e196ac2f72708d88a47d7f839f5e380d0f4cc87e0a196d4b4c32d45ce",
+            "bytes": 6301,
+            "intervals": [
+              {
+                "first_line": 9,
+                "last_line": 17,
+                "bytes": 298,
+                "sha256": "11e57701550c4f28d47e01b9f0573780adfd54725ef82c8f44632583672d3765"
+              },
+              {
+                "first_line": 19,
+                "last_line": 55,
+                "bytes": 1836,
+                "sha256": "c847abd79187739114d26ec4afb991658796afd94cc4f325adfe08ef4cf0cd2f"
+              },
+              {
+                "first_line": 127,
+                "last_line": 133,
+                "bytes": 197,
+                "sha256": "606d9fc0800f9cce0a5986f041c9f4c6f7a5518d4d7dbe98e8e0c669f62aede5"
+              }
+            ]
+          },
+          {
+            "path": "packages/core/src/board/money.ts",
+            "archive": "sources/packages/core/src/board/money.ts",
+            "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+            "git_blob_sha": "2e898a1aaf5d8740ced0bcd0a8afe0baa3996bc9",
+            "sha256": "30254e118087b0f8ac51e48b0c1f4a5f2e7bfd7a4bf2907267fe37c13a8a582b",
+            "bytes": 9068,
+            "intervals": [
+              {
+                "first_line": 21,
+                "last_line": 64,
+                "bytes": 2143,
+                "sha256": "5aa187dd5ec8d182e9d79255cfffe71172f8594619da5fbed3eac67eade60244"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "inverse_to_v2_verified": true
+  },
+  "prior_literals": "evidence-review.md; existing B01–B13 ranges reused by exact byte offsets and hashes",
+  "shared_population_reconciliation": "review-supplement-1-index.json#/shared_population_reconciliation",
+  "new_population_census": false,
+  "history_repeated": false,
+  "tests": "NOT_RUN",
+  "provider_execution": "NOT_RUN",
+  "oracle_access": false
+}
+```
+
+## AUT3-C01
+
+```json
+{
+  "block_id": "AUT3-C01",
+  "type": "literal_source_chain",
+  "canonical_request_namespace": "J1",
+  "requests": [
+    "RE-AUT3-01",
+    "RE-AUT3-02",
+    "RE-AUT3-04",
+    "RE-AUT3-05",
+    "RE-AUT3-06"
+  ],
+  "body_anchors": [
+    "B01",
+    "B02",
+    "B03",
+    "B07",
+    "B10",
+    "B13"
+  ],
+  "requested_subject": "Serviço completo desde constants/make: transações/projeções/trail/deps/CRUD/move/steps/questions/decisions/notes/attachments/undo/owner controls/polls/ports",
+  "path": "packages/core/src/board/board.ts",
+  "archive": "sources/packages/core/src/board/board.ts",
+  "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_git_blob_sha": "0488f3819c967df78abd4d6a5a94805e48b3213e",
+  "source_sha256": "9b0f56eb1b4c8a78bec8b6af3ce16a71a25bfdcb4e3a3b581317b4126f99141d",
+  "source_bytes": 83719,
+  "required_source_line_ranges": [
+    [
+      149,
+      1720
+    ]
+  ],
+  "prior_literal_ranges": [
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "B01",
+      "source_path": "packages/core/src/board/board.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "0488f3819c967df78abd4d6a5a94805e48b3213e",
+      "source_sha256": "9b0f56eb1b4c8a78bec8b6af3ce16a71a25bfdcb4e3a3b581317b4126f99141d",
+      "first_line": 181,
+      "last_line": 191,
+      "excerpt_bytes": 695,
+      "excerpt_sha256": "a5ea906ff67fe689af9f1e2f8544a4b7042bbfbe03dcc711b6334a6ffcd18ff6",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 116538,
+      "literal_content_byte_end_exclusive": 117233
+    },
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "B02",
+      "source_path": "packages/core/src/board/board.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "0488f3819c967df78abd4d6a5a94805e48b3213e",
+      "source_sha256": "9b0f56eb1b4c8a78bec8b6af3ce16a71a25bfdcb4e3a3b581317b4126f99141d",
+      "first_line": 427,
+      "last_line": 441,
+      "excerpt_bytes": 765,
+      "excerpt_sha256": "2d6dae25e7ea22c5f0361b45215fd328aa1f402d39dc49899cd0d90fb63a6941",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 118515,
+      "literal_content_byte_end_exclusive": 119280
+    },
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "B02",
+      "source_path": "packages/core/src/board/board.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "0488f3819c967df78abd4d6a5a94805e48b3213e",
+      "source_sha256": "9b0f56eb1b4c8a78bec8b6af3ce16a71a25bfdcb4e3a3b581317b4126f99141d",
+      "first_line": 1062,
+      "last_line": 1089,
+      "excerpt_bytes": 2006,
+      "excerpt_sha256": "d23bb3b4e4968535e1bddcf2f3d02a45da24959b480691f34ded27ce88ad91c7",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 119415,
+      "literal_content_byte_end_exclusive": 121421
+    },
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "B03",
+      "source_path": "packages/core/src/board/board.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "0488f3819c967df78abd4d6a5a94805e48b3213e",
+      "source_sha256": "9b0f56eb1b4c8a78bec8b6af3ce16a71a25bfdcb4e3a3b581317b4126f99141d",
+      "first_line": 1421,
+      "last_line": 1441,
+      "excerpt_bytes": 1254,
+      "excerpt_sha256": "fcf6abe6bcb809623543fadebcc2dcae7cbdbd4650fa4f5a866a451269a6912d",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 124407,
+      "literal_content_byte_end_exclusive": 125661
+    }
+  ]
+}
+```
+
+```json
+{"first_line":149,"last_line":180,"bytes":1696,"sha256":"4d5ee50e69bdce0afba5fc1619c80964af7c3f84f4903d283a1aa5b2b76cfff6"}
+```
+
+~~~~typescript
+const TRAIL_MS = 30_000
+// Fields GitHub mirrors (slice B2); changing one marks the issue for the next push.
+const MIRRORED = ["title", "body", "type", "epic_id", "stage", "steps"]
+const UNDOABLE = ["issue.update", "issue.move", "steps.set", "epic.upsert", "question.withdraw"]
+const ISSUE_COLUMNS = ["title", "body", "type", "epic_id", "estimate", "seat", "session_id", "branch", "pr_number", "stage", "position", "stage_entered_at", "attempts", "crash_reason", "guardrail_rule", "area", "order"]
+const EPIC_COLUMNS = ["title", "goal", "position", "status"]
+
+/**
+ * `gh` replaces the GitHub runner (tests inject recorded responses); `scanner` replaces the toolkit's gitleaks with a command (executable and leading arguments); `poll`
+ * starts the 60 second sync of every mirrored project and the 10 minute snapshot of every Building card. `record` binds
+ * Atlas's PR record renderer for the merge queue.
+ */
+export const layerWith = (options: {
+  readonly env?: NodeJS.ProcessEnv
+  readonly gh?: BoardGithub.Gh
+  readonly record?: BoardRecord.Port
+  readonly scanner?: ReadonlyArray<string>
+  readonly poll?: boolean
+  /** Replaces the merge queue's `turbo` affected set; tests bind it so they need no installed workspace. */
+  readonly affected?: BoardQueue.Deps["affected"]
+}) =>
+  Layer.effect(
+    Service,
+    Effect.gen(function* () {
+      const database = yield* Database.Service
+      const events = yield* EventV2.Service
+      const credentials = yield* Credential.Service
+      const proc = yield* AppProcess.Service
+      const global = yield* Global.Service
+      const db = database.db
+      const cache = new Map<string, { readonly at: number; readonly trail: Board.Trail }>()
+
+~~~~
+
+```json
+{"first_line":192,"last_line":426,"bytes":10932,"sha256":"35491ab5522d590ea6eb5f19af5f988d2ea762ecd425ce2a904df8cfeb043f9f"}
+```
+
+~~~~typescript
+
+      const issueRecords = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow, rows: IssueRow[]) {
+        if (rows.length === 0) return []
+        const ids = rows.map((row) => row.id)
+        const known = yield* numbers(tx, project)
+        const steps = yield* tx
+          .select()
+          .from(BoardStepTable)
+          .where(inArray(BoardStepTable.issue_id, ids))
+          .orderBy(asc(BoardStepTable.position))
+          .all()
+        const dependencies = yield* refs(tx, "depends", ids)
+        const queued = yield* tx.select().from(BoardQueueTable).where(inArray(BoardQueueTable.issue_id, ids)).all()
+        const cut = queued.length
+          ? yield* tx
+              .select({ issue: BoardBundleMemberTable.issue_id, n: BoardBundleTable.n })
+              .from(BoardBundleMemberTable)
+              .innerJoin(BoardBundleTable, eq(BoardBundleTable.id, BoardBundleMemberTable.bundle_id))
+              .where(and(inArray(BoardBundleMemberTable.issue_id, ids), inArray(BoardBundleTable.status, ["open", "accepted"])))
+              .all()
+          : []
+        const conflicted = queued.length
+          ? yield* tx
+              .select({ issue: BoardAttemptTable.issue_id })
+              .from(BoardAttemptTable)
+              .where(
+                and(inArray(BoardAttemptTable.issue_id, ids), isNull(BoardAttemptTable.outcome), isNotNull(BoardAttemptTable.conflict_base)),
+              )
+              .all()
+          : []
+        return rows.map(
+          (row): Board.Issue => ({
+            id: row.id,
+            number: row.number,
+            ref: `${project.key}-${row.number}`,
+            epic: row.epic_id ? (known.epics.get(row.epic_id) ?? null) : null,
+            title: row.title,
+            body: row.body,
+            type: row.type,
+            stage: row.stage,
+            position: row.position,
+            estimate: row.estimate,
+            seat: row.seat,
+            sessionID: row.session_id,
+            branch: row.branch,
+            prNumber: row.pr_number,
+            holdBeforeMerge: row.hold_before_merge,
+            paused: row.paused,
+            stageEnteredAt: row.stage_entered_at,
+            githubNumber: row.github_number,
+            steps: steps
+              .filter((step) => step.issue_id === row.id)
+              .map((step) => ({ title: step.title, status: step.status, now: step.now })),
+            dependsOn: dependencies.filter((item) => item.issue === row.id).map((item) => item.ref),
+            area: row.area,
+            order: row.order,
+            queue: queueState(
+              row,
+              queued.find((item) => item.issue_id === row.id),
+              cut.find((item) => item.issue === row.id)?.n,
+              conflicted.some((item) => item.issue === row.id),
+            ),
+          }),
+        )
+      })
+
+      // "depends": what each issue waits on. "blocks": which issues wait on each one.
+      const refs = Effect.fnUntraced(function* (tx: Tx, direction: "depends" | "blocks", ids: Board.IssueID[]) {
+        const self = direction === "depends" ? BoardDependencyTable.issue_id : BoardDependencyTable.depends_on_id
+        const other = direction === "depends" ? BoardDependencyTable.depends_on_id : BoardDependencyTable.issue_id
+        const rows = yield* tx
+          .select({ issue: self, key: BoardProjectTable.key, number: BoardIssueTable.number })
+          .from(BoardDependencyTable)
+          .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, other))
+          .innerJoin(BoardProjectTable, eq(BoardProjectTable.id, BoardIssueTable.project_id))
+          .where(inArray(self, ids))
+          .orderBy(asc(BoardProjectTable.key), asc(BoardIssueTable.number))
+          .all()
+        return rows.map((row) => ({ issue: row.issue, ref: `${row.key}-${row.number}` }))
+      })
+
+      const questionRecords = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow, rows: QuestionRow[]) {
+        const known = yield* numbers(tx, project)
+        return rows.map((row) => toQuestion(row, known))
+      })
+
+      // Read live through the pull-request plumbing and never stored. Only good reads are cached, briefly.
+      const trail = Effect.fnUntraced(function* (issue: IssueRow, directory: string | null, fresh: boolean) {
+        if (!issue.pr_number || !directory) return { state: "none", branch: issue.branch } satisfies Board.Trail
+        const key = `${directory}#${issue.pr_number}`
+        const now = yield* Clock.currentTimeMillis
+        const hit = cache.get(key)
+        if (!fresh && hit && now - hit.at < TRAIL_MS) return hit.trail
+        cache.delete(key)
+        const pulls = yield* PullRequest.make({ directory, env: options.env }).pipe(
+          Effect.provideService(AppProcess.Service, proc),
+        )
+        return yield* pulls.read(issue.pr_number).pipe(
+          Effect.map(
+            (pr): Board.Trail => ({
+              state: "ok",
+              branch: pr.branch,
+              pr,
+              verifiedAt: now,
+              commits: pr.commits.map((commit) => ({ hash: commit.hash, message: commit.message, seat: issue.seat })),
+            }),
+          ),
+          Effect.tap((value) => Effect.sync(() => cache.set(key, { at: now, trail: value }))),
+          Effect.catchTag("PullRequest.HostError", (error) =>
+            Effect.succeed<Board.Trail>(
+              error.kind === "not_authenticated"
+                ? { state: "signed_out", message: "GitHub is signed out; sign in with gh to see the git trail." }
+                : { state: "error", message: error.message },
+            ),
+          ),
+        )
+      })
+
+      const snapshotOf = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow) {
+        const epics = yield* tx
+          .select()
+          .from(BoardEpicTable)
+          .where(eq(BoardEpicTable.project_id, project.id))
+          .orderBy(asc(BoardEpicTable.position), asc(BoardEpicTable.number))
+          .all()
+        const issues = yield* tx
+          .select()
+          .from(BoardIssueTable)
+          .where(eq(BoardIssueTable.project_id, project.id))
+          .orderBy(asc(BoardIssueTable.stage), asc(BoardIssueTable.position), asc(BoardIssueTable.number))
+          .all()
+        const questions = yield* tx
+          .select()
+          .from(BoardQuestionTable)
+          .where(and(eq(BoardQuestionTable.project_id, project.id), eq(BoardQuestionTable.status, "open")))
+          .orderBy(asc(BoardQuestionTable.time_created))
+          .all()
+        const latest = yield* tx
+          .select({ id: BoardActivityTable.id })
+          .from(BoardActivityTable)
+          .where(eq(BoardActivityTable.project_id, project.id))
+          .orderBy(desc(BoardActivityTable.id))
+          .limit(1)
+          .get()
+        const history = yield* tx
+          .select({ issue: BoardActivityTable.issue_id, reason: BoardActivityTable.reason, after: BoardActivityTable.after, at: BoardActivityTable.time_created })
+          .from(BoardActivityTable)
+          .where(eq(BoardActivityTable.project_id, project.id))
+          .orderBy(asc(BoardActivityTable.id))
+          .all()
+        const forecast = yield* forecastOf(tx, project)
+        return {
+          project: toProject(project),
+          epics: epics.map((row) => toEpic(project.key, row)),
+          issues: yield* issueRecords(tx, project, issues),
+          questions: yield* questionRecords(tx, project, questions),
+          cursor: latest?.id ?? null,
+          forecast: forecast.project,
+          epicForecasts: forecast.epics,
+          scope: BoardForecast.scope(history),
+          ledger: yield* BoardLedger.of(tx, project),
+        } satisfies Board.Snapshot
+      })
+
+      const activityOf = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow, rows: ActivityRow[]) {
+        const known = yield* numbers(tx, project)
+        return rows.map((row) => toActivity(row, known.issues))
+      })
+
+      const pageOf = Effect.fnUntraced(function* (key: string, number: number) {
+        const loaded = yield* reading((tx) =>
+          Effect.gen(function* () {
+            const project = yield* loadProject(tx, key)
+            const row = yield* loadIssue(tx, project, number)
+            const known = yield* numbers(tx, project)
+            const questions = yield* tx
+              .select()
+              .from(BoardQuestionTable)
+              .where(eq(BoardQuestionTable.issue_id, row.id))
+              .orderBy(asc(BoardQuestionTable.time_created))
+              .all()
+            const notes = yield* tx
+              .select()
+              .from(BoardNoteTable)
+              .where(eq(BoardNoteTable.issue_id, row.id))
+              .orderBy(asc(BoardNoteTable.time_created), asc(BoardNoteTable.id))
+              .all()
+            const attachments = yield* tx
+              .select()
+              .from(BoardAttachmentTable)
+              .where(eq(BoardAttachmentTable.issue_id, row.id))
+              .orderBy(asc(BoardAttachmentTable.time_created), asc(BoardAttachmentTable.id))
+              .all()
+            const activity = yield* tx
+              .select()
+              .from(BoardActivityTable)
+              .where(eq(BoardActivityTable.issue_id, row.id))
+              .orderBy(asc(BoardActivityTable.id))
+              .all()
+            const issue = (yield* issueRecords(tx, project, [row]))[0]
+            return {
+              row,
+              directory: yield* worktree(tx, project),
+              page: {
+                issue,
+                record: row.record,
+                questions: questions.map((item) => toQuestion(item, known)),
+                notes: notes.map((item) => toNote(item, number)),
+                attachments: attachments.map((item) => toAttachment(item, number)),
+                activity: activity.map((item) => toActivity(item, known.issues)),
+                dependencies: {
+                  dependsOn: issue.dependsOn,
+                  blocks: (yield* refs(tx, "blocks", [row.id])).map((item) => item.ref),
+                },
+              },
+            }
+          }),
+        )
+        return {
+          ...loaded.page,
+          trail: yield* trail(loaded.row, loaded.directory, false),
+          pushState: yield* snapshots.state(loaded.row.id).pipe(Effect.orElseSucceed(() => null)),
+        } satisfies Board.IssuePage
+      })
+
+      // The plain-language summary of a guardrail rule from the checkout's own engine; null when it cannot be read.
+      const ruleSummary = Effect.fnUntraced(function* (directory: string | null, rule: string) {
+        if (!directory) return null
+        const guard = yield* Guardrail.make({ directory, env: options.env }).pipe(Effect.provideService(AppProcess.Service, proc))
+        return yield* guard.rules().pipe(
+          Effect.map((found) => found.rules.find((item) => item.id === rule)?.summary ?? null),
+          Effect.catchTag("Guardrail.EngineError", () => Effect.succeed(null)),
+        )
+      })
+
+~~~~
+
+```json
+{"first_line":442,"last_line":1061,"bytes":29741,"sha256":"4730164ac2bd3437829cdc4014157e165790a5007f0bd88c885f32ba61d20ced"}
+```
+
+~~~~typescript
+      }
+
+      const resolveRepo = Effect.fnUntraced(function* (tx: Tx, repo: string) {
+        const row = yield* tx
+          .select({ id: ProjectTable.id })
+          .from(ProjectTable)
+          .where(
+            path.isAbsolute(repo)
+              ? eq(ProjectTable.worktree, AbsolutePath.make(path.resolve(repo)))
+              : eq(ProjectTable.id, ProjectSchema.ID.make(repo)),
+          )
+          .get()
+        if (!row) return yield* new NotFoundError({ message: `No Orchestra project matches the repo ${repo}; open it in Orchestra first.` })
+        return row.id
+      })
+
+      const resolveDependencies = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow, list: readonly string[]) {
+        return yield* Effect.forEach(list, (ref) =>
+          Effect.gen(function* () {
+            const match = /^(?:([A-Z]{2,6})-)?(\d+)$/.exec(ref.trim())
+            if (!match) return yield* new RefusedError({ message: `"${ref}" is not an issue ref; use ${project.key}-12 or 12.` })
+            const owner = match[1] && match[1] !== project.key ? yield* loadProject(tx, match[1]) : project
+            return (yield* loadIssue(tx, owner, Number(match[2]))).id
+          }),
+        )
+      })
+
+      const setDependencies = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow, issue: IssueRow, list: readonly string[]) {
+        const ids = Array.from(new Set(yield* resolveDependencies(tx, project, list)))
+        const edges = (yield* tx.select().from(BoardDependencyTable).all()).filter((edge) => edge.issue_id !== issue.id)
+        const cycle = ids.find((id) => reaches(edges, id, issue.id, new Set()))
+        if (cycle)
+          return yield* new RefusedError({
+            message:
+              cycle === issue.id
+                ? `${project.key}-${issue.number} cannot depend on itself.`
+                : `That dependency would make a cycle: ${list.join(", ")} already waits on ${project.key}-${issue.number}.`,
+          })
+        yield* tx.delete(BoardDependencyTable).where(eq(BoardDependencyTable.issue_id, issue.id)).run()
+        if (ids.length > 0)
+          yield* tx
+            .insert(BoardDependencyTable)
+            .values(ids.map((id) => ({ issue_id: issue.id, depends_on_id: id })))
+            .run()
+      })
+
+      const replaceSteps = Effect.fnUntraced(function* (tx: Tx, issue: Board.IssueID, steps: readonly Board.Step[]) {
+        yield* tx.delete(BoardStepTable).where(eq(BoardStepTable.issue_id, issue)).run()
+        if (steps.length > 0)
+          yield* tx
+            .insert(BoardStepTable)
+            .values(
+              steps.map((step, position) => ({
+                id: Board.StepID.create(),
+                issue_id: issue,
+                position,
+                title: step.title,
+                status: step.status,
+                now: step.now,
+              })),
+            )
+            .run()
+      })
+
+      const stepsOf = Effect.fnUntraced(function* (tx: Tx, issue: Board.IssueID) {
+        return (yield* tx
+          .select()
+          .from(BoardStepTable)
+          .where(eq(BoardStepTable.issue_id, issue))
+          .orderBy(asc(BoardStepTable.position))
+          .all()).map((step): Board.Step => ({ title: step.title, status: step.status, now: step.now }))
+      })
+
+      const issueResult = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow, id: Board.IssueID, activity: Board.ActivityID) {
+        const row = yield* tx.select().from(BoardIssueTable).where(eq(BoardIssueTable.id, id)).get()
+        const issue = row ? (yield* issueRecords(tx, project, [row]))[0] : undefined
+        return {
+          result: issue ? { activity, issue } : { activity },
+          changed: changed(project.id, activity, id),
+        }
+      })
+
+      // Applies an activity row's fields to the current state; used by undo.
+      const apply = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow, row: ActivityRow, fields: Fields | null) {
+        if (row.action === "question.withdraw") {
+          yield* tx
+            .update(BoardQuestionTable)
+            .set({ status: fields?.status === "withdrawn" ? "withdrawn" : "open" })
+            .where(eq(BoardQuestionTable.id, String(row.after?.id ?? row.before?.id) as Board.QuestionID))
+            .run()
+          return
+        }
+        if (row.action === "epic.upsert") {
+          const id = String(row.after?.id ?? row.before?.id) as Board.EpicID
+          if (!fields) {
+            const used = yield* tx.select({ id: BoardIssueTable.id }).from(BoardIssueTable).where(eq(BoardIssueTable.epic_id, id)).get()
+            if (used) return yield* new RefusedError({ message: "Issues belong to that epic now; it cannot be uncreated." })
+            yield* tx.delete(BoardEpicTable).where(eq(BoardEpicTable.id, id)).run()
+            return
+          }
+          yield* tx
+            .update(BoardEpicTable)
+            .set(pick(fields, EPIC_COLUMNS) as Partial<typeof BoardEpicTable.$inferInsert>)
+            .where(eq(BoardEpicTable.id, id))
+            .run()
+          return
+        }
+        const issue = row.issue_id
+        if (!issue || !fields) return
+        if (Array.isArray(fields.steps)) yield* replaceSteps(tx, issue, fields.steps as Board.Step[])
+        if (Array.isArray(fields.depends_on)) {
+          const current = yield* tx.select().from(BoardIssueTable).where(eq(BoardIssueTable.id, issue)).get()
+          if (current) yield* setDependencies(tx, project, current, fields.depends_on as string[])
+        }
+        const columns = pick(fields, ISSUE_COLUMNS) as Partial<typeof BoardIssueTable.$inferInsert>
+        const dirty = Object.keys(fields).some((key) => MIRRORED.includes(key)) && project.github_repo !== null
+        if (Object.keys(columns).length > 0 || dirty)
+          yield* tx
+            .update(BoardIssueTable)
+            .set({ ...columns, ...(dirty ? { github_dirty: true } : {}) })
+            .where(eq(BoardIssueTable.id, issue))
+            .run()
+      })
+
+      const github = BoardGithub.make({
+        quiet: (work) => quiet(work).pipe(Effect.orDie),
+        publish: (changed) => events.publish(Board.Event.Changed, changed),
+        log,
+        gh: options.gh ?? BoardGithub.runner(proc, options.env),
+      })
+      const ci = BoardCi.make({
+        ...options,
+        quiet: (work) => quiet(work).pipe(Effect.orDie),
+        proc,
+        gh: options.gh ?? BoardGithub.runner(proc, options.env),
+      })
+      const snapshots = BoardSnapshot.make({
+        quiet: (work) => quiet(work).pipe(Effect.orDie),
+        proc,
+        scanner: options.scanner
+          ? Effect.succeed(options.scanner)
+          : BackendToolkit.ensure("gitleaks").pipe(
+              Effect.map((ready) => [ready.executable]),
+              Effect.orElseSucceed(() => undefined),
+              Effect.provideService(AppProcess.Service, proc),
+            ),
+        remote: (directory, project) => ci.contract(directory, project).pipe(Effect.map((contract) => contract.snapshots.remote)),
+        env: options.env,
+      })
+
+      const conflicts = BoardConflicts.make({
+        quiet: (work) => quiet(work).pipe(Effect.orDie),
+        git: gitRunner(proc, options.env),
+        base: (directory, project) => ci.contract(directory, project).pipe(Effect.map((contract) => contract.base)),
+        publish: (changed) => events.publish(Board.Event.Changed, changed),
+      })
+
+      const queue = BoardQueue.make({
+        quiet: (work) => quiet(work).pipe(Effect.orDie),
+        proc,
+        env: options.env,
+        gh: options.gh ?? BoardGithub.runner(proc, options.env),
+        contract: ci.contract,
+        publish: (changed) => events.publish(Board.Event.Changed, changed),
+        record: options.record,
+        affected: options.affected,
+      })
+
+      if (options.poll)
+        yield* conflicts.sweep().pipe(Effect.ignore, Effect.repeat(Schedule.spaced("60 seconds")), Effect.forkScoped)
+
+      if (options.poll) yield* queue.tick().pipe(Effect.ignore, Effect.repeat(Schedule.spaced("60 seconds")), Effect.forkScoped)
+
+      if (options.poll)
+        yield* snapshots.sweep().pipe(Effect.ignore, Effect.repeat(Schedule.spaced("10 minutes")), Effect.forkScoped)
+
+      if (options.poll)
+        yield* reading((tx) =>
+          tx
+            .select({ key: BoardProjectTable.key, id: BoardProjectTable.id, github: BoardProjectTable.github_repo })
+            .from(BoardProjectTable)
+            .where(ne(BoardProjectTable.status, "archived"))
+            .all(),
+        ).pipe(
+          Effect.flatMap((rows) =>
+            Effect.forEach(rows, (row) =>
+              Effect.gen(function* () {
+                if (row.github) {
+                  yield* github.sync(row.key)
+                  yield* github.ci(row.key)
+                }
+                // CI minutes are spend too: a fetch can be what pushes the forecast past 90%.
+                const raised = yield* quiet((tx) => BoardMoney.evaluate(tx, row.id))
+                if (raised) yield* events.publish(Board.Event.Changed, { project: row.id, activity: raised })
+              }),
+            ),
+          ),
+          Effect.ignore,
+          Effect.repeat(Schedule.spaced("60 seconds")),
+          Effect.forkScoped,
+        )
+
+      return Service.of({
+        summaries: Effect.fn("Board.summaries")(function* (options) {
+          return yield* reading((tx) =>
+            Effect.gen(function* () {
+              const projects = yield* tx
+                .select()
+                .from(BoardProjectTable)
+                .where(options?.archived ? undefined : ne(BoardProjectTable.status, "archived"))
+                .orderBy(asc(BoardProjectTable.key))
+                .all()
+              const stages = yield* tx
+                .select({ project: BoardIssueTable.project_id, stage: BoardIssueTable.stage, count: sql<number>`count(*)` })
+                .from(BoardIssueTable)
+                .groupBy(BoardIssueTable.project_id, BoardIssueTable.stage)
+                .all()
+              const open = yield* tx
+                .select({ project: BoardQuestionTable.project_id, blocking: BoardQuestionTable.blocking })
+                .from(BoardQuestionTable)
+                .where(eq(BoardQuestionTable.status, "open"))
+                .all()
+              return yield* Effect.forEach(projects, (project) =>
+                Effect.gen(function* () {
+                  const questions = open.filter((item) => item.project === project.id)
+                  return {
+                    project: toProject(project),
+                    stages: Object.fromEntries(
+                      stages.filter((item) => item.project === project.id).map((item) => [item.stage, item.count]),
+                    ),
+                    openQuestions: questions.length,
+                    health:
+                      project.status === "paused"
+                        ? "paused"
+                        : project.forecast_late_streak >= 2
+                          ? "at_risk"
+                          : questions.some((item) => item.blocking)
+                            ? "waiting_on_owner"
+                            : "on_track",
+                    forecast: (yield* forecastOf(tx, project)).project,
+                  } satisfies Board.Summary
+                }),
+              )
+            }),
+          )
+        }),
+
+        snapshot: Effect.fn("Board.snapshot")(function* (key) {
+          return yield* reading((tx) => loadProject(tx, key).pipe(Effect.flatMap((project) => snapshotOf(tx, project))))
+        }),
+
+        read: Effect.fn("Board.read")(function* (input) {
+          const loaded = yield* reading((tx) =>
+            Effect.gen(function* () {
+              const project = yield* loadProject(tx, input.project)
+              const snapshot = yield* snapshotOf(tx, project)
+              const rows = yield* tx
+                .select()
+                .from(BoardActivityTable)
+                .where(
+                  and(
+                    eq(BoardActivityTable.project_id, project.id),
+                    input.since ? gt(BoardActivityTable.id, input.since) : undefined,
+                    ne(BoardActivityTable.actor, "maestro"),
+                  ),
+                )
+                .orderBy(desc(BoardActivityTable.id))
+                .limit(100)
+                .all()
+              const ordered = rows.toReversed()
+              const noteIDs = ordered.flatMap((row) =>
+                (row.action === "note.add" || row.action === "note.edit") && row.after?.id ? [String(row.after.id) as Board.NoteID] : [],
+              )
+              const answerIDs = ordered.flatMap((row) =>
+                row.action === "question.answer" && row.after?.id ? [String(row.after.id) as Board.QuestionID] : [],
+              )
+              const known = yield* numbers(tx, project)
+              const notes = noteIDs.length > 0 ? yield* tx.select().from(BoardNoteTable).where(inArray(BoardNoteTable.id, noteIDs)).all() : []
+              const answers =
+                answerIDs.length > 0 ? yield* tx.select().from(BoardQuestionTable).where(inArray(BoardQuestionTable.id, answerIDs)).all() : []
+              const attachments = yield* tx
+                .select()
+                .from(BoardAttachmentTable)
+                .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardAttachmentTable.issue_id))
+                .where(eq(BoardIssueTable.project_id, project.id))
+                .orderBy(asc(BoardAttachmentTable.id))
+                .all()
+              return {
+                ...snapshot,
+                since: {
+                  activity: ordered.map((row) => toActivity(row, known.issues)),
+                  notes: notes.map((row) => toNote(row, known.issues.get(row.issue_id) ?? 0)),
+                  answers: answers.map((row) => toQuestion(row, known)),
+                },
+                attachments: attachments.map((row) => toAttachment(row.board_attachment, row.board_issue.number)),
+              }
+            }),
+          )
+          if (input.issue === undefined) return loaded satisfies Board.Read
+          return { ...loaded, issue: yield* pageOf(input.project, input.issue) } satisfies Board.Read
+        }),
+
+        issuePage: Effect.fn("Board.issuePage")(function* (key, number) {
+          return yield* pageOf(key, number)
+        }),
+
+        spend: Effect.fn("Board.spend")(function* (key) {
+          return yield* reading((tx) => BoardMoney.report(tx, key))
+        }),
+
+        decisions: Effect.fn("Board.decisions")(function* (key) {
+          return yield* reading((tx) => BoardDecision.list(tx, key))
+        }),
+
+        proof: Effect.fn("Board.proof")(function* (key, number) {
+          const loaded = yield* reading((tx) => BoardProof.load(tx, key, number))
+          const live = yield* trail(loaded.row, loaded.directory, false)
+          const summary = loaded.row.guardrail_rule ? yield* ruleSummary(loaded.directory, loaded.row.guardrail_rule) : null
+          return BoardProof.build(key, loaded, live, summary)
+        }),
+
+        activity: Effect.fn("Board.activity")(function* (key, since) {
+          return yield* reading((tx) =>
+            Effect.gen(function* () {
+              const project = yield* loadProject(tx, key)
+              const rows = yield* tx
+                .select()
+                .from(BoardActivityTable)
+                .where(
+                  and(
+                    eq(BoardActivityTable.project_id, project.id),
+                    since ? gt(BoardActivityTable.id, since as Board.ActivityID) : undefined,
+                  ),
+                )
+                .orderBy(asc(BoardActivityTable.id))
+                .all()
+              return yield* activityOf(tx, project, rows)
+            }),
+          )
+        }),
+
+        project: Effect.fn("Board.project")(function* (input) {
+          const done = yield* write((tx) =>
+            Effect.gen(function* () {
+              const existing = yield* tx.select().from(BoardProjectTable).where(eq(BoardProjectTable.key, input.key)).get()
+              const repo = input.repo === undefined ? undefined : input.repo === null ? null : yield* resolveRepo(tx, input.repo)
+              const next = {
+                name: input.name,
+                goal: input.goal,
+                target_date: input.target_date,
+                repo_project_id: repo,
+                github_repo: input.github_repo,
+              }
+              if (!existing) {
+                if (!input.name) return yield* new RefusedError({ message: `A new project needs a name; give ${input.key} one.` })
+                const id = Board.ProjectID.create()
+                const row = {
+                  id,
+                  key: input.key,
+                  name: input.name,
+                  goal: input.goal ?? "",
+                  target_date: input.target_date ?? null,
+                  budget_usd: null,
+                  repo_project_id: repo ?? null,
+                  github_repo: input.github_repo ?? null,
+                  status: "active" as const,
+                  github_state: "off" as const,
+                  next_issue_number: 1,
+                  next_epic_number: 1,
+                }
+                yield* tx.insert(BoardProjectTable).values(row).run()
+                const activity = yield* log(tx, {
+                  project: id,
+                  actor: "maestro",
+                  action: "project.upsert",
+                  reason: input.reason,
+                  after: pick(row, ["key", "name", "goal", "target_date", "repo_project_id", "github_repo"]),
+                })
+                return { result: { activity }, changed: changed(id, activity) }
+              }
+              yield* requireActive(existing)
+              const change = diff(existing, next)
+              if (!change) return yield* new RefusedError({ message: `Nothing to change on ${input.key}.` })
+              yield* tx.update(BoardProjectTable).set(change.after).where(eq(BoardProjectTable.id, existing.id)).run()
+              const activity = yield* log(tx, {
+                project: existing.id,
+                actor: "maestro",
+                action: "project.upsert",
+                reason: input.reason,
+                ...change,
+              })
+              return { result: { activity }, changed: changed(existing.id, activity) }
+            }),
+          )
+          return done.result
+        }),
+
+        epic: Effect.fn("Board.epic")(function* (input) {
+          const done = yield* write((tx) =>
+            Effect.gen(function* () {
+              const project = yield* loadProject(tx, input.project)
+              yield* requireActive(project)
+              if (input.number === undefined) {
+                if (!input.title) return yield* new RefusedError({ message: "A new epic needs a title." })
+                const id = Board.EpicID.create()
+                const last = yield* tx
+                  .select({ position: sql<number | null>`max(${BoardEpicTable.position})` })
+                  .from(BoardEpicTable)
+                  .where(eq(BoardEpicTable.project_id, project.id))
+                  .get()
+                const row = {
+                  title: input.title,
+                  goal: input.goal ?? "",
+                  position: input.position ?? (last?.position ?? 0) + 1,
+                  status: input.status ?? ("open" as const),
+                }
+                yield* tx
+                  .insert(BoardEpicTable)
+                  .values({ id, project_id: project.id, number: project.next_epic_number, ...row })
+                  .run()
+                yield* tx
+                  .update(BoardProjectTable)
+                  .set({ next_epic_number: project.next_epic_number + 1 })
+                  .where(eq(BoardProjectTable.id, project.id))
+                  .run()
+                const activity = yield* log(tx, {
+                  project: project.id,
+                  actor: "maestro",
+                  action: "epic.upsert",
+                  reason: input.reason,
+                  after: { id, number: project.next_epic_number, ...row },
+                })
+                return { result: { activity }, changed: changed(project.id, activity) }
+              }
+              const epic = yield* loadEpic(tx, project, input.number)
+              const change = diff(epic, { title: input.title, goal: input.goal, position: input.position, status: input.status })
+              if (!change) return yield* new RefusedError({ message: `Nothing to change on ${project.key}-E${epic.number}.` })
+              yield* tx.update(BoardEpicTable).set(change.after).where(eq(BoardEpicTable.id, epic.id)).run()
+              const activity = yield* log(tx, {
+                project: project.id,
+                actor: "maestro",
+                action: "epic.upsert",
+                reason: input.reason,
+                before: { id: epic.id, ...change.before },
+                after: { id: epic.id, ...change.after },
+              })
+              return { result: { activity }, changed: changed(project.id, activity) }
+            }),
+          )
+          return done.result
+        }),
+
+        issue: Effect.fn("Board.issue")(function* (input) {
+          const done = yield* write((tx) =>
+            Effect.gen(function* () {
+              const project = yield* loadProject(tx, input.project)
+              yield* requireActive(project)
+              const epic =
+                input.epic === undefined ? undefined : input.epic === null ? null : (yield* loadEpic(tx, project, input.epic)).id
+              const now = yield* Clock.currentTimeMillis
+              const fields = {
+                title: input.title,
+                body: input.body,
+                type: input.type,
+                epic_id: epic,
+                estimate: input.estimate,
+                seat: input.seat,
+                session_id: input.session,
+                branch: input.branch,
+                pr_number: input.pr,
+                attempts: input.attempts,

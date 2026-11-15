@@ -1,0 +1,345 @@
+P4 M1 “Triagem antes de alterar estado” sustenta registro de identidade/retorno/hipótese. P4 M2 “Diagnosticar aquisição e prontidão” sustenta receita/runtime/target/floor/layout/launcher, waiter versus aquisição compartilhada, marcador .complete e prefetch. P4 M3 “Diagnosticar vazio, stale e dirty no índice” sustenta basis/freshness/cobertura, source_unavailable, símbolos dirty versus outras relações e limite de conclusões negativas.
+
+P4 M4 “Diagnosticar probes, custódia e publicação incerta” separa resultado/cobrança/captura/admissão/publicação, locators e verdade, identidade/replay/revisão e efeito incerto. P4 M5–M7 sustentam impacto, gerados/donos, verificação futura, lacunas e ausência de execução. O relato Modelina/limite S4 r3 vem exclusivamente de M6 “Encaminhar com evidência suficiente”; os números são herdados e explicitamente não reaferidos, sem afirmação de capacidade atual.
+
+Classificação: mecanismo herdado, orientação e lacuna preservada. Não houve aquisição, probe, fetch, reparo ou consulta de release nesta autoria.
+
+## E04 — Fronteiras do Core e interpretação de fixtures
+
+Destino: body.md §§2–3 e 7.
+
+- P2 §2 “Atlas: abrir a superfície, executar um plano e propor conteúdo”: proposta/staging versus publicação e decisão da superfície; wrapper não qualifica engine.
+- P2 §3 “Relay: da sugestão de comando ao resultado registrado”: gate favorável sem registro como unavailable/unrecorded; cálculo e persistência distintos.
+- P2 §4 “Hooks: pin validado, decisão durável e shipping separado”: validação de material versus origem autorizada e decisão versus recibo.
+- P2 §§5–6 “Workflow: adquirir a versão e projetar o passo” / “Workflow: fence, checkpoint e settlement autenticado”: versão pinada, view currentstep sem avanço, identidade, pending/checkpoint e disposition autenticada; inferência delimitada sem qualificar Relay.
+- P2 §7 “Movimentação e RAG: separar persistência de coordenação”: ordem com efeitos parciais, ausência de transação única, caller/runner externo e limites do schema RAG.
+- P1 §5.1 “Actions, GitHub, Board e transporte” e §5.2 “Capability não é sinônimo de permissão ilimitada no fixture”: respostas controladas/partes reais, pass preparado e SessionExecution substituída no fixture.
+- P1 §§2–5: package, geradores, histórico e suporte de validação são rotas úteis, sem executar o que descrevem.
+
+Classificação: mecanismo herdado, expectativas de testes e limites. A entrada não conclui segurança universal, transação integrada, execução de Session, capacidade de busca ou prova de plataforma.
+
+## E05 — Preservação histórica e seleção da união
+
+Destino: body.md §§1–3, 5 e 7.
+
+P1 abertura, §§1, 4 e 6 “Reuso histórico, contribuição para união e encerramento local” conservam escopos distintos, data/autoridade da história, mock visual versus contrato HTTP e profundidade real das leituras dos 104 paths. Nenhum arquivo histórico foi aberto ou modificado nesta tarefa.
+
+N1 §1 fornece as keys e donos concretos; §2 “Entrada proposta por necessidade” fornece complementaridades; §3 “Cross-flows concretos que a coordenação deve reconciliar” qualifica admissão/execução, workflow/engines, movimentação e bibliotecas/adoção; §4 mantém campos não selecionados e handoffs apenas esperados. O estado fornecido pela receita é PASS_LOCAL_PROPOSAL_NOT_SELECTED_FOR_UNION. O estado preparatório no texto original não foi reescrito.
+
+A tabela da entrada é seleção editorial de rotas dessa proposta, não seleção de versões aceitas de outras subfatias. S3/S4/S5 não recebem keys inventadas. N1 é input de autoria local, sem virar aresta de build externa. inputs/COMMON.md, “Publicação e composição posterior”, e inputs/mission.json, integration_recipient, sustentam S1_COORDINATION/ROOT.
+
+Classificação: proposta pinada e autoridade normativa. Não foram lidos handoffs, pacote da união, respostas externas, bodies externos ou arquivos citados por N1.
+
+## E06 — Protocolo de consumo e intermediários
+
+Destino: body.md §4 e natureza das rotas da §2.
+
+P4 M0 “Quando usar e como consultar” prescreve ownership.index/read, seção pertinente e limitação em caso de acesso/versão/suporte ausentes. P3 §1 “Uso e autoridade desta orientação” oferece rotas rasas por necessidade sem alegar leitura real. P2 §1 “Escopo, evidência e entrada na leitura” fornece aprofundamento por porta, não recibo.
+
+inputs/references/principles.md, GO-A3, SC-2 e GO-I3/4; inputs/references/judging.md, “Consumidor independente”; e payload/recipes/derived-public-criteria.json, AC-02/03, QS-2/3 e GO-I3/4/7, sustentam consulta progressiva limitada, consumidor independente e validade de versão. payload/artifact-plan.json, direct_use_case_plan, fornece exatamente o mapeamento dos sete IDs públicos mencionado na entrada. consumers/public-cases.json é apenas citado pelo plano e NÃO foi aberto.
+
+Os seis passos de §4 são orientação derivada dessa autoridade, não implementação nova de índice/leitor, parâmetros de API, limite numérico inventado, resposta esperada ou prova de consumidor. O procedimento permite parar raso e alcançar intermediários diretamente.
+
+## E07 — Build, navegação, reúso e encaminhamento
+
+Destino: body.md §6.
+
+payload/artifact-plan.json fixa o grafo finito. P3 §7 “Manter conhecimentos e consumidores coerentes” declara a cadeia automação, os demais inputs da entrada, granularidade por artefato, independentes e critérios de propagação. P4 M5 “Preparar uma mudança e sua verificação” preserva cadeia research, impacto/independentes e necessidade de prova real. P2 §8 “Limites de conclusão e encaminhamento” classifica destinos externos como navegação.
+
+inputs/references/transport.md, “Regras pequenas, necessárias desde o primeiro WP”, distingue build_dependencies/navigation e inputs. payload/recipes/derived-public-criteria.json, GO-I3/4/5, AC-05/06 e QS-6, sustenta reúso, autoridade/validade/gaps, recibo versus resultado, adições/remoções/intenção/receita e HOLD quando impacto é indisponível.
+
+A necessidade de rever rotas da entrada se o input N1 mudar é inferência de sua condição de input de autoria; não cria dependência dos artefatos externos. As cadeias abreviadas na entrada são expansão dos prefixos exatos do plano, não chaves novas. Não houve invalidação, rebuild, cache hit, preservação runtime de independentes ou revalidação de consumidores observados.
+
+## E08 — Estado de autoria e verificações permitidas
+
+Destino: body.md §§1 e 7 e declarações de não execução.
+
+payload/recipes/derived-contract.json define L4 e entrada local, receita efetiva e limites. A receita específica, request.txt e dispatch fixam a tarefa presente. inputs/COMMON.md, inputs/SKILL.md, inputs/references/orchestration.md e judging.md separam produtor, par persistente, aceite e consumidor. AGENTS foi lido como autoridade pública; suas regras de produto não foram convertidas em execução de testes nesta tarefa, que explicitamente os proíbe.
+
+Foram lidos os 18 arquivos enumerados, a receita e o pedido, além do dispatch visível conservado literalmente: 21 unidades únicas. A primeira exibição de N1 foi truncada; a releitura integral isolada completou o conteúdo antes da autoria. A conferência determinística recalculou bytes, SHA256 e Git blob SHA dos arquivos enumerados e preservou request.txt. As verificações de outputs abrangem UTF-8, identidade, H2 e ausência de LF terminal em response.md, sem testar produto.
+
+production-manifest.json é registro posterior de produção, não receita retroativa, parecer semântico, pacote nativo publicado ou recibo Atlas. A receita efetiva é o contrato comum + receita específica + pedido/dispatch, com critérios públicos/autoridade enumerados. Não houve leitura de respostas reservadas, pareceres completos, outros corpos, raw source, arquivos apenas citados ou inventário recursivo; não houve delegação, rede, GitHub, teste, mudança de produto/policy/guard/workflow, Atlas ou consumidor. Tokens/tentativas físicas/cobrança não expostos ficam UNKNOWN. Estas declarações delimitam o trabalho observado; não autoatribuem PASS aos critérios.
+
+## END_EVIDENCIA_EXATA
+
+## BEGIN_RECEITA_DE_TAREFA_EXATA
+
+{
+  "schema": "s1-03-derived-task-recipe/v1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "frozen_at_utc": "2026-11-15T10:25:48.140968+00:00",
+  "state": "FROZEN_BEFORE_AUTHOR_DISPATCH",
+  "artifact": {
+    "key": "s1.subslice03.entry",
+    "layer": 4,
+    "need": "entry",
+    "required_build_predecessors": [
+      "s1.subslice03.support",
+      "s1.subslice03.boundary-flow",
+      "s1.subslice03.automation-maintenance",
+      "s1.subslice03.research-maintenance"
+    ],
+    "purpose": "Entrada local rasa e aprofundamento com proposta de navegação para a união"
+  },
+  "predecessors": [
+    {
+      "key": "s1.subslice03.support",
+      "local_body_path": "producers/boundaries/bodies/support.md",
+      "payload_body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/boundaries/bodies/support.md",
+      "body_bytes": 23025,
+      "body_sha256": "498a0454418a14977b9b2f4c4f515711d941b6d4bbece13f1baaa8feaa76d378",
+      "body_git_blob_sha": "facd86eb03aa44ba722a9dda77c4d820ad28479c",
+      "acceptance_gate": [
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J1",
+          "status": "PASS",
+          "body_sha256": "498a0454418a14977b9b2f4c4f515711d941b6d4bbece13f1baaa8feaa76d378",
+          "original_response_sha256": "4d9ae1b8953e8e4c1cb1d6d270387644bb5c4ac9c6201f371c32a7a9acc3abe0"
+        },
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J2",
+          "status": "PASS",
+          "body_sha256": "498a0454418a14977b9b2f4c4f515711d941b6d4bbece13f1baaa8feaa76d378",
+          "original_response_sha256": "e27cb74a5d7f43e41fa79ca52fdc54cc6b76e8761f447e0c6927ed02e869960b"
+        }
+      ],
+      "gate_scope": "Semantic acceptance only; runtime and consumers are separate. Full judge prose is not an author input."
+    },
+    {
+      "key": "s1.subslice03.boundary-flow",
+      "local_body_path": "producers/derived-boundary-flow/body.md",
+      "payload_body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/derived-boundary-flow/body.md",
+      "body_bytes": 16484,
+      "body_sha256": "e18fe141b88a3aba6ede8e8a0dd138876161984db36d4b8e5540f9ab329c0771",
+      "body_git_blob_sha": "4e4b5590f59c67e4fd101e9fcc3d840c9f3da355",
+      "acceptance_gate": [
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J1",
+          "status": "PASS",
+          "body_sha256": "e18fe141b88a3aba6ede8e8a0dd138876161984db36d4b8e5540f9ab329c0771",
+          "original_response_sha256": "bf39bc1e8eff30c4b0c80e710b5d89895dec9fb5c372ce15a092f9fd4bb12e05"
+        },
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J2",
+          "status": "PASS",
+          "body_sha256": "e18fe141b88a3aba6ede8e8a0dd138876161984db36d4b8e5540f9ab329c0771",
+          "original_response_sha256": "74fc5fd95de927e18837c7051daaf3bfa1c6a326c9a229e76020441d63a18638"
+        }
+      ],
+      "gate_scope": "Semantic acceptance only; runtime and consumers are separate. Full judge prose is not an author input."
+    },
+    {
+      "key": "s1.subslice03.automation-maintenance",
+      "local_body_path": "producers/derived-automation-maintenance/body.md",
+      "payload_body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/derived-automation-maintenance/body.md",
+      "body_bytes": 13840,
+      "body_sha256": "8cb4befb0cef6a35002679580d60f1746fdeac26acf45ff08e04942cff83abc7",
+      "body_git_blob_sha": "2685cecdd7df56046cc82f70ac8104c639249e33",
+      "acceptance_gate": [
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J1",
+          "status": "PASS",
+          "body_sha256": "8cb4befb0cef6a35002679580d60f1746fdeac26acf45ff08e04942cff83abc7",
+          "original_response_sha256": "9aedfc9092b3b5b019751612e4094ed1ab71420aa3b360a90493f8765c3bdccd"
+        },
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J2",
+          "status": "PASS",
+          "body_sha256": "8cb4befb0cef6a35002679580d60f1746fdeac26acf45ff08e04942cff83abc7",
+          "original_response_sha256": "28c55b37fb3adf5caac48352617c17624f600ed69b209941e49fc3f5ef05fec2"
+        }
+      ],
+      "gate_scope": "Semantic acceptance only; runtime and consumers are separate. Full judge prose is not an author input."
+    },
+    {
+      "key": "s1.subslice03.research-maintenance",
+      "local_body_path": "producers/derived-research-maintenance/body.md",
+      "payload_body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/derived-research-maintenance/body.md",
+      "body_bytes": 13958,
+      "body_sha256": "b57970febca6ecd87e6df64586e8a1bf557e112a0761ddc3afc58a92f4fc8025",
+      "body_git_blob_sha": "9fd888ebd44a07eba2724423d8cfb5e8e89a9dd1",
+      "acceptance_gate": [
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J1",
+          "status": "PASS",
+          "body_sha256": "b57970febca6ecd87e6df64586e8a1bf557e112a0761ddc3afc58a92f4fc8025",
+          "original_response_sha256": "3631f846544e74c09a11caf52c6d29e557e29c9cb88f21aa4dfa094522b91258"
+        },
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J2",
+          "status": "PASS",
+          "body_sha256": "b57970febca6ecd87e6df64586e8a1bf557e112a0761ddc3afc58a92f4fc8025",
+          "original_response_sha256": "f20d3d04c4caeb254371f63438a671da9339939fabd8b60911bcc046fbabc253"
+        }
+      ],
+      "gate_scope": "Semantic acceptance only; runtime and consumers are separate. Full judge prose is not an author input."
+    }
+  ],
+  "author_context": "Fresh native fork none for this family; no oracle, no judge prose and no raw source. Later family layers reuse this author only after their gates. Do not delegate.",
+  "retained_family_context": null,
+  "union_navigation_proposal_gate": {
+    "local_path": "producers/boundaries/union-navigation-proposal.md",
+    "sha256": "f4362077ed7eb2f0dff7bb76acd60debeaa41bd37886551977b92c02addfcb6e",
+    "status": "PASS_LOCAL_PROPOSAL_NOT_SELECTED_FOR_UNION",
+    "judge_pins": [
+      {
+        "judge_id": "parallel-v3-fresh/S1-03/J1",
+        "status": "PASS",
+        "original_response_sha256": "c590acf642d5db68279bc55eb0e7930015606eb8ac8df889b4da394554a10979"
+      },
+      {
+        "judge_id": "parallel-v3-fresh/S1-03/J2",
+        "status": "PASS",
+        "original_response_sha256": "82237b06839082d4b9bbce93c9d348ab40d08027f1566aad950b058cf5afe5fc"
+      }
+    ]
+  },
+  "exclusive_output_directory": "producers/derived-entry",
+  "payload_output_directory": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/derived-entry",
+  "read_exactly": [
+    {
+      "local_path": "inputs/AGENTS.md",
+      "bytes": 16501,
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "inputs/COMMON.md",
+      "bytes": 12959,
+      "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+      "git_blob_sha": "893cbb5f5eda2d0c19753606a50d1c482523f0c8",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "inputs/mission.json",
+      "bytes": 6006,
+      "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+      "git_blob_sha": "48fa8da131e97c50110ee76e41e79283cd9a0ac4",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "inputs/SKILL.md",
+      "bytes": 8143,
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+      "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "inputs/references/principles.md",
+      "bytes": 6010,
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+      "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "inputs/references/fatia-1.md",
+      "bytes": 3987,
+      "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
+      "git_blob_sha": "78482ad7c72ec275fadb26ebece1c30bc1e5ccb9",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "inputs/references/fresh-start.md",
+      "bytes": 4983,
+      "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166",
+      "git_blob_sha": "ca485b25e43293a309c5489279dce80ce1441ed0",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "inputs/references/orchestration.md",
+      "bytes": 4408,
+      "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+      "git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "inputs/references/judging.md",
+      "bytes": 5787,
+      "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+      "git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "inputs/references/transport.md",
+      "bytes": 8478,
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "payload/artifact-plan.json",
+      "bytes": 5017,
+      "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad",
+      "git_blob_sha": "8dba81b59cd093d28ea07cf4369d5842b6bdee68",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "payload/recipes/derived-contract.json",
+      "bytes": 4017,
+      "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
+      "git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "payload/recipes/derived-public-criteria.json",
+      "bytes": 16244,
+      "sha256": "1e7686491c5b68cb4f3d287377723edcd8932ae803c267ddbabf44a360dfc36e",
+      "git_blob_sha": "d4f6b765e6d78341ba2b77186c77b9177cf3156c",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/boundaries/bodies/support.md",
+      "bytes": 23025,
+      "sha256": "498a0454418a14977b9b2f4c4f515711d941b6d4bbece13f1baaa8feaa76d378",
+      "git_blob_sha": "facd86eb03aa44ba722a9dda77c4d820ad28479c",
+      "whole_file_identity": true,
+      "accepted_predecessor_key": "s1.subslice03.support"
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/body.md",
+      "bytes": 16484,
+      "sha256": "e18fe141b88a3aba6ede8e8a0dd138876161984db36d4b8e5540f9ab329c0771",
+      "git_blob_sha": "4e4b5590f59c67e4fd101e9fcc3d840c9f3da355",
+      "whole_file_identity": true,
+      "accepted_predecessor_key": "s1.subslice03.boundary-flow"
+    },
+    {
+      "local_path": "producers/derived-automation-maintenance/body.md",
+      "bytes": 13840,
+      "sha256": "8cb4befb0cef6a35002679580d60f1746fdeac26acf45ff08e04942cff83abc7",
+      "git_blob_sha": "2685cecdd7df56046cc82f70ac8104c639249e33",
+      "whole_file_identity": true,
+      "accepted_predecessor_key": "s1.subslice03.automation-maintenance"
+    },
+    {
+      "local_path": "producers/derived-research-maintenance/body.md",
+      "bytes": 13958,
+      "sha256": "b57970febca6ecd87e6df64586e8a1bf557e112a0761ddc3afc58a92f4fc8025",
+      "git_blob_sha": "9fd888ebd44a07eba2724423d8cfb5e8e89a9dd1",
+      "whole_file_identity": true,
+      "accepted_predecessor_key": "s1.subslice03.research-maintenance"
+    },
+    {
+      "local_path": "producers/boundaries/union-navigation-proposal.md",
+      "bytes": 14671,
+      "sha256": "f4362077ed7eb2f0dff7bb76acd60debeaa41bd37886551977b92c02addfcb6e",
+      "git_blob_sha": "69886d576e9368bf3bd4469d53c30095114c1d04",
+      "whole_file_identity": true,
+      "role": "Accepted concrete routing proposal, still NOT_SELECTED for union. An authoring input for this entry, not an external artifact build dependency or a grant of external acceptance."
+    }
+  ],
+  "other_actual_inputs": "This frozen recipe, the request file and the visible dispatch. Record their full identities. If an extra source is needed, ask principal before reading.",
+  "instructions": [
+    "Read the listed public authority, plan, common recipe and criteria in full unless already completely read in this same family context, then the exact accepted predecessor body. Avoid output truncation. Retain all earlier actual context inputs in the new manifest. Do not open any oracle, judgment response, unlisted sibling file or recursive directory inventory.",
+    "Produce only this artifact and its evidence/manifest. Do not preproduce a later layer. Use the accepted body as semantic authority, preserving its qualifications. The normative recipe states the role of this layer.",
+    "Write a coherent useful Portuguese reference, normally 6000–14000 UTF-8 bytes, with independent depth2 headings for bounded Atlas read. This is a sizing preference, not permission to omit necessary meaning.",
+    "Explain the defined need, mechanisms, decision boundaries and relevant limitations without copying the full predecessor. Distinguish static findings, contract-test expectations, inference and actual execution.",
+    "Map claims to exact predecessor keys/hashes/sections in evidence.md. Navigation is not a build edge. Do not claim provider qualification, runtime binding, live consumers, maintenance success or global S1 acceptance.",
+    "Store body.md, evidence.md, production-manifest.json, response.md and the exact visible dispatch record in the exclusive directory. Preserve existing request.txt. Include every actual consumed whole-file unit and provenance in production-manifest.json; do not call a postproduction manifest an earlier recipe.",
+    "No network, GitHub writes, product tests or product changes, policy/guard changes, sibling mutations or other agents. Python/file tools may read the enumerated inputs and write your outputs; deterministic hashing is permitted.",
+    "Stop after this one authoring delivery and report hashes, input/output counts and limitations. The principal obtains the same two native judges before releasing a dependent."
+  ],
+  "outputs": [
+    "body.md",
+    "evidence.md",

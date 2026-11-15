@@ -1,0 +1,7 @@
+A principal já recebeu os ACKs nativos de ambos para a parte 2/3. J2: «ACK — **derived-entry-v1, parte 2/3**. Última âncora recebida: receita específica, início do campo **`outputs`**, até **`"evidence.md",`**.
+
+Aguardo a parte 3/3 e o `FIM_DO_LOTE` externo, sem julgamento intermediário.» J1: «ACK_J1 — `derived-entry-v1`, parte **2/3** recebida.
+
+Última âncora: início de `outputs` na receita, com `"body.md"` e `"evidence.md",`.
+
+Aguardo a parte 3/3 e o `FIM_DO_LOTE` externo, sem julgamento.» Podem prosseguir os envios da parte 3. Se a notificação não chegou a você, preserve esta proveniência como cópia literal do FINAL observado pela principal, sem alegar captura direta pelo courier.

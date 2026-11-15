@@ -1,0 +1,1 @@
+ACK parte 3/6, fragmento 2/2 — última âncora recebida: **AUT1-C21**, abertura do bloco de metadados JSON.

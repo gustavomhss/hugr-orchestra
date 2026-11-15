@@ -1,0 +1,34 @@
+{
+  "lot": "derived-automation-maintenance-v1-compact",
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "source": "review-packets/derived-automation-maintenance-v1-compact.md",
+  "source_bytes": 50336,
+  "source_sha256": "5ff12392f08e1ee085b1e901de528f343be07818fb5ad64c47ad93803da4c65e",
+  "source_manifest": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/derived-automation-maintenance-v1-compact.manifest.json",
+  "source_manifest_bytes": 4190,
+  "source_manifest_sha256": "3d971061c7b481b2bfeb46097049f25d657e21fbafbaf1d34331c0989c789426",
+  "parts": [
+    {
+      "number": 1,
+      "file": "part-01.txt",
+      "start": 0,
+      "end": 24911,
+      "bytes": 24911,
+      "sha256": "4b95bd4bc4e711675e5387c3a80f21d0228eb3348cc18c0d472a206dfde7c2af",
+      "terminal_bytes_repr": "b' e limites desta autoria L4; 15 inputs enumerados; cinco outputs exclusivos. |\\n\\n'"
+    },
+    {
+      "number": 2,
+      "file": "part-02.txt",
+      "start": 24911,
+      "end": 50336,
+      "bytes": 25425,
+      "sha256": "8aed479006d734c452d725890651e886ab8cb755a5e95c0d4fae6e9b4130a3d0",
+      "terminal_bytes_repr": "b's itens independentes. O estado fica INCOMPLETE_BLOCKED.\\nEND_LITERAL_AUTHORITY\\n\\n'"
+    }
+  ],
+  "encoding": "UTF-8",
+  "preparation_state": "PREPARED_NOT_DISPATCHED",
+  "dispatch_count_at_preparation": 0,
+  "prepared_at_utc": "2026-11-15T10:18:37.413322+00:00"
+}

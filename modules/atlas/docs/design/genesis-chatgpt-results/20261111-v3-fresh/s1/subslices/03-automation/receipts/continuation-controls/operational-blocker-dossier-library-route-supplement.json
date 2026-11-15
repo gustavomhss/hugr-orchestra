@@ -1,0 +1,14 @@
+{
+  "id": "operational-blocker-dossier-library-route-supplement",
+  "kind": "MECHANICAL_DOCUMENTARY_INPUT_EXTENSION",
+  "target": "/root/native_descriptor",
+  "method": "collaboration.send_message",
+  "message": "Complemento factual autorizado ao seu dossiê: a principal executou agora uma busca exata pelo título source-captures.zip na Library; não retornou candidato com esse nome, e nenhum candidato não relacionado foi aberto. Você pode ler adicionalmente payload/receipts/guard-materialization/exact-zip-library-route-check.json. Inclua a identidade integral desse único arquivo adicional em evidence.json e trate a busca como rota observada sem correspondência exata, nunca como prova de ausência global. O resultado bruto contém candidato fuzzy alheio à missão e fica fora dos seus inputs e do payload; não o abra. Demais limites e saídas permanecem os mesmos.",
+  "message_bytes": 667,
+  "message_sha256": "bfcf36a7b27ddea1216019e951e7c87b1b1512dd9e065b59f8965161819de176",
+  "tool_returned_normally": true,
+  "observed_at_utc": "2026-11-15T09:25:12.932415+00:00",
+  "tokens": "UNKNOWN",
+  "physical_attempts": "UNKNOWN",
+  "cost": "UNKNOWN"
+}

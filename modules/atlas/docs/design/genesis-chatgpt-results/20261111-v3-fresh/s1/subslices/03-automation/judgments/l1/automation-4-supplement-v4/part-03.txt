@@ -1,0 +1,853 @@
+}
+
+// A one-off task whose time has passed cannot resume; it needs a new future time first.
+export function canResume(task: Timing, now: number) {
+  return task.cadence !== "once" || task.next > now
+}
+
+export function resume<T extends Timing>(task: T, now: number): T {
+  if (task.cadence === "once") return { ...task, enabled: true }
+  return { ...task, enabled: true, next: following(task, task.cadence, task.next, now) }
+}
+
+~~~~
+
+```json
+{"first_line":83,"last_line":140,"source_byte_start":4055,"source_byte_end_exclusive":6670,"bytes":2615,"sha256":"026a2c31781e7c3ed8780e55e34830c3ae3950208065ca44955daf1236ede18d"}
+```
+
+~~~~typescript
+
+export function validZone(timezone: string) {
+  return Option.isSome(DateTime.zoneMakeNamed(timezone))
+}
+
+// Local time of day, in minutes after midnight, of an instant in `timezone`.
+export function localMinute(time: number, timezone: string) {
+  const parts = DateTime.toParts(DateTime.makeZonedUnsafe(time, { timeZone: timezone }))
+  return parts.hour * 60 + parts.minute
+}
+
+// Deterministic IDs for the run that serves `slot`, so a retry, a second process or a restart reconciles
+// with the Session and prompt a first attempt already created instead of starting another run. The time
+// prefix matches the ID layout of Sessions (descending) and messages (ascending).
+export function slotIDs(taskID: string, slot: number) {
+  const seed = `${taskID}:${slot}`
+  return {
+    session: `ses_${stamp(slot, true)}${digest(`session:${seed}`)}`,
+    message: `msg_${stamp(slot, false)}${digest(`message:${seed}`)}`,
+  }
+}
+
+// The calendar day `days` after the local day of `from`, at the task's minute, in the task's zone.
+function local(zone: { minute: number; timezone: string }, from: number, days: number) {
+  const parts = DateTime.toParts(DateTime.makeZonedUnsafe(from, { timeZone: zone.timezone }))
+  const wall = Date.UTC(parts.year, parts.month - 1, parts.day + days, Math.floor(zone.minute / 60), zone.minute % 60)
+  return DateTime.toEpochMillis(
+    DateTime.makeZonedUnsafe(wall, { timeZone: zone.timezone, adjustForTimeZone: true, disambiguation: "compatible" }),
+  )
+}
+
+function stamp(time: number, descending: boolean) {
+  const current = BigInt(time) * 0x1000n + 1n
+  const value = descending ? ~current : current
+  return Array.from({ length: 6 }, (_, index) =>
+    Number((value >> BigInt(40 - 8 * index)) & 0xffn)
+      .toString(16)
+      .padStart(2, "0"),
+  ).join("")
+}
+
+const BASE62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+
+// 14 base62 characters from a non-cryptographic hash; IDs only need to be stable and well spread.
+function digest(text: string) {
+  return Array.from({ length: 14 }, (_, index) => BASE62[hash(text, index) % 62]).join("")
+}
+
+function hash(text: string, seed: number) {
+  const codes = Array.from(text, (char) => char.charCodeAt(0))
+  const [a, b] = codes.reduce(
+    ([h1, h2], code) => [Math.imul(h1 ^ code, 2654435761), Math.imul(h2 ^ code, 1597334677)],
+    [0xdeadbeef ^ seed, 0x41c6ce57 ^ seed],
+  )
+  const h1 = Math.imul(a ^ (a >>> 16), 2246822507) ^ Math.imul(b ^ (b >>> 13), 3266489909)
+  const h2 = Math.imul(b ^ (b >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909)
+  return 4294967296 * (2097151 & h2) + (h1 >>> 0)
+}
+~~~~
+
+## AUT4-C07
+
+```json
+{
+  "block_id": "AUT4-C07",
+  "type": "literal_source_chain",
+  "requests": [
+    "RE-AUT4-02",
+    "RE-AUT4-03"
+  ],
+  "body_anchors": [
+    "S03"
+  ],
+  "requested_subject": "Complete capability timing: cron parsing, possible dates and OR, anchor/catchup, bounds/scan/countWalls and gap resolution",
+  "path": "packages/core/src/scheduled-task/capability-model.ts",
+  "archive": "sources/packages/core/src/scheduled-task/capability-model.ts",
+  "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_git_blob_sha": "b92983cab05a5cff1ae32f459378192d07ddfc0b",
+  "source_sha256": "256620d07285f1e60c7e6023f4101e4f8738a565f43a6b859d8c1a7861230620",
+  "source_bytes": 10649,
+  "required_source_line_ranges": [
+    [
+      1,
+      218
+    ]
+  ],
+  "prior_literal_ranges": [
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "S03",
+      "role": "previously_transported_implementation",
+      "source_path": "packages/core/src/scheduled-task/capability-model.ts",
+      "source_archive": "sources/packages/core/src/scheduled-task/capability-model.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "b92983cab05a5cff1ae32f459378192d07ddfc0b",
+      "source_sha256": "256620d07285f1e60c7e6023f4101e4f8738a565f43a6b859d8c1a7861230620",
+      "source_bytes": 10649,
+      "first_line": 42,
+      "last_line": 58,
+      "source_byte_start": 1838,
+      "source_byte_end_exclusive": 2738,
+      "excerpt_bytes": 900,
+      "excerpt_sha256": "90f9f24d6735968e84ff4c3d8a3d66adbe63e9a6d63986cad801c59bf1b3e927",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 164779,
+      "literal_content_byte_end_exclusive": 165679
+    },
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "S03",
+      "role": "previously_transported_implementation",
+      "source_path": "packages/core/src/scheduled-task/capability-model.ts",
+      "source_archive": "sources/packages/core/src/scheduled-task/capability-model.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "b92983cab05a5cff1ae32f459378192d07ddfc0b",
+      "source_sha256": "256620d07285f1e60c7e6023f4101e4f8738a565f43a6b859d8c1a7861230620",
+      "source_bytes": 10649,
+      "first_line": 83,
+      "last_line": 105,
+      "source_byte_start": 4012,
+      "source_byte_end_exclusive": 5326,
+      "excerpt_bytes": 1314,
+      "excerpt_sha256": "42e180a8a3fbb208c1f84c68aa1cea1fffd6f4ab9e79a2d2c3f08f942945bc47",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 165811,
+      "literal_content_byte_end_exclusive": 167125
+    },
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "S03",
+      "role": "previously_transported_implementation",
+      "source_path": "packages/core/src/scheduled-task/capability-model.ts",
+      "source_archive": "sources/packages/core/src/scheduled-task/capability-model.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "b92983cab05a5cff1ae32f459378192d07ddfc0b",
+      "source_sha256": "256620d07285f1e60c7e6023f4101e4f8738a565f43a6b859d8c1a7861230620",
+      "source_bytes": 10649,
+      "first_line": 177,
+      "last_line": 189,
+      "source_byte_start": 8574,
+      "source_byte_end_exclusive": 9320,
+      "excerpt_bytes": 746,
+      "excerpt_sha256": "22f04c2fa6b2c7439332a70975dfeb3edc166b8134a8cb4f24be2748548bca0c",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 167258,
+      "literal_content_byte_end_exclusive": 168004
+    }
+  ]
+}
+```
+
+```json
+{"first_line":1,"last_line":41,"source_byte_start":0,"source_byte_end_exclusive":1838,"bytes":1838,"sha256":"b3ed2d7e2bfa64c3b5f2ee49a612eb9b78c1442592e8b0154d38ef279cc0ecb1"}
+```
+
+~~~~typescript
+export * as ScheduledTaskCapabilityModel from "./capability-model"
+
+import { DateTime, Option } from "effect"
+import type { CapabilityScheduleContract } from "../capability/schedule/contract"
+
+// Pure timing for capability schedules. Legacy-browser tasks keep model.ts unchanged.
+export type Timing = Readonly<{
+  cadence: CapabilityScheduleContract.Cadence
+  /** IANA zone; daily/weekly/cron wall-clock fields are read in it. */
+  timezone: string
+  /** Epoch ms of the slot currently owed (the persisted `next`). */
+  next: number
+  enabled: boolean
+  catchUp: "latest" | "skip"
+}>
+
+/** `skipped` counts slots that will never run because of this plan. Catch-up counts local wall times, so several
+ * cron matches inside one DST gap count separately although they collapse into one run. */
+export type Plan =
+  | { readonly type: "wait" }
+  | { readonly type: "run"; readonly slot: number; readonly skipped: number }
+  | { readonly type: "skip"; readonly skipped: number }
+
+export type Cron = Readonly<{ minutes: ReadonlySet<number>; hours: ReadonlySet<number>; days: ReadonlySet<number>;
+  months: ReadonlySet<number>; weekdays: ReadonlySet<number>; dayRestricted: boolean; weekdayRestricted: boolean }>
+
+const MINUTE = 60_000
+const DAY = 86_400_000
+// A once slot later than this is skipped; with catchUp "skip" a slot later than one tick is not run.
+const LATE = DAY
+const TICK = MINUTE
+// Local days searched for the next match: 28 years covers the weekday cycle of any date and Feb 29 across 2100.
+const HORIZON = 28 * 366
+const LIMIT = 100_000
+// Bounds of minute, hour, day-of-month, month and day-of-week (7 is also Sunday).
+const LOW = [0, 0, 1, 1, 0]
+const HIGH = [59, 23, 31, 12, 7]
+const MONTH_DAYS = [0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+
+type Clock = { zone: DateTime.TimeZone; cron: Cron; times: number[] }
+
+~~~~
+
+```json
+{"first_line":59,"last_line":82,"source_byte_start":2738,"source_byte_end_exclusive":4012,"bytes":1274,"sha256":"cdb65caf3f00d9539d02f10f23695c85fb29cd68287b5b91035da642e1977629"}
+```
+
+~~~~typescript
+  // With both day fields restricted any matching weekday fires; otherwise some selected month must hold the day.
+  const possible =
+    (cron.dayRestricted && cron.weekdayRestricted) ||
+    sets[3].some((month) => sets[2].some((day) => day <= MONTH_DAYS[month]))
+  return possible ? cron : undefined
+}
+
+/** First slot strictly after `after`; DST gaps resolve to the next valid local instant; undefined for a past once. */
+export function nextAfter(timing: Timing, after: number): number | undefined {
+  const cadence = timing.cadence
+  if (!inRange(after)) return undefined
+  if (cadence.kind === "once") return cadence.at > after ? cadence.at : undefined
+  if (cadence.kind === "interval") {
+    const step = cadence.minutes * MINUTE
+    const slot = timing.next > after ? timing.next : timing.next + (Math.floor((after - timing.next) / step) + 1) * step
+    return inRange(slot) ? slot : undefined
+  }
+  const clock = wallClock(timing)
+  if (!clock) return undefined
+  // Wall times at or before `after`'s own map to instants at or before it; inside a repeated hour later wall
+  // times can too, so the scan keeps going until an instant passes `after`.
+  return scan(clock, Math.floor(localWall(clock.zone, after) / MINUTE) * MINUTE, 1, (instant) => instant > after)
+}
+
+~~~~
+
+```json
+{"first_line":106,"last_line":176,"source_byte_start":5326,"source_byte_end_exclusive":8574,"bytes":3248,"sha256":"7cdad15bff132d9982a3c4d46f371bddb17d3a5b509ebce738ec920fb96599ca"}
+```
+
+~~~~typescript
+
+function wallClock(timing: Timing): Clock | undefined {
+  const cadence = timing.cadence
+  if (cadence.kind === "once" || cadence.kind === "interval") return undefined
+  const zone = Option.getOrUndefined(DateTime.zoneMakeNamed(timing.timezone))
+  // Daily and weekly are the cron rules "M H * * *" and "M H * * D".
+  const cron = parseCron(
+    cadence.kind === "cron"
+      ? cadence.expression
+      : `${cadence.time.split(":").map(Number).reverse().join(" ")} * * ${cadence.kind === "weekly" ? cadence.day : "*"}`,
+  )
+  if (!zone || !cron) return undefined
+  const times = [...cron.hours].flatMap((hour) => [...cron.minutes].map((minute) => hour * 60 + minute))
+  return { zone, cron, times: times.sort((a, b) => a - b) }
+}
+
+// The last slot at or before `now`. When `now` is in the second pass of a repeated hour, wall times up to one
+// offset change past its own already ran, so the backward scan starts that much later.
+function latestSlot(clock: Clock, now: number) {
+  const repeat = Math.max(0, localWall(clock.zone, now - DAY) - (now - DAY) - (localWall(clock.zone, now) - now))
+  const start = Math.floor((localWall(clock.zone, now) + repeat) / MINUTE) * MINUTE + MINUTE
+  return scan(clock, start, -1, (instant) => instant <= now)
+}
+
+// The first accepted instant among matching wall times from `from`; resolution is monotone in wall time.
+function scan(clock: Clock, from: number, step: 1 | -1, accept: (instant: number) => boolean) {
+  let wall = seek(clock, from, step)
+  for (let index = 0; wall !== undefined && index < LIMIT; index++) {
+    const instant = resolve(clock.zone, wall)
+    if (accept(instant)) return instant
+    wall = seek(clock, wall, step)
+  }
+  return undefined
+}
+
+// The first matching local wall time after `bound` (step 1) or the last one before it (step -1).
+function seek(clock: Clock, bound: number, step: 1 | -1) {
+  const first = Math.floor(bound / DAY)
+  for (let index = 0; index <= HORIZON; index++) {
+    const day = first + index * step
+    if (!matchesDay(clock.cron, day)) continue
+    const walls = clock.times.map((time) => day * DAY + time * MINUTE)
+    const wall = step === 1 ? walls.find((wall) => wall > bound) : walls.findLast((wall) => wall < bound)
+    if (wall !== undefined) return wall
+  }
+  return undefined
+}
+
+function matchesDay(cron: Cron, day: number) {
+  const date = new Date(day * DAY)
+  if (!cron.months.has(date.getUTCMonth() + 1)) return false
+  const dayOfMonth = cron.days.has(date.getUTCDate())
+  const weekday = cron.weekdays.has(date.getUTCDay())
+  return cron.dayRestricted && cron.weekdayRestricted ? dayOfMonth || weekday : dayOfMonth && weekday
+}
+
+// Matching wall times in (from, to].
+function countWalls(clock: Clock, from: number, to: number) {
+  const first = Math.floor(from / DAY)
+  const last = Math.floor(to / DAY)
+  return Array.from({ length: Math.min(Math.max(0, last - first + 1), LIMIT) }, (_, index) => first + index).reduce(
+    (total, day) => {
+      if (!matchesDay(clock.cron, day)) return total
+      if (day > first && day < last) return total + clock.times.length
+      const walls = clock.times.map((time) => day * DAY + time * MINUTE)
+      return total + walls.filter((wall) => wall > from && wall <= to).length
+    },
+    0,
+  )
+}
+
+~~~~
+
+```json
+{"first_line":190,"last_line":218,"source_byte_start":9320,"source_byte_end_exclusive":10649,"bytes":1329,"sha256":"e1bbd1e2a7d0410bb5383e661cae46c63013f4c0436523ce413bb0f9440000fa"}
+```
+
+~~~~typescript
+}
+
+// Local wall-clock time of an instant, encoded as UTC epoch ms.
+function localWall(zone: DateTime.TimeZone, instant: number) {
+  return instant + DateTime.zonedOffset(DateTime.makeZonedUnsafe(instant, { timeZone: zone }))
+}
+
+// Effect DateTime rejects instants near the edge of the Date range.
+function inRange(instant: number) {
+  return Math.abs(instant) < 8e15
+}
+
+function parseField(field: string, min: number, max: number) {
+  const items = field.split(",").map((item) => parseItem(item, min, max))
+  return items.every((item): item is number[] => item !== undefined) ? items.flat() : undefined
+}
+
+function parseItem(item: string, min: number, max: number) {
+  const match = /^(?:(\*)|(\d+)(?:-(\d+))?)(?:\/(\d+))?$/.exec(item)
+  if (!match) return undefined
+  // A step needs `*` or a range; `a/n` is not Vixie syntax.
+  if (match[4] !== undefined && match[1] === undefined && match[3] === undefined) return undefined
+  const low = match[1] ? min : Number(match[2])
+  const high = match[1] ? max : Number(match[3] ?? match[2])
+  const step = Number(match[4] ?? 1)
+  // Like cronie, a step above the field maximum is rejected.
+  if (low < min || high > max || low > high || step < 1 || step > max) return undefined
+  return Array.from({ length: Math.floor((high - low) / step) + 1 }, (_, index) => low + index * step)
+}
+~~~~
+
+## FIM_DO_SUPLEMENTO_LITERAL
+
+## Assertions T01 disponibilizadas integralmente neste transporte
+
+Os oito intervalos abaixo já estavam no arquivo evidence.md, mas não se presume que todos foram recebidos nos lotes anteriores. Fornecidos agora literalmente; NOT_RUN. Não constituem execução de testes.
+
+### T01-complemento-1
+
+Path `packages/core/test/actions/readback.test.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `817254ee4c663e5ae3d2d61639d4c70a7cafe009`; fonte SHA-256 `b10276afdb9bcfda8f704de349657d320511703049c604df3ee1e26978e99412`; linhas 182–231; trecho 2145 bytes, SHA-256 `b145215ca93279f47eeec4e28cad49f8e1bf31556ef49a2fe96798550deb936a`.
+
+```typescript
+  it.live(`retry readback requires native attempt: ${retry.name}`, () =>
+    Effect.gen(function* () {
+      const f = yield* fixture()
+      const binding = yield* f.create()
+      f.native.github = {
+        ...Object.fromEntries(Object.entries(f.native.github).filter(([key]) => key !== "run_attempt")),
+        ...(retry.attempt === undefined ? {} : { run_attempt: retry.attempt }),
+      }
+      const command = intent(binding, f.commit, {
+        kind: "run.retryFailed",
+        target: { runID },
+        expected: { commit: f.commit, attempt: 3 },
+      })
+      const receipt = yield* accepted(f, binding, command, {
+        runID,
+        ...(retry.acknowledged === undefined ? {} : { attempt: retry.acknowledged }),
+      })
+      expect((yield* f.api.reconcile(binding, receipt.id)).state).toBe(retry.state)
+      expect((yield* row(f, receipt.id))?.expected).toEqual(command.expected)
+    }),
+  )
+})
+
+it.live("GitLab retry stays pending when native pipeline exposes no attempt", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture()
+    const binding = yield* f.create(gitlab)
+    const receipt = yield* accepted(f, binding, intent(binding, f.commit, { kind: "run.retry", target: { runID } }), {
+      runID,
+      attempt: 4,
+    })
+    expect(yield* f.api.reconcile(binding, receipt.id)).toEqual(receipt)
+    expect(f.requests.map((call) => call.input.path)).toEqual(["projects/5678", `projects/5678/pipelines/${runID}`])
+  }),
+)
+const cancellations = [
+  { provider: github, status: "in_progress", conclusion: null, state: "accepted" },
+  { provider: github, status: "completed", conclusion: "cancelled", state: "confirmed" },
+  { provider: gitlab, status: "canceling", conclusion: null, state: "accepted" },
+  { provider: gitlab, status: "canceled", conclusion: null, state: "confirmed" },
+] satisfies {
+  provider: Actions.Provider
+  status: string
+  conclusion: string | null
+  state: Actions.Operation["state"]
+}[]
+cancellations.forEach((cancel) => {
+  it.live(`${cancel.provider.kind} cancel requires desired native status: ${cancel.status}`, () =>
+    Effect.gen(function* () {
+      const f = yield* fixture()
+
+```
+
+### T01-complemento-2
+
+Path `packages/core/test/actions-resource-schedules.test.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `56f5d0629d1b482e953bc28801155c8f06b03ffb`; fonte SHA-256 `30ea7374a0b515d6a96ece1296e40a68957c5839e5ae59be9b88bacd30ee31f5`; linhas 22–51; trecho 2614 bytes, SHA-256 `9878883b5668e79af595869504055190e73b4a31f513a3e835da3c25fc7e1ac9`.
+
+```typescript
+it.live("partial schedule creation and variable rejection stays outcome_unknown; no rollback or retry", Effect.gen(function* () {
+  const fixture = yield* ActionsResourceFixture.make("gitlab")
+  fixture.state.handler = (request) => request.path.endsWith("/variables") ? { status: 403, data: { message: "synthetic-secret-rejection" } } : undefined
+  const error = yield* ActionsSchedules.make(fixture).perform(fixture.binding,
+    { ...ActionsResourceFixture.intent(fixture.binding, "resource.create", "schedules"), target: { resourceKind: "schedules", ref: "dev" } },
+    { provider: "gitlab", name: "Nightly", cron: "17 2 * * *", zone: "UTC", ref: "dev", input: "target=synthetic-secret-value" }).pipe(Effect.flip)
+  expect(error).toMatchObject({ kind: "outcome_unknown", disposition: "unknown" })
+  expect(JSON.stringify(error)).not.toContain("synthetic-secret")
+  expect(fixture.requests.filter((request) => request.method !== "GET").map((request) => request.path))
+    .toEqual(["projects/9347/pipeline_schedules", "projects/9347/pipeline_schedules/13/variables"])
+}))
+
+it.live("explicit empty schedule variable field clears observed native keys using 202 deletion acknowledgements", Effect.gen(function* () {
+  const fixture = yield* ActionsResourceFixture.make("gitlab")
+  fixture.state.handler = (request): ActionsResourceFixture.Reply | undefined => {
+    if (request.path.endsWith("/variables/target")) return { status: 202, data: { key: "target", value: "synthetic-private-value", variable_type: "env_var" } }
+    if (request.method === "GET" && request.path.endsWith("/pipeline_schedules/13"))
+      return { data: { ...ActionsResourceFixture.schedule, variables: [{ key: "target", value: "synthetic-private-value", variable_type: "env_var" }] } }
+  }
+  const schedules = ActionsSchedules.make(fixture)
+  const page = yield* schedules.list(fixture.binding, { kind: "schedules", resourceID: "13" })
+  expect(JSON.stringify(page)).not.toContain("synthetic-private-value")
+  expect(yield* schedules.perform(fixture.binding,
+    { ...ActionsResourceFixture.intent(fixture.binding, "resource.update", "schedules", "13"), target: { resourceKind: "schedules", resourceID: "13", ref: "dev" } },
+    { provider: "gitlab", name: "Nightly", cron: "17 2 * * *", zone: "UTC", ref: "dev", input: "" }))
+    .toEqual({ acknowledgement: { resourceID: "13" } })
+  expect(fixture.requests.filter((request) => request.method !== "GET").map((request) => [request.method, request.path]))
+    .toEqual([["PUT", "projects/9347/pipeline_schedules/13"], ["DELETE", "projects/9347/pipeline_schedules/13/variables/target"]])
+}))
+
+
+```
+
+### T01-complemento-3
+
+Path `packages/core/test/actions-transport-gitlab-http.test.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `142f2e1116aad7479389f8640c0c5c9b4c1be4a9`; fonte SHA-256 `177c37ffc41d22526e737abf31f214250bef0e8a0d5f031515477419c324d875`; linhas 28–49; trecho 1498 bytes, SHA-256 `0ea7ea1e35337455dc6b2194f62637ae3a5783501726e0e74e62b2d63e0e04f1`.
+
+```typescript
+it.live("real TLS peer consumes mutation body before reset; transport outcome stays unknown and redacted", Effect.gen(function* () {
+  const fixture = yield* ActionsHttpFixture.make()
+  const body = { ref: "main", value: "synthetic-mutation-value" }
+  const state = { consumed: 0 }
+  fixture.serverState.handler = (request, response) => {
+    if (request.url === "/api/v4/user") {
+      response.writeHead(200, { "Content-Type": "application/json" }); response.end('{"id":913,"username":"fixture-user"}'); return
+    }
+    request.on("data", (chunk) => { state.consumed += chunk.length })
+    request.once("end", () => request.socket.destroy())
+  }
+  const error = yield* fixture.service.request(fixture.binding(), { method: "POST", path: "projects/9347/pipeline", body }).pipe(Effect.flip)
+  const mutation = fixture.requests.find((request) => request.method === "POST")
+  expect(state.consumed).toBe(Buffer.byteLength(JSON.stringify(body)))
+  expect(mutation?.size).toBe(state.consumed)
+  expect(mutation?.digest).toBe(createHash("sha256").update(JSON.stringify(body)).digest("hex"))
+  expect(error).toMatchObject({ kind: "transport_failed", disposition: "unknown", bindingID: fixture.binding().id })
+  expect(JSON.stringify(error)).not.toContain("synthetic-provider")
+  expect(JSON.stringify(error)).not.toContain(body.value)
+  expect(fixture.requests.map((request) => [request.method, request.path])).toEqual([["GET", "/api/v4/user"], ["POST", "/api/v4/projects/9347/pipeline"]])
+}), 120_000)
+
+
+```
+
+### T01-complemento-4
+
+Path `packages/core/test/board-budget.test.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `d7be43a0a867980844c94009c138bc0bba6e5693`; fonte SHA-256 `34a372da5e198a2cc1330fd429ca2a9da647205c8801ff39f60e4fdeb1040dbc`; linhas 93–130; trecho 1983 bytes, SHA-256 `3b2d1ca25d7be0d94d6a68e9663b81b496287cfb7b8a53e896b6ab6d7e36321b`.
+
+```typescript
+  it.live("an answered question becomes a decision; overturning keeps both, linked", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      yield* board.project({ key: "DEC", name: "Decisions", reason: "Start." })
+      yield* board.issue({ project: "DEC", title: "Pick", reason: "Plan." })
+      yield* board.question({ action: "ask", project: "DEC", issue: 1, text: "A or B?", options, recommended: "a", reason: "Blocks." })
+      const question = (yield* board.snapshot("DEC")).questions[0]!
+      yield* board.answer("DEC", question.id, { option: "b" })
+
+      const first = (yield* board.decisions("DEC"))[0]!
+      expect(first).toMatchObject({
+        issue: 1,
+        question: "A or B?",
+        recommended: "a",
+        chosen: "b",
+        chosenLabel: "Option B",
+        answeredBy: "owner",
+        outcome: "applied, no result yet",
+        supersedes: null,
+        overturnedBy: null,
+      })
+
+      yield* board.decisionOutcome({ project: "DEC", id: question.id, outcome: "B shipped in the first week.", reason: "It landed." })
+      expect((yield* board.decisions("DEC"))[0]?.outcome).toBe("B shipped in the first week.")
+
+      yield* board.changeDecision("DEC", first.id, { option: "a", text: "On reflection A." })
+      const all = yield* board.decisions("DEC")
+      expect(all).toHaveLength(2)
+      const current = all.find((item) => item.supersedes === first.id)!
+      expect(current).toMatchObject({ chosen: "a", text: "On reflection A.", overturnedBy: null })
+      expect(all.find((item) => item.id === first.id)?.overturnedBy).toBe(current.id)
+      expect(Exit.isFailure(yield* Effect.exit(board.changeDecision("DEC", first.id, { option: "b" })))).toBe(true)
+      expect(Exit.isFailure(yield* Effect.exit(board.changeDecision("DEC", current.id, { option: "zzz" })))).toBe(true)
+      // The card names the decision that moved it.
+      expect((yield* board.proof("DEC", 1)).decidedBy?.id).toBe(current.id)
+    }),
+  )
+
+
+```
+
+### T01-complemento-5
+
+Path `packages/core/test/board-queue.test.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `8ded9fcbbcd0b414bbea9ed2e43a6e36ab931f78`; fonte SHA-256 `9f75b5fe9d6cea03242d2e40a1db43602fe984a48134e1635c6d3510c010aec8`; linhas 145–187; trecho 1993 bytes, SHA-256 `e1a377eb640a85d0904a9619dd7317f2904bd9c53ae0d98276aeb9251ed30288`.
+
+```typescript
+  it.live("a host that pushed base and died before writing the rows merges once on restart", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QCR", 2)
+      yield* card(repo, "QCR", 1, "a.txt")
+      yield* card(repo, "QCR", 2, "b.txt")
+      yield* board.queue({ project: "QCR", number: 1, reason: "Verified." })
+      yield* board.queue({ project: "QCR", number: 2, reason: "Verified." })
+      yield* board.queueTick()
+      expect(repo.remote.pulls.get(102)).toBe("bundle-QCR-1")
+      yield* board.queueTick()
+      repo.remote.conclusion = "SUCCESS"
+
+      const database = yield* Database.Service
+      const open = yield* database.db
+        .select({ head: BoardBundleTable.head_sha })
+        .from(BoardBundleTable)
+        .innerJoin(BoardProjectTable, eq(BoardProjectTable.id, BoardBundleTable.project_id))
+        .where(and(eq(BoardProjectTable.key, "QCR"), eq(BoardBundleTable.status, "open")))
+        .get()
+        .pipe(Effect.orDie)
+      if (!open) return yield* Effect.die("The bundle is not open.")
+      yield* Effect.promise(() => git(repo.directory, "push", "--quiet", "origin", `${open.head}:refs/heads/main`))
+
+      yield* board.queueTick()
+      expect([yield* stage(repo, 1), yield* stage(repo, 2)]).toEqual(["shipped", "shipped"])
+      expect(yield* bundleStatuses(repo)).toEqual(["merged"])
+      expect(yield* origin(repo, "main")).toBe(open.head)
+    }),
+  )
+
+  it.live("two ticks at once settle a project only once", () =>
+    Effect.gen(function* () {
+      const board = yield* Board.Service
+      const repo = yield* repository("QLK", 1)
+      yield* card(repo, "QLK", 1, "a.txt")
+      yield* board.queue({ project: "QLK", number: 1, reason: "Verified.", flush: true })
+      yield* Effect.all([board.queueTick(), board.queueTick()], { concurrency: 2, discard: true })
+      expect(yield* bundleStatuses(repo)).toHaveLength(1)
+      expect(repo.remote.pulls.size).toBe(2)
+    }),
+  )
+
+
+```
+
+### T01-complemento-6
+
+Path `packages/core/test/scheduled-task-capability.test.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `c96b90a80f985a84c74f8859c211b533f8600db6`; fonte SHA-256 `85eb84f706e0228bb8e4202c45d4b4c0ab8645bb2a04427b573cebd335b12af9`; linhas 308–395; trecho 4058 bytes, SHA-256 `53e2b614c31b2368839227f8fbc926f585971f2d9e29af08cbe188818db57033`.
+
+```typescript
+  it.effect("an edit after admission keeps the old revision's started receipt and its new next", () =>
+    Effect.gen(function* () {
+      yield* TestClock.setTime(start)
+      const tasks = yield* ScheduledTask.Service
+      const owner = yield* ownerSession()
+      const created = yield* tasks.capability.create(owner, hourly)
+      const slot = created.next!
+      yield* TestClock.setTime(slot + MINUTE)
+      const edits: ScheduledTask.Schedule[] = []
+      hook.onWake = tasks.capability.update(owner, created.id, { cadence: { kind: "interval", minutes: 120 } }).pipe(
+        Effect.map((schedule) => edits.push(schedule)),
+        Effect.asVoid,
+        Effect.orDie,
+      )
+      yield* tasks.tick
+      const ids = slotIDs(created.id, 0, slot)
+      expect((yield* inputs).map((row) => row.id)).toEqual([ids.message])
+      expect((yield* runRows).map((row) => [row.revision, row.state, row.session_id])).toEqual([
+        [0, "started", ids.session],
+      ])
+      expect(yield* tasks.capability.get(owner, created.id)).toMatchObject({
+        revision: 1,
+        runs: 1,
+        next: edits[0]!.next,
+        last: { outcome: "started", sessionID: ids.session },
+      })
+    }),
+  )
+
+  it.effect("a claim revoked while its prompt was admitted settles as started without counting", () =>
+    Effect.gen(function* () {
+      yield* TestClock.setTime(start)
+      const tasks = yield* ScheduledTask.Service
+      const { db } = yield* Database.Service
+      const owner = yield* ownerSession()
+      const created = yield* tasks.capability.create(owner, hourly)
+      const slot = created.next!
+      yield* TestClock.setTime(slot + MINUTE)
+      // What an edit racing admission leaves behind: the claim revoked after the recheck.
+      hook.onWake = db
+        .update(ScheduledTaskRunTable)
+        .set({ state: "revoked", owner: null })
+        .where(eq(ScheduledTaskRunTable.task_id, created.id))
+        .run()
+        .pipe(Effect.asVoid, Effect.orDie)
+      yield* tasks.tick
+      const ids = slotIDs(created.id, 0, slot)
+      expect((yield* inputs).map((row) => row.id)).toEqual([ids.message])
+      expect((yield* runRows).map((row) => [row.state, row.session_id])).toEqual([["started", ids.session]])
+      expect(yield* tasks.capability.get(owner, created.id)).toMatchObject({ runs: 0, next: slot })
+    }),
+  )
+})
+
+describe("ScheduledTask capability manual runs", () => {
+  it.effect("a manual run dedupes on its key and never moves next or counts", () =>
+    Effect.gen(function* () {
+      yield* TestClock.setTime(start)
+      const tasks = yield* ScheduledTask.Service
+      const sessions = yield* SessionV2.Service
+      const owner = yield* ownerSession()
+      const created = yield* tasks.capability.create(owner, hourly)
+      yield* TestClock.setTime(start + 10 * MINUTE)
+      const key = "invocation:msg_assistant:call_1"
+      // The wake fails after admission: the prompt did start, so the run reports it and a retry reuses it.
+      hook.failWake = true
+      const first = yield* tasks.capability.run(owner, created.id, key)
+      hook.failWake = false
+      const retry = yield* tasks.capability.run(owner, created.id, key)
+      expect(first).toEqual({
+        sessionID: SessionV2.ID.make(ScheduledTaskModel.slotIDs(`${created.id}:manual:${key}`, start).session),
+        reused: false,
+      })
+      expect(retry).toEqual({ sessionID: first.sessionID, reused: true })
+      expect(yield* sessions.get(first.sessionID)).toMatchObject({ agent: "reviewer", location })
+      const other = yield* tasks.capability.run(owner, created.id, "invocation:msg_assistant:call_2")
+      expect(other.sessionID).not.toBe(first.sessionID)
+      expect(yield* inputs).toHaveLength(2)
+      expect(yield* tasks.capability.get(owner, created.id)).toMatchObject({ runs: 0, next: created.next })
+
+      yield* TestClock.setTime(created.next! + MINUTE)
+      yield* tasks.tick
+      expect(yield* tasks.capability.get(owner, created.id)).toMatchObject({ runs: 1 })
+      expect(yield* inputs).toHaveLength(3)
+    }),
+  )
+})
+
+
+```
+
+### T01-complemento-7
+
+Path `packages/core/test/scheduled-task-capability.test.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `c96b90a80f985a84c74f8859c211b533f8600db6`; fonte SHA-256 `85eb84f706e0228bb8e4202c45d4b4c0ab8645bb2a04427b573cebd335b12af9`; linhas 470–550; trecho 3520 bytes, SHA-256 `861d9e4a5f4df7b4e7ec6ef99774be9ca3abbe77e70acc6a93f003213fbd95e7`.
+
+```typescript
+      expect(yield* tasks.capability.get(gone, orphan.id)).toMatchObject({
+        enabled: false,
+        disabledReason: "owner-missing",
+      })
+      expect(yield* inputs).toHaveLength(0)
+    }),
+  )
+})
+
+describe("ScheduledTask capability isolation", () => {
+  it.effect("legacy routes never see capability rows and legacy rows keep their behavior", () =>
+    Effect.gen(function* () {
+      yield* TestClock.setTime(start - 10 * MINUTE)
+      const tasks = yield* ScheduledTask.Service
+      const sessions = yield* SessionV2.Service
+      const { db } = yield* Database.Service
+      const owner = yield* ownerSession()
+      const legacy = yield* tasks.create(directory, {
+        name: "Legacy",
+        prompt: "Legacy prompt.",
+        cadence: "hourly",
+        next: start,
+        timezone: "America/New_York",
+      })
+      const schedule = yield* tasks.capability.create(owner, hourly)
+      expect((yield* tasks.list(directory)).map((task) => task.id)).toEqual([legacy.id])
+      expect(yield* tasks.update(directory, schedule.id, { name: "x" }).pipe(Effect.flip)).toBeInstanceOf(
+        ScheduledTask.NotFoundError,
+      )
+      expect(yield* tasks.run(directory, schedule.id).pipe(Effect.flip)).toBeInstanceOf(ScheduledTask.NotFoundError)
+      expect(yield* tasks.remove(directory, schedule.id).pipe(Effect.flip)).toBeInstanceOf(ScheduledTask.NotFoundError)
+      expect((yield* tasks.capability.list(owner)).map((item) => item.id)).toEqual([schedule.id])
+      // Unknown, legacy and foreign IDs fail identically.
+      const stranger = { ...owner, sessionID: SessionV2.ID.make("ses_stranger") }
+      expect(yield* tasks.capability.get(owner, legacy.id).pipe(Effect.flip)).toBeInstanceOf(
+        ScheduledTask.NotFoundError,
+      )
+      expect(yield* tasks.capability.get(stranger, schedule.id).pipe(Effect.flip)).toBeInstanceOf(
+        ScheduledTask.NotFoundError,
+      )
+      expect(yield* tasks.capability.list(stranger)).toEqual([])
+
+      yield* TestClock.setTime(start + MINUTE)
+      yield* tasks.tick
+      const ids = ScheduledTaskModel.slotIDs(legacy.id, start)
+      expect(yield* sessions.get(SessionV2.ID.make(ids.session))).toMatchObject({ agent: "maestro" })
+      expect((yield* tasks.list(directory))[0]).toMatchObject({ runs: 1, next: start + HOUR })
+      const row = yield* db
+        .select()
+        .from(ScheduledTaskTable)
+        .where(eq(ScheduledTaskTable.id, legacy.id))
+        .get()
+        .pipe(Effect.orDie)
+      expect(row).toMatchObject({ policy: "legacy-browser", revision: 0, owner: null, skipped: 0 })
+    }),
+  )
+
+  it.effect("the migrated slot index is unique per task, revision and slot", () =>
+    Effect.gen(function* () {
+      const { db } = yield* Database.Service
+      const columns = yield* db
+        .all<{ name: string }>(sql`PRAGMA index_info('scheduled_task_run_slot_idx')`)
+        .pipe(Effect.orDie)
+      expect(columns.map((column) => column.name)).toEqual(["task_id", "revision", "slot"])
+      const indexes = yield* db
+        .all<{ name: string; unique: number }>(sql`PRAGMA index_list(scheduled_task_run)`)
+        .pipe(Effect.orDie)
+      expect(
+        indexes
+          .filter(
+            (index) => index.name.startsWith("scheduled_task_run_") && index.name !== "scheduled_task_run_state_idx",
+          )
+          .map((index) => [index.name, index.unique])
+          .sort(),
+      ).toEqual([
+        ["scheduled_task_run_manual_idx", 1],
+        ["scheduled_task_run_slot_idx", 1],
+      ])
+    }),
+  )
+})
+
+```
+
+### T01-complemento-8
+
+Path `packages/core/test/scheduled-task.test.ts`; commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `4d242fd64503184fbfe362fc52907c67539a3686`; fonte SHA-256 `0fb2f943f7e8595d5df3996d4fd671455f357cb5fcad2f35631a82c9d494d4b6`; linhas 184–248; trecho 3024 bytes, SHA-256 `701041cb8a81631265c2cd16ca46580aefa6f89f886e2b2746d85c3fcec55c11`.
+
+```typescript
+  it.effect("a failed run is recorded with its reason and its slot is not retried", () =>
+    Effect.gen(function* () {
+      yield* TestClock.setTime(slot - MINUTE)
+      const tasks = yield* ScheduledTask.Service
+      const sessions = yield* SessionV2.Service
+      const created = yield* tasks.create(directory, hourly)
+      // The slot's message ID already holds another prompt, so admission conflicts.
+      const ids = slotIDs(created.id, slot)
+      yield* sessions.create({ id: ids.session, location: { directory } })
+      yield* sessions.prompt({ id: ids.message, sessionID: ids.session, prompt: { text: "Something else." } })
+      yield* TestClock.setTime(slot + MINUTE)
+      yield* tasks.tick
+      yield* tasks.tick
+      expect(yield* first(tasks)).toMatchObject({
+        runs: 0,
+        next: slot + HOUR,
+        last: { outcome: "failed", slot, error: expect.stringContaining("conflicts") },
+      })
+      expect((yield* runRows).map((row) => row.state)).toEqual(["failed"])
+      expect(yield* inputs).toHaveLength(1)
+    }),
+  )
+})
+
+describe("ScheduledTask restart recovery", () => {
+  it.effect("a stopped process's claim is left alone until its lease ends, then finished without a second prompt", () =>
+    Effect.gen(function* () {
+      wakes.length = 0
+      yield* TestClock.setTime(slot - MINUTE)
+      const tasks = yield* ScheduledTask.Service
+      const created = yield* tasks.create(directory, hourly)
+      yield* TestClock.setTime(slot + MINUTE)
+      const ids = yield* stopped({ task: created, slot, claimed: slot + MINUTE, admitted: true })
+      wakes.length = 0
+      yield* tasks.tick
+      expect(yield* first(tasks)).toMatchObject({ runs: 0, next: slot })
+
+      yield* TestClock.setTime(slot + MINUTE + ScheduledTask.LEASE + 1)
+      yield* tasks.tick
+      expect((yield* inputs).map((row) => row.id)).toEqual([ids.message])
+      // The exact retry reconciles the admitted prompt and wakes its Session.
+      expect(wakes).toEqual([ids.session])
+      expect(yield* first(tasks)).toMatchObject({
+        runs: 1,
+        next: slot + HOUR,
+        last: { outcome: "started", sessionID: ids.session },
+      })
+      expect((yield* runRows).map((row) => [row.slot, row.state, row.owner])).toEqual([[slot, "started", null]])
+    }),
+  )
+
+  it.effect("a stopped claim that never admitted its prompt is void, and the slot is served once", () =>
+    Effect.gen(function* () {
+      yield* TestClock.setTime(slot - MINUTE)
+      const tasks = yield* ScheduledTask.Service
+      const created = yield* tasks.create(directory, hourly)
+      const ids = yield* stopped({ task: created, slot, claimed: slot - MINUTE, admitted: false })
+      yield* TestClock.setTime(slot + ScheduledTask.LEASE)
+      yield* tasks.tick
+      expect((yield* inputs).map((row) => row.id)).toEqual([ids.message])
+      expect((yield* runRows).map((row) => [row.slot, row.state])).toEqual([[slot, "started"]])
+      expect(yield* first(tasks)).toMatchObject({ runs: 1, next: slot + HOUR })
+    }),
+  )
+
+
+```
+

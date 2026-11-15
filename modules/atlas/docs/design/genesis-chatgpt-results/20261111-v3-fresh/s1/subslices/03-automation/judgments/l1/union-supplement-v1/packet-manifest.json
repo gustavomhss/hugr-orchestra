@@ -1,0 +1,20 @@
+{
+  "lot": "union-supplement-v1",
+  "path": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/union-supplement-v1.md",
+  "packet": {
+    "bytes": 12050,
+    "sha256": "270c6d57e808d88adeb0197adef132658e82071dd713d09041ff497af351ebfb",
+    "git_blob_sha": "34fb45a275b2aec43a42d0e2f15c2ebdd6bd3edc"
+  },
+  "verification": {
+    "lot": "union-supplement-v1",
+    "new_literal_entries": 7,
+    "reused_intervals": 5,
+    "supplement_sha256": "c3b28e78d92ab53256bd926963167187ba9703d2ec719a95d18a5b768b41f02c",
+    "shared_reconciliation_sha256": "75aa4f74aba2ddcecd58c52fd329481dffabc60271a57bf0bfbe358d0b903992",
+    "status": "PASS_LITERAL_IDENTITY",
+    "semantic_acceptance": "PENDING_SAME_PAIR",
+    "body_unchanged_sha256": "f4362077ed7eb2f0dff7bb76acd60debeaa41bd37886551977b92c02addfcb6e"
+  },
+  "oracle_access_by_relay": false
+}

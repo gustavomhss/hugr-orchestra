@@ -1,0 +1,114 @@
+{
+  "schema": "s1-03-derived-review-packet/v1",
+  "lot": "derived-automation-maintenance-v1-compact",
+  "artifact": "s1.subslice03.automation-maintenance",
+  "layer": 4,
+  "bytes": 50336,
+  "sha256": "5ff12392f08e1ee085b1e901de528f343be07818fb5ad64c47ad93803da4c65e",
+  "git_blob_sha": "ad268a07e04e83fcd20a4d8330bb6bce664f10d4",
+  "body_bytes": 13840,
+  "body_sha256": "8cb4befb0cef6a35002679580d60f1746fdeac26acf45ff08e04942cff83abc7",
+  "literal_files": [
+    {
+      "label": "body",
+      "bytes": 13840,
+      "sha256": "8cb4befb0cef6a35002679580d60f1746fdeac26acf45ff08e04942cff83abc7"
+    },
+    {
+      "label": "evidence",
+      "bytes": 13383,
+      "sha256": "006d65f15434530aa807a34dac97f9f717f77278a2aebc6dd320e1d420874e8c"
+    },
+    {
+      "label": "task_recipe",
+      "bytes": 9509,
+      "sha256": "234852b82b4d24a10cda4840c6262abab446e3520f1a706eb0a1c555200cca5c"
+    }
+  ],
+  "input_table": "Explicit mechanical projection of additional inputs only; unchanged cumulative rows reused from prior exact context; complete original table retained in undispatched alternative.",
+  "dispatch_state": "NOT_YET_DISPATCHED",
+  "public_authority_excerpts": [
+    {
+      "path": "inputs/AGENTS.md",
+      "first_line": 1,
+      "last_line": 1,
+      "source_bytes": 16501,
+      "source_sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "bytes": 169,
+      "sha256": "5d4629babd7a5f60103e1ccedc0583a63b1804203cd0d735d71f5b648aae14f8"
+    },
+    {
+      "path": "inputs/AGENTS.md",
+      "first_line": 158,
+      "last_line": 178,
+      "source_bytes": 16501,
+      "source_sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "bytes": 3402,
+      "sha256": "3f932e5e2e0bbed1e970b5e835b9db650f467fdb6a82785c51fdc9e4d09a1b40"
+    },
+    {
+      "path": "inputs/AGENTS.md",
+      "first_line": 194,
+      "last_line": 205,
+      "source_bytes": 16501,
+      "source_sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "bytes": 674,
+      "sha256": "c297e5d83bc49bbb8b9b2ebfe0092931750c5fc716168d10f636d47e8ff2446d"
+    },
+    {
+      "path": "inputs/COMMON.md",
+      "first_line": 34,
+      "last_line": 41,
+      "source_bytes": 12959,
+      "source_sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+      "bytes": 1357,
+      "sha256": "b2fc6248c9227243e9887796c3d2c5f77558feb9c49564130106525918d3d2bc"
+    },
+    {
+      "path": "inputs/COMMON.md",
+      "first_line": 93,
+      "last_line": 103,
+      "source_bytes": 12959,
+      "source_sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+      "bytes": 1749,
+      "sha256": "bef8ade677e8942e95475d027441de79091460a91d0bb0d2d99fbdbfac12c05c"
+    }
+  ],
+  "predispatch_amendment": {
+    "at_utc": "2026-11-15T10:17:26.265823+00:00",
+    "previous_sha256": "7033ad718b7bb9b1b1275daf863405bc7afde369c1b49b18c0ea6379224b6697",
+    "procedure_sha256": "290eeeee64567aac35356c97bbc0663826fe11c1b3675240cba7cb97ffa9625f",
+    "body_or_recipe_changed": false
+  },
+  "unchanged_context_reuse": [
+    {
+      "lot": "derived-automation-impact-v1",
+      "bytes": 52560,
+      "sha256": "a823a599b7ca343e2ba8338f9da89ce5c629cb82a2d664ac15c86a9228631114"
+    },
+    {
+      "lot": "derived-automation-impact-v2-delta",
+      "bytes": 34067,
+      "sha256": "851b536c34eb942e564595eacef0921aff211ec3c7e6d0eda5dca23207e524ba"
+    }
+  ],
+  "cumulative_rows_reused": 43,
+  "added_input_rows": 5,
+  "full_alternative_packet_not_dispatched": "review-packets/derived-automation-maintenance-v1.md",
+  "complete_new_body_evidence_task_recipe_preserved": true,
+  "procedure_sha256": "ba18b07965b4dbcb86dac3bfbac09bc3c50f5c493e362f5f8f3441c620003116",
+  "reused_literal_files": [
+    {
+      "label": "common_recipe",
+      "bytes": 4017,
+      "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
+      "delivery": "REUSED_PRIOR_LITERAL_NOT_RETRANSMITTED"
+    },
+    {
+      "label": "public_plan",
+      "bytes": 5017,
+      "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad",
+      "delivery": "REUSED_PRIOR_LITERAL_NOT_RETRANSMITTED"
+    }
+  ]
+}

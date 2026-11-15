@@ -1,0 +1,4 @@
+{
+  "target": "/root/s1_03_j1",
+  "message": "CORRECAO_LITERAL_DE_TRANSPORTE — automation-3-supplement-v3, parte 1/8, AUT3-C01, packages/core/src/board/board.ts, função issueRecords, argumento de queueState. A parte realmente enviada contém uma perda de três bytes pelo relay; o pacote canônico permanece intacto. Substitua somente esta ocorrência na remontagem da parte 1, preservando o pedido defeituoso e esta correção no histórico. Não use ferramentas nem julgue antes do FIM externo.\nLINHA_REALMENTE_ENVIADA\n              queued.find((item) => item.issue === row.id),\nFIM_LINHA_REALMENTE_ENVIADA\nLINHA_CANONICA_LITERAL\n              queued.find((item) => item.issue_id === row.id),\nFIM_LINHA_CANONICA_LITERAL\nA linha canônica termina com LF. A parte 1 canônica tem 51040 bytes, SHA256 788c7c0c5adf554bb4186dff681ecac4e35963234559719840367a7f09e5c5e2. Confirme somente o recebimento da correção; as partes 2–8 ainda seguirão."
+}

@@ -1,0 +1,12 @@
+{
+  "id": "relay-j2-auto4-handover",
+  "target": "/root/review_relay",
+  "kind": "exclusive_judge_transport_handover",
+  "method": "collaboration.followup_task",
+  "message": "Novo handover explícito: J2 está agora exclusivamente com você para automation-4-supplement-v4 e, condicionalmente, automation-aggregate-v4. Não há chamada J2 em voo. A principal recebeu, leu e preservou o FINAL nativo auto3 J2 em relay-root/automation-3-supplement-v3/j2-response.md, 7120 bytes SHA256 8f6a871a033b4b7f5e363e355d9a5efee62243b7e1325d9f611687a2ad67136a; todas as cinco pendências próprias de J2 foram encerradas, PASS §§6–9 v3. As duas correções de transporte de root (shared.ts diff e SHA256 AUT3-C24) foram explicitamente incorporadas pelo juiz e preservadas em dispatch-receipt.json. NÃO transmita a J2 o voto de J1. Use exatamente o pacote auto4 congelado review-packets/automation-4-supplement-v4.md (120308 bytes SHA256 90bf1fd0fd13fe877baf22755d2d39fd55cbb24ae7a74017e0fb1dd7a1e26a0f), com as 3 partes já canônicas em relay/automation-4-supplement-v4/; zero despachos prévios deste lote a J2. Root apenas preparou um fragmento 1.1 sem enviar; relay-root/automation-4-supplement-v4/prepared-j2-01-sub1-not-dispatched.json o registra. Preserve cada pedido efetivo, ACK e FINAL original antes da reutilização. Se o FINAL auto4 de J2 não contiver aceite explícito do corpo integral v4, envie o agregado vigente já congelado 70241 bytes SHA256 3198bf664dfe607f09c96b3da12ab75f73e10cae977b9d113a0b1ab358330952; sem oracle, sem opinião do outro juiz, sem criar conteúdo ou decidir suficiência. Retorne as decisões literais e hashes. J1 permanece com a principal e não deve receber novo envio seu. Continue até fechar esses dois lotes executáveis ou trazer um pedido real de evidência/correção. Sem GitHub writes.",
+  "message_bytes": 1659,
+  "message_sha256": "63efb7fa86b3161e36f54737cf29f4c64584dd97893025ff2ca0f6c5953aaec3",
+  "tool_returned_normally": true,
+  "captured_at_utc": "2026-11-15T08:33:37.411971+00:00",
+  "capture_basis": "Exact caller-visible argument, no independent host wire checksum"
+}

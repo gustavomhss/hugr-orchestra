@@ -1,0 +1,11 @@
+{
+  "schema": "s1-03-native-final-parent-capture/v1",
+  "judge_id": "parallel-v3-fresh/S1-03/J1",
+  "agent_id": "/root/s1_03_j1",
+  "capture_basis": "Exact FINAL_ANSWER received by root before any further root request; original visible prose, no added trailing newline. Duplicate preservation is not another native evaluation.",
+  "captured_at_utc": "2026-11-15T08:16:09.094462+00:00",
+  "path": "payload/receipts/parent-visible-captures/automation-3-j1-endof-final.md",
+  "bytes": 2929,
+  "sha256": "a29f9bbdf8c5e1a6ebc1de6deca158ce173cdac2e40b18c79b5fa9dde6a09c3a",
+  "decision_scope": "PASS only automation §§6–9 v3 after canonical endOf retransmission; whole current body still open."
+}

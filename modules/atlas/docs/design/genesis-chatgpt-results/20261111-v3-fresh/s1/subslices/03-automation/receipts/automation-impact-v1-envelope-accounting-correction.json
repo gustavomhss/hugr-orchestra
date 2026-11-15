@@ -1,0 +1,36 @@
+{
+  "at_utc": "2026-11-15T10:21:20.531215+00:00",
+  "addendum_ref": "judgments/derived/derived-automation-impact-v2-delta/prior-transport-accounting-addendum.json",
+  "addendum_sha256": "2e7ea5ad3b3062e66b2be45eb12b1917b33b9a8bc5ccfb4f295f75c4c115158f",
+  "original_requests_and_final_unchanged": true,
+  "corrections": [
+    {
+      "target": "/root/s1_03_j1",
+      "sequence": 3,
+      "original_request_ref": "judgments/derived/derived-automation-impact-v1/request-j1-02.json",
+      "recorded_message_bytes": 26913,
+      "recorded_message_sha256": "da2b6494e44a4b33f93f193e5679077ab3bcf0ddb8c5a15182c705d88dd7d4fd",
+      "reported_actual_visible_message_bytes": 26914,
+      "reported_actual_visible_message_sha256": "d3c9f9b280d6a0137c391ec4bab06d912b0fac02fd782939297b106cc8e6f558",
+      "lossless_reconstruction": "Replace only recorded_argument_tail with actual_visible_argument_tail from the preserved relay addendum; all preceding bytes remain identical.",
+      "identity_basis": "Mechanical reconstruction from preserved canonical request and relay-reported exact visible LF difference; not an independent capture or host-wire checksum.",
+      "source_body_changed": false,
+      "new_dispatch": false
+    },
+    {
+      "target": "/root/s1_03_j2",
+      "sequence": 4,
+      "original_request_ref": "judgments/derived/derived-automation-impact-v1/request-j2-02.json",
+      "recorded_message_bytes": 26913,
+      "recorded_message_sha256": "da2b6494e44a4b33f93f193e5679077ab3bcf0ddb8c5a15182c705d88dd7d4fd",
+      "reported_actual_visible_message_bytes": 26914,
+      "reported_actual_visible_message_sha256": "d3c9f9b280d6a0137c391ec4bab06d912b0fac02fd782939297b106cc8e6f558",
+      "lossless_reconstruction": "Replace only recorded_argument_tail with actual_visible_argument_tail from the preserved relay addendum; all preceding bytes remain identical.",
+      "identity_basis": "Mechanical reconstruction from preserved canonical request and relay-reported exact visible LF difference; not an independent capture or host-wire checksum.",
+      "source_body_changed": false,
+      "new_dispatch": false
+    }
+  ],
+  "new_native_requests": 0,
+  "ledger_addenda": 2
+}

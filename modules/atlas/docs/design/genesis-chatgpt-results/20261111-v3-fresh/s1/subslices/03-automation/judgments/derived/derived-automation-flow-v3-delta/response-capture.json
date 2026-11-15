@@ -1,0 +1,28 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "packet": "derived-automation-flow-v3-delta",
+  "responses": {
+    "j1": {
+      "target": "/root/s1_03_j1",
+      "judge_id": "parallel-v3-fresh/S1-03/J1",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-automation-flow-v3-delta/j1-response.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j1",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 2501,
+      "sha256": "e690c904584be5efe3021e5ae3d8a8683c9de1d85e3851714cb321f7339f61ba",
+      "captured_at_utc": "2026-11-15T09:39:28.915009+00:00"
+    },
+    "j2": {
+      "target": "/root/s1_03_j2",
+      "judge_id": "parallel-v3-fresh/S1-03/J2",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-automation-flow-v3-delta/j2-response.md",
+      "origin": "collaboration.list_agents completed status /root/s1_03_j2",
+      "literal": true,
+      "terminal_newline": false,
+      "bytes": 2097,
+      "sha256": "793452cf4731dc118de5e9b7cc0c5359c9278daedd76b18e86ae9377abade175",
+      "captured_at_utc": "2026-11-15T09:40:11.103273+00:00"
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "schema": "s1-03-original-native-final-parent-capture/v1",
+  "agent_id": "/root/s1_03_j2",
+  "judge_id": "parallel-v3-fresh/S1-03/J2",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/payload/receipts/parent-visible-captures/automation-2-j2-final.md",
+  "bytes": 5645,
+  "sha256": "57233449f3cb723968083a6af327fdf1553ecda2de25c0aa86427360a2a2f380",
+  "capture": "Whole visible FINAL message received in root; no terminal LF; not a reconstruction from response files or later confirmation.",
+  "recorded_at_utc": "2026-11-15T07:47:50.999725+00:00",
+  "new_native_request": false,
+  "duplicate_capture_if_relay_also_preserves": "Same one original verdict, not another evaluation. Compare whole bytes to canonical relay capture.",
+  "byte_identical_relay_original": "relay/automation-2-supplement-v2/j2-response.md",
+  "comparison_at_utc": "2026-11-15T07:49:34.736622+00:00"
+}

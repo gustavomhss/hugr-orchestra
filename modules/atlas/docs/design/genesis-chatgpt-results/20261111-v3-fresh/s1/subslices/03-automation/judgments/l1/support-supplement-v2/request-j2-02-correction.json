@@ -1,0 +1,4 @@
+{
+  "target": "/root/s1_03_j2",
+  "message": "CORRECAO_LITERAL_DE_TRANSPORTE — support-supplement-v2, parte 2/7. O relay transcreveu um caractere extra no metadado SHA256 integral de DOC-SESSION-1. Preserve o envio anterior como incidente e aplique somente a substituição literal abaixo na primeira ocorrência, em DOC-SESSION-1; DOC-SESSION-2 já está correto. Não há alteração no pacote canônico, na fonte ou no corpo candidato. Aguarde as demais partes e o FIM_DO_LOTE externo final.\nANTES_LITERAL\n38c0f5018d80c5ab015ff3f902ed003951f9a70872f98d09d2fdffa5f6a641a21\nDEPOIS_LITERAL\n38c0f501d80c5ab015ff3f902ed003951f9a70872f98d09d2fdffa5f6a641a21\nFIM_CORRECAO_LITERAL"
+}

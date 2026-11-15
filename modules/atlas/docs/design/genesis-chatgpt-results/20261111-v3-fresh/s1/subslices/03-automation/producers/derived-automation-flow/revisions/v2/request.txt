@@ -1,0 +1,6 @@
+Corrija somente os dois pontos AF-L2-PREVIEW-01/02 de s1.subslice03.automation-flow, conservando sua autoria e contexto da família.
+Raiz: /workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390
+Receita efetiva adicional: payload/recipes/derived/automation-flow-source-fidelity-v2.json
+SHA256 da receita: 16c2b4e2efc5a6e2ea6a111540e7a662ce154af3c58c366306e254f23d9b3364
+Leia integralmente a receita e cumpra seus limites de leitura, escrita e preservação. Os bytes v1 e o FINAL nativo original foram capturados antes deste pedido. O predecessor L1 v4 está inalterado. Nenhum parecer L2 foi ainda emitido.
+Preserve este request.txt e o dispatch inicial. Registre o dispatch novo e a delta; retorne exatamente response.md sem LF terminal. Não avance camada, não use oracle/novas fontes/ferramentas de produto nem rede.

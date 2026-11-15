@@ -1,0 +1,12 @@
+{
+  "schema": "s1-03-native-original-capture/v1",
+  "agent": "/root/native_descriptor",
+  "capture_basis": "Visible original native FINAL transcribed by root without terminal LF and compared against producer FINAL.md. Exact initial assertion found only the producer file trailing LF; both variants are preserved distinctly. No independent host wire checksum is available.",
+  "bytes": 3440,
+  "sha256": "944261151fdd0bfc266d812a43e063bcf2225c9ec7ef0bf359d79f015a7e6395",
+  "producer_final_file_bytes": 3441,
+  "producer_final_file_sha256": "9b77c23b9e85d9607b05eb090d892bea6356705ac6acd8dbaf681758c0c4dfc5",
+  "difference": "Producer FINAL.md and response.md include one terminal LF; visible native capture does not.",
+  "captured_utc": "2026-11-15T06:33:51.809685+00:00",
+  "runtime_or_semantic_acceptance": false
+}

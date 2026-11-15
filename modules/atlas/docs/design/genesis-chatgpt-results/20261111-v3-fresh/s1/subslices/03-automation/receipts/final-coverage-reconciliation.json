@@ -1,0 +1,18 @@
+{
+  "schema": "s1-03-final-source-coverage-reconciliation/v1",
+  "at_utc": "2026-11-15T08:53:39.843772+00:00",
+  "assigned_sources": 462,
+  "actual_unique_paths": 462,
+  "counts": {
+    "s1.subslice03.support": 104,
+    "s1.core.automation": 204,
+    "s1.core.boundaries": 24,
+    "s1.core.research": 130
+  },
+  "all_source_path_and_blob_identities_match": true,
+  "prior_aggregate_path": "history/coverage-before-current-semantic-gates.jsonl",
+  "prior_aggregate_sha256": "ac5032bd0f71fce700e8471ba2ef2d733d8f0cb906941f4a2310d5855793bc0f",
+  "current_aggregate_sha256": "33aebd7a7f362937d42614324c6188f334b4bdff0d3a922d30f99069adb34490",
+  "producer_files_unchanged": true,
+  "scope": "Aggregate semantic gate overlay only. No source read-depth expansion or product/runtime execution claim."
+}

@@ -1,0 +1,17 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "packet": "automation-1-supplement-v2-coverage-erratum",
+  "responses": {
+    "j2": {
+      "target": "/root/s1_03_j2",
+      "file": "j2-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 3581,
+      "sha256": "b7aed9190435dd3d829758cc6d3ed9b9a40d2b29236d6c23ebea4942e9b8cbd8",
+      "terminal_newline": false,
+      "literal": true,
+      "captured_at_utc": "2026-11-15T06:16:10.589397+00:00"
+    }
+  },
+  "ownership": "J1 captured by root in relay-root, not part of this relay capture."
+}

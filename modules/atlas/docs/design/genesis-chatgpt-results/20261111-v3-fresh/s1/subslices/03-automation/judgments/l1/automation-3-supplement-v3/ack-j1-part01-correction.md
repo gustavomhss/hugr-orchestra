@@ -1,0 +1,1 @@
+ACK da correção literal da parte 1/8: em **AUT3-C01 / `issueRecords`**, somente a ocorrência indicada passa a `queued.find((item) => item.issue_id === row.id),`, com LF final. Original e correção preservados no histórico. Aguardo as partes 2–8 e o **FIM_DO_LOTE** externo.

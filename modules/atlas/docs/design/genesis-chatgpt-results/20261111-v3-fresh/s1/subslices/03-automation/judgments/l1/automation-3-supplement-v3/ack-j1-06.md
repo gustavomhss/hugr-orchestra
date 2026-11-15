@@ -1,0 +1,1 @@
+ACK parte 6/8 — última âncora recebida: **AUT3-C19**, `packages/core/src/board/queue-settle.ts`, ramo de isolamento de falha, até o `Effect.forEach` que registra a reconstrução do bundle para os membros restantes. Aguardo as partes 7–8 e o **FIM_DO_LOTE** externo.

@@ -1,0 +1,13 @@
+{
+  "schema": "s1-03-assembly-procedure-correction/v1",
+  "at_utc": "2026-11-15T09:34:49.821100+00:00",
+  "old_path": "payload/assembly/procedures/history/assemble-automation-flow-v3-delta-review-syntax-v0.py",
+  "old_sha256": "61fd098796ba8ecefabcccbe32d9eae2e52946243e19ce2c926ac9a44ea32183",
+  "new_path": "payload/assembly/procedures/assemble-automation-flow-v3-delta-review.py",
+  "new_sha256": "003b9d67e120989d91ac290966d1edbfe1afcaf62977b9152bbcf2ee526ace5b",
+  "observed_error": "SyntaxError: bytes can only contain ASCII literal characters",
+  "attempts": "AST parse and then direct invocation both stopped at the same syntax error before any statement ran. No packet/output/model dispatch was created.",
+  "fix": "Encode two Unicode string labels explicitly instead of non-ASCII bytes literals. No semantic input/output changed.",
+  "new_ast_parse": "PASS",
+  "semantic_status": "NOT_A_JUDGMENT"
+}

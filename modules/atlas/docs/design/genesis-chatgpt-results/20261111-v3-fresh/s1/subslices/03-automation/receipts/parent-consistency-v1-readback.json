@@ -1,0 +1,32 @@
+{
+  "schema": "s1-03-payload-seal-readback/v1",
+  "recorded_utc": "2026-11-15T05:00:44.798037+00:00",
+  "state": "IN_PROGRESS",
+  "base": "332a0b292123de704ec0b4b393e77e0902a00b01",
+  "payload": "9cd485743dc9c6bde016581e0e6e2818762dab51",
+  "seal": "d5a84e583f55b31b17cbb407553243bd0801c56c",
+  "root_tree": "15d4d4ebf48042b53db763e3498d42a886eaf6ae",
+  "out_tree": "626637f84eeb9729774d21f767e525c0e10fd91c",
+  "lease": {
+    "expected_sha": "332a0b292123de704ec0b4b393e77e0902a00b01",
+    "force": false,
+    "success": true
+  },
+  "payload_files_verified": 827,
+  "payload_bytes": 32296037,
+  "git_sha_and_sizes_all_match": true,
+  "critical_actual_byte_readback": [
+    "handoff.json",
+    "producers/research/body.md",
+    "producers/boundaries/bodies/boundaries.md",
+    "historical s1.core.entry"
+  ],
+  "historical_entry_unchanged": true,
+  "handoff": {
+    "bytes": 8922,
+    "sha256": "164af0a5636fc76d583f729f61931847550f4b0ffefa40bd5f55024d684df540",
+    "git_blob_sha": "721afc12008004607be9bf65309a6375c2e16605"
+  },
+  "scope": "Only S1-03 output subtree; checkpoint does not end mission",
+  "snapshot_index": "publish/parent-consistency-v1/index.json"
+}

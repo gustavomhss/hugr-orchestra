@@ -1,0 +1,342 @@
+# Automação — decisão agregada do corpo corrente v4
+
+Mesmos J1/J2, independentes e sem ferramentas. O objetivo é uma decisão explícita sobre todos os bytes correntes depois da revisão dos quatro recortes e da resolução de seus próprios pedidos de evidência. O censo individual adicional é obrigatório apenas para o juiz cujo próprio RE-AUT1-01 corrente permaneça aberto; não reabra um aceite completo já explícito. Reutilize suas próprias evidências e feche ou mantenha cada pendência obrigatória; não infira PASS agregado da mera contagem dos lotes. Não receberá parecer do outro juiz.
+
+## Identidades e regra de reúso
+
+```json
+{
+  "scope": "s1.core.automation whole current v4 body, not the entire S1 mission",
+  "body": {
+    "path": "producers/automation/body.md",
+    "bytes": 60767,
+    "sha256": "968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae",
+    "git_blob_sha": "e26213eb2fc76dc843dca17d1111334c76f88890"
+  },
+  "required_prior_lots": [
+    "automation-1-supplement-v2-coverage-erratum",
+    "automation-2-supplement-v2",
+    "automation-3-supplement-v3",
+    "automation-4-supplement-v4"
+  ],
+  "reuse_rule": "Each judge reuses only their own prior reviews and the literal evidence already received. No other judge prose or reserved answer is included.",
+  "dispatch_rule": "Prepared only. Deliver to a judge after that judge has received all mandatory lot evidence, only when no explicit whole-current-body PASS already exists. Do not repeat a complete existing acceptance.",
+  "population": {
+    "assigned": 204,
+    "actions": 155,
+    "board": 38,
+    "scheduled-task": 11,
+    "current_projection_packet": {
+      "path": "review-packets/automation-population-current-v1.md",
+      "bytes": 120775,
+      "sha256": "4b9860993c5fd9b7492369e1b93946e241a9b2e9095ae2e763f7c0d8788b7511",
+      "git_blob_sha": "2fccf3c80fe75d243dbfb35d60be5a935c5d06fa"
+    }
+  },
+  "operational_limits": "Whole-body semantic PASS does not certify runtime binding, consumers, maintenance, guards, product/provider execution or delivery completion.",
+  "conditional_prior_lots": [
+    {
+      "lot": "automation-population-current-v1",
+      "condition": "Required only for the judge whose own current RE-AUT1-01 population evidence request remains open. A judge who has explicitly closed that request does not receive this projection again merely for symmetry."
+    }
+  ]
+}
+```
+
+## Reconciliação mecânica das seis substituições já autoradas
+
+A aplicação literal das mudanças declaradas reproduz cada versão integral seguinte, sem outra alteração de corpo. As identidades dos procedimentos são proveniência; este transporte não é nova autoria.
+
+```json
+[
+  {
+    "from": 1,
+    "to": 2,
+    "original_delta": {
+      "path": "producers/automation/revisions/v2/delta.json",
+      "bytes": 11454,
+      "sha256": "55ef2d173ced7e3ee8036d4d059dfacaf8391e8c95378d12d9279e379e378612",
+      "git_blob_sha": "df2760ac8891256641eb535eb9d8e33cbb1aa32e"
+    },
+    "before_body": {
+      "path": "producers/automation/history/body-v1.md",
+      "bytes": 59832,
+      "sha256": "2ed7670affc680005840d0918489cb1ac36e1c5a4021defcc57ae44186ae7459",
+      "git_blob_sha": "1867e5763e724fb2c3641f28297da24b311bdcda"
+    },
+    "after_body": {
+      "path": "producers/automation/history/body-v2.md",
+      "bytes": 59953,
+      "sha256": "e9c89bea68d594bc61356ff461642ea23cd905d4584f2b52d32e10a5af984e55",
+      "git_blob_sha": "b8fec4854b4c1384d3c4a2a4f0d51d220c874618"
+    },
+    "literal_substitutions": [
+      {
+        "section": "1.1",
+        "old_text": "Binding e serviços são construídos por necessidade.",
+        "new_text": "A resolução do binding, a inicialização cached de operations e o carregamento de output são adiados; transport, readers e resources são compostos ao construir a fachada."
+      }
+    ],
+    "actual_procedure": {
+      "path": "producers/automation/revisions/v2/apply.py",
+      "bytes": 11193,
+      "sha256": "d35c6441425e229f51ad7a33c4d204769c6df40439bcb1f8af7df0f68872163e",
+      "git_blob_sha": "1b08942ca11a2d2076eceb149b9e9068f9425f67"
+    },
+    "exact_reconstruction": true
+  },
+  {
+    "from": 2,
+    "to": 3,
+    "original_delta": {
+      "path": "producers/automation/revisions/v3/delta.json",
+      "bytes": 13658,
+      "sha256": "f10e98f4211547e710c099aaa2827c79f44ee1b1cef583435c85b6298b1aeb0a",
+      "git_blob_sha": "3f4f98e9e15b2a473e989b3a3e955f0025158ee0"
+    },
+    "before_body": {
+      "path": "producers/automation/history/body-v2.md",
+      "bytes": 59953,
+      "sha256": "e9c89bea68d594bc61356ff461642ea23cd905d4584f2b52d32e10a5af984e55",
+      "git_blob_sha": "b8fec4854b4c1384d3c4a2a4a4f0d51d220c874618"
+    },
+    "after_body": {
+      "path": "producers/automation/history/body-v3.md",
+      "bytes": 60588,
+      "sha256": "b31d52e5bf25f6eca3807e9c1f418b70d865c9d63c5690125c530c54f8247d84",
+      "git_blob_sha": "04c87b44543b6bde9713228c7b6fda0fc444a00a"
+    },
+    "literal_substitutions": [
+      {
+        "id": "AUT3-DELTA-01",
+        "section": "7.2",
+        "old_text": "Estado scoped-red resulta de fail mais recente; scoped-green precisa de requisitos existentes e pass dos caminhos requeridos; sem requisito, retorna null. Um check error/pending não vira pass.",
+        "new_text": "O estado usa o resultado mais recente por `(kind, command)` no tree: qualquer `fail` produz scoped-red e, sem requisito configurado, retorna null. Para scoped-green, basta algum check `scoped` com `pass` quando há scoped.tests, além de um `pass` por workflow exigido. Isso pode coexistir com outros checks scoped `pending`/`error`; não prova que todos os comandos scoped passaram."
+      },
+      {
+        "id": "AUT3-DELTA-02",
+        "section": "7.2",
+        "old_text": "Workflows são enviados uma vez por tree/arquivo no ledger observado.",
+        "new_text": "Para o card, o ledger evita novo dispatch do mesmo workflow no mesmo tree quando já existe row com outcome diferente de `error`; se houver apenas rows em `error`, permite outra tentativa."
+      },
+      {
+        "id": "AUT3-DELTA-03",
+        "section": "7.3",
+        "old_text": "Subscription engine ou preço ausente é `not-metered`, e mistura de medido/não medido pode ser parcial.",
+        "new_text": "`spend.card` considera medida a Session com custo positivo cujo provider não é `claude-code`; não medidas entram na outra classe apenas se têm tokens. O meter de modelos é `not-metered` sem Sessions vinculadas, ou se não houver Session medida e houver não medidas com tokens; nos demais casos retorna `usd`, inclusive `usd:0` com ambas as classes vazias. A coexistência de medidas e não medidas com tokens marca `partial`."
+      }
+    ],
+    "actual_procedure": {
+      "path": "producers/automation/revisions/v3/apply.py",
+      "bytes": 15116,
+      "sha256": "0868d35024004d41be8d9e161612b7619a1f68f9b6c33f4fa89468976596d8cb",
+      "git_blob_sha": "72d166dd21bd60687a136e7856b458290571f619"
+    },
+    "exact_reconstruction": true
+  },
+  {
+    "from": 3,
+    "to": 4,
+    "original_delta": {
+      "path": "producers/automation/revisions/v4/delta.json",
+      "bytes": 16136,
+      "sha256": "8132046e50a17ec68c9620022bc49147ffc8dfb13cbab46da1c725161723fc33",
+      "git_blob_sha": "c79d28f89e04f9fb87720f2dc55659ce908cfe3d"
+    },
+    "before_body": {
+      "path": "producers/automation/history/body-v3.md",
+      "bytes": 60588,
+      "sha256": "b31d52e5bf25f6eca3807e9c1f418b70d865c9d63c5690125c530c54f8247d84",
+      "git_blob_sha": "04c87b44543b6bde9713228c7b6fda0fc444a00a"
+    },
+    "after_body": {
+      "path": "producers/automation/body.md",
+      "bytes": 60767,
+      "sha256": "968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae",
+      "git_blob_sha": "e26213eb2fc76dc843dca17d1111334c76f88890"
+    },
+    "literal_substitutions": [
+      {
+        "id": "AUT4-DELTA-01",
+        "section": "12",
+        "old_text": "Em capability, verifica owner e `holds` antes da Session e outra vez antes de prompt.",
+        "new_text": "Em capability, verifica a presença/identidade do owner antes da Session; para claim ainda não admitida, verifica `holds` antes da Session e outra vez antes de prompt, sem reler a Session do owner."
+      },
+      {
+        "id": "AUT4-DELTA-02",
+        "section": "12",
+        "old_text": "Capability manualKey reutiliza Session somente depois de admissão; claim ainda starting retorna “retry shortly”; revoked não executa novamente com a mesma chamada.",
+        "new_text": "No replay de capability manualKey, `running` sem SessionInput retorna “retry shortly” e `revoked` retorna erro; nos demais casos, o ramo devolve o SessionID retido com `reused:true`, sem exigir admissão para uma row já assentada."
+      }
+    ],
+    "actual_procedure": {
+      "path": "producers/automation/revisions/v4/apply.py",
+      "bytes": 13081,
+      "sha256": "765cfd0879a63d7549eb402dabf21661a90d5d5f378fe3c3b7cb8b7564f75cfa",
+      "git_blob_sha": "33d062f24a3858d11b9fd046a03b140fe3782de5"
+    },
+    "exact_reconstruction": true
+  }
+]
+```
+
+## BEGIN_CORPO_V4_EXATO
+
+# Automação no Core: Actions, Board e agendamento
+
+**Artefato:** `s1.core.automation` · **camada:** L1 · **necessidade:** `flow` · **escopo:** `orchestra.s1`.
+
+**Fonte observada:** `gustavomhss/hugr-orchestra`, commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Este corpo é uma nova produção da chave histórica, construída sobre o corpo herdado de `a8df22ae3a140c58c63f62ce2a634c84f415c943`; não apaga respostas, correções, recibos ou decisões anteriores. O protocolo é `ee2521a5b966bd505cc95bd1c733e09e12f33531`, o kit é `70234d541a9a3539935ef16f19e33c8f2d5f30ec` e a execução local é `34269cf4-d631-41c5-a30b-85b0ec217390`. Metadado herdado `supported` não é aceite independente desta versão.
+
+## Como usar este L1
+
+Este corpo permite seguir uma operação desde sua intenção até o fato que a implementação realmente consegue observar. Para modificar dispatch, retries ou auth, comece em **1–5**; para trabalho planejado, CI e integração, em **6–9**; para cadência, retomada e revogação, em **10–12**. **13–14** delimitam provas e impacto de manutenção. Os identificadores `[A…]`, `[B…]`, `[S…]` e `[T…]` apontam para trechos literais em `evidence.md`; cada trecho conserva arquivo, linhas, commit, Git blob, SHA256 e bytes. `coverage.jsonl` dá disposição individual às 204 fontes; `captures.json` identifica os bytes capturados.
+
+**Vocabulário de autoridade.** “O código faz/recusa/persiste” significa observação estática das implementações capturadas. “Intenção” designa o contrato ou comentário atribuído que orienta esse código. “Inferência estática” explicita uma consequência deduzida, sujeita a revisão. “Teste existente” significa código de teste lido, **NOT_RUN nesta produção**. Nenhum estado de sucesso da implementação é um resultado executado por este produtor. Não houve chamada a provider de produto, CI, CLI autenticada, sessão agendada ou Atlas runtime. Este L1 não se autocertifica semanticamente e não qualifica runtime. [A01, B01, S04, T01]
+
+### Três mecanismos, três significados de sucesso
+
+| Superfície | Propósito e identidade | Saída que realmente autoriza afirmar algo | O que essa saída não prova |
+| --- | --- | --- | --- |
+| Actions | Operar CI e seus recursos no projeto nativo vinculado a uma Location e conta | Recibo durável da intenção; acknowledgment qualificado; observação por ID nativo; bytes de uma transferência | `accepted` não significa execução terminada; `confirmed` confirma a pós-condição observada da operação, que pode ser somente a existência do dispatch |
+| Board | Registrar plano, decisão do owner, evidência de trabalho e fila de integração de cards | Estado local com atividade; evidência PR/CI; commit de bundle integrado no remoto | Campo narrativo ou decisão não prova seu resultado; scoped-green não é full gate; mirror e CI do Board não herdam o ledger de Actions |
+| ScheduledTask | Admitir prompts em Sessions nos slots de duas políticas separadas | Claim, identidade de Session/mensagem, recibo `started` após admissão | `started` não é conclusão, resposta satisfatória, execução da intenção do prompt nem término de trabalho externo |
+
+Essas fronteiras se cruzam conceitualmente, mas são implementações distintas. Em especial, a fila do Board tem transporte `gh`, ledger e heurísticas de correlação próprios; não recebe por transitividade as garantias de identidade, não repetição e readback de Actions. [A15–A17, B04, B06–B10, S04]
+
+## 1. Actions: vínculo, leitura e autoridade
+
+### 1.1 Vínculo confiável antes de tocar o provider
+
+`actions.ts` é uma fachada da Location. A construção é preguiçosa: abrir uma Location sem Git não exige resolver remoto ou CLI; a operação solicitada é que descobre a indisponibilidade. A resolução do binding, a inicialização cached de operations e o carregamento de output são adiados; transport, readers e resources são compostos ao construir a fachada. O vínculo guarda ID estável, revisão, provider/host/API origin, projeto nativo e conta; o chamador passa a referência de ID/revisão, e a implementação relê o estado confiável. Nome visível, path do repositório ou metadado trazido pelo cliente não substituem a identidade nativa. [A01–A02]
+
+`binding.ts` resolve o diretório físico e examina URLs brutas **e** URLs efetivas após `insteadOf`, antes de resolver autenticação. Canonicaliza HTTPS/SSH/SCP e aliases públicos permitidos, recusa credenciais embutidas, remotos ambíguos, host/origin incompatíveis e caminhos inseguros. No subprocesso Git desse vínculo, remove `GIT_*`, desliga locks opcionais/fsmonitor e limita tempo/saída. Criar não pode duplicar remoto ou identidade imutável. Atualizar exige revisão esperada e pode mudar conta/remoto sob as verificações, mas não retargetar provider/projeto; atualização de policy local também avança a revisão. [A02]
+
+`state.ts` armazena JSON fora do checkout, particionado por projeto e hash de diretório/workspace, com schema estrito, limites, verificações de caminho/symlink, arquivo temporário exclusivo e rename. Um estado corrompido ou bloqueado não vira lista vazia. Diretórios/arquivos têm permissões restritas. O mutex dessa escrita é local ao processo; não equivale a coordenação distribuída de várias instâncias. Credenciais do provider não são um campo desse arquivo. [A02]
+
+**Pré-condição operacional:** o usuário precisa de remoto compatível, conta autenticada e autorização nativa para a operação particular. `capabilities` não promete essas permissões genericamente: uma leitura de catálogo bem-sucedida pode marcar aquela leitura disponível; várias capacidades de escrita continuam `unknown`. Ausência de um campo de permissão não é aprovação, e uma negação observada é respeitada. `Binding.policy` é política do Orchestra; editar essa política não configura remotamente GitHub ou GitLab. [A03, A18, A20, A27]
+
+### 1.2 Identidade e paginação são parte da leitura
+
+IDs positivos canônicos permanecem strings quando necessário, sem perder precisão. Commits aceitam as identidades SHA previstas por cada parser. Cursors vinculam binding/revisão, provider/host/projeto, escopo de consulta e fingerprint de filtros. Mudar filtro, escopo ou vínculo invalida o cursor; página inconsistente, continuação incompleta ou total desconhecido não deve ser apresentado como inventário vazio/completo. Cada adapter aplica ainda regras nativas de paginação. [A03–A07]
+
+| Leitura | GitHub | GitLab |
+| --- | --- | --- |
+| Catálogo | Workflow tem ID nativo, path, nome e estado próprios. Resolver repo usa `/repositories/{id}`, sem fallback silencioso para um path que pode ter sido reutilizado | Um slot de configuração de pipeline por projeto: `gitlab:project:<id>:pipeline`. Não é uma coleção de workflow IDs GitHub. `ci_config_path` explícito é preservado; configuração externa/dinâmica fica não resolvida |
+| Fonte | Resolve ref a commit, lê conteúdo nesse commit, verifica tipo/path, tamanho, base64, UTF-8 e hash Git do blob; SHA explicitamente solicitado é conferido | Resolve commit e verifica que arquivo, commit e conteúdo retornados pertencem à leitura. Versão da fonte é JSON com `blob_id` e `last_commit_id`. Arquivo histórico não demonstra qual definição gerou cada job |
+| Runs | Mantém ID, workflow, commit, ref, evento, estados e `run_attempt`; `updated_at` não é inventado como `finishedAt` | Pipeline mantém ID/projeto/source/status/ref/commit e tempos nativos; não se fabrica número de tentativa |
+| Jobs | A leitura fixa tentativa atual ou explicitamente solicitada antes de listar; confere run e tentativa | Jobs e bridges são coleções nativas separadas, percorridas em faixas distintas do cursor; `include_retried=true` conserva IDs diferentes. Nome/stage não prova `retryOf`, `definitionID` ou tentativa |
+| Filtros | Usa sintaxe nativa de criação/evento/status/ator/SHA; filtros não representáveis são recusados | Usa capacidades versionadas observadas no servidor, por exemplo criação limitada por data exige versão qualificada; não aceita um filtro genérico que a API não representa |
+
+As diferenças acima são comportamento dos adapters, não equivalências entre providers. A versão declarada no binding não prova recursos GitLab: os gates relevantes consultam `/metadata`. O leitor GitLab vincula `file.commit_id` ao commit resolvido, mas não reproduz em todo caminho a comparação explícita GitHub de SHA solicitado versus SHA resolvido; não se deve generalizar a prova exata de um adapter para o outro. [A04–A07]
+
+## 2. Fonte de CI: compreender, validar e propor alteração
+
+### 2.1 O grafo é uma projeção da definição
+
+O parser conserva o texto de fonte e impõe limites antes e durante parsing: fonte de 1 MiB, profundidade, nós, lexemas, aliases, merges, resoluções e diagnósticos. YAML usa schema seguro, rejeita valores/estruturas não representáveis, chaves perigosas e duplicatas. Isso limita expansão e trabalho; não executa expressões, scripts ou includes. Os estados `complete`, `partial` e `unresolved` pertencem à interpretação local. [A08]
+
+No GitHub, `jobs` são definições. Uma matriz estática continua uma definição; células executadas são outra informação. `needs` local cria arestas e recebe validação de referência/ciclo. Matriz dinâmica, reusable workflow ou condição podem exigir `partial`; não se inventam execuções. No GitLab, templates ocultos não viram jobs executados; `extends` local usa reverse deep merge, com pais posteriores/filho prevalecendo e arrays substituídos. `default` copia keywords inteiras quando permitido, sem deep merge de default em valor explícito do job. Limites e ciclos interrompem a resolução. [A09–A10]
+
+`include`, `!reference`, regras, paralelismo, downstream e dependências externas permanecem metadados ou parcialidades qualificadas quando não resolvidos. Stage order não fabrica `needs`. `needs` optional ausente pode ser omitido; required ausente e ciclos geram diagnóstico. A existência de um arquivo local correto não prova que regras/inclusões produzirão aquele DAG no servidor. [A10]
+
+O lint GitLab usa `ci/lint` com `dry_run:false` e `include_jobs:false`: erros podem tornar a fonte não resolvida; warning/indisponibilidade mantém limite. Um lint aceito **não** completa a topologia local nem simula uma pipeline. GitHub aqui oferece validação local, não um lint remoto equivalente. [A14]
+
+### 2.2 Ciclo de autoria com base imutável
+
+Um fluxo de manutenção é: observar a branch base por `sourceBase`; obter commit exato; validar rascunho contra essa base; admitir cada mutação apropriada; criar branch, escrever arquivo e abrir review quando necessário. As fases não são uma transação remota única. Cada nova fase precisa das identidades/precondições correspondentes ao estado que acabou de ser observado. [A11–A14]
+
+| Fase | Entradas e prova antes de escrever | Pós-condição exigida / falha |
+| --- | --- | --- |
+| Base e draft | Branch padrão observada ou short branch explícita; sem adivinhar `main`. Draft fixa path/base commit e calcula SHA256 do texto local | Releitura detecta branch movida. Hash do draft não é `sourceVersion` nativa |
+| Branch | Nome seguro e base commit esperada; nos caminhos de proposta de arquivo novo, ausência no path exato só após prova de projeto/ator/head | Retorno deve provar a nova ref e commit-base. 404 genérico/auth não autoriza criar |
+| Arquivo GitHub | Path literal `.github/workflows/<arquivo>.yml|yaml`; create sem blob anterior, update com SHA do blob; commit esperado; texto UTF-8 bem formado e limitado | `PUT contents` usa semântica create/update; retorno e readback devem provar path, bytes e commit novo. Texto idêntico não vira alteração fictícia |
+| Arquivo GitLab | Path local explícito; create por POST, update por PUT com `last_commit_id`; fonte anterior exige os dois componentes de versão | Releitura deve provar blob e último commit do arquivo no novo head; editar um path alternativo não muda automaticamente `ci_config_path` |
+| Review | Mesmo projeto/repositório, source/target branches e commit observados; base diferente; título/corpo literal | PR/MR retornado precisa da identidade, branches, estado e URL nativa exatos. URL é saída do pedido; não é aceite/merge |
+
+O texto/payload é congelado antes do primeiro `await`, e os schemas recusam extras e precondições que não pertencem à operação. Segredos/textos não devem ser refletidos em erros. Antes da escrita, falhas qualificadas podem ser `definitely_unsent`; depois de uma escrita, perda da confirmação/readback é `outcome_unknown`, inclusive se o arquivo já tiver mudado. Não há retry de mutação nem rollback silencioso para “fazer a confirmação passar”. [A11–A14, A16]
+
+Há dois editores de schedule YAML: o helper de autoria e o usado pelo recurso GitHub. Ambos alteram o campo schedule com restrições próprias, recusam estrutura ambígua/aliases nos caminhos admitidos e preservam outros elementos dentro do suporte observado. Não são um parser universal de cron nem garantia de disparo remoto; o provider continua decidindo aceitação e execução. [A14, A31]
+
+## 3. Intenção durável, execução única local e readback
+
+### 3.1 O ledger protege o envio, não inventa certeza remota
+
+`prepare` captura intenção estrita com binding/revisão, kind, target, expected e client ID. O ledger SQLite vincula Location/projeto/diretório/workspace, provider nativo e ator. A unicidade é `(location_key, binding_id, client_id)`. Repetir a mesma admissão retorna a mesma operação apenas quando a identidade e a intenção concordam; reutilizar a chave com conteúdo diferente é conflito. O payload de execute, inclusive texto ou segredo, não é persistido como intenção nem como acknowledgment. [A15]
+
+| Estado | Significado observado e transição |
+| --- | --- |
+| `prepared` | Intenção admitida, ainda não enviada. Lease de admissão de 24 horas; execute só pode reivindicar uma preparada válida |
+| `sending` | CAS durável ganhou o direito de executar. A implementação registra a fiber antes do CAS e amostra tempo sob lock; duplicatas não enviam novamente nem esperam a mesma chamada como um novo envio |
+| `accepted` | A escrita devolveu acknowledgment qualificado, com apenas metadados permitidos. Não é conclusão do trabalho remoto |
+| `rejected` | Há prova de não envio ou rejeição definitiva segundo o classificador; uma mensagem vaga de stderr não basta |
+| `outcome_unknown` | A escrita pode ter ocorrido, houve interrupção/timeout ou prova incompleta. Recuperação de `sending` órfão chega aqui; não reexecuta |
+| `confirmed` | Readback atribuído estabeleceu a pós-condição contemplada pelo observador |
+| `expired` | Admissão passou do prazo, ou recibo terminal envelheceu segundo retenção. A chave de admissão e a intenção permanecem retidas |
+
+Execução tem deadline de 30 s e vínculo ao Scope; fechamento interrompe/aguarda trabalho. Recuperação de `sending` acontece uma vez por lifetime do serviço de banco, não a cada reconstrução de Location. Retenção de 30 dias limpa resultado/envelhece estados elegíveis, **não** apaga a chave para autorizar reenvio. `outcome_unknown` não é descartado como terminal comum. Limites de ledger (100.000) e unknowns (10.000) recusam novas admissões quando excedidos. Estes são limites observados do código, sem medição de capacidade aqui. [A16]
+
+### 3.2 Confirmar exige atribuição suficiente
+
+`reconcile` da fachada usa `ActionsReadback.observe`; não escolhe automaticamente um reconciliador especializado por resourceKind. Só observa operações `accepted`/`outcome_unknown`, sem chamar `perform`, sem nova admissão e sem replay. Combinação de observações não pode trocar runID/jobID/resourceID/tentativa já atribuídos. Promoção exige observação atribuída; pending conserva o recibo. [A17]
+
+| Operação | Regra concreta do observador genérico | Consequência para o mantenedor |
+| --- | --- | --- |
+| Dispatch com runID | Relê o run exato; verifica commit esperado e identidade, workflow/ref; GitHub exige evento `workflow_dispatch` | Pode confirmar um run ainda em andamento: confirmou dispatch, não sucesso da pipeline |
+| Dispatch sem ID ou `unattributed:true` | Retorna pending antes de procurar runs | HTTP 204 aceito não autoriza escolher um run “próximo” |
+| Retry/retryFailed | Precisa de tentativa no acknowledgment e tentativa observada suficiente | Os comandos GitHub atuais retornam runID sem nova tentativa; portanto esse caminho não obtém confirmação genérica apenas do acknowledgment. GitLab não inventa tentativa |
+| Cancel/forceCancel | Confirma conclusão `cancelled` ou status nativo `canceled` | Aceitação de cancelamento não é cancelamento já concluído |
+| Source/resource/job e demais kinds | O observador não implementa pós-condição genérica para esses kinds | Um write pode permanecer `accepted`, mesmo que sua fase tenha feito readback próprio; não anuncie confirmação genérica inexistente |
+
+Essa limitação é uma propriedade do código, não uma fila de mudanças executadas por este trabalho. Uma operação ambígua exige examinar o recibo e o recurso nativo adequado, preservar o ID e decidir uma ação nova com sua própria autoridade; trocar client ID para repetir automaticamente a mesma mutação abandona a proteção de deduplicação. [A17, A19, A22]
+
+## 4. Comandos e recursos têm semântica nativa
+
+### 4.1 Comandos GitHub
+
+Autoridade passa por repo imutável e conta atual, recusando permissões negativas/arquivo arquivado/scopes clássicos incompatíveis quando observados. O ator é revisto próximo do envio, porque cada invocação `gh` pode resolver credencial novamente. Esperados de fonte/run/tentativa são conferidos no contexto apropriado; um campo extra não pode simplesmente ser ignorado. [A18]
+
+| Intenção | Elegibilidade, envio e acknowledgment |
+| --- | --- |
+| `workflow.dispatch` | Workflow ativo; prova de `workflow_dispatch` na branch padrão **e** fonte da ref selecionada; inputs literais tipados/defaults/required/choices e environment por identidade nativa. POST dispatch: 200 com identidade completa pode atribuir run; 204 fica `unattributed` |
+| `workflow.enable/disable` | Estados nativos admitidos e precondição opcional de fonte; PUT com 204. Acknowledgment vazio não é execução de workflow |
+| `run.retry` / `run.retryFailed` | Run completo; failed-mode restringe conclusões a failure/cancelled/timed_out. Endpoint rerun ou rerun-failed-jobs; 201/204. Retorna ID do run anterior, sem inventar nova tentativa |
+| `run.cancel` / `run.forceCancel` | Estado ativo/cancelável; 202. Force-cancel é limitado ao host público/origin público e à versão de API selecionada que o código observa (`2026-03-10` neste baseline) |
+| `run.delete` | Run terminal, DELETE 204; não interpreta ausência como um novo sucesso de execução |
+| `run.approveFork` | Evento pull_request, action_required, repo público, head repo distinto e realmente fork; confere novamente run/commit/tentativa/estado antes de aprovar |
+| `job.retry` | Job exato do run, SHA e tentativa atual; job e run terminais. Retorna IDs conhecidos, sem prometer nova tentativa/job observado |
+
+As regras de input são leitura estrutural limitada, não avaliação de expressões de Actions. O limite de definições dispatch é próprio desse caminho e menor que o limite geral de fonte. [A18–A19]
+
+### 4.2 Comandos GitLab
+
+O plano passa por projeto nativo, papel observado e conta; campos de repo/CI desabilitados, arquivamento, políticas de variables/cancelamento e mínimos de versão são verificações particulares. Roles desconhecidos não são promovidos a autorização. O adapter constrói plano antes do único envio principal e exige status e resposta nativos qualificados. Numeric attempt e `resourceVersion` não têm significado no dispatcher de execução GitLab. [A20–A22]
+
+| Intenção | Diferença nativa que deve sobreviver a uma alteração |
+| --- | --- |
+| Dispatch comum | POST pipeline por ref/commit observado; inputs e variables usam campos nativos. Ack precisa manter projeto, SHA, ref e source adequado |
+| Trigger | Endpoint de trigger e token no corpo têm semântica própria; não é dispatch comum com token em query/diagnóstico |
+| Pipeline de MR | Endpoint por IID de MR aberta no mesmo projeto; fork é recusado sem prova de placement. Source `merge_request_event` e refs head/merge são conferidos |
+| Retry de pipeline | Endpoint nativo retry, sem significado de rerun-all ou tentativa GitHub; retorno confirma aceitação/identidade do pipeline, não término de jobs |
+| Cancel / delete / rename | Cancel respeita política; delete requer role mais alta e resposta vazia 204; rename exige versão nativa observada e confirma nome. Não há a mesma lista local de estados terminais do dispatcher GitHub |
+| Job retry/play/cancel/erase | ID e ownership exatos, regras de estado específicas; retry deve retornar **outro** jobID, não converter nome em vínculo. Play é manual; erase exige estado/autoridade e não aceita arquivo variável. Readback pós-envio incompleto deixa unknown |
+| Bridges | Distintos dos jobs ordinários; retry/play dependem de versão qualificada, cancel/erase não são generalizados. Busca de bridge por ID é limitada e não adivinha por nome |
+
+Inputs de pipeline dependem de especificação local autoritativa e versão GitLab observada (o suporte explícito usado aqui exige 18.1). Includes desconhecidos não viram schema de inputs vazio; constraints que o código não consegue validar com fidelidade são recusadas, sem trocar regex nativa por avaliação JavaScript. Defaults omitidos ficam com o provider. [A20–A22]
+
+### 4.3 Recursos: escopo, versões e efeitos parciais
+
+`resourceID`, `resourceKind` e scope pertencem ao projeto vinculado. Versões de recurso são fingerprints de metadados selecionados ou versões/ETags nativos nos caminhos que os suportam; não contêm segredo e não constituem, por si, um CAS atômico no servidor. A implementação relê antes da escrita, mas a janela até o provider continua existindo. Em fluxos multifase, a primeira rejeição pode ser definitiva; falhar depois de uma fase aplicada é `outcome_unknown`, sem rollback ou repetição automática. [A23]
+
+| Recurso | GitHub | GitLab / limite relevante |
+| --- | --- | --- |
+| Variables/secrets | Repo ou environment; values legíveis só para variables. Secret é criptografado com sealed box e chave pública observada; nome/metadados podem ser lidos, valor não retorna. Rename só de variable legível | Identidade inclui key **e** environment_scope; `Repository` literal não é alias de `*`. Masked/hidden/hidden desconhecido redigem valor. Hidden create exige versão observada; valor refletido na resposta é descartado. Movimento de scope e rename só onde explicitamente suportados |
+| Environments | Reviewers resolvidos a users/teams nativos; branch/tag policies separadas; alterar proteção e refs pode aplicar parcialmente. Não altera silenciosamente plataforma de cobrança via timer ausente | Description/tier e conjunto limitado de approvals representáveis; proteção não garante filtro de branch/tag e não oferece wait timer equivalente. Wildcards, groups/roles ou multiapprovals não representáveis tornam reviewers read-only. Delete exige environment parado |
+| Deployment review | Aprovação de pending deployments da execução exata e elegibilidade do ator | Deployment bloqueado e approvals pendentes precisam de prova. Aprovar **não** executa job manual. Não confundir resource listing genérico com esse read por run |
+| Policy/retention | Política de actions permitidas preserva enabled/set selecionado; retention herdada não é um controle remoto implementado aqui | Política local de retenção fica no binding; GitLab approved-actions equivalente é indisponível. Project settings observados não implicam suporte para editar qualquer campo |
+| Caches | IDs/chaves/refs nativos; delete por ID ou key exige inventário suficiente e correspondência exata; uso é metadado com atualização aproximada | Uma entrada de cache de projeto descreve **invalidação do namespace**, via `/api/graphql`: afeta jobs futuros, não enumera/deleta cada blob e mantém blobs existentes. Não prometer remoção física imediata |
+| Runners | Repo scoped dá ownership; labels read-only/plataforma instalada não podem ser alterados como labels custom. JIT exige runnerGroupID explícito. Token de registration tem saída sensível efêmera e ack unattributed, sem provar instalação | OwnerProject vem de GraphQL, não da ordem de assignments ou tags. Runners herdados/externos são read-only salvo assign qualificado. Delete recusa impacto em outros projetos. Enrollment `user/runners` depende de versão e devolve token por saída de comando |
+| Schedules | Cron é conteúdo YAML de workflow na **branch padrão**; update exige commit/sourceVersion e publica como source.write. Sem API de play/ownership/pause independente; múltiplos crons exigem editor explícito | Pipeline schedule tem ID, owner, timezone, ref e active próprios. Update exige owner; take-ownership requer papel adequado. Inputs/variables têm fases próprias. Play 201 `Created` retorna resourceID **unattributed**, sem pipelineID ou prova de término |
+| Artifacts | Metadados e delete por artifactID nativo; keep não é suportado por equivalência | JobID identifica o artifact resource. Erased/expired/unavailable são estados explícitos. Keep exige confirmação de expiry nula; delete é operação nativa de artifacts do job |
+
+Valores secretos existem somente no caminho necessário à chamada e na saída sensível tipada quando aplicável; o ledger registra acknowledgment permitido, não CommandOutput de token/JIT. Isso não autoriza alegar apagamento garantido de toda string da memória do runtime. O wrapper de sealed box zera seu byte array local, não controla todas as cópias do texto JavaScript. [A24–A31, A37]

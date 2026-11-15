@@ -1,0 +1,14 @@
+{
+  "id": "final-mechanical-audit-dispatch",
+  "target": "/root/native_descriptor",
+  "method": "collaboration.followup_task",
+  "kind": "mechanical_assembly_audit",
+  "tool_returned_normally": true,
+  "capture_basis": "Actual visible native collaboration call; captured verbatim before handle reuse",
+  "captured_utc": "2026-11-15T06:20:41.811068+00:00",
+  "request_ref": "receipts/continuation-controls/final-mechanical-audit-dispatch.message.txt",
+  "request_bytes": 1178,
+  "request_sha256": "a71cdab6a96bd7f7d074c61524500c8c13dadb6f05cfacec15e8c247a79c0ec6",
+  "native_model_physical_attempts": "UNKNOWN",
+  "role": "coordination or mechanical audit only; not semantic acceptance"
+}

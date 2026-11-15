@@ -1,0 +1,285 @@
+Transporte literal pela principal ao mesmo juiz J2, execução 34269cf4-d631-41c5-a30b-85b0ec217390. Não use ferramentas, delegue, edite ou receba parecer do outro juiz. Lote derived-research-maintenance-v1; parte 2/2. Pacote canônico 69043 bytes SHA256 e675c3f31a8582ceadddbc296d9f12bd1811c08564de22c6aec91cf83eb2690b. Esta parte tem 34553 bytes SHA256 797752b541b66ea3f4c994bf1aabca0feaef60d5ad57c494bb9c41851c5f310a. Envio em dois fragmentos contíguos: este é 1/2, offsets UTF-8 [0,17043), 17043 bytes SHA256 79b9fbf0dc6708a9c5abf466109c005978127f8968393755454e36484a8c344b. Junte os fragmentos sem os envelopes. Conserve o exame anterior e os deltas já recebidos. Julgue apenas após FIM_DO_LOTE; até lá responda somente ACK da parte e da última âncora.
+
+BEGIN_PART
+    "Explain the defined need, mechanisms, decision boundaries and relevant limitations without copying the full predecessor. Distinguish static findings, contract-test expectations, inference and actual execution.",
+    "Map claims to exact predecessor keys/hashes/sections in evidence.md. Navigation is not a build edge. Do not claim provider qualification, runtime binding, live consumers, maintenance success or global S1 acceptance.",
+    "Store body.md, evidence.md, production-manifest.json, response.md and the exact visible dispatch record in the exclusive directory. Preserve existing request.txt. Include every actual consumed whole-file unit and provenance in production-manifest.json; do not call a postproduction manifest an earlier recipe.",
+    "No network, GitHub writes, product tests or product changes, policy/guard changes, sibling mutations or other agents. Python/file tools may read the enumerated inputs and write your outputs; deterministic hashing is permitted.",
+    "Stop after this one authoring delivery and report hashes, input/output counts and limitations. The principal obtains the same two native judges before releasing a dependent."
+  ],
+  "outputs": [
+    "body.md",
+    "evidence.md",
+    "production-manifest.json",
+    "response.md",
+    "dispatch-message.txt"
+  ],
+  "reserved_answers_included": false,
+  "usage_fields": "Physical attempts, tokens and billing UNKNOWN when not exposed."
+}
+
+## END_RECEITA_DE_TAREFA_EXATA
+
+## BEGIN_RECEITA_COMUM_EXATA
+
+{
+  "schema": "s1-03-derived-public-authoring-contract/v1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "purpose": "Actual common recipe for future L2-L4 derivation; frozen before those author dispatches. Not semantic output or acceptance.",
+  "scope": "S1-03 only",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "kit_revision": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+  "artifact_plan": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/artifact-plan.json",
+    "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad"
+  },
+  "author_context": "fresh fork none; no reserved answers; read exactly listed accepted predecessor bodies plus public task/recipe/authority inputs; new raw-source needs return to principal before use",
+  "gate": "Only dispatch a derived artifact after the same two current native judges accept every declared required predecessor at exact bytes. Recipe preparation does not release the gate.",
+  "layer_roles": {
+    "2": "Explain local working flow and decision boundaries from accepted L1, giving useful direct entry points into the detailed contracts.",
+    "3": "Explain relationships, change impact and which knowledge/consumers need re-evaluation; distinguish build dependencies from navigation and independent families.",
+    "4": "Ownership, maintenance/diagnosis, verification and escalation; entry gives shallow orientation and concrete deeper navigation while preserving the historical Core entry."
+  },
+  "quality_rules": [
+    "Write a usable Portuguese reference with clear depth2 section headings so a consumer can request a bounded section through ownership.read.",
+    "Make distinct the source-supported mechanism, authorized intent, inference and remaining gap. Do not upgrade tests listed to executions.",
+    "Cite exact accepted predecessor keys, bytes/hashes and relevant sections. Do not invent line evidence, raw source details or external engine guarantees.",
+    "Avoid reprinting the full predecessor or adding a file per source; satisfy the defined need with a compact coherent explanation.",
+    "Describe known failures and authority boundaries explicitly. A proposed operational action does not prove it was executed.",
+    "Do not include reserved oracle answers or infer a consumer PASS; public questions are needs, not outcomes.",
+    "No product edits, local tests, network/provider calls, GitHub writes, policy/guard changes or external messages.",
+    "Preserve exact visible request/response and body bytes; retain every revision and actual input identity, including genuine procedures used. No private reasoning.",
+    "Use only authorized exclusive producer directory. No sibling payload/producer mutation or recursive filesystem discovery. If an extra input is necessary, identify it before reading.",
+    "The actual authoring recipe is this contract plus the per-task frozen recipe and visible dispatch. A descriptive output manifest created afterwards is not a preexisting executable recipe."
+  ],
+  "public_criteria": [
+    "GO-A1",
+    "GO-A2",
+    "GO-A3",
+    "GO-A4",
+    "GO-A5",
+    "GO-A6",
+    "GO-A7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I7",
+    "GO-I8",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-4",
+    "QS-5",
+    "QS-6",
+    "CC-1",
+    "CC-3",
+    "CC-4",
+    "CC-7",
+    "AC-01"
+  ],
+  "outputs": [
+    "body.md",
+    "evidence.md mapping claims/sections to exact accepted predecessor sections",
+    "production-manifest.json listing actual consumed whole-file units and the scope of each, output hashes, gaps and procedure provenance",
+    "request.txt exact visible dispatch",
+    "response.md original visible result and limitations"
+  ],
+  "not_outputs": [
+    "No oracle copy",
+    "No new AGENTS or authority file",
+    "No claimed runtime receipts or semantic verdicts",
+    "No replacement of historical s1.core.entry"
+  ]
+}
+
+## END_RECEITA_COMUM_EXATA
+
+## BEGIN_PLANO_PUBLICO_EXATO
+
+{
+  "schema": "s1-03-required-artifact-plan/v1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "scope": "S1-03 only",
+  "assigned_source_population": 462,
+  "status": "FROZEN_BEFORE_DEPENDENT_L2_L4_PRODUCTION",
+  "authoring_gate": "Only release each dependent after both same native judges accept every required predecessor; input body pins and acceptance refs are supplied at dispatch. This plan is not acceptance.",
+  "artifacts": [
+    {
+      "key": "s1.core.automation",
+      "layer": 1,
+      "need": "flow",
+      "required_build_predecessors": [],
+      "purpose": "Actions, Board e agendamento: contratos da implementação"
+    },
+    {
+      "key": "s1.core.research",
+      "layer": 1,
+      "need": "component",
+      "required_build_predecessors": [],
+      "purpose": "Research e toolkits: contratos, prontidão e autoridade da evidência"
+    },
+    {
+      "key": "s1.core.boundaries",
+      "layer": 1,
+      "need": "component",
+      "required_build_predecessors": [],
+      "purpose": "Fronteiras Core para Atlas, Relay, control plane e RAG"
+    },
+    {
+      "key": "s1.subslice03.support",
+      "layer": 1,
+      "need": "entry",
+      "required_build_predecessors": [],
+      "purpose": "Suporte de entrada, ferramentas, história e fixtures dos104 paths"
+    },
+    {
+      "key": "s1.subslice03.automation-flow",
+      "layer": 2,
+      "need": "flow",
+      "required_build_predecessors": [
+        "s1.core.automation"
+      ],
+      "purpose": "Entendimento local do ciclo de comando, Board e admissão agendada"
+    },
+    {
+      "key": "s1.subslice03.research-flow",
+      "layer": 2,
+      "need": "flow",
+      "required_build_predecessors": [
+        "s1.core.research"
+      ],
+      "purpose": "Entendimento local da aquisição, índice, custódia e investigação"
+    },
+    {
+      "key": "s1.subslice03.boundary-flow",
+      "layer": 2,
+      "need": "flow",
+      "required_build_predecessors": [
+        "s1.core.boundaries"
+      ],
+      "purpose": "Encadeamento e limites do lado Core das portas externas"
+    },
+    {
+      "key": "s1.subslice03.automation-impact",
+      "layer": 3,
+      "need": "operational",
+      "required_build_predecessors": [
+        "s1.subslice03.automation-flow"
+      ],
+      "purpose": "Impacto de mudanças de contrato e separação de famílias independentes"
+    },
+    {
+      "key": "s1.subslice03.research-impact",
+      "layer": 3,
+      "need": "operational",
+      "required_build_predecessors": [
+        "s1.subslice03.research-flow"
+      ],
+      "purpose": "Impacto de mudanças em receitas, índice, custódia e autoridade"
+    },
+    {
+      "key": "s1.subslice03.automation-maintenance",
+      "layer": 4,
+      "need": "maintenance",
+      "required_build_predecessors": [
+        "s1.subslice03.automation-impact"
+      ],
+      "purpose": "Manutenção, diagnóstico, verificação e encaminhamento da automação"
+    },
+    {
+      "key": "s1.subslice03.research-maintenance",
+      "layer": 4,
+      "need": "maintenance",
+      "required_build_predecessors": [
+        "s1.subslice03.research-impact"
+      ],
+      "purpose": "Manutenção e diagnóstico de research/toolkits e suas evidências"
+    },
+    {
+      "key": "s1.subslice03.entry",
+      "layer": 4,
+      "need": "entry",
+      "required_build_predecessors": [
+        "s1.subslice03.support",
+        "s1.subslice03.boundary-flow",
+        "s1.subslice03.automation-maintenance",
+        "s1.subslice03.research-maintenance"
+      ],
+      "purpose": "Entrada local rasa e aprofundamento com proposta de navegação para a união"
+    }
+  ],
+  "direct_use_case_plan": {
+    "A-PERMITTED": [
+      "s1.core.automation",
+      "s1.subslice03.automation-flow"
+    ],
+    "A-VIOLATION": [
+      "s1.core.automation",
+      "s1.subslice03.automation-maintenance"
+    ],
+    "A-IMPACT": [
+      "s1.subslice03.automation-impact",
+      "s1.subslice03.research-impact"
+    ],
+    "S-FAILURE": [
+      "s1.core.automation",
+      "s1.subslice03.automation-flow"
+    ],
+    "R-FAILURE": [
+      "s1.core.research",
+      "s1.subslice03.research-flow"
+    ],
+    "B-ABSTAIN": [
+      "s1.core.boundaries",
+      "s1.subslice03.boundary-flow"
+    ],
+    "ENTRY-NAV": [
+      "s1.subslice03.entry",
+      "s1.subslice03.support"
+    ]
+  },
+  "case_limits_ref": "consumers/public-cases.json",
+  "reserved_answers_included": false,
+  "historical_entry": "s1.core.entry preserved byte-identically; never replaced or included as a rival new local definition",
+  "union_navigation": "Existing concrete36-key/5-owner proposal remains NOT_SELECTED; S1_COORDINATION chooses union after five handoffs.",
+  "navigation_rule": "Navigation links are not build edges. Declared entry dependencies concern the accepted explanations it summarizes; peer links alone never add dependency.",
+  "allowed_adjustment": "Only a concrete new need/finding can change this finite graph; preserve previous plan and explain the delta before new dependent production."
+}
+
+## END_PLANO_PUBLICO_EXATO
+
+## Inputs reais — projeção mecânica do manifesto
+
+| Path local | Bytes | SHA256 | Papel declarado |
+| --- | ---: | --- | --- |
+| inputs/AGENTS.md | 16501 | 07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f | Public authority/plan/contract/criteria fully read earlier; whole-byte identity rechecked for L4 |
+| inputs/COMMON.md | 12959 | ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7 | Public authority/plan/contract/criteria fully read earlier; whole-byte identity rechecked for L4 |
+| inputs/mission.json | 6006 | 32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75 | Public authority/plan/contract/criteria fully read earlier; whole-byte identity rechecked for L4 |
+| inputs/SKILL.md | 8143 | f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029 | Public authority/plan/contract/criteria fully read earlier; whole-byte identity rechecked for L4 |
+| inputs/references/principles.md | 6010 | f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230 | Public authority/plan/contract/criteria fully read earlier; whole-byte identity rechecked for L4 |
+| inputs/references/fatia-1.md | 3987 | 152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae | Public authority/plan/contract/criteria fully read earlier; whole-byte identity rechecked for L4 |
+| inputs/references/fresh-start.md | 4983 | c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166 | Public authority/plan/contract/criteria fully read earlier; whole-byte identity rechecked for L4 |
+| inputs/references/orchestration.md | 4408 | b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb | Public authority/plan/contract/criteria fully read earlier; whole-byte identity rechecked for L4 |
+| inputs/references/judging.md | 5787 | c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb | Public authority/plan/contract/criteria fully read earlier; whole-byte identity rechecked for L4 |
+| inputs/references/transport.md | 8478 | 02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c | Public authority/plan/contract/criteria fully read earlier; whole-byte identity rechecked for L4 |
+| payload/artifact-plan.json | 5017 | 6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad | Public authority/plan/contract/criteria fully read earlier; whole-byte identity rechecked for L4 |
+| payload/recipes/derived-contract.json | 4017 | bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588 | Public authority/plan/contract/criteria fully read earlier; whole-byte identity rechecked for L4 |
+| payload/recipes/derived-public-criteria.json | 16244 | 1e7686491c5b68cb4f3d287377723edcd8932ae803c267ddbabf44a360dfc36e | Public authority/plan/contract/criteria fully read earlier; whole-byte identity rechecked for L4 |
+| producers/research/revisions/v4/history/body.md | 63841 | f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f | Retained actual family whole-file input; no new read or build edge merely from retention |
+| payload/recipes/derived/research-flow.json | 8423 | 543c6045bfb145c0db4b2779b12c96c140ff20198c408357c7d84bcf0a7f71e1 | Retained actual family whole-file input; no new read or build edge merely from retention |
+| producers/derived-research-flow/request.txt | 850 | 351e7104bfdbc75075906493ef2db4d3f689d4181f7e621f64e75e6caf31f6ee | Retained actual family whole-file input; no new read or build edge merely from retention |
+| producers/derived-research-flow/dispatch-message.txt | 1511 | 2252f97394d8dbc61fd0e629ce1a16700f8a81bc78673add06985842fc75efcf | Retained actual family whole-file input; no new read or build edge merely from retention |
+| producers/derived-research-flow/history/v1/body.md | 16980 | a4b50fa9ae0b781dbea831aefcb98cb099f93167d4a7a584dc88878fc93bc044 | Retained actual family whole-file input; no new read or build edge merely from retention |
+| producers/derived-research-flow/history/v1/evidence.md | 11305 | 8e2b11c446ef73d166c98f7d852d5ca674a0a056779351e393a2d8b832cbf365 | Retained actual family whole-file input; no new read or build edge merely from retention |
+| producers/derived-research-flow/history/v1/production-manifest.json | 19363 | 363c7e06f9ec4f0ea2165c81204c238f2972d702875b2d2d445607c0d2e66fcf | Retained actual family whole-file input; no new read or build edge merely from retention |
+| producers/derived-research-flow/history/v1/response.md | 2472 | 4d10e4cbaacffd86da6c9c32091576608e3a0937a6f5ef5489c7f142778540ac | Retained actual family whole-file input; no new read or build edge merely from retention |
+| producers/derived-research-flow/revisions/v2/request.txt | 503 | 4c2c7a3e6262ab721b25b5aef283d6dfbbb9edacb6cd20da73e5212f55a9840a | Retained actual family whole-file input; no new read or build edge merely from retention |
+| producers/derived-research-flow/revisions/v2/recipe.json | 3279 | 007fa924ee039cce045c481143b71fff2dc3b6f6776b9cc77edfff1b386ca8b9 | Retained actual family whole-file input; no new read or build edge merely from retention |
+| producers/derived-research-flow/revisions/v2/public-finding.md | 1080 | 8230c3ca27cd3416c801ff0080dc102a41b0fb16ee6ecdf94aae0c8612f33bf7 | Retained actual family whole-file input; no new read or build edge merely from retention |
+| producers/derived-research-flow/revisions/v2/dispatch-message.txt | 1669 | 9de6643262b0eef5014515544cc97d0d3ed334a70598c3d86b6f5a89bacfe15d | Retained actual family whole-file input; no new read or build edge merely from retention |
+| producers/derived-research-flow/revisions/v2/prior-output-preservation.json | 2036 | af0552a04cae4c5e2c1eb6f32b00e0a372ed9028542298808debeae4b8d5b00d | Retained actual family whole-file input; no new read or build edge merely from retention |
+| producers/derived-research-flow/revisions/v2/apply.py | 19851 | 3404af9b477c4d07b170d03f7068d4152b2bd4cb76c607cf1a0f24320bd67bf8 | Retained actual family whole-file input; no new read or build edge merely from retention |
+| producers/derived-research-flow/revisions/v2/procedure-freeze.json | 15402 | b2b63dbbe1ac9cfdeb619ba074d2e8b8abc809b00bf13a72aea7f6235e746356 | Retained actual family whole-file input; no new read or build edge merely from retention |
+| producers/derived-research-flow/revisions/v2/delta.json | 4551 | ae2265221d845124e5632ab460e4278c0d49c987a16d38739ddd5fa07f5de268 | Retained actual family whole-file input; no new read or build edge merely from retention |
+
+END_PART

@@ -1,0 +1,47 @@
+{
+  "schema": "s1-03-mechanical-audit-corrections/v1",
+  "at_utc": "2026-11-15T06:34:31.118887+00:00",
+  "audit": {
+    "path": "payload/assembly/final-mechanical-audit/REPORT.md",
+    "bytes": 15755,
+    "sha256": "e592c4819b51ae3f4dfaeb3bde504c900d61d47061a3481b9dc2e1cd266f955d"
+  },
+  "patch": {
+    "path": "payload/assembly/final-mechanical-audit/proposed.patch",
+    "bytes": 10392,
+    "sha256": "911f16d004a6eea69ca34d428c053f1994d58ac81bf1c952dcd52337ad7df3fe"
+  },
+  "actual_application": {
+    "command": [
+      "patch",
+      "-p1",
+      "--forward",
+      "--input",
+      "assembly-native-descriptors/final-mechanical-audit/proposed.patch"
+    ],
+    "exit_code": 0
+  },
+  "before": {
+    "path": "payload/assembly/procedures/assemble-native-final-before-alias-fix.py",
+    "bytes": 12722,
+    "sha256": "166aefa008dd62f48c5ca6818681922b6fdfbfb183592b9c79e300323d5784a1"
+  },
+  "after": {
+    "path": "scripts/assemble-native-final.py",
+    "bytes": 13643,
+    "sha256": "3fb94dc441c45ef965fe52d2d372f462eecb168cf8f1dd1c5e2c74ddb2b1c10b"
+  },
+  "bridge_v2": {
+    "path": "scripts/atlas-consumer-bridge-v2.py",
+    "bytes": 7710,
+    "sha256": "461762d20372f8beec3bbfc1b0f5e7ff464872f4095a43f2987ff7e36724269b"
+  },
+  "closed_mechanical_findings": [
+    "F01 unique whole-identity mapping for mission alias",
+    "F02 timeout evidence preserved by v2 procedure",
+    "F03 opaque contract reference included in immutable source pin checks"
+  ],
+  "verification": "Read proposed patch and complete audit; applied exact patch; ast.parse both resulting texts. No runtime or product test. Full assembly and actual CLI remain gated by all semantic predecessors.",
+  "v1_bridge_unchanged": true,
+  "body_or_oracle_changed": false
+}

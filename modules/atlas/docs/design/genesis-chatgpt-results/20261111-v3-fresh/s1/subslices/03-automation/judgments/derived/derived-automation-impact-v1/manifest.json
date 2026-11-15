@@ -1,0 +1,36 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "packet": "derived-automation-impact-v1",
+  "source": "review-packets/derived-automation-impact-v1.md",
+  "source_bytes": 52560,
+  "source_sha256": "a823a599b7ca343e2ba8338f9da89ce5c629cb82a2d664ac15c86a9228631114",
+  "source_manifest": "review-packets/derived-automation-impact-v1.manifest.json",
+  "source_manifest_bytes": 1316,
+  "source_manifest_sha256": "307f851ddecaba0882b40f9d30ca9d06d24276fba4171b9989da7b953907a3c8",
+  "parts": [
+    {
+      "part": 1,
+      "file": "part-01.txt",
+      "start_byte": 0,
+      "end_byte_exclusive": 26253,
+      "bytes": 26253,
+      "sha256": "6abc9a92e22990792fccc4b2cdcb9f0400e057a19fb899c2f386a9c78e271fe7"
+    },
+    {
+      "part": 2,
+      "file": "part-02.txt",
+      "start_byte": 26253,
+      "end_byte_exclusive": 52560,
+      "bytes": 26307,
+      "sha256": "02dceb05caefc67401d00291d439b011bb984f4793e9a5d284c916008dc29347"
+    }
+  ],
+  "split_rule": "Contiguous UTF-8 parts, <=28000 bytes each, split after a complete line.",
+  "preparation_state": "PREPARED_NOT_DISPATCHED",
+  "dispatch_count_at_preparation": 0,
+  "prepared_at_utc": "2026-11-15T09:52:31.235049+00:00",
+  "transport_ownership": {
+    "/root/s1_03_j1": "/root/review_relay",
+    "/root/s1_03_j2": "/root/review_relay"
+  }
+}

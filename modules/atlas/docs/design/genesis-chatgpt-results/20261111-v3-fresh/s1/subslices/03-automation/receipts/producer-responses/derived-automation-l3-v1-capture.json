@@ -1,0 +1,14 @@
+{
+  "kind": "native_final_literal_capture",
+  "agent_id": "/root/derived_automation",
+  "artifact_key": "s1.subslice03.automation-impact",
+  "version": "v1",
+  "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/payload/receipts/producer-responses/derived-automation-l3-v1-original.md",
+  "bytes": 2703,
+  "sha256": "85831ceada2e319c68ec37bc7e521de4d66c2aa1828e2df18a25886fe0a181f7",
+  "literal": true,
+  "producer_response_byte_equal": true,
+  "captured_before_handle_reuse": true,
+  "capture_source": "Native FINAL_ANSWER delivered to root; independently visible in collaboration.list_agents",
+  "at": "2026-11-15T09:51:23.526846+00:00"
+}

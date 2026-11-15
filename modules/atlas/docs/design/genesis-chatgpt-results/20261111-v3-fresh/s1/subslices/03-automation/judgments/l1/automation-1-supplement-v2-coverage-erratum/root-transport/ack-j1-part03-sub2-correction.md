@@ -1,0 +1,1 @@
+ACK da correção — somente em **AUT1-C20**, a linha canônica usa `needs_duplicate:${id}`. **AUT1-C19** permanece com `needs_duplicate:jobs.${id}`. Envio defeituoso preservado no histórico; aguardo as partes restantes e o `FIM_DO_LOTE` externo.

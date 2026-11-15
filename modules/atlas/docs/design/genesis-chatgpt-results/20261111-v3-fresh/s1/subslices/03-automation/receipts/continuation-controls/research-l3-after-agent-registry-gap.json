@@ -1,0 +1,25 @@
+{
+  "id": "research-l3-after-agent-registry-gap",
+  "target": "/root/derived_research",
+  "kind": "SAME_FAMILY_L3_CONTINUATION_NO_NEW_SCOPE",
+  "method": "collaboration.followup_task",
+  "message": "Controle de continuação do mesmo pedido L3: o registro de agentes agora mostra somente /root; ainda não há body/evidence/manifest/response em producers/derived-research-impact. Não reinicie nem duplique uma execução já em curso, e não altere outputs existentes. Confirme seu estado real e continue o pedido já autorizado de s1.subslice03.research-impact sob payload/recipes/derived/research-impact.json (SHA256 68778f6144af73ee575678096eee818fb2a6ec2992572af4594dcf37af15fe7e), no diretório exclusivo já indicado. Não há mudança de escopo, critérios ou gate. Preserve o dispatch original e registre este controle adicional como contexto visível real, sem transformá-lo em parecer. Não leia oracle, juízes ou raw source; não produza L4. Se o pedido anterior tiver concluído, informe os outputs/hashes realmente existentes e não reconstrua um FINAL antigo como verbatim. Se houver impedimento do host, reporte o erro exato.",
+  "message_sha256": "ab20bf3cdc6375521405ac854ffc0589b8233e6947dfe7c66f8080e99116e09a",
+  "message_utf8_bytes": 944,
+  "tool_returned_normally": true,
+  "observed_registry": "collaboration.list_agents returned only /root; no definitive unavailable-handle error returned",
+  "outcome": "RUNNING_CONFIRMED_NO_HOST_ERROR_NO_DUPLICATION",
+  "recorded_utc": "2026-11-15T05:19:18.613662+00:00",
+  "not_a_new_judge_or_duplicate_authorization": true,
+  "tokens": "UNKNOWN",
+  "physical_attempts": "UNKNOWN",
+  "cost": "UNKNOWN",
+  "actual_status_message": {
+    "source": "Native agent MESSAGE from /root/derived_research; not a FINAL",
+    "text": "Estado real do produtor research: sigo ativo no mesmo contexto e pedido L3. Receita research-impact (9448 B, SHA256 68778f6144af73ee575678096eee818fb2a6ec2992572af4594dcf37af15fe7e), request e os 15 inputs enumerados foram lidos/conferidos; o L2 body aceito foi relido integralmente. O único output já escrito é dispatch-message.txt (1546 B, SHA256 28dcc55a79e9d1372cee574c7bdb7b5f7d7154f3e29c98af1f8b52ca9b24565e). Body/evidence/manifest/response estão em composição, sem execução duplicada. Nenhum erro de ferramenta ou impedimento do host foi observado. Vou preservar o controle adicional literalmente no contexto não documental do manifesto e concluir os cinco outputs autorizados.",
+    "bytes": 694,
+    "sha256": "7119bda79e01968f5e1d75d583c3c200a6b9093231ed49af8c0352f2c56fc3b1"
+  },
+  "registry_limit": "list_agents omission did not demonstrate unavailability; continuation was confirmed by the actual same author",
+  "updated_utc": "2026-11-15T05:20:13.043440+00:00"
+}

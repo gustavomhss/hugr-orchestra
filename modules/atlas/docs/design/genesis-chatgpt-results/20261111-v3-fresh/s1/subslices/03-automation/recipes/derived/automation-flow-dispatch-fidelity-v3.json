@@ -1,0 +1,107 @@
+{
+  "schema": "s1-03-derived-judge-finding-correction/v1",
+  "artifact": {
+    "key": "s1.subslice03.automation-flow",
+    "layer": 2,
+    "need": "flow",
+    "version": "v3"
+  },
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "frozen_at_utc": "2026-11-15T09:29:22.159439+00:00",
+  "state": "FROZEN_BEFORE_CORRECTION_DISPATCH",
+  "author": "/root/derived_automation",
+  "finding_origin": "Mandatory public source-fidelity finding AF-L2-J2-01 from the same persistent J2. No reserved answer, other-judge vote or full judgment prose is an author input. L2 has no dual gate yet; L1 v4 remains accepted unchanged.",
+  "prior_recipe": {
+    "local_path": "payload/recipes/derived/automation-flow-source-fidelity-v2.json",
+    "bytes": 7391,
+    "sha256": "16c2b4e2efc5a6e2ea6a111540e7a662ce154af3c58c366306e254f23d9b3364",
+    "git_blob_sha": "d41472b948b6c1a5d2d5990c3de0a906c9d5cf47"
+  },
+  "prior_manifest": {
+    "local_path": "producers/derived-automation-flow/revisions/v3/history/production-manifest.json",
+    "bytes": 27416,
+    "sha256": "1802600a673c0521064bc636bd9be5e9e9aad9dd644f26efd5d14c02bee52cff",
+    "git_blob_sha": "009ace4ecb5cda6ec2c3f58aec5573d1b986c205"
+  },
+  "parent_body": {
+    "local_path": "producers/automation/body.md",
+    "bytes": 60767,
+    "sha256": "968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae",
+    "git_blob_sha": "e26213eb2fc76dc843dca17d1111334c76f88890",
+    "key": "s1.core.automation",
+    "version": "v4",
+    "section": "4.1 Comandos GitHub"
+  },
+  "exact_retained_outputs": [
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v3/history/body.md",
+      "bytes": 16541,
+      "sha256": "5b24037431881e96ddb5a872fd6541c94880d189d8b0c873bac9d8bd874d85c1",
+      "git_blob_sha": "378dbb4cd9f978ed9ab848136a2f4b9fdd72ca6b",
+      "original_read_paths": [
+        "producers/derived-automation-flow/body.md"
+      ]
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v3/history/evidence.md",
+      "bytes": 14569,
+      "sha256": "0c4bff02eec8c4dbca2886127f1546bd51707060df8306ba4e630dba73f990d8",
+      "git_blob_sha": "ec9f7f1351681788c7c58cb345e4ee6860c4c3af",
+      "original_read_paths": [
+        "producers/derived-automation-flow/evidence.md"
+      ]
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v3/history/production-manifest.json",
+      "bytes": 27416,
+      "sha256": "1802600a673c0521064bc636bd9be5e9e9aad9dd644f26efd5d14c02bee52cff",
+      "git_blob_sha": "009ace4ecb5cda6ec2c3f58aec5573d1b986c205",
+      "original_read_paths": [
+        "producers/derived-automation-flow/production-manifest.json"
+      ]
+    },
+    {
+      "local_path": "producers/derived-automation-flow/revisions/v3/history/response.md",
+      "bytes": 3043,
+      "sha256": "59ffb319da5b27d830b9eeabe7ac592c104a64496864235da4331cd5adc05c23",
+      "git_blob_sha": "f07fae15e22fabc2fd4cad461fd721eab5e031d3",
+      "original_read_paths": [
+        "producers/derived-automation-flow/response.md"
+      ]
+    }
+  ],
+  "finding": {
+    "id": "AF-L2-J2-01",
+    "body_section": "4. Actions: preservar a semântica do provider e do transporte",
+    "location": "table / Dispatch / GitHub",
+    "current_literal": "Workflow ativo e `workflow_dispatch` na branch padrão e ref selecionada; 204 fica sem atribuição",
+    "accepted_predecessor_line": "| `workflow.dispatch` | Workflow ativo; prova de `workflow_dispatch` na branch padrão **e** fonte da ref selecionada; inputs literais tipados/defaults/required/choices e environment por identidade nativa. POST dispatch: 200 com identidade completa pode atribuir run; 204 fica `unattributed` |",
+    "public_judge_correction_example": "Workflow ativo; prova de `workflow_dispatch` na branch padrão e leitura da fonte da ref selecionada; 204 fica sem atribuição.",
+    "required_correction": "Keep the two proof objects distinct: workflow_dispatch eligibility in the default branch and the source in the selected ref. Do not say that both refs have the same workflow_dispatch check. No new raw-source reading is needed."
+  },
+  "allowed_reads": "Retain all24 current family inputs. Read this recipe, the frozen v3 request, literal correction dispatch, and the four retained v2 outputs listed above. Reconsult the already-read accepted L1 parent as needed. No other file, oracle, raw source, sibling or full judge response is authorized. Record all cumulative whole-file identities and historical aliases with original_read_paths.",
+  "allowed_writes": [
+    "producers/derived-automation-flow/body.md",
+    "producers/derived-automation-flow/evidence.md",
+    "producers/derived-automation-flow/production-manifest.json",
+    "producers/derived-automation-flow/response.md",
+    "producers/derived-automation-flow/revisions/v3/dispatch-message.txt",
+    "producers/derived-automation-flow/revisions/v3/delta.json"
+  ],
+  "preserve_unchanged": [
+    "producers/derived-automation-flow/request.txt",
+    "producers/derived-automation-flow/dispatch-message.txt",
+    "producers/derived-automation-flow/revisions/v2",
+    "producers/derived-automation-flow/revisions/v3/history",
+    "payload/artifact-plan.json",
+    "producers/automation/body.md"
+  ],
+  "instructions": [
+    "Only the one quoted body clause may change; all remaining current body bytes including both scheduler v2 fixes are immutable. Update relevant evidence, output identities, manifest and response consistently.",
+    "Use actual_authoring_recipe.task_recipe.local_path for this v3 recipe and current_request.local_path for the v3 request; retain earlier actual recipes/requests/dispatches and all context inputs. The manifest is an output, not a retrospective authoring recipe.",
+    "Record exact before/after identity, replacement and inverse equality in revisions/v3/delta.json. Preserve original_read_paths for historical output copies now read as inputs.",
+    "No product tests/runtime/network/GitHub/delegation/new source. Hashing and deterministic comparison are permitted.",
+    "FINAL must equal response.md exactly without terminal LF. No L3 release until the same two judges accept these exact current bytes."
+  ],
+  "reserved_answers_included": false
+}

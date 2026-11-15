@@ -1,0 +1,84 @@
+{
+  "schema": "s1-03-public-finding-correction-recipe/v1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "frozen_at_utc": "2026-11-15T10:00:39.279230+00:00",
+  "state": "FROZEN_BEFORE_AUTHOR_DISPATCH",
+  "artifact": {
+    "key": "s1.subslice03.automation-impact",
+    "layer": 3,
+    "need": "operational",
+    "version": "v2",
+    "scope": "orchestra.s1"
+  },
+  "exclusive_output_directory": "producers/derived-automation-impact",
+  "revision_output_directory": "producers/derived-automation-impact/revisions/v2",
+  "prior_family_manifest": {
+    "local_path": "producers/derived-automation-impact/production-manifest.json",
+    "bytes": 41752,
+    "sha256": "fa3cb6ba4888e6449e2cb39d424e4e0dab2bc4e05f85c190fa1cfd7591e71c9c",
+    "git_blob_sha": "82ad7bdbf68ad3c8db46478e71e31f650f60bf98",
+    "whole_file": true
+  },
+  "unchanged_accepted_semantic_predecessor": {
+    "key": "s1.subslice03.automation-flow",
+    "local_body_path": "producers/derived-automation-flow/body.md",
+    "body_bytes": 16570,
+    "body_sha256": "64d97f6da72c92a00ad8e3d91e20a42fd360dbedb502733c0548746462442287",
+    "body_git_blob_sha": "5af7e410ddfb4d1da1473a990fc25d27a7580303"
+  },
+  "predecessor_gate": "Same J1/J2 whole L2 v3 PASS; unchanged. This L3 remains blocked until same-pair correction review. No L4 release.",
+  "read_exactly": [
+    {
+      "local_path": "producers/derived-automation-impact/body.md",
+      "bytes": 13454,
+      "sha256": "cc7ebd4319e301cf3100f83867a889c6295e52c7d0c39a769d2962bc251c9722",
+      "git_blob_sha": "5e345882926432b1049d4ef9ae781c2fb6a1e5f2",
+      "whole_file": true
+    },
+    {
+      "local_path": "producers/derived-automation-impact/evidence.md",
+      "bytes": 12105,
+      "sha256": "2814a7361d26e4d99e4c77e16189baa53755ab8e8873c53a3fcddb96a67a8a5d",
+      "git_blob_sha": "87061f8933a3907565d04d346d9c2a7a0b60454d",
+      "whole_file": true
+    },
+    {
+      "local_path": "producers/derived-automation-impact/production-manifest.json",
+      "bytes": 41752,
+      "sha256": "fa3cb6ba4888e6449e2cb39d424e4e0dab2bc4e05f85c190fa1cfd7591e71c9c",
+      "git_blob_sha": "82ad7bdbf68ad3c8db46478e71e31f650f60bf98",
+      "whole_file": true
+    },
+    {
+      "local_path": "producers/derived-automation-impact/response.md",
+      "bytes": 2703,
+      "sha256": "85831ceada2e319c68ec37bc7e521de4d66c2aa1828e2df18a25886fe0a181f7",
+      "git_blob_sha": "377fdc2968753ba8d881097a808323b09237ad34",
+      "whole_file": true
+    },
+    {
+      "local_path": "producers/derived-automation-flow/body.md",
+      "bytes": 16570,
+      "sha256": "64d97f6da72c92a00ad8e3d91e20a42fd360dbedb502733c0548746462442287",
+      "git_blob_sha": "5af7e410ddfb4d1da1473a990fc25d27a7580303",
+      "whole_file": true
+    }
+  ],
+  "retained_context_rule": "Retain all 36 genuinely consumed prior inputs and original_read_paths. Reading own prior outputs adds genuine context units; preserve byte-exact old outputs under revisions/v2/history before replacements and point retained aliases there. Do not silently discard context. New recipe, request and actual dispatch are also inputs. Previously completely read public norms remain authorized without unlisted files.",
+  "public_finding": {
+    "id": "AI-L3-J1-01",
+    "location": "body.md §2, paragraph immediately after product relationship table",
+    "old_clause": "Alterar cron de CI exige examinar autoria/fonte; não invalida automaticamente DST ou claims locais.",
+    "problem": "This generalizes the authorship/source relation to both remote CI mechanisms. Accepted L2 v3 §4 Schedule remoto de CI distinguishes GitHub cron YAML on default branch edited through source.write, and GitLab pipeline schedule resource with its own identity, owner, timezone, ref and active.",
+    "required_correction": "Qualify impact by mechanism: authorship/source for editing GitHub cron YAML; resource contract and its identities/preconditions for GitLab pipeline schedule. Preserve no automatic invalidation of DST or claims of ScheduledTask. Use the unchanged accepted L2 only, no new source or tests.",
+    "scope": "One mandatory source-fidelity correction; the rest of the prior L3 was examined without other mandatory findings. Do not modify unrelated bytes."
+  },
+  "instructions": [
+    "Read this recipe, preserved request and the five exact files above completely; prior allowed context remains cumulative. No oracle, full judge prose, new raw sources, unlisted siblings, network, GitHub, delegation, Atlas, product changes or tests.",
+    "Preserve old body/evidence/manifest/response byte-identically under revisions/v2/history before replacing current versions. Preserve original request.txt and dispatch-message.txt; write this actual correction dispatch under revisions/v2/dispatch-message.txt.",
+    "Change only the mandatory §2 clause in body.md with sufficient precision and preserve every other body byte. Update directly related evidence plus honest correction/provenance metadata. No L4 or new domain claims.",
+    "Record delta.json linking old/new body hashes, exact old/new text, unchanged-byte verification, public finding and current accepted L2 authority. All outputs are posterior, not preexisting recipes.",
+    "Produce current body.md, evidence.md, production-manifest.json and response.md with full cumulative input identities and historical aliases. Include current effective recipe/request/dispatch references and response identity without self-hashing the manifest.",
+    "Your native FINAL must equal current response.md exactly, with no terminal LF. Report deterministic checks and limits; no semantic PASS self-certification."
+  ]
+}

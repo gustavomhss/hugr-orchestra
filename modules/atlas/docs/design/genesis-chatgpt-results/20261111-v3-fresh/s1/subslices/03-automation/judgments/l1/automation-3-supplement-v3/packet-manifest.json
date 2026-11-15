@@ -1,0 +1,17 @@
+{
+  "lot": "automation-3-supplement-v3",
+  "path": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/automation-3-supplement-v3.md",
+  "body_version": "v3",
+  "packet": {
+    "bytes": 408213,
+    "sha256": "f2c8d12e8e0b22964fadfaba9c40632f0ba5489d795d76dc3efde70fd30bd276",
+    "git_blob_sha": "4117e4541e8341591d140749bb8780d9f6c8bef7"
+  },
+  "source_supplement": {
+    "bytes": 404469,
+    "sha256": "e8158270e77a88cde1ec5db114c51e79004264ff80be667aebde8e365ede1d8c",
+    "git_blob_sha": "22a025bbc012ed09130f0d778e34e188f5533c89"
+  },
+  "additional_test_literals": [],
+  "oracle_access_by_relay": false
+}

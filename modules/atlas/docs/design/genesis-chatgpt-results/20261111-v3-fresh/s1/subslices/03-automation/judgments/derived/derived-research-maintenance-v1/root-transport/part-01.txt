@@ -1,0 +1,359 @@
+# s1.subslice03.research-maintenance — revisão semântica L4 v1
+
+Execução34269cf4-d631-41c5-a30b-85b0ec217390. Mesmos J1/J2, independentes, sem ferramentas. Material literal termina apenas no FIM_DO_LOTE externo. Nenhum voto do outro juiz sobre este candidato foi emitido ou incluído neste pacote. Metadados de gate na receita/evidência referem-se exclusivamente ao predecessor já aceito.
+
+Candidato: s1.subslice03.research-maintenance, 13958 bytes, SHA256 b57970febca6ecd87e6df64586e8a1bf557e112a0761ddc3afc58a92f4fc8025, Git blob 9fd888ebd44a07eba2724423d8cfb5e8e89a9dd1. Reutilize seus próprios pareceres e os bytes exatos dos predecessores indicados, já recebidos. Não reabrir por rotina conteúdo inalterado nem inferir aceite do novo corpo a partir do anterior.
+
+Aplicar todos os critérios públicos pertinentes já recebidos, em especial GO-A1–7, GO-I1/2/7/8, QS-1–6, CC-1/3/7 e a suficiência local AC-01; demais obrigações operacionais mantêm provas próprias. Julgar o corpo inteiro e a fidelidade ao predecessor, utilidade da camada, limites de autoridade, interpretação, navegação versus build e receita/proveniência. Emitir PASS, FIX-FIRST ou REQUEST_EVIDENCE com falta obrigatória concreta; sugestão opcional não amplia a barra. Não emitir binding Atlas, consumidor, manutenção ou entrega completa.
+
+A principal conferiu deterministicamente os 65 inputs declarados e os outputs, seus tamanhos/SHA256/blobs; receita congelada antes do dispatch; predecessor gate verificado antes da autoria. Corpo e evidência foram lidos integralmente. Nenhum teste de produto foi executado. Recibo receipts/derived-research-maintenance-v1-verification.json. A tabela abaixo é projeção mecânica identificada do manifesto posterior, não texto da receita anterior nem nova autoridade semântica.
+
+
+## BEGIN_CORPO_EXATO
+
+# Research: manutenção, diagnóstico e verificação
+
+**Chave:** `s1.subslice03.research-maintenance` · **L4** · **need:** `maintenance` · **escopo:** S1-03 / `orchestra.s1`.
+
+## M0. Quando usar e como consultar
+
+Use este guia para diagnosticar toolkits, índice, probes e evidências e preparar mudanças limitadas. Seu único predecessor semântico corrente é **`s1.subslice03.research-impact`, L3 v1**, **13.972 bytes**, SHA-256 **`4fe6c73bc209b2461f8ef3a342832dd79b5541cf8b2d43afd958bab0327a3d3f`**. O gate fornecido aceita esse L3, sem aprovar este L4 ou demonstrar manutenção executada.
+
+As referências I0–I7 são do predecessor. Os procedimentos são **orientação derivada**, sem verificações operacionais executadas nesta autoria.
+
+Na consulta Atlas autorizada, comece por `ownership.index` e leia M1/seção pertinente por `ownership.read`, dentro dos limites da tarefa. Aprofunde no L3 a relação que decide o caso; seus vínculos orientam o L2. São portas do protocolo público, sem disponibilidade presumida aqui. Falha de acesso, versão incompatível ou suporte faltante exige registrar a limitação, sem usar fonte arbitrária ou histórico como atual.
+
+## M1. Triagem antes de alterar estado
+
+1. **Nomeie a decisão:** ferramenta utilizável, resultado de consulta atual, experimento reproduzível, fonte admitida ou documento/dispatch publicado.
+2. **Fixe a identidade:** projeto/task/Session e operação pertinentes; versão do artefato consultado; receita/candidato e observação que motivou o caso. Preserve o retorno original, inclusive razão, cobertura e incerteza.
+3. **Classifique o sinal:** estado de aquisição, base de índice, resultado de probe, bytes em custódia, evento de admissão, revisão de record ou fechamento de inquiry. Encaminhe à seção correspondente.
+4. **Delimite o efeito:** use I6 para registrar afetados, independentes e evidência faltante. Ausência de observação não é conjunto afetado vazio.
+
+Registre os identificadores pertinentes: pack/receita/estado; shard/basis/freshness; probe/snapshot/runner/verdict; ou operação/dispatch/ref/revisão/digest/receipt. Preserve razão, cobertura e limites junto do resultado.
+
+Reúna somente o necessário para a pergunta. Estado ready, arquivo existente, exit de processo, cursor no fim ou card fechado não substituem a identidade e o contrato que tornam a evidência utilizável. [I0, I3–I4, I6]
+
+## M2. Diagnosticar aquisição e prontidão
+
+Comece pela receita e razão do estado. Research reutiliza backend apesar da raiz própria; distinga falha de pack e do mecanismo comum. [I1]
+
+| Sinal | Verificação que decide | Ação sustentada e condição de parada |
+| --- | --- | --- |
+| Pack listado, mas não utilizável | Conferir versão/lock/wheels, dependências/runtime, target/floor, layout e launcher da receita selecionada | Identificar qual condição de prontidão falta; listagem não qualifica instalação ou uso |
+| Waiter desistiu e estado permanece fetching | Distinguir término da espera do cliente e vida da aquisição compartilhada | Preservar estado/razão; não iniciar aquisição duplicada apenas pela desistência do waiter |
+| `.complete` presente, executável ausente | Confrontar marcador, executável e shim esperados | Registrar inconsistência; não declarar ready nem presumir reparação automática; encaminhar a correção do cache/receita ao dono |
+| Prefetch retornou | Conferir o estado individual da engine e suas dependências | Prosseguir somente pela conclusão específica sustentada; retorno coletivo não é sucesso de todas |
+| Versão igual, disponibilidade diferente | Comparar floor/target, runtime, dependências e verificação de executável/shim | Incluir o input alterado no impacto; não reduzir a identidade ao número da engine |
+| Uso OpenAPI ou Cassandra | Confirmar o guard de projeto ou overlay fixado pertinente, seguindo o aprofundamento de I1 | Aquisição do pacote não demonstra aplicação do guard nem compatibilidade externa |
+
+Não apagar cache/marcador/histórico como atalho. Identifique o reparo autorizado, candidato e prova necessária. Encaminhe ao dono do pack ou do mecanismo comum; preserve pares sem dependência do input alterado.
+
+## M3. Diagnosticar vazio, stale e dirty no índice
+
+Conserve a resposta inteira relevante, com basis, cobertura, freshness e bounds. Compare a pergunta feita com a base efetivamente servida antes de solicitar reconstrução ou concluir ausência de uso. [I2]
+
+| Sinal | Como discriminar | Resultado permitido |
+| --- | --- | --- |
+| Warm/plano sem trabalho | Distinguir adapter default, falha de plan, filtro de prewarm e plano realmente vazio | Registrar a origem; vazio sozinho não demonstra ausência de código ou índice concluído |
+| `source_unavailable` | Preservar falha de observação e identificar o input não observado | Manter decisão dependente aberta; não converter em remoção nem worklist vazia |
+| building/unavailable sem shard aberto | Verificar necessidade de construção, extrator e ausência de build em curso | Não afirmar que a consulta disparou novo build apenas pelo erro/estado |
+| Resposta stale | Identificar base/rows retidos e texto usado para a conclusão | Rotular a limitação; a base atual não torna rows antigos atuais |
+| Arquivo dirty com símbolos atuais | Verificar se a pergunta depende de imports/references/callers/callees/map ou de outro caminho do overlay | Não estender atualização de símbolos a todas as relações |
+| Nenhum hit ou opaqueSites=0 | Conferir seleção, linguagens/limites, cobertura e tipo de relação buscado | Restringir a conclusão à busca realizada; não provar inexistência de uso ou cobertura total |
+| Banco existe, mas leitura falha | Distinguir existência do arquivo, saúde do índice e escolha/retenção do shard | Registrar falha precisa; presença física não autoriza resultado limpo |
+
+Use os inputs de shard de I2 para justificar o conjunto candidato à reconstrução; evite invalidar tudo ou limitar-se ao arquivo do diff. HEAD não é toda a identidade e worktree não é snapshot atômico.
+
+Conserve base, descartes e limites dos ranges. Fallback não elimina lacunas; `semantic: absent` não promete embeddings. Sem a cobertura exigida, abstenha-se da conclusão negativa.
+
+## M4. Diagnosticar probes, custódia e publicação incerta
+
+Trate separadamente resultado de experimento, cobrança, captura, admissão e publicação. A tabela orienta leitura/reconciliação pela porta existente, sem autorizar uma nova ação live ou inventar eventos. [I3–I4]
+
+| Situação | Procedimento de diagnóstico | Não concluir nem fazer automaticamente |
+| --- | --- | --- |
+| Probe devolveu resultado | Conferir snapshot/runner/verdict/limites; identificar operação, cobrança e retenção/admissão associadas | Resultado ou URI isolados não são SourceAdmitted; não cobrar de novo sem verificar replay |
+| Fonte tem arquivo, mas leitura/admissão falha | Confrontar manifest, receipt, evento, binding e digest pertinentes | Usar arquivo órfão como fonte ou substituir por fetch live |
+| Captura parcial, derivada ou com representação diferente | Preservar complete, representation, bytes e metadata de derivação; escolher locator compatível | Tornar parcial completa pelo fim da paginação ou recodificar apagando a origem |
+| Quote/range/pointer inválido ou ambíguo | Conservar a recusa e confrontar coordenada/representação da revisão correta | Escolher ocorrência arbitrária ou tomar endereço válido como prova de verdade |
+| Binding/operação diverge | Conferir projeto/task/Session/location e payload da operação exata | Reutilizar autoridade de outra identidade ou ocultar tentativa nova como replay |
+| Erro depois de captura/publicação | Consultar a identidade e o evento exatos pela porta apropriada; registrar o que foi ou não observado | Deduzir ausência de efeito ou refazer aquisição incerta silenciosamente |
+| Revisão conflita ou finding mudou | Conservar baseRevision, razão, evidence/contrary e vínculo ao documento | Sobrescrever revisão, apagar contrários ou atribuir suporte antigo à conclusão nova |
+| Inquiry parece fechada | Conferir dispatch pertinente e evidência de fechamento | Fazer card antigo responder por um dispatch novo |
+
+Reserva não devolve saldo; incerteza não vira gasto zero. Sem reconciliação sustentada, encaminhe identidade e pergunta pendente; não amplie allowance nem forje replay.
+
+Snapshot pode referenciar dependências externas; timeout não cobre todo preparo/fila; coordenação de host é local. Cap não comprova enforcement. `blocked_by_repo_guard` exige parar, sem alternativa local disfarçada.
+
+## M5. Preparar uma mudança e sua verificação
+
+Procedimento futuro dentro da autoridade atribuída; nenhuma etapa de produto/Atlas foi executada nesta autoria. [I1–I6; contratos públicos]
+
+1. **Congele o caso:** comportamento/condição antes e depois, fonte/receita/candidato exatos, pergunta que a mudança resolve e desconhecidos. Preserve o estado anterior e os recibos; não apresente intenção como observação.
+2. **Delimite impacto:** registre afetados e independentes com os motivos de I6. Inclua adição/remoção, config/lock, intenção/documentação e receita de autoria pertinentes. Distinga pack local de runtime/aquisição compartilhados.
+3. **Atribua a alteração:** faça a correção somente no escopo do dono. Fora da autoridade local, entregue proposta/patch delimitado e evidência ao dono; não edite uma fronteira alheia para fabricar a garantia desejada. Gerados seguem o gerador oficial e seu responsável.
+4. **Atualize conhecimento na ordem correta:** reveja o predecessor afetado e só libere seu dependente após o gate exigido. Este L4 depende de research-impact; a navegação a L2/L1 não elimina a cadeia. Preserve versões anteriores com rótulo histórico.
+5. **Selecione provas pelo risco:** use os contratos existentes pertinentes e os gates do repositório. Testes de produto seguem GitHub Actions por `bun run test:ci`; typecheck pertence ao pacote e o guard aplicável segue AGENTS. Não executar localmente o teste proibido, duplicar implementação em fixture ou registrar comando não executado como verde.
+6. **Verifique o efeito e os independentes:** confronte o conjunto esperado com o observado, a validade das bases/locators e os usos afetados. Se a obrigação envolver Atlas, use o candidato/release e as portas reais compatíveis, com recibos próprios. Revalide consumidores exigidos sem lhes fornecer oracle ou fonte proibida.
+
+Resultado/prosa iguais não bastam se autoridade, validade ou lacunas mudaram. Em contraste, input/receita inalterados e resultado ainda válido devem permitir reúso; links de navegação não criam reconstrução. Alteração somente de recibo de transporte pode demandar atualização de bindings sem nova interpretação conforme o contrato público, mas não transforma publicação research incerta em detalhe descartável. Cache hit, parada de propagação e preservação de independentes precisam de observação real.
+
+Falha de atualização após mudança de input não autoriza servir a versão histórica como atual. Se impacto ou leitura válida não puderem ser demonstrados, mantenha a parte dependente aberta; preserve trabalho independente com vínculo válido.
+
+## M6. Encaminhar com evidência suficiente
+
+Encaminhe identidade/candidato, retorno original, hipótese, verificações/afetados, pergunta pendente e condição de desbloqueio. Distinga proposta, NOT_RUN e resultado; não invente recibo ou responsável. [I1, I3–I7]
+
+| Fronteira | Destino por responsabilidade | Evidência que evita encaminhamento vago |
+| --- | --- | --- |
+| Receita, versão/lock, layout ou launcher do pack | Dono do pack/receita | Input antes/depois e condição de aquisição/readiness incompatível |
+| Aquisição/readiness reutilizados por backend/research | Dono do mecanismo comum no Core | Caminhos afetados, dependências, estado/razão e distinção waiter/aquisição |
+| Índice, extração, consulta ou store | Dono do caminho de índice/research | Shard/basis, inputs alterados, freshness/dirty/cobertura e limite da conclusão |
+| Binding, allowance, custódia, records ou inquiry | Dono da porta research pertinente | Operação/dispatch/ref/revisão, evento/receipt e divergência precisa |
+| Sandbox, processo, memória ou banco externos | Dono da dependência correspondente | Garantia externa necessária e observação que não a demonstra |
+| Binding/transporte/publicação Atlas | Principal e dono do runtime Atlas/S4 pelo contrato da campanha | Release/candidato, operação/erro e fonte/dependência preservada |
+
+O relato Modelina (266.885 bytes versus limite S4 r3 de 256.000) não foi reaferido. Preserve a fonte e encaminhe o bloqueio; não remova evidência nem converta unavailable em absent. Composição e entrada local mantêm gates próprios.
+
+## M7. Encerrar o diagnóstico sem antecipar sucesso
+
+Encerre o diagnóstico com causa sustentada ou lacuna explícita. Reporte manutenção executada somente com candidato/identidades, efeito antes/depois e verificações observadas. Aceite semântico, binding, publicação, leitura, consumidor e manutenção são estados separados.
+
+Entregue decisão/evidência, afetados/independentes, versões, verificações, pendências/dono e uso conhecido/UNKNOWN. A-IMPACT e R-FAILURE em I6 são obrigações públicas, sem respostas ou execução presumidas. Dado hostil permanece conteúdo, sem privilégio.
+
+**Estado:** L4 produzido para o mesmo par, sem self-PASS. Reparo, aquisição, probe, testes, Atlas, consumidores e publicação: NOT_RUN. Sem nova qualificação de provider/host/engine, garantia externa ou conclusão S1/global. Entrada local não produzida/liberada. Tentativas físicas, tokens e custo não expostos: **UNKNOWN**.
+
+## END_CORPO_EXATO
+
+## BEGIN_EVIDENCIA_EXATA
+
+# Evidências — s1.subslice03.research-maintenance
+
+## E0. Autoridade semântica e gate
+
+O único predecessor semântico corrente é **`s1.subslice03.research-impact`, L3 v1**, `need=operational`, em `producers/derived-research-impact/body.md`: **13.972 bytes**, SHA-256 **`4fe6c73bc209b2461f8ef3a342832dd79b5541cf8b2d43afd958bab0327a3d3f`**, blob Git **`f85d2a546afb51d148c4f748d5f49c7a9c6727f8`**. Foi relido integralmente nesta tarefa. As referências I0–I7 do guia apontam a suas seções exatas.
+
+A receita `payload/recipes/derived/research-maintenance.json`, **9.481 bytes**, SHA-256 `01cdad4971a1098115e9533d034b2d9af45836bfa37fbbb15d85144be389aa09`, fornece os PASS completos de `parallel-v3-fresh/S1-03/J1` e `parallel-v3-fresh/S1-03/J2` para esses mesmos bytes. Os hashes das respostas originais informados são `d6a6cd73c1e6beb595f152d1ee3699b4980f7805910e7988f4bb5c225402fbb5` e `6845fb21de1489d7be922e1e8aacec043bbba1e3a2f00d1682a65fa896f56857`. Nenhum parecer integral foi aberto. O estado autoral histórico do L3 não substitui esse gate posterior; o gate não é PASS do L4 nem prova operacional.
+
+L1/L2 e produções anteriores permanecem contexto real cumulativo, sem novas leituras ou arestas semânticas somente pela retenção. O manifesto L3, **82.077 bytes**, SHA-256 `abdedb32a0c69cb170c3484d1e24cc5f7ac71fb9c89630b3229b6dee8a428b95`, foi lido como proveniência expressamente autorizada. É registro posterior, não receita anterior ou outro predecessor semântico.
+
+## E1. Derivação dos procedimentos do L3 aceito
+
+Todas as linhas abaixo usam a chave e o hash fixados em E0. Uma ação prescrita é orientação derivada para uma tarefa futura; não significa que o produtor executou a verificação ou observou seu resultado.
+
+| Trecho L4 | Contrato ou decisão operacional | Seções exatas do L3 | Natureza e limite |
+| --- | --- | --- | --- |
+| M0 | Necessidade, versão exata, distinção de autoria e operação | I0. Decidir o impacto com uma base exata; I7. Limites e abstenção | Autoridade/limite; uso das portas também depende do protocolo público em E2 |
+| M1 | Fixar decisão, identidade, sinal, afetados/independentes e evidência faltante | I0; I3. Probes e a passagem para evidência retida; I4. Autoridade muda mesmo com texto igual; I6. Alvos de reavaliação e registro de impacto | Procedimento derivado dos campos/contratos; não é trace de triagem executada |
+| M2, receita | Pack versus mecanismo compartilhado, runtime/dependências, target/floor/layout/launcher e readiness | I1. Receita local ou mecanismo compartilhado | Base estática com aplicação diagnóstica derivada; não qualifica a ferramenta |
+| M2, estados | Waiter/aquisição, prefetch individual, marcador/executável, guard OpenAPI/overlay Cassandra | I1. Receita local ou mecanismo compartilhado | Orientação preserva as diferenças de autoridade; nenhum download/reparo efetuado |
+| M2, reparo e alcance | Evitar remoção indiscriminada, atribuir candidato/prova ao dono e preservar pares independentes | I1; I5. Construção, navegação e independência | Orientação de manutenção inferida; não afirma política automática de reparo |
+| M3, vazio/indisponibilidade | Origens de vazio, source_unavailable, início condicionado de build | I2. Inputs do shard e conteúdo servido | Mantém extrator/necessidade/ausência de build em curso e não deduz disparo de building/unavailable |
+| M3, stale/dirty/ausência | Basis/rows, overlay limitado, cobertura/opaqueSites, fallback e semantic absent | I2. Inputs do shard e conteúdo servido | Critério para limitar conclusões; sem cobertura ou reconstrução certificada |
+| M3, conjunto de rebuild/store | Inputs de shard, partição, HEAD/worktree, existência versus saúde | I2. Inputs do shard e conteúdo servido | Delimitação candidata, sem worklist calculada, rebuild ou verificação de banco |
+| M4, probe | Snapshot/runner/verdict/limites; retorno não cobra/captura/admite | I3. Probes e a passagem para evidência retida | Procedimento de conferência de vínculo; não executa probe nem impõe enforcement externo |
+| M4, custódia/locator | Manifest/receipt/evento/binding/digest, parcialidade, representação, metadata e locator | I4. Autoridade muda mesmo com texto igual | Aplicação diagnóstica; arquivo e endereço não ganham autoridade ou verdade por si |
+| M4, orçamento/retry | Operação/payload, replay/conflito, reserva e efeito incerto | I4. Autoridade muda mesmo com texto igual | Orientação de reconciliação; nenhuma allowance alterada nem ação live repetida |
+| M4, revisão/inquiry | Evidence/contrary, baseRevision/CAS, dispatch e fechamento | I4. Autoridade muda mesmo com texto igual | Preserva revisão e identidade; não forja publicação/fechamento |
+| M5, congelamento/impacto | Inputs antes/depois, contrato, afetados/independentes e incógnitas | I1–I4; I6. Alvos de reavaliação e registro de impacto | Protocolo proposto com base nas relações estáticas; não é manutenção executada |
+| M5, cadeia/reúso | Predecessores, navegação, receita/intenção, autoridade/gaps, receipt-only e parada de propagação | I5. Construção, navegação e independência | Exigência pública explicada no L3; comportamento real exige prova separada |
+| M5, testes e gerados | Gates atribuídos, execução CI, typecheck/guard e geração oficial | I6–I7 para necessidade de prova; AGENTS/COMMON para procedimento normativo | Expectativas e regras, nenhuma execução de produto nesta autoria |
+| M6, responsáveis | Distinção pack/comum/índice/research e limites de sandbox/memória/DB/Atlas | I1; I3–I7 | Encaminhamento por papel, sem inventar pessoa, serviço disponível ou autoridade externa |
+| M6, transporte | Modelina/S4 r3 informado, fonte preservada e indisponibilidade diferente de ausência | I7. Limites e abstenção | Relato herdado, não diagnóstico de runtime reaferido |
+| M7 | Estados separados, pacote de entrega, casos públicos e abstenção | I0; I4–I7 | Condições para relatar trabalho futuro, sem encerramento global ou autoaceite |
+
+## E2. Autoridades públicas aplicadas
+
+`payload/recipes/derived-contract.json`, SHA-256 `bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588`, define o papel L4: ownership, manutenção/diagnóstico, verificação e encaminhamento. A receita específica libera somente research-maintenance.
+
+`payload/artifact-plan.json`, SHA-256 `6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad`, fixa o predecessor research-impact e o gate separado da entrada local. Sua navegação e os casos A-IMPACT/R-FAILURE não são arestas novas ou resultados executados.
+
+`inputs/references/principles.md` e `inputs/references/judging.md` sustentam o consumo progressivo, a separação de papéis e as portas `ownership.index`/`ownership.read`. `inputs/references/transport.md` distingue conhecimento nativo, binding, publicação e versões de inputs Atlas. Seus hashes integrais constam do manifesto; nenhum documento referenciado por esses arquivos foi aberto adicionalmente.
+
+`inputs/AGENTS.md`, SHA-256 `07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f`, e `inputs/COMMON.md`, SHA-256 `ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7`, sustentam testes de produto via CI, typecheck/guard aplicáveis, disciplina de gerados, ownership e encaminhamento fora do escopo. A menção a `bun run test:ci` é instrução futura; nenhum comando de produto foi executado.
+
+Os critérios públicos congelados em `payload/recipes/derived-public-criteria.json`, SHA-256 `1e7686491c5b68cb4f3d287377723edcd8932ae803c267ddbabf44a360dfc36e`, sustentam as condições de mudança/reúso/recusa de stale, prova por candidato e aceites separados. O guia contribui para GO-A1/2/3/4/5, GO-I1/2/7/8, QS-1/2/3/4/5/6, CC-1/3/4/7 e AC-01 local. Isso é mapeamento de contribuição, não decisão PASS.
+
+## E3. Inputs e preservação cumulativa
+
+São **65 unidades integrais únicas**, **797.294 bytes de contexto**: 58 unidades do manifesto anterior, quatro outputs L3 realmente lidos durante sua verificação e três controles L4 novos. **18 arquivos autorizados foram lidos/conferidos nesta tarefa**, totalizando **210.668 bytes**; **47 unidades foram retidas sem reabertura**. Essa diferença está explícita em cada item. Nenhuma unidade foi dividida para reduzir contagens; chunks históricos de exibição continuam uma identidade de arquivo integral.
+
+Os 15 pins enumerados coincidiram em tamanho, SHA-256 e blob Git. Autoridades públicas já integralmente lidas neste contexto foram reutilizadas; o L3 aceito foi relido integralmente e seu manifesto foi analisado como JSON completo de proveniência. Não foram reabertos irmãos não enumerados. Inputs retidos não viraram novas leituras ou predecessores.
+
+O pedido L4 permanece **878 bytes**, SHA-256 `aaa18954282dd9b9b7b3bac4e3db9ed8076e0311dd07f231219e205db0598471`. O dispatch literal tem **1.720 bytes**, SHA-256 `c7691d761d2e0221b4cd609a69b3ba14ec9747e03220b0e87eac45d9d4d4b2a2`, sem newline adicional. Controles visíveis históricos foram retidos pelo manifesto anterior; o FINAL L2 v2 ausente não foi reconstruído como verbatim. Response original e confirmação posterior continuam distintos.
+
+## E4. Verificação efetiva e limites
+
+O corpo final contém **13.958 bytes UTF-8** e oito seções depth2. Foi condensado em memória antes da primeira gravação: os tamanhos intermediários de 16.240, 14.421 e 14.043 bytes não geraram body em disco; uma checagem de tamanho de 14.043 abortou antes da escrita. Isso é procedimento de autoria, não teste de produto nem impedimento do host. O body final foi escrito uma vez.
+
+A verificação determinística cobre identidades autorizadas, request/dispatch, arquivos regulares UTF-8, JSON, hashes dos outputs e ausência de auto-inputs. Não é julgamento semântico, validação do runtime ou execução das rotinas propostas. O manifesto é posterior à produção e identifica as receitas efetivamente congeladas; não se apresenta como receita anterior.
+
+**NOT_RUN:** aquisição, reparo, probes, produto/testes/typecheck/guards, rede/provider, Atlas/binding/importação/publicação/leitura, consumidores e manutenção. **UNKNOWN:** tentativas físicas do host, tokens e custo. Somente o L4 research-maintenance foi produzido; a entrada local permanece fora da autorização e não foi redigida. Sem self-PASS, qualificação externa nova ou conclusão S1/global.
+
+## END_EVIDENCIA_EXATA
+
+## BEGIN_RECEITA_DE_TAREFA_EXATA
+
+{
+  "schema": "s1-03-derived-task-recipe/v1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "frozen_at_utc": "2026-11-15T05:50:05.477698+00:00",
+  "state": "FROZEN_BEFORE_AUTHOR_DISPATCH",
+  "artifact": {
+    "key": "s1.subslice03.research-maintenance",
+    "layer": 4,
+    "need": "maintenance",
+    "required_build_predecessors": [
+      "s1.subslice03.research-impact"
+    ],
+    "purpose": "Manutenção e diagnóstico de research/toolkits e suas evidências"
+  },
+  "predecessors": [
+    {
+      "key": "s1.subslice03.research-impact",
+      "local_body_path": "producers/derived-research-impact/body.md",
+      "payload_body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/derived-research-impact/body.md",
+      "body_bytes": 13972,
+      "body_sha256": "4fe6c73bc209b2461f8ef3a342832dd79b5541cf8b2d43afd958bab0327a3d3f",
+      "body_git_blob_sha": "f85d2a546afb51d148c4f748d5f49c7a9c6727f8",
+      "acceptance_gate": [
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J1",
+          "status": "PASS",
+          "body_sha256": "4fe6c73bc209b2461f8ef3a342832dd79b5541cf8b2d43afd958bab0327a3d3f",
+          "original_response_sha256": "d6a6cd73c1e6beb595f152d1ee3699b4980f7805910e7988f4bb5c225402fbb5"
+        },
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J2",
+          "status": "PASS",
+          "body_sha256": "4fe6c73bc209b2461f8ef3a342832dd79b5541cf8b2d43afd958bab0327a3d3f",
+          "original_response_sha256": "6845fb21de1489d7be922e1e8aacec043bbba1e3a2f00d1682a65fa896f56857"
+        }
+      ],
+      "gate_scope": "Semantic acceptance only; runtime and consumers are separate. Full judge prose is not an author input."
+    }
+  ],
+  "author_context": "Continue the same already oracle-blind family author after the predecessor gate. No new agent per layer; preserve cumulative input context.",
+  "retained_family_context": {
+    "prior_manifest": "producers/derived-research-impact/production-manifest.json",
+    "manifest_sha256": "abdedb32a0c69cb170c3484d1e24cc5f7ac71fb9c89630b3229b6dee8a428b95",
+    "rule": "Continue the same family author. List every retained prior context input in the new manifest as well as newly read files. Do not silently drop the earlier source/recipe/request context. The principal inspected this manifest mechanically; it is not a new semantic source."
+  },
+  "union_navigation_proposal_gate": null,
+  "exclusive_output_directory": "producers/derived-research-maintenance",
+  "payload_output_directory": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/derived-research-maintenance",
+  "read_exactly": [
+    {
+      "local_path": "inputs/AGENTS.md",
+      "bytes": 16501,
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "inputs/COMMON.md",
+      "bytes": 12959,
+      "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+      "git_blob_sha": "893cbb5f5eda2d0c19753606a50d1c482523f0c8",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "inputs/mission.json",
+      "bytes": 6006,
+      "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+      "git_blob_sha": "48fa8da131e97c50110ee76e41e79283cd9a0ac4",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "inputs/SKILL.md",
+      "bytes": 8143,
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+      "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "inputs/references/principles.md",
+      "bytes": 6010,
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+      "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "inputs/references/fatia-1.md",
+      "bytes": 3987,
+      "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
+      "git_blob_sha": "78482ad7c72ec275fadb26ebece1c30bc1e5ccb9",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "inputs/references/fresh-start.md",
+      "bytes": 4983,
+      "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166",
+      "git_blob_sha": "ca485b25e43293a309c5489279dce80ce1441ed0",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "inputs/references/orchestration.md",
+      "bytes": 4408,
+      "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+      "git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "inputs/references/judging.md",
+      "bytes": 5787,
+      "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+      "git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "inputs/references/transport.md",
+      "bytes": 8478,
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "payload/artifact-plan.json",
+      "bytes": 5017,
+      "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad",
+      "git_blob_sha": "8dba81b59cd093d28ea07cf4369d5842b6bdee68",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "payload/recipes/derived-contract.json",
+      "bytes": 4017,
+      "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
+      "git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "payload/recipes/derived-public-criteria.json",
+      "bytes": 16244,
+      "sha256": "1e7686491c5b68cb4f3d287377723edcd8932ae803c267ddbabf44a360dfc36e",
+      "git_blob_sha": "d4f6b765e6d78341ba2b77186c77b9177cf3156c",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-research-impact/body.md",
+      "bytes": 13972,
+      "sha256": "4fe6c73bc209b2461f8ef3a342832dd79b5541cf8b2d43afd958bab0327a3d3f",
+      "git_blob_sha": "f85d2a546afb51d148c4f748d5f49c7a9c6727f8",
+      "whole_file_identity": true,
+      "accepted_predecessor_key": "s1.subslice03.research-impact"
+    },
+    {
+      "local_path": "producers/derived-research-impact/production-manifest.json",
+      "bytes": 82077,
+      "sha256": "abdedb32a0c69cb170c3484d1e24cc5f7ac71fb9c89630b3229b6dee8a428b95",
+      "git_blob_sha": "febb337142fcc477f4fa14744bcbec5c94d74984",
+      "whole_file_identity": true,
+      "role": "Prior family output manifest now explicitly authorized as a provenance input for this next layer; not an original recipe or a new semantic predecessor."
+    }
+  ],
+  "other_actual_inputs": "This frozen recipe, the request file and the visible dispatch. Record their full identities. If an extra source is needed, ask principal before reading.",
+  "instructions": [
+    "Read the listed public authority, plan, common recipe and criteria in full unless already completely read in this same family context, then the exact accepted predecessor body. Avoid output truncation. Retain all earlier actual context inputs in the new manifest. Do not open any oracle, judgment response, unlisted sibling file or recursive directory inventory.",
+    "Produce only this artifact and its evidence/manifest. Do not preproduce a later layer. Use the accepted body as semantic authority, preserving its qualifications. The normative recipe states the role of this layer.",
+    "Write a coherent useful Portuguese reference, normally 6000–14000 UTF-8 bytes, with independent depth2 headings for bounded Atlas read. This is a sizing preference, not permission to omit necessary meaning.",

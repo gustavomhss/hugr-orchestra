@@ -1,0 +1,82 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "lot": "automation-1-supplement-v2-coverage-erratum",
+  "source": "review-packets/automation-1-supplement-v2-coverage-erratum.md",
+  "source_bytes": 344323,
+  "source_sha256": "1599aa38f34decbc6bff88c972ed778d5f49e179dca7ac2915d37ecacf245a4b",
+  "frozen_manifest": {
+    "lot": "automation-1-supplement-v2-coverage-erratum",
+    "path": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/automation-1-supplement-v2-coverage-erratum.md",
+    "packet": {
+      "bytes": 344323,
+      "sha256": "1599aa38f34decbc6bff88c972ed778d5f49e179dca7ac2915d37ecacf245a4b"
+    },
+    "superseded_unsent_packet": {
+      "path": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/automation-1-supplement-v2.md",
+      "sha256": "f0f56ddcadf602c0f5a3e15479fca4a98e12a07bb0aa22f52d89783f8d7d3106"
+    },
+    "body_version": "v2",
+    "body_unchanged": true,
+    "oracle_access_by_relay": false
+  },
+  "split_rule": "Balanced nearest LF boundaries, target 58000 bytes, each at most 60000; packet still undispatched.",
+  "parts": [
+    {
+      "part": 1,
+      "file": "part-01.txt",
+      "start": 0,
+      "end": 57361,
+      "bytes": 57361,
+      "sha256": "f21b643937f7c7c9a31f9073de6581834ae31a0cc8e738fa7919443072c413f5"
+    },
+    {
+      "part": 2,
+      "file": "part-02.txt",
+      "start": 57361,
+      "end": 114849,
+      "bytes": 57488,
+      "sha256": "26b8e22b68f5633ea1cd75882e1233514d950ca7ff7fec4d54f6c262c7d41cb2"
+    },
+    {
+      "part": 3,
+      "file": "part-03.txt",
+      "start": 114849,
+      "end": 171996,
+      "bytes": 57147,
+      "sha256": "b1bcf03269a79058661b8a3a91db2b122dc8d481a23d22db8973fa281aadefe6"
+    },
+    {
+      "part": 4,
+      "file": "part-04.txt",
+      "start": 171996,
+      "end": 229594,
+      "bytes": 57598,
+      "sha256": "b59753f9ee4a3bdd427d21b224fad9bb04870335c58663a6db2824b44c9d3705"
+    },
+    {
+      "part": 5,
+      "file": "part-05.txt",
+      "start": 229594,
+      "end": 286941,
+      "bytes": 57347,
+      "sha256": "53328661c411fd057281b2c1f8bb3963e7fae6bb646d0b8695f2597461a56ad9"
+    },
+    {
+      "part": 6,
+      "file": "part-06.txt",
+      "start": 286941,
+      "end": 344323,
+      "bytes": 57382,
+      "sha256": "f0395ecce15204ef18f57aeb166d97c5adf9703f7e30cae0cfc96e58c694e3e6"
+    }
+  ],
+  "end_marker_counts_per_part": [
+    1,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "replacement": "Authorized replacement of undispatched automation-1-supplement-v2; older source and preparations preserved."
+}

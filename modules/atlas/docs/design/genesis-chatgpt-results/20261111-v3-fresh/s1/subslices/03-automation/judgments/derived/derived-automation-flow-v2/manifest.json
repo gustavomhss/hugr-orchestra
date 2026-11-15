@@ -1,0 +1,36 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "packet": "derived-automation-flow-v2",
+  "source": "review-packets/derived-automation-flow-v2.md",
+  "source_bytes": 53852,
+  "source_sha256": "617afeacbade05f07406461052aea9e9dbb3ceeaecdc107a5eeda3db4c43a9e6",
+  "source_manifest": "review-packets/derived-automation-flow-v2.manifest.json",
+  "source_manifest_bytes": 1312,
+  "source_manifest_sha256": "efaaaf4751375d58a8bf7a786f4c07415f064f740171b461732854477f274017",
+  "parts": [
+    {
+      "part": 1,
+      "file": "part-01.txt",
+      "start_byte": 0,
+      "end_byte_exclusive": 26868,
+      "bytes": 26868,
+      "sha256": "ad0d3d3252774ef05443e2a42d1c686dcc77e0bd4fc32b958c36a6459763e4e0"
+    },
+    {
+      "part": 2,
+      "file": "part-02.txt",
+      "start_byte": 26868,
+      "end_byte_exclusive": 53852,
+      "bytes": 26984,
+      "sha256": "aba70d98b27018f52465995319e0c9a0501364df8f77f1c75dcf1807463d3777"
+    }
+  ],
+  "split_rule": "Contiguous UTF-8 parts, each <= 28000 bytes, split after a complete line.",
+  "state": "PREPARED_NOT_DISPATCHED",
+  "dispatch_count": 0,
+  "prepared_at_utc": "2026-11-15T09:16:20.983028+00:00",
+  "transport_ownership": {
+    "/root/s1_03_j1": "/root/review_relay",
+    "/root/s1_03_j2": "/root/review_relay"
+  }
+}

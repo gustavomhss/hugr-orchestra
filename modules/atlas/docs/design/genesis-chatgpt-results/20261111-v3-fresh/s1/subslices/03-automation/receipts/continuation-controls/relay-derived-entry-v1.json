@@ -1,0 +1,14 @@
+{
+  "id": "root-relay-derived-entry-v1",
+  "target": "/root/review_relay",
+  "kind": "literal_review_transport_control",
+  "method": "collaboration.followup_task",
+  "tool_returned_normally": true,
+  "message_path": "payload/receipts/continuation-controls/relay-derived-entry-v1.message.txt",
+  "message_bytes": 1582,
+  "message_sha256": "f0511c83d025beb134090bd0516b0f3a9c2c58f69517c7610a636767b1f56b1f",
+  "at_utc": "2026-11-15T10:38:57.456225+00:00",
+  "physical_attempts": "UNKNOWN",
+  "tokens": "UNKNOWN",
+  "cost": "UNKNOWN"
+}

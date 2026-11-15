@@ -1,0 +1,12 @@
+{
+  "id": "relay-notice-before-population-handover",
+  "target": "/root/review_relay",
+  "kind": "transport_ownership_control",
+  "method": "collaboration.send_message",
+  "message": "R L4 J1 original já observado; vou registrar o gate. Estou encerrando população204 J2 (3.1 enviado, 3.2 falta). Depois de preservar seu FINAL entregarei J2 também a você para automation2/3/4 e eventual agregado, para eu atualizar HEAD/S4 e preparar os controles finais. Não use J2 antes do meu handover explícito. Ajustarei agora só o controle pré-dispatch do agregado: população obrigatória apenas para juiz cujo próprio RE01 continue aberto; corpo/deltas intactos. Envio identidade nova antes de uso.",
+  "message_bytes": 515,
+  "message_sha256": "ab05c22682c5a8d7ed8f840bcf9ba222b437311a591a4a1a3c81392e184922b3",
+  "tool_returned_normally": true,
+  "capture_basis": "Exact caller-visible argument, no independent host wire checksum",
+  "captured_at_utc": "2026-11-15T07:00:00.146255+00:00"
+}

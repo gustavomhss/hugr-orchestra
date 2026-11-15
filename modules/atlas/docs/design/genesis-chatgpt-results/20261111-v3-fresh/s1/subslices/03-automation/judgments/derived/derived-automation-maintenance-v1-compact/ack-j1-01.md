@@ -1,0 +1,1 @@
+ACK — `derived-automation-maintenance-v1-compact`, parte **1/2** recebida. Última âncora: evidência, **§4 — Normas públicas usadas e limites de prova**, fim da tabela, linha da receita `automation-maintenance.json`. Aguardo a parte final e o `FIM_DO_LOTE` externo.

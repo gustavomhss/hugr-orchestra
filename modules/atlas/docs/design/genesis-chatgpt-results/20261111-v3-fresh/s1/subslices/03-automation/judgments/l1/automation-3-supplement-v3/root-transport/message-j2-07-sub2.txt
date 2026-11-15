@@ -1,0 +1,582 @@
+Transporte literal pela principal ao mesmo juiz J2, execução 34269cf4-d631-41c5-a30b-85b0ec217390. Não use ferramentas, delegue, edite ou receba parecer do outro juiz. Lote automation-3-supplement-v3; parte 7/8. Pacote canônico 408213 bytes SHA256 f2c8d12e8e0b22964fadfaba9c40632f0ba5489d795d76dc3efde70fd30bd276. Esta parte tem 51057 bytes SHA256 ab6e9d6ee61b2e3abbc248ccbcb52f6c18c0f52d83846853ed234e49f59d6d5c. Envio em dois fragmentos contíguos: este é 2/2, offsets UTF-8 [25490,51057), 25567 bytes SHA256 1ae64e29e2b38fb48e2b98cdf29caa33cc7fbd2c5f5fc9f09952738b9f5997a1. Junte os fragmentos sem os envelopes. Conserve o exame anterior e os deltas já recebidos. Julgue apenas após FIM_DO_LOTE; até lá responda somente ACK da parte e da última âncora.
+
+BEGIN_PART
+    // The full prefix was never run by the search: when the search reaches it, it decides whether there is a culprit at all.
+    if (lo === members.length) {
+      const whole = yield* tryOn(directory, template, bundle, groups, members.map((item) => item.member.head_sha))
+      if (whole === undefined) return undefined
+      if (whole) return { culprits: [], after: [] }
+    }
+    return { culprits: members.slice(lo - 1, lo).map((item) => item.issue), after: members.slice(0, lo - 1).map((item) => item.issue) }
+  })
+
+  /**
+   * Section 6.8: the first-parent commit between the last green whole-suite run and the red base where F starts failing:
+   * a merged bundle that ran the whole suite, or a green base probe or safety run. A lane bundle ran only its packages,
+   * so it is never the good point. Undefined when there is no such run to start from or a checkout fails.
+   */
+  const bisect = Effect.fnUntraced(function* (
+    row: ProjectRow,
+    directory: string,
+    template: string,
+    bundle: typeof BoardBundleTable.$inferSelect,
+    groups: ReadonlyArray<{ readonly package: string; readonly files: ReadonlyArray<string> }>,
+  ) {
+    const found = yield* deps.quiet((tx) =>
+      tx
+        .select({ status: BoardBundleTable.status, base_sha: BoardBundleTable.base_sha, head_sha: BoardBundleTable.head_sha })
+        .from(BoardBundleTable)
+        .where(
+          and(
+            eq(BoardBundleTable.project_id, row.id),
+            or(and(eq(BoardBundleTable.status, "merged"), isNull(BoardBundleTable.packages)), eq(BoardBundleTable.status, "probe-green")),
+          ),
+        )
+        .orderBy(desc(BoardBundleTable.n))
+        .get(),
+    )
+    if (!found) return undefined
+    const good = found.status === "merged" ? found.head_sha : found.base_sha
+    if ((yield* git(directory, ["merge-base", "--is-ancestor", good, bundle.base_sha])).code !== 0) return undefined
+    const commits = (yield* git(directory, ["rev-list", "--first-parent", "--reverse", `${good}..${bundle.base_sha}`])).out.split("\n").filter(Boolean)
+    if (commits.length === 0) return undefined
+    const scratch = yield* Effect.promise(() => fs.mkdtemp(path.join(os.tmpdir(), `orchestra-bisect-${bundle.n}-`)))
+    const added = yield* git(directory, ["worktree", "add", "--quiet", "--detach", scratch, bundle.base_sha])
+    if (added.code !== 0) {
+      yield* Effect.promise(() => fs.rm(scratch, { recursive: true, force: true }))
+      return undefined
+    }
+    return yield* Effect.gen(function* () {
+      // The last commit is known to fail, so the search only narrows within the list.
+      let lo = 0
+      let hi = commits.length - 1
+      while (lo < hi) {
+        const mid = Math.floor((lo + hi) / 2)
+        if ((yield* git(scratch, ["checkout", "--quiet", "--detach", commits[mid] ?? ""])).code !== 0) return undefined
+        const passes = yield* runGroups(scratch, template, bundle.branch, groups)
+        if (passes) lo = mid + 1
+        if (!passes) hi = mid
+      }
+      return commits[lo]
+    }).pipe(Effect.ensuring(git(directory, ["worktree", "remove", "--force", scratch])))
+  })
+
+  /** Section 6.8: the open fix card for a red base, reused while an earlier one has not shipped. */
+  const fixCard = Effect.fnUntraced(function* (
+    row: ProjectRow,
+    base: string,
+    culprit: string | undefined,
+    groups: ReadonlyArray<{ readonly package: string; readonly files: ReadonlyArray<string> }>,
+  ) {
+    const open = yield* deps.quiet((tx) =>
+      tx
+        .select({ id: BoardIssueTable.id })
+        .from(BoardBundleTable)
+        .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardBundleTable.fix_issue_id))
+        .where(and(eq(BoardBundleTable.project_id, row.id), ne(BoardIssueTable.stage, "shipped"), ne(BoardIssueTable.stage, "cut")))
+        .orderBy(desc(BoardBundleTable.n))
+        .get(),
+    )
+    if (open) return open.id
+    const files = groups.flatMap((group) => group.files).join(", ")
+    const title = `Fix ${base}: ${files} fail${culprit ? ` since ${culprit.slice(0, 10)}` : ""}`
+    const body = `${base} fails ${files}.${culprit ? ` Bisect found ${culprit} as the first failing commit.` : " The queue has no green point to bisect from."} The queue cuts only this card until ${base} is green; it rides alone and merges when these tests pass.`
+    const created = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        // `row` may be stale: the next issue number comes from a fresh read.
+        const project = yield* tx.select().from(BoardProjectTable).where(eq(BoardProjectTable.id, row.id)).get()
+        if (!project) return yield* Effect.die(`${row.key} has no project row to file its fix card in.`)
+        const id = Board.IssueID.create()
+        const position = yield* endOf(tx, row.id, "backlog")
+        const entered = yield* Clock.currentTimeMillis
+        yield* tx
+          .insert(BoardIssueTable)
+          .values({
+            id,
+            project_id: row.id,
+            number: project.next_issue_number,
+            title,
+            body,
+            type: "bug",
+            epic_id: null,
+            stage: "backlog",
+            position,
+            estimate: null,
+            seat: null,
+            session_id: null,
+            branch: null,
+            pr_number: null,
+            attempts: 0,
+            crash_reason: null,
+            guardrail_rule: null,
+            record: null,
+            stage_entered_at: entered,
+            github_dirty: project.github_repo !== null,
+          })
+          .run()
+        yield* tx
+          .update(BoardProjectTable)
+          .set({ next_issue_number: project.next_issue_number + 1 })
+          .where(eq(BoardProjectTable.id, row.id))
+          .run()
+        const activity = yield* log(tx, {
+          project: row.id,
+          issue: id,
+          actor: "github",
+          action: "issue.create",
+          reason: "base is red",
+          after: {
+            number: project.next_issue_number,
+            title,
+            body,
+            type: "bug",
+            stage: "backlog",
+            position,
+            stage_entered_at: entered,
+          },
+        })
+        return { id, changed: changed(row.id, activity, id) }
+      }),
+    )
+    yield* deps.publish(created.changed)
+    return created.id
+  })
+
+  /**
+   * Runs the whole suite on base itself: an empty commit on `sha`, opened as a bundle with no members. A phase 1 probe
+   * (packages null) gates on the full label; a safety run (section 7.3, packages []) dispatches the lane workflows with
+   * no package filter, which run every package, and overlaps no lane while it runs.
+   */
+  const probe = Effect.fnUntraced(function* (
+    row: ProjectRow,
+    repo: string,
+    directory: string,
+    contract: BoardCi.Contract,
+    sha: string,
+    body: string,
+    packages: ReadonlyArray<string> | null,
+  ) {
+    const head = (yield* git(directory, [...AUTHOR, "commit-tree", `${sha}^{tree}`, "-p", sha, "-m", "chore(queue): base probe"])).out
+    if (!head) return
+    const n = yield* deps.quiet((tx) => nextBundle(tx, row.id))
+    const branch = `bundle-${row.key}-${n}`
+    const pushed = yield* git(directory, ["push", "--quiet", "--force", "origin", `${head}:refs/heads/${branch}`])
+    if (pushed.code !== 0) return
+    const dispatch = dispatched({ packages }, contract)
+    const opened = yield* deps.gh(
+      [
+        "pr",
+        "create",
+        "--repo",
+        repo,
+        "--base",
+        contract.base,
+        "--head",
+        branch,
+        "--title",
+        `chore(queue): base probe ${row.key}-B${n}`,
+        "--body-file",
+        "-",
+        ...(contract.full.label && !dispatch ? ["--label", contract.full.label] : []),
+      ],
+      body,
+    )
+    const number = Number(opened.stdout.match(/\/pull\/(\d+)/)?.[1] ?? 0) || null
+    if (dispatch)
+      yield* Effect.forEach(contract.lanes?.workflows ?? [], (workflow) => deps.gh(["workflow", "run", workflow, "--repo", repo, "--ref", branch]), {
+        discard: true,
+      })
+    yield* deps.quiet((tx) =>
+      tx
+        .insert(BoardBundleTable)
+        .values({ id: Board.BundleID.create(), project_id: row.id, n, branch, pr_number: number, base_sha: sha, head_sha: head, tree_sha: "", status: "open", packages })
+        .run(),
+    )
+  })
+
+  /** Section 6.4: a flaky bundle keeps its PR open and its members queued until Maestro merges or retries it. */
+  const flaky = Effect.fnUntraced(function* (row: ProjectRow, bundle: typeof BoardBundleTable.$inferSelect, issues: ReadonlyArray<IssueRow>, tests: ReadonlyArray<string>) {
+    const now = yield* Clock.currentTimeMillis
+    yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        yield* tx.update(BoardBundleTable).set({ status: "flaky" }).where(eq(BoardBundleTable.id, bundle.id)).run()
+        yield* Effect.forEach(
+          tests,
+          (test) =>
+            tx
+              .insert(BoardFlakeTable)
+              .values({ project_id: row.id, test, bundle_id: bundle.id, first_seen: now, count: 1 })
+              .onConflictDoUpdate({ target: [BoardFlakeTable.project_id, BoardFlakeTable.test], set: { bundle_id: bundle.id, count: sql`${BoardFlakeTable.count} + 1` } })
+              .run(),
+          { discard: true },
+        )
+      }),
+    )
+    yield* Effect.forEach(
+      issues,
+      (issue) => note(row, issue, `Bundle ${row.key}-B${bundle.n} went red, and ${tests.join(", ")} then passed three scoped reruns of its head: it is flaky. Maestro merges it or retries it; this card stays queued.`),
+      { discard: true },
+    )
+    yield* Effect.logWarning(`integration: ${row.key}-B${bundle.n} flaky: ${tests.join(", ")} failed, then passed on rerun. Merge or retry.`)
+  })
+
+  return { failures, baseState, scope, tryOn, isolate, bisect, fixCard, probe, flaky }
+}
+~~~~
+
+## AUT3-C21
+
+```json
+{
+  "block_id": "AUT3-C21",
+  "type": "literal_source_chain",
+  "canonical_request_namespace": "J1",
+  "requests": [
+    "RE-AUT3-06"
+  ],
+  "body_anchors": [
+    "B11"
+  ],
+  "requested_subject": "Índice/scanner/remote/ref/push/registro/restoreworktree e lifecycle de attempts",
+  "path": "packages/core/src/board/snapshot.ts",
+  "archive": "sources/packages/core/src/board/snapshot.ts",
+  "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_git_blob_sha": "cc39cdec652c05bf969da8543335da1703a663fc",
+  "source_sha256": "8939a3de7e1123e7e650144adb79dfe5828706c73e6b34ab942bcc2edb626012",
+  "source_bytes": 15010,
+  "required_source_line_ranges": [
+    [
+      1,
+      309
+    ]
+  ],
+  "prior_literal_ranges": [
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "B11",
+      "source_path": "packages/core/src/board/snapshot.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "cc39cdec652c05bf969da8543335da1703a663fc",
+      "source_sha256": "8939a3de7e1123e7e650144adb79dfe5828706c73e6b34ab942bcc2edb626012",
+      "first_line": 75,
+      "last_line": 93,
+      "excerpt_bytes": 949,
+      "excerpt_sha256": "3e59c45a4ca740ced13176f39a76d87a9adab7d8553784101cd6a0a2b1621795",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 152210,
+      "literal_content_byte_end_exclusive": 153159
+    },
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "B11",
+      "source_path": "packages/core/src/board/snapshot.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "cc39cdec652c05bf969da8543335da1703a663fc",
+      "source_sha256": "8939a3de7e1123e7e650144adb79dfe5828706c73e6b34ab942bcc2edb626012",
+      "first_line": 208,
+      "last_line": 220,
+      "excerpt_bytes": 860,
+      "excerpt_sha256": "e29646c08bdeb2e59e665f7aa8ad4a6c2be83c1ab315923a4402b334128884db",
+      "prior_document": "evidence-review.md",
+      "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "literal_content_byte_start": 153292,
+      "literal_content_byte_end_exclusive": 154152
+    }
+  ]
+}
+```
+
+```json
+{"first_line":1,"last_line":74,"bytes":3728,"sha256":"0595617a6025ff64a17462aa90b820e0900bd1ec1246a35deadf8df40e61061a"}
+```
+
+~~~~typescript
+export * as BoardSnapshot from "./snapshot"
+
+import { existsSync } from "fs"
+import fs from "fs/promises"
+import os from "os"
+import path from "path"
+import { and, desc, eq, isNull } from "drizzle-orm"
+import { Clock, Effect } from "effect"
+import { ChildProcess } from "effect/unstable/process"
+import type { Board } from "@orchestra/schema/board"
+import type { AppProcess } from "../process"
+import { BoardAttemptTable, BoardIssueTable, BoardProjectTable } from "./sql"
+import { gitRunner, worktree } from "./shared"
+import type { Fields, IssueRow, ProjectRow, Tx } from "./shared"
+import { BoardThread } from "./thread"
+
+// Push early (docs/specs/maestro-lead/merge-queue.md section 8.1): the host writes a card's worktree to a snapshot
+// commit through a temporary index and pushes it to refs/orchestra/wip/<KEY>/a<n>. The worktree, its index and its
+// HEAD stay untouched, so seats still never commit.
+
+export interface Deps {
+  readonly quiet: <A>(work: (tx: Tx) => Effect.Effect<A, unknown>) => Effect.Effect<A>
+  readonly proc: AppProcess.Interface
+  /** The gitleaks command (executable and leading arguments), or undefined when none can be had; then no snapshot is pushed. */
+  readonly scanner: Effect.Effect<ReadonlyArray<string> | undefined>
+  /** The project's snapshot remote from its CI contract; a failure blocks the push rather than guess a remote. */
+  readonly remote: (directory: string, project: ProjectRow) => Effect.Effect<string, { readonly message: string }>
+  readonly env?: NodeJS.ProcessEnv
+}
+
+export type Attempt = typeof BoardAttemptTable.$inferSelect
+
+/**
+ * What one snapshot did. `blocked` says why nothing was pushed. `missing` means the worktree is gone with no snapshot
+ * to restore it from; `restored` means a gone worktree was re-created at its snapshot commit (spec 8.5).
+ */
+export type Result =
+  | { readonly status: "pushed" | "unchanged"; readonly ref: string; readonly sha: string }
+  | { readonly status: "blocked"; readonly ref: string; readonly reason: string }
+  | { readonly status: "missing"; readonly ref: string; readonly worktree: string | null }
+  | { readonly status: "restored"; readonly ref: string; readonly worktree: string; readonly sha: string }
+  | { readonly status: "none" }
+
+const IDENTITY = {
+  GIT_AUTHOR_NAME: "Orchestra",
+  GIT_AUTHOR_EMAIL: "orchestra@localhost",
+  GIT_COMMITTER_NAME: "Orchestra",
+  GIT_COMMITTER_EMAIL: "orchestra@localhost",
+}
+
+export function make(deps: Deps) {
+  const git = gitRunner(deps.proc, deps.env)
+  /** The cards already warned about a gone worktree, so the 10 minute sweep says it once, not on every pass. */
+  const warned = new Set<Board.IssueID>()
+
+  /** The worktree's tree as it stands, written from a copy of its index so the real index stays untouched. */
+  const tree = Effect.fnUntraced(function* (cwd: string) {
+    const index = yield* git(cwd, ["rev-parse", "--path-format=absolute", "--git-path", "index"])
+    return yield* Effect.acquireUseRelease(
+      Effect.promise(() => fs.mkdtemp(path.join(os.tmpdir(), "orchestra-snapshot-"))),
+      (temporary) =>
+        Effect.gen(function* () {
+          const env = { GIT_INDEX_FILE: path.join(temporary, "index") }
+          yield* Effect.promise(() => fs.copyFile(index.out, env.GIT_INDEX_FILE).catch(() => undefined))
+          const added = yield* git(cwd, ["add", "-A"], env)
+          const written = yield* git(cwd, ["write-tree"], env)
+          if (added.code !== 0 || written.code !== 0) return undefined
+          return written.out
+        }),
+      (temporary) => Effect.promise(() => fs.rm(temporary, { recursive: true, force: true })),
+    )
+  })
+
+  /** Scans the commits `from..to` with gitleaks; anything but a clean exit blocks the push. */
+~~~~
+
+```json
+{"first_line":94,"last_line":207,"bytes":5980,"sha256":"861feb2349b087a4fd1c7dc52ed2be2718ba4924897dcb44500e91492fd65807"}
+```
+
+~~~~typescript
+
+  const update = (attempt: Attempt, set: Partial<typeof BoardAttemptTable.$inferInsert>) =>
+    deps.quiet((tx) =>
+      tx
+        .update(BoardAttemptTable)
+        .set(set)
+        .where(and(eq(BoardAttemptTable.issue_id, attempt.issue_id), eq(BoardAttemptTable.n, attempt.n)))
+        .run(),
+    )
+
+  const find = (issue: Board.IssueID) =>
+    deps.quiet((tx) =>
+      Effect.gen(function* () {
+        const row = yield* tx
+          .select({ issue: BoardIssueTable, project: BoardProjectTable })
+          .from(BoardIssueTable)
+          .innerJoin(BoardProjectTable, eq(BoardIssueTable.project_id, BoardProjectTable.id))
+          .where(eq(BoardIssueTable.id, issue))
+          .get()
+        if (!row) return undefined
+        const attempt = yield* open(tx, issue)
+        return { ...row, attempt, directory: yield* worktree(tx, row.project) }
+      }),
+    )
+
+  /** The card's worktree: the one recorded on the attempt, else the worktree that has the card's branch checked out. */
+  const locate = Effect.fnUntraced(function* (directory: string | null, issue: IssueRow, attempt: Attempt) {
+    if (attempt.worktree) return attempt.worktree
+    if (!directory || !issue.branch) return null
+    const listed = yield* git(directory, ["worktree", "list", "--porcelain"])
+    // git lists Windows paths with forward slashes; resolve keeps the recorded path in the platform's form.
+    const listedPath = listed.out
+      .split("\n\n")
+      .map((block) => block.split("\n"))
+      .find((lines) => lines.includes(`branch refs/heads/${issue.branch}`))
+      ?.find((line) => line.startsWith("worktree "))
+      ?.slice("worktree ".length)
+    const found = listedPath && path.resolve(listedPath)
+    if (found) yield* update(attempt, { worktree: found })
+    return found ?? null
+  })
+
+  /**
+   * Re-creates a gone worktree on the card's branch, then writes the snapshot's tree over its files only, so HEAD and
+   * index are the branch's again and the work in progress shows as uncommitted, as before the loss (section 8.1).
+   * The branch is checked out detached when another worktree holds it.
+   */
+  const restore = Effect.fnUntraced(function* (directory: string, project: ProjectRow, branch: string, cwd: string, sha: string, ref: string) {
+    const remote = yield* deps.remote(directory, project).pipe(Effect.orElseSucceed(() => undefined))
+    if (!remote) return false
+    yield* git(directory, ["worktree", "prune"])
+    const fetched = yield* git(directory, ["fetch", "--quiet", "--no-tags", remote, ref])
+    if (fetched.code !== 0) return false
+    const added =
+      (yield* git(directory, ["worktree", "add", cwd, branch])).code === 0 ||
+      (yield* git(directory, ["worktree", "add", "--detach", cwd, branch])).code === 0
+    if (!added) return false
+    // No-overlay restore also deletes the files the snapshot lacks.
+    return (yield* git(cwd, ["restore", `--source=${sha}`, "--worktree", "--", "."])).code === 0
+  })
+
+  const push = Effect.fnUntraced(function* (issue: Board.IssueID) {
+    const found = yield* find(issue)
+    const attempt = found?.attempt
+    if (!found || !attempt) return { status: "none" } satisfies Result
+    const ref = `refs/orchestra/wip/${found.project.key}-${found.issue.number}/a${attempt.n}`
+    const cwd = yield* locate(found.directory, found.issue, attempt)
+    if (!cwd || !existsSync(cwd)) {
+      const sha = attempt.snapshot_sha
+      const branch = found.issue.branch
+      if (cwd && sha && branch && found.directory && (yield* restore(found.directory, found.project, branch, cwd, sha, ref)))
+        return { status: "restored", ref, worktree: cwd, sha } satisfies Result
+      // A card with no worktree on record never had one to lose (not started, or works outside one): nothing drifted.
+      if (!cwd) return { status: "missing", ref, worktree: cwd } satisfies Result
+      if (!warned.has(issue)) {
+        warned.add(issue)
+        yield* Effect.logWarning(`drift: ${found.project.key}-${found.issue.number} worktree ${cwd} is gone and has no snapshot to restore`)
+      }
+      return { status: "missing", ref, worktree: cwd } satisfies Result
+    }
+    warned.delete(issue)
+    const current = yield* tree(cwd)
+    if (!current) return { status: "blocked", ref, reason: `could not read the tree of ${cwd}` } satisfies Result
+    if (current === attempt.snapshot_tree && attempt.snapshot_sha)
+      return { status: "unchanged", ref, sha: attempt.snapshot_sha } satisfies Result
+    // The first snapshot's parent is the worktree's HEAD, so the scan and the push carry only the seat's change.
+    const parent = attempt.snapshot_sha ?? (yield* git(cwd, ["rev-parse", "HEAD"])).out
+    const commit = yield* git(
+      cwd,
+      ["commit-tree", current, ...(parent ? ["-p", parent] : []), "-m", `orchestra snapshot ${found.project.key}-${found.issue.number} a${attempt.n}`],
+      IDENTITY,
+    )
+    const blocked = (reason: string) =>
+      update(attempt, { snapshot_blocked: reason }).pipe(Effect.as({ status: "blocked", ref, reason } satisfies Result))
+    if (commit.code !== 0) return yield* blocked(`could not write the snapshot commit: ${commit.err}`)
+    const hit = yield* scan(cwd, parent ? `${parent}..${commit.out}` : commit.out)
+    if (hit) return yield* blocked(hit)
+    const remote = yield* deps.remote(found.directory ?? cwd, found.project).pipe(Effect.result)
+    if (remote._tag === "Failure") return yield* blocked(remote.failure.message)
+    const pushed = yield* git(cwd, ["push", "--no-verify", "--force", remote.success, `${commit.out}:${ref}`])
+    if (pushed.code !== 0) return yield* blocked(`the push to ${remote.success} failed: ${pushed.err.split("\n").at(-1)}`)
+    yield* update(attempt, {
+      snapshot_sha: commit.out,
+      snapshot_tree: current,
+      snapshot_at: yield* Clock.currentTimeMillis,
+      snapshot_blocked: null,
+    })
+    return { status: "pushed", ref, sha: commit.out } satisfies Result
+  })
+
+  return {
+    tree,
+    push,
+    /**
+~~~~
+
+```json
+{"first_line":221,"last_line":309,"bytes":3493,"sha256":"dfec2e197515d6f61bffc82e9158723742c86228bd7da9e48f14c907d1f39b33"}
+```
+
+~~~~typescript
+      const issues = yield* deps.quiet((tx) =>
+        tx
+          .selectDistinct({ id: BoardIssueTable.id })
+          .from(BoardIssueTable)
+          .innerJoin(BoardAttemptTable, eq(BoardAttemptTable.issue_id, BoardIssueTable.id))
+          .where(and(eq(BoardIssueTable.stage, "building"), isNull(BoardAttemptTable.outcome)))
+          .all(),
+      )
+      return yield* Effect.forEach(issues, (row) => push(row.id))
+    }),
+  }
+}
+
+export type Interface = ReturnType<typeof make>
+
+/** The card's open attempt: the latest one with no outcome. */
+export const open = Effect.fnUntraced(function* (tx: Tx, issue: Board.IssueID) {
+  const latest = yield* tx
+    .select()
+    .from(BoardAttemptTable)
+    .where(eq(BoardAttemptTable.issue_id, issue))
+    .orderBy(desc(BoardAttemptTable.n))
+    .limit(1)
+    .get()
+  return latest && latest.outcome === null ? latest : undefined
+})
+
+/**
+ * Records a dispatch of `issue`: the open attempt ends (`failed` when the card has a crash reason, else `superseded`)
+ * and attempt n+1 opens with what it runs on. `board_issue.attempts` becomes the new n.
+ */
+export const dispatch = Effect.fnUntraced(function* (
+  tx: Tx,
+  issue: IssueRow,
+  input: { readonly worktree?: string; readonly writePaths?: ReadonlyArray<string>; readonly cause?: string },
+) {
+  const latest = yield* tx
+    .select()
+    .from(BoardAttemptTable)
+    .where(eq(BoardAttemptTable.issue_id, issue.id))
+    .orderBy(desc(BoardAttemptTable.n))
+    .limit(1)
+    .get()
+  if (latest && latest.outcome === null)
+    yield* tx
+      .update(BoardAttemptTable)
+      .set({ outcome: issue.crash_reason ? "failed" : "superseded" })
+      .where(and(eq(BoardAttemptTable.issue_id, issue.id), eq(BoardAttemptTable.n, latest.n)))
+      .run()
+  const n = (latest?.n ?? 0) + 1
+  const cause = input.cause ?? (n === 1 ? null : `failed:${issue.crash_reason ?? "redispatched"}`)
+  yield* tx
+    .insert(BoardAttemptTable)
+    .values({
+      issue_id: issue.id,
+      n,
+      seat: issue.seat,
+      session_id: issue.session_id,
+      worktree: input.worktree ?? null,
+      branch: issue.branch,
+      pr_number: issue.pr_number,
+      write_paths: [...(input.writePaths ?? [])],
+      cause,
+    })
+    .run()
+  yield* tx.update(BoardIssueTable).set({ attempts: n }).where(eq(BoardIssueTable.id, issue.id)).run()
+  if (n > 1)
+    yield* BoardThread.write(tx, { id: `bno_rework_${issue.id}_${n}`, issue: issue.id, kind: "rework", author: "orchestra", body: cause ?? "redispatched" })
+  return n
+})
+
+/**
+ * Keeps attempts in step with an issue update: a new Session opens the next attempt, and a changed seat, branch or PR
+ * is written to the open one. The crash reason the card had before the update decides how the old attempt ended.
+ */
+export const follow = Effect.fnUntraced(function* (tx: Tx, before: IssueRow, after: Fields) {
+  const updated = yield* tx.select().from(BoardIssueTable).where(eq(BoardIssueTable.id, before.id)).get()
+  if (!updated) return
+  if (typeof after.session_id === "string" && after.session_id !== before.session_id) {
+    yield* dispatch(tx, { ...updated, crash_reason: before.crash_reason ?? updated.crash_reason }, {})
+    return
+  }
+  if (!["seat", "branch", "pr_number"].some((key) => key in after)) return
+  yield* tx
+
+END_PART

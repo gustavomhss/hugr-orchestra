@@ -1,0 +1,19 @@
+{
+  "schema": "s1-03-entry-manifest-mechanical-adapter/v1",
+  "at_utc": "2026-11-15T10:38:22.301493+00:00",
+  "purpose": "Explicit support for the original fresh entry author schema; no producer file, input, recipe, content, output or verdict changed. Root fully read entry body/evidence before staging.",
+  "procedures": [
+    {
+      "original": "scripts/assemble-derived-review-v2.py",
+      "original_sha256": "7f3152c91789730e076cf78affccbdaa75c4c632f84c526a4f7d2ab004a84204",
+      "adapted": "scripts/assemble-derived-review-v3.py",
+      "adapted_sha256": "bf5f078b917912082510a6f1abb11fa7b80f707acaddfa5a4317b881c33f5f1f"
+    },
+    {
+      "original": "scripts/append-derived-public-authority.py",
+      "original_sha256": "290eeeee64567aac35356c97bbc0663826fe11c1b3675240cba7cb97ffa9625f",
+      "adapted": "scripts/append-derived-public-authority-v2.py",
+      "adapted_sha256": "078ea312162248ef01ecb006238b48a086ee9a8d0201cb77341425119254402c"
+    }
+  ]
+}

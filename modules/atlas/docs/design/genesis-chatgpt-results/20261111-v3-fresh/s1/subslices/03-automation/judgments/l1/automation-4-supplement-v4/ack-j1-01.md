@@ -1,0 +1,1 @@
+ACK — `automation-4-supplement-v4`, parte **1/3** recebida. Última âncora: **AUT4-C02**, `capability.ts`, em `prior_literal_ranges`, após a referência às linhas **137–145**. Aguardo as partes restantes e o `FIM_DO_LOTE` externo.

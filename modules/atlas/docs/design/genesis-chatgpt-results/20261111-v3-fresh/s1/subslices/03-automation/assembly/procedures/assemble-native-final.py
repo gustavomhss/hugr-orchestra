@@ -46,11 +46,24 @@ def put_native(path,b):
  if not p.exists() or p.read_bytes()!=b:p.write_bytes(b)
  materialized[path]={'path':path,'bytes':len(b),'sha256':H(b),'git_blob_sha':G(b)}
 
-def canonical_local(local,sha,size=None,blob=None,alias=None):
+def shared_authority(local,raw):
+ """Resolve supplied authority aliases only after full byte-identity equality."""
+ identity=(H(raw),len(raw),G(raw))
+ matches=[m for m in shared if (m['sha256'],m['bytes'],m['git_blob_sha'])==identity]
+ named=shared_by_local.get(local)
+ if named is not None:
+  assert named in matches,('shared capture identity drift',local)
+  return named
+ if not local.startswith('inputs/'):return None
+ origins={(m['path'],m['commit']) for m in matches}
+ assert len(origins)==1,('unmapped or ambiguous original authority file',local)
+ return matches[0]
+
+def canonical_local(local,sha,size=None,blob=None,alias=None,original_read_paths=None):
  """Map a genuine local input, honoring exact old-version alias supplied in config."""
- p=W/(alias or local);b=exact(p,sha,size,blob)
- if local in shared_by_local:
-  m=shared_by_local[local];assert m['sha256']==sha;dest=m['path'];commit=m['commit']
+ p=W/(alias or local);b=exact(p,sha,size,blob);m=shared_authority(local,b)
+ if m is not None:
+  dest=m['path'];commit=m['commit']
  elif '/sources/' in local and local.split('/sources/',1)[1] in audited_by_path:
   dest=local.split('/sources/',1)[1];m=audited_by_path[dest];assert m['sha256']==sha;commit=m['origin_commit']
  elif local.startswith('inputs/'):
@@ -58,8 +71,9 @@ def canonical_local(local,sha,size=None,blob=None,alias=None):
  else:
   rel=(alias or local).removeprefix('payload/');dest=put_payload(rel,b);commit=pin
  put_native(dest,b)
- translation.append({'read_path':local,'retained_path':alias or local,'canonical_path':dest,'sha256':sha,'bytes':len(b),'whole_file':True,'publication_commit':commit})
- return {'input_key':'file:'+dest,'canonical_path':dest,'bytes':len(b),'sha256':sha,'git_blob_sha':G(b),'origin_commit':commit,'whole_file':True,'uses':[{'role':'genuine producer input; source or procedure provenance retained in original manifest','original_read_path':local,'retained_alias':alias}]}
+ lineage=original_read_paths or [local]
+ translation.append({'declared_local_input_path':local,'original_read_paths':lineage,'retained_path':alias or local,'canonical_path':dest,'sha256':sha,'bytes':len(b),'whole_file':True,'publication_commit':commit})
+ return {'input_key':'file:'+dest,'canonical_path':dest,'bytes':len(b),'sha256':sha,'git_blob_sha':G(b),'origin_commit':commit,'whole_file':True,'uses':[{'role':'genuine producer input; source or procedure provenance retained in original manifest','original_read_paths':lineage,'retained_alias':alias}]}
 
 def merge_unit(units,u):
  path=u['canonical_path']
@@ -83,6 +97,7 @@ for task in plan['artifacts']:
    u=json.loads(json.dumps(source));path=u['canonical_path'];override=spec.get('audited_path_aliases',{}).get(path)
    if override:
     original=dict(u);u=canonical_local(override['original_local_path'],u['sha256'],u['bytes'],u['git_blob_sha'],override['retained_local_path']);u['uses']+=original.get('uses',[])
+    u['uses'].append({'role':'Origin before exact retained alias; no old-version bytes replaced by current body','origin_commit':original['origin_commit'],'origin_path':original['canonical_path'],'sha256':original['sha256'],'git_blob_sha':original['git_blob_sha']})
    else:
     raw=exact(N/path,u['sha256'],u['bytes'],u['git_blob_sha'])
     if path.startswith(OUT+'/'):
@@ -91,7 +106,7 @@ for task in plan['artifacts']:
  # The root configuration enumerates genuinely consumed extension rows after reading their actual schemas.
  # No file is added merely because it is an output or was inspected by the transport assembler.
  for row in spec.get('additional_actual_inputs',[]):
-  merge_unit(units,canonical_local(row['local_path'],row['sha256'],row['bytes'],row['git_blob_sha'],row.get('retained_alias')))
+  merge_unit(units,canonical_local(row['local_path'],row['sha256'],row['bytes'],row['git_blob_sha'],row.get('retained_alias'),row.get('original_read_paths')))
  for path,u in units.items():
   if key not in all_units[path]['input_for']:all_units[path]['input_for'].append(key)
  refs=[{'commit':u['origin_commit'],'path':u['canonical_path'],'git_blob_sha':u['git_blob_sha'],'sha256':u['sha256']} for u in units.values()]
@@ -145,6 +160,11 @@ if not inventory_only:
   b=a['body'];raw=(P/b['path']).read_bytes();checks.append((OUT+'/'+b['path'],b['sha256'],b['byte_length'],G(raw)))
   for ref in [a['recipe_ref'],a['producer_request_ref'],a['producer_response_ref'],*a['semantic_review_refs']]:
    raw=(N/ref['payload_path']).read_bytes();checks.append((ref['payload_path'],ref['sha256'],len(raw),G(raw)))
+ # Bind the opaque contract reference to the same immutable publication snapshot.
+ # This checks identity only and never changes questions, criteria or oracle bytes.
+ oracle_ref=pack['contract']['oracle_ref']
+ oracle_bytes=exact(N/oracle_ref['payload_path'],oracle_ref['sha256'])
+ checks.append((oracle_ref['payload_path'],oracle_ref['sha256'],len(oracle_bytes),G(oracle_bytes)))
  for path,sha,size,blob in checks:
   row=published.get(path,published.get(path.removeprefix(OUT+'/')))
   assert row is not None,(path,'absent from immutable published snapshot')

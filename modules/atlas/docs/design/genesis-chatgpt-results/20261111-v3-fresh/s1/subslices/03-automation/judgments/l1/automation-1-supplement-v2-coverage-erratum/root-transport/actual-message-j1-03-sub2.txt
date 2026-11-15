@@ -1,0 +1,565 @@
+Transporte literal pela principal ao mesmo juiz J1, execução 34269cf4-d631-41c5-a30b-85b0ec217390. Não use ferramentas, delegue, edite ou receba parecer do outro juiz. Lote automation-1-supplement-v2-coverage-erratum; parte 3/6. Pacote canônico 344323 bytes SHA256 1599aa38f34decbc6bff88c972ed778d5f49e179dca7ac2915d37ecacf245a4b. Esta parte tem 57147 bytes SHA256 b1bcf03269a79058661b8a3a91db2b122dc8d481a23d22db8973fa281aadefe6. Envio em dois fragmentos contíguos: este é 2/2, offsets UTF-8 [28512,57147), 28635 bytes SHA256 0de44dc8569e08c48b35831cd096136ae07616781be3a6b3b703e1f0a6c1b6c5. Junte os fragmentos sem os envelopes. Conserve o exame anterior e os deltas já recebidos. Julgue apenas após FIM_DO_LOTE; até lá responda somente ACK da parte e da última âncora.
+
+BEGIN_PART
+          report.add("unresolved", "yaml_KEY_TYPE:CI mapping keys must be scalar strings, not aliases or collections")
+          return false
+        }
+        if ((item.key || item.value) && ++report.work.cstNodes > limits.nodes) {
+          report.add("unresolved", "precomposition_limit:maximum depth 64 and 50000 CST nodes")
+          return false
+        }
+        if (item.key) pending.push({ token: item.key, depth: entry.depth + 1 })
+        if (item.value) pending.push({ token: item.value, depth: entry.depth + 1 })
+        return true
+      })) return
+    }
+  }
+  return documents
+}
+
+function compose(text: string, provider: "github" | "gitlab", report: Diagnostics, offset: number) {
+  ++report.work.compositions
+  // Library uniqueKeys uses an O(n²) scan. Validate decoded string keys with per-map Sets below.
+  const document = parseDocument(text, {
+    version: "1.2", schema: "core", uniqueKeys: false, stringKeys: true, prettyErrors: false,
+    resolveKnownTags: false, merge: provider === "gitlab", logLevel: "error",
+  })
+  document.errors.forEach((error) => report.add("unresolved", `yaml_${error.code}:offset ${offset + error.pos[0]}`))
+  if (document.errors.length) return
+  if (document.directives.yaml.version !== "1.2") {
+    report.add("unresolved", "yaml_version:only YAML 1.2 supported")
+    return
+  }
+  document.warnings.forEach((warning) => report.add("partial", `yaml_${warning.code}:offset ${offset + warning.pos[0]}`))
+  const references: string[][] = []
+  const pending: { node: unknown; depth: number; path: string[] }[] = [{ node: document.contents, depth: 0, path: [] }]
+  const counts = { nodes: 0, aliases: 0 }
+  while (pending.length) {
+    const entry = pending.pop()
+    if (!entry) break
+    if (++counts.nodes > limits.nodes || entry.depth > limits.depth) {
+      report.add("unresolved", "structure_limit:maximum depth 64 and 50000 nodes")
+      return
+    }
+    if (isAlias(entry.node) && ++counts.aliases > limits.aliases) {
+      report.add("unresolved", "alias_limit:maximum 100 aliases")
+      return
+    }
+    if (isAlias(entry.node)) {
+      const target = entry.node.resolve(document)
+      if (target) pending.push({ node: target, depth: entry.depth, path: entry.path })
+    }
+    if (isPair(entry.node)) {
+      if (isScalar(entry.node.key) && ["__proto__", "constructor", "prototype"].includes(String(entry.node.key.value))) {
+        report.add("unresolved", "unsafe_key:prototype-sensitive mapping key")
+        return
+      }
+      const key = isScalar(entry.node.key) ? String(entry.node.key.value) : ""
+      pending.push({ node: entry.node.key, depth: entry.depth, path: entry.path }, {
+        node: entry.node.value, depth: entry.depth, path: [...entry.path, key],
+      })
+    }
+    if (isMap(entry.node) || isSeq(entry.node)) {
+      if (isMap(entry.node)) {
+        const keys = new Set<string>()
+        if (!entry.node.items.every((pair) => {
+          if (!isScalar(pair.key) || typeof pair.key.value !== "string") {
+            report.add("unresolved", "yaml_KEY_TYPE:CI mapping keys must be scalar strings")
+            return false
+          }
+          if (keys.has(pair.key.value)) {
+            report.add("unresolved", `yaml_DUPLICATE_KEY:offset ${offset + (pair.key.range?.[0] ?? 0)}`)
+            return false
+          }
+          keys.add(pair.key.value)
+          return true
+        })) return
+      }
+      if (entry.node.tag === "!reference" && provider === "gitlab") references.push(entry.path)
+      if (entry.node.tag && !["tag:yaml.org,2002:map", "tag:yaml.org,2002:seq"].includes(entry.node.tag)
+        && !(provider === "gitlab" && entry.node.tag === "!reference")) {
+        report.add("unresolved", "unsafe_tag:unsupported collection tag")
+        return
+      }
+      entry.node.items.forEach((node, index) => pending.push({
+        node, depth: entry.depth + 1, path: isSeq(entry.node) ? [...entry.path, String(index)] : entry.path,
+      }))
+    }
+    if (isScalar(entry.node) && entry.node.tag && ![
+      "tag:yaml.org,2002:str", "tag:yaml.org,2002:int", "tag:yaml.org,2002:float",
+      "tag:yaml.org,2002:bool", "tag:yaml.org,2002:null",
+    ].includes(entry.node.tag)) {
+      report.add("unresolved", "unsafe_tag:unsupported scalar tag")
+      return
+    }
+  }
+  const value: unknown = document.toJS({ maxAliasCount: limits.aliases })
+  const visited = { nodes: 0 }
+  if (!safeJson(value, new Set(), 0, visited) || !isJson(value) || !object(value)) {
+    report.add("unresolved", "unsafe_document:expected finite JSON mapping without cycles or unsafe keys")
+    return
+  }
+  return { value, references }
+}
+
+function safeJson(value: unknown, ancestors: Set<object>, depth: number, count: { nodes: number }): boolean {
+  if (++count.nodes > limits.nodes || depth > limits.depth) return false
+  if (value === null || typeof value === "string" || typeof value === "boolean") return true
+  if (typeof value === "number") return Number.isFinite(value)
+  if (typeof value !== "object" || ancestors.has(value)) return false
+  if (!Array.isArray(value) && Object.getPrototypeOf(value) !== Object.prototype) return false
+  if (Object.keys(value).some((key) => ["__proto__", "constructor", "prototype"].includes(key))) return false
+  ancestors.add(value)
+  const safe = Object.values(value).every((child: unknown) => safeJson(child, ancestors, depth + 1, count))
+  ancestors.delete(value)
+  return safe
+}
+
+export function object(value: Schema.Json | undefined): value is Schema.JsonObject {
+  return value !== undefined && value !== null && typeof value === "object" && !Array.isArray(value)
+}
+
+export function strings(value: Schema.Json | undefined): value is readonly string[] {
+  return Array.isArray(value) && value.every((entry: unknown) => typeof entry === "string" && entry.length > 0)
+}
+
+export function expression(value: Schema.Json | undefined): boolean {
+  if (typeof value === "string") return value.includes("${{")
+  if (Array.isArray(value)) return value.some((child) => expression(child))
+  return object(value) && Object.values(value).some((child) => expression(child))
+}
+
+export function inputExpression(value: Schema.Json | undefined): boolean {
+  if (typeof value === "string") return value.includes("$[[")
+  if (Array.isArray(value)) return value.some((child) => inputExpression(child))
+  return object(value) && Object.values(value).some((child) => inputExpression(child))
+}
+
+export function condition(value: Schema.Json | undefined, path: string, report: Diagnostics) {
+  if (value === undefined) return
+  if (typeof value === "string") return value
+  if (typeof value === "boolean" || typeof value === "number") return String(value)
+  report.add("unresolved", `condition_invalid:${path}`)
+}
+~~~~
+
+## AUT1-C18
+
+```json
+{"block_id":"AUT1-C18","type":"literal_source_excerpt","requests":["RE-AUT1-04"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/source/graph.ts","repository_path":"packages/core/src/actions/source/graph.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"9979794cf9f26e006fa36651ba026ecf044a65e2","source_sha256":"0219fc70d60d16887c37ac9cd9a3b9cf9aac5e586716d918d5cb2667550c8e0f","source_bytes":3845,"body_anchors":["A09"],"requested_subject":"Grafo, estados de resolução, needs, ciclo e inputs"}
+```
+
+```json
+{"first_line":1,"last_line":74,"bytes":3845,"sha256":"0219fc70d60d16887c37ac9cd9a3b9cf9aac5e586716d918d5cb2667550c8e0f"}
+```
+
+~~~~typescript
+export * as ActionsGraph from "./graph"
+
+import { Actions } from "@orchestra/schema/actions"
+import { Schema } from "effect"
+import { diagnostics, inputExpression, object, read } from "./document"
+import type { Diagnostics } from "./document"
+import { github } from "./github"
+import { gitlab } from "./gitlab"
+
+export function parse(provider: Actions.ProviderKind, source: Actions.Source): Actions.Graph {
+  const report = diagnostics()
+  source.diagnostics?.forEach((message) => report.add("partial", `source_diagnostic:${message}`))
+  if (source.includes?.length) report.add("partial", "source_includes:external source not resolved")
+  const document = read(source.text, provider, report)
+  if (!document) return { source, state: "unresolved", jobs: [], diagnostics: report.items }
+  const inputs = document.header ? inputDefinitions(document.header, report) : undefined
+  if (provider === "gitlab" && inputExpression(document.value)) report.add("partial", "inputs_unresolved:body interpolation retained without evaluation")
+  const result = provider === "github" ? github(document.value, report) : gitlab(document.value, report, document.references)
+  // Inspect only definition-level edges. Matrix cells and provider execution IDs are separate data.
+  const jobs = new Map(result.jobs.map((job) => [job.id, job]))
+  const degree = new Map(result.jobs.map((job) => [job.id, job.needs.filter((id) => jobs.has(id)).length]))
+  const outgoing = new Map<string, string[]>()
+  result.jobs.forEach((job) => job.needs.forEach((id) => {
+    if (!jobs.has(id)) return
+    const destinations = outgoing.get(id)
+    if (destinations) {
+      destinations.push(job.id)
+      return
+    }
+    outgoing.set(id, [job.id])
+  }))
+  const ready = result.jobs.filter((job) => degree.get(job.id) === 0).map((job) => job.id)
+  const processed = { count: 0 }
+  while (processed.count < ready.length) {
+    const id = ready[processed.count++]
+    if (id === undefined) break
+    outgoing.get(id)?.forEach((child) => {
+      const remaining = (degree.get(child) ?? 0) - 1
+      degree.set(child, remaining)
+      if (remaining === 0) ready.push(child)
+    })
+  }
+  if (processed.count !== result.jobs.length) {
+    report.add("unresolved", `needs_cycle:${result.jobs.filter((job) => (degree.get(job.id) ?? 0) > 0).map((job) => job.id).join(",")}`)
+  }
+  return { source, ...result, header: document.header, inputs, state: report.state(), diagnostics: report.items }
+}
+
+function inputDefinitions(header: Schema.JsonObject, report: Diagnostics): Actions.InputDefinition[] {
+  if (!object(header.spec)) return []
+  if (header.spec.include !== undefined) report.add("partial", "inputs_include_unresolved:external input definitions not fetched")
+  if (!object(header.spec.inputs)) return []
+  return Object.entries(header.spec.inputs).flatMap(([name, configuration]) => {
+    const config = configuration === null ? {} : configuration
+    if (!object(config) || !name) {
+      report.add("unresolved", `input_invalid:${name}`)
+      return []
+    }
+    if (config.rules !== undefined || inputExpression(config)) {
+      report.add("partial", `input_unresolved:${name}:conditional or interpolated input definition`)
+      return []
+    }
+    const definition = {
+      name, type: config.type === undefined ? "string" : config.type, required: !Object.hasOwn(config, "default"),
+      description: config.description, default: config.default, options: config.options,
+    }
+    if (!Schema.is(Actions.InputDefinition)(definition) || !["string", "boolean", "number", "array"].includes(definition.type)) {
+      report.add("unresolved", `input_invalid:${name}:unsupported native input shape`)
+      return []
+    }
+    if (config.regex !== undefined) report.add("partial", `input_constraints:${name}:native regex retained without evaluation`)
+    return [definition]
+  })
+}
+~~~~
+
+## AUT1-C19
+
+```json
+{"block_id":"AUT1-C19","type":"literal_source_excerpt","requests":["RE-AUT1-04"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/source/github.ts","repository_path":"packages/core/src/actions/source/github.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"48042830d79b37d23fa901759eeeaa2f56fd8253","source_sha256":"18b5e3799d02c347f7c80b58264e4e8bc6c5d8c07f7d1559a65186a9313c6bca","source_bytes":3773,"body_anchors":["A09"],"requested_subject":"Jobs/needing/cycle input, matrix/reusable/condition"}
+```
+
+```json
+{"first_line":1,"last_line":62,"bytes":3773,"sha256":"18b5e3799d02c347f7c80b58264e4e8bc6c5d8c07f7d1559a65186a9313c6bca"}
+```
+
+~~~~typescript
+import { Actions } from "@orchestra/schema/actions"
+import { Schema } from "effect"
+import { condition, expression, object, strings } from "./document"
+import type { Diagnostics } from "./document"
+
+export function github(document: Schema.JsonObject, report: Diagnostics) {
+  if (!object(document.jobs) || Object.keys(document.jobs).length === 0) {
+    report.add("unresolved", "jobs_invalid:GitHub requires a nonempty jobs mapping")
+    return { jobs: [], triggers: document.on }
+  }
+  if (document.on === undefined) report.add("unresolved", "triggers_missing:GitHub requires on")
+  if (document.on !== undefined && typeof document.on !== "string" && !strings(document.on) && !object(document.on)) {
+    report.add("unresolved", "triggers_invalid:expected native event string, array or mapping")
+  }
+  const definitions = document.jobs
+  const jobs = Object.entries(definitions).flatMap(([id, configuration]): Actions.GraphJob[] => {
+    if (!id || !object(configuration)) {
+      report.add("unresolved", `job_invalid:jobs.${id}`)
+      return []
+    }
+    const needs = configuration.needs === undefined ? [] : typeof configuration.needs === "string"
+      ? [configuration.needs] : strings(configuration.needs) ? configuration.needs : undefined
+    if (!needs || needs.some((need) => !need)) report.add("unresolved", `needs_invalid:jobs.${id}`)
+    needs?.forEach((need) => {
+      if (!Object.hasOwn(definitions, need)) report.add("unresolved", `needs_missing:jobs.${id}->${need}`)
+    })
+    if (needs && new Set(needs).size !== needs.length) report.add("unresolved", `needs_duplicate:jobs.${id}`)
+    const strategy = object(configuration.strategy) ? configuration.strategy : undefined
+    const matrix = strategy?.matrix
+    if (matrix !== undefined && expression(matrix)) report.add("partial", `matrix_dynamic:jobs.${id}`)
+    if (matrix !== undefined && !object(matrix) && typeof matrix !== "string") report.add("unresolved", `matrix_invalid:jobs.${id}`)
+    if (typeof configuration.uses === "string") report.add("partial", `reusable_unresolved:jobs.${id}`)
+    if (configuration.uses !== undefined && typeof configuration.uses !== "string") report.add("unresolved", `reusable_invalid:jobs.${id}`)
+    if (Object.hasOwn(configuration, "<<")) report.add("partial", `yaml_merge_unsupported:jobs.${id}`)
+    const steps = configuration.steps === undefined ? [] : Array.isArray(configuration.steps)
+      ? configuration.steps.flatMap((step, index): Actions.GraphStep[] => {
+        if (!object(step)) {
+          report.add("unresolved", `step_invalid:jobs.${id}.steps.${index}`)
+          return []
+        }
+        if (step.uses !== undefined && typeof step.uses !== "string" || step.run !== undefined && typeof step.run !== "string") {
+          report.add("unresolved", `step_command_invalid:jobs.${id}.steps.${index}`)
+        }
+        return [{
+          name: typeof step.name === "string" ? step.name : typeof step.id === "string" ? step.id
+            : typeof step.uses === "string" ? step.uses : `Step ${index + 1}`,
+          uses: typeof step.uses === "string" ? step.uses : undefined,
+          run: typeof step.run === "string" ? step.run : undefined,
+          condition: condition(step.if, `jobs.${id}.steps.${index}`, report),
+        }]
+      }) : undefined
+    if (!steps) report.add("unresolved", `steps_invalid:jobs.${id}`)
+    return [{
+      id, name: typeof configuration.name === "string" ? configuration.name : id,
+      needs: needs ?? [], condition: condition(configuration.if, `jobs.${id}`, report),
+      runner: configuration["runs-on"], matrix,
+      reusable: typeof configuration.uses === "string" ? configuration.uses : undefined,
+      configuration, steps: steps ?? [],
+    }]
+  })
+  return { jobs, triggers: document.on }
+}
+~~~~
+
+## AUT1-C20
+
+```json
+{"block_id":"AUT1-C20","type":"literal_source_excerpt","requests":["RE-AUT1-04"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/source/gitlab.ts","repository_path":"packages/core/src/actions/source/gitlab.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"2c78794a932b7b1680a0571a975201c55676feef","source_sha256":"cc2827422fb5962c93b849d212d0755eb040485689cd1c43219d7e885550c79c","source_bytes":11989,"body_anchors":["A10"],"requested_subject":"Includes/references, extends, precedence/arrays, defaults, needs optional/external e partial"}
+```
+
+```json
+{"first_line":1,"last_line":240,"bytes":11989,"sha256":"cc2827422fb5962c93b849d212d0755eb040485689cd1c43219d7e885550c79c"}
+```
+
+~~~~typescript
+import { Actions } from "@orchestra/schema/actions"
+import { Schema } from "effect"
+import { inputExpression, limits, object, strings } from "./document"
+import type { Diagnostics } from "./document"
+
+const reserved = new Set([
+  "include", "stages", "default", "variables", "workflow", "spec", "image", "services", "cache",
+  "before_script", "after_script", "types",
+])
+
+export function gitlab(document: Schema.JsonObject, report: Diagnostics, references: readonly (readonly string[])[] = []) {
+  const opaque = (path: readonly string[]) => references.some((reference) => path.every((key, index) => reference[index] === key))
+  const includes = document.include
+  if (includes !== undefined) report.add("partial", "include_unresolved:external GitLab configuration not fetched")
+  const explicit = document.stages === undefined ? document.types : document.stages
+  const stages = opaque(["stages"]) || opaque(["types"]) || inputExpression(explicit) ? undefined
+    : explicit === undefined ? includes === undefined ? [".pre", "build", "test", "deploy", ".post"] : undefined
+    : strings(explicit) ? [...new Set([".pre", ...explicit, ".post"])] : undefined
+  if (explicit !== undefined && !stages) report.add(opaque(["stages"]) || opaque(["types"]) || inputExpression(explicit) ? "partial" : "unresolved", "stages_unresolved:expected literal native stage name array")
+  if (strings(explicit) && new Set(explicit).size !== explicit.length) report.add("unresolved", "stages_duplicate")
+  const definitions = new Map(Object.entries(document).filter(([key]) => !reserved.has(key)))
+  const resolved = new Map<string, Schema.JsonObject>()
+  const levels = new Map<string, number>()
+  const resolving = new Set<string>()
+  const failed = new Set<string>()
+  const parentsByID = new Map<string, string[]>()
+  function resolve(id: string, depth = 0): Schema.JsonObject | undefined {
+    if (!resolutionVisit(report)) return
+    // Depth and active ancestry affect failure. A deep/cyclic caller must not poison a later shallow caller.
+    const context = JSON.stringify([id, depth, Array.from(resolving)])
+    if (failed.has(context)) return
+    const fail = (message: string) => {
+      failed.add(context)
+      report.add("partial", message)
+    }
+    const cached = resolved.get(id)
+    if (depth + (levels.get(id) ?? 0) > 11 || resolving.has(id)) {
+      fail(`extends_unresolved:cycle or more than 11 levels at ${id}`)
+      return
+    }
+    const raw = definitions.get(id)
+    if (!object(raw)) {
+      fail(`extends_missing:${id}`)
+      return
+    }
+    if (opaque([id]) && depth > 0 || opaque([id, "extends"])) {
+      fail(`extends_unresolved:opaque native reference at ${id}`)
+      return
+    }
+    if (cached) return cached
+    if (raw.extends === undefined || raw.extends === null) {
+      resolved.set(id, raw)
+      levels.set(id, 0)
+      return raw
+    }
+    if (includes !== undefined) {
+      fail(`extends_unresolved:unfetched includes may contribute parent configuration at ${id}`)
+      return
+    }
+    const parents = parentsByID.get(id) ?? []
+    if (!parentsByID.has(id)) {
+      const candidates = typeof raw.extends === "string" ? [raw.extends] : Array.isArray(raw.extends) ? raw.extends : undefined
+      if (!candidates || !candidates.every((parent) => {
+        if (!resolutionVisit(report) || typeof parent !== "string" || !parent) return false
+        parents.push(parent)
+        return true
+      })) {
+        fail(`extends_invalid:${id}`)
+        return
+      }
+      // Validate each immutable parent list once; repeated callers must not rescan wide failed lists.
+      parentsByID.set(id, parents)
+    }
+    resolving.add(id)
+    const result: { value: Schema.JsonObject } = { value: {} }
+    const sound = parents.every((parent) => {
+      const config = resolve(parent, depth + 1)
+      if (!config) return false
+      const value = merge(result.value, config, report)
+      if (!value) return false
+      result.value = value
+      return true
+    })
+    resolving.delete(id)
+    if (!sound) {
+      failed.add(context)
+      return
+    }
+    // GitLab reverse deep merge: later parent wins; child wins; arrays/null replace, never concatenate.
+    const effective = merge(result.value, raw, report)
+    if (!effective) {
+      failed.add(context)
+      return
+    }
+    resolved.set(id, effective)
+    levels.set(id, 1 + parents.reduce((maximum, parent) => Math.max(maximum, levels.get(parent) ?? 0), 0))
+    return effective
+  }
+  const jobs = Array.from(definitions).flatMap(([id, raw]): Actions.GraphJob[] => {
+    if (id.startsWith(".")) return []
+    if (!id || !object(raw)) {
+      report.add("unresolved", `job_invalid:${id}`)
+      return []
+    }
+    const effective = resolve(id)
+    // Unfetched includes may redefine even known templates/jobs. Keep only source-local projections.
+    const config = effective ? applyDefaults(document, effective, report, opaque, id) : raw
+    if (inputExpression(id) || inputExpression(config)) report.add("partial", `inputs_unresolved:${id}:native interpolation retained`)
+    const uncertain = opaque([id, "<<"])
+    if (uncertain) report.add("partial", `merge_unresolved:opaque native reference at ${id}`)
+    const stage = uncertain || opaque([id, "stage"]) || inputExpression(config.stage) ? undefined : typeof config.stage === "string" ? config.stage
+      : config.stage === undefined && effective && includes === undefined ? "test" : undefined
+    if (config.stage !== undefined && typeof config.stage !== "string") report.add(uncertain || opaque([id, "stage"]) ? "partial" : "unresolved", `stage_invalid:${id}`)
+    if (stage && stages && !stages.includes(stage)) report.add(includes === undefined ? "unresolved" : "partial", `stage_missing:${id}->${stage}`)
+    const status = object(config.needs) && typeof config.needs.pipeline === "string" && config.needs.pipeline.length > 0 && config.needs.job === undefined
+    if (status) report.add("partial", `needs_pipeline_status:${id}`)
+    const needs = uncertain || opaque([id, "needs"]) ? undefined : config.needs === undefined || status ? [] : Array.isArray(config.needs) ? config.needs.flatMap((need): string[] => {
+      if (typeof need === "string" && need) {
+        if (inputExpression(need)) return []
+        if (!definitions.has(need) || need.startsWith(".")) report.add(includes === undefined ? "unresolved" : "partial", `needs_missing:${id}->${need}`)
+        return [need]
+      }
+      if (!object(need) || typeof need.job !== "string" || !need.job) {
+        report.add("unresolved", `needs_invalid:${id}`)
+        return []
+      }
+      if (inputExpression(need.job)) return []
+      if (need.project !== undefined || need.pipeline !== undefined) {
+        report.add("partial", `needs_external:${id}->${need.job}`)
+        return []
+      }
+      if (need.optional !== undefined && typeof need.optional !== "boolean" || need.artifacts !== undefined && typeof need.artifacts !== "boolean") {
+        report.add("unresolved", `needs_options_invalid:${id}->${need.job}`)
+      }
+      if (!definitions.has(need.job) || need.job.startsWith(".")) {
+        if (need.optional !== true) report.add(includes === undefined ? "unresolved" : "partial", `needs_missing:${id}->${need.job}`)
+        return []
+      }
+      if (need.parallel !== undefined) report.add("partial", `needs_parallel:${id}->${need.job}`)
+      return [need.job]
+    }) : inputExpression(config.needs) ? [] : undefined
+    if (!needs) report.add(uncertain || opaque([id, "needs"]) ? "partial" : "unresolved", `needs_invalid:${id}`)
+    if (needs && new Set(needs).size !== needs.length) report.add("unresolved", `needs_duplicate:jobs.${id}`)
+    if (config.trigger !== undefined) report.add("partial", `downstream_unresolved:${id}`)
+    if (config.rules !== undefined || config.only !== undefined || config.except !== undefined) report.add("partial", `selection_native:${id}`)
+    if (config.parallel !== undefined && !object(config.parallel) && typeof config.parallel !== "number") report.add("partial", `parallel_unresolved:${id}`)
+    return [{
+      id, name: id, needs: needs ?? [], stage,
+      runner: uncertain ? undefined : config.tags, matrix: !uncertain && object(config.parallel) ? config.parallel.matrix : undefined,
+      configuration: raw, steps: [],
+    }]
+  })
+  if (jobs.length === 0) report.add(includes === undefined ? "unresolved" : "partial", "jobs_missing:no local execution definitions")
+  return { jobs, stages, includes, triggers: document.workflow }
+}
+
+function merge(parent: Schema.JsonObject, child: Schema.JsonObject, report: Diagnostics): Schema.JsonObject | undefined {
+  if (report.work.merges === limits.merges) {
+    report.add("partial", `merge_limit:${limits.merges} visits`, true)
+    return
+  }
+  const entries: [string, Schema.Json][] = []
+  const sound = [...new Set([...Object.keys(parent), ...Object.keys(child)])].every((key) => {
+    if (!mergeVisit(report)) return false
+    const value = child[key]
+    const previous = parent[key]
+    const result = value === undefined ? previous : object(value) && object(previous) ? merge(previous, value, report) : value
+    if (result === undefined) return false
+    entries.push([key, result])
+    return true
+  })
+  return sound ? Object.fromEntries(entries) : undefined
+}
+
+function resolutionVisit(report: Diagnostics) {
+  if (report.work.resolutions === limits.resolutions) {
+    report.add("partial", `resolution_limit:${limits.resolutions} visits`, true)
+    return false
+  }
+  ++report.work.resolutions
+  return true
+}
+
+function mergeVisit(report: Diagnostics) {
+  if (report.work.merges === limits.merges) {
+    report.add("partial", `merge_limit:${limits.merges} visits`, true)
+    return false
+  }
+  ++report.work.merges
+  return true
+}
+
+const defaultKeys = new Set([
+  "after_script", "artifacts", "before_script", "cache", "hooks", "id_tokens", "image",
+  "interruptible", "retry", "services", "tags",
+])
+
+export function applyDefaults(document: Schema.JsonObject, config: Schema.JsonObject, report: Diagnostics, opaque = (_path: readonly string[]) => false, id?: string) {
+  if (document.default === undefined) return config
+  const inheritance = object(config.inherit) ? config.inherit.default : undefined
+  if (config.inherit !== undefined && !object(config.inherit)
+    || inheritance !== undefined && typeof inheritance !== "boolean" && !Array.isArray(inheritance)
+    || inputExpression(config.inherit) || id !== undefined && opaque([id, "inherit"])
+    || opaque(["default"]) || !object(document.default)) {
+    report.add("partial", "defaults_unresolved:expected literal defaults and inherit:default boolean or allowlist")
+    return config
+  }
+  if (inheritance === false) return config
+  const allowed = new Set<string>()
+  if (Array.isArray(inheritance) && !inheritance.every((key) => {
+    if (!mergeVisit(report)) return false
+    if (typeof key !== "string" || !defaultKeys.has(key)) return false
+    allowed.add(key)
+    return true
+  })) {
+    report.add("partial", "defaults_unresolved:unsupported or excessive inherit:default allowlist")
+    return config
+  }
+  if (document.include !== undefined) {
+    report.add("partial", "defaults_unresolved:unfetched includes may contribute job overrides")
+    return config
+  }
+  if (report.work.merges === limits.merges) {
+    report.add("partial", `merge_limit:${limits.merges} visits`, true)
+    return config
+  }
+  const entries: [string, Schema.Json][] = []
+  const sound = Object.entries(document.default).every(([key, value]) => {
+    if (!mergeVisit(report)) return false
+    if (!defaultKeys.has(key)) {
+      report.add("partial", `default_unsupported:${key}`)
+      return true
+    }
+    if (Array.isArray(inheritance) && !allowed.has(key) || Object.hasOwn(config, key)) return true
+    // Native defaults copy whole keywords; they never deep-merge into an explicit job keyword.
+    entries.push([key, value])
+    return true
+  })
+  return sound ? { ...Object.fromEntries(entries), ...config } : config
+}
+~~~~
+
+## AUT1-C21
+
+```json
+
+END_PART

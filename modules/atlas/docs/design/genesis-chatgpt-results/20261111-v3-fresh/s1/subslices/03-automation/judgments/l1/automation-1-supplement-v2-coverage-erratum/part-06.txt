@@ -1,0 +1,934 @@
+      const admitted = yield* ActionsGitLabNative.checked(binding, () => GitLabCommandShared.admit(binding, intent))
+      if (admitted.kind === "workflow.dispatch" || admitted.kind === "pipeline.trigger") return yield* launch(binding, admitted, payload)
+      if (admitted.kind === "pipeline.mergeRequest") return yield* mergeRequest(binding, admitted, payload)
+      if (admitted.kind.startsWith("run.")) return yield* run(binding, admitted, payload)
+      return yield* job(binding, admitted, payload)
+    }).pipe(Effect.mapError((error) => new ActionsError({ ...error, message: error.message, disposition: "definitely_unsent" })))
+    // One write, owned by the caller's durable execution scope. W1 captures the
+    // same credential snapshot for native actor preflight and this HTTP mutation.
+    const response = yield* input.transport.request(binding, plan.request)
+    if (!plan.statuses.includes(response.status)) return yield* GitLabCommandShared.error(binding, "outcome_unknown", "GitLab command returned an unqualified native write status", true)
+    return { acknowledgement: yield* plan.acknowledge(response) }
+  }) }
+}
+~~~~
+
+## AUT1-C42
+
+```json
+{"block_id":"AUT1-C42","type":"literal_source_excerpt","requests":["RE-AUT1-06"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/gitlab/commands/shared.ts","repository_path":"packages/core/src/actions/gitlab/commands/shared.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"b15f4a3edb40e83274490b3c789cf2581aac9a5a","source_sha256":"0af91cc662eb4578cf1f16e967743fe9d69fb356d6c58555f50826b399e23a97","source_bytes":5846,"body_anchors":["A22"],"requested_subject":"Intent estrito, target/commit/source, parser do ack pipeline"}
+```
+
+```json
+{"first_line":9,"last_line":83,"bytes":5556,"sha256":"d10d6305fb44fcb10691798af365c1fa2b84743f8eae34e197d4f3203822f779"}
+```
+
+~~~~typescript
+export const kinds = ["workflow.dispatch", "run.retry", "run.cancel", "run.delete", "run.rename", "job.retry", "job.play", "job.cancel", "job.erase", "pipeline.mergeRequest", "pipeline.trigger"]
+export const terminal = ["success", "failed", "canceled", "skipped"]
+export type Plan = { readonly request: ActionsContract.Request; readonly statuses: readonly number[];
+  readonly acknowledge: (response: ActionsContract.Response) => Effect.Effect<Actions.OperationAcknowledgement, ActionsError> }
+
+export function error(binding: Actions.Binding, kind: Actions.ErrorKind, message: string, sent = false) {
+  return new ActionsError({ kind, message, bindingID: binding.id, provider: "gitlab", disposition: sent ? "unknown" : "definitely_unsent" })
+}
+
+export function decode<S extends Schema.Decoder<unknown>>(binding: Actions.Binding, schema: S, data: unknown): S["Type"] {
+  const result = Schema.decodeUnknownOption(schema, { onExcessProperty: "error" })(data)
+  if (Option.isNone(result)) throw error(binding, "invalid_input", "GitLab command payload or intent does not match its native schema")
+  return result.value
+}
+
+export function json(binding: Actions.Binding, data: unknown) {
+  const result = Schema.decodeUnknownOption(Schema.Json)(data)
+  if (Option.isNone(result)) throw error(binding, "invalid_input", "GitLab command requires finite JSON values")
+  return result.value
+}
+
+export function admit(binding: Actions.Binding, input: Actions.OperationIntent) {
+  const intent = decode(binding, Actions.OperationIntent, input)
+  ActionsGitLabNative.projectPath(binding)
+  if (intent.binding.id !== binding.id || intent.binding.revision !== binding.revision)
+    throw error(binding, "binding_stale", "GitLab command binding and admitted revision differ")
+  if (!kinds.includes(intent.kind)) throw error(binding, "invalid_input", "GitLab command kind belongs to a different dispatcher")
+  if (intent.expected?.attempt !== undefined) throw error(binding, "capability_unavailable", "GitLab has native retry job identities, not run_attempt preconditions")
+  if (intent.expected?.resourceVersion !== undefined) throw error(binding, "capability_unavailable", "This GitLab execution command has no native resourceVersion precondition")
+  if (intent.expected?.commit !== undefined && Option.isNone(Schema.decodeUnknownOption(ActionsGitLabNative.SHA)(intent.expected.commit)))
+    throw error(binding, "invalid_input", "GitLab expected commit must be an immutable Git object ID")
+  if (intent.target.workflowID !== undefined && intent.target.workflowID !== ActionsGitLabNative.workflowID(binding))
+    throw error(binding, "invalid_input", "GitLab workflow target must identify this project's native pipeline/config slot")
+  return intent
+}
+
+export function target(binding: Actions.Binding, intent: Actions.OperationIntent, allowed: readonly string[], required: readonly string[]) {
+  if (Object.keys(intent.target).some((key) => !allowed.includes(key)) || required.some((key) => !Object.hasOwn(intent.target, key)))
+    throw error(binding, "invalid_input", "GitLab admitted target does not match this native command")
+}
+
+export function commit(binding: Actions.Binding, intent: Actions.OperationIntent, sha: string, ref: string | null) {
+  if (intent.expected?.commit !== undefined && intent.expected.commit !== sha || intent.target.ref !== undefined && intent.target.ref !== ref)
+    throw error(binding, "source_conflict", "GitLab native commit or ref changed since admission")
+}
+
+export const source = Effect.fn("ActionsGitLabCommands.sourcePrecondition")(function* (
+  binding: Actions.Binding, intent: Actions.OperationIntent, reader: ActionsContract.ReadAdapter, sha: string, path?: string,
+) {
+  const selected = intent.target.path ?? path
+  if (!selected) {
+    if (intent.expected?.sourceVersion !== undefined) return yield* error(binding, "source_unresolved", "A sourceVersion precondition requires the admitted native source path")
+    return
+  }
+  const source = yield* reader.source(binding, { path: selected, ref: sha })
+  if (source.bindingID !== binding.id || source.path !== selected || source.commit !== sha ||
+    intent.expected?.sourceVersion !== undefined && source.version !== intent.expected.sourceVersion)
+    return yield* error(binding, "source_conflict", "GitLab source identity or version changed since admission")
+  return source
+})
+
+export function native<S extends Schema.Decoder<unknown>>(binding: Actions.Binding, schema: S, data: unknown, sent = false): S["Type"] {
+  const result = Schema.decodeUnknownOption(schema)(data)
+  if (Option.isNone(result)) throw error(binding, sent ? "outcome_unknown" : "transport_failed", "GitLab returned invalid command identity metadata", sent)
+  return result.value
+}
+
+export function pipeline(binding: Actions.Binding, data: unknown, expected: { id?: string; commit?: string; ref?: string | null; sources?: readonly string[]; name?: string }) {
+  const value = native(binding, ActionsGitLabNative.Pipeline, data, true)
+  if (String(value.project_id) !== binding.projectID || expected.id !== undefined && String(value.id) !== expected.id ||
+    expected.commit !== undefined && value.sha !== expected.commit || expected.ref !== undefined && value.ref !== expected.ref ||
+    expected.sources !== undefined && !expected.sources.includes(value.source) || expected.name !== undefined && value.name !== expected.name)
+    throw error(binding, "outcome_unknown", "GitLab mutation response did not prove the exact project, pipeline, source and ref", true)
+  return { runID: String(value.id) }
+}
+~~~~
+
+## AUT1-C43
+
+```json
+{"block_id":"AUT1-C43","type":"literal_source_excerpt","requests":["RE-AUT1-06"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/gitlab/commands/runs.ts","repository_path":"packages/core/src/actions/gitlab/commands/runs.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"999c7e5cd6c6d8d33cbe63ad601923b308eff3e4","source_sha256":"0c210556925c4d2f025c6942b2512e8ab782ae748aa51b0336dde859c441ec30","source_bytes":3685,"body_anchors":["A22"],"requested_subject":"Retry/cancel/delete/rename e acknowledgment pipeline concreto"}
+```
+
+```json
+{"first_line":9,"last_line":47,"bytes":3365,"sha256":"b9e290190f255ecd73886bd678ed598e21a97101e1b0a8de51dd851dcfd5606b"}
+```
+
+~~~~typescript
+
+export function make(input: { transport: ActionsContract.Transport; reader: ActionsContract.ReadAdapter }) {
+  const native = GitLabCommandNative.make(input.transport)
+  return Effect.fn("ActionsGitLabCommands.run")(function* (binding: Actions.Binding, intent: Actions.OperationIntent, payload: ActionsContract.Json): Effect.fn.Return<GitLabCommandShared.Plan, import("../../error").ActionsError> {
+    const name = yield* ActionsGitLabNative.checked(binding, () => {
+      GitLabCommandShared.target(binding, intent, ["runID", "workflowID", "ref", "path"], ["runID"])
+      ActionsGitLabNative.nativeID(binding, intent.target.runID ?? "", "pipeline ID")
+      if (intent.kind === "run.rename") return GitLabCommandShared.decode(binding, Actions.RenameCommand.fields.input, payload).name
+      const value = intent.kind === "run.retry" ? GitLabCommandShared.decode(binding, Actions.RetryCommand.fields.input, payload)
+        : GitLabCommandShared.decode(binding, Actions.GitLabCommand.fields.input, payload)
+      if (value.provider !== "gitlab") throw GitLabCommandShared.error(binding, "invalid_input", "GitLab command provider does not match this binding")
+    })
+    const project = yield* native.project(binding)
+    const level = yield* ActionsGitLabNative.checked(binding, () => GitLabCommandNative.role(binding, project, intent.kind === "run.delete" ? 50 : 30))
+    if (intent.kind === "run.rename") {
+      const observation = yield* native.metadata(binding)
+      // https://gitlab.com/gitlab-org/gitlab/-/blob/v18.4.0-ee/lib/api/ci/pipelines.rb
+      yield* ActionsGitLabNative.checked(binding, () => ActionsGitLabNative.requireVersion(binding, observation, [16, 6], "pipeline name metadata"))
+    }
+    const run = yield* input.reader.run(binding, intent.target.runID ?? "")
+    yield* ActionsGitLabNative.checked(binding, () => {
+      if (run.id !== intent.target.runID || run.bindingID !== binding.id || run.workflowID !== ActionsGitLabNative.workflowID(binding))
+        throw GitLabCommandShared.error(binding, "binding_stale", "GitLab selected pipeline belongs to a different native target")
+      GitLabCommandShared.commit(binding, intent, run.commit, run.ref)
+      if (intent.kind === "run.cancel") GitLabCommandNative.cancellation(binding, project, level)
+    })
+    yield* GitLabCommandShared.source(binding, intent, input.reader, run.commit)
+    const path = `${ActionsGitLabNative.projectPath(binding)}/pipelines/${run.id}`
+    if (intent.kind === "run.delete") return { request: { method: "DELETE", path }, statuses: [204],
+      acknowledge: (response) => ActionsGitLabNative.checked(binding, () => {
+        if (response.data !== null) throw GitLabCommandShared.error(binding, "outcome_unknown", "GitLab deletion did not return an exact native empty acknowledgement", true)
+        return { runID: run.id }
+      }) }
+    return { request: { method: name === undefined ? "POST" : "PUT", path: `${path}/${name === undefined ? intent.kind === "run.retry" ? "retry" : "cancel" : "metadata"}`,
+      ...(name === undefined ? {} : { body: { name } }) }, statuses: intent.kind === "run.retry" ? [200, 201] : [200],
+      acknowledge: (response) => ActionsGitLabNative.checked(binding, () => GitLabCommandShared.pipeline(binding, response.data,
+        { id: run.id, commit: run.commit, sources: [run.event], ref: run.ref, name })) }
+  })
+}
+~~~~
+
+## AUT1-C44
+
+```json
+{"block_id":"AUT1-C44","type":"literal_source_excerpt","requests":["RE-AUT1-06"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/gitlab/commands/jobs.ts","repository_path":"packages/core/src/actions/gitlab/commands/jobs.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"176a10632f895603fc8cc2b7baef1327db90377e","source_sha256":"0e59d1b73ef755e2e29d0e0dcb829c127f9cc6b642773c973510afe5d3e0f310","source_bytes":11307,"body_anchors":["A22"],"requested_subject":"Ramos job/bridge, novo jobID retry e readback após escrita"}
+```
+
+```json
+{"first_line":1,"last_line":133,"bytes":11307,"sha256":"0e59d1b73ef755e2e29d0e0dcb829c127f9cc6b642773c973510afe5d3e0f310"}
+```
+
+~~~~typescript
+export * as GitLabCommandJobs from "./jobs"
+
+import { Actions } from "@orchestra/schema/actions"
+import { Effect, Schema } from "effect"
+import { ActionsContract } from "../../contract"
+import { ActionsGitLabNative } from "../native"
+import { GitLabCommandNative } from "./native"
+import { GitLabCommandShared } from "./shared"
+
+const ReturnedJob = Schema.Struct({ id: ActionsGitLabNative.ID, pipeline: Schema.optional(Schema.Struct({ id: ActionsGitLabNative.ID, project_id: ActionsGitLabNative.ID,
+  sha: Schema.optional(ActionsGitLabNative.SHA), ref: Schema.optional(Schema.NullOr(Schema.String)) })),
+  commit: Schema.optional(Schema.Struct({ id: ActionsGitLabNative.SHA })), ref: Schema.optional(Schema.NullOr(Schema.String)),
+  erased_at: Schema.optional(Schema.NullOr(Schema.String)) })
+
+export function make(input: { transport: ActionsContract.Transport; reader: ActionsContract.ReadAdapter }) {
+  const native = GitLabCommandNative.make(input.transport)
+  return Effect.fn("ActionsGitLabCommands.job")(function* (binding: Actions.Binding, intent: Actions.OperationIntent, payload: ActionsContract.Json): Effect.fn.Return<GitLabCommandShared.Plan, import("../../error").ActionsError> {
+    const variables = yield* ActionsGitLabNative.checked(binding, () => {
+      GitLabCommandShared.target(binding, intent, ["jobID", "runID", "workflowID", "ref", "path"], ["jobID", "runID"])
+      ActionsGitLabNative.nativeID(binding, intent.target.jobID ?? "", "job ID")
+      ActionsGitLabNative.nativeID(binding, intent.target.runID ?? "", "pipeline ID")
+      if (intent.kind === "job.play") return GitLabCommandShared.decode(binding, Actions.JobPlayCommand.fields.input, payload).variables
+      const value = intent.kind === "job.retry" ? GitLabCommandShared.decode(binding, Actions.JobRetryCommand.fields.input, payload)
+        : GitLabCommandShared.decode(binding, Actions.GitLabCommand.fields.input, payload)
+      if (value.provider !== "gitlab") throw GitLabCommandShared.error(binding, "invalid_input", "GitLab command provider does not match this binding")
+    })
+    const project = yield* native.project(binding)
+    const level = yield* ActionsGitLabNative.checked(binding, () => GitLabCommandNative.role(binding, project, 30))
+    const run = yield* input.reader.run(binding, intent.target.runID ?? "")
+    const path = `${ActionsGitLabNative.projectPath(binding)}/jobs/${intent.target.jobID}`
+    const selected = yield* native.get(binding, path).pipe(
+      Effect.map((response) => ({ kind: "job", data: response.data })),
+      Effect.catch((error) => error.kind === "not_found"
+        ? findBridge(binding, input.reader, run.id, intent.target.jobID ?? "").pipe(Effect.map((job) => ({ kind: "bridge", data: job }))) : Effect.fail(error)),
+    )
+    if (selected.kind === "bridge") {
+      if (intent.kind === "job.cancel" || intent.kind === "job.erase")
+        return yield* GitLabCommandShared.error(binding, "capability_unavailable", "GitLab bridge jobs have no native build cancel/erase endpoint")
+      const observation = yield* native.metadata(binding)
+      yield* ActionsGitLabNative.checked(binding, () => ActionsGitLabNative.requireVersion(binding, observation, [17, 0], "bridge job retry/play"))
+    }
+    const job = yield* ActionsGitLabNative.checked(binding, () => {
+      const detail = selected.kind === "job" ? GitLabCommandShared.native(binding, GitLabCommandNative.Job, selected.data) : undefined
+      const bridge = selected.kind === "bridge" ? GitLabCommandShared.native(binding, Actions.Job, selected.data) : undefined
+      if (detail && (String(detail.id) !== intent.target.jobID || String(detail.pipeline.id) !== intent.target.runID || String(detail.pipeline.project_id) !== binding.projectID ||
+        detail.commit.id !== run.commit || detail.pipeline.sha !== run.commit || detail.ref !== run.ref || detail.pipeline.ref !== run.ref) ||
+        bridge && (bridge.id !== intent.target.jobID || bridge.runID !== run.id || bridge.bindingID !== binding.id || bridge.kind !== "bridge") ||
+        run.id !== intent.target.runID || run.bindingID !== binding.id)
+        throw GitLabCommandShared.error(binding, "binding_stale", "GitLab job does not belong to the exact admitted project, pipeline, commit and ref")
+      GitLabCommandShared.commit(binding, intent, run.commit, run.ref)
+      const status = detail?.status ?? bridge?.status
+      if (detail?.archived === true) throw GitLabCommandShared.error(binding, "capability_unavailable", "GitLab archived job is not eligible for this command")
+      if (intent.kind === "job.play" && status !== "manual")
+        throw GitLabCommandShared.error(binding, "capability_unavailable", "GitLab manual play requires an observed manual job")
+      if (intent.kind === "job.retry" && !["success", "failed", "canceled"].includes(status ?? ""))
+        throw GitLabCommandShared.error(binding, "capability_unavailable", "GitLab job retry requires an observed finished retryable job")
+      if (intent.kind === "job.erase" && (!GitLabCommandShared.terminal.includes(status ?? "") || detail?.erased_at))
+        throw GitLabCommandShared.error(binding, "capability_unavailable", "GitLab erase requires a terminal, non-archived, unerased job")
+      if (intent.kind === "job.cancel") GitLabCommandNative.cancellation(binding, project, level)
+      return detail
+    })
+    if (intent.kind === "job.erase" && level < 40) {
+      if (!job || job.user?.username !== binding.account) return yield* GitLabCommandShared.error(binding, "permission_denied", "GitLab erase requires Maintainer access or the job's unprotected-ref creator")
+      const ref = yield* native.get(binding, `${ActionsGitLabNative.projectPath(binding)}/repository/branches/${encodeURIComponent(job.ref)}`)
+      yield* ActionsGitLabNative.checked(binding, () => {
+        const branch = GitLabCommandShared.native(binding, Schema.Struct({ ...GitLabCommandNative.Ref.fields, protected: Schema.Boolean }), ref.data)
+        if (branch.name !== job.ref || branch.protected) throw GitLabCommandShared.error(binding, "permission_denied", "GitLab developer-owned erase requires a proved unprotected native ref")
+      })
+    }
+    yield* GitLabCommandShared.source(binding, intent, input.reader, run.commit)
+    const body = yield* ActionsGitLabNative.checked(binding, () => {
+      if (variables === undefined) return
+      if (variables.some((variable) => variable.variable_type === "file"))
+        throw GitLabCommandShared.error(binding, "capability_unavailable", "GitLab job play variables do not support native file variable_type")
+      if (new Set(variables.map((variable) => variable.key)).size !== variables.length)
+        throw GitLabCommandShared.error(binding, "invalid_input", "GitLab job play variables must have distinct native keys")
+      GitLabCommandNative.variables(binding, project, level, variables.length > 0)
+      return { job_variables_attributes: variables.map((variable) => ({ key: variable.key, value: variable.value })) }
+    })
+    const verb = intent.kind.slice(4)
+    return { request: { method: "POST", path: `${path}/${verb}`, ...(body === undefined ? {} : { body }) }, statuses: [200, 201],
+      acknowledge: Effect.fn("ActionsGitLabCommands.jobAcknowledgement")(function* (response: ActionsContract.Response) {
+        const returned = yield* ActionsGitLabNative.checked(binding, () => {
+          const value = GitLabCommandShared.native(binding, ReturnedJob, response.data, true)
+          requireSource(binding, value, run)
+          if (intent.kind !== "job.retry" && String(value.id) !== intent.target.jobID)
+            throw GitLabCommandShared.error(binding, "outcome_unknown", "GitLab job mutation returned a different native job ID", true)
+          if (intent.kind === "job.retry" && String(value.id) === intent.target.jobID)
+            throw GitLabCommandShared.error(binding, "outcome_unknown", "GitLab job retry did not establish a replacement native job ID", true)
+          return value
+        })
+        // Some native response shapes omit owning pipeline metadata. Read the exact
+        // acknowledged ID once; never attribute a retry by matching names or times.
+        const verified = returned.pipeline && intent.kind !== "job.erase" ? returned
+          : selected.kind === "bridge" ? yield* findBridge(binding, input.reader, run.id, String(returned.id)).pipe(
+            Effect.map((job) => ({ id: job.id, pipeline: { id: job.runID, project_id: binding.projectID } })),
+            Effect.mapError(() => GitLabCommandShared.error(binding, "outcome_unknown", "GitLab bridge write was accepted but exact returned-ID readback failed", true)),
+          ) : yield* native.get(binding, `${ActionsGitLabNative.projectPath(binding)}/jobs/${returned.id}`).pipe(
+            Effect.flatMap((response) => ActionsGitLabNative.checked(binding, () => GitLabCommandShared.native(binding, ReturnedJob, response.data, true))),
+            Effect.mapError(() => GitLabCommandShared.error(binding, "outcome_unknown", "GitLab job write was accepted but exact readback failed", true)),
+          )
+        return yield* ActionsGitLabNative.checked(binding, () => {
+          requireSource(binding, verified, run)
+          if (String(verified.id) !== String(returned.id) || !verified.pipeline || String(verified.pipeline.id) !== run.id || String(verified.pipeline.project_id) !== binding.projectID ||
+            intent.kind === "job.erase" && (!("erased_at" in verified) || !verified.erased_at))
+            throw GitLabCommandShared.error(binding, "outcome_unknown", "GitLab mutation response/readback did not prove exact job ownership or erasure", true)
+          return { runID: run.id, jobID: String(returned.id) }
+        })
+      }) }
+  })
+}
+
+function requireSource(binding: Actions.Binding, value: typeof ReturnedJob.Type, run: Actions.Run) {
+  if (value.pipeline && (String(value.pipeline.id) !== run.id || String(value.pipeline.project_id) !== binding.projectID ||
+    value.pipeline.sha !== undefined && value.pipeline.sha !== run.commit || value.pipeline.ref !== undefined && value.pipeline.ref !== run.ref) ||
+    value.commit !== undefined && value.commit.id !== run.commit || value.ref !== undefined && value.ref !== run.ref)
+    throw GitLabCommandShared.error(binding, "outcome_unknown", "GitLab job mutation contradicted admitted native pipeline/source identity", true)
+}
+
+const findBridge = Effect.fn("ActionsGitLabCommands.exactBridge")(function* (binding: Actions.Binding, reader: ActionsContract.ReadAdapter, runID: string, id: string) {
+  const seen = new Set<string>()
+  const selection: { cursor?: string } = {}
+  while (seen.size < 2000) {
+    const page = yield* reader.jobs(binding, { runID, cursor: selection.cursor })
+    const job = page.items.find((job) => job.id === id && job.kind === "bridge" && job.bindingID === binding.id && job.runID === runID)
+    if (job) return job
+    if (page.next === undefined) return yield* GitLabCommandShared.error(binding, "not_found", "GitLab exact native bridge job was not found in the owning pipeline")
+    if (seen.has(page.next)) break
+    seen.add(page.next)
+    selection.cursor = page.next
+  }
+  return yield* GitLabCommandShared.error(binding, "metadata_truncated", "GitLab bridge ownership lookup exceeded bounded native pagination")
+})
+~~~~
+
+## AUT1-C45
+
+```json
+{"block_id":"AUT1-C45","type":"literal_source_excerpt","requests":["RE-AUT1-05","RE-AUT1-06"],"source_category":"owned_population_source","archive":"sources/packages/core/src/actions/transport/response.ts","repository_path":"packages/core/src/actions/transport/response.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"09aed710878c0e33f33b7e1a8d566074a44ad30a","source_sha256":"dbe2d9284661b36cee41b379cba34f29cd6910df7757b10b94136eb12e6d8192","source_bytes":4934,"body_anchors":["A34"],"requested_subject":"Classificador de resposta: prova positiva de rejeição, não stderr vago"}
+```
+
+```json
+{"first_line":56,"last_line":76,"bytes":1751,"sha256":"1ebfeea36895201d250369da55982b9f902e3425c7dfdd8ee7db16385ee280ca"}
+```
+
+~~~~typescript
+export function failure(provider: Actions.Provider, exitCode: number, stderr: Buffer, status?: number, headers: Record<string, string> = {}, complete = false) {
+  const code = status ?? Number(/\bHTTP[ :]+(\d{3})\b/i.exec(stderr.toString("utf8"))?.[1])
+  const retry = headers["retry-after"]
+  const seconds = retry && /^\d+$/.test(retry) ? Number(retry)
+    : retry ? Math.max(0, Math.ceil((Date.parse(retry) - Date.now()) / 1000))
+    : headers["x-ratelimit-remaining"] === "0" && /^\d+$/.test(headers["x-ratelimit-reset"] ?? "")
+      ? Math.max(0, Number(headers["x-ratelimit-reset"]) - Math.floor(Date.now() / 1000)) : undefined
+  const kind = code === 429 || (code === 403 && (retry !== undefined || headers["x-ratelimit-remaining"] === "0"))
+    ? "rate_limited" : code === 401 ? "not_authenticated" : code === 403 ? "permission_denied" : code === 404 ? "not_found"
+      : (provider.kind === "github" && exitCode === 4) || /auth login|not logged in|not authenticated|login first|invalid token/i.test(stderr.toString("utf8"))
+        ? "not_authenticated" : "transport_failed"
+  // Provider diagnostics can echo submitted secrets. Only classifications leave this boundary.
+  return new ActionsError({
+    kind, provider: provider.kind, message: `Provider request failed${code ? ` (HTTP ${code})` : ""}`,
+    retryAfter: seconds !== undefined && Number.isFinite(seconds) ? seconds : undefined,
+    // Require complete bounded JSON and a normal CLI HTTP-error exit. Partial
+    // output, stderr HTTP hints and exit codes alone cannot prove rejection.
+    disposition: complete && (exitCode === 0 || exitCode === 1) && status !== undefined && [400, 401, 403, 404, 409, 422, 429].includes(status)
+      ? "definitely_rejected" : "unknown",
+  })
+}
+~~~~
+
+## AUT1-X01
+
+```json
+{"block_id":"AUT1-X01","type":"literal_source_excerpt","requests":["RE-AUT1-02","RE-AUT1-05","RE-AUT1-06"],"source_category":"external_S1_04_raw_source","archive":"external-sources/packages/schema/src/actions.ts","repository_path":"packages/schema/src/actions.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"3b9c5cc47c6e043e9e5d6f013a8201c4258abe0b","source_sha256":"ff0507ebbb63a8a1ab74bc11187cb70bd19d51ed2ec8cb741eaf0155d03f6b07","source_bytes":1071,"body_anchors":[],"requested_subject":"Barrel canônico consumido por Core"}
+```
+
+```json
+{"first_line":1,"last_line":18,"bytes":1071,"sha256":"ff0507ebbb63a8a1ab74bc11187cb70bd19d51ed2ec8cb741eaf0155d03f6b07"}
+```
+
+~~~~typescript
+export * as Actions from "./actions"
+
+export {
+  Binding, BindingID, BindingInput, BindingRef, Capability, ErrorData, ErrorKind,
+  OperationID, Policy, PolicyState, Provider, ProviderKind, SendDisposition,
+} from "./actions/identity"
+export { Graph, GraphJob, GraphStep, InputDefinition, ListInput, Source, SourceBase, Workflow, WorkflowPage } from "./actions/workflow"
+export { Job, JobPage, Run, RunListInput, RunPage, Step } from "./actions/run"
+export { Resource, ResourceKind, ResourceListInput, ResourcePage, TransferInfo, TransferInput } from "./actions/resource"
+export {
+  ExecuteInput, Operation, OperationAcknowledgement, OperationExpected, OperationIntent,
+  OperationKind, OperationObservation, OperationTarget,
+} from "./actions/operation"
+export {
+  CommandExecution, CommandOutput, DispatchCommand, GitHubCommand, GitHubDispatch, GitLabCommand,
+  GitLabDispatch, JobPlayCommand, JobRetryCommand, MergeRequestCommand, ProviderCommand, RenameCommand,
+  ResourceCommand, RetryCommand, TriggerPipelineCommand, WorkflowStateCommand,
+} from "./actions/command"
+~~~~
+
+## AUT1-X02
+
+```json
+{"block_id":"AUT1-X02","type":"literal_source_excerpt","requests":["RE-AUT1-02","RE-AUT1-06"],"source_category":"external_S1_04_raw_source","archive":"external-sources/packages/schema/src/actions/identity.ts","repository_path":"packages/schema/src/actions/identity.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"273b77520f81c755f62979b9609f45917e72e062","source_sha256":"1d3361dd26b49e366b7c59d14a589f6684a16b36bfec0b761e62481fc15f6f14","source_bytes":4175,"body_anchors":[],"requested_subject":"Binding/provider/ref/policy/error e IDs públicos"}
+```
+
+```json
+{"first_line":1,"last_line":93,"bytes":4175,"sha256":"1d3361dd26b49e366b7c59d14a589f6684a16b36bfec0b761e62481fc15f6f14"}
+```
+
+~~~~typescript
+import { Schema } from "effect"
+import { descending } from "../identifier"
+import { optional, PositiveInt, statics } from "../schema"
+
+export const ProviderKind = Schema.Literals(["github", "gitlab"]).annotate({ identifier: "Actions.ProviderKind" })
+export type ProviderKind = typeof ProviderKind.Type
+
+export const BindingID = Schema.String.check(Schema.isStartsWith("ab_")).annotate({ identifier: "Actions.BindingID" }).pipe(
+  Schema.brand("Actions.BindingID"),
+  statics((schema) => ({ create: () => schema.make(`ab_${descending()}`) })),
+)
+export type BindingID = typeof BindingID.Type
+
+export const OperationID = Schema.String.check(Schema.isStartsWith("aop_")).annotate({ identifier: "Actions.OperationID" }).pipe(
+  Schema.brand("Actions.OperationID"),
+  statics((schema) => ({ create: () => schema.make(`aop_${descending()}`) })),
+)
+export type OperationID = typeof OperationID.Type
+
+export const Provider = Schema.Struct({
+  kind: ProviderKind,
+  hostname: Schema.NonEmptyString,
+  apiOrigin: Schema.NonEmptyString,
+  version: optional(Schema.String),
+}).annotate({ identifier: "Actions.Provider" })
+export interface Provider extends Schema.Schema.Type<typeof Provider> {}
+
+export const BindingInput = Schema.Struct({
+  remote: Schema.NonEmptyString,
+  provider: Provider,
+  projectPath: Schema.NonEmptyString,
+  expectedRevision: optional(PositiveInt),
+}).annotate({ identifier: "Actions.BindingInput" })
+export interface BindingInput extends Schema.Schema.Type<typeof BindingInput> {}
+
+export const Binding = Schema.Struct({
+  id: BindingID,
+  revision: PositiveInt,
+  remote: Schema.NonEmptyString,
+  provider: Provider,
+  projectID: Schema.NonEmptyString,
+  projectPath: Schema.NonEmptyString,
+  account: optional(Schema.String),
+  directory: Schema.NonEmptyString,
+  workspaceID: optional(Schema.String),
+}).annotate({ identifier: "Actions.Binding" })
+export interface Binding extends Schema.Schema.Type<typeof Binding> {}
+
+export const BindingRef = Schema.Struct({ id: BindingID, revision: PositiveInt })
+  .annotate({ identifier: "Actions.BindingRef" })
+export interface BindingRef extends Schema.Schema.Type<typeof BindingRef> {}
+
+export const Capability = Schema.Struct({
+  operation: Schema.NonEmptyString,
+  state: Schema.Literals(["available", "unavailable", "unknown"]),
+  reason: optional(Schema.String),
+  scope: optional(Schema.String),
+  observedAt: Schema.Number,
+}).annotate({ identifier: "Actions.Capability" })
+export interface Capability extends Schema.Schema.Type<typeof Capability> {}
+
+export const ErrorKind = Schema.Literals([
+  "binding_missing", "binding_stale", "host_mismatch", "cli_missing", "not_authenticated",
+  "permission_denied", "capability_unavailable", "not_found", "invalid_input", "source_conflict",
+  "source_unresolved", "rate_limited", "metadata_truncated", "transport_failed", "transfer_failed",
+  "outcome_unknown", "operation_missing", "operation_expired", "operation_reused", "intent_conflict",
+  "maintenance_required",
+]).annotate({ identifier: "Actions.ErrorKind" })
+export type ErrorKind = typeof ErrorKind.Type
+
+export const SendDisposition = Schema.Literals(["definitely_unsent", "definitely_rejected", "unknown"])
+  .annotate({ identifier: "Actions.SendDisposition" })
+export type SendDisposition = typeof SendDisposition.Type
+
+export const ErrorData = Schema.Struct({
+  kind: ErrorKind,
+  message: Schema.String,
+  bindingID: optional(BindingID),
+  provider: optional(ProviderKind),
+  resourceID: optional(Schema.String),
+  retryAfter: optional(Schema.Number),
+  operationID: optional(OperationID),
+  disposition: optional(SendDisposition),
+}).annotate({ identifier: "Actions.ErrorData" })
+export interface ErrorData extends Schema.Schema.Type<typeof ErrorData> {}
+
+export const Policy = Schema.Struct({ retentionDays: optional(PositiveInt), execution: optional(Schema.String) })
+  .annotate({ identifier: "Actions.Policy" })
+export interface Policy extends Schema.Schema.Type<typeof Policy> {}
+
+export const PolicyState = Schema.Struct({ binding: BindingRef, policy: Policy })
+  .annotate({ identifier: "Actions.PolicyState" })
+export interface PolicyState extends Schema.Schema.Type<typeof PolicyState> {}
+~~~~
+
+## AUT1-X03
+
+```json
+{"block_id":"AUT1-X03","type":"literal_source_excerpt","requests":["RE-AUT1-05","RE-AUT1-06"],"source_category":"external_S1_04_raw_source","archive":"external-sources/packages/schema/src/actions/operation.ts","repository_path":"packages/schema/src/actions/operation.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"da7b1bdfb6bd5f7dd8fd368adb5eb5402c37c6fe","source_sha256":"6ad34b7a3cbc4eb4c1ce500f6f665894c0a7792d4d12177cdd1e055592812f0f","source_bytes":3857,"body_anchors":[],"requested_subject":"Kind/target/expected/intent/ack/observation/operation versus execute payload"}
+```
+
+```json
+{"first_line":1,"last_line":79,"bytes":3857,"sha256":"6ad34b7a3cbc4eb4c1ce500f6f665894c0a7792d4d12177cdd1e055592812f0f"}
+```
+
+~~~~typescript
+import { Schema } from "effect"
+import { BindingID, BindingRef, OperationID } from "./identity"
+import { ResourceKind } from "./resource"
+import { optional, PositiveInt } from "../schema"
+
+export const OperationKind = Schema.Literals([
+  "workflow.dispatch", "workflow.enable", "workflow.disable", "run.retry", "run.retryFailed",
+  "run.cancel", "run.forceCancel", "run.delete", "run.approveFork", "run.rename", "job.retry",
+  "job.play", "job.cancel", "job.erase", "logs.delete", "source.branch", "source.write", "source.delete", "source.review",
+  "resource.create", "resource.update", "resource.delete", "artifact.keep", "deployment.review",
+  "environment.stop", "runner.register", "runner.assign", "runner.remove", "cache.clear",
+  "schedule.play", "schedule.takeOwnership", "pipeline.mergeRequest", "pipeline.trigger",
+  "secureFile.upload", "resourceGroup.processMode",
+]).annotate({ identifier: "Actions.OperationKind" })
+export type OperationKind = typeof OperationKind.Type
+
+// Admission stores identity and optimistic preconditions, never a mutation's values.
+export const OperationTarget = Schema.Struct({
+  workflowID: optional(Schema.NonEmptyString),
+  runID: optional(Schema.NonEmptyString),
+  jobID: optional(Schema.NonEmptyString),
+  resourceID: optional(Schema.NonEmptyString),
+  resourceKind: optional(ResourceKind),
+  scope: optional(Schema.String),
+  path: optional(Schema.NonEmptyString),
+  ref: optional(Schema.NonEmptyString),
+}).annotate({ identifier: "Actions.OperationTarget" })
+export interface OperationTarget extends Schema.Schema.Type<typeof OperationTarget> {}
+
+export const OperationExpected = Schema.Struct({
+  sourceVersion: optional(Schema.NonEmptyString),
+  commit: optional(Schema.NonEmptyString),
+  attempt: optional(PositiveInt),
+  resourceVersion: optional(Schema.NonEmptyString),
+}).annotate({ identifier: "Actions.OperationExpected" })
+export interface OperationExpected extends Schema.Schema.Type<typeof OperationExpected> {}
+
+export const OperationIntent = Schema.Struct({
+  clientID: Schema.NonEmptyString,
+  binding: BindingRef,
+  kind: OperationKind,
+  target: OperationTarget,
+  expected: optional(OperationExpected),
+}).annotate({ identifier: "Actions.OperationIntent" })
+export interface OperationIntent extends Schema.Schema.Type<typeof OperationIntent> {}
+
+export const OperationAcknowledgement = Schema.Struct({
+  runID: optional(Schema.NonEmptyString),
+  jobID: optional(Schema.NonEmptyString),
+  resourceID: optional(Schema.NonEmptyString),
+  attempt: optional(PositiveInt),
+  unattributed: optional(Schema.Boolean),
+}).annotate({ identifier: "Actions.OperationAcknowledgement" })
+export interface OperationAcknowledgement extends Schema.Schema.Type<typeof OperationAcknowledgement> {}
+
+export const OperationObservation = Schema.Struct({
+  state: Schema.Literals(["pending", "confirmed", "rejected"]),
+  acknowledgement: optional(OperationAcknowledgement),
+}).annotate({ identifier: "Actions.OperationObservation" })
+export interface OperationObservation extends Schema.Schema.Type<typeof OperationObservation> {}
+
+export const Operation = Schema.Struct({
+  id: OperationID,
+  bindingID: BindingID,
+  clientID: Schema.String,
+  kind: OperationKind,
+  state: Schema.Literals(["prepared", "sending", "accepted", "confirmed", "rejected", "outcome_unknown", "expired"]),
+  target: OperationTarget,
+  createdAt: Schema.Number,
+  expiresAt: Schema.Number,
+  updatedAt: Schema.Number,
+  result: optional(OperationAcknowledgement),
+  reason: optional(Schema.String),
+}).annotate({ identifier: "Actions.Operation" })
+export interface Operation extends Schema.Schema.Type<typeof Operation> {}
+
+export const ExecuteInput = Schema.Struct({ id: OperationID, input: Schema.Json })
+  .annotate({ identifier: "Actions.ExecuteInput" })
+export interface ExecuteInput extends Schema.Schema.Type<typeof ExecuteInput> {}
+~~~~
+
+## AUT1-X04
+
+```json
+{"block_id":"AUT1-X04","type":"literal_source_excerpt","requests":["RE-AUT1-05","RE-AUT1-06"],"source_category":"external_S1_04_raw_source","archive":"external-sources/packages/schema/src/actions/command.ts","repository_path":"packages/schema/src/actions/command.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"763fc67220a5a5962794593062f4705840e7598b","source_sha256":"46722d7902f6005986f3e2c372675e3f9e047e2dbe639e404146f151e1de3d85","source_bytes":5060,"body_anchors":[],"requested_subject":"Payloads tipados e CommandOutput separado do recibo"}
+```
+
+```json
+{"first_line":1,"last_line":68,"bytes":5060,"sha256":"46722d7902f6005986f3e2c372675e3f9e047e2dbe639e404146f151e1de3d85"}
+```
+
+~~~~typescript
+import { Schema } from "effect"
+import { Operation } from "./operation"
+import { OperationID } from "./identity"
+import { optional } from "../schema"
+
+const Value = Schema.Union([Schema.String, Schema.Number, Schema.Boolean])
+const strict = { onExcessProperty: "error" } as const
+const Variables = Schema.Array(Schema.Struct({
+  key: Schema.NonEmptyString, value: Schema.String,
+  variable_type: optional(Schema.Literals(["env_var", "file"])),
+}).annotate({ parseOptions: strict }))
+
+export const GitHubDispatch = Schema.Struct({
+  provider: Schema.Literal("github"), ref: Schema.NonEmptyString,
+  inputs: optional(Schema.Record(Schema.String, Value)),
+}).annotate({ identifier: "Actions.GitHubDispatch", parseOptions: strict })
+export const GitLabDispatch = Schema.Struct({
+  provider: Schema.Literal("gitlab"), ref: Schema.NonEmptyString,
+  variables: optional(Variables), inputs: optional(Schema.Record(Schema.String, Schema.Json)),
+}).annotate({ identifier: "Actions.GitLabDispatch", parseOptions: strict })
+export const DispatchCommand = Schema.Struct({ id: OperationID, input: Schema.Union([GitHubDispatch, GitLabDispatch]) })
+  .annotate({ identifier: "Actions.DispatchCommand", parseOptions: strict })
+
+export const WorkflowStateCommand = Schema.Struct({
+  id: OperationID, input: Schema.Struct({ provider: Schema.Literal("github"), enabled: Schema.Boolean }),
+}).annotate({ identifier: "Actions.WorkflowStateCommand", parseOptions: strict })
+export const RetryCommand = Schema.Struct({ id: OperationID, input: Schema.Union([
+  Schema.Struct({ provider: Schema.Literal("github"), mode: Schema.Literals(["all", "failed"]), enableDebugLogging: optional(Schema.Boolean) }),
+  Schema.Struct({ provider: Schema.Literal("gitlab"), mode: Schema.Literal("failed") }),
+]) }).annotate({ identifier: "Actions.RetryCommand", parseOptions: strict })
+export const ProviderCommand = Schema.Struct({ id: OperationID, input: Schema.Struct({ provider: Schema.Literals(["github", "gitlab"]) }) })
+  .annotate({ identifier: "Actions.ProviderCommand", parseOptions: strict })
+export const GitHubCommand = Schema.Struct({ id: OperationID, input: Schema.Struct({ provider: Schema.Literal("github") }) })
+  .annotate({ identifier: "Actions.GitHubCommand", parseOptions: strict })
+export const GitLabCommand = Schema.Struct({ id: OperationID, input: Schema.Struct({ provider: Schema.Literal("gitlab") }) })
+  .annotate({ identifier: "Actions.GitLabCommand", parseOptions: strict })
+export const RenameCommand = Schema.Struct({ id: OperationID, input: Schema.Struct({
+  provider: Schema.Literal("gitlab"), name: Schema.NonEmptyString,
+}) }).annotate({ identifier: "Actions.RenameCommand", parseOptions: strict })
+export const JobRetryCommand = Schema.Struct({ id: OperationID, input: Schema.Union([
+  Schema.Struct({ provider: Schema.Literal("github"), enableDebugLogging: optional(Schema.Boolean) }),
+  Schema.Struct({ provider: Schema.Literal("gitlab") }),
+]) }).annotate({ identifier: "Actions.JobRetryCommand", parseOptions: strict })
+export const JobPlayCommand = Schema.Struct({ id: OperationID, input: Schema.Struct({
+  provider: Schema.Literal("gitlab"), variables: optional(Variables),
+}) }).annotate({ identifier: "Actions.JobPlayCommand", parseOptions: strict })
+
+export const MergeRequestCommand = Schema.Struct({ id: OperationID, input: Schema.Struct({ provider: Schema.Literal("gitlab") }) })
+  .annotate({ identifier: "Actions.MergeRequestCommand", parseOptions: strict })
+export const TriggerPipelineCommand = Schema.Struct({ id: OperationID, input: Schema.Struct({
+  provider: Schema.Literal("gitlab"), ref: Schema.NonEmptyString, token: Schema.NonEmptyString,
+  variables: optional(Schema.Record(Schema.String, Schema.String)), inputs: optional(Schema.Record(Schema.String, Schema.Json)),
+}) }).annotate({ identifier: "Actions.TriggerPipelineCommand", parseOptions: strict })
+
+// These values are returned only to the owning request, never put in an operation row.
+export const CommandOutput = Schema.Union([
+  Schema.Struct({ kind: Schema.Literal("runnerToken"), token: Schema.NonEmptyString, expiresAt: optional(Schema.String), runnerID: optional(Schema.String) }),
+  Schema.Struct({ kind: Schema.Literal("runnerJit"), encodedConfiguration: Schema.NonEmptyString, runnerID: Schema.NonEmptyString }),
+  Schema.Struct({ kind: Schema.Literal("triggerToken"), token: Schema.NonEmptyString, triggerID: Schema.NonEmptyString }),
+  Schema.Struct({ kind: Schema.Literal("sourceReview"), id: Schema.NonEmptyString, url: Schema.NonEmptyString }),
+]).annotate({ identifier: "Actions.CommandOutput" })
+export type CommandOutput = typeof CommandOutput.Type
+export const CommandExecution = Schema.Struct({ operation: Operation, output: optional(CommandOutput) })
+  .annotate({ identifier: "Actions.CommandExecution" })
+export interface CommandExecution extends Schema.Schema.Type<typeof CommandExecution> {}
+
+export const ResourceCommand = Schema.Struct({ id: OperationID, input: Schema.Json })
+  .annotate({ identifier: "Actions.ResourceCommand", parseOptions: strict })
+~~~~
+
+## AUT1-X05
+
+```json
+{"block_id":"AUT1-X05","type":"literal_source_excerpt","requests":["RE-AUT1-02","RE-AUT1-05","RE-AUT1-06"],"source_category":"external_S1_04_raw_source","archive":"external-sources/packages/schema/src/schema.ts","repository_path":"packages/schema/src/schema.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"d19a39b9708cfcaeedc1d7c62503afbadfee5dd7","source_sha256":"a7cdac1ae9d21d9d71a3783a730ca29bc8fbe769d01479a19101a81eec2bb447","source_bytes":1234,"body_anchors":[],"requested_subject":"PositiveInt/optional/statics usados pelos schemas"}
+```
+
+```json
+{"first_line":1,"last_line":23,"bytes":975,"sha256":"b7a5dba011c29cff7ff8005220b95e21f6cdaf9c31a44139e3e69ecaee85f868"}
+```
+
+~~~~typescript
+import { DateTime, Option, Schema, SchemaGetter } from "effect"
+
+export const PositiveInt = Schema.Int.check(Schema.isGreaterThan(0))
+export const NonNegativeInt = Schema.Int.check(Schema.isGreaterThanOrEqualTo(0))
+
+export const RelativePath = Schema.String.pipe(Schema.brand("RelativePath"))
+export type RelativePath = typeof RelativePath.Type
+
+export const AbsolutePath = Schema.String.pipe(Schema.brand("AbsolutePath"))
+export type AbsolutePath = typeof AbsolutePath.Type
+
+export const optional = <S extends Schema.Top>(schema: S) =>
+  Schema.optionalKey(schema).pipe(
+    Schema.decodeTo(Schema.optional(Schema.toType(schema)), {
+      decode: SchemaGetter.passthrough({ strict: false }),
+      encode: SchemaGetter.transformOptional(Option.filter((value) => value !== undefined)),
+    }),
+  )
+
+export const statics =
+  <S extends object, M extends Record<string, unknown>>(methods: (schema: S) => M) =>
+  (schema: S): S & M =>
+    Object.assign(schema, methods(schema))
+~~~~
+
+## AUT1-X06
+
+```json
+{"block_id":"AUT1-X06","type":"literal_source_excerpt","requests":["RE-AUT1-03","RE-AUT1-04","RE-AUT1-05"],"source_category":"external_S1_04_raw_source","archive":"external-sources/packages/schema/src/actions/workflow.ts","repository_path":"packages/schema/src/actions/workflow.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"a061e32b53f984a7e103e836fdfac97e5f6e98ce","source_sha256":"435abb6cb694c30d00c01bb0c00c8dd9cd821df163fe8c73cb30a4f09ad18321","source_bytes":3925,"body_anchors":[],"requested_subject":"Schemas SourceBase/Source/Graph/ListInput efetivamente usados na validação do Core"}
+```
+
+```json
+{"first_line":1,"last_line":96,"bytes":3925,"sha256":"435abb6cb694c30d00c01bb0c00c8dd9cd821df163fe8c73cb30a4f09ad18321"}
+```
+
+~~~~typescript
+import { Schema } from "effect"
+import { BindingID } from "./identity"
+import { optional, PositiveInt } from "../schema"
+
+export const InputDefinition = Schema.Struct({
+  name: Schema.NonEmptyString,
+  description: optional(Schema.String),
+  type: Schema.Literals(["string", "boolean", "number", "choice", "environment", "file", "array"]),
+  required: Schema.Boolean,
+  default: optional(Schema.Json),
+  options: optional(Schema.Array(Schema.Union([Schema.String, Schema.Boolean, Schema.Number]))),
+}).annotate({ identifier: "Actions.InputDefinition" })
+export interface InputDefinition extends Schema.Schema.Type<typeof InputDefinition> {}
+
+export const Workflow = Schema.Struct({
+  id: Schema.NonEmptyString,
+  bindingID: BindingID,
+  name: Schema.NullOr(Schema.String),
+  path: Schema.String,
+  defaultRef: optional(Schema.NonEmptyString),
+  state: Schema.String,
+  dispatchable: Schema.Boolean,
+  dispatchState: optional(Schema.Literals(["available", "unavailable", "unknown"])),
+  inputs: optional(Schema.Array(InputDefinition)),
+  triggers: optional(Schema.Array(Schema.String)),
+  updatedAt: optional(Schema.String),
+}).annotate({ identifier: "Actions.Workflow" })
+export interface Workflow extends Schema.Schema.Type<typeof Workflow> {}
+
+export const SourceBase = Schema.Struct({
+  bindingID: BindingID,
+  ref: Schema.NonEmptyString,
+  commit: Schema.String.check(Schema.isPattern(/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/i)),
+}).annotate({ identifier: "Actions.SourceBase" })
+export interface SourceBase extends Schema.Schema.Type<typeof SourceBase> {}
+
+export const Source = Schema.Struct({
+  bindingID: BindingID,
+  path: Schema.NonEmptyString,
+  ref: Schema.NonEmptyString,
+  commit: optional(Schema.String),
+  version: Schema.NonEmptyString,
+  text: Schema.String,
+  editable: Schema.Boolean,
+  includes: optional(Schema.Array(Schema.String)),
+  diagnostics: optional(Schema.Array(Schema.String)),
+}).annotate({ identifier: "Actions.Source" })
+export interface Source extends Schema.Schema.Type<typeof Source> {}
+
+export const GraphStep = Schema.Struct({
+  name: Schema.String,
+  uses: optional(Schema.String),
+  run: optional(Schema.String),
+  condition: optional(Schema.String),
+}).annotate({ identifier: "Actions.GraphStep" })
+export interface GraphStep extends Schema.Schema.Type<typeof GraphStep> {}
+
+export const GraphJob = Schema.Struct({
+  id: Schema.NonEmptyString,
+  name: Schema.String,
+  needs: Schema.Array(Schema.String),
+  stage: optional(Schema.String),
+  condition: optional(Schema.String),
+  runner: optional(Schema.Json),
+  matrix: optional(Schema.Json),
+  reusable: optional(Schema.String),
+  configuration: optional(Schema.Json),
+  steps: Schema.Array(GraphStep),
+}).annotate({ identifier: "Actions.GraphJob" })
+export interface GraphJob extends Schema.Schema.Type<typeof GraphJob> {}
+
+export const Graph = Schema.Struct({
+  source: Source,
+  state: Schema.Literals(["complete", "partial", "unresolved"]),
+  jobs: Schema.Array(GraphJob),
+  diagnostics: Schema.Array(Schema.String),
+  triggers: optional(Schema.Json),
+  stages: optional(Schema.Array(Schema.String)),
+  includes: optional(Schema.Json),
+  inputs: optional(Schema.Array(InputDefinition)),
+  header: optional(Schema.Json),
+}).annotate({ identifier: "Actions.Graph" })
+export interface Graph extends Schema.Schema.Type<typeof Graph> {}
+
+export const ListInput = Schema.Struct({
+  cursor: optional(Schema.String),
+  limit: optional(PositiveInt),
+  query: optional(Schema.String),
+  state: optional(Schema.String),
+}).annotate({ identifier: "Actions.ListInput" })
+export interface ListInput extends Schema.Schema.Type<typeof ListInput> {}
+
+export const WorkflowPage = Schema.Struct({
+  items: Schema.Array(Workflow), next: optional(Schema.String), total: optional(Schema.Number), capturedAt: Schema.Number,
+}).annotate({ identifier: "Actions.WorkflowPage" })
+export interface WorkflowPage extends Schema.Schema.Type<typeof WorkflowPage> {}
+~~~~
+
+## AUT1-X07
+
+```json
+{"block_id":"AUT1-X07","type":"literal_source_excerpt","requests":["RE-AUT1-03"],"source_category":"external_S1_04_raw_source","archive":"external-sources/packages/schema/src/actions/run.ts","repository_path":"packages/schema/src/actions/run.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","source_git_blob_sha":"830d6f13f362e0616160da6219f3eba8a9ab83df","source_sha256":"c91ac0507e4f4f304cea12b4681aea4f658aec6aa7fca9af478e0f38613267f8","source_bytes":3593,"body_anchors":[],"requested_subject":"Schemas Run/Job/RunListInput e paginação efetivamente usados pelos adapters"}
+```
+
+```json
+{"first_line":1,"last_line":84,"bytes":3593,"sha256":"c91ac0507e4f4f304cea12b4681aea4f658aec6aa7fca9af478e0f38613267f8"}
+```
+
+~~~~typescript
+import { Schema } from "effect"
+import { BindingID } from "./identity"
+import { optional, PositiveInt } from "../schema"
+
+export const Run = Schema.Struct({
+  id: Schema.NonEmptyString,
+  bindingID: BindingID,
+  workflowID: Schema.NonEmptyString,
+  name: Schema.NullOr(Schema.String),
+  title: optional(Schema.String),
+  number: optional(PositiveInt),
+  ref: Schema.NullOr(Schema.String),
+  commit: Schema.String,
+  event: Schema.String,
+  actor: optional(Schema.String),
+  status: Schema.NullOr(Schema.String),
+  conclusion: optional(Schema.NullOr(Schema.String)),
+  attempt: optional(PositiveInt),
+  createdAt: optional(Schema.String),
+  startedAt: optional(Schema.String),
+  finishedAt: optional(Schema.String),
+  updatedAt: optional(Schema.String),
+  triggeringActor: optional(Schema.String),
+  repositoryID: optional(Schema.String),
+  duration: optional(Schema.Number),
+  parentID: optional(Schema.String),
+  url: optional(Schema.String),
+}).annotate({ identifier: "Actions.Run" })
+export interface Run extends Schema.Schema.Type<typeof Run> {}
+
+export const Step = Schema.Struct({
+  number: Schema.Number,
+  name: Schema.String,
+  status: Schema.NullOr(Schema.String),
+  conclusion: optional(Schema.NullOr(Schema.String)),
+  startedAt: optional(Schema.String),
+  finishedAt: optional(Schema.String),
+}).annotate({ identifier: "Actions.Step" })
+export interface Step extends Schema.Schema.Type<typeof Step> {}
+
+export const Job = Schema.Struct({
+  id: Schema.NonEmptyString,
+  bindingID: BindingID,
+  runID: Schema.NonEmptyString,
+  name: Schema.String,
+  status: Schema.NullOr(Schema.String),
+  conclusion: optional(Schema.NullOr(Schema.String)),
+  definitionID: optional(Schema.String),
+  runner: optional(Schema.String),
+  runnerID: optional(Schema.String),
+  runnerLabels: optional(Schema.Array(Schema.String)),
+  runnerGroupID: optional(Schema.String),
+  attempt: optional(PositiveInt),
+  startedAt: optional(Schema.String),
+  finishedAt: optional(Schema.String),
+  downstreamID: optional(Schema.String),
+  downstreamProjectID: optional(Schema.String),
+  kind: optional(Schema.Literals(["job", "bridge"])),
+  stage: optional(Schema.String),
+  retried: optional(Schema.Boolean),
+  retryOf: optional(Schema.String),
+  allowFailure: optional(Schema.Boolean),
+  steps: Schema.Array(Step),
+}).annotate({ identifier: "Actions.Job" })
+export interface Job extends Schema.Schema.Type<typeof Job> {}
+
+export const RunListInput = Schema.Struct({
+  workflowID: optional(Schema.String), cursor: optional(Schema.String), limit: optional(PositiveInt),
+  ref: optional(Schema.String), event: optional(Schema.String), status: optional(Schema.String),
+  commit: optional(Schema.String), actor: optional(Schema.String), created: optional(Schema.String),
+  createdAfter: optional(Schema.String), createdBefore: optional(Schema.String),
+  updatedAfter: optional(Schema.String), updatedBefore: optional(Schema.String),
+}).annotate({ identifier: "Actions.RunListInput" })
+export interface RunListInput extends Schema.Schema.Type<typeof RunListInput> {}
+
+export const RunPage = Schema.Struct({
+  items: Schema.Array(Run), next: optional(Schema.String), total: optional(Schema.Number), capturedAt: Schema.Number,
+}).annotate({ identifier: "Actions.RunPage" })
+export interface RunPage extends Schema.Schema.Type<typeof RunPage> {}
+
+export const JobPage = Schema.Struct({
+  items: Schema.Array(Job), next: optional(Schema.String), total: optional(Schema.Number), capturedAt: Schema.Number,
+}).annotate({ identifier: "Actions.JobPage" })
+export interface JobPage extends Schema.Schema.Type<typeof JobPage> {}
+~~~~
+
+## FIM_DO_SUPLEMENTO_LITERAL
+
+
+## Erratum mecânico do censo — mesmo delta autoral v2
+
+A frase ampla “construção lazy” permaneceu no role/reason da fachada em coverage e em seus metadados derivados. A principal copiou a frase EXATA já produzida e mostrada no delta v2 para esses dois campos. Não alterou o corpo, fontes, população204 ou profundidade de leitura. O censo e dossiês antigos permanecem preservados; este erratum qualifica seu rótulo e a projeção corrente. Não se pede nova inferência de comportamento.
+
+```json
+{
+  "schema": "s1-03-mechanical-coverage-erratum/v1",
+  "assembler": "/root",
+  "authoritative_sentence_producer": "/root/automation_l1",
+  "method": "Copy the exact already-authored v2 correction sentence into the Actions facade role and substitute that same role clause in reason. No new behavioral claim or body change. Original producer coverage and all historical dossiers remain immutable.",
+  "source_body_v4_sha256": "968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae",
+  "source_delta_path": "producers/automation/revisions/v2/delta.json",
+  "source_delta_sha256": "55ef2d173ced7e3ee8036d4d059dfacaf8391e8c95378d12d9279e379e378612",
+  "source_path": "packages/core/src/actions.ts",
+  "row_1_based": 1,
+  "before": {
+    "role": "Fachada da Location; construção lazy, congelamento de entrada e reconciliador efetivamente escolhido",
+    "reason": "Implementação comportamental lida, necessária à compreensão operacional da necessidade flow: Fachada da Location; construção lazy, congelamento de entrada e reconciliador efetivamente escolhido. Mantida no corpo pelas âncoras indicadas; não reduzida a um censo nem usada como prova de execução."
+  },
+  "after": {
+    "role": "A resolução do binding, a inicialização cached de operations e o carregamento de output são adiados; transport, readers e resources são compostos ao construir a fachada.",
+    "reason": "Implementação comportamental lida, necessária à compreensão operacional da necessidade flow: A resolução do binding, a inicialização cached de operations e o carregamento de output são adiados; transport, readers e resources são compostos ao construir a fachada. Mantida no corpo pelas âncoras indicadas; não reduzida a um censo nem usada como prova de execução."
+  },
+  "coverage_before_sha256": "580c1885a277f378d9f5c44f0dd335e58cb4dc02f23bc002179103dc90dcfd5f",
+  "coverage_after_sha256": "2aa8583096af86ec9db54c9a1e60db305f46aa4be5c9979bda577c5f8b50f13e",
+  "updated_coverage": "assembly/automation-coverage-v2.jsonl",
+  "changed_rows": 1,
+  "changed_fields": [
+    "role",
+    "reason"
+  ],
+  "population_unchanged": 204,
+  "supersedes_interpretation_in": [
+    "automation coverage.jsonl row1",
+    "native-input-disposition.json source_inputs entry for packages/core/src/actions.ts",
+    "current aggregate coverage row for packages/core/src/actions.ts",
+    "derived census/dossier role labels for that same path"
+  ],
+  "historical_records_rewritten": false,
+  "body_changed": false,
+  "semantic_status": "PENDING_SAME_PAIR"
+}
+```
+

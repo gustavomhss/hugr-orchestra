@@ -1,0 +1,123 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "lot": "automation-4-supplement-v4",
+  "source": "review-packets/automation-4-supplement-v4.md",
+  "source_bytes": 120308,
+  "source_sha256": "90bf1fd0fd13fe877baf22755d2d39fd55cbb24ae7a74017e0fb1dd7a1e26a0f",
+  "frozen_manifest": {
+    "lot": "automation-4-supplement-v4",
+    "path": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/automation-4-supplement-v4.md",
+    "body_version": "v4",
+    "packet": {
+      "bytes": 120308,
+      "sha256": "90bf1fd0fd13fe877baf22755d2d39fd55cbb24ae7a74017e0fb1dd7a1e26a0f",
+      "git_blob_sha": "dc2e4629afc427eaad2894337459afedb8035518"
+    },
+    "source_supplement": {
+      "bytes": 93027,
+      "sha256": "686a0a0044cf44a0eb7ae6cb397a07632f823af52b610c6db276d27e031f4ce2",
+      "git_blob_sha": "01d3eef54dfdb4cd5713298f0688ce0f9fd74733"
+    },
+    "additional_test_literals": [
+      {
+        "source_path": "packages/core/test/actions/readback.test.ts",
+        "first_line": 182,
+        "last_line": 231,
+        "sha256": "b145215ca93279f47eeec4e28cad49f8e1bf31556ef49a2fe96798550deb936a",
+        "packet_byte_start": 96677,
+        "packet_byte_end_exclusive": 98822
+      },
+      {
+        "source_path": "packages/core/test/actions-resource-schedules.test.ts",
+        "first_line": 22,
+        "last_line": 51,
+        "sha256": "9878883b5668e79af595869504055190e73b4a31f513a3e835da3c25fc7e1ac9",
+        "packet_byte_start": 99225,
+        "packet_byte_end_exclusive": 101839
+      },
+      {
+        "source_path": "packages/core/test/actions-transport-gitlab-http.test.ts",
+        "first_line": 28,
+        "last_line": 49,
+        "sha256": "0ea7ea1e35337455dc6b2194f62637ae3a5783501726e0e74e62b2d63e0e04f1",
+        "packet_byte_start": 102245,
+        "packet_byte_end_exclusive": 103743
+      },
+      {
+        "source_path": "packages/core/test/board-budget.test.ts",
+        "first_line": 93,
+        "last_line": 130,
+        "sha256": "3b2d1ca25d7be0d94d6a68e9663b81b496287cfb7b8a53e896b6ab6d7e36321b",
+        "packet_byte_start": 104133,
+        "packet_byte_end_exclusive": 106116
+      },
+      {
+        "source_path": "packages/core/test/board-queue.test.ts",
+        "first_line": 145,
+        "last_line": 187,
+        "sha256": "e1a377eb640a85d0904a9619dd7317f2904bd9c53ae0d98276aeb9251ed30288",
+        "packet_byte_start": 106506,
+        "packet_byte_end_exclusive": 108499
+      },
+      {
+        "source_path": "packages/core/test/scheduled-task-capability.test.ts",
+        "first_line": 308,
+        "last_line": 395,
+        "sha256": "53e2b614c31b2368839227f8fbc926f585971f2d9e29af08cbe188818db57033",
+        "packet_byte_start": 108903,
+        "packet_byte_end_exclusive": 112961
+      },
+      {
+        "source_path": "packages/core/test/scheduled-task-capability.test.ts",
+        "first_line": 470,
+        "last_line": 550,
+        "sha256": "861d9e4a5f4df7b4e7ec6ef99774be9ca3abbe77e70acc6a93f003213fbd95e7",
+        "packet_byte_start": 113365,
+        "packet_byte_end_exclusive": 116885
+      },
+      {
+        "source_path": "packages/core/test/scheduled-task.test.ts",
+        "first_line": 184,
+        "last_line": 248,
+        "sha256": "701041cb8a81631265c2cd16ca46580aefa6f89f886e2b2746d85c3fcec55c11",
+        "packet_byte_start": 117278,
+        "packet_byte_end_exclusive": 120302
+      }
+    ],
+    "oracle_access_by_relay": false
+  },
+  "split_rule": "Autorização posterior da raiz: partes até aproximadamente 55–60KB; cortes balanceados em LF, alvo 58000 bytes.",
+  "parts": [
+    {
+      "part": 1,
+      "file": "part-01.txt",
+      "start": 0,
+      "end": 40086,
+      "bytes": 40086,
+      "sha256": "506a021a1a6bf9d544875296798d1f5fd8c18d774907089f2244ca554c0997ad"
+    },
+    {
+      "part": 2,
+      "file": "part-02.txt",
+      "start": 40086,
+      "end": 80216,
+      "bytes": 40130,
+      "sha256": "05a97160e500260c5338637bc75887be59bbd5247d3827dbbbf28c3f376be8a6"
+    },
+    {
+      "part": 3,
+      "file": "part-03.txt",
+      "start": 80216,
+      "end": 120308,
+      "bytes": 40092,
+      "sha256": "4407b5d69ddb78bf0ae9d15335f7566eeb29c5bcaeea85637a4249eb1787a4da"
+    }
+  ],
+  "end_marker_counts_per_part": [
+    1,
+    0,
+    0
+  ],
+  "previous_preparation": "prepared-32k/manifest.json (nunca despachada)",
+  "framing_rule": "Ocorrência interna de FIM_DO_LOTE é menção de dados; sinal externo acrescentado somente após FIM_PARTE_LITERAL da última mensagem, conforme confirmação da raiz."
+}
