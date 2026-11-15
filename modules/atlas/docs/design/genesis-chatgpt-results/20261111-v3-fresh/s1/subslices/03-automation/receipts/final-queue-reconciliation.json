@@ -1,0 +1,221 @@
+{
+  "schema": "s103-final-finite-queue-reconciliation/v1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "scope": "S1-03 only",
+  "historical_plan": "artifact-plan.json",
+  "historical_snapshot_rule": "Original plans and package pending-state fields remain exact historical evidence; this reconciliation records subsequent actual dispositions without rewriting tested inputs.",
+  "population": {
+    "state": "COMPLETED_LOCAL_ACCEPTED_COVERAGE",
+    "sources": 462,
+    "bytes": 4740213,
+    "evidence": [
+      "coverage.jsonl",
+      "receipts/final-coverage-reconciliation.json",
+      "semantic-acceptances.json"
+    ]
+  },
+  "artifacts": [
+    {
+      "key": "s1.core.automation",
+      "layer": 1,
+      "required_predecessors": [],
+      "state": "PASS_CURRENT_BODY_J1_AND_J2",
+      "acceptance": "semantic-acceptances.json",
+      "runtime_usability": "NOT_PROVEN"
+    },
+    {
+      "key": "s1.core.research",
+      "layer": 1,
+      "required_predecessors": [],
+      "state": "PASS_CURRENT_BODY_J1_AND_J2",
+      "acceptance": "semantic-acceptances.json",
+      "runtime_usability": "NOT_PROVEN"
+    },
+    {
+      "key": "s1.core.boundaries",
+      "layer": 1,
+      "required_predecessors": [],
+      "state": "PASS_CURRENT_BODY_J1_AND_J2",
+      "acceptance": "semantic-acceptances.json",
+      "runtime_usability": "NOT_PROVEN"
+    },
+    {
+      "key": "s1.subslice03.support",
+      "layer": 1,
+      "required_predecessors": [],
+      "state": "PASS_CURRENT_BODY_J1_AND_J2",
+      "acceptance": "semantic-acceptances.json",
+      "runtime_usability": "NOT_PROVEN"
+    },
+    {
+      "key": "s1.subslice03.automation-flow",
+      "layer": 2,
+      "required_predecessors": [
+        "s1.core.automation"
+      ],
+      "state": "PASS_CURRENT_BODY_J1_AND_J2",
+      "acceptance": "semantic-acceptances.json",
+      "runtime_usability": "NOT_PROVEN"
+    },
+    {
+      "key": "s1.subslice03.research-flow",
+      "layer": 2,
+      "required_predecessors": [
+        "s1.core.research"
+      ],
+      "state": "PASS_CURRENT_BODY_J1_AND_J2",
+      "acceptance": "semantic-acceptances.json",
+      "runtime_usability": "NOT_PROVEN"
+    },
+    {
+      "key": "s1.subslice03.boundary-flow",
+      "layer": 2,
+      "required_predecessors": [
+        "s1.core.boundaries"
+      ],
+      "state": "PASS_CURRENT_BODY_J1_AND_J2",
+      "acceptance": "semantic-acceptances.json",
+      "runtime_usability": "NOT_PROVEN"
+    },
+    {
+      "key": "s1.subslice03.automation-impact",
+      "layer": 3,
+      "required_predecessors": [
+        "s1.subslice03.automation-flow"
+      ],
+      "state": "PASS_CURRENT_BODY_J1_AND_J2",
+      "acceptance": "semantic-acceptances.json",
+      "runtime_usability": "NOT_PROVEN"
+    },
+    {
+      "key": "s1.subslice03.research-impact",
+      "layer": 3,
+      "required_predecessors": [
+        "s1.subslice03.research-flow"
+      ],
+      "state": "PASS_CURRENT_BODY_J1_AND_J2",
+      "acceptance": "semantic-acceptances.json",
+      "runtime_usability": "NOT_PROVEN"
+    },
+    {
+      "key": "s1.subslice03.automation-maintenance",
+      "layer": 4,
+      "required_predecessors": [
+        "s1.subslice03.automation-impact"
+      ],
+      "state": "PASS_CURRENT_BODY_J1_AND_J2",
+      "acceptance": "semantic-acceptances.json",
+      "runtime_usability": "NOT_PROVEN"
+    },
+    {
+      "key": "s1.subslice03.research-maintenance",
+      "layer": 4,
+      "required_predecessors": [
+        "s1.subslice03.research-impact"
+      ],
+      "state": "PASS_CURRENT_BODY_J1_AND_J2",
+      "acceptance": "semantic-acceptances.json",
+      "runtime_usability": "NOT_PROVEN"
+    },
+    {
+      "key": "s1.subslice03.entry",
+      "layer": 4,
+      "required_predecessors": [
+        "s1.subslice03.support",
+        "s1.subslice03.boundary-flow",
+        "s1.subslice03.automation-maintenance",
+        "s1.subslice03.research-maintenance"
+      ],
+      "state": "PASS_CURRENT_BODY_J1_AND_J2",
+      "acceptance": "semantic-acceptances.json",
+      "runtime_usability": "NOT_PROVEN"
+    }
+  ],
+  "navigation": {
+    "state": "COMPLETED_LOCAL_PROPOSAL_NOT_SELECTED_FOR_UNION",
+    "evidence": "navigation-acceptance.json",
+    "union_owner": "S1_COORDINATION"
+  },
+  "package": {
+    "state": "COMPLETE_EXACT_TESTED_INPUT_PACKAGE",
+    "path": "native-package.json",
+    "sha256": "ddada3d4b67cff13ef3a5817b95efc275b0d288061436546c8ec6b73290766a6",
+    "actual_prepare": "EXECUTED_FAILED_NATIVE_FILE_LIMIT"
+  },
+  "operations": [
+    {
+      "id": "full-native-prepare",
+      "owner": "S1-03",
+      "dependency_owner": "S4",
+      "state": "EXECUTED_FAILED",
+      "condition": "Released, authorized runtime accepts all six genuinely consumed whole inputs exceeding 256000 bytes; run exact full selection again with new linked receipt. Concrete 1 MiB proposal remains unapplied and untested outside S1-03 authority."
+    },
+    {
+      "id": "binding-and-governed-publication",
+      "owner": "S1-03",
+      "dependency_owner": "Authorized S1 policy/authority owner",
+      "state": "NOT_RUN_PRECONDITION",
+      "condition": "Successful prepared candidate, two exact native bindings, and valid S1 actor/ratifier/policy through authorized doors."
+    },
+    {
+      "id": "domain-consumers-and-direct-use",
+      "owner": "S1-03",
+      "state": "HOLD",
+      "condition": "Readable accepted local baseline; execute frozen cases and direct-use obligations with original attempts preserved; same pair evaluates actual native answers."
+    },
+    {
+      "id": "maintenance-and-recovery",
+      "owner": "S1-03",
+      "state": "NOT_RUN_PRECONDITION",
+      "condition": "Readable accepted baseline and usable execution environment; execute the two frozen changes and compare independently expected affected/independent sets, stale refusal, rebuild/reuse and recovery."
+    },
+    {
+      "id": "final-official-guard",
+      "owner": "S1-03",
+      "state": "NOT_RUN",
+      "condition": "Exact historical binary bytes and usable host environment permit faithful current/base checkout; run official bun run check:guards --base origin/dev. Own CI green is not inferred."
+    },
+    {
+      "id": "original-record-custody",
+      "owner": "S1-03",
+      "state": "HOLD",
+      "condition": "Restore the same workspace or obtain legitimate exact export of task records; match known hashes before publication. Do not invent original responses or rerun merely to fill custody gaps."
+    },
+    {
+      "id": "research-L2-v2-original-final",
+      "owner": "S1-03",
+      "state": "HOLD",
+      "condition": "Recover real native FINAL from legitimate source; existing producer file and later explicitly non-verbatim confirmation do not repair original capture. No silent waiver."
+    },
+    {
+      "id": "integral-economy",
+      "owner": "S1-03",
+      "state": "HOLD",
+      "condition": "Recover/reconcile physical host usage and missing local ledger via legitimate exposed evidence if available; maintain UNKNOWN and GLOBAL_UNRECONCILED otherwise."
+    }
+  ],
+  "final_native_delivery_review": {
+    "state": "COMPLETED_FOR_AVAILABLE_MATERIAL",
+    "outcome": {
+      "path": "judgments/delivery/final-review-outcome.json",
+      "bytes": 4217,
+      "sha256": "d2c514ce3a7d41c653ea7dd7a3d064aa4f1c4c35934eb9006e10280d10818268"
+    },
+    "mandatory_correctable_report_findings_remaining": 0,
+    "full_consumer_original_review": "BLOCKED_FIVE_UNAVAILABLE_FINALS_AND_RAW_CHAINS"
+  },
+  "closure": {
+    "payload_and_seal": "NEXT_AT_THIS_PAYLOAD_CUTOFF; actual commit identities are recorded by the subsequent seal handoff",
+    "post_seal_readback": "Required after branch update; not predeclared as performed in this payload"
+  },
+  "no_missing_local_proof_transferred_to_union": true,
+  "current_state": "INCOMPLETE_BLOCKED",
+  "execution_continues_after_final_handoff": false,
+  "executable_native_work_unsettled": 0,
+  "snapshot_utc": "2026-11-15T13:34:35.369Z",
+  "economy": {
+    "path": "economy/closing-visible-accounting.json",
+    "bytes": 6463,
+    "sha256": "c771b564b9674bf17f3111712a47554dbf39a9d288188891f344ca47654eb59b"
+  }
+}

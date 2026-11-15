@@ -9,7 +9,7 @@
     "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
   },
   "criterion_count": 50,
-  "decision_basis": "Principal local dispositions for final independent assessment by the same two native judges. Actual final original opinions are referenced by handoff; no future review is predeclared.",
+  "decision_basis": "Reconciled with the two actual original v1 opinions and the two actual original v2 corrective opinions. V2 changes GO-I2 only; the other 49 native decisions are retained. Recording these received decisions and the current review stage is a mechanical reconciliation, not a new semantic acceptance.",
   "status_rule": "PASS is criterion-specific local content/process evidence, never overall mission acceptance. HOLD is a local unmet obligation. GLOBAL_ONLY applies only to global human acceptance/landing/production composition.",
   "supersedes_published_matrix": {
     "path": "history/criteria-matrix-before-environment-finalization.json",
@@ -30,7 +30,12 @@
       "disposition": "Os doze corpos atuais sustentam propósito, comportamento, contratos, decisões, impacto e manutenção segundo os dois aceites integrais. PASS local de conteúdo; transferência por consumidor Atlas permanece aberta em AC-02.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "PASS",
+        "j2": "PASS",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "GO-A2",
@@ -45,7 +50,12 @@
       "disposition": "Quatro L1, três L2, dois L3 e três L4 persistem com inputs e receitas exatos. Autores derivados consumiram predecessores aceitos; não são scratch descartável. A disponibilidade por reader real continua aberta em CC-2.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "PASS",
+        "j2": "PASS",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "GO-A3",
@@ -63,7 +73,12 @@
       "disposition": "Entrada e procedimentos prescrevem consultas progressivas, mas os leitores reais não receberam conteúdo. As quotas foram respeitadas; o caminho raso/profundo não foi demonstrado.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "GO-A4",
@@ -79,7 +94,12 @@
       "disposition": "Dependências e procedimentos estão definidos, mas os dois casos próprios não executaram observe/plan/rebuild/read. Reúso histórico compatível não substitui manutenção local.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "GO-A5",
@@ -95,7 +115,12 @@
       "disposition": "Inputs e conhecimento foram versionados com payload/selo e readback. Faltam ativação governada, leituras aceitas e gates próprios; Git, semântica, frescor e autoridade não foram confundidos.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "GO-A6",
@@ -111,7 +136,12 @@
       "disposition": "Inventário, identidade, montagem e recuperação foram mecanizados; interpretação ficou com autores/juízes. Plano finito e quotas por consumidor precederam o uso. Este PASS de disciplina local não certifica teto financeiro ou total físico.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "PASS",
+        "j2": "PASS",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "GO-A7",
@@ -125,7 +155,12 @@
       "disposition": "Usou-se Atlas e sua CLI publicada, com ponte fiel. Não foi criado store, motor, governança ou framework paralelo; a proposta de limite S4 não foi aplicada.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "PASS",
+        "j2": "PASS",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "GO-I1",
@@ -141,7 +176,12 @@
       "disposition": "O FINAL nativo research-flow L2 v2 não foi capturado separadamente antes de compactação. Além disso, a queda do ambiente tornou inacessíveis vários originais locais ainda não publicados, incluindo cinco FINALs de consumidores e registros brutos. Arquivos recuperados têm identidades verificadas; resumos e confirmações não substituem originais.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "GO-I2",
@@ -155,12 +195,41 @@
         "receipts/native-prepare-final.json",
         "receipts/final-operational-disposition-after-environment.json",
         "receipts/environment-loss-custody.json",
-        "receipts/preservation-recovery-capability-check.json"
+        "receipts/preservation-recovery-capability-check.json",
+        "history/work-before-delivery-temporal-correction.md",
+        "receipts/delivery-temporal-correction.json",
+        "judgments/delivery/final-review-outcome.json"
       ],
-      "disposition": "Corpos e relato distinguem comportamento observado, intenção autorizada, interpretação e lacuna. Censo/hashes/PASS documental não são binding, conclusão de produto ou confirmação de uma operação não executada.",
+      "disposition": "O mesmo par nativo aceitou a correção temporal DF-REPORT-01 e encerrou DF-J1-01/DF-J2-01. P0/H0/readbacks e pareceres anteriores permanecem vinculados aos seus próprios objetos; revisão, reconciliação e publicação de encerramento só podem ser afirmadas após seus eventos e registros reais. PASS local do relato corrigido, sem binding ou conclusão operacional.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "corrective_review": {
+        "state": "ACCEPTED_BY_SAME_PAIR",
+        "correction": "receipts/delivery-temporal-correction.json",
+        "original_findings": [
+          "DF-J1-01",
+          "DF-J2-01"
+        ],
+        "original_final_refs": [
+          {
+            "path": "judgments/delivery/delivery-final-v2/j1-response.md",
+            "bytes": 2973,
+            "sha256": "ca389de368016ef56251f43d4d56f30133882020f5b6d7ea7c75e060fad86fb3"
+          },
+          {
+            "path": "judgments/delivery/delivery-final-v2/j2-response.md",
+            "bytes": 2799,
+            "sha256": "57210e6dd5ff706b7af0aa9bc09ea21a0a1b31ecbd3a64251b83f36f599748a7"
+          }
+        ],
+        "no_runtime_binding_or_mission_PASS": true
+      },
+      "native_judge_dispositions": {
+        "j1": "PASS",
+        "j2": "PASS",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "GO-I3",
@@ -179,7 +248,12 @@
       "disposition": "Todos os quinze reads atuais retornaram ownership-store-unavailable. Vinculação corrente, stale refusal após mutação e recuperação não foram provadas nesta seleção.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "GO-I4",
@@ -198,7 +272,12 @@
       "disposition": "A regra de reúso e independência está documentada e há controles comuns delimitados. Falta o caso próprio comparando identidades e chamadas após uma mudança independente.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "GO-I5",
@@ -217,7 +296,12 @@
       "disposition": "Impacto de mudanças/adições/remoções/inputs não código está descrito, mas não há conjunto afetado observado do planner próprio. Cinco afetados e sete independentes são expectativas estáticas.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "GO-I6",
@@ -232,7 +316,12 @@
       "disposition": "O ledger publicado anterior é preservado e novos eventos observáveis recebem adendos. O estado local de 550 linhas ficou inacessível; total físico, reservas e cobrança não são certificados. Sem fallback silencioso, reset ou chamada externa paga; UNKNOWN não é zero nem bloqueio financeiro artificial.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "GO-I7",
@@ -248,7 +337,12 @@
       "disposition": "Portas governadas e limites de propriedade foram preservados. Sem política/segredo/guard/workflow alterado, autoridade S4 copiada ou fonte promovida a instrução. Oracle não foi entregue a autores, consumidores ou courier.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "PASS",
+        "j2": "PASS",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "GO-I8",
@@ -264,7 +358,12 @@
       "disposition": "A entrega permanece INCOMPLETE_BLOCKED apesar dos doze aceites integrais. Grafo, hashes, censo, controles comuns e recuperação parcial não viraram completude semântica ou operacional.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "PASS",
+        "j2": "PASS",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "AC-01",
@@ -282,7 +381,12 @@
       "disposition": "462 fontes reconciliadas: 204 automação, 130 research/toolkits, 24 fronteiras e 104 suporte. Os doze artefatos necessários têm apoio aceito pelo mesmo par, com profundidade/grupos e limites explícitos. PASS de cobertura local; não qualifica engines/plataformas/produção.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "PASS",
+        "j2": "PASS",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "AC-02",
@@ -299,7 +403,12 @@
       "disposition": "Sete consumidores novos consultaram Atlas; nenhum recebeu corpo. A auditoria original registra 22 HOLDs e quatro erros de need em 26 chamadas. Dois FINALs integrais foram recuperados; cinco permanecem inacessíveis. Não há caso de domínio aprovado, inclusive B-ABSTAIN.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "AC-03",
@@ -316,7 +425,12 @@
       "disposition": "As doze chaves receberam tentativa direta e as quotas de 2 index/5 read/60000 bytes por caso foram cumpridas. Tentativa não é consumo: nenhum corpo foi entregue. A cadeia bruta completa também não está disponível após a queda.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "AC-04",
@@ -334,7 +448,12 @@
       "disposition": "Produção nativa e correções foram reais; quatro controles históricos AC-04-local-native foram aceitos para reúso delimitado. O prepare da seleção completa falhou; construção/importação operacional própria continua aberta.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "AC-05",
@@ -348,7 +467,12 @@
       "disposition": "Controles comuns mantêm seu alcance de cache/reúso. Não há caso próprio executado de independentes, receipt-only, authority/gap change ou parada downstream; zero proposer calls local não foi inferido.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "AC-06",
@@ -362,7 +486,12 @@
       "disposition": "M-ACTIONS e M-SCHEDULE-RECIPE têm patches/expectativas congelados. Mutação, planner, rebuild e comparação real não ocorreram por falta de baseline aceito. Conjuntos estáticos e staleness não passam incrementalidade.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "AC-07",
@@ -378,7 +507,12 @@
       "disposition": "Não houve publicação governada própria, falha entre geração/ativação, leitores concorrentes, retomada ou rollback. HOLD de store indisponível antes de baseline não prova as recusas específicas exigidas.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "AC-08",
@@ -393,7 +527,12 @@
       "disposition": "Há contabilidade visível e auditoria original de 33 requests/33 completions de consumidores, distinta das 26 CLI. Total de host, reservas, uso físico e custo não são certificados; o ledger local posterior ficou inacessível. Histórico GLOBAL_UNRECONCILED, sem cálculo financeiro fictício, fallback pago ou reset.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "AC-09",
@@ -411,7 +550,12 @@
       "disposition": "O guard final não rodou: falta o ZIP histórico exato para checkout fiel; a queda posterior também impede execução local. Zero runs próprios observados. protected=false é campo API, não prova completa de rulesets. Controles S4 não passam os gates próprios.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "AC-10",
@@ -427,7 +571,12 @@
       "disposition": "A publicação preserva Core histórico, outras subfatias e s1.core.entry. Não houve ativação própria ou prova de rollback/independentes; GO-I1 conserva lacunas. Novos arquivos ficam sem autoridade de consumidor; nenhum gerado foi editado.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "CC-1",
@@ -444,7 +593,12 @@
       "disposition": "Escopo, herança/gaps, fontes, doze artefatos, sete casos e dois cenários foram congelados antes das etapas correspondentes. O suplemento de read foi anterior a qualquer consumidor, sem mudar pergunta/oracle/quota/grafo.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "PASS",
+        "j2": "PASS",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "CC-2",
@@ -462,7 +616,12 @@
       "disposition": "Todos os níveis estão produzidos e persistidos, mas a usabilidade direta pelo reader/índice não foi demonstrada. Dois aceites de corpo não aprovam essa parcela.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "CC-3",
@@ -477,7 +636,12 @@
       "disposition": "Os dois juízes aceitaram integralmente propósito, comportamento, contratos, decisões, impacto e manutenção dos corpos atuais. PASS documental local; a transferência pelos casos AC-02 continua aberta.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "PASS",
+        "j2": "PASS",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "CC-4",
@@ -493,7 +657,12 @@
       "disposition": "Build/invalidação/rebuild/reúso e mudanças de inputs não fecharam ponta a ponta. Os dois cenários próprios ficaram antes da mutação por ausência de baseline utilizável.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "CC-5",
@@ -509,7 +678,12 @@
       "disposition": "Sem candidato preparado e autoridade S1 provisionada, não houve ativação ou recuperação/rollback. Branch Git acessível não é manifesto Atlas ativo.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "CC-6",
@@ -524,7 +698,12 @@
       "disposition": "A economia visível é reportada por etapa e sem ficção financeira. Não se certificam envelope/reservas/total físico; dez linhas iniciais são agregadas e o ledger local de 550 linhas ficou inacessível.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "CC-7",
@@ -542,7 +721,12 @@
       "disposition": "Compatibilidade, gerados não alterados, docs/guias e obrigações históricas têm disposição explícita. A navegação local é proposta para coordenação, sem seleção de versões externas ou expansão silenciosamente completa.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "PASS",
+        "j2": "PASS",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "SC-1",
@@ -557,7 +741,12 @@
       "disposition": "AC-02 não passou. Abstinência por store indisponível não comprova domínio dos casos congelados; cinco originais finais ainda não podem ser publicados.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "SC-2",
@@ -572,7 +761,12 @@
       "disposition": "Quotas foram respeitadas, mas nenhum conteúdo chegou ao leitor. Não se provou conclusão rasa ou aprofundamento útil.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "SC-3",
@@ -586,7 +780,12 @@
       "disposition": "Não se executaram rebuild próprio, preservação de independentes ou zero interpretação em reúso. As provas comuns não substituem essa execução.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "SC-4",
@@ -599,7 +798,12 @@
       "disposition": "Construção, validação/correção, manutenção e consultas são separadas; nenhuma economia percentual, dólar ou zero uso foi inventado. Permanência em envelope integralmente reconciliado não está certificada.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "SC-5",
@@ -617,7 +821,12 @@
       "disposition": "Não existe seleção própria aceita para provar coerência e as recusas específicas AC-07/09. HOLD inicial e controles comuns delimitados são insuficientes.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "QS-1",
@@ -634,7 +843,12 @@
       "disposition": "Fidelidade e rótulos dos corpos foram aceitos; conflitos/correções existentes persistem. Preservação integral falha pela captura nativa research L2 v2 ausente e pela indisponibilidade posterior dos registros locais não publicados.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "QS-2",
@@ -651,7 +865,12 @@
       "disposition": "Entrada/procedimentos aceitos prescrevem ações e aprofundamento, com perguntas/destinos úteis e distinção de navegação/build. Utilidade documental não substitui a leitura real bloqueada.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "PASS",
+        "j2": "PASS",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "QS-3",
@@ -665,7 +884,12 @@
       "disposition": "Nenhum mecanismo novo de produto, vector store, banco ou framework foi criado. Helpers determinísticos e ponte servem à evidência/CLI existente; não há loop obrigatório de aprofundamento.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "PASS",
+        "j2": "PASS",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "QS-4",
@@ -681,7 +905,12 @@
       "disposition": "Intervenção restrita ao namespace autorizado, sem alterar produto, gerados, dependências, políticas, secrets, AGENTS, guards ou workflows. Git usa lease. Este PASS de disciplina local não atribui verde ao guard não executado.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "PASS",
+        "j2": "PASS",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "QS-5",
@@ -699,7 +928,12 @@
       "disposition": "Há execução real e controles comuns com escopo explícito, porém faltam reader aceito, manutenção própria e guard; a cadeia bruta dos consumidores está parcialmente inacessível. A revisão segue a barra fixa sem terceiro voto.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "QS-6",
@@ -717,7 +951,12 @@
       "disposition": "Packs delimitados, derivações mecânicas, reúso de aceites e correções por finding foram empregados. Limites/custódia/contabilidade são explícitos, sem campanha automática opcional ou percentual de economia fictício.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "PASS",
+        "j2": "PASS",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "DOD-1",
@@ -733,10 +972,15 @@
         "receipts/environment-loss-custody.json",
         "receipts/preservation-recovery-capability-check.json"
       ],
-      "disposition": "Há matriz única dos 50 IDs e aceites nomeados dos corpos. Os pareceres finais devem avaliar estes bytes; a revisão direta completa dos cinco FINALs de consumidores e de suas cadeias está bloqueada, além das obrigações CC/SC não cumpridas.",
+      "disposition": "Há matriz única dos 50 IDs e aceites nomeados dos corpos. Os mesmos dois juízes examinaram a entrega disponível e aceitaram a correção documental. A revisão direta completa dos cinco FINALs de consumidores e de suas cadeias continua bloqueada, além das obrigações CC/SC não cumpridas; a revisão do relato não encerra este HOLD.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "DOD-2",
@@ -754,7 +998,12 @@
       "disposition": "Invariantes/QS têm disposições, mas controles próprios de mudança/leitura e guard não foram comprovados; os originais faltantes impedem certificação integral da revisão.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "DOD-3",
@@ -773,7 +1022,12 @@
       "disposition": "Houve consultas Atlas reais, sem consumo de artefatos aceitos. Update/publication/recovery próprios não fecharam ponta a ponta e não são transferidos a ROOT.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "DOD-4",
@@ -788,7 +1042,12 @@
       "disposition": "Preparação/build/typecheck e controles remotos S4 têm limites próprios. Não houve teste de produto local ou CI próprio inventado. Guard oficial final NOT_RUN por materialização binária e agora ambiente indisponível. Gate da união é global, separado.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "DOD-5",
@@ -803,7 +1062,12 @@
       "disposition": "Trabalho novo observado é contabilizado sem reset, com 33/33 consumidores relatados pela auditoria original. Não há total completo certificado; uso/custo físicos são UNKNOWN e os adendos locais pós-P0 não estão integralmente disponíveis.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "DOD-6",
@@ -822,7 +1086,12 @@
       "disposition": "Docs/procedimentos e obrigações históricas têm disposições, porém preservação integral e provas operacionais próprias permanecem abertas. A revisão final original deve ser consultada; migração/rollback não foram declarados concluídos. Landing global não é a causa deste HOLD.",
       "local_owner": "S1-03",
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "HOLD",
+        "j2": "HOLD",
+        "source": "final_native_review_refs"
+      }
     },
     {
       "id": "DOD-7",
@@ -836,12 +1105,45 @@
       "disposition": "Aceite humano, landing e produção pertencem a S1_COORDINATION/ROOT e ao dono autorizado. Não são pré-requisitos artificiais locais e nenhum aceite foi autoatribuído. INCOMPLETE_BLOCKED decorre das outras obrigações materiais locais.",
       "local_owner": null,
       "global_complement": "Union selection/composition, integrated gates, human acceptance, landing and production activation only; no missing local proof transferred.",
-      "global_owner": "S1_COORDINATION / ROOT"
+      "global_owner": "S1_COORDINATION / ROOT",
+      "native_judge_dispositions": {
+        "j1": "GLOBAL_ONLY",
+        "j2": "GLOBAL_ONLY",
+        "source": "final_native_review_refs"
+      }
     }
   ],
   "local_status_counts": {
     "PASS": 15,
     "HOLD": 34,
     "GLOBAL_ONLY": 1
-  }
+  },
+  "final_native_review_refs": {
+    "j1_v1": {
+      "path": "judgments/delivery/delivery-final-v1/j1-response.md",
+      "bytes": 12438,
+      "sha256": "d546371fe444326a9cc417caea41009b36827269ddd444fbebf9741bbe1e669c"
+    },
+    "j2_v1": {
+      "path": "judgments/delivery/delivery-final-v1/j2-response.md",
+      "bytes": 10904,
+      "sha256": "b4586e2005cac86b244436496fd4796a8491dddc50c31692f80fc422cd71ef8b"
+    },
+    "j1_v2": {
+      "path": "judgments/delivery/delivery-final-v2/j1-response.md",
+      "bytes": 2973,
+      "sha256": "ca389de368016ef56251f43d4d56f30133882020f5b6d7ea7c75e060fad86fb3"
+    },
+    "j2_v2": {
+      "path": "judgments/delivery/delivery-final-v2/j2-response.md",
+      "bytes": 2799,
+      "sha256": "57210e6dd5ff706b7af0aa9bc09ea21a0a1b31ecbd3a64251b83f36f599748a7"
+    }
+  },
+  "reconciled_at_utc": "2026-11-15T13:31:55.338Z",
+  "final_reconciliation_changes": [
+    "GO-I2 disposition promoted only after both original v2 local PASS decisions; original candidate retained under history/criteria-matrix-corrective-candidate.json.",
+    "Native per-criterion decisions and original review references added for all 50 IDs.",
+    "DOD-1 narrative records that available-material review actually occurred; HOLD and normative text unchanged."
+  ]
 }

@@ -1,0 +1,150 @@
+{
+  "schema": "s103-final-review-root-transport/v1",
+  "state": "ROOT_PORTION_COMPLETE_THROUGH_PART4",
+  "target": "/root/s1_03_j2",
+  "dispatcher": "/root",
+  "source_packet": "review-packets/delivery-final-v1.md",
+  "calls": [
+    {
+      "part": 1,
+      "tool": "collaboration.followup_task",
+      "target": "/root/s1_03_j2",
+      "canonical_message": {
+        "bytes": 22276,
+        "sha256": "f9397a520fea8d73ebec38b2b77ee1433365b27ce651a3a25dd9ff627c150687"
+      },
+      "tool_return_observed": "Output exceeded the available model context and was truncated",
+      "dispatch_resolution": "Original native FINAL ACK received; exact part and last anchor confirmed. No resend.",
+      "response": {
+        "bytes": 228,
+        "sha256": "722830d6e048e6e7e827554b8c8ba70f6ba7d78d3595f91641c74a31f14d4f8a",
+        "capture_key": "j2-ack-01"
+      },
+      "time_recorded": "2026-11-15T12:38:30.926Z",
+      "canonical_argument_record": {
+        "path": "judgments/delivery/delivery-final-v1/j2-request-01.canonical.json",
+        "bytes": 22516,
+        "sha256": "918039faeb0e6878ca0513b220f97b5a8f60ececb0777a2b5fd44c0b69530258"
+      }
+    },
+    {
+      "part": 2,
+      "tool": "collaboration.followup_task",
+      "target": "/root/s1_03_j2",
+      "canonical_message": {
+        "bytes": 22276,
+        "sha256": "489a07030c13700b54ef6f11b0ec1782cc487f1495e070a97b4735720bdcc53c"
+      },
+      "actual_message": {
+        "bytes": 22276,
+        "sha256": "7bd00fb1ef990d97233adb8be55726ffbe90a9a415db24830c214b3602bf6b0a"
+      },
+      "actual_message_key": "s103_j2_part2_actual_message",
+      "tool_return_observed": "normal empty result",
+      "transport_difference": "One copied inflection: canonical 'foram preservados.' delivered as 'foram preservadas.' in GO-I7. Exact correction must be delivered and captured before review.",
+      "time_recorded": "2026-11-15T12:39:26.289Z",
+      "response": {
+        "bytes": 439,
+        "sha256": "8afabefc06d6f8fedc630f7cb17427b48f9ba81617f4c774ddef7695b2b71458",
+        "capture_key": "j2-ack-02"
+      },
+      "dispatch_resolution": "Original native FINAL ACK received, including explicit incorporation of literal correction.",
+      "canonical_argument_record": {
+        "path": "judgments/delivery/delivery-final-v1/j2-request-02.canonical.json",
+        "bytes": 22506,
+        "sha256": "664ad01e47c74ba13470f4d6a5dbfd6585b39e92a5f3882681997ee156f4c4e4"
+      }
+    },
+    {
+      "part": 2,
+      "control": "literal-copy-correction",
+      "tool": "collaboration.send_message",
+      "target": "/root/s1_03_j2",
+      "message": "Correção literal de transporte da parte 2/7, antes do julgamento: em GO-I7, a frase canônica do pacote é exatamente “Portas governadas e limites de propriedade foram preservados.” A principal copiou “preservadas” nessa única ocorrência. Registrei a mensagem realmente enviada separadamente (22276 B; SHA256 7bd00fb1ef990d97233adb8be55726ffbe90a9a415db24830c214b3602bf6b0a); a mensagem canônica tem SHA256 489a07030c13700b54ef6f11b0ec1782cc487f1495e070a97b4735720bdcc53c. Este controle corrige somente a flexão, sem alterar mérito ou status. Confirme o recebimento e a correção no ACK; não julgue ainda.",
+      "bytes": 622,
+      "sha256": "93cac85aa1cdc5fb48bd860f8de3889efd2f8969735a88bc286ba0a3bac3e1be",
+      "tool_return_observed": "normal empty result",
+      "time_recorded": "2026-11-15T12:40:20.399Z",
+      "response": {
+        "bytes": 439,
+        "sha256": "8afabefc06d6f8fedc630f7cb17427b48f9ba81617f4c774ddef7695b2b71458",
+        "capture_key": "j2-ack-02"
+      },
+      "dispatch_resolution": "Original native FINAL ACK received, including explicit incorporation of literal correction.",
+      "canonical_argument_record": {
+        "path": "judgments/delivery/delivery-final-v1/j2-correction-control.canonical.json",
+        "bytes": 672,
+        "sha256": "d3418f268400f9cb1ead15bb55de23fefcc1235907a1fc3220efa0a4e12e985d"
+      }
+    },
+    {
+      "part": 3,
+      "tool": "collaboration.followup_task",
+      "target": "/root/s1_03_j2",
+      "canonical_message": {
+        "bytes": 22276,
+        "sha256": "89a8a11e26cbd757feb608f97b6b6aea9652e9f162cdf61ffe2ed50fe487edd7"
+      },
+      "message_source_key": "s103_delivery_canonical_messages[2]",
+      "tool_return_observed": "normal empty result",
+      "wire_checksum_independently_observed": false,
+      "time_recorded": "2026-11-15T12:45:54.547Z",
+      "response": {
+        "bytes": 251,
+        "sha256": "809327df7b3c4debb3e634840bf8ace2bbcb19f077a369751264bc5028155c86",
+        "capture_key": "j2-ack-03"
+      },
+      "canonical_argument_record": {
+        "path": "judgments/delivery/delivery-final-v1/j2-request-03.canonical.json",
+        "bytes": 23049,
+        "sha256": "bff73bdb34f4eb88362f7d58ab69cfd9eee93f93098b8a20961a03b81fd5a938"
+      }
+    },
+    {
+      "part": 4,
+      "tool": "collaboration.followup_task",
+      "target": "/root/s1_03_j2",
+      "canonical_message": {
+        "bytes": 22276,
+        "sha256": "63d7298614fc7b6d102dce184ecfc2aa339f8ae26c424ea20890b05256324b23"
+      },
+      "message_source_key": "s103_delivery_canonical_messages[3]",
+      "tool_return_observed": "normal empty result",
+      "wire_checksum_independently_observed": false,
+      "time_recorded": "2026-11-15T12:52:22.200Z",
+      "response": {
+        "bytes": 288,
+        "sha256": "83c049730c146ba745e2d769d33ccad8fe4bddfd5ac0961f36f77bd62d2e1a5d",
+        "capture_key": "j2-ack-04"
+      },
+      "canonical_argument_record": {
+        "path": "judgments/delivery/delivery-final-v1/j2-request-04.canonical.json",
+        "bytes": 23431,
+        "sha256": "aa6149044758304257de4f1c133e6d3ec2145d14d71a7864e15d92a5098898a7"
+      }
+    }
+  ],
+  "handover": {
+    "from": "/root",
+    "to": "/root/review_relay",
+    "root_parts_completed": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "root_calls_inflight": 0,
+    "next_part": 5,
+    "at_utc": "2026-11-15T12:57:23.773Z",
+    "dispatch_authorization": "Actual collaboration.send_message handover sent; normal empty return",
+    "control_path": "judgments/delivery/delivery-final-v1/root-courier-j2-tail-handover.json"
+  },
+  "actual_native_followups": 4,
+  "actual_control_send_messages_to_judge": 1,
+  "native_FINAL_ACKs": 4,
+  "root_native_calls_unsettled": 0,
+  "tail_dispatcher": "/root/review_relay",
+  "independent_wire_checksum_exposed": false,
+  "no_tools_by_judge": true,
+  "no_current_cross_judge_verdict_provided": true
+}

@@ -1,0 +1,129 @@
+{
+  "schema": "s103-final-native-delivery-review-outcome/v1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "recorded_at_utc": "2026-11-15T13:31:55.462Z",
+  "completion_state": "INCOMPLETE_BLOCKED",
+  "judges": [
+    "/root/s1_03_j1",
+    "/root/s1_03_j2"
+  ],
+  "same_pair_retained": true,
+  "tools_used_by_judges": false,
+  "current_cross_judge_opinions_provided": false,
+  "third_vote": false,
+  "original_reviews": {
+    "j1_v1": {
+      "path": "judgments/delivery/delivery-final-v1/j1-response.md",
+      "bytes": 12438,
+      "sha256": "d546371fe444326a9cc417caea41009b36827269ddd444fbebf9741bbe1e669c"
+    },
+    "j2_v1": {
+      "path": "judgments/delivery/delivery-final-v1/j2-response.md",
+      "bytes": 10904,
+      "sha256": "b4586e2005cac86b244436496fd4796a8491dddc50c31692f80fc422cd71ef8b"
+    },
+    "j1_v2": {
+      "path": "judgments/delivery/delivery-final-v2/j1-response.md",
+      "bytes": 2973,
+      "sha256": "ca389de368016ef56251f43d4d56f30133882020f5b6d7ea7c75e060fad86fb3"
+    },
+    "j2_v2": {
+      "path": "judgments/delivery/delivery-final-v2/j2-response.md",
+      "bytes": 2799,
+      "sha256": "57210e6dd5ff706b7af0aa9bc09ea21a0a1b31ecbd3a64251b83f36f599748a7"
+    }
+  },
+  "correction": {
+    "id": "DF-REPORT-01",
+    "receipt": {
+      "path": "receipts/delivery-temporal-correction.json",
+      "bytes": 2537,
+      "sha256": "ef03ccf7324b85f1785f1686117b50de70936cc4fe1f4afeeff4c0355f29aa7b"
+    },
+    "work": {
+      "path": "work.md",
+      "bytes": 16495,
+      "sha256": "7931d84630b6733831f15d1e99cec54c50b9889ea28ac72c35b68a5228c15152"
+    },
+    "findings_closed": [
+      {
+        "id": "DF-J1-01",
+        "by": "/root/s1_03_j1",
+        "original": {
+          "path": "judgments/delivery/delivery-final-v2/j1-response.md",
+          "bytes": 2973,
+          "sha256": "ca389de368016ef56251f43d4d56f30133882020f5b6d7ea7c75e060fad86fb3"
+        }
+      },
+      {
+        "id": "DF-J2-01",
+        "by": "/root/s1_03_j2",
+        "original": {
+          "path": "judgments/delivery/delivery-final-v2/j2-response.md",
+          "bytes": 2799,
+          "sha256": "57210e6dd5ff706b7af0aa9bc09ea21a0a1b31ecbd3a64251b83f36f599748a7"
+        }
+      }
+    ],
+    "mandatory_correctable_findings_remaining_in_available_report": 0
+  },
+  "criteria": {
+    "count": 50,
+    "local_status_counts": {
+      "PASS": 15,
+      "HOLD": 34,
+      "GLOBAL_ONLY": 1
+    },
+    "matrix": {
+      "path": "criteria-matrix.json",
+      "bytes": 65434,
+      "sha256": "9d015dfb8fc9967a5fb3716a9bac231afd76d922705ce2ce74c72e449eea84bf"
+    }
+  },
+  "accepted_current_bodies": 12,
+  "domain_consumers_passed": 0,
+  "consumer_originals_directly_reviewed": [
+    "R-FAILURE",
+    "ENTRY-NAV"
+  ],
+  "consumer_originals_not_available_for_full_direct_review": [
+    "A-PERMITTED",
+    "A-VIOLATION",
+    "A-IMPACT",
+    "S-FAILURE",
+    "B-ABSTAIN"
+  ],
+  "material_HOLDs_retained": true,
+  "not_runtime_binding": true,
+  "not_mission_complete": true,
+  "payload_seal_readback_not_attested_by_judges": true,
+  "transport": {
+    "v1_root": {
+      "path": "judgments/delivery/delivery-final-v1/j2-dispatch-receipt.json",
+      "bytes": 6526,
+      "sha256": "d60af5bed9dfac5f62f420b5a92a527157c07c8d8e4076a5379a69ecb8968a45"
+    },
+    "v1_courier": {
+      "path": "judgments/delivery/delivery-final-v1/courier-dispatch-receipt.json",
+      "bytes": 45815,
+      "sha256": "9f48e561cadd0ed113604a2069e47ea39caa02ab89d7ecc1f871ccab95be4a83"
+    },
+    "v2": {
+      "path": "judgments/delivery/delivery-final-v2/dispatch-receipt.json",
+      "bytes": 2648,
+      "sha256": "3b4fc3a0a0ea755d7edc924f7436ac79b6027a276a7057b9c07282489a4f266f"
+    },
+    "v1_actual_packet_followups": 13,
+    "v2_actual_followups": 2,
+    "v1_native_ACKs": 11,
+    "v1_native_judgment_FINALs": 2,
+    "v2_native_judgment_FINALs": 2,
+    "unsettled_current_judge_calls": 0,
+    "known_literal_copy_correction": "J2 part2 GO-I7 preservadas -> preservados, acknowledged before judgment",
+    "visible_tool_return_truncations": 2,
+    "blind_resends": 0,
+    "normal_return_for_truncated_calls": "UNKNOWN",
+    "native_completions_captured": true,
+    "independent_wire_checksum_exposed": false
+  }
+}

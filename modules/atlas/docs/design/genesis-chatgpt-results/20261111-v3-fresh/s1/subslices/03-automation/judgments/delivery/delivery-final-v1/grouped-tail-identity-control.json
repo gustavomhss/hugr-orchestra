@@ -1,0 +1,7 @@
+{
+  "tool": "collaboration.send_message",
+  "target": "/root/review_relay",
+  "message": "Identidade calculada pela principal para a mensagem J2 agrupada, com a abertura sem aspas externas: 41545 bytes UTF-8; SHA256 dd6ff56f27995ba9563ca588727b788d41237555d533e6ed4295ef25a9aac454. Ao reler a string antes da chamada direta, use saída suficiente no functions.exec para não truncar os 41,5 KB (por exemplo max_output_tokens: 22000). Este checksum é da mensagem canônica registrada, não evidência independente do wire.",
+  "tool_return_observed": "normal empty result",
+  "courier_original_response": "J1 parte 7 e J2 parte 5 foram realmente enviados, ambos com retorno normal vazio; oito chamadas efetivas minhas até aqui. Mensagem J2 agrupada 6–7 preparada com exatamente a abertura e os dois separadores de LF: 41.545 B, SHA256 dd6ff56f27995ba9563ca588727b788d41237555d533e6ed4295ef25a9aac454, coincidindo com sua identidade. Ainda não enviada; aguardarei/capturarei ACK 5 e então relerei a string inteira com orçamento suficiente antes da chamada única. Não haverá ACK 6 separado inventado."
+}

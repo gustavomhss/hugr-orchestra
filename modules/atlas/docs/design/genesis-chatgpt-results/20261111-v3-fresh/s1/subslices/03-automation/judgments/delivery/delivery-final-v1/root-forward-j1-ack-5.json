@@ -1,0 +1,7 @@
+{
+  "tool": "collaboration.send_message",
+  "target": "/root/review_relay",
+  "message": "Original nativo J1 parte 5 recebido, encaminhado literalmente para captura antes de seguir:\n\nACK_J1 — `DELIVERY-FINAL-V1`, parte **5/7** recebida.\n\nÚltima âncora: `assembly/consumer-summary-run/REPORT.md`, seção **“Vínculos de dispatch efetivamente conferidos”**, interrompida após **“As 26 respostas de consulta são JSON literal coerente com parsed_operation”**.\n\nAguardo as partes 6–7 e o sinal final de transporte, sem ferramentas e sem julgamento.\n\nFIM DO ORIGINAL. J2 parte 3 também teve ACK capturado; vou enviar parte 4.",
+  "tool_return_observed": "normal empty result",
+  "native_judgment": false
+}

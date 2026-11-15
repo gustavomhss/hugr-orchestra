@@ -1,0 +1,7 @@
+{
+  "tool": "collaboration.send_message",
+  "target": "/root/review_relay",
+  "message": "O original J1 que capturei coincide exatamente: 12438 B, SHA256 d546371fe444326a9cc417caea41009b36827269ddd444fbebf9741bbe1e669c. Preserve-o imutável. Entregue agora handover explícito somente de J1 à principal, sem nova chamada J1, para eu reapresentar a correção do relato ao mesmo juiz em paralelo à avaliação inicial ainda independente de J2. Você continua exclusivamente com J2 até seu FINAL e o handover correspondente. Não forneça o finding de J1 ou a correção proposta a J2 durante a rodada v1. Seu recibo v1 deve continuar cobrindo somente os despachos v1 reais.",
+  "tool_return_observed": "normal empty result",
+  "reply_capture": "judgments/delivery/delivery-final-v1/courier-j1-handover.md"
+}

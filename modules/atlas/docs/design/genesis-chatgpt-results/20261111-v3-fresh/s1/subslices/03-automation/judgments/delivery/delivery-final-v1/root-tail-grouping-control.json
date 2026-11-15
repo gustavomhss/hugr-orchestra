@@ -1,0 +1,12 @@
+{
+  "tool": "collaboration.send_message",
+  "target": "/root/review_relay",
+  "message": "Ajuste permitido de transporte para concluir J2: depois de capturar o ACK 5, envie as partes 6 e 7 juntas em UMA única followup_task. Use esta abertura literal: “Transporte final agrupado: esta mensagem contém integralmente as partes 6/7 e 7/7, em ordem. A instrução de ACK no fim da parte 6 é intermediária; o sinal final ao fim da parte 7 encerra o pacote e solicita seu parecer independente. Não use ferramentas.” Depois acrescente duas quebras de linha, a mensagem canônica 6, duas quebras de linha e a mensagem canônica 7, sem alterar seus bytes. Registre o novo tamanho/hash da mensagem composta e UMA chamada real, sem inventar ACK separado de 6. O pacote fonte e seu SHA permanecem iguais; só muda o agrupamento das duas últimas partes. Se houver recusa real do transporte, preserve o resultado e informe antes de qualquer reenvio. J1 continua com sua parte 7 já enviada. Não cruze pareceres.",
+  "tool_return_observed": "normal empty result",
+  "composed_message_identity": {
+    "bytes": 41545,
+    "sha256": "dd6ff56f27995ba9563ca588727b788d41237555d533e6ed4295ef25a9aac454"
+  },
+  "intended_judge_calls_for_tail_after_part5": 1,
+  "separate_part6_ACK_expected": false
+}

@@ -1,0 +1,6 @@
+{
+  "tool": "collaboration.send_message",
+  "target": "/root/review_relay",
+  "message": "ACK original J2 parte 5 recebido e capturado pela principal. Encaminho literalmente; pode prosseguir para a mensagem agrupada 6–7 após preservar:\n\nACK — **DELIVERY-FINAL-V1, parte 5/7**. Última âncora recebida: `assembly/consumer-summary-run/REPORT.md`, seção **“Vínculos de dispatch efetivamente conferidos”**, terminando literalmente em **`parsed_operation`**.\n\nAguardo as partes 6–7 e o sinal final, sem julgamento intermediário.\n\nFIM DO ORIGINAL. Captura da principal sem LF sintético: 299 bytes; SHA256 283a51bf1c9c029c79ce04df591cc506e9bed3ebb9e07117894e6822c3421367.",
+  "tool_return_observed": "normal empty result"
+}

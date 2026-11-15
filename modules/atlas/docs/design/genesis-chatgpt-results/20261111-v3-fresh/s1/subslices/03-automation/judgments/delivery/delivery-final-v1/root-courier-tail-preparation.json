@@ -1,0 +1,8 @@
+{
+  "tool": "collaboration.send_message",
+  "target": "/root/review_relay",
+  "message": "Prepare uma continuação de transporte paralela para J2 somente das partes 5–7, usando suas mensagens canônicas já conferidas; NÃO envie ainda. A principal enviou J2 partes 1–4 e aguarda ACK 4. Assim que eu capturar esse ACK e confirmar handover explícito sem chamada em voo, você poderá assumir exclusivamente as partes restantes de J2, em paralelo ao término de J1. Isso evita nova transcrição longa pela principal. Seu recibo deverá distinguir suas chamadas J1 1–7 e J2 5–7 das quatro chamadas J2 feitas pela principal e do controle de correção da parte 2; não ateste wire ou chamadas de outro dispatcher. Nenhum parecer atual deve ser enviado ao outro juiz.",
+  "tool_return_observed": "normal empty result",
+  "response": "Partes J2 5–7 preparadas em functions.store com as mensagens canônicas já lidas e hashes conferidos: 22.276/22.276/19.006 B, respectivamente cc294981… / 50c24726… / a482b0d4…. Nenhum envio novo a J2; aguardarei seu handover explícito após captura de ACK 4. O recibo distinguirá minhas chamadas das quatro J2 da principal e do controle de correção, sem atestar o wire alheio. J1 já recebeu 1–6; ACK 6 ainda pendente, parte 7 pronta.",
+  "state": "NOT_A_HANDOVER_YET"
+}

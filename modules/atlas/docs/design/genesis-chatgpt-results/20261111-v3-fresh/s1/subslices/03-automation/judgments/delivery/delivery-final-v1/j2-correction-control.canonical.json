@@ -1,0 +1,4 @@
+{
+  "target": "/root/s1_03_j2",
+  "message": "Correção literal de transporte da parte 2/7, antes do julgamento: em GO-I7, a frase canônica do pacote é exatamente “Portas governadas e limites de propriedade foram preservados.” A principal copiou “preservadas” nessa única ocorrência. Registrei a mensagem realmente enviada separadamente (22276 B; SHA256 7bd00fb1ef990d97233adb8be55726ffbe90a9a415db24830c214b3602bf6b0a); a mensagem canônica tem SHA256 489a07030c13700b54ef6f11b0ec1782cc487f1495e070a97b4735720bdcc53c. Este controle corrige somente a flexão, sem alterar mérito ou status. Confirme o recebimento e a correção no ACK; não julgue ainda."
+}

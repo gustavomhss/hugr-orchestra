@@ -1,0 +1,21 @@
+{
+  "tool": "collaboration.send_message",
+  "target": "/root/review_relay",
+  "message": "HANDOVER EXPLÍCITO J2, efetivo agora: a principal capturou o ACK original da parte 4; as quatro chamadas J2 estão concluídas, sem chamada em voo. Assuma exclusivamente J2 partes 5–7 a partir das mensagens canônicas já conferidas. A principal não enviará mais partes deste lote a J2. Continue também J1 parte 7. Mantenha a separação de despachos e nenhum parecer cruzado.\n\nOriginais nativos recebidos pela principal, para captura literal:\n\nBEGIN J1 ACK 6\nACK_J1 — `DELIVERY-FINAL-V1`, parte **6/7** recebida.\n\nÚltima âncora: bloco **`B-FINAL-GUARD`** de `receipts/final-operational-disposition-after-environment.json`, com a lista `evidence` interrompida em **`\"receipts/guard-materializat`**.\n\nAguardo a parte 7/7 e o sinal final de transporte, sem ferramentas e sem julgamento.\nEND J1 ACK 6\n\nBEGIN J2 ACK 4\nACK — **DELIVERY-FINAL-V1, parte 4/7**. Última âncora recebida: artefato **`s1.subslice03.research-maintenance`**, campo **`producer_request_ref`**, com o path interrompido em **`/03-automation/producers`**.\n\nAguardo as partes restantes e o sinal final, sem julgamento intermediário.\nEND J2 ACK 4\n\nInclua no recibo, se você já os tiver literalmente preservados em seu estado, os controles originais de entrada deste lote (pedido inicial de transporte, handover inicial de J2 à principal, controles de hashes). Não reconstrua texto perdido nem reemita mensagem por memória aproximada: informe precisamente o que está disponível. Não é necessário repetir o corpo do pacote no recibo. Preserve cada FINAL antes de reutilizar o handle.",
+  "tool_return_observed": "normal empty result",
+  "handover": {
+    "from": "/root",
+    "to": "/root/review_relay",
+    "root_parts_completed": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "root_calls_inflight": 0,
+    "next_part": 5,
+    "at_utc": "2026-11-15T12:57:23.773Z",
+    "dispatch_authorization": "Actual collaboration.send_message handover sent; normal empty return",
+    "control_path": "judgments/delivery/delivery-final-v1/root-courier-j2-tail-handover.json"
+  }
+}

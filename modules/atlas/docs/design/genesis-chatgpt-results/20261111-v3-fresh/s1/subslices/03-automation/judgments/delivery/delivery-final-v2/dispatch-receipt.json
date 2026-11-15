@@ -1,0 +1,69 @@
+{
+  "schema": "s103-final-delivery-corrective-transport/v1",
+  "state": "COMPLETED",
+  "calls": [
+    {
+      "tool": "collaboration.followup_task",
+      "target": "/root/s1_03_j1",
+      "part": "complete-corrective-packet",
+      "canonical_message": {
+        "bytes": 7599,
+        "sha256": "69dfc3a48b672142208824e27ce65ea75b5fe4e2d59474f5ef87cf39ca8c570a"
+      },
+      "request_record": {
+        "path": "judgments/delivery/delivery-final-v2/j1-request.canonical.json",
+        "bytes": 7930,
+        "sha256": "c7008507e00aeea25a7486fb3b531eeb02ff914eb3defc6002a1705bcdc90965"
+      },
+      "tool_return_observed": "normal empty result",
+      "state": "COMPLETED",
+      "at_recorded": "2026-11-15T13:14:59.600Z",
+      "preceding_original": {
+        "path": "judgments/delivery/delivery-final-v1/j1-response.md",
+        "bytes": 12438,
+        "sha256": "d546371fe444326a9cc417caea41009b36827269ddd444fbebf9741bbe1e669c"
+      },
+      "handover": "judgments/delivery/delivery-final-v1/courier-j1-handover.md",
+      "independent_of_current_other_judge": true,
+      "response": {
+        "path": "judgments/delivery/delivery-final-v2/j1-response.md",
+        "bytes": 2973,
+        "sha256": "ca389de368016ef56251f43d4d56f30133882020f5b6d7ea7c75e060fad86fb3"
+      }
+    },
+    {
+      "tool": "collaboration.followup_task",
+      "target": "/root/s1_03_j2",
+      "part": "complete-corrective-packet",
+      "canonical_message": {
+        "bytes": 7599,
+        "sha256": "69dfc3a48b672142208824e27ce65ea75b5fe4e2d59474f5ef87cf39ca8c570a"
+      },
+      "request_record": {
+        "path": "judgments/delivery/delivery-final-v2/j2-request.canonical.json",
+        "bytes": 7930,
+        "sha256": "c223946031c18cf0409d9f033334592479204323a997cfd91775a5b532f23bec"
+      },
+      "tool_return_observed": "normal empty result",
+      "state": "COMPLETED",
+      "at_recorded": "2026-11-15T13:22:14.701Z",
+      "preceding_original": {
+        "path": "judgments/delivery/delivery-final-v1/j2-response.md",
+        "bytes": 10904,
+        "sha256": "b4586e2005cac86b244436496fd4796a8491dddc50c31692f80fc422cd71ef8b"
+      },
+      "handover": "judgments/delivery/delivery-final-v1/courier-j2-handover.md",
+      "independent_of_current_other_judge": true,
+      "response": {
+        "path": "judgments/delivery/delivery-final-v2/j2-response.md",
+        "bytes": 2799,
+        "sha256": "57210e6dd5ff706b7af0aa9bc09ea21a0a1b31ecbd3a64251b83f36f599748a7"
+      }
+    }
+  ],
+  "actual_followups": 2,
+  "actual_native_finals": 2,
+  "unsettled_calls": 0,
+  "not_runtime_binding": true,
+  "other_judge_current_opinion_excluded": true
+}

@@ -1,0 +1,143 @@
+{
+  "schema": "s103-closing-visible-accounting/v1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "cutoff_utc": "2026-11-15T13:34:35.301Z",
+  "cutoff_scope": "After all visible final native reviews and corrections; before final payload/seal/readback Git operations. Not a certified complete physical host usage total.",
+  "ledger": {
+    "path": "execution-ledger.jsonl",
+    "bytes": 407992,
+    "sha256": "f9c4f685e0da7c86d1c0b1ffa29cdbf39cc3d2fd7a9b467fcad2d57d5d2a605e",
+    "rows": 485,
+    "original_P0_rows": 445,
+    "new_post_P0_rows": 40,
+    "ten_original_aggregate_rows_without_event_id": 10,
+    "duplicate_nonempty_event_ids": 0,
+    "published_P0_prefix_preserved": true,
+    "published_C2_C3_453_row_prefix_preserved": true
+  },
+  "prior_visible_snapshot": {
+    "path": "economy/final-visible-accounting.json",
+    "bytes": 2407,
+    "sha256": "a79a6cbaa941ecb68a5d4b82d1996429a57a34a9b03f0ccd55b2c56a9d0f9dd7"
+  },
+  "unavailable_pre_loss_ledger": {
+    "rows": 550,
+    "sha256": "66abda692fd4bed1f0981feeaf27dcf36cd333c735ffd7025de537ebd6ffe828",
+    "recovered": false
+  },
+  "actual_final_review_transport": {
+    "v1_packet_followups": 13,
+    "v1_root_followups": 4,
+    "v1_courier_followups": 9,
+    "v1_judge_control_send_messages": 1,
+    "v1_native_ACKs": 11,
+    "v1_native_judgment_FINALs": 2,
+    "v2_followups": 2,
+    "v2_native_judgment_FINALs": 2,
+    "current_visible_judge_calls_unsettled": 0,
+    "courier_v1_calls_unsettled": 0,
+    "context_check_followups_before_v1": 2,
+    "reserved_oracle_redelivery_followups_before_v1": 2,
+    "packet_parts_grouped_once": true,
+    "blind_retransmissions": 0,
+    "visible_tool_return_truncations": 2,
+    "normal_return_for_truncated_calls": "UNKNOWN",
+    "original_native_completion_for_both_truncated_calls": "CAPTURED"
+  },
+  "courier_control_records": {
+    "root_current_visible_send_message_records": [
+      {
+        "path": "judgments/delivery/delivery-final-v1/root-courier-control-after-part2.json",
+        "bytes": 609,
+        "sha256": "9b3a8642d1ae67bf15129fff78358df9cce00c4feb199e4c2558412126fcad40"
+      },
+      {
+        "path": "judgments/delivery/delivery-final-v1/root-forward-j1-ack-4.json",
+        "bytes": 578,
+        "sha256": "a4679ad178bc87cbbd3b95880d190d5e4eed4cdf5cbbdc4a96f21e67a34f61b7"
+      },
+      {
+        "path": "judgments/delivery/delivery-final-v1/root-forward-j1-ack-5.json",
+        "bytes": 547,
+        "sha256": "0ec708322b69af23b82582f5a9e4b67b059ae9b9fbb21d94cb8324eed3de92ec"
+      },
+      {
+        "path": "judgments/delivery/delivery-final-v1/root-courier-tail-preparation.json",
+        "bytes": 683,
+        "sha256": "f9d25578a5eec95b7214f9ed5d73c45bc907a3d0c463ba1c35de0891fa73c27e"
+      },
+      {
+        "path": "judgments/delivery/delivery-final-v1/root-courier-j2-tail-handover.json",
+        "bytes": 1570,
+        "sha256": "2aff8a863fd1fb1f39aa4817ea9a64dba5605a43c7faef7724a7ec23fcf2c85d"
+      },
+      {
+        "path": "judgments/delivery/delivery-final-v1/root-tail-grouping-control.json",
+        "bytes": 917,
+        "sha256": "c8680d8fa8bf7f0facba74d9da631ffd24afaef5a5f5d2044d6c7b3e9c8439dc"
+      },
+      {
+        "path": "judgments/delivery/delivery-final-v1/grouped-tail-identity-control.json",
+        "bytes": 432,
+        "sha256": "ccb1f4ab0f5cd2596f27b0101920a9ea666ab23ede6a71c0160372ada4a15774"
+      },
+      {
+        "path": "judgments/delivery/delivery-final-v1/root-forward-j2-ack-5.json",
+        "bytes": 591,
+        "sha256": "8398da0e2c523986aae2593ca227e2ffc1a5a8f7d5d292ddd129ff17790f81cf"
+      },
+      {
+        "path": "judgments/delivery/delivery-final-v1/root-forward-j1-ack-3.json",
+        "bytes": 576,
+        "sha256": "cf611969223ca564cb511008a26245875006076aa7c67b61ace1a04d6ad009a5"
+      },
+      {
+        "path": "judgments/delivery/delivery-final-v1/root-j1-handover-request.json",
+        "bytes": 585,
+        "sha256": "fb7f764cc455426cfe64630e27d889252e97534db4a178282f07ff331582b2c5"
+      }
+    ],
+    "earlier_original_controls_exported": 3,
+    "not_additional_packet_dispatches": true,
+    "physical_invocations_due_to_control_delivery": "UNKNOWN"
+  },
+  "consumer_run": {
+    "actual_native_requests": 33,
+    "actual_native_completions": 33,
+    "actual_CLI": 26,
+    "index": 11,
+    "read": 15,
+    "holds": 22,
+    "need_errors": 4,
+    "forwarded_UTF8_bytes": 7713,
+    "bodies_delivered": 0,
+    "source": {
+      "path": "assembly/consumer-summary-run/REPORT.md",
+      "bytes": 7877,
+      "sha256": "38e27c0f3087ae77c7412e08c61618a6930c3e3ec67c441f11fc4b74a4d07d20"
+    },
+    "individual_raw_dispatch_custody": "PARTIALLY_UNAVAILABLE; aggregate is not invented per-call rows"
+  },
+  "usage_by_stage": {
+    "construction": "Twelve current bodies and their original producer/gate records retained at P0; physical usage UNKNOWN.",
+    "validation_and_correction": "Original body reviews reused; current 13 packet followups and two corrective followups have original native completions, in addition to preserved context/oracle controls. Courier mechanics are not a third vote.",
+    "incremental_update": "Both frozen own cases NOT_RUN_PRECONDITION. No unexposed usage inferred as zero.",
+    "daily_reads": "26 actual CLI queries and 33 native consumer requests/completions reported by recovered original audit; original per-turn chain remains inaccessible."
+  },
+  "physical_attempts": "UNKNOWN",
+  "tokens": "UNKNOWN",
+  "cost": "UNKNOWN",
+  "historical_campaign": "GLOBAL_UNRECONCILED",
+  "financial_guarantee": "NOT_EXPOSED_BY_NATIVE_HOST",
+  "complete_host_native_total_certified": false,
+  "external_paid_calls": false,
+  "silent_provider_or_model_fallback": false,
+  "budget_reset": false,
+  "limits": [
+    "Caller-visible logical calls, received controls, ledger records, CLI invocations and physical model attempts are different units.",
+    "The native audit helper's original FINAL is preserved, but its exact request dispatch record is inaccessible; no invented request is substituted.",
+    "The 550-row local ledger and detailed pre-loss accounting snapshot remain unavailable; this closing ledger does not purport to recreate them.",
+    "Original control texts exported by courier are preserved with their stated provenance, not treated as independent host wire evidence.",
+    "Subsequent Git payload/seal/readback operations belong to the publication record; this cutoff does not predeclare them."
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "schema": "s103-delivery-temporal-correction/v1",
+  "change_id": "DF-REPORT-01",
+  "at_utc": "2026-11-15T13:13:08.895Z",
+  "source_review_packet": {
+    "path": "review-packets/delivery-final-v1.md",
+    "commit": "982076cfbbbbd34f70f02b6ebe150a276f97d3cf",
+    "bytes": 150497,
+    "sha256": "ceb4cbdb5056cc25dc372efeb4e739692ef62f5e045d2a014253249405952ea9"
+  },
+  "work_before": {
+    "bytes": 15771,
+    "sha256": "9c86373c9e941bfba61ae946dd65fa5334fd69b566fb9863f4be0b74f7e87888"
+  },
+  "work_after": {
+    "path": "work.md",
+    "bytes": 16495,
+    "sha256": "7931d84630b6733831f15d1e99cec54c50b9889ea28ac72c35b68a5228c15152"
+  },
+  "exact_removed_text": "Revisão final do material disponível, reconciliação dos seus eventos e payload/selo/readback são comprovados pelos originais e pelo handoff; nenhum evento futuro é simulado.",
+  "exact_replacement": "Os recibos em receipts/publication/native-inputs-v1/ comprovam a publicação anterior dos inputs no payload 191a3b3a12c60a2df70c1dbf36510303c025c5ea, seu selo 8873e22afcecddf58688a92e7ff9cb208dc4e2fd e as respectivas releituras. semantic-acceptances.json vincula os pareceres já existentes aos doze corpos julgados. Esses registros têm esses objetos e não comprovam antecipadamente a revisão final ou a publicação de encerramento desta entrega.\n\nA revisão final corrente, a reconciliação de seus eventos e a publicação de encerramento são etapas distintas. Só podem ser relatadas como concluídas na extensão sustentada pelos respectivos pareceres e recibos originais, após ocorrerem. O handoff de encerramento deve referenciar o payload P realmente criado; o selo H e a releitura posterior só podem ser confirmados depois de realizados. Este relato não antecipa sucesso dessas etapas.",
+  "occurrences_replaced": 1,
+  "matrix_before": {
+    "bytes": 56096,
+    "sha256": "49c371fffd20613e51c3c251a5961ba0f46712da82a2866621c10915408f1100"
+  },
+  "matrix_candidate": {
+    "path": "criteria-matrix.json",
+    "bytes": 56666,
+    "sha256": "ab1e0e94fffc05575668fd84ad3008258be642739f818fa906d6c842ba5d2d45"
+  },
+  "changed_row": "GO-I2",
+  "other_49_normative_rows_and_local_statuses_unchanged": true,
+  "package_unchanged": {
+    "path": "native-package.json",
+    "bytes": 485602,
+    "sha256": "ddada3d4b67cff13ef3a5817b95efc275b0d288061436546c8ec6b73290766a6"
+  },
+  "all_12_source_bodies_unchanged": true,
+  "operation_results_unchanged": true,
+  "completion_state": "INCOMPLETE_BLOCKED",
+  "review_state": "PENDING_SAME_PAIR_REASSESSMENT"
+}
