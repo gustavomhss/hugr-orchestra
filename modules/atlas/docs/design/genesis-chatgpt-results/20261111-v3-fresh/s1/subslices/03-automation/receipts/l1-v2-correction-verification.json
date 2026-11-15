@@ -1,0 +1,42 @@
+{
+  "schema": "s1-03-root-correction-verification/v1",
+  "assigned_population": 462,
+  "additional_raw_schema_inputs": 7,
+  "items": [
+    {
+      "family": "automation",
+      "before": {
+        "bytes": 59832,
+        "sha256": "2ed7670affc680005840d0918489cb1ac36e1c5a4021defcc57ae44186ae7459",
+        "git_blob_sha": "1867e5763e724fb2c3641f28297da24b311bdcda"
+      },
+      "after": {
+        "bytes": 59953,
+        "sha256": "e9c89bea68d594bc61356ff461642ea23cd905d4584f2b52d32e10a5af984e55",
+        "git_blob_sha": "b8fec4854b4c1384d3c4a2a4f0d51d220c874618"
+      },
+      "literal_substitutions": 1,
+      "remaining_bytes_identical": true,
+      "judgment": "PENDING_SAME_PAIR"
+    },
+    {
+      "family": "research",
+      "before": {
+        "bytes": 63389,
+        "sha256": "1213f85cf16f73feed220e8c1b33ed52b2af75afd570b154a29eaf8f99f27d73",
+        "git_blob_sha": "c29b9f5b8a8913cc4afa58d3e9cdede292f0657e"
+      },
+      "after": {
+        "bytes": 63501,
+        "sha256": "d2def4b82495605b491e0d5494b1511e1b68c47dcffa84af87c8d35705468661",
+        "git_blob_sha": "bb0eaa73b4fe9120fb46d9304778649b5c7205dd"
+      },
+      "literal_substitutions": 2,
+      "remaining_bytes_identical": true,
+      "judgment": "PENDING_SAME_PAIR"
+    }
+  ],
+  "historical_entry_untouched": true,
+  "semantic_acceptance": "PENDING_SAME_PAIR",
+  "product_tests": "NOT_RUN"
+}

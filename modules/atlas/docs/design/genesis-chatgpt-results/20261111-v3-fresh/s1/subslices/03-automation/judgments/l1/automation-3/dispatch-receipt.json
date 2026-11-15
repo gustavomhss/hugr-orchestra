@@ -1,0 +1,101 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "relay": "/root/review_relay",
+  "packet": "automation-3",
+  "source": "review-packets/automation-3.txt",
+  "source_bytes": 63730,
+  "source_sha256": "392337ffa4ec72c1a3d1b2cf11ccdb0b3e7e605de21e330ce05bb8fd41ef7594",
+  "recorded_at_utc": "2026-11-15T00:33:07.741717+00:00",
+  "dispatch_count": 4,
+  "parts_per_target": 2,
+  "completed_targets": [
+    "/root/s1_03_j1",
+    "/root/s1_03_j2"
+  ],
+  "pending_targets": [],
+  "calls": [
+    {
+      "sequence": 1,
+      "target": "/root/s1_03_j1",
+      "part": 1,
+      "request_file": "request-j1-01.json",
+      "request_file_bytes": 32784,
+      "request_file_sha256": "af96a1d0afd6c6e4b466fd24346859cb4f91cfe63d3510090341a3081aa6a9d5",
+      "message_bytes": 32280,
+      "message_sha256": "633513b5d7ce2f7695c6aac77048df8f920f9a2fbf0126e25899afd71cbeb221",
+      "payload_bytes": 31876,
+      "payload_sha256": "78911b5262b8127ea8bc7d836874180fcd3afa863bd836006853080bb38e26bf",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 2,
+      "target": "/root/s1_03_j1",
+      "part": 2,
+      "request_file": "request-j1-02.json",
+      "request_file_bytes": 33468,
+      "request_file_sha256": "5dd9a248e11ee507e7ad52024a5f43bb623056b8a5127bb0c38c2d7fbc26aa0d",
+      "message_bytes": 32432,
+      "message_sha256": "2c88ce95d3bb30a37694907553ec2bf8c1109c9d5fb115ab132a85deaea91428",
+      "payload_bytes": 31854,
+      "payload_sha256": "6ebaf5b4dbce754f4392b0b8729d92607212ee77a09fe3be4821c160f15baa03",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 3,
+      "target": "/root/s1_03_j2",
+      "part": 1,
+      "request_file": "request-j2-01.json",
+      "request_file_bytes": 32784,
+      "request_file_sha256": "e3dd2ff1a43ccc144015602ef076c9fd436403bcc46854cfcf8f9e8cef640b28",
+      "message_bytes": 32280,
+      "message_sha256": "633513b5d7ce2f7695c6aac77048df8f920f9a2fbf0126e25899afd71cbeb221",
+      "payload_bytes": 31876,
+      "payload_sha256": "78911b5262b8127ea8bc7d836874180fcd3afa863bd836006853080bb38e26bf",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 4,
+      "target": "/root/s1_03_j2",
+      "part": 2,
+      "request_file": "request-j2-02.json",
+      "request_file_bytes": 33468,
+      "request_file_sha256": "a5fa575c89a88b1088214b2d386d67d878478d71a9bbea81ec0449258d353510",
+      "message_bytes": 32432,
+      "message_sha256": "2c88ce95d3bb30a37694907553ec2bf8c1109c9d5fb115ab132a85deaea91428",
+      "payload_bytes": 31854,
+      "payload_sha256": "6ebaf5b4dbce754f4392b0b8729d92607212ee77a09fe3be4821c160f15baa03",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    }
+  ],
+  "local_recorded_reconstruction": [
+    {
+      "target": "/root/s1_03_j1",
+      "bytes": 63730,
+      "sha256": "392337ffa4ec72c1a3d1b2cf11ccdb0b3e7e605de21e330ce05bb8fd41ef7594",
+      "equals_source": true
+    },
+    {
+      "target": "/root/s1_03_j2",
+      "bytes": 63730,
+      "sha256": "392337ffa4ec72c1a3d1b2cf11ccdb0b3e7e605de21e330ce05bb8fd41ef7594",
+      "equals_source": true
+    }
+  ],
+  "known_transcription_corrections": [],
+  "receipt_limit": "Ferramenta retornou normalmente sem texto nem ID de despacho; os hashes descrevem os pedidos registrados e sua reconstrução local, não verificação remota nem suficiência semântica.",
+  "delivery_scope": "Conteúdo literal inline. Orientação pública de economia de relato da raiz reproduzida fora dos delimitadores literais, idêntica para ambos.",
+  "slot_handling": "Raiz informou autor automation inativo e slot para ambos os juízes; enviados sequencialmente por tool, julgamentos podem coexistir nos quatro slots.",
+  "judgment_capture": "Ambos completed; J1 original salvo pela raiz e hash verificado pelo relay; J2 original capturado pelo relay. Ver response-capture.json."
+}

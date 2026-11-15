@@ -1,0 +1,119 @@
+{
+  "schema": "genesis-review-supplement-receipt/v1",
+  "task": "AUTOMATION-L1",
+  "review_batch": "automation-2",
+  "producer": "/root/automation_l1",
+  "outputs": [
+    {
+      "path": "review-supplement-2.md",
+      "bytes": 375497,
+      "sha256": "208b0ba87350a91970d28f298d802512b72b6834360815b95ca17ab22ebc54b1",
+      "git_blob_sha": "bf43391979916e85f44ac4841926954d2c13362f"
+    },
+    {
+      "path": "review-supplement-2-index.json",
+      "bytes": 113392,
+      "sha256": "9b69ab60d2f1b5d51d46a165852e9402b63261b77aee59a7001ff80ff3a5cfcb",
+      "git_blob_sha": "bd0652636f38ee4b2e644a089bb0e037b078d81d"
+    },
+    {
+      "path": "review-supplement-2-response.md",
+      "bytes": 2397,
+      "sha256": "dd6b784c8a203d8c6c04b2249369ac37b5842ad47d9ed8e461436d6ef2e056d3",
+      "git_blob_sha": "359dd130eb89087b09d9ba1eefdb1a2d827a4f2f"
+    },
+    {
+      "path": "external-source-captures-supplement-2.json",
+      "bytes": 1207,
+      "sha256": "f6d85694176ffdc640a1f983de1737c9c61758d27795dc2ebedf4669967ced3c",
+      "git_blob_sha": "0492fde2b844cbdd9bd6f4f20380c5d347c50caf"
+    },
+    {
+      "path": "build_review_supplement_2.py",
+      "bytes": 23014,
+      "sha256": "9e50ba8093d9371e8d4e4034f14684bf6d7dc7946c154e7954aa18573e0f713a",
+      "git_blob_sha": "3b1e95b806017f2715ef0b6f65d53d3d85d3d6df"
+    }
+  ],
+  "preserved_files": [
+    {
+      "path": "body.md",
+      "bytes": 59953,
+      "sha256": "e9c89bea68d594bc61356ff461642ea23cd905d4584f2b52d32e10a5af984e55",
+      "git_blob_sha": "b8fec4854b4c1384d3c4a2a4f0d51d220c874618"
+    },
+    {
+      "path": "recipe.json",
+      "bytes": 28464,
+      "sha256": "2bed1778e629415d5bc7c818773ef18b012a8a0bd4239d5bc85db6642b41a80e",
+      "git_blob_sha": "ee579c43b9ab1eef07025be8f6221f6609326ebf"
+    },
+    {
+      "path": "review-supplement-1.md",
+      "bytes": 338932,
+      "sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "git_blob_sha": "dab732abd7f47eb3f26473b5614fa92d2b747a46"
+    },
+    {
+      "path": "review-supplement-1-index.json",
+      "bytes": 246723,
+      "sha256": "b3a190b8f1bc17ea7f35fc0c53c5bb0f0f134570ac78f62a020452c3818d8902",
+      "git_blob_sha": "c42a17c0071f3c864f3e6eb11b5a7ae3fa0d37be"
+    },
+    {
+      "path": "review-supplement-1-receipt.json",
+      "bytes": 4644,
+      "sha256": "153f5b0d8c77ebb2c7c281457b9e2227c8d5b208e29dd10f2e180d95b5384567",
+      "git_blob_sha": "fb21bb10a3ba44ea0bf464fc7a9a02422f49cfd5"
+    },
+    {
+      "path": "external-source-captures.json",
+      "bytes": 6152,
+      "sha256": "a6173c03c76fdae97db1535253700257827062eecc74a5e4a4f6d67c1634fd57",
+      "git_blob_sha": "a1762e44be3aaae6ce5da319134f1023f1b8e094"
+    },
+    {
+      "path": "coverage.jsonl",
+      "bytes": 223656,
+      "sha256": "580c1885a277f378d9f5c44f0dd335e58cb4dc02f23bc002179103dc90dcfd5f",
+      "git_blob_sha": "055916a29be2005f94a202949080f7d6139bff28"
+    },
+    {
+      "path": "captures.json",
+      "bytes": 100039,
+      "sha256": "d705eeab9e7ade1461f151f3b72556696cd3bbac473baf3ab13bb14192cd28e1",
+      "git_blob_sha": "e1c2cb2f2a58ac0b22e9fc86862594798fc802eb"
+    },
+    {
+      "path": "history/body-v1.md",
+      "bytes": 59832,
+      "sha256": "2ed7670affc680005840d0918489cb1ac36e1c5a4021defcc57ae44186ae7459",
+      "git_blob_sha": "1867e5763e724fb2c3641f28297da24b311bdcda"
+    },
+    {
+      "path": "history/recipe-v1.json",
+      "bytes": 15037,
+      "sha256": "0bea2453bc31f3f93109b9c64c7952aa690e6e6e8e5794c35a5630b8f9b38b21",
+      "git_blob_sha": "01c0b2008499d7df9449dd881ff9d9fd7f0f6853"
+    }
+  ],
+  "new_literal_blocks": 45,
+  "new_owned_source_files": 44,
+  "new_external_source_files": 1,
+  "reused_unique_blocks": 28,
+  "literal_bytes_equal": true,
+  "reused_transport_bytes_equal": true,
+  "unique_Core_source_paths_with_literal_blocks_in_supplements_1_2": 83,
+  "join_authority": "mechanical source-path union, not semantic acceptance or new census204",
+  "original_hashes_equal": true,
+  "recount204": false,
+  "history_repeated": false,
+  "product_tests": "NOT_RUN",
+  "provider_execution": "NOT_RUN",
+  "oracle_access": false,
+  "remote_writes": 0,
+  "judgment": "NOT_PERFORMED",
+  "proposed_deltas": [],
+  "model_tokens": "UNKNOWN",
+  "model_cost": "UNKNOWN"
+}

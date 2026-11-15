@@ -1,0 +1,95 @@
+{
+  "relay": "/root/review_relay",
+  "packet": "automation-1",
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "source_bytes": 65080,
+  "source_sha256": "935c0c6e45e27aac70c20505d5a08adfedd5a8bc5638ae9f0a40ab28db05de49",
+  "dispatches": [
+    {
+      "sequence": 1,
+      "target": "/root/s1_03_j1",
+      "request_file": "request-j1-01-original.json",
+      "request_file_bytes": 33966,
+      "request_file_sha256": "d7dd7a4e5da44f238fab4a19e26ebe3b87fe1214892642a3feada1f11edc0b3d",
+      "message_bytes": 33382,
+      "message_sha256": "15e0777c78b62f471ba7e948666b1b9191c0da75402fc666fda350cc3804d994",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 2,
+      "target": "/root/s1_03_j1",
+      "request_file": "request-j1-01-correction.json",
+      "request_file_bytes": 858,
+      "request_file_sha256": "fa97df1e4f944c3e6795c87317602543183cccb2a5ebdb2bab41abc58570b1ca",
+      "message_bytes": 805,
+      "message_sha256": "9110e1574af85f6dc19741cc33099b8e0ea82d0d902f0895106a0eaf9cf9d7a3",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 3,
+      "target": "/root/s1_03_j1",
+      "request_file": "request-j1-02.json",
+      "request_file_bytes": 33395,
+      "request_file_sha256": "8fe72830711cffc100a6b1684ab82a43d9e839782cac2be9ba81d0ec69be046b",
+      "message_bytes": 32383,
+      "message_sha256": "2677ee71739ba34b17100e4c466768cec361ecfeb96d90106648b0a9599108d2",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 4,
+      "target": "/root/s1_03_j2",
+      "request_file": "request-j2-01.json",
+      "request_file_bytes": 33964,
+      "request_file_sha256": "2a0a89fc0f8588c7442d4ad5105ba1d1f839c05400c5aaacd71563ff3ce18de8",
+      "message_bytes": 33381,
+      "message_sha256": "2c9d8cfea6b1cb6723282dfea2b33878aab661085198ebb95dfc380764682054",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 5,
+      "target": "/root/s1_03_j2",
+      "request_file": "request-j2-02.json",
+      "request_file_bytes": 33304,
+      "request_file_sha256": "819f95baf2e850fd1bb845c9d36267dac9debae040e359f9873986c5eed1ae65",
+      "message_bytes": 32292,
+      "message_sha256": "60669d9f9ad06a648aef95ea01cee04bbea8ce664e5de3de7e7aa6a5844a8bb6",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    }
+  ],
+  "dispatch_count": 5,
+  "pending_targets": [],
+  "transport_correction": {
+    "target": "/root/s1_03_j1",
+    "part": 1,
+    "difference": "Uma quebra de linha extra após “versão |” na linha de tabela de Arquivo GitLab.",
+    "original_request_preserved": true,
+    "literal_correction_sent": true,
+    "corrected_part_sha256": "d431e4e5e1c7cb356e639f6c3804fa6ff7f7399ec4db368d0bc54d22e45ca834",
+    "j1_acknowledgment_observed": "Recebidas as **2/2 partes**, a correção exclusiva de transporte da linha **“Arquivo GitLab”** e o marcador **FIM_DO_LOTE**. Julguei a linha recomposta conforme a correção, sem atribuir ao candidato a quebra introduzida pelo relay."
+  },
+  "recorded_at_utc": "2026-11-14T23:58:01.645698+00:00",
+  "parts_per_target": 2,
+  "targets": [
+    "/root/s1_03_j1",
+    "/root/s1_03_j2"
+  ],
+  "reconstructed_bytes_per_target": 65080,
+  "reconstructed_sha256": "935c0c6e45e27aac70c20505d5a08adfedd5a8bc5638ae9f0a40ab28db05de49",
+  "slot_handling": "J2 foi reativado somente depois de list_agents informar J1 completed; enquanto J1 e research_l1 estavam running, houve espera.",
+  "receipt_limit": "Retornos de collaboration.followup_task vazios e sem IDs de despacho. Este registro não julga mérito nem suficiência."
+}

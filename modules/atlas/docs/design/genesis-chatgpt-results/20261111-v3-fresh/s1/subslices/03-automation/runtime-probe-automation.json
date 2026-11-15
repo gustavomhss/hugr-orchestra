@@ -1,0 +1,1700 @@
+{
+  "schema": "genesis-native-package/v1",
+  "campaign": "20261111-v1",
+  "protocol_epoch": "parallel-v3-fresh",
+  "results_epoch": "20261111-v3-fresh",
+  "session": "S1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_ref": {
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "path": ".orchestra/skills/execute-genesis/SKILL.md",
+    "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029"
+  },
+  "scope": "orchestra.s1",
+  "package_state": "PREACCEPTANCE_CAPTURE_PROBE_NOT_PUBLISHABLE",
+  "contract": {
+    "criteria": [
+      "GO-A1",
+      "GO-A2",
+      "GO-A3",
+      "GO-A4",
+      "GO-A5",
+      "GO-A6",
+      "GO-A7",
+      "QS-1",
+      "QS-2",
+      "QS-3",
+      "QS-4",
+      "QS-5",
+      "QS-6",
+      "CC-1",
+      "CC-3",
+      "CC-7",
+      "GO-I1",
+      "GO-I2",
+      "GO-I7",
+      "GO-I8",
+      "runtime-import-binding"
+    ],
+    "oracle_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/oracles/consumer-maintenance-v1.json",
+      "sha256": "f1cc16fcd73e17fa1aff015e30e7facacaabf0dc2b195c0603f9f30a1f875ccb"
+    }
+  },
+  "required_artifact_keys": [
+    "s1.core.automation"
+  ],
+  "artifacts": [
+    {
+      "key": "s1.core.automation",
+      "scope": "orchestra.s1",
+      "title": "Automação, Actions, Board e agendamento — probe de captura anterior ao aceite",
+      "layer": 1,
+      "need": "flow",
+      "body": {
+        "path": "producers/automation/body.md",
+        "encoding": "utf-8",
+        "byte_length": 60767,
+        "sha256": "968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae"
+      },
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "S1-03 COMMON and mission at 70234d541a9a3539935ef16f19e33c8f2d5f30ec; no runtime publication authority is granted by this transport."
+      },
+      "validity": "blocked",
+      "gaps": [
+        "Semantic review of v4 remains pending; preserved v1 REQUEST_EVIDENCE responses are not approval.",
+        "This is an entire-automation-input capture probe only, not the final 12-artifact S1-03 package."
+      ],
+      "evidence": [
+        "producer native-input-disposition/v1; all declared effective dependencies retained",
+        "Original public reviews automation-4 J1/J2 remain REQUEST_EVIDENCE"
+      ],
+      "input_keys": [
+        "file:packages/core/src/actions.ts",
+        "file:packages/core/src/actions/authoring/base.ts",
+        "file:packages/core/src/actions/authoring/github.ts",
+        "file:packages/core/src/actions/authoring/gitlab.ts",
+        "file:packages/core/src/actions/authoring/index.ts",
+        "file:packages/core/src/actions/authoring/input.ts",
+        "file:packages/core/src/actions/authoring/lint.ts",
+        "file:packages/core/src/actions/authoring/remote.ts",
+        "file:packages/core/src/actions/authoring/schedule.ts",
+        "file:packages/core/src/actions/binding.ts",
+        "file:packages/core/src/actions/contract.ts",
+        "file:packages/core/src/actions/cursor.ts",
+        "file:packages/core/src/actions/error.ts",
+        "file:packages/core/src/actions/github/catalog.ts",
+        "file:packages/core/src/actions/github/commands.ts",
+        "file:packages/core/src/actions/github/commands/common.ts",
+        "file:packages/core/src/actions/github/commands/inputs.ts",
+        "file:packages/core/src/actions/github/commands/job.ts",
+        "file:packages/core/src/actions/github/commands/run.ts",
+        "file:packages/core/src/actions/github/commands/workflow.ts",
+        "file:packages/core/src/actions/github/index.ts",
+        "file:packages/core/src/actions/github/jobs.ts",
+        "file:packages/core/src/actions/github/native.ts",
+        "file:packages/core/src/actions/github/runs.ts",
+        "file:packages/core/src/actions/gitlab/catalog.ts",
+        "file:packages/core/src/actions/gitlab/commands.ts",
+        "file:packages/core/src/actions/gitlab/commands/inputs.ts",
+        "file:packages/core/src/actions/gitlab/commands/jobs.ts",
+        "file:packages/core/src/actions/gitlab/commands/launch.ts",
+        "file:packages/core/src/actions/gitlab/commands/merge-request.ts",
+        "file:packages/core/src/actions/gitlab/commands/native.ts",
+        "file:packages/core/src/actions/gitlab/commands/runs.ts",
+        "file:packages/core/src/actions/gitlab/commands/shared.ts",
+        "file:packages/core/src/actions/gitlab/index.ts",
+        "file:packages/core/src/actions/gitlab/jobs.ts",
+        "file:packages/core/src/actions/gitlab/native.ts",
+        "file:packages/core/src/actions/gitlab/runs.ts",
+        "file:packages/core/src/actions/operations.ts",
+        "file:packages/core/src/actions/operations/outcome.ts",
+        "file:packages/core/src/actions/operations/readback.ts",
+        "file:packages/core/src/actions/operations/sql.ts",
+        "file:packages/core/src/actions/operations/storage.ts",
+        "file:packages/core/src/actions/output/artifacts.ts",
+        "file:packages/core/src/actions/output/download.ts",
+        "file:packages/core/src/actions/output/headers.ts",
+        "file:packages/core/src/actions/output/index.ts",
+        "file:packages/core/src/actions/output/mutations.ts",
+        "file:packages/core/src/actions/output/native.ts",
+        "file:packages/core/src/actions/output/signed.ts",
+        "file:packages/core/src/actions/output/target.ts",
+        "file:packages/core/src/actions/output/version.ts",
+        "file:packages/core/src/actions/readback.ts",
+        "file:packages/core/src/actions/resources.ts",
+        "file:packages/core/src/actions/resources/caches.ts",
+        "file:packages/core/src/actions/resources/config-common.ts",
+        "file:packages/core/src/actions/resources/config-deployment-review.ts",
+        "file:packages/core/src/actions/resources/config-environment-github.ts",
+        "file:packages/core/src/actions/resources/config-environment-gitlab.ts",
+        "file:packages/core/src/actions/resources/config-environment-reviewers.ts",
+        "file:packages/core/src/actions/resources/config-environment-schema.ts",
+        "file:packages/core/src/actions/resources/config-sodium.d.ts",
+        "file:packages/core/src/actions/resources/config-variable-github-page.ts",
+        "file:packages/core/src/actions/resources/environments.ts",
+        "file:packages/core/src/actions/resources/gitlab-graphql.ts",
+        "file:packages/core/src/actions/resources/native.ts",
+        "file:packages/core/src/actions/resources/policy.ts",
+        "file:packages/core/src/actions/resources/runners.ts",
+        "file:packages/core/src/actions/resources/schedule-yaml.ts",
+        "file:packages/core/src/actions/resources/schedules.ts",
+        "file:packages/core/src/actions/resources/variables.ts",
+        "file:packages/core/src/actions/source/document.ts",
+        "file:packages/core/src/actions/source/github.ts",
+        "file:packages/core/src/actions/source/gitlab.ts",
+        "file:packages/core/src/actions/source/graph.ts",
+        "file:packages/core/src/actions/state.ts",
+        "file:packages/core/src/actions/transport.ts",
+        "file:packages/core/src/actions/transport/cli.ts",
+        "file:packages/core/src/actions/transport/credentials.ts",
+        "file:packages/core/src/actions/transport/gitlab.ts",
+        "file:packages/core/src/actions/transport/http.ts",
+        "file:packages/core/src/actions/transport/identity.ts",
+        "file:packages/core/src/actions/transport/process.ts",
+        "file:packages/core/src/actions/transport/response.ts",
+        "file:packages/core/src/board/board.ts",
+        "file:packages/core/src/board/ci.ts",
+        "file:packages/core/src/board/conflicts.ts",
+        "file:packages/core/src/board/decision.ts",
+        "file:packages/core/src/board/forecast.ts",
+        "file:packages/core/src/board/github.ts",
+        "file:packages/core/src/board/ledger.ts",
+        "file:packages/core/src/board/money.ts",
+        "file:packages/core/src/board/proof.ts",
+        "file:packages/core/src/board/queue-drift.ts",
+        "file:packages/core/src/board/queue-lanes.ts",
+        "file:packages/core/src/board/queue-record.ts",
+        "file:packages/core/src/board/queue-red.ts",
+        "file:packages/core/src/board/queue-settle.ts",
+        "file:packages/core/src/board/queue-shared.ts",
+        "file:packages/core/src/board/queue.ts",
+        "file:packages/core/src/board/record.ts",
+        "file:packages/core/src/board/rows.ts",
+        "file:packages/core/src/board/shared.ts",
+        "file:packages/core/src/board/snapshot.ts",
+        "file:packages/core/src/board/spend.ts",
+        "file:packages/core/src/board/sql.ts",
+        "file:packages/core/src/board/thread.ts",
+        "file:packages/core/src/board/tools.ts",
+        "file:packages/core/src/board/tree.ts",
+        "file:packages/core/src/scheduled-task.ts",
+        "file:packages/core/src/scheduled-task/capability-model.ts",
+        "file:packages/core/src/scheduled-task/capability.ts",
+        "file:packages/core/src/scheduled-task/model.ts",
+        "file:packages/core/src/scheduled-task/port.ts",
+        "file:packages/core/src/scheduled-task/shared.ts",
+        "file:packages/core/src/scheduled-task/sql.ts",
+        "file:packages/core/test/actions-resource-caches.test.ts",
+        "file:packages/core/test/actions-resource-graphql.test.ts",
+        "file:packages/core/test/actions-resource-runners.test.ts",
+        "file:packages/core/test/actions-resource-schedules.test.ts",
+        "file:packages/core/test/actions-transport-bytes.test.ts",
+        "file:packages/core/test/actions-transport-gitlab-http.test.ts",
+        "file:packages/core/test/actions-transport-metadata.test.ts",
+        "file:packages/core/test/actions/assembly-fixture.ts",
+        "file:packages/core/test/actions/authoring-base.test.ts",
+        "file:packages/core/test/actions/authoring-fixture.ts",
+        "file:packages/core/test/actions/authoring-outcomes.test.ts",
+        "file:packages/core/test/actions/authoring-phases.test.ts",
+        "file:packages/core/test/actions/authoring-schedule.test.ts",
+        "file:packages/core/test/actions/authoring-source-proposals.test.ts",
+        "file:packages/core/test/actions/binding.test.ts",
+        "file:packages/core/test/actions/config-environment-reviewers.test.ts",
+        "file:packages/core/test/actions/config-environments.test.ts",
+        "file:packages/core/test/actions/config-policy.test.ts",
+        "file:packages/core/test/actions/config-resource-fixture.ts",
+        "file:packages/core/test/actions/config-variable-scopes.test.ts",
+        "file:packages/core/test/actions/config-variables.test.ts",
+        "file:packages/core/test/actions/cursor.test.ts",
+        "file:packages/core/test/actions/facade.test.ts",
+        "file:packages/core/test/actions/fixtures/public-test-1.yml",
+        "file:packages/core/test/actions/fixtures/public-test-2.yml",
+        "file:packages/core/test/actions/fixtures/source-github.yml",
+        "file:packages/core/test/actions/fixtures/source-gitlab-inputs.yml",
+        "file:packages/core/test/actions/fixtures/source-gitlab.yml",
+        "file:packages/core/test/actions/github-command-dispatch.test.ts",
+        "file:packages/core/test/actions/github-command-preflight.test.ts",
+        "file:packages/core/test/actions/github-command-run-job.test.ts",
+        "file:packages/core/test/actions/github-command-transport.test.ts",
+        "file:packages/core/test/actions/github-read-identity.test.ts",
+        "file:packages/core/test/actions/github-read-metadata.test.ts",
+        "file:packages/core/test/actions/github-read-null-ranges.test.ts",
+        "file:packages/core/test/actions/github-read-runs-jobs.test.ts",
+        "file:packages/core/test/actions/github-read-source.test.ts",
+        "file:packages/core/test/actions/github-read-transport.test.ts",
+        "file:packages/core/test/actions/gitlab-command-execution.test.ts",
+        "file:packages/core/test/actions/gitlab-command-fixture.ts",
+        "file:packages/core/test/actions/gitlab-command-http-fixture.ts",
+        "file:packages/core/test/actions/gitlab-command-http.test.ts",
+        "file:packages/core/test/actions/gitlab-command-launch.test.ts",
+        "file:packages/core/test/actions/gitlab-command-mr.test.ts",
+        "file:packages/core/test/actions/gitlab-read-catalog.test.ts",
+        "file:packages/core/test/actions/gitlab-read-fixture.ts",
+        "file:packages/core/test/actions/gitlab-read-http.test.ts",
+        "file:packages/core/test/actions/gitlab-read-jobs.test.ts",
+        "file:packages/core/test/actions/gitlab-read-runs.test.ts",
+        "file:packages/core/test/actions/operations-admission.test.ts",
+        "file:packages/core/test/actions/operations-contract.test.ts",
+        "file:packages/core/test/actions/operations-fixture.ts",
+        "file:packages/core/test/actions/operations-lifetime.test.ts",
+        "file:packages/core/test/actions/operations-migration-worker.ts",
+        "file:packages/core/test/actions/operations-migration.test.ts",
+        "file:packages/core/test/actions/operations-reconcile.test.ts",
+        "file:packages/core/test/actions/operations-recovery.test.ts",
+        "file:packages/core/test/actions/operations-restart-worker.ts",
+        "file:packages/core/test/actions/operations-restart.test.ts",
+        "file:packages/core/test/actions/output-artifacts.test.ts",
+        "file:packages/core/test/actions/output-fixture.ts",
+        "file:packages/core/test/actions/output-mutations.test.ts",
+        "file:packages/core/test/actions/output-network.ts",
+        "file:packages/core/test/actions/output-process.test.ts",
+        "file:packages/core/test/actions/output-signed.test.ts",
+        "file:packages/core/test/actions/output-targets.test.ts",
+        "file:packages/core/test/actions/output-worker.ts",
+        "file:packages/core/test/actions/readback.test.ts",
+        "file:packages/core/test/actions/source-document.test.ts",
+        "file:packages/core/test/actions/source-github.test.ts",
+        "file:packages/core/test/actions/source-gitlab-boundaries.test.ts",
+        "file:packages/core/test/actions/source-gitlab.test.ts",
+        "file:packages/core/test/board-budget.test.ts",
+        "file:packages/core/test/board-ci.test.ts",
+        "file:packages/core/test/board-conflicts.test.ts",
+        "file:packages/core/test/board-github.test.ts",
+        "file:packages/core/test/board-lanes.test.ts",
+        "file:packages/core/test/board-queue-red.test.ts",
+        "file:packages/core/test/board-queue-scoped.test.ts",
+        "file:packages/core/test/board-queue.test.ts",
+        "file:packages/core/test/board-snapshot.test.ts",
+        "file:packages/core/test/board-spend.test.ts",
+        "file:packages/core/test/board-tools.test.ts",
+        "file:packages/core/test/board-tree.test.ts",
+        "file:packages/core/test/board.test.ts",
+        "file:packages/core/test/scheduled-task-capability-model.test.ts",
+        "file:packages/core/test/scheduled-task-capability.test.ts",
+        "file:packages/core/test/scheduled-task-model.test.ts",
+        "file:packages/core/test/scheduled-task.test.ts",
+        "file:packages/schema/src/actions.ts",
+        "file:packages/schema/src/actions/identity.ts",
+        "file:packages/schema/src/actions/operation.ts",
+        "file:packages/schema/src/actions/command.ts",
+        "file:packages/schema/src/schema.ts",
+        "file:packages/schema/src/actions/workflow.ts",
+        "file:packages/schema/src/actions/run.ts",
+        "file:packages/schema/src/actions/resource.ts",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/COMMON.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/03-automation/mission.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/03-automation/inputs.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/03-automation/sources.jsonl",
+        "file:.orchestra/skills/execute-genesis/references/criteria.json",
+        "file:.orchestra/skills/execute-genesis/SKILL.md",
+        "file:.orchestra/skills/execute-genesis/references/principles.md",
+        "file:.orchestra/skills/execute-genesis/references/fatia-1.md",
+        "file:.orchestra/skills/execute-genesis/references/transport.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/a-l1-evidence-v1/coverage-needs-projection.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/review-packets/l1-a3-v1-dossier.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/review-packets/l1-a4-v1-dossier.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/bodies/automation.md",
+        "file:modules/atlas/docs/design/genesis-ownership-plan.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/request.txt",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/recipe.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/history/body-v3.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/history/recipe-v3.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/revisions/v4/apply.py"
+      ],
+      "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "4f81df84763bd63e7680de8fd40c60b583ef68ca",
+          "sha256": "08c5f306bc1c53b978a4254eba0fc708d9a4bfbb30fb63ead23c237f359fceef",
+          "path": "packages/core/src/actions.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "3c18b87555faf8d09b789ac5dc7316c6721f0f58",
+          "sha256": "401a807ef4861a182c4ad70985f5d13d9b43a714693ec78ad2d9ec0dc1b83d7d",
+          "path": "packages/core/src/actions/authoring/base.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "fefe6fd6df55ea6fee6f898b9b5e37b13c650307",
+          "sha256": "bdcb41b748e4a4ac148867cfbcffe6638ed5dc2b07f3e6bfc25746f7f9134790",
+          "path": "packages/core/src/actions/authoring/github.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "2e17c642d355cdb595332f3069a0928ef192ae08",
+          "sha256": "aba55ae13260350fc70490bbf9930e19cb648babb5f555b23c3c350161e479a9",
+          "path": "packages/core/src/actions/authoring/gitlab.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "7a555bdb35cedd26ab5ddc151c1d068b40eb0144",
+          "sha256": "219a11d44b682e37a729f0ef4060ad2eda6eae05737dbac5de2325b6b3b10075",
+          "path": "packages/core/src/actions/authoring/index.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "92f38a96b425e8cbb9f6e1946c6c40fa78218e81",
+          "sha256": "93d7315954e83b280a4c1ae64b6882bb1d341b80e448cf1fd36330c30ed58fd2",
+          "path": "packages/core/src/actions/authoring/input.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "dca58f1b7cf7eaa4b4afdb25f18bb4ec9234d868",
+          "sha256": "35372e153a34ae76a23bc8d631ca762c169994db3a1d452c4e4ceb8f2920d5cc",
+          "path": "packages/core/src/actions/authoring/lint.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "0ef1c6bbc54e8e4a73bc9e82a7f1b6653161d3d7",
+          "sha256": "458a706a6415cb1e3d554169149215269f49bcbd5a5fc77f51162840cfcb13d8",
+          "path": "packages/core/src/actions/authoring/remote.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "189f4f3903314afb6b6d8c86b50dbbccb0309869",
+          "sha256": "2151bb5ece4c4d2a635ede984a8668620e8f619000e720af35370b0f87bc561b",
+          "path": "packages/core/src/actions/authoring/schedule.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "0012bd2c459c7c9899ce63aa6d4bb69760e9647a",
+          "sha256": "fa7b2380b5ea1c3b10195b17e2015fed34f0501df2e16cfa7fe497969dba83bc",
+          "path": "packages/core/src/actions/binding.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "62521cbd3f4860049c3480a2bf9f2ed650c6c9f8",
+          "sha256": "c69997923b14da057a5cab4b3e9077884263d43c02f98dee1da44fedf65ae9bc",
+          "path": "packages/core/src/actions/contract.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "3c61a40570a65ef162d6ab908f70b09b1a22aa93",
+          "sha256": "42629421f0bb3f1c6c48c37c256899929890a718f6072228669d58340ad56373",
+          "path": "packages/core/src/actions/cursor.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "5557a68cf67417c2c3149f6f130952297114ecbd",
+          "sha256": "9ce2b3a2943588b3bf4676773f9966a75f347aa84522b9ae96131ba9839017e7",
+          "path": "packages/core/src/actions/error.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "6fba4351d5bb942754a6609c3ddb82c55ae3dc36",
+          "sha256": "d6dfdfe937306ddec89ca7c43589d3c812f445797f5365c839af6ba303da2c04",
+          "path": "packages/core/src/actions/github/catalog.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "c4fcb4746c7bbefa8603afe01913816606181922",
+          "sha256": "02e462e14767c1d1b3a6e2294fb1d14c668d50e9f515eaec76b20cad1401e67b",
+          "path": "packages/core/src/actions/github/commands.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "e9ee98a334dd701d076a29900dc47ccdba7a3f01",
+          "sha256": "b1a6b5b2081d754e5b57f93fadaf56153ca38d133450a05e3c7145bcbf21cfa7",
+          "path": "packages/core/src/actions/github/commands/common.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "177837b7dfbc0272414263be7e2a24606839534c",
+          "sha256": "38c08aef5b55f2bdbef46c771e7974ff77a0408304a9bb9fcc4f572800baecaa",
+          "path": "packages/core/src/actions/github/commands/inputs.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "01828a587ca7443e08fc0ecdcff55bf1ebeca863",
+          "sha256": "b753ad05386cd13df639a4000b7fd35db4db8431e66f1ab27633acdbeb314591",
+          "path": "packages/core/src/actions/github/commands/job.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "20a65fe64b3559988856c829670ebb82296f9113",
+          "sha256": "a54d15a5e3870a09fc98708de4ee41aa09acaf2175b6d9c9e0e4249e6646fe78",
+          "path": "packages/core/src/actions/github/commands/run.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "bc9677ced86d82f08db5a38ae948bcca3b1406eb",
+          "sha256": "7330ca26082e22e8a81c89285afc18002903188555c96d1d60565fae993f7b2f",
+          "path": "packages/core/src/actions/github/commands/workflow.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "bca13413b5e00aeb317fdca0a8db0de21fa76562",
+          "sha256": "0f585e30bf78620b2878f7b2431af6186d0a401730325fe401f1ff9138329320",
+          "path": "packages/core/src/actions/github/index.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "dbd8e1e17265f8439ba932be4b88d002b6984d79",
+          "sha256": "7bc8c9a73de49cc8acefbff94fdf03d72ca3a595e3d0451012db6b54a23ffc86",
+          "path": "packages/core/src/actions/github/jobs.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "9de483d99f461e35c200b1fdcc2a0ce3f6224dac",
+          "sha256": "8624a7b9db3ea727bd4142c0233b37259f0a92ba457c31c658a8ce52f096a712",
+          "path": "packages/core/src/actions/github/native.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "ab56898ee021b474d882ecb6ef84282fe618ed30",
+          "sha256": "03a7cb4acf1a709fb8c289cede6f44045b70735107117d890e6c61f3fc1594c4",
+          "path": "packages/core/src/actions/github/runs.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "a7a087856e35e01764382211abebfddfa00c133d",
+          "sha256": "546e21ae307d414ec385b7de7963b1756535a22beb66ff277c007111fe0b6478",
+          "path": "packages/core/src/actions/gitlab/catalog.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "d3f432fc7b0c434bfcb9a88adeabfcfae5829033",
+          "sha256": "2be56b6ff21b0f9a63d929b0b38f75fad2d29705476dbd5d13f63634f803c00e",
+          "path": "packages/core/src/actions/gitlab/commands.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "12ba907ddadcd0103fa07da0eeabe7bede5fc9f5",
+          "sha256": "c1f72bbe27861b2f51e5f0fa2fe67bcbca6f48d2a7c0b08acd451395c9ab476f",
+          "path": "packages/core/src/actions/gitlab/commands/inputs.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "176a10632f895603fc8cc2b7baef1327db90377e",
+          "sha256": "0e59d1b73ef755e2e29d0e0dcb829c127f9cc6b642773c973510afe5d3e0f310",
+          "path": "packages/core/src/actions/gitlab/commands/jobs.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "69db848d7513a074b960851e27c12a39438ebd47",
+          "sha256": "444fe50cc00d0aaed2895b18ca25e11baca9fe281a917c0260674b5449540579",
+          "path": "packages/core/src/actions/gitlab/commands/launch.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "38a983b2834d42964934b1699b17d92637e8fab8",
+          "sha256": "4db4f1c18a91be6292d2b8a10c493ffe81a5893036f45b8fdee62a3e40b000b1",
+          "path": "packages/core/src/actions/gitlab/commands/merge-request.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "96c48f417a9df123e151215ff757186932fe1895",
+          "sha256": "ceac62595d8c7647e4a4277dbc893f9f7c4a71faada7fc50b1614a4474cdfc63",
+          "path": "packages/core/src/actions/gitlab/commands/native.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "999c7e5cd6c6d8d33cbe63ad601923b308eff3e4",
+          "sha256": "0c210556925c4d2f025c6942b2512e8ab782ae748aa51b0336dde859c441ec30",
+          "path": "packages/core/src/actions/gitlab/commands/runs.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "b15f4a3edb40e83274490b3c789cf2581aac9a5a",
+          "sha256": "0af91cc662eb4578cf1f16e967743fe9d69fb356d6c58555f50826b399e23a97",
+          "path": "packages/core/src/actions/gitlab/commands/shared.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "b73b4d7a730c58874e09b7df4f35be2ee13853b8",
+          "sha256": "7a6c70d16d96826f03d861001aa079307acc8d8fcc7d5d660b537d4d9d927b4b",
+          "path": "packages/core/src/actions/gitlab/index.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "5eef5ef7e30087596d06535bf9f4775704a8d033",
+          "sha256": "5f2ef28c5898a8375a57a0c85d053cea34a3f3981319d1bbb619db7599a5f8bf",
+          "path": "packages/core/src/actions/gitlab/jobs.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "d6cf026dcbfb9023285415a9dd16842951e39ac0",
+          "sha256": "4f61c33643ab30ba295e4e84619c1a3ec4d1dd029d6ce32407029553691eadcc",
+          "path": "packages/core/src/actions/gitlab/native.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "5c1611e2e163457eb6f17cc44f386f597ccaccd6",
+          "sha256": "4cb9c8b7a73b12019ee9f60b36b2c116ccac833ab12f73307e5c37ba6341cdab",
+          "path": "packages/core/src/actions/gitlab/runs.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "83c0b9e03b063bd59bc2d30317f7de85cbb99ee4",
+          "sha256": "f4180bfeabef99c0eaddace3f1da7242fb8dacd7d63fb948b84cc014f59a89d4",
+          "path": "packages/core/src/actions/operations.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "6ad54f11c415134b4eb590194e2079f09ef01aed",
+          "sha256": "3d89a3a86b0d51b2c153088397c952599dc8b75b5469a5a27a8efc7395ece20c",
+          "path": "packages/core/src/actions/operations/outcome.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "16146919f0a4fb7101a72bee160cdcdc642ad90f",
+          "sha256": "80de0b27f0b95536f35fd87186241ef51bd9a66a9e47a19cca1df104010f86a8",
+          "path": "packages/core/src/actions/operations/readback.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "63cad8cb4926acd4adc6c285bd6b1f1f64a238cc",
+          "sha256": "07f2de775a5e5352859f1bf041e32865b3681ec2db85fd4e367823fe2a00da75",
+          "path": "packages/core/src/actions/operations/sql.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "d7633da87c8fe5b41319e23c6ca9e9092d152e4e",
+          "sha256": "433462cdc96bbeda49a85f46e9c96954cee753822165329caac5c26c748ff2b4",
+          "path": "packages/core/src/actions/operations/storage.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "56d6c846172b96e1130b2bf8737712af9e0c5be0",
+          "sha256": "be26b08a227078ed6c0363be1f47ebdceda0b27a46749ad208d2642ea3ef46a7",
+          "path": "packages/core/src/actions/output/artifacts.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "b3e1e73f3a0f7f3604bae702cb749983f4178f29",
+          "sha256": "4dcb6f81b4fd186dbcd19da13ff1a0c0a47df7ba9e4ea7eb8ee5734959d4b8f7",
+          "path": "packages/core/src/actions/output/download.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "f7d5a6f28a5e7752f07ec01008136dc470c6fe61",
+          "sha256": "80cb68c5a02e39fd450630d1e8817d7435ada999c212c3b1e8e568a0d1a35549",
+          "path": "packages/core/src/actions/output/headers.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "97a1115aea631b1a1b8b7dc6ad438e3fb5bb1ace",
+          "sha256": "acf076da8a2806947561dc865a4eeb1db09d34494a3fb977c81166e04acbbc00",
+          "path": "packages/core/src/actions/output/index.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "2d165747ebfc35f05a4c0244fd06134780482b88",
+          "sha256": "b9151642332518eec3151825cb55bd2b0f65ba275d77e1d107ac29feb3a323e0",
+          "path": "packages/core/src/actions/output/mutations.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "93f8202c25955c4105c25f2ccdfada2df3352ad3",
+          "sha256": "200f3167fa58f45c0d9470ae9d50145392a05bb23f193c22e750214ca73a775b",
+          "path": "packages/core/src/actions/output/native.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "e3f97544c559f1cc5b67623a047a431a37219117",
+          "sha256": "0432ae5abfc0aa4d7cefb225433a0da3e3cff8539e110dab54dafedf9e833bc8",
+          "path": "packages/core/src/actions/output/signed.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "9195013d45d2b5deec234398d8a4fde834bf8edd",
+          "sha256": "162391bc77848f4dc03cb6b340375cfc732bc7f3137a810998196ef17f03bf2d",
+          "path": "packages/core/src/actions/output/target.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "a42fd54db9202bf822a439bb47ce4f216101a8e1",
+          "sha256": "935301ed0b3e64a03122d40ef4fcf58ef119c5c8b04c04b1f113bcb29163c6b9",
+          "path": "packages/core/src/actions/output/version.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "26e01af0e8dad921d4f7a408e2642a851da3903d",
+          "sha256": "891d45078014fc821bba1a9ea69e68b4a822545e79cf1e5ee5f9f0bcc86acac2",
+          "path": "packages/core/src/actions/readback.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "7d4d4c2248900819af4ace7731982ede0f67179f",
+          "sha256": "cb6e5bc0a32a104f697459fb39550b0ae12dc6f68c94d38364fff903d6726b94",
+          "path": "packages/core/src/actions/resources.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "d272111f079a5a22c09fde175c43c132e8048cca",
+          "sha256": "1cf002b729c4043e352d60d02a81f0aacd58d58b971bba16f834a2ab6be6b95b",
+          "path": "packages/core/src/actions/resources/caches.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "091480332aea03f03b8ab3cfcd21dfbe8b27fa84",
+          "sha256": "aee5e20b10091ab8c4c20daf21c72e45a583e7cfc162b0a5e5e162a61e5b7afd",
+          "path": "packages/core/src/actions/resources/config-common.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "53cd89baf0c85dfd338c6da6a119445ecb101066",
+          "sha256": "fcd8809b52ee73a044bc0ab61f88377cb882b72054708fa72e77771c81c5b400",
+          "path": "packages/core/src/actions/resources/config-deployment-review.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "258f9fcb61eeb90c457b2f116ebdbd406bbb340e",
+          "sha256": "fc9f6dab5045d664abe9fa5b5c665c190a70039b2bc4484a6829d274de5c2dbc",
+          "path": "packages/core/src/actions/resources/config-environment-github.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "610ab3c2831e40f288decfde7667af2387be313f",
+          "sha256": "873b53054d0e9bb1fad5a94400fefb7cbb11b96a23244cb9260e31f7e0e5f7ac",
+          "path": "packages/core/src/actions/resources/config-environment-gitlab.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "9110df8c9a839c9db3476ecdfbfe6e9d9955bc6e",
+          "sha256": "64222df345434d4400ec50653b25f03b94252d2bf0ecee5a8090ffa24f34c65e",
+          "path": "packages/core/src/actions/resources/config-environment-reviewers.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "68c018139273310ac5cfd10d220b965b09ea62da",
+          "sha256": "86af948872e70184a9ed866b6c5cda97809f680ca887cc177934fa9ace399b2a",
+          "path": "packages/core/src/actions/resources/config-environment-schema.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "8580645c5635998ff84dd397e88eb3bd131826ef",
+          "sha256": "88816907c0381d3ba2094c97a9572036f6ce757e10d2498b29d14150f4f5ebba",
+          "path": "packages/core/src/actions/resources/config-sodium.d.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "0ac96117ca2d882142c04ba700efac2b42e60073",
+          "sha256": "840684c984c0c57f586008b8d3e357be5bb1d8f298dc1bb64e4fe1c8a452ae20",
+          "path": "packages/core/src/actions/resources/config-variable-github-page.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "bf40e7c0a1e0eb17c0ac15f64b27ccaee1203292",
+          "sha256": "fc92638ae218671edd85d17f5c52b3de8b899d209dda930afd3fffdab5cee9fa",
+          "path": "packages/core/src/actions/resources/environments.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "08a1072c00be8d3ce858fbe6b57772f96afd2f78",
+          "sha256": "d29a849b8ae2fe1e8eb08ee947f8275bcee8b62e8c4a006d45f738e69758fb2c",
+          "path": "packages/core/src/actions/resources/gitlab-graphql.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "948787643b01ec9d52340a7b5e913b6ca071749d",
+          "sha256": "a53465358378f169c381ca67f90597976732655e9da173bb8125df7601f101e1",
+          "path": "packages/core/src/actions/resources/native.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "17cfdc17b154c76d935cd8e99d8ea2e07f71c68b",
+          "sha256": "c0e90e28da9148e24a6fc56df68566122215d9ba6d1b47f6222fc4b079b425e2",
+          "path": "packages/core/src/actions/resources/policy.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "5d27a887b6a1890a92d83b0310b3bc624f83bf47",
+          "sha256": "87a6b7a7a23e4aaa162366761f68282f64190e7a2555cf353f67a22aa3cac0b6",
+          "path": "packages/core/src/actions/resources/runners.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "cd3a52f384a522b74910f01ea0278efc1fa5a12f",
+          "sha256": "57ef9c02ab37eb8cebeb87cd3a307673211f989e1bb8036cf3d4799a2b783abd",
+          "path": "packages/core/src/actions/resources/schedule-yaml.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "700bc3658ebb06113d9027f740ff16d1e5f69cea",
+          "sha256": "e5664133d84a54b2187f6ba5b61d4d564579d7a58e6ed5801cc437f5454cc4ab",
+          "path": "packages/core/src/actions/resources/schedules.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "2b8bf42f1867f93bd05188893c5a1d49fa6b0c93",
+          "sha256": "4483cec419b1ac22628dd01c1386b9470fcd5511b2d0cd9a956b9736cfc2ca4e",
+          "path": "packages/core/src/actions/resources/variables.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "52ec9f767dad9ba0cec28ec25ec4f7e4c16a163b",
+          "sha256": "7948e08d19341892df7f4cd8ae38f3cdb27694a197e1b462c3b4efdb96d90ce3",
+          "path": "packages/core/src/actions/source/document.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "48042830d79b37d23fa901759eeeaa2f56fd8253",
+          "sha256": "18b5e3799d02c347f7c80b58264e4e8bc6c5d8c07f7d1559a65186a9313c6bca",
+          "path": "packages/core/src/actions/source/github.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "2c78794a932b7b1680a0571a975201c55676feef",
+          "sha256": "cc2827422fb5962c93b849d212d0755eb040485689cd1c43219d7e885550c79c",
+          "path": "packages/core/src/actions/source/gitlab.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "9979794cf9f26e006fa36651ba026ecf044a65e2",
+          "sha256": "0219fc70d60d16887c37ac9cd9a3b9cf9aac5e586716d918d5cb2667550c8e0f",
+          "path": "packages/core/src/actions/source/graph.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "c24ab01417fdea32688d26007e04d8fdac1d43ca",
+          "sha256": "a47ce41b196dd2c95e9724824d554472f93466be0220a02f1b019e855c3b9faf",
+          "path": "packages/core/src/actions/state.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "a028169bb585fb81c24889148ea61aa631c521af",
+          "sha256": "0bee331d9b87db900ad4310366fb4b3a7abdc7f2c6e915e926754c6eced6d2ae",
+          "path": "packages/core/src/actions/transport.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "695d1c8b2cc0872ad8e2a3d554a4b010674f834c",
+          "sha256": "94d766a8ffb45ec126698e2cf571f7a328261579edc1969147f2043c500df819",
+          "path": "packages/core/src/actions/transport/cli.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "e9fb72f248bb8500d5fc14d053ddb95396be3819",
+          "sha256": "36b0b3a3ed180de68ed8c8497c7231728ec4aabfd79fd67de34e33654b109010",
+          "path": "packages/core/src/actions/transport/credentials.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "a21535f1c3014d492d7f07e98250bfb9e6cc3b3a",
+          "sha256": "94a67ca1521b8ce37b40b34a93d36d9986bdbf3727e2152399dd69b14214aef0",
+          "path": "packages/core/src/actions/transport/gitlab.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "cb71e6424c0f4b9c7e714667f1298e46fe3a502d",
+          "sha256": "b3e60d9d087592f8847f53d94e60d3ece75cf827014407f9b4a66dfc78cc0ae7",
+          "path": "packages/core/src/actions/transport/http.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "4d9b3812a6078439d5a654bc198e5426e55b1cb2",
+          "sha256": "0760871fde3a3eb2f8b3a5895cae66a50266a2b731208af0a533b31570536a4a",
+          "path": "packages/core/src/actions/transport/identity.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "5da8d9899becf4814f9a3011adfafc50d20c5239",
+          "sha256": "03b52b82e18a5a9a0ec515895218574eefbc433597eeb64b0fb13f452575ce9b",
+          "path": "packages/core/src/actions/transport/process.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "09aed710878c0e33f33b7e1a8d566074a44ad30a",
+          "sha256": "dbe2d9284661b36cee41b379cba34f29cd6910df7757b10b94136eb12e6d8192",
+          "path": "packages/core/src/actions/transport/response.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "0488f3819c967df78abd4d6a5a94805e48b3213e",
+          "sha256": "9b0f56eb1b4c8a78bec8b6af3ce16a71a25bfdcb4e3a3b581317b4126f99141d",
+          "path": "packages/core/src/board/board.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "77bc3370fc8a34249a2baf19ee10c7e8151cdc6b",
+          "sha256": "7a67b182097690e957ec40cf04f753e2695047f7b2fa5f19b792d8db9e38c7dd",
+          "path": "packages/core/src/board/ci.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "06e450683e7c3428b8d466cd91696806c9ef5419",
+          "sha256": "c27c266af8e4461d76d253f6d13f8cc8ac4d1edeb7780e9726bb445fbab8a7ba",
+          "path": "packages/core/src/board/conflicts.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "4b219f5b62517b2c4f9749a1a99e6257cfeff167",
+          "sha256": "7fdd5f2d2d0dfa0414b70b870e4ff75ca62fe7af36c62c90e583663af8833b43",
+          "path": "packages/core/src/board/decision.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "8c5aa204de45ec477861b3c5ea3c37aa1fe78eab",
+          "sha256": "4c30459dd7de865d5536d9a24a842b19a14bbeffd5ae4597a8df5f0b76fa06fd",
+          "path": "packages/core/src/board/forecast.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "7a29abd5907dfb6f0443756ad8b2a6f7e7cf133e",
+          "sha256": "15775b713425cb60f68003099198918a4b567431e426bd351c50ba4971d36702",
+          "path": "packages/core/src/board/github.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "282e862105def593673fa404ca9ce87991b31fe2",
+          "sha256": "07f029330ac42176b6bac035d8fdbc2d81d72decd6b83004b6a9627e02351b2c",
+          "path": "packages/core/src/board/ledger.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "2e898a1aaf5d8740ced0bcd0a8afe0baa3996bc9",
+          "sha256": "30254e118087b0f8ac51e48b0c1f4a5f2e7bfd7a4bf2907267fe37c13a8a582b",
+          "path": "packages/core/src/board/money.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "6bd1374e707dd7f80975f37e2c03e02a9ee97a95",
+          "sha256": "6451c593372c579f0a2e116adc25fc824b1240519ad9110b6637d63935ba2608",
+          "path": "packages/core/src/board/proof.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "95761efe467c8f318cad7200ea7787fc15cdb10c",
+          "sha256": "6c3ccc9eee3cc220ac01e8a0a92c6c1fe4fd06ddf03f9780e4f218d46aaf338c",
+          "path": "packages/core/src/board/queue-drift.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "f9d68042af8b19bf79e155818f940dbf5c828d08",
+          "sha256": "62429a1b7a77a627622ce5a9e7dd4d74c9b04b51cb1856058f6a124cb5c2cdb1",
+          "path": "packages/core/src/board/queue-lanes.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "7ade81c640d6524360161d2c018ba1038c471f2e",
+          "sha256": "1414c1df2d7b08fc0027fe108275d4b07e343a56a56ded5f2119f196101f92d4",
+          "path": "packages/core/src/board/queue-record.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "57bcf02fe9c1eea69282f53a0c97799a89aacb5f",
+          "sha256": "c9a29e07575731d8becdcfea5e2571c018b294c4c4e88b1de078a17c1d61e5c8",
+          "path": "packages/core/src/board/queue-red.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "a0165ce506ae7c07a7a79e9793e8b09f3cda0fcb",
+          "sha256": "3dac27cec16c0d5003485753de4a132110a6251f628e040f49304a357d7f4ae5",
+          "path": "packages/core/src/board/queue-settle.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "108a40f374649e7498dad8f1d0033d3c8a984d41",
+          "sha256": "8382123484f1557dbff529a7c291d1aadf4b6ee435357a8a9e27db91e7d04cea",
+          "path": "packages/core/src/board/queue-shared.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "5194680fdf6bd598ececadf5f63c3339a945357d",
+          "sha256": "dd50c583530d4b6dd5de417fcd8b0e0abd0774e792ba7806c507b58e8386188f",
+          "path": "packages/core/src/board/queue.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "754a3d0e90e3fc92349d3080f37ff1d9c4f1a96a",
+          "sha256": "919161b5e11cf65f1fc0a2f857a63d45b54d56d1bd5b211d13b10794db87faed",
+          "path": "packages/core/src/board/record.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "10ebc542ef2fedcb6498be9379b77bd0e314471c",
+          "sha256": "3814113d4826f52c72bdede0c437837caca0a2f7de53af0ca0b960b156d4efcb",
+          "path": "packages/core/src/board/rows.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "6ef7b42006697e252dcf6b4542e8a36354591ce4",
+          "sha256": "7372c16b39f3077dddddfdfec7555bd5008cd489c90ce3546126fc38289ae2de",
+          "path": "packages/core/src/board/shared.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "cc39cdec652c05bf969da8543335da1703a663fc",
+          "sha256": "8939a3de7e1123e7e650144adb79dfe5828706c73e6b34ab942bcc2edb626012",
+          "path": "packages/core/src/board/snapshot.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "c5c82e700282b4ba2fad710a5a87daae0328b6f9",
+          "sha256": "11d1284e196ac2f72708d88a47d7f839f5e380d0f4cc87e0a196d4b4c32d45ce",
+          "path": "packages/core/src/board/spend.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "2784e4042e5d383f2f19250ed9efc3c388623cde",
+          "sha256": "752ca66b251fbe7691755f5bace14b5848112bb8da759570f7276637265464e4",
+          "path": "packages/core/src/board/sql.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "8c6fd3f62aeabca7d652f38cdc8740fbbd1abeba",
+          "sha256": "e3cb87f165438aba44cf9cde3ab49be59975fed42d45d4d71317016dfec60ad9",
+          "path": "packages/core/src/board/thread.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "d1ba07e4231da173fb5aa5478375cba7f99c00b4",
+          "sha256": "87638e1e13b803490987df2a5d33fd39e9c899ad7208a7b9d54d6f0635463eb5",
+          "path": "packages/core/src/board/tools.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "9a14e96aa37e6135380b730025756b0e80bfe661",
+          "sha256": "68edc94c79b05a0225c269efd0a8550ba05def07d4b8f9492766676eef99a8ed",
+          "path": "packages/core/src/board/tree.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "0a89bbdc576091ca01445e45e1500ed4008898a9",
+          "sha256": "8c204bd55a8cf8fd1dbddc232f5dfa84b9190822d074ccc72e85594e457af12b",
+          "path": "packages/core/src/scheduled-task.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "b92983cab05a5cff1ae32f459378192d07ddfc0b",
+          "sha256": "256620d07285f1e60c7e6023f4101e4f8738a565f43a6b859d8c1a7861230620",
+          "path": "packages/core/src/scheduled-task/capability-model.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "ab0410651446d3d1d98d9d8028a3ad79bb46aecb",
+          "sha256": "d024c2e05f0afc70fe49b801ee77b892a8097f5d499cd097d60f230cae67044e",
+          "path": "packages/core/src/scheduled-task/capability.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "a5560b15853e2941c31bf9e803560bbea0c24c4e",
+          "sha256": "f29962a40bd89bca23cff892d3ff01fcfa8e660b390c4831c88ca7cc695f0b5d",
+          "path": "packages/core/src/scheduled-task/model.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "8ea347436e18a93f8dc43926c7fb84108fc0a20c",
+          "sha256": "5fb969a9e8a030b02e31ff1678e1e0c2887c4e30c3078a5016642131de95ead7",
+          "path": "packages/core/src/scheduled-task/port.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "b997b9d2bb4246d3101c243fe0217ce9fcc30885",
+          "sha256": "b7ca14671135a068909b9163fa8c21d1ce2487f5d54d08e09adcd7585acf5540",
+          "path": "packages/core/src/scheduled-task/shared.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "f7b58d09202d0eb4026623b587363798a0908874",
+          "sha256": "822bcafeaf764d56be959c3c5184e2e3e76bbca52ae6c678477728e0df3899a7",
+          "path": "packages/core/src/scheduled-task/sql.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "63297753257b430cfb342574fc62f6ef36a15f38",
+          "sha256": "fc128acbf3fc13145558a1bdda8409c583ba5fec0662bf1f71b19ef665fbc6a3",
+          "path": "packages/core/test/actions-resource-caches.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "3b59979e7ad8fe19192f1a2e7b1074ef89cd281c",
+          "sha256": "f561ff3b0d741fff0d138eddb8a07dec9f208785960a45b835a1320dddb4b9a8",
+          "path": "packages/core/test/actions-resource-graphql.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "3b772926d5e92902ef91f6db1afbd8757331ff9c",
+          "sha256": "6cb45da31ddc02aa5ea19e63081738623a8fc4199295baf37d6db965821b8273",
+          "path": "packages/core/test/actions-resource-runners.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "56f5d0629d1b482e953bc28801155c8f06b03ffb",
+          "sha256": "30ea7374a0b515d6a96ece1296e40a68957c5839e5ae59be9b88bacd30ee31f5",
+          "path": "packages/core/test/actions-resource-schedules.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "bfd33399f222ebab97f235ceb68298d0d95f0bc2",
+          "sha256": "f662cc6dcc5a92114970ded69f3b7d9066ae79d21eefc391ee5c83c15176d1f8",
+          "path": "packages/core/test/actions-transport-bytes.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "142f2e1116aad7479389f8640c0c5c9b4c1be4a9",
+          "sha256": "177c37ffc41d22526e737abf31f214250bef0e8a0d5f031515477419c324d875",
+          "path": "packages/core/test/actions-transport-gitlab-http.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "c9667a56012117cf77adefba93dd937dc6bba7a3",
+          "sha256": "6c0043d5e510c0aa19edbd0132bd765b5b754167b028e508f79979e0e0a47ab5",
+          "path": "packages/core/test/actions-transport-metadata.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "d5ca5e9ef3876d8eadb49c82c13945be801d23b9",
+          "sha256": "c756a0bc61c47f97be682dd67492855c960fb248cea6f8465ec29d11ed469a16",
+          "path": "packages/core/test/actions/assembly-fixture.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "cb4d9172276a22dc9e2b21d900cee45f3a203300",
+          "sha256": "86b52cb4001199190040b98e4a0e2b392f750dcc4f9192b58e566cf43d5ad511",
+          "path": "packages/core/test/actions/authoring-base.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "5ca58408e093c3924bf76e011b512df21e8d4e15",
+          "sha256": "d603ae68f27314aac811547357a260aef606eba4dcc7c4f999cc01380f2fac7f",
+          "path": "packages/core/test/actions/authoring-fixture.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "b70ded38490f2ceec00bf4a3862bae2de66afb76",
+          "sha256": "22d9183d3faa9845ab2eee51d87d1ccbfd100913d9414ae55a9664ba6eb3473f",
+          "path": "packages/core/test/actions/authoring-outcomes.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "41f45558b5b6268f4b1464731e942aa78467290d",
+          "sha256": "492d506837df8f1ab3861e63e1e12c01c30eb329ddfda122bda4c37bf1a16136",
+          "path": "packages/core/test/actions/authoring-phases.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "525c9054be21d407b63ec179458ff75e135a98ac",
+          "sha256": "bf70a04861470f16b1a1bdf1283316fb6fb8a10bb2f8244baa5e99f018f4d7d6",
+          "path": "packages/core/test/actions/authoring-schedule.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "a2b73e93e409f78dd03ea689eed3b772b0a808bb",
+          "sha256": "294110535f6069b9672c0850d0e8af29b1b910d6188b31ae412500df0bb81481",
+          "path": "packages/core/test/actions/authoring-source-proposals.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "5065a5b45c24f63861a36d27b99d6b996f6d6fea",
+          "sha256": "402ffe7ae51bf463cc83e8047c1dd4cc47cbaa596a020eaa4747b71035801233",
+          "path": "packages/core/test/actions/binding.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "0e9bb893dbe0a05d83a1b54bf72a82320c9340b0",
+          "sha256": "c07241c88f173a9304d53380a125989e2341ff545db7a7a971eb964733cef98b",
+          "path": "packages/core/test/actions/config-environment-reviewers.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "19af7e4e62cdafedd3a2737ba62af737dae13db5",
+          "sha256": "1bddfd4cd26ea128e503ddaebdb57c7ddf6379620bdfbd1b387076af9a3fe9ac",
+          "path": "packages/core/test/actions/config-environments.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "f88e5a4cde994e20566458b0225c9da361496172",
+          "sha256": "bd400b2a8b49f0a3bc4dd09d3cbb617fbf9f3ef37ab4920dafcbbf17dfb06a33",
+          "path": "packages/core/test/actions/config-policy.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "bd4511642ae16c987d74845d2b3bb6a869ad6d81",
+          "sha256": "90ee3eac3c62ac884db33516ae51df4eaf9786f8204ee7a80378201fa42db0ed",
+          "path": "packages/core/test/actions/config-resource-fixture.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "123bb75e30f2f94bb4de28084e2b7a252b464f15",
+          "sha256": "97c4edbd18fed6eec4bbcfce87d73745afaec2b2a74d6e7f6a8f712b98ac2415",
+          "path": "packages/core/test/actions/config-variable-scopes.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "f48c44f008d3ab676d8e66ff5580699376c4f61b",
+          "sha256": "5d9045db9527b71197a9a75abfb3d09a69b4b5c6521f636832f7784361d7c5cb",
+          "path": "packages/core/test/actions/config-variables.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "17d6e3a1534518bee384ddf6935700c639334519",
+          "sha256": "91bb8e6850cec399a5f854ce4bba26664f473ad490528e33cad4942b9218bc73",
+          "path": "packages/core/test/actions/cursor.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "63798112c5057899bcacdc17cdcb5161e12b43a2",
+          "sha256": "fc4bb5be58aecf86d25175346774bd6b184532a9156ff042f1b83ff8f1024ee6",
+          "path": "packages/core/test/actions/facade.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "9502b0cae64da6e8d8ae163af674255a16f6fd6b",
+          "sha256": "62b3b60977e91147bd51e62a32615a4ac066b1bcfaf419fbf9c182b9b3deb16f",
+          "path": "packages/core/test/actions/fixtures/public-test-1.yml"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "d1d578333e044b04627fae2980dd9859820bd358",
+          "sha256": "ca7c2d7519257065d73d79630c6b24cc24907835fe4c4fb453d11b9d01bfefa7",
+          "path": "packages/core/test/actions/fixtures/public-test-2.yml"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "302d385d349d09e8f434cf20cc53f85adf0ac3a9",
+          "sha256": "4babed4cd9c095bf847fa95bc9556de76bdff29dd2b6d2ceb8e31026cd51ba76",
+          "path": "packages/core/test/actions/fixtures/source-github.yml"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "92f28b15d2e7fd470709f70ce740d197e07c4233",
+          "sha256": "3194a22c94bdb6c954c0e773d4058a413f92a07f83b2e43ef6f82da4bb080a27",
+          "path": "packages/core/test/actions/fixtures/source-gitlab-inputs.yml"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "30d041fc38a6ad09fb9eac2a8fff709854c65bca",
+          "sha256": "b07895fcd829314af2a631d43cddb0ecc3f830c7afedcc14e73036227783b158",
+          "path": "packages/core/test/actions/fixtures/source-gitlab.yml"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "f582d67487c7f4a3dd9331e49c0fd6bd3c994466",
+          "sha256": "6fb03dde5c1d91879f20a96aa20c33b76d0ea2dfe60afef865a506e4a8645fd9",
+          "path": "packages/core/test/actions/github-command-dispatch.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "53add2d730db365b8f40d780c77c5b7072e8ce00",
+          "sha256": "b5e9b52c9f794105b8c46925805689b1f64ffec7e27ed40a0e5b75b7826eff0a",
+          "path": "packages/core/test/actions/github-command-preflight.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "7fe62d269bdac1c7e1ac5fde62ea5b0e59c5dc8c",
+          "sha256": "e23712423eb48237e99d9a0088f8dd289f652fa32684647e61bc7cf4febb1492",
+          "path": "packages/core/test/actions/github-command-run-job.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "d18b1eb43705a86eb4e47fcc19ea50b26fbad3a9",
+          "sha256": "c0bd0b828337240fe24cfcae263219c7d0521bccfdac35c3a8ff49f8b536ad7a",
+          "path": "packages/core/test/actions/github-command-transport.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "38e7f61c00e3f0a64d63f6dc16676d249d784b1a",
+          "sha256": "d38daf3e9fab329527b9a46a926cd55e5e17f16a067e3b36bca0f937238ed4bc",
+          "path": "packages/core/test/actions/github-read-identity.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "6ac3441a0f9165b86183e353f91942fb2d478083",
+          "sha256": "979ea467fbb591249aaceb1448fece446113300b1aed5edd44d983ad5a4ab996",
+          "path": "packages/core/test/actions/github-read-metadata.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "d1432d4419c5f66b29050d6010a69de696f23ad6",
+          "sha256": "b47393582181dd489ebb5120cd9eadd46fa0950627af432867102ff37f750979",
+          "path": "packages/core/test/actions/github-read-null-ranges.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "7b250110cb7bdfa83e7a320ca680d6d85840c04d",
+          "sha256": "30c3e4b1ace319a41fb512ccc0e9cbd94e67646d9469ebc4cc19fa3e5af53186",
+          "path": "packages/core/test/actions/github-read-runs-jobs.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "43257ff9c32abe271e40bf93e78fbcf2f19c885f",
+          "sha256": "597084fc2aef366577b1e50d387c5ba6a6e2ae88d046499074e1ebbd0f04d935",
+          "path": "packages/core/test/actions/github-read-source.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "95983279a63a67c7f56ba4c44810f75608dbf2d6",
+          "sha256": "872c016aa42f361f7704af991ed983a3e65907ad0b07d78450894476bb6f349e",
+          "path": "packages/core/test/actions/github-read-transport.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "ba9d526bbe3799997d649ce93cd2af3a0d5f45fe",
+          "sha256": "238cb710300aba19d83e4239b9572234e6115595881ba2b6923a12e69f62c685",
+          "path": "packages/core/test/actions/gitlab-command-execution.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "850aee0dd6a1ddc0ce67de1c0eca176e33469021",
+          "sha256": "46d6fd7712795ecddc8979f7016dafd6685d003ecdf23cf82f661fd66d6eb1e8",
+          "path": "packages/core/test/actions/gitlab-command-fixture.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "103d58accec3953bf54eb5e2b1cfe6538b0b43a3",
+          "sha256": "9ad9146147dccc13b5201be22aac3c3abb7e5b6ba1d06d1b3eb8c9eef500d2f5",
+          "path": "packages/core/test/actions/gitlab-command-http-fixture.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "f6056c377dc58b522d44248b37519cd4d592f9af",
+          "sha256": "aa74a9853d97b9dad5ffdf244f16353ad4b0347bdbcdf1cf744608fbb2c88bdc",
+          "path": "packages/core/test/actions/gitlab-command-http.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "ae826c598911f449a7b352fb8c3945e02c60afbd",
+          "sha256": "4a9e7517fa1b9f2048f473e4d57f5d32943ed332efc7a86801952eea100cd7a0",
+          "path": "packages/core/test/actions/gitlab-command-launch.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "57200fde8f78b71e7b8db43cc730b35d33125dbf",
+          "sha256": "d0d64dc5873f6267c56f5a4b2abb35ad5e6ef3d9d996127e4335e1e04ced5bcf",
+          "path": "packages/core/test/actions/gitlab-command-mr.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "60944efce123ce6e9562eeb84651475230d2f336",
+          "sha256": "ab1cd9c3c54d180ad56785bf57eb8ae78e34686ffd0167d7487db5c6a7b67aa6",
+          "path": "packages/core/test/actions/gitlab-read-catalog.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "d049535f8ae800d8ec608e5ecd671ebd24ad0d3c",
+          "sha256": "c2f9cfded8a139946f95dcb35a553fba04b7aa1f488e5cb716151422f4e4239b",
+          "path": "packages/core/test/actions/gitlab-read-fixture.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "533104e6d82bf67679723cdf66d13ca07147d214",
+          "sha256": "622332cdde0d9aff1e2e5df331ea67eee13d90fa05340c9cefd4378d6cd73d04",
+          "path": "packages/core/test/actions/gitlab-read-http.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "d77acd0c63e73ea7e07e5be3a5eced3c3c0111eb",
+          "sha256": "1d3a874f410fd7f186647f1d2f0dbfe4d7e71e4540e0bc71bbc552eb8f0d33f6",
+          "path": "packages/core/test/actions/gitlab-read-jobs.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "c113aeccdbf2ea2c5aba288ac503156f3707a70a",
+          "sha256": "090fac0118e402c5dc95a864562e49af11b057a6d5df9304162d4a1efccedfad",
+          "path": "packages/core/test/actions/gitlab-read-runs.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "a308e3c12aff3cbeaf3a2690b0e09d91d925ffa2",
+          "sha256": "ca11e47cc16e9a99ba4beaa1a63fcf6d5973ea6b6bc6455c3701c3a921be9549",
+          "path": "packages/core/test/actions/operations-admission.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "cbb72d8659607f2f172451b5ef2b496c2cd5899a",
+          "sha256": "b681da864401cd5799d6d09aaa21bc660c7d1dc5241e8393451ae2e53dcdecd5",
+          "path": "packages/core/test/actions/operations-contract.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "0b2cc4fc28e2ff564374d7fb61449adbed1a3675",
+          "sha256": "ba1e548a440632726e3dc52b3d904bd2dafd4c8c7075e8b5dba85d8d904aa6e8",
+          "path": "packages/core/test/actions/operations-fixture.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "95984a74691e42f60d0892dd72893a6ca12ae05b",
+          "sha256": "206b27cb29a764c06dd2e484e61e6dc67cec7c1b3218c894ebc451241eaea45b",
+          "path": "packages/core/test/actions/operations-lifetime.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "1dfec6c577284b4b62d28fe59fe45bd965854036",
+          "sha256": "1260ca61a0e3c9991363a413b1b0028317b1aa85514f63deec05c814755fd75e",
+          "path": "packages/core/test/actions/operations-migration-worker.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "f9a882cd8cb16220b7bfcc10274a6452515836a2",
+          "sha256": "c8f7b2f5302d1c5dd52c23fa870f15dc5a9f4ba5962197db566fbb85afc22695",
+          "path": "packages/core/test/actions/operations-migration.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "02be8142b319d1e857ab41a740aa31bc45a06f14",
+          "sha256": "01bef1a3b5fb806c2b7de3271562208ea55885a0af8698b7ed8023f87cd63cd1",
+          "path": "packages/core/test/actions/operations-reconcile.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "4f7554575ce7cb8b798edf5fd152727763b00859",
+          "sha256": "d5996c8e695ac6e4c0f03556fb47737000623dc766024cb194b10dd0446e110b",
+          "path": "packages/core/test/actions/operations-recovery.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "449fae4989bc701dd307ec2644ba23238f9480c5",
+          "sha256": "afd98bf11d6e391a3c4f06f4a6ce9aca803a413697884df1092e93f3c797adc6",
+          "path": "packages/core/test/actions/operations-restart-worker.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "9709a50bb4b165e6d7919e14ef2c05e43eaca3a7",
+          "sha256": "368c4a15170b7aa5f6e824fb716fd7dab79fa99cec7ce0ba444a390ad97cb290",
+          "path": "packages/core/test/actions/operations-restart.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "246f0f8b9f8895f4eb43fa5d418601d79ee0ae1a",
+          "sha256": "bdcb2a7ad314ae4cceb874dfd8a0bcf2da97370a751a3561e20141180194f446",
+          "path": "packages/core/test/actions/output-artifacts.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "3de41ea57c173b8fc9c89f2915d12282d8e18415",
+          "sha256": "27c80804041aaaf56a8d14fd12aa697634671381812f10684dd40e19640ca30a",
+          "path": "packages/core/test/actions/output-fixture.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "c64155a49b980bba48d84e2d4529e74f16d71685",
+          "sha256": "4bd2bb7d0508c40aeac961ecc04462e23422ac753584a13180b66a3fd8ff0d77",
+          "path": "packages/core/test/actions/output-mutations.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "1cbc4f46a428d0bafee8a0c5cc2e7a517cc427c4",
+          "sha256": "1348031fb5476a629e0d3cfa1cdf20ec9765528d829d85a4064104b5fb8051e5",
+          "path": "packages/core/test/actions/output-network.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "dae7676368079a1d61cdd14717de1e07fc4395fb",
+          "sha256": "4c61e1e47f7d668c5f503682f4b9b2232467c8436a16f42d10c8f09f03b99c9a",
+          "path": "packages/core/test/actions/output-process.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "0f28025ad12a35585ac0c2f82c579ad79475666c",
+          "sha256": "1417f797d0355dd48c79eb103213ea4b862ba09301489a0fe3d54fe0614dd58d",
+          "path": "packages/core/test/actions/output-signed.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "d35e0175f94bc51371221ee37d7e55cc3e60bd49",
+          "sha256": "04bfc4a53e8aec7fa21f7a8592f00d378529ea42d1e79cc1ce51b10ef5203ecc",
+          "path": "packages/core/test/actions/output-targets.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "dc9f65a2e78f94f22ebaa3cefe70f1ea54a90c03",
+          "sha256": "9b19b39bd0f21b0c28cb85db2c0afa9e302c7591a377d901cd69c491ec0817fc",
+          "path": "packages/core/test/actions/output-worker.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "817254ee4c663e5ae3d2d61639d4c70a7cafe009",
+          "sha256": "b10276afdb9bcfda8f704de349657d320511703049c604df3ee1e26978e99412",
+          "path": "packages/core/test/actions/readback.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "356b24061f145130b637fefa07fc929054c7b37d",
+          "sha256": "71f3b12b9bdba436a45b099fcf3c227c74627c3e48b2db5bef3223113a1da2ef",
+          "path": "packages/core/test/actions/source-document.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "8e95df517612f2994d11f8032ae0f19c6bec70c5",
+          "sha256": "d6e022b08be6c58d3a9097e220f629bd288b77a072f10e0f7b51cb093e18ac60",
+          "path": "packages/core/test/actions/source-github.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "7345d77f1fc7baaeff7db75ddd794a4a249fa5b1",
+          "sha256": "7c4c832e83d62250689aa43b88e279d8cf3a8f5f1b48eba0cc21395f6f290e10",
+          "path": "packages/core/test/actions/source-gitlab-boundaries.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "ddb931d90b6de8ffb1fcbe7ce3020732bb4b20e5",
+          "sha256": "8e1ee2ded15c79b19c9a4ec7b9dae5e1970c248feb92a9bfba04de01d5b30608",
+          "path": "packages/core/test/actions/source-gitlab.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "d7be43a0a867980844c94009c138bc0bba6e5693",
+          "sha256": "34a372da5e198a2cc1330fd429ca2a9da647205c8801ff39f60e4fdeb1040dbc",
+          "path": "packages/core/test/board-budget.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "01e200e7bf1208426e7964cc50169c9a7054642f",
+          "sha256": "6eea235bf5a8c411d1dc7b32474a824890c3c507ec4808067e8cd15dbdd71793",
+          "path": "packages/core/test/board-ci.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "27e30f71d332c0fa186799a143fc464667583922",
+          "sha256": "af8c014c104da5c8e9e805e95815d976e0d0f501656451e325320a3afb257fb2",
+          "path": "packages/core/test/board-conflicts.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "121f0daad1e34747c36c17cbb464348fa0fbfe8f",
+          "sha256": "a2f2863a4da345bc555dd64f42690611ea1f842e995b7e5d353e44b6d9883a66",
+          "path": "packages/core/test/board-github.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "55228d09f02ccd61696ac8885dc756bccd2b4f7d",
+          "sha256": "d7b13098fcfd5101376e26018b0780a857f7165ce1856d8f430dd6af3b8a5d37",
+          "path": "packages/core/test/board-lanes.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "2ff87d49d4da2ff243801f34241d9da30bfe02a3",
+          "sha256": "52ad49503c77b2e9e6e3cd7315f02c24c090078dff4e863d757e53b5f241407e",
+          "path": "packages/core/test/board-queue-red.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "9afea5b88de188782979a6fc6850c7403e6ec15c",
+          "sha256": "523859f420cd81568c970b2978890dbd59e2f6b7a56b4c28d88d7bbd4c32b52a",
+          "path": "packages/core/test/board-queue-scoped.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "8ded9fcbbcd0b414bbea9ed2e43a6e36ab931f78",
+          "sha256": "9f75b5fe9d6cea03242d2e40a1db43602fe984a48134e1635c6d3510c010aec8",
+          "path": "packages/core/test/board-queue.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "6607025090a030d668c034c53bece4cfad2803da",
+          "sha256": "3417eb6fb6d12c2d88f08b4c7a6a214b74b8cc624dd49fe110083f13733d566d",
+          "path": "packages/core/test/board-snapshot.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "b66779a62d23d57f31cb00ddc6dfc8c638277ce1",
+          "sha256": "420488825462c710fc3ea6ecb5044dbedab3561aff545fd026864de0320dec88",
+          "path": "packages/core/test/board-spend.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "9e86af6b0352c1649a26ad2a67a0eab9a90ea7c7",
+          "sha256": "9fb29c97356ace68047929b92c90d35a5927a0f59c93a5c927a7f92693ffa365",
+          "path": "packages/core/test/board-tools.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "937992029ee936bca9b740ba7aaa30647076a67a",
+          "sha256": "518ab4a388d2941adb67aef29e80f7b379d461eb5e63505a2407f505037a0a12",
+          "path": "packages/core/test/board-tree.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "a3656fd48e5dbd4f6c3ca4cdc544e296cb422c73",
+          "sha256": "38820aae3726ef7ec5d843f664a30e18455eded507f808215c5128a35aed2eb2",
+          "path": "packages/core/test/board.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "b210caa320ec005453ce48d7d952f274549be95e",
+          "sha256": "542d050b908644bce5294bc942b490138b18a2ae5d3aafe9490f41a6256d8091",
+          "path": "packages/core/test/scheduled-task-capability-model.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "c96b90a80f985a84c74f8859c211b533f8600db6",
+          "sha256": "85eb84f706e0228bb8e4202c45d4b4c0ab8645bb2a04427b573cebd335b12af9",
+          "path": "packages/core/test/scheduled-task-capability.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "60c8056f1820a31a2e7acefa5395c0f2312c654d",
+          "sha256": "cd87b83f3a5354db708f8fb450b1c04658944f3f68259cc65c40332bb38e5dbc",
+          "path": "packages/core/test/scheduled-task-model.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "4d242fd64503184fbfe362fc52907c67539a3686",
+          "sha256": "0fb2f943f7e8595d5df3996d4fd671455f357cb5fcad2f35631a82c9d494d4b6",
+          "path": "packages/core/test/scheduled-task.test.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "3b9c5cc47c6e043e9e5d6f013a8201c4258abe0b",
+          "sha256": "ff0507ebbb63a8a1ab74bc11187cb70bd19d51ed2ec8cb741eaf0155d03f6b07",
+          "path": "packages/schema/src/actions.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "273b77520f81c755f62979b9609f45917e72e062",
+          "sha256": "1d3361dd26b49e366b7c59d14a589f6684a16b36bfec0b761e62481fc15f6f14",
+          "path": "packages/schema/src/actions/identity.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "da7b1bdfb6bd5f7dd8fd368adb5eb5402c37c6fe",
+          "sha256": "6ad34b7a3cbc4eb4c1ce500f6f665894c0a7792d4d12177cdd1e055592812f0f",
+          "path": "packages/schema/src/actions/operation.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "763fc67220a5a5962794593062f4705840e7598b",
+          "sha256": "46722d7902f6005986f3e2c372675e3f9e047e2dbe639e404146f151e1de3d85",
+          "path": "packages/schema/src/actions/command.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "d19a39b9708cfcaeedc1d7c62503afbadfee5dd7",
+          "sha256": "a7cdac1ae9d21d9d71a3783a730ca29bc8fbe769d01479a19101a81eec2bb447",
+          "path": "packages/schema/src/schema.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "a061e32b53f984a7e103e836fdfac97e5f6e98ce",
+          "sha256": "435abb6cb694c30d00c01bb0c00c8dd9cd821df163fe8c73cb30a4f09ad18321",
+          "path": "packages/schema/src/actions/workflow.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "830d6f13f362e0616160da6219f3eba8a9ab83df",
+          "sha256": "c91ac0507e4f4f304cea12b4681aea4f658aec6aa7fca9af478e0f38613267f8",
+          "path": "packages/schema/src/actions/run.ts"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "1346f69568a3796c88a55ed9d06ed4cc762aa93b",
+          "sha256": "5579f778bc5055f362058bf0e9386e6098af2f2cba3700ef68de1381aab6f576",
+          "path": "packages/schema/src/actions/resource.ts"
+        },
+        {
+          "commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+          "git_blob_sha": "893cbb5f5eda2d0c19753606a50d1c482523f0c8",
+          "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/COMMON.md"
+        },
+        {
+          "commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+          "git_blob_sha": "48fa8da131e97c50110ee76e41e79283cd9a0ac4",
+          "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/03-automation/mission.json"
+        },
+        {
+          "commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+          "git_blob_sha": "521964f9882a62f5a79ba5be6658b44b9fd464d0",
+          "sha256": "8388b4899512c8a7a8ac358a322da64bf8b2db5651f228e9090bebfc21a606a0",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/03-automation/inputs.json"
+        },
+        {
+          "commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+          "git_blob_sha": "71374892d3a7bda60aaf48cc8bd2c43e4d9e4c85",
+          "sha256": "1643a358ccaafe0ca9e6a9051d7c1a9bc9a1922834d6183e52703f6de2db077c",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/03-automation/sources.jsonl"
+        },
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "git_blob_sha": "6171f3d23d3e0263e578c04338067ecb8012016d",
+          "sha256": "8f86bdd36949185df39f729a2de16c5ea7166ccd1638f74b197cad60d1551116",
+          "path": ".orchestra/skills/execute-genesis/references/criteria.json"
+        },
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+          "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+          "path": ".orchestra/skills/execute-genesis/SKILL.md"
+        },
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+          "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+          "path": ".orchestra/skills/execute-genesis/references/principles.md"
+        },
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "git_blob_sha": "78482ad7c72ec275fadb26ebece1c30bc1e5ccb9",
+          "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
+          "path": ".orchestra/skills/execute-genesis/references/fatia-1.md"
+        },
+        {
+          "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+          "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+          "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+          "path": ".orchestra/skills/execute-genesis/references/transport.md"
+        },
+        {
+          "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+          "git_blob_sha": "2e91d0f916dfa95a2dd0ef7ae74ff8c1bb427045",
+          "sha256": "05485c4bd0ac9c76814e44537788818bbcf1fbcbfb87dd8063ce30bf1a67e0cf",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/a-l1-evidence-v1/coverage-needs-projection.json"
+        },
+        {
+          "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+          "git_blob_sha": "285e56c1680153ce75c71fd99bcf9455bde70d4d",
+          "sha256": "36416073165d59eec9c7d847a26f414d855cc2a40758d548f4dd49669dccc5d4",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/review-packets/l1-a3-v1-dossier.md"
+        },
+        {
+          "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+          "git_blob_sha": "6f872ea0e22097d8084fd587f585751a436f607e",
+          "sha256": "83b544ac46f99b2bf3585ff4e607bcd403e49eb20dd128deb5b6a029a772ead0",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/review-packets/l1-a4-v1-dossier.md"
+        },
+        {
+          "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+          "git_blob_sha": "83679961541fcbd73e5a79d8fea1ff14fc1aa4cb",
+          "sha256": "83d483f7f56a0e3dfa7a29e89fea01b29d1b5529e36693b20a06fe9cc0db8b88",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/bodies/automation.md"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+          "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+          "path": "modules/atlas/docs/design/genesis-ownership-plan.md"
+        }
+      ],
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/recipe.json",
+        "sha256": "c769860c4a685cdbeaff94d471ca393078b74b275924048a996a6376fbeb61c6"
+      },
+      "build_dependencies": [],
+      "navigation": [],
+      "producer_request_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/request.txt",
+        "sha256": "9753f217c3879889af8399e36f9024a52d5188500c03e83485bd04fea0448b27"
+      },
+      "producer_response_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/revisions/v4/response.md",
+        "sha256": "712314a8c78c088aa137edd1cf7beb9bbe4e61b293a77d7d2458489d647d0c79"
+      },
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/judgments/l1/automation-4-j1-response.md",
+          "sha256": "bf7d7f1861cd44306931482f0322cd5f19da35bb4b1bf6568e0075d7cfa5415c"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/judgments/l1/automation-4-j2-response.md",
+          "sha256": "9f27a6a9a5853fa58747d88c66f22a4fdd2024d3f550bb095f59363b037c8f0d"
+        }
+      ],
+      "runtime_receipt_refs": []
+    }
+  ],
+  "roots": {
+    "flow": "s1.core.automation"
+  },
+  "missing_required_artifact_keys": [],
+  "known_limits": [
+    "Selection is the complete automation input closure only; final mission graph remains 12 artifacts in artifact-plan.json.",
+    "No semantic PASS, binding or publication is claimed. Preparation is allowed to measure exact input-capture refusal before the independent review finishes.",
+    "Retain required historical projection of 726892 bytes; never remove/split it to pass."
+  ]
+}

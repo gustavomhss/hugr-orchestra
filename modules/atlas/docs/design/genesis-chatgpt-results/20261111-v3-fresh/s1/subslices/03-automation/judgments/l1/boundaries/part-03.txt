@@ -1,0 +1,459 @@
+  const nodes = new Map(hook.nodes.map((node) => [node.id, node]))
+  if (hook.nodes.length > 1000) return "Nodes must be a list of at most 1000 steps"
+  if (nodes.size !== hook.nodes.length || new Set(hook.nodes.map((node) => node.name)).size !== hook.nodes.length)
+    return "Node IDs and names must be unique"
+  if (
+    !hook.nodes.some((node) => node.type !== RelayHook.NodeType.trigger && node.type !== RelayHook.NodeType.condition)
+  )
+    return "Add at least one action to the hook"
+  const triggers = hook.nodes.filter((node) => node.type === RelayHook.NodeType.trigger)
+  if (triggers.length !== 1) return "A hook needs exactly one event"
+  const trigger = triggers[0]!
+  if (hook.connections.some((edge) => !nodes.has(edge.from))) return "Invalid hook connection"
+  if (hook.connections.some((edge) => edge.port >= RelayHook.Outputs[nodes.get(edge.from)!.type].length))
+    return "Invalid output port for this action"
+  // One next step per output: the evaluator reads the steps after a Verify as its Pass branch only.
+  if (new Set(hook.connections.map((edge) => `${edge.from}\u0000${edge.port}`)).size !== hook.connections.length)
+    return "A hook output accepts one next step"
+  if (hook.connections.some((edge) => !nodes.has(edge.to))) return "Invalid hook target"
+`````
+
+## R025 ← B12 — `packages/core/src/relay-hook-install.ts` 283–295
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `df1a8ef2e1656d4f2a9a235447c3439fa25fa0f1`; SHA256 fonte `3663a7a5f1eedca77f66ce09229839aeec433440e2bd23d38fa36957d5e46833`. Pai B12 254–295; SHA256 trecho `8e52721febcf48e40a6e00fa4f97ccefe85f415e2c5caceef0c65d85bee05cc9`.
+
+`````text
+    visiting.delete(id)
+    seen.add(id)
+    return found
+  }
+  if (cyclic(trigger.id)) return "Hooks do not accept cycles"
+  if (seen.size !== nodes.size) return "Connect the event to the next hook steps"
+  if (
+    trigger.parameters.timing !== "before" &&
+    hook.nodes.some((node) => node.type === RelayHook.NodeType.block || node.type === RelayHook.NodeType.approve)
+  )
+    return "Block and approval need an event before the effect"
+  return undefined
+}
+`````
+
+## R026 ← B13 — `packages/core/src/relay-hook-recovery.ts` 34–47
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `dac90dd02db4e0382932576d7041bee5142d4067`; SHA256 fonte `370b5746163de1f543102b3872c76c28331d82084984b2178d2e03127a74cea9`. Pai B13 25–88; SHA256 trecho `4ca8c0cdd407ea249cfec40813221a71a1e8344bca17085843188aacc675572d`.
+
+`````text
+      recover: Effect.fn("RelayHookRecovery.recover")(function* (): Effect.fn.Return<Result> {
+        if (location.workspaceID !== undefined)
+          return { scope: "unsupported-workspace", attemptedSessions: 0, errors: 0 }
+        const result = { scope: "implicit-local" as const, attemptedSessions: 0, errors: 0 }
+        const failed = (cause: unknown) =>
+          Effect.sync(() => result.errors++).pipe(
+            Effect.andThen(Effect.logWarning("Relay hook recovery failed", { cause, directory: location.directory })),
+            Effect.asVoid,
+          )
+        // Observe record errors before the shipper absorbs them, without replacing its locking or dedup.
+        const recording = Relay.Service.of({
+          ...relay,
+          record: (installID, body) => relay.record(installID, body).pipe(Effect.tapCause(failed)),
+        })
+`````
+
+## R027 ← B13 — `packages/core/src/relay-hook-recovery.ts` 50–64
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `dac90dd02db4e0382932576d7041bee5142d4067`; SHA256 fonte `370b5746163de1f543102b3872c76c28331d82084984b2178d2e03127a74cea9`. Pai B13 25–88; SHA256 trecho `b0d762c34c311a673d11ecb736f55a90056c72a439af7b6f289a6bb6d737afc4`.
+
+`````text
+          const rows = yield* database.db
+            .selectDistinct({ id: SessionTable.id })
+            .from(SessionTable)
+            .innerJoin(EventTable, eq(SessionTable.id, EventTable.aggregate_id))
+            .where(
+              and(
+                eq(EventTable.type, versionedType(RelayHook.Decided.type, 1)),
+                eq(SessionTable.project_id, location.project.id),
+                eq(SessionTable.directory, location.directory),
+                isNull(SessionTable.workspace_id),
+                cursor === undefined ? undefined : gt(SessionTable.id, cursor),
+              ),
+            )
+            .orderBy(asc(SessionTable.id))
+            .limit(64)
+`````
+
+## R028 ← B14 — `packages/core/src/relay-hook-shipper.ts` 39–54
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `ab87545ec4552ec2fb5a4f2c1b586e98313ed92a`; SHA256 fonte `6ce3c6f822f5fa17d8d5f2c1880e0e085365c913db24cd59a4ad2b51b0c6437c`. Pai B14 26–65; SHA256 trecho `ac0a4368313daf9ef4554603c932eb45c9661538912a163be20e7491f451c582`.
+
+`````text
+  const decisions = rows.flatMap((row) => Option.toArray(decode(row.data)))
+  const end = decisions.findIndex((decision) => decision.decisionID === input.current)
+  // A decision still on its way to its own receipt is not late; its own call ships it.
+  const due = decisions
+    .slice(0, end === -1 ? decisions.length : end + 1)
+    .filter((decision) => decision.decisionID === input.current || !inFlight.has(decision.decisionID))
+  yield* shipping.withPermit(
+    Effect.forEach(
+      Map.groupBy(due, (decision) => decision.installID).values(),
+      (group) =>
+        Effect.forEach(group, (decision) => receipt(input.relay, decision, decision.decisionID !== input.current), {
+          discard: true,
+        }).pipe(Effect.ignore),
+      { discard: true },
+    ),
+  )
+`````
+
+## R029 ← B14 — `packages/core/src/relay-hook-shipper.ts` 101–120
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `ab87545ec4552ec2fb5a4f2c1b586e98313ed92a`; SHA256 fonte `6ce3c6f822f5fa17d8d5f2c1880e0e085365c913db24cd59a4ad2b51b0c6437c`. Pai B14 67–130; SHA256 trecho `55ac8cee62d7ad0321671da6898ef04b41e1e6e5e5219104f5338490391dab40`.
+
+`````text
+  const ledger = path.join(relay.paths.hooks, decision.installID, "ledger.jsonl")
+  const ids = yield* recorded(ledger)
+  if (ids.has(decision.decisionID)) return
+  yield* relay.record(decision.installID, body(decision, deferred))
+  ids.add(decision.decisionID)
+  shipped.set(ledger, { stamp: yield* stamp(ledger), ids })
+})
+
+const recorded = Effect.fnUntraced(function* (ledger: string) {
+  const current = yield* stamp(ledger)
+  const cached = shipped.get(ledger)
+  if (cached?.stamp === current) return cached.ids
+  const entries = yield* LedgerRead.entries(ledger).pipe(
+    Effect.catchTag("LedgerRead.Missing", () => Effect.succeed([])),
+  )
+  const ids = new Set(
+    entries.flatMap((entry) =>
+      entry.event === "hook-decision" && typeof entry.decision === "string" ? [entry.decision] : [],
+    ),
+  )
+`````
+
+## R030 ← B15 — `packages/core/src/relay-workflow-binding.ts` 50–61
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `7149e276e0c214d70c2dafad90dadff5d2c21059`; SHA256 fonte `3174f65f835ea0c4ba64c6a597a2169902627b94673cbb1c54cc5e90a414e0e2`. Pai B15 50–75; SHA256 trecho `6b77d7505e389d1f7c3673acb018f6029db9c99344f74f60ce63ab599d3bdd1f`.
+
+`````text
+  if (input.port.projectID !== input.projectID)
+    return yield* new Held({ reason: "WORKFLOW_PUBLICATION_PROJECT_MISMATCH" })
+  return yield* input.port.use((store) => Effect.gen(function* () {
+    const live = yield* store.get(input.documentID)
+    if (live.id !== input.documentID)
+      return yield* new Held({ reason: "WORKFLOW_PUBLICATION_DOCUMENT_MISMATCH" })
+    if (!live.active || !live.activeVersionId || live.isArchived)
+      return yield* new Held({ reason: "WORKFLOW_PUBLICATION_UNPUBLISHED" })
+    const versionID = input.pinned?.activeVersionID ?? live.activeVersionId
+    const version = yield* store.version(live.id, versionID)
+    if (version.workflowId !== live.id || version.id !== live.id || version.versionId !== versionID)
+      return yield* new Held({ reason: "WORKFLOW_PUBLICATION_VERSION_MISMATCH" })
+`````
+
+## R031 ← B15 — `packages/core/src/relay-workflow-binding.ts` 129–147
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `7149e276e0c214d70c2dafad90dadff5d2c21059`; SHA256 fonte `3174f65f835ea0c4ba64c6a597a2169902627b94673cbb1c54cc5e90a414e0e2`. Pai B15 106–147; SHA256 trecho `1710252f9549c6fcd93155627e8c437cdea654ff20838a84062f27767f90ee90`.
+
+`````text
+export const revalidate = Effect.fn("RelayWorkflowBinding.revalidate")(function* (
+  port: PublicationPort,
+  expected: RelayArm.WorkflowDefinition,
+) {
+  const author = expected.knowledge?.[0]?.authorSessionID
+  if (expected.knowledge?.some((anchor) => anchor.authorSessionID !== author))
+    return yield* new Held({ reason: "WORKFLOW_KNOWLEDGE_AUTHOR_MISMATCH" })
+  // A bound run keeps its immutable published version: draft saves and later publishes do not hold it, unpublishing does.
+  const current = yield* acquire({ port, projectID: expected.publication.projectID,
+    documentID: expected.publication.documentID, parameters: expected.parameters, writePaths: expected.writePaths,
+    authorSessionID: author, pinned: expected.publication })
+  if (!isDeepStrictEqual(current.definition.resolvedSkills, expected.resolvedSkills))
+    return yield* new Held({ reason: "WORKFLOW_SKILL_DRIFT" })
+  if (!isDeepStrictEqual(current.definition.materialization, expected.materialization))
+    return yield* new Held({ reason: "WORKFLOW_MATERIALIZATION_DRIFT" })
+  if (!isDeepStrictEqual(current.definition.knowledge, expected.knowledge))
+    return yield* new Held({ reason: "WORKFLOW_KNOWLEDGE_DRIFT" })
+  return current
+})
+`````
+
+## R032 ← B16 — `packages/core/src/relay-workflow-binding.ts` 223–256
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `7149e276e0c214d70c2dafad90dadff5d2c21059`; SHA256 fonte `3174f65f835ea0c4ba64c6a597a2169902627b94673cbb1c54cc5e90a414e0e2`. Pai B16 149–261; SHA256 trecho `812d4693000b800603e1f4c0fb0149972e621143de8c7171f0d4fa1c6049b825`.
+
+`````text
+  const references = knowledgeReferences(input.sprint)
+  if (references.length > AtlasKnowledge.MAX_UNITS)
+    return new Held({ reason: "WORKFLOW_KNOWLEDGE_REFERENCE_LIMIT" })
+  if (references.length && !input.knowledge)
+    return new Held({ reason: "WORKFLOW_KNOWLEDGE_BINDING_MISSING" })
+  if (references.length && !input.authorSessionID)
+    return new Held({ reason: "WORKFLOW_KNOWLEDGE_AUTHOR_MISSING" })
+  const decoded = Schema.decodeUnknownOption(Schema.Array(AtlasKnowledge.Anchor))(
+    input.knowledge ?? [], { onExcessProperty: "error" })
+  if (Option.isNone(decoded)) return new Held({ reason: "WORKFLOW_KNOWLEDGE_INVALID" })
+  const anchors = decoded.value
+  if (anchors.length !== references.length || new Set(anchors.map((anchor) => anchor.reference)).size !== anchors.length)
+    return new Held({ reason: "WORKFLOW_KNOWLEDGE_REFERENCE_MISMATCH" })
+  const checked = anchors.map((anchor) => {
+    if (anchor.projectID !== input.projectID)
+      return new Held({ reason: "WORKFLOW_KNOWLEDGE_PROJECT_MISMATCH" })
+    if (anchor.authorSessionID !== input.authorSessionID)
+      return new Held({ reason: "WORKFLOW_KNOWLEDGE_AUTHOR_MISMATCH" })
+    if (!references.includes(anchor.reference))
+      return new Held({ reason: "WORKFLOW_KNOWLEDGE_REFERENCE_MISMATCH" })
+    if (new Set(anchor.units.map((unit) => unit.unit)).size !== anchor.units.length)
+      return new Held({ reason: "WORKFLOW_KNOWLEDGE_UNIT_DUPLICATE" })
+    if (anchor.units.some((unit) => digest(Buffer.from(unit.content, "utf8")) !== unit.bodyHash))
+      return new Held({ reason: "WORKFLOW_KNOWLEDGE_BODY_MISMATCH" })
+    if (knowledgeReference(anchor) !== anchor.reference)
+      return new Held({ reason: "WORKFLOW_KNOWLEDGE_DIGEST_MISMATCH" })
+    return anchor
+  })
+  const held = checked.find((anchor) => anchor instanceof Held)
+  if (held instanceof Held) return held
+  if (anchors.reduce((total, anchor) => total + anchor.units.reduce(
+    (bytes, unit) => bytes + Buffer.byteLength(unit.content, "utf8"), 0), 0) > AtlasKnowledge.MAX_BYTES)
+    return new Held({ reason: "WORKFLOW_KNOWLEDGE_CONTENT_LIMIT" })
+  return anchors
+`````
+
+## R033 ← B17 — `packages/core/src/relay-workflow-currentstep.ts` 38–48
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `c34249dde50c821e405128a148f015775095ac62`; SHA256 fonte `00b948197cb77d072629820bc844f9ddae0527561e04b4cab9922dd2460e6a22`. Pai B17 38–90; SHA256 trecho `38cafef22637ca0fd22aa098659a91f2301f8701b40c936261f60aa450a41030`.
+
+`````text
+// Pure view: no position migration, run-lock recovery, macro markers, entered_at or retry writes. In particular,
+// ArmState.position is deliberately not used: it writes legacy migration state even on a nominal read.
+export const read = Effect.fn("RelayWorkflowCurrentStep.read")(function* (
+  token: RelayArm.Token,
+  binding: RelayArm.WorkflowBinding,
+) {
+  const arm = yield* ArmState.dir(token)
+  const loaded = yield* ArmLoad.arm(arm)
+  if (!isDeepStrictEqual(loaded.meta.workflow, binding) ||
+    loaded.meta.project_id !== binding.definition.publication.projectID ||
+    loaded.meta.session_id !== binding.executionSessionID ||
+`````
+
+## R034 ← B17 — `packages/core/src/relay-workflow-currentstep.ts` 69–90
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `c34249dde50c821e405128a148f015775095ac62`; SHA256 fonte `00b948197cb77d072629820bc844f9ddae0527561e04b4cab9922dd2460e6a22`. Pai B17 38–90; SHA256 trecho `cba6fdadbd7213b0b1c3e91922a30c6fd8d7c4757c4237806d7353c08aa7a9b9`.
+
+`````text
+    onNone: () => Effect.fail(new RelayWorkflowBinding.Held({ reason: "WORKFLOW_POSITION_INVALID" })),
+    onSome: Effect.succeed,
+  })
+  const wp = loaded.sprint.work_packages[index]
+  const storedRetry = yield* ArmState.read(arm, `retry_${ArmState.safe(wp.id)}`)
+  const retry = Option.getOrElse(Option.isSome(storedRetry) ? storedRetry
+    : yield* ArmState.read(arm, `retry_${index}`), () => "0").trim()
+  const regression = Option.getOrElse(yield* ArmState.read(arm, RelayArm.Files.regRetry), () => "0").trim()
+  if (![retry, regression].every((value) => /^\d+$/.test(value) && Number.isSafeInteger(Number(value))) ||
+    !Number.isSafeInteger(Number(retry) + Number(regression)))
+    return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_ATTEMPT_INVALID" })
+  const entries = yield* LedgerRead.entries(path.join(arm, RelayArm.Files.ledger)).pipe(
+    Effect.catchTag("LedgerRead.Missing", () => Effect.succeed([])),
+  )
+  const seq = entries.at(-1)?.seq ?? -1
+  if (typeof seq !== "number" || !Number.isSafeInteger(seq) || seq < -1)
+    return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_LEDGER_INVALID" })
+  const stored = state === "active" ? yield* ArmState.read(arm, `feedback_${ArmState.safe(wp.id)}`) : Option.none<string>()
+  // Only the attempt that just failed is shown; a missing, stale or unreadable file adds nothing.
+  const feedback = Option.filter(Option.flatMap(stored, decodeFeedback),
+    (note) => note.attempt === Number(retry) + Number(regression) && note.controls.length > 0)
+  const macro = wp.macro ? loaded.sprint.macros?.find((macro) => macro.id === wp.macro)?.instructions : undefined
+`````
+
+## R035 ← B18 — `packages/core/src/relay-workflow-session.ts` 51–68
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `fc006686eb25e96aa55cd8b93fc60994ebdd9dfd`; SHA256 fonte `c5aefaf53fcd61059a68ee2b0411e587f4d125a42fae8169f8846c4d37c70221`. Pai B18 31–96; SHA256 trecho `c311a0febde4327fd4e676d6810bb41489c82eaed923f2e29fdb069938b73286`.
+
+`````text
+export const current = Effect.fn("RelayWorkflowSession.current")(function* (sessionID: string) {
+  const database = yield* Database.Service
+  const rows = yield* database.db.select().from(EventTable).where(and(eq(EventTable.aggregate_id, sessionID),
+    eq(EventTable.type, EventV2.versionedType(MaestroEvent.Task.WorkflowBound.type, 1)))).limit(2).all().pipe(Effect.orDie)
+  if (!rows.length) return
+  if (rows.length !== 1) return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_TASK_BINDING_AMBIGUOUS" })
+  const bound = yield* Schema.decodeUnknownEffect(MaestroEvent.Task.WorkflowBound.data)(rows[0].data).pipe(
+    Effect.mapError(() => new RelayWorkflowBinding.Held({ reason: "WORKFLOW_TASK_BINDING_MISMATCH" })),
+  )
+  if (bound.executionSessionID !== sessionID || bound.binding.executionSessionID !== sessionID)
+    return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_HOST_LINEAGE_MISMATCH" })
+  const host = yield* nativeHost
+  if (!host) return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_NATIVE_HOST_UNBOUND" })
+  const result = yield* host.current(bound)
+  if (result.view.state === "awaiting-human" && !result.view.pending)
+    return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_ARM_PARKED" })
+  return result
+})
+`````
+
+## R036 ← B18 — `packages/core/src/relay-workflow-session.ts` 82–96
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `fc006686eb25e96aa55cd8b93fc60994ebdd9dfd`; SHA256 fonte `c5aefaf53fcd61059a68ee2b0411e587f4d125a42fae8169f8846c4d37c70221`. Pai B18 31–96; SHA256 trecho `5b0ac6c3d8e6688cb50b416c9cc80e7511351abdcdb665942a698708f9e45650`.
+
+`````text
+}) {
+  if (!input.succeeded) return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_ASSISTANT_NOT_SETTLED" })
+  const host = yield* nativeHost
+  if (!host) return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_NATIVE_HOST_UNBOUND" })
+  const evaluation = yield* host.settle(input.current, { assistantMessageID: input.assistantMessageID,
+    expected: { position: input.current.view.position, attempt: input.current.view.attempt, ledgerSeq: input.current.view.ledgerSeq } })
+  return yield* continues(evaluation)
+})
+
+// An advance or a failing check continues the Session; a failing check keeps the step, which then shows its output.
+// A finished chain stops, and every other outcome holds.
+const continues = (evaluation: RelayArm.Evaluation) =>
+  evaluation.outcome === "complete" ? Effect.succeed(false)
+    : ["advance", "gate-fail", "regression-fail"].includes(evaluation.outcome) ? Effect.succeed(true)
+    : Effect.fail(new RelayWorkflowBinding.Held({ reason: `WORKFLOW_TRANSITION_${evaluation.outcome.toUpperCase().replaceAll("-", "_")}` }))
+`````
+
+## R037 ← B19 — `packages/core/src/relay-workflow-transition.ts` 67–91
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `a200d327a4e1f9f7c3b0e7c986f6a848608f6d6b`; SHA256 fonte `25e53b33dcccd86354775369126f63fcfee5fc89c324d3b7c1e00bd84b0ea28c`. Pai B19 35–99; SHA256 trecho `d0346ca3922a4368c709cd6a685f08c4a3213b66b88f1667f5d1dcd7dcc316b7`.
+
+`````text
+    // Any pending settlement of this arm blocks a different assistant. It cannot evaluate a partially settled cursor.
+    const pending = yield* read(arm, "workflow_pending.json")
+    if (pending) return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_SETTLEMENT_PENDING" })
+    const view = yield* RelayWorkflowCurrentStep.read(input.token, input.binding).pipe(Effect.mapError(held))
+    if (view.state !== "active")
+      return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_ARM_NOT_ACTIVE" })
+    if (!isDeepStrictEqual({ position: view.position, attempt: view.attempt, ledgerSeq: view.ledgerSeq }, input.settlement.expected))
+      return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_SETTLEMENT_POSITION_MISMATCH" })
+    const next = { binding: input.binding, settlement: input.settlement, phase: "pending" as const }
+    // Fence first. If writing the identity receipt fails, a new assistant still cannot grade this arm.
+    yield* write(arm, "workflow_pending.json", next)
+    yield* write(arm, file, next)
+  }, Effect.provideService(ArmState.Store, store))
+  const after = Effect.fn("RelayWorkflowTransition.after")(function* (evaluation: RelayArm.Evaluation) {
+    yield* write(arm, file, { binding: input.binding, settlement: input.settlement, phase: "settled", evaluation })
+    yield* clearPending(arm, { binding: input.binding, settlement: input.settlement, phase: "settled", evaluation })
+  })
+  return yield* evaluator.evaluate({
+    ...input,
+    revisionGuard: true, blockCap: 0, mode: "step", params: input.binding.definition.parameters,
+  }, { before, after })
+})
+
+// Checkpoint writes are atomic replacements. A receipt's assistant ID is the existing durable message identity, not
+// a new run/drain identity. Disk durability has the same filesystem guarantees as the existing arm state writes.
+`````
+
+## R038 ← B20 — `packages/core/src/relay-workflow-evaluator.ts` 50–70
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `898d949b03a82453955e1100335c2150fa51a881`; SHA256 fonte `eb9862b86f9aa64e34e8f52ae25ac079c6d464da9599433dd34625e620c5138c`. Pai B20 29–125; SHA256 trecho `2ff8a57462a151e60efc1aabc7e0a7dde405cd4254859fe7c0fe5ccb482de405`.
+
+`````text
+        yield* signed(ledger, key, true)
+        const saved = yield* boundary.before()
+        if (saved !== undefined) {
+          const receipts = yield* LedgerRead.entries(ledger)
+          const authenticated = receipts.some((entry) => {
+            const receipt = Schema.decodeUnknownOption(Receipt)(entry)
+            return Option.isSome(receipt) && sameIdentity(receipt.value.checkpoint, identity) &&
+              isDeepStrictEqual(receipt.value.evaluation, saved)
+          })
+          if (!authenticated) return yield* hold("WORKFLOW_SETTLEMENT_EVIDENCE_MISSING")
+          return saved
+        }
+        const fence = yield* pending(arm)
+        const receipt = yield* pending(arm,
+          `workflow_${RelayWorkflowBinding.digest(Buffer.from(identity.settlement.assistantMessageID))}.json`)
+        if (!sameIdentity(fence, identity) || !sameIdentity(receipt, identity))
+          return yield* hold("WORKFLOW_SETTLEMENT_IDENTITY_MISMATCH")
+        const view = yield* RelayWorkflowCurrentStep.read(input.token, identity.binding)
+        if (view.state !== "active" || !isDeepStrictEqual({ position: view.position, attempt: view.attempt,
+          ledgerSeq: view.ledgerSeq }, identity.settlement.expected))
+          return yield* hold("WORKFLOW_SETTLEMENT_POSITION_MISMATCH")
+`````
+
+## R039 ← B20 — `packages/core/src/relay-workflow-evaluator.ts` 106–125
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `898d949b03a82453955e1100335c2150fa51a881`; SHA256 fonte `eb9862b86f9aa64e34e8f52ae25ac079c6d464da9599433dd34625e620c5138c`. Pai B20 29–125; SHA256 trecho `4c9f97a397d330691d0eecca0ad6b5eb2b803c43b4599edbfcb6585cde2053eb`.
+
+`````text
+    const arm = yield* ArmState.dir(input.token)
+    if (!ArmState.held(arm)) return yield* hold("WORKFLOW_SETTLEMENT_LOCK_REQUIRED")
+    yield* input.revalidate()
+    if (checkpoint.phase !== "pending" || !isDeepStrictEqual(checkpoint.binding, input.binding) ||
+      !isDeepStrictEqual(checkpoint.settlement, input.settlement))
+      return yield* hold("WORKFLOW_SETTLEMENT_IDENTITY_MISMATCH")
+    const fence = yield* pending(arm)
+    if (!isDeepStrictEqual(fence, checkpoint)) return yield* hold("WORKFLOW_SETTLEMENT_IDENTITY_MISMATCH")
+    const loaded = yield* ArmLoad.arm(arm)
+    if (!isDeepStrictEqual(loaded.meta.workflow, input.binding) ||
+      loaded.meta.project_id !== input.binding.definition.publication.projectID ||
+      loaded.meta.session_id !== input.binding.executionSessionID ||
+      RelayWorkflowBinding.digest(loaded.sprintBytes) !== input.binding.definition.materialization.digest ||
+      loaded.sprintBytes.length !== input.binding.definition.materialization.byteLength)
+      return yield* hold("WORKFLOW_MATERIALIZATION_DRIFT")
+    const store = yield* ArmState.Store
+    const receipt = yield* evidence(arm, input.token, checkpoint, yield* requireKey(store.ledgerKey))
+    yield* ArmEvaluate.repair(arm, receipt.writes)
+    return receipt.evaluation
+  }).pipe(Effect.mapError(held), Effect.catchDefect(() => hold("WORKFLOW_SETTLEMENT_ACQUISITION"))),
+`````
+
+## R040 ← B20 — `packages/core/src/relay-workflow-evaluator.ts` 133–149
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `898d949b03a82453955e1100335c2150fa51a881`; SHA256 fonte `eb9862b86f9aa64e34e8f52ae25ac079c6d464da9599433dd34625e620c5138c`. Pai B20 130–208; SHA256 trecho `c6526b1b1508c6face996eedb24fb6de36f207f3f3a88a3b48d713fd5bfdf8d9`.
+
+`````text
+// A whole signed repair receipt, not an ordinary old PASS or unsigned checkpoint JSON. Its source disposition and
+// cursor/attempt identity are anchored after expected ledger seq. An interrupted earlier stage holds permanently.
+const evidence = (arm: string, token: RelayArm.Token, checkpoint: RelayArm.WorkflowCheckpoint, key: Redacted.Redacted<string>) =>
+  Effect.gen(function* () {
+    if (!ArmState.held(arm)) return yield* hold("WORKFLOW_SETTLEMENT_LOCK_REQUIRED")
+    const ledger = path.join(arm, RelayArm.Files.ledger)
+    yield* signed(ledger, key, true)
+    const entries = yield* LedgerRead.entries(ledger).pipe(
+      Effect.catchTag("LedgerRead.Missing", () => hold("WORKFLOW_SETTLEMENT_EVIDENCE_MISSING")),
+    )
+    const receipt = Schema.decodeUnknownOption(Receipt)(entries.at(-1))
+    if (Option.isNone(receipt)) return yield* hold("WORKFLOW_SETTLEMENT_EVIDENCE_MISSING")
+    const value = receipt.value
+    if (value.arm !== token || !isDeepStrictEqual(value.checkpoint, checkpoint) ||
+      value.seq !== value.evaluation.ledgerSeq || value.sourceSeq !== value.seq - 1 ||
+      value.sourceSeq <= checkpoint.settlement.expected.ledgerSeq)
+      return yield* hold("WORKFLOW_SETTLEMENT_IDENTITY_MISMATCH")
+`````
+
+## R041 ← B20 — `packages/core/src/relay-workflow-evaluator.ts` 170–193
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `898d949b03a82453955e1100335c2150fa51a881`; SHA256 fonte `eb9862b86f9aa64e34e8f52ae25ac079c6d464da9599433dd34625e620c5138c`. Pai B20 130–208; SHA256 trecho `f6b605ccca60d026a3d6080e749d7f40b7e528ceb76fab19b660b6bcd4c82f36`.
+
+`````text
+    const safe = ArmState.safe(wp.id)
+    const required = value.evaluation.outcome === "advance" || value.evaluation.outcome === "complete"
+      ? [`round_${safe}`, `repeat_${safe}`, RelayArm.Files.regRetry, RelayArm.Files.counter,
+          value.evaluation.outcome === "advance" ? RelayArm.Files.position : RelayArm.Files.state,
+          ...(value.evaluation.outcome === "advance" && next && source.base_ref ? [`base_${ArmState.safe(next.id)}`] : [])]
+      : [`round_${safe}`, `repeat_${safe}`,
+          ...(value.evaluation.outcome === "escalate" ? [RelayArm.Files.state, RelayArm.Files.counter]
+            : [value.evaluation.outcome === "regression-fail" ? RelayArm.Files.regRetry : `retry_${safe}`])]
+    if (!value.writes.length || value.writes.some((write) => !names.has(write.name)) ||
+      new Set(value.writes.map((write) => write.name)).size !== value.writes.length ||
+      required.some((name) => !value.writes.some((write) => write.name === name)) ||
+      (value.evaluation.outcome === "advance" && (!next || value.evaluation.next !== next.id)))
+      return yield* hold("WORKFLOW_SETTLEMENT_DISPOSITION_UNKNOWN")
+    return value
+  })
+
+const signed = (ledger: string, key: Redacted.Redacted<string>, missing = false) => Effect.gen(function* () {
+  const result = yield* LedgerVerify.verify(ledger, key)
+  if (result.exit !== 0 && !(missing && result.exit === 2)) return yield* hold("WORKFLOW_LEDGER_INVALID")
+})
+
+function requireKey(key: Option.Option<Redacted.Redacted<string>>) {
+  return Option.isSome(key) && Redacted.value(key.value) !== ""
+    ? Effect.succeed(key.value) : hold("WORKFLOW_LEDGER_KEY_MISSING")
+`````
+
+
+FIM_EVIDENCIA_LITERAL
+
+FIM_DO_LOTE

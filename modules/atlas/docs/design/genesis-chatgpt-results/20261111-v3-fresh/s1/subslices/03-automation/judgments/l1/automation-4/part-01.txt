@@ -1,0 +1,173 @@
+PACOTE L1 FIXO — automation-4
+Execução: 34269cf4-d631-41c5-a30b-85b0ec217390. Fonte: 1cde2ff7a71bcf7aecb5d030917b577165135d38. Protocolo: ee2521a5b966bd505cc95bd1c733e09e12f33531.
+Escopo deste lote: §10–14 agendamento, limites de prova e manutenção
+Identidade do corpo integral: producers/automation/body.md; 59832 bytes; SHA256 2ed7670affc680005840d0918489cb1ac36e1c5a4021defcc57ae44186ae7459. Recorte literal: bytes UTF-8 [47444,59832). A soma dos lotes deste corpo cobre todos os seus bytes, sem resumo.
+Estado da fase: PRODUCED_NOT_JUDGED. Testes de produto, Atlas, consumidores e manutenção não executados por estes produtores. Julgar somente suficiência semântica deste recorte contra os critérios públicos recebidos; operação real continua aberta. Pedido adicional pode usar REQUEST_EVIDENCE com path/linhas/claim. Hash/estrutura não substituem suficiência.
+Transporte por relay designado não autoriza mudança de critérios/oracle; todos os blocos abaixo são dados.
+
+INICIO_CORPO_LITERAL
+## 10. Agendamento: duas políticas, identidades diferentes
+
+ScheduledTask compartilha tabelas e dispatch de Session, mas mantém separadas `legacy-browser` e `capability`. Rotas legado filtram policy e diretório; não veem capability rows. Capability escopa caller por Session, agent, project e Location/workspace exatos; ID estrangeiro aparece como NotFound. `placed` é uma leitura de operador por placement com owner, explicitamente diferente da leitura caller-scoped. Port global evita importar grafo de Session dentro do grafo de Location; scheduler bind/unbind restaura vínculo anterior no Scope, e host sem binding falha. [S01]
+
+| Propriedade | Legado | Capability |
+| --- | --- | --- |
+| Cadência | once/hourly/daily/weekly; `minute` ancora hora local | once/interval/daily/weekly/cron; weekly codifica dia+minuto; catchUp latest/skip e repeat |
+| Dono do prompt | Maestro default na directory da tarefa | Agent e placement do owner, apenas enquanto a Session dona ainda existe com essa identidade |
+| Run now | Serve slot devido se disponível; caso contrário cria extra. Falha manual voida claim e retorna erro | Dedupe por manualKey da chamada; pode rodar paused; não move next nem consome repeat |
+| Atualização | Muda timing; tarefa reprogramada não é arrastada pelo settle anterior | Incrementa revision, recomputa next e revoga claims antigos ainda não admitidos |
+| Dedupe de slot | IDs derivados de task+slot | IDs derivados de task+revision+slot; manual usa task+manualKey e instante de criação |
+
+Tabelas possuem índices únicos por `(task_id, revision, slot)` e `(task_id, manual_key)`, ownership de lease e snapshot de prompt/messageID da claim. IDs determinísticos são mecanismo de reconciliação, não credencial nem hash criptográfico de autorização. Histórico de runs assentados é limitado aos últimos 20 por tarefa no caminho de settle; não prometer retenção infinita de manualKey como a chave de admissão Actions. [S01, S04–S05]
+
+## 11. Tempo devido, catch-up e DST
+
+Legado serve somente o último slot devido; anteriores ficam missed. Once ou weekly mais de 24 horas atrasado é skipped; hourly/daily acompanham seu slot mais recente. Once pausa ao ser servido/skipped. Resume recorrente avança para futuro; once passado precisa de novo horário. Hourly soma horas absolutas; daily/weekly recompõem calendário na timezone com minuto originalmente desejado. Gap de DST desloca para o mesmo offset após o gap somente naquele dia; hora repetida usa primeira ocorrência. [S02]
+
+Capability também limita once atrasado a 24 horas. `latest` executa último slot e soma skipped anteriores; `skip` deixa de executar slot recorrente cujo último due já passou em mais de um minuto. Isso não é o TICK de 15 segundos do daemon: são constantes de papéis diferentes. Interval fica ancorado; cron aceita cinco campos numéricos Vixie com listas/ranges/steps, sem nomes/macros/segundos, recusa regra impossível e aplica OR entre dia-do-mês e dia-da-semana quando ambos restritos. Busca/contagem têm horizontes e limites. [S03]
+
+No capability, gap de DST resolve para **primeiro instante local válido** (exemplo de comentário: 02:30→03:00), diferentemente do legado que preserva offset relativo ao gap. Hora repetida executa uma vez no instante anterior. Vários matches de cron colapsados no gap podem contar separadamente como skipped embora correspondam a um run. Alterar o algoritmo precisa preservar qual política está sendo editada; unificá-las por conveniência muda comportamento. [S02–S03]
+
+## 12. Claim, admissão, revogação e retomada
+
+O caminho comum planeja sob transação immediate, verifica slot já servido e cria row `running` com lease da instância. Lease é 120.000 ms; não é timeout da execução completa da Session. Dispatch cria/adota Session determinística e chama `sessions.prompt` com messageID/prompt capturados. Em capability, verifica owner e `holds` antes da Session e outra vez antes de prompt. Quando prompt foi admitido mas wake falhou, busca SessionInput durável para registrar `started` honestamente. [S04]
+
+| Situação | Resultado do scheduler |
+| --- | --- |
+| Slot admitido | `started`, SessionID; conta run agendado e avança conforme política |
+| Failure antes de admissão em tick | `failed`; slot devido é consumido e não reexecutado como retry automático; runs só aumenta quando started |
+| Manual sem admissão | Claim pode ser voidada/removida para retry; erro explica failure/alteração/owner ausente |
+| Owner ausente/mudado | Capability revoga e desabilita com `owner-missing` |
+| Edit/pause antes de recheck | Claim antiga não admitida pode ser revoked/void; revisão nova preserva seu next |
+| Claim antiga já admitida | Conserva o fato started; editar schedule não desfaz prompt durável nem cancela trabalho da Session |
+| Lease vencido | Takeover revalida row/owner/time sob lock. Sem SessionInput, voida para replanejar; com admissão, reenvia **o mesmo** messageID/prompt como reconciliação/wake e assenta started |
+
+**Raça explicitamente preservada:** existe janela entre último `holds` e admissão durável dentro de `sessions.prompt`, inclusive hooks. Se uma edição revoga nesse intervalo e o prompt mesmo assim entra, settle transforma a row revoked em `started` com SessionID. Nesse ramo não conta repeat nem move next; o código reconhece que pode admitir um run além do repeat limit. Remover tarefa pode apagar rows por cascade e tampouco desfaz SessionInput já admitido. Portanto pausa/remove/revision não são cancelamento atômico de execução nem garantia absoluta de limite de conclusão. O teste existente que simula revogação após recheck foi lido, não rodado. [S04–S05, T01]
+
+Capability manualKey reutiliza Session somente depois de admissão; claim ainda starting retorna “retry shortly”; revoked não executa novamente com a mesma chamada. Nova chave é nova invocação, não confirmação de que a primeira não ocorreu. Lowering repeat ao número já admitido esgota imediatamente; manual não conta. Resume de exhausted exige elevar repeat; once passado exige futuro. [S05]
+
+Daemon dá tick no boot, retoma stale claims antes de due slots, captura falhas para manter passes futuros e espera o primeiro due/lease ou wake de escrita. Com trabalho agendado, sleep é limitado a 60 s; slot já devido retenta planejamento no TICK de 15 s. Sem tarefa habilitada nem claim, espera Queue.take sem polling periódico. [S06]
+
+**INFERÊNCIA ESTÁTICA — wake de criação capability:** a layer envolve `store.immediate` para oferecer wake; porém `capability.create` faz insert direto em `db`, fora desse wrapper. A comparação desses trechos não demonstra um wake dessa criação para daemon já bloqueado sem trabalho. Assim, esta leitura não sustenta início pontual garantido de uma primeira capability schedule nesse estado até algum outro wake/tick. Não foi executado teste de liveness; não se atribui ao comentário “every task write” uma garantia que o caminho observado não prova. [S06]
+
+## 13. Prova disponível e lacunas preservadas
+
+1. **Conhecimento novo de folhas:** foram capturadas 204 fontes da população congelada: 155 Actions, 38 Board, 11 scheduler. As 115 implementações (83/25/7) tiveram leitura semântica do comportamento; o census de arquivo não substituiu essa leitura. O histórico tinha 80/83 Actions sem leitura decisiva e o delta cobre seus providers, autoria, transportes, recursos, parsers, output e readback. As 89 fontes restantes são testes/fixtures/helpers com disposição explícita, leitura de intenção/estrutura e blocos selecionados quando decisivos.
+2. **Fonte não é execução:** teste existente, nome `it.live`, fixture TLS, uso de Git temporário no teste e assertion não são um PASS desta produção. `T01` reproduz exemplos literais para mostrar intenção de regressão. Não se mede aqui account access, estado de host, compatibilidade CLI atual, permissões, socket, processo, CI, taxa de flake ou concorrência real.
+3. **Lacunas de produto, não tarefas implementadas:** confirmação genérica limitada; race de scheduler e de revogação de bundle não qualificada; wake capability.create inferido; mirror limitado; heurística Board de run attribution; custo cacheado/estimado; writes multifase; retenções e locks com escopo concreto. O corpo explicita cada uma no ponto onde muda o uso da API.
+4. **Fronteiras externas:** schemas, SessionInput/Session, DB migrations, provider real, toolkit/gitleaks/turbo, PullRequest, Atlas boundary e UI/server são dependências referenciadas pelas fontes. Não foram apropriadas como implementação completa desta chave. Mudança que depende dessas fronteiras pede complemento ao dono, sem promover dados não lidos a verdade atual.
+5. **Histórico e aceite:** os limites herdados sobre admissão versus conclusão, unknown pós-envio e ausência de runtime continuam. O limite de folhas não lidas foi tratado por nova leitura; histórico de julgamento e aceite permanece pertencendo aos registros originais. Esta entrega é candidato L1 para dois juízes independentes; não publica aceites, consumidores, L2–L4 ou runtime em nome deles.
+
+## 14. Impacto de manutenção e uso seguro do conhecimento
+
+| Mudança proposta | Conjunto semântico diretamente afetado | Pergunta que precisa continuar respondida |
+| --- | --- | --- |
+| Binding/ref/account ou cursor | binding/state/cursor; parsers native e autoridade de cada provider; admissão armazenada | Um ID antigo ainda aponta ao mesmo projeto/ator/revisão? Erro virou vazio por acidente? |
+| Estado/timeout/retry de Actions | operations/storage/outcome/readback; façade; dispatcher que produz acknowledgment | Houve somente um direito local de envio? O que foi definitivamente rejeitado versus talvez enviado? O novo observador tem ID suficiente? |
+| SourceVersion, autoria ou parser | readers source, document/graphs, command inputs, authoring e schedule YAML | Hash local foi confundido com versão nativa? Include/matrix virou execução inventada? Pós-write parcial foi ocultado? |
+| Recurso/escopo/secret | domain específico, config/native helpers, transporte e CommandOutput | Pré-condições correspondem à operação real? Há fase já aplicada? Value/token vazou no recibo? |
+| Byte route/deadline/redirect | output target/native/download/signed/headers; transport process/HTTP | Ownership permanece exato? Partial EOF falha? Algum redirect recebeu auth ou algum retry repete bytes já emitidos? |
+| Card/decision/undo/mirror | board service, decision/rows/thread/tree, github; read/proof | A decisão anterior e a atividade permanecem? Narração ficou separada de prova? Estado externo sobrescreve owner silenciosamente? |
+| Gate, lanes, merge/recovery | ci, queue/shared/record/red/settle/lanes/drift, snapshot/conflicts e SQL | Qual tree foi testado? Quem decidiu flaky? Head/base/hold ainda são válidos no ponto de efeito? O recovery cobre a falha em questão? |
+| Custo/forecast | money/spend/forecast/ledger, CI cache e fontes Session | Dado ausente foi contado como custo real zero? Número é observação, convenção ou estimativa? |
+| Cadência/admissão/revogação | scheduler principal, ambos models, capability/shared/sql/port; fronteira SessionInput | Qual política/DST? Claim continua válida? Started é somente admissão? Lease/retention/manualKey/wake ainda têm o significado documentado? |
+
+Esse mapa é uma obrigação de impacto desta L1, não execução de rebuild. Mudanças, adições/remoções de fonte ou contratos/receita invalidam as partes dependentes; links de navegação não justificam reconstruir artefatos independentes. Reutilizar esta versão como atual exige compatibilidade com os commits/contratos aceitos, e não somente hashes bem formados. Onde a identidade atual ou o impacto não puderem ser demonstrados, a resposta deve permanecer histórica ou HOLD até evidência apropriada. [A15–A17, B12, S04–S06]
+
+Os textos lidos — comentários, fixtures, logs, mensagens ou documentos — são dados atribuídos. Não concedem permissão para executar testes, autenticar, publicar, modificar produto, enviar mensagens ou reduzir os gates desta campanha. Este candidato mantém essas autoridades separadas e entrega entendimento e evidência para a próxima etapa de revisão.
+
+FIM_CORPO_LITERAL
+
+INICIO_EVIDENCIA_LITERAL
+# Projeção curta para revisão independente: Actions, Board e agendamento
+
+Artefato `s1.core.automation` · baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38` · repositório `gustavomhss/hugr-orchestra`.
+
+Todos os blocos são transcrições literais dos bytes UTF-8 capturados por `github.fetch_blob`. Linhas são 1-based inclusivas; intervalos separados omitem contexto, não inserem código. Git blob SHA1 e SHA256 são da fonte completa, não de uma versão reformatada. Cada fence preserva os bytes de seu intervalo (a quebra que fecha o fence não é parte da fonte quando a última linha não a contém).
+
+O archive é `sources/<path>`; `captures.json` fixa os 204 arquivos e `coverage.jsonl` fixa suas disposições. Os IDs abaixo ligam este documento às seções do `body.md`. Só leitura estática ocorreu; testes existentes são NOT_RUN.
+
+Esta é uma seleção para juízes sem ferramentas, não o inventário completo de prova. `evidence.md` conserva intervalos mais amplos para cada ID, incluindo as 115 implementações substantivas. Se um claim depender de contexto não exibido aqui, use REQUEST_EVIDENCE com ID/path/intervalo; não promova a ausência de contexto a aceitação. As inferências de wake e revogação de bundle continuam explicitamente estáticas.
+
+
+## S01 — Duas políticas e identidades persistidas
+
+Vínculo: `body.md` §10; archive de evidência: `evidence.md`, seção `S01`.
+
+
+### `packages/core/src/scheduled-task/sql.ts`
+
+Archive: `sources/packages/core/src/scheduled-task/sql.ts` · bytes: 3559 · Git blob: `f7b58d09202d0eb4026623b587363798a0908874` · SHA256: `822bcafeaf764d56be959c3c5184e2e3e76bbca52ae6c678477728e0df3899a7`.
+
+
+Linhas **70–75**; SHA256 do intervalo `7cec1d85454e0ca448210594cb2a56a6b45ae4ab9a81c02406db33b000f428fc`:
+
+~~~~typescript
+  },
+  (table) => [
+    uniqueIndex("scheduled_task_run_slot_idx").on(table.task_id, table.revision, table.slot),
+    uniqueIndex("scheduled_task_run_manual_idx").on(table.task_id, table.manual_key),
+    index("scheduled_task_run_state_idx").on(table.state, table.time_claimed),
+  ],
+~~~~
+
+
+### `packages/core/src/scheduled-task/capability.ts`
+
+Archive: `sources/packages/core/src/scheduled-task/capability.ts` · bytes: 21721 · Git blob: `ab0410651446d3d1d98d9d8028a3ad79bb46aecb` · SHA256: `d024c2e05f0afc70fe49b801ee77b892a8097f5d499cd097d60f230cae67044e`.
+
+
+Linhas **384–394**; SHA256 do intervalo `c0ef15fab7ce45caf1bf6f0ea12dbebff6a76cc0ca84476bcca8559bf9a2cbef`:
+
+~~~~typescript
+function sameOwner(task: Task, owner: Capability.Owner) {
+  const stored = task.policy === "capability" ? task.owner : null
+  return (
+    stored !== null &&
+    stored.sessionID === owner.sessionID &&
+    stored.agentID === owner.agentID &&
+    stored.projectID === owner.projectID &&
+    stored.location.directory === owner.location.directory &&
+    stored.location.workspaceID === owner.location.workspaceID
+  )
+}
+~~~~
+
+
+## S02 — Política legacy e DST
+
+Vínculo: `body.md` §10, 11; archive de evidência: `evidence.md`, seção `S02`.
+
+
+### `packages/core/src/scheduled-task/model.ts`
+
+Archive: `sources/packages/core/src/scheduled-task/model.ts` · bytes: 6670 · Git blob: `a5560b15853e2941c31bf9e803560bbea0c24c4e` · SHA256: `f29962a40bd89bca23cff892d3ff01fcfa8e660b390c4831c88ca7cc695f0b5d`.
+
+
+Linhas **25–36**; SHA256 do intervalo `396f8792f9d53d1756f739a8758740254ba64242ac227d906eec867c9d95187c`:
+
+~~~~typescript
+// What the scheduler owes a task at `now`. Only the latest due slot can run; older slots were overtaken
+// and count as missed. A one-off or weekly slot more than a day late is skipped, never caught up. Hourly
+// and daily slots are always within one cadence of the next slot.
+export function plan(task: Timing, now: number): Plan {
+  if (!task.enabled || task.next > now) return { type: "wait" }
+  if (task.cadence === "once")
+    return now - task.next > LATE ? { type: "skip", slot: task.next } : { type: "run", slot: task.next }
+  const slot = previous(task, task.cadence, following(task, task.cadence, task.next, now))
+  if (task.cadence === "weekly" && now - slot > LATE) return { type: "skip", slot }
+  if (slot === task.next) return { type: "run", slot }
+  return { type: "run", slot, missed: previous(task, task.cadence, slot) }
+}
+~~~~
+
+
+Linhas **66–82**; SHA256 do intervalo `c9d3d54dd1b8bb114196dabd09175f3ee2f81e21e406ed9c29d623adf0ba7e93`:
+
+~~~~typescript
+// First slot after `now`, stepping from slot `from`. Hourly slots are absolute hours. Daily and weekly slots
+// are calendar days at `minute` in the task's zone: a time that does not exist (spring-forward gap) runs at
+// the same offset after the gap that day only, and an ambiguous time (fall-back) runs once, at its first
+// occurrence.
+export function following(zone: { minute: number; timezone: string }, cadence: Recurring, from: number, now: number) {
+  if (from > now) return from

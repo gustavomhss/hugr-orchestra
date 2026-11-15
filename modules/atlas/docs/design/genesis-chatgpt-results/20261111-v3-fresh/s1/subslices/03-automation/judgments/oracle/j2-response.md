@@ -1,0 +1,3 @@
+Recebido diretamente da principal o **ORACLE_RESERVADO**, SHA-256 `f1cc16fcd73e17fa1aff015e30e7facacaabf0dc2b195c0603f9f30a1f875ccb`, para a execução `34269cf4-d631-41c5-a30b-85b0ec217390`.
+
+Manterei seu uso restrito à avaliação nas fases pertinentes, sem ferramentas nem transmissão à autoria. **Nenhuma decisão anterior foi alterada por este recebimento.** Semântica, binding e operação permanecem obrigações distintas.

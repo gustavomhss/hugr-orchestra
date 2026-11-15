@@ -22,11 +22,21 @@
     "at cap present; cap+1 unavailable/native-file-limit, never absent",
     "preserve symlink/path/regular-file/identity/race rejection controls",
     "prepare/publish/read new candidate on source drift; new native bindings for changed implementation",
-    "run scoped product tests in GitHub Actions and package-local bun typecheck; rerun affected shared controls only"
+    "run scoped product tests in GitHub Actions and package-local bun typecheck; rerun affected shared controls only",
+    "Actual726892 byte historical projection accepted with exact source bytes and live kernel input identity after owner-approved resource-envelope change; no projected source substitution"
   ],
   "retained_limits": [
     "Other files above proposed cap remain unsupported; coverage preserved",
     "No candidate code, policy, approvals, guard or workflow changed by S1-03",
     "Owner must publish new capability-scoped runtime release before S1-03 can use it"
-  ]
+  ],
+  "additional_required_input": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/a-l1-evidence-v1/coverage-needs-projection.json",
+    "bytes": 726892,
+    "sha256": "05485c4bd0ac9c76814e44537788818bbcf1fbcbfb87dd8063ce30bf1a67e0cf",
+    "reason": "Historical claims and reuse depend on this exact source; automation producer explicitly retains it as an effective input. Boundaries producer reports same dependency.",
+    "operation": "Real genesis-native prepare, full 231 automation input closure, preacceptance blocked artifact",
+    "result": "exit1 native-file-limit; candidate file not produced",
+    "receipt": "receipts/automation-native-prepare-probe.json"
+  }
 }

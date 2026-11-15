@@ -1,0 +1,622 @@
+    ...(data.run_number === undefined ? {} : { number: data.run_number }),
+    ...(duration === undefined || !Number.isFinite(duration) || duration < 0 ? {} : { duration }),
+    ...(data.run_started_at === undefined ? {} : { startedAt: data.run_started_at }) }
+~~~~
+
+
+### `packages/core/src/actions/github/jobs.ts`
+
+Archive: `sources/packages/core/src/actions/github/jobs.ts` · bytes: 4682 · Git blob: `dbd8e1e17265f8439ba932be4b88d002b6984d79` · SHA256: `7bc8c9a73de49cc8acefbff94fdf03d72ca3a595e3d0451012db6b54a23ffc86`.
+
+
+Linhas **22–30**; SHA256 do intervalo `97bab589edd7d906086476d3a2344ce18097412fa014e1b1d040b08f6558bea6`:
+
+~~~~typescript
+export const list = Effect.fn("ActionsGitHubRead.jobs")(function* (transport: ActionsContract.Transport, binding: Actions.Binding, input: { runID: string; attempt?: number; cursor?: string }) {
+  yield* GitHubNative.checked(binding, () => {
+    GitHubNative.id(binding, input.runID)
+    if (input.attempt !== undefined && (!Number.isSafeInteger(input.attempt) || input.attempt < 1))
+      throw GitHubNative.error(binding, "invalid_input", "GitHub run attempt must be a positive safe integer")
+  })
+  const repo = yield* GitHubNative.repository(transport, binding)
+  const run = yield* GitHubRuns.at(transport, binding, repo.path, input.runID)
+  const attempt = input.attempt ?? run.attempt
+~~~~
+
+
+## A06 — GitLab: um slot de CI e fonte local qualificada
+
+Vínculo: `body.md` §1; archive de evidência: `evidence.md`, seção `A06`.
+
+
+### `packages/core/src/actions/gitlab/native.ts`
+
+Archive: `sources/packages/core/src/actions/gitlab/native.ts` · bytes: 10614 · Git blob: `d6cf026dcbfb9023285415a9dd16842951e39ac0` · SHA256: `4f61c33643ab30ba295e4e84619c1a3ec4d1dd029d6ce32407029553691eadcc`.
+
+
+Linhas **79–90**; SHA256 do intervalo `ba8308503ade5bd6047ba0d95a5b62f2ee8023beb503de210a2d2dd8a8fdf70d`:
+
+~~~~typescript
+    const target = yield* checked(binding, () => {
+      const host = URL.parse(`https://${binding.provider.hostname}`)
+      const origin = URL.parse(binding.provider.apiOrigin)
+      if (!host || !origin || host.host !== binding.provider.hostname || host.pathname !== "/" || host.username || host.password || host.search || host.hash ||
+        origin.protocol !== "https:" || origin.host !== host.host || origin.username || origin.password || origin.search || origin.hash ||
+        (binding.provider.apiOrigin !== host.origin && binding.provider.apiOrigin !== `${host.origin}/api/v4`))
+        throw error(binding, "host_mismatch", "GitLab metadata requires the exact canonical bound HTTPS host and API origin")
+      return { hostname: binding.provider.hostname, apiOrigin: binding.provider.apiOrigin }
+    })
+    // Authenticated W1 transport supplies this observation, never client Provider.version.
+    // https://docs.gitlab.com/api/metadata/
+    const response = yield* get(binding, "metadata")
+~~~~
+
+
+### `packages/core/src/actions/gitlab/catalog.ts`
+
+Archive: `sources/packages/core/src/actions/gitlab/catalog.ts` · bytes: 7296 · Git blob: `a7a087856e35e01764382211abebfddfa00c133d` · SHA256: `546e21ae307d414ec385b7de7963b1756535a22beb66ff277c007111fe0b6478`.
+
+
+Linhas **21–31**; SHA256 do intervalo `7c47abf6cb64a132d649f48a9a2cf8b6896e3f49162fa6203ccf0b60af56e112`:
+
+~~~~typescript
+      (input.state === undefined || workflow.state === input.state) ? [workflow] : []
+    return { items, total: items.length, capturedAt: Date.now() }
+  })
+  const source = Effect.fn("ActionsGitLabRead.source")(function* (binding: Actions.Binding, input: { readonly path: string; readonly ref: string }) {
+    yield* ActionsGitLabNative.checked(binding, () => {
+      ActionsGitLabNative.selection(binding, input, ["path", "ref"], Schema.Struct({ path: Schema.NonEmptyString, ref: Schema.NonEmptyString }))
+      if (!ActionsGitLabNative.localPath(input.path)) throw ActionsGitLabNative.error(binding, "source_unresolved",
+        "GitLab external, project-qualified or dynamic CI source requires separate resolution; no local configuration fallback")
+      if (!input.ref || /[\x00-\x1f\x7f\\]/.test(input.ref) || input.ref.split("/").some((part) => !part || part === "." || part === ".."))
+        throw ActionsGitLabNative.error(binding, "invalid_input", "GitLab source ref must name an exact commit, branch or tag")
+    })
+~~~~
+
+
+Linhas **61–72**; SHA256 do intervalo `14e54a9c14cc479567d89065ddf341d6580d12272121bfff2bc9993b10f8c537`:
+
+~~~~typescript
+    })
+  })
+  const capabilities = Effect.fn("ActionsGitLabRead.capabilities")(function* (binding: Actions.Binding) {
+    const project = yield* native.project(binding)
+    const observedAt = Date.now()
+    const scope = `projects/${binding.projectID}`
+    const permissions = [project.permissions?.project_access?.access_level, project.permissions?.group_access?.access_level]
+      .filter((value) => value !== undefined)
+    const context = `Native project read succeeded; access levels ${permissions.length ? permissions.join(",") : "unobserved"}; advisory client version ${binding.provider.version ?? "unset"}; native version unobserved by this inspection`
+    return [Actions.Capability.make({ operation: "workflows.read", state: "available", reason: context, scope, observedAt }),
+      ...["source.read", "runs.read", "jobs.read"].map((operation) => Actions.Capability.make({ operation, state: "unknown", scope, observedAt,
+        reason: `${context}; endpoint-specific read permission not observed` })),
+~~~~
+
+
+## A07 — Runs/jobs/bridges GitLab sem tentativa fabricada
+
+Vínculo: `body.md` §1; archive de evidência: `evidence.md`, seção `A07`.
+
+
+### `packages/core/src/actions/gitlab/runs.ts`
+
+Archive: `sources/packages/core/src/actions/gitlab/runs.ts` · bytes: 9251 · Git blob: `5c1611e2e163457eb6f17cc44f386f597ccaccd6` · SHA256: `4cb9c8b7a73b12019ee9f60b36b2c116ccac833ab12f73307e5c37ba6341cdab`.
+
+
+Linhas **91–102**; SHA256 do intervalo `4e4f20a89e56c18b211f6530fb979f7982a5d50f7b1c379486b89f34ebf963e6`:
+
+~~~~typescript
+    name: pipeline.name === undefined ? `Pipeline ${pipeline.id}` : pipeline.name, ref: pipeline.ref, commit: pipeline.sha, event: pipeline.source,
+    repositoryID: String(pipeline.project_id),
+    ...(pipeline.name ? { title: pipeline.name } : {}),
+    ...(pipeline.iid === undefined ? {} : { number: Number(pipeline.iid) }),
+    status: pipeline.status, ...(ActionsGitLabNative.conclusion(pipeline.status) === undefined ? {} : { conclusion: pipeline.status }),
+    ...(pipeline.user ? { actor: pipeline.user.username } : {}),
+    ...(pipeline.created_at === undefined || pipeline.created_at === null ? {} : { createdAt: pipeline.created_at }),
+    ...(pipeline.started_at === undefined || pipeline.started_at === null ? {} : { startedAt: pipeline.started_at }),
+    ...(pipeline.finished_at === undefined || pipeline.finished_at === null ? {} : { finishedAt: pipeline.finished_at }),
+    ...(pipeline.updated_at === undefined || pipeline.updated_at === null ? {} : { updatedAt: pipeline.updated_at }),
+    ...(pipeline.duration === undefined || pipeline.duration === null ? {} : { duration: pipeline.duration }),
+    ...(pipeline.web_url === undefined || pipeline.web_url === null ? {} : { url: pipeline.web_url }),
+~~~~
+
+
+### `packages/core/src/actions/gitlab/jobs.ts`
+
+Archive: `sources/packages/core/src/actions/gitlab/jobs.ts` · bytes: 4992 · Git blob: `5eef5ef7e30087596d06535bf9f4775704a8d033` · SHA256: `5f2ef28c5898a8375a57a0c85d053cea34a3f3981319d1bbb619db7599a5f8bf`.
+
+
+Linhas **22–34**; SHA256 do intervalo `270cad718488ecb574bf6d74c2c212ff4869a518624d6f205d70b5aa2e4ba840`:
+
+~~~~typescript
+      }))
+      ActionsGitLabNative.nativeID(binding, input.runID, "pipeline ID")
+      if (input.attempt !== undefined) throw ActionsGitLabNative.error(binding, "capability_unavailable", "GitLab job retries have native job IDs, not pipeline run_attempt numbers")
+      return ActionsCursor.page(binding, "gitlab.jobs", filters, input.cursor)
+    })
+    yield* native.project(binding)
+    yield* native.pipeline(binding, input.runID)
+    const bridges = position > bridgeOffset
+    const page = bridges ? position - bridgeOffset : position
+    // The documented bridges route retains compatibility with pre-19.2 GitLab.
+    // https://docs.gitlab.com/api/jobs/#list-all-trigger-jobs-by-pipeline
+    const response = yield* native.get(binding, `${ActionsGitLabNative.projectPath(binding)}/pipelines/${input.runID}/${bridges ? "bridges" : "jobs"}`,
+      { page, per_page: perPage, ...(bridges ? {} : { include_retried: true }) })
+~~~~
+
+
+## A08 — Orçamento e segurança do parser YAML
+
+Vínculo: `body.md` §2; archive de evidência: `evidence.md`, seção `A08`.
+
+
+### `packages/core/src/actions/source/document.ts`
+
+Archive: `sources/packages/core/src/actions/source/document.ts` · bytes: 13276 · Git blob: `52ec9f767dad9ba0cec28ec25ec4f7e4c16a163b` · SHA256: `7948e08d19341892df7f4cd8ae38f3cdb27694a197e1b462c3b4efdb96d90ce3`.
+
+
+Linhas **10–27**; SHA256 do intervalo `f5530c017c93c909a1494a752fefe926ab1f80a7ecb00aa8b9830815dfabccc7`:
+
+~~~~typescript
+export function diagnostics() {
+  const items: string[] = []
+  const severity = { partial: false, unresolved: false }
+  return {
+    items,
+    work: { lexemes: 0, triviaPeak: 0, parserNext: 0, parserEnd: 0, cstNodes: 0, compositions: 0, resolutions: 0, merges: 0 },
+    add(kind: "partial" | "unresolved", message: string, critical = false) {
+      severity[kind] = true
+      if (critical && items.length >= limits.diagnostics - 1) {
+        items[limits.diagnostics - 1] = `source_${kind}:${message}; diagnostics_truncated`.slice(0, limits.diagnosticLength)
+        return
+      }
+      if (items.length < limits.diagnostics - 1) {
+        items.push(`source_${kind}:${message}`.slice(0, limits.diagnosticLength))
+        return
+      }
+      if (items.length === limits.diagnostics - 1) items.push("source_partial:diagnostics_truncated")
+    },
+~~~~
+
+
+Linhas **183–191**; SHA256 do intervalo `91ca7b2c0a6866f26549b9952fbcc909494f8d9ac7142b3f0bd663cfb4734cb4`:
+
+~~~~typescript
+      if (target) pending.push({ node: target, depth: entry.depth, path: entry.path })
+    }
+    if (isPair(entry.node)) {
+      if (isScalar(entry.node.key) && ["__proto__", "constructor", "prototype"].includes(String(entry.node.key.value))) {
+        report.add("unresolved", "unsafe_key:prototype-sensitive mapping key")
+        return
+      }
+      const key = isScalar(entry.node.key) ? String(entry.node.key.value) : ""
+      pending.push({ node: entry.node.key, depth: entry.depth, path: entry.path }, {
+~~~~
+
+
+## A09 — Grafo de definição GitHub
+
+Vínculo: `body.md` §2; archive de evidência: `evidence.md`, seção `A09`.
+
+
+### `packages/core/src/actions/source/graph.ts`
+
+Archive: `sources/packages/core/src/actions/source/graph.ts` · bytes: 3845 · Git blob: `9979794cf9f26e006fa36651ba026ecf044a65e2` · SHA256: `0219fc70d60d16887c37ac9cd9a3b9cf9aac5e586716d918d5cb2667550c8e0f`.
+
+
+Linhas **45–53**; SHA256 do intervalo `2754300c846818417302a29299c4938e54eea316f0682325e43c0179973cbf8f`:
+
+~~~~typescript
+  }
+  return { source, ...result, header: document.header, inputs, state: report.state(), diagnostics: report.items }
+}
+
+function inputDefinitions(header: Schema.JsonObject, report: Diagnostics): Actions.InputDefinition[] {
+  if (!object(header.spec)) return []
+  if (header.spec.include !== undefined) report.add("partial", "inputs_include_unresolved:external input definitions not fetched")
+  if (!object(header.spec.inputs)) return []
+  return Object.entries(header.spec.inputs).flatMap(([name, configuration]) => {
+~~~~
+
+
+### `packages/core/src/actions/source/github.ts`
+
+Archive: `sources/packages/core/src/actions/source/github.ts` · bytes: 3773 · Git blob: `48042830d79b37d23fa901759eeeaa2f56fd8253` · SHA256: `18b5e3799d02c347f7c80b58264e4e8bc6c5d8c07f7d1559a65186a9313c6bca`.
+
+
+Linhas **30–43**; SHA256 do intervalo `8a06bc003ddc570623d9a60285664f329d06726b44b2f7c8266955227d8f664d`:
+
+~~~~typescript
+    if (matrix !== undefined && expression(matrix)) report.add("partial", `matrix_dynamic:jobs.${id}`)
+    if (matrix !== undefined && !object(matrix) && typeof matrix !== "string") report.add("unresolved", `matrix_invalid:jobs.${id}`)
+    if (typeof configuration.uses === "string") report.add("partial", `reusable_unresolved:jobs.${id}`)
+    if (configuration.uses !== undefined && typeof configuration.uses !== "string") report.add("unresolved", `reusable_invalid:jobs.${id}`)
+    if (Object.hasOwn(configuration, "<<")) report.add("partial", `yaml_merge_unsupported:jobs.${id}`)
+    const steps = configuration.steps === undefined ? [] : Array.isArray(configuration.steps)
+      ? configuration.steps.flatMap((step, index): Actions.GraphStep[] => {
+        if (!object(step)) {
+          report.add("unresolved", `step_invalid:jobs.${id}.steps.${index}`)
+          return []
+        }
+        if (step.uses !== undefined && typeof step.uses !== "string" || step.run !== undefined && typeof step.run !== "string") {
+          report.add("unresolved", `step_command_invalid:jobs.${id}.steps.${index}`)
+        }
+~~~~
+
+
+## A10 — Resolução local de GitLab
+
+Vínculo: `body.md` §2; archive de evidência: `evidence.md`, seção `A10`.
+
+
+### `packages/core/src/actions/source/gitlab.ts`
+
+Archive: `sources/packages/core/src/actions/source/gitlab.ts` · bytes: 11989 · Git blob: `2c78794a932b7b1680a0571a975201c55676feef` · SHA256: `cc2827422fb5962c93b849d212d0755eb040485689cd1c43219d7e885550c79c`.
+
+
+Linhas **94–111**; SHA256 do intervalo `58f6e1b5e094f7d54a075a735e91693c30e5a61c53e587f51ade0d2d65afc57d`:
+
+~~~~typescript
+    }
+    resolved.set(id, effective)
+    levels.set(id, 1 + parents.reduce((maximum, parent) => Math.max(maximum, levels.get(parent) ?? 0), 0))
+    return effective
+  }
+  const jobs = Array.from(definitions).flatMap(([id, raw]): Actions.GraphJob[] => {
+    if (id.startsWith(".")) return []
+    if (!id || !object(raw)) {
+      report.add("unresolved", `job_invalid:${id}`)
+      return []
+    }
+    const effective = resolve(id)
+    // Unfetched includes may redefine even known templates/jobs. Keep only source-local projections.
+    const config = effective ? applyDefaults(document, effective, report, opaque, id) : raw
+    if (inputExpression(id) || inputExpression(config)) report.add("partial", `inputs_unresolved:${id}:native interpolation retained`)
+    const uncertain = opaque([id, "<<"])
+    if (uncertain) report.add("partial", `merge_unresolved:opaque native reference at ${id}`)
+    const stage = uncertain || opaque([id, "stage"]) || inputExpression(config.stage) ? undefined : typeof config.stage === "string" ? config.stage
+~~~~
+
+
+Linhas **207–217**; SHA256 do intervalo `9e4ee796284bdc3895930372b0ead4189e312f23a02bc823468ce58378f0355e`:
+
+~~~~typescript
+  }
+  if (inheritance === false) return config
+  const allowed = new Set<string>()
+  if (Array.isArray(inheritance) && !inheritance.every((key) => {
+    if (!mergeVisit(report)) return false
+    if (typeof key !== "string" || !defaultKeys.has(key)) return false
+    allowed.add(key)
+    return true
+  })) {
+    report.add("partial", "defaults_unresolved:unsupported or excessive inherit:default allowlist")
+    return config
+~~~~
+
+
+## A11 — Base e input de autoria
+
+Vínculo: `body.md` §2; archive de evidência: `evidence.md`, seção `A11`.
+
+
+### `packages/core/src/actions/authoring/base.ts`
+
+Archive: `sources/packages/core/src/actions/authoring/base.ts` · bytes: 4981 · Git blob: `3c18b87555faf8d09b789ac5dc7316c6721f0f58` · SHA256: `401a807ef4861a182c4ad70985f5d13d9b43a714693ec78ad2d9ec0dc1b83d7d`.
+
+
+Linhas **23–32**; SHA256 do intervalo `ed03d05ddc348171044fcfe064f412a1cd8865a30da9b66e0dd6b2e3c351ae9e`:
+
+~~~~typescript
+    if (ref !== undefined) branch(binding, ref)
+    return { binding: { ...binding, provider: { ...binding.provider } }, ref }
+  })
+  if (frozen.binding.provider.kind === "github") {
+    const repository = yield* GitHubNative.repository(services.transport, frozen.binding)
+    const selected = frozen.ref ?? repository.native.default_branch
+    if (!selected) return yield* error(frozen.binding, "source_unresolved", "GitHub repository has no observed default branch")
+    const name = yield* guard(frozen.binding, () => branch(frozen.binding, selected))
+    const response = yield* GitHubNative.get(services.transport, frozen.binding,
+      { method: "GET", path: `${repository.path}/git/ref/heads/${name.split("/").map(encodeURIComponent).join("/")}` })
+~~~~
+
+
+Linhas **58–72**; SHA256 do intervalo `972e1a5fdabcd37a64cfa7b95d8d3ae7200a7636f9ed113dec394e3667eb4cc8`:
+
+~~~~typescript
+    if (binding.provider.kind === "github" && (!path.startsWith(".github/workflows/") || path.split("/").length !== 3 || !/\.ya?ml$/i.test(path)))
+      throw error(binding, "invalid_input", "GitHub draft path must be a workflow YAML file")
+    if (binding.provider.kind === "gitlab" && !ActionsGitLabNative.localPath(path))
+      throw error(binding, "invalid_input", "GitLab draft path must be a local repository path")
+    // A draft digest identifies local text, never a native optimistic mutation version.
+    const source: Actions.Source = { bindingID: admitted.bindingID, path, ref: admitted.ref, commit: admitted.commit,
+      version: `draft:sha256:${createHash("sha256").update(draftBytes).digest("hex")}`, text: draft, editable: false }
+    decode(binding, Schema.toType(Actions.Source), source)
+    return { binding: { ...binding, provider: { ...binding.provider } }, base: { ...admitted }, source }
+  })
+  const current = yield* read(services, frozen.binding, frozen.base.ref)
+  if (current.commit.toLowerCase() !== frozen.base.commit.toLowerCase())
+    return yield* error(frozen.binding, "source_conflict", "Source branch moved after base admission")
+  return yield* ActionsAuthoring.make(services).validate(frozen.binding, frozen.source)
+})
+~~~~
+
+
+## A12 — Publicação GitHub em fases
+
+Vínculo: `body.md` §2; archive de evidência: `evidence.md`, seção `A12`.
+
+
+### `packages/core/src/actions/authoring/github.ts`
+
+Archive: `sources/packages/core/src/actions/authoring/github.ts` · bytes: 6777 · Git blob: `fefe6fd6df55ea6fee6f898b9b5e37b13c650307` · SHA256: `bdcb41b748e4a4ac148867cfbcffe6638ed5dc2b07f3e6bfc25746f7f9134790`.
+
+
+Linhas **33–45**; SHA256 do intervalo `82d3609f9a4f8dfcd994606aac31567e5cbd314cf07fa14d4a0e83b8c598fed2`:
+
+~~~~typescript
+  const path = yield* guard(binding, () => sourcePath(binding, intent.target.path))
+  const repo = yield* GitHubCommandCommon.authority(services, binding)
+  const ref = yield* head(services, binding, repo.root, intent.target.ref ?? "")
+  if (ref.toLowerCase() !== intent.expected?.commit?.toLowerCase())
+    return yield* error(binding, "source_conflict", "Source branch moved after admission")
+  if (intent.kind !== "source.write" && intent.expected?.sourceVersion !== undefined) yield* current(services, binding, intent)
+
+  if ("branch" in command) {
+    if (command.branch !== intent.target.resourceID)
+      return yield* error(binding, "invalid_input", "New source branch differs from admission")
+    if (intent.expected?.sourceVersion === undefined)
+      yield* absent(services, binding, `${repo.root}/contents/${GitHubNative.path(binding, path)}`, ref)
+    return {
+~~~~
+
+
+## A13 — Publicação GitLab em fases
+
+Vínculo: `body.md` §2; archive de evidência: `evidence.md`, seção `A13`.
+
+
+### `packages/core/src/actions/authoring/gitlab.ts`
+
+Archive: `sources/packages/core/src/actions/authoring/gitlab.ts` · bytes: 7205 · Git blob: `2e17c642d355cdb595332f3069a0928ef192ae08` · SHA256: `aba55ae13260350fc70490bbf9930e19cb648babb5f555b23c3c350161e479a9`.
+
+
+Linhas **39–56**; SHA256 do intervalo `cce66a6dd0ba41707d0e6565a807ffb6dd5e2fd6defb15cd2648c552df8815af`:
+
+~~~~typescript
+    return yield* error(binding, "source_conflict", "GitLab source branch moved after admission")
+  if (intent.kind !== "source.write" && intent.expected?.sourceVersion !== undefined) yield* current(services, binding, intent)
+  if ("branch" in command) {
+    if (command.branch !== intent.target.resourceID)
+      return yield* error(binding, "invalid_input", "New source branch differs from admission")
+    if (intent.expected?.sourceVersion === undefined)
+      yield* absent(services, binding, `${root}/repository/files/${encodeURIComponent(path)}`, ref)
+    return {
+      request: { method: "POST", path: `${root}/repository/branches`, body: { branch: command.branch, ref } }, status: 201,
+      acknowledge: (response) => guard(binding, () => {
+        const value = decode(binding, Ref, response.data, true)
+        if (value.name !== command.branch || value.commit.id.toLowerCase() !== ref.toLowerCase())
+          throw error(binding, "outcome_unknown", "GitLab did not prove the exact new branch and base commit", "unknown")
+        return { acknowledgement: { resourceID: command.branch } }
+      }),
+    }
+  }
+  if ("mode" in command) {
+~~~~
+
+
+## A14 — Readback de autoria, lint e editor schedule
+
+Vínculo: `body.md` §2; archive de evidência: `evidence.md`, seção `A14`.
+
+
+### `packages/core/src/actions/authoring/remote.ts`
+
+Archive: `sources/packages/core/src/actions/authoring/remote.ts` · bytes: 8787 · Git blob: `0ef1c6bbc54e8e4a73bc9e82a7f1b6653161d3d7` · SHA256: `458a706a6415cb1e3d554169149215269f49bcbd5a5fc77f51162840cfcb13d8`.
+
+
+Linhas **114–129**; SHA256 do intervalo `366a60f056eb086b1cacd1955ad2d02d36f9ddfa912f3d5c31a0dd73b7c97c79`:
+
+~~~~typescript
+
+export const send = Effect.fn("ActionsAuthoring.send")(function* (services: Services, binding: Actions.Binding, plan: Plan) {
+  yield* actor(services, binding)
+  const response = yield* services.transport.request(binding, plan.request).pipe(Effect.mapError((cause) => {
+    const disposition = cause.disposition === "definitely_unsent" || cause.disposition === "definitely_rejected" ? cause.disposition : "unknown"
+    return error(binding, disposition === "unknown" ? "outcome_unknown" : cause.kind, "Source provider write failed", disposition)
+  }))
+  if (response.status !== plan.status) {
+    if ([400, 401, 403, 404, 409, 422, 429].includes(response.status)) {
+      const failure = ActionsResponse.failure(binding.provider, 1, Buffer.alloc(0), response.status, { ...response.headers }, true)
+      return yield* error(binding, failure.kind, "Source provider write was rejected", "definitely_rejected")
+    }
+    return yield* error(binding, "outcome_unknown", "Source write returned an unqualified native status", "unknown")
+  }
+  return yield* after(binding, plan.acknowledge(response))
+})
+~~~~
+
+
+### `packages/core/src/actions/authoring/lint.ts`
+
+Archive: `sources/packages/core/src/actions/authoring/lint.ts` · bytes: 2071 · Git blob: `dca58f1b7cf7eaa4b4afdb25f18bb4ec9234d868` · SHA256: `35372e153a34ae76a23bc8d631ca762c169994db3a1d452c4e4ceb8f2920d5cc`.
+
+
+Linhas **13–21**; SHA256 do intervalo `628d8cac78051fd671afad64c3e24ae30ba6fb08dd739ba3d1c75bd49d1b51ea`:
+
+~~~~typescript
+): Effect.fn.Return<Actions.Graph, ActionsError> {
+  // CI lint is an explicit user-requested computation, not a durable mutation or a dry-run pipeline.
+  const root = yield* guard(binding, () => ActionsGitLabNative.projectPath(binding))
+  const result = yield* services.transport.request(binding, {
+    method: "POST", path: `${root}/ci/lint`,
+    body: { content: source.text, include_jobs: false, dry_run: false },
+  }).pipe(Effect.map((response) => response.status === 200 ? Schema.decodeUnknownOption(Lint)(response.data) : Option.none()),
+    Effect.catch(() => Effect.succeed(Option.none())))
+  const report = diagnostics()
+~~~~
+
+
+## A15 — Admissão durável da intenção
+
+Vínculo: `body.md` §3; archive de evidência: `evidence.md`, seção `A15`.
+
+
+### `packages/core/src/actions/operations.ts`
+
+Archive: `sources/packages/core/src/actions/operations.ts` · bytes: 12124 · Git blob: `83c0b9e03b063bd59bc2d30317f7de85cbb99ee4` · SHA256: `f4180bfeabef99c0eaddace3f1da7242fb8dacd7d63fb948b84cc014f59a89d4`.
+
+
+Linhas **83–101**; SHA256 do intervalo `51c8ba75a4365ca2aa253bbdadd500ecba79048bf17b015546765e5082983c3c`:
+
+~~~~typescript
+      if (existing) {
+        if (!matches(existing, binding) || !equivalent(intent(existing), decoded))
+          return yield* Effect.fail(error("intent_conflict", "Actions logical intent was already bound to another command", existing.id))
+        const expired = unavailable(existing, now)
+        if (expired) return yield* Effect.fail(expired)
+        return receipt(existing)
+      }
+      const ledger = yield* tx.select({ total: count() }).from(ActionsOperationTable).get()
+      if (!ledger || ledger.total >= LEDGER_LIMIT)
+        return yield* Effect.fail(error("maintenance_required", "Actions admission ledger requires maintenance"))
+      const unknown = yield* tx.select({ total: count() }).from(ActionsOperationTable)
+        .where(eq(ActionsOperationTable.state, "outcome_unknown")).get()
+      if (!unknown || unknown.total >= UNKNOWN_LIMIT)
+        return yield* Effect.fail(error("maintenance_required", "Actions unknown outcome storage requires maintenance"))
+      const inserted = yield* tx.insert(ActionsOperationTable).values({
+        id: Actions.OperationID.create(),
+        location_key: location,
+        project_id: input.projectID,
+        directory,
+~~~~
+
+
+### `packages/core/src/actions/operations/sql.ts`
+
+Archive: `sources/packages/core/src/actions/operations/sql.ts` · bytes: 1580 · Git blob: `63cad8cb4926acd4adc6c285bd6b1f1f64a238cc` · SHA256: `07f2de775a5e5352859f1bf041e32865b3681ec2db85fd4e367823fe2a00da75`.
+
+
+Linhas **27–35**; SHA256 do intervalo `583fdd02cb072b4c5f35857d46168a685fdeb03e8b51d4d03b2d0fb842e25f36`:
+
+~~~~typescript
+    result: text({ mode: "json" }).$type<Actions.Operation["result"]>(),
+    reason: text(),
+  },
+  (table) => [
+    uniqueIndex("actions_operation_location_binding_client_idx").on(table.location_key, table.binding_id, table.client_id),
+    index("actions_operation_state_expires_idx").on(table.state, table.time_expires),
+    index("actions_operation_state_updated_idx").on(table.state, table.time_updated),
+  ],
+)
+~~~~
+
+
+## A16 — CAS, limite de execução e recuperação sem replay
+
+Vínculo: `body.md` §3; archive de evidência: `evidence.md`, seção `A16`.
+
+
+### `packages/core/src/actions/operations.ts`
+
+Archive: `sources/packages/core/src/actions/operations.ts` · bytes: 12124 · Git blob: `83c0b9e03b063bd59bc2d30317f7de85cbb99ee4` · SHA256: `f4180bfeabef99c0eaddace3f1da7242fb8dacd7d63fb948b84cc014f59a89d4`.
+
+
+Linhas **138–165**; SHA256 do intervalo `a38d4d5955bdf0e9ce3dcb97a51a6ddaafecc8fd0a60dfc203eac7ed19067727`:
+
+~~~~typescript
+      // Register before the durable claim so disposal cannot race the CAS/cleanup
+      // handoff. This fiber remains the caller's request, never a shared worker.
+      lifetime.requests.add(fiber)
+      return yield* Effect.gen(function* () {
+        if (lifetime.closed) return yield* Effect.fail(error("binding_missing", "Actions operation Location was disposed"))
+        const claimed = yield* safe(database.db.transaction((tx) => Effect.gen(function* () {
+          if (lifetime.closed) return yield* Effect.fail(error("binding_missing", "Actions operation Location was disposed"))
+          // Sample time after acquiring SQLite's write reservation, not before
+          // waiting for it. A lease may expire while the request waits to claim.
+          const claimTime = yield* Clock.currentTimeMillis
+          return yield* tx.update(ActionsOperationTable).set({ state: "sending", time_updated: claimTime })
+            .where(and(
+              eq(ActionsOperationTable.id, row.id), eq(ActionsOperationTable.location_key, location),
+              eq(ActionsOperationTable.binding_id, binding.id), eq(ActionsOperationTable.binding_revision, binding.revision),
+              eq(ActionsOperationTable.actor, row.actor), eq(ActionsOperationTable.state, "prepared"),
+              gt(ActionsOperationTable.time_expires, claimTime),
+            )).returning().get()
+        }), { behavior: "immediate" }))
+        if (!claimed) return yield* get(binding, row.id)
+        yield* restore(Effect.suspend(() => lifetime.closed ? Effect.interrupt : perform(intent(claimed), submission.input)).pipe(
+          Effect.flatMap(checkedAcknowledgement),
+          Effect.scoped,
+          Effect.timeout(DEADLINE),
+          Effect.raceFirst(Deferred.await(disposed).pipe(Effect.andThen(Effect.interrupt))),
+          Effect.catchCause((cause) => Cause.hasInterrupts(cause)
+            ? Effect.interrupt
+            : Effect.fail(definitive(cause) ?? error("outcome_unknown", "Actions provider outcome was not established", row.id))),
+        )).pipe(Effect.onExit((exit) => finalize(database.db, row.id, exit)))
+~~~~
+
+
+### `packages/core/src/actions/operations/storage.ts`
+
+Archive: `sources/packages/core/src/actions/operations/storage.ts` · bytes: 7588 · Git blob: `d7633da87c8fe5b41319e23c6ca9e9092d152e4e` · SHA256: `433462cdc96bbeda49a85f46e9c96954cee753822165329caac5c26c748ff2b4`.
+
+
+Linhas **88–99**; SHA256 do intervalo `7843d98ac19a6e979df626a1fc5847f98f21c706e6b46a0b2d3aa26568291cc4`:
+
+~~~~typescript
+    yield* db.update(ActionsOperationTable).set({ state: "expired", time_updated: now, result: null, reason: LEASE_EXPIRED }).where(
+      and(eq(ActionsOperationTable.state, "prepared"), lte(ActionsOperationTable.time_expires, now)),
+    ).run()
+    // Keep the admission key and intent forever. Deleting a receipt would allow
+    // a delayed prepare with the same logical intent to issue another command.
+    yield* db.update(ActionsOperationTable).set({ state: "expired", result: null, reason: RECEIPT_EXPIRED }).where(and(
+      inArray(ActionsOperationTable.state, ["accepted", "confirmed", "rejected"]),
+      lte(ActionsOperationTable.time_updated, now - RETENTION),
+    )).run()
+  })
+
+// Database identity outlives Location services. Rebuilding a Location must never
+~~~~
+
+
+## A17 — Reconciliação exata e seus limites
+
+Vínculo: `body.md` §3; archive de evidência: `evidence.md`, seção `A17`.
+
+
+### `packages/core/src/actions/readback.ts`
+
+Archive: `sources/packages/core/src/actions/readback.ts` · bytes: 2118 · Git blob: `26e01af0e8dad921d4f7a408e2642a851da3903d` · SHA256: `891d45078014fc821bba1a9ea69e68b4a822545e79cf1e5ee5f9f0bcc86acac2`.
+
+
+Linhas **14–35**; SHA256 do intervalo `55f253871675d48a8e41279ea68aebb77c6ea5c82cb3f0916cc324992ef2646d`:
+
+~~~~typescript
+  // Unattributed dispatch cannot be recovered by guessing a nearby run.
+  if (acknowledged?.unattributed || !acknowledged?.runID) return { state: "pending" }
+  const run = yield* reader.run(binding, acknowledged.runID)
+  if (intent.expected?.commit && run.commit !== intent.expected.commit) return { state: "pending" }
+  if (intent.target.runID && run.id !== intent.target.runID) return { state: "pending" }
+  if (intent.kind === "workflow.dispatch") {
+    if (intent.target.workflowID && run.workflowID !== intent.target.workflowID) return { state: "pending" }
+    if (intent.target.ref && !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/i.test(intent.target.ref) &&
+      run.ref !== intent.target.ref.replace(/^refs\/heads\//, "")) return { state: "pending" }
+    if (intent.target.ref && /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/i.test(intent.target.ref) &&
+      run.commit.toLowerCase() !== intent.target.ref.toLowerCase()) return { state: "pending" }
+    if (run.event !== "workflow_dispatch" && binding.provider.kind === "github") return { state: "pending" }
+    return { state: "confirmed", acknowledgement: acknowledged }
+  }
+  if ((intent.kind === "run.retry" || intent.kind === "run.retryFailed") && acknowledged.attempt !== undefined &&
+    run.attempt !== undefined && run.attempt >= acknowledged.attempt)
+    return { state: "confirmed", acknowledgement: acknowledged }
+  if ((intent.kind === "run.cancel" || intent.kind === "run.forceCancel") &&
+    (run.conclusion === "cancelled" || run.status === "canceled"))
+    return { state: "confirmed", acknowledgement: acknowledged }
+  return { state: "pending" }
+})
+~~~~
+
+
+
+FIM_EVIDENCIA_LITERAL
+
+FIM_DO_LOTE

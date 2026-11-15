@@ -1,0 +1,54 @@
+{
+  "schema": "s1-03-public-consumer-cases/v1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "scope": "S1-03 only",
+  "source_access": false,
+  "oracle_access": false,
+  "cases": [
+    {
+      "id": "A-PERMITTED",
+      "kind": "permitted_change",
+      "question": "Um fluxo precisa despachar um workflow GitHub ativo em uma ref diferente da default branch com input environment. Quais precondições locais e provas de resultado a alteração deve preservar?"
+    },
+    {
+      "id": "A-VIOLATION",
+      "kind": "contract_violation",
+      "question": "Após timeout de um write aceito na admissão, um operador quer usar polling para converter outcome_unknown em accepted e reenviar o write se não achar run. O procedimento é válido?"
+    },
+    {
+      "id": "A-IMPACT",
+      "kind": "impact",
+      "question": "Mudou a regra que prova o conteúdo escrito por Actions Authoring. Quais conhecimentos/consumidores precisam de reavaliação e quais podem permanecer independentes?"
+    },
+    {
+      "id": "S-FAILURE",
+      "kind": "operational_failure",
+      "question": "Um task perdeu a autorização depois da última verificação de claim e retornou started; a UI quer marcá-lo como concluído e garantir que nunca excedeu repeat limit. Como diagnosticar e responder?"
+    },
+    {
+      "id": "R-FAILURE",
+      "kind": "operational_failure",
+      "question": "O warm de research terminou sem shards e um toolkit tem marker local. Isso basta para declarar indexação pronta e confiar em todo conteúdo do ledger?"
+    },
+    {
+      "id": "B-ABSTAIN",
+      "kind": "abstention",
+      "question": "Só com esta seleção Core, é possível garantir recuperação distribuída de Relay, publicação Atlas da união ou retrieval vetorial em produção?"
+    },
+    {
+      "id": "ENTRY-NAV",
+      "kind": "navigation_direct_intermediate",
+      "question": "Onde começar uma manutenção de automação, como aprofundar até o contrato de provider e como localizar os donos das outras partes do Core?"
+    }
+  ],
+  "limits": {
+    "access": "ownership.index/read only through actual Atlas or faithfully recorded bridge",
+    "max_index_calls_per_case": 2,
+    "max_read_calls_per_case": 5,
+    "max_returned_utf8_bytes_per_case": 60000,
+    "source_access": false,
+    "oracle_access": false,
+    "required_direct_use": "Every necessary L1/L2/L3 intermediate must be explicitly read in at least one case; no claim of product runtime qualification"
+  },
+  "status": "FROZEN_QUESTIONS_BEFORE_PRODUCTION_PROJECTED_WITHOUT_ANSWERS"
+}

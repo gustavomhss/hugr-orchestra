@@ -1,0 +1,36 @@
+{
+  "schema": "s1-03-direct-oracle-dispatch/v1",
+  "tool": "collaboration.followup_task",
+  "caller": "/root",
+  "targets": [
+    "/root/s1_03_j1",
+    "/root/s1_03_j2"
+  ],
+  "request": {
+    "path": "request.txt",
+    "bytes": 10695,
+    "sha256": "cd5a5f7c6c4ad8dbecb7390e88d17946f335121a7ffcfe27194c93a47e424dee",
+    "git_blob_sha": "81b31159a042561a01fb118ec6efa9c29c6b1a57"
+  },
+  "oracle_sha256": "f1cc16fcd73e17fa1aff015e30e7facacaabf0dc2b195c0603f9f30a1f875ccb",
+  "native_tool_invocations": 2,
+  "author_or_consumer_access": false,
+  "relay_access": false,
+  "request_text_preservation": "Exact inline tool argument text transcribed from root call; host does not expose independent argument hash/message ID",
+  "responses": {
+    "j1": {
+      "path": "j1-response.md",
+      "bytes": 460,
+      "sha256": "5b75223a95e0cb1bc225fc39ac701869f166fe16a55571ce24ebb89a5759801a",
+      "git_blob_sha": "5f86486f15c0b8b10550b7cfa5a916cb144b64fb"
+    },
+    "j2": {
+      "path": "j2-response.md",
+      "bytes": 434,
+      "sha256": "c43d32c716b316f0d8cbe16472384a8b7b8726a731515dacb8a0fc65a0e33adc",
+      "git_blob_sha": "c3ee1135887166c6ef18a4330155f181279b5386"
+    }
+  },
+  "response_preservation": "Visible native final Markdown transcribed without appended LF; no private reasoning",
+  "semantic_verdicts_changed": false
+}

@@ -1,0 +1,278 @@
+{
+  "schema": "genesis-native-l1-literal-correction/v1",
+  "revision": 2,
+  "task": "RESEARCH-L1",
+  "producer": "/root/research_l1",
+  "authorized_by": "/root",
+  "produced_at_utc": "2026-11-14T23:59:26.766598+00:00",
+  "request": {
+    "path": "correction-v2-request.txt",
+    "bytes": 918,
+    "sha256": "cd859a2dc0b42377f83e755618967acfa4de82becc565bb06730c866bcef245a",
+    "git_blob_sha": "0d3e0293eb9b44f9812aac9fff9e5bb2dc11cd95"
+  },
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "BEFORE": {
+    "body": {
+      "path": "history/body-v1.md",
+      "bytes": 63389,
+      "sha256": "1213f85cf16f73feed220e8c1b33ed52b2af75afd570b154a29eaf8f99f27d73",
+      "git_blob_sha": "c29b9f5b8a8913cc4afa58d3e9cdede292f0657e"
+    },
+    "recipe": {
+      "path": "history/recipe-v1.json",
+      "bytes": 134003,
+      "sha256": "a5bd9215347a9eb06ab008846f2ef169e1d3269f0f6c0a75f73da72d914178a2",
+      "git_blob_sha": "12ef72626a68da88e6b37523c54663119902a0e4"
+    }
+  },
+  "AFTER": {
+    "body": {
+      "path": "body.md",
+      "bytes": 63501,
+      "sha256": "d2def4b82495605b491e0d5494b1511e1b68c47dcffa84af87c8d35705468661",
+      "git_blob_sha": "bb0eaa73b4fe9120fb46d9304778649b5c7205dd"
+    },
+    "recipe": {
+      "path": "recipe-v2.json",
+      "bytes": 138195,
+      "sha256": "09505ca6228267ab6ad9c0397c7a45690009b1738ae3aa53c8b8df722db5598b",
+      "git_blob_sha": "cd3e47810afc47fec314bab149c7ce0653f4fc9b"
+    }
+  },
+  "substitutions": [
+    {
+      "id": "CORRECTION-V2-1",
+      "body_line": 203,
+      "BEFORE": "Memoiza no máximo dois dumps por path, mtime e tamanho;",
+      "AFTER": "O memo mantém no máximo duas entradas no total, uma por path, validadas por mtime e tamanho;",
+      "BEFORE_literal_sha256": "5c6e6593323f7cf50e6cd648363716c687245156f7a1383075ebd1d7dc409b04",
+      "AFTER_literal_sha256": "ae9d792358d1b79b904f95da895ecd8fd0986671c01205213e8892d2c4e6b625",
+      "BEFORE_body_byte_range": [
+        31868,
+        31924
+      ],
+      "AFTER_body_byte_range": [
+        31868,
+        31962
+      ],
+      "evidence": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/scip.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "2e8f9fa18bf6661bc7510dae3106010ef0babf81",
+          "sha256": "fa1f6dee8938ca64e416758acedf759e44904e1a8d6a44c0778ae610ee9f9947",
+          "bytes": 10599,
+          "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+          "archive_path": "sources/packages/core/src/research-toolkit/code-index/scip.ts",
+          "excerpts": [
+            {
+              "lines": [
+                81,
+                110
+              ],
+              "raw_excerpt_bytes": 1440,
+              "raw_excerpt_sha256": "abe7ec2432633c2cc5681ef2aed3c1163b669695ac17da675e5fe9a28f15c855"
+            }
+          ]
+        }
+      ],
+      "review_group": "RA5-02",
+      "proposal_index": "review-supplement-a-index.json",
+      "reason": "A redação pode ser lida como dois dumps por path; o Map é global ao módulo, tem uma entrada por path e limite total de duas. Precisão textual proposta sem alterar o corpo congelado.",
+      "status": "APPLIED_BY_EXPLICIT_PRINCIPAL_REQUEST"
+    },
+    {
+      "id": "CORRECTION-V2-2",
+      "body_line": 225,
+      "BEFORE": "`query.ts` abre shard atual ou o mais novo retido de mesmo id quando o atual falta.",
+      "AFTER": "`query.ts` abre o shard atual ou o primeiro retido de mesmo id ainda presente, na ordem do manifesto (atualizada por `retain`/`touch`), quando o atual falta.",
+      "BEFORE_literal_sha256": "bdd9031c94b88124d8e2d11d97b63d901cfb58261092bd1a59606ff226166213",
+      "AFTER_literal_sha256": "afd4e21f0dc781316dec92874e7a54c12a85f8e804af0617351f1f23f3415071",
+      "BEFORE_body_byte_range": [
+        35632,
+        35715
+      ],
+      "AFTER_body_byte_range": [
+        35670,
+        35827
+      ],
+      "evidence": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/query.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "25d652ee0ce78d327427837466b5d7fe5886013f",
+          "sha256": "ec1dd4a297e6e798c497d67ac5ed21cd4c6484e2aba3c2bed60dbd8f174f05e8",
+          "bytes": 32872,
+          "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+          "archive_path": "sources/packages/core/src/research-toolkit/code-index/query.ts",
+          "excerpts": [
+            {
+              "lines": [
+                180,
+                196
+              ],
+              "raw_excerpt_bytes": 1309,
+              "raw_excerpt_sha256": "712697a93400cd9c8d07c54159f5af5b912b530dfd64a42390f5241afe10e406"
+            }
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/code-index/store.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "f71cdf0ae1979f002fce68b53eae445647682d73",
+          "sha256": "570a81a04360d060a7c67a436e531b4c079ba7a9951130a2648ca986846b5e11",
+          "bytes": 13372,
+          "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+          "archive_path": "sources/packages/core/src/research-toolkit/code-index/store.ts",
+          "excerpts": [
+            {
+              "lines": [
+                170,
+                215
+              ],
+              "raw_excerpt_bytes": 2535,
+              "raw_excerpt_sha256": "8e458a06ade994958c2273e8e103ccb8da6d0bc16800d42af37f5123b8417d3d"
+            }
+          ]
+        }
+      ],
+      "review_group": "RB1-02",
+      "proposal_index": "review-supplement-b-index.json",
+      "reason": "previous.find usa a ordem de records; records não ordena por timestamp. retain antepõe seu record e touch move um commit usado à frente. A redação mais novo pode ser confundida com mais recente cronologicamente.",
+      "status": "APPLIED_BY_EXPLICIT_PRINCIPAL_REQUEST"
+    }
+  ],
+  "verification": {
+    "exact_literal_substitutions": 2,
+    "changed_body_lines": [
+      203,
+      225
+    ],
+    "line_diff_operations": [
+      [
+        "replace",
+        202,
+        203,
+        202,
+        203
+      ],
+      [
+        "replace",
+        224,
+        225,
+        224,
+        225
+      ]
+    ],
+    "inverse_substitution_reconstructs_v1": true,
+    "remaining_body_bytes_identical": true,
+    "v1_archives_byte_identical": true,
+    "original_recipe_bytes_identical": true,
+    "all_preexisting_artifacts_except_body_unchanged": true,
+    "verified_existing_file_count": 146,
+    "scope": "Byte/hash/diff verification only; no product tests or semantic judgment"
+  },
+  "original_artifacts_preserved": {
+    "coverage.jsonl": {
+      "bytes": 127215,
+      "sha256": "bb06bcef77a2dbeccabc70dd00dc10d70bf22cb338588661d7ecc9f49e01eec9",
+      "git_blob_sha": "48b8beafa81098be06c37b4f4ec1a3044e77414d"
+    },
+    "response.md": {
+      "bytes": 5451,
+      "sha256": "d91be8e07e1f38bd712a2f178fd0ee800af5e6fb0e5c4a92cccdf672e5922780",
+      "git_blob_sha": "5d5032c084ea252c409fe747e7654501285acea0"
+    },
+    "review-supplement-b.md": {
+      "bytes": 261153,
+      "sha256": "5f06a933f3e0b95f994af2ad56a1ec44363b5ed650bbe7e8fedb18bb238f5ed5",
+      "git_blob_sha": "061b8790df058e50a5852cc9475bfb3ce7935a48"
+    },
+    "review-supplement-a.md": {
+      "bytes": 220079,
+      "sha256": "900fd149a1182df270ef6f71fce883793dba1a836df2dd2dd67e500c268f4aca",
+      "git_blob_sha": "22c601309312a8b61692bd73bf5a4a8c5da7a48f"
+    },
+    "review-supplement-b-receipt.json": {
+      "bytes": 11009,
+      "sha256": "3dd0bf49d13493c4b62069154075b18a58834cec9f459f343f5d739355268b2d",
+      "git_blob_sha": "7cad08a7bd547ad061c74945c7789d90c91061bd"
+    },
+    "captures.json": {
+      "bytes": 52221,
+      "sha256": "4275f6f649be64c3e0fb948115f3260b618d633e98a650824f58b17ac3036a52",
+      "git_blob_sha": "3c88d5718848071443d0c3cc412846a0ffba2e75"
+    },
+    "evidence-review.md": {
+      "bytes": 89675,
+      "sha256": "3496f3e102e5db734d2954cf18e9bea6da5fbc418d2084f56814eefb5347788e",
+      "git_blob_sha": "6a0d62257e36fef18db108295f6325f059773a38"
+    },
+    "evidence.md": {
+      "bytes": 599806,
+      "sha256": "e8cc0b447e48f26b3a059dc70c7ad7e607ec9b60a9af3d605e76f4c10b1da05b",
+      "git_blob_sha": "f828e2d973d4e21f84f052440cc2802dcc7f5fb0"
+    },
+    "review-supplements-dispatch.md": {
+      "bytes": 5272,
+      "sha256": "1eddda9c2ed04f65f12f4c2fee808f9d5cc01b950865eabbac716e5625617ce8",
+      "git_blob_sha": "b35e8f28e97d9da0d569841fd2f9e20c7e1d4776"
+    },
+    "review-supplement-a-index.json": {
+      "bytes": 202490,
+      "sha256": "74787dca5c9311883708cffb23fb90eb889e45f5258046e39d3a941c265bce8b",
+      "git_blob_sha": "c561007609996b71edd15fe89d70c539f488773a"
+    },
+    "review-supplement-a-receipt.json": {
+      "bytes": 7963,
+      "sha256": "e716c72c9a4dd0f0066ea56780a7a2651db9a50ed5fa6affd36e3e6367073f61",
+      "git_blob_sha": "1de0c5c0061fcd0163f394cc3a2735943ff43d24"
+    },
+    "recipe.json": {
+      "bytes": 134003,
+      "sha256": "a5bd9215347a9eb06ab008846f2ef169e1d3269f0f6c0a75f73da72d914178a2",
+      "git_blob_sha": "12ef72626a68da88e6b37523c54663119902a0e4"
+    },
+    "evidence-index.json": {
+      "bytes": 63265,
+      "sha256": "219182fe48272b4eb6c8f21507e337730c09b86e1c9ef47e973d7846ec75a4c0",
+      "git_blob_sha": "11aea05e6a5f4f1cd1a48481469a5366ab5d3700"
+    },
+    "request.txt": {
+      "bytes": 3325,
+      "sha256": "4e11428b6ece1d3fe3769a5f1ca7c4d3eb36654ccdec504500bb6622aec86adc",
+      "git_blob_sha": "3cf36fc80a69175f3db6fca92120b564601aaec5"
+    },
+    "review-supplement-b-index.json": {
+      "bytes": 94776,
+      "sha256": "c497861cfb349283f21fa464237d0fc71995b1c2392620dcf2a49aac71ca0dd1",
+      "git_blob_sha": "762145204f86ecc532c4253ba52fbf2e513dbebb"
+    },
+    "history/body-initial.md": {
+      "bytes": 63291,
+      "sha256": "172e61c2f199fe1b9c4fc787922d669e95da2dcaa35aa065aea01d2a146bc6e5",
+      "git_blob_sha": "d1166e93f4105178518f09dc161cbfa4d94cad85"
+    }
+  },
+  "response": {
+    "path": "correction-v2-response.md",
+    "bytes": 2686,
+    "sha256": "fa3cddb9cb13dd2093b14464c9009c0b885f21999ee3328d7b887eba03698bcf",
+    "git_blob_sha": "dd6414a93fcf79e3f2fad94877519d9d5fd8c0ef"
+  },
+  "not_performed": [
+    "oracle access",
+    "judge access/contact/creation",
+    "product code alteration",
+    "product test run",
+    "new semantic verdict",
+    "Atlas operation",
+    "GitHub mutation"
+  ],
+  "principal_responsibility": [
+    "v2 binding and references",
+    "delta/evidence delivery to existing judges"
+  ],
+  "reported_remote_v1_payload": "5eefca63b48970f3abb4d22e8dc2b1323487da92"
+}

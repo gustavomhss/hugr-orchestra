@@ -1,0 +1,43 @@
+{
+  "source": "review-packets/boundaries.txt",
+  "bytes": 82387,
+  "sha256": "e370401be0acb2b60a95ec1f8e165185b76e35f0bd511d4aab284a9c38db1ff3",
+  "frozen_manifest_entry": {
+    "lot": "boundaries",
+    "path": "review-packets/boundaries.txt",
+    "bytes": 82387,
+    "sha256": "e370401be0acb2b60a95ec1f8e165185b76e35f0bd511d4aab284a9c38db1ff3",
+    "body": "producers/boundaries/bodies/boundaries.md",
+    "body_sha256": "c557b33392cae8d0078a7da17f3421bb57ec2434f3bf5bba3b54f4172faeadae",
+    "body_fragment_sha256": "c557b33392cae8d0078a7da17f3421bb57ec2434f3bf5bba3b54f4172faeadae",
+    "part": "integral",
+    "scope": "24 fontes fronteira"
+  },
+  "part_count": 3,
+  "parts": [
+    {
+      "number": 1,
+      "file": "part-01.txt",
+      "start_byte": 0,
+      "end_byte": 27437,
+      "bytes": 27437,
+      "sha256": "99d4d97f60b92705f02314623ae7ddf7e4013fe379f963b8a07a7d285fb1ebd2"
+    },
+    {
+      "number": 2,
+      "file": "part-02.txt",
+      "start_byte": 27437,
+      "end_byte": 54909,
+      "bytes": 27472,
+      "sha256": "b53fd43093c813404c9300a9a2596436a7f6cd62b9e124cc866c65a07ea900e1"
+    },
+    {
+      "number": 3,
+      "file": "part-03.txt",
+      "start_byte": 54909,
+      "end_byte": 82387,
+      "bytes": 27478,
+      "sha256": "c97a05fbc66cc17650fc9665aa5149ca5ae2f9b36d5b586892387b510a5f473f"
+    }
+  ]
+}

@@ -1,0 +1,682 @@
+          github_node_id: created?.node_id ?? issue.github_node_id,
+          // A write that landed while the push was in flight keeps the card dirty.
+          github_dirty: sql`case when ${BoardIssueTable.time_updated} = ${issue.time_updated} then 0 else 1 end`,
+        })
+        .where(eq(BoardIssueTable.id, issue.id))
+        .run(),
+    )
+  })
+~~~~
+
+
+## B05 — Medição parcial, orçamento e forecast
+
+Vínculo: `body.md` §6, 7; archive de evidência: `evidence.md`, seção `B05`.
+
+
+### `packages/core/src/board/money.ts`
+
+Archive: `sources/packages/core/src/board/money.ts` · bytes: 9068 · Git blob: `2e898a1aaf5d8740ced0bcd0a8afe0baa3996bc9` · SHA256: `30254e118087b0f8ac51e48b0c1f4a5f2e7bfd7a4bf2907267fe37c13a8a582b`.
+
+
+Linhas **163–169**; SHA256 do intervalo `2ef7090c698e3ef827e2a8c3cdc12c38b04a191a44688881ab5ce51eea5392d3`:
+
+~~~~typescript
+export const requireRoom = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow, issue: IssueRow, stage: Board.Stage, ref: string) {
+  if (stage !== "building" || issue.stage === "building" || project.budget_usd === null) return
+  const budget = (yield* spendOf(tx, project, null)).budget
+  if (budget.state !== "paused") return
+  return yield* new BudgetPausedError({
+    message: `${project.key} has spent $${budget.spentUsd.toFixed(2)} of its $${project.budget_usd.toFixed(2)} budget, so no new work starts; ${ref} stays where it is. Work in progress continues. Ask the owner to raise the budget.`,
+  })
+~~~~
+
+
+### `packages/core/src/board/spend.ts`
+
+Archive: `sources/packages/core/src/board/spend.ts` · bytes: 6301 · Git blob: `c5c82e700282b4ba2fad710a5a87daae0328b6f9` · SHA256: `11d1284e196ac2f72708d88a47d7f839f5e380d0f4cc87e0a196d4b4c32d45ce`.
+
+
+Linhas **30–49**; SHA256 do intervalo `26ef2f8eaebf6d6335d3e53da76a6aa6fa31c44016f0856bd38fccbff16bb214`:
+
+~~~~typescript
+export function card(input: { readonly sessions: readonly Session[]; readonly ci: Ci }): Board.Spend {
+  const metered = input.sessions.filter((item) => item.cost > 0 && !subscription(item))
+  const unmetered = input.sessions.filter((item) => item.tokens > 0 && !metered.includes(item))
+  const byModel = Object.entries(
+    metered.reduce<Record<string, number>>((all, item) => ({ ...all, [item.model ?? "unknown"]: (all[item.model ?? "unknown"] ?? 0) + item.cost }), {}),
+  )
+    .map(([model, usd]) => ({ model, usd }))
+    .toSorted((a, b) => b.usd - a.usd || a.model.localeCompare(b.model))
+  const models: Board.Meter =
+    input.sessions.length === 0
+      ? { kind: "not-metered", source: "no session linked" }
+      : metered.length > 0 || unmetered.length === 0
+        ? { kind: "usd", usd: sum(metered.map((item) => item.cost)) }
+        : { kind: "not-metered", source: unmetered.some(subscription) ? "subscription engine, no per-token price" : "no price reported" }
+  const infra: Board.Meter =
+    input.ci.kind === "ok"
+      ? { kind: "usd", usd: input.ci.usd }
+      : { kind: "not-metered", source: input.ci.kind === "pending" ? "GitHub Actions not fetched yet" : "no PR linked" }
+  return {
+    models,
+~~~~
+
+
+### `packages/core/src/board/forecast.ts`
+
+Archive: `sources/packages/core/src/board/forecast.ts` · bytes: 6656 · Git blob: `8c5aa204de45ec477861b3c5ea3c37aa1fe78eab` · SHA256: `4c30459dd7de865d5536d9a24a842b19a14bbeffd5ae4597a8df5f0b76fa06fd`.
+
+
+Linhas **8–14**; SHA256 do intervalo `6c95730368bd0e73b52b90435eec1b52f9534a3393fd6f62742e5ff853ac7d7c`:
+
+~~~~typescript
+const DAY = 86_400_000
+const NEEDED = 5
+const TRIALS = 1000
+const HORIZON = 3650
+const SEED = 0x9e3779b9
+const OPEN: readonly Board.Stage[] = ["backlog", "ready", "building", "review", "queue"]
+
+~~~~
+
+
+## B06 — CI do tree e correlação por heurística
+
+Vínculo: `body.md` §7; archive de evidência: `evidence.md`, seção `B06`.
+
+
+### `packages/core/src/board/ci.ts`
+
+Archive: `sources/packages/core/src/board/ci.ts` · bytes: 25362 · Git blob: `77bc3370fc8a34249a2baf19ee10c7e8151cdc6b` · SHA256: `7a67b182097690e957ec40cf04f753e2695047f7b2fa5f19b792d8db9e38c7dd`.
+
+
+Linhas **336–359**; SHA256 do intervalo `a308b3f559db72dc82f04d56b15e590847482d88fb0f0b0e5b63e3f9d0bb44ce`:
+
+~~~~typescript
+  const settle = Effect.fnUntraced(function* (repo: string, branch: string, row: typeof BoardCheckTable.$inferSelect) {
+    const listed = yield* deps.gh([
+      "run", "list", "-R", repo, "--workflow", row.command, "--branch", branch, "--event", "workflow_dispatch",
+      "--json", "headSha,status,conclusion,url,createdAt", "--limit", "20",
+    ])
+    // A dispatch returns no run id: the run is the newest one on the dispatched commit created after the dispatch.
+    const run = Option.getOrElse(decodeRuns(listed.stdout), () => []).find(
+      (item) => item.headSha === row.commit_sha && Date.parse(item.createdAt) >= row.started_at - 60_000,
+    )
+    if (!run) return
+    if (run.status !== "completed") {
+      if (row.url !== run.url) yield* deps.quiet((tx) => tx.update(BoardCheckTable).set({ url: run.url }).where(eq(BoardCheckTable.id, row.id)).run())
+      return
+    }
+    const outcome: Board.CheckOutcome =
+      run.conclusion === "success" ? "pass" : run.conclusion === "failure" || run.conclusion === "timed_out" ? "fail" : "error"
+    yield* deps.quiet((tx) =>
+      tx
+        .update(BoardCheckTable)
+        .set({ outcome, url: run.url, failing: outcome === "pass" ? [] : [row.command], ended_at: Date.now() })
+        .where(and(eq(BoardCheckTable.id, row.id), eq(BoardCheckTable.outcome, "pending")))
+        .run(),
+    )
+  })
+~~~~
+
+
+Linhas **440–454**; SHA256 do intervalo `c2f9f407d1e28687c85c5366d4b9f065535b74dbc16684fd716f87ec36510752`:
+
+~~~~typescript
+/**
+ * `scoped-red` when the latest result of any check on the tree failed; `scoped-green` when the contract requires
+ * something and every required check passed on the tree. Rows must all be on the one tree.
+ */
+export function state(
+  rows: ReadonlyArray<typeof BoardCheckTable.$inferSelect>,
+  terms: Pick<Contract, "scoped">,
+): Board.ScopedState {
+  const latest = [...new Map(rows.toSorted((a, b) => a.started_at - b.started_at).map((row) => [`${row.kind}:${row.command}`, row])).values()]
+  if (latest.some((row) => row.outcome === "fail")) return "scoped-red"
+  if (terms.scoped.tests === null && terms.scoped.workflows.length === 0) return null
+  const tests = terms.scoped.tests === null || latest.some((row) => row.kind === "scoped" && row.outcome === "pass")
+  const flows = terms.scoped.workflows.every((file) => latest.some((row) => row.kind === "workflow" && row.command === file && row.outcome === "pass"))
+  return tests && flows ? "scoped-green" : null
+}
+~~~~
+
+
+## B07 — Admissão na fila e head exato
+
+Vínculo: `body.md` §8; archive de evidência: `evidence.md`, seção `B07`.
+
+
+### `packages/core/src/board/queue.ts`
+
+Archive: `sources/packages/core/src/board/queue.ts` · bytes: 38106 · Git blob: `5194680fdf6bd598ececadf5f63c3339a945357d` · SHA256: `dd50c583530d4b6dd5de417fcd8b0e0abd0774e792ba7806c507b58e8386188f`.
+
+
+Linhas **98–117**; SHA256 do intervalo `98ca2205c183960b350f8f3edbf32a0dc8be7b5aefea7f03f0ac2082e789fec6`:
+
+~~~~typescript
+    if (issue.stage !== "review") return yield* new RefusedError({ message: `${ref} is in ${issue.stage}; only a Review card is queued.` })
+    if (!issue.pr_number) return yield* new RefusedError({ message: `${ref} has no PR to queue.` })
+    if (!project.github_repo || !found.success.directory)
+      return yield* new RefusedError({ message: `${input.project} needs a linked repository and its GitHub repo before cards queue.` })
+    if (issue.paused) return yield* new RefusedError({ message: `${ref} is paused.` })
+    if (found.success.attempt?.conflict_base)
+      return yield* new RefusedError({
+        message: `${ref} conflicts with base in ${(found.success.attempt.conflict_files ?? []).join(", ")}; merge base in its worktree first.`,
+      })
+    const waiting = found.success.waits.filter((dep) => dep.stage !== "shipped" && dep.stage !== "queue")
+    if (waiting.length > 0)
+      return yield* new RefusedError({
+        message: `${ref} depends on ${waiting.map((dep) => `${input.project}-${dep.number}`).join(", ")}, which is neither shipped nor queued.`,
+      })
+    const missing = incomplete(issue.record)
+    if (missing.length > 0)
+      return yield* new RefusedError({ message: `${ref}'s PR record has no ${missing.join(", ")}; write it with board_issue first.` })
+    const follow = issue.record?.follow_ups ?? []
+    if (follow.length > 0) {
+      const known = yield* deps.quiet((tx) =>
+~~~~
+
+
+Linhas **134–150**; SHA256 do intervalo `ba17230008c1b32f67c5bfd7448cd75a84cacac56fb913cddad2847db639d676`:
+
+~~~~typescript
+    const state = BoardCi.state(checks, contract)
+    if (state === "scoped-red") return yield* new RefusedError({ message: `${ref} is scoped-red on its PR head; fix it before queueing.` })
+    const required = contract.scoped.tests !== null || contract.scoped.workflows.length > 0
+    if (required && state !== "scoped-green")
+      return yield* new RefusedError({
+        message: `${ref} is not scoped-green on its PR head ${pr.sha.slice(0, 10)}; run ci_run on that tree first.`,
+      })
+    const now = yield* Clock.currentTimeMillis
+    const done = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        const current = yield* loadIssue(tx, project, input.number)
+        if (current.stage !== "review" || current.pr_number !== issue.pr_number)
+          return yield* new RefusedError({ message: `${ref} changed while it was being checked; try again.` })
+        yield* tx
+          .insert(BoardQueueTable)
+          .values({ issue_id: issue.id, project_id: project.id, head_sha: pr.sha, urgent: input.urgent ?? false, flush: input.flush ?? false, queued_at: now })
+          .run()
+~~~~
+
+
+## B08 — Corte, lanes e full gate
+
+Vínculo: `body.md` §8; archive de evidência: `evidence.md`, seção `B08`.
+
+
+### `packages/core/src/board/queue.ts`
+
+Archive: `sources/packages/core/src/board/queue.ts` · bytes: 38106 · Git blob: `5194680fdf6bd598ececadf5f63c3339a945357d` · SHA256: `dd50c583530d4b6dd5de417fcd8b0e0abd0774e792ba7806c507b58e8386188f`.
+
+
+Linhas **271–287**; SHA256 do intervalo `712e28361338a54ac39d707fddaf568bb898f828efb974df170e8c69db9b8ee3`:
+
+~~~~typescript
+  // Projects settle concurrently, and a project still settling (a scoped run can take minutes) is skipped, never run twice.
+  const busy = new Set<string>()
+
+  /** One pass over every active project: settle the open bundles, then cut. The poll runs it every minute. */
+  const tick = Effect.fnUntraced(function* () {
+    const rows = yield* deps.quiet((tx) => tx.select().from(BoardProjectTable).where(ne(BoardProjectTable.status, "archived")).all())
+    yield* Effect.forEach(
+      rows,
+      (row) =>
+        Effect.gen(function* () {
+          if (busy.has(row.id)) return
+          busy.add(row.id)
+          yield* project(row).pipe(Effect.ignore, Effect.ensuring(Effect.sync(() => busy.delete(row.id))))
+        }),
+      { concurrency: 2, discard: true },
+    )
+  })
+~~~~
+
+
+### `packages/core/src/board/queue-lanes.ts`
+
+Archive: `sources/packages/core/src/board/queue-lanes.ts` · bytes: 4203 · Git blob: `f9d68042af8b19bf79e155818f940dbf5c828d08` · SHA256: `62429a1b7a77a627622ce5a9e7dd4d74c9b04b51cb1856058f6a124cb5c2cdb1`.
+
+
+Linhas **25–44**; SHA256 do intervalo `106031dd7943d1c74f1f7676c704380673a9cdedd378d8f251b443c89a1e2164`:
+
+~~~~typescript
+export function lanes<Id>(cards: ReadonlyArray<Card<Id>>, flight: ReadonlyArray<Affected>, room = Infinity) {
+  const sorted = cards.filter((card) => card.bundleable).toSorted(earlier)
+  const going = sorted.reduce(
+    (acc, card) => {
+      const free =
+        !flight.some((other) => overlaps(other, card.affected)) &&
+        !acc.waiting.some((other) => overlaps(other, card.affected)) &&
+        (card.affected === null
+          ? acc.going.every((other) => other.affected === null)
+          : !acc.going.some((other) => other.affected === null))
+      if (free) return { going: [...acc.going, card], waiting: acc.waiting }
+      return { going: acc.going, waiting: [...acc.waiting, card.affected] }
+    },
+    { going: [] as Array<Card<Id>>, waiting: [] as Affected[] },
+  ).going
+  // Cards with no affected package share one lane instead of one each.
+  const linked = (a: Affected, b: Affected) => overlaps(a, b) || (a?.length === 0 && b?.length === 0)
+  const first = (group: ReadonlyArray<Card<Id>>) => Math.min(...group.map((card) => sorted.indexOf(card)))
+  return going
+    .reduce(
+~~~~
+
+
+### `packages/core/src/board/queue-shared.ts`
+
+Archive: `sources/packages/core/src/board/queue-shared.ts` · bytes: 11579 · Git blob: `108a40f374649e7498dad8f1d0033d3c8a984d41` · SHA256: `8382123484f1557dbff529a7c291d1aadf4b6ee435357a8a9e27db91e7d04cea`.
+
+
+Linhas **54–74**; SHA256 do intervalo `30c1633439fa3aba20fb03a1b87f4e80890eb8eaca8984974a25dbac7d5eb354`:
+
+~~~~typescript
+/** `full.checks` names the checks that gate the bundle, matched by check or by the workflow that ran it; with none named, every reported check must pass. */
+export function judge(rollup: typeof Rollup.Type["statusCheckRollup"], contract: BoardCi.Contract) {
+  const gates = gating(rollup, contract)
+  if (gates.some((check) => check.done && FAILED.has(check.result))) return "red"
+  if (contract.full.checks.some((name) => !gates.some((check) => check.name === name || check.workflow === name))) return "pending"
+  if (gates.length === 0) return contract.source === "no-ci" ? "green" : "pending"
+  return gates.every((check) => check.done && PASSED.has(check.result)) ? "green" : "pending"
+}
+
+export function gating(rollup: typeof Rollup.Type["statusCheckRollup"], contract: BoardCi.Contract) {
+  const checks = rollup.map((item) => ({
+    name: item.name ?? item.context ?? "",
+    done: item.state ? item.state !== "PENDING" && item.state !== "EXPECTED" : item.status === "COMPLETED",
+    result: item.conclusion ?? item.state ?? "",
+    workflow: item.workflowName ?? "",
+    url: item.detailsUrl ?? "",
+  }))
+  return contract.full.checks.length > 0
+    ? checks.filter((check) => contract.full.checks.includes(check.name) || contract.full.checks.includes(check.workflow))
+    : checks
+}
+~~~~
+
+
+## B09 — Red, infra, base e isolamento
+
+Vínculo: `body.md` §8; archive de evidência: `evidence.md`, seção `B09`.
+
+
+### `packages/core/src/board/queue-settle.ts`
+
+Archive: `sources/packages/core/src/board/queue-settle.ts` · bytes: 27575 · Git blob: `a0165ce506ae7c07a7a79e9793e8b09f3cda0fcb` · SHA256: `3dac27cec16c0d5003485753de4a132110a6251f628e040f49304a357d7f4ae5`.
+
+
+Linhas **99–110**; SHA256 do intervalo `3d7cdcb39e2d3549295cf77ed1ec399a2aa8ed07b1294b1bbfb21a0f3698dc72`:
+
+~~~~typescript
+      // An infrastructure red reruns only its failed jobs, in the same runs, so the green jobs stand and the bundle stays
+      // open. A run already on its second attempt failed on infrastructure twice. A red whose runs cannot be read or
+      // rerun falls back to rebuilding the bundle.
+      const attempts = found.infra
+        ? yield* Effect.forEach(found.runs, (run) =>
+            deps
+              .gh(["run", "view", run, "--repo", repo, "--json", "attempt,status"])
+              .pipe(Effect.map((read) => (read.exitCode === 0 ? Option.getOrUndefined(decodeAttempt(read.stdout)) : undefined))),
+          )
+        : []
+      const rerunnable = attempts.length > 0 && attempts.every((attempt) => attempt !== undefined)
+      // GitHub can still report the last attempt's jobs for a moment after a rerun starts.
+~~~~
+
+
+Linhas **451–463**; SHA256 do intervalo `16e183e67753df9253f34bd234be93127035e0c62eaf20e6cd2c0a556e0ae5a7`:
+
+~~~~typescript
+  const hold = Effect.fnUntraced(function* (
+    row: ProjectRow,
+    repo: string,
+    bundle: typeof BoardBundleTable.$inferSelect,
+    members: ReadonlyArray<{ readonly member: typeof BoardBundleMemberTable.$inferSelect; readonly issue: IssueRow }>,
+    why: string,
+  ) {
+    yield* deps.quiet((tx) =>
+      tx
+        .update(BoardQueueTable)
+        .set({ hold: "held" })
+        .where(inArray(BoardQueueTable.issue_id, members.map((item) => item.issue.id)))
+        .run(),
+~~~~
+
+
+### `packages/core/src/board/queue-red.ts`
+
+Archive: `sources/packages/core/src/board/queue-red.ts` · bytes: 23316 · Git blob: `57bcf02fe9c1eea69282f53a0c97799a89aacb5f` · SHA256: `c9a29e07575731d8becdcfea5e2571c018b294c4c4e88b1de078a17c1d61e5c8`.
+
+
+Linhas **48–82**; SHA256 do intervalo `1f852f823862a62a06c724d64e758869d4d65d02e994101c520ea8da4f7f2fe5`:
+
+~~~~typescript
+        const silent = control !== null && control.jobs.some((prefix) => check.name.startsWith(prefix)) && !text.includes(control.line)
+        const stopped = /##\[error\](The action '.*' has timed out after \d+ minutes|The operation was canceled)/.test(text)
+        return { files, groups: text ? BoardCi.packaged(text) : [], infra: (silent || stopped) && text !== "" && files.length === 0 }
+      }),
+    )
+    return {
+      files: [...new Set(read.flatMap((item) => item.files))],
+      groups: read.flatMap((item) => item.groups),
+      infra: read.length > 0 && read.every((item) => item.infra),
+      // The Actions runs the failed jobs belong to, which an infrastructure red reruns in place.
+      runs: [...new Set(failed.flatMap((check) => check.url.match(/\/actions\/runs\/(\d+)\//)?.[1] ?? []))],
+    }
+  })
+
+  /**
+   * Whether base was green or red at `sha`: a base probe on that commit decides first, then a green whole-suite run on
+   * the same tree, then the commit's own checks. A base reached by an outside merge often has no runs; that is unknown,
+   * never green.
+   */
+  const baseState = Effect.fnUntraced(function* (row: ProjectRow, repo: string, directory: string, sha: string, contract: BoardCi.Contract) {
+    const probed = yield* deps.quiet((tx) =>
+      tx
+        .select({ status: BoardBundleTable.status })
+        .from(BoardBundleTable)
+        .where(and(eq(BoardBundleTable.project_id, row.id), eq(BoardBundleTable.base_sha, sha), inArray(BoardBundleTable.status, ["probe-green", "base-red"])))
+        .orderBy(desc(BoardBundleTable.n))
+        .get(),
+    )
+    if (probed) return probed.status === "probe-green" ? "green" : "red"
+    if (yield* greenTree(row, directory, sha)) return "green"
+    const read = yield* deps.gh(["api", `repos/${repo}/commits/${sha}/check-runs`, "--jq", "[.check_runs[] | {name, status: (.status | ascii_upcase), conclusion: ((.conclusion // \"\") | ascii_upcase)}]"])
+    const runs = read.exitCode === 0 ? Option.getOrUndefined(decodeRuns(read.stdout)) : undefined
+    const verdict = runs && runs.length > 0 ? judge(runs, contract) : "pending"
+    return verdict === "pending" ? "unknown" : verdict
+  })
+~~~~
+
+
+## B10 — Merge, recuperação e limite de revogação
+
+Vínculo: `body.md` §8; archive de evidência: `evidence.md`, seção `B10`.
+
+
+### `packages/core/src/board/queue-settle.ts`
+
+Archive: `sources/packages/core/src/board/queue-settle.ts` · bytes: 27575 · Git blob: `a0165ce506ae7c07a7a79e9793e8b09f3cda0fcb` · SHA256: `3dac27cec16c0d5003485753de4a132110a6251f628e040f49304a357d7f4ae5`.
+
+
+Linhas **238–271**; SHA256 do intervalo `dbbc9c90793a1627cb7fc335f20f3bcbff1ed1c66d7ebd2fb89499ff11e64a55`:
+
+~~~~typescript
+    // Section 6.6: a member head that moved since assembly dequeues that member and the bundle is rebuilt.
+    const heads = yield* Effect.forEach(members, (item) =>
+      head(directory, repo, item.issue.pr_number ?? 0).pipe(
+        Effect.map((current) => ({ item, sha: current.sha as string | undefined })),
+        Effect.orElseSucceed(() => ({ item, sha: undefined })),
+      ),
+    )
+    const stale = heads.filter((entry) => entry.sha !== entry.item.member.head_sha)
+    if (stale.length > 0) {
+      yield* Effect.forEach(stale, (entry) => moved(row, entry.item.issue, entry.sha), { discard: true })
+      return yield* dissolve(row, bundle, `${stale.map((entry) => `${row.key}-${entry.item.issue.number}`).join(", ")} moved after assembly.`)
+    }
+    yield* git(directory, ["fetch", "--quiet", "--no-tags", "origin", contract.base])
+    const tip = (yield* git(directory, ["rev-parse", "--verify", "--quiet", `refs/remotes/origin/${contract.base}`])).out
+    if (!tip) return
+    // Section 8.5: a host that died after pushing base but before writing the rows finds the bundle already in base,
+    // so it only records the merge: no second push and no rebuilt bundle.
+    const already = tip !== bundle.base_sha && (yield* git(directory, ["merge-base", "--is-ancestor", bundle.head_sha, tip])).code === 0
+    const landed = already
+      ? { target: tip, on: null }
+      : tip === bundle.base_sha
+        ? { target: bundle.head_sha, on: null }
+        : yield* skew(directory, contract, bundle, tip, row)
+    if (!landed) return yield* dissolve(row, bundle, `${contract.base} moved to ${tip.slice(0, 10)}; the bundle is rebuilt and retested.`)
+    const pushed = already
+      ? { code: 0 }
+      : yield* git(directory, [
+          "push",
+          "--quiet",
+          `--force-with-lease=refs/heads/${contract.base}:${landed.on ?? bundle.base_sha}`,
+          "origin",
+          `${landed.target}:refs/heads/${contract.base}`,
+        ])
+    if (pushed.code !== 0) return
+~~~~
+
+
+### `packages/core/src/board/queue.ts`
+
+Archive: `sources/packages/core/src/board/queue.ts` · bytes: 38106 · Git blob: `5194680fdf6bd598ececadf5f63c3339a945357d` · SHA256: `dd50c583530d4b6dd5de417fcd8b0e0abd0774e792ba7806c507b58e8386188f`.
+
+
+Linhas **315–335**; SHA256 do intervalo `1b383069ce69ad137d7ad5575063ac2f88bc4d691a4833f07be768adf410d8ab`:
+
+~~~~typescript
+  ) {
+    yield* git(directory, ["fetch", "--quiet", "--no-tags", "origin", contract.base])
+    const tip = (yield* git(directory, ["rev-parse", "--verify", "--quiet", `refs/remotes/origin/${contract.base}`])).out
+    if (!tip) return
+    const found = yield* deps.quiet((tx) =>
+      Effect.gen(function* () {
+        const open = yield* openBundles(tx, row.id)
+        const members = open.length
+          ? yield* tx
+              .select({ issue: BoardBundleMemberTable.issue_id })
+              .from(BoardBundleMemberTable)
+              .where(inArray(BoardBundleMemberTable.bundle_id, open.map((bundle) => bundle.id)))
+              .all()
+          : []
+        const stopped = yield* tx
+          .select({ id: BoardBundleTable.id })
+          .from(BoardBundleTable)
+          .where(and(eq(BoardBundleTable.project_id, row.id), inArray(BoardBundleTable.status, ["paused", "flaky"])))
+          .get()
+        const closed = yield* tx
+          .select()
+~~~~
+
+
+Linhas **584–595**; SHA256 do intervalo `3265802a77bd8427365ed7b1af1c899e757e0e9dcba0db3d9b981dba063df32a`:
+
+~~~~typescript
+    const members = yield* Effect.gen(function* () {
+      const taken: Array<{ readonly issue: IssueRow; readonly head: string; readonly labels: ReadonlyArray<string> }> = []
+      for (const card of fix ? [fix] : alone ? [alone] : queued.cards) {
+        if (taken.length >= cap) break
+        if (card.queue.hold === "held") continue
+        if (card.issue.hold_before_merge || card.issue.paused) continue
+        const attempt = queued.attempts.find((item) => item.issue_id === card.issue.id)
+        if (attempt?.conflict_base) continue
+        const ready = queued.waits
+          .filter((dep) => dep.issue === card.issue.id)
+          .every((dep) => dep.stage === "shipped" || taken.some((item) => item.issue.id === dep.on))
+        if (!ready) continue
+~~~~
+
+
+## B11 — Snapshot e conflitos
+
+Vínculo: `body.md` §9; archive de evidência: `evidence.md`, seção `B11`.
+
+
+### `packages/core/src/board/snapshot.ts`
+
+Archive: `sources/packages/core/src/board/snapshot.ts` · bytes: 15010 · Git blob: `cc39cdec652c05bf969da8543335da1703a663fc` · SHA256: `8939a3de7e1123e7e650144adb79dfe5828706c73e6b34ab942bcc2edb626012`.
+
+
+Linhas **75–93**; SHA256 do intervalo `3e59c45a4ca740ced13176f39a76d87a9adab7d8553784101cd6a0a2b1621795`:
+
+~~~~typescript
+  const scan = Effect.fnUntraced(function* (cwd: string, range: string) {
+    const scanner = yield* deps.scanner
+    if (!scanner) return "no secret scanner (gitleaks) is available"
+    const result = yield* deps.proc
+      .run(
+        ChildProcess.make(scanner[0], [...scanner.slice(1), "git", "--no-banner", "--redact", "--exit-code", "1", "--log-opts", range, cwd], {
+          cwd,
+          env: deps.env,
+          extendEnv: true,
+          stdin: "ignore",
+        }),
+        { combineOutput: true, maxOutputBytes: 1024 * 1024, timeout: "120 seconds" },
+      )
+      .pipe(Effect.result)
+    if (result._tag === "Failure") return `the secret scanner could not run: ${result.failure.message}`
+    if (result.success.exitCode === 0) return undefined
+    if (result.success.exitCode === 1) return "the secret scanner found a secret in the changed files"
+    return `the secret scanner could not run (exit ${result.success.exitCode})`
+  })
+~~~~
+
+
+Linhas **208–220**; SHA256 do intervalo `e29646c08bdeb2e59e665f7aa8ad4a6c2be83c1ab315923a4402b334128884db`:
+
+~~~~typescript
+     * `pushed` when the worktree's tree equals the last pushed snapshot's tree, else `local`. Null with no open attempt
+     * or no worktree to read. The host records a snapshot only after its push succeeded, so the row stands for the remote.
+     */
+    state: Effect.fnUntraced(function* (issue: Board.IssueID) {
+      const found = yield* find(issue)
+      if (!found?.attempt) return null satisfies Board.PushState
+      const cwd = yield* locate(found.directory, found.issue, found.attempt)
+      if (!cwd || !existsSync(cwd)) return null satisfies Board.PushState
+      const current = yield* tree(cwd)
+      return (current && current === found.attempt.snapshot_tree ? "pushed" : "local") satisfies Board.PushState
+    }),
+    /** Snapshots every Building card with an open attempt: the 10 minute timer. */
+    sweep: Effect.fnUntraced(function* () {
+~~~~
+
+
+### `packages/core/src/board/conflicts.ts`
+
+Archive: `sources/packages/core/src/board/conflicts.ts` · bytes: 8573 · Git blob: `06e450683e7c3428b8d466cd91696806c9ef5419` · SHA256: `c27c266af8e4461d76d253f6d13f8cc8ac4d1edeb7780e9726bb445fbab8a7ba`.
+
+
+Linhas **35–43**; SHA256 do intervalo `72b4c99b953a0ee38fbf4cc3d533aa8bae1433c8f98e82f452e02a26c8d0d66b`:
+
+~~~~typescript
+// Review cards are about to queue and queued cards are about to be bundled: a conflict holds a queued card out of the
+// next bundle until its worktree merges base.
+const WATCHED: ReadonlyArray<Board.Stage> = ["review", "queue"]
+
+// A project with no watched card has nobody to warn, so its fetch can wait. A later sweep diffs from the stored base
+// SHA to the new head, so a delayed fetch loses no changed file; it only delays the note.
+const IDLE_FETCH = 5 * 60_000
+// Projects are checked two at a time: each check spawns git and writes the database.
+const CONCURRENCY = 2
+~~~~
+
+
+## B12 — Record Atlas e replay de plano
+
+Vínculo: `body.md` §9; archive de evidência: `evidence.md`, seção `B12`.
+
+
+### `packages/core/src/board/queue-record.ts`
+
+Archive: `sources/packages/core/src/board/queue-record.ts` · bytes: 15266 · Git blob: `7ade81c640d6524360161d2c018ba1038c471f2e` · SHA256: `1414c1df2d7b08fc0027fe108275d4b07e343a56a56ded5f2119f196101f92d4`.
+
+
+Linhas **271–296**; SHA256 do intervalo `09447f1bc62d22d68e69c07e77ee0e85c7f2a7cee0abbcbb1aea1d3e30822d23`:
+
+~~~~typescript
+          packages: [],
+          ownUnits: [],
+        },
+        evidence: {
+          doneWhen: [],
+          reviews: [],
+          checks: found.checks.map((check) => ({
+            name: `${check.kind} ${check.command}`,
+            state: check.outcome,
+            ...(check.url ? { url: check.url } : {}),
+          })),
+          used: "unseen",
+        },
+        cost: {
+          attempts: found.attempts.map((attempt) => ({ n: attempt.n, cause: attempt.cause ?? "" })),
+          ciRuns: found.checks.length,
+          ciMinutes: Math.round(
+            found.checks.reduce((sum, check) => sum + Math.max(0, (check.ended_at ?? check.started_at) - check.started_at), 0) / 60_000,
+          ),
+          wallMs: now - card.time_created,
+        },
+        lineage: {
+          card: `${row.key}-${card.number}`,
+          ...(found.epic ? { epic: `${row.key}-E${found.epic.number}` } : {}),
+          dependsOn: found.depends.map((dep) => `${row.key}-${dep.number}`),
+          seats: [...new Set(found.attempts.map((attempt) => attempt.seat).filter((seat) => seat !== null))],
+~~~~
+
+
+### `packages/core/src/board/tree.ts`
+
+Archive: `sources/packages/core/src/board/tree.ts` · bytes: 19770 · Git blob: `9a14e96aa37e6135380b730025756b0e80bfe661` · SHA256: `68edc94c79b05a0225c269efd0a8550ba05def07d4b8f9492766676eef99a8ed`.
+
+
+Linhas **21–24**; SHA256 do intervalo `a313be9cf9e4f495d77f1cb8673a2816e021be21a5f753c4b6426479eb734668`:
+
+~~~~typescript
+// The board log in the record tree (`.atlas/board`) and the import that rebuilds the board from it. Import restores
+// projects, epics, issues, steps, dependencies, questions, decisions, notes and the activity log itself. The queue,
+// bundles, attempts, checks and GitHub sync state are re-derived from git, GitHub and the card records, so import leaves
+// them empty. Attachments are left out on purpose: their bytes and secrets never enter the log.
+~~~~
+
+
+Linhas **59–73**; SHA256 do intervalo `c1110e37a157591e8856078fe88ea4c9f1af96ad139e58f9e11ee02903685761`:
+
+~~~~typescript
+export const restore = Effect.fnUntraced(function* (tx: Tx, repoPath: string) {
+  if (yield* tx.select({ id: BoardProjectTable.id }).from(BoardProjectTable).get())
+    return yield* new ReplayError({ activity: "", message: "Import needs an empty board." })
+  // Ids are minted in order within a millisecond, so they break ties inside one; across milliseconds they can wrap.
+  const events = readBoard(repoPath).events.toSorted((a, b) => (a.at === b.at ? a.activity.localeCompare(b.activity) : a.at.localeCompare(b.at)))
+  const cards = new Map<string, Board.IssueID>()
+  for (const item of events) {
+    const apply = APPLIERS[item.action as Board.Action]
+    if (!apply) return yield* new UnknownActionError({ activity: item.activity, action: item.action })
+    const redacted = item.text === undefined && item.textHash !== undefined
+    const before = merge(item.before, item.text, "before")
+    const after = merge(item.after, item.text, "after")
+    const ctx = { tx, item, before, after, at: Date.parse(item.at), cards, project: yield* projectOf(tx, item) }
+    yield* apply(ctx)
+    const project = ctx.project ?? (yield* projectOf(tx, item))
+~~~~
+
+
+## B13 — Proof e ledger: origem de fatos e ausência
+
+Vínculo: `body.md` §7, 9; archive de evidência: `evidence.md`, seção `B13`.
+
+
+### `packages/core/src/board/proof.ts`
+
+Archive: `sources/packages/core/src/board/proof.ts` · bytes: 2553 · Git blob: `6bd1374e707dd7f80975f37e2c03e02a9ee97a95` · SHA256: `6451c593372c579f0a2e116adc25fc824b1240519ad9110b6637d63935ba2608`.
+
+
+Linhas **31–48**; SHA256 do intervalo `359d8a4cbf38030ea04bf0aaab741690d8c97ae9dcf2aeeb6abda6ac527f382e`:
+
+~~~~typescript
+export function build(key: string, loaded: Loaded, live: Board.Trail, summary: string | null) {
+  const rule = loaded.row.guardrail_rule
+  return {
+    issue: loaded.row.number,
+    ref: `${key}-${loaded.row.number}`,
+    banner:
+      loaded.project.github_state === "signed_out" || live.state === "signed_out"
+        ? "GitHub sign-in expired. Sign in with gh to refresh pull request and CI status."
+        : null,
+    pr:
+      live.state === "ok"
+        ? {
+            number: live.pr.number,
+            state: live.pr.state,
+            merged: live.pr.merged,
+            commits: live.pr.commits.length,
+            lastSha: live.pr.commits.at(-1)?.hash ?? null,
+          }
+~~~~
+
+
+
+FIM_EVIDENCIA_LITERAL
+
+FIM_DO_LOTE

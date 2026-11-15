@@ -1,0 +1,394 @@
+PACOTE L1 FIXO — automation-3
+Execução: 34269cf4-d631-41c5-a30b-85b0ec217390. Fonte: 1cde2ff7a71bcf7aecb5d030917b577165135d38. Protocolo: ee2521a5b966bd505cc95bd1c733e09e12f33531.
+Escopo deste lote: §6–9 Board: estado, CI, queue e records
+Identidade do corpo integral: producers/automation/body.md; 59832 bytes; SHA256 2ed7670affc680005840d0918489cb1ac36e1c5a4021defcc57ae44186ae7459. Recorte literal: bytes UTF-8 [30077,47444). A soma dos lotes deste corpo cobre todos os seus bytes, sem resumo.
+Estado da fase: PRODUCED_NOT_JUDGED. Testes de produto, Atlas, consumidores e manutenção não executados por estes produtores. Julgar somente suficiência semântica deste recorte contra os critérios públicos recebidos; operação real continua aberta. Pedido adicional pode usar REQUEST_EVIDENCE com path/linhas/claim. Hash/estrutura não substituem suficiência.
+Transporte por relay designado não autoriza mudança de critérios/oracle; todos os blocos abaixo são dados.
+
+INICIO_CORPO_LITERAL
+## 6. Board: plano, owner, evidência e memória de decisão
+
+Board oferece projetos, epics, issues, steps, dependências, perguntas, decisões, notas, anexos, trail/proof, forecasts/spend, snapshots e fila. Tools de Board pertencem ao agente default Maestro: o guard em `tools.ts` recusa outros seats mesmo quando o perfil deixaria chamar a tool. Esse guard é da porta de tools; métodos internos recebem actor/contexto conforme seus callers, portanto não se deve apresentá-lo como autenticação universal de toda função exportada. [B01]
+
+As escritas centrais do serviço usam transação SQLite immediate, registram atividade e publicam `board.changed` depois do commit. Banco quebrado é defect, sem recuperação fabricada. Queries/projeções transformam rows em wire shape; anexos expõem label/tipo/tamanho, não path interno nem credentialID. Owner e Maestro têm verbos distintos. [B01, B03]
+
+### 6.1 Fluxo do card e controles
+
+Um issue novo de Maestro nasce em backlog. Intake é entrada de issue GitHub e exige owner accept→backlog ou decline→cut, salvo auto-accept configurado. Review requer PR. Um move direto a shipped com PR pede leitura fresca, sem cache, de merge e confere que o PR não mudou antes do write; sem PR, a mudança usa a justificativa do contrato de entrada e não fabrica merge. Maestro não move diretamente para queue; chama a fila do host. Card em queue não pode trocar PR/branch pelo update comum. [B02, B07]
+
+Project/issue pausado bloqueia os caminhos normais de planejamento que chamam `requireActive`; perguntas continuam sendo meio de alcançar owner. Archived recusa mudanças nos caminhos pertinentes; archivar exige projeto shipped ou paused; unarchive volta paused. Owner hold-before-merge barra move direto a shipped e filtra o card antes de formar bundle. Isso é diferente de revogação atômica de um bundle já em execução, discutida em 8.4. [B02, B10]
+
+Dependências são refs resolvidas, inclusive cross-project, com recusa de self/cycle antes de substituir lista. Steps permitem no máximo um active. `blocking` em pergunta e `paused` ajudam a representar espera/forecast; não se deve presumir que todo método externo, CI ou fila revalida todos esses sinais. Orçamento impede **entrada nova** em building quando o gasto medido alcança 100%; trabalho já building continua. [B02, B05]
+
+### 6.2 Decisão, resultado narrado e undo
+
+Responder pergunta aberta exige opção existente; cria decisão com pergunta, opções, recomendado, escolhido, texto, owner e instante. Alterar uma decisão cria outra e liga `supersedes_id`/`overturned_by_id`; a pergunta carrega a resposta atual para Maestro. Não se reescreve a decisão antiga. Mudar uma já superada é recusado. [B03]
+
+`decisionOutcome` grava o resultado narrado por Maestro na decisão vigente; não consulta PR, CI ou agente para provar o relato. Até haver relato, a projeção mostra `applied, no result yet`. O mantenedor deve distinguir **owner escolheu**, **Maestro declarou resultado** e **fato independente observado**. [B03, T01]
+
+Undo é um novo evento inverso, limitado a ações de planejamento Maestro permitidas ou `github.overwrite`. Se atividade posterior tocou os mesmos campos da mesma entidade, recusa para não sobrescrever trabalho mais novo. Owner faz a ação contrária para reverter seus próprios controles. Notas de owner podem ser editadas/removidas; notas GitHub/Maestro/threads do host não recebem esse poder. Threads do host têm IDs determinísticos e insert-on-conflict-do-nothing para retry exato. [B03]
+
+Segredo anexado vai ao credential store; Board conserva label. Arquivo vai para diretório de dados e registro aponta a cópia. Remover segredo elimina credential row; remoção física de arquivo acontece depois do commit. O fato de a escrita de arquivo ocorrer dentro do fluxo de transação não torna filesystem e SQLite atomicamente reversíveis. Não atribuir rollback externo garantido a uma transação de rows. [B03]
+
+## 7. Espelho GitHub, CI local e métricas do Board
+
+### 7.1 Espelho e fatos vivos
+
+O mirror usa `gh` autenticado sem prompting, runner injetável e sem armazenar token diretamente. Serializa sync/CI pelo seu semaphore local. Sync puxa issues/comments, segue PRs e empurra cards dirty. A origem de Intake é delimitada pelo instante inicial do mirror; issues fechadas históricas, PRs e markers de outro Board não são importados como novos cards. Pagination é uma varredura limitada por `since`, ETag, lotes de 100 e até cinco passos; não é inventário ilimitado garantido. [B04]
+
+Board prevalece para stage/steps; divergência de title/body marcado gera atividade `github.overwrite` e próximo push restaura Board, com undo possível. Close/reopen divergente gera pergunta, sem aplicar automaticamente stage do issue remoto. Comentário vira nota uma vez por ID; esse caminho não é sincronização bidirecional de edits de comentários. Push preserva labels de pessoas, substitui stage/type, renderiza steps/footer/marker e usa milestone de epic. Dirty só é limpo se a row não mudou durante o envio. [B04]
+
+PR aberto pode levar building→review; PR merged pode levar building/review→shipped, respeitando os controles lidos nesse caminho. Erro de um PR deixa seu card sem avanço. Trail usa leitura PR, cacheia somente sucesso por 30 s e expõe `verifiedAt`; sign-out/error/none permanecem estados próprios. Proof combina esse fato vivo com attempts, crash reason, guardrail e decisão armazenados; não converte campo de card em prova externa. [B02, B04, B13]
+
+### 7.2 `ci_run`: resultado do tree, não do rótulo
+
+O contrato vem de `.orchestra/ci.json` no base ref observado. JSON inválido recusa execução. Ausente, tenta descobrir required PR checks e escolhe defaults `required-checks` ou `no-ci`; indisponibilidade dessa descoberta não é a mesma prova forte de “repo não tem CI”, pois o default deriva do resultado que esse caminho conseguiu ler. O contrato define scoped tests/workflows, full checks/label/control, base, bundle/lane/budget, remote de snapshot e somente merge commits. [B06]
+
+O tree corrente é obtido com índice temporário; ci.ts preserva timestamps ao copiar o índice para não esconder edição de mesmo tamanho/segundo. Checks são registrados por issue, tree e comando. Commit com mesmo tree pode reutilizar o resultado; editar conteúdo perde o green daquele tree. `run:false` só relata. Comando é tokenizado por whitespace, sem shell; `{package}` e `{files}` têm substituição específica, não interpretação completa de quoting shell. [B06]
+
+Se scoped tests precisam de package e nenhum foi fornecido, turbo deve provar packages afetados. Havendo packages, recusa e nomeia; se nenhum workspace package foi afetado, pode registrar explicitamente `none: no workspace package affected` como pass, sem testes. Essa é uma convenção do gate, não execução vazia disfarçada. Estado scoped-red resulta de fail mais recente; scoped-green precisa de requisitos existentes e pass dos caminhos requeridos; sem requisito, retorna null. Um check error/pending não vira pass. [B06]
+
+Workflows são enviados uma vez por tree/arquivo no ledger observado. **Aqui há heurística:** após dispatch sem ID, Board consulta últimos runs da branch/workflow/evento e escolhe correspondência por SHA e createdAt a partir de 60 s antes do envio. Lane rollup também usa o run mais novo por workflow no head do bundle. Essas correlações são mais fracas que a atribuição exata de Actions; concorrência externa no mesmo head pode tornar associação ambígua. Trata-se de limite estático explícito, sem corrida reproduzida nesta produção. [B06, B08]
+
+### 7.3 Spend, forecast e ledger são estimativas com origem
+
+Spend lê custo/tokens de Sessions vinculadas e seus filhos imediatos, mais cache de minutos CI; não busca GitHub a cada render. Subscription engine ou preço ausente é `not-metered`, e mistura de medido/não medido pode ser parcial. Ausência de meter não significa custo real zero, ainda que a soma numérica use apenas parcelas conhecidas. Cache de CI é atualizado com TTL de dez minutos; lê runs completos do head do PR, guarda runID uma vez e aplica taxas constantes no código. Não é uma fatura atual verificada, nem captura garantida de todas as tentativas/histórico; o endpoint lido e o primeiro cache limitam a observação. [B05]
+
+Budget sinaliza warn a 80%, impede início novo a 100%, e forecast de gasto acima de 90% pode gerar uma pergunta não bloqueante por valor de budget. Cards ≥3 vezes a mediana de pelo menos dois peers do epic são sinalizados. Owner **e** Maestro têm entrada de settings no serviço; a mensagem “ask owner” não substitui a autoridade efetivamente exposta pelo caller. [B05]
+
+Forecast requer ao menos cinco shipped, usa throughput diário incluindo zeros, 1.000 simulações com seed fixo e horizonte limitado para p50/p85. É estimativa reproduzível do histórico do Board, não compromisso. Dois evaluations consecutivos atrasados geram health at_risk; não equivalem a dois dias. Ledger calcula medianas de espera/lead e proporções das rows disponíveis; null significa falta de base. [B05, B13]
+
+## 8. Fila: admissão, bundle, gate e integração
+
+### 8.1 Antes de cortar um bundle
+
+`board_queue` exige card Review, PR/repo/worktree, não pausado e sem conflito registrado, dependencies shipped ou queued, record com intent/decisions/not-covered/risk e follow-ups que sejam cards conhecidos. Busca head nativo, fetch e commit exato, verifica scoped state do tree desse head quando o contrato exige. Sob lock, confere novamente stage/PR e grava o SHA admitido. Mudança posterior do head devolve card a Review para nova verificação. `dequeue` retira card e dissolve bundle aberto correspondente, deixando demais membros na fila. [B07]
+
+Tick é periódico, com até dois projetos em paralelo e busy-set **em memória do serviço**, para não assentar o mesmo projeto simultaneamente naquela instância. Isso não é lease distribuído entre vários hosts. Forma bundles num worktree temporário destacado do base, merges `--no-ff`, refs `bundle-KEY-n`, PR de bundle e full gate/lane workflows. Nenhuma dessas operações foi executada nesta produção. [B08]
+
+Corte pode ocorrer por tamanho, flush, espera máxima, fechamento de epic, split após red ou fix especial. Sem 50 outcomes, usa tamanho configurado; depois adapta pelo red rate, limitado por max. Dependencies devem já ter landed ou estar antes no bundle. Owner hold, card paused, conflict e hold interno da fila filtram membros. Conflito com bundle so far registra nota e mantém card queued. [B08]
+
+Lanes são componentes de packages afetados recalculados com turbo sobre árvore de integração, não tags declaradas `area`. Sem graph/resultado confiável, recua para escopo global/conveyor. Mudança em glob global sobrepõe tudo; cards disjuntos podem rodar em paralelo, respeitando predecessors que se sobrepõem. `area` divergente gera nota de plan drift, não recusa. Capacidade por jobs é cálculo do host, com mínimo de uma lane e sem teto quando dados são desconhecidos; não é limite duro de cobrança do provider. Periodic full safety e epic closing testam o todo nos caminhos previstos. [B08]
+
+### 8.2 O gate e suas saídas
+
+| Fato observado | Comportamento da fila |
+| --- | --- |
+| Check requerido ausente/em andamento | `pending`; não mergeia por ausência. Só `source:no-ci` permite green sem checks |
+| Full gate verde e heads intactos | Caminho de integração; base é reobservado antes do push |
+| Red de infraestrutura qualificado | Tenta rerun de jobs falhos uma vez na mesma execução; segundo failure pausa, ou fallback reconstrói uma vez antes de pausar |
+| Red com failing files reproduzíveis scoped | Roda grupos no base/head; duas falhas no base qualificam base-red; três passes no head qualificam flaky; failure no head pode isolar código |
+| Base desconhecido | Abre probe sem membros; não culpa imediatamente os cards nem presume base green |
+| Base-red | Mantém cards, pode bisectar first-parent e abrir/reusar fix card; fix viaja sozinho, julgado no conjunto falho. Com lanes, limita espera às sobrepostas quando há conjunto conhecido |
+| Código red em vários membros | Isola por candidato/dependências/prefixo quando possível; senão divide bundle; card falhando sozinho volta Review e nova attempt |
+| Red após reconstruções limitadas / sem culpado | Dissolve e mantém cards held; Maestro libera um por vez ou dequeues |
+| Flaky | Guarda flake e mantém PR aberto até `board_bundle merge/retry`; aceitar torna bundle `accepted`, permitindo ship como testado apesar do full gate red |
+
+Leitura de logs e classifiers distingue timeout/cancel/control-line ausente de falha de teste. Log ilegível não é automaticamente infraestrutura. Probes e safety runs sem membros não mergeiam; seu resultado informa o estado do base. Aceite explícito de flaky é decisão registrada, **não** transformação retroativa de teste vermelho em verde. [B09]
+
+### 8.3 Integração e recuperação parcial
+
+Antes de integrar, `queue-settle` compara head do PR do bundle e heads de cada membro com os SHAs capturados. Mudança dissolve/reverifica. Busca base atual. Se bundle head já é ancestral do base, entende que o host pode ter morrido após push e antes do banco: registra merge sem segundo push. Caso contrário, push usa `--force-with-lease` para o base esperado. Só depois de push bem-sucedido atualiza bundle/attempts/cards e remove queue rows. Remove refs de bundle/snapshot nos passos subsequentes. [B10]
+
+Base movido normalmente pede reteste. `merge-if-disjoint` e lanes podem integrar sobre tip novo quando merge-tree é limpo e write sets/packages não sobrepõem; `.atlas/` tem tratamento próprio por logs union-merged. O commit registra “tested on” e “merged on” diferentes. Portanto a fila pode integrar uma combinação estruturalmente qualificada que não é literalmente o mesmo commit executado pelo full gate; preserve essa distinção na revisão. [B10]
+
+O protocolo não é uma transação única GitHub+Git+SQLite. Falha ao abrir PR, push de bundle, dispatch de gate, atualizar record ou fechar branch pode deixar efeito parcial; o código tem recuperações específicas, não garantia genérica de exatamente uma mutação externa. A reconstrução pós-push-base observada não cobre toda falha intermediária. [B08–B10]
+
+### 8.4 Limite de revogação observado por leitura
+
+**INFERÊNCIA ESTÁTICA:** os filtros de owner hold/card pause aparecem antes de cortar membros. `queue-settle`, após consultar o gate, relê heads/tip e pode fazer push sem uma nova checagem desses controles imediatamente antes da integração. O tick seleciona projetos não archived, e as rotas de queue não aplicam universalmente o mesmo `requireActive` do planejamento. Consequentemente, esta leitura não sustenta “pausar projeto/card ou aplicar hold revoga atomicamente qualquer bundle já formado”. Não houve demonstração em execução de uma violação; a documentação preserva a janela e a fronteira de prova para uma futura mudança/qualificação. [B02, B07–B10]
+
+## 9. Snapshots e records: durabilidade limitada ao que foi gravado
+
+Snapshot do Board usa índice temporário e commit em `refs/orchestra/wip/<card>/a<n>`, mantendo HEAD/índice do seat fora do commit normal. Publica somente após scanner gitleaks retornar limpo no range de mudança; scanner ausente/falho ou hit bloqueia e conserva motivo. Remote vem do contrato; falha não escolhe outro. Guarda snapshot SHA/tree/time depois do push. `pushed` compara tree local ao último snapshot registrado; não é uma nova consulta do remoto a cada leitura. [B11]
+
+Worktree ausente com snapshot pode ser restaurado no path e branch (detached se necessário), aplicando snapshot ao worktree para voltar como alteração não commitada; sem snapshot, sinaliza missing. Sweep a cada dez minutos cobre building com attempt aberta. Attempt nova fecha anterior como failed/superseded conforme crash reason, incrementa n, vincula Session/seat/worktree/branch/PR/write paths e conserva histórico. Conflict sweep lê avanço do base, cruza write set declarado+real e usa merge-tree para produzir nota; não rebasa o worktree do seat. [B11]
+
+Record port distingue prosa Maestro de fatos do host. Sem port, fila ainda opera com fallback explícito; com port, renderiza PR/bundle e trailers. Campos sem fonte permanecem vazios/`unseen`: não inventa review, doneWhen ou uso “as user”. Record do bundle reúne activities, threads, attempts, checks, transcript digest, logbook e milestones pelo boundary Atlas. Visibilidade remota desconhecida é tratada como pública para redigir prosa; isso é política do writer, não comprovação de sigilo de todo conteúdo de um repo. [B12]
+
+`BoardTree.restore` requer Board vazio; ordena eventos, aplica ações conhecidas, recusa ação desconhecida e marca prose redigida como lacuna. Restaura plano/decisões/notas/activity; attachments/segredos não estão no log. Queue/bundles/attempts/checks e sync state não são reconstruídos por esse import. Texto público redigido não reaparece por inferência. Uma restauração de conhecimento/plano não prova retomada completa da automação em voo. [B12]
+
+
+FIM_CORPO_LITERAL
+
+INICIO_EVIDENCIA_LITERAL
+# Projeção curta para revisão independente: Actions, Board e agendamento
+
+Artefato `s1.core.automation` · baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38` · repositório `gustavomhss/hugr-orchestra`.
+
+Todos os blocos são transcrições literais dos bytes UTF-8 capturados por `github.fetch_blob`. Linhas são 1-based inclusivas; intervalos separados omitem contexto, não inserem código. Git blob SHA1 e SHA256 são da fonte completa, não de uma versão reformatada. Cada fence preserva os bytes de seu intervalo (a quebra que fecha o fence não é parte da fonte quando a última linha não a contém).
+
+O archive é `sources/<path>`; `captures.json` fixa os 204 arquivos e `coverage.jsonl` fixa suas disposições. Os IDs abaixo ligam este documento às seções do `body.md`. Só leitura estática ocorreu; testes existentes são NOT_RUN.
+
+Esta é uma seleção para juízes sem ferramentas, não o inventário completo de prova. `evidence.md` conserva intervalos mais amplos para cada ID, incluindo as 115 implementações substantivas. Se um claim depender de contexto não exibido aqui, use REQUEST_EVIDENCE com ID/path/intervalo; não promova a ausência de contexto a aceitação. As inferências de wake e revogação de bundle continuam explicitamente estáticas.
+
+
+## B01 — Serviço Board e porta Maestro
+
+Vínculo: `body.md` §6; archive de evidência: `evidence.md`, seção `B01`.
+
+
+### `packages/core/src/board/board.ts`
+
+Archive: `sources/packages/core/src/board/board.ts` · bytes: 83719 · Git blob: `0488f3819c967df78abd4d6a5a94805e48b3213e` · SHA256: `9b0f56eb1b4c8a78bec8b6af3ce16a71a25bfdcb4e3a3b581317b4126f99141d`.
+
+
+Linhas **181–191**; SHA256 do intervalo `a5ea906ff67fe689af9f1e2f8544a4b7042bbfbe03dcc711b6334a6ffcd18ff6`:
+
+~~~~typescript
+      const quiet = <A, E>(work: (tx: Tx) => Effect.Effect<A, E>) =>
+        db.transaction(work, { behavior: "immediate" }).pipe(dieOnStorage)
+
+      // Every committed board write is one forecast evaluation of its project; GitHub mirror writes are not.
+      const write = <A extends { readonly changed: Changed }, E>(work: (tx: Tx) => Effect.Effect<A, E>) =>
+        quiet((tx) => work(tx).pipe(Effect.tap((result) => BoardMoney.evaluate(tx, result.changed.project)))).pipe(
+          Effect.tap((result) => events.publish(Board.Event.Changed, result.changed)),
+        )
+
+      const reading = <A, E>(work: (tx: Tx) => Effect.Effect<A, E>) =>
+        db.transaction(work).pipe(dieOnStorage)
+~~~~
+
+
+### `packages/core/src/board/tools.ts`
+
+Archive: `sources/packages/core/src/board/tools.ts` · bytes: 8288 · Git blob: `d1ba07e4231da173fb5aa5478375cba7f99c00b4` · SHA256: `87638e1e13b803490987df2a5d33fd39e9c899ad7208a7b9d54d6f0635463eb5`.
+
+
+Linhas **153–161**; SHA256 do intervalo `c580a703b01bd6731a21bd72896e18eadee5fb848d05516ef9c1304bfaf8f6e9`:
+
+~~~~typescript
+  ),
+  deps: [ApplicationTools.node, Board.node],
+})
+
+function guard<A>(context: Tool.Context, effect: Effect.Effect<A, Board.Error>) {
+  if (context.agent !== AgentV2.defaultID)
+    return Effect.fail(new Tool.Failure({ message: "The board tools belong to Maestro; ask Maestro to change the board." }))
+  return effect.pipe(Effect.mapError((error) => new Tool.Failure({ message: error.message })))
+}
+~~~~
+
+
+## B02 — Transições e autoridade do card
+
+Vínculo: `body.md` §6; archive de evidência: `evidence.md`, seção `B02`.
+
+
+### `packages/core/src/board/board.ts`
+
+Archive: `sources/packages/core/src/board/board.ts` · bytes: 83719 · Git blob: `0488f3819c967df78abd4d6a5a94805e48b3213e` · SHA256: `9b0f56eb1b4c8a78bec8b6af3ce16a71a25bfdcb4e3a3b581317b4126f99141d`.
+
+
+Linhas **427–441**; SHA256 do intervalo `2d6dae25e7ea22c5f0361b45215fd328aa1f402d39dc49899cd0d90fb63a6941`:
+
+~~~~typescript
+      const requireActive = (project: ProjectRow, issue?: IssueRow): Effect.Effect<void, RefusedError> => {
+        if (project.status === "archived") return Effect.fail(archived(project))
+        if (project.status === "paused")
+          return Effect.fail(
+            new RefusedError({
+              message: `${project.key} is paused by the owner${project.paused_reason ? ` (${project.paused_reason})` : ""}; only board_question works until they resume it.`,
+            }),
+          )
+        if (issue?.paused)
+          return Effect.fail(
+            new RefusedError({
+              message: `${project.key}-${issue.number} is paused by the owner; only board_question works until they resume it.`,
+            }),
+          )
+        return Effect.void
+~~~~
+
+
+Linhas **1062–1089**; SHA256 do intervalo `d23bb3b4e4968535e1bddcf2f3d02a45da24959b480691f34ded27ce88ad91c7`:
+
+~~~~typescript
+              yield* requireActive(project, issue)
+              if (issue.stage === "intake")
+                return yield* new RefusedError({ message: `${ref} is in Intake; the owner accepts or declines it first.` })
+              if (issue.stage === "queue")
+                return yield* new RefusedError({ message: `${ref} is queued; take it out with board_dequeue first.` })
+              if (input.stage === "review" && !issue.pr_number)
+                return yield* new RefusedError({ message: `${ref} has no PR; link one with board_issue before Review.` })
+              if (input.stage === "shipped" && issue.hold_before_merge)
+                return yield* new RefusedError({
+                  message: `${ref} is on hold before merge; only the owner can release it. Do not merge its PR.`,
+                })
+              if (input.stage === "shipped" && issue.pr_number) {
+                if (issue.pr_number !== checked.issue.pr_number || !proof)
+                  return yield* new RefusedError({ message: `${ref}'s PR changed while it was being checked; try again.` })
+                if (proof.state === "none")
+                  return yield* new RefusedError({
+                    message: `${input.project} has no repo linked, so PR #${issue.pr_number} cannot be checked as merged.`,
+                  })
+                if (proof.state === "signed_out")
+                  return yield* new RefusedError({
+                    message: `GitHub is signed out, so PR #${issue.pr_number} cannot be checked as merged; ${ref} stays where it is.`,
+                  })
+                if (proof.state === "error")
+                  return yield* new RefusedError({ message: `PR #${issue.pr_number} could not be read: ${proof.message}` })
+                if (!proof.pr.merged)
+                  return yield* new RefusedError({ message: `PR #${issue.pr_number} for ${ref} is not merged yet.` })
+              }
+              yield* BoardMoney.requireRoom(tx, project, issue, input.stage, ref)
+~~~~
+
+
+## B03 — Decisão durável, undo, nota e anexo
+
+Vínculo: `body.md` §6; archive de evidência: `evidence.md`, seção `B03`.
+
+
+### `packages/core/src/board/decision.ts`
+
+Archive: `sources/packages/core/src/board/decision.ts` · bytes: 5365 · Git blob: `4b219f5b62517b2c4f9749a1a99e6257cfeff167` · SHA256: `7fdd5f2d2d0dfa0414b70b870e4ff75ca62fe7af36c62c90e583663af8833b43`.
+
+
+Linhas **54–75**; SHA256 do intervalo `4624cb63c8ab9da5a9954a17bcabd126e7b140384e6c9c1d860f1df66bb94ce6`:
+
+~~~~typescript
+    .get()
+  if (!old) return yield* new NotFoundError({ message: `Decision ${id} is not on ${key}.` })
+  if (old.overturned_by_id)
+    return yield* new RefusedError({ message: "That decision was already overturned; change the newer one instead." })
+  if (!old.options.some((option) => option.id === input.option))
+    return yield* new RefusedError({ message: `Pick one of: ${old.options.map((option) => option.id).join(", ")}.` })
+  const text = input.text ?? null
+  if (old.chosen === input.option && old.chosen_text === text)
+    return yield* new RefusedError({ message: "That is already the answer." })
+  const now = yield* Clock.currentTimeMillis
+  const next = Board.DecisionID.create()
+  yield* tx
+    .insert(BoardDecisionTable)
+    .values({
+      id: next,
+      project_id: project.id,
+      issue_id: old.issue_id,
+      epic_id: old.epic_id,
+      question_id: old.question_id,
+      question: old.question,
+      options: old.options,
+      recommended: old.recommended,
+~~~~
+
+
+Linhas **101–118**; SHA256 do intervalo `3ecd85c8a12fd38074c1d56a26e3f7633234ff84ff1176570ed585a0d6a59ee7`:
+
+~~~~typescript
+export const outcome = Effect.fnUntraced(function* (tx: Tx, input: Board.DecisionOutcomeInput) {
+  const project = yield* loadProject(tx, input.project)
+  const row = yield* tx
+    .select()
+    .from(BoardDecisionTable)
+    .where(
+      and(
+        eq(BoardDecisionTable.project_id, project.id),
+        isNull(BoardDecisionTable.overturned_by_id),
+        or(eq(BoardDecisionTable.id, input.id as Board.DecisionID), eq(BoardDecisionTable.question_id, input.id as Board.QuestionID)),
+      ),
+    )
+    .orderBy(desc(BoardDecisionTable.answered_at))
+    .get()
+  if (!row) return yield* new NotFoundError({ message: `No standing decision ${input.id} on ${project.key}.` })
+  if (row.outcome === input.outcome) return yield* new RefusedError({ message: "That outcome is already recorded." })
+  const now = yield* Clock.currentTimeMillis
+  yield* tx.update(BoardDecisionTable).set({ outcome: input.outcome, outcome_at: now }).where(eq(BoardDecisionTable.id, row.id)).run()
+~~~~
+
+
+### `packages/core/src/board/board.ts`
+
+Archive: `sources/packages/core/src/board/board.ts` · bytes: 83719 · Git blob: `0488f3819c967df78abd4d6a5a94805e48b3213e` · SHA256: `9b0f56eb1b4c8a78bec8b6af3ce16a71a25bfdcb4e3a3b581317b4126f99141d`.
+
+
+Linhas **1421–1441**; SHA256 do intervalo `fcf6abe6bcb809623543fadebcc2dcae7cbdbd4650fa4f5a866a451269a6912d`:
+
+~~~~typescript
+              const project = yield* loadProject(tx, key)
+              const target = yield* tx
+                .select()
+                .from(BoardActivityTable)
+                .where(and(eq(BoardActivityTable.id, id as Board.ActivityID), eq(BoardActivityTable.project_id, project.id)))
+                .get()
+              if (!target) return yield* new NotFoundError({ message: `Activity ${id} is not on ${key}.` })
+              const undoable =
+                target.action === "github.overwrite" || (target.actor === "maestro" && UNDOABLE.includes(target.action))
+              if (!undoable)
+                return yield* new RefusedError({
+                  message: "Only Maestro's plan changes and GitHub overwrites can be undone; reverse owner actions by doing the opposite.",
+                })
+              if (target.undone_by) return yield* new RefusedError({ message: "That change was already undone." })
+              const later = yield* tx
+                .select()
+                .from(BoardActivityTable)
+                .where(and(eq(BoardActivityTable.project_id, project.id), gt(BoardActivityTable.id, target.id)))
+                .all()
+              const keys = touched(target)
+              const conflict = later.find(
+~~~~
+
+
+## B04 — Mirror GitHub tem semântica própria
+
+Vínculo: `body.md` §7; archive de evidência: `evidence.md`, seção `B04`.
+
+
+### `packages/core/src/board/github.ts`
+
+Archive: `sources/packages/core/src/board/github.ts` · bytes: 32508 · Git blob: `7a29abd5907dfb6f0443756ad8b2a6f7e7cf133e` · SHA256: `15775b713425cb60f68003099198918a4b567431e426bd351c50ba4971d36702`.
+
+
+Linhas **126–135**; SHA256 do intervalo `8aadddffaa7d99d54cb9522a9dfa7b2372e165d5b9ad6994cae158d08a12bc78`:
+
+~~~~typescript
+// GitHub's per-minute rates for hosted runners; public repositories bill nothing, which the timing endpoint reports as 0 ms.
+const RATES: Record<string, number> = { UBUNTU: 0.008, WINDOWS: 0.016, MACOS: 0.08 }
+/** CI minutes are refreshed at most this often unless the owner forces it. */
+const CI_TTL = 10 * 60_000
+
+const PAGE = 100
+const MAX_PAGES = 5
+const MARKER = /<!-- orchestra-board:([A-Z]+)-(\d+) -->/
+const FOOTER = "\n\n---\nTracked on the Orchestra board as "
+const COLORS = { stage: "5319e7", type: "0e8a16" }
+~~~~
+
+
+Linhas **323–341**; SHA256 do intervalo `d89f100bd92d5071d2c6fb1c0369bf4a4da025b2d93af1ba600e32501b8272b7`:
+
+~~~~typescript
+    const comments = yield* pages(repo, "issues/comments", "sort=updated&direction=asc", start, project.github_comments_etag, decodeComments)
+    for (const item of comments.items) yield* comment(project, item)
+    const newest = issues.items.reduce((high, item) => Math.max(high, Date.parse(item.updated_at) || 0), start)
+    yield* deps.quiet((tx) =>
+      tx
+        .update(BoardProjectTable)
+        .set({
+          github_since: newest,
+          github_issues_etag: issues.etag ?? project.github_issues_etag,
+          github_comments_etag: comments.etag ?? project.github_comments_etag,
+        })
+        .where(eq(BoardProjectTable.id, project.id))
+        .run(),
+    )
+  })
+
+  /** Reads a list endpoint with `since` and the stored ETag; a 304 is an empty page. */
+  const pages = <T extends { readonly updated_at: string }>(
+    repo: string,
+~~~~
+
+
+Linhas **595–611**; SHA256 do intervalo `890502dbffb1f7e01a44f0160c2626604db773bb3e8b6515381be5ad3cc60ea4`:
+
+~~~~typescript
+          })
+    // A new issue is created open with its labels; closing it, and every update, goes through PATCH.
+    if (existing !== null || shut)
+      yield* send("PATCH", `repos/${repo}/issues/${number}`, { ...content, ...state, labels: [...theirs, ...ours], milestone })
+    yield* deps.quiet((tx) =>
+      tx
+        .update(BoardIssueTable)
+        .set({
+          github_number: number,

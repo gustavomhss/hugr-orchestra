@@ -1,0 +1,67 @@
+{
+  "schema": "s1-03-root-literal-supplement-verification/v1",
+  "method": "Independent source SHA-256 and Git blob, exact original line intervals, dossier byte offsets, complete requested line reconstruction. This verifies custody and presentation, not semantic acceptance or product test execution.",
+  "checks": [
+    {
+      "path": "producers/automation/review-supplement-1.md",
+      "sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "bytes": 338932,
+      "unique_sources": 55,
+      "new_intervals": 56,
+      "reused_intervals": 0,
+      "complete_sequences": 0,
+      "existing_test_intervals": 0,
+      "status": "PASS_LITERAL_IDENTITY"
+    },
+    {
+      "path": "producers/automation/review-supplement-2.md",
+      "sha256": "208b0ba87350a91970d28f298d802512b72b6834360815b95ca17ab22ebc54b1",
+      "bytes": 375497,
+      "unique_sources": 45,
+      "new_intervals": 46,
+      "reused_intervals": 0,
+      "complete_sequences": 0,
+      "existing_test_intervals": 0,
+      "status": "PASS_LITERAL_IDENTITY"
+    },
+    {
+      "path": "producers/automation/review-supplement-3.md",
+      "sha256": "e8158270e77a88cde1ec5db114c51e79004264ff80be667aebde8e365ede1d8c",
+      "bytes": 404469,
+      "unique_sources": 25,
+      "new_intervals": 57,
+      "reused_intervals": 33,
+      "complete_sequences": 25,
+      "existing_test_intervals": 0,
+      "status": "PASS_LITERAL_IDENTITY"
+    },
+    {
+      "path": "producers/automation/review-supplement-4.md",
+      "sha256": "686a0a0044cf44a0eb7ae6cb397a07632f823af52b610c6db276d27e031f4ce2",
+      "bytes": 93027,
+      "unique_sources": 7,
+      "new_intervals": 25,
+      "reused_intervals": 17,
+      "complete_sequences": 7,
+      "existing_test_intervals": 8,
+      "status": "PASS_LITERAL_IDENTITY"
+    },
+    {
+      "path": "producers/research/review-supplement-a.md",
+      "sha256": "900fd149a1182df270ef6f71fce883793dba1a836df2dd2dd67e500c268f4aca",
+      "bytes": 220079,
+      "unique_sources": 68,
+      "new_intervals": 157,
+      "status": "PASS_LITERAL_IDENTITY"
+    },
+    {
+      "path": "producers/research/review-supplement-b.md",
+      "sha256": "5f06a933f3e0b95f994af2ad56a1ec44363b5ed650bbe7e8fedb18bb238f5ed5",
+      "bytes": 261153,
+      "unique_sources": 32,
+      "new_intervals": 92,
+      "status": "PASS_LITERAL_IDENTITY"
+    }
+  ],
+  "status": "PASS"
+}

@@ -1,0 +1,25 @@
+{
+  "recorded_at_utc": "2026-11-15T00:24:25.628358+00:00",
+  "responses": [
+    {
+      "judge": "/root/s1_03_j1",
+      "file": "j1-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 12356,
+      "sha256": "f04ab6c3980172b0adbb8f2abbbcc0211591d7fa3f2c65db22971d5448f9ed86",
+      "terminal_newline": false,
+      "literal": true
+    },
+    {
+      "judge": "/root/s1_03_j2",
+      "file": "j2-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 9430,
+      "sha256": "17fb39dc71ebea1a9a0b84c4cde1e7d6c265fadc6e2e4da00503000732e86b32",
+      "terminal_newline": false,
+      "literal": true
+    }
+  ],
+  "pending": [],
+  "sync_state": "Ambos automation-2 completed e respostas originais salvas; pausa obrigatória antes de automation-3 até confirmação da raiz."
+}

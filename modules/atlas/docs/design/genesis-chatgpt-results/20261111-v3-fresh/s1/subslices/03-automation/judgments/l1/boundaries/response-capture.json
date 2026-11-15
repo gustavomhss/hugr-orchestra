@@ -1,0 +1,25 @@
+{
+  "recorded_at_utc": "2026-11-15T00:59:09.111342+00:00",
+  "responses": [
+    {
+      "judge": "/root/s1_03_j1",
+      "file": "j1-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 8320,
+      "sha256": "ccad14b91237930376d42ebb54d39bdd3f35e3b7587d5cb8935bc121202ae376",
+      "terminal_newline": false,
+      "literal": true
+    },
+    {
+      "judge": "/root/s1_03_j2",
+      "file": "j2-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 6656,
+      "sha256": "677ce359667553b2e3ab5cc3855897ca003db08ba1ded0e1004b96653c726b0a",
+      "terminal_newline": false,
+      "literal": true
+    }
+  ],
+  "pending": [],
+  "sync_state": "Ambos completed; originais preservados antes do próximo lote."
+}

@@ -1,0 +1,4 @@
+{
+  "target": "/root/s1_03_j1",
+  "message": "CORRECAO_LITERAL_DE_TRANSPORTE boundaries — PARTE 2/3. Duas linhas de R012 receberam um parêntese excedente durante a transcrição do relay. Para a composição literal, substitua exclusivamente as duas linhas abaixo; esta correção restaura os bytes do pacote congelado e não altera o candidato nem o critério. Aguarde a parte final e não use ferramentas.\nLINHAS_ENVIADAS_COM_ERRO:\n  if (yield* exists(\"pnpm-lock.yaml\"))) return \"pnpm\"\n  if (yield* exists(\"yarn.lock\"))) return \"yarn\"\nLINHAS_LITERAIS_CORRETAS:\n  if (yield* exists(\"pnpm-lock.yaml\")) return \"pnpm\"\n  if (yield* exists(\"yarn.lock\")) return \"yarn\""
+}

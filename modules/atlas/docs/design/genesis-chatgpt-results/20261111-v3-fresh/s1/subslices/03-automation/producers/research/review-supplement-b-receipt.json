@@ -1,0 +1,232 @@
+{
+  "schema": "genesis-review-literal-supplement-receipt/v1",
+  "task": "RESEARCH-L1/research-b",
+  "producer": "/root/research_l1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "produced_at_utc": "2026-11-14T23:55:10.734440+00:00",
+  "request_from": "/root",
+  "request_text": "J1 concluiu research-b também REQUEST_EVIDENCE, sem erro comprovado. Depois de A (pode concluir A primeiro para destravar), produzir suplemento-b separado: RE-B1 types operações/limites; query basis,resoluçãoid/name/posição,references/callers/callees/imports/map,paths/dirty; searchJSON/modos/snippets; locate seleção/materialização/validaçãoaplicada/descarte/fallback/bounds. B2 liveness funções check/allowed/probe completas+constantes/captura/DNS→fetch, HEAD/GET/deadline/redirects (limiteslocais). B3 probeuniãofechada,run65–94+retorno/slots, snapshotseleção/cópia/digest,assets/runners/typecheck,ResearchProcessenv/capture/timeout/kill (nãoeficáciaexternajail). B4 binding task/authorSession/worktree, duasrepresentaçõestoolpart,leituraretida; allowancebindrepetido/compatibilidade/ledgerinterrompido;ledgerhashcanônico/operation/eventID/tipos. B5 artifactsput/directórios/bytes/cursor/offset/verifySource;records.sourcepaginaçãointegral,lineStart/locators,errossemreacquisição. B6 recordpreconds/caps/evidence/contrary/relations/findingRefs;beginAcquisitiondesdeinícioatépublicação/replay;viewscorpus/attempts/records/find; inquiry/dispatch/closed completos incluindoalegaçãocheck/closequenãorequeropened. B7 compartilhar mesma coverageintegralcomA,seat-tools E43 eexpectationsdecisivas E44–E46 (semtestsrodados). Use branches completos quando ausência/ordemexigir; enumeraçõesde pin/cobertura podemserprojeçõesmecânicasexplicitamentetipadas e verificáveis, nãopseudoliteral. Nunca alterecorpos silenciosamente. J2 ainda recebeB e eventualpedidoextra seráencaminhado.",
+  "additional_request_text": "J2 final research-b também RE, sobreposição comJ1. Adições específicas para suplementoB: mostrar ordem/origem de records que torna previous.find o shard 'mais novo'; em locate mostrar bounds do range COMPLETO antes de valid(check), não sócheck; searchconstants8MiB/literaldefault/streaminválido/paginação/snippetUTF16; snapshotdirtyDigest/desaparecidos; ResearchProcesshardcap/cauda/overflow/memória; views cursor snapshot stale/101ºmatch/complete; closed dispatch maisrecente efiltragemcharges; testsE44–46priorizar marker/binárioausente,stale/dirty/encoding,retençãoacimabudget,symlink/corrupção,binding/replay/CAS,sourceparcial/locatorambíguo. Nenhumtestedeproduto solicitado. Se algumaafirmaçãov1forampla demais, proponhacorreçãomínimaelegíveldepoisdepreservaroriginal. Preciso também da orientação exata de montagem dos gruposA/B emlotes semrepetircorpointes.",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "body_frozen_sha256": "1213f85cf16f73feed220e8c1b33ed52b2af75afd570b154a29eaf8f99f27d73",
+  "body_unchanged": true,
+  "frozen_artifacts_unchanged": {
+    "body.md": {
+      "bytes": 63389,
+      "sha256": "1213f85cf16f73feed220e8c1b33ed52b2af75afd570b154a29eaf8f99f27d73",
+      "git_blob_sha": "c29b9f5b8a8913cc4afa58d3e9cdede292f0657e"
+    },
+    "captures.json": {
+      "bytes": 52221,
+      "sha256": "4275f6f649be64c3e0fb948115f3260b618d633e98a650824f58b17ac3036a52",
+      "git_blob_sha": "3c88d5718848071443d0c3cc412846a0ffba2e75"
+    },
+    "coverage.jsonl": {
+      "bytes": 127215,
+      "sha256": "bb06bcef77a2dbeccabc70dd00dc10d70bf22cb338588661d7ecc9f49e01eec9",
+      "git_blob_sha": "48b8beafa81098be06c37b4f4ec1a3044e77414d"
+    },
+    "evidence.md": {
+      "bytes": 599806,
+      "sha256": "e8cc0b447e48f26b3a059dc70c7ad7e607ec9b60a9af3d605e76f4c10b1da05b",
+      "git_blob_sha": "f828e2d973d4e21f84f052440cc2802dcc7f5fb0"
+    },
+    "evidence-review.md": {
+      "bytes": 89675,
+      "sha256": "3496f3e102e5db734d2954cf18e9bea6da5fbc418d2084f56814eefb5347788e",
+      "git_blob_sha": "6a0d62257e36fef18db108295f6325f059773a38"
+    },
+    "evidence-index.json": {
+      "bytes": 63265,
+      "sha256": "219182fe48272b4eb6c8f21507e337730c09b86e1c9ef47e973d7846ec75a4c0",
+      "git_blob_sha": "11aea05e6a5f4f1cd1a48481469a5366ab5d3700"
+    },
+    "recipe.json": {
+      "bytes": 134003,
+      "sha256": "a5bd9215347a9eb06ab008846f2ef169e1d3269f0f6c0a75f73da72d914178a2",
+      "git_blob_sha": "12ef72626a68da88e6b37523c54663119902a0e4"
+    },
+    "request.txt": {
+      "bytes": 3325,
+      "sha256": "4e11428b6ece1d3fe3769a5f1ca7c4d3eb36654ccdec504500bb6622aec86adc",
+      "git_blob_sha": "3cf36fc80a69175f3db6fca92120b564601aaec5"
+    },
+    "response.md": {
+      "bytes": 5451,
+      "sha256": "d91be8e07e1f38bd712a2f178fd0ee800af5e6fb0e5c4a92cccdf672e5922780",
+      "git_blob_sha": "5d5032c084ea252c409fe747e7654501285acea0"
+    },
+    "history/body-initial.md": {
+      "bytes": 63291,
+      "sha256": "172e61c2f199fe1b9c4fc787922d669e95da2dcaa35aa065aea01d2a146bc6e5",
+      "git_blob_sha": "d1166e93f4105178518f09dc161cbfa4d94cad85"
+    },
+    "review-supplement-a.md": {
+      "bytes": 220079,
+      "sha256": "900fd149a1182df270ef6f71fce883793dba1a836df2dd2dd67e500c268f4aca",
+      "git_blob_sha": "22c601309312a8b61692bd73bf5a4a8c5da7a48f"
+    },
+    "review-supplement-a-index.json": {
+      "bytes": 202490,
+      "sha256": "74787dca5c9311883708cffb23fb90eb889e45f5258046e39d3a941c265bce8b",
+      "git_blob_sha": "c561007609996b71edd15fe89d70c539f488773a"
+    },
+    "review-supplement-a-receipt.json": {
+      "bytes": 7963,
+      "sha256": "e716c72c9a4dd0f0066ea56780a7a2651db9a50ed5fa6affd36e3e6367073f61",
+      "git_blob_sha": "1de0c5c0061fcd0163f394cc3a2735943ff43d24"
+    }
+  },
+  "public_requests_supplied": [
+    "RE-B1",
+    "RE-B2",
+    "RE-B3",
+    "RE-B4",
+    "RE-B5",
+    "RE-B6",
+    "RE-B7"
+  ],
+  "outputs": {
+    "review-supplement-b.md": {
+      "bytes": 261153,
+      "sha256": "5f06a933f3e0b95f994af2ad56a1ec44363b5ed650bbe7e8fedb18bb238f5ed5",
+      "git_blob_sha": "061b8790df058e50a5852cc9475bfb3ce7935a48"
+    },
+    "review-supplement-b-index.json": {
+      "bytes": 94776,
+      "sha256": "c497861cfb349283f21fa464237d0fc71995b1c2392620dcf2a49aac71ca0dd1",
+      "git_blob_sha": "762145204f86ecc532c4253ba52fbf2e513dbebb"
+    },
+    "review-supplements-dispatch.md": {
+      "bytes": 5272,
+      "sha256": "1eddda9c2ed04f65f12f4c2fee808f9d5cc01b950865eabbac716e5625617ce8",
+      "git_blob_sha": "b35e8f28e97d9da0d569841fd2f9e20c7e1d4776"
+    }
+  },
+  "mechanical_verification": {
+    "population_paths": 130,
+    "population_bytes": 1212271,
+    "families": {
+      "backend-toolkit": 59,
+      "research": 71
+    },
+    "kinds": {
+      "implementation": 80,
+      "generated_output": 1,
+      "runtime_data_or_pin": 7,
+      "documentation": 1,
+      "test_code": 41
+    },
+    "shared_coverage_rows": 130,
+    "source_identity_count": 32,
+    "literal_intervals": 92,
+    "literal_source_lines": 3351,
+    "all_130_source_hashes_and_blobs_match_capture": true,
+    "matching_literal_intervals": true,
+    "matching_shared_coverage_projection": true,
+    "delivery_batches": 17,
+    "ordered_batches_reconstruct_exact_supplements": true,
+    "scope": "Literal source extraction, projected field comparison, UTF-8 and SHA256/Git-blob byte integrity; no product test or semantic approval."
+  },
+  "wording_proposals": [
+    {
+      "status": "PROPOSED_NOT_APPLIED",
+      "kind": "precision_of_manifest_recency",
+      "body_path": "body.md",
+      "body_frozen": {
+        "bytes": 63389,
+        "sha256": "1213f85cf16f73feed220e8c1b33ed52b2af75afd570b154a29eaf8f99f27d73",
+        "git_blob_sha": "c29b9f5b8a8913cc4afa58d3e9cdede292f0657e"
+      },
+      "body_proposed": {
+        "bytes": 63463,
+        "sha256": "81dfb4356b48331a4e348af3735de2697a23297a45994a3049f6948f9b4290bf",
+        "git_blob_sha": "452d64304666380d4abcd758dfb85569447d2f3a"
+      },
+      "before_literal": "`query.ts` abre shard atual ou o mais novo retido de mesmo id quando o atual falta.",
+      "after_literal": "`query.ts` abre o shard atual ou o primeiro retido de mesmo id ainda presente, na ordem do manifesto (atualizada por `retain`/`touch`), quando o atual falta.",
+      "before_literal_sha256": "bdd9031c94b88124d8e2d11d97b63d901cfb58261092bd1a59606ff226166213",
+      "after_literal_sha256": "afd4e21f0dc781316dec92874e7a54c12a85f8e804af0617351f1f23f3415071",
+      "sources": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/query.ts",
+          "source_ranges": [
+            [
+              180,
+              196
+            ]
+          ],
+          "sha256": "ec1dd4a297e6e798c497d67ac5ed21cd4c6484e2aba3c2bed60dbd8f174f05e8"
+        },
+        {
+          "path": "packages/core/src/research-toolkit/code-index/store.ts",
+          "source_ranges": [
+            [
+              170,
+              215
+            ]
+          ],
+          "sha256": "570a81a04360d060a7c67a436e531b4c079ba7a9951130a2648ca986846b5e11"
+        }
+      ],
+      "reason": "previous.find usa a ordem de records; records não ordena por timestamp. retain antepõe seu record e touch move um commit usado à frente. A redação mais novo pode ser confundida com mais recente cronologicamente.",
+      "applied": false
+    }
+  ],
+  "shared_coverage_projection": {
+    "path": "review-supplement-a.md",
+    "bytes": 220079,
+    "sha256": "900fd149a1182df270ef6f71fce883793dba1a836df2dd2dd67e500c268f4aca",
+    "git_blob_sha": "22c601309312a8b61692bd73bf5a4a8c5da7a48f",
+    "projection_group": "RA1-P",
+    "projection_lines": [
+      293,
+      439
+    ],
+    "projection_byte_range": [
+      17509,
+      38167
+    ],
+    "projection_fragment_sha256": "a9cfbf2fbe35f2fdac2631378652a7d75e034b5fc49dea45cf6caa61f06bd835",
+    "index_path": "review-supplement-a-index.json",
+    "index_sha256": "74787dca5c9311883708cffb23fb90eb889e45f5258046e39d3a941c265bce8b",
+    "json_pointer": "/coverage_projection",
+    "mechanical": true,
+    "rows": 130,
+    "original_coverage": {
+      "path": "coverage.jsonl",
+      "bytes": 127215,
+      "sha256": "bb06bcef77a2dbeccabc70dd00dc10d70bf22cb338588661d7ecc9f49e01eec9",
+      "git_blob_sha": "48b8beafa81098be06c37b4f4ec1a3044e77414d"
+    },
+    "fields": [
+      "path",
+      "role",
+      "need",
+      "read_depth",
+      "body_sections"
+    ],
+    "semantics": "Projection only, not integral JSONL rows or a semantic acceptance judgment"
+  },
+  "not_performed": [
+    "oracle access",
+    "judge access or contact",
+    "body alteration",
+    "supplement A alteration",
+    "original artifact alteration",
+    "product code alteration",
+    "local product test run",
+    "engine execution/install",
+    "paid provider call",
+    "GitHub mutation",
+    "Atlas operation",
+    "semantic verdict",
+    "sending evidence to judges"
+  ],
+  "usage": {
+    "model_tokens": "UNKNOWN",
+    "model_cost": "UNKNOWN",
+    "paid_external_provider_calls": 0,
+    "product_test_runs": 0
+  }
+}

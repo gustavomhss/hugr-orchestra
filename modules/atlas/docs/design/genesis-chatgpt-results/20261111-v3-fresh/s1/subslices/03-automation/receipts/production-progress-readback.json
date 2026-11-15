@@ -1,0 +1,59 @@
+{
+  "schema": "s1-03-payload-seal-readback/v1",
+  "kind": "production-progress-only",
+  "B": "e23c1c695071af92d8f4d78a715daaeb7ef213db",
+  "P": "5eefca63b48970f3abb4d22e8dc2b1323487da92",
+  "H": "1423adaac613ffc361ca89aa70c77f9b7ed5b7f7",
+  "root_tree": "0c681650568d659d83aa954027576c2a2bc4eee9",
+  "out_tree": "1b56297126c3efee5d443d8946ec7948d2d42717",
+  "file_count": 120,
+  "all_published_git_blobs_exact": true,
+  "readbacks": [
+    {
+      "path": "handoff.json",
+      "ref": "1423adaac613ffc361ca89aa70c77f9b7ed5b7f7",
+      "git_blob_sha": "a7d2c281e6dccacdb445e1a3929d2f509274f03f",
+      "exact_bytes": true
+    },
+    {
+      "path": "work.md",
+      "ref": "5eefca63b48970f3abb4d22e8dc2b1323487da92",
+      "git_blob_sha": "ce9dac8735c60d9f0c02fbc8e1e92c5ed7585889",
+      "exact_bytes": true
+    },
+    {
+      "path": "producers/automation/body.md",
+      "ref": "5eefca63b48970f3abb4d22e8dc2b1323487da92",
+      "git_blob_sha": "1867e5763e724fb2c3641f28297da24b311bdcda",
+      "exact_bytes": true
+    },
+    {
+      "path": "producers/research/body.md",
+      "ref": "5eefca63b48970f3abb4d22e8dc2b1323487da92",
+      "git_blob_sha": "c29b9f5b8a8913cc4afa58d3e9cdede292f0657e",
+      "exact_bytes": true
+    },
+    {
+      "path": "producers/boundaries/bodies/boundaries.md",
+      "ref": "5eefca63b48970f3abb4d22e8dc2b1323487da92",
+      "git_blob_sha": "8232a8f75cc7b75614d2fd8873cc935edb84c538",
+      "exact_bytes": true
+    },
+    {
+      "path": "producers/boundaries/bodies/support.md",
+      "ref": "5eefca63b48970f3abb4d22e8dc2b1323487da92",
+      "git_blob_sha": "d21c3271726295f09d297995688678dde9f2dd2a",
+      "exact_bytes": true
+    },
+    {
+      "path": "inherited/entry.md",
+      "ref": "5eefca63b48970f3abb4d22e8dc2b1323487da92",
+      "git_blob_sha": "894266bd4543763fb1ee2a4dbf0ba749a244ec48",
+      "exact_bytes": true
+    }
+  ],
+  "lease_expected": "e23c1c695071af92d8f4d78a715daaeb7ef213db",
+  "force": false,
+  "scope_prefix": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation",
+  "execution_continues": true
+}

@@ -1,0 +1,26 @@
+{
+  "recorded_at_utc": "2026-11-15T00:34:56.651500+00:00",
+  "responses": [
+    {
+      "judge": "/root/s1_03_j1",
+      "file": "j1-response.md",
+      "origin": "Raiz /root preservou diretamente o final nativo integral do próprio transcript; verificação local do tamanho/hash informado.",
+      "bytes": 8441,
+      "sha256": "906a155f0521df31c8b2be459aaae09df9e656663947257cd8e609e00fd3a790",
+      "terminal_newline": false,
+      "literal": true
+    },
+    {
+      "judge": "/root/s1_03_j2",
+      "file": "j2-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 6448,
+      "sha256": "a23c54ec037b21caebbba4a12a7ea5e21023d6cc53511ac57680afb0709c3626",
+      "terminal_newline": false,
+      "literal": true
+    }
+  ],
+  "pending": [],
+  "visibility_incident": "J1 ausente da listagem pós-despacho; mesmo handle mantido, final original preservado pela raiz. Nenhuma perda definitiva inferida.",
+  "sync_state": "Ambos completed e respostas originais preservadas; próximo lote autorizado automation-4."
+}

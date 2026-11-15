@@ -1,0 +1,30 @@
+{
+  "schema": "genesis-cross-scope-supplemental-source-captures/v1",
+  "review_batch": "automation-2",
+  "repository": "gustavomhss/hugr-orchestra",
+  "captures": [
+    {
+      "path": "packages/schema/src/actions/resource.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "1346f69568a3796c88a55ed9d06ed4cc762aa93b",
+      "sha256": "5579f778bc5055f362058bf0e9386e6098af2f2cba3700ef68de1381aab6f576",
+      "bytes": 2429,
+      "capture_path": "external-sources/packages/schema/src/actions/resource.ts",
+      "connector": "github.fetch_file",
+      "encoding": "utf-8",
+      "source_owner": "S1-04",
+      "population_member": false,
+      "role": "semantic_dependency_ResourceListInput_TransferInput_ResourceKind",
+      "authority": "raw_source_not_schema_artifact_acceptance"
+    }
+  ],
+  "population_effect": 0,
+  "frozen_v2_recipe_changed": false,
+  "prior_external_manifest_changed": false,
+  "integration_status": "additional_raw_review_input_to_be_accounted_for_by_principal",
+  "applicable_instructions": {
+    "root": "../../inputs/AGENTS.md",
+    "package": "external-sources/packages/schema/AGENTS.md",
+    "read_status": "previously_read_unchanged"
+  }
+}

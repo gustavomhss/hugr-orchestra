@@ -1,0 +1,3432 @@
+{
+  "schema": "genesis-review-literal-supplement-index/v1",
+  "task": "RESEARCH-L1/research-b",
+  "producer": "/root/research_l1",
+  "body_frozen": {
+    "path": "body.md",
+    "bytes": 63389,
+    "sha256": "1213f85cf16f73feed220e8c1b33ed52b2af75afd570b154a29eaf8f99f27d73",
+    "git_blob_sha": "c29b9f5b8a8913cc4afa58d3e9cdede292f0657e"
+  },
+  "supplement": {
+    "path": "review-supplement-b.md",
+    "bytes": 261153,
+    "sha256": "5f06a933f3e0b95f994af2ad56a1ec44363b5ed650bbe7e8fedb18bb238f5ed5",
+    "git_blob_sha": "061b8790df058e50a5852cc9475bfb3ce7935a48"
+  },
+  "public_requests": [
+    "RE-B1",
+    "RE-B2",
+    "RE-B3",
+    "RE-B4",
+    "RE-B5",
+    "RE-B6",
+    "RE-B7"
+  ],
+  "sources": [
+    {
+      "path": "packages/core/src/research-toolkit/code-index/types.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "f0690be298513ba918b88c59eb01c2142f8133dc",
+      "sha256": "2bc3804460a0faf5ddf2e62d19ca86efd39db0a8142dc75787e60cdd2519332f",
+      "bytes": 7619,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+      "source_id": "RB-S001",
+      "source_archive_path": "sources/packages/core/src/research-toolkit/code-index/types.ts",
+      "archive_evidence_groups": [
+        "E24"
+      ]
+    },
+    {
+      "path": "packages/core/src/research-toolkit/code-index/query.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "25d652ee0ce78d327427837466b5d7fe5886013f",
+      "sha256": "ec1dd4a297e6e798c497d67ac5ed21cd4c6484e2aba3c2bed60dbd8f174f05e8",
+      "bytes": 32872,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+      "source_id": "RB-S002",
+      "source_archive_path": "sources/packages/core/src/research-toolkit/code-index/query.ts",
+      "archive_evidence_groups": [
+        "E24",
+        "E25"
+      ]
+    },
+    {
+      "path": "packages/core/src/research-toolkit/code-index/store.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "f71cdf0ae1979f002fce68b53eae445647682d73",
+      "sha256": "570a81a04360d060a7c67a436e531b4c079ba7a9951130a2648ca986846b5e11",
+      "bytes": 13372,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+      "source_id": "RB-S003",
+      "source_archive_path": "sources/packages/core/src/research-toolkit/code-index/store.ts",
+      "archive_evidence_groups": [
+        "E17"
+      ]
+    },
+    {
+      "path": "packages/core/src/research-toolkit/search.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "c02ca1932f9782f4a2c141a892db5938b3d2c514",
+      "sha256": "5d69897854d3c3ef0b305f4977163233ff73eea0525ad40a2b1d9b606f97cc93",
+      "bytes": 7919,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+      "source_id": "RB-S004",
+      "source_archive_path": "sources/packages/core/src/research-toolkit/search.ts",
+      "archive_evidence_groups": [
+        "E26"
+      ]
+    },
+    {
+      "path": "packages/core/src/research-toolkit/locate.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "d1343801f7b336d5e5b46eac860f6a07a0ae19fa",
+      "sha256": "0ebac9d228ca1764020e0f7ccf260228dc02c1169c0143c07f258e7c7ac650f2",
+      "bytes": 16148,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+      "source_id": "RB-S005",
+      "source_archive_path": "sources/packages/core/src/research-toolkit/locate.ts",
+      "archive_evidence_groups": [
+        "E27"
+      ]
+    },
+    {
+      "path": "packages/core/src/research-toolkit/liveness.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "3b6335d550f6979d9aca63cd0e524b3e43b0a9b2",
+      "sha256": "9703355fbfac94a32110e810f0843ce22285895cc45b8da3f534f36a61f772af",
+      "bytes": 6955,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+      "source_id": "RB-S006",
+      "source_archive_path": "sources/packages/core/src/research-toolkit/liveness.ts",
+      "archive_evidence_groups": [
+        "E28"
+      ]
+    },
+    {
+      "path": "packages/core/src/research-toolkit/probe/types.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a3859179186c2e7f55aa401fa4b3f091540eaffe",
+      "sha256": "7946f380ef918f065273afa09304cdf61da2d88d78bb287cff0ad5812e45c3e6",
+      "bytes": 3631,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+      "source_id": "RB-S007",
+      "source_archive_path": "sources/packages/core/src/research-toolkit/probe/types.ts",
+      "archive_evidence_groups": [
+        "E29"
+      ]
+    },
+    {
+      "path": "packages/core/src/research-toolkit/probe/run.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "be267f2f07e4c59a2b69f58b98ddc9499dd550ab",
+      "sha256": "80ece4f75445501ac55ecc69bee4a00ca46f88bf931ba0b1f71c6ec5aa53f73c",
+      "bytes": 8683,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+      "source_id": "RB-S008",
+      "source_archive_path": "sources/packages/core/src/research-toolkit/probe/run.ts",
+      "archive_evidence_groups": [
+        "E29"
+      ]
+    },
+    {
+      "path": "packages/core/src/research-toolkit/probe/snapshot.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "0e89bf342e5c4567c4c2cfc180a3d3961ffec91e",
+      "sha256": "c376cc01e1e893d3fac7cff70f6858888b29145546e36c36ce4d4b0a4655ea77",
+      "bytes": 6868,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+      "source_id": "RB-S009",
+      "source_archive_path": "sources/packages/core/src/research-toolkit/probe/snapshot.ts",
+      "archive_evidence_groups": [
+        "E31"
+      ]
+    },
+    {
+      "path": "packages/core/src/research-toolkit/probe/assets.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "723a227214d129eed66a8e6d43d3277ae0f199d1",
+      "sha256": "3fd210e83469c18a58aa2ffade6286cd1fdbd21ea1f8280cfad9c949ef77f1d9",
+      "bytes": 3800,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+      "source_id": "RB-S010",
+      "source_archive_path": "sources/packages/core/src/research-toolkit/probe/assets.ts",
+      "archive_evidence_groups": [
+        "E32"
+      ]
+    },
+    {
+      "path": "packages/core/src/research-toolkit/probe/runners.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "5d56b469bb20f80dff4cd89d034706ee8db4798d",
+      "sha256": "551427a96e05cf5562e8d6eff1873b91a538a9614869ae2323d4b40a7120a028",
+      "bytes": 8962,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+      "source_id": "RB-S011",
+      "source_archive_path": "sources/packages/core/src/research-toolkit/probe/runners.ts",
+      "archive_evidence_groups": [
+        "E32"
+      ]
+    },
+    {
+      "path": "packages/core/src/research-toolkit/probe/typecheck.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ce72fc2597ac4a25486bc96c88411a3a7cbf9269",
+      "sha256": "929d76e274a17b9eae1f25eab1349fe72f625805c9457110c25f13c618e91cb9",
+      "bytes": 6837,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+      "source_id": "RB-S012",
+      "source_archive_path": "sources/packages/core/src/research-toolkit/probe/typecheck.ts",
+      "archive_evidence_groups": [
+        "E33"
+      ]
+    },
+    {
+      "path": "packages/core/src/research-toolkit/process.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "04f6a92d3a145da49f9934983ea20fc0b2266490",
+      "sha256": "4d040e1cd277492ec22ef7dc3b06fb77a4bfd73064c45ee1fe894992a8948f77",
+      "bytes": 6087,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+      "source_id": "RB-S013",
+      "source_archive_path": "sources/packages/core/src/research-toolkit/process.ts",
+      "archive_evidence_groups": [
+        "E30"
+      ]
+    },
+    {
+      "path": "packages/core/src/research/binding.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "5f5c7f92d7ade9c902d54c0e9bce713871952e78",
+      "sha256": "b64e476309f22af194c1459389814939887c117819be494adaac0b2fa73d1701",
+      "bytes": 7351,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+      "source_id": "RB-S014",
+      "source_archive_path": "sources/packages/core/src/research/binding.ts",
+      "archive_evidence_groups": [
+        "E34"
+      ]
+    },
+    {
+      "path": "packages/core/src/research/allowance.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "2a2b412f57e8b34016ff5bdbfe6f638e9616cf80",
+      "sha256": "177b564304a9d79e9144da70a6c97107b604d40dde16ae8185467d801fd3c3eb",
+      "bytes": 11674,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+      "source_id": "RB-S015",
+      "source_archive_path": "sources/packages/core/src/research/allowance.ts",
+      "archive_evidence_groups": [
+        "E35"
+      ]
+    },
+    {
+      "path": "packages/core/src/research/ledger.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "6b6ca2931b6aa8bdd2156b47fc13005aab93dcbf",
+      "sha256": "67e07368ea820ec0c1cb791d601a10acdfa2e9259605a1bec4f556f6bb121839",
+      "bytes": 9660,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+      "source_id": "RB-S016",
+      "source_archive_path": "sources/packages/core/src/research/ledger.ts",
+      "archive_evidence_groups": [
+        "E36"
+      ]
+    },
+    {
+      "path": "packages/core/src/research/artifacts.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "7c8bb90f269ad00d3779923dd1d8211e3d4edbd4",
+      "sha256": "57e6e7d99c507014c52b887d21dfe766311a1a20a5e3e24837665fed7091d24f",
+      "bytes": 16639,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+      "source_id": "RB-S017",
+      "source_archive_path": "sources/packages/core/src/research/artifacts.ts",
+      "archive_evidence_groups": [
+        "E37",
+        "E38"
+      ]
+    },
+    {
+      "path": "packages/core/src/research/records.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "17f942640c19e3057ef463252be56ad72a9fa4e7",
+      "sha256": "6f38acb52606d54c2b070057b301cfc82cba29f814599a0dee480c110cee558d",
+      "bytes": 42199,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+      "source_id": "RB-S018",
+      "source_archive_path": "sources/packages/core/src/research/records.ts",
+      "archive_evidence_groups": [
+        "E39",
+        "E40",
+        "E41",
+        "E42"
+      ]
+    },
+    {
+      "path": "packages/core/src/research/seat-tools.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "60cbc55506b5e3cd9cd7d937abf532399ec235b5",
+      "sha256": "d88373a47e970593f281019269874b0cbe981e09b86d500604eaa4e24b29c36e",
+      "bytes": 1258,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+      "source_id": "RB-S019",
+      "source_archive_path": "sources/packages/core/src/research/seat-tools.ts",
+      "archive_evidence_groups": [
+        "E43"
+      ]
+    },
+    {
+      "path": "packages/core/test/backend-toolkit.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "3eea6205614cc9cea12be23c820e1d53f9b6ffac",
+      "sha256": "0c455829b290c1d35b67cd6bc1777918943fa1b7b1d37880c0a978075af71fa0",
+      "bytes": 17079,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+      "source_id": "RB-S020",
+      "source_archive_path": "sources/packages/core/test/backend-toolkit.test.ts",
+      "archive_evidence_groups": [
+        "E44"
+      ]
+    },
+    {
+      "path": "packages/core/test/backend-toolkit-source-readiness.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "0b5ddae83a45a11e5a546be9edc8393d1b161791",
+      "sha256": "049b094e5266d65b48f48feb3cf526eccb9aefc36e00aa9e0ef79352aa03d157",
+      "bytes": 7634,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+      "source_id": "RB-S021",
+      "source_archive_path": "sources/packages/core/test/backend-toolkit-source-readiness.test.ts",
+      "archive_evidence_groups": [
+        "E44"
+      ]
+    },
+    {
+      "path": "packages/core/test/code-index-query.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "89bd7ce2a6edaa5af7df10dcee03de0bdd2fa06e",
+      "sha256": "5759817d4df6aafb66b8a6827a4c4a0942ff8ea4f2e7f755abe3c0f952e81be4",
+      "bytes": 25982,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+      "source_id": "RB-S022",
+      "source_archive_path": "sources/packages/core/test/code-index-query.test.ts",
+      "archive_evidence_groups": [
+        "E45"
+      ]
+    },
+    {
+      "path": "packages/core/test/code-index-store.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "cb745065bf6208f70ec38456e78d0dba7bdad26d",
+      "sha256": "1b6bcbc705aefe57d2620982e4cc3914fa67bd67464bcda16dfbcf587341c730",
+      "bytes": 5359,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+      "source_id": "RB-S023",
+      "source_archive_path": "sources/packages/core/test/code-index-store.test.ts",
+      "archive_evidence_groups": [
+        "E45"
+      ]
+    },
+    {
+      "path": "packages/core/test/research-toolkit/code-index-scip-encoding.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "72dfcf7b6b82f3755923e9ab81898b15e9e33f06",
+      "sha256": "84837ea6b1f329ed10c6abdbaa4d8206f15ad113584ab5a3ef8bf0f841e062cf",
+      "bytes": 3163,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+      "source_id": "RB-S024",
+      "source_archive_path": "sources/packages/core/test/research-toolkit/code-index-scip-encoding.test.ts",
+      "archive_evidence_groups": [
+        "E45"
+      ]
+    },
+    {
+      "path": "packages/core/test/research-binding.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a0bed7ab69d086b18cd4e921e477a9b35a0ed4a9",
+      "sha256": "3fc62da977ccf97ebd3fa989448432f44f8dcd861c06e831756b2ad050a45db5",
+      "bytes": 8564,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+      "source_id": "RB-S025",
+      "source_archive_path": "sources/packages/core/test/research-binding.test.ts",
+      "archive_evidence_groups": [
+        "E46"
+      ]
+    },
+    {
+      "path": "packages/core/test/research-artifacts.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "31ae551a9de42954c9f06984eeecba98b725eb77",
+      "sha256": "47960eef80bbae8f9aad0254f15c5278dcb5ff9e319c3a8cb74acf4303231810",
+      "bytes": 10671,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+      "source_id": "RB-S026",
+      "source_archive_path": "sources/packages/core/test/research-artifacts.test.ts",
+      "archive_evidence_groups": [
+        "E46"
+      ]
+    },
+    {
+      "path": "packages/core/test/research-records.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "355e6b47b052251b57ee4f4dc56cfe1aee257e99",
+      "sha256": "b2dda3fe95b4fdc32ed63d6e1fe06c10d1fe9e1cb50d28f373cd5dc79b4c879f",
+      "bytes": 20826,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+      "source_id": "RB-S027",
+      "source_archive_path": "sources/packages/core/test/research-records.test.ts",
+      "archive_evidence_groups": [
+        "E46"
+      ]
+    },
+    {
+      "path": "packages/core/test/research-allowance.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "0925c03cdf252fe2ae8338c6f31e6d6be172f876",
+      "sha256": "4eec8c9322095c6c6f8b33a9f74ea6655400ff332678c90da62f2e9aad9edc2b",
+      "bytes": 17963,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+      "source_id": "RB-S028",
+      "source_archive_path": "sources/packages/core/test/research-allowance.test.ts",
+      "archive_evidence_groups": [
+        "E46"
+      ]
+    },
+    {
+      "path": "packages/core/test/research-inquiry-ledger.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "25743a3cdea9e2191146694dfdb9c9fe41e44577",
+      "sha256": "5a50187b432fe80d8c07ed712c27f419c7af026263512ee81912eea04e71d0d9",
+      "bytes": 6648,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+      "source_id": "RB-S029",
+      "source_archive_path": "sources/packages/core/test/research-inquiry-ledger.test.ts",
+      "archive_evidence_groups": [
+        "E46"
+      ]
+    },
+    {
+      "path": "packages/core/test/research-probe.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "92f668b9b22842f2210103138cbdb7a95fa4c3a5",
+      "sha256": "8b68cb18e71ba3291b86e2943b754ae701bb4f9ed8db0be059aaca3e57935bfb",
+      "bytes": 10594,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+      "source_id": "RB-S030",
+      "source_archive_path": "sources/packages/core/test/research-probe.test.ts",
+      "archive_evidence_groups": [
+        "E46"
+      ]
+    },
+    {
+      "path": "packages/core/test/research-search.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "4993ba8decd55d2bc8ed812e30227a67595e2f33",
+      "sha256": "5d776ea45efbb391b7fefc1eb225b34e7701b0222fdacf077808019bd8fd45b6",
+      "bytes": 5955,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+      "source_id": "RB-S031",
+      "source_archive_path": "sources/packages/core/test/research-search.test.ts",
+      "archive_evidence_groups": [
+        "E46"
+      ]
+    },
+    {
+      "path": "packages/core/test/research-locate.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "53aed544518715b880e3415295e94da7756cc9ad",
+      "sha256": "ef4ff4e93af664f8810da34386b235ef33071fcbba9868bf9904aa40f72f801a",
+      "bytes": 8418,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl",
+      "source_id": "RB-S032",
+      "source_archive_path": "sources/packages/core/test/research-locate.test.ts",
+      "archive_evidence_groups": [
+        "E46"
+      ]
+    }
+  ],
+  "sections": [
+    {
+      "request_id": "RE-B1",
+      "group_id": "RB1-01",
+      "title": "Uniões públicas, operações, coordenadas e limites de entrada",
+      "body_sections": [
+        "R8"
+      ],
+      "archive_groups": [
+        "E24"
+      ],
+      "supplement_lines": [
+        11,
+        139
+      ],
+      "supplement_byte_range": [
+        1454,
+        7051
+      ]
+    },
+    {
+      "request_id": "RE-B1",
+      "group_id": "RB1-02",
+      "title": "Query: basis, paths, abertura e ordem real dos shards retidos",
+      "body_sections": [
+        "R6",
+        "R8"
+      ],
+      "archive_groups": [
+        "E17",
+        "E24"
+      ],
+      "supplement_lines": [
+        140,
+        367
+      ],
+      "supplement_byte_range": [
+        7051,
+        20277
+      ]
+    },
+    {
+      "request_id": "RE-B1",
+      "group_id": "RB1-03",
+      "title": "Query: overlay dirty e resolução por id, posição ou nome",
+      "body_sections": [
+        "R8"
+      ],
+      "archive_groups": [
+        "E24",
+        "E25"
+      ],
+      "supplement_lines": [
+        368,
+        515
+      ],
+      "supplement_byte_range": [
+        20277,
+        30293
+      ]
+    },
+    {
+      "request_id": "RE-B1",
+      "group_id": "RB1-04",
+      "title": "Query: referências, callers/callees, imports, símbolos, map e leituras",
+      "body_sections": [
+        "R8"
+      ],
+      "archive_groups": [
+        "E25"
+      ],
+      "supplement_lines": [
+        516,
+        700
+      ],
+      "supplement_byte_range": [
+        30293,
+        41865
+      ]
+    },
+    {
+      "request_id": "RE-B1",
+      "group_id": "RB1-05",
+      "title": "Search: 8 MiB, literal default, JSON, paginação e recorte UTF-16",
+      "body_sections": [
+        "R8"
+      ],
+      "archive_groups": [
+        "E26"
+      ],
+      "supplement_lines": [
+        701,
+        864
+      ],
+      "supplement_byte_range": [
+        41865,
+        49781
+      ]
+    },
+    {
+      "request_id": "RE-B1",
+      "group_id": "RB1-06",
+      "title": "Locate: seleção, limites completos, materialização, fallback e descarte",
+      "body_sections": [
+        "R8"
+      ],
+      "archive_groups": [
+        "E27"
+      ],
+      "supplement_lines": [
+        865,
+        1124
+      ],
+      "supplement_byte_range": [
+        49781,
+        64935
+      ]
+    },
+    {
+      "request_id": "RE-B2",
+      "group_id": "RB2-01",
+      "title": "Liveness: allowed/check/probe completos, DNS, requests e limites locais",
+      "body_sections": [
+        "R8"
+      ],
+      "archive_groups": [
+        "E28"
+      ],
+      "supplement_lines": [
+        1127,
+        1267
+      ],
+      "supplement_byte_range": [
+        64945,
+        72905
+      ]
+    },
+    {
+      "request_id": "RE-B3",
+      "group_id": "RB3-01",
+      "title": "Probe: união fechada, execução, retorno, verdict e slots",
+      "body_sections": [
+        "R9"
+      ],
+      "archive_groups": [
+        "E29"
+      ],
+      "supplement_lines": [
+        1270,
+        1507
+      ],
+      "supplement_byte_range": [
+        72915,
+        86087
+      ]
+    },
+    {
+      "request_id": "RE-B3",
+      "group_id": "RB3-02",
+      "title": "Snapshot: seleção commit/worktree, cópia, desaparecidos, digest e links",
+      "body_sections": [
+        "R9"
+      ],
+      "archive_groups": [
+        "E31"
+      ],
+      "supplement_lines": [
+        1508,
+        1617
+      ],
+      "supplement_byte_range": [
+        86087,
+        93233
+      ]
+    },
+    {
+      "request_id": "RE-B3",
+      "group_id": "RB3-03",
+      "title": "Assets e runners: seleção, identidade, argv, ambiente e contenção de path",
+      "body_sections": [
+        "R9"
+      ],
+      "archive_groups": [
+        "E32"
+      ],
+      "supplement_lines": [
+        1618,
+        1830
+      ],
+      "supplement_byte_range": [
+        93233,
+        106221
+      ]
+    },
+    {
+      "request_id": "RE-B3",
+      "group_id": "RB3-04",
+      "title": "Typecheck: comando, tsconfig, diagnósticos, causas e caminhos",
+      "body_sections": [
+        "R9"
+      ],
+      "archive_groups": [
+        "E33"
+      ],
+      "supplement_lines": [
+        1831,
+        1948
+      ],
+      "supplement_byte_range": [
+        106221,
+        112701
+      ]
+    },
+    {
+      "request_id": "RE-B3",
+      "group_id": "RB3-05",
+      "title": "ResearchProcess: env, hard cap, cauda, overflow, memória e timeout",
+      "body_sections": [
+        "R9"
+      ],
+      "archive_groups": [
+        "E30"
+      ],
+      "supplement_lines": [
+        1949,
+        2081
+      ],
+      "supplement_byte_range": [
+        112701,
+        119206
+      ]
+    },
+    {
+      "request_id": "RE-B4",
+      "group_id": "RB4-01",
+      "title": "Binding: Task, author Session, worktree e duas representações de tool part",
+      "body_sections": [
+        "R10"
+      ],
+      "archive_groups": [
+        "E34"
+      ],
+      "supplement_lines": [
+        2084,
+        2182
+      ],
+      "supplement_byte_range": [
+        119216,
+        126445
+      ]
+    },
+    {
+      "request_id": "RE-B4",
+      "group_id": "RB4-02",
+      "title": "Allowance: bind repetido, compatibilidade, charge, reconciliação e interrupção",
+      "body_sections": [
+        "R10"
+      ],
+      "archive_groups": [
+        "E35"
+      ],
+      "supplement_lines": [
+        2183,
+        2354
+      ],
+      "supplement_byte_range": [
+        126445,
+        137288
+      ]
+    },
+    {
+      "request_id": "RE-B4",
+      "group_id": "RB4-03",
+      "title": "Ledger: tipos, hash canônico, operation/eventID, scope, retenção e replay",
+      "body_sections": [
+        "R10",
+        "R11",
+        "R12"
+      ],
+      "archive_groups": [
+        "E36"
+      ],
+      "supplement_lines": [
+        2355,
+        2459
+      ],
+      "supplement_byte_range": [
+        137288,
+        143516
+      ]
+    },
+    {
+      "request_id": "RE-B5",
+      "group_id": "RB5-01",
+      "title": "Artifacts: put, admissão, manifest, verifySource e paginação UTF-8",
+      "body_sections": [
+        "R11"
+      ],
+      "archive_groups": [
+        "E37"
+      ],
+      "supplement_lines": [
+        2462,
+        2593
+      ],
+      "supplement_byte_range": [
+        143526,
+        153737
+      ]
+    },
+    {
+      "request_id": "RE-B5",
+      "group_id": "RB5-02",
+      "title": "Artifacts: intent estável, diretórios, bytes e publicação imutável",
+      "body_sections": [
+        "R11",
+        "R12"
+      ],
+      "archive_groups": [
+        "E38"
+      ],
+      "supplement_lines": [
+        2594,
+        2702
+      ],
+      "supplement_byte_range": [
+        153737,
+        159343
+      ]
+    },
+    {
+      "request_id": "RE-B5",
+      "group_id": "RB5-03",
+      "title": "Records.source: todas as páginas; locators, lineStart e erros",
+      "body_sections": [
+        "R11"
+      ],
+      "archive_groups": [
+        "E39"
+      ],
+      "supplement_lines": [
+        2703,
+        2809
+      ],
+      "supplement_byte_range": [
+        159343,
+        166768
+      ]
+    },
+    {
+      "request_id": "RE-B6",
+      "group_id": "RB6-01",
+      "title": "Record: precondições, evidence/contrary, relations, findingRefs, caps e CAS",
+      "body_sections": [
+        "R12"
+      ],
+      "archive_groups": [
+        "E40",
+        "E42"
+      ],
+      "supplement_lines": [
+        2812,
+        2986
+      ],
+      "supplement_byte_range": [
+        166778,
+        179364
+      ]
+    },
+    {
+      "request_id": "RE-B6",
+      "group_id": "RB6-02",
+      "title": "Capture, attempt e beginAcquisition: publicação, retorno e replay sem reacquisição",
+      "body_sections": [
+        "R11",
+        "R12"
+      ],
+      "archive_groups": [
+        "E40",
+        "E41"
+      ],
+      "supplement_lines": [
+        2987,
+        3135
+      ],
+      "supplement_byte_range": [
+        179364,
+        190034
+      ]
+    },
+    {
+      "request_id": "RE-B6",
+      "group_id": "RB6-03",
+      "title": "Views: corpus, attempts, source/document, find e records com cursor snapshot",
+      "body_sections": [
+        "R12"
+      ],
+      "archive_groups": [
+        "E42"
+      ],
+      "supplement_lines": [
+        3136,
+        3247
+      ],
+      "supplement_byte_range": [
+        190034,
+        198020
+      ]
+    },
+    {
+      "request_id": "RE-B6",
+      "group_id": "RB6-04",
+      "title": "Inquiry, dispatch e closed completos; ordem e filtragem de charges",
+      "body_sections": [
+        "R12"
+      ],
+      "archive_groups": [
+        "E42",
+        "E36"
+      ],
+      "supplement_lines": [
+        3248,
+        3382
+      ],
+      "supplement_byte_range": [
+        198020,
+        206859
+      ]
+    },
+    {
+      "request_id": "RE-B7",
+      "group_id": "RB7-01",
+      "title": "População única compartilhada com A e declaração seat-tools",
+      "body_sections": [
+        "R10",
+        "R13"
+      ],
+      "archive_groups": [
+        "E43"
+      ],
+      "supplement_lines": [
+        3385,
+        3428
+      ],
+      "supplement_byte_range": [
+        206869,
+        209761
+      ]
+    },
+    {
+      "request_id": "RE-B7",
+      "group_id": "RB7-02",
+      "title": "E44: expectativas decisivas de marker, shim e binário ausente",
+      "body_sections": [
+        "R2",
+        "R13"
+      ],
+      "archive_groups": [
+        "E44"
+      ],
+      "supplement_lines": [
+        3429,
+        3487
+      ],
+      "supplement_byte_range": [
+        209761,
+        213073
+      ]
+    },
+    {
+      "request_id": "RE-B7",
+      "group_id": "RB7-03",
+      "title": "E45: expectativas stale/dirty/encoding e retenção acima do budget",
+      "body_sections": [
+        "R6",
+        "R7",
+        "R8",
+        "R13"
+      ],
+      "archive_groups": [
+        "E45"
+      ],
+      "supplement_lines": [
+        3488,
+        3643
+      ],
+      "supplement_byte_range": [
+        213073,
+        222192
+      ]
+    },
+    {
+      "request_id": "RE-B7",
+      "group_id": "RB7-04",
+      "title": "E46: expectativas de binding, custódia, fonte parcial, symlink e corrupção",
+      "body_sections": [
+        "R10",
+        "R11",
+        "R13"
+      ],
+      "archive_groups": [
+        "E46"
+      ],
+      "supplement_lines": [
+        3644,
+        3775
+      ],
+      "supplement_byte_range": [
+        222192,
+        231935
+      ]
+    },
+    {
+      "request_id": "RE-B7",
+      "group_id": "RB7-05",
+      "title": "E46: expectativas de replay, CAS, locator ambíguo e allowance",
+      "body_sections": [
+        "R10",
+        "R11",
+        "R12",
+        "R13"
+      ],
+      "archive_groups": [
+        "E46"
+      ],
+      "supplement_lines": [
+        3776,
+        3992
+      ],
+      "supplement_byte_range": [
+        231935,
+        247231
+      ]
+    },
+    {
+      "request_id": "RE-B7",
+      "group_id": "RB7-06",
+      "title": "E46: expectativas de inquiry, original lineStart, guard e timeout",
+      "body_sections": [
+        "R9",
+        "R11",
+        "R12",
+        "R13"
+      ],
+      "archive_groups": [
+        "E46"
+      ],
+      "supplement_lines": [
+        3993,
+        4099
+      ],
+      "supplement_byte_range": [
+        247231,
+        254248
+      ]
+    },
+    {
+      "request_id": "RE-B7",
+      "group_id": "RB7-07",
+      "title": "E46: expectativas de paginação search e descarte/fallback locate",
+      "body_sections": [
+        "R8",
+        "R13"
+      ],
+      "archive_groups": [
+        "E46"
+      ],
+      "supplement_lines": [
+        4100,
+        4203
+      ],
+      "supplement_byte_range": [
+        254248,
+        259766
+      ]
+    }
+  ],
+  "fragments": [
+    {
+      "request_id": "RE-B1",
+      "group_id": "RB1-01",
+      "source_id": "RB-S001",
+      "source_key": "packages/core/src/research-toolkit/code-index/types.ts",
+      "source_range": [
+        7,
+        8
+      ],
+      "raw_excerpt_bytes": 200,
+      "raw_excerpt_sha256": "761b97e140fbd965c0ac6c9161cf6210fefaf5af5589da0a59dfd12e6436e58f",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        24,
+        25
+      ],
+      "supplement_content_byte_range": [
+        1964,
+        2170
+      ]
+    },
+    {
+      "request_id": "RE-B1",
+      "group_id": "RB1-01",
+      "source_id": "RB-S001",
+      "source_key": "packages/core/src/research-toolkit/code-index/types.ts",
+      "source_range": [
+        20,
+        40
+      ],
+      "raw_excerpt_bytes": 1208,
+      "raw_excerpt_sha256": "f490cc1d2c1a25d8e3dbc6ea7fca50760d7f5d06aa516a9c6113aa7a635d2b13",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        31,
+        51
+      ],
+      "supplement_content_byte_range": [
+        2200,
+        3492
+      ]
+    },
+    {
+      "request_id": "RE-B1",
+      "group_id": "RB1-01",
+      "source_id": "RB-S001",
+      "source_key": "packages/core/src/research-toolkit/code-index/types.ts",
+      "source_range": [
+        43,
+        70
+      ],
+      "raw_excerpt_bytes": 1189,
+      "raw_excerpt_sha256": "39908fc4fba87524e35eebafef17a8f0f6f7f367c20fb19c3ba9a60ba10cfc21",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        57,
+        84
+      ],
+      "supplement_content_byte_range": [
+        3522,
+        4823
+      ]
+    },
+    {
+      "request_id": "RE-B1",
+      "group_id": "RB1-01",
+      "source_id": "RB-S001",
+      "source_key": "packages/core/src/research-toolkit/code-index/types.ts",
+      "source_range": [
+        81,
+        98
+      ],
+      "raw_excerpt_bytes": 731,
+      "raw_excerpt_sha256": "9cfc711ac218b8e91b3278dd5f5d4fb7fe16610e2f66e3786926b51ab2efc00a",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        90,
+        107
+      ],
+      "supplement_content_byte_range": [
+        4853,
+        5656
+      ]
+    },
+    {
+      "request_id": "RE-B1",
+      "group_id": "RB1-01",
+      "source_id": "RB-S001",
+      "source_key": "packages/core/src/research-toolkit/code-index/types.ts",
+      "source_range": [
+        110,
+        134
+      ],
+      "raw_excerpt_bytes": 1233,
+      "raw_excerpt_sha256": "23755fb490f3534b7b68cb9e6c1d3c34d6047e552c17d482f2ae76e0b7f09e70",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        113,
+        137
+      ],
+      "supplement_content_byte_range": [
+        5688,
+        7046
+      ]
+    },
+    {
+      "request_id": "RE-B1",
+      "group_id": "RB1-02",
+      "source_id": "RB-S002",
+      "source_key": "packages/core/src/research-toolkit/code-index/query.ts",
+      "source_range": [
+        58,
+        60
+      ],
+      "raw_excerpt_bytes": 73,
+      "raw_excerpt_sha256": "3fabacbfc2b8828588efbce5f953595bec50f7220f07bfc1158b04e8a2420a69",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        155,
+        157
+      ],
+      "supplement_content_byte_range": [
+        7795,
+        7880
+      ]
+    },
+    {
+      "request_id": "RE-B1",
+      "group_id": "RB1-02",
+      "source_id": "RB-S002",
+      "source_key": "packages/core/src/research-toolkit/code-index/query.ts",
+      "source_range": [
+        82,
+        134
+      ],
+      "raw_excerpt_bytes": 3121,
+      "raw_excerpt_sha256": "638effd3e0854e89f0ef37a858149510df8048ae7b1b3908ac87e349e1055ea9",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        163,
+        215
+      ],
+      "supplement_content_byte_range": [
+        7911,
+        11279
+      ]
+    },
+    {
+      "request_id": "RE-B1",
+      "group_id": "RB1-02",
+      "source_id": "RB-S002",
+      "source_key": "packages/core/src/research-toolkit/code-index/query.ts",
+      "source_range": [
+        137,
+        169
+      ],
+      "raw_excerpt_bytes": 1672,
+      "raw_excerpt_sha256": "6b43b3a59871e2caa0c37aa2fdb44045f01b2f18883d75b353238dee13493af4",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        221,
+        253
+      ],
+      "supplement_content_byte_range": [
+        11311,
+        13148
+      ]
+    },
+    {
+      "request_id": "RE-B1",
+      "group_id": "RB1-02",
+      "source_id": "RB-S002",
+      "source_key": "packages/core/src/research-toolkit/code-index/query.ts",
+      "source_range": [
+        176,
+        225
+      ],
+      "raw_excerpt_bytes": 3672,
+      "raw_excerpt_sha256": "d5247bd567dedef70790e07a2ed1a976c147315f0b9a6d954eec438f6b099ec4",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        259,
+        308
+      ],
+      "supplement_content_byte_range": [
+        13180,
+        17102
+      ]
+    },
+    {
+      "request_id": "RE-B1",
+      "group_id": "RB1-02",
+      "source_id": "RB-S003",
+      "source_key": "packages/core/src/research-toolkit/code-index/store.ts",
+      "source_range": [
+        170,
+        215
+      ],
+      "raw_excerpt_bytes": 2535,
+      "raw_excerpt_sha256": "8e458a06ade994958c2273e8e103ccb8da6d0bc16800d42af37f5123b8417d3d",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        320,
+        365
+      ],
+      "supplement_content_byte_range": [
+        17507,
+        20272
+      ]
+    },
+    {
+      "request_id": "RE-B1",
+      "group_id": "RB1-03",
+      "source_id": "RB-S002",
+      "source_key": "packages/core/src/research-toolkit/code-index/query.ts",
+      "source_range": [
+        228,
+        261
+      ],
+      "raw_excerpt_bytes": 2083,
+      "raw_excerpt_sha256": "d6d9ffb8f200161e09e8f36d3a89e196bc0a0d58297a96d4d7434ca266b16ed3",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        377,
+        410
+      ],
+      "supplement_content_byte_range": [
+        20480,
+        22733
+      ]
+    },
+    {
+      "request_id": "RE-B1",
+      "group_id": "RB1-03",
+      "source_id": "RB-S002",
+      "source_key": "packages/core/src/research-toolkit/code-index/query.ts",
+      "source_range": [
+        263,
+        287
+      ],
+      "raw_excerpt_bytes": 1675,
+      "raw_excerpt_sha256": "f6ceb5c3073c7b718bec987fc5e4e3697cbefa28d2c11fb9b9c636f7c8ca64db",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        416,
+        440
+      ],
+      "supplement_content_byte_range": [
+        22765,
+        24565
+      ]
+    },
+    {
+      "request_id": "RE-B1",
+      "group_id": "RB1-03",
+      "source_id": "RB-S002",
+      "source_key": "packages/core/src/research-toolkit/code-index/query.ts",
+      "source_range": [
+        292,
+        345
+      ],
+      "raw_excerpt_bytes": 4490,
+      "raw_excerpt_sha256": "3f432fb14804b67d9247b0fb4d8425c2a231809847bd321696866c271f87e733",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        446,
+        499
+      ],
+      "supplement_content_byte_range": [
+        24597,
+        29357
+      ]
+    },
+    {
+      "request_id": "RE-B1",
+      "group_id": "RB1-03",
+      "source_id": "RB-S002",
+      "source_key": "packages/core/src/research-toolkit/code-index/query.ts",
+      "source_range": [
+        348,
+        356
+      ],
+      "raw_excerpt_bytes": 854,
+      "raw_excerpt_sha256": "cc78311c4a823b95af645d95244f3a9c53afeed5964353548d9fe126a7f4a4de",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        505,
+        513
+      ],
+      "supplement_content_byte_range": [
+        29389,
+        30288
+      ]
+    },
+    {
+      "request_id": "RE-B1",
+      "group_id": "RB1-04",
+      "source_id": "RB-S002",
+      "source_key": "packages/core/src/research-toolkit/code-index/query.ts",
+      "source_range": [
+        358,
+        410
+      ],
+      "raw_excerpt_bytes": 3845,
+      "raw_excerpt_sha256": "420f86cb625bec19c32b9ae022b89464031fce59b0b07379330aeeaeaba6dc3d",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        527,
+        579
+      ],
+      "supplement_content_byte_range": [
+        30714,
+        34824
+      ]
+    },
+    {
+      "request_id": "RE-B1",
+      "group_id": "RB1-04",
+      "source_id": "RB-S002",
+      "source_key": "packages/core/src/research-toolkit/code-index/query.ts",
+      "source_range": [
+        413,
+        439
+      ],
+      "raw_excerpt_bytes": 1887,
+      "raw_excerpt_sha256": "b4be194cc5c2da2c286dd14f7389be1f1f595d9236ca366b801b21e5de13c24d",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        585,
+        611
+      ],
+      "supplement_content_byte_range": [
+        34856,
+        36878
+      ]
+    },
+    {
+      "request_id": "RE-B1",
+      "group_id": "RB1-04",
+      "source_id": "RB-S002",
+      "source_key": "packages/core/src/research-toolkit/code-index/query.ts",
+      "source_range": [
+        445,
+        474
+      ],
+      "raw_excerpt_bytes": 1867,
+      "raw_excerpt_sha256": "5bbde8f8d9cdc8a991ee3c433c52922904678dab8e43ea8cd70a6fae106ca317",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        617,
+        646
+      ],
+      "supplement_content_byte_range": [
+        36910,
+        38927
+      ]
+    },
+    {
+      "request_id": "RE-B1",
+      "group_id": "RB1-04",
+      "source_id": "RB-S002",
+      "source_key": "packages/core/src/research-toolkit/code-index/query.ts",
+      "source_range": [
+        477,
+        523
+      ],
+      "raw_excerpt_bytes": 2666,
+      "raw_excerpt_sha256": "5ece64457092466c7faff018910a82379f01d104b72073001d76674655dc8977",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        652,
+        698
+      ],
+      "supplement_content_byte_range": [
+        38959,
+        41860
+      ]
+    },
+    {
+      "request_id": "RE-B1",
+      "group_id": "RB1-05",
+      "source_id": "RB-S004",
+      "source_key": "packages/core/src/research-toolkit/search.ts",
+      "source_range": [
+        26,
+        55
+      ],
+      "raw_excerpt_bytes": 1466,
+      "raw_excerpt_sha256": "8628f7e3c4f67daaa46256c092b86a4e7c9087f3fe34fbdfc7a4c1f2ea2626d5",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        716,
+        745
+      ],
+      "supplement_content_byte_range": [
+        42533,
+        44119
+      ]
+    },
+    {
+      "request_id": "RE-B1",
+      "group_id": "RB1-05",
+      "source_id": "RB-S004",
+      "source_key": "packages/core/src/research-toolkit/search.ts",
+      "source_range": [
+        57,
+        124
+      ],
+      "raw_excerpt_bytes": 3495,
+      "raw_excerpt_sha256": "3bbced7101a7d7b75ee4d0a79307e702791da431c4b79c94edcf135408ab02d3",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        751,
+        818
+      ],
+      "supplement_content_byte_range": [
+        44150,
+        47942
+      ]
+    },
+    {
+      "request_id": "RE-B1",
+      "group_id": "RB1-05",
+      "source_id": "RB-S004",
+      "source_key": "packages/core/src/research-toolkit/search.ts",
+      "source_range": [
+        137,
+        175
+      ],
+      "raw_excerpt_bytes": 1607,
+      "raw_excerpt_sha256": "d0f6a74b7e098c5d6c2b468d60e24a296e2eb0dfbc0ee6eeb8ac3162c5da9987",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        824,
+        862
+      ],
+      "supplement_content_byte_range": [
+        47974,
+        49776
+      ]
+    },
+    {
+      "request_id": "RE-B1",
+      "group_id": "RB1-06",
+      "source_id": "RB-S005",
+      "source_key": "packages/core/src/research-toolkit/locate.ts",
+      "source_range": [
+        24,
+        43
+      ],
+      "raw_excerpt_bytes": 719,
+      "raw_excerpt_sha256": "59e0147530af00f2d7b6b82debcd7349378d8ed10d922779eaa489d302cf2a52",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        880,
+        899
+      ],
+      "supplement_content_byte_range": [
+        50500,
+        51299
+      ]
+    },
+    {
+      "request_id": "RE-B1",
+      "group_id": "RB1-06",
+      "source_id": "RB-S005",
+      "source_key": "packages/core/src/research-toolkit/locate.ts",
+      "source_range": [
+        56,
+        110
+      ],
+      "raw_excerpt_bytes": 3828,
+      "raw_excerpt_sha256": "906e35115f2f41581f0bd4d23b28782c949d983923aa49e97306f67404062418",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        905,
+        959
+      ],
+      "supplement_content_byte_range": [
+        51330,
+        55389
+      ]
+    },
+    {
+      "request_id": "RE-B1",
+      "group_id": "RB1-06",
+      "source_id": "RB-S005",
+      "source_key": "packages/core/src/research-toolkit/locate.ts",
+      "source_range": [
+        116,
+        128
+      ],
+      "raw_excerpt_bytes": 791,
+      "raw_excerpt_sha256": "f0584212ebbb5476f8a82d71d9594c15399cbc6aa712e96045ce450f8cc853ed",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        965,
+        977
+      ],
+      "supplement_content_byte_range": [
+        55421,
+        56277
+      ]
+    },
+    {
+      "request_id": "RE-B1",
+      "group_id": "RB1-06",
+      "source_id": "RB-S005",
+      "source_key": "packages/core/src/research-toolkit/locate.ts",
+      "source_range": [
+        130,
+        199
+      ],
+      "raw_excerpt_bytes": 4174,
+      "raw_excerpt_sha256": "b31730d5a10d37f8fdd4d5ccdf15f971e58fa292a58b52d2d449caad3a1ec755",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        983,
+        1052
+      ],
+      "supplement_content_byte_range": [
+        56309,
+        60833
+      ]
+    },
+    {
+      "request_id": "RE-B1",
+      "group_id": "RB1-06",
+      "source_id": "RB-S005",
+      "source_key": "packages/core/src/research-toolkit/locate.ts",
+      "source_range": [
+        205,
+        235
+      ],
+      "raw_excerpt_bytes": 1721,
+      "raw_excerpt_sha256": "536c4d186b64d29cee2a052934993975bec2c25f149fe78b812b2438a81cde8f",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        1058,
+        1088
+      ],
+      "supplement_content_byte_range": [
+        60865,
+        62741
+      ]
+    },
+    {
+      "request_id": "RE-B1",
+      "group_id": "RB1-06",
+      "source_id": "RB-S005",
+      "source_key": "packages/core/src/research-toolkit/locate.ts",
+      "source_range": [
+        237,
+        265
+      ],
+      "raw_excerpt_bytes": 2012,
+      "raw_excerpt_sha256": "cd5df3e1cdbac103a0c32e4bd127d4f01544e31e0ba5727c57477273b625eb49",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        1094,
+        1122
+      ],
+      "supplement_content_byte_range": [
+        62773,
+        64930
+      ]
+    },
+    {
+      "request_id": "RE-B2",
+      "group_id": "RB2-01",
+      "source_id": "RB-S006",
+      "source_key": "packages/core/src/research-toolkit/liveness.ts",
+      "source_range": [
+        9,
+        46
+      ],
+      "raw_excerpt_bytes": 1860,
+      "raw_excerpt_sha256": "99ba516e85d54860309ef25f5cca2feccb272e00d441abba804844a0c9533536",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        1142,
+        1179
+      ],
+      "supplement_content_byte_range": [
+        65706,
+        67717
+      ]
+    },
+    {
+      "request_id": "RE-B2",
+      "group_id": "RB2-01",
+      "source_id": "RB-S006",
+      "source_key": "packages/core/src/research-toolkit/liveness.ts",
+      "source_range": [
+        48,
+        69
+      ],
+      "raw_excerpt_bytes": 1189,
+      "raw_excerpt_sha256": "d3233f9514d71d34ce97db77bc941f3bf6e3933cf0483295a7eb54989f405618",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        1185,
+        1206
+      ],
+      "supplement_content_byte_range": [
+        67747,
+        69024
+      ]
+    },
+    {
+      "request_id": "RE-B2",
+      "group_id": "RB2-01",
+      "source_id": "RB-S006",
+      "source_key": "packages/core/src/research-toolkit/liveness.ts",
+      "source_range": [
+        73,
+        126
+      ],
+      "raw_excerpt_bytes": 3602,
+      "raw_excerpt_sha256": "4dd28afa370ace6e8e2a8a28fdb707023fd321d0e332504e976bb6deeade28b1",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        1212,
+        1265
+      ],
+      "supplement_content_byte_range": [
+        69055,
+        72900
+      ]
+    },
+    {
+      "request_id": "RE-B3",
+      "group_id": "RB3-01",
+      "source_id": "RB-S007",
+      "source_key": "packages/core/src/research-toolkit/probe/types.ts",
+      "source_range": [
+        10,
+        84
+      ],
+      "raw_excerpt_bytes": 3254,
+      "raw_excerpt_sha256": "0c00a033f5ddecd59da726828a53bfbcd07bab4adb6676a90d1c9ffb37700567",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        1285,
+        1359
+      ],
+      "supplement_content_byte_range": [
+        73670,
+        77224
+      ]
+    },
+    {
+      "request_id": "RE-B3",
+      "group_id": "RB3-01",
+      "source_id": "RB-S008",
+      "source_key": "packages/core/src/research-toolkit/probe/run.ts",
+      "source_range": [
+        21,
+        110
+      ],
+      "raw_excerpt_bytes": 5514,
+      "raw_excerpt_sha256": "5d8650c8aa966b69db55770622d483f4a5aa283d148e854e3ce053e9f5b7dceb",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        1371,
+        1460
+      ],
+      "supplement_content_byte_range": [
+        77613,
+        83498
+      ]
+    },
+    {
+      "request_id": "RE-B3",
+      "group_id": "RB3-01",
+      "source_id": "RB-S008",
+      "source_key": "packages/core/src/research-toolkit/probe/run.ts",
+      "source_range": [
+        113,
+        152
+      ],
+      "raw_excerpt_bytes": 2352,
+      "raw_excerpt_sha256": "b4e9faa41e95097b81a87b61c888826e7283f2ccfcdae96e43378de5e90c607e",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        1466,
+        1505
+      ],
+      "supplement_content_byte_range": [
+        83530,
+        86082
+      ]
+    },
+    {
+      "request_id": "RE-B3",
+      "group_id": "RB3-02",
+      "source_id": "RB-S009",
+      "source_key": "packages/core/src/research-toolkit/probe/snapshot.ts",
+      "source_range": [
+        25,
+        65
+      ],
+      "raw_excerpt_bytes": 2717,
+      "raw_excerpt_sha256": "89041709d51a0305bbdb8d115695af8243ba7d868614bb6c6b9456fb4ea22104",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        1523,
+        1563
+      ],
+      "supplement_content_byte_range": [
+        86824,
+        89705
+      ]
+    },
+    {
+      "request_id": "RE-B3",
+      "group_id": "RB3-02",
+      "source_id": "RB-S009",
+      "source_key": "packages/core/src/research-toolkit/probe/snapshot.ts",
+      "source_range": [
+        67,
+        113
+      ],
+      "raw_excerpt_bytes": 3290,
+      "raw_excerpt_sha256": "c6ab36206e7ffd5b8bc80e5252efa0b3b07d8363e92d9d27a76b3973516632f3",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        1569,
+        1615
+      ],
+      "supplement_content_byte_range": [
+        89736,
+        93228
+      ]
+    },
+    {
+      "request_id": "RE-B3",
+      "group_id": "RB3-03",
+      "source_id": "RB-S010",
+      "source_key": "packages/core/src/research-toolkit/probe/assets.ts",
+      "source_range": [
+        12,
+        64
+      ],
+      "raw_excerpt_bytes": 3322,
+      "raw_excerpt_sha256": "ba0abf1f0bd37aece1c506b7069493aaf9e778112b3c5d6ea7cd479892411cc5",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        1631,
+        1683
+      ],
+      "supplement_content_byte_range": [
+        93750,
+        97284
+      ]
+    },
+    {
+      "request_id": "RE-B3",
+      "group_id": "RB3-03",
+      "source_id": "RB-S011",
+      "source_key": "packages/core/src/research-toolkit/probe/runners.ts",
+      "source_range": [
+        27,
+        56
+      ],
+      "raw_excerpt_bytes": 1585,
+      "raw_excerpt_sha256": "e259be62210f8d7678bf290614031be5d4f18cc2b8328a791ddbe0f92603ce31",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        1695,
+        1724
+      ],
+      "supplement_content_byte_range": [
+        97680,
+        99385
+      ]
+    },
+    {
+      "request_id": "RE-B3",
+      "group_id": "RB3-03",
+      "source_id": "RB-S011",
+      "source_key": "packages/core/src/research-toolkit/probe/runners.ts",
+      "source_range": [
+        58,
+        108
+      ],
+      "raw_excerpt_bytes": 3387,
+      "raw_excerpt_sha256": "437ee312c8b0d25044d129365dd648ee10e376577ee791d8eb749eba332a1d9d",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        1730,
+        1780
+      ],
+      "supplement_content_byte_range": [
+        99416,
+        103016
+      ]
+    },
+    {
+      "request_id": "RE-B3",
+      "group_id": "RB3-03",
+      "source_id": "RB-S011",
+      "source_key": "packages/core/src/research-toolkit/probe/runners.ts",
+      "source_range": [
+        110,
+        152
+      ],
+      "raw_excerpt_bytes": 2953,
+      "raw_excerpt_sha256": "598ff18802f7a47d662a31e4626e75cff1981d6450dd82e377f7c1623a8fd17d",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        1786,
+        1828
+      ],
+      "supplement_content_byte_range": [
+        103048,
+        106216
+      ]
+    },
+    {
+      "request_id": "RE-B3",
+      "group_id": "RB3-04",
+      "source_id": "RB-S012",
+      "source_key": "packages/core/src/research-toolkit/probe/typecheck.ts",
+      "source_range": [
+        18,
+        26
+      ],
+      "raw_excerpt_bytes": 569,
+      "raw_excerpt_sha256": "10e2806e311b29094299242fb039ef882674d5911064cd1d43d1c0bc0ce5e669",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        1846,
+        1854
+      ],
+      "supplement_content_byte_range": [
+        106969,
+        107574
+      ]
+    },
+    {
+      "request_id": "RE-B3",
+      "group_id": "RB3-04",
+      "source_id": "RB-S012",
+      "source_key": "packages/core/src/research-toolkit/probe/typecheck.ts",
+      "source_range": [
+        32,
+        42
+      ],
+      "raw_excerpt_bytes": 574,
+      "raw_excerpt_sha256": "964ac734d1a5ad1a294a3eec7a64682122b8088df0429aa214895962494ff3db",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        1860,
+        1870
+      ],
+      "supplement_content_byte_range": [
+        107604,
+        108222
+      ]
+    },
+    {
+      "request_id": "RE-B3",
+      "group_id": "RB3-04",
+      "source_id": "RB-S012",
+      "source_key": "packages/core/src/research-toolkit/probe/typecheck.ts",
+      "source_range": [
+        48,
+        67
+      ],
+      "raw_excerpt_bytes": 1599,
+      "raw_excerpt_sha256": "4db72c45326944ba2c2146e60b989e0b092c65e1976a770e72cb9376110949d0",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        1876,
+        1895
+      ],
+      "supplement_content_byte_range": [
+        108252,
+        109931
+      ]
+    },
+    {
+      "request_id": "RE-B3",
+      "group_id": "RB3-04",
+      "source_id": "RB-S012",
+      "source_key": "packages/core/src/research-toolkit/probe/typecheck.ts",
+      "source_range": [
+        73,
+        118
+      ],
+      "raw_excerpt_bytes": 2531,
+      "raw_excerpt_sha256": "f287e5c39ae1d64582705da27d001c01f94c1af414e38ab712e82db62afa1ceb",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        1901,
+        1946
+      ],
+      "supplement_content_byte_range": [
+        109962,
+        112696
+      ]
+    },
+    {
+      "request_id": "RE-B3",
+      "group_id": "RB3-05",
+      "source_id": "RB-S013",
+      "source_key": "packages/core/src/research-toolkit/process.ts",
+      "source_range": [
+        12,
+        21
+      ],
+      "raw_excerpt_bytes": 640,
+      "raw_excerpt_sha256": "2daa6faf5913771910ae252bf260c8ff8d4c5f4bf283dbb70841001966bf1405",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        1964,
+        1973
+      ],
+      "supplement_content_byte_range": [
+        113397,
+        114077
+      ]
+    },
+    {
+      "request_id": "RE-B3",
+      "group_id": "RB3-05",
+      "source_id": "RB-S013",
+      "source_key": "packages/core/src/research-toolkit/process.ts",
+      "source_range": [
+        23,
+        37
+      ],
+      "raw_excerpt_bytes": 554,
+      "raw_excerpt_sha256": "a000a3c5687bd5ea3bdad5e0a172dfd0804cc1a56f06cc7e0452eda8e3b02de4",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        1979,
+        1993
+      ],
+      "supplement_content_byte_range": [
+        114107,
+        114721
+      ]
+    },
+    {
+      "request_id": "RE-B3",
+      "group_id": "RB3-05",
+      "source_id": "RB-S013",
+      "source_key": "packages/core/src/research-toolkit/process.ts",
+      "source_range": [
+        46,
+        126
+      ],
+      "raw_excerpt_bytes": 4098,
+      "raw_excerpt_sha256": "b96686db22044e9c6a3f6c87558a6ffaf2c6007f200d098c02df1a6d81bf0b36",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        1999,
+        2079
+      ],
+      "supplement_content_byte_range": [
+        114752,
+        119201
+      ]
+    },
+    {
+      "request_id": "RE-B4",
+      "group_id": "RB4-01",
+      "source_id": "RB-S014",
+      "source_key": "packages/core/src/research/binding.ts",
+      "source_range": [
+        21,
+        104
+      ],
+      "raw_excerpt_bytes": 6391,
+      "raw_excerpt_sha256": "012f014659d095bf5fcdc139bb570801e910e30ab26a773e36190b0d9f23969e",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        2097,
+        2180
+      ],
+      "supplement_content_byte_range": [
+        119708,
+        126440
+      ]
+    },
+    {
+      "request_id": "RE-B4",
+      "group_id": "RB4-02",
+      "source_id": "RB-S015",
+      "source_key": "packages/core/src/research/allowance.ts",
+      "source_range": [
+        41,
+        179
+      ],
+      "raw_excerpt_bytes": 8760,
+      "raw_excerpt_sha256": "19258241638b30cdebf550e92b5a54d98dc518233974bf58e6f5d46b96ff0aaf",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        2196,
+        2334
+      ],
+      "supplement_content_byte_range": [
+        126948,
+        136344
+      ]
+    },
+    {
+      "request_id": "RE-B4",
+      "group_id": "RB4-02",
+      "source_id": "RB-S015",
+      "source_key": "packages/core/src/research/allowance.ts",
+      "source_range": [
+        185,
+        197
+      ],
+      "raw_excerpt_bytes": 842,
+      "raw_excerpt_sha256": "7fd96d4171d3799fec77c576ca0dc97e001fbb57aaf27605aa17b8d34f9379a3",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        2340,
+        2352
+      ],
+      "supplement_content_byte_range": [
+        136376,
+        137283
+      ]
+    },
+    {
+      "request_id": "RE-B4",
+      "group_id": "RB4-03",
+      "source_id": "RB-S016",
+      "source_key": "packages/core/src/research/ledger.ts",
+      "source_range": [
+        15,
+        84
+      ],
+      "raw_excerpt_bytes": 4507,
+      "raw_excerpt_sha256": "37905513f50945ce58c73b10fc78e3cc104fb611c84db56910475aa86c7f5bdc",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        2370,
+        2439
+      ],
+      "supplement_content_byte_range": [
+        137875,
+        142662
+      ]
+    },
+    {
+      "request_id": "RE-B4",
+      "group_id": "RB4-03",
+      "source_id": "RB-S016",
+      "source_key": "packages/core/src/research/ledger.ts",
+      "source_range": [
+        145,
+        157
+      ],
+      "raw_excerpt_bytes": 752,
+      "raw_excerpt_sha256": "1e1d8e0611523b2d882519bc055772ac5682f2a91b043845299dde16671d9787",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        2445,
+        2457
+      ],
+      "supplement_content_byte_range": [
+        142694,
+        143511
+      ]
+    },
+    {
+      "request_id": "RE-B5",
+      "group_id": "RB5-01",
+      "source_id": "RB-S017",
+      "source_key": "packages/core/src/research/artifacts.ts",
+      "source_range": [
+        32,
+        148
+      ],
+      "raw_excerpt_bytes": 9194,
+      "raw_excerpt_sha256": "d7e8ad0babe5978ed116d0736f3bd839975a2efcd1a32574941b882f85ba6d50",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        2475,
+        2591
+      ],
+      "supplement_content_byte_range": [
+        144021,
+        153732
+      ]
+    },
+    {
+      "request_id": "RE-B5",
+      "group_id": "RB5-02",
+      "source_id": "RB-S017",
+      "source_key": "packages/core/src/research/artifacts.ts",
+      "source_range": [
+        162,
+        194
+      ],
+      "raw_excerpt_bytes": 2244,
+      "raw_excerpt_sha256": "ceec1451af98f4da479c131e9866508a88a051aea7a425f9cf6294b17bd578c7",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        2603,
+        2635
+      ],
+      "supplement_content_byte_range": [
+        153952,
+        156361
+      ]
+    },
+    {
+      "request_id": "RE-B5",
+      "group_id": "RB5-02",
+      "source_id": "RB-S017",
+      "source_key": "packages/core/src/research/artifacts.ts",
+      "source_range": [
+        200,
+        259
+      ],
+      "raw_excerpt_bytes": 2645,
+      "raw_excerpt_sha256": "57ac672319f4ac3d0ecf9e78d930e109297290a91f7863b27351ea1f107150bf",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        2641,
+        2700
+      ],
+      "supplement_content_byte_range": [
+        156393,
+        159338
+      ]
+    },
+    {
+      "request_id": "RE-B5",
+      "group_id": "RB5-03",
+      "source_id": "RB-S018",
+      "source_key": "packages/core/src/research/records.ts",
+      "source_range": [
+        73,
+        115
+      ],
+      "raw_excerpt_bytes": 3317,
+      "raw_excerpt_sha256": "f4df67a0cb8608294026321184f475a35993acdcae09c55241b23cb6de64ef6b",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        2718,
+        2760
+      ],
+      "supplement_content_byte_range": [
+        160016,
+        163521
+      ]
+    },
+    {
+      "request_id": "RE-B5",
+      "group_id": "RB5-03",
+      "source_id": "RB-S018",
+      "source_key": "packages/core/src/research/records.ts",
+      "source_range": [
+        513,
+        554
+      ],
+      "raw_excerpt_bytes": 3000,
+      "raw_excerpt_sha256": "70c78d31d9b7ed2d4895b2938d034c2d32c3a61edee7e1b20553ece88ef2ed9c",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        2766,
+        2807
+      ],
+      "supplement_content_byte_range": [
+        163553,
+        166763
+      ]
+    },
+    {
+      "request_id": "RE-B6",
+      "group_id": "RB6-01",
+      "source_id": "RB-S018",
+      "source_key": "packages/core/src/research/records.ts",
+      "source_range": [
+        117,
+        127
+      ],
+      "raw_excerpt_bytes": 799,
+      "raw_excerpt_sha256": "f11af42b3d2745160bcee367758436de6733d51809274cfb20b14cedf8b09ef3",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        2823,
+        2833
+      ],
+      "supplement_content_byte_range": [
+        167223,
+        168077
+      ]
+    },
+    {
+      "request_id": "RE-B6",
+      "group_id": "RB6-01",
+      "source_id": "RB-S018",
+      "source_key": "packages/core/src/research/records.ts",
+      "source_range": [
+        129,
+        215
+      ],
+      "raw_excerpt_bytes": 6864,
+      "raw_excerpt_sha256": "cc3954339015d396255b75d8fd1c2c344baf62581c7dc74f0b439a2f52aabd1d",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        2839,
+        2925
+      ],
+      "supplement_content_byte_range": [
+        168109,
+        175408
+      ]
+    },
+    {
+      "request_id": "RE-B6",
+      "group_id": "RB6-01",
+      "source_id": "RB-S018",
+      "source_key": "packages/core/src/research/records.ts",
+      "source_range": [
+        479,
+        505
+      ],
+      "raw_excerpt_bytes": 1868,
+      "raw_excerpt_sha256": "912ad67e699a64fc86f0f01d9c88a4672ad727c1bba983b71d828ed6f4b62297",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        2931,
+        2957
+      ],
+      "supplement_content_byte_range": [
+        175440,
+        177443
+      ]
+    },
+    {
+      "request_id": "RE-B6",
+      "group_id": "RB6-01",
+      "source_id": "RB-S018",
+      "source_key": "packages/core/src/research/records.ts",
+      "source_range": [
+        556,
+        577
+      ],
+      "raw_excerpt_bytes": 1774,
+      "raw_excerpt_sha256": "021c39f931d785133680ba6f911e20713708ce1cfbb40c79e374c7216c7547f4",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        2963,
+        2984
+      ],
+      "supplement_content_byte_range": [
+        177475,
+        179359
+      ]
+    },
+    {
+      "request_id": "RE-B6",
+      "group_id": "RB6-02",
+      "source_id": "RB-S018",
+      "source_key": "packages/core/src/research/records.ts",
+      "source_range": [
+        18,
+        28
+      ],
+      "raw_excerpt_bytes": 431,
+      "raw_excerpt_sha256": "a2a755d8f5ee651b4546d18f69b36183bfbe61acaaee254b122df843f5ca834a",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        2998,
+        3008
+      ],
+      "supplement_content_byte_range": [
+        179781,
+        180256
+      ]
+    },
+    {
+      "request_id": "RE-B6",
+      "group_id": "RB6-02",
+      "source_id": "RB-S018",
+      "source_key": "packages/core/src/research/records.ts",
+      "source_range": [
+        217,
+        260
+      ],
+      "raw_excerpt_bytes": 3686,
+      "raw_excerpt_sha256": "d558c8642b369364b6e03ac2347b1af44e0f8674a85dcee1ad1c29b2630baa91",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        3014,
+        3057
+      ],
+      "supplement_content_byte_range": [
+        180288,
+        184194
+      ]
+    },
+    {
+      "request_id": "RE-B6",
+      "group_id": "RB6-02",
+      "source_id": "RB-S018",
+      "source_key": "packages/core/src/research/records.ts",
+      "source_range": [
+        262,
+        332
+      ],
+      "raw_excerpt_bytes": 5448,
+      "raw_excerpt_sha256": "681ef71b48e126e3ad4880ddd3a2c458222bf9b45689da840886585a4fa69908",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        3063,
+        3133
+      ],
+      "supplement_content_byte_range": [
+        184226,
+        190029
+      ]
+    },
+    {
+      "request_id": "RE-B6",
+      "group_id": "RB6-03",
+      "source_id": "RB-S018",
+      "source_key": "packages/core/src/research/records.ts",
+      "source_range": [
+        68,
+        68
+      ],
+      "raw_excerpt_bytes": 135,
+      "raw_excerpt_sha256": "dd611003e70913b601579431dbb73d274e247417c7412f8346a8dda3602aeb9b",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        3145,
+        3145
+      ],
+      "supplement_content_byte_range": [
+        190247,
+        190386
+      ]
+    },
+    {
+      "request_id": "RE-B6",
+      "group_id": "RB6-03",
+      "source_id": "RB-S018",
+      "source_key": "packages/core/src/research/records.ts",
+      "source_range": [
+        334,
+        428
+      ],
+      "raw_excerpt_bytes": 7122,
+      "raw_excerpt_sha256": "27d264265642f58a9db254d224bb2920d52e12b50777ec7ca37b4bcf3f0c3baf",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        3151,
+        3245
+      ],
+      "supplement_content_byte_range": [
+        190418,
+        198015
+      ]
+    },
+    {
+      "request_id": "RE-B6",
+      "group_id": "RB6-04",
+      "source_id": "RB-S018",
+      "source_key": "packages/core/src/research/records.ts",
+      "source_range": [
+        49,
+        52
+      ],
+      "raw_excerpt_bytes": 338,
+      "raw_excerpt_sha256": "c6683af5cb1f1e0be47f2a5fc72b114375577cf7992ff2f4cac4d3f075426f29",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        3259,
+        3262
+      ],
+      "supplement_content_byte_range": [
+        198467,
+        198821
+      ]
+    },
+    {
+      "request_id": "RE-B6",
+      "group_id": "RB6-04",
+      "source_id": "RB-S018",
+      "source_key": "packages/core/src/research/records.ts",
+      "source_range": [
+        429,
+        472
+      ],
+      "raw_excerpt_bytes": 3563,
+      "raw_excerpt_sha256": "65da9bed80fd8af10e24945571a43c17906a92307c1227ba8571d09d16a67afa",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        3268,
+        3311
+      ],
+      "supplement_content_byte_range": [
+        198853,
+        202636
+      ]
+    },
+    {
+      "request_id": "RE-B6",
+      "group_id": "RB6-04",
+      "source_id": "RB-S018",
+      "source_key": "packages/core/src/research/records.ts",
+      "source_range": [
+        508,
+        510
+      ],
+      "raw_excerpt_bytes": 218,
+      "raw_excerpt_sha256": "c9bda89b343cfcd88b9030c1657d2c70a95d129638a48fb6f18e44be9ea0c57b",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        3317,
+        3319
+      ],
+      "supplement_content_byte_range": [
+        202668,
+        202901
+      ]
+    },
+    {
+      "request_id": "RE-B6",
+      "group_id": "RB6-04",
+      "source_id": "RB-S016",
+      "source_key": "packages/core/src/research/ledger.ts",
+      "source_range": [
+        90,
+        143
+      ],
+      "raw_excerpt_bytes": 3602,
+      "raw_excerpt_sha256": "c13a032103cb14335a1a4b4a483ccc87a1eecf5cd6f9161ec4e0d17d0b25f5a8",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        3327,
+        3380
+      ],
+      "supplement_content_byte_range": [
+        202992,
+        206854
+      ]
+    },
+    {
+      "request_id": "RE-B7",
+      "group_id": "RB7-01",
+      "source_id": "RB-S019",
+      "source_key": "packages/core/src/research/seat-tools.ts",
+      "source_range": [
+        3,
+        25
+      ],
+      "raw_excerpt_bytes": 1207,
+      "raw_excerpt_sha256": "39eae9fe97c7a2aa7ade7d5973c95edaa297bdbbc4021a71063d1da760d4dadb",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        3400,
+        3422
+      ],
+      "supplement_content_byte_range": [
+        207550,
+        208842
+      ]
+    },
+    {
+      "request_id": "RE-B7",
+      "group_id": "RB7-02",
+      "source_id": "RB-S020",
+      "source_key": "packages/core/test/backend-toolkit.test.ts",
+      "source_range": [
+        161,
+        174
+      ],
+      "raw_excerpt_bytes": 947,
+      "raw_excerpt_sha256": "9ec7df2106d0aaf57ddfe4874300af4e6aff39cf49c33b0d23d8cd11c8bd113f",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        3444,
+        3457
+      ],
+      "supplement_content_byte_range": [
+        210353,
+        211370
+      ]
+    },
+    {
+      "request_id": "RE-B7",
+      "group_id": "RB7-02",
+      "source_id": "RB-S021",
+      "source_key": "packages/core/test/backend-toolkit-source-readiness.test.ts",
+      "source_range": [
+        106,
+        122
+      ],
+      "raw_excerpt_bytes": 1199,
+      "raw_excerpt_sha256": "8e72ee130938b83003b421943bfc1da8f6a9291c85327e08368ce7aed5dbc03f",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        3469,
+        3485
+      ],
+      "supplement_content_byte_range": [
+        211784,
+        213068
+      ]
+    },
+    {
+      "request_id": "RE-B7",
+      "group_id": "RB7-03",
+      "source_id": "RB-S022",
+      "source_key": "packages/core/test/code-index-query.test.ts",
+      "source_range": [
+        347,
+        383
+      ],
+      "raw_excerpt_bytes": 2189,
+      "raw_excerpt_sha256": "60b5b803c042c71a122f982f1defc2ac0f5b8adcd36fe2f8d00f55ab0624d5d2",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        3503,
+        3539
+      ],
+      "supplement_content_byte_range": [
+        213680,
+        216054
+      ]
+    },
+    {
+      "request_id": "RE-B7",
+      "group_id": "RB7-03",
+      "source_id": "RB-S023",
+      "source_key": "packages/core/test/code-index-store.test.ts",
+      "source_range": [
+        53,
+        87
+      ],
+      "raw_excerpt_bytes": 2491,
+      "raw_excerpt_sha256": "9236272b8782a49550646a3d51b4d2020ad6735c07b831181f3986ab6c6e9795",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        3551,
+        3585
+      ],
+      "supplement_content_byte_range": [
+        216434,
+        219065
+      ]
+    },
+    {
+      "request_id": "RE-B7",
+      "group_id": "RB7-03",
+      "source_id": "RB-S024",
+      "source_key": "packages/core/test/research-toolkit/code-index-scip-encoding.test.ts",
+      "source_range": [
+        13,
+        26
+      ],
+      "raw_excerpt_bytes": 805,
+      "raw_excerpt_sha256": "a4db62c104fc3fe9b9cf751406329f857c33cd1dbea9bf4bcdf9a7dcdd677a2d",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        3597,
+        3610
+      ],
+      "supplement_content_byte_range": [
+        219495,
+        220356
+      ]
+    },
+    {
+      "request_id": "RE-B7",
+      "group_id": "RB7-03",
+      "source_id": "RB-S024",
+      "source_key": "packages/core/test/research-toolkit/code-index-scip-encoding.test.ts",
+      "source_range": [
+        28,
+        53
+      ],
+      "raw_excerpt_bytes": 1697,
+      "raw_excerpt_sha256": "0913c93fcbb69ae7e8a04ff0743ebe7b6daf5026d8751008fefb3264406f79df",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        3616,
+        3641
+      ],
+      "supplement_content_byte_range": [
+        220386,
+        222187
+      ]
+    },
+    {
+      "request_id": "RE-B7",
+      "group_id": "RB7-04",
+      "source_id": "RB-S025",
+      "source_key": "packages/core/test/research-binding.test.ts",
+      "source_range": [
+        95,
+        121
+      ],
+      "raw_excerpt_bytes": 2513,
+      "raw_excerpt_sha256": "e19bd7fc833f8642af4a6b0a8d53dfea601a8a049a61b88918adb4223525930c",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        3659,
+        3685
+      ],
+      "supplement_content_byte_range": [
+        222805,
+        225448
+      ]
+    },
+    {
+      "request_id": "RE-B7",
+      "group_id": "RB7-04",
+      "source_id": "RB-S026",
+      "source_key": "packages/core/test/research-artifacts.test.ts",
+      "source_range": [
+        40,
+        91
+      ],
+      "raw_excerpt_bytes": 4077,
+      "raw_excerpt_sha256": "5e6a0694ff6d349301d808453ba85c36ed87b50c42f569087f5f69bdc43b098f",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        3697,
+        3748
+      ],
+      "supplement_content_byte_range": [
+        225833,
+        230118
+      ]
+    },
+    {
+      "request_id": "RE-B7",
+      "group_id": "RB7-04",
+      "source_id": "RB-S026",
+      "source_key": "packages/core/test/research-artifacts.test.ts",
+      "source_range": [
+        94,
+        113
+      ],
+      "raw_excerpt_bytes": 1687,
+      "raw_excerpt_sha256": "b9acefea9522feb5a43eaad903b0f142bd659f6049aac0a82d737771e4d432a5",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        3754,
+        3773
+      ],
+      "supplement_content_byte_range": [
+        230149,
+        231930
+      ]
+    },
+    {
+      "request_id": "RE-B7",
+      "group_id": "RB7-05",
+      "source_id": "RB-S027",
+      "source_key": "packages/core/test/research-records.test.ts",
+      "source_range": [
+        18,
+        20
+      ],
+      "raw_excerpt_bytes": 203,
+      "raw_excerpt_sha256": "30ed1adc1b418f9e4431476ed94d986ac6cf561e9290287ef3dfb5b250c56373",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        3791,
+        3793
+      ],
+      "supplement_content_byte_range": [
+        232538,
+        232753
+      ]
+    },
+    {
+      "request_id": "RE-B7",
+      "group_id": "RB7-05",
+      "source_id": "RB-S027",
+      "source_key": "packages/core/test/research-records.test.ts",
+      "source_range": [
+        23,
+        66
+      ],
+      "raw_excerpt_bytes": 3764,
+      "raw_excerpt_sha256": "0a08ced56fbaa2f4a5cf6c276ceeeeead6a0b5a02415554fb96918139cc2d3c4",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        3799,
+        3842
+      ],
+      "supplement_content_byte_range": [
+        232783,
+        236723
+      ]
+    },
+    {
+      "request_id": "RE-B7",
+      "group_id": "RB7-05",
+      "source_id": "RB-S027",
+      "source_key": "packages/core/test/research-records.test.ts",
+      "source_range": [
+        141,
+        155
+      ],
+      "raw_excerpt_bytes": 1282,
+      "raw_excerpt_sha256": "66c3009d4269fe49f48e611454a34528148b95059e16bf2951da52729b04cdb3",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        3848,
+        3862
+      ],
+      "supplement_content_byte_range": [
+        236755,
+        238112
+      ]
+    },
+    {
+      "request_id": "RE-B7",
+      "group_id": "RB7-05",
+      "source_id": "RB-S027",
+      "source_key": "packages/core/test/research-records.test.ts",
+      "source_range": [
+        159,
+        188
+      ],
+      "raw_excerpt_bytes": 2578,
+      "raw_excerpt_sha256": "aeb3e4ad728d17f5492ff369e5735decef3e300fd4c43e07cac54c1d919ed085",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        3868,
+        3897
+      ],
+      "supplement_content_byte_range": [
+        238144,
+        240872
+      ]
+    },
+    {
+      "request_id": "RE-B7",
+      "group_id": "RB7-05",
+      "source_id": "RB-S027",
+      "source_key": "packages/core/test/research-records.test.ts",
+      "source_range": [
+        190,
+        208
+      ],
+      "raw_excerpt_bytes": 1575,
+      "raw_excerpt_sha256": "14c5461edf5a7682e168e488ca4c5970ed059e73b491d740d6af0d4dce942e10",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        3903,
+        3921
+      ],
+      "supplement_content_byte_range": [
+        240904,
+        242574
+      ]
+    },
+    {
+      "request_id": "RE-B7",
+      "group_id": "RB7-05",
+      "source_id": "RB-S028",
+      "source_key": "packages/core/test/research-allowance.test.ts",
+      "source_range": [
+        38,
+        53
+      ],
+      "raw_excerpt_bytes": 1400,
+      "raw_excerpt_sha256": "626bce8d190e00a14eee132c89c29ce870f467099bb7813252fe31befc366c6a",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        3933,
+        3948
+      ],
+      "supplement_content_byte_range": [
+        242959,
+        244423
+      ]
+    },
+    {
+      "request_id": "RE-B7",
+      "group_id": "RB7-05",
+      "source_id": "RB-S028",
+      "source_key": "packages/core/test/research-allowance.test.ts",
+      "source_range": [
+        90,
+        108
+      ],
+      "raw_excerpt_bytes": 1751,
+      "raw_excerpt_sha256": "9bb60dab598129881dc78429d316b8c97c5dc60015b3271252c35eb3f93eb577",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        3954,
+        3972
+      ],
+      "supplement_content_byte_range": [
+        244454,
+        246290
+      ]
+    },
+    {
+      "request_id": "RE-B7",
+      "group_id": "RB7-05",
+      "source_id": "RB-S028",
+      "source_key": "packages/core/test/research-allowance.test.ts",
+      "source_range": [
+        232,
+        244
+      ],
+      "raw_excerpt_bytes": 839,
+      "raw_excerpt_sha256": "be23b5dc845210ace17ad16f2ebf8dc0cfc3b372d54df953a8cb0b6f58410582",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        3978,
+        3990
+      ],
+      "supplement_content_byte_range": [
+        246322,
+        247226
+      ]
+    },
+    {
+      "request_id": "RE-B7",
+      "group_id": "RB7-06",
+      "source_id": "RB-S029",
+      "source_key": "packages/core/test/research-inquiry-ledger.test.ts",
+      "source_range": [
+        20,
+        69
+      ],
+      "raw_excerpt_bytes": 3956,
+      "raw_excerpt_sha256": "3ff6b3cd1b2d5c7f6b7670f7f355c7a6aa668a71374b78953c0d43a55199884b",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        4008,
+        4057
+      ],
+      "supplement_content_byte_range": [
+        247849,
+        252005
+      ]
+    },
+    {
+      "request_id": "RE-B7",
+      "group_id": "RB7-06",
+      "source_id": "RB-S030",
+      "source_key": "packages/core/test/research-probe.test.ts",
+      "source_range": [
+        116,
+        144
+      ],
+      "raw_excerpt_bytes": 1714,
+      "raw_excerpt_sha256": "f216bcf03f519f7340abdb5ae88f6b7eee99e77b121e63b9fb79333f3b9730bc",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        4069,
+        4097
+      ],
+      "supplement_content_byte_range": [
+        252384,
+        254243
+      ]
+    },
+    {
+      "request_id": "RE-B7",
+      "group_id": "RB7-07",
+      "source_id": "RB-S031",
+      "source_key": "packages/core/test/research-search.test.ts",
+      "source_range": [
+        74,
+        90
+      ],
+      "raw_excerpt_bytes": 963,
+      "raw_excerpt_sha256": "22e713d5540ee8ed3c6fa338201f1c9fad930a030d23d69c23b14078fda4c58e",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        4115,
+        4131
+      ],
+      "supplement_content_byte_range": [
+        254841,
+        255872
+      ]
+    },
+    {
+      "request_id": "RE-B7",
+      "group_id": "RB7-07",
+      "source_id": "RB-S031",
+      "source_key": "packages/core/test/research-search.test.ts",
+      "source_range": [
+        102,
+        123
+      ],
+      "raw_excerpt_bytes": 1004,
+      "raw_excerpt_sha256": "5172ff2814fa3787c590eebf1818aa7aa850ab3659da337b82dffe492b403ec9",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        4137,
+        4158
+      ],
+      "supplement_content_byte_range": [
+        255904,
+        257018
+      ]
+    },
+    {
+      "request_id": "RE-B7",
+      "group_id": "RB7-07",
+      "source_id": "RB-S032",
+      "source_key": "packages/core/test/research-locate.test.ts",
+      "source_range": [
+        83,
+        114
+      ],
+      "raw_excerpt_bytes": 2221,
+      "raw_excerpt_sha256": "41931a8312f8c3e0413cb4d56e0d10be9d37b71a5470f9c1fcc8fe0b9c862ca0",
+      "presentation": "literal_original_lines_numbered",
+      "supplement_content_lines": [
+        4170,
+        4201
+      ],
+      "supplement_content_byte_range": [
+        257397,
+        259761
+      ]
+    }
+  ],
+  "shared_coverage_projection": {
+    "path": "review-supplement-a.md",
+    "bytes": 220079,
+    "sha256": "900fd149a1182df270ef6f71fce883793dba1a836df2dd2dd67e500c268f4aca",
+    "git_blob_sha": "22c601309312a8b61692bd73bf5a4a8c5da7a48f",
+    "projection_group": "RA1-P",
+    "projection_lines": [
+      293,
+      439
+    ],
+    "projection_byte_range": [
+      17509,
+      38167
+    ],
+    "projection_fragment_sha256": "a9cfbf2fbe35f2fdac2631378652a7d75e034b5fc49dea45cf6caa61f06bd835",
+    "index_path": "review-supplement-a-index.json",
+    "index_sha256": "74787dca5c9311883708cffb23fb90eb889e45f5258046e39d3a941c265bce8b",
+    "json_pointer": "/coverage_projection",
+    "mechanical": true,
+    "rows": 130,
+    "original_coverage": {
+      "path": "coverage.jsonl",
+      "bytes": 127215,
+      "sha256": "bb06bcef77a2dbeccabc70dd00dc10d70bf22cb338588661d7ecc9f49e01eec9",
+      "git_blob_sha": "48b8beafa81098be06c37b4f4ec1a3044e77414d"
+    },
+    "fields": [
+      "path",
+      "role",
+      "need",
+      "read_depth",
+      "body_sections"
+    ],
+    "semantics": "Projection only, not integral JSONL rows or a semantic acceptance judgment"
+  },
+  "wording_proposals": [
+    {
+      "status": "PROPOSED_NOT_APPLIED",
+      "kind": "precision_of_manifest_recency",
+      "body_path": "body.md",
+      "body_frozen": {
+        "bytes": 63389,
+        "sha256": "1213f85cf16f73feed220e8c1b33ed52b2af75afd570b154a29eaf8f99f27d73",
+        "git_blob_sha": "c29b9f5b8a8913cc4afa58d3e9cdede292f0657e"
+      },
+      "body_proposed": {
+        "bytes": 63463,
+        "sha256": "81dfb4356b48331a4e348af3735de2697a23297a45994a3049f6948f9b4290bf",
+        "git_blob_sha": "452d64304666380d4abcd758dfb85569447d2f3a"
+      },
+      "before_literal": "`query.ts` abre shard atual ou o mais novo retido de mesmo id quando o atual falta.",
+      "after_literal": "`query.ts` abre o shard atual ou o primeiro retido de mesmo id ainda presente, na ordem do manifesto (atualizada por `retain`/`touch`), quando o atual falta.",
+      "before_literal_sha256": "bdd9031c94b88124d8e2d11d97b63d901cfb58261092bd1a59606ff226166213",
+      "after_literal_sha256": "afd4e21f0dc781316dec92874e7a54c12a85f8e804af0617351f1f23f3415071",
+      "sources": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/query.ts",
+          "source_ranges": [
+            [
+              180,
+              196
+            ]
+          ],
+          "sha256": "ec1dd4a297e6e798c497d67ac5ed21cd4c6484e2aba3c2bed60dbd8f174f05e8"
+        },
+        {
+          "path": "packages/core/src/research-toolkit/code-index/store.ts",
+          "source_ranges": [
+            [
+              170,
+              215
+            ]
+          ],
+          "sha256": "570a81a04360d060a7c67a436e531b4c079ba7a9951130a2648ca986846b5e11"
+        }
+      ],
+      "reason": "previous.find usa a ordem de records; records não ordena por timestamp. retain antepõe seu record e touch move um commit usado à frente. A redação mais novo pode ser confundida com mais recente cronologicamente.",
+      "applied": false
+    }
+  ],
+  "delivery": {
+    "guide": {
+      "path": "review-supplements-dispatch.md",
+      "bytes": 5272,
+      "sha256": "1eddda9c2ed04f65f12f4c2fee808f9d5cc01b950865eabbac716e5625617ce8",
+      "git_blob_sha": "b35e8f28e97d9da0d569841fd2f9e20c7e1d4776"
+    },
+    "method": "ordered whole-group literal UTF-8 byte slices; original body sent once, not repeated",
+    "batches": [
+      {
+        "batch_id": "A01",
+        "file": "review-supplement-a.md",
+        "byte_range": [
+          0,
+          13069
+        ],
+        "line_range": [
+          1,
+          175
+        ],
+        "bytes": 13069,
+        "sha256": "4f47271c299049274264fc982662a326b358be85a37288f33f58e8e8f021e9c3",
+        "groups": [
+          "RA1-01",
+          "RA1-02",
+          "RA1-03"
+        ],
+        "request_ids": [
+          "RE-A1"
+        ]
+      },
+      {
+        "batch_id": "A02",
+        "file": "review-supplement-a.md",
+        "byte_range": [
+          13069,
+          38177
+        ],
+        "line_range": [
+          176,
+          441
+        ],
+        "bytes": 25108,
+        "sha256": "513fe28fb1b49a3d1ed66f0202082cd329d337ee6c067a966021f5f4be19a984",
+        "groups": [
+          "RA1-04"
+        ],
+        "request_ids": [
+          "RE-A1"
+        ]
+      },
+      {
+        "batch_id": "A03",
+        "file": "review-supplement-a.md",
+        "byte_range": [
+          38177,
+          69218
+        ],
+        "line_range": [
+          442,
+          1329
+        ],
+        "bytes": 31041,
+        "sha256": "913f63f4607227c3c5346a773dbe62093b0f0fcf6d9847cae00fe04fd30bf495",
+        "groups": [
+          "RA2-01"
+        ],
+        "request_ids": [
+          "RE-A2"
+        ]
+      },
+      {
+        "batch_id": "A04",
+        "file": "review-supplement-a.md",
+        "byte_range": [
+          69218,
+          102051
+        ],
+        "line_range": [
+          1330,
+          2147
+        ],
+        "bytes": 32833,
+        "sha256": "7d6f814f719631cb992aed19252b0363a9ff28eae2ea1c7ef641e559263392b0",
+        "groups": [
+          "RA2-02",
+          "RA2-03",
+          "RA2-04"
+        ],
+        "request_ids": [
+          "RE-A2"
+        ]
+      },
+      {
+        "batch_id": "A05",
+        "file": "review-supplement-a.md",
+        "byte_range": [
+          102051,
+          132701
+        ],
+        "line_range": [
+          2148,
+          2766
+        ],
+        "bytes": 30650,
+        "sha256": "41a5732eae727f86d7b4546058c7112ed07d711f65d6554b70b994a71d91999b",
+        "groups": [
+          "RA3-01",
+          "RA3-02",
+          "RA3-03",
+          "RA3-04"
+        ],
+        "request_ids": [
+          "RE-A3"
+        ]
+      },
+      {
+        "batch_id": "A06",
+        "file": "review-supplement-a.md",
+        "byte_range": [
+          132701,
+          159642
+        ],
+        "line_range": [
+          2767,
+          3289
+        ],
+        "bytes": 26941,
+        "sha256": "f49ac0c3313ea698945849be7d02ddb55700442eb41765fccb07008aac5e9b06",
+        "groups": [
+          "RA4-01",
+          "RA4-02",
+          "RA4-03",
+          "RA4-04"
+        ],
+        "request_ids": [
+          "RE-A4"
+        ]
+      },
+      {
+        "batch_id": "A07",
+        "file": "review-supplement-a.md",
+        "byte_range": [
+          159642,
+          190409
+        ],
+        "line_range": [
+          3290,
+          3832
+        ],
+        "bytes": 30767,
+        "sha256": "049218d2932201a55a3f6266413c14d905a4b53d30ed760147935fe2244ef34e",
+        "groups": [
+          "RA4-05",
+          "RA5-01",
+          "RA5-02"
+        ],
+        "request_ids": [
+          "RE-A4",
+          "RE-A5"
+        ]
+      },
+      {
+        "batch_id": "A08",
+        "file": "review-supplement-a.md",
+        "byte_range": [
+          190409,
+          220079
+        ],
+        "line_range": [
+          3833,
+          4392
+        ],
+        "bytes": 29670,
+        "sha256": "4e9c305a0649106441da47d7df53ae9b80a736c9bab485fb401d3ad39037bab2",
+        "groups": [
+          "RA5-03",
+          "RA5-04",
+          "RA5-05"
+        ],
+        "request_ids": [
+          "RE-A5"
+        ]
+      },
+      {
+        "batch_id": "B01",
+        "file": "review-supplement-b.md",
+        "byte_range": [
+          0,
+          30293
+        ],
+        "line_range": [
+          1,
+          515
+        ],
+        "bytes": 30293,
+        "sha256": "5fca5b88895ceacd63940ff4e87966b98bc8c3e033119b6ce62018cce7279e7e",
+        "groups": [
+          "RB1-01",
+          "RB1-02",
+          "RB1-03"
+        ],
+        "request_ids": [
+          "RE-B1"
+        ]
+      },
+      {
+        "batch_id": "B02",
+        "file": "review-supplement-b.md",
+        "byte_range": [
+          30293,
+          64945
+        ],
+        "line_range": [
+          516,
+          1126
+        ],
+        "bytes": 34652,
+        "sha256": "cb4fecbb56aaca04782e44467ce8f53341b739b144cc81a7c2e3f322be4c0dc7",
+        "groups": [
+          "RB1-04",
+          "RB1-05",
+          "RB1-06"
+        ],
+        "request_ids": [
+          "RE-B1"
+        ]
+      },
+      {
+        "batch_id": "B03",
+        "file": "review-supplement-b.md",
+        "byte_range": [
+          64945,
+          93233
+        ],
+        "line_range": [
+          1127,
+          1617
+        ],
+        "bytes": 28288,
+        "sha256": "2b6e17075b1997e23ee9d92c1503049809c62dca10105b39fecf93f789c44db9",
+        "groups": [
+          "RB2-01",
+          "RB3-01",
+          "RB3-02"
+        ],
+        "request_ids": [
+          "RE-B2",
+          "RE-B3"
+        ]
+      },
+      {
+        "batch_id": "B04",
+        "file": "review-supplement-b.md",
+        "byte_range": [
+          93233,
+          126445
+        ],
+        "line_range": [
+          1618,
+          2182
+        ],
+        "bytes": 33212,
+        "sha256": "35d50410660491099503ea058e44b71ad6f701663c16a0ca53a24dd2702cbc51",
+        "groups": [
+          "RB3-03",
+          "RB3-04",
+          "RB3-05",
+          "RB4-01"
+        ],
+        "request_ids": [
+          "RE-B3",
+          "RE-B4"
+        ]
+      },
+      {
+        "batch_id": "B05",
+        "file": "review-supplement-b.md",
+        "byte_range": [
+          126445,
+          159343
+        ],
+        "line_range": [
+          2183,
+          2702
+        ],
+        "bytes": 32898,
+        "sha256": "a5a750af2455df154e639a189a460a03b006502864fa2307fb82e37406c13a97",
+        "groups": [
+          "RB4-02",
+          "RB4-03",
+          "RB5-01",
+          "RB5-02"
+        ],
+        "request_ids": [
+          "RE-B4",
+          "RE-B5"
+        ]
+      },
+      {
+        "batch_id": "B06",
+        "file": "review-supplement-b.md",
+        "byte_range": [
+          159343,
+          190034
+        ],
+        "line_range": [
+          2703,
+          3135
+        ],
+        "bytes": 30691,
+        "sha256": "7145663785f719e25f3960451fd7045f7c471a129e9b79069b455e17cfbd7554",
+        "groups": [
+          "RB5-03",
+          "RB6-01",
+          "RB6-02"
+        ],
+        "request_ids": [
+          "RE-B5",
+          "RE-B6"
+        ]
+      },
+      {
+        "batch_id": "B07",
+        "file": "review-supplement-b.md",
+        "byte_range": [
+          190034,
+          222192
+        ],
+        "line_range": [
+          3136,
+          3643
+        ],
+        "bytes": 32158,
+        "sha256": "401e08aad4459c54080a91b1f245ebaa3b0beb3b626a889bafc7e375905db855",
+        "groups": [
+          "RB6-03",
+          "RB6-04",
+          "RB7-01",
+          "RB7-02",
+          "RB7-03"
+        ],
+        "request_ids": [
+          "RE-B6",
+          "RE-B7"
+        ]
+      },
+      {
+        "batch_id": "B08",
+        "file": "review-supplement-b.md",
+        "byte_range": [
+          222192,
+          254248
+        ],
+        "line_range": [
+          3644,
+          4099
+        ],
+        "bytes": 32056,
+        "sha256": "78732d73641df54dc9306051f0284efa803d94fd1d6ca72ecd80ac1ea72850fd",
+        "groups": [
+          "RB7-04",
+          "RB7-05",
+          "RB7-06"
+        ],
+        "request_ids": [
+          "RE-B7"
+        ]
+      },
+      {
+        "batch_id": "B09",
+        "file": "review-supplement-b.md",
+        "byte_range": [
+          254248,
+          261153
+        ],
+        "line_range": [
+          4100,
+          4216
+        ],
+        "bytes": 6905,
+        "sha256": "c3fb3cb9f298eaf2c81018c36c9e48ab646b36f9ba290b692385e1bc3c81ad53",
+        "groups": [
+          "RB7-07"
+        ],
+        "request_ids": [
+          "RE-B7"
+        ]
+      }
+    ]
+  },
+  "semantic_decision": "NOT_PERFORMED"
+}

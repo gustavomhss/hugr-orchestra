@@ -1,0 +1,384 @@
+{
+  "schema": "genesis-producer-literal-revision/v1",
+  "task": "AUTOMATION-L1",
+  "revision": 3,
+  "status": "APPLIED_DOCUMENTARY_CORRECTIONS_NO_JUDGMENT",
+  "request": {
+    "path": "revisions/v3/request.txt",
+    "bytes": 2102,
+    "sha256": "38048ea666ae8b5f9338067a3d84edbb1f3619c13fb9bf7ee0e483e1cad34e7f",
+    "git_blob_sha": "62bbbec289f922a121df9bf33c9d80eb4b9be831"
+  },
+  "response": {
+    "path": "revisions/v3/response.md",
+    "bytes": 3383,
+    "sha256": "1a8816900626f5b1920d7e33e3b8f015274744eb7b507a70d2ac5ad6f2448cd2",
+    "git_blob_sha": "6e4f25b4860900cea903980e2e1d6609228c2144"
+  },
+  "procedure": {
+    "path": "revisions/v3/apply.py",
+    "bytes": 15116,
+    "sha256": "0868d35024004d41be8d9e161612b7619a1f68f9b6c33f4fa89468976596d8cb",
+    "git_blob_sha": "72d166dd21bd60687a136e7856b458290571f619"
+  },
+  "before": {
+    "body": {
+      "path": "history/body-v2.md",
+      "bytes": 59953,
+      "sha256": "e9c89bea68d594bc61356ff461642ea23cd905d4584f2b52d32e10a5af984e55",
+      "git_blob_sha": "b8fec4854b4c1384d3c4a2a4f0d51d220c874618"
+    },
+    "recipe": {
+      "path": "history/recipe-v2.json",
+      "bytes": 28464,
+      "sha256": "2bed1778e629415d5bc7c818773ef18b012a8a0bd4239d5bc85db6642b41a80e",
+      "git_blob_sha": "ee579c43b9ab1eef07025be8f6221f6609326ebf"
+    }
+  },
+  "after": {
+    "body": {
+      "path": "body.md",
+      "bytes": 60588,
+      "sha256": "b31d52e5bf25f6eca3807e9c1f418b70d865c9d63c5690125c530c54f8247d84",
+      "git_blob_sha": "04c87b44543b6bde9713228c7b6fda0fc444a00a"
+    },
+    "recipe": {
+      "path": "recipe.json",
+      "bytes": 32520,
+      "sha256": "d42e72daa68af5354ddc50e8f7d03c3bb82b451b2732612fc4a4dbb87ed89a3a",
+      "git_blob_sha": "a2bc0ec47c421abc4fa18ee6f0212213999606ad"
+    }
+  },
+  "offset_basis": "UTF-8 bytes, zero-based, end exclusive; line numbers one-based",
+  "substitution_count": 3,
+  "changes": [
+    {
+      "id": "AUT3-DELTA-01",
+      "section": "7.2",
+      "old_text": "Estado scoped-red resulta de fail mais recente; scoped-green precisa de requisitos existentes e pass dos caminhos requeridos; sem requisito, retorna null. Um check error/pending não vira pass.",
+      "new_text": "O estado usa o resultado mais recente por `(kind, command)` no tree: qualquer `fail` produz scoped-red e, sem requisito configurado, retorna null. Para scoped-green, basta algum check `scoped` com `pass` quando há scoped.tests, além de um `pass` por workflow exigido. Isso pode coexistir com outros checks scoped `pending`/`error`; não prova que todos os comandos scoped passaram.",
+      "v2_byte_interval": [
+        37127,
+        37320
+      ],
+      "v3_byte_interval": [
+        37127,
+        37510
+      ],
+      "line_1_based": 218,
+      "old_bytes": 193,
+      "new_bytes": 383,
+      "sources": [
+        {
+          "path": "packages/core/src/board/ci.ts",
+          "archive": "sources/packages/core/src/board/ci.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "77bc3370fc8a34249a2baf19ee10c7e8151cdc6b",
+          "sha256": "7a67b182097690e957ec40cf04f753e2695047f7b2fa5f19b792d8db9e38c7dd",
+          "bytes": 25362,
+          "intervals": [
+            {
+              "first_line": 426,
+              "last_line": 454,
+              "bytes": 1376,
+              "sha256": "58ae1526d9c8d4ac7d3f88a2ab84e7800b3cff54383d61bfc08b6a466f53ca61"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AUT3-DELTA-02",
+      "section": "7.2",
+      "old_text": "Workflows são enviados uma vez por tree/arquivo no ledger observado.",
+      "new_text": "Para o card, o ledger evita novo dispatch do mesmo workflow no mesmo tree quando já existe row com outcome diferente de `error`; se houver apenas rows em `error`, permite outra tentativa.",
+      "v2_byte_interval": [
+        37328,
+        37397
+      ],
+      "v3_byte_interval": [
+        37518,
+        37706
+      ],
+      "line_1_based": 220,
+      "old_bytes": 69,
+      "new_bytes": 188,
+      "sources": [
+        {
+          "path": "packages/core/src/board/ci.ts",
+          "archive": "sources/packages/core/src/board/ci.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "77bc3370fc8a34249a2baf19ee10c7e8151cdc6b",
+          "sha256": "7a67b182097690e957ec40cf04f753e2695047f7b2fa5f19b792d8db9e38c7dd",
+          "bytes": 25362,
+          "intervals": [
+            {
+              "first_line": 284,
+              "last_line": 334,
+              "bytes": 2226,
+              "sha256": "5d3e7d96176dbfdc57e2228ab8ca3b916e3e1176fd40ae1dd2703db200b3f74c"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AUT3-DELTA-03",
+      "section": "7.3",
+      "old_text": "Subscription engine ou preço ausente é `not-metered`, e mistura de medido/não medido pode ser parcial.",
+      "new_text": "`spend.card` considera medida a Session com custo positivo cujo provider não é `claude-code`; não medidas entram na outra classe apenas se têm tokens. O meter de modelos é `not-metered` sem Sessions vinculadas, ou se não houver Session medida e houver não medidas com tokens; nos demais casos retorna `usd`, inclusive `usd:0` com ambas as classes vazias. A coexistência de medidas e não medidas com tokens marca `partial`.",
+      "v2_byte_interval": [
+        38086,
+        38191
+      ],
+      "v3_byte_interval": [
+        38395,
+        38826
+      ],
+      "line_1_based": 224,
+      "old_bytes": 105,
+      "new_bytes": 431,
+      "sources": [
+        {
+          "path": "packages/core/src/board/spend.ts",
+          "archive": "sources/packages/core/src/board/spend.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "c5c82e700282b4ba2fad710a5a87daae0328b6f9",
+          "sha256": "11d1284e196ac2f72708d88a47d7f839f5e380d0f4cc87e0a196d4b4c32d45ce",
+          "bytes": 6301,
+          "intervals": [
+            {
+              "first_line": 9,
+              "last_line": 17,
+              "bytes": 298,
+              "sha256": "11e57701550c4f28d47e01b9f0573780adfd54725ef82c8f44632583672d3765"
+            },
+            {
+              "first_line": 19,
+              "last_line": 55,
+              "bytes": 1836,
+              "sha256": "c847abd79187739114d26ec4afb991658796afd94cc4f325adfe08ef4cf0cd2f"
+            },
+            {
+              "first_line": 127,
+              "last_line": 133,
+              "bytes": 197,
+              "sha256": "606d9fc0800f9cce0a5986f041c9f4c6f7a5518d4d7dbe98e8e0c669f62aede5"
+            }
+          ]
+        },
+        {
+          "path": "packages/core/src/board/money.ts",
+          "archive": "sources/packages/core/src/board/money.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "2e898a1aaf5d8740ced0bcd0a8afe0baa3996bc9",
+          "sha256": "30254e118087b0f8ac51e48b0c1f4a5f2e7bfd7a4bf2907267fe37c13a8a582b",
+          "bytes": 9068,
+          "intervals": [
+            {
+              "first_line": 21,
+              "last_line": 64,
+              "bytes": 2143,
+              "sha256": "5aa187dd5ec8d182e9d79255cfffe71172f8594619da5fbed3eac67eade60244"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "unchanged_segments": [
+    {
+      "v2_interval": [
+        0,
+        37127
+      ],
+      "v3_interval": [
+        0,
+        37127
+      ],
+      "sha256": "2427a617f8b03bea30a30b1d7b3e547073e2bd90742840e2df190fbb46ab7ea8",
+      "bytes": 37127
+    },
+    {
+      "v2_interval": [
+        37320,
+        37328
+      ],
+      "v3_interval": [
+        37510,
+        37518
+      ],
+      "sha256": "3f58a54adf75a61d2bc447147fcbb0c5c1dfeb6e0ee94dd9254f7862298306ff",
+      "bytes": 8
+    },
+    {
+      "v2_interval": [
+        37397,
+        38086
+      ],
+      "v3_interval": [
+        37706,
+        38395
+      ],
+      "sha256": "967a6927cb3dbf74e8e87d755cf97ab96a4ad0371cea674617d86b6c15bf0983",
+      "bytes": 689
+    },
+    {
+      "v2_interval": [
+        38191,
+        59953
+      ],
+      "v3_interval": [
+        38826,
+        60588
+      ],
+      "sha256": "e732d0b0debf89ee6e5a23a011799451bf583b63101d726c938a4bae50d3cea9",
+      "bytes": 21762
+    }
+  ],
+  "inverse_recovers_v2_byte_for_byte": true,
+  "inverse_sha256": "e9c89bea68d594bc61356ff461642ea23cd905d4584f2b52d32e10a5af984e55",
+  "preserved_files": [
+    {
+      "path": "review-supplement-1.md",
+      "bytes": 338932,
+      "sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "git_blob_sha": "dab732abd7f47eb3f26473b5614fa92d2b747a46"
+    },
+    {
+      "path": "review-supplement-1-index.json",
+      "bytes": 246723,
+      "sha256": "b3a190b8f1bc17ea7f35fc0c53c5bb0f0f134570ac78f62a020452c3818d8902",
+      "git_blob_sha": "c42a17c0071f3c864f3e6eb11b5a7ae3fa0d37be"
+    },
+    {
+      "path": "review-supplement-1-receipt.json",
+      "bytes": 4644,
+      "sha256": "153f5b0d8c77ebb2c7c281457b9e2227c8d5b208e29dd10f2e180d95b5384567",
+      "git_blob_sha": "fb21bb10a3ba44ea0bf464fc7a9a02422f49cfd5"
+    },
+    {
+      "path": "review-supplement-2.md",
+      "bytes": 375497,
+      "sha256": "208b0ba87350a91970d28f298d802512b72b6834360815b95ca17ab22ebc54b1",
+      "git_blob_sha": "bf43391979916e85f44ac4841926954d2c13362f"
+    },
+    {
+      "path": "review-supplement-2-index.json",
+      "bytes": 113392,
+      "sha256": "9b69ab60d2f1b5d51d46a165852e9402b63261b77aee59a7001ff80ff3a5cfcb",
+      "git_blob_sha": "bd0652636f38ee4b2e644a089bb0e037b078d81d"
+    },
+    {
+      "path": "review-supplement-2-receipt.json",
+      "bytes": 4254,
+      "sha256": "a41edddd6acec91077499e9d060540b338344af85c3b7aaca0091ec61c0ee566",
+      "git_blob_sha": "81d86ae3cd4ea5a6f9ab26a951f3759d5c605c5f"
+    },
+    {
+      "path": "review-supplement-2-response.md",
+      "bytes": 2397,
+      "sha256": "dd6b784c8a203d8c6c04b2249369ac37b5842ad47d9ed8e461436d6ef2e056d3",
+      "git_blob_sha": "359dd130eb89087b09d9ba1eefdb1a2d827a4f2f"
+    },
+    {
+      "path": "external-source-captures.json",
+      "bytes": 6152,
+      "sha256": "a6173c03c76fdae97db1535253700257827062eecc74a5e4a4f6d67c1634fd57",
+      "git_blob_sha": "a1762e44be3aaae6ce5da319134f1023f1b8e094"
+    },
+    {
+      "path": "external-source-captures-supplement-2.json",
+      "bytes": 1207,
+      "sha256": "f6d85694176ffdc640a1f983de1737c9c61758d27795dc2ebedf4669967ced3c",
+      "git_blob_sha": "0492fde2b844cbdd9bd6f4f20380c5d347c50caf"
+    },
+    {
+      "path": "captures.json",
+      "bytes": 100039,
+      "sha256": "d705eeab9e7ade1461f151f3b72556696cd3bbac473baf3ab13bb14192cd28e1",
+      "git_blob_sha": "e1c2cb2f2a58ac0b22e9fc86862594798fc802eb"
+    },
+    {
+      "path": "coverage.jsonl",
+      "bytes": 223656,
+      "sha256": "580c1885a277f378d9f5c44f0dd335e58cb4dc02f23bc002179103dc90dcfd5f",
+      "git_blob_sha": "055916a29be2005f94a202949080f7d6139bff28"
+    },
+    {
+      "path": "request.txt",
+      "bytes": 6568,
+      "sha256": "9753f217c3879889af8399e36f9024a52d5188500c03e83485bd04fea0448b27",
+      "git_blob_sha": "9feb5466de0e2729aa07896258171ec0bfd53fef"
+    },
+    {
+      "path": "response.md",
+      "bytes": 8967,
+      "sha256": "486a533d95528df339e354b68243052203c08141f2dae43c96f58e7dfd9a31d9",
+      "git_blob_sha": "18bd9db841a12091da00cd7c7fd63872e11f88da"
+    },
+    {
+      "path": "evidence.md",
+      "bytes": 953016,
+      "sha256": "de46e809f97346c81701ee8af0144abbe8458386787a2598b2bc88b81ec2b400",
+      "git_blob_sha": "a00e38106ddfe903960659b3bfa4cb3fc73e69d3"
+    },
+    {
+      "path": "evidence-review.md",
+      "bytes": 181923,
+      "sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "git_blob_sha": "58a71f6514962e4a69def762e403140f9705909b"
+    },
+    {
+      "path": "document-integrity.json",
+      "bytes": 1220,
+      "sha256": "fdbc36f75b6f753405e19c65e65abd7fdbb7a7cd93893efbb6b7b6acaa4a5217",
+      "git_blob_sha": "10e6f57b8d5355ad30812b0eda6c7e0eb610d51d"
+    },
+    {
+      "path": "history/body-v1.md",
+      "bytes": 59832,
+      "sha256": "2ed7670affc680005840d0918489cb1ac36e1c5a4021defcc57ae44186ae7459",
+      "git_blob_sha": "1867e5763e724fb2c3641f28297da24b311bdcda"
+    },
+    {
+      "path": "history/recipe-v1.json",
+      "bytes": 15037,
+      "sha256": "0bea2453bc31f3f93109b9c64c7952aa690e6e6e8e5794c35a5630b8f9b38b21",
+      "git_blob_sha": "01c0b2008499d7df9449dd881ff9d9fd7f0f6853"
+    },
+    {
+      "path": "revisions/v2/delta.json",
+      "bytes": 11454,
+      "sha256": "55ef2d173ced7e3ee8036d4d059dfacaf8391e8c95378d12d9279e379e378612",
+      "git_blob_sha": "df2760ac8891256641eb535eb9d8e33cbb1aa32e"
+    },
+    {
+      "path": "revisions/v2/request.txt",
+      "bytes": 649,
+      "sha256": "e1f77388fe81de2fc5089529876c772304e40948ccfb595f949282de099777bf",
+      "git_blob_sha": "87b66c48e837ecad49ad8f9f1a6ac14a8fc1569c"
+    },
+    {
+      "path": "revisions/v2/response.md",
+      "bytes": 2278,
+      "sha256": "787b2eb2e61dfd8f530a95f7c41d5b99b8292870fe991e46ff383feca7109ba8",
+      "git_blob_sha": "374164b6c8b2618116aae5322ebf3328c79e3b87"
+    }
+  ],
+  "external_semantic_input_count": 8,
+  "external_population_effect": 0,
+  "counts": {
+    "local_population": 204,
+    "subslice_population": 462
+  },
+  "raw_additional_source_identity_incorporated": "packages/schema/src/actions/resource.ts",
+  "new_source_captures": 0,
+  "verification": "exact replacement, inverse byte equality, source and file hashes; no product execution",
+  "product_tests": "NOT_RUN",
+  "provider_execution": "NOT_RUN",
+  "oracle_access": false,
+  "remote_writes": 0,
+  "model_tokens": "UNKNOWN",
+  "model_cost": "UNKNOWN"
+}

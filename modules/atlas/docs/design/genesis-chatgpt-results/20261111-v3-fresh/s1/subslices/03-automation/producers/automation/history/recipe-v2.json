@@ -1,0 +1,654 @@
+{
+  "schema": "genesis-l1-producer-recipe/v1",
+  "task": "AUTOMATION-L1",
+  "role": "producer_only",
+  "repository": "gustavomhss/hugr-orchestra",
+  "artifact_key": "s1.core.automation",
+  "layer": 1,
+  "need": "flow",
+  "scope": "orchestra.s1",
+  "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "kit_commit": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+  "inheritance_commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "publication_owner": "/root",
+  "branch": "genesis-s1-automation",
+  "final_prefix": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation",
+  "population": {
+    "count": 204,
+    "family_counts": {
+      "actions": 155,
+      "board": 38,
+      "scheduled-task": 11
+    },
+    "substantive_implementations": 115,
+    "actions_implementations": 83,
+    "existing_validation_files": 89,
+    "decisive_existing_test_files": 7,
+    "orientation_validation_files": 82,
+    "unknown_source_dispositions": 0
+  },
+  "actual_inputs": [
+    {
+      "path": "../../inputs/COMMON.md",
+      "bytes": 12959,
+      "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+      "read_scope": "full"
+    },
+    {
+      "path": "../../inputs/mission.json",
+      "bytes": 6006,
+      "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+      "read_scope": "full"
+    },
+    {
+      "path": "../../inputs/inputs.json",
+      "bytes": 6979,
+      "sha256": "8388b4899512c8a7a8ac358a322da64bf8b2db5651f228e9090bebfc21a606a0",
+      "read_scope": "full"
+    },
+    {
+      "path": "../../inputs/AGENTS.md",
+      "bytes": 16501,
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "read_scope": "full"
+    },
+    {
+      "path": "../../inputs/SKILL.md",
+      "bytes": 8143,
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+      "read_scope": "full"
+    },
+    {
+      "path": "../../inputs/sources.jsonl",
+      "bytes": 119405,
+      "sha256": "1643a358ccaafe0ca9e6a9051d7c1a9bc9a1922834d6183e52703f6de2db077c",
+      "read_scope": "exact population selection legacy_artifact_key == \"s1.core.automation\""
+    },
+    {
+      "path": "../../inputs/criteria.json",
+      "bytes": 4001,
+      "sha256": "8f86bdd36949185df39f729a2de16c5ea7166ccd1638f74b197cad60d1551116",
+      "read_scope": "full"
+    },
+    {
+      "path": "../../inputs/references/principles.md",
+      "bytes": 6010,
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+      "read_scope": "full"
+    },
+    {
+      "path": "../../inputs/references/fatia-1.md",
+      "bytes": 3987,
+      "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
+      "read_scope": "full"
+    },
+    {
+      "path": "../../inputs/references/fresh-start.md",
+      "bytes": 4983,
+      "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166",
+      "read_scope": "full"
+    },
+    {
+      "path": "../../inputs/references/orchestration.md",
+      "bytes": 4408,
+      "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+      "read_scope": "full"
+    },
+    {
+      "path": "../../inputs/references/judging.md",
+      "bytes": 5787,
+      "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+      "read_scope": "full"
+    },
+    {
+      "path": "../../inputs/references/transport.md",
+      "bytes": 8478,
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "read_scope": "full"
+    },
+    {
+      "path": "../../inputs/history/coverage-needs-projection.json",
+      "bytes": 726892,
+      "sha256": "05485c4bd0ac9c76814e44537788818bbcf1fbcbfb87dd8063ce30bf1a67e0cf",
+      "read_scope": "s1.core.automation projection and connected source dispositions"
+    },
+    {
+      "path": "../../inputs/history/a3-dossier.md",
+      "bytes": 177076,
+      "sha256": "36416073165d59eec9c7d847a26f414d855cc2a40758d548f4dd49669dccc5d4",
+      "read_scope": "selected pertinent ranges: 190–218, 414–428, 2240–2350, 2903–3101"
+    },
+    {
+      "path": "../../inputs/history/a4-dossier.md",
+      "bytes": 155061,
+      "sha256": "83b544ac46f99b2bf3585ff4e607bcd403e49eb20dd128deb5b6a029a772ead0",
+      "read_scope": "selected pertinent ranges: 246–304, 338–349"
+    },
+    {
+      "path": "../../inputs/history/bodies/automation.md",
+      "bytes": 4377,
+      "sha256": "83d483f7f56a0e3dfa7a29e89fea01b29d1b5529e36693b20a06fe9cc0db8b88",
+      "read_scope": "full"
+    },
+    {
+      "path": "context/genesis-ownership-plan.md",
+      "repository_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+      "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+      "bytes": 28267,
+      "read_scope": "normative public goals/invariants/AC/CC/QS/DoD; source captured through connector"
+    },
+    {
+      "path": "external-sources/packages/schema/src/actions.ts",
+      "repository_path": "packages/schema/src/actions.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "3b9c5cc47c6e043e9e5d6f013a8201c4258abe0b",
+      "sha256": "ff0507ebbb63a8a1ab74bc11187cb70bd19d51ed2ec8cb741eaf0155d03f6b07",
+      "bytes": 1071,
+      "role": "semantic_dependency_of_Core_Actions_call_sites",
+      "source_owner": "S1-04",
+      "population_member": false,
+      "read_scope": "raw external schema source supporting Core call sites",
+      "authority": "raw_source_not_acceptance_of_S1_04_artifact"
+    },
+    {
+      "path": "external-sources/packages/schema/AGENTS.md",
+      "repository_path": "packages/schema/AGENTS.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "88ff8b244e3fca3c8b23950514b7eff3cf37e85b",
+      "sha256": "ca79ab26b6eb07d1ed35a76851852d69475ec554dad7624714d3e47c15dce057",
+      "bytes": 5640,
+      "role": "applicable_package_instructions",
+      "source_owner": "S1-04",
+      "population_member": false,
+      "read_scope": "applicable Schema package instructions read in full",
+      "authority": "raw_source_not_acceptance_of_S1_04_artifact"
+    },
+    {
+      "path": "external-sources/packages/schema/src/actions/identity.ts",
+      "repository_path": "packages/schema/src/actions/identity.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "273b77520f81c755f62979b9609f45917e72e062",
+      "sha256": "1d3361dd26b49e366b7c59d14a589f6684a16b36bfec0b761e62481fc15f6f14",
+      "bytes": 4175,
+      "role": "semantic_dependency_of_Core_Actions_call_sites",
+      "source_owner": "S1-04",
+      "population_member": false,
+      "read_scope": "raw external schema source supporting Core call sites",
+      "authority": "raw_source_not_acceptance_of_S1_04_artifact"
+    },
+    {
+      "path": "external-sources/packages/schema/src/actions/operation.ts",
+      "repository_path": "packages/schema/src/actions/operation.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "da7b1bdfb6bd5f7dd8fd368adb5eb5402c37c6fe",
+      "sha256": "6ad34b7a3cbc4eb4c1ce500f6f665894c0a7792d4d12177cdd1e055592812f0f",
+      "bytes": 3857,
+      "role": "semantic_dependency_of_Core_Actions_call_sites",
+      "source_owner": "S1-04",
+      "population_member": false,
+      "read_scope": "raw external schema source supporting Core call sites",
+      "authority": "raw_source_not_acceptance_of_S1_04_artifact"
+    },
+    {
+      "path": "external-sources/packages/schema/src/actions/command.ts",
+      "repository_path": "packages/schema/src/actions/command.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "763fc67220a5a5962794593062f4705840e7598b",
+      "sha256": "46722d7902f6005986f3e2c372675e3f9e047e2dbe639e404146f151e1de3d85",
+      "bytes": 5060,
+      "role": "semantic_dependency_of_Core_Actions_call_sites",
+      "source_owner": "S1-04",
+      "population_member": false,
+      "read_scope": "raw external schema source supporting Core call sites",
+      "authority": "raw_source_not_acceptance_of_S1_04_artifact"
+    },
+    {
+      "path": "external-sources/packages/schema/src/schema.ts",
+      "repository_path": "packages/schema/src/schema.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "d19a39b9708cfcaeedc1d7c62503afbadfee5dd7",
+      "sha256": "a7cdac1ae9d21d9d71a3783a730ca29bc8fbe769d01479a19101a81eec2bb447",
+      "bytes": 1234,
+      "role": "semantic_dependency_of_Core_Actions_call_sites",
+      "source_owner": "S1-04",
+      "population_member": false,
+      "read_scope": "raw external schema source supporting Core call sites",
+      "authority": "raw_source_not_acceptance_of_S1_04_artifact"
+    },
+    {
+      "path": "external-sources/packages/schema/src/actions/workflow.ts",
+      "repository_path": "packages/schema/src/actions/workflow.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a061e32b53f984a7e103e836fdfac97e5f6e98ce",
+      "sha256": "435abb6cb694c30d00c01bb0c00c8dd9cd821df163fe8c73cb30a4f09ad18321",
+      "bytes": 3925,
+      "role": "semantic_dependency_of_Core_Actions_call_sites",
+      "source_owner": "S1-04",
+      "population_member": false,
+      "read_scope": "raw external schema source supporting Core call sites",
+      "authority": "raw_source_not_acceptance_of_S1_04_artifact"
+    },
+    {
+      "path": "external-sources/packages/schema/src/actions/run.ts",
+      "repository_path": "packages/schema/src/actions/run.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "830d6f13f362e0616160da6219f3eba8a9ab83df",
+      "sha256": "c91ac0507e4f4f304cea12b4681aea4f658aec6aa7fca9af478e0f38613267f8",
+      "bytes": 3593,
+      "role": "semantic_dependency_of_Core_Actions_call_sites",
+      "source_owner": "S1-04",
+      "population_member": false,
+      "read_scope": "raw external schema source supporting Core call sites",
+      "authority": "raw_source_not_acceptance_of_S1_04_artifact"
+    },
+    {
+      "path": "history/body-v1.md",
+      "bytes": 59832,
+      "sha256": "2ed7670affc680005840d0918489cb1ac36e1c5a4021defcc57ae44186ae7459",
+      "git_blob_sha": "1867e5763e724fb2c3641f28297da24b311bdcda",
+      "read_scope": "v2 documentary correction provenance"
+    },
+    {
+      "path": "history/recipe-v1.json",
+      "bytes": 15037,
+      "sha256": "0bea2453bc31f3f93109b9c64c7952aa690e6e6e8e5794c35a5630b8f9b38b21",
+      "git_blob_sha": "01c0b2008499d7df9449dd881ff9d9fd7f0f6853",
+      "read_scope": "v2 documentary correction provenance"
+    },
+    {
+      "path": "review-supplement-1-index.json",
+      "bytes": 246723,
+      "sha256": "b3a190b8f1bc17ea7f35fc0c53c5bb0f0f134570ac78f62a020452c3818d8902",
+      "git_blob_sha": "c42a17c0071f3c864f3e6eb11b5a7ae3fa0d37be",
+      "read_scope": "v2 documentary correction provenance"
+    },
+    {
+      "path": "external-source-captures.json",
+      "bytes": 6152,
+      "sha256": "a6173c03c76fdae97db1535253700257827062eecc74a5e4a4f6d67c1634fd57",
+      "git_blob_sha": "a1762e44be3aaae6ce5da319134f1023f1b8e094",
+      "read_scope": "v2 documentary correction provenance"
+    }
+  ],
+  "producer_procedure": [
+    "Ler COMMON/missão/AGENTS/SKILL/referências e ingerir histórico pertinente; priorizar 80 folhas Actions sem leitura decisiva.",
+    "Capturar 204 blobs fixados por conector GitHub read-only e verificar SHA1 Git e SHA256 de cada byte UTF-8.",
+    "Ler substantivamente todas as 115 implementações; inventariar 89 arquivos de validação e ler assertions decisivas de sete.",
+    "Escrever novo corpo completo, preservando histórico e seus limites; não implementar gaps para mudar a verdade.",
+    "Gerar evidência literal ampla e projeção curta; registrar disposição por fonte sem alegar execução.",
+    "Verificar somente integridade documental, população e âncoras; entregar para juízes independentes sem autocertificação.",
+    "v2: apply only AUT1-DELTA-PROPOSAL-01, preserve body/recipe v1 and frozen supplement1, and register seven external S1-04 semantic source identities; documentary byte checks only."
+  ],
+  "deterministic_receipt_generator": "revisions/v2/apply.py",
+  "public_criteria": [
+    {
+      "id": "GO-A1",
+      "producer_disposition": "Corpo operacional por propósito/estado/entrada/saída/falha/autoridade; aceite semântico pertence aos juízes.",
+      "status": "SUBMITTED_FOR_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "GO-A2",
+      "producer_disposition": "Capturas imutáveis, metadados de bytes, evidência e recibo do produtor persistidos; história não reescrita.",
+      "status": "SUBMITTED_FOR_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "GO-A3",
+      "producer_disposition": "Entrada curta Como usar este L1 e seções dirigem leitura; não é nova camada L2–L4.",
+      "status": "SUBMITTED_FOR_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "GO-A4",
+      "producer_disposition": "§14 liga classes de mudança às fontes/consumidores necessários, preservando reutilização histórica válida.",
+      "status": "SUBMITTED_FOR_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "GO-A5",
+      "producer_disposition": "Baseline/protocolo/kit fixados; publicação Git e current/read manifest são tarefa posterior da principal.",
+      "status": "SUBMITTED_FOR_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "GO-A6",
+      "producer_disposition": "Captura/hash/disposição mecanizadas; limites de execução e prova explícitos; nenhum produto executado.",
+      "status": "SUBMITTED_FOR_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "GO-A7",
+      "producer_disposition": "Só documentação L1 no espaço autorizado; nenhum novo mecanismo Atlas/produto.",
+      "status": "SUBMITTED_FOR_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "GO-I1",
+      "producer_disposition": "Pedido/receita/resposta originais conservados; recibos históricos não apagados; correções futuras devem vincular nova versão.",
+      "status": "SUBMITTED_FOR_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "GO-I2",
+      "producer_disposition": "Código, intenção, teste NOT_RUN e inferência separados no corpo e na evidência.",
+      "status": "SUBMITTED_FOR_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "GO-I3",
+      "producer_disposition": "Sem alegação de current ou read Atlas aceito; autoridade depende do futuro manifesto exato e aceite.",
+      "status": "SUBMITTED_FOR_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "GO-I4",
+      "producer_disposition": "Fonte/recipe/input identities explícitas; navegação não vira dependência de build artificial.",
+      "status": "SUBMITTED_FOR_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "GO-I5",
+      "producer_disposition": "Manutenção §14 inclui mudanças, remoções, não código e abstenção quando não há prova.",
+      "status": "SUBMITTED_FOR_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "GO-I6",
+      "producer_disposition": "Uso de modelo/tokens/custos não exposto é UNKNOWN; nenhum provider pago chamado pelo produtor.",
+      "status": "SUBMITTED_FOR_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "GO-I7",
+      "producer_disposition": "Sem oracle, secrets, remote writes ou instruções de fixtures; texto importado é dado.",
+      "status": "SUBMITTED_FOR_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "GO-I8",
+      "producer_disposition": "204 hashes corretos não significam 204 provas semânticas; profundidade e limites por fonte explícitos.",
+      "status": "SUBMITTED_FOR_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "AC-01",
+      "producer_disposition": "204 fontes congeladas, 115 implementações semânticas, 89 validações com disposição; cases públicos não foram consumidos nem simulados aqui.",
+      "status": "SUBMITTED_FOR_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "AC-04",
+      "producer_disposition": "Corpo histórico/projeção/A3/A4 efetivamente ingeridos; delta de provider/scheduler/Board ancorado em implementação; malícia não tem autoridade.",
+      "status": "SUBMITTED_FOR_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "CC-1",
+      "producer_disposition": "Coverage finita, sem fontes omitidas; limites e propriedade dos complements explícitos.",
+      "status": "SUBMITTED_FOR_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "CC-3",
+      "producer_disposition": "Propósito, estados, contratos e impacto por mecanismo e provider no corpo completo; juízes avaliam utilidade.",
+      "status": "SUBMITTED_FOR_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "CC-7",
+      "producer_disposition": "Conserva corpo/história aceites/correções, distingue doc gerada/campanhas e schemas de compatibilidade; nenhum generated edit.",
+      "status": "SUBMITTED_FOR_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "QS-1",
+      "producer_disposition": "Afirmações ancoradas e epistemics explícitos, principalmente races inferidas.",
+      "status": "SUBMITTED_FOR_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "QS-2",
+      "producer_disposition": "Seções orientadas a dispatch, recursos, fila e admissão/recovery; decisões de manutenção concretas.",
+      "status": "SUBMITTED_FOR_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "QS-3",
+      "producer_disposition": "Um corpo, arquivo de evidência e projeção; sem documento narrativo por fonte.",
+      "status": "SUBMITTED_FOR_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "QS-4",
+      "producer_disposition": "Boundaries de autoridade/auth/identity/preconditions/falhas e valores secretos explicitados.",
+      "status": "SUBMITTED_FOR_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "QS-5",
+      "producer_disposition": "Fontes e assertions existentes com hashes, limites reais e nenhum novo PASS; testes/consumidores/runtime não executados.",
+      "status": "SUBMITTED_FOR_INDEPENDENT_REVIEW"
+    },
+    {
+      "id": "QS-6",
+      "producer_disposition": "Aproveitamento de história, capture única por blob, limites de contagem/custo honestos; projeção evita repetir archive inteiro.",
+      "status": "SUBMITTED_FOR_INDEPENDENT_REVIEW"
+    }
+  ],
+  "evidence": {
+    "evidence.md": {
+      "anchors": 57,
+      "source_files": 122,
+      "selected_lines": 14289,
+      "literal_bytes": 865873,
+      "bytes": 953016
+    },
+    "evidence-review.md": {
+      "anchors": 57,
+      "source_files": 82,
+      "selected_lines": 1911,
+      "literal_bytes": 132041,
+      "bytes": 181923
+    }
+  },
+  "artifacts": [
+    {
+      "path": "body.md",
+      "bytes": 59953,
+      "sha256": "e9c89bea68d594bc61356ff461642ea23cd905d4584f2b52d32e10a5af984e55",
+      "git_blob_sha": "b8fec4854b4c1384d3c4a2a4f0d51d220c874618"
+    },
+    {
+      "path": "captures.json",
+      "bytes": 100039,
+      "sha256": "d705eeab9e7ade1461f151f3b72556696cd3bbac473baf3ab13bb14192cd28e1",
+      "git_blob_sha": "e1c2cb2f2a58ac0b22e9fc86862594798fc802eb"
+    },
+    {
+      "path": "coverage.jsonl",
+      "bytes": 223656,
+      "sha256": "580c1885a277f378d9f5c44f0dd335e58cb4dc02f23bc002179103dc90dcfd5f",
+      "git_blob_sha": "055916a29be2005f94a202949080f7d6139bff28"
+    },
+    {
+      "path": "evidence.md",
+      "bytes": 953016,
+      "sha256": "de46e809f97346c81701ee8af0144abbe8458386787a2598b2bc88b81ec2b400",
+      "git_blob_sha": "a00e38106ddfe903960659b3bfa4cb3fc73e69d3"
+    },
+    {
+      "path": "evidence-review.md",
+      "bytes": 181923,
+      "sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "git_blob_sha": "58a71f6514962e4a69def762e403140f9705909b"
+    },
+    {
+      "path": "request.txt",
+      "bytes": 6568,
+      "sha256": "9753f217c3879889af8399e36f9024a52d5188500c03e83485bd04fea0448b27",
+      "git_blob_sha": "9feb5466de0e2729aa07896258171ec0bfd53fef"
+    }
+  ],
+  "execution": {
+    "product_tests": "NOT_RUN",
+    "ci": "NOT_RUN",
+    "provider_mutations": "NOT_RUN",
+    "atlas_runtime": "NOT_RUN",
+    "consumers": "NOT_RUN",
+    "independent_judgments": "NOT_PERFORMED_BY_PRODUCER",
+    "L2_L4": "NOT_PRODUCED",
+    "local_product_changes": 0,
+    "remote_writes": 0,
+    "paid_provider_calls": 0,
+    "oracle_access": false,
+    "model_tokens": "UNKNOWN",
+    "model_cost": "UNKNOWN",
+    "model_usage_accounting": "Not exposed by host; unknown is not zero"
+  },
+  "unresolved_runtime_qualification": "All actual runtime/provider/TLS/scheduler/queue results remain unqualified; static observation is not execution.",
+  "important_static_limits": [
+    "Actions generic readback cannot confirm source/resource kinds and does not recover unattributed dispatch by guessing a run.",
+    "Board uses separate gh/ledger/heuristics; queue settle path does not show universal post-admission hold/pause revocation check (static inference, not reproduced defect).",
+    "Scheduler started is durable prompt admission; revocation can race admission and keep started without counting repeat/advancing next.",
+    "Capability create directly inserts while idle daemon waits on wake queue; possible wake gap is static inference with caller/runtime qualification absent."
+  ],
+  "global_complements": "Publication, two independent judges, consumers, L2–L4, Atlas isolated import/current/read/index and maintenance runs belong to principal after L1 acceptance.",
+  "producer_revision": 2,
+  "revision": {
+    "id": "AUTOMATION-L1-v2",
+    "proposal_id": "AUT1-DELTA-PROPOSAL-01",
+    "previous_body": {
+      "path": "history/body-v1.md",
+      "bytes": 59832,
+      "sha256": "2ed7670affc680005840d0918489cb1ac36e1c5a4021defcc57ae44186ae7459",
+      "git_blob_sha": "1867e5763e724fb2c3641f28297da24b311bdcda"
+    },
+    "previous_recipe": {
+      "path": "history/recipe-v1.json",
+      "bytes": 15037,
+      "sha256": "0bea2453bc31f3f93109b9c64c7952aa690e6e6e8e5794c35a5630b8f9b38b21",
+      "git_blob_sha": "01c0b2008499d7df9449dd881ff9d9fd7f0f6853"
+    },
+    "current_body": {
+      "path": "body.md",
+      "bytes": 59953,
+      "sha256": "e9c89bea68d594bc61356ff461642ea23cd905d4584f2b52d32e10a5af984e55",
+      "git_blob_sha": "b8fec4854b4c1384d3c4a2a4f0d51d220c874618"
+    },
+    "request": {
+      "path": "revisions/v2/request.txt",
+      "bytes": 649,
+      "sha256": "e1f77388fe81de2fc5089529876c772304e40948ccfb595f949282de099777bf",
+      "git_blob_sha": "87b66c48e837ecad49ad8f9f1a6ac14a8fc1569c"
+    },
+    "replacement_count": 1,
+    "scope": "Only the exact registered sentence in body §1.1; no other passage changed",
+    "correction_authority": "Principal authorization following producer's own source evidence; no oracle or judgment input",
+    "supplements_preserved": [
+      {
+        "path": "review-supplement-1.md",
+        "bytes": 338932,
+        "sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+        "git_blob_sha": "dab732abd7f47eb3f26473b5614fa92d2b747a46"
+      },
+      {
+        "path": "review-supplement-1-index.json",
+        "bytes": 246723,
+        "sha256": "b3a190b8f1bc17ea7f35fc0c53c5bb0f0f134570ac78f62a020452c3818d8902",
+        "git_blob_sha": "c42a17c0071f3c864f3e6eb11b5a7ae3fa0d37be"
+      },
+      {
+        "path": "review-supplement-1-receipt.json",
+        "bytes": 4644,
+        "sha256": "153f5b0d8c77ebb2c7c281457b9e2227c8d5b208e29dd10f2e180d95b5384567",
+        "git_blob_sha": "fb21bb10a3ba44ea0bf464fc7a9a02422f49cfd5"
+      }
+    ]
+  },
+  "external_dependencies": {
+    "type": "file_source_inputs_not_artifact_acceptance_edges",
+    "owner": "S1-04",
+    "semantic_input_count": 7,
+    "population_effect": 0,
+    "local_population_retained": 204,
+    "subslice_population_retained": 462,
+    "manifest": {
+      "path": "external-source-captures.json",
+      "bytes": 6152,
+      "sha256": "a6173c03c76fdae97db1535253700257827062eecc74a5e4a4f6d67c1634fd57",
+      "git_blob_sha": "a1762e44be3aaae6ce5da319134f1023f1b8e094"
+    },
+    "semantic_source_refs": [
+      {
+        "input_key": "file:packages/schema/src/actions.ts",
+        "path": "packages/schema/src/actions.ts",
+        "capture_path": "external-sources/packages/schema/src/actions.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "3b9c5cc47c6e043e9e5d6f013a8201c4258abe0b",
+        "sha256": "ff0507ebbb63a8a1ab74bc11187cb70bd19d51ed2ec8cb741eaf0155d03f6b07",
+        "bytes": 1071,
+        "source_owner": "S1-04",
+        "population_member": false,
+        "authority": "raw_source_only"
+      },
+      {
+        "input_key": "file:packages/schema/src/actions/identity.ts",
+        "path": "packages/schema/src/actions/identity.ts",
+        "capture_path": "external-sources/packages/schema/src/actions/identity.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "273b77520f81c755f62979b9609f45917e72e062",
+        "sha256": "1d3361dd26b49e366b7c59d14a589f6684a16b36bfec0b761e62481fc15f6f14",
+        "bytes": 4175,
+        "source_owner": "S1-04",
+        "population_member": false,
+        "authority": "raw_source_only"
+      },
+      {
+        "input_key": "file:packages/schema/src/actions/operation.ts",
+        "path": "packages/schema/src/actions/operation.ts",
+        "capture_path": "external-sources/packages/schema/src/actions/operation.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "da7b1bdfb6bd5f7dd8fd368adb5eb5402c37c6fe",
+        "sha256": "6ad34b7a3cbc4eb4c1ce500f6f665894c0a7792d4d12177cdd1e055592812f0f",
+        "bytes": 3857,
+        "source_owner": "S1-04",
+        "population_member": false,
+        "authority": "raw_source_only"
+      },
+      {
+        "input_key": "file:packages/schema/src/actions/command.ts",
+        "path": "packages/schema/src/actions/command.ts",
+        "capture_path": "external-sources/packages/schema/src/actions/command.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "763fc67220a5a5962794593062f4705840e7598b",
+        "sha256": "46722d7902f6005986f3e2c372675e3f9e047e2dbe639e404146f151e1de3d85",
+        "bytes": 5060,
+        "source_owner": "S1-04",
+        "population_member": false,
+        "authority": "raw_source_only"
+      },
+      {
+        "input_key": "file:packages/schema/src/schema.ts",
+        "path": "packages/schema/src/schema.ts",
+        "capture_path": "external-sources/packages/schema/src/schema.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "d19a39b9708cfcaeedc1d7c62503afbadfee5dd7",
+        "sha256": "a7cdac1ae9d21d9d71a3783a730ca29bc8fbe769d01479a19101a81eec2bb447",
+        "bytes": 1234,
+        "source_owner": "S1-04",
+        "population_member": false,
+        "authority": "raw_source_only"
+      },
+      {
+        "input_key": "file:packages/schema/src/actions/workflow.ts",
+        "path": "packages/schema/src/actions/workflow.ts",
+        "capture_path": "external-sources/packages/schema/src/actions/workflow.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "a061e32b53f984a7e103e836fdfac97e5f6e98ce",
+        "sha256": "435abb6cb694c30d00c01bb0c00c8dd9cd821df163fe8c73cb30a4f09ad18321",
+        "bytes": 3925,
+        "source_owner": "S1-04",
+        "population_member": false,
+        "authority": "raw_source_only"
+      },
+      {
+        "input_key": "file:packages/schema/src/actions/run.ts",
+        "path": "packages/schema/src/actions/run.ts",
+        "capture_path": "external-sources/packages/schema/src/actions/run.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "830d6f13f362e0616160da6219f3eba8a9ab83df",
+        "sha256": "c91ac0507e4f4f304cea12b4681aea4f658aec6aa7fca9af478e0f38613267f8",
+        "bytes": 3593,
+        "source_owner": "S1-04",
+        "population_member": false,
+        "authority": "raw_source_only"
+      }
+    ],
+    "instruction_inputs": [
+      "packages/schema/AGENTS.md"
+    ],
+    "impact_rule": "Changes to these pinned schema inputs require reassessing the corresponding Core binding/source/filter/operation/output claims; ownership and artifact acceptance remain S1-04"
+  },
+  "prior_receipt_generator": "build_artifacts.py (v1; retained unchanged, do not rerun over v2)"
+}

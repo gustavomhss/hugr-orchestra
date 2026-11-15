@@ -1,0 +1,159 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "relay": "/root/review_relay",
+  "packet": "boundaries",
+  "source": "review-packets/boundaries.txt",
+  "source_bytes": 82387,
+  "source_sha256": "e370401be0acb2b60a95ec1f8e165185b76e35f0bd511d4aab284a9c38db1ff3",
+  "recorded_at_utc": "2026-11-15T00:56:56.437942+00:00",
+  "dispatch_count": 7,
+  "parts_per_target": 3,
+  "completed_targets": [
+    "/root/s1_03_j1",
+    "/root/s1_03_j2"
+  ],
+  "pending_targets": [],
+  "calls": [
+    {
+      "sequence": 1,
+      "target": "/root/s1_03_j1",
+      "request_file": "request-j1-01.json",
+      "request_file_bytes": 28098,
+      "request_file_sha256": "830b3c9cd4a37916fdf2fe9bddd0431305fcc2a5c6dfefca7ebbafe64c45e007",
+      "message_bytes": 27839,
+      "message_sha256": "104fce05fac200d82e935ef4b24c2a417826b8e0791c47d5fbd7f56f68eea72d",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null,
+      "part": 1,
+      "payload_bytes": 27437,
+      "payload_sha256": "99d4d97f60b92705f02314623ae7ddf7e4013fe379f963b8a07a7d285fb1ebd2"
+    },
+    {
+      "sequence": 2,
+      "target": "/root/s1_03_j1",
+      "request_file": "request-j1-02.json",
+      "request_file_bytes": 28372,
+      "request_file_sha256": "e262d71c78e0fe0c71f458bd81f0adbb91c814e09ce321db1b0e62c5f2dd44a6",
+      "message_bytes": 27603,
+      "message_sha256": "fe993f19918cefbc497f5499735ede5baec03019f276cbdb4a10a646995aab4a",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null,
+      "part": 2,
+      "payload_bytes": 27474,
+      "payload_sha256": "3932f634e63d7e93f719c19763e6e94aa3de0911f410c0554ba2fd3406a60e6f"
+    },
+    {
+      "sequence": 3,
+      "target": "/root/s1_03_j1",
+      "request_file": "request-j1-02-correction.json",
+      "request_file_bytes": 692,
+      "request_file_sha256": "e2e026722b1419cb90fca572691d5b6d5e5ebf7177394053b0d9745ee94a0e7b",
+      "message_bytes": 620,
+      "message_sha256": "3dcaad08b9e12dac3d876877438bdc89206a2e746579fa34325df37fb6884681",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null,
+      "part": 2,
+      "kind": "literal-transcription-correction"
+    },
+    {
+      "sequence": 4,
+      "target": "/root/s1_03_j1",
+      "request_file": "request-j1-03.json",
+      "request_file_bytes": 28779,
+      "request_file_sha256": "457f9b57308f34a7b57ccd8e81984f484a8bbd0d54d9f240d7a1fffe5b1e528a",
+      "message_bytes": 28054,
+      "message_sha256": "3900ef916ca679c1eba8fdc3d544a757bb26522ccd0861048456f81bef6f1089",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null,
+      "part": 3,
+      "payload_bytes": 27478,
+      "payload_sha256": "c97a05fbc66cc17650fc9665aa5149ca5ae2f9b36d5b586892387b510a5f473f"
+    },
+    {
+      "sequence": 5,
+      "target": "/root/s1_03_j2",
+      "part": 1,
+      "request_file": "request-j2-01.json",
+      "request_file_bytes": 28098,
+      "request_file_sha256": "79cb01d64e6ed332bfeabacbc8161785c84c8f94ee16ab79d90ea78bde0bf370",
+      "message_bytes": 27839,
+      "message_sha256": "104fce05fac200d82e935ef4b24c2a417826b8e0791c47d5fbd7f56f68eea72d",
+      "payload_bytes": 27437,
+      "payload_sha256": "99d4d97f60b92705f02314623ae7ddf7e4013fe379f963b8a07a7d285fb1ebd2",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 6,
+      "target": "/root/s1_03_j2",
+      "part": 2,
+      "request_file": "request-j2-02.json",
+      "request_file_bytes": 28370,
+      "request_file_sha256": "b1126268584b8ff3bbb9340c51d0bcbc311dd354d8ba11cb3d3f9bae25ff2e7c",
+      "message_bytes": 27601,
+      "message_sha256": "436574808da5f3489b44dddc81a2b561110ee9b20c46cbe94a1e32cf954990b6",
+      "payload_bytes": 27472,
+      "payload_sha256": "b53fd43093c813404c9300a9a2596436a7f6cd62b9e124cc866c65a07ea900e1",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 7,
+      "target": "/root/s1_03_j2",
+      "part": 3,
+      "request_file": "request-j2-03.json",
+      "request_file_bytes": 28779,
+      "request_file_sha256": "7a3b5101c59bd6ebca289e1cf2c7d89c44a2825e407eb061f41d17e8705d93ba",
+      "message_bytes": 28054,
+      "message_sha256": "3900ef916ca679c1eba8fdc3d544a757bb26522ccd0861048456f81bef6f1089",
+      "payload_bytes": 27478,
+      "payload_sha256": "c97a05fbc66cc17650fc9665aa5149ca5ae2f9b36d5b586892387b510a5f473f",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    }
+  ],
+  "local_recorded_reconstruction": [
+    {
+      "target": "/root/s1_03_j1",
+      "raw_bytes": 82389,
+      "raw_sha256": "83f36d5bdeb43178f1d93ae9ddfa4702c617de0c1846dbcb77b7fe833a797d13",
+      "correction_applied": true,
+      "bytes": 82387,
+      "sha256": "e370401be0acb2b60a95ec1f8e165185b76e35f0bd511d4aab284a9c38db1ff3",
+      "equals_source": true
+    },
+    {
+      "target": "/root/s1_03_j2",
+      "bytes": 82387,
+      "sha256": "e370401be0acb2b60a95ec1f8e165185b76e35f0bd511d4aab284a9c38db1ff3",
+      "equals_source": true
+    }
+  ],
+  "known_transcription_corrections": [
+    {
+      "target": "/root/s1_03_j1",
+      "part": 2,
+      "original_request": "request-j1-02.json",
+      "correction_request": "request-j1-02-correction.json",
+      "detail": "R012: um parêntese excedente em cada linha pnpm-lock.yaml e yarn.lock, removidos por correção literal enviada antes da parte final."
+    }
+  ],
+  "receipt_limit": "Ferramenta retornou normalmente sem texto nem ID de despacho; os hashes descrevem os pedidos registrados e sua reconstrução local, não verificação remota nem suficiência semântica.",
+  "delivery_scope": "Pacote congelado integral, sem alteração de candidato/critério. Orientação pública da raiz fora do payload final.",
+  "slot_handling": "J1 concluído e original preservado antes de iniciar J2.",
+  "judgment_capture": "Ambos completed, originais salvos conforme response-capture.json."
+}

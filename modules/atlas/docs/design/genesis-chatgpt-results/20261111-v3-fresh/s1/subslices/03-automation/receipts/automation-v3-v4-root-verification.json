@@ -1,0 +1,24 @@
+{
+  "schema": "s1-03-root-correction-verification/v1",
+  "source": "producer original literal changes and archived bodies",
+  "checks": [
+    {
+      "version": 3,
+      "changes": 3,
+      "before_sha256": "e9c89bea68d594bc61356ff461642ea23cd905d4584f2b52d32e10a5af984e55",
+      "after_sha256": "b31d52e5bf25f6eca3807e9c1f418b70d865c9d63c5690125c530c54f8247d84",
+      "rest_unchanged": true,
+      "bytes": 60588
+    },
+    {
+      "version": 4,
+      "changes": 2,
+      "before_sha256": "b31d52e5bf25f6eca3807e9c1f418b70d865c9d63c5690125c530c54f8247d84",
+      "after_sha256": "968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae",
+      "rest_unchanged": true,
+      "bytes": 60767
+    }
+  ],
+  "tests": "NOT_RUN",
+  "semantic_acceptance": "PENDING_SAME_PAIR"
+}

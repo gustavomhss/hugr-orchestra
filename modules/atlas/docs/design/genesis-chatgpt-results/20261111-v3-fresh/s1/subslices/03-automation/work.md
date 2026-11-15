@@ -47,3 +47,22 @@ O mesmo par de juízes pediu os ramos faltantes de research-a/b. O autor prepara
 Operação real já observada: o arquivo Modelina de 266.885 bytes retornou unavailable no observador Atlas de limite256.000; fonte intacta. A proposta S4 é concreta e não aplicada. O guard oficial foi invocado em preflight e recusou a materialização sem Git (no-repository); não é gate aprovado. A política/autoridade Atlas de S1 permanece ausente e sua modificação é excluída pelo COMMON; ainda será feita a tentativa governada após pacote/binding reais. Os controles comuns S4 foram reconciliados por capacidade e seis componentes conferidos têm blobs idênticos; binding local não é transferido.
 
 Esta publicação preserva a produção em curso. A execução continua em revisão, L2–L4, Atlas, consumidores, manutenção, matriz e selagem final.
+
+## Revisão e correções v2
+
+O par atual recebeu diretamente da principal o oracle reservado congelado; autores e relay não o receberam. Research-a/b e automation-1/2 permanecem REQUEST_EVIDENCE até análise dos suplementos literais já preparados. Foram preservadas três correções mínimas: composição eager de transport/readers/resources versus resolução adiada de binding/operations/output; memo SCIP com duas entradas no total; fallback de shard pela ordem retain/touch do manifesto, sem cronologia presumida. Os corpos anteriores e pedidos/respostas estão em history/ e revisions/. A população continua462; oito schemas externos são evidência bruta auxiliar de S1-04, sem aceite daquele artefato. Nenhum L1 foi liberado integralmente até este registro.
+
+O release S4 foi relido e permanece db9b4235022c4df32fe3bfd4faeea8adcd69abb7. A fila de julgamentos e a prova Atlas seguem em execução; este registro não encerra a missão.
+
+
+## Atualização — correções e captura nativa anterior ao aceite
+
+Corpos atuais: automation v4 (SHA256968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae) com seis substituições precisas; research v2 (SHA256d2def4b82495605b491e0d5494b1511e1b68c47dcffa84af87c8d35705468661) com duas. Versões e pedidos originais preservados; não há aceite L1 global. O mesmo par recebeu o oracle diretamente da principal. Relay e autores permanecem sem oracle.
+
+Suplementos literais automation1–4 e researchA/B conferidos independentemente por SHA256, Git blob, linhas originais e offsets do dossiê; o recibo não certifica semântica. O grafo necessário de12artefatos está congelado em artifact-plan.json antes da produçãoL2–L4. Dependentes só serão liberados com ambos os aceites exatos.
+
+A preparação real do pacote de captura de automação, ainda explicitamente blocked/preacceptance, declarou231inputs efetivos e226source_refs e foi interrompida durante a captura de fontes ao recusar a projeção histórica726892bytes com native-file-limit. Exit1; nenhum candidate/prepared file; nenhuma publicação tentada. Não é o prepare final da missão. Input necessário não foi removido, recortado ou reclassificado para passar. Limite externoS4 documentado com operação e proposta não aplicada; demais trabalhos independentes continuam.
+
+Boundary/support em revisão: ambos pediram provas dirigidas; J1support encontrou atribuição arquitetural Protocol→Core não sustentada pelo README. Autor recebeu correção limitada e complementação, sem alteração de produto. A entrada históricaCore continua preservada.
+
+A matriz única dos50IDs está IN_PROGRESS/HOLD, com obrigações locais e complementos globais separados. Revisão, binding, consumo, manutenção e gates não são inferidos de hashes ou captura.

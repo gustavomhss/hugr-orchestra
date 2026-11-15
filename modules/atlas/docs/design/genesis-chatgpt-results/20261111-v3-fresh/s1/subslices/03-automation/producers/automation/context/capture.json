@@ -1,0 +1,10 @@
+{
+  "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+  "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+  "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+  "bytes": 28267,
+  "capture_path": "context/genesis-ownership-plan.md",
+  "connector": "github.fetch_blob",
+  "git_blob_verified": true
+}

@@ -1,0 +1,101 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "relay": "/root/review_relay",
+  "packet": "automation-4",
+  "source": "review-packets/automation-4.txt",
+  "source_bytes": 36664,
+  "source_sha256": "7460bdb729767ca2a99a50edd7531c56126d8e9bdef18203056d276a7d9ed12a",
+  "recorded_at_utc": "2026-11-15T00:42:06.795794+00:00",
+  "dispatch_count": 4,
+  "parts_per_target": 2,
+  "completed_targets": [
+    "/root/s1_03_j1",
+    "/root/s1_03_j2"
+  ],
+  "pending_targets": [],
+  "calls": [
+    {
+      "sequence": 1,
+      "target": "/root/s1_03_j1",
+      "part": 1,
+      "request_file": "request-j1-01.json",
+      "request_file_bytes": 18989,
+      "request_file_sha256": "e0c1d506614dce3460ac0b91703c63dc94bbd0c1d470caafcd5fffb1bc68530a",
+      "message_bytes": 18740,
+      "message_sha256": "9b35342dc698145dfeb34900e426f2a928cd08c65e8d6c6817cda20da5676b80",
+      "payload_bytes": 18336,
+      "payload_sha256": "d2415989608185943d030e60922a3220b1a3eefd48c459c8730f56fc7b4945b2",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 2,
+      "target": "/root/s1_03_j1",
+      "part": 2,
+      "request_file": "request-j1-02.json",
+      "request_file_bytes": 19490,
+      "request_file_sha256": "5d83f24609d48f3fcb8417887666ad40d77a2ed0f6664da25517ead365ba0ea7",
+      "message_bytes": 18906,
+      "message_sha256": "667e62a3f577f0336d5860b56b8846e0c1339abc4cafb34d93aa339c0d05421b",
+      "payload_bytes": 18328,
+      "payload_sha256": "4019d068839d998c9843063c661e299290a1933e5e44a28c725c07eb3e813d08",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 3,
+      "target": "/root/s1_03_j2",
+      "part": 1,
+      "request_file": "request-j2-01.json",
+      "request_file_bytes": 18989,
+      "request_file_sha256": "733947cfd03feade0717d7ebc5432541e1f39ac7b477db47afc18137607b0208",
+      "message_bytes": 18740,
+      "message_sha256": "9b35342dc698145dfeb34900e426f2a928cd08c65e8d6c6817cda20da5676b80",
+      "payload_bytes": 18336,
+      "payload_sha256": "d2415989608185943d030e60922a3220b1a3eefd48c459c8730f56fc7b4945b2",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 4,
+      "target": "/root/s1_03_j2",
+      "part": 2,
+      "request_file": "request-j2-02.json",
+      "request_file_bytes": 19490,
+      "request_file_sha256": "f5e8474ffb1d03e46d392e9a75dab1fe18b5e285960dc2f11a3967e9aaf1751a",
+      "message_bytes": 18906,
+      "message_sha256": "667e62a3f577f0336d5860b56b8846e0c1339abc4cafb34d93aa339c0d05421b",
+      "payload_bytes": 18328,
+      "payload_sha256": "4019d068839d998c9843063c661e299290a1933e5e44a28c725c07eb3e813d08",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    }
+  ],
+  "local_recorded_reconstruction": [
+    {
+      "target": "/root/s1_03_j1",
+      "bytes": 36664,
+      "sha256": "7460bdb729767ca2a99a50edd7531c56126d8e9bdef18203056d276a7d9ed12a",
+      "equals_source": true
+    },
+    {
+      "target": "/root/s1_03_j2",
+      "bytes": 36664,
+      "sha256": "7460bdb729767ca2a99a50edd7531c56126d8e9bdef18203056d276a7d9ed12a",
+      "equals_source": true
+    }
+  ],
+  "known_transcription_corrections": [],
+  "receipt_limit": "Ferramenta retornou normalmente sem texto nem ID de despacho; os hashes descrevem os pedidos registrados e sua reconstrução local, não verificação remota nem suficiência semântica.",
+  "delivery_scope": "Conteúdo literal inline. Orientação pública de economia de relato da raiz fora dos delimitadores literais.",
+  "slot_handling": "J2 ativado após J1 completed e captura original; mesmos handles preservados.",
+  "judgment_capture": "Ambos completed e respostas originais capturadas literalmente; ver response-capture.json."
+}

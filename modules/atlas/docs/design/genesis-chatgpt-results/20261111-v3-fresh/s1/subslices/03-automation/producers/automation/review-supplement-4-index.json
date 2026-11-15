@@ -1,0 +1,3277 @@
+{
+  "schema": "genesis-review-supplement-index/v1",
+  "review_batch": "automation-4",
+  "task": "AUTOMATION-L1",
+  "principal_request": {
+    "path": "revisions/v4/request.txt",
+    "bytes": 1703,
+    "sha256": "6da39e6a661e646cb6766d1119c986a98fe87ceb2c8dcec3c45fccdeacd910fc",
+    "git_blob_sha": "07abdecb9b822719aa09d8e99d5095ba1b9f0419"
+  },
+  "public_request_refs": [
+    {
+      "path": "../../relay/automation-4/j1-response.md",
+      "bytes": 6667,
+      "sha256": "bf7d7f1861cd44306931482f0322cd5f19da35bb4b1bf6568e0075d7cfa5415c",
+      "git_blob_sha": "95e14d44f011e43fdae066928bd33f2c21c48b0e",
+      "judge_id": "J1",
+      "origin": "public_request_relay",
+      "repository_commit": null
+    },
+    {
+      "path": "../../relay/automation-4/j2-response.md",
+      "bytes": 5380,
+      "sha256": "9f27a6a9a5853fa58747d88c66f22a4fdd2024d3f550bb095f59363b037c8f0d",
+      "git_blob_sha": "9cd2db49e4ac68de10ccb3933a39b28a89f2634d",
+      "judge_id": "J2",
+      "origin": "public_request_relay",
+      "repository_commit": null
+    }
+  ],
+  "body_ref": {
+    "path": "body.md",
+    "bytes": 60767,
+    "sha256": "968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae",
+    "git_blob_sha": "e26213eb2fc76dc843dca17d1111334c76f88890"
+  },
+  "recipe_ref": {
+    "path": "recipe.json",
+    "bytes": 35356,
+    "sha256": "c769860c4a685cdbeaff94d471ca393078b74b275924048a996a6376fbeb61c6",
+    "git_blob_sha": "96513c04a7d69233a2127315e6915152d485ebb8"
+  },
+  "body_scope": {
+    "sections": [
+      10,
+      11,
+      12,
+      13,
+      14
+    ],
+    "utf8_byte_interval": [
+      48200,
+      60767
+    ],
+    "sha256": "b36caf32ed321a23f29489fa88a02973ea68196e9deb5e7c0636edcd3e503da8",
+    "contains_only_two_authorized_v4_corrections": true
+  },
+  "authorized_revision_receipt": {
+    "path": "revisions/v4/delta.json",
+    "bytes": 16136,
+    "sha256": "8132046e50a17ec68c9620022bc49147ffc8dfb13cbab46da1c725161723fc33",
+    "git_blob_sha": "c79d28f89e04f9fb87720f2dc55659ce908cfe3d"
+  },
+  "authorized_changes": [
+    {
+      "id": "AUT4-DELTA-01",
+      "section": "12",
+      "old_text": "Em capability, verifica owner e `holds` antes da Session e outra vez antes de prompt.",
+      "new_text": "Em capability, verifica a presença/identidade do owner antes da Session; para claim ainda não admitida, verifica `holds` antes da Session e outra vez antes de prompt, sem reler a Session do owner.",
+      "v3_byte_interval": [
+        52110,
+        52195
+      ],
+      "v4_byte_interval": [
+        52110,
+        52308
+      ],
+      "line_1_based": 304,
+      "old_bytes": 85,
+      "new_bytes": 198,
+      "old_sha256": "39c1d613a2bdd472b4267ba7ab92a2a93488afe93924a51f64ff4c0a993c1f24",
+      "new_sha256": "56ad5e5f1a5220eb028ee5f7f1cb3a6377a7b95d06c455ee73e948fe9eb35317",
+      "sources": [
+        {
+          "path": "packages/core/src/scheduled-task.ts",
+          "archive": "sources/packages/core/src/scheduled-task.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "0a89bbdc576091ca01445e45e1500ed4008898a9",
+          "sha256": "8c204bd55a8cf8fd1dbddc232f5dfa84b9190822d074ccc72e85594e457af12b",
+          "bytes": 26123,
+          "intervals": [
+            {
+              "first_line": 152,
+              "last_line": 185,
+              "source_byte_start": 7365,
+              "source_byte_end_exclusive": 9670,
+              "bytes": 2305,
+              "sha256": "142fa50cc90f2fa8f479c7f6d6dd3787017f73b161520fdc71c6cf1a3fa5e5ac"
+            }
+          ]
+        },
+        {
+          "path": "packages/core/src/scheduled-task/capability.ts",
+          "archive": "sources/packages/core/src/scheduled-task/capability.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "ab0410651446d3d1d98d9d8028a3ad79bb46aecb",
+          "sha256": "d024c2e05f0afc70fe49b801ee77b892a8097f5d499cd097d60f230cae67044e",
+          "bytes": 21721,
+          "intervals": [
+            {
+              "first_line": 121,
+              "last_line": 157,
+              "source_byte_start": 5595,
+              "source_byte_end_exclusive": 6915,
+              "bytes": 1320,
+              "sha256": "b678c239a31ba99218b07e46a60c1206b07eb5ec6c082c42f9b2e82d63c5f461"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "AUT4-DELTA-02",
+      "section": "12",
+      "old_text": "Capability manualKey reutiliza Session somente depois de admissão; claim ainda starting retorna “retry shortly”; revoked não executa novamente com a mesma chamada.",
+      "new_text": "No replay de capability manualKey, `running` sem SessionInput retorna “retry shortly” e `revoked` retorna erro; nos demais casos, o ramo devolve o SessionID retido com `reused:true`, sem exigir admissão para uma row já assentada.",
+      "v3_byte_interval": [
+        53944,
+        54113
+      ],
+      "v4_byte_interval": [
+        54057,
+        54292
+      ],
+      "line_1_based": 318,
+      "old_bytes": 169,
+      "new_bytes": 235,
+      "old_sha256": "2f5ab0de8b60b65a35583acf3d57db16c96a69053981dda5918e7bff30e9de4e",
+      "new_sha256": "7bd31d66ace0d96ddd43147e7cf040cfc7990618bb5da1fd40a708e6ec8e19b7",
+      "sources": [
+        {
+          "path": "packages/core/src/scheduled-task/capability.ts",
+          "archive": "sources/packages/core/src/scheduled-task/capability.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "ab0410651446d3d1d98d9d8028a3ad79bb46aecb",
+          "sha256": "d024c2e05f0afc70fe49b801ee77b892a8097f5d499cd097d60f230cae67044e",
+          "bytes": 21721,
+          "intervals": [
+            {
+              "first_line": 335,
+              "last_line": 378,
+              "source_byte_start": 14313,
+              "source_byte_end_exclusive": 16627,
+              "bytes": 2314,
+              "sha256": "688e91325bd99978927834a0dcc09d1e5242c8f1a4cc07de8af724c8f8efb1b9"
+            }
+          ]
+        },
+        {
+          "path": "packages/core/src/scheduled-task.ts",
+          "archive": "sources/packages/core/src/scheduled-task.ts",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "0a89bbdc576091ca01445e45e1500ed4008898a9",
+          "sha256": "8c204bd55a8cf8fd1dbddc232f5dfa84b9190822d074ccc72e85594e457af12b",
+          "bytes": 26123,
+          "intervals": [
+            {
+              "first_line": 187,
+              "last_line": 218,
+              "source_byte_start": 9671,
+              "source_byte_end_exclusive": 11366,
+              "bytes": 1695,
+              "sha256": "eb6f8bba87a974a21c0fb37ecc67573000e0ce25ae97e5e8cc3e258eecc9f76d"
+            },
+            {
+              "first_line": 272,
+              "last_line": 302,
+              "source_byte_start": 13674,
+              "source_byte_end_exclusive": 15274,
+              "bytes": 1600,
+              "sha256": "00a85e47facdb694c567c88cedaf35058551ffaafecd9695be1d6ed12b07b029"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "supplement": {
+    "path": "review-supplement-4.md",
+    "bytes": 93027,
+    "sha256": "686a0a0044cf44a0eb7ae6cb397a07632f823af52b610c6db276d27e031f4ce2",
+    "git_blob_sha": "01d3eef54dfdb4cd5713298f0688ce0f9fd74733"
+  },
+  "request_map": [
+    {
+      "judge_id": "J1",
+      "request_id": "RE-AUT4-01",
+      "literal_chain_ids": [
+        "AUT4-C01",
+        "AUT4-C02",
+        "AUT4-C03",
+        "AUT4-C04",
+        "AUT4-C05",
+        "AUT4-C06"
+      ],
+      "source_paths": [
+        "packages/core/src/scheduled-task.ts",
+        "packages/core/src/scheduled-task/capability.ts",
+        "packages/core/src/scheduled-task/shared.ts",
+        "packages/core/src/scheduled-task/sql.ts",
+        "packages/core/src/scheduled-task/port.ts",
+        "packages/core/src/scheduled-task/model.ts"
+      ],
+      "caller_branch_response_sequences": [
+        [
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 349,
+            "last_line": 361,
+            "source_byte_start": 17569,
+            "source_byte_end_exclusive": 18135,
+            "excerpt_sha256": "b0059493ac78cac87c2474e8ceaa81e58d8d864c2ad3a52d044814380b6d6034",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C03",
+            "path": "packages/core/src/scheduled-task/shared.ts",
+            "first_line": 46,
+            "last_line": 66,
+            "source_byte_start": 1589,
+            "source_byte_end_exclusive": 2464,
+            "excerpt_sha256": "e85be411da125bc0ade82f08f0d7d9b8902494b00ece7435bcfbcb18c2ffd978",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 107,
+            "last_line": 111,
+            "source_byte_start": 4971,
+            "source_byte_end_exclusive": 5250,
+            "excerpt_sha256": "989d589d562dd3144aa80cb4ba9380d14829fd607e14359c13b57d962fab8812",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 506,
+            "last_line": 508,
+            "source_byte_start": 24217,
+            "source_byte_end_exclusive": 24369,
+            "excerpt_sha256": "fbd49bca572c88c5af5e9470ea4734e211c12cad75e7b62d51fd3a0f9638c5af",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ],
+        [
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 362,
+            "last_line": 473,
+            "source_byte_start": 18135,
+            "source_byte_end_exclusive": 23354,
+            "excerpt_sha256": "ccad122cfbd2d23623fd87f7c13f665b4d6a84bcbc03287cb9fd4408e71713d2",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ],
+        [
+          {
+            "chain_id": "AUT4-C02",
+            "path": "packages/core/src/scheduled-task/capability.ts",
+            "first_line": 70,
+            "last_line": 87,
+            "source_byte_start": 3447,
+            "source_byte_end_exclusive": 4139,
+            "excerpt_sha256": "68e954d881cc7b1830cccae6dfc055f1d83132f93d72813f3418d8a1f943250f",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C02",
+            "path": "packages/core/src/scheduled-task/capability.ts",
+            "first_line": 238,
+            "last_line": 268,
+            "source_byte_start": 9929,
+            "source_byte_end_exclusive": 11418,
+            "excerpt_sha256": "340db3d906d443b472c27d7b995a1f13f61e7959eb2119941eb60f3d775300c8",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C02",
+            "path": "packages/core/src/scheduled-task/capability.ts",
+            "first_line": 384,
+            "last_line": 394,
+            "source_byte_start": 16692,
+            "source_byte_end_exclusive": 17109,
+            "excerpt_sha256": "c0ef15fab7ce45caf1bf6f0ea12dbebff6a76cc0ca84476bcca8559bf9a2cbef",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ],
+        [
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 156,
+            "last_line": 185,
+            "source_byte_start": 7780,
+            "source_byte_end_exclusive": 9670,
+            "excerpt_sha256": "76cfef1dbe6c9096a45b021b49f59769717a416723814c6f4556476ecc3c3a05",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C02",
+            "path": "packages/core/src/scheduled-task/capability.ts",
+            "first_line": 121,
+            "last_line": 157,
+            "source_byte_start": 5595,
+            "source_byte_end_exclusive": 6915,
+            "excerpt_sha256": "b678c239a31ba99218b07e46a60c1206b07eb5ec6c082c42f9b2e82d63c5f461",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ],
+        [
+          {
+            "chain_id": "AUT4-C03",
+            "path": "packages/core/src/scheduled-task/shared.ts",
+            "first_line": 94,
+            "last_line": 134,
+            "source_byte_start": 3215,
+            "source_byte_end_exclusive": 4538,
+            "excerpt_sha256": "cf19f4f8d65be1fbec27703ce1fb03b136bc763873a62ea8620ce46b9aa3c0cf",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C06",
+            "path": "packages/core/src/scheduled-task/model.ts",
+            "first_line": 94,
+            "last_line": 140,
+            "source_byte_start": 4434,
+            "source_byte_end_exclusive": 6670,
+            "excerpt_sha256": "27f51d94e893dd0a45fe75fc9e9d0433891f34e96584405c12dd0f18aa8e0618",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C04",
+            "path": "packages/core/src/scheduled-task/sql.ts",
+            "first_line": 9,
+            "last_line": 76,
+            "source_byte_start": 437,
+            "source_byte_end_exclusive": 3559,
+            "excerpt_sha256": "99271755966623cf64df6afed2756ebb29ab89ce3f2900e96ec63a2629ffee85",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ],
+        [
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 349,
+            "last_line": 350,
+            "source_byte_start": 17569,
+            "source_byte_end_exclusive": 17668,
+            "excerpt_sha256": "385ef3f02e3c65725eddbbf9cab5f45ddfa1c501851dec6c65c92021424a2184",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C05",
+            "path": "packages/core/src/scheduled-task/port.ts",
+            "first_line": 7,
+            "last_line": 41,
+            "source_byte_start": 206,
+            "source_byte_end_exclusive": 2092,
+            "excerpt_sha256": "2a470da5a8694148251c1f3fb021e8cb6fbf862cdf98763e9b2d6d266a38cdf5",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ]
+      ],
+      "shared_reconciliation": null,
+      "historical_evidence": null,
+      "existing_test_literal_references": null,
+      "status": "EVIDENCE_SUPPLIED_NOT_JUDGED"
+    },
+    {
+      "judge_id": "J1",
+      "request_id": "RE-AUT4-02",
+      "literal_chain_ids": [
+        "AUT4-C01",
+        "AUT4-C02",
+        "AUT4-C06",
+        "AUT4-C07"
+      ],
+      "source_paths": [
+        "packages/core/src/scheduled-task.ts",
+        "packages/core/src/scheduled-task/capability.ts",
+        "packages/core/src/scheduled-task/model.ts",
+        "packages/core/src/scheduled-task/capability-model.ts"
+      ],
+      "caller_branch_response_sequences": [
+        [
+          {
+            "chain_id": "AUT4-C06",
+            "path": "packages/core/src/scheduled-task/model.ts",
+            "first_line": 1,
+            "last_line": 140,
+            "source_byte_start": 0,
+            "source_byte_end_exclusive": 6670,
+            "excerpt_sha256": "f29962a40bd89bca23cff892d3ff01fcfa8e660b390c4831c88ca7cc695f0b5d",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 408,
+            "last_line": 450,
+            "source_byte_start": 20067,
+            "source_byte_end_exclusive": 22243,
+            "excerpt_sha256": "7fba57ef4a0494d9db49efe4882fd2a7bcca7ad5c98b9dcdcf4ad58d9135b8b0",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 521,
+            "last_line": 528,
+            "source_byte_start": 24618,
+            "source_byte_end_exclusive": 25133,
+            "excerpt_sha256": "0ca57602588232726390a55f0c6fcc2b225a3471dbb1670f5f0b39db74689bbf",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ],
+        [
+          {
+            "chain_id": "AUT4-C02",
+            "path": "packages/core/src/scheduled-task/capability.ts",
+            "first_line": 397,
+            "last_line": 453,
+            "source_byte_start": 17220,
+            "source_byte_end_exclusive": 20045,
+            "excerpt_sha256": "43661a6fccbd7b87d11c6c00653c8b23994780dc438c8c699d96e51e6d1c2d38",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C02",
+            "path": "packages/core/src/scheduled-task/capability.ts",
+            "first_line": 487,
+            "last_line": 493,
+            "source_byte_start": 21477,
+            "source_byte_end_exclusive": 21721,
+            "excerpt_sha256": "0afe68e5b55dd76f5891201577db79eefee2e22be779bd2e9c693bdb7f147f26",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C07",
+            "path": "packages/core/src/scheduled-task/capability-model.ts",
+            "first_line": 1,
+            "last_line": 218,
+            "source_byte_start": 0,
+            "source_byte_end_exclusive": 10649,
+            "excerpt_sha256": "256620d07285f1e60c7e6023f4101e4f8738a565f43a6b859d8c1a7861230620",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ],
+        [
+          {
+            "chain_id": "AUT4-C07",
+            "path": "packages/core/src/scheduled-task/capability-model.ts",
+            "first_line": 83,
+            "last_line": 105,
+            "source_byte_start": 4012,
+            "source_byte_end_exclusive": 5326,
+            "excerpt_sha256": "42e180a8a3fbb208c1f84c68aa1cea1fffd6f4ab9e79a2d2c3f08f942945bc47",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C07",
+            "path": "packages/core/src/scheduled-task/capability-model.ts",
+            "first_line": 122,
+            "last_line": 175,
+            "source_byte_start": 6058,
+            "source_byte_end_exclusive": 8573,
+            "excerpt_sha256": "0c3cb1970e26d26a053d9d5801d316fed296a72a65232efd03701437d626c326",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C07",
+            "path": "packages/core/src/scheduled-task/capability-model.ts",
+            "first_line": 177,
+            "last_line": 200,
+            "source_byte_start": 8574,
+            "source_byte_end_exclusive": 9690,
+            "excerpt_sha256": "da5ca9a4598c943eda153db101beffba3328b1d648da02ee4cc64a609b8d1bd0",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ],
+        [
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 23,
+            "last_line": 32,
+            "source_byte_start": 1018,
+            "source_byte_end_exclusive": 1595,
+            "excerpt_sha256": "5a2ab1604f7021867fc7de41bf584ea0246dffc1feba184d019d8c6cb6355a54",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C07",
+            "path": "packages/core/src/scheduled-task/capability-model.ts",
+            "first_line": 27,
+            "last_line": 38,
+            "source_byte_start": 1207,
+            "source_byte_end_exclusive": 1766,
+            "excerpt_sha256": "3f5e334c3daa00870ec1c2938986e8d73f43062f412d725c9e50ec1ee8a3df1b",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ]
+      ],
+      "shared_reconciliation": null,
+      "historical_evidence": null,
+      "existing_test_literal_references": null,
+      "status": "EVIDENCE_SUPPLIED_NOT_JUDGED"
+    },
+    {
+      "judge_id": "J1",
+      "request_id": "RE-AUT4-03",
+      "literal_chain_ids": [
+        "AUT4-C01",
+        "AUT4-C02",
+        "AUT4-C03",
+        "AUT4-C04",
+        "AUT4-C06",
+        "AUT4-C07"
+      ],
+      "source_paths": [
+        "packages/core/src/scheduled-task.ts",
+        "packages/core/src/scheduled-task/capability.ts",
+        "packages/core/src/scheduled-task/shared.ts",
+        "packages/core/src/scheduled-task/sql.ts",
+        "packages/core/src/scheduled-task/model.ts",
+        "packages/core/src/scheduled-task/capability-model.ts"
+      ],
+      "caller_branch_response_sequences": [
+        [
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 120,
+            "last_line": 150,
+            "source_byte_start": 5556,
+            "source_byte_end_exclusive": 7364,
+            "excerpt_sha256": "2c9389acbe801e644a1eb39ee555f167cdaf76fe926d1c81e9675d134214de33",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C02",
+            "path": "packages/core/src/scheduled-task/capability.ts",
+            "first_line": 89,
+            "last_line": 119,
+            "source_byte_start": 4140,
+            "source_byte_end_exclusive": 5594,
+            "excerpt_sha256": "93e9d1062c0eaa6d5a73095c443098dd114f025151ee853589321390ccabf9b8",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C03",
+            "path": "packages/core/src/scheduled-task/shared.ts",
+            "first_line": 52,
+            "last_line": 66,
+            "source_byte_start": 1848,
+            "source_byte_end_exclusive": 2464,
+            "excerpt_sha256": "b5feba61bd8c5abd167ac63c33006e3112f9a20b9f9af9858e43633a18a5ac17",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C03",
+            "path": "packages/core/src/scheduled-task/shared.ts",
+            "first_line": 94,
+            "last_line": 134,
+            "source_byte_start": 3215,
+            "source_byte_end_exclusive": 4538,
+            "excerpt_sha256": "cf19f4f8d65be1fbec27703ce1fb03b136bc763873a62ea8620ce46b9aa3c0cf",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ],
+        [
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 152,
+            "last_line": 185,
+            "source_byte_start": 7365,
+            "source_byte_end_exclusive": 9670,
+            "excerpt_sha256": "142fa50cc90f2fa8f479c7f6d6dd3787017f73b161520fdc71c6cf1a3fa5e5ac",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C02",
+            "path": "packages/core/src/scheduled-task/capability.ts",
+            "first_line": 121,
+            "last_line": 157,
+            "source_byte_start": 5595,
+            "source_byte_end_exclusive": 6915,
+            "excerpt_sha256": "b678c239a31ba99218b07e46a60c1206b07eb5ec6c082c42f9b2e82d63c5f461",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 187,
+            "last_line": 264,
+            "source_byte_start": 9671,
+            "source_byte_end_exclusive": 13414,
+            "excerpt_sha256": "8855bdca4d996098b65973572616953f0e7022a1e079707eb54e9088f28b9da6",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C02",
+            "path": "packages/core/src/scheduled-task/capability.ts",
+            "first_line": 455,
+            "last_line": 466,
+            "source_byte_start": 20046,
+            "source_byte_end_exclusive": 20852,
+            "excerpt_sha256": "293f0c3d7328a3a34be4fbb7553c3c3f23c667397a2ed78565946651ec9d734f",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ],
+        [
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 23,
+            "last_line": 32,
+            "source_byte_start": 1018,
+            "source_byte_end_exclusive": 1595,
+            "excerpt_sha256": "5a2ab1604f7021867fc7de41bf584ea0246dffc1feba184d019d8c6cb6355a54",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 272,
+            "last_line": 320,
+            "source_byte_start": 13674,
+            "source_byte_end_exclusive": 16146,
+            "excerpt_sha256": "6e24e6eacc0901fbf25b44f9ac9f04230d04d6fbfa5680246b0653c325653345",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ],
+        [
+          {
+            "chain_id": "AUT4-C02",
+            "path": "packages/core/src/scheduled-task/capability.ts",
+            "first_line": 159,
+            "last_line": 200,
+            "source_byte_start": 6916,
+            "source_byte_end_exclusive": 8583,
+            "excerpt_sha256": "170529b669c34153c598c54a2fe0063746304410789cd5ffb9188f26c37bb500",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C02",
+            "path": "packages/core/src/scheduled-task/capability.ts",
+            "first_line": 270,
+            "last_line": 334,
+            "source_byte_start": 11437,
+            "source_byte_end_exclusive": 14313,
+            "excerpt_sha256": "7467a77f021959d211afb4fdbcebd9278e16a70cdeb02385770e14b822e880cf",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C04",
+            "path": "packages/core/src/scheduled-task/sql.ts",
+            "first_line": 44,
+            "last_line": 76,
+            "source_byte_start": 1970,
+            "source_byte_end_exclusive": 3559,
+            "excerpt_sha256": "e3ed08dbf591cf31d61e9b0df4d7e9508166bee812331e66f17951b9cd64002f",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ],
+        [
+          {
+            "chain_id": "AUT4-C02",
+            "path": "packages/core/src/scheduled-task/capability.ts",
+            "first_line": 335,
+            "last_line": 378,
+            "source_byte_start": 14313,
+            "source_byte_end_exclusive": 16627,
+            "excerpt_sha256": "688e91325bd99978927834a0dcc09d1e5242c8f1a4cc07de8af724c8f8efb1b9",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 187,
+            "last_line": 218,
+            "source_byte_start": 9671,
+            "source_byte_end_exclusive": 11366,
+            "excerpt_sha256": "eb6f8bba87a974a21c0fb37ecc67573000e0ce25ae97e5e8cc3e258eecc9f76d",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 272,
+            "last_line": 302,
+            "source_byte_start": 13674,
+            "source_byte_end_exclusive": 15274,
+            "excerpt_sha256": "00a85e47facdb694c567c88cedaf35058551ffaafecd9695be1d6ed12b07b029",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C03",
+            "path": "packages/core/src/scheduled-task/shared.ts",
+            "first_line": 139,
+            "last_line": 144,
+            "source_byte_start": 4608,
+            "source_byte_end_exclusive": 4949,
+            "excerpt_sha256": "af5330d99b729a0d55fa86a6aeb99f9893561c00eab2974c90425e6fb0edc324",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ],
+        [
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 408,
+            "last_line": 473,
+            "source_byte_start": 20067,
+            "source_byte_end_exclusive": 23354,
+            "excerpt_sha256": "8d154207a25c4d53cf80c3833fddb30490a1ddd1e90ad7896ab50bff99eba92e",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 521,
+            "last_line": 528,
+            "source_byte_start": 24618,
+            "source_byte_end_exclusive": 25133,
+            "excerpt_sha256": "0ca57602588232726390a55f0c6fcc2b225a3471dbb1670f5f0b39db74689bbf",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ]
+      ],
+      "shared_reconciliation": null,
+      "historical_evidence": null,
+      "existing_test_literal_references": null,
+      "status": "EVIDENCE_SUPPLIED_NOT_JUDGED"
+    },
+    {
+      "judge_id": "J1",
+      "request_id": "RE-AUT4-04",
+      "literal_chain_ids": [
+        "AUT4-C01",
+        "AUT4-C02"
+      ],
+      "source_paths": [
+        "packages/core/src/scheduled-task.ts",
+        "packages/core/src/scheduled-task/capability.ts"
+      ],
+      "caller_branch_response_sequences": [
+        [
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 23,
+            "last_line": 32,
+            "source_byte_start": 1018,
+            "source_byte_end_exclusive": 1595,
+            "excerpt_sha256": "5a2ab1604f7021867fc7de41bf584ea0246dffc1feba184d019d8c6cb6355a54",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 304,
+            "last_line": 347,
+            "source_byte_start": 15275,
+            "source_byte_end_exclusive": 17568,
+            "excerpt_sha256": "28fd466233f2407409a4c50808fccd67b509444218e30847861849915f617269",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 484,
+            "last_line": 504,
+            "source_byte_start": 23521,
+            "source_byte_end_exclusive": 24216,
+            "excerpt_sha256": "d8260ed62db849067ad504d83604e8de09ed938e092c9349144e71ef2eb6dd83",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 546,
+            "last_line": 558,
+            "source_byte_start": 25556,
+            "source_byte_end_exclusive": 26123,
+            "excerpt_sha256": "8fbdedd6a2072673f9c972746cc7bcc9fabafb581104cbfff0ae63cd7cd9aa8b",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ],
+        [
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 85,
+            "last_line": 95,
+            "source_byte_start": 4047,
+            "source_byte_end_exclusive": 4696,
+            "excerpt_sha256": "acd69264fab22407c6a071a579a2d3c7ea9f4f04c7d593b913f90e75be50987f",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C02",
+            "path": "packages/core/src/scheduled-task/capability.ts",
+            "first_line": 207,
+            "last_line": 237,
+            "source_byte_start": 8822,
+            "source_byte_end_exclusive": 9929,
+            "excerpt_sha256": "2f2fc041e6f5b956bb4dff5ef36d08a7ca0583c75eea95b04a8bf58040e5cee5",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ]
+      ],
+      "shared_reconciliation": {
+        "index": {
+          "path": "review-supplement-1-index.json",
+          "bytes": 246723,
+          "sha256": "b3a190b8f1bc17ea7f35fc0c53c5bb0f0f134570ac78f62a020452c3818d8902",
+          "git_blob_sha": "c42a17c0071f3c864f3e6eb11b5a7ae3fa0d37be"
+        },
+        "pointer": "/shared_population_reconciliation",
+        "new_census": false,
+        "new_rows": 0
+      },
+      "historical_evidence": {
+        "index": {
+          "path": "review-supplement-1-index.json",
+          "bytes": 246723,
+          "sha256": "b3a190b8f1bc17ea7f35fc0c53c5bb0f0f134570ac78f62a020452c3818d8902",
+          "git_blob_sha": "c42a17c0071f3c864f3e6eb11b5a7ae3fa0d37be"
+        },
+        "pointer": "/history",
+        "new_history_projection": false,
+        "prior_literal_block_ids": [
+          "AUT1-H01",
+          "AUT1-H02",
+          "AUT1-H03",
+          "AUT1-H04"
+        ]
+      },
+      "existing_test_literal_references": "/existing_test_literal_references",
+      "status": "EVIDENCE_SUPPLIED_NOT_JUDGED"
+    }
+  ],
+  "judge_J2_request_map": [
+    {
+      "judge_id": "J2",
+      "request_id": "RE-AUT4-01",
+      "canonical_groups": [
+        "RE-AUT4-01"
+      ],
+      "literal_chain_ids": [
+        "AUT4-C01",
+        "AUT4-C02",
+        "AUT4-C03",
+        "AUT4-C04",
+        "AUT4-C05",
+        "AUT4-C06"
+      ],
+      "caller_branch_response_sequences": [
+        [
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 349,
+            "last_line": 361,
+            "source_byte_start": 17569,
+            "source_byte_end_exclusive": 18135,
+            "excerpt_sha256": "b0059493ac78cac87c2474e8ceaa81e58d8d864c2ad3a52d044814380b6d6034",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C03",
+            "path": "packages/core/src/scheduled-task/shared.ts",
+            "first_line": 46,
+            "last_line": 66,
+            "source_byte_start": 1589,
+            "source_byte_end_exclusive": 2464,
+            "excerpt_sha256": "e85be411da125bc0ade82f08f0d7d9b8902494b00ece7435bcfbcb18c2ffd978",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 107,
+            "last_line": 111,
+            "source_byte_start": 4971,
+            "source_byte_end_exclusive": 5250,
+            "excerpt_sha256": "989d589d562dd3144aa80cb4ba9380d14829fd607e14359c13b57d962fab8812",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 506,
+            "last_line": 508,
+            "source_byte_start": 24217,
+            "source_byte_end_exclusive": 24369,
+            "excerpt_sha256": "fbd49bca572c88c5af5e9470ea4734e211c12cad75e7b62d51fd3a0f9638c5af",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ],
+        [
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 362,
+            "last_line": 473,
+            "source_byte_start": 18135,
+            "source_byte_end_exclusive": 23354,
+            "excerpt_sha256": "ccad122cfbd2d23623fd87f7c13f665b4d6a84bcbc03287cb9fd4408e71713d2",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ],
+        [
+          {
+            "chain_id": "AUT4-C02",
+            "path": "packages/core/src/scheduled-task/capability.ts",
+            "first_line": 70,
+            "last_line": 87,
+            "source_byte_start": 3447,
+            "source_byte_end_exclusive": 4139,
+            "excerpt_sha256": "68e954d881cc7b1830cccae6dfc055f1d83132f93d72813f3418d8a1f943250f",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C02",
+            "path": "packages/core/src/scheduled-task/capability.ts",
+            "first_line": 238,
+            "last_line": 268,
+            "source_byte_start": 9929,
+            "source_byte_end_exclusive": 11418,
+            "excerpt_sha256": "340db3d906d443b472c27d7b995a1f13f61e7959eb2119941eb60f3d775300c8",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C02",
+            "path": "packages/core/src/scheduled-task/capability.ts",
+            "first_line": 384,
+            "last_line": 394,
+            "source_byte_start": 16692,
+            "source_byte_end_exclusive": 17109,
+            "excerpt_sha256": "c0ef15fab7ce45caf1bf6f0ea12dbebff6a76cc0ca84476bcca8559bf9a2cbef",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ],
+        [
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 156,
+            "last_line": 185,
+            "source_byte_start": 7780,
+            "source_byte_end_exclusive": 9670,
+            "excerpt_sha256": "76cfef1dbe6c9096a45b021b49f59769717a416723814c6f4556476ecc3c3a05",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C02",
+            "path": "packages/core/src/scheduled-task/capability.ts",
+            "first_line": 121,
+            "last_line": 157,
+            "source_byte_start": 5595,
+            "source_byte_end_exclusive": 6915,
+            "excerpt_sha256": "b678c239a31ba99218b07e46a60c1206b07eb5ec6c082c42f9b2e82d63c5f461",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ],
+        [
+          {
+            "chain_id": "AUT4-C03",
+            "path": "packages/core/src/scheduled-task/shared.ts",
+            "first_line": 94,
+            "last_line": 134,
+            "source_byte_start": 3215,
+            "source_byte_end_exclusive": 4538,
+            "excerpt_sha256": "cf19f4f8d65be1fbec27703ce1fb03b136bc763873a62ea8620ce46b9aa3c0cf",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C06",
+            "path": "packages/core/src/scheduled-task/model.ts",
+            "first_line": 94,
+            "last_line": 140,
+            "source_byte_start": 4434,
+            "source_byte_end_exclusive": 6670,
+            "excerpt_sha256": "27f51d94e893dd0a45fe75fc9e9d0433891f34e96584405c12dd0f18aa8e0618",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C04",
+            "path": "packages/core/src/scheduled-task/sql.ts",
+            "first_line": 9,
+            "last_line": 76,
+            "source_byte_start": 437,
+            "source_byte_end_exclusive": 3559,
+            "excerpt_sha256": "99271755966623cf64df6afed2756ebb29ab89ce3f2900e96ec63a2629ffee85",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ],
+        [
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 349,
+            "last_line": 350,
+            "source_byte_start": 17569,
+            "source_byte_end_exclusive": 17668,
+            "excerpt_sha256": "385ef3f02e3c65725eddbbf9cab5f45ddfa1c501851dec6c65c92021424a2184",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C05",
+            "path": "packages/core/src/scheduled-task/port.ts",
+            "first_line": 7,
+            "last_line": 41,
+            "source_byte_start": 206,
+            "source_byte_end_exclusive": 2092,
+            "excerpt_sha256": "2a470da5a8694148251c1f3fb021e8cb6fbf862cdf98763e9b2d6d266a38cdf5",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ]
+      ],
+      "status": "EVIDENCE_SUPPLIED_NOT_JUDGED"
+    },
+    {
+      "judge_id": "J2",
+      "request_id": "RE-AUT4-02",
+      "canonical_groups": [
+        "RE-AUT4-02"
+      ],
+      "literal_chain_ids": [
+        "AUT4-C01",
+        "AUT4-C02",
+        "AUT4-C06",
+        "AUT4-C07"
+      ],
+      "caller_branch_response_sequences": [
+        [
+          {
+            "chain_id": "AUT4-C06",
+            "path": "packages/core/src/scheduled-task/model.ts",
+            "first_line": 1,
+            "last_line": 140,
+            "source_byte_start": 0,
+            "source_byte_end_exclusive": 6670,
+            "excerpt_sha256": "f29962a40bd89bca23cff892d3ff01fcfa8e660b390c4831c88ca7cc695f0b5d",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 408,
+            "last_line": 450,
+            "source_byte_start": 20067,
+            "source_byte_end_exclusive": 22243,
+            "excerpt_sha256": "7fba57ef4a0494d9db49efe4882fd2a7bcca7ad5c98b9dcdcf4ad58d9135b8b0",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 521,
+            "last_line": 528,
+            "source_byte_start": 24618,
+            "source_byte_end_exclusive": 25133,
+            "excerpt_sha256": "0ca57602588232726390a55f0c6fcc2b225a3471dbb1670f5f0b39db74689bbf",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ],
+        [
+          {
+            "chain_id": "AUT4-C02",
+            "path": "packages/core/src/scheduled-task/capability.ts",
+            "first_line": 397,
+            "last_line": 453,
+            "source_byte_start": 17220,
+            "source_byte_end_exclusive": 20045,
+            "excerpt_sha256": "43661a6fccbd7b87d11c6c00653c8b23994780dc438c8c699d96e51e6d1c2d38",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C02",
+            "path": "packages/core/src/scheduled-task/capability.ts",
+            "first_line": 487,
+            "last_line": 493,
+            "source_byte_start": 21477,
+            "source_byte_end_exclusive": 21721,
+            "excerpt_sha256": "0afe68e5b55dd76f5891201577db79eefee2e22be779bd2e9c693bdb7f147f26",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C07",
+            "path": "packages/core/src/scheduled-task/capability-model.ts",
+            "first_line": 1,
+            "last_line": 218,
+            "source_byte_start": 0,
+            "source_byte_end_exclusive": 10649,
+            "excerpt_sha256": "256620d07285f1e60c7e6023f4101e4f8738a565f43a6b859d8c1a7861230620",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ],
+        [
+          {
+            "chain_id": "AUT4-C07",
+            "path": "packages/core/src/scheduled-task/capability-model.ts",
+            "first_line": 83,
+            "last_line": 105,
+            "source_byte_start": 4012,
+            "source_byte_end_exclusive": 5326,
+            "excerpt_sha256": "42e180a8a3fbb208c1f84c68aa1cea1fffd6f4ab9e79a2d2c3f08f942945bc47",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C07",
+            "path": "packages/core/src/scheduled-task/capability-model.ts",
+            "first_line": 122,
+            "last_line": 175,
+            "source_byte_start": 6058,
+            "source_byte_end_exclusive": 8573,
+            "excerpt_sha256": "0c3cb1970e26d26a053d9d5801d316fed296a72a65232efd03701437d626c326",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C07",
+            "path": "packages/core/src/scheduled-task/capability-model.ts",
+            "first_line": 177,
+            "last_line": 200,
+            "source_byte_start": 8574,
+            "source_byte_end_exclusive": 9690,
+            "excerpt_sha256": "da5ca9a4598c943eda153db101beffba3328b1d648da02ee4cc64a609b8d1bd0",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ],
+        [
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 23,
+            "last_line": 32,
+            "source_byte_start": 1018,
+            "source_byte_end_exclusive": 1595,
+            "excerpt_sha256": "5a2ab1604f7021867fc7de41bf584ea0246dffc1feba184d019d8c6cb6355a54",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C07",
+            "path": "packages/core/src/scheduled-task/capability-model.ts",
+            "first_line": 27,
+            "last_line": 38,
+            "source_byte_start": 1207,
+            "source_byte_end_exclusive": 1766,
+            "excerpt_sha256": "3f5e334c3daa00870ec1c2938986e8d73f43062f412d725c9e50ec1ee8a3df1b",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ]
+      ],
+      "status": "EVIDENCE_SUPPLIED_NOT_JUDGED"
+    },
+    {
+      "judge_id": "J2",
+      "request_id": "RE-AUT4-03",
+      "canonical_groups": [
+        "RE-AUT4-03",
+        "RE-AUT4-04"
+      ],
+      "literal_chain_ids": [
+        "AUT4-C01",
+        "AUT4-C02",
+        "AUT4-C03",
+        "AUT4-C04",
+        "AUT4-C06",
+        "AUT4-C07"
+      ],
+      "caller_branch_response_sequences": [
+        [
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 120,
+            "last_line": 150,
+            "source_byte_start": 5556,
+            "source_byte_end_exclusive": 7364,
+            "excerpt_sha256": "2c9389acbe801e644a1eb39ee555f167cdaf76fe926d1c81e9675d134214de33",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C02",
+            "path": "packages/core/src/scheduled-task/capability.ts",
+            "first_line": 89,
+            "last_line": 119,
+            "source_byte_start": 4140,
+            "source_byte_end_exclusive": 5594,
+            "excerpt_sha256": "93e9d1062c0eaa6d5a73095c443098dd114f025151ee853589321390ccabf9b8",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C03",
+            "path": "packages/core/src/scheduled-task/shared.ts",
+            "first_line": 52,
+            "last_line": 66,
+            "source_byte_start": 1848,
+            "source_byte_end_exclusive": 2464,
+            "excerpt_sha256": "b5feba61bd8c5abd167ac63c33006e3112f9a20b9f9af9858e43633a18a5ac17",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C03",
+            "path": "packages/core/src/scheduled-task/shared.ts",
+            "first_line": 94,
+            "last_line": 134,
+            "source_byte_start": 3215,
+            "source_byte_end_exclusive": 4538,
+            "excerpt_sha256": "cf19f4f8d65be1fbec27703ce1fb03b136bc763873a62ea8620ce46b9aa3c0cf",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ],
+        [
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 152,
+            "last_line": 185,
+            "source_byte_start": 7365,
+            "source_byte_end_exclusive": 9670,
+            "excerpt_sha256": "142fa50cc90f2fa8f479c7f6d6dd3787017f73b161520fdc71c6cf1a3fa5e5ac",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C02",
+            "path": "packages/core/src/scheduled-task/capability.ts",
+            "first_line": 121,
+            "last_line": 157,
+            "source_byte_start": 5595,
+            "source_byte_end_exclusive": 6915,
+            "excerpt_sha256": "b678c239a31ba99218b07e46a60c1206b07eb5ec6c082c42f9b2e82d63c5f461",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 187,
+            "last_line": 264,
+            "source_byte_start": 9671,
+            "source_byte_end_exclusive": 13414,
+            "excerpt_sha256": "8855bdca4d996098b65973572616953f0e7022a1e079707eb54e9088f28b9da6",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C02",
+            "path": "packages/core/src/scheduled-task/capability.ts",
+            "first_line": 455,
+            "last_line": 466,
+            "source_byte_start": 20046,
+            "source_byte_end_exclusive": 20852,
+            "excerpt_sha256": "293f0c3d7328a3a34be4fbb7553c3c3f23c667397a2ed78565946651ec9d734f",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ],
+        [
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 23,
+            "last_line": 32,
+            "source_byte_start": 1018,
+            "source_byte_end_exclusive": 1595,
+            "excerpt_sha256": "5a2ab1604f7021867fc7de41bf584ea0246dffc1feba184d019d8c6cb6355a54",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 272,
+            "last_line": 320,
+            "source_byte_start": 13674,
+            "source_byte_end_exclusive": 16146,
+            "excerpt_sha256": "6e24e6eacc0901fbf25b44f9ac9f04230d04d6fbfa5680246b0653c325653345",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ],
+        [
+          {
+            "chain_id": "AUT4-C02",
+            "path": "packages/core/src/scheduled-task/capability.ts",
+            "first_line": 159,
+            "last_line": 200,
+            "source_byte_start": 6916,
+            "source_byte_end_exclusive": 8583,
+            "excerpt_sha256": "170529b669c34153c598c54a2fe0063746304410789cd5ffb9188f26c37bb500",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C02",
+            "path": "packages/core/src/scheduled-task/capability.ts",
+            "first_line": 270,
+            "last_line": 334,
+            "source_byte_start": 11437,
+            "source_byte_end_exclusive": 14313,
+            "excerpt_sha256": "7467a77f021959d211afb4fdbcebd9278e16a70cdeb02385770e14b822e880cf",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C04",
+            "path": "packages/core/src/scheduled-task/sql.ts",
+            "first_line": 44,
+            "last_line": 76,
+            "source_byte_start": 1970,
+            "source_byte_end_exclusive": 3559,
+            "excerpt_sha256": "e3ed08dbf591cf31d61e9b0df4d7e9508166bee812331e66f17951b9cd64002f",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ],
+        [
+          {
+            "chain_id": "AUT4-C02",
+            "path": "packages/core/src/scheduled-task/capability.ts",
+            "first_line": 335,
+            "last_line": 378,
+            "source_byte_start": 14313,
+            "source_byte_end_exclusive": 16627,
+            "excerpt_sha256": "688e91325bd99978927834a0dcc09d1e5242c8f1a4cc07de8af724c8f8efb1b9",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 187,
+            "last_line": 218,
+            "source_byte_start": 9671,
+            "source_byte_end_exclusive": 11366,
+            "excerpt_sha256": "eb6f8bba87a974a21c0fb37ecc67573000e0ce25ae97e5e8cc3e258eecc9f76d",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 272,
+            "last_line": 302,
+            "source_byte_start": 13674,
+            "source_byte_end_exclusive": 15274,
+            "excerpt_sha256": "00a85e47facdb694c567c88cedaf35058551ffaafecd9695be1d6ed12b07b029",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C03",
+            "path": "packages/core/src/scheduled-task/shared.ts",
+            "first_line": 139,
+            "last_line": 144,
+            "source_byte_start": 4608,
+            "source_byte_end_exclusive": 4949,
+            "excerpt_sha256": "af5330d99b729a0d55fa86a6aeb99f9893561c00eab2974c90425e6fb0edc324",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ],
+        [
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 408,
+            "last_line": 473,
+            "source_byte_start": 20067,
+            "source_byte_end_exclusive": 23354,
+            "excerpt_sha256": "8d154207a25c4d53cf80c3833fddb30490a1ddd1e90ad7896ab50bff99eba92e",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 521,
+            "last_line": 528,
+            "source_byte_start": 24618,
+            "source_byte_end_exclusive": 25133,
+            "excerpt_sha256": "0ca57602588232726390a55f0c6fcc2b225a3471dbb1670f5f0b39db74689bbf",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ],
+        [
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 23,
+            "last_line": 32,
+            "source_byte_start": 1018,
+            "source_byte_end_exclusive": 1595,
+            "excerpt_sha256": "5a2ab1604f7021867fc7de41bf584ea0246dffc1feba184d019d8c6cb6355a54",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 304,
+            "last_line": 347,
+            "source_byte_start": 15275,
+            "source_byte_end_exclusive": 17568,
+            "excerpt_sha256": "28fd466233f2407409a4c50808fccd67b509444218e30847861849915f617269",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 484,
+            "last_line": 504,
+            "source_byte_start": 23521,
+            "source_byte_end_exclusive": 24216,
+            "excerpt_sha256": "d8260ed62db849067ad504d83604e8de09ed938e092c9349144e71ef2eb6dd83",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 546,
+            "last_line": 558,
+            "source_byte_start": 25556,
+            "source_byte_end_exclusive": 26123,
+            "excerpt_sha256": "8fbdedd6a2072673f9c972746cc7bcc9fabafb581104cbfff0ae63cd7cd9aa8b",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ],
+        [
+          {
+            "chain_id": "AUT4-C01",
+            "path": "packages/core/src/scheduled-task.ts",
+            "first_line": 85,
+            "last_line": 95,
+            "source_byte_start": 4047,
+            "source_byte_end_exclusive": 4696,
+            "excerpt_sha256": "acd69264fab22407c6a071a579a2d3c7ea9f4f04c7d593b913f90e75be50987f",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          },
+          {
+            "chain_id": "AUT4-C02",
+            "path": "packages/core/src/scheduled-task/capability.ts",
+            "first_line": 207,
+            "last_line": 237,
+            "source_byte_start": 8822,
+            "source_byte_end_exclusive": 9929,
+            "excerpt_sha256": "2f2fc041e6f5b956bb4dff5ef36d08a7ca0583c75eea95b04a8bf58040e5cee5",
+            "literal_transport": "new and reused intervals in source_reconstruction_sequences"
+          }
+        ]
+      ],
+      "status": "EVIDENCE_SUPPLIED_NOT_JUDGED"
+    },
+    {
+      "judge_id": "J2",
+      "request_id": "RE-AUT4-04",
+      "literal_chain_ids": [],
+      "shared_reconciliation": {
+        "index": {
+          "path": "review-supplement-1-index.json",
+          "bytes": 246723,
+          "sha256": "b3a190b8f1bc17ea7f35fc0c53c5bb0f0f134570ac78f62a020452c3818d8902",
+          "git_blob_sha": "c42a17c0071f3c864f3e6eb11b5a7ae3fa0d37be"
+        },
+        "pointer": "/shared_population_reconciliation",
+        "new_census": false,
+        "new_rows": 0
+      },
+      "historical_evidence": {
+        "index": {
+          "path": "review-supplement-1-index.json",
+          "bytes": 246723,
+          "sha256": "b3a190b8f1bc17ea7f35fc0c53c5bb0f0f134570ac78f62a020452c3818d8902",
+          "git_blob_sha": "c42a17c0071f3c864f3e6eb11b5a7ae3fa0d37be"
+        },
+        "pointer": "/history",
+        "new_history_projection": false,
+        "prior_literal_block_ids": [
+          "AUT1-H01",
+          "AUT1-H02",
+          "AUT1-H03",
+          "AUT1-H04"
+        ]
+      },
+      "existing_test_literal_references": "/existing_test_literal_references",
+      "status": "EVIDENCE_SUPPLIED_NOT_JUDGED"
+    }
+  ],
+  "literal_chains": [
+    {
+      "block_id": "AUT4-C01",
+      "type": "literal_source_chain",
+      "requests": [
+        "RE-AUT4-01",
+        "RE-AUT4-02",
+        "RE-AUT4-03",
+        "RE-AUT4-04"
+      ],
+      "body_anchors": [
+        "S01",
+        "S02",
+        "S04",
+        "S06"
+      ],
+      "requested_subject": "Constants, construction/wake/binding, legacy routes and planning, dispatch/settle/pruning/takeover, tick and daemon",
+      "path": "packages/core/src/scheduled-task.ts",
+      "archive": "sources/packages/core/src/scheduled-task.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "0a89bbdc576091ca01445e45e1500ed4008898a9",
+      "source_sha256": "8c204bd55a8cf8fd1dbddc232f5dfa84b9190822d074ccc72e85594e457af12b",
+      "source_bytes": 26123,
+      "required_source_line_ranges": [
+        [
+          23,
+          32
+        ],
+        [
+          80,
+          558
+        ]
+      ],
+      "prior_literal_ranges": [
+        {
+          "type": "prior_literal_range_reference",
+          "anchor_id": "S04",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "0a89bbdc576091ca01445e45e1500ed4008898a9",
+          "source_sha256": "8c204bd55a8cf8fd1dbddc232f5dfa84b9190822d074ccc72e85594e457af12b",
+          "source_bytes": 26123,
+          "first_line": 156,
+          "last_line": 182,
+          "source_byte_start": 7780,
+          "source_byte_end_exclusive": 9637,
+          "excerpt_bytes": 1857,
+          "excerpt_sha256": "6faed758cfb62cba5f1849f441c03ad7cfa74204e5d877f0608e23b91f72089c",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 168533,
+          "literal_content_byte_end_exclusive": 170390
+        },
+        {
+          "type": "prior_literal_range_reference",
+          "anchor_id": "S04",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "0a89bbdc576091ca01445e45e1500ed4008898a9",
+          "source_sha256": "8c204bd55a8cf8fd1dbddc232f5dfa84b9190822d074ccc72e85594e457af12b",
+          "source_bytes": 26123,
+          "first_line": 196,
+          "last_line": 207,
+          "source_byte_start": 10053,
+          "source_byte_end_exclusive": 10928,
+          "excerpt_bytes": 875,
+          "excerpt_sha256": "0dfbe91720b43cfe31c27eb5af8c3f8812ecb3332b97bc7d6b9db8310ed127d2",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 170523,
+          "literal_content_byte_end_exclusive": 171398
+        },
+        {
+          "type": "prior_literal_range_reference",
+          "anchor_id": "S04",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "0a89bbdc576091ca01445e45e1500ed4008898a9",
+          "source_sha256": "8c204bd55a8cf8fd1dbddc232f5dfa84b9190822d074ccc72e85594e457af12b",
+          "source_bytes": 26123,
+          "first_line": 285,
+          "last_line": 302,
+          "source_byte_start": 14585,
+          "source_byte_end_exclusive": 15274,
+          "excerpt_bytes": 689,
+          "excerpt_sha256": "76bc5a87541218e37d4a882d6c8a1e7bfcaa89651409464deab1756074e33397",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 171531,
+          "literal_content_byte_end_exclusive": 172220
+        },
+        {
+          "type": "prior_literal_range_reference",
+          "anchor_id": "S06",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "0a89bbdc576091ca01445e45e1500ed4008898a9",
+          "source_sha256": "8c204bd55a8cf8fd1dbddc232f5dfa84b9190822d074ccc72e85594e457af12b",
+          "source_bytes": 26123,
+          "first_line": 85,
+          "last_line": 95,
+          "source_byte_start": 4047,
+          "source_byte_end_exclusive": 4696,
+          "excerpt_bytes": 649,
+          "excerpt_sha256": "acd69264fab22407c6a071a579a2d3c7ea9f4f04c7d593b913f90e75be50987f",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 177247,
+          "literal_content_byte_end_exclusive": 177896
+        },
+        {
+          "type": "prior_literal_range_reference",
+          "anchor_id": "S06",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "0a89bbdc576091ca01445e45e1500ed4008898a9",
+          "source_sha256": "8c204bd55a8cf8fd1dbddc232f5dfa84b9190822d074ccc72e85594e457af12b",
+          "source_bytes": 26123,
+          "first_line": 339,
+          "last_line": 347,
+          "source_byte_start": 16896,
+          "source_byte_end_exclusive": 17568,
+          "excerpt_bytes": 672,
+          "excerpt_sha256": "4bc19434c37a8375a5c59b753187934fddeb378585ccafe66eb038be0622bfeb",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 178029,
+          "literal_content_byte_end_exclusive": 178701
+        }
+      ],
+      "new_literal_intervals": [
+        {
+          "first_line": 23,
+          "last_line": 32,
+          "source_byte_start": 1018,
+          "source_byte_end_exclusive": 1595,
+          "bytes": 577,
+          "sha256": "5a2ab1604f7021867fc7de41bf584ea0246dffc1feba184d019d8c6cb6355a54",
+          "literal_content_byte_start": 14800,
+          "literal_content_byte_end_exclusive": 15377
+        },
+        {
+          "first_line": 80,
+          "last_line": 84,
+          "source_byte_start": 3891,
+          "source_byte_end_exclusive": 4047,
+          "bytes": 156,
+          "sha256": "a7b448ac5b3d796493313a2c88935f15c6667e8503fd3d7ad12046fa6e4bb66a",
+          "literal_content_byte_start": 15590,
+          "literal_content_byte_end_exclusive": 15746
+        },
+        {
+          "first_line": 96,
+          "last_line": 155,
+          "source_byte_start": 4696,
+          "source_byte_end_exclusive": 7780,
+          "bytes": 3084,
+          "sha256": "1ff812636443a2f3d9414067c5e6b6444ae7a6c31e0545e5773583889a81ecf7",
+          "literal_content_byte_start": 15961,
+          "literal_content_byte_end_exclusive": 19045
+        },
+        {
+          "first_line": 183,
+          "last_line": 195,
+          "source_byte_start": 9637,
+          "source_byte_end_exclusive": 10053,
+          "bytes": 416,
+          "sha256": "b2263cb5bb4a12f44976cb618c8baac37f08186955d7a422f7ef8fa7a6d130f6",
+          "literal_content_byte_start": 19261,
+          "literal_content_byte_end_exclusive": 19677
+        },
+        {
+          "first_line": 208,
+          "last_line": 284,
+          "source_byte_start": 10928,
+          "source_byte_end_exclusive": 14585,
+          "bytes": 3657,
+          "sha256": "aca72dc70cf5133905a9471558e9ca644563eb4d36d17aba38a96e85e04fc53c",
+          "literal_content_byte_start": 19895,
+          "literal_content_byte_end_exclusive": 23552
+        },
+        {
+          "first_line": 303,
+          "last_line": 338,
+          "source_byte_start": 15274,
+          "source_byte_end_exclusive": 16896,
+          "bytes": 1622,
+          "sha256": "e77a79cd5e99b1c6a5eb8e46e2efc57b67904a1b01edd7a5cabe437b1a153bee",
+          "literal_content_byte_start": 23770,
+          "literal_content_byte_end_exclusive": 25392
+        },
+        {
+          "first_line": 348,
+          "last_line": 558,
+          "source_byte_start": 17568,
+          "source_byte_end_exclusive": 26123,
+          "bytes": 8555,
+          "sha256": "d68e6d0e31b82e7d870954ce6f7b0a6184ab893c39619fa3ac5c25abafb1f045",
+          "literal_content_byte_start": 25610,
+          "literal_content_byte_end_exclusive": 34165
+        }
+      ],
+      "supplement_byte_start": 8639,
+      "supplement_byte_end_exclusive": 34170,
+      "transport_sha256": "5747b7f1eba3b9d3d111d1a4d383f10af118ac8e301506630618cdb11b79d6e5"
+    },
+    {
+      "block_id": "AUT4-C02",
+      "type": "literal_source_chain",
+      "requests": [
+        "RE-AUT4-01",
+        "RE-AUT4-02",
+        "RE-AUT4-03",
+        "RE-AUT4-04"
+      ],
+      "body_anchors": [
+        "S01",
+        "S03",
+        "S04",
+        "S05",
+        "S06"
+      ],
+      "requested_subject": "Owner/operator API, claim planning, holds/present/revoke, create/list/placed/get/edit/manual replay, cadence encoding and settling",
+      "path": "packages/core/src/scheduled-task/capability.ts",
+      "archive": "sources/packages/core/src/scheduled-task/capability.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "ab0410651446d3d1d98d9d8028a3ad79bb46aecb",
+      "source_sha256": "d024c2e05f0afc70fe49b801ee77b892a8097f5d499cd097d60f230cae67044e",
+      "source_bytes": 21721,
+      "required_source_line_ranges": [
+        [
+          26,
+          493
+        ]
+      ],
+      "prior_literal_ranges": [
+        {
+          "type": "prior_literal_range_reference",
+          "anchor_id": "S01",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task/capability.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task/capability.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "ab0410651446d3d1d98d9d8028a3ad79bb46aecb",
+          "source_sha256": "d024c2e05f0afc70fe49b801ee77b892a8097f5d499cd097d60f230cae67044e",
+          "source_bytes": 21721,
+          "first_line": 384,
+          "last_line": 394,
+          "source_byte_start": 16692,
+          "source_byte_end_exclusive": 17109,
+          "excerpt_bytes": 417,
+          "excerpt_sha256": "c0ef15fab7ce45caf1bf6f0ea12dbebff6a76cc0ca84476bcca8559bf9a2cbef",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 161240,
+          "literal_content_byte_end_exclusive": 161657
+        },
+        {
+          "type": "prior_literal_range_reference",
+          "anchor_id": "S04",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task/capability.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task/capability.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "ab0410651446d3d1d98d9d8028a3ad79bb46aecb",
+          "source_sha256": "d024c2e05f0afc70fe49b801ee77b892a8097f5d499cd097d60f230cae67044e",
+          "source_bytes": 21721,
+          "first_line": 137,
+          "last_line": 145,
+          "source_byte_start": 6167,
+          "source_byte_end_exclusive": 6460,
+          "excerpt_bytes": 293,
+          "excerpt_sha256": "d339c9448987bf0c71c326bfd0de45c58e29a91d369c77f3723cdd983e93bae2",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 172626,
+          "literal_content_byte_end_exclusive": 172919
+        },
+        {
+          "type": "prior_literal_range_reference",
+          "anchor_id": "S04",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task/capability.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task/capability.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "ab0410651446d3d1d98d9d8028a3ad79bb46aecb",
+          "source_sha256": "d024c2e05f0afc70fe49b801ee77b892a8097f5d499cd097d60f230cae67044e",
+          "source_bytes": 21721,
+          "first_line": 187,
+          "last_line": 198,
+          "source_byte_start": 8090,
+          "source_byte_end_exclusive": 8568,
+          "excerpt_bytes": 478,
+          "excerpt_sha256": "fb78aed49fc2f26818e0445282063659adc717e7cf339f9548adbf91358f66a0",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 173052,
+          "literal_content_byte_end_exclusive": 173530
+        },
+        {
+          "type": "prior_literal_range_reference",
+          "anchor_id": "S05",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task/capability.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task/capability.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "ab0410651446d3d1d98d9d8028a3ad79bb46aecb",
+          "source_sha256": "d024c2e05f0afc70fe49b801ee77b892a8097f5d499cd097d60f230cae67044e",
+          "source_bytes": 21721,
+          "first_line": 335,
+          "last_line": 364,
+          "source_byte_start": 14313,
+          "source_byte_end_exclusive": 16030,
+          "excerpt_bytes": 1717,
+          "excerpt_sha256": "80b4fd0d5c92c88f745bca334b92821e854805d700df9c7294210feffa0cd0ea",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 174069,
+          "literal_content_byte_end_exclusive": 175786
+        },
+        {
+          "type": "prior_literal_range_reference",
+          "anchor_id": "S05",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task/capability.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task/capability.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "ab0410651446d3d1d98d9d8028a3ad79bb46aecb",
+          "source_sha256": "d024c2e05f0afc70fe49b801ee77b892a8097f5d499cd097d60f230cae67044e",
+          "source_bytes": 21721,
+          "first_line": 455,
+          "last_line": 466,
+          "source_byte_start": 20046,
+          "source_byte_end_exclusive": 20852,
+          "excerpt_bytes": 806,
+          "excerpt_sha256": "293f0c3d7328a3a34be4fbb7553c3c3f23c667397a2ed78565946651ec9d734f",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 175919,
+          "literal_content_byte_end_exclusive": 176725
+        },
+        {
+          "type": "prior_literal_range_reference",
+          "anchor_id": "S06",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task/capability.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task/capability.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "ab0410651446d3d1d98d9d8028a3ad79bb46aecb",
+          "source_sha256": "d024c2e05f0afc70fe49b801ee77b892a8097f5d499cd097d60f230cae67044e",
+          "source_bytes": 21721,
+          "first_line": 207,
+          "last_line": 237,
+          "source_byte_start": 8822,
+          "source_byte_end_exclusive": 9929,
+          "excerpt_bytes": 1107,
+          "excerpt_sha256": "2f2fc041e6f5b956bb4dff5ef36d08a7ca0583c75eea95b04a8bf58040e5cee5",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 179107,
+          "literal_content_byte_end_exclusive": 180214
+        }
+      ],
+      "new_literal_intervals": [
+        {
+          "first_line": 26,
+          "last_line": 136,
+          "source_byte_start": 1154,
+          "source_byte_end_exclusive": 6167,
+          "bytes": 5013,
+          "sha256": "1c7027887df0566ac130ac9c4ffb86651ea003d44a20b65d088c2623b624ffd8",
+          "literal_content_byte_start": 41499,
+          "literal_content_byte_end_exclusive": 46512
+        },
+        {
+          "first_line": 146,
+          "last_line": 186,
+          "source_byte_start": 6460,
+          "source_byte_end_exclusive": 8090,
+          "bytes": 1630,
+          "sha256": "64320d4caa83cc36f8a38360975c890789fbdee73a6f4e2e6e233d93ed722e2e",
+          "literal_content_byte_start": 46728,
+          "literal_content_byte_end_exclusive": 48358
+        },
+        {
+          "first_line": 199,
+          "last_line": 206,
+          "source_byte_start": 8568,
+          "source_byte_end_exclusive": 8822,
+          "bytes": 254,
+          "sha256": "1842c7bf1d7d2345a0c57e442e7de986d733a9a73c8e668c44d613822197fbc8",
+          "literal_content_byte_start": 48573,
+          "literal_content_byte_end_exclusive": 48827
+        },
+        {
+          "first_line": 238,
+          "last_line": 334,
+          "source_byte_start": 9929,
+          "source_byte_end_exclusive": 14313,
+          "bytes": 4384,
+          "sha256": "6c43575547ff43f80cdda409a4ef7257ad63911f70b9d6dc52c56387b3de46e8",
+          "literal_content_byte_start": 49044,
+          "literal_content_byte_end_exclusive": 53428
+        },
+        {
+          "first_line": 365,
+          "last_line": 383,
+          "source_byte_start": 16030,
+          "source_byte_end_exclusive": 16692,
+          "bytes": 662,
+          "sha256": "09161e9144038bff39c188ff458f7d3ed370468d4ad800ecce624baa0f6a0e00",
+          "literal_content_byte_start": 53645,
+          "literal_content_byte_end_exclusive": 54307
+        },
+        {
+          "first_line": 395,
+          "last_line": 454,
+          "source_byte_start": 17109,
+          "source_byte_end_exclusive": 20046,
+          "bytes": 2937,
+          "sha256": "f8756018e309db2da3257614bf3ffc3a98567199556837c6eb067b384a9e9f9e",
+          "literal_content_byte_start": 54525,
+          "literal_content_byte_end_exclusive": 57462
+        },
+        {
+          "first_line": 467,
+          "last_line": 493,
+          "source_byte_start": 20852,
+          "source_byte_end_exclusive": 21721,
+          "bytes": 869,
+          "sha256": "9bbd057398bf713606117e37efea9ed410c6385c32eedb91fec7659d92153eeb",
+          "literal_content_byte_start": 57679,
+          "literal_content_byte_end_exclusive": 58548
+        }
+      ],
+      "supplement_byte_start": 34170,
+      "supplement_byte_end_exclusive": 58553,
+      "transport_sha256": "9154c06bcbcbaa2d0fe084fa7a402d83a3eba9a4613f64459f8b4ac7c89cbaa0"
+    },
+    {
+      "block_id": "AUT4-C03",
+      "type": "literal_source_chain",
+      "requests": [
+        "RE-AUT4-01",
+        "RE-AUT4-03"
+      ],
+      "body_anchors": [
+        "S01",
+        "S04",
+        "S05"
+      ],
+      "requested_subject": "Errors, claim/outcome, immediate transaction, legacy filtering, deterministic IDs and persisted claim snapshot",
+      "path": "packages/core/src/scheduled-task/shared.ts",
+      "archive": "sources/packages/core/src/scheduled-task/shared.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "b997b9d2bb4246d3101c243fe0217ce9fcc30885",
+      "source_sha256": "b7ca14671135a068909b9163fa8c21d1ce2487f5d54d08e09adcd7585acf5540",
+      "source_bytes": 4949,
+      "required_source_line_ranges": [
+        [
+          13,
+          144
+        ]
+      ],
+      "prior_literal_ranges": [],
+      "new_literal_intervals": [
+        {
+          "first_line": 13,
+          "last_line": 144,
+          "source_byte_start": 514,
+          "source_byte_end_exclusive": 4949,
+          "bytes": 4435,
+          "sha256": "e94fc61db55616c640f9715ddf5fa66e4598c383b789b2602d14dbf4d8683305",
+          "literal_content_byte_start": 59562,
+          "literal_content_byte_end_exclusive": 63997
+        }
+      ],
+      "supplement_byte_start": 58553,
+      "supplement_byte_end_exclusive": 64002,
+      "transport_sha256": "b9aea943859043fe7f5de5b7c55eac5d1560bc82fda7281c8f09bd3c315470b6"
+    },
+    {
+      "block_id": "AUT4-C04",
+      "type": "literal_source_chain",
+      "requests": [
+        "RE-AUT4-01",
+        "RE-AUT4-03"
+      ],
+      "body_anchors": [
+        "S01"
+      ],
+      "requested_subject": "Both task policies and complete claim schema, cascade and unique dedupe indexes",
+      "path": "packages/core/src/scheduled-task/sql.ts",
+      "archive": "sources/packages/core/src/scheduled-task/sql.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "f7b58d09202d0eb4026623b587363798a0908874",
+      "source_sha256": "822bcafeaf764d56be959c3c5184e2e3e76bbca52ae6c678477728e0df3899a7",
+      "source_bytes": 3559,
+      "required_source_line_ranges": [
+        [
+          1,
+          76
+        ]
+      ],
+      "prior_literal_ranges": [
+        {
+          "type": "prior_literal_range_reference",
+          "anchor_id": "S01",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task/sql.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task/sql.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "f7b58d09202d0eb4026623b587363798a0908874",
+          "source_sha256": "822bcafeaf764d56be959c3c5184e2e3e76bbca52ae6c678477728e0df3899a7",
+          "source_bytes": 3559,
+          "first_line": 70,
+          "last_line": 75,
+          "source_byte_start": 3273,
+          "source_byte_end_exclusive": 3557,
+          "excerpt_bytes": 284,
+          "excerpt_sha256": "7cec1d85454e0ca448210594cb2a56a6b45ae4ab9a81c02406db33b000f428fc",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 160550,
+          "literal_content_byte_end_exclusive": 160834
+        }
+      ],
+      "new_literal_intervals": [
+        {
+          "first_line": 1,
+          "last_line": 69,
+          "source_byte_start": 0,
+          "source_byte_end_exclusive": 3273,
+          "bytes": 3273,
+          "sha256": "d2577cae4e803dacec3727f13e77a1207e67fdbeb7ea78e5ede26f1ea1f7fcb8",
+          "literal_content_byte_start": 65968,
+          "literal_content_byte_end_exclusive": 69241
+        },
+        {
+          "first_line": 76,
+          "last_line": 76,
+          "source_byte_start": 3557,
+          "source_byte_end_exclusive": 3559,
+          "bytes": 2,
+          "sha256": "fafba0527c3953c4b6e0e5b5739ba83612f8053bcdc9466730193cd1d590b408",
+          "literal_content_byte_start": 69452,
+          "literal_content_byte_end_exclusive": 69454
+        }
+      ],
+      "supplement_byte_start": 64002,
+      "supplement_byte_end_exclusive": 69459,
+      "transport_sha256": "6cf54f5b40c08dfebc93e05c3a6d07b4ff002ec689f53db214cdb00ad4cdec6d"
+    },
+    {
+      "block_id": "AUT4-C05",
+      "type": "literal_source_chain",
+      "requests": [
+        "RE-AUT4-01"
+      ],
+      "body_anchors": [
+        "S01"
+      ],
+      "requested_subject": "Scope acquire/release, previous binding restoration, missing binding failure and forwarding",
+      "path": "packages/core/src/scheduled-task/port.ts",
+      "archive": "sources/packages/core/src/scheduled-task/port.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "8ea347436e18a93f8dc43926c7fb84108fc0a20c",
+      "source_sha256": "5fb969a9e8a030b02e31ff1678e1e0c2887c4e30c3078a5016642131de95ead7",
+      "source_bytes": 2092,
+      "required_source_line_ranges": [
+        [
+          7,
+          41
+        ]
+      ],
+      "prior_literal_ranges": [],
+      "new_literal_intervals": [
+        {
+          "first_line": 7,
+          "last_line": 41,
+          "source_byte_start": 206,
+          "source_byte_end_exclusive": 2092,
+          "bytes": 1886,
+          "sha256": "2a470da5a8694148251c1f3fb021e8cb6fbf862cdf98763e9b2d6d266a38cdf5",
+          "literal_content_byte_start": 70401,
+          "literal_content_byte_end_exclusive": 72287
+        }
+      ],
+      "supplement_byte_start": 69459,
+      "supplement_byte_end_exclusive": 72292,
+      "transport_sha256": "ef3184035acb6d9625d71fc055019c1239532e145f4e410270b73d91a1143924"
+    },
+    {
+      "block_id": "AUT4-C06",
+      "type": "literal_source_chain",
+      "requests": [
+        "RE-AUT4-01",
+        "RE-AUT4-02",
+        "RE-AUT4-03"
+      ],
+      "body_anchors": [
+        "S01",
+        "S02"
+      ],
+      "requested_subject": "Complete legacy model: plan/record/skip/resume, local DST conversion and deterministic noncryptographic IDs",
+      "path": "packages/core/src/scheduled-task/model.ts",
+      "archive": "sources/packages/core/src/scheduled-task/model.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "a5560b15853e2941c31bf9e803560bbea0c24c4e",
+      "source_sha256": "f29962a40bd89bca23cff892d3ff01fcfa8e660b390c4831c88ca7cc695f0b5d",
+      "source_bytes": 6670,
+      "required_source_line_ranges": [
+        [
+          1,
+          140
+        ]
+      ],
+      "prior_literal_ranges": [
+        {
+          "type": "prior_literal_range_reference",
+          "anchor_id": "S02",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task/model.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task/model.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "a5560b15853e2941c31bf9e803560bbea0c24c4e",
+          "source_sha256": "f29962a40bd89bca23cff892d3ff01fcfa8e660b390c4831c88ca7cc695f0b5d",
+          "source_bytes": 6670,
+          "first_line": 25,
+          "last_line": 36,
+          "source_byte_start": 818,
+          "source_byte_end_exclusive": 1659,
+          "excerpt_bytes": 841,
+          "excerpt_sha256": "396f8792f9d53d1756f739a8758740254ba64242ac227d906eec867c9d95187c",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 162170,
+          "literal_content_byte_end_exclusive": 163011
+        },
+        {
+          "type": "prior_literal_range_reference",
+          "anchor_id": "S02",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task/model.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task/model.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "a5560b15853e2941c31bf9e803560bbea0c24c4e",
+          "source_sha256": "f29962a40bd89bca23cff892d3ff01fcfa8e660b390c4831c88ca7cc695f0b5d",
+          "source_bytes": 6670,
+          "first_line": 66,
+          "last_line": 82,
+          "source_byte_start": 2970,
+          "source_byte_end_exclusive": 4055,
+          "excerpt_bytes": 1085,
+          "excerpt_sha256": "c9d3d54dd1b8bb114196dabd09175f3ee2f81e21e406ed9c29d623adf0ba7e93",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 163142,
+          "literal_content_byte_end_exclusive": 164227
+        }
+      ],
+      "new_literal_intervals": [
+        {
+          "first_line": 1,
+          "last_line": 24,
+          "source_byte_start": 0,
+          "source_byte_end_exclusive": 818,
+          "bytes": 818,
+          "sha256": "572b7ca99e6cbf93c8136828cf9bbc897e221f9d7e203f502130e984e3810224",
+          "literal_content_byte_start": 75346,
+          "literal_content_byte_end_exclusive": 76164
+        },
+        {
+          "first_line": 37,
+          "last_line": 65,
+          "source_byte_start": 1659,
+          "source_byte_end_exclusive": 2970,
+          "bytes": 1311,
+          "sha256": "3f9f7b3d9172712c657b57444280c24105bd201526d3fb52698b08da58c195f6",
+          "literal_content_byte_start": 76378,
+          "literal_content_byte_end_exclusive": 77689
+        },
+        {
+          "first_line": 83,
+          "last_line": 140,
+          "source_byte_start": 4055,
+          "source_byte_end_exclusive": 6670,
+          "bytes": 2615,
+          "sha256": "026a2c31781e7c3ed8780e55e34830c3ae3950208065ca44955daf1236ede18d",
+          "literal_content_byte_start": 77904,
+          "literal_content_byte_end_exclusive": 80519
+        }
+      ],
+      "supplement_byte_start": 72292,
+      "supplement_byte_end_exclusive": 80524,
+      "transport_sha256": "853a2d57dbe7e1869ca6f6a0f2f2b4c7431afc3ad094d2c5707e98018deaf07c"
+    },
+    {
+      "block_id": "AUT4-C07",
+      "type": "literal_source_chain",
+      "requests": [
+        "RE-AUT4-02",
+        "RE-AUT4-03"
+      ],
+      "body_anchors": [
+        "S03"
+      ],
+      "requested_subject": "Complete capability timing: cron parsing, possible dates and OR, anchor/catchup, bounds/scan/countWalls and gap resolution",
+      "path": "packages/core/src/scheduled-task/capability-model.ts",
+      "archive": "sources/packages/core/src/scheduled-task/capability-model.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "b92983cab05a5cff1ae32f459378192d07ddfc0b",
+      "source_sha256": "256620d07285f1e60c7e6023f4101e4f8738a565f43a6b859d8c1a7861230620",
+      "source_bytes": 10649,
+      "required_source_line_ranges": [
+        [
+          1,
+          218
+        ]
+      ],
+      "prior_literal_ranges": [
+        {
+          "type": "prior_literal_range_reference",
+          "anchor_id": "S03",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task/capability-model.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task/capability-model.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "b92983cab05a5cff1ae32f459378192d07ddfc0b",
+          "source_sha256": "256620d07285f1e60c7e6023f4101e4f8738a565f43a6b859d8c1a7861230620",
+          "source_bytes": 10649,
+          "first_line": 42,
+          "last_line": 58,
+          "source_byte_start": 1838,
+          "source_byte_end_exclusive": 2738,
+          "excerpt_bytes": 900,
+          "excerpt_sha256": "90f9f24d6735968e84ff4c3d8a3d66adbe63e9a6d63986cad801c59bf1b3e927",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 164779,
+          "literal_content_byte_end_exclusive": 165679
+        },
+        {
+          "type": "prior_literal_range_reference",
+          "anchor_id": "S03",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task/capability-model.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task/capability-model.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "b92983cab05a5cff1ae32f459378192d07ddfc0b",
+          "source_sha256": "256620d07285f1e60c7e6023f4101e4f8738a565f43a6b859d8c1a7861230620",
+          "source_bytes": 10649,
+          "first_line": 83,
+          "last_line": 105,
+          "source_byte_start": 4012,
+          "source_byte_end_exclusive": 5326,
+          "excerpt_bytes": 1314,
+          "excerpt_sha256": "42e180a8a3fbb208c1f84c68aa1cea1fffd6f4ab9e79a2d2c3f08f942945bc47",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 165811,
+          "literal_content_byte_end_exclusive": 167125
+        },
+        {
+          "type": "prior_literal_range_reference",
+          "anchor_id": "S03",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task/capability-model.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task/capability-model.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "b92983cab05a5cff1ae32f459378192d07ddfc0b",
+          "source_sha256": "256620d07285f1e60c7e6023f4101e4f8738a565f43a6b859d8c1a7861230620",
+          "source_bytes": 10649,
+          "first_line": 177,
+          "last_line": 189,
+          "source_byte_start": 8574,
+          "source_byte_end_exclusive": 9320,
+          "excerpt_bytes": 746,
+          "excerpt_sha256": "22f04c2fa6b2c7439332a70975dfeb3edc166b8134a8cb4f24be2748548bca0c",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 167258,
+          "literal_content_byte_end_exclusive": 168004
+        }
+      ],
+      "new_literal_intervals": [
+        {
+          "first_line": 1,
+          "last_line": 41,
+          "source_byte_start": 0,
+          "source_byte_end_exclusive": 1838,
+          "bytes": 1838,
+          "sha256": "b3ed2d7e2bfa64c3b5f2ee49a612eb9b78c1442592e8b0154d38ef279cc0ecb1",
+          "literal_content_byte_start": 84686,
+          "literal_content_byte_end_exclusive": 86524
+        },
+        {
+          "first_line": 59,
+          "last_line": 82,
+          "source_byte_start": 2738,
+          "source_byte_end_exclusive": 4012,
+          "bytes": 1274,
+          "sha256": "cdb65caf3f00d9539d02f10f23695c85fb29cd68287b5b91035da642e1977629",
+          "literal_content_byte_start": 86738,
+          "literal_content_byte_end_exclusive": 88012
+        },
+        {
+          "first_line": 106,
+          "last_line": 176,
+          "source_byte_start": 5326,
+          "source_byte_end_exclusive": 8574,
+          "bytes": 3248,
+          "sha256": "7cdad15bff132d9982a3c4d46f371bddb17d3a5b509ebce738ec920fb96599ca",
+          "literal_content_byte_start": 88228,
+          "literal_content_byte_end_exclusive": 91476
+        },
+        {
+          "first_line": 190,
+          "last_line": 218,
+          "source_byte_start": 9320,
+          "source_byte_end_exclusive": 10649,
+          "bytes": 1329,
+          "sha256": "e1bbd1e2a7d0410bb5383e661cae46c63013f4c0436523ce413bb0f9440000fa",
+          "literal_content_byte_start": 91693,
+          "literal_content_byte_end_exclusive": 93022
+        }
+      ],
+      "supplement_byte_start": 80524,
+      "supplement_byte_end_exclusive": 93027,
+      "transport_sha256": "9af5e6b579a9297007675db0b4011c4d7006b0141178faff30754590a114b8e0"
+    }
+  ],
+  "source_reconstruction_sequences": [
+    {
+      "path": "packages/core/src/scheduled-task.ts",
+      "required_source_line_ranges": [
+        [
+          23,
+          32
+        ],
+        [
+          80,
+          558
+        ]
+      ],
+      "sequence": [
+        {
+          "type": "new_literal",
+          "block_id": "AUT4-C01",
+          "first_line": 23,
+          "last_line": 32,
+          "sha256": "5a2ab1604f7021867fc7de41bf584ea0246dffc1feba184d019d8c6cb6355a54",
+          "source_byte_start": 1018,
+          "source_byte_end_exclusive": 1595,
+          "byte_start": 14800,
+          "byte_end_exclusive": 15377
+        },
+        {
+          "type": "new_literal",
+          "block_id": "AUT4-C01",
+          "first_line": 80,
+          "last_line": 84,
+          "sha256": "a7b448ac5b3d796493313a2c88935f15c6667e8503fd3d7ad12046fa6e4bb66a",
+          "source_byte_start": 3891,
+          "source_byte_end_exclusive": 4047,
+          "byte_start": 15590,
+          "byte_end_exclusive": 15746
+        },
+        {
+          "type": "reused_prior_literal",
+          "anchor_id": "S06",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "0a89bbdc576091ca01445e45e1500ed4008898a9",
+          "source_sha256": "8c204bd55a8cf8fd1dbddc232f5dfa84b9190822d074ccc72e85594e457af12b",
+          "source_bytes": 26123,
+          "first_line": 85,
+          "last_line": 95,
+          "source_byte_start": 4047,
+          "source_byte_end_exclusive": 4696,
+          "excerpt_bytes": 649,
+          "excerpt_sha256": "acd69264fab22407c6a071a579a2d3c7ea9f4f04c7d593b913f90e75be50987f",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 177247,
+          "literal_content_byte_end_exclusive": 177896
+        },
+        {
+          "type": "new_literal",
+          "block_id": "AUT4-C01",
+          "first_line": 96,
+          "last_line": 155,
+          "sha256": "1ff812636443a2f3d9414067c5e6b6444ae7a6c31e0545e5773583889a81ecf7",
+          "source_byte_start": 4696,
+          "source_byte_end_exclusive": 7780,
+          "byte_start": 15961,
+          "byte_end_exclusive": 19045
+        },
+        {
+          "type": "reused_prior_literal",
+          "anchor_id": "S04",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "0a89bbdc576091ca01445e45e1500ed4008898a9",
+          "source_sha256": "8c204bd55a8cf8fd1dbddc232f5dfa84b9190822d074ccc72e85594e457af12b",
+          "source_bytes": 26123,
+          "first_line": 156,
+          "last_line": 182,
+          "source_byte_start": 7780,
+          "source_byte_end_exclusive": 9637,
+          "excerpt_bytes": 1857,
+          "excerpt_sha256": "6faed758cfb62cba5f1849f441c03ad7cfa74204e5d877f0608e23b91f72089c",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 168533,
+          "literal_content_byte_end_exclusive": 170390
+        },
+        {
+          "type": "new_literal",
+          "block_id": "AUT4-C01",
+          "first_line": 183,
+          "last_line": 195,
+          "sha256": "b2263cb5bb4a12f44976cb618c8baac37f08186955d7a422f7ef8fa7a6d130f6",
+          "source_byte_start": 9637,
+          "source_byte_end_exclusive": 10053,
+          "byte_start": 19261,
+          "byte_end_exclusive": 19677
+        },
+        {
+          "type": "reused_prior_literal",
+          "anchor_id": "S04",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "0a89bbdc576091ca01445e45e1500ed4008898a9",
+          "source_sha256": "8c204bd55a8cf8fd1dbddc232f5dfa84b9190822d074ccc72e85594e457af12b",
+          "source_bytes": 26123,
+          "first_line": 196,
+          "last_line": 207,
+          "source_byte_start": 10053,
+          "source_byte_end_exclusive": 10928,
+          "excerpt_bytes": 875,
+          "excerpt_sha256": "0dfbe91720b43cfe31c27eb5af8c3f8812ecb3332b97bc7d6b9db8310ed127d2",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 170523,
+          "literal_content_byte_end_exclusive": 171398
+        },
+        {
+          "type": "new_literal",
+          "block_id": "AUT4-C01",
+          "first_line": 208,
+          "last_line": 284,
+          "sha256": "aca72dc70cf5133905a9471558e9ca644563eb4d36d17aba38a96e85e04fc53c",
+          "source_byte_start": 10928,
+          "source_byte_end_exclusive": 14585,
+          "byte_start": 19895,
+          "byte_end_exclusive": 23552
+        },
+        {
+          "type": "reused_prior_literal",
+          "anchor_id": "S04",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "0a89bbdc576091ca01445e45e1500ed4008898a9",
+          "source_sha256": "8c204bd55a8cf8fd1dbddc232f5dfa84b9190822d074ccc72e85594e457af12b",
+          "source_bytes": 26123,
+          "first_line": 285,
+          "last_line": 302,
+          "source_byte_start": 14585,
+          "source_byte_end_exclusive": 15274,
+          "excerpt_bytes": 689,
+          "excerpt_sha256": "76bc5a87541218e37d4a882d6c8a1e7bfcaa89651409464deab1756074e33397",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 171531,
+          "literal_content_byte_end_exclusive": 172220
+        },
+        {
+          "type": "new_literal",
+          "block_id": "AUT4-C01",
+          "first_line": 303,
+          "last_line": 338,
+          "sha256": "e77a79cd5e99b1c6a5eb8e46e2efc57b67904a1b01edd7a5cabe437b1a153bee",
+          "source_byte_start": 15274,
+          "source_byte_end_exclusive": 16896,
+          "byte_start": 23770,
+          "byte_end_exclusive": 25392
+        },
+        {
+          "type": "reused_prior_literal",
+          "anchor_id": "S06",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "0a89bbdc576091ca01445e45e1500ed4008898a9",
+          "source_sha256": "8c204bd55a8cf8fd1dbddc232f5dfa84b9190822d074ccc72e85594e457af12b",
+          "source_bytes": 26123,
+          "first_line": 339,
+          "last_line": 347,
+          "source_byte_start": 16896,
+          "source_byte_end_exclusive": 17568,
+          "excerpt_bytes": 672,
+          "excerpt_sha256": "4bc19434c37a8375a5c59b753187934fddeb378585ccafe66eb038be0622bfeb",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 178029,
+          "literal_content_byte_end_exclusive": 178701
+        },
+        {
+          "type": "new_literal",
+          "block_id": "AUT4-C01",
+          "first_line": 348,
+          "last_line": 558,
+          "sha256": "d68e6d0e31b82e7d870954ce6f7b0a6184ab893c39619fa3ac5c25abafb1f045",
+          "source_byte_start": 17568,
+          "source_byte_end_exclusive": 26123,
+          "byte_start": 25610,
+          "byte_end_exclusive": 34165
+        }
+      ],
+      "all_required_lines_available": true
+    },
+    {
+      "path": "packages/core/src/scheduled-task/capability.ts",
+      "required_source_line_ranges": [
+        [
+          26,
+          493
+        ]
+      ],
+      "sequence": [
+        {
+          "type": "new_literal",
+          "block_id": "AUT4-C02",
+          "first_line": 26,
+          "last_line": 136,
+          "sha256": "1c7027887df0566ac130ac9c4ffb86651ea003d44a20b65d088c2623b624ffd8",
+          "source_byte_start": 1154,
+          "source_byte_end_exclusive": 6167,
+          "byte_start": 41499,
+          "byte_end_exclusive": 46512
+        },
+        {
+          "type": "reused_prior_literal",
+          "anchor_id": "S04",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task/capability.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task/capability.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "ab0410651446d3d1d98d9d8028a3ad79bb46aecb",
+          "source_sha256": "d024c2e05f0afc70fe49b801ee77b892a8097f5d499cd097d60f230cae67044e",
+          "source_bytes": 21721,
+          "first_line": 137,
+          "last_line": 145,
+          "source_byte_start": 6167,
+          "source_byte_end_exclusive": 6460,
+          "excerpt_bytes": 293,
+          "excerpt_sha256": "d339c9448987bf0c71c326bfd0de45c58e29a91d369c77f3723cdd983e93bae2",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 172626,
+          "literal_content_byte_end_exclusive": 172919
+        },
+        {
+          "type": "new_literal",
+          "block_id": "AUT4-C02",
+          "first_line": 146,
+          "last_line": 186,
+          "sha256": "64320d4caa83cc36f8a38360975c890789fbdee73a6f4e2e6e233d93ed722e2e",
+          "source_byte_start": 6460,
+          "source_byte_end_exclusive": 8090,
+          "byte_start": 46728,
+          "byte_end_exclusive": 48358
+        },
+        {
+          "type": "reused_prior_literal",
+          "anchor_id": "S04",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task/capability.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task/capability.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "ab0410651446d3d1d98d9d8028a3ad79bb46aecb",
+          "source_sha256": "d024c2e05f0afc70fe49b801ee77b892a8097f5d499cd097d60f230cae67044e",
+          "source_bytes": 21721,
+          "first_line": 187,
+          "last_line": 198,
+          "source_byte_start": 8090,
+          "source_byte_end_exclusive": 8568,
+          "excerpt_bytes": 478,
+          "excerpt_sha256": "fb78aed49fc2f26818e0445282063659adc717e7cf339f9548adbf91358f66a0",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 173052,
+          "literal_content_byte_end_exclusive": 173530
+        },
+        {
+          "type": "new_literal",
+          "block_id": "AUT4-C02",
+          "first_line": 199,
+          "last_line": 206,
+          "sha256": "1842c7bf1d7d2345a0c57e442e7de986d733a9a73c8e668c44d613822197fbc8",
+          "source_byte_start": 8568,
+          "source_byte_end_exclusive": 8822,
+          "byte_start": 48573,
+          "byte_end_exclusive": 48827
+        },
+        {
+          "type": "reused_prior_literal",
+          "anchor_id": "S06",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task/capability.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task/capability.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "ab0410651446d3d1d98d9d8028a3ad79bb46aecb",
+          "source_sha256": "d024c2e05f0afc70fe49b801ee77b892a8097f5d499cd097d60f230cae67044e",
+          "source_bytes": 21721,
+          "first_line": 207,
+          "last_line": 237,
+          "source_byte_start": 8822,
+          "source_byte_end_exclusive": 9929,
+          "excerpt_bytes": 1107,
+          "excerpt_sha256": "2f2fc041e6f5b956bb4dff5ef36d08a7ca0583c75eea95b04a8bf58040e5cee5",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 179107,
+          "literal_content_byte_end_exclusive": 180214
+        },
+        {
+          "type": "new_literal",
+          "block_id": "AUT4-C02",
+          "first_line": 238,
+          "last_line": 334,
+          "sha256": "6c43575547ff43f80cdda409a4ef7257ad63911f70b9d6dc52c56387b3de46e8",
+          "source_byte_start": 9929,
+          "source_byte_end_exclusive": 14313,
+          "byte_start": 49044,
+          "byte_end_exclusive": 53428
+        },
+        {
+          "type": "reused_prior_literal",
+          "anchor_id": "S05",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task/capability.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task/capability.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "ab0410651446d3d1d98d9d8028a3ad79bb46aecb",
+          "source_sha256": "d024c2e05f0afc70fe49b801ee77b892a8097f5d499cd097d60f230cae67044e",
+          "source_bytes": 21721,
+          "first_line": 335,
+          "last_line": 364,
+          "source_byte_start": 14313,
+          "source_byte_end_exclusive": 16030,
+          "excerpt_bytes": 1717,
+          "excerpt_sha256": "80b4fd0d5c92c88f745bca334b92821e854805d700df9c7294210feffa0cd0ea",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 174069,
+          "literal_content_byte_end_exclusive": 175786
+        },
+        {
+          "type": "new_literal",
+          "block_id": "AUT4-C02",
+          "first_line": 365,
+          "last_line": 383,
+          "sha256": "09161e9144038bff39c188ff458f7d3ed370468d4ad800ecce624baa0f6a0e00",
+          "source_byte_start": 16030,
+          "source_byte_end_exclusive": 16692,
+          "byte_start": 53645,
+          "byte_end_exclusive": 54307
+        },
+        {
+          "type": "reused_prior_literal",
+          "anchor_id": "S01",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task/capability.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task/capability.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "ab0410651446d3d1d98d9d8028a3ad79bb46aecb",
+          "source_sha256": "d024c2e05f0afc70fe49b801ee77b892a8097f5d499cd097d60f230cae67044e",
+          "source_bytes": 21721,
+          "first_line": 384,
+          "last_line": 394,
+          "source_byte_start": 16692,
+          "source_byte_end_exclusive": 17109,
+          "excerpt_bytes": 417,
+          "excerpt_sha256": "c0ef15fab7ce45caf1bf6f0ea12dbebff6a76cc0ca84476bcca8559bf9a2cbef",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 161240,
+          "literal_content_byte_end_exclusive": 161657
+        },
+        {
+          "type": "new_literal",
+          "block_id": "AUT4-C02",
+          "first_line": 395,
+          "last_line": 454,
+          "sha256": "f8756018e309db2da3257614bf3ffc3a98567199556837c6eb067b384a9e9f9e",
+          "source_byte_start": 17109,
+          "source_byte_end_exclusive": 20046,
+          "byte_start": 54525,
+          "byte_end_exclusive": 57462
+        },
+        {
+          "type": "reused_prior_literal",
+          "anchor_id": "S05",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task/capability.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task/capability.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "ab0410651446d3d1d98d9d8028a3ad79bb46aecb",
+          "source_sha256": "d024c2e05f0afc70fe49b801ee77b892a8097f5d499cd097d60f230cae67044e",
+          "source_bytes": 21721,
+          "first_line": 455,
+          "last_line": 466,
+          "source_byte_start": 20046,
+          "source_byte_end_exclusive": 20852,
+          "excerpt_bytes": 806,
+          "excerpt_sha256": "293f0c3d7328a3a34be4fbb7553c3c3f23c667397a2ed78565946651ec9d734f",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 175919,
+          "literal_content_byte_end_exclusive": 176725
+        },
+        {
+          "type": "new_literal",
+          "block_id": "AUT4-C02",
+          "first_line": 467,
+          "last_line": 493,
+          "sha256": "9bbd057398bf713606117e37efea9ed410c6385c32eedb91fec7659d92153eeb",
+          "source_byte_start": 20852,
+          "source_byte_end_exclusive": 21721,
+          "byte_start": 57679,
+          "byte_end_exclusive": 58548
+        }
+      ],
+      "all_required_lines_available": true
+    },
+    {
+      "path": "packages/core/src/scheduled-task/shared.ts",
+      "required_source_line_ranges": [
+        [
+          13,
+          144
+        ]
+      ],
+      "sequence": [
+        {
+          "type": "new_literal",
+          "block_id": "AUT4-C03",
+          "first_line": 13,
+          "last_line": 144,
+          "sha256": "e94fc61db55616c640f9715ddf5fa66e4598c383b789b2602d14dbf4d8683305",
+          "source_byte_start": 514,
+          "source_byte_end_exclusive": 4949,
+          "byte_start": 59562,
+          "byte_end_exclusive": 63997
+        }
+      ],
+      "all_required_lines_available": true
+    },
+    {
+      "path": "packages/core/src/scheduled-task/sql.ts",
+      "required_source_line_ranges": [
+        [
+          1,
+          76
+        ]
+      ],
+      "sequence": [
+        {
+          "type": "new_literal",
+          "block_id": "AUT4-C04",
+          "first_line": 1,
+          "last_line": 69,
+          "sha256": "d2577cae4e803dacec3727f13e77a1207e67fdbeb7ea78e5ede26f1ea1f7fcb8",
+          "source_byte_start": 0,
+          "source_byte_end_exclusive": 3273,
+          "byte_start": 65968,
+          "byte_end_exclusive": 69241
+        },
+        {
+          "type": "reused_prior_literal",
+          "anchor_id": "S01",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task/sql.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task/sql.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "f7b58d09202d0eb4026623b587363798a0908874",
+          "source_sha256": "822bcafeaf764d56be959c3c5184e2e3e76bbca52ae6c678477728e0df3899a7",
+          "source_bytes": 3559,
+          "first_line": 70,
+          "last_line": 75,
+          "source_byte_start": 3273,
+          "source_byte_end_exclusive": 3557,
+          "excerpt_bytes": 284,
+          "excerpt_sha256": "7cec1d85454e0ca448210594cb2a56a6b45ae4ab9a81c02406db33b000f428fc",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 160550,
+          "literal_content_byte_end_exclusive": 160834
+        },
+        {
+          "type": "new_literal",
+          "block_id": "AUT4-C04",
+          "first_line": 76,
+          "last_line": 76,
+          "sha256": "fafba0527c3953c4b6e0e5b5739ba83612f8053bcdc9466730193cd1d590b408",
+          "source_byte_start": 3557,
+          "source_byte_end_exclusive": 3559,
+          "byte_start": 69452,
+          "byte_end_exclusive": 69454
+        }
+      ],
+      "all_required_lines_available": true
+    },
+    {
+      "path": "packages/core/src/scheduled-task/port.ts",
+      "required_source_line_ranges": [
+        [
+          7,
+          41
+        ]
+      ],
+      "sequence": [
+        {
+          "type": "new_literal",
+          "block_id": "AUT4-C05",
+          "first_line": 7,
+          "last_line": 41,
+          "sha256": "2a470da5a8694148251c1f3fb021e8cb6fbf862cdf98763e9b2d6d266a38cdf5",
+          "source_byte_start": 206,
+          "source_byte_end_exclusive": 2092,
+          "byte_start": 70401,
+          "byte_end_exclusive": 72287
+        }
+      ],
+      "all_required_lines_available": true
+    },
+    {
+      "path": "packages/core/src/scheduled-task/model.ts",
+      "required_source_line_ranges": [
+        [
+          1,
+          140
+        ]
+      ],
+      "sequence": [
+        {
+          "type": "new_literal",
+          "block_id": "AUT4-C06",
+          "first_line": 1,
+          "last_line": 24,
+          "sha256": "572b7ca99e6cbf93c8136828cf9bbc897e221f9d7e203f502130e984e3810224",
+          "source_byte_start": 0,
+          "source_byte_end_exclusive": 818,
+          "byte_start": 75346,
+          "byte_end_exclusive": 76164
+        },
+        {
+          "type": "reused_prior_literal",
+          "anchor_id": "S02",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task/model.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task/model.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "a5560b15853e2941c31bf9e803560bbea0c24c4e",
+          "source_sha256": "f29962a40bd89bca23cff892d3ff01fcfa8e660b390c4831c88ca7cc695f0b5d",
+          "source_bytes": 6670,
+          "first_line": 25,
+          "last_line": 36,
+          "source_byte_start": 818,
+          "source_byte_end_exclusive": 1659,
+          "excerpt_bytes": 841,
+          "excerpt_sha256": "396f8792f9d53d1756f739a8758740254ba64242ac227d906eec867c9d95187c",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 162170,
+          "literal_content_byte_end_exclusive": 163011
+        },
+        {
+          "type": "new_literal",
+          "block_id": "AUT4-C06",
+          "first_line": 37,
+          "last_line": 65,
+          "sha256": "3f9f7b3d9172712c657b57444280c24105bd201526d3fb52698b08da58c195f6",
+          "source_byte_start": 1659,
+          "source_byte_end_exclusive": 2970,
+          "byte_start": 76378,
+          "byte_end_exclusive": 77689
+        },
+        {
+          "type": "reused_prior_literal",
+          "anchor_id": "S02",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task/model.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task/model.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "a5560b15853e2941c31bf9e803560bbea0c24c4e",
+          "source_sha256": "f29962a40bd89bca23cff892d3ff01fcfa8e660b390c4831c88ca7cc695f0b5d",
+          "source_bytes": 6670,
+          "first_line": 66,
+          "last_line": 82,
+          "source_byte_start": 2970,
+          "source_byte_end_exclusive": 4055,
+          "excerpt_bytes": 1085,
+          "excerpt_sha256": "c9d3d54dd1b8bb114196dabd09175f3ee2f81e21e406ed9c29d623adf0ba7e93",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 163142,
+          "literal_content_byte_end_exclusive": 164227
+        },
+        {
+          "type": "new_literal",
+          "block_id": "AUT4-C06",
+          "first_line": 83,
+          "last_line": 140,
+          "sha256": "026a2c31781e7c3ed8780e55e34830c3ae3950208065ca44955daf1236ede18d",
+          "source_byte_start": 4055,
+          "source_byte_end_exclusive": 6670,
+          "byte_start": 77904,
+          "byte_end_exclusive": 80519
+        }
+      ],
+      "all_required_lines_available": true
+    },
+    {
+      "path": "packages/core/src/scheduled-task/capability-model.ts",
+      "required_source_line_ranges": [
+        [
+          1,
+          218
+        ]
+      ],
+      "sequence": [
+        {
+          "type": "new_literal",
+          "block_id": "AUT4-C07",
+          "first_line": 1,
+          "last_line": 41,
+          "sha256": "b3ed2d7e2bfa64c3b5f2ee49a612eb9b78c1442592e8b0154d38ef279cc0ecb1",
+          "source_byte_start": 0,
+          "source_byte_end_exclusive": 1838,
+          "byte_start": 84686,
+          "byte_end_exclusive": 86524
+        },
+        {
+          "type": "reused_prior_literal",
+          "anchor_id": "S03",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task/capability-model.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task/capability-model.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "b92983cab05a5cff1ae32f459378192d07ddfc0b",
+          "source_sha256": "256620d07285f1e60c7e6023f4101e4f8738a565f43a6b859d8c1a7861230620",
+          "source_bytes": 10649,
+          "first_line": 42,
+          "last_line": 58,
+          "source_byte_start": 1838,
+          "source_byte_end_exclusive": 2738,
+          "excerpt_bytes": 900,
+          "excerpt_sha256": "90f9f24d6735968e84ff4c3d8a3d66adbe63e9a6d63986cad801c59bf1b3e927",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 164779,
+          "literal_content_byte_end_exclusive": 165679
+        },
+        {
+          "type": "new_literal",
+          "block_id": "AUT4-C07",
+          "first_line": 59,
+          "last_line": 82,
+          "sha256": "cdb65caf3f00d9539d02f10f23695c85fb29cd68287b5b91035da642e1977629",
+          "source_byte_start": 2738,
+          "source_byte_end_exclusive": 4012,
+          "byte_start": 86738,
+          "byte_end_exclusive": 88012
+        },
+        {
+          "type": "reused_prior_literal",
+          "anchor_id": "S03",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task/capability-model.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task/capability-model.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "b92983cab05a5cff1ae32f459378192d07ddfc0b",
+          "source_sha256": "256620d07285f1e60c7e6023f4101e4f8738a565f43a6b859d8c1a7861230620",
+          "source_bytes": 10649,
+          "first_line": 83,
+          "last_line": 105,
+          "source_byte_start": 4012,
+          "source_byte_end_exclusive": 5326,
+          "excerpt_bytes": 1314,
+          "excerpt_sha256": "42e180a8a3fbb208c1f84c68aa1cea1fffd6f4ab9e79a2d2c3f08f942945bc47",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 165811,
+          "literal_content_byte_end_exclusive": 167125
+        },
+        {
+          "type": "new_literal",
+          "block_id": "AUT4-C07",
+          "first_line": 106,
+          "last_line": 176,
+          "sha256": "7cdad15bff132d9982a3c4d46f371bddb17d3a5b509ebce738ec920fb96599ca",
+          "source_byte_start": 5326,
+          "source_byte_end_exclusive": 8574,
+          "byte_start": 88228,
+          "byte_end_exclusive": 91476
+        },
+        {
+          "type": "reused_prior_literal",
+          "anchor_id": "S03",
+          "role": "previously_transported_implementation",
+          "source_path": "packages/core/src/scheduled-task/capability-model.ts",
+          "source_archive": "sources/packages/core/src/scheduled-task/capability-model.ts",
+          "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "source_git_blob_sha": "b92983cab05a5cff1ae32f459378192d07ddfc0b",
+          "source_sha256": "256620d07285f1e60c7e6023f4101e4f8738a565f43a6b859d8c1a7861230620",
+          "source_bytes": 10649,
+          "first_line": 177,
+          "last_line": 189,
+          "source_byte_start": 8574,
+          "source_byte_end_exclusive": 9320,
+          "excerpt_bytes": 746,
+          "excerpt_sha256": "22f04c2fa6b2c7439332a70975dfeb3edc166b8134a8cb4f24be2748548bca0c",
+          "prior_document": "evidence-review.md",
+          "prior_document_sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+          "literal_content_byte_start": 167258,
+          "literal_content_byte_end_exclusive": 168004
+        },
+        {
+          "type": "new_literal",
+          "block_id": "AUT4-C07",
+          "first_line": 190,
+          "last_line": 218,
+          "sha256": "e1bbd1e2a7d0410bb5383e661cae46c63013f4c0436523ce413bb0f9440000fa",
+          "source_byte_start": 9320,
+          "source_byte_end_exclusive": 10649,
+          "byte_start": 91693,
+          "byte_end_exclusive": 93022
+        }
+      ],
+      "all_required_lines_available": true
+    }
+  ],
+  "shared_reconciliation": {
+    "index": {
+      "path": "review-supplement-1-index.json",
+      "bytes": 246723,
+      "sha256": "b3a190b8f1bc17ea7f35fc0c53c5bb0f0f134570ac78f62a020452c3818d8902",
+      "git_blob_sha": "c42a17c0071f3c864f3e6eb11b5a7ae3fa0d37be"
+    },
+    "pointer": "/shared_population_reconciliation",
+    "new_census": false,
+    "new_rows": 0
+  },
+  "historical_evidence": {
+    "index": {
+      "path": "review-supplement-1-index.json",
+      "bytes": 246723,
+      "sha256": "b3a190b8f1bc17ea7f35fc0c53c5bb0f0f134570ac78f62a020452c3818d8902",
+      "git_blob_sha": "c42a17c0071f3c864f3e6eb11b5a7ae3fa0d37be"
+    },
+    "pointer": "/history",
+    "new_history_projection": false,
+    "prior_literal_block_ids": [
+      "AUT1-H01",
+      "AUT1-H02",
+      "AUT1-H03",
+      "AUT1-H04"
+    ]
+  },
+  "existing_test_literal_references": [
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "T01",
+      "role": "existing_test_assertions_NOT_RUN",
+      "source_path": "packages/core/test/actions/readback.test.ts",
+      "source_archive": "sources/packages/core/test/actions/readback.test.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "817254ee4c663e5ae3d2d61639d4c70a7cafe009",
+      "source_sha256": "b10276afdb9bcfda8f704de349657d320511703049c604df3ee1e26978e99412",
+      "source_bytes": 14628,
+      "first_line": 182,
+      "last_line": 231,
+      "source_byte_start": 8361,
+      "source_byte_end_exclusive": 10506,
+      "excerpt_bytes": 2145,
+      "excerpt_sha256": "b145215ca93279f47eeec4e28cad49f8e1bf31556ef49a2fe96798550deb936a",
+      "prior_document": "evidence.md",
+      "prior_document_sha256": "de46e809f97346c81701ee8af0144abbe8458386787a2598b2bc88b81ec2b400",
+      "literal_content_byte_start": 929145,
+      "literal_content_byte_end_exclusive": 931290,
+      "execution_status": "NOT_RUN"
+    },
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "T01",
+      "role": "existing_test_assertions_NOT_RUN",
+      "source_path": "packages/core/test/actions-resource-schedules.test.ts",
+      "source_archive": "sources/packages/core/test/actions-resource-schedules.test.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "56f5d0629d1b482e953bc28801155c8f06b03ffb",
+      "source_sha256": "30ea7374a0b515d6a96ece1296e40a68957c5839e5ae59be9b88bacd30ee31f5",
+      "source_bytes": 13709,
+      "first_line": 22,
+      "last_line": 51,
+      "source_byte_start": 1551,
+      "source_byte_end_exclusive": 4165,
+      "excerpt_bytes": 2614,
+      "excerpt_sha256": "9878883b5668e79af595869504055190e73b4a31f513a3e835da3c25fc7e1ac9",
+      "prior_document": "evidence.md",
+      "prior_document_sha256": "de46e809f97346c81701ee8af0144abbe8458386787a2598b2bc88b81ec2b400",
+      "literal_content_byte_start": 931778,
+      "literal_content_byte_end_exclusive": 934392,
+      "execution_status": "NOT_RUN"
+    },
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "T01",
+      "role": "existing_test_assertions_NOT_RUN",
+      "source_path": "packages/core/test/actions-transport-gitlab-http.test.ts",
+      "source_archive": "sources/packages/core/test/actions-transport-gitlab-http.test.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "142f2e1116aad7479389f8640c0c5c9b4c1be4a9",
+      "source_sha256": "177c37ffc41d22526e737abf31f214250bef0e8a0d5f031515477419c324d875",
+      "source_bytes": 15150,
+      "first_line": 28,
+      "last_line": 49,
+      "source_byte_start": 1619,
+      "source_byte_end_exclusive": 3117,
+      "excerpt_bytes": 1498,
+      "excerpt_sha256": "0ea7ea1e35337455dc6b2194f62637ae3a5783501726e0e74e62b2d63e0e04f1",
+      "prior_document": "evidence.md",
+      "prior_document_sha256": "de46e809f97346c81701ee8af0144abbe8458386787a2598b2bc88b81ec2b400",
+      "literal_content_byte_start": 934893,
+      "literal_content_byte_end_exclusive": 936391,
+      "execution_status": "NOT_RUN"
+    },
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "T01",
+      "role": "existing_test_assertions_NOT_RUN",
+      "source_path": "packages/core/test/board-budget.test.ts",
+      "source_archive": "sources/packages/core/test/board-budget.test.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "d7be43a0a867980844c94009c138bc0bba6e5693",
+      "source_sha256": "34a372da5e198a2cc1330fd429ca2a9da647205c8801ff39f60e4fdeb1040dbc",
+      "source_bytes": 10675,
+      "first_line": 93,
+      "last_line": 130,
+      "source_byte_start": 4750,
+      "source_byte_end_exclusive": 6733,
+      "excerpt_bytes": 1983,
+      "excerpt_sha256": "3b2d1ca25d7be0d94d6a68e9663b81b496287cfb7b8a53e896b6ab6d7e36321b",
+      "prior_document": "evidence.md",
+      "prior_document_sha256": "de46e809f97346c81701ee8af0144abbe8458386787a2598b2bc88b81ec2b400",
+      "literal_content_byte_start": 936854,
+      "literal_content_byte_end_exclusive": 938837,
+      "execution_status": "NOT_RUN"
+    },
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "T01",
+      "role": "existing_test_assertions_NOT_RUN",
+      "source_path": "packages/core/test/board-queue.test.ts",
+      "source_archive": "sources/packages/core/test/board-queue.test.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "8ded9fcbbcd0b414bbea9ed2e43a6e36ab931f78",
+      "source_sha256": "9f75b5fe9d6cea03242d2e40a1db43602fe984a48134e1635c6d3510c010aec8",
+      "source_bytes": 16848,
+      "first_line": 145,
+      "last_line": 187,
+      "source_byte_start": 7311,
+      "source_byte_end_exclusive": 9304,
+      "excerpt_bytes": 1993,
+      "excerpt_sha256": "e1a377eb640a85d0904a9619dd7317f2904bd9c53ae0d98276aeb9251ed30288",
+      "prior_document": "evidence.md",
+      "prior_document_sha256": "de46e809f97346c81701ee8af0144abbe8458386787a2598b2bc88b81ec2b400",
+      "literal_content_byte_start": 939301,
+      "literal_content_byte_end_exclusive": 941294,
+      "execution_status": "NOT_RUN"
+    },
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "T01",
+      "role": "existing_test_assertions_NOT_RUN",
+      "source_path": "packages/core/test/scheduled-task-capability.test.ts",
+      "source_archive": "sources/packages/core/test/scheduled-task-capability.test.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "c96b90a80f985a84c74f8859c211b533f8600db6",
+      "source_sha256": "85eb84f706e0228bb8e4202c45d4b4c0ab8645bb2a04427b573cebd335b12af9",
+      "source_bytes": 24066,
+      "first_line": 308,
+      "last_line": 395,
+      "source_byte_start": 13112,
+      "source_byte_end_exclusive": 17170,
+      "excerpt_bytes": 4058,
+      "excerpt_sha256": "53e2b614c31b2368839227f8fbc926f585971f2d9e29af08cbe188818db57033",
+      "prior_document": "evidence.md",
+      "prior_document_sha256": "de46e809f97346c81701ee8af0144abbe8458386787a2598b2bc88b81ec2b400",
+      "literal_content_byte_start": 941802,
+      "literal_content_byte_end_exclusive": 945860,
+      "execution_status": "NOT_RUN"
+    },
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "T01",
+      "role": "existing_test_assertions_NOT_RUN",
+      "source_path": "packages/core/test/scheduled-task-capability.test.ts",
+      "source_archive": "sources/packages/core/test/scheduled-task-capability.test.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "c96b90a80f985a84c74f8859c211b533f8600db6",
+      "source_sha256": "85eb84f706e0228bb8e4202c45d4b4c0ab8645bb2a04427b573cebd335b12af9",
+      "source_bytes": 24066,
+      "first_line": 470,
+      "last_line": 550,
+      "source_byte_start": 20546,
+      "source_byte_end_exclusive": 24066,
+      "excerpt_bytes": 3520,
+      "excerpt_sha256": "861d9e4a5f4df7b4e7ec6ef99774be9ca3abbe77e70acc6a93f003213fbd95e7",
+      "prior_document": "evidence.md",
+      "prior_document_sha256": "de46e809f97346c81701ee8af0144abbe8458386787a2598b2bc88b81ec2b400",
+      "literal_content_byte_start": 945993,
+      "literal_content_byte_end_exclusive": 949513,
+      "execution_status": "NOT_RUN"
+    },
+    {
+      "type": "prior_literal_range_reference",
+      "anchor_id": "T01",
+      "role": "existing_test_assertions_NOT_RUN",
+      "source_path": "packages/core/test/scheduled-task.test.ts",
+      "source_archive": "sources/packages/core/test/scheduled-task.test.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "4d242fd64503184fbfe362fc52907c67539a3686",
+      "source_sha256": "0fb2f943f7e8595d5df3996d4fd671455f357cb5fcad2f35631a82c9d494d4b6",
+      "source_bytes": 21239,
+      "first_line": 184,
+      "last_line": 248,
+      "source_byte_start": 7531,
+      "source_byte_end_exclusive": 10555,
+      "excerpt_bytes": 3024,
+      "excerpt_sha256": "701041cb8a81631265c2cd16ca46580aefa6f89f886e2b2746d85c3fcec55c11",
+      "prior_document": "evidence.md",
+      "prior_document_sha256": "de46e809f97346c81701ee8af0144abbe8458386787a2598b2bc88b81ec2b400",
+      "literal_content_byte_start": 949987,
+      "literal_content_byte_end_exclusive": 953011,
+      "execution_status": "NOT_RUN"
+    }
+  ],
+  "existing_test_reference_semantics": "Literal archived assertions only; same seven decisive files, NOT_RUN; no new test/census",
+  "reuse_source_document": {
+    "path": "evidence-review.md",
+    "bytes": 181923,
+    "sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+    "git_blob_sha": "58a71f6514962e4a69def762e403140f9705909b"
+  },
+  "new_external_sources": [],
+  "additional_proposed_deltas": [],
+  "changes_outside_authorized_revision": [],
+  "tests": "NOT_RUN",
+  "provider_execution": "NOT_RUN",
+  "timezone_execution": "NOT_RUN",
+  "status": "EVIDENCE_SUPPLIED_NOT_JUDGED"
+}

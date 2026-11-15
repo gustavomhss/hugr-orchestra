@@ -1,0 +1,25 @@
+{
+  "recorded_at_utc": "2026-11-15T00:43:30.765352+00:00",
+  "responses": [
+    {
+      "judge": "/root/s1_03_j1",
+      "file": "j1-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 6667,
+      "sha256": "bf7d7f1861cd44306931482f0322cd5f19da35bb4b1bf6568e0075d7cfa5415c",
+      "terminal_newline": false,
+      "literal": true
+    },
+    {
+      "judge": "/root/s1_03_j2",
+      "file": "j2-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 5380,
+      "sha256": "9f27a6a9a5853fa58747d88c66f22a4fdd2024d3f550bb095f59363b037c8f0d",
+      "terminal_newline": false,
+      "literal": true
+    }
+  ],
+  "pending": [],
+  "sync_state": "Ambos completed e originais preservados; próximo lote autorizado boundaries."
+}

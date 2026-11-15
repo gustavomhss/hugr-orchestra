@@ -1,0 +1,131 @@
+{
+  "schema": "genesis-review-supplement-receipt/v1",
+  "task": "AUTOMATION-L1",
+  "review_batch": "automation-1",
+  "producer": "/root/automation_l1",
+  "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "body_sha256": "2ed7670affc680005840d0918489cb1ac36e1c5a4021defcc57ae44186ae7459",
+  "outputs": [
+    {
+      "path": "review-supplement-1.md",
+      "bytes": 338932,
+      "sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "git_blob_sha": "dab732abd7f47eb3f26473b5614fa92d2b747a46"
+    },
+    {
+      "path": "review-supplement-1-index.json",
+      "bytes": 246723,
+      "sha256": "b3a190b8f1bc17ea7f35fc0c53c5bb0f0f134570ac78f62a020452c3818d8902",
+      "git_blob_sha": "c42a17c0071f3c864f3e6eb11b5a7ae3fa0d37be"
+    },
+    {
+      "path": "external-source-captures.json",
+      "bytes": 6152,
+      "sha256": "a6173c03c76fdae97db1535253700257827062eecc74a5e4a4f6d67c1634fd57",
+      "git_blob_sha": "a1762e44be3aaae6ce5da319134f1023f1b8e094"
+    },
+    {
+      "path": "build_review_supplement_1.py",
+      "bytes": 25049,
+      "sha256": "bde72dad11febfd8897b1cdd3831449c1ae34693bbb3ee6f6d3ccc054dc97b7a",
+      "git_blob_sha": "2a5b001525e56783cffb9b39fa9157a331e7bee1"
+    }
+  ],
+  "original_files_preserved": [
+    {
+      "path": "body.md",
+      "bytes": 59832,
+      "sha256": "2ed7670affc680005840d0918489cb1ac36e1c5a4021defcc57ae44186ae7459",
+      "git_blob_sha": "1867e5763e724fb2c3641f28297da24b311bdcda"
+    },
+    {
+      "path": "recipe.json",
+      "bytes": 15037,
+      "sha256": "0bea2453bc31f3f93109b9c64c7952aa690e6e6e8e5794c35a5630b8f9b38b21",
+      "git_blob_sha": "01c0b2008499d7df9449dd881ff9d9fd7f0f6853"
+    },
+    {
+      "path": "request.txt",
+      "bytes": 6568,
+      "sha256": "9753f217c3879889af8399e36f9024a52d5188500c03e83485bd04fea0448b27",
+      "git_blob_sha": "9feb5466de0e2729aa07896258171ec0bfd53fef"
+    },
+    {
+      "path": "captures.json",
+      "bytes": 100039,
+      "sha256": "d705eeab9e7ade1461f151f3b72556696cd3bbac473baf3ab13bb14192cd28e1",
+      "git_blob_sha": "e1c2cb2f2a58ac0b22e9fc86862594798fc802eb"
+    },
+    {
+      "path": "coverage.jsonl",
+      "bytes": 223656,
+      "sha256": "580c1885a277f378d9f5c44f0dd335e58cb4dc02f23bc002179103dc90dcfd5f",
+      "git_blob_sha": "055916a29be2005f94a202949080f7d6139bff28"
+    },
+    {
+      "path": "response.md",
+      "bytes": 8967,
+      "sha256": "486a533d95528df339e354b68243052203c08141f2dae43c96f58e7dfd9a31d9",
+      "git_blob_sha": "18bd9db841a12091da00cd7c7fd63872e11f88da"
+    },
+    {
+      "path": "evidence.md",
+      "bytes": 953016,
+      "sha256": "de46e809f97346c81701ee8af0144abbe8458386787a2598b2bc88b81ec2b400",
+      "git_blob_sha": "a00e38106ddfe903960659b3bfa4cb3fc73e69d3"
+    },
+    {
+      "path": "evidence-review.md",
+      "bytes": 181923,
+      "sha256": "3c6c199a81000e2a08d1b215c23e8cbb04e69a47aea014a046ce62e4407b2f4c",
+      "git_blob_sha": "58a71f6514962e4a69def762e403140f9705909b"
+    },
+    {
+      "path": "document-integrity.json",
+      "bytes": 1220,
+      "sha256": "fdbc36f75b6f753405e19c65e65abd7fdbb7a7cd93893efbb6b7b6acaa4a5217",
+      "git_blob_sha": "10e6f57b8d5355ad30812b0eda6c7e0eb610d51d"
+    },
+    {
+      "path": "build_artifacts.py",
+      "bytes": 47573,
+      "sha256": "ef50c322f6f3db3fbb8c597a125676d9768b799088be76fb229b21027edf0466",
+      "git_blob_sha": "57fcaffd959e3ce627289027e18da587d9c6e5b7"
+    },
+    {
+      "path": "capture-ledger.jsonl",
+      "bytes": 86229,
+      "sha256": "8592cb2b3ffb9b90429d949d379fb46d35df5486b73a90d1d62638b00885c5b2",
+      "git_blob_sha": "a1208bbfde90bea626002f70103adb525ed22e0f"
+    },
+    {
+      "path": "capture_save.py",
+      "bytes": 1529,
+      "sha256": "49a9812af0dc01284179c03113b74a6cc1193e08c43a24a10f0409e2a54db758",
+      "git_blob_sha": "7b203193bf973e90a6de190429bd694c1ab65a49"
+    }
+  ],
+  "literal_blocks": 55,
+  "literal_source_intervals": 56,
+  "owned_population_sources_in_supplement": 45,
+  "external_semantic_sources": 7,
+  "external_instruction_sources": 1,
+  "all_original_population_verified": 204,
+  "projection_rows_verified": 204,
+  "literal_intervals_byte_equal": true,
+  "old_file_hashes_equal": true,
+  "verification_type": "document_bytes_hashes_and_population_only_not_product_tests",
+  "proposed_delta_ids": [
+    "AUT1-DELTA-PROPOSAL-01"
+  ],
+  "applied_deltas": [],
+  "judgment": "NOT_PERFORMED",
+  "product_tests": "NOT_RUN",
+  "provider_execution": "NOT_RUN",
+  "paid_provider_calls": 0,
+  "remote_writes": 0,
+  "oracle_access": false,
+  "schema_artifact_acceptance": "NOT_ASSERTED",
+  "model_tokens": "UNKNOWN",
+  "model_cost": "UNKNOWN"
+}

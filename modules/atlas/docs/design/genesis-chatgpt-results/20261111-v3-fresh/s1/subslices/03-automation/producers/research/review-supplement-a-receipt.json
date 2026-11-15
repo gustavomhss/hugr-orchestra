@@ -1,0 +1,151 @@
+{
+  "schema": "genesis-review-literal-supplement-receipt/v1",
+  "task": "RESEARCH-L1/research-a",
+  "producer": "/root/research_l1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "produced_at_utc": "2026-11-14T23:45:23.368217+00:00",
+  "request_from": "/root",
+  "request_text": "J1 e J2 terminaram research-a (R0–R7, body atual sha1213f85...), ambos REQUEST_EVIDENCE, nenhum defeito factual comprovado. Mantenha o corpo congelado por ora. Escreva apenas suplemento literal para fechar RE-A1..5 em producers/research/review-supplement-a.md + índice/recibo, com fontes/ranges/hashes reais. Não acesse oracle nem juízes. Pedidos coincidentes: (1) histórico research integral3942bytes; trechos A3/A4/projeção que sustentam39backend/38research e supported; projeção de coverage por path/role/need/profundidade/sections pertinente R0–R7 e reconciliação130=59+71,80impl41test7locks1gerado1README. Pode fazer projeção MECÂNICA identificada dos campos, não fingir que é row integral. (2) E11–E13: campos literais decisivos de21engines backend,5runtimes,5packs research id/version/runtime/install/deps/unsupported/features/fit; evidenciar scip-typescript transitivo vs TS oracle, Go/Rusttoolchains eVSIX; dos7locks sócampos fundamentadores resolved/integrity/bundled/install scripts/esbuildopcionais/wheels, semlocksinteiros. (3) prepare emindex.ts:formas $BACKEND_TOOLKIT_BIN,waiter60s,PATH,prefetch porengine; ambienteallowlist/HOME/configprivados; hostedGo/Cargoargv/env/processlimits; project-versionparserrestrito/output/caminhos; cassandra-metadata staging/replace/license/notices/inputs +dialer modos exclusivos/respostaCONNECTlimitada/deadline/cancelamento. (4) caps/pack-not-shipped/estadosshard; shardGiterrors,truncamento,descobertaprojetos,órfãos/.pyi; buildmemo/singleFlight/falhas/ongoing; storeescritatransacional/publicação/leiturascoped/manifest; extractplatform/ordemindexersversusfallback/HEAD/limitesSCIP. (5) filter/tamanho/tree-sitter export/import; SCIPspanconversãoUTF16/defaultsevicçãomemo; enclosing/callerscanonicalização; E22adaptersGoPythonRust; E23resolve/rank branches relevantes. Não despeje arquivosinteirosindiscriminadamente; trechos suficientes para cada claim, agrupados de forma econômica, referência/hashes uma vez por fonte. Ambos aceitam solicitar mais contexto se faltante, mas precisamos fechar estas perguntas concretas. Sugestão opcional J1 sobre memo 'no máximo2 dumps por path,mtime,tamanho': confirmar se2globais +1 porpath; se for erro factual, preservev1eproponhacorreçãomínima separada comhashes, sem alterar v1 silenciosamente. Finalize ao entregar suplemento. A produção principal continua e não haverá encerramento em checkpoint.",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "body_frozen_sha256": "1213f85cf16f73feed220e8c1b33ed52b2af75afd570b154a29eaf8f99f27d73",
+  "body_unchanged": true,
+  "frozen_artifacts_unchanged": {
+    "body.md": {
+      "bytes": 63389,
+      "sha256": "1213f85cf16f73feed220e8c1b33ed52b2af75afd570b154a29eaf8f99f27d73",
+      "git_blob_sha": "c29b9f5b8a8913cc4afa58d3e9cdede292f0657e"
+    },
+    "captures.json": {
+      "bytes": 52221,
+      "sha256": "4275f6f649be64c3e0fb948115f3260b618d633e98a650824f58b17ac3036a52",
+      "git_blob_sha": "3c88d5718848071443d0c3cc412846a0ffba2e75"
+    },
+    "coverage.jsonl": {
+      "bytes": 127215,
+      "sha256": "bb06bcef77a2dbeccabc70dd00dc10d70bf22cb338588661d7ecc9f49e01eec9",
+      "git_blob_sha": "48b8beafa81098be06c37b4f4ec1a3044e77414d"
+    },
+    "evidence.md": {
+      "bytes": 599806,
+      "sha256": "e8cc0b447e48f26b3a059dc70c7ad7e607ec9b60a9af3d605e76f4c10b1da05b",
+      "git_blob_sha": "f828e2d973d4e21f84f052440cc2802dcc7f5fb0"
+    },
+    "evidence-review.md": {
+      "bytes": 89675,
+      "sha256": "3496f3e102e5db734d2954cf18e9bea6da5fbc418d2084f56814eefb5347788e",
+      "git_blob_sha": "6a0d62257e36fef18db108295f6325f059773a38"
+    },
+    "evidence-index.json": {
+      "bytes": 63265,
+      "sha256": "219182fe48272b4eb6c8f21507e337730c09b86e1c9ef47e973d7846ec75a4c0",
+      "git_blob_sha": "11aea05e6a5f4f1cd1a48481469a5366ab5d3700"
+    },
+    "recipe.json": {
+      "bytes": 134003,
+      "sha256": "a5bd9215347a9eb06ab008846f2ef169e1d3269f0f6c0a75f73da72d914178a2",
+      "git_blob_sha": "12ef72626a68da88e6b37523c54663119902a0e4"
+    },
+    "request.txt": {
+      "bytes": 3325,
+      "sha256": "4e11428b6ece1d3fe3769a5f1ca7c4d3eb36654ccdec504500bb6622aec86adc",
+      "git_blob_sha": "3cf36fc80a69175f3db6fca92120b564601aaec5"
+    },
+    "response.md": {
+      "bytes": 5451,
+      "sha256": "d91be8e07e1f38bd712a2f178fd0ee800af5e6fb0e5c4a92cccdf672e5922780",
+      "git_blob_sha": "5d5032c084ea252c409fe747e7654501285acea0"
+    },
+    "history/body-initial.md": {
+      "bytes": 63291,
+      "sha256": "172e61c2f199fe1b9c4fc787922d669e95da2dcaa35aa065aea01d2a146bc6e5",
+      "git_blob_sha": "d1166e93f4105178518f09dc161cbfa4d94cad85"
+    }
+  },
+  "public_requests_supplied": [
+    "RE-A1",
+    "RE-A2",
+    "RE-A3",
+    "RE-A4",
+    "RE-A5"
+  ],
+  "outputs": {
+    "review-supplement-a.md": {
+      "bytes": 220079,
+      "sha256": "900fd149a1182df270ef6f71fce883793dba1a836df2dd2dd67e500c268f4aca",
+      "git_blob_sha": "22c601309312a8b61692bd73bf5a4a8c5da7a48f"
+    },
+    "review-supplement-a-index.json": {
+      "bytes": 202490,
+      "sha256": "74787dca5c9311883708cffb23fb90eb889e45f5258046e39d3a941c265bce8b",
+      "git_blob_sha": "c561007609996b71edd15fe89d70c539f488773a"
+    }
+  },
+  "mechanical_verification": {
+    "population_paths": 130,
+    "families": {
+      "backend-toolkit": 59,
+      "research": 71
+    },
+    "kinds": {
+      "implementation": 80,
+      "generated_output": 1,
+      "runtime_data_or_pin": 7,
+      "documentation": 1,
+      "test_code": 41
+    },
+    "coverage_projection_rows": 130,
+    "coverage_not_selected_rows": 0,
+    "source_identity_count": 68,
+    "literal_intervals": 157,
+    "literal_source_lines": 3115,
+    "historical_body_complete_bytes": 3942,
+    "matching_source_intervals": true,
+    "matching_coverage_projections": true,
+    "scope": "Only literal excerpts, data counts, path reconciliation and byte/hash checks; not product tests or semantic validation."
+  },
+  "memo_wording_proposal": {
+    "status": "PROPOSED_NOT_APPLIED",
+    "body_path": "body.md",
+    "body_frozen": {
+      "bytes": 63389,
+      "sha256": "1213f85cf16f73feed220e8c1b33ed52b2af75afd570b154a29eaf8f99f27d73",
+      "git_blob_sha": "c29b9f5b8a8913cc4afa58d3e9cdede292f0657e"
+    },
+    "body_proposed": {
+      "bytes": 63427,
+      "sha256": "04f4a3f3b328fea0de526e607ff4dbe13de3710d19ec6553debe3be979f417c9",
+      "git_blob_sha": "f24df37356421e28bfad445bb0bef0722b6fc501"
+    },
+    "before_literal": "Memoiza no máximo dois dumps por path, mtime e tamanho;",
+    "after_literal": "O memo mantém no máximo duas entradas no total, uma por path, validadas por mtime e tamanho;",
+    "before_literal_sha256": "5c6e6593323f7cf50e6cd648363716c687245156f7a1383075ebd1d7dc409b04",
+    "after_literal_sha256": "ae9d792358d1b79b904f95da895ecd8fd0986671c01205213e8892d2c4e6b625",
+    "source": "packages/core/src/research-toolkit/code-index/scip.ts",
+    "source_ranges": [
+      [
+        81,
+        110
+      ]
+    ],
+    "reason": "A redação pode ser lida como dois dumps por path; o Map é global ao módulo, tem uma entrada por path e limite total de duas. Precisão textual proposta sem alterar o corpo congelado."
+  },
+  "not_performed": [
+    "oracle access",
+    "judge access or contact",
+    "body alteration",
+    "original artifact alteration",
+    "product code alteration",
+    "local product test run",
+    "engine execution/install",
+    "paid provider call",
+    "GitHub mutation",
+    "Atlas operation",
+    "semantic verdict"
+  ],
+  "usage": {
+    "model_tokens": "UNKNOWN",
+    "model_cost": "UNKNOWN",
+    "paid_external_provider_calls": 0,
+    "product_test_runs": 0
+  }
+}

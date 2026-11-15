@@ -140,6 +140,218 @@
       "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
       "bytes": 28267,
       "read_scope": "normative public goals/invariants/AC/CC/QS/DoD; source captured through connector"
+    },
+    {
+      "path": "external-sources/packages/schema/src/actions.ts",
+      "repository_path": "packages/schema/src/actions.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "3b9c5cc47c6e043e9e5d6f013a8201c4258abe0b",
+      "sha256": "ff0507ebbb63a8a1ab74bc11187cb70bd19d51ed2ec8cb741eaf0155d03f6b07",
+      "bytes": 1071,
+      "role": "semantic_dependency_of_Core_Actions_call_sites",
+      "source_owner": "S1-04",
+      "population_member": false,
+      "read_scope": "raw external schema source supporting Core call sites",
+      "authority": "raw_source_not_acceptance_of_S1_04_artifact"
+    },
+    {
+      "path": "external-sources/packages/schema/AGENTS.md",
+      "repository_path": "packages/schema/AGENTS.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "88ff8b244e3fca3c8b23950514b7eff3cf37e85b",
+      "sha256": "ca79ab26b6eb07d1ed35a76851852d69475ec554dad7624714d3e47c15dce057",
+      "bytes": 5640,
+      "role": "applicable_package_instructions",
+      "source_owner": "S1-04",
+      "population_member": false,
+      "read_scope": "applicable Schema package instructions read in full",
+      "authority": "raw_source_not_acceptance_of_S1_04_artifact"
+    },
+    {
+      "path": "external-sources/packages/schema/src/actions/identity.ts",
+      "repository_path": "packages/schema/src/actions/identity.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "273b77520f81c755f62979b9609f45917e72e062",
+      "sha256": "1d3361dd26b49e366b7c59d14a589f6684a16b36bfec0b761e62481fc15f6f14",
+      "bytes": 4175,
+      "role": "semantic_dependency_of_Core_Actions_call_sites",
+      "source_owner": "S1-04",
+      "population_member": false,
+      "read_scope": "raw external schema source supporting Core call sites",
+      "authority": "raw_source_not_acceptance_of_S1_04_artifact"
+    },
+    {
+      "path": "external-sources/packages/schema/src/actions/operation.ts",
+      "repository_path": "packages/schema/src/actions/operation.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "da7b1bdfb6bd5f7dd8fd368adb5eb5402c37c6fe",
+      "sha256": "6ad34b7a3cbc4eb4c1ce500f6f665894c0a7792d4d12177cdd1e055592812f0f",
+      "bytes": 3857,
+      "role": "semantic_dependency_of_Core_Actions_call_sites",
+      "source_owner": "S1-04",
+      "population_member": false,
+      "read_scope": "raw external schema source supporting Core call sites",
+      "authority": "raw_source_not_acceptance_of_S1_04_artifact"
+    },
+    {
+      "path": "external-sources/packages/schema/src/actions/command.ts",
+      "repository_path": "packages/schema/src/actions/command.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "763fc67220a5a5962794593062f4705840e7598b",
+      "sha256": "46722d7902f6005986f3e2c372675e3f9e047e2dbe639e404146f151e1de3d85",
+      "bytes": 5060,
+      "role": "semantic_dependency_of_Core_Actions_call_sites",
+      "source_owner": "S1-04",
+      "population_member": false,
+      "read_scope": "raw external schema source supporting Core call sites",
+      "authority": "raw_source_not_acceptance_of_S1_04_artifact"
+    },
+    {
+      "path": "external-sources/packages/schema/src/schema.ts",
+      "repository_path": "packages/schema/src/schema.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "d19a39b9708cfcaeedc1d7c62503afbadfee5dd7",
+      "sha256": "a7cdac1ae9d21d9d71a3783a730ca29bc8fbe769d01479a19101a81eec2bb447",
+      "bytes": 1234,
+      "role": "semantic_dependency_of_Core_Actions_call_sites",
+      "source_owner": "S1-04",
+      "population_member": false,
+      "read_scope": "raw external schema source supporting Core call sites",
+      "authority": "raw_source_not_acceptance_of_S1_04_artifact"
+    },
+    {
+      "path": "external-sources/packages/schema/src/actions/workflow.ts",
+      "repository_path": "packages/schema/src/actions/workflow.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a061e32b53f984a7e103e836fdfac97e5f6e98ce",
+      "sha256": "435abb6cb694c30d00c01bb0c00c8dd9cd821df163fe8c73cb30a4f09ad18321",
+      "bytes": 3925,
+      "role": "semantic_dependency_of_Core_Actions_call_sites",
+      "source_owner": "S1-04",
+      "population_member": false,
+      "read_scope": "raw external schema source supporting Core call sites",
+      "authority": "raw_source_not_acceptance_of_S1_04_artifact"
+    },
+    {
+      "path": "external-sources/packages/schema/src/actions/run.ts",
+      "repository_path": "packages/schema/src/actions/run.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "830d6f13f362e0616160da6219f3eba8a9ab83df",
+      "sha256": "c91ac0507e4f4f304cea12b4681aea4f658aec6aa7fca9af478e0f38613267f8",
+      "bytes": 3593,
+      "role": "semantic_dependency_of_Core_Actions_call_sites",
+      "source_owner": "S1-04",
+      "population_member": false,
+      "read_scope": "raw external schema source supporting Core call sites",
+      "authority": "raw_source_not_acceptance_of_S1_04_artifact"
+    },
+    {
+      "path": "history/body-v1.md",
+      "bytes": 59832,
+      "sha256": "2ed7670affc680005840d0918489cb1ac36e1c5a4021defcc57ae44186ae7459",
+      "git_blob_sha": "1867e5763e724fb2c3641f28297da24b311bdcda",
+      "read_scope": "v2 documentary correction provenance"
+    },
+    {
+      "path": "history/recipe-v1.json",
+      "bytes": 15037,
+      "sha256": "0bea2453bc31f3f93109b9c64c7952aa690e6e6e8e5794c35a5630b8f9b38b21",
+      "git_blob_sha": "01c0b2008499d7df9449dd881ff9d9fd7f0f6853",
+      "read_scope": "v2 documentary correction provenance"
+    },
+    {
+      "path": "review-supplement-1-index.json",
+      "bytes": 246723,
+      "sha256": "b3a190b8f1bc17ea7f35fc0c53c5bb0f0f134570ac78f62a020452c3818d8902",
+      "git_blob_sha": "c42a17c0071f3c864f3e6eb11b5a7ae3fa0d37be",
+      "read_scope": "v2 documentary correction provenance"
+    },
+    {
+      "path": "external-source-captures.json",
+      "bytes": 6152,
+      "sha256": "a6173c03c76fdae97db1535253700257827062eecc74a5e4a4f6d67c1634fd57",
+      "git_blob_sha": "a1762e44be3aaae6ce5da319134f1023f1b8e094",
+      "read_scope": "v2 documentary correction provenance"
+    },
+    {
+      "path": "history/body-v2.md",
+      "bytes": 59953,
+      "sha256": "e9c89bea68d594bc61356ff461642ea23cd905d4584f2b52d32e10a5af984e55",
+      "git_blob_sha": "b8fec4854b4c1384d3c4a2a4f0d51d220c874618",
+      "read_scope": "authorized v3 documentary corrections"
+    },
+    {
+      "path": "history/recipe-v2.json",
+      "bytes": 28464,
+      "sha256": "2bed1778e629415d5bc7c818773ef18b012a8a0bd4239d5bc85db6642b41a80e",
+      "git_blob_sha": "ee579c43b9ab1eef07025be8f6221f6609326ebf",
+      "read_scope": "authorized v3 documentary corrections"
+    },
+    {
+      "path": "revisions/v3/request.txt",
+      "bytes": 2102,
+      "sha256": "38048ea666ae8b5f9338067a3d84edbb1f3619c13fb9bf7ee0e483e1cad34e7f",
+      "git_blob_sha": "62bbbec289f922a121df9bf33c9d80eb4b9be831",
+      "read_scope": "authorized v3 documentary corrections"
+    },
+    {
+      "path": "external-sources/packages/schema/src/actions/resource.ts",
+      "repository_path": "packages/schema/src/actions/resource.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "1346f69568a3796c88a55ed9d06ed4cc762aa93b",
+      "sha256": "5579f778bc5055f362058bf0e9386e6098af2f2cba3700ef68de1381aab6f576",
+      "bytes": 2429,
+      "source_owner": "S1-04",
+      "population_member": false,
+      "role": "semantic_dependency_ResourceListInput_TransferInput_ResourceKind",
+      "read_scope": "Previously captured supplement2 raw ResourceListInput/TransferInput evidence, now explicitly accounted in v3 recipe",
+      "authority": "raw_source_not_acceptance_of_S1_04_artifact"
+    },
+    {
+      "path": "external-source-captures-supplement-2.json",
+      "bytes": 1207,
+      "sha256": "f6d85694176ffdc640a1f983de1737c9c61758d27795dc2ebedf4669967ced3c",
+      "git_blob_sha": "0492fde2b844cbdd9bd6f4f20380c5d347c50caf",
+      "read_scope": "identity of additional raw supplement2 schema input; no new capture"
+    },
+    {
+      "path": "history/body-v3.md",
+      "bytes": 60588,
+      "sha256": "b31d52e5bf25f6eca3807e9c1f418b70d865c9d63c5690125c530c54f8247d84",
+      "git_blob_sha": "04c87b44543b6bde9713228c7b6fda0fc444a00a",
+      "read_scope": "authorized v4 documentary corrections"
+    },
+    {
+      "path": "history/recipe-v3.json",
+      "bytes": 32520,
+      "sha256": "d42e72daa68af5354ddc50e8f7d03c3bb82b451b2732612fc4a4dbb87ed89a3a",
+      "git_blob_sha": "a2bc0ec47c421abc4fa18ee6f0212213999606ad",
+      "read_scope": "authorized v4 documentary corrections"
+    },
+    {
+      "path": "revisions/v4/request.txt",
+      "bytes": 1703,
+      "sha256": "6da39e6a661e646cb6766d1119c986a98fe87ceb2c8dcec3c45fccdeacd910fc",
+      "git_blob_sha": "07abdecb9b822719aa09d8e99d5095ba1b9f0419",
+      "read_scope": "authorized v4 documentary corrections"
+    },
+    {
+      "path": "../../relay/automation-4/j1-response.md",
+      "bytes": 6667,
+      "sha256": "bf7d7f1861cd44306931482f0322cd5f19da35bb4b1bf6568e0075d7cfa5415c",
+      "git_blob_sha": "95e14d44f011e43fdae066928bd33f2c21c48b0e",
+      "origin": "public_request_relay",
+      "judge_id": "J1",
+      "read_scope": "public evidence request, not oracle or authority to execute"
+    },
+    {
+      "path": "../../relay/automation-4/j2-response.md",
+      "bytes": 5380,
+      "sha256": "9f27a6a9a5853fa58747d88c66f22a4fdd2024d3f550bb095f59363b037c8f0d",
+      "git_blob_sha": "9cd2db49e4ac68de10ccb3933a39b28a89f2634d",
+      "origin": "public_request_relay",
+      "judge_id": "J2",
+      "read_scope": "public evidence request, not oracle or authority to execute"
     }
   ],
   "producer_procedure": [
@@ -148,9 +360,12 @@
     "Ler substantivamente todas as 115 implementações; inventariar 89 arquivos de validação e ler assertions decisivas de sete.",
     "Escrever novo corpo completo, preservando histórico e seus limites; não implementar gaps para mudar a verdade.",
     "Gerar evidência literal ampla e projeção curta; registrar disposição por fonte sem alegar execução.",
-    "Verificar somente integridade documental, população e âncoras; entregar para juízes independentes sem autocertificação."
+    "Verificar somente integridade documental, população e âncoras; entregar para juízes independentes sem autocertificação.",
+    "v2: apply only AUT1-DELTA-PROPOSAL-01, preserve body/recipe v1 and frozen supplement1, and register seven external S1-04 semantic source identities; documentary byte checks only.",
+    "v3: qualify scoped-green's existential predicate, workflow redispatch after only error rows, and spend.card metering; preserve v2 and supplements1/2; verify exact inverse to v2 bytes; no product tests.",
+    "v4: distinguish owner presence check from the two holds calls; describe the actual manualKey replay predicate without inferring admission for settled rows. Preserve v3 and supplements1/2/3, verify exact inverse, no product execution."
   ],
-  "deterministic_receipt_generator": "build_artifacts.py",
+  "deterministic_receipt_generator": "revisions/v4/apply.py",
   "public_criteria": [
     {
       "id": "GO-A1",
@@ -302,9 +517,9 @@
   "artifacts": [
     {
       "path": "body.md",
-      "bytes": 59832,
-      "sha256": "2ed7670affc680005840d0918489cb1ac36e1c5a4021defcc57ae44186ae7459",
-      "git_blob_sha": "1867e5763e724fb2c3641f28297da24b311bdcda"
+      "bytes": 60767,
+      "sha256": "968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae",
+      "git_blob_sha": "e26213eb2fc76dc843dca17d1111334c76f88890"
     },
     {
       "path": "captures.json",
@@ -360,5 +575,234 @@
     "Scheduler started is durable prompt admission; revocation can race admission and keep started without counting repeat/advancing next.",
     "Capability create directly inserts while idle daemon waits on wake queue; possible wake gap is static inference with caller/runtime qualification absent."
   ],
-  "global_complements": "Publication, two independent judges, consumers, L2–L4, Atlas isolated import/current/read/index and maintenance runs belong to principal after L1 acceptance."
+  "global_complements": "Publication, two independent judges, consumers, L2–L4, Atlas isolated import/current/read/index and maintenance runs belong to principal after L1 acceptance.",
+  "producer_revision": 4,
+  "revision": {
+    "id": "AUTOMATION-L1-v4",
+    "change_ids": [
+      "AUT4-DELTA-01",
+      "AUT4-DELTA-02"
+    ],
+    "previous_body": {
+      "path": "history/body-v3.md",
+      "bytes": 60588,
+      "sha256": "b31d52e5bf25f6eca3807e9c1f418b70d865c9d63c5690125c530c54f8247d84",
+      "git_blob_sha": "04c87b44543b6bde9713228c7b6fda0fc444a00a"
+    },
+    "previous_recipe": {
+      "path": "history/recipe-v3.json",
+      "bytes": 32520,
+      "sha256": "d42e72daa68af5354ddc50e8f7d03c3bb82b451b2732612fc4a4dbb87ed89a3a",
+      "git_blob_sha": "a2bc0ec47c421abc4fa18ee6f0212213999606ad"
+    },
+    "current_body": {
+      "path": "body.md",
+      "bytes": 60767,
+      "sha256": "968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae",
+      "git_blob_sha": "e26213eb2fc76dc843dca17d1111334c76f88890"
+    },
+    "request": {
+      "path": "revisions/v4/request.txt",
+      "bytes": 1703,
+      "sha256": "6da39e6a661e646cb6766d1119c986a98fe87ceb2c8dcec3c45fccdeacd910fc",
+      "git_blob_sha": "07abdecb9b822719aa09d8e99d5095ba1b9f0419"
+    },
+    "replacement_count": 2,
+    "scope": "Only two authorized scheduler wording qualifications in section12; all other body bytes identical",
+    "correction_authority": "Principal authorization and producer static inspection of captured baseline source; no oracle",
+    "inverse_byte_equality_verified": true,
+    "supplements_preserved": [
+      {
+        "path": "review-supplement-1-index.json",
+        "bytes": 246723,
+        "sha256": "b3a190b8f1bc17ea7f35fc0c53c5bb0f0f134570ac78f62a020452c3818d8902",
+        "git_blob_sha": "c42a17c0071f3c864f3e6eb11b5a7ae3fa0d37be"
+      },
+      {
+        "path": "review-supplement-1-receipt.json",
+        "bytes": 4644,
+        "sha256": "153f5b0d8c77ebb2c7c281457b9e2227c8d5b208e29dd10f2e180d95b5384567",
+        "git_blob_sha": "fb21bb10a3ba44ea0bf464fc7a9a02422f49cfd5"
+      },
+      {
+        "path": "review-supplement-1.md",
+        "bytes": 338932,
+        "sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+        "git_blob_sha": "dab732abd7f47eb3f26473b5614fa92d2b747a46"
+      },
+      {
+        "path": "review-supplement-2-index.json",
+        "bytes": 113392,
+        "sha256": "9b69ab60d2f1b5d51d46a165852e9402b63261b77aee59a7001ff80ff3a5cfcb",
+        "git_blob_sha": "bd0652636f38ee4b2e644a089bb0e037b078d81d"
+      },
+      {
+        "path": "review-supplement-2-receipt.json",
+        "bytes": 4254,
+        "sha256": "a41edddd6acec91077499e9d060540b338344af85c3b7aaca0091ec61c0ee566",
+        "git_blob_sha": "81d86ae3cd4ea5a6f9ab26a951f3759d5c605c5f"
+      },
+      {
+        "path": "review-supplement-2-response.md",
+        "bytes": 2397,
+        "sha256": "dd6b784c8a203d8c6c04b2249369ac37b5842ad47d9ed8e461436d6ef2e056d3",
+        "git_blob_sha": "359dd130eb89087b09d9ba1eefdb1a2d827a4f2f"
+      },
+      {
+        "path": "review-supplement-2.md",
+        "bytes": 375497,
+        "sha256": "208b0ba87350a91970d28f298d802512b72b6834360815b95ca17ab22ebc54b1",
+        "git_blob_sha": "bf43391979916e85f44ac4841926954d2c13362f"
+      },
+      {
+        "path": "review-supplement-3-index.json",
+        "bytes": 137722,
+        "sha256": "97a8d1c0c7a61d8161a9fed9548b1f7dc13b426a9994f0b0ec2ee577976c7bbf",
+        "git_blob_sha": "a9a07d77a4332e9012cd7dbd14d38ad16ca7a1cb"
+      },
+      {
+        "path": "review-supplement-3-receipt.json",
+        "bytes": 5092,
+        "sha256": "07b1f552cd5a8c6ee56375063d41ef912d64640a4edc7ad83cdcdb2ce536e9c8",
+        "git_blob_sha": "c9faee48353e1d6b84f2b93ba2b98da990f43498"
+      },
+      {
+        "path": "review-supplement-3-response.md",
+        "bytes": 1859,
+        "sha256": "aaf066117ea5db9f5c200c4a324671a2029eeda45a8ff966e3763eb6fce54d89",
+        "git_blob_sha": "b18b1831481e8c6002b0cabe3b894584741b5d35"
+      },
+      {
+        "path": "review-supplement-3.md",
+        "bytes": 404469,
+        "sha256": "e8158270e77a88cde1ec5db114c51e79004264ff80be667aebde8e365ede1d8c",
+        "git_blob_sha": "22a025bbc012ed09130f0d778e34e188f5533c89"
+      }
+    ]
+  },
+  "external_dependencies": {
+    "type": "file_source_inputs_not_artifact_acceptance_edges",
+    "owner": "S1-04",
+    "semantic_input_count": 8,
+    "population_effect": 0,
+    "local_population_retained": 204,
+    "subslice_population_retained": 462,
+    "manifest": {
+      "path": "external-source-captures.json",
+      "bytes": 6152,
+      "sha256": "a6173c03c76fdae97db1535253700257827062eecc74a5e4a4f6d67c1634fd57",
+      "git_blob_sha": "a1762e44be3aaae6ce5da319134f1023f1b8e094"
+    },
+    "semantic_source_refs": [
+      {
+        "input_key": "file:packages/schema/src/actions.ts",
+        "path": "packages/schema/src/actions.ts",
+        "capture_path": "external-sources/packages/schema/src/actions.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "3b9c5cc47c6e043e9e5d6f013a8201c4258abe0b",
+        "sha256": "ff0507ebbb63a8a1ab74bc11187cb70bd19d51ed2ec8cb741eaf0155d03f6b07",
+        "bytes": 1071,
+        "source_owner": "S1-04",
+        "population_member": false,
+        "authority": "raw_source_only"
+      },
+      {
+        "input_key": "file:packages/schema/src/actions/identity.ts",
+        "path": "packages/schema/src/actions/identity.ts",
+        "capture_path": "external-sources/packages/schema/src/actions/identity.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "273b77520f81c755f62979b9609f45917e72e062",
+        "sha256": "1d3361dd26b49e366b7c59d14a589f6684a16b36bfec0b761e62481fc15f6f14",
+        "bytes": 4175,
+        "source_owner": "S1-04",
+        "population_member": false,
+        "authority": "raw_source_only"
+      },
+      {
+        "input_key": "file:packages/schema/src/actions/operation.ts",
+        "path": "packages/schema/src/actions/operation.ts",
+        "capture_path": "external-sources/packages/schema/src/actions/operation.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "da7b1bdfb6bd5f7dd8fd368adb5eb5402c37c6fe",
+        "sha256": "6ad34b7a3cbc4eb4c1ce500f6f665894c0a7792d4d12177cdd1e055592812f0f",
+        "bytes": 3857,
+        "source_owner": "S1-04",
+        "population_member": false,
+        "authority": "raw_source_only"
+      },
+      {
+        "input_key": "file:packages/schema/src/actions/command.ts",
+        "path": "packages/schema/src/actions/command.ts",
+        "capture_path": "external-sources/packages/schema/src/actions/command.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "763fc67220a5a5962794593062f4705840e7598b",
+        "sha256": "46722d7902f6005986f3e2c372675e3f9e047e2dbe639e404146f151e1de3d85",
+        "bytes": 5060,
+        "source_owner": "S1-04",
+        "population_member": false,
+        "authority": "raw_source_only"
+      },
+      {
+        "input_key": "file:packages/schema/src/schema.ts",
+        "path": "packages/schema/src/schema.ts",
+        "capture_path": "external-sources/packages/schema/src/schema.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "d19a39b9708cfcaeedc1d7c62503afbadfee5dd7",
+        "sha256": "a7cdac1ae9d21d9d71a3783a730ca29bc8fbe769d01479a19101a81eec2bb447",
+        "bytes": 1234,
+        "source_owner": "S1-04",
+        "population_member": false,
+        "authority": "raw_source_only"
+      },
+      {
+        "input_key": "file:packages/schema/src/actions/workflow.ts",
+        "path": "packages/schema/src/actions/workflow.ts",
+        "capture_path": "external-sources/packages/schema/src/actions/workflow.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "a061e32b53f984a7e103e836fdfac97e5f6e98ce",
+        "sha256": "435abb6cb694c30d00c01bb0c00c8dd9cd821df163fe8c73cb30a4f09ad18321",
+        "bytes": 3925,
+        "source_owner": "S1-04",
+        "population_member": false,
+        "authority": "raw_source_only"
+      },
+      {
+        "input_key": "file:packages/schema/src/actions/run.ts",
+        "path": "packages/schema/src/actions/run.ts",
+        "capture_path": "external-sources/packages/schema/src/actions/run.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "830d6f13f362e0616160da6219f3eba8a9ab83df",
+        "sha256": "c91ac0507e4f4f304cea12b4681aea4f658aec6aa7fca9af478e0f38613267f8",
+        "bytes": 3593,
+        "source_owner": "S1-04",
+        "population_member": false,
+        "authority": "raw_source_only"
+      },
+      {
+        "input_key": "file:packages/schema/src/actions/resource.ts",
+        "path": "packages/schema/src/actions/resource.ts",
+        "capture_path": "external-sources/packages/schema/src/actions/resource.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "git_blob_sha": "1346f69568a3796c88a55ed9d06ed4cc762aa93b",
+        "sha256": "5579f778bc5055f362058bf0e9386e6098af2f2cba3700ef68de1381aab6f576",
+        "bytes": 2429,
+        "source_owner": "S1-04",
+        "population_member": false,
+        "authority": "raw_source_only"
+      }
+    ],
+    "instruction_inputs": [
+      "packages/schema/AGENTS.md"
+    ],
+    "impact_rule": "Changes to these pinned schema inputs require reassessing the corresponding Core binding/source/filter/operation/output claims; ownership and artifact acceptance remain S1-04",
+    "additional_review_manifests": [
+      {
+        "path": "external-source-captures-supplement-2.json",
+        "bytes": 1207,
+        "sha256": "f6d85694176ffdc640a1f983de1737c9c61758d27795dc2ebedf4669967ced3c",
+        "git_blob_sha": "0492fde2b844cbdd9bd6f4f20380c5d347c50caf"
+      }
+    ]
+  },
+  "prior_receipt_generator": "revisions/v3/apply.py (v3; preserved unchanged)"
 }

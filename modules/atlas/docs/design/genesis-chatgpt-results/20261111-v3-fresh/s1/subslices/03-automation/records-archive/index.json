@@ -1,0 +1,294 @@
+{
+  "schema": "s1-03-visible-records-archive/v1",
+  "archivist_id": "/root/records_archivist",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "captured_at_utc": "2026-11-15T00:05:19.906049+00:00",
+  "scope": "Visible final responses, judge creation tool argument values/returns, confirmations and one continuity/transport acknowledgment. No semantic evaluation.",
+  "records": [
+    {
+      "origin": "inherited visible transcript",
+      "role": "judge_visible_response",
+      "agent_id": "/root/s1_03_j1",
+      "lot": "automation-1-transport-correction",
+      "file": "judges/j1/automation-1-transport-correction-ack.md",
+      "byte_length": 244,
+      "sha256": "477187df056c4c5c4d17c91ca56373af279a44026414cf3ae5dd7307a760fde5",
+      "capture_method": "verbatim transcription of visible text; one terminal LF in Markdown files",
+      "host_message_id": "NOT_EXPOSED",
+      "comparison": null,
+      "private_reasoning_included": false
+    },
+    {
+      "origin": "inherited visible transcript",
+      "role": "judge_visible_response",
+      "agent_id": "/root/s1_03_j1",
+      "lot": "research-a-handle-continuity",
+      "file": "judges/j1/continuity-response.md",
+      "byte_length": 299,
+      "sha256": "3bf6e64031a6fdc3bbd0c27a32d82bdd7eb948211594edd09141e4a5b3683370",
+      "capture_method": "verbatim transcription of visible text; one terminal LF in Markdown files",
+      "host_message_id": "NOT_EXPOSED",
+      "comparison": null,
+      "private_reasoning_included": false
+    },
+    {
+      "origin": "inherited visible transcript",
+      "role": "judge_creation_message",
+      "agent_id": "/root/s1_03_j1",
+      "lot": "judge-creation",
+      "file": "judges/j1/creation-message.txt",
+      "byte_length": 3716,
+      "sha256": "52feb0adc8ba87822032c3c80724bb914dda2d5e5d6dfa115cb5a3d1ba8d3fa6",
+      "capture_method": "exact visible message argument value; no terminal newline added",
+      "host_message_id": "NOT_EXPOSED",
+      "comparison": null,
+      "private_reasoning_included": false
+    },
+    {
+      "origin": "inherited visible transcript",
+      "role": "judge_visible_response",
+      "agent_id": "/root/s1_03_j1",
+      "lot": "judge-creation",
+      "file": "judges/j1/creation-response.md",
+      "byte_length": 877,
+      "sha256": "3243a5d0240e69e8c4dbe04ff7fbcca2d08c1391a211837464725eb32c145a2f",
+      "capture_method": "verbatim transcription of visible text; one terminal LF in Markdown files",
+      "host_message_id": "NOT_EXPOSED",
+      "comparison": null,
+      "private_reasoning_included": false
+    },
+    {
+      "origin": "inherited visible transcript",
+      "role": "judge_creation_tool_arguments",
+      "agent_id": "/root/s1_03_j1",
+      "lot": "judge-creation",
+      "file": "judges/j1/creation-tool-arguments.json",
+      "byte_length": 3784,
+      "sha256": "6ea424546cd178a50de5292f5d3c48d64e6e002a2811f3c7dc79236bce32742f",
+      "capture_method": "visible argument values serialized as JSON; raw RPC framing not exposed",
+      "host_message_id": "NOT_EXPOSED",
+      "comparison": null,
+      "private_reasoning_included": false
+    },
+    {
+      "origin": "inherited visible transcript",
+      "role": "judge_creation_tool_return",
+      "agent_id": "/root/s1_03_j1",
+      "lot": "judge-creation",
+      "file": "judges/j1/creation-tool-return.json",
+      "byte_length": 31,
+      "sha256": "4fd028a77e18c83db5e37b4503450cce82ab36273403a1a420c7ce606932f25b",
+      "capture_method": "visible returned argument values serialized as JSON; raw RPC framing not exposed",
+      "host_message_id": "NOT_EXPOSED",
+      "comparison": null,
+      "private_reasoning_included": false
+    },
+    {
+      "origin": "inherited visible transcript",
+      "role": "judge_creation_message",
+      "agent_id": "/root/s1_03_j2",
+      "lot": "judge-creation",
+      "file": "judges/j2/creation-message.txt",
+      "byte_length": 3715,
+      "sha256": "b5332ecf2002c496bdc05d7f79ff0a4024fbc3c09f217b0aa68666b583ba87eb",
+      "capture_method": "exact visible message argument value; no terminal newline added",
+      "host_message_id": "NOT_EXPOSED",
+      "comparison": null,
+      "private_reasoning_included": false
+    },
+    {
+      "origin": "inherited visible transcript",
+      "role": "judge_visible_response",
+      "agent_id": "/root/s1_03_j2",
+      "lot": "judge-creation",
+      "file": "judges/j2/creation-response.md",
+      "byte_length": 662,
+      "sha256": "1c6a546722e578fb0334c4c625c4cb8bb45e7c555a4820326539c9c7a1ec3317",
+      "capture_method": "verbatim transcription of visible text; one terminal LF in Markdown files",
+      "host_message_id": "NOT_EXPOSED",
+      "comparison": null,
+      "private_reasoning_included": false
+    },
+    {
+      "origin": "inherited visible transcript",
+      "role": "judge_creation_tool_arguments",
+      "agent_id": "/root/s1_03_j2",
+      "lot": "judge-creation",
+      "file": "judges/j2/creation-tool-arguments.json",
+      "byte_length": 3783,
+      "sha256": "bd57494dcb5a1068ab334fdae1c2328c760b6e55e1f472a09527562623191d4d",
+      "capture_method": "visible argument values serialized as JSON; raw RPC framing not exposed",
+      "host_message_id": "NOT_EXPOSED",
+      "comparison": null,
+      "private_reasoning_included": false
+    },
+    {
+      "origin": "inherited visible transcript",
+      "role": "judge_creation_tool_return",
+      "agent_id": "/root/s1_03_j2",
+      "lot": "judge-creation",
+      "file": "judges/j2/creation-tool-return.json",
+      "byte_length": 31,
+      "sha256": "e923d1b713634d0a3f40bede2426c35ac65fa8478e4080775c657c870d8c3213",
+      "capture_method": "visible returned argument values serialized as JSON; raw RPC framing not exposed",
+      "host_message_id": "NOT_EXPOSED",
+      "comparison": null,
+      "private_reasoning_included": false
+    },
+    {
+      "origin": "inherited visible transcript",
+      "role": "judge_final_response",
+      "agent_id": "/root/s1_03_j1",
+      "lot": "automation-1",
+      "file": "judgments/automation-1/j1-response.md",
+      "byte_length": 11953,
+      "sha256": "eb34049a80b131f9b17df2712673835f2ef70a07b47c1fea496712e1c28a243b",
+      "capture_method": "verbatim transcription of visible text; one terminal LF in Markdown files",
+      "host_message_id": "NOT_EXPOSED",
+      "comparison": {
+        "path": "relay/automation-1/j1-response.md",
+        "state": "NO_EXISTING_COUNTERPART_AT_CAPTURE"
+      },
+      "private_reasoning_included": false
+    },
+    {
+      "origin": "collaboration.list_agents response in this archivist turn: agent_status.completed of /root/s1_03_j2",
+      "role": "judge_final_response",
+      "agent_id": "/root/s1_03_j2",
+      "lot": "automation-1",
+      "file": "judgments/automation-1/j2-response.md",
+      "byte_length": 9414,
+      "sha256": "b851275006baf1f789c08c8095995ce9da28238fb85caf7e923f3a909a3b222b",
+      "capture_method": "verbatim transcription of visible text; one terminal LF in Markdown files",
+      "host_message_id": "NOT_EXPOSED",
+      "comparison": {
+        "path": "relay/automation-1/j2-response.md",
+        "state": "NO_EXISTING_COUNTERPART_AT_CAPTURE"
+      },
+      "private_reasoning_included": false
+    },
+    {
+      "origin": "relay/research-a/j1-response.md",
+      "role": "judge_final_response",
+      "agent_id": "/root/s1_03_j1",
+      "lot": "research-a",
+      "file": "judgments/research-a/j1-response.md",
+      "byte_length": 11422,
+      "sha256": "1df0a8574e437cd7e28ecfc3ce1a3cac60c3e25bbbc3fc66a4cbb0ee3d281b09",
+      "capture_method": "byte-identical copy of existing preserved response record",
+      "host_message_id": "NOT_EXPOSED",
+      "comparison": {
+        "path": "relay/research-a/j1-response.md",
+        "sha256": "1df0a8574e437cd7e28ecfc3ce1a3cac60c3e25bbbc3fc66a4cbb0ee3d281b09",
+        "byte_equal": true,
+        "difference": "NONE"
+      },
+      "private_reasoning_included": false
+    },
+    {
+      "origin": "relay/research-a/j2-response.md",
+      "role": "judge_final_response",
+      "agent_id": "/root/s1_03_j2",
+      "lot": "research-a",
+      "file": "judgments/research-a/j2-response.md",
+      "byte_length": 8830,
+      "sha256": "8b344b3cd7d5dbfb69c08c699800de0d366697eb86e4145b1dd14f82f6faddcf",
+      "capture_method": "byte-identical copy of existing preserved response record",
+      "host_message_id": "NOT_EXPOSED",
+      "comparison": {
+        "path": "relay/research-a/j2-response.md",
+        "sha256": "8b344b3cd7d5dbfb69c08c699800de0d366697eb86e4145b1dd14f82f6faddcf",
+        "byte_equal": true,
+        "difference": "NONE"
+      },
+      "private_reasoning_included": false
+    },
+    {
+      "origin": "inherited visible transcript",
+      "role": "judge_final_response",
+      "agent_id": "/root/s1_03_j1",
+      "lot": "research-b",
+      "file": "judgments/research-b/j1-response.md",
+      "byte_length": 12289,
+      "sha256": "a3e472d6fbbb2f947567291c1f908fb385dd2c95ef1d99a6874f1fb09e2c470e",
+      "capture_method": "verbatim transcription of visible text; one terminal LF in Markdown files",
+      "host_message_id": "NOT_EXPOSED",
+      "comparison": {
+        "path": "relay/research-b/j1-response.md",
+        "state": "NO_EXISTING_COUNTERPART_AT_CAPTURE"
+      },
+      "private_reasoning_included": false
+    },
+    {
+      "origin": "relay/research-b/j2-response.md",
+      "role": "judge_final_response",
+      "agent_id": "/root/s1_03_j2",
+      "lot": "research-b",
+      "file": "judgments/research-b/j2-response.md",
+      "byte_length": 10280,
+      "sha256": "b027cce13a470009f00b11178fe69c4855bd62bed4ee1fb4cf41d4a38c8302f5",
+      "capture_method": "byte-identical copy of existing preserved response record",
+      "host_message_id": "NOT_EXPOSED",
+      "comparison": {
+        "path": "relay/research-b/j2-response.md",
+        "sha256": "b027cce13a470009f00b11178fe69c4855bd62bed4ee1fb4cf41d4a38c8302f5",
+        "byte_equal": true,
+        "difference": "NONE"
+      },
+      "private_reasoning_included": false
+    },
+    {
+      "origin": "inherited visible transcript",
+      "role": "producer_host_final_response",
+      "agent_id": "/root/automation_l1",
+      "lot": "AUTOMATION-L1",
+      "file": "producers/automation-l1-host-final-response.md",
+      "byte_length": 4291,
+      "sha256": "ef079fb4a4f0ad296b89425d7f4bbeffede25e4ceba0428b97cafdd8abb3a32d",
+      "capture_method": "verbatim transcription of visible text; one terminal LF in Markdown files",
+      "host_message_id": "NOT_EXPOSED",
+      "comparison": null,
+      "private_reasoning_included": false
+    },
+    {
+      "origin": "inherited visible transcript",
+      "role": "producer_host_final_response",
+      "agent_id": "/root/boundaries_l1",
+      "lot": "BOUNDARIES-L1",
+      "file": "producers/boundaries-l1-host-final-response.md",
+      "byte_length": 4566,
+      "sha256": "28626934804e7df36858f030ecd4f4a39ead6666f2480cb95a9501d3ede8adb2",
+      "capture_method": "verbatim transcription of visible text; one terminal LF in Markdown files",
+      "host_message_id": "NOT_EXPOSED",
+      "comparison": null,
+      "private_reasoning_included": false
+    },
+    {
+      "origin": "inherited visible transcript",
+      "role": "producer_host_final_response",
+      "agent_id": "/root/research_l1",
+      "lot": "RESEARCH-L1",
+      "file": "producers/research-l1-host-final-response.md",
+      "byte_length": 5450,
+      "sha256": "57b52c84ae35c940517f61fbbe05e12002c1ff5ac6c006e77abdbf24a6a288a4",
+      "capture_method": "verbatim transcription of visible text; one terminal LF in Markdown files",
+      "host_message_id": "NOT_EXPOSED",
+      "comparison": null,
+      "private_reasoning_included": false
+    }
+  ],
+  "counts": {
+    "files": 19,
+    "judge_final_responses": 6,
+    "producer_host_final_responses": 3,
+    "bytes": 95637
+  },
+  "limitations": [
+    "Host message IDs, original event timestamps and raw RPC framing were not exposed. Hashes identify these saved UTF-8 files, not an unavailable host transport envelope.",
+    "For manually transcribed Markdown responses, the visible text is preserved with one terminal LF for file serialization; no claim is made about an unexposed host terminal-newline framing.",
+    "Three existing relay response records were copied byte for byte; their identity comparison does not constitute a new semantic judgment.",
+    "Routine partial-receipt acknowledgments are not part of this final-response archive; dispatch originals remain with the relay.",
+    "No source files, product repository, oracle/reserved files, private reasoning or remote system were consulted or modified."
+  ],
+  "unavailable_requested_records": []
+}

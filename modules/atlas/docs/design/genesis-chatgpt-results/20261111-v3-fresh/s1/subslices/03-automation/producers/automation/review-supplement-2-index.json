@@ -1,0 +1,2951 @@
+{
+  "schema": "genesis-review-supplement-index/v1",
+  "task": "AUTOMATION-L1",
+  "review_batch": "automation-2",
+  "principal_request_original": "Confirmei o retorno v2; trate-o congelado. Execute agora suplemento2 para RE-AUT2-01..06 de J1 em relay/automation-2/j1-response.md; J2 está em avaliação e será incorporado quando o arquivo aparecer ou raiz avisar. Preserve body/recipe v2 e suplemento1, reaproveite blocos já presentes ao atender sobreposições. Atenda também eventuais pedidos públicos automation-3/4 quando relay os entregar, mas mantenha suplementos separados por lote para não bloquear o transporte já pronto. Não leia oracle ou avaliações reservadas. Escritas somente producers/automation. Trechos literais com cadeia chamador/ramo/resposta e offsets/hash, index/mapeamento de pedidos, sem recensus204 nem repetir histórico. Se achar inexatidão factual, registre proposta mínima e peça à raiz para aplicar, não silencie.",
+  "body_ref": {
+    "path": "body.md",
+    "bytes": 59953,
+    "sha256": "e9c89bea68d594bc61356ff461642ea23cd905d4584f2b52d32e10a5af984e55",
+    "git_blob_sha": "b8fec4854b4c1384d3c4a2a4f0d51d220c874618"
+  },
+  "recipe_ref": {
+    "path": "recipe.json",
+    "bytes": 28464,
+    "sha256": "2bed1778e629415d5bc7c818773ef18b012a8a0bd4239d5bc85db6642b41a80e",
+    "git_blob_sha": "ee579c43b9ab1eef07025be8f6221f6609326ebf"
+  },
+  "body_scope": {
+    "sections": [
+      4,
+      5
+    ],
+    "utf8_byte_interval": [
+      17674,
+      30198
+    ],
+    "sha256": "660d25ae77ac8d40085d1564757c5e9d88054641d5505f53802e55fb91c2454a",
+    "v1_byte_interval": [
+      17553,
+      30077
+    ],
+    "v1_v2_section_bytes_equal": true
+  },
+  "public_request_refs": [
+    {
+      "path": "../../relay/automation-2/j1-response.md",
+      "bytes": 12356,
+      "sha256": "f04ab6c3980172b0adbb8f2abbbcc0211591d7fa3f2c65db22971d5448f9ed86",
+      "git_blob_sha": "7820369b7bb6835cd20b379f28c80467cea7de55",
+      "judge_id": "J1",
+      "origin": "public_request_relay",
+      "repository_commit": null
+    },
+    {
+      "path": "../../relay/automation-2/j2-response.md",
+      "bytes": 9430,
+      "sha256": "17fb39dc71ebea1a9a0b84c4cde1e7d6c265fadc6e2e4da00503000732e86b32",
+      "git_blob_sha": "48f5961826a2a5d9501843f9332f6b0dd9762260",
+      "judge_id": "J2",
+      "origin": "public_request_relay",
+      "repository_commit": null
+    }
+  ],
+  "supplement": {
+    "path": "review-supplement-2.md",
+    "bytes": 375497,
+    "sha256": "208b0ba87350a91970d28f298d802512b72b6834360815b95ca17ab22ebc54b1",
+    "git_blob_sha": "bf43391979916e85f44ac4841926954d2c13362f"
+  },
+  "request_namespace": "J1 canonical groups",
+  "request_map": [
+    {
+      "judge_id": "J1",
+      "request_id": "RE-AUT2-01",
+      "public_request_origin": {
+        "path": "../../relay/automation-2/j1-response.md",
+        "bytes": 12356,
+        "sha256": "f04ab6c3980172b0adbb8f2abbbcc0211591d7fa3f2c65db22971d5448f9ed86",
+        "git_blob_sha": "7820369b7bb6835cd20b379f28c80467cea7de55",
+        "judge_id": "J1",
+        "origin": "public_request_relay",
+        "repository_commit": null
+      },
+      "new_literal_block_ids": [
+        "AUT2-C01",
+        "AUT2-C02",
+        "AUT2-C03",
+        "AUT2-C04",
+        "AUT2-C05"
+      ],
+      "reused_block_ids": [
+        "AUT1-C01",
+        "AUT1-C30",
+        "AUT1-C38",
+        "AUT1-C39",
+        "AUT1-C40",
+        "AUT1-X01",
+        "AUT1-X03",
+        "AUT1-X04",
+        "AUT1-X05"
+      ],
+      "requested_chain": [
+        "Actions.execute → GitHubCommands.execute",
+        "capture/authority/source/actor → command plan",
+        "workflow/run/job → send → native acknowledgement"
+      ],
+      "new_literal_bytes": 12309,
+      "status": "EVIDENCE_SUPPLIED_NOT_JUDGED"
+    },
+    {
+      "judge_id": "J1",
+      "request_id": "RE-AUT2-02",
+      "public_request_origin": {
+        "path": "../../relay/automation-2/j1-response.md",
+        "bytes": 12356,
+        "sha256": "f04ab6c3980172b0adbb8f2abbbcc0211591d7fa3f2c65db22971d5448f9ed86",
+        "git_blob_sha": "7820369b7bb6835cd20b379f28c80467cea7de55",
+        "judge_id": "J1",
+        "origin": "public_request_relay",
+        "repository_commit": null
+      },
+      "new_literal_block_ids": [
+        "AUT2-C06",
+        "AUT2-C07",
+        "AUT2-C08",
+        "AUT2-C09",
+        "AUT2-C10",
+        "AUT2-C11"
+      ],
+      "reused_block_ids": [
+        "AUT1-C01",
+        "AUT1-C12",
+        "AUT1-C13",
+        "AUT1-C41",
+        "AUT1-C42",
+        "AUT1-C43",
+        "AUT1-C44",
+        "AUT1-X01",
+        "AUT1-X03",
+        "AUT1-X04"
+      ],
+      "requested_chain": [
+        "Actions.execute → ActionsGitLabCommands.execute",
+        "admit + native role/policies + inputs → plan",
+        "single request → status check → plan.acknowledge → native pipeline/job ownership"
+      ],
+      "new_literal_bytes": 18841,
+      "status": "EVIDENCE_SUPPLIED_NOT_JUDGED"
+    },
+    {
+      "judge_id": "J1",
+      "request_id": "RE-AUT2-03",
+      "public_request_origin": {
+        "path": "../../relay/automation-2/j1-response.md",
+        "bytes": 12356,
+        "sha256": "f04ab6c3980172b0adbb8f2abbbcc0211591d7fa3f2c65db22971d5448f9ed86",
+        "git_blob_sha": "7820369b7bb6835cd20b379f28c80467cea7de55",
+        "judge_id": "J1",
+        "origin": "public_request_relay",
+        "repository_commit": null
+      },
+      "new_literal_block_ids": [
+        "AUT2-C12",
+        "AUT2-C13",
+        "AUT2-C14",
+        "AUT2-C15",
+        "AUT2-C16",
+        "AUT2-C17",
+        "AUT2-C18",
+        "AUT2-C19",
+        "AUT2-C20",
+        "AUT2-C21",
+        "AUT2-C22",
+        "AUT2-C23",
+        "AUT2-C24",
+        "AUT2-X01"
+      ],
+      "reused_block_ids": [
+        "AUT1-C01",
+        "AUT1-C03",
+        "AUT1-C04",
+        "AUT1-C05",
+        "AUT1-C31",
+        "AUT1-C32",
+        "AUT1-C33",
+        "AUT1-C34",
+        "AUT1-X02",
+        "AUT1-X03",
+        "AUT1-X04",
+        "AUT1-X05"
+      ],
+      "requested_chain": [
+        "ActionsResources route → concrete config domain",
+        "selection/project/actor/source/version → planned phases",
+        "stage result → acknowledgement; CommandOutput stays outside operations/sql"
+      ],
+      "new_literal_bytes": 103072,
+      "status": "EVIDENCE_SUPPLIED_NOT_JUDGED"
+    },
+    {
+      "judge_id": "J1",
+      "request_id": "RE-AUT2-04",
+      "public_request_origin": {
+        "path": "../../relay/automation-2/j1-response.md",
+        "bytes": 12356,
+        "sha256": "f04ab6c3980172b0adbb8f2abbbcc0211591d7fa3f2c65db22971d5448f9ed86",
+        "git_blob_sha": "7820369b7bb6835cd20b379f28c80467cea7de55",
+        "judge_id": "J1",
+        "origin": "public_request_relay",
+        "repository_commit": null
+      },
+      "new_literal_block_ids": [
+        "AUT2-C12",
+        "AUT2-C13",
+        "AUT2-C14",
+        "AUT2-C25",
+        "AUT2-C26",
+        "AUT2-C27",
+        "AUT2-C28",
+        "AUT2-C29",
+        "AUT2-C30",
+        "AUT2-C31",
+        "AUT2-C41",
+        "AUT2-X01"
+      ],
+      "reused_block_ids": [
+        "AUT1-C01",
+        "AUT1-C28",
+        "AUT1-C29",
+        "AUT1-C32",
+        "AUT1-C33",
+        "AUT1-C34",
+        "AUT1-X03",
+        "AUT1-X04",
+        "AUT1-X05"
+      ],
+      "requested_chain": [
+        "Resource capture/authority/version → cache/runner/schedule domain",
+        "native ownership/inventory/precondition → mutation(s) → acknowledgement/output",
+        "artifact mutation → OutputTarget/OutputNative ownership/state/version → delete/keep"
+      ],
+      "new_literal_bytes": 131601,
+      "status": "EVIDENCE_SUPPLIED_NOT_JUDGED"
+    },
+    {
+      "judge_id": "J1",
+      "request_id": "RE-AUT2-05",
+      "public_request_origin": {
+        "path": "../../relay/automation-2/j1-response.md",
+        "bytes": 12356,
+        "sha256": "f04ab6c3980172b0adbb8f2abbbcc0211591d7fa3f2c65db22971d5448f9ed86",
+        "git_blob_sha": "7820369b7bb6835cd20b379f28c80467cea7de55",
+        "judge_id": "J1",
+        "origin": "public_request_relay",
+        "repository_commit": null
+      },
+      "new_literal_block_ids": [
+        "AUT2-C32",
+        "AUT2-C33",
+        "AUT2-C34",
+        "AUT2-C35",
+        "AUT2-C36",
+        "AUT2-C37",
+        "AUT2-C38"
+      ],
+      "reused_block_ids": [
+        "AUT1-C02",
+        "AUT1-C05",
+        "AUT1-C37",
+        "AUT1-C45",
+        "AUT1-X02"
+      ],
+      "requested_chain": [
+        "ActionsTransport request/resolve → CLI or GitLab transport",
+        "glab qualified snapshot → same snapshot actor + authenticated request",
+        "HTTP phase/write/read/response → safe classifier; multipart body under backpressure"
+      ],
+      "new_literal_bytes": 37515,
+      "status": "EVIDENCE_SUPPLIED_NOT_JUDGED"
+    },
+    {
+      "judge_id": "J1",
+      "request_id": "RE-AUT2-06",
+      "public_request_origin": {
+        "path": "../../relay/automation-2/j1-response.md",
+        "bytes": 12356,
+        "sha256": "f04ab6c3980172b0adbb8f2abbbcc0211591d7fa3f2c65db22971d5448f9ed86",
+        "git_blob_sha": "7820369b7bb6835cd20b379f28c80467cea7de55",
+        "judge_id": "J1",
+        "origin": "public_request_relay",
+        "repository_commit": null
+      },
+      "new_literal_block_ids": [
+        "AUT2-C29",
+        "AUT2-C30",
+        "AUT2-C31",
+        "AUT2-C34",
+        "AUT2-C35",
+        "AUT2-C38",
+        "AUT2-C39",
+        "AUT2-C40",
+        "AUT2-C41",
+        "AUT2-C42",
+        "AUT2-C43",
+        "AUT2-C44",
+        "AUT2-X01"
+      ],
+      "reused_block_ids": [
+        "AUT1-C01",
+        "AUT1-C02",
+        "AUT1-C05",
+        "AUT1-X05"
+      ],
+      "requested_chain": [
+        "ActionsOutput.read → OutputTarget.resolve → OutputDownload.open(renew=true)",
+        "native redirect → OutputSigned.follow/open → pre-byte renewal if eligible",
+        "ActionsOutput.read rejects206/content-range → response.body → valid EOF and finalizers"
+      ],
+      "new_literal_bytes": 70315,
+      "status": "EVIDENCE_SUPPLIED_NOT_JUDGED"
+    }
+  ],
+  "judge_J2_request_map": [
+    {
+      "judge_id": "J2",
+      "request_id": "RE-AUT2-01",
+      "public_request_origin": {
+        "path": "../../relay/automation-2/j2-response.md",
+        "bytes": 9430,
+        "sha256": "17fb39dc71ebea1a9a0b84c4cde1e7d6c265fadc6e2e4da00503000732e86b32",
+        "git_blob_sha": "48f5961826a2a5d9501843f9332f6b0dd9762260",
+        "judge_id": "J2",
+        "origin": "public_request_relay",
+        "repository_commit": null
+      },
+      "canonical_J1_request_groups": [
+        "RE-AUT2-01",
+        "RE-AUT2-02"
+      ],
+      "new_literal_block_ids": [
+        "AUT2-C01",
+        "AUT2-C02",
+        "AUT2-C03",
+        "AUT2-C04",
+        "AUT2-C05",
+        "AUT2-C06",
+        "AUT2-C07",
+        "AUT2-C08",
+        "AUT2-C09",
+        "AUT2-C10",
+        "AUT2-C11"
+      ],
+      "reused_block_ids": [
+        "AUT1-C01",
+        "AUT1-C30",
+        "AUT1-C38",
+        "AUT1-C39",
+        "AUT1-C40",
+        "AUT1-X01",
+        "AUT1-X03",
+        "AUT1-X04",
+        "AUT1-X05",
+        "AUT1-C12",
+        "AUT1-C13",
+        "AUT1-C41",
+        "AUT1-C42",
+        "AUT1-C43",
+        "AUT1-C44"
+      ],
+      "status": "EVIDENCE_SUPPLIED_NOT_JUDGED"
+    },
+    {
+      "judge_id": "J2",
+      "request_id": "RE-AUT2-02",
+      "public_request_origin": {
+        "path": "../../relay/automation-2/j2-response.md",
+        "bytes": 9430,
+        "sha256": "17fb39dc71ebea1a9a0b84c4cde1e7d6c265fadc6e2e4da00503000732e86b32",
+        "git_blob_sha": "48f5961826a2a5d9501843f9332f6b0dd9762260",
+        "judge_id": "J2",
+        "origin": "public_request_relay",
+        "repository_commit": null
+      },
+      "canonical_J1_request_groups": [
+        "RE-AUT2-03",
+        "RE-AUT2-04"
+      ],
+      "new_literal_block_ids": [
+        "AUT2-C12",
+        "AUT2-C13",
+        "AUT2-C14",
+        "AUT2-C15",
+        "AUT2-C16",
+        "AUT2-C17",
+        "AUT2-C18",
+        "AUT2-C19",
+        "AUT2-C20",
+        "AUT2-C21",
+        "AUT2-C22",
+        "AUT2-C23",
+        "AUT2-C24",
+        "AUT2-C25",
+        "AUT2-C26",
+        "AUT2-C27",
+        "AUT2-C28",
+        "AUT2-C29",
+        "AUT2-C30",
+        "AUT2-C31",
+        "AUT2-C41",
+        "AUT2-X01"
+      ],
+      "reused_block_ids": [
+        "AUT1-C01",
+        "AUT1-C03",
+        "AUT1-C04",
+        "AUT1-C05",
+        "AUT1-C31",
+        "AUT1-C32",
+        "AUT1-C33",
+        "AUT1-C34",
+        "AUT1-X02",
+        "AUT1-X03",
+        "AUT1-X04",
+        "AUT1-X05",
+        "AUT1-C28",
+        "AUT1-C29"
+      ],
+      "status": "EVIDENCE_SUPPLIED_NOT_JUDGED"
+    },
+    {
+      "judge_id": "J2",
+      "request_id": "RE-AUT2-03",
+      "public_request_origin": {
+        "path": "../../relay/automation-2/j2-response.md",
+        "bytes": 9430,
+        "sha256": "17fb39dc71ebea1a9a0b84c4cde1e7d6c265fadc6e2e4da00503000732e86b32",
+        "git_blob_sha": "48f5961826a2a5d9501843f9332f6b0dd9762260",
+        "judge_id": "J2",
+        "origin": "public_request_relay",
+        "repository_commit": null
+      },
+      "canonical_J1_request_groups": [
+        "RE-AUT2-05"
+      ],
+      "new_literal_block_ids": [
+        "AUT2-C32",
+        "AUT2-C33",
+        "AUT2-C34",
+        "AUT2-C35",
+        "AUT2-C36",
+        "AUT2-C37",
+        "AUT2-C38"
+      ],
+      "reused_block_ids": [
+        "AUT1-C02",
+        "AUT1-C05",
+        "AUT1-C37",
+        "AUT1-C45",
+        "AUT1-X02"
+      ],
+      "status": "EVIDENCE_SUPPLIED_NOT_JUDGED"
+    },
+    {
+      "judge_id": "J2",
+      "request_id": "RE-AUT2-04",
+      "public_request_origin": {
+        "path": "../../relay/automation-2/j2-response.md",
+        "bytes": 9430,
+        "sha256": "17fb39dc71ebea1a9a0b84c4cde1e7d6c265fadc6e2e4da00503000732e86b32",
+        "git_blob_sha": "48f5961826a2a5d9501843f9332f6b0dd9762260",
+        "judge_id": "J2",
+        "origin": "public_request_relay",
+        "repository_commit": null
+      },
+      "canonical_J1_request_groups": [
+        "RE-AUT2-06"
+      ],
+      "new_literal_block_ids": [
+        "AUT2-C29",
+        "AUT2-C30",
+        "AUT2-C31",
+        "AUT2-C34",
+        "AUT2-C35",
+        "AUT2-C38",
+        "AUT2-C39",
+        "AUT2-C40",
+        "AUT2-C41",
+        "AUT2-C42",
+        "AUT2-C43",
+        "AUT2-C44",
+        "AUT2-X01"
+      ],
+      "reused_block_ids": [
+        "AUT1-C01",
+        "AUT1-C02",
+        "AUT1-C05",
+        "AUT1-X05"
+      ],
+      "status": "EVIDENCE_SUPPLIED_NOT_JUDGED"
+    }
+  ],
+  "literal_blocks": [
+    {
+      "block_id": "AUT2-C01",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-01"
+      ],
+      "body_anchors": [
+        "A18"
+      ],
+      "requested_subject": "Chamador: captura e seleção do comando por kind",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/github/commands.ts",
+      "archive": "sources/packages/core/src/actions/github/commands.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "c4fcb4746c7bbefa8603afe01913816606181922",
+      "source_sha256": "02e462e14767c1d1b3a6e2294fb1d14c668d50e9f515eaec76b20cad1401e67b",
+      "source_bytes": 3076,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 38,
+          "bytes": 3076,
+          "sha256": "02e462e14767c1d1b3a6e2294fb1d14c668d50e9f515eaec76b20cad1401e67b",
+          "literal_content_byte_start": 42522,
+          "literal_content_byte_end_exclusive": 45598
+        }
+      ],
+      "supplement_byte_start": 41723,
+      "supplement_byte_end_exclusive": 45603,
+      "transport_sha256": "38a92fcb713d838d5d7bf7bb9b8be10b01c47f6a4065deef4a894fcfaeeb67a9"
+    },
+    {
+      "block_id": "AUT2-C02",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-01"
+      ],
+      "body_anchors": [
+        "A18"
+      ],
+      "requested_subject": "Parser completo de definições/inputs dispatch, budgets/defaults/required/choices",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/github/commands/inputs.ts",
+      "archive": "sources/packages/core/src/actions/github/commands/inputs.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "177837b7dfbc0272414263be7e2a24606839534c",
+      "source_sha256": "38c08aef5b55f2bdbef46c771e7974ff77a0408304a9bb9fcc4f572800baecaa",
+      "source_bytes": 5159,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 69,
+          "bytes": 5159,
+          "sha256": "38c08aef5b55f2bdbef46c771e7974ff77a0408304a9bb9fcc4f572800baecaa",
+          "literal_content_byte_start": 46449,
+          "literal_content_byte_end_exclusive": 51608
+        }
+      ],
+      "supplement_byte_start": 45603,
+      "supplement_byte_end_exclusive": 51613,
+      "transport_sha256": "17f4e2b01a86600602016de2b598a34f7915216f959f2edffe9fc7b87b86f1db"
+    },
+    {
+      "block_id": "AUT2-C03",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-01"
+      ],
+      "body_anchors": [
+        "A18"
+      ],
+      "requested_subject": "Schemas anteriores a dispatch e ramos enable/disable; dispatch12–47 reutilizado de AUT1-C38",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/github/commands/workflow.ts",
+      "archive": "sources/packages/core/src/actions/github/commands/workflow.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "bc9677ced86d82f08db5a38ae948bcca3b1406eb",
+      "source_sha256": "7330ca26082e22e8a81c89285afc18002903188555c96d1d60565fae993f7b2f",
+      "source_bytes": 6811,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 11,
+          "bytes": 579,
+          "sha256": "0415f3a904df243bdb4194b9fb43bc5df98c9c68bdda34a67ebb828d0798cb9d",
+          "literal_content_byte_start": 52473,
+          "literal_content_byte_end_exclusive": 53052
+        },
+        {
+          "first_line": 48,
+          "last_line": 79,
+          "bytes": 2744,
+          "sha256": "6d2a8fd1cc9d2546e29f1b2e87ebc8c346b486bd986ef3c1dc1906f9ec0bfd31",
+          "literal_content_byte_start": 53208,
+          "literal_content_byte_end_exclusive": 55952
+        }
+      ],
+      "supplement_byte_start": 51613,
+      "supplement_byte_end_exclusive": 55957,
+      "transport_sha256": "17c4d2d9307a2341da68d5c440e257d10e8e93a1b1f124f4f2d46b11b75c55af"
+    },
+    {
+      "block_id": "AUT2-C04",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-01"
+      ],
+      "body_anchors": [
+        "A19"
+      ],
+      "requested_subject": "Imports/declarações anteriores ao ramo completo já transportado em AUT1-C39",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/github/commands/run.ts",
+      "archive": "sources/packages/core/src/actions/github/commands/run.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "20a65fe64b3559988856c829670ebb82296f9113",
+      "source_sha256": "a54d15a5e3870a09fc98708de4ee41aa09acaf2175b6d9c9e0e4249e6646fe78",
+      "source_bytes": 4900,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 9,
+          "bytes": 424,
+          "sha256": "9f40f95c371ca0d8b7b728265c3d09db7893d1c0370afc554a8b1fa0279ec67f",
+          "literal_content_byte_start": 56791,
+          "literal_content_byte_end_exclusive": 57215
+        }
+      ],
+      "supplement_byte_start": 55957,
+      "supplement_byte_end_exclusive": 57220,
+      "transport_sha256": "e002a48b0c43e891487a47843f3649a42d64e675d6742948ec7a6666dbd50ced"
+    },
+    {
+      "block_id": "AUT2-C05",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-01"
+      ],
+      "body_anchors": [
+        "A19"
+      ],
+      "requested_subject": "Imports/declarações anteriores ao ramo completo já transportado em AUT1-C40",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/github/commands/job.ts",
+      "archive": "sources/packages/core/src/actions/github/commands/job.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "01828a587ca7443e08fc0ecdcff55bf1ebeca863",
+      "source_sha256": "b753ad05386cd13df639a4000b7fd35db4db8431e66f1ab27633acdbeb314591",
+      "source_bytes": 2482,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 8,
+          "bytes": 327,
+          "sha256": "634771599ec0976a8486e4bbdb318153face1a06750f2e7e077c7f85dbe1f6fc",
+          "literal_content_byte_start": 58054,
+          "literal_content_byte_end_exclusive": 58381
+        }
+      ],
+      "supplement_byte_start": 57220,
+      "supplement_byte_end_exclusive": 58386,
+      "transport_sha256": "aa4638a4e20da31fbe2f36574a58cc3d490a9727624cb80a52cc2981c7711cef"
+    },
+    {
+      "block_id": "AUT2-C06",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-02"
+      ],
+      "body_anchors": [
+        "A20"
+      ],
+      "requested_subject": "Roles observados, project policies, ref e variables/cancellation",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/gitlab/commands/native.ts",
+      "archive": "sources/packages/core/src/actions/gitlab/commands/native.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "96c48f417a9df123e151215ff757186932fe1895",
+      "source_sha256": "ceac62595d8c7647e4a4277dbc893f9f7c4a71faada7fc50b1614a4474cdfc63",
+      "source_bytes": 5006,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 72,
+          "bytes": 5006,
+          "sha256": "ceac62595d8c7647e4a4277dbc893f9f7c4a71faada7fc50b1614a4474cdfc63",
+          "literal_content_byte_start": 59214,
+          "literal_content_byte_end_exclusive": 64220
+        }
+      ],
+      "supplement_byte_start": 58386,
+      "supplement_byte_end_exclusive": 64225,
+      "transport_sha256": "3fd8026152ccb794b517de471e192f08b26b75f26dd8b6c9fdf2a8c96ede6e52"
+    },
+    {
+      "block_id": "AUT2-C07",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-02"
+      ],
+      "body_anchors": [
+        "A21"
+      ],
+      "requested_subject": "Inputs locais autoritativos, includes/constraints/defaults e gate de versão",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/gitlab/commands/inputs.ts",
+      "archive": "sources/packages/core/src/actions/gitlab/commands/inputs.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "12ba907ddadcd0103fa07da0eeabe7bede5fc9f5",
+      "source_sha256": "c1f72bbe27861b2f51e5f0fa2fe67bcbca6f48d2a7c0b08acd451395c9ab476f",
+      "source_bytes": 4814,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 80,
+          "bytes": 4814,
+          "sha256": "c1f72bbe27861b2f51e5f0fa2fe67bcbca6f48d2a7c0b08acd451395c9ab476f",
+          "literal_content_byte_start": 65065,
+          "literal_content_byte_end_exclusive": 69879
+        }
+      ],
+      "supplement_byte_start": 64225,
+      "supplement_byte_end_exclusive": 69884,
+      "transport_sha256": "cc880981c9e850ecdc67057df0cf907214f441afab66437f268da06e4f4ed09f"
+    },
+    {
+      "block_id": "AUT2-C08",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-02"
+      ],
+      "body_anchors": [
+        "A20"
+      ],
+      "requested_subject": "Planejamento de dispatch versus trigger e acknowledgment pipeline",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/gitlab/commands/launch.ts",
+      "archive": "sources/packages/core/src/actions/gitlab/commands/launch.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "69db848d7513a074b960851e27c12a39438ebd47",
+      "source_sha256": "444fe50cc00d0aaed2895b18ca25e11baca9fe281a917c0260674b5449540579",
+      "source_bytes": 4234,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 52,
+          "bytes": 4234,
+          "sha256": "444fe50cc00d0aaed2895b18ca25e11baca9fe281a917c0260674b5449540579",
+          "literal_content_byte_start": 70713,
+          "literal_content_byte_end_exclusive": 74947
+        }
+      ],
+      "supplement_byte_start": 69884,
+      "supplement_byte_end_exclusive": 74952,
+      "transport_sha256": "70d47460072618d5d447c9f9d4ae1bcbff57b432b94feba84f6acfb4d6181cff"
+    },
+    {
+      "block_id": "AUT2-C09",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-02"
+      ],
+      "body_anchors": [
+        "A21"
+      ],
+      "requested_subject": "MR no mesmo projeto, ref head/merge e pós-condição nativa",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/gitlab/commands/merge-request.ts",
+      "archive": "sources/packages/core/src/actions/gitlab/commands/merge-request.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "38a983b2834d42964934b1699b17d92637e8fab8",
+      "source_sha256": "4db4f1c18a91be6292d2b8a10c493ffe81a5893036f45b8fdee62a3e40b000b1",
+      "source_bytes": 4177,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 53,
+          "bytes": 4177,
+          "sha256": "4db4f1c18a91be6292d2b8a10c493ffe81a5893036f45b8fdee62a3e40b000b1",
+          "literal_content_byte_start": 75790,
+          "literal_content_byte_end_exclusive": 79967
+        }
+      ],
+      "supplement_byte_start": 74952,
+      "supplement_byte_end_exclusive": 79972,
+      "transport_sha256": "e6330d1f639e3306cd46e4e99f5a8a517b361081c0906c1116caac6639b86c3e"
+    },
+    {
+      "block_id": "AUT2-C10",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-02"
+      ],
+      "body_anchors": [
+        "A22"
+      ],
+      "requested_subject": "Imports anteriores a admit/target/source/pipeline completos em AUT1-C42",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/gitlab/commands/shared.ts",
+      "archive": "sources/packages/core/src/actions/gitlab/commands/shared.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "b15f4a3edb40e83274490b3c789cf2581aac9a5a",
+      "source_sha256": "0af91cc662eb4578cf1f16e967743fe9d69fb356d6c58555f50826b399e23a97",
+      "source_bytes": 5846,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 8,
+          "bytes": 290,
+          "sha256": "e7428bb188cb40d08072aee620aee87302a1d0064fb2703a5d3436af74d1e708",
+          "literal_content_byte_start": 80805,
+          "literal_content_byte_end_exclusive": 81095
+        }
+      ],
+      "supplement_byte_start": 79972,
+      "supplement_byte_end_exclusive": 81100,
+      "transport_sha256": "77c50edc6a2f558815024408b9b146cbd5199787a31a2d7b80f1ab2b23934ac6"
+    },
+    {
+      "block_id": "AUT2-C11",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-02"
+      ],
+      "body_anchors": [
+        "A22"
+      ],
+      "requested_subject": "Imports anteriores a ramos completos em AUT1-C43",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/gitlab/commands/runs.ts",
+      "archive": "sources/packages/core/src/actions/gitlab/commands/runs.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "999c7e5cd6c6d8d33cbe63ad601923b308eff3e4",
+      "source_sha256": "0c210556925c4d2f025c6942b2512e8ab782ae748aa51b0336dde859c441ec30",
+      "source_bytes": 3685,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 8,
+          "bytes": 320,
+          "sha256": "06624e45353dda2eb328e352a37d890f7034729a46562be5d0a076c5cbadc2b0",
+          "literal_content_byte_start": 81906,
+          "literal_content_byte_end_exclusive": 82226
+        }
+      ],
+      "supplement_byte_start": 81100,
+      "supplement_byte_end_exclusive": 82231,
+      "transport_sha256": "bdbfb3f479a6607c7816b47327e82a1ec978b45282957a7820d33fa9e14fb0e5"
+    },
+    {
+      "block_id": "AUT2-C12",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-03",
+        "RE-AUT2-04"
+      ],
+      "body_anchors": [
+        "A23"
+      ],
+      "requested_subject": "Roteamento de domínios, environments/deployments, artifact e schedule source.write",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/resources.ts",
+      "archive": "sources/packages/core/src/actions/resources.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "7d4d4c2248900819af4ace7731982ede0f67179f",
+      "source_sha256": "cb6e5bc0a32a104f697459fb39550b0ae12dc6f68c94d38364fff903d6726b94",
+      "source_bytes": 3620,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 66,
+          "bytes": 3620,
+          "sha256": "cb6e5bc0a32a104f697459fb39550b0ae12dc6f68c94d38364fff903d6726b94",
+          "literal_content_byte_start": 83065,
+          "literal_content_byte_end_exclusive": 86685
+        }
+      ],
+      "supplement_byte_start": 82231,
+      "supplement_byte_end_exclusive": 86690,
+      "transport_sha256": "2f7139e4aa2ed0c7bd2bb8b9430702f4a25b4f25be7967e139279db79d2ffb15"
+    },
+    {
+      "block_id": "AUT2-C13",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-03",
+        "RE-AUT2-04"
+      ],
+      "body_anchors": [
+        "A23"
+      ],
+      "requested_subject": "Captura/selection/authority/versão/source e envio de recursos",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/resources/native.ts",
+      "archive": "sources/packages/core/src/actions/resources/native.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "948787643b01ec9d52340a7b5e913b6ca071749d",
+      "source_sha256": "a53465358378f169c381ca67f90597976732655e9da173bb8125df7601f101e1",
+      "source_bytes": 13033,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 188,
+          "bytes": 13033,
+          "sha256": "a53465358378f169c381ca67f90597976732655e9da173bb8125df7601f101e1",
+          "literal_content_byte_start": 87520,
+          "literal_content_byte_end_exclusive": 100553
+        }
+      ],
+      "supplement_byte_start": 86690,
+      "supplement_byte_end_exclusive": 100558,
+      "transport_sha256": "51b4cb63009f27dfda5ca9e89670df820a9ab35cd144f7001a592981324ccc67"
+    },
+    {
+      "block_id": "AUT2-C14",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-03",
+        "RE-AUT2-04"
+      ],
+      "body_anchors": [
+        "A23"
+      ],
+      "requested_subject": "Schemas e guarda de contexto, projeto/ator/source/versão e execução em fases",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/resources/config-common.ts",
+      "archive": "sources/packages/core/src/actions/resources/config-common.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "091480332aea03f03b8ab3cfcd21dfbe8b27fa84",
+      "source_sha256": "aee5e20b10091ab8c4c20daf21c72e45a583e7cfc162b0a5e5e162a61e5b7afd",
+      "source_bytes": 12418,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 169,
+          "bytes": 12418,
+          "sha256": "aee5e20b10091ab8c4c20daf21c72e45a583e7cfc162b0a5e5e162a61e5b7afd",
+          "literal_content_byte_start": 101419,
+          "literal_content_byte_end_exclusive": 113837
+        }
+      ],
+      "supplement_byte_start": 100558,
+      "supplement_byte_end_exclusive": 113842,
+      "transport_sha256": "d26df6c0820b7e54ac1910b27c5651a29c9b278fc5afbdf2c11ba98bdc0ccd8b"
+    },
+    {
+      "block_id": "AUT2-C15",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-03"
+      ],
+      "body_anchors": [
+        "A24"
+      ],
+      "requested_subject": "Leitura/redaction, key/scope, rename/move, sealed box e zeroização local",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/resources/variables.ts",
+      "archive": "sources/packages/core/src/actions/resources/variables.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "2b8bf42f1867f93bd05188893c5a1d49fa6b0c93",
+      "source_sha256": "4483cec419b1ac22628dd01c1386b9470fcd5511b2d0cd9a956b9736cfc2ca4e",
+      "source_bytes": 17420,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 207,
+          "bytes": 17420,
+          "sha256": "4483cec419b1ac22628dd01c1386b9470fcd5511b2d0cd9a956b9736cfc2ca4e",
+          "literal_content_byte_start": 114677,
+          "literal_content_byte_end_exclusive": 132097
+        }
+      ],
+      "supplement_byte_start": 113842,
+      "supplement_byte_end_exclusive": 132102,
+      "transport_sha256": "77b5e0d26986677d2e430d0d9477af602981f8cf9258682f487858e55dffa6fc"
+    },
+    {
+      "block_id": "AUT2-C16",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-03"
+      ],
+      "body_anchors": [
+        "A24"
+      ],
+      "requested_subject": "Pagination conjunta de variables e secrets, sem fundir identidades",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/resources/config-variable-github-page.ts",
+      "archive": "sources/packages/core/src/actions/resources/config-variable-github-page.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "0ac96117ca2d882142c04ba700efac2b42e60073",
+      "source_sha256": "840684c984c0c57f586008b8d3e357be5bb1d8f298dc1bb64e4fe1c8a452ae20",
+      "source_bytes": 4453,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 59,
+          "bytes": 4453,
+          "sha256": "840684c984c0c57f586008b8d3e357be5bb1d8f298dc1bb64e4fe1c8a452ae20",
+          "literal_content_byte_start": 132962,
+          "literal_content_byte_end_exclusive": 137415
+        }
+      ],
+      "supplement_byte_start": 132102,
+      "supplement_byte_end_exclusive": 137420,
+      "transport_sha256": "d68def2290ab9c96f0af0e0ddb177acc66777a3f0c4d02a8b1f47add75058570"
+    },
+    {
+      "block_id": "AUT2-C17",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-03"
+      ],
+      "body_anchors": [
+        "A24"
+      ],
+      "requested_subject": "Contrato local do módulo crypto usado pelo wrapper, não implementação criptográfica",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/resources/config-sodium.d.ts",
+      "archive": "sources/packages/core/src/actions/resources/config-sodium.d.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "8580645c5635998ff84dd397e88eb3bd131826ef",
+      "source_sha256": "88816907c0381d3ba2094c97a9572036f6ce757e10d2498b29d14150f4f5ebba",
+      "source_bytes": 812,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 15,
+          "bytes": 812,
+          "sha256": "88816907c0381d3ba2094c97a9572036f6ce757e10d2498b29d14150f4f5ebba",
+          "literal_content_byte_start": 138276,
+          "literal_content_byte_end_exclusive": 139088
+        }
+      ],
+      "supplement_byte_start": 137420,
+      "supplement_byte_end_exclusive": 139093,
+      "transport_sha256": "4bd94a652881d7af2529c34705849a7eb5e593cd38fb2a42d1f227ace0d7f3db"
+    },
+    {
+      "block_id": "AUT2-C18",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-03"
+      ],
+      "body_anchors": [
+        "A25"
+      ],
+      "requested_subject": "Schemas de environments/reviewers/refs GH e GL",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/resources/config-environment-schema.ts",
+      "archive": "sources/packages/core/src/actions/resources/config-environment-schema.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "68c018139273310ac5cfd10d220b965b09ea62da",
+      "source_sha256": "86af948872e70184a9ed866b6c5cda97809f680ca887cc177934fa9ace399b2a",
+      "source_bytes": 2818,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 37,
+          "bytes": 2818,
+          "sha256": "86af948872e70184a9ed866b6c5cda97809f680ca887cc177934fa9ace399b2a",
+          "literal_content_byte_start": 139929,
+          "literal_content_byte_end_exclusive": 142747
+        }
+      ],
+      "supplement_byte_start": 139093,
+      "supplement_byte_end_exclusive": 142752,
+      "transport_sha256": "1403a92838bf451ab9f0a3d1eccf9cee11162f100f68cea38349a5f4edbeec4c"
+    },
+    {
+      "block_id": "AUT2-C19",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-03"
+      ],
+      "body_anchors": [
+        "A25"
+      ],
+      "requested_subject": "Reviews representáveis, read-only e lookup de identidade",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/resources/config-environment-reviewers.ts",
+      "archive": "sources/packages/core/src/actions/resources/config-environment-reviewers.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "9110df8c9a839c9db3476ecdfbfe6e9d9955bc6e",
+      "source_sha256": "64222df345434d4400ec50653b25f03b94252d2bf0ecee5a8090ffa24f34c65e",
+      "source_bytes": 2604,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 32,
+          "bytes": 2604,
+          "sha256": "64222df345434d4400ec50653b25f03b94252d2bf0ecee5a8090ffa24f34c65e",
+          "literal_content_byte_start": 143605,
+          "literal_content_byte_end_exclusive": 146209
+        }
+      ],
+      "supplement_byte_start": 142752,
+      "supplement_byte_end_exclusive": 146214,
+      "transport_sha256": "65b0eec27bce1841933a569702f5bd750455994909bc9480fff3602ba2a2bc90"
+    },
+    {
+      "block_id": "AUT2-C20",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-03"
+      ],
+      "body_anchors": [
+        "A26"
+      ],
+      "requested_subject": "Entrada list/execute e caminho runID para pending review",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/resources/environments.ts",
+      "archive": "sources/packages/core/src/actions/resources/environments.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "bf40e7c0a1e0eb17c0ac15f64b27ccaee1203292",
+      "source_sha256": "fc92638ae218671edd85d17f5c52b3de8b899d209dda930afd3fffdab5cee9fa",
+      "source_bytes": 5333,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 72,
+          "bytes": 5333,
+          "sha256": "fc92638ae218671edd85d17f5c52b3de8b899d209dda930afd3fffdab5cee9fa",
+          "literal_content_byte_start": 147034,
+          "literal_content_byte_end_exclusive": 152367
+        }
+      ],
+      "supplement_byte_start": 146214,
+      "supplement_byte_end_exclusive": 152372,
+      "transport_sha256": "aaeded48998d6c60eee3e68765ee21827ec2255df009a83ab628e3d997f04b3c"
+    },
+    {
+      "block_id": "AUT2-C21",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-03"
+      ],
+      "body_anchors": [
+        "A25"
+      ],
+      "requested_subject": "Reviewers/branch-tag policies/timer e plano multifase GH",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/resources/config-environment-github.ts",
+      "archive": "sources/packages/core/src/actions/resources/config-environment-github.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "258f9fcb61eeb90c457b2f116ebdbd406bbb340e",
+      "source_sha256": "fc9f6dab5045d664abe9fa5b5c665c190a70039b2bc4484a6829d274de5c2dbc",
+      "source_bytes": 10164,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 114,
+          "bytes": 10164,
+          "sha256": "fc9f6dab5045d664abe9fa5b5c665c190a70039b2bc4484a6829d274de5c2dbc",
+          "literal_content_byte_start": 153221,
+          "literal_content_byte_end_exclusive": 163385
+        }
+      ],
+      "supplement_byte_start": 152372,
+      "supplement_byte_end_exclusive": 163390,
+      "transport_sha256": "d509850cc2095d0719aa0f60e96c9a2e1f08677417d45bcaa3a1de5c23580ea0"
+    },
+    {
+      "block_id": "AUT2-C22",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-03"
+      ],
+      "body_anchors": [
+        "A25"
+      ],
+      "requested_subject": "Estado stopped/delete, proteção e approvals representáveis GL",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/resources/config-environment-gitlab.ts",
+      "archive": "sources/packages/core/src/actions/resources/config-environment-gitlab.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "610ab3c2831e40f288decfde7667af2387be313f",
+      "source_sha256": "873b53054d0e9bb1fad5a94400fefb7cbb11b96a23244cb9260e31f7e0e5f7ac",
+      "source_bytes": 10953,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 116,
+          "bytes": 10953,
+          "sha256": "873b53054d0e9bb1fad5a94400fefb7cbb11b96a23244cb9260e31f7e0e5f7ac",
+          "literal_content_byte_start": 164247,
+          "literal_content_byte_end_exclusive": 175200
+        }
+      ],
+      "supplement_byte_start": 163390,
+      "supplement_byte_end_exclusive": 175205,
+      "transport_sha256": "dd9b0e96966dba459b2e1b37d15585dc0f58e8feb2500745fbdfc36ecc37c2b4"
+    },
+    {
+      "block_id": "AUT2-C23",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-03"
+      ],
+      "body_anchors": [
+        "A26"
+      ],
+      "requested_subject": "Pending deployments por run/env, precondições/ator/versão e aprovação nativa",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/resources/config-deployment-review.ts",
+      "archive": "sources/packages/core/src/actions/resources/config-deployment-review.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "53cd89baf0c85dfd338c6da6a119445ecb101066",
+      "source_sha256": "fcd8809b52ee73a044bc0ab61f88377cb882b72054708fa72e77771c81c5b400",
+      "source_bytes": 9534,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 110,
+          "bytes": 9534,
+          "sha256": "fcd8809b52ee73a044bc0ab61f88377cb882b72054708fa72e77771c81c5b400",
+          "literal_content_byte_start": 176075,
+          "literal_content_byte_end_exclusive": 185609
+        }
+      ],
+      "supplement_byte_start": 175205,
+      "supplement_byte_end_exclusive": 185614,
+      "transport_sha256": "e50c56ba2db103d2d8e002e158039421e1f5c8b9f72a75e992c8bf876ecdd09c"
+    },
+    {
+      "block_id": "AUT2-C24",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-03"
+      ],
+      "body_anchors": [
+        "A27"
+      ],
+      "requested_subject": "Policy/retention local versus configurações remotas e limites de edição",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/resources/policy.ts",
+      "archive": "sources/packages/core/src/actions/resources/policy.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "17cfdc17b154c76d935cd8e99d8ea2e07f71c68b",
+      "source_sha256": "c0e90e28da9148e24a6fc56df68566122215d9ba6d1b47f6222fc4b079b425e2",
+      "source_bytes": 7481,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 85,
+          "bytes": 7481,
+          "sha256": "c0e90e28da9148e24a6fc56df68566122215d9ba6d1b47f6222fc4b079b425e2",
+          "literal_content_byte_start": 186441,
+          "literal_content_byte_end_exclusive": 193922
+        }
+      ],
+      "supplement_byte_start": 185614,
+      "supplement_byte_end_exclusive": 193927,
+      "transport_sha256": "79f8594ce161f753ef2a24566be87450e04bcaa3d5e3182e6b2e9f086413638d"
+    },
+    {
+      "block_id": "AUT2-C25",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-04"
+      ],
+      "body_anchors": [
+        "A28"
+      ],
+      "requested_subject": "GH inventário/correspondência/delete; GL namespace/future jobs e versão do projeto",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/resources/caches.ts",
+      "archive": "sources/packages/core/src/actions/resources/caches.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "d272111f079a5a22c09fde175c43c132e8048cca",
+      "source_sha256": "1cf002b729c4043e352d60d02a81f0aacd58d58b971bba16f834a2ab6be6b95b",
+      "source_bytes": 13087,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 152,
+          "bytes": 13087,
+          "sha256": "1cf002b729c4043e352d60d02a81f0aacd58d58b971bba16f834a2ab6be6b95b",
+          "literal_content_byte_start": 194767,
+          "literal_content_byte_end_exclusive": 207854
+        }
+      ],
+      "supplement_byte_start": 193927,
+      "supplement_byte_end_exclusive": 207859,
+      "transport_sha256": "ba4b5f6b3f7b3f1378f5680546ee07ce919b088206860e211859b9bef0c1c076"
+    },
+    {
+      "block_id": "AUT2-C26",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-04"
+      ],
+      "body_anchors": [
+        "A28",
+        "A29"
+      ],
+      "requested_subject": "Seam allowlisted GraphQL, cacheClear e ownerProject nativos",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/resources/gitlab-graphql.ts",
+      "archive": "sources/packages/core/src/actions/resources/gitlab-graphql.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "08a1072c00be8d3ce858fbe6b57772f96afd2f78",
+      "source_sha256": "d29a849b8ae2fe1e8eb08ee947f8275bcee8b62e8c4a006d45f738e69758fb2c",
+      "source_bytes": 6809,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 96,
+          "bytes": 6809,
+          "sha256": "d29a849b8ae2fe1e8eb08ee947f8275bcee8b62e8c4a006d45f738e69758fb2c",
+          "literal_content_byte_start": 208692,
+          "literal_content_byte_end_exclusive": 215501
+        }
+      ],
+      "supplement_byte_start": 207859,
+      "supplement_byte_end_exclusive": 215506,
+      "transport_sha256": "194b1099ba10ce8073c7699b84886eacf413a7609eeb3b99bfc691fae4bee5bf"
+    },
+    {
+      "block_id": "AUT2-C27",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-04"
+      ],
+      "body_anchors": [
+        "A29"
+      ],
+      "requested_subject": "Ownership/labels/JIT/enrollment/assign/update/remove e saída efêmera",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/resources/runners.ts",
+      "archive": "sources/packages/core/src/actions/resources/runners.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "5d27a887b6a1890a92d83b0310b3bc624f83bf47",
+      "source_sha256": "87a6b7a7a23e4aaa162366761f68282f64190e7a2555cf353f67a22aa3cac0b6",
+      "source_bytes": 26618,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 286,
+          "bytes": 26618,
+          "sha256": "87a6b7a7a23e4aaa162366761f68282f64190e7a2555cf353f67a22aa3cac0b6",
+          "literal_content_byte_start": 216333,
+          "literal_content_byte_end_exclusive": 242951
+        }
+      ],
+      "supplement_byte_start": 215506,
+      "supplement_byte_end_exclusive": 242956,
+      "transport_sha256": "48a32fa34ea6b0d42478fdbc5903f785bafff16216b53c0983113e2ccc1ca956"
+    },
+    {
+      "block_id": "AUT2-C28",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-04"
+      ],
+      "body_anchors": [
+        "A30",
+        "A31"
+      ],
+      "requested_subject": "Owners/take-ownership/play, inputs/variables em fases e source.write GH; editores em AUT1-C28/C29",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/resources/schedules.ts",
+      "archive": "sources/packages/core/src/actions/resources/schedules.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "700bc3658ebb06113d9027f740ff16d1e5f69cea",
+      "source_sha256": "e5664133d84a54b2187f6ba5b61d4d564579d7a58e6ed5801cc437f5454cc4ab",
+      "source_bytes": 31805,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 335,
+          "bytes": 31805,
+          "sha256": "e5664133d84a54b2187f6ba5b61d4d564579d7a58e6ed5801cc437f5454cc4ab",
+          "literal_content_byte_start": 243820,
+          "literal_content_byte_end_exclusive": 275625
+        }
+      ],
+      "supplement_byte_start": 242956,
+      "supplement_byte_end_exclusive": 275630,
+      "transport_sha256": "ba8f2351985f2fb3d1a3b44749fd67ebc75d6d391376ea88c5f8c471de7e16de"
+    },
+    {
+      "block_id": "AUT2-C29",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-04",
+        "RE-AUT2-06"
+      ],
+      "body_anchors": [
+        "A35"
+      ],
+      "requested_subject": "Inventory GH/GL, ownership, versões e estados de artifact",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/output/artifacts.ts",
+      "archive": "sources/packages/core/src/actions/output/artifacts.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "56d6c846172b96e1130b2bf8737712af9e0c5be0",
+      "source_sha256": "be26b08a227078ed6c0363be1f47ebdceda0b27a46749ad208d2642ea3ef46a7",
+      "source_bytes": 5515,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 73,
+          "bytes": 5515,
+          "sha256": "be26b08a227078ed6c0363be1f47ebdceda0b27a46749ad208d2642ea3ef46a7",
+          "literal_content_byte_start": 276453,
+          "literal_content_byte_end_exclusive": 281968
+        }
+      ],
+      "supplement_byte_start": 275630,
+      "supplement_byte_end_exclusive": 281973,
+      "transport_sha256": "479b111f191ddbe35316dd9d67b1e26411a37d26f5c5edc17ab5ae053c93ac00"
+    },
+    {
+      "block_id": "AUT2-C30",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-04",
+        "RE-AUT2-06"
+      ],
+      "body_anchors": [
+        "A37"
+      ],
+      "requested_subject": "Delete/keep completos com target/version/ownership e pós-condição",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/output/mutations.ts",
+      "archive": "sources/packages/core/src/actions/output/mutations.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "2d165747ebfc35f05a4c0244fd06134780482b88",
+      "source_sha256": "b9151642332518eec3151825cb55bd2b0f65ba275d77e1d107ac29feb3a323e0",
+      "source_bytes": 4523,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 58,
+          "bytes": 4523,
+          "sha256": "b9151642332518eec3151825cb55bd2b0f65ba275d77e1d107ac29feb3a323e0",
+          "literal_content_byte_start": 282806,
+          "literal_content_byte_end_exclusive": 287329
+        }
+      ],
+      "supplement_byte_start": 281973,
+      "supplement_byte_end_exclusive": 287334,
+      "transport_sha256": "47b4f8c86dc20ed5c6e9db7d57e13b567302e292155e589d73dee64b222a8432"
+    },
+    {
+      "block_id": "AUT2-C31",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-04",
+        "RE-AUT2-06"
+      ],
+      "body_anchors": [
+        "A37"
+      ],
+      "requested_subject": "Campos selecionados de versão e expiry observada",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/output/version.ts",
+      "archive": "sources/packages/core/src/actions/output/version.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "a42fd54db9202bf822a439bb47ce4f216101a8e1",
+      "source_sha256": "935301ed0b3e64a03122d40ef4fcf58ef119c5c8b04c04b1f113bcb29163c6b9",
+      "source_bytes": 1050,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 16,
+          "bytes": 1050,
+          "sha256": "935301ed0b3e64a03122d40ef4fcf58ef119c5c8b04c04b1f113bcb29163c6b9",
+          "literal_content_byte_start": 288144,
+          "literal_content_byte_end_exclusive": 289194
+        }
+      ],
+      "supplement_byte_start": 287334,
+      "supplement_byte_end_exclusive": 289199,
+      "transport_sha256": "57456856d5385e6bdadf8e3beadac9e0f51631f4c4523e6665018c8a46620475"
+    },
+    {
+      "block_id": "AUT2-C32",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-05"
+      ],
+      "body_anchors": [
+        "A32"
+      ],
+      "requested_subject": "CLI target/argv/stdin/ambiente, host/origin/path e ausência de shell no command builder",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/transport/cli.ts",
+      "archive": "sources/packages/core/src/actions/transport/cli.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "695d1c8b2cc0872ad8e2a3d554a4b010674f834c",
+      "source_sha256": "94d766a8ffb45ec126698e2cf571f7a328261579edc1969147f2043c500df819",
+      "source_bytes": 5166,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 90,
+          "bytes": 5166,
+          "sha256": "94d766a8ffb45ec126698e2cf571f7a328261579edc1969147f2043c500df819",
+          "literal_content_byte_start": 290033,
+          "literal_content_byte_end_exclusive": 295199
+        }
+      ],
+      "supplement_byte_start": 289199,
+      "supplement_byte_end_exclusive": 295204,
+      "transport_sha256": "cb3f1095d1907b8ec7428d6754fc08d571bbc0b93d63af097a0ce2e7fe920a1a"
+    },
+    {
+      "block_id": "AUT2-C33",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-05"
+      ],
+      "body_anchors": [
+        "A33"
+      ],
+      "requested_subject": "Qualificação glab, token/config, CA/mTLS, arquivos regulares e limites",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/transport/credentials.ts",
+      "archive": "sources/packages/core/src/actions/transport/credentials.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "e9fb72f248bb8500d5fc14d053ddb95396be3819",
+      "source_sha256": "36b0b3a3ed180de68ed8c8497c7231728ec4aabfd79fd67de34e33654b109010",
+      "source_bytes": 5469,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 85,
+          "bytes": 5469,
+          "sha256": "36b0b3a3ed180de68ed8c8497c7231728ec4aabfd79fd67de34e33654b109010",
+          "literal_content_byte_start": 296038,
+          "literal_content_byte_end_exclusive": 301507
+        }
+      ],
+      "supplement_byte_start": 295204,
+      "supplement_byte_end_exclusive": 301512,
+      "transport_sha256": "7a82d760713fb3c388bd8d0b3336085608e781901be0db9b9ce5896eb273e681"
+    },
+    {
+      "block_id": "AUT2-C34",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-05",
+        "RE-AUT2-06"
+      ],
+      "body_anchors": [
+        "A33"
+      ],
+      "requested_subject": "Snapshot por pedido, ator e write, rotas raw e framing de upload multipart",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/transport/gitlab.ts",
+      "archive": "sources/packages/core/src/actions/transport/gitlab.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "a21535f1c3014d492d7f07e98250bfb9e6cc3b3a",
+      "source_sha256": "94a67ca1521b8ce37b40b34a93d36d9986bdbf3727e2152399dd69b14214aef0",
+      "source_bytes": 5999,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 73,
+          "bytes": 5999,
+          "sha256": "94a67ca1521b8ce37b40b34a93d36d9986bdbf3727e2152399dd69b14214aef0",
+          "literal_content_byte_start": 302351,
+          "literal_content_byte_end_exclusive": 308350
+        }
+      ],
+      "supplement_byte_start": 301512,
+      "supplement_byte_end_exclusive": 308355,
+      "transport_sha256": "4c0a6460b77dc7767b86c3be8c332477d0c37873a3aed2fb4eae51f4dcf83f21"
+    },
+    {
+      "block_id": "AUT2-C35",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-05",
+        "RE-AUT2-06"
+      ],
+      "body_anchors": [
+        "A33",
+        "A34"
+      ],
+      "requested_subject": "HTTPS verificado, phase sticky, request/body/backpressure/erro/abort e streams",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/transport/http.ts",
+      "archive": "sources/packages/core/src/actions/transport/http.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "cb71e6424c0f4b9c7e714667f1298e46fe3a502d",
+      "source_sha256": "b3e60d9d087592f8847f53d94e60d3ece75cf827014407f9b4a66dfc78cc0ae7",
+      "source_bytes": 10713,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 186,
+          "bytes": 10713,
+          "sha256": "b3e60d9d087592f8847f53d94e60d3ece75cf827014407f9b4a66dfc78cc0ae7",
+          "literal_content_byte_start": 309203,
+          "literal_content_byte_end_exclusive": 319916
+        }
+      ],
+      "supplement_byte_start": 308355,
+      "supplement_byte_end_exclusive": 319921,
+      "transport_sha256": "6dde4098b7512d3ccee5bee5bf026c472b8174e82f28beef380c20a0bb42032e"
+    },
+    {
+      "block_id": "AUT2-C36",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-05"
+      ],
+      "body_anchors": [
+        "A32",
+        "A33"
+      ],
+      "requested_subject": "Parsers nativos de projeto/conta chamados pelo transporte",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/transport/identity.ts",
+      "archive": "sources/packages/core/src/actions/transport/identity.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "4d9b3812a6078439d5a654bc198e5426e55b1cb2",
+      "source_sha256": "0760871fde3a3eb2f8b3a5895cae66a50266a2b731208af0a533b31570536a4a",
+      "source_bytes": 1531,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 24,
+          "bytes": 1531,
+          "sha256": "0760871fde3a3eb2f8b3a5895cae66a50266a2b731208af0a533b31570536a4a",
+          "literal_content_byte_start": 320740,
+          "literal_content_byte_end_exclusive": 322271
+        }
+      ],
+      "supplement_byte_start": 319921,
+      "supplement_byte_end_exclusive": 322276,
+      "transport_sha256": "385d9fd722cde411a92322734c23ca480ea8194d4a275e49c5fb63887095cd99"
+    },
+    {
+      "block_id": "AUT2-C37",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-05"
+      ],
+      "body_anchors": [
+        "A34"
+      ],
+      "requested_subject": "Parsers headers/JSON/saída completa; failure56–76 reutilizado de AUT1-C45",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/transport/response.ts",
+      "archive": "sources/packages/core/src/actions/transport/response.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "09aed710878c0e33f33b7e1a8d566074a44ad30a",
+      "source_sha256": "dbe2d9284661b36cee41b379cba34f29cd6910df7757b10b94136eb12e6d8192",
+      "source_bytes": 4934,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 55,
+          "bytes": 3183,
+          "sha256": "c0414db9df802aa5d2a9a30f69717e369b9c191bcb93fba263a6f42d2b44c37b",
+          "literal_content_byte_start": 323108,
+          "literal_content_byte_end_exclusive": 326291
+        }
+      ],
+      "supplement_byte_start": 322276,
+      "supplement_byte_end_exclusive": 326296,
+      "transport_sha256": "0f3a2efb80b8e4a793b3a551f40b7c3b33fb06643eb1e43dc8b3607d9f457859"
+    },
+    {
+      "block_id": "AUT2-C38",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-05",
+        "RE-AUT2-06"
+      ],
+      "body_anchors": [
+        "A32"
+      ],
+      "requested_subject": "Process capture/bytes: buffers/timeout, stdin, watchdog, scope, backpressure e exit após EOF",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/transport/process.ts",
+      "archive": "sources/packages/core/src/actions/transport/process.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "5da8d9899becf4814f9a3011adfafc50d20c5239",
+      "source_sha256": "03b52b82e18a5a9a0ec515895218574eefbc433597eeb64b0fb13f452575ce9b",
+      "source_bytes": 5454,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 91,
+          "bytes": 5454,
+          "sha256": "03b52b82e18a5a9a0ec515895218574eefbc433597eeb64b0fb13f452575ce9b",
+          "literal_content_byte_start": 327156,
+          "literal_content_byte_end_exclusive": 332610
+        }
+      ],
+      "supplement_byte_start": 326296,
+      "supplement_byte_end_exclusive": 332615,
+      "transport_sha256": "4f3bd5cd9ab5848d28fd02299495bba68100fd8f006422323fc7c211ceedf7ab"
+    },
+    {
+      "block_id": "AUT2-C39",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-06"
+      ],
+      "body_anchors": [
+        "A35",
+        "A36"
+      ],
+      "requested_subject": "Chamador de open(renew=true), recusa 206/content-range antes de body, watchdog e Scope/Pull",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/output/index.ts",
+      "archive": "sources/packages/core/src/actions/output/index.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "97a1115aea631b1a1b8b7dc6ad438e3fb5bb1ace",
+      "source_sha256": "acf076da8a2806947561dc865a4eeb1db09d34494a3fb977c81166e04acbbc00",
+      "source_bytes": 4816,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 66,
+          "bytes": 4816,
+          "sha256": "acf076da8a2806947561dc865a4eeb1db09d34494a3fb977c81166e04acbbc00",
+          "literal_content_byte_start": 333456,
+          "literal_content_byte_end_exclusive": 338272
+        }
+      ],
+      "supplement_byte_start": 332615,
+      "supplement_byte_end_exclusive": 338277,
+      "transport_sha256": "176962f5fb741bc2fec64ea8413661e90e022fbfafd4f7a3be0e8d225137aff2"
+    },
+    {
+      "block_id": "AUT2-C40",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-06"
+      ],
+      "body_anchors": [
+        "A35"
+      ],
+      "requested_subject": "Targets/IDs/attempts/single-file path, ownership e endpoint exato",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/output/target.ts",
+      "archive": "sources/packages/core/src/actions/output/target.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "9195013d45d2b5deec234398d8a4fde834bf8edd",
+      "source_sha256": "162391bc77848f4dc03cb6b340375cfc732bc7f3137a810998196ef17f03bf2d",
+      "source_bytes": 7464,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 103,
+          "bytes": 7464,
+          "sha256": "162391bc77848f4dc03cb6b340375cfc732bc7f3137a810998196ef17f03bf2d",
+          "literal_content_byte_start": 339089,
+          "literal_content_byte_end_exclusive": 346553
+        }
+      ],
+      "supplement_byte_start": 338277,
+      "supplement_byte_end_exclusive": 346558,
+      "transport_sha256": "3f7f0bf01e4b9daaddf67bfab2884ca48d4ee7acb62850ea5963654b6eb37935"
+    },
+    {
+      "block_id": "AUT2-C41",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-04",
+        "RE-AUT2-06"
+      ],
+      "body_anchors": [
+        "A35"
+      ],
+      "requested_subject": "Schemas/ownership/erased/expired e parsers de outputs nativos",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/output/native.ts",
+      "archive": "sources/packages/core/src/actions/output/native.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "93f8202c25955c4105c25f2ccdfada2df3352ad3",
+      "source_sha256": "200f3167fa58f45c0d9470ae9d50145392a05bb23f193c22e750214ca73a775b",
+      "source_bytes": 10694,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 167,
+          "bytes": 10694,
+          "sha256": "200f3167fa58f45c0d9470ae9d50145392a05bb23f193c22e750214ca73a775b",
+          "literal_content_byte_start": 347381,
+          "literal_content_byte_end_exclusive": 358075
+        }
+      ],
+      "supplement_byte_start": 346558,
+      "supplement_byte_end_exclusive": 358080,
+      "transport_sha256": "f052add3bab0be32fa6f80494400f52cb2908f1320de4153bd579130842ac249"
+    },
+    {
+      "block_id": "AUT2-C42",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-06"
+      ],
+      "body_anchors": [
+        "A36"
+      ],
+      "requested_subject": "Open/redirect/renew antes de bytes, revalidação e renew=false",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/output/download.ts",
+      "archive": "sources/packages/core/src/actions/output/download.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "b3e1e73f3a0f7f3604bae702cb749983f4178f29",
+      "source_sha256": "4dcb6f81b4fd186dbcd19da13ff1a0c0a47df7ba9e4ea7eb8ee5734959d4b8f7",
+      "source_bytes": 2496,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 39,
+          "bytes": 2496,
+          "sha256": "4dcb6f81b4fd186dbcd19da13ff1a0c0a47df7ba9e4ea7eb8ee5734959d4b8f7",
+          "literal_content_byte_start": 358893,
+          "literal_content_byte_end_exclusive": 361389
+        }
+      ],
+      "supplement_byte_start": 358080,
+      "supplement_byte_end_exclusive": 361394,
+      "transport_sha256": "c64164185060e5cf85363d4b891c7a98148c48f203326a56eb22e0406a44cc59"
+    },
+    {
+      "block_id": "AUT2-C43",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-06"
+      ],
+      "body_anchors": [
+        "A36"
+      ],
+      "requested_subject": "HTTPS sem credenciais nativas, validação de cada hop, bounds e EOF completo",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/output/signed.ts",
+      "archive": "sources/packages/core/src/actions/output/signed.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "e3f97544c559f1cc5b67623a047a431a37219117",
+      "source_sha256": "0432ae5abfc0aa4d7cefb225433a0da3e3cff8539e110dab54dafedf9e833bc8",
+      "source_bytes": 5817,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 90,
+          "bytes": 5817,
+          "sha256": "0432ae5abfc0aa4d7cefb225433a0da3e3cff8539e110dab54dafedf9e833bc8",
+          "literal_content_byte_start": 362217,
+          "literal_content_byte_end_exclusive": 368034
+        }
+      ],
+      "supplement_byte_start": 361394,
+      "supplement_byte_end_exclusive": 368039,
+      "transport_sha256": "d47a8c038d1e12f809e23ee9b12910a918ab4d9a1fe0c2543c14cb3b6bf10091"
+    },
+    {
+      "block_id": "AUT2-C44",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-06"
+      ],
+      "body_anchors": [
+        "A36"
+      ],
+      "requested_subject": "Parsing e sanitização de filename/headers, digest como metadado",
+      "source_category": "owned_population_source",
+      "path": "packages/core/src/actions/output/headers.ts",
+      "archive": "sources/packages/core/src/actions/output/headers.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "f7d5a6f28a5e7752f07ec01008136dc470c6fe61",
+      "source_sha256": "80cb68c5a02e39fd450630d1e8817d7435ada999c212c3b1e8e568a0d1a35549",
+      "source_bytes": 3345,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 46,
+          "bytes": 3345,
+          "sha256": "80cb68c5a02e39fd450630d1e8817d7435ada999c212c3b1e8e568a0d1a35549",
+          "literal_content_byte_start": 368852,
+          "literal_content_byte_end_exclusive": 372197
+        }
+      ],
+      "supplement_byte_start": 368039,
+      "supplement_byte_end_exclusive": 372202,
+      "transport_sha256": "4a6dbaf8dcee2574f57caece12cfbf83f9abe8c4b44e981c44cb1f4e778acf9d"
+    },
+    {
+      "block_id": "AUT2-X01",
+      "type": "literal_source_excerpt",
+      "request_namespace": "J1 canonical groups; J2 mapping in index",
+      "requests": [
+        "RE-AUT2-03",
+        "RE-AUT2-04",
+        "RE-AUT2-06"
+      ],
+      "body_anchors": [
+        "A23",
+        "A35"
+      ],
+      "requested_subject": "ResourceKind/ResourceListInput/TransferInput/TransferInfo consumidos pelo Core",
+      "source_category": "external_S1_04_raw_source",
+      "path": "packages/schema/src/actions/resource.ts",
+      "archive": "external-sources/packages/schema/src/actions/resource.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "1346f69568a3796c88a55ed9d06ed4cc762aa93b",
+      "source_sha256": "5579f778bc5055f362058bf0e9386e6098af2f2cba3700ef68de1381aab6f576",
+      "source_bytes": 2429,
+      "intervals": [
+        {
+          "first_line": 1,
+          "last_line": 57,
+          "bytes": 2429,
+          "sha256": "5579f778bc5055f362058bf0e9386e6098af2f2cba3700ef68de1381aab6f576",
+          "literal_content_byte_start": 373063,
+          "literal_content_byte_end_exclusive": 375492
+        }
+      ],
+      "supplement_byte_start": 372202,
+      "supplement_byte_end_exclusive": 375497,
+      "transport_sha256": "2050116a5c4673e96a279414194c07a6b5292ff420c81d09f35c831710497c59"
+    }
+  ],
+  "reused_literal_blocks": [
+    {
+      "request_id": "RE-AUT2-01",
+      "block_id": "AUT1-C01",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 17665,
+      "byte_end_exclusive": 27835,
+      "transport_sha256": "9eae4bdf920a837ce1a269732c5e7058a0be978b02ceb63b4a198abb06e7ade0",
+      "source_path": "packages/core/src/actions.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "4f81df84763bd63e7680de8fd40c60b583ef68ca",
+      "source_sha256": "08c5f306bc1c53b978a4254eba0fc708d9a4bfbb30fb63ead23c237f359fceef",
+      "source_line_intervals": [
+        [
+          49,
+          216
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-01",
+      "block_id": "AUT1-C30",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 225010,
+      "byte_end_exclusive": 238859,
+      "transport_sha256": "2edda00cfc0d0ae5678932a7d27125f8f49da5e09897811948ea098e55d9aa0b",
+      "source_path": "packages/core/src/actions/github/commands/common.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "e9ee98a334dd701d076a29900dc47ccdba7a3f01",
+      "source_sha256": "b1a6b5b2081d754e5b57f93fadaf56153ca38d133450a05e3c7145bcbf21cfa7",
+      "source_line_intervals": [
+        [
+          1,
+          166
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-01",
+      "block_id": "AUT1-C38",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 270335,
+      "byte_end_exclusive": 274599,
+      "transport_sha256": "4ed6d1a261f31136b8714b010b002aa0026fb1ac68ef601bedf52b525c136d75",
+      "source_path": "packages/core/src/actions/github/commands/workflow.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "bc9677ced86d82f08db5a38ae948bcca3b1406eb",
+      "source_sha256": "7330ca26082e22e8a81c89285afc18002903188555c96d1d60565fae993f7b2f",
+      "source_line_intervals": [
+        [
+          12,
+          47
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-01",
+      "block_id": "AUT1-C39",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 274599,
+      "byte_end_exclusive": 279839,
+      "transport_sha256": "18cb83cd09646f169eddb7219f5db5089677ccadf4a06b75a31fef737dea044c",
+      "source_path": "packages/core/src/actions/github/commands/run.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "20a65fe64b3559988856c829670ebb82296f9113",
+      "source_sha256": "a54d15a5e3870a09fc98708de4ee41aa09acaf2175b6d9c9e0e4249e6646fe78",
+      "source_line_intervals": [
+        [
+          10,
+          59
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-01",
+      "block_id": "AUT1-C40",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 279839,
+      "byte_end_exclusive": 282763,
+      "transport_sha256": "78266cd1587c027a8e1a4ea876182e6bec15fc3c064c9d8c3bd8b49f41f31045",
+      "source_path": "packages/core/src/actions/github/commands/job.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "01828a587ca7443e08fc0ecdcff55bf1ebeca863",
+      "source_sha256": "b753ad05386cd13df639a4000b7fd35db4db8431e66f1ab27633acdbeb314591",
+      "source_line_intervals": [
+        [
+          9,
+          33
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-01",
+      "block_id": "AUT1-X01",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 310894,
+      "byte_end_exclusive": 312707,
+      "transport_sha256": "b99dce07a09585d14a07e10c48e471b8eb5ce708d31cbee16cdbe1fd91d6d49b",
+      "source_path": "packages/schema/src/actions.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "3b9c5cc47c6e043e9e5d6f013a8201c4258abe0b",
+      "source_sha256": "ff0507ebbb63a8a1ab74bc11187cb70bd19d51ed2ec8cb741eaf0155d03f6b07",
+      "source_line_intervals": [
+        [
+          1,
+          18
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-01",
+      "block_id": "AUT1-X03",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 317643,
+      "byte_end_exclusive": 322290,
+      "transport_sha256": "ada2f1cf8f9532d4a08564e6278850aafc2b687a3ce354519039097499006a39",
+      "source_path": "packages/schema/src/actions/operation.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "da7b1bdfb6bd5f7dd8fd368adb5eb5402c37c6fe",
+      "source_sha256": "6ad34b7a3cbc4eb4c1ce500f6f665894c0a7792d4d12177cdd1e055592812f0f",
+      "source_line_intervals": [
+        [
+          1,
+          79
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-01",
+      "block_id": "AUT1-X04",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 322290,
+      "byte_end_exclusive": 328111,
+      "transport_sha256": "b823bab78f9d376ed8cbcce50984352472f679be69730008e7fec3517c1f5aa6",
+      "source_path": "packages/schema/src/actions/command.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "763fc67220a5a5962794593062f4705840e7598b",
+      "source_sha256": "46722d7902f6005986f3e2c372675e3f9e047e2dbe639e404146f151e1de3d85",
+      "source_line_intervals": [
+        [
+          1,
+          68
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-01",
+      "block_id": "AUT1-X05",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 328111,
+      "byte_end_exclusive": 329839,
+      "transport_sha256": "deee6a656753c0df83acfb451333cee7bb7b07b0c5093fc0e1d1c16e82173e3e",
+      "source_path": "packages/schema/src/schema.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "d19a39b9708cfcaeedc1d7c62503afbadfee5dd7",
+      "source_sha256": "a7cdac1ae9d21d9d71a3783a730ca29bc8fbe769d01479a19101a81eec2bb447",
+      "source_line_intervals": [
+        [
+          1,
+          23
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-02",
+      "block_id": "AUT1-C01",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 17665,
+      "byte_end_exclusive": 27835,
+      "transport_sha256": "9eae4bdf920a837ce1a269732c5e7058a0be978b02ceb63b4a198abb06e7ade0",
+      "source_path": "packages/core/src/actions.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "4f81df84763bd63e7680de8fd40c60b583ef68ca",
+      "source_sha256": "08c5f306bc1c53b978a4254eba0fc708d9a4bfbb30fb63ead23c237f359fceef",
+      "source_line_intervals": [
+        [
+          49,
+          216
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-02",
+      "block_id": "AUT1-C12",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 97848,
+      "byte_end_exclusive": 108773,
+      "transport_sha256": "67c219730f2ee4ad5d12b00614edba10525a277ad9e8f915ff6d6fa360708f38",
+      "source_path": "packages/core/src/actions/gitlab/native.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "d6cf026dcbfb9023285415a9dd16842951e39ac0",
+      "source_sha256": "4f61c33643ab30ba295e4e84619c1a3ec4d1dd029d6ce32407029553691eadcc",
+      "source_line_intervals": [
+        [
+          12,
+          170
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-02",
+      "block_id": "AUT1-C13",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 108773,
+      "byte_end_exclusive": 116850,
+      "transport_sha256": "b8fda1d6559e8e4fa8f891e161bb0e8e9d37daf9a7e25c946232248898a10ba9",
+      "source_path": "packages/core/src/actions/gitlab/catalog.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "a7a087856e35e01764382211abebfddfa00c133d",
+      "source_sha256": "546e21ae307d414ec385b7de7963b1756535a22beb66ff277c007111fe0b6478",
+      "source_line_intervals": [
+        [
+          1,
+          87
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-02",
+      "block_id": "AUT1-C41",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 282763,
+      "byte_end_exclusive": 285793,
+      "transport_sha256": "ff2ddae174f12e7472a808e3c9a1be43e626a4cb56bf701a4c1dec8c9434dad4",
+      "source_path": "packages/core/src/actions/gitlab/commands.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "d3f432fc7b0c434bfcb9a88adeabfcfae5829033",
+      "source_sha256": "2be56b6ff21b0f9a63d929b0b38f75fad2d29705476dbd5d13f63634f803c00e",
+      "source_line_intervals": [
+        [
+          1,
+          33
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-02",
+      "block_id": "AUT1-C42",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 285793,
+      "byte_end_exclusive": 292126,
+      "transport_sha256": "01f95096d8534319516989d2547feb3eb6798dd53835a8b5785427e02fcf2f9b",
+      "source_path": "packages/core/src/actions/gitlab/commands/shared.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "b15f4a3edb40e83274490b3c789cf2581aac9a5a",
+      "source_sha256": "0af91cc662eb4578cf1f16e967743fe9d69fb356d6c58555f50826b399e23a97",
+      "source_line_intervals": [
+        [
+          9,
+          83
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-02",
+      "block_id": "AUT1-C43",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 292126,
+      "byte_end_exclusive": 296265,
+      "transport_sha256": "0b327061883f51c3ebc5513072c0c39f962c44004c059c4736c8ab2b2ba7210e",
+      "source_path": "packages/core/src/actions/gitlab/commands/runs.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "999c7e5cd6c6d8d33cbe63ad601923b308eff3e4",
+      "source_sha256": "0c210556925c4d2f025c6942b2512e8ab782ae748aa51b0336dde859c441ec30",
+      "source_line_intervals": [
+        [
+          9,
+          47
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-02",
+      "block_id": "AUT1-C44",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 296265,
+      "byte_end_exclusive": 308347,
+      "transport_sha256": "2724e840885641b4f21b0576241f1bc05869407cce8751dee6e8efbf306f5fe6",
+      "source_path": "packages/core/src/actions/gitlab/commands/jobs.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "176a10632f895603fc8cc2b7baef1327db90377e",
+      "source_sha256": "0e59d1b73ef755e2e29d0e0dcb829c127f9cc6b642773c973510afe5d3e0f310",
+      "source_line_intervals": [
+        [
+          1,
+          133
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-02",
+      "block_id": "AUT1-X01",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 310894,
+      "byte_end_exclusive": 312707,
+      "transport_sha256": "b99dce07a09585d14a07e10c48e471b8eb5ce708d31cbee16cdbe1fd91d6d49b",
+      "source_path": "packages/schema/src/actions.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "3b9c5cc47c6e043e9e5d6f013a8201c4258abe0b",
+      "source_sha256": "ff0507ebbb63a8a1ab74bc11187cb70bd19d51ed2ec8cb741eaf0155d03f6b07",
+      "source_line_intervals": [
+        [
+          1,
+          18
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-02",
+      "block_id": "AUT1-X03",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 317643,
+      "byte_end_exclusive": 322290,
+      "transport_sha256": "ada2f1cf8f9532d4a08564e6278850aafc2b687a3ce354519039097499006a39",
+      "source_path": "packages/schema/src/actions/operation.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "da7b1bdfb6bd5f7dd8fd368adb5eb5402c37c6fe",
+      "source_sha256": "6ad34b7a3cbc4eb4c1ce500f6f665894c0a7792d4d12177cdd1e055592812f0f",
+      "source_line_intervals": [
+        [
+          1,
+          79
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-02",
+      "block_id": "AUT1-X04",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 322290,
+      "byte_end_exclusive": 328111,
+      "transport_sha256": "b823bab78f9d376ed8cbcce50984352472f679be69730008e7fec3517c1f5aa6",
+      "source_path": "packages/schema/src/actions/command.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "763fc67220a5a5962794593062f4705840e7598b",
+      "source_sha256": "46722d7902f6005986f3e2c372675e3f9e047e2dbe639e404146f151e1de3d85",
+      "source_line_intervals": [
+        [
+          1,
+          68
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-03",
+      "block_id": "AUT1-C01",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 17665,
+      "byte_end_exclusive": 27835,
+      "transport_sha256": "9eae4bdf920a837ce1a269732c5e7058a0be978b02ceb63b4a198abb06e7ade0",
+      "source_path": "packages/core/src/actions.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "4f81df84763bd63e7680de8fd40c60b583ef68ca",
+      "source_sha256": "08c5f306bc1c53b978a4254eba0fc708d9a4bfbb30fb63ead23c237f359fceef",
+      "source_line_intervals": [
+        [
+          49,
+          216
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-03",
+      "block_id": "AUT1-C03",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 33248,
+      "byte_end_exclusive": 44916,
+      "transport_sha256": "67d13936ebd7ba6d1b68ad42a7f70a7e3eb598ce36631b5a1a1902b1d1379cfb",
+      "source_path": "packages/core/src/actions/binding.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "0012bd2c459c7c9899ce63aa6d4bb69760e9647a",
+      "source_sha256": "fa7b2380b5ea1c3b10195b17e2015fed34f0501df2e16cfa7fe497969dba83bc",
+      "source_line_intervals": [
+        [
+          12,
+          161
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-03",
+      "block_id": "AUT1-C04",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 44916,
+      "byte_end_exclusive": 54270,
+      "transport_sha256": "089025b40223c27069456b8c2674c904328137db1396ff410279a0adb1a5dd98",
+      "source_path": "packages/core/src/actions/state.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "c24ab01417fdea32688d26007e04d8fdac1d43ca",
+      "source_sha256": "a47ce41b196dd2c95e9724824d554472f93466be0220a02f1b019e855c3b9faf",
+      "source_line_intervals": [
+        [
+          8,
+          166
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-03",
+      "block_id": "AUT1-C05",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 54270,
+      "byte_end_exclusive": 60260,
+      "transport_sha256": "8361ac52d901e3ff71ac1ace3ec0df258c9a06fbfb7b3808d09a81c04d2161a0",
+      "source_path": "packages/core/src/actions/contract.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "62521cbd3f4860049c3480a2bf9f2ed650c6c9f8",
+      "source_sha256": "c69997923b14da057a5cab4b3e9077884263d43c02f98dee1da44fedf65ae9bc",
+      "source_line_intervals": [
+        [
+          8,
+          88
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-03",
+      "block_id": "AUT1-C31",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 238859,
+      "byte_end_exclusive": 250919,
+      "transport_sha256": "c2ad42bfb0555bc939e4f5df47178f7dbc643674d65eb1115d456573429780a7",
+      "source_path": "packages/core/src/actions/operations.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "83c0b9e03b063bd59bc2d30317f7de85cbb99ee4",
+      "source_sha256": "f4180bfeabef99c0eaddace3f1da7242fb8dacd7d63fb948b84cc014f59a89d4",
+      "source_line_intervals": [
+        [
+          16,
+          204
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-03",
+      "block_id": "AUT1-C32",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 250919,
+      "byte_end_exclusive": 253239,
+      "transport_sha256": "4684c8e83731ee175f5f29e2867deb772a23779e18f910bf687e972de75e5960",
+      "source_path": "packages/core/src/actions/operations/sql.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "63cad8cb4926acd4adc6c285bd6b1f1f64a238cc",
+      "source_sha256": "07f2de775a5e5352859f1bf041e32865b3681ec2db85fd4e367823fe2a00da75",
+      "source_line_intervals": [
+        [
+          1,
+          35
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-03",
+      "block_id": "AUT1-C33",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 253239,
+      "byte_end_exclusive": 261258,
+      "transport_sha256": "ab4daaf7e51a0100d2f67befc7679ba0939c122d2ac3bb22c92ba2e81c8b88be",
+      "source_path": "packages/core/src/actions/operations/storage.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "d7633da87c8fe5b41319e23c6ca9e9092d152e4e",
+      "source_sha256": "433462cdc96bbeda49a85f46e9c96954cee753822165329caac5c26c748ff2b4",
+      "source_line_intervals": [
+        [
+          9,
+          142
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-03",
+      "block_id": "AUT1-C34",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 261258,
+      "byte_end_exclusive": 264083,
+      "transport_sha256": "96d449ca45380b215d6670ce093642b74c409ce4a418eb761bc654b1b41ce9bf",
+      "source_path": "packages/core/src/actions/operations/outcome.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "6ad54f11c415134b4eb590194e2079f09ef01aed",
+      "source_sha256": "3d89a3a86b0d51b2c153088397c952599dc8b75b5469a5a27a8efc7395ece20c",
+      "source_line_intervals": [
+        [
+          1,
+          40
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-03",
+      "block_id": "AUT1-X02",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 312707,
+      "byte_end_exclusive": 317643,
+      "transport_sha256": "64ca2184d79d48846c2761afe27a0f392c273309fd5b54433c0290441f250ff9",
+      "source_path": "packages/schema/src/actions/identity.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "273b77520f81c755f62979b9609f45917e72e062",
+      "source_sha256": "1d3361dd26b49e366b7c59d14a589f6684a16b36bfec0b761e62481fc15f6f14",
+      "source_line_intervals": [
+        [
+          1,
+          93
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-03",
+      "block_id": "AUT1-X03",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 317643,
+      "byte_end_exclusive": 322290,
+      "transport_sha256": "ada2f1cf8f9532d4a08564e6278850aafc2b687a3ce354519039097499006a39",
+      "source_path": "packages/schema/src/actions/operation.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "da7b1bdfb6bd5f7dd8fd368adb5eb5402c37c6fe",
+      "source_sha256": "6ad34b7a3cbc4eb4c1ce500f6f665894c0a7792d4d12177cdd1e055592812f0f",
+      "source_line_intervals": [
+        [
+          1,
+          79
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-03",
+      "block_id": "AUT1-X04",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 322290,
+      "byte_end_exclusive": 328111,
+      "transport_sha256": "b823bab78f9d376ed8cbcce50984352472f679be69730008e7fec3517c1f5aa6",
+      "source_path": "packages/schema/src/actions/command.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "763fc67220a5a5962794593062f4705840e7598b",
+      "source_sha256": "46722d7902f6005986f3e2c372675e3f9e047e2dbe639e404146f151e1de3d85",
+      "source_line_intervals": [
+        [
+          1,
+          68
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-03",
+      "block_id": "AUT1-X05",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 328111,
+      "byte_end_exclusive": 329839,
+      "transport_sha256": "deee6a656753c0df83acfb451333cee7bb7b07b0c5093fc0e1d1c16e82173e3e",
+      "source_path": "packages/schema/src/schema.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "d19a39b9708cfcaeedc1d7c62503afbadfee5dd7",
+      "source_sha256": "a7cdac1ae9d21d9d71a3783a730ca29bc8fbe769d01479a19101a81eec2bb447",
+      "source_line_intervals": [
+        [
+          1,
+          23
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-04",
+      "block_id": "AUT1-C01",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 17665,
+      "byte_end_exclusive": 27835,
+      "transport_sha256": "9eae4bdf920a837ce1a269732c5e7058a0be978b02ceb63b4a198abb06e7ade0",
+      "source_path": "packages/core/src/actions.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "4f81df84763bd63e7680de8fd40c60b583ef68ca",
+      "source_sha256": "08c5f306bc1c53b978a4254eba0fc708d9a4bfbb30fb63ead23c237f359fceef",
+      "source_line_intervals": [
+        [
+          49,
+          216
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-04",
+      "block_id": "AUT1-C28",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 213124,
+      "byte_end_exclusive": 218868,
+      "transport_sha256": "4d7daadc9554d596abb08e2d4b70afd2d4d32b012542e47d36ef2cf8711760ad",
+      "source_path": "packages/core/src/actions/authoring/schedule.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "189f4f3903314afb6b6d8c86b50dbbccb0309869",
+      "source_sha256": "2151bb5ece4c4d2a635ede984a8668620e8f619000e720af35370b0f87bc561b",
+      "source_line_intervals": [
+        [
+          1,
+          77
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-04",
+      "block_id": "AUT1-C29",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 218868,
+      "byte_end_exclusive": 225010,
+      "transport_sha256": "dc4afa0cf92efcc4ec58cace9aeec91ce56493fc6409184ecc05f28c81a3d3d9",
+      "source_path": "packages/core/src/actions/resources/schedule-yaml.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "cd3a52f384a522b74910f01ea0278efc1fa5a12f",
+      "source_sha256": "57ef9c02ab37eb8cebeb87cd3a307673211f989e1bb8036cf3d4799a2b783abd",
+      "source_line_intervals": [
+        [
+          1,
+          81
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-04",
+      "block_id": "AUT1-C32",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 250919,
+      "byte_end_exclusive": 253239,
+      "transport_sha256": "4684c8e83731ee175f5f29e2867deb772a23779e18f910bf687e972de75e5960",
+      "source_path": "packages/core/src/actions/operations/sql.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "63cad8cb4926acd4adc6c285bd6b1f1f64a238cc",
+      "source_sha256": "07f2de775a5e5352859f1bf041e32865b3681ec2db85fd4e367823fe2a00da75",
+      "source_line_intervals": [
+        [
+          1,
+          35
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-04",
+      "block_id": "AUT1-C33",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 253239,
+      "byte_end_exclusive": 261258,
+      "transport_sha256": "ab4daaf7e51a0100d2f67befc7679ba0939c122d2ac3bb22c92ba2e81c8b88be",
+      "source_path": "packages/core/src/actions/operations/storage.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "d7633da87c8fe5b41319e23c6ca9e9092d152e4e",
+      "source_sha256": "433462cdc96bbeda49a85f46e9c96954cee753822165329caac5c26c748ff2b4",
+      "source_line_intervals": [
+        [
+          9,
+          142
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-04",
+      "block_id": "AUT1-C34",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 261258,
+      "byte_end_exclusive": 264083,
+      "transport_sha256": "96d449ca45380b215d6670ce093642b74c409ce4a418eb761bc654b1b41ce9bf",
+      "source_path": "packages/core/src/actions/operations/outcome.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "6ad54f11c415134b4eb590194e2079f09ef01aed",
+      "source_sha256": "3d89a3a86b0d51b2c153088397c952599dc8b75b5469a5a27a8efc7395ece20c",
+      "source_line_intervals": [
+        [
+          1,
+          40
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-04",
+      "block_id": "AUT1-X03",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 317643,
+      "byte_end_exclusive": 322290,
+      "transport_sha256": "ada2f1cf8f9532d4a08564e6278850aafc2b687a3ce354519039097499006a39",
+      "source_path": "packages/schema/src/actions/operation.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "da7b1bdfb6bd5f7dd8fd368adb5eb5402c37c6fe",
+      "source_sha256": "6ad34b7a3cbc4eb4c1ce500f6f665894c0a7792d4d12177cdd1e055592812f0f",
+      "source_line_intervals": [
+        [
+          1,
+          79
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-04",
+      "block_id": "AUT1-X04",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 322290,
+      "byte_end_exclusive": 328111,
+      "transport_sha256": "b823bab78f9d376ed8cbcce50984352472f679be69730008e7fec3517c1f5aa6",
+      "source_path": "packages/schema/src/actions/command.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "763fc67220a5a5962794593062f4705840e7598b",
+      "source_sha256": "46722d7902f6005986f3e2c372675e3f9e047e2dbe639e404146f151e1de3d85",
+      "source_line_intervals": [
+        [
+          1,
+          68
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-04",
+      "block_id": "AUT1-X05",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 328111,
+      "byte_end_exclusive": 329839,
+      "transport_sha256": "deee6a656753c0df83acfb451333cee7bb7b07b0c5093fc0e1d1c16e82173e3e",
+      "source_path": "packages/schema/src/schema.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "d19a39b9708cfcaeedc1d7c62503afbadfee5dd7",
+      "source_sha256": "a7cdac1ae9d21d9d71a3783a730ca29bc8fbe769d01479a19101a81eec2bb447",
+      "source_line_intervals": [
+        [
+          1,
+          23
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-05",
+      "block_id": "AUT1-C02",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 27835,
+      "byte_end_exclusive": 33248,
+      "transport_sha256": "586895696085e383f599f5cb2f1a11edcbfed57a314900111b09596383d6505e",
+      "source_path": "packages/core/src/actions/transport.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "a028169bb585fb81c24889148ea61aa631c521af",
+      "source_sha256": "0bee331d9b87db900ad4310366fb4b3a7abdc7f2c6e915e926754c6eced6d2ae",
+      "source_line_intervals": [
+        [
+          14,
+          67
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-05",
+      "block_id": "AUT1-C05",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 54270,
+      "byte_end_exclusive": 60260,
+      "transport_sha256": "8361ac52d901e3ff71ac1ace3ec0df258c9a06fbfb7b3808d09a81c04d2161a0",
+      "source_path": "packages/core/src/actions/contract.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "62521cbd3f4860049c3480a2bf9f2ed650c6c9f8",
+      "source_sha256": "c69997923b14da057a5cab4b3e9077884263d43c02f98dee1da44fedf65ae9bc",
+      "source_line_intervals": [
+        [
+          8,
+          88
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-05",
+      "block_id": "AUT1-C37",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 269368,
+      "byte_end_exclusive": 270335,
+      "transport_sha256": "88989e6f58128d49892f257f53220da30a97a785b01c636c89952cce168e6610",
+      "source_path": "packages/core/src/actions/error.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "5557a68cf67417c2c3149f6f130952297114ecbd",
+      "source_sha256": "9ce2b3a2943588b3bf4676773f9966a75f347aa84522b9ae96131ba9839017e7",
+      "source_line_intervals": [
+        [
+          1,
+          6
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-05",
+      "block_id": "AUT1-C45",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 308347,
+      "byte_end_exclusive": 310894,
+      "transport_sha256": "c5ff4a07e1871ef94b93d08c9a5dfc08b7a18c4b6ecb00898252db4291302f0c",
+      "source_path": "packages/core/src/actions/transport/response.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "09aed710878c0e33f33b7e1a8d566074a44ad30a",
+      "source_sha256": "dbe2d9284661b36cee41b379cba34f29cd6910df7757b10b94136eb12e6d8192",
+      "source_line_intervals": [
+        [
+          56,
+          76
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-05",
+      "block_id": "AUT1-X02",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 312707,
+      "byte_end_exclusive": 317643,
+      "transport_sha256": "64ca2184d79d48846c2761afe27a0f392c273309fd5b54433c0290441f250ff9",
+      "source_path": "packages/schema/src/actions/identity.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "273b77520f81c755f62979b9609f45917e72e062",
+      "source_sha256": "1d3361dd26b49e366b7c59d14a589f6684a16b36bfec0b761e62481fc15f6f14",
+      "source_line_intervals": [
+        [
+          1,
+          93
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-06",
+      "block_id": "AUT1-C01",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 17665,
+      "byte_end_exclusive": 27835,
+      "transport_sha256": "9eae4bdf920a837ce1a269732c5e7058a0be978b02ceb63b4a198abb06e7ade0",
+      "source_path": "packages/core/src/actions.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "4f81df84763bd63e7680de8fd40c60b583ef68ca",
+      "source_sha256": "08c5f306bc1c53b978a4254eba0fc708d9a4bfbb30fb63ead23c237f359fceef",
+      "source_line_intervals": [
+        [
+          49,
+          216
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-06",
+      "block_id": "AUT1-C02",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 27835,
+      "byte_end_exclusive": 33248,
+      "transport_sha256": "586895696085e383f599f5cb2f1a11edcbfed57a314900111b09596383d6505e",
+      "source_path": "packages/core/src/actions/transport.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "a028169bb585fb81c24889148ea61aa631c521af",
+      "source_sha256": "0bee331d9b87db900ad4310366fb4b3a7abdc7f2c6e915e926754c6eced6d2ae",
+      "source_line_intervals": [
+        [
+          14,
+          67
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-06",
+      "block_id": "AUT1-C05",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 54270,
+      "byte_end_exclusive": 60260,
+      "transport_sha256": "8361ac52d901e3ff71ac1ace3ec0df258c9a06fbfb7b3808d09a81c04d2161a0",
+      "source_path": "packages/core/src/actions/contract.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "62521cbd3f4860049c3480a2bf9f2ed650c6c9f8",
+      "source_sha256": "c69997923b14da057a5cab4b3e9077884263d43c02f98dee1da44fedf65ae9bc",
+      "source_line_intervals": [
+        [
+          8,
+          88
+        ]
+      ]
+    },
+    {
+      "request_id": "RE-AUT2-06",
+      "block_id": "AUT1-X05",
+      "supplement": "review-supplement-1.md",
+      "supplement_sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "byte_start": 328111,
+      "byte_end_exclusive": 329839,
+      "transport_sha256": "deee6a656753c0df83acfb451333cee7bb7b07b0c5093fc0e1d1c16e82173e3e",
+      "source_path": "packages/schema/src/schema.ts",
+      "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_git_blob_sha": "d19a39b9708cfcaeedc1d7c62503afbadfee5dd7",
+      "source_sha256": "a7cdac1ae9d21d9d71a3783a730ca29bc8fbe769d01479a19101a81eec2bb447",
+      "source_line_intervals": [
+        [
+          1,
+          23
+        ]
+      ]
+    }
+  ],
+  "shared_population_reconciliation": {
+    "index_ref": {
+      "path": "review-supplement-1-index.json",
+      "bytes": 246723,
+      "sha256": "b3a190b8f1bc17ea7f35fc0c53c5bb0f0f134570ac78f62a020452c3818d8902",
+      "git_blob_sha": "c42a17c0071f3c864f3e6eb11b5a7ae3fa0d37be"
+    },
+    "json_pointer": "/shared_population_reconciliation",
+    "new_census": false,
+    "new_rows": 0
+  },
+  "external_additional_input": {
+    "manifest": {
+      "path": "external-source-captures-supplement-2.json",
+      "bytes": 1207,
+      "sha256": "f6d85694176ffdc640a1f983de1737c9c61758d27795dc2ebedf4669967ced3c",
+      "git_blob_sha": "0492fde2b844cbdd9bd6f4f20380c5d347c50caf"
+    },
+    "source": {
+      "path": "packages/schema/src/actions/resource.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "1346f69568a3796c88a55ed9d06ed4cc762aa93b",
+      "sha256": "5579f778bc5055f362058bf0e9386e6098af2f2cba3700ef68de1381aab6f576",
+      "bytes": 2429,
+      "capture_path": "external-sources/packages/schema/src/actions/resource.ts",
+      "connector": "github.fetch_file",
+      "encoding": "utf-8",
+      "source_owner": "S1-04",
+      "population_member": false,
+      "role": "semantic_dependency_ResourceListInput_TransferInput_ResourceKind",
+      "authority": "raw_source_not_schema_artifact_acceptance"
+    },
+    "frozen_recipe_v2_modified": false,
+    "prior_external_manifest_modified": false,
+    "population_effect": 0,
+    "integration_note": "One additional raw schema source input for principal to account for; no S1-04 artifact acceptance"
+  },
+  "specific_chain_206": {
+    "request_id": "RE-AUT2-06",
+    "caller": "packages/core/src/actions/output/index.ts",
+    "lines": [
+      43,
+      50
+    ],
+    "literal_block_id": "AUT2-C39",
+    "helper": "packages/core/src/actions/output/download.ts",
+    "helper_accepts_2xx": true,
+    "source_observation": "caller checks status206 or content-range after open and before returning response.body",
+    "defect_or_runtime_result": "NOT_ASSERTED"
+  },
+  "proposed_deltas": [],
+  "body_changes_applied": [],
+  "recipe_changes_applied": [],
+  "j2_status": "PUBLIC_REQUEST_READ_AND_MAPPED",
+  "future_public_requests": "separate addendum if required; preserve frozen supplement bytes",
+  "other_batches": "Separate supplements for automation-3/4 when public requests arrive",
+  "tests": "NOT_RUN",
+  "provider_execution": "NOT_RUN"
+}

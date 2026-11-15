@@ -1,0 +1,453 @@
+Vínculo: `body.md` §4; archive de evidência: `evidence.md`, seção `A30`.
+
+
+### `packages/core/src/actions/resources/schedules.ts`
+
+Archive: `sources/packages/core/src/actions/resources/schedules.ts` · bytes: 31805 · Git blob: `700bc3658ebb06113d9027f740ff16d1e5f69cea` · SHA256: `e5664133d84a54b2187f6ba5b61d4d564579d7a58e6ed5801cc437f5454cc4ab`.
+
+
+Linhas **112–126**; SHA256 do intervalo `42be1d25f3b8ee1ff814b4775c12b87f41ce35aa785902d127458ad0d646a7d4`:
+
+~~~~typescript
+        yield* ActionsResourceNative.before(current, GitLabCommandInputs.check(current, services.transport, source, overrides.inputs))
+      }
+      const path = `${authority.root}/pipeline_schedules${id === undefined ? "" : `/${id}`}`
+      if (admitted.kind === "schedule.play") {
+        const response = yield* ActionsResourceNative.send(services, current, { method: "POST", path: `${path}/play` }, [201])
+        yield* ActionsResourceNative.after(current, ActionsResourceNative.checked(current, () => {
+          const data = ActionsResourceNative.decode(current, Schema.Struct({ message: Schema.Literal("201 Created") }), response.data, true)
+          return data
+        }))
+        return { acknowledgement: { resourceID: id, unattributed: true } }
+      }
+      if (admitted.kind === "schedule.takeOwnership") {
+        const response = yield* ActionsResourceNative.send(services, current, { method: "POST", path: `${path}/take_ownership` }, [201, 200])
+        return yield* ActionsResourceNative.after(current, ActionsResourceNative.checked(current, () => {
+          const data = ActionsResourceNative.decode(current, Schedule, response.data, true)
+~~~~
+
+
+Linhas **178–190**; SHA256 do intervalo `6bfaa203f903106309d1bc643cc07390ffb3c5b701391a31c90b8f89044382e9`:
+
+~~~~typescript
+        native.variables.filter((item) => !overrides.variables?.some((variable) => variable.key === item.key)),
+        (variable) => Effect.gen(function* () {
+          const response = yield* ActionsResourceNative.send(services, current, { method: "DELETE",
+            path: `${authority.root}/pipeline_schedules/${written.id}/variables/${encodeURIComponent(variable.key)}` }, [202])
+          yield* ActionsResourceNative.checked(current, () => {
+            const deleted = ActionsResourceNative.decode(current, Schema.Struct({ key: Schema.NonEmptyString, variable_type: Schema.Literals(["env_var", "file"]) }), response.data, true)
+            if (deleted.key !== variable.key || deleted.variable_type !== variable.variable_type)
+              throw ActionsResourceNative.error(current, "outcome_unknown", "Schedule variable deletion did not acknowledge its exact native key/type", "unknown")
+          })
+        }), { concurrency: 1 },
+      ))
+      return { acknowledgement: { resourceID: String(written.id) } }
+    }),
+~~~~
+
+
+## A31 — Schedules GitHub são source.write
+
+Vínculo: `body.md` §2, 4; archive de evidência: `evidence.md`, seção `A31`.
+
+
+### `packages/core/src/actions/resources/schedules.ts`
+
+Archive: `sources/packages/core/src/actions/resources/schedules.ts` · bytes: 31805 · Git blob: `700bc3658ebb06113d9027f740ff16d1e5f69cea` · SHA256: `e5664133d84a54b2187f6ba5b61d4d564579d7a58e6ed5801cc437f5454cc4ab`.
+
+
+Linhas **299–326**; SHA256 do intervalo `0e77224d73efcfb8e67f12e8bd98fe54e734052a04345529c1613c302200dff0`:
+
+~~~~typescript
+    return yield* ActionsResourceNative.error(binding, "capability_unavailable", "GitHub schedules are workflow YAML; play/ownership controls have no native schedule API")
+  const input = yield* ActionsResourceNative.checked(binding, () => intent.kind === "resource.delete"
+    ? ActionsResourceNative.input(binding, ActionsResourceNative.ProviderOnly, payload) : ActionsResourceNative.input(binding, Form, payload))
+  if (input.provider !== "github") return yield* ActionsResourceNative.error(binding, "invalid_input", "Schedule payload belongs to another provider")
+  if (!services.publish) return yield* ActionsResourceNative.error(binding, "capability_unavailable", "GitHub schedule changes require the owning SourcePublisher callback; open Edit YAML")
+  const workflowID = yield* ActionsResourceNative.checked(binding, () => ActionsResourceNative.id(binding, intent.target.workflowID ?? intent.target.resourceID ?? ""))
+  if (intent.target.resourceID !== undefined && intent.target.resourceID !== workflowID)
+    return yield* ActionsResourceNative.error(binding, "invalid_input", "Schedule workflow and resource target identities differ")
+  const authority = yield* ActionsResourceNative.authority(services, binding)
+  const scopes = authority.headers["x-oauth-scopes"]?.split(",").map((scope) => scope.trim()).filter(Boolean)
+  if (scopes?.length && !scopes.includes("workflow"))
+    return yield* ActionsResourceNative.error(binding, "permission_denied", "Observed classic OAuth scopes deny publishing workflow-source changes")
+  const repo = yield* GitHubNative.repository(services.transport, binding)
+  if (!repo.native.default_branch || intent.target.ref !== repo.native.default_branch || !intent.expected?.sourceVersion || !intent.expected.commit)
+    return yield* ActionsResourceNative.error(binding, "invalid_input", "GitHub schedule authoring requires captured default-branch ref, sourceVersion and commit")
+  const response = yield* ActionsResourceNative.get(services, binding, `${repo.path}/actions/workflows/${workflowID}`)
+  const workflow = yield* ActionsResourceNative.checked(binding, () => ActionsResourceNative.decode(binding, Workflow, response.data))
+  if (String(workflow.id) !== workflowID || workflow.path !== intent.target.path || !/^\.github\/workflows\/[^/]+\.ya?ml$/.test(workflow.path))
+    return yield* ActionsResourceNative.error(binding, "source_conflict", "Captured schedule source path differs from the exact native workflow")
+  const source = yield* ActionsResourceNative.before(binding, services.reader.source(binding, { path: workflow.path, ref: intent.target.ref }))
+  if (source.bindingID !== binding.id || source.path !== workflow.path || source.ref !== intent.target.ref || source.version !== intent.expected.sourceVersion || source.commit !== intent.expected.commit)
+    return yield* ActionsResourceNative.error(binding, "source_conflict", "Workflow schedule source moved after admission")
+  const text = yield* ActionsResourceNative.checked(binding, () => {
+    ActionsResourceNative.requireVersion(binding, intent, ActionsResourceNative.version({ workflowID, sourceVersion: source.version, state: workflow.state }))
+    const existing = ActionsScheduleYaml.inspect(binding, source.text)
+    if (intent.kind === "resource.delete") return ActionsScheduleYaml.edit(binding, source.text, [])
+    if (!Schema.is(Form)(input)) throw ActionsResourceNative.error(binding, "invalid_input", "Schedule command requires its exact native form")
+    if (input.name !== workflow.name || input.zone !== "UTC" || input.ref !== intent.target.ref || input.input || input.inputs !== undefined || input.variables !== undefined || input.inputMode !== undefined || input.enabled !== undefined)
+~~~~
+
+
+## A32 — CLI GitHub e lifecycle de processo
+
+Vínculo: `body.md` §5; archive de evidência: `evidence.md`, seção `A32`.
+
+
+### `packages/core/src/actions/transport/cli.ts`
+
+Archive: `sources/packages/core/src/actions/transport/cli.ts` · bytes: 5166 · Git blob: `695d1c8b2cc0872ad8e2a3d554a4b010674f834c` · SHA256: `94d766a8ffb45ec126698e2cf571f7a328261579edc1969147f2043c500df819`.
+
+
+Linhas **15–27**; SHA256 do intervalo `fa241fdb2bbc8293f7cb41af1b7c9e1321af6713434f8041fcb2f092c2bd3393`:
+
+~~~~typescript
+
+export const target = Effect.fn("ActionsTransport.target")(function* (provider: Actions.Provider) {
+  const host = URL.parse(`https://${provider.hostname}`)
+  if (!host || host.host !== provider.hostname || host.pathname !== "/" || host.username || host.password || host.search || host.hash)
+    return yield* error(provider, "host_mismatch", "Provider hostname must be an explicit canonical HTTPS host", "definitely_unsent")
+  const origin = provider.kind === "github" && provider.hostname === "github.com"
+    ? "https://api.github.com"
+    : host.origin
+  const base = provider.kind === "gitlab" ? `${origin}/api/v4` : `${origin}/api/v3`
+  if (provider.apiOrigin !== origin && (provider.hostname === "github.com" || provider.apiOrigin !== base))
+    return yield* error(provider, "host_mismatch", "Provider API origin does not match the CLI hostname", "definitely_unsent")
+  if ((provider.kind === "gitlab" && provider.hostname === "github.com") ||
+      (provider.kind === "github" && provider.hostname === "gitlab.com"))
+~~~~
+
+
+### `packages/core/src/actions/transport/process.ts`
+
+Archive: `sources/packages/core/src/actions/transport/process.ts` · bytes: 5454 · Git blob: `5da8d9899becf4814f9a3011adfafc50d20c5239` · SHA256: `03b52b82e18a5a9a0ec515895218574eefbc433597eeb64b0fb13f452575ce9b`.
+
+
+Linhas **61–77**; SHA256 do intervalo `2d547a87b0040934a1c314da44f122a02d15acb4dd87bfb1ee24ffc7cf6dc95a`:
+
+~~~~typescript
+      const exit = yield* pull.pipe(Effect.raceFirst(stderrFailure), Effect.raceFirst(Deferred.await(stopped)), Effect.exit)
+      if (yield* Deferred.isDone(stopped)) return yield* Deferred.await(stopped)
+      return yield* exit
+    })))
+  })).pipe(
+    Stream.mapError((cause) => cause instanceof ActionsError ? cause : ActionsCli.error(provider, "transfer_failed", "Provider CLI byte transfer failed")),
+  )
+}
+
+const collect = Effect.fn("ActionsTransport.collect")(function* (
+  proc: AppProcess.Interface, provider: Actions.Provider, command: ChildProcess.Command,
+  stdin: Stream.Stream<Uint8Array, ActionsError> = Stream.empty,
+) {
+  const handle = yield* proc.spawn(command)
+  const result = yield* Effect.all({
+    stdout: bounded(handle.stdout, provider, METADATA_LIMIT),
+    stderr: bounded(handle.stderr, provider, STDERR_LIMIT),
+~~~~
+
+
+## A33 — Snapshot de credenciais e HTTP GitLab
+
+Vínculo: `body.md` §5; archive de evidência: `evidence.md`, seção `A33`.
+
+
+### `packages/core/src/actions/transport/credentials.ts`
+
+Archive: `sources/packages/core/src/actions/transport/credentials.ts` · bytes: 5469 · Git blob: `e9fb72f248bb8500d5fc14d053ddb95396be3819` · SHA256: `36b0b3a3ed180de68ed8c8497c7231728ec4aabfd79fd67de34e33654b109010`.
+
+
+Linhas **13–27**; SHA256 do intervalo `bf46a0b4ae7ad24391b2ae477236f9fc37a573d0b630bd70580107b56fc68040`:
+
+~~~~typescript
+const commit = "570955d4252f860d6b0cbf3fd2ec44f86a7e6957"
+const keys = ["token", "job_token", "is_oauth2", "ca_cert", "client_cert", "client_key"] as const
+
+// Request-memory only. This module neither reads/copies a CLI config file nor
+// exports credential values through the public Transport response/identity seam.
+export const read = Effect.fn("ActionsTransport.credentials")(function* (proc: AppProcess.Interface, directory: string, provider: Actions.Provider) {
+  const executable = yield* ActionsCli.target(provider)
+  const command = ActionsCli.command(directory, provider, executable, [], "ignore")
+  const get = (args: string[]) => Effect.scoped(Effect.gen(function* () {
+    const handle = yield* proc.spawn(ChildProcess.make(executable, args, command.options))
+    const result = yield* Effect.all({
+      stdout: capture(handle.stdout), stderr: capture(handle.stderr), code: handle.exitCode,
+    }, { concurrency: "unbounded" })
+    if (result.code !== 0) return yield* ActionsCli.error(provider, "not_authenticated", "GitLab local sign-in configuration could not be read", "definitely_unsent")
+    return yield* Effect.try({
+~~~~
+
+
+### `packages/core/src/actions/transport/gitlab.ts`
+
+Archive: `sources/packages/core/src/actions/transport/gitlab.ts` · bytes: 5999 · Git blob: `a21535f1c3014d492d7f07e98250bfb9e6cc3b3a` · SHA256: `94a67ca1521b8ce37b40b34a93d36d9986bdbf3727e2152399dd69b14214aef0`.
+
+
+Linhas **19–32**; SHA256 do intervalo `354795c99666a2499ba29cbb3dee741779217add006e3c56ff3d49258986fcd2`:
+
+~~~~typescript
+    const account = ActionsIdentity.account(binding.provider, user.data)
+    if (Option.isNone(account) || account.value !== binding.account)
+      return yield* ActionsCli.error(binding.provider, "binding_stale", "GitLab sign-in identity changed; rebind before mutation", "definitely_unsent")
+  })
+  return {
+    resolve: Effect.fn("ActionsTransport.gitlabResolve")(function* (provider: Actions.Provider, projectPath: string) {
+      const snapshot = yield* ActionsCredentials.read(proc, directory, provider)
+      const project = yield* ActionsHttp.metadata(provider, snapshot, { method: "GET", path: `projects/${encodeURIComponent(projectPath)}` })
+      const identity = ActionsIdentity.project(provider, project.data)
+      if (Option.isNone(identity)) return yield* ActionsCli.error(provider, "transport_failed", "Provider did not return native project identity")
+      const user = yield* ActionsHttp.metadata(provider, snapshot, { method: "GET", path: "user" })
+      const account = ActionsIdentity.account(provider, user.data)
+      if (Option.isNone(account)) return yield* ActionsCli.error(provider, "not_authenticated", "Provider did not return the current signed-in account")
+      return { ...identity.value, account: account.value }
+~~~~
+
+
+## A34 — Classificação de resposta e incerteza
+
+Vínculo: `body.md` §5; archive de evidência: `evidence.md`, seção `A34`.
+
+
+### `packages/core/src/actions/transport/response.ts`
+
+Archive: `sources/packages/core/src/actions/transport/response.ts` · bytes: 4934 · Git blob: `09aed710878c0e33f33b7e1a8d566074a44ad30a` · SHA256: `dbe2d9284661b36cee41b379cba34f29cd6910df7757b10b94136eb12e6d8192`.
+
+
+Linhas **56–76**; SHA256 do intervalo `1ebfeea36895201d250369da55982b9f902e3425c7dfdd8ee7db16385ee280ca`:
+
+~~~~typescript
+export function failure(provider: Actions.Provider, exitCode: number, stderr: Buffer, status?: number, headers: Record<string, string> = {}, complete = false) {
+  const code = status ?? Number(/\bHTTP[ :]+(\d{3})\b/i.exec(stderr.toString("utf8"))?.[1])
+  const retry = headers["retry-after"]
+  const seconds = retry && /^\d+$/.test(retry) ? Number(retry)
+    : retry ? Math.max(0, Math.ceil((Date.parse(retry) - Date.now()) / 1000))
+    : headers["x-ratelimit-remaining"] === "0" && /^\d+$/.test(headers["x-ratelimit-reset"] ?? "")
+      ? Math.max(0, Number(headers["x-ratelimit-reset"]) - Math.floor(Date.now() / 1000)) : undefined
+  const kind = code === 429 || (code === 403 && (retry !== undefined || headers["x-ratelimit-remaining"] === "0"))
+    ? "rate_limited" : code === 401 ? "not_authenticated" : code === 403 ? "permission_denied" : code === 404 ? "not_found"
+      : (provider.kind === "github" && exitCode === 4) || /auth login|not logged in|not authenticated|login first|invalid token/i.test(stderr.toString("utf8"))
+        ? "not_authenticated" : "transport_failed"
+  // Provider diagnostics can echo submitted secrets. Only classifications leave this boundary.
+  return new ActionsError({
+    kind, provider: provider.kind, message: `Provider request failed${code ? ` (HTTP ${code})` : ""}`,
+    retryAfter: seconds !== undefined && Number.isFinite(seconds) ? seconds : undefined,
+    // Require complete bounded JSON and a normal CLI HTTP-error exit. Partial
+    // output, stderr HTTP hints and exit codes alone cannot prove rejection.
+    disposition: complete && (exitCode === 0 || exitCode === 1) && status !== undefined && [400, 401, 403, 404, 409, 422, 429].includes(status)
+      ? "definitely_rejected" : "unknown",
+  })
+}
+~~~~
+
+
+### `packages/core/src/actions/transport/http.ts`
+
+Archive: `sources/packages/core/src/actions/transport/http.ts` · bytes: 10713 · Git blob: `cb71e6424c0f4b9c7e714667f1298e46fe3a502d` · SHA256: `b3e60d9d087592f8847f53d94e60d3ece75cf827014407f9b4a66dfc78cc0ae7`.
+
+
+Linhas **91–104**; SHA256 do intervalo `9531d8e343d90d4c6b4fdc22163de6c9eb7fb1b32dbe57fb3e67f5739131c49b`:
+
+~~~~typescript
+  const req = yield* Effect.acquireRelease(Effect.try({
+    try: () => request(url, {
+      method: input.method, agent: false, rejectUnauthorized: true, minVersion: "TLSv1.2", signal: abort.signal,
+      ca: snapshot.ca, cert: snapshot.cert, key: snapshot.key,
+      // Verification success precedes authenticated HTTP. Keep this transition
+      // sticky: later renegotiation/certificate/TLS failures cannot prove unsent.
+      checkServerIdentity: (hostname, certificate) => {
+        const error = checkServerIdentity(hostname, certificate)
+        if (!error) state.phase = "http_possible"
+        return error
+      },
+      headers: { ...snapshot.headers, "Content-Type": contentType, Connection: "close" },
+    }),
+    catch: () => ActionsCli.error(provider, "invalid_input", "GitLab HTTPS request could not be constructed safely", "definitely_unsent"),
+~~~~
+
+
+## A35 — Alvos de bytes e identidade do artifact
+
+Vínculo: `body.md` §5; archive de evidência: `evidence.md`, seção `A35`.
+
+
+### `packages/core/src/actions/output/target.ts`
+
+Archive: `sources/packages/core/src/actions/output/target.ts` · bytes: 7464 · Git blob: `9195013d45d2b5deec234398d8a4fde834bf8edd` · SHA256: `162391bc77848f4dc03cb6b340375cfc732bc7f3137a810998196ef17f03bf2d`.
+
+
+Linhas **35–46**; SHA256 do intervalo `36be716fd3fd79799813b13fba8f9700efa886bc3a89cd7ed2dc1f5094758fa3`:
+
+~~~~typescript
+  if (binding.provider.kind === "gitlab") {
+    const response = yield* OutputNative.get(transport, binding, `${root}/jobs/${input.id}`)
+    const job = yield* OutputNative.checked(binding, () => {
+      const job = OutputNative.decode(binding, OutputNative.GitLabJob, response.data)
+      OutputNative.gitlabOwner(binding, job, input.id, input.runID)
+      if (job.erased_at) throw OutputNative.error(binding, "not_found", "GitLab job output was erased")
+      if (input.kind === "artifact" && OutputNative.gitlabState(job) === "expired")
+        throw OutputNative.error(binding, "not_found", "GitLab job artifacts are expired or unavailable")
+      if (input.kind === "artifact" && !OutputNative.gitlabArchive(job))
+        throw OutputNative.error(binding, "capability_unavailable", "GitLab job has no native downloadable artifact archive")
+      return job
+    })
+~~~~
+
+
+### `packages/core/src/actions/output/native.ts`
+
+Archive: `sources/packages/core/src/actions/output/native.ts` · bytes: 10694 · Git blob: `93f8202c25955c4105c25f2ccdfada2df3352ad3` · SHA256: `200f3167fa58f45c0d9470ae9d50145392a05bb23f193c22e750214ca73a775b`.
+
+
+Linhas **142–167**; SHA256 do intervalo `ee7c3631dbea8f91763b54d4ce250a2e44decbafdde0bb1b60df85631a988073`:
+
+~~~~typescript
+export function gitlabOwner(binding: Actions.Binding, job: typeof GitLabJob.Type, jobID?: string, runID?: string) {
+  if (String(job.pipeline.project_id) !== binding.projectID || (jobID !== undefined && String(job.id) !== jobID) ||
+    (runID !== undefined && String(job.pipeline.id) !== runID))
+    throw error(binding, "binding_stale", "GitLab artifact job does not belong to the selected project, pipeline and job")
+}
+
+export function artifactOwner(binding: Actions.Binding, artifact: typeof Artifact.Type, artifactID?: string, runID?: string) {
+  if (String(artifact.workflow_run.repository_id) !== binding.projectID || (artifactID !== undefined && String(artifact.id) !== artifactID) ||
+    (runID !== undefined && String(artifact.workflow_run.id) !== runID))
+    throw error(binding, "binding_stale", "GitHub artifact does not belong to the selected repository, run and artifact")
+}
+
+export function gitlabState(job: typeof GitLabJob.Type) {
+  if (job.erased_at) return "erased"
+  if (job.artifacts_expire_at && Date.parse(job.artifacts_expire_at) <= Date.now()) return "expired"
+  if (gitlabArchive(job)) return "available"
+  return "unavailable"
+}
+
+export function gitlabArchive(job: typeof GitLabJob.Type) {
+  const file = job.artifacts_file
+  if (file && "filename" in file && typeof file.filename === "string" && "size" in file && typeof file.size === "number" && file.filename)
+    return { filename: file.filename, size: file.size }
+  const artifact = job.artifacts.find((file) => file.file_type === "archive" && !!file.filename)
+  return artifact && { filename: artifact.filename, size: artifact.size }
+}
+~~~~
+
+
+## A36 — URL assinada, renovação e headers
+
+Vínculo: `body.md` §5; archive de evidência: `evidence.md`, seção `A36`.
+
+
+### `packages/core/src/actions/output/download.ts`
+
+Archive: `sources/packages/core/src/actions/output/download.ts` · bytes: 2496 · Git blob: `b3e1e73f3a0f7f3604bae702cb749983f4178f29` · SHA256: `4dcb6f81b4fd186dbcd19da13ff1a0c0a47df7ba9e4ea7eb8ee5734959d4b8f7`.
+
+
+Linhas **9–37**; SHA256 do intervalo `a3f21215360507114eb977c0beb546cf4c5cf7241a514afb3ccc3f77c8cdbd19`:
+
+~~~~typescript
+import { OutputSigned } from "./signed"
+import { OutputTarget } from "./target"
+
+export const open = Effect.fn("ActionsOutput.downloadOpen")(function* (
+  transport: ActionsContract.Transport, reader: ActionsContract.ReadAdapter, binding: Actions.Binding,
+  input: Actions.TransferInput, target: OutputTarget.Target, renew = false,
+): Effect.fn.Return<{ response: ActionsContract.RawResponse; info: Actions.TransferInfo }, ActionsError, Scope.Scope> {
+  if (!transport.open) return yield* OutputNative.error(binding, "capability_unavailable", "GitLab CI output requires the scoped native raw-opening transport")
+  const native = yield* transport.open(binding, target.request)
+  if (native.status >= 200 && native.status < 300) return { response: native, info: target.info }
+  if (![301, 302, 303, 307, 308].includes(native.status)) {
+    yield* native.close
+    return yield* ActionsResponse.failure(binding.provider, 1, Buffer.alloc(0), native.status, { ...native.headers })
+  }
+  const location = native.headers.location
+  yield* native.close
+  if (!location) return yield* OutputNative.error(binding, "transfer_failed", "Native CI output redirect has no Location")
+  const base = yield* OutputNative.checked(binding, () => new URL(`${new URL(binding.provider.apiOrigin).origin}/api/v4/${target.request.path}`))
+  const signed = yield* OutputSigned.follow(binding, location, base)
+  if (signed.status >= 200 && signed.status < 300) return { response: signed, info: target.info }
+  yield* signed.close
+  // One read-only renewal, before any byte reaches caller. Revalidate identities
+  // and GET original native endpoint; never replay an expired signed URL.
+  if (renew && [401, 403, 404].includes(signed.status)) {
+    const fresh = yield* OutputTarget.resolve(transport, reader, binding, input)
+    if (fresh.request.path !== target.request.path)
+      return yield* OutputNative.error(binding, "binding_stale", "Signed URL renewal changed the selected native output endpoint")
+    return yield* open(transport, reader, binding, input, fresh, false)
+  }
+~~~~
+
+
+### `packages/core/src/actions/output/signed.ts`
+
+Archive: `sources/packages/core/src/actions/output/signed.ts` · bytes: 5817 · Git blob: `e3f97544c559f1cc5b67623a047a431a37219117` · SHA256: `0432ae5abfc0aa4d7cefb225433a0da3e3cff8539e110dab54dafedf9e833bc8`.
+
+
+Linhas **19–31**; SHA256 do intervalo `0a028a88dbd0c3abcc9ae84566db350e79ecb687580a48d8723262bbf13857d4`:
+
+~~~~typescript
+    throw OutputNative.error(binding, "host_mismatch", "Signed CI output destination must be credential-free HTTPS without fragments or controls")
+  return url
+}
+
+// Bare Node HTTPS. Deliberately accepts neither native credentials, client TLS
+// material, cookies nor caller headers. Every redirect is separately validated.
+export const open = Effect.fn("ActionsOutput.signedOpen")(function* (
+  binding: Actions.Binding, url: URL,
+): Effect.fn.Return<ActionsContract.RawResponse, ActionsError, Scope.Scope> {
+  yield* OutputNative.checked(binding, () => destination(binding, url.href))
+  const scope = yield* Scope.make()
+  yield* Effect.addFinalizer((exit) => Scope.close(scope, exit))
+  return yield* Effect.gen(function* () {
+~~~~
+
+
+## A37 — Mutações de artifact e versão selecionada
+
+Vínculo: `body.md` §4, 5; archive de evidência: `evidence.md`, seção `A37`.
+
+
+### `packages/core/src/actions/output/mutations.ts`
+
+Archive: `sources/packages/core/src/actions/output/mutations.ts` · bytes: 4523 · Git blob: `2d165747ebfc35f05a4c0244fd06134780482b88` · SHA256: `b9151642332518eec3151825cb55bd2b0f65ba275d77e1d107ac29feb3a323e0`.
+
+
+Linhas **25–36**; SHA256 do intervalo `14eeb8778d7b3cb150f311f62a9f5e631eff8dffeebb7aa3ec5eedcf418ebc54`:
+
+~~~~typescript
+      return yield* ActionsResourceNative.error(binding, "capability_unavailable", "GitHub Actions has no native artifact keep operation")
+    const authority = yield* ActionsResourceNative.authority(services, binding, intent.kind === "artifact.keep" ? 30 : 40)
+    if (binding.provider.kind === "github") {
+      const path = `${authority.root}/actions/artifacts/${id}`
+      const response = yield* ActionsResourceNative.get(services, binding, path)
+      yield* ActionsResourceNative.before(binding, ActionsResourceNative.checked(binding, () => {
+        const native = ActionsResourceNative.decode(binding, OutputNative.Artifact, response.data)
+        OutputNative.artifactOwner(binding, native, id, intent.target.runID)
+        if (intent.target.scope !== undefined && intent.target.scope !== String(native.workflow_run.id))
+          throw ActionsResourceNative.error(binding, "binding_stale", "Artifact scope differs from its admitted native run")
+        ActionsResourceNative.requireVersion(binding, intent, OutputVersion.github(native))
+      }))
+~~~~
+
+
+Linhas **45–58**; SHA256 do intervalo `0fe53daa773fffd31f2081c7e7119ba85d3ea22dd954c4d32a8c920114db014f`:
+
+~~~~typescript
+        throw ActionsResourceNative.error(binding, "binding_stale", "Artifact scope differs from its admitted native pipeline")
+      ActionsResourceNative.requireVersion(binding, intent, OutputVersion.gitlab(native))
+      return native
+    }))
+    const response = yield* ActionsResourceNative.send(services, binding, { method: intent.kind === "artifact.keep" ? "POST" : "DELETE",
+      path: `${authority.root}/jobs/${id}/artifacts${intent.kind === "artifact.keep" ? "/keep" : ""}` }, intent.kind === "artifact.keep" ? [200] : [204])
+    if (intent.kind === "artifact.keep") yield* ActionsResourceNative.after(binding, ActionsResourceNative.checked(binding, () => {
+      const kept = ActionsResourceNative.decode(binding, OutputNative.GitLabJob, response.data, true)
+      OutputNative.gitlabOwner(binding, kept, id, String(native.pipeline.id))
+      if (kept.artifacts_expire_at !== null) throw ActionsResourceNative.error(binding, "outcome_unknown", "Native artifact keep response did not prove removed expiry", "unknown")
+    }))
+    return { acknowledgement: { resourceID: id } }
+  })
+}
+~~~~
+
+
+
+FIM_EVIDENCIA_LITERAL
+
+FIM_DO_LOTE

@@ -1,0 +1,26 @@
+{
+  "source": "review-packets/automation-2.txt",
+  "bytes": 84544,
+  "sha256": "09da4c30d25f3612a501c545e8a28f516dbf66eb3e821dfb990ccdd6b3ee0c3b",
+  "part_count": 3,
+  "parts": [
+    {
+      "number": 1,
+      "file": "part-01.txt",
+      "bytes": 28847,
+      "sha256": "3823224a4c59fa309477eb31e9c6940cd98ea616397943218abcf92667f1b434"
+    },
+    {
+      "number": 2,
+      "file": "part-02.txt",
+      "bytes": 28961,
+      "sha256": "e3a99a3ae887a665ace2efabe5a261d94d62e849f131d38037ca503cd0afe5d9"
+    },
+    {
+      "number": 3,
+      "file": "part-03.txt",
+      "bytes": 26736,
+      "sha256": "4aea9a8beaf469d3a83fbc0e4c899a7e0bd0286da31ee35a3a996ea74fca13c3"
+    }
+  ]
+}

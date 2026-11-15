@@ -1,0 +1,407 @@
+  if (cadence === "hourly") return from + (Math.floor((now - from) / HOUR) + 1) * HOUR
+  const step = cadence === "daily" ? 1 : 7
+  const start = Math.max(1, Math.floor((now - from) / (step * DAY)))
+  const slots = Array.from({ length: 3 }, (_, index) => local(zone, from, (start + index) * step))
+  return slots.find((slot) => slot > now) ?? local(zone, from, (start + 3) * step)
+}
+
+export function previous(zone: { minute: number; timezone: string }, cadence: Recurring, slot: number) {
+  if (cadence === "hourly") return slot - HOUR
+  return local(zone, slot, cadence === "daily" ? -1 : -7)
+}
+~~~~
+
+
+## S03 — Capability: cron, intervalo e catch-up
+
+Vínculo: `body.md` §10, 11; archive de evidência: `evidence.md`, seção `S03`.
+
+
+### `packages/core/src/scheduled-task/capability-model.ts`
+
+Archive: `sources/packages/core/src/scheduled-task/capability-model.ts` · bytes: 10649 · Git blob: `b92983cab05a5cff1ae32f459378192d07ddfc0b` · SHA256: `256620d07285f1e60c7e6023f4101e4f8738a565f43a6b859d8c1a7861230620`.
+
+
+Linhas **42–58**; SHA256 do intervalo `90f9f24d6735968e84ff4c3d8a3d66adbe63e9a6d63986cad801c59bf1b3e927`:
+
+~~~~typescript
+/** Five Vixie fields separated by ASCII spaces or tabs, with `*`, lists, ranges and steps; names, macros and
+ * seconds are rejected, as is a rule that can never fire. */
+export function parseCron(expression: string): Cron | undefined {
+  const fields = expression.split(/[ \t]+/).filter((field) => field !== "")
+  if (fields.length !== 5) return undefined
+  const sets = fields.map((field, index) => parseField(field, LOW[index], HIGH[index]))
+  if (!sets.every((set): set is number[] => set !== undefined)) return undefined
+  const cron = {
+    minutes: new Set(sets[0]),
+    hours: new Set(sets[1]),
+    days: new Set(sets[2]),
+    months: new Set(sets[3]),
+    weekdays: new Set(sets[4].map((day) => day % 7)),
+    // Vixie: a day field that starts with `*` is unrestricted, even with a step.
+    dayRestricted: !fields[2].startsWith("*"),
+    weekdayRestricted: !fields[4].startsWith("*"),
+  }
+~~~~
+
+
+Linhas **83–105**; SHA256 do intervalo `42e180a8a3fbb208c1f84c68aa1cea1fffd6f4ab9e79a2d2c3f08f942945bc47`:
+
+~~~~typescript
+/** What a capability schedule owes at `now`. A once slot more than 24h late is skipped. */
+export function plan(timing: Timing, now: number): Plan {
+  if (!timing.enabled || timing.next > now) return { type: "wait" }
+  if (timing.cadence.kind === "once")
+    return now - timing.next > LATE ? { type: "skip", skipped: 1 } : { type: "run", slot: timing.next, skipped: 0 }
+  const due = overdue(timing, now)
+  if (timing.catchUp === "skip" && now - due.latest > TICK) return { type: "skip", skipped: due.count }
+  return { type: "run", slot: due.latest, skipped: due.count - 1 }
+}
+
+// The latest due slot and the due count including the owed `next`; without a usable zone or rule, only `next`.
+function overdue(timing: Timing, now: number) {
+  const cadence = timing.cadence
+  if (cadence.kind === "interval") {
+    const step = cadence.minutes * MINUTE
+    const count = Math.floor((now - timing.next) / step) + 1
+    return { latest: timing.next + (count - 1) * step, count }
+  }
+  const clock = wallClock(timing)
+  const latest = clock && inRange(now) ? latestSlot(clock, now) : undefined
+  if (!clock || latest === undefined || latest <= timing.next) return { latest: timing.next, count: 1 }
+  return { latest, count: 1 + countWalls(clock, localWall(clock.zone, timing.next), localWall(clock.zone, latest)) }
+}
+~~~~
+
+
+Linhas **177–189**; SHA256 do intervalo `22f04c2fa6b2c7439332a70975dfeb3edc166b8134a8cb4f24be2748548bca0c`:
+
+~~~~typescript
+// The instant of a local wall time: the earlier one when the hour repeats, and the first instant after the gap
+// when the wall time does not exist (02:30 on a spring-forward day runs at 03:00).
+function resolve(zone: DateTime.TimeZone, wall: number) {
+  const instant = DateTime.toEpochMillis(
+    DateTime.makeZonedUnsafe(wall, { timeZone: zone, adjustForTimeZone: true, disambiguation: "earlier" }),
+  )
+  if (localWall(zone, instant) === wall) return instant
+  // In a gap "earlier" lands before it; the gap ends at the first minute whose local time passes `wall`.
+  return (
+    Array.from({ length: 24 * 60 }, (_, index) => instant + (index + 1) * MINUTE).find(
+      (candidate) => localWall(zone, candidate) > wall,
+    ) ?? instant
+  )
+~~~~
+
+
+## S04 — Admissão de prompt, lease e corrida de revogação
+
+Vínculo: `body.md` §12; archive de evidência: `evidence.md`, seção `S04`.
+
+
+### `packages/core/src/scheduled-task.ts`
+
+Archive: `sources/packages/core/src/scheduled-task.ts` · bytes: 26123 · Git blob: `0a89bbdc576091ca01445e45e1500ed4008898a9` · SHA256: `8c204bd55a8cf8fd1dbddc232f5dfa84b9190822d074ccc72e85594e457af12b`.
+
+
+Linhas **156–182**; SHA256 do intervalo `6faed758cfb62cba5f1849f441c03ad7cfa74204e5d877f0608e23b91f72089c`:
+
+~~~~typescript
+    const dispatch = (claimed: Claim, admitted = false) =>
+      Effect.gen(function* () {
+        const owner = claimed.task.policy === "capability" ? claimed.task.owner : undefined
+        if (claimed.task.policy === "capability" && !(owner && (yield* cap.present(owner))))
+          return { type: "revoked" } as const
+        // Checked before the Session too, so a void claim leaves no empty Session behind.
+        const checked = claimed.task.policy === "capability" && !admitted
+        if (checked && !(yield* cap.holds(claimed))) return { type: "void" } as const
+        const session = yield* sessions.create({
+          id: claimed.sessionID,
+          agent: owner?.agentID ?? AgentV2.defaultID,
+          location: owner?.location ?? { directory: claimed.task.directory },
+        })
+        // An edit, pause or removal since the claim voids it before admission. What remains is the window from this
+        // read to the durable admission inside `sessions.prompt` (its prompt hooks included); a claim revoked in it
+        // still settles with an honest `started` receipt.
+        if (checked && !(yield* cap.holds(claimed))) return { type: "void" } as const
+        yield* sessions.prompt({ id: claimed.messageID, sessionID: session.id, prompt: { text: claimed.prompt } })
+        return { type: "started", sessionID: session.id } as const
+      }).pipe(
+        Effect.catchCause((cause) =>
+          Effect.gen(function* () {
+            // A capability prompt that was admitted before the failure (a wake that failed, say) did start.
+            const durable =
+              claimed.task.policy === "capability" ? yield* SessionInput.find(db, claimed.messageID) : undefined
+            if (durable) return { type: "started", sessionID: durable.sessionID } as const
+            return { type: "failed", error: reason(cause) } as const
+~~~~
+
+
+Linhas **196–207**; SHA256 do intervalo `0dfbe91720b43cfe31c27eb5af8c3f8812ecb3332b97bc7d6b9db8310ed127d2`:
+
+~~~~typescript
+          // A claim an edit revoked while its prompt was being admitted keeps an honest receipt; it never counts
+          // toward repeat or moves `next`, so this race can admit one run past the repeat limit.
+          if (run?.state === "revoked" && outcome.type === "started")
+            return yield* db
+              .update(ScheduledTaskRunTable)
+              .set({ state: "started", session_id: outcome.sessionID, error: null, time_settled: now })
+              .where(eq(ScheduledTaskRunTable.id, run.id))
+              .run()
+          // Gone with its task, taken over after the lease ended (the new lease settles it), or revoked by an edit.
+          if (run?.state !== "running" || run.owner !== lease) return
+          if (outcome.type === "void")
+            return yield* db.delete(ScheduledTaskRunTable).where(eq(ScheduledTaskRunTable.id, run.id)).run()
+~~~~
+
+
+Linhas **285–302**; SHA256 do intervalo `76bc5a87541218e37d4a882d6c8a1e7bfcaa89651409464deab1756074e33397`:
+
+~~~~typescript
+            .where(eq(ScheduledTaskRunTable.id, run.id))
+            .run()
+          return {
+            id: run.id,
+            task,
+            sessionID: run.session_id,
+            messageID: run.message_id,
+            prompt: run.prompt,
+          }
+        }),
+      )
+      if (!claimed) return
+      const admitted = yield* SessionInput.find(db, claimed.messageID)
+      if (!admitted) return yield* settle(claimed, { type: "void" })
+      const retried = yield* dispatch(claimed, true)
+      if (retried.type !== "started") yield* Effect.logWarning("Scheduled run retry failed", retried)
+      yield* settle(claimed, { type: "started", sessionID: admitted.sessionID })
+    })
+~~~~
+
+
+### `packages/core/src/scheduled-task/capability.ts`
+
+Archive: `sources/packages/core/src/scheduled-task/capability.ts` · bytes: 21721 · Git blob: `ab0410651446d3d1d98d9d8028a3ad79bb46aecb` · SHA256: `d024c2e05f0afc70fe49b801ee77b892a8097f5d499cd097d60f230cae67044e`.
+
+
+Linhas **137–145**; SHA256 do intervalo `d339c9448987bf0c71c326bfd0de45c58e29a91d369c77f3723cdd983e93bae2`:
+
+~~~~typescript
+        Effect.map(
+          (row) =>
+            row?.state === "running" &&
+            row.lease === lease &&
+            row.claimed === row.revision &&
+            // A manual run may start while the schedule is paused.
+            (row.enabled || row.slot === null),
+        ),
+      )
+~~~~
+
+
+Linhas **187–198**; SHA256 do intervalo `fb78aed49fc2f26818e0445282063659adc717e7cf339f9548adbf91358f66a0`:
+
+~~~~typescript
+      yield* Effect.forEach(
+        pending,
+        (run) =>
+          Effect.gen(function* () {
+            if (run.message_id && (yield* SessionInput.find(db, run.message_id))) return
+            yield* db
+              .update(ScheduledTaskRunTable)
+              .set({ state: "revoked", error: "revoked by an edit", owner: null, time_settled: now })
+              .where(eq(ScheduledTaskRunTable.id, run.id))
+              .run()
+          }),
+        { discard: true },
+~~~~
+
+
+## S05 — Revisão, manual key e contabilização
+
+Vínculo: `body.md` §12; archive de evidência: `evidence.md`, seção `S05`.
+
+
+### `packages/core/src/scheduled-task/capability.ts`
+
+Archive: `sources/packages/core/src/scheduled-task/capability.ts` · bytes: 21721 · Git blob: `ab0410651446d3d1d98d9d8028a3ad79bb46aecb` · SHA256: `d024c2e05f0afc70fe49b801ee77b892a8097f5d499cd097d60f230cae67044e`.
+
+
+Linhas **335–364**; SHA256 do intervalo `80b4fd0d5c92c88f745bca334b92821e854805d700df9c7294210feffa0cd0ea`:
+
+~~~~typescript
+    run: Effect.fn("ScheduledTask.capability.run")(function* (owner, id, manualKey) {
+      const now = yield* Clock.currentTimeMillis
+      const begun = yield* immediate(
+        Effect.gen(function* () {
+          const task = yield* owned(owner, id)
+          if (!task) return { type: "missing" } as const
+          const prior = yield* db
+            .select()
+            .from(ScheduledTaskRunTable)
+            .where(and(eq(ScheduledTaskRunTable.task_id, id), eq(ScheduledTaskRunTable.manual_key, manualKey)))
+            .get()
+          if (prior) return { type: "prior", run: prior } as const
+          return { type: "claimed", claim: yield* claim(task, undefined, now, manualKey) } as const
+        }),
+      )
+      if (begun.type === "missing") return yield* new ScheduledTaskShared.NotFoundError({ id })
+      if (begun.type === "prior") {
+        // A revoked manual claim stays revoked: the same call never runs, a new call (new key) may.
+        if (begun.run.state === "revoked")
+          return yield* new ScheduledTaskShared.RunError({
+            reason: `${begun.run.error ?? "revoked"}; retrying the same call will not run`,
+          })
+        // A claim still starting elsewhere (or stopped before its lease ended) is reused only once admitted.
+        const admitted = begun.run.message_id && (yield* SessionInput.find(db, begun.run.message_id))
+        if (begun.run.state === "running" && !admitted)
+          return yield* new ScheduledTaskShared.RunError({ reason: "This run is still starting; retry shortly." })
+        return { sessionID: begun.run.session_id, reused: true }
+      }
+      const outcome = yield* ops.dispatch(begun.claim)
+      if (outcome.type === "started") {
+~~~~
+
+
+Linhas **455–466**; SHA256 do intervalo `293f0c3d7328a3a34be4fbb7553c3c3f23c667397a2ed78565946651ec9d734f`:
+
+~~~~typescript
+// A settled capability claim. Manual runs never move the schedule or count. A slot counts once its prompt was
+// admitted; a failed slot is consumed, never retried. An edit since the claim already recomputed `next`.
+export function settledCapability(task: Task, run: RunRow, outcome: Outcome): Partial<Task> {
+  if (outcome.type === "revoked") return { enabled: false, disabled_reason: "owner-missing" }
+  if (run.slot === null) return {}
+  const runs = outcome.type === "started" ? task.runs + 1 : task.runs
+  const moved =
+    run.revision === task.revision && task.next <= run.slot ? following(capabilityTiming(task), run.slot) : {}
+  if (task.repeat_limit !== null && runs >= task.repeat_limit)
+    return { runs, ...moved, enabled: false, disabled_reason: "exhausted" }
+  return { runs, ...moved }
+}
+~~~~
+
+
+## S06 — Daemon, wake e inferência estática de create
+
+Vínculo: `body.md` §12; archive de evidência: `evidence.md`, seção `S06`.
+
+
+### `packages/core/src/scheduled-task.ts`
+
+Archive: `sources/packages/core/src/scheduled-task.ts` · bytes: 26123 · Git blob: `0a89bbdc576091ca01445e45e1500ed4008898a9` · SHA256: `8c204bd55a8cf8fd1dbddc232f5dfa84b9190822d074ccc72e85594e457af12b`.
+
+
+Linhas **85–95**; SHA256 do intervalo `acd69264fab22407c6a071a579a2d3c7ea9f4f04c7d593b913f90e75be50987f`:
+
+~~~~typescript
+    // At most one pending wake: the daemon needs to know that something was written, not how many times.
+    const woken = yield* Queue.sliding<void>(1)
+    const store = ScheduledTaskShared.store(db, crypto.randomUUID())
+    // Every task write, legacy or capability, runs under `immediate`, so each one wakes a sleeping daemon.
+    const tasks = {
+      ...store,
+      immediate: <A, E>(effect: Effect.Effect<A, E>) =>
+        store.immediate(effect).pipe(Effect.tap(() => Queue.offer(woken, undefined))),
+    }
+    const { lease, immediate, find, lastRuns, advance, claim } = tasks
+    const cap = ScheduledTaskCapability.make(tasks, sessions)
+~~~~
+
+
+Linhas **339–347**; SHA256 do intervalo `4bc19434c37a8375a5c59b753187934fddeb378585ccafe66eb038be0622bfeb`:
+
+~~~~typescript
+      // The next due slot, and the moment a running claim goes stale and can be taken over.
+      const wanted = [next?.at, claimed?.at == null ? undefined : claimed.at + LEASE + 1].filter((at) => at != null)
+      // Nothing is scheduled and nothing is running: only a task write can make a tick useful.
+      if (wanted.length === 0) return yield* Queue.take(woken)
+      const at = Math.min(...wanted)
+      // A slot already due that the tick left alone (a held run, say) is retried at the old cadence, not in a spin.
+      const delay = at > now ? Math.min(at - now, SLEEP_LIMIT) : TICK_MILLIS
+      yield* Effect.race(Effect.sleep(delay), Queue.take(woken))
+    })
+~~~~
+
+
+### `packages/core/src/scheduled-task/capability.ts`
+
+Archive: `sources/packages/core/src/scheduled-task/capability.ts` · bytes: 21721 · Git blob: `ab0410651446d3d1d98d9d8028a3ad79bb46aecb` · SHA256: `d024c2e05f0afc70fe49b801ee77b892a8097f5d499cd097d60f230cae67044e`.
+
+
+Linhas **207–237**; SHA256 do intervalo `2f2fc041e6f5b956bb4dff5ef36d08a7ca0583c75eea95b04a8bf58040e5cee5`:
+
+~~~~typescript
+    create: Effect.fn("ScheduledTask.capability.create")(function* (owner, input) {
+      const now = yield* Clock.currentTimeMillis
+      const timezone = input.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone
+      const catchUp = input.catchUp ?? "latest"
+      const enabled = input.enabled ?? true
+      const next = firstSlot({ cadence: input.cadence, timezone, catchUp, enabled }, now)
+      if (typeof next !== "number") return yield* next
+      const id = ScheduledTask.ID.create()
+      yield* db
+        .insert(ScheduledTaskTable)
+        .values({
+          id,
+          directory: owner.location.directory,
+          name: input.name,
+          prompt: input.prompt,
+          ...encode(input.cadence),
+          timezone,
+          next,
+          enabled,
+          runs: 0,
+          policy: "capability",
+          owner,
+          catch_up: catchUp,
+          repeat_limit: input.repeat ?? null,
+          time_created: now,
+          time_updated: now,
+        })
+        .run()
+        .pipe(Effect.orDie)
+      return yield* getOwned(owner, id).pipe(Effect.orDie)
+    }),
+~~~~
+
+
+## T01 — Testes existentes: intenção verificável, NOT_RUN
+
+Vínculo: `body.md` §13; archive de evidência: `evidence.md`, seção `T01`.
+
+
+### `packages/core/test/scheduled-task-capability.test.ts`
+
+Archive: `sources/packages/core/test/scheduled-task-capability.test.ts` · bytes: 24066 · Git blob: `c96b90a80f985a84c74f8859c211b533f8600db6` · SHA256: `85eb84f706e0228bb8e4202c45d4b4c0ab8645bb2a04427b573cebd335b12af9`.
+
+
+Linhas **337–359**; SHA256 do intervalo `4b1a6316d7464dcf41625142b1ed7727016c7b4455040b7d402d5a3f341046a1`:
+
+~~~~typescript
+  it.effect("a claim revoked while its prompt was admitted settles as started without counting", () =>
+    Effect.gen(function* () {
+      yield* TestClock.setTime(start)
+      const tasks = yield* ScheduledTask.Service
+      const { db } = yield* Database.Service
+      const owner = yield* ownerSession()
+      const created = yield* tasks.capability.create(owner, hourly)
+      const slot = created.next!
+      yield* TestClock.setTime(slot + MINUTE)
+      // What an edit racing admission leaves behind: the claim revoked after the recheck.
+      hook.onWake = db
+        .update(ScheduledTaskRunTable)
+        .set({ state: "revoked", owner: null })
+        .where(eq(ScheduledTaskRunTable.task_id, created.id))
+        .run()
+        .pipe(Effect.asVoid, Effect.orDie)
+      yield* tasks.tick
+      const ids = slotIDs(created.id, 0, slot)
+      expect((yield* inputs).map((row) => row.id)).toEqual([ids.message])
+      expect((yield* runRows).map((row) => [row.state, row.session_id])).toEqual([["started", ids.session]])
+      expect(yield* tasks.capability.get(owner, created.id)).toMatchObject({ runs: 0, next: slot })
+    }),
+  )
+~~~~
+
+FIM_EVIDENCIA_LITERAL
+
+FIM_DO_LOTE

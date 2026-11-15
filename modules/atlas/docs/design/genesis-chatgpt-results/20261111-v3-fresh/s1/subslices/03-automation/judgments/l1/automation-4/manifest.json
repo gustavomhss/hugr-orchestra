@@ -1,0 +1,35 @@
+{
+  "source": "review-packets/automation-4.txt",
+  "bytes": 36664,
+  "sha256": "7460bdb729767ca2a99a50edd7531c56126d8e9bdef18203056d276a7d9ed12a",
+  "frozen_manifest_entry": {
+    "lot": "automation-4",
+    "path": "review-packets/automation-4.txt",
+    "bytes": 36664,
+    "sha256": "7460bdb729767ca2a99a50edd7531c56126d8e9bdef18203056d276a7d9ed12a",
+    "body": "producers/automation/body.md",
+    "body_sha256": "2ed7670affc680005840d0918489cb1ac36e1c5a4021defcc57ae44186ae7459",
+    "body_fragment_sha256": "53f19d741d229ddfd917f763df032a7a7aa2b5286d9849b97a49024ac1cab6cb",
+    "part": "bytes UTF-8 [47444,59832)",
+    "scope": "§10–14 agendamento, limites de prova e manutenção"
+  },
+  "part_count": 2,
+  "parts": [
+    {
+      "number": 1,
+      "file": "part-01.txt",
+      "start_byte": 0,
+      "end_byte": 18336,
+      "bytes": 18336,
+      "sha256": "d2415989608185943d030e60922a3220b1a3eefd48c459c8730f56fc7b4945b2"
+    },
+    {
+      "number": 2,
+      "file": "part-02.txt",
+      "start_byte": 18336,
+      "end_byte": 36664,
+      "bytes": 18328,
+      "sha256": "4019d068839d998c9843063c661e299290a1933e5e44a28c725c07eb3e813d08"
+    }
+  ]
+}
